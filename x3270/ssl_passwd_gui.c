@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -38,23 +38,21 @@
 
 #include "globals.h"
 
-#if defined(HAVE_LIBSSL) /*[*/
-
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 
-#include <openssl/ssl.h>
-
+#include "appres.h"
 #include "host.h"
 #include "objects.h"
 #include "popups.h"
+#include "sio.h"
 #include "ssl_passwd_gui.h"
 #include "telnet.h"
 #include "telnet_private.h"
+#include "xglobals.h"
 #include "xpopups.h"
 
 /* Statics. */
-static bool ssl_password_prompted;
 static char *ssl_password;
 static Widget password_shell = NULL;
 
@@ -69,19 +67,7 @@ password_callback(Widget w _is_unused, XtPointer client_data,
     ssl_password = NewString(password);
     XtPopdown(password_shell);
 
-    /* Try init again, with the right password. */
-    ssl_base_init(NULL, NULL);
-
-    /*
-     * Now try connecting to the command-line hostname, if SSL init
-     *  succeeded and there is one.
-     * If SSL init failed because of a password problem, the password
-     *  dialog will be popped back up.
-     */
-    if (ssl_ctx != NULL && ssl_cl_hostname) {
-	(void) host_connect(ssl_cl_hostname);
-	Replace(ssl_cl_hostname, NULL);
-    }
+    net_password_continue(ssl_password);
 }
 
 /* The password dialog was popped down. */
@@ -91,14 +77,8 @@ password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 {
     /* If there's no password (they cancelled), don't pop up again. */
     if (ssl_password == NULL) {
-	/* Don't pop up again. */
-	add_error_popdown_callback(NULL);
-
-	/* Try connecting to the command-line host. */
-	if (ssl_cl_hostname != NULL) {
-	    (void) host_connect(ssl_cl_hostname);
-	    Replace(ssl_cl_hostname, NULL);
-	}
+	/* We might want to do something more sophisticated here. */
+	host_disconnect(true);
     }
 }
 
@@ -122,49 +102,14 @@ popup_password(void)
 
 /*
  * Password callback.
- * Returns the length of the password (including 0 for no password), or -1
- * to indicate an error.
  */
-int
-ssl_passwd_gui_callback(char *buf, int size)
+ssl_passwd_ret_t
+ssl_passwd_gui_callback(char *buf, int size, bool again)
 {
-    if (ssl_pending != NULL) {
-	/* Delay the host connection until the dialog is complete. */
-	*ssl_pending = true;
-
-	/* Pop up the dialog. */
-	popup_password();
-	ssl_password_prompted = true;
-	return 0;
-    } else if (ssl_password != NULL) {
-	/* Dialog is complete. */
-	snprintf(buf, size, "%s", ssl_password);
-	memset(ssl_password, 0, strlen(ssl_password));
-	Replace(ssl_password, NULL);
-	return strlen(buf);
-    } else {
-	return -1;
+    /* Pop up the dialog. */
+    popup_password();
+    if (again) {
+	popup_an_error("Password is incorrect.");
     }
+    return SP_PENDING;
 }
-
-/* Password GUI reset. */
-void
-ssl_passwd_gui_reset(void)
-{
-    ssl_password_prompted = false;
-}
-
-/*
- * Password GUI retry.
- * Returns true if we should try prompting for the password again.
- */
-bool
-ssl_passwd_gui_retry(void)
-{
-    /* Pop up the password dialog again when the error pop-up pops down. */
-    if (ssl_password_prompted) {
-	add_error_popdown_callback(popup_password);
-    }
-    return false;
-}
-#endif /*]*/

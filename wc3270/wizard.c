@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2016 Paul Mattes.
+ * Copyright (c) 2006-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@
 
 #include <wincon.h>
 #include <lmcons.h>
+#include <winspool.h>
 
 #include "winvers.h"
 #include "shortcutc.h"
@@ -1759,7 +1760,6 @@ This option controls whether the wc3270 cursor is a block or an underscore.");
     return 0;
 }
 
-#if defined(HAVE_LIBSSL) /*[*/
 /**
  * Prompt for SSL tunnel mode.
  *
@@ -1824,7 +1824,6 @@ certificates are not valid, the connection will be aborted.");
     } while (rc < 0);
     return 0;
 }
-#endif /*]*/
 
 /**
  * Prompt for proxy server name
@@ -2867,15 +2866,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	printf("%3d. Cursor Type ............ : %s\n",
 		MN_CURSORTYPE, (s->flags & WF_ALTCURSOR)?
 		    "Underscore": "Block");
-#if defined(HAVE_LIBSSL) /*[*/
 	printf("%3d. SSL Tunnel ............. : %s\n", MN_SSL,
 		s->ssl? "Yes": "No");
 	printf("%3d. Verify host certificates : %s\n", MN_VERIFY,
 		(s->flags & WF_VERIFY_HOST_CERTS)? "Yes": "No");
-#else /*][*/
-	grayout("%3d. SSL Tunnel ............. :\n", MN_SSL);
-	grayout("%3d. Verify host certificates :\n", MN_VERIFY);
-#endif /*]*/
 	printf("%3d. Proxy .................. : %s\n", MN_PROXY,
 		s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 	if (s->proxy_type[0]) {
@@ -2998,7 +2992,6 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-#if defined(HAVE_LIBSSL) /*[*/
 	    case MN_SSL:
 		if (get_ssl(s) < 0) {
 		    ret = SRC_ERR;
@@ -3011,7 +3004,6 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-#endif /*]*/
 	    case MN_PROXY:
 		if (get_proxy(s) < 0) {
 		    ret = SRC_ERR;

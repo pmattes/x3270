@@ -15,13 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="..\..\ws3270\ws3270.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\..\ws3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\s3270.c">
+    <ClCompile Include="..\..\ws3270\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\version.c">
+    <ClCompile Include="..\..\Common\s3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

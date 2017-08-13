@@ -37,6 +37,7 @@
  * below, and containing the typedefs for the substitute functions defined
  * below.
  */
+# define WIN32_LEAN_AND_MEAN 1		/* Skip things we don't need */
 # include <winsock2.h>                  /* Has to come before windows.h */
 # include <windows.h>                   /* Common definitions for Windows */
 

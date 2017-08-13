@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -69,6 +69,7 @@
 #include "resourcesc.h"
 #include "screen.h"
 #include "selectc.h"
+#include "sio.h"
 #include "status.h"
 #include "telnet.h"
 #include "toggles.h"
@@ -123,20 +124,19 @@ static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
 static void	copy_xres_to_res_bool(void);
 
-XrmOptionDescRec options[]= {
+XrmOptionDescRec base_options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
     { OptAplMode,	DotAplMode,	XrmoptionNoArg,		ResTrue },
-#if defined(HAVE_LIBSSL) /*[*/
     { OptAcceptHostname,DotAcceptHostname,XrmoptionSepArg,	NULL },
     { OptCaDir,		DotCaDir,	XrmoptionSepArg,	NULL },
     { OptCaFile,	DotCaFile,	XrmoptionSepArg,	NULL },
     { OptCertFile,	DotCertFile,	XrmoptionSepArg,	NULL },
     { OptCertFileType,	DotCertFileType,XrmoptionSepArg,	NULL },
     { OptChainFile,	DotChainFile,	XrmoptionSepArg,	NULL },
-#endif /*]*/
     { OptCharClass,	DotCharClass,	XrmoptionSepArg,	NULL },
     { OptCharset,	DotCharset,	XrmoptionSepArg,	NULL },
     { OptClear,		".xxx",		XrmoptionSkipArg,	NULL },
+    { OptClientCert,	DotClientCert,	XrmoptionSepArg,	NULL },
     { OptColorScheme,	DotColorScheme,	XrmoptionSepArg,	NULL },
     { OptConnectTimeout,DotConnectTimeout,XrmoptionSepArg,	NULL },
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
@@ -148,20 +148,17 @@ XrmOptionDescRec options[]= {
     { OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
     { OptIconX,		".iconX",	XrmoptionSepArg,	NULL },
     { OptIconY,		".iconY",	XrmoptionSepArg,	NULL },
-#if defined(HAVE_LIBSSL) /*[*/
     { OptKeyFile,	DotKeyFile,	XrmoptionSepArg,	NULL },
     { OptKeyFileType,	DotKeyFileType,	XrmoptionSepArg,	NULL },
-#endif /*]*/
     { OptKeymap,	DotKeymap,	XrmoptionSepArg,	NULL },
     { OptKeypadOn,	DotKeypadOn,	XrmoptionNoArg,		ResTrue },
-#if defined(HAVE_LIBSSL) /*[*/
     { OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
-#endif /*]*/
     { OptLoginMacro,	DotLoginMacro,	XrmoptionSepArg,	NULL },
     { OptM3279,		DotM3279,	XrmoptionNoArg,		ResTrue },
     { OptModel,		DotModel,	XrmoptionSepArg,	NULL },
     { OptMono,		DotMono,	XrmoptionNoArg,		ResTrue },
     { OptNoScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResFalse },
+    { OptNoVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResFalse },
     { OptNvtMode,	DotNvtMode,	XrmoptionNoArg,		ResTrue },
     { OptOnce,		DotOnce,	XrmoptionNoArg,		ResTrue },
     { OptOversize,	DotOversize,	XrmoptionSepArg,	NULL },
@@ -173,9 +170,6 @@ XrmOptionDescRec options[]= {
     { OptScripted,	DotScripted,	XrmoptionNoArg,		ResTrue },
     { OptScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResTrue },
     { OptSecure,	DotSecure,	XrmoptionNoArg,		ResTrue },
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptSelfSignedOk,DotSelfSignedOk,	XrmoptionNoArg,		ResTrue },
-#endif /*]*/
     { OptSet,		".xxx",		XrmoptionSkipArg,	NULL },
     { OptSocket,	DotSocket,	XrmoptionNoArg,		ResTrue },
     { OptScriptPort,	DotScriptPort,	XrmoptionSepArg,	NULL },
@@ -187,36 +181,39 @@ XrmOptionDescRec options[]= {
     { OptPreeditType,	DotPreeditType,	XrmoptionSepArg,	NULL },
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
     { OptV,		DotV,		XrmoptionNoArg,		ResTrue },
-#if defined(HAVE_LIBSSL) /*[*/
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
-#endif /*]*/
     { OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
     { "-xrm",		NULL,		XrmoptionResArg,	NULL }
 };
-int num_options = XtNumber(options);
+int num_base_options = XtNumber(base_options);
 
-static struct {
+XrmOptionDescRec *options;
+int num_options;
+
+static struct option_help {
     char *opt;
     char *args;
     char *help;
+    unsigned ssl_flag;
 } option_help[] = {
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptAcceptHostname, "any|DNS:<name>|IP:<addr>",
+    { OptAcceptHostname, "any|DNS:<name>",
 	"Host name to accept from server certificate" },
-#endif /*]*/
     { OptActiveIcon, NULL, "Make icon a miniature of the display" },
     { OptAplMode, NULL,    "Turn on APL mode" },
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptCaDir, "<directory>", "OpenSSL CA certificate database directory" },
-    { OptCaFile, "<filename>", "OpenSSL CA certificate file" },
-    { OptCertFile, "<file>", "OpenSSL certificate file" },
-    { OptCertFileType, "pem|asn1", "OpenSSL certificate file type" },
-    { OptChainFile, "<filename>", "OpenSSL certificate chain file" },
-#endif /*]*/
+    { OptCaDir, "<directory>", "SSL/TLS CA certificate database directory",
+      SSL_OPT_CA_DIR },
+    { OptCaFile, "<filename>", "SSL/TLS CA certificate file", SSL_OPT_CA_FILE },
+    { OptCertFile, "<file>", "SSL/TLS certificate file", SSL_OPT_CERT_FILE },
+    { OptCertFileType, "pem|asn1", "SSL/TLS certificate file type",
+      SSL_OPT_CERT_FILE_TYPE },
+    { OptChainFile, "<filename>", "SSL/TLS certificate chain file",
+      SSL_OPT_CHAIN_FILE },
     { OptCharClass, "<spec>", "Define characters for word boundaries" },
     { OptCharset, "<name>",
 	"Use host EBCDIC character set (code page) <name>" },
     { OptClear, "<toggle>", "Turn on <toggle>" },
+    { OptClientCert, "<name>", "SSL/TLS client certificate name",
+      SSL_OPT_CLIENT_CERT },
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
@@ -227,21 +224,20 @@ static struct {
     { OptIconName, "<name>", "Title for icon" },
     { OptIconX, "<x>", "X position for icon" },
     { OptIconY, "<y>", "Y position for icon" },
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptKeyFile, "<filename>", "Get OpenSSL private key from <filename>" },
-    { OptKeyFileType, "pem|asn1", "OpenSSL private key file type" },
-#endif /*]*/
+    { OptKeyFile, "<filename>", "Get SSL/TLS private key from <filename>",
+      SSL_OPT_KEY_FILE },
+    { OptKeyFileType, "pem|asn1", "SSL/TLS private key file type",
+      SSL_OPT_KEY_FILE_TYPE },
     { OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
     { OptKeypadOn, NULL, "Turn on pop-up keypad at start-up" },
-#if defined(HAVE_LIBSSL) /*[*/
     { OptKeyPasswd, "file:<filename>|string:<text>",
-	"OpenSSL private key password" },
-#endif /*]*/
+	"SSL/TLS private key password", SSL_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
     { OptM3279, NULL, "3279 emulation (deprecated)" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
     { OptNoScrollBar, NULL, "Disable scroll bar" },
+    { OptNoVerifyHostCert, NULL, "Do not verify SSL/TLS host certificate" },
     { OptNvtMode, NULL, "Begin in NVT mode" },
     { OptOnce, NULL, "Exit as soon as the host disconnects" },
     { OptOversize,  "<cols>x<rows>", "Larger screen dimensions" },
@@ -253,9 +249,6 @@ static struct {
     { OptSaveLines, "<n>", "Number of lines to save for scroll bar" },
     { OptScripted, NULL, "Accept commands on standard input" },
     { OptScrollBar, NULL, "Turn on scroll bar" },
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptSelfSignedOk, NULL, "Allow self-signed host certificates" },
-#endif /*]*/
     { OptSet, "<toggle>", "Turn on <toggle>" },
     { OptSocket,  NULL, "Create socket for script control" },
     { OptScriptPort, "<port>",
@@ -270,9 +263,7 @@ static struct {
     { OptPreeditType, "<style>", "Define input method pre-edit type" },
     { OptUser, "<name>", "User name for RFC 4777" },
     { OptV, NULL, "Display build options and character sets" },
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptVerifyHostCert, NULL, "Verify OpenSSL host certificate" },
-#endif /*]*/
+    { OptVerifyHostCert, NULL, "Verify SSL/TLS host certificate (enabled by default)" },
     { OptVersion, NULL, "Display build options and character sets" },
     { "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };
@@ -286,11 +277,64 @@ static String fallbacks[] = {
 
 static void x3270_register(void);
 
+/* Find an option in the help list. */
+static struct option_help *
+find_option_help(const char *opt)
+{
+    unsigned j;
+
+    for (j = 0; j < XtNumber(option_help); j++) {
+	if (!strcmp(opt, option_help[j].opt)) {
+	    return &option_help[j];
+	}
+    }
+    return NULL;
+}
+
+/* Set up the options array. */
+static void
+setup_options(void)
+{
+    unsigned ssl_options = sio_options_supported();
+    int i;
+    int n_filtered = 0;
+
+    /* Count the number of filtered options. */
+    for (i = 0; i < num_base_options; i++) {
+	struct option_help *help = find_option_help(base_options[i].option);
+	if (help == NULL) {
+	    Error(xs_buffer("Option %s has no help", base_options[i].option));
+	}
+
+	if (!help->ssl_flag || (help->ssl_flag & ssl_options)) {
+	    n_filtered++;
+	}
+    }
+
+    /* Allocate the new array. */
+    options = (XrmOptionDescRec *)Malloc(n_filtered * sizeof(XrmOptionDescRec));
+    num_options = n_filtered;
+
+    /* Copy the filtered entries into the new array. */
+    n_filtered = 0;
+    for (i = 0; i < num_base_options; i++) {
+	struct option_help *help = find_option_help(base_options[i].option);
+	if (help == NULL) {
+	    Error(xs_buffer("Option %s has no help", base_options[i].option));
+	}
+
+	if (!help->ssl_flag || (help->ssl_flag & ssl_options)) {
+	    options[n_filtered++] = base_options[i]; /* struct copy */
+	}
+    }
+}
+
 
 void
 usage(const char *msg)
 {
     unsigned i;
+    unsigned ssl_options = sio_options_supported();
 
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
@@ -300,11 +344,14 @@ usage(const char *msg)
 	    programname);
     fprintf(stderr, "Options:\n");
     for (i = 0; i < XtNumber(option_help); i++) {
-	fprintf(stderr, " %s%s%s\n   %s\n",
-		option_help[i].opt,
-		option_help[i].args? " ": "",
-		option_help[i].args? option_help[i].args: "",
-		option_help[i].help);
+	if (option_help[i].ssl_flag == 0
+		|| (option_help[i].ssl_flag & ssl_options)) {
+	    fprintf(stderr, " %s%s%s\n   %s\n",
+		    option_help[i].opt,
+		    option_help[i].args? " ": "",
+		    option_help[i].args? option_help[i].args: "",
+		    option_help[i].help);
+	}
     }
     fprintf(stderr,
 	    " Plus standard Xt options like '-title' and '-geometry'\n");
@@ -317,6 +364,13 @@ no_minus(char *arg)
     if (arg[0] == '-') {
 	usage(xs_buffer("Unknown or incomplete option: %s", arg));
     }
+}
+
+/* Clean up Xt (close windows gracefully). */
+static void
+cleanup_Xt(bool b _is_unused)
+{
+    XtDestroyApplicationContext(appcontext);
 }
 
 int
@@ -333,11 +387,6 @@ main(int argc, char *argv[])
     int	model_number;
     bool mono = false;
     char *session = NULL;
-    bool pending = false;
-
-    if (XtNumber(options) != XtNumber(option_help)) {
-	Error("Help mismatch");
-    }
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -429,6 +478,9 @@ main(int argc, char *argv[])
     XCloseDisplay(display);
 #endif /*]*/
 
+    /* Set up the command-line options and resources we support. */
+    setup_options();
+
     /* Initialize. */
     toplevel = XtVaAppInitialize(
 	    &appcontext,
@@ -449,6 +501,8 @@ main(int argc, char *argv[])
     if (get_resource(ResV)) {
 	dump_version();
     }
+
+    register_schange(ST_EXITING, cleanup_Xt);
 
     /*
      * Add the base translations to the toplevel object.
@@ -713,13 +767,10 @@ main(int argc, char *argv[])
     }
     initialize_toggles();
 
-#if defined(HAVE_LIBSSL) /*[*/
-    ssl_base_init(cl_hostname, &pending);
-#endif /*]*/
-
     /* Connect to the host. */
-    if (cl_hostname != NULL && !pending)
-	    (void) host_connect(cl_hostname);
+    if (cl_hostname != NULL) {
+	(void) host_connect(cl_hostname);
+    }
 
     /* Prepare to run a peer script. */
     peer_script_init();
@@ -1111,7 +1162,6 @@ copy_xres_to_res_bool(void)
     copy_bool(linemode.inlcr);
     copy_bool(linemode.onlcr);
 
-    copy_bool(ssl.self_signed_ok);
     copy_bool(ssl.tls);
     copy_bool(ssl.verify_host_cert);
 }

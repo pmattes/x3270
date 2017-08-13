@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -54,9 +54,10 @@ extern Pixmap		gray;
 extern Pixel		keypadbg_pixel;
 extern XrmDatabase	rdb;
 extern Window		root_window;
+extern char		*ssl_cl_hostname;
 extern char		*user_title;
 
-extern XrmOptionDescRec options[];
+extern XrmOptionDescRec *options;
 extern int num_options;
 
 #if defined(USE_APP_DEFAULTS) /*[*/

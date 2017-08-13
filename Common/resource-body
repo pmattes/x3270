@@ -35,7 +35,7 @@ endif
  command-line option.  For example %-bsdTm% can be set by the
  following command-line option:
  <pre>
-     -xrm '%p%.bsdTm: true'
+     -xrm "%p%.bsdTm: true"
  </pre>
  Note that <b>-xrm</b> is supported on all of the 3270 emulators, not just on
  x3270.
@@ -80,11 +80,14 @@ groups s
 switch -accepthostname
 description
     Defines a specific name to accept when validating the name presented in
-    the server's SSL certificate, instead of using the name or IP address used
-    to make the connection. Takes one of three forms: <b>any</b>, which
-    disables name checking, <b>DNS:</b><i>name</i>, which specifies a DNS
-    hostname, and <b>IP:</b><i>address</i>, which specifies a numeric IPv4 or
-    IPv6 address.
+    the server's SSL/TLS certificate, instead of using the name used
+    to make the connection.
+if u
+    Takes one of two forms: <b>any</b>, which disables name checking, or a
+    specific name.
+endif
+    (The form <b>DNS:</b><i>name</i>
+    is also accepted for backwards compatibility.)
 .
 
 name acs
@@ -369,35 +372,27 @@ description
 .
 
 name caDir
-applies a
+applies u
 type s
 groups s
 switch -cadir
 description
     Defines a directory containing CA (root) certificates, used to validate
-    a certificate presented by the host during SSL negotiation.
-if w
-    There is no default directory. The default is to use the file
-    <tt>root_certs.txt</tt> in in the wc3270 install directory.
-else
+    a certificate presented by the host during SSL/TLS negotiation.
     The default is determined by the OpenSSL library on your workstation.
-endif
+    (OpenSSL only)
 .
 
 name caFile
-applies a
+applies u
 type s
 groups s
 switch -cafile
 description
     Defines a PEM-format file containing CA (root) certificates, used to
-    validate a certificate presented by the host during SSL negotiation.
-if w
-    The default is to use the file <tt>root_certs.txt</tt> in in the wc3270
-    install directory.
-else
+    validate a certificate presented by the host during SSL/TLS negotiation.
     The default is determined by the OpenSSL library on your workstation.
-endif
+    (OpenSSL only)
 .
 
 name cbreak
@@ -413,20 +408,24 @@ desc
 .
 
 name certFile
-applies a
+applies u
 groups s
 type s
 switch -certfile
 desc
-    Gives the name of a certificate file, provided to the host if requested
-    during SSL negotiation.
-    The default file format is PEM; it can be overridden by %-certFileType%.
+    Gives the name of a client certificate file, provided to the host
+    during SSL/TLS negotiation.
+    <p class=indented>
+    With OpenSSL, the default file format is PEM; it can be overridden by
+    %-certFileType%.
     The private key for the certificate is specified by %-keyFile%.
     If %-chainFile% is specified, it overrides %-certFile%.
+    <p class=indented>
+    On the Mac, the file must be in PKCS12 format.
 .
 
 name certFileType
-applies a
+applies u
 groups s
 type s
 default pem
@@ -434,21 +433,23 @@ switch -certfiletype
 desc
     Gives the type of the certificate file specified by %-certFile%.
     The value can be <b>pem</b> or <b>asn1</b>.
+    (OpenSSL only)
 .
 
 name chainFile
-applies a
+applies u
 groups s
 type s
 switch -chainfile
 desc
-    Gives the name of a certificate chain file, provided to the host if
-    requested during SSL negotiation.
+    Gives the name of a certificate chain file to provided to the host
+    during SSL/TLS negotiation.
     The file contains a PEM-format certificate, optionally followed by
     any intermediate certificates used to sign it, and the CA (root)
     certificate.
     The private key for the certificate is specified by %-keyFile%.
     If %-chainFile% is specified, it overrides %-certFile%.
+    (OpenSSL only)
 .
 
 name charClass
@@ -481,6 +482,26 @@ if wc
     language support must be installed. On Windows Vista and later, the Windows
     System Locale must be set to a matching language.
 endif
+.
+
+name clientCert
+applies w
+groups s
+type s
+switch -clientcert
+desc
+    Gives the name of a client certificate, provided during SSL/TLS
+    negotiation. The certificate is searched for in the Personal store.
+.
+
+name clientCert
+applies u
+groups s
+type s
+switch -clientcert
+desc
+    Gives the name of a client certificate, provided during SSL/TLS
+    negotiation. (Mac only)
 .
 
 name color8
@@ -1640,7 +1661,7 @@ description
 .
 
 name keyFile
-applies a
+applies u
 groups s
 type s
 switch -keyfile
@@ -1649,10 +1670,11 @@ desc
     specified by %-certFile% or %-chainFile%.  The default file type is PEM;
     it can be overridden by %-keyFileType%.  If the private key is encrypted,
     the password is specified by %-keyPasswd%.
+    (OpenSSL only)
 .
 
 name keyFileType
-applies a
+applies u
 groups s
 type s
 default pem
@@ -1660,6 +1682,7 @@ switch -keyfileType
 desc
     Gives the type of the private key file specified by %-keyFile%.
     The value can be <b>pem</b> or <b>asn1</b>.
+    (OpenSSL only)
 .
 
 name keyHeight
@@ -1764,16 +1787,19 @@ description
 .
 
 name keyPasswd
-applies a
+applies u
 groups s
 type s
 switch -keypasswd
 desc
-    Gives the password for the private key file specified by %-keyFile%, if it
+    On OpenSSL,
+    gives the password for the private key file specified by %-keyFile%, if it
     is encrypted.
     The value can take one of two forms. <b>file</b>:<i>filename</i> specifies
     that the password is in a file. <b>string</b>:<i>string</i> gives the
     password value in the resource itself.
+    <p class=indented>
+    On the Mac, this gives the password for the %-certfile% certifiate file.
 .
 
 name keyWidth
@@ -1826,6 +1852,7 @@ description
 name keypadOn
 applies x
 type b
+groups a
 default false
 description
     If true, the keypad will automatically appear when %p% is
@@ -2258,6 +2285,9 @@ desc
     input immediately, instead of waiting for the host to send data or
     negotiate 3270 mode. It also causes the default terminal type to be
     <b>xterm</b>.
+    <p class="indented">
+    NVT mode can also be selected per session by prepending an <b>A:</b> onto
+    the hostname.
 .
 
 name onlcr
@@ -2832,16 +2862,6 @@ desc
     X11 displays, selected text is in reverse video.
 .
 
-name selfSignedOk
-applies a
-type b
-default false
-groups s
-description
-    When true, %p% will allow SSL authentication with a host that uses a
-    self-signed certificate.
-.
-
 name showTiming
 applies x
 groups a
@@ -2984,13 +3004,8 @@ type b
 groups s
 default true
 description
-if w
-    If true, %p% will accept TLS negotiations from the host (if the OpenSSL
-    DLLs are installed). If false, it will reject them.
-else
     If true, %p% will accept TLS negotiations from the host. If false, it will
     reject them.
-endif
 .
 
 name trace
@@ -3134,7 +3149,7 @@ endif
 .
 
 name unlockDelay
-applies a
+applies x c wc
 type b
 default true
 desc
@@ -3145,9 +3160,26 @@ desc
     finished processing the command, which can cause scripts to malfunction
     subtly.  To avoid this, %p% implements a hack to briefly delay actually
     unlocking the keyboard.
-    When %-unlockDelay% is true, the keyboard unlock
+    When %-unlockDelay% is true (the default), the keyboard unlock
     will be delayed for %-unlockDelayMs% milliseconds.  Setting it to
-    false removes this delay, except when executing a macro.
+    false removes this delay.
+.
+
+name unlockDelay
+applies s ws tcl
+type b
+default false
+desc
+    When %p% sends the host an AID (the <b>Enter</b>, <b>Clear</b>, <b>PF</b>
+    or <b>PA</b>
+    actions), it locks the keyboard until the host sends a reply to
+    unlock it.  Some hosts unlock the keyboard before they are actually
+    finished processing the command, which can cause scripts to malfunction
+    subtly.  To avoid this, %p% can implement a hack to briefly delay actually
+    unlocking the keyboard.
+    When set to false (the default), there is no delay.
+    When set to true, the keyboard unlock will be delayed for %-unlockDelayMs%
+    milliseconds.
 .
 
 name unlockDelayMs
@@ -3194,13 +3226,17 @@ name verifyHostCert
 applies a
 type b
 groups s
+switch -noverifycert
 switch -verifycert
-default false
+default true
 description
-    If false (the default), %p% will not verify SSL host certificates.
-    If true or if the <b>-verifycert</b> option is given, %p% will verify SSL
-    host certificates, and not allow an SSL or SSL/TLS connection to complete
-    unless the host certificate can be validated.
+    If true (the default), %p% will verify SSL/TLS host certificates, and not
+    allow an SSL/TLS connection to complete unless the host certificate can be
+    validated.
+    If false, %p% will not verify SSL/TLS host certificates.
+    <p class="indented">
+    This resource is overridden by a <b>y:</b> prepended to the hostname when
+    connecting, which disables certificate checking.
 .
 
 name visibleControl

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -79,6 +79,8 @@
 #include "product.h"
 #include "screen.h"
 #include "selectc.h"
+#include "sio.h"
+#include "split_host.h"
 #include "status.h"
 #include "telnet.h"
 #include "telnet_gui.h"
@@ -283,13 +285,9 @@ main(int argc, char *argv[])
     }
 #endif /*]*/
 
-#if !defined(X3270_DBCS) /*[*/
-    /*
-     * Explicitly turn off DBCS, in case the library was built with it but we
-     * weren't. This can happen if the system we were built on does not support
-     * wide curses.
-     */
-    allow_dbcs = false;
+#if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
+    /* Explicitly turn off DBCS if wide curses is not supported. */
+    dbcs_allowed = false;
 #endif /*]*/
 
     /*
@@ -319,6 +317,7 @@ main(int argc, char *argv[])
     toggles_register();
     trace_register();
     xio_register();
+    sio_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);
@@ -395,11 +394,6 @@ main(int argc, char *argv[])
 
     /* Handle initial toggle settings. */
     initialize_toggles();
-
-#if defined(HAVE_LIBSSL) /*[*/
-    /* Initialize SSL and ask for the password, if needed. */
-    ssl_base_init(NULL, NULL);
-#endif /*]*/
 
     if (cl_hostname != NULL) {
 	pause_for_errors();
@@ -959,6 +953,18 @@ hms(time_t ts)
 }
 
 static void
+indent_dump(const char *s)
+{
+    const char *newline;
+
+    while ((newline = strchr(s, '\n')) != NULL) {
+	action_output("    %.*s", (int)(newline - s), s);
+	s = newline + 1;
+    }
+    action_output("    %s", s);
+}
+
+static void
 status_dump(void)
 {
     const char *emode, *ftype, *ts;
@@ -1034,22 +1040,21 @@ status_dump(void)
 	{
 	    action_output("  %s %d", get_message("port"), current_port);
 	}
-#if defined(LOCAL_PROCESS) /*[*/
-#endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-	if (secure_connection) {
-	    action_output("  %s%s%s", get_message("secure"),
-			secure_unverified? ", ": "",
-			secure_unverified? get_message("unverified"): "");
-	    if (secure_unverified) {
-		int i;
+	if (net_secure_connection()) {
+	    const char *session, *cert;
 
-		for (i = 0; unverified_reasons[i] != NULL; i++) {
-		    action_output("   %s", unverified_reasons[i]);
-		}
+	    action_output("  %s%s%s", get_message("secure"),
+			net_secure_unverified()? ", ": "",
+			net_secure_unverified()? get_message("unverified"): "");
+	    if ((session = net_session_info()) != NULL) {
+		action_output("  %s", get_message("sessionInfo"));
+		indent_dump(session);
+	    }
+	    if ((cert = net_server_cert_info()) != NULL) {
+		action_output("  %s", get_message("serverCert"));
+		indent_dump(cert);
 	    }
 	}
-#endif /*]*/
 	ptype = net_proxy_type();
 	if (ptype) {
 	    action_output("  %s %s  %s %s  %s %s",

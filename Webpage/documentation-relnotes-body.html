@@ -1,5 +1,83 @@
-<h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.5</h1>
-3.5 is the current development line for the x3270 suite.
+<h1>Caveats and Known Issues for x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.6</h1>
+
+<h2>Linux</h2>
+<ul>
+ <li>Unity's Terminal app will intercept a number of keys (such as F1) that
+  c3270 needs for 3270 operations. The easiest way to prevent this is to create
+  a profile for c3270, with Shortcuts disabled (from the taskbar, select
+  Preferences from the Terminal menu, then go to the Shortcuts tab and un-check
+  <i>Enable shortcuts</i>). You can also disable or remap individual shortcuts
+  if you find the others useful.</li>
+</ul>
+
+<h2>Windows</h2>
+<ul>
+ <li>Under Windows 10, the console windows that wc3270 runs in will intercept
+ mouse clicks and certain control keys needed by wc3270 for correct operation.
+ To prevent this, you must explicitly disable several console window options
+ for each wc3270 window. Click on the terminal icon in the upper left
+ of the wc3270 window and select Properties. Select the Options tab, and look
+ for the Edit section. Uncheck <i>Quick Edit Mode</i> and <i>Enable Ctrl
+ key Shortcuts</i>.</li>
+</ul>
+
+<h2>MacOS</h2>
+<ul>
+ <li>When running c3270 in a Terminal window, the Backspace key performs the
+  <b>Delete()</b> action (deleting the character under the cursor) instead of
+  the <b>BackSpace()</b> action (deleting the character to the left of the
+  cursor). This is corrected through Terminal's Preferences dialog. Under the
+  Advanced tab, select <i>Delete sends Control-H</i>.</li>
+</ul>
+
+<h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.6</h1>
+3.6 is the current development line for the x3270 suite.
+<h2>Changes in version 3.6alpha1, Nn. Mon 2017</h2>
+<ul>
+ <li>[all] Fixed the <b>unlockDelay</b> resource, which was inadvertently
+  ignored (effectively aways on) for several releases. The value is now
+  <b>false</b> for s3270, ws3270 and tcl3270, and <b>true</b> elsewhere.
+ <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Display the host certificate
+  when the lock icon (x3270) or lock field in the OIA (c3270/wc3270) is
+  clicked.</li>
+ <li>[all] An accept name can now be appended to the hostname using <b>=</b>,
+  e.g., <b>L:myhost.com=myparticularhost.com</b>.</li>
+ <li>The <b>-disable-ssl</b> configure option now applies to Windows.</li>
+ <li>[all Windows] Windows cross-compilers are now tested by the configure
+  script. If they are not found, they will be excluded from the build.
+  </li>
+ <li>[<i>x3270</i>] Fixed pop-up window and keypad placement issues on the
+  Unity desktop, and some crashes related to window movement.</li>
+ <li>[all] Re-enabled the <b>A:</b> host modifier to indicate an NVT-mode host
+  (equivalent to the <b>-nvt</b> command-line option or <b>nvtMode</b>
+  resource).</li>
+ <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Added host certificate
+  display to the x3270 Connection Status dialog and the c3270/wc3270
+  <b>Show(Status)</b> action.</li>
+ <li>[all Unix] Removed explicit support for self-signed host certificates (the
+  <b>-selfsignedok</b> option and <b>selfSignedOk</b> resource). This is
+  because the implementation assumed that being self-signed was the only
+  verification error, while there could be many. To allow self-signed
+  certificates, disable verification.</li>
+ <li>[all] Added support for the <b>Y:</b> host modifier to disable host
+  certificate checking.</li>
+ <li>[all Unix] Removed support for the <b>IP:</b> form of accepting a name
+  in a host certificate.</li>
+ <li>[all Unix] Changed the configure script option to specify the location
+  of the OpenSSL installation from <b>--with-ssl=</b> to <b>with-openssl=</b>.
+  </li>
+ <li>[all Unix] Switched MacOS to use Secure Transport instead of OpenSSL.
+  OpenSSL can still be selected during build with the
+  <b>--disable-stransport</b> option to the configure script.</li>
+ <li>[all] Switched to verifying host certficates by default. This can be
+  disabled by using the <b>-noverifycert</b> opton or by setting the
+  <b>verifyHostCert</b> resource to <b>false</b>.
+ <li>[all Windows] Removed SSL configurations from the Visual Studio
+  project.</li>
+ <li>[all Windows] Switched Windows SSL/TLS from OpenSSL to the native Windows
+  Schannel APIs. This allows secure connections without the need to install a
+  separate set of DLLs.</li>
+</ul>
 <h2>Changes in version 3.5ga11, 26. June 2017</h2>
 <ul>
   <li>[all] Fixed an issue where the web server would reject requests

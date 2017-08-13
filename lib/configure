@@ -600,7 +600,11 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+SSL_MODULES
 LIBX3270DIR
+SSL_LIBS
+SSL_LDFLAGS
+ICONV_LIBS
 USE_ICONV
 EGREP
 GREP
@@ -674,6 +678,8 @@ enable_dbcs
 enable_local_process
 enable_ssl
 enable_ipv6
+enable_stransport
+enable_mock_ssl
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1302,13 +1308,15 @@ Optional Features:
   --disable-apl           leave out APL character support
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
-  --disable-ssl           leave out OpenSSL support
-  --disable-ipv6         leave out IPv6 support
+  --disable-ssl           leave out SSL/TLS support
+  --disable-ipv6          leave out IPv6 support
+  --disable-stransport    use OpenSSL instead of Secure Transport (MacOS)
+  --enable-mock-ssl       use SSL mock for testing
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-ssl=DIR          specify OpenSSL install directory
+  --with-openssl=DIR      specify OpenSSL install directory
   --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead
 
 Some influential environment variables:
@@ -3237,6 +3245,7 @@ solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
 darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED"
+		mac_os=1
 		;;
 linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
@@ -3719,16 +3728,25 @@ fi
 done
 
 
+if test ! "$enable_ssl" = no
+then	use_openssl=yes
+else	use_openssl=no
+fi
+
+if test ! -z "$mac_os" -a "$enable_stransport" != no
+then	use_openssl=no
+fi
+
 
 # Check whether --with-ssl was given.
 if test "${with_ssl+set}" = set; then :
   withval=$with_ssl;
 fi
 
-if test "$enable_ssl" != no
+if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
-	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
 	do	header_fail=0
 		if test -n "$dir" -a ! -d "$dir/include"
 		then	header_fail=1
@@ -3765,7 +3783,7 @@ done
 	if test $header_fail -eq 1
 	then	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling OpenSSL" >&5
 $as_echo "$as_me: WARNING: Disabling OpenSSL" >&2;}
-		enable_ssl="no"
+		use_openssl="no"
 		unset HAVE_LIBSSL
 	fi
 fi
@@ -4103,9 +4121,14 @@ if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 
 else
-  if test "$unkw"; then as_fn_error $? "\"No iconv library function\"" "$LINENO" 5; fi
+  if test "$unkw"; then as_fn_error $? "No iconv library function" "$LINENO" 5; fi
 fi
 
+fi
+
+
+if echo "$LIBS" | grep -e '-liconv\>' >/dev/null
+then	ICONV_LIBS="-liconv"
 fi
 
 
@@ -4189,10 +4212,11 @@ $as_echo "#define HAVE_FSEEKO 1" >>confdefs.h
 fi
 
 
-if test "$enable_ssl" != no
+if test "$use_openssl" != no
 then	orig_LDFLAGS="$LDFLAGS"
+    	orig_LIBS="$LIBS"
 	unset any
-	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	for dir in "$with_openssl" /usr/local /usr/pkg /usr /var /opt
 	do	lib_fail=0
 		if test -n "$dir" -a ! -d "$dir/ssl/lib"
 		then	lib_fail=1
@@ -4204,6 +4228,7 @@ $as_echo "$as_me: retrying with -L$dir/ssl/lib" >&6;}
 		fi
 		if test -n "$dir"
 		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		    	SSL_LDFLAGS=-L$dir/ssl/lib
 		fi
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CRYPTO_malloc in -lcrypto" >&5
 $as_echo_n "checking for CRYPTO_malloc in -lcrypto... " >&6; }
@@ -4307,14 +4332,18 @@ fi
 		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
 		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
 		LDFLAGS="$orig_LDFLAGS"
+		unset SSL_LDFLAGS
 		any=1
 	done
 	if test $lib_fail -eq 1
 	then	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling OpenSSL" >&5
 $as_echo "$as_me: WARNING: Disabling OpenSSL" >&2;}
-		enable_ssl="no"
+		use_openssl="no"
+	else	SSL_LIBS="-lssl -lcrypto"
 	fi
 fi
+
+
 
 LIBX3270DIR='${sysconfdir}/x3270'
 
@@ -4365,10 +4394,41 @@ case "$enable_ipv6" in
 
 	;;
 esac
+# Check whether --enable-stransport was given.
+if test "${enable_stransport+set}" = set; then :
+  enableval=$enable_stransport;
+fi
+
+if test ! -z "$mac_os" -a "$enable_stransport" = no -a "use_openssl" = no
+then	enable_ssl=no
+fi
+if test -z "$mac_os" -a ! -z "$enable_stransport"
+then	as_fn_error $? "--enable-stransport/--disable-stransport is only for MacOS" "$LINENO" 5;
+fi
+# Check whether --enable-mock_ssl was given.
+if test "${enable_mock_ssl+set}" = set; then :
+  enableval=$enable_mock_ssl;
+fi
+
+if test "$enable_mock_ssl" = yes
+then	use_openssl=no
+fi
+
+if test "$enable_mock_ssl" = yes
+then	SSL_MODULES=sio_mock.o
+elif test "$enable_ssl" = no
+then	SSL_MODULES=""
+elif test ! -z "$mac_os" -a "$enable_stransport" != no
+then	SSL_MODULES=sio_secure_transport.o
+	SSL_LIBS="-framework CoreFoundation -framework Security"
+else	SSL_MODULES=sio_openssl.o
+fi
+
+
 
 ac_config_headers="$ac_config_headers include/unix/conf.h"
 
-ac_config_files="$ac_config_files 3270/Makefile 3270/Makefile.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 3270stubs/Makefile 3270stubs/Makefile.obj"
+ac_config_files="$ac_config_files 3270/Makefile 3270/Makefile.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5081,6 +5141,7 @@ do
     "32xx/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 32xx/Makefile.obj" ;;
     "3270stubs/Makefile") CONFIG_FILES="$CONFIG_FILES 3270stubs/Makefile" ;;
     "3270stubs/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 3270stubs/Makefile.obj" ;;
+    "32xx/32xx-deplibs.mk") CONFIG_FILES="$CONFIG_FILES 32xx/32xx-deplibs.mk" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

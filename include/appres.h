@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -32,6 +32,12 @@
  *		Application resource definitions for x3270, c3270, s3270 and
  *		tcl3270.
  */
+
+/*
+ * Alas, a nested #include here, so everyone who wants the appres definitions
+ * does not need to explicitly include ssl_config.h.
+ */
+#include "ssl_config.h"
 
 /* Application resources */
 
@@ -119,20 +125,7 @@ typedef struct {
     } linemode;
 
     /* SSL fields. */
-    struct {
-	char	*ca_dir;
-	char	*ca_file;
-	char	*cert_file;
-	char	*cert_file_type;
-	char	*chain_file;
-	char	*key_file;
-	char	*key_file_type;
-	char	*key_passwd;
-	char	*accept_hostname;
-	bool	 self_signed_ok;
-	bool	 verify_host_cert;
-	bool	 tls;
-    } ssl;
+    ssl_config_t ssl;
 
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {

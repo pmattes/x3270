@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -106,20 +106,6 @@ typedef char bool;			/* roll our own for MSC */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
 
 /*
- * Locale-related definitions.
- * Note that USE_ICONV can be used to override __STDC_ISO_10646__, so that
- * development of iconv-based logic can be done on 10646-compliant systems.
- */
-#if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
-# define UNICODE_WCHAR	1
-#endif /*]*/
-#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
-# undef USE_ICONV
-# define USE_ICONV 1
-# include <iconv.h>
-#endif /*]*/
-
-/*
  * Unicode UCS-4 characters are (hopefully) 32 bits.
  * EBCDIC (including DBCS) is (hopefully) 16 bits.
  */
@@ -170,16 +156,7 @@ typedef unsigned long ks_t;
 #define KS_NONE 0L
 
 /* Host flags. */
-typedef enum {
-    ANSI_HOST,		/* A:, now a no-op */
-    NO_LOGIN_HOST,	/* C: */
-    SSL_HOST,		/* L: */
-    NON_TN3270E_HOST,	/* N: */
-    PASSTHRU_HOST,	/* P: */
-    STD_DS_HOST,	/* S: */
-    BIND_LOCK_HOST	/* B:, now a no-op */
-} host_flags_t;
-#define HOST_FLAG(t)	(host_flags & (1 << t))
+#define HOST_FLAG(t)	HOST_nFLAG(host_flags, t)
 
 /* Simple global variables */
 
@@ -228,11 +205,6 @@ extern char		*qualified_host;
 extern char		*reconnect_host;
 extern int		screen_depth;
 extern bool		scroll_initted;
-#if defined(HAVE_LIBSSL) /*[*/
-extern bool		secure_connection;
-extern bool		secure_unverified;
-extern char		**unverified_reasons;
-#endif /*]*/
 extern bool		shifted;
 extern bool		*standard_font;
 extern char		*termtype;
@@ -256,6 +228,7 @@ extern unsigned		windirs_flags;
 /*   connection state */
 enum cstate {
     NOT_CONNECTED,	/* no socket, unknown mode */
+    SSL_PASS,		/* waiting for interactive SSL password */
     RESOLVING,		/* resolving hostname */
     PENDING,		/* socket connection pending */
     NEGOTIATING,	/* SSL/proxy negotiation in progress */
@@ -269,10 +242,9 @@ enum cstate {
 };
 extern enum cstate cstate;
 
-#define PCONNECTED	((int)cstate >= (int)RESOLVING)
+#define PCONNECTED	(cstate > NOT_CONNECTED)
 #define HALF_CONNECTED	(cstate == RESOLVING || cstate == PENDING)
-#define CONNECTED	((int)cstate >= (int)CONNECTED_INITIAL)
-#define IN_NEITHER	(cstate == NEGOTIATING || cstate == CONNECTED_INITIAL)
+#define CONNECTED	(cstate >= CONNECTED_INITIAL)
 #define IN_NVT		(cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT)
 #define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
 #define IN_SSCP		(cstate == CONNECTED_SSCP)

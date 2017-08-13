@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013, 2015, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,15 +56,6 @@ typedef char bool;                      /* roll our own for MSC */
 #endif /*]*/
 
 #include "localdefs.h"
-
-#if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
-#define UNICODE_WCHAR   1
-#endif /*]*/
-#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
-#undef USE_ICONV
-#define USE_ICONV 1
-#include <iconv.h>
-#endif /*]*/
 
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;

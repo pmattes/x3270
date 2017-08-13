@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -79,6 +79,7 @@
 #include "print_screen.h"
 #include "screen.h"
 #include "selectc.h"
+#include "sio.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -271,6 +272,7 @@ Tcl_AppInit(Tcl_Interp *interp)
     toggles_register();
     trace_register();
     xio_register();
+    sio_register();
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);
@@ -447,10 +449,6 @@ tcl3270_main(int argc, const char *argv[])
 
     /* Handle initial toggle settings. */
     initialize_toggles();
-
-#if defined(HAVE_LIBSSL) /*[*/
-    ssl_base_init(NULL, NULL);
-#endif /*]*/
 
     /* Connect to the host, and wait for negotiation to complete. */
     if (cl_hostname != NULL) {
@@ -1791,6 +1789,16 @@ idle_ft_complete(void)
 void
 idle_ft_start(void)
 {
+}
+
+/**
+ * Set product-specific appres defaults.
+ */
+void
+product_set_appres_defaults(void)
+{
+    appres.oerr_lock = true;
+    appres.unlock_delay = false;
 }
 
 /**

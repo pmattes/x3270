@@ -128,7 +128,16 @@ win32_strerror(int e)
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 	    buffer,
 	    sizeof(buffer),
-	    NULL) == 0) {
+	    NULL)) {
+	size_t sl;
+	char c;
+
+	/* Get rid of trailing CRLF. */
+	while ((sl = strlen(buffer)) > 0 &&
+		((c = buffer[sl - 1]) == '\r' || c == '\n')) {
+	    buffer[sl - 1] = '\0';
+	}
+    } else {
 	sprintf(buffer, "Windows error %d", e);
     }
 

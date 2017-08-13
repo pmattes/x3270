@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2010, 2013-2016 Paul Mattes.
+# Copyright (c) 1999-2010, 2013-2017 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,6 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-OBJ = o
 HOST = @host@
 include pr3287_files.mk libs.mk
 OBJECTS = $(PR3287_OBJECTS)
@@ -59,8 +58,8 @@ version.o: mkversion.sh $(OBJECTS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-pr3287: $(OBJECTS) version.o $(DEP32XX)
-	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) $(LD32XX)
+pr3287: $(OBJECTS) version.o $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \

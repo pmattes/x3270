@@ -1,14 +1,4 @@
 # Common definitions for Windows makefiles.
-#
-# Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/OpenSSL-Win32-1_1_0c
-HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
-ifeq ($(HAVE_OPENSSL),yes)
-ifndef NO_SSL
-SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
-endif
-endif
 
 # Set the MinGW tools prefix and the _WIN32/64 symbols based on the WIN64
 # environment variable.

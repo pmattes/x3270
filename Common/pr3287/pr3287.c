@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2016 Paul Mattes.
+ * Copyright (c) 2000-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  *
  *	pr3287 [options] [lu[,lu...]@]host[:port]
  *	Options are:
- *	    -accepthostname any|DNS:name|IP:address
+ *	    -accepthostname any|[DNS:]name|address
  *	        accept any certificate hostname, or a specific name, or an
  *	        IP address
  *	    -assoc session
@@ -40,6 +40,7 @@
  *	    -certfile file
  *	    -certfiletype type
  *	    -chainfile file
+ *	    -clientcert name
  *	    -command "string"
  *		command to use to print (default "lpr", POSIX only)
  *          -charset name
@@ -72,6 +73,8 @@
  *              set the maximum presentation position (unformatted line length)
  *          -nocrlf
  *		expand newlines to CR/LF (Windows only)
+ *          -noverifycert
+ *          	do not verify host certificates for SSL or SSL/TLS connections
  *	    -printer "printer name"
  *	        printer to use (default is $PRINTER or system default,
  *	        Windows only)
@@ -135,10 +138,15 @@
 #include "trace.h"
 #include "ctlrc.h"
 #include "popups.h"
+#include "pr3287.h"
 #include "proxy.h"
 #include "pr_telnet.h"
 #include "resolver.h"
+#include "resources.h"
+#include "sio.h"
+#include "split_host.h"
 #include "telnet_core.h"
+#include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
 #include "xtablec.h"
@@ -148,8 +156,6 @@
 # include "wsc.h"
 # include "windirs.h"
 #endif /*]*/
-
-#include "pr3287.h"
 
 #if defined(_IOLBF) /*[*/
 # define SETLINEBUF(s)	setvbuf(s, NULL, _IOLBF, BUFSIZ)
@@ -182,27 +188,55 @@ const char *build_options(void);
 static void
 usage(void)
 {
-	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s%s%s%s%s%s%s%s%s", programname,
-#if defined(HAVE_LIBSSL) /*[*/
-"  -accepthostname any|DNS:name|IP:addr\n"
-"                   accept any name, specific name or address in host cert\n"
+    unsigned ssl_options = sio_options_supported();
+
+    (void) fprintf(stderr,
+	    "usage: %s [options] [lu[,lu...]@]host[:port]\nOptions:\n",
+	    programname);
+    (void) fprintf(stderr,
+#if defined(_WIN32) /*[*/
+"  -accepthostname name\n"
+"                   accept a specific name in host cert\n"
+#else /*][*/
+"  -accepthostname any|name\n"
+"                   accept any name, or a specific name in host cert\n"
 #endif /*]*/
-"  -assoc <session> associate with a session (TN3270E only)\n",
-#if defined(HAVE_LIBSSL) /*[*/
-"  -cadir <dir>     find CA certificate database in <dir>\n"
-"  -cafile <file>   find CA certificates in <file>\n"
-"  -certfile <file> find client certificate in <file>\n"
-"  -certfiletype pem|asn1\n"
-"                   specify client certificate file type\n"
-"  -chainfile <file>\n"
-"                   specify client certificate chain file\n"
-#endif /*]*/
-"  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings\n",
+    );
+    (void) fprintf(stderr,
+"  -assoc <session> associate with a session (TN3270E only)\n");
+    if (ssl_options & SSL_OPT_CA_DIR) {
+	(void) fprintf(stderr,
+"  " OptCaDir " <dir>     find CA certificate database in <dir>\n");
+    }
+    if (ssl_options & SSL_OPT_CA_FILE) {
+	(void) fprintf(stderr,
+"  " OptCaFile " <file>   find CA certificates in <file>\n");
+    }
+    if (ssl_options & SSL_OPT_CERT_FILE) {
+	(void) fprintf(stderr,
+"  " OptCertFile " <file> find client certificate in <file>\n");
+    }
+    if (ssl_options & SSL_OPT_CERT_FILE_TYPE) {
+	(void) fprintf(stderr,
+"  " OptCertFileType " pem|asn1\n"
+"                   specify client certificate file type\n");
+    }
+    if (ssl_options & SSL_OPT_CHAIN_FILE) {
+	(void) fprintf(stderr,
+"  " OptChainFile " <file>\n"
+"                   specify client certificate chain file\n");
+    }
+    (void) fprintf(stderr,
+"  " OptCharset " <name>  use built-in alternate EBCDIC-to-ASCII mappings\n");
+    if (ssl_options & SSL_OPT_CLIENT_CERT) {
+	(void) fprintf(stderr,
+"  " OptClientCert " <name> use SSL/TLS client certificate <name>\n");
+    }
+    (void) fprintf(stderr,
 #if !defined(_WIN32) /*[*/
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
-"  -blanklines      display blank lines even if empty (formatted LU3)\n",
+"  -blanklines      display blank lines even if empty (formatted LU3)\n"
 #if !defined(_WIN32) /*[*/
 "  -daemon          become a daemon after connecting\n"
 #endif /*]*/
@@ -217,20 +251,29 @@ usage(void)
 #endif /*]*/
 "  -crthru          pass through CRs in unformatted 3270 mode\n"
 "  -eojtimeout <seconds>\n"
-"                   time out end of print job\n",
+"                   time out end of print job\n"
 "  -ffeoj           assume FF at the end of each print job\n"
-"  -ffthru          pass through SCS FF orders\n",
-"  -ffskip          skip FF orders at top of page\n"
-#if defined(HAVE_LIBSSL) /*[*/
-"  -keyfile <file>  find certificate private key in <file>\n"
-"  -keyfiletype pem|asn1\n"
-"                   specify private key file type\n"
-"  -keypasswd file:<file>|string:<string>\n"
-"                   specify private key password\n"
-#endif /*]*/
-"  -ignoreeoj       ignore PRINT-EOJ commands\n",
+"  -ffthru          pass through SCS FF orders\n"
+"  -ffskip          skip FF orders at top of page\n");
+    if (ssl_options & SSL_OPT_KEY_FILE) {
+	(void) fprintf(stderr,
+"  " OptKeyFile " <file>  find certificate private key in <file>\n");
+    }
+    if (ssl_options & SSL_OPT_KEY_FILE_TYPE) {
+	(void) fprintf(stderr,
+"  " OptKeyFileType " pem|asn1\n"
+"                   specify private key file type\n");
+    }
+    if (ssl_options & SSL_OPT_KEY_PASSWD) {
+	(void) fprintf(stderr,
+"  " OptKeyPasswd " file:<file>|string:<string>\n"
+"                   specify private key password\n");
+    }
+    (void) fprintf(stderr,
+"  -ignoreeoj       ignore PRINT-EOJ commands\n"
 "  -mpp <n>         define the Maximum Presentation Position (unformatted\n"
 "                   line length)\n"
+"  " OptNoVerifyHostCert "    do not verify host certificate for SSL/TLS connections\n"
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
@@ -240,28 +283,23 @@ usage(void)
 #endif /*]*/
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
-"  -reconnect       keep trying to reconnect\n",
-#if defined(HAVE_LIBSSL) /*[*/
-"  -selfsignedok    allow self-signed host SSL certificates\n"
-#endif /*]*/
+"  " OptReconnect "       keep trying to reconnect\n");
+    (void) fprintf(stderr,
 "  -skipcc          skip ASA carriage control characters in unformatted host\n"
 "                   output\n"
 "  -syncport port   TCP port for login session synchronization\n"
 #if defined(_WIN32) /*[*/
-"  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
+"  " OptTrace "           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n"
 #else /*][*/
-"  -trace           trace data stream to /tmp/x3trc.<pid>\n",
+"  " OptTrace "           trace data stream to /tmp/x3trc.<pid>\n"
 #endif /*]*/
 "  -tracedir <dir>  directory to keep trace information in\n"
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n"
-#if defined(HAVE_LIBSSL) /*[*/
-"  -verfycert       verify host certificate for SSL and SSL/TLS connections\n"
-#endif /*]*/
+"  " OptVerifyHostCert "      verify host certificate for SSL/TLS connections (enabled by default)\n"
 "  -V               log verbose information about connection negotiation\n"
-"  -xtable <file>   specify a custom EBCDIC-to-ASCII translation table\n"
-);
+"  -xtable <file>   specify a custom EBCDIC-to-ASCII translation table\n");
 	pr3287_exit(1);
 }
 
@@ -283,7 +321,7 @@ verrmsg(const char *fmt, va_list ap)
 	}
 #if !defined(_WIN32) /*[*/
 	if (options.bdaemon == AM_DAEMON) {
-		/* XXX: Need to put somethig in the Application Event Log. */
+		/* XXX: Need to put something in the Application Event Log. */
 		syslog(LOG_ERR, "%s: %s", programname, buf[ix]);
 	} else {
 #endif /*]*/
@@ -446,7 +484,6 @@ init_options(void)
 	options.reconnect		= 0;
 	options.skipcc			= 0;
 	options.mpp			= DEFAULT_UNF_MPP;
-#if defined(HAVE_LIBSSL) /*[*/
 	options.ssl.accept_hostname	= NULL;
 	options.ssl.ca_dir		= NULL;
 	options.ssl.ca_file		= NULL;
@@ -456,10 +493,9 @@ init_options(void)
 	options.ssl.key_file		= NULL;
 	options.ssl.key_file_type	= NULL;
 	options.ssl.key_passwd		= NULL;
-	options.ssl.self_signed_ok	= 0;
-	options.ssl.ssl_host		= 0;
-	options.ssl.verify_cert		= 0;
-#endif /*]*/
+	options.ssl.client_cert		= NULL;
+	options.ssl_host		= false;
+	options.ssl.verify_host_cert	= true;
 	options.syncport		= 0;
 #if !defined(_WIN32) /*[*/
 	options.tracedir		= "/tmp";
@@ -476,11 +512,12 @@ int
 main(int argc, char *argv[])
 {
 	int i;
-	char *at, *colon;
-	size_t len;
 	char *lu = NULL;
 	char *host = NULL;
 	char *port = "23";
+	char *accept = NULL;
+	unsigned prefixes;
+	char *error;
 	char *xtable = NULL;
 	unsigned short p;
 	union {
@@ -494,6 +531,7 @@ main(int argc, char *argv[])
 	socket_t s = INVALID_SOCKET;
 	int rc = 0;
 	int report_success = 0;
+	unsigned ssl_options = sio_options_supported();
 
 	/* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -526,18 +564,16 @@ main(int argc, char *argv[])
 			options.bdaemon = WILL_DAEMON;
 		else
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-		if (!strcmp(argv[i], "-accepthostname")) {
+		if (!strcmp(argv[i], OptAcceptHostname)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -accepthostname\n");
+				    "Missing value for "
+				    OptAcceptHostname "\n");
 				usage();
 			}
 			options.ssl.accept_hostname = argv[i + 1];
 			i++;
-		} else
-#endif /*]*/
-		if (!strcmp(argv[i], "-assoc")) {
+		} else if (!strcmp(argv[i], "-assoc")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -assoc\n");
@@ -545,9 +581,8 @@ main(int argc, char *argv[])
 			}
 			options.assoc = argv[i + 1];
 			i++;
-		} else
 #if !defined(_WIN32) /*[*/
-		if (!strcmp(argv[i], "-command")) {
+		} else if (!strcmp(argv[i], "-command")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -command\n");
@@ -555,79 +590,92 @@ main(int argc, char *argv[])
 			}
 			options.command = argv[i + 1];
 			i++;
-		} else
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-		if (!strcmp(argv[i], "-cadir")) {
+		} else if ((ssl_options & SSL_OPT_CA_DIR) &&
+			!strcmp(argv[i], OptCaDir)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -cadir\n");
+				    "Missing value for " OptCaDir "\n");
 				usage();
 			}
 			options.ssl.ca_dir = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-cafile")) {
+		} else if ((ssl_options & SSL_OPT_CA_FILE) &&
+			!strcmp(argv[i], OptCaFile)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -cafile\n");
+				    "Missing value for " OptCaFile "\n");
 				usage();
 			}
 			options.ssl.ca_file = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-certfile")) {
+		} else if ((ssl_options & SSL_OPT_CERT_FILE) &&
+			!strcmp(argv[i], OptCertFile)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -certfile\n");
+				    "Missing value for " OptCertFile "\n");
 				usage();
 			}
 			options.ssl.cert_file = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-certfiletype")) {
+		} else if ((ssl_options & SSL_OPT_CERT_FILE_TYPE) &&
+			!strcmp(argv[i], OptCertFileType)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -certfiletype\n");
+				    "Missing value for " OptCertFileType "\n");
 				usage();
 			}
 			options.ssl.cert_file_type = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-chainfile")) {
+		} else if ((ssl_options & SSL_OPT_CHAIN_FILE) &&
+			!strcmp(argv[i], OptChainFile)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -chainfile\n");
+				    "Missing value for " OptChainFile "\n");
 				usage();
 			}
 			options.ssl.chain_file = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-keyfile")) {
+		} else if ((ssl_options & SSL_OPT_KEY_FILE) &&
+			!strcmp(argv[i], OptKeyFile)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -keyfile\n");
+				    "Missing value for " OptKeyFile "\n");
 				usage();
 			}
 			options.ssl.key_file = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-keyfiletype")) {
+		} else if ((ssl_options & SSL_OPT_KEY_FILE_TYPE) &&
+			!strcmp(argv[i], OptKeyFileType)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -keyfiletype\n");
+				    "Missing value for " OptKeyFileType "\n");
 				usage();
 			}
 			options.ssl.key_file_type = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-keypasswd")) {
+		} else if ((ssl_options & SSL_OPT_KEY_PASSWD) &&
+			!strcmp(argv[i], OptKeyPasswd)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -keypasswd\n");
+				    "Missing value for " OptKeyPasswd "\n");
 				usage();
 			}
 			options.ssl.key_passwd = argv[i + 1];
 			i++;
-		} else
-#endif /*]*/
-		if (!strcmp(argv[i], "-charset")) {
+		} else if ((ssl_options & SSL_OPT_CLIENT_CERT) &&
+			!strcmp(argv[i], OptClientCert)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -charset\n");
+				    "Missing value for " OptClientCert "\n");
+				usage();
+			}
+			options.ssl.client_cert = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], OptCharset)) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for " OptCharset "\n");
 				usage();
 			}
 			options.charset = argv[i + 1];
@@ -695,12 +743,10 @@ main(int argc, char *argv[])
 				usage();
 			}
 			i++;
-		} else if (!strcmp(argv[i], "-reconnect")) {
+		} else if (!strcmp(argv[i], OptNoVerifyHostCert)) {
+		    	options.ssl.verify_host_cert = false;
+		} else if (!strcmp(argv[i], OptReconnect)) {
 			options.reconnect = 1;
-#if defined(HAVE_LIBSSL) /*[*/
-		} else if (!strcmp(argv[i], "-selfsignedok")) {
-		    	options.ssl.self_signed_ok = 1;
-#endif /*]*/
 		} else if (!strcmp(argv[i], "-v")) {
 			printf("%s\n%s\n", build, build_options());
 			charset_list();
@@ -710,10 +756,8 @@ See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			exit(0);
-#if defined(HAVE_LIBSSL) /*[*/
-		} else if (!strcmp(argv[i], "-verifycert")) {
-		    	options.ssl.verify_cert = 1;
-#endif /*]*/
+		} else if (!strcmp(argv[i], OptVerifyHostCert)) {
+		    	options.ssl.verify_host_cert = true;
 		} else if (!strcmp(argv[i], "-V")) {
 			options.verbose = 1;
 		} else if (!strcmp(argv[i], "-syncport")) {
@@ -724,7 +768,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			}
 			options.syncport = (int)strtoul(argv[i + 1], NULL, 0);
 			i++;
-		} else if (!strcmp(argv[i], "-trace")) {
+		} else if (!strcmp(argv[i], OptTrace)) {
 			options.tracing = 1;
 		} else if (!strcmp(argv[i], "-tracedir")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -750,10 +794,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			}
 			options.trnpost = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], "-proxy")) {
+		} else if (!strcmp(argv[i], OptProxy)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -proxy\n");
+				    "Missing value for " OptProxy "\n");
 				usage();
 			}
 			options.proxy_spec = argv[i + 1];
@@ -780,65 +824,36 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	 * Pick apart the hostname, LUs and port.
 	 * We allow "L:" and "<luname>@" in either order.
 	 */
-	host = argv[i];
-#if defined(HAVE_LIBSSL) /*[*/
-	while (!strncasecmp(host, "l:", 2)) {
-		options.ssl.ssl_host = true;
-		host += 2;
+	if (!new_split_host(argv[i],  &lu, &host, &port, &accept, &prefixes,
+		    &error)) {
+	    (void) fprintf(stderr, "%s\n", error);
+	    pr3287_exit(1);
 	}
-#endif /*]*/
-	if ((at = strchr(host, '@')) != NULL) {
-		len = at - host;
-		if (!len)
-			usage();
-		lu = Malloc(len + 1);
-		(void) strncpy(lu, host, len);
-		lu[len] = '\0';
-		host = at + 1;
-	}
-#if defined(HAVE_LIBSSL) /*[*/
-	while (!strncasecmp(host, "l:", 2)) {
-		options.ssl.ssl_host = true;
-		host += 2;
-	}
-#endif /*]*/
-	if (!*host) {
-		usage();
+	if (port == NULL) {
+	    port = "23";
 	}
 
-	/*
-	 * Allow the hostname to be enclosed in '[' and ']' to quote any
-	 * IPv6 numeric-address ':' characters.
-	 */
-	if (host[0] == '[') {
-		char *tmp;
-		char *rbracket;
+	if (HOST_nFLAG(prefixes, SSL_HOST)) {
+	    options.ssl_host = true;
+	}
+	if (HOST_nFLAG(prefixes, NO_VERIFY_CERT_HOST)) {
+	    options.ssl.verify_host_cert = false;
+	}
+	if (accept != NULL) {
+	    options.ssl.accept_hostname = accept;
+	}
 
-		rbracket = strchr(host+1, ']');
-		if (rbracket != NULL) {
-			len = rbracket - (host+1);
-			tmp = Malloc(len + 1);
-			(void) strncpy(tmp, host+1, len);
-			tmp[len] = '\0';
-			host = tmp;
-		}
-		if (*(rbracket + 1) == ':') {
-			port = rbracket + 2;
-		}
-	} else {
-		colon = strchr(host, ':');
-		if (colon != NULL) {
-			char *tmp;
+	if (HOST_nFLAG(prefixes, NO_LOGIN_HOST) ||
+		HOST_nFLAG(prefixes, NON_TN3270E_HOST) ||
+		HOST_nFLAG(prefixes, PASSTHRU_HOST) ||
+		HOST_nFLAG(prefixes, STD_DS_HOST) ||
+		HOST_nFLAG(prefixes, BIND_LOCK_HOST)) {
+	    usage();
+	}
 
-			len = colon - host;
-			if (!len || !*(colon + 1))
-				usage();
-			port = colon + 1;
-			tmp = Malloc(len + 1);
-			(void) strncpy(tmp, host, len);
-			tmp[len] = '\0';
-			host = tmp;
-		}
+	if (options.ssl_host && !sio_supported()) {
+	    (void) fprintf(stderr, "Secure connections not supported.\n");
+	    pr3287_exit(1);
 	}
 
 #if defined(_WIN32) /*[*/
@@ -956,10 +971,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		}
 	}
 
-#if defined(HAVE_LIBSSL) /*[*/
-	pr_ssl_base_init();
-#endif /*]*/
-
 #if !defined(_WIN32) /*[*/
 	/* Become a daemon. */
 	if (options.bdaemon != NOT_DAEMON) {
@@ -1039,8 +1050,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			if (resolve_host_and_port(proxy_host, proxy_portname,
 				    0, &proxy_port, &ha.sa, &ha_len, &errtxt,
 				    NULL) < 0) {
-			    popup_an_error("%s/%s: %s", proxy_host,
-				    proxy_portname, errtxt);
+			    popup_an_error("%s", errtxt);
 			    rc = 1;
 			    goto retry;
 			}
@@ -1060,7 +1070,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		} else {
 			if (resolve_host_and_port(host, port, 0, &p, &ha.sa,
 				    &ha_len, &errtxt, NULL) < 0) {
-			    popup_an_error("%s/%s: %s", host, port, errtxt);
+			    popup_an_error("%s", errtxt);
 			    rc = 1;
 			    goto retry;
 			}
@@ -1097,12 +1107,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		if (options.verbose) {
 			(void) fprintf(stderr, "Connected to %s, port %u%s\n",
 			    host, p,
-#if defined(HAVE_LIBSSL) /*[*/
-			    options.ssl.ssl_host? " via SSL": ""
-#else /*][*/
-			    ""
-#endif /*]*/
-			    					);
+			    options.ssl_host? " via SSL": "");
 			if (options.assoc != NULL)
 				(void) fprintf(stderr, "Associating with LU "
 				    "%s\n", options.assoc);
@@ -1119,12 +1124,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 		}
 		vtrace("Connected to %s, port %u%s\n", host, p,
-#if defined(HAVE_LIBSSL) /*[*/
-			options.ssl.ssl_host? " via SSL": ""
-#else /*][*/
-			""
-#endif /*]*/
-							    );
+			options.ssl_host? " via SSL": "");
 		if (options.assoc != NULL) {
 			vtrace("Associating with LU %s\n", options.assoc);
 		} else if (lu != NULL) {
@@ -1167,7 +1167,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 		/* Close the socket. */
 		if (s != INVALID_SOCKET) {
-			net_disconnect();
+			net_disconnect(true);
 			s = INVALID_SOCKET;
 		}
 
@@ -1228,22 +1228,16 @@ popup_an_errno(int err, const char *fmt, ...)
 const char *
 build_options(void)
 {
-    	return "Build options:"
+    const char *build = NULL;
+
+    if (build == NULL) {
+    	build = xs_buffer("Build options:"
 #if defined(X3270_DBCS) /*[*/
 	    " --enable-dbcs"
 #else /*][*/
 	    " --disable-dbcs"
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-	    " --with-ssl"
-#else /*][*/
-	    " --without-ssl"
-#endif /*]*/
-#if defined(USE_ICONV) /*[*/
-	    " --with-iconv"
-#else /*][*/
-	    " --without-iconv"
-#endif /*]*/
+	    "%s"
 #if defined(_MSC_VER) /*[*/
 	    " via MSVC " xstr(_MSC_VER)
 #endif /*]*/
@@ -1255,6 +1249,7 @@ build_options(void)
 #else /*][*/
 	    " 32-bit"
 #endif /*]*/
-
-	    ;
+	    , using_iconv()? " -with-iconv": "");
+    }
+    return build;
 }

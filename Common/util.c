@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -42,6 +42,7 @@
 #include "charset.h"
 #include "lazya.h"
 #include "product.h"
+#include "unicodec.h"
 #include "varbuf.h"
 
 #include "utils.h"
@@ -799,7 +800,7 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s%s",
+    return lazyaf("%s%s%s%s",
 	    "Build options:"
 #if defined(X3270_DBCS) /*[*/
 	    " --enable-dbcs"
@@ -811,16 +812,7 @@ build_options(void)
 #else /*][*/
 	    " --disable-local-process"
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-	    " --with-ssl"
-#else /*][*/
-	    " --without-ssl"
-#endif /*]*/
-	    , p,
-
-#if defined(USE_ICONV) /*[*/
-	    " --with-iconv"
-#endif /*]*/
+	    , p, using_iconv()? " --with-iconv": "",
 #if defined(_MSC_VER) /*[*/
 	    " via MSVC " xstr(_MSC_VER)
 #endif /*]*/

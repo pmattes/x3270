@@ -55,15 +55,6 @@
 # include <netdb.h>
 #endif /*]*/
 #include <stdint.h>
-#if defined(HAVE_LIBSSL) /*[*/
-# if defined(_WIN32) /*[*/
-#  include "ssl_dll.h"
-# endif /*]*/
-# include <openssl/ssl.h>
-# include <openssl/err.h>
-# include <openssl/conf.h>
-# include <openssl/x509v3.h>
-#endif /*]*/
 #include "tn3270e.h"
 #include "3270ds.h"
 
@@ -73,6 +64,7 @@
 #include "b8.h"
 #include "ctlrc.h"
 #include "host.h"
+#include "indent_s.h"
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
@@ -81,21 +73,21 @@
 #include "popups.h"
 #include "proxy.h"
 #include "resolver.h"
+#include "sio.h"
+#include "sioc.h"
+#include "split_host.h"
 #include "ssl_passwd_gui.h"
 #include "status.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "telnet_gui.h"
 #include "telnet_private.h"
+#include "telnet_sio.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "w3misc.h"
 #include "xio.h"
-
-#if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
-# define ROOT_CERTS	"root_certs.txt"
-#endif /*]*/
 
 #if !defined(TELOPT_NAWS) /*[*/
 # define TELOPT_NAWS	31
@@ -106,7 +98,7 @@
 #endif /*]*/
 #define TLS_FOLLOWS	1
 
-#define BUFSZ		16384
+#define BUFSZ		32768
 #define TRACELINE	72
 
 #define N_OPTS		256
@@ -184,6 +176,9 @@ static char	*proxy_portname = NULL;
 static unsigned short proxy_port = 0;
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
+
+static bool	secure_connection;
+static char	*net_accept;
 
 static bool telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, size_t len);
@@ -264,40 +259,15 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define XMIT_COLS	maxCOLS
 #endif /*]*/
 
-static int ssl_init(void);
+sio_t sio = NULL;
 
-#if defined(HAVE_LIBSSL) /*[*/
-bool ssl_supported = true;
-const char *unsupported_reason = "SSL DLLs not found";
-bool secure_connection = false;
-bool secure_unverified = false;
-char **unverified_reasons = NULL;
-static int n_unverified_reasons = 0;
-SSL_CTX *ssl_ctx;
-static SSL *ssl_con;
-static bool need_tls_follows = false;
-char *ssl_cl_hostname;
-bool *ssl_pending;
-static bool accept_specified_host;
-static char *accept_dnsname;
-struct in_addr host_inaddr;
-static bool host_inaddr_valid;
-# if defined(X3270_IPV6) /*[*/
-struct in6_addr host_in6addr;
-static bool host_in6addr_valid;
-# endif /*]*/
-# if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
-#  define INFO_CONST const
-# else /*][*/
-#  define INFO_CONST
-# endif /*]*/
-static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
-static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
-	unsigned char *v4addr, unsigned char *v6addr);
-#endif /*]*/
 static bool refused_tls = false;
+static bool nested_tls = false;
 static bool any_host_data = false;
+static bool need_tls_follows = false;
+
+static bool net_connect_pending;
 
 #if !defined(_WIN32) /*[*/
 static void output_possible(iosrc_t fd, ioid_t id);
@@ -349,9 +319,6 @@ static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
-#if defined(HAVE_LIBSSL) /*[*/
-static bool hin[NUM_HA];
-#endif /*]*/
 static int num_ha = 0;
 static int ha_ix = 0;
 
@@ -406,28 +373,6 @@ connect_to(int ix, bool noisy, bool *pending)
     			  return INVALID_IOSRC; \
 			}
 
-#if defined(HAVE_LIBSSL) /*[*/
-    /* Set host_inaddr and host_in6addr for IP address validation. */
-    if (!accept_specified_host && hin[ix]) {
-	if (haddr[ix].sa.sa_family == AF_INET) {
-	    memcpy(&host_inaddr, &haddr[ix].sin.sin_addr,
-		    sizeof(struct in_addr));
-	    host_inaddr_valid = true;
-# if defined(X3270_IPV6) /*[*/
-	    host_in6addr_valid = false;
-# endif /*]*/
-	}
-#if defined(X3270_IPV6) /*[*/
-	if (haddr[ix].sa.sa_family == AF_INET6) {
-	    memcpy(&host_in6addr, &haddr[ix].sin6.sin6_addr,
-		    sizeof(struct in6_addr));
-	    host_in6addr_valid = true;
-	    host_inaddr_valid = false;
-	}
-#endif /*]*/
-    }
-#endif /*]*/
-
     /* create the socket */
     if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) ==
 	    INVALID_SOCKET) {
@@ -454,10 +399,10 @@ connect_to(int ix, bool noisy, bool *pending)
     }
 #endif /*]*/
 
-	/* set the socket to be non-delaying */
-	if (non_blocking(true) < 0) {
-		close_fail;
-	}
+    /* set the socket to be non-delaying */
+    if (non_blocking(true) < 0) {
+	close_fail;
+    }
 
 #if !defined(_WIN32) /*[*/
     /* don't share the socket with our children */
@@ -466,7 +411,8 @@ connect_to(int ix, bool noisy, bool *pending)
 
     /* init ssl */
     if (HOST_FLAG(SSL_HOST)) {
-	if (ssl_init() < 0) {
+	if (!sio_supported()) {
+	    popup_an_error("SSL/TLS not supported\n");
 	    close_fail;
 	}
     }
@@ -532,42 +478,15 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 }
 
-#if defined(HAVE_LIBSSL) /*[*/
-static bool
-is_numeric_host(const char *host)
-{
-	/* Is it an IPv4 address? */
-	if (inet_addr(host) != (INET_ADDR_T)-1)
-		return true;
-
-# if defined(X3270_IPV6) /*[*/
-	/*
-	 * Is it an IPv6 address?
-	 *
-	 * The test here is imperfect, but a DNS name can't contain a colon,
-	 * so if the name contains one, and getaddrinfo() succeeds, we can
-	 * assume it is a numeric IPv6 address.  We add an extra level of
-	 * insurance, that it only contains characters that are valid in an
-	 * IPv6 numeric address (hex digits, colons and periods).
-	 */
-	if (strchr(host, ':') &&
-	    strspn(host, ":.0123456789abcdefABCDEF") == strlen(host))
-		return true;
-# endif /*]*/
-
-	return false;
-}
-#endif /*]*/
-
 /*
  * net_connect
  *	Establish a telnet socket to the given host passed as an argument.
  *	Called only once and is responsible for setting up the telnet
  *	variables.  Returns the file descriptor of the connected socket.
  */
-iosrc_t
-net_connect(const char *host, char *portname, bool ls, bool *resolving,
-    bool *pending)
+net_connect_t
+net_connect(const char *host, char *portname, char *accept, bool ls,
+	iosrc_t *iosrc)
 {
     struct servent       *sp;
     struct hostent       *hp;
@@ -576,9 +495,8 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
     unsigned short	passthru_port = 0;
     char		*errmsg;
     iosrc_t		s;
-#if defined(HAVE_LIBSSL) /*[*/
-    bool		inh;
-#endif /*]*/
+
+    *iosrc = INVALID_IOSRC;
 
     if (netrbuf == NULL) {
 	netrbuf = (unsigned char *)Malloc(BUFSZ);
@@ -586,25 +504,12 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 
     linemode_init();
 
-    *resolving = false;
-    *pending = false;
-
     Replace(hostname, NewString(host));
-#if defined(HAVE_LIBSSL) /*[*/
-    if (!accept_specified_host) {
-	host_inaddr_valid = false;
-# if defined(X3270_IPV6) /*[*/
-	host_in6addr_valid = false;
-# endif /*]*/
-	inh = is_numeric_host(host);
-    } else {
-	inh = false;
-    }
-#endif /*]*/
+    net_accept = accept;
 
     /* set up temporary termtype */
     if (appres.termname == NULL) {
-	if (appres.nvt_mode) {
+	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    termtype = "xterm";
 	} else if (ov_rows || ov_cols) {
 	    termtype = "IBM-DYNAMIC";
@@ -629,7 +534,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 	hp = gethostbyname(hn);
 	if (hp == (struct hostent *) 0) {
 	    popup_an_error("Unknown passthru host: %s", hn);
-	    return INVALID_IOSRC;
+	    return NC_FAILED;
 	}
 	(void) memmove(passthru_haddr, hp->h_addr, hp->h_length);
 	passthru_len = hp->h_length;
@@ -653,7 +558,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 		if (!(sp = getservbyname(portname, "tcp"))) {
 		    popup_an_error("Unknown port number or service: %s",
 			    portname);
-		    return INVALID_IOSRC;
+		    return NC_FAILED;
 		}
 		current_port = ntohs(sp->s_port);
 	    } else {
@@ -661,7 +566,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 	    }
 	}
 	if (proxy_type < 0) {
-	    return INVALID_IOSRC;
+	    return NC_FAILED;
 	}
     }
 
@@ -676,9 +581,6 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 	(void) memmove(&haddr[0].sin.sin_addr, passthru_haddr, passthru_len);
 	haddr[0].sin.sin_port = passthru_port;
 	ha_len[0] = sizeof(struct sockaddr_in);
-#if defined(HAVE_LIBSSL) /*[*/
-	hin[0] = false;
-#endif /*]*/
 	num_ha = 1;
 	ha_ix = 0;
     } else if (proxy_type > 0) {
@@ -692,11 +594,8 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 		&haddr[0].sa, &ha_len[0], &errmsg, NULL);
 	if (RHP_IS_ERROR(rv)) {
 	    popup_an_error("%s", errmsg);
-	    return INVALID_IOSRC;
+	    return NC_FAILED;
 	}
-#if defined(HAVE_LIBSSL) /*[*/
-	hin[0] = false;
-#endif /*]*/
 	num_ha = 1;
 	ha_ix = 0;
     } else {
@@ -718,11 +617,8 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 			&haddr[i].sa, &ha_len[i], &errmsg, &last);
 		if (RHP_IS_ERROR(rv)) {
 		    popup_an_error("%s", errmsg);
-		    return INVALID_IOSRC;
+		    return NC_FAILED;
 		}
-#if defined(HAVE_LIBSSL) /*[*/
-		hin[i] = inh;
-#endif /*]*/
 		num_ha++;
 	    }
 	    ha_ix = 0;
@@ -765,21 +661,41 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 	    host_in3270(CONNECTED_NVT);
 	    break;
 	}
-	return sock;
+	*iosrc = sock;
+	return NC_CONNECTED;
     }
 #endif /*]*/
 
+    /* Set up the SSL context, whether this is an SSL host or not. */
+    if (sio_supported()) {
+	bool pending = false;
+
+	sio = sio_init_wrapper(NULL, HOST_FLAG(NO_VERIFY_CERT_HOST),
+		net_accept, &pending);
+	if (sio == NULL) {
+	    if (pending) {
+		net_connect_pending = true;
+		return NC_SSL_PASS;
+	    }
+	    net_disconnect(false);
+	    return NC_FAILED;
+	}
+    }
+
     /* Try each of the haddrs. */
     while (ha_ix < num_ha) {
+	bool pending = false;
+
 	if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
-			pending)) != INVALID_IOSRC) {
-	    return s;
+			&pending)) != INVALID_IOSRC) {
+	    *iosrc = s;
+	    return pending? NC_CONNECT_PENDING: NC_CONNECTED;
 	}
 	ha_ix++;
     }
 
     /* Ran out. */
-    return INVALID_IOSRC;
+    return NC_FAILED;
 }
 #undef close_fail
 
@@ -836,105 +752,61 @@ setup_lus(void)
     try_lu = *curr_lu;
 }
 
-#if defined(HAVE_LIBSSL) /*[*/
-/*
- * Add a reason that the host certificate is unverified.
- */
 static void
-add_unverified_reason(const char *reason)
+net_connected_complete(void)
 {
-    char **s;
-    int i;
-
-    s = unverified_reasons;
-    unverified_reasons = (char **)Malloc(
-	   (n_unverified_reasons + 2) * sizeof(char *));
-    for (i = 0; i < n_unverified_reasons; i++) {
-	unverified_reasons[i] = s[i];
+    /* Done with SSL or proxy. */
+    if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	host_in3270(CONNECTED_NVT);
+    } else {
+	cstate = CONNECTED_INITIAL;
     }
-    unverified_reasons[n_unverified_reasons++] = NewString(reason);
-    unverified_reasons[n_unverified_reasons] = NULL;
-    Free(s);
+
+    /* set up telnet options */
+    memset((char *)myopts, 0, sizeof(myopts));
+    memset((char *)hisopts, 0, sizeof(hisopts));
+    did_ne_send = false;
+    deferred_will_ttype = false;
+    b8_zero(&e_funcs);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
+    e_xmit_seq = 0;
+    response_required = TN3270E_RSF_NO_RESPONSE;
+    need_tls_follows = false;
+    telnet_state = TNS_DATA;
+    ibptr = ibuf;
+
+    /* clear statistics and flags */
+    (void) time(&ns_time);
+    ns_brcvd = 0;
+    ns_rrcvd = 0;
+    ns_bsent = 0;
+    ns_rsent = 0;
+    syncing = 0;
+    tn3270e_negotiated = 0;
+    tn3270e_submode = E_UNBOUND;
+    tn3270e_bound = 0;
+
+    setup_lus();
+
+    check_linemode(true);
+
+    /* write out the passthru hostname and port nubmer */
+    if (HOST_FLAG(PASSTHRU_HOST)) {
+	char *buf;
+
+	buf = xs_buffer("%s %d\r\n", hostname, current_port);
+	(void) send(sock, buf, (int)strlen(buf), 0);
+	Free(buf);
+    }
 }
-
-/*
- * Clear the list of reasons the host certificate is unverified.
- */
-static void
-free_unverified_reasons(void)
-{
-    if (unverified_reasons != NULL) {
-	int i;
-
-	for (i = 0; unverified_reasons[i]; i++) {
-	    Free(unverified_reasons[i]);
-	}
-	Replace(unverified_reasons, NULL);
-    }
-    n_unverified_reasons = 0;
-}
-
-/*
- * Check the name in the host certificate.
- *
- * Returns true if the certificate is okay (or doesn't need to be), false if
- * the connection should fail because of a bad certificate.
- */
-static bool
-check_cert_name(void)
-{
-    X509 *cert;
-    char *unmatched_names;
-
-    cert = SSL_get_peer_certificate(ssl_con);
-    if (cert == NULL) {
-	if (appres.ssl.verify_host_cert) {
-	    popup_an_error("No host certificate");
-	    return false;
-	} else {
-	    secure_unverified = true;
-	    vtrace("No host certificate.\n");
-	    add_unverified_reason("No host certificate");
-	    return true;
-	}
-    }
-
-    unmatched_names = spc_verify_cert_hostname(cert,
-	    accept_specified_host? accept_dnsname: hostname,
-	    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr: NULL,
-#if defined(X3270_IPV6) /*[*/
-	    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr: NULL
-#else /*][*/
-	    NULL
-#endif /*]*/
-	    );
-    if (unmatched_names != NULL) {
-	X509_free(cert);
-	if (appres.ssl.verify_host_cert) {
-	    popup_an_error("Host certificate name(s) do not match '%s':\n%s",
-		    hostname, unmatched_names);
-	    return false;
-	} else {
-	    char *reason;
-
-	    secure_unverified = true;
-	    vtrace("Host certificate name(s) do not match hostname.\n");
-	    reason = xs_buffer("Host certificate name(s) do not match '%s': "
-		    "%s", hostname, unmatched_names);
-	    add_unverified_reason(reason);
-	    Free(reason);
-	    return true;
-	}
-	Free(unmatched_names);
-    }
-    X509_free(cert);
-    return true;
-}
-#endif /*]*/
 
 static void
 net_connected(void)
 {
+    bool data = false;
+
     /* Cancel the timeout. */
     if (connect_timeout_id != NULL_IOID) {
 	RemoveTimeOut(connect_timeout_id);
@@ -964,125 +836,75 @@ net_connected(void)
     vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
 	    HOST_FLAG(SSL_HOST)? " via SSL": "");
 
-#if defined(HAVE_LIBSSL) /*[*/
     /* Set up SSL. */
-    if (HOST_FLAG(SSL_HOST) && !secure_connection) {
-	int rv;
+    if (HOST_FLAG(SSL_HOST) && sio != NULL && !secure_connection) {
+	bool rv;
+	char *session, *cert;
 
-	if (SSL_set_fd(ssl_con, (int)sock) != 1) {
-	    vtrace("Can't set fd!\n");
-	}
-#if defined(_WIN32) /*[*/
-	/* Make the socket blocking for SSL_connect. */
-	(void) WSAEventSelect(sock, sock_handle, 0);
-	(void) non_blocking(false);
-#endif /*]*/
-	rv = SSL_connect(ssl_con);
-#if defined(_WIN32) /*[*/
-	/* Make the socket non-blocking again for event processing. */
-	(void) WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE);
-#endif /*]*/
-	if (rv != 1) {
-	    long v;
-
-	    v = SSL_get_verify_result(ssl_con);
-	    if (v != X509_V_OK) {
-		popup_an_error("Host certificate verification failed:\n"
-			"%s (%ld)%s", X509_verify_cert_error_string(v), v,
-			(v == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)?
-	       "\nCA certificate needs to be added to the local database": "");
-	    } else {
-		int err = SSL_get_error(ssl_con, rv);
-		char err_buf[120];
-		if (err == SSL_ERROR_SYSCALL) {
-		    /* Something went wrong with the socket. */
-		    unsigned long e;
-
-		    vtrace("SSL error is %d\n", err);
-
-		    e = ERR_get_error();
-		    if (e != 0) {
-			(void) ERR_error_string(e, err_buf);
-		    } else {
-			strcpy(err_buf, "unexpected EOF");
-		    }
-		    vtrace("RCVD SSL_connect SYSCALL error %ld (%s)\n",
-			    e, err_buf);
-		} else {
-		    /* SSL protocol error */
-		    vtrace("RCVD SSL_connect error %d\n", err);
-		    snprintf(err_buf, sizeof(err_buf), "error %d", err);
-		}
-		popup_an_error("SSL_connect:\n%s", err_buf);
-	    }
-
+	rv = sio_negotiate(sio, sock, hostname, &data);
+	if (!rv) {
 	    /* No need to trace the error, it was already displayed. */
-	    host_disconnect(true);
-	    return;
-	}
-
-	/* Check the host certificate. */
-	if (!check_cert_name()) {
+	    popup_an_error("%s", sio_last_error());
 	    host_disconnect(true);
 	    return;
 	}
 
 	secure_connection = true;
-
-	vtrace("TLS/SSL tunneled connection complete. Connection is now "
-		"secure.\n");
+	session = indent_s(sio_session_info(sio));
+	cert = indent_s(sio_server_cert_info(sio));
+	vtrace("Connection is now secure.\n"
+		"Session:\n%s\nServer certificate:\n%s\n",
+		session, cert);
+	Free(session);
+	Free(cert);
 
 	/* Tell everyone else again. */
 	host_connected();
     }
-#endif /*]*/
 
-    /* Done with SSL or proxy. */
-    if (appres.nvt_mode) {
-	host_in3270(CONNECTED_NVT);
-    } else {
-	cstate = CONNECTED_INITIAL;
+    net_connected_complete();
+
+    if (data) {
+	vtrace("Reading extra data after negotiation\n");
+	net_input(INVALID_IOSRC, NULL_IOID);
+    }
+}
+
+/*
+ * net_password_continue
+ * 	Called by the password GUI when a password has been entered.
+ */
+void
+net_password_continue(char *password)
+{
+    bool pending;
+    iosrc_t s;
+
+    if (!net_connect_pending) {
+	/* Connection is gone. */
+	return;
+    }
+    net_connect_pending = false;
+
+    /* Try initializing sio again, with a new password. */
+    if ((sio = sio_init_wrapper(password, HOST_FLAG(NO_VERIFY_CERT_HOST),
+		    net_accept, &pending)) == NULL) {
+	if (pending) {
+	    /* Still pending, try again. */
+	    net_connect_pending = true;
+	}
+	return;
     }
 
-    /* set up telnet options */
-    memset((char *)myopts, 0, sizeof(myopts));
-    memset((char *)hisopts, 0, sizeof(hisopts));
-    did_ne_send = false;
-    deferred_will_ttype = false;
-    b8_zero(&e_funcs);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
-    e_xmit_seq = 0;
-    response_required = TN3270E_RSF_NO_RESPONSE;
-#if defined(HAVE_LIBSSL) /*[*/
-    need_tls_follows = false;
-#endif /*]*/
-    telnet_state = TNS_DATA;
-    ibptr = ibuf;
-
-    /* clear statistics and flags */
-    (void) time(&ns_time);
-    ns_brcvd = 0;
-    ns_rrcvd = 0;
-    ns_bsent = 0;
-    ns_rsent = 0;
-    syncing = 0;
-    tn3270e_negotiated = 0;
-    tn3270e_submode = E_UNBOUND;
-    tn3270e_bound = 0;
-
-    setup_lus();
-
-    check_linemode(true);
-
-    /* write out the passthru hostname and port nubmer */
-    if (HOST_FLAG(PASSTHRU_HOST)) {
-	char *buf;
-
-	buf = xs_buffer("%s %d\r\n", hostname, current_port);
-	(void) send(sock, buf, (int)strlen(buf), 0);
-	Free(buf);
+    /* Try connecting. */
+    while (ha_ix < num_ha) {
+	s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
+	if (s != INVALID_IOSRC) {
+	    host_newfd(s);
+	    host_new_connection(pending);
+	    break;
+	}
+	ha_ix++;
     }
 }
 
@@ -1172,18 +994,13 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
  *	Shut down the socket.
  */
 void
-net_disconnect(void)
+net_disconnect(bool including_ssl)
 {
-#if defined(HAVE_LIBSSL) /*[*/
-    if (ssl_con != NULL) {
-	SSL_shutdown(ssl_con);
-	SSL_free(ssl_con);
-	ssl_con = NULL;
+    if (including_ssl && sio != NULL) {
+	sio_close(sio);
+	sio = NULL;
+	secure_connection = false;
     }
-    secure_connection = false;
-    secure_unverified = false;
-    free_unverified_reasons();
-#endif /*]*/
     if (CONNECTED) {
 	(void) shutdown(sock, 2);
     }
@@ -1209,23 +1026,24 @@ net_disconnect(void)
 
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
-#if defined(HAVE_LIBSSL) /*[*/
 	if (!appres.ssl.tls) {
 	    popup_an_error("Connection failed:\n"
-		    "Host requested TLS but SSL disabled");
+		    "Host requested STARTTLS but STARTTLS disabled");
+	} else if (nested_tls) {
+	    popup_an_error("Connection failed:\n"
+		    "Host requested nested STARTTLS");
 	} else {
 	    popup_an_error("Connection failed:\n"
-		    "Host requested TLS but SSL DLLs not found");
+		    "Host requested STARTTLS but TLS/SSL not supported");
 	}
-#else /*][*/
-	popup_an_error("Connection failed:\n"
-		"Host requested TLS but SSL not supported");
-#endif /*]*/
     }
     refused_tls = false;
+    nested_tls = false;
     any_host_data = false;
 
     net_set_default_termtype();
+
+    net_connect_pending = false;
 }
 
 
@@ -1240,11 +1058,11 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	register unsigned char	*cp;
 	int	nr;
-#if defined(HAVE_LIBSSL) /*[*/
 	bool	ignore_ssl = false;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
+	WSANETWORKEVENTS events;
+
 	/*
 	 * Make the socket non-blocking.
 	 * Note that WSAEventSelect does this automatically (and won't allow
@@ -1254,46 +1072,43 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		    host_disconnect(true);
 		    return;
 	}
-	for (;;) {
 #endif /*]*/
 	if (sock == INVALID_SOCKET) {
 		return;
 	}
 
 #if defined(_WIN32) /*[*/
+	if (WSAEnumNetworkEvents(sock, sock_handle, &events) != 0) {
+	    popup_an_error("WSAEnumNetworkEvents failed: %s",
+		    win32_strerror(WSAGetLastError()));
+	    host_disconnect(true);
+	    return;
+	}
 	if (HALF_CONNECTED) {
-		if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
-			int err = GetLastError();
-
-			switch (err) {
-			case WSAEISCONN:
-				connection_complete();
-				/* and go get data...? */
-				break;
-			case WSAEALREADY:
-			case WSAEWOULDBLOCK:
-			case WSAEINVAL:
-				return;
-			default:
-				fprintf(stderr,
-				    "second connect() failed: %s\n",
-				    win32_strerror(err));
-				x3270_exit(1);
-			}
-		}
-
-		if (sock == INVALID_SOCKET) {
+	    if (events.lNetworkEvents & FD_CONNECT) {
+		if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
+		    popup_an_error("Connection failed: %s",
+			    win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
+		    host_disconnect(true);
 		    return;
+		} else {
+		    connection_complete();
+		    if (sock == INVALID_SOCKET) {
+			return;
+		    }
 		}
+	    } else {
+		vtrace("Spurious net_input call\n");
+		return;
+	    }
 	}
 #endif /*]*/
 
 	nvt_data = 0;
 
-	vtrace("Reading host socket\n");
+	vtrace("Reading host socket%s\n", secure_connection? " via SSL": "");
 
-#if defined(HAVE_LIBSSL) /*[*/
-	if (ssl_con != NULL) {
+	if (secure_connection) {
 		/*
 		 * OpenSSL does not like getting refused connections
 		 * when it hasn't done any I/O yet.  So peek ahead to
@@ -1304,11 +1119,9 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			       MSG_PEEK)) <= 0) {
 			ignore_ssl = true;
 		} else {
-			nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
+			nr = sio_read(sio, (char *) netrbuf, BUFSZ);
 		}
 	} else {
-#else /*][*/
-#endif /*]*/
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process) {
 			nr = read(sock, (char *) netrbuf, BUFSZ);
@@ -1320,27 +1133,16 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
 	vtrace("Host socket read complete nr=%d\n", nr);
 	if (nr < 0) {
-		if (socket_errno() == SE_EWOULDBLOCK) {
+	    	if ((secure_connection && nr == SIO_EWOULDBLOCK) ||
+		    (!secure_connection && socket_errno() == SE_EWOULDBLOCK)) {
 			vtrace("EWOULDBLOCK\n");
 			return;
 		}
-#if defined(HAVE_LIBSSL) /*[*/
-		if (ssl_con != NULL && !ignore_ssl) {
-			unsigned long e;
-			char err_buf[120];
-
-			e = ERR_get_error();
-			if (e != 0)
-				(void) ERR_error_string(e, err_buf);
-			else
-				strcpy(err_buf, "unknown error");
-			vtrace("RCVD SSL_read error %ld (%s)\n", e,
-			    err_buf);
-			popup_an_error("SSL_read:\n%s", err_buf);
+		if (secure_connection && !ignore_ssl) {
+		    	popup_an_error("%s", sio_last_error());
 			host_disconnect(true);
 			return;
 		}
-#endif /*]*/
 		if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
 			connection_complete();
 			return;
@@ -1359,22 +1161,17 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				popup_a_sockerr("Connect to %s, "
 				    "port %d", hostname, current_port);
 			} else {
-				bool dummy;
+				bool pending;
 				iosrc_t s;
 
-				net_disconnect();
-				if (HOST_FLAG(SSL_HOST)) {
-					if (ssl_init() < 0) {
-						host_disconnect(true);
-						return;
-					}
-				}
+				net_disconnect(false);
 				while (++ha_ix < num_ha) {
 					s = connect_to(ha_ix,
 						(ha_ix == num_ha - 1),
-						&dummy);
+						&pending);
 					if (s != INVALID_IOSRC) {
 						host_newfd(s);
+						host_new_connection(pending);
 						return;
 					}
 				}
@@ -1410,7 +1207,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process) {
 			/* More to do here, probably. */
-			if (IN_NEITHER) {	/* now can assume NVT mode */
+			if (cstate == CONNECTED_INITIAL) {
+				/* now can assume NVT mode */
 				host_in3270(CONNECTED_NVT);
 				hisopts[TELOPT_ECHO] = 1;
 				check_linemode(false);
@@ -1441,10 +1239,6 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 	/* See if it's time to roll over the trace file. */
 	trace_rollover_check();
-
-#if defined(_WIN32) /*[*/
-	}
-#endif /*]*/
 }
 
 
@@ -1578,7 +1372,8 @@ telnet_fsm(unsigned char c)
 	    }
 	    break;
 	}
-	if (IN_NEITHER) {	/* now can assume NVT mode */
+	if (cstate == CONNECTED_INITIAL) {
+	    /* now can assume NVT mode */
 	    if (linemode) {
 		linemode_buf_init();
 	    }
@@ -1750,17 +1545,16 @@ telnet_fsm(unsigned char c)
 	case TELOPT_TM:
 	case TELOPT_TN3270E:
 	case TELOPT_STARTTLS:
-#if defined(HAVE_LIBSSL) /*[*/
-	    if (c == TELOPT_STARTTLS && (!ssl_supported || !appres.ssl.tls)) {
+	    if (c == TELOPT_STARTTLS &&
+		    (!sio_supported() ||
+		     !appres.ssl.tls ||
+		     secure_connection)) {
 		refused_tls = true;
+		if (secure_connection) {
+		    nested_tls = true;
+		}
 		goto wont;
 	    }
-#else /*][*/
-	    if (c == TELOPT_STARTTLS) {
-		refused_tls = true;
-		goto wont;
-	    }
-#endif /*]*/
 	case TELOPT_NEW_ENVIRON:
 	    if (c == TELOPT_TN3270E && HOST_FLAG(NON_TN3270E_HOST)) {
 		goto wont;
@@ -1795,7 +1589,6 @@ telnet_fsm(unsigned char c)
 	    if (c == TELOPT_NAWS) {
 		send_naws();
 	    }
-#if defined(HAVE_LIBSSL) /*[*/
 	    if (c == TELOPT_STARTTLS) {
 		static unsigned char follows_msg[] = {
 		    IAC, SB, TELOPT_STARTTLS, TLS_FOLLOWS, IAC, SE
@@ -1810,7 +1603,6 @@ telnet_fsm(unsigned char c)
 			opt(TELOPT_STARTTLS), cmd(SE));
 		need_tls_follows = true;
 	    }
-#endif /*]*/
 	    break;
 	default:
 	wont:
@@ -1891,12 +1683,13 @@ telnet_fsm(unsigned char c)
 		    return false;
 		}
 	    }
-#if defined(HAVE_LIBSSL) /*[*/
-	    else if (need_tls_follows && myopts[TELOPT_STARTTLS] &&
+	    else if (sio_supported() &&
+		    sio != NULL &&
+		    need_tls_follows &&
+		    myopts[TELOPT_STARTTLS] &&
 		    sbbuf[0] == TELOPT_STARTTLS) {
 		continue_tls(sbbuf, (int)(sbptr - sbbuf));
 	    }
-#endif /*]*/
 	    else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
 		    sbbuf[1] == TELQUAL_SEND && appres.new_environ) {
 		size_t tb_len;
@@ -2702,11 +2495,9 @@ net_rawout(unsigned const char *buf, size_t len)
 #else
 #		define n2w len
 #endif
-#if defined(HAVE_LIBSSL) /*[*/
-		if (ssl_con != NULL)
-			nw = SSL_write(ssl_con, (const char *) buf, (int)n2w);
+		if (secure_connection)
+			nw = sio_write(sio, (const char *) buf, (int)n2w);
 		else
-#endif /*]*/
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process)
 			nw = write(sock, (const char *) buf, (int)n2w);
@@ -2714,20 +2505,11 @@ net_rawout(unsigned const char *buf, size_t len)
 #endif /*]*/
 			nw = send(sock, (const char *) buf, (int)n2w, 0);
 		if (nw < 0) {
-#if defined(HAVE_LIBSSL) /*[*/
-			if (ssl_con != NULL) {
-				unsigned long e;
-				char err_buf[120];
-
-				e = ERR_get_error();
-				(void) ERR_error_string(e, err_buf);
-				vtrace("RCVD SSL_write error %ld (%s)\n", e,
-				    err_buf);
-				popup_an_error("SSL_write:\n%s", err_buf);
+			if (secure_connection) {
+			    	popup_an_error("%s", sio_last_error());
 				host_disconnect(false);
 				return;
 			}
-#endif /*]*/
 			vtrace("RCVD socket error %d (%s)\n",
 				socket_errno(),
 				socket_strerror(socket_errno()));
@@ -2809,6 +2591,7 @@ check_in3270(void)
 	enum cstate new_cstate = NOT_CONNECTED;
 	static const char *state_name[] = {
 		"unconnected",				/* NOT_CONNECTED */
+		"SSL password pending",			/* SSL_PASS */
 		"resolving hostname",			/* RESOLVING */
 		"TCP connection pending",		/* PENDING */
 		"negotiating SSL or proxy",		/* NEGOTIATING */
@@ -2847,7 +2630,7 @@ check_in3270(void)
 	} else if (cstate == CONNECTED_INITIAL) {
 		/* Nothing has happened, yet. */
 		return;
-	} else if (appres.nvt_mode) {
+	} else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 		new_cstate = CONNECTED_NVT;
 	} else {
 		new_cstate = CONNECTED_INITIAL;
@@ -3522,718 +3305,12 @@ non_blocking(bool on)
     return 0;
 }
 
-#if defined(HAVE_LIBSSL) /*[*/
-
-/* Password callback. */
-static int
-passwd_cb(char *buf, int size, int rwflag _is_unused,
-	void *userdata _is_unused)
-{
-    if (appres.ssl.key_passwd == NULL) {
-	int psize = ssl_passwd_gui_callback(buf, size);
-
-	if (psize >= 0) {
-	    return psize;
-	} else {
-	    popup_an_error("No OpenSSL private key password specified");
-	    return 0;
-	}
-    }
-
-    if (!strncasecmp(appres.ssl.key_passwd, "string:", 7)) {
-	/* Plaintext in the resource. */
-	size_t len = strlen(appres.ssl.key_passwd + 7);
-
-	if (len > (size_t)size - 1) {
-	    len = size - 1;
-	}
-	strncpy(buf, appres.ssl.key_passwd + 7, len);
-	buf[len] = '\0';
-	return (int)len;
-    } else if (!strncasecmp(appres.ssl.key_passwd, "file:", 5)) {
-	/* In a file. */
-	FILE *f;
-	char *s;
-
-	f = fopen(appres.ssl.key_passwd + 5, "r");
-	if (f == NULL) {
-	    popup_an_errno(errno, "OpenSSL private key file '%s'",
-		    appres.ssl.key_passwd + 5);
-	    return 0;
-	}
-	memset(buf, '\0', size);
-	s = fgets(buf, size - 1, f);
-	fclose(f);
-	return s? (int)strlen(s): 0;
-    } else {
-	popup_an_error("Unknown OpenSSL private key syntax '%s'",
-		appres.ssl.key_passwd);
-	return 0;
-    }
-}
-
-static int
-parse_file_type(const char *s)
-{
-    if (s == NULL || !strcasecmp(s, "pem")) {
-	return SSL_FILETYPE_PEM;
-    } else if (!strcasecmp(s, "asn1")) {
-	return SSL_FILETYPE_ASN1;
-    } else {
-	return -1;
-    }
-}
-
-static char *
-get_ssl_error(char *buf)
-{
-    unsigned long e;
-
-    e = ERR_get_error();
-    if (getenv("SSL_VERBOSE_ERRORS")) {
-	(void) ERR_error_string(e, buf);
-    } else {
-	char xbuf[120];
-	char *colon;
-
-	(void) ERR_error_string(e, xbuf);
-	colon = strrchr(xbuf, ':');
-	if (colon != NULL) {
-	    strcpy(buf, colon + 1);
-	} else {
-	    strcpy(buf, xbuf);
-	}
-    }
-    return buf;
-}
-
-/*
- * Base-level initialization.
- * Happens once, before the screen switches modes (for c3270).
- */
-void
-ssl_base_init(char *cl_hostname, bool *pending)
-{
-    char err_buf[120];
-    int cert_file_type = SSL_FILETYPE_PEM;
-
-#if defined(_WIN32) /*[*/
-    if (ssl_dll_init() < 0) {
-	/* The DLLs may not be there, or may be the wrong ones. */
-	vtrace("SSL DLL init failed: %s\n", ssl_fail_reason);
-	ssl_supported = false;
-	unsupported_reason = ssl_fail_reason;
-	return;
-    }
-#endif /*]*/
-
-    /* Parse the -accepthostname option. */
-    if (appres.ssl.accept_hostname != NULL) {
-	if (!strcasecmp(appres.ssl.accept_hostname, "any") ||
-	    !strcmp(appres.ssl.accept_hostname, "*")) {
-	    accept_specified_host = true;
-	    accept_dnsname = "*";
-	} else if (!strncasecmp(appres.ssl.accept_hostname, "DNS:", 4) &&
-		    appres.ssl.accept_hostname[4] != '\0') {
-	    accept_specified_host = true;
-	    accept_dnsname = &appres.ssl.accept_hostname[4];
-	} else if (!strncasecmp(appres.ssl.accept_hostname, "IP:", 3)) {
-	    unsigned short port;
-	    sockaddr_46_t ahaddr;
-	    socklen_t len;
-	    char *errmsg;
-	    rhp_t rv;
-
-	    rv = resolve_host_and_port(&appres.ssl.accept_hostname[3],
-		    "0", 0, &port, &ahaddr.sa, &len, &errmsg,
-		    NULL);
-	    if (RHP_IS_ERROR(rv)) {
-		popup_an_error("Invalid acceptHostname '%s': %s",
-			appres.ssl.accept_hostname, errmsg);
-		return;
-	    }
-	    switch (ahaddr.sa.sa_family) {
-	    case AF_INET:
-		memcpy(&host_inaddr, &ahaddr.sin.sin_addr,
-			sizeof(struct in_addr));
-		host_inaddr_valid = true;
-		accept_specified_host = true;
-		accept_dnsname = "";
-		break;
-#if defined(X3270_IPV6) /*[*/
-	    case AF_INET6:
-		memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
-			sizeof(struct in6_addr));
-		host_in6addr_valid = true;
-		accept_specified_host = true;
-		accept_dnsname = "";
-		break;
-#endif /*]*/
-	    default:
-		break;
-	    }
-
-	} else {
-	    popup_an_error("Cannot parse acceptHostname '%s' "
-		    "(must be 'any' or 'DNS:name' or 'IP:addr')",
-		    appres.ssl.accept_hostname);
-	    return;
-	}
-    }
-
-    if (cl_hostname != NULL)
-	ssl_cl_hostname = NewString(cl_hostname);
-    if (pending != NULL) {
-	*pending = false;
-	ssl_pending = pending;
-    }
-
-#if !defined(_WIN32) && OPENSSL_VERSION_NUMBER < 0x10100000L /*[*/
-    SSL_load_error_strings();
-    SSL_library_init();
-#else /*][*/
-    OPENSSL_init_ssl(0, NULL);
-#endif /*]*/
-try_again:
-    ssl_passwd_gui_reset();
-#if !defined(_WIN32) && OPENSSL_VERSION_NUMBER < 0x10100000L /*[*/
-    ssl_ctx = SSL_CTX_new(SSLv23_method());
-#else /*][*/
-    ssl_ctx = SSL_CTX_new(TLS_method());
-#endif /*]*/
-    if (ssl_ctx == NULL) {
-	popup_an_error("SSL_CTX_new failed");
-	goto fail;
-    }
-    SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
-    SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
-    SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
-
-    /* Pull in the CA certificate file. */
-    if (appres.ssl.ca_file != NULL || appres.ssl.ca_dir != NULL) {
-	if (SSL_CTX_load_verify_locations(ssl_ctx, appres.ssl.ca_file,
-		    appres.ssl.ca_dir) != 1) {
-	    popup_an_error("CA database load (%s%s%s%s%s%s%s%s%s) failed:\n%s",
-		    appres.ssl.ca_file? "file ": "",
-		    appres.ssl.ca_file? "\"": "",
-		    appres.ssl.ca_file? appres.ssl.ca_file: "",
-		    appres.ssl.ca_file? "\"": "",
-		    (appres.ssl.ca_file && appres.ssl.ca_dir)? ", ": "",
-		    appres.ssl.ca_dir? "dir ": "",
-		    appres.ssl.ca_dir? "\"": "",
-		    appres.ssl.ca_dir? appres.ssl.ca_dir: "",
-		    appres.ssl.ca_dir? "\"": "",
-		    get_ssl_error(err_buf));
-	    goto fail;
-	}
-    } else {
-#if defined(_WIN32) /*[*/
-	char *certs;
-
-	/*
-	 * Look in:
-	 * (1) Current directory.
-	 * (2) Install directory, which if the program wasn't actually
-	 *     installed, is the directory of the path it was run from.
-	 */
-#define readable(path)	(access(path, R_OK) == 0)
-	if (!readable(certs = ROOT_CERTS) &&
-	    !readable(certs = lazyaf("%s%s", instdir, ROOT_CERTS))) {
-	    popup_an_error("No %s found", ROOT_CERTS);
-	    goto fail;
-	}
-#undef readable
-
-	if (SSL_CTX_load_verify_locations(ssl_ctx, certs, NULL) != 1) {
-	    popup_an_error("CA database load (file \"%s\") failed:\n%s", certs,
-		    get_ssl_error(err_buf));
-	    goto fail;
-	}
-#else /*][*/
-	SSL_CTX_set_default_verify_paths(ssl_ctx);
-#endif /*]*/
-    }
-
-    /* Pull in the client certificate file. */
-    if (appres.ssl.chain_file != NULL) {
-	if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
-		    appres.ssl.chain_file) != 1) {
-	    popup_an_error("Client certificate chain file load (\"%s\") "
-		    "failed:\n%s", appres.ssl.chain_file,
-		    get_ssl_error(err_buf));
-	    goto fail;
-	}
-    } else if (appres.ssl.cert_file != NULL) {
-	cert_file_type = parse_file_type(appres.ssl.cert_file_type);
-	if (cert_file_type == -1) {
-	    popup_an_error("Invalid client certificate file type '%s'",
-		    appres.ssl.cert_file_type);
-	    goto fail;
-	}
-	if (SSL_CTX_use_certificate_file(ssl_ctx, appres.ssl.cert_file,
-		    cert_file_type) != 1) {
-	    popup_an_error("Client certificate file load (\"%s\") failed:\n%s",
-		    appres.ssl.cert_file, get_ssl_error(err_buf));
-	    goto fail;
-	}
-    }
-
-    /* Pull in the private key file. */
-    if (appres.ssl.key_file != NULL) {
-	int key_file_type = parse_file_type(appres.ssl.key_file_type);
-
-	if (key_file_type == -1) {
-	    popup_an_error("Invalid private key file type '%s'",
-		    appres.ssl.key_file_type);
-	    goto fail;
-	}
-	if (SSL_CTX_use_PrivateKey_file(ssl_ctx, appres.ssl.key_file,
-		    key_file_type) != 1) {
-	    if (pending == NULL || !*pending) {
-		popup_an_error("Private key file load (\"%s\") failed:\n%s",
-			appres.ssl.key_file, get_ssl_error(err_buf));
-	    }
-	    goto password_fail;
-	}
-    } else if (appres.ssl.chain_file != NULL) {
-	if (SSL_CTX_use_PrivateKey_file(ssl_ctx, appres.ssl.chain_file,
-		    SSL_FILETYPE_PEM) != 1) {
-	    if (pending == NULL || !*pending) {
-		popup_an_error("Private key file load (\"%s\") failed:\n%s",
-			appres.ssl.chain_file, get_ssl_error(err_buf));
-	    }
-	    goto password_fail;
-	}
-    } else if (appres.ssl.cert_file != NULL) {
-	if (SSL_CTX_use_PrivateKey_file(ssl_ctx, appres.ssl.cert_file,
-		    cert_file_type) != 1) {
-	    if (pending == NULL || !*pending) {
-		popup_an_error("Private key file load (\"%s\") "
-			"failed:\n%s", appres.ssl.cert_file,
-			get_ssl_error(err_buf));
-	    }
-	    goto password_fail;
-	}
-    }
-
-    /* Check the key. */
-    if (appres.ssl.key_file != NULL &&
-	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
-	popup_an_error("Private key check failed:\n%s",
-		get_ssl_error(err_buf));
-	goto fail;
-    }
-    ssl_pending = NULL;
-
-    return;
-
-password_fail:
-    if (ssl_passwd_gui_retry()) {
-	SSL_CTX_free(ssl_ctx);
-	ssl_ctx = NULL;
-	goto try_again;
-    }
-
-fail:
-    ssl_pending = NULL;
-    if (ssl_ctx != NULL) {
-	SSL_CTX_free(ssl_ctx);
-	ssl_ctx = NULL;
-    }
-    return;
-}
-
-/* Verify function. */
-static int
-ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
-{
-    int err;
-    char *why_not = NULL;
-
-    /* If OpenSSL thinks it's okay, so do we. */
-    if (preverify_ok) {
-	return 1;
-    }
-
-    /* Fetch the error. */
-    err = X509_STORE_CTX_get_error(ctx);
-
-    /* We might not care. */
-    if (!appres.ssl.verify_host_cert) {
-	why_not = "not verifying";
-    } else if (appres.ssl.self_signed_ok &&
-	    (err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
-	     err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
-	why_not = "self-signed okay";
-    }
-    if (why_not != NULL) {
-	char *s;
-
-	vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
-		why_not, X509_verify_cert_error_string(err), err);
-	secure_unverified = true;
-	s = xs_buffer("%s (%d)", X509_verify_cert_error_string(err), err);
-	add_unverified_reason(s);
-	Free(s);
-	return 1;
-    }
-
-    /* Then again, we might. */
-    return 0;
-}
-
-/* Hostname match function. */
-static int
-hostname_matches(const char *hostname, const char *cn, size_t len)
-{
-    /*
-     * If the name from the certificate contains an embedded NUL, then by
-     * definition it will not match the hostname.
-     */
-    if (strlen(cn) < len) {
-	return 0;
-    }
-
-    /*
-     * Try a direct comparison.
-     */
-    if (!strcasecmp(hostname, cn)) {
-	return 1;
-    }
-
-    /*
-     * Try a wild-card comparison.
-     */
-    if (!strncmp(cn, "*.", 2) &&
-	    strlen(hostname) > strlen(cn + 1) &&
-	    !strcasecmp(hostname + strlen(hostname) - strlen(cn + 1),
-		cn + 1)) {
-	return 1;
-    }
-
-    return 0;
-}
-
-/* IP address match function. */
-static int
-ipaddr_matches(unsigned char *v4addr, unsigned char *v6addr,
-	unsigned char *data, int len)
-{
-    switch (len) {
-    case 4:
-	if (v4addr) {
-	    return !memcmp(v4addr, data, 4);
-	}
-	break;
-    case 16:
-	if (v6addr) {
-	    return !memcmp(v6addr, data, 16);
-	}
-	break;
-    default:
-	break;
-    }
-    return 0;
-}
-
-/*
- * Certificate hostname expansion function.
- * Mostly, this expands NULs.
- */
-static char *
-expand_hostname(const char *cn, size_t len)
-{
-    static char buf[1024];
-    int ix = 0;
-
-    if (len > sizeof(buf) / 2 + 1) {
-	len = sizeof(buf) / 2 + 1;
-    }
-
-    while (len--) {
-	char c = *cn++;
-
-	if (c) {
-	    buf[ix++] = c;
-	} else {
-		buf[ix++] = '\\';
-		buf[ix++] = '0';
-	}
-    }
-    buf[ix] = '\0';
-
-    return buf;
-}
-
-/*
- * Add a unique element to a NULL-terminated list of strings.
- * Return the old list, or free it and return a new one.
- */
-static char **
-add_to_namelist(char **list, char *item)
-{
-    char **new;
-    int count;
-
-    if (list == NULL) {
-	/* First element. */
-	new = (char **)Malloc(2 * sizeof(char *));
-	new[0] = NewString(item);
-	new[1] = NULL;
-	return new;
-    }
-
-    /* Count the number of elements, and bail if we find a match. */
-    for (count = 0; list[count] != NULL; count++) {
-	if (!strcasecmp(list[count], item)) {
-	    return list;
-	}
-    }
-
-    new = (char **)Malloc((count + 2) * sizeof(char *));
-    memcpy(new, list, count * sizeof(char *));
-    Free(list);
-    new[count] = NewString(item);
-    new[count + 1] = NULL;
-    return new;
-}
-
-/*
- * Free a namelist.
- */
-static void
-free_namelist(char **list)
-{
-    int i;
-
-    for (i = 0; list[i] != NULL; i++) {
-	Free(list[i]);
-    }
-    Free(list);
-}
-
-/*
- * Expand a namelist into text.
- */
-static char *
-expand_namelist(char **list)
-{
-    int i;
-    char *r = NULL;
-
-    if (list != NULL) {
-	for (i = 0; list[i] != NULL; i++) {
-	    char *new;
-
-	    new = xs_buffer("%s%s%s", r? r: "", r? " ": "", list[i]);
-	    Replace(r, new);
-	}
-    }
-    return r? r: NewString("(none)");
-}
-
-/* Hostname validation function. */
-static char *
-spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
-	unsigned char *v6addr)
-{
-    int ok = 0;
-    X509_NAME *subj;
-    char name[256];
-    GENERAL_NAMES *values;
-    GENERAL_NAME *value;
-    int num_an, i;
-    unsigned char *dns;
-    int len;
-    char **namelist = NULL;
-    char *nnl;
-
-    /* Check the common name. */
-    if (!ok &&
-	(subj = X509_get_subject_name(cert)) &&
-	(len = X509_NAME_get_text_by_NID(subj, NID_commonName, name,
-	    sizeof(name))) > 0) {
-
-	name[sizeof(name) - 1] = '\0';
-	if (!strcmp(hostname, "*") ||
-	     (!v4addr && !v6addr &&
-	      hostname_matches(hostname, name, len))) {
-	    ok = 1;
-	    vtrace("SSL_connect: commonName %s matches hostname %s\n", name,
-		    hostname);
-	} else {
-	    vtrace("SSL_connect: non-matching commonName: %s\n",
-		    expand_hostname(name, len));
-	    nnl = xs_buffer("DNS:%s", expand_hostname(name, len));
-	    namelist = add_to_namelist(namelist, nnl);
-	    Free(nnl);
-	}
-    }
-
-    /* Check the alternate names. */
-    if (!ok &&
-	(values = X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0))) {
-	num_an = sk_GENERAL_NAME_num(values);
-	for (i = 0; i < num_an && !ok; i++) {
-	    value = sk_GENERAL_NAME_value(values, i);
-	    if (value->type == GEN_DNS) {
-		len = ASN1_STRING_to_UTF8(&dns, value->d.dNSName);
-		if (!strcmp(hostname, "*") ||
-		    (!v4addr && !v6addr &&
-		     hostname_matches(hostname, (char *)dns, len))) {
-
-		    ok = 1;
-		    vtrace("SSL_connect: alternameName DNS:%s matches "
-			    "hostname %s\n", expand_hostname((char *)dns, len),
-			    hostname);
-		    OPENSSL_free(dns);
-		    break;
-		} else {
-		    vtrace("SSL_connect: non-matching alternateName: DNS:%s\n",
-			    expand_hostname((char *)dns, len));
-		    nnl = xs_buffer("DNS:%s", expand_hostname((char *)dns,
-				len));
-		    namelist = add_to_namelist(namelist, nnl);
-		    Free(nnl);
-		}
-		OPENSSL_free(dns);
-	    } else if (value->type == GEN_IPADD) {
-		int i;
-		char *ipbuf;
-
-		if (!strcmp(hostname, "*") ||
-			ipaddr_matches(v4addr, v6addr,
-			    value->d.iPAddress->data,
-			    value->d.iPAddress->length)) {
-		    vtrace("SSL_connect: matching alternateName IP:");
-		    ok = 1;
-		} else {
-		    vtrace("SSL_connect: non-matching alternateName: IP:");
-		}
-		ipbuf = NewString("IP:");
-		switch (value->d.iPAddress->length) {
-		case 4:
-		    for (i = 0; i < 4; i++) {
-			nnl = xs_buffer("%s%s%u", ipbuf, (i > 0)? ".": "",
-				value->d.iPAddress->data[i]);
-			Replace(ipbuf, nnl);
-		    }
-		    break;
-		case 16:
-		    for (i = 0; i < 16; i+= 2) {
-			nnl = xs_buffer("%s%s%x", ipbuf,
-				(i > 0)? ":": "",
-	 (value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
-			Replace(ipbuf, nnl);
-		    }
-		    break;
-		default:
-		    for (i = 0; i < value->d.iPAddress->length; i++) {
-			nnl = xs_buffer("%s%s%u", ipbuf, (i > 0)? "-": "",
-				value->d.iPAddress->data[i]);
-			Replace(ipbuf, nnl);
-		    }
-		    break;
-		}
-		vtrace("%s\n", ipbuf);
-		if (!ok) {
-		    namelist = add_to_namelist(namelist, ipbuf);
-		}
-		Free(ipbuf);
-	    }
-	    if (ok) {
-		break;
-	    }
-	}
-    }
-
-    if (ok) {
-	if (namelist) {
-	    free_namelist(namelist);
-	}
-	return NULL;
-    } else if (namelist == NULL) {
-	return NewString("(none)");
-    } else {
-	nnl = expand_namelist(namelist);
-	free_namelist(namelist);
-	return nnl;
-    }
-}
-
-/* Create a new OpenSSL connection. */
-static int
-ssl_init(void)
-{
-    if (!ssl_supported) {
-	popup_an_error("Cannot connect:\n%s\n", unsupported_reason);
-	return -1;
-    }
-    if (ssl_ctx == NULL) {
-	popup_an_error("Cannot connect:\nSSL initialization error");
-	return -1;
-    }
-
-    ssl_con = SSL_new(ssl_ctx);
-    if (ssl_con == NULL) {
-	popup_an_error("SSL_new failed");
-	return -1;
-    }
-    SSL_set_verify_depth(ssl_con, 64);
-    vtrace("SSL_init: %sverifying host certificate\n",
-	    appres.ssl.verify_host_cert? "": "not ");
-    SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
-    return 0;
-}
-
-/* Callback for tracing protocol negotiation. */
-static void
-client_info_callback(INFO_CONST SSL *s, int where, int ret)
-{
-    if (where == SSL_CB_CONNECT_LOOP) {
-	vtrace("SSL_connect trace: %s %s\n", SSL_state_string(s),
-		SSL_state_string_long(s));
-    } else if (where == SSL_CB_CONNECT_EXIT) {
-	if (ret == 0) {
-	    vtrace("SSL_connect trace: failed in %s\n",
-		    SSL_state_string_long(s));
-	} else if (ret < 0) {
-	    unsigned long e;
-	    char err_buf[1024];
-	    char *st;
-	    char *colon;
-
-	    err_buf[0] = '\n';
-	    e = ERR_get_error();
-	    if (e != 0) {
-		(void) ERR_error_string(e, err_buf + 1);
-#if defined(_WIN32) /*[*/
-	    } else if (GetLastError() != 0) {
-		strcpy(err_buf + 1, win32_strerror(GetLastError()));
-#else /*][*/
-	    } else if (errno != 0) {
-		strcpy(err_buf + 1, strerror(errno));
-#endif /*]*/
-	    } else {
-		err_buf[0] = '\0';
-	    }
-	    st = xs_buffer("SSL_connect trace: error in %s%s",
-		    SSL_state_string_long(s), err_buf);
-	    if ((colon = strrchr(st, ':')) != NULL) {
-		*colon = '\n';
-	    }
-
-	    popup_an_error("%s", st);
-	    Free(st);
-	}
-    }
-}
-
 /* Process a STARTTLS subnegotiation. */
 static void
 continue_tls(unsigned char *sbbuf, int len)
 {
-    int rv;
+    bool data = false;
+    char *session, *cert;
 
     /* Whatever happens, we're not expecting another SB STARTTLS. */
     need_tls_follows = false;
@@ -4243,59 +3320,16 @@ continue_tls(unsigned char *sbbuf, int len)
 	/* Trace the junk. */
 	vtrace("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 	popup_an_error("TLS negotiation failure");
-	net_disconnect();
+	host_disconnect(true);
 	return;
     }
 
     /* Trace what we got. */
     vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
-    /* Initialize the SSL library. */
-    if (ssl_init() < 0) {
-	/* Failed. */
-	net_disconnect();
-	return;
-    }
-
-    /* Set up the TLS/SSL connection. */
-    if (SSL_set_fd(ssl_con, (int)sock) != 1) {
-	vtrace("Can't set fd!\n");
-    }
-
-#if defined(_WIN32) /*[*/
-    /* Make the socket blocking for SSL. */
-    (void) WSAEventSelect(sock, sock_handle, 0);
-    (void) non_blocking(false);
-#endif /*]*/
-
-    rv = SSL_connect(ssl_con);
-
-#if defined(_WIN32) /*[*/
-    /* Make the socket non-blocking again for event processing. */
-    (void) WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE);
-#endif /*]*/
-
-    if (rv != 1) {
-	long v;
-
-	v = SSL_get_verify_result(ssl_con);
-	if (v != X509_V_OK)
-	    popup_an_error("Host certificate verification failed:\n%s (%ld)%s",
-		    X509_verify_cert_error_string(v), v,
-		    (v == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)?
-	       "\nCA certificate needs to be added to the local database": "");
-
-	/*
-	 * No need to trace the error, it was already
-	 * displayed.
-	 */
-	host_disconnect(true);
-	return;
-    }
-
-    /* Check the host certificate. */
-    if (!check_cert_name()) {
-	vtrace("disconnect: check_cert_name failed\n");
+    /* Negotiate the session. */
+    if (!sio_negotiate(sio, sock, hostname, &data)) {
+	popup_an_error("%s", sio_last_error());
 	host_disconnect(true);
 	return;
     }
@@ -4303,21 +3337,24 @@ continue_tls(unsigned char *sbbuf, int len)
     secure_connection = true;
 
     /* Success. */
+    session = indent_s(sio_session_info(sio));
+    cert = indent_s(sio_server_cert_info(sio));
     vtrace("TLS/SSL negotiated connection complete. "
-	    "Connection is now secure.\n");
+	    "Connection is now secure.\n"
+	    "Session:\n%s\nServer certificate:\n%s\n",
+	    session, cert);
+    Free(session);
+    Free(cert);
 
     /* Tell the world that we are (still) connected, now in secure mode. */
     host_connected();
-}
 
-#else /*][*/
-static int
-ssl_init(void)
-{
-    popup_an_error("Secure connections not supported");
-    return -1;
+    if (data) {
+	/* Got extra data with the negotiation. */
+	vtrace("Reading extra data after negotiation\n");
+	net_input(INVALID_IOSRC, NULL_IOID);
+    }
 }
-#endif /*]*/
 
 /* Return the current BIND application name, if any. */
 const char *
@@ -4400,15 +3437,11 @@ net_query_ssl(void)
     static char *not_secure = "not secure";
 
     if (CONNECTED) {
-#if defined(HAVE_LIBSSL) /*[*/
 	if (!secure_connection) {
 	    return not_secure;
 	}
 	return lazyaf("secure %s",
-		secure_unverified? "host-unverified": "host-verified");
-#else /*][*/
-	return not_secure;
-#endif /*]*/
+		net_secure_unverified()? "host-unverified": "host-verified");
     } else {
 	return "";
     }
@@ -4478,11 +3511,41 @@ net_set_default_termtype(void)
 {
     if (appres.termname) {
 	termtype = appres.termname;
-    } else if (appres.nvt_mode) {
+    } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	termtype = "xterm";
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
     } else {
 	termtype = full_model_name;
     }
+}
+
+bool
+net_secure_unverified(void)
+{
+    return secure_connection && sio_secure_unverified(sio);
+}
+
+const char *
+net_session_info(void)
+{
+    if (sio == NULL) {
+	return NULL;
+    }
+    return sio_session_info(sio);
+}
+
+const char *
+net_server_cert_info(void)
+{
+    if (sio == NULL) {
+	return NULL;
+    }
+    return sio_server_cert_info(sio);
+}
+
+bool
+net_secure_connection(void)
+{
+    return secure_connection;
 }

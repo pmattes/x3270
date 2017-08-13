@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -61,6 +61,7 @@
 #include "readres.h"
 #include "screen.h"
 #include "selectc.h"
+#include "sio.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -482,9 +483,8 @@ set_appres_defaults(void)
 #endif /*]*/
     appres.devname = "x3270";
 
-#if defined(HAVE_LIBSSL) /*[*/
+    appres.ssl.verify_host_cert = true;
     appres.ssl.tls = true;
-#endif /*]*/
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -497,26 +497,15 @@ set_appres_defaults(void)
 #endif /*]*/
 
 static opt_t base_opts[] = {
-#if defined(HAVE_LIBSSL) /*[*/
 { OptAcceptHostname,OPT_STRING,false,ResAcceptHostname,aoffset(ssl.accept_hostname),
-    "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
+#if !defined(_WIN32) /*[*/
+    "any|[DNS:]<name>",
+#else /*][*/
+    "[DNS:]<name>",
 #endif /*]*/
+    "Host name to accept from server certificate" },
 { OptAplMode,  OPT_BOOLEAN, true,  ResAplMode,   aoffset(apl_mode),
     NULL, "Turn on APL mode" },
-#if defined(HAVE_LIBSSL) /*[*/
-{ OptCaDir,    OPT_STRING,  false, ResCaDir,     aoffset(ssl.ca_dir),
-    "<directory>","OpenSSL CA certificate database directory" },
-{ OptCaFile,   OPT_STRING,  false, ResCaFile,    aoffset(ssl.ca_file),
-    "<filename>", "OpenSSL CA certificate file" },
-#endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-{ OptCertFile, OPT_STRING,  false, ResCertFile,  aoffset(ssl.cert_file),
-    "<filename>", "OpenSSL certificate file" },
-{ OptCertFileType,OPT_STRING,false,ResCertFileType,  aoffset(ssl.cert_file_type),
-    "pem|asn1",   "OpenSSL certificate file type" },
-{ OptChainFile,OPT_STRING,  false,ResChainFile,  aoffset(ssl.chain_file),
-    "<filename>", "OpenSSL certificate chain file" },
-#endif /*]*/
 { OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,
@@ -534,14 +523,6 @@ static opt_t base_opts[] = {
     "<filename>", "Use <hostname> as the ibm_hosts file" },
 { OptHttpd,    OPT_STRING,  false, ResHttpd,     aoffset(httpd_port),
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
-#if defined(HAVE_LIBSSL) /*[*/
-{ OptKeyFile,  OPT_STRING,  false, ResKeyFile, aoffset(ssl.key_file),
-    "<filename>", "Get OpenSSL private key from <filename>" },
-{ OptKeyFileType,OPT_STRING,false, ResKeyFileType,aoffset(ssl.key_file_type),
-    "pem|asn1",   "OpenSSL private key file type" },
-{ OptKeyPasswd,OPT_STRING,  false, ResKeyPasswd,aoffset(ssl.key_passwd),
-    "file:<filename>|string:<text>","OpenSSL private key password" },
-#endif /*]*/
 #if defined(_WIN32) /*[*/
 { OptLocalCp,  OPT_INT,	false, ResLocalCp,   aoffset(local_cp),
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
@@ -552,6 +533,8 @@ static opt_t base_opts[] = {
 },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+{ OptNoVerifyHostCert,OPT_BOOLEAN,false,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
+    NULL, "Disable SSL/TLS host certificate validation" },
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
 { OptOversize, OPT_STRING,  false, ResOversize,  aoffset(oversize),
@@ -564,10 +547,6 @@ static opt_t base_opts[] = {
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
 { OptScriptPortOnce,OPT_BOOLEAN,true,ResScriptPortOnce,aoffset(script_port_once),
     NULL, "Accept one script connection, then exit" },
-#if defined(HAVE_LIBSSL) /*[*/
-{ OptSelfSignedOk, OPT_BOOLEAN, true, ResSelfSignedOk, aoffset(ssl.self_signed_ok),
-    NULL, "Allow self-signed host certificates" },
-#endif /*]*/
 { OptSet,      OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 { OptSocket,   OPT_BOOLEAN, true,  ResSocket,    aoffset(socket),
@@ -584,10 +563,8 @@ static opt_t base_opts[] = {
     "<name>", "User name for RFC 4777" },
 { OptV,        OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-#if defined(HAVE_LIBSSL) /*[*/
 { OptVerifyHostCert,OPT_BOOLEAN,true,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
-    NULL, "Enable OpenSSL host certificate validation" },
-#endif /*]*/
+    NULL, "Enable SSL/TLS host certificate validation (set by default)" },
 { OptVersion,  OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 { "-xrm",      OPT_XRM,     false, NULL,         NULL,
@@ -983,14 +960,7 @@ static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
-#if defined(HAVE_LIBSSL) /*[*/
     { ResAcceptHostname,aoffset(ssl.accept_hostname),XRM_STRING },
-    { ResCaDir,		aoffset(ssl.ca_dir),	XRM_STRING },
-    { ResCaFile,	aoffset(ssl.ca_file),	XRM_STRING },
-    { ResCertFile,	aoffset(ssl.cert_file),	XRM_STRING },
-    { ResCertFileType,aoffset(ssl.cert_file_type),	XRM_STRING },
-    { ResChainFile,	aoffset(ssl.chain_file),	XRM_STRING },
-#endif /*]*/
     { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
@@ -1027,11 +997,6 @@ static res_t base_resources[] = {
     { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
     { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
     { ResIntr,		aoffset(linemode.intr),	XRM_STRING },
-#if defined(HAVE_LIBSSL) /*[*/
-    { ResKeyFile,	aoffset(ssl.key_file),	XRM_STRING },
-    { ResKeyFileType,	aoffset(ssl.key_file_type),XRM_STRING },
-    { ResKeyPasswd,	aoffset(ssl.key_passwd),	XRM_STRING },
-#endif /*]*/
     { ResKill,		aoffset(linemode.kill),	XRM_STRING },
     { ResLnext,		aoffset(linemode.lnext),	XRM_STRING },
 #if defined(_WIN32) /*[*/
@@ -1052,16 +1017,11 @@ static res_t base_resources[] = {
     { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
     { ResScreenTraceFile,aoffset(screentrace_file),XRM_STRING },
     { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
-#if defined(HAVE_LIBSSL) /*[*/
-    { ResSelfSignedOk,aoffset(ssl.self_signed_ok),XRM_BOOLEAN },
-#endif /*]*/
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
     { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
-#if defined(HAVE_LIBSSL) /*[*/
     { ResTls,	aoffset(ssl.tls),		XRM_BOOLEAN },
-#endif /*]*/
     { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
     { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
@@ -1069,9 +1029,7 @@ static res_t base_resources[] = {
     { ResTypeahead,	aoffset(typeahead),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
-#if defined(HAVE_LIBSSL) /*[*/
     { ResVerifyHostCert,aoffset(ssl.verify_host_cert),XRM_BOOLEAN },
-#endif /*]*/
     { ResWerase,	aoffset(linemode.werase),XRM_STRING }
 };
 

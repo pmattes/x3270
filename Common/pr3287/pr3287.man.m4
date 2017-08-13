@@ -5,8 +5,7 @@ XX_SM(IBM)
 host printing tool
 XX_SH(Synopsis)
 XX_FB(XX_PRODUCT)
-[ XX_FI(options) ]       
-[ L: ] [[ XX_FI(LUname) [, XX_FI(LUname) ...]@] XX_FI(hostname) [: XX_FI(port) ]] 
+[XX_FI(options)] [L:][Y:][XX_FI(LUname)[,XX_FI(LUname)...]@]XX_FI(hostname)[:XX_FI(port)][=XX_FI(accept)]
 XX_SH(Description)
 XX_FB(XX_PRODUCT)
 opens a telnet connection to an
@@ -15,7 +14,9 @@ host, and emulates an XX_SM(IBM) 3287 printer.
 It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection).
 XX_LP
 If the XX_FI(hostname) is prefixed with XX_FB(L:), the connection will be made
-through an SSL tunnel.
+through an SSL/TLS tunnel.
+If the XX_FI(hostname) is also prefixed with XX_FB(Y:), the host's SSL/TLS
+certificate will not be checked.
 XX_FB(XX_PRODUCT) also supports TELNET START-TLS option negotiation without any
 need for command-line options.
 XX_LP
@@ -34,18 +35,26 @@ to the
 XX_FI(hostname)
 with a colon
 XX_DQUOTED(XX_FB(:)).
+XX_LP
+An accept name (a name to compare to the host's SSL/TLS certificate) may be
+specified by appending it with an equals sign.
 XX_SH(Options)
 XX_FB(XX_PRODUCT)
 understands the following options:
 XX_TPS()dnl
-XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(spec))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(name))
 Specifies a particular hostname to accept when validating the name presented
-in the host's SSL certificate, instead of comparing to the name or address
+in the server SSL certificate, instead of comparing to the name
 used to make the connection.
-XX_FI(spec) can either be XX_FB(any), which
-disables name validation, XX_FB(DNS:)`'XX_FI(hostname), which matches a
-particular DNS hostname, or XX_FB(IP:)`'XX_FI(address), which matches a
-particular numeric IPv4 or IPv6 address.
+XX_FI(name) can either be XX_FB(any) (OpenSSL only), which
+disables name validation, or a specific name.
+',
+`XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(name))
+Specifies a particular hostname to accept when validating the name presented
+in the server SSL certificate, instead of comparing to the name
+used to make the connection.
+')dnl
 XX_TP(XX_FB(XX_DASHED(assoc)) XX_FI(LUname))
 Causes the session to be associated with the specified
 XX_FI(LUname).
@@ -53,26 +62,36 @@ XX_TP(XX_FB(XX_DASHED(blanklines)))
 In LU3 formatted mode, print blank lines even if they are all NULLs or control
 characters.
 (This is a violation of the 3270 printer protocol, but some hosts require it.)
-XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
 Specifies a directory containing CA (root) certificates to use when verifying a
-certificate provided by the host.
+certificate provided by the host. (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(cafile)) XX_FI(filename))
 Specifies a XX_SM(PEM)-format file containing CA (root) certificates to use
-when verifying a certificate provided by the host.
-XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
-Specifies a file containing a certificate to provide to the host, if
-requested.
-The default file type is XX_SM(PEM).
+when verifying a certificate provided by the host. (OpenSSL only)
+')dnl
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
+Specifies a file containing a certificate to provide to the host.
+The default file type is XX_SM(PEM) (OpenSSL) or PKCS12 (MacOS).
 XX_TP(XX_FB(XX_DASHED(certfiletype)) XX_FI(type))
 Specifies the type of the certificate file specified
 by XX_FB(XX_DASHED(certfile)).
-XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(chainfile) XX_FI(filename)))
 Specifies a certificate chain file in XX_SM(PEM) format, containing a
-certificate to provide to the host if requested, as well as one or more
+certificate to provide to the host, as well as one or more
 intermediate certificates and the CA certificate used to sign that certificate.
 If XX_FB(XX_DASHED(chainfile)) is specified, it
-overrides XX_FB(XX_DASHED(certfile)).
+overrides XX_FB(XX_DASHED(certfile)). (OpenSSL only)
+XX_TP(XX_FB(XX_DASHED(clientcert)) XX_FI(name))
+Specifies the name of a client certificate to provide to the host. It must be
+installed in the keychain. (MacOS only)
+',
+`XX_TP(XX_FB(XX_DASHED(clientcert)) XX_FI(name))
+Specifies the name of a client certificate to provide to the host. It must be
+in the Personal certificate store.
+')dnl
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an alternate host code page (input XX_SM(EBCDIC) mapping).
 The default maps the U.S. English (037) code page to the
@@ -127,19 +146,21 @@ XX_TP(XX_FB(XX_DASHED(ffthru)))
 In SCS mode, causes XX_FI(XX_PRODUCT) to pass FF (formfeed) orders through to the
 printer as ASCII formfeed characters, rather than simulating them based on the
 values of the MPL (maximum presentation line) and TM (top margin) parameters.
-XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
 Specifies a file containing the private key for the certificate file
 (specified via XX_FB(XX_DASHED(certfile)) or XX_FB(XX_DASHED(chainfile))).
-The default file type is XX_SM(PEM).
+The default file type is XX_SM(PEM). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(keyfiletype)) XX_FI(type))
 Specifies the type of the private key file specified
 by XX_FB(XX_DASHED(keyfile)).
-XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(keypasswd)) XX_FI(type):XX_FI(value))
 Specifies the password for the private key file, if it is encrypted.
 The argument can be XX_FB(file):XX_FI(filename), specifying that the
 password is in a file, or XX_FB(string):XX_FI(string), specifying the
 password on the command-line directly.
+')dnl
 XX_TP(XX_FB(XX_DASHED(mpp) XX_FI(n)))
 Specifies a non-default value for the Maximum Presentation Position (the
 line length for unformatted Write commands).
@@ -155,6 +176,8 @@ printer, e.g., <b>\\server\printer1</b>.
 XX_TP(XX_FB(XX_DASHED(printercp)) XX_FI(codepage))
 Specifies the code page to use when generating printer output.
 The default is to use the system ANSI code page.')
+XX_TP(XX_FB(XX_DASHED(noverifycert)))
+Do not verify the host certificate for SSL/TLS connections.
 XX_TP(XX_FB(XX_DASHED(proxy) XX_FI(type):XX_FI(host)[:XX_FI(port)]))
 Causes XX_FB(XX_PRODUCT) to connect via the specified proxy, instead of
 using a direct connection.
@@ -167,8 +190,6 @@ Causes XX_FI(XX_PRODUCT) to reconnect to the host, whenever the connection is
 broken.
 There is a 5-second delay between reconnect attempts, to reduce network
 thrashing for down or misconfigured hosts.
-XX_TP(XX_FB(XX_DASHED(selfsignedok)))
-Allow self-signed host certificates.
 XX_TP(XX_FB(XX_DASHED(skipcc)))
 For unformatted writes, skip ASA carriage control characters (e.g., blank for
 single-space, `0' for double-space, `1' for formfeed, etc.) in the first
@@ -194,8 +215,8 @@ translated in any way.
 XX_TP(XX_FB(XX_DASHED(v)))
 Display build and version information and exit.
 XX_TP(XX_FB(XX_DASHED(verifycert)))
-Verify the host certificate for tunneled SSL and negotiated SSL/TLS
-connections.
+Verify the host certificate for SSL/TLS connections. (This is the default
+setting.)
 XX_TP(XX_FB(XX_DASHED(xtable) XX_FI(file)))
 Specifies a file containing transparent data translations.
 The file specifies EBCDIC characters that will be translated into transparent
@@ -276,7 +297,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2014, Paul Mattes.
+Copyright`'XX_COPY()1993-XX_CYEAR, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()1990, Jeff Sparkes.
 XX_BR

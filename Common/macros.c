@@ -69,6 +69,7 @@
 #include "pr3287_session.h"
 #include "product.h"
 #include "screen.h"
+#include "split_host.h"
 #include "status.h"
 #include "telnet.h"
 #include "trace.h"

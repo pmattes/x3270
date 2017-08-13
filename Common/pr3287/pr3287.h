@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2014, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,9 @@
  * 	Global declarations.
  */
 
+/* Nested include for ssl_config_t. */
+#include "ssl_config.h"
+
 /* Options. */
 typedef struct {
 	const char *assoc;	/* TN3270 session to associate with (-assoc) */
@@ -58,22 +61,8 @@ typedef struct {
 	int reconnect;		/* -reconnect */
 	int skipcc;		/* -skipcc */
 	int mpp;		/* -mpp */
-#if defined(HAVE_LIBSSL) /*[*/
-	struct {
-		const char *accept_hostname;	/* -accepthostname */
-		const char *ca_dir;		/* -cadir */
-		const char *ca_file;		/* -cafile */
-		const char *cert_file;		/* -certfile */
-		const char *cert_file_type;	/* -certfiletype */
-		const char *chain_file;		/* -chainfile */
-		const char *key_file;		/* -keyfile */
-		const char *key_file_type;	/* -keyfiletype */
-		const char *key_passwd;		/* -keypasswd */
-		int self_signed_ok;		/* -selfsignedok */
-		int ssl_host;			/* L: */
-		int verify_cert;		/* -verifycert */
-	} ssl;
-#endif /*]*/
+	bool ssl_host;		/* L: */
+	ssl_config_t ssl;	/* SSL options */
 	int syncport;		/* -syncport */
 	const char *tracedir;	/* where we are tracing (-tracedir) */
 	int tracing;		/* are we tracing? (-trace) */

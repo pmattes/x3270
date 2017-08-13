@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014, 2016 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014, 2016-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,4 +72,18 @@ get_version_info(void)
     }
 
     return 0;
+}
+
+/* Returns true if running under Wine. */
+bool
+is_wine(void)
+{
+    static const char *(CDECL *pwine_get_version)(void);
+    HMODULE hntdll = GetModuleHandle("ntdll.dll");
+    if (!hntdll) {
+	return false;
+    }
+
+    pwine_get_version = (void *)GetProcAddress(hntdll, "wine_get_version");
+    return pwine_get_version != NULL;
 }

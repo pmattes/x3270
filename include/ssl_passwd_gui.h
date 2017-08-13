@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,10 @@
  *		Global declarations for ssl_passwd_gui.c.
  */
 
-int ssl_passwd_gui_callback(char *buf, int size);
-void ssl_passwd_gui_reset(void);
-bool ssl_passwd_gui_retry(void);
+typedef enum {
+    SP_SUCCESS,		/* got a password */
+    SP_FAILURE,		/* aborted */
+    SP_PENDING,		/* pending */
+    SP_NOT_SUPPORTED	/* can't prompt */
+} ssl_passwd_ret_t;
+ssl_passwd_ret_t ssl_passwd_gui_callback(char *buf, int size, bool again);

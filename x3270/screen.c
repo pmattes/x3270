@@ -5680,15 +5680,7 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 done:
     if (needs_moving && !iconic) {
 	keypad_move();
-	{
-	    static bool first = true;
-
-	    if (first) {
-		first = false;
-	    } else {
-		popups_move();
-	    }
-	}
+	popups_move();
     }
 }
 

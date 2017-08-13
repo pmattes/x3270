@@ -15,31 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wpr3287\charset.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wpr3287\ctlr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wpr3287\pr3287.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wpr3287\sf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wpr3287\telnet.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wpr3287\trace.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ResourceCompile Include="..\..\wpr3287\wpr3287.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\..\wpr3287\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\wpr3287\ws.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287\xtable.c">
+    <ClCompile Include="..\..\Common\pr3287\charset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\ctlr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\pr3287.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\sf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\telnet.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\trace.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\xtable.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2016, Paul Mattes.
+ * Copyright (c) 1995-2017, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,6 +62,7 @@
 #define ResCharClass		"charClass"
 #define ResCharset		"charset"
 #define ResCharsetList		"charsetList"
+#define ResClientCert		"clientCert"
 #define ResColor8		"color8"
 #define ResColorBackground	"colorBackground"
 #define ResColorScheme		"colorScheme"
@@ -202,7 +203,6 @@
 #define ResScrollBar		"scrollBar"
 #define ResSecure		"secure"
 #define ResSelectBackground	"selectBackground"
-#define ResSelfSignedOk		"selfSignedOk"
 #define ResSbcsCgcsgid		"sbcsCgcsgid"
 #define ResShowTiming		"showTiming"
 #define ResSocket		"socket"
@@ -246,6 +246,7 @@
 #define DotCbreak		"." ResCbreak
 #define DotCharClass		"." ResCharClass
 #define DotCharset		"." ResCharset
+#define DotClientCert		"." ResClientCert
 #define DotColorScheme		"." ResColorScheme
 #define DotConnectTimeout	"." ResConnectTimeout
 #define DotDevName		"." ResDevName
@@ -315,6 +316,7 @@
 #define ClsChainFile		"ChainFile"
 #define ClsCharClass		"CharClass"
 #define ClsCharset		"Charset"
+#define ClsClientCert		"ClientCert"
 #define ClsColor8		"Color8"
 #define ClsColorBackground	"ColorBackground"
 #define ClsColorScheme		"ColorScheme"
@@ -426,7 +428,6 @@
 #define ClsScrollBar		"ScrollBar"
 #define ClsSecure		"Secure"
 #define ClsSelectBackground	"SelectBackground"
-#define ClsSelfSignedOk		"SelfSignedOk"
 #define ClsShowTiming		"ShowTiming"
 #define ClsSocket		"Socket"
 #define ClsSuppressActions	"SuppressActions"
@@ -466,6 +467,7 @@
 #define OptChainFile		"-chainfile"
 #define OptCharClass		"-cc"
 #define OptCharset		"-charset"
+#define OptClientCert		"-clientcert"
 #define OptClear		"-clear"
 #define OptColorScheme		"-scheme"
 #define OptConnectTimeout	"-connecttimeout"
@@ -506,7 +508,6 @@
 #define OptReverseVideo		"-rv"
 #define OptSaveLines		"-sl"
 #define OptSecure		"-secure"
-#define OptSelfSignedOk		"-selfsignedok"
 #define OptScripted		"-script"
 #define OptScriptPort		"-scriptport"
 #define OptScriptPortOnce	"-scriptportonce"
@@ -516,6 +517,7 @@
 #define OptSyncPort		"-syncport"
 #define OptAutoShortcut		"-S"
 #define OptNoAutoShortcut	"+S"
+#define OptNoVerifyHostCert	"-noverifycert"
 #define OptTermName		"-tn"
 #define OptTitle		"-title"
 #define OptTraceFile		"-tracefile"

@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2016, Paul Mattes.
+# Copyright (c) 2007-2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,18 @@
 
 # Makefile for wpr3287
 
-# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
-#  WIN32_FLAGS.
+# Set GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/Common/pr3287 -I$(TOP)/include
-CFLAGS = -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
+CFLAGS = -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(CDEBUGFLAGS)
 
-OBJ = o
 include pr3287_files.mk
 include wpr3287_files.mk
 VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
 
 OBJECTS = $(VOBJS) version.o
-LIBS = $(SSLLIB) -lws2_32 -lwinspool
+LIBS = -lws2_32 -lwinspool -lcrypt32 -lsecur32
 
 ifdef WIN64
 HOST = win64
@@ -49,7 +47,7 @@ endif
 W = w
 include libs.mk
 
-all: wpr3287.exe root_certs.txt
+all: wpr3287.exe
 
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
@@ -58,18 +56,18 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-wpr3287res.o: wpr3287.rc pr3287.ico
+wpr3287.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wpr3287 "wpr3287 printer emulator" $(WIN64) >$@.tmp
+	/bin/mv -f $@.tmp $@
+
+wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
 	$(WINDRES) -i $< -o $@
 
 wpr3287.exe: $(OBJECTS) $(DEP32XX)
 	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
 
-root_certs.txt: root_certs.txt.in
-	@$(RM) $@
-	cp $< $@
-
 clean:
-	rm -f *.o
+	rm -f *.o wpr3287.exe.manifest
 
 clobber: clean
 	rm -f wpr3287.exe *.d

@@ -40,6 +40,7 @@
 #include "icmdc.h"
 #include "lazya.h"
 #include "popups.h"
+#include "split_host.h"
 #include "utf8.h"
 #include "utils.h"
 

@@ -17,22 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="SSL-Debug|x64">
-      <Configuration>SSL-Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="SSL-Release|Win32">
-      <Configuration>SSL-Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="SSL-Debug|Win32">
-      <Configuration>SSL-Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="SSL-Release|x64">
-      <Configuration>SSL-Release</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F0E2661-72DE-4C76-B013-3FA3ED125DF3}</ProjectGuid>
@@ -62,22 +46,6 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'" Label="Configuration">
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'" Label="Configuration">
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -104,10 +72,6 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">true</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">true</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">false</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -116,7 +80,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -128,7 +92,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;crypt32.lib;secur32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -142,7 +106,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -153,7 +117,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;crypt32.lib;secur32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -162,7 +126,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -186,7 +150,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -202,67 +166,6 @@
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <Optimization>Disabled</Optimization>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Console</SubSystem>
-      <ImageHasSafeExceptionHandlers />
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <Optimization>Disabled</Optimization>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <SubSystem>Console</SubSystem>
-      <ImageHasSafeExceptionHandlers />
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win64\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw32xx.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

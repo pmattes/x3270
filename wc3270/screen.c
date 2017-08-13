@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2016 Paul Mattes.
+ * Copyright (c) 2000-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,7 @@
 #include "see.h"
 #include "selectc.h"
 #include "status.h"
+#include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -184,6 +185,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If 0, there is no menu bar.
 				   If nonzero (2, actually), menu bar is at the
 				   top of the display. */
+static int rmargin;
 
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
@@ -2143,6 +2145,16 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	}
     }
 
+    /* Check for SSL pop-up. */
+    if (me->dwEventFlags == 0 &&
+	    me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED &&
+	    status_row &&
+	    x == rmargin - 28 &&
+	    y == status_row) {
+	run_action("Show", IA_DEFAULT, "Stats", NULL);
+	return;
+    }
+
     /* Figure out what sort of event it is. */
     if ((me->dwEventFlags & DOUBLE_CLICK) &&
 	(me->dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED)) {
@@ -2871,9 +2883,8 @@ status_connect(bool connected)
 	} else {
 	    status_msg = "";
 	}
-#if defined(HAVE_LIBSSL) /*[*/
-	if (secure_connection) {
-	    if (secure_unverified) {
+	if (net_secure_connection()) {
+	    if (net_secure_unverified()) {
 		status_secure = SS_UNVERIFIED;
 	    } else {
 		status_secure = SS_SECURE;
@@ -2881,7 +2892,6 @@ status_connect(bool connected)
 	} else {
 	    status_secure = SS_INSECURE;
 	}
-#endif /*]*/
     } else {
 	oia_boxsolid = false;
 	status_msg = "X Not Connected";
@@ -2965,7 +2975,6 @@ status_script(bool on _is_unused)
 static void
 draw_oia(void)
 {
-    int rmargin;
     int i, j;
     int cursor_col = (cursor_addr % cCOLS);
     int fl_cursor_col = flipped? (console_cols - 1 - cursor_col): cursor_col;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -136,7 +136,6 @@ XtResource resources[] = {
       offset(interactive.printer_lu), XtRString, 0 },
     { ResDbcsCgcsgid, ClsDbcsCgcsgid, XtRString, sizeof(char *),
       offset(dbcs_cgcsgid), XtRString, 0 },
-#if defined(HAVE_LIBSSL) /*[*/
     { ResAcceptHostname, ClsAcceptHostname, XtRString, sizeof(char *),
       offset(ssl.accept_hostname), XtRString, 0 },
     { ResCaDir, ClsCaDir, XtRString, sizeof(char *),
@@ -155,7 +154,6 @@ XtResource resources[] = {
       offset(ssl.key_file_type), XtRString, 0 },
     { ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
       offset(ssl.key_passwd), XtRString, 0 },
-#endif /*]*/
 
     { ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
       offset(ft.dft_buffer_size_bc), XtRString, 0 }, /* deprecated */
@@ -380,12 +378,10 @@ XtResource xresources[] = {
     { ResOnlcr, ClsOnlcr, XtRBoolean, sizeof(Boolean),
       boffset(linemode.onlcr), XtRString, ResTrue },
 
-    { ResSelfSignedOk, ClsSelfSignedOk, XtRBoolean, sizeof(Boolean),
-      boffset(ssl.self_signed_ok), XtRString, ResFalse },
     { ResTls, ClsTls, XtRBoolean, sizeof(Boolean),
       boffset(ssl.tls), XtRString, ResTrue },
     { ResVerifyHostCert, ClsVerifyHostCert, XtRBoolean, sizeof(Boolean),
-      boffset(ssl.verify_host_cert), XtRString, ResFalse },
+      boffset(ssl.verify_host_cert), XtRString, ResTrue },
 };
 
 Cardinal num_xresources = XtNumber(xresources);

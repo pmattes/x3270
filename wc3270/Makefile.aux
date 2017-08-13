@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2015 Paul Mattes.
+# Copyright (c) 1995-2015, 2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -53,18 +53,28 @@ html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 
-# Special rule to build the SSL documentation, which comes from a template.
+# Special rule to build the SSL documentation.
 html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
-documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
-	openssl-url.txt
-	./dll-subst.sh <documentation-ssl-body.tmpl >$@
+	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
 
 LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
 	./mkiss <LICENSE.txt.tmpl >LICENSE.txt
+
+# Find Inno Setup and kSign.
+# On 32-bit Wine, they are in C:\Program Files.
+# On 64-bit Wine, they are in C:\Program Files (x86).
+ifeq ($(shell test -d "`winepath -u \"C:\\Program Files (x86)\"`" && echo yes),yes)
+PFX = C:\Program Files (x86)
+QPFX = C:\\Program Files (x86)
+QQPFX = C:\\Program\ Files\ \(x86\)
+else
+PFX = C:\Program Files
+QPFX = C:\\Program Files
+QQPFX = C:\\Program\ Files
+endif
 
 # Generate the Inno Setup .exe and the no-install zip file.
 # This depends on external targets, and is intended to be built recursively
@@ -80,9 +90,9 @@ CERT = z:\\hd\\xfer\\Certificate3.p12
 PASS = /p `cat /tmp/pass`
 sign-files:
 	./readpass
-	@(echo '@echo off'; \
+	@(/bin/echo '@echo off'; \
 	 for i in $(SIGNFILES); \
-	    do /bin/echo -E "\"C:\\Program Files\\kSign\\ksigncmd.exe\" /f $(CERT) /p \"`sed 's/%/%%/' /tmp/pass`\" $$i"; \
+	    do /bin/echo -E "\"$(QPFX)\\kSign\\ksigncmd.exe\" /f $(CERT) /p \"`sed 's/%/%%/' /tmp/pass`\" $$i"; \
 	       /bin/echo "if errorlevel 1 ("; \
 	       /bin/echo "    goto :EOF"; \
 	       /bin/echo ")"; \
@@ -95,8 +105,8 @@ sign-files:
 # .iss.tmpl file.
 ISSDEP = $(shell awk '/Source:/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-/-g')
 wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux sign-files
-	wine C:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE \
-	    /smystandard="C:\\Program Files\\ksign\\ksigncmd.exe /f $(CERT) $(PASS) \$$p" \
+	wine $(QQPFX)\\Inno\ Setup\ 5\\ISCC.EXE \
+	    /smystandard="$(QPFX)\\ksign\\ksigncmd.exe /f $(CERT) $(PASS) \$$p" \
 	    wc3270.iss
 
 # Rule for building the noinstall.zip file, deriving dependencies from the

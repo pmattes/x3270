@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -38,9 +38,8 @@
 
 #include "globals.h"
 
-#if defined(HAVE_LIBSSL) /*[*/
-
 #include "appres.h"
+#include "screen.h"
 # if defined(WC3270) /*[*/
 #  include "cscreen.h"
 # endif /*]*/
@@ -91,35 +90,20 @@ gets_noecho(char *buf, int size)
 }
 
 /* Password callback. */
-int
-ssl_passwd_gui_callback(char *buf, int size)
+ssl_passwd_ret_t
+ssl_passwd_gui_callback(char *buf, int size, bool again)
 {
     char *s;
 
-   fprintf(stdout, "\nEnter password for Private Key: ");
-   fflush(stdout);
-   s = gets_noecho(buf, size);
-   fprintf(stdout, "\n");
-   fflush(stdout);
-   ssl_password_prompted = true;
-   return s? (int)strlen(s): 0;
+    screen_suspend();
+    if (again) {
+	fprintf(stdout, "\nPassword is incorrect.");
+    }
+    fprintf(stdout, "\nEnter password for Private Key: ");
+    fflush(stdout);
+    s = gets_noecho(buf, size);
+    fprintf(stdout, "\n");
+    fflush(stdout);
+    ssl_password_prompted = true;
+    return (s && strlen(s))? SP_SUCCESS: SP_FAILURE;
 }
-
-/* Password GUI reset. */
-void
-ssl_passwd_gui_reset(void)
-{
-    ssl_password_prompted = false;
-}
-
-/*
- * Password GUI retry.
- * Returns true if we should try prompting for the password again.
- */
-bool
-ssl_passwd_gui_retry(void)
-{
-    return ssl_password_prompted;
-}
-
-#endif /*]*/

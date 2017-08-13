@@ -33,9 +33,10 @@ Name: "ws3270"; Description: "ws3270 (scripting app)"; Types: full custom
 Name: "help"; Description: "Help files"; Types: full custom
 
 [InstallDelete]
-; Get rid of the AppData CA root certs files. The new install puts it in {app}.
+; Get rid of the old root certs files.
 Type: files; Name: "{userappdata}\root_certs.txt"
 Type: files; Name: "{commonappdata}\root_certs.txt"
+Type: files; Name: "{app}\root_certs.txt"
 ; Get rid of the old New wc3270 Session desktop icon.
 Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
 ; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
@@ -66,7 +67,6 @@ Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignorevers
 Source: "..\obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: wizard
 Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
 Source: "..\obj\win64\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win64\wc3270\root_certs.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -32,8 +32,5 @@
  *		Private (locally-shared) declarations for telnet.c.
  */
 
-#if defined(HAVE_LIBSSL) /*[*/
-extern SSL_CTX *ssl_ctx;
-#endif /*]*/
-extern char *ssl_cl_hostname;
+extern sio_t sio;
 extern bool *ssl_pending;

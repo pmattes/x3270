@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -115,9 +115,7 @@ static void scheme_init(void);
 static void charsets_init(void);
 static void options_menu_init(bool regen, Position x, Position y);
 static void keypad_button_init(Position x, Position y);
-#if defined(HAVE_LIBSSL) /*[*/
 static void ssl_icon_init(Position x, Position y);
-#endif /*]*/
 static void connect_menu_init(bool regen, Position x, Position y);
 static void macros_menu_init(bool regen, Position x, Position y);
 static void file_menu_init(bool regen, Dimension x, Dimension y);
@@ -139,10 +137,8 @@ static void screensave_option(Widget w, XtPointer client_data,
 #include "diamond.bm"
 #include "no_diamond.bm"
 #include "ky.bm"
-#if defined(HAVE_LIBSSL) /*[*/
 #include "locked.bm"
 #include "unlocked.bm"
-#endif /*]*/
 #include "null.bm"
 
 
@@ -162,11 +158,9 @@ static Widget	assoc_button;
 static Widget	lu_button;
 static Widget	printer_off_button;
 static Widget   connect_button;
-#if defined(HAVE_LIBSSL) /*[*/
 static Widget   locked_icon;
 static Widget   unlocked_icon;
 static Widget   unverified_icon;
-#endif /*]*/
 static Widget   keypad_button;
 static Widget   linemode_button;
 static Widget   charmode_button;
@@ -421,7 +415,6 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 	    BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 	    TOP_MARGIN);
 
-#if defined(HAVE_LIBSSL) /*[*/
 	/* SSL icon */
 
 	ssl_icon_init(
@@ -429,7 +422,6 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 			    (ky_width+8) -
 			    4*BORDER - 2*MENU_BORDER - (locked_width+8)),
 	    TOP_MARGIN);
-#endif /*]*/
 
 	/* Keypad button */
 
@@ -548,12 +540,11 @@ menubar_connect(bool ignored _is_unused)
 	XtVaSetValues(m3279_button, XtNsensitive, !PCONNECTED, NULL);
     }
 
-#if defined(HAVE_LIBSSL) /*[*/
     if (locked_icon != NULL) {
 	if (CONNECTED) {
-	    if (secure_connection) {
+	    if (net_secure_connection()) {
 		XtUnmapWidget(unlocked_icon);
-		if (secure_unverified) {
+		if (net_secure_unverified()) {
 		    XtMapWidget(unverified_icon);
 		} else {
 		    XtMapWidget(locked_icon);
@@ -569,7 +560,6 @@ menubar_connect(bool ignored _is_unused)
 	    XtUnmapWidget(unlocked_icon);
 	}
     }
-#endif /*]*/
 }
 
 /* Called when the printer starts or stops. */
@@ -1333,7 +1323,6 @@ keypad_button_init(Position x, Position y)
 	}
 }
 
-#if defined(HAVE_LIBSSL) /*[*/
 static void
 ssl_icon_init(Position x, Position y)
 {
@@ -1345,53 +1334,56 @@ ssl_icon_init(Position x, Position y)
 		pixmap = XCreateBitmapFromData(display, root_window,
 		    (char *) locked_bits, locked_width, locked_height);
 		locked_icon = XtVaCreateManagedWidget(
-		    "lockedIcon", labelWidgetClass, menu_parent,
+		    "lockedIcon", commandWidgetClass, menu_parent,
 		    XtNbitmap, pixmap,
 		    XtNx, x,
 		    XtNy, y,
 		    XtNwidth, locked_width+8,
 		    XtNheight, KEY_HEIGHT,
 		    XtNmappedWhenManaged,
-			CONNECTED && secure_connection && !secure_unverified,
+			CONNECTED && net_secure_connection() && !net_secure_unverified(),
 		    NULL);
+		XtAddCallback(locked_icon, XtNcallback,
+		    show_about_status, NULL);
 		unverified_icon = XtVaCreateManagedWidget(
-		    "unverifiedIcon", labelWidgetClass, menu_parent,
+		    "unverifiedIcon", commandWidgetClass, menu_parent,
 		    XtNbitmap, pixmap,
 		    XtNx, x,
 		    XtNy, y,
 		    XtNwidth, locked_width+8,
 		    XtNheight, KEY_HEIGHT,
 		    XtNmappedWhenManaged,
-			CONNECTED && secure_connection && secure_unverified,
+			CONNECTED && net_secure_connection() && net_secure_unverified(),
 		    NULL);
+		XtAddCallback(unverified_icon, XtNcallback,
+		    show_about_status, NULL);
 		pixmap = XCreateBitmapFromData(display, root_window,
 		    (char *) unlocked_bits, unlocked_width, unlocked_height);
 		unlocked_icon = XtVaCreateManagedWidget(
-		    "unlockedIcon", labelWidgetClass, menu_parent,
+		    "unlockedIcon", commandWidgetClass, menu_parent,
 		    XtNbitmap, pixmap,
 		    XtNx, x,
 		    XtNy, y,
 		    XtNwidth, unlocked_width+8,
 		    XtNheight, KEY_HEIGHT,
-		    XtNmappedWhenManaged, CONNECTED && !secure_connection,
+		    XtNmappedWhenManaged, CONNECTED && !net_secure_connection(),
 		    NULL);
+		XtAddCallback(unlocked_icon, XtNcallback,
+		    show_about_status, NULL);
 	} else {
 		XtVaSetValues(locked_icon, XtNx, x, NULL);
 		XtVaSetValues(unlocked_icon, XtNx, x, NULL);
 	}
 }
-#endif /*]*/
 
 void
 menubar_resize(Dimension width)
 {
-#if defined(HAVE_LIBSSL) /*[*/
 	ssl_icon_init(
 	    (Position) (width - LEFT_MARGIN -
 			    (ky_width+8) -
 			    4*BORDER - 2*MENU_BORDER - (locked_width+8)),
 	    TOP_MARGIN);
-#endif /*]*/
 	keypad_button_init(
 	    (Position) (width - LEFT_MARGIN - (ky_width+8) - 2*BORDER),
 	    TOP_MARGIN);

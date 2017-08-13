@@ -87,8 +87,8 @@ static struct {
 	{ "CloseScript", NULL, P_SCRIPTING, "Exit peer script" },
 	{ "Compose", NULL, P_INTERACTIVE,
 	    "Interpret next two keystrokes according to the compose map" },
-	{ "Connect", "[<lu>@]<host>[:<port>]", P_INTERACTIVE,
-	    "Open connection to <host>" },
+	{ "Connect", "[L:][Y:][A:][<lu>@]<host>[:<port>][=<accept>]",
+	    P_INTERACTIVE, "Open connection to <host>" },
 #if defined(LOCAL_PROCESS) /*[*/
 	{ "Connect", "-e [<command> [<arg>...]]", P_INTERACTIVE,
 	    "Open connection to a local shell or command" },

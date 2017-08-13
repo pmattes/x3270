@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016, Paul Mattes.
+ * Copyright (c) 2008-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,20 @@
 #include "unicode_dbcs.h"
 #include "utf8.h"
 #include "utils.h"
+
+/*
+ * Locale-related definitions.
+ * Note that USE_ICONV can be used to override __STDC_ISO_10646__, so that
+ * development of iconv-based logic can be done on 10646-compliant systems.
+ */
+#if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
+# define UNICODE_WCHAR  1
+#endif /*]*/
+#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
+# undef USE_ICONV
+# define USE_ICONV 1
+# include <iconv.h>
+#endif /*]*/
 
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;
@@ -906,7 +920,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
     if (is_utf8) {
 	/* Translate from UTF-8 to UCS-4. */
-	nw = utf8_to_unicode(mb, mb_len, &ucs4);
+	nw = utf8_to_unicode(mb, (int)mb_len, &ucs4);
 	if (nw < 0) {
 	    *errorp = ME_INVALID;
 	    return 0;
@@ -1207,4 +1221,15 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     mb[mb_len - outbytesleft--] = '\0';
     return mb_len - outbytesleft;
 #endif /*]*/
+}
+
+/* Returns true if using iconv. */
+bool
+using_iconv(void)
+{
+#if defined(USE_ICONV) /*[*/
+    return true;
+#else /*][*/
+    return false;
+#endif
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2015 Paul Mattes.
+ * Copyright (c) 2008-2009, 2015, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	unicode.h
+ *	unicodec.h
  *		Declarations for Unicode translation functions.
  */
 
@@ -48,11 +48,6 @@ bool set_uni(const char *csname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
 int linedraw_to_unicode(ebc_t e);
 int apl_to_unicode(ebc_t e, unsigned flags);
-#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
-extern iconv_t i_u2mb;
-extern iconv_t i_mb2u;
-#endif /*]*/
-
 size_t ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	size_t mb_len, unsigned flags, ucs4_t *uc);
 size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
@@ -73,3 +68,4 @@ ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp);
 int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
+bool using_iconv(void);

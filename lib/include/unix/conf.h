@@ -1,6 +1,6 @@
 /* include/unix/conf.h.  Generated from conf.h.in by configure.  */
 /*
- * Copyright (c) 2000-2015, Paul Mattes.
+ * Copyright (c) 2000-2015, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,6 @@
 
 
 /* Libraries. */
-#define HAVE_LIBSSL 1
 
 /* Header files. */
 #define HAVE_SYS_SELECT_H 1

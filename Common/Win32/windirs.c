@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 2006-2009, 2014-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -211,7 +211,6 @@ get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
 	char *bsl;
 
 	GetModuleFileName(hModule, path, MAX_PATH);
-	CloseHandle(hModule);
 
 	/* Chop it off after the last backslash. */
 	bsl = strrchr(path, '\\');

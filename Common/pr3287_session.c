@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@
 #include "popups.h"
 #include "pr3287_session.h"
 #include "telnet_core.h"
+#include "sio.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -469,45 +470,48 @@ pr3287_start_now(const char *lu, bool associated)
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "V%", 2)) {
-#if defined(HAVE_LIBSSL) /*[*/
-		if (appres.ssl.verify_host_cert) {
-		    vb_appends(&r, " " OptVerifyHostCert);
+		unsigned ssl_opts = sio_options_supported();
+
+		if (!appres.ssl.verify_host_cert) {
+		    vb_appends(&r, " " OptNoVerifyHostCert);
 		}
-		if (appres.ssl.self_signed_ok) {
-		    vb_appends(&r, " " OptSelfSignedOk);
-		}
-		if (appres.ssl.ca_dir) {
+		if ((ssl_opts & SSL_OPT_CA_DIR) && appres.ssl.ca_dir) {
 		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appres.ssl.ca_dir);
 		}
-		if (appres.ssl.ca_file) {
+		if ((ssl_opts & SSL_OPT_CA_FILE) && appres.ssl.ca_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptCaFile,
 			    appres.ssl.ca_file);
 		}
-		if (appres.ssl.cert_file) {
+		if ((ssl_opts & SSL_OPT_CERT_FILE) && appres.ssl.cert_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptCertFile,
 			    appres.ssl.cert_file);
 		}
-		if (appres.ssl.cert_file_type) {
+		if ((ssl_opts & SSL_OPT_CERT_FILE_TYPE) &&
+			appres.ssl.cert_file_type) {
 		    vb_appendf(&r, " %s %s", OptCertFileType,
 			    appres.ssl.cert_file_type);
 		}
-		if (appres.ssl.chain_file) {
+		if ((ssl_opts & SSL_OPT_CHAIN_FILE) && appres.ssl.chain_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptChainFile,
 			    appres.ssl.chain_file);
 		}
-		if (appres.ssl.key_file) {
+		if ((ssl_opts & SSL_OPT_KEY_FILE) && appres.ssl.key_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptKeyFile,
 			    appres.ssl.key_file);
 		}
-		if (appres.ssl.key_passwd) {
+		if ((ssl_opts & SSL_OPT_KEY_PASSWD) && appres.ssl.key_passwd) {
 		    vb_appendf(&r, " %s \"%s\"", OptKeyPasswd,
 			    appres.ssl.key_passwd);
+		}
+		if ((ssl_opts & SSL_OPT_CLIENT_CERT) &&
+			appres.ssl.client_cert) {
+		    vb_appendf(&r, " %s %s", OptClientCert,
+			    appres.ssl.client_cert);
 		}
 		if (appres.ssl.accept_hostname) {
 		    vb_appendf(&r, " %s \"%s\"", OptAcceptHostname,
 			    appres.ssl.accept_hostname);
 		}
-#endif /*]*/
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "S%", 2)) {

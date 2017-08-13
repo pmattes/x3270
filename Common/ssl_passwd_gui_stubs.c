@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,19 +34,9 @@
 
 #include "ssl_passwd_gui.h"
 
-int
-ssl_passwd_gui_callback(char *buf _is_unused, int size _is_unused)
+ssl_passwd_ret_t
+ssl_passwd_gui_callback(char *buf _is_unused, int size _is_unused,
+	bool again _is_unused)
 {
-    return -1; /* not supported */
-}
-
-void
-ssl_passwd_gui_reset(void)
-{
-}
-
-bool
-ssl_passwd_gui_retry(void)
-{
-    return false;
+    return SP_NOT_SUPPORTED; /* not supported */
 }

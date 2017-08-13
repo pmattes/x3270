@@ -137,14 +137,15 @@
 		</tr>
 		<tr>
 		    <td valign="top"><tt>--disable-ssl</tt></td>
-		    <td valign="top">Leave out SSL (Secure Sockets Layer)
-			support. SSL support requires the OpenSSL library.
+		    <td valign="top">Leave out SSL/TLS (Secure Sockets Layer)
+			support.
 		    </td>
 		</tr>
 		<tr>
-		    <td valign="top"><tt>--with-ssl=<i>dir</i></tt></td>
+		    <td valign="top"><tt>--with-openssl=<i>dir</i></tt></td>
 		    <td valign="top">Specify the directory where the OpenSSL
-			library is installed.
+			library is installed. Note that this option was
+			previously called <tt>--with-ssl=</tt>.
 		    </td>
 		</tr>
 	    </tbody> 
@@ -177,6 +178,15 @@
    make <i>group</i>-clobber
    make <i>program</i>-clobber</tt></pre>
 
+	<h2>Notes for Ubuntu</h2>
+	Base packages needed to compile any of programs in the suite are:
+	<ul>
+	    <li>libssl-dev (for SSL/TLS support)</li>
+	    <li>mingw-w64 (for Windows cross-compilation)</li>
+	    <li>m4 (to build man pages)</li>
+	</ul>
+	Other packages are listed in the program-specific instructions.
+
 	<h3>Notes for Cygwin</h3>
 	The minimum set of extra Cygwin packages needed to build the 3270 suite
 	are:
@@ -193,14 +203,17 @@
 	Other packages are needed by the specific programs, and are listed in those
 	programs' build instructions.
 
-	<h3>Notes for Mac OS X</h3>
-	Everything except x3270 is built the usual (Unix) way on Mac OS X.
+	<h3>Notes for MacOS X</h3>
+	Everything except x3270 is built the usual (Unix) way on MacOS X.
 	But to build x3270, you first need to install XQuartz (<a
 	    href="http://xquartz.macosforge.org/">http://xquartz.macosforge.org/</a>).
 	Then to build all of the emulators, use the following commands:
 	<pre><tt>   export PATH=$PATH:/opt/X11/bin
    ./configure --enable-unix --x-includes=/opt/X11/include
    make</tt></pre>
+	<p>By default, the MacOS build uses Secure Transport for SSL/TLS. To
+	switch to OpenSSL, pass the <tt>--disable-stransport</tt> option to the
+	configure script.
 
 	<h3>Notes for Solaris 2.x and Sun's C Compiler</h3>
 	Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This
@@ -212,6 +225,25 @@
     FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
     the the following options must be passed to the <tt>configure</tt> script:
     <pre><tt>   ./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</tt></pre>
+    <p>Also, the generated makefiles must be run with GNU make (gmake), not BSD
+    make.
+
+    <a name="Windows"></a>
+    <h2>Building with Visual Studio 2013</h2>
+
+	<h3>Visual Studio GUI</h3>
+	The Visual Studio solution is called <tt>suite3270.sln</tt> in the
+	<tt>VS2013</tt> folder. There are individual projects for each of the
+	programs and components.
+
+	<h3>Visual Studio Command Line</h3>
+	To build with Microsoft Visual Studio from the command prompt, first
+	open a command console with Visual Studio build environment variables
+	set. Switch to the <tt>VS2013</tt> directory, and type:
+	<pre><tt>   msbuild</tt></pre>
+	The usual msbuild options are available, such as <b>/m</b>,
+	<b>/p:Configuration</b> (which can specify Debug or Release)
+	and <b>/p:Platform</b> (which can specify x86 or x64).
 
     <a name="Windows"></a>
     <h2>Building with Visual Studio 2013</h2>

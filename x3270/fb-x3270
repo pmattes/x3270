@@ -691,7 +691,7 @@ x3270.infoPopup.title:				x3270 Information
 x3270.printerInfoPopup.title:			x3270 Printer Information
 x3270.childInfoPopup.title:			x3270 Child Process Information
 x3270.connectPopup.title:			x3270 Connect
-x3270.connectPopup.dialog.label:		Enter Hostname
+x3270.connectPopup.dialog.label:		Enter Hostname: [L:][Y:][A:][lu@]host[:port][=accept]
 x3270.fontPopup.title:				x3270 Font
 x3270.fontPopup.dialog.label:			Enter Font Name
 x3270.keymapPopup.title:			x3270 Keymap
@@ -1081,7 +1081,7 @@ x3270.infoPopup.width:				500
 x3270.printerInfoPopup.width:			500
 x3270.childInfoPopup.width:			500
 x3270.printerLuPopup.width:			300
-x3270.connectPopup.width:			300
+x3270.connectPopup.width:			500
 x3270.fontPopup.width:				300
 x3270.keymapPopup.width:			300
 x3270.oversizePopup.width:			300

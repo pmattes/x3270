@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -34,8 +34,16 @@
  */
 
 #if defined(PR3287) /*[*/
-#error Do not include this file for pr3287
+# error "Do not include this file for pr3287"
 #endif /*]*/
+
+typedef enum {
+    NC_FAILED,			/* failed */
+    NC_RESOLVING,		/* name resolution in progress */
+    NC_SSL_PASS,		/* SSL password pending */
+    NC_CONNECT_PENDING,		/* connection pending */
+    NC_CONNECTED		/* connected */
+} net_connect_t;
 
 extern int ns_brcvd;
 extern int ns_bsent;
@@ -46,7 +54,7 @@ extern time_t ns_time;
 void net_abort(void);
 void net_break(void);
 void net_charmode(void);
-iosrc_t net_connect(const char *, char *, bool, bool *, bool *);
+net_connect_t net_connect(const char *, char *, char *, bool, iosrc_t *);
 void net_exception(iosrc_t fd, ioid_t id);
 int net_getsockname(void *buf, int *len);
 void net_hexnvt_out(unsigned char *buf, int len);
@@ -66,11 +74,13 @@ char *net_proxy_type(void);
 char *net_proxy_host(void);
 char *net_proxy_port(void);
 bool net_bound(void);
-#if defined(HAVE_LIBSSL) /*[*/
-void ssl_base_init(char *cl_hostname, bool *pending);
-#endif /*]*/
 extern int linemode;
+bool net_secure_connection();
 void net_set_default_termtype(void);
+bool net_secure_unverified(void);
+const char *net_server_cert_info(void);
+const char *net_session_info(void);
+void net_password_continue(char *password);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);

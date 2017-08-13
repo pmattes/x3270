@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2016 Paul Mattes.
+# Copyright (c) 1995-2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -52,9 +52,6 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 html/Windows-x3270if.html:  x3270if.man.m4 $(MANDEP)
 	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 
-# Special rule to build the SSL documentation, which comes from a template.
+# Special rule to build the SSL documentation.
 html/SSL.html: documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
-documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
-	openssl-url.txt
-	./dll-subst.sh <documentation-ssl-body.tmpl >$@

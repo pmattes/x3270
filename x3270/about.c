@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -51,6 +51,7 @@
 #include "lazya.h"
 #include "linemode.h"
 #include "popups.h"
+#include "split_host.h"
 #include "telnet.h"
 #include "utf8.h"
 #include "utils.h"
@@ -553,21 +554,33 @@ popup_about_status(void)
 #if defined(LOCAL_PROCESS) /*[*/
 	}
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-	if (secure_connection) {
+	if (net_secure_connection()) {
+	    const char *session, *cert;
+	    const char *newline;
+
 	    MAKE_LABEL2(lazyaf("%s%s%s",
 			get_message("secure"),
-			secure_unverified? ", ": "",
-			secure_unverified? get_message("unverified"): ""));
-	    if (secure_unverified) {
-		int i;
-
-		for (i = 0; unverified_reasons[i] != NULL; i++) {
-		    MAKE_LABEL(lazyaf("   %s", unverified_reasons[i]), 0);
+			net_secure_unverified()? ", ": "",
+			net_secure_unverified()? get_message("unverified"): ""));
+	    if ((session = net_session_info()) != NULL) {
+		MAKE_LABEL(get_message("sessionInfo"), 2);
+		while ((newline = strchr(session, '\n')) != NULL) {
+		    MAKE_LABEL(lazyaf("   %.*s", (int)(newline - session),
+				session), 0);
+		    session = newline + 1;
 		}
+		MAKE_LABEL(lazyaf("   %s", session), 0);
+	    }
+	    if ((cert = net_server_cert_info()) != NULL) {
+		MAKE_LABEL(get_message("serverCert"), 2);
+		while ((newline = strchr(cert, '\n')) != NULL) {
+		    MAKE_LABEL(lazyaf("   %.*s", (int)(newline - cert),
+				cert), 0);
+		    cert = newline + 1;
+		}
+		MAKE_LABEL(lazyaf("   %s", cert), 0);
 	    }
 	}
-#endif /*]*/
 	ptype = net_proxy_type();
 	if (ptype) {
 	    MAKE_LABEL(get_message("proxyType"), 4);
@@ -589,15 +602,15 @@ popup_about_status(void)
 	    } else {
 		ftype = get_message("charMode");
 	    }
-	    fbuf = lazyaf("  %s%s, ", emode, ftype);
+	    fbuf = lazyaf("%s%s, ", emode, ftype);
 	} else if (IN_SSCP) {
-	    fbuf = lazyaf("  %s%s, ", emode, get_message("sscpMode"));
+	    fbuf = lazyaf("%s%s, ", emode, get_message("sscpMode"));
 	} else if (IN_3270) {
-	    fbuf = lazyaf("  %s%s, ", emode, get_message("dsMode"));
+	    fbuf = lazyaf("%s%s, ", emode, get_message("dsMode"));
 	} else if (cstate == CONNECTED_UNBOUND) {
-	    fbuf = lazyaf("  %s%s, ", emode, get_message("unboundMode"));
+	    fbuf = lazyaf("%s%s, ", emode, get_message("unboundMode"));
 	} else {
-	    fbuf = "  ";
+	    fbuf = "";
 	}
 	fbuf = lazyaf("%s%s", fbuf, hms(ns_time));
 	MAKE_LABEL(fbuf, 0);

@@ -1,2 +1,0 @@
-URL32="https://slproweb.com/download/Win32OpenSSL_Light-1_1_0f.exe"
-URL64="https://slproweb.com/download/Win64OpenSSL_Light-1_1_0f.exe"

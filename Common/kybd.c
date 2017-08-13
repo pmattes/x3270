@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -62,6 +62,7 @@
 #include "product.h"
 #include "screen.h"
 #include "scroll.h"
+#include "split_host.h"
 #include "status.h"
 #include "telnet.h"
 #include "toggles.h"
@@ -520,7 +521,7 @@ kybd_connect(bool connected)
     kybdlock_clr(-1, "kybd_connect");
 
     if (connected) {
-	if (!appres.nvt_mode) {
+	if (!appres.nvt_mode && !HOST_FLAG(ANSI_HOST)) {
 	    /* Wait for any output or a WCC(restore) from the host */
 	    kybdlock_set(KL_AWAITING_FIRST, "kybd_connect");
 	}
@@ -1634,6 +1635,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 		case NOT_CONNECTED:
 			why = "connected";
 			break;
+		case SSL_PASS:
 		case RESOLVING:
 		case PENDING:
 		case NEGOTIATING:
@@ -1809,7 +1811,7 @@ do_reset(bool explicit)
 	 */
 	if (explicit
 	    || ft_state != FT_NONE
-	    || (!appres.unlock_delay && !sms_in_macro())
+	    || !appres.unlock_delay
 	    || (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
 	    || !appres.unlock_delay_ms) {
 		kybdlock_clr(-1, "do_reset");

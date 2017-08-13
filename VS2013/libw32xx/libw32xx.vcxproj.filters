@@ -33,9 +33,6 @@
     <ClCompile Include="..\..\Common\Win32\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\ssl_dll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +58,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\xs_buffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\Win32\sio_schannel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\sioc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

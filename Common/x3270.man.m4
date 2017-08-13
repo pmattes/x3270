@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2016, Paul Mattes.
+dnl Copyright (c) 1993-2017, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -78,14 +78,19 @@ ifelse(XX_PRODUCT,x3270,`XX_FB(x3270) is a toolkit based program, so it understa
 resources.
 It also understands',` XX_FB(XX_PRODUCT) understands')
 the following options:XX_TPS()
-XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(spec))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(name))
 Specifies a particular hostname to accept when validating the name presented
-in the host's SSL certificate, instead of comparing to the name or address
+in the server SSL certificate, instead of comparing to the name
 used to make the connection.
-XX_FI(spec) can either be XX_FB(any), which
-disables name validation, XX_FB(DNS:)`'XX_FI(hostname), which matches a
-particular DNS hostname, or XX_FB(IP:)`'XX_FI(address), which matches a
-particular numeric IPv4 or IPv6 address.
+XX_FI(name) can either be XX_FB(any), which
+disables name validation, or a specific name.
+',
+`XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(name))
+Specifies a particular hostname to accept when validating the name presented
+in the server SSL certificate, instead of comparing to the name
+used to make the connection.
+')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(activeicon)))
 Specifies that the icon should be a miniature version of the screen image.
 See XX_LINK(#Icons,XX_SM(ICONS)) below.
@@ -118,12 +123,14 @@ ifelse(XX_PRODUCT,x3270,`This is actually an abbreviation for several options.
 ')dnl
 See XX_LINK(#APL-Support,XX_SM(APL SUPPORT)) below.
 ')dnl
-XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
 Specifies a directory containing CA (root) certificates to use when verifying a
-certificate provided by the host.
+certificate provided by the host. (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(cafile)) XX_FI(filename))
 Specifies a XX_SM(PEM)-format file containing CA (root) certificates to use
-when verifying a certificate provided by the host.
+when verifying a certificate provided by the host. (OpenSSL only)
+')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(cbreak)))
 Causes XX_FB(c3270) to operate in XX_FI(cbreak) mode, instead of XX_FI(raw)
@@ -141,20 +148,27 @@ Sets character classes.
 XX_HO(`See XX_LINK(#Character-Classes,XX_SM(CHARACTER CLASSES)), below.
 ')dnl
 ')dnl
-XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
-Specifies a file containing a certificate to provide to the host, if
-requested.
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
+Specifies a file containing a client certificate to provide to the host.
 The default file type is XX_SM(PEM).
-XX_TP(XX_FB(XX_DASHED(certfiletype)) XX_FI(type))
+')dnl
+XX_TP(XX_FB(XX_DASHED(clientcert)) XX_FI(name))
+Specifies the name of a client certificate to provide to the host.
+ifelse(XX_PLATFORM,unix,`(MacOS only)
+')dnl
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(certfiletype)) XX_FI(type))
 Specifies the type of the certificate file specified
 by XX_FB(XX_DASHED(certfile)).
-XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(chainfile) XX_FI(filename)))
 Specifies a certificate chain file in XX_SM(PEM) format, containing a
-certificate to provide to the host if requested, as well as one or more
+certificate to provide to the host, as well as one or more
 intermediate certificates and the CA certificate used to sign that certificate.
 If XX_FB(XX_DASHED(chainfile)) is specified, it
-overrides XX_FB(XX_DASHED(certfile)).
+overrides XX_FB(XX_DASHED(certfile)). (OpenSSL only)
+')dnl
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an XX_SM(EBCDIC) host character set.
 XX_HO(`See XX_LINK(#Character-Sets,XX_SM(CHARACTER SETS)) below.
@@ -223,16 +237,18 @@ ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(im)) XX_FI(method))
 Specifies the name of the input method to use for multi-byte input.
 (Supported only when XX_PRODUCT is compiled with DBCS support.)
 ')dnl
-XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
+ifelse(XX_PLATFORM,unix,
+`XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
 Specifies a file containing the private key for the certificate file
 (specified via XX_FB(XX_DASHED(certfile)) or XX_FB(XX_DASHED(chainfile))).
-The default file type is XX_SM(PEM).
+The default file type is XX_SM(PEM). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(keyfiletype)) XX_FI(type))
 Specifies the type of the private key file specified
 by XX_FB(XX_DASHED(keyfile)).
-XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1). (OpenSSL only)
 XX_TP(XX_FB(XX_DASHED(keypasswd)) XX_FI(type):XX_FI(value))
-Specifies the password for the private key file, if it is encrypted.
+Specifies the password for the private key file (OpenSSL) or client
+certificate file (MacOS), if it is encrypted.
 The argument can be XX_FB(file):XX_FI(filename), specifying that the
 password is in a file, or XX_FB(string):XX_FI(string), specifying the
 password on the command-line directly.
@@ -240,6 +256,7 @@ If the private key file is encrypted and no XX_FB(XX_DASHED(keypasswd))
 option is given,
 ifelse(XX_INTERACTIVE,yes,`the password will be prompted for interactively.',
 `secure connections will not be allowed.')
+')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(keymap)) XX_FI(name))
 Specifies a keymap name and optional modifiers.
 See XX_LINK(#Keymaps,XX_SM(KEYMAPS)) below.
@@ -317,6 +334,8 @@ reported by the terminal.
 XX_TP(XX_FB(XX_DASHED(noprompt)))
 An alias for XX_DASHED(secure).
 ')dnl
+XX_TP(XX_FB(XX_DASHED(noverifycert)))
+For SSL/TLS connections, do not verify the host certificate.
 XX_TP(XX_FB(XX_DASHED(nvt)))
 Start in NVT mode instead of waiting for the host to send data, and make the
 default terminal type XX_FB(xterm).
@@ -443,8 +462,6 @@ ifelse(XX_PRODUCT,x3270,
 Disables run-time features that could compromise system security
 (user-specified file names and commands, etc.).
 ')dnl
-XX_TP(XX_FB(XX_DASHED(selfsignedok)))
-When verifying a host XX_SM(SSL) certificate, allow it to be self-signed.
 XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
 XX_HO(`The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
@@ -521,8 +538,11 @@ Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
 XX_TP(XX_FB(XX_DASHED(v)))
 Display the version and build options for XX_FB(XX_PRODUCT) and exit.
 XX_TP(XX_FB(XX_DASHED(verifycert)))
-For SSL or SSL/TLS connections, verify the host certificate, and do not allow
-the connection to complete unless it can be validated.
+For SSL/TLS connections, verify the host certificate, and do not allow
+the connection to complete unless it can be validated. (This is the default
+setting.)
+This option is overridden by a XX_FB(y:) prepended to the hostname when
+connecting.
 ifelse(XX_PRODUCT,x3270,,
 `XX_TP(XX_FB(XX_DASHED(xrm)) "XX_PRODUCT.XX_FI(resource): XX_FI(value)")
 Sets the value of the named XX_FI(resource) to XX_FI(value).

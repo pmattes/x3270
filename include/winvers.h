@@ -35,3 +35,4 @@
 #endif /*[*/
 
 int get_version_info(void);
+bool is_wine(void);

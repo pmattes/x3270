@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2016, Paul Mattes.
+# Copyright (c) 2007-2017, Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -71,9 +71,6 @@ documentation-other.html: documentation-other-body.html mkpages.bash version.txt
 documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash \
     	version.txt
 	./mkpages.bash documentation-relnotes
-documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
-    	openssl-url.txt
-	./dll-subst.sh <documentation-ssl-body.tmpl >$@
 documentation-ssl.html: documentation-ssl-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-ssl
 download.html: download-body.html mkpages.bash version.txt

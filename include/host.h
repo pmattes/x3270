@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ void hostfile_init(void);
 void host_cancel_reconnect(void);
 bool host_connect(const char *n);
 void host_connected(void);
+void host_new_connection(bool pending);
 void host_disconnect(bool disable);
 void host_in3270(enum cstate);
 void host_newfd(iosrc_t s);

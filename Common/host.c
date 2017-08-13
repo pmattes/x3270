@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #include "macros.h"
 #include "popups.h"
 #include "product.h"
+#include "split_host.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
@@ -300,261 +301,6 @@ parse_localprocess(const char *s)
 }
 #endif /*]*/
 
-static char *pfxstr = "AaCcLlNnPpSsBb";
-
-/**
- * Hostname parser.
- *  [prefix:...][lu@]hostname[:port]
- * Backslashes to quote anything (including backslashes).
- * [ ] quotes : and @, e.g., [1:2::3] to quote an IPv6 numeric hostname.
- *
- * @param[in] raw	Raw hostname, with possible decorations
- * @param[out] lu	Returned Malloc'd LU name, or NULL
- * @param[out] host	Returned Malloc'd hostname, isolated from other parts
- * @param[out] port	Returned Malloc'd port, or NULL
- * @param[out] prefixes	Returned bitmap of prefixes, indexed by ACLNPSB (bit 0
- * 			 is A, bit 1 is C, bit 2 is L, etc.)
- * @param[out] error	Returned error text for failure, or NULL
- *
- * @return true for success, false for syntax error.
- */
-static bool
-new_split_host(char *raw, char **lu, char **host, char **port,
-	unsigned *prefixes, char **error)
-{
-    char   *start     = raw;
-    size_t  sl        = strlen(raw);
-    char   *s;
-    char   *uq        = NULL;
-    int     uq_len    = 0;
-    char   *qmap      = NULL;
-    char   *rqmap;
-    char   *errmsg    = "nonspecific";
-    bool rc        = false;
-    bool quoted    = false;
-    int     bracketed = 0;
-    int     n_ch      = 0;
-    int     n_at      = 0;
-    int     n_colon   = 0;
-    char   *part[3]   = { NULL, NULL, NULL };
-    int     part_ix   = 0;
-    char   *pfx;
-
-    *lu       = NULL;
-    *host     = NULL;
-    *port     = NULL;
-    *prefixes = 0;
-    *error    = NULL;
-
-    /* Trim leading and trailing blanks. */
-    while (sl && isspace((unsigned char)*start)) {
-	start++;
-	sl--;
-    }
-    while (sl && isspace((unsigned char)start[sl - 1])) {
-	sl--;
-    }
-    if (!sl) {
-	errmsg = "empty string";
-	goto done;
-    }
-
-    /*
-     * 'start' now points to the start of the string, and sl is its length.
-     */
-
-    /*
-     * Create a bit-map of quoted characters.
-     * This includes and character preceded by \, and any : or @ inside
-     *  unquoted [ and ].
-     * This can fail if an unquoted [ is found inside a [ ], or if an
-     *  unquoted [ is not terminated, or if whitespace is found.
-     * Backslashes and unquoted square brackets are deleted at this point.
-     * Leaves a filtered copy of the string in uq[].
-     */
-    uq = Malloc(sl + 1);
-    qmap = Malloc(sl + 1);
-    memset(qmap, ' ', sl);
-    qmap[sl] = '\0';
-    rqmap = qmap;
-    for (s = start; (size_t)(s - start) < sl; s++) {
-	if (isspace((unsigned char)*s)) {
-	    errmsg = "contains whitespace";
-	    goto done;
-	}
-	if (quoted) {
-	    qmap[uq_len] = '+';
-	    quoted = false;
-	    uq[uq_len++] = *s;
-	    continue;
-	} else if (*s == '\\') {
-	    quoted = true;
-	    continue;
-	}
-	if (bracketed) {
-	    if (*s == ':' || *s == '@') {
-		qmap[uq_len] = '+';
-		/* add the character below */
-	    } else if (*s == '[') {
-		errmsg = "nested '['";
-		goto done;
-	    } else if (*s == ']') {
-		/*
-		 * What follows has to be the end of the
-		 * string, or an unquoted ':' or a '@'.
-		 */
-		if ((size_t)(s - start) == sl - 1 ||
-			*(s + 1) == '@' ||
-			*(s + 1) == ':') {
-			bracketed = 0;
-		} else {
-		    errmsg = "text following ']'";
-		    goto done;
-		}
-		continue;
-	    }
-	} else if (*s == '[') {
-	    /*
-	     * Make sure that what came before is the beginning of
-	     * the string or an unquoted : or @.
-	     */
-	    if (uq_len == 0 ||
-		    (qmap[uq_len - 1] == ' ' &&
-		     (uq[uq_len - 1] == ':' ||
-		      uq[uq_len - 1] == '@'))) {
-		bracketed = 1;
-	    } else {
-		errmsg = "text preceding '['";
-		goto done;
-	    }
-	    continue;
-	}
-	uq[uq_len++] = *s;
-    }
-    if (quoted) {
-	errmsg = "dangling '\\'";
-	goto done;
-    }
-    if (bracketed) {
-	errmsg = "missing ']'";
-	goto done;
-    }
-    if (!uq_len) {
-	errmsg = "empty hostname";
-	goto done;
-    }
-    uq[uq_len] = '\0';
-
-    /* Trim off prefixes. */
-    s = uq;
-    while ((pfx = strchr(pfxstr, *s)) != NULL &&
-	    qmap[(s + 1) - uq] == ' ' &&
-	    *(s + 1) == ':') {
-
-	*prefixes |= 1 << ((pfx - pfxstr) / 2);
-	s += 2;
-	rqmap += 2;
-    }
-    start = s;
-
-    /*
-     * Now check for syntax: [LUname@]hostname[:port]
-     * So more than one @, more than one :, : before @, or no text before @
-     * or :, or no text after : are all syntax errors.
-     * This also lets us figure out which elements are there.
-     */
-    while (*s) {
-	if (rqmap[s - start] == ' ') {
-	    if (*s == '@') {
-		if (n_ch == 0) {
-		    errmsg = "empty LU name";
-		    goto done;
-		}
-		if (n_colon > 0) {
-		    errmsg = "'@' after ':'";
-		    goto done;
-		}
-		if (n_at > 0) {
-		    errmsg = "double '@'";
-		    goto done;
-		}
-		n_at++;
-		n_ch = 0;
-	    } else if (*s == ':') {
-		if (n_ch == 0) {
-		    errmsg = "empty hostname";
-		    goto done;
-		}
-		if (n_colon > 0) {
-		    errmsg = "double ':'";
-		    goto done;
-		}
-		n_colon++;
-		n_ch = 0;
-	    } else {
-		n_ch++;
-	    }
-	} else {
-	    n_ch++;
-	}
-    s++;
-    }
-    if (!n_ch) {
-	if (n_colon) {
-	    errmsg = "empty port";
-	} else {
-	    errmsg = "empty hostname";
-	}
-	goto done;
-    }
-
-    /*
-     * The syntax is clean, and we know what parts there are.
-     * Split them out.
-     */
-    if (n_at) {
-	*lu = Malloc(uq_len + 1);
-	part[0] = *lu;
-    }
-    *host = Malloc(uq_len + 1);
-    part[1] = *host;
-    if (n_colon) {
-	*port = Malloc(uq_len + 1);
-	part[2] = *port;
-    }
-    s = start;
-    n_ch = 0;
-    while (*s) {
-	if (rqmap[s - start] == ' ' && (*s == '@' || *s == ':')) {
-	    part[part_ix][n_ch] = '\0';
-	    part_ix++;
-	    n_ch = 0;
-	} else {
-	    while (part[part_ix] == NULL) {
-		part_ix++;
-	    }
-	    part[part_ix][n_ch++] = *s;
-	}
-	s++;
-    }
-    part[part_ix][n_ch] = '\0';
-
-    /* Success! */
-    rc = true;
-
-done:
-    if (uq != NULL) {
-	Free(uq);
-    }
-    if (qmap != NULL) {
-	Free(qmap);
-    }
-    if (!rc) {
-	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);
-    }
-    return rc;
-}
-
 /*
  * Strip qualifiers from a hostname.
  * Returns the hostname part in a newly-malloc'd string.
@@ -562,7 +308,8 @@ done:
  * Returns NULL if there is a syntax error.
  */
 static char *
-split_host(char *s, unsigned *flags, char *xluname, char **port, bool *needed)
+split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
+	bool *needed)
 {
     char *lu;
     char *host;
@@ -572,7 +319,7 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, bool *needed)
     *needed = false;
 
     /* Call the sane, new version. */
-    if (!new_split_host(s, &lu, &host, port, flags, &error)) {
+    if (!new_split_host(s, &lu, &host, port, accept, flags, &error)) {
 	popup_an_error("%s", error);
 	Free(error);
 	return NULL;
@@ -605,10 +352,10 @@ host_connect(const char *n)
     char *target_name;
     char *ps = NULL;
     char *port = NULL;
-    bool resolving;
-    bool pending;
+    char *accept = NULL;
     const char *localprocess_cmd = NULL;
     bool has_colons = false;
+    net_connect_t nc;
 
     if (CONNECTED || auto_reconnect_inprogress) {
 	return true;
@@ -648,7 +395,7 @@ host_connect(const char *n)
 	bool needed;
 
 	/* Strip off and remember leading qualifiers. */
-	if ((s = split_host(nb, &host_flags, luname, &port,
+	if ((s = split_host(nb, &host_flags, luname, &port, &accept,
 			&needed)) == NULL) {
 	    goto failure;
 	}
@@ -657,12 +404,12 @@ host_connect(const char *n)
 	if (!needed && hostfile_lookup(s, &target_name, &ps)) {
 	    /*
 	     * Rescan for qualifiers.
-	     * Qualifiers, LU names, and ports are all overridden by the hosts
-	     * file.
+	     * Qualifiers, LU names, ports and accept names  are all
+	     * overridden by the hosts file.
 	     */
 	    Free(s);
 	    if (!(s = split_host(target_name, &host_flags, luname, &port,
-			    &needed))) {
+			    &accept, &needed))) {
 		goto failure;
 	    }
 	}
@@ -696,18 +443,19 @@ host_connect(const char *n)
     }
 
     has_colons = (strchr(chost, ':') != NULL);
-    Replace(qualified_host, xs_buffer("%s%s%s%s:%s",
+    Replace(qualified_host, xs_buffer("%s%s%s%s:%s%s%s",
 		HOST_FLAG(SSL_HOST)? "L:": "",
 		has_colons? "[": "",
 		chost,
 		has_colons? "]": "",
-		port));
+		port,
+		(accept != NULL)? "=": "",
+		(accept != NULL)? accept: ""));
 
     /* Attempt contact. */
     ever_3270 = false;
-    net_sock = net_connect(chost, port, localprocess_cmd != NULL, &resolving,
-	    &pending);
-    if (net_sock == INVALID_IOSRC && !resolving) {
+    nc = net_connect(chost, port, accept, localprocess_cmd != NULL, &net_sock);
+    if (nc == NC_FAILED) {
 	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
 		auto_reconnect_inprogress = true;
@@ -720,9 +468,13 @@ host_connect(const char *n)
     }
 
     /* Still thinking about it? */
-    if (resolving) {
+    if (nc == NC_RESOLVING) {
 	cstate = RESOLVING;
 	st_changed(ST_RESOLVING, true);
+	goto success;
+    }
+    if (nc == NC_SSL_PASS) {
+	cstate = SSL_PASS;
 	goto success;
     }
 
@@ -737,14 +489,17 @@ host_connect(const char *n)
     }
 
     /* Prepare Xt for I/O. */
-    x_add_input(net_sock);
+    if (net_sock != INVALID_IOSRC) {
+	x_add_input(net_sock);
+    }
 
     /* Set state and tell the world. */
-    if (pending) {
+    if (nc == NC_CONNECT_PENDING) {
 	cstate = PENDING;
 	st_changed(ST_HALF_CONNECT, true);
     } else {
-	if (appres.nvt_mode) {
+	/* cstate == NC_CONNECTED */
+	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    cstate = CONNECTED_NVT;
 	} else {
 	    cstate = CONNECTED_INITIAL;
@@ -764,6 +519,25 @@ failure:
 	Free(nb);
     }
     return false;
+}
+
+/* Process a new connection, when it happens after SSL validation. */
+void
+host_new_connection(bool pending)
+{
+    /* Set state and tell the world. */
+    if (pending) {
+	cstate = PENDING;
+	st_changed(ST_HALF_CONNECT, true);
+    } else {
+	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	    cstate = CONNECTED_NVT;
+	} else {
+	    cstate = CONNECTED_INITIAL;
+	}
+	st_changed(ST_CONNECT, true);
+	host_gui_connect_initial();
+    }
 }
 
 /*
@@ -811,7 +585,7 @@ host_disconnect(bool failed)
     }
 
     x_remove_input();
-    net_disconnect();
+    net_disconnect(true);
     net_sock = INVALID_IOSRC;
     if (!host_gui_disconnect()) {
 	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
@@ -1112,7 +886,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Connect", argc, 1, 1) < 0) {
 	return false;
     }
-    if (CONNECTED || HALF_CONNECTED) {
+    if (PCONNECTED) {
 	popup_an_error("Already connected");
 	return false;
     }
@@ -1141,7 +915,7 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Reconnect", argc, 0, 0) < 0) {
 	return false;
     }
-    if (CONNECTED || HALF_CONNECTED) {
+    if (PCONNECTED) {
 	popup_an_error("Already connected");
 	return false;
     }

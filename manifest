@@ -3,9 +3,7 @@ c3270/c3270.man
 c3270/conf.h.in
 c3270/configure
 c3270/configure.in
-c3270/dll-subst.sh
 c3270/documentation-ssl-body.html
-c3270/documentation-ssl-body.tmpl
 c3270/ft.inc
 c3270/hostname.inc
 c3270/html/Bugs.html
@@ -35,10 +33,10 @@ c3270/make-resource-doc.pl
 c3270/man.m4
 c3270/mkstand.bash
 c3270/mkversion.sh
-c3270/openssl-url.txt
 c3270/README
 c3270/resource-body
 c3270/resources.inc
+c3270/screen.c
 c3270/version.txt
 c3270/x3270_glue.expect
 c3270/x3270.man.m4
@@ -68,7 +66,6 @@ Common/c3270/keypad.outline
 Common/c3270/localdefs.h
 Common/c3270/menubar.c
 Common/c3270/mkkeypad.c
-Common/c3270/screen.c
 Common/c3270/ssl_passwd_gui.c
 Common/charset.c
 Common/child.c
@@ -95,6 +92,7 @@ Common/httpd-io.c
 Common/httpd-nodes.c
 Common/idle.c
 Common/idle_stubs.c
+Common/indent_s.c
 Common/kybd.c
 Common/lazya.c
 Common/lib3270_files.mk
@@ -155,12 +153,18 @@ Common/scroll_stubs.c
 Common/see.c
 Common/select_stubs.c
 Common/sf.c
-Common/ssl_dll.c
+Common/sioc.c
+Common/sio_common.c
+Common/sio_none.c
+Common/sio_openssl.c
+Common/sio_secure_transport.c
+Common/split_host.c
 Common/ssl_passwd_gui_stubs.c
 Common/status_stubs.c
 Common/tables.c
 Common/telnet.c
 Common/telnet_gui_stubs.c
+Common/telnet_sio.c
 Common/toggles.c
 Common/trace.c
 Common/trace_gui_stubs.c
@@ -169,9 +173,13 @@ Common/unicode_dbcs.c
 Common/utf8.c
 Common/util.c
 Common/varbuf.c
+Common/version.txt
 Common/Win32/gdi_print.c
+Common/Win32/manifest.tmpl
+Common/Win32/mkmanifest.c
+Common/Win32/mkmanifest.sh
 Common/Win32/mkversion.c
-Common/Win32/root_certs.txt.in
+Common/Win32/sio_schannel.c
 Common/Win32/snprintf.c
 Common/Win32/w3misc.c
 Common/Win32/windirs.c
@@ -218,6 +226,7 @@ include/httpd-io.h
 include/httpd-nodes.h
 include/idle.h
 include/include_files.mk
+include/indent_s.h
 include/kybd.h
 include/latin1.h
 include/lazya.h
@@ -245,7 +254,10 @@ include/scroll.h
 include/see.h
 include/selectc.h
 include/sf.h
-include/ssl_dll.h
+include/sio.h
+include/sioc.h
+include/split_host.h
+include/ssl_config.h
 include/ssl_passwd_gui.h
 include/status.h
 include/tables.h
@@ -253,6 +265,7 @@ include/telnet_core.h
 include/telnet_gui.h
 include/telnet.h
 include/telnet_private.h
+include/telnet_sio.h
 include/tn3270e.h
 include/toggles.h
 include/trace_gui.h
@@ -281,6 +294,7 @@ lib/3270stubs/lib3270stubsu_files.mk
 lib/3270stubs/Makefile.aux
 lib/3270stubs/Makefile.in
 lib/3270stubs/Makefile.obj.in
+lib/32xx/32xx-deplibs.mk.in
 lib/32xx/Makefile.aux
 lib/32xx/Makefile.in
 lib/32xx/Makefile.obj.in
@@ -334,9 +348,7 @@ README.txt
 s3270/conf.h.in
 s3270/configure
 s3270/configure.in
-s3270/dll-subst.sh
 s3270/documentation-ssl-body.html
-s3270/documentation-ssl-body.tmpl
 s3270/Examples/cms_cmd.expect
 s3270/ft.inc
 s3270/hostname.inc
@@ -365,7 +377,6 @@ s3270/make-resource-doc.pl
 s3270/man.m4
 s3270/mkstand.bash
 s3270/mkversion.sh
-s3270/openssl-url.txt
 s3270/parts.h.in
 s3270/README
 s3270/resource-body
@@ -383,9 +394,7 @@ s3270/x3270-script.man.m4
 tcl3270/conf.h.in
 tcl3270/configure
 tcl3270/configure.in
-tcl3270/dll-subst.sh
 tcl3270/documentation-ssl-body.html
-tcl3270/documentation-ssl-body.tmpl
 tcl3270/Examples/cms_cmd.tcl3270
 tcl3270/ft.inc
 tcl3270/hostname.inc
@@ -410,7 +419,6 @@ tcl3270/make-resource-doc.pl
 tcl3270/man.m4
 tcl3270/mkstand.bash
 tcl3270/mkversion.sh
-tcl3270/openssl-url.txt
 tcl3270/README
 tcl3270/resource-body
 tcl3270/resources.inc
@@ -443,6 +451,10 @@ VS2013/mkicon/mkfaviconc.bat
 VS2013/mkicon/mkicon.vcxproj
 VS2013/mkicon/mkicon.vcxproj.filters
 VS2013/mkicon/mkicon.vcxproj.user
+VS2013/mkmanifest/mkmanifest.bat
+VS2013/mkmanifest/mkmanifest.vcxproj
+VS2013/mkmanifest/mkmanifest.vcxproj.filters
+VS2013/mkmanifest/mkmanifest.vcxproj.user
 VS2013/mkkeypad/mkkeypadh.bat
 VS2013/mkkeypad/mkkeypad.vcxproj
 VS2013/mkkeypad/mkkeypad.vcxproj.filters
@@ -473,9 +485,7 @@ VS2013/x3270if/x3270if.vcxproj.filters
 VS2013/x3270if/x3270if.vcxproj.user
 wc3270/catf.c
 wc3270/conf.h
-wc3270/dll-subst.sh
 wc3270/documentation-ssl-body.html
-wc3270/documentation-ssl-body.tmpl
 wc3270/ft.inc
 wc3270/hostname.inc
 wc3270/html/Bugs.html
@@ -510,7 +520,6 @@ wc3270/mkversion.sh
 wc3270/mkwversion.sh
 wc3270/NO-INSTALL.txt
 wc3270/nvt_gui.c
-wc3270/openssl-url.txt
 wc3270/README-zip.txt
 wc3270/readpass
 wc3270/relink.c
@@ -533,6 +542,7 @@ wc3270/wc3270km.ico
 wc3270/wc3270.rc
 wc3270/wizard.c
 wc3270/wselectc.h
+wc3270/wversion.c
 wc3270/x3270-icon2.bmp
 wc3270/x3270.man.m4
 wc3270/x3270-script.man.m4
@@ -563,9 +573,7 @@ wpr3287/wpr3287.rc
 wpr3287/ws.c
 wpr3287/wsc.h
 ws3270/conf.h
-ws3270/dll-subst.sh
 ws3270/documentation-ssl-body.html
-ws3270/documentation-ssl-body.tmpl
 ws3270/Examples/cms_cmd.expect
 ws3270/ft.inc
 ws3270/hostname.inc
@@ -592,7 +600,6 @@ ws3270/Makefile.obj
 ws3270/make-resource-doc.pl
 ws3270/mkstand.bash
 ws3270/mkversion.sh
-ws3270/openssl-url.txt
 ws3270/README.txt
 ws3270/resource-body
 ws3270/resources.inc
@@ -650,9 +657,7 @@ x3270/display_charsets.c
 x3270/display_charsets_dbcs.c
 x3270/display_charsets_dbcs.h
 x3270/display_charsets.h
-x3270/dll-subst.sh
 x3270/documentation-ssl-body.html
-x3270/documentation-ssl-body.tmpl
 x3270/dot.bm
 x3270/dryrun.in
 x3270/Examples/child_script.bash
@@ -727,7 +732,6 @@ x3270/no_dot.bm
 x3270/null.bm
 x3270/nvt_gui.c
 x3270/objects.h
-x3270/openssl-url.txt
 x3270/popups.c
 x3270/printer_gui.c
 x3270/printer_gui.h

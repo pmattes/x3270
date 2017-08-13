@@ -61,6 +61,8 @@ x3270.message.seconds:			seconds
 x3270.message.secure:			via TLS/SSL
 x3270.message.sent:			Sent
 x3270.message.server:			Server:
+x3270.message.serverCert:		Host certificate:
+x3270.message.sessionInfo:		Session information:
 x3270.message.specialCharacters:	Special characters:
 x3270.message.sscpMode:			SSCP-LU mode
 x3270.message.standardDs:		standard data stream
@@ -68,4 +70,4 @@ x3270.message.terminalName:		Terminal name:
 x3270.message.tn3270eNoOpts:		No TN3270E options
 x3270.message.tn3270eOpts:		TN3270E options:
 x3270.message.unboundMode:		unbound mode
-x3270.message.unverified:		unverified:
+x3270.message.unverified:		unverified

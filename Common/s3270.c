@@ -67,6 +67,7 @@
 #include "product.h"
 #include "screen.h"
 #include "selectc.h"
+#include "sio.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -143,6 +144,7 @@ main(int argc, char *argv[])
     toggles_register();
     trace_register();
     xio_register();
+    sio_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -179,10 +181,6 @@ main(int argc, char *argv[])
 
     /* Handle initial toggle settings. */
     initialize_toggles();
-
-#if defined(HAVE_LIBSSL) /*[*/
-    ssl_base_init(NULL, NULL);
-#endif /*]*/
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
@@ -221,6 +219,7 @@ product_set_appres_defaults(void)
 {
     appres.scripted = true;
     appres.oerr_lock = true;
+    appres.unlock_delay = false;
 }
 
 /**
