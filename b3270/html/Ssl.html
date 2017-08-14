@@ -15,13 +15,15 @@
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>secure</td><td>yes</td><td><b>true</b> or <b>false</b>, connection is secure</td></tr>
  <tr><td>verified</td><td>no</td><td><b>true</b> or <b>false</b>, host certificate is verified</td></tr>
+ <tr><td>session</td><td>no</td><td>session details</td></tr>
+ <tr><td>host-cert</td><td>no</td><td>host certificate details</td></tr>
 </table>
 
-<p>The <i>verified</i> attribute is present only if <i>secure</i> is
+<p>The <i>verified</i>, <i>session</i> and <i>host-cert</i> attributes are present only if <i>secure</i> is
 <b>true</b>.</p>
 <p>Example:
 <pre>
-&lt;ssl secure="true" verified="false"/&gt;
+&lt;ssl secure="true" verified="false" session="Version: TLSv1.2&amp;#10;Cipher: AES256-SHA" host-cert="Public key: 2048 bit RSA&amp;10;Subject: C = US, ST = Michigan, L = Southfield, O = &quot;ATT Services, Inc.&quot;, OU = zOS, CN = mvsap6-tcpipin.ims.att.com&amp;#10;Issuer: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;Alternate DNS names: mvsap6-tcpipin.ims.att.com&amp;#10;CA 1 Public key: 2048 bit RSA&amp;#10;CA 1 Subject: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;CA 1 Issuer: C = US, O = &quot;VeriSign, Inc.&quot;, OU = VeriSign Trust Network, OU = &quot;(c) 2006 VeriSign, Inc. - For authorized use only&quot;, CN = VeriSign Class 3 Public Primary Certification Authority - G5"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

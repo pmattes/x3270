@@ -221,7 +221,9 @@ else:
 if (args.trace):
     command = [b3270,"-trace"]
 else:
-    command = b3270
+    command = [b3270]
+command += ["-xrm","*unlockDelay: false","-xrm","*oerrLock: true"]
+Debug("Command line is: " + repr(command))
 b = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 b.stdin.write(b'<ui3270-in>\n')
 
