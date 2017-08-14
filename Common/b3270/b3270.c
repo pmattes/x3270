@@ -244,6 +244,8 @@ b3270_secure(bool ignored)
 	     "secure", net_secure_connection()? "true": "false",
 	     "verified",
 		 net_secure_connection()? (net_secure_unverified()? "false": "true"): NULL,
+	     "session", net_session_info(),
+	     "host-cert", net_server_cert_info(),
 	     NULL);
 }
 
@@ -630,7 +632,14 @@ xterm_text_gui(int code, const char *text)
 void
 product_set_appres_defaults(void)
 {
+    /*
+     * Set defaults like s3270 -- operator error locks the keyboard and
+     * no unlock delay.
+     *
+     * TODO: I need a way to change these from the UI.
+     */
     appres.oerr_lock = true;
+    appres.unlock_delay = false;
 }
 
 /**
