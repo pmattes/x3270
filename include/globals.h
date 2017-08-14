@@ -238,11 +238,12 @@ enum cstate {
     CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
     CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
     CONNECTED_SSCP,	/* connected in TN3270E mode, SSCP-LU mode */
-    CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
+    CONNECTED_TN3270E,	/* connected in TN3270E mode, 3270 mode */
+    NUM_CSTATE		/* number of cstates */
 };
 extern enum cstate cstate;
 
-#define cPCONNECTED(c)	(c >= NOT_CONNECTED)
+#define cPCONNECTED(c)	(c > NOT_CONNECTED)
 #define cHALF_CONNECTED(c) (c == RESOLVING || c == PENDING)
 #define cCONNECTED(c)	(c >= CONNECTED_INITIAL)
 #define cIN_NVT(c)	(c == CONNECTED_NVT || \

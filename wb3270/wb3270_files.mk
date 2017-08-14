@@ -1,9 +1,5 @@
-# wb3270-specific source files
-WB3270_SOURCES = async.c b3270.c b_ft.c b_popups.c b_status.c screen.c \
-	ui_stream.c
-
-WB3270_OBJECTS = async.$(OBJ) b3270.$(OBJ) b_ft.$(OBJ) b_popups.$(OBJ) \
-	b_status.$(OBJ) screen.$(OBJ) ui_stream.$(OBJ)
+WB3270_OBJECTS = async.o b3270.o b_ft.o b_popups.o b_status.o screen.o \
+	ui_stream.o
 
 # wb3270-specific header files
 WB3270_HEADERS = conf.h

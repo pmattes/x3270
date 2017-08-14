@@ -95,7 +95,8 @@ enum cstate {
 	CONNECTED_INITIAL_E,	/* connected in TN3270E mode, unnegotiated */
 	CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
 	CONNECTED_SSCP,		/* connected in TN3270E mode, SSCP-LU mode */
-	CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
+	CONNECTED_TN3270E,	/* connected in TN3270E mode, 3270 mode */
+	NUM_CSTATE		/* number of cstates */
 };
 enum cstate cstate = NOT_CONNECTED;
 

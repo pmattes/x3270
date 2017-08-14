@@ -151,7 +151,7 @@ class Parser:
             # lack thereof.
             self.state.host = ""
             if ("host" in attrs):
-                host = attrs["host"]
+                self.state.host = attrs["host"]
             self.state.state = ""
             if ("state" in attrs):
                 self.state.state = attrs["state"]

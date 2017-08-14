@@ -250,6 +250,21 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE)? \
 			trsp_flag[(n)]: "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
+static const char *state_name[] = {
+    "unconnected",			/* NOT_CONNECTED */
+    "SSL password pending",		/* SSL_PASS */
+    "resolving hostname",		/* RESOLVING */
+    "TCP connection pending",		/* PENDING */
+    "negotiating SSL or proxy",		/* NEGOTIATING */
+    "connected; 3270 state unknown",	/* CONNECTED_INITIAL */
+    "TN3270 NVT",			/* CONNECTED_NVT */
+    "TN3270 NVT charmode",		/* CONNECTED_NVT_CHAR */
+    "TN3270 3270",			/* CONNECTED_3270 */
+    "TN3270E unbound",			/* CONNECTED_UNBOUND */
+    "TN3270E NVT",			/* CONNECTED_E_NVT */
+    "TN3270E SSCP-LU",			/* CONNECTED_SSCP */
+    "TN3270E 3270"			/* CONNECTED_TN3270E */
+};
 
 #if !defined(_WIN32) /*[*/
 # define XMIT_ROWS	((appres.c3270.altscreen)? MODEL_2_ROWS: maxROWS)
@@ -495,6 +510,10 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     unsigned short	passthru_port = 0;
     char		*errmsg;
     iosrc_t		s;
+
+    if (sizeof(state_name)/sizeof(state_name[0]) != NUM_CSTATE) {
+	Error("telnet cstate_name has the wrong number of elements");
+    }
 
     *iosrc = INVALID_IOSRC;
 
@@ -2598,21 +2617,6 @@ static void
 check_in3270(void)
 {
 	enum cstate new_cstate = NOT_CONNECTED;
-	static const char *state_name[] = {
-		"unconnected",				/* NOT_CONNECTED */
-		"SSL password pending",			/* SSL_PASS */
-		"resolving hostname",			/* RESOLVING */
-		"TCP connection pending",		/* PENDING */
-		"negotiating SSL or proxy",		/* NEGOTIATING */
-		"connected; 3270 state unknown",	/* CONNECTED_INITIAL */
-		"TN3270 NVT",				/* CONNECTED_NVT */
-		"TN3270 NVT charmode",			/* CONNECTED_NVT_CHAR */
-		"TN3270 3270",				/* CONNECTED_3270 */
-		"TN3270E unbound",			/* CONNECTED_UNBOUND */
-		"TN3270E NVT",				/* CONNECTED_E_NVT */
-		"TN3270E SSCP-LU",			/* CONNECTED_SSCP */
-		"TN3270E 3270"				/* CONNECTED_TN3270E */
-	};
 
 	if (myopts[TELOPT_TN3270E]) {
 		if (!tn3270e_negotiated)
@@ -3332,7 +3336,7 @@ continue_tls(unsigned char *sbbuf, int len)
     if (len < 2 || sbbuf[1] != TLS_FOLLOWS) {
 	/* Trace the junk. */
 	vtrace("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
-	popup_an_error("TLS negotiation failure"); /* XXX: connect_error? */
+	connect_error("TLS negotiation failure");
 	host_disconnect(true);
 	return;
     }
@@ -3342,7 +3346,7 @@ continue_tls(unsigned char *sbbuf, int len)
 
     /* Negotiate the session. */
     if (!sio_negotiate(sio, sock, hostname, &data)) {
-	popup_an_error("%s", sio_last_error()); /* XXX: connect_error? */
+	connect_error("%s", sio_last_error());
 	host_disconnect(true);
 	return;
     }

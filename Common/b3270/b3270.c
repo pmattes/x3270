@@ -114,6 +114,21 @@ static toggle_register_t toggles[] = {
     { CROSSHAIR,	b3270_toggle,	TOGGLE_NEED_INIT },
     { OVERLAY_PASTE,	b3270_toggle,	TOGGLE_NEED_INIT }
 };
+static const char *cstate_name[] = {
+    "not-connected",
+    "ssl-password-pending",
+    "resolving",
+    "pending",
+    "negotiating",
+    "connected-initial",
+    "connected-nvt",
+    "connected-nvt-charmode",
+    "connected-3270",
+    "connected-unbound",
+    "connected-e-nvt",
+    "connected-sscp",
+    "connected-tn3270e"
+};
 
 static void check_min_version(const char *min_version);
 static void b3270_register(void);
@@ -163,20 +178,6 @@ stats_poll(ioid_t id _is_unused)
 static void
 b3270_connect(bool ignored)
 {       
-    static const char *cstate_name[] = {
-	"not-connected",
-	"resolving",
-	"pending",
-	"negotiating",
-	"connected-initial",
-	"connected-nvt",
-	"connected-nvt-charmode",
-	"connected-3270",
-	"connected-unbound",
-	"connected-e-nvt",
-	"connected-sscp",
-	"connected-tn3270e"
-    };
     static enum cstate old_cstate = (int)NOT_CONNECTED;
 
     if (cstate == old_cstate) {
@@ -250,6 +251,10 @@ int
 main(int argc, char *argv[])
 {
     const char *cl_hostname = NULL;
+
+    if (sizeof(cstate_name)/sizeof(cstate_name[0]) != NUM_CSTATE) {
+	Error("b3270 cstate_name has the wrong number of elements");
+    }
 
 #if defined(_WIN32) /*[*/
     (void) get_version_info();

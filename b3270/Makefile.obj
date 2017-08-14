@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2016 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,14 +24,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for b3270 (scripted 3270 emulator)
+# Makefile for b3270 (backend for scripted 3270 emulator)
 
 RM = rm -f
 CC = gcc
 
 all: b3270
 
-OBJ = o
 HOST = x86_64-unknown-linux-gnu
 include libs.mk
 
