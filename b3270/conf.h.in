@@ -34,7 +34,6 @@
  */
 
 /* Libraries. */
-#undef HAVE_LIBSSL
 
 /* Header files. */
 #undef HAVE_SYS_SELECT_H
@@ -49,7 +48,6 @@
 #undef HAVE_FORKPTY
 
 /* Configuration options. */
-#undef USE_ICONV
 
 /* Optional parts. */
 #undef X3270_DBCS
