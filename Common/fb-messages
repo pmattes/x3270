@@ -49,6 +49,7 @@ x3270.message.model:			Model
 x3270.message.mono:			monochrome
 x3270.message.notConnected:		Not connected
 x3270.message.port:			Port:
+x3270.message.provider:			Provider:
 x3270.message.proxyType:		Proxy type:
 x3270.message.Received:			Received
 x3270.message.received:			received

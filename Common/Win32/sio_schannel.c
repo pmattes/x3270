@@ -1724,3 +1724,12 @@ sio_server_cert_info(sio_t sio)
     schannel_sio_t *s = (schannel_sio_t *)sio;
     return s? s->server_cert_info: NULL;
 }
+
+/*
+ * Returns the provider name.
+ */
+const char *
+sio_provider(void)
+{
+    return "Windows Schannel";
+}

@@ -81,6 +81,8 @@ bool net_secure_unverified(void);
 const char *net_server_cert_info(void);
 const char *net_session_info(void);
 void net_password_continue(char *password);
+unsigned net_sio_supported(void);
+const char *net_sio_provider(void);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);

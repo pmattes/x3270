@@ -219,3 +219,34 @@ sio_register(void)
     add_ssl_opts();
     add_ssl_resources();
 }
+
+/*
+ * Translate an option flag to its name.
+ */
+const char *
+sio_option_name(unsigned option)
+{
+    /* Option names, in bitmap order. */
+    static const char *sio_option_names[] = {
+	ResCaDir,
+	ResCaFile,
+	ResCertFile,
+	ResCertFileType,
+	ResChainFile,
+	ResKeyFile,
+	ResKeyFileType,
+	ResKeyPasswd,
+	ResClientCert
+    };
+    unsigned opt = 1;
+    int i = 0;
+
+    while (SSL_ALL_OPTS & opt) {
+	if (option & opt) {
+	    return sio_option_names[i];
+	}
+	opt <<= 1;
+	i++;
+    }
+    return NULL;
+}

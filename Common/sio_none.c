@@ -100,3 +100,9 @@ sio_server_cert_info(sio_t sio)
 {
     return "None";
 }
+
+const char *
+sio_provider(void)
+{
+    return "None";
+}

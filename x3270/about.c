@@ -562,6 +562,8 @@ popup_about_status(void)
 			get_message("secure"),
 			net_secure_unverified()? ", ": "",
 			net_secure_unverified()? get_message("unverified"): ""));
+	    MAKE_LABEL(lazyaf("%s %s",
+			get_message("provider"), net_sio_provider()), 2);
 	    if ((session = net_session_info()) != NULL) {
 		MAKE_LABEL(get_message("sessionInfo"), 2);
 		while ((newline = strchr(session, '\n')) != NULL) {

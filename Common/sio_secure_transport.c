@@ -1107,3 +1107,9 @@ sio_server_cert_info(sio_t sio)
     stransport_sio_t *s = (stransport_sio_t *)sio;
     return (s != NULL)? s->server_cert_info: NULL;
 }
+
+const char *
+sio_provider(void)
+{
+    return "Apple Secure Transport";
+}

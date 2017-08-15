@@ -853,8 +853,9 @@ net_connected(void)
 	session = indent_s(sio_session_info(sio));
 	cert = indent_s(sio_server_cert_info(sio));
 	vtrace("Connection is now secure.\n"
+		"Provider: %s\n"
 		"Session:\n%s\nServer certificate:\n%s\n",
-		session, cert);
+		sio_provider(), session, cert);
 	Free(session);
 	Free(cert);
 
@@ -3341,8 +3342,9 @@ continue_tls(unsigned char *sbbuf, int len)
     cert = indent_s(sio_server_cert_info(sio));
     vtrace("TLS/SSL negotiated connection complete. "
 	    "Connection is now secure.\n"
+	    "Provider: %s\n"
 	    "Session:\n%s\nServer certificate:\n%s\n",
-	    session, cert);
+	    sio_provider(), session, cert);
     Free(session);
     Free(cert);
 
@@ -3548,4 +3550,16 @@ bool
 net_secure_connection(void)
 {
     return secure_connection;
+}
+
+unsigned
+net_sio_supported(void)
+{
+    return sio_supported();
+}
+
+const char *
+net_sio_provider(void)
+{
+    return sio_provider();
 }

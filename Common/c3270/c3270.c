@@ -1046,6 +1046,8 @@ status_dump(void)
 	    action_output("  %s%s%s", get_message("secure"),
 			net_secure_unverified()? ", ": "",
 			net_secure_unverified()? get_message("unverified"): "");
+	    action_output("  %s %s", get_message("provider"),
+		    net_sio_provider());
 	    if ((session = net_session_info()) != NULL) {
 		action_output("  %s", get_message("sessionInfo"));
 		indent_dump(session);

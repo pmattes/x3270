@@ -50,9 +50,12 @@ typedef void *sio_t;
 /* Implemented in common code. */
 void sio_register(void);
 const char *sio_last_error(void);
+const char *sio_option_name(unsigned option);
 
 /* Implemented in platform-specific code. */
 bool sio_supported(void);
+const char *sio_provider(void);
+unsigned sio_options_supported(void);
 sio_init_ret_t sio_init(ssl_config_t *config, const char *password,
 	sio_t *sio_ret);
 bool sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data);
@@ -60,6 +63,5 @@ int sio_read(sio_t sio, char *buf, size_t buflen);
 int sio_write(sio_t sio, const char *buf, size_t buflen);
 void sio_close(sio_t sio);
 bool sio_secure_unverified(sio_t sio);
-unsigned sio_options_supported(void);
 const char *sio_session_info(sio_t sio);
 const char *sio_server_cert_info(sio_t sio);

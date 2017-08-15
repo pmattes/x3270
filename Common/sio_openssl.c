@@ -1063,3 +1063,12 @@ sio_server_cert_info(sio_t sio)
     ssl_sio_t *s = (ssl_sio_t *)sio;
     return (s != NULL)? s->server_cert_info: NULL;
 }
+
+/*
+ * Returns the name of the provider.
+ */
+const char *
+sio_provider(void)
+{
+    return SSLeay_version(SSLEAY_VERSION);
+}
