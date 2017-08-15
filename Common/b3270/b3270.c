@@ -251,15 +251,15 @@ b3270_secure(bool ignored)
 }
 
 /* Translate supported SSL options to a list of names. */
-static char *sio_options(void)
+static char *
+sio_options(void)
 {
-    unsigned options = sio_options_supported();
-    unsigned opt;
+    unsigned options = sio_all_options_supported();
     varbuf_t v;
     char *sep = "";
 
     vb_init(&v);
-    while (SSL_ALL_OPTS & opt) {
+    FOREACH_SSL_OPTS(opt) {
 	if (options & opt) {
 	    const char *opt_name = sio_option_name(opt);
 
@@ -268,8 +268,7 @@ static char *sio_options(void)
 		sep = " ";
 	    }
 	}
-	opt <<= 1;
-    }
+    } FOREACH_SSL_OPTS_END(opt);
 
     return lazya(vb_consume(&v));
 }
