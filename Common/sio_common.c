@@ -57,8 +57,20 @@ add_ssl_opts(void)
 	unsigned flag;
 	opt_t opt;
     } flagged_opts[] = {
+	{ SSL_OPT_ACCEPT_HOSTNAME,
+	    { OptAcceptHostname, OPT_STRING, false, ResAcceptHostname,
+		aoffset(ssl.accept_hostname), "[DNS:]<name>",
+		"Host name to accept from server certificate" } },
+	{ SSL_OPT_VERIFY_HOST_CERT,
+	    { OptVerifyHostCert, OPT_BOOLEAN, true, ResVerifyHostCert,
+		aoffset(ssl.verify_host_cert),
+		NULL, "Enable SSL/TLS host certificate validation (set by default)" } },
+	{ SSL_OPT_VERIFY_HOST_CERT,
+	    { OptNoVerifyHostCert, OPT_BOOLEAN, false, ResVerifyHostCert,
+		aoffset(ssl.verify_host_cert),
+		NULL, "Disable SSL/TLS host certificate validation" } },
 	{ SSL_OPT_CA_DIR,
-	    { OptCaDir, OPT_STRING,false, ResCaDir, aoffset(ssl.ca_dir),
+	    { OptCaDir, OPT_STRING, false, ResCaDir, aoffset(ssl.ca_dir),
 		"<directory>","SSL/TLS CA certificate database directory" } },
 	{ SSL_OPT_CA_FILE,
 	    { OptCaFile, OPT_STRING, false, ResCaFile, aoffset(ssl.ca_file),
@@ -93,28 +105,25 @@ add_ssl_opts(void)
 		"<name>", "SSL/TLS client certificate name" } }
     };
     int n_opts = (int)(sizeof(flagged_opts) / sizeof(flagged_opts[0]));
-    int i;
-    unsigned opt;
     unsigned n_ssl_opts = 0;
     opt_t *ssl_opts;
     int add_ix = 0;
 
     /* Fetch the list from the implementation. */
-    unsigned supported_options = sio_options_supported();
+    unsigned supported_options = sio_all_options_supported();
 
     /* Match options against the supported ones. */
-    for (i = 0, opt = 1; opt; i++, opt <<= 1) {
+    FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
 	    for (j = 0; j < n_opts; j++) {
 		if (flagged_opts[j].flag == opt) {
 		    n_ssl_opts++;
-		    break;
 		}
 	    }
 	}
-    }
+    } FOREACH_SSL_OPTS_END(opt);
 
     if (!n_ssl_opts) {
 	return;
@@ -122,7 +131,7 @@ add_ssl_opts(void)
 
     /* Construct the list of options to add. */
     ssl_opts = (opt_t *)Malloc(n_ssl_opts * sizeof(opt_t));
-    for (i = 0, opt = 1; opt; i++, opt <<= 1) {
+    FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
@@ -132,7 +141,7 @@ add_ssl_opts(void)
 		}
 	    }
 	}
-    }
+    } FOREACH_SSL_OPTS_END(opt);
 
     /* Add them. */
     register_opts(ssl_opts, n_ssl_opts);
@@ -145,6 +154,12 @@ add_ssl_resources(void)
 	unsigned flag;
 	res_t res;
     } flagged_res[] = {
+	{ SSL_OPT_ACCEPT_HOSTNAME,
+	    { ResAcceptHostname, aoffset(ssl.accept_hostname), XRM_STRING } },
+	{ SSL_OPT_VERIFY_HOST_CERT,
+	    { ResVerifyHostCert, aoffset(ssl.verify_host_cert), XRM_BOOLEAN } },
+	{ SSL_OPT_TLS,
+	    { ResTls, aoffset(ssl.tls), XRM_BOOLEAN } },
 	{ SSL_OPT_CA_DIR,
 	    { ResCaDir, aoffset(ssl.ca_dir), XRM_STRING } },
 	{ SSL_OPT_CA_FILE,
@@ -165,17 +180,16 @@ add_ssl_resources(void)
 	    { ResClientCert, aoffset(ssl.client_cert), XRM_STRING } }
     };
     int n_res = (int)(sizeof(flagged_res) / sizeof(flagged_res[0]));
-    int i;
-    unsigned opt;
     unsigned n_ssl_res = 0;
     res_t *ssl_res;
     int add_ix = 0;
+    int i;
 
     /* Fetch the list from the implementation. */
-    unsigned supported_options = sio_options_supported();
+    unsigned supported_options = sio_all_options_supported();
 
     /* Match options against the supported ones. */
-    for (i = 0, opt = 1; opt; i++, opt <<= 1) {
+    FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
@@ -186,7 +200,7 @@ add_ssl_resources(void)
 		}
 	    }
 	}
-    }
+    } FOREACH_SSL_OPTS_END(opt);
 
     if (!n_ssl_res) {
 	return;
@@ -194,7 +208,8 @@ add_ssl_resources(void)
 
     /* Construct the list of resources to add. */
     ssl_res = (res_t *)Malloc(n_ssl_res * sizeof(res_t));
-    for (i = 0, opt = 1; opt; i++, opt <<= 1) {
+    i = 0;
+    FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
@@ -204,7 +219,8 @@ add_ssl_resources(void)
 		}
 	    }
 	}
-    }
+	i++;
+    } FOREACH_SSL_OPTS_END(opt);
 
     /* Add them. */
     register_resources(ssl_res, n_ssl_res);
@@ -228,6 +244,9 @@ sio_option_name(unsigned option)
 {
     /* Option names, in bitmap order. */
     static const char *sio_option_names[] = {
+	ResAcceptHostname,
+	ResVerifyHostCert,
+	ResTls,
 	ResCaDir,
 	ResCaFile,
 	ResCertFile,
@@ -238,15 +257,13 @@ sio_option_name(unsigned option)
 	ResKeyPasswd,
 	ResClientCert
     };
-    unsigned opt = 1;
     int i = 0;
 
-    while (SSL_ALL_OPTS & opt) {
+    FOREACH_SSL_OPTS(opt) {
 	if (option & opt) {
 	    return sio_option_names[i];
 	}
-	opt <<= 1;
 	i++;
-    }
+    } FOREACH_SSL_OPTS_END(opt);
     return NULL;
 }

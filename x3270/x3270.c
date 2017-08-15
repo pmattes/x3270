@@ -196,8 +196,9 @@ static struct option_help {
     char *help;
     unsigned ssl_flag;
 } option_help[] = {
-    { OptAcceptHostname, "any|DNS:<name>",
-	"Host name to accept from server certificate" },
+    { OptAcceptHostname, "[DNS:]<name>",
+	"Host name to accept from server certificate",
+	SSL_OPT_ACCEPT_HOSTNAME },
     { OptActiveIcon, NULL, "Make icon a miniature of the display" },
     { OptAplMode, NULL,    "Turn on APL mode" },
     { OptCaDir, "<directory>", "SSL/TLS CA certificate database directory",
@@ -237,7 +238,8 @@ static struct option_help {
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
     { OptNoScrollBar, NULL, "Disable scroll bar" },
-    { OptNoVerifyHostCert, NULL, "Do not verify SSL/TLS host certificate" },
+    { OptNoVerifyHostCert, NULL, "Do not verify SSL/TLS host certificate",
+	SSL_OPT_VERIFY_HOST_CERT },
     { OptNvtMode, NULL, "Begin in NVT mode" },
     { OptOnce, NULL, "Exit as soon as the host disconnects" },
     { OptOversize,  "<cols>x<rows>", "Larger screen dimensions" },
@@ -263,7 +265,8 @@ static struct option_help {
     { OptPreeditType, "<style>", "Define input method pre-edit type" },
     { OptUser, "<name>", "User name for RFC 4777" },
     { OptV, NULL, "Display build options and character sets" },
-    { OptVerifyHostCert, NULL, "Verify SSL/TLS host certificate (enabled by default)" },
+    { OptVerifyHostCert, NULL, "Verify SSL/TLS host certificate (enabled by default)",
+	SSL_OPT_VERIFY_HOST_CERT },
     { OptVersion, NULL, "Display build options and character sets" },
     { "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };
@@ -295,7 +298,7 @@ find_option_help(const char *opt)
 static void
 setup_options(void)
 {
-    unsigned ssl_options = sio_options_supported();
+    unsigned ssl_options = sio_all_options_supported();
     int i;
     int n_filtered = 0;
 
@@ -334,7 +337,7 @@ void
 usage(const char *msg)
 {
     unsigned i;
-    unsigned ssl_options = sio_options_supported();
+    unsigned ssl_options = sio_all_options_supported();
 
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);

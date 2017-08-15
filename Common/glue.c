@@ -497,13 +497,6 @@ set_appres_defaults(void)
 #endif /*]*/
 
 static opt_t base_opts[] = {
-{ OptAcceptHostname,OPT_STRING,false,ResAcceptHostname,aoffset(ssl.accept_hostname),
-#if !defined(_WIN32) /*[*/
-    "any|[DNS:]<name>",
-#else /*][*/
-    "[DNS:]<name>",
-#endif /*]*/
-    "Host name to accept from server certificate" },
 { OptAplMode,  OPT_BOOLEAN, true,  ResAplMode,   aoffset(apl_mode),
     NULL, "Turn on APL mode" },
 { OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
@@ -533,8 +526,6 @@ static opt_t base_opts[] = {
 },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
-{ OptNoVerifyHostCert,OPT_BOOLEAN,false,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
-    NULL, "Disable SSL/TLS host certificate validation" },
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
 { OptOversize, OPT_STRING,  false, ResOversize,  aoffset(oversize),
@@ -563,8 +554,6 @@ static opt_t base_opts[] = {
     "<name>", "User name for RFC 4777" },
 { OptV,        OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-{ OptVerifyHostCert,OPT_BOOLEAN,true,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
-    NULL, "Enable SSL/TLS host certificate validation (set by default)" },
 { OptVersion,  OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 { "-xrm",      OPT_XRM,     false, NULL,         NULL,
@@ -960,7 +949,6 @@ static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
-    { ResAcceptHostname,aoffset(ssl.accept_hostname),XRM_STRING },
     { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
@@ -1021,7 +1009,6 @@ static res_t base_resources[] = {
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
     { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
-    { ResTls,	aoffset(ssl.tls),		XRM_BOOLEAN },
     { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
     { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
@@ -1029,7 +1016,6 @@ static res_t base_resources[] = {
     { ResTypeahead,	aoffset(typeahead),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
-    { ResVerifyHostCert,aoffset(ssl.verify_host_cert),XRM_BOOLEAN },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING }
 };
 

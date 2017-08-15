@@ -153,3 +153,17 @@ sioc_parse_password_spec(const char *spec)
     /* No qualifier, assume direct value */
     return (NewString(spec));
 }
+
+/*
+ * Report all supported SSL-related options.
+ */
+unsigned
+sio_all_options_supported(void)
+{
+    if (sio_supported()) {
+	return SSL_REQUIRED_OPTS | sio_options_supported();
+    } else {
+	return 0;
+    }
+}
+

@@ -19,7 +19,7 @@
 </table>
 <p>Example:
 <pre>
-&lt;ssl-hello supported="true" provider="OpenSSL 1.0.1 14 Mar 2012" options="certFileType chainFile keyFile keyFileType keyPasswd"&gt;
+&lt;ssl-hello supported="true" provider="OpenSSL 1.0.1 14 Mar 2012" options="certFileType chainFile keyFile keyFileType keyPasswd acceptHostname verifyHostCert tls"&gt;
 </pre></p>
 <a name="options"></a><h3>SSL Options</h3>
 <p>The <b>Ssl()</b> action allows the SSL configuration to be changed. The
@@ -29,6 +29,7 @@ Possible values include:</p>
 
 <table border cols=2 width="75%">
  <tr><th>Option Name</th><th>Meaning</th></tr>
+ <tr><td>acceptHostname</td><td>Hostname to check against host certificate name</td></tr>
  <tr><td>caDir</td><td>Directory holding CA root certificates</td></tr>
  <tr><td>caFile</td><td>File holding CA root certificates</td></tr>
  <tr><td>certFile</td><td>File holding client certificate to present</td></tr>
@@ -38,6 +39,8 @@ Possible values include:</p>
  <tr><td>keyFile</td><td>File holding key for <b>certFile</b></td></tr>
  <tr><td>keyFileType</td><td>Type of <b>keyFile</b> (<b>pem</b> or <b>asn1</b>)</td></tr>
  <tr><td>keyPasswd</td><td>Password for client certificate (<b>file:<i>xxx</i></b> or <b>string:<i>xxx</i></b>)</td></tr>
+ <tr><td>tls</td><td><b>true</b> to accept the TELNET STARTTLS option (default), <b>false</b> to reject it</td></tr>
+ <tr><td>verifyHostCert</td><td><b>true</b> to verify the host certificate (default), <b>false</b> to accept any certificate</b></td></tr>
 </table>
 
 <hr>

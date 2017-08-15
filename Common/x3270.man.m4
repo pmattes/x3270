@@ -83,8 +83,6 @@ ifelse(XX_PLATFORM,unix,
 Specifies a particular hostname to accept when validating the name presented
 in the server SSL certificate, instead of comparing to the name
 used to make the connection.
-XX_FI(name) can either be XX_FB(any), which
-disables name validation, or a specific name.
 ',
 `XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(name))
 Specifies a particular hostname to accept when validating the name presented

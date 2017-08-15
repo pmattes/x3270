@@ -48,21 +48,35 @@ typedef struct {
     char	*client_cert;
 } ssl_config_t;
 
-/*
- * Options optionally supported by specific implementations.
- * Options not listed here must be supported by all implementations.
- */
-#define SSL_OPT_CA_DIR			0x00000001
-#define SSL_OPT_CA_FILE			0x00000002
-#define SSL_OPT_CERT_FILE		0x00000004
-#define SSL_OPT_CERT_FILE_TYPE		0x00000008
-#define SSL_OPT_CHAIN_FILE		0x00000010
-#define SSL_OPT_KEY_FILE		0x00000020
-#define SSL_OPT_KEY_FILE_TYPE		0x00000040
-#define SSL_OPT_KEY_PASSWD		0x00000080
-#define SSL_OPT_CLIENT_CERT		0x00000100
+/* Required options. */
+#define SSL_OPT_ACCEPT_HOSTNAME		0x00000001
+#define SSL_OPT_VERIFY_HOST_CERT	0x00000002
+#define SSL_OPT_TLS			0x00000004
+#define SSL_REQUIRED_OPTS \
+    (SSL_OPT_ACCEPT_HOSTNAME | SSL_OPT_VERIFY_HOST_CERT | SSL_OPT_TLS)
 
-#define SSL_ALL_OPTS \
-    (SSL_OPT_CA_DIR | SSL_OPT_CA_FILE | SSL_OPT_CERT_FILE \
-     | SSL_OPT_CERT_FILE_TYPE | SSL_OPT_CHAIN_FILE | SSL_OPT_KEY_FILE \
-     | SSL_OPT_KEY_FILE_TYPE | SSL_OPT_KEY_PASSWD | SSL_OPT_CLIENT_CERT)
+/* Options optionally supported by specific implementations. */
+#define SSL_OPT_CA_DIR			0x00000008
+#define SSL_OPT_CA_FILE			0x00000010
+#define SSL_OPT_CERT_FILE		0x00000020
+#define SSL_OPT_CERT_FILE_TYPE		0x00000040
+#define SSL_OPT_CHAIN_FILE		0x00000080
+#define SSL_OPT_KEY_FILE		0x00000100
+#define SSL_OPT_KEY_FILE_TYPE		0x00000200
+#define SSL_OPT_KEY_PASSWD		0x00000400
+#define SSL_OPT_CLIENT_CERT		0x00000800
+
+#define SSL_OPTIONAL_OPTS \
+    (SSL_OPT_CA_DIR | SSL_OPT_CA_FILE | SSL_OPT_CERT_FILE | \
+     SSL_OPT_CERT_FILE_TYPE | SSL_OPT_CHAIN_FILE | SSL_OPT_KEY_FILE | \
+     SSL_OPT_KEY_FILE_TYPE | SSL_OPT_KEY_PASSWD | SSL_OPT_CLIENT_CERT)
+
+#define SSL_ALL_OPTS	(SSL_REQUIRED_OPTS | SSL_OPTIONAL_OPTS)
+
+#define FOREACH_SSL_OPTS(opt) { \
+	unsigned opt = 1; \
+	while (SSL_ALL_OPTS & opt) {
+#define FOREACH_SSL_OPTS_END(opt) \
+	    opt <<= 1; \
+	} \
+    }

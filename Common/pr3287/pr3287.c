@@ -188,20 +188,16 @@ const char *build_options(void);
 static void
 usage(void)
 {
-    unsigned ssl_options = sio_options_supported();
+    unsigned ssl_options = sio_all_options_supported();
 
     (void) fprintf(stderr,
 	    "usage: %s [options] [lu[,lu...]@]host[:port]\nOptions:\n",
 	    programname);
-    (void) fprintf(stderr,
-#if defined(_WIN32) /*[*/
-"  -accepthostname name\n"
-"                   accept a specific name in host cert\n"
-#else /*][*/
-"  -accepthostname any|name\n"
-"                   accept any name, or a specific name in host cert\n"
-#endif /*]*/
-    );
+    if (ssl_options & SSL_OPT_ACCEPT_HOSTNAME) {
+	(void) fprintf(stderr,
+"  " OptAcceptHostname " <name>\n"
+"                   accept a specific name in host cert\n");
+    }
     (void) fprintf(stderr,
 "  -assoc <session> associate with a session (TN3270E only)\n");
     if (ssl_options & SSL_OPT_CA_DIR) {
@@ -272,8 +268,12 @@ usage(void)
     (void) fprintf(stderr,
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
 "  -mpp <n>         define the Maximum Presentation Position (unformatted\n"
-"                   line length)\n"
-"  " OptNoVerifyHostCert "    do not verify host certificate for SSL/TLS connections\n"
+"                   line length)\n");
+    if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
+	(void) fprintf(stderr,
+"  " OptNoVerifyHostCert "    do not verify host certificate for SSL/TLS connections\n");
+    }
+    (void) fprintf(stderr,
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
@@ -296,8 +296,12 @@ usage(void)
 "  -tracedir <dir>  directory to keep trace information in\n"
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
-"  -v               display version information and exit\n"
-"  " OptVerifyHostCert "      verify host certificate for SSL/TLS connections (enabled by default)\n"
+"  -v               display version information and exit\n");
+    if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
+	(void) fprintf(stderr,
+"  " OptVerifyHostCert "      verify host certificate for SSL/TLS connections (enabled by default)\n");
+    }
+    (void) fprintf(stderr,
 "  -V               log verbose information about connection negotiation\n"
 "  -xtable <file>   specify a custom EBCDIC-to-ASCII translation table\n");
 	pr3287_exit(1);
@@ -531,7 +535,7 @@ main(int argc, char *argv[])
 	socket_t s = INVALID_SOCKET;
 	int rc = 0;
 	int report_success = 0;
-	unsigned ssl_options = sio_options_supported();
+	unsigned ssl_options = sio_all_options_supported();
 
 	/* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -564,7 +568,8 @@ main(int argc, char *argv[])
 			options.bdaemon = WILL_DAEMON;
 		else
 #endif /*]*/
-		if (!strcmp(argv[i], OptAcceptHostname)) {
+		if ((ssl_options & SSL_OPT_ACCEPT_HOSTNAME) &&
+			!strcmp(argv[i], OptAcceptHostname)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for "
@@ -743,7 +748,8 @@ main(int argc, char *argv[])
 				usage();
 			}
 			i++;
-		} else if (!strcmp(argv[i], OptNoVerifyHostCert)) {
+		} else if ((ssl_options & SSL_OPT_VERIFY_HOST_CERT) &&
+			!strcmp(argv[i], OptNoVerifyHostCert)) {
 		    	options.ssl.verify_host_cert = false;
 		} else if (!strcmp(argv[i], OptReconnect)) {
 			options.reconnect = 1;
@@ -756,7 +762,8 @@ See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			exit(0);
-		} else if (!strcmp(argv[i], OptVerifyHostCert)) {
+		} else if ((ssl_options & SSL_OPT_VERIFY_HOST_CERT) &&
+			!strcmp(argv[i], OptVerifyHostCert)) {
 		    	options.ssl.verify_host_cert = true;
 		} else if (!strcmp(argv[i], "-V")) {
 			options.verbose = 1;

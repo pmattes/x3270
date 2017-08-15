@@ -50,6 +50,7 @@ typedef void *sio_t;
 /* Implemented in common code. */
 void sio_register(void);
 const char *sio_last_error(void);
+unsigned sio_all_options_supported();
 const char *sio_option_name(unsigned option);
 
 /* Implemented in platform-specific code. */

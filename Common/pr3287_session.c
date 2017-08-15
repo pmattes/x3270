@@ -470,9 +470,10 @@ pr3287_start_now(const char *lu, bool associated)
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "V%", 2)) {
-		unsigned ssl_opts = sio_options_supported();
+		unsigned ssl_opts = sio_all_options_supported();
 
-		if (!appres.ssl.verify_host_cert) {
+		if ((ssl_opts & SSL_OPT_VERIFY_HOST_CERT) &&
+			!appres.ssl.verify_host_cert) {
 		    vb_appends(&r, " " OptNoVerifyHostCert);
 		}
 		if ((ssl_opts & SSL_OPT_CA_DIR) && appres.ssl.ca_dir) {
@@ -508,7 +509,8 @@ pr3287_start_now(const char *lu, bool associated)
 		    vb_appendf(&r, " %s %s", OptClientCert,
 			    appres.ssl.client_cert);
 		}
-		if (appres.ssl.accept_hostname) {
+		if ((ssl_opts & SSL_OPT_ACCEPT_HOSTNAME) &&
+			appres.ssl.accept_hostname) {
 		    vb_appendf(&r, " %s \"%s\"", OptAcceptHostname,
 			    appres.ssl.accept_hostname);
 		}

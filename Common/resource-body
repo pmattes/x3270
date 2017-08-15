@@ -82,10 +82,6 @@ description
     Defines a specific name to accept when validating the name presented in
     the server's SSL/TLS certificate, instead of using the name used
     to make the connection.
-if u
-    Takes one of two forms: <b>any</b>, which disables name checking, or a
-    specific name.
-endif
     (The form <b>DNS:</b><i>name</i>
     is also accepted for backwards compatibility.)
 .
