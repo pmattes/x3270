@@ -78,6 +78,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
@@ -249,6 +250,30 @@ b3270_secure(bool ignored)
 	     NULL);
 }
 
+/* Translate supported SSL options to a list of names. */
+static char *sio_options(void)
+{
+    unsigned options = sio_options_supported();
+    unsigned opt;
+    varbuf_t v;
+    char *sep = "";
+
+    vb_init(&v);
+    while (SSL_ALL_OPTS & opt) {
+	if (options & opt) {
+	    const char *opt_name = sio_option_name(opt);
+
+	    if (opt_name != NULL) {
+		vb_appendf(&v, "%s%s", sep, opt_name);
+		sep = " ";
+	    }
+	}
+	opt <<= 1;
+    }
+
+    return lazya(vb_consume(&v));
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -378,6 +403,13 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
     /* Handle initial toggle settings. */
     initialize_toggles();
+
+    /* Send SSL set-up */
+    ui_vleaf("ssl-hello",
+	    "supported", sio_supported()? "true": "false",
+	    "provider", sio_provider(),
+	    "options", sio_options(),
+	    NULL);
 
     ui_vleaf("ready", NULL);
 
