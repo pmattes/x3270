@@ -31,3 +31,4 @@
  */
 
 bool push_password(void);
+ia_t password_ia_restrict(const char *action);

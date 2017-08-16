@@ -964,6 +964,12 @@ success:
     if (any != NULL) {
 	const char **params = NULL;
 
+	if (any->t.ia_restrict != IA_NONE && cause != any->t.ia_restrict) {
+	    popup_an_error("Action %s is invalid in this context",
+		    any->t.name);
+	    goto silent_failure;
+	}
+
 	if (param_count) {
 	    /* Create the parameter array. */
 	    params = (const char **)Malloc(param_count * sizeof(const char *));

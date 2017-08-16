@@ -37,6 +37,7 @@ typedef struct {
     unsigned help_flags;
     const char *help_parms;
     const char *help_text;
+    ia_t ia_restrict;
 } action_table_t;
 #define ACTION_KE	0x1	/* action is valid from key events */
 

@@ -50,9 +50,9 @@ unsigned actions_list_count;
 
 enum iaction ia_cause;
 const char *ia_name[] = {
-    "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
+    "None", "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
-    "Keymap", "Idle"
+    "Keymap", "Idle", "Password"
 };
 const char *current_action_name;
 

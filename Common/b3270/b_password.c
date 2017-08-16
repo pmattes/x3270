@@ -114,7 +114,7 @@ password_done(task_cbh handle, bool success, bool abort)
     if (success) {
 	net_password_continue(password_result);
     } else {
-	vtrace("Password command failed%s%s",
+	vtrace("Password command failed%s%s\n",
 		password_result? ": ": "",
 		password_result? password_result: "");
 	AddTimeOut(1, password_error);
@@ -149,4 +149,14 @@ push_password(void)
     push_cb(PASSWORD_PASSTHRU_CALL, strlen(PASSWORD_PASSTHRU_CALL),
 	    &password_cb, (task_cbh)&password_cb);
     return true;
+}
+
+/**
+ * Return restrictions based on a passthru command name.
+ * @returns IA_NONE or IA_PASSWORD.
+ */
+ia_t
+password_ia_restrict(const char *action)
+{
+    return strcasecmp(action, PASSWORD_PASSTHRU_NAME)? IA_NONE: IA_PASSWORD;
 }

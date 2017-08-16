@@ -46,6 +46,7 @@
 #include "actions.h"
 #include "appres.h"
 #include "3270ds.h"
+#include "b_password.h"
 #include "lazya.h"
 #include "popups.h"
 #include "resources.h"
@@ -499,12 +500,14 @@ do_register(const char *cmd, const char **attrs)
     }
 
     a = (action_table_t *)Malloc(sizeof(action_table_t));
+    memset(a, 0, sizeof(action_table_t));
     a[0].name = NewString(name);
     a[0].action = Passthru_action;
     a[0].flags = ACTION_KE;
     a[0].help_flags = 0;
     a[0].help_parms = help_parms? NewString(help_parms): NULL;
     a[0].help_text = help_text? NewString(help_text): NULL;
+    a[0].ia_restrict = password_ia_restrict(name);
 
     register_actions(a, 1);
 }
