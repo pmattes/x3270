@@ -27,40 +27,8 @@
  */
 
 /*
- *	sio.h
- *		External definitions for functions and data for secure I/O,
- *		implemented in various platform-specific ways.
+ *	sio_glue.h
+ *		Secure I/O glue functions.
  */
 
-/* Special return values from sio_read and sio_write. */
-#define SIO_EOF			0
-#define SIO_FATAL_ERROR		(-1)
-#define SIO_EWOULDBLOCK		(-2)
-
-/* Return values from sio_init. */
-typedef enum {
-    SI_SUCCESS,		/* success */
-    SI_FAILURE,		/* failure, reason in sio_last_error  */
-    SI_NEED_PASSWORD,	/* need a password */
-    SI_WRONG_PASSWORD	/* password is wrong */
-} sio_init_ret_t;
-
-typedef void *sio_t;
-
-/* Implemented in common code. */
-const char *sio_last_error(void);
-unsigned sio_all_options_supported();
-
-/* Implemented in platform-specific code. */
-bool sio_supported(void);
-const char *sio_provider(void);
-unsigned sio_options_supported(void);
-sio_init_ret_t sio_init(ssl_config_t *config, const char *password,
-	sio_t *sio_ret);
-bool sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data);
-int sio_read(sio_t sio, char *buf, size_t buflen);
-int sio_write(sio_t sio, const char *buf, size_t buflen);
-void sio_close(sio_t sio);
-bool sio_secure_unverified(sio_t sio);
-const char *sio_session_info(sio_t sio);
-const char *sio_server_cert_info(sio_t sio);
+void sio_glue_register(void);

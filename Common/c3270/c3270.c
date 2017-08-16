@@ -78,8 +78,9 @@
 #include "product.h"
 #include "screen.h"
 #include "selectc.h"
-#include "sio.h"
+#include "sio_glue.h"
 #include "split_host.h"
+#include "ssl_action.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -323,7 +324,8 @@ main(int argc, char *argv[])
     toggles_register();
     trace_register();
     xio_register();
-    sio_register();
+    sio_glue_register();
+    sio_register_actions();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

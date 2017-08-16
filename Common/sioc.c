@@ -27,7 +27,8 @@
 
 /*
  *	sioc.c
- *		Common back-end logic for secure I/O.
+ *		Common back-end logic used by secure I/O providers,
+ *		plus common internal logic that depends on that.
  */
 
 #include "globals.h"

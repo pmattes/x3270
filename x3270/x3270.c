@@ -70,6 +70,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "ssl_action.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -452,6 +453,7 @@ main(int argc, char *argv[])
     trace_register();
     x3270_register();
     xio_register();
+    sio_register_actions();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */

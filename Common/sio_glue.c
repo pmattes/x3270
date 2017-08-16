@@ -26,8 +26,8 @@
  */
 
 /*
- *	sio_common.c
- *		Common logic for secure I/O.
+ *	sio_glue.c
+ *		Resource and options glue logic for secure I/O.
  */
 
 #include "globals.h"
@@ -38,8 +38,14 @@
 #include "resources.h"
 
 #include "opts.h"
+#include "lazya.h"
+#include "popups.h"
 #include "utils.h"
 #include "sio.h"
+#include "sio_glue.h"
+#include "sio_internal.h"
+#include "telnet.h"
+#include "varbuf.h"
 
 /* Typedefs */
 
@@ -104,7 +110,7 @@ add_ssl_opts(void)
 		aoffset(ssl.client_cert),
 		"<name>", "SSL/TLS client certificate name" } }
     };
-    int n_opts = (int)(sizeof(flagged_opts) / sizeof(flagged_opts[0]));
+    int n_opts = (int)array_count(flagged_opts);
     unsigned n_ssl_opts = 0;
     opt_t *ssl_opts;
     int add_ix = 0;
@@ -150,36 +156,6 @@ add_ssl_opts(void)
 static void
 add_ssl_resources(void)
 {
-    struct {
-	unsigned flag;
-	res_t res;
-    } flagged_res[] = {
-	{ SSL_OPT_ACCEPT_HOSTNAME,
-	    { ResAcceptHostname, aoffset(ssl.accept_hostname), XRM_STRING } },
-	{ SSL_OPT_VERIFY_HOST_CERT,
-	    { ResVerifyHostCert, aoffset(ssl.verify_host_cert), XRM_BOOLEAN } },
-	{ SSL_OPT_TLS,
-	    { ResTls, aoffset(ssl.tls), XRM_BOOLEAN } },
-	{ SSL_OPT_CA_DIR,
-	    { ResCaDir, aoffset(ssl.ca_dir), XRM_STRING } },
-	{ SSL_OPT_CA_FILE,
-	    { ResCaFile, aoffset(ssl.ca_file), XRM_STRING } },
-	{ SSL_OPT_CERT_FILE,
-	    { ResCertFile, aoffset(ssl.cert_file), XRM_STRING } },
-	{ SSL_OPT_CERT_FILE_TYPE,
-	    { ResCertFileType,aoffset(ssl.cert_file_type), XRM_STRING } },
-	{ SSL_OPT_CHAIN_FILE,
-	    { ResChainFile, aoffset(ssl.chain_file), XRM_STRING } },
-	{ SSL_OPT_KEY_FILE,
-	    { ResKeyFile, aoffset(ssl.key_file), XRM_STRING } },
-	{ SSL_OPT_KEY_FILE_TYPE,
-	    { ResKeyFileType, aoffset(ssl.key_file_type),XRM_STRING } },
-	{ SSL_OPT_KEY_PASSWD,
-	    { ResKeyPasswd, aoffset(ssl.key_passwd), XRM_STRING } },
-	{ SSL_OPT_CLIENT_CERT,
-	    { ResClientCert, aoffset(ssl.client_cert), XRM_STRING } }
-    };
-    int n_res = (int)(sizeof(flagged_res) / sizeof(flagged_res[0]));
     unsigned n_ssl_res = 0;
     res_t *ssl_res;
     int add_ix = 0;
@@ -193,8 +169,8 @@ add_ssl_resources(void)
 	if (supported_options & opt) {
 	    int j;
 
-	    for (j = 0; j < n_res; j++) {
-		if (flagged_res[j].flag == opt) {
+	    for (j = 0; j < n_sio_flagged_res; j++) {
+		if (sio_flagged_res[j].flag == opt) {
 		    n_ssl_res++;
 		    break;
 		}
@@ -213,9 +189,9 @@ add_ssl_resources(void)
 	if (supported_options & opt) {
 	    int j;
 
-	    for (j = 0; j < n_res; j++) {
-		if (flagged_res[j].flag == opt) {
-		    ssl_res[add_ix++] = flagged_res[j].res; /* struct copy */
+	    for (j = 0; j < n_sio_flagged_res; j++) {
+		if (sio_flagged_res[j].flag == opt) {
+		    ssl_res[add_ix++] = sio_flagged_res[j].res; /* struct copy */
 		}
 	    }
 	}
@@ -230,40 +206,8 @@ add_ssl_resources(void)
  * Register SSL-specific options and resources.
  */
 void
-sio_register(void)
+sio_glue_register(void)
 {
     add_ssl_opts();
     add_ssl_resources();
-}
-
-/*
- * Translate an option flag to its name.
- */
-const char *
-sio_option_name(unsigned option)
-{
-    /* Option names, in bitmap order. */
-    static const char *sio_option_names[] = {
-	ResAcceptHostname,
-	ResVerifyHostCert,
-	ResTls,
-	ResCaDir,
-	ResCaFile,
-	ResCertFile,
-	ResCertFileType,
-	ResChainFile,
-	ResKeyFile,
-	ResKeyFileType,
-	ResKeyPasswd,
-	ResClientCert
-    };
-    int i = 0;
-
-    FOREACH_SSL_OPTS(opt) {
-	if (option & opt) {
-	    return sio_option_names[i];
-	}
-	i++;
-    } FOREACH_SSL_OPTS_END(opt);
-    return NULL;
 }

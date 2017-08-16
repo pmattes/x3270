@@ -250,29 +250,6 @@ b3270_secure(bool ignored)
 	     NULL);
 }
 
-/* Translate supported SSL options to a list of names. */
-static char *
-sio_options(void)
-{
-    unsigned options = sio_all_options_supported();
-    varbuf_t v;
-    char *sep = "";
-
-    vb_init(&v);
-    FOREACH_SSL_OPTS(opt) {
-	if (options & opt) {
-	    const char *opt_name = sio_option_name(opt);
-
-	    if (opt_name != NULL) {
-		vb_appendf(&v, "%s%s", sep, opt_name);
-		sep = " ";
-	    }
-	}
-    } FOREACH_SSL_OPTS_END(opt);
-
-    return lazya(vb_consume(&v));
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -310,7 +287,8 @@ main(int argc, char *argv[])
     toggles_register();
     trace_register();
     xio_register();
-    sio_register();
+    sio_glue_register();
+    sio_register_actions();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {
@@ -407,7 +385,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     ui_vleaf("ssl-hello",
 	    "supported", sio_supported()? "true": "false",
 	    "provider", sio_provider(),
-	    "options", sio_options(),
+	    "options", sio_option_names(),
 	    NULL);
 
     ui_vleaf("ready", NULL);

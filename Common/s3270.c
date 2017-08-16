@@ -66,7 +66,8 @@
 #include "product.h"
 #include "screen.h"
 #include "selectc.h"
-#include "sio.h"
+#include "sio_glue.h"
+#include "ssl_action.h"
 #include "task.h"
 #include "telnet.h"
 #include "toggles.h"
@@ -145,7 +146,8 @@ main(int argc, char *argv[])
     toggles_register();
     trace_register();
     xio_register();
-    sio_register();
+    sio_glue_register();
+    sio_register_actions();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

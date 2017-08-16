@@ -153,11 +153,13 @@ Common/see.c
 Common/select_stubs.c
 Common/sf.c
 Common/sioc.c
-Common/sio_common.c
+Common/sio_glue.c
+Common/sio_internal.c
 Common/sio_none.c
 Common/sio_openssl.c
 Common/sio_secure_transport.c
 Common/split_host.c
+Common/ssl_action.c
 Common/ssl_passwd_gui_stubs.c
 Common/status_stubs.c
 Common/tables.c
@@ -254,8 +256,11 @@ include/see.h
 include/selectc.h
 include/sf.h
 include/sio.h
+include/sio_glue.h
+include/sio_internal.h
 include/sioc.h
 include/split_host.h
+include/ssl_action.h
 include/ssl_config.h
 include/ssl_passwd_gui.h
 include/status.h

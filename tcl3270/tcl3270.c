@@ -78,7 +78,8 @@
 #include "print_screen.h"
 #include "screen.h"
 #include "selectc.h"
-#include "sio.h"
+#include "sio_glue.h"
+#include "ssl_action.h"
 #include "task.h"
 #include "telnet.h"
 #include "toggles.h"
@@ -272,7 +273,8 @@ Tcl_AppInit(Tcl_Interp *interp)
     toggles_register();
     trace_register();
     xio_register();
-    sio_register();
+    sio_glue_register();
+    sio_register_actions();
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);
