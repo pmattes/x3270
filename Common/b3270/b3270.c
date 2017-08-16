@@ -49,6 +49,7 @@
 #include "actions.h"
 #include "bind-opt.h"
 #include "bscreen.h"
+#include "b_password.h"
 #include "charset.h"
 #include "ctlr.h"
 #include "ctlrc.h"
@@ -75,6 +76,7 @@
 #include "sio_glue.h"
 #include "sio_internal.h"
 #include "ssl_action.h"
+#include "ssl_passwd_gui.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -788,6 +790,25 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 	    "file", (ix == TRACING && toggled(ix) && tracefile_name != NULL)?
 		tracefile_name: NULL,
 	    NULL);
+}
+
+/**
+ * SSL password GUI.
+ * @param[out] buf	Returned password
+ * @param[in] size	Buffer size
+ * @param[in] again	true if this is a re-prompt (old password was bad)
+ * @return SP_SUCCESS if password entered, SP_FAILURE to abort, SP_PENDING to
+ *  indicate that a prompt was displayed and there is no answer yet,
+ *  SP_NOT_SUPPORTED to indicate that password prompting is not supported.
+ */
+ssl_passwd_ret_t
+ssl_passwd_gui_callback(char *buf, int size, bool again)
+{
+    if (push_password()) {
+	return SP_PENDING;
+    } else {
+	return SP_NOT_SUPPORTED;
+    }
 }
 
 /**

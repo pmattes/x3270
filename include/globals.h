@@ -244,7 +244,7 @@ enum cstate {
 extern enum cstate cstate;
 
 #define cPCONNECTED(c)	(c > NOT_CONNECTED)
-#define cHALF_CONNECTED(c) (c == RESOLVING || c == PENDING)
+#define cHALF_CONNECTED(c) (c == SSL_PASS || c == RESOLVING || c == PENDING)
 #define cCONNECTED(c)	(c >= CONNECTED_INITIAL)
 #define cIN_NVT(c)	(c == CONNECTED_NVT || \
 			 c == CONNECTED_NVT_CHAR || \
@@ -378,7 +378,8 @@ void usage(const char *);
 /* types of internal actions */
 typedef enum iaction {
     IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_KEY, IA_MACRO,
-    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE
+    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE,
+    IA_PASSWORD
 } ia_t;
 extern enum iaction ia_cause;
 

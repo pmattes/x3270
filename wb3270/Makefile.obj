@@ -42,9 +42,9 @@ else
 HOST = win32
 endif
 W = w
-include wb3270_files.mk libs.mk
+include b3270_files.mk libs.mk
 
-VOBJS = $(WB3270_OBJECTS) fallbacks.o wb3270res.o
+VOBJS = $(B3270_OBJECTS) fallbacks.o wb3270res.o
 
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32

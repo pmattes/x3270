@@ -79,6 +79,17 @@ When the UI has processed the action, it uses the
 <a href="Succeed.html">succeed</a> or <a href="Fail.html">fail</a> operation to
 complete the action, giving back the unique tag and optional result text.</p>
 
+<p>The pass-through mechanism is also used to implement password prompting for
+SSL/TLS certificates. The action name <b>TlsKeyPassword</b> is reserved for
+this purpose. If a password is needed to use an SSL/TLS client certificate,
+b3270 will invoke the <b>TlsKeyPassword()</b> action. If the user interface
+has not registered a pass-through for <b>TlsKeyPassword</b>, then the SSL/TLS
+password operation will fail, and the host session will not be established. If
+a pass-through has been registered, a <a href="Passthru.html">passthru</a>
+indication will be generated for it. If that operation succeeds, the TLS/SSL
+password will come from the result text. If the operation fails, the TLS/SSL
+password operation and host session will fail.</p>
+
 <h2>Initialization</h2>
 
 When b3270 starts up, it sends a series of initialization indications to the
