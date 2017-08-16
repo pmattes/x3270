@@ -50,7 +50,4 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 
 # Special rule to build the SSL documentation, which comes from a template.
 html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
-documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
-	openssl-url.txt
-	./dll-subst.sh <documentation-ssl-body.tmpl >$@
+	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
