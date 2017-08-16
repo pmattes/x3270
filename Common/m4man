@@ -53,12 +53,13 @@ fi
 date=`date "+%d %B %Y"`
 # platform
 case $product in
-    x3270|x3270|c3270|s3270|tcl3270|pr3287)
+    x3270|x3270|c3270|s3270|tcl3270|b3270|pr3287)
 	platform=unix
 	c3270=c3270
 	s3270=s3270
 	pr3287=pr3287
 	x3270=x3270
+	b3270=b3270
 	;;
     wc3270|ws3270|wpr3287)
 	platform=windows
@@ -66,6 +67,7 @@ case $product in
 	s3270=ws3270
 	pr3287=wpr3287
 	x3270=wc3270
+	b3270=wb3270
 	;;
     *)  
 	echo >&2 "Unknown product: $1"
@@ -76,7 +78,7 @@ case $product in
     c3270|wc3270)
 	mode=console
 	;;
-    s3270|ws3270)
+    s3270|ws3270|b3270)
 	mode=script
 	;;
     *)
@@ -104,8 +106,8 @@ fi
 /usr/bin/m4 -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
     -DXX_PLATFORM=$platform -DXX_MODE=$mode -DXX_INTERACTIVE=$interactive \
     -DXX_C3270=$c3270 -DXX_S3270=$s3270 -DXX_PR3287=$pr3287 -DXX_X3270=$x3270 \
-    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version -DXX_CYEAR=$cyear \
-    $type.m4 $source |
+    -DXX_B3270=$b3270 -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version \
+    -DXX_CYEAR=$cyear $type.m4 $source |
  if [ -n "$outfile" ]
  then	cat >$tf
  else	cat

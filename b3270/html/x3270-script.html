@@ -1,0 +1,753 @@
+<html>
+<head>
+<title>x3270-script Manual Page</title>
+<link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+<h1>x3270-script Manual Page</h1>
+<h2>Contents</h2>
+<blockquote>
+<a HREF="#Name">Name</a><br>
+<a HREF="#Synopsis">Synopsis</a><br>
+<a HREF="#Description">Description</a><br>
+<a HREF="#Status-Format">Status Format</a><br>
+<a HREF="#Differences">Differences</a><br>
+<a HREF="#Basic-Programming-Strategies">Basic Programming Strategies</a><br>
+<a HREF="#Script-Specific-Actions">Script-Specific Actions</a><br>
+<a HREF="#File-Transfer">File Transfer</a><br>
+<a HREF="#See-Also">See Also</a><br>
+<a HREF="#Version">Version</a><br>
+</blockquote>
+<a NAME="Name"></a><h2>Name</h2>
+Scripting Facilities for
+x3270,
+c3270 and s3270
+<a NAME="Synopsis"></a><h2>Synopsis</h2>
+<b>x3270</b> <b>-script</b> [ <i>x3270-options</i> ]
+<br>
+<b>x3270</b> <b>-socket</b> [ <i>x3270-options</i> ]
+<br>
+<b>x3270</b> <b>-scriptport <i>port</i></b> [ <i>x3270-options</i> ]
+<br>
+<b>c3270</b> <b>-socket</b> [ <i>c3270-options</i> ]
+<br>
+<b>c3270</b> <b>-scriptport</b> <i>port</i> [ <i>s3270-options</i> ]
+<br>
+<b>s3270</b> [ <i>s3270-options</i> ]
+<br>
+<b>Script</b> ( <i>command</i> [ ,<i>arg</i>... ] )
+<a NAME="Description"></a><h2>Description</h2>
+The <b>x3270</b> scripting facilities allow the interactive 3270
+emulators <b>x3270</b> and <b>c3270</b>
+to be operated under the control of another
+program, and forms the basis for the script-only emulator <b>s3270</b>.
+<p>
+There are
+four
+basic scripting methods.
+The first is the <b>peer script</b> facility,
+invoked by the <b>x3270</b>
+<b>-script</b> switch, and the default mode for <b>s3270</b>.
+This runs the emulator as a child of another process.
+Typically this would be a script using
+<i>expect</i>(1), <i>perl</i>(1),
+or the co-process facility of the Korn Shell
+<i>ksh</i>(1).
+In this mode, the emulator process looks for commands on its standard input,
+and places the responses on standard output.
+<p>
+The second method is the <b>child script</b>
+facility, invoked by the emulator's <b>Script</b> action.
+This runs a script as a child process of the emulator.
+The child has access to pipes connected to the
+emulator; the emulator looks for commands on one pipe, and places the responses on the other.
+The file descriptor of the pipe for commands to the emulator
+is passed in the environment variable X3270INPUT (e.g., the text string "7" if
+the file descriptor is 7); the file descriptor
+of the pipe for responses from the emulator is passed in the environment
+variable X3270OUTPUT.
+<p>
+The third method uses a TCP socket.
+The <b>-scrpiptport</b> command-line option causes the emulator to
+bind a socket to the specified port (on the IPv4 loopback address, 127.0.0.1).
+The emulator accepts TCP connections on that port.
+Multiple commands and responses can be sent over each connection.
+<p>
+The fourth method uses a Unix-domain socket.
+The <b>-socket</b> command-line option causes the emulator to
+create a Unix-domain stream socket named <b>/tmp/x3sck.</b><i>pid</i>.
+The emulator accepts connections to that socket.
+Multiple commands and responses can be sent over each connection.
+<p>
+It is possible to nest the methods.
+For example, a peer or TCP socket script can invoke the <b>Script</b> action.
+The calling script will be resumed when the nested script completes.
+<p>
+Commands are emulator <i>actions</i>; the syntax is the same as for the
+right-hand side of
+an <b>x3270</b> or
+<b>c3270</b> keymap.
+Unlike translation tables, action names are case-insensitive, can be
+uniquely abbreviated, and the parentheses may be omitted if there are
+no parameters.
+Any input line that begins with <b>#</b> or <b>!</b> is treaded as a comment
+and will be ignored.
+<p>
+Any emulator action may be specified.
+Several specific actions have been defined for use by scripts, and the behavior
+of certain other actions (and of the emulators in general) is different when
+an action is initiated by a script.
+<p>
+Some actions generate output; some may delay completion until the certain
+external events occur, such as the host unlocking the keyboard.
+The completion of every command is marked by a two-line message.
+The first line is the current status of the emulator, documented below.
+If the command is successful, the second line is the string "ok"; otherwise it
+is the string "error".
+<a NAME="Status-Format"></a><h2>Status Format</h2>
+The status message consists of 12 blank-separated fields:
+<dl><dt>1 Keyboard State</dt><dd>
+If the keyboard is unlocked, the letter
+<b>U</b>.
+If the keyboard is locked waiting for a response from the host, or if not
+connected to a host, the letter
+<b>L</b>.
+If the keyboard is locked because of an operator error (field overflow,
+protected field, etc.), the letter
+<b>E</b>.
+<dt>2 Screen Formatting</dt><dd>
+If the screen is formatted, the letter
+<b>F</b>.
+If unformatted or in <font size=-1>NVT</font> mode, the letter <b>U</b>.
+<dt>3 Field Protection</dt><dd>
+If the field containing the cursor is protected, the letter
+<b>P</b>.
+If unprotected or unformatted, the letter
+<b>U</b>.
+<dt>4 Connection State</dt><dd>
+If connected to a host, the string
+<b>C(</b><i>hostname</i><b>)</b>.
+Otherwise, the letter
+<b>N</b>.
+<dt>5 Emulator Mode</dt><dd>
+If connected in 3270 mode, the letter
+<b>I</b>.
+If connected in <font size=-1>NVT</font> line mode, the letter
+<b>L</b>.
+If connected in <font size=-1>NVT</font> character mode, the letter
+<b>C</b>.
+If connected in unnegotiated mode (no BIND active from the host), the letter
+<b>P</b>.
+If not connected, the letter
+<b>N</b>.
+<dt>6 Model Number (2-5)</dt><dd>
+<dt>7 Number of Rows</dt><dd>
+The current number of rows defined on the screen.
+The host can request that the emulator
+use a 24x80 screen, so this number may be smaller than the maximum number of
+rows possible with the current model.
+<dt>8 Number of Columns</dt><dd>
+The current number of columns defined on the screen, subject to the same
+difference for rows, above.
+<dt>9 Cursor Row</dt><dd>
+The current cursor row (zero-origin).
+<dt>10 Cursor Column</dt><dd>
+The current cursor column (zero-origin).
+<dt>11 Window ID</dt><dd>
+The X window identifier for the main
+<b>x3270</b>
+window, in hexadecimal preceded by
+<b>0x</b>.
+For
+<b>s3270</b> and <b>c3270</b>,
+this is zero.
+<dt>12 Command Execution Time</dt><dd>
+The time that it took for the host to respond to the previous commnd, in
+seconds with milliseconds after the decimal.
+If the previous command did not require a host response, this is a dash.
+</dl>
+<a NAME="Differences"></a><h2>Differences</h2>
+When an action is initiated by a script, the emulators
+behave in several different ways:
+<p>
+If an error occurs in processing an action, the usual pop-up window does not
+appear.
+Instead, the text is written to standard output.
+<p>
+If end-of-file is detected on standard input, the emulator exits.
+(A script can exit without killing the emulator
+by using the <b>CloseScript</b> action, below.)
+Note that this applies to peer scripts only; end-of-file on the pipe
+connected to a child script simply causes the pipes to be closed and
+the
+<b>Script</b>
+action to complete.
+<p>
+The <b>Quit</b> action always causes the emulator to exit.
+(When called from the keyboard, it will exit only if not connected to a host.)
+<p>
+Normally, the AID actions (<b>Clear</b>,
+<b>Enter</b>,
+<b>PF</b>,
+and
+<b>PA</b>)
+will not complete until the host unlocks the keyboard.
+If the parameter to a
+<b>String</b>
+action includes a code for one these actions,
+it will also wait for the keyboard to unlock before proceeding.
+<p>
+The <b>AidWait</b> toggle controls with behavior.
+When this toggle is set (the default), actions block as described above.
+When the toggle is clear, AID actions complete immediately.
+The <b>Wait(Output)</b> action can then be used to delay a script until the
+host changes something on the screen, and the
+<b>Wait(Unlock)</b> action can be used to delay a script until the host
+unlocks the keyboard, regardless of the state of the <b>AidWait</b> toggle.
+<p>
+Note that the
+<b>Script</b>
+action does not complete until
+end-of-file is detected on the pipe or the <b>CloseScript</b> action is called by the child process.
+This behavior is not affected by the state of the <b>AidWait</b> toggle.
+<a NAME="Basic-Programming-Strategies"></a><h2>Basic Programming Strategies</h2>
+3270 session scripting can be more difficult than other kinds of scripting,
+because it can be hard to tell when the host is finished processing a
+command.
+There is a well-defined 3270 Data Stream facility for doing this: The emulator
+locks the keyboard when it sends the host an AID, and the later host unlocks
+the keyboard.
+The emulator supports this facility directly by not allowing an AID action
+to complete until the keyboard is unlocked.
+Unfortunately, some hosts and some host applications unlock the keyboard as
+soon as they begin processing the command, instead of after it is finished.
+A human operator can see on the screen when the command is finished (e.g.,
+when a READY prompt is displayed), but it can be difficult for a script to
+do this. For such early-unlock hosts, the only option in a script is to poll the
+screen until it can determine that the command is complete.
+<p>
+Another complication is that host I/O and script operation are asynchronous.
+That is, the host can update the screen at any time, even between actions that
+are reading the screen contents, so a script can get inconsistent results.
+Assistance for this problem is provided by the <b>Snap</b> action.
+The <b>Snap(Save)</b> action saves a snapshot of the screen in a special
+buffer. Then the script can use <b>Snap</b> variants of the <b>Ascii</b> and
+<b>Ebcdic</b> actions (<b>Snap(Ascii)</b> and <b>Snap(Ebcdic)</b>) to query
+the saved buffer -- which the host cannot modify -- to get the data it wants.
+Finally, <b>Snap(Wait Output)</b> blocks the script until the host
+modifies the screen, specifically since the last call to <b>Snap(Save)</b>.
+Thus a script can poll the screen efficiently by writing a loop that begins
+with <b>Snap(Save)</b> and ends with <b>Snap(Wait Output)</b>.
+<a NAME="Script-Specific-Actions"></a><h2>Script-Specific Actions</h2>
+The following actions have been defined or modified for use with scripts.
+(Note that unlike the display on the status line,
+<i>row</i>
+and
+<i>col</i>
+coordinates used in these actions use [0,0] as their origin at the upper left,
+not [1,1]).
+<dl><dt><b>AnsiText</b></dt><dd>
+Outputs whatever data that has been output by the host in
+<font size=-1>NVT</font> mode
+since the last time that
+<b>AnsiText</b>
+was called.
+The data is preceded by the string "data:&nbsp;", and has had all control characters
+expanded into C backslash sequences.
+<p>
+This is a convenient way to capture
+<font size=-1>NVT</font>
+mode output in a synchronous manner without trying to decode the screen
+contents.
+<dt><b>Ascii</b>(<i>row</i>,<i>col</i>,<i>rows</i>,<i>cols</i>)</dt><dd>
+<dt><b>Ascii</b>(<i>row</i>,<i>col</i>,<i>length</i>)</dt><dd>
+<dt><b>Ascii</b>(<i>length</i>)</dt><dd>
+<dt><b>Ascii</b></dt><dd>
+Outputs an <font size=-1>ASCII</font> text representation of the screen contents.
+Each line is preceded by the string "data:&nbsp;", and there are no control
+characters.
+<p>
+If four parameters are given, a rectangular region of the screen is output.
+(Note that the row and column are zero-origin.)
+<p>
+If three parameters are given,
+<i>length</i>
+characters are output, starting at the specified zero-origin row and column.
+<p>
+If only the
+<i>length</i>
+parameter is given, that many characters are output, starting at the cursor
+position.
+<p>
+If no parameters are given, the entire screen is output.
+<p>
+The EBCDIC-to-ASCII translation and output character set depend on the both the
+emulator character set (the <b>-charset</b> option) and the locale.
+UTF-8 and certain DBCS locales may result in multi-byte expansions of EBCDIC
+characters that translate to ASCII codes greater than 0x7f.
+<dt><b>AsciiField</b></dt><dd>
+Outputs an <font size=-1>ASCII</font> text representation of the field containing the cursor.
+The text is preceded by the string "data:&nbsp;".
+<dt><b>Connect</b>(<i>hostname</i>)</dt><dd>
+Connects to a host.
+The command does not return until the emulator
+is successfully connected in the proper mode, or the connection fails.
+<dt><b>CloseScript</b>(<i>status</i>)</dt><dd>
+Causes the emulator to stop reading commands from the script.
+This is useful to allow a peer script to exit, with the emulator
+proceeding interactively.
+(Without this command, the emulator
+would exit when it detected end-of-file on standard input.)
+If the script was invoked by the
+<b>Script</b>
+action, the optional
+<i>status</i>
+is used as the return status of
+<b>Script</b>;
+if nonzero,
+<b>Script</b>
+will complete with an error, and if this script was invoked as part of
+login through the
+<b>ibm_hosts</b>
+file, the connection will be broken.
+<dt><b>ContinueScript</b>([<i>param</i>])</dt><dd>
+Allows a script that is waiting in a
+<b>PauseScript</b>
+action, below, to continue.
+The optional
+<i>param</i>
+string is output by the
+<b>PauseScript</b>
+action.
+<dt><b>Disconnect</b></dt><dd>
+Disconnects from the host.
+<dt><b>Ebcdic</b>(<i>row</i>,<i>col</i>,<i>rows</i>,<i>cols</i>)</dt><dd>
+<dt><b>Ebcdic</b>(<i>row</i>,<i>col</i>,<i>length</i>)</dt><dd>
+<dt><b>Ebcdic</b>(<i>length</i>)</dt><dd>
+<dt><b>Ebcdic</b></dt><dd>
+The same function as
+<b>Ascii</b>
+above, except that rather than generating
+<font size=-1>ASCII</font>
+text, each character is output as a 2-digit or 4-digit hexadecimal
+<font size=-1>EBCDIC</font>
+code.
+<dt><b>EbcdicField</b></dt><dd>
+The same function as
+<b>AsciiField</b>
+above, except that it generates hexadecimal
+<font size=-1>EBCDIC</font>
+codes.
+<dt><b>Info</b>(<i>message</i>)</dt><dd>
+In x3270, pops up an informational message.
+In c3270 and wc3270, writes an informational message to the OIA (the line below
+the display).
+Not defined for s3270 or tcl3270.
+<dt><b>Expect</b>(<i>text</i>[,<i>timeout</i>])</dt><dd>
+Pauses the script until the specified
+<i>text</i>
+appears in the data stream from the host, or the specified
+<i>timeout</i>
+(in seconds) expires.
+If no
+<i>timeout</i>
+is specified, the default is 30 seconds.
+<i>Text</i>
+can contain standard C-language escape (backslash) sequences.
+No wild-card characters or pattern anchor characters are understood.
+<b>Expect</b>
+is valid only in
+<font size=-1>NVT</font>
+mode.
+<dt><b>MoveCursor</b>(<i>row</i>,<i>col</i>)</dt><dd>
+Moves the cursor to the specified zero-origin coordinates.
+<dt><b>PauseScript</b></dt><dd>
+Stops a script until the
+<b>ContinueScript</b>
+action, above, is executed.
+This allows a script to wait for user input and continue.
+Outputs the single parameter to
+<b>ContinueScript</b>, if one is given.
+<dt><b>PrintText</b>([<b>command</b>,]<i>filter</i>)</dt><dd>
+Pipes an ASCII representation of the current screen image through the named
+<i>filter</i>, e.g., <b>lpr</b>.
+<dt><b>PrintText</b>([<b>html</b>,][<b>append</b>,][<b>replace</b>,]<b>file</b>,<i>filename</i>)</dt><dd>
+Saves the current screen contents in a file.
+With the <b>html</b> option, saves it as HTML, otherwise saves it as plain
+ASCII.
+The <b>append</b> option (the default) causes the data to be appended to the
+file if it already exists. The <b>replace</b> option causes the file to be
+overwritten instead.
+<dt><b>PrintText</b>(<b>html,string</b>)</dt><dd>
+Returns the current screen contents as HTML.
+<dt><b>Query</b>(<i>keyword</i>)</dt><dd>
+Returns state information.
+Keywords are:
+<p>
+<table BORDER cols=3 width="75%">
+<tr><td >Keyword</td>	<td >Output</td></tr>
+
+<tr><td >BindPluName</td>	<td >BIND PLU returned by the host</td></tr>
+<tr><td >ConnectionState</td>	<td >TN3270/TN3270E mode and submode</td></tr>
+<tr><td >CodePage</td>	<td >Host code page</td></tr>
+<tr><td >Cursor</td>	<td zero-origin>Cursor position (row col)</td></tr>
+<tr><td >Formatted</td>	<td >3270 format state (formatted or unformatted)</td></tr>
+<tr><td >Host</td>	<td >Host name and port</td></tr>
+<tr><td >LocalEncoding</td>	<td >Local character encoding</td></tr>
+<tr><td >LuName</td>	<td >Host name LU name</td></tr>
+<tr><td >Model</td>	<td >3270 model name (IBM-327x-n)</td></tr>
+<tr><td >ScreenCurSize</td>	<td >Current screen size (rows cols)</td></tr>
+<tr><td >ScreenMaxSize</td>	<td >Maximum screen size (rows cols)</td></tr>
+<tr><td >Ssl</td>	<td >SSL state (secure or not-secure) and host validation state (host-verified or host-unverified)</td></tr>
+</table>
+<p>
+Without a <i>keyword</i>, <b>Query</b> returns each of the defined attributes,
+one per line, labeled by its name.
+<dt><b>ReadBuffer</b>(<b>Ascii</b>)</dt><dd>
+Dumps the contents of the screen buffer, one line at a time.
+Positions inside data fields are generally output as 2-digit hexadecimal codes
+in the current display character set.
+If the current locale specifies UTF-8 (or certain DBCS character sets), some
+positions may be output as multi-byte strings (4-, 6- or 8-digit codes).
+DBCS characters take two positions in the screen buffer; the first location
+is output as a multi-byte string in the current locale codeset, and the second
+location is output as a dash.
+Start-of-field characters (each of which takes up a display position) are
+output as <b>SF(aa=nn[,...])</b>, where <i>aa</i> is a field
+attribute type and <i>nn</i> is its value.
+<p>
+<table BORDER cols=3 width="75%">
+<tr><td ><center>Attribute</center></td>	<td ><center>Values</center></td></tr>
+
+<tr><td ><center>c0 basic 3270</center></td>	<td ><center>20 protected</center></td></tr>
+<tr><td ></td>	<td ><center>10 numeric</center></td></tr>
+<tr><td ></td>	<td ><center>04 detectable</center></td></tr>
+<tr><td ></td>	<td ><center>08 intensified</center></td></tr>
+<tr><td ></td>	<td ><center>0c non-display</center></td></tr>
+<tr><td ></td>	<td ><center>01 modified</center></td></tr>
+<tr><td ><center>41 highlighting</center></td>	<td ><center>f1 blink</center></td></tr>
+<tr><td ></td>	<td ><center>f2 reverse</center></td></tr>
+<tr><td ></td>	<td ><center>f4 underscore</center></td></tr>
+<tr><td ></td>	<td ><center>f8 intensify</center></td></tr>
+<tr><td ><center>42 foreground</center></td>	<td ><center>f0 neutral black</center></td></tr>
+<tr><td ></td>	<td ><center>f1 blue</center></td></tr>
+<tr><td ></td>	<td ><center>f2 red</center></td></tr>
+<tr><td ></td>	<td ><center>f3 pink</center></td></tr>
+<tr><td ></td>	<td ><center>f4 green</center></td></tr>
+<tr><td ></td>	<td ><center>f5 turquoise</center></td></tr>
+<tr><td ></td>	<td ><center>f6 yellow</center></td></tr>
+<tr><td ></td>	<td ><center>f7 neutral white</center></td></tr>
+<tr><td ></td>	<td ><center>f8 black</center></td></tr>
+<tr><td ></td>	<td ><center>f9 deep blue</center></td></tr>
+<tr><td ></td>	<td ><center>fa orange</center></td></tr>
+<tr><td ></td>	<td ><center>fb purple</center></td></tr>
+<tr><td ></td>	<td ><center>fc pale green</center></td></tr>
+<tr><td ></td>	<td ><center>fd pale turquoise</center></td></tr>
+<tr><td ></td>	<td ><center>fe grey</center></td></tr>
+<tr><td ></td>	<td ><center>ff white</center></td></tr>
+<tr><td ><center>43 character set</center></td>	<td ><center>f0 default</center></td></tr>
+<tr><td ></td>	<td ><center>f1 APL</center></td></tr>
+<tr><td ></td>	<td ><center>f8 DBCS</center></td></tr>
+</table>
+<p>
+Extended attributes (which do not take up display positions) are output as
+<b>SA(aa=nn)</b>, with <i>aa</i> and <i>nn</i> having
+the same definitions as above (though the basic 3270 attribute will never
+appear as an extended attribute).
+<p>
+In addition, NULL characters in the screen buffer are reported as ASCII
+character 00 instead of 20, even though they should be displayed as blanks.
+<dt><b>ReadBuffer</b>(<b>Ebcdic</b>)</dt><dd>
+Equivalent to <b>ReadBuffer</b>(<b>Ascii</b>), but with the data fields output as
+hexadecimal EBCDIC codes instead.
+Additionally, if a buffer position has the Graphic Escape attribute, it is
+displayed as <b>GE(<i>xx</i>)</b>.
+<dt><b>Script</b>(<i>path</i>[,arg...])</dt><dd>
+Runs a child script, passing it optional command-line arguments.
+<i>path</i> must specify an executable (binary) program: the emulator will
+create a new process and execute it. If you simply want the emulator to read
+commands from a file, use the <b>Source</b> action.
+<dt><b>Snap</b></dt><dd>
+Equivalent to <b>Snap</b>(<b>Save</b>) (see <a HREF="#save">below</a>).
+<dt><b>Snap</b>(<b>Ascii</b>,...)</dt><dd>
+Performs the <b>Ascii</b> action on the saved screen image.
+<dt><b>Snap</b>(<b>Cols</b>)</dt><dd>
+Returns the number of columns in the saved screen image.
+<dt><b>Snap</b>(<b>Ebcdic</b>,...)</dt><dd>
+Performs the <b>Ebcdic</b> action on the saved screen image.
+<dt><b>Snap</b>(<b>ReadBuffer</b>)</dt><dd>
+Performs the <b>ReadBuffer</b> action on the saved screen image.
+<dt><b>Snap(<b>Rows</b>)</b></dt><dd>
+Returns the number of rows in the saved screen image.
+<a NAME="save"></a><dt><b>Snap</b>(<b>Save</b>)</dt><dd>
+Saves a copy of the screen image and status in a temporary buffer.
+This copy can be queried with other
+<b>Snap</b>
+actions to allow a script to examine a consistent screen image, even when the
+host may be changing the image (or even the screen dimensions) dynamically.
+<dt><b>Snap</b>(<b>Status</b>)</dt><dd>
+Returns the status line from when the screen was last saved.
+<dt><b>Snap</b>(<b>Wait</b>[,<i>timeout</i>],<b>Output</b>)</dt><dd>
+Pauses the script until the host sends further output, then updates the snap
+buffer with the new screen contents.
+Used when the host unlocks the keyboard (allowing the script to proceed after
+an
+<b>Enter</b>,
+<b>PF</b>
+or
+<b>PA</b>
+action), but has not finished updating the screen.
+This action is usually invoked in a loop that uses the
+<b>Snap</b>(<b>Ascii</b>)
+or
+<b>Snap</b>(<b>Ebcdic</b>)
+action to scan the screen for some pattern that indicates that the host has
+fully processed the last command.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Snap</b> action.  The default is to wait indefinitely.
+<dt><b>Source</b>(<i>file</i>)</dt><dd>
+Read and execute commands from <i>file</i>.
+Any output from those commands will become the output from <b>Source</b>.
+If any of the commands fails, the <b>Source</b> command will <i>not</i> abort;
+it will continue reading commands until EOF.
+<dt><b>Title</b>(<i>text</i>)</dt><dd>
+Changes the
+x3270
+window title to <i>text</i>.
+<dt><b>Transfer</b>(<i>keyword</i>=<i>value</i>,...)</dt><dd>
+Invokes IND$FILE file transfer.
+See <a HREF="#File-Transfer"><font size=-1>FILE TRANSFER</font></a> below.
+<dt><b>Wait</b>([<i>timeout</i>,] <b>3270Mode</b>)</dt><dd>
+Used when communicating with a host that switches between
+<font size=-1>NVT</font> mode and 3270 mode.
+Pauses the script or macro until the host negotiates 3270 mode, then waits for
+a formatted screen as above.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<p>
+For backwards compatibility,
+<b>Wait(3270)</b>
+is equivalent to
+<b>Wait</b>(<b>3270Mode</b>)
+<dt><b>Wait</b>([<i>timeout</i>,] <b>Disconnect</b>)</dt><dd>
+Pauses the script until the host disconnects.
+Often used to after sending a
+<i>logoff</i>
+command to a <font size=-1>VM/CMS</font> host, to ensure that the session is not unintentionally
+set to
+<b>disconnected</b>
+state.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<dt><b>Wait</b>([<i>timeout</i>,] <b>InputField</b>)</dt><dd>
+A useful utility for use at the beginning of scripts and after the
+<b>Connect</b> action.
+In 3270 mode, waits until the screen is formatted, and the host has positioned
+the cursor on a modifiable field.
+In <font size=-1>NVT</font> mode, waits until the host sends at least one byte of data.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<p>
+For backwards compatibility,
+<b>Wait</b>
+is equivalent to
+<b>Wait</b>(<b>InputField</b>).
+<dt><b>Wait</b>([<i>timeout</i>,] <b>NVTMode</b>)</dt><dd>
+Used when communicating with a host that switches between 3270 mode and
+<font size=-1>NVT</font> mode.
+Pauses the script or macro until the host negotiates <font size=-1>NVT</font>
+mode, then waits for
+a byte from the host as above.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<p>
+For backwards compatibility,
+<b>Wait</b>(<b>ansi</b>)
+is equivalent to
+<b>Wait</b>(<b>NVTMode</b>).
+<dt><b>Wait</b>([<i>timeout</i>,] <b>Output</b>)</dt><dd>
+Pauses the script until the host sends further output.
+Often needed when the host unlocks the keyboard (allowing the script to
+proceed after a
+<b>Clear</b>,
+<b>Enter</b>,
+<b>PF</b>
+or
+<b>PA</b>
+action), but has not finished updating the screen.
+Also used in non-blocking AID mode (see <a HREF="#Differences"><font size=-1>DIFFERENCES</font></a>
+for details).
+This action is usually invoked in a loop that uses the
+<b>Ascii</b>
+or
+<b>Ebcdic</b>
+action to scan the screen for some pattern that indicates that the host has
+fully processed the last command.
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<dt><b>Wait</b>([<i>timeout</i>,] <b>Unlock</b>)</dt><dd>
+Pauses the script until the host unlocks the keyboard.
+This is useful when operating in non-blocking AID mode
+(<b>toggle AidWait clear</b>), to wait for a host command to complete.
+See <a HREF="#Differences"><font size=-1>DIFFERENCES</font></a> for details).
+<p>
+The optional <i>timeout</i> parameter specifies a number of seconds to wait
+before failing the <b>Wait</b> action.  The default is to wait indefinitely.
+<dt><b>Wait</b>(<i>timeout</i>, <b>Seconds</b>)</dt><dd>
+Delays the script <i>timeout</i> seconds.
+Unlike the other forms of <b>Wait</b>, the timeout is not optional.
+<dt><b>WindowState</b>(<i>mode</i>)</dt><dd>
+If <i>mode</i> is <b>Iconic</b>, changes the x3270 window into an icon.
+If <i>mode</i> is <b>Normal</b>, changes the x3270 window from an icon to a
+normal window.
+</dl>
+<a NAME="File-Transfer"></a><h2>File Transfer</h2>
+The <b>Transfer</b> action implements <b>IND$FILE</b> file transfer.
+This action requires that the <b>IND$FILE</b>
+program be installed on the <font size=-1>IBM</font> host, and that the 3270 cursor
+be located in a field that will accept a <font size=-1>TSO</font> or <font size=-1>VM/CMS</font> command.
+<p>
+The <b>Transfer</b> action
+can be entered at the command prompt with no parameters, which will cause it
+to prompt interactively for the file names and options.
+It can also be invoked with parameters to define the entire transfer.
+<p>
+Because of the complexity and number of options for file transfer, the
+parameters to the <b>Transfer</b> action take the unique form
+of <i>option</i>=<i>value</i>, and can appear in any order.
+Note that if the <i>value</i> contains spaces (such as a VM/CMS file name),
+then the entire parameter must be quoted, e.g., "HostFile=xxx foo a".
+The options are:
+<p>
+<table BORDER cols=4 width="75%">
+<tr><td >Option</td>	<td >Required?</td>	<td >Default</td>	<td >Other Values</td></tr>
+
+<tr><td >Direction</td>	<td >No</td>	<td >receive</td>	<td >send</td></tr>
+<tr><td >HostFile</td>	<td >Yes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >LocalFile</td>	<td >Yes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Host</td>	<td >No</td>	<td >tso</td>	<td >vm, cics</td></tr>
+<tr><td >Mode</td>	<td >No</td>	<td >ascii</td>	<td >binary</td></tr>
+<tr><td >Cr</td>	<td >No</td>	<td >remove</td>	<td >add, keep</td></tr>
+<tr><td >Remap</td>	<td >No</td>	<td >yes</td>	<td >no</td></tr>
+<tr><td >Exist</td>	<td >No</td>	<td >keep</td>	<td >replace, append</td></tr>
+<tr><td >Recfm</td>	<td >No</td>	<td >&nbsp;</td>	<td >fixed, variable, undefined</td></tr>
+<tr><td >Lrecl</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Blksize</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Allocation</td>	<td >No</td>	<td >&nbsp;</td>	<td >tracks, cylinders, avblock</td></tr>
+<tr><td >PrimarySpace</td>	<td >Sometimes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >SecondarySpace</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Avblock</td>	<td >Sometimes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >BufferSize</td>	<td >No</td>	<td >4096</td>	<td >&nbsp;</td></tr>
+</table>
+<p>
+The option details are as follows.
+<dl><dt><b>Direction</b></dt><dd>
+<b>send</b> to send a file to the host,
+<b>receive</b> to receive a file from the host.
+<dt><b>HostFile</b></dt><dd>
+The name of the file on the host.
+<dt><b>LocalFile</b></dt><dd>
+The name of the file on the local workstation.
+<dt><b>Host</b></dt><dd>
+The type of host (which dictates the form of the <b>IND$FILE</b> command):
+<b>tso</b> (the default), <b>vm</b> or <b>cics</b>.
+<dt><b>Mode</b></dt><dd>
+Use <b>ascii</b> (the default) for a text file, which will be translated
+between <font size=-1>EBCDIC</font> and <font size=-1>ASCII</font> as necessary.
+Use <b>binary</b> for non-text files.
+<dt><b>Cr</b></dt><dd>
+Controls how <b>Newline</b> characters are handled when transferring
+<b>Mode=ascii</b> files.
+<b>remove</b> (the default) strips <b>Newline</b> characters in local files
+before transferring them to the host.
+<b>add</b> adds <b>Newline</b> characters to each host file record before
+transferring it to the local workstation.
+<b>keep</b> preserves <b>Newline</b> characters when transferring a local file
+to the host.
+<dt><b>Remap</b></dt><dd>
+Controls text translation for <b>Mode=ascii</b> files.
+The value <b>yes</b> (the default) causes b3270 to remap the text to ensure
+maximum compatibility between the workstation's character set and encoding
+and the host's <font size=-1>EBCDIC</font> code page.
+The value <b>no</b> causes b3270 to pass the text to or from the host
+as-is, leaving all translation to the <b>IND$FILE</b> program on the host.
+<dt><b>Exist</b></dt><dd>
+Controls what happens when the destination file already exists.
+<b>keep</b> (the default) preserves the file, causing the
+<b>Transfer</b> action to fail.
+<b>replace</b> overwrites the destination file with the source file.
+<b>append</b> appends the source file to the destination file.
+<dt><b>Recfm</b></dt><dd>
+Controls the record format of files created on the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<b>fixed</b> creates a file with fixed-length records.
+<b>variable</b> creates a file with variable-length records.
+<b>undefined</b> creates a file with undefined-length records (<font size=-1>TSO</font> hosts
+only).
+The <b>Lrecl</b> option controls the record length or maximum record length for
+<b>Recfm=fixed</b> and <b>Recfm=variable</b> files, respectively.
+<dt><b>Lrecl</b></dt><dd>
+Specifies the record length (or maximum record length) for files created on
+the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<dt><b>Blksize</b></dt><dd>
+Specifies the block size for files created on the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<dt><b>Allocation</b></dt><dd>
+Specifies the units for the <b>PrimarySpace</b> and
+<b>SecondarySpace</b> options: <b>tracks</b>, <b>cylinders</b> or
+<b>avblock</b>. (<font size=-1>TSO</font> hosts only.)
+<dt><b>PrimarySpace</b></dt><dd>
+Primary allocation for a file.
+The units are given by the <b>Allocation</b> option.
+Required when the <b>Allocation</b> is specified as something other than
+<b>default</b>.
+(<font size=-1>TSO</font> hosts only.)
+<dt><b>SecondarySpace</b></dt><dd>
+Secondary allocation for a file.
+The units are given by the <b>Allocation</b> option. (<font size=-1>TSO</font> hosts only.) 
+<dt><b>Avblock</b></dt><dd>
+Average block size, required when <b>Allocation</b> specifies <b>avblock</b>.
+(<font size=-1>TSO</font> hosts only.)
+<dt><b>BufferSize</b></dt><dd>
+Buffer size for DFT-mode transfers.
+Can range from 256 to 32768.
+Larger values give better performance, but some hosts may not be able to
+support them.
+</dl>
+<p>
+There are also resources that control the default values for each of the
+file transfer parameters.
+These resources have the same names as the <b>Transfer</b> keywords, but with
+<b>ft</b> prepended. E.g., the default for the <b>Mode</b> keyword is the
+<b>b3270.ftMode</b> resource.
+<a NAME="See-Also"></a><h2>See Also</h2>
+expect(1)
+<br>
+perl(1)
+<br>
+ksh(1)
+<br>
+<a HREF="x3270-man.html">x3270(1)</a>
+<br>
+<a HREF="Unix-x3270if.html">x3270if(1)</a>
+<br>
+<a HREF="c3270-man.html">c3270(1)</a>
+<br>
+<a HREF="s3270-man.html">s3270(1)</a>
+<a NAME="Version"></a><h2>Version</h2>
+Version 3.7alpha1
+<hr>
+<i>
+This HTML document and the accompanying troff document were generated with
+a set of write-only <b>m4</b> macros and the powerful <b>vi</b> editor.
+<br>Last modified 16 August 2017.
+</i>
+</body>
+</html>

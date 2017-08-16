@@ -1,0 +1,904 @@
+<html>
+<head>
+<title>b3270 Manual Page</title>
+<link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+<h1>b3270 Manual Page</h1>
+<h2>Contents</h2>
+<blockquote>
+<a HREF="#Name">Name</a><br>
+<a HREF="#Synopsis">Synopsis</a><br>
+<a HREF="#Description">Description</a><br>
+<a HREF="#Options">Options</a><br>
+<a HREF="#Character-Sets">Character Sets</a><br>
+<a HREF="#NVT-Mode">NVT Mode</a><br>
+<a HREF="#Toggles">Toggles</a><br>
+<a HREF="#Actions">Actions</a><br>
+<a HREF="#File-Transfer">File Transfer</a><br>
+<a HREF="#The-PrintText-Action">The PrintText Action</a><br>
+<a HREF="#Nested-Scripts">Nested Scripts</a><br>
+<a HREF="#Composite-Characters">Composite Characters</a><br>
+<a HREF="#Passthru">Passthru</a><br>
+<a HREF="#Proxy">Proxy</a><br>
+<a HREF="#Resources">Resources</a><br>
+<a HREF="#Files">Files</a><br>
+<a HREF="#See-Also">See Also</a><br>
+<a HREF="#Copyrights">Copyrights</a><br>
+<a HREF="#Version">Version</a><br>
+</blockquote>
+<a NAME="Name"></a><h2>Name</h2>
+b3270 -
+<font size=-1>IBM</font> host access tool
+back end
+<a NAME="Synopsis"></a><h2>Synopsis</h2>
+<b>b3270</b>
+[<i>options</i>]
+
+<br>
+<b>b3270</b> [<i>options</i>] <i>session-file</i>.b3270
+
+<a NAME="Description"></a><h2>Description</h2>
+<b>b3270</b> opens a telnet connection to an <font size=-1>IBM</font>
+host, handling the 3270, TELNET and TLS protocols,
+allowing a front-end application handle user interactions.
+It uses XML on its standard input and standard output to communicate with the
+front end.
+
+It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection),
+and supports IND$FILE file transfer.
+
+<a NAME="Options"></a><h2>Options</h2>
+ <b>b3270</b> understands
+the following options:<dl>
+<dt><b>-accepthostname</b> <i>name</i></dt><dd>
+Specifies a particular hostname to accept when validating the name presented
+in the server SSL certificate, instead of comparing to the name
+used to make the connection.
+<dt><b>-cadir</b> <i>directory</i></dt><dd>
+Specifies a directory containing CA (root) certificates to use when verifying a
+certificate provided by the host. (OpenSSL only)
+<dt><b>-cafile</b> <i>filename</i></dt><dd>
+Specifies a <font size=-1>PEM</font>-format file containing CA (root) certificates to use
+when verifying a certificate provided by the host. (OpenSSL only)
+<dt><b>-certfile</b> <i>filename</i></dt><dd>
+Specifies a file containing a client certificate to provide to the host.
+The default file type is <font size=-1>PEM</font>.
+<dt><b>-clientcert</b> <i>name</i></dt><dd>
+Specifies the name of a client certificate to provide to the host.
+(MacOS only)
+<dt><b>-certfiletype</b> <i>type</i></dt><dd>
+Specifies the type of the certificate file specified
+by <b>-certfile</b>.
+<i>Type</i> can be <b>pem</b> or <b>asn1</b>. (OpenSSL only)
+<dt><b>-chainfile <i>filename</i></b></dt><dd>
+Specifies a certificate chain file in <font size=-1>PEM</font> format, containing a
+certificate to provide to the host, as well as one or more
+intermediate certificates and the CA certificate used to sign that certificate.
+If <b>-chainfile</b> is specified, it
+overrides <b>-certfile</b>. (OpenSSL only)
+<dt><b>-charset</b> <i>name</i></dt><dd>
+Specifies an <font size=-1>EBCDIC</font> host character set.
+See <a HREF="#Character-Sets"><font size=-1>CHARACTER SETS</font></a> below.
+<dt><b>-clear</b> <i>toggle</i></dt><dd>
+Sets the initial value of <i>toggle</i> to <b>false</b>.
+The list of toggle names is under <a HREF="#Toggles"><font size=-1>TOGGLES</font></a>
+below.
+<dt><b>-connecttimeout</b> <i>seconds</i></dt><dd>
+Specifies the time that b3270 will wait for a host connection to
+complete.
+<dt><b>-devname</b> <i>name</i></dt><dd>
+Specifies a device name (workstation ID) for RFC 4777 support.
+<dt><b>-httpd</b> <b>[</b><i>addr</i><b>:]</b><i>port</i></dt><dd>
+Specifies a port and optional address to listen on for HTTP connections.
+<i>Addr</i> can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4080 to specify the IPv6 loopback address and
+TCP port 4080.
+<p>
+Note that this option is mutually-exclusive with the -scriptport
+option
+and disables reading commands from standard input.
+<dt><b>-keyfile</b> <i>filename</i></dt><dd>
+Specifies a file containing the private key for the certificate file
+(specified via <b>-certfile</b> or <b>-chainfile</b>).
+The default file type is <font size=-1>PEM</font>. (OpenSSL only)
+<dt><b>-keyfiletype</b> <i>type</i></dt><dd>
+Specifies the type of the private key file specified
+by <b>-keyfile</b>.
+<i>Type</i> can be <b>pem</b> or <b>asn1</b>. (OpenSSL only)
+<dt><b>-keypasswd</b> <i>type</i>:<i>value</i></dt><dd>
+Specifies the password for the private key file (OpenSSL) or client
+certificate file (MacOS), if it is encrypted.
+The argument can be <b>file</b>:<i>filename</i>, specifying that the
+password is in a file, or <b>string</b>:<i>string</i>, specifying the
+password on the command-line directly.
+If the private key file is encrypted and no <b>-keypasswd</b>
+option is given,
+secure connections will not be allowed.
+<dt><b>-km</b> <i>name</i></dt><dd>
+Specifies the local encoding method for multi-byte text.
+<i>name</i> is an encoding name recognized by the ICU library.
+(Supported only when b3270 is compiled with DBCS support, and necessary
+only when b3270 cannot figure it out from the locale.)
+<dt><b>-loginmacro</b> <i>Action(arg...) ...</i></dt><dd>
+Specifies a macro to run at login time.
+<dt><b>-minversion</b> <i>version</i></dt><dd>
+The minimum required version of <b>b3270</b>, e.g., 3.7alpha1.
+If the running version is less than the specified version, <b>b3270</b>
+will abort.
+The format of a version is
+<i>major</i><b>.</b><i>minor</i><b>type</b><i>iteration</i>. <b>type</b> is
+ignored, and <i>minor</i> and <i>iteration</i> can be omitted.
+<dt><b>-model</b> <i>name</i></dt><dd>
+The model of 3270 display to be emulated.
+The model name is in two parts, either of which may be omitted:
+<p>
+The first part is the
+<b>base model</b>,
+which is either <b>3278</b> or <b>3279</b>.
+<b>3278</b> specifies a monochrome (green on black) 3270 display;
+<b>3279</b> specifies a color 3270 display.
+<p>
+The second part is the
+<b>model number</b>,
+which specifies the number of rows and columns.
+Model 4 is the default.
+<p>
+<table BORDER cols=3 width="75%">
+<tr><td ><center>Model Number</center></td>	<td ><center>Columns</center></td>	<td ><center>Rows</center></td></tr>
+
+<tr><td ><center>2</center></td>	<td ><center>80</center></td>	<td ><center>24</center></td></tr>
+<tr><td ><center>3</center></td>	<td ><center>80</center></td>	<td ><center>32</center></td></tr>
+<tr><td ><center>4</center></td>	<td ><center>80</center></td>	<td ><center>43</center></td></tr>
+<tr><td ><center>5</center></td>	<td ><center>132</center></td>	<td ><center>27</center></td></tr>
+</table>
+<p>
+Note: Technically, there is no such 3270 display as a 3279-4 or 3279-5, but
+most hosts seem to work with them anyway.
+<p>
+The default model
+is <b>3279-4</b>.
+<dt><b>-noverifycert</b></dt><dd>
+For SSL/TLS connections, do not verify the host certificate.
+<dt><b>-nvt</b></dt><dd>
+Start in NVT mode instead of waiting for the host to send data, and make the
+default terminal type <b>xterm</b>.
+<dt><b>-oversize</b> <i>cols</i><b>x</b><i>rows</i></dt><dd>
+Makes the screen larger than the default for the chosen model number.
+This option has effect only in combination with extended data stream support
+(controlled by the "b3270.extended" resource), and only if the host
+supports the Query Reply structured field.
+The number of columns multiplied by the number of rows must not exceed
+16383 (3fff hex), the limit of 14-bit 3270 buffer addressing.
+<dt><b>-port</b> <i>n</i></dt><dd>
+Specifies a different <font size=-1>TCP</font> port to connect to.
+<i>n</i> can be a name from <b>/etc/services</b> like <b>telnet</b>, or a
+number.
+This option changes the default port number used for all connections.
+(The positional parameter affects only the initial connection.)
+<dt><b>-proxy <i>type</i>:<i>host</i>[:<i>port</i>]</b></dt><dd>
+Causes <b>b3270</b> to connect via the specified proxy, instead of
+using a direct connection.
+The <i>host</i> can be an IP address or hostname.
+The optional <i>port</i> can be a number or a service name.
+For a list of supported proxy <i>types</i>, see <a HREF="#Proxy"><font size=-1>PROXY</font></a>
+below.
+<dt><b>-scriptport</b> <b>[</b><i>addr</i><b>:]</b><i>port</i></dt><dd>
+Specifies a port and optional address to listen on for scripting connections.
+<i>Addr</i> can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4081 to specify the IPv6 loopback address and
+TCP port 4081.
+<p>
+Note that this option is mutually-exclusive with the -httpd
+option
+and disables reading commands from standard input.
+<dt><b>-scriptportonce</b></dt><dd>
+Allows b3270 to accept only one script connection. When that connection is
+broken, b3270 will exit.
+<dt><b>-set</b> <i>toggle</i></dt><dd>
+Sets the initial value of <i>toggle</i> to <b>true</b>.
+The list of toggle names is under <a HREF="#Toggles"><font size=-1>TOGGLES</font></a>
+below.
+<dt><b>-socket</b></dt><dd>
+Causes the emulator to create a Unix-domain socket when it starts, for use
+by script processes to send commands to the emulator.
+The socket is named <b>/tmp/x3sck.</b><i>pid</i>.
+The <b>-p</b> option of <i>x3270if</i> causes it to use this socket,
+instead of pipes specified by environment variables.
+<dt><a NAME="tn"></a><b>-tn</b> <i>name</i></dt><dd>
+Specifies the terminal name to be transmitted over the telnet connection.
+The default name is
+<b>IBM-</b><i>model_name</i><b>-E</b>,
+for example,
+<b>IBM-3278-4-E</b>.
+<p>
+Some hosts are confused by the <b>-E</b>
+suffix on the terminal name, and will ignore the extra screen area on
+models 3, 4 and 5.
+Prepending an <b>s:</b> on the hostname, or setting the "b3270.extended"
+resource to "false", removes the <b>-E</b>
+from the terminal name when connecting to such hosts.
+<p>
+The name can also be specified with the "b3270.termName" resource.
+<dt><b>-trace</b></dt><dd>
+Turns on data stream and event tracing at startup.
+The default trace file name is
+<b>/tmp/x3trc</b>.
+<dt><b>-tracefile</b> <i>file</i></dt><dd>
+Specifies a file to save data stream and event traces into.
+If the name starts with `>>', data will be appended to the file.
+<dt><b>-tracefilesize</b> <i>size</i></dt><dd>
+Places a limit on the size of a trace file.
+If this option is not specified, or is specified as <b>0</b> or <b>none</b>,
+the trace file size will be unlimited.
+The minimum size is 64 Kbytes.
+The value of <i>size</i> can have a <b>K</b> or <b>M</b> suffix, indicating
+kilobytes or megabytes respectively.
+When the trace file reaches the size limit, it will be renamed with a 
+`-' appended and a new file started.
+<dt><b>-user</b> <i>name</i></dt><dd>
+Specifies the user name for RFC 4777 support.
+<dt><b>-utf8</b></dt><dd>
+Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
+<dt><b>-v</b></dt><dd>
+Display the version and build options for <b>b3270</b> and exit.
+<dt><b>-verifycert</b></dt><dd>
+For SSL/TLS connections, verify the host certificate, and do not allow
+the connection to complete unless it can be validated. (This is the default
+setting.)
+This option is overridden by a <b>y:</b> prepended to the hostname when
+connecting.
+<dt><b>-xrm</b> "b3270.<i>resource</i>: <i>value</i>"</dt><dd>
+Sets the value of the named <i>resource</i> to <i>value</i>.
+Resources control less common <b>b3270</b>
+options, and are defined under <a HREF="#Resources"><font size=-1>RESOURCES</font></a> below.
+</dl>
+<a NAME="Character-Sets"></a><h2>Character Sets</h2>
+The <b>-charset</b>
+option or the "b3270.charset" resource controls the <font size=-1>EBCDIC</font>
+host character set used by <b>b3270</b>.
+Available sets include:
+<p>
+<table BORDER cols=3 width="75%">
+<tr><td ><center>Charset Name</center></td>	<td ><center>Host Code Page</center></td>	<td ><center>Character Set</center></td></tr>
+
+<tr><td ><center>belgian</center></td>	<td ><center>500</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>belgian-euro</center></td>	<td ><center>1148</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>bracket</center></td>	<td ><center>037</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>brazilian</center></td>	<td ><center>275</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>chinese-gb18030</center></td>	<td ><center>1388</center></td>	<td ><center> iso8859-1 + iso10646-1</center></td></tr>
+<tr><td ><center>cp1047</center></td>	<td ><center>1047</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>cp870</center></td>	<td ><center>870</center></td>	<td ><center>  iso8859-2</center></td></tr>
+<tr><td ><center>finnish</center></td>	<td ><center>278</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>finnish-euro</center></td>	<td ><center>1143</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>french</center></td>	<td ><center>297</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>french-euro</center></td>	<td ><center>1147</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>german</center></td>	<td ><center>273</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>german-euro</center></td>	<td ><center>1141</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>greek</center></td>	<td ><center>423</center></td>	<td ><center> iso8859-7</center></td></tr>
+<tr><td ><center>hebrew</center></td>	<td ><center>424</center></td>	<td ><center> iso8859-8</center></td></tr>
+<tr><td ><center>icelandic</center></td>	<td ><center>871</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>icelandic-euro</center></td>	<td ><center>1149</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>italian</center></td>	<td ><center>280</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>italian-euro</center></td>	<td ><center>1144</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>japanese-kana</center></td>	<td ><center>930</center></td>	<td ><center>jisx0201.1976-0 + jisx0208.1983-0</center></td></tr>
+<tr><td ><center>japanese-latin</center></td>	<td ><center>939</center></td>	<td ><center>jisx0201.1976-0 + jisx0208.1983-0</center></td></tr>
+<tr><td ><center>norwegian</center></td>	<td ><center>277</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>norwegian-euro</center></td>	<td ><center>1142</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>russian</center></td>	<td ><center>880</center></td>	<td ><center>koi8-r</center></td></tr>
+<tr><td ><center>simplified-chinese</center></td>	<td ><center>935</center></td>	<td ><center> iso8859-1 + gb2312.1980-0</center></td></tr>
+<tr><td ><center>slovenian</center></td>	<td ><center>870</center></td>	<td ><center>iso8859-2</center></td></tr>
+<tr><td ><center>spanish</center></td>	<td ><center>284</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>spanish-euro</center></td>	<td ><center>1145</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>swedish</center></td>	<td ><center>278</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>swedish-euro</center></td>	<td ><center>1143</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>thai</center></td>	<td ><center>1160</center></td>	<td ><center>iso8859-11 tis620.2529-0</center></td></tr>
+<tr><td ><center>traditional-chinese</center></td>	<td ><center>937</center></td>	<td ><center> iso8859-1 + Big5-0</center></td></tr>
+<tr><td ><center>turkish</center></td>	<td ><center>1026</center></td>	<td ><center>iso8859-9</center></td></tr>
+<tr><td ><center>uk</center></td>	<td ><center>285</center></td>	<td ><center>  iso8859-1</center></td></tr>
+<tr><td ><center>uk-euro</center></td>	<td ><center>1146</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>us-euro</center></td>	<td ><center>1140</center></td>	<td ><center>  iso8859-15</center></td></tr>
+<tr><td ><center>us-intl</center></td>	<td ><center>037</center></td>	<td ><center>  iso8859-1</center></td></tr>
+</table>
+<p>
+The default character set is
+<b>bracket</b>,
+which is useful for common U.S. <font size=-1>IBM</font> hosts which use <font size=-1>EBCDIC</font>
+codes AD and BD for the `[' and `]' characters,
+respectively.
+<p>
+Note that any of the host code pages listed above can be specified by adding
+<b>cp</b> to the host code page, e.g., <b>cp037</b> for host code page 037.
+Also note that the code pages available for a given version of <b>b3270</b>
+are displayed by the <b>-v</b> command-line option.
+<a NAME="NVT-Mode"></a><h2>NVT Mode</h2>
+Some hosts use an <font size=-1>ASCII</font> front-end to do initial login negotiation,
+then later switch to 3270 mode.
+<b>b3270</b> will emulate an <font size=-1>ANSI</font> X3.64 terminal until the host
+places it in 3270 mode (telnet <font size=-1>BINARY</font> and <font size=-1>SEND EOR</font> modes, or
+<font size=-1>TN3270E</font> mode negotiation).
+<p>
+If the host later negotiates to stop functioning in 3270 mode,
+<b>b3270</b> will return to <font size=-1>NVT</font> emulation.
+<p>
+In <font size=-1>NVT</font> mode, <b>b3270</b>
+supports both character-at-a-time mode and line mode operation.
+You may select the mode with a menu option.
+When in line mode, the special characters and operational characteristics are
+defined by resources:
+<p>
+<table BORDER cols=3 width="75%">
+<tr><td >Mode/Character</td>	<td >Resource</td>	<td >Default</td></tr>
+
+<tr><td >Translate CR to NL</td>	<td >b3270.icrnl</td>	<td >true</td></tr>
+<tr><td >Translate NL to CR</td>	<td >b3270.inlcr</td>	<td >false</td></tr>
+<tr><td >Erase previous character</td>	<td >b3270.erase</td>	<td >^?</td></tr>
+<tr><td >Erase entire line</td>	<td >b3270.kill</td>	<td >^U</td></tr>
+<tr><td >Erase previous word</td>	<td >b3270.werase</td>	<td >^W</td></tr>
+<tr><td >Redisplay line</td>	<td >b3270.rprnt</td>	<td >^R</td></tr>
+<tr><td >Ignore special meaning of next character</td>	<td >b3270.lnext</td>	<td >^V</td></tr>
+<tr><td >Interrupt</td>	<td >b3270.intr</td>	<td >^C</td></tr>
+<tr><td >Quit</td>	<td >b3270.quit</td>	<td >^\</td></tr>
+<tr><td >End of file</td>	<td >b3270.eof</td>	<td >^D</td></tr>
+</table>
+<p>
+Separate keymaps can be defined for use only when <b>b3270</b> is in
+3270 mode or <font size=-1>NVT</font> mode.
+See <a HREF="#Keymaps"><font size=-1>KEYMAPS</font></a> for details.
+<a NAME="Toggles"></a><h2>Toggles</h2>
+<b>b3270</b> has a number of configurable modes which may be selected by
+the <b>-set</b> and <b>-clear</b> options.
+These names can also be used as the first parameter to the <b>Toggle</b>
+action, and are the names of resources that can be used to set or clear
+the value of each toggle at start-up.
+<dl><dt><b>aidWait</b></dt><dd>
+Changes the behavior of actions that send an <font size=-1>AID</font> to the
+host (<b>Enter</b>,
+<b>Clear</b>, <b>PA</b> and <b>PF</b>).
+When set, these actions no longer block until the host unlocks the keyboard.
+It is up to the script to poll the prompt for the unlocked state, or to use
+the <b>Wait(Unlock)</b> action to wait for the unlock.
+<dt><b>blankFill</b></dt><dd>
+If set, <b>b3270</b> modifies interactive 3270 behavior in two ways.
+First, when a character is typed into a field, all nulls in the field to the
+left of that character are changed to blanks.
+This eliminates a common 3270 data-entry surprise.
+Second, in insert mode, trailing blanks in a field are treated like nulls,
+eliminating the annoying `lock-up' that often occurs when inserting
+into an field with (apparent) space at the end.
+<dt><b>lineWrap</b></dt><dd>
+If set, the <font size=-1>NVT</font> terminal emulator automatically assumes
+a <font size=-1>NEWLINE</font> character when it reaches the end of a line.
+<dt><b>screenTrace</b></dt><dd>
+Turns on screen tracing at start-up.
+Each time the screen changes, its contents are appended to the file
+.
+<dt><b>trace</b></dt><dd>
+Turns on data stream and event tracing at start-up.
+Network traffic (both a hexadecimal representation and its
+interpretation) is logged to the file
+.
+The directory for the trace file can be changed with
+the "b3270.traceDir" resource.
+Script commands are also traced.
+</dl>
+<p>
+
+<a NAME="actions"></a><a NAME="Actions"></a><h2>Actions</h2>
+Here is a complete list of basic b3270 actions.
+Script-specific actions are described on the
+<a HREF="x3270-script.html"><i>x3270-script</i>(1)</a> manual page.
+)<p>
+Actions marked with an asterisk (*) may block, sending data to the host and
+possibly waiting for a response.
+<p>
+<table BORDER cols=2 width="75%">
+<tr><td >Ascii</td>	<td >return entire screen contents as text</td></tr>
+<tr><td >Ascii(<i>length</i>)</td>	<td >return screen contents at cursor as text</td></tr>
+<tr><td >Ascii(<i>row</i>, <i>col</i>, <i>length</i>)</td>	<td >return screen contents as text</td></tr>
+<tr><td >Ascii(<i>row</i>, <i>col</i>, <i>rows</i>, <i>cols</i>)</td>	<td >return screen region as text</td></tr>
+<tr><td >AsciiField</td>	<td >return current field as text</td></tr>
+<tr><td >*Attn</td>	<td >attention key</td></tr>
+<tr><td >BackSpace</td>	<td >move cursor left (or send <font size=-1>ASCII BS</font>)</td></tr>
+<tr><td >BackTab</td>	<td >tab to start of previous input field</td></tr>
+<tr><td >Charset(<i>charset</i>)</td>	<td >change host code page</td></tr>
+<tr><td >CircumNot</td>	<td >input "^" in <font size=-1>NVT</font> mode, or "&not;" in 3270 mode</tr></td>
+<tr><td >*Clear</td>	<td >clear screen</td></tr>
+<tr><td >Cols</td>	<td >report screen size</td></tr>
+<tr><td >Compose</td>	<td >next two keys form a special symbol</td></tr>
+<tr><td >*Connect(<i>host</i>)</td>	<td >connect to <i>host</i></td></tr>
+<tr><td >*CursorSelect</td>	<td >Cursor Select <font size=-1>AID</font></td></tr>
+<tr><td >Delete</td>	<td >delete character under cursor (or send <font size=-1>ASCII DEL</font>)</td></tr>
+<tr><td >DeleteField</td>	<td >delete the entire field</td></tr>
+<tr><td >DeleteWord</td>	<td >delete the current or previous word</td></tr>
+<tr><td >*Disconnect</td>	<td >disconnect from host</td></tr>
+<tr><td >Down</td>	<td >move cursor down</td></tr>
+<tr><td >Dup([FailOnError|NoFailOnError])</td>	<td >duplicate field</td></tr>
+<tr><td >Ebcdic</td>	<td >return entire screen contents in <font size=-1>EBCDIC</font></td></tr>
+<tr><td >Ebcdic(<i>length</i>)</td>	<td >return screen contents at cursor in <font size=-1>EBCDIC</font></td></tr>
+<tr><td >Ebcdic(<i>row</i>, <i>col</i>, <i>length</i>)</td>	<td >return screen contents in <font size=-1>EBCDIC</font></td></tr>
+<tr><td >Ebcdic(<i>row</i>, <i>col</i>, <i>rows</i>, <i>cols</i>)</td>	<td >return screen region in <font size=-1>EBCDIC</font></td></tr>
+<tr><td >EbcdicField</td>	<td >return current field in <font size=-1>EBCDIC</font></td></tr>
+<tr><td >*Enter</td>	<td >Enter <font size=-1>AID</font> (or send <font size=-1>ASCII CR</font>)</td></tr>
+<tr><td >Erase</td>	<td >erase previous character (or send <font size=-1>ASCII BS</font>)</td></tr>
+<tr><td >EraseEOF</td>	<td >erase to end of current field</td></tr>
+<tr><td >EraseInput</td>	<td >erase all input fields</td></tr>
+<tr><td >Execute(<i>cmd</i>)</td>	<td >execute a command in a shell</td></tr>
+<tr><td >FieldEnd</td>	<td >move cursor to end of field</td></tr>
+<tr><td >FieldMark([FailOnError|NoFailOnError])</td>	<td >mark field</td></tr>
+<tr><td >HexString(<i>hex_digits</i>)</td>	<td >insert control-character string</td></tr>
+<tr><td >Home</td>	<td >move cursor to first input field</td></tr>
+<tr><td >Insert</td>	<td >set insert mode</td></tr>
+<tr><td >*Interrupt</td>	<td >send <font size=-1>TELNET IP</font> to host</td></tr>
+<tr><td >Key(<i>keysym</i>[,FailOnError|NoFailOnError])</td>	<td >insert key <i>keysym</i></td></tr>
+<tr><td >Key(0x<i>xx</i>[,FailOnError|NoFailOnError])</td>	<td >insert key with character code <i>xx</i></td></tr>
+<tr><td >Left</td>	<td >move cursor left</td></tr>
+<tr><td >Left2</td>	<td >move cursor left 2 positions</td></tr>
+<tr><td >MonoCase</td>	<td >toggle uppercase-only mode</td></tr>
+<tr><td >MoveCursor(<i>row</i>, <i>col</i>)</td>	<td >move cursor to zero-origin (<i>row</i>,<i>col</i>)</td></tr>
+<tr><td >Newline</td>	<td >move cursor to first field on next line (or send <font size=-1>ASCII LF</font>)</td></tr>
+<tr><td >NextWord</td>	<td >move cursor to next word</td></tr>
+<tr><td >*PA(<i>n</i>)</td>	<td >Program Attention <font size=-1>AID</font> (<i>n</i> from 1 to 3)</td></tr>
+<tr><td >*PF(<i>n</i>)</td>	<td >Program Function <font size=-1>AID</font> (<i>n</i> from 1 to 24)</td></tr>
+<tr><td >PreviousWord</td>	<td >move cursor to previous word</td></tr>
+<tr><td >PasteString(<i>hex_digits</i>)</td>	<td >insert string using pasting behavior</td></tr>
+<tr><td >Printer(Start[,<i>lu</i>]|Stop)</td>	<td >start or stop printer session</td></tr>
+<tr><td >PrintText(<i>command</i>)</td>	<td >print screen text on printer</td></tr>
+<tr><td >Quit</td>	<td >exit <b>b3270</b></td></tr>
+<tr><td >Redraw</td>	<td >redraw window</td></tr>
+<tr><td >Reset</td>	<td >reset locked keyboard</td></tr>
+<tr><td >Right</td>	<td >move cursor right</td></tr>
+<tr><td >Right2</td>	<td >move cursor right 2 positions</td></tr>
+<tr><td >ReadBufferAscii</td>	<td >dump screen buffer as text</td></tr>
+<tr><td >ReadBufferEbcdic</td>	<td >dump screen buffer in EBCDIC</td></tr>
+<tr><td >Rows</td>	<td >report screen size</td></tr>
+<tr><td >*Script(<i>command</i>[,<i>arg</i>...])</td>	<td >run a script</td></tr>
+<tr><td >SnapAscii</td>	<td >report saved screen data (see <b>Ascii</b>)</td></tr>
+<tr><td >SnapCols</td>	<td >report saved screen size</td></tr>
+<tr><td >SnapEbcdic</td>	<td >report saved screen data (see <b>Ebcdic</b>)</td></tr>
+<tr><td >SnapReadBuffer</td>	<td >report saved screen data (see <b>ReadBuffer</b>)</td></tr>
+<tr><td >SnapRows</td>	<td >report saved screen size</td></tr>
+<tr><td >SnapSave</td>	<td >save screen image</td></tr>
+<tr><td >SnapStatus</td>	<td >report saved connection status</td></tr>
+<tr><td >*SnapWaitOuput(<i>timeout</i>)</td>	<td >wait for host output and save screen image</td></tr>
+<tr><td >*Source(<i>file</i>)</td>	<td >read commands from <i>file</i></td></tr>
+<tr><td >Status</td>	<td >report connection status</td></tr>
+<tr><td >*String(<i>string</i>)</td>	<td >insert string (simple macro facility)</td></tr>
+<tr><td >Tab</td>	<td >move cursor to next input field</td></tr>
+<tr><td >Toggle(<i>option</i>[,<i>set|clear</i>])</td>	<td >toggle an option</td></tr>
+<tr><td >ToggleInsert</td>	<td >toggle insert mode</td></tr>
+<tr><td >ToggleReverse</td>	<td >toggle reverse-input mode</td></tr>
+<tr><td >*Transfer(<i>option</i>=<i>value</i>...')</td>	<td >file transfer</td></tr>
+<tr><td >Up</td>	<td >move cursor up</td></tr>
+<tr><td >*Wait3270mode(<i>timeout</i>)</td>	<td >wait for 3270 mode</td></tr>
+<tr><td >*WaitDisconnect(<i>timeout</i>)</td>	<td >wait for host to disconnect</td></tr>
+<tr><td >*WaitInputField(<i>timeout</i>)</td>	<td >wait for valid input field</td></tr>
+<tr><td >*WaitNVTMode(<i>timeout</i>)</td>	<td >wait for NVT mode</td></tr>
+<tr><td >*WaitOutput(<i>timeout</i>)</td>	<td >wait for more host output</td></tr>
+</table>
+<p>
+Note that certain parameters to b3270 actions (such as the names of files
+and keymaps) are subject to <i>substitutions</i>:
+<p>
+The character <b>~</b> at the beginning of a string is replaced with the user's
+home directory.
+A <b>~</b> character followed by a username is
+replaced with that user's home directory.
+<p>
+Environment variables are substituted using the Unix shell convention of
+$<i>name</i> or ${<i>name</i>}.
+<p>
+Two special pseudo-environment variables are supported. ${TIMESTAMP} is
+replaced with a microsecond-resolution timestamp; ${UNIQUE} is replaced with a
+string guaranteed to make a unique filename (the process ID optionally
+followed by a dash and a string of digits). ${UNIQUE} is used to form trace
+file names.
+<a NAME="File-Transfer"></a><h2>File Transfer</h2>
+The <b>Transfer</b> action implements <b>IND$FILE</b> file transfer.
+This action requires that the <b>IND$FILE</b>
+program be installed on the <font size=-1>IBM</font> host, and that the 3270 cursor
+be located in a field that will accept a <font size=-1>TSO</font> or <font size=-1>VM/CMS</font> command.
+<p>
+The <b>Transfer</b> action
+can be entered at the command prompt with no parameters, which will cause it
+to prompt interactively for the file names and options.
+It can also be invoked with parameters to define the entire transfer.
+<p>
+Because of the complexity and number of options for file transfer, the
+parameters to the <b>Transfer</b> action take the unique form
+of <i>option</i>=<i>value</i>, and can appear in any order.
+Note that if the <i>value</i> contains spaces (such as a VM/CMS file name),
+then the entire parameter must be quoted, e.g., "HostFile=xxx foo a".
+The options are:
+<p>
+<table BORDER cols=4 width="75%">
+<tr><td >Option</td>	<td >Required?</td>	<td >Default</td>	<td >Other Values</td></tr>
+
+<tr><td >Direction</td>	<td >No</td>	<td >receive</td>	<td >send</td></tr>
+<tr><td >HostFile</td>	<td >Yes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >LocalFile</td>	<td >Yes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Host</td>	<td >No</td>	<td >tso</td>	<td >vm, cics</td></tr>
+<tr><td >Mode</td>	<td >No</td>	<td >ascii</td>	<td >binary</td></tr>
+<tr><td >Cr</td>	<td >No</td>	<td >remove</td>	<td >add, keep</td></tr>
+<tr><td >Remap</td>	<td >No</td>	<td >yes</td>	<td >no</td></tr>
+<tr><td >Exist</td>	<td >No</td>	<td >keep</td>	<td >replace, append</td></tr>
+<tr><td >Recfm</td>	<td >No</td>	<td >&nbsp;</td>	<td >fixed, variable, undefined</td></tr>
+<tr><td >Lrecl</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Blksize</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Allocation</td>	<td >No</td>	<td >&nbsp;</td>	<td >tracks, cylinders, avblock</td></tr>
+<tr><td >PrimarySpace</td>	<td >Sometimes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >SecondarySpace</td>	<td >No</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >Avblock</td>	<td >Sometimes</td>	<td >&nbsp;</td>	<td >&nbsp;</td></tr>
+<tr><td >BufferSize</td>	<td >No</td>	<td >4096</td>	<td >&nbsp;</td></tr>
+</table>
+<p>
+The option details are as follows.
+<dl><dt><b>Direction</b></dt><dd>
+<b>send</b> to send a file to the host,
+<b>receive</b> to receive a file from the host.
+<dt><b>HostFile</b></dt><dd>
+The name of the file on the host.
+<dt><b>LocalFile</b></dt><dd>
+The name of the file on the local workstation.
+<dt><b>Host</b></dt><dd>
+The type of host (which dictates the form of the <b>IND$FILE</b> command):
+<b>tso</b> (the default), <b>vm</b> or <b>cics</b>.
+<dt><b>Mode</b></dt><dd>
+Use <b>ascii</b> (the default) for a text file, which will be translated
+between <font size=-1>EBCDIC</font> and <font size=-1>ASCII</font> as necessary.
+Use <b>binary</b> for non-text files.
+<dt><b>Cr</b></dt><dd>
+Controls how <b>Newline</b> characters are handled when transferring
+<b>Mode=ascii</b> files.
+<b>remove</b> (the default) strips <b>Newline</b> characters in local files
+before transferring them to the host.
+<b>add</b> adds <b>Newline</b> characters to each host file record before
+transferring it to the local workstation.
+<b>keep</b> preserves <b>Newline</b> characters when transferring a local file
+to the host.
+<dt><b>Remap</b></dt><dd>
+Controls text translation for <b>Mode=ascii</b> files.
+The value <b>yes</b> (the default) causes b3270 to remap the text to ensure
+maximum compatibility between the workstation's character set and encoding
+and the host's <font size=-1>EBCDIC</font> code page.
+The value <b>no</b> causes b3270 to pass the text to or from the host
+as-is, leaving all translation to the <b>IND$FILE</b> program on the host.
+<dt><b>Exist</b></dt><dd>
+Controls what happens when the destination file already exists.
+<b>keep</b> (the default) preserves the file, causing the
+<b>Transfer</b> action to fail.
+<b>replace</b> overwrites the destination file with the source file.
+<b>append</b> appends the source file to the destination file.
+<dt><b>Recfm</b></dt><dd>
+Controls the record format of files created on the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<b>fixed</b> creates a file with fixed-length records.
+<b>variable</b> creates a file with variable-length records.
+<b>undefined</b> creates a file with undefined-length records (<font size=-1>TSO</font> hosts
+only).
+The <b>Lrecl</b> option controls the record length or maximum record length for
+<b>Recfm=fixed</b> and <b>Recfm=variable</b> files, respectively.
+<dt><b>Lrecl</b></dt><dd>
+Specifies the record length (or maximum record length) for files created on
+the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<dt><b>Blksize</b></dt><dd>
+Specifies the block size for files created on the host.
+(<font size=-1>TSO</font> and <font size=-1>VM</font> hosts only.)
+<dt><b>Allocation</b></dt><dd>
+Specifies the units for the <b>PrimarySpace</b> and
+<b>SecondarySpace</b> options: <b>tracks</b>, <b>cylinders</b> or
+<b>avblock</b>. (<font size=-1>TSO</font> hosts only.)
+<dt><b>PrimarySpace</b></dt><dd>
+Primary allocation for a file.
+The units are given by the <b>Allocation</b> option.
+Required when the <b>Allocation</b> is specified as something other than
+<b>default</b>.
+(<font size=-1>TSO</font> hosts only.)
+<dt><b>SecondarySpace</b></dt><dd>
+Secondary allocation for a file.
+The units are given by the <b>Allocation</b> option. (<font size=-1>TSO</font> hosts only.) 
+<dt><b>Avblock</b></dt><dd>
+Average block size, required when <b>Allocation</b> specifies <b>avblock</b>.
+(<font size=-1>TSO</font> hosts only.)
+<dt><b>BufferSize</b></dt><dd>
+Buffer size for DFT-mode transfers.
+Can range from 256 to 32768.
+Larger values give better performance, but some hosts may not be able to
+support them.
+</dl>
+<p>
+There are also resources that control the default values for each of the
+file transfer parameters.
+These resources have the same names as the <b>Transfer</b> keywords, but with
+<b>ft</b> prepended. E.g., the default for the <b>Mode</b> keyword is the
+<b>b3270.ftMode</b> resource.
+
+<a NAME="The-PrintText-Action"></a><h2>The PrintText Action</h2>
+The <b>PrintText</b> produces screen snapshots in a number of different
+forms.
+The default form wth no arguments sends a copy of the screen to the default
+printer.
+A single argument is
+the command to use to print, e.g., <b>lpr</b>.
+<p>
+Multiple arguments can include keywords to control the output of
+<b>PrintText</b>:
+<dl><dt><b>file</b> <i>filename</i></dt><dd>
+Save the output in a file.
+<dt><b>html</b></dt><dd>
+Save the output as HTML.  This option implies <b>file</b>.
+<dt><b>rtf</b></dt><dd>
+Save the output as RichText.  This option implies <b>file</b>.
+The font defaults to <b>Courier New</b> and the
+point size defaults to 8.
+These can be overridden by the <b>printTextFont</b> and <b>printTextSize</b>
+resources, respectively.
+<dt><b>string</b></dt><dd>
+Return the output as a string.  This can only be used from scripts.
+<dt><b>modi</b></dt><dd>
+Render modified fields in italics.
+<dt><b>caption</b> <i>text</i></dt><dd>
+Add the specified <i>text</i> as a caption above the output.
+Within <i>text</i>, the special sequence <b>%T%</b> will be replaced with
+a timestamp.
+<dt><b>command</b> <i>command</i></dt><dd>
+Directs the output to a command.
+This allows one or more of the other keywords to be specified, while still
+sending the output to the printer.
+</dl>
+
+<a NAME="Nested-Scripts"></a><h2>Nested Scripts</h2>
+There are several types of
+nested script functions available.
+<dl><dt><b>The String Action</b></dt><dd>
+The simplest method for
+nested scripts is provided via the <b>String</b>
+action.
+The arguments to <b>String</b> are one or more double-quoted strings which are
+inserted directly as if typed.
+The C backslash conventions are honored as follows.
+(Entries marked * mean that after sending the <font size=-1>AID</font> code to the host,
+<b>b3270</b> will wait for the host to unlock the keyboard before further
+processing the string.)
+<table BORDER cols=2 width="75%">
+<tr><td >\b</td>	<td >Left</td></tr>
+<tr><td >\e<i>xxxx</i></td>	<td >EBCDIC character in hex</td></tr>
+<tr><td >\f</td>	<td >Clear*</td></tr>
+<tr><td >\n</td>	<td >Enter*</td></tr>
+<tr><td >\pa<i>n</i></td>	<td >PA(<i>n</i>)*</td></tr>
+<tr><td >\pf<i>nn</i></td>	<td >PF(<i>nn</i>)*</td></tr>
+<tr><td >\r</td>	<td >Newline</td></tr>
+<tr><td >\t</td>	<td >Tab</td></tr>
+<tr><td >\T</td>	<td >BackTab</td></tr>
+<tr><td >\u<i>xxxx</i></td>	<td >Unicode character in hex</td></tr>
+<tr><td >\x<i>xxxx</i></td>	<td >Unicode character in hex</td></tr>
+</table>
+<p>
+Note that the numeric values for the \e, \u and \x sequences
+can be abbreviated to 2 digits.
+Note also that EBCDIC codes greater than 255 and some Unicode character codes
+represent DBCS characters, which will work only if b3270 is built with
+DBCS support and the host allows DBCS input in the current field.
+<p>
+An example keymap entry would be:
+<blockquote>Meta&lt;Key>p: String("probs clearrdr\n")</blockquote>
+<p>
+<b>Note:</b>
+The strings are in <font size=-1>ASCII</font> and converted to <font size=-1>EBCDIC</font>,
+so beware of inserting
+control codes.
+<p>
+There is also an alternate form of the <b>String</b> action, <b>HexString</b>,
+which is used to enter non-printing data.
+The argument to <b>HexString</b> is a string of hexadecimal digits, two per
+character.  A leading 0x or 0X is optional.
+In 3270 mode, the hexadecimal data represent <font size=-1>EBCDIC</font> characters, which
+are entered into the current field.
+In <font size=-1>NVT</font> mode, the hexadecimal data represent <font size=-1>ASCII</font> characters,
+which are sent directly to the host.
+<dt><b>The Script Action</b></dt><dd>
+This action causes <b>b3270</b> to start a child process which can
+execute <b>b3270</b> actions.
+Standard input and output from the child process are piped back to
+<b>b3270</b>.
+The <b>Script</b> action is fully documented in
+<a HREF="x3270-script.html"><i>x3270-script</i>(1)</a>.
+</dl>
+<a NAME="Composite-Characters"></a><h2>Composite Characters</h2>
+<b>b3270</b>
+allows the direct entry of accented letters and special symbols.
+Pressing and releasing the "Compose" key, followed by two other keys, causes
+entry of the symbol combining those two keys.
+For example, "Compose" followed by the "C" key and the "," (comma) key, enters
+the "C-cedilla" symbol.
+A C on the status line indicates a pending composite character.
+<p>
+The mappings between these pairs of ordinary keys and the symbols they
+represent is controlled by the "b3270.composeMap" resource; it gives the
+name of the map to use.
+The maps themselves are named "b3270.composeMap.<i>name</i>".
+The default is "latin1", which gives mappings for most of the symbols in
+the <font size=-1>ISO</font> 8859-1 Latin-1 character set that are not in the
+7-bit <font size=-1>ASCII</font>
+character set.
+<p>
+<b>Note:</b>
+The default keymap defines
+Meta&lt;Key>m
+as the "Compose" key.
+You
+may set up your own "Compose" key with
+a keymap that maps some other keysym onto the <b>Compose</b> action.
+
+<a NAME="Passthru"></a><h2>Passthru</h2>
+<b>b3270</b> supports the Sun <i>telnet-passthru</i>
+service provided by the <i>in.telnet-gw</i> server.
+This allows outbound telnet connections through a firewall machine.
+When a <b>p:</b> is prepended to a hostname, <b>b3270</b>
+acts much like the <i>itelnet</i>(1) command.
+It contacts the machine named <b>internet-gateway</b> at the port defined in
+<b>/etc/services</b> as <b>telnet-passthru</b>
+(which defaults to 3514).
+It then passes the requested hostname and port to the
+<b>in.telnet-gw</b> server.
+<a NAME="Proxy"></a><h2>Proxy</h2>
+The <b>-proxy</b> option or the <b>b3270.proxy</b> resource
+causes b3270 to use a proxy server to connect to the host.
+The syntax of the option or resource is:
+<blockquote><i>type</i>:<i>host</i>[:<i>port</i>]
+</blockquote>
+The supported values for <i>type</i> are:
+<table BORDER cols=3 width="75%">
+<tr><td ><center>Proxy Type</center></td>	<td ><center>Protocol</center></td>	<td ><center>Default Port</center></td></tr>
+
+<tr><td ><center>http</center></td>	<td ><center>RFC 2817 HTTP tunnel (squid)</center></td>	<td ><center>3128</center></td></tr>
+<tr><td ><center>passthru</center></td>	<td ><center>Sun in.telnet-gw</center></td>	<td ><center>none</center></td></tr>
+<tr><td ><center>socks4</center></td>	<td ><center>SOCKS version 4</center></td>	<td ><center>1080</center></td></tr>
+<tr><td ><center>socks5</center></td>	<td ><center>SOCKS version 5 (RFC 1928)</center></td>	<td ><center>1080</center></td></tr>
+<tr><td ><center>telnet</center></td>	<td ><center>No protocol (just send <b>connect</b> <i>host port</i>)</center></td>	<td ><center>none</center></td></tr>
+</table>
+<p>
+The special types <b>socks4a</b> and <b>socks5d</b> can also be used to force
+the proxy server to do the hostname resolution for the SOCKS protocol.
+<a NAME="Resources"></a><h2>Resources</h2>
+Certain <b>b3270</b>
+options can be configured via resources.
+Resources are defined
+by <b>-xrm</b> options.
+The definitions are similar to X11 resources, and use a similar syntax.
+The resources available in <b>b3270</b> are:
+<p>
+<table BORDER cols=4 width="75%">
+<tr><td >Resource</td>	<td >Default</td>	<td >Option</td>	<td >Purpose</td></tr>
+
+<tr><td >blankFill</td>	<td >False</td>	<td >-set blankFill</td>	<td >Blank Fill mode</td></tr>
+<tr><td >charset</td>	<td >bracket</td>	<td >-charset</td>	<td ><font size=-1>EBCDIC</font> character set</td></tr>
+<tr><td >dbcsCgcsgid</td>	<td >&nbsp;</td>	<td >&nbsp;</td>	<td >Override DBCS CGCSGID</td></tr>
+<tr><td >dsTrace</td>	<td >False</td>	<td >-trace</td>	<td >Data stream tracing</td></tr>
+<tr><td >eof</td>	<td >^D</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode <font size=-1>EOF</font> character</td></tr>
+<tr><td >erase</td>	<td >^H</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode erase character</td></tr>
+<tr><td >extended</td>	<td >True</td>	<td >&nbsp;</td>	<td >Use 3270 extended data stream</td></tr>
+<tr><td >eventTrace</td>	<td >False</td>	<td >-trace</td>	<td >Event tracing</td></tr>
+<tr><td >icrnl</td>	<td >False</td>	<td >&nbsp;</td>	<td >Map <font size=-1>CR</font> to <font size=-1>NL</font> on <font size=-1>NVT</font>-mode input</td></tr>
+<tr><td >inlcr</td>	<td >False</td>	<td >&nbsp;</td>	<td >Map <font size=-1>NL</font> to <font size=-1>CR</font> in <font size=-1>NVT</font>-mode input</td></tr>
+<tr><td >intr</td>	<td >^C</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode interrupt character</td></tr>
+<tr><td >kill</td>	<td >^U</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode kill character</td></tr>
+<tr><td >lineWrap</td>	<td >False</td>	<td >-set lineWrap</td>	<td ><font size=-1>NVT</font> line wrap mode</td></tr>
+<tr><td >lnext</td>	<td >^V</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode lnext character</td></tr>
+<tr><td >m3279</td>	<td ><a HREF="#rn1">(note 1)</a></td>	<td >-model</td>	<td >3279 (color) emulation</td></tr>
+<tr><td >marginedPaste</td>	<td >False</td>	<td >-set marginedPaste</td>	<td >Keep left margin when pasting</td></tr>
+<tr><td >monoCase</td>	<td >False</td>	<td >-set monoCase</td>	<td >Mono-case mode</td></tr>
+<tr><td >numericLock</td>	<td >False</td>	<td >&nbsp;</td>	<td >Lock keyboard for numeric field error</td></tr>
+<tr><td >oerrLock</td>	<td >False</td>	<td >&nbsp;</td>	<td >Lock keyboard for input error</td></tr>
+<tr><td >overlayPaste</td>	<td >False</td>	<td >-set overlayPaste</td>	<td >Overlay protected fields when pasting</td></tr>
+<tr><td >oversize</td>	<td >&nbsp;</td>	<td >-oversize</td>	<td >Oversize screen dimensions</td></tr>
+<tr><td >port</td>	<td >telnet</td>	<td >-port</td>	<td >Non-default TCP port</td></tr>
+<tr><td >quit</td>	<td >^\</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode quit character</td></tr>
+<tr><td >rprnt</td>	<td >^R</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode reprint character</td></tr>
+<tr><td >sbcsCgcsgid</td>	<td >&nbsp;</td>	<td >&nbsp;</td>	<td >Override SBCS CGCSGID</td></tr>
+<tr><td >secure</td>	<td >False</td>	<td >&nbsp;</td>	<td >Disable "dangerous" options</td></tr>
+<tr><td >termName</td>	<td ><a HREF="#rn2">(note 2)</a></td>	<td >-tn</td>	<td ><font size=-1>TELNET</font> terminal type string</td></tr>
+<tr><td >traceDir</td>	<td >/tmp</td>	<td >&nbsp;</td>	<td >Directory for trace files</td></tr>
+<tr><td >traceFile</td>	<td ><a HREF="#rn3">(note 3)</a></td>	<td >-tracefile</td>	<td >File for trace output</td></tr>
+<tr><td >werase</td>	<td >^W</td>	<td >&nbsp;</td>	<td ><font size=-1>NVT</font>-mode word-erase character</td></tr>
+</table>
+<p>
+<blockquote><a NAME="rn1"></a><i>Note 1</i>: <b>m3279</b> defaults to
+<b>False</b>.
+It can be forced to <b>True</b> with the proper <b>-model</b>
+option.
+<p>
+<a NAME="rn2"></a><i>Note 2</i>:
+The default terminal type string is constructed from the model number, color
+emulation, and extended data stream modes.
+E.g., a model 2 with color emulation and the extended data stream option
+would be sent as <b>IBM-3279-2-E</b>.
+Note also that when <font size=-1>TN3270E</font>
+mode is used, the terminal type is always sent as 3278, but this does not
+affect color capabilities.
+<p>
+<a NAME="rn3"></a><i>Note 3</i>: The default trace file is
+<b>x3trc.</b><i>pid</i> in the directory specified by
+the <b>traceDir</b> resource.
+
+
+
+</blockquote>
+<p>
+If more than one <b>-xrm</b> option is given for the same resource,
+the last one on the command line is used.
+<a NAME="Files"></a><h2>Files</h2>
+/usr/local/lib/x3270/ibm_hosts
+<br>
+
+<a NAME="See-Also"></a><h2>See Also</h2>
+<a HREF="s3270-man.html">s3270(1)</a>, <a HREF="x3270-script.html">x3270-script(1), </a><a HREF="x3270-man.html">x3270(1)</a>, <a HREF="c3270-man.html">c3270(1)</a>, <a HREF="tcl3270-man.html">tcl3270(1)</a>, telnet(1), tn3270(1)
+<br>
+Data Stream Programmer's Reference, IBM GA23-0059
+<br>
+Character Set Reference, IBM GA27-3831
+<br>
+RFC 1576, TN3270 Current Practices
+<br>
+RFC 1646, TN3270 Extensions for LUname and Printer Selection
+<br>
+RFC 2355, TN3270 Enhancements
+<a NAME="Copyrights"></a><h2>Copyrights</h2>
+Copyright &copy; 1993-2017, Paul Mattes.
+<br>
+Copyright &copy; 2004-2005, Don Russell.
+<br>
+Copyright &copy; 2004, Dick Altenbern.
+<br>
+Copyright &copy; 1990, Jeff Sparkes.
+<br>
+Copyright &copy; 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+<br>
+All rights reserved.
+<p>
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+<dl>
+<dt>*</dt><dd>
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+<dt>*</dt><dd>
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+<dt>*</dt><dd>
+Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
+GTRC nor
+the names of their contributors may be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+</dl>
+
+<p>
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
+SPARKES AND GTRC
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
+ALTENBERN, JEFF
+SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+<a NAME="Version"></a><h2>Version</h2>
+b3270 3.7alpha1
+<hr>
+<i>
+This HTML document and the accompanying troff document were generated with
+a set of write-only <b>m4</b> macros and the powerful <b>vi</b> editor.
+<br>Last modified 16 August 2017.
+</i>
+</body>
+</html>

@@ -34,12 +34,15 @@ XX_PRODUCT XX_DASH
 ifelse(XX_PRODUCT,c3270,`curses-based 
 ')dnl
 XX_SM(IBM) host access tool
+ifelse(XX_PRODUCT,b3270,`back end
+')dnl
 XX_SH(Synopsis)
 XX_FB(XX_PRODUCT)
 ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script)]
 ')dnl
 [XX_FI(options)]
-[XX_FI(host)]
+ifelse(XX_PRODUCT,b3270,,`[XX_FI(host)]
+')dnl
 ifelse(XX_PRODUCT,tcl3270,`[XX_DASHED(XX_DASH) XX_FI(script-arg)...]
 ')
 XX_BR
@@ -59,7 +62,12 @@ session.
 It is derived from
 XX_LINK(x3270-man.html,XX_FI(x3270)(1)),
 an X-windows IBM 3270 emulator.',
-XX_MODE,console,`host in a console window.')
+XX_MODE,console,`host in a console window.',
+XX_PRODUCT,b3270,`host, handling the 3270, TELNET and TLS protocols,
+allowing a front-end application handle user interactions.
+It uses XML on its standard input and standard output to communicate with the
+front end.
+')
 It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection),
 and supports IND$FILE file transfer.
 ifelse(XX_PRODUCT,x3270,
@@ -72,7 +80,7 @@ ifelse(XX_PRODUCT,c3270,
 `If the console is capable of displaying colors, then XX_FB(c3270) emulates an
 XX_SM(IBM) 3279.  Otherwise, it emulates a 3278.
 ')dnl
-include(hostname.inc)
+ifelse(XX_PRODUCT,b3270,,`include(hostname.inc)')
 XX_SH(Options)
 ifelse(XX_PRODUCT,x3270,`XX_FB(x3270) is a toolkit based program, so it understands standard Xt options and
 resources.
@@ -284,7 +292,7 @@ The minimum required version of XX_FB(XX_PRODUCT), e.g., XX_VERSION_NUMBER.
 If the running version is less than the specified version, XX_FB(XX_PRODUCT)
 will abort.
 The format of a version is
-XX_FI(major)XX_FB(.)XX_FI(minor)XX_FB(type)XX_FI(iteration). XX_FB(type) is
+XX_FI(major)`'XX_FB(.)`'XX_FI(minor)`'XX_FB(type)`'XX_FI(iteration). XX_FB(type) is
 ignored, and XX_FI(minor) and XX_FI(iteration) can be omitted.
 ')dnl
 XX_TP(XX_FB(XX_DASHED(model)) XX_FI(name))
