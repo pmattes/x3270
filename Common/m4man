@@ -53,7 +53,7 @@ fi
 date=`date "+%d %B %Y"`
 # platform
 case $product in
-    x3270|x3270|c3270|s3270|tcl3270|b3270|pr3287)
+    x3270|c3270|s3270|tcl3270|b3270|pr3287)
 	platform=unix
 	c3270=c3270
 	s3270=s3270
@@ -61,7 +61,7 @@ case $product in
 	x3270=x3270
 	b3270=b3270
 	;;
-    wc3270|ws3270|wpr3287)
+    wc3270|ws3270|wb3270|wpr3287)
 	platform=windows
 	c3270=wc3270
 	s3270=ws3270
