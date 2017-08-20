@@ -804,7 +804,7 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 ssl_passwd_ret_t
 ssl_passwd_gui_callback(char *buf, int size, bool again)
 {
-    if (push_password()) {
+    if (push_password(again)) {
 	return SP_PENDING;
     } else {
 	return SP_NOT_SUPPORTED;

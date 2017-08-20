@@ -30,5 +30,5 @@
  *		SSL/TLS password for b3270.
  */
 
-bool push_password(void);
+bool push_password(bool again);
 ia_t password_ia_restrict(const char *action);

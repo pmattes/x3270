@@ -36,6 +36,7 @@
 
 #include "actions.h"
 #include "b_password.h"
+#include "lazya.h"
 #include "task.h"
 #include "telnet.h"
 #include "host.h"
@@ -127,10 +128,11 @@ password_done(task_cbh handle, bool success, bool abort)
  * @return true if pass-through queued, false otherwise.
  */
 bool
-push_password(void)
+push_password(bool again)
 {
     action_elt_t *e;
     bool found = false;
+    char *cmd;
 
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	if (!strcasecmp(e->t.name, PASSWORD_PASSTHRU_NAME)) {
@@ -146,8 +148,8 @@ push_password(void)
     Replace(password_result, NULL);
 
     /* Push a callback with a macro. */
-    push_cb(PASSWORD_PASSTHRU_CALL, strlen(PASSWORD_PASSTHRU_CALL),
-	    &password_cb, (task_cbh)&password_cb);
+    cmd = lazyaf("%s(%s)", PASSWORD_PASSTHRU_NAME, again? "again": "");
+    push_cb(cmd, strlen(cmd), &password_cb, (task_cbh)&password_cb);
     return true;
 }
 
