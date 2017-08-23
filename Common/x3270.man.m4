@@ -284,7 +284,7 @@ The minimum required version of XX_FB(XX_PRODUCT), e.g., XX_VERSION_NUMBER.
 If the running version is less than the specified version, XX_FB(XX_PRODUCT)
 will abort.
 The format of a version is
-XX_FI(major)XX_FB(.)XX_FI(minor)XX_FB(type)XX_FI(iteration). XX_FB(type) is
+XX_FI(major)`'XX_FB(.)`'XX_FI(minor)`'XX_FB(type)`'XX_FI(iteration). XX_FB(type) is
 ignored, and XX_FI(minor) and XX_FI(iteration) can be omitted.
 ')dnl
 XX_TP(XX_FB(XX_DASHED(model)) XX_FI(name))
