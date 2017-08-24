@@ -1110,6 +1110,11 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    host_disconnect(true);
 	    return;
 	}
+	vtrace("net_input: NetworkEvents 0x%lx%s%s%s\n",
+		events.lNetworkEvents,
+		(events.lNetworkEvents & FD_CONNECT) ? " CONNECT": "",
+		(events.lNetworkEvents & FD_CLOSE) ? " CLOSE": "",
+		(events.lNetworkEvents & FD_READ) ? " READ": "");
 	if (HALF_CONNECTED) {
 	    if (events.lNetworkEvents & FD_CONNECT) {
 		if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
@@ -1262,6 +1267,13 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		vtrace("\n");
 		nvt_data = 0;
 	}
+
+#if defined(_WIN32) /*[*/
+	if (events.lNetworkEvents & FD_CLOSE) {
+	    vtrace("RCVD disconnect\n");
+	    host_disconnect(false);
+	}
+#endif /*]*/
 
 	/* See if it's time to roll over the trace file. */
 	trace_rollover_check();

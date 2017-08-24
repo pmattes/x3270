@@ -574,19 +574,19 @@ process_ds(unsigned char *buf, size_t buflen)
 	case CMD_RB:	/* read buffer */
 	case SNA_CMD_RB:
 		trace_ds("< ReadBuffer\n");
-		ctlr_read_buffer(aid);
+		ctlr_read_buffer(AID_NO);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RM:	/* read modifed */
 	case SNA_CMD_RM:
 		trace_ds("< ReadModified\n");
-		ctlr_read_modified(aid, false);
+		ctlr_read_modified(AID_NO, false);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RMA:	/* read modifed all */
 	case SNA_CMD_RMA:
 		trace_ds("< ReadModifiedAll\n");
-		ctlr_read_modified(aid, true);
+		ctlr_read_modified(AID_NO, true);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_WSF:	/* write structured field */
