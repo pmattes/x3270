@@ -457,7 +457,7 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 	char x, junk;
 	if (sscanf(argv[1], "%u%c%u%c", &ovr, &x, &ovc, &junk) != 3
 		|| x != 'x') {
-	    popup_an_error("Mode: Second parameter must be <rows>x<cols>");
+	    popup_an_error("Model: Second parameter must be <rows>x<cols>");
 	    return false;
 	}
     }
