@@ -879,7 +879,8 @@ do_qr_ddm(void)
 	    size = set_dft_buffersize(0);
 	}
 
-	trace_ds("> QueryReply(DistributedDataManagement)\n");
+	trace_ds("> QueryReply(DistributedDataManagement INLIM/OUTLIM=%d)\n",
+		size);
 	space3270out(8);
 	SET16(obptr,0);			/* set reserved field to 0 */
 	SET16(obptr, size);		/* set inbound length limit INLIM */

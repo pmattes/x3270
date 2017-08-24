@@ -348,7 +348,7 @@ enum keytype { KT_STD, KT_GE };
 
 /* Default DFT file transfer buffer size. */
 #if !defined(DFT_BUF) /*[*/
-# define DFT_BUF		(4 * 1024)
+# define DFT_BUF		(16 * 1024)
 #endif /*]*/
 
 /* DBCS Preedit Types */
