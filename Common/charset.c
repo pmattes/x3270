@@ -128,7 +128,7 @@ charset_init(const char *csname)
 	set_cgcsgids(NULL);
 	set_host_codepage(NULL);
 	set_charset_name(NULL);
-	(void) screen_new_display_charsets(NULL, "us");
+	(void) screen_new_display_charsets("cp037", "us");
 	(void) set_uni(NULL, LOCAL_CODEPAGE, &codepage, &cgcsgid, NULL, NULL);
 	(void) set_uni_dbcs("", NULL);
 	return CS_OKAY;

@@ -407,11 +407,12 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
 /*
  * Model action:
- * Model(["327x-n"[,<rows>x<cols>a]])
+ * Model(["327x-n[-E]"[,<rows>x<cols>a]])
  */
 static bool
 Model_action(ia_t ia, unsigned argc, const char **argv)
 {
+    const char *model;
     char *color;
     char *digit;
     unsigned ovr = 0, ovc = 0;
@@ -424,14 +425,13 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 
     /* With no arguments, outputs the current model. */
     if (argc == 0) {
-	char *model = lazyaf("327%c-%d",
-		appres.m3279? '9': '8',
-		model_num);
-
-	if (ov_rows || ov_cols) {
-	    model = lazyaf("%s,%dx%d", model, ov_rows, ov_cols);
-	}
-	action_output("%s", model);
+	action_output("%s",
+		lazyaf("327%c-%d%s%s",
+		    appres.m3279? '9': '8',
+		    model_num,
+		    appres.extended? "-E": "",
+		    (ov_rows || ov_cols)?
+			lazyaf(",%dx%d", ov_rows, ov_cols): ""));
 	return true;
     }
 
@@ -444,13 +444,15 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
      * One argument changes the model number and clears oversize.
      * Two changes both.
      */
-    if (strlen(argv[0]) != 6 ||
-	strncmp(argv[0], "327", 3) ||
-	(color = strchr("89", argv[0][3])) == NULL ||
-	argv[0][4] != '-' ||
-	(digit = strchr("2345", argv[0][5])) == NULL) {
+    model = argv[0];
+    if ((strlen(model) != 6 && strlen(model) != 8) ||
+	strncmp(model, "327", 3) ||
+	(color = strchr("89", model[3])) == NULL ||
+	model[4] != '-' ||
+	(digit = strchr("2345", model[5])) == NULL ||
+	(strlen(model) == 8 && strcasecmp(model + 6, "-E"))) {
 
-	popup_an_error("Model: First parameter must be 327[89]-[2345]");
+	popup_an_error("Model: First parameter must be 327[89]-[2345][-E]");
 	return false;
     }
     if (argc > 1) {
@@ -469,6 +471,7 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
     COLS = maxCOLS;
     ctlr_reinit(MODEL_CHANGE);
     appres.m3279 = *color == '9';
+    appres.extended = (strlen(model) == 8);
 
     /* Reset the screen state. */
     screen_init();

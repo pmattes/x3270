@@ -141,12 +141,14 @@ screen_80(void)
 {
 }
 
+/* 'realname' is the canonical name. 'csname' is the alias used to invoke it */
 bool
 screen_new_display_charsets(const char *realname, const char *csname)
 {
     ui_vleaf("charset",
 	    "name", realname,
-	    "alias", strcmp(realname, csname)? csname : NULL,
+	    "alias", (csname != NULL && strcmp(realname, csname))?
+		csname: NULL,
 	    NULL);
     return true;
 }
