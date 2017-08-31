@@ -348,6 +348,8 @@
 
 /* Other EBCDIC control codes. */
 #define EBC_null	0x00
+#define EBC_soh		0x01
+#define EBC_stx		0x02
 #define EBC_ff		0x0c
 #define EBC_cr		0x0d
 #define EBC_so		0x0e
@@ -361,6 +363,8 @@
 #define EBC_nobreakspace 0x41   
 #define EBC_period	0x4b    
 #define EBC_ampersand	0x50    
+#define EBC_slash	0x61
+#define EBC_percent	0x6c
 #define EBC_underscore	0x6d
 #define EBC_greater	0x6e    
 #define EBC_question	0x6f    
