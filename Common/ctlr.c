@@ -575,19 +575,19 @@ process_ds(unsigned char *buf, size_t buflen)
 	case CMD_RB:	/* read buffer */
 	case SNA_CMD_RB:
 		trace_ds("< ReadBuffer\n");
-		ctlr_read_buffer(AID_NO);
+		ctlr_read_buffer(aid);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RM:	/* read modifed */
 	case SNA_CMD_RM:
 		trace_ds("< ReadModified\n");
-		ctlr_read_modified(AID_NO, false);
+		ctlr_read_modified(aid, false);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RMA:	/* read modifed all */
 	case SNA_CMD_RMA:
 		trace_ds("< ReadModifiedAll\n");
-		ctlr_read_modified(AID_NO, true);
+		ctlr_read_modified(aid, true);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_WSF:	/* write structured field */
@@ -701,11 +701,11 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 
 	    case AID_SYSREQ:			/* test request */
 		space3270out(4);
-		*obptr++ = 0x01;	/* soh */
-		*obptr++ = 0x5b;	/*  %  */
-		*obptr++ = 0x61;	/*  /  */
-		*obptr++ = 0x02;	/* stx */
-		trace_ds("SYSREQ");
+		*obptr++ = EBC_soh;
+		*obptr++ = EBC_percent;
+		*obptr++ = EBC_slash;
+		*obptr++ = EBC_stx;
+		trace_ds("SysReq");
 		break;
 
 	    case AID_PA1:			/* short-read AIDs */
