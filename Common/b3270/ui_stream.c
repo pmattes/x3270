@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Paul Mattes.
+ * Copyright (c) 2016-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -105,6 +105,14 @@ static tcb_t cb_keymap = {
 static tcb_t cb_macro = {
     "ui",
     IA_UI,
+    CB_UI | CB_NEW_TASKQ,
+    ui_action_data,
+    ui_action_done,
+    NULL
+};
+static tcb_t cb_command = {
+    "ui",
+    IA_COMMAND,
     CB_UI | CB_NEW_TASKQ,
     ui_action_data,
     ui_action_done,
@@ -390,6 +398,7 @@ do_run(const char *cmd, const char **attrs)
     const char *command = NULL;
     int i;
     ui_action_t *uia;
+    tcb_t *tcb;
 
     for (i = 0; attrs[i] != NULL; i += 2) {
 	if (!strcasecmp(attrs[i], "type")) {
@@ -416,10 +425,13 @@ do_run(const char *cmd, const char **attrs)
 	strcpy(uia->tag, tag);
     }
     uia->result = NULL;
-    push_cb(command, strlen(command),
-	    (type != NULL && !strcasecmp(type, "keymap"))? &cb_keymap:
-							   &cb_macro,
-	    (task_cbh)uia);
+    tcb = &cb_macro;
+    if (type != NULL && !strcasecmp(type, "keymap")) {
+	tcb = &cb_keymap;
+    } else if (type != NULL && !strcasecmp(type, "command")) {
+	tcb = &cb_command;
+    }
+    push_cb(command, strlen(command), tcb, (task_cbh)uia);
 }
 
 /* The (dummy) action for pass-through actions. */

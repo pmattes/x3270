@@ -485,14 +485,14 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * TerminalName action:
  * TerminalName()
- * TerminalName(name)
+ * TerminalName([Change,]name)
  * TerminalName(Default)
  */
 static bool
 TerminalName_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("TerminalName", ia, argc, argv);
-    if (check_argc("TerminalName", argc, 0, 1) < 0) {
+    if (check_argc("TerminalName", argc, 0, 2) < 0) {
 	return false;
     }
 
@@ -502,20 +502,30 @@ TerminalName_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
+    if (argc == 2 && strcasecmp(argv[0], "Change")) {
+	popup_an_error("TerminalName: First argument must be 'Change'");
+	return false;
+    }
+
     if (PCONNECTED) {
 	popup_an_error("TerminalName: Cannot change model while connected");
 	return false;
     }
 
-    /*
-     * "Default" clears the terminal name.
-     * Any other value sets it.
-     */
     if (!strcasecmp(argv[0], "Default")) {
 	appres.termname = NULL;
+    } else if (!strcasecmp(argv[0], "Change")) {
+	appres.termname = NewString(argv[1]);
     } else {
 	appres.termname = NewString(argv[0]);
     }
+
+    if (ia != IA_UI) {
+	ui_vleaf("terminal-name",
+		"text", appres.termname,
+		NULL);
+    }
+
     return true;
 }
 
