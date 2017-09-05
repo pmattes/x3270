@@ -200,6 +200,8 @@ static const char *cmd(int c);
 static const char *opt(unsigned char c);
 static const char *nnn(int c);
 
+static void net_hexnvt_out_framed(unsigned char *buf, int len, bool framed);
+
 /* telnet states */
 #define TNS_DATA	0	/* receiving data */
 #define TNS_IAC		1	/* got an IAC */
@@ -1702,7 +1704,7 @@ telnet_fsm(unsigned char c)
 			(try_lu != NULL && *try_lu)? "@": "",
 			(try_lu != NULL && *try_lu)?  force_ascii(try_lu) : "",
 			IAC, SE);
-		net_hexnvt_out((unsigned char *)tt_out, tb_len);
+		net_hexnvt_out_framed((unsigned char *)tt_out, tb_len, true);
 		Free(tt_out);
 
 		status_lu(connected_lu);
@@ -1812,7 +1814,7 @@ tn3270e_request(void)
 
 	(void) sprintf(t, "%c%c", IAC, SE);
 
-	net_hexnvt_out((unsigned char *)tt_out, tb_len);
+	net_hexnvt_out_framed((unsigned char *)tt_out, tb_len, true);
 	Free(tt_out);
 
 	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
@@ -2579,15 +2581,16 @@ net_rawout(unsigned const char *buf, size_t len)
 
 
 /*
- * net_hexnvt_out
+ * net_hexnvt_out_framed
  *	Send uncontrolled user data to the host in NVT mode, performing IAC
  *	and CR quoting as necessary.
  */
-void
-net_hexnvt_out(unsigned char *buf, int len)
+static void
+net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
 {
 	unsigned char *tbuf;
 	unsigned char *xbuf;
+	bool first = true;
 
 	if (!len)
 		return;
@@ -2609,15 +2612,33 @@ net_hexnvt_out(unsigned char *buf, int len)
 
 		*tbuf++ = c;
 		len--;
+		if (framed && (first || len == 1)) {
+		    /* Don't quote initial IAC or trailing IAC SE. */
+		    first = false;
+		    continue;
+		}
 		if (c == IAC)
 			*tbuf++ = IAC;
 		else if (c == '\r' && (!len || *buf != '\n'))
 			*tbuf++ = '\0';
+		first = false;
 	}
 
 	/* Send it to the host. */
 	net_rawout(xbuf, tbuf - xbuf);
 	Free(xbuf);
+}
+
+
+/*
+ * net_hexnvt_out
+ *	Send uncontrolled user data to the host in NVT mode, performing IAC
+ *	and CR quoting as necessary.
+ */
+void
+net_hexnvt_out(unsigned char *buf, int len)
+{
+	net_hexnvt_out_framed(buf, len, false);
 }
 
 
