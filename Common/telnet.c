@@ -1702,7 +1702,7 @@ telnet_fsm(unsigned char c)
 			(try_lu != NULL && *try_lu)? "@": "",
 			(try_lu != NULL && *try_lu)?  force_ascii(try_lu) : "",
 			IAC, SE);
-		net_rawout((unsigned char *)tt_out, tb_len);
+		net_hexnvt_out((unsigned char *)tt_out, tb_len);
 		Free(tt_out);
 
 		status_lu(connected_lu);
@@ -1812,7 +1812,7 @@ tn3270e_request(void)
 
 	(void) sprintf(t, "%c%c", IAC, SE);
 
-	net_rawout((unsigned char *)tt_out, tb_len);
+	net_hexnvt_out((unsigned char *)tt_out, tb_len);
 	Free(tt_out);
 
 	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "

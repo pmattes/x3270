@@ -483,6 +483,43 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
+ * TerminalName action:
+ * TerminalName()
+ * TerminalName(name)
+ * TerminalName(Default)
+ */
+static bool
+TerminalName_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("TerminalName", ia, argc, argv);
+    if (check_argc("TerminalName", argc, 0, 1) < 0) {
+	return false;
+    }
+
+    /* With no arguments, outputs the current terminal name. */
+    if (argc == 0) {
+	action_output("%s", appres.termname? appres.termname: "");
+	return true;
+    }
+
+    if (PCONNECTED) {
+	popup_an_error("TerminalName: Cannot change model while connected");
+	return false;
+    }
+
+    /*
+     * "Default" clears the terminal name.
+     * Any other value sets it.
+     */
+    if (!strcasecmp(argv[0], "Default")) {
+	appres.termname = NULL;
+    } else {
+	appres.termname = NewString(argv[0]);
+    }
+    return true;
+}
+
+/*
  * Trace action:
  *  Trace
  *  Trace On
@@ -823,7 +860,8 @@ b3270_register(void)
     static action_table_t actions[] = {
 	{ "Model",	Model_action,	0 },
 	{ "Trace",	Trace_action,	0 },
-	{ "ClearRegion",ClearRegion_action,0 }
+	{ "ClearRegion",ClearRegion_action,0 },
+	{ "TerminalName",TerminalName_action,0 }
     };
     static opt_t b3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
