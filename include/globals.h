@@ -379,7 +379,7 @@ void usage(const char *);
 typedef enum iaction {
     IA_NONE, IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_KEY,
     IA_MACRO, IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP,
-    IA_IDLE, IA_PASSWORD
+    IA_IDLE, IA_PASSWORD, IA_UI
 } ia_t;
 extern enum iaction ia_cause;
 

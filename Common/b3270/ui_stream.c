@@ -104,7 +104,7 @@ static tcb_t cb_keymap = {
 };
 static tcb_t cb_macro = {
     "ui",
-    IA_MACRO,
+    IA_UI,
     CB_UI | CB_NEW_TASKQ,
     ui_action_data,
     ui_action_done,

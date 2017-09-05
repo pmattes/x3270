@@ -217,6 +217,7 @@ internal_screen_init(void)
 	    "cols", lazyaf("%d", maxCOLS),
 	    "color", appres.m3279? "true": "false",
 	    "oversize", ov_rows || ov_cols? "true": "false",
+	    "extended", appres.extended? "true": "false",
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);

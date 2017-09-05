@@ -52,7 +52,7 @@ enum iaction ia_cause;
 const char *ia_name[] = {
     "None", "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
-    "Keymap", "Idle", "Password"
+    "Keymap", "Idle", "Password", "UI"
 };
 const char *current_action_name;
 
