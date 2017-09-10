@@ -76,7 +76,12 @@
 		    versions of wc3270) to Documents folders</td>
 	    </tr>
 	</table>
-
+	<h2>Notes for Installing as SYSTEM</h2>
+	To install wc3270 as the SYSTEM user, which does not have any per-user
+	special folders, you must
+	disable the <i>desktopicons</i> and <i>migratefiles</i> tasks by
+	specifying the following option:
+	<pre><tt>    /TASKS=""</tt></pre>
 	<h2>Notes for Version Upgrades</h2>
 	<h3>AppData File Migration</h3>
 	Release 3.5beta5 stopped the use of the wc3270 AppData folders. When
