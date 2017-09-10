@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2016 Paul Mattes.
+# Copyright (c) 2015-2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -97,6 +97,6 @@ wpr3287-src.tgz:
 	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz
 
 # Target for building the Inno Setup .exe file and the .zip file.
-windows-release:
+windows-release: man
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@

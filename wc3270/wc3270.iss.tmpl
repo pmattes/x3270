@@ -34,14 +34,20 @@ Name: "help"; Description: "Help files"; Types: full custom
 
 [InstallDelete]
 ; Get rid of the AppData CA root certs files. The new install puts it in {app}.
-Type: files; Name: "{userappdata}\root_certs.txt"
+;; Skip the rule below because it interferes with installing as SYSTEM and is
+;; likely unnecessary now.
+;Type: files; Name: "{userappdata}\root_certs.txt"
 Type: files; Name: "{commonappdata}\root_certs.txt"
 ; Get rid of the old New wc3270 Session desktop icon.
-Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
+;; Skip the rule below because it interferes with installing as SYSTEM and is
+;; likely unnecessary now.
+;Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
 ; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
 ; the common programs group or the user programs group.
 Type: files; Name: "{commonprograms}\{groupname}\New wc3270 Session.lnk"
-Type: files; Name: "{userprograms}\{groupname}\New wc3270 Session.lnk"
+;; Skip the rule below because it interferes with installing as SYSTEM and is
+;; likely unnecessary now.
+;Type: files; Name: "{userprograms}\{groupname}\New wc3270 Session.lnk"
 ; Get rid of the old networking DLLs.
 Type: files; Name: "{app}\w3n4.dll"
 Type: files; Name: "{app}\w3n46.dll"
