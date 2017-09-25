@@ -9,16 +9,18 @@
 <body>
 <a name="terminal-name"></a><h3>terminal-name Indication</h3>
 
-<p>Indicates a change in the terminal name override.</p>
+<p>Indicates the terminal name.</p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
- <tr><td>text</td><td>no</td><td>New terminal name</td></tr>
+ <tr><td>text</td><td>yes</td><td>Terminal name</td></tr>
+ <tr><td>override</td><td>yes</td><td><b>true</b> if the name is an override</td></tr>
 </table>
 
-<p>If the terminal name returns to the default (computed from other options),
-the <i>text</i> attribute will be missing.</p>
-&lt;terminal-name text="myterm"/&gt;
+<p>Examples:
+<pre>
+&lt;terminal-name text="IBM-3279-4-E" override="false"/&gt;
+&lt;terminal-name text="Fred" override="true"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

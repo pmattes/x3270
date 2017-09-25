@@ -255,6 +255,31 @@ b3270_secure(bool ignored)
 	     NULL);
 }
 
+/* Report the terminal name. */
+static void
+report_terminal_name(void)
+{
+    if (appres.termname != NULL && appres.termname[0]) {
+	ui_vleaf("terminal-name",
+		"text", appres.termname,
+		"override", "true",
+		NULL);
+    } else {
+	char *tn = NewString(full_model_name);
+
+	/* full_model_name is IBM-327x-n-E. */
+	tn[7] = appres.m3279 ? '9' : '8';
+	if (!appres.extended) {
+	    tn[10] = '\0';
+	}
+	ui_vleaf("terminal-name",
+		"text", (ov_rows || ov_cols)? "IBM-DYNAMIC": tn,
+		"override", "false",
+		NULL);
+	Free(tn);
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -360,9 +385,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     screen_init();
     ctlr_init(-1);
     ctlr_reinit(-1);
-    ui_vleaf("model",
-	    "name", model_name,
-	    NULL);
+    report_terminal_name();
     idle_init();
     if (appres.httpd_port) {
 	struct sockaddr *sa;
@@ -466,16 +489,21 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Change the screen size and emulation mode. */
     model_number = *digit - '0';
+    appres.m3279 = *color == '9';
+    appres.extended = (strlen(model) == 8);
     set_rows_cols(model_number, ovc, ovr);
     ROWS = maxROWS;
     COLS = maxCOLS;
     ctlr_reinit(MODEL_CHANGE);
-    appres.m3279 = *color == '9';
-    appres.extended = (strlen(model) == 8);
 
     /* Reset the screen state. */
     screen_init();
     ctlr_erase(true);
+
+    /* Report the new terminal name. */
+    if (appres.termname == NULL || !appres.termname[0]) {
+	report_terminal_name();
+    }
 
     return model_num == model_number
 	&& ov_rows == (int)ovr
@@ -491,6 +519,8 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 TerminalName_action(ia_t ia, unsigned argc, const char **argv)
 {
+    char *new_name;
+
     action_debug("TerminalName", ia, argc, argv);
     if (check_argc("TerminalName", argc, 0, 2) < 0) {
 	return false;
@@ -508,24 +538,39 @@ TerminalName_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (PCONNECTED) {
-	popup_an_error("TerminalName: Cannot change model while connected");
+	popup_an_error("TerminalName: Cannot change while connected");
 	return false;
     }
 
     if (!strcasecmp(argv[0], "Default")) {
-	appres.termname = NULL;
+	new_name = NULL;
     } else if (!strcasecmp(argv[0], "Change")) {
-	appres.termname = NewString(argv[1]);
+	new_name = NewString(argv[1]);
     } else {
-	appres.termname = NewString(argv[0]);
+	new_name = NewString(argv[0]);
     }
 
-    if (ia != IA_UI) {
-	ui_vleaf("terminal-name",
-		"text", appres.termname,
-		NULL);
+    if (new_name != NULL) {
+	char *s = new_name;
+
+	while (*s && isspace((unsigned char)*s)) {
+	    s++;
+	}
+	if (!*s) {
+	    new_name = NULL;
+	} else {
+	    size_t sl = strlen(s);
+
+	    new_name = NewString(s);
+	    while (sl && isspace((unsigned char)new_name[sl - 1])) {
+		new_name[--sl] = 0;
+	    }
+	}
     }
 
+    appres.termname = new_name;
+
+    report_terminal_name();
     return true;
 }
 
