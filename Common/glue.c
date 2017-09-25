@@ -326,6 +326,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 #endif /*]*/
 
+    appres.termname = clean_termname(appres.termname);
+
     return argc;
 }
 
@@ -1403,6 +1405,33 @@ bool
 read_resource_file(const char *filename, bool fatal)
 {
     return read_resource_filex(filename, fatal);
+}
+
+/* Clean the terminal name. */
+char *
+clean_termname(const char *tn)
+{
+    const char *s = tn;
+    size_t sl;
+    char *ret;
+
+    if (tn == NULL) {
+	return (char *)tn;
+    }
+
+    while (*s && isspace((unsigned char)*s)) {
+	s++;
+    }
+    if (!*s) {
+	return NULL;
+    }
+    sl = strlen(s);
+    ret = NewString(s);
+    while (sl && isspace((unsigned char)ret[sl - 1])) {
+	ret[--sl] = 0;
+    }
+
+    return ret;
 }
 
 /* Screen globals. */

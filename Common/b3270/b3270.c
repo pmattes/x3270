@@ -259,24 +259,16 @@ b3270_secure(bool ignored)
 static void
 report_terminal_name(void)
 {
-    if (appres.termname != NULL && appres.termname[0]) {
+    if (appres.termname != NULL) {
 	ui_vleaf("terminal-name",
 		"text", appres.termname,
 		"override", "true",
 		NULL);
     } else {
-	char *tn = NewString(full_model_name);
-
-	/* full_model_name is IBM-327x-n-E. */
-	tn[7] = appres.m3279 ? '9' : '8';
-	if (!appres.extended) {
-	    tn[10] = '\0';
-	}
 	ui_vleaf("terminal-name",
-		"text", (ov_rows || ov_cols)? "IBM-DYNAMIC": tn,
+		"text", (ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name,
 		"override", "false",
 		NULL);
-	Free(tn);
     }
 }
 
@@ -501,7 +493,7 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
     ctlr_erase(true);
 
     /* Report the new terminal name. */
-    if (appres.termname == NULL || !appres.termname[0]) {
+    if (appres.termname == NULL) {
 	report_terminal_name();
     }
 
@@ -550,26 +542,7 @@ TerminalName_action(ia_t ia, unsigned argc, const char **argv)
 	new_name = NewString(argv[0]);
     }
 
-    if (new_name != NULL) {
-	char *s = new_name;
-
-	while (*s && isspace((unsigned char)*s)) {
-	    s++;
-	}
-	if (!*s) {
-	    new_name = NULL;
-	} else {
-	    size_t sl = strlen(s);
-
-	    new_name = NewString(s);
-	    while (sl && isspace((unsigned char)new_name[sl - 1])) {
-		new_name[--sl] = 0;
-	    }
-	}
-    }
-
-    appres.termname = new_name;
-
+    appres.termname = clean_termname(new_name);
     report_terminal_name();
     return true;
 }
