@@ -432,6 +432,16 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
     char *digit;
     unsigned ovr = 0, ovc = 0;
     int model_number;
+    struct {
+	int model_num;
+	int rows;
+	int cols;
+	int ov_cols;
+	int ov_rows;
+	bool extended;
+	bool m3279;
+	bool alt;
+    } old;
 
     action_debug("Model", ia, argc, argv);
     if (check_argc("Model", argc, 0, 2) < 0) {
@@ -479,11 +489,35 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
+    /* Save the current settings. */
+    old.model_num = model_num;
+    old.rows = ROWS;
+    old.cols = COLS;
+    old.ov_rows = ov_rows;
+    old.ov_cols = ov_cols;
+    old.extended = appres.extended;
+    old.m3279 = appres.m3279;
+    old.alt = screen_alt;
+
     /* Change the screen size and emulation mode. */
     model_number = *digit - '0';
     appres.m3279 = *color == '9';
     appres.extended = (strlen(model) == 8);
     set_rows_cols(model_number, ovc, ovr);
+
+    if (model_num != model_number ||
+	    ov_rows != (int)ovr ||
+	    ov_cols != (int)ovc) {
+	/* Failed. Restore the old settings. */
+	appres.extended = old.extended;
+	appres.m3279 = old.m3279;
+	set_rows_cols(old.model_num, old.ov_cols, old.ov_rows);
+	ROWS = old.rows;
+	COLS = old.cols;
+	screen_alt = old.alt;
+	return false;
+    }
+
     ROWS = maxROWS;
     COLS = maxCOLS;
     ctlr_reinit(MODEL_CHANGE);
@@ -497,9 +531,7 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 	report_terminal_name();
     }
 
-    return model_num == model_number
-	&& ov_rows == (int)ovr
-	&& ov_cols == (int)ovc;
+    return true;
 }
 
 /*
