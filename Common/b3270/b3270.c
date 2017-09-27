@@ -456,7 +456,7 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 		    model_num,
 		    appres.extended? "-E": "",
 		    (ov_rows || ov_cols)?
-			lazyaf(",%dx%d", ov_rows, ov_cols): ""));
+			lazyaf(",%dx%d", ov_cols, ov_rows): ""));
 	return true;
     }
 
@@ -482,9 +482,9 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (argc > 1) {
 	char x, junk;
-	if (sscanf(argv[1], "%u%c%u%c", &ovr, &x, &ovc, &junk) != 3
+	if (sscanf(argv[1], "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
 		|| x != 'x') {
-	    popup_an_error("Model: Second parameter must be <rows>x<cols>");
+	    popup_an_error("Model: Second parameter must be <cols>x<rows>");
 	    return false;
 	}
     }
