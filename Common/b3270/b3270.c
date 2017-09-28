@@ -934,7 +934,8 @@ b3270_register(void)
     static res_t b3270_resources[] = {
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
-	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING }
+	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
+	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN }
     };
     static xres_t b3270_xresources[] = {
 	{ ResPrintTextScreensPerPage,	V_FLAT },
