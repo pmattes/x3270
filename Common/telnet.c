@@ -508,18 +508,18 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     net_accept = accept;
 
     /* set up temporary termtype */
-    if (appres.termname == NULL) {
-	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    termtype = "xterm";
-	} else if (ov_rows || ov_cols) {
-	    termtype = "IBM-DYNAMIC";
-	} else if (HOST_FLAG(STD_DS_HOST)) {
-	    (void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
-		    appres.m3279? '9': '8', model_num);
-	    termtype = ttype_tmpval;
-	} else {
-	    termtype = full_model_name;
-	}
+    if (appres.termname != NULL) {
+	termtype = appres.termname;
+    } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	termtype = "xterm";
+    } else if (ov_rows || ov_cols) {
+	termtype = "IBM-DYNAMIC";
+    } else if (HOST_FLAG(STD_DS_HOST)) {
+	(void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
+		appres.m3279? '9': '8', model_num);
+	termtype = ttype_tmpval;
+    } else {
+	termtype = full_model_name;
     }
 
     /* get the passthru host and port number */
