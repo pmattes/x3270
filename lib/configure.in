@@ -103,8 +103,9 @@ then	orig_CPPFLAGS="$CPPFLAGS"
 		any=1
 	done
 	if test $header_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL)
+	then	AC_MSG_WARN(Disabling OpenSSL -- missing headers)
 		use_openssl="no"
+		enable_ssl="no"
 		unset HAVE_LIBSSL
 	fi
 fi
@@ -146,18 +147,25 @@ if test "$use_openssl" != no
 then	orig_LDFLAGS="$LDFLAGS"
     	orig_LIBS="$LIBS"
 	unset any
-	for dir in "$with_openssl" /usr/local /usr/pkg /usr /var /opt
+	if test -n "$with_openssl"
+	then	ssl_libs="$with_openssl/lib $with_openssl/ssl/lib"
+	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib"
+	fi
+	for dir in $ssl_libs
 	do	lib_fail=0
-		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		if test "$dir" = nil
+		then	dir=""
+		fi
+		if test -n "$dir" -a ! -d "$dir"
 		then	lib_fail=1
 			continue
 		fi
 		if test -n "$any"
-		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		then	AC_MSG_NOTICE(retrying with -L$dir)
 		fi
 		if test -n "$dir"
-		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
-		    	SSL_LDFLAGS=-L$dir/ssl/lib
+		then	LDFLAGS="$orig_LDFLAGS -L$dir"
+			SSL_LDFLAGS=-L$dir
 		fi
 		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
 		if test "$lib_fail" -eq 0
@@ -172,9 +180,11 @@ then	orig_LDFLAGS="$LDFLAGS"
 		unset SSL_LDFLAGS
 		any=1
 	done
+
 	if test $lib_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL)
+	then	AC_MSG_WARN(Disabling OpenSSL -- missing libs)
 		use_openssl="no"
+		enable_ssl="no"
 	else	SSL_LIBS="-lssl -lcrypto"
 	fi
 fi
