@@ -691,7 +691,7 @@ display_cert(varbuf_t *v, X509 *cert, int level, const char *who)
     if (pkey != NULL) {
 	vb_appendf(v, "%*s%sPublic key: %d bit ", level, "", who,
 		EVP_PKEY_bits(pkey));
-	switch (pkey->type) {
+	switch (EVP_PKEY_base_id(pkey)) {
 	case EVP_PKEY_RSA:
 	    vb_appendf(v, "RSA");
 	    break;
