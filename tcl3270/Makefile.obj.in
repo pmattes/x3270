@@ -75,12 +75,15 @@ mkfb: mkfb.c
 tcl3270: $(OBJS1) $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
+man:: tcl3270.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install: tcl3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) tcl3270 $(DESTDIR)$(BINDIR)/tcl3270
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) tcl3270.man $(DESTDIR)$(MANDIR)/man1/tcl3270.1
@@ -88,7 +91,7 @@ install.man:
 clean:
 	$(RM) *.o mkfb
 clobber: clean
-	$(RM) tcl3270 *.d
+	$(RM) tcl3270 *.d *.man
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d) mkfb.d

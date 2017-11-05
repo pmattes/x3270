@@ -61,12 +61,15 @@ version.o: mkversion.sh $(OBJECTS) version.txt
 pr3287: $(OBJECTS) version.o $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
+man:: pr3287.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) pr3287 $(DESTDIR)$(BINDIR)/pr3287
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) pr3287.man $(DESTDIR)$(MANDIR)/man1/pr3287.1
@@ -74,7 +77,7 @@ install.man:
 clean:
 	$(RM) *.o
 clobber: clean
-	$(RM) pr3287 *.d
+	$(RM) pr3287 *.d *.man
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d)

@@ -79,6 +79,13 @@ compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.ca
 c3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
+man:: c3270.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: x3270-script.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: ibm_hosts.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install:: c3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
@@ -89,7 +96,7 @@ install:: ibm_hosts
 	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
 		$(INSTALL_DATA) $< $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
@@ -102,7 +109,7 @@ clean:
 	$(RM) *.o mkfb fallbacks.c compiled_keypad.h
 
 clobber: clean
-	$(RM) c3270 *.d
+	$(RM) c3270 *.d *.man
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d) mkfb.d

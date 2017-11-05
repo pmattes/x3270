@@ -76,13 +76,20 @@ s3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 x3270if: x3270if.o
 	$(CC) -o $@ $(LDFLAGS) -I../include x3270if.o $(LIBS)
 
+man:: s3270.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: x3270if.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: x3270-script.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install: s3270 x3270if
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) s3270 $(DESTDIR)$(BINDIR)/s3270
 	$(INSTALL_PROGRAM) x3270if $(DESTDIR)$(BINDIR)/x3270if
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) s3270.man $(DESTDIR)$(MANDIR)/man1/s3270.1
@@ -92,7 +99,7 @@ install.man:
 clean:
 	$(RM) *.o mkfb
 clobber: clean
-	$(RM) s3270 *.d
+	$(RM) s3270 *.d *.man
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d) x3270if.d mkfb.d

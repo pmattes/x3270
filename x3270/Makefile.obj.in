@@ -42,7 +42,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
 	3270h.pcf.gz
 
-all: x3270 $(FONTS) dryrun
+all: x3270 man $(FONTS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -87,6 +87,13 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 dryrun: dryrun.in
 	/bin/cp $< $@
 
+man:: x3270.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: x3270-script.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: ibm_hosts.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install:: x3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
@@ -107,7 +114,7 @@ install::
 	chmod u=rwx,go=rx $(DESTDIR)$(CIFONTDIR)
 	chmod a=r $(DESTDIR)$(CIFONTDIR)/fonts.dir
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
@@ -119,7 +126,7 @@ install.man:
 clean:
 	$(RM) *.o *pcf.gz mkfb fallbacks.c
 clobber: clean
-	$(RM) x3270 *.d
+	$(RM) x3270 *.d *.man dryrun
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d) mkfb.d
