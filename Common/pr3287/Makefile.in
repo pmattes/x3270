@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Paul Mattes.
+# Copyright (c) 2016-2017 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ all: $(objdir)
 install: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 install.man: $(objdir)
-	$(MAKE) -I../Common -I../Common/pr3287 -f Makefile.obj $@
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clean: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clobber: $(objdir)
