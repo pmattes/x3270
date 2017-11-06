@@ -140,11 +140,6 @@ LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)
 
 dnl Check for unwanted parts.
-AC_ARG_ENABLE(apl,[  --disable-apl           leave out APL character support])
-case "$enable_apl" in
-""|yes)	AC_DEFINE(X3270_APL,1)
-	;;
-esac
 AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
 case "$enable_dbcs" in
 no)	;;
