@@ -42,7 +42,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
 	3270h.pcf.gz
 
-all: x3270 man $(FONTS) dryrun
+all: x3270 $(FONTS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
