@@ -5,8 +5,8 @@ LIB3270_OBJECTS = Malloc.o XtGlue.o actions.o apl.o b8.o bind-opt.o charset.o \
 	kybd.o linemode.o login_macro.o llist.o nvt.o peerscript.o \
 	popups_glue.o print_screen.o readres.o resources.o rpq.o run_action.o \
 	sf.o sio_glue.o sio_internal.o source.o ssl_action.o \
-	stdinscript.o stringscript.o task.o telnet.o telnet_sio.o toggles.o \
-	trace.o util.o xio.o
+	stdinscript.o stringscript.o task.o telnet.o telnet_new_environ.o \
+	telnet_sio.o toggles.o trace.o util.o xio.o
 
 # Header files for lib3270.
 LIB3270_HEADERS =

@@ -34,3 +34,11 @@
 
 extern sio_t sio;
 extern bool *ssl_pending;
+extern const char *telquals[];
+
+const char *cmd(int c);
+const char *opt(unsigned char c);
+bool telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
+	unsigned char **reply_buf, size_t *reply_buflen,
+	char **trace_inp, char **trace_outp);
+void environ_init(void);

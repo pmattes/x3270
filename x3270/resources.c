@@ -83,7 +83,7 @@ XtResource resources[] = {
     { ResTermName, ClsTermName, XtRString, sizeof(char *),
       offset(termname), XtRString, 0 },
     { ResDevName, ClsDevName, XtRString, sizeof(char *),
-      offset(devname), XtRString, "x3270" },
+      offset(devname), XtRString, 0 },
     { ResUser, ClsUser, XtRString, sizeof(char *),
       offset(user), XtRString, 0 },
     { ResMacros, ClsMacros, XtRString, sizeof(char *),
