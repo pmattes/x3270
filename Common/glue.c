@@ -481,7 +481,6 @@ set_appres_defaults(void)
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();
 #endif /*]*/
-    appres.devname = "x3270";
 
     appres.ssl.verify_host_cert = true;
     appres.ssl.tls = true;
@@ -955,6 +954,7 @@ static res_t base_resources[] = {
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
+    { ResDevName,	aoffset(devname),	XRM_STRING },
     { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },

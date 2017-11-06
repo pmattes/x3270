@@ -118,6 +118,8 @@ bool		local_process = false;
 #endif /*]*/
 char           *termtype;
 
+const char *telquals[3] = { "IS", "SEND", "INFO" };
+
 /* Statics */
 static socket_t sock = INVALID_SOCKET;	/* active socket */
 #if defined(_WIN32) /*[*/
@@ -196,8 +198,6 @@ static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 
-static const char *cmd(int c);
-static const char *opt(unsigned char c);
 static const char *nnn(int c);
 
 /* telnet states */
@@ -222,8 +222,6 @@ static unsigned char	wont_opt[]	= {
 static unsigned char	functions_req[] = {
 	IAC, SB, TELOPT_TN3270E, TN3270E_OP_FUNCTIONS };
 
-static const char *telquals[3] = { "IS", "SEND", "INFO" };
-static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
 static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"INV-ASSOCIATE", "INV-NAME", "INV-DEVICE-TYPE", "TYPE-NAME-ERROR",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
@@ -503,6 +501,8 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     }
 
     linemode_init();
+
+    environ_init();
 
     Replace(hostname, NewString(host));
     net_accept = accept;
@@ -1695,42 +1695,32 @@ telnet_fsm(unsigned char c)
 		if (tn3270e_negotiate()) {
 		    return false;
 		}
-	    }
-	    else if (sio_supported() &&
+	    } else if (sio_supported() &&
 		    sio != NULL &&
 		    need_tls_follows &&
 		    myopts[TELOPT_STARTTLS] &&
 		    sbbuf[0] == TELOPT_STARTTLS) {
 		continue_tls(sbbuf, (int)(sbptr - sbbuf));
-	    }
-	    else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
+	    } else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
 		    sbbuf[1] == TELQUAL_SEND && appres.new_environ) {
-		size_t tb_len;
-		char *tt_out;
-		char *user;
+		unsigned char *reply_buf;
+		size_t reply_buflen;
+		char *trace_in;
+		char *trace_out;
 
-		vtrace("%s %s %s\n", opt(sbbuf[0]), telquals[sbbuf[1]],
-			telobjs[sbbuf[2]]);
-
-		/* Send out NEW-ENVIRON. */
-		user = appres.user? appres.user: getenv("USER");
-		if (user == NULL) {
-		    user = "unknown";
+		if (!telnet_new_environ(sbbuf + 2, (sbptr - sbbuf - 3),
+			    &reply_buf, &reply_buflen, &trace_in,
+			    &trace_out)) {
+		    vtrace("%s %s [error]\n", opt(sbbuf[0]),
+			    telquals[sbbuf[1]]);
+		} else {
+		    vtrace("%s\n", trace_in);
+		    Free(trace_in);
+		    net_rawout(reply_buf, reply_buflen);
+		    Free(reply_buf);
+		    vtrace("SENT %s\n", trace_out);
+		    Free(trace_out);
 		}
-		tb_len = 21 + strlen(user) + strlen(appres.devname);
-		tt_out = Malloc(tb_len + 1);
-		(void) sprintf(tt_out, "%c%c%c%c%c%s%c%s%c%s%c%s%c%c",
-			IAC, SB, TELOPT_NEW_ENVIRON, TELQUAL_IS, TELOBJ_VAR,
-			force_ascii("USER"), TELOBJ_VALUE, force_ascii(user),
-			TELOBJ_USERVAR, force_ascii("DEVNAME"), TELOBJ_VALUE,
-			force_ascii(appres.devname), IAC, SE);
-		net_rawout((unsigned char *)tt_out, tb_len);
-		Free(tt_out);
-		vtrace("SENT %s %s %s %s \"%s\" %s \"%s\" %s \"%s\" %s \"%s\""
-			"\n", cmd(SB), opt(TELOPT_NEW_ENVIRON),
-			telquals[TELQUAL_IS], telobjs[TELOBJ_VAR], "USER",
-			telobjs[TELOBJ_VALUE], user, telobjs[TELOBJ_USERVAR],
-			"DEVNAME", telobjs[TELOBJ_VALUE], appres.devname);
 
 		/*
 		 * Remember that we did a NEW_ENVIRON SEND, so we won't defer a
@@ -2793,7 +2783,7 @@ nnn(int c)
  * cmd
  *	Expands a TELNET command into a character string.
  */
-static const char *
+const char *
 cmd(int c)
 {
     if (TELCMD_OK(c)) {
@@ -2807,7 +2797,7 @@ cmd(int c)
  * opt
  *	Expands a TELNET option into a character string.
  */
-static const char *
+const char *
 opt(unsigned char c)
 {
     if (TELOPT_OK(c)) {

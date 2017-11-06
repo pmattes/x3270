@@ -164,6 +164,7 @@ Common/status_stubs.c
 Common/tables.c
 Common/telnet.c
 Common/telnet_gui_stubs.c
+Common/telnet_new_environ.c
 Common/telnet_sio.c
 Common/toggles.c
 Common/trace.c

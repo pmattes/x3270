@@ -34,6 +34,8 @@
 3.6 is the current development line for the x3270 suite.
 <h2>Changes in version 3.6alpha1, Nn. Mon 2017</h2>
 <ul>
+ <li>[all] Fixed TELNET NEW-ENVIRONMENT behavior to be more compatible with
+  IBM iSeries hosts.</li>
  <li>[all] Fixed the <b>unlockDelay</b> resource, which was inadvertently
   ignored (effectively aways on) for several releases. The value is now
   <b>false</b> for s3270, ws3270 and tcl3270, and <b>true</b> elsewhere.
