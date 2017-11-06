@@ -673,7 +673,6 @@ ac_user_opts='
 enable_option_checking
 with_ssl
 with_iconv
-enable_apl
 enable_dbcs
 enable_local_process
 enable_ssl
@@ -1305,7 +1304,6 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-apl           leave out APL character support
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
   --disable-ssl           leave out SSL/TLS support
@@ -4358,16 +4356,6 @@ fi
 LIBX3270DIR='${sysconfdir}/x3270'
 
 
-# Check whether --enable-apl was given.
-if test "${enable_apl+set}" = set; then :
-  enableval=$enable_apl;
-fi
-
-case "$enable_apl" in
-""|yes)	$as_echo "#define X3270_APL 1" >>confdefs.h
-
-	;;
-esac
 # Check whether --enable-dbcs was given.
 if test "${enable_dbcs+set}" = set; then :
   enableval=$enable_dbcs;
