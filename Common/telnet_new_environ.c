@@ -60,7 +60,6 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
-#include "macros.h"
 #include "nvt.h"
 #include "popups.h"
 #include "proxy.h"

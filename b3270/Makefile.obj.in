@@ -73,12 +73,18 @@ mkfb: mkfb.c
 
 b3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+man:: b3270.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+man:: x3270-script.man
+	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+
 install: b3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) b3270 $(DESTDIR)$(BINDIR)/b3270
 
-install.man:
+install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) b3270.man $(DESTDIR)$(MANDIR)/man1/b3270.1
