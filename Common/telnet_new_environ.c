@@ -33,52 +33,20 @@
 
 #include "globals.h"
 
-#if !defined(_WIN32) /*[*/
-# include <sys/ioctl.h>
-# include <netinet/in.h>
-#endif /*]*/
 #include "arpa_telnet.h"
-#if !defined(_WIN32) /*[*/
-# include <arpa/inet.h>
-#endif /*]*/
-#include <errno.h>
-#include <fcntl.h>
-#if !defined(_WIN32) /*[*/
-# include <netdb.h>
-#endif /*]*/
-#include <stdint.h>
 #include "tn3270e.h"
 #include "3270ds.h"
 
 #include "appres.h"
 
-#include "actions.h"
-#include "b8.h"
-#include "ctlrc.h"
-#include "host.h"
-#include "indent_s.h"
-#include "kybd.h"
 #include "lazya.h"
-#include "linemode.h"
-#include "macros.h"
-#include "nvt.h"
-#include "popups.h"
-#include "proxy.h"
-#include "resolver.h"
 #include "sio.h"
-#include "sioc.h"
-#include "split_host.h"
-#include "ssl_passwd_gui.h"
-#include "status.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "telnet_private.h"
 #include "trace.h"
-#include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
-#include "w3misc.h"
-#include "xio.h"
 
 #define ESCAPED(c)	\
     (c == TELOBJ_VAR || c == TELOBJ_USERVAR || c == TELOBJ_ESC || \
