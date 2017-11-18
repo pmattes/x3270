@@ -85,6 +85,7 @@
 #include "utils.h"
 #include "varbuf.h"
 #include "xio.h"
+#include "xscroll.h"
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
@@ -306,6 +307,7 @@ main(int argc, char *argv[])
     nvt_register();
     print_screen_register();
     b3270_register();
+    scroll_register();
     toggles_register();
     trace_register();
     xio_register();
@@ -754,6 +756,7 @@ product_set_appres_defaults(void)
      */
     appres.oerr_lock = true;
     appres.unlock_delay = false;
+    appres.interactive.save_lines = 4096;
 }
 
 /**

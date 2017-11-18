@@ -46,6 +46,7 @@
 #include "utils.h"
 #include "utf8.h"
 #include "varbuf.h"
+#include "xscroll.h"
 
 /* Unicode circled A character. */
 #define CIRCLED_A	0x24b6
@@ -224,6 +225,8 @@ internal_screen_init(void)
 
     last_rows = maxROWS;
     last_cols = maxCOLS;
+
+    scroll_buf_init(); /* XXX: What about changing the model? */
 
     save_empty();
 }
@@ -887,4 +890,25 @@ void
 screen_disp(bool erasing _is_unused)
 {
     screen_disp_cond(false);
+}
+
+/* Scrollbar support. */
+
+/*
+ * Enable or disable the cursor (scrolling)
+ */
+void
+enable_cursor(bool on)
+{
+}
+
+/**
+ * Set the scrollbar thumb.
+ *
+ * @param[in] top	Where the top of the scrollbar should be (percentage)
+ * @param[in] shown	How much of the scrollbar to show (percentage)
+ */
+void
+screen_set_thumb(float top, float shown)
+{
 }

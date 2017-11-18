@@ -71,8 +71,8 @@ fallbacks.c: mkfb $(FALLBACKS)
 mkfb: mkfb.c
 	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^)
 
-b3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
+b3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 man:: b3270.man
 	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi

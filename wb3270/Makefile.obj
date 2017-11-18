@@ -72,8 +72,8 @@ $(MKFB): mkfb.c
 wb3270res.o: wb3270.rc wb3270.ico Makefile
 	$(WINDRES) -i $< -o $@
 
-wb3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP32XX) $(DEP3270STUBS) $(DEPLIBEXPAT)
-	$(CC) -o wb3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
+wb3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEPLIBEXPAT)
+	$(CC) -o wb3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
 
 x3270if.exe: x3270if.o $(DEP32XX)
 	$(CC) -o $@ $(CFLAGS) x3270if.o $(LD32XX) -lws2_32
