@@ -464,16 +464,40 @@ static bool
 Scroll_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Scroll", ia, argc, argv);
-    if (check_argc("Scroll", argc, 1, 1) < 0) {
+    if (check_argc("Scroll", argc, 1, 2) < 0) {
 	return false;
     }
 
-    if (!strcasecmp(argv[0], "Forward")) {
+    if (argc == 1 && !strcasecmp(argv[0], "Forward")) {
 	scroll_n(maxROWS, +1);
-    } else if (!strcasecmp(argv[0], "Backward")) {
+    } else if (argc == 1 && !strcasecmp(argv[0], "Backward")) {
 	scroll_n(maxROWS, -1);
+    } else if (argc == 1 && !strcasecmp(argv[0], "Reset")) {
+	scroll_reset();
+    } else if (argc == 2 && !strcasecmp(argv[0], "Set")) {
+	int n;
+	char *ptr;
+	int curr = scrolled_back / maxROWS;
+
+	n = strtol(argv[1], &ptr, 10);
+	if (n < 0 || ptr == argv[1] || *ptr != '\0') {
+	    popup_an_error("Invalid Scroll(Set,n) value");
+	    return false;
+	}
+	if (n > n_saved / maxROWS) {
+	    vtrace("scroll set: %d -> overflow\n", n);
+	    n = n_saved / maxROWS;
+	}
+	if (n > curr) {
+	    /* Scroll back further. */
+	    scroll_n((n - curr) * maxROWS, -1);
+	} else if (n < curr) {
+	    /* Scroll back less. */
+	    scroll_n((curr - n) * maxROWS, +1);
+	}
     } else {
-	popup_an_error("Scroll parameter must be Forward or Backward");
+	popup_an_error("Scroll parameter must be Forward, Backward, Reset or "
+		"Set,<n>");
 	return false;
     }
     return true;

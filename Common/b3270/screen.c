@@ -916,10 +916,10 @@ void
 screen_set_thumb(float top, float shown, int saved, int screen, int back)
 {
     ui_vleaf("thumb",
-	"top", lazyaf("%.5f", top),
-	"shown", lazyaf("%.5f", shown),
-	"saved", lazyaf("%d", saved),
-	"screen", lazyaf("%d", screen),
-	"back", lazyaf("%d", back),
-	NULL);
+	    "top", lazyaf("%.5f", top),
+	    "shown", lazyaf("%.5f", shown),
+	    "saved", lazyaf("%d", saved),
+	    "screen", lazyaf("%d", screen),
+	    "back", lazyaf("%d", back),
+	    NULL);
 }
