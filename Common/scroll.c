@@ -293,6 +293,8 @@ sync_scroll(int sb)
      * set the scroll bar.
      */
     if (ever_3270) {
+	/* XXX: When disconnected, ever_3270 is false, so we might scroll
+	 * into some very strange places. */
 	if ((slop = (sb % maxROWS))) {
 	    if (slop <= maxROWS / 2) {
 		sb -= slop;
@@ -326,18 +328,18 @@ sync_scroll(int sb)
 	vscreen_swapped = false;
     }
 
-    scroll_first = (scroll_next + appres.interactive.save_lines-sb) %
+    scroll_first = (scroll_next + appres.interactive.save_lines - sb) %
 	appres.interactive.save_lines;
 
     /* Update the screen. */
     for (i = 0; i < maxROWS; i++) {
 	if (i < sb) {
-	    (void) memmove((ea_buf + (i * COLS)), ea_save[(scroll_first+i) %
-		    appres.interactive.save_lines], COLS*sizeof(struct ea));
+	    (void) memmove((ea_buf + (i * COLS)), ea_save[(scroll_first + i) %
+		    appres.interactive.save_lines], COLS * sizeof(struct ea));
 	} else {
 	    (void) memmove((ea_buf + (i * COLS)),
-		    ea_save[appres.interactive.save_lines+i-sb],
-		    COLS*sizeof(struct ea));
+		    ea_save[appres.interactive.save_lines + i - sb],
+		    COLS * sizeof(struct ea));
 	}
     }
 
@@ -345,7 +347,7 @@ sync_scroll(int sb)
     enable_cursor(sb == 0);
 
     scrolled_back = sb;
-    ctlr_changed(0, ROWS*COLS);
+    ctlr_changed(0, ROWS * COLS);
     blink_start();
 
     tt0 = ((float)n_saved /

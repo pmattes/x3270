@@ -242,14 +242,24 @@ status_script(bool on)
 void
 status_scrolled(int n)
 {
+    static int scroll_n = -1;
+
     if (n != 0) {
+	if (scrolled && scroll_n == n) {
+	    return;
+	}
 	scrolled = true;
+	scroll_n = n;
 	ui_vleaf("oia",
 		"field", "lock",
 		"value", lazyaf("scrolled %d", n),
 		NULL);
     } else {
+	if (!scrolled) {
+	    return;
+	}
 	scrolled = false;
+	scroll_n = -1;
 	ui_vleaf("oia",
 		"field", "lock",
 		"value", saved_lock,

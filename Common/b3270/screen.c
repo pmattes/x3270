@@ -920,6 +920,22 @@ enable_cursor(bool on)
 void
 screen_set_thumb(float top, float shown, int saved, int screen, int back)
 {
+    static float last_top = -1.0;
+    static float last_shown = -1.0;
+    static int last_saved = -1;
+    static int last_back = -1;
+
+    if (top == last_top &&
+	    shown == last_shown &&
+	    saved == last_saved &&
+	    back == last_back)
+    {
+	return;
+    }
+    last_top = top;
+    last_shown = shown;
+    last_saved = saved;
+    last_back = back;
     ui_vleaf("thumb",
 	    "top", lazyaf("%.5f", top),
 	    "shown", lazyaf("%.5f", shown),
