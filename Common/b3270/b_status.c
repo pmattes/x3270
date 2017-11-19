@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 Paul Mattes.
+ * Copyright (c) 2015-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #include "screen.h"
 #include "status.h"
 #include "ui_stream.h"
+#include "utils.h"
 
 typedef enum {
     K_NONE,
@@ -50,6 +51,9 @@ typedef enum {
     K_TWAIT
 } oia_kybdlock_t;
 oia_kybdlock_t oia_kybdlock = K_NONE;
+
+static bool scrolled = false;
+static char *saved_lock;
 
 bool
 screen_suspend(void)
@@ -130,6 +134,19 @@ status_lu(const char *s)
 	    NULL);
 }
 
+/* Display or buffer a new lock state. */
+static void
+status_lock(char *msg)
+{
+    Replace(saved_lock, msg);
+    if (!scrolled) {
+	ui_vleaf("oia",
+		"field", "lock",
+		"value", saved_lock,
+		NULL);
+    }
+}
+
 void
 status_minus(void)
 {
@@ -137,11 +154,7 @@ status_minus(void)
 	return;
     }
     oia_kybdlock = K_MINUS;
-
-    ui_vleaf("oia",
-	    "field", "lock",
-	    "value", "minus",
-	    NULL);
+    status_lock(NewString("minus"));
 }
 
 void
@@ -158,14 +171,11 @@ status_oerr(int error_type)
     oia_kybdlock = K_OERR;
 
     if (error_type >= 1 && error_type <= 4) {
-	name = lazyaf("oerr %s", oerr_names[error_type - 1]);
+	name = xs_buffer("oerr %s", oerr_names[error_type - 1]);
     } else {
-	name = lazyaf("oerr %d", error_type);
+	name = xs_buffer("oerr %d", error_type);
     }
-    ui_vleaf("oia",
-	    "field", "lock",
-	    "value", name,
-	    NULL);
+    status_lock(name);
 }
 
 void
@@ -176,36 +186,25 @@ status_reset(void)
 	    return;
 	}
 	oia_kybdlock = K_NOT_CONNECTED;
-	ui_vleaf("oia",
-		"field", "lock",
-		"value", "not-connected",
-		NULL);
+	status_lock(NewString("not-connected"));
     } else if (kybdlock & KL_ENTER_INHIBIT) {
 	if (oia_kybdlock == K_INHIBIT) {
 	    return;
 	}
 	oia_kybdlock = K_INHIBIT;
-	ui_vleaf("oia",
-		"field", "lock",
-		"value", "inhibit",
-		NULL);
+	status_lock(NewString("inhibit"));
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	if (oia_kybdlock == K_DEFERRED) {
 	    return;
 	}
 	oia_kybdlock = K_DEFERRED;
-	ui_vleaf("oia",
-		"field", "lock",
-		"value", "deferred",
-		NULL);
+	status_lock(NewString("deferred"));
     } else {
 	if (oia_kybdlock == K_NONE) {
 	    return;
 	}
 	oia_kybdlock = K_NONE;
-	ui_vleaf("oia",
-		"field", "lock",
-		NULL);
+	status_lock(NULL);
     }
 }
 
@@ -243,10 +242,19 @@ status_script(bool on)
 void
 status_scrolled(int n)
 {
-    ui_vleaf("oia",
-	    "field", "lock",
-	    "value", lazyaf("scrolled %d", n),
-	    NULL);
+    if (n != 0) {
+	scrolled = true;
+	ui_vleaf("oia",
+		"field", "lock",
+		"value", lazyaf("scrolled %d", n),
+		NULL);
+    } else {
+	scrolled = false;
+	ui_vleaf("oia",
+		"field", "lock",
+		"value", saved_lock,
+		NULL);
+    }
 }
 
 void
@@ -256,11 +264,7 @@ status_syswait(void)
 	return;
     }
     oia_kybdlock = K_SYSWAIT;
-
-    ui_vleaf("oia",
-	    "field", "lock",
-	    "value", "syswait",
-	    NULL);
+    status_lock(NewString("syswait"));
 }
 
 static bool is_timed = false;
@@ -307,10 +311,7 @@ status_twait(void)
 	    "value", "true",
 	    NULL);
 
-    ui_vleaf("oia",
-	    "field", "lock",
-	    "value", "twait",
-	    NULL);
+    status_lock(NewString("twait"));
 }
 
 void

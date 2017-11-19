@@ -2729,9 +2729,13 @@ screen_selected(int baddr _is_unused)
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)
+ * @param[in] saved	Number of lines saved
+ * @param[in] screen	Size of a screen
+ * @param[in] back	Number of lines scrolled back
  */
 void
-screen_set_thumb(float top _is_unused, float shown _is_unused)
+screen_set_thumb(float top _is_unused, float shown _is_unused,
+	int saved _is_unused, int screen _is_unused, int back _is_unused)
 {
 }
 

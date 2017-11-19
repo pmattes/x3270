@@ -1035,7 +1035,8 @@ inflate_screen(void)
 
 /* Scrollbar support. */
 void
-screen_set_thumb(float top, float shown)
+screen_set_thumb(float top, float shown, int saved _is_unused,
+	int screen _is_unused, int back _is_unused)
 {
     if (toggled(SCROLL_BAR)) {
 	XawScrollbarSetThumb(scrollbar, top, shown);

@@ -117,7 +117,8 @@ scroll_buf_init(void)
 }
 
 static void
-screen_set_thumb_traced(float top, float shown)
+screen_set_thumb_traced(float top, float shown, int saved, int screen,
+	int back)
 {
 #if defined(SCROLL_DEBUG) /*[*/
     vtrace(" -> screen_set_thumb(top %f, shown %f)\n", top, shown);
@@ -126,7 +127,7 @@ screen_set_thumb_traced(float top, float shown)
 	    thumb_top_base,
 	    thumb_shown);
 #endif /*]*/
-    screen_set_thumb(top, shown);
+    screen_set_thumb(top, shown, saved, screen, back);
 }
 
 /*
@@ -142,7 +143,8 @@ scroll_reset(void)
     thumb_top_base = thumb_top = 0.0;
     thumb_shown = 1.0;
     need_saving = true;
-    screen_set_thumb_traced(thumb_top, thumb_shown);
+    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+	    scrolled_back);
     enable_cursor(true);
 }
 
@@ -208,7 +210,8 @@ scroll_save(int n, bool trim_blanks)
     thumb_top_base = thumb_top =
 	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
     thumb_shown = (float)(1.0 - thumb_top);
-    screen_set_thumb_traced(thumb_top, thumb_shown);
+    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+	    scrolled_back);
 }
 
 /*
@@ -238,7 +241,7 @@ scroll_round(void)
     thumb_top_base = thumb_top =
 	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
     thumb_shown = (float)(1.0 - thumb_top);
-    screen_set_thumb_traced(thumb_top, thumb_shown);
+    screen_set_thumb_traced(thumb_top, thumb_shown, 0, maxROWS, scrolled_back);
 }
 
 /*
@@ -351,7 +354,8 @@ sync_scroll(int sb)
     thumb_shown = (float)(1.0 - tt0);
     thumb_top = ((float)(n_saved-sb) /
 	    (float)(appres.interactive.save_lines + maxROWS));
-    screen_set_thumb_traced(thumb_top, thumb_shown);
+    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+	    scrolled_back);
 }
 
 /*
@@ -393,7 +397,8 @@ scroll_n(int nss, int direction)
     }
 
     screen_set_thumb_traced((float)(n_saved - scrolled_back) /
-	    (float)(appres.interactive.save_lines + maxROWS), thumb_shown);
+	    (float)(appres.interactive.save_lines + maxROWS), thumb_shown,
+	    n_saved, maxROWS, scrolled_back);
 }
 
 /*
@@ -431,11 +436,13 @@ jump_proc(float top)
     vtrace("jump_proc(%f)\n", top);
 #endif /*]*/
     if (!n_saved) {
-	screen_set_thumb_traced(thumb_top, thumb_shown);
+	screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+		scrolled_back);
 	return;
     }
     if (top > thumb_top_base) {	/* too far down */
-	screen_set_thumb_traced(thumb_top_base, thumb_shown);
+	screen_set_thumb_traced(thumb_top_base, thumb_shown, n_saved,
+		maxROWS, scrolled_back);
 	sync_scroll(0);
     } else {
 	save_image();
@@ -449,7 +456,8 @@ jump_proc(float top)
 void
 rethumb(void)
 {
-    screen_set_thumb_traced(thumb_top, thumb_shown);
+    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+	    scrolled_back);
 }
 
 static bool

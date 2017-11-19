@@ -907,8 +907,19 @@ enable_cursor(bool on)
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)
+ * @param[in] saved	Number of lines saved
+ * @param[in] screen	Size of a screen
+ * @param[in] back	Number of lines scrolled back
+ *
  */
 void
-screen_set_thumb(float top, float shown)
+screen_set_thumb(float top, float shown, int saved, int screen, int back)
 {
+    ui_vleaf("thumb",
+	"top", lazyaf("%.5f", top),
+	"shown", lazyaf("%.5f", shown),
+	"saved", lazyaf("%d", saved),
+	"screen", lazyaf("%d", screen),
+	"back", lazyaf("%d", back),
+	NULL);
 }

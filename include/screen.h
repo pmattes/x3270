@@ -53,5 +53,5 @@ bool screen_selected(int baddr);
 bool screen_new_display_charsets(const char *realname, const char *csnames);
 void screen_system_fixup(void);
 bool screen_suspend(void);
-void screen_set_thumb(float top, float shown);
+void screen_set_thumb(float top, float shown, int saved, int screen, int back);
 void enable_cursor(bool on);
