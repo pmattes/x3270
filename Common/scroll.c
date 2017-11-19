@@ -252,7 +252,6 @@ scroll_to_bottom(void)
 {
     if (scrolled_back) {
 	sync_scroll(0);
-	/* screen_set_thumb_traced(thumb_top, thumb_shown); */
     }
     need_saving = true;
 }

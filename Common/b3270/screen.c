@@ -900,6 +900,11 @@ screen_disp(bool erasing _is_unused)
 void
 enable_cursor(bool on)
 {
+    /*
+     * Forget what cursor address we sent, so we send it unconditionally
+     * next time.
+     */
+    sent_baddr = 0;
 }
 
 /**
