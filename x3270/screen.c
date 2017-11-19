@@ -1143,9 +1143,6 @@ screen_connect(bool ignored _is_unused)
 	 * otherwise go to the default 24x80 for 3270 or SSCP mode.
 	 */
 	ctlr_erase((IN_NVT || IN_SSCP)? true: false);
-	if (IN_3270) {
-	    scroll_round();
-	}
 	cursor_on("connect");
 	schedule_cursor_blink();
     } else {

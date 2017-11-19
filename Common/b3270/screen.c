@@ -163,6 +163,7 @@ see_gr(u_char gr)
     return lazya(vb_consume(&r));
 }
 
+/* Save empty screen state. */
 static void
 save_empty(void)
 {
@@ -170,12 +171,14 @@ save_empty(void)
     size_t ss = maxROWS * maxCOLS * sizeof(screen_t);
     int i;
 
+    /* Zero saved_ea. */
     Replace(saved_ea, (struct ea *)Malloc(se));
     memset(saved_ea, 0, se);
     saved_rows = ROWS;
     saved_cols = COLS;
     saved_ea_is_empty = true;
 
+    /* Erase saved_s. */
     Replace(saved_s, (screen_t *)Malloc(ss));
     memset(saved_s, 0, ss);
     for (i = 0; i < maxROWS * maxCOLS; i++) {
@@ -821,6 +824,7 @@ screen_disp_cond(bool always)
 	last_cols = COLS;
 	sent_erase = true;
 	xformatted = false;
+	save_empty();
     }
 
     /* Check for a cursor move. */
@@ -850,15 +854,15 @@ screen_disp_cond(bool always)
     }
     if (empty) {
 	if (!saved_ea_is_empty) {
+	    /* Screen was not empty -- erase it now. */
 	    if (!sent_erase) {
 		emit_erase(-1, -1);
 	    }
 	    xformatted = false;
 	}
+	/* Remember that the screen is empty. */
 	save_empty();
 	return;
-    } else {
-	saved_ea_is_empty = false;
     }
 
     if (formatted != xformatted) {
@@ -878,6 +882,7 @@ screen_disp_cond(bool always)
     /* Save the screen for next time. */
     Replace(saved_ea, Malloc(se));
     memcpy(saved_ea, ea_buf, se);
+    saved_ea_is_empty = false;
     Replace(saved_s, s);
     saved_rows = ROWS;
     saved_cols = COLS;

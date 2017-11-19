@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,4 +37,3 @@ void rethumb(void);
 void scroll_buf_init(void);
 void scroll_proc(int n, int total);
 void scroll_register(void);
-void scroll_round(void);

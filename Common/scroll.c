@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@
 #include "selectc.h"
 #include "status.h"
 #include "trace.h"
+#include "utils.h"
 
 /* Globals */
 bool	scroll_initted = false;
@@ -177,6 +178,9 @@ scroll_save(int n, bool trim_blanks)
 	    }
 	}
 	if (!n) {
+#if defined(SCROLL_DEBUG) /*[*/
+	    vtrace(" -> nothing to save\n");
+#endif /*]*/
 	    return;
 	}
     }
@@ -206,6 +210,10 @@ scroll_save(int n, bool trim_blanks)
 	}
     }
 
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace(" -> n_saved %d\n", n_saved);
+#endif /*]*/
+
     /* Reset the thumb. */
     thumb_top_base = thumb_top =
 	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
@@ -218,7 +226,7 @@ scroll_save(int n, bool trim_blanks)
  * Add blank lines to the scroll buffer to make it a multiple of the
  * screen size.
  */
-void
+static void
 scroll_round(void)
 {
     int n;
@@ -226,6 +234,10 @@ scroll_round(void)
     if (!(n_saved % maxROWS)) {
 	return;
     }
+
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace("scroll_round start n_saved %d\n", n_saved);
+#endif /*]*/
 
     /* Zero the scroll buffer. */
     for (n = maxROWS - (n_saved % maxROWS); n; n--) {
@@ -237,11 +249,16 @@ scroll_round(void)
 	}
     }
 
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace(" -> n_saved %d\n", n_saved);
+#endif /*]*/
+
     /* Reset the thumb. */
     thumb_top_base = thumb_top =
 	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
     thumb_shown = (float)(1.0 - thumb_top);
-    screen_set_thumb_traced(thumb_top, thumb_shown, 0, maxROWS, scrolled_back);
+    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
+	    scrolled_back);
 }
 
 /*
@@ -268,6 +285,11 @@ save_image(void)
 	return;
     }
 
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace("save_image: saving %d lines after the buffer, n_saved %d\n",
+	    maxROWS, n_saved);
+#endif /*]*/
+
     for (i = 0; i < maxROWS; i++) {
 	(void) memmove(ea_save[appres.interactive.save_lines+i],
 		(ea_buf + (i * COLS)), COLS*sizeof(struct ea));
@@ -285,6 +307,11 @@ sync_scroll(int sb)
     int i;
     int scroll_first;
     float tt0;
+
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace("sync_scroll(sb=%d) n_saved=%d, scrolled_back=%d\n", sb, n_saved,
+	    scrolled_back);
+#endif /*]*/
 
     unselect(0, ROWS * COLS);
 
@@ -318,10 +345,16 @@ sync_scroll(int sb)
 
     /* Swap screen sizes. */
     if (sb && !scrolled_back && ((COLS < maxCOLS) || (ROWS < maxROWS))) {
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace("sync_scroll: primary -> alt\n");
+#endif /*]*/
 	COLS = maxCOLS;
 	ROWS = maxROWS;
 	vscreen_swapped = true;
     } else if (!sb && scrolled_back && vscreen_swapped) {
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace("sync_scroll: alt -> primary\n");
+#endif /*]*/
 	ctlr_shrink();
 	COLS = MODEL_2_COLS;
 	ROWS = MODEL_2_ROWS;
@@ -330,6 +363,9 @@ sync_scroll(int sb)
 
     scroll_first = (scroll_next + appres.interactive.save_lines - sb) %
 	appres.interactive.save_lines;
+#if defined(SCROLL_DEBUG) /*[*/
+    vtrace("sync_scroll: scroll_first is %d\n", scroll_first);
+#endif /*]*/
 
     /* Update the screen. */
     for (i = 0; i < maxROWS; i++) {
@@ -504,6 +540,19 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/*
+ * Called when a host connects, disconnects or changes NVT/3270 modes.
+ */
+static void
+scroll_connect(bool ignored _is_unused)
+{
+    if (CONNECTED) {
+	if (IN_3270) {
+	    scroll_round();
+	}
+    }
+}
+
 /**
  * Scrollbar module registration.
  */
@@ -516,4 +565,9 @@ scroll_register(void)
 
     /* Register the actions. */
     register_actions(scroll_actions, array_count(scroll_actions));
+
+    /* Register the state change callbacks. */
+    register_schange(ST_HALF_CONNECT, scroll_connect);
+    register_schange(ST_CONNECT, scroll_connect);
+    register_schange(ST_3270_MODE, scroll_connect);
 }
