@@ -13,13 +13,15 @@
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
- <tr><td>row</td><td>yes</td><td>Row number, with 1 at the top</td></tr>
- <tr><td>col</td><td>yes</td><td>Column number, with 1 at the left</td></tr>
+ <tr><td>enabled</td><td>yes</td><td><b>true</b> if cursor is to be displayed</td></tr>
+ <tr><td>row</td><td>no</td><td>Row number, with 1 at the top</td></tr>
+ <tr><td>col</td><td>no</td><td>Column number, with 1 at the left</td></tr>
 </table>
 
 <p>Example:
 <pre>
-&lt;cursor row="20" col="12"/&gt;
+&lt;cursor enabled="true" row="20" col="12"/&gt;
+&lt;cursor enabled="false"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
