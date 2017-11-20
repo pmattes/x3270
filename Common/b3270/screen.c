@@ -96,6 +96,8 @@ static int saved_baddr = 0;
 
 static struct ea zero_ea;
 
+static bool cursor_enabled = true;
+
 static void screen_disp_cond(bool always);
 
 /*
@@ -828,8 +830,9 @@ screen_disp_cond(bool always)
     }
 
     /* Check for a cursor move. */
-    if (sent_baddr != saved_baddr) {
+    if (cursor_enabled && sent_baddr != saved_baddr) {
 	ui_vleaf("cursor",
+	    "enabled", "true",
 	    "row", lazyaf("%d", (saved_baddr / COLS) + 1),
 	    "col", lazyaf("%d", (saved_baddr % COLS) + 1),
 	    NULL);
@@ -905,11 +908,14 @@ screen_disp(bool erasing _is_unused)
 void
 enable_cursor(bool on)
 {
-    /*
-     * Forget what cursor address we sent, so we send it unconditionally
-     * next time.
-     */
-    sent_baddr = 0;
+    if (on != cursor_enabled) {
+	if (!(cursor_enabled = on)) {
+	    ui_vleaf("cursor",
+		"enabled", "false",
+		NULL);
+	    sent_baddr = -1;
+	}
+    }
 }
 
 /**
