@@ -1137,12 +1137,7 @@ screen_connect(bool ignored _is_unused)
     }
 
     if (CONNECTED) {
-	/*
-	 * Clear the screen.
-	 * If we're in NVT mode, go to the maximum screen dimensions,
-	 * otherwise go to the default 24x80 for 3270 or SSCP mode.
-	 */
-	ctlr_erase((IN_NVT || IN_SSCP)? true: false);
+	ctlr_erase(true);
 	cursor_on("connect");
 	schedule_cursor_blink();
     } else {
