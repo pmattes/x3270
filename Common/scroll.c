@@ -76,6 +76,9 @@ static float    thumb_top_base = 0.0;
 /*   Fraction of thumb shown (1.0 - thumb_top_base) */
 static float    thumb_shown = 1.0;
 
+/* The number of scroll lines to save. */
+static int	scroll_max;
+
 static void sync_scroll(int sb);
 static void save_image(void);
 static void scroll_reset(void);
@@ -90,25 +93,26 @@ scroll_buf_init(void)
     int sa_size;
     unsigned char *s;
 
-    if (appres.interactive.save_lines % maxROWS) {
-	appres.interactive.save_lines =
-	    ((appres.interactive.save_lines+maxROWS-1)/maxROWS) * maxROWS;
+    /* Set the number of rows to save, as a multiple of maxROWS. */
+    scroll_max = appres.interactive.save_lines;
+    if (scroll_max % maxROWS) {
+	scroll_max = ((scroll_max + maxROWS - 1) / maxROWS) * maxROWS;
     }
-    if (!appres.interactive.save_lines) {
-	appres.interactive.save_lines = maxROWS;
+    if (scroll_max < maxROWS * 5) {
+	scroll_max = maxROWS * 5;
     }
     if (sbuf != NULL) {
 	Free(sbuf);
 	Free(zbuf);
 	Free(ea_save);
     }
-    sa_size = appres.interactive.save_lines + maxROWS;
+    sa_size = scroll_max + maxROWS;
     ea_save = (struct ea **)Calloc(sizeof(struct ea *), sa_size);
     sa_bufsize = (sa_size *
 	    (sizeof(unsigned char) + sizeof(struct ea))) * maxCOLS;
     sbuf = Malloc(sa_bufsize);
     zbuf = Malloc(maxCOLS);
-    (void) memset(zbuf, '\0', maxCOLS);
+    memset(zbuf, '\0', maxCOLS);
     s = (unsigned char *)sbuf;
     for (i = 0; i < sa_size; s += (maxCOLS * sizeof(struct ea)), i++) {
 	ea_save[i] = (struct ea *)s;
@@ -137,7 +141,7 @@ screen_set_thumb_traced(float top, float shown, int saved, int screen,
 static void
 scroll_reset(void)
 {
-    (void) memset(sbuf, 0, sa_bufsize);
+    memset(sbuf, 0, sa_bufsize);
     scroll_next = 0;
     n_saved = 0;
     scrolled_back = 0;
@@ -192,20 +196,20 @@ scroll_save(int n, bool trim_blanks)
 
     /* Save the screen contents. */
     for (i = 0; i < n; i++) {
-	if (i < COLS) {
-	    (void) memmove(ea_save[scroll_next],
-		    (ea_buf+(i*COLS)),
-		    COLS*sizeof(struct ea));
+	if (i < ROWS) {
+	    memmove(ea_save[scroll_next],
+		    ea_buf + (i * COLS),
+		    COLS * sizeof(struct ea));
 	    if (COLS < maxCOLS) {
-		(void) memset((char *)(ea_save[scroll_next] + COLS), '\0',
+		memset((char *)(ea_save[scroll_next] + COLS), '\0',
 			(maxCOLS - COLS) * sizeof(struct ea));
 	    }
 	} else {
-	    (void) memset((char *)ea_save[scroll_next], '\0',
+	    memset((char *)ea_save[scroll_next], '\0',
 		    maxCOLS * sizeof(struct ea));
 	}
-	scroll_next = (scroll_next + 1) % appres.interactive.save_lines;
-	if (n_saved < appres.interactive.save_lines) {
+	scroll_next = (scroll_next + 1) % scroll_max;
+	if (n_saved < scroll_max) {
 	    n_saved++;
 	}
     }
@@ -216,7 +220,7 @@ scroll_save(int n, bool trim_blanks)
 
     /* Reset the thumb. */
     thumb_top_base = thumb_top =
-	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
+	((float)n_saved / (float)(scroll_max + maxROWS));
     thumb_shown = (float)(1.0 - thumb_top);
     screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
 	    scrolled_back);
@@ -241,10 +245,10 @@ scroll_round(void)
 
     /* Zero the scroll buffer. */
     for (n = maxROWS - (n_saved % maxROWS); n; n--) {
-	(void) memset((char *)ea_save[scroll_next], '\0',
+	memset((char *)ea_save[scroll_next], '\0',
 		maxCOLS * sizeof(struct ea));
-	scroll_next = (scroll_next + 1) % appres.interactive.save_lines;
-	if (n_saved < appres.interactive.save_lines) {
+	scroll_next = (scroll_next + 1) % scroll_max;
+	if (n_saved < scroll_max) {
 	    n_saved++;
 	}
     }
@@ -255,7 +259,7 @@ scroll_round(void)
 
     /* Reset the thumb. */
     thumb_top_base = thumb_top =
-	((float)n_saved / (float)(appres.interactive.save_lines + maxROWS));
+	((float)n_saved / (float)(scroll_max + maxROWS));
     thumb_shown = (float)(1.0 - thumb_top);
     screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
 	    scrolled_back);
@@ -291,8 +295,8 @@ save_image(void)
 #endif /*]*/
 
     for (i = 0; i < maxROWS; i++) {
-	(void) memmove(ea_save[appres.interactive.save_lines+i],
-		(ea_buf + (i * COLS)), COLS*sizeof(struct ea));
+	memmove(ea_save[scroll_max + i],
+		(ea_buf + (i * COLS)), COLS * sizeof(struct ea));
     }
     need_saving = false;
 }
@@ -361,8 +365,7 @@ sync_scroll(int sb)
 	vscreen_swapped = false;
     }
 
-    scroll_first = (scroll_next + appres.interactive.save_lines - sb) %
-	appres.interactive.save_lines;
+    scroll_first = (scroll_next + scroll_max - sb) % scroll_max;
 #if defined(SCROLL_DEBUG) /*[*/
     vtrace("sync_scroll: scroll_first is %d\n", scroll_first);
 #endif /*]*/
@@ -370,11 +373,12 @@ sync_scroll(int sb)
     /* Update the screen. */
     for (i = 0; i < maxROWS; i++) {
 	if (i < sb) {
-	    (void) memmove((ea_buf + (i * COLS)), ea_save[(scroll_first + i) %
-		    appres.interactive.save_lines], COLS * sizeof(struct ea));
+	    memmove((ea_buf + (i * COLS)),
+		    ea_save[(scroll_first + i) % scroll_max],
+		    COLS * sizeof(struct ea));
 	} else {
-	    (void) memmove((ea_buf + (i * COLS)),
-		    ea_save[appres.interactive.save_lines + i - sb],
+	    memmove((ea_buf + (i * COLS)),
+		    ea_save[scroll_max + i - sb],
 		    COLS * sizeof(struct ea));
 	}
     }
@@ -386,11 +390,9 @@ sync_scroll(int sb)
     ctlr_changed(0, ROWS * COLS);
     blink_start();
 
-    tt0 = ((float)n_saved /
-	    (float)(appres.interactive.save_lines + maxROWS));
+    tt0 = ((float)n_saved / (float)(scroll_max + maxROWS));
     thumb_shown = (float)(1.0 - tt0);
-    thumb_top = ((float)(n_saved-sb) /
-	    (float)(appres.interactive.save_lines + maxROWS));
+    thumb_top = ((float)(n_saved-sb) / (float)(scroll_max + maxROWS));
     screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
 	    scrolled_back);
 }
@@ -434,7 +436,7 @@ scroll_n(int nss, int direction)
     }
 
     screen_set_thumb_traced((float)(n_saved - scrolled_back) /
-	    (float)(appres.interactive.save_lines + maxROWS), thumb_shown,
+	    (float)(scroll_max + maxROWS), thumb_shown,
 	    n_saved, maxROWS, scrolled_back);
 }
 
