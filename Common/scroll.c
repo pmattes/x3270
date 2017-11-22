@@ -79,6 +79,8 @@ static float    thumb_shown = 1.0;
 /* The number of scroll lines to save. */
 static int	scroll_max;
 
+static bool	scroll_has_3270;
+
 static void sync_scroll(int sb);
 static void save_image(void);
 static void scroll_reset(void);
@@ -323,9 +325,7 @@ sync_scroll(int sb)
      * If in 3270 mode, round to a multiple of the screen size and
      * set the scroll bar.
      */
-    if (ever_3270) {
-	/* XXX: When disconnected, ever_3270 is false, so we might scroll
-	 * into some very strange places. */
+    if (scroll_has_3270) {
 	if ((slop = (sb % maxROWS))) {
 	    if (slop <= maxROWS / 2) {
 		sb -= slop;
@@ -341,7 +341,7 @@ sync_scroll(int sb)
     }
 
     /* Update the status line. */
-    if (ever_3270) {
+    if (scroll_has_3270) {
 	status_scrolled(sb / maxROWS);
     } else {
 	status_scrolled(0);
@@ -418,7 +418,7 @@ scroll_n(int nss, int direction)
 	    sync_scroll(0);
 	} else {
 	    nsr = scrolled_back - nss;
-	    if (ever_3270 && (nsr % maxROWS)) {
+	    if (scroll_has_3270 && (nsr % maxROWS)) {
 		nsr -= nsr % maxROWS;
 	    }
 	    sync_scroll(nsr);
@@ -428,7 +428,7 @@ scroll_n(int nss, int direction)
 	    sync_scroll(n_saved);
 	} else {
 	    nsr = scrolled_back + nss;
-	    if (ever_3270 && (nsr % maxROWS)) {
+	    if (scroll_has_3270 && (nsr % maxROWS)) {
 		nsr += maxROWS - (nsr % maxROWS);
 	    }
 	    sync_scroll(nsr);
@@ -552,6 +552,10 @@ scroll_connect(bool ignored _is_unused)
 	if (IN_3270) {
 	    scroll_round();
 	}
+
+	/* Make scroll_has_3270 sticky across disconnects and UNBINDs. */
+	scroll_has_3270 = IN_3270 ||
+	    (scroll_has_3270 && cstate == CONNECTED_UNBOUND);
     }
 }
 
