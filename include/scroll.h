@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,5 +32,5 @@
  *		Global declarations for scroll.c.
  */
 
-void scroll_save(int n, bool trim_blanks);
+void scroll_save(int n);
 void scroll_to_bottom(void);

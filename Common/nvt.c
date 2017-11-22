@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -709,7 +709,7 @@ ansi_erase_in_display(int nn, int ig2 _is_unused)
 		break;
 	    case 2:	/* all (without moving cursor) */
 		if (cursor_addr == 0 && !is_altbuffer)
-			scroll_save(ROWS, true);
+			scroll_save(ROWS);
 		ctlr_aclear(0, ROWS * COLS, 1);
 		break;
 	}
@@ -1634,7 +1634,7 @@ nvt_scroll(void)
 	/* Save the top line */
 	if (scroll_top == 1 && scroll_bottom == ROWS) {
 		if (!is_altbuffer)
-			scroll_save(1, false);
+			scroll_save(1);
 		ctlr_scroll();
 		return;
 	}

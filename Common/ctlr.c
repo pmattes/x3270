@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -2452,7 +2452,7 @@ ctlr_clear(bool can_snap)
 		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE)) {
 			trace_screen(true);
 		}
-		scroll_save(maxROWS, ever_3270 ? false : true);
+		scroll_save(maxROWS);
 	}
 	trace_skipping = false;
 
@@ -2504,7 +2504,7 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 	    if (toggled(SCREEN_TRACE)) {
 		trace_screen(false);
 	    }
-	    scroll_save(maxROWS, false);
+	    scroll_save(maxROWS);
 	    trace_primed = false;
 	}
 	if (screen_selected(baddr)) {

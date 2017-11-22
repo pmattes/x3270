@@ -159,37 +159,13 @@ scroll_reset(void)
  * Save <n> lines of data from the top of the screen.
  */
 void
-scroll_save(int n, bool trim_blanks)
+scroll_save(int n)
 {
-    int i;
+    int row;
 
 #if defined(SCROLL_DEBUG) /*[*/
-    vtrace("scroll_save(%d, %s)\n", n, trim_blanks? "trim": "no trim");
+    vtrace("scroll_save(%d)\n", n);
 #endif /*]*/
-
-    /* Trim trailing blank lines from 'n', if requested */
-    if (trim_blanks) {
-	while (n) {
-	    int i;
-
-	    for (i = 0; i < COLS; i++) {
-		if (ea_buf[(n-1)*COLS + i].cc) {
-		    break;
-		}
-	    }
-	    if (i < COLS) {
-		break;
-	    } else {
-		n--;
-	    }
-	}
-	if (!n) {
-#if defined(SCROLL_DEBUG) /*[*/
-	    vtrace(" -> nothing to save\n");
-#endif /*]*/
-	    return;
-	}
-    }
 
     /* Scroll to bottom on "output". */
     if (scrolled_back) {
@@ -197,10 +173,10 @@ scroll_save(int n, bool trim_blanks)
     }
 
     /* Save the screen contents. */
-    for (i = 0; i < n; i++) {
-	if (i < ROWS) {
+    for (row = 0; row < n; row++) {
+	if (row < ROWS) {
 	    memmove(ea_save[scroll_next],
-		    ea_buf + (i * COLS),
+		    ea_buf + (row * COLS),
 		    COLS * sizeof(struct ea));
 	    if (COLS < maxCOLS) {
 		memset((char *)(ea_save[scroll_next] + COLS), '\0',
@@ -215,44 +191,35 @@ scroll_save(int n, bool trim_blanks)
 	    n_saved++;
 	}
     }
-
-#if defined(SCROLL_DEBUG) /*[*/
-    vtrace(" -> n_saved %d\n", n_saved);
-#endif /*]*/
-
-    /* Reset the thumb. */
-    thumb_top_base = thumb_top =
-	((float)n_saved / (float)(scroll_max + maxROWS));
-    thumb_shown = (float)(1.0 - thumb_top);
-    screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
-	    scrolled_back);
-}
-
-/*
- * Add blank lines to the scroll buffer to make it a multiple of the
- * screen size.
- */
-static void
-scroll_round(void)
-{
-    int n;
-
-    if (!(n_saved % maxROWS)) {
-	return;
-    }
-
-#if defined(SCROLL_DEBUG) /*[*/
-    vtrace("scroll_round start n_saved %d\n", n_saved);
-#endif /*]*/
-
-    /* Zero the scroll buffer. */
-    for (n = maxROWS - (n_saved % maxROWS); n; n--) {
-	memset((char *)ea_save[scroll_next], '\0',
-		maxCOLS * sizeof(struct ea));
+    if (n == ROWS && n < maxROWS) {
+	/* ansi_erase_in_display(all) */
+	for (row = n; row < maxROWS; row++) {
+	    memset((char *)ea_save[scroll_next], 0,
+		    maxCOLS * sizeof(struct ea));
+	}
 	scroll_next = (scroll_next + 1) % scroll_max;
 	if (n_saved < scroll_max) {
 	    n_saved++;
 	}
+    }
+
+    /*
+     * If we've been asked to snap the whole screen and ended up on a
+     * non-screenful boundary, this must be scrolled NVT data. Pad with blank
+     * lines to get a screenful.
+     */
+    if (n != 1 && (scroll_next % maxROWS)) {
+	int pad;
+
+	for (pad = maxROWS - (scroll_next % maxROWS); pad; pad--) {
+	    memset((char *)ea_save[scroll_next], '\0',
+		    maxCOLS * sizeof(struct ea));
+	    scroll_next = (scroll_next + 1) % scroll_max;
+	    if (n_saved < scroll_max) {
+		n_saved++;
+	    }
+	}
+
     }
 
 #if defined(SCROLL_DEBUG) /*[*/
@@ -549,10 +516,6 @@ static void
 scroll_connect(bool ignored _is_unused)
 {
     if (CONNECTED) {
-	if (IN_3270) {
-	    scroll_round();
-	}
-
 	/* Make scroll_has_3270 sticky across disconnects and UNBINDs. */
 	scroll_has_3270 = IN_3270 ||
 	    (scroll_has_3270 && cstate == CONNECTED_UNBOUND);
