@@ -483,23 +483,23 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
     } else if (argc == 2 && !strcasecmp(argv[0], "Set")) {
 	int n;
 	char *ptr;
-	int curr = scrolled_back / maxROWS;
+	int curr = scrolled_back;
 
 	n = strtol(argv[1], &ptr, 10);
 	if (n < 0 || ptr == argv[1] || *ptr != '\0') {
 	    popup_an_error("Invalid Scroll(Set,n) value");
 	    return false;
 	}
-	if (n > n_saved / maxROWS) {
-	    vtrace("scroll set: %d -> overflow\n", n);
-	    n = n_saved / maxROWS;
+	if (n > n_saved) {
+	    vtrace("scroll set: %d > %d -> overflow\n", n, n_saved);
+	    n = n_saved;
 	}
 	if (n > curr) {
 	    /* Scroll back further. */
-	    scroll_n((n - curr) * maxROWS, -1);
+	    scroll_n(n - curr, -1);
 	} else if (n < curr) {
 	    /* Scroll back less. */
-	    scroll_n((curr - n) * maxROWS, +1);
+	    scroll_n(curr - n, +1);
 	}
     } else {
 	popup_an_error("Scroll parameter must be Forward, Backward, Reset or "
