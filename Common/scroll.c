@@ -66,6 +66,7 @@ static bool  vscreen_swapped = false;
 static char    *sbuf = NULL;
 static int      sa_bufsize;
 static char    *zbuf = NULL;
+static struct ea *defaults_buf = NULL;
 
 /* Thumb state: */
 /*   Fraction of blank area above thumb (0.0 to 1.0) */
@@ -106,6 +107,7 @@ scroll_buf_init(void)
     if (sbuf != NULL) {
 	Free(sbuf);
 	Free(zbuf);
+	Free(defaults_buf);
 	Free(ea_save);
     }
     sa_size = scroll_max + maxROWS;
@@ -115,6 +117,16 @@ scroll_buf_init(void)
     sbuf = Malloc(sa_bufsize);
     zbuf = Malloc(maxCOLS);
     memset(zbuf, '\0', maxCOLS);
+    defaults_buf = Calloc(maxCOLS, sizeof(struct ea));
+    for (i = 0; i < maxCOLS; i++) {
+	/*
+	 * Black and intensify ensure that the area outside of the primary
+	 * screen don't inherit other display attributes from fields at the
+	 * edges.
+	 */
+	defaults_buf[i].bg = HOST_COLOR_BLACK;
+	defaults_buf[i].gr = XAH_INTENSIFY & 0x0f;
+    }
     s = (unsigned char *)sbuf;
     for (i = 0; i < sa_size; s += (maxCOLS * sizeof(struct ea)), i++) {
 	ea_save[i] = (struct ea *)s;
@@ -179,11 +191,11 @@ scroll_save(int n)
 		    ea_buf + (row * COLS),
 		    COLS * sizeof(struct ea));
 	    if (COLS < maxCOLS) {
-		memset((char *)(ea_save[scroll_next] + COLS), '\0',
+		memcpy(ea_save[scroll_next] + COLS, defaults_buf,
 			(maxCOLS - COLS) * sizeof(struct ea));
 	    }
 	} else {
-	    memset((char *)ea_save[scroll_next], '\0',
+	    memcpy(ea_save[scroll_next], defaults_buf,
 		    maxCOLS * sizeof(struct ea));
 	}
 	scroll_next = (scroll_next + 1) % scroll_max;
@@ -192,9 +204,8 @@ scroll_save(int n)
 	}
     }
     if (n == ROWS && n < maxROWS) {
-	/* ansi_erase_in_display(all) */
 	for (row = n; row < maxROWS; row++) {
-	    memset((char *)ea_save[scroll_next], 0,
+	    memcpy(ea_save[scroll_next], defaults_buf,
 		    maxCOLS * sizeof(struct ea));
 	}
 	scroll_next = (scroll_next + 1) % scroll_max;
@@ -212,7 +223,7 @@ scroll_save(int n)
 	int pad;
 
 	for (pad = maxROWS - (scroll_next % maxROWS); pad; pad--) {
-	    memset((char *)ea_save[scroll_next], '\0',
+	    memcpy(ea_save[scroll_next], defaults_buf,
 		    maxCOLS * sizeof(struct ea));
 	    scroll_next = (scroll_next + 1) % scroll_max;
 	    if (n_saved < scroll_max) {
