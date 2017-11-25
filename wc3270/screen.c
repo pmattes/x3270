@@ -231,6 +231,7 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 
 static char *window_title;
 static bool selecting;
+static BOOL cursor_visible = TRUE;
 
 static action_t Paste_action;
 static action_t Redraw_action;
@@ -1042,7 +1043,7 @@ set_cursor_size(HANDLE handle)
     CONSOLE_CURSOR_INFO cci;
 	
     memset(&cci, 0, sizeof(cci));
-    cci.bVisible = true;
+    cci.bVisible = cursor_visible;
     if (toggled(ALT_CURSOR)) {
 	cci.dwSize = 25;
     } else {
@@ -3414,13 +3415,15 @@ screen_set_thumb(float top _is_unused, float shown _is_unused)
 }
 
 /**
- * Stub for scrollbar function.
+ * Enable or disable the cursor when scrolling.
  *
  * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
-enable_cursor(bool on _is_unused)
+enable_cursor(bool on)
 {
+    cursor_visible = on? TRUE: FALSE;
+    set_cursor_size(sbuf);
 }
 
 /**
