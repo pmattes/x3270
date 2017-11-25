@@ -1,3 +1,3 @@
 # b3270-specific object files
-B3270_OBJECTS = async.o b3270.o b_ft.o b_password.o b_popups.o b_status.o \
-	screen.o ui_stream.o
+B3270_OBJECTS = async.o b3270.o ft.o password.o popups.o screen.o status.o \
+	ui_stream.o
