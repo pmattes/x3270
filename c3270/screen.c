@@ -2170,7 +2170,7 @@ draw_oia(void)
     }
 
     /* Draw the crosshair between the menubar and display. */
-    if (!menu_is_up && screen_yoffset) {
+    if (!menu_is_up && screen_yoffset > 1) {
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(1, j);
 	    if (toggled(CROSSHAIR) && j == fl_cursor_col) {
