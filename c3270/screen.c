@@ -2745,8 +2745,9 @@ screen_set_thumb(float top _is_unused, float shown _is_unused,
  * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
-enable_cursor(bool on _is_unused)
+enable_cursor(bool on)
 {
+    curs_set(on ? 1 : 0);
 }
 
 /**
