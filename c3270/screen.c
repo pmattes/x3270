@@ -2736,7 +2736,7 @@ screen_set_thumb(float top _is_unused, float shown _is_unused)
 }
 
 /**
- * Stub for scrollbar function.
+ * Enable or disable the cursor when scrolling.
  *
  * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
