@@ -111,6 +111,8 @@
 #define S2	53	/* select G2 for next character */
 #define S3	54	/* select G3 for next character */
 #define MB	55	/* process multi-byte character */
+#define CH	56	/* cursor horizontal absolute (CHA) */
+#define VP	57	/* vertical position absolute (VPA) */
 
 static enum state {
     DATA = 0, ESC = 1, CSDES = 2,
@@ -179,6 +181,8 @@ static enum state ansi_select_g3(int, int);
 static enum state ansi_one_g2(int, int);
 static enum state ansi_one_g3(int, int);
 static enum state ansi_multibyte(int, int);
+static enum state ansi_cursor_horizontal_absolute(int, int);
+static enum state ansi_vertical_position_absolute(int, int);
 
 typedef enum state (*afn_t)(int, int);
 static afn_t nvt_fn[] = {
@@ -238,6 +242,8 @@ static afn_t nvt_fn[] = {
 /* 53 */	&ansi_one_g2,
 /* 54 */	&ansi_one_g3,
 /* 55 */	&ansi_multibyte,
+/* 56 */	&ansi_cursor_horizontal_absolute,
+/* 57 */	&ansi_vertical_position_absolute,
 };
 
 static unsigned char st[8][256] = {
@@ -319,9 +325,9 @@ static unsigned char st[8][256] = {
 /* 10 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 20 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0,Sc, 0, 0, 0,E3,
-/* 40 */       IC,UP,DN,RT,LT, 0, 0, 0,CM, 0,ED,EL,IL,DL, 0, 0,
+/* 40 */       IC,UP,DN,RT,LT, 0, 0,CH,CM, 0,ED,EL,IL,DL, 0, 0,
 /* 50 */       DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 60 */	0, 0, 0,DA, 0, 0,CM,TC,SM, 0, 0, 0,RM,SG,SR, 0,
+/* 60 */	0, 0, 0,DA,VP, 0,CM,TC,SM, 0, 0, 0,RM,SG,SR, 0,
 /* 70 */	0, 0,SS, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 80 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 90 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -693,6 +699,26 @@ ansi_cursor_motion(int n1, int n2)
 	if (n2 < 1) n2 = 1;
 	if (n2 > COLS) n2 = COLS;
 	cursor_move((n1 - 1) * COLS + (n2 - 1));
+	held_wrap = false;
+	return DATA;
+}
+
+static enum state
+ansi_cursor_horizontal_absolute(int n1, int n2 _is_unused)
+{
+	if (n1 < 1) n1 = 1;
+	if (n1 > COLS) n1 = COLS;
+	cursor_move((cursor_addr / COLS) * COLS + (n1 - 1));
+	held_wrap = false;
+	return DATA;
+}
+
+static enum state
+ansi_vertical_position_absolute(int n1, int n2 _is_unused)
+{
+	if (n1 < 1) n1 = 1;
+	if (n1 > ROWS) n1 = ROWS;
+	cursor_move(((n1 - 1) * COLS) + (cursor_addr % COLS));
 	held_wrap = false;
 	return DATA;
 }
