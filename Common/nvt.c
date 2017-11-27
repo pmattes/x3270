@@ -1691,8 +1691,19 @@ nvt_scroll(void)
 static void
 nvt_in3270(bool in3270)
 {
-	if (!in3270)
-		(void) ansi_reset(0, 0);
+    if (in3270) {
+	/*
+	 * When switching to 3270 mode, clean up our external effects:
+	 * cursor disable and alternate buffer.
+	 */
+	if (!cursor_enabled) {
+	    cursor_enabled = true;
+	    ctlr_enable_cursor(true, EC_NVT);
+	}
+	ctlr_altbuffer(false);
+    } else {
+	(void) ansi_reset(0, 0);
+    }
 }
 
 
