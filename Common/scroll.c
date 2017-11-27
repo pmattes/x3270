@@ -164,7 +164,7 @@ scroll_reset(void)
     need_saving = true;
     screen_set_thumb_traced(thumb_top, thumb_shown, n_saved, maxROWS,
 	    scrolled_back);
-    enable_cursor(true);
+    ctlr_enable_cursor(true, EC_SCROLL);
 }
 
 /*
@@ -362,7 +362,7 @@ sync_scroll(int sb)
     }
 
     /* Disable the cursor if we're scrolled back, enable it if not. */
-    enable_cursor(sb == 0);
+    ctlr_enable_cursor(sb == 0, EC_SCROLL);
 
     scrolled_back = sb;
     ctlr_changed(0, ROWS * COLS);

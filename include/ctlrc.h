@@ -123,3 +123,7 @@ enum dbcs_state ctlr_dbcs_state(int baddr);
 enum dbcs_state ctlr_dbcs_state_ea(int baddr, struct ea *ea);
 enum dbcs_state ctlr_lookleft_state(int baddr, enum dbcs_why *why);
 int ctlr_dbcs_postprocess(void);
+
+#define EC_SCROLL	0x01	/* Enable cursor from scroll logic */
+#define EC_NVT		0x02	/* Enable cursor from NVT */
+void ctlr_enable_cursor(bool enable, unsigned source);

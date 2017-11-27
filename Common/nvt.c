@@ -483,6 +483,7 @@ static int	pmi = 0;
 static char	pending_mbs[MB_MAX];
 static int	pe = 0;
 static unsigned char ped[PE_MAX];
+static bool	cursor_enabled = true;
 
 static bool  held_wrap = false;
 
@@ -585,6 +586,7 @@ ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
 	saved_csd[0] = saved_csd[1] = saved_csd[2] = saved_csd[3] = CSD_US;
 	once_cset = -1;
 	saved_cursor = 0;
+	cursor_enabled = true;
 	insert_mode = 0;
 	auto_newline_mode = 0;
 	appl_cursor = 0;
@@ -610,6 +612,7 @@ ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
 		ctlr_altbuffer(false);
 		ctlr_clear(false);
 		screen_80();
+		ctlr_enable_cursor(true, EC_NVT);
 	}
 	first = false;
 	pmi = 0;
@@ -1460,6 +1463,10 @@ dec_set(int ig1 _is_unused, int ig2 _is_unused)
 		    case 7:	/* wraparound mode */
 			wraparound_mode = 1;
 			break;
+		    case 25:	/* cursor */
+			cursor_enabled = true;
+			ctlr_enable_cursor(true, EC_NVT);
+			break;
 		    case 40:	/* allow 80/132 switching */
 			allow_wide_mode = 1;
 			break;
@@ -1492,6 +1499,10 @@ dec_reset(int ig1 _is_unused, int ig2 _is_unused)
 			break;
 		    case 7:	/* no wraparound mode */
 			wraparound_mode = 0;
+			break;
+		    case 25:	/* cursor */
+			cursor_enabled = false;
+			ctlr_enable_cursor(false, EC_NVT);
 			break;
 		    case 40:	/* allow 80/132 switching */
 			allow_wide_mode = 0;
@@ -2124,7 +2135,8 @@ nvt_snap_modes(void)
 	    saved_csd[0] != CSD_US ||
 	    saved_csd[1] != CSD_US ||
 	    saved_csd[2] != CSD_US ||
-	    saved_csd[3] != CSD_US) {
+	    saved_csd[3] != CSD_US ||
+	    !cursor_enabled) {
 
 	    	if (saved_cursor != 0)
 		    	emit_cup(saved_cursor);
@@ -2169,6 +2181,15 @@ nvt_snap_modes(void)
 				*obptr++ = csdsel[i];
 				*obptr++ = gnnames[saved_csd[i]];
 			}
+		}
+		if (!cursor_enabled) {
+		    space3270out(6);
+		    *obptr++ = 0x1b;
+		    *obptr++ = '[';
+		    *obptr++ = '?';
+		    *obptr++ = '2';
+		    *obptr++ = '5';
+		    *obptr++ = 'l';
 		}
 
 	    	/* Emit a SAVE CURSOR to stash these away. */

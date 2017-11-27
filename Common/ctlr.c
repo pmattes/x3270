@@ -2940,3 +2940,27 @@ ctlr_query_max_size(void)
 {
     return lazyaf("%u %u", maxROWS, maxCOLS);
 }
+
+/*
+ * Cursor enable/disable.
+ */
+void
+ctlr_enable_cursor(bool enable, unsigned source)
+{
+    static unsigned disables = 0;
+    int new_disables;
+
+    /* Compute the new disable mask. */
+    if (enable) {
+	new_disables = disables & ~source;
+    } else {
+	new_disables = disables | source;
+    }
+
+    if (!!disables ^ !!new_disables) {
+	/* Overall state change. */
+	enable_cursor(!new_disables);
+    }
+    disables = new_disables;
+}
+

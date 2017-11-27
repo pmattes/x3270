@@ -147,6 +147,7 @@ Common/screen_stubs3.c
 Common/screen_stubs4.c
 Common/screen_stubs5.c
 Common/screen_stubs6.c
+Common/screen_stubs7.c
 Common/scroll.c
 Common/scroll_stubs.c
 Common/see.c
