@@ -1763,6 +1763,11 @@ nvt_send_pf(int nn)
     if (nn < 1 || (unsigned)nn > sizeof(code)/sizeof(code[0])) {
 	return;
     }
+    if (nn <= 4) {
+	/* xterm sends PF codes instead of F codes for F1..F4. */
+	nvt_send_pa(nn);
+	return;
+    }
     s = xs_buffer("\033[%d~", code[nn-1]);
     net_sends(s);
     Free(s);
