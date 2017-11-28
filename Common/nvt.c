@@ -113,11 +113,13 @@
 #define MB	55	/* process multi-byte character */
 #define CH	56	/* cursor horizontal absolute (CHA) */
 #define VP	57	/* vertical position absolute (VPA) */
+#define GT	58	/* > (after ESC [) */
+#define D2	59	/* secondary device attributes */
 
 static enum state {
     DATA = 0, ESC = 1, CSDES = 2,
     N1 = 3, DECP = 4, TEXT = 5, TEXT2 = 6,
-    MBPEND = 7
+    MBPEND = 7, ESCGT = 8, NUM_STATES = 9
 } state = DATA;
 
 /*
@@ -183,6 +185,8 @@ static enum state ansi_one_g3(int, int);
 static enum state ansi_multibyte(int, int);
 static enum state ansi_cursor_horizontal_absolute(int, int);
 static enum state ansi_vertical_position_absolute(int, int);
+static enum state ansi_gt(int, int);
+static enum state dec_secondary_device_attributes(int, int);
 
 typedef enum state (*afn_t)(int, int);
 static afn_t nvt_fn[] = {
@@ -244,9 +248,11 @@ static afn_t nvt_fn[] = {
 /* 55 */	&ansi_multibyte,
 /* 56 */	&ansi_cursor_horizontal_absolute,
 /* 57 */	&ansi_vertical_position_absolute,
+/* 58 */	&ansi_gt,
+/* 59 */	&dec_secondary_device_attributes,
 };
 
-static unsigned char st[8][256] = {
+static unsigned char st[NUM_STATES][256] = {
 /*
  * State table for base processing (state == DATA)
  */
@@ -324,7 +330,7 @@ static unsigned char st[8][256] = {
 /* 00 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 10 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 20 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0,Sc, 0, 0, 0,E3,
+/* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0,Sc, 0, 0,GT,E3,
 /* 40 */       IC,UP,DN,RT,LT, 0, 0,CH,CM, 0,ED,EL,IL,DL, 0, 0,
 /* 50 */       DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 60 */	0, 0, 0,DA,VP, 0,CM,TC,SM, 0, 0, 0,RM,SG,SR, 0,
@@ -428,6 +434,29 @@ static unsigned char st[8][256] = {
 /* d0 */       MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,
 /* e0 */       MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,
 /* f0 */       MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB,MB
+},
+
+/*
+ * State table for ESC > processing (state == ESCGT)
+ */
+{
+	     /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  */
+/* 00 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 10 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 20 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0, 0, 0, 0, 0, 0,
+/* 40 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 50 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 60 */	0, 0, 0,D2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 70 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 80 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 },
 };
 
@@ -1333,6 +1362,14 @@ dec_return_terminal_id(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
+dec_secondary_device_attributes(int ig1 _is_unused, int ig2 _is_unused)
+{
+    	/* Don't respond. It can trigger all sorts of additional chatter. */
+	/* net_sends("\033[>0;3270;0c"); */
+	return DATA;
+}
+
+static enum state
 ansi_set_mode(int nn, int ig2 _is_unused)
 {
 	switch (nn) {
@@ -1658,6 +1695,12 @@ ansi_htab_clear(int nn, int ig2 _is_unused)
 		break;
 	}
 	return DATA;
+}
+
+static enum state
+ansi_gt(int ig1 _is_unused, int ig2 _is_unused)
+{
+    return ESCGT;
 }
 
 /*
