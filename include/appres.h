@@ -101,6 +101,7 @@ typedef struct {
     char	*suppress_actions;
     char	*min_version;
     int		 connect_timeout;
+    int		 nop_seconds;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;
