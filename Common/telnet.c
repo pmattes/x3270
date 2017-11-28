@@ -146,6 +146,7 @@ static int      syncing;
 static ioid_t output_id = NULL_IOID;
 #endif /*]*/
 static ioid_t	connect_timeout_id = NULL_IOID;	/* explicit Connect timeout */
+static ioid_t	nop_timeout_id = NULL_IOID;
 static char     ttype_tmpval[13];
 
 static unsigned short e_xmit_seq; /* transmit sequence number */
@@ -752,6 +753,19 @@ setup_lus(void)
     try_lu = *curr_lu;
 }
 
+/* Send a periodic TELNET NOP. */
+static void
+send_nop(ioid_t id _is_unused)
+{
+    static unsigned char nop[] = { IAC, NOP };
+
+    vtrace("SENT NOP\n");
+    net_rawout(nop, sizeof(nop));
+    if (cstate != NOT_CONNECTED) {
+	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    }
+}
+
 static void
 net_connected_complete(void)
 {
@@ -800,6 +814,9 @@ net_connected_complete(void)
 	(void) send(sock, buf, (int)strlen(buf), 0);
 	Free(buf);
     }
+
+    /* set up NOP transmission */
+    nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
 }
 
 static void
@@ -1017,6 +1034,12 @@ net_disconnect(bool including_ssl)
     if (connect_timeout_id != NULL_IOID) {
 	RemoveTimeOut(connect_timeout_id);
 	connect_timeout_id = NULL_IOID;
+    }
+
+    /* Cancel NOPs. */
+    if (nop_timeout_id != NULL_IOID) {
+	RemoveTimeOut(nop_timeout_id);
+	nop_timeout_id = NULL_IOID;
     }
 
     /* We're not connected to an LU any more. */

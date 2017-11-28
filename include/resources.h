@@ -169,6 +169,7 @@
 #define ResNewEnviron		"newEnviron"
 #define ResNoOther		"noOther"
 #define ResNoPrompt		"noPrompt"
+#define ResNopSeconds		"nopSeconds"
 #define ResNormalColor		"normalColor"
 #define ResNormalCursor		"normalCursor"
 #define ResNumericLock		"numericLock"
@@ -266,6 +267,7 @@
 #define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
+#define DotNopSeconds		"." ResNopSeconds
 #define DotNvtMode		"." ResNvtMode
 #define DotOnce			"." ResOnce
 #define DotOversize		"." ResOversize
@@ -401,6 +403,7 @@
 #define ClsMonoCase		"MonoCase"
 #define ClsNewEnviron		"NewEnviron"
 #define ClsNoOther		"NoOther"
+#define ClsNopSeconds		"NopSeconds"
 #define ClsNormalColor		"NormalColor"
 #define ClsNormalCursor		"NormalCursor"
 #define ClsNumericLock		"NumericLock"

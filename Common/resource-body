@@ -2250,6 +2250,17 @@ desc
     locked.
 .
 
+name nopSeconds
+applies a
+type i
+groups i
+default 0
+desc
+    If nonzero, %p% will send a TELNET NOP to the host every <i>n</i> seconds.
+    This can be used to keep host sessions running that would otherwise be
+    terminated due to inactivity.
+.
+
 name normalColor
 applies x
 groups a

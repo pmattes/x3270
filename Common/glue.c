@@ -995,6 +995,7 @@ static res_t base_resources[] = {
     { ResModel,	aoffset(model),			XRM_STRING },
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
+    { ResNopSeconds,aoffset(nop_seconds),	XRM_INT },
     { ResNumericLock, aoffset(numeric_lock),	XRM_BOOLEAN },
     { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
     { ResOversize,	aoffset(oversize),	XRM_STRING },

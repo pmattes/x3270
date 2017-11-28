@@ -114,6 +114,8 @@ XtResource resources[] = {
       offset(interactive.crosshair_color), XtRString, "purple" },
     { ResConnectTimeout, ClsConnectTimeout, XtRInt, sizeof(int),
       offset(connect_timeout), XtRString, "0" },
+    { ResNopSeconds, ClsNopSeconds, XtRInt, sizeof(int),
+      offset(nop_seconds), XtRString, "0" },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },
