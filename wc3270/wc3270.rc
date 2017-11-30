@@ -1,3 +1,4 @@
+#define RT_MANIFEST 24
 LANGUAGE 0, 0
 1 RT_MANIFEST wc3270.exe.manifest
 100 ICON wc3270.ico
