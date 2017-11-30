@@ -816,7 +816,9 @@ net_connected_complete(void)
     }
 
     /* set up NOP transmission */
-    nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    if (appres.nop_seconds != 0) {
+	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    }
 }
 
 static void
