@@ -128,7 +128,10 @@ The <b>acceptHostname</b> resource or the <b>-accepthostname</b> option can be
 used to specify a different name to compare.
 <a name="Windows"></a>
 <h2>TLS on Windows</h2>
-<p>wc3270, ws3270 and wpr3287 use the native Windows Schannel APIs for TLS.</p>
+<p>wc3270, ws3270 and wpr3287 use the native Windows Schannel APIs for TLS.
+This means that the emulators' TLS support is limited by the functionality
+supported by the underlying OS, but it benefits from OS fixes and updates over
+time without any need to update the app.</p>
 <h3>Options and Resources</h3>
 TLS is controlled by a number of different command-line options and resources.
 <h3>Specifying a Certificate for the Client (the Emulator)</h3>
