@@ -203,6 +203,9 @@ stdin_done(task_cbh handle, bool success, bool abort)
 #else /*][*/
 	stdin_nr = 0;
 	SetEvent(stdin_enable_event);
+	if (stdin_id == NULL_IOID) {
+	    stdin_id = AddInput(stdin_done_event, stdin_input);
+	}
 #endif /*]*/
     }
 
