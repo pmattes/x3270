@@ -574,13 +574,36 @@ popup_about_status(void)
 		MAKE_LABEL(lazyaf("   %s", session), 0);
 	    }
 	    if ((cert = net_server_cert_info()) != NULL) {
+		int line_len;
+#		define CERT_WRAP 80
+		char *break_indent = "";
+
 		MAKE_LABEL(get_message("serverCert"), 2);
 		while ((newline = strchr(cert, '\n')) != NULL) {
-		    MAKE_LABEL(lazyaf("   %.*s", (int)(newline - cert),
+		    line_len = (int)(newline - cert);
+		    while (line_len > CERT_WRAP) {
+			MAKE_LABEL(lazyaf("   %s%.*s", break_indent, CERT_WRAP,
+				    cert), 0);
+			cert += CERT_WRAP;
+			line_len -= CERT_WRAP;
+			break_indent = "  ";
+		    }
+
+		    MAKE_LABEL(lazyaf("   %s%.*s", break_indent, line_len,
 				cert), 0);
 		    cert = newline + 1;
+		    break_indent = "";
 		}
-		MAKE_LABEL(lazyaf("   %s", cert), 0);
+
+		line_len = (int)strlen(cert);
+		while (line_len > CERT_WRAP) {
+		    MAKE_LABEL(lazyaf("   %s%.*s", break_indent, CERT_WRAP,
+				cert), 0);
+		    cert += CERT_WRAP;
+		    line_len -= CERT_WRAP;
+		    break_indent = "  ";
+		}
+		MAKE_LABEL(lazyaf("   %s%s", break_indent, cert), 0);
 	    }
 	}
 	ptype = net_proxy_type();
