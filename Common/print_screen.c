@@ -241,11 +241,6 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    i++;
 	    break;
 	} else if (!strcasecmp(argv[i], "string")) {
-	    if (ia_cause != IA_SCRIPT) {
-		popup_an_error("PrintText(string) can only be used from a "
-			"script");
-		return false;
-	    }
 	    use_string = true;
 	    use_file = true;
 	} else if (!strcasecmp(argv[i], "modi")) {
