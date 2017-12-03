@@ -47,6 +47,7 @@ VOBJS = $(WC3270_OBJECTS) fallbacks.o wc3270res.o
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
+MKSHORTOBJECTS = mkshort.o shortcut.o wc3270res.o
 LIBS = -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
 SHRTLIBS = $(LD32XX) -lole32 -luuid
 WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
@@ -87,8 +88,8 @@ wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico wc3270.exe.manifest
 wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-mkshort.exe: mkshort.o shortcut.o $(DEP32XX)
-	$(CC) -o mkshort.exe $(CFLAGS) mkshort.o shortcut.o $(SHRTLIBS)
+mkshort.exe: $(MKSHORTOBJECTS) $(DEP32XX)
+	$(CC) -o mkshort.exe $(CFLAGS) $(MKSHORTOBJECTS) $(SHRTLIBS)
 
 wversion.o: mkwversion.sh version.txt
 	sh $< $(CC) $(filter %.txt,$^)
