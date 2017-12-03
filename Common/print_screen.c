@@ -398,6 +398,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 	    action_output("%s", buf);
 	}
+	fclose(f);
 	unlink(temp_name);
 	Free(temp_name);
 	return true;
