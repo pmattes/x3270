@@ -141,7 +141,6 @@ typedef enum {
     MO_RENAME,		/* rename existing session */
     MO_SHORTCUT,	/* create shortcut */
     MO_MIGRATE,		/* migrate AppData files */
-    MO_CTRLKEY,		/* change CtrlKeyShortcutsDisabled */
     MO_QUIT,		/* quit wizard */
     MO_ERR = -1		/* error */
 } menu_op_t;
@@ -823,70 +822,6 @@ new_screen(session_t *s, const char *path, const char *title)
     printf("\n%s\n", title);
 }
 
-/**
- * Get the current value of CtrlKeyShortcutsDisabled from the registry.
- *
- * @returns Value (0 or 1) or -1 for error.
- */
-static int
-get_ctrlkey_default(void)
-{
-    HKEY key;
-    LONG error;
-    DWORD data;
-    DWORD size = sizeof(data);
-    DWORD type = REG_DWORD;
-
-    /* Create the key. */
-    error = RegCreateKeyEx(HKEY_CURRENT_USER, "Console", (DWORD)0, NULL,
-	    REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, NULL);
-    if (error != ERROR_SUCCESS) {
-	return -1;
-    }
-
-    /* Look for the existing value. */
-    size = sizeof(data);
-    type = REG_DWORD;
-    error = RegQueryValueEx(key, "CtrlKeyShortcutsDisabled", NULL, &type,
-	    (LPBYTE)&data, &size);
-    RegCloseKey(key);
-    if (error == ERROR_FILE_NOT_FOUND) {
-	return 0;
-    }
-    if (error != ERROR_SUCCESS) {
-	return -1;
-    }
-    return data;
-}
-
-/**
- * Set the value of CtrlKeyShortcutsDisabled from the registry.
- *
- * @returns 0 for success or -1 for error.
- */
-static int
-set_ctrlkey_default(DWORD data)
-{
-    HKEY key;
-    LONG error;
-
-    /* Create the key. */
-    error = RegCreateKeyEx(HKEY_CURRENT_USER, "Console", (DWORD)0, NULL,
-	    REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, NULL);
-    if (error != ERROR_SUCCESS) {
-	return -1;
-    }
-
-    /* Set the existing value. */
-    error = RegSetValueEx(key, "CtrlKeyShortcutsDisabled", (DWORD)0, REG_DWORD,
-	    (LPBYTE)&data, sizeof(DWORD));
-    RegCloseKey(key);
-    if (error != ERROR_SUCCESS) {
-	return -1;
-    }
-    return 0;
-}
-
 /*
  * List of main menu operations.
  *
@@ -909,7 +844,6 @@ struct {		/* Menu options: */
     { "Rename session",             "rename",   "mv",     true,  false, 2 },
     { "Create shortcut",            "shortcut", NULL,     true,  false, 1 },
     { "Migrate files from AppData", "migrate",  NULL,     false, true,  0 },
-    { "Change CtrlKeyShortcutsDisabled","ctrlkey",NULL,false,false,0 },
     { "Quit",                       "quit",     "exit",   false, false, 0 },
     { NULL, NULL, FALSE, 0 } /* end marker */
 };
@@ -951,16 +885,12 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
     printf("\n");
     for (i = MO_FIRST; main_option[i].text != NULL; i++) {
 	if ((main_option[i].requires_xs && !num_xs) ||
-	    (main_option[i].requires_ad && !ad_exist()) ||
-	    (i == MO_CTRLKEY && !IsWindowsVersionOrGreater(10, 0, 0))) {
+	    (main_option[i].requires_ad && !ad_exist())) {
 #if 0
 	    grayout("  %d. %s (%s)\n",
 		    i, main_option[i].text, main_option[i].name);
 #endif
 	    continue;
-	} else if (i == MO_CTRLKEY && get_ctrlkey_default() == 0) {
-	    errout("  %d. %s (%s)\n",
-		    i, main_option[i].text, main_option[i].name);
 	} else {
 	    printf("  %d. %s (%s)\n",
 		    i, main_option[i].text, main_option[i].name);
@@ -4150,80 +4080,6 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 }
 
 /**
- * Change the default value of CtrlKeyShortcutsDisabled in the registry.
- *
- * @return sw_t (success, error, quit).
- */
-static sw_t
-change_ctrlkey_default(void)
-{
-    int current = get_ctrlkey_default();
-    bool enabled;
-
-    if (!IsWindowsVersionOrGreater(10, 0, 0)) {
-	return SW_SUCCESS;
-    }
-
-    if (current < 0) {
-	errout("Registry fetch failed\n");
-	goto failed;
-    }
-
-    enabled = get_ctrlkey_default() == 0;
-
-    new_screen(&empty_session, NULL, "\
-Change 'Ctrl key shortcuts'\n\
-\n\
-Starting with Windows 10, Windows consoles implement 'Ctrl key shortcuts',\n\
-with their own functions for Ctrl-C, Ctrl-V, F11 and other keys. This\n\
-interferes with wc3270's use of these keys. Unfortunately, it is so far\n\
-impossible to create a wc3270 desktop shortcut that disables this feature.\n\
-\n\
-There are two workarounds. The first is to manually modify each wc3270\n\
-shortcut, opening the Properties menu and unchecking the 'Enable Ctrl key\n\
-shortcuts' checkbox on the Options tab. The second is to change a registry\n\
-value (HKEY_CURRENT_USER\\Console\\CtrlKeyShortcutsDisabled) to disable\n\
-'Ctrl key shortcuts' by default for all consoles. (If you want 'Ctrl key\n\
-shortcuts' for cmd.exe, Powershell or other console apps, you can manually\n\
-enable it on each of their consoles.)");
-    if (enabled) {
-	errout("\nConsole Ctrl key shortcuts are currently enabled in the "
-		"registry.");
-    } else {
-	printf("\nConsole Ctrl key shortcuts are currently disabled in the "
-		"registry.");
-    }
-    for (;;) {
-	int rc;
-
-	printf("\n%sable them? (y/n) [%s]: ", enabled? "Dis": "En",
-		enabled? "y": "n");
-	fflush(stdout);
-	rc = getyn(enabled);
-	if (rc == YN_ERR) {
-	    return SW_ERR;
-	}
-	if (rc == YN_RETRY) {
-	    continue;
-	}
-
-	if (rc == 1) {
-	    if (set_ctrlkey_default(!current) < 0) {
-		errout("Registry update failed\n");
-	    }
-
-	}
-	break;
-    }
-
-    return SW_SUCCESS;
-
-failed:
-    ask_enter();
-    return SW_SUCCESS;
-}
-
-/**
  * One pass of the session wizard.
  *
  * @param[in] session_name	Name of session to edit, or NULL
@@ -4330,8 +4186,6 @@ Edit Session\n");
 	    free(cmd);
 	    return SW_SUCCESS;
 	}
-	case MO_CTRLKEY:
-	    return change_ctrlkey_default();
 	}
     } else {
 	new_screen(&session, NULL, "");
