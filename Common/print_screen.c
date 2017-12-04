@@ -394,6 +394,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	char buf[8192];
 
 	/* Print to string. */
+	fflush(f);
 	rewind(f);
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 	    action_output("%s", buf);

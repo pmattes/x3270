@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015 Paul Mattes.
+ * Copyright (c) 1994-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -169,6 +169,7 @@ gdi_print_finish(FILE *f, const char *caption)
     ea_tmp[0].fa = FA_PRINTABLE | FA_MODIFY;
 
     /* Rewind the file. */
+    fflush(f);
     rewind(f);
 
     /* Read it back. */

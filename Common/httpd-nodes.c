@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     }
 
     /* Read it back into a varbuf_t. */
+    fflush(f);
     rewind(f);
     vb_init(image);
     while (fgets(buf, sizeof(buf), f) != NULL) {
