@@ -157,6 +157,7 @@ XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
 XX_TR(XX_TD(Select by Rectangles)	XX_TD(rectangleSelect))
 XX_TR(XX_TD(Crosshair Cursor)	XX_TD(crosshair))
 XX_TR(XX_TD(Visible Control Chars)	XX_TD(visibleControl))
+XX_TR(XX_TD(Typeahead)	XX_TD(typeahead))
 XX_TE()
 XX_LP
 In addition, the toggle XX_FB(altCursor) can be used to select the cursor type.

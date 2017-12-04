@@ -917,6 +917,10 @@ directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
 The directory for the trace file can be changed with
 the "XX_PRODUCT.traceDir" resource.
 Script commands are also traced.
+XX_TP(XX_FB(typeahead))
+If set, characters typed while the keyboard is locked will be stored and played
+back when the host unlocks the keyboard.
+If clear, these characters will be dropped.
 ifelse(XX_MODE,console,`XX_TP(XX_FB(underscore))
 If set, XX_PRODUCT will display underlined fields by substituting
 underscore XX_DQUOTED(_) characters for blanks or nulls in the field.

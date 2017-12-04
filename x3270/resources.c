@@ -315,8 +315,6 @@ XtResource xresources[] = {
       boffset(secure), XtRString, ResFalse },
     { ResOerrLock, ClsOerrLock, XtRBoolean, sizeof(Boolean),
       boffset(oerr_lock), XtRString, ResTrue },
-    { ResTypeahead, ClsTypeahead, XtRBoolean, sizeof(Boolean),
-      boffset(typeahead), XtRString, ResTrue },
     { ResDebugTracing, ClsDebugTracing, XtRBoolean, sizeof(Boolean),
       boffset(debug_tracing), XtRString, ResTrue },
     { ResDisconnectClear, ClsDisconnectClear, XtRBoolean, sizeof(Boolean),
@@ -372,6 +370,8 @@ XtResource xresources[] = {
       btoffset(AID_WAIT), XtRString, ResTrue },
     { ResOverlayPaste, ClsOverlayPaste, XtRBoolean, sizeof(Boolean),
       btoffset(OVERLAY_PASTE), XtRString, ResFalse },
+    { ResTypeahead, ClsTypeahead, XtRBoolean, sizeof(Boolean),
+      btoffset(TYPEAHEAD), XtRString, ResTrue },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },

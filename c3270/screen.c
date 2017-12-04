@@ -2761,7 +2761,8 @@ screen_register(void)
 	{ SHOW_TIMING,	toggle_showTiming,	0 },
 	{ UNDERSCORE,	toggle_underscore,	0 },
 	{ VISIBLE_CONTROL, toggle_visibleControl, 0 },
-	{ CROSSHAIR,	toggle_crosshair,	0 }
+	{ CROSSHAIR,	toggle_crosshair,	0 },
+	{ TYPEAHEAD,	NULL,			0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Redraw",	Redraw_action,	ACTION_KE }

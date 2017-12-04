@@ -837,6 +837,7 @@ x3270*idleCommandOption.label:			Configure Idle Command
 x3270*keypadOption.label:			Keypad
 x3270*monocaseOption.label:			Monocase
 x3270*cursorBlinkOption.label:			Blinking Cursor
+x3270*typeaheadOption.Label:			Typeahead
 x3270*showTimingOption.label:			Show Timing
 x3270*cursorPosOption.label:			Track Cursor
 x3270*traceOption.label:			Trace Data and Events

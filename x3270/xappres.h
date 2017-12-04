@@ -98,7 +98,6 @@ typedef struct {
 	Boolean numeric_lock;
 	Boolean secure;
 	Boolean oerr_lock;
-	Boolean typeahead;
 	Boolean debug_tracing;
 	Boolean disconnect_clear;
 	Boolean highlight_bold;

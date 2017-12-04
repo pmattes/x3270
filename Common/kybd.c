@@ -276,7 +276,7 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
     }
 
     /* If typeahead disabled, complain and drop it. */
-    if (!appres.typeahead) {
+    if (!toggled(TYPEAHEAD)) {
 	vtrace("  dropped (no typeahead)\n");
 	return;
     }

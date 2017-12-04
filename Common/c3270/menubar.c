@@ -887,6 +887,7 @@ typedef enum {
     OM_OVERLAY_PASTE,
 #endif /*]*/
     OM_VISIBLE_CONTROL,
+    OM_TYPEAHEAD,
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -901,7 +902,8 @@ toggle_index_t option_index[OM_COUNT] = {
     MARGINED_PASTE,
     OVERLAY_PASTE,
 #endif /*]*/
-    VISIBLE_CONTROL
+    VISIBLE_CONTROL,
+    TYPEAHEAD
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
@@ -914,7 +916,8 @@ char *option_names[OM_COUNT] = {
     "Margined Paste",
     "Overlay Paste",
 #endif /*]*/
-    "Visible Control"
+    "Visible Control",
+    "Typeahead"
 };
 
 cmenu_t *file_menu;

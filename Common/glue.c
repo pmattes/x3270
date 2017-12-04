@@ -444,7 +444,6 @@ set_appres_defaults(void)
     /* Set the defaults. */
     appres.extended = true;
     appres.m3279 = true;
-    appres.typeahead = true;
     appres.debug_tracing = true;
     appres.conf_dir = LIBX3270DIR;
 
@@ -478,6 +477,7 @@ set_appres_defaults(void)
 
     set_toggle(CURSOR_POS, true);
     set_toggle(AID_WAIT, true);
+    set_toggle(TYPEAHEAD, true);
 
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();
@@ -1015,7 +1015,6 @@ static res_t base_resources[] = {
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
     { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
     { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
-    { ResTypeahead,	aoffset(typeahead),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING }

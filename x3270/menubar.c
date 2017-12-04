@@ -1929,6 +1929,7 @@ options_menu_init(bool regen, Position x, Position y)
 		&spaced);
 	toggle_init(t, CROSSHAIR, "crosshairOption", NULL, &spaced);
 	toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL, &spaced);
+	toggle_init(t, TYPEAHEAD, "typeaheadOption", NULL, &spaced);
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);

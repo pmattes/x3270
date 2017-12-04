@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -78,6 +78,7 @@ toggle_name_t toggle_names[] = {
     { ResAidWait,         AID_WAIT,		false },
     { ResUnderscore,	  UNDERSCORE,		false },
     { ResOverlayPaste,    OVERLAY_PASTE,	false },
+    { ResTypeahead,       TYPEAHEAD,		false },
     { NULL,               0,			false }
 };
 
@@ -96,7 +97,9 @@ do_toggle_reason(toggle_index_t ix, enum toggle_type reason)
      */
     toggle_toggle(ix);
     for (u = t->upcalls; u != NULL; u = u->next) {
-	u->upcall(ix, reason);
+	if (u->upcall != NULL) {
+	    u->upcall(ix, reason);
+	}
     }
     menubar_retoggle(ix);
 }

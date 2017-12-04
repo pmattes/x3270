@@ -273,26 +273,23 @@ extern enum cstate cstate;
 /*   toggles */
 typedef enum {
     MONOCASE,		/* all-uppercase display */
-    ALT_CURSOR,		/* block cursor (x3270) */
-    CURSOR_BLINK,	/* blinking cursor (x3270) */
-    SHOW_TIMING,	/* display command execution time in the OIA
-			   (interactive) */
-    CURSOR_POS,		/* display cursor position in the OIA (interactive) */
+    ALT_CURSOR,		/* block cursor */
+    CURSOR_BLINK,	/* blinking cursor */
+    SHOW_TIMING,	/* display command execution time in the OIA */
+    CURSOR_POS,		/* display cursor position in the OIA */
     TRACING,		/* trace data and events */
-    SCROLL_BAR,		/* include scroll bar (x3270) */
+    SCROLL_BAR,		/* include scroll bar */
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
     BLANK_FILL,		/* treat trailing blanks like NULLs on input */
     SCREEN_TRACE,	/* trace screen contents to file or printer */
-    MARGINED_PASTE,	/* respect left margin when pasting (x3270 and
-			   wc3270) */
-    RECTANGLE_SELECT,	/* select by rectangles (x3270) */
-    CROSSHAIR,		/* display cursor crosshair (x3270) */
-    VISIBLE_CONTROL,	/* display visible control characters (x3270) */
+    MARGINED_PASTE,	/* respect left margin when pasting */
+    RECTANGLE_SELECT,	/* select by rectangles */
+    CROSSHAIR,		/* display cursor crosshair */
+    VISIBLE_CONTROL,	/* display visible control characters */
     AID_WAIT,		/* make scripts wait for AIDs to complete */
-    UNDERSCORE,		/* special c3270/wc3270 underscore display mode
-			   (c3270 and wc320) */
-    OVERLAY_PASTE,	/* overlay protected fields when pasting (x3270 and
-			   wc3270) */
+    UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
+    OVERLAY_PASTE,	/* overlay protected fields when pasting */
+    TYPEAHEAD,		/* typeahead */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);

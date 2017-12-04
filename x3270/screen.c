@@ -6353,7 +6353,8 @@ screen_register(void)
 	{ VISIBLE_CONTROL,	toggle_visible_control, 0 },
 	{ SCROLL_BAR,		toggle_scrollBar,	0 },
 	{ MARGINED_PASTE,	NULL,			0 },
-	{ OVERLAY_PASTE,	NULL,			0 }
+	{ OVERLAY_PASTE,	NULL,			0 },
+	{ TYPEAHEAD,		NULL,			0 }
     };
     static action_table_t screen_actions[] = {
 	{ "SetFont",		SetFont_action,		ACTION_KE },

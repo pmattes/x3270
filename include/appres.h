@@ -52,7 +52,6 @@ typedef struct {
     bool	 numeric_lock;
     bool	 secure;
     bool	 oerr_lock;
-    bool	 typeahead;
     bool	 debug_tracing;
     bool	 disconnect_clear;
     bool	 highlight_bold;

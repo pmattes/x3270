@@ -1144,7 +1144,6 @@ copy_xres_to_res_bool(void)
     copy_bool(numeric_lock);
     copy_bool(secure);
     copy_bool(oerr_lock);
-    copy_bool(typeahead);
     copy_bool(debug_tracing);
     copy_bool(disconnect_clear);
     copy_bool(highlight_bold);

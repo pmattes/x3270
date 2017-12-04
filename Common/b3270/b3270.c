@@ -120,7 +120,8 @@ static toggle_register_t toggles[] = {
     { VISIBLE_CONTROL,	b3270_toggle,	TOGGLE_NEED_INIT },
     { SCREEN_TRACE,	b3270_toggle,	TOGGLE_NEED_INIT },
     { CROSSHAIR,	b3270_toggle,	TOGGLE_NEED_INIT },
-    { OVERLAY_PASTE,	b3270_toggle,	TOGGLE_NEED_INIT }
+    { OVERLAY_PASTE,	b3270_toggle,	TOGGLE_NEED_INIT },
+    { TYPEAHEAD,	b3270_toggle,	TOGGLE_NEED_INIT }
 };
 static const char *cstate_name[] = {
     "not-connected",

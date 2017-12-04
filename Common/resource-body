@@ -3124,9 +3124,11 @@ endif
 .
 
 name typeahead
-applies w C
+applies C x b
 type b
 default true
+switch -set typeahead
+switch -clear typeahead
 desc
     When true, %p% will store keystrokes in a buffer when the
     keyboard is locked.  When false, these keystrokes will be dropped.

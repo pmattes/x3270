@@ -3455,7 +3455,8 @@ screen_register(void)
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 },
 	{ VISIBLE_CONTROL,	toggle_visibleControl,	0 },
-	{ CROSSHAIR,		toggle_crosshair,	0 }
+	{ CROSSHAIR,		toggle_crosshair,	0 },
+	{ TYPEAHEAD,		NULL,			0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Paste",	Paste_action,	ACTION_KE },
