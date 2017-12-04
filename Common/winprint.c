@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015 Paul Mattes.
+ * Copyright (c) 1994-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@ win_mkstemp(char **path, ptype_t ptype)
 	    *path = xs_buffer("%s\\x3h-%u.%s", s, getpid(),
 		    (ptype == P_RTF)? "rtf": "txt");
 	}
-	fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE | O_EXCL);
+	fd = open(*path, O_CREAT | O_EXCL | O_RDWR, S_IREAD | S_IWRITE);
 	if (fd >= 0) {
 	    break;
 	}
