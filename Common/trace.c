@@ -106,6 +106,7 @@ static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = NULL;
 static tss_t	screentrace_how = TSS_FILE;
 static ptype_t	screentrace_ptype = P_TEXT;
+static unsigned	screentrace_opts = 0; /* initialized in register function */
 static tss_t	screentrace_last_how = TSS_FILE;
 static char    *onetime_screentrace_name = NULL;
 static void	vwtrace(bool do_ts, const char *fmt, va_list args);
@@ -1033,7 +1034,7 @@ trace_nvt_disc(void)
  * Returns true for success, false for failure.
  */
 static bool
-screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
+screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 {
 	char *xtfn = NULL;
 	int srv;
@@ -1083,7 +1084,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
 	srv = fprint_screen_start(screentracef, ptype,
-		(how == TSS_PRINTER)? FPS_FF_SEP: 0,
+		opts | ((how == TSS_PRINTER)? FPS_FF_SEP: 0),
 		default_caption(), screentrace_name, &screentrace_fps);
 	if (FPS_IS_ERROR(srv)) {
 		if (srv == FPS_STATUS_ERROR) {
@@ -1129,10 +1130,12 @@ end_screentrace(bool is_final _is_unused)
 }
 
 void
-trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name)
+trace_set_screentrace_file(tss_t how, ptype_t ptype, unsigned opts,
+	const char *name)
 {
 	screentrace_how = how;
 	screentrace_ptype = ptype;
+	screentrace_opts = opts;
     	Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
@@ -1225,7 +1228,7 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 	    }
 	}
 	if (!screentrace_cb(screentrace_how, screentrace_ptype,
-		    NewString(tracefile))) {
+		    screentrace_opts, NewString(tracefile))) {
 
 	    set_toggle(SCREEN_TRACE, false);
 	    status_screentrace((screentrace_count = -1));
@@ -1239,6 +1242,8 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 	screentrace_last_how = screentrace_how;
 	screentrace_how = TSS_FILE; /* back to the default */
 	screentrace_ptype = P_TEXT; /* back to the default */
+	screentrace_opts = product_has_display()? 0: FPS_NO_DIALOG;
+				    /* back to the default */
 	status_screentrace((screentrace_count = -1));
     }
 
@@ -1265,4 +1270,7 @@ trace_register(void)
     };
 
     register_toggles(toggles, array_count(toggles));
+
+    /* Initialize default screentrace flags. */
+    screentrace_opts = product_has_display()? 0: FPS_NO_DIALOG;
 }

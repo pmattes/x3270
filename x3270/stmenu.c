@@ -101,7 +101,7 @@ screentrace_ok(Widget w _is_unused, XtPointer client_data _is_unused,
 	else
 		XtVaGetValues(print_command, XtNstring, &name, NULL);
 	trace_set_screentrace_file(file_flag? TSS_FILE: TSS_PRINTER,
-		file_flag? stm_ptype: P_TEXT, name);
+		file_flag? stm_ptype: P_TEXT, 0, name);
 	do_toggle(SCREEN_TRACE);
 	if (!continuously_flag && toggled(SCREEN_TRACE))
 		do_toggle(SCREEN_TRACE);

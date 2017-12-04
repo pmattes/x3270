@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2015 Paul Mattes.
+ * Copyright (c) 1995-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,8 @@ tss_t trace_get_screentrace_how(void);
 tss_t trace_get_screentrace_last_how(void);
 const char *trace_get_screentrace_name(void);
 void trace_set_trace_file(const char *path);
-void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
+void trace_set_screentrace_file(tss_t how, ptype_t ptype, unsigned opts,
+	const char *name);
 void trace_screen(bool is_clear);
 void trace_rollover_check(void);
 void tracefile_ok(const char *tfn);

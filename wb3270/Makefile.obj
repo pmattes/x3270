@@ -69,7 +69,7 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 $(MKFB): mkfb.c
 	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
 
-wb3270res.o: wb3270.rc wb3270.ico Makefile
+wb3270res.o: wb3270.rc b3270.ico Makefile
 	$(WINDRES) -i $< -o $@
 
 wb3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEPLIBEXPAT)
