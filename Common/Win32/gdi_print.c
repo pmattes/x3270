@@ -169,6 +169,7 @@ gdi_print_finish(FILE *f, const char *caption)
     ea_tmp[0].fa = FA_PRINTABLE | FA_MODIFY;
 
     /* Rewind the file. */
+    fflush(f);
     rewind(f);
 
     /* Read it back. */
