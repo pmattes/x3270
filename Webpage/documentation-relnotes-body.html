@@ -32,7 +32,12 @@
 
 <h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.6</h1>
 3.6 is the current development line for the x3270 suite.
-<h2>Changes in version 3.6alpha1, Nn. Mon 2017</h2>
+<h2>Changes in version 3.6beta3, Nn. Mon 2017</h2>
+<ul>
+ <li>[<i>wc3270</i>, <i>ws3270</i>] <b>PrintText()</b> would sometimes include
+  junk in the output, if called more than once. This is now fixed.</li>
+ </ul>
+<h2>Changes in version 3.6beta2, 3. December 2017</h2>
 <ul>
  <li>[<i>wc3270</i>] Added a (hackish) fix for the Windows 10 "Ctrl key
   shortcuts" feature that interferes with Ctrl-C, Ctrl-V and F11.</li>
@@ -44,6 +49,9 @@
  <li>[<i>c3270</i>, <i>wc3270</i>] Turn off the cursor when scrolled back.</li>
  <li>[all] Fixed TELNET NEW-ENVIRONMENT behavior to be more compatible with
   IBM iSeries hosts.</li>
+</ul>
+<h2>Changes in version 3.6alpha1, 8. March 2017</h2>
+<ul>
  <li>[all] Fixed the <b>unlockDelay</b> resource, which was inadvertently
   ignored (effectively aways on) for several releases. The value is now
   <b>false</b> for s3270, ws3270 and tcl3270, and <b>true</b> elsewhere.
