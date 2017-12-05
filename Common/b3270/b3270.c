@@ -139,6 +139,9 @@ static const char *cstate_name[] = {
     "connected-tn3270e"
 };
 
+static char *pending_model;
+static char *pending_oversize;
+
 static void check_min_version(const char *min_version);
 static void b3270_register(void);
 
@@ -425,13 +428,31 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 }
 
 /*
- * Model action:
- * Model(["327x-n[-E]"[,<rows>x<cols>a]])
+ * Toggle the model.
  */
 static bool
-Model_action(ia_t ia, unsigned argc, const char **argv)
+toggle_model(const char *name _is_unused, const char *value)
 {
-    const char *model;
+    Replace(pending_model, *value? NewString(value): NULL);
+    return true;
+}
+
+/*
+ * Toggle oversize.
+ */
+static bool
+toggle_oversize(const char *name _is_unused, const char *value)
+{
+    Replace(pending_oversize, *value? NewString(value): NULL);
+    return true;
+}
+
+/*
+ * Done function for changing the model and oversize.
+ */
+static bool
+toggle_model_done(bool success)
+{
     char *color;
     char *digit;
     unsigned ovr = 0, ovc = 0;
@@ -446,51 +467,48 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 	bool m3279;
 	bool alt;
     } old;
+    bool res = true;
 
-    action_debug("Model", ia, argc, argv);
-    if (check_argc("Model", argc, 0, 2) < 0) {
-	return false;
-    }
-
-    /* With no arguments, outputs the current model. */
-    if (argc == 0) {
-	action_output("%s",
-		lazyaf("327%c-%d%s%s",
-		    appres.m3279? '9': '8',
-		    model_num,
-		    appres.extended? "-E": "",
-		    (ov_rows || ov_cols)?
-			lazyaf(",%dx%d", ov_cols, ov_rows): ""));
-	return true;
+    if (!success || (pending_model == NULL && pending_oversize == NULL)) {
+	goto done;
     }
 
     if (PCONNECTED) {
-	popup_an_error("Model: Cannot change model while connected");
-	return false;
+	popup_an_error("Toggle(%s/%s): Cannot change model or oversize while "
+		"connected", ResModel, ResOversize);
+	goto fail;
     }
 
     /*
      * One argument changes the model number and clears oversize.
      * Two changes both.
      */
-    model = argv[0];
-    if ((strlen(model) != 6 && strlen(model) != 8) ||
-	strncmp(model, "327", 3) ||
-	(color = strchr("89", model[3])) == NULL ||
-	model[4] != '-' ||
-	(digit = strchr("2345", model[5])) == NULL ||
-	(strlen(model) == 8 && strcasecmp(model + 6, "-E"))) {
+    if (pending_model != NULL) {
+	if ((strlen(pending_model) != 6 && strlen(pending_model) != 8) ||
+	    strncmp(pending_model, "327", 3) ||
+	    (color = strchr("89", pending_model[3])) == NULL ||
+	    pending_model[4] != '-' ||
+	    (digit = strchr("2345", pending_model[5])) == NULL ||
+	    (strlen(pending_model) == 8 &&
+	     strcasecmp(pending_model + 6, "-E"))) {
 
-	popup_an_error("Model: First parameter must be 327[89]-[2345][-E]");
-	return false;
-    }
-    if (argc > 1) {
-	char x, junk;
-	if (sscanf(argv[1], "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
-		|| x != 'x') {
-	    popup_an_error("Model: Second parameter must be <cols>x<rows>");
-	    return false;
+	    popup_an_error("Toggle(%s): Model must be 327[89]-[2345][-E]",
+		    ResModel);
+	    goto fail;
 	}
+    }
+
+    if (pending_oversize != NULL) {
+	char x, junk;
+	if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
+		|| x != 'x') {
+	    popup_an_error("Toggle(%s): Oversize must be <cols>x<rows>",
+		    ResOversize);
+	    goto fail;
+	}
+    } else {
+	ovc = 0;
+	ovr = 0;
     }
 
     /* Save the current settings. */
@@ -503,10 +521,14 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
     old.m3279 = appres.m3279;
     old.alt = screen_alt;
 
-    /* Change the screen size and emulation mode. */
-    model_number = *digit - '0';
-    appres.m3279 = *color == '9';
-    appres.extended = (strlen(model) == 8);
+    /* Change settings. */
+    if (pending_model != NULL) {
+	model_number = *digit - '0';
+	appres.m3279 = *color == '9';
+	appres.extended = (strlen(pending_model) == 8);
+    } else {
+	model_number = model_num;
+    }
     set_rows_cols(model_number, ovc, ovr);
 
     if (model_num != model_number ||
@@ -535,7 +557,15 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 	report_terminal_name();
     }
 
-    return true;
+goto done;
+
+fail:
+    res = false;
+
+done:
+    Replace(pending_model, NULL);
+    Replace(pending_oversize, NULL);
+    return res;
 }
 
 /*
@@ -895,7 +925,6 @@ static void
 b3270_register(void)
 {
     static action_table_t actions[] = {
-	{ "Model",	Model_action,	0 },
 	{ "Trace",	Trace_action,	0 },
 	{ "ClearRegion",ClearRegion_action,0 }
     };
@@ -931,6 +960,8 @@ b3270_register(void)
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
     register_extended_toggle(ResTermName, toggle_terminal_name, NULL);
+    register_extended_toggle(ResModel, toggle_model, toggle_model_done);
+    register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);
