@@ -57,6 +57,16 @@ typedef struct {
 } toggle_t;
 static toggle_t toggle[N_TOGGLES];
 
+/* Extended upcalls. */
+typedef struct toggle_extended_upcalls {
+    struct toggle_extended_upcalls *next;
+    char *name;
+    toggle_extended_upcall_t *upcall;
+    toggle_extended_done_t *done;
+} toggle_extended_upcalls_t;
+static toggle_extended_upcalls_t *extended_upcalls;
+static toggle_extended_upcalls_t **extended_upcalls_last = &extended_upcalls;
+
 /* Toggle name dictionary. */
 toggle_name_t toggle_names[] = {
     { ResMonoCase,        MONOCASE,		false },
@@ -163,46 +173,119 @@ toggle_exiting(bool mode _is_unused)
     }
 }
 
+/*
+ * Toggle action.
+ *  Toggle(toggleName)
+ *  Toggle(toggleName,value[,toggleName,value...])
+ * For old-style boolean toggles, values can be Set, Clear, On, Off.
+ */
 bool
 Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
     int j;
     int ix;
+    toggle_extended_upcalls_t *u = NULL;
+    unsigned arg = 0;
+    toggle_extended_done_t **dones;
+    int n_dones = 0;
+    bool success = true;
+    int d;
 
     action_debug("Toggle", ia, argc, argv);
-    if (check_argc("Toggle", argc, 1, 2) < 0) {
-	return false;
-    }
-    for (j = 0; toggle_names[j].name != NULL; j++) {
-	if (!toggle_supported(toggle_names[j].index)) {
-	    continue;
-	}
-	if (!strcasecmp(argv[0], toggle_names[j].name)) {
-	    ix = toggle_names[j].index;
-	    break;
-	}
-    }
-    if (toggle_names[j].name == NULL) {
-	popup_an_error("Toggle: Unknown toggle name '%s'", argv[0]);
+
+    /* Check basic syntax. */
+    if (argc < 1) {
+	popup_an_error("Toggle requires at least one argument");
 	return false;
     }
 
-    if (argc == 1) {
-	do_toggle_reason(ix, TT_ACTION);
-    } else if (!strcasecmp(argv[1], "set") || !strcasecmp(argv[1], "on")) {
-	if (!toggled(ix)) {
-	    do_toggle_reason(ix, TT_ACTION);
+    dones = (toggle_extended_done_t **)Malloc(argc
+	    * sizeof(toggle_extended_done_t *));
+
+    /* Look up the toggle name. */
+    while (arg < argc) {
+	for (j = 0; toggle_names[j].name != NULL; j++) {
+	    if (!toggle_supported(toggle_names[j].index)) {
+		continue;
+	    }
+	    if (!strcasecmp(argv[arg], toggle_names[j].name)) {
+		ix = toggle_names[j].index;
+		break;
+	    }
 	}
-    } else if (!strcasecmp(argv[1], "clear") || !strcasecmp(argv[1], "off")) {
-	if (toggled(ix)) {
-	    do_toggle_reason(ix, TT_ACTION);
+	if (toggle_names[j].name == NULL) {
+	    for (u = extended_upcalls; u != NULL; u = u->next) {
+		if (!strcasecmp(argv[arg], u->name)) {
+		    break;
+		}
+	    }
 	}
-    } else {
-	popup_an_error("Toggle: Unknown keyword '%s' (must be 'Set' or "
-		"'Clear')", argv[1]);
-	return false;
+	if (toggle_names[j].name == NULL && u == NULL) {
+	    popup_an_error("Toggle: Unknown toggle name '%s'", argv[0]);
+	    goto failed;
+	}
+
+	/* Check for old syntax (flip the value of a Boolean). */
+	if (argc - arg == 1) {
+	    if (u == NULL) {
+		do_toggle_reason(ix, TT_ACTION);
+		goto done;
+	    } else {
+		popup_an_error("Toggle: '%s' requires a value", argv[arg]);
+		goto failed;
+	    }
+	}
+
+	if (u == NULL) {
+	    /* Check for explicit Boolean value. */
+	    if (!strcasecmp(argv[arg + 1], "set") ||
+		    !strcasecmp(argv[arg + 1], "on")) {
+		if (!toggled(ix)) {
+		    do_toggle_reason(ix, TT_ACTION);
+		}
+	    } else if (!strcasecmp(argv[arg + 1], "clear") ||
+		    !strcasecmp(argv[arg + 1], "off")) {
+		if (toggled(ix)) {
+		    do_toggle_reason(ix, TT_ACTION);
+		}
+	    } else {
+		popup_an_error("Toggle: Unknown keyword '%s' (must be 'Set' "
+			"or 'Clear')", argv[arg + 1]);
+		goto failed;
+	    }
+	} else {
+	    /*
+	     * Call an extended toggle, remembering each unique 'done'
+	     * function.
+	     */
+	    if (u->done != NULL) {
+		for (d = 0; d < n_dones; d++) {
+		    if (dones[d] == u->done) {
+			break;
+		    }
+		}
+		if (d >= n_dones) {
+		    dones[n_dones++] = u->done;
+		}
+	    }
+	    if (!u->upcall(argv[arg], argv[arg + 1])) {
+		goto failed;
+	    }
+	}
+	arg += 2;
     }
-    return true;
+    goto done;
+
+failed:
+    success = false;
+
+done:
+    /* Call each of the done functions. */
+    for (d = 0; d < n_dones; d++) {
+	success &= (*dones[d])(success);
+    }
+    Free(dones);
+    return success;
 }
 
 /**
@@ -318,4 +401,30 @@ register_toggles(toggle_register_t toggles[], unsigned count)
 	u->flags = toggles[i].flags;
 	toggle[toggles[i].ix].upcalls = u;
     }
+}
+
+/**
+ * Register an extended toggle.
+ *
+ * @param[in] name	Toggle name
+ * @param[in] upcall	Value-change upcall.
+ * @param[in] done	Done upcall.
+ */
+void
+register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
+	toggle_extended_done_t done)
+{
+    toggle_extended_upcalls_t *u;
+
+    u = (toggle_extended_upcalls_t *)Malloc(sizeof(toggle_extended_upcalls_t)
+	    + strlen(name) + 1);
+    u->next = NULL;
+    u->name = (char *)(u + 1);
+    strcpy(u->name, name);
+    u->upcall = upcall;
+    u->done = done;
+
+    *extended_upcalls_last = u;
+    extended_upcalls_last = &u->next;
+
 }

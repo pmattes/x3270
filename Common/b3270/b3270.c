@@ -539,46 +539,18 @@ Model_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * TerminalName action:
- * TerminalName()
- * TerminalName([Change,]name)
- * TerminalName(Default)
+ * Terminal name toggle.
  */
 static bool
-TerminalName_action(ia_t ia, unsigned argc, const char **argv)
+toggle_terminal_name(const char *name _is_unused, const char *value)
 {
-    char *new_name;
-
-    action_debug("TerminalName", ia, argc, argv);
-    if (check_argc("TerminalName", argc, 0, 2) < 0) {
-	return false;
-    }
-
-    /* With no arguments, outputs the current terminal name. */
-    if (argc == 0) {
-	action_output("%s", appres.termname? appres.termname: "");
-	return true;
-    }
-
-    if (argc == 2 && strcasecmp(argv[0], "Change")) {
-	popup_an_error("TerminalName: First argument must be 'Change'");
-	return false;
-    }
-
     if (PCONNECTED) {
-	popup_an_error("TerminalName: Cannot change while connected");
+	popup_an_error("Toggle(%s): Cannot change while connected",
+		ResTermName);
 	return false;
     }
 
-    if (!strcasecmp(argv[0], "Default")) {
-	new_name = NULL;
-    } else if (!strcasecmp(argv[0], "Change")) {
-	new_name = NewString(argv[1]);
-    } else {
-	new_name = NewString(argv[0]);
-    }
-
-    appres.termname = clean_termname(new_name);
+    appres.termname = clean_termname(*value? value: NULL);
     report_terminal_name();
     return true;
 }
@@ -925,8 +897,7 @@ b3270_register(void)
     static action_table_t actions[] = {
 	{ "Model",	Model_action,	0 },
 	{ "Trace",	Trace_action,	0 },
-	{ "ClearRegion",ClearRegion_action,0 },
-	{ "TerminalName",TerminalName_action,0 }
+	{ "ClearRegion",ClearRegion_action,0 }
     };
     static opt_t b3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
@@ -959,6 +930,7 @@ b3270_register(void)
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
+    register_extended_toggle(ResTermName, toggle_terminal_name, NULL);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);

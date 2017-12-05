@@ -68,3 +68,8 @@ typedef struct {
     unsigned flags;
 } toggle_register_t;
 void register_toggles(toggle_register_t toggles[], unsigned count);
+
+typedef bool toggle_extended_upcall_t(const char *name, const char *value);
+typedef bool toggle_extended_done_t(bool success);
+void register_extended_toggle(const char *name,
+	toggle_extended_upcall_t upcall, toggle_extended_done_t done);
