@@ -1406,7 +1406,7 @@ success:
 	    /* Create the parameter array. */
 	    params = (const char **)Malloc(param_count * sizeof(const char *));
 	    for (i = 0; i < param_count; i++) {
-		params[i] = vb_buf(&r[i]);
+		params[i] = vb_buf(&r[i])? vb_buf(&r[i]) : NewString("");
 	    }
 	}
 

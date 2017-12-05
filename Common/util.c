@@ -147,7 +147,7 @@ scatv(const char *s, char *buf, size_t len)
     }
 
     /* Copy what fits. */
-    (void) snprintf(buf, len, "%s", vb_buf(&r));
+    (void) snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
     vb_free(&r);
 
     return buf;
