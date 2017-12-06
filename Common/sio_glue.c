@@ -45,11 +45,30 @@
 #include "sio_glue.h"
 #include "sio_internal.h"
 #include "telnet.h"
+#include "toggles.h"
 #include "varbuf.h"
 
 /* Typedefs */
 
 /* Statics */
+static struct {
+    unsigned opt;
+    const char *name;
+} tls_opt_names[] = {
+    { SSL_OPT_ACCEPT_HOSTNAME, ResAcceptHostname },
+    { SSL_OPT_VERIFY_HOST_CERT, ResVerifyHostCert },
+    { SSL_OPT_TLS, ResTls },
+    { SSL_OPT_CA_DIR, ResCaDir },
+    { SSL_OPT_CA_FILE, ResCaFile },
+    { SSL_OPT_CERT_FILE, ResCertFile },
+    { SSL_OPT_CERT_FILE_TYPE, ResCertFileType },
+    { SSL_OPT_CHAIN_FILE, ResChainFile },
+    { SSL_OPT_KEY_FILE, ResKeyFile },
+    { SSL_OPT_KEY_FILE_TYPE, ResKeyFileType },
+    { SSL_OPT_KEY_PASSWD, ResKeyPasswd },
+    { SSL_OPT_CLIENT_CERT, ResClientCert },
+    { 0, NULL }
+};
 
 /* Globals */
 
@@ -203,11 +222,141 @@ add_ssl_resources(void)
 }
 
 /*
+ * Translate an option number to a toggle (resource) name.
+ */
+static const char *
+sio_toggle_name(unsigned opt)
+{
+    int i;
+
+    for (i = 0; tls_opt_names[i].opt; i++) {
+	if (tls_opt_names[i].opt == opt) {
+	    return tls_opt_names[i].name;
+	}
+    }
+    return NULL;
+}
+
+/*
+ * Translate a toggle (resource) name to an option number.
+ */
+static unsigned
+sio_toggle_value(const char *name)
+{
+    int i;
+
+    for (i = 0; tls_opt_names[i].opt; i++) {
+	if (!strcasecmp(name, tls_opt_names[i].name)) {
+	    return tls_opt_names[i].opt;
+	}
+    }
+    return 0;
+}
+
+/*
+ * Parse a Boolean value.
+ */
+static bool
+parse_bool(const char *value, bool *res)
+{
+    if (!strcasecmp(value, "true")) {
+	*res = true;
+	return true;
+    }
+    if (!strcasecmp(value, "false")) {
+	*res = false;
+	return true;
+    }
+    return false;
+}
+
+/*
+ * Toggle for TLS parameters.
+ */
+static bool
+sio_toggle(const char *name, const char *value)
+{
+    bool b;
+
+    if (cstate != NOT_CONNECTED) {
+	popup_an_error("Toggle(%s): Cannot change while connected", name);
+	return false;
+    }
+
+    /*
+     * Many of these are memory leaks, so if someone changes them enough,
+     * we will run out of memory.
+     *
+     * At some point, it would make sense to copy every string in appres into
+     * the heap at init time, so they can be replaced without leaking.
+     */
+    switch (sio_toggle_value(name)) {
+    case SSL_OPT_ACCEPT_HOSTNAME:
+	appres.ssl.accept_hostname = value[0]? NewString(value) : NULL;
+	break;
+    case SSL_OPT_VERIFY_HOST_CERT:
+	if (!parse_bool(value, &b)) {
+	    popup_an_error("Toggle(%s): Invalid value '%s'", name, value);
+	    return false;
+	}
+	appres.ssl.verify_host_cert = b;
+	break;
+    case SSL_OPT_TLS:
+	if (!parse_bool(value, &b)) {
+	    popup_an_error("Toggle(%s): Invalid value '%s'", name, value);
+	    return false;
+	}
+	appres.ssl.tls = b;
+	break;
+    case SSL_OPT_CA_DIR:
+	appres.ssl.ca_dir = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_CA_FILE:
+	appres.ssl.ca_file = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_CERT_FILE:
+	appres.ssl.cert_file = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_CERT_FILE_TYPE:
+	appres.ssl.cert_file_type = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_CHAIN_FILE:
+	appres.ssl.chain_file = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_KEY_FILE:
+	appres.ssl.key_file = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_KEY_FILE_TYPE:
+	appres.ssl.key_file_type = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_KEY_PASSWD:
+	appres.ssl.key_passwd = value[0]? NewString(value): NULL;
+	break;
+    case SSL_OPT_CLIENT_CERT:
+	appres.ssl.client_cert = value[0]? NewString(value): NULL;
+	break;
+    default:
+	popup_an_error("Toggle(%s): Unknown name", name);
+	return false;
+    }
+
+    return true;
+}
+
+/*
  * Register SSL-specific options and resources.
  */
 void
 sio_glue_register(void)
 {
+    unsigned supported_options = sio_all_options_supported();
+
     add_ssl_opts();
     add_ssl_resources();
+
+    FOREACH_SSL_OPTS(opt) {
+	if (supported_options & opt) {
+	    register_extended_toggle(sio_toggle_name(opt), sio_toggle, NULL);
+	}
+    } FOREACH_SSL_OPTS_END(opt);
 }
