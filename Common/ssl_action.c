@@ -57,65 +57,14 @@
 static bool
 Ssl_action(ia_t ia, unsigned argc, const char **argv)
 {
-    unsigned options = sio_all_options_supported();
-    int i;
-    unsigned long l;
-    char *s;
-
     action_debug("Ssl", ia, argc, argv);
-    if (check_argc("Ssl", argc, 1, 3) < 0) {
+    if (check_argc("Ssl", argc, 1, 1) < 0) {
 	return false;
     }
 
-    for (i = 0; i < n_sio_flagged_res; i++) {
-	res_t *res = &sio_flagged_res[i].res;
-
-	if (!(options & sio_flagged_res[i].flag) ||
-		strcasecmp(argv[0], res->name)) {
-	    continue;
-	}
-	if (argc != 2) {
-	    popup_an_error("Ssl: missing or extra value after %s", argv[0]);
-	    return false;
-	}
-	switch (res->type) {
-	case XRM_STRING:
-	    *(char **)res->address = NewString(argv[1]);
-	    break;
-	case XRM_BOOLEAN:
-	    if (!strcasecmp(argv[1], "true")) {
-		*(bool *)res->address = true;
-	    } else if (!strcasecmp(argv[1], "false")) {
-		*(bool *)res->address = false;
-	    } else {
-		popup_an_error("Ssl: %s requires True or False", argv[0]);
-		return false;
-	    }
-	    break;
-	case XRM_INT:
-	    l = strtoul(argv[1], &s, 0);
-	    if (s == argv[1] || *s != '\0') {
-		popup_an_error("Ssl: invalid value for %s\n", argv[0]);
-		return false;
-	    }
-	    *(int *)res->address = (int)l;
-	    break;
-	default:
-	    continue;
-	}
-
-	/* Success. */
-	return true;
-    }
-
     if (!strcasecmp(argv[0], "SessionInfo")) {
-	const char *info;
+	const char *info = net_session_info();
 
-	if (argc != 1) {
-	    popup_an_error("Ssl: extra value after SessionInfo");
-	    return false;
-	}
-	info = net_session_info();
 	if (info != NULL) {
 	    action_output("%s", net_session_info());
 	    return true;
@@ -126,13 +75,7 @@ Ssl_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!strcasecmp(argv[0], "CertInfo")) {
-	const char *info;
-
-	if (argc != 1) {
-	    popup_an_error("Ssl: extra value after CertInfo");
-	    return false;
-	}
-	info = net_server_cert_info();
+	const char *info = net_server_cert_info();
 	if (info != NULL) {
 	    action_output("%s", net_server_cert_info());
 	    return true;
@@ -142,11 +85,8 @@ Ssl_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
-    action_output("Ssl: must specify one of %s SessionInfo CertInfo",
-	    sio_option_names());
-
-
-    return true;
+    popup_an_error("Ssl: must specify SessionInfo or CertInfo");
+    return false;
 }
 
 /*

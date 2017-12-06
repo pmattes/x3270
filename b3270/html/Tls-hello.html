@@ -2,29 +2,30 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>b3270 ssl-hello Indication</title>
+  <title>b3270 tls-hello Indication</title>
   <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
 </head>
 
 <body>
-<a name="ssl-hello"></a><h3>SSL Hello Indication</h3>
+<a name="tls-hello"></a><h3>TLS Hello Indication</h3>
 
-<p>SSL initialization message. This is a one-time indication.</p>
+<p>TLS initialization message. This is a one-time indication.</p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>supported</td><td>yes</td><td><b>true</b> or <b>false</b></td></tr>
- <tr><td>provider</td><td>yes</td><td>Name of SSL/TLS provider library</td></tr>
+ <tr><td>provider</td><td>yes</td><td>Name of TLS provider library</td></tr>
  <tr><td>options</td><td>no</td><td>List of supported <a href="#options">options</a></td></tr>
 </table>
 <p>Example:
 <pre>
-&lt;ssl-hello supported="true" provider="OpenSSL 1.0.1 14 Mar 2012" options="certFileType chainFile keyFile keyFileType keyPasswd acceptHostname verifyHostCert tls"&gt;
+&lt;tls-hello supported="true" provider="OpenSSL 1.0.1 14 Mar 2012" options="certFileType chainFile keyFile keyFileType keyPasswd acceptHostname verifyHostCert tls"&gt;
 </pre></p>
-<a name="options"></a><h3>SSL Options</h3>
-<p>The <b>Ssl()</b> action allows the SSL configuration to be changed. The
-<b>ssl-hello</b> indication lists the option keywords supported by this
-implementation (not all implementations support all options).
+<a name="options"></a><h3>TLS Options</h3>
+<p>The <b>Toggle()</b> action allows the TLS configuration to be changed. The
+<b>tls-hello</b> indication shows whether TLS is supported, and lists the
+TLS-related option keywords supported by this implementation (not all
+implementations support all options).
 Possible values include:</p>
 
 <table border cols=2 width="75%">

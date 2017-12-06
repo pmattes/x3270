@@ -49,28 +49,43 @@
 #include "varbuf.h"
 
 /* Typedefs */
-
-/* Statics */
-static struct {
-    unsigned opt;
-    const char *name;
-} tls_opt_names[] = {
-    { SSL_OPT_ACCEPT_HOSTNAME, ResAcceptHostname },
-    { SSL_OPT_VERIFY_HOST_CERT, ResVerifyHostCert },
-    { SSL_OPT_TLS, ResTls },
-    { SSL_OPT_CA_DIR, ResCaDir },
-    { SSL_OPT_CA_FILE, ResCaFile },
-    { SSL_OPT_CERT_FILE, ResCertFile },
-    { SSL_OPT_CERT_FILE_TYPE, ResCertFileType },
-    { SSL_OPT_CHAIN_FILE, ResChainFile },
-    { SSL_OPT_KEY_FILE, ResKeyFile },
-    { SSL_OPT_KEY_FILE_TYPE, ResKeyFileType },
-    { SSL_OPT_KEY_PASSWD, ResKeyPasswd },
-    { SSL_OPT_CLIENT_CERT, ResClientCert },
-    { 0, NULL }
-};
+typedef struct {
+    unsigned flag;
+    res_t res;
+} flagged_res_t;
 
 /* Globals */
+
+/* Statics */
+
+/* Note: These are ordered by bitmap (flag) value, lowest to highest. */
+static flagged_res_t sio_flagged_res[] = {
+    { SSL_OPT_ACCEPT_HOSTNAME,
+	{ ResAcceptHostname, aoffset(ssl.accept_hostname), XRM_STRING } },
+    { SSL_OPT_VERIFY_HOST_CERT,
+	{ ResVerifyHostCert, aoffset(ssl.verify_host_cert), XRM_BOOLEAN } },
+    { SSL_OPT_TLS,
+	{ ResTls, aoffset(ssl.tls), XRM_BOOLEAN } },
+    { SSL_OPT_CA_DIR,
+	{ ResCaDir, aoffset(ssl.ca_dir), XRM_STRING } },
+    { SSL_OPT_CA_FILE,
+	{ ResCaFile, aoffset(ssl.ca_file), XRM_STRING } },
+    { SSL_OPT_CERT_FILE,
+	{ ResCertFile, aoffset(ssl.cert_file), XRM_STRING } },
+    { SSL_OPT_CERT_FILE_TYPE,
+	{ ResCertFileType,aoffset(ssl.cert_file_type), XRM_STRING } },
+    { SSL_OPT_CHAIN_FILE,
+	{ ResChainFile, aoffset(ssl.chain_file), XRM_STRING } },
+    { SSL_OPT_KEY_FILE,
+	{ ResKeyFile, aoffset(ssl.key_file), XRM_STRING } },
+    { SSL_OPT_KEY_FILE_TYPE,
+	{ ResKeyFileType, aoffset(ssl.key_file_type),XRM_STRING } },
+    { SSL_OPT_KEY_PASSWD,
+	{ ResKeyPasswd, aoffset(ssl.key_passwd), XRM_STRING } },
+    { SSL_OPT_CLIENT_CERT,
+	{ ResClientCert, aoffset(ssl.client_cert), XRM_STRING } }
+};
+static int n_sio_flagged_res = (int)array_count(sio_flagged_res);
 
 /*
  * Add SSL options.
@@ -222,35 +237,60 @@ add_ssl_resources(void)
 }
 
 /*
- * Translate an option number to a toggle (resource) name.
+ * Translate an option flag to its name.
  */
 static const char *
-sio_toggle_name(unsigned opt)
+sio_option_name(unsigned option)
 {
-    int i;
+    int i = 0;
 
-    for (i = 0; tls_opt_names[i].opt; i++) {
-	if (tls_opt_names[i].opt == opt) {
-	    return tls_opt_names[i].name;
+    FOREACH_SSL_OPTS(opt) {
+	if (option & opt) {
+	    return sio_flagged_res[i].res.name;
 	}
-    }
+	i++;
+    } FOREACH_SSL_OPTS_END(opt);
     return NULL;
 }
 
 /*
- * Translate a toggle (resource) name to an option number.
+ * Translate an option to its flag value.
  */
 static unsigned
 sio_toggle_value(const char *name)
 {
-    int i;
+    int i = 0;
 
-    for (i = 0; tls_opt_names[i].opt; i++) {
-	if (!strcasecmp(name, tls_opt_names[i].name)) {
-	    return tls_opt_names[i].opt;
+    FOREACH_SSL_OPTS(opt) {
+	if (!strcasecmp(sio_flagged_res[i].res.name, name)) {
+	    return opt;
 	}
-    }
+	i++;
+    } FOREACH_SSL_OPTS_END(opt);
     return 0;
+}
+
+/* Translate supported SSL options to a list of names. */
+char *
+sio_option_names(void)
+{
+    unsigned options = sio_all_options_supported();
+    varbuf_t v;
+    char *sep = "";
+
+    vb_init(&v);
+    FOREACH_SSL_OPTS(opt) {
+	if (options & opt) {
+	    const char *opt_name = sio_option_name(opt);
+
+	    if (opt_name != NULL) {
+		vb_appendf(&v, "%s%s", sep, opt_name);
+		sep = " ";
+	    }
+	}
+    } FOREACH_SSL_OPTS_END(opt);
+
+    return lazya(vb_consume(&v));
 }
 
 /*
@@ -356,7 +396,7 @@ sio_glue_register(void)
 
     FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
-	    register_extended_toggle(sio_toggle_name(opt), sio_toggle, NULL);
+	    register_extended_toggle(sio_option_name(opt), sio_toggle, NULL);
 	}
     } FOREACH_SSL_OPTS_END(opt);
 }

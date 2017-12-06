@@ -2,14 +2,14 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>b3270 ssl Indication</title>
+  <title>b3270 tls Indication</title>
   <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
 </head>
 
 <body>
-<a name="ssl"></a><h3>ssl Indication</h3>
+<a name="tls"></a><h3>tls Indication</h3>
 
-<p>Change in SSL state.</p>
+<p>Change in TLS state.</p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
@@ -23,7 +23,7 @@
 <b>true</b>.</p>
 <p>Example:
 <pre>
-&lt;ssl secure="true" verified="false" session="Version: TLSv1.2&amp;#10;Cipher: AES256-SHA" host-cert="Public key: 2048 bit RSA&amp;10;Subject: C = US, ST = Michigan, L = Southfield, O = &quot;ATT Services, Inc.&quot;, OU = zOS, CN = mvsap6-tcpipin.ims.att.com&amp;#10;Issuer: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;Alternate DNS names: mvsap6-tcpipin.ims.att.com&amp;#10;CA 1 Public key: 2048 bit RSA&amp;#10;CA 1 Subject: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;CA 1 Issuer: C = US, O = &quot;VeriSign, Inc.&quot;, OU = VeriSign Trust Network, OU = &quot;(c) 2006 VeriSign, Inc. - For authorized use only&quot;, CN = VeriSign Class 3 Public Primary Certification Authority - G5"/&gt;
+&lt;tls secure="true" verified="false" session="Version: TLSv1.2&amp;#10;Cipher: AES256-SHA" host-cert="Public key: 2048 bit RSA&amp;10;Subject: C = US, ST = Michigan, L = Southfield, O = &quot;ATT Services, Inc.&quot;, OU = zOS, CN = mvsap6-tcpipin.ims.att.com&amp;#10;Issuer: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;Alternate DNS names: mvsap6-tcpipin.ims.att.com&amp;#10;CA 1 Public key: 2048 bit RSA&amp;#10;CA 1 Subject: C = US, O = Symantec Corporation, OU = Symantec Trust Network, CN = Symantec Class 3 Secure Server CA - G4&amp;#10;CA 1 Issuer: C = US, O = &quot;VeriSign, Inc.&quot;, OU = VeriSign Trust Network, OU = &quot;(c) 2006 VeriSign, Inc. - For authorized use only&quot;, CN = VeriSign Class 3 Public Primary Certification Authority - G5"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

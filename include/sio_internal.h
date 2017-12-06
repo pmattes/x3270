@@ -31,11 +31,4 @@
  *		Internal secure I/O data and functions.
  */
 
-typedef struct {
-    unsigned flag;
-    res_t res;
-} flagged_res_t;
-extern flagged_res_t sio_flagged_res[];
-extern int n_sio_flagged_res;
-
 char *sio_option_names(void);

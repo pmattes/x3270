@@ -252,7 +252,7 @@ b3270_secure(bool ignored)
     }
     is_secure = net_secure_connection();
 
-     ui_vleaf("ssl",
+     ui_vleaf("tls",
 	     "secure", net_secure_connection()? "true": "false",
 	     "verified",
 		 net_secure_connection()? (net_secure_unverified()? "false": "true"): NULL,
@@ -409,7 +409,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     initialize_toggles();
 
     /* Send SSL set-up */
-    ui_vleaf("ssl-hello",
+    ui_vleaf("tls-hello",
 	    "supported", sio_supported()? "true": "false",
 	    "provider", sio_provider(),
 	    "options", sio_option_names(),
