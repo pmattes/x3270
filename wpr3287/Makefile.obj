@@ -63,8 +63,8 @@ wpr3287.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-wpr3287.exe: $(OBJECTS) $(DEP32XX)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
+wpr3287.exe: $(OBJECTS) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 clean:
 	rm -f *.o wpr3287.exe.manifest
