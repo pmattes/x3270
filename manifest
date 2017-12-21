@@ -326,7 +326,6 @@ lib/w32xx/libw32xx_files.mk
 lib/w32xx/Makefile
 lib/w32xx/Makefile.aux
 lib/w32xx/Makefile.obj
-Makefile
 Makefile.aux
 Makefile.in
 Playback/Makefile

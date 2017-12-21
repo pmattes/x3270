@@ -108,6 +108,9 @@
     <ClCompile Include="..\..\Common\telnet.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\telnet_new_environ.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\toggles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
