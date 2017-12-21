@@ -169,6 +169,7 @@
     <ClCompile Include="..\..\Common\rpq.c" />
     <ClCompile Include="..\..\Common\sf.c" />
     <ClCompile Include="..\..\Common\telnet.c" />
+    <ClCompile Include="..\..\Common\telnet_new_environ.c" />
     <ClCompile Include="..\..\Common\toggles.c" />
     <ClCompile Include="..\..\Common\trace.c" />
     <ClCompile Include="..\..\Common\util.c" />
