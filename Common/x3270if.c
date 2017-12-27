@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -751,6 +751,7 @@ iterative_io(int pid, unsigned short port)
 				exit(0);
 			}
 			fwrite(buf, 1, nr, stdout);
+			fflush(stdout);
 			break;
 		case WAIT_OBJECT_0 + 1: /* stdin input */
 			if (verbose) {
