@@ -64,8 +64,8 @@ static flagged_res_t sio_flagged_res[] = {
 	{ ResAcceptHostname, aoffset(ssl.accept_hostname), XRM_STRING } },
     { SSL_OPT_VERIFY_HOST_CERT,
 	{ ResVerifyHostCert, aoffset(ssl.verify_host_cert), XRM_BOOLEAN } },
-    { SSL_OPT_TLS,
-	{ ResTls, aoffset(ssl.tls), XRM_BOOLEAN } },
+    { SSL_OPT_STARTTLS,
+	{ ResStartTls, aoffset(ssl.starttls), XRM_BOOLEAN } },
     { SSL_OPT_CA_DIR,
 	{ ResCaDir, aoffset(ssl.ca_dir), XRM_STRING } },
     { SSL_OPT_CA_FILE,
@@ -341,12 +341,12 @@ sio_toggle(const char *name, const char *value)
 	}
 	appres.ssl.verify_host_cert = b;
 	break;
-    case SSL_OPT_TLS:
+    case SSL_OPT_STARTTLS:
 	if (!parse_bool(value, &b)) {
 	    popup_an_error("Toggle(%s): Invalid value '%s'", name, value);
 	    return false;
 	}
-	appres.ssl.tls = b;
+	appres.ssl.starttls = b;
 	break;
     case SSL_OPT_CA_DIR:
 	appres.ssl.ca_dir = value[0]? NewString(value): NULL;

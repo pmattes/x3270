@@ -380,8 +380,8 @@ XtResource xresources[] = {
     { ResOnlcr, ClsOnlcr, XtRBoolean, sizeof(Boolean),
       boffset(linemode.onlcr), XtRString, ResTrue },
 
-    { ResTls, ClsTls, XtRBoolean, sizeof(Boolean),
-      boffset(ssl.tls), XtRString, ResTrue },
+    { ResStartTls, ClsStartTls, XtRBoolean, sizeof(Boolean),
+      boffset(ssl.starttls), XtRString, ResTrue },
     { ResVerifyHostCert, ClsVerifyHostCert, XtRBoolean, sizeof(Boolean),
       boffset(ssl.verify_host_cert), XtRString, ResTrue },
 };

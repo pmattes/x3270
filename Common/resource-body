@@ -2894,6 +2894,17 @@ desc
     <i>x3270if</i> command can be used to connect to this socket.
 .
 
+name startTls
+applies a
+type b
+groups s
+default true
+description
+    If true, %p% will accept the TELNET STARTTLS negotiation from the host. If
+    false, it will
+    reject them.
+.
+
 name *suppress
 applies x
 groups s
@@ -3003,16 +3014,6 @@ switch -title
 desc
     Sets the title for the %p% window, overriding the default of constructing
     the name from the host that is connected to.
-.
-
-name tls
-applies a
-type b
-groups s
-default true
-description
-    If true, %p% will accept TELNET STARTTLS negotiations from the host. If
-    false, it will reject them.
 .
 
 name trace

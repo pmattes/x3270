@@ -1079,7 +1079,7 @@ net_disconnect(bool including_ssl)
 
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
-	if (!appres.ssl.tls) {
+	if (!appres.ssl.starttls) {
 	    connect_error("Connection failed:\n"
 		    "Host requested STARTTLS but STARTTLS disabled");
 	} else if (nested_tls) {
@@ -1610,7 +1610,7 @@ telnet_fsm(unsigned char c)
 	case TELOPT_STARTTLS:
 	    if (c == TELOPT_STARTTLS &&
 		    (!sio_supported() ||
-		     !appres.ssl.tls ||
+		     !appres.ssl.starttls ||
 		     secure_connection)) {
 		refused_tls = true;
 		if (secure_connection) {
