@@ -1165,6 +1165,6 @@ copy_xres_to_res_bool(void)
     copy_bool(linemode.inlcr);
     copy_bool(linemode.onlcr);
 
-    copy_bool(ssl.tls);
+    copy_bool(ssl.starttls);
     copy_bool(ssl.verify_host_cert);
 }

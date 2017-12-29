@@ -124,7 +124,7 @@ typedef struct {
 	    Boolean onlcr;
 	} linemode;
 	struct {
-	    Boolean tls;
+	    Boolean starttls;
 	    Boolean verify_host_cert;
 	} ssl;
     } bools;

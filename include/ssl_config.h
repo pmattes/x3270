@@ -34,7 +34,7 @@ typedef struct {
     /* Required options. */
     char	*accept_hostname;
     bool	 verify_host_cert;
-    bool	 tls;
+    bool	 starttls;
 
     /* Options that might or might not be supported. */
     char	*ca_dir;
@@ -51,9 +51,9 @@ typedef struct {
 /* Required options. */
 #define SSL_OPT_ACCEPT_HOSTNAME		0x00000001
 #define SSL_OPT_VERIFY_HOST_CERT	0x00000002
-#define SSL_OPT_TLS			0x00000004
+#define SSL_OPT_STARTTLS		0x00000004
 #define SSL_REQUIRED_OPTS \
-    (SSL_OPT_ACCEPT_HOSTNAME | SSL_OPT_VERIFY_HOST_CERT | SSL_OPT_TLS)
+    (SSL_OPT_ACCEPT_HOSTNAME | SSL_OPT_VERIFY_HOST_CERT | SSL_OPT_STARTTLS)
 
 /* Options optionally supported by specific implementations. */
 #define SSL_OPT_CA_DIR			0x00000008

@@ -483,7 +483,7 @@ set_appres_defaults(void)
 #endif /*]*/
 
     appres.ssl.verify_host_cert = true;
-    appres.ssl.tls = true;
+    appres.ssl.starttls = true;
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
