@@ -664,7 +664,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     CloseHandle(process_information.hThread);
 
     /* Create a new script description. */
-    c = (child_t *)Malloc(sizeof(child_t));
+    c = (child_t *)Calloc(sizeof(child_t), 1);
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
     c->success = true;
