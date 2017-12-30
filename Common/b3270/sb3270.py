@@ -74,7 +74,7 @@ class State:
         else:
             s = s + "N "
         # 6 model
-        s = s + self.model[5] + " "
+        s = s + self.model[9] + " "
         # 7 rows
         # 8 cols
         s = s + "{} {} ".format(self.rows, self.cols)
@@ -156,9 +156,9 @@ class Parser:
             if ("state" in attrs):
                 self.state.state = attrs["state"]
 
-        if (tag == "model"):
+        if (tag == "terminal-name"):
             # Process the model number.
-            self.state.model = attrs["name"]
+            self.state.model = attrs["text"]
 
         if (tag == "erase"):
             if ("logical-rows" in attrs):
@@ -170,7 +170,7 @@ class Parser:
             # Process the formatted indication.
             self.state.formatted = not ("state" in attrs and attrs["state"] == "false");
 
-        if (tag == "cursor"):
+        if (tag == "cursor" and "row" in attrs):
             # Process the cursor address.
             self.state.row = int(attrs["row"]) - 1
             self.state.col = int(attrs["col"]) - 1
