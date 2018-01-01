@@ -18,8 +18,6 @@ class x3270if:
         self.socket = None
         port = os.getenv('X3270PORT')
         if (port != None):
-            #self.socket = socket.socket()
-            #self.socket.create_connection(['127.0.0.1',int(port)])
             self.socket = socket.create_connection(['127.0.0.1',int(port)])
             self.to3270 = self.socket.makefile('w', encoding='utf-8')
             self.from3270 = self.socket.makefile('r', encoding='utf-8')
