@@ -187,8 +187,8 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
     bool found_peer = false;
     char buf[8192];
     size_t n2r;
-    size_t nr;
-    size_t i;
+    ssize_t nr;
+    ssize_t i;
 
     /* Find the peer. */
     FOREACH_LLIST(&peer_scripts, p, peer_t *) {
