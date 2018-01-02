@@ -204,7 +204,10 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
     nr = recv(p->socket, buf, (int)n2r, 0);
     if (nr < 0) {
 #if defined(_WIN32) /*[*/
-	popup_an_error("peer recv: %s", win32_strerror(GetLastError()));
+	if (GetLastError() != WSAECONNRESET) {
+	    /* Windows does this habitually. */
+	    popup_an_error("peer recv: %s", win32_strerror(GetLastError()));
+	}
 #else /*][*/
 	popup_an_errno(errno, "peer read");
 #endif /*]*/
