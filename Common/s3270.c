@@ -320,8 +320,8 @@ check_min_version(const char *min_version)
 
     /* Compare. */
     if (our_major < min_major ||
-	our_minor < min_minor ||
-	our_iteration < min_iteration)
+	(our_major == min_major && our_minor < min_minor) ||
+	(our_major == min_major && our_minor == min_minor && our_iteration < min_iteration))
     {
 	fprintf(stderr, "Version %s < requested %s, aborting\n",
 		build_rpq_version, min_version);
