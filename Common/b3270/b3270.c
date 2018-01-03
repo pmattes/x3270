@@ -278,6 +278,17 @@ report_terminal_name(void)
     }
 }
 
+#if !defined(_WIN32) /*[*/
+/* Empty SIGCHLD handler, ensuring that we can collect child exit status. */
+static void
+sigchld_handler(int ignored)
+{
+# if !defined(_AIX) /*[*/
+    (void) signal(SIGCHLD, sigchld_handler);
+# endif /*]*/
+}
+#endif /*]*/
+
 int
 main(int argc, char *argv[])
 {
@@ -403,6 +414,9 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
     (void) signal(SIGPIPE, SIG_IGN);
+
+    /* Collect child exit status. */
+    (void) signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 
     /* Handle initial toggle settings. */
