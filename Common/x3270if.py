@@ -1,11 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Simple Python version of x3270if
 
 import os
 import socket
 import sys
+import subprocess
+import time
 
 # x3270if class.
+# Abstract class, should not use directly.
 class x3270if:
     def __init__(self,debug=False):
         self.quoteChars = '\\"'
@@ -14,30 +17,13 @@ class x3270if:
         # Debug flag
         self.debug = debug
 
-        # Socket or files
-        self.socket = None
-        port = os.getenv('X3270PORT')
-        if (port != None):
-            self.socket = socket.create_connection(['127.0.0.1',int(port)])
-            self.to3270 = self.socket.makefile('w', encoding='utf-8')
-            self.from3270 = self.socket.makefile('r', encoding='utf-8')
-            self.Debug('Connected')
-        else:
-            infd = os.getenv('X3270INPUT');
-            outfd = os.getenv('X3270OUTPUT');
-            if (infd == None or outfd == None):
-                raise Exception("Don't know what to connect to")
-            self.to3270 = os.fdopen(int(infd), 'wt', encoding='utf-8')
-            self.from3270 = os.fdopen(int(outfd), 'rt', encoding='utf-8')
-            self.Debug('Pipes connected')
-
         # Last prompt
-        self.Prompt = ""
+        self.Prompt = ''
 
     def __del__(self):
         if (self.socket != None):
             self.socket.close()
-        self.Debug('Deleted')
+        self.Debug('x3270if deleted')
 
     # Run method.
     #
@@ -57,39 +43,41 @@ class x3270if:
                 argstr = cmd
             else:
                 # Isolate the first element, the command.
-                argstr = cmd[0] + "("
+                argstr = cmd[0] + '('
                 # Iterate over everything else.
                 skip = True
-                comma = ""
+                comma = ''
                 for arg in cmd:
                     if (not skip):
                         argstr += comma + self.Quote(str(arg))
-                        comma = ","
+                        comma = ','
                     skip = False
-                argstr += ")"
+                argstr += ')'
         else:
             # Iterate over the arguments.
-            argstr = cmd + "("
-            comma = ""
+            argstr = cmd + '('
+            comma = ''
             for arg in args:
                 argstr += comma + self.Quote(str(arg))
-                comma = ","
-            argstr += ")"
+                comma = ','
+            argstr += ')'
         self.to3270.write(argstr + '\n')
         self.to3270.flush()
         self.Debug('Sent ' + argstr)
-        result = ""
-        prev = ""
+        result = ''
+        prev = ''
         while (True):
             text = self.from3270.readline().rstrip('\n')
-            self.Debug("Got " + text)
-            if (text == "ok"):
+            if (text == ''):
+                raise Exception('Emulator exited')
+            self.Debug("Got '" + text + "'")
+            if (text == 'ok'):
                 self.Prompt = prev
                 break
-            if (text == "error"):
+            if (text == 'error'):
                 self.Prompt = prev
                 raise Exception(result)
-            if (result == ""):
+            if (result == ''):
                 result = prev.lstrip('data: ')
             else:
                 result = result + '\n' + prev.lstrip('data: ')
@@ -108,7 +96,7 @@ class x3270if:
                 break
         if (not anyBad):
             return arg
-        ret = ""
+        ret = ''
         for ch in arg:
             if (ch in self.quoteChars):
                 ret += '\\' + ch
@@ -119,4 +107,82 @@ class x3270if:
     # Debug output.
     def Debug(self,text):
         if (self.debug):
-            sys.stderr.write("[33m" + text + "[0m\n")
+            sys.stderr.write('[33m' + text + '[0m\n')
+
+# x3270if child script class.
+class Child(x3270if):
+    def __init__(self,debug=False):
+        # Init the parent.
+        self.socket = None
+        x3270if.__init__(self, debug)
+
+        # Socket or files
+        port = os.getenv('X3270PORT')
+        if (port != None):
+            self.socket = socket.create_connection(['127.0.0.1',int(port)])
+            self.to3270 = self.socket.makefile('w', encoding='utf-8')
+            self.from3270 = self.socket.makefile('r', encoding='utf-8')
+            self.Debug('Connected')
+        else:
+            infd = os.getenv('X3270INPUT')
+            outfd = os.getenv('X3270OUTPUT')
+            if (infd == None or outfd == None):
+                raise Exception("Don't know what to connect to")
+            self.to3270 = os.fdopen(int(infd), 'wt', encoding='utf-8')
+            self.from3270 = os.fdopen(int(outfd), 'rt', encoding='utf-8')
+            self.Debug('Pipes connected')
+
+# x3270if peer script class (starts s3270).
+class Peer(x3270if):
+    def __init__(self,debug=False,extra_args=[]):
+        # Init the parent.
+        self.socket = None
+        self.s3270 = None
+        x3270if.__init__(self, debug)
+
+        # Create the temporary socket.
+        tempsocket = socket.socket()
+        tempsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        tempsocket.bind(('127.0.0.1', 0))
+        port = tempsocket.getsockname()[1]
+        self.Debug('Port is {0}'.format(port))
+
+        # Create the child process.
+        try:
+            self.args = ['-utf8','-scriptport',str(port),'-scriptportonce'] + extra_args
+            if (os.name == 'nt'):
+                self.s3270 = subprocess.Popen(['ws3270.exe'] + self.args,
+                        stderr=subprocess.PIPE,universal_newlines=True)
+            else:
+                self.s3270 = subprocess.Popen(['s3270'] + self.args,
+                        stderr=subprocess.PIPE,universal_newlines=True)
+            # It might take a couple of tries to connect, as it takes time to
+            # start the process. We wait a maximum of half a second.
+            tries = 0
+            connected = False
+            while (tries < 5):
+                try:
+                    self.socket = socket.create_connection(['127.0.0.1', port])
+                    connected = True
+                    break
+                except:
+                    time.sleep(0.1)
+                    tries += 1
+            if (not connected):
+                errmsg = 'Could not connect to emulator'
+                self.s3270.terminate()
+                r = self.s3270.stderr.readline().rstrip('\r\n')
+                if (r != ''):
+                    errmsg += ': ' + r
+                raise Exception(errmsg)
+            self.to3270 = self.socket.makefile('w', encoding='utf-8')
+            self.from3270 = self.socket.makefile('r', encoding='utf-8')
+            self.Debug('Connected')
+        finally:
+            del tempsocket
+
+    def __del__(self):
+        if (self.s3270 != None):
+            self.s3270.terminate()
+        x3270if.__del__(self)
+        self.Debug('Peer deleted')
