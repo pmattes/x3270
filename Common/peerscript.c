@@ -396,7 +396,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 #endif /*]*/
 
     /* Allocate the peer state and remember it. */
-    p = (peer_t *)Malloc(sizeof(peer_t));
+    p = (peer_t *)Calloc(1, sizeof(peer_t));
     llist_init(&p->llist);
     p->listener = listener;
     p->socket = accept_fd;
