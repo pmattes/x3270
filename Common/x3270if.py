@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Simple Python version of x3270if
 
+import io
 import os
 import socket
 import sys
@@ -19,9 +20,13 @@ class _x3270if():
         # Last prompt
         self.Prompt = ''
 
+    def Reencode(self,socket):
+        emulatorEncoding = self.Run('Query(LocalEncoding)')
+        if (emulatorEncoding != 'UTF-8'):
+            self.to3270 = socket.makefile('w', emulatorEncoding)
+            self.from3270 = socket.makefile('r', emulatorEncoding)
+
     def __del__(self):
-        if (self.socket != None):
-            self.socket.close()
         self.Debug('_x3270if deleted')
 
     # Run method.
@@ -113,23 +118,47 @@ class Child(_x3270if):
     def __init__(self,debug=False):
         # Init the parent.
         self.socket = None
+        self.infd = -1
+        self.outfd = -1
         _x3270if.__init__(self, debug)
 
-        # Socket or files
+        # Socket or pipes
         port = os.getenv('X3270PORT')
         if (port != None):
             self.socket = socket.create_connection(['127.0.0.1',int(port)])
             self.to3270 = self.socket.makefile('w', encoding='utf-8')
             self.from3270 = self.socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
+            emulatorEncoding = self.Run('Query(LocalEncoding)')
+            if (emulatorEncoding != 'UTF-8'):
+                self.to3270 = socket.makefile('w', emulatorEncoding)
+                self.from3270 = socket.makefile('r', emulatorEncoding)
         else:
-            infd = os.getenv('X3270INPUT')
-            outfd = os.getenv('X3270OUTPUT')
-            if (infd == None or outfd == None):
+            self.infd = os.getenv('X3270INPUT')
+            self.outfd = os.getenv('X3270OUTPUT')
+            if (self.infd == None or self.outfd == None):
                 raise Exception("Don't know what to connect to")
-            self.to3270 = os.fdopen(int(infd), 'wt', encoding='utf-8')
-            self.from3270 = os.fdopen(int(outfd), 'rt', encoding='utf-8')
+            self.to3270 = io.open(int(self.infd), 'wt', encoding='utf-8',
+                    closefd=False)
+            self.from3270 = io.open(int(self.outfd), 'rt', encoding='utf-8',
+                    closefd=False)
             self.Debug('Pipes connected')
+            emulatorEncoding = self.Run('Query(LocalEncoding)')
+            if (emulatorEncoding != 'UTF-8'):
+                self.to3270 = io.open(int(self.infd), 'wt',
+                        encoding=emulatorEncoding, closefd=False)
+                self.from3270 = io.open(int(self.outfd), 'rt',
+                        encoding=emulatorEncoding, closefd=False)
+
+    def __del__(self):
+        if (self.socket != None):
+            self.socket.close();
+        if (self.infd != -1):
+            os.close(self.infd)
+        if (self.outfd != -1):
+            os.close(self.outfd)
+        _x3270if.__del__(self)
+        self.Debug('Child deleted')
 
 # x3270if peer script class (starts s3270).
 class Peer(_x3270if):
@@ -144,13 +173,14 @@ class Peer(_x3270if):
         tempsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         tempsocket.bind(('127.0.0.1', 0))
         port = tempsocket.getsockname()[1]
-	self.Debug('Port is {0}'.format(port))
+        self.Debug('Port is {0}'.format(port))
 
         # Create the child process.
         try:
             args = ['s3270' if os.name != 'nt' else 'ws3270.exe',
-		    '-utf8',
-		    '-scriptport', str(port),
+                    '-utf8',
+                    '-minversion', '3.6',
+                    '-scriptport', str(port),
                     '-scriptportonce'] + extra_args
             self.s3270 = subprocess.Popen(args,
                     stderr=subprocess.PIPE,universal_newlines=True)
@@ -184,5 +214,7 @@ class Peer(_x3270if):
     def __del__(self):
         if (self.s3270 != None):
             self.s3270.terminate()
+        if (self.socket != None):
+            self.socket.close();
         _x3270if.__del__(self)
         self.Debug('Peer deleted')
