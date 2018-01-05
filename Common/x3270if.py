@@ -89,17 +89,17 @@ class _x3270if():
 class Child(_x3270if):
     def __init__(self,debug=False):
         # Init the parent.
-        self.socket = None
-        self.infd = -1
-        self.outfd = -1
+        self._socket = None
+        self._infd = -1
+        self._outfd = -1
         _x3270if.__init__(self, debug)
 
         # Socket or pipes
         port = os.getenv('X3270PORT')
         if (port != None):
-            self.socket = socket.create_connection(['127.0.0.1',int(port)])
-            self._to3270 = self.socket.makefile('w', encoding='utf-8')
-            self._from3270 = self.socket.makefile('r', encoding='utf-8')
+            self._socket = socket.create_connection(['127.0.0.1',int(port)])
+            self._to3270 = self._socket.makefile('w', encoding='utf-8')
+            self._from3270 = self._socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
@@ -125,8 +125,8 @@ class Child(_x3270if):
                         encoding=emulatorEncoding, closefd=False)
 
     def __del__(self):
-        if (self.socket != None):
-            self.socket.close();
+        if (self._socket != None):
+            self._socket.close();
         if (self._infd != -1):
             os.close(self._infd)
         if (self._outfd != -1):
@@ -138,8 +138,8 @@ class Child(_x3270if):
 class Peer(_x3270if):
     def __init__(self,debug=False,extra_args=[]):
         # Init the parent.
-        self.socket = None
-        self.s3270 = None
+        self._socket = None
+        self._s3270 = None
         _x3270if.__init__(self, debug)
 
         # Create a temporary socket to find a unique local port.
@@ -156,7 +156,7 @@ class Peer(_x3270if):
                     '-minversion', '3.6',
                     '-scriptport', str(port),
                     '-scriptportonce'] + extra_args
-            self.s3270 = subprocess.Popen(args,
+            self._s3270 = subprocess.Popen(args,
                     stderr=subprocess.PIPE,universal_newlines=True)
 
             # It might take a couple of tries to connect, as it takes time to
@@ -165,7 +165,7 @@ class Peer(_x3270if):
             connected = False
             while (tries < 5):
                 try:
-                    self.socket = socket.create_connection(['127.0.0.1', port])
+                    self._socket = socket.create_connection(['127.0.0.1', port])
                     connected = True
                     break
                 except:
@@ -173,22 +173,22 @@ class Peer(_x3270if):
                     tries += 1
             if (not connected):
                 errmsg = 'Could not connect to emulator'
-                self.s3270.terminate()
-                r = self.s3270.stderr.readline().rstrip('\r\n')
+                self._s3270.terminate()
+                r = self._s3270.stderr.readline().rstrip('\r\n')
                 if (r != ''):
                     errmsg += ': ' + r
                 raise Exception(errmsg)
 
-            self._to3270 = self.socket.makefile('w', encoding='utf-8')
-            self._from3270 = self.socket.makefile('r', encoding='utf-8')
+            self._to3270 = self._socket.makefile('w', encoding='utf-8')
+            self._from3270 = self._socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
         finally:
             del tempsocket
 
     def __del__(self):
-        if (self.s3270 != None):
-            self.s3270.terminate()
-        if (self.socket != None):
-            self.socket.close();
+        if (self._s3270 != None):
+            self._s3270.terminate()
+        if (self._socket != None):
+            self._socket.close();
         _x3270if.__del__(self)
         self.Debug('Peer deleted')
