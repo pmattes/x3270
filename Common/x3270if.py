@@ -11,8 +11,8 @@ import time
 # Abstract x3270if base class.
 class _x3270if():
     def __init__(self,debug=False):
-        self._quoteChars = '\\"'
-        self._badChars = self._quoteChars + ' ,()'
+        self._backslashChars = '\\"'
+        self._quoteChars = self._backslashChars + ' ,()'
 
         # Debug flag
         self._debug = debug
@@ -44,25 +44,11 @@ class _x3270if():
                 # Just one argument, presumably already formatted.
                 argstr = cmd
             else:
-                # Isolate the first element, the command.
-                argstr = cmd[0] + '('
-                # Iterate over everything else.
-                skip = True
-                comma = ''
-                for arg in cmd:
-                    if (not skip):
-                        argstr += comma + self.Quote(str(arg))
-                        comma = ','
-                    skip = False
-                argstr += ')'
+                # First element is the command.
+                argstr = cmd[0] + '(' + ','.join(self.Quote(arg) for arg in cmd[1:]) + ')'
         else:
             # Iterate over the arguments.
-            argstr = cmd + '('
-            comma = ''
-            for arg in args:
-                argstr += comma + self.Quote(str(arg))
-                comma = ','
-            argstr += ')'
+            argstr = cmd + '(' + ','.join(self.Quote(arg) for arg in args) + ')'
         self._to3270.write(argstr + '\n')
         self._to3270.flush()
         self.Debug('Sent ' + argstr)
@@ -91,20 +77,8 @@ class _x3270if():
     # Other syntax markers (space, comma, paren) just need the argument in
     #  double quotes.
     def Quote(self,arg):
-        anyBad = False
-        for ch in self._badChars:
-            if (ch in arg):
-                anyBad = True
-                break
-        if (not anyBad):
-            return arg
-        ret = ''
-        for ch in arg:
-            if (ch in self._quoteChars):
-                ret += '\\' + ch
-            else:
-                ret += ch
-        return '"' + ret + '"'
+        if (not any(ch in arg for ch in self._quoteChars)): return arg
+        return '"' + ''.join('\\' + ch if ch in self._backslashChars else ch for ch in arg) + '"'
 
     # Debug output.
     def Debug(self,text):
