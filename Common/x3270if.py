@@ -11,23 +11,21 @@ import time
 # Abstract x3270if base class.
 class _x3270if():
     def __init__(self,debug=False):
-        self.quoteChars = '\\"'
-        self.badChars = self.quoteChars + ' ,()'
+        self._quoteChars = '\\"'
+        self._badChars = self._quoteChars + ' ,()'
 
         # Debug flag
-        self.debug = debug
+        self._debug = debug
 
         # Last prompt
-        self.Prompt = ''
-
-    def Reencode(self,socket):
-        emulatorEncoding = self.Run('Query(LocalEncoding)')
-        if (emulatorEncoding != 'UTF-8'):
-            self.to3270 = socket.makefile('w', emulatorEncoding)
-            self.from3270 = socket.makefile('r', emulatorEncoding)
+        self._prompt = ''
 
     def __del__(self):
         self.Debug('_x3270if deleted')
+
+    @property
+    def prompt(self):
+        return self._prompt
 
     # Run method.
     #
@@ -65,21 +63,21 @@ class _x3270if():
                 argstr += comma + self.Quote(str(arg))
                 comma = ','
             argstr += ')'
-        self.to3270.write(argstr + '\n')
-        self.to3270.flush()
+        self._to3270.write(argstr + '\n')
+        self._to3270.flush()
         self.Debug('Sent ' + argstr)
         result = ''
         prev = ''
         while (True):
-            text = self.from3270.readline().rstrip('\n')
+            text = self._from3270.readline().rstrip('\n')
             if (text == ''):
                 raise Exception('Emulator exited')
             self.Debug("Got '" + text + "'")
             if (text == 'ok'):
-                self.Prompt = prev
+                self._prompt = prev
                 break
             if (text == 'error'):
-                self.Prompt = prev
+                self._prompt = prev
                 raise Exception(result)
             if (result == ''):
                 result = prev.lstrip('data: ')
@@ -94,7 +92,7 @@ class _x3270if():
     #  double quotes.
     def Quote(self,arg):
         anyBad = False
-        for ch in self.badChars:
+        for ch in self._badChars:
             if (ch in arg):
                 anyBad = True
                 break
@@ -102,7 +100,7 @@ class _x3270if():
             return arg
         ret = ''
         for ch in arg:
-            if (ch in self.quoteChars):
+            if (ch in self._quoteChars):
                 ret += '\\' + ch
             else:
                 ret += ch
@@ -110,7 +108,7 @@ class _x3270if():
 
     # Debug output.
     def Debug(self,text):
-        if (self.debug):
+        if (self._debug):
             sys.stderr.write('[33m' + text + '[0m\n')
 
 # x3270if child script class.
@@ -126,37 +124,39 @@ class Child(_x3270if):
         port = os.getenv('X3270PORT')
         if (port != None):
             self.socket = socket.create_connection(['127.0.0.1',int(port)])
-            self.to3270 = self.socket.makefile('w', encoding='utf-8')
-            self.from3270 = self.socket.makefile('r', encoding='utf-8')
+            self._to3270 = self.socket.makefile('w', encoding='utf-8')
+            self._from3270 = self.socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
-                self.to3270 = socket.makefile('w', emulatorEncoding)
-                self.from3270 = socket.makefile('r', emulatorEncoding)
+                self._to3270 = socket.makefile('w', emulatorEncoding)
+                self._from3270 = socket.makefile('r', emulatorEncoding)
         else:
-            self.infd = os.getenv('X3270INPUT')
-            self.outfd = os.getenv('X3270OUTPUT')
-            if (self.infd == None or self.outfd == None):
+            infd = os.getenv('X3270INPUT')
+            outfd = os.getenv('X3270OUTPUT')
+            if (infd == None or outfd == None):
                 raise Exception("Don't know what to connect to")
-            self.to3270 = io.open(int(self.infd), 'wt', encoding='utf-8',
+            self._infd = int(infd)
+            self._to3270 = io.open(self._infd, 'wt', encoding='utf-8',
                     closefd=False)
-            self.from3270 = io.open(int(self.outfd), 'rt', encoding='utf-8',
+            self._outfd = int(outfd)
+            self._from3270 = io.open(self._outfd, 'rt', encoding='utf-8',
                     closefd=False)
             self.Debug('Pipes connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
-                self.to3270 = io.open(int(self.infd), 'wt',
+                self._to3270 = io.open(self._infd, 'wt',
                         encoding=emulatorEncoding, closefd=False)
-                self.from3270 = io.open(int(self.outfd), 'rt',
+                self._from3270 = io.open(self._outfd, 'rt',
                         encoding=emulatorEncoding, closefd=False)
 
     def __del__(self):
         if (self.socket != None):
             self.socket.close();
-        if (self.infd != -1):
-            os.close(self.infd)
-        if (self.outfd != -1):
-            os.close(self.outfd)
+        if (self._infd != -1):
+            os.close(self._infd)
+        if (self._outfd != -1):
+            os.close(self._outfd)
         _x3270if.__del__(self)
         self.Debug('Child deleted')
 
@@ -205,8 +205,8 @@ class Peer(_x3270if):
                     errmsg += ': ' + r
                 raise Exception(errmsg)
 
-            self.to3270 = self.socket.makefile('w', encoding='utf-8')
-            self.from3270 = self.socket.makefile('r', encoding='utf-8')
+            self._to3270 = self.socket.makefile('w', encoding='utf-8')
+            self._from3270 = self.socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
         finally:
             del tempsocket
