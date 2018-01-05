@@ -7,9 +7,8 @@ import sys
 import subprocess
 import time
 
-# x3270if class.
-# Abstract class, should not use directly.
-class x3270if:
+# Abstract x3270if base class.
+class _x3270if():
     def __init__(self,debug=False):
         self.quoteChars = '\\"'
         self.badChars = self.quoteChars + ' ,()'
@@ -23,7 +22,7 @@ class x3270if:
     def __del__(self):
         if (self.socket != None):
             self.socket.close()
-        self.Debug('x3270if deleted')
+        self.Debug('_x3270if deleted')
 
     # Run method.
     #
@@ -110,11 +109,11 @@ class x3270if:
             sys.stderr.write('[33m' + text + '[0m\n')
 
 # x3270if child script class.
-class Child(x3270if):
+class Child(_x3270if):
     def __init__(self,debug=False):
         # Init the parent.
         self.socket = None
-        x3270if.__init__(self, debug)
+        _x3270if.__init__(self, debug)
 
         # Socket or files
         port = os.getenv('X3270PORT')
@@ -133,29 +132,29 @@ class Child(x3270if):
             self.Debug('Pipes connected')
 
 # x3270if peer script class (starts s3270).
-class Peer(x3270if):
+class Peer(_x3270if):
     def __init__(self,debug=False,extra_args=[]):
         # Init the parent.
         self.socket = None
         self.s3270 = None
-        x3270if.__init__(self, debug)
+        _x3270if.__init__(self, debug)
 
-        # Create the temporary socket.
+        # Create a temporary socket to find a unique local port.
         tempsocket = socket.socket()
         tempsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         tempsocket.bind(('127.0.0.1', 0))
         port = tempsocket.getsockname()[1]
-        self.Debug('Port is {0}'.format(port))
+	self.Debug('Port is {0}'.format(port))
 
         # Create the child process.
         try:
-            self.args = ['-utf8','-scriptport',str(port),'-scriptportonce'] + extra_args
-            if (os.name == 'nt'):
-                self.s3270 = subprocess.Popen(['ws3270.exe'] + self.args,
-                        stderr=subprocess.PIPE,universal_newlines=True)
-            else:
-                self.s3270 = subprocess.Popen(['s3270'] + self.args,
-                        stderr=subprocess.PIPE,universal_newlines=True)
+            args = ['s3270' if os.name != 'nt' else 'ws3270.exe',
+		    '-utf8',
+		    '-scriptport', str(port),
+                    '-scriptportonce'] + extra_args
+            self.s3270 = subprocess.Popen(args,
+                    stderr=subprocess.PIPE,universal_newlines=True)
+
             # It might take a couple of tries to connect, as it takes time to
             # start the process. We wait a maximum of half a second.
             tries = 0
@@ -175,6 +174,7 @@ class Peer(x3270if):
                 if (r != ''):
                     errmsg += ': ' + r
                 raise Exception(errmsg)
+
             self.to3270 = self.socket.makefile('w', encoding='utf-8')
             self.from3270 = self.socket.makefile('r', encoding='utf-8')
             self.Debug('Connected')
@@ -184,5 +184,5 @@ class Peer(x3270if):
     def __del__(self):
         if (self.s3270 != None):
             self.s3270.terminate()
-        x3270if.__del__(self)
+        _x3270if.__del__(self)
         self.Debug('Peer deleted')
