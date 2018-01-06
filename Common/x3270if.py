@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Simple Python version of x3270if
 
+"""Python interface to the x3270 family"""
+
 import io
 import os
 import socket
@@ -8,11 +10,20 @@ import sys
 import subprocess
 import time
 
-# Abstract x3270if base class.
+_backslashChars = '\\"'
+_quoteChars = _backslashChars + ' ,()'
+
+def Quote(arg):
+    """Quote an argument in action syntax"""
+    # Backslashes and double quotes need backslashes in front of them.
+    # Other syntax markers (space, comma, paren) just need the argument in
+    #  double quotes.
+    if (not any(ch in arg for ch in _quoteChars)): return arg
+    return '"' + ''.join('\\' + ch if ch in _backslashChars else ch for ch in arg) + '"'
+
 class _x3270if():
+    """Abstract x3270if base class"""
     def __init__(self,debug=False):
-        self._backslashChars = '\\"'
-        self._quoteChars = self._backslashChars + ' ,()'
 
         # Debug flag
         self._debug = debug
@@ -20,35 +31,36 @@ class _x3270if():
         # Last prompt
         self._prompt = ''
 
+        # File streams to/from the emulator
+        self._to3270 = None
+        self._from3270 = None
+
     def __del__(self):
         self.Debug('_x3270if deleted')
 
     @property
     def prompt(self):
+        """Gets the last emulator prompt"""
         return self._prompt
 
-    # Run method.
-    #
-    # Can pass just a string, which will be left untouched.
-    # Can pass a command and arguments; the arguments will be quoted as needed
-    #  and put in parentheses.
-    # Can pass a list or a tuple; the first element will be treated as the
-    #  command name and the remainder will be treated as the arguments.
-    # Returns literal text from the emulator. Multi-line output is separated
-    #  by newlines.
-    # Raises an exception if the command fails.
     def Run(self,cmd,*args):
+        """Run method: Send an action to the emulator"""
+        # Can pass just a string, which will be left untouched.
+        # Can pass a command and arguments; the arguments will be quoted as
+        #  needed and put in parentheses.
+        # Can pass a list or a tuple; the first element will be treated as the
+        #  command name and the remainder will be treated as the arguments.
+        # Returns literal text from the emulator. Multi-line output is
+        #  separated by newlines.
+        # Raises an exception if the command fails.
         # First argument (if any) is the action name, others are arguments.
         if (args == ()):
             if (isinstance(cmd, str)):
-                # Just one argument, presumably already formatted.
                 argstr = cmd
             else:
-                # First element is the command.
-                argstr = cmd[0] + '(' + ','.join(self.Quote(arg) for arg in cmd[1:]) + ')'
+                argstr = cmd[0] + '(' + ','.join(Quote(arg) for arg in cmd[1:]) + ')'
         else:
-            # Iterate over the arguments.
-            argstr = cmd + '(' + ','.join(self.Quote(arg) for arg in args) + ')'
+            argstr = cmd + '(' + ','.join(Quote(arg) for arg in args) + ')'
         self._to3270.write(argstr + '\n')
         self._to3270.flush()
         self.Debug('Sent ' + argstr)
@@ -56,8 +68,7 @@ class _x3270if():
         prev = ''
         while (True):
             text = self._from3270.readline().rstrip('\n')
-            if (text == ''):
-                raise Exception('Emulator exited')
+            if (text == ''): raise Exception('Emulator exited')
             self.Debug("Got '" + text + "'")
             if (text == 'ok'):
                 self._prompt = prev
@@ -65,38 +76,28 @@ class _x3270if():
             if (text == 'error'):
                 self._prompt = prev
                 raise Exception(result)
-            if (result == ''):
-                result = prev.lstrip('data: ')
-            else:
-                result = result + '\n' + prev.lstrip('data: ')
+            if (result == ''): result = prev.lstrip('data: ')
+            else: result = result + '\n' + prev.lstrip('data: ')
             prev = text
         return result
 
-    # Argument quoting.
-    # Backslashes and double quotes need backslashes in front of them.
-    # Other syntax markers (space, comma, paren) just need the argument in
-    #  double quotes.
-    def Quote(self,arg):
-        if (not any(ch in arg for ch in self._quoteChars)): return arg
-        return '"' + ''.join('\\' + ch if ch in self._backslashChars else ch for ch in arg) + '"'
-
-    # Debug output.
     def Debug(self,text):
-        if (self._debug):
-            sys.stderr.write('[33m' + text + '[0m\n')
+        """Debug output"""
+        if (self._debug): sys.stderr.write('[33m' + text + '[0m\n')
 
-# x3270if child script class.
 class Child(_x3270if):
+    """x3270if child script class (script is a child of the emulator process)"""
     def __init__(self,debug=False):
         # Init the parent.
+        _x3270if.__init__(self, debug)
         self._socket = None
         self._infd = -1
         self._outfd = -1
-        _x3270if.__init__(self, debug)
 
         # Socket or pipes
         port = os.getenv('X3270PORT')
         if (port != None):
+            # Connect to a TCP port.
             self._socket = socket.create_connection(['127.0.0.1',int(port)])
             self._to3270 = self._socket.makefile('w', encoding='utf-8')
             self._from3270 = self._socket.makefile('r', encoding='utf-8')
@@ -106,6 +107,7 @@ class Child(_x3270if):
                 self._to3270 = socket.makefile('w', emulatorEncoding)
                 self._from3270 = socket.makefile('r', emulatorEncoding)
         else:
+            # Talk to pipe file descriptors.
             infd = os.getenv('X3270INPUT')
             outfd = os.getenv('X3270OUTPUT')
             if (infd == None or outfd == None):
@@ -125,22 +127,18 @@ class Child(_x3270if):
                         encoding=emulatorEncoding, closefd=False)
 
     def __del__(self):
-        if (self._socket != None):
-            self._socket.close();
-        if (self._infd != -1):
-            os.close(self._infd)
-        if (self._outfd != -1):
-            os.close(self._outfd)
+        if (self._socket != None): self._socket.close();
+        if (self._infd != -1): os.close(self._infd)
+        if (self._outfd != -1): os.close(self._outfd)
         _x3270if.__del__(self)
         self.Debug('Child deleted')
 
-# x3270if peer script class (starts s3270).
 class Peer(_x3270if):
+    """x3270if peer script class (starts a copy of s3270)"""
     def __init__(self,debug=False,extra_args=[]):
-        # Init the parent.
+        _x3270if.__init__(self, debug)
         self._socket = None
         self._s3270 = None
-        _x3270if.__init__(self, debug)
 
         # Create a temporary socket to find a unique local port.
         tempsocket = socket.socket()
@@ -175,8 +173,7 @@ class Peer(_x3270if):
                 errmsg = 'Could not connect to emulator'
                 self._s3270.terminate()
                 r = self._s3270.stderr.readline().rstrip('\r\n')
-                if (r != ''):
-                    errmsg += ': ' + r
+                if (r != ''): errmsg += ': ' + r
                 raise Exception(errmsg)
 
             self._to3270 = self._socket.makefile('w', encoding='utf-8')
@@ -186,9 +183,7 @@ class Peer(_x3270if):
             del tempsocket
 
     def __del__(self):
-        if (self._s3270 != None):
-            self._s3270.terminate()
-        if (self._socket != None):
-            self._socket.close();
+        if (self._s3270 != None): self._s3270.terminate()
+        if (self._socket != None): self._socket.close();
         _x3270if.__del__(self)
         self.Debug('Peer deleted')
