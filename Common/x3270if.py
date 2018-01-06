@@ -14,16 +14,37 @@ _backslashChars = '\\"'
 _quoteChars = _backslashChars + ' ,()'
 
 def Quote(arg):
-    """Quote an argument in action syntax"""
+    """Quote an argument in action syntax
+
+       Args:
+          arg (str): Argument to format
+       Returns:
+          str: Formatted argument
+    """
     # Backslashes and double quotes need backslashes in front of them.
     # Other syntax markers (space, comma, paren) just need the argument in
     #  double quotes.
     if (not any(ch in arg for ch in _quoteChars)): return arg
     return '"' + ''.join('\\' + ch if ch in _backslashChars else ch for ch in arg) + '"'
 
+class ActionFailException(Exception):
+    """x3270if action failure"""
+    def __init__(self,msg):
+        Exception.__init__(self,msg)
+
+class StartupException(RuntimeError):
+    """x3270if unable to start s3270"""
+    def __init__(self,msg):
+        RuntimeError.__init__(self,msg)
+
 class _x3270if():
     """Abstract x3270if base class"""
     def __init__(self,debug=False):
+        """Initialize an instance
+
+           Args:
+              debug (bool): True to trace debug info to stderr.
+       """
 
         # Debug flag
         self._debug = debug
@@ -40,11 +61,27 @@ class _x3270if():
 
     @property
     def prompt(self):
-        """Gets the last emulator prompt"""
+        """Gets the last emulator prompt
+           str: Last emulator prompt
+
+        """
         return self._prompt
 
     def Run(self,cmd,*args):
-        """Run method: Send an action to the emulator"""
+        """Send an action to the emulator
+
+           Args:
+              cmd (str): Action name
+                 If 'args' is omitted, this is the entire command and the text
+                 will be passed through unmodified.
+              args (iterable): Arguments
+           Returns:
+              str: Command output
+                 Mulitiple lines are separated by newline characters.
+           Raises:
+              x3270if.ActionFailException: Action failed.
+              EOFException: Emulator exited unexpectedly.
+        """
         # Can pass just a string, which will be left untouched.
         # Can pass a command and arguments; the arguments will be quoted as
         #  needed and put in parentheses.
@@ -68,27 +105,39 @@ class _x3270if():
         prev = ''
         while (True):
             text = self._from3270.readline().rstrip('\n')
-            if (text == ''): raise Exception('Emulator exited')
+            if (text == ''): raise EOFError('Emulator exited')
             self.Debug("Got '" + text + "'")
             if (text == 'ok'):
                 self._prompt = prev
                 break
             if (text == 'error'):
                 self._prompt = prev
-                raise Exception(result)
+                raise ActionFailException(result)
             if (result == ''): result = prev.lstrip('data: ')
             else: result = result + '\n' + prev.lstrip('data: ')
             prev = text
         return result
 
     def Debug(self,text):
-        """Debug output"""
+        """Debug output
+
+           Args:
+              text (str): Text to log. A Newline will be added.
+        """
         if (self._debug): sys.stderr.write('[33m' + text + '[0m\n')
 
 class Child(_x3270if):
     """x3270if child script class (script is a child of the emulator process)"""
     def __init__(self,debug=False):
-        # Init the parent.
+        """Initialize the object.
+
+           Args:
+              debug (bool): True to log debug information to stderr.
+
+           Raises:
+              StartupException: Insufficient information in the environment to
+              connect to the emulator.
+        """
         _x3270if.__init__(self, debug)
         self._socket = None
         self._infd = -1
@@ -111,7 +160,7 @@ class Child(_x3270if):
             infd = os.getenv('X3270INPUT')
             outfd = os.getenv('X3270OUTPUT')
             if (infd == None or outfd == None):
-                raise Exception("Don't know what to connect to")
+                raise StartupException("No X3270PORT, X3270INPUT or X3270OUTPUT defined")
             self._infd = int(infd)
             self._to3270 = io.open(self._infd, 'wt', encoding='utf-8',
                     closefd=False)
@@ -136,6 +185,15 @@ class Child(_x3270if):
 class Peer(_x3270if):
     """x3270if peer script class (starts a copy of s3270)"""
     def __init__(self,debug=False,extra_args=[]):
+        """Initialize the object.
+
+           Args:
+              debug (bool): True to log debug information to stderr.
+              extra_args(list of str, optional): Extra arguments
+                 to pass in the s3270 command line.
+           Raises:
+              StartupException: Unable to start s3270
+        """
         _x3270if.__init__(self, debug)
         self._socket = None
         self._s3270 = None
@@ -154,8 +212,14 @@ class Peer(_x3270if):
                     '-minversion', '3.6',
                     '-scriptport', str(port),
                     '-scriptportonce'] + extra_args
-            self._s3270 = subprocess.Popen(args,
-                    stderr=subprocess.PIPE,universal_newlines=True)
+            oserr = None
+            try:
+                self._s3270 = subprocess.Popen(args,
+                        stderr=subprocess.PIPE,universal_newlines=True)
+            except OSError as err:
+                oserr = str(err)
+
+            if (oserr != None): raise StartupException(oserr)
 
             # It might take a couple of tries to connect, as it takes time to
             # start the process. We wait a maximum of half a second.
@@ -174,7 +238,7 @@ class Peer(_x3270if):
                 self._s3270.terminate()
                 r = self._s3270.stderr.readline().rstrip('\r\n')
                 if (r != ''): errmsg += ': ' + r
-                raise Exception(errmsg)
+                raise StartupException(errmsg)
 
             self._to3270 = self._socket.makefile('w', encoding='utf-8')
             self._from3270 = self._socket.makefile('r', encoding='utf-8')
