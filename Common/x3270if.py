@@ -82,21 +82,16 @@ class _x3270if():
               x3270if.ActionFailException: Action failed.
               EOFException: Emulator exited unexpectedly.
         """
-        # Can pass just a string, which will be left untouched.
-        # Can pass a command and arguments; the arguments will be quoted as
-        #  needed and put in parentheses.
-        # Can pass a list or a tuple; the first element will be treated as the
-        #  command name and the remainder will be treated as the arguments.
-        # Returns literal text from the emulator. Multi-line output is
-        #  separated by newlines.
-        # Raises an exception if the command fails.
-        # First argument (if any) is the action name, others are arguments.
+        if (not isinstance(cmd, str)):
+            raise Exception("First argument must be a string")
+        self.Debug("args is {0}, len is {1}".format(args, len(args)))
         if (args == ()):
-            if (isinstance(cmd, str)):
-                argstr = cmd
-            else:
-                argstr = cmd[0] + '(' + ','.join(Quote(arg) for arg in cmd[1:]) + ')'
+            argstr = cmd
+        elif (len(args) == 1 and not isinstance(args[0], str)):
+            # One argument that can be iterated over.
+            argstr = cmd + '(' + ','.join(Quote(arg) for arg in args[0]) + ')'
         else:
+            # Multiple arguments.
             argstr = cmd + '(' + ','.join(Quote(arg) for arg in args) + ')'
         self._to3270.write(argstr + '\n')
         self._to3270.flush()
