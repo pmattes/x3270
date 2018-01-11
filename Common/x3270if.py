@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Simple Python version of x3270if
 
-"""Python interface to the x3270 family"""
+"""Python interface to x3270 emulators"""
 
 import io
 import os
@@ -126,8 +126,8 @@ class _x3270if():
         """
         if (self._debug): sys.stderr.write('[33m' + text + '[0m\n')
 
-class Child(_x3270if):
-    """x3270if child script class (script is a child of the emulator process)"""
+class WorkerConnection(_x3270if):
+    """Connection to the emulator from a worker script invoked via the Script() action"""
     def __init__(self,debug=False):
         """Initialize the object.
 
@@ -153,8 +153,10 @@ class Child(_x3270if):
             self.Debug('Connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
-                self._to3270 = socket.makefile('w', emulatorEncoding)
-                self._from3270 = socket.makefile('r', emulatorEncoding)
+                self._to3270 = self._socket.makefile('w',
+			encoding=emulatorEncoding)
+                self._from3270 = self._socket.makefile('r',
+			encoding=emulatorEncoding)
         else:
             # Talk to pipe file descriptors.
             infd = os.getenv('X3270INPUT')
@@ -180,10 +182,10 @@ class Child(_x3270if):
         if (self._infd != -1): os.close(self._infd)
         if (self._outfd != -1): os.close(self._outfd)
         _x3270if.__del__(self)
-        self.Debug('Child deleted')
+        self.Debug('WorkerConnection deleted')
 
-class Peer(_x3270if):
-    """x3270if peer script class (starts a copy of s3270)"""
+class NewEmulator(_x3270if):
+    """Starts a new copy of s3270"""
     def __init__(self,debug=False,extra_args=[]):
         """Initialize the object.
 
@@ -192,7 +194,7 @@ class Peer(_x3270if):
               extra_args(list of str, optional): Extra arguments
                  to pass in the s3270 command line.
            Raises:
-              StartupException: Unable to start s3270
+              StartupException: Unable to start s3270.
         """
         _x3270if.__init__(self, debug)
         self._socket = None
@@ -250,4 +252,4 @@ class Peer(_x3270if):
         if (self._s3270 != None): self._s3270.terminate()
         if (self._socket != None): self._socket.close();
         _x3270if.__del__(self)
-        self.Debug('Peer deleted')
+        self.Debug('NewEmulator deleted')
