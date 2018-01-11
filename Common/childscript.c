@@ -602,7 +602,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned short port;
     socket_t s;
-    struct sockaddr_in sin;
+    struct sockaddr_in *sin;
     peer_listen_t listener;
     STARTUPINFO startupinfo;
     PROCESS_INFORMATION process_information;
@@ -623,10 +623,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (port == 0) {
 	return false;
     }
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port = htons(port);
-    listener = peer_init((struct sockaddr *)&sin, sizeof(sin), false);
+    sin = (struct sockaddr_in *)Calloc(sizeof(struct sockaddr_in), 1);
+    sin->sin_family = AF_INET;
+    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin->sin_port = htons(port);
+    listener = peer_init((struct sockaddr *)sin, sizeof(*sin), false);
     SOCK_CLOSE(s);
     if (listener == NULL) {
 	return false;
@@ -651,7 +652,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	Free(args);
 	args = t;
     }
-    if (CreateProcess( NULL, args, NULL, NULL, FALSE, DETACHED_PROCESS, NULL,
+    if (CreateProcess(NULL, args, NULL, NULL, FALSE, DETACHED_PROCESS, NULL,
 		NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));
