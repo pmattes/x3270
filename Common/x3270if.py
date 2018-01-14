@@ -120,12 +120,12 @@ class _x3270if():
               text (str): Text to log. A Newline will be added.
         """
         if (self._debugEnabled):
-	    if os.name != 'nt':
-		sys.stderr.write('[33m')
-	    sys.stderr.write(text + '[0m\n')
-	    if os.name != 'nt':
-		sys.stderr.write('[0m')
-	    sys.stderr.write('\n')
+            if os.name != 'nt':
+                sys.stderr.write('[33m')
+            sys.stderr.write(text + '[0m\n')
+            if os.name != 'nt':
+                sys.stderr.write('[0m')
+            sys.stderr.write('\n')
 
 class WorkerConnection(_x3270if):
     """Connection to the emulator from a worker script invoked via the Script() action"""
@@ -155,9 +155,9 @@ class WorkerConnection(_x3270if):
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
                 self._to3270 = self._socket.makefile('w',
-			encoding=emulatorEncoding)
+                        encoding=emulatorEncoding)
                 self._from3270 = self._socket.makefile('r',
-			encoding=emulatorEncoding)
+                        encoding=emulatorEncoding)
         else:
             # Talk to pipe file descriptors.
             infd = os.getenv('X3270INPUT')
@@ -184,6 +184,10 @@ class WorkerConnection(_x3270if):
         if (self._outfd != -1): os.close(self._outfd)
         _x3270if.__del__(self)
         self._Debug('WorkerConnection deleted')
+
+_badHostChars = '@,[]='
+_goodLuChars = 'ABCDEFGHIJKLMNOPQRSTUVWYZabcdefghijklmnopqrstuvwxyz0123456789_-'
+_badAcceptChars = '@,[]=:'
 
 class NewEmulator(_x3270if):
     """Starts a new copy of s3270"""
@@ -254,3 +258,89 @@ class NewEmulator(_x3270if):
         if (self._socket != None): self._socket.close();
         _x3270if.__del__(self)
         self._Debug('NewEmulator deleted')
+
+class HostSpecification:
+    """Host specification with proper formatting"""
+    def __init__(self,hostName,Port=23,LogicalUnitNames=[],TlsTunnel=False,ValidateHostCertificate=True,AcceptName=None):
+        """Initialize an instance
+
+           Args:
+              hostName (str): Host name or IP address.
+              Port (int, optional): TCP port number.
+              LogicalUnitNames (list of str, optional): Logical unit names.
+              TlsTunnel (bool, optional): Set up a TLS tunnel.
+              ValidateHostCertificate (bool, optional): Validate the host TLS certificate.
+              AcceptName (str, optional): Host name to accept in the host TLS certificate.
+       """
+        self.HostName = hostName
+        self.Port = Port
+        self.LogicalUnitNames = LogicalUnitNames
+        self.TlsTunnel = TlsTunnel
+        self.ValidateHostCertificate = ValidateHostCertificate
+        self.AcceptName = AcceptName
+
+    @property
+    def HostName(self):
+        """Host name or IP address"""
+        return self._hostName
+    @HostName.setter
+    def HostName(self,value):
+        if (any(ch in value for ch in _badHostChars)):
+            raise Exception("HostName contains invalid character(s)")
+        self._hostName = value
+
+    @property
+    def Port(self):
+        """TCP port number"""
+        return self._port
+    @Port.setter
+    def Port(self,value):
+        self._port = int(value)
+        if (self._port < 1 or self._port > 0xffff):
+            raise Exception("Invalid port value")
+
+    @property
+    def LogicalUnitNames(self):
+        """List of Logical Unit (LU) names"""
+        return self._logicalUnitNames
+    @LogicalUnitNames.setter
+    def LogicalUnitNames(self,value):
+        for lu in value:
+            if (any(ch not in _goodLuChars for ch in lu)):
+                raise Exception("Logical unit name contains invalid character(s)")
+        self._logicalUnitNames = value
+
+    @property
+    def AcceptName(self):
+        """Name to accept in the host TLS certificate"""
+        return self._acceptName
+    @AcceptName.setter
+    def AcceptName(self,value):
+        if (value == None):
+            self._acceptName = value
+            return
+        for lu in value:
+            if (any(ch in value for ch in _badAcceptChars)):
+                raise Exception("Accept name contains invalid character(s)")
+        self._acceptName = value
+
+    def __str__(self):
+        if (self.HostName == None):
+            return ''
+        r = ''
+        if (self.TlsTunnel):
+            r += "L:"
+        if (not self.ValidateHostCertificate):
+            r += "Y:"
+        if (self.LogicalUnitNames != []):
+            r += ','.join(self.LogicalUnitNames) + '@'
+        if (':' in self.HostName):
+            r += '[' + self.HostName + ']'
+        else:
+            r += self.HostName
+        if (self.Port != 23):
+            r += ':' + str(self.Port)
+        if (self.AcceptName != None):
+            r += '=' + self.AcceptName
+        return r
+
