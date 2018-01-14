@@ -47,7 +47,7 @@ class _x3270if():
        """
 
         # Debug flag
-        self._debug = debug
+        self._debugEnabled = debug
 
         # Last prompt
         self._prompt = ''
@@ -57,7 +57,7 @@ class _x3270if():
         self._from3270 = None
 
     def __del__(self):
-        self.Debug('_x3270if deleted')
+        self._Debug('_x3270if deleted')
 
     @property
     def prompt(self):
@@ -84,7 +84,7 @@ class _x3270if():
         """
         if (not isinstance(cmd, str)):
             raise Exception("First argument must be a string")
-        self.Debug("args is {0}, len is {1}".format(args, len(args)))
+        self._Debug("args is {0}, len is {1}".format(args, len(args)))
         if (args == ()):
             argstr = cmd
         elif (len(args) == 1 and not isinstance(args[0], str)):
@@ -95,13 +95,13 @@ class _x3270if():
             argstr = cmd + '(' + ','.join(Quote(arg) for arg in args) + ')'
         self._to3270.write(argstr + '\n')
         self._to3270.flush()
-        self.Debug('Sent ' + argstr)
+        self._Debug('Sent ' + argstr)
         result = ''
         prev = ''
         while (True):
             text = self._from3270.readline().rstrip('\n')
             if (text == ''): raise EOFError('Emulator exited')
-            self.Debug("Got '" + text + "'")
+            self._Debug("Got '" + text + "'")
             if (text == 'ok'):
                 self._prompt = prev
                 break
@@ -113,13 +113,19 @@ class _x3270if():
             prev = text
         return result
 
-    def Debug(self,text):
+    def _Debug(self,text):
         """Debug output
 
            Args:
               text (str): Text to log. A Newline will be added.
         """
-        if (self._debug): sys.stderr.write('[33m' + text + '[0m\n')
+        if (self._debugEnabled):
+	    if os.name != 'nt':
+		sys.stderr.write('[33m')
+	    sys.stderr.write(text + '[0m\n')
+	    if os.name != 'nt':
+		sys.stderr.write('[0m')
+	    sys.stderr.write('\n')
 
 class WorkerConnection(_x3270if):
     """Connection to the emulator from a worker script invoked via the Script() action"""
@@ -145,7 +151,7 @@ class WorkerConnection(_x3270if):
             self._socket = socket.create_connection(['127.0.0.1',int(port)])
             self._to3270 = self._socket.makefile('w', encoding='utf-8')
             self._from3270 = self._socket.makefile('r', encoding='utf-8')
-            self.Debug('Connected')
+            self._Debug('Connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
                 self._to3270 = self._socket.makefile('w',
@@ -164,7 +170,7 @@ class WorkerConnection(_x3270if):
             self._outfd = int(outfd)
             self._from3270 = io.open(self._outfd, 'rt', encoding='utf-8',
                     closefd=False)
-            self.Debug('Pipes connected')
+            self._Debug('Pipes connected')
             emulatorEncoding = self.Run('Query(LocalEncoding)')
             if (emulatorEncoding != 'UTF-8'):
                 self._to3270 = io.open(self._infd, 'wt',
@@ -177,7 +183,7 @@ class WorkerConnection(_x3270if):
         if (self._infd != -1): os.close(self._infd)
         if (self._outfd != -1): os.close(self._outfd)
         _x3270if.__del__(self)
-        self.Debug('WorkerConnection deleted')
+        self._Debug('WorkerConnection deleted')
 
 class NewEmulator(_x3270if):
     """Starts a new copy of s3270"""
@@ -200,7 +206,7 @@ class NewEmulator(_x3270if):
         tempsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         tempsocket.bind(('127.0.0.1', 0))
         port = tempsocket.getsockname()[1]
-        self.Debug('Port is {0}'.format(port))
+        self._Debug('Port is {0}'.format(port))
 
         # Create the child process.
         try:
@@ -239,7 +245,7 @@ class NewEmulator(_x3270if):
 
             self._to3270 = self._socket.makefile('w', encoding='utf-8')
             self._from3270 = self._socket.makefile('r', encoding='utf-8')
-            self.Debug('Connected')
+            self._Debug('Connected')
         finally:
             del tempsocket
 
@@ -247,4 +253,4 @@ class NewEmulator(_x3270if):
         if (self._s3270 != None): self._s3270.terminate()
         if (self._socket != None): self._socket.close();
         _x3270if.__del__(self)
-        self.Debug('NewEmulator deleted')
+        self._Debug('NewEmulator deleted')
