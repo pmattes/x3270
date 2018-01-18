@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1042,7 +1042,7 @@ static void
 host_connect_callback(Widget w _is_unused, XtPointer client_data,
     XtPointer call_data _is_unused)
 {
-	(void) host_connect(client_data);
+	(void) host_connect(client_data, IA_UI);
 }
 
 /* Called from the lone "Connect" button on the connect dialog */
@@ -1056,7 +1056,7 @@ connect_button_callback(Widget w _is_unused, XtPointer client_data,
     if (!s || !*s) {
 	return;
     }
-    if (host_connect(s)) {
+    if (host_connect(s, IA_UI)) {
 	XtPopdown(connect_shell);
     }
 }

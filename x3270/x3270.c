@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -776,7 +776,7 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	(void) host_connect(cl_hostname);
+	(void) host_connect(cl_hostname, IA_UI);
     }
 
     /* Prepare to run a peer script. */

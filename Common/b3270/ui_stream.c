@@ -104,7 +104,7 @@ static tcb_t cb_keymap = {
 };
 static tcb_t cb_macro = {
     "ui",
-    IA_UI,
+    IA_MACRO,
     CB_UI | CB_NEW_TASKQ,
     ui_action_data,
     ui_action_done,
@@ -113,6 +113,14 @@ static tcb_t cb_macro = {
 static tcb_t cb_command = {
     "ui",
     IA_COMMAND,
+    CB_UI | CB_NEW_TASKQ,
+    ui_action_data,
+    ui_action_done,
+    NULL
+};
+static tcb_t cb_ui = {
+    "ui",
+    IA_UI,
     CB_UI | CB_NEW_TASKQ,
     ui_action_data,
     ui_action_done,
@@ -425,11 +433,14 @@ do_run(const char *cmd, const char **attrs)
 	strcpy(uia->tag, tag);
     }
     uia->result = NULL;
-    tcb = &cb_macro;
     if (type != NULL && !strcasecmp(type, "keymap")) {
 	tcb = &cb_keymap;
     } else if (type != NULL && !strcasecmp(type, "command")) {
 	tcb = &cb_command;
+    } else if (type != NULL && !strcasecmp(type, "macro")) {
+	tcb = &cb_macro;
+    } else {
+	tcb = &cb_ui;
     }
     push_cb(command, strlen(command), tcb, (task_cbh)uia);
 }

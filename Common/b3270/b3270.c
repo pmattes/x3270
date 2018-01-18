@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -218,10 +218,23 @@ b3270_connect(bool ignored)
 		"state", cstate_name[(int)cstate],
 		NULL);
     } else {
+	char *cause = NewString(ia_name[connect_ia]);
+	char *s = cause;
+	char c;
+
+	while ((c = *s)) {
+	    c = tolower((int)(unsigned char)c);
+	    if (c == ' ') {
+		c = '-';
+	    }
+	    *s++ = c;
+	}
 	ui_vleaf("connection",
 		"state", cstate_name[(int)cstate],
 		"host", current_host,
+		"cause", cause,
 		NULL);
+	Free(cause);
 
 	/* Clear the screen. */
 	if (old_cstate == NOT_CONNECTED) {

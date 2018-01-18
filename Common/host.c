@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@ char           *full_current_host = NULL;
 unsigned short  current_port;
 char	       *reconnect_host = NULL;
 char	       *qualified_host = NULL;
+enum iaction	connect_ia = IA_NONE;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
@@ -344,7 +345,7 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
  * side-effects.
  */
 bool
-host_connect(const char *n)
+host_connect(const char *n, enum iaction ia)
 {
     char *nb;		/* name buffer */
     char *s;		/* temporary */
@@ -494,6 +495,7 @@ host_connect(const char *n)
     }
 
     /* Set state and tell the world. */
+    connect_ia = ia;
     if (nc == NC_CONNECT_PENDING) {
 	cstate = PENDING;
 	st_changed(ST_HALF_CONNECT, true);
@@ -550,7 +552,7 @@ host_reconnect(void)
 	    HALF_CONNECTED) {
 	return;
     }
-    if (host_connect(reconnect_host)) {
+    if (host_connect(reconnect_host, connect_ia)) {
 	auto_reconnect_inprogress = false;
     }
 }
@@ -884,7 +886,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error("Already connected");
 	return false;
     }
-    (void) host_connect(argv[0]);
+    (void) host_connect(argv[0], ia);
 
     /*
      * If not called from a keymap and the connection was successful (or

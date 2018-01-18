@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -187,7 +187,7 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	if (!host_connect(cl_hostname)) {
+	if (!host_connect(cl_hostname, IA_UI)) {
 	    exit(1);
 	}
 	/* Wait for negotiations to complete or fail. */

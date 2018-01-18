@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -456,7 +456,7 @@ tcl3270_main(int argc, const char *argv[])
     /* Connect to the host, and wait for negotiation to complete. */
     if (cl_hostname != NULL) {
 	action = NewString("[initial connection]");
-	if (!host_connect(cl_hostname)) {
+	if (!host_connect(cl_hostname, IA_UI)) {
 	    exit(1);
 	}
 	if (CONNECTED || HALF_CONNECTED) {
