@@ -1137,13 +1137,16 @@ execute_command(enum iaction cause, char *s, char **np)
 	ME_FUNCTION,	/* within action name */
 	ME_FUNCTIONx,	/* saw whitespace after action name */
 	ME_LPAREN,	/* saw left paren */
+	ME_LPAREN_COMMA,/* saw left paren and comma */
 	ME_P_PARM,	/* paren: within unquoted parameter */
 	ME_P_QPARM,	/* paren: within quoted parameter */
 	ME_P_BSL,	/* paren: after backslash in quoted parameter */
+	ME_P_BSL2,	/* paren: after second backslash in quoted parameter */
 	ME_P_PARMx,	/* paren: saw whitespace after parameter */
 	ME_S_PARM,	/* space: within unquoted parameter */
 	ME_S_QPARM,	/* space: within quoted parameter */
 	ME_S_BSL,	/* space: after backslash in quoted parameter */
+	ME_S_BSL2,	/* space: after second backslash in quoted parameter */
 	ME_S_PARMx	/* space: saw whitespace after parameter */
     } state = ME_GND;
     char c;
@@ -1163,7 +1166,8 @@ execute_command(enum iaction cause, char *s, char **np)
 	/*2*/ "Syntax error in action name",
 	/*3*/ "Syntax error: \")\" or \",\" expected",
 	/*4*/ "Extra data after parameters",
-	/*5*/ "Syntax error: \")\" expected"
+	/*5*/ "Syntax error: \")\" expected",
+	/*6*/ "Syntax error: unclosed \""
     };
 #define fail(n) { failreason = n; goto failure; }
 
@@ -1225,12 +1229,14 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_LPAREN:
+	case ME_LPAREN_COMMA:
 	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == '"') {
 		state = ME_P_QPARM;
 	    } else if (c == ',') {
 		param_count++;
+		state = ME_LPAREN_COMMA;
 	    } else if (c == ')') {
 		goto success;
 	    } else {
@@ -1247,21 +1253,33 @@ execute_command(enum iaction cause, char *s, char **np)
 		goto success;
 	    } else if (c == ',') {
 		param_count++;
-		state = ME_LPAREN;
+		state = ME_LPAREN_COMMA;
 	    } else {
 		vb_append(&r[param_count], &c, 1);
 	    }
 	    break;
 	case ME_P_BSL:
-	    if (c == 'n') {
-		vb_append(&r[param_count], "\n", 1);
-	    } else {
-		if (c != '"') {
-		    vb_append(&r[param_count], "\\", 1);
-		}
-		vb_append(&r[param_count], &c, 1);
+	    if (c != '"') {
+		vb_append(&r[param_count], "\\", 1);
 	    }
-	    state = ME_P_QPARM;
+	    if (c == '\\') {
+		state = ME_P_BSL2;
+	    } else {
+		vb_append(&r[param_count], &c, 1);
+		state = ME_P_QPARM;
+	    }
+	    break;
+	case ME_P_BSL2:
+	    if (c == '"') {
+		param_count++;
+		state = ME_P_PARMx;
+	    } else {
+		vb_append(&r[param_count], "\\", 1);
+		if (c != '\\') {
+		    vb_append(&r[param_count], &c, 1);
+		    state = ME_P_QPARM;
+		}
+	    }
 	    break;
 	case ME_P_QPARM:
 	    if (c == '"') {
@@ -1277,7 +1295,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == ',') {
-		state = ME_LPAREN;
+		state = ME_LPAREN_COMMA;
 	    } else if (c == ')') {
 		goto success;
 	    } else {
@@ -1293,15 +1311,27 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_S_BSL:
-	    if (c == 'n') {
-		vb_append(&r[param_count], "\n", 1);
+	    if (c != '"') {
+		vb_append(&r[param_count], "\\", 1);
+	    }
+	    if (c == '\\') {
+		state = ME_S_BSL2;
 	    } else {
-		if (c != '"') {
-		    vb_append(&r[param_count], "\\", 1);
-		}
 		vb_append(&r[param_count], &c, 1);
 	    }
 	    state = ME_S_QPARM;
+	    break;
+	case ME_S_BSL2:
+	    if (c == '"') {
+		param_count++;
+		state = ME_S_PARMx;
+	    } else {
+		vb_append(&r[param_count], "\\", 1);
+		if (c != '\\') {
+		    vb_append(&r[param_count], &c, 1);
+		    state = ME_S_QPARM;
+		}
+	    }
 	    break;
 	case ME_S_QPARM:
 	    if (c == '"') {
@@ -1345,11 +1375,22 @@ execute_command(enum iaction cause, char *s, char **np)
     case ME_S_PARM:	/* mid space-style parameter */
 	param_count++;
 	break;
+    case ME_S_QPARM:	/* inside quoted parameter */
+    case ME_P_QPARM:
+    case ME_S_BSL:	/* backslash inside quoted parameter */
+    case ME_P_BSL:
+    case ME_S_BSL2:	/* second backslash inside quoted parameter */
+    case ME_P_BSL2:
+	fail(6);
     default:
 	fail(5);
     }
 
 success:
+    if (state == ME_LPAREN_COMMA) {
+	param_count++;
+    }
+
     if (c) {
 	while (*s && isspace((unsigned char)*s)) {
 	    s++;
