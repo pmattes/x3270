@@ -2562,7 +2562,7 @@ Newline_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Dup_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool oerr_fail = false;
+    bool oerr_fail = (ia != IA_KEYMAP);
     bool consumed = false;
 
     action_debug("Dup", ia, argc, argv);
@@ -2603,7 +2603,7 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool oerr_fail = false;
+    bool oerr_fail = (ia != IA_KEYMAP);
 
     action_debug("FieldMark", ia, argc, argv);
     if (check_argc("FieldMark", argc, 0, 1) < 0) {
@@ -3251,7 +3251,7 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
     ks_t k;
     enum keytype keytype;
     ucs4_t ucs4;
-    bool oerr_fail = false;
+    bool oerr_fail = (ia != IA_KEYMAP);
 
     action_debug("Key", ia, argc, argv);
     reset_idle_timer();
@@ -3287,9 +3287,9 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
 	    continue;
 	}
 	if (k != KS_NONE) {
-	    key_UCharacter(k, keytype, IA_KEY, oerr_fail);
+	    key_UCharacter(k, keytype, ia, oerr_fail);
 	} else {
-	    key_UCharacter(ucs4, keytype, IA_KEY, oerr_fail);
+	    key_UCharacter(ucs4, keytype, ia, oerr_fail);
 	}
     }
     return true;
@@ -3431,9 +3431,9 @@ CircumNot_action(ia_t ia, unsigned argc, const char **argv)
     reset_idle_timer();
 
     if (IN_3270 && composing == NONE) {
-	key_UCharacter(0xac, KT_STD, IA_KEY, true);
+	key_UCharacter(0xac, KT_STD, ia, ia != IA_KEYMAP);
     } else {
-	key_UCharacter('^', KT_STD, IA_KEY, true);
+	key_UCharacter('^', KT_STD, ia, ia != IA_KEYMAP);
     }
     return true;
 }
