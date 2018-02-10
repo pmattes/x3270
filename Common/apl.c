@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015, 2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,6 +132,7 @@ static struct {
 	{ "epsilonunderbar",	latin1_Iacute,		1 },
 	{ "equal",		latin1_equals,		0 },
 	{ "equalunderbar",	latin1_bsol,		1 },
+	{ "equiv",		latin1_bsol,		1 },
 	{ "euro",		latin1_X,		1 }, /* soliton */
 	{ "greater",		latin1_gt,		0 },
 	{ "iota",		latin1_yen,		1 },
