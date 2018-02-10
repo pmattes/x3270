@@ -319,6 +319,18 @@ greenout(char *fmt, ...)
     va_end(ap);
 }
 
+/* Generate yellow output. */
+static void
+yellowout(char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    color_out(fmt, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+	    ap);
+    va_end(ap);
+}
+
 /* Generate reverse output. */
 static void
 reverseout(char *fmt, ...)
@@ -1806,19 +1818,26 @@ This option causes wc3270 to verify the certificates presented by the host\n\
 if an SSL tunnel is used, or if the TELNET TLS option is negotiated.  If the\n\
 certificates are not valid, the connection will be aborted.");
 
+    if (!(s->flags2 & WF2_NEW_VHC_DEFAULT)) {
+	yellowout("\n\
+Note: The default for this option has changed from 'n' to 'y'.\n");
+    }
+
     do {
 	printf("\nVerify host certificates? (y/n) [%s] ",
-		(s->flags & WF_VERIFY_HOST_CERTS)? "y" : "n");
+		(s->flags2 & WF2_NO_VERIFY_HOST_CERT)? "n" : "y");
 	fflush(stdout);
-	rc = getyn((s->flags & WF_VERIFY_HOST_CERTS) != 0);
+	rc = getyn((s->flags2 & WF2_NO_VERIFY_HOST_CERT) == 0);
 	switch (rc) {
 	case YN_ERR:
 	    return -1;
 	case TRUE:
-	    s->flags |= WF_VERIFY_HOST_CERTS;
+	    s->flags2 &= ~WF2_NO_VERIFY_HOST_CERT;
+	    s->flags2 |= WF2_NEW_VHC_DEFAULT;
 	    break;
 	case FALSE:
-	    s->flags &= ~WF_VERIFY_HOST_CERTS;
+	    s->flags2 |= WF2_NO_VERIFY_HOST_CERT;
+	    s->flags2 |= WF2_NEW_VHC_DEFAULT;
 	    break;
 	}
     } while (rc < 0);
@@ -2868,8 +2887,13 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    "Underscore": "Block");
 	printf("%3d. SSL Tunnel ............. : %s\n", MN_SSL,
 		s->ssl? "Yes": "No");
-	printf("%3d. Verify host certificates : %s\n", MN_VERIFY,
-		(s->flags & WF_VERIFY_HOST_CERTS)? "Yes": "No");
+	printf("%3d. Verify host certificates : %s", MN_VERIFY,
+		(s->flags2 & WF2_NO_VERIFY_HOST_CERT)? "No": "Yes");
+	fflush(stdout);
+	if (!(s->flags2 & WF2_NEW_VHC_DEFAULT)) {
+	    yellowout(" [default has changed]");
+	}
+	printf("\n");
 	printf("%3d. Proxy .................. : %s\n", MN_PROXY,
 		s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 	if (s->proxy_type[0]) {
@@ -3145,6 +3169,13 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	    break;
 	}
     }
+
+    /*
+     * Set the WF2_NEW_VHC_DEFAULT flag in the session, so even if they
+     * don't change anything on an old session file, it will need to be
+     * written back out.
+     */
+    s->flags2 |= WF2_NEW_VHC_DEFAULT;
 
     /* Ask if they want to write the file. */
     if (memcmp(s, &old_session, sizeof(session_t)) ||
@@ -4228,6 +4259,7 @@ Edit Session\n");
 	session.model = 4;
 	strcpy(session.charset, "bracket");
 	strcpy(session.printerlu, ".");
+	session.flags2 |= WF2_NEW_VHC_DEFAULT;
 	/* fall through... */
     case GS_EDIT:		/* Edit existing file. */
 	/* See what they want to change. */
@@ -4269,8 +4301,8 @@ Edit Session\n");
 	    }
 	    goto failed;
 	}
-	snprintf(result, result_size, "%cCreated session '%s'.", 1,
-		session.session);
+	snprintf(result, result_size, "%c%s session '%s'.", 1,
+		(rc == GS_NEW)? "Created": "Updated", session.session);
 	if (us != NULL) {
 	    free(us);
 	    us = NULL;
@@ -4497,9 +4529,8 @@ wc3270." ResConsoleColorForHostColor "NeutralBlack: 15\n\
 wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
     }
 
-    if (session->flags & WF_VERIFY_HOST_CERTS) {
-	fprintf(f, "wc3270.%s: %s\n", ResVerifyHostCert, ResTrue);
-    }
+    fprintf(f, "wc3270.%s: %s\n", ResVerifyHostCert,
+	    (session->flags2 & WF2_NO_VERIFY_HOST_CERT)? ResFalse: ResTrue);
 
     if (session->flags & WF_NO_MENUBAR) {
 	fprintf(f, "wc3270.%s: %s\n", ResMenuBar, ResFalse);

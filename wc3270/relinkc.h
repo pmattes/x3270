@@ -62,16 +62,21 @@ typedef struct {
 	unsigned char ov_rows;		/* oversize rows */
 	unsigned char ov_cols;		/* oversize columns */
 	unsigned char point_size;	/* font point size */
+	unsigned char flags2;		/* more flags */
 } session_t;
 
 #define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */
 #define WF_AUTO_SHORTCUT	0x02	/* 'auto-shortcut' mode */
 #define WF_WHITE_BG		0x04	/* white background */
 #define WF_NO_MENUBAR		0x08	/* don't leave room for menu bar */
-#define WF_VERIFY_HOST_CERTS	0x10	/* verify host certificate */
+#define WF_VERIFY_HOST_CERTS	0x10	/* verify host certificate
+					   (deprecated) */
 #define WF_TRACE		0x20	/* trace at start-up */
 #define WF_CROSSHAIR		0x40	/* crosshair cursor */
 #define WF_ALTCURSOR		0x80	/* underscore cursor */
+
+#define WF2_NEW_VHC_DEFAULT	0x01	/* has new verify-host-cert default */
+#define WF2_NO_VERIFY_HOST_CERT	0x02	/* do not verify host certificate */
 
 typedef struct {
 	char *name;

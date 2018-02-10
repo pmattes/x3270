@@ -34,6 +34,10 @@
 3.6 is the current development line for the x3270 suite.
 <h2>Changes in version 3.6ga4, Nn. Month 2018</h2>
 <ul>
+ <li>[<i>wc3270</i>] Corrected the Session Wizard's handing of host TLS
+  certificate validation, which switched the default from 'no' to 'yes' in 3.6.
+  To stop host certificate checking for an existing session, you must re-run the
+  Session Wizard and explicitly disable it.</li>
  <li>[all] Corrected some subtle bugs in parsing action arguments. The syntax
   is now compliant with the original specification, which is X11 Xt translation
   table syntax.</li>
