@@ -186,9 +186,9 @@ on the current XX_POSESSIVE(user) desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_
 in the current directory',`XX_FB(x3trc.)`'XX_FI(pid) in the directory specified by
 the XX_FB(traceDir) resource').
 ifelse(XX_PRODUCT,c3270,`XX_LP
-XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Support,XX_SM(PRINTER SUPPORT)) for details.')
+XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Session-Support,XX_SM(PRINTER SUPPORT)) for details.')
 ifelse(XX_PRODUCT,wc3270,`XX_LP
-XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Support,XX_SM(PRINTER SUPPORT)) for details.')'
+XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Session-Support,XX_SM(PRINTER SUPPORT)) for details.')'
 ifelse(XX_PRODUCT,c3270,`XX_LP
 XX_TARGET(rn5)XX_FI(Note 5): XX_FB(mono) defaults to XX_FB(false) if the
 terminal supports at least 8 colors and to XX_FB(true) otherwise.')
