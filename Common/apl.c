@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015, 2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,9 @@ static struct {
 	{ "diaeresisjot",	latin1_U,		1 }, /* soliton */
 	{ "diamond",		latin1_oslash,		1 },
 	{ "dieresis",		latin1_Ecirc,		1 },
+	{ "dieresiscircle",	latin1_V,		1 }, /* soliton */
 	{ "dieresisdot",	latin1_Ouml,		1 },
+	{ "dieresisjot",	latin1_U,		1 }, /* soliton */
 	{ "divide",		latin1_frac12,		1 },
 	{ "dot",		latin1_period,		0 },
 	{ "downarrow",		latin1_raquo,		1 },
