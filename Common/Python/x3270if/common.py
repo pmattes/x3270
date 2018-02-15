@@ -8,8 +8,7 @@ import os
 import socket
 import sys
 
-_backslash_chars = '\\"'
-_quote_chars = _backslash_chars + ' ,()'
+_quote_chars = ' ,()'
 
 def quote(arg):
     """Quote an argument in action syntax
@@ -19,11 +18,19 @@ def quote(arg):
        Returns:
           str: Formatted argument
     """
-    # Backslashes and double quotes need backslashes in front of them.
-    # Other syntax markers (space, comma, paren) just need the argument in
-    #  double quotes.
-    if (not any(ch in arg for ch in _quote_chars)): return arg
-    return '"' + ''.join('\\' + ch if ch in _backslash_chars else ch for ch in arg) + '"'
+
+    # If the argument is empty, contains a space, comma or paren, or starts
+    # with a double quote, it needs to be put in double quotes. (For an empty
+    # argument it is not strictly necessary, but it makes traces easier to
+    # read.)
+    if (not (arg == '' or any(ch in arg for ch in _quote_chars) or arg.startswith('"'))):
+        return arg
+
+    # A double quote inside the argument needs a backslash in front of it.
+    # A backslash at the end of the argument needs to be doubled.
+    x = arg.replace('"', '\\"')
+    if (x.endswith('\\')): x = x + '\\'
+    return '"' + x + '"'
 
 class ActionFailException(Exception):
     """x3270if action failure"""
@@ -70,9 +77,9 @@ class _session():
 
            Args:
               cmd (str): Action name
-		 Action name. If 'args' is omitted, this is the entire
-		 properly-formatted action name and arguments, and the text
-		 will be passed through unmodified.
+                 Action name. If 'args' is omitted, this is the entire
+                 properly-formatted action name and arguments, and the text
+                 will be passed through unmodified.
               args (iterable): Arguments
            Returns:
               str: Command output
