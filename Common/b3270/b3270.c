@@ -68,6 +68,7 @@
 #include "nvt_gui.h"
 #include "opts.h"
 #include "popups.h"
+#include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
 #include "screen.h"
@@ -334,6 +335,7 @@ main(int argc, char *argv[])
     kybd_register();
     macros_register();
     nvt_register();
+    pr3287_session_register();
     print_screen_register();
     b3270_register();
     scroll_register();
@@ -944,6 +946,16 @@ ssl_passwd_gui_callback(char *buf, int size, bool again)
     }
 }
 
+/* State change for the printer session. */
+static void
+b3270_printer(bool on)
+{
+    ui_vleaf("printer-session",
+	    "on", on? "true": "false",
+	    "lu", on? pr3287_session_lu(): NULL,
+	    NULL);
+}
+
 /**
  * Main module registration.
  */
@@ -996,6 +1008,7 @@ b3270_register(void)
     register_schange(ST_LINE_MODE, b3270_connect);
     register_schange(ST_SECURE, b3270_secure);
     register_schange(ST_CHARSET, b3270_new_charset);
+    register_schange(ST_PRINTER, b3270_printer);
 
     /* Register our actions. */
     register_actions(actions, array_count(actions));

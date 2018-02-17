@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-FALLBACKS = fb-common
+FALLBACKS = fb-common fb-printSession
 fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(filter-out mkfb,$^)

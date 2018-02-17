@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2017 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@
 #include "pr3287_session.h"
 #include "telnet_core.h"
 #include "sio.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -104,6 +105,10 @@ static struct pr3o {
     char buf[PRINTER_BUF];	/* input buffer */
 } pr3287_stdout = { -1, 0L, 0L, 0 },
   pr3287_stderr = { -1, 0L, 0L, 0 };
+static char	*pr3287_toggle_lu;	/* printer LU from Toggle() */
+static bool	pr3287_lu_toggled = false;
+static bool	pr3287_associated = false;
+static char	*pr3287_running_lu;
 
 #if !defined(_WIN32) /*[*/
 static void	pr3287_output(iosrc_t fd, ioid_t id);
@@ -119,6 +124,7 @@ static void	pr3287_host_connect(bool connected _is_unused);
 static void	pr3287_exiting(bool b _is_unused);
 static void	pr3287_accept(iosrc_t fd, ioid_t id);
 static void	pr3287_start_now(const char *lu, bool associated);
+static bool	pr3287_toggle(const char *name, const char *value);
 
 /* Globals */
 
@@ -132,6 +138,9 @@ pr3287_session_register(void)
     register_schange(ST_CONNECT, pr3287_host_connect);
     register_schange(ST_3270_MODE, pr3287_host_connect);
     register_schange(ST_EXITING, pr3287_exiting);
+
+    /* Register the extended toggle. */
+    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL);
 }
 
 /*
@@ -219,7 +228,7 @@ delayed_start(ioid_t id _is_unused)
 void
 pr3287_session_start(const char *lu)
 {
-    bool associated = false;
+    pr3287_associated = false;
 
     /* Gotta be in 3270 mode. */
     if (!IN_3270) {
@@ -230,7 +239,7 @@ pr3287_session_start(const char *lu)
     /* Figure out the LU. */
     if (lu == NULL) {
 	/* Associate with the current session. */
-	associated = true;
+	pr3287_associated = true;
 
 	/* Gotta be in TN3270E mode. */
 	if (!IN_TN3270E) {
@@ -255,7 +264,7 @@ pr3287_session_start(const char *lu)
 	 */
 	vtrace("Delaying printer session start %dms.\n", PRINTER_DELAY_MS);
 	Replace(pr3287_delay_lu, NewString(lu));
-	pr3287_delay_associated = associated;
+	pr3287_delay_associated = pr3287_associated;
 	pr3287_state = P_DELAY;
 	pr3287_delay_id = AddTimeOut(PRINTER_DELAY_MS, delayed_start);
 	break;
@@ -276,12 +285,12 @@ pr3287_session_start(const char *lu)
 	vtrace("Delaying printer session start %dms after exit.\n",
 		PRINTER_DELAY_MS);
 	Replace(pr3287_delay_lu, NewString(lu));
-	pr3287_delay_associated = associated;
+	pr3287_delay_associated = pr3287_associated;
 	return;
     case P_TERMINATING:
 	/* Collect the exit status now and start the new session. */
 	pr3287_reap_now();
-	pr3287_start_now(lu, associated);
+	pr3287_start_now(lu, pr3287_associated);
 	break;
     }
 }
@@ -377,6 +386,7 @@ pr3287_start_now(const char *lu, bool associated)
 		sizeof(pr3287_lsa)) < 0) {
 	popup_a_sockerr("bind(printer sync)");
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
 	return;
     }
     memset(&pr3287_lsa, '\0', sizeof(pr3287_lsa));
@@ -385,12 +395,14 @@ pr3287_start_now(const char *lu, bool associated)
     if (getsockname(pr3287_ls, (struct sockaddr *)&pr3287_lsa, &len) < 0) {
 	popup_a_sockerr("getsockname(printer sync)");
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
 	return;
     }
     syncopt = lazyaf("%s %d", OptSyncPort, ntohs(pr3287_lsa.sin_port));
     if (listen(pr3287_ls, 5) < 0) {
 	popup_a_sockerr("listen(printer sync)");
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
 	return;
     }
 #if defined(_WIN32) /*[*/
@@ -417,6 +429,8 @@ pr3287_start_now(const char *lu, bool associated)
     if (cmdline == NULL) {
 	popup_an_error("%s resource not defined", cmdlineName);
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
+	RemoveInput(pr3287_ls_id);
 	return;
     }
 #if !defined(_WIN32) /*[*/
@@ -424,6 +438,8 @@ pr3287_start_now(const char *lu, bool associated)
     if (cmd == NULL) {
 	popup_an_error(ResPrinterCommand " resource not defined");
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
+	RemoveInput(pr3287_ls_id);
 	return;
     }
 #else /*][*/
@@ -566,6 +582,8 @@ pr3287_start_now(const char *lu, bool associated)
 	popup_an_errno(errno, "pipe() failed");
 	Free(cmd_text);
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
+	RemoveInput(pr3287_ls_id);
 	return;
     }
     (void) fcntl(stdout_pipe[0], F_SETFD, 1);
@@ -575,6 +593,8 @@ pr3287_start_now(const char *lu, bool associated)
 	(void) close(stdout_pipe[1]);
 	Free(cmd_text);
 	SOCK_CLOSE(pr3287_ls);
+	pr3287_ls = INVALID_SOCKET;
+	RemoveInput(pr3287_ls_id);
 	return;
     }
     (void) fcntl(stderr_pipe[0], F_SETFD, 1);
@@ -648,6 +668,7 @@ pr3287_start_now(const char *lu, bool associated)
     /* Tell everyone else. */
     if (success) {
 	pr3287_state = P_RUNNING;
+	Replace(pr3287_running_lu, associated? NewString("."): NewString(lu));
 	st_changed(ST_PRINTER, true);
     }
 }
@@ -1088,35 +1109,48 @@ pr3287_exiting(bool b _is_unused)
     }
 }
 
-/* Host connect/disconnect/3270-mode event. */
-static void
-pr3287_host_connect(bool connected _is_unused)
+/* Return the current printer LU. */
+static char *
+pr3287_saved_lu(void)
 {
-    if (IN_3270) {
-	char *pr3287_lu = appres.interactive.printer_lu;
+    char *current = pr3287_lu_toggled? pr3287_toggle_lu:
+	appres.interactive.printer_lu;
 
-	if (pr3287_lu != NULL && !pr3287_session_running()) {
-	    if (!strcmp(pr3287_lu, ".")) {
-		if (IN_TN3270E) {
-		    /* Associate with TN3270E session. */
-		    pr3287_session_start(NULL);
-		}
-	    } else {
-		/* Specific LU. */
-		pr3287_session_start(pr3287_lu);
+    return (current != NULL && !*current)? NULL: current;
+}
+
+/* Start a pr3287 session. */
+static void
+pr3287_connected(void)
+{
+    char *pr3287_lu = pr3287_saved_lu();
+
+    if (pr3287_lu != NULL && !pr3287_session_running()) {
+	if (!strcmp(pr3287_lu, ".")) {
+	    if (IN_TN3270E) {
+		/* Associate with TN3270E session. */
+		pr3287_session_start(NULL);
 	    }
-	} else if (!IN_E && pr3287_lu != NULL && !strcmp(pr3287_lu, ".") &&
-		pr3287_session_running()) {
-
-	    /* Stop an automatic associated printer. */
-	    pr3287_session_stop();
+	} else {
+	    /* Specific LU. */
+	    pr3287_session_start(pr3287_lu);
 	}
-    } else if (pr3287_session_running()) {
+    } else if (!IN_E && pr3287_associated && pr3287_session_running()) {
+	/* Stop an automatic associated printer. */
+	pr3287_session_stop();
+    }
+}
+
+/* Cancel any running or pending pr3287 session. */
+static void
+pr3287_disconnected(void)
+{
+    if (pr3287_session_running()) {
 	/*
-	 * We're no longer in 3270 mode, then we can no longer have a
+	 * We're no longer in 3270 mode, so we can no longer have a
 	 * printer session.  This may cause some fireworks if there is
-	 * a print job pending when we do this, so some sort of awful
-	 * timeout may be needed.
+	 * a print job pending, so some sort of awful timeout may be
+	 * needed.
 	 */
 	pr3287_session_stop();
     } else {
@@ -1137,8 +1171,62 @@ pr3287_host_connect(bool connected _is_unused)
     }
 }
 
+/* Host connect/disconnect/3270-mode event. */
+static void
+pr3287_host_connect(bool connected _is_unused)
+{
+    if (IN_3270) {
+	pr3287_connected();
+    } else {
+	pr3287_disconnected();
+    }
+}
+
 bool
 pr3287_session_running(void)
 {
     return (pr3287_state == P_RUNNING);
+}
+
+/*
+ * Extended toggle for pr3287 sessions.
+ */
+static bool
+pr3287_toggle(const char *name, const char *value)
+{
+    char *current = pr3287_saved_lu();
+
+    if (!*value) {
+	value = NULL;
+    }
+    if ((current == NULL && value == NULL) ||
+	    (current != NULL && value != NULL && !strcmp(current, value))) {
+	/* No change. */
+	return true;
+    }
+
+    /* Save the new value. */
+    pr3287_lu_toggled = true;
+    Replace(pr3287_toggle_lu, (value != NULL)? NewString(value): NULL);
+
+    /* Stop the current session. */
+    pr3287_disconnected();
+
+    /* Start a new session. */
+    if (value != NULL && IN_3270) {
+	pr3287_connected();
+    }
+
+    return true;
+}
+
+/* Return the running printer LU. */
+const char *
+pr3287_session_lu(void)
+{
+    if (!pr3287_session_running()) {
+	return NULL;
+    }
+
+    return pr3287_running_lu;
 }
