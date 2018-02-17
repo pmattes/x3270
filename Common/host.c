@@ -444,8 +444,9 @@ host_connect(const char *n, enum iaction ia)
     }
 
     has_colons = (strchr(chost, ':') != NULL);
-    Replace(qualified_host, xs_buffer("%s%s%s%s:%s%s%s",
+    Replace(qualified_host, xs_buffer("%s%s%s%s%s:%s%s%s",
 		HOST_FLAG(SSL_HOST)? "L:": "",
+		HOST_FLAG(NO_VERIFY_CERT_HOST)? "Y:": "",
 		has_colons? "[": "",
 		chost,
 		has_colons? "]": "",
