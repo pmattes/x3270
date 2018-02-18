@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,7 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
     int     uq_len    = 0;
     char   *qmap      = NULL;
     char   *rqmap;
+    char   *skip_map  = NULL;
     char   *errmsg    = "nonspecific";
     bool rc        = false;
     bool quoted    = false;
@@ -115,6 +116,9 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
     memset(qmap, ' ', sl);
     qmap[sl] = '\0';
     rqmap = qmap;
+    skip_map = Malloc(sl + 1);
+    memset(skip_map, ' ', sl);
+    skip_map[sl] = '\0';
     for (s = start; (size_t)(s - start) < sl; s++) {
 	if (isspace((unsigned char)*s)) {
 	    errmsg = "contains whitespace";
@@ -223,6 +227,19 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
 		}
 		n_at++;
 		n_ch = 0;
+
+		/* Trim off prefixes. */
+		while (rqmap[s + 1 - start] == ' ' &&
+		    rqmap[s + 2 - start] == ' ' &&
+		    (pfx = strchr(pfxstr, *(s + 1))) != NULL &&
+		    *(s + 2) == ':') {
+
+		    *prefixes |= 1 << ((pfx - pfxstr) / 2);
+		    skip_map[s + 1 - start] = '+';
+		    skip_map[s + 2 - start] = '+';
+		    s += 2;
+		}
+
 	    } else if (*s == ':') {
 		if (n_colon > 0) {
 		    errmsg = "double ':'";
@@ -289,15 +306,18 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
     s = start;
     n_ch = 0;
     while (*s) {
-	if (rqmap[s - start] == ' ' && (*s == '@' || *s == ':' || *s == '=')) {
-	    part[part_ix][n_ch] = '\0';
-	    part_ix++;
-	    n_ch = 0;
-	} else {
-	    while (part[part_ix] == NULL) {
+	if (skip_map[s - start] == ' ') {
+	    if (rqmap[s - start] == ' ' &&
+		    (*s == '@' || *s == ':' || *s == '=')) {
+		part[part_ix][n_ch] = '\0';
 		part_ix++;
+		n_ch = 0;
+	    } else {
+		while (part[part_ix] == NULL) {
+		    part_ix++;
+		}
+		part[part_ix][n_ch++] = *s;
 	    }
-	    part[part_ix][n_ch++] = *s;
 	}
 	s++;
     }
@@ -312,6 +332,9 @@ done:
     }
     if (qmap != NULL) {
 	Free(qmap);
+    }
+    if (skip_map != NULL) {
+	Free(skip_map);
     }
     if (!rc) {
 	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);

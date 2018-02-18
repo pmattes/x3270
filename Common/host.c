@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -443,8 +443,9 @@ host_connect(const char *n)
     }
 
     has_colons = (strchr(chost, ':') != NULL);
-    Replace(qualified_host, xs_buffer("%s%s%s%s:%s%s%s",
+    Replace(qualified_host, xs_buffer("%s%s%s%s%s:%s%s%s",
 		HOST_FLAG(SSL_HOST)? "L:": "",
+		HOST_FLAG(SSL_HOST)? "Y:": "",
 		has_colons? "[": "",
 		chost,
 		has_colons? "]": "",
