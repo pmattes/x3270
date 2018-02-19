@@ -92,6 +92,8 @@ static socket_t	pr3287_sync = INVALID_SOCKET;	/* printer sync socket */
 static ioid_t	pr3287_sync_id = NULL_IOID; /* input ID */
 #if defined(_WIN32) /*[*/
 static HANDLE	pr3287_sync_handle = NULL;
+static HANDLE	pr3287_stderr_wr = NULL;
+static HANDLE	pr3287_stderr_rd = NULL;
 #endif /*]*/
 static ioid_t	pr3287_kill_id = NULL_IOID; /* kill timeout ID */
 static ioid_t	pr3287_delay_id = NULL_IOID; /* delay timeout ID */
@@ -143,6 +145,36 @@ pr3287_session_register(void)
     register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL);
 }
 
+#if defined(_WIN32) /*[*/
+/*
+ * Read pr3287's stdout/stderr when it exits.
+ */
+static char *
+read_pr3287_errors(void)
+{
+    DWORD nread;
+    CHAR buf[PRINTER_BUF]; 
+    BOOL success = FALSE;
+    char *result = NULL;
+    size_t result_len = 0;
+
+    for (;;) {
+	success = ReadFile(pr3287_stderr_rd, buf, PRINTER_BUF, &nread, NULL);
+	if (!success || nread == 0) {
+	    break; 
+	}
+
+	result = Realloc(result, result_len + nread + 1);
+	memcpy(result + result_len, buf, nread);
+	result_len += nread;
+    } 
+    if (result_len > 0) {
+	result[result_len] = '\0';
+    }
+    return result;
+}
+#endif /*]*/
+
 /*
  * If the printer process was terminated, but has not yet exited, wait for it
  * to exit.
@@ -154,6 +186,7 @@ pr3287_reap_now(void)
     int status;
 #else /*][*/
     DWORD exit_code;
+    char *stderr_text;
 #endif /*]*/
 
     assert(pr3287_state == P_TERMINATING);
@@ -182,14 +215,25 @@ pr3287_reap_now(void)
 
     CloseHandle(pr3287_handle);
     pr3287_handle = NULL;
+    CloseHandle(pr3287_stderr_wr);
+    pr3287_stderr_wr = NULL;
+
+    stderr_text = read_pr3287_errors();
+    CloseHandle(pr3287_stderr_rd);
+    pr3287_stderr_rd = NULL;
 
     if (exit_code != 0) {
-	popup_an_error("Printer process exited with status 0x%lx",
+	popup_printer_output(true, NULL,
+		"%s%sPrinter process exited with status 0x%lx",
+		(stderr_text != NULL)? stderr_text: "",
+		(stderr_text != NULL)? "\n": "",
 		(long)exit_code);
+    } else if (stderr_text != NULL) {
+	popup_printer_output(true, NULL, "%s", stderr_text);
     }
-
-    CloseHandle(pr3287_handle);
-    pr3287_handle = NULL;
+    if (stderr_text != NULL) {
+	Free(stderr_text);
+    }
 #endif /*]*/
 
     vtrace("Old printer session exited.\n");
@@ -350,6 +394,8 @@ pr3287_start_now(const char *lu, bool associated)
     char *cp_cmdline;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
+    SECURITY_ATTRIBUTES sa;
+    DWORD mode;
 #else /*][*/
     int stdout_pipe[2];
     int stderr_pipe[2];
@@ -648,19 +694,62 @@ pr3287_start_now(const char *lu, bool associated)
     if (printerName != NULL) {
 	vtrace("Printer (via %%PRINTER%%): %s\n", printerName);
     }
+
+    /* Create a named pipe for pr3287's stderr. */
+    memset(&sa, 0, sizeof(sa));
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES); 
+    sa.bInheritHandle = TRUE; 
+    sa.lpSecurityDescriptor = NULL; 
+    if (!CreatePipe(&pr3287_stderr_rd, &pr3287_stderr_wr, &sa, 0)) {
+	popup_an_error("CreatePipe() failed: %s",
+		win32_strerror(GetLastError()));
+	success = false;
+	goto done;
+    }
+    if (!SetHandleInformation(pr3287_stderr_rd, HANDLE_FLAG_INHERIT, 0)) {
+	popup_an_error("SetHandleInformation() failed: %s",
+		win32_strerror(GetLastError()));
+	CloseHandle(&pr3287_stderr_rd);
+	pr3287_stderr_rd = NULL;
+	CloseHandle(&pr3287_stderr_wr);
+	pr3287_stderr_wr = NULL;
+	success = false;
+	goto done;
+    }
+    mode = PIPE_READMODE_BYTE | PIPE_NOWAIT;
+    if (!SetNamedPipeHandleState(pr3287_stderr_rd, &mode, NULL, NULL)) {
+	popup_an_error("SetNamedPipeHandleState() failed: %s",
+		win32_strerror(GetLastError()));
+	CloseHandle(&pr3287_stderr_rd);
+	pr3287_stderr_rd = NULL;
+	CloseHandle(&pr3287_stderr_wr);
+	pr3287_stderr_wr = NULL;
+	success = false;
+	goto done;
+    }
+
     memset(&si, '\0', sizeof(si));
     si.cb = sizeof(pi);
+    si.hStdError = pr3287_stderr_wr;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
     memset(&pi, '\0', sizeof(pi));
-    if (!CreateProcess(NULL, cp_cmdline, NULL, NULL, FALSE, DETACHED_PROCESS,
+    if (!CreateProcess(NULL, cp_cmdline, NULL, NULL, TRUE, DETACHED_PROCESS,
 		NULL, NULL, &si, &pi)) {
 	popup_an_error("CreateProcess() for printer session failed: %s",
 		win32_strerror(GetLastError()));
+	CloseHandle(pr3287_stderr_rd);
+	pr3287_stderr_rd = NULL;
+	CloseHandle(pr3287_stderr_wr);
+	pr3287_stderr_wr = NULL;
 	success = false;
     } else {
 	pr3287_handle = pi.hProcess;
 	CloseHandle(pi.hThread);
 	pr3287_id = AddInput(pr3287_handle, pr3287_reaped);
     }
+
+done:
 #endif /*]*/
 
     Free(cmd_text);
@@ -998,13 +1087,28 @@ pr3287_session_check(
     if (pr3287_handle != NULL &&
 	    GetExitCodeProcess(pr3287_handle, &exit_code) != 0 &&
 	    exit_code != STILL_ACTIVE) {
+	char *stderr_text;
 
 	CloseHandle(pr3287_handle);
 	pr3287_handle = NULL;
+	CloseHandle(pr3287_stderr_wr);
+	pr3287_stderr_wr = NULL;
+
+	stderr_text = read_pr3287_errors();
+	CloseHandle(pr3287_stderr_rd);
+	pr3287_stderr_rd = NULL;
 
 	if (pr3287_state == P_RUNNING) {
-	    popup_an_error("Printer process exited with status 0x%lx",
+	    popup_printer_output(true, NULL,
+		    "%s%sPrinter process exited with status 0x%lx",
+		    (stderr_text != NULL)? stderr_text: "",
+		    (stderr_text != NULL)? "\n": "",
 		    (long)exit_code);
+	} else if (stderr_text != NULL) {
+	    popup_printer_output(true, NULL, "%s", stderr_text);
+	}
+	if (stderr_text != NULL) {
+	    Free(stderr_text);
 	}
     } else {
 	/* It is still running. */
