@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2017 Paul Mattes.
+ * Copyright (c) 2000-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -432,6 +432,8 @@ flush_signal(int sig)
 void
 pr3287_exit(int status)
 {
+    fflush(stdout);
+    fflush(stderr);
 #if defined(_WIN32) && defined(NEED_PAUSE) /*[*/
 	char buf[2];
 
