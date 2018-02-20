@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1976,8 +1976,7 @@ calc_cs(unsigned char cs)
  * screen buffer 'ea_buf' or a copy saved with 'Snap'.
  */
 static bool
-do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
-	int fd)
+do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 {
     int	baddr;
     unsigned char current_fg = 0x00;
@@ -2004,18 +2003,6 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	}
     }
 
-    if (fd >= 0) {
-	char *s;
-	int nw;
-
-	s = xs_buffer("rows %d cols %d cursor %d\n", ROWS, COLS, cursor_addr);
-	nw = write(fd, s, (int)strlen(s));
-	Free(s);
-	if (nw < 0) {
-		return false;
-	}
-    }
-
     /*
      * If the client has looked at the live screen, then if they later
      * execute 'Wait(output)', they will need to wait for output from the
@@ -2036,16 +2023,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     do {
 	if (!(baddr % COLS)) {
 	    if (baddr) {
-		if (fd >= 0) {
-		    if (write(fd, vb_buf(&r) + 1, (int)(vb_len(&r) - 1)) < 0) {
-			goto done;
-		    }
-		    if (write(fd, "\n", 1) < 0) {
-			goto done;
-		    }
-		} else {
-		    action_output("%s", vb_buf(&r) + 1);
-		}
+		action_output("%s", vb_buf(&r) + 1);
 	    }
 	    vb_reset(&r);
 	}
@@ -2164,17 +2142,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	}
 	INC_BA(baddr);
     } while (baddr != 0);
-    if (fd >= 0) {
-	if (write(fd, vb_buf(&r) + 1, (int)(vb_len(&r) - 1)) < 0) {
-	    goto done;
-	}
-	if (write(fd, "\n", 1) < 0) {
-	    goto done;
-	}
-    } else {
-	action_output("%s", vb_buf(&r) + 1);
-    }
-done:
+    action_output("%s", vb_buf(&r) + 1);
     vb_free(&r);
     return true;
 }
@@ -2185,7 +2153,7 @@ done:
 static bool
 ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return do_read_buffer(argv, argc, ea_buf, -1);
+    return do_read_buffer(argv, argc, ea_buf);
 }
 
 /*
@@ -2560,7 +2528,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    popup_an_error("No saved state");
 	    return false;
 	}
-	return do_read_buffer(argv + 1, argc - 1, snap_buf, -1);
+	return do_read_buffer(argv + 1, argc - 1, snap_buf);
     } else {
 	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
 		"Wait, Ascii, Ebcdic, or ReadBuffer");
