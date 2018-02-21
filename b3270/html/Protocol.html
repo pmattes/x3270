@@ -31,25 +31,25 @@ similar mechanism, allowing its operation as a 'captive' process.</p>
 <h2>Protocol Description</h2>
 
 <p>b3270 operations and indications are formatted as UTF-8-encoded XML. b3270
-input is a document called <b>ui3270-in</b>. b3270 output is a document called
-<b>ui3270-out</b>. So the input session to b3270 must begin with the
+input is a document called <b>b3270-in</b>. b3270 output is a document called
+<b>b3270-out</b>. So the input session to b3270 must begin with the
 following:
 <pre>
  &lt;xml version="1.0" encoding="UTF-8"?&gt;
- &lt;ui3270-in&gt;
+ &lt;b3270-in&gt;
 </pre>
 (The first line is actually optional, but helpful.) It should also end with:
 <pre>
- &lt;/ui3270-in&gt;
+ &lt;/b3270-in&gt;
 </pre>
 Similarly, the entire b3270 session output is bracketed by:</p>
 <pre>
  &lt;xml version="1.0" encoding="UTF-8"?&gt;
- &lt;ui3270-out&gt;
+ &lt;b3270-out&gt;
 </pre>
 and:
 <pre>
- &lt;/ui3270-out&gt;
+ &lt;/b3270-out&gt;
 </pre></p>
 <p>White space is allowed around XML elements, but plain text is never used in
 the protocol. All information is conveyed by elements and their attributes.</p>

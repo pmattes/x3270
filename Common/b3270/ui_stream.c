@@ -46,6 +46,7 @@
 #include "actions.h"
 #include "appres.h"
 #include "3270ds.h"
+#include "b3270proto.h"
 #include "b_password.h"
 #include "lazya.h"
 #include "popups.h"
@@ -756,10 +757,10 @@ xml_start(void *userData _is_unused, const XML_Char *name,
     if (input_nest == 1) {
 	int i;
 
-	if (strcasecmp(name, "ui3270-in")) {
+	if (strcasecmp(name, DocIn)) {
 	    ui_vleaf("ui-error",
 		    "fatal", "true",
-		    "text", "unexpected document element (want ui3270-in)",
+		    "text", "unexpected document element (want " DocIn ")",
 		    "element", name,
 		    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
 		    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
@@ -768,7 +769,7 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 	    x3270_exit(1);
 	}
 	for (i = 0; atts[i] != NULL; i += 2) {
-	    ui_unknown_attribute("ui3270-in", atts[i]);
+	    ui_unknown_attribute(DocIn, atts[i]);
 	}
 	return;
     }
@@ -870,7 +871,7 @@ ui_io_init()
     /* Start the XML stream. */
     uprintf("%c%c%c<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
 	    0xef, 0xbb, 0xbf);
-    ui_vpush("ui3270-out", NULL);
+    ui_vpush(DocOut, NULL);
 
     /* Set up a handler for exit. */
     register_schange_ordered(ST_EXITING, ui_exiting, ORDER_LAST);
