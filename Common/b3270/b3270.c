@@ -47,6 +47,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "b3270proto.h"
 #include "bind-opt.h"
 #include "bscreen.h"
 #include "b_password.h"
@@ -950,8 +951,9 @@ ssl_passwd_gui_callback(char *buf, int size, bool again)
 static void
 b3270_printer(bool on)
 {
-    ui_vleaf("printer-session",
-	    "on", on? "true": "false",
+    ui_vleaf(IndOia,
+	    "field", "printer-session",
+	    "value", on? "true": "false",
 	    "lu", on? pr3287_session_lu(): NULL,
 	    NULL);
 }

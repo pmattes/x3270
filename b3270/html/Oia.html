@@ -17,6 +17,7 @@
  <tr><td>value</td><td>no</td><td>New field value</td></tr>
  <tr><td>char</td><td>no</td><td>Compose character (<b>U+nnnn</b>)</td></tr>
  <tr><td>type</td><td>no</td><td>Compose type (<b>std<b> or <b>ge</b>)</td></tr>
+ <tr><td>lu</td><td>no</td><td>Printer session LU name</td></tr>
 </table>
 
 </p>Fields listed as true/false always have values of <b>true</b> or <b>false</b>,
@@ -31,11 +32,12 @@ For other fields, a missing <b>value</b> tag means that the field is now empty.
  <tr><td>insert</td><td>yes</td><td>Insert mode</td></tr>
  <tr><td>lock</td><td>no</td><td><a href="#lock">Keyboard lock</a></td></tr>
  <tr><td>lu</td><td>no</td><td>LU name</td></tr>
+ <tr><td>not-undera</td><td>yes</td><td>Communication incomplete</td></tr>
+ <tr><td>printer-session</td><td>yes</td><td>3287 printer session active</td></tr>
  <tr><td>screentrace</td><td>no</td><td>Screen trace count</td></tr>
  <tr><td>script</td><td>yes</td><td>Running script indication</td></tr>
  <tr><td>timing</td><td>no</td><td>Host command timer (<b>min:sec</b>)</td></tr>
  <tr><td>typeahead</td><td>yes</td><td>Keystrokes buffered</td></tr>
- <tr><td>not-undera</td><td>yes</td><td>Communication incomplete</td></tr>
 </table>
 <a name="lock"></a><p>Reasons for the keyboard lock are:</p>
 <table border cols=2 width="75%">

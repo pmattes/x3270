@@ -35,5 +35,6 @@
 #define DocOut		"b3270-out"
 
 /* Indications. */
+#define IndOia		"oia"
 #define IndUiError	"ui-error"
 #define IndRunResult	"run-result"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Paul Mattes.
+ * Copyright (c) 2015-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include "b3270proto.h"
 #include "ctlr.h"
 #include "kybd.h"
 #include "lazya.h"
@@ -71,7 +72,7 @@ status_compose(bool on, unsigned char c, enum keytype keytype)
     }
     is_on = on;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "compose",
 	    "value", on? "true": "false",
 	    "char", on? lazyaf("U+%04%x", c): NULL,
@@ -89,7 +90,7 @@ status_ctlr_done(void)
     }
     oia_undera = true;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "not-undera",
 	    "value", "false",
 	    NULL);
@@ -105,7 +106,7 @@ status_insert_mode(bool on)
     }
     is_on = on;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "insert",
 	    "value", on? "true": "false",
 	    NULL);
@@ -128,7 +129,7 @@ status_lu(const char *s)
 	Replace(saved_lu, NewString(s));
     }
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "lu",
 	    "value", s,
 	    NULL);
@@ -140,7 +141,7 @@ status_lock(char *msg)
 {
     Replace(saved_lock, msg);
     if (!scrolled) {
-	ui_vleaf("oia",
+	ui_vleaf(IndOia,
 		"field", "lock",
 		"value", saved_lock,
 		NULL);
@@ -217,7 +218,7 @@ status_reverse_mode(bool on)
 void
 status_screentrace(int n)
 {
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "screentrace",
 	    "value", (n >= 0)? lazyaf("%d", n): NULL,
 	    NULL);
@@ -233,7 +234,7 @@ status_script(bool on)
     }
     is_on = on;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "script",
 	    "value", on? "true": "false",
 	    NULL);
@@ -250,7 +251,7 @@ status_scrolled(int n)
 	}
 	scrolled = true;
 	scroll_n = n;
-	ui_vleaf("oia",
+	ui_vleaf(IndOia,
 		"field", "lock",
 		"value", lazyaf("scrolled %d", n),
 		NULL);
@@ -260,7 +261,7 @@ status_scrolled(int n)
 	}
 	scrolled = false;
 	scroll_n = -1;
-	ui_vleaf("oia",
+	ui_vleaf(IndOia,
 		"field", "lock",
 		"value", saved_lock,
 		NULL);
@@ -287,7 +288,7 @@ status_timing(struct timeval *t0 _is_unused, struct timeval *t1 _is_unused)
     is_timed = true;
     cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	 (t1->tv_usec - t0->tv_usec + 50000) / 100000;
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "timing",
 	    "value", lazyaf("%lu.%lu", cs / 10, cs % 10),
 	    NULL);
@@ -301,7 +302,7 @@ status_untiming(void)
     }
     is_timed = false;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "timing",
 	    NULL);
 }
@@ -316,7 +317,7 @@ status_twait(void)
 
     oia_undera = false;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "not-undera",
 	    "value", "true",
 	    NULL);
@@ -334,7 +335,7 @@ status_typeahead(bool on _is_unused)
     }
     is_on = on;
 
-    ui_vleaf("oia",
+    ui_vleaf(IndOia,
 	    "field", "typeahead",
 	    "value", on? "true": "false",
 	    NULL);
