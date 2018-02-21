@@ -155,7 +155,6 @@ Common/select_stubs.c
 Common/sf.c
 Common/sioc.c
 Common/sio_glue.c
-Common/sio_internal.c
 Common/sio_none.c
 Common/sio_openssl.c
 Common/sio_secure_transport.c
