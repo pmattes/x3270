@@ -1986,20 +1986,24 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     unsigned char current_ic = 0x00;
     bool in_ebcdic = false;
     varbuf_t r;
+    bool field = false;
+    bool any = false;
 
     if (num_params > 0) {
-	if (num_params > 1) {
-	    popup_an_error("ReadBuffer: extra agruments");
-	    return false;
-	}
-	if (!strncasecmp(params[0], "Ascii", strlen(params[0]))) {
-	    in_ebcdic = false;
-	} else if (!strncasecmp(params[0], "Ebcdic", strlen(params[0]))) {
-	    in_ebcdic = true;
-	} else {
-	    popup_an_error("ReadBuffer: first parameter must be Ascii or "
-		    "Ebcdic");
-	    return false;
+	unsigned i;
+
+	for (i = 0; i < num_params; i++) {
+	    if (!strncasecmp(params[i], "Ascii", strlen(params[i]))) {
+		in_ebcdic = false;
+	    } else if (!strncasecmp(params[i], "Ebcdic", strlen(params[i]))) {
+		in_ebcdic = true;
+	    } else if (!strncasecmp(params[i], "Field", strlen(params[i]))) {
+		field = true;
+	    } else {
+		popup_an_error("ReadBuffer: parameter must be Ascii, "
+			"Ebcdic or Field");
+		return false;
+	    }
 	}
     }
 
@@ -2018,16 +2022,31 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	set_output_needed(true);
     }
 
+    if (field) {
+	baddr = find_field_attribute(cursor_addr);
+	if (baddr < 0) {
+	    baddr = 0;
+	}
+	action_output("Start: %d %d", baddr / COLS, baddr % COLS);
+	action_output("StartOffset: %d", baddr);
+	action_output("Cursor: %d %d", cursor_addr / COLS, cursor_addr % COLS);
+	action_output("CursorOffset: %d", cursor_addr);
+    } else {
+	baddr = 0;
+    }
+
     vb_init(&r);
-    baddr = 0;
-    do {
-	if (!(baddr % COLS)) {
+    for (;;) {
+	if (!field && !(baddr % COLS)) {
 	    if (baddr) {
 		action_output("%s", vb_buf(&r) + 1);
 	    }
 	    vb_reset(&r);
 	}
 	if (buf[baddr].fa) {
+	    if (field && any) {
+		break;
+	    }
 	    vb_appendf(&r, " SF(%02x=%02x", XA_3270, buf[baddr].fa);
 	    if (buf[baddr].fg) {
 		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
@@ -2141,8 +2160,12 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    }
 	}
 	INC_BA(baddr);
-    } while (baddr != 0);
-    action_output("%s", vb_buf(&r) + 1);
+	if ((!field || !formatted) && baddr == 0) {
+	    break;
+	}
+	any = true;
+    }
+    action_output("%s%s", field? "Contents: ": "", vb_buf(&r) + 1);
     vb_free(&r);
     return true;
 }
@@ -3223,6 +3246,12 @@ Abort_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+static const char *
+query_cursor_offset(void)
+{
+    return lazyaf("%d", cursor_addr);
+}
+
 static bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -3235,6 +3264,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "ConnectionState", net_query_connection_state, NULL },
 	{ "CodePage", get_host_codepage, NULL },
 	{ "Cursor", ctlr_query_cursor, NULL },
+	{ "CursorOffset", query_cursor_offset, NULL },
 	{ "Formatted", ctlr_query_formatted, NULL },
 	{ "Host", net_query_host, NULL },
 	{ "LocalEncoding", get_codeset, NULL },
@@ -3246,6 +3276,11 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ NULL, NULL }
     };
     int i;
+
+    action_debug("Query", ia, argc, argv);
+    if (check_argc("Query", argc, 0, 1) < 0) {
+	return false;
+    }
 
     switch (argc) {
     case 0:
@@ -3269,9 +3304,6 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	popup_an_error("Query: Unknown parameter");
-	break;
-    default:
-	popup_an_error("Query: Requires 0 or 1 arguments");
 	break;
     }
     return true;

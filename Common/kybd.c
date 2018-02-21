@@ -162,7 +162,6 @@ static action_t CircumNot_action;
 static action_t Clear_action;
 static action_t Compose_action;
 static action_t CursorSelect_action;
-static action_t CursorTo_action;
 static action_t Delete_action;
 static action_t DeleteField_action;
 static action_t DeleteWord_action;
@@ -203,7 +202,6 @@ static action_table_t kybd_actions[] = {
     { "CircumNot",	CircumNot_action,	ACTION_KE },
     { "Clear",		Clear_action,		ACTION_KE },
     { "CursorSelect",	CursorSelect_action,	ACTION_KE },
-    { "CursorTo",	CursorTo_action,	ACTION_KE },
     { "Delete",		Delete_action,		ACTION_KE },
     { "DeleteField",	DeleteField_action,	ACTION_KE },
     { "DeleteWord",	DeleteWord_action,	ACTION_KE },
@@ -3179,7 +3177,7 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
     int row, col;
 
     action_debug("MoveCursor", ia, argc, argv);
-    if (check_argc("MoveCursor", argc, 2, 2) < 0) {
+    if (check_argc("MoveCursor", argc, 1, 2) < 0) {
 	return false;
     }
 
@@ -3189,53 +3187,28 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
-    row = atoi(argv[0]);
-    col = atoi(argv[1]);
-    if (!IN_3270) {
-	row--;
-	col--;
+    if (argc == 1) {
+	baddr = atoi(argv[0]);
+    } else {
+	row = atoi(argv[0]);
+	if (row < 0) {
+	    row = 0;
+	} else if (row >= ROWS) {
+	    row = ROWS - 1;
+	}
+	col = atoi(argv[1]);
+	if (col < 0) {
+	    col = 0;
+	} else if (col >= COLS) {
+	    col = COLS - 1;
+	}
+	baddr = ((row * COLS) + col) % (ROWS * COLS);
     }
-    if (row < 0) {
-	row = 0;
+    if (baddr < 0) {
+	baddr = 0;
+    } else if (baddr >= ROWS * COLS) {
+	baddr = (ROWS * COLS) - 1;
     }
-    if (col < 0) {
-	col = 0;
-    }
-    baddr = ((row * COLS) + col) % (ROWS * COLS);
-    cursor_move(baddr);
-
-    return true;
-}
-
-/*
- * CursorTo action. Moves to a specific location. Uses 1-origin coordinates.
- */
-static bool
-CursorTo_action(ia_t ia, unsigned argc, const char **argv)
-{
-    int baddr;
-    int row, col;
-
-    action_debug("CursorTo", ia, argc, argv);
-    if (check_argc("CursorTo", argc, 2, 2) < 0) {
-	return false;
-    }
-
-    reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("CursorTo", argv[0], argv[1]);
-	return true;
-    }
-
-    row = atoi(argv[0]) - 1;
-    col = atoi(argv[1]) - 1;
-    if (row < 0) {
-	row = 0;
-    }
-    if (col < 0) {
-	col = 0;
-    }
-    baddr = ((row * COLS) + col) % (ROWS * COLS);
     cursor_move(baddr);
 
     return true;

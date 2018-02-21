@@ -1173,27 +1173,77 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     varbuf_t r;
     char *rbuf;
     bool in_ebcdic = false;
+    bool field = false;
+    bool any = false;
 
     if (num_params > 0) {
-	if (num_params > 1) {
-	    popup_an_error("ReadBuffer: extra agruments");
-	    return false;
-	}
-	if (!strncasecmp(params[0], "Ascii", strlen(params[0])))
-	    in_ebcdic = false;
-	else if (!strncasecmp(params[0], "Ebcdic", strlen(params[0])))
-	    in_ebcdic = true;
-	else {
-	    popup_an_error("ReadBuffer: first parameter must be Ascii or "
-		    "Ebcdic");
-	    return false;
+	unsigned i;
+	for (i = 0; i < num_params; i++) {
+	    if (!strncasecmp(params[i], "Ascii", strlen(params[i]))) {
+		in_ebcdic = false;
+	    } else if (!strncasecmp(params[i], "Ebcdic", strlen(params[i]))) {
+		in_ebcdic = true;
+	    } else if (!strncasecmp(params[i], "Field", strlen(params[i]))) {
+		field = true;
+	    } else {
+		popup_an_error("ReadBuffer: parameter must be Ascii, "
+			"Ebcdic or Field");
+		return false;
+	    }
 	}
     }
 
+
+    if (field) {
+	baddr = find_field_attribute(cursor_addr);
+	if (baddr < 0) {
+	    baddr = 0;
+	}
+
+	o = Tcl_NewListObj(0, NULL);
+
+	row = Tcl_NewListObj(0, NULL);
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj("Start", -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", baddr / COLS), -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", baddr % COLS), -1));
+	Tcl_ListObjAppendElement(sms_interp, o, row);
+
+	row = Tcl_NewListObj(0, NULL);
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj("StartOffset", -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", baddr), -1));
+	Tcl_ListObjAppendElement(sms_interp, o, row);
+
+	row = Tcl_NewListObj(0, NULL);
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj("Cursor", -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", cursor_addr / COLS), -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", cursor_addr % COLS), -1));
+	Tcl_ListObjAppendElement(sms_interp, o, row);
+
+	row = Tcl_NewListObj(0, NULL);
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj("CursorOffset", -1));
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj(lazyaf("%d", cursor_addr), -1));
+	Tcl_ListObjAppendElement(sms_interp, o, row);
+
+	row = Tcl_NewListObj(0, NULL);
+	Tcl_ListObjAppendElement(sms_interp, row,
+		Tcl_NewStringObj("Contents", -1));
+    } else {
+	baddr = 0;
+    }
+
     vb_init(&r);
-    baddr = 0;
-    do {
-	if (!(baddr % COLS)) {
+    for (;;) {
+	if (!field && !(baddr % COLS)) {
 	    /* New row. */
 	    if (o == NULL) {
 		o = Tcl_NewListObj(0, NULL);
@@ -1204,6 +1254,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    row = Tcl_NewListObj(0, NULL);
 	}
 	if (buf[baddr].fa) {
+	    if (field && any) {
+		break;
+	    }
 	    vb_appendf(&r, "SF(%02x=%02x", XA_3270, buf[baddr].fa);
 	    if (buf[baddr].fg) {
 		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
@@ -1304,7 +1357,11 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    }
 	}
 	INC_BA(baddr);
-    } while (baddr != 0);
+	if ((!field || !formatted) && baddr == 0) {
+	    break;
+	}
+	any = true;
+    }
 
     if (row) {
 	if (o) {
