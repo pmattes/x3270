@@ -31,5 +31,9 @@
  */
 
 /* Start elements. */
-#define DocIn	"b3270-in"
-#define DocOut	"b3270-out"
+#define DocIn		"b3270-in"
+#define DocOut		"b3270-out"
+
+/* Indications. */
+#define IndUiError	"ui-error"
+#define IndRunResult	"run-result"

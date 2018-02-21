@@ -357,7 +357,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
      */
     screen_disp(false);
 
-    ui_vleaf("run-result",
+    ui_vleaf(IndRunResult,
 	    "r-tag", uia->tag,
 	    "success", success? "true": "false",
 	    "text", uia->result,
@@ -374,7 +374,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 static void
 ui_unknown_attribute(const char *element, const char *attribute)
 {
-    ui_vleaf("ui-error",
+    ui_vleaf(IndUiError,
 	    "fatal", "false",
 	    "text", "unknown attribute",
 	    "element", element,
@@ -388,7 +388,7 @@ ui_unknown_attribute(const char *element, const char *attribute)
 static void
 ui_missing_attribute(const char *element, const char *attribute)
 {
-    ui_vleaf("ui-error",
+    ui_vleaf(IndUiError,
 	    "fatal", "false",
 	    "text", "missing attribute",
 	    "element", element,
@@ -512,7 +512,7 @@ do_register(const char *cmd, const char **attrs)
     }
     for (j = 0; name[j]; j++) {
 	if (!isprint((unsigned char)name[j])) {
-	    ui_vleaf("ui-error",
+	    ui_vleaf(IndUiError,
 		    "fatal", "false",
 		    "text", "invalid name",
 		    "element", "register",
@@ -574,7 +574,7 @@ static void
 process_input(const char *buf, ssize_t nr)
 {
     if (XML_Parse(parser, buf, nr, 0) == 0) {
-	ui_vleaf("ui-error",
+	ui_vleaf(IndUiError,
 		"fatal", "true",
 		"text", xs_buffer("XML parsing error: %s",
 		    XML_ErrorString(XML_GetErrorCode(parser))),
@@ -620,7 +620,7 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (nr == 0) {
 	vtrace("UI input EOF, exiting\n");
 	if (input_nest) {
-	    ui_vleaf("ui-error",
+	    ui_vleaf(IndUiError,
 		    "fatal", "false",
 		    "text", "unclosed elements",
 		    "count", lazyaf("%d", input_nest),
@@ -744,7 +744,7 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 {
     input_nest++;
     if (input_nest > 2) {
-	ui_vleaf("ui-error",
+	ui_vleaf(IndUiError,
 		"fatal", "false",
 		"text", "invalid nested element",
 		"element", name,
@@ -758,7 +758,7 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 	int i;
 
 	if (strcasecmp(name, DocIn)) {
-	    ui_vleaf("ui-error",
+	    ui_vleaf(IndUiError,
 		    "fatal", "true",
 		    "text", "unexpected document element (want " DocIn ")",
 		    "element", name,
@@ -783,7 +783,7 @@ xml_start(void *userData _is_unused, const XML_Char *name,
     } else if (!strcasecmp(name, "fail")) {
 	do_passthru_complete(false, name, atts);
     } else {
-	ui_vleaf("ui-error",
+	ui_vleaf(IndUiError,
 		"fatal", "false",
 		"text", "unrecognized element",
 		"element", name,
@@ -822,7 +822,7 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
 	return;
     }
 
-    ui_vleaf("ui-error",
+    ui_vleaf(IndUiError,
 	    "fatal", "false",
 	    "text", "ignoring plain text",
 	    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
