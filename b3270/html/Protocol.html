@@ -21,12 +21,12 @@ protocol, all b3270 operations are asynchronous &#8212; the next command is
 accepted immediately. The results of each operation are reported
 asynchronously.
 Emulator state changes are reported also asynchronously.
-When b3270
-receives an end-of-file indication on its standard input, it will exit.</p>
 
 <p>A user interface application creates an instance of the b3270
 process with b3270's standard input and output connected to it by pipes or a
-similar mechanism, allowing its operation as a 'captive' process.</p>
+similar mechanism, allowing its operation as a 'captive' process.
+When b3270
+receives end-of-file on its standard input, it exits.</p>
 
 <h2>Protocol Description</h2>
 
@@ -56,16 +56,28 @@ the protocol. All information is conveyed by elements and their attributes.</p>
 
 <p>XML elements sent from the UI to the emulator are referred to as
 <i>operations</i>. XML elements sent from the emulator to the user interface
-are referred to as <i>indications</i>.</p>
+are referred to as <i>indications</i>.
+<p>Operations and indications are transmitted as complete XML elements.
+For example, the <a href="Ready.html">ready</a> indication, which tells the
+user interface that the emulator has sent all of its initial state, looks like
+this:
+<pre>
+ &lt;ready/&gt;
+</pre></p>
+<p>Similarly, a <a href="Run.html">run</a> operation sent to the emulator might look like this:
+<pre>
+ &lt;run r-tag="ui-1234" type="keymap" actions="Enter()"/&gt;
+</pre>
 
 <h2>Pass-Through Actions</h2>
 
 <p>b3270 supports <i>pass-through</i> actions, which are
 emulator actions implemented by the user interface. An example of a
-pass-through action could be <b>ChangeKeymap()</b>, used to change the
-keyboard mapping dynamically. The emulator back end has no knowledge of
-keymaps, but it would be useful to allow this action to appear in scripts,
-macros and sourced files processed by the the emulator.
+pass-through action could be <b>UI-Copy()</b>, used to copy selected text to
+the clipboard.
+The emulator back end has no knowledge of
+the clipboard, but it would be useful to allow this action to appear in
+keymaps, scripts, macros and sourced files processed by the the emulator.
 Yet b3270 cannot
 anticipate this and every other possible UI operation.</p>
 
