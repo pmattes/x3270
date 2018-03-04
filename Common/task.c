@@ -726,6 +726,7 @@ execute_command(enum iaction cause, char *s, char **np)
     action_elt_t *exact = NULL;
     unsigned i;
     enum em_stat rc = EM_ERROR;	/* failure return code */
+    char *s_orig = s;
     static const char *fail_text[] = {
 	/*1*/ "Action name must begin with an alphanumeric character",
 	/*2*/ "Syntax error in action name",
@@ -1048,7 +1049,8 @@ success:
     return EM_CONTINUE;
 
 failure:
-    popup_an_error("%s", fail_text[failreason-1]);
+    popup_an_error("%s at column %d", fail_text[failreason-1],
+	    (int)(s - s_orig) );
 silent_failure:
     if (vbcount) {
 	for (i = 0; i < vbcount; i++) {
