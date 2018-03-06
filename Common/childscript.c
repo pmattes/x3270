@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,11 @@
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
 # include <sys/signal.h>
+# include <sys/wait.h>
 #endif /*]*/
 
 #include "actions.h"
+#include "child.h"
 #include "childscript.h"
 #include "lazya.h"
 #include "peerscript.h"
@@ -354,8 +356,21 @@ child_run(task_cbh handle, bool *success)
 
     if (c->done) {
 	if (!c->success) {
+#if !defined(_WIN32) /*[*/
+	    if (WIFEXITED(c->exit_status)) {
+		popup_an_error("Child script exited with status %d",
+			WEXITSTATUS(c->exit_status));
+	    } else if (WIFSIGNALED(c->exit_status)) {
+		popup_an_error("Child script killed by signal %d",
+			WTERMSIG(c->exit_status));
+	    } else {
+		popup_an_error("Child script stopped by unknown status %d",
+			c->exit_status);
+	    }
+#else /*][*/
 	    popup_an_error("Child script exited with status %d",
 		    c->exit_status);
+#endif /*]*/
 	}
 	*success = c->success;
 	free_child(c);
@@ -446,8 +461,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Fork and exec the script process. */
-    /* XXX: The child's stdout and stderr end up going to strange places. */
-    if ((pid = fork()) < 0) {
+    if ((pid = fork_child()) < 0) {
 	(void) close(inpipe[0]);
 	(void) close(inpipe[1]);
 	(void) close(outpipe[0]);
@@ -466,9 +480,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	/* Clean up the pipes. */
 	(void) close(outpipe[1]);
 	(void) close(inpipe[0]);
-
-	/* Redirect stdout, so it doesn't interfere with stdio scripts. */
-	dup2(open("/dev/null", O_WRONLY), 1);
 
 	/* Export the names of the pipes into the environment. */
 	(void) putenv(xs_buffer("X3270OUTPUT=%d", outpipe[0]));

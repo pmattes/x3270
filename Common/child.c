@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, 2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -136,7 +136,7 @@ child_data(struct pr3o *p, bool is_err)
 {
     int space;
     int nr;
-    static char exitmsg[] = "Printer session exited";
+    static char exitmsg[] = "Child process exited";
 
     /*
      * If we're discarding output, pull it in and drop it on the floor.
