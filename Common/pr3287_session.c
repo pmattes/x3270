@@ -709,9 +709,9 @@ pr3287_start_now(const char *lu, bool associated)
     if (!SetHandleInformation(pr3287_stderr_rd, HANDLE_FLAG_INHERIT, 0)) {
 	popup_an_error("SetHandleInformation() failed: %s",
 		win32_strerror(GetLastError()));
-	CloseHandle(&pr3287_stderr_rd);
+	CloseHandle(pr3287_stderr_rd);
 	pr3287_stderr_rd = NULL;
-	CloseHandle(&pr3287_stderr_wr);
+	CloseHandle(pr3287_stderr_wr);
 	pr3287_stderr_wr = NULL;
 	success = false;
 	goto done;
@@ -720,9 +720,9 @@ pr3287_start_now(const char *lu, bool associated)
     if (!SetNamedPipeHandleState(pr3287_stderr_rd, &mode, NULL, NULL)) {
 	popup_an_error("SetNamedPipeHandleState() failed: %s",
 		win32_strerror(GetLastError()));
-	CloseHandle(&pr3287_stderr_rd);
+	CloseHandle(pr3287_stderr_rd);
 	pr3287_stderr_rd = NULL;
-	CloseHandle(&pr3287_stderr_wr);
+	CloseHandle(pr3287_stderr_wr);
 	pr3287_stderr_wr = NULL;
 	success = false;
 	goto done;
