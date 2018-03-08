@@ -516,23 +516,13 @@ child_run(task_cbh handle, bool *success)
 	}
 #endif /*]*/
 	if (c->output_buflen) {
-	    /* Strip out CRs and any trailing newline. */
+	    /* Strip out CRs. */
 	    char *tmp = Malloc(strlen(c->output_buf) + 1);
 	    char *s = c->output_buf;
 	    char *t = tmp;
 	    char c;
-	    bool nl = false;
 
 	    while ((c = *s++) != '\0') {
-		if (c == '\n') {
-		    if (nl) {
-			*t++ = '\n';
-		    }
-		    nl = true;
-		    continue;
-		} else {
-		    nl = false;
-		}
 		if (c != '\r') {
 		    *t++ = c;
 		}
