@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1009,6 +1009,7 @@ static res_t base_resources[] = {
     { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
+    { ResScriptPortOnce,aoffset(script_port_once),	XRM_BOOLEAN },
     { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
     { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
