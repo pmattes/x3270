@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -55,6 +55,7 @@ const char *ia_name[] = {
     "Keymap", "Idle", "Password", "UI"
 };
 const char *current_action_name;
+bool keyboard_disabled = false;
 
 typedef struct {
     llist_t list;
@@ -195,6 +196,12 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 
     if (action_suppressed(e->t.name)) {
 	vtrace("%s() [suppressed]\n", e->t.name);
+	return false;
+    }
+
+    if (keyboard_disabled &&
+	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
+	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
 	return false;
     }
 

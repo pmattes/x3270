@@ -242,6 +242,7 @@ static action_t Ebcdic_action;
 static action_t EbcdicField_action;
 static action_t Execute_action;
 static action_t Expect_action;
+static action_t KeyboardDisable_action;
 static action_t Macro_action;
 static action_t PauseScript_action;
 static action_t Query_action;
@@ -329,6 +330,7 @@ macros_register(void)
 	{ "EbcdicField",	EbcdicField_action, 0 },
 	{ "Execute",		Execute_action, ACTION_KE },
 	{ "Expect",		Expect_action, 0 },
+	{ "KeyboardDisable",	KeyboardDisable_action, 0 },
 	{ "Macro",		Macro_action, ACTION_KE },
 	{ "PauseScript",	PauseScript_action, 0 },
 	{ "Query",		Query_action, 0 },
@@ -3138,11 +3140,37 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Keyboar disable action, enables or disables the keyboard explicitly. */
+static bool
+KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("KeyboardDisable", ia, argc, argv);
+    if (check_argc("KeyboardDisable", argc, 0, 1) < 0) {
+	return false;
+    }
+
+    if (argc == 0) {
+	keyboard_disabled = true;
+    } else {
+	if (!strcasecmp(argv[0], "True")) {
+	    keyboard_disabled = true;
+	} else if (!strcasecmp(argv[0], "False")) {
+	    keyboard_disabled = false;
+	} else {
+	    popup_an_error("KeyboardDisable(): parameter must be True or "
+		    "False");
+	    return false;
+	}
+    }
+    return true;
+}
+
+
 /* "Macro" action, explicitly invokes a named macro. */
 static bool
 Macro_action(ia_t ia, unsigned argc, const char **argv)
 {
-	struct macro_def *m;
+    struct macro_def *m;
 
     action_debug("Macro", ia, argc, argv);
     if (check_argc("Macro", argc, 1, 1) < 0) {

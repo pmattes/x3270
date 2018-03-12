@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,8 @@ extern unsigned actions_list_count;
 extern const char       *ia_name[];
 
 extern const char *current_action_name;
+
+extern bool keyboard_disabled;
 
 void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
