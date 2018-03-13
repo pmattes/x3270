@@ -113,7 +113,6 @@ typedef struct task {
 	TS_CONNECT_WAIT,/* command awaiting connection to complete */
 	TS_FT_WAIT,	/* command awaiting file transfer to complete */
 	TS_TIME_WAIT,   /* command awaiting simple timeout */
-	TS_PAUSED,	/* stopped in PauseScript action */
 	TS_WAIT_NVT,	/* awaiting completion of Wait(NVTMode) */
 	TS_WAIT_3270,	/* awaiting completion of Wait(3270Mode) */
 	TS_WAIT_OUTPUT,	/* awaiting completion of Wait(Output) */
@@ -185,7 +184,6 @@ static const char *task_state_name[] = {
     "CONNECT_WAIT",
     "FT_WAIT",
     "TIME_WAIT",
-    "PAUSED",
     "WAIT_NVT",
     "WAIT_3270",
     "WAIT_OUTPUT",
@@ -237,14 +235,12 @@ static action_t AnsiText_action;
 static action_t Ascii_action;
 static action_t AsciiField_action;
 static action_t CloseScript_action;
-static action_t ContinueScript_action;
 static action_t Ebcdic_action;
 static action_t EbcdicField_action;
 static action_t Execute_action;
 static action_t Expect_action;
 static action_t KeyboardDisable_action;
 static action_t Macro_action;
-static action_t PauseScript_action;
 static action_t Query_action;
 static action_t ReadBuffer_action;
 static action_t Snap_action;
@@ -325,14 +321,12 @@ macros_register(void)
 	{ "AsciiField",		AsciiField_action, 0 },
 	{ "Bell",		Bell_action, 0 },
 	{ "CloseScript",	CloseScript_action, 0 },
-	{ "ContinueScript",	ContinueScript_action, ACTION_KE },
 	{ "Ebcdic",		Ebcdic_action, 0 },
 	{ "EbcdicField",	EbcdicField_action, 0 },
 	{ "Execute",		Execute_action, ACTION_KE },
 	{ "Expect",		Expect_action, 0 },
 	{ "KeyboardDisable",	KeyboardDisable_action, 0 },
 	{ "Macro",		Macro_action, ACTION_KE },
-	{ "PauseScript",	PauseScript_action, 0 },
 	{ "Query",		Query_action, 0 },
 	{ "ReadBuffer",		ReadBuffer_action, 0 },
 	{ "Script",		Script_action, ACTION_KE },
@@ -1647,9 +1641,6 @@ run_taskq(void)
 		return any;
 	    }
 
-	case TS_PAUSED:
-	    return any;
-
 	case TS_EXPECTING:
 	    if (!PCONNECTED) {
 		task_disconnect_abort(current_task);
@@ -2912,54 +2903,6 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     vb_free(&r);
     nvt_save_cnt = 0;
     nvt_save_ix = 0;
-    return true;
-}
-
-/* Pause a script. */
-static bool
-PauseScript_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug("PauseScript", ia, argc, argv);
-    if (check_argc("PauseScript", argc, 0, 0) < 0) {
-	return false;
-    }
-    task_set_state(current_task, TS_PAUSED, "PauseScript");
-    return true;
-}
-
-/*
- * Continue a script.
- * Strange: This assumes that only one script is waiting.
- * Not the most useful facility.
- */
-static bool
-ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
-{
-    taskq_t *q;
-    task_t *s = NULL;
-
-    action_debug("ContinueScript", ia, argc, argv);
-    if (check_argc("ContinueScript", argc, 0, 1) < 0) {
-	return false;
-    }
-
-    FOREACH_LLIST(&taskq, q, taskq_t *) {
-	if (q->top != NULL && q->top->state == TS_PAUSED) {
-	    s = q->top;
-	    break;
-	}
-    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
-
-    if (!s) {
-	popup_an_error("ContinueScript: No script waiting");
-	return false;
-    }
-
-    /* Continue the running script and output the token to it. */
-    task_set_state(s, TS_RUNNING, "ContinueScript");
-    if (argc) {
-	task_result(s->next, argv[0]);
-    }
     return true;
 }
 

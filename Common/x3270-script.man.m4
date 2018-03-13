@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2014, 2016 Paul Mattes.
+dnl Copyright (c) 2000-2014, 2016, 2018 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -333,15 +333,6 @@ will complete with an error, and if this script was invoked as part of
 login through the
 XX_FB(ibm_hosts)
 file, the connection will be broken.
-XX_TP(XX_FB(ContinueScript)([XX_FI(param)]))
-Allows a script that is waiting in a
-XX_FB(PauseScript)
-action, below, to continue.
-The optional
-XX_FI(param)
-string is output by the
-XX_FB(PauseScript)
-action.
 XX_TP(XX_FB(Disconnect))
 Disconnects from the host.
 XX_TP(XX_FB(Ebcdic)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
@@ -389,13 +380,6 @@ If no parameter is given, the most recently added keymap is removed.
 ')dnl
 XX_TP(XX_FB(MoveCursor)(XX_FI(row),XX_FI(col)))
 Moves the cursor to the specified zero-origin coordinates.
-XX_TP(XX_FB(PauseScript))
-Stops a script until the
-XX_FB(ContinueScript)
-action, above, is executed.
-This allows a script to wait for user input and continue.
-Outputs the single parameter to
-XX_FB(ContinueScript), if one is given.
 XX_TP(XX_FB(PrintText)([XX_FB(command),]XX_FI(filter)))
 Pipes an ASCII representation of the current screen image through the named
 XX_FI(filter), e.g., XX_FB(lpr).
