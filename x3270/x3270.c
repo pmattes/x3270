@@ -438,7 +438,7 @@ main(int argc, char *argv[])
     idle_register();
     keymap_register();
     kybd_register();
-    macros_register();
+    task_register();
     menubar_register();
     nvt_register();
     popups_register();

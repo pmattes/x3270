@@ -311,7 +311,7 @@ main(int argc, char *argv[])
     keymap_register();
     keypad_register();
     kybd_register();
-    macros_register();
+    task_register();
     menubar_register();
     nvt_register();
     pr3287_session_register();

@@ -334,7 +334,7 @@ main(int argc, char *argv[])
     host_register();
     idle_register();
     kybd_register();
-    macros_register();
+    task_register();
     nvt_register();
     pr3287_session_register();
     print_screen_register();

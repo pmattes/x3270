@@ -309,12 +309,12 @@ task_in3270(bool in3270)
 }
 
 /**
- * Macros module registration.
+ * Task module registration.
  */
 void
-macros_register(void)
+task_register(void)
 {
-    static action_table_t macros_actions[] = {
+    static action_table_t task_actions[] = {
 	{ "Abort",		Abort_action, ACTION_KE },
 	{ "AnsiText",		AnsiText_action, 0 },
 	{ "Ascii",		Ascii_action, 0 },
@@ -335,7 +335,7 @@ macros_register(void)
 	{ "Tasks",		Tasks_action, 0 },
 	{ "Wait",		Wait_action, ACTION_KE }
     };
-    static action_table_t macros_dactions[] = {
+    static action_table_t task_dactions[] = {
 	{ "Printer",		Printer_action, ACTION_KE },
     };
     static toggle_register_t toggles[] = {
@@ -347,9 +347,9 @@ macros_register(void)
     register_schange_ordered(ST_3270_MODE, task_in3270, 2000);
 
     /* Register actions.*/
-    register_actions(macros_actions, array_count(macros_actions));
+    register_actions(task_actions, array_count(task_actions));
     if (product_has_display()) {
-	register_actions(macros_dactions, array_count(macros_dactions));
+	register_actions(task_dactions, array_count(task_dactions));
     }
 
     /* Register toggles. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,6 +83,6 @@ typedef struct {
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 void task_activate(task_cbh handle);
-void macros_register(void);
+void task_register(void);
 char *task_cb_prompt(task_cbh handle);
 unsigned long task_cb_msec(task_cbh handle);
