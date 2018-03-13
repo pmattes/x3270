@@ -53,8 +53,6 @@ extern const char       *ia_name[];
 
 extern const char *current_action_name;
 
-extern bool keyboard_disabled;
-
 void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
 bool run_action(const char *name, enum iaction cause, const char *parm1,
@@ -67,3 +65,4 @@ int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max);
 void register_actions(action_table_t *actions, unsigned count);
 char *safe_param(const char *s);
+void disable_keyboard(bool disable, bool explicit);

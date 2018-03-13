@@ -553,6 +553,7 @@ child_run(task_cbh handle, bool *success)
 	}
 	*success = c->success;
 	free_child(c);
+	disable_keyboard(false, false);
 	return true;
     }
 
@@ -724,6 +725,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     name = push_cb(NULL, 0, &script_cb, (task_cbh)c);
     Replace(c->parent_name, NewString(name));
     vtrace("%s script process is %d\n", c->parent_name, (int)pid);
+
+    disable_keyboard(true, false);
 
     return true;
 }
@@ -1022,6 +1025,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     Replace(c->parent_name, NewString(name));
 
     vtrace("%s child pid is %d\n", c->parent_name, (int)c->pid);
+
+    disable_keyboard(true, false);
 
     return true;
 }

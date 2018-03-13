@@ -3140,7 +3140,7 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-/* Keyboar disable action, enables or disables the keyboard explicitly. */
+/* Keyboard disable action, enables or disables the keyboard explicitly. */
 static bool
 KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -3150,12 +3150,12 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (argc == 0) {
-	keyboard_disabled = true;
+	disable_keyboard(true, true);
     } else {
 	if (!strcasecmp(argv[0], "True")) {
-	    keyboard_disabled = true;
+	    disable_keyboard(true, true);
 	} else if (!strcasecmp(argv[0], "False")) {
-	    keyboard_disabled = false;
+	    disable_keyboard(false, true);
 	} else {
 	    popup_an_error("KeyboardDisable(): parameter must be True or "
 		    "False");

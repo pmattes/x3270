@@ -54,8 +54,10 @@ const char *ia_name[] = {
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
     "Keymap", "Idle", "Password", "UI"
 };
+static int keyboard_implicit_disable_count = 0;
+static bool keyboard_disabled_explicitly = false;
+
 const char *current_action_name;
-bool keyboard_disabled = false;
 
 typedef struct {
     llist_t list;
@@ -185,6 +187,46 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
+ * Disable or re-enable the keyboard implicitly.
+ */
+void
+disable_keyboard(bool disable, bool explicit)
+{
+    bool disabled_before, disabled_after, would_enable;
+
+    vtrace("Keyboard %sabled %splicitly",
+	    disable? "dis": "en",
+	    explicit? "ex": "im");
+
+    disabled_before = keyboard_disabled_explicitly ||
+	keyboard_implicit_disable_count;
+
+    if (!explicit) {
+	/* Implicit disable. These nest. */
+	int incr = disable? 1 : -1;
+	vtrace(" (%d->%d)",
+		keyboard_implicit_disable_count,
+		keyboard_implicit_disable_count + incr);
+	keyboard_implicit_disable_count += incr;
+	would_enable = (keyboard_implicit_disable_count == 0);
+    } else {
+	/* Explicit disable. These do not nest. */
+	keyboard_disabled_explicitly = disable;
+	would_enable = !disable;
+    }
+
+    disabled_after = keyboard_disabled_explicitly ||
+	keyboard_implicit_disable_count;
+    vtrace(", %s %sabled",
+	  (disabled_before == disabled_after)? "still": "now",
+	  disabled_after? "dis": "en");
+    if (would_enable && disabled_after) {
+	vtrace(" %splicitly", explicit? "im": "ex");
+    }
+    vtrace("\n");
+}
+
+/*
  * Run an action by entry.
  * This is where action suppression happens.
  */
@@ -199,9 +241,15 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	return false;
     }
 
-    if (keyboard_disabled &&
+    if (keyboard_disabled_explicitly &&
 	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
-	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
+	vtrace("%s() [suppressed, keyboard disabled explicitly]\n", e->t.name);
+	return false;
+    }
+
+    if (keyboard_implicit_disable_count &&
+	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
+	vtrace("%s() [suppressed, keyboard disabled implicitly]\n", e->t.name);
 	return false;
     }
 
