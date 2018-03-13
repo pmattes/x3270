@@ -120,7 +120,7 @@ free_source(source_t *s)
 {
     Replace(s->name, NULL);
     Free(s);
-    disable_keyboard(false, false);
+    disable_keyboard(ENABLE, IMPLICIT);
 }
 
 /**
@@ -232,6 +232,6 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     s->result = NULL;
     name = push_cb(NULL, 0, &source_cb, (task_cbh)s);
     s->name = NewString(name);
-    disable_keyboard(true, false);
+    disable_keyboard(DISABLE, IMPLICIT);
     return true;
 }

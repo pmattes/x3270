@@ -3093,12 +3093,12 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (argc == 0) {
-	disable_keyboard(true, true);
+	disable_keyboard(DISABLE, EXPLICIT);
     } else {
 	if (!strcasecmp(argv[0], "True")) {
-	    disable_keyboard(true, true);
+	    disable_keyboard(DISABLE, EXPLICIT);
 	} else if (!strcasecmp(argv[0], "False")) {
-	    disable_keyboard(false, true);
+	    disable_keyboard(ENABLE, EXPLICIT);
 	} else {
 	    popup_an_error("KeyboardDisable(): parameter must be True or "
 		    "False");

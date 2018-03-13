@@ -66,3 +66,7 @@ int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 void register_actions(action_table_t *actions, unsigned count);
 char *safe_param(const char *s);
 void disable_keyboard(bool disable, bool explicit);
+#define DISABLE		true
+#define ENABLE		false
+#define EXPLICIT	true
+#define IMPLICIT	false
