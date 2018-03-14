@@ -127,6 +127,7 @@ static void menubar_connect(bool ignored);
 static void menubar_printer(bool printer_on);
 static void menubar_remodel(bool ignored _is_unused);
 static void menubar_charset(bool ignored _is_unused);
+static void menubar_keyboard_disable(bool ignored _is_unused);
 static void screensave_option(Widget w, XtPointer client_data,
 	XtPointer call_data);
 
@@ -180,6 +181,7 @@ static Widget   connect_menu;
 static Widget	script_abort_button;
 static Widget	idle_button;
 static Widget	snap_button;
+static Widget	reenable_button;
 
 static Pixmap   arrow;
 Pixmap	dot;
@@ -688,6 +690,14 @@ disconnect(Widget w _is_unused, XtPointer client_data _is_unused,
     host_disconnect(false);
 }
 
+/* Called from the "Re-enble Keyboard" button on the "File..." menu */
+static void
+reenable_keyboard_option(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+    push_macro("KeyboardDisable(ForceEnable)");
+}
+
 /* Called from the "Abort Script" button on the "File..." menu */
 static void
 script_abort_callback(Widget w _is_unused, XtPointer client_data _is_unused,
@@ -975,6 +985,14 @@ file_menu_init(bool regen, Dimension x, Dimension y)
 		NULL);
 	any |= (w != NULL);
     }
+
+    /* Re-enable keyboard. */
+    spaced = false;
+    reenable_button = add_menu_itemv("reenableKeyboardOption", file_menu,
+	    reenable_keyboard_option, NULL, &spaced,
+	    XtNsensitive, keyboard_disabled(),
+	    NULL);
+    any |= (reenable_button != NULL);
 
     /* Abort script */
     spaced = false;
@@ -1796,6 +1814,13 @@ menubar_charset(bool ignored _is_unused)
     }
 }
 
+/* Called when keyboard enable/disable changes. */
+static void
+menubar_keyboard_disable(bool ignored _is_unused)
+{
+    XtVaSetValues(reenable_button, XtNsensitive, keyboard_disabled(), NULL);
+}
+
 /* Called to change emulation modes */
 static void
 toggle_extended(Widget w _is_unused, XtPointer client_data _is_unused,
@@ -2319,5 +2344,6 @@ menubar_register(void)
     register_schange(ST_PRINTER, menubar_printer);
     register_schange(ST_REMODEL, menubar_remodel);
     register_schange(ST_CHARSET, menubar_charset);
+    register_schange(ST_KBD_DISABLE, menubar_keyboard_disable);
 }
 

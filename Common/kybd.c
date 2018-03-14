@@ -1558,6 +1558,12 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
     reset_idle_timer();
 
+    if (keyboard_disabled()) {
+	vtrace("  [suppressed, keyboard disabled]\n");
+	status_keyboard_disable_flash();
+	return;
+    }
+
     if (kybdlock) {
 	const char *apl_name;
 

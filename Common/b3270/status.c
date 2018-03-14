@@ -269,6 +269,12 @@ status_scrolled(int n)
 }
 
 void
+status_keyboard_disable_flash(void)
+{
+    /* For now, do nothing. */
+}
+
+void
 status_syswait(void)
 {
     if (oia_kybdlock == K_SYSWAIT) {

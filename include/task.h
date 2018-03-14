@@ -52,6 +52,7 @@ void push_keymap_action(char *);
 void push_macro(char *);
 void push_stack_macro(char *);
 bool task_active(void);
+bool task_can_kbwait(void);
 void task_connect_wait(void);
 bool run_tasks(void);
 void task_error(const char *msg);

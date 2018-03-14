@@ -117,9 +117,17 @@ string_run(task_cbh handle, bool *success)
 	goto clean_up;
     }
 
-    /* Check for some other keyboard lock. */
-    if (kybdlock) {
+    /* Check for some waitable keyboard lock. */
+    if (task_can_kbwait()) {
 	task_kbwait();
+	goto clean_up;
+    }
+
+    /* Any other keyboard lock is fatal, such as disconnect. */
+    if (kybdlock) {
+	popup_an_error("Aborted");
+	*success = false;
+	done = true;
 	goto clean_up;
     }
 

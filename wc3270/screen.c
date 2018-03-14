@@ -2967,6 +2967,12 @@ status_scrolled(int n)
 }
 
 void
+status_keyboard_disable_flash(void)
+{
+    /* Temporarily, nothing */
+}
+
+void
 status_screentrace(int n)
 {
     if (n < 0) {

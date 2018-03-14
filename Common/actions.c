@@ -41,6 +41,7 @@
 #include "lazya.h"
 #include "popups.h"
 #include "resources.h"
+#include "status.h"
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
@@ -223,6 +224,8 @@ disable_keyboard(bool disable, bool explicit, const char *why)
 	vtrace(" %splicitly", explicit? "im": "ex");
     }
     vtrace("\n");
+
+    st_changed(ST_KBD_DISABLE, keyboard_disabled());
 }
 
 /*
@@ -234,6 +237,16 @@ force_enable_keyboard(void)
     vtrace("Forcing keyboard enable\n");
     keyboard_implicit_disables = 0;
     keyboard_explicit_disables = 0;
+    st_changed(ST_KBD_DISABLE, keyboard_disabled());
+}
+
+/*
+ * Test for keyboard disable.
+ */
+bool
+keyboard_disabled(void)
+{
+    return keyboard_implicit_disables || keyboard_explicit_disables;
 }
 
 /*
@@ -252,8 +265,10 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
     }
 
     if ((keyboard_explicit_disables || keyboard_implicit_disables) &&
-	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
+	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP ||
+	     cause == IA_DEFAULT)) {
 	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
+	status_keyboard_disable_flash();
 	return false;
     }
 

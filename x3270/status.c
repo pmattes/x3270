@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,14 @@
 #include "globals.h"
 #include "xglobals.h"
 
+#include <assert.h>
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include "3270ds.h"
 #include "appres.h"
 #include "cg.h"
 
+#include "actions.h"
 #include "kybd.h"
 #include "host.h"
 #include "screen.h"
@@ -175,6 +177,7 @@ static void do_overflow(void);
 static void do_dbcs(void);
 static void do_scrolled(void);
 static void do_minus(void);
+static void do_disabled(void);
 
 static bool  oia_undera = true;
 static bool  oia_boxsolid = false;
@@ -199,8 +202,9 @@ static enum msg {
 	DBCS,			/* X DBCS */
 	SCROLLED,		/* X Scrolled */
 	MINUS,			/* X -f */
+	KBD_DISABLED,		/* X Disabled */
 	N_MSGS
-}               oia_msg = DISCONNECTED, saved_msg;
+} oia_msg = DISCONNECTED, scroll_saved_msg, disabled_saved_msg = BLANK;
 static char	oia_lu[LUCNT+1];
 static bool  msg_is_saved = false;
 static int      n_scrolled = 0;
@@ -218,7 +222,8 @@ static void     (*msg_proc[N_MSGS])(void) = {
 	do_overflow,
 	do_dbcs,
 	do_scrolled,
-	do_minus
+	do_minus,
+	do_disabled
 };
 static int      msg_color[N_MSGS] = {
 	FA_INT_HIGH_SEL,
@@ -227,6 +232,7 @@ static int      msg_color[N_MSGS] = {
 	FA_INT_NORM_NSEL,
 	FA_INT_NORM_NSEL,
 	FA_INT_NORM_NSEL,
+	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL,
@@ -249,6 +255,7 @@ static int      msg_color3279[N_MSGS] = {
 	HOST_COLOR_RED,
 	HOST_COLOR_RED,
 	HOST_COLOR_WHITE,
+	HOST_COLOR_RED,
 	HOST_COLOR_RED,
 	HOST_COLOR_RED
 };
@@ -290,11 +297,15 @@ static unsigned char *a_overflow;
 static unsigned char *a_dbcs;
 static unsigned char *a_scrolled;
 static unsigned char *a_minus;
+static unsigned char *a_disabled;
+
+static ioid_t revert_timer_id = NULL_IOID;
 
 static unsigned char *make_amsg(const char *key);
 static unsigned char *make_emsg(unsigned char prefix[], const char *key,
 	int *len);
 
+static void cancel_disabled_revert(void);
 static void status_render(int region);
 static void do_ctlr(void);
 static void do_msg(enum msg t);
@@ -351,6 +362,7 @@ status_init(void)
     a_dbcs = make_amsg("statusDbcs");
     a_scrolled = make_amsg("statusScrolled");
     a_minus = make_amsg("statusMinus");
+    a_disabled = make_amsg("statusDisabled");
 }
 
 /* Reinitialize the status line */
@@ -498,20 +510,24 @@ status_touch(void)
 static void
 status_connect(bool connected)
 {
-	if (connected) {
-		oia_boxsolid = IN_3270 && !IN_SSCP;
-		do_ctlr();
-		if (kybdlock & KL_AWAITING_FIRST)
-			do_msg(NONSPECIFIC);
-		else
-			do_msg(BLANK);
-		status_untiming();
+    if (connected) {
+	oia_boxsolid = IN_3270 && !IN_SSCP;
+	do_ctlr();
+	if (kybdlock & KL_AWAITING_FIRST) {
+	    cancel_disabled_revert();
+	    do_msg(NONSPECIFIC);
 	} else {
-		oia_boxsolid = false;
-		do_ctlr();
-		do_msg(DISCONNECTED);
-		status_uncursor_pos();
+	    cancel_disabled_revert();
+	    do_msg(BLANK);
 	}
+	status_untiming();
+    } else {
+	oia_boxsolid = false;
+	do_ctlr();
+	cancel_disabled_revert();
+	do_msg(DISCONNECTED);
+	status_uncursor_pos();
+    }
 }
 
 /* Changed 3270 mode */
@@ -529,6 +545,7 @@ status_resolving(bool ignored _is_unused)
 {
 	oia_boxsolid = false;
 	do_ctlr();
+	cancel_disabled_revert();
 	do_msg(XRESOLVING);
 	status_untiming();
 	status_uncursor_pos();
@@ -540,6 +557,7 @@ status_half_connect(bool ignored _is_unused)
 {
 	oia_boxsolid = false;
 	do_ctlr();
+	cancel_disabled_revert();
 	do_msg(CONNECTING);
 	status_untiming();
 	status_uncursor_pos();
@@ -552,12 +570,69 @@ status_printer(bool on)
 	do_printer(oia_printer = on);
 }
 
+/* Revert the disabled message. */
+static void
+revert_disabled(ioid_t id _is_unused)
+{
+    assert(disabled_saved_msg != KBD_DISABLED);
+    paint_msg(disabled_saved_msg);
+    revert_timer_id = NULL_IOID;
+}
+
+/* Cancel the revert timer. */
+static void
+cancel_disabled_revert(void)
+{
+    if (revert_timer_id != NULL_IOID) {
+	RemoveTimeOut(revert_timer_id);
+	revert_timer_id = NULL_IOID;
+    }
+}
+
+/* Revert early. */
+static void
+revert_early(void)
+{
+    if (revert_timer_id != NULL_IOID) {
+	RemoveTimeOut(revert_timer_id);
+	revert_disabled(NULL_IOID);
+    }
+}
+
+/* Keyboard disable flash. */
+void
+status_keyboard_disable_flash()
+{
+    if (keyboard_disabled()) {
+	if (oia_msg == KBD_DISABLED) {
+	    /* Push out the revert timer. */
+	    if (revert_timer_id != NULL_IOID) {
+		RemoveTimeOut(revert_timer_id);
+		revert_timer_id = AddTimeOut(1000, revert_disabled);
+	    }
+	} else {
+	    disabled_saved_msg = oia_msg;
+	    paint_msg(KBD_DISABLED);
+
+	    /* Revert the message in 1s. */
+	    assert(revert_timer_id == NULL_IOID);
+	    revert_timer_id = AddTimeOut(1000, revert_disabled);
+	}
+    } else {
+	if (oia_msg == KBD_DISABLED) {
+	    cancel_disabled_revert();
+	    paint_msg(disabled_saved_msg);
+	}
+    }
+}
+
 /* Lock the keyboard (twait) */
 void
 status_twait(void)
 {
 	oia_undera = false;
 	do_ctlr();
+	cancel_disabled_revert();
 	do_msg(TWAIT);
 }
 
@@ -573,6 +648,7 @@ status_ctlr_done(void)
 void
 status_syswait(void)
 {
+	cancel_disabled_revert();
 	do_msg(SYSWAIT);
 }
 
@@ -582,43 +658,65 @@ status_oerr(int error_type)
 {
 	switch (error_type) {
 	    case KL_OERR_PROTECTED:
+		cancel_disabled_revert();
 		do_msg(PROTECTED);
 		break;
 	    case KL_OERR_NUMERIC:
+		cancel_disabled_revert();
 		do_msg(NUMERIC);
 		break;
 	    case KL_OERR_OVERFLOW:
+		cancel_disabled_revert();
 		do_msg(OVERFLOW);
 		break;
 	    case KL_OERR_DBCS:
+		cancel_disabled_revert();
 		do_msg(DBCS);
 		break;
 	}
 }
 
+/*
+ * The interaction of SCROLLED and KBD_DISABLED is somewhat complex.
+ *
+ * KBD_DISABLED overlays SCROLLED, and KBD_DISABLED overlays SCROLLED.  When
+ * the disable revert timer expires, SCROLLED will be restored (if we are still
+ * scrolled). But when SCROLLED reverts, KBD_DISABLED will *not* be restored.
+ *
+ * Meanwhile, any other OIA state that is set while showing SCROLLED (or
+ * showing KBD_DISABLED which is overlaying SCROLLED) will be saved, to be
+ * restored when scrolling reverts.
+ */
+
 /* Lock the keyboard (X Scrolled) */
 void
 status_scrolled(int n)
 {
-	if (n != 0) {
-		if (!msg_is_saved) {
-			saved_msg = oia_msg;
-			msg_is_saved = true;
-		}
-		n_scrolled = n;
-		paint_msg(SCROLLED);
-	} else {
-		if (msg_is_saved) {
-			msg_is_saved = false;
-			paint_msg(saved_msg);
-		}
+    /* Fire the 'X Disabled' revert timer early. */
+    revert_early();
+
+    n_scrolled = n;
+    if (n != 0) {
+	if (!msg_is_saved) {
+	    scroll_saved_msg = oia_msg;
+	    assert(scroll_saved_msg != SCROLLED);
+	    assert(scroll_saved_msg != KBD_DISABLED);
+	    msg_is_saved = true;
 	}
+	paint_msg(SCROLLED);
+    } else {
+	if (msg_is_saved) {
+	    msg_is_saved = false;
+	    paint_msg(scroll_saved_msg);
+	}
+    }
 }
 
 /* Lock the keyboard (X -f) */
 void
 status_minus(void)
 {
+	cancel_disabled_revert();
 	do_msg(MINUS);
 }
 
@@ -626,14 +724,16 @@ status_minus(void)
 void
 status_reset(void)
 {
-	if (!CONNECTED)
-	    	do_msg(DISCONNECTED);
-	else if (kybdlock & KL_ENTER_INHIBIT)
-		do_msg(INHIBIT);
-	else if (kybdlock & KL_DEFERRED_UNLOCK)
-		do_msg(NONSPECIFIC);
-	else
-		do_msg(BLANK);
+    cancel_disabled_revert();
+    if (!CONNECTED) {
+	do_msg(DISCONNECTED);
+    } else if (kybdlock & KL_ENTER_INHIBIT) {
+	do_msg(INHIBIT);
+    } else if (kybdlock & KL_DEFERRED_UNLOCK) {
+	do_msg(NONSPECIFIC);
+    } else {
+	do_msg(BLANK);
+    }
 }
 
 /* Toggle insert mode */
@@ -1009,7 +1109,7 @@ static void
 do_msg(enum msg t)
 {
 	if (msg_is_saved) {
-		saved_msg = t;
+		scroll_saved_msg = t;
 		return;
 	}
 	paint_msg(t);
@@ -1206,6 +1306,20 @@ do_minus(void)
 		status_msg_set(a_minus, strlen((char *)a_minus));
 	else
 		status_msg_set(minus, sizeof(minus));
+}
+
+static void
+do_disabled(void)
+{
+    static unsigned char disabled[] = {
+	CG_lock, CG_space, CG_D, CG_i, CG_s, CG_a, CG_b, CG_l, CG_e, CG_d
+    };
+
+    if (*standard_font) {
+	status_msg_set(a_minus, strlen((char *)a_minus));
+    } else {
+	status_msg_set(disabled, sizeof(disabled));
+    }
 }
 
 /* Insert, reverse, kmap, script, shift, compose */

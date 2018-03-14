@@ -106,7 +106,8 @@ void llist_unlink(llist_t *element);
 #define ST_CHARSET	9
 #define ST_SELECTING	10
 #define ST_SECURE	11
-#define N_ST		12
+#define ST_KBD_DISABLE	12
+#define N_ST		13
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff

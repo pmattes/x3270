@@ -219,7 +219,8 @@ static task_t *task_redirect_to(void);
 static bool expect_matches(task_t *task);
 
 /* Macro that defines that the keyboard is locked due to user input. */
-#define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST))
+#define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST)
+#define KBWAIT	(kybdlock & KBWAIT_MASK)
 #define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
 
 /* Macro that defines when it's safe to continue a Wait()ing task. */
@@ -3102,8 +3103,8 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
 	} else if (!strcasecmp(argv[0], "ForceEnable")) {
 	    force_enable_keyboard();
 	} else {
-	    popup_an_error("KeyboardDisable(): parameter must be True or "
-		    "False");
+	    popup_an_error("KeyboardDisable(): parameter must be True, "
+		    "False or ForceEnable");
 	    return false;
 	}
     }
@@ -3344,6 +3345,16 @@ bool
 task_ifield_can_proceed(void)
 {
     return CAN_PROCEED;
+}
+
+/**
+ * Indicate whether it is safe for a task to go into KBWAIT state.
+ *
+ * @return True if safe for KBWAIT.
+ */
+bool task_can_kbwait(void)
+{
+    return (kybdlock & KBWAIT_MASK) && !(kybdlock & ~KBWAIT_MASK);
 }
 
 /**

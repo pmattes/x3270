@@ -71,3 +71,4 @@ void disable_keyboard(bool disable, bool explicit, const char *why);
 #define EXPLICIT	true
 #define IMPLICIT	false
 void force_enable_keyboard(void);
+bool keyboard_disabled(void);
