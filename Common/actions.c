@@ -54,8 +54,8 @@ const char *ia_name[] = {
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
     "Keymap", "Idle", "Password", "UI"
 };
-static int keyboard_implicit_disable_count = 0;
-static bool keyboard_disabled_explicitly = false;
+static int keyboard_implicit_disables = 0;
+static int keyboard_explicit_disables = 0;
 
 const char *current_action_name;
 
@@ -187,36 +187,35 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * Disable or re-enable the keyboard implicitly.
+ * Disable or re-enable the keyboard.
  */
 void
-disable_keyboard(bool disable, bool explicit)
+disable_keyboard(bool disable, bool explicit, const char *why)
 {
     bool disabled_before, disabled_after, would_enable;
+    int *countp = explicit?
+	&keyboard_explicit_disables:
+	&keyboard_implicit_disables;
+    int incr = disable? 1 : -1;
 
-    vtrace("Keyboard %sabled %splicitly",
-	    disable? "dis": "en",
-	    explicit? "ex": "im");
-
-    disabled_before = keyboard_disabled_explicitly ||
-	keyboard_implicit_disable_count;
-
-    if (!explicit) {
-	/* Implicit disable. These nest. */
-	int incr = disable? 1 : -1;
-	vtrace(" (%d->%d)",
-		keyboard_implicit_disable_count,
-		keyboard_implicit_disable_count + incr);
-	keyboard_implicit_disable_count += incr;
-	would_enable = (keyboard_implicit_disable_count == 0);
-    } else {
-	/* Explicit disable. These do not nest. */
-	keyboard_disabled_explicitly = disable;
-	would_enable = !disable;
+    if (*countp + incr < 0) {
+	vtrace("Redundant %splicit keyboard enable ignored\n",
+		explicit? "ex": "im");
+	return;
     }
 
-    disabled_after = keyboard_disabled_explicitly ||
-	keyboard_implicit_disable_count;
+    vtrace("Keyboard %sabled %splicitly by %s (%d->%d)",
+	    disable? "dis": "en",
+	    explicit? "ex": "im",
+	    why,
+	    *countp,
+	    *countp + incr);
+
+    disabled_before = keyboard_explicit_disables || keyboard_implicit_disables;
+    *countp += incr;
+    disabled_after = keyboard_explicit_disables || keyboard_implicit_disables;
+    would_enable = (*countp == 0);
+
     vtrace(", %s %sabled",
 	  (disabled_before == disabled_after)? "still": "now",
 	  disabled_after? "dis": "en");
@@ -224,6 +223,17 @@ disable_keyboard(bool disable, bool explicit)
 	vtrace(" %splicitly", explicit? "im": "ex");
     }
     vtrace("\n");
+}
+
+/*
+ * Force a keyboard enable (both explicit and implicit).
+ */
+void
+force_enable_keyboard(void)
+{
+    vtrace("Forcing keyboard enable\n");
+    keyboard_implicit_disables = 0;
+    keyboard_explicit_disables = 0;
 }
 
 /*
@@ -241,15 +251,9 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	return false;
     }
 
-    if (keyboard_disabled_explicitly &&
+    if ((keyboard_explicit_disables || keyboard_implicit_disables) &&
 	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
-	vtrace("%s() [suppressed, keyboard disabled explicitly]\n", e->t.name);
-	return false;
-    }
-
-    if (keyboard_implicit_disable_count &&
-	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP)) {
-	vtrace("%s() [suppressed, keyboard disabled implicitly]\n", e->t.name);
+	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
 	return false;
     }
 

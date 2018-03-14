@@ -3093,12 +3093,14 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (argc == 0) {
-	disable_keyboard(DISABLE, EXPLICIT);
+	disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
     } else {
 	if (!strcasecmp(argv[0], "True")) {
-	    disable_keyboard(DISABLE, EXPLICIT);
+	    disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
 	} else if (!strcasecmp(argv[0], "False")) {
-	    disable_keyboard(ENABLE, EXPLICIT);
+	    disable_keyboard(ENABLE, EXPLICIT, "KeyboardDisable() action");
+	} else if (!strcasecmp(argv[0], "ForceEnable")) {
+	    force_enable_keyboard();
 	} else {
 	    popup_an_error("KeyboardDisable(): parameter must be True or "
 		    "False");
@@ -3107,7 +3109,6 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
     }
     return true;
 }
-
 
 /* "Macro" action, explicitly invokes a named macro. */
 static bool
