@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2017 Paul Mattes.
+ * Copyright (c) 2000-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -213,6 +213,16 @@ static bool curses_alt = false;
 static bool default_colors = false;
 #endif /*]*/
 static bool screen_initted = false;
+
+static ioid_t disabled_done_id = NULL_IOID;
+
+/* Layered OIA messages. */
+static char *disabled_msg = NULL;	/* layer 0 (top) */
+static char *scrolled_msg = NULL;	/* layer 1 */
+static char *info_msg = NULL;		/* layer 2 */
+static char *other_msg = NULL;		/* layer 3 */
+
+static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -1832,24 +1842,8 @@ static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
 
-static char *status_msg = "X Not Connected";
-static char *saved_status_msg = NULL;
-static ioid_t saved_status_timeout = NULL_IOID;
-static ioid_t oia_scroll_timeout = NULL_IOID;
-
-static void
-cancel_status_push(void)
-{
-    saved_status_msg = NULL;
-    if (saved_status_timeout != NULL_IOID) {
-	RemoveTimeOut(saved_status_timeout);
-	saved_status_timeout = NULL_IOID;
-    }
-    if (oia_scroll_timeout != NULL_IOID) {
-	RemoveTimeOut(oia_scroll_timeout);
-	oia_scroll_timeout = NULL_IOID;
-    }
-}
+static ioid_t info_done_timeout = NULL_IOID;
+static ioid_t info_scroll_timeout = NULL_IOID;
 
 void
 status_ctlr_done(void)
@@ -1863,67 +1857,101 @@ status_insert_mode(bool on)
     status_im = on;
 }
 
+/* Remove the info message. */
 static void
-status_pop(ioid_t id _is_unused)
+info_done(ioid_t id _is_unused)
 {
-    status_msg = saved_status_msg;
-    saved_status_msg = NULL;
-    saved_status_timeout = NULL_IOID;
+    Replace(info_base_msg, NULL);
+    info_msg = NULL;
+    info_done_timeout = NULL_IOID;
 }
 
+/* Scroll the info message. */
 static void
-oia_scroll(ioid_t id _is_unused)
+info_scroll(ioid_t id _is_unused)
 {
-    status_msg++;
-    if (strlen(status_msg) > 35) {
-	oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS, oia_scroll);
+    ++info_msg;
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS, info_scroll);
     } else {
-	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
-	oia_scroll_timeout = NULL_IOID;
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
+	info_scroll_timeout = NULL_IOID;
     }
 }
 
+/* Pop up an info message. */
 void
 status_push(char *msg)
 {
-    if (saved_status_msg != NULL) {
-	/* Already showing something. */
-	RemoveTimeOut(saved_status_timeout);
-	saved_status_timeout = NULL_IOID;
-    } else {
-	saved_status_msg = status_msg;
+    Replace(info_base_msg, NewString(msg));
+    info_msg = info_base_msg;
+
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
+
+/*
+ * Reset the info message, so when it is revealed, it starts at the beginning.
+ */
+static void
+reset_info(void)
+{
+    if (info_base_msg != NULL) {
+	info_msg = info_base_msg;
     }
 
-    status_msg = msg;
+    /* Stop any timers. */
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
 
-    if (strlen(msg) > 35) {
-	oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS, oia_scroll);
+/*
+ * The info message has been displayed. Set the timer to scroll or erase it.
+ */
+static void
+set_info_timer(void)
+{
+    if (info_scroll_timeout != NULL_IOID || info_done_timeout != NULL_IOID) {
+	return;
+
+    }
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS, info_scroll);
     } else {
-	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
     }
 }
 
 void
 status_minus(void)
 {
-    cancel_status_push();
-    status_msg = "X -f";
+    other_msg = "X -f";
 }
 
 void
 status_oerr(int error_type)
 {
-    cancel_status_push();
-
     switch (error_type) {
     case KL_OERR_PROTECTED:
-	status_msg = "X Protected";
+	other_msg = "X Protected";
 	break;
     case KL_OERR_NUMERIC:
-	status_msg = "X Numeric";
+	other_msg = "X Numeric";
 	break;
     case KL_OERR_OVERFLOW:
-	status_msg = "X Overflow";
+	other_msg = "X Overflow";
 	break;
     }
 }
@@ -1931,16 +1959,14 @@ status_oerr(int error_type)
 void
 status_reset(void)
 {
-    cancel_status_push();
-
     if (!CONNECTED) {
-	status_msg = "X Not Connected";
+	other_msg = "X Not Connected";
     } else if (kybdlock & KL_ENTER_INHIBIT) {
-	status_msg = "X Inhibit";
+	other_msg = "X Inhibit";
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-	status_msg = "X";
+	other_msg = "X";
     } else {
-	status_msg = "";
+	other_msg = NULL;
     }
 }
 
@@ -1953,18 +1979,14 @@ status_reverse_mode(bool on)
 void
 status_syswait(void)
 {
-    cancel_status_push();
-
-    status_msg = "X SYSTEM";
+    other_msg = "X SYSTEM";
 }
 
 void
 status_twait(void)
 {
-    cancel_status_push();
-
     oia_undera = false;
-    status_msg = "X Wait";
+    other_msg = "X Wait";
 }
 
 void
@@ -1996,12 +2018,7 @@ static void
 status_half_connect(bool half_connected)
 {
     if (half_connected) {
-	/* Push the 'Connecting' status under whatever is popped up. */
-	if (saved_status_msg != NULL) {
-	    saved_status_msg = "X Connecting";
-	} else {
-	    status_msg = "X Connecting";
-	}
+	other_msg = "X Connecting";
 	oia_boxsolid = false;
 	status_secure = SS_INSECURE;
     }
@@ -2010,14 +2027,13 @@ status_half_connect(bool half_connected)
 static void
 status_connect(bool connected)
 {
-    cancel_status_push();
-
     if (connected) {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
-	if (kybdlock & KL_AWAITING_FIRST)
-	    status_msg = "X";
-	else
-	    status_msg = "";
+	if (kybdlock & KL_AWAITING_FIRST) {
+	    other_msg = "X";
+	} else {
+	    other_msg = NULL;
+	}
 	if (net_secure_connection()) {
 	    if (net_secure_unverified()) {
 		status_secure = SS_UNVERIFIED;
@@ -2029,7 +2045,7 @@ status_connect(bool connected)
 	}
     } else {
 	oia_boxsolid = false;
-	status_msg = "X Not Connected";
+	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
 }
@@ -2080,21 +2096,32 @@ status_untiming(void)
 void
 status_scrolled(int n)
 {
-    static char ssbuf[128];
-
-    cancel_status_push();
     if (n) {
-	snprintf(ssbuf, sizeof(ssbuf), "X Scrolled %d", n);
-	status_msg = ssbuf;
+	Replace(scrolled_msg, xs_buffer("X Scrolled %d", n));
     } else {
-	status_msg = "";
+	Replace(scrolled_msg, NULL);
     }
 }
 
+/* Remove 'X Disabled'. */
+static void
+disabled_done(ioid_t id _is_unused)
+{
+    disabled_msg = NULL;
+    disabled_done_id = NULL_IOID;
+}
+
+/* Flash 'X Disabled' in the OIA. */
 void
 status_keyboard_disable_flash(void)
 {
-    /* For now, do nothing. */
+    if (disabled_done_id == NULL_IOID) {
+	disabled_msg = "X Disabled";
+    } else {
+	RemoveTimeOut(disabled_done_id);
+	disabled_done_id = NULL_IOID;
+    }
+    disabled_done_id = AddTimeOut(1000L, disabled_done);
 }
 
 void    
@@ -2123,6 +2150,7 @@ draw_oia(void)
     int cursor_row = cursor_addr / cCOLS;
     int cursor_col = cursor_addr % cCOLS;
     int fl_cursor_col = flipped? (cursesCOLS - 1 - cursor_col): cursor_col;
+    char *status_msg_now;
     static struct {
 	ucs4_t u;
 	unsigned char acs;
@@ -2295,8 +2323,24 @@ draw_oia(void)
 	printw("?");
     }
 
+    /* Figure out the status message. */
+    if (disabled_msg != NULL) {
+	status_msg_now = disabled_msg;
+	reset_info();
+    } else if (scrolled_msg != NULL) {
+	status_msg_now = scrolled_msg;
+	reset_info();
+    } else if (info_msg != NULL) {
+	status_msg_now = info_msg;
+	set_info_timer();
+    } else if (other_msg != NULL) {
+	status_msg_now = other_msg;
+    } else {
+	status_msg_now = "";
+    }
+
     (void) attrset(defattr);
-    mvprintw(status_row, 8, "%-35.35s", status_msg);
+    mvprintw(status_row, 8, "%-35.35s", status_msg_now);
     mvprintw(status_row, rmargin-35,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
