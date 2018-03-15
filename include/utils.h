@@ -58,7 +58,7 @@ typedef void (*childfn_t)(ioid_t id, int status);
 ioid_t AddInput(iosrc_t fd, iofn_t fn);
 ioid_t AddExcept(iosrc_t fd, iofn_t fn);
 ioid_t AddOutput(iosrc_t fd, iofn_t fn);
-#if !defined(_WIN32) /*[*.
+#if !defined(_WIN32) /*[*/
 ioid_t AddChild(pid_t pid, childfn_t fn);
 #endif /*]*/
 void RemoveInput(ioid_t);
