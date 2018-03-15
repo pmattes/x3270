@@ -490,6 +490,9 @@ tcl3270/x3270-script.man.m4
 VS2017/catf/catf.vcxproj
 VS2017/catf/catf.vcxproj.filters
 VS2017/catf/catf.vcxproj.user
+VS2017/libexpat/libexpat.vcxproj
+VS2017/libexpat/libexpat.vcxproj.filters
+VS2017/libexpat/libexpat.vcxproj.user
 VS2017/libw3270i/libw3270i.vcxproj
 VS2017/libw3270i/libw3270i.vcxproj.filters
 VS2017/libw3270i/libw3270i.vcxproj.user
