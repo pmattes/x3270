@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 Paul Mattes.
+ * Copyright (c) 2010-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -801,6 +801,12 @@ fm_wizard(void *session)
 #endif /*]*/
 
 static void
+fm_reenable(void *ignored _is_unused)
+{
+    push_macro("KeyboardDisable(ForceEnable)");
+}
+
+static void
 fm_disconnect(void *ignored _is_unused)
 {
     push_macro("Disconnect");
@@ -828,6 +834,7 @@ typedef enum {
     FM_WIZARD,
     FM_WIZARD_SESS,
 #endif /*]*/
+    FM_REENABLE,
     FM_DISC,
     FM_QUIT,
     FM_COUNT
@@ -852,6 +859,7 @@ char *file_menu_names[FM_COUNT] = {
     "Session Wizard",
     "Edit Session",
 #endif /*]*/
+    "Re-enable Keyboard",
     "Disconnect",
     "Quit"
 };
@@ -870,6 +878,7 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_wizard,
     fm_wizard,
 #endif /*]*/
+    fm_reenable,
     fm_disconnect,
     fm_quit
 };
