@@ -3,3 +3,6 @@ cd ..\..\wc3270
 
 cd ..\ws3270
 %1\mkfb.exe -c -o fallbacks.c ..\Common\fb-common
+
+cd ..\wb3270
+%1\mkfb.exe -c -o fallbacks.c ..\Common\fb-common ..\Common\fb-printSession
