@@ -166,7 +166,7 @@ main(int argc, char *argv[])
 	/* Grab the username. */
 	user = getenv("USERNAME");
 	if (user == NULL) {
-		fprintf(stderr, "No %USERNAME%?\n");
+		fprintf(stderr, "No %%USERNAME%%?\n");
 		return 1;
 	}
 
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday);
-	sprintf(rpqtime, "%02d%02d%02d%02d%02d",
+	sprintf(rpqtime, "%02d%02d%02d%02d%02d%02d",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday,

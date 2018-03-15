@@ -143,7 +143,6 @@
     <ClCompile Include="..\..\Common\charset.c" />
     <ClCompile Include="..\..\Common\ctlr.c" />
     <ClCompile Include="..\..\Common\event.c" />
-    <ClCompile Include="..\..\Common\sio_common.c" />
     <ClCompile Include="..\..\Common\telnet_sio.c" />
     <ClCompile Include="..\..\lib\w3270\favicon.c" />
     <ClCompile Include="..\..\Common\fprint_screen.c" />
@@ -160,7 +159,6 @@
     <ClCompile Include="..\..\Common\kybd.c" />
     <ClCompile Include="..\..\Common\linemode.c" />
     <ClCompile Include="..\..\Common\llist.c" />
-    <ClCompile Include="..\..\Common\macros.c" />
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\nvt.c" />
     <ClCompile Include="..\..\Common\print_screen.c" />
@@ -168,6 +166,7 @@
     <ClCompile Include="..\..\Common\Nodisplay/resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
     <ClCompile Include="..\..\Common\sf.c" />
+    <ClCompile Include="..\..\Common\task.c" />
     <ClCompile Include="..\..\Common\telnet.c" />
     <ClCompile Include="..\..\Common\telnet_new_environ.c" />
     <ClCompile Include="..\..\Common\toggles.c" />
@@ -176,6 +175,16 @@
     <ClCompile Include="..\..\Common\winprint.c" />
     <ClCompile Include="..\..\Common\xio.c" />
     <ClCompile Include="..\..\Common\XtGlue.c" />
+    <ClCompile Include="..\..\Common\popups_glue.c" />
+    <ClCompile Include="..\..\Common\sio_glue.c" />
+    <ClCompile Include="..\..\Common\ssl_action.c" />
+    <ClCompile Include="..\..\Common\run_action.c" />
+    <ClCompile Include="..\..\Common\login_macro.c" />
+    <ClCompile Include="..\..\Common\stringscript.c" />
+    <ClCompile Include="..\..\Common\childscript.c" />
+    <ClCompile Include="..\..\Common\source.c" />
+    <ClCompile Include="..\..\Common\peerscript.c" />
+    <ClCompile Include="..\..\Common\stdinscript.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

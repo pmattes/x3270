@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\Common\screen_stubs6.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\screen_stubs7.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\scroll_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

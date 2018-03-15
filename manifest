@@ -69,6 +69,7 @@ Common/c3270/mkkeypad.c
 Common/c3270/ssl_passwd_gui.c
 Common/charset.c
 Common/child.c
+Common/childscript.c
 Common/ckeypad.h
 Common/ctlr.c
 Common/event.c
@@ -102,6 +103,7 @@ Common/lib32xx_files.mk
 Common/libs.mk
 Common/linemode.c
 Common/llist.c
+Common/login_macro.c
 Common/Malloc.c
 Common/menubar_stubs.c
 Common/mkfb.c
@@ -109,7 +111,9 @@ Common/mkicon.c
 Common/Nodisplay/resources.c
 Common/nvt.c
 Common/nvt_gui_stubs.c
+Common/peerscript.c
 Common/popups_stubs.c
+Common/popups_glue.c
 Common/pr3287/charset.c
 Common/pr3287/ctlr.c
 Common/pr3287/ctlrc.h
@@ -138,6 +142,7 @@ Common/proxy.c
 Common/readres.c
 Common/resolver.c
 Common/rpq.c
+Common/run_action.c
 Common/s3270.c
 Common/s3270/localdefs.h
 Common/save_stubs.c
@@ -158,10 +163,13 @@ Common/sio_glue.c
 Common/sio_none.c
 Common/sio_openssl.c
 Common/sio_secure_transport.c
+Common/source.c
 Common/split_host.c
 Common/ssl_action.c
 Common/ssl_passwd_gui_stubs.c
 Common/status_stubs.c
+Common/stdinscript.c
+Common/stringscript.c
 Common/tables.c
 Common/task.c
 Common/telnet.c
@@ -207,6 +215,7 @@ include/bind-opt.h
 include/charset.h
 include/child.h
 include/child_popups.h
+include/childscript.h
 include/ctlrc.h
 include/ctlr.h
 include/fallbacks.h
@@ -239,6 +248,7 @@ include/menubar.h
 include/nvt_gui.h
 include/nvt.h
 include/opts.h
+include/peerscript.h
 include/popups.h
 include/pr3287_session.h
 include/print_gui.h
@@ -260,11 +270,14 @@ include/sio.h
 include/sio_glue.h
 include/sio_internal.h
 include/sioc.h
+include/source.h
 include/split_host.h
 include/ssl_action.h
 include/ssl_config.h
 include/ssl_passwd_gui.h
 include/status.h
+include/stdinscript.h
+include/stringscript.h
 include/tables.h
 include/task.h
 include/telnet_core.h

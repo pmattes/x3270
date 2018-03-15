@@ -37,6 +37,7 @@
     <ClCompile Include="..\..\Common\screen_stubs4.c" />
     <ClCompile Include="..\..\Common\screen_stubs5.c" />
     <ClCompile Include="..\..\Common\screen_stubs6.c" />
+    <ClCompile Include="..\..\Common\screen_stubs7.c" />
     <ClCompile Include="..\..\Common\scroll_stubs.c" />
     <ClCompile Include="..\..\Common\select_stubs.c" />
     <ClCompile Include="..\..\Common\sio_none.c" />
