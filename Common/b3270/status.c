@@ -41,6 +41,8 @@
 #include "ui_stream.h"
 #include "utils.h"
 
+#define FLASH_MSEC	1000
+
 typedef enum {
     K_NONE,
     K_MINUS,
@@ -54,7 +56,10 @@ typedef enum {
 oia_kybdlock_t oia_kybdlock = K_NONE;
 
 static bool scrolled = false;
+static int scroll_n = -1;
 static char *saved_lock;
+static bool flashing = false;
+static ioid_t flashing_id = NULL_IOID;
 
 bool
 screen_suspend(void)
@@ -140,7 +145,7 @@ static void
 status_lock(char *msg)
 {
     Replace(saved_lock, msg);
-    if (!scrolled) {
+    if (!scrolled && !flashing) {
 	ui_vleaf(IndOia,
 		"field", "lock",
 		"value", saved_lock,
@@ -243,24 +248,47 @@ status_script(bool on)
 void
 status_scrolled(int n)
 {
-    static int scroll_n = -1;
-
     if (n != 0) {
 	if (scrolled && scroll_n == n) {
 	    return;
 	}
 	scrolled = true;
 	scroll_n = n;
-	ui_vleaf(IndOia,
-		"field", "lock",
-		"value", lazyaf("scrolled %d", n),
-		NULL);
+	if (!flashing) {
+	    ui_vleaf(IndOia,
+		    "field", "lock",
+		    "value", lazyaf("scrolled %d", n),
+		    NULL);
+	}
     } else {
 	if (!scrolled) {
 	    return;
 	}
 	scrolled = false;
 	scroll_n = -1;
+	if (!flashing) {
+	    ui_vleaf(IndOia,
+		    "field", "lock",
+		    "value", saved_lock,
+		    NULL);
+	}
+    }
+}
+
+/* A keyboard disable flash is done. */
+static void
+flash_done(ioid_t id _is_unused)
+{
+    flashing = false;
+    flashing_id = NULL_IOID;
+    if (scrolled) {
+	int n = scroll_n;
+
+	/* Restore the scroll message. */
+	scroll_n = -1;
+	status_scrolled(n);
+    } else {
+	/* Restore the lock message. */
 	ui_vleaf(IndOia,
 		"field", "lock",
 		"value", saved_lock,
@@ -271,7 +299,17 @@ status_scrolled(int n)
 void
 status_keyboard_disable_flash(void)
 {
-    /* For now, do nothing. */
+    if (!flashing) {
+	ui_vleaf(IndOia,
+		"field", "lock",
+		"value", "disabled",
+		NULL);
+    }
+    flashing = true;
+    if (flashing_id != NULL_IOID) {
+	RemoveTimeOut(flashing_id);
+    }
+    flashing_id = AddTimeOut(FLASH_MSEC, flash_done);
 }
 
 void

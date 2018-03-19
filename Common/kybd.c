@@ -1558,7 +1558,8 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
     reset_idle_timer();
 
-    if (keyboard_disabled()) {
+    if (keyboard_disabled() &&
+	    (cause == IA_KEY || cause == IA_KEYMAP || cause == IA_DEFAULT)) {
 	vtrace("  [suppressed, keyboard disabled]\n");
 	status_keyboard_disable_flash();
 	return;
