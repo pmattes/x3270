@@ -594,6 +594,24 @@ generate_rowdiffs(screen_t *oldr, screen_t *newr)
     return diffs;
 }
 
+/*
+ * Compare the attributes between the end of 'd' and the beginning of 'next'.
+ */
+static bool
+ea_equal_attrs_span(screen_t *oldr, screen_t *newr, rowdiff_t *d,
+	rowdiff_t *next)
+{
+    int i;
+
+    for (i = d->start_col + d->width; i < next->start_col; i++) {
+	if (!ea_equal_attrs(&oldr[i], &oldr[d->start_col]) ||
+            !ea_equal_attrs(&newr[i], &newr[d->start_col])) {
+	    return false;
+	}
+    }
+    return true;
+}
+
 /* Merge adjacent sets of diffs to minimize output. */
 static rowdiff_t *
 merge_adjacent(rowdiff_t *diffs, screen_t *oldr, screen_t *newr)
@@ -610,12 +628,16 @@ merge_adjacent(rowdiff_t *diffs, screen_t *oldr, screen_t *newr)
 	/*
 	 * Merge two text diffs if they are joined by a span of RED_SPAN or
 	 * fewer matching cells and have the same attributes.
+	 *
+	 * But what if the intervening areas have different attributes from
+	 * the first text diff?
 	 */
 	if (d->reason == RD_TEXT &&
 		next->reason == RD_TEXT &&
 		next->start_col - (d->start_col + d->width) <= RED_SPAN &&
 		ea_equal_attrs(&oldr[d->start_col], &oldr[next->start_col]) &&
-		ea_equal_attrs(&newr[d->start_col], &newr[next->start_col])) {
+		ea_equal_attrs(&newr[d->start_col], &newr[next->start_col]) &&
+		ea_equal_attrs_span(oldr, newr, d, next)) {
 
 	    rowdiff_t *nx;
 
