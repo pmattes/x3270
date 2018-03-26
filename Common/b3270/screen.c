@@ -384,6 +384,7 @@ render_screen(struct ea *ea, screen_t *s)
 	bool dbcs = false;
 	bool order = false;
 	bool extra_underline = false;
+	bool pua = false;
 	bool no_copy = false;
 
 	uc = 0;
@@ -449,12 +450,12 @@ render_screen(struct ea *ea, screen_t *s)
 		    break;
 		case EBC_dup:
 		    uc = '*';
-		    extra_underline = true;
+		    pua = true;
 		    order = true;
 		    break;
 		case EBC_fm:
 		    uc = ';';
-		    extra_underline = true;
+		    pua = true;
 		    order = true;
 		    break;
 		}
@@ -463,6 +464,7 @@ render_screen(struct ea *ea, screen_t *s)
 		    if (is_apl_underlined(ea[i].cs, uc)) {
 			uc = uncircle(uc);
 			extra_underline = true;
+			pua = true;
 		    }
 		    if (uc == 0) {
 			uc = ' ';
@@ -542,7 +544,10 @@ render_screen(struct ea *ea, screen_t *s)
 		s[si].gr |= XX_ORDER;
 	    }
 	    if (extra_underline) {
-		s[si].gr |= XX_UNDERLINE | XX_PUA;
+		s[si].gr |= XX_UNDERLINE;
+	    }
+	    if (pua) {
+		s[si].gr |= XX_PUA;
 	    }
 	    if (no_copy) {
 		s[si].gr |= XX_NO_COPY;
