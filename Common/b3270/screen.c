@@ -164,7 +164,7 @@ see_gr(u_char gr)
 	sep = ",";
     }
     if (gr & XX_PUA) {
-	vb_appendf(&r, "%spua", sep);
+	vb_appendf(&r, "%sprivate-use", sep);
 	sep = ",";
     }
     if (gr & XX_NO_COPY) {

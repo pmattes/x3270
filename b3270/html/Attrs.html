@@ -19,7 +19,7 @@ values.</p>
  <tr><td>reverse</td><td>Monochrome displays only</td></tr>
  <tr><td>wide</td><td>Each character takes two columns</td></tr>
  <tr><td>order</td><td>3270 <a href="#orders">order</a> made visible</td></tr>
- <tr><td>pua</td><td>Use <a href="#pua">Private Use Area</a> for
+ <tr><td>private-use</td><td>Use <a href="#pua">Private Use Area</a> for
 	 copy/paste</td></tr>
  <tr><td>no-copy</td><td><a href="#nocopy">Do not copy</a> into paste buffer</td></tr>
 </table>
@@ -29,8 +29,9 @@ set).</p>
 contents are a visible representation of a 3270 order that would normally be
 displayed as a blank.
 This is done when b3270 has the <b>visibleControl</b> toggle set.</p>
-<p>Note that except when the <a href="#pua">pua</a> attribute is also set,
-visible orders should be copied into a paste buffer as a space (U+0020).</p>
+<p>Note that except when the <a href="#pua">private-use</a> attribute is also
+set, visible orders should be copied into a paste buffer as a space
+(U+0020).</p>
 The set of orders displayed this way are:</p>
 <table border cols=2 width="75%">
  <tr><th>Character</th><th>Meaning</th></tr>
@@ -70,20 +71,31 @@ The set of orders displayed this way are:</p>
  <tr><td>U</td><td>Start Field, invisible, protected, numeric</td></tr>
  <tr><td>V</td><td>Start Field, invisible, protected, numeric, modified</td></tr>
 </table>
-<a name="pua"></a><p>When a location has the <b>pua</b> attribute, it should be
-treated specially when copied into a paste buffer: the character value should
-be offset by the value 0xe000 to put it in the Unicode BMP Private Use Area.
-For example, the <b>*</b> character (U+002a), when marked with <b>pua</b>,
-represents the EBCDIC character <b>DUP</b> (X'1C'). It should be encoded in the
-paste buffer as U+e02a. The <b>Z</b> character (U+005a), when marked
-with <b>pua</b>, represents the APL EBCDIC character <b>Underlined Z</b> (GE
-X'69'). It should be encoded in the paste buffer as U+e05a.
+<a name="pua"></a><p>When a location has the <b>private-use</b> attribute, it
+should be treated specially when copied into a paste buffer: the character
+value should be offset by the value 0xe000 to put it in the Unicode BMP Private
+Use Area.
+For example, the <b>*</b> character (U+002a), when marked with
+<b>private-use</b>, represents the EBCDIC character <b>DUP</b> (X'1C'). It
+should be encoded in the paste buffer as U+e02a. The <b>Z</b> character
+(U+005a), when marked with <b>private-use</b>, represents the APL EBCDIC
+character <b>Underlined Z</b> (GE X'69'). It should be encoded in the paste
+buffer as U+e05a.
 This rule applies even if the <b>order</b> attribute it set (normally orders
 are represented as U+0020 in the paste buffer).</p>
 <a name="nocopy"></a><p>When a location has the <b>no-copy</b> attribute, it
 should not be copied into a paste buffer. This is generally the case for EBCDIC
 <b>SO</b> (X'0E') and <b>SI</b> (X'0F') orders, which can be inferred from
 other data.</p>
+<p>
+So the hierarchy for selecting a value to copy into the paste buffer is:
+<ul>
+ <li>if <b>no-copy</b> is set, do not copy anything</li>
+ <li>else if <b>private-use</b> is set, add 0xe000</li>
+ <li>else if <b>order</b> is set, substitute U+0020</li>
+ <li>else copy the value as-is</li>
+</ul>
+</p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
 </body>
