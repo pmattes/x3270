@@ -66,6 +66,7 @@
 #define XX_REVERSE	0x10	/* reverse video (3278) */
 #define XX_WIDE		0x20	/* double-width character (DBCS) */
 #define XX_ORDER	0x40	/* other visible order */
+#define XX_PUA		0x80	/* private use area */
 
 typedef struct {
     u_int ccode;	/* unicode character to display */
@@ -160,6 +161,10 @@ see_gr(u_char gr)
     }
     if (gr & XX_ORDER) {
 	vb_appendf(&r, "%sorder", sep);
+	sep = ",";
+    }
+    if (gr & XX_PUA) {
+	vb_appendf(&r, "%spua", sep);
 	sep = ",";
     }
     return lazya(vb_consume(&r));
@@ -524,7 +529,7 @@ render_screen(struct ea *ea, screen_t *s)
 		s[si].gr |= XX_ORDER;
 	    }
 	    if (extra_underline) {
-		s[si].gr |= XX_UNDERLINE;
+		s[si].gr |= XX_UNDERLINE | XX_PUA;
 	    }
 	}
     }

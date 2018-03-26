@@ -19,6 +19,8 @@ values.</p>
  <tr><td>reverse</td><td>Monochrome displays only</td></tr>
  <tr><td>wide</td><td>Each character takes two columns</td></tr>
  <tr><td>order</td><td>3270 <a href="#orders">order</a> made visible</td></tr>
+ <tr><td>pua</td><td>Use <a href="#pua">Private Use Area</a> for
+	 copy/paste</td></tr>
 </table>
 <p>An empty value indicates the default (none of the above properties are
 set).</p>
@@ -65,6 +67,14 @@ The set of orders displayed this way are:</p>
  <tr><td>U</td><td>Start Field, invisible, protected, numeric</td></tr>
  <tr><td>V</td><td>Start Field, invisible, protected, numeric, modified</td></tr>
 </table>
+<a name="pua"></a><p>When a location has the <b>pua</b> attribute, it should be
+treated specially when copied into a paste buffer: the character value should
+be offset by the value 0xe000 to put it in the Private Use Area. For example,
+the underlined <b>*</b> character (U+002a), when marked with <b>pua</b>,
+represents the EBCDIC character <b>DUP</b> (X'1C'). It should be encoded in the
+paste buffer as U+e02a. The underlined <b>Z</b> character (U+005a), when marked
+with <b>pua</b>, represents the APL EBCDIC character <b>Underlined Z</b> (GE
+X'69'). It should be encoded in the paste buffer as U+e05a.
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
 </body>
