@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -3695,12 +3695,16 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		}
 		break;
 	    case UPRIV_fm: /* private-use FM */
+	    case UPRIV2_fm:
 		if (pasting) {
+		    vtrace(" %s -> FM\n", ia_name[(int) ia]);
 		    key_Character(EBC_fm, false, true, true, NULL);
 		}
 		break;
 	    case UPRIV_dup: /* private-use DUP */
+	    case UPRIV2_dup:
 		if (pasting) {
+		    vtrace(" %s -> DUP\n", ia_name[(int) ia]);
 		    key_Character(EBC_dup, false, true, true, NULL);
 		}
 		break;

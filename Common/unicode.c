@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2017 Paul Mattes.
+ * Copyright (c) 2008-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -439,12 +439,18 @@ unicode_to_ebcdic_ge(ucs4_t u, bool *ge)
     if (e)
 	return e;
 
-    /* Handle GEs.  Yes, this is slow, but I'm lazy. */
+    /* Handle APL GEs.  Yes, this is slow, but I'm lazy. */
     for (e = 0x70; e <= 0xfe; e++) {
 	if ((ucs4_t)apl_to_unicode(e, EUO_NONE) == u) {
 	    *ge = true;
 	    return e;
 	}
+    }
+
+    /* Handle APL underlined alphabetics. */
+    if (u >= UPRIV2_Aunderline && u <= UPRIV2_Zunderline) {
+	*ge = true;
+	return unicode_to_ebcdic(u - UPRIV2) - 0x80;
     }
 
     return 0;
