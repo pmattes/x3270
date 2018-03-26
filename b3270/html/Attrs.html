@@ -27,7 +27,9 @@ set).</p>
 <a name="orders"></a><p>When a location has the <b>order</b> attribute, the
 contents are a visible representation of a 3270 order that would normally be
 displayed as a blank.
-This is done when b3270 has the <b>visibleControl</b> toggle set.
+This is done when b3270 has the <b>visibleControl</b> toggle set.</p>
+<p>Note that except when the <a href="#pua">pua</a> attribute is also set,
+visible orders should be copied into a paste buffer as a space (U+0020).</p>
 The set of orders displayed this way are:</p>
 <table border cols=2 width="75%">
  <tr><th>Character</th><th>Meaning</th></tr>
@@ -75,6 +77,8 @@ represents the EBCDIC character <b>DUP</b> (X'1C'). It should be encoded in the
 paste buffer as U+e02a. The underlined <b>Z</b> character (U+005a), when marked
 with <b>pua</b>, represents the APL EBCDIC character <b>Underlined Z</b> (GE
 X'69'). It should be encoded in the paste buffer as U+e05a.
+This rule applies even if the <b>order</b> attribute it set (normally orders
+are represented as U+0020 in the paste buffer).</p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
 </body>
