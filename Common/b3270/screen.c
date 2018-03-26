@@ -59,21 +59,21 @@
 /* How many columns of attr diff to join with a text diff. */
 #define AM_MAX		16
 
-#define XX_UNDERLINE	0x01	/* underlined */
-#define XX_BLINK	0x02	/* blinking */
-#define XX_HIGHLIGHT	0x04	/* highlighted */
-#define XX_SELECTABLE	0x08	/* lightpen selectable */
-#define XX_REVERSE	0x10	/* reverse video (3278) */
-#define XX_WIDE		0x20	/* double-width character (DBCS) */
-#define XX_ORDER	0x40	/* other visible order */
-#define XX_PUA		0x80	/* private use area */
+#define XX_UNDERLINE	0x0001	/* underlined */
+#define XX_BLINK	0x0002	/* blinking */
+#define XX_HIGHLIGHT	0x0004	/* highlighted */
+#define XX_SELECTABLE	0x0008	/* lightpen selectable */
+#define XX_REVERSE	0x0010	/* reverse video (3278) */
+#define XX_WIDE		0x0020	/* double-width character (DBCS) */
+#define XX_ORDER	0x0040	/* visible order */
+#define XX_PUA		0x0080	/* private use area */
+#define XX_NO_COPY	0x0100	/* do not copy into paste buffer */
 
 typedef struct {
     u_int ccode;	/* unicode character to display */
     u_char fg;		/* foreground color */
     u_char bg;		/* background color */
-    u_char gr;		/* graphic representation */
-    u_char xx;		/* unused (zero) */
+    u_short gr;		/* graphic representation */
 } screen_t;
 
 /* Row-difference region. */
@@ -165,6 +165,10 @@ see_gr(u_char gr)
     }
     if (gr & XX_PUA) {
 	vb_appendf(&r, "%spua", sep);
+	sep = ",";
+    }
+    if (gr & XX_NO_COPY) {
+	vb_appendf(&r, "%sno-copy", sep);
 	sep = ",";
     }
     return lazya(vb_consume(&r));
@@ -380,6 +384,7 @@ render_screen(struct ea *ea, screen_t *s)
 	bool dbcs = false;
 	bool order = false;
 	bool extra_underline = false;
+	bool no_copy = false;
 
 	uc = 0;
 
@@ -415,23 +420,33 @@ render_screen(struct ea *ea, screen_t *s)
 	    case DBCS_NONE:
 	    case DBCS_SI:
 	    case DBCS_SB:
-		if (toggled(VISIBLE_CONTROL)) {
-		    switch (ea[i].cc) {
-		    case EBC_null:
+		switch (ea[i].cc) {
+		case EBC_null:
+		    if (toggled(VISIBLE_CONTROL)) {
 			uc = '.';
 			order = true;
-			break;
-		    case EBC_so:
+		    } else {
+			uc = ' ';
+		    }
+		    break;
+		case EBC_so:
+		    if (toggled(VISIBLE_CONTROL)) {
 			uc = '<';
 			order = true;
-			break;
-		    case EBC_si:
+			no_copy = true;
+		    } else {
+			uc = ' ';
+		    }
+		    break;
+		case EBC_si:
+		    if (toggled(VISIBLE_CONTROL)) {
 			uc = '>';
 			order = true;
-			break;
+			no_copy = true;
+		    } else {
+			uc = ' ';
 		    }
-		}
-		switch (ea[i].cc) {
+		    break;
 		case EBC_dup:
 		    uc = '*';
 		    extra_underline = true;
@@ -504,8 +519,6 @@ render_screen(struct ea *ea, screen_t *s)
 		visible_fa(ea[i].fa): uc;
 	    s[si].fg = appres.m3279? fg_color: HOST_COLOR_NEUTRAL_WHITE;
 	    s[si].bg = appres.m3279? bg_color: HOST_COLOR_NEUTRAL_BLACK;
-	    s[si].xx = 0;
-	    s[si].gr = 0;
 
 	    if ((fa_gr | ea[i].gr) & GR_UNDERLINE) {
 		s[si].gr |= XX_UNDERLINE;
@@ -530,6 +543,9 @@ render_screen(struct ea *ea, screen_t *s)
 	    }
 	    if (extra_underline) {
 		s[si].gr |= XX_UNDERLINE | XX_PUA;
+	    }
+	    if (no_copy) {
+		s[si].gr |= XX_NO_COPY;
 	    }
 	}
     }
