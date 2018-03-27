@@ -982,6 +982,7 @@ static res_t base_resources[] = {
     { ResFtSecondarySpace,aoffset(ft.secondary_space),XRM_INT },
     { ResHostname,	aoffset(hostname),	XRM_STRING },
     { ResHostsFile,	aoffset(hostsfile),	XRM_STRING },
+    { ResHttpd,		aoffset(httpd_port),		XRM_STRING },
     { ResIcrnl,		aoffset(linemode.icrnl),	XRM_BOOLEAN },
     { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
     { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
