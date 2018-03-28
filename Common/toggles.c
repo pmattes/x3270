@@ -227,7 +227,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	if (toggle_names[j].name == NULL && u == NULL) {
-	    popup_an_error("Toggle: Unknown toggle name '%s'", argv[0]);
+	    popup_an_error("Toggle: Unknown toggle name '%s'", argv[arg]);
 	    goto failed;
 	}
 
