@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,13 @@
 #include <limits.h>
 #include <errno.h>
 #if !defined(_WIN32) /*[*/
+# include <arpa/inet.h>
 # include <netinet/in.h>
 #endif /*]*/
 
+#include "wincmn.h"
 #include "resolver.h"
+#include "utils.h"
 
 #include "bind-opt.h"
 
@@ -166,4 +169,35 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     }
 
     return true;
+}
+
+/**
+ * Return the canonical form of a bind option.
+ *
+ * @param[in] sa	Sockaddr to encode
+ *
+ * @returns encoded address and port
+ */
+char *
+canonical_bind_opt(struct sockaddr *sa)
+{
+#   define RET_LEN 128
+    char addrbuf[RET_LEN];
+    struct sockaddr_in *sin;
+    struct sockaddr_in6 *sin6;
+
+    switch (sa->sa_family) {
+    case AF_INET:
+	sin = (struct sockaddr_in *)sa;
+	return xs_buffer("[%s]:%u",
+	    inet_ntop(sa->sa_family, &sin->sin_addr, addrbuf, RET_LEN),
+	    ntohs(sin->sin_port));
+    case AF_INET6:
+	sin6 = (struct sockaddr_in6 *)sa;
+	return xs_buffer("[%s]:%u",
+	    inet_ntop(sa->sa_family, &sin6->sin6_addr, addrbuf, RET_LEN),
+	    ntohs(sin6->sin6_port));
+    default:
+	return NewString("unknown");
+    }
 }

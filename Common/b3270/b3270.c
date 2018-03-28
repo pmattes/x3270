@@ -345,6 +345,7 @@ main(int argc, char *argv[])
     xio_register();
     sio_glue_register();
     sio_register_actions();
+    hio_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {
@@ -461,7 +462,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
  * Toggle the model.
  */
 static bool
-toggle_model(const char *name _is_unused, const char *value)
+toggle_model(const char *name _is_unused, const char *value,
+	char **canonical_value)
 {
     Replace(pending_model, *value? NewString(value): NULL);
     return true;
@@ -471,7 +473,8 @@ toggle_model(const char *name _is_unused, const char *value)
  * Toggle oversize.
  */
 static bool
-toggle_oversize(const char *name _is_unused, const char *value)
+toggle_oversize(const char *name _is_unused, const char *value,
+	char **canonical_value)
 {
     Replace(pending_oversize, *value? NewString(value): NULL);
     return true;
@@ -602,7 +605,8 @@ done:
  * Terminal name toggle.
  */
 static bool
-toggle_terminal_name(const char *name _is_unused, const char *value)
+toggle_terminal_name(const char *name _is_unused, const char *value,
+	char **canonical_value)
 {
     if (PCONNECTED) {
 	popup_an_error("Toggle(%s): Cannot change while connected",
@@ -929,6 +933,18 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 }
 
 /**
+ * Handle a generic toggle change.
+ */
+static void
+b3270_toggle_notify(const char *name, const char *value)
+{
+    ui_vleaf("toggle",
+	    "name", name,
+	    "value", value,
+	    NULL);
+}
+
+/**
  * SSL password GUI.
  * @param[out] buf	Returned password
  * @param[in] size	Buffer size
@@ -1002,6 +1018,7 @@ b3270_register(void)
     register_extended_toggle(ResTermName, toggle_terminal_name, NULL);
     register_extended_toggle(ResModel, toggle_model, toggle_model_done);
     register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done);
+    register_extended_toggle_notify(b3270_toggle_notify);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);

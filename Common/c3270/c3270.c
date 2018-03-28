@@ -326,6 +326,7 @@ main(int argc, char *argv[])
     xio_register();
     sio_glue_register();
     sio_register_actions();
+    hio_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

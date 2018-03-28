@@ -454,6 +454,7 @@ main(int argc, char *argv[])
     x3270_register();
     xio_register();
     sio_register_actions();
+    hio_register();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */

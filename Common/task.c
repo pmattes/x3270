@@ -155,6 +155,7 @@ typedef struct task {
 } task_t;
 static task_t *current_task = NULL;	/* the current task */
 static int passthru_index = 0;
+static peer_listen_t global_peer_listen = NULL;
 
 /* List of active task stacks. */
 typedef struct _taskq {
@@ -310,6 +311,38 @@ task_in3270(bool in3270)
 }
 
 /**
+ * Upcall for toggling the script listener on and off.
+ *
+ * @param[in] name	Name of toggle
+ * @param[in] value	Toggle value
+ * @param[out] canonical_value	Returned canonical value
+ * @returns true if toggle changed successfully
+ */
+static bool
+scriptport_toggle_upcall(const char *name, const char *value,
+	char **canonical_value)
+{
+    struct sockaddr *sa;
+    socklen_t sa_len;
+
+    if (global_peer_listen != NULL) {
+	peer_shutdown(global_peer_listen);
+	global_peer_listen = NULL;
+    }
+    if (value == NULL || !*value) {
+	return true;
+    }
+
+    if (!parse_bind_opt(value, &sa, &sa_len)) {
+	popup_an_error("Invalid %s: %s", name, value);
+	return false;
+    }
+    *canonical_value = canonical_bind_opt(sa);
+    global_peer_listen = peer_init(sa, sa_len, false);
+    return true;
+}
+
+/**
  * Task module registration.
  */
 void
@@ -355,6 +388,9 @@ task_register(void)
 
     /* Register toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register extended toggle. */
+    register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL);
 
     /* This doesn't go here, but it needs to happen once. */
     nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
@@ -639,7 +675,7 @@ peer_script_init(void)
 	appres.scripted = false;
 
 	/* Do the actual initialization. */
-	(void) peer_init(sa, sa_len, appres.script_port_once);
+	global_peer_listen = peer_init(sa, sa_len, appres.script_port_once);
 
 	return;
     }

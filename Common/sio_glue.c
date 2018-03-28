@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -314,7 +314,7 @@ parse_bool(const char *value, bool *res)
  * Toggle for TLS parameters.
  */
 static bool
-sio_toggle(const char *name, const char *value)
+sio_toggle(const char *name, const char *value, char **canonical_value)
 {
     bool b;
 

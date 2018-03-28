@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Paul Mattes.
+ * Copyright (c) 2014-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -507,7 +507,13 @@ rest_json_dyn(const char *url, void *dhandle)
 void
 httpd_objects_init(void)
 {
+    static bool initted = false;
     void *nhandle;
+
+    if (initted) {
+	return;
+    }
+    initted = true;
 
     (void) httpd_register_dir("/3270", "Emulator state");
     (void) httpd_register_dyn_term("/3270/screen.html", "Screen image",

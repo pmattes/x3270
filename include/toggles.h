@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -69,7 +69,10 @@ typedef struct {
 } toggle_register_t;
 void register_toggles(toggle_register_t toggles[], unsigned count);
 
-typedef bool toggle_extended_upcall_t(const char *name, const char *value);
+typedef bool toggle_extended_upcall_t(const char *name, const char *value,
+	char **canonical_value);
 typedef bool toggle_extended_done_t(bool success);
 void register_extended_toggle(const char *name,
 	toggle_extended_upcall_t upcall, toggle_extended_done_t done);
+typedef void toggle_extended_notify_t(const char *name, const char *value);
+void register_extended_toggle_notify(toggle_extended_notify_t notify);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,3 +55,5 @@ void hio_send(void *mhandle, const char *buf, size_t len);
 void hio_async_done(void *dhandle, httpd_status_t rv);
 
 void hio_init(struct sockaddr *sa, socklen_t sa_len);
+void hio_stop(void);
+void hio_register(void);

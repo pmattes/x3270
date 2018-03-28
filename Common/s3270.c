@@ -148,6 +148,7 @@ main(int argc, char *argv[])
     xio_register();
     sio_glue_register();
     sio_register_actions();
+    hio_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

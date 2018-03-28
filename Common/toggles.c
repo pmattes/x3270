@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -66,6 +66,12 @@ typedef struct toggle_extended_upcalls {
 } toggle_extended_upcalls_t;
 static toggle_extended_upcalls_t *extended_upcalls;
 static toggle_extended_upcalls_t **extended_upcalls_last = &extended_upcalls;
+typedef struct toggle_extended_notifies {
+    struct toggle_extended_notifies *next;
+    toggle_extended_notify_t *notify;
+} toggle_extended_notifies_t;
+static toggle_extended_notifies_t *extended_notifies;
+static toggle_extended_notifies_t **extended_notifies_last = &extended_notifies;
 
 /* Toggle name dictionary. */
 toggle_name_t toggle_names[] = {
@@ -254,6 +260,9 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 		goto failed;
 	    }
 	} else {
+	    char *canonical_value = NULL;
+	    toggle_extended_notifies_t *notifies;
+
 	    /*
 	     * Call an extended toggle, remembering each unique 'done'
 	     * function.
@@ -268,8 +277,17 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 		    dones[n_dones++] = u->done;
 		}
 	    }
-	    if (!u->upcall(argv[arg], argv[arg + 1])) {
+	    if (!u->upcall(argv[arg], argv[arg + 1], &canonical_value)) {
 		goto failed;
+	    }
+	    for (notifies = extended_notifies;
+		 notifies != NULL;
+		 notifies = notifies->next) {
+		(*notifies->notify)(u->name,
+			canonical_value? canonical_value: argv[arg + 1]);
+	    }
+	    if (canonical_value != NULL) {
+		Free(canonical_value);
 	    }
 	}
 	arg += 2;
@@ -427,4 +445,23 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
     *extended_upcalls_last = u;
     extended_upcalls_last = &u->next;
 
+}
+
+/**
+ * Register an extended toggle notify upcall -- called when a toggle is
+ * changed successfully.
+ *
+ * @param[in] notify	Notify upcall.
+ */
+void
+register_extended_toggle_notify(toggle_extended_notify_t notify)
+{
+    toggle_extended_notifies_t *notifies =
+	Malloc(sizeof(toggle_extended_notifies_t));
+
+    notifies->next = NULL;
+    notifies->notify = notify;
+
+    *extended_notifies_last = notifies;
+    extended_notifies_last = &notifies->next;
 }

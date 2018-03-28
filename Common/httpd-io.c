@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,15 +44,19 @@
 #include <assert.h>
 
 #include "appres.h"
+#include "bind-opt.h"
 #include "lazya.h"
 #include "popups.h"
+#include "resources.h"
 #include "task.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"
 #include "httpd-io.h"
+#include "httpd-nodes.h"
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
@@ -82,10 +86,11 @@ typedef struct {
 } session_t;
 llist_t sessions = LLIST_INIT(sessions);
 static int n_sessions;
-static socket_t listen_s;
+static socket_t listen_s = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
-static HANDLE listen_event;
+static HANDLE listen_event = INVALID_HANDLE_VALUE;
 #endif /*]*/
+static ioid_t listen_id = NULL_IOID;
 
 /**
  * Return the text for the most recent socket error.
@@ -324,26 +329,26 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
     listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
     if (listen_s == INVALID_SOCKET) {
 	popup_an_error("httpd socket: %s", socket_errtext());
-	return;
+	goto done;
     }
     if (setsockopt(listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
 		sizeof(on)) < 0) {
 	popup_an_error("httpd setsockopt: %s", socket_errtext());
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
-	return;
+	goto done;
     }
     if (bind(listen_s, sa, sa_len) < 0) {
 	popup_an_error("httpd bind: %s", socket_errtext());
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
-	return;
+	goto done;
     }
     if (listen(listen_s, 10) < 0) {
 	popup_an_error("httpd listen: %s", socket_errtext());
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
-	return;
+	goto done;
     }
 #if defined(_WIN32) /*[*/
     listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -351,7 +356,7 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	popup_an_error("httpd: cannot create listen handle");
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
-	return;
+	goto done;
     }
     if (WSAEventSelect(listen_s, listen_event, FD_ACCEPT) != 0) {
 	popup_an_error("httpd: WSAEventSelect failed: %s",
@@ -360,10 +365,37 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	listen_event = INVALID_HANDLE_VALUE;
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
+	goto done;
     }
-    (void) AddInput(listen_event, hio_connection);
+    listen_id = AddInput(listen_event, hio_connection);
 #else /*][*/
-    (void) AddInput(listen_s, hio_connection);
+    listen_id = AddInput(listen_s, hio_connection);
+#endif /*]*/
+
+done:
+    Free(sa);
+    return;
+}
+
+/**
+ * Stop listening for HTTP connections.
+ */
+void
+hio_stop(void)
+{
+    if (listen_id == NULL_IOID) {
+	return;
+    }
+
+    RemoveInput(listen_id);
+    listen_id = NULL_IOID;
+
+    SOCK_CLOSE(listen_s);
+    listen_s = INVALID_SOCKET;
+
+#if defined(_WIN32) /*[*/
+    CloseHandle(listen_event);
+    listen_event = INVALID_HANDLE_VALUE;
 #endif /*]*/
 }
 
@@ -549,4 +581,42 @@ hio_async_done(void *dhandle, httpd_status_t rv)
     if (session->toid == NULL_IOID) {
 	session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
     }
+}
+
+/**
+ * Upcall for toggling the HTTP listener on and off.
+ *
+ * @param[in] name	Name of toggle
+ * @param[in] value	Toggle value
+ * @param[out] canonical_value	Returned canonical form of value
+ * @returns true if toggle changed successfully
+ */
+static bool
+hio_toggle_upcall(const char *name, const char *value, char **canonical_value)
+{
+    struct sockaddr *sa;
+    socklen_t sa_len;
+
+    hio_stop();
+    if (value == NULL || !*value) {
+	return true;
+    }
+
+    if (!parse_bind_opt(value, &sa, &sa_len)) {
+	popup_an_error("Invalid %s: %s", name, value);
+	return false;
+    }
+    *canonical_value = canonical_bind_opt(sa);
+    httpd_objects_init();
+    hio_init(sa, sa_len);
+    return true;
+}
+
+/**
+ * Register httpd with the rest of the system.
+ */
+void
+hio_register(void)
+{
+    register_extended_toggle(ResHttpd, hio_toggle_upcall, NULL);
 }
