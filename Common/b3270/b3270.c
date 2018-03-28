@@ -146,6 +146,7 @@ static char *pending_oversize;
 
 static void check_min_version(const char *min_version);
 static void b3270_register(void);
+static void b3270_toggle_notify(const char *name, const char *value);
 
 void
 usage(const char *msg)
@@ -421,6 +422,11 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
 	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
+	    char *canonical = canonical_bind_opt(sa);
+
+	    b3270_toggle_notify(ResHttpd, canonical);
+	    Free(canonical);
+
 	    httpd_objects_init();
 	    hio_init(sa, sa_len);
 	}
@@ -446,10 +452,10 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    "options", sio_option_names(),
 	    NULL);
 
-    ui_vleaf("ready", NULL);
-
     /* Prepare to run a peer script. */
     peer_script_init();
+
+    ui_vleaf("ready", NULL);
 
     /* Process events forever. */
     while (1) {

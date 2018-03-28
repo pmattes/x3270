@@ -465,3 +465,21 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
     *extended_notifies_last = notifies;
     extended_notifies_last = &notifies->next;
 }
+
+/**
+ * Do an initial extended notify.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	Toggle value.
+ */
+void
+external_extended_toggle_notify(const char *name, const char *value)
+{
+    toggle_extended_notifies_t *notifies;
+
+    for (notifies = extended_notifies;
+	 notifies != NULL;
+	 notifies = notifies->next) {
+	(*notifies->notify)(name, value);
+    }
+}
