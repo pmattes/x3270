@@ -618,5 +618,6 @@ hio_toggle_upcall(const char *name, const char *value, char **canonical_value)
 void
 hio_register(void)
 {
-    register_extended_toggle(ResHttpd, hio_toggle_upcall, NULL);
+    register_extended_toggle(ResHttpd, hio_toggle_upcall, NULL,
+	    canonical_bind_opt_res);
 }

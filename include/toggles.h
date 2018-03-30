@@ -72,8 +72,9 @@ void register_toggles(toggle_register_t toggles[], unsigned count);
 typedef bool toggle_extended_upcall_t(const char *name, const char *value,
 	char **canonical_value);
 typedef bool toggle_extended_done_t(bool success);
+typedef char *toggle_extended_canonicalize_t(const char *value);
 void register_extended_toggle(const char *name,
-	toggle_extended_upcall_t upcall, toggle_extended_done_t done);
+	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
+	toggle_extended_canonicalize_t canonicalize);
 typedef void toggle_extended_notify_t(const char *name, const char *value);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
-void external_extended_toggle_notify(const char *name, const char *value);

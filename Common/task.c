@@ -390,7 +390,8 @@ task_register(void)
     register_toggles(toggles, array_count(toggles));
 
     /* Register extended toggle. */
-    register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL);
+    register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL,
+	   canonical_bind_opt_res);
 
     /* This doesn't go here, but it needs to happen once. */
     nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
@@ -659,7 +660,6 @@ peer_script_init(void)
     if (appres.script_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
-	char *canonical;
 
 	if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
 	    popup_an_error("Invalid script port value '%s', "
@@ -676,9 +676,6 @@ peer_script_init(void)
 	appres.scripted = false;
 
 	/* Do the actual initialization. */
-	canonical = canonical_bind_opt(sa);
-	external_extended_toggle_notify(ResScriptPort, canonical);
-	Free(canonical);
 	global_peer_listen = peer_init(sa, sa_len, appres.script_port_once);
 
 	return;

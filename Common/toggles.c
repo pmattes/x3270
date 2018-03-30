@@ -63,6 +63,7 @@ typedef struct toggle_extended_upcalls {
     char *name;
     toggle_extended_upcall_t *upcall;
     toggle_extended_done_t *done;
+    toggle_extended_canonicalize_t *canonicalize;
 } toggle_extended_upcalls_t;
 static toggle_extended_upcalls_t *extended_upcalls;
 static toggle_extended_upcalls_t **extended_upcalls_last = &extended_upcalls;
@@ -422,6 +423,19 @@ register_toggles(toggle_register_t toggles[], unsigned count)
 }
 
 /**
+ * Default canonicalization function. Just a pass-through.
+ *
+ * @param[in] value	Value to canonicalize
+ *
+ * @returns Canonicalized value
+ */
+static char *
+default_canonicalize(const char *value)
+{
+    return value? NewString(value): NULL;
+}
+
+/**
  * Register an extended toggle.
  *
  * @param[in] name	Toggle name
@@ -430,10 +444,13 @@ register_toggles(toggle_register_t toggles[], unsigned count)
  */
 void
 register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
-	toggle_extended_done_t done)
+	toggle_extended_done_t done,
+	toggle_extended_canonicalize_t canonicalize)
 {
     toggle_extended_upcalls_t *u;
+    toggle_extended_notifies_t *notifies;
 
+    /* Register the toggle. */
     u = (toggle_extended_upcalls_t *)Malloc(sizeof(toggle_extended_upcalls_t)
 	    + strlen(name) + 1);
     u->next = NULL;
@@ -441,10 +458,17 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
     strcpy(u->name, name);
     u->upcall = upcall;
     u->done = done;
+    u->canonicalize = canonicalize? canonicalize: default_canonicalize;
 
     *extended_upcalls_last = u;
     extended_upcalls_last = &u->next;
 
+    /* Notify with the current value. */
+    for (notifies = extended_notifies;
+	 notifies != NULL;
+	 notifies = notifies->next) {
+	(*notifies->notify)(name, (*u->canonicalize)(get_resource(name)));
+    }
 }
 
 /**
@@ -456,6 +480,9 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
 void
 register_extended_toggle_notify(toggle_extended_notify_t notify)
 {
+    toggle_extended_upcalls_t *u;
+
+    /* Register the notify function. */
     toggle_extended_notifies_t *notifies =
 	Malloc(sizeof(toggle_extended_notifies_t));
 
@@ -464,22 +491,9 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
 
     *extended_notifies_last = notifies;
     extended_notifies_last = &notifies->next;
-}
 
-/**
- * Do an initial extended notify.
- *
- * @param[in] name	Toggle name.
- * @param[in] value	Toggle value.
- */
-void
-external_extended_toggle_notify(const char *name, const char *value)
-{
-    toggle_extended_notifies_t *notifies;
-
-    for (notifies = extended_notifies;
-	 notifies != NULL;
-	 notifies = notifies->next) {
-	(*notifies->notify)(name, value);
+    /* Call it with everything registered so far. */
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	(*notify)(u->name, (*u->canonicalize)(get_resource(u->name)));
     }
 }

@@ -396,7 +396,8 @@ sio_glue_register(void)
 
     FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
-	    register_extended_toggle(sio_option_name(opt), sio_toggle, NULL);
+	    register_extended_toggle(sio_option_name(opt), sio_toggle, NULL,
+		    NULL);
 	}
     } FOREACH_SSL_OPTS_END(opt);
 }

@@ -143,7 +143,7 @@ pr3287_session_register(void)
     register_schange(ST_EXITING, pr3287_exiting);
 
     /* Register the extended toggle. */
-    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL);
+    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL, NULL);
 }
 
 #if defined(_WIN32) /*[*/

@@ -422,11 +422,6 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
 	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
-	    char *canonical = canonical_bind_opt(sa);
-
-	    b3270_toggle_notify(ResHttpd, canonical);
-	    Free(canonical);
-
 	    httpd_objects_init();
 	    hio_init(sa, sa_len);
 	}
@@ -451,6 +446,12 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    "provider", sio_provider(),
 	    "options", sio_option_names(),
 	    NULL);
+
+    /*
+     * Register for extended toggle notifies, which will cause a dump of the
+     * current values.
+     */
+    register_extended_toggle_notify(b3270_toggle_notify);
 
     /* Prepare to run a peer script. */
     peer_script_init();
@@ -946,7 +947,7 @@ b3270_toggle_notify(const char *name, const char *value)
 {
     ui_vleaf("toggle",
 	    "name", name,
-	    "value", value,
+	    "value", value? value: "",
 	    NULL);
 }
 
@@ -1021,10 +1022,10 @@ b3270_register(void)
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
-    register_extended_toggle(ResTermName, toggle_terminal_name, NULL);
-    register_extended_toggle(ResModel, toggle_model, toggle_model_done);
-    register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done);
-    register_extended_toggle_notify(b3270_toggle_notify);
+    register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL);
+    register_extended_toggle(ResModel, toggle_model, toggle_model_done, NULL);
+    register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
+	    NULL);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);

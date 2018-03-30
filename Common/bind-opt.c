@@ -201,3 +201,25 @@ canonical_bind_opt(struct sockaddr *sa)
 	return NewString("unknown");
     }
 }
+
+/**
+ * Return the canonical form of a bind option, given a resource value.
+ *
+ * @param[in] res	Resource value (might be NULL)
+ *
+ * @returns Canonical representtion
+ */
+char *
+canonical_bind_opt_res(const char *res)
+{
+    struct sockaddr *sa;
+    socklen_t len;
+    char *ret;
+
+    if (res == NULL || !parse_bind_opt(res, &sa, &len)) {
+	return NULL;
+    }
+    ret = canonical_bind_opt(sa);
+    Free(sa);
+    return ret;
+}

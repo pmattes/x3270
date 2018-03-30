@@ -34,3 +34,4 @@
 bool parse_bind_opt(const char *spec, struct sockaddr **addr,
 	socklen_t *addrlen);
 char *canonical_bind_opt(struct sockaddr *sa);
+char *canonical_bind_opt_res(const char *res);
