@@ -107,8 +107,6 @@ static struct pr3o {
     char buf[PRINTER_BUF];	/* input buffer */
 } pr3287_stdout = { -1, 0L, 0L, 0 },
   pr3287_stderr = { -1, 0L, 0L, 0 };
-static char	*pr3287_toggle_lu;	/* printer LU from Toggle() */
-static bool	pr3287_lu_toggled = false;
 static bool	pr3287_associated = false;
 static char	*pr3287_running_lu;
 
@@ -126,7 +124,11 @@ static void	pr3287_host_connect(bool connected _is_unused);
 static void	pr3287_exiting(bool b _is_unused);
 static void	pr3287_accept(iosrc_t fd, ioid_t id);
 static void	pr3287_start_now(const char *lu, bool associated);
-static bool	pr3287_toggle(const char *name, const char *value);
+static bool	pr3287_toggle_lu(const char *name, const char *value);
+#if defined(_WIN32) /*[*/
+static bool	pr3287_toggle_name(const char *name, const char *value);
+#endif /*]*/
+static bool	pr3287_toggle_opts(const char *name, const char *value);
 
 /* Globals */
 
@@ -141,9 +143,15 @@ pr3287_session_register(void)
     register_schange(ST_3270_MODE, pr3287_host_connect);
     register_schange(ST_EXITING, pr3287_exiting);
 
-    /* Register the extended toggle. */
-    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL, NULL,
+    /* Register the extended toggles. */
+    register_extended_toggle(ResPrinterLu, pr3287_toggle_lu, NULL, NULL,
 	    (void **)&appres.interactive.printer_lu, XRM_STRING);
+#if defined(_WIN32) /*[*/
+    register_extended_toggle(ResPrinterName, pr3287_toggle_name, NULL, NULL,
+	    NULL, XRM_STRING);
+#endif /*]*/
+    register_extended_toggle(ResPrinterOptions, pr3287_toggle_opts, NULL, NULL,
+	    NULL, XRM_STRING);
 }
 
 #if defined(_WIN32) /*[*/
@@ -1218,8 +1226,7 @@ pr3287_exiting(bool b _is_unused)
 static char *
 pr3287_saved_lu(void)
 {
-    char *current = pr3287_lu_toggled? pr3287_toggle_lu:
-	appres.interactive.printer_lu;
+    char *current = appres.interactive.printer_lu;
 
     return (current != NULL && !*current)? NULL: current;
 }
@@ -1294,10 +1301,10 @@ pr3287_session_running(void)
 }
 
 /*
- * Extended toggle for pr3287 sessions.
+ * Extended toggle for pr3287 Logical Unit.
  */
 static bool
-pr3287_toggle(const char *name, const char *value)
+pr3287_toggle_lu(const char *name, const char *value)
 {
     char *current = pr3287_saved_lu();
 
@@ -1311,8 +1318,72 @@ pr3287_toggle(const char *name, const char *value)
     }
 
     /* Save the new value. */
-    pr3287_lu_toggled = true;
-    Replace(pr3287_toggle_lu, (value != NULL)? NewString(value): NULL);
+    Replace(appres.interactive.printer_lu,
+	    (value != NULL)? NewString(value): NULL);
+
+    /* Stop the current session. */
+    pr3287_disconnected();
+
+    /* Start a new session. */
+    if (value != NULL && IN_3270) {
+	pr3287_connected();
+    }
+
+    return true;
+}
+
+#if defined(_WIN32) /*[*/
+/*
+ * Extended toggle for pr3287 printer name.
+ */
+static bool
+pr3287_toggle_name(const char *name, const char *value)
+{
+    char *current = get_resource(ResPrinterName);
+
+    if (!*value) {
+	value = NULL;
+    }
+    if ((current == NULL && value == NULL) ||
+	    (current != NULL && value != NULL && !strcmp(current, value))) {
+	/* No change. */
+	return true;
+    }
+
+    /* Save the new value. */
+    add_resource(ResPrinterName, NewString(value));
+
+    /* Stop the current session. */
+    pr3287_disconnected();
+
+    /* Start a new session. */
+    if (value != NULL && IN_3270) {
+	pr3287_connected();
+    }
+
+    return true;
+}
+#endif /*]*/
+
+/*
+ * Extended toggle for pr3287 printer options.
+ */
+static bool
+pr3287_toggle_opts(const char *name, const char *value)
+{
+    char *current = get_resource(ResPrinterOptions);
+
+    if (!*value) {
+	value = NULL;
+    }
+    if ((current == NULL && value == NULL) ||
+	    (current != NULL && value != NULL && !strcmp(current, value))) {
+	/* No change. */
+	return true;
+    }
+
+    /* Save the new value. */
+    add_resource(ResPrinterOptions, NewString(value));
 
     /* Stop the current session. */
     pr3287_disconnected();
