@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Paul Mattes.
+ * Copyright (c) 2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,11 +61,7 @@ void register_opts(opt_t *opts, unsigned num_opts);
 typedef struct {
     const char *name;
     void *address;
-    enum resource_type {
-	XRM_STRING,	/* char * */
-	XRM_BOOLEAN,	/* bool */
-	XRM_INT		/* int */
-    } type;
+    enum resource_type type;
 } res_t;
 
 /* Register an array of resources. */

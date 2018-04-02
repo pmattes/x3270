@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,50 +28,8 @@
 #include "globals.h"
 #include "fallbacks.h"
 
-/* s3270 substitute Xt resource database. */
-
-static struct dresource {
-    struct dresource *next;
-    const char *name;
-    char *value;
-} *drdb = NULL, **drdb_next = &drdb;
-
-void
-add_resource(const char *name, char *value)
-{
-    struct dresource *d;
-
-    for (d = drdb; d != NULL; d = d->next) {
-	if (!strcmp(d->name, name)) {
-	    d->value = value;
-	    return;
-	}
-    }
-    d = Malloc(sizeof(struct dresource));
-    d->next = NULL;
-    d->name = name;
-    d->value = value;
-    *drdb_next = d;
-    drdb_next = &d->next;
-}
-
 char *
-get_resource(const char *name)
+get_underlying_resource(const char *name)
 {
-    struct dresource *d;
-    int i;
-
-    for (d = drdb; d != NULL; d = d->next) {
-	if (!strcmp(d->name, name)) {
-	    return d->value;
-	}
-    }
-
-    for (i = 0; fallbacks[i] != NULL; i++) {
-	if (!strncmp(fallbacks[i], name, strlen(name)) &&
-		*(fallbacks[i] + strlen(name)) == ':') {
-	    return fallbacks[i] + strlen(name) + 2;
-	}
-    }
     return NULL;
 }

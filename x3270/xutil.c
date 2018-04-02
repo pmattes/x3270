@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -39,11 +39,13 @@
 
 /* Glue between x3270 and the X libraries. */
 
+char *fallbacks[] = { NULL };
+
 /*
  * Get an arbitrarily-named resource.
  */
 char *
-get_resource(const char *resource)
+get_underlying_resource(const char *resource)
 {
     char *tlname;	/* top-level name */
     char *fq_resource;	/* fully-qualified resource name */

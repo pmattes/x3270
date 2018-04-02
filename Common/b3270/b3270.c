@@ -143,6 +143,8 @@ static const char *cstate_name[] = {
 
 static char *pending_model;
 static char *pending_oversize;
+static bool pending_extended;
+static bool pending_extended_value;
 
 static void check_min_version(const char *min_version);
 static void b3270_register(void);
@@ -469,21 +471,66 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
  * Toggle the model.
  */
 static bool
-toggle_model(const char *name _is_unused, const char *value,
-	char **canonical_value)
+toggle_model(const char *name _is_unused, const char *value)
 {
     Replace(pending_model, *value? NewString(value): NULL);
     return true;
 }
 
 /*
+ * Canonical representation of the model.
+ */
+static char *
+canonical_model(const char *res)
+{
+    size_t sl;
+    char *digitp;
+    char *colorp = "9";
+
+    if (res == NULL) {
+	return NULL;
+    }
+    sl = strlen(res);
+
+    if ((sl != 1 && sl != 6) ||
+	(sl == 1 &&
+	 (digitp = strchr("2345", res[0])) == NULL) ||
+	(sl == 6 &&
+	 (strncmp(res, "327", 3) ||
+	  (colorp = strchr("89", res[3])) == NULL ||
+	  res[4] != '-' ||
+	  (digitp = strchr("2345", res[5])) == NULL))) {
+	return NULL;
+    }
+    return xs_buffer("327%c-%c", *colorp, *digitp);
+}
+
+/*
  * Toggle oversize.
  */
 static bool
-toggle_oversize(const char *name _is_unused, const char *value,
-	char **canonical_value)
+toggle_oversize(const char *name _is_unused, const char *value)
 {
-    Replace(pending_oversize, *value? NewString(value): NULL);
+    Replace(pending_oversize, NewString(value));
+    return true;
+}
+
+/*
+ * Toggle extended mode.
+ */
+static bool
+toggle_extended(const char *name _is_unused, const char *value)
+{
+    if (!strcasecmp(value, "true")) {
+	pending_extended_value = true;
+    } else if (!strcasecmp(value, "false")) {
+	pending_extended_value = false;
+    } else {
+	popup_an_error("%s value must be True or False", ResExtended);
+	return false;
+    }
+
+    pending_extended = true;
     return true;
 }
 
@@ -493,23 +540,28 @@ toggle_oversize(const char *name _is_unused, const char *value,
 static bool
 toggle_model_done(bool success)
 {
-    char *color;
-    char *digit;
+    char color = '9';
+    char digit;
     unsigned ovr = 0, ovc = 0;
     int model_number;
+    bool extended;
     struct {
 	int model_num;
 	int rows;
 	int cols;
 	int ov_cols;
 	int ov_rows;
-	bool extended;
 	bool m3279;
 	bool alt;
+	bool extended;
     } old;
+    bool oversize_was_pending = (pending_oversize != NULL);
     bool res = true;
 
-    if (!success || (pending_model == NULL && pending_oversize == NULL)) {
+    if (!success ||
+	    (pending_model == NULL &&
+	     pending_oversize == NULL &&
+	     !pending_extended)) {
 	goto done;
     }
 
@@ -524,31 +576,57 @@ toggle_model_done(bool success)
      * Two changes both.
      */
     if (pending_model != NULL) {
-	if ((strlen(pending_model) != 6 && strlen(pending_model) != 8) ||
-	    strncmp(pending_model, "327", 3) ||
-	    (color = strchr("89", pending_model[3])) == NULL ||
-	    pending_model[4] != '-' ||
-	    (digit = strchr("2345", pending_model[5])) == NULL ||
-	    (strlen(pending_model) == 8 &&
-	     strcasecmp(pending_model + 6, "-E"))) {
+	size_t sl = strlen(pending_model);
+	char *digitp;
+	char *colorp = "9";
 
-	    popup_an_error("Toggle(%s): Model must be 327[89]-[2345][-E]",
+	if ((sl != 1 && sl != 6) ||
+	    (sl == 1 &&
+	     (digitp = strchr("2345", pending_model[0])) == NULL) ||
+	    (sl == 6 &&
+	     (strncmp(pending_model, "327", 3) ||
+	      (colorp = strchr("89", pending_model[3])) == NULL ||
+	      pending_model[4] != '-' ||
+	      (digitp = strchr("2345", pending_model[5])) == NULL))) {
+
+	    popup_an_error("Toggle(%s): value must be 327[89]-[2345]",
 		    ResModel);
 	    goto fail;
 	}
+
+	color = *colorp;
+	digit = *digitp;
+	if (sl == 1) {
+	    Replace(pending_model, xs_buffer("327%c-%c", color, digit));
+	}
+    }
+
+    if (pending_extended) {
+	extended = pending_extended_value;
+	if (!pending_extended_value) {
+	    /* With extended, no oversize. */
+	    Replace(pending_oversize, NewString(""));
+	}
+    } else {
+	extended = appres.extended;
     }
 
     if (pending_oversize != NULL) {
-	char x, junk;
-	if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
-		|| x != 'x') {
-	    popup_an_error("Toggle(%s): Oversize must be <cols>x<rows>",
-		    ResOversize);
-	    goto fail;
+	if (*pending_oversize) {
+	    char x, junk;
+	    if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
+		    || x != 'x') {
+		popup_an_error("Toggle(%s): Oversize must be <cols>x<rows>",
+			ResOversize);
+		goto fail;
+	    }
+	} else {
+	    ovc = 0;
+	    ovr = 0;
 	}
     } else {
-	ovc = 0;
-	ovr = 0;
+	ovc = ov_cols;
+	ovr = ov_rows;
     }
 
     /* Save the current settings. */
@@ -557,30 +635,30 @@ toggle_model_done(bool success)
     old.cols = COLS;
     old.ov_rows = ov_rows;
     old.ov_cols = ov_cols;
-    old.extended = appres.extended;
     old.m3279 = appres.m3279;
     old.alt = screen_alt;
+    old.extended = appres.extended;
 
     /* Change settings. */
     if (pending_model != NULL) {
-	model_number = *digit - '0';
-	appres.m3279 = *color == '9';
-	appres.extended = (strlen(pending_model) == 8);
+	model_number = digit - '0';
+	appres.m3279 = color == '9';
     } else {
 	model_number = model_num;
     }
+    appres.extended = extended;
     set_rows_cols(model_number, ovc, ovr);
 
     if (model_num != model_number ||
 	    ov_rows != (int)ovr ||
 	    ov_cols != (int)ovc) {
 	/* Failed. Restore the old settings. */
-	appres.extended = old.extended;
 	appres.m3279 = old.m3279;
 	set_rows_cols(old.model_num, old.ov_cols, old.ov_rows);
 	ROWS = old.rows;
 	COLS = old.cols;
 	screen_alt = old.alt;
+	appres.extended = old.extended;
 	return false;
     }
 
@@ -597,6 +675,25 @@ toggle_model_done(bool success)
 	report_terminal_name();
     }
 
+    if (pending_model != NULL) {
+	Replace(appres.model, pending_model);
+	pending_model = NULL;
+    }
+    if (pending_oversize != NULL) {
+	if (*pending_oversize) {
+	    Replace(appres.oversize, pending_oversize);
+	    pending_oversize = NULL;
+	} else {
+	    bool force = !oversize_was_pending && appres.oversize != NULL;
+
+	    Replace(appres.oversize, NULL);
+	    if (force) {
+		/* Turning off extended killed oversize. */
+		force_toggle_notify(ResOversize);
+	    }
+	}
+    }
+
 goto done;
 
 fail:
@@ -605,6 +702,8 @@ fail:
 done:
     Replace(pending_model, NULL);
     Replace(pending_oversize, NULL);
+    pending_extended = false;
+    pending_extended_value = false;
     return res;
 }
 
@@ -612,8 +711,7 @@ done:
  * Terminal name toggle.
  */
 static bool
-toggle_terminal_name(const char *name _is_unused, const char *value,
-	char **canonical_value)
+toggle_terminal_name(const char *name _is_unused, const char *value)
 {
     if (PCONNECTED) {
 	popup_an_error("Toggle(%s): Cannot change while connected",
@@ -1022,10 +1120,14 @@ b3270_register(void)
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
-    register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL);
-    register_extended_toggle(ResModel, toggle_model, toggle_model_done, NULL);
+    register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL,
+	    (void **)&appres.termname, XRM_STRING);
+    register_extended_toggle(ResModel, toggle_model, toggle_model_done,
+	    canonical_model, (void **)&appres.model, XRM_STRING);
     register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
-	    NULL);
+	    NULL, (void **)&appres.oversize, XRM_STRING);
+    register_extended_toggle(ResExtended, toggle_extended, toggle_model_done,
+	    NULL, (void **)&appres.extended, XRM_BOOLEAN);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);

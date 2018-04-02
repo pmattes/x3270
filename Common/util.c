@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -40,6 +40,7 @@
 #include <errno.h>
 #include "resources.h"
 #include "charset.h"
+#include "fallbacks.h"
 #include "lazya.h"
 #include "product.h"
 #include "unicodec.h"
@@ -48,6 +49,12 @@
 #include "utils.h"
 
 #define my_isspace(c)	isspace((unsigned char)c)
+
+static struct dresource {
+    struct dresource *next;
+    const char *name;
+    char *value;
+} *drdb = NULL, **drdb_next = &drdb;
 
 /**
  * printf-like interface to Warning().
@@ -711,6 +718,60 @@ ctl_see(int c)
     return buf;
 }
 
+/**
+ * Add a resource value.
+ *
+ * @param[in] name	Resource name.
+ * @param[in] value	Resource value.
+ */
+void
+add_resource(const char *name, const char *value)
+{
+    struct dresource *d;
+
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    Replace(d->value, NewString(value));
+	    return;
+	}
+    }
+    d = Malloc(sizeof(struct dresource));
+    d->next = NULL;
+    d->name = name;
+    d->value = NewString(value);
+    *drdb_next = d;
+    drdb_next = &d->next;
+}
+
+/**
+ * Get a string-valued resource.
+ *
+ * @param[in] name	Resource name.
+ *
+ * @returns Resource value.
+ */
+char *
+get_resource(const char *name)
+{
+    struct dresource *d;
+    int i;
+
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    return d->value;
+	}
+    }
+
+    for (i = 0; fallbacks[i] != NULL; i++) {
+	if (!strncmp(fallbacks[i], name, strlen(name)) &&
+		*(fallbacks[i] + strlen(name)) == ':') {
+	    return fallbacks[i] + strlen(name) + 2;
+	}
+    }
+
+    return get_underlying_resource(name);
+}
+
 /* A version of get_resource that accepts sprintf arguments. */
 char *
 get_fresource(const char *fmt, ...)
@@ -725,6 +786,43 @@ get_fresource(const char *fmt, ...)
     r = get_resource(name);
     Free(name);
     return r;
+}
+
+/**
+ * Get an integer-valued resource.
+ *
+ * @param[in] name	Resource name
+ *
+ * @returns Resource value
+ */
+int
+get_resource_int(const char *name)
+{
+    char *s = get_resource(name);
+
+    return s? atoi(s): 0;
+}
+
+/**
+ * Get a Boolean-valued resource.
+ *
+ * @param[in] name	Resource name
+ *
+ * @returns Resource value
+ */
+bool
+get_resource_bool(const char *name)
+{
+    char *s = get_resource(name);
+
+    if (s == NULL) {
+	return false;
+    }
+
+    return !strcasecmp(s, "true") ||
+	!strcasecmp(s, "set") ||
+	!strcasecmp(s, "on") ||
+	!strcasecmp(s, "1");
 }
 
 /*

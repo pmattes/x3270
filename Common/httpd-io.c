@@ -592,13 +592,14 @@ hio_async_done(void *dhandle, httpd_status_t rv)
  * @returns true if toggle changed successfully
  */
 static bool
-hio_toggle_upcall(const char *name, const char *value, char **canonical_value)
+hio_toggle_upcall(const char *name, const char *value)
 {
     struct sockaddr *sa;
     socklen_t sa_len;
 
     hio_stop();
     if (value == NULL || !*value) {
+	Replace(appres.httpd_port, NULL);
 	return true;
     }
 
@@ -606,7 +607,7 @@ hio_toggle_upcall(const char *name, const char *value, char **canonical_value)
 	popup_an_error("Invalid %s: %s", name, value);
 	return false;
     }
-    *canonical_value = canonical_bind_opt(sa);
+    Replace(appres.httpd_port, canonical_bind_opt(sa));
     httpd_objects_init();
     hio_init(sa, sa_len);
     return true;
@@ -619,5 +620,5 @@ void
 hio_register(void)
 {
     register_extended_toggle(ResHttpd, hio_toggle_upcall, NULL,
-	    canonical_bind_opt_res);
+	    canonical_bind_opt_res, (void **)&appres.httpd_port, XRM_STRING);
 }

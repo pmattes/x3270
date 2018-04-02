@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -406,3 +406,10 @@ typedef struct llist {
     struct llist *next;
     struct llist *prev;
 } llist_t;
+
+/* Resource types. */
+enum resource_type {
+  XRM_STRING,     /* char * */
+  XRM_BOOLEAN,    /* bool */
+  XRM_INT         /* int */
+};

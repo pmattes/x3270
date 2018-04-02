@@ -126,8 +126,7 @@ static void	pr3287_host_connect(bool connected _is_unused);
 static void	pr3287_exiting(bool b _is_unused);
 static void	pr3287_accept(iosrc_t fd, ioid_t id);
 static void	pr3287_start_now(const char *lu, bool associated);
-static bool	pr3287_toggle(const char *name, const char *value,
-		    char **canonical_value);
+static bool	pr3287_toggle(const char *name, const char *value);
 
 /* Globals */
 
@@ -143,7 +142,8 @@ pr3287_session_register(void)
     register_schange(ST_EXITING, pr3287_exiting);
 
     /* Register the extended toggle. */
-    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL, NULL);
+    register_extended_toggle(ResPrinterLu, pr3287_toggle, NULL, NULL,
+	    (void **)&appres.interactive.printer_lu, XRM_STRING);
 }
 
 #if defined(_WIN32) /*[*/
@@ -1297,7 +1297,7 @@ pr3287_session_running(void)
  * Extended toggle for pr3287 sessions.
  */
 static bool
-pr3287_toggle(const char *name, const char *value, char **canonical_value)
+pr3287_toggle(const char *name, const char *value)
 {
     char *current = pr3287_saved_lu();
 

@@ -39,6 +39,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "lazya.h"
 #include "menubar.h"
 #include "popups.h"
 #include "toggles.h"
@@ -64,6 +65,8 @@ typedef struct toggle_extended_upcalls {
     toggle_extended_upcall_t *upcall;
     toggle_extended_done_t *done;
     toggle_extended_canonicalize_t *canonicalize;
+    void **address;
+    enum resource_type type;
 } toggle_extended_upcalls_t;
 static toggle_extended_upcalls_t *extended_upcalls;
 static toggle_extended_upcalls_t **extended_upcalls_last = &extended_upcalls;
@@ -180,6 +183,37 @@ toggle_exiting(bool mode _is_unused)
     }
 }
 
+/**
+ * Get the current value of an extended toggle.
+ * 
+ * @param[in] u		Extended upcall struct
+ *
+ * @returns Current value
+ */
+static char *
+u_value(toggle_extended_upcalls_t *u)
+{
+    char *value;
+
+    if (u->address != NULL) {
+	switch (u->type) {
+	case XRM_STRING:
+	    value = *(char **)u->address;
+	    break;
+	case XRM_BOOLEAN:
+	    value = *(bool *)u->address? "true": "false";
+	    break;
+	case XRM_INT:
+	    value = lazyaf("%d", *(int *)u->address);
+	    break;
+	}
+    } else {
+	value = get_resource(u->name);
+    }
+
+    return (*u->canonicalize)(value);
+}
+
 /*
  * Toggle action.
  *  Toggle(toggleName)
@@ -193,10 +227,17 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     int ix;
     toggle_extended_upcalls_t *u = NULL;
     unsigned arg = 0;
-    toggle_extended_done_t **dones;
+    typedef struct {
+	toggle_extended_done_t *done;
+	bool success;
+    } done_success_t;
+    done_success_t *dones;
     int n_dones = 0;
+    toggle_extended_upcalls_t **done_u;
+    int n_done_u = 0;
     bool success = true;
-    int d;
+    int d, du;
+    toggle_extended_notifies_t *notifies;
 
     action_debug("Toggle", ia, argc, argv);
 
@@ -206,8 +247,9 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    dones = (toggle_extended_done_t **)Malloc(argc
-	    * sizeof(toggle_extended_done_t *));
+    dones = (done_success_t *)Malloc(argc * sizeof(done_success_t *));
+    done_u = (toggle_extended_upcalls_t **)Malloc(argc
+	    * sizeof(toggle_extended_upcalls_t *));
 
     /* Look up the toggle name. */
     while (arg < argc) {
@@ -261,34 +303,34 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 		goto failed;
 	    }
 	} else {
-	    char *canonical_value = NULL;
-	    toggle_extended_notifies_t *notifies;
-
 	    /*
 	     * Call an extended toggle, remembering each unique 'done'
 	     * function.
 	     */
 	    if (u->done != NULL) {
+		done_u[n_done_u++] = u;
 		for (d = 0; d < n_dones; d++) {
-		    if (dones[d] == u->done) {
+		    if (dones[d].done == u->done) {
 			break;
 		    }
 		}
 		if (d >= n_dones) {
-		    dones[n_dones++] = u->done;
+		    dones[n_dones].done = u->done;
+		    dones[n_dones++].success = false;
 		}
 	    }
-	    if (!u->upcall(argv[arg], argv[arg + 1], &canonical_value)) {
+	    if (!u->upcall(argv[arg], argv[arg + 1])) {
 		goto failed;
 	    }
-	    for (notifies = extended_notifies;
-		 notifies != NULL;
-		 notifies = notifies->next) {
-		(*notifies->notify)(u->name,
-			canonical_value? canonical_value: argv[arg + 1]);
-	    }
-	    if (canonical_value != NULL) {
-		Free(canonical_value);
+	    if (u->done == NULL) {
+		for (notifies = extended_notifies;
+		     notifies != NULL;
+		     notifies = notifies->next) {
+		    char *v = u_value(u);
+
+		    (*notifies->notify)(u->name, v);
+		    Free(v);
+		}
 	    }
 	}
 	arg += 2;
@@ -301,9 +343,32 @@ failed:
 done:
     /* Call each of the done functions. */
     for (d = 0; d < n_dones; d++) {
-	success &= (*dones[d])(success);
+	dones[d].success = (*dones[d].done)(success);
+	success &= dones[d].success;
     }
+
+    /* Call each of the notify functions with successful done functions. */
+    for (du = 0; du < n_done_u; du++) {
+	for (d = 0; d < n_dones; d++) {
+	    if (dones[d].done == done_u[du]->done) {
+		break;
+	    }
+	}
+	if (d < n_dones && !dones[d].success) {
+	    continue;
+	}
+	for (notifies = extended_notifies;
+	     notifies != NULL;
+	     notifies = notifies->next) {
+	    char *v = u_value(done_u[du]);
+
+	    (*notifies->notify)(done_u[du]->name, v);
+	    Free(v);
+	}
+    }
+
     Free(dones);
+    Free(done_u);
     return success;
 }
 
@@ -439,16 +504,21 @@ default_canonicalize(const char *value)
  * Register an extended toggle.
  *
  * @param[in] name	Toggle name
- * @param[in] upcall	Value-change upcall.
- * @param[in] done	Done upcall.
+ * @param[in] upcall	Value-change upcall
+ * @param[in] done	Done upcall
+ * @param[in] canonicalize Canonicalization upcall
+ * @param[in] address	Address of value in appres
+ * @param[in] type	Resource type
  */
 void
 register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
 	toggle_extended_done_t done,
-	toggle_extended_canonicalize_t canonicalize)
+	toggle_extended_canonicalize_t canonicalize, void **address,
+	enum resource_type type)
 {
     toggle_extended_upcalls_t *u;
     toggle_extended_notifies_t *notifies;
+    char *v;
 
     /* Register the toggle. */
     u = (toggle_extended_upcalls_t *)Malloc(sizeof(toggle_extended_upcalls_t)
@@ -459,16 +529,21 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
     u->upcall = upcall;
     u->done = done;
     u->canonicalize = canonicalize? canonicalize: default_canonicalize;
+    u->address = address;
+    u->type = type;
 
     *extended_upcalls_last = u;
     extended_upcalls_last = &u->next;
 
     /* Notify with the current value. */
+    v = u_value(u);
     for (notifies = extended_notifies;
 	 notifies != NULL;
 	 notifies = notifies->next) {
-	(*notifies->notify)(name, (*u->canonicalize)(get_resource(name)));
+
+	(*notifies->notify)(name, v);
     }
+    Free(v);
 }
 
 /**
@@ -494,6 +569,35 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
 
     /* Call it with everything registered so far. */
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	(*notify)(u->name, (*u->canonicalize)(get_resource(u->name)));
+	char *v = u_value(u);
+	(*notify)(u->name, v);
+	Free(v);
     }
+}
+
+/**
+ * Force notification of a toggle change.
+ */
+void
+force_toggle_notify(const char *name)
+{
+    toggle_extended_upcalls_t *u;
+    toggle_extended_notifies_t *n;
+    char *v;
+
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	if (!strcmp(name, u->name)) {
+	    break;
+	}
+    }
+    if (u == NULL) {
+	return;
+    }
+
+    /* Notify with the current value. */
+    v = u_value(u);
+    for (n = extended_notifies; n != NULL; n = n->next) {
+	(*n->notify)(name, v);
+    }
+    Free(v);
 }

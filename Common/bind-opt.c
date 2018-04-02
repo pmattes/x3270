@@ -207,7 +207,7 @@ canonical_bind_opt(struct sockaddr *sa)
  *
  * @param[in] res	Resource value (might be NULL)
  *
- * @returns Canonical representtion
+ * @returns Canonical representation
  */
 char *
 canonical_bind_opt_res(const char *res)

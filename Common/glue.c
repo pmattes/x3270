@@ -447,14 +447,14 @@ set_appres_defaults(void)
     appres.debug_tracing = true;
     appres.conf_dir = LIBX3270DIR;
 
-    appres.model = "4";
+    appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;
     appres.port = "23";
-    appres.charset = "bracket";
+    appres.charset = NewString("bracket");
     appres.termname = NULL;
     appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
-    appres.trace_dir = "/tmp";
+    appres.trace_dir = NewString("/tmp");
 #endif /*]*/
     appres.oversize = NULL;
     appres.bind_limit = true;
@@ -463,14 +463,14 @@ set_appres_defaults(void)
 
     appres.linemode.icrnl = true;
     appres.linemode.onlcr = true;
-    appres.linemode.erase = "^H";
-    appres.linemode.kill = "^U";
-    appres.linemode.werase = "^W";
-    appres.linemode.rprnt = "^R";
-    appres.linemode.lnext = "^V";
-    appres.linemode.intr = "^C";
-    appres.linemode.quit = "^\\";
-    appres.linemode.eof = "^D";
+    appres.linemode.erase = NewString("^H");
+    appres.linemode.kill = NewString("^U");
+    appres.linemode.werase = NewString("^W");
+    appres.linemode.rprnt = NewString("^R");
+    appres.linemode.lnext = NewString("^V");
+    appres.linemode.intr = NewString("^C");
+    appres.linemode.quit = NewString("^\\");
+    appres.linemode.eof = NewString("^D");
 
     appres.unlock_delay = true;
     appres.unlock_delay_ms = 350;
@@ -637,7 +637,7 @@ parse_options(int *argcp, const char **argv)
 		popup_an_error("Missing value for '%s'", argv[i]);
 		continue;
 	    }
-	    *(const char **)opts[j].aoff = argv[++i];
+	    *(const char **)opts[j].aoff = NewString(argv[++i]);
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].res_name), NewString(argv[i]));
 	    }

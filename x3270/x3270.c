@@ -378,6 +378,26 @@ cleanup_Xt(bool b _is_unused)
     XtDestroyApplicationContext(appcontext);
 }
 
+/* Duplicate string resources so they can be reallocated later. */
+static void
+dup_resource_strings(XtResourceList res, Cardinal num)
+{
+    Cardinal c;
+
+    for (c = 0; c < num; c++) {
+	char **value;
+	XtResource *r = &res[c];
+
+	if (r->resource_type != XtRString) {
+	    continue;
+	}
+	value = (char **)(void *)((char *)(void *)&appres + r->resource_offset);
+	if (*value != NULL) {
+	    *value = NewString(*value);
+	}
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -392,6 +412,7 @@ main(int argc, char *argv[])
     int	model_number;
     bool mono = false;
     char *session = NULL;
+    XtResource *res;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -565,6 +586,13 @@ main(int argc, char *argv[])
     /* Merge in the profile or session file. */
     merge_profile(&rdb, session, mono);
 
+    /*
+     * Save copies of resources, because it turns out that
+     * XtGetApplicationResources overwrites it.
+     */
+    res = (XtResource *)Malloc(num_resources * sizeof(XtResource));
+    memcpy(res, resources, num_resources * sizeof(XtResource));
+
     /* Fill in appres. */
     old_emh = XtAppSetWarningMsgHandler(appcontext,
 	    (XtErrorMsgHandler)trap_colormaps);
@@ -572,8 +600,13 @@ main(int argc, char *argv[])
 	    num_resources, 0, 0);
     XtGetApplicationResources(toplevel, (XtPointer)&xappres, xresources,
 	    num_xresources, 0, 0);
-    copy_xres_to_res_bool();
     (void) XtAppSetWarningMsgHandler(appcontext, old_emh);
+
+    /* Copy bool values. */
+    copy_xres_to_res_bool();
+
+    /* Duplicate the strings in appres, so they can be reallocated later. */
+    dup_resource_strings(res, num_resources);
 
     /*
      * If the hostname is specified as a resource and not specified as a

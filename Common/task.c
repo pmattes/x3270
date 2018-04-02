@@ -319,8 +319,7 @@ task_in3270(bool in3270)
  * @returns true if toggle changed successfully
  */
 static bool
-scriptport_toggle_upcall(const char *name, const char *value,
-	char **canonical_value)
+scriptport_toggle_upcall(const char *name, const char *value)
 {
     struct sockaddr *sa;
     socklen_t sa_len;
@@ -330,6 +329,7 @@ scriptport_toggle_upcall(const char *name, const char *value,
 	global_peer_listen = NULL;
     }
     if (value == NULL || !*value) {
+	Replace(appres.script_port, NULL);
 	return true;
     }
 
@@ -337,7 +337,7 @@ scriptport_toggle_upcall(const char *name, const char *value,
 	popup_an_error("Invalid %s: %s", name, value);
 	return false;
     }
-    *canonical_value = canonical_bind_opt(sa);
+    Replace(appres.script_port, canonical_bind_opt(sa));
     global_peer_listen = peer_init(sa, sa_len, false);
     return true;
 }
@@ -391,7 +391,7 @@ task_register(void)
 
     /* Register extended toggle. */
     register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL,
-	   canonical_bind_opt_res);
+	   canonical_bind_opt_res, (void **)&appres.script_port, XRM_STRING);
 
     /* This doesn't go here, but it needs to happen once. */
     nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);

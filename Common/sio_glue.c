@@ -254,6 +254,40 @@ sio_option_name(unsigned option)
 }
 
 /*
+ * Translate an option flag to its appres address.
+ */
+static void *
+sio_address(unsigned option)
+{
+    int i = 0;
+
+    FOREACH_SSL_OPTS(opt) {
+	if (option & opt) {
+	    return sio_flagged_res[i].res.address;
+	}
+	i++;
+    } FOREACH_SSL_OPTS_END(opt);
+    return NULL;
+}
+
+/*
+ * Translate an option flag to its appres type.
+ */
+static enum resource_type
+sio_type(unsigned option)
+{
+    int i = 0;
+
+    FOREACH_SSL_OPTS(opt) {
+	if (option & opt) {
+	    return sio_flagged_res[i].res.type;
+	}
+	i++;
+    } FOREACH_SSL_OPTS_END(opt);
+    return XRM_INT + 1; /* XXX */
+}
+
+/*
  * Translate an option to its flag value.
  */
 static unsigned
@@ -314,7 +348,7 @@ parse_bool(const char *value, bool *res)
  * Toggle for TLS parameters.
  */
 static bool
-sio_toggle(const char *name, const char *value, char **canonical_value)
+sio_toggle(const char *name, const char *value)
 {
     bool b;
 
@@ -323,16 +357,9 @@ sio_toggle(const char *name, const char *value, char **canonical_value)
 	return false;
     }
 
-    /*
-     * Many of these are memory leaks, so if someone changes them enough,
-     * we will run out of memory.
-     *
-     * At some point, it would make sense to copy every string in appres into
-     * the heap at init time, so they can be replaced without leaking.
-     */
     switch (sio_toggle_value(name)) {
     case SSL_OPT_ACCEPT_HOSTNAME:
-	appres.ssl.accept_hostname = value[0]? NewString(value) : NULL;
+	Replace(appres.ssl.accept_hostname, value[0]? NewString(value) : NULL);
 	break;
     case SSL_OPT_VERIFY_HOST_CERT:
 	if (!parse_bool(value, &b)) {
@@ -349,31 +376,31 @@ sio_toggle(const char *name, const char *value, char **canonical_value)
 	appres.ssl.starttls = b;
 	break;
     case SSL_OPT_CA_DIR:
-	appres.ssl.ca_dir = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.ca_dir, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_CA_FILE:
-	appres.ssl.ca_file = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.ca_file, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_CERT_FILE:
-	appres.ssl.cert_file = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.cert_file, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_CERT_FILE_TYPE:
-	appres.ssl.cert_file_type = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.cert_file_type, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_CHAIN_FILE:
-	appres.ssl.chain_file = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.chain_file, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_KEY_FILE:
-	appres.ssl.key_file = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.key_file, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_KEY_FILE_TYPE:
-	appres.ssl.key_file_type = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.key_file_type, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_KEY_PASSWD:
-	appres.ssl.key_passwd = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.key_passwd, value[0]? NewString(value): NULL);
 	break;
     case SSL_OPT_CLIENT_CERT:
-	appres.ssl.client_cert = value[0]? NewString(value): NULL;
+	Replace(appres.ssl.client_cert, value[0]? NewString(value): NULL);
 	break;
     default:
 	popup_an_error("Toggle(%s): Unknown name", name);
@@ -397,7 +424,7 @@ sio_glue_register(void)
     FOREACH_SSL_OPTS(opt) {
 	if (supported_options & opt) {
 	    register_extended_toggle(sio_option_name(opt), sio_toggle, NULL,
-		    NULL);
+		    NULL, sio_address(opt), sio_type(opt));
 	}
     } FOREACH_SSL_OPTS_END(opt);
 }
