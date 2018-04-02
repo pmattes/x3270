@@ -55,6 +55,10 @@ get_underlying_resource(const char *resource)
     XrmValue value;	/* resource value */
     char *r = NULL;	/* returned value */
 
+    if (toplevel == NULL) {
+	return NULL;
+    }
+
     /* Find the toplevel name. */
     tlname = XtName(toplevel);
 
