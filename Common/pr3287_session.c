@@ -127,6 +127,7 @@ static void	pr3287_start_now(const char *lu, bool associated);
 static bool	pr3287_toggle_lu(const char *name, const char *value);
 #if defined(_WIN32) /*[*/
 static bool	pr3287_toggle_name(const char *name, const char *value);
+static bool	pr3287_toggle_codepage(const char *name, const char *value);
 #endif /*]*/
 static bool	pr3287_toggle_opts(const char *name, const char *value);
 
@@ -149,6 +150,8 @@ pr3287_session_register(void)
 #if defined(_WIN32) /*[*/
     register_extended_toggle(ResPrinterName, pr3287_toggle_name, NULL, NULL,
 	    NULL, XRM_STRING);
+    register_extended_toggle(ResPrinterCodepage, pr3287_toggle_codepage, NULL,
+	    NULL, NULL, XRM_STRING);
 #endif /*]*/
     register_extended_toggle(ResPrinterOptions, pr3287_toggle_opts, NULL, NULL,
 	    NULL, XRM_STRING);
@@ -168,14 +171,19 @@ read_pr3287_errors(void)
     size_t result_len = 0;
 
     for (;;) {
+	DWORD ix;
+
 	success = ReadFile(pr3287_stderr_rd, buf, PRINTER_BUF, &nread, NULL);
 	if (!success || nread == 0) {
 	    break; 
 	}
 
 	result = Realloc(result, result_len + nread + 1);
-	memcpy(result + result_len, buf, nread);
-	result_len += nread;
+	for (ix = 0; ix < nread; ix++) {
+	    if (buf[ix] != '\r') {
+		result[result_len++] = buf[ix];
+	    }
+	}
     } 
     if (result_len > 0) {
 	result[result_len] = '\0';
@@ -1352,6 +1360,37 @@ pr3287_toggle_name(const char *name, const char *value)
 
     /* Save the new value. */
     add_resource(ResPrinterName, NewString(value));
+
+    /* Stop the current session. */
+    pr3287_disconnected();
+
+    /* Start a new session. */
+    if (value != NULL && IN_3270) {
+	pr3287_connected();
+    }
+
+    return true;
+}
+
+/*
+ * Extended toggle for pr3287 printer code page.
+ */
+static bool
+pr3287_toggle_codepage(const char *name, const char *value)
+{
+    char *current = get_resource(ResPrinterCodepage);
+
+    if (!*value) {
+	value = NULL;
+    }
+    if ((current == NULL && value == NULL) ||
+	    (current != NULL && value != NULL && !strcmp(current, value))) {
+	/* No change. */
+	return true;
+    }
+
+    /* Save the new value. */
+    add_resource(ResPrinterCodepage, NewString(value));
 
     /* Stop the current session. */
     pr3287_disconnected();

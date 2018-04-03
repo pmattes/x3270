@@ -823,8 +823,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			options.skipcc = 1;
 		} else if (!strcmp(argv[i], "--help")) {
 			usage();
-		} else
+		} else {
+			(void) fprintf(stderr, "Unknown option '%s'\n",
+				argv[i]);
 			usage();
+		}
 	}
 	if (argc != i + 1)
 		usage();
