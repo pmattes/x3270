@@ -37,6 +37,7 @@
  */
 
 #include "globals.h"
+#include <assert.h>
 #if !defined(_WIN32) /*[*/
 # include <sys/wait.h>
 # include <signal.h>
@@ -858,6 +859,35 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/*
+ * Crash action. Used for debug purposes.
+ */
+static bool
+Crash_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("Crash", ia, argc, argv);
+    if (check_argc("Crash", argc, 1, 1) < 0) {
+	return false;
+    }
+    if (!strcasecmp(argv[0], "Assert")) {
+	assert(false);
+	popup_an_error("Crash: Assert did not work");
+    } else if (!strcasecmp(argv[0], "Exit")) {
+	exit(999);
+	popup_an_error("Crash: Exit did not work");
+    } else if (!strcasecmp(argv[0], "Null")) {
+	char *s = NULL;
+	char c;
+
+	printf("%c\n", c = *s);
+	popup_an_error("Crash: Null did not work");
+    } else {
+	popup_an_error("Crash: Must specify Assert, Exit or Null");
+    }
+
+    return false;
+}
+
 /**
  * xterm text escape
  *
@@ -1087,7 +1117,8 @@ b3270_register(void)
 {
     static action_table_t actions[] = {
 	{ "Trace",	Trace_action,	0 },
-	{ "ClearRegion",ClearRegion_action,0 }
+	{ "ClearRegion",ClearRegion_action,0 },
+	{ "Crash",	Crash_action,	0 }
     };
     static opt_t b3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
