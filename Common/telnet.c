@@ -788,6 +788,8 @@ send_nop(ioid_t id _is_unused)
     net_rawout(nop, sizeof(nop));
     if (cstate != NOT_CONNECTED) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    } else {
+	nop_timeout_id = NULL_IOID;
     }
 }
 
@@ -3626,4 +3628,26 @@ const char *
 net_sio_provider(void)
 {
     return sio_provider();
+}
+
+/*
+ * Change the NOP transmit interval.
+ */
+void
+net_nop_seconds(void)
+{
+    /* Cancel first. */
+    if (nop_timeout_id != NULL_IOID) {
+	RemoveTimeOut(nop_timeout_id);
+	nop_timeout_id = NULL_IOID;
+    }
+
+    if (appres.nop_seconds == 0) {
+	return;
+    }
+
+    /* Restart with the new interval. */
+    if (cstate >= CONNECTED_INITIAL) {
+	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    }
 }

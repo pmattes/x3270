@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -61,6 +61,7 @@ void net_hexnvt_out(unsigned char *buf, int len);
 void net_input(iosrc_t fd, ioid_t id);
 void net_interrupt(void);
 void net_linemode(void);
+void net_nop_seconds(void);
 const char *net_query_bind_plu_name(void);
 const char *net_query_connection_state(void);
 const char *net_query_host(void);

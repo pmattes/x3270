@@ -535,6 +535,30 @@ toggle_extended(const char *name _is_unused, const char *value)
     return true;
 }
 
+static bool
+toggle_nop_seconds(const char *name _is_unused, const char *value)
+{
+    unsigned long l;
+    char *end;
+    int secs;
+
+    if (!*value) {
+	appres.nop_seconds = 0;
+	net_nop_seconds();
+	return true;
+    }
+
+    l = strtoul(value, &end, 10);
+    secs = (int)l;
+    if (*end != '\0' || (unsigned long)secs != l || secs < 0) {
+	popup_an_error("Invalid %s value", ResNopSeconds);
+	return false;
+    }
+    appres.nop_seconds = secs;
+    net_nop_seconds();
+    return true;
+}
+
 /*
  * Done function for changing the model and oversize.
  */
@@ -1159,6 +1183,8 @@ b3270_register(void)
 	    NULL, (void **)&appres.oversize, XRM_STRING);
     register_extended_toggle(ResExtended, toggle_extended, toggle_model_done,
 	    NULL, (void **)&appres.extended, XRM_BOOLEAN);
+    register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,
+	    NULL, (void **)&appres.nop_seconds, XRM_INT);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);
