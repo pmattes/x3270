@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2017 Paul Mattes.
+ * Copyright (c) 1994-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -414,7 +414,7 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 static gdi_status_t
 gdi_init(const char *printer_name, unsigned opts, const char **fail)
 {
-    char *default_printer_name;
+    char *default_printer_name = NULL;
     LPDEVMODE devmode;
     HDC dc;
     DOCINFO docinfo;

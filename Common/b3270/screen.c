@@ -125,7 +125,7 @@ ea_equal_attrs(screen_t *a, screen_t *b)
 }
 
 static char *
-see_gr(u_char gr)
+see_gr(u_short gr)
 {
     varbuf_t r;
     char *sep = "";
