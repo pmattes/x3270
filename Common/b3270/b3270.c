@@ -1083,12 +1083,17 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 	return;
     }
 
-    ui_vleaf("toggle",
-	    "name", toggle_names[i].name,
-	    "value", toggled(ix)? "true": "false",
-	    "file", (ix == TRACING && toggled(ix) && tracefile_name != NULL)?
-		tracefile_name: NULL,
+    ui_vleaf(IndToggle,
+	    AttrName, toggle_names[i].name,
+	    AttrValue, toggled(ix)? ValTrue: ValFalse,
 	    NULL);
+
+    if (ix == TRACING) {
+	ui_vleaf(IndTraceFile,
+		AttrName, (toggled(ix) && tracefile_name != NULL)?
+		    tracefile_name: NULL,
+		NULL);
+    }
 }
 
 /**
@@ -1097,9 +1102,9 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 static void
 b3270_toggle_notify(const char *name, const char *value)
 {
-    ui_vleaf("toggle",
-	    "name", name,
-	    "value", value? value: "",
+    ui_vleaf(IndToggle,
+	    AttrName, name,
+	    AttrValue, value,
 	    NULL);
 }
 

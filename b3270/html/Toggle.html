@@ -14,8 +14,7 @@
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>name</td><td>yes</td><td>Toggle <a href=#toggles">name</a></td></tr>
- <tr><td>value</td><td>yes</td><td><b>true</b>, <b>false</b> or a specific value</td></tr>
- <tr><td>file</td><td>no</td><td>Trace file name</td></tr>
+ <tr><td>value</td><td>no</td><td><b>true</b>, <b>false</b> or a specific value</td></tr>
 </table>
 
 <a name="toggles"></a>
@@ -54,6 +53,8 @@
 <p>Example:
 <pre>
 &lt;toggle name="altCursor" value="true"/&gt;
+&lt;toggle name="printerLu" value="POOL27"/&gt;
+&lt;toggle name="printerLu"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

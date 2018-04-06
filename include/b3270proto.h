@@ -36,5 +36,15 @@
 
 /* Indications. */
 #define IndOia		"oia"
-#define IndUiError	"ui-error"
 #define IndRunResult	"run-result"
+#define IndToggle	"toggle"
+#define IndTraceFile	"trace-file"
+#define IndUiError	"ui-error"
+
+/* Attributes. */
+#define AttrName	"name"
+#define AttrValue	"value"
+
+/* Values. */
+#define ValTrue		"true"
+#define ValFalse	"false"
