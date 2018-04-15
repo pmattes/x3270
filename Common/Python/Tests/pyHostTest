@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import sys
+import x3270if
+
+h = x3270if.HostSpecification("x")
+sys.stderr.write(str(h) + '\n')
+h.Port = 3
+sys.stderr.write(str(h) + '\n')

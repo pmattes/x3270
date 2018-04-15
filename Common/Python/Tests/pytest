@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import sys
+import x3270if
+
+x = x3270if.WorkerConnection(debug=True)
+
+r = x.Run('Query')
+sys.stderr.write(r + '\n')
+
+#r = x.Run('Query', 'Cursor', 'a\\nb', '"x"', ',', ')')
+#r = x.Run('#')
+#r = x.Run(('Query', 'Cursor', 'foo'))
+r = x.Run(['Query', 'Cursor'])
+sys.stderr.write(r + '\n')
+
+try:
+    r = x.Run('Quisp')
+except x3270if.ActionFailException as err:
+    sys.stderr.write('Run failed: {0}\n'.format(err))
+
+sys.stderr.write('Quote(a,b,c) -> ' + x3270if.Quote('a,b,c') + '\n')

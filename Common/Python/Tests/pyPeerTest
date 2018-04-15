@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+
+import sys
+import x3270if
+
+x = x3270if.new_emulator(debug=True)
+
+r = x.run_action('Query')
+sys.stderr.write(r + '\n')
