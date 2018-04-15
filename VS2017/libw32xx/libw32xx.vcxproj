@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\Common\asprintf.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\lazya.c" />
+    <ClCompile Include="..\..\Common\min_version.c" />
     <ClCompile Include="..\..\Common\proxy.c" />
     <ClCompile Include="..\..\Common\resolver.c" />
     <ClCompile Include="..\..\Common\see.c" />

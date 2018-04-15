@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015-2016 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -109,6 +109,7 @@ typedef struct {
 	Boolean dsTrace_bc;
 	Boolean eventTrace_bc;
 	Boolean script_port_once;
+	Boolean utf8;
 	struct {
 	    Boolean mono;
 	    Boolean menubar;

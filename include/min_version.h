@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015, 2017-2018 Paul Mattes.
+ * Copyright (c) 2015-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,10 @@
  */
 
 /*
- *	glue.h
- *		Declarations for glue.c and XtGlue.c
+ *	min_version.h
+ *		Minimum version checker.
  */
 
-/* glue.c */
-extern bool any_error_output;
-struct host_color {
-    char *name;
-    int index;
-};
-extern struct host_color host_color[];
-extern char *profile_path;
+extern int our_major, our_minor, our_iteration;
 
-int parse_command_line(int argc, const char **argv, const char **cl_hostname);
-void parse_xrm(const char *arg, const char *where);
-char *safe_string(const char *s);
-bool process_events(bool block);
-void cmdline_help(bool as_action);
-void model_init(void);
-typedef bool merge_profile_t(void);
-void register_merge_profile(merge_profile_t *);
-char *clean_termname(const char *tn);
-
-/* XtGlue.c */
-void (*Error_redirect)(const char *);
-void (*Warning_redirect)(const char *);
+void check_min_version(const char *min_version);

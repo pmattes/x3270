@@ -21,6 +21,9 @@
     <ClCompile Include="..\..\Common\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\min_version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>

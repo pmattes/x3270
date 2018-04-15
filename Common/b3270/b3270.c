@@ -66,6 +66,7 @@
 #include "idle.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "nvt_gui.h"
 #include "opts.h"
@@ -112,8 +113,6 @@ static int bsent = 0;
 static int rsent = 0;
 static ioid_t stats_ioid = NULL_IOID;
 
-static int our_major, our_minor, our_iteration;
-
 static void b3270_toggle(toggle_index_t ix, enum toggle_type tt);
 static toggle_register_t toggles[] = {
     { MONOCASE,		b3270_toggle,	TOGGLE_NEED_INIT },
@@ -147,7 +146,6 @@ static char *pending_oversize;
 static bool pending_extended;
 static bool pending_extended_value;
 
-static void check_min_version(const char *min_version);
 static void b3270_register(void);
 static void b3270_toggle_notify(const char *name, const char *value);
 
@@ -957,114 +955,6 @@ product_set_appres_defaults(void)
 }
 
 /**
- * Parse a version number.
- * Version numbers are of the form: <major>.<minor>text<iteration>, such as
- *  3.4ga10 (3, 4, 10)
- *  3.5apha3 (3, 5, 3)
- * The version can be under-specified, e.g.:
- *  3.4 (3, 4, 0)
- *  3 (3, 0, 0)
- * Numbers are limited to 0..999.
- * @param[in] text		String to decode.
- * @param[out] major		Major number.
- * @param[out] minor		Minor number.
- * @param[out] iteration	Iteration.
- *
- * @return true if parse successful.
- */
-#define MAX_VERSION 999
-static bool
-parse_version(const char *text, int *major, int *minor, int *iteration)
-{
-    const char *t = text;
-    unsigned long n;
-    char *ptr;
-
-    *major = 0;
-    *minor = 0;
-    *iteration = 0;
-
-    /* Parse the major number. */
-    n = strtoul(t, &ptr, 10);
-    if (ptr == t || (*ptr != '.' && *ptr != '\0') || n > MAX_VERSION) {
-	return false;
-    }
-    *major = (int)n;
-
-    if (*ptr == '\0') {
-	/* Just a major number. */
-	return true;
-    }
-
-    /* Parse the minor number. */
-    t = ptr + 1;
-    n = strtoul(t, &ptr, 10);
-    if (ptr == text || n > MAX_VERSION) {
-	return false;
-    }
-    *minor = (int)n;
-
-    if (*ptr == '\0') {
-	/* Just a major and minor number. */
-	return true;
-    }
-
-    /* Parse the iteration. */
-    t = ptr;
-    while (!isdigit((unsigned char)*t) && *t != '\0')
-    {
-	t++;
-    }
-    if (*t == '\0') {
-	return false;
-    }
-
-    n = strtoul(t, &ptr, 10);
-    if (ptr == t || *ptr != '\0' || n > MAX_VERSION) {
-	return false;
-    }
-    *iteration = (int)n;
-
-    return true;
-}
-
-/**
- * Check the requested version against the actual version.
- * @param[in] min_version	Desired minimum version
- */
-static void
-check_min_version(const char *min_version)
-{
-    int min_major, min_minor, min_iteration;
-
-    /* Parse our version. */
-    if (!parse_version(build_rpq_version, &our_major, &our_minor,
-		&our_iteration)) {
-	fprintf(stderr, "Internal error: Can't parse version: %s\n",
-		build_rpq_version);
-	exit(1);
-    }
-    if (min_version == NULL) {
-	return;
-    }
-
-    /* Parse the desired version. */
-    if (!parse_version(min_version, &min_major, &min_minor, &min_iteration)) {
-	fprintf(stderr, "Invalid %s: %s\n", ResMinVersion, min_version);
-	exit(1);
-    }
-
-    /* Compare. */
-    if (our_major < min_major ||
-	    (our_major == min_major && our_minor < min_minor) ||
-	    (our_major == min_major && our_minor == min_minor && our_iteration < min_iteration)) {
-	fprintf(stderr, "Version %s < requested %s, aborting\n",
-		build_rpq_version, min_version);
-	exit(1);
-    }
-}
-
-/**
  * Handle a toggle change.
  * @param[in] ix	Toggle index
  * @param[in] tt	Toggle type
@@ -1153,9 +1043,7 @@ b3270_register(void)
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
-	    NULL, "Force local codeset to be UTF-8" },
-	{ OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
-	    "<version>", "Fail unless at this version or greater" }
+	    NULL, "Force local codeset to be UTF-8" }
     };
     static res_t b3270_resources[] = {
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },

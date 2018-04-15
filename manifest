@@ -145,6 +145,7 @@ Common/llist.c
 Common/login_macro.c
 Common/Malloc.c
 Common/menubar_stubs.c
+Common/min_version.c
 Common/mkfb.c
 Common/mkicon.c
 Common/Nodisplay/resources.c
@@ -285,6 +286,7 @@ include/lazya.h
 include/linemode.h
 include/Makefile.aux
 include/menubar.h
+include/min_version.h
 include/nvt_gui.h
 include/nvt.h
 include/opts.h

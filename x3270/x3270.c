@@ -60,6 +60,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -156,6 +157,7 @@ XrmOptionDescRec base_options[]= {
     { OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
     { OptLoginMacro,	DotLoginMacro,	XrmoptionSepArg,	NULL },
     { OptM3279,		DotM3279,	XrmoptionNoArg,		ResTrue },
+    { OptMinVersion,	DotMinVersion,	XrmoptionSepArg,	NULL },
     { OptModel,		DotModel,	XrmoptionSepArg,	NULL },
     { OptMono,		DotMono,	XrmoptionNoArg,		ResTrue },
     { OptNoScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResFalse },
@@ -181,6 +183,7 @@ XrmOptionDescRec base_options[]= {
     { OptInputMethod,	DotInputMethod,	XrmoptionSepArg,	NULL },
     { OptPreeditType,	DotPreeditType,	XrmoptionSepArg,	NULL },
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
+    { OptUtf8,		DotUtf8,	XrmoptionNoArg,		ResTrue },
     { OptV,		DotV,		XrmoptionNoArg,		ResTrue },
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
     { OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
@@ -236,6 +239,7 @@ static struct option_help {
 	"SSL/TLS private key password", SSL_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
     { OptM3279, NULL, "3279 emulation (deprecated)" },
+    { OptMinVersion, "<version>", "Fail unless at this version or greater" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
     { OptNoScrollBar, NULL, "Disable scroll bar" },
@@ -265,6 +269,7 @@ static struct option_help {
     { OptInputMethod, "<name>", "Multi-byte input method" },
     { OptPreeditType, "<style>", "Define input method pre-edit type" },
     { OptUser, "<name>", "User name for RFC 4777" },
+    { OptUtf8, NULL, "Force script I/O to use UTF-8" },
     { OptV, NULL, "Display build options and character sets" },
     { OptVerifyHostCert, NULL, "Verify SSL/TLS host certificate (enabled by default)",
 	SSL_OPT_VERIFY_HOST_CERT },
@@ -607,6 +612,9 @@ main(int argc, char *argv[])
 
     /* Duplicate the strings in appres, so they can be reallocated later. */
     dup_resource_strings(res, num_resources);
+
+    /* Check the minimum version. */
+    check_min_version(appres.min_version);
 
     /*
      * If the hostname is specified as a resource and not specified as a
@@ -1189,6 +1197,7 @@ copy_xres_to_res_bool(void)
     copy_bool(dsTrace_bc);
     copy_bool(eventTrace_bc);
     copy_bool(script_port_once);
+    copy_bool(utf8);
 
     copy_bool(interactive.mono);
     copy_bool(interactive.menubar);

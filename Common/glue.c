@@ -524,6 +524,8 @@ static opt_t base_opts[] = {
 { OptLoginMacro, OPT_STRING, false, ResLoginMacro, aoffset(login_macro),
     "Action([arg[,arg...]]) [...]"
 },
+{ OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
+    "<version>", "Fail unless at this version or greater" },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),

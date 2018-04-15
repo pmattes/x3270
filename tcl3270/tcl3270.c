@@ -73,6 +73,7 @@
 #include "host.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -434,6 +435,9 @@ tcl3270_main(int argc, const char *argv[])
     const char	*cl_hostname = NULL;
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+
+    /* Check minimum version. */
+    check_min_version(appres.min_version);
 
     /* Set tcl3270-specific defaults. */
     appres.utf8 = true;

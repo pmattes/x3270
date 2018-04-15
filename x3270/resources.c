@@ -116,6 +116,8 @@ XtResource resources[] = {
       offset(connect_timeout), XtRString, "0" },
     { ResNopSeconds, ClsNopSeconds, XtRInt, sizeof(int),
       offset(nop_seconds), XtRString, "0" },
+    { ResMinVersion, ClsMinVersion, XtRString, sizeof(String),
+      offset(min_version), XtRString, 0 },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },
@@ -333,6 +335,8 @@ XtResource xresources[] = {
       boffset(nvt_mode), XtRString, ResFalse },
     { ResScriptPortOnce, ClsScriptPortOnce, XtRBoolean, sizeof(Boolean),
       boffset(script_port_once), XtRString, ResFalse },
+    { ResUtf8, ClsUtf8, XtRBoolean, sizeof(Boolean),
+      boffset(utf8), XtRString, ResFalse },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

@@ -290,6 +290,7 @@
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
+#define DotUtf8			"." ResUtf8
 #define DotV			"." ResV
 #define DotVerifyHostCert	"." ResVerifyHostCert
 
@@ -448,6 +449,7 @@
 #define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
 #define ClsUser			"User"
+#define ClsUtf8			"Utf8"
 #define ClsVerifyHostCert	"VerifyHostCert"
 #define ClsVisibleControl	"VisibleControl"
 #define ClsVisualBell		"VisualBell"
