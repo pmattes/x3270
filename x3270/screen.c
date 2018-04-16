@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -154,6 +154,7 @@ static union sp *temp_image;		/* temporary for X display */
 static Pixel	colorbg_pixel;
 static bool	crosshair_enabled = true;
 static bool     cursor_displayed = false;
+static bool	lower_crosshair_displayed = false;
 static bool     cursor_enabled = true;
 static bool     cursor_blink_pending = false;
 static XtIntervalId cursor_blink_id;
@@ -372,7 +373,9 @@ static void schedule_cursor_blink(void);
 static void schedule_text_blink(void);
 static void inflate_screen(void);
 static int fa_color(unsigned char fa);
-static bool cursor_off(const char *why);
+static void redraw_lower_crosshair(void);
+static bool cursor_off(const char *why, bool including_lower_crosshair,
+	bool *xwo);
 static void draw_aicon_label(void);
 static void set_mcursor(void);
 static void scrollbar_init(bool is_reset);
@@ -1138,13 +1141,15 @@ screen_connect(bool ignored _is_unused)
 
     if (CONNECTED) {
 	ctlr_erase(true);
+	cursor_enabled = true;
 	cursor_on("connect");
 	schedule_cursor_blink();
     } else {
 	if (appres.disconnect_clear) {
 	    ctlr_erase(true);
 	}
-	(void) cursor_off("connect");
+	cursor_enabled = false;
+	(void) cursor_off("connect", true, NULL);
     }
     if (toggled(CROSSHAIR)) {
 	screen_changed = true;
@@ -1507,31 +1512,60 @@ fix_status:
     draw_oia_line();
 }
 
+/* Redraw the lower crosshair. */
+static void
+redraw_lower_crosshair(void)
+{
+    if (!lower_crosshair_displayed && toggled(CROSSHAIR)) {
+	int column;
+
+	crosshair_margin(true, "redraw");
+	column = cursor_addr % COLS;
+	if (flipped) {
+	    column = (COLS - 1) - column;
+	}
+	status_crosshair(column);
+	lower_crosshair_displayed = true;
+
+	/* Even though the cursor isn't visible, this is where it is. */
+	ss->cursor_daddr = cursor_addr;
+    }
+}
 
 /*
  * Make the (displayed) cursor disappear.  Returns a bool indiciating if
  * the cursor was on before the call.
+ *
+ * *xwo is returned true if the lower crosshair was displayed and would then
+ * need to be restored, independently of the cursor.
  */
 static bool
-cursor_off(const char *why)
+cursor_off(const char *why, bool including_lower_crosshair, bool *xwo)
 {
+    bool was_on = cursor_displayed;
+    bool xwo_ret = false;
+
     if (cursor_displayed) {
 	cursor_displayed = false;
 	put_cursor(ss->cursor_daddr, false);
+    }
 
+    if (including_lower_crosshair && toggled(CROSSHAIR) &&
+	    lower_crosshair_displayed) {
 	/*
 	 * Erase the crosshair in the empty region between the primary
 	 * and alternate screens.
 	 */
-	if (toggled(CROSSHAIR)) {
-	    crosshair_margin(false, why);
-	    status_crosshair_off();
-	}
-
-	return true;
-    } else {
-	return false;
+	crosshair_margin(false, why);
+	status_crosshair_off();
+	lower_crosshair_displayed = false;
+	xwo_ret = true;
     }
+
+    if (xwo != NULL) {
+	*xwo = xwo_ret;
+    }
+    return was_on;
 }
 
 
@@ -1548,7 +1582,7 @@ cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     }
     if (cursor_displayed) {
 	if (in_focus) {
-	    (void) cursor_off("blink");
+	    (void) cursor_off("blink", false, NULL);
 	}
     } else {
 	cursor_on("blink");
@@ -1623,6 +1657,7 @@ cursor_on(const char *why)
 		column = (COLS - 1) - column;
 	    }
 	    status_crosshair(column);
+	    lower_crosshair_displayed = true;
 	}
     }
 }
@@ -1639,7 +1674,7 @@ toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
     /* do_toggle already changed the value; temporarily change it back */
     toggle_toggle(ix);
 
-    was_on = cursor_off("toggleAlt");
+    was_on = cursor_off("toggleAlt", false, NULL);
 
     /* Now change it back again */
     toggle_toggle(ix);
@@ -1695,7 +1730,7 @@ enable_cursor(bool on)
 	cursor_on("enable");
 	cursor_changed = true;
     } else {
-	(void) cursor_off("enable");
+	(void) cursor_off("enable", true, NULL);
     }
 }
 
@@ -1723,7 +1758,7 @@ toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
      * Don't forget to turn the toggle back off, if we temporarily turned it
      * on above.
      */
-    if (cursor_off("toggleCrosshair")) {
+    if (cursor_off("toggleCrosshair", true, NULL)) {
 	if (turning_off) {
 	    toggle_toggle(CROSSHAIR);
 	}
@@ -1908,10 +1943,11 @@ screen_disp(bool erasing)
      * If only the cursor has changed (and not the screen image), draw it.
      */
     if (cursor_changed && !screen_changed) {
-	if (cursor_off("disp")) {
-	    cursor_on("disp");
-	}
-	if (toggled(CROSSHAIR)) {
+	if (!toggled(CROSSHAIR)) {
+	    if (cursor_off("disp", false, NULL)) {
+		cursor_on("disp");
+	    }
+	} else {
 	    screen_changed = true; /* repaint crosshair */
 	}
     }
@@ -1922,6 +1958,7 @@ screen_disp(bool erasing)
      */
     if (screen_changed) {
 	bool was_on = false;
+	bool xwo = false;
 
 	/* Draw the new screen image into "temp_image" */
 	if (screen_changed) {
@@ -1942,7 +1979,7 @@ screen_disp(bool erasing)
 
 	/* Undraw the cursor, if necessary. */
 	if (cursor_changed) {
-	    was_on = cursor_off("cursorChanged");
+	    was_on = cursor_off("cursorChanged", true, &xwo);
 	}
 
 	/* Intelligently update the X display with the new text. */
@@ -1951,6 +1988,9 @@ screen_disp(bool erasing)
 	/* Redraw the cursor. */
 	if (was_on) {
 	    cursor_on("cursorChanged");
+	}
+	if (xwo) {
+	    redraw_lower_crosshair();
 	}
 
 	screen_changed = false;
@@ -2597,12 +2637,13 @@ void
 screen_scroll(void)
 {
     bool was_on;
+    bool xwo;
 
     if (!ss->exposed_yet) {
 	return;
     }
 
-    was_on = cursor_off("scroll");
+    was_on = cursor_off("scroll", true, &xwo);
     (void) memmove(&ss->image[0], &ss->image[COLS],
 		       (ROWS - 1) * COLS * sizeof(union sp));
     (void) memmove(&temp_image[0], &temp_image[COLS],
@@ -2626,6 +2667,9 @@ screen_scroll(void)
 	ss->char_height);
     if (was_on) {
 	cursor_on("scroll");
+    }
+    if (xwo) {
+	redraw_lower_crosshair();
     }
 }
 
@@ -4180,7 +4224,7 @@ screen_focus(bool in)
      * Change the appearance of the cursor.  Make it hollow out or fill in
      * instantly, even if it was blinked off originally.
      */
-    (void) cursor_off("focus");
+    (void) cursor_off("focus", true, NULL);
     in_focus = in;
     cursor_on("focus");
 
