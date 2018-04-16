@@ -1989,7 +1989,7 @@ screen_disp(bool erasing)
 	if (was_on) {
 	    cursor_on("cursorChanged");
 	}
-	if (xwo) {
+	if (xwo && !erasing) {
 	    redraw_lower_crosshair();
 	}
 
