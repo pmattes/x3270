@@ -261,8 +261,8 @@ static char *required_display_charsets;
 
 static int crosshair_color = HOST_COLOR_PURPLE;
 
-#define CROSSABLE	(toggled(CROSSHAIR) && IN_3270 && \
-			 cursor_enabled && crosshair_enabled && in_focus)
+#define CROSSABLE	(toggled(CROSSHAIR) && cursor_enabled && \
+			 crosshair_enabled && in_focus)
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
 
@@ -1940,6 +1940,16 @@ screen_disp(bool erasing)
     }
 
     /*
+     * If the cursor moves while the crosshair is toggled, redraw the whole
+     * screen.
+     */
+    if (cursor_changed && toggled(CROSSHAIR)) {
+	screen_changed = true;
+	first_changed = 0;
+	last_changed = ROWS * COLS;
+    }
+
+    /*
      * If only the cursor has changed (and not the screen image), draw it.
      */
     if (cursor_changed && !screen_changed) {
@@ -1961,14 +1971,12 @@ screen_disp(bool erasing)
 	bool xwo = false;
 
 	/* Draw the new screen image into "temp_image" */
-	if (screen_changed) {
-	    if (erasing) {
-		crosshair_enabled = false;
-	    }
-	    draw_fields(temp_image, first_changed, last_changed);
-	    if (erasing) {
-		crosshair_enabled = true;
-	    }
+	if (erasing) {
+	    crosshair_enabled = false;
+	}
+	draw_fields(temp_image, first_changed, last_changed);
+	if (erasing) {
+	    crosshair_enabled = true;
 	}
 
 	/* Set "cursor_changed" if the text under it has changed. */
@@ -2828,7 +2836,7 @@ draw_fields(union sp *buffer, int first, int last)
 		b.bits.gr = GR_UNDERLINE;
 		b.bits.fg = appres.m3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
 		    FA_INT_HIGH_SEL;
-	    } else if (CROSSABLE && CROSSED(baddr)) {
+	    } else if (crossable && CROSSED(baddr)) {
 		b.bits.cs = CS_APL;
 		b.bits.cc = map_crosshair(baddr);
 		b.bits.fg = CROSS_COLOR;
@@ -2880,7 +2888,7 @@ draw_fields(union sp *buffer, int first, int last)
 	    if (zero) {
 		if (visible_control) {
 		    b.bits.cc = EBC_space;
-		} else if (CROSSABLE && CROSSED(baddr)) {
+		} else if (crossable && CROSSED(baddr)) {
 		    b.bits.cs = CS_APL;
 		    b.bits.cc = map_crosshair(baddr);
 		    b.bits.fg = CROSS_COLOR;
@@ -2898,7 +2906,7 @@ draw_fields(union sp *buffer, int first, int last)
 		 * spaces.
 		 */
 		if (!text_blinking_on && (gr & GR_BLINK)) {
-		    if (!CROSSABLE || !CROSSED(baddr)) {
+		    if (!crossable || !CROSSED(baddr)) {
 			b.bits.cc = EBC_space;
 		    } else {
 			b.bits.cs = CS_APL;
@@ -2948,7 +2956,7 @@ draw_fields(union sp *buffer, int first, int last)
 	    }
 
 	    /* Check for blanks. */
-	    if (CROSSABLE && CROSSED(baddr) &&
+	    if (crossable && CROSSED(baddr) &&
 		    b.bits.cs == CS_BASE && BKM_ISSET(b.bits.cc)) {
 		b.bits.cs = CS_APL;
 		b.bits.cc = map_crosshair(baddr);
