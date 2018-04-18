@@ -89,12 +89,9 @@ static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
 static merge_profile_t *merge_profilep = NULL;
-static char *session_suffix;
-static size_t session_suffix_len;
-#if defined(_WIN32) /*[*/
-static char *session_short_suffix;
-static size_t session_short_suffix_len;
-#endif /*]*/
+static char *session_suffix[3];
+static size_t session_suffix_len[3];
+static int n_session_suffixes;
 static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
 
@@ -116,6 +113,31 @@ register_merge_profile(merge_profile_t *m)
     merge_profilep = m;
 }
 
+/* Add a session suffix to the list. */
+static void
+add_session_suffix(char *suffix)
+{
+    session_suffix[n_session_suffixes] = suffix;
+    session_suffix_len[n_session_suffixes++] = strlen(suffix);
+}
+
+/* Check a name for ending in a session suffix. */
+static int
+check_session_suffix(const char *name)
+{
+    int i;
+    size_t sl = strlen(name);
+
+    for (i = 0; i < n_session_suffixes; i++) {
+	if (sl > session_suffix_len[i] &&
+	  !strcasecmp(name + sl - session_suffix_len[i], session_suffix[i])) {
+	    return i;
+	}
+    }
+
+    return -1;
+}
+
 /* Parse the command line and read in any session file. */
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
@@ -123,12 +145,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     size_t cl;
     int i;
     int hn_argc;
-    size_t sl;
     size_t xcmd_len = 0;
     char *xcmd;
     int xargc;
     const char **xargv;
     bool read_session_or_profile = false;
+    int suffix_match = -1;
 
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -224,25 +246,15 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 
     /* Merge in the session. */
-    if (session_suffix == NULL) {
-	session_suffix = xs_buffer(".%s", app);
-	session_suffix_len = strlen(session_suffix);
-    }
+    if (n_session_suffixes == 0) {
+	add_session_suffix(xs_buffer(".%s", app));
 #if defined(_WIN32) /*[*/
-    if (session_short_suffix == NULL) {
-	session_short_suffix = xs_buffer(".%.3s", app);
-	session_short_suffix_len = strlen(session_short_suffix);
-    }
+	add_session_suffix(xs_buffer(".%s", app + 1));
+	add_session_suffix(xs_buffer(".%.3s", app));
 #endif /*]*/
+    }
     if (*cl_hostname != NULL &&
-	(((sl = strlen(*cl_hostname)) > session_suffix_len &&
-	  !strcasecmp(*cl_hostname + sl - session_suffix_len, session_suffix))
-#if defined(_WIN32) /*[*/
-	 || ((sl = strlen(*cl_hostname)) > session_short_suffix_len &&
-	  !strcasecmp(*cl_hostname + sl - session_short_suffix_len,
-	      session_short_suffix))
-#endif /*]*/
-	 )) {
+	(suffix_match = check_session_suffix(*cl_hostname)) >= 0) {
 
 	const char *pname;
 
@@ -260,20 +272,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	}
 	profile_name = NewString(pname);
 	Replace(profile_path, NewString(profile_name));
-
-	sl = strlen(profile_name);
-	if (sl > session_suffix_len &&
-		!strcasecmp(profile_name + sl - session_suffix_len,
-		    session_suffix)) {
-	    profile_name[sl - session_suffix_len] = '\0';
-#if defined(_WIN32) /*[*/
-	} else if (sl > session_short_suffix_len &&
-		!strcasecmp(profile_name + sl - session_short_suffix_len,
-			session_short_suffix)) {
-	    profile_name[sl - session_short_suffix_len] = '\0';
-#endif /*]*/
-	}
-
+	profile_name[strlen(profile_name) - session_suffix_len[suffix_match]]
+	    = '\0';
 	*cl_hostname = appres.hostname; /* might be NULL */
     } else {
 	/* There is no session file. */
