@@ -3215,6 +3215,12 @@ abort_script(void)
 	for (s = q->top; s != NULL; s = next) {
 	    next = s->next;
 
+	    /* Don't abort a peer script. */
+	    if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
+		vtrace("Abort skipping peer\n");
+		continue;
+	    }
+
 	    /* Abort the cb. */
 	    if (s->type == ST_CB) {
 		vtrace("Aborting " TASK_NAME_FMT "\n", TASK_sNAME(s));
@@ -3232,7 +3238,9 @@ abort_script(void)
 	}
 
 	/* Mark the taskq as deleted. */
-	q->deleted = true;
+	if (q->depth == 0) {
+	    q->deleted = true;
+	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 
     /* Re-evaluate the OIA and menus. */

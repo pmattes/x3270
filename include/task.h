@@ -81,6 +81,7 @@ typedef struct {
 #define CB_UI		0x1	/* came from the UI */
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
 #define CB_NEW_TASKQ	0x4	/* creates a new task queue */
+#define CB_PEER		0x8	/* peer script (don't abort) */
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 void task_activate(task_cbh handle);

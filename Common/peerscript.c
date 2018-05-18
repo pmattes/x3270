@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ static void peer_closescript(task_cbh handle);
 static tcb_t peer_cb = {
     "peer",
     IA_MACRO,
-    CB_NEW_TASKQ,
+    CB_NEW_TASKQ | CB_PEER,
     peer_data,
     peer_done,
     NULL,
