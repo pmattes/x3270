@@ -381,6 +381,7 @@ child_done(task_cbh handle, bool success, bool abort)
 	if (abort) {
 	    vtrace("%s killing process %d\n", c->child_name, (int)c->pid);
 	    killpg(c->pid, SIGKILL);
+	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
 	}
 	return true;
     }
@@ -405,6 +406,7 @@ child_done(task_cbh handle, bool success, bool abort)
 	c->listener = NULL;
 	vtrace("%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
+	disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
     }
     return true;
 
