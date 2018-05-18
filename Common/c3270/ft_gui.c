@@ -84,8 +84,13 @@ ft_gui_clear_progress(void)
 
 /* Pop up a successful completion message. */
 void
-ft_gui_complete_popup(const char *msg)
+ft_gui_complete_popup(const char *msg, bool is_error)
 {
+    if (is_error) {
+	popup_an_error("%s", msg);
+	return;
+    }
+
 #if !defined(_WIN32) /*[*/
     signal(SIGINT, SIG_IGN);
 #else /*][*/

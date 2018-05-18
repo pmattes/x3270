@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -472,7 +472,7 @@ ft_complete(const char *errmsg)
 	ft_gui_clear_progress();
 
 	/* Pop up the error. */
-	popup_an_error("%s", msg_copy);
+	ft_gui_complete_popup(msg_copy, true);
 	Free(msg_copy);
     } else {
 	struct timeval t1;
@@ -487,7 +487,7 @@ ft_complete(const char *errmsg)
 		display_scale(bytes_sec),
 		fts.is_cut ? "CUT" : "DFT");
 	ft_gui_clear_progress();
-	ft_gui_complete_popup(buf);
+	ft_gui_complete_popup(buf, false);
 	Free(buf);
     }
 }

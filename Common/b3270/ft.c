@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2016, Paul Mattes.
+ * Copyright (c) 1996-2018, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,11 +45,6 @@ ft_gui_progress_popdown(void)
 void
 ft_gui_errmsg_prepare(char *msg)
 {
-    ui_vleaf("ft",
-	    "state", "complete",
-	    "success", "false",
-	    "text", msg,
-	    NULL);
 }
 
 void ft_gui_clear_progress(void)
@@ -57,11 +52,11 @@ void ft_gui_clear_progress(void)
 }
 
 void
-ft_gui_complete_popup(const char *msg)
+ft_gui_complete_popup(const char *msg, bool is_error)
 {
     ui_vleaf("ft",
 	    "state", "complete",
-	    "success", "true",
+	    "success", is_error? "false": "true",
 	    "text", msg,
 	    NULL);
 }

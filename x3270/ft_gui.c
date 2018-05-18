@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -1462,9 +1462,11 @@ ft_gui_clear_progress(void)
 
 /* Pop up a successful completion message. */
 void
-ft_gui_complete_popup(const char *msg)
+ft_gui_complete_popup(const char *msg, bool is_error)
 {
-    if (!ftc->is_action) {
+    if (is_error) {
+	popup_an_error("%s", msg);
+    } else if (!ftc->is_action) {
 	popup_an_info("%s", msg);
     }
 }
