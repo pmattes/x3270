@@ -253,8 +253,8 @@ That is, the host can update the screen at any time, even between actions that
 are reading the screen contents, so a script can get inconsistent results.
 Assistance for this problem is provided by the XX_FB(Snap) action.
 The XX_FB(Snap(Save)) action saves a snapshot of the screen in a special
-buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii) and
-XX_FB(Ebcdic) actions (XX_FB(Snap(Ascii)) and XX_FB(Snap(Ebcdic))) to query
+buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii1) and
+XX_FB(Ebcdic1) actions (XX_FB(Snap(Ascii1)) and XX_FB(Snap(Ebcdic1))) to query
 the saved buffer -- which the host cannot modify -- to get the data it wants.
 Finally, XX_FB(Snap(Wait Output)) blocks the script until the host
 modifies the screen, specifically since the last call to XX_FB(Snap(Save)).
@@ -262,12 +262,9 @@ Thus a script can poll the screen efficiently by writing a loop that begins
 with XX_FB(Snap(Save)) and ends with XX_FB(Snap(Wait Output)).
 XX_SH(Script-Specific Actions)
 The following actions have been defined or modified for use with scripts.
-(Note that unlike the display on the status line,
-XX_FI(row)
-and
-XX_FI(col)
-coordinates used in these actions use [0,0] as their origin at the upper left,
-not [1,1]).
+Note that actions that use row and column coordinates generally use an origin
+of 1, with row 1 at the top and column 1 at the left. This is consistent with
+the on-screen cursor position and data stream trace messages.
 XX_TPS()dnl
 XX_TP(XX_FB(AnsiText))
 Outputs whatever data that has been output by the host in
@@ -282,20 +279,20 @@ This is a convenient way to capture
 XX_SM(NVT)
 mode output in a synchronous manner without trying to decode the screen
 contents.
-XX_TP(XX_FB(Ascii)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
-XX_TP(XX_FB(Ascii)(XX_FI(row),XX_FI(col),XX_FI(length)))
-XX_TP(XX_FB(Ascii)(XX_FI(length)))
-XX_TP(XX_FB(Ascii))
+XX_TP(XX_FB(Ascii1)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
+XX_TP(XX_FB(Ascii1)(XX_FI(row),XX_FI(col),XX_FI(length)))
+XX_TP(XX_FB(Ascii1)(XX_FI(length)))
+XX_TP(XX_FB(Ascii1))
 Outputs an XX_SM(ASCII) text representation of the screen contents.
 Each line is preceded by the string "data:XX_NBSP", and there are no control
 characters.
 XX_IP
 If four parameters are given, a rectangular region of the screen is output.
-(Note that the row and column are zero-origin.)
+(Note that the row and column are 1-origin.)
 XX_IP
 If three parameters are given,
 XX_FI(length)
-characters are output, starting at the specified zero-origin row and column.
+characters are output, starting at the specified 1-origin row and column.
 XX_IP
 If only the
 XX_FI(length)
@@ -304,10 +301,10 @@ position.
 XX_IP
 If no parameters are given, the entire screen is output.
 XX_IP
-The EBCDIC-to-ASCII translation and output character set depend on the both the
+The XX_SM(EBCDIC)-to-XX_SM(ASCII) translation and output character set depend on the both the
 emulator character set (the XX_FB(XX_DASHED(charset)) option) and the locale.
-UTF-8 and certain DBCS locales may result in multi-byte expansions of EBCDIC
-characters that translate to ASCII codes greater than 0x7f.
+UTF-8 and certain XX_SM(DBCS) locales may result in multi-byte expansions of XX_SM(EBCDIC)
+characters that translate to XX_SM(ASCII) codes greater than 0x7f.
 XX_TP(XX_FB(AsciiField))
 Outputs an XX_SM(ASCII) text representation of the field containing the cursor.
 The text is preceded by the string "data:XX_NBSP".
@@ -335,12 +332,12 @@ XX_FB(ibm_hosts)
 file, the connection will be broken.
 XX_TP(XX_FB(Disconnect))
 Disconnects from the host.
-XX_TP(XX_FB(Ebcdic)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
-XX_TP(XX_FB(Ebcdic)(XX_FI(row),XX_FI(col),XX_FI(length)))
-XX_TP(XX_FB(Ebcdic)(XX_FI(length)))
-XX_TP(XX_FB(Ebcdic))
+XX_TP(XX_FB(Ebcdic1)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
+XX_TP(XX_FB(Ebcdic1)(XX_FI(row),XX_FI(col),XX_FI(length)))
+XX_TP(XX_FB(Ebcdic1)(XX_FI(length)))
+XX_TP(XX_FB(Ebcdic1))
 The same function as
-XX_FB(Ascii)
+XX_FB(Ascii1)
 above, except that rather than generating
 XX_SM(ASCII)
 text, each character is output as a 2-digit or 4-digit hexadecimal
@@ -378,15 +375,18 @@ Adds or removes a temporary keymap.
 If the XX_FI(keymap) parameter is given, the named keymap is added.
 If no parameter is given, the most recently added keymap is removed.
 ')dnl
-XX_TP(XX_FB(MoveCursor)(XX_FI(row),XX_FI(col)))
-Moves the cursor to the specified zero-origin coordinates.
+XX_TP(XX_FB(MoveCursor1)(XX_FI(row),XX_FI(col)))
+Moves the cursor to the specified 1-origin coordinates.
+XX_TP(XX_FB(MoveCursor1)(XX_FI(offset)))
+Moves the cursor to the specified offset. Offset 0 is the upper left-hand
+corner of the screen.
 XX_TP(XX_FB(PrintText)([XX_FB(command),]XX_FI(filter)))
-Pipes an ASCII representation of the current screen image through the named
+Pipes an XX_SM(ASCII) representation of the current screen image through the named
 XX_FI(filter), e.g., XX_FB(lpr).
 XX_TP(XX_FB(PrintText)([XX_FB(html),][XX_FB(append),][XX_FB(replace),]XX_FB(file),XX_FI(filename)))
 Saves the current screen contents in a file.
 With the XX_FB(html) option, saves it as HTML, otherwise saves it as plain
-ASCII.
+XX_SM(ASCII).
 The XX_FB(append) option (the default) causes the data to be appended to the
 file if it already exists. The XX_FB(replace) option causes the file to be
 overwritten instead.
@@ -403,7 +403,8 @@ XX_T_
 XX_TR(XX_TD(BindPluName)	XX_TD(BIND PLU returned by the host))
 XX_TR(XX_TD(ConnectionState)	XX_TD(TN3270/TN3270E mode and submode))
 XX_TR(XX_TD(CodePage)	XX_TD(Host code page))
-XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col), zero-origin))
+XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col) zero-origin))
+XX_TR(XX_TD(Cursor1)	XX_TD(Cursor position (row col) 1-origin))
 XX_TR(XX_TD(Formatted)	XX_TD(3270 format state (formatted or unformatted)))
 XX_TR(XX_TD(Host)	XX_TD(Host name and port))
 XX_TR(XX_TD(LocalEncoding)	XX_TD(Local character encoding))
@@ -417,14 +418,18 @@ XX_IP
 Without a XX_FI(keyword), XX_FB(Query) returns each of the defined attributes,
 one per line, labeled by its name.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Ascii)))
-Dumps the contents of the screen buffer, one line at a time.
-Positions inside data fields are generally output as 2-digit hexadecimal codes
-in the current display character set.
-If the current locale specifies UTF-8 (or certain DBCS character sets), some
-positions may be output as multi-byte strings (4-, 6- or 8-digit codes).
-DBCS characters take two positions in the screen buffer; the first location
-is output as a multi-byte string in the current locale codeset, and the second
-location is output as a dash.
+Dumps the contents of the screen buffer, one line per row.
+Each buffer position inside a data field is generally output as a 2-digit
+hexadecimal code, translated from the host XX_SM(EBCDIC) code page to the
+current locale.
+(E.g., the XX_SM(EBCDIC) value for the letter A in host code page 037 is
+X'C1'. In XX_SM(ASCII), this is 0x41, so it is output as XX_FB(41).)
+If the current locale specifies a multi-byte character set such as UTF-8, some
+positions may be output as 4-, 6- or 8-digit codes.
+(E.g., in host code page 037, the XX_SM(EBCDIC) value for a U+00ac NOT symbol
+is X'5F'. In UTF-8, this is 0xc2, 0xac, so it is output as XX_FB(c2ac).)
+XX_SM(DBCS) characters take two positions in the screen buffer; the first location
+is output as a multi-byte code, and the second location is output as a dash.
 Start-of-field characters (each of which takes up a display position) are
 output as XX_FB(SF`(aa=nn[,...])'), where XX_FI(aa) is a field
 attribute type and XX_FI(nn) is its value.
@@ -469,13 +474,30 @@ XX_FB(SA`('aa=nn`)'), with XX_FI(aa) and XX_FI(nn) having
 the same definitions as above (though the basic 3270 attribute will never
 appear as an extended attribute).
 XX_IP
-In addition, NULL characters in the screen buffer are reported as ASCII
+In addition, XX_SM(NULL) characters in the screen buffer are reported as XX_SM(ASCII)
 character 00 instead of 20, even though they should be displayed as blanks.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Ebcdic)))
 Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output as
-hexadecimal EBCDIC codes instead.
+hexadecimal XX_SM(EBCDIC) codes instead.
 Additionally, if a buffer position has the Graphic Escape attribute, it is
 displayed as XX_FB(GE`('XX_FI(xx)`)').
+XX_TP(XX_FB(ReadBuffer)(XX_FB(Field)))
+Dumps information about the current field.
+XX_FB(Ascii) and XX_FB(Ebcdic) keywords are also accepted.
+The output consists of keywords and parameters.
+Note that XX_DQUOTED(field start) is the location of the start-of-field
+character, which is displayed on the screen as a blank to the left of the
+field, and is dumped as XX_FB(SF). The XX_FB(Contents) line is always last.
+XX_TS(4,`center;
+l l l .')
+XX_TR(XX_TD(XX_TC(Keyword))	XX_TD(XX_TC(Parameters))	XX_TD(XX_TC(Meaning)))
+XX_T_
+XX_TR(XX_TD(XX_TC(Start1))	XX_TD(XX_TC(row col))	XX_TD(XX_TC(Field start coordinates (1-origin))))
+XX_TR(XX_TD(XX_TC(StartOffset))	XX_TD(XX_TC(offset))	XX_TD(XX_TC(Field start location as offset)))
+XX_TR(XX_TD(XX_TC(Cursor1))	XX_TD(XX_TC(row col))	XX_TD(XX_TC(Cursor coordinates (1-origin))))
+XX_TR(XX_TD(XX_TC(CursorOffset))	XX_TD(XX_TC(offset))	XX_TD(XX_TC(Cursor location as offset)))
+XX_TR(XX_TD(XX_TC(Contents))	XX_TD(XX_TC(contents))	XX_TD(XX_TC(Field contents on one line in XX_FB(ReadBuffer) format)))
+XX_TE()
 XX_TP(XX_FB(Script)(XX_FI(path)[,arg...]))
 Runs a child script, passing it optional command-line arguments.
 XX_FI(path) must specify an executable (binary) program: the emulator will
@@ -483,12 +505,12 @@ create a new process and execute it. If you simply want the emulator to read
 commands from a file, use the XX_FB(Source) action.
 XX_TP(XX_FB(Snap))
 Equivalent to XX_FB(Snap)(XX_FB(Save)) (see XX_LINK(#save,below)).
-XX_TP(XX_FB(Snap)(XX_FB(Ascii),...))
-Performs the XX_FB(Ascii) action on the saved screen image.
+XX_TP(XX_FB(Snap)(XX_FB(Ascii1),...))
+Performs the XX_FB(Ascii1) action on the saved screen image.
 XX_TP(XX_FB(Snap)(XX_FB(Cols)))
 Returns the number of columns in the saved screen image.
-XX_TP(XX_FB(Snap)(`XX_FB(Ebcdic),...'))
-Performs the XX_FB(Ebcdic) action on the saved screen image.
+XX_TP(XX_FB(Snap)(`XX_FB(Ebcdic1),...'))
+Performs the XX_FB(Ebcdic1) action on the saved screen image.
 XX_TP(XX_FB(Snap)(XX_FB(ReadBuffer)))
 Performs the XX_FB(ReadBuffer) action on the saved screen image.
 XX_TP(XX_FB(Snap(XX_FB(Rows))))
@@ -513,9 +535,9 @@ or
 XX_FB(PA)
 action), but has not finished updating the screen.
 This action is usually invoked in a loop that uses the
-XX_FB(Snap)(XX_FB(Ascii))
+XX_FB(Snap)(XX_FB(Ascii1))
 or
-XX_FB(Snap)(XX_FB(Ebcdic))
+XX_FB(Snap)(XX_FB(Ebcdic1))
 action to scan the screen for some pattern that indicates that the host has
 fully processed the last command.
 XX_IP
@@ -598,9 +620,9 @@ action), but has not finished updating the screen.
 Also used in non-blocking AID mode (see XX_LINK(#Differences,XX_SM(DIFFERENCES))
 for details).
 This action is usually invoked in a loop that uses the
-XX_FB(Ascii)
+XX_FB(Ascii1)
 or
-XX_FB(Ebcdic)
+XX_FB(Ebcdic1)
 action to scan the screen for some pattern that indicates that the host has
 fully processed the last command.
 XX_IP
@@ -625,6 +647,20 @@ normal window.
 XX_TPE()dnl
 define(XX_action,action)dnl
 include(ft.inc)dnl
+XX_SH(Deprecated/Compatibility Actions)
+For comptibility with earlier versions, there are alternate versions of
+several of these actions. These versions use zero-origin coordinates, with row
+0 at the top and column 0 on the left.
+XX_TPS()
+XX_TP(XX_FB(Ascii)(...))
+XX_TP(XX_FB(Ebcdic)(...))
+XX_TP(XX_FB(MoveCursor)(...))
+Identical to XX_FB(Ascii1), XX_FB(Ebcdic1) and XX_FB(MoveCursor1), but using
+zero-origin coordinates.
+XX_PP
+The XX_FB(Snap) action also accepts XX_FB(Ascii) and XX_FB(Ebcdic) keywords,
+allowing zero-origin coordinates.
+XX_TPE()
 XX_SH(See Also)
 expect(1)
 XX_BR
