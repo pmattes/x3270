@@ -2930,6 +2930,12 @@ ctlr_query_cursor(void)
 }
 
 const char *
+ctlr_query_cursor1(void)
+{
+    return lazyaf("%u %u", (cursor_addr / COLS) + 1, (cursor_addr % COLS) + 1);
+}
+
+const char *
 ctlr_query_formatted(void)
 {
     return formatted? "formatted": "unformatted";

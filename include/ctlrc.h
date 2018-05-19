@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,6 +62,7 @@ void ctlr_erase_all_unprotected(void);
 void ctlr_init(unsigned cmask);
 const char *ctlr_query_cur_size(void);
 const char *ctlr_query_cursor(void);
+const char *ctlr_query_cursor1(void);
 const char *ctlr_query_formatted(void);
 const char *ctlr_query_max_size(void);
 void ctlr_read_buffer(unsigned char aid_byte);

@@ -181,6 +181,7 @@ static action_t Key_action;
 static action_t Left2_action;
 static action_t MonoCase_action;
 static action_t MoveCursor_action;
+static action_t MoveCursor1_action;
 static action_t Newline_action;
 static action_t NextWord_action;
 static action_t PA_action;
@@ -223,6 +224,7 @@ static action_table_t kybd_actions[] = {
     { "Left",		Left_action,		ACTION_KE },
     { "MonoCase",	MonoCase_action,	ACTION_KE },
     { "MoveCursor",	MoveCursor_action,	ACTION_KE },
+    { "MoveCursor1",	MoveCursor1_action,	ACTION_KE },
     { "Newline",	Newline_action,		ACTION_KE },
     { "NextWord",	NextWord_action,	ACTION_KE },
     { "PA",		PA_action,		ACTION_KE },
@@ -3175,22 +3177,23 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * MoveCursor action. Moves to a specific location.
+ * Common MoveCursor/MoveCursor1 logic. Moves to a specific location.
  */
 static bool
-MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
+MoveCursor_common(int origin, const char *name, ia_t ia, unsigned argc,
+	const char **argv)
 {
     int baddr;
     int row, col;
 
-    action_debug("MoveCursor", ia, argc, argv);
-    if (check_argc("MoveCursor", argc, 1, 2) < 0) {
+    action_debug(name, ia, argc, argv);
+    if (check_argc(name, argc, 1, 2) < 0) {
 	return false;
     }
 
     reset_idle_timer();
     if (kybdlock) {
-	enq_ta("MoveCursor", argv[0], argv[1]);
+	enq_ta(name, argv[0], argv[1]);
 	return true;
     }
 
@@ -3198,18 +3201,18 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 	baddr = atoi(argv[0]);
     } else {
 	row = atoi(argv[0]);
-	if (row < 0) {
-	    row = 0;
-	} else if (row >= ROWS) {
-	    row = ROWS - 1;
+	if (row < origin) {
+	    row = origin;
+	} else if (row > ROWS - !origin) {
+	    row = ROWS - !origin;
 	}
 	col = atoi(argv[1]);
-	if (col < 0) {
-	    col = 0;
-	} else if (col >= COLS) {
-	    col = COLS - 1;
+	if (col < origin) {
+	    col = origin;
+	} else if (col > COLS - !origin) {
+	    col = COLS - !origin;
 	}
-	baddr = ((row * COLS) + col) % (ROWS * COLS);
+	baddr = (((row - origin) * COLS) + (col - origin)) % (ROWS * COLS);
     }
     if (baddr < 0) {
 	baddr = 0;
@@ -3219,6 +3222,25 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
     cursor_move(baddr);
 
     return true;
+}
+
+/*
+ * 0-origin MoveCursor action. Moves to a specific location.
+ * For backwards compatibility.
+ */
+static bool
+MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return MoveCursor_common(0, "MoveCursor", ia, argc, argv);
+}
+
+/*
+ * 1-origin MoveCursor action. Moves to a specific location.
+ */
+static bool
+MoveCursor1_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return MoveCursor_common(1, "MoveCursor1", ia, argc, argv);
 }
 
 /*

@@ -149,8 +149,10 @@ static int cmd_ret;
 static char *action = NULL;
 static bool interactive = false;
 static action_t Ascii_action;
+static action_t Ascii1_action;
 static action_t AsciiField_action;
 static action_t Ebcdic_action;
+static action_t Ebcdic1_action;
 static action_t EbcdicField_action;
 static action_t Status_action;
 static action_t ReadBuffer_action;
@@ -944,7 +946,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 }
 
 static bool
-dump_fixed(const char **params, unsigned count, const char *name,
+dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	bool in_ascii, struct ea *buf, int rel_rows, int rel_cols,
 	int caddr)
 {
@@ -952,8 +954,8 @@ dump_fixed(const char **params, unsigned count, const char *name,
 
     switch (count) {
     case 0:	/* everything */
-	row = 0;
-	col = 0;
+	row = origin;
+	col = origin;
 	len = rel_rows*rel_cols;
 	break;
     case 1:	/* from cursor, for n */
@@ -978,12 +980,21 @@ dump_fixed(const char **params, unsigned count, const char *name,
 	return false;
     }
 
-    if (
-	(row < 0 || row > rel_rows || col < 0 || col > rel_cols || len < 0) ||
-	((count < 4)  && ((row * rel_cols) + col + len > rel_rows * rel_cols)) ||
-	((count == 4) && (cols < 0 || rows < 0 ||
-			  col + cols > rel_cols || row + rows > rel_rows))
-       ) {
+    row -= origin;
+    col -= origin;
+
+    if ((row < 0 ||
+	 row > rel_rows ||
+	 col < 0 ||
+	 col > rel_cols ||
+	 len < 0) ||
+	((count < 4) &&
+	 ((row * rel_cols) + col + len > rel_rows * rel_cols)) ||
+	((count == 4) &&
+	 (cols < 0 ||
+	  rows < 0 ||
+	  col + cols > rel_cols ||
+	  row + rows > rel_rows))) {
 	popup_an_error("%s: Invalid argument", name);
 	return false;
     }
@@ -1029,7 +1040,15 @@ static bool
 Ascii_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Ascii", ia, argc, argv);
-    return dump_fixed(argv, argc, "Ascii", true, ea_buf, ROWS, COLS,
+    return dump_fixed(argv, argc, 0, "Ascii", true, ea_buf, ROWS, COLS,
+	    cursor_addr);
+}
+
+static bool
+Ascii1_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("Ascii1", ia, argc, argv);
+    return dump_fixed(argv, argc, 1, "Ascii1", true, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
@@ -1044,7 +1063,15 @@ static bool
 Ebcdic_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Ebcdic", ia, argc, argv);
-    return dump_fixed(argv, argc, "Ebcdic", false, ea_buf, ROWS, COLS,
+    return dump_fixed(argv, argc, 0, "Ebcdic", false, ea_buf, ROWS, COLS,
+	    cursor_addr);
+}
+
+static bool
+Ebcdic1_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("Ebcdic1", ia, argc, argv);
+    return dump_fixed(argv, argc, 1, "Ebcdic1", false, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
@@ -1547,14 +1574,28 @@ Snap_action(ia_t ia, unsigned argc, const char **argv)
 	    popup_an_error("No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, "Ascii", true, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 0, "Ascii", true, snap_buf,
+		snap_rows, snap_cols, snap_caddr);
+    } else if (!strcasecmp(argv[0], "Ascii1")) {
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return false;
+	}
+	return dump_fixed(argv + 1, argc - 1, 1, "Ascii1", true, snap_buf,
 		snap_rows, snap_cols, snap_caddr);
     } else if (!strcasecmp(argv[0], "Ebcdic")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, "Ebcdic", false, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 0, "Ebcdic", false, snap_buf,
+		snap_rows, snap_cols, snap_caddr);
+    } else if (!strcasecmp(argv[0], "Ebcdic1")) {
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return false;
+	}
+	return dump_fixed(argv + 1, argc - 1, 1, "Ebcdic1", false, snap_buf,
 		snap_rows, snap_cols, snap_caddr);
     } else if (!strcasecmp(argv[0], "ReadBuffer")) {
 	if (snap_status == NULL) {
@@ -1564,7 +1605,7 @@ Snap_action(ia_t ia, unsigned argc, const char **argv)
 	return do_read_buffer(argv + 1, argc - 1, snap_buf);
     } else {
 	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
-		"Wait, Ascii, Ebcdic or ReadBuffer");
+		"Wait, Ascii, Ascii1, Ebcdic, Ebcdic1 or ReadBuffer");
 	return false;
     }
 
@@ -1722,6 +1763,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "ConnectionState", net_query_connection_state, NULL },
 	{ "CodePage", get_host_codepage, NULL },
 	{ "Cursor", ctlr_query_cursor, NULL },
+	{ "Cursor1", ctlr_query_cursor1, NULL },
 	{ "Formatted", ctlr_query_formatted, NULL },
 	{ "Host", net_query_host, NULL },
 	{ "LocalEncoding", get_codeset, NULL },
@@ -1935,8 +1977,10 @@ tcl3270_register(void)
     };
     static action_table_t actions[] = {
 	{ "Ascii",		Ascii_action,		ACTION_KE },
+	{ "Ascii1",		Ascii1_action,		ACTION_KE },
 	{ "AsciiField",		AsciiField_action,	ACTION_KE },
 	{ "Ebcdic",		Ebcdic_action,		ACTION_KE },
+	{ "Ebcdic1",		Ebcdic1_action,		ACTION_KE },
 	{ "EbcdicField",	EbcdicField_action,	ACTION_KE },
 	{ "Status",		Status_action,		ACTION_KE },
 	{ "ReadBuffer",		ReadBuffer_action,	ACTION_KE },
