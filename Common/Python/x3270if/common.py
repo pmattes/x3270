@@ -120,10 +120,10 @@ class _session():
             argstr = cmd
         elif (len(args) == 1 and not isinstance(args[0], str)):
             # One argument that can be iterated over.
-            argstr = cmd + '(' + ','.join(quote(arg) for arg in args[0]) + ')'
+            argstr = cmd + '(' + ','.join(quote(str(arg)) for arg in args[0]) + ')'
         else:
             # Multiple arguments.
-            argstr = cmd + '(' + ','.join(quote(arg) for arg in args) + ')'
+            argstr = cmd + '(' + ','.join(quote(str(arg)) for arg in args) + ')'
         self._to3270.write(argstr + '\n')
         self._to3270.flush()
         self._debug('Sent ' + argstr)

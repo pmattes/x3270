@@ -15,7 +15,12 @@ r = x.run_action('Query', 'Cursor')
 sys.stderr.write(r + '\n')
 
 try:
-    r = x.run_action('Quisp',['Quake','Foo'])
+    r = x.run_action('Quisp',['Quake','Foo',9,10])
+except x3270if.ActionFailException as err:
+    sys.stderr.write('Run failed: {0}\n'.format(err))
+
+try:
+    r = x.run_action('Quisp','Quake','Foo',9,10)
 except x3270if.ActionFailException as err:
     sys.stderr.write('Run failed: {0}\n'.format(err))
 
