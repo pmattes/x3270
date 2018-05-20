@@ -63,10 +63,8 @@ class new_emulator(_session):
         self._debug('Port is {0}'.format(port))
 
         # Create the child process.
-        if (emulator == None):
-            emulator = 's3270' if os.name != 'nt' else 'ws3270.exe'
         try:
-            args = [emulator,
+            args = ['s3270',
                     '-utf8',
                     '-minversion', '3.6',
                     '-scriptport', str(port),
@@ -77,9 +75,6 @@ class new_emulator(_session):
                         stderr=subprocess.PIPE,universal_newlines=True)
             except OSError as err:
                 oserr = str(err)
-                if (os.name == 'nt'):
-                    oserr += ' (ws3270.exe)'
-
             if (oserr != None): raise StartupException(oserr)
 
             # It might take a couple of tries to connect, as it takes time to

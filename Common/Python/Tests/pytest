@@ -8,10 +8,10 @@ x = x3270if.new_emulator(debug=True,emulator='x3270')
 r = x.run_action('Query')
 sys.stderr.write(r + '\n')
 
-#r = x.run_action('Query', 'Cursor', 'a\\nb', '"x"', ',', ')')
+#r = x.run_action('Query', 'Cursor1', 'a\\nb', '"x"', ',', ')')
 #r = x.run_action('#')
-#r = x.run_action(('Query', 'Cursor', 'foo'))
-r = x.run_action('Query', 'Cursor')
+#r = x.run_action(('Query', 'Cursor1', 'foo'))
+r = x.run_action('Query', 'Cursor1')
 sys.stderr.write(r + '\n')
 
 try:
