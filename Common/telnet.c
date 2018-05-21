@@ -1147,7 +1147,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (HALF_CONNECTED) {
 	    if (events.lNetworkEvents & FD_CONNECT) {
 		if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
-		    popup_an_error("Connection failed: %s",
+		    connect_error("Connection failed: %s",
 			    win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
 		    host_disconnect(true);
 		    return;
