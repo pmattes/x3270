@@ -1627,7 +1627,7 @@ XX_SH(Proxy)
 The XX_FB(XX_DASHED(proxy)) option or the XX_FB(XX_PRODUCT.proxy) resource
 causes XX_PRODUCT to use a proxy server to connect to the host.
 The syntax of the option or resource is:
-XX_RS(XX_FI(type):XX_FI(host)[:XX_FI(port)]
+XX_RS(XX_FI(type):[XX_FI(username):XX_FI(password)@]XX_FI(host)[:XX_FI(port)]
 )
 The supported values for XX_FI(type) are:
 XX_TS(3,`center;
@@ -1643,6 +1643,7 @@ XX_TE()
 XX_LP()
 The special types XX_FB(socks4a) and XX_FB(socks5d) can also be used to force
 the proxy server to do the hostname resolution for the SOCKS protocol.
+Note that only the XX_FB(http) proxy supports a username and password.
 ifelse(XX_PRODUCT,x3270,,`include(resources.inc)')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_SH(Files)
 ifelse(XX_PRODUCT,x3270,/usr/lib/X11,/usr/local/lib)/x3270/ibm_hosts

@@ -177,6 +177,7 @@ char *instdir;
 /* Locals. */
 static char *programname = NULL;
 static int proxy_type = 0;
+static char *proxy_user = NULL;
 static char *proxy_host = NULL;
 static char *proxy_portname = NULL;
 static unsigned short proxy_port = 0;
@@ -1017,8 +1018,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 	/* Set up the proxy. */
 	if (options.proxy_spec != NULL) {
-	    	proxy_type = proxy_setup(options.proxy_spec, &proxy_host,
-			&proxy_portname);
+	    	proxy_type = proxy_setup(options.proxy_spec,  &proxy_user,
+			&proxy_host, &proxy_portname);
 		if (proxy_type < 0)
 			pr3287_exit(1);
 	}
@@ -1109,7 +1110,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 					       "server %s, port %u\n",
 					       proxy_host, proxy_port);
 			}
-		    	if (!proxy_negotiate(proxy_type, s, host, p)) {
+		    	if (!proxy_negotiate(proxy_type, s, proxy_user, host,
+				    p)) {
 				rc = 1;
 				goto retry;
 			}

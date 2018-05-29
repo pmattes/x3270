@@ -2420,7 +2420,7 @@ switch -proxy
 desc
     Defines a proxy server that %p% will use to connect to hosts.
     The value is of the form
-    <b><i>type</i>:<i>server</i></b>[<b>:<i>port</i></b>],
+    <b><i>type</i>:[<i>username</i>:<i>password</i>@]<i>server</i></b>[<b>:<i>port</i></b>],
     where options for <i>type</i> are described on the %p% manual page.
 .
 

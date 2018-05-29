@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -174,6 +174,7 @@ static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
 
 static int	proxy_type = 0;
+static char	*proxy_user = NULL;
 static char	*proxy_host = NULL;
 static char	*proxy_portname = NULL;
 static unsigned short proxy_port = 0;
@@ -572,7 +573,8 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    passthru_port = htons(3514);
 	}
     } else if (appres.proxy != NULL && !proxy_type) {
-	proxy_type = proxy_setup(appres.proxy, &proxy_host, &proxy_portname);
+	proxy_type = proxy_setup(appres.proxy, &proxy_user, &proxy_host,
+		&proxy_portname);
 	if (proxy_type > 0) {
 	    unsigned long lport;
 	    char *ptr;
@@ -873,7 +875,8 @@ net_connected(void)
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
 		proxy_port);
 
-	if (!proxy_negotiate(proxy_type, sock, hostname, current_port)) {
+	if (!proxy_negotiate(proxy_type, sock, proxy_user, hostname,
+		    current_port)) {
 	    host_disconnect(true);
 	    return;
 	}
@@ -3531,6 +3534,17 @@ net_proxy_type(void)
 {
     if (proxy_type > 0) {
 	return proxy_type_name(proxy_type);
+    } else {
+	return NULL;
+    }
+}
+
+/* Return the current proxy user, or NULL. */
+char *
+net_proxy_user(void)
+{
+    if (proxy_type > 0) {
+	return proxy_user;
     } else {
 	return NULL;
     }

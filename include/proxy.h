@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
  *		Declarations for proxy.c.
  */
 
-int proxy_setup(const char *spec, char **phost, char **pport);
-bool proxy_negotiate(int type, socket_t fd, char *host, unsigned short port);
+int proxy_setup(const char *spec, char **puser, char **phost, char **pport);
+bool proxy_negotiate(int type, socket_t fd, char *user, char *host,
+	unsigned short port);
 char *proxy_type_name(int type);

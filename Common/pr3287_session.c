@@ -515,9 +515,9 @@ pr3287_start_now(const char *lu, bool associated)
     /* Construct proxy option. */
     if (appres.proxy != NULL) {
 #if !defined(_WIN32) /*[*/
-	proxy_cmd = lazyaf("-proxy \"%s\"", appres.proxy);
+	proxy_cmd = lazyaf(OptProxy  " \"%s\"", appres.proxy);
 #else /*][ */
-	proxy_cmd = lazyaf("-proxy %s", appres.proxy);
+	proxy_cmd = lazyaf(OptProxy " %s", appres.proxy);
 #endif /*]*/
     }
 

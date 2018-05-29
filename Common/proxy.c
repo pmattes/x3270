@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,8 @@
 #endif /*]*/
 
 #include "3270ds.h"
+#include "base64.h"
+#include "lazya.h"
 #include "popups.h"
 #include "proxy.h"
 #include "proxy_names.h"
@@ -81,10 +83,11 @@ char *type_name[] = {
     "SOCKS5D"
 };
 
-static bool parse_host_port(char *s, char **phost, char **pport);
+static bool parse_host_port(char *s, char **puser, char **phost, char **pport);
 
 static bool proxy_passthru(socket_t fd, char *host, unsigned short port);
-static bool proxy_http(socket_t fd, char *host, unsigned short port);
+static bool proxy_http(socket_t fd, char *user, char *host,
+	unsigned short port);
 static bool proxy_telnet(socket_t fd, char *host, unsigned short port);
 static bool proxy_socks4(socket_t fd, char *host, unsigned short port,
 	int force_a);
@@ -106,7 +109,7 @@ proxy_type_name(int type)
  * Returns -1 for failure, 0 for no proxy, >0 (the proxy type) for success.
  */
 int
-proxy_setup(const char *proxy, char **phost, char **pport)
+proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
 {
     char *colon;
     size_t sl;
@@ -124,7 +127,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     if (sl == strlen(PROXY_PASSTHRU) &&
 	    !strncasecmp(proxy, PROXY_PASSTHRU, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -134,7 +137,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_HTTP) && !strncasecmp(proxy, PROXY_HTTP, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -144,7 +147,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_TELNET) && !strncasecmp(proxy, PROXY_TELNET, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -155,7 +158,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_SOCKS4) && !strncasecmp(proxy, PROXY_SOCKS4, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -166,7 +169,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS4A) &&
 	    !strncasecmp(proxy, PROXY_SOCKS4A, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -176,7 +179,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_SOCKS5) && !strncasecmp(proxy, PROXY_SOCKS5, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -187,7 +190,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS5D) &&
 	    !strncasecmp(proxy, PROXY_SOCKS5D, sl)) {
 
-	if (!parse_host_port(colon + 1, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -200,27 +203,43 @@ proxy_setup(const char *proxy, char **phost, char **pport)
 }
 
 /*
- * Parse host[:port] from a string.
+ * Parse [user:password@]host[:port] from a string.
  * 'host' can be in square brackets to allow numeric IPv6 addresses.
  * Returns the host name and port name in heap memory.
  * Returns false for failure, true for success.
  */
 static bool
-parse_host_port(char *s, char **phost, char **pport)
+parse_host_port(char *s, char **puser, char **phost, char **pport)
 {
+    char *at;
+    char *h;
     char *colon;
     char *hstart;
     size_t hlen;
 
-    if (*s == '[') {
+    /* Check for 'username:password@' first. */
+    if ((at = strchr(s, '@')) != NULL) {
+	if (puser == NULL) {
+	    popup_an_error("Proxy type does not support username");
+	    return false;
+	}
+	if (at == s) {
+	    popup_an_error("Invalid proxy username syntax");
+	    return false;
+	}
+	h = at + 1;
+    } else {
+	h = s;
+    }
+
+    if (*h == '[') {
 	char *rbrack;
 
 	/* Hostname in square brackets. */
-	hstart = s + 1;
-	rbrack = strchr(s, ']');
-	if (rbrack == NULL || rbrack == s + 1 ||
+	hstart = h + 1;
+	rbrack = strchr(h, ']');
+	if (rbrack == NULL || rbrack == h + 1 ||
 		(*(rbrack + 1) != '\0' && *(rbrack + 1) != ':')) {
-
 	    popup_an_error("Invalid proxy hostname syntax");
 	    return false;
 	}
@@ -229,18 +248,18 @@ parse_host_port(char *s, char **phost, char **pport)
 	} else {
 	    colon = NULL;
 	}
-	hlen = rbrack - (s + 1);
+	hlen = rbrack - (h + 1);
     } else {
-	hstart = s;
-	colon = strchr(s, ':');
-	if (colon == s) {
+	hstart = h;
+	colon = strchr(h, ':');
+	if (colon == h) {
 	    popup_an_error("Invalid proxy hostname syntax");
 	    return false;
 	}
 	if (colon == NULL) {
-	    hlen = strlen(s);
+	    hlen = strlen(h);
 	} else {
-	    hlen = colon - s;
+	    hlen = colon - h;
 	}
     }
 
@@ -255,6 +274,15 @@ parse_host_port(char *s, char **phost, char **pport)
     *phost = Malloc(hlen + 1);
     strncpy(*phost, hstart, hlen);
     (*phost)[hlen] = '\0';
+
+    /* Copy out the username. */
+    if (at != NULL) {
+	*puser = Malloc((at - s) + 1);
+	strncpy(*puser, s, at - s);
+	(*puser)[at - s] = '\0';
+    } else {
+	*puser = NULL;
+    }
     return true;
 }
 
@@ -263,7 +291,8 @@ parse_host_port(char *s, char **phost, char **pport)
  * Returns false for failure, true for success.
  */
 bool
-proxy_negotiate(int type, socket_t fd, char *host, unsigned short port)
+proxy_negotiate(int type, socket_t fd, char *user, char *host,
+	unsigned short port)
 {
     switch (type) {
     case PT_NONE:
@@ -271,7 +300,7 @@ proxy_negotiate(int type, socket_t fd, char *host, unsigned short port)
     case PT_PASSTHRU:
 	return proxy_passthru(fd, host, port);
     case PT_HTTP:
-	return proxy_http(fd, host, port);
+	return proxy_http(fd, user, host, port);
     case PT_TELNET:
 	return proxy_telnet(fd, host, port);
     case PT_SOCKS4:
@@ -310,7 +339,7 @@ proxy_passthru(socket_t fd, char *host, unsigned short port)
 
 /* HTTP (RFC 2817 CONNECT tunnel) proxy. */
 static bool
-proxy_http(socket_t fd, char *host, unsigned short port)
+proxy_http(socket_t fd, char *user, char *host, unsigned short port)
 {
     char *buf;
     char *colon;
@@ -350,6 +379,22 @@ proxy_http(socket_t fd, char *host, unsigned short port)
 	popup_a_sockerr("HTTP Proxy: send error");
 	Free(buf);
 	return false;
+    }
+
+    if (user != NULL) {
+
+	Free(buf);
+	buf = xs_buffer("Authorization: Basic %s\r\n",
+		lazya(base64_encode(user)));
+
+	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
+	trace_netdata('>', (unsigned char *)buf, strlen(buf));
+
+	if (send(fd, buf, (int)strlen(buf), 0) < 0) {
+	    popup_a_sockerr("HTTP Proxy: send error");
+	    Free(buf);
+	    return false;
+	}
     }
 
     Free(buf);

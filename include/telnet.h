@@ -72,6 +72,7 @@ void net_sends(const char *s);
 bool net_snap_options(void);
 const char *tn3270e_current_opts(void);
 char *net_proxy_type(void);
+char *net_proxy_user(void);
 char *net_proxy_host(void);
 char *net_proxy_port(void);
 bool net_bound(void);
