@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\asprintf.c" />
+    <ClCompile Include="..\..\Common\base64.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\lazya.c" />
     <ClCompile Include="..\..\Common\min_version.c" />

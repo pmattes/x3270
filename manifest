@@ -57,6 +57,7 @@ Common/b3270/screen.c
 Common/b3270/status.c
 Common/b3270/ui_stream.c
 Common/b8.c
+Common/base64.c
 Common/bind-opt.c
 Common/c3270/c3270.c
 Common/c3270/cmenubar.h
@@ -252,6 +253,7 @@ include/arpa_telnet.h
 include/asprintf.h
 include/b3270proto.h
 include/b8.h
+include/base64.h
 include/bind-opt.h
 include/charset.h
 include/child.h
