@@ -3302,7 +3302,7 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 	    for (i = 0; i < sl; i++) {
 		*us++ = *w++;
 	    }
-	    emulate_uinput(u, sl, true);
+	    emulate_uinput(u, sl, true, false);
 	    Free(u);
 	}
 	GlobalUnlock(hglb); 

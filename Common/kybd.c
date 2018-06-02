@@ -3382,9 +3382,10 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     size_t len = 0;
     char *s;
     const char *t;
+    bool apl = false;
 
     action_debug("PasteString", ia, argc, argv);
-    if (check_argc("PasteString", argc, 1, 1) < 0) {
+    if (check_argc("PasteString", argc, 1, 2) < 0) {
 	return false;
     }
     reset_idle_timer();
@@ -3392,7 +3393,11 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     /* Determine the total length of the strings. */
     for (i = 0; i < argc; i++) {
 	t = argv[i];
-	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2)) {
+	if (!strcasecmp(t, "apl")) {
+	    apl = true;
+	    continue;
+	}
+	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
 	}
 	len += strlen(t);
@@ -3406,13 +3411,18 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     *s = '\0';
     for (i = 0; i < argc; i++) {
 	t = argv[i];
-	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2))
+	if (!strcasecmp(t, "apl")) {
+	    apl = true;
+	    continue;
+	}
+	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
+	}
 	(void) strcat(s, t);
     }
 
     /* Set a pending string. */
-    push_string(s, true, true);
+    push_string(s, true, true, apl);
     return true;
 }
 
@@ -3566,7 +3576,7 @@ ns_action(action_t action, enum iaction cause, const char *param)
  * Returns the number of unprocessed characters.
  */
 size_t
-emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
+emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
 {
     enum {
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
@@ -3703,14 +3713,14 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		}
 		break;
 	    case '[':	/* APL left bracket */
-		if (pasting && appres.apl_mode) {
+		if (pasting && (apl || appres.apl_mode)) {
 			key_UCharacter(latin1_Yacute, KT_GE, ia, true);
 		} else {
 			key_UCharacter((unsigned char)c, KT_STD, ia, true);
 		}
 		break;
 	    case ']':	/* APL right bracket */
-		if (pasting && appres.apl_mode) {
+		if (pasting && (apl || appres.apl_mode)) {
 		    key_UCharacter(latin1_uml, KT_GE, ia, true);
 		} else {
 		    key_UCharacter((unsigned char)c, KT_STD, ia, true);
@@ -4016,7 +4026,7 @@ emulate_input(const char *s, size_t len, bool pasting)
     }
 
     /* Process it as Unicode. */
-    return emulate_uinput(w_ibuf, xlen, pasting);
+    return emulate_uinput(w_ibuf, xlen, pasting, false);
 }
 
 /*
