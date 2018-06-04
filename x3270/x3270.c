@@ -716,7 +716,6 @@ main(int argc, char *argv[])
 
     if (appres.apl_mode) {
 	appres.interactive.compose_map = XtNewString(Apl);
-	appres.charset = XtNewString(Apl);
     }
 
     screen_preinit();

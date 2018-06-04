@@ -308,10 +308,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      * All right, we have all of the resources defined.
      * Sort out the contradictory and implicit settings.
      */
-
-    if (appres.apl_mode) {
-	appres.charset = Apl;
-    }
     if (*cl_hostname == NULL) {
 	appres.once = false;
     }
