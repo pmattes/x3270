@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1062,6 +1062,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	int nc;
 	unsigned short ebc_ch;
 	enum dbcs_state d;
+	bool ge;
 
 	if ((pmi == 0) && (nvt_ch & 0x80)) {
 	    	char mbs[2];
@@ -1092,7 +1093,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	pmi = 0;
 
 	/* Translate to EBCDIC to see if it's DBCS. */
-	ebc_ch = unicode_to_ebcdic(nvt_ch);
+	ebc_ch = unicode_to_ebcdic_ge(nvt_ch, &ge, false);
 	if (ebc_ch & ~0xff) {
 		if (!dbcs) {
 			nvt_ch = '?';
@@ -1193,7 +1194,8 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 		}
 
 		/* Add an SBCS character to the buffer. */
-		ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
+		ctlr_add(cursor_addr, (unsigned char)ebc_ch,
+			ge? CS_GE: CS_BASE);
 		break;
 	}
 

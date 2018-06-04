@@ -44,7 +44,7 @@ bool charset_matches_alias(const char *alias, const char *canon);
 ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);
-ebc_t unicode_to_ebcdic_ge(ucs4_t u, bool *ge);
+ebc_t unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl);
 bool set_uni(const char *csname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
 int linedraw_to_unicode(ebc_t e);

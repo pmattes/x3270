@@ -32,197 +32,265 @@
 
 #include "globals.h"
 
+#include "3270ds.h"
 #include "latin1.h"
 #include "apl.h"
 
-
 /*
- * APL key translation.
+ * APL translation table.
+ * Translates a symbolic key name to a Unicode code point, and to an EBCDIC
+ * value with a GE indicator.
  *
- * This code looks a little odd because of how an APL font is implemented.
- * An APL font has APL graphics in place of the various accented letters and
- * special symbols in a regular font.  APL key translation consists of
- * taking the key name for an APL symbol (these names are meaningful only to
- * x3270) and translating it into the key for the regular symbol that the
- * desired APL symbol _replaces_.
+ * The UPRIV2 range is used to represent APL characters with no Unicode code
+ * points (underlined alphabetics). Some fonts use circled alphabetics for
+ * these, but this is non-standard.
  *
- * For example, an APL font has the APL "jot" symbol where a regular font has
- * the "registered" symbol.  So we take the key name "jot" and translate it
- * into the key latin1_reg.  When the latin1_reg symbol is displayed
- * with an APL font, it appears as a "jot".
+ * (1) Unicode value changed in 4.0.
+ * (2) Name changed in 4.0 (old name was wrong)
+ * (3) Not on Code Page 310
  *
- * The specification of which APL symbols replace which regular symbols is in
- * IBM GA27-3831, 3174 Establishment Controller Character Set Reference.
+ * Reference: https://aplwiki.com/UnicodeAplTable
+ *            https://en.wikipedia.org/wiki/Code_page_310
  *
- * In addition, several standard characters have different names for APL,
- * for example, "period" becomes "dot".  These are included in the table as
- * well.
+ * Note: The EBCDIC values in this table are not used at present. Instead,
+ * there is a table called apl2uc[] embedded in the function apl_to_unicode(),
+ * which has Unicode code points indexed by CP310 EBCDIC code points.
  */
 
 static struct {
-	const char *name;
-	latin1_symbol_t key;
-	int is_ge;
-} axl[] = {
-	{ "Aunderbar",		latin1_nbsp,		1 },
-	{ "Bunderbar",		latin1_acirc,		1 },
-	{ "Cunderbar",		latin1_auml,		1 },
-	{ "Dunderbar",		latin1_agrave,		1 },
-	{ "Eunderbar",		latin1_aacute,		1 },
-	{ "Funderbar",		latin1_atilde,		1 },
-	{ "Gunderbar",		latin1_aring,		1 },
-	{ "Hunderbar",		latin1_ccedil,		1 },
-	{ "Iunderbar",		latin1_ntilde,		1 },
-	{ "Junderbar",		latin1_eacute,		1 },
-	{ "Kunderbar",		latin1_ecirc,		1 },
-	{ "Lunderbar",		latin1_euml,		1 },
-	{ "Munderbar",		latin1_egrave,		1 },
-	{ "Nunderbar",		latin1_iacute,		1 },
-	{ "Ounderbar",		latin1_icirc,		1 },
-	{ "Punderbar",		latin1_iuml,		1 },
-	{ "Qunderbar",		latin1_igrave,		1 },
-	{ "Runderbar",		latin1_szlig,		1 },
-	{ "Sunderbar",		latin1_Acirc,		1 },
-	{ "Tunderbar",		latin1_Auml,		1 },
-	{ "Uunderbar",		latin1_Agrave,		1 },
-	{ "Vunderbar",		latin1_Aacute,		1 },
-	{ "Wunderbar",		latin1_Atilde,		1 },
-	{ "Xunderbar",		latin1_Aring,		1 },
-	{ "Yunderbar",		latin1_Ccedil,		1 },
-	{ "Zunderbar",		latin1_Ntilde,		1 },
-	{ "alpha",		latin1_circ,		1 },
-	{ "bar",		latin1_minus,		0 },
-	{ "braceleft",		latin1_lcub,		1 },
-	{ "braceright",		latin1_rcub,		1 },
-	{ "bracketleft",	latin1_Yacute,		1 },
-	{ "bracketright", 	latin1_uml,		1 },
-	{ "circle",		latin1_cedil,		1 },
-	{ "circlebar",		latin1_Ograve,		1 },
-	{ "circleslope",	latin1_otilde,		1 },
-	{ "circlestar",		latin1_Ugrave,		1 },
-	{ "circlestile",	latin1_ograve,		1 },
-	{ "colon",		latin1_colon,		0 },
-	{ "comma",		latin1_comma,		0 },
-	{ "commabar",		latin1_W,		1 }, /* soliton */
-	{ "del",		latin1_lsqb,		1 },
-	{ "delstile",		latin1_uuml,		1 },
-	{ "delta",		latin1_rsqb,		1 },
-	{ "deltastile",		latin1_ugrave,		1 },
-	{ "deltaunderbar",	latin1_Uuml,		1 },
-	{ "deltilde",		latin1_Ucirc,		1 },
-	{ "diaeresis",		latin1_Ecirc,		1 },
-	{ "diaeresiscircle",	latin1_V,		1 }, /* soliton */
-	{ "diaeresisdot",	latin1_Ouml,		1 },
-	{ "diaeresisjot",	latin1_U,		1 }, /* soliton */
-	{ "diamond",		latin1_oslash,		1 },
-	{ "dieresis",		latin1_Ecirc,		1 },
-	{ "dieresiscircle",	latin1_V,		1 }, /* soliton */
-	{ "dieresisdot",	latin1_Ouml,		1 },
-	{ "dieresisjot",	latin1_U,		1 }, /* soliton */
-	{ "divide",		latin1_frac12,		1 },
-	{ "dot",		latin1_period,		0 },
-	{ "downarrow",		latin1_raquo,		1 },
-	{ "downcaret",		latin1_Igrave,		1 },
-	{ "downcarettilde",	latin1_ocirc,		1 },
-	{ "downshoe",		latin1_iquest,		1 },
-	{ "downstile",		latin1_thorn,		1 },
-	{ "downtack",		latin1_ETH,		1 },
-	{ "downtackjot",	latin1_Uacute,		1 },
-	{ "downtackup",		latin1_sup1,		1 },
-	{ "downtackuptack",	latin1_sup1,		1 },
-	{ "epsilon",		latin1_pound,		1 },
-	{ "epsilonunderbar",	latin1_Iacute,		1 },
-	{ "equal",		latin1_equals,		0 },
-	{ "equalunderbar",	latin1_bsol,		1 },
-	{ "equiv",		latin1_bsol,		1 },
-	{ "euro",		latin1_X,		1 }, /* soliton */
-	{ "greater",		latin1_gt,		0 },
-	{ "iota",		latin1_yen,		1 },
-	{ "iotaunderbar",	latin1_Egrave,		1 },
-	{ "jot",		latin1_reg,		1 },
-	{ "leftarrow",		latin1_curren,		1 },
-	{ "leftbracket",	latin1_Yacute,		1 },
-	{ "leftparen",		latin1_lpar,		0 },
-	{ "leftshoe",		latin1_ordm,		1 },
-	{ "lefttack",		latin1_Icirc,		1 },
-	{ "less",		latin1_lt,		0 },
-	{ "multiply",		latin1_para,		1 },
-	{ "notequal",		latin1_acute,		1 },
-	{ "notgreater",		latin1_eth,		1 },
-	{ "notless",		latin1_THORN,		1 },
-	{ "omega",		latin1_copy,		1 },
-	{ "overbar",		latin1_micro,		1 },
-	{ "plus",		latin1_plus,		0 },
-	{ "plusminus",		latin1_AElig,		1 },
-	{ "quad",		latin1_deg,		1 },
-	{ "quaddivide",		latin1_Oacute,		1 },
-	{ "quadjot",		latin1_Euml,		1 },
-	{ "quadquote",		latin1_uacute,		1 },
-	{ "quadslope",		latin1_oacute,		1 },
-	{ "query",		latin1_quest,		0 },
-	{ "quote",		latin1_apos,		0 },
-	{ "quotedot",		latin1_ucirc,		1 },
-	{ "rho",		latin1_middot,		1 },
-	{ "rightarrow",		latin1_plusmn,		1 },
-	{ "rightbracket", 	latin1_uml,		1 },
-	{ "rightparen",		latin1_rpar,		0 },
-	{ "rightshoe",		latin1_ordf,		1 },
-	{ "righttack",		latin1_Iuml,		1 },
-	{ "semicolon",		latin1_semi,		0 },
-	{ "slash",		latin1_sol,		0 },
-	{ "slashbar",		latin1_sup2,		1 },
-	{ "slope",		latin1_frac14,		1 },
-	{ "slopebar",		latin1_Ocirc,		1 },
-	{ "slopequad",		latin1_oacute,		1 },
-	{ "splat",		latin1_aelig,		1 },
-	{ "squad",		latin1_ouml,		1 },
-	{ "star",		latin1_ast,		0 },
-	{ "stile",		latin1_times,		1 },
-	{ "tilde",		latin1_Oslash,		1 },
-	{ "times",		latin1_para,		1 },
-	{ "underbar",		latin1_lowbar,		0 },
-	{ "uparrow",		latin1_laquo,		1 },
-	{ "upcaret",		latin1_Eacute,		1 },
-	{ "upcarettilde",	latin1_shy,		1 },
-	{ "upshoe",		latin1_iexcl,		1 },
-	{ "upshoejot",		latin1_yuml,		1 },
-	{ "upstile",		latin1_yacute,		1 },
-	{ "uptack",		latin1_macr,		1 },
-	{ "uptackjot",		latin1_Otilde,		1 },
-	{ 0, 0 }
+    const char *name;
+    ucs4_t ucs4;
+    unsigned char ebc;
+    bool ge;
+} au[] = {
+    /* APL Name		Unicode Value	EBCDIC  GE         Unicode Name */
+    { "Aunderbar",	UPRIV2 + 'A',	0x41, true },
+    { "Bunderbar",	UPRIV2 + 'B',	0x42, true },
+    { "Cunderbar",	UPRIV2 + 'C',	0x43, true },
+    { "Dunderbar",	UPRIV2 + 'D',	0x44, true },
+    { "Eunderbar",	UPRIV2 + 'E',	0x45, true },
+    { "Funderbar",	UPRIV2 + 'F',	0x46, true },
+    { "Gunderbar",	UPRIV2 + 'G',	0x47, true },
+    { "Hunderbar",	UPRIV2 + 'H',	0x48, true },
+    { "Iunderbar",	UPRIV2 + 'I',	0x49, true },
+    { "dot",		'.',		0x4b, false },	/* Full Stop */
+    { "less",		'<', 		0x4c, false },	/* Less-than Sign */
+    { "leftparen",	'(',		0x4d, false },	/* Left Parenthesis */
+    { "plus",		'+',		0x4e, false },	/* Plus Sign */
+    { "Junderbar",	UPRIV2 + 'J',	0x51, true },
+    { "Kunderbar",	UPRIV2 + 'K',	0x52, true },
+    { "Lunderbar",	UPRIV2 + 'L',	0x53, true },
+    { "Munderbar",	UPRIV2 + 'M',	0x54, true },
+    { "Nunderbar",	UPRIV2 + 'N',	0x55, true },
+    { "Ounderbar",	UPRIV2 + 'O',	0x56, true },
+    { "Punderbar",	UPRIV2 + 'P',	0x57, true },
+    { "Qunderbar",	UPRIV2 + 'Q',	0x58, true },
+    { "Runderbar",	UPRIV2 + 'R',	0x59, true },
+    { "star",		'*',		0x5c, false },	/* Asterisk */
+    { "rightparen",	')',		0x5d, false },	/* Right Parentheses */
+    { "semicolon",	';',		0x5e, false },	/* Semicolon */
+    { "bar",		'-',		0x60, false },	/* Hyphen-minus */
+    { "slash",		'/',		0x61, false },	/* Solidus */
+    { "Sunderbar",	UPRIV2 + 'S',	0x62, true },
+    { "Tunderbar",	UPRIV2 + 'T',	0x63, true },
+    { "Uunderbar",	UPRIV2 + 'U',	0x64, true },
+    { "Vunderbar",	UPRIV2 + 'V',	0x65, true },
+    { "Wunderbar",	UPRIV2 + 'W',	0x66, true },
+    { "Xunderbar",	UPRIV2 + 'Z',	0x67, true },
+    { "Yunderbar",	UPRIV2 + 'Y',	0x68, true },
+    { "Zunderbar",	UPRIV2 + 'Z',	0x69, true },
+    { "comma",		',',		0x6b, false },	/* Comma */
+    { "underbar",	'_',		0x6d, false },	/* Low Line */
+    { "greater",	'>',		0x6e, false },	/* Greater-than Sign */
+    { "query",		'?',		0x6f, false },	/* Question Mark */
+    { "diamond",	0x22c4,		0x70, true },	/* (1) Diamond
+							   Operator */
+    { "upcaret",	0x2227,		0x71, true },	/* (1) Logical AND */
+    { "diaeresis",	0x00a8,		0x72, true },	/* Diaeresis */
+    { "dieresis",	0x00a8,		0x72, true },	/* Diaeresis */
+    { "quadjot",	0x233b,		0x73, true },	/* APL Functional
+							   Symbol Quad Jot */
+    { "iotaunderbar",	0x2378,		0x74, true },	/* APL Functional
+							   Symbol Iota
+							   Underbar */
+    { "epsilonunderbar",0x2377,		0x75, true },	/* APL Functional
+							   Symbol Epsilon
+							   Underbar */
+    { "righttack",	0x22a2,		0x76, true },	/* (2) Right Tack */
+    { "lefttack",	0x22a3,		0x77, true },	/* (2) Left Tack */
+    { "downcaret",	0x2228,		0x78, true },	/* Logical Or */
+    { "colon",		':',		0x7a, false },	/* Colon */
+    { "quote",		'\'',		0x7d, false },	/* Apostrophe */
+    { "equal",		'=',		0x7e, false },	/* Equals Sign */
+    { "uparrow",	0x2191,		0x8a, true },	/* Upwards Arrow */
+    { "downarrow",	0x2193,		0x8b, true },	/* Downwards Arrow */
+    { "notgreater",	0x2264,		0x8c, true },	/* Less-than Or Equal
+							   To */
+    { "upstile",	0x2308,		0x8d, true },	/* Left Ceiling */
+    { "downstile",	0x230a,		0x8e, true },	/* Left Floor */
+    { "rightarrow",	0x2192,		0x8f, true },	/* Rightwards Arrow */
+    { "quad",		0x2395,		0x90, true },	/* APL Functional
+							   Symbol Quad */
+    { "rightshoe",	0x2283,		0x9a, true },	/* Superset Of */
+    { "leftshoe",	0x2282,		0x9b, true },	/* Subset Of */
+    { "splat",		0x00a4,		0x9c, true },	/* Currency Sign */
+    { "circle",		0x25cb,		0x9d, true },	/* (3) White Circle */
+    { "plusminus",	0x00b1,		0x9e, true },	/* (3) Plus Minus
+							   Sign */
+    { "leftarrow",	0x2190,		0x9f, true },	/* Leftwards Arrow */
+    { "overbar",	0x00af,		0xa0, true },	/* Macron */
+    { "tilde",		'~',		0xa1, false },	/* Tilde */
+    { "upshoe",		0x2229,		0xaa, true },	/* Intersection */
+    { "downshoe",	0x222a,		0xab, true },	/* Union */
+    { "uptack",		0x22a5,		0xac, true },	/* (2) Up Tack */
+    { "bracketleft",	'[',		0xad, true },	/* Left Square
+							   Bracket */
+    { "leftbracket",	'[',		0xad, true },	/* Left Square
+							   Bracket */
+    { "notless",	0x2265, 	0xae, true },	/* Greater-than Or
+							   Equal To */
+    { "jot",		0x2218,		0xaf, true },	/* Ring operator */
+    { "alpha",		0x237a,		0xb0, true },	/* (1) APL Functional
+							   Symbol Alpha */
+    { "epsilon",	0x220a,		0xb1, true },	/* (1) Small Element
+							   Of */
+    { "iota",		0x2373,		0xb2, true },	/* (1) APL Functional
+							   Symbol Iota */
+    { "rho",		0x2374,		0xb3, true },	/* (1) APL Functional
+							   Symbol Rho */
+    { "omega",		0x2375,		0xb4, true },	/* (1) APL Functional
+							   Symbol Omega */
+    { "multiply",	0x00d7,		0xb6, true },	/* Multiplication
+							   Sign */
+    { "times",		0x00d7,		0xb6, true },	/* Multiplication
+							   Sign */
+    { "slope",		'\\',		0xb7, true },	/* Reverse Solidus */
+    { "divide",		0x00f7,		0xb8, true },	/* Division Sign */
+    { "del",		0x2207,		0xba, true },	/* Nabla */
+    { "delta",		0x2206,		0xbb, true },	/* Increment */
+    { "downtack",	0x22a4,		0xbc, true },	/* (2) Down Tack */
+    { "bracketright", 	']',		0xbd, true },	/* Right Square
+							   Bracket */
+    { "rightbracket", 	']',		0xbd, true },	/* Right Square
+							   Bracket */
+    { "notequal",	0x2260,		0xbe, true },	/* Not Equal To */
+    { "stile",		0x2223,		0xbf, true },	/* (1) Divides */
+    { "braceleft",	'{',		0xc0, true },	/* Left Curly
+							   Bracket */
+    { "upcarettilde",	0x2372,		0xca, true },	/* APL Functional
+							   Symbol Up Caret
+							   Tilde */
+    { "downcarettilde",	0x2371,		0xcb, true },	/* APL Functional
+							   Symbol Down Caret
+							   Tilde */
+    { "squad",		0x2337,		0xcc, true },	/* APL Functional
+							   Symbol Squish
+							   Quad */
+    { "circlestile",	0x233d,		0xcd, true },	/* APL Functional
+							   Symbol Circle
+							   Stile */
+    { "quadslope",	0x2342,		0xce, true },	/* APL Functional
+							   Symbol Quad
+							   Backslash */
+    { "slopequad",	0x2342,		0xce, true },	/* APL Functional
+							   Symbol Quad
+							   Backslash */
+    { "circleslope",	0x2349,		0xcf, true },	/* APL Functional
+							   Symbol Circle
+							   Backslash */
+    { "braceright",	'}',		0xd0, true },	/* Right Curly
+							   Bracket */
+    { "delstile",	0x2352,		0xdc, true },	/* APL Functional
+							   Symbol Del Stile */
+    { "downtackup",	0x2336,		0xda, true },	/* APL Functional
+							   Symbol I-beam */
+    { "downtackuptack",	0x2336,		0xda, true },	/* APL Functional
+							   Symbol I-beam */
+    { "quotedot",	'!',		0xdb, false },	/* Exclamation Mark */
+    { "deltastile",	0x234b,		0xdd, true },	/* APL Functional
+							   Symbol Delta
+							   Stile */
+    { "quadquote",	0x235e, 	0xde, true },	/* APL Functional
+							   Symbol Quote Quad */
+    { "upshoejot",	0x235d,		0xdf, true },	/* APL Functional
+							   Symbol Up Shoe
+							   Jot */
+    { "equalunderbar",	0x2261,		0xe0, true },	/* Identical To */
+    { "equiv",		0x2261,		0xe0, true },	/* Identical To */
+    { "diaeresisjot",	0x2364,		0xe4, true },	/* (3) APL Functional
+							   Symbol Jot
+							   Diaeresis */
+    { "dieresisjot",	0x2364,		0xe4, true },	/* (3) APL Functional
+    							   Symbol Jot
+							   Diaeresis */
+    { "diaeresiscircle",0x2365,		0xe5, true },	/* (3) APL Functional
+							   Symbol Cicrle
+							   Diaeresis */
+    { "dieresiscircle",	0x2365,		0xe5, true },	/* (3) APL Functional
+							   Symbol Cicrle
+							   Diaeresis */
+    { "commabar",	0x236a,		0xe6, true },	/* (3) APL Functional
+							   Symbol Comma Bar */
+    { "euro",		0x20ac,		0xe7, true },	/* (3) Euro Sign */
+    { "slashbar",	0x233f,		0xea, true },	/* APL Functional
+							   Symbol Slash Bar */
+    { "slopebar",	0x2340,		0xeb, true },	/* APL Functional
+							   Symbol Backslash
+							   Bar */
+    { "diaeresisdot",	0x2235,		0xec, true },	/* Because */
+    { "dieresisdot",	0x2235,		0xec, true },	/* Because */
+    { "circlebar",	0x2296,		0xed, true },	/* Circled Minus */
+    { "quaddivide",	0x2339,		0xee, true },	/* APL Functional
+							   Symbol Quad
+							   Divide */
+    { "uptackjot",	0x2355,		0xef, true },	/* APL Functional
+							   Symbol Up Tack Jot */
+    { "deltilde",	0x236b,		0xfb, true },	/* APL Functional
+							   Symbol Del Tilde */
+    { "deltaunderbar",	0x2359,		0xfc, true },	/* APL Functional
+							   Symbol Delta
+							   Underbar */
+    { "circlestar",	0x235f,		0xfd, true },	/* APL Functional
+							   Symbol Circle Star */
+    { "downtackjot",	0x234e,		0xfe, true },	/* APL Functional
+							   Symbol Down Tack
+							   Jot */
+    { NULL, 0 }
 };
 
 /*
- * Translation from APL key names to indirect APL keys.
+ * Translate a symbolic APL key name to a Unicode code point.
  */
-ks_t
-apl_string_to_key(const char *s, int *is_gep)
+ucs4_t
+apl_key_to_ucs4(const char *s, bool *is_ge)
 {
     int i;
 
     if (strncmp(s, "apl_", 4)) {
-	return KS_NONE;
+	return 0;
     }
     s += 4;
-    for (i = 0; axl[i].name; i++)
-	if (!strcmp(axl[i].name, s)) {
-	    *is_gep = axl[i].is_ge;
-	    return axl[i].key;
+    for (i = 0; au[i].name; i++) {
+	if (!strcmp(au[i].name, s)) {
+	    *is_ge = au[i].ge;
+	    return au[i].ucs4;
 	}
-    return KS_NONE;
+    }
+    return 0;
 }
 
 /*
- * Translation from latin1 symbol to APL character name.
+ * Translate from a Unicode code point to APL character name (without the
+ * "apl_" prefix).
  */
 const char *
-key_to_apl_string(ks_t k)
+ucs4_to_apl_key(ucs4_t ucs4)
 {
     int i;
 
-    for (i = 0; axl[i].name; i++) {
-	if (axl[i].key == k) {
-	    return axl[i].name;
+    for (i = 0; au[i].name; i++) {
+	if (au[i].ucs4 == ucs4) {
+	    return au[i].name;
 	}
     }
     return NULL;

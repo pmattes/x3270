@@ -430,21 +430,31 @@ unicode_to_ebcdic(ucs4_t u)
  * Returns 0 for failure, nonzero for success.
  */
 ebc_t
-unicode_to_ebcdic_ge(ucs4_t u, bool *ge)
+unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl)
 {
-    ebc_t e;
+    ebc_t e_cur = 0;
+    ebc_t e_apl = 0;
 
-    *ge = false;
-    e = unicode_to_ebcdic(u);
-    if (e)
-	return e;
+    /* Find the character in the host's code page. */
+    e_cur = unicode_to_ebcdic(u);
 
-    /* Handle APL GEs.  Yes, this is slow, but I'm lazy. */
-    for (e = 0x70; e <= 0xfe; e++) {
-	if ((ucs4_t)apl_to_unicode(e, EUO_NONE) == u) {
-	    *ge = true;
-	    return e;
+    /* Find the character in the APL code page. */
+    for (e_apl = 0x70; e_apl <= 0xfe; e_apl++) {
+	if ((ucs4_t)apl_to_unicode(e_apl, EUO_NONE) == u) {
+	    break;
 	}
+    }
+    if (e_apl > 0xfe) {
+	e_apl = 0;
+    }
+
+    if (e_apl != 0 && ((e_cur == 0) || prefer_apl)) {
+	*ge = true;
+	return e_apl;
+    }
+    if (e_cur != 0) {
+	*ge = false;
+	return e_cur;
     }
 
     /* Handle APL underlined alphabetics. */
@@ -640,8 +650,8 @@ apl_to_unicode(ebc_t c, unsigned flags)
     /* 98 */	0x0000, 0x0000, 0x2283, 0x2282, 0x00a4, 0x25cb, 0x00b1, 0x2190,
     /* a0 */	0x00af, 0x00b0, 0x2500, 0x2022, 0x0000, 0x0000, 0x0000, 0x0000,
     /* a8 */	0x0000, 0x0000, 0x2229, 0x222a, 0x22a5, 0x005b, 0x2265, 0x2218,
-    /* b0 */	0x03b1, 0x03b5, 0x03b9, 0x03c1, 0x03c9, 0x0000, 0x00d7, 0x005c,
-    /* b8 */	0x00f7, 0x0000, 0x2207, 0x2206, 0x22a4, 0x005d, 0x2260, 0x2502,
+    /* b0 */	0x237a, 0x220a, 0x2373, 0x2374, 0x2375, 0x0000, 0x00d7, 0x005c,
+    /* b8 */	0x00f7, 0x0000, 0x2207, 0x2206, 0x22a4, 0x005d, 0x2260, 0x2223,
     /* c0 */	0x007b, 0x207c, 0x002b, 0x220e, 0x2514, 0x250c, 0x251c, 0x2534,
     /* c8 */	0x00a7, 0x0000, 0x2372, 0x2371, 0x2337, 0x233d, 0x2342, 0x2349,
     /* d0 */	0x007d, 0x207e, 0x002d, 0x253c, 0x2518, 0x2510, 0x2524, 0x252c,

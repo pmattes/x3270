@@ -1575,7 +1575,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		    oerr_fail ? FailOnError : NoFailOnError);
 	} else {
 	    /* APL character */
-	    apl_name = key_to_apl_string(ucs4);
+	    apl_name = ucs4_to_apl_key(ucs4);
 	    if (apl_name != NULL) {
 		enq_ta("Key", lazyaf("apl_%s", apl_name),
 			oerr_fail ? FailOnError : NoFailOnError);
@@ -1639,7 +1639,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    vtrace("  dropped (control char)\n");
 	    return;
 	}
-	ebc = unicode_to_ebcdic_ge(ucs4, &ge);
+	ebc = unicode_to_ebcdic_ge(ucs4, &ge, keytype == KT_GE);
 	if (ebc == 0) {
 	    vtrace("  dropped (no EBCDIC translation)\n");
 	    return;
@@ -4202,22 +4202,21 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 
     /* Look for my contrived APL symbols. */
     if (!strncmp(s, "apl_", 4)) {
-	int is_ge;
+	bool is_ge;
 
-	k = apl_string_to_key(s, &is_ge);
-	if (is_ge) {
-	    *keytypep = KT_GE;
-	} else {
-	    *keytypep = KT_STD;
+	*ucs4 = apl_key_to_ucs4(s, &is_ge);
+	if (*ucs4 != 0) {
+	    *keytypep = is_ge? KT_GE: KT_STD;
+	    return KS_NONE;
 	}
+
+    }
+
+    /* Look for a standard HTML entity or X11 keysym name. */
+    k = string_to_key((char *)s);
+    *keytypep = KT_STD;
+    if (k != KS_NONE) {
 	return k;
-    } else {
-	/* Look for a standard HTML entity or X11 keysym name. */
-	k = string_to_key((char *)s);
-	*keytypep = KT_STD;
-	if (k != KS_NONE) {
-	    return k;
-	}
     }
 
     /* Look for "euro". */
