@@ -3591,6 +3591,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
     int last_row = BA_TO_ROW(cursor_addr);
     bool just_wrapped = false;
     ucs4_t c;
+    ebc_t ebc;
     bool auto_skip = true;
 
     if (pasting && toggled(OVERLAY_PASTE)) {
@@ -3712,20 +3713,6 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
 		    state = XGE;
 		}
 		break;
-	    case '[':	/* APL left bracket */
-		if (pasting && (apl || appres.apl_mode)) {
-			key_UCharacter(latin1_Yacute, KT_GE, ia, true);
-		} else {
-			key_UCharacter((unsigned char)c, KT_STD, ia, true);
-		}
-		break;
-	    case ']':	/* APL right bracket */
-		if (pasting && (apl || appres.apl_mode)) {
-		    key_UCharacter(latin1_uml, KT_GE, ia, true);
-		} else {
-		    key_UCharacter((unsigned char)c, KT_STD, ia, true);
-		}
-		break;
 	    case UPRIV_fm: /* private-use FM */
 	    case UPRIV2_fm:
 		if (pasting) {
@@ -3751,9 +3738,15 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
 		}
 		break;
 	    default:
-		if (pasting && (c >= UPRIV_GE_00 && c <= UPRIV_GE_ff)) {
-		    key_Character(c - UPRIV_GE_00, KT_GE, ia, true, NULL);
+		if (pasting && (apl || appres.apl_mode) &&
+			apl_paste_ge(c, &ebc)) {
+		    /* Non-APL-specific character included in CP 310. */
+		    key_Character(ebc, true, ia, true, NULL);
+		} else if (pasting && (c >= UPRIV_GE_00 && c <= UPRIV_GE_ff)) {
+		    /* Untranslatable CP 310 code point. */
+		    key_Character(c - UPRIV_GE_00, true, ia, true, NULL);
 		} else {
+		    /* Ordinary text. */
 		    key_UCharacter(c, KT_STD, ia, true);
 		}
 		break;

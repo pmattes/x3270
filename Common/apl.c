@@ -32,9 +32,11 @@
 
 #include "globals.h"
 
+#include <assert.h>
+
 #include "3270ds.h"
-#include "latin1.h"
 #include "apl.h"
+#include "unicodec.h"
 
 /*
  * APL translation table.
@@ -45,16 +47,20 @@
  * points (underlined alphabetics). Some fonts use circled alphabetics for
  * these, but this is non-standard.
  *
- * (1) Unicode value changed in 4.0.
- * (2) Name changed in 4.0 (old name was wrong)
- * (3) Not on Code Page 310
+ * (1) Not on Code Page 310
  *
  * Reference: https://aplwiki.com/UnicodeAplTable
  *            https://en.wikipedia.org/wiki/Code_page_310
+ *            https://www.tachyonsoft.com/cp00310.htm
  *
- * Note: The EBCDIC values in this table are not used at present. Instead,
- * there is a table called apl2uc[] embedded in the function apl_to_unicode(),
- * which has Unicode code points indexed by CP310 EBCDIC code points.
+ * Note that Tachyonsoft and Wikipedia disagree on X'DB'. Wikipedia translates
+ * it to U+0021 ('!'), but Tachyonsoft translates it to U+01c3, Latin Letter
+ * Retroflex Click. I am going with Wikipedia for now.
+ *
+ * Note: This table is partially redundant with apl2uc[] in unicode.c, and 
+ * needs to be kept consistent with it. apl2uc[] has Unicode translations for
+ * additional line-drawing code points that are not intended for keyboard
+ * input.
  */
 
 static struct {
@@ -103,9 +109,8 @@ static struct {
     { "underbar",	'_',		0x6d, false },	/* Low Line */
     { "greater",	'>',		0x6e, false },	/* Greater-than Sign */
     { "query",		'?',		0x6f, false },	/* Question Mark */
-    { "diamond",	0x22c4,		0x70, true },	/* (1) Diamond
-							   Operator */
-    { "upcaret",	0x2227,		0x71, true },	/* (1) Logical AND */
+    { "diamond",	0x22c4,		0x70, true },	/* Diamond Operator */
+    { "upcaret",	0x2227,		0x71, true },	/* Logical AND */
     { "diaeresis",	0x00a8,		0x72, true },	/* Diaeresis */
     { "dieresis",	0x00a8,		0x72, true },	/* Diaeresis */
     { "quadjot",	0x233b,		0x73, true },	/* APL Functional
@@ -116,12 +121,13 @@ static struct {
     { "epsilonunderbar",0x2377,		0x75, true },	/* APL Functional
 							   Symbol Epsilon
 							   Underbar */
-    { "righttack",	0x22a2,		0x76, true },	/* (2) Right Tack */
-    { "lefttack",	0x22a3,		0x77, true },	/* (2) Left Tack */
+    { "righttack",	0x22a2,		0x76, true },	/* Right Tack */
+    { "lefttack",	0x22a3,		0x77, true },	/* Left Tack */
     { "downcaret",	0x2228,		0x78, true },	/* Logical Or */
     { "colon",		':',		0x7a, false },	/* Colon */
     { "quote",		'\'',		0x7d, false },	/* Apostrophe */
     { "equal",		'=',		0x7e, false },	/* Equals Sign */
+    { "tilde",		0x223c,		0x80, true },	/* Tilde Operator */
     { "uparrow",	0x2191,		0x8a, true },	/* Upwards Arrow */
     { "downarrow",	0x2193,		0x8b, true },	/* Downwards Arrow */
     { "notgreater",	0x2264,		0x8c, true },	/* Less-than Or Equal
@@ -134,15 +140,14 @@ static struct {
     { "rightshoe",	0x2283,		0x9a, true },	/* Superset Of */
     { "leftshoe",	0x2282,		0x9b, true },	/* Subset Of */
     { "splat",		0x00a4,		0x9c, true },	/* Currency Sign */
-    { "circle",		0x25cb,		0x9d, true },	/* (3) White Circle */
-    { "plusminus",	0x00b1,		0x9e, true },	/* (3) Plus Minus
-							   Sign */
+    { "circle",		0x25cb,		0x9d, true },	/* White Circle */
+    { "plusminus",	0x00b1,		0x9e, true },	/* Plus Minus Sign */
     { "leftarrow",	0x2190,		0x9f, true },	/* Leftwards Arrow */
     { "overbar",	0x00af,		0xa0, true },	/* Macron */
-    { "tilde",		'~',		0xa1, false },	/* Tilde */
+    { "degree",		0x00b0,		0xa1, true },	/* Degree Sign */
     { "upshoe",		0x2229,		0xaa, true },	/* Intersection */
     { "downshoe",	0x222a,		0xab, true },	/* Union */
-    { "uptack",		0x22a5,		0xac, true },	/* (2) Up Tack */
+    { "uptack",		0x22a5,		0xac, true },	/* Up Tack */
     { "bracketleft",	'[',		0xad, true },	/* Left Square
 							   Bracket */
     { "leftbracket",	'[',		0xad, true },	/* Left Square
@@ -150,15 +155,14 @@ static struct {
     { "notless",	0x2265, 	0xae, true },	/* Greater-than Or
 							   Equal To */
     { "jot",		0x2218,		0xaf, true },	/* Ring operator */
-    { "alpha",		0x237a,		0xb0, true },	/* (1) APL Functional
+    { "alpha",		0x237a,		0xb0, true },	/* APL Functional
 							   Symbol Alpha */
-    { "epsilon",	0x220a,		0xb1, true },	/* (1) Small Element
-							   Of */
-    { "iota",		0x2373,		0xb2, true },	/* (1) APL Functional
+    { "epsilon",	0x220a,		0xb1, true },	/* Small Element Of */
+    { "iota",		0x2373,		0xb2, true },	/* APL Functional
 							   Symbol Iota */
-    { "rho",		0x2374,		0xb3, true },	/* (1) APL Functional
+    { "rho",		0x2374,		0xb3, true },	/* APL Functional
 							   Symbol Rho */
-    { "omega",		0x2375,		0xb4, true },	/* (1) APL Functional
+    { "omega",		0x2375,		0xb4, true },	/* APL Functional
 							   Symbol Omega */
     { "multiply",	0x00d7,		0xb6, true },	/* Multiplication
 							   Sign */
@@ -168,15 +172,16 @@ static struct {
     { "divide",		0x00f7,		0xb8, true },	/* Division Sign */
     { "del",		0x2207,		0xba, true },	/* Nabla */
     { "delta",		0x2206,		0xbb, true },	/* Increment */
-    { "downtack",	0x22a4,		0xbc, true },	/* (2) Down Tack */
+    { "downtack",	0x22a4,		0xbc, true },	/* Down Tack */
     { "bracketright", 	']',		0xbd, true },	/* Right Square
 							   Bracket */
     { "rightbracket", 	']',		0xbd, true },	/* Right Square
 							   Bracket */
     { "notequal",	0x2260,		0xbe, true },	/* Not Equal To */
-    { "stile",		0x2223,		0xbf, true },	/* (1) Divides */
+    { "stile",		0x2223,		0xbf, true },	/* Divides */
     { "braceleft",	'{',		0xc0, true },	/* Left Curly
 							   Bracket */
+    { "section",	0x00a7,		0xc8, true },	/* Section Sign */
     { "upcarettilde",	0x2372,		0xca, true },	/* APL Functional
 							   Symbol Up Caret
 							   Tilde */
@@ -200,13 +205,14 @@ static struct {
 							   Backslash */
     { "braceright",	'}',		0xd0, true },	/* Right Curly
 							   Bracket */
-    { "delstile",	0x2352,		0xdc, true },	/* APL Functional
-							   Symbol Del Stile */
+    { "paragraph",	0x00b6,		0xd8, true },	/* Pilcrow sign */
     { "downtackup",	0x2336,		0xda, true },	/* APL Functional
 							   Symbol I-beam */
     { "downtackuptack",	0x2336,		0xda, true },	/* APL Functional
 							   Symbol I-beam */
-    { "quotedot",	'!',		0xdb, false },	/* Exclamation Mark */
+    { "quotedot",	'!',		0xdb, true },	/* Exclamation Mark */
+    { "delstile",	0x2352,		0xdc, true },	/* APL Functional
+							   Symbol Del Stile */
     { "deltastile",	0x234b,		0xdd, true },	/* APL Functional
 							   Symbol Delta
 							   Stile */
@@ -217,21 +223,21 @@ static struct {
 							   Jot */
     { "equalunderbar",	0x2261,		0xe0, true },	/* Identical To */
     { "equiv",		0x2261,		0xe0, true },	/* Identical To */
-    { "diaeresisjot",	0x2364,		0xe4, true },	/* (3) APL Functional
+    { "diaeresisjot",	0x2364,		0xe4, true },	/* (1) APL Functional
 							   Symbol Jot
 							   Diaeresis */
-    { "dieresisjot",	0x2364,		0xe4, true },	/* (3) APL Functional
+    { "dieresisjot",	0x2364,		0xe4, true },	/* (1) APL Functional
     							   Symbol Jot
 							   Diaeresis */
-    { "diaeresiscircle",0x2365,		0xe5, true },	/* (3) APL Functional
+    { "diaeresiscircle",0x2365,		0xe5, true },	/* (1) APL Functional
 							   Symbol Cicrle
 							   Diaeresis */
-    { "dieresiscircle",	0x2365,		0xe5, true },	/* (3) APL Functional
+    { "dieresiscircle",	0x2365,		0xe5, true },	/* (1) APL Functional
 							   Symbol Cicrle
 							   Diaeresis */
-    { "commabar",	0x236a,		0xe6, true },	/* (3) APL Functional
+    { "commabar",	0x236a,		0xe6, true },	/* (1) APL Functional
 							   Symbol Comma Bar */
-    { "euro",		0x20ac,		0xe7, true },	/* (3) Euro Sign */
+    { "euro",		0x20ac,		0xe7, true },	/* (1) Euro Sign */
     { "slashbar",	0x233f,		0xea, true },	/* APL Functional
 							   Symbol Slash Bar */
     { "slopebar",	0x2340,		0xeb, true },	/* APL Functional
@@ -257,6 +263,21 @@ static struct {
 							   Jot */
     { NULL, 0 }
 };
+
+/*
+ * Check the consistency of au[] and apl2uc[].
+ */
+void
+check_apl_consistency(ucs4_t apl2uc[])
+{
+    int i;
+
+    for (i = 0; au[i].name; i++) {
+	if (au[i].ucs4 > 0x7f && au[i].ucs4 < UPRIV2) {
+	    assert(apl2uc[au[i].ebc] == au[i].ucs4);
+	}
+    }
+}
 
 /*
  * Translate a symbolic APL key name to a Unicode code point.
@@ -294,4 +315,29 @@ ucs4_to_apl_key(ucs4_t ucs4)
 	}
     }
     return NULL;
+}
+
+
+/* Check if a pasted character needs a GE in APL mode. */
+bool
+apl_paste_ge(ucs4_t ucs4, ebc_t *ebcp)
+{
+    int i;
+
+    *ebcp = 0;
+    if (ucs4 >= 0x100) {
+	return false;
+    }
+
+    for (i = 0; au[i].name; i++) {
+	if (au[i].ucs4 == ucs4) {
+	    if (au[i].ge) {
+		*ebcp = au[i].ebc;
+		return true;
+	    }
+	    return false;
+	}
+    }
+
+    return false;
 }

@@ -1374,33 +1374,17 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 			return;
 		}
 	    case CS_GE:
-		switch (ea_buf[baddr].cc) {
-		    case EBC_null:
-			*r = 0;
-			return;
-		    case EBC_Yacute:
-			*r = '[';
-			return;
-		    case EBC_diaeresis:
-			*r = ']';
-			return;
-		    default:
-			/* Translate APL to Unicode. */
-			uc = apl_to_unicode(ea_buf[baddr].cc, EUO_NONE);
-			if (uc == (ucs4_t)-1 ||
-			    (appres.apl_mode && (uc < 0x100))) {
-			    	/*
-				 * No translation, or we're in APL mode and the
-				 * GE character maps back onto a non-GE
-				 * character.  Use private-use characters.
-				 */
-				uc = UPRIV_GE_00 + ea_buf[baddr].cc;
-			}
-			*rlen = unicode_to_utf8(uc, (char *)r);
-			if (*rlen < 0)
-				*rlen = 0;
-			return;
+		/* Translate APL to Unicode. */
+		uc = apl_to_unicode(ea_buf[baddr].cc, EUO_NONE);
+		if (uc == (ucs4_t)-1) {
+		    /* No translation. */
+		    uc = UPRIV_GE_00 + ea_buf[baddr].cc;
 		}
+		*rlen = unicode_to_utf8(uc, (char *)r);
+		if (*rlen < 0) {
+		    *rlen = 0;
+		}
+		return;
 	    case CS_LINEDRAW:
 		/* vt100 line-drawing character */
 		*r = ea_buf[baddr].cc + 0x5f;

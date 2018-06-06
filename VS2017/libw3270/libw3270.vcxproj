@@ -137,7 +137,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\actions.c" />
-    <ClCompile Include="..\..\Common\apl.c" />
     <ClCompile Include="..\..\Common\b8.c" />
     <ClCompile Include="..\..\Common\bind-opt.c" />
     <ClCompile Include="..\..\Common\charset.c" />

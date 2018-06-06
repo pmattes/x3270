@@ -21,9 +21,6 @@
     <ClCompile Include="..\..\Common\actions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\apl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\b8.c">
       <Filter>Source Files</Filter>
     </ClCompile>

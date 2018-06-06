@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Common\apl.c" />
     <ClCompile Include="..\..\Common\asprintf.c" />
     <ClCompile Include="..\..\Common\base64.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />

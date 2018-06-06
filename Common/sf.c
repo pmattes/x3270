@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 1994-2010, 2013-2015, 2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -839,12 +839,8 @@ do_qr_charsets(void)
 
 	/* special 3270 font, includes APL */
 	*obptr++ = 0x01;/* SET 1: */
-	if (appres.apl_mode)
-		*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
-					    single-byte, no compare */
-	else
-		*obptr++ = 0x10;	/*  FLAGS: non-loadable, single-plane,
-					    single-byte, no compare */
+	*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
+				    single-byte, no compare */
 	*obptr++ = 0xf1;		/*  LCID */
 	if (dbcs) {
 		*obptr++ = 0x00;	/*  SW 0 */

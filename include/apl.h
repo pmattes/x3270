@@ -30,5 +30,7 @@
  *		Global declarations for apl.c.
  */
 
+void check_apl_consistency(ucs4_t apl2uc[]);
 ucs4_t apl_key_to_ucs4(const char *s, bool *is_ge);
 const char *ucs4_to_apl_key(ucs4_t ucs4);
+bool apl_paste_ge(ucs4_t ucs4, ebc_t *ebcp);
