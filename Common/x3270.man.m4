@@ -1643,7 +1643,8 @@ XX_TE()
 XX_LP()
 The special types XX_FB(socks4a) and XX_FB(socks5d) can also be used to force
 the proxy server to do the hostname resolution for the SOCKS protocol.
-Note that only the XX_FB(http) proxy supports a username and password.
+Note that only the XX_FB(http) and XX_FB(socks5) proxies support a username and
+password.
 ifelse(XX_PRODUCT,x3270,,`include(resources.inc)')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_SH(Files)
 ifelse(XX_PRODUCT,x3270,/usr/lib/X11,/usr/local/lib)/x3270/ibm_hosts
