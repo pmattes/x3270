@@ -90,9 +90,9 @@ static bool proxy_http(socket_t fd, char *user, char *host,
 	unsigned short port);
 static bool proxy_telnet(socket_t fd, char *host, unsigned short port);
 static bool proxy_socks4(socket_t fd, char *host, unsigned short port,
-	int force_a);
-static bool proxy_socks5(socket_t fd, char *host, unsigned short port,
-	int force_d);
+	bool force_a);
+static bool proxy_socks5(socket_t fd, char *user, char *host,
+	unsigned short port, bool force_d);
 
 char *
 proxy_type_name(int type)
@@ -179,7 +179,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_SOCKS5) && !strncasecmp(proxy, PROXY_SOCKS5, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -190,7 +190,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS5D) &&
 	    !strncasecmp(proxy, PROXY_SOCKS5D, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -304,13 +304,13 @@ proxy_negotiate(int type, socket_t fd, char *user, char *host,
     case PT_TELNET:
 	return proxy_telnet(fd, host, port);
     case PT_SOCKS4:
-	return proxy_socks4(fd, host, port, 0);
+	return proxy_socks4(fd, host, port, false);
     case PT_SOCKS4A:
-	return proxy_socks4(fd, host, port, 1);
+	return proxy_socks4(fd, host, port, true);
     case PT_SOCKS5:
-	return proxy_socks5(fd, host, port, 0);
+	return proxy_socks5(fd, user, host, port, false);
     case PT_SOCKS5D:
-	return proxy_socks5(fd, host, port, 1);
+	return proxy_socks5(fd, user, host, port, true);
     default:
 	return false;
     }
@@ -384,7 +384,7 @@ proxy_http(socket_t fd, char *user, char *host, unsigned short port)
     if (user != NULL) {
 
 	Free(buf);
-	buf = xs_buffer("Authorization: Basic %s\r\n",
+	buf = xs_buffer("Proxy-Authorization: Basic %s\r\n",
 		lazya(base64_encode(user)));
 
 	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
@@ -493,11 +493,11 @@ proxy_telnet(socket_t fd, char *host, unsigned short port)
 
 /* SOCKS version 4 proxy. */
 static bool
-proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
+proxy_socks4(socket_t fd, char *host, unsigned short port, bool force_a)
 {
     struct hostent *hp;
     struct in_addr ipaddr;
-    int use_4a = 0;
+    bool use_4a = false;
     char *user;
     char *buf;
     char *s;
@@ -508,7 +508,7 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 
     /* Resolve the hostname to an IPv4 address. */
     if (force_a) {
-	use_4a = 1;
+	use_4a = true;
     } else {
 	hp = gethostbyname(host);
 	if (hp != NULL) {
@@ -516,7 +516,7 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 	} else {
 	    ipaddr.s_addr = inet_addr(host);
 	    if (ipaddr.s_addr == (in_addr_t)-1) {
-		use_4a = 1;
+		use_4a = true;
 	    }
 	}
     }
@@ -639,7 +639,8 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 
 /* SOCKS version 5 (RFC 1928) proxy. */
 static bool
-proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
+proxy_socks5(socket_t fd, char *user, char *host, unsigned short port,
+	bool force_d)
 {
     union {
 	struct sockaddr sa;
@@ -649,7 +650,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 #endif /*]*/
     } ha;
     socklen_t ha_len = 0;
-    int use_name = 0;
+    bool use_name = false;
     char *buf;
     char *s;
     unsigned char rbuf[8];
@@ -667,9 +668,10 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
     };
     unsigned char *portp;
     unsigned short rport;
+    int nw0;
 
     if (force_d) {
-	use_name = 1;
+	use_name = true;
     } else {
 	char *errmsg;
 	rhp_t rv;
@@ -678,7 +680,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 	rv = resolve_host_and_port(host, NULL, 0, &rport, &ha.sa, &ha_len,
 		&errmsg, NULL);
 	if (rv == RHP_CANNOT_RESOLVE) {
-	    use_name = 1;
+	    use_name = true;
 	} else if (RHP_IS_ERROR(rv)) {
 	    popup_an_error("SOCKS5 proxy: %s/%u: %s", host, port, errmsg);
 	    return false;
@@ -686,10 +688,18 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
     }
 
     /* Send the authentication request to the server. */
-    strcpy((char *)rbuf, "\005\001\000");
-    vtrace("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
-    trace_netdata('>', rbuf, 3);
-    if (send(fd, (char *)rbuf, 3, 0) < 0) {
+    if (user != NULL) {
+	memcpy((char *)rbuf, "\005\002\000\002", 4);
+	vtrace("SOCKS5 Proxy: xmit version 5 nmethods 2 (no auth, "
+		"username/password)\n");
+	nw0 = 4;
+    } else {
+	strcpy((char *)rbuf, "\005\001\000");
+	vtrace("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
+	nw0 = 3;
+    }
+    trace_netdata('>', rbuf, nw0);
+    if (send(fd, (char *)rbuf, nw0, 0) < 0) {
 	popup_a_sockerr("SOCKS5 Proxy: send error");
 	return false;
     }
@@ -737,7 +747,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 
     trace_netdata('<', rbuf, nread);
 
-    if (rbuf[0] != 0x05 || (rbuf[1] != 0 && rbuf[1] != 0xff)) {
+    if (rbuf[0] != 0x05) {
 	popup_an_error("SOCKS5 Proxy: bad authentication response");
 	return false;
     }
@@ -747,6 +757,103 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
     if (rbuf[1] == 0xff) {
 	popup_an_error("SOCKS5 Proxy: authentication failure");
 	return false;
+    }
+
+    if (user == NULL && rbuf[1] != 0x00) {
+	popup_an_error("SOCKS5 Proxy: bad authentication response");
+	return false;
+    }
+
+    if (user != NULL && (rbuf[1] != 0x00 && rbuf[1] != 0x02)) {
+	popup_an_error("SOCKS5 Proxy: bad authentication response");
+	return false;
+    }
+
+    /* Send the username/password. */
+    if (rbuf[1] == 0x02) {
+	unsigned char upbuf[1 + 1 + 255 + 1 + 255 + 1];
+	char *colon = strchr(user, ':');
+
+	if (colon == NULL ||
+		colon == user ||
+		*(colon + 1) == '\0' ||
+		colon - user > 255 ||
+		strlen(colon + 1) > 255) {
+	    popup_an_error("SOCKS5 Proxy: invalid username:password");
+	    return false;
+	}
+
+	sprintf((char *)upbuf, "\001%c%.*s%c%s",
+		(int)(colon - user),	/* ULEN */
+		(int)(colon - user),	/* length of user */
+		user,			/* user */
+		(int)strlen(colon + 1),	/* length of password */
+		colon + 1);		/* password */
+	vtrace("SOCKS5 Proxy: xmit version 1 ulen %d username '%.*s' plen %d "
+		"password '%s'\n",
+		(int)(colon - user),
+		(int)(colon - user),
+		user,
+		(int)strlen(colon + 1),
+		colon + 1);
+	trace_netdata('>', upbuf, strlen((char *)upbuf));
+	if (send(fd, (char *)upbuf, strlen((char *)upbuf), 0) < 0) {
+	    popup_a_sockerr("SOCKS5 Proxy: send error");
+	    return false;
+	}
+
+	/* Read the response. */
+	nread = 0;
+	for (;;) {
+	    fd_set rfds;
+	    struct timeval tv;
+
+	    FD_ZERO(&rfds);
+	    FD_SET(fd, &rfds);
+	    tv.tv_sec = 15;
+	    tv.tv_usec = 0;
+	    if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) < 0) {
+		popup_an_error("SOCKS5 Proxy: server timeout");
+		if (nread) {
+		    trace_netdata('<', rbuf, nread);
+		}
+		return false;
+	    }
+
+	    nr = recv(fd, (char *)&rbuf[nread], 1, 0);
+	    if (nr < 0) {
+		popup_a_sockerr("SOCKS5 Proxy: receive error");
+		if (nread) {
+		    trace_netdata('<', rbuf, nread);
+		}
+		return false;
+	    }
+	    if (nr == 0) {
+		popup_a_sockerr("SOCKS5 Proxy: unexpected EOF");
+		if (nread) {
+		    trace_netdata('<', rbuf, nread);
+		}
+		return false;
+	    }
+	    if (++nread >= 2) {
+		break;
+	    }
+	}
+
+	trace_netdata('<', rbuf, nread);
+
+	if (rbuf[0] != 0x01) {
+	    popup_an_error("SOCKS5 Proxy: bad username/password "
+		    "authentication response type, expected 1, got %d",
+		    rbuf[0]);
+	    return false;
+	}
+
+	if (rbuf[1] != 0x00) {
+	    popup_an_error("SOCKS5 Proxy: bad username/password response %d",
+		    rbuf[1]);
+	    return false;
+	}
     }
 
     /* Send the request to the server. */
