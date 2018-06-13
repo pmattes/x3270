@@ -52,14 +52,14 @@ extern int ns_rsent;
 extern time_t ns_time;
 
 void net_abort(void);
-void net_break(void);
+void net_break(char c);
 void net_charmode(void);
 net_connect_t net_connect(const char *, char *, char *, bool, iosrc_t *);
 void net_exception(iosrc_t fd, ioid_t id);
 int net_getsockname(void *buf, int *len);
 void net_hexnvt_out(unsigned char *buf, int len);
 void net_input(iosrc_t fd, ioid_t id);
-void net_interrupt(void);
+void net_interrupt(char c);
 void net_linemode(void);
 void net_nop_seconds(void);
 const char *net_query_bind_plu_name(void);

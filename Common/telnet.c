@@ -687,6 +687,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    (void) fcntl(sock, F_SETFD, 1);
 	    connection_complete();
 	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
+	    host_set_flag(NO_TELNET_HOST);
 	    break;
 	}
 	*iosrc = sock;
@@ -1434,7 +1435,8 @@ telnet_fsm(unsigned char c)
 
     switch (telnet_state) {
     case TNS_DATA:	/* normal data processing */
-	if (c == IAC) {	/* got a telnet command */
+	if (!HOST_FLAG(NO_TELNET_HOST) && c == IAC) {
+	    /* got a telnet command */
 	    telnet_state = TNS_IAC;
 	    if (nvt_data) {
 		vtrace("\n");
@@ -2608,45 +2610,53 @@ net_rawout(unsigned const char *buf, size_t len)
 static void
 net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
 {
-	unsigned char *tbuf;
-	unsigned char *xbuf;
-	bool first = true;
+    unsigned char *tbuf;
+    unsigned char *xbuf;
+    bool first = true;
 
-	if (!len)
-		return;
+    if (!len) {
+	return;
+    }
 
-	/* Trace the data. */
-	if (toggled(TRACING)) {
-		int i;
+    /* Trace the data. */
+    if (toggled(TRACING)) {
+	int i;
 
-		vtrace(">");
-		for (i = 0; i < len; i++)
-			vtrace(" %s", ctl_see((int) *(buf+i)));
-		vtrace("\n");
+	vtrace(">");
+	for (i = 0; i < len; i++) {
+	    vtrace(" %s", ctl_see((int) *(buf+i)));
 	}
+	vtrace("\n");
+    }
 
-	/* Expand it. */
-	tbuf = xbuf = (unsigned char *)Malloc(2*len);
-	while (len) {
-		unsigned char c = *buf++;
+    if (HOST_FLAG(NO_TELNET_HOST)) {
+	net_rawout(buf, len);
+	return;
+    }
 
-		*tbuf++ = c;
-		len--;
-		if (framed && (first || len == 1)) {
-		    /* Don't quote initial IAC or trailing IAC SE. */
-		    first = false;
-		    continue;
-		}
-		if (c == IAC)
-			*tbuf++ = IAC;
-		else if (c == '\r' && (!len || *buf != '\n'))
-			*tbuf++ = '\0';
-		first = false;
+    /* Expand it. */
+    tbuf = xbuf = (unsigned char *)Malloc(2*len);
+    while (len) {
+	unsigned char c = *buf++;
+
+	*tbuf++ = c;
+	len--;
+	if (framed && (first || len == 1)) {
+	    /* Don't quote initial IAC or trailing IAC SE. */
+	    first = false;
+	    continue;
 	}
+	if (c == IAC) {
+	    *tbuf++ = IAC;
+	} else if (c == '\r' && (!len || *buf != '\n')) {
+	    *tbuf++ = '\0';
+	}
+	first = false;
+    }
 
-	/* Send it to the host. */
-	net_rawout(xbuf, tbuf - xbuf);
-	Free(xbuf);
+    /* Send it to the host. */
+    net_rawout(xbuf, tbuf - xbuf);
+    Free(xbuf);
 }
 
 
@@ -3111,35 +3121,49 @@ net_sends(const char *s)
 void
 net_linemode(void)
 {
-	if (!CONNECTED)
-		return;
+    if (!CONNECTED) {
+	return;
+    }
+    if (!HOST_FLAG(NO_TELNET_HOST)) {
 	if (hisopts[TELOPT_ECHO]) {
-		dont_opt[2] = TELOPT_ECHO;
-		net_rawout(dont_opt, sizeof(dont_opt));
-		vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_ECHO));
+	    dont_opt[2] = TELOPT_ECHO;
+	    net_rawout(dont_opt, sizeof(dont_opt));
+	    vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_ECHO));
 	}
 	if (hisopts[TELOPT_SGA]) {
-		dont_opt[2] = TELOPT_SGA;
-		net_rawout(dont_opt, sizeof(dont_opt));
-		vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_SGA));
+	    dont_opt[2] = TELOPT_SGA;
+	    net_rawout(dont_opt, sizeof(dont_opt));
+	    vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_SGA));
 	}
+    } else {
+	hisopts[TELOPT_ECHO] = 0;
+	hisopts[TELOPT_SGA] = 0;
+	check_linemode(false);
+    }
 }
 
 void
 net_charmode(void)
 {
-	if (!CONNECTED)
-		return;
+    if (!CONNECTED) {
+	return;
+    }
+    if (!HOST_FLAG(NO_TELNET_HOST)) {
 	if (!hisopts[TELOPT_ECHO]) {
-		do_opt[2] = TELOPT_ECHO;
-		net_rawout(do_opt, sizeof(do_opt));
-		vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_ECHO));
+	    do_opt[2] = TELOPT_ECHO;
+	    net_rawout(do_opt, sizeof(do_opt));
+	    vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_ECHO));
 	}
 	if (!hisopts[TELOPT_SGA]) {
-		do_opt[2] = TELOPT_SGA;
-		net_rawout(do_opt, sizeof(do_opt));
-		vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_SGA));
+	    do_opt[2] = TELOPT_SGA;
+	    net_rawout(do_opt, sizeof(do_opt));
+	    vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_SGA));
 	}
+    } else {
+	hisopts[TELOPT_ECHO] = 1;
+	hisopts[TELOPT_SGA] = 1;
+	check_linemode(false);
+    }
 }
 
 
@@ -3149,13 +3173,17 @@ net_charmode(void)
  *
  */
 void
-net_break(void)
+net_break(char c)
 {
+    if (!HOST_FLAG(NO_TELNET_HOST)) {
 	static unsigned char buf[] = { IAC, BREAK };
 
 	/* I don't know if we should first send TELNET synch ? */
 	net_rawout(buf, sizeof(buf));
 	vtrace("SENT BREAK\n");
+    } else if (c != '\0') {
+	net_rawout((unsigned char *)&c, 1);
+    }
 }
 
 /*
@@ -3164,13 +3192,17 @@ net_break(void)
  *
  */
 void
-net_interrupt(void)
+net_interrupt(char c)
 {
+    if (!HOST_FLAG(NO_TELNET_HOST)) {
 	static unsigned char buf[] = { IAC, IP };
 
 	/* I don't know if we should first send TELNET synch ? */
 	net_rawout(buf, sizeof(buf));
 	vtrace("SENT IP\n");
+    } else if (c != '\0') {
+	net_rawout((unsigned char *)&c, 1);
+    }
 }
 
 /*
@@ -3181,36 +3213,36 @@ net_interrupt(void)
 void
 net_abort(void)
 {
-	static unsigned char buf[] = { IAC, AO };
+    static unsigned char buf[] = { IAC, AO };
 
-	if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_SYSREQ)) {
-		/*
-		 * I'm not sure yet what to do here.  Should the host respond
-		 * to the AO by sending us SSCP-LU data (and putting us into
-		 * SSCP-LU mode), or should we put ourselves in it?
-		 * Time, and testers, will tell.
-		 */
-		switch (tn3270e_submode) {
-		case E_UNBOUND:
-		case E_NVT:
-			break;
-		case E_SSCP:
-			net_rawout(buf, sizeof(buf));
-			vtrace("SENT AO\n");
-			if (tn3270e_bound || !b8_bit_is_set(&e_funcs,
-						    TN3270E_FUNC_BIND_IMAGE)) {
-				tn3270e_submode = E_3270;
-				check_in3270();
-			}
-			break;
-		case E_3270:
-			net_rawout(buf, sizeof(buf));
-			vtrace("SENT AO\n");
-			tn3270e_submode = E_SSCP;
-			check_in3270();
-			break;
-		}
+    if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_SYSREQ)) {
+	/*
+	 * I'm not sure yet what to do here.  Should the host respond
+	 * to the AO by sending us SSCP-LU data (and putting us into
+	 * SSCP-LU mode), or should we put ourselves in it?
+	 * Time, and testers, will tell.
+	 */
+	switch (tn3270e_submode) {
+	case E_UNBOUND:
+	case E_NVT:
+	    break;
+	case E_SSCP:
+	    net_rawout(buf, sizeof(buf));
+	    vtrace("SENT AO\n");
+	    if (tn3270e_bound || !b8_bit_is_set(&e_funcs,
+					TN3270E_FUNC_BIND_IMAGE)) {
+		    tn3270e_submode = E_3270;
+		    check_in3270();
+	    }
+	    break;
+	case E_3270:
+	    net_rawout(buf, sizeof(buf));
+	    vtrace("SENT AO\n");
+	    tn3270e_submode = E_SSCP;
+	    check_in3270();
+	    break;
 	}
+    }
 }
 
 /*

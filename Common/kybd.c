@@ -813,13 +813,13 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 
     if (IN_E) {
 	if (net_bound()) {
-	    net_interrupt();
+	    net_interrupt(0);
 	} else {
 	    status_minus();
 	    kybdlock_set(KL_OIA_MINUS, "Attn");
 	}
     } else {
-	net_break();
+	net_break(0);
     }
     return true;
 }
@@ -841,7 +841,7 @@ Interrupt_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    net_interrupt();
+    net_interrupt(0);
     return true;
 }
 

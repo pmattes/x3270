@@ -213,6 +213,17 @@ host_exiting(bool mode _is_unused)
 }
 
 /**
+ * Set a host flag.
+ * 
+ * @param[in] flag	Flag to set.
+ */
+void
+host_set_flag(int flag)
+{
+    host_flags |= 1 << flag;
+}
+
+/**
  * Hosts module registration.
  */
 void
