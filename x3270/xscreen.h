@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -64,6 +64,12 @@
 #define SCREEN_HEIGHT(ch, descent, _vhalo) \
 			(chROW_TO_Y(maxROWS, ch, _vhalo) + \
 			 _vhalo+SGAP(descent)+_vhalo)
+
+/* keyboard modifer bitmap */
+#define ShiftKeyDown 0x01
+#define MetaKeyDown  0x02
+#define AltKeyDown   0x04
+#define AplMode      0x08
 
 /* selections */
 

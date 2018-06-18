@@ -823,6 +823,10 @@ main(int argc, char *argv[])
     /* Prepare to run a peer script. */
     peer_script_init();
 
+    if (toggled(APL_MODE)) {
+	temporary_keymap("apl");
+    }
+
     /* Process X events forever. */
     while (1) {
 	XEvent event;

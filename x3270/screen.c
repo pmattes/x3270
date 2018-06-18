@@ -298,6 +298,7 @@ struct sstate {
     int		   xtra_width;
     bool           standard_font;
     bool	   extended_3270font;
+    bool	   full_apl_font;
     bool           font_8bit;
     bool	   font_16bit;
     bool	   funky_font;
@@ -336,6 +337,7 @@ bool           *standard_font = &nss.standard_font;
 bool           *font_8bit = &nss.font_8bit;
 bool           *font_16bit = &nss.font_16bit;
 bool           *extended_3270font = &nss.extended_3270font;
+bool           *full_apl_font = &nss.full_apl_font;
 bool           *funky_font = &nss.funky_font;
 int            *xtra_width = &nss.xtra_width;
 Font           *fid = &nss.fid;
@@ -1127,6 +1129,13 @@ toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     if (toggled(SCROLL_BAR)) {
 	rethumb();
     }
+}
+
+/* Register an APL mode toggle. */
+static void
+toggle_aplMode(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    status_apl_mode(toggled(APL_MODE));
 }
 
 /*
@@ -4824,6 +4833,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     /* Set other globals. */
     if (nss.standard_font) {
 	nss.extended_3270font = false;
+	nss.full_apl_font = false;
 	nss.font_8bit = efont_matches;
 	nss.font_16bit = (f->max_byte1 > 0);
 	nss.d8_ix = display8_init(nss.font_8bit? font_charset: "ascii-7");
@@ -4833,6 +4843,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 #else
 	nss.extended_3270font = f->max_byte1 > 0 || f->max_char_or_byte2 > 255;
 #endif
+	nss.full_apl_font = !strcmp(ef, "3270"); /* hack! */
 	nss.font_8bit = false;
 	nss.font_16bit = false;
 	nss.d8_ix = display8_init(font_charset);
@@ -6406,7 +6417,8 @@ screen_register(void)
 	{ SCROLL_BAR,		toggle_scrollBar,	0 },
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 },
-	{ TYPEAHEAD,		NULL,			0 }
+	{ TYPEAHEAD,		NULL,			0 },
+	{ APL_MODE,		toggle_aplMode,		0 }
     };
     static action_table_t screen_actions[] = {
 	{ "SetFont",		SetFont_action,		ACTION_KE },

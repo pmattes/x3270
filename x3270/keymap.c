@@ -182,55 +182,54 @@ keymap_3270_mode(bool ignored _is_unused)
 static void
 setup_keymaps(const char *km, bool do_popup)
 {
-    	char *bkm;
-	bool saw_apl_keymod = false;
-	struct trans_list *t;
-	struct trans_list *next;
+    char *bkm;
+    struct trans_list *t;
+    struct trans_list *next;
 
-	/* Make sure it starts with "base". */
-	if (km == NULL)
-		bkm = XtNewString("base");
-	else
-		bkm = xs_buffer("base,%s", km);
+    /* Make sure it starts with "base". */
+    if (km == NULL) {
+	bkm = XtNewString("base");
+    } else {
+	bkm = xs_buffer("base,%s", km);
+    }
 
-	if (do_popup)
-		keymap_changed = true;
+    if (do_popup) {
+	keymap_changed = true;
+    }
 
-	/* Clear out any existing translations. */
-	Replace(current_keymap, NULL);
-	for (t = trans_list; t != NULL; t = next) {
-		next = t->next;
-		Free(t->name);
-		Free(t->pathname);
-		Free(t);
-	}
-	trans_list = NULL;
-	last_trans = &trans_list;
+    /* Clear out any existing translations. */
+    Replace(current_keymap, NULL);
+    for (t = trans_list; t != NULL; t = next) {
+	next = t->next;
+	Free(t->name);
+	Free(t->pathname);
+	Free(t);
+    }
+    trans_list = NULL;
+    last_trans = &trans_list;
 
-	/* Build up the new list. */
-	if (bkm != NULL) {
-		char *ns = XtNewString(bkm);
-		char *n0 = ns;
-		char *comma;
+    /* Build up the new list. */
+    if (bkm != NULL) {
+	char *ns = XtNewString(bkm);
+	char *n0 = ns;
+	char *comma;
 
-		do {
-			comma = strchr(ns, ',');
-			if (comma)
-				*comma = '\0';
-			if (!strcmp(ns, Apl))
-				saw_apl_keymod = true;
-			add_keymap(ns, do_popup);
-			if (comma)
-				ns = comma + 1;
-			else
-				ns = NULL;
-		} while (ns);
+	do {
+	    comma = strchr(ns, ',');
+	    if (comma) {
+		*comma = '\0';
+	    }
+	    add_keymap(ns, do_popup);
+	    if (comma) {
+		ns = comma + 1;
+	    } else {
+		ns = NULL;
+	    }
+	} while (ns);
 
-		XtFree(n0);
-	}
-	if (toggled(APL_MODE) && !saw_apl_keymod)
-		add_keymap(Apl, do_popup);
-	XtFree(bkm);
+	XtFree(n0);
+    }
+    XtFree(bkm);
 }
 
 /*

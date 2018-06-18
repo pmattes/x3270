@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -40,6 +40,7 @@ extern int		default_screen;
 extern bool		*extended_3270font;
 extern Font		*fid;
 extern bool		*font_8bit;
+extern bool		*full_apl_font;
 extern char		*locale_name;
 extern Widget		toplevel;
 extern Atom		a_delete_me;

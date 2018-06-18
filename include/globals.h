@@ -265,11 +265,6 @@ extern enum cstate cstate;
 #define IN_TN3270E	cIN_TN3270E(cstate)
 #define IN_E		cIN_E(cstate)
 
-/*   keyboard modifer bitmap */
-#define ShiftKeyDown	0x01
-#define MetaKeyDown	0x02
-#define AltKeyDown	0x04
-
 /*   toggles */
 typedef enum {
     MONOCASE,		/* all-uppercase display */

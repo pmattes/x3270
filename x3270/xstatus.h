@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,4 +40,5 @@ void status_kmap(bool on);
 void status_register(void);
 void status_reinit(unsigned cmask);
 void status_shift_mode(int state);
+void status_apl_mode(bool on);
 void status_touch(void);

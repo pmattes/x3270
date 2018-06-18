@@ -266,3 +266,5 @@
 #define CG_underA	0xfd	/* status underlined A */
 #define CG_magcard	0xfe	/* status magnetic card indicator */
 #define CG_boxhuman	0xff	/* status boxed position indicator */
+
+#define CG_alpha	0x13a	/* APL alpha character */

@@ -105,7 +105,8 @@ static int colors3279[SSZ] =  {
  *   M-41	Meta indication ("M" or blank)
  *   M-40	Alt indication ("A" or blank)
  *   M-39	Shift indication (Special symbol/"^" or blank)
- *   M-38..M-37	empty
+ *   M-38	APL indication (Special symbol/"a" or blank)
+ *   M-37	empty
  *   M-36	Compose indication ("C" or blank)
  *   M-35	Compose first character
  *   M-34	empty
@@ -363,6 +364,8 @@ status_init(void)
     a_scrolled = make_amsg("statusScrolled");
     a_minus = make_amsg("statusMinus");
     a_disabled = make_amsg("statusDisabled");
+
+    oia_shift = toggled(APL_MODE)? AplMode: 0;
 }
 
 /* Reinitialize the status line */
@@ -768,7 +771,14 @@ status_script(bool on)
 void
 status_shift_mode(int state)
 {
-	do_shift(oia_shift = state);
+	do_shift(oia_shift = (oia_shift & AplMode) | state);
+}
+
+/* Toggle APL mode. */
+void
+status_apl_mode(bool on)
+{
+	do_shift(oia_shift = (oia_shift & ~AplMode) | (on? AplMode: 0));
 }
 
 /* Toggle typeahead */
@@ -1363,6 +1373,16 @@ do_shift(int state)
 		(*standard_font ? 'A' : CG_A) : nullblank, KT_STD);
 	status_add(SHIFT, (state & ShiftKeyDown) ?
 		(*standard_font ? '^' : CG_upshift) : nullblank, KT_STD);
+
+	/* APL requires some somersaults. */
+	if (state & AplMode) {
+	    status_add(SHIFT+1,
+		    *full_apl_font? (CG_alpha & 0xff) :
+			(*standard_font? 'a': CG_a),
+		    *full_apl_font? KT_GE: KT_STD);
+	} else {
+	    status_add(SHIFT+1, nullblank, KT_STD);
+	}
 }
 
 static void
