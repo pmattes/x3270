@@ -86,7 +86,6 @@ typedef struct {
     struct {
 	Boolean extended;
 	Boolean m3279;
-	Boolean apl_mode;
 	Boolean once;
 	Boolean scripted;
 	Boolean modified_sel;

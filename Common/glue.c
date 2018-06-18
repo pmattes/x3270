@@ -493,8 +493,6 @@ set_appres_defaults(void)
 #endif /*]*/
 
 static opt_t base_opts[] = {
-{ OptAplMode,  OPT_BOOLEAN, true,  ResAplMode,   aoffset(apl_mode),
-    NULL, "Turn on APL mode" },
 { OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,

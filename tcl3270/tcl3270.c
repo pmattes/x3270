@@ -1951,7 +1951,7 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 }
 
 void
-push_string(char *s, bool is_hex, bool is_paste, bool is_apl)
+push_string(char *s, bool is_hex, bool is_paste)
 {
     /* Do nothing. */
 }

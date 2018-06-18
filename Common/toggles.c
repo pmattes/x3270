@@ -99,6 +99,7 @@ toggle_name_t toggle_names[] = {
     { ResUnderscore,	  UNDERSCORE,		false },
     { ResOverlayPaste,    OVERLAY_PASTE,	false },
     { ResTypeahead,       TYPEAHEAD,		false },
+    { ResAplMode,	  APL_MODE,		false },
     { NULL,               0,			false }
 };
 

@@ -1639,7 +1639,8 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    vtrace("  dropped (control char)\n");
 	    return;
 	}
-	ebc = unicode_to_ebcdic_ge(ucs4, &ge, keytype == KT_GE);
+	ebc = unicode_to_ebcdic_ge(ucs4, &ge,
+		keytype == KT_GE || toggled(APL_MODE));
 	if (ebc == 0) {
 	    vtrace("  dropped (no EBCDIC translation)\n");
 	    return;
@@ -3382,7 +3383,6 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     size_t len = 0;
     char *s;
     const char *t;
-    bool apl = false;
 
     action_debug("PasteString", ia, argc, argv);
     if (check_argc("PasteString", argc, 1, 2) < 0) {
@@ -3393,10 +3393,6 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     /* Determine the total length of the strings. */
     for (i = 0; i < argc; i++) {
 	t = argv[i];
-	if (!strcasecmp(t, "apl")) {
-	    apl = true;
-	    continue;
-	}
 	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
 	}
@@ -3411,10 +3407,6 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     *s = '\0';
     for (i = 0; i < argc; i++) {
 	t = argv[i];
-	if (!strcasecmp(t, "apl")) {
-	    apl = true;
-	    continue;
-	}
 	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
 	}
@@ -3422,7 +3414,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Set a pending string. */
-    push_string(s, true, true, apl);
+    push_string(s, true, true);
     return true;
 }
 
@@ -3576,7 +3568,7 @@ ns_action(action_t action, enum iaction cause, const char *param)
  * Returns the number of unprocessed characters.
  */
 size_t
-emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
+emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 {
     enum {
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
@@ -3591,7 +3583,6 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
     int last_row = BA_TO_ROW(cursor_addr);
     bool just_wrapped = false;
     ucs4_t c;
-    ebc_t ebc;
     bool auto_skip = true;
 
     if (pasting && toggled(OVERLAY_PASTE)) {
@@ -3738,11 +3729,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool apl)
 		}
 		break;
 	    default:
-		if (pasting && (apl || appres.apl_mode) &&
-			apl_paste_ge(c, &ebc)) {
-		    /* Non-APL-specific character included in CP 310. */
-		    key_Character(ebc, true, ia, true, NULL);
-		} else if (pasting && (c >= UPRIV_GE_00 && c <= UPRIV_GE_ff)) {
+		if (pasting && (c >= UPRIV_GE_00 && c <= UPRIV_GE_ff)) {
 		    /* Untranslatable CP 310 code point. */
 		    key_Character(c - UPRIV_GE_00, true, ia, true, NULL);
 		} else {
@@ -4019,7 +4006,7 @@ emulate_input(const char *s, size_t len, bool pasting)
     }
 
     /* Process it as Unicode. */
-    return emulate_uinput(w_ibuf, xlen, pasting, false);
+    return emulate_uinput(w_ibuf, xlen, pasting);
 }
 
 /*
@@ -4190,7 +4177,7 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
     int consumed;
     enum me_fail error;
 
-    /* No UCS-4 yet. */
+    *keytypep = KT_STD;
     *ucs4 = 0L;
 
     /* Look for my contrived APL symbols. */
@@ -4207,7 +4194,6 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 
     /* Look for a standard HTML entity or X11 keysym name. */
     k = string_to_key((char *)s);
-    *keytypep = KT_STD;
     if (k != KS_NONE) {
 	return k;
     }
@@ -4218,7 +4204,7 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 	return KS_NONE;
     }
 
-    /* Look for U+nnnn of 0xXXXX. */
+    /* Look for U+nnnn or 0xXXXX. */
     if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
 	*ucs4 = strtoul(s + 2, NULL, 16);
 	return KS_NONE;

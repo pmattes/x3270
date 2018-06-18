@@ -30,4 +30,4 @@
  *		Global declarations for stringscript.c.
  */
 
-void push_string(char *st, bool is_hex, bool is_paste, bool is_apl);
+void push_string(char *st, bool is_hex, bool is_paste);

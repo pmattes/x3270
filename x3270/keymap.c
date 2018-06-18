@@ -228,7 +228,7 @@ setup_keymaps(const char *km, bool do_popup)
 
 		XtFree(n0);
 	}
-	if (appres.apl_mode && !saw_apl_keymod)
+	if (toggled(APL_MODE) && !saw_apl_keymod)
 		add_keymap(Apl, do_popup);
 	XtFree(bkm);
 }

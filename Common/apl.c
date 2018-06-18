@@ -316,28 +316,3 @@ ucs4_to_apl_key(ucs4_t ucs4)
     }
     return NULL;
 }
-
-
-/* Check if a pasted character needs a GE in APL mode. */
-bool
-apl_paste_ge(ucs4_t ucs4, ebc_t *ebcp)
-{
-    int i;
-
-    *ebcp = 0;
-    if (ucs4 >= 0x100) {
-	return false;
-    }
-
-    for (i = 0; au[i].name; i++) {
-	if (au[i].ucs4 == ucs4) {
-	    if (au[i].ge) {
-		*ebcp = au[i].ebc;
-		return true;
-	    }
-	    return false;
-	}
-    }
-
-    return false;
-}

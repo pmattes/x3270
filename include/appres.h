@@ -47,7 +47,6 @@ typedef struct {
     bool	 m3279;
     bool	 modified_sel;
     bool	 once;
-    bool	 apl_mode;
     bool	 scripted;
     bool	 numeric_lock;
     bool	 secure;

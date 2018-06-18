@@ -71,7 +71,6 @@ typedef struct {
     ia_t ia;		/* cause */
     bool is_hex;	/* true if data is hexadecimal */
     bool is_paste;	/* true to use paste mode */
-    bool is_apl;	/* true to paste in APL mode */
     char *result;	/* error message from child action */
     bool aborted;	/* action aborted due to child error */
 } string_t;
@@ -134,7 +133,7 @@ string_run(task_cbh handle, bool *success)
 
     if (s->is_paste) {
 	/* Push in paste data. */
-	emulate_uinput(s->pdata, s->pdata_len, true, s->is_apl);
+	emulate_uinput(s->pdata, s->pdata_len, true);
 	done = true;
     } else if (s->is_hex) {
 	/* Run the whole string. */
@@ -288,10 +287,9 @@ hex_to_unicode(const char *s, size_t *lenp)
  * @param[in] st	String to execute
  * @param[in] is_hex	True if string is in hex
  * @param[in] is_paste	True if paste mode
- * @param[in] is_apl	True if pasting in APL mode
  */
 void
-push_string(char *st, bool is_hex, bool is_paste, bool is_apl)
+push_string(char *st, bool is_hex, bool is_paste)
 {
     string_t *s;
     ucs4_t *pdata = NULL;

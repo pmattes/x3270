@@ -289,8 +289,6 @@ XtResource xresources[] = {
       boffset(interactive.menubar), XtRString, ResTrue },
     { ResVisualBell, ClsVisualBell, XtRBoolean, sizeof(Boolean),
       boffset(interactive.visual_bell), XtRString, ResFalse },
-    { ResAplMode, ClsAplMode, XtRBoolean, sizeof(Boolean),
-      boffset(apl_mode), XtRString, ResFalse },
     { ResOnce, ClsOnce, XtRBoolean, sizeof(Boolean),
       boffset(once), XtRString, ResFalse },
     { ResScripted, ClsScripted, XtRBoolean, sizeof(Boolean),
@@ -376,6 +374,8 @@ XtResource xresources[] = {
       btoffset(OVERLAY_PASTE), XtRString, ResFalse },
     { ResTypeahead, ClsTypeahead, XtRBoolean, sizeof(Boolean),
       btoffset(TYPEAHEAD), XtRString, ResTrue },
+    { ResAplMode, ClsAplMode, XtRBoolean, sizeof(Boolean),
+      btoffset(APL_MODE), XtRString, ResFalse },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },

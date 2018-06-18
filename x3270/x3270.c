@@ -714,7 +714,7 @@ main(int argc, char *argv[])
     /* Define the keymap. */
     keymap_init(appres.interactive.key_map, false);
 
-    if (appres.apl_mode) {
+    if (toggled(APL_MODE)) {
 	appres.interactive.compose_map = XtNewString(Apl);
     }
 
@@ -1173,7 +1173,6 @@ copy_xres_to_res_bool(void)
 
     copy_bool(extended);
     copy_bool(m3279);
-    copy_bool(apl_mode);
     copy_bool(once);
     copy_bool(scripted);
     copy_bool(modified_sel);

@@ -290,6 +290,7 @@ typedef enum {
     UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
     OVERLAY_PASTE,	/* overlay protected fields when pasting */
     TYPEAHEAD,		/* typeahead */
+    APL_MODE,		/* APL mode */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);
@@ -297,7 +298,7 @@ bool toggled(toggle_index_t ix);
 /*   extended attributes */
 struct ea {
     unsigned char cc;	/* EBCDIC or ASCII character code */
-    unsigned char fa;	/* field attribute, it nonzero */
+    unsigned char fa;	/* field attribute, if nonzero */
     unsigned char fg;	/* foreground color (0x00 or 0xf<n>) */
     unsigned char bg;	/* background color (0x00 or 0xf<n>) */
     unsigned char gr;	/* ANSI graphics rendition bits */

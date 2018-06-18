@@ -1359,7 +1359,7 @@ task_activate(task_cbh handle)
 void
 ps_set(char *s, bool is_hex)
 {
-    push_string(s, is_hex, false, false);
+    push_string(s, is_hex, false);
 }
 
 /* Callback for macros menu. */

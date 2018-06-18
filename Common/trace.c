@@ -508,7 +508,7 @@ create_tracefile_header(const char *mode)
     }
     wtrace(false, ", %s emulation", appres.m3279 ? "color" : "monochrome");
     wtrace(false, ", %s charset", get_charset_name());
-    if (appres.apl_mode) {
+    if (toggled(APL_MODE)) {
 	wtrace(false, ", APL mode");
     }
     wtrace(false, "\n");
