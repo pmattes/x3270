@@ -37,7 +37,7 @@
 #include "status.h"
 
 void
-status_compose(bool on _is_unused, unsigned char c _is_unused,
+status_compose(bool on _is_unused, ucs4_t ucs4 _is_unused,
 	enum keytype keytype _is_unused)
 {
 }

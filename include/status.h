@@ -32,7 +32,7 @@
  *		Global declarations for status.c.
  */
 
-void status_compose(bool on, unsigned char c, enum keytype keytype);
+void status_compose(bool on, ucs4_t ucs4, enum keytype keytype);
 void status_ctlr_done(void);
 void status_cursor_pos(int ca);
 void status_insert_mode(bool on);

@@ -68,7 +68,7 @@ screen_suspend(void)
 }
 
 void
-status_compose(bool on, unsigned char c, enum keytype keytype)
+status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
     static bool is_on = false;
 
@@ -80,7 +80,7 @@ status_compose(bool on, unsigned char c, enum keytype keytype)
     ui_vleaf(IndOia,
 	    "field", "compose",
 	    "value", on? "true": "false",
-	    "char", on? lazyaf("U+%04%x", c): NULL,
+	    "char", on? lazyaf("U+%04%x", ucs4): NULL,
 	    "type", on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }

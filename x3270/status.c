@@ -49,6 +49,7 @@
 #include "status.h"
 #include "tables.h"
 #include "trace.h" /* temp */
+#include "unicodec.h"
 #include "utils.h"
 #include "xscreen.h"
 #include "xtables.h"
@@ -186,7 +187,7 @@ static int      oia_shift = 0;
 static bool  oia_typeahead = false;
 static int      oia_screentrace = -1;
 static bool  oia_compose = false;
-static unsigned char oia_compose_char = 0;
+static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 static enum msg {
 	DISCONNECTED,		/* X Not Connected */
@@ -319,7 +320,7 @@ static void do_printer(bool on);
 static void do_shift(int state);
 static void do_typeahead(int state);
 static void do_screentrace(int state);
-static void do_compose(bool on, unsigned char c, enum keytype keytype);
+static void do_compose(bool on, ucs4_t ucs4, enum keytype keytype);
 static void do_lu(const char *lu);
 static void do_timing(char *buf);
 static void do_cursor(char *buf);
@@ -797,12 +798,12 @@ status_screentrace(int n)
 
 /* Set compose character */
 void
-status_compose(bool on, unsigned char c, enum keytype keytype)
+status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
 	oia_compose = on;
-	oia_compose_char = c;
+	oia_compose_char = ucs4;
 	oia_compose_keytype = keytype;
-	do_compose(on, c, keytype);
+	do_compose(on, ucs4, keytype);
 }
 
 /* Set LU name */
@@ -1408,17 +1409,28 @@ do_screentrace(int n)
 }
 
 static void
-do_compose(bool on, unsigned char c, enum keytype keytype)
+do_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
-	if (on) {
-		status_add(COMPOSE,
-		    (unsigned char)(*standard_font ? 'C' : CG_C), KT_STD);
-		status_add(COMPOSE+1,
-		    c ? (*standard_font ? c : asc2cg0[c]) : nullblank, keytype);
+    if (on) {
+	status_add(COMPOSE,
+		(unsigned char)(*standard_font ? 'C' : CG_C), KT_STD);
+	if (!ucs4) {
+	    status_add(COMPOSE+1, nullblank, KT_STD);
 	} else {
-		status_add(COMPOSE, nullblank, KT_STD);
-		status_add(COMPOSE+1, nullblank, KT_STD);
+	    if (*standard_font) {
+		status_add(COMPOSE+1, ucs4, KT_STD);
+	    } else {
+		ebc_t ebc;
+		bool ge;
+
+		ebc = unicode_to_ebcdic_ge(ucs4, &ge, false);
+		status_add(COMPOSE+1, ebc2cg0[ebc], ge? KT_GE: KT_STD);
+	    }
 	}
+    } else {
+	status_add(COMPOSE, nullblank, KT_STD);
+	status_add(COMPOSE+1, nullblank, KT_STD);
+    }
 }
 
 static void

@@ -2714,7 +2714,7 @@ static bool oia_boxsolid = false;
 static bool oia_undera = true;
 static bool oia_compose = false;
 static bool oia_printer = false;
-static unsigned char oia_compose_char = 0;
+static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
@@ -2874,10 +2874,10 @@ status_typeahead(bool on)
 }
 
 void    
-status_compose(bool on, unsigned char c, enum keytype keytype)
+status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
     oia_compose = on;
-    oia_compose_char = c;
+    oia_compose_char = ucs4;
     oia_compose_keytype = keytype;
 }
 
@@ -3124,7 +3124,7 @@ draw_oia(void)
     mvprintw(status_row, rmargin-35,
 	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
-	    oia_compose? oia_compose_char: ' ',
+	    oia_compose? oia_compose_char: ' ', /* XXX */
 	    status_ta? 'T': ' ',
 	    status_rm? 'R': ' ',
 	    status_im? 'I': ' ',

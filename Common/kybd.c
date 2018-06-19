@@ -111,7 +111,7 @@ unsigned char	aid = AID_NO;		/* current attention ID */
 /* Composite key mappings. */
 
 struct akey {
-    ks_t key;
+    ucs4_t ucs4;
     enum keytype keytype;
 };
 static struct akey cc_first;
@@ -123,7 +123,7 @@ static int n_composites = 0;
 static char *default_compose_map_name = NULL;
 static char *temporary_compose_map_name = NULL;
 
-#define ak_eq(k1, k2)	(((k1).key  == (k2).key) && \
+#define ak_eq(k1, k2)	(((k1).ucs4  == (k2).ucs4) && \
 			 ((k1).keytype == (k2).keytype))
 
 typedef struct ta {
@@ -1590,7 +1590,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	return;
     }
 
-    ak.key = ucs4;
+    ak.ucs4 = ucs4;
     ak.keytype = keytype;
 
     switch (composing) {
@@ -1603,7 +1603,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    }
 	}
 	if (i < n_composites) {
-	    cc_first.key = ucs4;
+	    cc_first.ucs4 = ucs4;
 	    cc_first.keytype = keytype;
 	    composing = FIRST;
 	    status_compose(true, ucs4, keytype);
@@ -1625,7 +1625,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    }
 	}
 	if (i < n_composites) {
-	    ucs4 = composites[i].translation.key;
+	    ucs4 = composites[i].translation.ucs4;
 	    keytype = composites[i].translation.keytype;
 	} else {
 	    ring_bell();
@@ -4229,8 +4229,8 @@ build_composites(const char *how)
     char *ln;
     char ksname[3][64];
     char junk[2];
-    ks_t k[3];
     enum keytype a[3];
+    ucs4_t ucs4[3];
     int i;
     struct composite *cp;
 
@@ -4255,14 +4255,15 @@ build_composites(const char *how)
 	    continue;
 	}
 	for (i = 0; i < 3; i++) {
-	    ucs4_t ucs4;
+	    ks_t k = my_string_to_key(ksname[i], &a[i], &ucs4[i]);
 
-	    k[i] = my_string_to_key(ksname[i], &a[i], &ucs4);
-	    if (k[i] == KS_NONE) {
-		/* For now, ignore UCS4.  XXX: Fix this. */
+	    if ((k == KS_NONE && !ucs4[i]) || (k & ~0xff)) {
 		popup_an_error("%s: Invalid name: \"%s\"", how, ksname[i]);
 		okay = false;
 		break;
+	    }
+	    if (k != KS_NONE) {
+		ucs4[i] = k;
 	    }
 	}
 	if (!okay) {
@@ -4271,11 +4272,11 @@ build_composites(const char *how)
 	composites = (struct composite *) Realloc((char *)composites,
 		(n_composites + 1) * sizeof(struct composite));
 	cp = composites + n_composites;
-	cp->k1.key = k[0];
+	cp->k1.ucs4 = ucs4[0];
 	cp->k1.keytype = a[0];
-	cp->k2.key = k[1];
+	cp->k2.ucs4 = ucs4[1];
 	cp->k2.keytype = a[1];
-	cp->translation.key = k[2];
+	cp->translation.ucs4 = ucs4[2];
 	cp->translation.keytype = a[2];
 	n_composites++;
     }
@@ -4306,10 +4307,8 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
-    if (composing == NONE) {
-	composing = COMPOSE;
-	status_compose(true, 0, KT_STD);
-    }
+    composing = COMPOSE;
+    status_compose(true, 0, KT_STD);
     return true;
 }
 
