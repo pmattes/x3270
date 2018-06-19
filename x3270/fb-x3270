@@ -245,7 +245,7 @@ x3270.keymap.base: \
 	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n\
 	:<Key>Prior:			Scroll(Backward)\n\
 	:<Key>Next:			Scroll(Forward)\n\
-	Shift<Key>Escape:		TemporaryKeymap(apl) Toggle(AplMode)\n
+	Shift<Key>Escape:		TemporaryKeymap(apl) TemporaryComposeMap(apl) Toggle(AplMode)\n
 !
 ! Base keymap for 3270 mode.  These mappings are added to the base keymap,
 ! but only when in 3270 mode.

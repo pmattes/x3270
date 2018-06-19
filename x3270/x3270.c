@@ -715,7 +715,6 @@ main(int argc, char *argv[])
     keymap_init(appres.interactive.key_map, false);
 
     if (toggled(APL_MODE)) {
-	appres.interactive.compose_map = XtNewString(Apl);
     }
 
     screen_preinit();
@@ -823,8 +822,10 @@ main(int argc, char *argv[])
     /* Prepare to run a peer script. */
     peer_script_init();
 
+    /* Initialize APL mode. */
     if (toggled(APL_MODE)) {
-	temporary_keymap("apl");
+	temporary_keymap(Apl);
+	temporary_compose_map(Apl, "Init");
     }
 
     /* Process X events forever. */

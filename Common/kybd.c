@@ -120,6 +120,8 @@ static struct composite {
     struct akey translation;
 } *composites = NULL;
 static int n_composites = 0;
+static char *default_compose_map_name = NULL;
+static char *temporary_compose_map_name = NULL;
 
 #define ak_eq(k1, k2)	(((k1).key  == (k2).key) && \
 			 ((k1).keytype == (k2).keytype))
@@ -193,6 +195,7 @@ static action_t Right2_action;
 static action_t String_action;
 static action_t SysReq_action;
 static action_t Tab_action;
+static action_t TemporaryComposeMap_action;
 static action_t ToggleInsert_action;
 static action_t ToggleReverse_action;
 
@@ -237,6 +240,7 @@ static action_table_t kybd_actions[] = {
     { "String",		String_action,		ACTION_KE },
     { "SysReq",		SysReq_action,		ACTION_KE },
     { "Tab",		Tab_action,		ACTION_KE },
+    { "TemporaryComposeMap",TemporaryComposeMap_action,ACTION_KE },
     { "ToggleInsert",	ToggleInsert_action,	ACTION_KE },
     { "ToggleReverse",	ToggleReverse_action,	ACTION_KE },
     { "Up",		Up_action,		ACTION_KE }
@@ -4219,7 +4223,7 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 }
 
 static bool
-build_composites(void)
+build_composites(const char *how)
 {
     char *c, *c0, *c1;
     char *ln;
@@ -4231,12 +4235,12 @@ build_composites(void)
     struct composite *cp;
 
     if (appres.interactive.compose_map == NULL) {
-	popup_an_error("Compose: No %s defined", ResComposeMap);
+	popup_an_error("%s: No %s defined", how, ResComposeMap);
 	return false;
     }
     c0 = get_fresource("%s.%s", ResComposeMap, appres.interactive.compose_map);
     if (c0 == NULL) {
-	popup_an_error("Compose: Cannot find %s \"%s\"", ResComposeMap,
+	popup_an_error("%s: Cannot find %s \"%s\"", how, ResComposeMap,
 		appres.interactive.compose_map);
 	return false;
     }
@@ -4247,7 +4251,7 @@ build_composites(void)
 	c = NULL;
 	if (sscanf(ln, " %63[^+ \t] + %63[^= \t] =%63s%1s",
 		    ksname[0], ksname[1], ksname[2], junk) != 3) {
-	    popup_an_error("Compose: Invalid syntax: %s", ln);
+	    popup_an_error("%s: Invalid syntax: %s", how, ln);
 	    continue;
 	}
 	for (i = 0; i < 3; i++) {
@@ -4256,7 +4260,7 @@ build_composites(void)
 	    k[i] = my_string_to_key(ksname[i], &a[i], &ucs4);
 	    if (k[i] == KS_NONE) {
 		/* For now, ignore UCS4.  XXX: Fix this. */
-		popup_an_error("Compose: Invalid name: \"%s\"", ksname[i]);
+		popup_an_error("%s: Invalid name: \"%s\"", how, ksname[i]);
 		okay = false;
 		break;
 	    }
@@ -4298,7 +4302,7 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
     }
     reset_idle_timer();
 
-    if (!composites && !build_composites()) {
+    if (!composites && !build_composites("Compose")) {
 	return true;
     }
 
@@ -4307,4 +4311,62 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
 	status_compose(true, 0, KT_STD);
     }
     return true;
+}
+
+/* Destroy the current compose map. */
+static void
+destroy_compose_map(void)
+{
+    composing = NONE;
+    status_compose(false, 0, KT_STD);
+
+    Replace(composites, NULL);
+    n_composites = 0;
+}
+
+/* Set or clear a temporary compose map. */
+bool
+temporary_compose_map(const char *name, const char *how)
+{
+    /* Make sure we track the default. */
+    if (default_compose_map_name == NULL
+	    && appres.interactive.compose_map != NULL) {
+	default_compose_map_name = NewString(appres.interactive.compose_map);
+    }
+
+    /* Destroy the current map. */
+    destroy_compose_map();
+    Replace(appres.interactive.compose_map,
+	    NewString(default_compose_map_name));
+
+    if (name == NULL ||
+	    (temporary_compose_map_name != NULL &&
+	     !strcmp(temporary_compose_map_name, name))) {
+	/* Clear out the temporary map. */
+	Replace(temporary_compose_map_name, NULL);
+	return true;
+    }
+
+    /* Set the temporary one. */
+    temporary_compose_map_name = NewString(name);
+    appres.interactive.compose_map = NewString(name);
+    return !build_composites(how);
+}
+
+/*
+ * TemporaryComposeMap() clears out any temporary compose map.
+ * TemporaryComposeMap(x) makes the temporary compose map, or if x is already
+ *  the temporary compose map, removes it.
+ */
+static bool
+TemporaryComposeMap_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("TemporaryComposeMap", ia, argc, argv);
+    if (check_argc("TemporaryComposeMap", argc, 0, 1) < 0) {
+	return false;
+    }
+    reset_idle_timer();
+
+    return temporary_compose_map((argc > 0)? argv[0]: NULL,
+	    "TemporaryComposeMap");
 }

@@ -69,4 +69,5 @@ void kybd_register(void);
 bool Down_action(ia_t ia, unsigned argc, const char **argv);
 bool Left_action(ia_t ia, unsigned argc, const char **argv);
 bool Right_action(ia_t ia, unsigned argc, const char **argv);
+bool temporary_compose_map(const char *name, const char *how);
 bool Up_action(ia_t ia, unsigned argc, const char **argv);
