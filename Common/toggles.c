@@ -216,13 +216,13 @@ u_value(toggle_extended_upcalls_t *u)
 }
 
 /*
- * Toggle action.
- *  Toggle(toggleName)
- *  Toggle(toggleName,value[,toggleName,value...])
- * For old-style boolean toggles, values can be Set, Clear, On, Off.
+ * Toggle/Set action.
+ *  Toggle/Set(toggleName)
+ *  Toggle/Set(toggleName,value[,toggleName,value...])
+ * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
  */
-bool
-Toggle_action(ia_t ia, unsigned argc, const char **argv)
+static bool
+toggle_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 {
     int j;
     int ix;
@@ -240,11 +240,11 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     int d, du;
     toggle_extended_notifies_t *notifies;
 
-    action_debug("Toggle", ia, argc, argv);
+    action_debug(name, ia, argc, argv);
 
     /* Check basic syntax. */
     if (argc < 1) {
-	popup_an_error("Toggle requires at least one argument");
+	popup_an_error("%s requires at least one argument", name);
 	return false;
     }
 
@@ -271,7 +271,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	if (toggle_names[j].name == NULL && u == NULL) {
-	    popup_an_error("Toggle: Unknown toggle name '%s'", argv[arg]);
+	    popup_an_error("%s: Unknown toggle name '%s'", name, argv[arg]);
 	    goto failed;
 	}
 
@@ -281,7 +281,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 		do_toggle_reason(ix, TT_ACTION);
 		goto done;
 	    } else {
-		popup_an_error("Toggle: '%s' requires a value", argv[arg]);
+		popup_an_error("%s: '%s' requires a value", name, argv[arg]);
 		goto failed;
 	    }
 	}
@@ -303,8 +303,8 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 		    do_toggle_reason(ix, TT_ACTION);
 		}
 	    } else {
-		popup_an_error("Toggle: Unknown keyword '%s' (must be 'Set' "
-			"or 'Clear')", argv[arg + 1]);
+		popup_an_error("%s: Unknown keyword '%s' (must be 'Set' "
+			"or 'Clear')", name, argv[arg + 1]);
 		goto failed;
 	    }
 	} else {
@@ -377,6 +377,30 @@ done:
     return success;
 }
 
+/*
+ * Toggle action.
+ *  Toggle(toggleName)
+ *  Toggle(toggleName,value[,toggleName,value...])
+ * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
+ */
+static bool
+Toggle_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return toggle_common("Toggle", ia, argc, argv);
+}
+
+/*
+ * Set action. Alias for 'toggle'.
+ *  Set(toggleName)
+ *  Set(toggleName,value[,toggleName,value...])
+ * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
+ */
+static bool
+Set_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return toggle_common("Set", ia, argc, argv);
+}
+
 /**
  * Toggles module registration.
  */
@@ -384,7 +408,8 @@ void
 toggles_register(void)
 {
     static action_table_t toggle_actions[] = {
-	{ "Toggle",		Toggle_action,	ACTION_KE }
+	{ "Toggle",		Toggle_action,	ACTION_KE },
+	{ "Set",		Set_action,	ACTION_KE }
     };
 
     /* Register the cleanup routine. */
