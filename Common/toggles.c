@@ -289,12 +289,16 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	if (u == NULL) {
 	    /* Check for explicit Boolean value. */
 	    if (!strcasecmp(argv[arg + 1], "set") ||
-		    !strcasecmp(argv[arg + 1], "on")) {
+		    !strcasecmp(argv[arg + 1], "on") ||
+		    !strcasecmp(argv[arg + 1], "true") ||
+		    !strcasecmp(argv[arg + 1], "1")) {
 		if (!toggled(ix)) {
 		    do_toggle_reason(ix, TT_ACTION);
 		}
 	    } else if (!strcasecmp(argv[arg + 1], "clear") ||
-		    !strcasecmp(argv[arg + 1], "off")) {
+		    !strcasecmp(argv[arg + 1], "off") ||
+		    !strcasecmp(argv[arg + 1], "false") ||
+		    !strcasecmp(argv[arg + 1], "0")) {
 		if (toggled(ix)) {
 		    do_toggle_reason(ix, TT_ACTION);
 		}
