@@ -217,12 +217,10 @@ u_value(toggle_extended_upcalls_t *u)
 
 /*
  * Toggle/Set action.
- *  Toggle/Set(toggleName)
- *  Toggle/Set(toggleName,value[,toggleName,value...])
- * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
  */
 static bool
-toggle_common(const char *name, ia_t ia, unsigned argc, const char **argv)
+toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
+	const char **argv)
 {
     int j;
     int ix;
@@ -275,15 +273,20 @@ toggle_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 	    goto failed;
 	}
 
-	/* Check for old syntax (flip the value of a Boolean). */
+	/* Check for old syntax. */
 	if (argc - arg == 1) {
-	    if (u == NULL) {
-		do_toggle_reason(ix, TT_ACTION);
-		goto done;
-	    } else {
+	    if (u != NULL) {
 		popup_an_error("%s: '%s' requires a value", name, argv[arg]);
 		goto failed;
 	    }
+	    if (is_toggle || !toggled(ix)) {
+		/*
+		 * The default for the Toggle() action is to flip the toggle.
+		 * The default for the Set() action is to set the toggle.
+		 */
+		do_toggle_reason(ix, TT_ACTION);
+	    }
+	    goto done;
 	}
 
 	if (u == NULL) {
@@ -380,25 +383,29 @@ done:
 /*
  * Toggle action.
  *  Toggle(toggleName)
+ *    flips the value
  *  Toggle(toggleName,value[,toggleName,value...])
- * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
+ *    sets an explicit value
+ * For old-style Boolean toggles, values can be Set/Clear On/Off True/False 1/0
  */
 static bool
 Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return toggle_common("Toggle", ia, argc, argv);
+    return toggle_common("Toggle", true, ia, argc, argv);
 }
 
 /*
- * Set action. Alias for 'toggle'.
+ * Set action. Near-alias for 'toggle'.
  *  Set(toggleName)
+ *     sets the value to 'True'
  *  Set(toggleName,value[,toggleName,value...])
- * For old-style boolean toggles, values can be Set, Clear, On, Off, 1, 0.
+ *    sets an explicit value
+ * For old-style Boolean toggles, values can be Set/Clear On/Off True/False 1/0
  */
 static bool
 Set_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return toggle_common("Set", ia, argc, argv);
+    return toggle_common("Set", false, ia, argc, argv);
 }
 
 /**
