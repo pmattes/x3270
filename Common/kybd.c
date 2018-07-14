@@ -3576,7 +3576,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 {
     enum {
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
-	HEX, EBC, XGE
+	HEX, EBC
     } state = BASE;
     int literal = 0;
     int nc = 0;
@@ -3701,11 +3701,6 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		    state = BACKSLASH;
 		} else {
 		    key_UCharacter((unsigned char)c, KT_STD, ia, true);
-		}
-		break;
-	    case '\033': /* ESC is special only when pasting */
-		if (pasting) {
-		    state = XGE;
 		}
 		break;
 	    case UPRIV_fm: /* private-use FM */
@@ -3930,20 +3925,6 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		state = BASE;
 		continue;
 	    }
-	case XGE:	/* have seen ESC */
-	    switch (c) {
-	    case ';':	/* FM */
-		key_Character(EBC_fm, false, true, true, NULL);
-		break;
-	    case '*':	/* DUP */
-		key_Character(EBC_dup, false, true, true, NULL);
-		break;
-	    default:
-		key_UCharacter((unsigned char) c, KT_GE, ia, true);
-		break;
-	    }
-	    state = BASE;
-	    break;
 	}
 	ws++;
 	xlen--;
