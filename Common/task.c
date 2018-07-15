@@ -694,7 +694,7 @@ peer_script_init(void)
 
 	/* Create the listening socket. */
 	ssun = (struct sockaddr_un *)Malloc(sizeof(struct sockaddr_un));
-	(void) memset(ssun, '\0', sizeof(ssun));
+	(void) memset(ssun, '\0', sizeof(*ssun));
 	ssun->sun_family = AF_UNIX;
 	(void) snprintf(ssun->sun_path, sizeof(ssun->sun_path),
 		"/tmp/x3sck.%u", (unsigned)getpid());
