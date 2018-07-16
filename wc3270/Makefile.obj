@@ -49,6 +49,7 @@ OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
 MKSHORTOBJECTS = mkshort.o shortcut.o wc3270res.o
 LIBS = -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
 SHRTLIBS = $(LD32XX) -lole32 -luuid
 WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
@@ -56,7 +57,7 @@ DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--ena
 PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe
 all: $(PROGS)
 
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) xversion.c
 	sh $< wc3270 $(filter %.txt,$^) >xversion.c
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
@@ -85,7 +86,7 @@ wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico wc3270.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
+wc3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 c3270.exe: wc3270.exe

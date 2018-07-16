@@ -38,6 +38,7 @@ VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
 
 OBJECTS = $(VOBJS) version.o
 LIBS = -lws2_32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP32XX) $(DEP3270STUBS)
 
 ifdef WIN64
 HOST = win64
@@ -50,7 +51,7 @@ include libs.mk
 all: wpr3287.exe
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
 	sh $< wpr3287 $(filter %.txt,$^) >$(XVERSION)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
@@ -63,7 +64,7 @@ wpr3287.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-wpr3287.exe: $(OBJECTS) $(DEP32XX) $(DEP3270STUBS)
+wpr3287.exe: $(OBJECTS) $(LIBDEPS)
 	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 clean:

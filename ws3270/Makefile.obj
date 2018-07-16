@@ -46,6 +46,7 @@ VOBJS = $(WS3270_OBJECTS) fallbacks.o ws3270res.o
 
 OBJECTS = $(VOBJS) version.o
 LIBS = -lws2_32 -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
@@ -53,7 +54,7 @@ PROGS = ws3270.exe s3270.exe x3270if.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
 	sh $< ws3270 $(filter %.txt,$^) >$(XVERSION)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
@@ -74,7 +75,7 @@ ws3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 ws3270res.o: ws3270.rc ws3270.ico Makefile ws3270.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-ws3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
+ws3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 s3270.exe: ws3270.exe
