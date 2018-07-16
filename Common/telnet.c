@@ -391,7 +391,7 @@ connect_to(int ix, bool noisy, bool *pending)
 			}
 
     /* create the socket */
-    if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) ==
+    if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, IPPROTO_TCP)) ==
 	    INVALID_SOCKET) {
 	popup_a_sockerr("socket");
 	return INVALID_IOSRC;
