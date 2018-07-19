@@ -51,9 +51,9 @@ unsigned actions_list_count;
 
 enum iaction ia_cause;
 const char *ia_name[] = {
-    "None", "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
-    "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
-    "Keymap", "Idle", "Password", "UI"
+    "None", "String", "Paste", "Screen redraw", "Keypad", "Default", "Macro",
+    "Script", "Peek", "Typeahead", "File transfer", "Command", "Keymap",
+    "Idle", "Password", "UI"
 };
 static int keyboard_implicit_disables = 0;
 static int keyboard_explicit_disables = 0;
@@ -265,8 +265,7 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
     }
 
     if ((keyboard_explicit_disables || keyboard_implicit_disables) &&
-	    (cause == IA_KEY || cause == IA_KEYPAD || cause == IA_KEYMAP ||
-	     cause == IA_DEFAULT)) {
+	    IA_IS_KEY(cause)) {
 	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
 	status_keyboard_disable_flash();
 	return false;

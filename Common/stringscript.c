@@ -94,7 +94,7 @@ string_run(task_cbh handle, bool *success)
 
     /* Check for an abort triggered by a child failure. */
     if (s->aborted) {
-	if (s->ia != IA_KEYMAP) {
+	if (!IA_IS_KEY(s->ia)) {
 	    /* For anything but a keymap, pop up an error message. */
 	    if (s->result) {
 		popup_an_error("String failed: %s", s->result);

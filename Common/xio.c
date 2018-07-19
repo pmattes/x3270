@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, 2015 Paul Mattes.
+ * Copyright (c) 1993-2013, 2015, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -164,7 +164,7 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
      * read in a file that includes a Quit(). If we are connected, it will
      * fail.
      */
-    if (ia != IA_KEYMAP || !CONNECTED) {
+    if (!IA_IS_KEY(ia) || !CONNECTED) {
 	x3270_exit(0);
     }
     return false;

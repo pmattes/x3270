@@ -370,10 +370,12 @@ void usage(const char *);
 /* Emulator actions. */
 /* types of internal actions */
 typedef enum iaction {
-    IA_NONE, IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_KEY,
-    IA_MACRO, IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP,
-    IA_IDLE, IA_PASSWORD, IA_UI
+    IA_NONE, IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_MACRO,
+    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE,
+    IA_PASSWORD, IA_UI
 } ia_t;
+#define IA_IS_KEY(ia)	\
+    ((ia) == IA_KEYPAD || (ia) == IA_KEYMAP || (ia) == IA_DEFAULT)
 extern enum iaction ia_cause;
 
 typedef bool (action_t)(ia_t ia, unsigned argc, const char **argv);

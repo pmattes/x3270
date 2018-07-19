@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 Paul Mattes.
+ * Copyright (c) 2013-2016, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -306,11 +306,11 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
 		/* No selection pending: Paste. */
 		vtrace("  Paste\n");
-		run_action("Paste", IA_KEY, NULL, NULL);
+		run_action("Paste", IA_KEYMAP, NULL, NULL);
 	    } else {
 		/* Selection pending: Copy. */
 		vtrace("  Copy\n");
-		run_action("Copy", IA_KEY, NULL, NULL);
+		run_action("Copy", IA_KEYMAP, NULL, NULL);
 	    }
 	    break;
 	default:
@@ -365,7 +365,7 @@ bool
 select_return_key(void)
 {
     if (memchr(s_pending, 1, COLS * ROWS) != NULL) {
-	run_action("Copy", IA_KEY, NULL, NULL);
+	run_action("Copy", IA_KEYMAP, NULL, NULL);
 	return true;
     } else {
 	return false;

@@ -1564,8 +1564,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
     reset_idle_timer();
 
-    if (keyboard_disabled() &&
-	    (cause == IA_KEY || cause == IA_KEYMAP || cause == IA_DEFAULT)) {
+    if (keyboard_disabled() && IA_IS_KEY(cause)) {
 	vtrace("  [suppressed, keyboard disabled]\n");
 	status_keyboard_disable_flash();
 	return;
@@ -2574,7 +2573,7 @@ Newline_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Dup_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool oerr_fail = (ia != IA_KEYMAP);
+    bool oerr_fail = !IA_IS_KEY(ia);
     bool consumed = false;
 
     action_debug("Dup", ia, argc, argv);
@@ -2615,7 +2614,7 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool oerr_fail = (ia != IA_KEYMAP);
+    bool oerr_fail = !IA_IS_KEY(ia);
 
     action_debug("FieldMark", ia, argc, argv);
     if (check_argc("FieldMark", argc, 0, 1) < 0) {
@@ -3258,7 +3257,7 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
     ks_t k;
     enum keytype keytype;
     ucs4_t ucs4;
-    bool oerr_fail = (ia != IA_KEYMAP);
+    bool oerr_fail = !IA_IS_KEY(ia);
 
     action_debug("Key", ia, argc, argv);
     reset_idle_timer();
@@ -3439,9 +3438,9 @@ CircumNot_action(ia_t ia, unsigned argc, const char **argv)
     reset_idle_timer();
 
     if (IN_3270 && composing == NONE) {
-	key_UCharacter(0xac, KT_STD, ia, ia != IA_KEYMAP);
+	key_UCharacter(0xac, KT_STD, ia, !IA_IS_KEY(ia));
     } else {
-	key_UCharacter('^', KT_STD, ia, ia != IA_KEYMAP);
+	key_UCharacter('^', KT_STD, ia, !IA_IS_KEY(ia));
     }
     return true;
 }

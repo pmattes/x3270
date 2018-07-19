@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -498,7 +498,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
 		ucs4 = keysym2ucs(ks);
 		if (ucs4 != (ucs4_t)-1) {
-		    key_UCharacter(ucs4, KT_STD, IA_KEY, false);
+		    key_UCharacter(ucs4, KT_STD, IA_DEFAULT, false);
 		} else {
 		    vtrace(" Default: dropped (unknown keysym)\n");
 		}

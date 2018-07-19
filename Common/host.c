@@ -910,7 +910,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
      * since someone could put a Source() in a keymap for a file that includes
      * a Connect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP) {
+    if (!IA_IS_KEY(ia)) {
 	task_connect_wait();
     }
     return true;
@@ -943,7 +943,7 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
      * since someone could put a Source() in a keymap for a file that includes
      * a Reconnect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP) {
+    if (!IA_IS_KEY(ia)) {
 	task_connect_wait();
     }
 
