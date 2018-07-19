@@ -383,17 +383,17 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    break;
 #if defined(XK_EuroSign) /*[*/
 	case XK_EuroSign:
-	    run_action("Key", IA_DEFAULT, "currency", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "currency", NULL);
 	    break;
 #endif /*]*/
 
 #if defined(XK_3270_Duplicate) /*[*/
 	/* Funky 3270 keysyms. */
 	case XK_3270_Duplicate:
-	    run_action("Dup", IA_DEFAULT, NoFailOnError, NULL);
+	    run_action("Dup", IA_DEFAULT, NULL, NULL);
 	    break;
 	case XK_3270_FieldMark:
-	    run_action("FieldMark", IA_DEFAULT, NoFailOnError, NULL);
+	    run_action("FieldMark", IA_DEFAULT, NULL, NULL);
 	    break;
 	case XK_3270_Right2:
 	    run_action("Right2", IA_DEFAULT, NULL, NULL);
@@ -438,55 +438,55 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
 	/* Funky APL keysyms. */
 	case XK_downcaret:
-	    run_action("Key", IA_DEFAULT, "apl_downcaret", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_downcaret", NULL);
 	    break;
 	case XK_upcaret:
-	    run_action("Key", IA_DEFAULT, "apl_upcaret", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_upcaret", NULL);
 	    break;
 	case XK_overbar:
-	    run_action("Key", IA_DEFAULT, "apl_overbar", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_overbar", NULL);
 	    break;
 	case XK_downtack:
-	    run_action("Key", IA_DEFAULT, "apl_downtack", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_downtack", NULL);
 	    break;
 	case XK_upshoe:
-	    run_action("Key", IA_DEFAULT, "apl_upshoe", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_upshoe", NULL);
 	    break;
 	case XK_downstile:
-	    run_action("Key", IA_DEFAULT, "apl_downstile", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_downstile", NULL);
 	    break;
 	case XK_underbar:
-	    run_action("Key", IA_DEFAULT, "apl_underbar", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_underbar", NULL);
 	    break;
 	case XK_jot:
-	    run_action("Key", IA_DEFAULT, "apl_jot", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_jot", NULL);
 	    break;
 	case XK_quad:
-	    run_action("Key", IA_DEFAULT, "apl_quad", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_quad", NULL);
 	    break;
 	case XK_uptack:
-	    run_action("Key", IA_DEFAULT, "apl_uptack", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_uptack", NULL);
 	    break;
 	case XK_circle:
-	    run_action("Key", IA_DEFAULT, "apl_circle", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_circle", NULL);
 	    break;
 	case XK_upstile:
-	    run_action("Key", IA_DEFAULT, "apl_upstile", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_upstile", NULL);
 	    break;
 	case XK_downshoe:
-	    run_action("Key", IA_DEFAULT, "apl_downshoe", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_downshoe", NULL);
 	    break;
 	case XK_rightshoe:
-	    run_action("Key", IA_DEFAULT, "apl_rightshoe", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_rightshoe", NULL);
 	    break;
 	case XK_leftshoe:
-	    run_action("Key", IA_DEFAULT, "apl_leftshoe", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_leftshoe", NULL);
 	    break;
 	case XK_lefttack:
-	    run_action("Key", IA_DEFAULT, "apl_lefttack", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_lefttack", NULL);
 	    break;
 	case XK_righttack:
-	    run_action("Key", IA_DEFAULT, "apl_righttack", NoFailOnError);
+	    run_action("Key", IA_DEFAULT, "apl_righttack", NULL);
 	    break;
 
 	default:

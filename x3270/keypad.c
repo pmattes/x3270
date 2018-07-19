@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -160,8 +160,8 @@ static struct button_list lower_list[] = {
                                       "Delete",   NULL },
     { "Erase\nEOF",     Sm, NULL, 0, 0, "EraseEOF", NULL },
     { "Erase\nInput",   Sm, NULL, 0, 0, "EraseInput",NULL },
-    { "Dup",            Sm, NULL, 0, 0, "Dup",      NoFailOnError },
-    { "Field\nMark",    Sm, NULL, 0, 0, "FieldMark",NoFailOnError },
+    { "Dup",            Sm, NULL, 0, 0, "Dup",      NULL },
+    { "Field\nMark",    Sm, NULL, 0, 0, "FieldMark",NULL },
     { "Sys\nReq",       Sm, NULL, 0, 0, "SysReq",   NULL },
     { "Cursor\nSelect", Sm, NULL, 0, 0, "CursorSelect",NULL },
     { "Attn",           Sm, NULL, 0, 0, "Attn",     NULL },
@@ -240,8 +240,8 @@ static struct button_list vfn_list[] = {
     { "Reset",          Sm, NULL, 0, 0, "Reset",    NULL },
     { "Erase\nEOF",     Sm, NULL, 0, 0, "EraseEOF", NULL },
     { "Erase\nInput",   Sm, NULL, 0, 0, "EraseInput",NULL },
-    { "Dup",            Sm, NULL, 0, 0, "Dup",      NoFailOnError },
-    { "Field\nMark",    Sm, NULL, 0, 0, "FieldMark",NoFailOnError },
+    { "Dup",            Sm, NULL, 0, 0, "Dup",      NULL },
+    { "Field\nMark",    Sm, NULL, 0, 0, "FieldMark",NULL },
     { "Sys\nReq",       Sm, NULL, 0, 0, "SysReq",   NULL },
     { "Cursor\nSelect", Sm, NULL, 0, 0, "CursorSelect",NULL },
     { "Attn",           Sm, NULL, 0, 0, "Attn",     NULL },

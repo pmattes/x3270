@@ -2583,7 +2583,7 @@ kybd_input2(INPUT_RECORD *ir)
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
 	run_action("Key", IA_DEFAULT,
 		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
-		NoFailOnError);
+		NULL);
     } else {
 	vtrace(" dropped (no default)\n");
     }

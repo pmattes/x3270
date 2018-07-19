@@ -1673,7 +1673,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	char ks[16];
 
 	sprintf(ks, "U+%04x", ucs4);
-	run_action("Key", IA_DEFAULT, NoFailOnError, ks);
+	run_action("Key", IA_DEFAULT, ks, NULL);
 	return;
     }
 
