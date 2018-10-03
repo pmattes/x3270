@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+# Copyright (c) 1995-2009, 2014-2015, 2018 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 # 
@@ -40,8 +40,10 @@ export LANG LC_ALL
 set -e
 
 . ${2-./version.txt}
-builddate=`date`
-sccsdate=`date +%Y/%m/%d`
+date="date -u"
+[ -n "$SOURCE_DATE_EPOCH" ] && date="$date -d@$SOURCE_DATE_EPOCH"
+builddate=`$date`
+sccsdate=`$date +%Y/%m/%d`
 user=${LOGNAME-$USER}
 
 # Create an all numeric timestamp for rpqnames.

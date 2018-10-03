@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2017 Paul Mattes.
+# Copyright (c) 1999-2018 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 %.pcf.gz: %.bdf
-	bdftopcf $< | gzip >$@
+	bdftopcf $< | gzip -n9 >$@
 
 dryrun: dryrun.in
 	/bin/cp $< $@
