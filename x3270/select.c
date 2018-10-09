@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -227,49 +227,76 @@ reclass(char *s)
 	popup_an_error("Error in %s string", ResCharClass);
 }
 
+static int
+ucs4_class(ucs4_t u)
+{
+    return (u < 0x100)? char_class[u]: (int)u;
+}
+
 static void
 select_word(int baddr, Time t)
 {
-	unsigned char fa = get_field_attribute(baddr);
-	unsigned char ch;
-	int class;
+    unsigned char fa = get_field_attribute(baddr);
+    unsigned char ch;
+    int class;
 
-	/* Find the initial character class */
-	if (FA_IS_ZERO(fa))
-		ch = EBC_space;
-	else
-		ch = ea_buf[baddr].cc;
+    /* Find the initial character class */
+    if (ea_buf[baddr].ucs4) {
+	class = ucs4_class(ea_buf[baddr].ucs4);
+    } else {
+	if (FA_IS_ZERO(fa)) {
+	    ch = EBC_space;
+	} else {
+	    ch = ea_buf[baddr].ec;
+	}
 	class = char_class[ebc2asc0[ch]];
+    }
 
-	/* Find the beginning */
-	for (f_start = baddr; f_start % COLS; f_start--) {
-		fa = get_field_attribute(f_start);
-		if (FA_IS_ZERO(fa))
-			ch = EBC_space;
-		else
-			ch = ea_buf[f_start].cc;
-		if (char_class[ebc2asc0[ch]] != class) {
-			f_start++;
-			break;
-		}
+    /* Find the beginning */
+    for (f_start = baddr; f_start % COLS; f_start--) {
+	int xclass;
+
+	if (ea_buf[f_start].ucs4) {
+	    xclass = ucs4_class(ea_buf[f_start].ucs4);
+	} else {
+	    fa = get_field_attribute(f_start);
+	    if (FA_IS_ZERO(fa)) {
+		ch = EBC_space;
+	    } else {
+		ch = ea_buf[f_start].ec;
+	    }
+	    xclass = char_class[ebc2asc0[ch]];
 	}
-
-	/* Find the end */
-	for (f_end = baddr; (f_end+1) % COLS; f_end++) {
-		fa = get_field_attribute(f_end);
-		if (FA_IS_ZERO(fa))
-			ch = EBC_space;
-		else
-			ch = ea_buf[f_end].cc;
-		if (char_class[ebc2asc0[ch]] != class) {
-			f_end--;
-			break;
-		}
+	if (xclass != class) {
+	    f_start++;
+	    break;
 	}
+    }
 
-	v_start = f_start;
-	v_end = f_end;
-	grab_sel(f_start, f_end, true, t);
+    /* Find the end */
+    for (f_end = baddr; (f_end+1) % COLS; f_end++) {
+	int xclass;
+
+	if (ea_buf[f_start].ucs4) {
+	    xclass = ucs4_class(ea_buf[f_end].ucs4);
+	} else {
+	    fa = get_field_attribute(f_end);
+	    if (FA_IS_ZERO(fa)) {
+		ch = EBC_space;
+	    } else {
+		ch = ea_buf[f_end].ec;
+	    }
+	    xclass = char_class[ebc2asc0[ch]];
+	}
+	if (xclass != class) {
+	    f_end--;
+	    break;
+	}
+    }
+
+    v_start = f_start;
+    v_end = f_end;
+    grab_sel(f_start, f_end, true, t);
 }
 
 static void
@@ -871,8 +898,8 @@ Cut_xaction(Widget w _is_unused, XEvent *event, String *params,
     /* Erase them. */
     for (baddr = 0; baddr < ROWS*COLS; baddr++) {
 	if ((target[baddr/ULBS] & (1L << (baddr%ULBS)))
-		    && ea_buf[baddr].cc != EBC_so
-		    && ea_buf[baddr].cc != EBC_si) {
+		    && ea_buf[baddr].ec != EBC_so
+		    && ea_buf[baddr].ec != EBC_si) {
 	    switch (ctlr_dbcs_state(baddr)) {
 	    case DBCS_NONE:
 	    case DBCS_SB:
@@ -1285,111 +1312,128 @@ osc_start(void)
 static void
 onscreen_char(int baddr, unsigned char *r, int *rlen)
 {
-	static int osc_baddr;
-	static unsigned char fa;
-	ucs4_t uc;
-	int baddr2;
+    static int osc_baddr;
+    static unsigned char fa;
+    ucs4_t uc;
+    int baddr2;
+    int l;
 
-	*rlen = 1;
+    *rlen = 1;
 
-	/* If we aren't moving forward, all bets are off. */
-	if (osc_valid && baddr < osc_baddr)
-		osc_valid = false;
+    /* If we aren't moving forward, all bets are off. */
+    if (osc_valid && baddr < osc_baddr) {
+	osc_valid = false;
+    }
 
-	if (osc_valid) {
-		/*
-		 * Search for a new field attribute between the address we
-		 * want and the last address we searched.  If we found a new
-		 * field attribute, save the address for next time.
-		 */
-		(void) get_bounded_field_attribute(baddr, osc_baddr, &fa);
-		osc_baddr = baddr;
+    if (osc_valid) {
+	/*
+	 * Search for a new field attribute between the address we
+	 * want and the last address we searched.  If we found a new
+	 * field attribute, save the address for next time.
+	 */
+	(void) get_bounded_field_attribute(baddr, osc_baddr, &fa);
+	osc_baddr = baddr;
+    } else {
+	/*
+	 * Find the attribute the old way.
+	 */
+	fa = get_field_attribute(baddr);
+	osc_baddr = baddr;
+	osc_valid = true;
+    }
+
+    /* If it isn't visible, then make it a blank. */
+    if (FA_IS_ZERO(fa)) {
+	*r = ' ';
+	return;
+    }
+
+    /* Handle DBCS. */
+    switch (ctlr_dbcs_state(baddr)) {
+    case DBCS_LEFT:
+	if (ea_buf[baddr].ucs4) {
+	    *rlen = unicode_to_utf8(ea_buf[baddr].ucs4, (char *)r);
 	} else {
-		/*
-		 * Find the attribute the old way.
-		 */
-		fa = get_field_attribute(baddr);
-		osc_baddr = baddr;
-		osc_valid = true;
-	}
-
-	/* If it isn't visible, then make it a blank. */
-	if (FA_IS_ZERO(fa)) {
-		*r = ' ';
-		return;
-	}
-
-	/* Handle DBCS. */
-	switch (ctlr_dbcs_state(baddr)) {
-	case DBCS_LEFT:
 	    baddr2 = baddr;
 	    INC_BA(baddr2);
-	    uc = ebcdic_to_unicode((ea_buf[baddr].cc << 8) | ea_buf[baddr2].cc,
+	    uc = ebcdic_to_unicode((ea_buf[baddr].ec << 8) |
+			ea_buf[baddr2].ec,
 		    CS_BASE, EUO_NONE);
 	    *rlen = unicode_to_utf8(uc, (char *)r);
-	    return;
-	case DBCS_RIGHT:
-	    /* Returned the entire character when the left half was read. */
-	    *rlen = 0;
-	    return;
-	case DBCS_SI:
-	    /* Suppress SI's altogether.  They'll expand back on paste. */
-	    *rlen = 0;
-	    return;
-	case DBCS_SB:
-	    /* Treat SB's as normal SBCS characters. */
-	    break;
-	default:
-	    break;
 	}
+	return;
+    case DBCS_RIGHT:
+	/* Returned the entire character when the left half was read. */
+	*rlen = 0;
+	return;
+    case DBCS_SI:
+	/* Suppress SI's altogether.  They'll expand back on paste. */
+	*rlen = 0;
+	return;
+    case DBCS_SB:
+	/* Treat SB's as normal SBCS characters. */
+	break;
+    default:
+	break;
+    }
 
-	switch (ea_buf[baddr].cs) {
-	    case CS_BASE:
+    switch (ea_buf[baddr].cs) {
+    case CS_BASE:
+    default:
+	if (ea_buf[baddr].ucs4) {
+	    *rlen = unicode_to_utf8(ea_buf[baddr].ucs4, (char *)r);
+	} else {
+	    switch (ea_buf[baddr].ec) {
+	    case EBC_so:
+		/*
+		 * Suppress SO's altogether.  They'll expand back on
+		 * paste.
+		 */
+		*rlen = 0;
+		return;
+	    case EBC_null:
+		*r = 0;
+		return;
 	    default:
-		switch (ea_buf[baddr].cc) {
-		    case EBC_so:
-			/*
-			 * Suppress SO's altogether.  They'll expand back on
-			 * paste.
-			 */
-			*rlen = 0;
-			return;
-		    case EBC_null:
-			*r = 0;
-			return;
-		    default:
-			/*
-			 * Note that we use the 'for_display' flavor of
-			 * ebcdic_base_to_unicode here, so DUP and FM are
-			 * translated to special private-use Unicode values.
-			 * These will (hopefully) be ignored by other
-			 * applications, but translated back to DUP and FM if
-			 * pasted back into x3270.
-			 */
-			uc = ebcdic_base_to_unicode(ea_buf[baddr].cc,
-				EUO_BLANK_UNDEF | EUO_UPRIV);
-			*rlen = unicode_to_utf8(uc, (char *)r);
-			if (*rlen < 0)
-			    	*rlen = 0;
-			return;
-		}
-	    case CS_GE:
-		/* Translate APL to Unicode. */
-		uc = apl_to_unicode(ea_buf[baddr].cc, EUO_NONE);
-		if (uc == (ucs4_t)-1) {
-		    /* No translation. */
-		    uc = UPRIV_GE_00 + ea_buf[baddr].cc;
-		}
+		/*
+		 * Note that we use the 'for_display' flavor of
+		 * ebcdic_base_to_unicode here, so DUP and FM are
+		 * translated to special private-use Unicode values.
+		 * These will (hopefully) be ignored by other
+		 * applications, but translated back to DUP and FM if
+		 * pasted back into x3270.
+		 */
+		uc = ebcdic_base_to_unicode(ea_buf[baddr].ec,
+			EUO_BLANK_UNDEF | EUO_UPRIV);
 		*rlen = unicode_to_utf8(uc, (char *)r);
 		if (*rlen < 0) {
 		    *rlen = 0;
 		}
-		return;
-	    case CS_LINEDRAW:
-		/* vt100 line-drawing character */
-		*r = ea_buf[baddr].cc + 0x5f;
-		return;
+	    }
 	}
+	return;
+    case CS_GE:
+	/* Translate APL to Unicode. */
+	uc = apl_to_unicode(ea_buf[baddr].ec, EUO_NONE);
+	if (uc == (ucs4_t)-1) {
+	    /* No translation. */
+	    uc = UPRIV_GE_00 + ea_buf[baddr].ec;
+	}
+	*rlen = unicode_to_utf8(uc, (char *)r);
+	if (*rlen < 0) {
+	    *rlen = 0;
+	}
+	return;
+    case CS_LINEDRAW:
+	/* VT100 line-drawing character. */
+	l = linedraw_to_unicode(ea_buf[baddr].ucs4);
+	if (l <= 0) {
+	    *rlen = 0;
+	    return;
+	}
+	*rlen = unicode_to_utf8((ucs4_t)l, (char *)r);
+	return;
+    }
 }
 
 /*

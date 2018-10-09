@@ -290,9 +290,24 @@ typedef enum {
 } toggle_index_t;
 bool toggled(toggle_index_t ix);
 
+/*
+ * ea.ucs4 (Unicode) will be non-zero if the buffer location was set in NVT
+ *  mode.
+ * ea.ec (EBCDIC) will be non-zero if the buffer location was set in 3270 mode.
+ * They will *never* both be non-zero.
+ *
+ * We translate between the two values as needed for display or for the Ascii()
+ * action, but when getting a raw buffer dump via ReadBuffer(Ebcdic) or sending
+ * the buffer to the host (Read Modified), we only send EBCDIC: If there is
+ * Unicode in a buffer location, we consider it an EBCDIC X'00' (NUL).
+ *
+ * Note that the right-hand location of a DBCS pair is ec=0 in 3270 mode, but
+ * ucs4=0x20 (a space) in NVT mode.
+ */
+
 /*   extended attributes */
 struct ea {
-    unsigned char cc;	/* EBCDIC or ASCII character code */
+    unsigned char ec;	/* EBCDIC code */
     unsigned char fa;	/* field attribute, if nonzero */
     unsigned char fg;	/* foreground color (0x00 or 0xf<n>) */
     unsigned char bg;	/* background color (0x00 or 0xf<n>) */
@@ -300,6 +315,7 @@ struct ea {
     unsigned char cs;	/* character set (GE flag, or 0..2) */
     unsigned char ic;	/* input control (DBCS) */
     unsigned char db;	/* DBCS state */
+    ucs4_t ucs4;	/* Unicode value, if set in NVT mode */
 };
 #define GR_BLINK	0x01
 #define GR_REVERSE	0x02

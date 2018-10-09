@@ -828,13 +828,13 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else if (is_zero) {
 		/* leave mb[] as " " */
 	    } else if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-		len = ebcdic_to_multibyte((buf[first + i].cc << 8) |
-			    buf[first + i + 1].cc,
+		len = ebcdic_to_multibyte((buf[first + i].ec << 8) |
+			    buf[first + i + 1].ec,
 			mb, sizeof(mb));
 	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		continue;
 	    } else {
-		len = ebcdic_to_multibyte_x(buf[first + i].cc,
+		len = ebcdic_to_multibyte_x(buf[first + i].ec,
 			buf[first + i].cs & CS_MASK, mb, sizeof(mb),
 			EUO_BLANK_UNDEF, &uc);
 	    }
@@ -844,7 +844,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	} else {
 	    char *s;
 
-	    s = xs_buffer("0x%02x", buf[first + i].cc);
+	    s = xs_buffer("0x%02x", buf[first + i].ec);
 	    Tcl_ListObjAppendElement(sms_interp, row, Tcl_NewStringObj(s, -1));
 	    Free(s);
 	}
@@ -910,12 +910,12 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 		    mb[1] = '\0';
 		    len = 2;
 		} else if (IS_LEFT(ctlr_dbcs_state(loc))) {
-		    len = ebcdic_to_multibyte((buf[loc].cc << 8) |
-			    buf[loc + 1].cc, mb, sizeof(mb));
+		    len = ebcdic_to_multibyte((buf[loc].ec << 8) |
+			    buf[loc + 1].ec, mb, sizeof(mb));
 		} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
 		    continue;
 		} else {
-		    len = ebcdic_to_multibyte_x(buf[loc].cc,
+		    len = ebcdic_to_multibyte_x(buf[loc].ec,
 			    buf[loc].cs & CS_MASK, mb, sizeof(mb),
 			    EUO_BLANK_UNDEF, &uc);
 		}
@@ -925,7 +925,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 	    } else {
 		char *s;
 
-		s = xs_buffer("0x%02x", buf[loc].cc);
+		s = xs_buffer("0x%02x", buf[loc].ec);
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(s, -1));
 		Free(s);
@@ -1350,9 +1350,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    }
 	    if (in_ebcdic) {
 		if (buf[baddr].cs & CS_GE) {
-		    rbuf = xs_buffer("GE(%02x)", buf[baddr].cc);
+		    rbuf = xs_buffer("GE(%02x)", buf[baddr].ec);
 		} else {
-		    rbuf = xs_buffer("%02x", buf[baddr].cc);
+		    rbuf = xs_buffer("%02x", buf[baddr].ec);
 		}
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(rbuf, -1));
@@ -1364,18 +1364,18 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		ucs4_t uc;
 
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-		    len = ebcdic_to_multibyte((buf[baddr].cc << 8) |
-			    buf[baddr + 1].cc,
+		    len = ebcdic_to_multibyte((buf[baddr].ec << 8) |
+			    buf[baddr + 1].ec,
 			    mb, sizeof(mb));
 		    for (j = 0; j < len - 1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
 		    vb_appends(&r, " -");
-		} else if (buf[baddr].cc == EBC_null) {
+		} else if (buf[baddr].ec == EBC_null) {
 		    vb_appends(&r, "00");
 		} else {
-		    len = ebcdic_to_multibyte_x(buf[baddr].cc,
+		    len = ebcdic_to_multibyte_x(buf[baddr].ec,
 			    buf[baddr].cs & CS_MASK,
 			    mb, sizeof(mb), EUO_BLANK_UNDEF,
 			    &uc);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -755,7 +755,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 				trace_ds(" SetBufferAddress%s", rcba(baddr));
 				while (!ea_buf[baddr].fa) {
 					if (send_data &&
-					    ea_buf[baddr].cc) {
+					    ea_buf[baddr].ec) {
 						insert_sa(baddr,
 						    &current_fg,
 						    &current_bg,
@@ -772,18 +772,18 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 							any = false;
 						}
 						space3270out(1);
-						*obptr++ = ea_buf[baddr].cc;
-						if (ea_buf[baddr].cc <= 0x3f ||
-						    ea_buf[baddr].cc == 0xff) {
+						*obptr++ = ea_buf[baddr].ec;
+						if (ea_buf[baddr].ec <= 0x3f ||
+						    ea_buf[baddr].ec == 0xff) {
 							if (any)
 								trace_ds("'");
 
-							trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
+							trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
 							any = false;
 						} else {
 							if (!any)
 								trace_ds(" '");
-							trace_ds("%s", see_ebc(ea_buf[baddr].cc));
+							trace_ds("%s", see_ebc(ea_buf[baddr].ec));
 							any = true;
 						}
 					}
@@ -810,7 +810,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 			baddr = sscp_start;
 
 		do {
-			if (ea_buf[baddr].cc) {
+			if (ea_buf[baddr].ec) {
 				insert_sa(baddr,
 				    &current_fg,
 				    &current_bg,
@@ -827,18 +827,18 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 					any = false;
 				}
 				space3270out(1);
-				*obptr++ = ea_buf[baddr].cc;
-				if (ea_buf[baddr].cc <= 0x3f ||
-				    ea_buf[baddr].cc == 0xff) {
+				*obptr++ = ea_buf[baddr].ec;
+				if (ea_buf[baddr].ec <= 0x3f ||
+				    ea_buf[baddr].ec == 0xff) {
 					if (any)
 						trace_ds("'");
 
-					trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
+					trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
 					any = false;
 				} else {
 					if (!any)
 						trace_ds(" '");
-					trace_ds("%s", see_ebc(ea_buf[baddr].cc));
+					trace_ds("%s", see_ebc(ea_buf[baddr].ec));
 					any = true;
 				}
 				nbytes++;
@@ -963,18 +963,18 @@ ctlr_read_buffer(unsigned char aid_byte)
 				any = false;
 			}
 			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
-			if (ea_buf[baddr].cc <= 0x3f ||
-			    ea_buf[baddr].cc == 0xff) {
+			*obptr++ = ea_buf[baddr].ec;
+			if (ea_buf[baddr].ec <= 0x3f ||
+			    ea_buf[baddr].ec == 0xff) {
 				if (any)
 					trace_ds("'");
 
-				trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
+				trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
 				any = false;
 			} else {
 				if (!any)
 					trace_ds(" '");
-				trace_ds("%s", see_ebc(ea_buf[baddr].cc));
+				trace_ds("%s", see_ebc(ea_buf[baddr].ec));
 				any = true;
 			}
 		}
@@ -1089,7 +1089,7 @@ ctlr_snap_buffer(void)
 				*obptr++ = ORDER_GE;
 			}
 			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
+			*obptr++ = ea_buf[baddr].ec;
 		}
 		INC_BA(baddr);
 	} while (baddr != 0);
@@ -1136,24 +1136,24 @@ ctlr_snap_buffer_sscp_lu(void)
 
 	/* Write out the screen contents once. */
 	do {
-	    	if (ea_buf[baddr].cc == 0xff) {
+	    	if (ea_buf[baddr].ec == 0xff) {
 			space3270out(1);
 			*obptr++ = 0xff;
 		}
 		space3270out(1);
-		*obptr++ = ea_buf[baddr].cc;
+		*obptr++ = ea_buf[baddr].ec;
 		INC_BA(baddr);
 	} while (baddr != 0);
 
 	/* Write them out again, until we hit where the cursor is. */
 	if (cursor_addr != baddr) {
 		do {
-			if (ea_buf[baddr].cc == 0xff) {
+			if (ea_buf[baddr].ec == 0xff) {
 				space3270out(1);
 				*obptr++ = 0xff;
 			}
 			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
+			*obptr++ = ea_buf[baddr].ec;
 			INC_BA(baddr);
 		} while (baddr != cursor_addr);
 	}
@@ -1816,16 +1816,16 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 			while (!aborted &&
 			       ((fa_addr >= 0 && baddr != fa_addr) ||
 			        (fa_addr < 0 && baddr != ROWS*COLS - 1))) {
-				if (ea_buf[baddr].cc == FCORDER_SI) {
+				if (ea_buf[baddr].ec == FCORDER_SI) {
 					ABORT_WRITE("double SI");
 				}
-				if (ea_buf[baddr].cc == FCORDER_SO)
+				if (ea_buf[baddr].ec == FCORDER_SO)
 					break;
 				DEC_BA(baddr);
 			}
 			if (aborted)
 				break;
-			if (ea_buf[baddr].cc != FCORDER_SO) {
+			if (ea_buf[baddr].ec != FCORDER_SO) {
 				ABORT_WRITE("SI without SO");
 			}
 			/* All is well. */
@@ -2172,13 +2172,13 @@ ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 	 * characters which effectively split it.
 	 */
 	if (ea_buf[baddr].cs == CS_DBCS) {
-		if (ea_buf[baddr].cc == EBC_so || ea_buf[baddr].cc == EBC_si)
+		if (ea_buf[baddr].ec == EBC_so || ea_buf[baddr].ec == EBC_si)
 			return DBCS_NONE;
 		xaddr = baddr;
 		while (!AT_END(faddr, xaddr) &&
 		       ea_buf[xaddr].cs == CS_DBCS &&
-		       ea_buf[xaddr].cc != EBC_so &&
-		       ea_buf[xaddr].cc != EBC_si) {
+		       ea_buf[xaddr].ec != EBC_so &&
+		       ea_buf[xaddr].ec != EBC_si) {
 			DEC_BA(xaddr);
 		}
 		*why = DBCS_ATTRIBUTE;
@@ -2192,9 +2192,9 @@ ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 	xaddr = baddr;
 	DEC_BA(xaddr);
 	while (!AT_END(faddr, xaddr)) {
-		if (ea_buf[xaddr].cc == EBC_si)
+		if (ea_buf[xaddr].ec == EBC_si)
 			si = true;
-		else if (ea_buf[xaddr].cc == EBC_so) {
+		else if (ea_buf[xaddr].ec == EBC_so) {
 			if (si)
 				si = false;
 			else {
@@ -2296,7 +2296,7 @@ ctlr_dbcs_postprocess(void)
 			if (pbaddr >= 0 && ea_buf[pbaddr].db == DBCS_SI)
 				ea_buf[pbaddr].db = DBCS_NONE;
 		} else {
-			switch (ea_buf[baddr].cc) {
+			switch (ea_buf[baddr].ec) {
 			case EBC_so:
 			    /* Two SO's or SO in DBCS field are invalid. */
 			    if (so || dbcs_field) {
@@ -2355,11 +2355,11 @@ ctlr_dbcs_postprocess(void)
 				     */
 				    if ((baddr + ROWS*COLS - dbaddr) % 2) {
 					    if (!valid_dbcs_char(
-							ea_buf[pbaddr].cc,
-							ea_buf[baddr].cc)) {
-						    ea_buf[pbaddr].cc =
+							ea_buf[pbaddr].ec,
+							ea_buf[baddr].ec)) {
+						    ea_buf[pbaddr].ec =
 							EBC_space;
-						    ea_buf[baddr].cc =
+						    ea_buf[baddr].ec =
 							EBC_space;
 					    }
 					    MAKE_RIGHT(baddr);
@@ -2385,7 +2385,7 @@ ctlr_dbcs_postprocess(void)
 				    "at %s\n", rcba(pbaddr));
 				rc = -1;
 			}
-			ea_buf[pbaddr].cc = EBC_null;
+			ea_buf[pbaddr].ec = EBC_null;
 			ea_buf[pbaddr].db = DBCS_DEAD;
 		}
 
@@ -2434,7 +2434,7 @@ ctlr_any_data(void)
 		return false;
 
 	for (i = 0; i < ROWS*COLS; i++) {
-		if (!IsBlank(ea_buf[i].cc))
+		if (!IsBlank(ea_buf[i].ec))
 			return true;
 	}
 	return false;
@@ -2479,7 +2479,7 @@ ctlr_blanks(void)
 	int baddr;
 
 	for (baddr = 0; baddr < maxROWS*maxCOLS; baddr++) {
-		ea_buf[baddr].cc = EBC_space;
+		ea_buf[baddr].ec = EBC_space;
 	}
 	ALL_CHANGED;
 	cursor_move(0);
@@ -2490,7 +2490,7 @@ ctlr_blanks(void)
 
 
 /*
- * Change a character in the 3270 buffer.
+ * Change a character in the 3270 buffer, EBCDIC mode.
  * Removes any field attribute defined at that location.
  */
 void
@@ -2499,7 +2499,8 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
     unsigned char oc = 0;
 
     if (ea_buf[baddr].fa ||
-	((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
+	ea_buf[baddr].ucs4 ||
+	((oc = ea_buf[baddr].ec) != c || ea_buf[baddr].cs != cs)) {
 	if (trace_primed && !IsBlank(oc)) {
 	    if (toggled(SCREEN_TRACE)) {
 		trace_screen(false);
@@ -2511,9 +2512,43 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 	    unselect(baddr, 1);
 	}
 	ONE_CHANGED(baddr);
-	ea_buf[baddr].cc = c;
+	ea_buf[baddr].ec = c;
 	ea_buf[baddr].cs = cs;
 	ea_buf[baddr].fa = 0;
+	ea_buf[baddr].ucs4 = 0;
+    }
+}
+
+/*
+ * Change a character in the 3270 buffer, NVT mode.
+ * Removes any field attribute defined at that location.
+ */
+void
+ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs)
+{
+    if (ea_buf[baddr].fa ||
+	ea_buf[baddr].ucs4 != ucs4 ||
+	ea_buf[baddr].ec != 0 ||
+	ea_buf[baddr].cs != cs) {
+	if (trace_primed && !IsBlank(ea_buf[baddr].ec)) {
+	    if (toggled(SCREEN_TRACE)) {
+		trace_screen(false);
+	    }
+	    scroll_save(maxROWS);
+	    trace_primed = false;
+	}
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
+	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].ucs4 = ucs4;
+	ea_buf[baddr].ec = 0;
+	ea_buf[baddr].cs = cs;
+	ea_buf[baddr].fa = 0;
+
+	if (cs == CS_DBCS) {
+	    ea_buf[baddr].db = ucs4 == ' '? DBCS_RIGHT: DBCS_LEFT;
+	}
     }
 }
 
@@ -2808,7 +2843,7 @@ ctlr_shrink(void)
 
 	for (baddr = 0; baddr < ROWS*COLS; baddr++) {
 		if (!ea_buf[baddr].fa)
-			ea_buf[baddr].cc =
+			ea_buf[baddr].ec =
 			    visible_control? EBC_space : EBC_null;
 	}
 	ALL_CHANGED;
@@ -2831,13 +2866,13 @@ ctlr_shrink(void)
 enum dbcs_state
 ctlr_dbcs_state_ea(int baddr, struct ea *ea)
 {
-	return dbcs? ea[baddr].db: DBCS_NONE;
+    return (ea[baddr].ucs4 || dbcs)? ea[baddr].db: DBCS_NONE;
 }
 
 enum dbcs_state
 ctlr_dbcs_state(int baddr)
 {
-	return ctlr_dbcs_state_ea(baddr, ea_buf);
+    return ctlr_dbcs_state_ea(baddr, ea_buf);
 }
 
 

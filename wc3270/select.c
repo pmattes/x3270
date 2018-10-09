@@ -157,6 +157,7 @@ reselect(bool generate_event)
 static bool
 is_blank(int baddr)
 {
+    ucs4_t u;
     unsigned char fa;
     int xbaddr;
     int c;
@@ -167,12 +168,25 @@ is_blank(int baddr)
 	return true;
     }
 
+    /* Handle NVT-mode text. */
+    if ((u = ea_buf[baddr].ucs4)) {
+	if (IS_LEFT(baddr)) {
+	    return u == IDEOGRAPHIC_SPACE;
+	} else if (IS_RIGHT(baddr)) {
+	    xbaddr = baddr;
+	    INC_BA(xbaddr);
+	    return ea_buf[xbaddr].ucs4 == IDEOGRAPHIC_SPACE;
+	} else {
+	    return u == ' ' || u == 0xa0;
+	}
+    }
+
     /* Translate to Unicode, exactly as we would display it. */
     if (IS_LEFT(baddr)) {
 	xbaddr = baddr;
 	DEC_BA(xbaddr);
-	c = ebcdic_to_unicode((ea_buf[xbaddr].cc << 8) |
-			      ea_buf[baddr].cc,
+	c = ebcdic_to_unicode((ea_buf[xbaddr].ec << 8) |
+			      ea_buf[baddr].ec,
 			      CS_BASE, EUO_NONE);
 	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
 	    return true;
@@ -180,14 +194,14 @@ is_blank(int baddr)
     } else if (IS_RIGHT(baddr)) {
 	xbaddr = baddr;
 	INC_BA(xbaddr);
-	c = ebcdic_to_unicode((ea_buf[baddr].cc << 8) |
-			      ea_buf[xbaddr].cc,
+	c = ebcdic_to_unicode((ea_buf[baddr].ec << 8) |
+			      ea_buf[xbaddr].ec,
 			      CS_BASE, EUO_NONE);
 	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
 	    return true;
 	}
     } else {
-	c = ebcdic_to_unicode(ea_buf[baddr].cc,
+	c = ebcdic_to_unicode(ea_buf[baddr].ec,
 		ea_buf[baddr].cs,
 		appres.c3270.ascii_box_draw?
 		    EUO_ASCII_BOX: 0);
@@ -408,36 +422,59 @@ copy_clipboard_unicode(LPTSTR lptstr)
 	    any_row = r;
 
 	    d = ctlr_dbcs_state(baddr);
-	    if (IS_LEFT(d)) {
-		int xbaddr = baddr;
+	    if (ea_buf[baddr].ucs4) {
+		if (!IS_RIGHT(d)) {
+		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
+			/* XXX: ascii_box_draw */
+			int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
 
-		if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-		    ch = IDEOGRAPHIC_SPACE;
-		} else {
-		    xbaddr = baddr;
-		    INC_BA(xbaddr);
-		    ch = ebcdic_to_unicode(
-			    (ea_buf[baddr].cc << 8) |
-				ea_buf[xbaddr].cc,
-			    CS_BASE, EUO_NONE);
-		    if (ch == 0) {
-			ch = IDEOGRAPHIC_SPACE;
+			if (l > 0) {
+			    ch = l;
+			} else {
+			    ch = ' ';
+			}
 		    }
-		}
-	    } else if (!IS_RIGHT(d)) {
-		if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-		    ch = ' ';
-		} else {
-		    ch = ebcdic_to_unicode(ea_buf[baddr].cc,
-				ea_buf[baddr].cs,
-				appres.c3270.ascii_box_draw?
-				    EUO_ASCII_BOX: 0);
-		    if (ch == 0) {
-			ch = ' ';
-		    }
-		    if (toggled(MONOCASE) && islower(ch)) {
+		    ch = ea_buf[baddr].ucs4;
+		    if (!IS_LEFT(d) && toggled(MONOCASE) && islower(ch)) {
 			ch = toupper(ch);
 		    }
+		} else {
+		    continue;
+		}
+	    } else {
+		if (IS_LEFT(d)) {
+		    int xbaddr = baddr;
+
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+			ch = IDEOGRAPHIC_SPACE;
+		    } else {
+			xbaddr = baddr;
+			INC_BA(xbaddr);
+			ch = ebcdic_to_unicode(
+				(ea_buf[baddr].ec << 8) |
+				    ea_buf[xbaddr].ec,
+				CS_BASE, EUO_NONE);
+			if (ch == 0) {
+			    ch = IDEOGRAPHIC_SPACE;
+			}
+		    }
+		} else if (!IS_RIGHT(d)) {
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+			ch = ' ';
+		    } else {
+			ch = ebcdic_to_unicode(ea_buf[baddr].ec,
+				    ea_buf[baddr].cs,
+				    appres.c3270.ascii_box_draw?
+					EUO_ASCII_BOX: 0);
+			if (ch == 0) {
+			    ch = ' ';
+			}
+			if (toggled(MONOCASE) && islower(ch)) {
+			    ch = toupper(ch);
+			}
+		    }
+		} else {
+		    continue;
 		}
 	    }
 
@@ -497,58 +534,111 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 	    }
 	    any_row = r;
 	    d = ctlr_dbcs_state(baddr);
-	    if (IS_LEFT(d)) {
-		int xbaddr = baddr;
-
-		if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-		    ch = IDEOGRAPHIC_SPACE;
-		} else {
-		    xbaddr = baddr;
-		    INC_BA(xbaddr);
-		    ch = ebcdic_to_unicode(
-			    (ea_buf[baddr].cc << 8) |
-				ea_buf[xbaddr].cc,
-			    CS_BASE, EUO_NONE);
-		    if (ch == 0) {
+	    if (ea_buf[baddr].ucs4) {
+		/* NVT-mode text */
+		if (IS_LEFT(d)) {
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
 			ch = IDEOGRAPHIC_SPACE;
-		    }
-		}
-		while (ns) {
-		    *bp++ = ' ';
-		    ns--;
-		}
-		bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
-			bp, 1, "?", NULL);
-		last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
-	    } else if (!IS_RIGHT(d)) {
-		if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-		    ch = ' ';
-		} else {
-		    ch = ebcdic_to_unicode(ea_buf[baddr].cc,
-			    ea_buf[baddr].cs,
-			    appres.c3270.ascii_box_draw?
-				EUO_ASCII_BOX: 0);
-		    if (ch == 0) {
-			ch = ' ';
-		    }
-		    if (toggled(MONOCASE) && islower(ch)) {
-			ch = toupper(ch);
-		    }
-		}
-		if (ch == ' ') {
-		    if (!word_selected || last_cjk_space) {
-			*bp++ = ' ';
 		    } else {
-			ns++;
+			ch = ea_buf[baddr].ucs4;
 		    }
-		} else {
 		    while (ns) {
 			*bp++ = ' ';
 			ns--;
 		    }
-		    bp += WideCharToMultiByte(CP_OEMCP, 0,
-			    &ch, 1, bp, 1, "?", NULL);
-		    last_cjk_space = false;
+		    bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
+			    bp, 1, "?", NULL);
+		    last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
+		} else if (!IS_RIGHT(d)) {
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+			ch = ' ';
+		    } else {
+			/* XXX: ascii_box_draw */
+			if (ea_buf[baddr].cs == CS_LINEDRAW) {
+			    int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
+
+			    if (l > 0) {
+				ch = l;
+			    } else {
+				ch = ' ';
+			    }
+			}
+			ch = ea_buf[baddr].ucs4;
+			if (toggled(MONOCASE) && islower(ch)) {
+			    ch = toupper(ch);
+			}
+		    }
+		    if (ch == ' ') {
+			if (!word_selected || last_cjk_space) {
+			    *bp++ = ' ';
+			} else {
+			    ns++;
+			}
+		    } else {
+			while (ns) {
+			    *bp++ = ' ';
+			    ns--;
+			}
+			bp += WideCharToMultiByte(CP_OEMCP, 0,
+				&ch, 1, bp, 1, "?", NULL);
+			last_cjk_space = false;
+		    }
+		}
+	    } else {
+		/* 3270-mode text */
+		if (IS_LEFT(d)) {
+		    int xbaddr = baddr;
+
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+			ch = IDEOGRAPHIC_SPACE;
+		    } else {
+			xbaddr = baddr;
+			INC_BA(xbaddr);
+			ch = ebcdic_to_unicode(
+				(ea_buf[baddr].ec << 8) |
+				    ea_buf[xbaddr].ec,
+				CS_BASE, EUO_NONE);
+			if (ch == 0) {
+			    ch = IDEOGRAPHIC_SPACE;
+			}
+		    }
+		    while (ns) {
+			*bp++ = ' ';
+			ns--;
+		    }
+		    bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
+			    bp, 1, "?", NULL);
+		    last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
+		} else if (!IS_RIGHT(d)) {
+		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+			ch = ' ';
+		    } else {
+			ch = ebcdic_to_unicode(ea_buf[baddr].ec,
+				ea_buf[baddr].cs,
+				appres.c3270.ascii_box_draw?
+				    EUO_ASCII_BOX: 0);
+			if (ch == 0) {
+			    ch = ' ';
+			}
+			if (toggled(MONOCASE) && islower(ch)) {
+			    ch = toupper(ch);
+			}
+		    }
+		    if (ch == ' ') {
+			if (!word_selected || last_cjk_space) {
+			    *bp++ = ' ';
+			} else {
+			    ns++;
+			}
+		    } else {
+			while (ns) {
+			    *bp++ = ' ';
+			    ns--;
+			}
+			bp += WideCharToMultiByte(CP_OEMCP, 0,
+				&ch, 1, bp, 1, "?", NULL);
+			last_cjk_space = false;
+		    }
 		}
 	    }
 	}
@@ -598,12 +688,28 @@ copy_clipboard_text(LPTSTR lptstr)
 		    ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
 		ch = ' ';
 	    } else {
-		nc = ebcdic_to_multibyte_x(ea_buf[baddr].cc,
-			ea_buf[baddr].cs, buf, sizeof(buf),
-			EUO_BLANK_UNDEF |
-			    (appres.c3270.ascii_box_draw?
-			     EUO_ASCII_BOX: 0),
-			&u);
+		if (ea_buf[baddr].ucs4) {
+		    /* XXX: ascii_box_draw */
+		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
+			int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
+
+			if (l > 0) {
+			    ch = l;
+			} else {
+			    ch = ' ';
+			}
+		    } else {
+			ch = ea_buf[baddr].ucs4;
+		    }
+		    nc = unicode_to_multibyte(ch, buf, sizeof(buf));
+		} else {
+		    nc = ebcdic_to_multibyte_x(ea_buf[baddr].ec,
+			    ea_buf[baddr].cs, buf, sizeof(buf),
+			    EUO_BLANK_UNDEF |
+				(appres.c3270.ascii_box_draw?
+				 EUO_ASCII_BOX: 0),
+			    &u);
+		}
 		if (nc == 2) {
 		    ch = buf[0];
 		} else {
@@ -740,8 +846,8 @@ copy_cut_action(bool cutting)
 	    } else {
 		if (!sp_save[baddr]
 			|| FA_IS_PROTECTED(fa)
-			|| ea_buf[baddr].cc == EBC_so
-			|| ea_buf[baddr].cc == EBC_si) {
+			|| ea_buf[baddr].ec == EBC_so
+			|| ea_buf[baddr].ec == EBC_si) {
 		    continue;
 		}
 		switch (ctlr_dbcs_state(baddr)) {

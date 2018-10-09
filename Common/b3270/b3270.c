@@ -851,8 +851,8 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
 	    baddr = ROWCOL_TO_BA(r, c);
 	    if (ea_buf[baddr].fa ||
 		    FA_IS_PROTECTED(get_field_attribute(baddr)) ||
-		    ea_buf[baddr].cc == EBC_so ||
-		    ea_buf[baddr].cc == EBC_si) {
+		    ea_buf[baddr].ec == EBC_so ||
+		    ea_buf[baddr].ec == EBC_si) {
 		continue;
 	    }
 	    switch (ctlr_dbcs_state(baddr)) {

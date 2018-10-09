@@ -1060,9 +1060,8 @@ static enum state
 ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 {
 	int nc;
-	unsigned short ebc_ch;
 	enum dbcs_state d;
-	bool ge;
+	int xcset;
 
 	if ((pmi == 0) && (nvt_ch & 0x80)) {
 	    	char mbs[2];
@@ -1092,15 +1091,6 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	}
 	pmi = 0;
 
-	/* Translate to EBCDIC to see if it's DBCS. */
-	ebc_ch = unicode_to_ebcdic_ge(nvt_ch, &ge, false);
-	if (ebc_ch & ~0xff) {
-		if (!dbcs) {
-			nvt_ch = '?';
-			ebc_ch = asc2ebc0['?'];
-		}
-	}
-
 	if (held_wrap) {
 		PWRAP;
 		held_wrap = false;
@@ -1109,45 +1099,19 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	if (insert_mode)
 		(void) ansi_insert_chars(1, 0);
 	d = ctlr_dbcs_state(cursor_addr);
-	switch (csd[(once_cset != -1) ? once_cset : cset]) {
-	    case CSD_LD:	/* line drawing "0" */
-		if (nvt_ch >= 0x5f && nvt_ch <= 0x7e)
-			ctlr_add(cursor_addr, (unsigned char)(nvt_ch - 0x5f),
-			    CS_LINEDRAW);
-		else if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr,
-				(unsigned char)unicode_to_ebcdic('?'),
-				CS_BASE);
-		else
-			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
-		break;
-	    case CSD_UK:	/* UK "A" */
-		if (nvt_ch == '#')
-			ctlr_add(cursor_addr, 0x1e, CS_LINEDRAW);
-		else if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr,
-				(unsigned char)unicode_to_ebcdic('?'),
-				CS_BASE);
-		else
-			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
-		break;
-	    case CSD_US:	/* US "B" */
-		if (ebc_ch & ~0xff) {
-
-		    	/* Add a DBCS character to the buffer. */
-		    	if (!dbcs) {
-				/* Not currently using a DBCS character set. */
-				ctlr_add(cursor_addr,
-					(unsigned char)unicode_to_ebcdic('?'),
-					CS_BASE);
-				break;
-			}
-
+	xcset = csd[(once_cset != -1) ? once_cset : cset];
+	if (xcset == CSD_LD && nvt_ch >= 0x5f && nvt_ch <= 0x7e) {
+		ctlr_add_nvt(cursor_addr, (unsigned char)(nvt_ch - 0x5f),
+			CS_LINEDRAW);
+	} else if (xcset == CSD_UK && nvt_ch == '#') {
+		ctlr_add_nvt(cursor_addr, 0x1e, CS_LINEDRAW);
+	} else {
+		if (IS_UNICODE_DBCS(nvt_ch)) {
 			/* Get past the last column. */
 			if ((cursor_addr % COLS) == (COLS-1)) {
 				if (!wraparound_mode)
 				    	return DATA;
-				ctlr_add(cursor_addr, EBC_space, CS_BASE);
+				ctlr_add_nvt(cursor_addr, ' ', CS_BASE);
 				ctlr_add_gr(cursor_addr, gr);
 				ctlr_add_fg(cursor_addr, fg);
 				ctlr_add_bg(cursor_addr, bg);
@@ -1156,7 +1120,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			}
 
 			/* Add the left half. */
-			ctlr_add(cursor_addr, (ebc_ch >> 8) & 0xff, CS_DBCS);
+			ctlr_add_nvt(cursor_addr, nvt_ch, CS_DBCS);
 			ctlr_add_gr(cursor_addr, gr);
 			ctlr_add_fg(cursor_addr, fg);
 			ctlr_add_bg(cursor_addr, bg);
@@ -1167,13 +1131,13 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 				xaddr = cursor_addr;
 				DEC_BA(xaddr);
-				ctlr_add(xaddr, EBC_space, CS_BASE);
+				ctlr_add_nvt(xaddr, ' ', CS_BASE);
 				ea_buf[xaddr].db = DBCS_NONE;
 			}
 
 			/* Add the right half. */
 			INC_BA(cursor_addr);
-			ctlr_add(cursor_addr, ebc_ch & 0xff, CS_DBCS);
+			ctlr_add_nvt(cursor_addr, ' ', CS_DBCS);
 			ctlr_add_gr(cursor_addr, gr);
 			ctlr_add_fg(cursor_addr, fg);
 			ctlr_add_bg(cursor_addr, bg);
@@ -1191,12 +1155,10 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			}
 			(void) ctlr_dbcs_postprocess();
 			return DATA;
+		} else {
+			/* Add an SBCS character to the buffer. */
+			ctlr_add_nvt(cursor_addr, nvt_ch, CS_BASE);
 		}
-
-		/* Add an SBCS character to the buffer. */
-		ctlr_add(cursor_addr, (unsigned char)ebc_ch,
-			ge? CS_GE: CS_BASE);
-		break;
 	}
 
 	/* Handle conflicts with existing DBCS characters. */
@@ -1205,7 +1167,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 		xaddr = cursor_addr;
 		DEC_BA(xaddr);
-		ctlr_add(xaddr, EBC_space, CS_BASE);
+		ctlr_add_nvt(xaddr, ' ', CS_BASE);
 		ea_buf[xaddr].db = DBCS_NONE;
 		ea_buf[cursor_addr].db = DBCS_NONE;
 		(void) ctlr_dbcs_postprocess();
@@ -1215,7 +1177,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 		xaddr = cursor_addr;
 		INC_BA(xaddr);
-		ctlr_add(xaddr, EBC_space, CS_BASE);
+		ctlr_add_nvt(xaddr, ' ', CS_BASE);
 		ea_buf[xaddr].db = DBCS_NONE;
 		ea_buf[cursor_addr].db = DBCS_NONE;
 		(void) ctlr_dbcs_postprocess();
@@ -2009,6 +1971,7 @@ nvt_snap_one(struct ea *buf)
     int xlen;
     size_t i;
     enum dbcs_state d;
+    ucs4_t u;
     int c;
     int last_sgr = 0;
 #   define	EMIT_SGR(n)	{ emit_sgr(n); last_sgr = (n); }
@@ -2075,16 +2038,31 @@ nvt_snap_one(struct ea *buf)
 
 	/* Expand the current character to multibyte. */
 	d = ctlr_dbcs_state(baddr);
-	if (IS_LEFT(d)) {
-	    int xaddr = baddr;
-	    INC_BA(xaddr);
-	    len = ebcdic_to_multibyte(buf[baddr].cc << 8 | buf[xaddr].cc, mb,
-		    sizeof(mb));
-	} else if (IS_RIGHT(d)) {
-	    len = 0;
+	u = buf[baddr].ucs4;
+	if (u) {
+	    if (!IS_RIGHT(d)) {
+		len = unicode_to_multibyte(u, mb, sizeof(mb));
+		if (len == 0) {
+		    /* Is this necessary? */
+		    mb[0] = ' ';
+		    len = 2;
+		}
+	    } else {
+		len = 0;
+	    }
 	} else {
-	    len = ebcdic_to_multibyte(buf[baddr].cc, mb, sizeof(mb));
+	    if (IS_LEFT(d)) {
+		int xaddr = baddr;
+		INC_BA(xaddr);
+		len = ebcdic_to_multibyte(buf[baddr].ec << 8 | buf[xaddr].ec,
+			mb, sizeof(mb));
+	    } else if (IS_RIGHT(d)) {
+		len = 0;
+	    } else {
+		len = ebcdic_to_multibyte(buf[baddr].ec, mb, sizeof(mb));
+	    }
 	}
+
 	if (len > 0) {
 	    len--; /* terminating NUL */
 	}

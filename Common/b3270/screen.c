@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Paul Mattes.
+ * Copyright (c) 2015-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -416,76 +416,103 @@ render_screen(struct ea *ea, screen_t *s)
 		uc = ' ';
 	    }
 	} else {
-	    /* Convert EBCDIC to Unicode. */
-	    switch (ctlr_dbcs_state(i)) {
-	    case DBCS_NONE:
-	    case DBCS_SI:
-	    case DBCS_SB:
-		switch (ea[i].cc) {
-		case EBC_null:
-		    if (toggled(VISIBLE_CONTROL)) {
-			uc = '.';
-			order = true;
+	    if (ea[i].ucs4) {
+		/* NVT-mode text. */
+		switch (ctlr_dbcs_state(i)) {
+		case DBCS_RIGHT:
+		    uc = 0;
+		    dbcs = true;
+		    break;
+		case DBCS_LEFT:
+		    dbcs = true;
+		    /* fall through */
+		default:
+		    if (ea[i].cs == CS_LINEDRAW) {
+			int l = linedraw_to_unicode(ea[i].ucs4);
+
+			if (l <= 0) {
+			    uc = ' ';
+			} else {
+			    uc = (ucs4_t)l;
+			}
 		    } else {
-			uc = ' ';
+			uc = ea[i].ucs4;
 		    }
-		    break;
-		case EBC_so:
-		    if (toggled(VISIBLE_CONTROL)) {
-			uc = '<';
-			order = true;
-			no_copy = true;
-		    } else {
-			uc = ' ';
-		    }
-		    break;
-		case EBC_si:
-		    if (toggled(VISIBLE_CONTROL)) {
-			uc = '>';
-			order = true;
-			no_copy = true;
-		    } else {
-			uc = ' ';
-		    }
-		    break;
-		case EBC_dup:
-		    uc = '*';
-		    pua = true;
-		    order = true;
-		    break;
-		case EBC_fm:
-		    uc = ';';
-		    pua = true;
-		    order = true;
 		    break;
 		}
-		if (!order) {
-		    uc = ebcdic_to_unicode(ea[i].cc, ea[i].cs, EUO_APL_CIRCLED);
-		    if (is_apl_underlined(ea[i].cs, uc)) {
-			uc = uncircle(uc);
-			extra_underline = true;
+	    } else {
+		/* Convert EBCDIC to Unicode. */
+		switch (ctlr_dbcs_state(i)) {
+		case DBCS_NONE:
+		case DBCS_SI:
+		case DBCS_SB:
+		    switch (ea[i].ec) {
+		    case EBC_null:
+			if (toggled(VISIBLE_CONTROL)) {
+			    uc = '.';
+			    order = true;
+			} else {
+			    uc = ' ';
+			}
+			break;
+		    case EBC_so:
+			if (toggled(VISIBLE_CONTROL)) {
+			    uc = '<';
+			    order = true;
+			    no_copy = true;
+			} else {
+			    uc = ' ';
+			}
+			break;
+		    case EBC_si:
+			if (toggled(VISIBLE_CONTROL)) {
+			    uc = '>';
+			    order = true;
+			    no_copy = true;
+			} else {
+			    uc = ' ';
+			}
+			break;
+		    case EBC_dup:
+			uc = '*';
 			pua = true;
+			order = true;
+			break;
+		    case EBC_fm:
+			uc = ';';
+			pua = true;
+			order = true;
+			break;
 		    }
+		    if (!order) {
+			uc = ebcdic_to_unicode(ea[i].ec, ea[i].cs,
+				EUO_APL_CIRCLED);
+			if (is_apl_underlined(ea[i].cs, uc)) {
+			    uc = uncircle(uc);
+			    extra_underline = true;
+			    pua = true;
+			}
+			if (uc == 0) {
+			    uc = ' ';
+			}
+		    }
+		    break;
+		case DBCS_LEFT:
+		    uc = ebcdic_to_unicode((ea[i].ec << 8) | ea[i + 1].ec,
+			    CS_BASE, EUO_NONE);
 		    if (uc == 0) {
-			uc = ' ';
+			uc = 0x3000;
 		    }
+		    dbcs = true;
+		    break;
+		case DBCS_RIGHT:
+		    uc = 0;
+		    dbcs = true;
+		    break;
+		default:
+		    uc = ' ';
+		    break;
 		}
-		break;
-	    case DBCS_LEFT:
-		uc = ebcdic_to_unicode((ea[i].cc << 8) | ea[i + 1].cc,
-			CS_BASE, EUO_NONE);
-		if (uc == 0) {
-		    uc = 0x3000;
-		}
-		dbcs = true;
-		break;
-	    case DBCS_RIGHT:
-		uc = 0;
-		dbcs = true;
-		break;
-	    default:
-		uc = ' ';
-		break;
 	    }
 	}
 

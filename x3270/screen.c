@@ -150,7 +150,7 @@ static char gray_bits[] = { 0x01, 0x02 };
 static unsigned char  *selected;	/* selection bitmap */
 static bool	allow_resize;
 static Dimension main_height;		/* desired toplevel width */
-static union sp *temp_image;		/* temporary for X display */
+static struct sp *temp_image;		/* temporary for X display */
 static Pixel	colorbg_pixel;
 static bool	crosshair_enabled = true;
 static bool     cursor_displayed = false;
@@ -276,7 +276,7 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 struct sstate {
     Widget          widget;	/* the widget */
     Window          window;	/* the window */
-    union sp       *image;	/* what's on the X display */
+    struct sp       *image;	/* what's on the X display */
     int             cursor_daddr;	/* displayed cursor address */
     bool	    xh_alt;	/* crosshair was drawn in alt area */
     bool            exposed_yet;	/* have we been exposed yet? */
@@ -304,6 +304,7 @@ struct sstate {
     bool	   funky_font;
     bool           obscured;
     bool           copied;
+    bool	   unicode_font;
     int		   d8_ix;
     unsigned long  odd_width[256 / BPW];
     unsigned long  odd_lbearing[256 / BPW];
@@ -365,10 +366,10 @@ static void screen_focus(bool in);
 static void make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg);
 static void make_gcs(struct sstate *s);
 static void put_cursor(int baddr, bool on);
-static void resync_display(union sp *buffer, int first, int last);
-static void draw_fields(union sp *buffer, int first, int last);
-static void render_text(union sp *buffer, int baddr, int len,
-    bool block_cursor, union sp *attrs);
+static void resync_display(struct sp *buffer, int first, int last);
+static void draw_fields(struct sp *buffer, int first, int last);
+static void render_text(struct sp *buffer, int baddr, int len,
+    bool block_cursor, struct sp *attrs);
 static void cursor_pos(void);
 static void cursor_on(const char *why);
 static void schedule_cursor_blink(void);
@@ -393,8 +394,8 @@ static void set_font_globals(XFontStruct *f, const char *ef, const char *fef,
 static void screen_connect(bool ignored);
 static void configure_stable(XtPointer closure, XtIntervalId *id);
 static void cancel_blink(void);
-static void render_blanks(int baddr, int height, union sp *buffer);
-static void resync_text(int baddr, int len, union sp *buffer);
+static void render_blanks(int baddr, int height, struct sp *buffer);
+static void resync_text(int baddr, int len, struct sp *buffer);
 static void screen_reinit(unsigned cmask);
 static void aicon_font_init(void);
 static void aicon_size(Dimension *iw, Dimension *ih);
@@ -406,6 +407,7 @@ static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
 static void hollow_cursor(int baddr);
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
+static void xlate_dbcs_unicode(ucs4_t, XChar2b *);
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
@@ -656,9 +658,9 @@ screen_reinit(unsigned cmask)
 				      (maxROWS * maxCOLS + 7) / 8));
 
 	/* X display image */
-	Replace(nss.image, (union sp *)XtCalloc(sizeof(union sp),
+	Replace(nss.image, (struct sp *)XtCalloc(sizeof(struct sp),
 						maxROWS * maxCOLS));
-	Replace(temp_image, (union sp *)XtCalloc(sizeof(union sp),
+	Replace(temp_image, (struct sp *)XtCalloc(sizeof(struct sp),
 						 maxROWS*maxCOLS));
 
 	/* render_text buffers */
@@ -666,7 +668,7 @@ screen_reinit(unsigned cmask)
 	    (XChar2b *)XtMalloc(maxCOLS * sizeof(XChar2b)));
     } else {
 	(void) memset((char *) nss.image, 0,
-		      sizeof(union sp) * maxROWS * maxCOLS);
+		      sizeof(struct sp) * maxROWS * maxCOLS);
     }
 
     /* Compute SBCS/DBCS size differences. */
@@ -1864,12 +1866,12 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	}
 	for (row = startrow; row < endrow; row++) {
 	    (void) memset((char *) &ss->image[ROWCOL_TO_BA(row, startcol)],
-		    0, ncols * sizeof(union sp));
+		    0, ncols * sizeof(struct sp));
 	    if (visible_control) {
 		c0 = ROWCOL_TO_BA(row, startcol);
 
 		for (i = 0; i < ncols; i++) {
-		    ss->image[c0 + i].bits.cc = EBC_space;
+		    ss->image[c0 + i].u.bits.ec = EBC_space;
 		}
 	    }
 	}
@@ -1880,10 +1882,10 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)), 0, 0,
 		ss->screen_width, ss->screen_height);
 	(void) memset((char *) ss->image, 0,
-		(maxROWS*maxCOLS) * sizeof(union sp));
+		(maxROWS*maxCOLS) * sizeof(struct sp));
 	if (visible_control) {
 	    for (i = 0; i < maxROWS*maxCOLS; i++) {
-		ss->image[i].bits.cc = EBC_space;
+		ss->image[i].u.bits.ec = EBC_space;
 	    }
 	}
 	ss->copied = false;
@@ -1989,8 +1991,8 @@ screen_disp(bool erasing)
 	}
 
 	/* Set "cursor_changed" if the text under it has changed. */
-	if (ss->image[fl_baddr(cursor_addr)].word !=
-		temp_image[fl_baddr(cursor_addr)].word) {
+	if (ss->image[fl_baddr(cursor_addr)].u.word !=
+		temp_image[fl_baddr(cursor_addr)].u.word) {
 	    cursor_changed = true;
 	}
 
@@ -2033,7 +2035,7 @@ screen_disp(bool erasing)
  * Render a blank rectangle on the X display.
  */
 static void
-render_blanks(int baddr, int height, union sp *buffer)
+render_blanks(int baddr, int height, struct sp *buffer)
 {
     int x, y;
 
@@ -2050,7 +2052,22 @@ render_blanks(int baddr, int height, union sp *buffer)
 	(ss->char_width * COLS) + 1, (ss->char_height * height));
 
     (void) memmove(&ss->image[baddr], &buffer[baddr],
-	    COLS * height *sizeof(union sp));
+	    COLS * height *sizeof(struct sp));
+}
+
+/*
+ * Check if a character position is blank.
+ */
+static bool
+bkm_isset(struct sp *buffer)
+{
+    if (buffer->u.bits.cs != CS_BASE) {
+	return false;
+    }
+    if (buffer->ucs4 != 0) {
+	return buffer->ucs4 == ' ' || buffer->ucs4 == 0xa0;
+    }
+    return BKM_ISSET(buffer->u.bits.ec);
 }
 
 /*
@@ -2060,16 +2077,16 @@ render_blanks(int baddr, int height, union sp *buffer)
  * Works _only_ with non-debug fonts.
  */
 static bool
-empty_space(register union sp *buffer, int len)
+empty_space(register struct sp *buffer, int len)
 {
     int i;
 
     for (i = 0; i < len; i++, buffer++) {
-	if (buffer->bits.gr ||
-	    buffer->bits.sel ||
-	    (buffer->bits.fg & INVERT_MASK) ||
-	    (buffer->bits.cs != CS_BASE) ||
-	    !BKM_ISSET(buffer->bits.cc)) {
+	if (buffer->u.bits.gr ||
+	    buffer->u.bits.sel ||
+	    (buffer->u.bits.fg & INVERT_MASK) ||
+	    (buffer->u.bits.cs != CS_BASE) ||
+	    !bkm_isset(buffer)) {
 	    return false;
 	}
     }
@@ -2083,7 +2100,7 @@ empty_space(register union sp *buffer, int len)
  * must not span lines.
  */
 static void
-resync_text(int baddr, int len, union sp *buffer)
+resync_text(int baddr, int len, struct sp *buffer)
 {
     static bool ever = false;
     static unsigned long cmask = 0L;
@@ -2108,20 +2125,20 @@ resync_text(int baddr, int len, union sp *buffer)
     }
 
     if (!ever) {
-	union sp b;
+	struct sp b;
 
 	/* Create masks for the "important" fields in an sp. */
-	b.word = 0L;
-	b.bits.fg = COLOR_MASK | INVERT_MASK;
-	b.bits.sel = 1;
-	b.bits.gr = GR_UNDERLINE | GR_INTENSIFY;
-	cmask = b.word;
+	b.u.word = 0L;
+	b.u.bits.fg = COLOR_MASK | INVERT_MASK;
+	b.u.bits.sel = 1;
+	b.u.bits.gr = GR_UNDERLINE | GR_INTENSIFY;
+	cmask = b.u.word;
 
-	b.word = 0L;
-	b.bits.fg = INVERT_MASK;
-	b.bits.sel = 1;
-	b.bits.gr = 0xf;
-	gmask = b.word;
+	b.u.word = 0L;
+	b.u.bits.fg = INVERT_MASK;
+	b.u.bits.sel = 1;
+	b.u.bits.gr = 0xf;
+	gmask = b.u.word;
 
 	ever = true;
     }
@@ -2142,22 +2159,22 @@ resync_text(int baddr, int len, union sp *buffer)
 	unsigned long attrs, attrs2;
 	bool has_gr, has_gr2;
 	bool empty, empty2;
-	union sp ra;
+	struct sp ra;
 	int i;
 	int i0 = 0;
 
 	ra = buffer[baddr];
 
 	/* Note the characteristics of the beginning of the region. */
-	attrs = buffer[baddr].word & cmask;
-	has_gr = (buffer[baddr].word & gmask) != 0;
-	empty = !has_gr && BKM_ISSET(buffer[baddr].bits.cc);
+	attrs = buffer[baddr].u.word & cmask;
+	has_gr = (buffer[baddr].u.word & gmask) != 0;
+	empty = !has_gr && bkm_isset(&buffer[baddr]);
 
 	for (i = 0; i < len; i++) {
 	    /* Note the characteristics of this character. */
-	    attrs2 = buffer[baddr+i].word & cmask;
-	    has_gr2 = (buffer[baddr+i].word & gmask) != 0;
-	    empty2 = !has_gr2 && BKM_ISSET(buffer[baddr+i].bits.cc);
+	    attrs2 = buffer[baddr+i].u.word & cmask;
+	    has_gr2 = (buffer[baddr+i].u.word & gmask) != 0;
+	    empty2 = !has_gr2 && bkm_isset(&buffer[baddr+i]);
 
 	    /* If this character has exactly the same attributes
 	       as the current region, simply add it, noting that
@@ -2207,7 +2224,7 @@ resync_text(int baddr, int len, union sp *buffer)
     }
 
     /* The X display is now correct; update ss->image[]. */
-    (void) memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(union sp));
+    (void) memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(struct sp));
 }
 
 /*
@@ -2358,14 +2375,14 @@ linedraw_to_udisplay(int d8_ix, unsigned char c)
  * Render text onto the X display.  The region must not span lines.
  */
 static void
-render_text(union sp *buffer, int baddr, int len, bool block_cursor,
-	union sp *attrs)
+render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
+	struct sp *attrs)
 {
     int color;
     int x, y;
     GC dgc = (GC)None;	/* drawing text */
     GC cleargc = (GC)None;	/* clearing under undersized characters */
-    int sel = attrs->bits.sel;
+    int sel = attrs->u.bits.sel;
     register int i, j;
     bool one_at_a_time = false;
     int d8_ix = ss->d8_ix;
@@ -2402,7 +2419,7 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
     }
 
     for (i = 0, j = 0; i < len; i++) {
-	if (buffer[i].bits.cs != CS_DBCS || !dbcs || iconic) {
+	if (buffer[i].u.bits.cs != CS_DBCS || !dbcs || iconic) {
 	    if (n_texts < 0 || in_dbcs) {
 		/* Switch from nothing or DBCS, to SBCS. */
 #if defined(_ST) /*[*/
@@ -2436,32 +2453,63 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	    clear_len += 2 * ss->char_width;
 	}
 
-	switch (buffer[i].bits.cs) {
+	switch (buffer[i].u.bits.cs) {
 	case CS_BASE:	/* latin-1 */
-	    rt_buf[j].byte1 = 0;
-	    if (toggled(MONOCASE)) {
-		rt_buf[j].byte2 = font_index(buffer[i].bits.cc, d8_ix, true);
-	    } else {
-		if (visible_control) {
-		    if (buffer[i].bits.cc == EBC_so) {
-			rt_buf[j].byte1 = 0;
-			rt_buf[j].byte2 = font_index(EBC_less, d8_ix, false);
-		    } else if (buffer[i].bits.cc == EBC_si) {
-			rt_buf[j].byte1 = 0;
-			rt_buf[j].byte2 = font_index(EBC_greater, d8_ix, false);
+	    if (buffer[i].ucs4) {
+		/*
+		 * NVT-mode text. With a Unicode font, we can just display it
+		 * as-is. Otherwise, we need to map to EBCDIC and display it
+		 * only if there is a mapping.
+		 */
+		if (ss->unicode_font) {
+		    ucs4_t u = buffer[i].ucs4;
+
+		    if (toggled(MONOCASE) && islower((int)u)) {
+			u = (ucs4_t)toupper((int)u);
+		    }
+		    rt_buf[j].byte1 = (u >> 8) & 0xff;
+		    rt_buf[j].byte2 = u & 0xff;
+		} else {
+		    /* Only draw if there is an EBCDIC mapping. */
+		    ebc_t e = unicode_to_ebcdic(buffer[i].ucs4);
+
+		    rt_buf[j].byte1 = 0;
+		    if (e != 0) {
+			rt_buf[j].byte2 = font_index(e, d8_ix,
+				toggled(MONOCASE));
 		    } else {
-			unsigned short c = font_index(buffer[i].bits.cc, d8_ix,
-				false);
+			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
+		    }
+		}
+	    } else {
+		rt_buf[j].byte1 = 0;
+		if (toggled(MONOCASE)) {
+		    rt_buf[j].byte2 = font_index(buffer[i].u.bits.ec, d8_ix,
+			    true);
+		} else {
+		    if (visible_control) {
+			if (buffer[i].u.bits.ec == EBC_so) {
+			    rt_buf[j].byte1 = 0;
+			    rt_buf[j].byte2 = font_index(EBC_less, d8_ix,
+				    false);
+			} else if (buffer[i].u.bits.ec == EBC_si) {
+			    rt_buf[j].byte1 = 0;
+			    rt_buf[j].byte2 = font_index(EBC_greater, d8_ix,
+				    false);
+			} else {
+			    unsigned short c = font_index(buffer[i].u.bits.ec,
+				    d8_ix, false);
+
+			    rt_buf[j].byte1 = (c >> 8) & 0xff;
+			    rt_buf[j].byte2 = c & 0xff;
+			}
+		    } else {
+			unsigned short c = font_index(buffer[i].u.bits.ec,
+				d8_ix, false);
 
 			rt_buf[j].byte1 = (c >> 8) & 0xff;
 			rt_buf[j].byte2 = c & 0xff;
 		    }
-		} else {
-		    unsigned short c = font_index(buffer[i].bits.cc, d8_ix,
-			    false);
-
-		    rt_buf[j].byte1 = (c >> 8) & 0xff;
-		    rt_buf[j].byte2 = c & 0xff;
 		}
 	    }
 	    j++;
@@ -2470,12 +2518,12 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	case CS_BASE | CS_GE:
 	    if (ss->extended_3270font) {
 		rt_buf[j].byte1 = 1;
-		rt_buf[j].byte2 = ebc2cg0[buffer[i].bits.cc];
+		rt_buf[j].byte2 = ebc2cg0[buffer[i].u.bits.ec];
 	    } else {
 		if (ss->font_16bit) {
-		    rt_buf[j] = apl_to_udisplay(d8_ix, buffer[i].bits.cc);
+		    rt_buf[j] = apl_to_udisplay(d8_ix, buffer[i].u.bits.ec);
 		} else {
-		    rt_buf[j] = apl_to_ldisplay(buffer[i].bits.cc);
+		    rt_buf[j] = apl_to_ldisplay(buffer[i].u.bits.ec);
 		}
 	    }
 	    j++;
@@ -2483,16 +2531,16 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	case CS_LINEDRAW:	/* DEC line drawing */
 	    if (ss->standard_font) {
 		if (ss->font_16bit) {
-		    rt_buf[j] = linedraw_to_udisplay(d8_ix, buffer[i].bits.cc);
+		    rt_buf[j] = linedraw_to_udisplay(d8_ix, buffer[i].ucs4);
 		} else {
 		    /* Assume the first 32 characters are line-drawing. */
 		    rt_buf[j].byte1 = 0;
-		    rt_buf[j].byte2 = buffer[i].bits.cc;
+		    rt_buf[j].byte2 = buffer[i].u.bits.ec;
 		}
 	    } else {
 		if (ss->extended_3270font) {
 		    rt_buf[j].byte1 = 2;
-		    rt_buf[j].byte2 = buffer[i].bits.cc;
+		    rt_buf[j].byte2 = buffer[i].ucs4;
 		} else {
 		    rt_buf[j].byte1 = 0;
 		    rt_buf[j].byte2 = 0;
@@ -2500,9 +2548,14 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	    }
 	    j++;
 	    break;
-	    case CS_DBCS:	/* DBCS */
+	case CS_DBCS:	/* DBCS */
 	    if (dbcs) {
-		xlate_dbcs(buffer[i].bits.cc, buffer[i+1].bits.cc, &rt_buf[j]);
+		if (buffer[i].ucs4 /* && dbcs_font.unicode*/) {
+		    xlate_dbcs_unicode(buffer[i].ucs4, &rt_buf[j]);
+		} else {
+		    xlate_dbcs(buffer[i].u.bits.ec, buffer[i+1].u.bits.ec,
+			    &rt_buf[j]);
+		}
 		/* Skip the next byte as well. */
 		i++;
 	    } else {
@@ -2530,7 +2583,7 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 
     x = ssCOL_TO_X(BA_TO_COL(baddr));
     y = ssROW_TO_Y(BA_TO_ROW(baddr));
-    color = attrs->bits.fg;
+    color = attrs->u.bits.fg;
 
     /* Select the GCs. */
     if (sel && !block_cursor) {
@@ -2621,7 +2674,7 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	}
     } else {
 	XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
-	if (ss->overstrike && ((attrs->bits.gr & GR_INTENSIFY) ||
+	if (ss->overstrike && ((attrs->u.bits.gr & GR_INTENSIFY) ||
 		    ((appres.interactive.mono ||
 		      (!appres.m3279 && highlight_bold)) &&
 		     ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
@@ -2629,7 +2682,7 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	}
     }
 
-    if (attrs->bits.gr & GR_UNDERLINE) {
+    if (attrs->u.bits.gr & GR_UNDERLINE) {
 	XDrawLine(display, ss->window, dgc, x,
 		y - ss->ascent + ss->char_height - 1, x + clear_len,
 		y - ss->ascent + ss->char_height - 1);
@@ -2662,13 +2715,13 @@ screen_scroll(void)
 
     was_on = cursor_off("scroll", true, &xwo);
     (void) memmove(&ss->image[0], &ss->image[COLS],
-		       (ROWS - 1) * COLS * sizeof(union sp));
+		       (ROWS - 1) * COLS * sizeof(struct sp));
     (void) memmove(&temp_image[0], &temp_image[COLS],
-		       (ROWS - 1) * COLS * sizeof(union sp));
+		       (ROWS - 1) * COLS * sizeof(struct sp));
     (void) memset((char *)&ss->image[(ROWS - 1) * COLS], 0,
-		  COLS * sizeof(union sp));
+		  COLS * sizeof(struct sp));
     (void) memset((char *)&temp_image[(ROWS - 1) * COLS], 0,
-		  COLS * sizeof(union sp));
+		  COLS * sizeof(struct sp));
     XCopyArea(display, ss->window, ss->window, get_gc(ss, 0),
 	ssCOL_TO_X(0),
 	ssROW_TO_Y(1) - ss->ascent,
@@ -2697,7 +2750,7 @@ screen_scroll(void)
 static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    (void) memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(union sp));
+    (void) memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(struct sp));
     ctlr_changed(0, ROWS*COLS);
 }
 
@@ -2775,7 +2828,7 @@ map_crosshair(int baddr)
  * "Draw" ea_buf into a buffer
  */
 static void
-draw_fields(union sp *buffer, int first, int last)
+draw_fields(struct sp *buffer, int first, int last)
 {
     int	baddr = 0;
     int	faddr;
@@ -2824,12 +2877,14 @@ draw_fields(union sp *buffer, int first, int last)
     }
 
     do {
-	unsigned char	c = sbp->cc;
-	union sp	b;
+	unsigned char	c = sbp->ec;
+	ucs4_t		u = sbp->ucs4;
+	struct sp	b;
 	bool		reverse = false;
 	bool		is_selected = false;
 
-	b.word = 0;	/* clear out all fields */
+	b.u.word = 0;	/* clear out all fields */
+	b.ucs4 = 0;
 
 	if (ea_buf[baddr].fa) {
 	    fa = ea_buf[baddr].fa;
@@ -2841,15 +2896,15 @@ draw_fields(union sp *buffer, int first, int last)
 		field_color = fa_color(fa);
 	    }
 	    if (visible_control) {
-		b.bits.cc = visible_ebcdic(fa);
-		b.bits.gr = GR_UNDERLINE;
-		b.bits.fg = appres.m3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
+		b.u.bits.ec = visible_ebcdic(fa);
+		b.u.bits.gr = GR_UNDERLINE;
+		b.u.bits.fg = appres.m3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
 		    FA_INT_HIGH_SEL;
 	    } else if (crossable && CROSSED(baddr)) {
-		b.bits.cs = CS_APL;
-		b.bits.cc = map_crosshair(baddr);
-		b.bits.fg = CROSS_COLOR;
-		b.bits.gr = 0;
+		b.u.bits.cs = CS_APL;
+		b.u.bits.ec = map_crosshair(baddr);
+		b.u.bits.fg = CROSS_COLOR;
+		b.u.bits.gr = 0;
 	    }
 	} else {
 	    unsigned short gr;
@@ -2889,26 +2944,26 @@ draw_fields(union sp *buffer, int first, int last)
 		}
 	    }
 	    if (!appres.interactive.mono) {
-		b.bits.fg = e_color;
+		b.u.bits.fg = e_color;
 	    }
 
 	    /* Find the right character and character set. */
 	    d = ctlr_dbcs_state(baddr);
 	    if (zero) {
 		if (visible_control) {
-		    b.bits.cc = EBC_space;
+		    b.u.bits.ec = EBC_space;
 		} else if (crossable && CROSSED(baddr)) {
-		    b.bits.cs = CS_APL;
-		    b.bits.cc = map_crosshair(baddr);
-		    b.bits.fg = CROSS_COLOR;
-		    b.bits.gr = 0;
+		    b.u.bits.cs = CS_APL;
+		    b.u.bits.ec = map_crosshair(baddr);
+		    b.u.bits.fg = CROSS_COLOR;
+		    b.u.bits.gr = 0;
 		}
-	    } else if (((!visible_control || c != EBC_null) &&
-			(c != EBC_space || d != DBCS_NONE)) ||
+	    } else if (((!visible_control || (u || c != EBC_null)) &&
+			((!u && c != EBC_space) || (u && u != ' ') || d != DBCS_NONE)) ||
 		       (gr & (GR_REVERSE | GR_UNDERLINE)) ||
 		       visible_control) {
 
-		b.bits.fg = e_color;
+		b.u.bits.fg = e_color;
 
 		/*
 		 * Replace blanked-out blinking text with
@@ -2916,36 +2971,37 @@ draw_fields(union sp *buffer, int first, int last)
 		 */
 		if (!text_blinking_on && (gr & GR_BLINK)) {
 		    if (!crossable || !CROSSED(baddr)) {
-			b.bits.cc = EBC_space;
+			b.u.bits.ec = EBC_space;
 		    } else {
-			b.bits.cs = CS_APL;
-			b.bits.cc = map_crosshair(baddr);
-			b.bits.fg = CROSS_COLOR;
-			b.bits.gr = 0;
+			b.u.bits.cs = CS_APL;
+			b.u.bits.ec = map_crosshair(baddr);
+			b.u.bits.fg = CROSS_COLOR;
+			b.u.bits.gr = 0;
 		    }
 		} else {
-		    if (visible_control && c == EBC_null) {
-			b.bits.cc = EBC_period;
+		    if (visible_control && !u && c == EBC_null) {
+			b.u.bits.ec = EBC_period;
 			is_vc = true;
 		    } else if (visible_control &&
 			(c == EBC_so || c == EBC_si)) {
-			b.bits.cc = (c == EBC_so)? EBC_less: EBC_greater;
+			b.u.bits.ec = (c == EBC_so)? EBC_less: EBC_greater;
 			is_vc = true;
 		    } else {
-			b.bits.cc = c;
+			b.u.bits.ec = c;
+			b.ucs4 = u;
 		    }
 		    if (sbp->cs) {
-			b.bits.cs = sbp->cs;
+			b.u.bits.cs = sbp->cs;
 		    } else {
-			b.bits.cs = field_ea->cs;
+			b.u.bits.cs = field_ea->cs;
 		    }
-		    if (b.bits.cs & CS_GE) {
-			b.bits.cs = CS_APL;
-		    } else if ((b.bits.cs & CS_MASK) != CS_DBCS ||
+		    if (b.u.bits.cs & CS_GE) {
+			b.u.bits.cs = CS_APL;
+		    } else if ((b.u.bits.cs & CS_MASK) != CS_DBCS ||
 			     d != DBCS_NONE) {
-			b.bits.cs &= CS_MASK;
+			b.u.bits.cs &= CS_MASK;
 		    } else {
-			b.bits.cs = CS_BASE;
+			b.u.bits.cs = CS_BASE;
 		    }
 		}
 
@@ -2953,24 +3009,24 @@ draw_fields(union sp *buffer, int first, int last)
 
 	    if (visible_control) {
 		if (is_vc) {
-		    b.bits.gr = GR_UNDERLINE;
+		    b.u.bits.gr = GR_UNDERLINE;
 		}
 	    } else {
-		b.bits.gr = gr & (GR_UNDERLINE | GR_INTENSIFY);
+		b.u.bits.gr = gr & (GR_UNDERLINE | GR_INTENSIFY);
 	    }
 
 	    /* Check for SI/SO. */
 	    if (d == DBCS_LEFT || d == DBCS_RIGHT) {
-		b.bits.cs = CS_DBCS;
+		b.u.bits.cs = CS_DBCS;
 	    }
 
 	    /* Check for blanks. */
 	    if (crossable && CROSSED(baddr) &&
-		    b.bits.cs == CS_BASE && BKM_ISSET(b.bits.cc)) {
-		b.bits.cs = CS_APL;
-		b.bits.cc = map_crosshair(baddr);
-		b.bits.fg = CROSS_COLOR;
-		b.bits.gr = 0;
+		    b.u.bits.cs == CS_BASE && bkm_isset(&b)) {
+		b.u.bits.cs = CS_APL;
+		b.u.bits.ec = map_crosshair(baddr);
+		b.u.bits.fg = CROSS_COLOR;
+		b.u.bits.gr = 0;
 	    }
 	}
 
@@ -3026,7 +3082,7 @@ draw_fields(union sp *buffer, int first, int last)
 	 * XOR the crosshair cursor with selections.
 	 */
 	if (is_selected) {
-	    b.bits.sel = 1;
+	    b.u.bits.sel = 1;
 	}
 
 	if (!flipped) {
@@ -3049,7 +3105,7 @@ draw_fields(union sp *buffer, int first, int last)
  * Resync the X display with the contents of 'buffer'
  */
 static void
-resync_display(union sp *buffer, int first, int last)
+resync_display(struct sp *buffer, int first, int last)
 {
     int		i, j;
     int		b = 0;
@@ -3074,7 +3130,7 @@ resync_display(union sp *buffer, int first, int last)
 
 	/* Has the line changed? */
 	if (!memcmp((char *) &ss->image[b], (char *) &buffer[b],
-	    COLS*sizeof(union sp))) {
+	    COLS*sizeof(struct sp))) {
 	    if (i0 >= 0) {
 		render_blanks(i0 * COLS, i - i0, buffer);
 		i0 = -1;
@@ -3114,7 +3170,8 @@ resync_display(union sp *buffer, int first, int last)
 		s0 = -1;
 		continue;
 	    }
-	    if (ss->image[b+j].word == buffer[b+j].word) {
+	    if (ss->image[b+j].u.word == buffer[b+j].u.word
+		    && ss->image[b+j].ucs4 == buffer[b+j].ucs4) {
 
 		/* Character is the same. */
 
@@ -3259,7 +3316,7 @@ static void
 redraw_char(int baddr, bool invert)
 {
     enum dbcs_state d;
-    union sp buffer[2];
+    struct sp buffer[2];
     int faddr;
     unsigned char fa;
     int gr;
@@ -3313,18 +3370,20 @@ redraw_char(int baddr, bool invert)
      * ss->image isn't going to help, because it may contain shortcuts
      *  for faster display, so we have to construct a buffer to use.
      */
-    buffer[0].word = 0L;
-    buffer[0].bits.cc = ea_buf[baddr].cc;
-    buffer[0].bits.cs = ea_buf[baddr].cs;
-    if (buffer[0].bits.cs & CS_GE) {
-	buffer[0].bits.cs = CS_APL;
+    buffer[0].u.word = 0L;
+    buffer[0].ucs4 = 0L;
+    buffer[0].u.bits.ec = ea_buf[baddr].ec;
+    buffer[0].u.bits.cs = ea_buf[baddr].cs;
+    if (buffer[0].u.bits.cs & CS_GE) {
+	buffer[0].u.bits.cs = CS_APL;
     } else {
-	buffer[0].bits.cs &= CS_MASK;
+	buffer[0].u.bits.cs &= CS_MASK;
     }
+    buffer[0].ucs4 = ea_buf[baddr].ucs4;
 
     faddr = find_field_attribute(baddr);
     if (d == DBCS_LEFT || d == DBCS_RIGHT) {
-	buffer[0].bits.cs = CS_DBCS;
+	buffer[0].u.bits.cs = CS_DBCS;
     }
     fa = ea_buf[faddr].fa;
     if (FA_IS_ZERO(fa)) {
@@ -3346,26 +3405,27 @@ redraw_char(int baddr, bool invert)
 	    blank_it = 1;
 	}
     }
-    if (buffer[0].bits.cs == CS_BASE && BKM_ISSET(buffer[0].bits.cc)) {
+    if (buffer[0].u.bits.cs == CS_BASE && bkm_isset(&buffer[0])) {
 	blank_it = true;
     }
     if (blank_it) {
 	if (CROSSABLE && CROSSED(baddr)) {
-	    buffer[0].bits.cs = CS_APL;
-	    buffer[0].bits.cc = map_crosshair(baddr);
-	    buffer[0].bits.fg = CROSS_COLOR;
-	    buffer[0].bits.gr = 0;
+	    buffer[0].u.bits.cs = CS_APL;
+	    buffer[0].u.bits.ec = map_crosshair(baddr);
+	    buffer[0].u.bits.fg = CROSS_COLOR;
+	    buffer[0].u.bits.gr = 0;
 	} else {
-	    buffer[0].bits.cc = EBC_space;
-	    buffer[0].bits.cs = 0;
+	    buffer[0].u.bits.ec = EBC_space;
+	    buffer[0].u.bits.cs = 0;
 	}
     }
-    buffer[0].bits.fg = char_color(baddr);
-    buffer[0].bits.gr |= (gr & GR_INTENSIFY);
+    buffer[0].u.bits.fg = char_color(baddr);
+    buffer[0].u.bits.gr |= (gr & GR_INTENSIFY);
     if (len == 2) {
-	buffer[1].word = buffer[0].word;
+	buffer[1].u.word = buffer[0].u.word;
 	if (!blank_it) {
-	    buffer[1].bits.cc = ea_buf[baddr2].cc;
+	    buffer[1].u.bits.ec = ea_buf[baddr2].ec;
+	    buffer[1].ucs4 = ea_buf[baddr2].ucs4;
 	}
     }
     render_text(buffer, fl_baddr(baddr), len, true, buffer);
@@ -4788,7 +4848,6 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     }
 
     font_charset = xs_buffer("%s-%s", family_name, fe);
-    Free(family_name);
     Free(font_encoding);
 
     if (is_dbcs) {
@@ -4804,6 +4863,8 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	dbcs = true;
 	Replace(full_efontname_dbcs, XtNewString(fef));
 	Replace(efont_charset_dbcs, font_charset);
+
+	Free(family_name);
 	return;
     }
     Replace(efontname, XtNewString(ef));
@@ -4848,6 +4909,8 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	nss.font_16bit = false;
 	nss.d8_ix = display8_init(font_charset);
     }
+    nss.unicode_font = !strcasecmp(family_name, "iso10646");
+    Free(family_name);
 
     /* See if this font has any unusually-shaped characters. */
     INIT_ODD(nss.odd_width);
@@ -5237,7 +5300,7 @@ aicon_reinit(unsigned cmask)
 
     if (cmask & MODEL_CHANGE) {
 	aicon_size(&iss.screen_width, &iss.screen_height);
-	Replace(iss.image, (union sp *)XtMalloc(sizeof(union sp) * maxROWS *
+	Replace(iss.image, (struct sp *)XtMalloc(sizeof(struct sp) * maxROWS *
 		    maxCOLS));
 	XtVaSetValues(iss.widget,
 		XtNwidth, iss.screen_width,
@@ -5245,7 +5308,7 @@ aicon_reinit(unsigned cmask)
 		NULL);
     }
     if (cmask & (MODEL_CHANGE | FONT_CHANGE | COLOR_CHANGE)) {
-	(void)memset((char *)iss.image, 0, sizeof(union sp) * maxROWS *
+	(void)memset((char *)iss.image, 0, sizeof(struct sp) * maxROWS *
 		maxCOLS);
     }
 }
@@ -5821,10 +5884,10 @@ PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
 	 * Force a screen redraw.
 	 */
 	(void) memset((char *) ss->image, 0,
-		(maxROWS*maxCOLS) * sizeof(union sp));
+		(maxROWS*maxCOLS) * sizeof(struct sp));
 	if (visible_control) {
 	    for (i = 0; i < maxROWS*maxCOLS; i++) {
-		ss->image[i].bits.cc = EBC_space;
+		ss->image[i].u.bits.ec = EBC_space;
 	    }
 	}
 	ctlr_changed(0, ROWS*COLS);
@@ -5889,6 +5952,25 @@ xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 
 #if defined(_ST) /*[*/
     printf("EBC %02x%02x -> X11 font %02x%02x\n", c0, c1, r->byte1, r->byte2);
+#endif /*]*/
+}
+
+/* Translate a Unicode character to a display character. */
+static void
+xlate_dbcs_unicode(ucs4_t ucs, XChar2b *r)
+{
+    int d = display16_lookup(dbcs_font.d16_ix, ucs);
+
+    if (d >= 0) {
+	r->byte1 = (d >> 8) & 0xff;
+	r->byte2 = d & 0xff;
+    } else {
+	r->byte1 = 0;
+	r->byte2 = 0;
+    }
+
+#if defined(_ST) /*[*/
+    printf("UCS4 %04x -> X11 font %02x%02x\n", ucs4, r->byte1, r->byte2);
 #endif /*]*/
 }
 

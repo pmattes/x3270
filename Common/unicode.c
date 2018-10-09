@@ -797,6 +797,16 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 		}
 	}
 
+	/* Do uppercase. */
+	if (flags & EUO_TOUPPER) {
+	    	if (islower((int)uc)) {
+		    uc = (ucs4_t)toupper((int)uc);
+		    if (ucp != NULL) {
+			    *ucp = uc;
+		    }
+		}
+	}
+
 	/* Translate from Unicode to local multibyte. */
 
 #if defined(_WIN32) /*[*/

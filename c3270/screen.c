@@ -1258,45 +1258,56 @@ screen_disp(bool erasing _is_unused)
 
 		    INC_BA(xaddr);
 		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null &&
-			    ea_buf[xaddr].cc == EBC_null) {
+			    ea_buf[baddr].ec == EBC_null &&
+			    ea_buf[xaddr].ec == EBC_null) {
 			(void) attrset(attrs | A_UNDERLINE);
 			addstr("..");
 		    } else {
-			len = ebcdic_to_multibyte(
-				(ea_buf[baddr].cc << 8) |
-				 ea_buf[xaddr].cc,
-				mb, sizeof(mb));
+			if (ea_buf[baddr].ucs4 != 0) {
+			    len = unicode_to_multibyte(ea_buf[baddr].ucs4,
+				    mb, sizeof(mb));
+			} else {
+			    len = ebcdic_to_multibyte(
+				    (ea_buf[baddr].ec << 8) |
+				     ea_buf[xaddr].ec,
+				    mb, sizeof(mb));
+			}
 			addstr(mb);
 		    }
 		} else if (!IS_RIGHT(d)) {
 		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null) {
+			    ea_buf[baddr].ucs4 == 0 &&
+			    ea_buf[baddr].ec == EBC_null) {
 			(void) attrset(attrs | A_UNDERLINE);
 			addstr(".");
 		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_so) {
+			    ea_buf[baddr].ec == EBC_so) {
 			(void) attrset(attrs | A_UNDERLINE);
 			addstr("<");
 		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_si) {
+			    ea_buf[baddr].ec == EBC_si) {
 			(void) attrset(attrs | A_UNDERLINE);
 			addstr(">");
 		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			display_linedraw(ea_buf[baddr].cc);
+			display_linedraw(ea_buf[baddr].ucs4);
 		    } else if (ea_buf[baddr].cs == CS_APL ||
 			    (ea_buf[baddr].cs & CS_GE)) {
-			display_ge(ea_buf[baddr].cc);
+			display_ge(ea_buf[baddr].ec);
 		    } else {
 			bool done_sbcs = false;
 
-			len = ebcdic_to_multibyte_x(
-				    ea_buf[baddr].cc,
-				    CS_BASE, mb,
-				    sizeof(mb),
-				    EUO_BLANK_UNDEF |
+			if (ea_buf[baddr].ucs4 != 0) {
+			    len = unicode_to_multibyte(ea_buf[baddr].ucs4,
+				    mb, sizeof(mb));
+			} else {
+			    len = ebcdic_to_multibyte_x(
+					ea_buf[baddr].ec,
+					CS_BASE, mb,
+					sizeof(mb),
+					EUO_BLANK_UNDEF |
 			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
-				    NULL);
+					NULL);
+			}
 			if (len > 0) {
 			    len--;
 			}

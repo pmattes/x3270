@@ -79,15 +79,18 @@ void screen_unselect_all(void);
 /*
  * Screen position structure.
  */
-union sp {
-    struct {
-	unsigned cc  : 8;	/* character code */
-	unsigned sel : 1;	/* selection status */
-	unsigned fg  : 6;	/* foreground color (flag/inv/0-15) */
-	unsigned gr  : 4;	/* graphic rendition */
-	unsigned cs  : 3;	/* character set */
-    } bits;
-    unsigned long word;
+struct sp {
+    union {
+	struct {
+	    unsigned ec  : 8;	/* EBCDIC character code */
+	    unsigned sel : 1;	/* selection status */
+	    unsigned fg  : 6;	/* foreground color (flag/inv/0-15) */
+	    unsigned gr  : 4;	/* graphic rendition */
+	    unsigned cs  : 3;	/* character set */
+	} bits;
+	unsigned long word;
+    } u;
+    ucs4_t ucs4;		/* NVT-mode character */
 };
 
 /*

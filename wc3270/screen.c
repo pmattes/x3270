@@ -1971,52 +1971,19 @@ screen_disp(bool erasing _is_unused)
 		    blinking = b_blinking;
 		}
 		d = ctlr_dbcs_state(baddr);
-		if (IS_LEFT(d)) {
-		    int xaddr = baddr;
-
-		    INC_BA(xaddr);
-		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null &&
-			    ea_buf[xaddr].cc == EBC_null) {
-			attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-				             cmap_bg[HOST_COLOR_YELLOW],
-					     baddr));
-			addch('.');
-			addch('.');
-		    } else {
-			c = ebcdic_to_unicode(
-				(ea_buf[baddr].cc << 8) |
-				ea_buf[xaddr].cc,
-				CS_BASE, EUO_NONE);
+		if (ea_buf[baddr].ucs4) {
+		    /* NVT-mode text. */
+		    if (IS_LEFT(d)) {
 			attrset(attr_this);
 			cur_attr |= COMMON_LVB_LEAD_BYTE;
-			addch(c);
+			addch(ea_buf[baddr].ucs4);
 			cur_attr &= ~COMMON_LVB_LEAD_BYTE;
 			cur_attr |= COMMON_LVB_TRAILING_BYTE;
 			addch(' ');
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
-		    }
-		} else if (!IS_RIGHT(d)) {
-		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null) {
-			c = '.';
-		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_so) {
-			c = '<';
-		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_si) {
-			c = '>';
-		    } else {
-			c = ebcdic_to_unicode(ea_buf[baddr].cc,
-				ea_buf[baddr].cs,
-				appres.c3270.ascii_box_draw?
-				    EUO_ASCII_BOX: 0);
-			if (c == 0) {
-			    c = crosshair_blank(baddr);
-			    if (c != ' ') {
-				attr_this = apply_select(xhattr, baddr);
-			    }
-			} else if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
+		    } else if (!IS_RIGHT(d)) {
+			c = ea_buf[baddr].ucs4;
+			if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
 			    c = crosshair_blank(baddr);
 			    if (c != ' ') {
 				attr_this = apply_select(xhattr, baddr);
@@ -2028,9 +1995,72 @@ screen_disp(bool erasing _is_unused)
 			if (toggled(MONOCASE) && iswlower(c)) {
 			    c = towupper(c);
 			}
+			attrset(attr_this);
+			addch(blinkmap(blinking, underlined, c));
 		    }
-		    attrset(attr_this);
-		    addch(blinkmap(blinking, underlined, c));
+		} else {
+		    /* 3270-mode text. */
+		    if (IS_LEFT(d)) {
+			int xaddr = baddr;
+
+			INC_BA(xaddr);
+			if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_null &&
+				ea_buf[xaddr].ec == EBC_null) {
+			    attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+						 cmap_bg[HOST_COLOR_YELLOW],
+						 baddr));
+			    addch('.');
+			    addch('.');
+			} else {
+			    c = ebcdic_to_unicode(
+				    (ea_buf[baddr].ec << 8) |
+				    ea_buf[xaddr].ec,
+				    CS_BASE, EUO_NONE);
+			    attrset(attr_this);
+			    cur_attr |= COMMON_LVB_LEAD_BYTE;
+			    addch(c);
+			    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
+			    cur_attr |= COMMON_LVB_TRAILING_BYTE;
+			    addch(' ');
+			    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
+			}
+		    } else if (!IS_RIGHT(d)) {
+			if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_null) {
+			    c = '.';
+			} else if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_so) {
+			    c = '<';
+			} else if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_si) {
+			    c = '>';
+			} else {
+			    c = ebcdic_to_unicode(ea_buf[baddr].ec,
+				    ea_buf[baddr].cs,
+				    appres.c3270.ascii_box_draw?
+					EUO_ASCII_BOX: 0);
+			    if (c == 0) {
+				c = crosshair_blank(baddr);
+				if (c != ' ') {
+				    attr_this = apply_select(xhattr, baddr);
+				}
+			    } else if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
+				c = crosshair_blank(baddr);
+				if (c != ' ') {
+				    attr_this = apply_select(xhattr, baddr);
+				}
+			    }
+			    if (underlined && c == ' ') {
+				c = '_';
+			    }
+			    if (toggled(MONOCASE) && iswlower(c)) {
+				c = towupper(c);
+			    }
+			}
+			attrset(attr_this);
+			addch(blinkmap(blinking, underlined, c));
+		    }
 		}
 	    }
 	}

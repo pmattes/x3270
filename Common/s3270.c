@@ -220,12 +220,20 @@ product_set_appres_defaults(void)
     appres.unlock_delay = false;
 }
 
+static void
+s3270_toggle(toggle_index_t ix, enum toggle_type tt)
+{
+}
+
 /**
  * Main module registration.
  */
 static void
 s3270_register(void)
 {
+    static toggle_register_t toggles[] = {
+	{ MONOCASE,         s3270_toggle,   0 }
+    };
     static opt_t s3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
@@ -251,6 +259,9 @@ s3270_register(void)
 	{ ResPrintTextCommand,		V_FLAT },
 #endif /*]*/
     };
+
+    /* Register our toggles. */
+    register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, s3270_connect);

@@ -47,6 +47,7 @@ extern int last_changed;
 
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);
+void ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs);
 void ctlr_add_bg(int baddr, unsigned char color);
 void ctlr_add_cs(int baddr, unsigned char cs);
 void ctlr_add_fa(int baddr, unsigned char fa, unsigned char cs);

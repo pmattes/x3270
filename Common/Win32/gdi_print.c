@@ -948,12 +948,39 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		} else {
 		    uc = ' ';
 		}
+	    } else if (ea[baddr].ucs4) {
+		switch (ctlr_dbcs_state(baddr)) {
+		case DBCS_NONE:
+		case DBCS_SB:
+		    if (ea[baddr].cs == CS_LINEDRAW) {
+			int l = linedraw_to_unicode(ea[baddr].ucs4);
+
+			if (l <= 0) {
+			    uc = ' ';
+			} else {
+			    uc = (ucs4_t)l;
+			}
+		    } else {
+			uc = ea[baddr].ucs4;
+		    }
+		    break;
+		case DBCS_LEFT:
+		    is_dbcs = TRUE;
+		    uc = ea[baddr].ucs4;
+		    break;
+		case DBCS_RIGHT:
+		    /* skip altogether, we took care of it above */
+		    continue;
+		default:
+		    uc = ' ';
+		    break;
+		}
 	    } else {
 		/* Convert EBCDIC to Unicode. */
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
 		case DBCS_SB:
-		    uc = ebcdic_to_unicode(ea[baddr].cc, ea[baddr].cs,
+		    uc = ebcdic_to_unicode(ea[baddr].ec, ea[baddr].cs,
 			    EUO_NONE);
 		    if (uc == 0) {
 			uc = ' ';
@@ -961,8 +988,8 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    break;
 		case DBCS_LEFT:
 		    is_dbcs = TRUE;
-		    uc = ebcdic_to_unicode((ea[baddr].cc << 8) |
-				ea[baddr + 1].cc,
+		    uc = ebcdic_to_unicode((ea[baddr].ec << 8) |
+				ea[baddr + 1].ec,
 			    CS_BASE, EUO_NONE);
 		    if (uc == 0) {
 			uc = 0x3000;

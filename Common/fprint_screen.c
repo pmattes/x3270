@@ -529,20 +529,35 @@ fprint_screen_body(fps_t ofps)
 			    	uc = 0x3000;
 			else
 				uc = ' ';
+		} else if (ea_buf[i].ucs4) {
+		    	/* NVT-mode text. */
+		    	if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
+			    	continue;
+			}
+			if (ea_buf[i].cs == CS_LINEDRAW) {
+			    int l = linedraw_to_unicode(ea_buf[i].ucs4);
+
+			    if (l <= 0) {
+				l = ' ';
+			    }
+			    uc = (ucs4_t)l;
+			} else {
+			    uc = ea_buf[i].ucs4;
+			}
 		} else {
 		    	/* Convert EBCDIC to Unicode. */
 			switch (ctlr_dbcs_state(i)) {
 			case DBCS_NONE:
 			case DBCS_SB:
-			    	uc = ebcdic_to_unicode(ea_buf[i].cc,
+			    	uc = ebcdic_to_unicode(ea_buf[i].ec,
 					ea_buf[i].cs, EUO_NONE);
 				if (uc == 0)
 				    	uc = ' ';
 				break;
 			case DBCS_LEFT:
 				uc = ebcdic_to_unicode(
-					(ea_buf[i].cc << 8) |
-					 ea_buf[i + 1].cc,
+					(ea_buf[i].ec << 8) |
+					 ea_buf[i + 1].ec,
 					CS_BASE, EUO_NONE);
 				if (uc == 0)
 				    	uc = 0x3000;

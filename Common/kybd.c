@@ -884,11 +884,11 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
     need = count;
     ntb = 0;
     while (need && (xaddr != next_faddr)) {
-	if (ea_buf[xaddr].cc == EBC_null) {
+	if (ea_buf[xaddr].ec == EBC_null) {
 	    need--; 
 	} else if (toggled(BLANK_FILL) &&
-		((ea_buf[xaddr].cc == EBC_space) ||
-		 (ea_buf[xaddr].cc == EBC_underscore))) {
+		((ea_buf[xaddr].ec == EBC_space) ||
+		 (ea_buf[xaddr].ec == EBC_underscore))) {
 		if (tb_start == -1) {
 		    tb_start = xaddr;
 		}
@@ -922,7 +922,7 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	int first_null = -1;
 
 	while (need &&
-	       ((ea_buf[xaddr].cc == EBC_null) ||
+	       ((ea_buf[xaddr].ec == EBC_null) ||
 		(tb_start >= 0 && xaddr >= tb_start))) {
 		need--;
 		n_nulls++;
@@ -1060,7 +1060,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     }
 
     /* If it's an SI (end of DBCS subfield), move over one position. */
-    if (ea_buf[baddr].cc == EBC_si) {
+    if (ea_buf[baddr].ec == EBC_si) {
 	INC_BA(baddr);
 	if (baddr == faddr) {
 	    return operator_error(KL_OERR_OVERFLOW, oerr_fail);
@@ -1068,7 +1068,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     }
 
     /* Add the character. */
-    if (ea_buf[baddr].cc == EBC_so) {
+    if (ea_buf[baddr].ec == EBC_so) {
 
 	if (insert) {
 	    if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
@@ -1086,7 +1086,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	     */
 	    xaddr = baddr;
 	    INC_BA(xaddr);
-	    was_si = (ea_buf[xaddr].cc == EBC_si);
+	    was_si = (ea_buf[xaddr].ec == EBC_si);
 	    ctlr_add(xaddr, EBC_space, CS_BASE);
 	    ctlr_add_fg(xaddr, 0);
 	    ctlr_add_bg(xaddr, 0);
@@ -1127,7 +1127,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		 */
 		xaddr = baddr;
 		DEC_BA(xaddr);
-		if (ea_buf[xaddr].cc == EBC_so) {
+		if (ea_buf[xaddr].ec == EBC_so) {
 		    DEC_BA(baddr);
 		    if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
 			return false;
@@ -1156,7 +1156,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		INC_BA(xaddr);
 		INC_BA(baddr);
 		INC_BA(xaddr);
-		was_si = (ea_buf[xaddr].cc == EBC_si);
+		was_si = (ea_buf[xaddr].ec == EBC_si);
 		ctlr_add(xaddr, EBC_space, CS_BASE);
 		ctlr_add_fg(xaddr, 0);
 		ctlr_add_gr(xaddr, 0);
@@ -1205,7 +1205,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 
 		/* Check the field within the preceeding line for NULLs. */
 		while (baddr_scan != faddr) {
-		    if (ea_buf[baddr_scan].cc != EBC_null) {
+		    if (ea_buf[baddr_scan].ec != EBC_null) {
 			aborted = false;
 			break;
 		    }
@@ -1219,7 +1219,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		}
 	    }
 
-	    if (ea_buf[baddr_fill].cc == EBC_null) {
+	    if (ea_buf[baddr_fill].ec == EBC_null) {
 		ctlr_add(baddr_fill, EBC_space, 0);
 	    }
 	    DEC_BA(baddr_fill);
@@ -1369,11 +1369,11 @@ retry:
 	    if (ea_buf[xaddr].fa) {
 		break;
 	    }
-	    if (ea_buf[xaddr].cc == EBC_so) {
+	    if (ea_buf[xaddr].ec == EBC_so) {
 		no_si = true;
 	    }
 	    INC_BA(xaddr);	/* SI */
-	    if (ea_buf[xaddr].fa || ea_buf[xaddr].cc == EBC_so) {
+	    if (ea_buf[xaddr].fa || ea_buf[xaddr].ec == EBC_so) {
 		break;
 	    }
 	}
@@ -1399,7 +1399,7 @@ retry:
 		}
 	    } else {
 		xaddr = baddr;	/* baddr, SO */
-		if (ea_buf[xaddr].cc == EBC_so) {
+		if (ea_buf[xaddr].ec == EBC_so) {
 		    /*
 		     * (baddr), where we would have put the SO, is already an
 		     * SO. Move to (baddr+1) and try again.
@@ -1415,7 +1415,7 @@ retry:
 		if (ea_buf[xaddr].fa) {
 		    break;
 		}
-		if (ea_buf[xaddr].cc == EBC_so) {
+		if (ea_buf[xaddr].ec == EBC_so) {
 		    enum dbcs_state e;
 
 		    /*
@@ -1448,7 +1448,7 @@ retry:
 		if (ea_buf[xaddr].fa) {
 		    break;
 		}
-		if (ea_buf[xaddr].cc == EBC_so) {
+		if (ea_buf[xaddr].ec == EBC_so) {
 		    /*
 		     * (baddr+2), where we want to put the right half of the
 		     * DBCS character, is a SO. This is a natural extension to
@@ -1469,7 +1469,7 @@ retry:
 		    if (ea_buf[xaddr].fa) {
 			break;
 		    }
-		    if (ea_buf[xaddr].cc == EBC_so) {
+		    if (ea_buf[xaddr].ec == EBC_so) {
 			/*
 			 * (baddr+3), where we want to put an SI, is an SO.
 			 * Forget it.
@@ -1525,7 +1525,7 @@ retry:
 	    xaddr = faddr;
 	    INC_BA(xaddr);
 	    while (xaddr != baddr) {
-		if (ea_buf[xaddr].cc == EBC_null) {
+		if (ea_buf[xaddr].ec == EBC_null) {
 		    ctlr_add(xaddr, EBC_space, CS_BASE);
 		} else {
 		    break;
@@ -1976,14 +1976,14 @@ do_delete(void)
     if (FA_IS_PROTECTED(fa) || ea_buf[baddr].fa) {
 	return operator_error(KL_OERR_PROTECTED, true);
     }
-    if (ea_buf[baddr].cc == EBC_so || ea_buf[baddr].cc == EBC_si) {
+    if (ea_buf[baddr].ec == EBC_so || ea_buf[baddr].ec == EBC_si) {
 	/*
 	 * Can't delete SO or SI, unless it's adjacent to its
 	 * opposite.
 	 */
 	xaddr = baddr;
 	INC_BA(xaddr);
-	if (ea_buf[xaddr].cc == SOSI(ea_buf[baddr].cc)) {
+	if (ea_buf[xaddr].ec == SOSI(ea_buf[baddr].ec)) {
 	    ndel = 2;
 	} else {
 	    return operator_error(KL_OERR_PROTECTED, true);
@@ -2125,7 +2125,7 @@ do_erase(void)
     /*
      * If we are now on an SI, move left again.
      */
-    if (ea_buf[cursor_addr].cc == EBC_si) {
+    if (ea_buf[cursor_addr].ec == EBC_si) {
 	baddr = cursor_addr;
 	DEC_BA(baddr);
 	cursor_move(baddr);
@@ -2157,7 +2157,7 @@ do_erase(void)
      */
     baddr = cursor_addr;
     DEC_BA(baddr);
-    if (ea_buf[baddr].cc == EBC_so && ea_buf[cursor_addr].cc == EBC_si) {
+    if (ea_buf[baddr].ec == EBC_so && ea_buf[cursor_addr].ec == EBC_si) {
 	cursor_move(baddr);
 	(void) do_delete();
     }
@@ -2285,20 +2285,20 @@ PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Skip to before this word, if in one now. */
     if (!prot) {
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	while (!ea_buf[baddr].fa && c != EBC_space && c != EBC_null) {
 	    DEC_BA(baddr);
 	    if (baddr == cursor_addr) {
 		return true;
 	    }
-	    c = ea_buf[baddr].cc;
+	    c = ea_buf[baddr].ec;
 	}
     }
     baddr0 = baddr;
 
     /* Find the end of the preceding word. */
     do {
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	if (ea_buf[baddr].fa) {
 	    DEC_BA(baddr);
 	    prot = FA_IS_PROTECTED(get_field_attribute(baddr));
@@ -2317,7 +2317,7 @@ PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
     /* Go it its front. */
     for (;;) {
 	DEC_BA(baddr);
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	if (ea_buf[baddr].fa || c == EBC_space || c == EBC_null) {
 	    break;
 	}
@@ -2373,7 +2373,7 @@ nu_word(int baddr)
     prot = FA_IS_PROTECTED(get_field_attribute(baddr));
 
     do {
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	if (ea_buf[baddr].fa) {
 	    prot = FA_IS_PROTECTED(ea_buf[baddr].fa);
 	} else if (!prot && c != EBC_space && c != EBC_null) {
@@ -2394,7 +2394,7 @@ nt_word(int baddr)
     bool in_word = true;
 
     do {
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	if (ea_buf[baddr].fa)
 	    return -1;
 	if (in_word) {
@@ -2453,11 +2453,11 @@ NextWord_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* If in a word, go to just after its end. */
-    c = ea_buf[cursor_addr].cc;
+    c = ea_buf[cursor_addr].ec;
     if (c != EBC_space && c != EBC_null) {
 	baddr = cursor_addr;
 	do {
-	    c = ea_buf[baddr].cc;
+	    c = ea_buf[baddr].ec;
 	    if (c == EBC_space || c == EBC_null) {
 		cursor_move(baddr);
 		return true;
@@ -2752,23 +2752,23 @@ lightpen_select(int baddr)
 		    ring_bell();
 		    return;
 	    }
-	    if (ea_buf[designator].cc == 0x42 &&
-		    ea_buf[designator2].cc == EBC_greater) {
+	    if (ea_buf[designator].ec == 0x42 &&
+		    ea_buf[designator2].ec == EBC_greater) {
 		ctlr_add(designator2, EBC_question, CS_DBCS);
 		mdt_clear(faddr);
-	    } else if (ea_buf[designator].cc == 0x42 &&
-		       ea_buf[designator2].cc == EBC_question) {
+	    } else if (ea_buf[designator].ec == 0x42 &&
+		       ea_buf[designator2].ec == EBC_question) {
 		ctlr_add(designator2, EBC_greater, CS_DBCS);
 		mdt_clear(faddr);
-	    } else if ((ea_buf[designator].cc == EBC_space &&
-			ea_buf[designator2].cc == EBC_space) ||
-		       (ea_buf[designator].cc == EBC_null &&
-			ea_buf[designator2].cc == EBC_null)) {
+	    } else if ((ea_buf[designator].ec == EBC_space &&
+			ea_buf[designator2].ec == EBC_space) ||
+		       (ea_buf[designator].ec == EBC_null &&
+			ea_buf[designator2].ec == EBC_null)) {
 		ctlr_add(designator2, EBC_greater, CS_DBCS);
 		mdt_set(faddr);
 		key_AID(AID_SELECT);
-	    } else if (ea_buf[designator].cc == 0x42 &&
-		       ea_buf[designator2].cc == EBC_ampersand) {
+	    } else if (ea_buf[designator].ec == 0x42 &&
+		       ea_buf[designator2].ec == EBC_ampersand) {
 		mdt_set(faddr);
 		key_AID(AID_ENTER);
 	    } else {
@@ -2778,7 +2778,7 @@ lightpen_select(int baddr)
 	}
     } 
 
-    switch (ea_buf[designator].cc) {
+    switch (ea_buf[designator].ec) {
     case EBC_greater:		/* > */
 	ctlr_add(designator, EBC_question, 0); /* change to ? */
 	mdt_clear(faddr);
@@ -2869,9 +2869,9 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 	if (d == DBCS_RIGHT) {
 	    baddr = cursor_addr;
 	    DEC_BA(baddr);
-	    ea_buf[baddr].cc = EBC_si;
+	    ea_buf[baddr].ec = EBC_si;
 	} else {
-	    ea_buf[cursor_addr].cc = EBC_si;
+	    ea_buf[cursor_addr].ec = EBC_si;
 	}
     }
     (void) ctlr_dbcs_postprocess();
@@ -2986,7 +2986,7 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 	if (ea_buf[baddr].fa) {
 	    return true;
 	}
-	if (ea_buf[baddr].cc == EBC_null || ea_buf[baddr].cc == EBC_space) {
+	if (ea_buf[baddr].ec == EBC_null || ea_buf[baddr].ec == EBC_space) {
 	    do_erase();
 	} else {
 	    break;
@@ -3000,7 +3000,7 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 	if (ea_buf[baddr].fa) {
 	    return true;
 	}
-	if (ea_buf[baddr].cc == EBC_null || ea_buf[baddr].cc == EBC_space) {
+	if (ea_buf[baddr].ec == EBC_null || ea_buf[baddr].ec == EBC_space) {
 	    break;
 	} else {
 	    do_erase();
@@ -3157,7 +3157,7 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
     baddr = faddr;
     while (true) {
 	INC_BA(baddr);
-	c = ea_buf[baddr].cc;
+	c = ea_buf[baddr].ec;
 	if (ea_buf[baddr].fa) {
 	    break;
 	}
@@ -4102,8 +4102,8 @@ kybd_prime(void)
     if (!formatted) {
 	baddr = cursor_addr;
 
-	while (ea_buf[baddr].cc == EBC_null ||
-	   ea_buf[baddr].cc == EBC_space) {
+	while (ea_buf[baddr].ec == EBC_null ||
+	   ea_buf[baddr].ec == EBC_space) {
 	    len++;
 	    INC_BA(baddr);
 	    if (baddr == cursor_addr) {
