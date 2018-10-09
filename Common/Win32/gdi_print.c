@@ -188,7 +188,7 @@ gdi_print_finish(FILE *f, const char *caption)
 
 	/* Read the screen image in. */
 	if (fread(ea_tmp + 1, sizeof(struct ea), h.rows * h.cols, f) !=
-		    h.rows * h.cols) {
+		h.rows * h.cols) {
 	    popup_an_error("Truncated temporary file");
 	    goto abort;
 	}
@@ -830,8 +830,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     bool fa_underline, underline;
     bool fa_reverse, reverse;
     unsigned long uc;
-    bool is_dbcs;
-    char c;
     int usable_rows;
     HFONT got_font = NULL, want_font;
 #if defined(GDI_DEBUG) /*[*/
@@ -875,7 +873,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		0, NULL,
 		pstate.caption, (UINT)strlen(pstate.caption), NULL);
 	if (status <= 0) {
-	    *fail = "ExtTextOut failed";
+	    *fail = "ExtTextOut(caption) failed";
 	    rc = -1;
 	    goto done;
 	}
@@ -925,6 +923,9 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    break;
 	}
 	for (col = 0; col < COLS; col++, baddr++) {
+	    wchar_t w;
+	    INT wdx;
+
 	    if (ea[baddr].fa) {
 		fa = ea[baddr].fa;
 		if (ea[baddr].gr & GR_INTENSIFY) {
@@ -941,7 +942,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    if (col >= pstate.usable_cols) {
 		continue;
 	    }
-	    is_dbcs = FALSE;
 	    if (FA_IS_ZERO(fa)) {
 		if (ctlr_dbcs_state_ea(baddr, ea) == DBCS_LEFT) {
 		    uc = 0x3000;
@@ -959,7 +959,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    }
 		    break;
 		case DBCS_LEFT:
-		    is_dbcs = TRUE;
 		    uc = ea[baddr].ucs4;
 		    break;
 		case DBCS_RIGHT:
@@ -981,7 +980,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    }
 		    break;
 		case DBCS_LEFT:
-		    is_dbcs = TRUE;
 		    uc = ebcdic_to_unicode((ea[baddr].ec << 8) |
 				ea[baddr + 1].ec,
 			    CS_BASE, EUO_NONE);
@@ -1084,7 +1082,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 			    (uc == 0x3000)? 2: 1,
 			    pstate.dx);
 		    if (status <= 0) {
-			*fail = "ExtTextOut failed";
+			*fail = "ExtTextOut(space) failed";
 			rc = -1;
 			goto done;
 		    }
@@ -1096,52 +1094,31 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	     * Emit one character at a time. This should be optimized to print
 	     * strings of characters with the same attributes.
 	     */
-	    if (is_dbcs) {
-		wchar_t w;
-		INT wdx;
-
-		w = (wchar_t)uc;
-		wdx = pstate.space_size.cx;
-
-		status = ExtTextOutW(dc,
-			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
-			    pchar.poffX,
-			pstate.vmargin_pixels +
-			    ((pstate.out_row + row + 1) *
-			     pstate.space_size.cy) -
-			    pchar.poffY,
-			0, NULL,
-			&w, 1, &wdx);
-		if (status <= 0) {
-		    *fail = "ExtTextOutW failed";
-		    rc = -1;
-		    goto done;
-		}
-		continue;
-	    }
-	    c = (char)uc;
-	    status = ExtTextOut(dc,
-		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
-			pchar.poffX,
-		    pstate.vmargin_pixels +
-			((pstate.out_row + row + 1) * pstate.space_size.cy) -
-			pchar.poffY,
-		    0, NULL,
-		    &c, 1, pstate.dx);
 #if defined(GDI_DEBUG) /*[*/
-	    if (c != ' ') {
-		vtrace("[gdi] row %d col %d x=%ld y=%ld '%c'\n",
+	    if (uc != ' ') {
+		vtrace("[gdi] row %d col %d x=%ld y=%ld uc=%lx\n",
 			row, col,
 			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
 			    pchar.poffX,
 			pstate.vmargin_pixels +
-			    ((pstate.out_row + row + 1) * pstate.space_size.cy) -
+			  ((pstate.out_row + row + 1) * pstate.space_size.cy) -
 			    pchar.poffY,
-			c);
+			uc);
 	    }
 #endif /*]*/
+	    w = (wchar_t)uc;
+	    wdx = pstate.space_size.cx;
+	    status = ExtTextOutW(dc,
+		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
+			pchar.poffX,
+		    pstate.vmargin_pixels +
+			((pstate.out_row + row + 1) *
+			 pstate.space_size.cy) -
+			pchar.poffY,
+		    0, NULL,
+		    &w, 1, &wdx);
 	    if (status <= 0) {
-		*fail = "ExtTextOut failed";
+		*fail = "ExtTextOutW(image) failed";
 		rc = -1;
 		goto done;
 	    }
