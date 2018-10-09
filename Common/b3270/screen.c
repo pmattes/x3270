@@ -428,13 +428,7 @@ render_screen(struct ea *ea, screen_t *s)
 		    /* fall through */
 		default:
 		    if (ea[i].cs == CS_LINEDRAW) {
-			int l = linedraw_to_unicode(ea[i].ucs4);
-
-			if (l <= 0) {
-			    uc = ' ';
-			} else {
-			    uc = (ucs4_t)l;
-			}
+			uc = linedraw_to_unicode_def(ea[i].ucs4, false);
 		    } else {
 			uc = ea[i].ucs4;
 		    }

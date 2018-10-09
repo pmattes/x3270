@@ -953,13 +953,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		case DBCS_NONE:
 		case DBCS_SB:
 		    if (ea[baddr].cs == CS_LINEDRAW) {
-			int l = linedraw_to_unicode(ea[baddr].ucs4);
-
-			if (l <= 0) {
-			    uc = ' ';
-			} else {
-			    uc = (ucs4_t)l;
-			}
+			uc = linedraw_to_unicode_def(ea[baddr].ucs4, false);
 		    } else {
 			uc = ea[baddr].ucs4;
 		    }

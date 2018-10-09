@@ -535,12 +535,7 @@ fprint_screen_body(fps_t ofps)
 			    	continue;
 			}
 			if (ea_buf[i].cs == CS_LINEDRAW) {
-			    int l = linedraw_to_unicode(ea_buf[i].ucs4);
-
-			    if (l <= 0) {
-				l = ' ';
-			    }
-			    uc = (ucs4_t)l;
+			    uc = linedraw_to_unicode_def(ea_buf[i].ucs4, false);
 			} else {
 			    uc = ea_buf[i].ucs4;
 			}

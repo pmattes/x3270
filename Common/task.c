@@ -1856,19 +1856,12 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		if (buf[first + i].ucs4) {
 		    ucs4_t ucs4 = buf[first + i].ucs4;
 
+		    /* NVT-mode text. */
 		    if (toggled(MONOCASE) && islower((int)ucs4)) {
 			ucs4 = (ucs4_t)toupper((int)ucs4);
 		    }
-
-		    /* NVT-mode text. */
 		    if (buf[first + i].cs == CS_LINEDRAW) {
-			int x = linedraw_to_unicode(ucs4);
-
-			if (x > 0) {
-			    ucs4 = x;
-			} else {
-			    ucs4 = ' ';
-			}
+			ucs4 = linedraw_to_unicode_def(ucs4, false);
 		    }
 		    xlen = unicode_to_multibyte(ucs4, mb, sizeof(mb));
 		    for (j = 0; j < xlen - 1; j++) {

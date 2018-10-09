@@ -2041,12 +2041,10 @@ nvt_snap_one(struct ea *buf)
 	u = buf[baddr].ucs4;
 	if (u) {
 	    if (!IS_RIGHT(d)) {
-		len = unicode_to_multibyte(u, mb, sizeof(mb));
-		if (len == 0) {
-		    /* Is this necessary? */
-		    mb[0] = ' ';
-		    len = 2;
+		if (buf[baddr].cs == CS_LINEDRAW) {
+		    u = linedraw_to_unicode_def(u, false);
 		}
+		len = unicode_to_multibyte(u, mb, sizeof(mb));
 	    } else {
 		len = 0;
 	    }

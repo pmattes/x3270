@@ -375,43 +375,39 @@ charset_list(void)
 ucs4_t
 ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 {
-	int iuc;
-	ucs4_t uc;
+    ucs4_t uc;
 
-#if 0	/* I'm not sure why this was put in, but it breaks display of DUP
-	   and FM.
-	   Hopefully I'll figure out why it was put in in the first place
-	   and I can put it back under the right conditions. */
-	/* Control characters become blanks. */
-    	if (c <= 0x41 || c == 0xff)
-	    	uc = 0;
+#if 0
+    /* I'm not sure why this was put in, but it breaks display of DUP and FM.
+       Hopefully I'll figure out why it was put in in the first place
+       and I can put it back under the right conditions. */
+    /* Control characters become blanks. */
+    if (c <= 0x41 || c == 0xff)
+	    uc = 0;
 #endif
 
-	/*
-	 * We do not pay attention to BLANK_UNDEF -- we always return 0
-	 * for undefined characters.
-	 */
-	flags &= ~EUO_BLANK_UNDEF;
+    /*
+     * We do not pay attention to BLANK_UNDEF -- we always return 0
+     * for undefined characters.
+     */
+    flags &= ~EUO_BLANK_UNDEF;
 
-	/* Dispatch on the character set. */
-	if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
-		iuc = apl_to_unicode(c, flags);
-		if (iuc != -1)
-		    	uc = iuc;
-		else
-		    	uc = 0;
-	} else if (cs == CS_LINEDRAW) {
-	    	iuc = linedraw_to_unicode(c /* XXX: flags */);
-		if (iuc != -1)
-		    	uc = iuc;
-		else
-		    	uc = 0;
-	} else if (cs != CS_BASE)
-	    	uc = 0;
-	else
-	    	uc = ebcdic_base_to_unicode(c, flags);
+    /* Dispatch on the character set. */
+    if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
+	int iuc = apl_to_unicode(c, flags);
 
-	return uc;
+	uc = (iuc != -1)? iuc: 0;
+    } else if (cs == CS_LINEDRAW) {
+	ucs4_t u = linedraw_to_unicode_def(c, (flags & EUO_ASCII_BOX) != 0);
+
+	uc = (u != ' ')? u: 0;
+    } else if (cs != CS_BASE) {
+	uc = 0;
+    } else {
+	uc = ebcdic_base_to_unicode(c, flags);
+    }
+
+    return uc;
 }
 
 /*
@@ -664,6 +660,22 @@ charset_matches_alias(const char *alias, const char *canon)
     return false;
 }
 
+/* Line-drawing to Unicode table. */
+static ucs4_t ld2uc[32] = {
+    /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
+    /* 08 */	0x00b1, 0x0000, 0x0000, 0x2518, 0x2510, 0x250c, 0x2514, 0x253c,
+    /* 10 */	0x002d, 0x002d, 0x2500, 0x002d, 0x005f, 0x251c, 0x2524, 0x2534,
+    /* 18 */	0x252c, 0x2502, 0x2264, 0x2265, 0x03c0, 0x2260, 0x00a3, 0x2022
+};
+
+/* Line-drawing to Unicode table, ASCII-art style. */
+static ucs4_t ld2uc_ascii_art[32] = {
+    /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
+    /* 08 */	0x00b1, 0x0000, 0x0000,    '+',    '+',    '+',    '+',    '+',
+    /* 10 */	0x002d, 0x002d,    '-', 0x002d, 0x005f,    '+',    '+',    '+',
+    /* 18 */	   '+',    '|', 0x2264, 0x2265, 0x03c0, 0x2260, 0x00a3, 0x2022
+};
+
 /*
  * Translate an x3270 font line-drawing character (the first two rows of a
  * standard X11 fixed-width font) to Unicode.
@@ -673,17 +685,29 @@ charset_matches_alias(const char *alias, const char *canon)
 int
 linedraw_to_unicode(ebc_t c)
 {
-	static ebc_t ld2uc[32] = {
-    /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
-    /* 08 */	0x00b1, 0x0000, 0x0000, 0x2518, 0x2510, 0x250c, 0x2514, 0x253c,
-    /* 10 */	0x002d, 0x002d, 0x2500, 0x002d, 0x005f, 0x251c, 0x2524, 0x2534,
-    /* 18 */	0x252c, 0x2502, 0x2264, 0x2265, 0x03c0, 0x2260, 0x00a3, 0x2022
-	};
-
-	if (c < 32 && ld2uc[c] != 0x0000)
+	if (c < 32 && ld2uc[c] != 0)
 	    	return ld2uc[c];
 	else
 	    	return -1;
+}
+
+/*
+ * Translate an NVT-mode line-drawing character to Unicode, optionally using
+ * ASCII-art for the box-drawing characters.
+ *
+ * Returns a space if there is no translation.
+ */
+ucs4_t
+linedraw_to_unicode_def(ebc_t c, bool ascii_art)
+{
+    ucs4_t u;
+
+    if (c >= 32) {
+	return ' ';
+    }
+
+    u = ascii_art? ld2uc_ascii_art[c]: ld2uc[c];
+    return u? u: ' ';
 }
 
 /*

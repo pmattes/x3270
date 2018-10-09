@@ -425,14 +425,8 @@ copy_clipboard_unicode(LPTSTR lptstr)
 	    if (ea_buf[baddr].ucs4) {
 		if (!IS_RIGHT(d)) {
 		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			/* XXX: ascii_box_draw */
-			int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
-
-			if (l > 0) {
-			    ch = l;
-			} else {
-			    ch = ' ';
-			}
+			ch = linedraw_to_unicode_def(ea_buf[baddr].ucs4,
+				appres.c3270.ascii_box_draw);
 		    }
 		    ch = ea_buf[baddr].ucs4;
 		    if (!IS_LEFT(d) && toggled(MONOCASE) && islower(ch)) {
@@ -553,15 +547,9 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
 			ch = ' ';
 		    } else {
-			/* XXX: ascii_box_draw */
 			if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			    int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
-
-			    if (l > 0) {
-				ch = l;
-			    } else {
-				ch = ' ';
-			    }
+			    ch = linedraw_to_unicode_def(ea_buf[baddr].ucs4,
+				    appres.c3270.ascii_box_draw);
 			}
 			ch = ea_buf[baddr].ucs4;
 			if (toggled(MONOCASE) && islower(ch)) {
@@ -689,15 +677,9 @@ copy_clipboard_text(LPTSTR lptstr)
 		ch = ' ';
 	    } else {
 		if (ea_buf[baddr].ucs4) {
-		    /* XXX: ascii_box_draw */
 		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			int l = linedraw_to_unicode(ea_buf[baddr].ucs4);
-
-			if (l > 0) {
-			    ch = l;
-			} else {
-			    ch = ' ';
-			}
+			ch = linedraw_to_unicode_def(ea_buf[baddr].ucs4,
+				appres.c3270.ascii_box_draw);
 		    } else {
 			ch = ea_buf[baddr].ucs4;
 		    }
