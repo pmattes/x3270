@@ -662,16 +662,16 @@ charset_matches_alias(const char *alias, const char *canon)
 
 /* Line-drawing to Unicode table. */
 static ucs4_t ld2uc[32] = {
-    /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
-    /* 08 */	0x00b1, 0x0000, 0x0000, 0x2518, 0x2510, 0x250c, 0x2514, 0x253c,
+    /* 00 */	0x2588, 0x25c6, 0x2592, 0x2409, 0x240c, 0x240d, 0x240a, 0x00b0,
+    /* 08 */	0x00b1, 0x2424, 0x240b, 0x2518, 0x2510, 0x250c, 0x2514, 0x253c,
     /* 10 */	0x002d, 0x002d, 0x2500, 0x002d, 0x005f, 0x251c, 0x2524, 0x2534,
     /* 18 */	0x252c, 0x2502, 0x2264, 0x2265, 0x03c0, 0x2260, 0x00a3, 0x2022
 };
 
 /* Line-drawing to Unicode table, ASCII-art style. */
 static ucs4_t ld2uc_ascii_art[32] = {
-    /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
-    /* 08 */	0x00b1, 0x0000, 0x0000,    '+',    '+',    '+',    '+',    '+',
+    /* 00 */	0x2588, 0x25c6, 0x2592, 0x2409, 0x240c, 0x2140d, 0x240a, 0x00b0,
+    /* 08 */	0x00b1, 0x2424, 0x240b,    '+',    '+',    '+',    '+',    '+',
     /* 10 */	0x002d, 0x002d,    '-', 0x002d, 0x005f,    '+',    '+',    '+',
     /* 18 */	   '+',    '|', 0x2264, 0x2265, 0x03c0, 0x2260, 0x00a3, 0x2022
 };
@@ -685,10 +685,7 @@ static ucs4_t ld2uc_ascii_art[32] = {
 int
 linedraw_to_unicode(ebc_t c)
 {
-	if (c < 32 && ld2uc[c] != 0)
-	    	return ld2uc[c];
-	else
-	    	return -1;
+    return (c < 32)? (int)ld2uc[c] : -1;
 }
 
 /*
@@ -700,14 +697,11 @@ linedraw_to_unicode(ebc_t c)
 ucs4_t
 linedraw_to_unicode_def(ebc_t c, bool ascii_art)
 {
-    ucs4_t u;
-
     if (c >= 32) {
 	return ' ';
     }
 
-    u = ascii_art? ld2uc_ascii_art[c]: ld2uc[c];
-    return u? u: ' ';
+    return ascii_art? ld2uc_ascii_art[c]: ld2uc[c];
 }
 
 /*
