@@ -236,7 +236,7 @@ static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char);
 static void set_status_row(int screen_rows, int emulator_rows);
 static bool ts_value(const char *s, enum ts *tsp);
-static void display_linedraw(unsigned char ebc);
+static void display_linedraw(ucs4_t ucs);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
@@ -2636,9 +2636,8 @@ linedraw_to_acs(unsigned char c)
 }
 
 static void
-display_linedraw(unsigned char ebc)
+display_linedraw(ucs4_t u)
 {
-    int c;
     char mb[16];
     int len;
 
@@ -2646,8 +2645,9 @@ display_linedraw(unsigned char ebc)
     if (appres.c3270.acs)
 #endif /*]*/
     {
-	/* Try UCS first. */
-	c = linedraw_to_acs(ebc);
+	/* Try ACS first. */
+	int c = linedraw_to_acs(u);
+
 	if (c != -1) {
 	    addch(c);
 	    return;
@@ -2655,9 +2655,9 @@ display_linedraw(unsigned char ebc)
     }
 
     /* Then try Unicode. */
-    len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
-	    EUO_BLANK_UNDEF | (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
-	    NULL);
+    len = unicode_to_multibyte(
+	    linedraw_to_unicode(u, appres.c3270.ascii_box_draw),
+	    mb, sizeof(mb));
     if (len > 0) {
 	len--;
     }

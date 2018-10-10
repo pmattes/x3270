@@ -569,7 +569,7 @@ attrset(int a)
 }
 
 static void
-addch(int c)
+addch(ucs4_t c)
 {
     CHAR_INFO *ch = &toscreen[(cur_row * console_cols) + cur_col];
 
@@ -1697,8 +1697,8 @@ blink_em(ioid_t id _is_unused)
  * Note that blinked-off spaces are underscores, if in underscore mode.
  * Also sets up the timeout for the next blink if needed.
  */
-static int
-blinkmap(bool blinking, bool underlined, int c)
+static ucs4_t
+blinkmap(bool blinking, bool underlined, ucs4_t c)
 {
     if (!blinking) {
 	return c;
@@ -1732,7 +1732,7 @@ visible_fa(unsigned char fa)
     return varr[ix];
 }
 
-static int
+static ucs4_t
 crosshair_blank(int baddr)
 {
     if (in_focus && toggled(CROSSHAIR)) {
@@ -1758,7 +1758,6 @@ screen_disp(bool erasing _is_unused)
     int a;
     bool a_underlined = false;
     bool a_blinking = false;
-    int c;
     unsigned char fa;
     enum dbcs_state d;
     int fa_addr;
@@ -1921,25 +1920,25 @@ screen_disp(bool erasing _is_unused)
 					     baddr));
 			addch(visible_fa(fa));
 		    } else {
-			c = crosshair_blank(baddr);
-			if (c != ' ') {
+			u = crosshair_blank(baddr);
+			if (u != ' ') {
 			    attrset(apply_select(xhattr, baddr));
 			} else {
 			    attrset(apply_select(defattr, baddr));
 			}
-			addch(c);
+			addch(u);
 		    }
 		}
 	    } else if (FA_IS_ZERO(fa)) {
 		/* Blank. */
 		if (!is_menu) {
-		    c = crosshair_blank(baddr);
-		    if (c == ' ') {
+		    u = crosshair_blank(baddr);
+		    if (u == ' ') {
 			attrset(apply_select(a, baddr));
 		    } else {
 			attrset(apply_select(xhattr, baddr));
 		    }
-		    addch(c);
+		    addch(u);
 		}
 	    } else {
 		int attr_this;
@@ -1982,25 +1981,25 @@ screen_disp(bool erasing _is_unused)
 			addch(' ');
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		    } else if (!IS_RIGHT(d)) {
-			c = ea_buf[baddr].ucs4;
+			u = ea_buf[baddr].ucs4;
 			if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			    c = linedraw_to_unicode(c,
+			    u = linedraw_to_unicode(u,
 				    appres.c3270.ascii_box_draw);
 			}
-			if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
-			    c = crosshair_blank(baddr);
-			    if (c != ' ') {
+			if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
+			    u = crosshair_blank(baddr);
+			    if (u != ' ') {
 				attr_this = apply_select(xhattr, baddr);
 			    }
 			}
-			if (underlined && c == ' ') {
-			    c = '_';
+			if (underlined && u == ' ') {
+			    u = '_';
 			}
-			if (toggled(MONOCASE) && iswlower(c)) {
-			    c = towupper(c);
+			if (toggled(MONOCASE) && iswlower((int)u)) {
+			    u = (ucs4_t)towupper((int)u);
 			}
 			attrset(attr_this);
-			addch(blinkmap(blinking, underlined, c));
+			addch(blinkmap(blinking, underlined, u));
 		    }
 		} else {
 		    /* 3270-mode text. */
@@ -2017,13 +2016,13 @@ screen_disp(bool erasing _is_unused)
 			    addch('.');
 			    addch('.');
 			} else {
-			    c = ebcdic_to_unicode(
+			    u = ebcdic_to_unicode(
 				    (ea_buf[baddr].ec << 8) |
 				    ea_buf[xaddr].ec,
 				    CS_BASE, EUO_NONE);
 			    attrset(attr_this);
 			    cur_attr |= COMMON_LVB_LEAD_BYTE;
-			    addch(c);
+			    addch(u);
 			    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
 			    cur_attr |= COMMON_LVB_TRAILING_BYTE;
 			    addch(' ');
@@ -2032,38 +2031,38 @@ screen_disp(bool erasing _is_unused)
 		    } else if (!IS_RIGHT(d)) {
 			if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_null) {
-			    c = '.';
+			    u = '.';
 			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_so) {
-			    c = '<';
+			    u = '<';
 			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_si) {
-			    c = '>';
+			    u = '>';
 			} else {
-			    c = ebcdic_to_unicode(ea_buf[baddr].ec,
+			    u = ebcdic_to_unicode(ea_buf[baddr].ec,
 				    ea_buf[baddr].cs,
 				    appres.c3270.ascii_box_draw?
 					EUO_ASCII_BOX: 0);
-			    if (c == 0) {
-				c = crosshair_blank(baddr);
-				if (c != ' ') {
+			    if (u == 0) {
+				u = crosshair_blank(baddr);
+				if (u != ' ') {
 				    attr_this = apply_select(xhattr, baddr);
 				}
-			    } else if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
-				c = crosshair_blank(baddr);
-				if (c != ' ') {
+			    } else if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
+				u = crosshair_blank(baddr);
+				if (u != ' ') {
 				    attr_this = apply_select(xhattr, baddr);
 				}
 			    }
-			    if (underlined && c == ' ') {
-				c = '_';
+			    if (underlined && u == ' ') {
+				u = '_';
 			    }
-			    if (toggled(MONOCASE) && iswlower(c)) {
-				c = towupper(c);
+			    if (toggled(MONOCASE) && iswlower((int)u)) {
+				u = towupper((int)u);
 			    }
 			}
 			attrset(attr_this);
-			addch(blinkmap(blinking, underlined, c));
+			addch(blinkmap(blinking, underlined, u));
 		    }
 		}
 	    }

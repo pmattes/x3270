@@ -397,10 +397,6 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 	int iuc = apl_to_unicode(c, flags);
 
 	uc = (iuc != -1)? iuc: 0;
-    } else if (cs == CS_LINEDRAW) {
-	ucs4_t u = linedraw_to_unicode(c, (flags & EUO_ASCII_BOX) != 0);
-
-	uc = (u != ' ')? u: 0;
     } else if (cs != CS_BASE) {
 	uc = 0;
     } else {
