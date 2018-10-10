@@ -840,7 +840,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		continue;
 	    } else {
 		if ((u = buf[first + i].ucs4) != 0 ||
-			buf[first + 1].cs == CS_LINEDRAW) {
+			buf[first + i].cs == CS_LINEDRAW) {
 		    if (buf[first + i].cs == CS_LINEDRAW) {
 			u = linedraw_to_unicode(u, false);
 		    }
