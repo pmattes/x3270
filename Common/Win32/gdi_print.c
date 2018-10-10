@@ -47,6 +47,7 @@
 
 #include "fprint_screen.h"
 #include "gdi_print.h"
+#include "nvt.h"
 #include "popups.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -829,7 +830,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     bool fa_high, high;
     bool fa_underline, underline;
     bool fa_reverse, reverse;
-    unsigned long uc;
+    ucs4_t uc;
     int usable_rows;
     HFONT got_font = NULL, want_font;
 #if defined(GDI_DEBUG) /*[*/
@@ -948,15 +949,10 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		} else {
 		    uc = ' ';
 		}
-	    } else if ((uc = ea[baddr].ucs4) != 0 ||
-		    ea[baddr].cs == CS_LINEDRAW) {
+	    } else if (is_nvt(&ea[baddr], false, &uc)) {
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
 		case DBCS_SB:
-		    if (ea[baddr].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode(uc, false);
-		    }
-		    break;
 		case DBCS_LEFT:
 		    break;
 		case DBCS_RIGHT:

@@ -51,6 +51,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "nvt.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
@@ -1970,7 +1971,7 @@ screen_disp(bool erasing _is_unused)
 		    blinking = b_blinking;
 		}
 		d = ctlr_dbcs_state(baddr);
-		if (ea_buf[baddr].ucs4 || ea_buf[baddr].cs == CS_LINEDRAW) {
+		if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
 		    /* NVT-mode text. */
 		    if (IS_LEFT(d)) {
 			attrset(attr_this);
@@ -1981,11 +1982,6 @@ screen_disp(bool erasing _is_unused)
 			addch(' ');
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		    } else if (!IS_RIGHT(d)) {
-			u = ea_buf[baddr].ucs4;
-			if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			    u = linedraw_to_unicode(u,
-				    appres.c3270.ascii_box_draw);
-			}
 			if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
 			    u = crosshair_blank(baddr);
 			    if (u != ' ') {

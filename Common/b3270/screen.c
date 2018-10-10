@@ -38,6 +38,7 @@
 #include "ctlrc.h"
 #include "ui_stream.h"
 #include "lazya.h"
+#include "nvt.h"
 #include "screen.h"
 #include "see.h"
 #include "toggles.h"
@@ -342,7 +343,7 @@ void
 render_screen(struct ea *ea, screen_t *s)
 {
     int i;
-    unsigned long uc;
+    ucs4_t uc;
     int fa_addr = find_field_attribute(0);
     unsigned char fa = ea[fa_addr].fa;
     int fa_fg;
@@ -416,7 +417,7 @@ render_screen(struct ea *ea, screen_t *s)
 		uc = ' ';
 	    }
 	} else {
-	    if ((uc = ea[i].ucs4) != 0 || ea[i].cs == CS_LINEDRAW) {
+	    if (is_nvt(&ea[i], false, &uc)) {
 		/* NVT-mode text. */
 		switch (ctlr_dbcs_state(i)) {
 		case DBCS_RIGHT:
@@ -427,9 +428,6 @@ render_screen(struct ea *ea, screen_t *s)
 		    dbcs = true;
 		    /* fall through */
 		default:
-		    if (ea[i].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode(uc, false);
-		    }
 		    break;
 		}
 	    } else {

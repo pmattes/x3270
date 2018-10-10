@@ -65,6 +65,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "menubar.h"
+#include "nvt.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -1853,13 +1854,9 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		continue;
 	    } else {
-		if ((uc = buf[first + i].ucs4) != 0 ||
-			buf[first + i].cs == CS_LINEDRAW) {
-
+		if (is_nvt(&buf[first + i], false, &uc)) {
 		    /* NVT-mode text. */
-		    if (buf[first + i].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode(uc, false);
-		    } else if (toggled(MONOCASE) && islower((int)uc)) {
+		    if (toggled(MONOCASE) && islower((int)uc)) {
 			uc = (ucs4_t)toupper((int)uc);
 		    }
 		    xlen = unicode_to_multibyte(uc, mb, sizeof(mb));
@@ -1898,8 +1895,8 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		    continue;
 		}
-		if (calc_cs(buf[first + i].cs) != CS_LINEDRAW) {
-		    /* Translate to EBCDIC. */
+		if (buf[first + i].cs != CS_LINEDRAW) {
+		    /* Try to translate to EBCDIC. */
 		    ebc = unicode_to_ebcdic(buf[first + i].ucs4);
 		}
 	    } else {
@@ -2245,12 +2242,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		    done = true;
 		}
 
-		if ((uc = buf[baddr].ucs4) != 0 ||
-			buf[baddr].cs == CS_LINEDRAW) {
+		if (is_nvt(&buf[baddr], false, &uc)) {
 		    /* NVT-mode text. */
-		    if (buf[baddr].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode(uc, false);
-		    }
 		    len = unicode_to_multibyte(uc, mb, sizeof(mb));
 		} else {
 		    /* 3270-mode text. */

@@ -44,6 +44,7 @@
 #if defined(_WIN32) /*[*/
 # include "gdi_print.h"
 #endif /*]*/
+#include "nvt.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
@@ -375,7 +376,7 @@ fprint_screen_body(fps_t ofps)
 {
 	real_fps_t *fps = (real_fps_t *)(void *)ofps;
 	register int i;
-	unsigned long uc;
+	ucs4_t uc;
 	int ns = 0;
 	int nr = 0;
 	bool any = false;
@@ -529,14 +530,10 @@ fprint_screen_body(fps_t ofps)
 			    	uc = 0x3000;
 			else
 				uc = ' ';
-		} else if ((uc = ea_buf[i].ucs4) != 0 ||
-			ea_buf[i].cs == CS_LINEDRAW) {
+		} else if (is_nvt(&ea_buf[i], false, &uc)) {
 		    	/* NVT-mode text. */
 		    	if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
 			    	continue;
-			}
-			if (ea_buf[i].cs == CS_LINEDRAW) {
-			    uc = linedraw_to_unicode(uc, false);
 			}
 		} else {
 		    	/* Convert EBCDIC to Unicode. */
@@ -666,7 +663,7 @@ fprint_screen_body(fps_t ofps)
 			any = true;
 			if (fps->ptype == P_RTF) {
 				if (uc & ~0x7f) {
-					if (fprintf(fps->file, "\\u%ld?", uc)
+					if (fprintf(fps->file, "\\u%u?", uc)
 						    < 0)
 						FAIL;
 				} else {

@@ -44,6 +44,7 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "kybd.h"
+#include "nvt.h"
 #include "popups.h"
 #include "screen.h"
 #include "trace.h"
@@ -398,7 +399,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
     bool last_cjk_space = false;
     wchar_t *bp = (wchar_t *)lptstr;
     enum dbcs_state d;
-    int ch;
+    ucs4_t u;
     unsigned char fa;
 
     /* Fill in the buffer. */
@@ -422,15 +423,10 @@ copy_clipboard_unicode(LPTSTR lptstr)
 	    any_row = r;
 
 	    d = ctlr_dbcs_state(baddr);
-	    if (ea_buf[baddr].ucs4 || ea_buf[baddr].cs == CS_LINEDRAW) {
+	    if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
 		if (!IS_RIGHT(d)) {
-		    ch = ea_buf[baddr].ucs4;
-		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			ch = linedraw_to_unicode(ch,
-				appres.c3270.ascii_box_draw);
-		    }
-		    if (!IS_LEFT(d) && toggled(MONOCASE) && islower(ch)) {
-			ch = toupper(ch);
+		    if (!IS_LEFT(d) && toggled(MONOCASE) && islower(u)) {
+			u = toupper(u);
 		    }
 		} else {
 		    continue;
@@ -440,31 +436,31 @@ copy_clipboard_unicode(LPTSTR lptstr)
 		    int xbaddr = baddr;
 
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = IDEOGRAPHIC_SPACE;
+			u = IDEOGRAPHIC_SPACE;
 		    } else {
 			xbaddr = baddr;
 			INC_BA(xbaddr);
-			ch = ebcdic_to_unicode(
+			u = ebcdic_to_unicode(
 				(ea_buf[baddr].ec << 8) |
 				    ea_buf[xbaddr].ec,
 				CS_BASE, EUO_NONE);
-			if (ch == 0) {
-			    ch = IDEOGRAPHIC_SPACE;
+			if (u == 0) {
+			    u = IDEOGRAPHIC_SPACE;
 			}
 		    }
 		} else if (!IS_RIGHT(d)) {
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = ' ';
+			u = ' ';
 		    } else {
-			ch = ebcdic_to_unicode(ea_buf[baddr].ec,
+			u = ebcdic_to_unicode(ea_buf[baddr].ec,
 				    ea_buf[baddr].cs,
 				    appres.c3270.ascii_box_draw?
 					EUO_ASCII_BOX: 0);
-			if (ch == 0) {
-			    ch = ' ';
+			if (u == 0) {
+			    u = ' ';
 			}
-			if (toggled(MONOCASE) && islower(ch)) {
-			    ch = toupper(ch);
+			if (toggled(MONOCASE) && islower(u)) {
+			    u = toupper(u);
 			}
 		    }
 		} else {
@@ -472,7 +468,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
 		}
 	    }
 
-	    if (ch == ' ') {
+	    if (u == ' ') {
 		if (!word_selected || last_cjk_space) {
 		    *bp++ = ' ';
 		} else {
@@ -483,8 +479,8 @@ copy_clipboard_unicode(LPTSTR lptstr)
 		    *bp++ = ' ';
 		    ns--;
 		}
-		*bp++ = ch;
-		last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
+		*bp++ = u;
+		last_cjk_space = (u == IDEOGRAPHIC_SPACE);
 	    }
 	}
     }
@@ -506,6 +502,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
     char *bp = lptstr;
     enum dbcs_state d;
     wchar_t ch;
+    ucs4_t u;
     unsigned char fa;
 
     /* Fill in the buffer. */
@@ -528,34 +525,27 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 	    }
 	    any_row = r;
 	    d = ctlr_dbcs_state(baddr);
-	    if (ea_buf[baddr].ucs4 || ea_buf[baddr].cs == CS_LINEDRAW) {
+	    if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
 		/* NVT-mode text */
 		if (IS_LEFT(d)) {
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = IDEOGRAPHIC_SPACE;
-		    } else {
-			ch = ea_buf[baddr].ucs4;
+			u = IDEOGRAPHIC_SPACE;
 		    }
 		    while (ns) {
 			*bp++ = ' ';
 			ns--;
 		    }
+		    ch = u;
 		    bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
 			    bp, 1, "?", NULL);
-		    last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
+		    last_cjk_space = (u == IDEOGRAPHIC_SPACE);
 		} else if (!IS_RIGHT(d)) {
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = ' ';
-		    } else {
-			ch = ea_buf[baddr].ucs4;
-			if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			    ch = linedraw_to_unicode(ch,
-				    appres.c3270.ascii_box_draw);
-			} else if (toggled(MONOCASE) && islower(ch)) {
-			    ch = toupper(ch);
-			}
+			u = ' ';
+		    } else if (toggled(MONOCASE) && islower(u)) {
+			u = toupper(u);
 		    }
-		    if (ch == ' ') {
+		    if (u == ' ') {
 			if (!word_selected || last_cjk_space) {
 			    *bp++ = ' ';
 			} else {
@@ -566,6 +556,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 			    *bp++ = ' ';
 			    ns--;
 			}
+			ch = u;
 			bp += WideCharToMultiByte(CP_OEMCP, 0,
 				&ch, 1, bp, 1, "?", NULL);
 			last_cjk_space = false;
@@ -577,41 +568,42 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 		    int xbaddr = baddr;
 
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = IDEOGRAPHIC_SPACE;
+			u = IDEOGRAPHIC_SPACE;
 		    } else {
 			xbaddr = baddr;
 			INC_BA(xbaddr);
-			ch = ebcdic_to_unicode(
+			u = ebcdic_to_unicode(
 				(ea_buf[baddr].ec << 8) |
 				    ea_buf[xbaddr].ec,
 				CS_BASE, EUO_NONE);
-			if (ch == 0) {
-			    ch = IDEOGRAPHIC_SPACE;
+			if (u == 0) {
+			    u = IDEOGRAPHIC_SPACE;
 			}
 		    }
 		    while (ns) {
 			*bp++ = ' ';
 			ns--;
 		    }
+		    ch = u;
 		    bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
 			    bp, 1, "?", NULL);
-		    last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
+		    last_cjk_space = (u == IDEOGRAPHIC_SPACE);
 		} else if (!IS_RIGHT(d)) {
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			ch = ' ';
+			u = ' ';
 		    } else {
-			ch = ebcdic_to_unicode(ea_buf[baddr].ec,
+			u = ebcdic_to_unicode(ea_buf[baddr].ec,
 				ea_buf[baddr].cs,
 				appres.c3270.ascii_box_draw?
 				    EUO_ASCII_BOX: 0);
-			if (ch == 0) {
-			    ch = ' ';
+			if (u == 0) {
+			    u = ' ';
 			}
-			if (toggled(MONOCASE) && islower(ch)) {
-			    ch = toupper(ch);
+			if (toggled(MONOCASE) && islower(u)) {
+			    u = toupper(u);
 			}
 		    }
-		    if (ch == ' ') {
+		    if (u == ' ') {
 			if (!word_selected || last_cjk_space) {
 			    *bp++ = ' ';
 			} else {
@@ -622,6 +614,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 			    *bp++ = ' ';
 			    ns--;
 			}
+			ch = u;
 			bp += WideCharToMultiByte(CP_OEMCP, 0,
 				&ch, 1, bp, 1, "?", NULL);
 			last_cjk_space = false;
@@ -646,7 +639,6 @@ copy_clipboard_text(LPTSTR lptstr)
     int ns = 0;
     char *bp = lptstr;
     enum dbcs_state d;
-    int ch;
     unsigned char fa;
 
     /* Fill in the buffer. */
@@ -673,15 +665,10 @@ copy_clipboard_text(LPTSTR lptstr)
 	    d = ctlr_dbcs_state(baddr);
 	    if (IS_LEFT(d) || IS_RIGHT(d) ||
 		    ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-		ch = ' ';
+		u = ' ';
 	    } else {
-		if (ea_buf[baddr].ucs4 || ea_buf[baddr].cs == CS_LINEDRAW) {
-		    ch = ea_buf[baddr].ucs4;
-		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			ch = linedraw_to_unicode(ch,
-				appres.c3270.ascii_box_draw);
-		    }
-		    nc = unicode_to_multibyte(ch, buf, sizeof(buf));
+		if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
+		    nc = unicode_to_multibyte(u, buf, sizeof(buf));
 		} else {
 		    nc = ebcdic_to_multibyte_x(ea_buf[baddr].ec,
 			    ea_buf[baddr].cs, buf, sizeof(buf),
@@ -691,23 +678,23 @@ copy_clipboard_text(LPTSTR lptstr)
 			    &u);
 		}
 		if (nc == 2) {
-		    ch = buf[0];
+		    u = buf[0];
 		} else {
-		    ch = ' ';
+		    u = ' ';
 		}
-		if (toggled(MONOCASE) && islower(ch)) {
-		    ch = toupper(ch);
+		if (toggled(MONOCASE) && islower(u)) {
+		    u = toupper(u);
 		}
 	    }
 
-	    if (ch == ' ' && word_selected) {
+	    if (u == ' ' && word_selected) {
 		ns++;
 	    } else {
 		while (ns) {
 		    *bp++ = ' ';
 		    ns--;
 		}
-		*bp++ = ch;
+		*bp++ = u;
 	    }
 	}
     }

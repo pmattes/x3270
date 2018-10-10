@@ -2453,3 +2453,25 @@ nvt_register(void)
     /* Register for state changes. */
     register_schange(ST_3270_MODE, nvt_in3270);
 }
+
+/**
+ * Test a buffer position for NVT mode text.
+ *
+ * @param[in] ea	Buffer position
+ * @param[in] ascii_box_draw True to do ASCII-art box drawing
+ * @param[out] u	Returned Unicode or line drawing value
+ *
+ * @return true if NVT text present
+ */
+bool
+is_nvt(struct ea *ea, bool ascii_box_draw, ucs4_t *u)
+{
+    if ((*u = ea->ucs4) != 0) {
+	return true;
+    }
+    if (ea->cs == CS_LINEDRAW) {
+	*u = linedraw_to_unicode(*u, ascii_box_draw);
+	return true;
+    }
+    return false;
+}
