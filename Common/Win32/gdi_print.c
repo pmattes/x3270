@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2017 Paul Mattes.
+ * Copyright (c) 1994-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -414,7 +414,7 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 static gdi_status_t
 gdi_init(const char *printer_name, unsigned opts, const char **fail)
 {
-    char *default_printer_name;
+    char *default_printer_name = NULL;
     LPDEVMODE devmode;
     HDC dc;
     DOCINFO docinfo;
@@ -830,8 +830,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     bool fa_underline, underline;
     bool fa_reverse, reverse;
     unsigned long uc;
-    bool is_dbcs;
-    char c;
     int usable_rows;
     HFONT got_font = NULL, want_font;
 #if defined(GDI_DEBUG) /*[*/
@@ -875,7 +873,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		0, NULL,
 		pstate.caption, (UINT)strlen(pstate.caption), NULL);
 	if (status <= 0) {
-	    *fail = "ExtTextOut failed";
+	    *fail = "ExtTextOut(caption) failed";
 	    rc = -1;
 	    goto done;
 	}
@@ -921,6 +919,9 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     fa_underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
 
     for (baddr = 0, row = 0; row < ROWS; row++) {
+	wchar_t w;
+	INT wdx;
+
 	if (pstate.out_row + row >= usable_rows) {
 	    break;
 	}
@@ -941,7 +942,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    if (col >= pstate.usable_cols) {
 		continue;
 	    }
-	    is_dbcs = FALSE;
 	    if (FA_IS_ZERO(fa)) {
 		if (ctlr_dbcs_state_ea(baddr, ea) == DBCS_LEFT) {
 		    uc = 0x3000;
@@ -960,7 +960,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    }
 		    break;
 		case DBCS_LEFT:
-		    is_dbcs = TRUE;
 		    uc = ebcdic_to_unicode((ea[baddr].cc << 8) |
 				ea[baddr + 1].cc,
 			    CS_BASE, EUO_NONE);
@@ -1063,7 +1062,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 			    (uc == 0x3000)? 2: 1,
 			    pstate.dx);
 		    if (status <= 0) {
-			*fail = "ExtTextOut failed";
+			*fail = "ExtTextOut(space) failed";
 			rc = -1;
 			goto done;
 		    }
@@ -1075,38 +1074,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	     * Emit one character at a time. This should be optimized to print
 	     * strings of characters with the same attributes.
 	     */
-	    if (is_dbcs) {
-		wchar_t w;
-		INT wdx;
-
-		w = (wchar_t)uc;
-		wdx = pstate.space_size.cx;
-
-		status = ExtTextOutW(dc,
-			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
-			    pchar.poffX,
-			pstate.vmargin_pixels +
-			    ((pstate.out_row + row + 1) *
-			     pstate.space_size.cy) -
-			    pchar.poffY,
-			0, NULL,
-			&w, 1, &wdx);
-		if (status <= 0) {
-		    *fail = "ExtTextOutW failed";
-		    rc = -1;
-		    goto done;
-		}
-		continue;
-	    }
-	    c = (char)uc;
-	    status = ExtTextOut(dc,
-		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
-			pchar.poffX,
-		    pstate.vmargin_pixels +
-			((pstate.out_row + row + 1) * pstate.space_size.cy) -
-			pchar.poffY,
-		    0, NULL,
-		    &c, 1, pstate.dx);
 #if defined(GDI_DEBUG) /*[*/
 	    if (c != ' ') {
 		vtrace("[gdi] row %d col %d x=%ld y=%ld '%c'\n",
@@ -1119,8 +1086,20 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 			c);
 	    }
 #endif /*]*/
+	    w = (wchar_t)uc;
+	    wdx = pstate.space_size.cx;
+
+	    status = ExtTextOutW(dc,
+		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
+			pchar.poffX,
+		    pstate.vmargin_pixels +
+			((pstate.out_row + row + 1) *
+			 pstate.space_size.cy) -
+			pchar.poffY,
+		    0, NULL,
+		    &w, 1, &wdx);
 	    if (status <= 0) {
-		*fail = "ExtTextOut failed";
+		*fail = "ExtTextOutW(image) failed";
 		rc = -1;
 		goto done;
 	    }
