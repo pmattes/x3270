@@ -2038,12 +2038,8 @@ nvt_snap_one(struct ea *buf)
 
 	/* Expand the current character to multibyte. */
 	d = ctlr_dbcs_state(baddr);
-	u = buf[baddr].ucs4;
-	if (u || buf[baddr].cs == CS_LINEDRAW) {
+	if (is_nvt(&buf[baddr], false, &u)) {
 	    if (!IS_RIGHT(d)) {
-		if (buf[baddr].cs == CS_LINEDRAW) {
-		    u = linedraw_to_unicode(u, false);
-		}
 		len = unicode_to_multibyte(u, mb, sizeof(mb));
 	    } else {
 		len = 0;
@@ -2456,10 +2452,11 @@ nvt_register(void)
 
 /**
  * Test a buffer position for NVT mode text.
+ * Translates line-drawing characters to Unicode.
  *
  * @param[in] ea	Buffer position
  * @param[in] ascii_box_draw True to do ASCII-art box drawing
- * @param[out] u	Returned Unicode or line drawing value
+ * @param[out] u	Returned Unicode value
  *
  * @return true if NVT text present
  */
