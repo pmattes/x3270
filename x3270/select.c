@@ -1316,7 +1316,6 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
     static unsigned char fa;
     ucs4_t uc;
     int baddr2;
-    int l;
 
     *rlen = 1;
 
@@ -1426,12 +1425,8 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	return;
     case CS_LINEDRAW:
 	/* VT100 line-drawing character. */
-	l = linedraw_to_unicode(ea_buf[baddr].ucs4);
-	if (l <= 0) {
-	    *rlen = 0;
-	    return;
-	}
-	*rlen = unicode_to_utf8((ucs4_t)l, (char *)r);
+	*rlen = unicode_to_utf8(
+		linedraw_to_unicode(ea_buf[baddr].ucs4, false), (char *)r);
 	return;
     }
 }

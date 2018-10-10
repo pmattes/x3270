@@ -1971,7 +1971,7 @@ screen_disp(bool erasing _is_unused)
 		    blinking = b_blinking;
 		}
 		d = ctlr_dbcs_state(baddr);
-		if (ea_buf[baddr].ucs4) {
+		if (ea_buf[baddr].ucs4 || ea_buf[baddr].cs == CS_LINEDRAW) {
 		    /* NVT-mode text. */
 		    if (IS_LEFT(d)) {
 			attrset(attr_this);
@@ -1982,11 +1982,10 @@ screen_disp(bool erasing _is_unused)
 			addch(' ');
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		    } else if (!IS_RIGHT(d)) {
+			c = ea_buf[baddr].ucs4;
 			if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			    c = linedraw_to_unicode_def(ea_buf[baddr].ucs4,
+			    c = linedraw_to_unicode(c,
 				    appres.c3270.ascii_box_draw);
-			} else {
-			    c = ea_buf[baddr].ucs4;
 			}
 			if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
 			    c = crosshair_blank(baddr);

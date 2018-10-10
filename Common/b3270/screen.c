@@ -416,7 +416,7 @@ render_screen(struct ea *ea, screen_t *s)
 		uc = ' ';
 	    }
 	} else {
-	    if (ea[i].ucs4) {
+	    if ((uc = ea[i].ucs4) != 0 || ea[i].cs == CS_LINEDRAW) {
 		/* NVT-mode text. */
 		switch (ctlr_dbcs_state(i)) {
 		case DBCS_RIGHT:
@@ -428,9 +428,7 @@ render_screen(struct ea *ea, screen_t *s)
 		    /* fall through */
 		default:
 		    if (ea[i].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode_def(ea[i].ucs4, false);
-		    } else {
-			uc = ea[i].ucs4;
+			uc = linedraw_to_unicode(uc, false);
 		    }
 		    break;
 		}

@@ -1853,17 +1853,16 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		continue;
 	    } else {
-		if (buf[first + i].ucs4) {
-		    ucs4_t ucs4 = buf[first + i].ucs4;
+		if ((uc = buf[first + i].ucs4) != 0 ||
+			buf[first + i].cs == CS_LINEDRAW) {
 
 		    /* NVT-mode text. */
-		    if (toggled(MONOCASE) && islower((int)ucs4)) {
-			ucs4 = (ucs4_t)toupper((int)ucs4);
-		    }
 		    if (buf[first + i].cs == CS_LINEDRAW) {
-			ucs4 = linedraw_to_unicode_def(ucs4, false);
+			uc = linedraw_to_unicode(uc, false);
+		    } else if (toggled(MONOCASE) && islower((int)uc)) {
+			uc = (ucs4_t)toupper((int)uc);
 		    }
-		    xlen = unicode_to_multibyte(ucs4, mb, sizeof(mb));
+		    xlen = unicode_to_multibyte(uc, mb, sizeof(mb));
 		    for (j = 0; j < xlen - 1; j++) {
 			vb_appendf(&r, "%c", mb[j]);
 		    }
@@ -2246,19 +2245,13 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		    done = true;
 		}
 
-		if (buf[baddr].ucs4) {
+		if ((uc = buf[baddr].ucs4) != 0 ||
+			buf[baddr].cs == CS_LINEDRAW) {
 		    /* NVT-mode text. */
 		    if (buf[baddr].cs == CS_LINEDRAW) {
-			int l = linedraw_to_unicode(buf[baddr].ucs4);
-
-			if (l < 0) {
-			    l = 0;
-			}
-			len = unicode_to_multibyte((ucs4_t)l, mb, sizeof(mb));
-		    } else {
-			len = unicode_to_multibyte(buf[baddr].ucs4, mb,
-				sizeof(mb));
+			uc = linedraw_to_unicode(uc, false);
 		    }
+		    len = unicode_to_multibyte(uc, mb, sizeof(mb));
 		} else {
 		    /* 3270-mode text. */
 		    switch (buf[baddr].ec) {

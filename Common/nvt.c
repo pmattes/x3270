@@ -2039,10 +2039,10 @@ nvt_snap_one(struct ea *buf)
 	/* Expand the current character to multibyte. */
 	d = ctlr_dbcs_state(baddr);
 	u = buf[baddr].ucs4;
-	if (u) {
+	if (u || buf[baddr].cs == CS_LINEDRAW) {
 	    if (!IS_RIGHT(d)) {
 		if (buf[baddr].cs == CS_LINEDRAW) {
-		    u = linedraw_to_unicode_def(u, false);
+		    u = linedraw_to_unicode(u, false);
 		}
 		len = unicode_to_multibyte(u, mb, sizeof(mb));
 	    } else {

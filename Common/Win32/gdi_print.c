@@ -948,18 +948,16 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		} else {
 		    uc = ' ';
 		}
-	    } else if (ea[baddr].ucs4) {
+	    } else if ((uc = ea[baddr].ucs4) != 0 ||
+		    ea[baddr].cs == CS_LINEDRAW) {
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
 		case DBCS_SB:
 		    if (ea[baddr].cs == CS_LINEDRAW) {
-			uc = linedraw_to_unicode_def(ea[baddr].ucs4, false);
-		    } else {
-			uc = ea[baddr].ucs4;
+			uc = linedraw_to_unicode(uc, false);
 		    }
 		    break;
 		case DBCS_LEFT:
-		    uc = ea[baddr].ucs4;
 		    break;
 		case DBCS_RIGHT:
 		    /* skip altogether, we took care of it above */

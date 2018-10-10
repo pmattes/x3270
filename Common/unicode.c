@@ -398,7 +398,7 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 
 	uc = (iuc != -1)? iuc: 0;
     } else if (cs == CS_LINEDRAW) {
-	ucs4_t u = linedraw_to_unicode_def(c, (flags & EUO_ASCII_BOX) != 0);
+	ucs4_t u = linedraw_to_unicode(c, (flags & EUO_ASCII_BOX) != 0);
 
 	uc = (u != ' ')? u: 0;
     } else if (cs != CS_BASE) {
@@ -677,31 +677,13 @@ static ucs4_t ld2uc_ascii_art[32] = {
 };
 
 /*
- * Translate an x3270 font line-drawing character (the first two rows of a
- * standard X11 fixed-width font) to Unicode.
- *
- * Returns -1 if there is no translation.
- */
-int
-linedraw_to_unicode(ebc_t c)
-{
-    return (c < 32)? (int)ld2uc[c] : -1;
-}
-
-/*
  * Translate an NVT-mode line-drawing character to Unicode, optionally using
  * ASCII-art for the box-drawing characters.
- *
- * Returns a space if there is no translation.
  */
 ucs4_t
-linedraw_to_unicode_def(ebc_t c, bool ascii_art)
+linedraw_to_unicode(ucs4_t c, bool ascii_art)
 {
-    if (c >= 32) {
-	return ' ';
-    }
-
-    return ascii_art? ld2uc_ascii_art[c]: ld2uc[c];
+    return ascii_art? ld2uc_ascii_art[c % 32]: ld2uc[c % 32];
 }
 
 /*

@@ -50,8 +50,7 @@ ebc_t unicode_to_ebcdic(ucs4_t u);
 ebc_t unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl);
 bool set_uni(const char *csname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
-int linedraw_to_unicode(ebc_t e);
-ucs4_t linedraw_to_unicode_def(ebc_t e, bool ascii_art);
+ucs4_t linedraw_to_unicode(ucs4_t e, bool ascii_art);
 int apl_to_unicode(ebc_t e, unsigned flags);
 size_t ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	size_t mb_len, unsigned flags, ucs4_t *uc);

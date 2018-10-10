@@ -529,15 +529,14 @@ fprint_screen_body(fps_t ofps)
 			    	uc = 0x3000;
 			else
 				uc = ' ';
-		} else if (ea_buf[i].ucs4) {
+		} else if ((uc = ea_buf[i].ucs4) != 0 ||
+			ea_buf[i].cs == CS_LINEDRAW) {
 		    	/* NVT-mode text. */
 		    	if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
 			    	continue;
 			}
 			if (ea_buf[i].cs == CS_LINEDRAW) {
-			    uc = linedraw_to_unicode_def(ea_buf[i].ucs4, false);
-			} else {
-			    uc = ea_buf[i].ucs4;
+			    uc = linedraw_to_unicode(uc, false);
 			}
 		} else {
 		    	/* Convert EBCDIC to Unicode. */

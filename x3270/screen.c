@@ -2351,14 +2351,10 @@ static XChar2b
 linedraw_to_udisplay(int d8_ix, unsigned char c)
 {
     XChar2b x;
-    int u = -1;
-    int d = 0;
+    int d;
 
     /* Look it up. */
-    u = linedraw_to_unicode(c);
-    if (u != -1) {
-	d = display8_lookup(d8_ix, u);
-    }
+    d = display8_lookup(d8_ix, linedraw_to_unicode(c, false));
 
     /* Default to a space. */
     if (d == 0) {
