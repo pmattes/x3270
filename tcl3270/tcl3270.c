@@ -815,6 +815,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    }
 	}
 	if (in_ascii) {
+	    ucs4_t u;
 	    int len;
 	    char mb[16];
 	    ucs4_t uc;
@@ -828,15 +829,26 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else if (is_zero) {
 		/* leave mb[] as " " */
 	    } else if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-		len = ebcdic_to_multibyte((buf[first + i].ec << 8) |
-			    buf[first + i + 1].ec,
-			mb, sizeof(mb));
+		if ((u = buf[first + i].ucs4) != 0) {
+		    len = unicode_to_multibyte(u, mb, sizeof(mb));
+		} else {
+		    len = ebcdic_to_multibyte((buf[first + i].ec << 8) |
+				buf[first + i + 1].ec,
+			    mb, sizeof(mb));
+		}
 	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		continue;
 	    } else {
-		len = ebcdic_to_multibyte_x(buf[first + i].ec,
-			buf[first + i].cs & CS_MASK, mb, sizeof(mb),
-			EUO_BLANK_UNDEF, &uc);
+		if ((u = buf[first + i].ucs4) != 0) {
+		    if (buf[first + i].cs == CS_LINEDRAW) {
+			u = linedraw_to_unicode_def(u, false);
+		    }
+		    len = unicode_to_multibyte(u, mb, sizeof(mb));
+		} else {
+		    len = ebcdic_to_multibyte_x(buf[first + i].ec,
+			    buf[first + i].cs & CS_MASK, mb, sizeof(mb),
+			    EUO_BLANK_UNDEF, &uc);
+		}
 	    }
 	    if (len > 0) {
 		Tcl_AppendToObj(row, mb, len - 1);
@@ -844,6 +856,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	} else {
 	    char *s;
 
+	    /* In EBCDIC mode, ignore NVT text. */
 	    s = xs_buffer("0x%02x", buf[first + i].ec);
 	    Tcl_ListObjAppendElement(sms_interp, row, Tcl_NewStringObj(s, -1));
 	    Free(s);
@@ -910,14 +923,25 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 		    mb[1] = '\0';
 		    len = 2;
 		} else if (IS_LEFT(ctlr_dbcs_state(loc))) {
-		    len = ebcdic_to_multibyte((buf[loc].ec << 8) |
-			    buf[loc + 1].ec, mb, sizeof(mb));
+		    if ((uc = buf[loc].ucs4) != 0) {
+			len = unicode_to_multibyte(uc, mb, sizeof(mb));
+		    } else {
+			len = ebcdic_to_multibyte((buf[loc].ec << 8) |
+				buf[loc + 1].ec, mb, sizeof(mb));
+		    }
 		} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
 		    continue;
 		} else {
-		    len = ebcdic_to_multibyte_x(buf[loc].ec,
-			    buf[loc].cs & CS_MASK, mb, sizeof(mb),
-			    EUO_BLANK_UNDEF, &uc);
+		    if ((uc = buf[loc].ucs4) != 0) {
+			if (buf[loc].cs == CS_LINEDRAW) {
+			    uc = linedraw_to_unicode_def(uc, false);
+			}
+			len = unicode_to_multibyte(uc, mb, sizeof(mb));
+		    } else {
+			len = ebcdic_to_multibyte_x(buf[loc].ec,
+				buf[loc].cs & CS_MASK, mb, sizeof(mb),
+				EUO_BLANK_UNDEF, &uc);
+		    }
 		}
 		if (len > 0) {
 		    Tcl_AppendToObj(row, mb, len - 1);
@@ -925,6 +949,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 	    } else {
 		char *s;
 
+		/* In EBCDIC mode, ignore NVT-mode text. */
 		s = xs_buffer("0x%02x", buf[loc].ec);
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(s, -1));
@@ -1311,6 +1336,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		    Tcl_NewStringObj(vb_consume(&r), -1));
 	} else {
 	    bool any_sa = false;
+	    unsigned char xcs;
 #           define SA_SEP (any_sa? ",": "SA(")
 
 	    if (buf[baddr].fg != current_fg) {
@@ -1337,10 +1363,14 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		current_ic = buf[baddr].ic;
 		any_sa = true;
 	    }
-	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
-		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_CHARSET,
-			calc_cs(buf[baddr].cs));
-		current_cs = buf[baddr].cs;
+	    xcs = buf[baddr].cs & CS_MASK;
+	    if (xcs == CS_LINEDRAW) {
+		/* Treat LINEDRAW and BASE as equivalent. */
+		xcs = CS_BASE;
+	    }
+	    if (xcs != (current_cs & CS_MASK)) {
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_CHARSET, calc_cs(xcs));
+		current_cs = xcs;
 		any_sa = true;
 	    }
 	    if (any_sa) {
@@ -1349,6 +1379,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 			Tcl_NewStringObj(vb_consume(&r), -1));
 	    }
 	    if (in_ebcdic) {
+		/* Ignore NVT-mode text. */
 		if (buf[baddr].cs & CS_GE) {
 		    rbuf = xs_buffer("GE(%02x)", buf[baddr].ec);
 		} else {
@@ -1364,21 +1395,43 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		ucs4_t uc;
 
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-		    len = ebcdic_to_multibyte((buf[baddr].ec << 8) |
-			    buf[baddr + 1].ec,
-			    mb, sizeof(mb));
+		    if (buf[baddr].ucs4) {
+			len = unicode_to_multibyte(buf[baddr].ucs4, mb,
+				sizeof(mb));
+		    } else {
+			len = ebcdic_to_multibyte((buf[baddr].ec << 8) |
+				buf[baddr + 1].ec,
+				mb, sizeof(mb));
+		    }
 		    for (j = 0; j < len - 1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
 		    vb_appends(&r, " -");
-		} else if (buf[baddr].ec == EBC_null) {
-		    vb_appends(&r, "00");
 		} else {
-		    len = ebcdic_to_multibyte_x(buf[baddr].ec,
-			    buf[baddr].cs & CS_MASK,
-			    mb, sizeof(mb), EUO_BLANK_UNDEF,
-			    &uc);
+		    if ((uc = buf[baddr].ucs4) != 0) {
+			if (buf[baddr].cs == CS_LINEDRAW) {
+			    int l = linedraw_to_unicode(uc);
+
+			    if (l < 0) {
+				l = 0;
+			    }
+			    len = unicode_to_multibyte((ucs4_t)l, mb,
+				    sizeof(mb));
+			} else {
+			    len = unicode_to_multibyte(uc, mb, sizeof(mb));
+			}
+		    } else {
+			if (buf[baddr].ec == EBC_null) {
+			    vb_appends(&r, "00");
+			    len = 0;
+			} else {
+			    len = ebcdic_to_multibyte_x(buf[baddr].ec,
+				    buf[baddr].cs & CS_MASK,
+				    mb, sizeof(mb), EUO_BLANK_UNDEF,
+				    &uc);
+			}
+		    }
 		    for (j = 0; j < len - 1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
