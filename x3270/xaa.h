@@ -30,5 +30,4 @@
  *              Header file for the x3270> prompt menu item.
  */
 
-void execute_action_option(Widget w, XtPointer client_data,
-	XtPointer call_data);
+void prompt_option(Widget w, XtPointer client_data, XtPointer call_data);

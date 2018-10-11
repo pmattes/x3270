@@ -42,7 +42,7 @@
 /* Statics */
 
 void
-execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
+prompt_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     push_macro(

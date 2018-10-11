@@ -978,10 +978,10 @@ file_menu_init(bool regen, Dimension x, Dimension y)
 		NULL);
 	any |= (w != NULL);
 
-	/* Execute an action (x3270> prompt) */
+	/* x3270> prompt. */
 	spaced = false;
 	w = add_menu_itemv("promptOption", file_menu,
-		execute_action_option, NULL, &spaced,
+		prompt_option, NULL, &spaced,
 		NULL);
 	any |= (w != NULL);
     }
