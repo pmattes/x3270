@@ -215,6 +215,74 @@ u_value(toggle_extended_upcalls_t *u)
     return (*u->canonicalize)(value);
 }
 
+typedef struct {
+    const char *name;
+    const char *value;
+} toggle_list_t;
+
+static int
+toggle_compare(const void *a, const void *b)
+{
+    toggle_list_t *ta = (toggle_list_t *)a;
+    toggle_list_t *tb = (toggle_list_t *)b;
+
+    return strcmp(ta->name, tb->name);
+}
+
+/*
+ * Show all toggles.
+ */
+static void
+toggle_show(void)
+{
+    int i, tix;
+    toggle_extended_upcalls_t *u = NULL;
+    int nt = 0;
+    toggle_list_t *toggle_list;
+
+    /* Count the toggles. */
+    for (i = 0; toggle_names[i].name != NULL; i++) {
+	if (toggle_supported(toggle_names[i].index)) {
+	    nt++;
+	}
+    }
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	nt++;
+    }
+
+    /* Copy them into an array. */
+    toggle_list = (toggle_list_t *)Calloc(nt, sizeof(toggle_list_t));
+    tix = 0;
+    for (i = 0; toggle_names[i].name != NULL; i++) {
+	if (toggle_supported(toggle_names[i].index)) {
+	    toggle_list[tix].name = toggle_names[i].name;
+	    toggle_list[tix].value =
+		toggled(toggle_names[i].index)? "True": "False";
+	    tix++;
+	}
+    }
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	toggle_list[tix].name = u->name;
+	toggle_list[tix].value = u_value(u);
+	tix++;
+    }
+
+    /* Sort the array by name. */
+    qsort(toggle_list, nt, sizeof(toggle_list_t), toggle_compare);
+
+    /* Walk the array. */
+    for (tix = 0; tix < nt; tix++) {
+	if (toggle_list[tix].value != NULL) {
+	    action_output("%s: %s", toggle_list[tix].name,
+		    toggle_list[tix].value);
+	} else {
+	    action_output("%s:", toggle_list[tix].name);
+	}
+    }
+
+    Free(toggle_list);
+}
+
 /*
  * Toggle/Set action.
  */
@@ -239,6 +307,11 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
     toggle_extended_notifies_t *notifies;
 
     action_debug(name, ia, argc, argv);
+
+    if (argc == 0) {
+	toggle_show();
+	return true;
+    }
 
     /* Check basic syntax. */
     if (argc < 1) {
