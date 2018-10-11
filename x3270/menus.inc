@@ -64,8 +64,8 @@ A different options file can be specified by the XX_FB(X3270PRO)
 environment variable.
 If the environment variable XX_FB(NOX3270PRO)
 is set, no options file will be read.
-XX_TP(XX_FB(Execute an Action))
-Allows an action name and parameters to be entered from the keyboard.
+XX_TP(XX_FB(x3270 Prompt))
+Opens an interactive window for entering actions and viewing their output.
 This allows experimentation with actions without having to edit keymaps
 and repeatedly restart XX_FB(x3270).
 XX_TP(XX_FB(Toggles))

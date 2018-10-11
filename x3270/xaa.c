@@ -27,7 +27,7 @@
 
 /*
  *      xaa.c
- *              The Execute an Action menu item.
+ *              The x3270> prompt menu item.
  */
 
 #include "globals.h"

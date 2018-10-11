@@ -2850,7 +2850,7 @@ default false
 desc
     When true, %p% will prevent users from executing arbitrary
     commands from within the program.
-    In particular, the <b>File -&gt; Execute an Action</b> menu option is
+    In particular, the <b>File -&gt; x3270&gt; Prompt</b> menu option is
     disabled, as are the pop-ups which allow editing the commands
     for <b>File -&gt; Print Screen Text</b> and
     <b>File -&gt; Print Window Bitmap</b>, and
@@ -2911,8 +2911,8 @@ groups s
 type b
 desc
     When true, suppresses a menu item.  For example, setting
-    <b>x3270*executeActionOption.suppress</b> to true will remove
-    the <b>Execute an Action</b> option on the <b>File</b> menu.
+    <b>x3270*aboutConfig.suppress</b> to true will remove
+    the <b>Configuration</b> option from the <b>About</b> menu.
     The names of the menu items are:<br>
 &nbsp;&nbsp;&nbsp;aboutMenu.aboutConfig.suppress<br>
 &nbsp;&nbsp;&nbsp;aboutMenu.aboutCopyright.suppress<br>
@@ -2920,11 +2920,11 @@ desc
 &nbsp;&nbsp;&nbsp;fileMenu.abortScriptOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.aboutOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.disconnectOption.suppress<br>
-&nbsp;&nbsp;&nbsp;fileMenu.executeActionOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.exitOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.ftOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.printerOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.printWindowOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.promptOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.saveOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.screenTraceOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.traceOption.suppress<br>
@@ -2972,7 +2972,7 @@ type s
 desc
     A list of whitespace-separated action names, with or without parentheses,
     which are to be ignored.  The actions will be completely inaccessible,
-    whether by keymaps, scripts, macros or the Execute an Action menu option.
+    whether by keymaps, scripts, macros or at the prompt.
     This resource is intended to be used as a security precaution for users
     who can define their own keymaps, but who do not have access to resource
     definitions or command-line options.

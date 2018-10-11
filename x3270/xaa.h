@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 
 /*
  *      xaa.h
- *              Header file for the Execute an Action menu item.
+ *              Header file for the x3270> prompt menu item.
  */
 
 void execute_action_option(Widget w, XtPointer client_data,

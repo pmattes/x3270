@@ -726,9 +726,6 @@ x3270.screenTracePopup*html.label:		HTML
 x3270.screenTracePopup*rtf.label:		RichText
 x3270.screenTracePopup*fileName.label:		File Name
 x3270.screenTracePopup*printCommand.label:	Printer Command
-x3270.executeActionPopup.title:			x3270 Execute Action
-x3270.executeActionPopup.dialog.label:		Enter Action and Parameters
-x3270.executeActionPopup*confirmButton.label:	Execute
 x3270.saveOptionsPopup.title:			x3270 Save Changed Options
 x3270.saveOptionsPopup.dialog.label:		Enter Profile/Session File Name
 x3270.saveOptionsPopup*confirmButton.label:	Save
@@ -763,7 +760,7 @@ x3270*disconnectOption.label:			Disconnect
 x3270*exitOption.label:				Exit x3270
 x3270*exitReallyOption.label:			Disconnect and Exit
 x3270*printWindowOption.label:			Print Window Bitmap
-x3270*executeActionOption.label:		Execute an Action
+x3270*promptOption.label:			x3270> Prompt
 x3270*reenableKeyboardOption.label:		Re-enable Keyboard
 x3270*fileMenuButton.label:			File
 x3270*fileMenu.label:				File
