@@ -308,15 +308,10 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
 
     action_debug(name, ia, argc, argv);
 
+    /* Check for show-all. */
     if (argc == 0) {
 	toggle_show();
 	return true;
-    }
-
-    /* Check basic syntax. */
-    if (argc < 1) {
-	popup_an_error("%s requires at least one argument", name);
-	return false;
     }
 
     dones = (done_success_t *)Malloc(argc * sizeof(done_success_t *));
