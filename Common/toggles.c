@@ -215,16 +215,18 @@ u_value(toggle_extended_upcalls_t *u)
     return (*u->canonicalize)(value);
 }
 
+/* A toggle name and its (possibly NULL) value. */
 typedef struct {
     const char *name;
     const char *value;
-} toggle_list_t;
+} tnv_t;
 
+/* Compare two toggles by name. Used by qsort. */
 static int
 toggle_compare(const void *a, const void *b)
 {
-    toggle_list_t *ta = (toggle_list_t *)a;
-    toggle_list_t *tb = (toggle_list_t *)b;
+    tnv_t *ta = (tnv_t *)a;
+    tnv_t *tb = (tnv_t *)b;
 
     return strcmp(ta->name, tb->name);
 }
@@ -235,52 +237,40 @@ toggle_compare(const void *a, const void *b)
 static void
 toggle_show(void)
 {
-    int i, tix;
-    toggle_extended_upcalls_t *u = NULL;
-    int nt = 0;
-    toggle_list_t *toggle_list;
+    int i;
+    toggle_extended_upcalls_t *u;
+    tnv_t *tnv = NULL;
+    int n_tnv = 0;
 
-    /* Count the toggles. */
+    /* Copy the toggles and values into an array. */
     for (i = 0; toggle_names[i].name != NULL; i++) {
 	if (toggle_supported(toggle_names[i].index)) {
-	    nt++;
+	    tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
+	    tnv[n_tnv].name = toggle_names[i].name;
+	    tnv[n_tnv].value = toggled(toggle_names[i].index)? "True": "False";
+	    n_tnv++;
 	}
     }
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	nt++;
-    }
-
-    /* Copy them into an array. */
-    toggle_list = (toggle_list_t *)Calloc(nt, sizeof(toggle_list_t));
-    tix = 0;
-    for (i = 0; toggle_names[i].name != NULL; i++) {
-	if (toggle_supported(toggle_names[i].index)) {
-	    toggle_list[tix].name = toggle_names[i].name;
-	    toggle_list[tix].value =
-		toggled(toggle_names[i].index)? "True": "False";
-	    tix++;
-	}
-    }
-    for (u = extended_upcalls; u != NULL; u = u->next) {
-	toggle_list[tix].name = u->name;
-	toggle_list[tix].value = u_value(u);
-	tix++;
+	tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
+	tnv[n_tnv].name = u->name;
+	tnv[n_tnv].value = u_value(u);
+	n_tnv++;
     }
 
     /* Sort the array by name. */
-    qsort(toggle_list, nt, sizeof(toggle_list_t), toggle_compare);
+    qsort(tnv, n_tnv, sizeof(tnv_t), toggle_compare);
 
     /* Walk the array. */
-    for (tix = 0; tix < nt; tix++) {
-	if (toggle_list[tix].value != NULL) {
-	    action_output("%s: %s", toggle_list[tix].name,
-		    toggle_list[tix].value);
+    for (i = 0; i < n_tnv; i++) {
+	if (tnv[i].value != NULL) {
+	    action_output("%s: %s", tnv[i].name, tnv[i].value);
 	} else {
-	    action_output("%s:", toggle_list[tix].name);
+	    action_output("%s:", tnv[i].name);
 	}
     }
 
-    Free(toggle_list);
+    Free(tnv);
 }
 
 /*
