@@ -2463,11 +2463,11 @@ nvt_register(void)
 bool
 is_nvt(struct ea *ea, bool ascii_box_draw, ucs4_t *u)
 {
-    if ((*u = ea->ucs4) != 0) {
+    if (ea->cs == CS_LINEDRAW) {
+	*u = linedraw_to_unicode(ea->ucs4, ascii_box_draw);
 	return true;
     }
-    if (ea->cs == CS_LINEDRAW) {
-	*u = linedraw_to_unicode(*u, ascii_box_draw);
+    if ((*u = ea->ucs4) != 0) {
 	return true;
     }
     return false;

@@ -474,16 +474,21 @@ XX_FB(SA`('aa=nn`)'), with XX_FI(aa) and XX_FI(nn) having
 the same definitions as above (though the basic 3270 attribute will never
 appear as an extended attribute).
 XX_IP
-In addition, XX_SM(NULL) characters in the screen buffer are reported as XX_SM(ASCII)
-character 00 instead of 20, even though they should be displayed as blanks.
+XX_SM(NULL) characters in the screen buffer are reported as XX_SM(ASCII)
+character 00 instead of 20, even though they are displayed as blanks.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Ebcdic)))
 Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output as
-hexadecimal XX_SM(EBCDIC) codes instead.
-Additionally, if a buffer position has the Graphic Escape attribute, it is
-displayed as XX_FB(GE`('XX_FI(xx)`)').
+hexadecimal XX_SM(EBCDIC) codes.
+If a buffer position has the Graphic Escape attribute, it is
+displayed as XX_FB(GE)`('XX_FI(xx)`)'.
+If a buffer position was written in NVT mode, it does not have an
+EBCDIC value, and will be displayed as 00.
+XX_TP(XX_FB(ReadBuffer)(XX_FB(Unicode)))
+Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output
+as 4-digit hexadecimal Unicode values.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Field)))
 Dumps information about the current field.
-XX_FB(Ascii) and XX_FB(Ebcdic) keywords are also accepted.
+XX_FB(Ascii), XX_FB(Ebcdic) and XX_FB(Unicode) keywords are also accepted.
 The output consists of keywords and parameters.
 Note that XX_DQUOTED(field start) is the location of the start-of-field
 character, which is displayed on the screen as a blank to the left of the

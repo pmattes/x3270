@@ -1222,7 +1222,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     unsigned char current_ic = 0x00;
     varbuf_t r;
     char *rbuf;
-    bool in_ebcdic = false;
+    enum { RB_ASCII, RB_EBCDIC, RB_UNICODE } mode = RB_ASCII;
     bool field = false;
     bool any = false;
 
@@ -1230,14 +1230,16 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	unsigned i;
 	for (i = 0; i < num_params; i++) {
 	    if (!strncasecmp(params[i], "Ascii", strlen(params[i]))) {
-		in_ebcdic = false;
+		mode = RB_ASCII;
 	    } else if (!strncasecmp(params[i], "Ebcdic", strlen(params[i]))) {
-		in_ebcdic = true;
+		mode = RB_EBCDIC;
+	    } else if (!strncasecmp(params[i], "Unicode", strlen(params[i]))) {
+		mode = RB_UNICODE;
 	    } else if (!strncasecmp(params[i], "Field", strlen(params[i]))) {
 		field = true;
 	    } else {
 		popup_an_error("ReadBuffer: parameter must be Ascii, "
-			"Ebcdic or Field");
+			"Ebcdic, Unicode or Field");
 		return false;
 	    }
 	}
@@ -1372,7 +1374,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(vb_consume(&r), -1));
 	    }
-	    if (in_ebcdic) {
+	    if (mode == RB_EBCDIC) {
 		/* Ignore NVT-mode text. */
 		if (buf[baddr].cs & CS_GE) {
 		    rbuf = xs_buffer("GE(%02x)", buf[baddr].ec);
@@ -1382,7 +1384,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(rbuf, -1));
 		Free(rbuf);
-	    } else {
+	    } else if (mode == RB_ASCII) {
 		int len;
 		char mb[16];
 		int j;
@@ -1401,7 +1403,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
-		    vb_appends(&r, " -");
+		    vb_appends(&r, "-");
 		} else {
 		    if (is_nvt(&buf[baddr], false, &uc)) {
 			len = unicode_to_multibyte(uc, mb, sizeof(mb));
@@ -1419,6 +1421,43 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		    for (j = 0; j < len - 1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
+		}
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(vb_consume(&r), -1));
+	    } else {
+		/* Unicode */
+		ucs4_t uc;
+
+		if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
+		    vb_appends(&r, "-");
+		} else {
+		    if (IS_LEFT(ctlr_dbcs_state(baddr))) {
+			if ((uc = buf[baddr].ucs4) == 0) {
+			    uc = ebcdic_to_unicode(
+				    (buf[baddr].ec << 8) | buf[baddr + 1].ec,
+				    buf[baddr].cs, 0);
+			}
+		    } else {
+			if (!is_nvt(&buf[baddr], false, &uc)) {
+			    /* 3270-mode text. */
+			    switch (buf[baddr].ec) {
+			    case EBC_null:
+				uc = 0;
+				break;
+			    case EBC_so:
+				uc = 0x0e;
+				break;
+			    case EBC_si:
+				uc = 0x0f;
+				break;
+			    default:
+				uc = ebcdic_to_unicode(buf[baddr].ec,
+					buf[baddr].cs, 0);
+				break;
+			    }
+			}
+		    }
+		    vb_appendf(&r, "%04x", uc);
 		}
 		Tcl_ListObjAppendElement(sms_interp, row,
 			Tcl_NewStringObj(vb_consume(&r), -1));

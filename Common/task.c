@@ -2079,7 +2079,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
     unsigned char current_ic = 0x00;
-    bool in_ebcdic = false;
+    enum { RB_ASCII, RB_EBCDIC, RB_UNICODE } mode = RB_ASCII;
     varbuf_t r;
     bool field = false;
     bool any = false;
@@ -2089,14 +2089,16 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 
 	for (i = 0; i < num_params; i++) {
 	    if (!strncasecmp(params[i], "Ascii", strlen(params[i]))) {
-		in_ebcdic = false;
+		mode = RB_ASCII;
 	    } else if (!strncasecmp(params[i], "Ebcdic", strlen(params[i]))) {
-		in_ebcdic = true;
+		mode = RB_EBCDIC;
+	    } else if (!strncasecmp(params[i], "Unicode", strlen(params[i]))) {
+		mode = RB_UNICODE;
 	    } else if (!strncasecmp(params[i], "Field", strlen(params[i]))) {
 		field = true;
 	    } else {
 		popup_an_error("ReadBuffer: parameter must be Ascii, "
-			"Ebcdic or Field");
+			"Ebcdic, Unicode or Field");
 		return false;
 	    }
 	}
@@ -2204,7 +2206,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    if (any_sa) {
 		vb_appends(&r, ")");
 	    }
-	    if (in_ebcdic) {
+	    if (mode == RB_EBCDIC) {
 		/*
 		 * When dumping the buffer in EBCDIC mode, we implicitly
 		 * ignore NVT-node text -- because the host never sent us
@@ -2215,7 +2217,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		} else {
 		    vb_appendf(&r, " %02x", buf[baddr].ec);
 		}
-	    } else {
+	    } else if (mode == RB_ASCII) {
 		bool done = false;
 		char mb[16];
 		size_t j;
@@ -2275,6 +2277,41 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 			    vb_appendf(&r, "%02x", mb[j] & 0xff);
 			}
 		    }
+		}
+	    } else {
+		/* Unicode. */
+		ucs4_t uc;
+
+		if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
+		    vb_appends(&r, " -");
+		} else {
+		    if (IS_LEFT(ctlr_dbcs_state(baddr))) {
+			if ((uc = buf[baddr].ucs4) == 0) {
+			    uc = ebcdic_to_unicode(
+				    (buf[baddr].ec << 8) | buf[baddr + 1].ec,
+				    buf[baddr].cs, 0);
+			}
+		    } else {
+			if (!is_nvt(&buf[baddr], false, &uc)) {
+			    /* 3270-mode text. */
+			    switch (buf[baddr].ec) {
+			    case EBC_null:
+				uc = 0;
+				break;
+			    case EBC_so:
+				uc = 0x0e;
+				break;
+			    case EBC_si:
+				uc = 0x0f;
+				break;
+			    default:
+				uc = ebcdic_to_unicode(buf[baddr].ec,
+					buf[baddr].cs, 0);
+				break;
+			    }
+			}
+		    }
+		    vb_appendf(&r, " %04x", uc);
 		}
 	    }
 	}
