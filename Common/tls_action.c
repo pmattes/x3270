@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,81 @@
  */
 
 /*
- *	ssl_action.h
- *		The Ssl() action.
+ *	tls_action.c
+ *		The Tls() action.
  */
 
-void sio_register_actions(void);
+#include "globals.h"
+
+#include <stdarg.h>
+
+#include "appres.h"
+#include "resources.h"
+
+#include "actions.h"
+#include "opts.h"
+#include "popups.h"
+#include "utils.h"
+#include "sio.h"
+#include "sio_internal.h"
+#include "telnet.h"
+
+/* Typedefs */
+
+/* Statics */
+
+/* Globals */
+
+/*
+ * Tls action.
+ */
+static bool
+Tls_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("Tls", ia, argc, argv);
+    if (check_argc("Tls", argc, 1, 1) < 0) {
+	return false;
+    }
+
+    if (!strcasecmp(argv[0], "SessionInfo")) {
+	const char *info = net_session_info();
+
+	if (info != NULL) {
+	    action_output("%s", net_session_info());
+	    return true;
+	} else {
+	    popup_an_error("No secure connection");
+	    return false;
+	}
+    }
+
+    if (!strcasecmp(argv[0], "CertInfo")) {
+	const char *info = net_server_cert_info();
+	if (info != NULL) {
+	    action_output("%s", net_server_cert_info());
+	    return true;
+	} else {
+	    popup_an_error("No secure connection");
+	    return false;
+	}
+    }
+
+    popup_an_error("Tls: must specify SessionInfo or CertInfo");
+    return false;
+}
+
+/*
+ * Register the Tls() action.
+ */
+void
+sio_register_actions(void)
+{
+    static action_table_t actions[] = {
+	{ "Tls", Tls_action, 0 }
+    };
+
+    /* Register our actions. */
+    if (sio_supported()) {
+	register_actions(actions, array_count(actions));
+    }
+}
