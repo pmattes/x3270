@@ -59,6 +59,13 @@
 # include <arpa/inet.h>
 #endif /*]*/
 
+#if defined(HAVE_LIBREADLINE) /*[*/
+# include <readline/readline.h>
+# if defined(HAVE_READLINE_HISTORY_H) /*[*/
+#  include <readline/history.h>
+# endif /*]*/
+#endif /*]*/
+
 #include "w3misc.h"
 
 #define IBS	4096
@@ -83,6 +90,11 @@ static int single_io(int pid, unsigned short port, int fn, char *cmd,
 	char **ret);
 #if !defined(_WIN32) /*[*/
 static void interactive_io(const char *prompt);
+#endif /*]*/
+
+#if defined(HAVE_LIBREADLINE) /*[*/
+static char **attempted_completion();
+static char *completion_entry(const char *, int);
 #endif /*]*/
 
 static void
@@ -824,24 +836,81 @@ iterative_io(int pid, unsigned short port)
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
+static char **
+attempted_completion(const char *text, int start, int end)
+{
+    /*
+     * At some point, we may get the action list from the emulator, but for
+     * now, just fail.
+     */
+    return NULL;
+}
+
+static char *
+completion_entry(const char *text, int state)
+{
+    /*
+     * At some point, we may get the action list from the emulator, but for
+     * now, just fail.
+     */
+    return NULL;
+}
+# endif /*]*/
+
 static void
 interactive_io(const char *prompt)
 {
+    char *full_prompt;
+
+    full_prompt = malloc(strlen(prompt) + 3);
+    if (full_prompt == NULL) {
+	fprintf(stderr, "Out of memory\n");
+	exit(2);
+    }
+    snprintf(full_prompt, strlen(prompt) + 3, "%s> ", prompt);
+
+# if defined(HAVE_LIBREADLINE) /*[*/
+    /* Set up readline. */
+    rl_readline_name = "c3270";
+    rl_initialize();
+    rl_attempted_completion_function = attempted_completion;
+#  if defined(RL_READLINE_VERSION) && (RL_READLINE_VERSION > 0x0402) /*[*/
+    rl_completion_entry_function = completion_entry;
+#  else /*][*/
+    rl_completion_entry_function = (Function *)completion_entry;
+#  endif /*]*/
+# endif /*]*/
+
     printf("%s Interactive Prompt\nUse ^D to close this window\n\n", prompt);
     for (;;) {
 	char inbuf[1024];
+	char *command;
 	int rc;
 	char *nl;
 	char *ret = NULL;
 
-	printf("%s> ", prompt);
-	if (fgets(inbuf, sizeof(inbuf), stdin) == NULL) {
+# if defined(HAVE_LIBREADLINE) /*[*/
+	command = readline(full_prompt);
+# else /*][*/
+	fputs(full_prompt, stdout);
+	command = fgets(inbuf, sizeof(inbuf), stdin);
+# endif /*]*/
+	if (command == NULL) {
 	    exit(0);
 	}
 	if ((nl = strchr(inbuf, '\n')) != NULL) {
 	    *nl = '\0';
 	}
-	rc = single_io(0, 0, NO_STATUS, inbuf, &ret);
+# if defined(HAVE_LIBREADLINE) /*[*/
+	if (command[0]) {
+	    add_history(command);
+	}
+# endif /*]*/
+	rc = single_io(0, 0, NO_STATUS, command, &ret);
+# if defined(HAVE_LIBREADLINE) /*[*/
+	free(command);
+# endif /*]*/
 	if (ret == NULL) {
 	    continue;
 	}
