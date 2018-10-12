@@ -125,13 +125,9 @@ typedef struct {
     size_t buf_len;		/* length of pending command */
     int stdoutpipe;		/* stdout pipe */
     ioid_t stdout_id;		/* stdout I/O identifier */
-    bool interactive;		/* interactive */
 #endif /*]*/
 } child_t;
 static llist_t child_scripts = LLIST_INIT(child_scripts);
-#if !defined(_WIN32) /*[*/
-static char *interactive_prompt;
-#endif /*]*/
 
 /**
  * Free a child.
@@ -350,7 +346,7 @@ child_data(task_cbh handle, const char *buf, size_t len)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf("%s%.*s\n", c->interactive? "": "data: ", (int)len, buf);
+    char *s = lazyaf("data: %.*s\n", (int)len, buf);
 
     (void) write(c->outfd, s, strlen(s));
 #endif /*]*/
@@ -371,23 +367,13 @@ child_done(task_cbh handle, bool success, bool abort)
     child_t *c = (child_t *)handle;
 #if !defined(_WIN32) /*[*/
     bool new_child = false;
+    char *prompt = task_cb_prompt(handle);
+    char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
 
-    if (!c->interactive) {
-	char *prompt = task_cb_prompt(handle);
-	char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
-
-	/* Print the prompt. */
-	vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
-	    success? "ok": "error");
-	(void) write(c->outfd, s, strlen(s));
-    } else {
-	vtrace("Output for %s: %s/%s\n", c->child_name,
-		success? "": "[error]/", interactive_prompt);
-	if (!success) {
-	    (void) write(c->outfd, "[error]\n", strlen("[error]\n"));
-	}
-	(void) write(c->outfd, interactive_prompt, strlen(interactive_prompt));
-    }
+    /* Print the prompt. */
+    vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
+	success? "ok": "error");
+    (void) write(c->outfd, s, strlen(s));
 
     if (abort || !c->enabled) {
 	close(c->outfd);
@@ -635,31 +621,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     int stdoutpipe[2];
     child_t *c;
     char *name;
-    bool interactive = false;
 
     if (argc < 1) {
 	popup_an_error("Script requires at least one argument");
 	return false;
-    }
-    if (!strcasecmp(argv[0], "-Interactive")) {
-	interactive = true;
-	argc--;
-	argv++;
-	if (argc < 1) {
-	    popup_an_error("Script requires at least one argument");
-	    return false;
-	}
-	if (interactive_prompt == NULL) {
-	    char *space = strchr(build, ' ');
-
-	    if (space != NULL) {
-		interactive_prompt = Malloc(space - build + 3);
-		strncpy(interactive_prompt, build, space - build);
-		strcpy(interactive_prompt + (space - build), "> ");
-	    } else {
-		interactive_prompt = "> ";
-	    }
-	}
     }
 
     /*
@@ -744,7 +709,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->exit_id = AddChild(pid, child_exited);
     c->enabled = true;
     c->stdoutpipe = stdoutpipe[0];
-    c->interactive = interactive;
 
     /* Clean up our ends of the pipes. */
     c->infd = inpipe[0];
@@ -765,11 +729,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     vtrace("%s script process is %d\n", c->parent_name, (int)pid);
 
     disable_keyboard(DISABLE, IMPLICIT, "Script() start");
-
-    /* Write the prompt. */
-    if (c->interactive) {
-	(void) write(c->outfd, interactive_prompt, strlen(interactive_prompt));
-    }
 
     return true;
 }
