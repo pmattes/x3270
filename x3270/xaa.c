@@ -45,15 +45,5 @@ void
 prompt_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    push_macro(
-"Script(-Interactive,"
-        "xterm,"
-          "-title,x3270>,"
-          "-sb,"
-          "-e,/bin/sh,"
-              "-c,\"echo x3270 Interactive Prompt;"
-	           "echo Type ^D to close this window.;"
-                   "echo;"
-	           "(cat /dev/fd/$X3270OUTPUT; kill $$)&"
-	           "cat >/dev/fd/$X3270INPUT\")");
+    push_macro("Script(xterm,-title,x3270>,-e,x3270if,-I,x3270)");
 }
