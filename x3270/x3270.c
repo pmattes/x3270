@@ -1263,6 +1263,7 @@ poll_children(void)
 		    child_exits = next;
 		}
 		Free(c);
+		break;
 	    } else {
 		prev = c;
 	    }
