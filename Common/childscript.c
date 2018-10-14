@@ -69,6 +69,17 @@ static tcb_t script_cb = {
     child_closescript
 };
 
+/* Asynchronous callback block for parent script. */
+static tcb_t async_script_cb = {
+    "child",
+    IA_MACRO,
+    CB_NEW_TASKQ,
+    child_data,
+    child_done,
+    child_run,
+    child_closescript
+};
+
 #if !defined(_WIN32) /*[*/
 /* Callback block for child (creates new taskq). */
 static tcb_t child_cb = {
@@ -610,130 +621,6 @@ child_exited(ioid_t id, int status)
 }
 #endif /*]*/
 
-/* "Script" action, runs a script as a child process. */
-#if !defined(_WIN32) /*[*/
-bool
-Script_action(ia_t ia, unsigned argc, const char **argv)
-{
-    pid_t pid;
-    int inpipe[2];
-    int outpipe[2];
-    int stdoutpipe[2];
-    child_t *c;
-    char *name;
-
-    if (argc < 1) {
-	popup_an_error("Script requires at least one argument");
-	return false;
-    }
-
-    /*
-     * Create pipes and stdout stream for the script process.
-     *  inpipe[] is read by x3270, written by the script
-     *  outpipe[] is written by x3270, read by the script
-     */
-    if (pipe(inpipe) < 0) {
-	popup_an_error("pipe() failed");
-	return false;
-    }
-    if (pipe(outpipe) < 0) {
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
-	popup_an_error("pipe() failed");
-	return false;
-    }
-
-    /* Create a pipe to capture child stdout. */
-    if (pipe(stdoutpipe) < 0) {
-	(void) close(outpipe[0]);
-	(void) close(outpipe[1]);
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
-	popup_an_error("pipe() failed");
-    }
-
-    /* Fork and exec the script process. */
-    if ((pid = fork()) < 0) {
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
-	(void) close(outpipe[0]);
-	(void) close(outpipe[1]);
-	(void) close(stdoutpipe[0]);
-	(void) close(stdoutpipe[1]);
-	popup_an_error("fork() failed");
-	return false;
-    }
-
-    /* Child processing. */
-    if (pid == 0) {
-	char **child_argv;
-	unsigned i;
-
-	/* Become a process group. */
-	setsid();
-
-	/* Clean up the pipes. */
-	(void) close(outpipe[1]);
-	(void) close(inpipe[0]);
-	(void) close(stdoutpipe[0]);
-
-	/* Redirect output. */
-	(void) dup2(stdoutpipe[1], 1);
-	(void) dup2(stdoutpipe[1], 2);
-
-	/* Export the names of the pipes into the environment. */
-	(void) putenv(xs_buffer("X3270OUTPUT=%d", outpipe[0]));
-	(void) putenv(xs_buffer("X3270INPUT=%d", inpipe[1]));
-
-	/* Set up arguments. */
-	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
-	for (i = 0; i < argc; i++) {
-	    child_argv[i] = (char *)argv[i];
-	}
-	child_argv[i] = NULL;
-
-	/* Exec. */
-	(void) execvp(argv[0], child_argv);
-	(void) fprintf(stderr, "exec(%s) failed\n", argv[0]);
-	(void) _exit(1);
-    }
-
-    c = (child_t *)Calloc(sizeof(child_t), 1);
-    llist_init(&c->llist);
-    LLIST_APPEND(&c->llist, child_scripts);
-    c->success = true;
-    c->done = false;
-    c->buf = NULL;
-    c->buf_len = 0;
-    c->pid = pid;
-    c->exit_id = AddChild(pid, child_exited);
-    c->enabled = true;
-    c->stdoutpipe = stdoutpipe[0];
-
-    /* Clean up our ends of the pipes. */
-    c->infd = inpipe[0];
-    (void) close(inpipe[1]);
-    c->outfd = outpipe[1];
-    (void) close(outpipe[0]);
-    (void) close(stdoutpipe[1]);
-
-    /* Allow child input. */
-    c->id = AddInput(c->infd, child_input);
-
-    /* Capture child output. */
-    c->stdout_id = AddInput(c->stdoutpipe, child_stdout);
-
-    /* Create the context. It will be idle. */
-    name = push_cb(NULL, 0, &script_cb, (task_cbh)c);
-    Replace(c->parent_name, NewString(name));
-    vtrace("%s script process is %d\n", c->parent_name, (int)pid);
-
-    disable_keyboard(DISABLE, IMPLICIT, "Script() start");
-
-    return true;
-}
-#endif /*]*/
-
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (a process exit). */
 static void
@@ -912,11 +799,21 @@ setup_cr(child_t *c)
 
     return true;
 }
+#endif /*]*/
 
 /* "Script" action, runs a script as a child process. */
 bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
+    child_t *c;
+    char *name;
+    bool async = false;
+#if !defined(_WIN32) /*[*/
+    pid_t pid;
+    int inpipe[2];
+    int outpipe[2];
+    int stdoutpipe[2];
+#else /*][*/
     unsigned short port;
     socket_t s;
     struct sockaddr_in *sin;
@@ -926,15 +823,122 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     char *args;
     unsigned i;
     cr_t *cr;
-    child_t *c;
-    char *name;
+#endif /*]*/
 
     action_debug("Script", ia, argc, argv);
 
-    if (argc < 1) {
-	popup_an_error("Script requires at least one argument");
+    for (;;) {
+	if (argc < 1) {
+	    popup_an_error("Script requires at least one argument");
+	    return false;
+	}
+	if (!strcasecmp(argv[0], "-Async")) {
+	    async = true;
+	    argc--;
+	    argv++;
+	} else {
+	    break;
+	}
+    }
+
+#if !defined(_WIN32) /*[*/
+    /*
+     * Create pipes and stdout stream for the script process.
+     *  inpipe[] is read by x3270, written by the script
+     *  outpipe[] is written by x3270, read by the script
+     */
+    if (pipe(inpipe) < 0) {
+	popup_an_error("pipe() failed");
 	return false;
     }
+    if (pipe(outpipe) < 0) {
+	(void) close(inpipe[0]);
+	(void) close(inpipe[1]);
+	popup_an_error("pipe() failed");
+	return false;
+    }
+
+    /* Create a pipe to capture child stdout. */
+    if (pipe(stdoutpipe) < 0) {
+	(void) close(outpipe[0]);
+	(void) close(outpipe[1]);
+	(void) close(inpipe[0]);
+	(void) close(inpipe[1]);
+	popup_an_error("pipe() failed");
+    }
+
+    /* Fork and exec the script process. */
+    if ((pid = fork()) < 0) {
+	(void) close(inpipe[0]);
+	(void) close(inpipe[1]);
+	(void) close(outpipe[0]);
+	(void) close(outpipe[1]);
+	(void) close(stdoutpipe[0]);
+	(void) close(stdoutpipe[1]);
+	popup_an_error("fork() failed");
+	return false;
+    }
+
+    /* Child processing. */
+    if (pid == 0) {
+	char **child_argv;
+	unsigned i;
+
+	/* Become a process group. */
+	setsid();
+
+	/* Clean up the pipes. */
+	(void) close(outpipe[1]);
+	(void) close(inpipe[0]);
+	(void) close(stdoutpipe[0]);
+
+	/* Redirect output. */
+	(void) dup2(stdoutpipe[1], 1);
+	(void) dup2(stdoutpipe[1], 2);
+
+	/* Export the names of the pipes into the environment. */
+	(void) putenv(xs_buffer("X3270OUTPUT=%d", outpipe[0]));
+	(void) putenv(xs_buffer("X3270INPUT=%d", inpipe[1]));
+
+	/* Set up arguments. */
+	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
+	for (i = 0; i < argc; i++) {
+	    child_argv[i] = (char *)argv[i];
+	}
+	child_argv[i] = NULL;
+
+	/* Exec. */
+	(void) execvp(argv[0], child_argv);
+	(void) fprintf(stderr, "exec(%s) failed\n", argv[0]);
+	(void) _exit(1);
+    }
+
+    c = (child_t *)Calloc(sizeof(child_t), 1);
+    llist_init(&c->llist);
+    LLIST_APPEND(&c->llist, child_scripts);
+    c->success = true;
+    c->done = false;
+    c->buf = NULL;
+    c->buf_len = 0;
+    c->pid = pid;
+    c->exit_id = AddChild(pid, child_exited);
+    c->enabled = true;
+    c->stdoutpipe = stdoutpipe[0];
+
+    /* Clean up our ends of the pipes. */
+    c->infd = inpipe[0];
+    (void) close(inpipe[1]);
+    c->outfd = outpipe[1];
+    (void) close(outpipe[0]);
+    (void) close(stdoutpipe[1]);
+
+    /* Allow child input. */
+    c->id = AddInput(c->infd, child_input);
+
+    /* Capture child output. */
+    c->stdout_id = AddInput(c->stdoutpipe, child_stdout);
+
+#else /*]*/
 
     /* Set up X3270PORT for the child process. */
     port = pick_port(&s);
@@ -1022,14 +1026,14 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
      */
     c->exit_id = AddInput(process_information.hProcess, child_exited);
 
-    /* Create the context. It will be idle. */
-    name = push_cb(NULL, 0, &script_cb, (task_cbh)c);
-    Replace(c->parent_name, NewString(name));
+#endif /*]*/
 
-    vtrace("%s child pid is %d\n", c->parent_name, (int)c->pid);
+    /* Create the context. It will be idle. */
+    name = push_cb(NULL, 0, async? &async_script_cb: &script_cb, (task_cbh)c);
+    Replace(c->parent_name, NewString(name));
+    vtrace("%s script process is %d\n", c->parent_name, (int)c->pid);
 
     disable_keyboard(DISABLE, IMPLICIT, "Script() start");
 
     return true;
 }
-#endif /*]*/
