@@ -75,11 +75,11 @@
 
 #if defined(_WIN32) /*[*/
 #define DIRSEP	'\\'
-#define OPTS	"iI:s:St:v"
+#define OPTS	"H:iI:s:St:v"
 #define FD_ENV_REQUIRED	true
 #else /*][*/
 #define DIRSEP '/'
-#define OPTS	"iI:p:s:St:v"
+#define OPTS	"H:iI:p:s:St:v"
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
 
@@ -90,7 +90,7 @@ static char buf[IBS];
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, int fn, char *cmd,
 	char **ret);
-static void interactive_io(const char *prompt);
+static void interactive_io(const char *emulator_name, const char *help_name);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
@@ -110,13 +110,15 @@ usage:\n\
    display all status fields\n\
  %s [options] -i\n\
    shuttle commands and responses between stdin/stdout and emulator\n\
+ %s [options] -I <emulator-name> [-H <help-action-name>]\n\
+   interactive command window\n\
 options:\n\
  -v       verbose operation\n"
 #if !defined(_WIN32) /*[*/
 " -p pid   connect to process <pid>\n"
 #endif /*]*/
 " -t port  connect to TCP port <port>\n",
-	    me, me, me, me);
+	    me, me, me, me, me);
     exit(2);
 }
 
@@ -155,7 +157,8 @@ main(int argc, char *argv[])
     int iterative = 0;
     int pid = 0;
     unsigned short port = 0;
-    const char *prompt = NULL;
+    const char *emulator_name = NULL;
+    const char *help_name = NULL;
 
 #if defined(_WIN32) /*[*/
     if (sockstart() < 0) {
@@ -174,6 +177,9 @@ main(int argc, char *argv[])
     opterr = 0;
     while ((c = getopt(argc, argv, OPTS)) != -1) {
 	switch (c) {
+	case 'H':
+	    help_name = optarg;
+	    break;
 	case 'i':
 	    if (fn >= 0) {
 		x3270if_usage();
@@ -185,7 +191,7 @@ main(int argc, char *argv[])
 		x3270if_usage();
 	    }
 	    iterative++;
-	    prompt = optarg;
+	    emulator_name = optarg;
 	    break;
 #if !defined(_WIN32) /*[*/
 	case 'p':
@@ -248,6 +254,9 @@ main(int argc, char *argv[])
     if (pid && port) {
 	x3270if_usage();
     }
+    if (help_name != NULL && emulator_name == NULL) {
+	x3270if_usage();
+    }
 
 #if !defined(_WIN32) /*[*/
     /* Ignore broken pipes. */
@@ -255,8 +264,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 
     /* Do the I/O. */
-    if (iterative && prompt != NULL) {
-	interactive_io(prompt);
+    if (iterative && emulator_name != NULL) {
+	interactive_io(emulator_name, help_name);
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
@@ -866,20 +875,21 @@ completion_entry(const char *text, int state)
 # endif /*]*/
 
 static void
-interactive_io(const char *prompt)
+interactive_io(const char *emulator_name, const char *help_name)
 {
-    char *full_prompt;
+    char *prompt;
 
-    full_prompt = malloc(strlen(prompt) + 3);
-    if (full_prompt == NULL) {
+    prompt = malloc(strlen(emulator_name) + 17);
+    if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
 	exit(2);
     }
-    snprintf(full_prompt, strlen(prompt) + 3, "%s> ", prompt);
+    snprintf(prompt, strlen(emulator_name) + 17,
+	    "\001\033[34m\002%s>\001\033[39m\002 ", emulator_name);
 
 # if defined(HAVE_LIBREADLINE) /*[*/
     /* Set up readline. */
-    rl_readline_name = "c3270";
+    rl_readline_name = emulator_name;
     rl_initialize();
     rl_attempted_completion_function = attempted_completion;
 #  if defined(RL_READLINE_VERSION) && (RL_READLINE_VERSION > 0x0402) /*[*/
@@ -889,25 +899,43 @@ interactive_io(const char *prompt)
 #  endif /*]*/
 # endif /*]*/
 
-    printf("%s Interactive Prompt\nUse ^D to close this window\n\n", prompt);
+    printf("%s Prompt\n\n", emulator_name);
+    printf("To execute one action and close this window, end the command line with '/'.\n");
+    printf("To close this window, enter just '/' as the command line.\n");
+    if (help_name != NULL) {
+	printf("To get help, use the %s action.\n", help_name);
+    }
+    printf("\033[33mThe command 'Quit()' will cause %s to exit.\033[39m",
+	    emulator_name);
+    printf("\n\n");
+
     for (;;) {
+#if !defined(HAVE_LIBREADLINE) /*[*/
 	char inbuf[1024];
+#endif /*]*/
 	char *command;
 	int rc;
 	char *nl;
 	char *ret = NULL;
+	size_t sl;
+	bool done = false;
 
 # if defined(HAVE_LIBREADLINE) /*[*/
-	command = readline(full_prompt);
+	command = readline(prompt);
 # else /*][*/
-	fputs(full_prompt, stdout);
+	fputs(prompt, stdout);
 	command = fgets(inbuf, sizeof(inbuf), stdin);
 # endif /*]*/
 	if (command == NULL) {
 	    exit(0);
 	}
-	if ((nl = strchr(inbuf, '\n')) != NULL) {
+	if ((nl = strchr(command, '\n')) != NULL) {
 	    *nl = '\0';
+	}
+	sl = strlen(command);
+	if (sl > 0 && command[sl - 1] == '/') {
+	    command[--sl] = '\0';
+	    done = true;
 	}
 # if defined(HAVE_LIBREADLINE) /*[*/
 	if (command[0]) {
@@ -918,43 +946,51 @@ interactive_io(const char *prompt)
 # if defined(HAVE_LIBREADLINE) /*[*/
 	free(command);
 # endif /*]*/
-	if (ret == NULL) {
-	    continue;
-	}
-	if (rc == 0) {
-	    fputs(ret, stdout);
-	} else {
-	    size_t sl;
-
+	if (ret != NULL) {
 	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
 		ret[sl - 1] = '\0';
 	    }
-	    printf("\033[31m%s\033[39m\n", ret);
+	    printf("\033[3%cm%s\033[39m\n",
+		    rc? '1': '2',
+		    ret);
+	    free(ret);
 	}
-	free(ret);
+	if (done) {
+	    exit(0);
+	}
     }
 }
 
 #else /*][*/
 
 static void
-interactive_io(const char *prompt)
+set_text_attribute(HANDLE out, WORD attributes)
+{
+    if (!SetConsoleTextAttribute(out, attributes)) {
+	win32_perror("Can't set console text attribute");
+	exit(2);
+    }
+}
+
+static void
+interactive_io(const char *emulator_name, const char *help_name)
 {
     int port;
-    char *full_prompt;
+    char *prompt;
     HANDLE out;
+    CONSOLE_SCREEN_BUFFER_INFO info;
 
     port = fd_env("X3270PORT", true);
     if (verbose) {
 	fprintf(stderr, "Port is %d\n", port);
     }
 
-    full_prompt = malloc(strlen(prompt) + 3);
-    if (full_prompt == NULL) {
+    prompt = malloc(strlen(emulator_name) + 3);
+    if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
 	exit(2);
     }
-    snprintf(full_prompt, strlen(prompt) + 3, "%s> ", prompt);
+    snprintf(prompt, strlen(emulator_name) + 3, "%s> ", emulator_name);
 
     /* Open the console handle. */
     out = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
@@ -963,23 +999,46 @@ interactive_io(const char *prompt)
 	win32_perror("Can't open console output handle");
 	exit(2);
     }
+    if (!GetConsoleScreenBufferInfo(out, &info)) {
+	win32_perror("Can't get console info");
+	exit(2);
+    }
 
     /* wx3270 speaks Unicode. */
     SetConsoleOutputCP(65001);
 
     /* Set the title. */
-    SetConsoleTitle(full_prompt);
+    SetConsoleTitle(prompt);
 
-    printf("%s Interactive Prompt\n", prompt);
+    /* Introduce yourself. */
+    printf("%s Prompt\n\n", emulator_name);
+    printf("To execute one action and close this window, end the command line with '/'.\n");
+    printf("To close this window, enter just '/' as the command line.\n");
+    if (help_name != NULL) {
+	printf("To get help, use the %s action.\n", help_name);
+    }
+    fflush(stdout);
+
+    set_text_attribute(out, FOREGROUND_GREEN | FOREGROUND_RED);
+    printf("The command 'Quit()' will cause %s to exit.", emulator_name);
+    fflush(stdout);
+    set_text_attribute(out, info.wAttributes);
+    printf("\n\n");
+    fflush(stdout);
+
     for (;;) {
 	char inbuf[1024];
 	char *command;
 	int rc;
 	char *nl;
 	char *ret = NULL;
+	size_t sl;
+	bool done = false;
 
-	fputs(full_prompt, stdout);
+	set_text_attribute(out, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	fputs(prompt, stdout);
 	fflush(stdout);
+	set_text_attribute(out, info.wAttributes);
 	command = fgets(inbuf, sizeof(inbuf), stdin);
 	if (command == NULL) {
 	    exit(0);
@@ -987,39 +1046,30 @@ interactive_io(const char *prompt)
 	if ((nl = strchr(inbuf, '\n')) != NULL) {
 	    *nl = '\0';
 	}
-	rc = single_io(0, 0, NO_STATUS, command, &ret);
-	if (ret == NULL) {
-	    continue;
+	sl = strlen(inbuf);
+	done = (sl > 0 && inbuf[sl - 1] == '/');
+	if (done) {
+	    inbuf[--sl] = '\0';
 	}
-	if (rc == 0) {
-	    /* Success. */
-	    fputs(ret, stdout);
-	} else {
-	    CONSOLE_SCREEN_BUFFER_INFO info;
-	    size_t sl;
 
-	    /* Failure. */
-	    if (!GetConsoleScreenBufferInfo(out, &info)) {
-		win32_perror("Can't get console info");
-		exit(2);
-	    }
-	    if (!SetConsoleTextAttribute(out, FOREGROUND_RED)) {
-		win32_perror("Can't set console text attribute");
-		exit(2);
-	    }
+	rc = single_io(0, 0, NO_STATUS, command, &ret);
+	if (ret != NULL) {
+	    set_text_attribute(out, rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
+					FOREGROUND_GREEN);
 	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
 		ret[sl - 1] = '\0';
 	    }
 	    fputs(ret, stdout);
 	    fflush(stdout);
-	    if (!SetConsoleTextAttribute(out, info.wAttributes)) {
-		win32_perror("Can't set console text attribute");
-		exit(2);
-	    }
+	    set_text_attribute(out, info.wAttributes);
 	    fputc('\n', stdout);
 	    fflush(stdout);
+	    free(ret);
 	}
-	free(ret);
+
+	if (done) {
+	    exit(0);
+	}
     }
 }
 #endif /*]*/
