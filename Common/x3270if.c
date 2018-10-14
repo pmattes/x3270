@@ -75,10 +75,12 @@
 
 #if defined(_WIN32) /*[*/
 #define DIRSEP	'\\'
-#define OPTS	"is:St:v"
+#define OPTS	"iI:s:St:v"
+#define FD_ENV_REQUIRED	true
 #else /*][*/
 #define DIRSEP '/'
 #define OPTS	"iI:p:s:St:v"
+#define FD_ENV_REQUIRED	false
 #endif /*]*/
 
 static char *me;
@@ -88,9 +90,7 @@ static char buf[IBS];
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, int fn, char *cmd,
 	char **ret);
-#if !defined(_WIN32) /*[*/
 static void interactive_io(const char *prompt);
-#endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
@@ -122,16 +122,20 @@ options:\n\
 
 /* Get a file descriptor from the environment. */
 static int
-fd_env(const char *name)
+fd_env(const char *name, bool required)
 {
     char *fdname;
     int fd;
 
     fdname = getenv(name);
     if (fdname == NULL) {
-	(void) fprintf(stderr, "%s: %s not set in the environment\n", me,
-		name);
-	exit(2);
+	if (required) {
+	    (void) fprintf(stderr, "%s: %s not set in the environment\n", me,
+		    name);
+	    exit(2);
+	} else {
+	    return -1;
+	}
     }
     fd = atoi(fdname);
     if (fd <= 0) {
@@ -151,9 +155,7 @@ main(int argc, char *argv[])
     int iterative = 0;
     int pid = 0;
     unsigned short port = 0;
-#if !defined(_WIN32) /*[*/
     const char *prompt = NULL;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
     if (sockstart() < 0) {
@@ -178,7 +180,6 @@ main(int argc, char *argv[])
 	    }
 	    iterative++;
 	    break;
-#if !defined(_WIN32) /*[*/
 	case 'I':
 	    if (fn > 0) {
 		x3270if_usage();
@@ -186,6 +187,7 @@ main(int argc, char *argv[])
 	    iterative++;
 	    prompt = optarg;
 	    break;
+#if !defined(_WIN32) /*[*/
 	case 'p':
 	    pid = (int)strtoul(optarg, &ptr, 0);
 	    if (ptr == optarg || *ptr != '\0' || pid <= 0) {
@@ -253,12 +255,9 @@ main(int argc, char *argv[])
 #endif /*]*/
 
     /* Do the I/O. */
-#if !defined(_WIN32) /*[*/
     if (iterative && prompt != NULL) {
 	interactive_io(prompt);
-    } else
-#endif /*]*/
-    if (iterative) {
+    } else if (iterative) {
 	iterative_io(pid, port);
     } else {
 	return single_io(pid, port, fn, argv[optind], NULL);
@@ -325,8 +324,8 @@ tsock(unsigned short port)
 static int
 single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
 {
-    char *port_env;
-    int infd, outfd;
+    int port_env;
+    int infd = -1, outfd = -1;
     socket_t insocket, outsocket;
     bool is_socket = false;
     char status[IBS] = "";
@@ -350,12 +349,16 @@ single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
     if (port) {
 	insocket = outsocket = tsock(port);
 	is_socket = true;
-    } else if ((port_env = getenv("X3270PORT")) != NULL) {
-	insocket = outsocket = tsock(atoi(port_env));
+    } else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
+	insocket = outsocket = tsock(port_env);
 	is_socket = true;
     } else {
-	infd  = fd_env("X3270OUTPUT");
-	outfd = fd_env("X3270INPUT");
+#if defined(_WIN32) /*[*/
+	return -1;
+#else /*][*/
+	infd  = fd_env("X3270OUTPUT", true);
+	outfd = fd_env("X3270INPUT", true);
+#endif /*]*/
     }
     if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
 	perror("x3270if: input");
@@ -556,7 +559,7 @@ iterative_io(int pid, unsigned short port)
     fd_set rfds, wfds;
     int fd_max = 0;
     int i;
-    char *port_env;
+    int port_env = -1;
 
 #ifdef DEBUG
     if (verbose) {
@@ -575,16 +578,20 @@ iterative_io(int pid, unsigned short port)
 #endif /*]*/
     if (port) {
 	io[0].wfd = tsock(port);
-    } else if ((port_env = getenv("X3270PORT")) != NULL) {
-	io[0].wfd = tsock(atoi(port_env));
+    } else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
+	io[0].wfd = tsock(port_env);
     } else {
-	io[0].wfd = fd_env("X3270INPUT");
+#if defined(_WIN32) /*[*/
+	return;
+#else /*][ */
+	io[0].wfd = fd_env("X3270INPUT", true);
+#endif /*]*/
     }
     io[1].name = "emulator->script";
-    if (pid || port || (port_env != NULL)) {
+    if (pid || port || (port_env >= 0)) {
 	io[1].rfd = dup(io[0].wfd);
     } else {
-	io[1].rfd = fd_env("X3270OUTPUT");
+	io[1].rfd = fd_env("X3270OUTPUT", true);
     }
     io[1].wfd = fileno(stdout);
     for (i = 0; i < N_IO; i++) {
@@ -923,6 +930,94 @@ interactive_io(const char *prompt)
 		ret[sl - 1] = '\0';
 	    }
 	    printf("\033[31m%s\033[39m\n", ret);
+	}
+	free(ret);
+    }
+}
+
+#else /*][*/
+
+static void
+interactive_io(const char *prompt)
+{
+    int port;
+    char *full_prompt;
+    HANDLE out;
+
+    port = fd_env("X3270PORT", true);
+    if (verbose) {
+	fprintf(stderr, "Port is %d\n", port);
+    }
+
+    full_prompt = malloc(strlen(prompt) + 3);
+    if (full_prompt == NULL) {
+	fprintf(stderr, "Out of memory\n");
+	exit(2);
+    }
+    snprintf(full_prompt, strlen(prompt) + 3, "%s> ", prompt);
+
+    /* Open the console handle. */
+    out = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (out == NULL) {
+	win32_perror("Can't open console output handle");
+	exit(2);
+    }
+
+    /* wx3270 speaks Unicode. */
+    SetConsoleOutputCP(65001);
+
+    /* Set the title. */
+    SetConsoleTitle(full_prompt);
+
+    printf("%s Interactive Prompt\n", prompt);
+    for (;;) {
+	char inbuf[1024];
+	char *command;
+	int rc;
+	char *nl;
+	char *ret = NULL;
+
+	fputs(full_prompt, stdout);
+	fflush(stdout);
+	command = fgets(inbuf, sizeof(inbuf), stdin);
+	if (command == NULL) {
+	    exit(0);
+	}
+	if ((nl = strchr(inbuf, '\n')) != NULL) {
+	    *nl = '\0';
+	}
+	rc = single_io(0, 0, NO_STATUS, command, &ret);
+	if (ret == NULL) {
+	    continue;
+	}
+	if (rc == 0) {
+	    /* Success. */
+	    fputs(ret, stdout);
+	} else {
+	    CONSOLE_SCREEN_BUFFER_INFO info;
+	    size_t sl;
+
+	    /* Failure. */
+	    if (!GetConsoleScreenBufferInfo(out, &info)) {
+		win32_perror("Can't get console info");
+		exit(2);
+	    }
+	    if (!SetConsoleTextAttribute(out, FOREGROUND_RED)) {
+		win32_perror("Can't set console text attribute");
+		exit(2);
+	    }
+	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
+		ret[sl - 1] = '\0';
+	    }
+	    fputs(ret, stdout);
+	    fflush(stdout);
+	    if (!SetConsoleTextAttribute(out, info.wAttributes)) {
+		win32_perror("Can't set console text attribute");
+		exit(2);
+	    }
+	    fputc('\n', stdout);
+	    fflush(stdout);
 	}
 	free(ret);
     }
