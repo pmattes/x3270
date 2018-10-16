@@ -88,8 +88,8 @@ static int verbose = 0;
 static char buf[IBS];
 
 static void iterative_io(int pid, unsigned short port);
-static int single_io(int pid, unsigned short port, int fn, char *cmd,
-	char **ret);
+static int single_io(int pid, unsigned short port, socket_t socket, int infd,
+	int outfd, int fn, char *cmd, char **ret);
 static void interactive_io(const char *emulator_name, const char *help_name);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -269,7 +269,8 @@ main(int argc, char *argv[])
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
-	return single_io(pid, port, fn, argv[optind], NULL);
+	return single_io(pid, port, INVALID_SOCKET, -1, -1, fn, argv[optind],
+		NULL);
     }
     return 0;
 }
@@ -331,7 +332,8 @@ tsock(unsigned short port)
 
 /* Do a single command, and interpret the results. */
 static int
-single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
+single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
+	int fn, char *cmd, char **ret)
 {
     int port_env;
     int infd = -1, outfd = -1;
@@ -349,34 +351,43 @@ single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
     size_t ret_sl = 0;
 
     /* Verify the environment and open files. */
-#if !defined(_WIN32) /*[*/
-    if (pid) {
-	insocket = outsocket = usock(pid);
+    if (socket != INVALID_SOCKET) {
+	insocket = socket;
+	outsocket = socket;
 	is_socket = true;
-    } else
-#endif /*]*/
-    if (port) {
-	insocket = outsocket = tsock(port);
-	is_socket = true;
-    } else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
-	insocket = outsocket = tsock(port_env);
-	is_socket = true;
+    } else if (xinfd != -1 && xoutfd != -1) {
+	infd = xinfd;
+	outfd = xoutfd;
     } else {
-#if defined(_WIN32) /*[*/
-	return -1;
-#else /*][*/
-	infd  = fd_env("X3270OUTPUT", true);
-	outfd = fd_env("X3270INPUT", true);
+#if !defined(_WIN32) /*[*/
+	if (pid) {
+	    insocket = outsocket = usock(pid);
+	    is_socket = true;
+	} else
 #endif /*]*/
-    }
-    if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
-	perror("x3270if: input");
-	exit(2);
-    }
-    if ((!is_socket && outfd < 0) ||
-	(is_socket && outsocket == INVALID_SOCKET)) {
-	perror("x3270if: output");
-	exit(2);
+	if (port) {
+	    insocket = outsocket = tsock(port);
+	    is_socket = true;
+	} else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
+	    insocket = outsocket = tsock(port_env);
+	    is_socket = true;
+	} else {
+#if defined(_WIN32) /*[*/
+	    return -1;
+#else /*][*/
+	    infd  = fd_env("X3270OUTPUT", true);
+	    outfd = fd_env("X3270INPUT", true);
+#endif /*]*/
+	}
+	if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
+	    perror("x3270if: input");
+	    exit(2);
+	}
+	if ((!is_socket && outfd < 0) ||
+	    (is_socket && outsocket == INVALID_SOCKET)) {
+	    perror("x3270if: output");
+	    exit(2);
+	}
     }
 
     /* Speak to x3270. */
@@ -540,7 +551,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
 	exit(2);
     }
 
-    if (is_socket) {
+    if (is_socket && socket != INVALID_SOCKET) {
 	shutdown(insocket, 2);
 #if defined(_WIN32) /*[*/
 	closesocket(insocket);
@@ -550,6 +561,26 @@ single_io(int pid, unsigned short port, int fn, char *cmd, char **ret)
     }
 
     return xs;
+}
+
+/* Fetch the ports from the environment. */
+static void
+get_ports(socket_t *socket, int *infd, int *outfd)
+{
+#if !defined(_WIN32) /*[*/
+    *infd = fd_env("X3270OUTPUT", true);
+    *outfd = fd_env("X3270INPUT", true);
+    if (verbose) {
+	fprintf(stderr, "input: %d, output: %d\n", *infd, *outfd);
+    }
+#else /*][*/
+    int socketport = fd_env("X3270PORT", true);
+
+    *socket = tsock(socketport);
+    if (verbose) {
+	fprintf(stderr, "port: %d\n", socketport);
+    }
+#endif /*]*/
 }
 
 #if !defined(_WIN32) /*[*/
@@ -872,20 +903,54 @@ completion_entry(const char *text, int state)
      */
     return NULL;
 }
+
+/* The command line read by readline. */
+static char *readline_command;
+
+/* True if readline is finished reading a command. */
+static bool readline_done = false;
+
+/* Handle a command line. */
+static void
+rl_handler(char *command)
+{
+    /*
+     * readline's callback handler API doesn't allow context to be passed in or
+     * out of the handler. So the only way for it to communicate with the
+     * function that calls rl_callback_read_char() is through global variables.
+     */
+    readline_done = true;
+    readline_command = command;
+
+    /*
+     * Remove the callback handler. If we don't remove it, readline() will
+     * display the prompt as soon as this function returns.
+     */
+    rl_callback_handler_remove();
+}
+
 # endif /*]*/
 
 static void
 interactive_io(const char *emulator_name, const char *help_name)
 {
     char *prompt;
+    int infd, outfd;
+
+    get_ports(NULL, &infd, &outfd);
 
     prompt = malloc(strlen(emulator_name) + 17);
     if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
 	exit(2);
     }
+# if defined(HAVE_LIBREADLINE) /*[*/
     snprintf(prompt, strlen(emulator_name) + 17,
 	    "\001\033[34m\002%s>\001\033[39m\002 ", emulator_name);
+#else /*][*/
+    snprintf(prompt, strlen(emulator_name) + 13,
+	    "\033[34m%s>\033[39m ", emulator_name);
+#endif /*]*/
 
 # if defined(HAVE_LIBREADLINE) /*[*/
     /* Set up readline. */
@@ -909,26 +974,60 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    emulator_name);
     printf("\n\n");
 
+# if defined(HAVE_LIBREADLINE) /*[*/
+    /* Installing the callback handler causes the prompt to be displayed. */
+    rl_callback_handler_install(prompt, &rl_handler);
+#else /*][*/
+    /* Display the initial prompt. */
+    fputs(prompt, stdout);
+    fflush(stdout);
+# endif /*]*/
+
     for (;;) {
-#if !defined(HAVE_LIBREADLINE) /*[*/
+# if !defined(HAVE_LIBREADLINE) /*[*/
 	char inbuf[1024];
-#endif /*]*/
+# endif /*]*/
 	char *command;
 	int rc;
 	char *nl;
 	char *ret = NULL;
 	size_t sl;
 	bool done = false;
+	fd_set rfds;
 
+	FD_ZERO(&rfds);
+	FD_SET(0, &rfds);
+	FD_SET(infd, &rfds);
+	(void) select(infd + 1, &rfds, NULL, NULL, NULL);
+	if (FD_ISSET(0, &rfds)) {
+	    /* Keyboard input. */
 # if defined(HAVE_LIBREADLINE) /*[*/
-	command = readline(prompt);
+	    rl_callback_read_char();
+	    if (!readline_done) {
+		/* No input yet. */
+		continue;
+	    }
+
+	    /* Grab what readline returned and reset for next time. */
+	    command = readline_command;
+	    readline_command = NULL;
+	    readline_done = false;
 # else /*][*/
-	fputs(prompt, stdout);
-	command = fgets(inbuf, sizeof(inbuf), stdin);
-# endif /*]*/
-	if (command == NULL) {
+	    command = fgets(inbuf, sizeof(inbuf), stdin);
+	    if (command == NULL) {
+		exit(0);
+	    }
+# endif /*][*/
+	}
+	if (FD_ISSET(infd, &rfds) || command == NULL) {
+	    /* Pipe input (EOF) or keyboard EOF. */
+# if defined(HAVE_LIBREADLINE) /*[*/
+	    rl_callback_handler_remove();
+#endif /*]*/
 	    exit(0);
 	}
+
+	/* We have a line of input. */
 	if ((nl = strchr(command, '\n')) != NULL) {
 	    *nl = '\0';
 	}
@@ -942,7 +1041,8 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    add_history(command);
 	}
 # endif /*]*/
-	rc = single_io(0, 0, NO_STATUS, command, &ret);
+	rc = single_io(0, 0, INVALID_SOCKET, infd, outfd, NO_STATUS, command,
+		&ret);
 # if defined(HAVE_LIBREADLINE) /*[*/
 	free(command);
 # endif /*]*/
@@ -958,6 +1058,14 @@ interactive_io(const char *emulator_name, const char *help_name)
 	if (done) {
 	    exit(0);
 	}
+
+	/* Display another prompt. */
+# if defined(HAVE_LIBREADLINE) /*[*/
+	rl_callback_handler_install(prompt, &rl_handler);
+# else /*][*/
+	fputs(prompt, stdout);
+	fflush(stdout);
+# endif /*]*/
     }
 }
 
@@ -975,15 +1083,12 @@ set_text_attribute(HANDLE out, WORD attributes)
 static void
 interactive_io(const char *emulator_name, const char *help_name)
 {
-    int port;
     char *prompt;
     HANDLE out;
     CONSOLE_SCREEN_BUFFER_INFO info;
+    socket_t s;
 
-    port = fd_env("X3270PORT", true);
-    if (verbose) {
-	fprintf(stderr, "Port is %d\n", port);
-    }
+    get_ports(&s, NULL, NULL);
 
     prompt = malloc(strlen(emulator_name) + 3);
     if (prompt == NULL) {
@@ -1052,7 +1157,7 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    inbuf[--sl] = '\0';
 	}
 
-	rc = single_io(0, 0, NO_STATUS, command, &ret);
+	rc = single_io(0, 0, s, -1, -1, NO_STATUS, command, &ret);
 	if (ret != NULL) {
 	    set_text_attribute(out, rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
 					FOREGROUND_GREEN);
