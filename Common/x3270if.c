@@ -1146,12 +1146,12 @@ interactive_io(const char *emulator_name, const char *help_name)
     printf("To execute one action and close this window, end the command line with '/'.\n");
     printf("To close this window, enter just '/' as the command line.\n");
     if (help_name != NULL) {
-	printf("To get help, use the '%s' action.\n", help_name);
+	printf("To get help, use the '%s()' action.\n", help_name);
     }
     fflush(stdout);
 
     set_text_attribute(out, FOREGROUND_GREEN | FOREGROUND_RED);
-    printf("The command 'Quit()' will cause %s to exit.", emulator_name);
+    printf("Note: The 'Quit()' action will cause %s to exit.", emulator_name);
     fflush(stdout);
     set_text_attribute(out, info.wAttributes);
     printf("\n\n");
