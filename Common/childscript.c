@@ -121,6 +121,7 @@ typedef struct {
     bool enabled;		/* enabled */
     char *output_buf;		/* output buffer */
     size_t output_buflen;	/* size of output buffer */
+    bool keyboard_lock;		/* lock/unlock keyboard while running */
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
@@ -392,7 +393,9 @@ child_done(task_cbh handle, bool success, bool abort)
 	if (abort) {
 	    vtrace("%s killing process %d\n", c->child_name, (int)c->pid);
 	    killpg(c->pid, SIGKILL);
-	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	    if (c->keyboard_lock) {
+		disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	    }
 	}
 	return true;
     }
@@ -417,7 +420,9 @@ child_done(task_cbh handle, bool success, bool abort)
 	c->listener = NULL;
 	vtrace("%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
-	disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	if (c->keyboard_lock) {
+	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	}
     }
     return true;
 
@@ -565,8 +570,10 @@ child_run(task_cbh handle, bool *success)
 #endif /*]*/
 	}
 	*success = c->success;
+	if (c->keyboard_lock) {
+	    disable_keyboard(ENABLE, IMPLICIT, "Script() completion");
+	}
 	free_child(c);
-	disable_keyboard(ENABLE, IMPLICIT, "Script() completion");
 	return true;
     }
 
@@ -808,6 +815,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     child_t *c;
     char *name;
     bool async = false;
+    bool keyboard_lock = true;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2];
@@ -834,6 +842,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	if (!strcasecmp(argv[0], "-Async")) {
 	    async = true;
+	    argc--;
+	    argv++;
+	} else if (!strcasecmp(argv[0], "-NoLock")) {
+	    keyboard_lock = false;
 	    argc--;
 	    argv++;
 	} else {
@@ -1029,11 +1041,14 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 
     /* Create the context. It will be idle. */
+    c->keyboard_lock = keyboard_lock;
     name = push_cb(NULL, 0, async? &async_script_cb: &script_cb, (task_cbh)c);
     Replace(c->parent_name, NewString(name));
     vtrace("%s script process is %d\n", c->parent_name, (int)c->pid);
 
-    disable_keyboard(DISABLE, IMPLICIT, "Script() start");
+    if (keyboard_lock) {
+	disable_keyboard(DISABLE, IMPLICIT, "Script() start");
+    }
 
     return true;
 }
