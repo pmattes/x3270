@@ -1758,6 +1758,7 @@ restart:
 
     /* Now there is no active task. */
     current_task = NULL;
+    task_status_set();
     return any;
 }
 

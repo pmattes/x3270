@@ -1254,16 +1254,15 @@ poll_children(void)
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 	for (c = child_exits; c != NULL; c = next) {
+	    next = c->next;
 	    if (c->pid == pid) {
 		(*c->proc)((ioid_t)c, status);
-		next = c->next;
 		if (prev) {
 		    prev->next = next;
 		} else {
 		    child_exits = next;
 		}
 		Free(c);
-		break;
 	    } else {
 		prev = c;
 	    }
