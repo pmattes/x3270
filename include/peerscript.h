@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Paul Mattes.
+ * Copyright (c) 2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,5 +31,11 @@
  */
 
 typedef struct _peer_listen *peer_listen_t;
-peer_listen_t peer_init(struct sockaddr *sa, socklen_t sa_len, bool once);
+typedef enum {
+    PLM_MULTI,		/* allow multiple connections */
+    PLM_SINGLE,		/* allow a single connection */
+    PLM_ONCE		/* exit after single connection */
+} peer_listen_mode;
+peer_listen_t peer_init(struct sockaddr *sa, socklen_t sa_len,
+	peer_listen_mode mode);
 void peer_shutdown(peer_listen_t listener);

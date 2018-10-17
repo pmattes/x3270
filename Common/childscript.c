@@ -822,6 +822,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     int outpipe[2];
     int stdoutpipe[2];
 #else /*][*/
+    peer_listen_mode mode = PLM_MULTI;
     unsigned short port;
     socket_t s;
     struct sockaddr_in *sin;
@@ -846,6 +847,12 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    argv++;
 	} else if (!strcasecmp(argv[0], "-NoLock")) {
 	    keyboard_lock = false;
+	    argc--;
+	    argv++;
+	} else if (!strcasecmp(argv[0], "-Single")) {
+#if defined(_WIN32) /*[*/
+	    mode = PLM_SINGLE;
+#endif /*]*/
 	    argc--;
 	    argv++;
 	} else {
@@ -961,7 +968,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     sin->sin_family = AF_INET;
     sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     sin->sin_port = htons(port);
-    listener = peer_init((struct sockaddr *)sin, sizeof(*sin), false);
+    listener = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
     SOCK_CLOSE(s);
     if (listener == NULL) {
 	return false;

@@ -59,6 +59,10 @@
 #include "w3misc.h"
 #include "xio.h"
 
+#if defined(_WIN32) && !defined(WSA_FLAG_NO_HANDLE_INHERIT) /*[*/
+# define WSA_FLAG_NO_HANDLE_INHERIT 0x80
+#endif /*]*/
+
 static void peer_data(task_cbh handle, const char *buf, size_t len);
 static bool peer_done(task_cbh handle, bool success, bool abort);
 static void peer_closescript(task_cbh handle);
@@ -98,7 +102,8 @@ struct _peer_listen {
     HANDLE event;	/* event */
 #endif /*]*/
     ioid_t id;		/* I/O identifier */
-    bool once;		/* if true, exit when session breaks */
+    peer_listen_mode mode; /* listen mode */
+    u_short port;	/* TCP port */
 };
 static llist_t peer_listeners = LLIST_INIT(peer_listeners);
 
@@ -113,19 +118,22 @@ close_peer(peer_t *p)
     llist_unlink(&p->llist);
     if (p->socket != INVALID_SOCKET) {
 	SOCK_CLOSE(p->socket);
+	p->socket = INVALID_SOCKET;
     }
 #if defined(_WIN32) /*[*/
     if (p->event != INVALID_HANDLE_VALUE) {
 	CloseHandle(p->event);
+	p->event = INVALID_HANDLE_VALUE;
     }
 #endif /*]*/
     if (p->id != NULL_IOID) {
 	RemoveInput(p->id);
+	p->id = NULL_IOID;
     }
     Replace(p->buf, NULL);
     Replace(p->name, NULL);
 
-    if (p->listener->once) {
+    if (p->listener->mode == PLM_ONCE) {
 	vtrace("once-only socket closed, exiting\n");
 	x3270_exit(0);
     }
@@ -383,6 +391,27 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	return;
     }
 
+    if (listener->mode == PLM_SINGLE || listener->mode == PLM_ONCE) {
+	/* Close the listener. */
+	vtrace("Closing listener %u (single mode)\n", listener->port);
+	if (listener->socket != INVALID_SOCKET) {
+	    SOCK_CLOSE(listener->socket);
+	    listener->socket = INVALID_SOCKET;
+	}
+#if defined(_WIN32) /*[*/
+	if (listener->event != INVALID_HANDLE_VALUE) {
+	    CloseHandle(listener->event);
+	    listener->event = INVALID_HANDLE_VALUE;
+	}
+#endif /*]*/
+	if (listener->id != NULL_IOID) {
+	    RemoveInput(listener->id);
+	    listener->id = NULL_IOID;
+	}
+    } else {
+	vtrace("Not closing listener %u (multi mode)\n", listener->port);
+    }
+
 #if defined(_WIN32) /*[*/
     event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (event == NULL) {
@@ -417,12 +446,12 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
  *
  * @param[in] sa	Socket address to listen on
  * @param[in] sa_len	Socket address length
- * @param[in] once	Exit when connection breaks
+ * @param[in] mode	Connection mode
  *
  * @return peer listen context
  */
 peer_listen_t
-peer_init(struct sockaddr *sa, socklen_t sa_len, bool once)
+peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 {
     peer_listen_t listener;
     char hostbuf[128];
@@ -436,8 +465,13 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, bool once)
 #endif /*]*/
     listener->id = NULL_IOID;
 
-    listener->once = once;
+    listener->mode = mode;
+#if !defined(_WIN32) /*[*/
     listener->socket = socket(sa->sa_family, SOCK_STREAM, 0);
+#else /*][*/
+    listener->socket = WSASocket(sa->sa_family, SOCK_STREAM, 0, NULL, 0,
+	    WSA_FLAG_NO_HANDLE_INHERIT);
+#endif /*]*/
     if (listener->socket == INVALID_SOCKET) {
 #if !defined(_WIN32) /*[*/
 	popup_an_errno(errno, "script socket()");
@@ -499,19 +533,21 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, bool once)
     if (sa->sa_family == AF_INET) {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
+	listener->port = ntohs(sin->sin_port);
 	vtrace("Listening for peer scripts on %s, port %u.\n",
 		inet_ntop(sa->sa_family, &sin->sin_addr, hostbuf,
 		    sizeof(hostbuf)),
-		ntohs(sin->sin_port));
+		listener->port);
     }
 #if defined(X3270_IPV6) /*[*/
     else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
+	listener->port = ntohs(sin6->sin6_port);
 	vtrace("Listening for peer scripts on %s, port %u.\n",
 		inet_ntop(sa->sa_family, &sin6->sin6_addr, hostbuf,
 		    sizeof(hostbuf)),
-		ntohs(sin6->sin6_port));
+		listener->port);
     }
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
@@ -533,10 +569,12 @@ fail:
 #if defined(_WIN32) /*[*/
     if (listener->event != INVALID_HANDLE_VALUE) {
 	CloseHandle(listener->event);
+	listener->event = INVALID_HANDLE_VALUE;
     }
 #endif /*]*/
     if (listener->socket != INVALID_SOCKET) {
 	SOCK_CLOSE(listener->socket);
+	listener->socket = INVALID_SOCKET;
     }
     Free(listener);
     listener = NULL;
@@ -554,12 +592,19 @@ done:
 void
 peer_shutdown(peer_listen_t listener)
 {
-    SOCK_CLOSE(listener->socket);
+    if (listener->socket != INVALID_SOCKET) {
+	SOCK_CLOSE(listener->socket);
+	listener->socket = INVALID_SOCKET;
+    }
 #if defined(_WIN32) /*[*/
-    CloseHandle(listener->event);
+    if (listener->event != INVALID_HANDLE_VALUE) {
+	CloseHandle(listener->event);
+	listener->event = INVALID_HANDLE_VALUE;
+    }
 #endif /*]*/
     if (listener->id != NULL_IOID) {
 	RemoveInput(listener->id);
+	listener->id = NULL_IOID;
     }
     llist_unlink(&listener->llist);
     Free(listener);
