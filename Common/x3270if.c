@@ -90,7 +90,8 @@ static char buf[IBS];
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, socket_t socket, int infd,
 	int outfd, int fn, char *cmd, char **ret);
-static void interactive_io(const char *emulator_name, const char *help_name);
+static void interactive_io(int port, const char *emulator_name,
+	const char *help_name);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
@@ -119,7 +120,7 @@ options:\n\
 #endif /*]*/
 " -t port  connect to TCP port <port>\n",
 	    me, me, me, me, me);
-    exit(1);
+    exit(__LINE__);
 }
 
 /* Get a file descriptor from the environment. */
@@ -134,7 +135,7 @@ fd_env(const char *name, bool required)
 	if (required) {
 	    (void) fprintf(stderr, "%s: %s not set in the environment\n", me,
 		    name);
-	    exit(2);
+	    exit(__LINE__);
 	} else {
 	    return -1;
 	}
@@ -143,7 +144,7 @@ fd_env(const char *name, bool required)
     if (fd <= 0) {
 	(void) fprintf(stderr, "%s: invalid value '%s' for %s\n", me, fdname,
 		name);
-	exit(3);
+	exit(__LINE__);
     }
     return fd;
 }
@@ -162,7 +163,7 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
     if (sockstart() < 0) {
-	exit(4);
+	exit(__LINE__);
     }
 #endif /*]*/
 
@@ -265,7 +266,7 @@ main(int argc, char *argv[])
 
     /* Do the I/O. */
     if (iterative && emulator_name != NULL) {
-	interactive_io(emulator_name, help_name);
+	interactive_io(port, emulator_name, help_name);
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
@@ -286,14 +287,14 @@ usock(int pid)
     fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
 	perror("socket");
-	exit(5);
+	exit(__LINE__);
     }
     (void) memset(&ssun, '\0', sizeof(struct sockaddr_un));
     ssun.sun_family = AF_UNIX;
     (void) snprintf(ssun.sun_path, sizeof(ssun.sun_path), "/tmp/x3sck.%d", pid);
     if (connect(fd, (struct sockaddr *)&ssun, sizeof(ssun)) < 0) {
 	perror("connect");
-	exit(6);
+	exit(__LINE__);
     }
     return fd;
 }
@@ -313,7 +314,7 @@ tsock(unsigned short port)
 #else /*][*/
 	perror("socket");
 #endif /*]*/
-	exit(7);
+	exit(__LINE__);
     }
     (void) memset(&sin, '\0', sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
@@ -325,7 +326,7 @@ tsock(unsigned short port)
 #else /*][*/
 	perror("connect");
 #endif /*]*/
-	exit(8);
+	exit(__LINE__);
     }
     return fd;
 }
@@ -381,12 +382,12 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	}
 	if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
 	    perror("x3270if: input");
-	    exit(9);
+	    exit(__LINE__);
 	}
 	if ((!is_socket && outfd < 0) ||
 	    (is_socket && outsocket == INVALID_SOCKET)) {
 	    perror("x3270if: output");
-	    exit(10);
+	    exit(__LINE__);
 	}
     }
 
@@ -399,7 +400,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	cmd_nl = malloc(strlen(cmd) + 2);
 	if (cmd_nl == NULL) {
 	    fprintf(stderr, "Out of memory\n");
-	    exit(11);
+	    exit(__LINE__);
 	}
 	sprintf(cmd_nl, "%s\n", cmd);
 	wstr = cmd_nl;
@@ -423,7 +424,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	} else {
 	    perror("x3270if: write");
 	}
-	exit(12);
+	exit(__LINE__);
     }
     if (cmd_nl != NULL) {
 	free(cmd_nl);
@@ -480,7 +481,7 @@ retry:
 		    *ret = realloc(*ret, ret_sl + strlen(buf + 6) + 2);
 		    if (*ret == NULL) {
 			fprintf(stderr, "Out of memory\n");
-			exit(13);
+			exit(__LINE__);
 		    }
 		    *(*ret + ret_sl) = '\0';
 		    strcat(strcat(*ret, buf + 6), "\n");
@@ -488,7 +489,7 @@ retry:
 		} else {
 		    if (printf("%s\n", buf + 6) < 0) {
 			perror("x3270if: printf");
-			exit(14);
+			exit(__LINE__);
 		    }
 		}
 	    } else {
@@ -517,15 +518,15 @@ retry:
 	} else {
 	    perror("read");
 	}
-	exit(15);
+	exit(__LINE__);
     } else if (nr == 0) {
 	fprintf(stderr, "x3270if: unexpected EOF\n");
-	exit(16);
+	exit(__LINE__);
     }
 
     if (fflush(stdout) < 0) {
 	perror("x3270if: fflush");
-	exit(17);
+	exit(__LINE__);
     }
 
     /* Print status, if that's what they want. */
@@ -548,13 +549,13 @@ retry:
 	}
 	if (rc < 0) {
 	    perror("x3270if: printf");
-		exit(18);
+		exit(__LINE__);
 	}
     }
 
     if (fflush(stdout) < 0) {
 	perror("x3270if: fflush");
-	exit(19);
+	exit(__LINE__);
     }
 
     if (is_socket && socket == INVALID_SOCKET) {
@@ -680,7 +681,7 @@ iterative_io(int pid, unsigned short port)
 
 	if ((rv = select(fd_max, &rfds, &wfds, NULL, NULL)) < 0) {
 	    perror("x3270if: select");
-	    exit(20);
+	    exit(__LINE__);
 	}
 	if (verbose) {
 	    (void) fprintf(stderr, "select->%d\n", rv);
@@ -694,7 +695,7 @@ iterative_io(int pid, unsigned short port)
 		    if (rv < 0) {
 			(void) fprintf(stderr, "x3270if: write(%s): %s",
 				io[i].name, strerror(errno));
-			exit(21);
+			exit(__LINE__);
 		    }
 		    io[i].offset += rv;
 		    io[i].count -= rv;
@@ -710,7 +711,7 @@ iterative_io(int pid, unsigned short port)
 		if (rv < 0) {
 		    (void) fprintf(stderr, "x3270if: read(%s): %s", io[i].name,
 			    strerror(errno));
-		    exit(22);
+		    exit(__LINE__);
 		}
 		if (rv == 0) {
 		    exit(0);
@@ -791,12 +792,12 @@ iterative_io(int pid, unsigned short port)
 	port_env = getenv("X3270PORT");
 	if (port_env == NULL) {
 	    fprintf(stderr, "Must specify port or put port in X3270PORT.\n");
-	    exit(23);
+	    exit(__LINE__);
 	}
 	port = atoi(port_env);
 	if (port <= 0 || (port & ~0xffff)) {
 	    fprintf(stderr, "Invalid X3270PORT.\n");
-	    exit(24);
+	    exit(__LINE__);
 	}
     }
 
@@ -804,7 +805,7 @@ iterative_io(int pid, unsigned short port)
     s = socket(PF_INET, SOCK_STREAM, 0);
     if (s < 0) {
 	win32_perror("socket");
-	exit(25);
+	exit(__LINE__);
     }
     memset(&sin, '\0', sizeof(sin));
     sin.sin_family = AF_INET;
@@ -812,7 +813,7 @@ iterative_io(int pid, unsigned short port)
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 	win32_perror("connect(%u) failed", port);
-	exit(26);
+	exit(__LINE__);
     }
     if (verbose) {
 	fprintf(stderr, "<connected to port %d>\n", port);
@@ -820,11 +821,11 @@ iterative_io(int pid, unsigned short port)
     socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (socket_event == NULL) {
 	win32_perror("CreateEvent failed");
-	exit(27);
+	exit(__LINE__);
     }
     if (WSAEventSelect(s, socket_event, FD_READ | FD_CLOSE) != 0) {
 	win32_perror("WSAEventSelect failed");
-	exit(28);
+	exit(__LINE__);
     }
 
     /* Create a thread to read data from the socket. */
@@ -833,7 +834,7 @@ iterative_io(int pid, unsigned short port)
     stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
     if (stdin_thread == NULL) {
 	win32_perror("CreateThread failed");
-	exit(29);
+	exit(__LINE__);
     }
     SetEvent(stdin_enable_event);
 
@@ -850,10 +851,10 @@ iterative_io(int pid, unsigned short port)
 	    }
 	    if (nr < 0) {
 		win32_perror("recv failed");
-		exit(30);
+		exit(__LINE__);
 	    }
 	    if (nr == 0) {
-		exit(31);
+		exit(__LINE__);
 	    }
 	    fwrite(buf, 1, nr, stdout);
 	    fflush(stdout);
@@ -866,7 +867,7 @@ iterative_io(int pid, unsigned short port)
 	    if (stdin_nr < 0) {
 		fprintf(stderr, "stdin read failed: %s\n",
 			win32_strerror(stdin_error));
-		exit(32);
+		exit(__LINE__);
 	    }
 	    if (stdin_nr == 0) {
 		exit(0);
@@ -876,11 +877,11 @@ iterative_io(int pid, unsigned short port)
 	    break;
 	case WAIT_FAILED:
 	    win32_perror("WaitForMultipleObjects failed");
-	    exit(33);
+	    exit(__LINE__);
 	default:
 	    fprintf(stderr, "Unexpected return %d from "
 		    "WaitForMultipleObjects\n", (int)ret);
-	    exit(34);
+	    exit(__LINE__);
 	}
     }
 }
@@ -937,17 +938,22 @@ rl_handler(char *command)
 # endif /*]*/
 
 static void
-interactive_io(const char *emulator_name, const char *help_name)
+interactive_io(int port, const char *emulator_name, const char *help_name)
 {
     char *prompt;
-    int infd, outfd;
+    int s = INVALID_SOCKET;
+    int infd = -1, outfd = -1;
 
-    get_ports(NULL, &infd, &outfd);
+    if (port) {
+	s = tsock(port);
+    } else {
+	get_ports(NULL, &infd, &outfd);
+    }
 
     prompt = malloc(strlen(emulator_name) + 17);
     if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
-	exit(35);
+	exit(__LINE__);
     }
 # if defined(HAVE_LIBREADLINE) /*[*/
     snprintf(prompt, strlen(emulator_name) + 17,
@@ -973,7 +979,7 @@ interactive_io(const char *emulator_name, const char *help_name)
     printf("To execute one action and close this window, end the command line with '/'.\n");
     printf("To close this window, enter just '/' as the command line.\n");
     if (help_name != NULL) {
-	printf("To get help, use the '%s' action.\n", help_name);
+	printf("To get help, use the '%s()' action.\n", help_name);
     }
     printf("\033[33mThe command 'Quit()' will cause %s to exit.\033[39m",
 	    emulator_name);
@@ -999,11 +1005,12 @@ interactive_io(const char *emulator_name, const char *help_name)
 	size_t sl;
 	bool done = false;
 	fd_set rfds;
+	int mfd = (s == INVALID_SOCKET)? infd: s;
 
 	FD_ZERO(&rfds);
 	FD_SET(0, &rfds);
-	FD_SET(infd, &rfds);
-	(void) select(infd + 1, &rfds, NULL, NULL, NULL);
+	FD_SET(mfd, &rfds);
+	(void) select(mfd + 1, &rfds, NULL, NULL, NULL);
 	if (FD_ISSET(0, &rfds)) {
 	    /* Keyboard input. */
 # if defined(HAVE_LIBREADLINE) /*[*/
@@ -1024,7 +1031,7 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    }
 # endif /*][*/
 	}
-	if (FD_ISSET(infd, &rfds) || command == NULL) {
+	if (FD_ISSET(mfd, &rfds) || command == NULL) {
 	    /* Pipe input (EOF) or keyboard EOF. */
 # if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
@@ -1046,7 +1053,7 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    add_history(command);
 	}
 # endif /*]*/
-	rc = single_io(0, 0, INVALID_SOCKET, infd, outfd, NO_STATUS, command,
+	rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
 		&ret);
 # if defined(HAVE_LIBREADLINE) /*[*/
 	free(command);
@@ -1081,12 +1088,12 @@ set_text_attribute(HANDLE out, WORD attributes)
 {
     if (!SetConsoleTextAttribute(out, attributes)) {
 	win32_perror("Can't set console text attribute");
-	exit(36);
+	exit(__LINE__);
     }
 }
 
 static void
-interactive_io(const char *emulator_name, const char *help_name)
+interactive_io(int port, const char *emulator_name, const char *help_name)
 {
     char *prompt;
     HANDLE out;
@@ -1094,12 +1101,16 @@ interactive_io(const char *emulator_name, const char *help_name)
     socket_t s;
     HANDLE socket_event;
 
-    get_ports(&s, NULL, NULL);
+    if (port) {
+	s = tsock(port);
+    } else {
+	get_ports(&s, NULL, NULL);
+    }
 
     prompt = malloc(strlen(emulator_name) + 3);
     if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
-	exit(37);
+	exit(__LINE__);
     }
     snprintf(prompt, strlen(emulator_name) + 3, "%s> ", emulator_name);
 
@@ -1108,11 +1119,11 @@ interactive_io(const char *emulator_name, const char *help_name)
 	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (out == NULL) {
 	win32_perror("Can't open console output handle");
-	exit(38);
+	exit(__LINE__);
     }
     if (!GetConsoleScreenBufferInfo(out, &info)) {
 	win32_perror("Can't get console info");
-	exit(39);
+	exit(__LINE__);
     }
 
     /* wx3270 speaks Unicode. */
@@ -1127,18 +1138,18 @@ interactive_io(const char *emulator_name, const char *help_name)
     stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
     if (stdin_thread == NULL) {
 	win32_perror("Cannot create stdin thread");
-	exit(40);
+	exit(__LINE__);
     }
 
     /* Set up the socket event. */
     socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (socket_event == NULL) {
 	win32_perror("Cannot create socket event");
-	exit(41);
+	exit(__LINE__);
     }
     if (WSAEventSelect(s, socket_event, FD_CLOSE) != 0) {
 	win32_perror("Cannot set socket events");
-	exit(42);
+	exit(__LINE__);
     }
 
     /* Introduce yourself. */
@@ -1192,13 +1203,13 @@ interactive_io(const char *emulator_name, const char *help_name)
 		break;
 	    case WAIT_FAILED:
 		win32_perror("WaitForMultipleObjects failed");
-		exit(44);
+		exit(__LINE__);
 		break;
 	    default:
 		fprintf(stderr, "Unexpected return %d from "
 			"WaitForMultipleObjects\n", (int)rv);
 		fflush(stderr);
-		exit(45);
+		exit(__LINE__);
 		break;
 	}
 
