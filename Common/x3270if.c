@@ -888,8 +888,7 @@ iterative_io(int pid, unsigned short port)
 
 #endif /*]*/
 
-#if !defined(_WIN32) /*[*/
-# if defined(HAVE_LIBREADLINE) /*[*/
+#if defined(HAVE_LIBREADLINE) /*[*/
 static char **
 attempted_completion(const char *text, int start, int end)
 {
@@ -934,34 +933,63 @@ rl_handler(char *command)
      */
     rl_callback_handler_remove();
 }
+#endif /*]*/
 
-# endif /*]*/
+#if defined(_WIN32) /*[*/
+static void
+set_text_attribute(HANDLE out, WORD attributes)
+{
+    if (!SetConsoleTextAttribute(out, attributes)) {
+	win32_perror("Can't set console text attribute");
+	exit(__LINE__);
+    }
+}
+#endif /*[*/
 
 static void
 interactive_io(int port, const char *emulator_name, const char *help_name)
 {
     char *prompt;
-    int s = INVALID_SOCKET;
+    socket_t s = INVALID_SOCKET;
     int infd = -1, outfd = -1;
+    size_t prompt_len;
+#if defined(_WIN32) /*[*/
+    HANDLE conout;
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    HANDLE socket_event;
+#endif /*]*/
 
     if (port) {
 	s = tsock(port);
     } else {
+#if !defined(_WIN32) /*[*/
 	get_ports(NULL, &infd, &outfd);
+#else /*][*/
+	get_ports(&s, NULL, NULL);
+#endif /*]*/
     }
 
-    prompt = malloc(strlen(emulator_name) + 17);
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
+#  define LEFT	"\001\033[34m\002"
+#  define RIGHT	"\001\033[39m\002"
+# else /*]*/
+#  define LEFT	"\033[34m"
+#  define RIGHT	"\033[39m"
+# endif /*]*/
+#else /*]*/
+# define LEFT	""
+# define RIGHT	""
+#endif /*]*/
+
+    prompt_len = strlen(LEFT) + strlen(emulator_name) + strlen(">") +
+	strlen(RIGHT) + strlen(" ") + 1;
+    prompt = malloc(prompt_len);
     if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
 	exit(__LINE__);
     }
-# if defined(HAVE_LIBREADLINE) /*[*/
-    snprintf(prompt, strlen(emulator_name) + 17,
-	    "\001\033[34m\002%s>\001\033[39m\002 ", emulator_name);
-#else /*][*/
-    snprintf(prompt, strlen(emulator_name) + 13,
-	    "\033[34m%s>\033[39m ", emulator_name);
-#endif /*]*/
+    snprintf(prompt, prompt_len, LEFT "%s>" RIGHT " ", emulator_name);
 
 # if defined(HAVE_LIBREADLINE) /*[*/
     /* Set up readline. */
@@ -975,153 +1003,15 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 #  endif /*]*/
 # endif /*]*/
 
-    printf("%s Prompt\n\n", emulator_name);
-    printf("To execute one action and close this window, end the command line with '/'.\n");
-    printf("To close this window, enter just '/' as the command line.\n");
-    if (help_name != NULL) {
-	printf("To get help, use the '%s()' action.\n", help_name);
-    }
-    printf("\033[33mThe command 'Quit()' will cause %s to exit.\033[39m",
-	    emulator_name);
-    printf("\n\n");
-
-# if defined(HAVE_LIBREADLINE) /*[*/
-    /* Installing the callback handler causes the prompt to be displayed. */
-    rl_callback_handler_install(prompt, &rl_handler);
-#else /*][*/
-    /* Display the initial prompt. */
-    fputs(prompt, stdout);
-    fflush(stdout);
-# endif /*]*/
-
-    for (;;) {
-# if !defined(HAVE_LIBREADLINE) /*[*/
-	char inbuf[1024];
-# endif /*]*/
-	char *command;
-	int rc;
-	char *nl;
-	char *ret = NULL;
-	size_t sl;
-	bool done = false;
-	fd_set rfds;
-	int mfd = (s == INVALID_SOCKET)? infd: s;
-
-	FD_ZERO(&rfds);
-	FD_SET(0, &rfds);
-	FD_SET(mfd, &rfds);
-	(void) select(mfd + 1, &rfds, NULL, NULL, NULL);
-	if (FD_ISSET(0, &rfds)) {
-	    /* Keyboard input. */
-# if defined(HAVE_LIBREADLINE) /*[*/
-	    rl_callback_read_char();
-	    if (!readline_done) {
-		/* No input yet. */
-		continue;
-	    }
-
-	    /* Grab what readline returned and reset for next time. */
-	    command = readline_command;
-	    readline_command = NULL;
-	    readline_done = false;
-# else /*][*/
-	    command = fgets(inbuf, sizeof(inbuf), stdin);
-	    if (command == NULL) {
-		exit(0);
-	    }
-# endif /*][*/
-	}
-	if (FD_ISSET(mfd, &rfds) || command == NULL) {
-	    /* Pipe input (EOF) or keyboard EOF. */
-# if defined(HAVE_LIBREADLINE) /*[*/
-	    rl_callback_handler_remove();
-#endif /*]*/
-	    exit(0);
-	}
-
-	/* We have a line of input. */
-	if ((nl = strchr(command, '\n')) != NULL) {
-	    *nl = '\0';
-	}
-	sl = strlen(command);
-	if (sl > 0 && command[sl - 1] == '/') {
-	    command[--sl] = '\0';
-	    done = true;
-	}
-# if defined(HAVE_LIBREADLINE) /*[*/
-	if (command[0]) {
-	    add_history(command);
-	}
-# endif /*]*/
-	rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
-		&ret);
-# if defined(HAVE_LIBREADLINE) /*[*/
-	free(command);
-# endif /*]*/
-	if (ret != NULL) {
-	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
-		ret[sl - 1] = '\0';
-	    }
-	    printf("\033[3%cm%s\033[39m\n",
-		    rc? '1': '2',
-		    ret);
-	    free(ret);
-	}
-	if (done) {
-	    exit(0);
-	}
-
-	/* Display another prompt. */
-# if defined(HAVE_LIBREADLINE) /*[*/
-	rl_callback_handler_install(prompt, &rl_handler);
-# else /*][*/
-	fputs(prompt, stdout);
-	fflush(stdout);
-# endif /*]*/
-    }
-}
-
-#else /*][*/
-
-static void
-set_text_attribute(HANDLE out, WORD attributes)
-{
-    if (!SetConsoleTextAttribute(out, attributes)) {
-	win32_perror("Can't set console text attribute");
-	exit(__LINE__);
-    }
-}
-
-static void
-interactive_io(int port, const char *emulator_name, const char *help_name)
-{
-    char *prompt;
-    HANDLE out;
-    CONSOLE_SCREEN_BUFFER_INFO info;
-    socket_t s;
-    HANDLE socket_event;
-
-    if (port) {
-	s = tsock(port);
-    } else {
-	get_ports(&s, NULL, NULL);
-    }
-
-    prompt = malloc(strlen(emulator_name) + 3);
-    if (prompt == NULL) {
-	fprintf(stderr, "Out of memory\n");
-	exit(__LINE__);
-    }
-    snprintf(prompt, strlen(emulator_name) + 3, "%s> ", emulator_name);
-
+#if defined(_WIN32) /*[*/
     /* Open the console handle. */
-    out = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+    conout = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
 	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-    if (out == NULL) {
+    if (conout == NULL) {
 	win32_perror("Can't open console output handle");
 	exit(__LINE__);
     }
-    if (!GetConsoleScreenBufferInfo(out, &info)) {
+    if (!GetConsoleScreenBufferInfo(conout, &info)) {
 	win32_perror("Can't get console info");
 	exit(__LINE__);
     }
@@ -1151,6 +1041,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	win32_perror("Cannot set socket events");
 	exit(__LINE__);
     }
+#endif /*]*/
 
     /* Introduce yourself. */
     printf("%s Prompt\n\n", emulator_name);
@@ -1159,14 +1050,20 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     if (help_name != NULL) {
 	printf("To get help, use the '%s()' action.\n", help_name);
     }
+#if !defined(_WIN32) /*[*/
+    printf("\033[33m");
+# else /*][*/
     fflush(stdout);
-
-    set_text_attribute(out, FOREGROUND_GREEN | FOREGROUND_RED);
+    set_text_attribute(conout, FOREGROUND_GREEN | FOREGROUND_RED);
+#endif /*]*/
     printf("Note: The 'Quit()' action will cause %s to exit.", emulator_name);
+#if !defined(_WIN32) /*[*/
+    printf("\033[39m");
+# else /*][*/
     fflush(stdout);
-    set_text_attribute(out, info.wAttributes);
+    set_text_attribute(conout, info.wAttributes);
+#endif /*]*/
     printf("\n\n");
-    fflush(stdout);
 
     for (;;) {
 	char *command;
@@ -1175,27 +1072,81 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	char *ret = NULL;
 	size_t sl;
 	bool done = false;
+#if !defined(_WIN32) /*[*/
+# if !defined(HAVE_LIBREADLINE) /*[*/
+	char inbuf[1024];
+# endif /*]*/
+# else /*][*/
 	HANDLE ha[2];
 	DWORD rv;
+#endif /*]*/
 
 	/* Display the prompt. */
-	set_text_attribute(out, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
+	rl_callback_handler_install(prompt, &rl_handler);
+# else /*][*/
 	fputs(prompt, stdout);
 	fflush(stdout);
-	set_text_attribute(out, info.wAttributes);
+# endif /*]*/
+#else /*][*/
+	set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	fputs(prompt, stdout);
+	fflush(stdout);
+	set_text_attribute(conout, info.wAttributes);
 
 	/* Enable console input. */
 	SetEvent(stdin_enable_event);
+#endif /*]*/
 
 	/* Wait for socket or console input. */
+#if !defined(_WIN32) /*[*/
+	do {
+	    fd_set rfds;
+	    int mfd = (s == INVALID_SOCKET)? infd: s;
+
+	    FD_ZERO(&rfds);
+	    FD_SET(0, &rfds);
+	    FD_SET(mfd, &rfds);
+	    (void) select(mfd + 1, &rfds, NULL, NULL, NULL);
+	    if (FD_ISSET(mfd, &rfds) || command == NULL) {
+		/* Pipe input (EOF) or keyboard EOF. */
+# if defined(HAVE_LIBREADLINE) /*[*/
+		rl_callback_handler_remove();
+# endif /*]*/
+		exit(0);
+	    }
+	    if (FD_ISSET(0, &rfds)) {
+		/* Keyboard input. */
+# if defined(HAVE_LIBREADLINE) /*[*/
+		rl_callback_read_char();
+		if (!readline_done) {
+		    /* No input yet. */
+		    continue;
+		}
+		command = readline_command;
+# else /*][*/
+		command = fgets(inbuf, sizeof(inbuf), stdin);
+# endif /*]*/
+		if (command == NULL) {
+		    exit(0);
+		}
+		break;
+	    }
+	} while (true);
+# if defined(HAVE_LIBREADLINE) /*[*/
+	readline_command = NULL;
+	readline_done = false;
+# endif /*]*/
+# else /*][*/
 	ha[0] = socket_event;
 	ha[1] = stdin_done_event;
 	rv = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
 	switch (rv) {
-	    case WAIT_OBJECT_0: /* socket close */
+	    case WAIT_OBJECT_0:		/* socket close */
 		exit(0);
 		break;
-	    case WAIT_OBJECT_0 + 1: /* console input */
+	    case WAIT_OBJECT_0 + 1:	/* console input */
 		if (stdin_nr <= 0) {
 		    exit(0);
 		}
@@ -1212,29 +1163,48 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		exit(__LINE__);
 		break;
 	}
+#endif /*]*/
 
+	/* We have a line of input. */
 	if ((nl = strchr(command, '\n')) != NULL) {
 	    *nl = '\0';
 	}
 	sl = strlen(command);
-	done = (sl > 0 && command[sl - 1] == '/');
-	if (done) {
+	if (sl > 0 && command[sl - 1] == '/') {
 	    command[--sl] = '\0';
+	    done = true;
 	}
+# if defined(HAVE_LIBREADLINE) /*[*/
+	if (command[0]) {
+	    add_history(command);
+	}
+# endif /*]*/
 
-	rc = single_io(0, 0, s, -1, -1, NO_STATUS, command, &ret);
+	rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
+		&ret);
+# if defined(HAVE_LIBREADLINE) /*[*/
+	free(command);
+# endif /*]*/
+
 	if (ret != NULL) {
-	    set_text_attribute(out, rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
-					FOREGROUND_GREEN);
 	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
 		ret[sl - 1] = '\0';
 	    }
+#if !defined(_WIN32) /*[*/
+	    printf("\033[3%cm%s\033[39m\n",
+		    rc? '1': '2',
+		    ret);
+# else /*][*/
+	    set_text_attribute(conout,
+		    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
+		    	 FOREGROUND_GREEN);
 	    fputs(ret, stdout);
 	    fflush(stdout);
-	    set_text_attribute(out, info.wAttributes);
+	    set_text_attribute(conout, info.wAttributes);
 	    fputc('\n', stdout);
-	    fflush(stdout);
+#endif /*]*/
 	    free(ret);
+	    fflush(stdout);
 	}
 
 	if (done) {
@@ -1242,4 +1212,3 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	}
     }
 }
-#endif /*]*/
