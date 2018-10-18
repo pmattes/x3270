@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2017 Paul Mattes.
+ * Copyright (c) 2006-2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,7 @@ enum {
     MN_CHARSET,		/* character set */
     MN_CROSSHAIR,	/* crosshair cursor */
     MN_CURSORTYPE,	/* cursor type */
-    MN_SSL,		/* SSL tunnel */
+    MN_TLS,		/* TLS tunnel */
     MN_VERIFY,		/* verify host certificate */
     MN_PROXY,		/* use proxy host */
     MN_PROXY_SERVER,	/* proxy host name */
@@ -1375,6 +1375,13 @@ number, character set, etc.), enter '" CHOICE_NONE "'."
 		    buf[n_good]);
 	    continue;
 	}
+	if (isalpha(buf[0]) && buf[1] == ':') {
+	    errout("\nDo not include prefixes in host names.");
+	    if (buf[0] == 'L' || buf[0] == 'l') {
+		errout("\nTo set up a TLS tunnel, use the TLS tunnel option.");
+	    }
+	    continue;
+	}
 	if (!buf[0]) {
 	    if (!s->host[0]) {
 		continue;
@@ -1773,23 +1780,26 @@ This option controls whether the wc3270 cursor is a block or an underscore.");
 }
 
 /**
- * Prompt for SSL tunnel mode.
+ * Prompt for TLS tunnel mode.
  *
  * @param[in,out] s	Session
  *
  * @return 0 for success, -1 for failure
  */
 static int
-get_ssl(session_t *s)
+get_tls(session_t *s)
 {
     new_screen(s, NULL, "\
-SSL Tunnel\n\
+TLS Tunnel\n\
 \n\
-This option causes wc3270 to first create a tunnel to the host using the\n\
-Secure Sockets Layer (SSL), then to run the TN3270 session inside the tunnel.");
+This option causes wc3270 to first create a tunnel to the host using\n\
+Transport Layer Security (TLS); then it runs the TN3270 session inside the\n\
+tunnel.\n\
+\n\
+TLS is also known as the Secure Sockets Layer (SSL).");
 
     do {
-	printf("\nUse an SSL tunnel? (y/n) [%s] ", s->ssl? "y" : "n");
+	printf("\nUse a TLS tunnel? (y/n) [%s] ", s->ssl? "y" : "n");
 	fflush(stdout);
 	s->ssl = getyn(s->ssl);
 	if (s->ssl == YN_ERR) {
@@ -1815,7 +1825,7 @@ get_verify(session_t *s)
 Verify Host Certificates\n\
 \n\
 This option causes wc3270 to verify the certificates presented by the host\n\
-if an SSL tunnel is used, or if the TELNET TLS option is negotiated.  If the\n\
+if a TLS tunnel is used, or if the TELNET TLS option is negotiated.  If the\n\
 certificates are not valid, the connection will be aborted.");
 
     if (!(s->flags2 & WF2_NEW_VHC_DEFAULT)) {
@@ -2885,7 +2895,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	printf("%3d. Cursor Type ............ : %s\n",
 		MN_CURSORTYPE, (s->flags & WF_ALTCURSOR)?
 		    "Underscore": "Block");
-	printf("%3d. SSL Tunnel ............. : %s\n", MN_SSL,
+	printf("%3d. TLS (SSL) Tunnel ....... : %s\n", MN_TLS,
 		s->ssl? "Yes": "No");
 	printf("%3d. Verify host certificates : %s", MN_VERIFY,
 		(s->flags2 & WF2_NO_VERIFY_HOST_CERT)? "No": "Yes");
@@ -3016,8 +3026,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-	    case MN_SSL:
-		if (get_ssl(s) < 0) {
+	    case MN_TLS:
+		if (get_tls(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
