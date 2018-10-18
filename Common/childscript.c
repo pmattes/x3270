@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
+# include <signal.h>
 # include <sys/signal.h>
 # include <sys/wait.h>
 #endif /*]*/

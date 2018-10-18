@@ -993,7 +993,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 
 # if defined(HAVE_LIBREADLINE) /*[*/
     /* Set up readline. */
-    rl_readline_name = emulator_name;
+    rl_readline_name = (char *)emulator_name;
     rl_initialize();
     rl_attempted_completion_function = attempted_completion;
 #  if defined(RL_READLINE_VERSION) && (RL_READLINE_VERSION > 0x0402) /*[*/
@@ -1109,12 +1109,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    FD_SET(0, &rfds);
 	    FD_SET(mfd, &rfds);
 	    (void) select(mfd + 1, &rfds, NULL, NULL, NULL);
-	    if (FD_ISSET(mfd, &rfds) || command == NULL) {
-		/* Pipe input (EOF) or keyboard EOF. */
-# if defined(HAVE_LIBREADLINE) /*[*/
-		rl_callback_handler_remove();
-# endif /*]*/
-		exit(0);
+	    if (FD_ISSET(mfd, &rfds)) {
+		/* Pipe input (EOF). */
+		done = true;
 	    }
 	    if (FD_ISSET(0, &rfds)) {
 		/* Keyboard input. */
@@ -1129,15 +1126,24 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		command = fgets(inbuf, sizeof(inbuf), stdin);
 # endif /*]*/
 		if (command == NULL) {
-		    exit(0);
+		    done = true;
 		}
 		break;
 	    }
 	} while (true);
+
+	if (done) {
+# if defined(HAVE_LIBREADLINE) /*[*/
+	    rl_callback_handler_remove();
+# endif /*]*/
+	    exit(0);
+	}
+
 # if defined(HAVE_LIBREADLINE) /*[*/
 	readline_command = NULL;
 	readline_done = false;
 # endif /*]*/
+
 # else /*][*/
 	ha[0] = socket_event;
 	ha[1] = stdin_done_event;
