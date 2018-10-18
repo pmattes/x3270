@@ -161,7 +161,7 @@ get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
     char **common_xappdata = common_appdata;
     bool is_installed = false;
     HRESULT r;
-    char *d, *cd;
+    char *d = NULL, *cd = NULL;
     HKEY key;
     HMODULE h;
 
