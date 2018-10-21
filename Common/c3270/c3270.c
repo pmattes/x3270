@@ -120,6 +120,7 @@
 static void c3270_push_command(char *s);
 static void interact(void);
 static void stop_pager(void);
+static void display_prompt(void);
 
 #if !defined(_WIN32) /*[*/
 static bool merge_profile(void);
@@ -621,6 +622,12 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
 	    goto done;
 	} else {
+#if !defined(_WIN32) /*[*/
+	    if (CONNECTED && dont_return) {
+		(void) printf("Press <Enter> to resume session.\n");
+	    }
+#endif /*]*/
+
 	    /* Continue interacting. Display the prompt. */
 	    display_prompt();
 
