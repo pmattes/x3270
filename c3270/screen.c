@@ -1754,6 +1754,10 @@ screen_resume(void)
 {
     char *cl;
 
+    if (!escaped) {
+	return;
+    }
+
     escaped = false;
 
     /*

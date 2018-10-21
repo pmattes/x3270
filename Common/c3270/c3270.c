@@ -134,17 +134,23 @@ static char *completion_entry(const char *, int);
 #if !defined(_WIN32) /*[*/
 static FILE *pager = NULL;
 #else /*][*/
-static int pager_rowcnt = 0;
-static bool pager_q = false;
-static int pager_rows = 25;
-static int pager_cols = 80;
+struct {
+    int rows;		/* current number of rows */
+    int cols;		/* current number of colunns */
+    int rowcnt;		/* number of rows displayed so far */
+    int nw;		/* number of bytes written in the prompt */
+    char *residual;	/* residual output */
+    bool flushing;	/* true if 'q' selected and output is being discarded */
+} pager = { 25, 80, 0, 0, NULL, false };
 #endif /*]*/
 static bool command_complete = false;
 static bool command_output = false;
 
-bool escape_pending = false;
-bool stop_pending = false;
-bool dont_return = false;
+#if !defined(_WIN32) /*[*/
+static bool stop_pending = false;
+static bool dont_return = false;
+#endif /*]*/
+static char *prompt_string = NULL;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -153,6 +159,17 @@ char *mydocs3270 = NULL;
 char *commondocs3270 = NULL;
 unsigned windirs_flags;
 static void start_auto_shortcut(void);
+
+static struct {
+    HANDLE thread;		/* thread handle */
+    HANDLE enable_event;	/* let the thread do a read */
+    HANDLE done_event;		/* thread has read input */
+    enum imode { LINE, KEY } mode; /* input mode */
+    char buf[1024];		/* input buffer */
+    int nr;			/* number of bytes read */
+    int error;			/* error code */
+} inthread;
+static DWORD WINAPI inthread_read(LPVOID lpParameter);
 #endif /*]*/
 
 static void c3270_register(void);
@@ -261,15 +278,11 @@ int
 main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
-#if !defined(_WIN32) /*[*/
-#if 0
-    pid_t	 pid;
-    int		 status;
-#endif
-#else /*][*/
+    bool	 once = false;
+    bool	 was_connected;
+#if defined(_WIN32) /*[*/
     char	*delenv;
 #endif /*]*/
-    bool	 once = false;
 
 #if defined(_WIN32) /*[*/
     /* Redirect Error() so we pause. */
@@ -290,6 +303,8 @@ main(int argc, char *argv[])
 	x3270_exit(1);
     }
 #endif /*]*/
+
+    prompt_string = xs_buffer("%s> ", app);
 
 #if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
     /* Explicitly turn off DBCS if wide curses is not supported. */
@@ -372,6 +387,18 @@ main(int argc, char *argv[])
 #endif /*]*/
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+    /* Create a thread to read data from stdin. */
+    inthread.enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    inthread.done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    inthread.thread = CreateThread(NULL, 0, inthread_read, NULL, 0, NULL);
+    if (inthread.thread == NULL) {
+	win32_perror("CreateThread failed");
+	exit(1);
+    }
+
+#endif /*]*/
+
     /* Get the screen set up as early as possible. */
     screen_init();
 
@@ -424,8 +451,8 @@ main(int argc, char *argv[])
 	/* Drop to the prompt. */
 	if (!appres.secure) {
 	    interact();
-	    screen_disp(false);
 	} else {
+	    /* Blank screen. */
 	    pause_for_errors();
 	    screen_resume();
 	}
@@ -434,36 +461,34 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	if (!escaped || ft_state != FT_NONE) {
+	if (CONNECTED) {
+	    was_connected = true;
+	}
+	if (/*!escaped || ft_state != FT_NONE*/true) {
 	    (void) process_events(true);
 	}
-	if (
-#if !defined(_WIN32) /*[*/
-	    appres.c3270.cbreak_mode &&
-#endif /*]*/
-					escape_pending) {
-	    escape_pending = false;
-	    screen_suspend();
-	}
-	if (!appres.secure && !CONNECTED && !appres.interactive.reconnect) {
+	if (!appres.secure &&
+		was_connected &&
+		!CONNECTED &&
+		!appres.interactive.reconnect
+		&& !escaped) {
 	    screen_suspend();
 	    (void) printf("Disconnected.\n");
 	    if (once) {
 		x3270_exit(0);
 	    }
 	    interact();
-	    screen_resume();
-	} else if (escaped && ft_state == FT_NONE) {
-	    interact();
-	    vtrace("Done interacting.\n");
-	    screen_resume();
-	} else if (!CONNECTED && !appres.interactive.reconnect &&
+	    was_connected = false;
+	} else if (!CONNECTED &&
+		!appres.interactive.reconnect &&
 		cl_hostname != NULL) {
 	    screen_suspend();
 	    x3270_exit(0);
 	}
 
-	screen_disp(false);
+	if (CONNECTED) {
+	    screen_disp(false);
+	}
     }
 }
 
@@ -496,20 +521,206 @@ prompt_sigtstp_handler(int ignored _is_unused)
 }
 #endif /*]*/
 
-/*static*/ void
-interact(void)
-{
 #if defined(HAVE_LIBREADLINE) /*[*/
-    static char *prompt_string = NULL;
+static char *readline_command;
+static bool readline_done = false;
+
+static void
+rl_handler(char *command)
+{
+    readline_done = true;
+    readline_command = command;
+    rl_callback_handler_remove();
+}
+
 #endif /*]*/
 
-    /* In case we got here because a command output, stop the pager. */
+static ioid_t c3270_input_id = NULL_IOID;
+
+/* Display the prompt. */
+static void
+display_prompt(void)
+{
+    stop_pager();
+#if defined(HAVE_LIBREADLINE) /*[*/
+    rl_callback_handler_install(prompt_string, &rl_handler);
+#else /*][*/
+    fputs(prompt_string, stdout);
+    fflush(stdout);
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+    dont_return = false;
+    signal(SIGTSTP, prompt_sigtstp_handler);
+#endif /*]*/
+}
+
+#if defined(_WIN32) /*[*/
+static void
+enable_input(enum imode mode)
+{
+    inthread.mode = mode;
+    SetEvent(inthread.enable_event);
+}
+#endif /*]*/
+
+/* We've got console input. */
+static void
+c3270_input(iosrc_t fd, ioid_t id)
+{
+#if !defined(HAVE_LIBREADLINE) && !defined(_WIN32) /*[*/
+    char inbuf[1024];
+#endif /*]*/
+    char *command;
+    char *s;
+    size_t sl;
+
+    /* Get the input. */
+#if !defined(_WIN32) /*[*/
+#if defined(HAVE_LIBREADLINE) /*[*/
+    rl_callback_read_char();
+    if (!readline_done) {
+	/* More to collect. */
+	return;
+    }
+    command = readline_command;
+    readline_done = false;
+#else /*][*/
+    command = fgets(inbuf, sizeof(inbuf), stdin);
+#endif /*]*/
+#else /*][*/
+    command = inthread.buf;
+#endif /*]*/
+
+    if (command == NULL) {
+	/* EOF */
+	exit(0);
+    }
+
+    s = command;
+    while (isspace((unsigned char)*s)) {
+	s++;
+    }
+    sl = strlen(s);
+    while (sl && isspace((unsigned char)s[sl - 1])) {
+	s[--sl] = '\0';
+    }
+
+    /* A null command means exit from the prompt. */
+    if (!sl) {
+	if (CONNECTED
+#if !defined(_WIN32) /*[*/
+		      && !dont_return
+#endif /*]*/
+		                     ) {
+	    /* Stop interacting. */
+	    RemoveInput(c3270_input_id);
+	    c3270_input_id = NULL_IOID;
+	    screen_resume();
+#if defined(_WIN32) /*[*/
+	    signal(SIGINT, SIG_DFL);
+#endif /*]*/
+	    goto done;
+	} else {
+	    /* Continue interacting. Display the prompt. */
+	    display_prompt();
+
+	    /* Wait for more input. */
+#if defined(_WIN32) /*[*/
+	    enable_input(LINE);
+#endif /*]*/
+	    goto done;
+	}
+    }
+
+#if defined(HAVE_LIBREADLINE) /*[*/
+    /* Save this command in the history buffer. */
+    add_history(s);
+#endif /*]*/
+
+    /* "?" is an alias for "Help". */
+    if (!strcmp(s, "?")) {
+	s = "Help";
+    }
+
+    /* No more input. */
+    RemoveInput(c3270_input_id);
+    c3270_input_id = NULL_IOID;
+
+    /* Run the command. */
+#if defined(_WIN32) /*[*/
+    get_console_size(&pager.rows, &pager.cols);
+#endif /*]*/
+    c3270_push_command(s);
+
+done:
+#if defined(HAVE_LIBREADLINE) /*[*/
+    Free(command);
+#endif /*]*/
+    s = s; /* to make the compiler happy */
+}
+
+#if defined(_WIN32) /*[*/
+/*
+ * stdin input thread
+ *
+ * Endlessly:
+ * - waits for inthread.enable_event
+ * - reads from stdin
+ * - leaves the input in inthread.buf and the length in inthread.nr
+ * - sets inthread.done_event
+ *
+ * If inthread.mode is KEY, waits for a 'q' or other key instead of a
+ * line of input, and leaves the result in inthread.buf.
+ * If there is a read error, leaves -1 in inthread.nr and a Windows error code
+ * in inthread.error.
+ */
+static DWORD WINAPI
+inthread_read(LPVOID lpParameter)
+{
+    for (;;) {
+	DWORD rv;
+
+	rv = WaitForSingleObject(inthread.enable_event, INFINITE);
+	switch (rv) {
+	case WAIT_ABANDONED:
+	case WAIT_TIMEOUT:
+	case WAIT_FAILED:
+	    inthread.nr = -1;
+	    inthread.error = GetLastError();
+	    SetEvent(inthread.done_event);
+	    break;
+	case WAIT_OBJECT_0:
+	    if (inthread.mode == KEY) {
+		if (screen_wait_for_key(NULL)) {
+		    inthread.buf[0] = 'q';
+		    inthread.nr = 1;
+		} else {
+		    inthread.nr = 0;
+		}
+		inthread.buf[inthread.nr] = '\0';
+	    } else {
+		inthread.nr = read(0, inthread.buf, sizeof(inthread.buf) - 1);
+		if (inthread.nr < 0) {
+		    inthread.error = GetLastError();
+		} else {
+		    inthread.buf[inthread.nr] = '\0';
+		}
+	    }
+	    SetEvent(inthread.done_event);
+	    break;
+	}
+    }
+    return 0;
+}
+#endif /*]*/
+
+static void
+interact(void)
+{
+    /* In case we got here because of a command output, stop the pager. */
     stop_pager();
 
-    /* Stop any pending scripts. */
-    abort_script();
-
-    vtrace("Interacting.\n");
+    /* In secure mode, we don't interact. */
     if (appres.secure) {
 	char s[10];
 
@@ -521,138 +732,24 @@ interact(void)
 	return;
     }
 
-#if !defined(_WIN32) /*[*/
-    /* Handle SIGTSTP differently at the prompt. */
-    signal(SIGTSTP, SIG_DFL);
-#endif /*]*/
+    /* Now we are interacting. */
+    vtrace("Interacting.\n");
 
-    /*
-     * Ignore SIGINT at the prompt.
-     * I'm sure there's more we could do.
-     */
-    signal(SIGINT, SIG_IGN);
-
-    for (;;) {
-	size_t sl;
-	char *s;
-#if defined(HAVE_LIBREADLINE) /*[*/
-	char *rl_s;
-#else /*][*/
-	char buf[1024];
-#endif /*]*/
-
-	dont_return = false;
-
-	/* Process a pending stop now. */
-	if (stop_pending) {
-	    stop_pending = false;
-#if !defined(_WIN32) /*[*/
-	    signal(SIGTSTP, SIG_DFL);
-	    kill(getpid(), SIGTSTP);
-#endif /*]*/
-	    continue;
-	}
-
-#if !defined(_WIN32) /*[*/
-	/* Process SIGTSTPs immediately. */
-	signal(SIGTSTP, prompt_sigtstp_handler);
-#endif /*]*/
-	/* Display the prompt. */
-	if (CONNECTED) {
-	    (void) printf("Press <Enter> to resume session.\n");
-	}
-#if defined(HAVE_LIBREADLINE) /*[*/
-	if (prompt_string == NULL) {
-	    prompt_string = xs_buffer("%s> ", app);
-	}
-	s = rl_s = readline(prompt_string);
-	if (s == NULL) {
-	    printf("\n");
-	    exit(0);
-	}
-#else /*][*/
-	(void) printf("%s>", app);
-	(void) fflush(stdout);
-
-	/* Get the command, and trim white space. */
-	if (fgets(buf, sizeof(buf), stdin) == NULL) {
-	    printf("\n");
-# if defined(_WIN32) /*[*/
-	    continue;
-# else /*][*/
-	    x3270_exit(0);
-# endif /*]*/
-	}
-	s = buf;
-#endif /*]*/
-#if !defined(_WIN32) /*[*/
-	/* Defer SIGTSTP until the next prompt display. */
-	signal(SIGTSTP, running_sigtstp_handler);
-#endif /*]*/
-
-#if defined(_WIN32) /*[*/
-	/* Get the current console size. */
-	get_console_size(&pager_rows, &pager_cols);
-#endif /*]*/
-
-	while (isspace((unsigned char)*s)) {
-	    s++;
-	}
-	sl = strlen(s);
-	while (sl && isspace((unsigned char)s[sl-1])) {
-	    s[--sl] = '\0';
-	}
-
-	/* A null command means go back. */
-	if (!sl) {
-	    if (CONNECTED && !dont_return) {
-		break;
-	    } else {
-		continue;
-	    }
-	}
-
-#if defined(HAVE_LIBREADLINE) /*[*/
-	/* Save this command in the history buffer. */
-	add_history(s);
-#endif /*]*/
-
-	/* "?" is an alias for "Help". */
-	if (!strcmp(s, "?")) {
-	    s = "Help";
-	}
-
-	/*
-	 * Process the command like a macro, and spin until it
-	 * completes.
-	 */
-	c3270_push_command(s);
-	while (!command_complete) {
-	    (void) process_events(true);
-	}
-
-	/* Close the pager. */
-	stop_pager();
-
-#if defined(HAVE_LIBREADLINE) /*[*/
-	/* Give back readline's buffer. */
-	free(rl_s);
-#endif /*]*/
-
-	/* If it succeeded, return to the session. */
-	if (!command_output && CONNECTED) {
-	    break;
-	}
+    if (CONNECTED) {
+	(void) printf("Press <Enter> to resume session.\n");
     }
 
-    /* Ignore SIGTSTP again. */
-    stop_pending = false;
+    /* Display the prompt. */
+    display_prompt();
+
+    /* Wait for input. */
 #if !defined(_WIN32) /*[*/
-    signal(SIGTSTP, SIG_IGN);
+    c3270_input_id = AddInput(0, c3270_input);
+#else /*][*/
+    c3270_input_id = AddInput(inthread.done_event, c3270_input);
+    enable_input(LINE);
 #endif /*]*/
-#if defined(_WIN32) /*[*/
-    signal(SIGINT, SIG_DFL);
-#endif /*]*/
+    signal(SIGINT, SIG_IGN);
 }
 
 /* A command is about to produce output.  Start the pager. */
@@ -694,6 +791,9 @@ start_pager(void)
     }
     return pager;
 #else /*][*/
+    pager.rowcnt = 0;
+    Replace(pager.residual, NULL);
+    pager.flushing = false;
     return stdout;
 #endif /*]*/
 }
@@ -702,6 +802,7 @@ start_pager(void)
 static void
 stop_pager(void)
 {
+    vtrace("stop pager\n");
 #if !defined(_WIN32) /*[*/
     if (pager != NULL) {
 	if (pager != stdout) {
@@ -710,35 +811,85 @@ stop_pager(void)
 	pager = NULL;
     }
 #else /*][*/
-    pager_rowcnt = 0;
-    pager_q = false;
+    pager.rowcnt = 0;
+    Replace(pager.residual, NULL);
+    pager.flushing = false;
 #endif /*]*/
 }
 
 #if defined(_WIN32) /*[*/
+/* A key was pressed while the pager prompt was up. */
+static void
+pager_key_done(iosrc_t fd, ioid_t id)
+{
+    char *p;
+
+    pager.flushing = inthread.buf[0] == 'q';
+    vtrace("Got pager key%s\n", pager.flushing? " (quit)": "");
+
+    /* No more key-mode input. */
+    RemoveInput(c3270_input_id);
+    inthread.mode = LINE;
+
+    /* Overwrite the prompt and reset. */
+    printf("\r%*s\r", (pager.nw > 0)? pager.nw: 79, "");
+    fflush(stdout);
+    pager.rowcnt = 0;
+    get_console_size(&pager.rows, &pager.cols);
+
+    if (pager.flushing && command_complete) {
+	/* Pressed 'q' and the command is complete. */
+
+	/* New prompt. */
+	display_prompt();
+	c3270_input_id = AddInput(inthread.done_event, c3270_input);
+	enable_input(LINE);
+	return;
+    }
+
+    /* Dump what's remaining, which might leave more output pager.residual. */
+    p = pager.residual;
+    pager.residual = NULL;
+    pager_output(p);
+    Free(p);
+
+    if (command_complete && pager.residual == NULL) {
+	/* Command no longer running, and no more pending otuput. */
+	display_prompt();
+	c3270_input_id = AddInput(inthread.done_event, c3270_input);
+	enable_input(LINE);
+    }
+}
+
+/* Write a line of output to the pager. */
 void
 pager_output(const char *s)
 {
-    if (pager_q) {
+    if (pager.flushing) {
+	/* They don't want to see any more. */
+	return;
+    }
+
+    if (pager.residual != NULL) {
+	/* Output is pending already. */
+	pager.residual = Realloc(pager.residual,
+		strlen(pager.residual) + strlen(s) + 2);
+	strcat(strcat(pager.residual, "\n"), s);
 	return;
     }
 
     do {
 	char *nl;
 	size_t sl;
-	int nw;
 
 	/* Pause for a screenful. */
-	if (pager_rowcnt >= (pager_rows - 1)) {
-	    nw = printf("Press any key to continue . . . ");
+	if (pager.rowcnt >= (pager.rows - 1)) {
+	    Replace(pager.residual, NewString(s));
+	    pager.nw = printf("Press any key to continue . . . ");
 	    fflush(stdout);
-	    pager_q = screen_wait_for_key(NULL);
-	    printf("\r%*s\r", (nw > 0)? nw: 79, "");
-	    pager_rowcnt = 0;
-	    get_console_size(&pager_rows, &pager_cols);
-	    if (pager_q) {
-		return;
-	    }
+	    c3270_input_id = AddInput(inthread.done_event, pager_key_done);
+	    enable_input(KEY);
+	    return;
 	}
 
 	/*
@@ -758,10 +909,10 @@ pager_output(const char *s)
 	}
 
 	/* Account for the newline. */
-	pager_rowcnt++;
+	pager.rowcnt++;
 
 	/* Account (conservatively) for any line wrap. */
-	pager_rowcnt += (int)(sl / pager_cols);
+	pager.rowcnt += (int)(sl / pager.cols);
 
     } while (s != NULL);
 }
@@ -1291,12 +1442,10 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (!appres.secure) {
+    if (!escaped && !appres.secure) {
 	host_cancel_reconnect();
 	screen_suspend();
-#if 0 /* this fix is in there for something, but I don't know what */
-	abort_script();
-#endif
+	interact();
     }
     return true;
 }
@@ -1389,7 +1538,7 @@ command_data(task_cbh handle, const char *buf, size_t len)
 }
 
 /**
- * Callback for completion of one command executed from a keymap.
+ * Callback for completion of one command executed from the prompt.
  *
  * @param[in] handle		Callback handle
  * @param[in] success		True if child succeeded
@@ -1403,6 +1552,47 @@ command_done(task_cbh handle, bool success, bool abort)
     if (handle != (tcb_t *)&command_cb) {
 	vtrace("command_data: no match\n");
 	return true;
+    }
+
+#if defined(_WIN32) /*[*/
+    if (inthread.mode == KEY) {
+	command_complete = true;
+	return true;
+    }
+#endif /*]*/
+
+    /* The command from the prompt completed. */
+    if (command_output || !CONNECTED) {
+	/* Command produced output, or we are not connected any more. */
+
+	/* Stop the pager. */
+	stop_pager();
+
+#if !defined(_WIN32) /*[*/
+	/* Process a pending stop. */
+	if (stop_pending) {
+	    stop_pending = false;
+	    signal(SIGTSTP, SIG_DFL);
+	    kill(getpid(), SIGTSTP);
+	}
+#endif /*]*/
+
+	/* Display the prompt. */
+	display_prompt();
+
+	/* Wait for more input. */
+#if !defined(_WIN32) /*[*/
+	c3270_input_id = AddInput(0, c3270_input);
+#else /*][*/
+	c3270_input_id = AddInput(inthread.done_event, c3270_input);
+	enable_input(LINE);
+#endif /*]*/
+    } else {
+	/* Exit interactive mode. */
+	screen_resume();
+#if defined(_WIN32) /*[*/
+	signal(SIGINT, SIG_DFL);
+#endif /*]*/
     }
 
     command_complete = true;
@@ -1419,6 +1609,11 @@ c3270_push_command(char *s)
 {
     command_complete = false;
     command_output = false;
+
+    /* Defer SIGTSTP until the command completes. */
+#if !defined(_WIN32) /*[*/
+    signal(SIGTSTP, running_sigtstp_handler);
+#endif /*]*/
 
     /* Push a callback with a macro. */
     push_cb(s, strlen(s), &command_cb, (task_cbh)&command_cb);

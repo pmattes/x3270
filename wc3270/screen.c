@@ -2658,6 +2658,9 @@ screen_system_fixup(void)
 void
 screen_resume(void)
 {
+    if (!escaped) {
+	return;
+    }
     escaped = false;
 
     screen_disp(false);
