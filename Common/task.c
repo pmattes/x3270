@@ -3418,22 +3418,27 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	char *name;
 	const char *(*fn)(void);
 	char *string;
+	bool hidden;
+	bool specific;
     } queries[] = {
-	{ "BindPluName", net_query_bind_plu_name, NULL },
-	{ "ConnectionState", net_query_connection_state, NULL },
-	{ "CodePage", get_host_codepage, NULL },
-	{ "Cursor", ctlr_query_cursor, NULL },
-	{ "Cursor1", ctlr_query_cursor1, NULL },
-	{ "CursorOffset", query_cursor_offset, NULL },
-	{ "Formatted", ctlr_query_formatted, NULL },
-	{ "Host", net_query_host, NULL },
-	{ "LocalEncoding", get_codeset, NULL },
-	{ "LuName", net_query_lu_name, NULL },
-	{ "Model", NULL, full_model_name },
-	{ "ScreenCurSize", ctlr_query_cur_size, NULL },
-	{ "ScreenMaxSize", ctlr_query_max_size, NULL },
-	{ "Ssl", net_query_ssl, NULL },
-	{ NULL, NULL }
+	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
+	{ "ConnectionState", net_query_connection_state, NULL, false, false },
+	{ "CodePage", get_host_codepage, NULL, false, false },
+	{ "Cursor", ctlr_query_cursor, NULL, false, false },
+	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },
+	{ "CursorOffset", query_cursor_offset, NULL, false, false },
+	{ "Formatted", ctlr_query_formatted, NULL, false, false },
+	{ "Host", net_query_host, NULL, false, false },
+	{ "LocalEncoding", get_codeset, NULL, false, false },
+	{ "LuName", net_query_lu_name, NULL, false, false },
+	{ "Model", NULL, full_model_name, false, false },
+	{ "ScreenCurSize", ctlr_query_cur_size, NULL, false, false },
+	{ "ScreenMaxSize", ctlr_query_max_size, NULL, false, false },
+	{ "Ssl", net_query_tls, NULL, true, false },
+	{ "Tls", net_query_tls, NULL, false, false },
+	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
+	{ "TlsSessionInfo", net_session_info, NULL, false, true },
+	{ NULL, NULL, false, false }
     };
     int i;
 
@@ -3445,8 +3450,18 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
     switch (argc) {
     case 0:
 	for (i = 0; queries[i].name != NULL; i++) {
-	    action_output("%s: %s", queries[i].name,
-		    queries[i].fn? (*queries[i].fn)(): queries[i].string);
+	    if (!queries[i].hidden) {
+		const char *s = (queries[i].fn? (*queries[i].fn)():
+			queries[i].string);
+
+		if (s == NULL) {
+		    s = "";
+		}
+		if (queries[i].specific && strcmp(s, "")) {
+		    s = "...";
+		}
+		action_output("%s: %s", queries[i].name, s);
+	    }
 	}
 	break;
     case 1:

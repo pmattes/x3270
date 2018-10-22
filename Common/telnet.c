@@ -3533,9 +3533,9 @@ net_query_host(void)
     }
 }
 
-/* Return the SSL state. */
+/* Return the TLS state. */
 const char *
-net_query_ssl(void)
+net_query_tls(void)
 {
     static char *not_secure = "not secure";
 

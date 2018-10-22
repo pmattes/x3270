@@ -66,7 +66,7 @@ const char *net_query_bind_plu_name(void);
 const char *net_query_connection_state(void);
 const char *net_query_host(void);
 const char *net_query_lu_name(void);
-const char *net_query_ssl(void);
+const char *net_query_tls(void);
 void net_sendc(char c);
 void net_sends(const char *s);
 bool net_snap_options(void);

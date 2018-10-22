@@ -70,7 +70,6 @@
 #include "sio_glue.h"
 #include "task.h"
 #include "telnet.h"
-#include "tls_action.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
@@ -147,7 +146,6 @@ main(int argc, char *argv[])
     trace_register();
     xio_register();
     sio_glue_register();
-    sio_register_actions();
     hio_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);

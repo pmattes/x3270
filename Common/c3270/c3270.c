@@ -84,7 +84,6 @@
 #include "task.h"
 #include "telnet.h"
 #include "telnet_gui.h"
-#include "tls_action.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utf8.h"
@@ -341,7 +340,6 @@ main(int argc, char *argv[])
     trace_register();
     xio_register();
     sio_glue_register();
-    sio_register_actions();
     hio_register();
 
 #if !defined(_WIN32) /*[*/

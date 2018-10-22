@@ -135,9 +135,6 @@
     <ClCompile Include="..\..\Common\sio_glue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\tls_action.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\run_action.c">
       <Filter>Source Files</Filter>
     </ClCompile>

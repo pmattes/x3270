@@ -294,7 +294,6 @@ Common/telnet.c
 Common/telnet_gui_stubs.c
 Common/telnet_new_environ.c
 Common/telnet_sio.c
-Common/tls_action.c
 Common/toggles.c
 Common/trace.c
 Common/trace_gui_stubs.c
@@ -406,7 +405,6 @@ include/telnet_gui.h
 include/telnet.h
 include/telnet_private.h
 include/telnet_sio.h
-include/tls_action.h
 include/tn3270e.h
 include/toggles.h
 include/trace_gui.h

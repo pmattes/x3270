@@ -74,7 +74,6 @@
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
-#include "tls_action.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
@@ -479,7 +478,6 @@ main(int argc, char *argv[])
     trace_register();
     x3270_register();
     xio_register();
-    sio_register_actions();
     hio_register();
     xkybd_register();
 
