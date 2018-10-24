@@ -217,6 +217,9 @@ main_exiting(bool ignored)
 {       
     if (escaped) {
 	stop_pager();
+#if defined(HAVE_LIBREADLINE) /*[*/
+	rl_callback_handler_remove();
+#endif /*]*/
     } else {
 	if (screen_suspend()) {
 	    screen_final();
@@ -538,6 +541,9 @@ rl_handler(char *command)
     readline_done = true;
     readline_command = command;
     rl_callback_handler_remove();
+
+    /* Apparently readline un-does this. */
+    signal(SIGINT, SIG_IGN);
 }
 
 #endif /*]*/
@@ -558,6 +564,7 @@ display_prompt(void)
 #if !defined(_WIN32) /*[*/
     dont_return = false;
     signal(SIGTSTP, prompt_sigtstp_handler);
+    signal(SIGINT, SIG_IGN);
 #endif /*]*/
 }
 
