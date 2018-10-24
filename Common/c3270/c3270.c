@@ -151,7 +151,6 @@ static bool command_output = false;
 
 #if !defined(_WIN32) /*[*/
 static bool stop_pending = false;
-static bool dont_return = false;
 #endif /*]*/
 static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
@@ -517,6 +516,12 @@ running_sigtstp_handler(int ignored _is_unused)
     stop_pending = true;
 }
 
+static void
+prompt_sigcont_handler(int ignored _is_unused)
+{
+    display_prompt();
+}
+
 /*
  * SIGTSTP haandler for use while the prompt is being displayed.
  * Acts immediately by setting SIGTSTP to the default and sending it to
@@ -526,10 +531,8 @@ running_sigtstp_handler(int ignored _is_unused)
 static void
 prompt_sigtstp_handler(int ignored _is_unused)
 {
-    if (CONNECTED) {
-	dont_return = true;
-    }
     signal(SIGTSTP, SIG_DFL);
+    signal(SIGCONT, prompt_sigcont_handler);
     kill(getpid(), SIGTSTP);
 }
 #endif /*]*/
@@ -557,6 +560,10 @@ static ioid_t c3270_input_id = NULL_IOID;
 static void
 display_prompt(void)
 {
+    if (CONNECTED) {
+	(void) printf("Press <Enter> to resume session.\n");
+    }
+
     stop_pager();
 #if defined(HAVE_LIBREADLINE) /*[*/
     rl_callback_handler_install(prompt_string, &rl_handler);
@@ -565,7 +572,6 @@ display_prompt(void)
     fflush(stdout);
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-    dont_return = false;
     signal(SIGTSTP, prompt_sigtstp_handler);
     signal(SIGINT, SIG_IGN);
 #endif /*]*/
@@ -626,11 +632,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 
     /* A null command means exit from the prompt. */
     if (!aux_input && !sl) {
-	if (CONNECTED
-#if !defined(_WIN32) /*[*/
-		      && !dont_return
-#endif /*]*/
-		                     ) {
+	if (CONNECTED) {
 	    /* Stop interacting. */
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
@@ -640,12 +642,6 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
 	    goto done;
 	} else {
-#if !defined(_WIN32) /*[*/
-	    if (CONNECTED && dont_return) {
-		(void) printf("Press <Enter> to resume session.\n");
-	    }
-#endif /*]*/
-
 	    /* Continue interacting. Display the prompt. */
 	    display_prompt();
 
@@ -773,10 +769,6 @@ interact(void)
 	c3270_push_command(escape_action);
 	Replace(escape_action, NULL);
 	return;
-    }
-
-    if (CONNECTED) {
-	(void) printf("Press <Enter> to resume session.\n");
     }
 
     /* Display the prompt. */
@@ -1637,6 +1629,7 @@ command_done(task_cbh handle, bool success, bool abort)
 	if (stop_pending) {
 	    stop_pending = false;
 	    signal(SIGTSTP, SIG_DFL);
+	    signal(SIGCONT, prompt_sigcont_handler);
 	    kill(getpid(), SIGTSTP);
 	}
 #endif /*]*/
@@ -1659,6 +1652,9 @@ command_done(task_cbh handle, bool success, bool abort)
 #endif /*]*/
     }
 
+#if !defined(_WIN32) /*[*/
+    stop_pending = false;
+#endif /*]*/
     command_complete = true;
     return true;
 }
