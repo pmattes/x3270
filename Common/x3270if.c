@@ -1241,13 +1241,15 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
 		    &ret);
 	} else {
-	    char *response = malloc(strlen(command) + 128);
+	    char *command_base64 = base64_encode(command);
+	    char *response = malloc(strlen(command_base64) + 128);
 
 	    if (response == NULL) {
 		fprintf(stderr, "Out of memory\n");
 		exit(__LINE__);
 	    }
-	    sprintf(response, "ResumeInput(%u,\"%s\")", token, command); /* XXX: quotes */
+	    sprintf(response, "ResumeInput(%u,%s)", token, command_base64);
+	    free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
 		    &ret);
 	    free(response);

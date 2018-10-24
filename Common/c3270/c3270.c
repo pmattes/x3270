@@ -669,7 +669,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (aux_input) {
 	aux_input = false;
-	c3270_push_command(lazyaf("ResumeInput(%u,\"%s\")", token, s)); /* XXX: quotes */
+	c3270_push_command(lazyaf("ResumeInput(%u,%s)",
+		    token, lazya(base64_encode(s))));
 	Replace(prompt_string, real_prompt_string);
     } else {
 	c3270_push_command(s);

@@ -3649,7 +3649,8 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 		(*ir->abort_fn)(ir->handle);
 		ret = true;
 	    } else {
-		ret = (*ir->continue_fn)(ir->handle, argv[1]);
+		ret = (*ir->continue_fn)(ir->handle,
+			lazya(base64_decode(argv[1])));
 	    }
 
 	    /* Forget about this request in the parent. */
