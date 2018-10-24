@@ -3626,6 +3626,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
     unsigned long seq;
     input_request_t *ir;
     bool abort = false;
+    task_t *redirect = task_redirect_to();
 
     action_debug("ResumeInput", ia, argc, argv);
     if (check_argc("ResumeInput", argc, 2, 2) < 0) {
@@ -3650,6 +3651,12 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 	    } else {
 		ret = (*ir->continue_fn)(ir->handle, argv[1]);
 	    }
+
+	    /* Forget about this request in the parent. */
+	    if (redirect != NULL && redirect->cbx.cb->ir != NULL) {
+		(*redirect->cbx.cb->ir)(redirect->cbx.handle, seq, true);
+	    }
+
 	    Free(ir);
 	    return ret;
 	}
@@ -3695,11 +3702,34 @@ request_input(const char *action, const char *prompt, continue_fn *continue_fn,
     ir->handle = handle;
     LLIST_APPEND(&ir->llist, input_requestq);
 
+    /* Tell the parent. */
+    if (redirect->cbx.cb->ir != NULL) {
+	(*redirect->cbx.cb->ir)(redirect->cbx.handle, seq, false);
+    }
+
     /* Tell them we want input. */
     action_output("Friendly first line");
     popup_an_error("[input] %u %s", seq, lazya(base64_encode(prompt)));
     seq++;
     return true;
+}
+
+/**
+ * Abort an input request, by sequene number.
+ */
+void
+task_abort_input_request(unsigned seq)
+{
+    input_request_t *ir;
+
+    FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
+	if (ir->seq == seq) {
+	    llist_unlink(&ir->llist);
+	    (*ir->abort_fn)(ir->handle);
+	    Free(ir);
+	}
+    } FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
+    vtrace("task_abort_input_request: no match for %u\n", seq);
 }
 
 /* Continue the RequestInput action. */

@@ -61,6 +61,7 @@ static bool child_run(task_cbh handle, bool *success);
 static void child_closescript(task_cbh handle);
 static void child_setflags(task_cbh handle, unsigned flags);
 static unsigned child_getflags(task_cbh handle);
+static void child_ir(task_cbh handle, unsigned seq, bool forget);
 
 /* Callback block for parent script. */
 static tcb_t script_cb = {
@@ -72,7 +73,8 @@ static tcb_t script_cb = {
     child_run,
     child_closescript,
     child_setflags,
-    child_getflags
+    child_getflags,
+    child_ir
 };
 
 /* Asynchronous callback block for parent script. */
@@ -85,7 +87,8 @@ static tcb_t async_script_cb = {
     child_run,
     child_closescript,
     child_setflags,
-    child_getflags
+    child_getflags,
+    child_ir
 };
 
 #if !defined(_WIN32) /*[*/
@@ -99,7 +102,8 @@ static tcb_t child_cb = {
     child_run,
     child_closescript,
     child_setflags,
-    child_getflags
+    child_getflags,
+    child_ir
 };
 #endif /*]*/
 
@@ -133,6 +137,8 @@ typedef struct {
     size_t output_buflen;	/* size of output buffer */
     bool keyboard_lock;		/* lock/unlock keyboard while running */
     unsigned capabilities;	/* self-reported capabilities */
+    bool ir_stored;		/* true if IR stored */
+    unsigned ir;		/* IR sequence number */
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
@@ -241,6 +247,11 @@ close_child(child_t *c)
     if (c->stdoutpipe != -1) {
 	close(c->stdoutpipe);
 	c->stdoutpipe = -1;
+    }
+
+    if (c->ir_stored) {
+	task_abort_input_request(c->ir);
+	c->ir_stored = false;
     }
 }
 
@@ -488,6 +499,11 @@ close_child(child_t *c)
 	c->listener = NULL;
     }
     cr_teardown(&c->cr);
+
+    if (c->ir_stored) {
+	task_abort_input_request(c->ir);
+	c->ir_stored = false;
+    }
 }
 
 /*
@@ -631,6 +647,26 @@ child_getflags(task_cbh handle)
     child_t *c = (child_t *)handle;
 
     return c->capabilities;
+}
+
+/**
+ * Input request operation.
+ *
+ * @param[in] handle	Child context
+ * @param[in] seq	Sequence number
+ * @param[in] forget	If true, forget; if false, store
+ */
+static void
+child_ir(task_cbh handle, unsigned seq, bool forget)
+{
+    child_t *c = (child_t *)handle;
+
+    if (forget) {
+	c->ir_stored = false;
+    } else {
+	c->ir = seq;
+	c->ir_stored = true;
+    }
 }
 
 #if !defined(_WIN32) /*[*/
