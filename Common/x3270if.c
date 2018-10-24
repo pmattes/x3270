@@ -1277,16 +1277,24 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		rc = 0;
 	    }
 #if !defined(_WIN32) /*[*/
-	    printf("\033[3%cm%s\033[39m\n",
-		    rc? '1': '2',
-		    ret);
+	    if (aux_input) {
+		printf("%s\n", ret);
+	    } else {
+		printf("\033[3%cm%s\033[39m\n",
+			rc? '1': '2',
+			ret);
+	    }
 # else /*][*/
-	    set_text_attribute(conout,
-		    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
-		    	 FOREGROUND_GREEN);
+	    if (!aux_input) {
+		set_text_attribute(conout,
+			rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
+			     FOREGROUND_GREEN);
+	    }
 	    fputs(ret, stdout);
 	    fflush(stdout);
-	    set_text_attribute(conout, info.wAttributes);
+	    if (!aux_input) {
+		set_text_attribute(conout, info.wAttributes);
+	    }
 	    fputc('\n', stdout);
 #endif /*]*/
 	    free(ret);
