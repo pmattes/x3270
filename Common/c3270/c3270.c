@@ -493,6 +493,9 @@ main(int argc, char *argv[])
 		!appres.interactive.reconnect &&
 		cl_hostname != NULL) {
 	    screen_suspend();
+	    if (was_connected) {
+		(void) printf("Disconnected.\n");
+	    }
 	    x3270_exit(0);
 	}
 
@@ -1467,7 +1470,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (tracefile_name != NULL) {
-	if (ia_cause == IA_COMMAND) {
+	if (task_is_interactive()) {
 	    action_output("Trace file is %s.", tracefile_name);
 	} else {
 	    popup_an_info("Trace file is %s.", tracefile_name);

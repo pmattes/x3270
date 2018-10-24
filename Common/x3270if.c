@@ -400,11 +400,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
     }
 
     if (cmd != NULL) {
-	cmd_nl = malloc(strlen(cmd) + 2);
-	if (cmd_nl == NULL) {
-	    fprintf(stderr, "Out of memory\n");
-	    exit(__LINE__);
-	}
+	cmd_nl = Malloc(strlen(cmd) + 2);
 	sprintf(cmd_nl, "%s\n", cmd);
 	wstr = cmd_nl;
     } else {
@@ -430,7 +426,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	exit(__LINE__);
     }
     if (cmd_nl != NULL) {
-	free(cmd_nl);
+	Free(cmd_nl);
     }
 
     if (ret != NULL) {
@@ -481,11 +477,7 @@ retry:
 		break;
 	    } else if (!strncmp(buf, "data: ", 6)) {
 		if (ret != NULL) {
-		    *ret = realloc(*ret, ret_sl + strlen(buf + 6) + 2);
-		    if (*ret == NULL) {
-			fprintf(stderr, "Out of memory\n");
-			exit(__LINE__);
-		    }
+		    *ret = Realloc(*ret, ret_sl + strlen(buf + 6) + 2);
 		    *(*ret + ret_sl) = '\0';
 		    strcat(strcat(*ret, buf + 6), "\n");
 		    ret_sl += strlen(buf + 6) + 1;
@@ -1030,11 +1022,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 
     prompt_len = strlen(LEFT) + strlen(emulator_name) + strlen(">") +
 	strlen(RIGHT) + strlen(" ") + 1;
-    real_prompt = prompt = malloc(prompt_len);
-    if (prompt == NULL) {
-	fprintf(stderr, "Out of memory\n");
-	exit(__LINE__);
-    }
+    real_prompt = prompt = Malloc(prompt_len);
     snprintf(prompt, prompt_len, LEFT "%s>" RIGHT " ", emulator_name);
 
 # if defined(HAVE_LIBREADLINE) /*[*/
@@ -1242,23 +1230,23 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		    &ret);
 	} else {
 	    char *command_base64 = base64_encode(command);
-	    char *response = malloc(strlen(command_base64) + 128);
+	    char *response = Malloc(strlen(command_base64) + 128);
 
 	    if (response == NULL) {
 		fprintf(stderr, "Out of memory\n");
 		exit(__LINE__);
 	    }
 	    sprintf(response, "ResumeInput(%u,%s)", token, command_base64);
-	    free(command_base64);
+	    Free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
 		    &ret);
-	    free(response);
-	    free(prompt);
+	    Free(response);
+	    Free(prompt);
 	    prompt = real_prompt;
 	    aux_input = false;
 	}
 # if defined(HAVE_LIBREADLINE) /*[*/
-	free(command);
+	Free(command);
 # endif /*]*/
 
 	if (ret != NULL) {
@@ -1269,7 +1257,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    }
 	    if (rc && is_input(ret, &token, &p)) {
 		if (!*ret) {
-		    free(ret);
+		    Free(ret);
 		    continue;
 		}
 		prompt = p;
@@ -1297,7 +1285,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    }
 	    fputc('\n', stdout);
 #endif /*]*/
-	    free(ret);
+	    Free(ret);
 	    fflush(stdout);
 	}
 
@@ -1312,6 +1300,18 @@ void *
 Malloc(size_t size)
 {
     void *r = malloc(size);
+
+    if (r == NULL) {
+	fprintf(stderr, "Out of memory");
+	exit(1);
+    }
+    return r;
+}
+
+void *
+Realloc(void *buf, size_t size)
+{
+    void *r = realloc(buf, size);
 
     if (r == NULL) {
 	fprintf(stderr, "Out of memory");

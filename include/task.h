@@ -65,6 +65,7 @@ bool task_redirect(void);
 const char *task_set_passthru(task_cbh **ret_cbh);
 void task_store(unsigned char c);
 void task_abort_input_request(unsigned seq);
+bool task_is_interactive(void);
 
 typedef void (*task_data_cb)(task_cbh handle, const char *buf, size_t len,
 	bool success);

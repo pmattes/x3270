@@ -3668,6 +3668,22 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /**
+ * Test the current task for interactivity.
+ *
+ * @returns true if interactive.
+ */
+bool
+task_is_interactive(void)
+{
+    task_t *redirect = task_redirect_to();
+
+    return redirect != NULL &&
+	   redirect->cbx.cb->getflags != NULL &&
+	   ((*redirect->cbx.cb->getflags)(redirect->cbx.handle) &
+		CBF_INTERACTIVE) != 0;
+}
+
+/**
  * Request input.
  *
  * @param[in] action		Action name
