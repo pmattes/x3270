@@ -63,7 +63,8 @@
 # define WSA_FLAG_NO_HANDLE_INHERIT 0x80
 #endif /*]*/
 
-static void peer_data(task_cbh handle, const char *buf, size_t len);
+static void peer_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool peer_done(task_cbh handle, bool success, bool abort);
 static void peer_closescript(task_cbh handle);
 
@@ -262,9 +263,10 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] success	True if data, false if error message
  */
 static void
-peer_data(task_cbh handle, const char *buf, size_t len)
+peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf("data: %.*s\n", (int)len, buf);

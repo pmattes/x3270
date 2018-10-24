@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,8 @@
 #include "w3misc.h"
 #include "xio.h"
 
-static void action_data(task_cbh handle, const char *buf, size_t len);
+static void action_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool action_done(task_cbh handle, bool success, bool abort);
 
 /* Action context. */
@@ -74,9 +75,10 @@ static llist_t action_cbs = LLIST_INIT(action_cbs);
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] success	True if data, false if error message
  */
 static void
-action_data(task_cbh handle, const char *buf, size_t len)
+action_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     action_context_t *k;
     bool found = false;

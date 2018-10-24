@@ -50,7 +50,8 @@ static char *alphabet64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
  *
  * Returns a malloc'd buffer.
  */
-char *base64_encode(const char *s)
+char *
+base64_encode(const char *s)
 {
     /*
      * We need one output character for every 6 bits of input, plus up to two
@@ -114,7 +115,8 @@ char *base64_encode(const char *s)
  *
  * Returns a malloc'd buffer.
  */
-char *base64_decode(const char *s)
+char *
+base64_decode(const char *s)
 {
     /* Do a little overkill on the decode buffer. */
     char *ret = Malloc(strlen(s) + 1);

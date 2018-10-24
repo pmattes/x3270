@@ -66,6 +66,7 @@
 # endif /*]*/
 #endif /*]*/
 
+#include "base64.h"
 #include "w3misc.h"
 
 #define IBS	4096
@@ -82,6 +83,8 @@
 #define OPTS	"H:iI:p:s:St:v"
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
+
+#define INPUT "[input] "
 
 static char *me;
 static int verbose = 0;
@@ -946,13 +949,51 @@ set_text_attribute(HANDLE out, WORD attributes)
 }
 #endif /*[*/
 
+/*
+ * Test a return buffer for the [input] tag on the last line,
+ * removing the last line if found.
+ */
+static bool
+is_input(char *s, unsigned *token, char **prompt)
+{
+    char *nl;
+    char *next;
+
+    /* Find the last line. */
+    nl = strrchr(s, '\n');
+    if (nl == NULL && !*s) {
+	return false;
+    }
+
+    /* See if the last line starts with the token. */
+    if (strncmp((nl? (nl + 1): s), INPUT, strlen(INPUT))) {
+	return false;
+    }
+
+    /* Remove the last line. */
+    if (nl) {
+	*nl = '\0';
+    } else {
+	*s = '\0';
+    }
+
+    /* Parse the other parts. */
+    *token = (unsigned)strtoul((nl? (nl + 1): s) + strlen(INPUT), &next, 10);
+    *prompt = base64_decode(next + 1);
+
+    return true;
+}
+
 static void
 interactive_io(int port, const char *emulator_name, const char *help_name)
 {
-    char *prompt;
+    char *prompt, *real_prompt;
     socket_t s = INVALID_SOCKET;
     int infd = -1, outfd = -1;
     size_t prompt_len;
+    char *ret;
+    unsigned token = 0;
+    bool aux_input = false;
 #if defined(_WIN32) /*[*/
     HANDLE conout;
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -982,9 +1023,14 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 # define RIGHT	""
 #endif /*]*/
 
+    /* Announce our capabilities. */
+    ret = NULL;
+    single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(Interactive)",
+	    &ret);
+
     prompt_len = strlen(LEFT) + strlen(emulator_name) + strlen(">") +
 	strlen(RIGHT) + strlen(" ") + 1;
-    prompt = malloc(prompt_len);
+    real_prompt = prompt = malloc(prompt_len);
     if (prompt == NULL) {
 	fprintf(stderr, "Out of memory\n");
 	exit(__LINE__);
@@ -1069,7 +1115,6 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	char *command;
 	int rc;
 	char *nl;
-	char *ret = NULL;
 	size_t sl;
 	bool done = false;
 #if !defined(_WIN32) /*[*/
@@ -1090,10 +1135,14 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	fflush(stdout);
 # endif /*]*/
 #else /*][*/
-	set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	if (!aux_input) {
+	    set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	}
 	fputs(prompt, stdout);
 	fflush(stdout);
-	set_text_attribute(conout, info.wAttributes);
+	if (!aux_input) {
+	    set_text_attribute(conout, info.wAttributes);
+	}
 
 	/* Enable console input. */
 	SetEvent(stdin_enable_event);
@@ -1112,6 +1161,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    if (FD_ISSET(mfd, &rfds)) {
 		/* Pipe input (EOF). */
 		done = true;
+		break;
 	    }
 	    if (FD_ISSET(0, &rfds)) {
 		/* Keyboard input. */
@@ -1181,20 +1231,48 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    done = true;
 	}
 # if defined(HAVE_LIBREADLINE) /*[*/
-	if (command[0]) {
+	if (!aux_input && command[0]) {
 	    add_history(command);
 	}
 # endif /*]*/
 
-	rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
-		&ret);
+	ret = NULL;
+	if (!aux_input) {
+	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
+		    &ret);
+	} else {
+	    char *response = malloc(strlen(command) + 128);
+
+	    if (response == NULL) {
+		fprintf(stderr, "Out of memory\n");
+		exit(__LINE__);
+	    }
+	    sprintf(response, "ResumeInput(%u,\"%s\")", token, command); /* XXX: quotes */
+	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
+		    &ret);
+	    free(response);
+	    free(prompt);
+	    prompt = real_prompt;
+	    aux_input = false;
+	}
 # if defined(HAVE_LIBREADLINE) /*[*/
 	free(command);
 # endif /*]*/
 
 	if (ret != NULL) {
+	    char *p;
+
 	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
 		ret[sl - 1] = '\0';
+	    }
+	    if (rc && is_input(ret, &token, &p)) {
+		if (!*ret) {
+		    free(ret);
+		    continue;
+		}
+		prompt = p;
+		aux_input = true;
+		rc = 0;
 	    }
 #if !defined(_WIN32) /*[*/
 	    printf("\033[3%cm%s\033[39m\n",
@@ -1217,4 +1295,23 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    exit(0);
 	}
     }
+}
+
+/* Auxiliary functions used by base64. */
+void *
+Malloc(size_t size)
+{
+    void *r = malloc(size);
+
+    if (r == NULL) {
+	fprintf(stderr, "Out of memory");
+	exit(1);
+    }
+    return r;
+}
+
+void
+Free(void *buf)
+{
+    free(buf);
 }

@@ -49,7 +49,8 @@
 static const char hex_digits[] = "0123456789abcdefABCDEF";
 
 static bool string_run(task_cbh handle, bool *success);
-static void string_child_data(task_cbh handle, const char *buf, size_t len);
+static void string_child_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool string_child_done(task_cbh handle, bool success, bool abort);
 
 /* Leaf callback block for String. */
@@ -174,9 +175,10 @@ clean_up:
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] success	True if data, false if error message
  */
 static void
-string_child_data(task_cbh handle, const char *buf, size_t len)
+string_child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     string_t *s = (string_t *)handle;
     char *b = Malloc(len + 1);

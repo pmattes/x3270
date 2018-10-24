@@ -73,8 +73,8 @@ mkfb: mkfb.c
 
 s3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
-x3270if: x3270if.o
-	$(CC) -o $@ $(LDFLAGS) -I../include x3270if.o $(LIBS)
+x3270if: x3270if.o base64.o
+	$(CC) -o $@ $(LDFLAGS) -I../include x3270if.o base64.o $(LIBS)
 
 man:: s3270.man
 	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi

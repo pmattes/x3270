@@ -155,6 +155,7 @@ ft_gui_aborting(void)
 ft_gui_interact_t 
 ft_gui_interact(ft_conf_t *p)
 {   
+#if 0
     if (!escaped) {
 	return FGI_NOP;
     }
@@ -166,6 +167,20 @@ ft_gui_interact(ft_conf_t *p)
     }
     p->is_interactive = true;
     return FGI_SUCCESS;
+#endif
+    /*
+     * Allocate a file transfer context. This will display the initial
+     * message and return the prompt (or it might fail).
+     *
+     * Allocate an input token, registering the context.
+     *
+     * Indicate inline that input is wanted.
+     *
+     * XXX: Need to way to make sure that this is being called in the
+     * context of a prompt. Likely ia == IA_COMMAND.
+     */
+    popup_an_error("[redirect] c3ftcmd");
+    return FGI_ABORT;
 }
 
 #if !defined(_WIN32) /*[*/

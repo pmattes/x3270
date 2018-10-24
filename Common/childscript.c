@@ -54,10 +54,13 @@
 
 #define CHILD_BUF 1024
 
-static void child_data(task_cbh handle, const char *buf, size_t len);
+static void child_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool child_done(task_cbh handle, bool success, bool abort);
 static bool child_run(task_cbh handle, bool *success);
 static void child_closescript(task_cbh handle);
+static void child_setflags(task_cbh handle, unsigned flags);
+static unsigned child_getflags(task_cbh handle);
 
 /* Callback block for parent script. */
 static tcb_t script_cb = {
@@ -67,7 +70,9 @@ static tcb_t script_cb = {
     child_data,
     child_done,
     child_run,
-    child_closescript
+    child_closescript,
+    child_setflags,
+    child_getflags
 };
 
 /* Asynchronous callback block for parent script. */
@@ -78,7 +83,9 @@ static tcb_t async_script_cb = {
     child_data,
     child_done,
     child_run,
-    child_closescript
+    child_closescript,
+    child_setflags,
+    child_getflags
 };
 
 #if !defined(_WIN32) /*[*/
@@ -90,7 +97,9 @@ static tcb_t child_cb = {
     child_data,
     child_done,
     child_run,
-    child_closescript
+    child_closescript,
+    child_setflags,
+    child_getflags
 };
 #endif /*]*/
 
@@ -123,6 +132,7 @@ typedef struct {
     char *output_buf;		/* output buffer */
     size_t output_buflen;	/* size of output buffer */
     bool keyboard_lock;		/* lock/unlock keyboard while running */
+    unsigned capabilities;	/* self-reported capabilities */
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
@@ -353,9 +363,10 @@ child_stdout(iosrc_t fd _is_unused, ioid_t id)
  * @param[in] handle    Callback handle
  * @param[in] buf       Buffer
  * @param[in] len       Buffer length
+ * @param[in] success   True if data, false if error message
  */
 static void
-child_data(task_cbh handle, const char *buf, size_t len)
+child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
@@ -594,6 +605,34 @@ child_closescript(task_cbh handle)
     c->enabled = false;
 }
 
+/**
+ * Set capabilities flags.
+ *
+ * @param[in] handle	Child context
+ * @param[in] flags	Flags
+ */
+static void
+child_setflags(task_cbh handle, unsigned flags)
+{
+    child_t *c = (child_t *)handle;
+
+    c->capabilities = flags;
+}
+
+/**
+ * Get capabilities flags.
+ *
+ * @param[in] handle	Child context
+ * @returns flags
+ */
+static unsigned
+child_getflags(task_cbh handle)
+{
+    child_t *c = (child_t *)handle;
+
+    return c->capabilities;
+}
+
 #if !defined(_WIN32) /*[*/
 static void
 child_exited(ioid_t id, int status)
@@ -817,6 +856,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     char *name;
     bool async = false;
     bool keyboard_lock = true;
+    bool stdout_redirect = true;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2];
@@ -854,6 +894,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 	    mode = PLM_SINGLE;
 #endif /*]*/
+	    argc--;
+	    argv++;
+	} else if (!strcasecmp(argv[0], "-NoStdoutRedirect")) {
+	    stdout_redirect = false;
 	    argc--;
 	    argv++;
 	} else {
@@ -913,7 +957,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	(void) close(stdoutpipe[0]);
 
 	/* Redirect output. */
-	(void) dup2(stdoutpipe[1], 1);
+	if (stdout_redirect) {
+	    (void) dup2(stdoutpipe[1], 1);
+	}
 	(void) dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
@@ -987,7 +1033,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Start the child process. */
     (void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
     startupinfo.cb = sizeof(STARTUPINFO);
-    startupinfo.hStdOutput = cr->pipe_wr_handle;
+    if (stdout_redirect) {
+	startupinfo.hStdOutput = cr->pipe_wr_handle;
+    }
     startupinfo.hStdError = cr->pipe_wr_handle;
     startupinfo.dwFlags |= STARTF_USESTDHANDLES;
     (void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
@@ -1005,8 +1053,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	Free(args);
 	args = t;
     }
-    if (CreateProcess(NULL, args, NULL, NULL, TRUE, DETACHED_PROCESS, NULL,
-		NULL, &startupinfo, &process_information) == 0) {
+    if (CreateProcess(NULL, args, NULL, NULL, TRUE,
+		stdout_redirect? DETACHED_PROCESS: 0,
+		NULL, NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));
 	peer_shutdown(listener);

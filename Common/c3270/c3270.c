@@ -48,6 +48,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "base64.h"
 #include "bind-opt.h"
 #include "charset.h"
 #include "ckeypad.h"
@@ -106,6 +107,8 @@
 #include "winvers.h"
 #endif /*]*/
 
+#define INPUT	"[input] "
+
 #if defined(_WIN32) /*[*/
 # define DELENV		"WC3DEL"
 #endif /*]*/
@@ -151,6 +154,11 @@ static bool stop_pending = false;
 static bool dont_return = false;
 #endif /*]*/
 static char *prompt_string = NULL;
+static char *real_prompt_string = NULL;
+static char *escape_action = NULL;
+
+static unsigned token;
+static bool aux_input = false;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -304,7 +312,7 @@ main(int argc, char *argv[])
     }
 #endif /*]*/
 
-    prompt_string = xs_buffer("%s> ", app);
+    real_prompt_string = prompt_string = xs_buffer("%s> ", app);
 
 #if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
     /* Explicitly turn off DBCS if wide curses is not supported. */
@@ -596,16 +604,18 @@ c3270_input(iosrc_t fd, ioid_t id)
     }
 
     s = command;
-    while (isspace((unsigned char)*s)) {
-	s++;
-    }
-    sl = strlen(s);
-    while (sl && isspace((unsigned char)s[sl - 1])) {
-	s[--sl] = '\0';
+    if (!aux_input) {
+	while (isspace((unsigned char)*s)) {
+	    s++;
+	}
+	sl = strlen(s);
+	while (sl && isspace((unsigned char)s[sl - 1])) {
+	    s[--sl] = '\0';
+	}
     }
 
     /* A null command means exit from the prompt. */
-    if (!sl) {
+    if (!aux_input && !sl) {
 	if (CONNECTED
 #if !defined(_WIN32) /*[*/
 		      && !dont_return
@@ -639,11 +649,13 @@ c3270_input(iosrc_t fd, ioid_t id)
 
 #if defined(HAVE_LIBREADLINE) /*[*/
     /* Save this command in the history buffer. */
-    add_history(s);
+    if (!aux_input) {
+	add_history(s);
+    }
 #endif /*]*/
 
     /* "?" is an alias for "Help". */
-    if (!strcmp(s, "?")) {
+    if (!aux_input && !strcmp(s, "?")) {
 	s = "Help";
     }
 
@@ -655,7 +667,13 @@ c3270_input(iosrc_t fd, ioid_t id)
 #if defined(_WIN32) /*[*/
     get_console_size(&pager.rows, &pager.cols);
 #endif /*]*/
-    c3270_push_command(s);
+    if (aux_input) {
+	aux_input = false;
+	c3270_push_command(lazyaf("ResumeInput(%u,\"%s\")", token, s)); /* XXX: quotes */
+	Replace(prompt_string, real_prompt_string);
+    } else {
+	c3270_push_command(s);
+    }
 
 done:
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -739,6 +757,12 @@ interact(void)
 
     /* Now we are interacting. */
     vtrace("Interacting.\n");
+
+    if (escape_action != NULL) {
+	c3270_push_command(escape_action);
+	Replace(escape_action, NULL);
+	return;
+    }
 
     if (CONNECTED) {
 	(void) printf("Press <Enter> to resume session.\n");
@@ -1031,6 +1055,9 @@ attempted_completion(const char *text, int start, int end)
     /* Search for matches. */
     match_count = 0;
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (e->t.flags & ACTION_HIDDEN) {
+	    continue;
+	}
 	if (!strncasecmp(e->t.name, s, strlen(s))) {
 	    match_count++;
 	}
@@ -1043,6 +1070,9 @@ attempted_completion(const char *text, int start, int end)
     next_match = matches = Malloc((match_count + 1) * sizeof(char **));
     j = 0;
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (e->t.flags & ACTION_HIDDEN) {
+	    continue;
+	}
 	if (!strncasecmp(e->t.name, s, strlen(s))) {
 	    matches[j++] = NewString(e->t.name);
 	}
@@ -1443,11 +1473,14 @@ static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Escape", ia, argc, argv);
-    if (check_argc("Escape", argc, 0, 0) < 0) {
+    if (check_argc("Escape", argc, 0, 1) < 0) {
 	return false;
     }
 
     if (!escaped && !appres.secure) {
+	if (argc > 0) {
+	    escape_action = NewString(argv[0]);
+	}
 	host_cancel_reconnect();
 	screen_suspend();
 	interact();
@@ -1511,8 +1544,10 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Command-prompt action support. */
-static void command_data(task_cbh handle, const char *buf, size_t len);
+static void command_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool command_done(task_cbh handle, bool success, bool abort);
+static unsigned command_getflags(task_cbh handle);
 
 /* Callback block for actions. */
 static tcb_t command_cb = {
@@ -1521,7 +1556,10 @@ static tcb_t command_cb = {
     CB_NEW_TASKQ,
     command_data,
     command_done,
-    NULL
+    NULL,
+    NULL,
+    NULL,
+    command_getflags
 };
 
 /**
@@ -1530,16 +1568,26 @@ static tcb_t command_cb = {
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] data	True if data, false if error message
  */
 static void
-command_data(task_cbh handle, const char *buf, size_t len)
+command_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     if (handle != (tcb_t *)&command_cb) {
 	vtrace("command_data: no match\n");
 	return;
     }
 
-    glue_gui_output(lazyaf("%.*s", (int)len, buf));
+    if (!success && !strncmp(buf, INPUT, strlen(INPUT))) {
+	char *rest;
+	u_long u = strtoul(buf + strlen(INPUT), &rest, 10);
+
+	token = (unsigned)u;
+	prompt_string = base64_decode(rest + 1);
+	aux_input = true;
+    } else {
+	glue_gui_output(lazyaf("%.*s", (int)len, buf));
+    }
 }
 
 /**
@@ -1602,6 +1650,12 @@ command_done(task_cbh handle, bool success, bool abort)
 
     command_complete = true;
     return true;
+}
+
+static unsigned
+command_getflags(task_cbh handle)
+{
+    return CBF_INTERACTIVE;
 }
 
 /**

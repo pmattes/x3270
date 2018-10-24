@@ -424,9 +424,10 @@ hio_send(void *mhandle, const char *buf, size_t len)
  * @param[in] handle	handle
  * @param[in] buf	buffer
  * @param[in] len	size of buffer
+ * @param[in] success	true if data, false if error message
  */
 static void
-hio_data(task_cbh handle, const char *buf, size_t len)
+hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     session_t *s = handle;
 

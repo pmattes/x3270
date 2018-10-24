@@ -53,6 +53,7 @@
 #include "toggles.h"
 
 #include "actions.h"
+#include "base64.h"
 #include "bind-opt.h"
 #include "charset.h"
 #include "child.h"
@@ -233,6 +234,18 @@ static bool expect_matches(task_t *task);
     (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 
+/* An input request. */
+typedef bool continue_fn(void *, const char *);
+typedef void abort_fn(void *);
+typedef struct {
+    llist_t llist;		/* linkage */
+    unsigned seq;		/* sequence number */
+    continue_fn *continue_fn;	/* continue function */
+    abort_fn *abort_fn;		/* abort function */
+    void *handle;		/* to pass to continue function */
+} input_request_t;
+static llist_t input_requestq = LLIST_INIT(input_requestq);
+
 static action_t Abort_action;
 static action_t AnsiText_action;
 static action_t Ascii_action;
@@ -251,6 +264,9 @@ static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
 static action_t Tasks_action;
+static action_t Capabilities_action;
+static action_t ResumeInput_action;
+static action_t RequestInput_action;
 
 static action_t Bell_action;
 static action_t Printer_action;
@@ -360,6 +376,7 @@ task_register(void)
 	{ "Ascii1",		Ascii1_action, 0 },
 	{ "AsciiField",		AsciiField_action, 0 },
 	{ "Bell",		Bell_action, 0 },
+	{ "Capabilities",	Capabilities_action, ACTION_HIDDEN },
 	{ "CloseScript",	CloseScript_action, 0 },
 	{ "Ebcdic",		Ebcdic_action, 0 },
 	{ "Ebcdic1",		Ebcdic1_action, 0 },
@@ -370,6 +387,8 @@ task_register(void)
 	{ "Macro",		Macro_action, ACTION_KE },
 	{ "Query",		Query_action, 0 },
 	{ "ReadBuffer",		ReadBuffer_action, 0 },
+	{ "ResumeInput",	ResumeInput_action, ACTION_HIDDEN },
+	{ "RequestInput",	RequestInput_action, ACTION_HIDDEN },
 	{ "Script",		Script_action, ACTION_KE },
 	{ "Snap",		Snap_action, 0 },
 	{ "Source",		Source_action, ACTION_KE },
@@ -1375,7 +1394,7 @@ macro_command(struct macro_def *m)
 
 /* Pass result text up to a script. */
 static void
-task_result(task_t *s, const char *msg)
+task_result(task_t *s, const char *msg, bool success)
 {
     size_t sl = strlen(msg);
     char *text = NewString(msg);
@@ -1397,7 +1416,7 @@ task_result(task_t *s, const char *msg)
 	sl--;
     }
     trace_task_output(s, "%.*s\n", (int)sl, text);
-    (*s->cbx.cb->data)(s->cbx.handle, text, sl);
+    (*s->cbx.cb->data)(s->cbx.handle, text, sl, success);
 
     Free(text);
 }
@@ -1411,7 +1430,7 @@ task_error(const char *msg)
     /* Print the error message. */
     s = task_redirect_to();
     if (s != NULL) {
-	task_result(s, msg);
+	task_result(s, msg, false);
 	s->success = false;
 	current_task->success = false;
     } else {
@@ -1453,7 +1472,7 @@ task_info(const char *fmt, ...)
 	    if ((s = task_redirect_to()) != NULL) {
 		assert(s->type == ST_CB);
 		trace_task_output(current_task, "%.*s\n", nc, msg);
-		(*s->cbx.cb->data)(s->cbx.handle, msg, nc);
+		(*s->cbx.cb->data)(s->cbx.handle, msg, nc, true);
 	    } else {
 		(void) fprintf(stderr, "%.*s\n", (int)nc, msg);
 	    }
@@ -1477,7 +1496,7 @@ task_disconnect_abort(task_t *s)
     assert(s->type == ST_MACRO);
     assert(s->next != NULL);
     assert(s->next->type == ST_CB);
-    task_result(s->next, "Host disconnected");
+    task_result(s->next, "Host disconnected", false);
     s->success = false;
     task_pop();
 }
@@ -3363,7 +3382,7 @@ abort_script(void)
 	    /* Abort the cb. */
 	    if (s->type == ST_CB) {
 		vtrace("Aborting " TASK_NAME_FMT "\n", TASK_sNAME(s));
-		task_result(s, "Aborted");
+		task_result(s, "Aborted", false);
 		(*s->cbx.cb->done)(s->cbx.handle, true, true);
 	    }
 
@@ -3536,6 +3555,187 @@ Tasks_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Capabilities action, sets flags in the current CB. */
+static bool
+Capabilities_action(ia_t ia, unsigned argc, const char **argv)
+{
+    unsigned i;
+    int j;
+    task_t *redirect;
+    unsigned flags = 0;
+    static struct {
+	unsigned flag;
+	const char *name;
+    } fname[] = {
+	{ CBF_INTERACTIVE, "Interactive" },
+	{ 0, NULL }
+    };
+
+    action_debug("Capabilities", ia, argc, argv);
+
+    redirect = task_redirect_to();
+
+    if (argc == 0) {
+	if (redirect == NULL || redirect->cbx.cb->getflags == NULL) {
+	    return true;
+	}
+
+	flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle);
+	for (j = 0; fname[j].name != NULL; j++) {
+	    if (flags & fname[j].flag) {
+		action_output("%s", fname[j].name);
+	    }
+	}
+	return true;
+    }
+
+    if (redirect == NULL || redirect->cbx.cb->setflags == NULL) {
+	popup_an_error("Capabilities: cannot set on this task type");
+	return false;
+    }
+
+    for (i = 0; i < argc; i++) {
+	for (j = 0; fname[j].name != NULL; j++) {
+	    if (!strcasecmp(argv[i], fname[j].name)) {
+		flags |= fname[i].flag;
+		break;
+	    }
+	}
+	if (fname[j].name == NULL) {
+	    popup_an_error("Capabilities: Unknown flag '%s'", argv[i]);
+	    return false;
+	}
+    }
+
+    if (flags) {
+	(*redirect->cbx.cb->setflags)(redirect->cbx.handle, flags);
+    }
+
+    return true;
+}
+
+/*
+ * ResumeInput action, resumes an action-suspended action.
+ *
+ * ResumeInput(token,text)
+ * ResumeInput(-Abort,token)
+ */
+static bool
+ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
+{
+    unsigned long seq;
+    input_request_t *ir;
+    bool abort = false;
+
+    action_debug("ResumeInput", ia, argc, argv);
+    if (check_argc("ResumeInput", argc, 2, 2) < 0) {
+	return false;
+    }
+
+    if (!strcasecmp(argv[0], "Abort")) {
+	abort = true;
+	seq = strtoul(argv[1], NULL, 10);
+    } else {
+	seq = strtoul(argv[0], NULL, 10);
+    }
+
+    FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
+	if (ir->seq == seq) {
+	    bool ret;
+
+	    llist_unlink(&ir->llist);
+	    if (abort) {
+		(*ir->abort_fn)(ir->handle);
+		ret = true;
+	    } else {
+		ret = (*ir->continue_fn)(ir->handle, argv[1]);
+	    }
+	    Free(ir);
+	    return ret;
+	}
+    } FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
+
+    popup_an_error("ResumeInput: no match");
+    return false;
+}
+
+/**
+ * Request input.
+ *
+ * @param[in] action		Action name
+ * @param[in] prompt		Prompt string
+ * @param[in] continue_fn	Continue function
+ * @param[in] handle		Handle to pass to continue functon
+ *
+ * @returns true if input requested successfully
+ */
+bool
+request_input(const char *action, const char *prompt, continue_fn *continue_fn,
+	abort_fn *abort_fn, void *handle)
+{
+    task_t *redirect = task_redirect_to();
+    unsigned flags;
+    static unsigned seq = 0;
+    input_request_t *ir;
+
+    if (redirect == NULL ||
+	    redirect->cbx.cb->getflags == NULL ||
+	    (!(flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
+	     CBF_INTERACTIVE)) {
+	popup_an_error("%s: not an interactive session", action);
+	return false;
+    }
+
+    /* Track this request. */
+    ir = (input_request_t *)Malloc(sizeof(input_request_t));
+    llist_init(&ir->llist);
+    ir->seq = seq;
+    ir->continue_fn = continue_fn;
+    ir->abort_fn = abort_fn;
+    ir->handle = handle;
+    LLIST_APPEND(&ir->llist, input_requestq);
+
+    /* Tell them we want input. */
+    action_output("Friendly first line");
+    popup_an_error("[input] %u %s", seq, lazya(base64_encode(prompt)));
+    seq++;
+    return true;
+}
+
+/* Continue the RequestInput action. */
+static bool
+continue_input(void *handle, const char *text)
+{
+    vtrace("Continuing RequestInput\n");
+    action_output("You said '%s'", text);
+    return true;
+}
+
+/* Abort the RequestInput action. */
+static void
+abort_input(void *handle)
+{
+    vtrace("Aborting RequestInput\n");
+}
+
+/*
+ * RequestInput action, dummy test of interactive input.
+ *
+ * RequestInput()
+ */
+static bool
+RequestInput_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("RequestInput", ia, argc, argv);
+    if (check_argc("RequestInput", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    (void) request_input("RequestInput", "Input: ", continue_input,
+	    abort_input, NULL);
+    return false;
+}
+
 /**
  * Indicate whether an input field can proceed.
  *
@@ -3608,7 +3808,7 @@ task_passthru_done(const char *tag, bool success, const char *result)
 		s->success = success;
 		if (result && s->next != NULL && s->next->type == ST_CB) {
 		    /* Pass the result back. */
-		    task_result(s->next, result);
+		    task_result(s->next, result, success);
 		}
 		return;
 	    }

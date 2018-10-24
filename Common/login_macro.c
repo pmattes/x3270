@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,8 @@
 #include "w3misc.h"
 #include "xio.h"
 
-static void login_data(task_cbh handle, const char *buf, size_t len);
+static void login_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool login_done(task_cbh handle, bool success, bool abort);
 
 /* Callback block for login. */
@@ -68,9 +69,11 @@ static char *login_result;
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] success	True if data, false if error message
  */
 static void
-login_data(task_cbh handle _is_unused, const char *buf, size_t len)
+login_data(task_cbh handle _is_unused, const char *buf, size_t len,
+	bool success)
 {
     if (handle != (tcb_t *)&login_cb) {
 	vtrace("login_data: no match\n");

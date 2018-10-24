@@ -747,7 +747,7 @@ fm_print(void *ignored _is_unused)
 static void
 fm_xfer(void *ignored _is_unused)
 {
-    push_macro("Escape() Transfer()");
+    push_macro("Escape(\"Transfer()\")");
 }
 
 static void

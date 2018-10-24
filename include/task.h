@@ -65,10 +65,13 @@ bool task_redirect(void);
 const char *task_set_passthru(task_cbh **ret_cbh);
 void task_store(unsigned char c);
 
-typedef void (*task_data_cb)(task_cbh handle, const char *buf, size_t len);
+typedef void (*task_data_cb)(task_cbh handle, const char *buf, size_t len,
+	bool success);
 typedef bool (*task_done_cb)(task_cbh handle, bool success, bool abort);
 typedef bool (*task_run_cb)(task_cbh handle, bool *success);
 typedef void (*task_closescript_cb)(task_cbh handle);
+typedef void (*task_setflags_cb)(task_cbh handle, unsigned flags);
+typedef unsigned (*task_getflags_cb)(task_cbh handle);
 typedef struct {
     const char *shortname;
     enum iaction ia;
@@ -77,11 +80,15 @@ typedef struct {
     task_done_cb done;
     task_run_cb run;
     task_closescript_cb closescript;
+    task_setflags_cb setflags;
+    task_getflags_cb getflags;
 } tcb_t;
 #define CB_UI		0x1	/* came from the UI */
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
 #define CB_NEW_TASKQ	0x4	/* creates a new task queue */
 #define CB_PEER		0x8	/* peer script (don't abort) */
+
+#define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 void task_activate(task_cbh handle);

@@ -40,6 +40,7 @@ typedef struct {
     ia_t ia_restrict;
 } action_table_t;
 #define ACTION_KE	0x1	/* action is valid from key events */
+#define ACTION_HIDDEN	0x2	/* action does not have help or tab expansion */
 
 typedef struct action_elt {
     llist_t list;		/* linkage */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -286,7 +286,8 @@ get_idle_timeout(void)
 }
 
 /* Action support. */
-static void idle_data(task_cbh handle, const char *buf, size_t len);
+static void idle_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool idle_done(task_cbh handle, bool success, bool abort);
 
 /* Callback block for actions. */
@@ -306,9 +307,10 @@ static char *idle_result = NULL;
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
+ * @param[in] success	True if data, false if error message
  */
 static void
-idle_data(task_cbh handle, const char *buf, size_t len)
+idle_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     if (handle != (tcb_t *)&idle_cb) {
 	vtrace("idle_data: no match\n");

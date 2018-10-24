@@ -93,7 +93,8 @@ typedef struct {
 } ui_action_t;
 
 /* Callback blocks. */
-static void ui_action_data(task_cbh handle, const char *buf, size_t len);
+static void ui_action_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
 static bool ui_action_done(task_cbh handle, bool success, bool abort);
 static tcb_t cb_keymap = {
     "ui",
@@ -332,7 +333,7 @@ ui_pop(void)
 
 /* Data callback. */
 static void
-ui_action_data(task_cbh handle, const char *buf, size_t len)
+ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     ui_action_t *uia = (ui_action_t *)handle;
 

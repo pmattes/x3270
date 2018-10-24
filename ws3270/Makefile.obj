@@ -84,8 +84,8 @@ s3270.exe: ws3270.exe
 x3270ifres.o: x3270if.rc x3270if.ico Makefile
 	$(WINDRES) -i $< -o $@
 
-x3270if.exe: x3270if.o x3270ifres.o $(DEP32XX)
-	$(CC) -o $@ $(CFLAGS) x3270if.o x3270ifres.o $(LD32XX) -lws2_32
+x3270if.exe: x3270if.o base64.o x3270ifres.o $(DEP32XX)
+	$(CC) -o $@ $(CFLAGS) x3270if.o base64.o x3270ifres.o $(LD32XX) -lws2_32
 
 wversion.o: mkwversion.sh version.txt
 	sh $< ws3270 $(CC) $(filter %.txt,$^)
