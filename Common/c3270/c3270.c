@@ -43,6 +43,7 @@
 #endif /*]*/
 #include <signal.h>
 #include <errno.h>
+#include <assert.h>
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
@@ -148,11 +149,15 @@ struct {
     bool flushing;	/* true if 'q' selected and output is being discarded */
 } pager = { 25, 80, 0, 0, NULL, false };
 #endif /*]*/
+static bool command_running = false;
 static bool command_complete = false;
 static bool command_output = false;
 
 #if !defined(_WIN32) /*[*/
 static bool stop_pending = false;
+static int signalpipe[2];
+static void synchronous_signal(iosrc_t fd, ioid_t id);
+static void common_handler(int signum);
 #endif /*]*/
 static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
@@ -160,6 +165,8 @@ static char *escape_action = NULL;
 
 static unsigned aux_input_token;
 static bool aux_input = false;
+
+static ioid_t c3270_input_id = NULL_IOID;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -407,7 +414,15 @@ main(int argc, char *argv[])
 	win32_perror("CreateThread failed");
 	exit(1);
     }
+#endif /*]*/
 
+#if !defined(_WIN32) /*[*/
+    /* Set up the signal pipes. */
+    if (pipe(signalpipe) < 0) {
+	perror("pipe");
+	exit(1);
+    }
+    AddInput(signalpipe[0], synchronous_signal);
 #endif /*]*/
 
     /* Get the screen set up as early as possible. */
@@ -437,6 +452,11 @@ main(int argc, char *argv[])
 
     /* Make sure we can collect child exit status. */
     (void) signal(SIGCHLD, sigchld_handler);
+
+    /* Handle run-time signals. */
+    (void) signal(SIGCONT, common_handler);
+    (void) signal(SIGINT, common_handler);
+    (void) signal(SIGTSTP, common_handler);
 #endif /*]*/
 
     /* Handle initial toggle settings. */
@@ -507,45 +527,72 @@ main(int argc, char *argv[])
 }
 
 #if !defined(_WIN32) /*[*/
-/*
- * SIGTSTP handler for use while a command is running.  Sets a flag so that
- * c3270 will stop before the next prompt is printed.
- */
+/* Synchronous signal handler. */
 static void
-running_sigtstp_handler(int ignored _is_unused)
+synchronous_signal(iosrc_t fd, ioid_t id)
 {
-    vtrace("SIGTSTP while running an action -- deferring\n");
-    signal(SIGTSTP, SIG_IGN);
-    stop_pending = true;
-}
+    unsigned char sig;
+    int nr;
 
-static void
-prompt_sigcont_handler(int ignored _is_unused)
-{
-    display_prompt();
-}
+    /* Read the signal from the pipe. */
+    nr = read(signalpipe[0], &sig, 1);
+    if (nr < 0) {
+	perror("signalpipe read");
+	exit(1);
+    }
 
-/* SIGTSTP haandler for use while the prompt is being displayed. */
-static void
-prompt_sigtstp_handler(int ignored _is_unused)
-{
-    vtrace("SIGTSTP at the prompt\n");
-    signal(SIGTSTP, SIG_DFL); /* not necessary */
-    signal(SIGCONT, prompt_sigcont_handler);
+    switch (sig) {
+    case SIGINT:
+	if (command_running) {
+	    vtrace("SIGINT while running an action -- ignorning\n");
+	} else if (!aux_input) {
+	    vtrace("SIGINT at the normal prompt -- ignorning\n");
+	} else {
+	    vtrace("SIGINT with aux input -- aborting\n");
 #if defined(HAVE_LIBREADLINE) /*[*/
-    rl_callback_handler_remove();
+	    rl_callback_handler_remove();
 #endif /*]*/
-    kill(getpid(), SIGSTOP);
+	    printf(" [aborted]\n");
+	    aux_input = false;
+	    c3270_push_command(lazyaf("ResumeInput(-Abort,%u)",
+			aux_input_token));
+	    Replace(prompt_string, real_prompt_string);
+	    RemoveInput(c3270_input_id);
+	    c3270_input_id = NULL_IOID;
+	    /* And wait for it to complete before displaying a new prompt. */
+	}
+	break;
+    case SIGTSTP:
+	if (command_running) {
+	    /* Defer handling until command completes. */
+	    vtrace("SIGTSTP while running an action -- deferring\n");
+	    stop_pending = true;
+	} else {
+	    vtrace("SIGTSTP at the prompt\n");
+#if defined(HAVE_LIBREADLINE) /*[*/
+	    rl_callback_handler_remove();
+#endif /*]*/
+	    kill(getpid(), SIGSTOP);
+	}
+	break;
+    case SIGCONT:
+	vtrace("SIGCONT\n");
+	display_prompt();
+	break;
+    default:
+	vtrace("Got unknown synchronous signal %u\n", sig);
+	break;
+    }
 }
 
-/*
- * SIGINT handler while the prompt is displayed.
- */
+/* Common signal handler. Writes to the pipe. */
 static void
-prompt_sigint_handler(int ignored _is_unused)
+common_handler(int signum)
 {
-    vtrace("SIGINT at the prompt\n");
-    signal(SIGINT, SIG_IGN);
+    char sig = signum;
+
+    signal(signum, common_handler);
+    write(signalpipe[1], &sig, 1);
 }
 #endif /*]*/
 
@@ -559,12 +606,10 @@ rl_handler(char *command)
     rl_callback_handler_remove();
 
     /* Apparently readline un-does this. */
-    signal(SIGINT, SIG_IGN);
+    /*signal(SIGINT, SIG_IGN);*/
 }
 
 #endif /*]*/
-
-static ioid_t c3270_input_id = NULL_IOID;
 
 /* Display the prompt. */
 static void
@@ -582,12 +627,8 @@ display_prompt(void)
     fflush(stdout);
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-    signal(SIGTSTP, prompt_sigtstp_handler);
-    if (aux_input) {
-	signal(SIGINT, prompt_sigint_handler);
-    } else {
-	signal(SIGINT, SIG_IGN);
-    }
+    signal(SIGTSTP, common_handler);
+    signal(SIGINT, common_handler);
 #endif /*]*/
 }
 
@@ -791,6 +832,7 @@ interact(void)
     display_prompt();
 
     /* Wait for input. */
+    assert(c3270_input_id == NULL_IOID);
 #if !defined(_WIN32) /*[*/
     c3270_input_id = AddInput(0, c3270_input);
 #else /*][*/
@@ -808,6 +850,7 @@ start_pager(void)
     static char *lesspath = LESSPATH;
     static char *lesscmd = LESSPATH " -EX";
     static char *morepath = MOREPATH;
+    static char *trap = "trap '' TSTP; ";
     static char *or_cat = " || cat";
     char *pager_env;
     char *pager_cmd = NULL;
@@ -826,8 +869,8 @@ start_pager(void)
     if (pager_cmd != NULL && strcmp(pager_cmd, "none")) {
 	char *s;
 
-	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
-	(void) sprintf(s, "%s%s", pager_cmd, or_cat);
+	s = Malloc(strlen(trap) + strlen(pager_cmd) + strlen(or_cat) + 1);
+	(void) sprintf(s, "%s%s%s", trap, pager_cmd, or_cat);
 	pager = popen(s, "w");
 	Free(s);
 	if (pager == NULL) {
@@ -877,6 +920,7 @@ pager_key_done(iosrc_t fd, ioid_t id)
 
     /* No more key-mode input. */
     RemoveInput(c3270_input_id);
+    c3270_input_id = NULL_IOID;
     inthread.mode = LINE;
 
     /* Overwrite the prompt and reset. */
@@ -890,6 +934,7 @@ pager_key_done(iosrc_t fd, ioid_t id)
 
 	/* New prompt. */
 	display_prompt();
+	assert(c3270_input_id == NULL_IOID);
 	c3270_input_id = AddInput(inthread.done_event, c3270_input);
 	enable_input(LINE);
 	return;
@@ -904,6 +949,7 @@ pager_key_done(iosrc_t fd, ioid_t id)
     if (command_complete && pager.residual == NULL) {
 	/* Command no longer running, and no more pending otuput. */
 	display_prompt();
+	assert(c3270_input_id == NULL_IOID);
 	c3270_input_id = AddInput(inthread.done_event, c3270_input);
 	enable_input(LINE);
     }
@@ -935,6 +981,7 @@ pager_output(const char *s)
 	    Replace(pager.residual, NewString(s));
 	    pager.nw = printf("Press any key to continue . . . ");
 	    fflush(stdout);
+	    assert(c3270_input_id == NULL_IOID);
 	    c3270_input_id = AddInput(inthread.done_event, pager_key_done);
 	    enable_input(KEY);
 	    return;
@@ -1626,6 +1673,8 @@ command_done(task_cbh handle, bool success, bool abort)
 	return true;
     }
 
+    command_running = false;
+
 #if defined(_WIN32) /*[*/
     if (inthread.mode == KEY) {
 	command_complete = true;
@@ -1644,9 +1693,7 @@ command_done(task_cbh handle, bool success, bool abort)
 	/* Process a pending stop. */
 	if (stop_pending) {
 	    stop_pending = false;
-	    signal(SIGTSTP, SIG_DFL);
-	    signal(SIGCONT, prompt_sigcont_handler);
-	    kill(getpid(), SIGTSTP);
+	    kill(getpid(), SIGSTOP);
 	}
 #endif /*]*/
 
@@ -1654,6 +1701,7 @@ command_done(task_cbh handle, bool success, bool abort)
 	display_prompt();
 
 	/* Wait for more input. */
+	assert(c3270_input_id == NULL_IOID);
 #if !defined(_WIN32) /*[*/
 	c3270_input_id = AddInput(0, c3270_input);
 #else /*][*/
@@ -1689,13 +1737,9 @@ command_getflags(task_cbh handle)
 static void
 c3270_push_command(char *s)
 {
+    command_running = true;
     command_complete = false;
     command_output = false;
-
-    /* Defer SIGTSTP until the command completes. */
-#if !defined(_WIN32) /*[*/
-    signal(SIGTSTP, running_sigtstp_handler);
-#endif /*]*/
 
     /* Push a callback with a macro. */
     push_cb(s, strlen(s), &command_cb, (task_cbh)&command_cb);

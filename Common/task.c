@@ -3632,7 +3632,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (!strcasecmp(argv[0], "Abort")) {
+    if (!strcasecmp(argv[0], "-Abort")) {
 	abort = true;
 	seq = strtoul(argv[1], NULL, 10);
     } else {
