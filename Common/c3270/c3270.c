@@ -131,6 +131,8 @@ static bool merge_profile(void);
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
 static char *completion_entry(const char *, int);
+static char *readline_command;
+static bool readline_done = false;
 #endif /*]*/
 
 /* Pager state. */
@@ -156,7 +158,7 @@ static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
 static char *escape_action = NULL;
 
-static unsigned token;
+static unsigned aux_input_token;
 static bool aux_input = false;
 
 #if defined(_WIN32) /*[*/
@@ -523,12 +525,7 @@ prompt_sigcont_handler(int ignored _is_unused)
     display_prompt();
 }
 
-/*
- * SIGTSTP haandler for use while the prompt is being displayed.
- * Acts immediately by setting SIGTSTP to the default and sending it to
- * ourselves, but also sets a flag so that the user gets one free empty line
- * of input before resuming the connection.
- */
+/* SIGTSTP haandler for use while the prompt is being displayed. */
 static void
 prompt_sigtstp_handler(int ignored _is_unused)
 {
@@ -540,12 +537,20 @@ prompt_sigtstp_handler(int ignored _is_unused)
 #endif /*]*/
     kill(getpid(), SIGSTOP);
 }
+
+/*
+ * SIGINT handler while the prompt is displayed.
+ */
+static void
+prompt_sigint_handler(int ignored _is_unused)
+{
+    vtrace("SIGINT at the prompt\n");
+    signal(SIGINT, SIG_IGN);
+}
 #endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-static char *readline_command;
-static bool readline_done = false;
-
+/* Readline completion handler -- a line of input has been collected. */
 static void
 rl_handler(char *command)
 {
@@ -578,7 +583,11 @@ display_prompt(void)
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
     signal(SIGTSTP, prompt_sigtstp_handler);
-    signal(SIGINT, SIG_IGN);
+    if (aux_input) {
+	signal(SIGINT, prompt_sigint_handler);
+    } else {
+	signal(SIGINT, SIG_IGN);
+    }
 #endif /*]*/
 }
 
@@ -683,7 +692,7 @@ c3270_input(iosrc_t fd, ioid_t id)
     if (aux_input) {
 	aux_input = false;
 	c3270_push_command(lazyaf("ResumeInput(%u,%s)",
-		    token, lazya(base64_encode(s))));
+		    aux_input_token, lazya(base64_encode(s))));
 	Replace(prompt_string, real_prompt_string);
     } else {
 	c3270_push_command(s);
@@ -1592,7 +1601,7 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
 	char *rest;
 	u_long u = strtoul(buf + strlen(INPUT), &rest, 10);
 
-	token = (unsigned)u;
+	aux_input_token = (unsigned)u;
 	prompt_string = base64_decode(rest + 1);
 	aux_input = true;
     } else {
