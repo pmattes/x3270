@@ -454,7 +454,6 @@ main(int argc, char *argv[])
     (void) signal(SIGCHLD, sigchld_handler);
 
     /* Handle run-time signals. */
-    (void) signal(SIGCONT, common_handler);
     (void) signal(SIGINT, common_handler);
     (void) signal(SIGTSTP, common_handler);
 #endif /*]*/
@@ -573,11 +572,8 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    rl_callback_handler_remove();
 #endif /*]*/
 	    kill(getpid(), SIGSTOP);
+	    display_prompt();
 	}
-	break;
-    case SIGCONT:
-	vtrace("SIGCONT\n");
-	display_prompt();
 	break;
     default:
 	vtrace("Got unknown synchronous signal %u\n", sig);
@@ -604,9 +600,6 @@ rl_handler(char *command)
     readline_done = true;
     readline_command = command;
     rl_callback_handler_remove();
-
-    /* Apparently readline un-does this. */
-    /*signal(SIGINT, SIG_IGN);*/
 }
 
 #endif /*]*/
