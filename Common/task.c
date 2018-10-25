@@ -235,8 +235,6 @@ static bool expect_matches(task_t *task);
 )
 
 /* An input request. */
-typedef bool continue_fn(void *, const char *);
-typedef void abort_fn(void *);
 typedef struct {
     llist_t llist;		/* linkage */
     unsigned seq;		/* sequence number */
@@ -245,6 +243,7 @@ typedef struct {
     void *handle;		/* to pass to continue function */
 } input_request_t;
 static llist_t input_requestq = LLIST_INIT(input_requestq);
+static unsigned input_request_seq;
 
 static action_t Abort_action;
 static action_t AnsiText_action;
@@ -3649,8 +3648,14 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 		(*ir->abort_fn)(ir->handle);
 		ret = true;
 	    } else {
-		ret = (*ir->continue_fn)(ir->handle,
-			lazya(base64_decode(argv[1])));
+		char *text = base64_decode(argv[1]);
+
+		if (text == NULL) {
+		    (*ir->abort_fn)(ir->handle);
+		    popup_an_error("ResumeInput: invalid base64 text");
+		    return false;
+		}
+		ret = (*ir->continue_fn)(ir->handle, lazya(text));
 	    }
 
 	    /* Forget about this request in the parent. */
@@ -3684,6 +3689,27 @@ task_is_interactive(void)
 }
 
 /**
+ * Increment input_request_seq, keeping it unique.
+ */
+static void
+increment_input_request_seq(void)
+{
+    input_request_t *ir;
+    bool dup = false;
+
+    do {
+	++input_request_seq;
+	dup = false;
+	FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
+	    if (ir->seq == input_request_seq) {
+		dup = true;
+		break;
+	    }
+	} FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
+    } while (dup);
+}
+
+/**
  * Request input.
  *
  * @param[in] action		Action name
@@ -3694,12 +3720,11 @@ task_is_interactive(void)
  * @returns true if input requested successfully
  */
 bool
-request_input(const char *action, const char *prompt, continue_fn *continue_fn,
-	abort_fn *abort_fn, void *handle)
+task_request_input(const char *action, const char *prompt,
+	continue_fn *continue_fn, abort_fn *abort_fn, void *handle)
 {
     task_t *redirect = task_redirect_to();
     unsigned flags;
-    static unsigned seq = 0;
     input_request_t *ir;
 
     if (redirect == NULL ||
@@ -3713,7 +3738,8 @@ request_input(const char *action, const char *prompt, continue_fn *continue_fn,
     /* Track this request. */
     ir = (input_request_t *)Malloc(sizeof(input_request_t));
     llist_init(&ir->llist);
-    ir->seq = seq;
+    increment_input_request_seq();
+    ir->seq = input_request_seq;
     ir->continue_fn = continue_fn;
     ir->abort_fn = abort_fn;
     ir->handle = handle;
@@ -3721,13 +3747,14 @@ request_input(const char *action, const char *prompt, continue_fn *continue_fn,
 
     /* Tell the parent. */
     if (redirect->cbx.cb->ir != NULL) {
-	(*redirect->cbx.cb->ir)(redirect->cbx.handle, seq, false);
+	(*redirect->cbx.cb->ir)(redirect->cbx.handle, input_request_seq,
+		false);
     }
 
     /* Tell them we want input. */
     action_output("Friendly first line");
-    popup_an_error("[input] %u %s", seq, lazya(base64_encode(prompt)));
-    seq++;
+    popup_an_error("[input] %u %s", input_request_seq,
+	    lazya(base64_encode(prompt)));
     return true;
 }
 
@@ -3744,6 +3771,7 @@ task_abort_input_request(unsigned seq)
 	    llist_unlink(&ir->llist);
 	    (*ir->abort_fn)(ir->handle);
 	    Free(ir);
+	    break;
 	}
     } FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
     vtrace("task_abort_input_request: no match for %u\n", seq);
@@ -3778,7 +3806,7 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    (void) request_input("RequestInput", "Input: ", continue_input,
+    (void) task_request_input("RequestInput", "Input: ", continue_input,
 	    abort_input, NULL);
     return false;
 }

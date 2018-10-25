@@ -99,3 +99,8 @@ void task_activate(task_cbh handle);
 void task_register(void);
 char *task_cb_prompt(task_cbh handle);
 unsigned long task_cb_msec(task_cbh handle);
+
+typedef bool continue_fn(void *, const char *);
+typedef void abort_fn(void *);
+bool task_request_input(const char *action, const char *prompt,
+	continue_fn *continue_fn, abort_fn *abort_fn, void *handle);

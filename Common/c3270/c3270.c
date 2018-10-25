@@ -473,9 +473,9 @@ main(int argc, char *argv[])
 	if (CONNECTED) {
 	    was_connected = true;
 	}
-	if (/*!escaped || ft_state != FT_NONE*/true) {
-	    (void) process_events(true);
-	}
+
+	(void) process_events(true);
+
 	if (!appres.secure &&
 		was_connected &&
 		!CONNECTED &&
@@ -512,6 +512,7 @@ main(int argc, char *argv[])
 static void
 running_sigtstp_handler(int ignored _is_unused)
 {
+    vtrace("SIGTSTP while running an action -- deferring\n");
     signal(SIGTSTP, SIG_IGN);
     stop_pending = true;
 }
@@ -531,9 +532,13 @@ prompt_sigcont_handler(int ignored _is_unused)
 static void
 prompt_sigtstp_handler(int ignored _is_unused)
 {
-    signal(SIGTSTP, SIG_DFL);
+    vtrace("SIGTSTP at the prompt\n");
+    signal(SIGTSTP, SIG_DFL); /* not necessary */
     signal(SIGCONT, prompt_sigcont_handler);
-    kill(getpid(), SIGTSTP);
+#if defined(HAVE_LIBREADLINE) /*[*/
+    rl_callback_handler_remove();
+#endif /*]*/
+    kill(getpid(), SIGSTOP);
 }
 #endif /*]*/
 
@@ -616,6 +621,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 
     if (command == NULL) {
 	/* EOF */
+	printf("\n");
+	fflush(stdout);
 	exit(0);
     }
 
@@ -807,7 +814,7 @@ start_pager(void)
     } else if (strlen(morepath)) {
 	pager_cmd = morepath;
     }
-    if (pager_cmd != NULL) {
+    if (pager_cmd != NULL && strcmp(pager_cmd, "none")) {
 	char *s;
 
 	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
