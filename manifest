@@ -317,6 +317,7 @@ Common/Win32/winvers.c
 Common/winprint.c
 Common/x3270if.c
 Common/xio.c
+Common/xpopen.c
 Common/xs_buffer.c
 Common/XtGlue.c
 config.guess
@@ -421,6 +422,7 @@ include/windirs.h
 include/winprint.h
 include/winvers.h
 include/xio.h
+include/xpopen.h
 include/xscroll.h
 install-sh
 lib/3270i/Makefile.aux
@@ -435,6 +437,7 @@ lib/3270stubs/Makefile.aux
 lib/3270stubs/Makefile.in
 lib/3270stubs/Makefile.obj.in
 lib/32xx/32xx-deplibs.mk.in
+lib/32xx/lib32xxu_files.mk
 lib/32xx/Makefile.aux
 lib/32xx/Makefile.in
 lib/32xx/Makefile.obj.in

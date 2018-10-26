@@ -91,6 +91,7 @@
 #include "utf8.h"
 #include "utils.h"
 #include "xio.h"
+#include "xpopen.h"
 #include "xscroll.h"
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -847,6 +848,7 @@ start_pager(void)
     static char *or_cat = " || cat";
     char *pager_env;
     char *pager_cmd = NULL;
+    pid_t pid;
 
     if (pager != NULL) {
 	return pager;
@@ -864,7 +866,7 @@ start_pager(void)
 
 	s = Malloc(strlen(trap) + strlen(pager_cmd) + strlen(or_cat) + 1);
 	(void) sprintf(s, "%s%s%s", trap, pager_cmd, or_cat);
-	pager = popen(s, "w");
+	pager = xpopen(s, "w", &pid);
 	Free(s);
 	if (pager == NULL) {
 	    (void) perror(pager_cmd);
@@ -890,7 +892,7 @@ stop_pager(void)
 #if !defined(_WIN32) /*[*/
     if (pager != NULL) {
 	if (pager != stdout) {
-	    pclose(pager);
+	    xpclose(pager, 0);
 	}
 	pager = NULL;
     }
