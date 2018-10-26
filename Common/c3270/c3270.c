@@ -836,6 +836,7 @@ interact(void)
     }
 
 #if !defined(_WIN32) /*[*/
+    /* screen_init/screen_resume reset these. */
     (void) signal(SIGINT, common_handler);
     (void) signal(SIGTSTP, common_handler);
 #endif /*]*/
