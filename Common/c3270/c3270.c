@@ -559,7 +559,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
-	    printf(" [aborted]\n");
+	    printf("\n");
 	    aux_input = false;
 	    c3270_push_command(lazyaf("ResumeInput(-Abort,%u)",
 			aux_input_token));

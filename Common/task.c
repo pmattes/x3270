@@ -3646,7 +3646,8 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 	    llist_unlink(&ir->llist);
 	    if (abort) {
 		(*ir->abort_fn)(ir->handle);
-		ret = true;
+		popup_an_error("Action aborted");
+		ret = false;
 	    } else {
 		char *text = base64_decode(argv[1]);
 
