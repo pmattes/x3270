@@ -898,7 +898,6 @@ start_pager(void)
     static char *lesspath = LESSPATH;
     static char *lesscmd = LESSPATH " -EX";
     static char *morepath = MOREPATH;
-    static char *trap = "trap '' TSTP; ";
     static char *or_cat = " || cat";
     char *pager_env;
     char *pager_cmd = NULL;
@@ -917,8 +916,8 @@ start_pager(void)
     if (pager_cmd != NULL && strcmp(pager_cmd, "none")) {
 	char *s;
 
-	s = Malloc(strlen(trap) + strlen(pager_cmd) + strlen(or_cat) + 1);
-	(void) sprintf(s, "%s%s%s", trap, pager_cmd, or_cat);
+	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
+	(void) sprintf(s, "%s%s", pager_cmd, or_cat);
 	pager = xpopen(s, "w", &pager_pid);
 	Free(s);
 	if (pager == NULL) {
