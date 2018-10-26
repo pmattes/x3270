@@ -1760,6 +1760,10 @@ screen_resume(void)
 
     escaped = false;
 
+    /* Ignore signals we don't like. */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+
     /*
      * Clear the screen first, if possible, so future command output
      * starts at the bottom of the screen.

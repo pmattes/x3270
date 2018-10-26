@@ -140,6 +140,7 @@ static bool readline_done = false;
 /* Pager state. */
 #if !defined(_WIN32) /*[*/
 static FILE *pager = NULL;
+static pid_t pager_pid = 0;
 #else /*][*/
 struct {
     int rows;		/* current number of rows */
@@ -148,7 +149,8 @@ struct {
     int nw;		/* number of bytes written in the prompt */
     char *residual;	/* residual output */
     bool flushing;	/* true if 'q' selected and output is being discarded */
-} pager = { 25, 80, 0, 0, NULL, false };
+    bool running;	/* true if pager is active */
+} pager = { 25, 80, 0, 0, NULL, false, false };
 #endif /*]*/
 static bool command_running = false;
 static bool command_complete = false;
@@ -541,6 +543,11 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	exit(1);
     }
 
+    if (!escaped) {
+	vtrace("Ingoring synchronous signal\n");
+	return;
+    }
+
     switch (sig) {
     case SIGINT:
 	if (command_running) {
@@ -548,7 +555,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	} else if (!aux_input) {
 	    vtrace("SIGINT at the normal prompt -- ignorning\n");
 	} else {
-	    vtrace("SIGINT with aux input -- aborting\n");
+	    vtrace("SIGINT with aux input -- aborting action\n");
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
@@ -568,12 +575,14 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    vtrace("SIGTSTP while running an action -- deferring\n");
 	    stop_pending = true;
 	} else {
-	    vtrace("SIGTSTP at the prompt\n");
+	    vtrace("SIGTSTP at the %s\n", (pager_pid == 0)? "prompt": "pager");
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
 	    kill(getpid(), SIGSTOP);
-	    display_prompt();
+	    if (pager_pid == 0) {
+		display_prompt();
+	    }
 	}
 	break;
     default:
@@ -613,7 +622,9 @@ display_prompt(void)
 	(void) printf("Press <Enter> to resume session.\n");
     }
 
+#if 0
     stop_pager();
+#endif
 #if defined(HAVE_LIBREADLINE) /*[*/
     rl_callback_handler_install(prompt_string, &rl_handler);
 #else /*][*/
@@ -799,7 +810,9 @@ static void
 interact(void)
 {
     /* In case we got here because of a command output, stop the pager. */
+#if 0
     stop_pager();
+#endif
 
     /* In secure mode, we don't interact. */
     if (appres.secure) {
@@ -822,6 +835,11 @@ interact(void)
 	return;
     }
 
+#if !defined(_WIN32) /*[*/
+    (void) signal(SIGINT, common_handler);
+    (void) signal(SIGTSTP, common_handler);
+#endif /*]*/
+
     /* Display the prompt. */
     display_prompt();
 
@@ -836,6 +854,41 @@ interact(void)
     signal(SIGINT, SIG_IGN);
 }
 
+#if !defined(_WIN32) /*[*/
+static void
+pager_exit(ioid_t id, int status)
+{
+    vtrace("pager exited with status %d\n", status);
+
+    pager_pid = 0;
+    if (command_output || !CONNECTED) {
+	/* Command produced output, or we are not connected any more. */
+
+	/* Process a pending stop. */
+	if (stop_pending) {
+	    vtrace("Processing deferred SIGTSTP on pager exit\n");
+	    stop_pending = false;
+#if defined(HAVE_LIBREADLINE) /*[*/
+	    rl_callback_handler_remove();
+#endif /*]*/
+	    kill(getpid(), SIGSTOP);
+	}
+
+	/* Display the prompt. */
+	display_prompt();
+
+	/* Wait for more input. */
+	assert(c3270_input_id == NULL_IOID);
+	c3270_input_id = AddInput(0, c3270_input);
+    } else {
+	/* Exit interactive mode. */
+	screen_resume();
+    }
+
+    stop_pending = false;
+}
+#endif /*]*/
+
 /* A command is about to produce output.  Start the pager. */
 FILE *
 start_pager(void)
@@ -848,7 +901,6 @@ start_pager(void)
     static char *or_cat = " || cat";
     char *pager_env;
     char *pager_cmd = NULL;
-    pid_t pid;
 
     if (pager != NULL) {
 	return pager;
@@ -866,10 +918,12 @@ start_pager(void)
 
 	s = Malloc(strlen(trap) + strlen(pager_cmd) + strlen(or_cat) + 1);
 	(void) sprintf(s, "%s%s%s", trap, pager_cmd, or_cat);
-	pager = xpopen(s, "w", &pid);
+	pager = xpopen(s, "w", &pager_pid);
 	Free(s);
 	if (pager == NULL) {
 	    (void) perror(pager_cmd);
+	} else {
+	    AddChild(pager_pid, pager_exit);
 	}
     }
     if (pager == NULL) {
@@ -877,9 +931,12 @@ start_pager(void)
     }
     return pager;
 #else /*][*/
-    pager.rowcnt = 0;
-    Replace(pager.residual, NULL);
-    pager.flushing = false;
+    if (!pager.running) {
+	pager.rowcnt = 0;
+	Replace(pager.residual, NULL);
+	pager.flushing = false;
+	pager.running = true;
+    }
     return stdout;
 #endif /*]*/
 }
@@ -892,7 +949,7 @@ stop_pager(void)
 #if !defined(_WIN32) /*[*/
     if (pager != NULL) {
 	if (pager != stdout) {
-	    xpclose(pager, 0);
+	    xpclose(pager, XPC_NOWAIT);
 	}
 	pager = NULL;
     }
@@ -900,6 +957,7 @@ stop_pager(void)
     pager.rowcnt = 0;
     Replace(pager.residual, NULL);
     pager.flushing = false;
+    pager.running = false;
 #endif /*]*/
 }
 
@@ -916,7 +974,6 @@ pager_key_done(iosrc_t fd, ioid_t id)
     /* No more key-mode input. */
     RemoveInput(c3270_input_id);
     c3270_input_id = NULL_IOID;
-    inthread.mode = LINE;
 
     /* Overwrite the prompt and reset. */
     printf("\r%*s\r", (pager.nw > 0)? pager.nw: 79, "");
@@ -961,6 +1018,7 @@ pager_output(const char *s)
 
     if (pager.residual != NULL) {
 	/* Output is pending already. */
+	vtrace("pager accumulate\n");
 	pager.residual = Realloc(pager.residual,
 		strlen(pager.residual) + strlen(s) + 2);
 	strcat(strcat(pager.residual, "\n"), s);
@@ -973,6 +1031,7 @@ pager_output(const char *s)
 
 	/* Pause for a screenful. */
 	if (pager.rowcnt >= (pager.rows - 1)) {
+	    vtrace("pager pausing\n");
 	    Replace(pager.residual, NewString(s));
 	    pager.nw = printf("Press any key to continue . . . ");
 	    fflush(stdout);
@@ -1668,10 +1727,24 @@ command_done(task_cbh handle, bool success, bool abort)
 	return true;
     }
 
+    vtrace("command complete\n");
+
     command_running = false;
 
 #if defined(_WIN32) /*[*/
-    if (inthread.mode == KEY) {
+    if (pager.residual != NULL) {
+	/* Pager is paused, don't do anything yet. */
+	command_complete = true;
+	return true;
+    }
+#endif /*]*/
+
+    /* Stop the pager. */
+    stop_pager();
+
+#if !defined(_WIN32) /*[*/
+    if (pager_pid != 0) {
+	/* Pager process is still running, don't do anything else yet. */
 	command_complete = true;
 	return true;
     }
@@ -1681,14 +1754,20 @@ command_done(task_cbh handle, bool success, bool abort)
     if (command_output || !CONNECTED) {
 	/* Command produced output, or we are not connected any more. */
 
-	/* Stop the pager. */
-	stop_pager();
-
 #if !defined(_WIN32) /*[*/
 	/* Process a pending stop. */
 	if (stop_pending) {
+	    vtrace("Processing deferred SIGTSTP on command completion\n");
 	    stop_pending = false;
+#if defined(HAVE_LIBREADLINE) /*[*/
+	    rl_callback_handler_remove();
+#endif /*]*/
 	    kill(getpid(), SIGSTOP);
+#if !defined(_WIN32) /*[*/
+	    if (pager_pid != 0) {
+		return true;
+	    }
+#endif /*]*/
 	}
 #endif /*]*/
 
@@ -1989,6 +2068,7 @@ glue_gui_output(const char *s)
 #if !defined(_WIN32) /*[*/
     (void) fprintf(start_pager(), "%s\n", s);
 #else /*][*/
+    start_pager();
     pager_output(s);
 #endif /*]*/
     command_output = true;
