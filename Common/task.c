@@ -3789,32 +3789,58 @@ task_get_ir_state(const char *name)
     }
 }
 
+typedef struct {
+    char *previous;
+} sample_per_type_t;
+
 /* Continue the sample RequestInput action. */
 static bool
 sample_continue_input(void *handle, const char *text)
 {
-    void *state;
+    sample_per_type_t *state = (sample_per_type_t *)handle;
 
     vtrace("Continuing RequestInput\n");
-    state = task_get_ir_state("RequestInput");
     vtrace("State: %s\n", state? (char *)state: "not found");
 
     action_output("You said '%s'", text);
+
+    /* Remember for next time. */
+    state = (sample_per_type_t *)handle;
+    if (state != NULL) {
+	Replace(state->previous, NewString(text));
+    }
+
     return true;
 }
 
-/* Abort the RequestInput action. */
+/* Abort the sample RequestInput action. */
 static void
 sample_abort_input(void *handle)
 {
+    sample_per_type_t *state = (sample_per_type_t *)handle;
+
     vtrace("Aborting RequestInput\n");
+    if (state != NULL) {
+	if (state->previous != NULL) {
+	    Free(state->previous);
+	}
+	Free(state);
+    }
 }
 
-/* Abort input request state. */
+/* Abort sample input request state. */
 static void
-sample_abort_state(void *state)
+sample_abort_session(void *handle)
 {
-    vtrace("Aborting input request state '%s'\n", (char *)state);
+    sample_per_type_t *state = (sample_per_type_t *)handle;
+
+    vtrace("Aborting input request session\n");
+    if (state != NULL) {
+	if (state->previous != NULL) {
+	    Free(state->previous);
+	}
+	Free(state);
+    }
 }
 
 /*
@@ -3825,16 +3851,25 @@ sample_abort_state(void *state)
 static bool
 RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 {
+    sample_per_type_t *state;
+
     action_debug("RequestInput", ia, argc, argv);
     if (check_argc("RequestInput", argc, 0, 0) < 0) {
 	return false;
     }
 
-    /* Set up some state. */
-    task_set_ir_state("RequestInput", "SampleState", sample_abort_state);
+    state = (sample_per_type_t *)task_get_ir_state("RequestInput");
+    if (state == NULL) {
+	/* Set up some state. */
+	state = (sample_per_type_t *)Malloc(sizeof(*state));
+	state->previous = NULL;
+	task_set_ir_state("RequestInput", state, sample_abort_session);
+    } else if (state->previous != NULL) {
+	action_output("Your last answer was '%s'", state->previous);
+    }
 
-    (void) task_request_input("RequestInput", "Input: ", sample_continue_input,
-	    sample_abort_input, NULL);
+    (void) task_request_input("RequestInput", "Input: ",
+	    sample_continue_input, sample_abort_input, state);
     return false;
 }
 
