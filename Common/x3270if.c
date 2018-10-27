@@ -946,10 +946,10 @@ set_text_attribute(HANDLE out, WORD attributes)
  * removing the last line if found.
  */
 static bool
-is_input(char *s, unsigned *token, char **prompt)
+is_input(char *s, char **prompt)
 {
     char *nl;
-    char *next;
+    char *last_line;
 
     /* Find the last line. */
     nl = strrchr(s, '\n');
@@ -957,8 +957,9 @@ is_input(char *s, unsigned *token, char **prompt)
 	return false;
     }
 
-    /* See if the last line starts with the token. */
-    if (strncmp((nl? (nl + 1): s), INPUT, strlen(INPUT))) {
+    /* See if the last line starts with the tag. */
+    last_line = (nl? (nl + 1): s);
+    if (strncmp(last_line, INPUT, strlen(INPUT))) {
 	return false;
     }
 
@@ -969,9 +970,8 @@ is_input(char *s, unsigned *token, char **prompt)
 	*s = '\0';
     }
 
-    /* Parse the other parts. */
-    *token = (unsigned)strtoul((nl? (nl + 1): s) + strlen(INPUT), &next, 10);
-    *prompt = base64_decode(next + 1);
+    /* Parse the rest. */
+    *prompt = base64_decode(last_line + strlen(INPUT));
 
     return true;
 }
@@ -984,7 +984,6 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     int infd = -1, outfd = -1;
     size_t prompt_len;
     char *ret;
-    unsigned token = 0;
     bool aux_input = false;
 #if defined(_WIN32) /*[*/
     HANDLE conout;
@@ -1236,7 +1235,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		fprintf(stderr, "Out of memory\n");
 		exit(__LINE__);
 	    }
-	    sprintf(response, "ResumeInput(%u,%s)", token, command_base64);
+	    sprintf(response, "ResumeInput(%s)", command_base64);
 	    Free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
 		    &ret);
@@ -1255,7 +1254,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
 		ret[sl - 1] = '\0';
 	    }
-	    if (rc && is_input(ret, &token, &p)) {
+	    if (rc && is_input(ret, &p)) {
 		if (!*ret) {
 		    Free(ret);
 		    continue;

@@ -237,13 +237,11 @@ static bool expect_matches(task_t *task);
 /* An input request. */
 typedef struct {
     llist_t llist;		/* linkage */
-    unsigned seq;		/* sequence number */
     continue_fn *continue_fn;	/* continue function */
     abort_fn *abort_fn;		/* abort function */
     void *handle;		/* to pass to continue function */
 } input_request_t;
 static llist_t input_requestq = LLIST_INIT(input_requestq);
-static unsigned input_request_seq;
 
 static action_t Abort_action;
 static action_t AnsiText_action;
@@ -3616,61 +3614,61 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * ResumeInput action, resumes an action-suspended action.
  *
- * ResumeInput(token,text)
- * ResumeInput(-Abort,token)
+ * ResumeInput(text)
+ * ResumeInput(-Abort)
  */
 static bool
 ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 {
-    unsigned long seq;
     input_request_t *ir;
-    bool abort = false;
+    void *irhandle;
     task_t *redirect = task_redirect_to();
+    char *text;
+    int ret;
 
     action_debug("ResumeInput", ia, argc, argv);
-    if (check_argc("ResumeInput", argc, 2, 2) < 0) {
+    if (check_argc("ResumeInput", argc, 1, 1) < 0) {
+	return false;
+    }
+
+    /* Check for a pending request. */
+    if (redirect == NULL ||
+	redirect->cbx.cb->irv == NULL ||
+	(irhandle =
+	 (*redirect->cbx.cb->irv->getir)(redirect->cbx.handle)) == NULL) {
+	popup_an_error("ResumeInput: No pending input request");
 	return false;
     }
 
     if (!strcasecmp(argv[0], "-Abort")) {
-	abort = true;
-	seq = strtoul(argv[1], NULL, 10);
-    } else {
-	seq = strtoul(argv[0], NULL, 10);
+	/* Tell the CB to forget about it. */
+	(*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, NULL);
+
+	/* Forget about it. */
+	task_abort_input_request_irhandle(irhandle);
+
+	popup_an_error("Action aborted");
+	return false;
     }
 
-    FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
-	if (ir->seq == seq) {
-	    bool ret;
+    /* Decode the response text. */
+    text = base64_decode(argv[0]);
+    if (text == NULL) {
+	(*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, NULL);
+	task_abort_input_request_irhandle(irhandle);
+	popup_an_error("ResumeInput: Invalid base64 text");
+	return false;
+    }
 
-	    llist_unlink(&ir->llist);
-	    if (abort) {
-		(*ir->abort_fn)(ir->handle);
-		popup_an_error("Action aborted");
-		ret = false;
-	    } else {
-		char *text = base64_decode(argv[1]);
+    /* Tell the CB to forget about the input request. */
+    (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, NULL);
 
-		if (text == NULL) {
-		    (*ir->abort_fn)(ir->handle);
-		    popup_an_error("ResumeInput: invalid base64 text");
-		    return false;
-		}
-		ret = (*ir->continue_fn)(ir->handle, lazya(text));
-	    }
-
-	    /* Forget about this request in the parent. */
-	    if (redirect != NULL && redirect->cbx.cb->ir != NULL) {
-		(*redirect->cbx.cb->ir)(redirect->cbx.handle, seq, true);
-	    }
-
-	    Free(ir);
-	    return ret;
-	}
-    } FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
-
-    popup_an_error("ResumeInput: no match");
-    return false;
+    /* Continue and free the input request. */
+    ir = (input_request_t *)irhandle;
+    llist_unlink(&ir->llist);
+    ret = (*ir->continue_fn)(ir->handle, lazya(text));
+    Free(ir);
+    return ret;
 }
 
 /**
@@ -3687,27 +3685,6 @@ task_is_interactive(void)
 	   redirect->cbx.cb->getflags != NULL &&
 	   ((*redirect->cbx.cb->getflags)(redirect->cbx.handle) &
 		CBF_INTERACTIVE) != 0;
-}
-
-/**
- * Increment input_request_seq, keeping it unique.
- */
-static void
-increment_input_request_seq(void)
-{
-    input_request_t *ir;
-    bool dup = false;
-
-    do {
-	++input_request_seq;
-	dup = false;
-	FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
-	    if (ir->seq == input_request_seq) {
-		dup = true;
-		break;
-	    }
-	} FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
-    } while (dup);
 }
 
 /**
@@ -3739,43 +3716,32 @@ task_request_input(const char *action, const char *prompt,
     /* Track this request. */
     ir = (input_request_t *)Malloc(sizeof(input_request_t));
     llist_init(&ir->llist);
-    increment_input_request_seq();
-    ir->seq = input_request_seq;
     ir->continue_fn = continue_fn;
     ir->abort_fn = abort_fn;
     ir->handle = handle;
     LLIST_APPEND(&ir->llist, input_requestq);
 
     /* Tell the parent. */
-    if (redirect->cbx.cb->ir != NULL) {
-	(*redirect->cbx.cb->ir)(redirect->cbx.handle, input_request_seq,
-		false);
-    }
+    (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
     action_output("Friendly first line");
-    popup_an_error("[input] %u %s", input_request_seq,
-	    lazya(base64_encode(prompt)));
+    popup_an_error("[input] %s", lazya(base64_encode(prompt)));
     return true;
 }
 
 /**
- * Abort an input request, by sequene number.
+ * Abort an input request for a given handle.
  */
 void
-task_abort_input_request(unsigned seq)
+task_abort_input_request_irhandle(void *irhandle)
 {
-    input_request_t *ir;
+    input_request_t *ir = irhandle;
 
-    FOREACH_LLIST(&input_requestq, ir, input_request_t *) {
-	if (ir->seq == seq) {
-	    llist_unlink(&ir->llist);
-	    (*ir->abort_fn)(ir->handle);
-	    Free(ir);
-	    break;
-	}
-    } FOREACH_LLIST_END(&input_requestq, ir, input_request_t *);
-    vtrace("task_abort_input_request: no match for %u\n", seq);
+    /* Abort and forget. */
+    llist_unlink(&ir->llist);
+    (*ir->abort_fn)(ir->handle);
+    Free(ir);
 }
 
 /* Continue the RequestInput action. */

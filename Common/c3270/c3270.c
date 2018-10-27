@@ -166,7 +166,6 @@ static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
 static char *escape_action = NULL;
 
-static unsigned aux_input_token;
 static bool aux_input = false;
 
 static ioid_t c3270_input_id = NULL_IOID;
@@ -561,8 +560,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 #endif /*]*/
 	    printf("\n");
 	    aux_input = false;
-	    c3270_push_command(lazyaf("ResumeInput(-Abort,%u)",
-			aux_input_token));
+	    c3270_push_command("ResumeInput(-Abort)");
 	    Replace(prompt_string, real_prompt_string);
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
@@ -737,8 +735,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (aux_input) {
 	aux_input = false;
-	c3270_push_command(lazyaf("ResumeInput(%u,%s)",
-		    aux_input_token, lazya(base64_encode(s))));
+	c3270_push_command(lazyaf("ResumeInput(%s)", lazya(base64_encode(s))));
 	Replace(prompt_string, real_prompt_string);
     } else {
 	c3270_push_command(s);
@@ -1664,6 +1661,19 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Command-prompt action support. */
+static void command_setir(task_cbh handle, void *irhandle);
+static void *command_getir(task_cbh handle);
+static void command_setir_state(task_cbh handle, const char *name, void *state);
+static void *command_getir_state(task_cbh handle, const char *name);
+static void *command_irhandle;
+
+static irv_t command_irv = {
+    command_setir,
+    command_getir,
+    command_setir_state,
+    command_getir_state
+};
+
 static void command_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool command_done(task_cbh handle, bool success, bool abort);
@@ -1679,7 +1689,8 @@ static tcb_t command_cb = {
     NULL,
     NULL,
     NULL,
-    command_getflags
+    command_getflags,
+    &command_irv
 };
 
 /**
@@ -1699,11 +1710,7 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
     }
 
     if (!success && !strncmp(buf, INPUT, strlen(INPUT))) {
-	char *rest;
-	u_long u = strtoul(buf + strlen(INPUT), &rest, 10);
-
-	aux_input_token = (unsigned)u;
-	prompt_string = base64_decode(rest + 1);
+	prompt_string = base64_decode(buf + strlen(INPUT));
 	aux_input = true;
     } else {
 	glue_gui_output(lazyaf("%.*s", (int)len, buf));
@@ -1801,6 +1808,42 @@ static unsigned
 command_getflags(task_cbh handle)
 {
     return CBF_INTERACTIVE;
+}
+
+/**
+ * Set the pending input request.
+ *
+ * @param[in] handle	Context
+ * @param[in] irhandle	Input request handle
+ */
+static void
+command_setir(task_cbh handle, void *irhandle)
+{
+    command_irhandle = irhandle;
+}
+
+/**
+ * Get the pending input request.
+ *
+ * @param[in] handle	 Context
+ *
+ * @returns input request handle
+ */
+static void *
+command_getir(task_cbh handle)
+{
+    return command_irhandle;
+}
+
+static void
+command_setir_state(task_cbh handle, const char *name, void *state)
+{
+}
+
+static void *
+command_getir_state(task_cbh handle, const char *name)
+{
+    return NULL;
 }
 
 /**

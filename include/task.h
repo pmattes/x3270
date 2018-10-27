@@ -64,8 +64,22 @@ void task_passthru_done(const char *tag, bool success, const char *result);
 bool task_redirect(void);
 const char *task_set_passthru(task_cbh **ret_cbh);
 void task_store(unsigned char c);
-void task_abort_input_request(unsigned seq);
+void task_abort_input_request_irhandle(void *irhandle);
+void task_abort_input_request(void);
 bool task_is_interactive(void);
+
+/* Input request vectors. */
+typedef void (*task_setir_cb)(task_cbh handle, void *irhandle);
+typedef void *(*task_getir_cb)(task_cbh handle);
+typedef void (*task_setir_state_cb)(task_cbh handle, const char *name,
+	void *state);
+typedef void *(*task_getir_state_cb)(task_cbh handle, const char *name);
+typedef struct {
+    task_setir_cb setir;
+    task_getir_cb getir;
+    task_setir_state_cb setir_state;
+    task_getir_state_cb getir_state;
+} irv_t;
 
 typedef void (*task_data_cb)(task_cbh handle, const char *buf, size_t len,
 	bool success);
@@ -74,7 +88,6 @@ typedef bool (*task_run_cb)(task_cbh handle, bool *success);
 typedef void (*task_closescript_cb)(task_cbh handle);
 typedef void (*task_setflags_cb)(task_cbh handle, unsigned flags);
 typedef unsigned (*task_getflags_cb)(task_cbh handle);
-typedef void (*task_ir_cb)(task_cbh handle, unsigned seq, bool forget);
 typedef struct {
     const char *shortname;
     enum iaction ia;
@@ -85,7 +98,7 @@ typedef struct {
     task_closescript_cb closescript;
     task_setflags_cb setflags;
     task_getflags_cb getflags;
-    task_ir_cb ir;
+    irv_t *irv;
 } tcb_t;
 #define CB_UI		0x1	/* came from the UI */
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
