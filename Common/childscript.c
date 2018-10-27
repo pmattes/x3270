@@ -64,7 +64,8 @@ static unsigned child_getflags(task_cbh handle);
 
 static void child_setir(task_cbh handle, void *irhandle);
 static void *child_getir(task_cbh handle);
-static void child_setir_state(task_cbh handle, const char *name, void *state);
+static void child_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort_cb);
 static void *child_getir_state(task_cbh handle, const char *name);
 
 static irv_t child_irv = {
@@ -149,6 +150,7 @@ typedef struct {
     bool keyboard_lock;		/* lock/unlock keyboard while running */
     unsigned capabilities;	/* self-reported capabilities */
     void *irhandle;		/* input request handle */
+    task_cb_ir_state_t ir_state; /* named input request state */
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
@@ -262,6 +264,7 @@ close_child(child_t *c)
 	task_abort_input_request_irhandle(c->irhandle);
 	c->irhandle = NULL;
     }
+    task_cb_abort_ir_state(&c->ir_state);
 }
 
 /**
@@ -512,6 +515,7 @@ close_child(child_t *c)
 	task_abort_input_request_irhandle(c->irhandle);
 	c->irhandle = NULL;
     }
+    task_cb_abort_ir_state(&c->ir_state);
 }
 
 /*
@@ -686,15 +690,35 @@ child_getir(task_cbh handle)
     return c->irhandle;
 }
 
+/**
+ * Set input request state.
+ *
+ * @param[in] handle    CB handle
+ * @param[in] name      Input request type name
+ * @param[in] state     State to store
+ * @param[in] abort     Abort callback
+ */
 static void
-child_setir_state(task_cbh handle, const char *name, void *state)
+child_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort)
 {
+    child_t *c = (child_t *)handle;
+
+    task_cb_set_ir_state(&c->ir_state, name, state, abort);
 }
 
+/**
+ * Get input request state.
+ *
+ * @param[in] handle    CB handle
+ * @param[in] name      Input request type name
+ */
 static void *
 child_getir_state(task_cbh handle, const char *name)
 {
-    return NULL;
+    child_t *c = (child_t *)handle;
+
+    return task_cb_get_ir_state(&c->ir_state, name);
 }
 
 #if !defined(_WIN32) /*[*/
@@ -1054,6 +1078,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->exit_id = AddChild(pid, child_exited);
     c->enabled = true;
     c->stdoutpipe = stdoutpipe[0];
+    task_cb_init_ir_state(&c->ir_state);
 
     /* Clean up our ends of the pipes. */
     c->infd = inpipe[0];
@@ -1092,6 +1117,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	Free(c);
 	return false;
     }
+    task_cb_init_ir_state(&c->ir_state);
     cr = &c->cr;
 
     /* Start the child process. */

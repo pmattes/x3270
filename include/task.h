@@ -69,10 +69,11 @@ void task_abort_input_request(void);
 bool task_is_interactive(void);
 
 /* Input request vectors. */
+typedef void (*ir_state_abort_cb)(void *state);
 typedef void (*task_setir_cb)(task_cbh handle, void *irhandle);
 typedef void *(*task_getir_cb)(task_cbh handle);
 typedef void (*task_setir_state_cb)(task_cbh handle, const char *name,
-	void *state);
+	void *state, ir_state_abort_cb abort_cb);
 typedef void *(*task_getir_state_cb)(task_cbh handle, const char *name);
 typedef struct {
     task_setir_cb setir;
@@ -117,3 +118,13 @@ typedef bool continue_fn(void *, const char *);
 typedef void abort_fn(void *);
 bool task_request_input(const char *action, const char *prompt,
 	continue_fn *continue_fn, abort_fn *abort_fn, void *handle);
+
+typedef llist_t task_cb_ir_state_t;
+void task_cb_init_ir_state(task_cb_ir_state_t *ir_state);
+void task_cb_set_ir_state(task_cb_ir_state_t *ir_state, const char *name,
+	void *state, ir_state_abort_cb abort);
+void *task_cb_get_ir_state(task_cb_ir_state_t *ir_state, const char *name);
+void task_cb_abort_ir_state(task_cb_ir_state_t *ir_state);
+
+void task_set_ir_state(const char *name, void *state, ir_state_abort_cb abort);
+void *task_get_ir_state(const char *name);

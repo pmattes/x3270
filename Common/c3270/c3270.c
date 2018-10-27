@@ -169,6 +169,7 @@ static char *escape_action = NULL;
 static bool aux_input = false;
 
 static ioid_t c3270_input_id = NULL_IOID;
+static task_cb_ir_state_t command_ir_state;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -459,6 +460,7 @@ main(int argc, char *argv[])
     (void) signal(SIGINT, common_handler);
     (void) signal(SIGTSTP, common_handler);
 #endif /*]*/
+    task_cb_init_ir_state(&command_ir_state);
 
     /* Handle initial toggle settings. */
     initialize_toggles();
@@ -1663,7 +1665,8 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 /* Command-prompt action support. */
 static void command_setir(task_cbh handle, void *irhandle);
 static void *command_getir(task_cbh handle);
-static void command_setir_state(task_cbh handle, const char *name, void *state);
+static void command_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort_cb);
 static void *command_getir_state(task_cbh handle, const char *name);
 static void *command_irhandle;
 
@@ -1835,15 +1838,31 @@ command_getir(task_cbh handle)
     return command_irhandle;
 }
 
+/**
+ * Set input request state.
+ *
+ * @param[in] handle	CB handle
+ * @param[in] name	Input request type name
+ * @param[in] state	State to store
+ * @param[in] abort	Abort callback
+ */
 static void
-command_setir_state(task_cbh handle, const char *name, void *state)
+command_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort)
 {
+    task_cb_set_ir_state(&command_ir_state, name, state, abort);
 }
 
+/**
+ * Get input request state.
+ *
+ * @param[in] handle    CB handle
+ * @param[in] name      Input request type name
+ */
 static void *
 command_getir_state(task_cbh handle, const char *name)
 {
-    return NULL;
+    return task_cb_get_ir_state(&command_ir_state, name);
 }
 
 /**

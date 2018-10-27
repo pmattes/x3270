@@ -243,6 +243,14 @@ typedef struct {
 } input_request_t;
 static llist_t input_requestq = LLIST_INIT(input_requestq);
 
+/* Per-type input request state, kept per (interactive) callback. */
+typedef struct {
+    llist_t llist;		/* linkage */
+    const char *name;		/* name */
+    void *state;		/* state */
+    ir_state_abort_cb abort;	/* abort callback */
+} ir_state_t;
+
 static action_t Abort_action;
 static action_t AnsiText_action;
 static action_t Ascii_action;
@@ -3744,20 +3752,69 @@ task_abort_input_request_irhandle(void *irhandle)
     Free(ir);
 }
 
-/* Continue the RequestInput action. */
-static bool
-continue_input(void *handle, const char *text)
+/**
+ * Set input-specific request context.
+ *
+ * @param[in] name	Input request type name
+ * @param[in] state	Context to store
+ * @param[in] abort	Abort callback
+ */
+void
+task_set_ir_state(const char *name, void *state, ir_state_abort_cb abort)
 {
+    task_t *redirect = task_redirect_to();
+
+    if (redirect != NULL && redirect->cbx.cb->irv != NULL) {
+	(*redirect->cbx.cb->irv->setir_state)(redirect->cbx.handle, name,
+		state, abort);
+    }
+}
+
+/**
+ * Get input-specific request context.
+ *
+ * @param[in] name	Input request type name
+ * @returns context, or NULL
+ */
+void *
+task_get_ir_state(const char *name)
+{
+    task_t *redirect = task_redirect_to();
+
+    if (redirect != NULL && redirect->cbx.cb->irv != NULL) {
+	return (*redirect->cbx.cb->irv->getir_state)(redirect->cbx.handle,
+		name);
+    } else {
+	return NULL;
+    }
+}
+
+/* Continue the sample RequestInput action. */
+static bool
+sample_continue_input(void *handle, const char *text)
+{
+    void *state;
+
     vtrace("Continuing RequestInput\n");
+    state = task_get_ir_state("RequestInput");
+    vtrace("State: %s\n", state? (char *)state: "not found");
+
     action_output("You said '%s'", text);
     return true;
 }
 
 /* Abort the RequestInput action. */
 static void
-abort_input(void *handle)
+sample_abort_input(void *handle)
 {
     vtrace("Aborting RequestInput\n");
+}
+
+/* Abort input request state. */
+static void
+sample_abort_state(void *state)
+{
+    vtrace("Aborting input request state '%s'\n", (char *)state);
 }
 
 /*
@@ -3773,9 +3830,92 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    (void) task_request_input("RequestInput", "Input: ", continue_input,
-	    abort_input, NULL);
+    /* Set up some state. */
+    task_set_ir_state("RequestInput", "SampleState", sample_abort_state);
+
+    (void) task_request_input("RequestInput", "Input: ", sample_continue_input,
+	    sample_abort_input, NULL);
     return false;
+}
+
+/**
+ * Initialize input request state.
+ *
+ * @param[in,out] ir_state	Input request state.
+ */
+void
+task_cb_init_ir_state(task_cb_ir_state_t *ir_state)
+{
+    llist_init(ir_state);
+}
+
+/**
+ * Set input request state.
+ *
+ * @param[in,out] ir_state	Input request state
+ * @param[in] name		Name
+ * @param[in] state		State value
+ * @param[in] abort		Abort callback
+ */
+void
+task_cb_set_ir_state(task_cb_ir_state_t *ir_state, const char *name,
+	void *state, ir_state_abort_cb abort)
+{
+    ir_state_t *irs;
+
+    FOREACH_LLIST(ir_state, irs, ir_state_t *) {
+	if (!strcmp(irs->name, name)) {
+	    irs->state = state;
+	    irs->abort = abort;
+	    return;
+	}
+    } FOREACH_LLIST_END(ir_state, irs, ir_state_t);
+
+    irs = (ir_state_t *)Calloc(1, sizeof(ir_state_t));
+    llist_init(&irs->llist);
+    irs->name = name;
+    irs->state = state;
+    irs->abort = abort;
+    LLIST_APPEND(&irs->llist, *ir_state);
+}
+
+/**
+ * Get input request state.
+ *
+ * @param[in] ir_state	Input request state
+ * @param[in] name	Name
+ * @returns state, or NULL if name not found
+ */
+void *
+task_cb_get_ir_state(task_cb_ir_state_t *ir_state, const char *name)
+{
+    ir_state_t *irs;
+
+    FOREACH_LLIST(ir_state, irs, ir_state_t *) {
+	if (!strcmp(irs->name, name)) {
+	    return irs->state;
+	}
+    } FOREACH_LLIST_END(ir_state, irs, ir_state_t);
+    return NULL;
+}
+
+/**
+ * Abort all input request state.
+ *
+ * @param[in,out] ir_state	Input request state
+ */
+void
+task_cb_abort_ir_state(task_cb_ir_state_t *ir_state)
+{
+    ir_state_t *irs;
+
+    FOREACH_LLIST(ir_state, irs, ir_state_t *) {
+	if (irs->abort != NULL) {
+	    (*irs->abort)(irs->state);
+	}
+	llist_unlink(&irs->llist);
+	Free(irs);
+    } FOREACH_LLIST_END(ir_state, irs, ir_state_t);
 }
 
 /**
