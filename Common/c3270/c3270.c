@@ -301,7 +301,8 @@ main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
     bool	 once = false;
-    bool	 was_connected;
+    bool	 was_connected = false;
+    bool	 was_escaped = false;
 #if defined(_WIN32) /*[*/
     char	*delenv;
 #endif /*]*/
@@ -495,9 +496,8 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	if (CONNECTED) {
-	    was_connected = true;
-	}
+	was_connected = CONNECTED;
+	was_escaped = escaped;
 
 	(void) process_events(true);
 
@@ -512,7 +512,6 @@ main(int argc, char *argv[])
 		x3270_exit(0);
 	    }
 	    interact();
-	    was_connected = false;
 	} else if (!CONNECTED &&
 		!appres.interactive.reconnect &&
 		cl_hostname != NULL) {
@@ -521,6 +520,8 @@ main(int argc, char *argv[])
 		(void) printf("Disconnected.\n");
 	    }
 	    x3270_exit(0);
+	} else if (!was_escaped && escaped) {
+	    interact();
 	}
 
 	if (CONNECTED) {
@@ -1603,7 +1604,6 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	host_cancel_reconnect();
 	screen_suspend();
-	interact();
     }
     return true;
 }

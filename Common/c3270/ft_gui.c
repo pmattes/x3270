@@ -170,6 +170,7 @@ ft_gui_interact(ft_conf_t *p)
 }
 #endif
 
+#if 0
 #if !defined(_WIN32) /*[*/
 static void
 ft_sigint(int ignored _is_unused)
@@ -200,11 +201,13 @@ ft_poll_abort(ioid_t id _is_unused)
 	ft_poll_id = AddTimeOut(500, ft_poll_abort);
     }
 }
+#endif
 
 /* Display an "Awaiting start of transfer" message. */
 void
 ft_gui_awaiting(void)
 {   
+#if 0
     if (ftc->is_interactive) {
 	printf("Press ^C to abort\n");
 	printf("Awaiting start of transfer... ");
@@ -227,4 +230,6 @@ ft_gui_awaiting(void)
     } else {
 	popup_an_info("Awaiting start of transfer");
     }
+#endif
+    popup_an_info("Awaiting start of transfer");
 }

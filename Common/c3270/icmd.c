@@ -1278,6 +1278,7 @@ ask_buffer_size(itc_t *itc)
     ft_conf_t *p = &itc->conf;
 
     /* Ask for the DFT buffer size. */
+    action_output(" ");
     return xs_buffer("DFT buffer size: [%d] ", p->dft_buffersize);
 }
 
