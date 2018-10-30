@@ -36,11 +36,13 @@
 
 #include "charset.h"
 #include "ft_dft.h"
-#include "ft_private.h"
+#include "ft_private.h" /* must precede ft_gui */
+#include "ft_gui.h"
 #include "icmdc.h"
 #include "lazya.h"
 #include "popups.h"
 #include "split_host.h"
+#include "task.h"
 #include "utf8.h"
 #include "utils.h"
 
@@ -54,90 +56,58 @@ icmd_register(void)
 {
 }
 
-/*
- * Get a buffer full of input.
- * Trims white space in the result.
- * Returns NULL if there is an input error or if the input is 'quit'.
+typedef enum {
+    YN_NO = 0,
+    YN_YES = 1,
+    YN_RETRY = -1
+} yn_t;
+
+/**
+ * Process the response to a yes or no question.
+ * 
+ * @param defval	Default value
+ * @param response	Response text to process
+ *
+ * @returns YN_NO (0) for no, YN_YES (1) for yes, YN_RETRY (-1) for retry
  */
-static char *
-get_input(char *buf, int size)
+static yn_t
+getyn_iter(int defval, const char *response)
 {
-    size_t sl;
-    char *s;
-
-    fflush(stdout);
-
-    /* Get the raw input. */
-    if (fgets(buf, size, stdin) == NULL) {
-	return NULL;
+    if (!response[0]) {
+	return (yn_t)defval;
     }
-
-    /* Trim trailing white space. */
-    sl = strlen(buf);
-    while (sl && isspace((unsigned char)buf[sl - 1])) {
-	buf[--sl] = '\0';
+    if (!strncasecmp(response, "yes", strlen(response))) {
+	return YN_YES;
+    } else if (!strncasecmp(response, "no", strlen(response))) {
+	return YN_NO;
+    } else {
+	action_output("Please answer 'yes', 'no' or 'quit'.");
+	return YN_RETRY;
     }
-
-    /* Trim leading white space. */
-    s = buf;
-    while (*s && isspace((unsigned char)*s)) {
-	s++;
-	sl--;
-    }
-    if (s != buf) {
-	memmove(buf, s, sl + 1);
-    }
-
-    /* Check for 'quit'. */
-    if (!strcasecmp(buf, "quit")) {
-	return NULL;
-    }
-
-    return buf;
 }
 
-/* Get a yes, no or quit.  Returns 0 for no, 1 for yes, -1 for quit or error. */
-static int
-getyn(int defval)
-{
-    	char buf[64];
-
-	for (;;) {
-	    	if (get_input(buf, sizeof(buf)) == NULL)
-		    	return -1;
-		if (!buf[0])
-		    	return defval;
-		if (!strncasecmp(buf, "yes", strlen(buf)))
-		    	return 1;
-		else if (!strncasecmp(buf, "no", strlen(buf)))
-		    	return 0;
-		else {
-		    	printf("Please answer 'yes', 'no' or 'quit': ");
-		}
-	}
-}
-
-/*
- * Get a numeric value.  Returns the number for good input, -1 for quit or
- * error.
+/**
+ * Process a numeric response.
+ *
+ * @param defval	Default value
+ * @param response	Response text to process
+ *
+ * @returns numeric response, or -1 for error
  */
 static int
-getnum(int defval)
+getnum_iter(int defval, const char *response)
 {
-    	char buf[64];
-	unsigned long u;
-	char *ptr;
+    unsigned long u;
+    char *ptr;
 
-	for (;;) {
-	    	if (get_input(buf, sizeof(buf)) == NULL)
-		    	return -1;
-		if (!buf[0])
-		    	return defval;
-		u = strtoul(buf, &ptr, 10);
-		if (*ptr == '\0')
-		    	return (int)u;	
-		printf("Please enter a number or 'quit': ");
-	}
+    if (!*response) {
+	return defval;
+    }
+    u = strtoul(response, &ptr, 10);
+    if (*ptr == '\0') {
+	return (int)u;
+    }
+    return -1;
 }
 
 /* Format a text string to fit on an 80-column display. */
@@ -147,7 +117,7 @@ fmt80(const char *s)
     char *nl;
     size_t nc;
 
-    printf("\n");
+    action_output(" ");
 
     while (*s) {
 	nl = strchr(s, '\n');
@@ -167,7 +137,7 @@ fmt80(const char *s)
 	    }
 	}
 
-	printf(" %.*s\n", (int)nc, s);
+	action_output(" %.*s", (int)nc, s);
 	s += nc;
 	if (*s == '\n' || *s == ' ') {
 	    s++;
@@ -176,193 +146,999 @@ fmt80(const char *s)
 }
 
 /*
- * Interactive file transfer command.
- * Called from Transfer_action.  Returns an updated ft_private.
- * Returns 0 for success, -1 for failure.
+ * Pseudo-code:
+ *
+ *  ask to continue
+ *  ask for direction
+ *  ask for source file
+ *  ask for destination file
+ *  ask for host type
+ *  ask for ascii/binary
+ *  if ascii
+ *       ask for cr
+ *       ask for remap
+ *       if windows and remap
+ *          ask for codepage
+ *  if receive
+ *      ask for overwrite
+ *  if not receive
+ *      if not CICS
+ *          ask for recfm
+ *          ask for lrecl
+ *      if tso
+ *          ask for blksz
+ *          ask for units
+ *          if non-default units
+ *              ask for primary
+ *              ask for secondary
+ *              if avblock
+ *                  ask for avblock size
+ *  if not std data stream
+ *      ask for buffer size
+ *  ask to go ahead with the transfer
  */
-int
-interactive_transfer(ft_conf_t *p)
+
+/* File transfer dialog states */
+typedef enum {
+    ITS_BASE,		/* base state */
+    ITS_CONTINUE,	/* Continue? */
+    ITS_DIRECTION,	/* Direction: */
+    ITS_SOURCE_FILE,	/* Source file: */
+    ITS_DEST_FILE,	/* Destination file: */
+    ITS_HOST_TYPE,	/* Host type: */
+    ITS_ASCII,		/* Ascii/Binary? */
+    ITS_CR,		/* Cr keep/remove? */
+    ITS_REMAP,		/* Remap? */
+#if defined(_WIN32) /*[*/
+    ITS_WINDOWS_CP,	/* Windows code page? */
+#endif /*]*/
+    ITS_KEEP,		/* Keep? */
+    ITS_RECFM,		/* Record format: */
+    ITS_LRECL,		/* Record length: */
+    ITS_BLKSIZE,	/* Block size: */
+    ITS_ALLOC,		/* Allocation type: */
+    ITS_PRIMARY,	/* Primary space: */
+    ITS_SECONDARY,	/* Secondary space: */
+    ITS_AVBLOCK,	/* Avblock size: */
+    ITS_BUFFER_SIZE,	/* DFT buffer size: */
+    ITS_GO		/* Continue? */
+} its_t;
+
+/* Interactive transfer context. */
+typedef struct {
+    ft_conf_t conf;	/* returned config */
+    its_t state;	/* state */
+    char *prompt;	/* last prompt displayed */
+    enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode;
+    enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode;
+} itc_t;
+
+/* Returned state for the incremental dialog. */
+typedef enum {
+    ITR_RETRY,		/* ask again */
+    ITR_CONTINUE,	/* more input needed */
+    ITR_GO,		/* go ahead with transfer */
+    ITR_QUIT		/* abort the operation */
+} itret_t;
+
+/* Resume functions, per state. */
+typedef itret_t itret_fn(itc_t *, const char *);
+static itret_fn it_continue;
+static itret_fn it_direction;
+static itret_fn it_source_file;
+static itret_fn it_dest_file;
+static itret_fn it_host_type;
+static itret_fn it_ascii;
+static itret_fn it_cr;
+static itret_fn it_remap;
+#if defined(_WIN32) /*[*/
+static itret_fn it_windows_cp;
+#endif /*]*/
+static itret_fn it_keep;
+static itret_fn it_recfm;
+static itret_fn it_lrecl;
+static itret_fn it_blksize;
+static itret_fn it_alloc;
+static itret_fn it_primary;
+static itret_fn it_secondary;
+static itret_fn it_avblock;
+static itret_fn it_buffer_size;
+static itret_fn it_go;
+
+static itret_fn *it_resume_fn[] = {
+    NULL,
+    it_continue,
+    it_direction,
+    it_source_file,
+    it_dest_file,
+    it_host_type,
+    it_ascii,
+    it_cr,
+    it_remap,
+#if defined(_WIN32) /*[*/
+    it_windows_cp,
+#endif /*]*/
+    it_keep,
+    it_recfm,
+    it_lrecl,
+    it_blksize,
+    it_alloc,
+    it_primary,
+    it_secondary,
+    it_avblock,
+    it_buffer_size,
+    it_go
+};
+
+/* Predicate functions, per state. */
+typedef bool itpred_t(ft_conf_t *);
+static itpred_t pred_base;
+static itpred_t pred_continue;
+static itpred_t pred_direction;
+static itpred_t pred_source_file;
+static itpred_t pred_dest_file;
+static itpred_t pred_host_type;
+static itpred_t pred_ascii;
+static itpred_t pred_cr;
+static itpred_t pred_remap;
+#if defined(_WIN32) /*[*/
+static itpred_t pred_windows_cp;
+#endif /*]*/
+static itpred_t pred_keep;
+static itpred_t pred_recfm;
+static itpred_t pred_lrecl;
+static itpred_t pred_blksize;
+static itpred_t pred_alloc;
+static itpred_t pred_primary;
+static itpred_t pred_secondary;
+static itpred_t pred_avblock;
+static itpred_t pred_buffer_size;
+static itpred_t pred_go;
+
+static itpred_t *it_pred[] = {
+    pred_base,
+    pred_continue,
+    pred_direction,
+    pred_source_file,
+    pred_dest_file,
+    pred_host_type,
+    pred_ascii,
+    pred_cr,
+    pred_remap,
+#if defined(_WIN32) /*[*/
+    pred_windows_cp,
+#endif /*]*/
+    pred_keep,
+    pred_recfm,
+    pred_lrecl,
+    pred_blksize,
+    pred_alloc,
+    pred_primary,
+    pred_secondary,
+    pred_avblock,
+    pred_buffer_size,
+    pred_go
+};
+
+/* Ask functions, per state. */
+typedef char *it_ask_t(itc_t *);
+static it_ask_t ask_continue;
+static it_ask_t ask_direction;
+static it_ask_t ask_source_file;
+static it_ask_t ask_dest_file;
+static it_ask_t ask_host_type;
+static it_ask_t ask_ascii;
+static it_ask_t ask_cr;
+static it_ask_t ask_remap;
+#if defined(_WIN32) /*[*/
+static it_ask_t ask_windows_cp;
+#endif /*]*/
+static it_ask_t ask_keep;
+static it_ask_t ask_recfm;
+static it_ask_t ask_lrecl;
+static it_ask_t ask_blksize;
+static it_ask_t ask_alloc;
+static it_ask_t ask_primary;
+static it_ask_t ask_secondary;
+static it_ask_t ask_avblock;
+static it_ask_t ask_buffer_size;
+static it_ask_t ask_go;
+
+static it_ask_t *it_ask[] = {
+    NULL,
+    ask_continue,
+    ask_direction,
+    ask_source_file,
+    ask_dest_file,
+    ask_host_type,
+    ask_ascii,
+    ask_cr,
+    ask_remap,
+#if defined(_WIN32) /*[*/
+    ask_windows_cp,
+#endif /*]*/
+    ask_keep,
+    ask_recfm,
+    ask_lrecl,
+    ask_blksize,
+    ask_alloc,
+    ask_primary,
+    ask_secondary,
+    ask_avblock,
+    ask_buffer_size,
+    ask_go
+};
+
+/**
+ * Resume an interactive transfer dialog.
+ *
+ * @param[in] handle	Handle (transfer state)
+ * @param[in] response	Reply text
+ *
+ * @returns true to continue, false to quit
+ */
+static bool
+it_resume(void *handle, const char *response)
 {
-#define KW_SIZE 1024
-    char inbuf[KW_SIZE];
-    int n;
-    enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
-    char *default_cr;
-    enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
-    char *default_fe;
+    char *r;
+    itc_t *itc = (itc_t *)handle;
+    itret_t ret;
+    its_t state;
 
-    printf("\n\
-File Transfer\n\
-\n\
-Type 'quit' at any prompt to abort this dialog.\n\
-\n\
-Note: In order to initiate a file transfer, the 3270 cursor must be\n\
-positioned on an input field that can accept the IND$FILE command, e.g.,\n\
-at the VM/CMS or TSO command prompt.\n");
+    if (response != NULL) {
+	size_t sl;
 
-    printf("\nContinue? (y/n) [y] ");
-    if (getyn(1) <= 0) {
-	return -1;
+	/* Trim spaces. */
+	r = lazya(NewString(response));
+	while (*r == ' ') {
+	    r++;
+	}
+	sl = strlen(r);
+	while (sl > 0 && r[sl - 1] == ' ') {
+	    r[--sl] = '\0';
+	}
+
+	/* Test for 'quit'. */
+	if (!strcasecmp(r, "quit")) {
+	    return false;
+	}
+    } else {
+	r = NULL;
     }
 
-    printf("\n\
- 'send' means copy a file from this workstation to the host.\n\
- 'receive' means copy a file from the host to this workstation.\n");
-    for (;;) {
-	printf("Direction: (send/receive) [%s] ",
-		p->receive_flag? "receive": "send");
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
-	}
-	if (!inbuf[0]) {
+    /* Call the resume function for the current state. */
+    ret = (*it_resume_fn[itc->state])(itc, r);
+    if (ret == ITR_RETRY) {
+	task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+	return false;
+    }
+    if (ret == ITR_QUIT) {
+	/* Go no further. */
+	return false;
+    }
+    if (ret == ITR_GO) {
+	return ft_start_backend(&itc->conf);;
+    }
+
+    /*
+     * More input needed.
+     * Look for the next state with a match.
+     * e.g., if state is BASE, then if pred[base](), call ask[base](), which is
+     *  ask_continue() and sets state to BASE+1, which is CONTINUE.
+     */
+    for (state = itc->state + 1; state <= ITS_GO; state++) {
+	if ((*it_pred[state])(&itc->conf)) {
+	    Replace(itc->prompt, (*it_ask[state])(itc));
+	    itc->state = state;
+	    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+	    return false;
 	    break;
 	}
-	if (!strncasecmp(inbuf, "receive", strlen(inbuf))) {
+    }
+
+    return false;
+}
+
+/**
+ * Per-session abort. Free the context saved for this session.
+ *
+ * @param[in] handle	Handle (transfer state)
+ */
+static void
+interactive_transfer_type_abort(void *handle)
+{
+    itc_t *itc = (itc_t *)handle;
+
+    if (itc != NULL) {
+	ft_conf_t *p = &itc->conf;
+
+	Replace(itc->prompt, NULL);
+	Replace(p->local_filename, NULL);
+	Replace(p->local_filename, NULL);
+	Free(itc);
+    }
+}
+
+/*
+ * Start an interactive transfer.
+ * Returns true if dialog in progress, false otherwise.
+ */
+static bool
+interactive_transfer_start(void)
+{
+    itc_t *itc;
+
+    /* Check for an interactive session. */
+    if (!task_is_interactive()) {
+	return false;
+    }
+
+    /* Check for per-type state, and allocate some if needed. */
+    itc = (itc_t *)task_get_ir_state("Transfer");
+    if (itc == NULL) {
+	itc = (itc_t *)Calloc(1, sizeof(itc_t));
+	ft_init_conf(&itc->conf);
+	task_set_ir_state("Transfer", itc, interactive_transfer_type_abort);
+    }
+
+    /* Initialize the state. */
+    itc->cr_mode = CR_REMOVE;
+    itc->fe_mode = FE_KEEP;
+
+    /* Print the banner. */
+    action_output(" ");
+    action_output(
+"File Transfer");
+    action_output(" ");
+    action_output(
+"Type 'quit' at any prompt to abort this dialog.");
+    action_output(" ");
+    action_output(
+"Note: In order to initiate a file transfer, the 3270 cursor must be");
+    action_output(
+"positioned on an input field that can accept the IND$FILE command, e.g.,");
+    action_output(
+"at the VM/CMS or TSO command prompt.");
+    action_output(" ");
+
+    /* Ask about continuing. */
+    itc->state = ITS_CONTINUE;
+    Replace(itc->prompt, NewString("Continue? (y/n) [y] "));
+    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+    return true;
+}
+
+/**
+ * UI hook for the Transfer() action.
+ *
+ * @param[in] p		Configuration (ignored)
+ *
+ * @returns FGI_ASYNC if started, FGI_NOP if not interactive.
+ */
+ft_gui_interact_t
+ft_gui_interact(ft_conf_t *p)
+{
+    return interactive_transfer_start()? FGI_ASYNC: FGI_NOP;
+}
+
+/* ===================== Resume functions ====================== */
+
+/* Received an answer to the initial "Continue?". */
+static itret_t
+it_continue(itc_t *itc, const char *response)
+{
+    switch (getyn_iter(1, response)) {
+    case YN_YES:
+	return ITR_CONTINUE;
+    case YN_NO:
+	return ITR_QUIT;
+    default:
+    case YN_RETRY:
+	return ITR_RETRY;
+    }
+}
+
+/* Received an answer to "Direction:" */
+static itret_t
+it_direction(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (*response) {
+	if (!strncasecmp(response, "receive", strlen(response))) {
 	    p->receive_flag = true;
-	    break;
-	}
-	if (!strncasecmp(inbuf, "send", strlen(inbuf))) {
+	} else if (!strncasecmp(response, "send", strlen(response))) {
 	    p->receive_flag = false;
-	    break;
-	}
-    }
-
-    printf("\n");
-    for (;;) {
-	printf("Name of source file on %s: ",
-		p->receive_flag? "the host": "this workstation");
-	if (p->receive_flag && p->host_filename) {
-	    printf("[%s] ", p->host_filename);
-	} else if (!p->receive_flag && p->local_filename) {
-	    printf("[%s] ", p->local_filename);
-	}
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
-	}
-	if (!inbuf[0]) {
-	    if ((p->receive_flag && p->host_filename) ||
-		 (!p->receive_flag && p->local_filename)) {
-		break;
-	    } else {
-		continue;
-	    }
-	}
-	if (p->receive_flag) {
-	    Replace(p->host_filename, NewString(inbuf));
 	} else {
-	    Replace(p->local_filename, NewString(inbuf));
+	    return ITR_RETRY;
 	}
-	break;
     }
 
-    for (;;) {
-	printf("Name of destination file on %s: ",
-		p->receive_flag? "this workstation": "the host");
-	if (!p->receive_flag && p->host_filename) {
-	    printf("[%s] ", p->host_filename);
-	} else if (p->receive_flag && p->local_filename) {
-	    printf("[%s] ", p->local_filename);
+    return ITR_CONTINUE;
+}
+
+/* Received an answer to "Source file:". */
+static itret_t
+it_source_file(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (!*response) {
+	if (!((p->receive_flag && p->host_filename) ||
+		    (!p->receive_flag && p->local_filename))) {
+	    return ITR_RETRY;
 	}
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
+    } else {
+	if (p->receive_flag) {
+	    Replace(p->host_filename, NewString(response));
+	} else {
+	    Replace(p->local_filename, NewString(response));
 	}
-	if (!inbuf[0]) {
-	    if ((!p->receive_flag && p->host_filename) ||
-		 (p->receive_flag && p->local_filename)) {
-		break;
-	    } else {
-		continue;
-	    }
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Received an answer to "Destination file:". */
+static itret_t
+it_dest_file(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (!*response) {
+	if (!((!p->receive_flag && p->host_filename) ||
+	     (p->receive_flag && p->local_filename))) {
+	    return ITR_RETRY;
 	}
+    } else {
 	if (!p->receive_flag) {
-	    Replace(p->host_filename, NewString(inbuf));
+	    Replace(p->host_filename, NewString(response));
 	} else {
-	    Replace(p->local_filename, NewString(inbuf));
-	}
-	break;
-    }
-
-    printf("\n");
-    for (;;) {
-	printf("Host type: (tso/vm/cics) [%s] ",
-		ft_decode_host_type(p->host_type));
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
-	}
-	if (!inbuf[0]) {
-	    break;
-	}
-	if (ft_encode_host_type(inbuf, &p->host_type)) {
-	    break;
+	    Replace(p->local_filename, NewString(response));
 	}
     }
 
-    printf("\n\
- An 'ascii' transfer does automatic translation between EBCDIC on the host and\n\
- ASCII on the workstation.\n\
- A 'binary' transfer does no data translation.\n");
+    return ITR_CONTINUE;
+}
 
-    for (;;) {
-	printf("Transfer mode: (ascii/binary) [%s] ",
-		p->ascii_flag? "ascii": "binary");
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
+/* Received an answer to "Host type" */
+static itret_t
+it_host_type(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (*response) {
+	host_type_t h;
+
+	if (!ft_encode_host_type(response, &h)) {
+	    return ITR_RETRY;
 	}
-	if (!inbuf[0]) {
-	    break;
-	}
-	if (!strncasecmp(inbuf, "ascii", strlen(inbuf))) {
+	p->host_type = h;
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Received an answer to "ASCII/binary". */
+static itret_t
+it_ascii(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (*response) {
+	if (!strncasecmp(response, "ascii", strlen(response))) {
 	    p->ascii_flag = true;
-	    break;
-	}
-	if (!strncasecmp(inbuf, "binary", strlen(inbuf))) {
+	} else if (!strncasecmp(response, "binary", strlen(response))) {
 	    p->ascii_flag = false;
-	    break;
+	} else {
+	    return ITR_RETRY;
 	}
     }
 
-    if (p->ascii_flag) {
-	printf("\n\
- For ASCII transfers, carriage return (CR) characters can be handled specially.\n");
-	if (p->receive_flag) {
-	    printf("\
- 'add' means that CRs will be added to each record during the transfer.\n");
+    return ITR_CONTINUE;
+}
+
+
+/* Received an answer to "CR?". */
+static itret_t
+it_cr(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (!*response) {
+	itc->cr_mode = p->cr_flag? (p->receive_flag? CR_ADD: CR_REMOVE):
+			CR_KEEP;
+    } else if (!strncasecmp(response, "remove", strlen(response))) {
+	p->cr_flag = true;
+	itc->cr_mode = CR_REMOVE;
+    } else if (!strncasecmp(response, "add", strlen(response))) {
+	p->cr_flag = true;
+	itc->cr_mode = CR_ADD;
+    } else if (!strncasecmp(response, "keep", strlen(response))) {
+	p->cr_flag = false;
+	itc->cr_mode = CR_KEEP;
+    } else {
+	return ITR_RETRY;
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Remap?". */
+static itret_t
+it_remap(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (!response[0]) {
+	if (!strncasecmp(response, "yes", strlen(response))) {
+	    p->remap_flag = true;
+	} else if (!strncasecmp(response, "no", strlen(response))) {
+	    p->remap_flag = false;
 	} else {
-	    printf("\
- 'remove' means that CRs will be removed during the transfer.\n");
+	    return ITR_RETRY;
 	}
-	printf("\
- 'keep' means that no special action is taken with CRs.\n");
-	default_cr = p->cr_flag? (p->receive_flag? "add": "remove"): "keep";
-	for (;;) {
-	    printf("CR handling: (%s/keep) [%s] ",
-		    p->receive_flag? "add": "remove",
-		    default_cr);
-	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-		return -1;
-	    }
-	    if (!inbuf[0]) {
-		cr_mode = p->cr_flag? (p->receive_flag? CR_ADD: CR_REMOVE):
-					      CR_KEEP;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "remove", strlen(inbuf))) {
-		p->cr_flag = true;
-		cr_mode = CR_REMOVE;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "add", strlen(inbuf))) {
-		p->cr_flag = true;
-		cr_mode = CR_ADD;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
-		p->cr_flag = false;
-		cr_mode = CR_KEEP;
-		break;
-	    }
+    }
+
+    return ITR_CONTINUE;
+}
+
+#if defined(_WIN32) /*[*/
+/* Got an answer to "Windows codepage?". */
+static itret_t
+it_windows_cp(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int cp = getnum_iter(p->windows_codepage, response);
+
+    if (cp < 0) {
+	return ITR_RETRY;
+    }
+    p->windows_codepage = cp;
+
+    return ITR_CONTINUE;
+}
+#endif /*]*/
+
+/* Got an answer to "Keep?" */
+static itret_t
+it_keep(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (!*response) {
+	itc->fe_mode = p->allow_overwrite? FE_REPLACE:
+	    (p->append_flag? FE_APPEND: FE_KEEP);
+    } else if (!strncasecmp(response, "keep", strlen(response))) {
+	p->append_flag = false;
+	p->allow_overwrite = false;
+	itc->fe_mode = FE_KEEP;
+    } else if (!strncasecmp(response, "replace", strlen(response))) {
+	p->append_flag = false;
+	p->allow_overwrite = true;
+	itc->fe_mode = FE_REPLACE;
+    } else if (!strncasecmp(response, "append", strlen(response))) {
+	p->append_flag = true;
+	p->allow_overwrite = false;
+	itc->fe_mode = FE_APPEND;
+    } else {
+	return ITR_RETRY;
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Record format?". */
+static itret_t
+it_recfm(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (*response) {
+	recfm_t recfm;
+
+	if (ft_encode_recfm(response, &recfm)) {
+	    p->recfm = recfm;
+	} else {
+	    return ITR_RETRY;
 	}
-	fmt80(lazyaf("For ASCII transfers, "
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Logical record length?". */
+static itret_t
+it_lrecl(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int lrecl = getnum_iter(p->lrecl, response);
+
+    if (lrecl < 0) {
+	return ITR_RETRY;
+    }
+    p->lrecl = lrecl;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Blocksize?". */
+static itret_t
+it_blksize(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int blksize = getnum_iter(p->blksize, response);
+
+    if (blksize < 0) {
+	return ITR_RETRY;
+    }
+    p->blksize = blksize;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Units?". */
+static itret_t
+it_alloc(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    units_t units;
+
+    if (ft_encode_units(response, &units)) {
+	p->units = units;
+    } else {
+	return ITR_RETRY;
+    }
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer for "Primary?". */
+static itret_t
+it_primary(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int primary = getnum_iter(p->primary_space, response);
+
+    if (primary < 0) {
+	return ITR_RETRY;
+    }
+    p->primary_space = primary;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Secondary?". */
+static itret_t
+it_secondary(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int secondary = getnum_iter(p->secondary_space, response);
+
+    if (secondary < 0) {
+	return ITR_RETRY;
+    }
+    p->secondary_space = secondary;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Avblock?". */
+static itret_t
+it_avblock(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int avblock = getnum_iter(p->avblock, response);
+
+    if (avblock < 0) {
+	return ITR_RETRY;
+    }
+    p->avblock = avblock;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to "Buffer size?. */
+static itret_t
+it_buffer_size(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+    int buffer_size = getnum_iter(p->dft_buffersize, response);
+    int nsize;
+
+    if (buffer_size < 0) {
+	return ITR_RETRY;
+    }
+    nsize = set_dft_buffersize(buffer_size);
+    if (nsize != buffer_size) {
+	action_output("Size changed to %d.", nsize);
+    }
+    p->dft_buffersize = nsize;
+
+    return ITR_CONTINUE;
+}
+
+/* Got an answer to the final "Continue?". */
+static itret_t
+it_go(itc_t *itc, const char *response)
+{
+    int go = getyn_iter(1, response);
+
+    if (go < 0) {
+	return ITR_RETRY;
+    }
+    if (!go) {
+	return ITR_QUIT;
+    }
+
+    return ITR_GO;
+}
+
+/* ===================== Predicates ====================== */
+
+static bool
+pred_base(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_continue(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_direction(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_source_file(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_dest_file(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_host_type(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_ascii(ft_conf_t *p)
+{
+    return true;
+}
+
+static bool
+pred_cr(ft_conf_t *p)
+{
+    return p->ascii_flag;
+}
+
+static bool
+pred_remap(ft_conf_t *p)
+{
+    return p->ascii_flag;
+}
+
+#if defined(_WIN32) /*[*/
+static bool
+pred_windows_cp(ft_conf_t *p)
+{
+    return p->ascii_flag && p->remap_flag;
+}
+#endif /*]*/
+
+static bool
+pred_keep(ft_conf_t *p)
+{
+    return p->receive_flag;
+}
+
+static bool
+pred_recfm(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type != HT_CICS;
+}
+
+static bool
+pred_lrecl(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type != HT_CICS;
+}
+
+static bool
+pred_blksize(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type == HT_TSO;
+}
+
+static bool
+pred_alloc(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type == HT_TSO;
+}
+
+static bool
+pred_primary(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type == HT_TSO
+	&& p->units != DEFAULT_UNITS;
+}
+
+static bool
+pred_secondary(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type == HT_TSO
+	&& p->units != DEFAULT_UNITS;
+}
+
+static bool
+pred_avblock(ft_conf_t *p)
+{
+    return !p->receive_flag && p->host_type == HT_TSO
+	&& p->units == AVBLOCK;
+}
+
+static bool
+pred_buffer_size(ft_conf_t *p)
+{
+    return !HOST_FLAG(STD_DS_HOST);
+}
+
+static bool
+pred_go(ft_conf_t *p)
+{
+    return true;
+}
+
+/* ===================== Ask functions ====================== */
+
+static char *
+ask_continue(itc_t *itc)
+{
+    /* Print the banner. */
+    action_output(" ");
+    action_output(
+"File Transfer");
+    action_output(" ");
+    action_output(
+"Type 'quit' at any prompt to abort this dialog.");
+    action_output(" ");
+    action_output(
+"Note: In order to initiate a file transfer, the 3270 cursor must be");
+    action_output(
+"positioned on an input field that can accept the IND$FILE command, e.g.,");
+    action_output(
+"at the VM/CMS or TSO command prompt.");
+    action_output(" ");
+
+    /* Ask about continuing. */
+    return NewString("Continue? (y/n) [y] ");
+}
+
+static char *
+ask_direction(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask about the direction. */
+    action_output(" ");
+    action_output(
+"'send' means copy a file from this workstation to the host.");
+    action_output(
+"'receive' means copy a file from the host to this workstation.");
+
+    return xs_buffer("Direction: (send/receive) [%s] ",
+	    p->receive_flag? "receive": "send");
+}
+
+static char *
+ask_source_file(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+    char *default_file;
+
+    /* Ask about the source file. */
+    if (p->receive_flag && p->host_filename) {
+	default_file = lazyaf(" [%s]", p->host_filename);
+    } else if (!p->receive_flag && p->local_filename) {
+	default_file = lazyaf(" [%s]", p->local_filename);
+    } else {
+	default_file = "";
+    }
+
+    return xs_buffer("Name of source file on %s:%s ",
+	    p->receive_flag? "the host": "this workstation", default_file);
+}
+
+static char *
+ask_dest_file(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+    char *default_file;
+
+    /* Ask about the destination file. */
+    if (!p->receive_flag && p->host_filename) {
+	default_file = lazyaf(" [%s]", p->host_filename);
+    } else if (p->receive_flag && p->local_filename) {
+	default_file = lazyaf(" [%s]", p->local_filename);
+    } else {
+	default_file = "";
+    }
+    return xs_buffer("Name of destination file on %s:%s ",
+	    p->receive_flag? "this workstation": "the host",
+	    default_file);
+}
+
+static char *
+ask_host_type(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask about the host type. */
+    action_output(" ");
+    return xs_buffer("Host type: (tso/vm/cics) [%s] ",
+	    ft_decode_host_type(p->host_type));
+}
+
+static char *
+ask_ascii(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    action_output(" ");
+    action_output(
+"An 'ascii' transfer does automatic translation between EBCDIC on the host and");
+    action_output(
+"ASCII on the workstation.");
+    action_output(
+"A 'binary' transfer does no data translation.");
+
+    return xs_buffer("Transfer mode: (ascii/binary) [%s] ",
+	    p->ascii_flag? "ascii": "binary");
+}
+
+static char *
+ask_cr(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+    char *default_cr;
+
+    /* Ask about CR handling. */
+    action_output(" ");
+    action_output(
+"For ASCII transfers, carriage return (CR) characters can be handled specially.");
+    if (p->receive_flag) {
+	action_output(
+"'add' means that CRs will be added to each record during the transfer.");
+    } else {
+	action_output(
+"'remove' means that CRs will be removed during the transfer.");
+    }
+    action_output(
+"'keep' means that no special action is taken with CRs.");
+    default_cr = p->cr_flag? (p->receive_flag? "add": "remove"): "keep";
+    return xs_buffer("CR handling: (%s/keep) [%s] ",
+	    p->receive_flag? "add": "remove", default_cr);
+}
+
+static char *
+ask_remap(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask about character set remapping. */
+    fmt80(lazyaf("For ASCII transfers, "
 #if defined(WC3270) /*[*/
 "w"
 #endif /*]*/
@@ -378,341 +1154,276 @@ at the VM/CMS or TSO command prompt.\n");
 'yes' means that text will be translated.\n\
 'no' means that text will be transferred as-is.",
 #if !defined(WC3270) /*[*/
-	    locale_codeset,
+	locale_codeset,
 #endif /*]*/
-	    get_host_codepage()));
-	for (;;) {
-	    printf("Re-map character set? (yes/no) [%s] ",
-		    p->remap_flag? "yes": "no");
-	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-		return -1;
-	    }
-	    if (!inbuf[0]) {
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "yes", strlen(inbuf))) {
-		p->remap_flag = true;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "no", strlen(inbuf))) {
-		p->remap_flag = false;
-		break;
-	    }
-	}
+	get_host_codepage()));
+    return xs_buffer("Re-map character set? (yes/no) [%s] ",
+	    p->remap_flag? "yes": "no");
+}
+
 #if defined(_WIN32) /*[*/
-	if (p->remap_flag) {
-	    for (;;) {
-		int cp;
+static char *
+ask_windows_cp(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
 
-		printf("Windows code page for re-mapping: [%d] ",
-			p->windows_codepage);
-		cp = getnum(p->windows_codepage);
-		if (cp < 0) {
-		    return -1;
-		}
-		if (cp > 0) {
-		    p->windows_codepage = cp;
-		    break;
-		}
-	    }
-	}
+    /* Ask about the Windows code page. */
+    return xs_buffer("Windows code page for re-mapping: [%d] ",
+	    p->windows_codepage);
+}
 #endif /*]*/
-    }
 
-    if (p->receive_flag) {
-	printf("\n\
- If the destination file exists, you can choose to keep it (and abort the\n\
- transfer), replace it, or append the source file to it.\n");
-	if (p->allow_overwrite) {
-	    default_fe = "replace";
-	} else if (p->append_flag) {
-	    default_fe = "append";
-	} else {
-	    default_fe = "keep";
-	}
-	printf("\n");
-	for (;;) {
-	    printf("Action if destination file exists: "
-		    "(keep/replace/append) [%s] ", default_fe);
-	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-		return -1;
-	    }
-	    if (!inbuf[0]) {
-		fe_mode = p->allow_overwrite? FE_REPLACE:
-		    (p->append_flag? FE_APPEND: FE_KEEP);
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
-		p->append_flag = false;
-		p->allow_overwrite = false;
-		fe_mode = FE_KEEP;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "replace", strlen(inbuf))) {
-		p->append_flag = false;
-		p->allow_overwrite = true;
-		fe_mode = FE_REPLACE;
-		break;
-	    }
-	    if (!strncasecmp(inbuf, "append", strlen(inbuf))) {
-		p->append_flag = true;
-		p->allow_overwrite = false;
-		fe_mode = FE_APPEND;
-		break;
-	    }
-	}
-    }
+static char *
+ask_keep(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+    char *default_fe;
 
-    if (!p->receive_flag) {
-	if (p->host_type != HT_CICS) {
-	    printf("\n");
-	    for (;;) {
-		printf("[optional] Destination file record "
-			"format:\n (default/fixed/variable/undefined) [%s] ",
-			ft_decode_recfm(p->recfm));
-		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-		    return -1;
-		}
-		if (!inbuf[0]) {
-		    break;
-		}
-		if (ft_encode_recfm(inbuf, &p->recfm)) {
-		    break;
-		}
-	    }
-
-	    printf("\n");
-	    printf("[optional] Destination file logical record length: ");
-	    if (p->lrecl) {
-		printf("[%d] ", p->lrecl);
-	    }
-	    n = getnum(p->lrecl);
-	    if (n < 0) {
-		return -1;
-	    }
-	    p->lrecl = n;
-	}
-
-	if (p->host_type == HT_TSO) {
-
-	    printf("[optional] Destination file block size: ");
-	    if (p->blksize) {
-		printf("[%d] ", p->blksize);
-	    }
-	    n = getnum(p->blksize);
-	    if (n < 0) {
-		return -1;
-	    }
-	    p->blksize = n;
-
-	    printf("\n");
-	    for (;;) {
-		printf("[optional] Destination file "
-			"allocation type:\n"
-			" (default/tracks/cylinders/avblock) ");
-		if (p->units) {
-		    printf("[%s] ", ft_decode_units(p->units));
-		}
-		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-		    return -1;
-		}
-		if (!inbuf[0]) {
-		    break;
-		}
-		if (ft_encode_units(inbuf, &p->units)) {
-		    break;
-		}
-	    }
-
-	    if (p->units != DEFAULT_UNITS) {
-		printf("\n");
-		for (;;) {
-		    printf("Destination file primary space: ");
-		    if (p->primary_space) {
-			printf("[%d] ", p->primary_space);
-		    }
-		    n = getnum(p->primary_space);
-		    if (n < 0) {
-			return -1;
-		    }
-		    if (n > 0) {
-			p->primary_space = n;
-			break;
-		    }
-		}
-
-		printf("[optional] Destination file secondary space: ");
-		if (p->secondary_space) {
-		    printf("[%d] ", p->secondary_space);
-		}
-		n = getnum(p->secondary_space);
-		if (n < 0) {
-		    return -1;
-		}
-		p->secondary_space = n;
-
-		if (p->units == AVBLOCK) {
-		    for (;;) {
-			printf("Destination file avblock size: ");
-			if (p->avblock) {
-			    printf("[%d] ", p->avblock);
-			}
-			n = getnum(p->avblock);
-			if (n < 0) {
-			    return -1;
-			}
-			if (n > 0) {
-			    p->avblock = n;
-			    break;
-			}
-		    }
-		}
-	    }
-	}
-    }
-
-    if (!HOST_FLAG(STD_DS_HOST)) {
-	printf("\n");
-	for (;;) {
-	    int nsize;
-
-	    printf("DFT buffer size: [%d] ", p->dft_buffersize);
-	    if (p->avblock) {
-		printf("[%d] ", p->avblock);
-	    }
-	    n = getnum(p->dft_buffersize);
-	    if (n < 0) {
-		return -1;
-	    }
-	    nsize = set_dft_buffersize(n);
-	    if (nsize != n) {
-		printf("Size changed to %d.\n", nsize);
-	    }
-	    p->dft_buffersize = nsize;
-	    break;
-	}
-    }
-
-    printf("\nFile Transfer Summary:\n");
-    if (p->receive_flag) {
-	printf(" Source file on Host: %s\n", p->host_filename);
-	printf(" Destination file on Workstation: %s\n", p->local_filename);
+    action_output(" ");
+    action_output(
+"If the destination file exists, you can choose to keep it (and abort the");
+    action_output(
+"transfer), replace it, or append the source file to it.");
+    if (p->allow_overwrite) {
+	default_fe = "replace";
+    } else if (p->append_flag) {
+	default_fe = "append";
     } else {
-	printf(" Source file on workstation: %s\n", p->local_filename);
-	printf(" Destination file on Host: %s\n", p->host_filename);
+	default_fe = "keep";
     }
-    printf(" Host type: ");
+    return xs_buffer("Action if destination file exists: "
+	    "(keep/replace/append) [%s] ", default_fe);
+}
+
+static char *
+ask_recfm(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for the record format. */
+    action_output("[optional] Destination file record format:");
+    return xs_buffer(" (default/fixed/variable/undefined) [%s] ",
+	    ft_decode_recfm(p->recfm));
+}
+
+static char *
+ask_lrecl(itc_t *itc)
+{
+    /* Ask for the logical record length. */
+    return NewString("[optional] Destination file logical record length: ");
+}
+
+static char *
+ask_blksize(itc_t *itc)
+{
+    /* Ask for the block size. */
+    return NewString("[optional] Destination file block size: ");
+}
+
+static char *
+ask_alloc(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for units. */
+    action_output("[optional] Destination file allocation type:");
+    return xs_buffer(" (default/tracks/cylinders/avblock) [%s] ",
+	    ft_decode_units(p->units));
+}
+
+static char *
+ask_primary(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for primary allocation. */
+    if (p->primary_space) {
+	return xs_buffer("Destination file primary space: [%d]",
+		p->primary_space);
+    } else {
+	return  NewString("Destination file primary space: ");
+    }
+}
+
+static char *
+ask_secondary(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for secondary. */
+    if (p->secondary_space) {
+	return xs_buffer("Destination file secondary space: [%d]",
+		p->secondary_space);
+    } else {
+	return NewString("Destination file secondary space: ");
+    }
+}
+
+static char *
+ask_avblock(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for AVBLOCK. */
+    if (p->avblock) {
+	return xs_buffer("Destination file avblock size: [%d]", p->avblock);
+    } else {
+	return NewString("Destination file abvlock size: ");
+    }
+}
+
+static char *
+ask_buffer_size(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for the DFT buffer size. */
+    return xs_buffer("DFT buffer size: [%d] ", p->dft_buffersize);
+}
+
+static char *
+ask_go(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+    char *ht = "";
+    char *cr = "";
+    char *remap = "";
+    char *windows_cp = "";
+
+    /* Sum up and ask about starting the transfer. */
+    action_output(" ");
+    action_output("File Transfer Summary:");
+
+    if (p->receive_flag) {
+	action_output(" Source file on Host: %s", p->host_filename);
+	action_output(" Destination file on Workstation: %s",
+		p->local_filename);
+    } else {
+	action_output(" Source file on workstation: %s", p->local_filename);
+	action_output(" Destination file on Host: %s", p->host_filename);
+    }
+
     switch (p->host_type) {
     case HT_TSO:
-	printf("TSO");
+	ht = "TSO";
 	break;
     case HT_VM:
-	printf("VM/CMS");
+	ht = "VM/CMS";
 	break;
     case HT_CICS:
-	printf("CICS");
+	ht = "CICS";
 	break;
     }
-    printf(" \n Transfer mode: %s", p->ascii_flag? "ASCII": "Binary");
+    action_output(" Host type: %s", ht);
+
     if (p->ascii_flag) {
-	switch (cr_mode) {
+	switch (itc->cr_mode) {
 	case CR_REMOVE:
-	    printf(", remove CRs");
+	    cr = ", remove CRs";
 	    break;
 	case CR_ADD:
-	    printf(", add CRs");
+	    cr = ", add CRs";
 	    break;
 	case CR_KEEP:
 	    break;
 	}
 	if (p->remap_flag) {
-	    printf(", remap text");
+	    remap = ", remap text";
 	} else {
-	    printf(", don't remap text");
+	    remap = ", don't remap text";
 	}
 #if defined(_WIN32) /*[*/
 	if (p->remap_flag) {
-	    printf(", Windows code page %d", p->windows_codepage);
+	    windows_cp = lazyaf(", Windows code page %d", p->windows_codepage);
 	}
 #endif /*]*/
-	printf("\n");
-    } else {
-	printf("\n");
     }
+    action_output(" ");
+    action_output(" Transfer mode: %s%s%s%s",
+	    p->ascii_flag? "ASCII": "Binary",
+	    cr,
+	    remap,
+	    windows_cp);
+
     if (p->receive_flag) {
-	printf(" If destination file exists, ");
-	switch (fe_mode) {
+	char *exists = "";
+
+	switch (itc->fe_mode) {
 	case FE_KEEP:
-	    printf("abort the transfer\n");
+	    exists = "abort the transfer";
 	    break;
 	case FE_REPLACE:
-	    printf("replace it\n");
+	    exists = "replace it";
 	    break;
 	case FE_APPEND:
-	    printf("append to it\n");
+	    exists = "append to it";
 	    break;
 	}
+	action_output(" If destination file exists, %s", exists);
     }
+
     if (!p->receive_flag &&
 	    (p->recfm != DEFAULT_RECFM || p->lrecl || p->primary_space ||
 	     p->secondary_space)) {
 
-	printf(" Destination file:\n");
+	action_output(" Destination file:");
 
 	switch (p->recfm) {
 	case DEFAULT_RECFM:
 	    break;
 	case RECFM_FIXED:
-	    printf("  Record format: fixed\n");
+	    action_output("  Record format: fixed");
 	    break;
 	case RECFM_VARIABLE:
-	    printf("  Record format: variable\n");
+	    action_output("  Record format: variable");
 	    break;
 	case RECFM_UNDEFINED:
-	    printf("  Record format: undefined\n");
+	    action_output("  Record format: undefined");
 	    break;
 	}
 	if (p->lrecl) {
-	    printf("  Logical record length: %d\n", p->lrecl);
+	    action_output("  Logical record length: %d", p->lrecl);
 	}
 	if (p->blksize) {
-	    printf("  Block size: %d\n", p->blksize);
+	    action_output("  Block size: %d", p->blksize);
 	}
+
 	if (p->primary_space || p->secondary_space) {
-	    printf("  Allocation:");
+	    char *primary = "";
+	    char *secondary = "";
+	    char *units = "";
+
 	    if (p->primary_space) {
-		printf(" primary %d", p->primary_space);
+		primary = lazyaf(" primary %d", p->primary_space);
 	    }
 	    if (p->secondary_space) {
-		printf(" secondary %d", p->secondary_space);
+		secondary = lazyaf(" secondary %d", p->secondary_space);
 	    }
 	    switch (p->units) {
 	    case DEFAULT_UNITS:
 		break;
 	    case TRACKS:
-		printf(" tracks");
+		units = " tracks";
 		break;
 	    case CYLINDERS:
-		printf(" cylinders");
+		units = " cylinders";
 		break;
 	    case AVBLOCK:
-		printf(" avblock %d", p->avblock);
+		units = lazyaf(" avblock %d", p->avblock);
 		break;
 	    }
-	    printf("\n");
+	    action_output("  Allocation:%s%s%s",
+		    primary,
+		    secondary,
+		    units);
 	}
     }
+
     if (!HOST_FLAG(STD_DS_HOST)) {
-	printf(" DFT buffer size: %d\n", p->dft_buffersize);
+	action_output(" DFT buffer size: %d", p->dft_buffersize);
     }
 
-    printf("\nContinue? (y/n) [y] ");
-    if (getyn(1) <= 0) {
-	return -1;
-    }
-
-    /* Let it go. */
-    return 0;
+    return NewString("Continue? (y/n) [y] ");
 }
 
 /* Help for the interactive Transfer action. */

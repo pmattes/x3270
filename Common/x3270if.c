@@ -1235,7 +1235,8 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		fprintf(stderr, "Out of memory\n");
 		exit(__LINE__);
 	    }
-	    sprintf(response, "ResumeInput(%s)", command_base64);
+	    sprintf(response, "ResumeInput(%s)",
+		    command_base64[0]? command_base64: "\"\"");
 	    Free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
 		    &ret);
@@ -1255,35 +1256,33 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		ret[sl - 1] = '\0';
 	    }
 	    if (rc && is_input(ret, &p)) {
-		if (!*ret) {
-		    Free(ret);
-		    continue;
-		}
 		prompt = p;
 		aux_input = true;
 		rc = 0;
 	    }
+	    if (*ret) {
 #if !defined(_WIN32) /*[*/
-	    if (aux_input) {
-		printf("%s\n", ret);
-	    } else {
-		printf("\033[3%cm%s\033[39m\n",
-			rc? '1': '2',
-			ret);
-	    }
+		if (aux_input) {
+		    printf("%s\n", ret);
+		} else {
+		    printf("\033[3%cm%s\033[39m\n",
+			    rc? '1': '2',
+			    ret);
+		}
 # else /*][*/
-	    if (!aux_input) {
-		set_text_attribute(conout,
-			rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
-			     FOREGROUND_GREEN);
-	    }
-	    fputs(ret, stdout);
-	    fflush(stdout);
-	    if (!aux_input) {
-		set_text_attribute(conout, info.wAttributes);
-	    }
-	    fputc('\n', stdout);
+		if (!aux_input) {
+		    set_text_attribute(conout,
+			    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
+				 FOREGROUND_GREEN);
+		}
+		fputs(ret, stdout);
+		fflush(stdout);
+		if (!aux_input) {
+		    set_text_attribute(conout, info.wAttributes);
+		}
+		fputc('\n', stdout);
 #endif /*]*/
+	    }
 	    Free(ret);
 	    fflush(stdout);
 	}

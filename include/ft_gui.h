@@ -42,7 +42,8 @@ void ft_gui_aborting(void);
 typedef enum {
     FGI_NOP,		/* interaction not supported */
     FGI_SUCCESS,	/* parameters set, proceed */
-    FGI_ABORT		/* user aborted transfer */
+    FGI_ABORT,		/* user aborted transfer */
+    FGI_ASYNC		/* dialog running asynchronously */
 } ft_gui_interact_t;
 ft_gui_interact_t ft_gui_interact(ft_conf_t *p);
 void ft_gui_awaiting(void);

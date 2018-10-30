@@ -3674,7 +3674,8 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
     /* Continue and free the input request. */
     ir = (input_request_t *)irhandle;
     llist_unlink(&ir->llist);
-    ret = (*ir->continue_fn)(ir->handle, lazya(text));
+    ret = (*ir->continue_fn)(ir->handle, text);
+    Free(text);
     Free(ir);
     return ret;
 }
@@ -3733,7 +3734,6 @@ task_request_input(const char *action, const char *prompt,
     (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
-    action_output("Friendly first line");
     popup_an_error("[input] %s", lazya(base64_encode(prompt)));
     return true;
 }
@@ -3748,7 +3748,9 @@ task_abort_input_request_irhandle(void *irhandle)
 
     /* Abort and forget. */
     llist_unlink(&ir->llist);
-    (*ir->abort_fn)(ir->handle);
+    if (ir->abort_fn != NULL) {
+	(*ir->abort_fn)(ir->handle);
+    }
     Free(ir);
 }
 

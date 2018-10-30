@@ -33,7 +33,7 @@ MKFB = mkfb$(NATIVE_SFX)
 MKKEYPAD = mkkeypad$(NATIVE_SFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -I$(TOP)/include
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -Wno-format-zero-length -MMD -MP $(XCPPFLAGS)
 
 ifdef WIN64
 HOST = win64

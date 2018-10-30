@@ -947,6 +947,25 @@ parse_ft_keywords(unsigned argc, const char **argv)
     return p;
 }
 
+/* Start a transfer. */
+bool
+ft_start_backend(ft_conf_t *p)
+{
+    fts.local_file = ft_go(p);
+    if (fts.local_file == NULL) {
+	return false;
+    }
+
+    /* If interactive, tell the user we're waiting. */
+    ft_gui_awaiting();
+
+    /* Set a timeout for failed command start. */
+    ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
+
+    /* Success. */
+    return true;
+}
+
 /*
  * Script/macro action for file transfer.
  *  Transfer(option=value[,...])
@@ -1015,6 +1034,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	case FGI_ABORT:
 	    /* User said no. */
 	    return false;
+	case FGI_ASYNC:
+	    /* Asynchronous dialog running. */
+	    return true;
 	}
     }
 
@@ -1028,19 +1050,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Start the transfer. */
-    fts.local_file = ft_go(p);
-    if (fts.local_file == NULL) {
-	return false;
-    }
-
-    /* If interactive, tell the user we're waiting. */
-    ft_gui_awaiting();
-
-    /* Set a timeout for failed command start. */
-    ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
-
-    /* Success. */
-    return true;
+    return ft_start_backend(p);
 }
 
 /*

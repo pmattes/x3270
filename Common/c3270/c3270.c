@@ -618,7 +618,7 @@ rl_handler(char *command)
 static void
 display_prompt(void)
 {
-    if (CONNECTED) {
+    if (CONNECTED && !aux_input) {
 	(void) printf("Press <Enter> to resume session.\n");
     }
 
@@ -737,7 +737,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (aux_input) {
 	aux_input = false;
-	c3270_push_command(lazyaf("ResumeInput(%s)", lazya(base64_encode(s))));
+	c3270_push_command(lazyaf("ResumeInput(%s)",
+		    *s? lazya(base64_encode(s)): "\"\""));
 	Replace(prompt_string, real_prompt_string);
     } else {
 	c3270_push_command(s);
@@ -1715,6 +1716,7 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
     if (!success && !strncmp(buf, INPUT, strlen(INPUT))) {
 	prompt_string = base64_decode(buf + strlen(INPUT));
 	aux_input = true;
+	command_output = true; /* a while lie */
     } else {
 	glue_gui_output(lazyaf("%.*s", (int)len, buf));
     }

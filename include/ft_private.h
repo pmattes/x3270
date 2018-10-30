@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, Paul Mattes.
+ * Copyright (c) 1996-2014, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -88,7 +88,8 @@ typedef struct {
 extern ft_conf_t *ftc;
 
 FILE *ft_go(ft_conf_t *p);
-extern void ft_init_conf(ft_conf_t *p);
+void ft_init_conf(ft_conf_t *p);
+bool ft_start_backend(ft_conf_t *p);
 
 /* Transient state. */
 typedef struct {
