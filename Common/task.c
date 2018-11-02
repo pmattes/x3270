@@ -3354,6 +3354,63 @@ Printer_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/*
+ * Abort all scripts using a particular CB.
+ */
+void
+abort_script_by_cb(const char *cb_name)
+{
+    taskq_t *q;
+
+#if !defined(_WIN32) /*[*/
+    /* child_ignore_output(); */ /* Needed? */
+#endif /*]*/
+
+    vtrace("Aborting all pending scripts for %s\n", cb_name);
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	task_t *s;
+	task_t *next;
+
+	if (strcmp(cb_name, q->cb->shortname)) {
+	    continue;
+	}
+
+	for (s = q->top; s != NULL; s = next) {
+	    next = s->next;
+
+	    /* Don't abort a peer script. */
+	    if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
+		vtrace("Abort skipping peer\n");
+		continue;
+	    }
+
+	    /* Abort the cb. */
+	    if (s->type == ST_CB) {
+		vtrace("Aborting " TASK_NAME_FMT "\n", TASK_sNAME(s));
+		task_result(s, "Aborted", false);
+		(*s->cbx.cb->done)(s->cbx.handle, true, true);
+	    }
+
+	    /* Free the task -- this is not a pop */
+	    vtrace("Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	    free_task(s);
+
+	    /* Take it out of the taskq. */
+	    q->top = next;
+	    q->depth--;
+	}
+
+	/* Mark the taskq as deleted. */
+	if (q->depth == 0) {
+	    q->deleted = true;
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+
+    /* Re-evaluate the OIA and menus. */
+    task_status_set();
+}
+
 /* Abort all running scripts. */
 void
 abort_script(void)

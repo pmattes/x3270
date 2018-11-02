@@ -41,6 +41,7 @@ extern struct macro_def *macro_defs;
 typedef void *task_cbh;
 
 void abort_script(void);
+void abort_script_by_cb(const char *cb_name);
 void login_macro(char *s);
 void macros_init(void);
 void macro_command(struct macro_def *m);

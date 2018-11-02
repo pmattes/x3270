@@ -194,6 +194,39 @@ static struct {
 static DWORD WINAPI inthread_read(LPVOID lpParameter);
 #endif /*]*/
 
+static void command_setir(task_cbh handle, void *irhandle);
+static void *command_getir(task_cbh handle);
+static void command_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort_cb);
+static void *command_getir_state(task_cbh handle, const char *name);
+static void *command_irhandle;
+
+static irv_t command_irv = {
+    command_setir,
+    command_getir,
+    command_setir_state,
+    command_getir_state
+};
+
+static void command_data(task_cbh handle, const char *buf, size_t len,
+	bool success);
+static bool command_done(task_cbh handle, bool success, bool abort);
+static unsigned command_getflags(task_cbh handle);
+
+/* Callback block for actions. */
+static tcb_t command_cb = {
+    "command",
+    IA_COMMAND,
+    CB_NEW_TASKQ,
+    command_data,
+    command_done,
+    NULL,
+    NULL,
+    NULL,
+    command_getflags,
+    &command_irv
+};
+
 static void c3270_register(void);
 
 void
@@ -593,7 +626,8 @@ synchronous_signal(iosrc_t fd, ioid_t id)
     /* Handle SIGINT first. */
     if (got_sigint) {
 	if (command_running) {
-	    vtrace("SIGINT while running an action -- ignorning\n");
+	    vtrace("SIGINT while running an action\n");
+	    abort_script_by_cb(command_cb.shortname);
 	} else if (!aux_input) {
 	    vtrace("SIGINT at the normal prompt -- ignorning\n");
 	} else {
@@ -1725,40 +1759,6 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
     action_debug("ignore", ia, argc, argv);
     return true;
 }
-
-/* Command-prompt action support. */
-static void command_setir(task_cbh handle, void *irhandle);
-static void *command_getir(task_cbh handle);
-static void command_setir_state(task_cbh handle, const char *name, void *state,
-	ir_state_abort_cb abort_cb);
-static void *command_getir_state(task_cbh handle, const char *name);
-static void *command_irhandle;
-
-static irv_t command_irv = {
-    command_setir,
-    command_getir,
-    command_setir_state,
-    command_getir_state
-};
-
-static void command_data(task_cbh handle, const char *buf, size_t len,
-	bool success);
-static bool command_done(task_cbh handle, bool success, bool abort);
-static unsigned command_getflags(task_cbh handle);
-
-/* Callback block for actions. */
-static tcb_t command_cb = {
-    "command",
-    IA_COMMAND,
-    CB_NEW_TASKQ,
-    command_data,
-    command_done,
-    NULL,
-    NULL,
-    NULL,
-    command_getflags,
-    &command_irv
-};
 
 /**
  * Callback for data returned to action.
