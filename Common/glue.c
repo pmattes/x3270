@@ -104,7 +104,6 @@ bool		exiting = false;
 char	       *command_string = NULL;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
-bool		any_error_output = false;
 
 /* Register a profile merge function. */
 void

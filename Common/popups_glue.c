@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -36,37 +36,6 @@
 
 #include "globals.h"
 
-#if 0
-#if !defined(_WIN32) /*[*/
-#include <sys/wait.h>
-#endif /*]*/
-#include <signal.h>
-#include <errno.h>
-#include "appres.h"
-#include "3270ds.h"
-#include "resources.h"
-
-#include "actions.h"
-#include "charset.h"
-#include "ctlrc.h"
-#include "glue_gui.h"
-#include "host.h"
-#include "kybd.h"
-#include "nvt.h"
-#include "opts.h"
-#include "product.h"
-#include "readres.h"
-#include "selectc.h"
-#include "telnet.h"
-#include "toggles.h"
-#include "unicodec.h"
-#include "xio.h"
-
-#if defined(_WIN32) /*[*/
-# include "winvers.h"
-#endif /*]*/
-#endif
-
 #include "glue.h"
 #include "glue_gui.h"
 #include "popups.h" /* must come before child_popups.h */
@@ -75,8 +44,6 @@
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
-
-bool error_popup_visible = false;
 
 /* Pop up an error dialog. */
 void
@@ -90,15 +57,13 @@ popup_an_error(const char *fmt, ...)
     va_end(args);
 
     /* Log to the trace file. */
-    vtrace("%s\n", s);
+    vtrace("error: %s\n", s);
 
     if (task_redirect()) {
 	task_error(s);
-    } else {
-	screen_suspend();
+    } else if (!glue_gui_error(s)) {
 	(void) fprintf(stderr, "%s\n", s);
 	fflush(stderr);
-	any_error_output = true;
     }
     Free(s);
 }
@@ -135,9 +100,9 @@ action_output(const char *fmt, ...)
 	task_info("%s", s);
     } else {
 	if (!glue_gui_output(s)) {
-	    (void) printf("%s\n", s);
+	    (void) fprintf(stderr, "%s\n", s);
+	    fflush(stderr);
 	}
-	any_error_output = true;
     }
     Free(s);
 }
@@ -152,7 +117,7 @@ popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
     va_start(args, fmt);
     m = xs_vbuffer(fmt, args);
     va_end(args);
-    action_output("%s", m);
+    popup_an_error("Printer session: %s", m);
     Free(m);
 }
 

@@ -40,6 +40,7 @@
 
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
+#include <termios.h>
 #endif /*]*/
 #include <signal.h>
 #include <errno.h>
@@ -152,6 +153,7 @@ struct {
     bool running;	/* true if pager is active */
 } pager = { 25, 80, 0, 0, NULL, false, false };
 #endif /*]*/
+static bool any_error_output;
 static bool command_running = false;
 static bool command_complete = false;
 static bool command_output = false;
@@ -206,9 +208,9 @@ usage(const char *msg)
     exit(1);
 }
 
-/* Callback for connection state changes. */
+/* Callback for 3270-mode state changes. */
 static void
-c3270_connect(bool ignored)
+c3270_3270_mode(bool ignored)
 {
     if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
@@ -219,6 +221,17 @@ c3270_connect(bool ignored)
 	{
 	    ctlr_erase(true);
 	}
+    }
+} 
+
+/* Callback for connection state changes. */
+static void
+c3270_connect(bool ignored)
+{
+    c3270_3270_mode(true);
+    if (CONNECTED) {
+	/* Clear 'Trying' text. */
+	status_push(NULL);
     }
 } 
 
@@ -282,6 +295,17 @@ c3270_Error(const char *s)
     x3270_exit(1);
 }
 
+/**
+ * Redirection for Warning.
+ */
+static void
+c3270_Warning(const char *s)
+{
+    fprintf(stderr, "Warning: %s\n", s);
+    fflush(stderr);
+    any_error_output = true;
+}
+
 /* Pause before exiting. */
 static void
 exit_pause(bool mode _is_unused)
@@ -301,8 +325,7 @@ main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
     bool	 once = false;
-    bool	 was_connected = false;
-    bool	 was_escaped = false;
+    bool	 cl_connect_done = false;
 #if defined(_WIN32) /*[*/
     char	*delenv;
 #endif /*]*/
@@ -310,6 +333,7 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
     /* Redirect Error() so we pause. */
     Error_redirect = c3270_Error;
+    Warning_redirect = c3270_Warning;
 
     /* Register a final exit function, so we pause. */
     register_schange_ordered(ST_EXITING, exit_pause, ORDER_LAST);
@@ -470,18 +494,6 @@ main(int argc, char *argv[])
 	pause_for_errors();
 	/* Connect to the host. */
 	once = true;
-	if (!host_connect(cl_hostname, IA_UI)) {
-	    x3270_exit(1);
-	}
-	/* Wait for negotiations to complete or fail. */
-	while (!IN_NVT && !IN_3270) {
-	    (void) process_events(true);
-	    if (!PCONNECTED) {
-		x3270_exit(1);
-	    }
-	}
-	pause_for_errors();
-	screen_disp(false);
     } else {
 	/* Drop to the prompt. */
 	if (!appres.secure) {
@@ -496,8 +508,17 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	was_connected = CONNECTED;
-	was_escaped = escaped;
+	bool was_connected = CONNECTED;
+	bool was_escaped = escaped;
+
+	/* Connect to the host. */
+	if (cl_hostname != NULL && !cl_connect_done) {
+	    if (!host_connect(cl_hostname, IA_UI)) {
+		x3270_exit(1);
+	    }
+	    screen_resume();
+	    cl_connect_done = true;
+	}
 
 	(void) process_events(true);
 
@@ -512,10 +533,13 @@ main(int argc, char *argv[])
 		x3270_exit(0);
 	    }
 	    interact();
-	} else if (!CONNECTED &&
+	} else if (!PCONNECTED &&
 		!appres.interactive.reconnect &&
 		cl_hostname != NULL) {
 	    screen_suspend();
+#if defined(_WIN32) /*[*/
+	    pause_for_errors();
+#endif /*]*/
 	    if (was_connected) {
 		(void) printf("Disconnected.\n");
 	    }
@@ -524,7 +548,7 @@ main(int argc, char *argv[])
 	    interact();
 	}
 
-	if (CONNECTED) {
+	if (PCONNECTED) {
 	    screen_disp(false);
 	}
     }
@@ -619,13 +643,15 @@ rl_handler(char *command)
 static void
 display_prompt(void)
 {
-    if (CONNECTED && !aux_input) {
+    if (ft_state != FT_NONE) {
+	(void) printf("File transfer in progress.\n");
+    }
+    if (PCONNECTED && !aux_input) {
 	(void) printf("Press <Enter> to resume session.\n");
     }
 
-#if 0
-    stop_pager();
-#endif
+    stop_pager(); /* to ensure flushing is complete */
+
 #if defined(HAVE_LIBREADLINE) /*[*/
     rl_callback_handler_install(prompt_string, &rl_handler);
 #else /*][*/
@@ -691,11 +717,16 @@ c3270_input(iosrc_t fd, ioid_t id)
 	while (sl && isspace((unsigned char)s[sl - 1])) {
 	    s[--sl] = '\0';
 	}
+    } else {
+	sl = strlen(s);
+	if (sl && s[sl - 1] == '\n') {
+	    s[sl - 1] = '\0';
+	}
     }
 
     /* A null command means exit from the prompt. */
     if (!aux_input && !sl) {
-	if (CONNECTED) {
+	if (PCONNECTED) {
 	    /* Stop interacting. */
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
@@ -1629,7 +1660,7 @@ popup_an_info(const char *fmt, ...)
 
     /* Push it out. */
     if (sl) {
-	if (escaped) {
+	if (/*escaped*/false) {
 	    printf("%s\n", vmsgbuf);
 	    fflush(stdout);
 	} else {
@@ -1763,7 +1794,7 @@ command_done(task_cbh handle, bool success, bool abort)
 #endif /*]*/
 
     /* The command from the prompt completed. */
-    if (command_output || !CONNECTED) {
+    if (command_output || !PCONNECTED) {
 	/* Command produced output, or we are not connected any more. */
 
 #if !defined(_WIN32) /*[*/
@@ -1787,7 +1818,7 @@ command_done(task_cbh handle, bool success, bool abort)
 	display_prompt();
 
 	/* Wait for more input. */
-	assert(c3270_input_id == NULL_IOID);
+	assert(c3270_input_id == NULL_IOID); // crashes after disc
 #if !defined(_WIN32) /*[*/
 	c3270_input_id = AddInput(0, c3270_input);
 #else /*][*/
@@ -1812,7 +1843,11 @@ command_done(task_cbh handle, bool success, bool abort)
 static unsigned
 command_getflags(task_cbh handle)
 {
-    return CBF_INTERACTIVE;
+    /*
+     * INTERACTIVE: We understand [input] responses.
+     * CONNECT_NONBLOCK: We do not want Connect()/Open() to block.
+     */
+    return CBF_INTERACTIVE | CBF_CONNECT_NONBLOCK;
 }
 
 /**
@@ -2122,7 +2157,7 @@ telnet_gui_connecting(const char *hostname, const char *portname)
 }
 
 /**
- * GUI function for action_output.
+ * GUI redirect function for action_output.
  */
 bool
 glue_gui_output(const char *s)
@@ -2136,6 +2171,57 @@ glue_gui_output(const char *s)
     pager_output(s);
 #endif /*]*/
     command_output = true;
+    /* any_error_output = true; */ /* XXX: Needed? */
+    return true;
+}
+
+/**
+ * GUI redirect function for popup_an_error.
+ */
+bool
+glue_gui_error(const char *s)
+{
+    bool was_escaped = escaped;
+
+    if (!was_escaped) {
+	screen_suspend();
+    } else {
+#if defined(_WIN32) /*[*/
+	if (pager.residual == NULL) {
+	    /* Send yourself an ESC to flush current input. */
+	    screen_send_esc();
+	}
+#endif /*]*/
+    }
+
+    ring_bell();
+    fprintf(stderr, "\n%s\n", s);
+    fflush(stderr);
+    any_error_output = true;
+
+    if (was_escaped) {
+#if !defined(_WIN32) /*[*/
+	/* Interrupted the prompt. */
+# if defined(HAVE_LIBREADLINE) /*[*/
+	/* Redisplay the prompt and any pending input. */
+	rl_forced_update_display();
+# else /*][*/
+	/* Discard any pending input and redisplay the prompt. */
+	tcflush(0, TCIFLUSH);
+	display_prompt();
+# endif /*]*/
+#else /*][*/
+	if (pager.residual == NULL) {
+	    /* Redisplay the c3270 prompt. */
+	    display_prompt();
+	} else {
+	    /* Redisplay the pager prompt. */
+	    pager.nw = printf("Press any key to continue . . . ");
+	    fflush(stdout);
+	}
+#endif /*]*/
+    }
+
     return true;
 }
 
@@ -2291,7 +2377,7 @@ c3270_register(void)
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, c3270_connect);
-    register_schange(ST_3270_MODE, c3270_connect);
+    register_schange(ST_3270_MODE, c3270_3270_mode);
     register_schange(ST_EXITING, main_exiting);
 
     /* Register our actions. */

@@ -85,7 +85,6 @@ Warning(const char *s)
 	fprintf(stderr, "Warning: %s\n", s);
 	fflush(stderr);
     }
-    any_error_output = true;
 }
 
 static struct {

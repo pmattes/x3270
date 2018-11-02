@@ -1902,7 +1902,9 @@ info_scroll(ioid_t id _is_unused)
 void
 status_push(char *msg)
 {
-    Replace(info_base_msg, NewString(msg));
+    char *new_msg = msg? NewString(msg): NULL;
+
+    Replace(info_base_msg, new_msg);
     info_msg = info_base_msg;
 
     if (info_scroll_timeout != NULL_IOID) {

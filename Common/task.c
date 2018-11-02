@@ -3697,6 +3697,22 @@ task_is_interactive(void)
 }
 
 /**
+ * Test the current task for non-blocking Connect(). 
+ *
+ * @returns true if non-blocking.
+ */
+bool
+task_nonblocking_connect(void)
+{
+    task_t *redirect = task_redirect_to();
+
+    return redirect != NULL &&
+	   redirect->cbx.cb->getflags != NULL &&
+	   ((*redirect->cbx.cb->getflags)(redirect->cbx.handle) &
+		CBF_CONNECT_NONBLOCK) != 0;
+}
+
+/**
  * Request input.
  *
  * @param[in] action		Action name

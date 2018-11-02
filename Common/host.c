@@ -898,7 +898,9 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error("Already connected");
 	return false;
     }
-    (void) host_connect(argv[0], ia);
+    if (!host_connect(argv[0], ia)) {
+	return false;
+    }
 
     /*
      * If not called from a keymap and the connection was successful (or
@@ -910,7 +912,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
      * since someone could put a Source() in a keymap for a file that includes
      * a Connect(), and it would still stall here.
      */
-    if (!IA_IS_KEY(ia)) {
+    if (!task_nonblocking_connect() && !IA_IS_KEY(ia)) {
 	task_connect_wait();
     }
     return true;

@@ -67,6 +67,7 @@ void task_store(unsigned char c);
 void task_abort_input_request_irhandle(void *irhandle);
 void task_abort_input_request(void);
 bool task_is_interactive(void);
+bool task_nonblocking_connect(void);
 
 /* Input request vectors. */
 typedef void (*ir_state_abort_cb)(void *state);
@@ -107,6 +108,7 @@ typedef struct {
 #define CB_PEER		0x8	/* peer script (don't abort) */
 
 #define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
+#define CBF_CONNECT_NONBLOCK 0x2 /* do not block Connect()/Open() */
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 void task_activate(task_cbh handle);

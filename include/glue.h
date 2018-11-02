@@ -31,7 +31,6 @@
  */
 
 /* glue.c */
-extern bool any_error_output;
 struct host_color {
     char *name;
     int index;

@@ -2794,7 +2794,9 @@ info_scroll(ioid_t id _is_unused)
 void
 status_push(char *msg)
 {
-    Replace(info_base_msg, NewString(msg));
+    char *new_msg = msg? NewString(msg): NULL;
+
+    Replace(info_base_msg, new_msg);
     info_msg = info_base_msg;
 
     if (info_scroll_timeout != NULL_IOID) {
@@ -3522,6 +3524,17 @@ enable_cursor(bool on)
 {
     cursor_visible = on? TRUE: FALSE;
     set_cursor_size(sbuf);
+}
+
+/**
+ * Send yourself an ESC, to cancel any pending input.
+ */
+void
+screen_send_esc(void)
+{
+    if (console_window != NULL) {
+	PostMessage(console_window, WM_KEYDOWN, VK_ESCAPE, 0);
+    }
 }
 
 /**

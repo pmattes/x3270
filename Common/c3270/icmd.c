@@ -417,7 +417,12 @@ it_resume(void *handle, const char *response)
 	return false;
     }
     if (ret == ITR_GO) {
-	return ft_start_backend(&itc->conf);;
+	bool rv = ft_start_backend(&itc->conf);
+
+	if (rv) {
+	    action_output("Transfer initiated.");
+	    action_output(" ");
+	}
     }
 
     /*
@@ -1057,6 +1062,8 @@ ask_source_file(itc_t *itc)
 	default_file = "";
     }
 
+    action_output(" ");
+
     return xs_buffer("Name of source file on %s:%s ",
 	    p->receive_flag? "the host": "this workstation", default_file);
 }
@@ -1423,6 +1430,8 @@ ask_go(itc_t *itc)
     if (!HOST_FLAG(STD_DS_HOST)) {
 	action_output(" DFT buffer size: %d", p->dft_buffersize);
     }
+
+    action_output(" ");
 
     return NewString("Continue? (y/n) [y] ");
 }

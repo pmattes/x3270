@@ -53,7 +53,9 @@
 /* Globals. */
 
 /* Statics. */
+#if 0
 static bool ft_sigint_aborting = false;
+#endif
 static ioid_t ft_poll_id = NULL_IOID;
 
 /* Entry points called from the common FT logic. */
@@ -74,22 +76,28 @@ ft_gui_errmsg_prepare(char *msg _is_unused)
 void
 ft_gui_clear_progress(void)
 {
+#if 0
     if (ftc->is_interactive || escaped) {
 	printf("\r%79s\r", "");
 	fflush(stdout);
     } else {
+#endif
 	popup_an_info(" ");
+#if 0
     }
+#endif
 }
 
-/* Pop up a successful completion message. */
+/* Pop up a completion message. */
 void
 ft_gui_complete_popup(const char *msg, bool is_error)
 {
     if (is_error) {
 	popup_an_error("%s", msg);
-	return;
+    } else {
+	popup_an_info("%s", msg);
     }
+#if 0
 
 #if !defined(_WIN32) /*[*/
     signal(SIGINT, SIG_IGN);
@@ -106,12 +114,14 @@ ft_gui_complete_popup(const char *msg, bool is_error)
 	printf("%s\n", msg);
 	fflush(stdout);
     }
+#endif
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
 ft_gui_update_length(size_t length)
 {
+#if 0
     if (ftc->is_interactive || escaped) {
 	if (ft_sigint_aborting) {
 	    ft_sigint_aborting = false;
@@ -124,9 +134,12 @@ ft_gui_update_length(size_t length)
 	}
 	fflush(stdout);
     } else {
+#endif
 	/* Not interactive, put it in the OIA. */
 	popup_an_info("Transferred %lu bytes", (unsigned long)length);
+#if 0
     }
+#endif
 }
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */

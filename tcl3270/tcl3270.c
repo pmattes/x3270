@@ -759,6 +759,12 @@ task_host_output(void)
     output_wait_needed = false;
 }
 
+bool
+task_nonblocking_connect(void)
+{
+    return false;
+}
+
 /* More no-ops. */
 void
 login_macro(char *s)
