@@ -1629,11 +1629,16 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
+    if (escaped && argc > 0) {
+	popup_an_error("Cannot nest Escape()");
+	return false;
+    }
+
     if (!escaped && !appres.secure) {
 	if (argc > 0) {
 	    escape_action = NewString(argv[0]);
 	}
-	host_cancel_reconnect();
+	host_cancel_reconnect(); /* why? */
 	screen_suspend();
     }
     return true;
