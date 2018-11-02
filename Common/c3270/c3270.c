@@ -161,6 +161,7 @@ static bool command_output = false;
 #if !defined(_WIN32) /*[*/
 static bool stop_pending = false;
 static int signalpipe[2];
+sigset_t pending_signals;
 static void synchronous_signal(iosrc_t fd, ioid_t id);
 static void common_handler(int signum);
 #endif /*]*/
@@ -446,6 +447,7 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     /* Set up the signal pipes. */
+    sigemptyset(&pending_signals);
     if (pipe(signalpipe) < 0) {
 	perror("pipe");
 	exit(1);
@@ -559,23 +561,37 @@ main(int argc, char *argv[])
 static void
 synchronous_signal(iosrc_t fd, ioid_t id)
 {
-    unsigned char sig;
+    unsigned char dummy;
     int nr;
+    sigset_t temp_sigset, old_sigset;
+    bool got_sigint, got_sigtstp;
 
     /* Read the signal from the pipe. */
-    nr = read(signalpipe[0], &sig, 1);
+    nr = read(signalpipe[0], &dummy, 1);
     if (nr < 0) {
 	perror("signalpipe read");
 	exit(1);
     }
 
     if (!escaped) {
-	vtrace("Ingoring synchronous signal\n");
+	vtrace("Ingoring synchronous signals\n");
 	return;
     }
 
-    switch (sig) {
-    case SIGINT:
+    /* Collect pending signals. */
+    sigemptyset(&temp_sigset);
+    sigaddset(&temp_sigset, SIGTSTP);
+    sigaddset(&temp_sigset, SIGINT);
+    sigemptyset(&old_sigset);
+    sigprocmask(SIG_BLOCK, &temp_sigset, &old_sigset);
+    got_sigint = sigismember(&pending_signals, SIGINT);
+    sigdelset(&pending_signals, SIGINT);
+    got_sigtstp = sigismember(&pending_signals, SIGTSTP);
+    sigdelset(&pending_signals, SIGTSTP);
+    sigprocmask(SIG_SETMASK, &old_sigset, NULL);
+
+    /* Handle SIGINT first. */
+    if (got_sigint) {
 	if (command_running) {
 	    vtrace("SIGINT while running an action -- ignorning\n");
 	} else if (!aux_input) {
@@ -593,8 +609,10 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    c3270_input_id = NULL_IOID;
 	    /* And wait for it to complete before displaying a new prompt. */
 	}
-	break;
-    case SIGTSTP:
+    }
+
+    /* Then handle SIGTSTP. */
+    if (got_sigtstp) {
 	if (command_running) {
 	    /* Defer handling until command completes. */
 	    vtrace("SIGTSTP while running an action -- deferring\n");
@@ -609,10 +627,6 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 		display_prompt();
 	    }
 	}
-	break;
-    default:
-	vtrace("Got unknown synchronous signal %u\n", sig);
-	break;
     }
 }
 
@@ -620,10 +634,23 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 static void
 common_handler(int signum)
 {
-    char sig = signum;
+    char dummy = '\0';
+    sigset_t temp_sigset, old_sigset;
 
+    /* Make sure this signal handler continues to be in effect. */
     signal(signum, common_handler);
-    write(signalpipe[1], &sig, 1);
+
+    /* Set this signal as pending, while holding off other signals. */
+    sigemptyset(&temp_sigset);
+    sigaddset(&temp_sigset, SIGTSTP);
+    sigaddset(&temp_sigset, SIGINT);
+    sigemptyset(&old_sigset);
+    sigprocmask(SIG_BLOCK, &temp_sigset, &old_sigset);
+    sigaddset(&pending_signals, signum);
+    sigprocmask(SIG_SETMASK, &old_sigset, NULL);
+
+    /* Write to the pipe, so we process this synchronously. */
+    write(signalpipe[1], &dummy, 1);
 }
 #endif /*]*/
 
