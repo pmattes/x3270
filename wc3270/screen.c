@@ -245,6 +245,9 @@ static char *window_title;
 static bool selecting;
 static BOOL cursor_visible = TRUE;
 
+static HANDLE cc_event;
+static ioid_t cc_id;
+
 static action_t Paste_action;
 static action_t Redraw_action;
 static action_t Title_action;
@@ -278,34 +281,42 @@ BOOL WINAPI
 cc_handler(DWORD type)
 {
     if (type == CTRL_C_EVENT) {
-	char *action;
-
-	/* Process it as a Ctrl-C. */
-	vtrace("Control-C received via Console Event Handler (%s)\n",
-		escaped? "at prompt": "in session");
-	if (escaped) {
-	    if (ctrlc_fn) {
-		(*ctrlc_fn)();
-	    }
-	    return TRUE;
-	}
-	action = lookup_key(0x03, LEFT_CTRL_PRESSED);
-	if (action != NULL) {
-	    if (strcmp(action, "[ignore]")) {
-		push_keymap_action(action);
-	    }
-	} else {
-	    run_action("Key", IA_DEFAULT, "0x03", NULL);
-	}
-
+	/* Set the synchronous event so we can process it in the main loop. */
+	SetEvent(cc_event);
 	return TRUE;
     } else if (type == CTRL_CLOSE_EVENT) {
+	/* Exit gracefully. */
 	vtrace("Window closed\n");
 	x3270_exit(0);
 	return TRUE;
     } else {
-	/* Let Windows have its way with it. */
+	/* Let Windows process it. */
 	return FALSE;
+    }
+}
+
+/*
+ * Synchronous ^C handler.
+ */
+static void
+synchronous_cc(iosrc_t fd _is_unused, ioid_t id _is_unused)
+{
+    char *action;
+
+    vtrace("^C received %s\n", escaped? "at prompt": "in session");
+    if (escaped) {
+	if (ctrlc_fn) {
+	    (*ctrlc_fn)();
+	}
+	return;
+    }
+    action = lookup_key(0x03, LEFT_CTRL_PRESSED);
+    if (action != NULL) {
+	if (strcmp(action, "[ignore]")) {
+	    push_keymap_action(action);
+	}
+    } else {
+	run_action("Key", IA_DEFAULT, "0x03", NULL);
     }
 }
 
@@ -536,6 +547,12 @@ initscr(void)
 	win32_perror("SetConsoleCtrlHandler failed");
 	return NULL;
     }
+    cc_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (cc_event == NULL) {
+	win32_perror("CreateEvent for ^C failed");
+	return NULL;
+    }
+    cc_id = AddInput(cc_event, synchronous_cc);
 
     /* Allocate and initialize the onscreen and toscreen buffers. */
     buffer_size = sizeof(CHAR_INFO) * console_rows * console_cols;
