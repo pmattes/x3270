@@ -164,6 +164,10 @@ static int signalpipe[2];
 sigset_t pending_signals;
 static void synchronous_signal(iosrc_t fd, ioid_t id);
 static void common_handler(int signum);
+#else /*][*/
+static void windows_sigint(iosrc_t fd, ioid_t id);
+static void windows_ctrlc(void);
+static HANDLE sigint_event;
 #endif /*]*/
 static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
@@ -467,6 +471,23 @@ main(int argc, char *argv[])
 #endif /*]*/
 #endif /*]*/
 
+#if !defined(_WIN32) /*[*/
+    /* Set up the signal pipes. */
+    sigemptyset(&pending_signals);
+    if (pipe(signalpipe) < 0) {
+	perror("pipe");
+	exit(1);
+    }
+    AddInput(signalpipe[0], synchronous_signal);
+#else /*][*/
+    sigint_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    AddInput(sigint_event, windows_sigint);
+    screen_set_ctrlc_fn(windows_ctrlc);
+#endif /*]*/
+
+    /* Get the screen set up as early as possible. */
+    screen_init();
+
 #if defined(_WIN32) /*[*/
     /* Create a thread to read data from stdin. */
     inthread.enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -477,19 +498,6 @@ main(int argc, char *argv[])
 	exit(1);
     }
 #endif /*]*/
-
-#if !defined(_WIN32) /*[*/
-    /* Set up the signal pipes. */
-    sigemptyset(&pending_signals);
-    if (pipe(signalpipe) < 0) {
-	perror("pipe");
-	exit(1);
-    }
-    AddInput(signalpipe[0], synchronous_signal);
-#endif /*]*/
-
-    /* Get the screen set up as early as possible. */
-    screen_init();
 
     idle_init();
     keymap_init();
@@ -686,6 +694,28 @@ common_handler(int signum)
     /* Write to the pipe, so we process this synchronously. */
     write(signalpipe[1], &dummy, 1);
 }
+#else /*][*/
+/* Control-C handler. */
+static void
+windows_ctrlc(void)
+{
+    /* Signal the event. */
+    SetEvent(sigint_event);
+}
+
+/* Synchronous SIGINT handler. */
+static void
+windows_sigint(iosrc_t fd, ioid_t id)
+{
+    if (command_running) {
+	vtrace("SIGINT while running an action\n");
+	abort_script_by_cb(command_cb.shortname);
+    } else if (!aux_input) {
+	vtrace("SIGINT at the normal prompt -- ignorning\n");
+    } else {
+	vtrace("SIGINT with aux input -- handled when 0-length read arrived\n");
+    }
+}
 #endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -729,6 +759,7 @@ display_prompt(void)
 static void
 enable_input(enum imode mode)
 {
+    vtrace("enable_input(%s)\n", (mode == LINE)? "LINE": "KEY");
     inthread.mode = mode;
     SetEvent(inthread.enable_event);
 }
@@ -759,6 +790,11 @@ c3270_input(iosrc_t fd, ioid_t id)
     command = fgets(inbuf, sizeof(inbuf), stdin);
 #endif /*]*/
 #else /*][*/
+    if (inthread.nr < 0) {
+	vtrace("c3270_input: input failed\n");
+	enable_input(LINE);
+    }
+    vtrace("c3270_input: got %d bytes\n", inthread.nr);
     command = inthread.buf;
 #endif /*]*/
 
@@ -768,6 +804,30 @@ c3270_input(iosrc_t fd, ioid_t id)
 	fflush(stdout);
 	exit(0);
     }
+
+#if defined(_WIN32) /*[*/
+    if (!command[0]) {
+	/*
+	 * Windows returns 0 bytes to read(0) in two cases: ^Z+<Return> and
+	 * ^C. Though the documentation says otherwise, there is no way to
+	 * distinguish them. So we simply re-post the read.
+	 */
+	if (aux_input) {
+	    /* Abort the input. */
+	    vtrace("Aborting auxiliary input\n");
+	    aux_input = false;
+	    c3270_push_command("ResumeInput(-Abort)");
+	    Replace(prompt_string, real_prompt_string);
+	    RemoveInput(c3270_input_id);
+	    c3270_input_id = NULL_IOID;
+	} else {
+	    printf("\n");
+	    display_prompt();
+	    enable_input(LINE);
+	}
+	goto done;
+    }
+#endif /*]*/
 
     s = command;
     if (!aux_input) {
@@ -792,9 +852,6 @@ c3270_input(iosrc_t fd, ioid_t id)
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
 	    screen_resume();
-#if defined(_WIN32) /*[*/
-	    signal(SIGINT, SIG_DFL);
-#endif /*]*/
 	    goto done;
 	} else {
 	    /* Continue interacting. Display the prompt. */
@@ -885,8 +942,9 @@ inthread_read(LPVOID lpParameter)
 		inthread.buf[inthread.nr] = '\0';
 	    } else {
 		inthread.nr = read(0, inthread.buf, sizeof(inthread.buf) - 1);
-		if (inthread.nr < 0) {
+		if (inthread.nr <= 0) {
 		    inthread.error = GetLastError();
+		    inthread.buf[0] = '\0';
 		} else {
 		    inthread.buf[inthread.nr] = '\0';
 		}
@@ -945,7 +1003,6 @@ interact(void)
     c3270_input_id = AddInput(inthread.done_event, c3270_input);
     enable_input(LINE);
 #endif /*]*/
-    signal(SIGINT, SIG_IGN);
 }
 
 #if !defined(_WIN32) /*[*/

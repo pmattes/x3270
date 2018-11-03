@@ -281,8 +281,8 @@ cc_handler(DWORD type)
 	char *action;
 
 	/* Process it as a Ctrl-C. */
-	vtrace("Control-C received via Console Event Handler%s\n",
-		escaped? " (should be ignored)": "");
+	vtrace("Control-C received via Console Event Handler (%s)\n",
+		escaped? "at prompt": "in session");
 	if (escaped) {
 	    if (ctrlc_fn) {
 		(*ctrlc_fn)();

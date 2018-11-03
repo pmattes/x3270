@@ -963,7 +963,7 @@ toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
 	if (tracef == NULL) {
 	    set_toggle(TRACING, false);
 	}
-    } else if (!toggled(TRACING)) {
+    } else if (!toggled(TRACING) || (toggled(TRACING) && tt == TT_FINAL)) {
 	/* If turning off trace and not still tracing events, close the
 	   trace file. */
 	tracefile_off();

@@ -3875,8 +3875,6 @@ sample_continue_input(void *handle, const char *text)
     sample_per_type_t *state = (sample_per_type_t *)handle;
 
     vtrace("Continuing RequestInput\n");
-    vtrace("State: %s\n", state? (char *)state: "not found");
-
     action_output("You said '%s'", text);
 
     /* Remember for next time. */
@@ -3896,10 +3894,7 @@ sample_abort_input(void *handle)
 
     vtrace("Aborting RequestInput\n");
     if (state != NULL) {
-	if (state->previous != NULL) {
-	    Free(state->previous);
-	}
-	Free(state);
+	Replace(state->previous, NewString("[aborted]"));
     }
 }
 
@@ -3911,9 +3906,7 @@ sample_abort_session(void *handle)
 
     vtrace("Aborting input request session\n");
     if (state != NULL) {
-	if (state->previous != NULL) {
-	    Free(state->previous);
-	}
+	Replace(state->previous, NULL);
 	Free(state);
     }
 }
