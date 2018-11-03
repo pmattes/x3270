@@ -735,7 +735,8 @@ static void
 display_prompt(void)
 {
     if (ft_state != FT_NONE) {
-	(void) printf("File transfer in progress.\n");
+	(void) printf("File transfer in progress. Use Transfer(Cancel) to "
+		"cancel.\n");
     }
     if (PCONNECTED && !aux_input) {
 	(void) printf("Press <Enter> to resume session.\n");

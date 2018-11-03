@@ -45,6 +45,8 @@
 #include "cmenubar.h"
 #include "cscreen.h"
 #include "ctlrc.h"
+#include "unicodec.h"	/* must precede ft.h */
+#include "ft.h"
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
@@ -55,7 +57,6 @@
 #include "task.h"
 #include "toggles.h"
 #include "trace.h"
-#include "unicodec.h"
 #include "utils.h"
 
 #if defined(_WIN32) /*[*/
@@ -336,80 +337,6 @@ draw_menu(cmenu_t *cmenu)
 	    map_acs('j', &menu_screen[ix], &menu_acs[ix]);
 	}
     }
-}
-
-/* Pop up a menu. */
-void
-popup_menu(int x, int click)
-{
-    cmenu_t *cmenu;
-    cmenu_t *c;
-    int row, col;
-    int next_col;
-
-    if (!appres.interactive.menubar) {
-	return;
-    }
-
-    /* Find which menu to start with. */
-    for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
-	if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH) {
-	    break;
-	}
-    }
-    if (cmenu == NULL) {
-	return;
-    }
-
-    /* If it was a direct click, see if the menu has a direct callback. */
-    if (click && cmenu->callback != NULL) {
-	(*cmenu->callback)(cmenu->param);
-	if (after_callback != NULL) {
-	    (*after_callback)(after_param);
-	    after_callback = NULL;
-	    after_param = NULL;
-	}
-	return;
-    }
-
-    /* Start with nothing. */
-    basic_menu_init();
-
-    /*
-     * Draw the menu names on the top line, with the active one highlighted.
-     */
-    row = 0;
-    col = 0;
-    next_col = MENU_WIDTH;
-    for (c = menus; c != NULL; c = c->next) {
-	char *d;
-
-	for (d = c->title; *d; d++) {
-	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
-	    menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
-	    col++;
-	}
-	while (col < next_col) {
-	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
-	    col++;
-	}
-	next_col += MENU_WIDTH;
-    }
-    current_menu = cmenu;
-
-    /* Draw the current menu, with the active item highlighted. */
-    if (cmenu->items) {
-	current_item = cmenu->items;
-	while (current_item && !current_item->enabled) {
-	    current_item = current_item->next;
-	}
-	draw_menu(cmenu);
-    } else {
-	current_item = NULL;
-    }
-
-    /* We're up. */
-    menu_is_up |= MENU_IS_UP;
 }
 
 #if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
@@ -747,7 +674,11 @@ fm_print(void *ignored _is_unused)
 static void
 fm_xfer(void *ignored _is_unused)
 {
-    push_macro("Escape(\"Transfer()\")");
+    if (ft_state == FT_NONE) {
+	push_macro("Escape(\"Transfer()\")");
+    } else {
+	push_macro("Transfer(Cancel)");
+    }
 }
 
 static void
@@ -1068,6 +999,84 @@ menubar_retoggle(toggle_index_t ix)
 	    enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], true);
 	}
     }
+}
+
+/* Pop up a menu. */
+void
+popup_menu(int x, int click)
+{
+    cmenu_t *cmenu;
+    cmenu_t *c;
+    int row, col;
+    int next_col;
+
+    if (!appres.interactive.menubar) {
+	return;
+    }
+
+    /* Find which menu to start with. */
+    for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
+	if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH) {
+	    break;
+	}
+    }
+    if (cmenu == NULL) {
+	return;
+    }
+
+    /* If it was a direct click, see if the menu has a direct callback. */
+    if (click && cmenu->callback != NULL) {
+	(*cmenu->callback)(cmenu->param);
+	if (after_callback != NULL) {
+	    (*after_callback)(after_param);
+	    after_callback = NULL;
+	    after_param = NULL;
+	}
+	return;
+    }
+
+    /* Start with nothing. */
+    basic_menu_init();
+
+    /* Switch the name of the File Transfer menu. */
+    rename_item(file_menu_items[FM_XFER],
+	    (ft_state == FT_NONE)? "File Transfer": "Cancel File Transfer");
+
+    /*
+     * Draw the menu names on the top line, with the active one highlighted.
+     */
+    row = 0;
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
+
+	for (d = c->title; *d; d++) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
+	    menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
+	    col++;
+	}
+	while (col < next_col) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
+	    col++;
+	}
+	next_col += MENU_WIDTH;
+    }
+    current_menu = cmenu;
+
+    /* Draw the current menu, with the active item highlighted. */
+    if (cmenu->items) {
+	current_item = cmenu->items;
+	while (current_item && !current_item->enabled) {
+	    current_item = current_item->next;
+	}
+	draw_menu(cmenu);
+    } else {
+	current_item = NULL;
+    }
+
+    /* We're up. */
+    menu_is_up |= MENU_IS_UP;
 }
 
 /*
