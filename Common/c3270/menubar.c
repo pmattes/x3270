@@ -896,7 +896,7 @@ menu_init(void)
 
     file_menu = add_menu("File");
     for (j = 0; j < FM_COUNT; j++) {
-	if (appres.secure && j == FM_PROMPT) {
+	if (appres.secure && (j == FM_PROMPT || j == FM_XFER)) {
 	    continue;
 	}
 #if defined(WC3270) /*[*/
