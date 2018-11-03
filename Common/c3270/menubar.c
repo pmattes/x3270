@@ -650,13 +650,13 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro("Show(copyright)");
+    push_macro("Escape(\"Show(copyright)\")");
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro("Show(status)");
+    push_macro("Escape(\"Show(status)\")");
 }
 
 static void
@@ -714,7 +714,7 @@ fm_screentrace_printer(void *ignored _is_unused)
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro("Show(keymap)");
+    push_macro("Escape(\"Show(keymap)\")");
 }
 
 #if defined(_WIN32) /*[*/
@@ -896,7 +896,8 @@ menu_init(void)
 
     file_menu = add_menu("File");
     for (j = 0; j < FM_COUNT; j++) {
-	if (appres.secure && (j == FM_PROMPT || j == FM_XFER)) {
+	if (appres.secure &&
+		(j == FM_PROMPT || j == FM_XFER || j == FM_TRACE)) {
 	    continue;
 	}
 #if defined(WC3270) /*[*/
@@ -1039,8 +1040,10 @@ popup_menu(int x, int click)
     basic_menu_init();
 
     /* Switch the name of the File Transfer menu. */
-    rename_item(file_menu_items[FM_XFER],
-	    (ft_state == FT_NONE)? "File Transfer": "Cancel File Transfer");
+    if (!appres.secure) {
+	rename_item(file_menu_items[FM_XFER],
+		(ft_state == FT_NONE)? "File Transfer": "Cancel File Transfer");
+    }
 
     /*
      * Draw the menu names on the top line, with the active one highlighted.

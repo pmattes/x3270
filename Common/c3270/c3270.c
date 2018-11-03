@@ -389,8 +389,6 @@ main(int argc, char *argv[])
     }
 #endif /*]*/
 
-    real_prompt_string = prompt_string = xs_buffer("%s> ", app);
-
 #if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
     /* Explicitly turn off DBCS if wide curses is not supported. */
     dbcs_allowed = false;
@@ -437,6 +435,13 @@ main(int argc, char *argv[])
 	    "Type 'show copyright' for full copyright information.\n"
 	    "Type 'help' for help information.\n\n",
 	    build, cyear);
+
+    if (appres.secure) {
+	/* We don't allow a command line in secure mode. */
+	real_prompt_string = prompt_string = "[Press <Enter>] ";
+    } else {
+	real_prompt_string = prompt_string = xs_buffer("%s> ", app);
+    }
 
 #if defined(_WIN32) /*[*/
     /* Delete the link file, if we've been told do. */
@@ -734,12 +739,14 @@ rl_handler(char *command)
 static void
 display_prompt(void)
 {
-    if (ft_state != FT_NONE) {
-	(void) printf("File transfer in progress. Use Transfer(Cancel) to "
-		"cancel.\n");
-    }
-    if (PCONNECTED && !aux_input) {
-	(void) printf("Press <Enter> to resume session.\n");
+    if (!appres.secure) {
+	if (ft_state != FT_NONE) {
+	    (void) printf("File transfer in progress. Use Transfer(Cancel) to "
+		    "cancel.\n");
+	}
+	if (PCONNECTED && !aux_input) {
+	    (void) printf("Press <Enter> to resume session.\n");
+	}
     }
 
     stop_pager(); /* to ensure flushing is complete */
@@ -847,8 +854,8 @@ c3270_input(iosrc_t fd, ioid_t id)
     }
 
     /* A null command means exit from the prompt. */
-    if (!aux_input && !sl) {
-	if (PCONNECTED) {
+    if (!aux_input && (!sl || appres.secure)) {
+	if (PCONNECTED || appres.secure) {
 	    /* Stop interacting. */
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
@@ -965,18 +972,6 @@ interact(void)
 #if 0
     stop_pager();
 #endif
-
-    /* In secure mode, we don't interact. */
-    if (appres.secure) {
-	char s[10];
-
-	printf("[Press <Enter>] ");
-	fflush(stdout);
-	if (fgets(s, sizeof(s), stdin) == NULL) {
-	    x3270_exit(1);
-	}
-	return;
-    }
 
     /* Now we are interacting. */
     vtrace("Interacting.\n");
@@ -1753,9 +1748,12 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (!escaped && !appres.secure) {
+    if (!escaped) {
 	if (argc > 0) {
 	    escape_action = NewString(argv[0]);
+	} else if (appres.secure) {
+	    /* Plain Escape() does nothing when secure. */
+	    return true;
 	}
 	host_cancel_reconnect(); /* why? */
 	screen_suspend();

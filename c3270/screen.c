@@ -163,7 +163,7 @@ static int bg_color = COLOR_BLACK;
 
 static int defattr = A_NORMAL;
 static int xhattr = A_NORMAL;
-static unsigned long input_id;
+static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
 
@@ -660,7 +660,9 @@ screen_init2(void)
 #endif /*]*/
 
     /* Subscribe to input events. */
-    input_id = AddInput(0, kybd_input);
+    if (input_id == NULL_IOID) {
+	input_id = AddInput(0, kybd_input);
+    }
 
     /* Ignore SIGINT and SIGTSTP. */
     signal(SIGINT, SIG_IGN);
@@ -1744,6 +1746,7 @@ screen_suspend(void)
 	}
 #endif /*]*/
 	RemoveInput(input_id);
+	input_id = NULL_IOID;
     }
 
     return needed;
@@ -1792,7 +1795,9 @@ screen_resume(void)
 #endif /*]*/
     screen_disp(false);
     refresh();
-    input_id = AddInput(0, kybd_input);
+    if (input_id == NULL_IOID) {
+	input_id = AddInput(0, kybd_input);
+    }
 }
 
 void
