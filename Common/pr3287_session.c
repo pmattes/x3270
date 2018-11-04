@@ -1148,11 +1148,20 @@ pr3287_session_check(
 	pr3287_stop_sync();
     }
 
-    /*
-     * Clean up I/O.
-     * It would be better to wait for EOF first so we can display errors from
-     * pr3287, but for now, we just need to get the state straight.
-     */
+    /* (Try to) display pr3287's stderr. */
+    if (pr3287_stderr.count > 0) {
+	popup_an_error("%.*s", pr3287_stderr.count, pr3287_stderr.buf);
+    } else {
+	char buf[1024];
+	ssize_t nr;
+
+	nr = read(pr3287_stderr.fd, buf, sizeof(buf));
+	if (nr > 0) {
+	    popup_an_error("%.*s", (int)nr, buf);
+	}
+    }
+
+    /* Clean up I/O. */
     pr3287_cleanup_io();
 
     pr3287_state = P_NONE;
