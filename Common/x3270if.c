@@ -67,6 +67,7 @@
 #endif /*]*/
 
 #include "base64.h"
+#include "s3270_proto.h"
 #include "w3misc.h"
 
 #define IBS	4096
@@ -83,8 +84,6 @@
 #define OPTS	"H:iI:p:s:St:v"
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
-
-#define INPUT "[input] "
 
 static char *me;
 static int verbose = 0;
@@ -372,15 +371,15 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	if (port) {
 	    insocket = outsocket = tsock(port);
 	    is_socket = true;
-	} else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
+	} else if ((port_env = fd_env(PORT_ENV, FD_ENV_REQUIRED)) >= 0) {
 	    insocket = outsocket = tsock(port_env);
 	    is_socket = true;
 	} else {
 #if defined(_WIN32) /*[*/
 	    return -1;
 #else /*][*/
-	    infd  = fd_env("X3270OUTPUT", true);
-	    outfd = fd_env("X3270INPUT", true);
+	    infd  = fd_env(INPUT_ENV, true);
+	    outfd = fd_env(OUTPUT_ENV, true);
 #endif /*]*/
 	}
 	if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
@@ -465,24 +464,25 @@ retry:
 	    if (verbose) {
 		(void) fprintf(stderr, "i+ in %s\n", buf);
 	    }
-	    if (!strcmp(buf, "ok")) {
+	    if (!strcmp(buf, PROMPT_OK)) {
 		(void) fflush(stdout);
 		xs = 0;
 		done = 1;
 		break;
-	    } else if (!strcmp(buf, "error")) {
+	    } else if (!strcmp(buf, PROMPT_ERROR)) {
 		(void) fflush(stdout);
 		xs = 1;
 		done = 1;
 		break;
-	    } else if (!strncmp(buf, "data: ", 6)) {
+	    } else if (!strncmp(buf, DATA_PREFIX, strlen(DATA_PREFIX))) {
 		if (ret != NULL) {
-		    *ret = Realloc(*ret, ret_sl + strlen(buf + 6) + 2);
+		    *ret = Realloc(*ret, ret_sl +
+			    strlen(buf + strlen(DATA_PREFIX)) + 2);
 		    *(*ret + ret_sl) = '\0';
-		    strcat(strcat(*ret, buf + 6), "\n");
-		    ret_sl += strlen(buf + 6) + 1;
+		    strcat(strcat(*ret, buf + strlen(DATA_PREFIX)), "\n");
+		    ret_sl += strlen(buf + strlen(DATA_PREFIX)) + 1;
 		} else {
-		    if (printf("%s\n", buf + 6) < 0) {
+		    if (printf("%s\n", buf + strlen(DATA_PREFIX)) < 0) {
 			perror("x3270if: printf");
 			exit(__LINE__);
 		    }
@@ -570,13 +570,13 @@ static void
 get_ports(socket_t *socket, int *infd, int *outfd)
 {
 #if !defined(_WIN32) /*[*/
-    *infd = fd_env("X3270OUTPUT", true);
-    *outfd = fd_env("X3270INPUT", true);
+    *infd = fd_env(OUTPUT_ENV, true);
+    *outfd = fd_env(INPUT_ENV, true);
     if (verbose) {
 	fprintf(stderr, "input: %d, output: %d\n", *infd, *outfd);
     }
 #else /*][*/
-    int socketport = fd_env("X3270PORT", true);
+    int socketport = fd_env(PORT_ENV, true);
 
     *socket = tsock(socketport);
     if (verbose) {
@@ -620,20 +620,20 @@ iterative_io(int pid, unsigned short port)
 #endif /*]*/
     if (port) {
 	io[0].wfd = tsock(port);
-    } else if ((port_env = fd_env("X3270PORT", FD_ENV_REQUIRED)) >= 0) {
+    } else if ((port_env = fd_env(PORT_ENV, FD_ENV_REQUIRED)) >= 0) {
 	io[0].wfd = tsock(port_env);
     } else {
 #if defined(_WIN32) /*[*/
 	return;
 #else /*][ */
-	io[0].wfd = fd_env("X3270INPUT", true);
+	io[0].wfd = fd_env(INPUT_ENV, true);
 #endif /*]*/
     }
     io[1].name = "emulator->script";
     if (pid || port || (port_env >= 0)) {
 	io[1].rfd = dup(io[0].wfd);
     } else {
-	io[1].rfd = fd_env("X3270OUTPUT", true);
+	io[1].rfd = fd_env(OUTPUT_ENV, true);
     }
     io[1].wfd = fileno(stdout);
     for (i = 0; i < N_IO; i++) {
@@ -784,14 +784,14 @@ iterative_io(int pid, unsigned short port)
     int nr;
 
     if (!port) {
-	port_env = getenv("X3270PORT");
+	port_env = getenv(PORT_ENV);
 	if (port_env == NULL) {
-	    fprintf(stderr, "Must specify port or put port in X3270PORT.\n");
+	    fprintf(stderr, "Must specify port or put port in " PORT_ENV ".\n");
 	    exit(__LINE__);
 	}
 	port = atoi(port_env);
 	if (port <= 0 || (port & ~0xffff)) {
-	    fprintf(stderr, "Invalid X3270PORT.\n");
+	    fprintf(stderr, "Invalid " PORT_ENV ".\n");
 	    exit(__LINE__);
 	}
     }
@@ -959,7 +959,7 @@ is_input(char *s, char **prompt)
 
     /* See if the last line starts with the tag. */
     last_line = (nl? (nl + 1): s);
-    if (strncmp(last_line, INPUT, strlen(INPUT))) {
+    if (strncmp(last_line, INPUT_TOKEN, strlen(INPUT_TOKEN))) {
 	return false;
     }
 
@@ -971,7 +971,7 @@ is_input(char *s, char **prompt)
     }
 
     /* Parse the rest. */
-    *prompt = base64_decode(last_line + strlen(INPUT));
+    *prompt = base64_decode(last_line + strlen(INPUT_TOKEN));
 
     return true;
 }
@@ -1235,7 +1235,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		fprintf(stderr, "Out of memory\n");
 		exit(__LINE__);
 	    }
-	    sprintf(response, "ResumeInput(%s)",
+	    sprintf(response, RESUME_INPUT "(%s)",
 		    command_base64[0]? command_base64: "\"\"");
 	    Free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,

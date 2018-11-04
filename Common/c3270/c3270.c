@@ -78,6 +78,7 @@
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
+#include "s3270_proto.h"
 #include "screen.h"
 #include "selectc.h"
 #include "show_action.h"
@@ -109,8 +110,6 @@
 #include "windirs.h"
 #include "winvers.h"
 #endif /*]*/
-
-#define INPUT	"[input] "
 
 #if defined(_WIN32) /*[*/
 # define DELENV		"WC3DEL"
@@ -655,7 +654,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 #endif /*]*/
 	    printf("\n");
 	    aux_input = false;
-	    c3270_push_command("ResumeInput(-Abort)");
+	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
 	    Replace(prompt_string, real_prompt_string);
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
@@ -835,7 +834,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 	    /* Abort the input. */
 	    vtrace("Aborting auxiliary input\n");
 	    aux_input = false;
-	    c3270_push_command("ResumeInput(-Abort)");
+	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
 	    Replace(prompt_string, real_prompt_string);
 	} else {
 	    printf("\n");
@@ -908,7 +907,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (aux_input) {
 	aux_input = false;
-	c3270_push_command(lazyaf("ResumeInput(%s)",
+	c3270_push_command(lazyaf(RESUME_INPUT "(%s)",
 		    *s? lazya(base64_encode(s)): "\"\""));
 	Replace(prompt_string, real_prompt_string);
     } else {
@@ -1542,8 +1541,8 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
 
-    if (!success && !strncmp(buf, INPUT, strlen(INPUT))) {
-	prompt_string = base64_decode(buf + strlen(INPUT));
+    if (!success && !strncmp(buf, INPUT_TOKEN, strlen(INPUT_TOKEN))) {
+	prompt_string = base64_decode(buf + strlen(INPUT_TOKEN));
 	aux_input = true;
 	command_output = true; /* a while lie */
     } else {

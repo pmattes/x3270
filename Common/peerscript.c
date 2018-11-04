@@ -51,6 +51,7 @@
 #include "lazya.h"
 #include "peerscript.h"
 #include "popups.h"
+#include "s3270_proto.h"
 #include "source.h"
 #include "task.h"
 #include "trace.h"
@@ -269,7 +270,7 @@ static void
 peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
-    char *s = lazyaf("data: %.*s\n", (int)len, buf);
+    char *s = lazyaf(DATA_PREFIX, "%.*s\n", (int)len, buf);
 
     (void) send(p->socket, s, strlen(s), 0);
 }
@@ -288,12 +289,12 @@ peer_done(task_cbh handle, bool success, bool abort)
 {
     peer_t *p = (peer_t *)handle;
     char *prompt = task_cb_prompt(handle);
-    char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
+    char *s = lazyaf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
     bool new_child = false;
 
     /* Print the prompt. */
     vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
-	    success? "ok": "error");
+	    success? PROMPT_OK: PROMPT_ERROR);
     (void) send(p->socket, s, strlen(s), 0);
 
     if (abort || !p->enabled) {

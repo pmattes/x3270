@@ -47,6 +47,7 @@
 #include "childscript.h"
 #include "lazya.h"
 #include "peerscript.h"
+#include "s3270_proto.h"
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
@@ -393,7 +394,7 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf("data: %.*s\n", (int)len, buf);
+    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
     (void) write(c->outfd, s, strlen(s));
 #endif /*]*/
@@ -1051,8 +1052,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	(void) dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
-	(void) putenv(xs_buffer("X3270OUTPUT=%d", outpipe[0]));
-	(void) putenv(xs_buffer("X3270INPUT=%d", inpipe[1]));
+	(void) putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
+	(void) putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1109,7 +1110,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (listener == NULL) {
 	return false;
     }
-    putenv(lazyaf("X3270PORT=%d", port));
+    putenv(lazyaf(PORT_ENV "=%d", port));
 
     /* Set up the stdout/stderr output pipes. */
     c = (child_t *)Calloc(sizeof(child_t), 1);

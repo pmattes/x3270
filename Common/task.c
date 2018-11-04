@@ -71,6 +71,7 @@
 #include "popups.h"
 #include "pr3287_session.h"
 #include "product.h"
+#include "s3270_proto.h"
 #include "screen.h"
 #include "source.h"
 #include "split_host.h"
@@ -392,7 +393,7 @@ task_register(void)
 	{ "Macro",		Macro_action, ACTION_KE },
 	{ "Query",		Query_action, 0 },
 	{ "ReadBuffer",		ReadBuffer_action, 0 },
-	{ "ResumeInput",	ResumeInput_action, ACTION_HIDDEN },
+	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
 	{ "RequestInput",	RequestInput_action, ACTION_HIDDEN },
 	{ "Script",		Script_action, ACTION_KE },
 	{ "Snap",		Snap_action, 0 },
@@ -3691,8 +3692,8 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
     char *text;
     int ret;
 
-    action_debug("ResumeInput", ia, argc, argv);
-    if (check_argc("ResumeInput", argc, 1, 1) < 0) {
+    action_debug(RESUME_INPUT, ia, argc, argv);
+    if (check_argc(RESUME_INPUT, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -3701,7 +3702,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 	redirect->cbx.cb->irv == NULL ||
 	(irhandle =
 	 (*redirect->cbx.cb->irv->getir)(redirect->cbx.handle)) == NULL) {
-	popup_an_error("ResumeInput: No pending input request");
+	popup_an_error(RESUME_INPUT ": No pending input request");
 	return false;
     }
 
@@ -3721,7 +3722,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
     if (text == NULL) {
 	(*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, NULL);
 	task_abort_input_request_irhandle(irhandle);
-	popup_an_error("ResumeInput: Invalid base64 text");
+	popup_an_error(RESUME_INPUT ": Invalid base64 text");
 	return false;
     }
 
@@ -3807,7 +3808,7 @@ task_request_input(const char *action, const char *prompt,
     (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
-    popup_an_error("[input] %s", lazya(base64_encode(prompt)));
+    popup_an_error(INPUT_TOKEN "%s", lazya(base64_encode(prompt)));
     return true;
 }
 

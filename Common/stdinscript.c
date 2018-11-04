@@ -39,6 +39,7 @@
 #include "actions.h"
 #include "kybd.h"
 #include "popups.h"
+#include "s3270_proto.h"
 #include "source.h"
 #include "task.h"
 #include "trace.h"
@@ -173,7 +174,7 @@ static void
 stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	bool success)
 {
-    printf("data: %.*s\n", (int)len, buf);
+    printf(DATA_PREFIX "%.*s\n", (int)len, buf);
     fflush(stdout);
 }
 
@@ -193,8 +194,9 @@ stdin_done(task_cbh handle, bool success, bool abort)
     if (!pushed_wait) {
 	char *prompt = task_cb_prompt(handle);
 
-	vtrace("Output for stdin: %s/%s\n", prompt, success? "ok": "error");
-	printf("%s\n%s\n", prompt, success? "ok": "error");
+	vtrace("Output for stdin: %s/%s\n", prompt,
+		success? PROMPT_OK: PROMPT_ERROR);
+	printf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
 	fflush(stdout);
     }
     pushed_wait = false;

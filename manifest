@@ -383,6 +383,7 @@ include/readres.h
 include/resolver.h
 include/resources.h
 include/rpq.h
+include/s3270_proto.h
 include/save.h
 include/screen.h
 include/scroll.h
