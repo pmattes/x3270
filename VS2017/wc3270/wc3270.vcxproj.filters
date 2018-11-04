@@ -62,6 +62,9 @@
     <ClCompile Include="..\..\Common\c3270\menubar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\c3270\show_command.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\c3270\ssl_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>

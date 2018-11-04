@@ -155,6 +155,7 @@ Common/c3270/keypad.outline
 Common/c3270/localdefs.h
 Common/c3270/menubar.c
 Common/c3270/mkkeypad.c
+Common/c3270/show_action.c
 Common/c3270/ssl_passwd_gui.c
 Common/charset.c
 Common/child.c
@@ -388,6 +389,7 @@ include/scroll.h
 include/see.h
 include/selectc.h
 include/sf.h
+include/show_action.h
 include/sio.h
 include/sio_glue.h
 include/sio_internal.h

@@ -72,7 +72,6 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "linemode.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -81,6 +80,7 @@
 #include "product.h"
 #include "screen.h"
 #include "selectc.h"
+#include "show_action.h"
 #include "sio_glue.h"
 #include "split_host.h"
 #include "status.h"
@@ -140,8 +140,10 @@ static bool readline_done = false;
 
 /* Pager state. */
 #if !defined(_WIN32) /*[*/
-static FILE *pager = NULL;
-static pid_t pager_pid = 0;
+struct {
+    FILE *fp;		/* file pointer */
+    pid_t pid;		/* process ID */
+} pager = { NULL, 0 };
 #else /*][*/
 struct {
     int rows;		/* current number of rows */
@@ -152,6 +154,7 @@ struct {
     bool flushing;	/* true if 'q' selected and output is being discarded */
     bool running;	/* true if pager is active */
 } pager = { 25, 80, 0, 0, NULL, false, false };
+static void pager_key_done(void);
 #endif /*]*/
 static bool any_error_output;
 static bool command_running = false;
@@ -171,10 +174,11 @@ static HANDLE sigint_event;
 #endif /*]*/
 static char *prompt_string = NULL;
 static char *real_prompt_string = NULL;
-static char *escape_action = NULL;
+static char *nested_escape_action = NULL;
 
 static bool aux_input = false;
 
+static void c3270_input(iosrc_t fd, ioid_t id);
 static ioid_t c3270_input_id = NULL_IOID;
 static task_cb_ir_state_t command_ir_state;
 
@@ -502,6 +506,7 @@ main(int argc, char *argv[])
 	win32_perror("CreateThread failed");
 	exit(1);
     }
+    c3270_input_id = AddInput(inthread.done_event, c3270_input);
 #endif /*]*/
 
     idle_init();
@@ -665,12 +670,12 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    vtrace("SIGTSTP while running an action -- deferring\n");
 	    stop_pending = true;
 	} else {
-	    vtrace("SIGTSTP at the %s\n", (pager_pid == 0)? "prompt": "pager");
+	    vtrace("SIGTSTP at the %s\n", (pager.pid == 0)? "prompt": "pager");
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
 	    kill(getpid(), SIGSTOP);
-	    if (pager_pid == 0) {
+	    if (pager.pid == 0) {
 		display_prompt();
 	    }
 	}
@@ -784,9 +789,15 @@ c3270_input(iosrc_t fd, ioid_t id)
     char *s;
     size_t sl;
 
+#if defined(_WIN32) /*[*/
+    if (pager.residual != NULL) {
+	return pager_key_done();
+    }
+#endif /*]*/
+
     /* Get the input. */
 #if !defined(_WIN32) /*[*/
-#if defined(HAVE_LIBREADLINE) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
     rl_callback_read_char();
     if (!readline_done) {
 	/* More to collect. */
@@ -794,9 +805,9 @@ c3270_input(iosrc_t fd, ioid_t id)
     }
     command = readline_command;
     readline_done = false;
-#else /*][*/
+# else /*][*/
     command = fgets(inbuf, sizeof(inbuf), stdin);
-#endif /*]*/
+# endif /*]*/
 #else /*][*/
     if (inthread.nr < 0) {
 	vtrace("c3270_input: input failed\n");
@@ -826,8 +837,6 @@ c3270_input(iosrc_t fd, ioid_t id)
 	    aux_input = false;
 	    c3270_push_command("ResumeInput(-Abort)");
 	    Replace(prompt_string, real_prompt_string);
-	    RemoveInput(c3270_input_id);
-	    c3270_input_id = NULL_IOID;
 	} else {
 	    printf("\n");
 	    display_prompt();
@@ -857,8 +866,10 @@ c3270_input(iosrc_t fd, ioid_t id)
     if (!aux_input && (!sl || appres.secure)) {
 	if (PCONNECTED || appres.secure) {
 	    /* Stop interacting. */
+#if !defined(_WIN32) /*[*/
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
+#endif /*]*/
 	    screen_resume();
 	    goto done;
 	} else {
@@ -885,9 +896,11 @@ c3270_input(iosrc_t fd, ioid_t id)
 	s = "Help";
     }
 
+#if !defined(_WIN32) /*[*/
     /* No more input. */
     RemoveInput(c3270_input_id);
     c3270_input_id = NULL_IOID;
+#endif /*]*/
 
     /* Run the command. */
 #if defined(_WIN32) /*[*/
@@ -976,9 +989,9 @@ interact(void)
     /* Now we are interacting. */
     vtrace("Interacting.\n");
 
-    if (escape_action != NULL) {
-	c3270_push_command(escape_action);
-	Replace(escape_action, NULL);
+    if (nested_escape_action != NULL) {
+	c3270_push_command(nested_escape_action);
+	Replace(nested_escape_action, NULL);
 	return;
     }
 
@@ -992,11 +1005,10 @@ interact(void)
     display_prompt();
 
     /* Wait for input. */
-    assert(c3270_input_id == NULL_IOID);
 #if !defined(_WIN32) /*[*/
+    assert(c3270_input_id == NULL_IOID);
     c3270_input_id = AddInput(0, c3270_input);
 #else /*][*/
-    c3270_input_id = AddInput(inthread.done_event, c3270_input);
     enable_input(LINE);
 #endif /*]*/
 }
@@ -1007,7 +1019,7 @@ pager_exit(ioid_t id, int status)
 {
     vtrace("pager exited with status %d\n", status);
 
-    pager_pid = 0;
+    pager.pid = 0;
     if (command_output || !CONNECTED) {
 	/* Command produced output, or we are not connected any more. */
 
@@ -1048,8 +1060,8 @@ start_pager(void)
     char *pager_env;
     char *pager_cmd = NULL;
 
-    if (pager != NULL) {
-	return pager;
+    if (pager.fp != NULL) {
+	return pager.fp;
     }
 
     if ((pager_env = getenv("PAGER")) != NULL) {
@@ -1064,24 +1076,25 @@ start_pager(void)
 
 	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
 	(void) sprintf(s, "%s%s", pager_cmd, or_cat);
-	pager = xpopen(s, "w", &pager_pid);
+	pager.fp = xpopen(s, "w", &pager.pid);
 	Free(s);
-	if (pager == NULL) {
+	if (pager.fp == NULL) {
 	    (void) perror(pager_cmd);
 	} else {
-	    AddChild(pager_pid, pager_exit);
+	    AddChild(pager.pid, pager_exit);
 	}
     }
-    if (pager == NULL) {
-	pager = stdout;
+    if (pager.fp == NULL) {
+	pager.fp = stdout;
     }
-    return pager;
+    return pager.fp;
 #else /*][*/
     if (!pager.running) {
 	pager.rowcnt = 0;
 	Replace(pager.residual, NULL);
 	pager.flushing = false;
 	pager.running = true;
+	get_console_size(&pager.rows, &pager.cols);
     }
     return stdout;
 #endif /*]*/
@@ -1093,11 +1106,11 @@ stop_pager(void)
 {
     vtrace("stop pager\n");
 #if !defined(_WIN32) /*[*/
-    if (pager != NULL) {
-	if (pager != stdout) {
-	    xpclose(pager, XPC_NOWAIT);
+    if (pager.fp != NULL) {
+	if (pager.fp != stdout) {
+	    xpclose(pager.fp, XPC_NOWAIT);
 	}
-	pager = NULL;
+	pager.fp = NULL;
     }
 #else /*][*/
     pager.rowcnt = 0;
@@ -1110,16 +1123,12 @@ stop_pager(void)
 #if defined(_WIN32) /*[*/
 /* A key was pressed while the pager prompt was up. */
 static void
-pager_key_done(iosrc_t fd, ioid_t id)
+pager_key_done(void)
 {
     char *p;
 
     pager.flushing = inthread.buf[0] == 'q';
     vtrace("Got pager key%s\n", pager.flushing? " (quit)": "");
-
-    /* No more key-mode input. */
-    RemoveInput(c3270_input_id);
-    c3270_input_id = NULL_IOID;
 
     /* Overwrite the prompt and reset. */
     printf("\r%*s\r", (pager.nw > 0)? pager.nw: 79, "");
@@ -1132,8 +1141,6 @@ pager_key_done(iosrc_t fd, ioid_t id)
 
 	/* New prompt. */
 	display_prompt();
-	assert(c3270_input_id == NULL_IOID);
-	c3270_input_id = AddInput(inthread.done_event, c3270_input);
 	enable_input(LINE);
 	return;
     }
@@ -1148,7 +1155,6 @@ pager_key_done(iosrc_t fd, ioid_t id)
 	/* Command no longer running, and no more pending otuput. */
 	display_prompt();
 	assert(c3270_input_id == NULL_IOID);
-	c3270_input_id = AddInput(inthread.done_event, c3270_input);
 	enable_input(LINE);
     }
 }
@@ -1181,8 +1187,6 @@ pager_output(const char *s)
 	    Replace(pager.residual, NewString(s));
 	    pager.nw = printf("Press any key to continue . . . ");
 	    fflush(stdout);
-	    assert(c3270_input_id == NULL_IOID);
-	    c3270_input_id = AddInput(inthread.done_event, pager_key_done);
 	    enable_input(KEY);
 	    return;
 	}
@@ -1370,300 +1374,6 @@ completion_entry(const char *text, int state)
 
 /* c3270-specific actions. */
 
-/* Return a time difference in English */
-static char *
-hms(time_t ts)
-{
-    time_t t, td;
-    long hr, mn, sc;
-
-    (void) time(&t);
-
-    td = t - ts;
-    hr = (long)(td / 3600);
-    mn = (td % 3600) / 60;
-    sc = td % 60;
-
-    if (hr > 0) {
-	return lazyaf("%ld %s %ld %s %ld %s",
-	    hr, (hr == 1) ?
-		get_message("hour") : get_message("hours"),
-	    mn, (mn == 1) ?
-		get_message("minute") : get_message("minutes"),
-	    sc, (sc == 1) ?
-		get_message("second") : get_message("seconds"));
-    } else if (mn > 0) {
-	return lazyaf("%ld %s %ld %s",
-	    mn, (mn == 1) ?
-		get_message("minute") : get_message("minutes"),
-	    sc, (sc == 1) ?
-		get_message("second") : get_message("seconds"));
-    } else {
-	return lazyaf("%ld %s",
-	    sc, (sc == 1) ?
-		get_message("second") : get_message("seconds"));
-    }
-}
-
-static void
-indent_dump(const char *s)
-{
-    const char *newline;
-
-    while ((newline = strchr(s, '\n')) != NULL) {
-	action_output("    %.*s", (int)(newline - s), s);
-	s = newline + 1;
-    }
-    action_output("    %s", s);
-}
-
-static void
-status_dump(void)
-{
-    const char *emode, *ftype, *ts;
-    const char *clu;
-    const char *eopts;
-    const char *bplu;
-    const char *ptype;
-
-    action_output("%s", build);
-    action_output("%s %s: %d %s x %d %s, %s, %s",
-	    get_message("model"), model_name,
-	    maxCOLS, get_message("columns"),
-	    maxROWS, get_message("rows"),
-	    appres.m3279? get_message("fullColor"): get_message("mono"),
-	    (appres.extended && !HOST_FLAG(STD_DS_HOST))?
-		get_message("extendedDs"): get_message("standardDs"));
-    action_output("%s %s", get_message("terminalName"), termtype);
-    clu = net_query_lu_name();
-    if (clu != NULL && clu[0]) {
-	action_output("%s %s", get_message("luName"), clu);
-    }
-    bplu = net_query_bind_plu_name();
-    if (bplu != NULL && bplu[0]) {
-	action_output("%s %s", get_message("bindPluName"), bplu);
-    }
-    action_output("%s %s (%s)", get_message("characterSet"),
-	    get_charset_name(), dbcs? "DBCS": "SBCS");
-    action_output("%s %s",
-	    get_message("hostCodePage"),
-	    get_host_codepage());
-    action_output("%s GCSGID %u, CPGID %u",
-	    get_message("sbcsCgcsgid"),
-	    (unsigned short)((cgcsgid >> 16) & 0xffff),
-	    (unsigned short)(cgcsgid & 0xffff));
-    if (dbcs) {
-	action_output("%s GCSGID %u, CPGID %u",
-		get_message("dbcsCgcsgid"),
-		(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
-		(unsigned short)(cgcsgid_dbcs & 0xffff));
-    }
-#if !defined(_WIN32) /*[*/
-    action_output("%s %s", get_message("localeCodeset"), locale_codeset);
-    action_output("%s DBCS %s, wide curses %s",
-	    get_message("buildOpts"),
-# if defined(X3270_DBCS) /*[*/
-	    get_message("buildEnabled"),
-# else /*][*/
-	    get_message("buildDisabled"),
-# endif /*]*/
-# if defined(CURSES_WIDE) /*[*/
-	    get_message("buildEnabled")
-# else /*][*/
-	    get_message("buildDisabled")
-# endif /*]*/
-	    );
-#else /*][*/
-    action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
-	    windows_cp, GetACP());
-#endif /*]*/
-    if (appres.interactive.key_map) {
-	action_output("%s %s", get_message("keyboardMap"),
-		appres.interactive.key_map);
-    }
-    if (CONNECTED) {
-	action_output("%s %s", get_message("connectedTo"),
-#if defined(LOCAL_PROCESS) /*[*/
-		(local_process && !strlen(current_host))? "(shell)":
-#endif /*]*/
-		current_host);
-#if defined(LOCAL_PROCESS) /*[*/
-	if (!local_process)
-#endif /*]*/
-	{
-	    action_output("  %s %d", get_message("port"), current_port);
-	}
-	if (net_secure_connection()) {
-	    const char *session, *cert;
-
-	    action_output("  %s%s%s", get_message("secure"),
-			net_secure_unverified()? ", ": "",
-			net_secure_unverified()? get_message("unverified"): "");
-	    action_output("  %s %s", get_message("provider"),
-		    net_sio_provider());
-	    if ((session = net_session_info()) != NULL) {
-		action_output("  %s", get_message("sessionInfo"));
-		indent_dump(session);
-	    }
-	    if ((cert = net_server_cert_info()) != NULL) {
-		action_output("  %s", get_message("serverCert"));
-		indent_dump(cert);
-	    }
-	}
-	ptype = net_proxy_type();
-	if (ptype) {
-	    action_output("  %s %s  %s %s  %s %s",
-		    get_message("proxyType"), ptype,
-		    get_message("server"), net_proxy_host(),
-		    get_message("port"), net_proxy_port());
-	}
-	ts = hms(ns_time);
-	if (IN_E) {
-	    emode = "TN3270E ";
-	} else {
-	    emode = "";
-	}
-	if (IN_NVT) {
-	    if (linemode) {
-		ftype = get_message("lineMode");
-	    } else {
-		ftype = get_message("charMode");
-	    }
-	    action_output("  %s%s, %s", emode, ftype, ts);
-	} else if (IN_SSCP) {
-	    action_output("  %s%s, %s", emode, get_message("sscpMode"), ts);
-	} else if (IN_3270) {
-	    action_output("  %s%s, %s", emode, get_message("dsMode"), ts);
-	} else if (cstate == CONNECTED_UNBOUND) {
-	    action_output("  %s%s, %s", emode, get_message("unboundMode"), ts);
-	} else {
-	    action_output("  %s, %s", get_message("unnegotiated"), ts);
-	}
-
-	eopts = tn3270e_current_opts();
-	if (eopts != NULL) {
-	    action_output("  %s %s", get_message("tn3270eOpts"), eopts);
-	} else if (IN_E) {
-	    action_output("  %s", get_message("tn3270eNoOpts"));
-	}
-
-	if (IN_3270) {
-	    action_output("%s %d %s, %d %s\n%s %d %s, %d %s",
-		    get_message("sent"),
-		    ns_bsent, (ns_bsent == 1)?
-			get_message("byte") : get_message("bytes"),
-		    ns_rsent, (ns_rsent == 1)?
-			get_message("record") : get_message("records"),
-		    get_message("Received"), ns_brcvd,
-			(ns_brcvd == 1)? get_message("byte"):
-					 get_message("bytes"),
-		    ns_rrcvd,
-		    (ns_rrcvd == 1)? get_message("record"):
-				     get_message("records"));
-	} else {
-	    action_output("%s %d %s, %s %d %s",
-		    get_message("sent"), ns_bsent,
-		    (ns_bsent == 1)? get_message("byte"):
-				     get_message("bytes"),
-		    get_message("received"), ns_brcvd,
-		    (ns_brcvd == 1)? get_message("byte"):
-				     get_message("bytes"));
-	}
-
-	if (IN_NVT) {
-	    struct ctl_char *c = linemode_chars();
-	    int i;
-	    char buf[128];
-	    char *s = buf;
-
-	    action_output("%s", get_message("specialCharacters"));
-	    for (i = 0; c[i].name; i++) {
-		if (i && !(i % 4)) {
-		    *s = '\0';
-		    action_output("%s", buf);
-		    s = buf;
-		}
-		s += sprintf(s, "  %s %s", c[i].name, c[i].value);
-	    }
-	    if (s != buf) {
-		*s = '\0';
-		action_output("%s", buf);
-	    }
-	}
-    } else if (HALF_CONNECTED) {
-	action_output("%s %s", get_message("connectionPending"),
-	    current_host);
-    } else {
-	action_output("%s", get_message("notConnected"));
-    }
-}
-
-static void
-copyright_dump(void)
-{
-    action_output(" ");
-    action_output("%s", build);
-    action_output(" ");
-    action_output("Copyright (c) 1993-%s, Paul Mattes.", cyear);
-    action_output("Copyright (c) 1990, Jeff Sparkes.");
-    action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
-    action_output(" 30332.");
-    action_output("All rights reserved.");
-    action_output(" ");
-    action_output("Redistribution and use in source and binary forms, with or without");
-    action_output("modification, are permitted provided that the following conditions are met:");
-    action_output("    * Redistributions of source code must retain the above copyright");
-    action_output("      notice, this list of conditions and the following disclaimer.");
-    action_output("    * Redistributions in binary form must reproduce the above copyright");
-    action_output("      notice, this list of conditions and the following disclaimer in the");
-    action_output("      documentation and/or other materials provided with the distribution.");
-    action_output("    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of");
-    action_output("      their contributors may be used to endorse or promote products derived");
-    action_output("      from this software without specific prior written permission.");
-    action_output(" ");
-    action_output("THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC \"AS IS\" AND");
-    action_output("ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE");
-    action_output("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE");
-    action_output("ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE");
-    action_output("LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR");
-    action_output("CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF");
-    action_output("SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS");
-    action_output("INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN");
-    action_output("CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)");
-    action_output("ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE");
-    action_output("POSSIBILITY OF SUCH DAMAGE.");
-    action_output(" ");
-}
-
-static bool
-Show_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug("Show", ia, argc, argv);
-    if (check_argc("Show", argc, 0, 1) < 0) {
-	return false;
-    }
-
-    if (argc == 0) {
-	action_output("  Show copyright   copyright information");
-	action_output("  Show stats       connection statistics");
-	action_output("  Show status      same as 'Show stats'");
-	action_output("  Show keymap      current keymap");
-	return true;
-    }
-    if (!strncasecmp(argv[0], "stats", strlen(argv[0])) ||
-	!strncasecmp(argv[0], "status", strlen(argv[0]))) {
-	status_dump();
-    } else if (!strncasecmp(argv[0], "keymap", strlen(argv[0]))) {
-	keymap_dump();
-    } else if (!strncasecmp(argv[0], "copyright", strlen(argv[0]))) {
-	copyright_dump();
-    } else {
-	popup_an_error("Unknown 'Show' keyword");
-	return false;
-    }
-    return true;
-}
-
 /* Trace([data|keyboard][on [filename]|off]) */
 static bool
 Trace_action(ia_t ia, unsigned argc, const char **argv)
@@ -1750,7 +1460,7 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 
     if (!escaped) {
 	if (argc > 0) {
-	    escape_action = NewString(argv[0]);
+	    nested_escape_action = NewString(argv[0]);
 	} else if (appres.secure) {
 	    /* Plain Escape() does nothing when secure. */
 	    return true;
@@ -1874,7 +1584,7 @@ command_done(task_cbh handle, bool success, bool abort)
     stop_pager();
 
 #if !defined(_WIN32) /*[*/
-    if (pager_pid != 0) {
+    if (pager.pid != 0) {
 	/* Pager process is still running, don't do anything else yet. */
 	command_complete = true;
 	return true;
@@ -1895,7 +1605,7 @@ command_done(task_cbh handle, bool success, bool abort)
 #endif /*]*/
 	    kill(getpid(), SIGSTOP);
 #if !defined(_WIN32) /*[*/
-	    if (pager_pid != 0) {
+	    if (pager.pid != 0) {
 		return true;
 	    }
 #endif /*]*/
@@ -1906,11 +1616,10 @@ command_done(task_cbh handle, bool success, bool abort)
 	display_prompt();
 
 	/* Wait for more input. */
-	assert(c3270_input_id == NULL_IOID); // crashes after disc
 #if !defined(_WIN32) /*[*/
+	assert(c3270_input_id == NULL_IOID);
 	c3270_input_id = AddInput(0, c3270_input);
 #else /*][*/
-	c3270_input_id = AddInput(inthread.done_event, c3270_input);
 	enable_input(LINE);
 #endif /*]*/
     } else {

@@ -199,6 +199,7 @@
     <ClCompile Include="..\..\wc3270\screen.c" />
     <ClCompile Include="..\..\wc3270\select.c" />
     <ClCompile Include="..\..\wc3270\shortcut.c" />
+    <ClCompile Include="..\..\Common\c3270\show_action.c" />
     <ClCompile Include="..\..\Common\c3270\ssl_passwd_gui.c" />
     <ClCompile Include="..\..\wc3270\version.c" />
   </ItemGroup>
