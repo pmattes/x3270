@@ -110,6 +110,7 @@ typedef struct {
 
 #define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
 #define CBF_CONNECT_NONBLOCK 0x2 /* do not block Connect()/Open() */
+#define CBF_PWINPUT	0x4	/* can do password (no echo) input */
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 void task_activate(task_cbh handle);
@@ -120,7 +121,8 @@ unsigned long task_cb_msec(task_cbh handle);
 typedef bool continue_fn(void *, const char *);
 typedef void abort_fn(void *);
 bool task_request_input(const char *action, const char *prompt,
-	continue_fn *continue_fn, abort_fn *abort_fn, void *handle);
+	continue_fn *continue_fn, abort_fn *abort_fn, void *handle,
+	bool no_echo);
 
 typedef llist_t task_cb_ir_state_t;
 void task_cb_init_ir_state(task_cb_ir_state_t *ir_state);

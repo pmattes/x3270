@@ -409,7 +409,8 @@ it_resume(void *handle, const char *response)
     /* Call the resume function for the current state. */
     ret = (*it_resume_fn[itc->state])(itc, r);
     if (ret == ITR_RETRY) {
-	task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+	task_request_input("Transfer", itc->prompt, it_resume, NULL, itc,
+		false);
 	return false;
     }
     if (ret == ITR_QUIT) {
@@ -435,7 +436,8 @@ it_resume(void *handle, const char *response)
 	if ((*it_pred[state])(&itc->conf)) {
 	    Replace(itc->prompt, (*it_ask[state])(itc));
 	    itc->state = state;
-	    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+	    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc,
+		    false);
 	    return false;
 	    break;
 	}
@@ -509,7 +511,7 @@ interactive_transfer_start(void)
     /* Ask about continuing. */
     itc->state = ITS_CONTINUE;
     Replace(itc->prompt, NewString("Continue? (y/n) [y] "));
-    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc);
+    task_request_input("Transfer", itc->prompt, it_resume, NULL, itc, false);
     return true;
 }
 

@@ -3631,6 +3631,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 	const char *name;
     } fname[] = {
 	{ CBF_INTERACTIVE, "Interactive" },
+	{ CBF_PWINPUT, "PwInput" },
 	{ 0, NULL }
     };
 
@@ -3777,12 +3778,14 @@ task_nonblocking_connect(void)
  * @param[in] prompt		Prompt string
  * @param[in] continue_fn	Continue function
  * @param[in] handle		Handle to pass to continue functon
+ * @param[in] no_echo		True to use no-echo mode
  *
  * @returns true if input requested successfully
  */
 bool
 task_request_input(const char *action, const char *prompt,
-	continue_fn *continue_fn, abort_fn *abort_fn, void *handle)
+	continue_fn *continue_fn, abort_fn *abort_fn, void *handle,
+	bool no_echo)
 {
     task_t *redirect = task_redirect_to();
     unsigned flags;
@@ -3793,6 +3796,11 @@ task_request_input(const char *action, const char *prompt,
 	    (!(flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
 	     CBF_INTERACTIVE)) {
 	popup_an_error("%s: not an interactive session", action);
+	return false;
+    }
+
+    if (no_echo && !(flags & CBF_PWINPUT)) {
+	popup_an_error("%s: session does not support password input", action);
 	return false;
     }
 
@@ -3808,7 +3816,9 @@ task_request_input(const char *action, const char *prompt,
     (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
-    popup_an_error(INPUT_TOKEN "%s", lazya(base64_encode(prompt)));
+    popup_an_error(
+	    no_echo? PWINPUT_TOKEN "%s": INPUT_TOKEN "%s",
+	    lazya(base64_encode(prompt)));
     return true;
 }
 
@@ -3921,12 +3931,21 @@ static bool
 RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 {
     sample_per_type_t *state;
+    bool no_echo = false;
 
     action_debug("RequestInput", ia, argc, argv);
-    if (check_argc("RequestInput", argc, 0, 0) < 0) {
+    if (check_argc("RequestInput", argc, 0, 1) < 0) {
 	return false;
     }
 
+    if (argc > 0) {
+	if (!strcasecmp(argv[0], "-NoEcho")) {
+	    no_echo = true;
+	} else {
+	    popup_an_error("RequestInput: unknown keyword '%s'", argv[0]);
+	    return false;
+	}
+    }
     state = (sample_per_type_t *)task_get_ir_state("RequestInput");
     if (state == NULL) {
 	/* Set up some state. */
@@ -3938,7 +3957,7 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     (void) task_request_input("RequestInput", "Input: ",
-	    sample_continue_input, sample_abort_input, state);
+	    sample_continue_input, sample_abort_input, state, no_echo);
     return false;
 }
 

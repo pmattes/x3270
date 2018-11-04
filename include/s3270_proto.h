@@ -42,8 +42,9 @@
 #define PROMPT_OK	"ok"
 #define PROMPT_ERROR	"error"
 
-/* Token to request interactive input. */
+/* Tokens to request interactive input. */
 #define INPUT_TOKEN	"[input] "
+#define PWINPUT_TOKEN	"[pwinput] "
 
 /* Action to continue or abort interactive input. */
 #define RESUME_INPUT	"ResumeInput"

@@ -1146,6 +1146,26 @@ set_console_cooked(void)
     }
 }
 
+/* Toggle cooked echo/noecho modes. */
+void
+screen_echo_mode(bool echo)
+{
+    if (echo) {
+	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
+				    ENABLE_LINE_INPUT |
+				    ENABLE_PROCESSED_INPUT |
+				    ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	}
+    } else {
+	if (SetConsoleMode(chandle, ENABLE_LINE_INPUT |
+				    ENABLE_PROCESSED_INPUT |
+				    ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	}
+    }
+}
+
 /* Go back to the original screen. */
 static void
 endwin(void)

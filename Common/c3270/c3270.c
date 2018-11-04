@@ -176,6 +176,7 @@ static char *real_prompt_string = NULL;
 static char *nested_escape_action = NULL;
 
 static bool aux_input = false;
+static bool aux_pwinput = false;
 
 static void c3270_input(iosrc_t fd, ioid_t id);
 static ioid_t c3270_input_id = NULL_IOID;
@@ -606,6 +607,28 @@ main(int argc, char *argv[])
     }
 }
 
+static void
+echo_mode(bool echo)
+{
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
+    struct termios t;
+
+    tcgetattr(0, &t);
+    if (echo) {
+	t.c_lflag |= ECHO;
+    } else {
+	t.c_lflag &= ~ECHO;
+    }
+    tcsetattr(0, TCSANOW, &t);
+# else /*[*/
+    rl_tty_set_echoing(echo);
+# endif /*]*/
+#else /*][*/
+    screen_echo_mode(echo);
+#endif /*]*/
+}
+
 #if !defined(_WIN32) /*[*/
 /* Synchronous signal handler. */
 static void
@@ -654,6 +677,8 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 #endif /*]*/
 	    printf("\n");
 	    aux_input = false;
+	    aux_pwinput = false;
+	    echo_mode(true);
 	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
 	    Replace(prompt_string, real_prompt_string);
 	    RemoveInput(c3270_input_id);
@@ -834,6 +859,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 	    /* Abort the input. */
 	    vtrace("Aborting auxiliary input\n");
 	    aux_input = false;
+	    aux_pwinput = false;
+	    echo_mode(true);
 	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
 	    Replace(prompt_string, real_prompt_string);
 	} else {
@@ -907,6 +934,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (aux_input) {
 	aux_input = false;
+	aux_pwinput = false;
+	echo_mode(true);
 	c3270_push_command(lazyaf(RESUME_INPUT "(%s)",
 		    *s? lazya(base64_encode(s)): "\"\""));
 	Replace(prompt_string, real_prompt_string);
@@ -1544,7 +1573,15 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
     if (!success && !strncmp(buf, INPUT_TOKEN, strlen(INPUT_TOKEN))) {
 	prompt_string = base64_decode(buf + strlen(INPUT_TOKEN));
 	aux_input = true;
-	command_output = true; /* a while lie */
+	aux_pwinput = false;
+	command_output = true; /* a white lie */
+    } else if (!success && !strncmp(buf, PWINPUT_TOKEN,
+		strlen(PWINPUT_TOKEN))) {
+	prompt_string = base64_decode(buf + strlen(PWINPUT_TOKEN));
+	aux_input = true;
+	aux_pwinput = true;
+	command_output = true; /* a white lie */
+	echo_mode(false);
     } else {
 	glue_gui_output(lazyaf("%.*s", (int)len, buf));
     }
@@ -1642,8 +1679,9 @@ command_getflags(task_cbh handle)
     /*
      * INTERACTIVE: We understand [input] responses.
      * CONNECT_NONBLOCK: We do not want Connect()/Open() to block.
+     * PWINPUT: We understand [pwinput] responses.
      */
-    return CBF_INTERACTIVE | CBF_CONNECT_NONBLOCK;
+    return CBF_INTERACTIVE | CBF_CONNECT_NONBLOCK | CBF_PWINPUT;
 }
 
 /**
