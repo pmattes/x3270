@@ -42,6 +42,7 @@
 #include "appres.h"
 #include "charset.h"
 #include "cscreen.h"
+#include "host.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "linemode.h"
@@ -276,6 +277,8 @@ status_dump(void)
     } else if (HALF_CONNECTED) {
 	action_output("%s %s", get_message("connectionPending"),
 	    current_host);
+    } else if (host_reconnecting()) {
+	action_output("%s", get_message("reconnecting"));
     } else {
 	action_output("%s", get_message("notConnected"));
     }

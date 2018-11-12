@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -47,6 +47,7 @@
 
 #include "about.h"
 #include "charset.h"
+#include "host.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "linemode.h"
@@ -698,6 +699,8 @@ popup_about_status(void)
     } else if (HALF_CONNECTED) {
 	MAKE_LABEL(get_message("connectionPending"), 4);
 	MAKE_VALUE(current_host);
+    } else if (host_reconnecting()) {
+	MAKE_LABEL(get_message("reconnecting"), 4);
     } else {
 	MAKE_LABEL(get_message("notConnected"), 4);
     }

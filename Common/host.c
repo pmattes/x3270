@@ -977,3 +977,9 @@ host_query_connection_state(void)
     }
     return s;
 }
+
+bool
+host_reconnecting(void)
+{
+    return auto_reconnect_inprogress;
+}
