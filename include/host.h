@@ -51,5 +51,6 @@ void host_new_connection(bool pending);
 void host_disconnect(bool disable);
 void host_in3270(enum cstate);
 void host_newfd(iosrc_t s);
+const char *host_query_connection_state(void);
 void host_register(void);
 void host_set_flag(int flag);

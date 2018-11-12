@@ -1842,7 +1842,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	bool specific;
     } queries[] = {
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
-	{ "ConnectionState", net_query_connection_state, NULL, false, false },
+	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "CodePage", get_host_codepage, NULL, false, false },
 	{ "Cursor", ctlr_query_cursor, NULL, false, false },
 	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },

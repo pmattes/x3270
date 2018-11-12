@@ -966,3 +966,14 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
     host_disconnect(false);
     return true;
 }
+
+const char *
+host_query_connection_state(void)
+{
+    const char *s = net_query_connection_state();
+
+    if (!*s && auto_reconnect_inprogress) {
+	return "reconnecting";
+    }
+    return s;
+}
