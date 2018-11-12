@@ -341,6 +341,7 @@ c3270_connect(bool ignored)
 #if !defined(_WIN32) /*[*/
 	    if (prompt.displayed) {
 		printf("\n");
+		fflush(stdout);
 	    }
 #else /*][*/
 	    pause_for_errors();
@@ -706,6 +707,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    rl_callback_handler_remove();
 #endif /*]*/
 	    printf("\n");
+	    fflush(stdout);
 	    aux_input = false;
 	    aux_pwinput = false;
 	    echo_mode(true);
@@ -801,7 +803,8 @@ static void
 display_prompt(void)
 {
     if (error_pending != NULL) {
-	fprintf(stderr, "%s\n", error_pending);
+	printf("%s\n", error_pending);
+	fflush(stdout);
 	Replace(error_pending, NULL);
     }
     if (exit_pending) {
@@ -814,9 +817,11 @@ display_prompt(void)
 	if (ft_state != FT_NONE) {
 	    printf("File transfer in progress. Use Transfer(Cancel) to "
 		    "cancel.\n");
+	    fflush(stdout);
 	}
 	if (PCONNECTED) {
 	    printf("Press <Enter> to resume session.\n");
+	    fflush(stdout);
 	}
     }
 
@@ -911,6 +916,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 	} else {
 	    /* Get more input. */
 	    printf("\n");
+	    fflush(stdout);
 	}
 	goto done;
     }
@@ -1230,6 +1236,7 @@ pager_output(const char *s)
 	    sl = strlen(s);
 	    s = NULL;
 	}
+	fflush(stdout);
 
 	/* Account for the newline. */
 	pager.rowcnt++;
@@ -1805,11 +1812,13 @@ start_auto_shortcut(void)
     f = fopen(profile_path, "r");
     if (f == NULL) {
 	fprintf(stderr, "%s: %s\n", profile_path, strerror(errno));
+	fflush(stderr);
 	x3270_exit(1);
     }
     memset(&s, '\0', sizeof(session_t));
     if (read_session(f, &s, NULL) == 0) {
 	fprintf(stderr, "%s: invalid format\n", profile_path);
+	fflush(stderr);
 	x3270_exit(1);
     }
 #if defined(AS_DEBUG) /*[*/
@@ -1821,6 +1830,7 @@ start_auto_shortcut(void)
     tempdir = getenv("TEMP");
     if (tempdir == NULL) {
 	fprintf(stderr, "No %%TEMP%%?\n");
+	fflush(stderr);
 	x3270_exit(1);
     }
     sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
@@ -1831,6 +1841,7 @@ start_auto_shortcut(void)
 #endif /*]*/
     if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
 	fprintf(stderr, "%s: Error %ld\n", profile_path, GetLastError());
+	fflush(stderr);
 	x3270_exit(1);
     }
     sprintf(args, "+S \"%s\"", sesspath);
@@ -1842,6 +1853,7 @@ start_auto_shortcut(void)
 			   cwd		/* cwd     */);
     if (!SUCCEEDED(hres)) {
 	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
+	fflush(stderr);
 	x3270_exit(1);
     }
 #if defined(AS_DEBUG) /*[*/
@@ -1855,6 +1867,7 @@ start_auto_shortcut(void)
     h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
     if ((uintptr_t)h <= 32) {
 	fprintf(stderr, "ShellExecute failed, error %d\n", (int)(uintptr_t)h);
+	fflush(stderr);
 	x3270_exit(1);
     }
 
@@ -1985,6 +1998,7 @@ glue_gui_output(const char *s)
 
 #if !defined(_WIN32) /*[*/
     fprintf(start_pager(), "%s\n", s);
+    fflush(start_pager());
 #else /*][*/
     start_pager();
     pager_output(s);
@@ -2032,10 +2046,11 @@ glue_gui_error(const char *s)
     }
 
     if (prompt.displayed) {
-	fprintf(stderr, "\n");
+	printf("\n");
+	fflush(stdout);
     }
-    fprintf(stderr, "%s\n", s);
-    fflush(stderr);
+    printf("%s\n", s);
+    fflush(stdout);
     any_error_output = true;
 
     if (was_escaped) {
