@@ -70,8 +70,10 @@ ssl_passwd_gui_callback(char *buf, int size, bool again)
 {
     if (again) {
 	action_output("Password is incorrect.");
+    } else {
+	action_output("TLS certificate private key requires a password.");
     }
-    if (task_request_input("Open", "Enter password for private key: ",
+    if (task_request_input("Open", "Enter password: ",
 		ssl_passwd_continue_input, ssl_passwd_abort_input, NULL,
 		true)) {
 	return SP_PENDING;

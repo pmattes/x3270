@@ -604,9 +604,7 @@ main(int argc, char *argv[])
 	pause_for_errors();
 	/* Connect to the host. */
 	connect_once = true;
-	if (!host_connect(cl_hostname, IA_UI)) {
-	    x3270_exit(1);
-	}
+	c3270_push_command(lazyaf("Open(\"%s\")", cl_hostname));
 	screen_resume();
     } else {
 	/* Drop to the prompt. */
