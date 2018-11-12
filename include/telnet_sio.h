@@ -31,5 +31,5 @@
  *		Glue between telnet and secure I/O (sio).
  */
 
-sio_t sio_init_wrapper(char *password, bool force_no_verify, char *accept,
+sio_t sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 	bool *pending);

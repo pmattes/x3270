@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017-2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -127,7 +127,7 @@ lookup_cache(ssl_config_t *config)
  * Set up TLS, integrated with password prompting.
  */
 sio_t
-sio_init_wrapper(char *password, bool force_no_verify, char *accept,
+sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 	bool *pending)
 {
     char password_buf[1024];
@@ -148,7 +148,7 @@ sio_init_wrapper(char *password, bool force_no_verify, char *accept,
     if (password == NULL) {
 	password = lookup_cache(&appres.ssl);
 	if (password != NULL) {
-	    vtrace("SSL: Using cached password\n");
+	    vtrace("TLS: Using cached password\n");
 	}
     } else {
 	add_to_cache(&appres.ssl, password);
@@ -165,7 +165,7 @@ sio_init_wrapper(char *password, bool force_no_verify, char *accept,
 	    popup_an_error("%s", sio_last_error());
 	    return NULL;
 	case SI_WRONG_PASSWORD:
-	    vtrace("SSL: Password is wrong\n");
+	    vtrace("TLS: Password is wrong\n");
 	    if (password == NULL) {
 		popup_an_error("%s", sio_last_error());
 		return NULL;
@@ -177,20 +177,20 @@ sio_init_wrapper(char *password, bool force_no_verify, char *accept,
 			sizeof(password_buf), again)) {
 	    case SP_SUCCESS:
 		/* Got it right away. */
-		vtrace("SSL: Password needed, supplied by GUI\n");
+		vtrace("TLS: Password needed, supplied by GUI\n");
 		password = password_buf;
 		add_to_cache(&appres.ssl, password);
 		/* Try again. */
 		break;
 	    case SP_FAILURE:
-		vtrace("SSL: Password needed, GUI failed\n");
+		vtrace("TLS: Password needed, GUI failed\n");
 		return NULL;
 	    case SP_PENDING:
-		vtrace("SSL: Password needed, GUI pending\n");
+		vtrace("TLS: Password needed, GUI pending\n");
 		*pending = true;
 		return NULL;
 	    case SP_NOT_SUPPORTED:
-		vtrace("SSL: Password needed, GUI unavailable\n");
+		vtrace("TLS: Password needed, GUI unavailable\n");
 		popup_an_error("Private key password needed");
 		return NULL;
 	    }

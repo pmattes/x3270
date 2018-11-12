@@ -927,7 +927,7 @@ net_connected(void)
  * 	Called by the password GUI when a password has been entered.
  */
 void
-net_password_continue(char *password)
+net_password_continue(const char *password)
 {
     bool pending;
     iosrc_t s;

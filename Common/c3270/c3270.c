@@ -889,6 +889,7 @@ c3270_input(iosrc_t fd, ioid_t id)
     prompt.displayed = false;
     if (command == NULL) {
 	/* EOF */
+	echo_mode(true);
 	printf("\n");
 	fflush(stdout);
 	exit(0);
@@ -958,6 +959,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 
     /* Run the command. */
     if (aux_input) {
+	printf("\n");
+	fflush(stdout);
 	aux_input = false;
 	aux_pwinput = false;
 	echo_mode(true);
