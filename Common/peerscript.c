@@ -68,6 +68,21 @@ static void peer_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool peer_done(task_cbh handle, bool success, bool abort);
 static void peer_closescript(task_cbh handle);
+static void peer_setflags(task_cbh handle, unsigned flags);
+static unsigned peer_getflags(task_cbh handle);
+
+static void peer_setir(task_cbh handle, void *irhandle);
+static void *peer_getir(task_cbh handle);
+static void peer_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort_cb);
+static void *peer_getir_state(task_cbh handle, const char *name);
+
+static irv_t peer_irv = {
+    peer_setir,
+    peer_getir,
+    peer_setir_state,
+    peer_getir_state
+};
 
 /* Callback block for peer. */
 static tcb_t peer_cb = {
@@ -77,7 +92,10 @@ static tcb_t peer_cb = {
     peer_data,
     peer_done,
     NULL,
-    peer_closescript
+    peer_closescript,
+    peer_setflags,
+    peer_getflags,
+    &peer_irv
 };
 
 /* Peer script context. */
@@ -93,6 +111,9 @@ typedef struct {
     size_t buf_len;	/* length of pending command */
     bool enabled;	/* is this peer enabled? */
     char *name;		/* task name */
+    unsigned capabilities; /* self-reported capabilities */
+    void *irhandle;	/* input request handle */
+    task_cb_ir_state_t ir_state; /* named input request state */
 } peer_t;
 static llist_t peer_scripts = LLIST_INIT(peer_scripts);
 
@@ -139,6 +160,8 @@ close_peer(peer_t *p)
 	vtrace("once-only socket closed, exiting\n");
 	x3270_exit(0);
     }
+    task_cb_abort_ir_state(&p->ir_state);
+
     Free(p);
 }
 
@@ -270,7 +293,7 @@ static void
 peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
-    char *s = lazyaf(DATA_PREFIX, "%.*s\n", (int)len, buf);
+    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
     (void) send(p->socket, s, strlen(s), 0);
 }
@@ -329,6 +352,94 @@ peer_closescript(task_cbh handle)
     peer_t *p = (peer_t *)handle;
 
     p->enabled = false;
+}
+
+/**
+ * Set capabilities flags.
+ *
+ * @param[in] handle	Peer context
+ * @param[in] flags	Flags
+ */
+static void
+peer_setflags(task_cbh handle, unsigned flags)
+{
+    peer_t *p = (peer_t *)handle;
+
+    p->capabilities = flags;
+}
+
+/**
+ * Get capabilities flags.
+ *
+ * @param[in] handle	Peer context
+ * @returns flags
+ */
+static unsigned
+peer_getflags(task_cbh handle)
+{
+    peer_t *p = (peer_t *)handle;
+
+    return p->capabilities;
+}
+
+/**
+ * Set the pending input request.
+ *
+ * @param[in] handle	Peer context
+ * @param[in] irhandle	Input request handle
+ */
+static void
+peer_setir(task_cbh handle, void *irhandle)
+{
+    peer_t *p = (peer_t *)handle;
+
+    p->irhandle = irhandle;
+}
+
+/**
+ * Get the pending input request.
+ *
+ * @param[in] handle	Peer context
+ *
+ * @returns input request handle
+ */
+static void *
+peer_getir(task_cbh handle)
+{
+    peer_t *p = (peer_t *)handle;
+
+    return p->irhandle;
+}
+
+/**
+ * Set input request state.
+ *
+ * @param[in] handle    CB handle
+ * @param[in] name      Input request type name
+ * @param[in] state     State to store
+ * @param[in] abort     Abort callback
+ */
+static void
+peer_setir_state(task_cbh handle, const char *name, void *state,
+	ir_state_abort_cb abort)
+{
+    peer_t *p = (peer_t *)handle;
+
+    task_cb_set_ir_state(&p->ir_state, name, state, abort);
+}
+
+/**
+ * Get input request state.
+ *
+ * @param[in] handle    CB handle
+ * @param[in] name      Input request type name
+ */
+static void *
+peer_getir_state(task_cbh handle, const char *name)
+{
+    peer_t *p = (peer_t *)handle;
+
+    return task_cb_get_ir_state(&p->ir_state, name);
 }
 
 /**
@@ -441,6 +552,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     p->buf = NULL;
     p->buf_len = 0;
     p->enabled = true;
+    task_cb_init_ir_state(&p->ir_state);
     LLIST_APPEND(&p->llist, peer_scripts);
 }
 
