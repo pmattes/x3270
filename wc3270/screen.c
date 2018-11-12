@@ -207,7 +207,6 @@ static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char fa);
-static void screen_connect(bool connected);
 static void set_status_row(int screen_rows, int emulator_rows);
 static bool ts_value(const char *s, enum ts *tsp);
 static void relabel(bool ignored);
@@ -1278,7 +1277,6 @@ screen_init(void)
     select_init(maxROWS, maxCOLS);
 
     /* Set up callbacks for state changes. */
-    register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_HALF_CONNECT, status_half_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
@@ -1332,17 +1330,6 @@ screen_init(void)
 
     /* Finish screen initialization. */
     set_console_cooked();
-}
-
-static void
-screen_connect(bool connected)
-{
-    static bool initted = false;
-
-    if (!initted && connected) {
-	initted = true;
-	screen_resume();
-    }
 }
 
 /* Calculate where the status line goes now. */

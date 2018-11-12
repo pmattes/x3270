@@ -604,7 +604,9 @@ main(int argc, char *argv[])
     if (cl_hostname != NULL) {
 	pause_for_errors();
 	/* Connect to the host. */
-	connect_once = true;
+	if (!appres.interactive.reconnect) {
+	    connect_once = true;
+	}
 	c3270_push_command(lazyaf("Open(\"%s\")", cl_hostname));
 	screen_resume();
     } else {

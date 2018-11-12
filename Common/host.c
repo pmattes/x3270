@@ -898,6 +898,10 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error("Already connected");
 	return false;
     }
+    if (auto_reconnect_inprogress) {
+	popup_an_error("Reconnect already pending");
+	return false;
+    }
     if (!host_connect(argv[0], ia)) {
 	return false;
     }

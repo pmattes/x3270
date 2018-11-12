@@ -227,7 +227,6 @@ static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
-static void screen_connect(bool connected);
 static void status_half_connect(bool ignored);
 static void status_connect(bool ignored);
 static void status_3270_mode(bool ignored);
@@ -581,15 +580,6 @@ finish_screen_init(void)
     scroll_buf_init();
 
     screen_init2();
-}
-
-/* When the host connects, really initialize the screen. */
-static void
-screen_connect(bool connected)
-{
-    if (connected && !screen_initted) {
-	finish_screen_init();
-    }
 }
 
 /* Configure the TTY settings for a curses screen. */
@@ -2871,7 +2861,6 @@ screen_register(void)
     register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
-    register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_HALF_CONNECT, status_half_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
