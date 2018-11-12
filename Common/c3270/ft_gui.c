@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -53,10 +53,6 @@
 /* Globals. */
 
 /* Statics. */
-#if 0
-static bool ft_sigint_aborting = false;
-#endif
-static ioid_t ft_poll_id = NULL_IOID;
 
 /* Entry points called from the common FT logic. */
 
@@ -76,16 +72,7 @@ ft_gui_errmsg_prepare(char *msg _is_unused)
 void
 ft_gui_clear_progress(void)
 {
-#if 0
-    if (ftc->is_interactive || escaped) {
-	printf("\r%79s\r", "");
-	fflush(stdout);
-    } else {
-#endif
-	popup_an_info(" ");
-#if 0
-    }
-#endif
+    popup_an_info(" ");
 }
 
 /* Pop up a completion message. */
@@ -97,59 +84,20 @@ ft_gui_complete_popup(const char *msg, bool is_error)
     } else {
 	popup_an_info("%s", msg);
     }
-#if 0
-
-#if !defined(_WIN32) /*[*/
-    signal(SIGINT, SIG_IGN);
-#else /*][*/
-    screen_set_ctrlc_fn(NULL);
-#endif /*]*/
-    if (ftc->is_interactive) {
-	/*
-	 * We call task_info here instead of plain printf, so that
-	 * macro_output is set and the user will stay at the c3270> prompt.
-	 */
-	task_info("%s\n", msg);
-    } else if (escaped) {
-	printf("%s\n", msg);
-	fflush(stdout);
-    }
-#endif
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
 ft_gui_update_length(size_t length)
 {
-#if 0
-    if (ftc->is_interactive || escaped) {
-	if (ft_sigint_aborting) {
-	    ft_sigint_aborting = false;
-	    if (!ft_do_cancel()) {
-		printf("Aborting... waiting for host acknowledgment... ");
-	    }
-	} else {
-	    printf("\r%79s\rTransferred %lu bytes ", "",
-		    (unsigned long)length);
-	}
-	fflush(stdout);
-    } else {
-#endif
-	/* Not interactive, put it in the OIA. */
-	popup_an_info("Transferred %lu bytes", (unsigned long)length);
-#if 0
-    }
-#endif
+    /* Put it in the OIA. */
+    popup_an_info("Transferred %lu bytes", (unsigned long)length);
 }
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */
 void
 ft_gui_running(size_t length _is_unused)
 {
-    if (ftc->is_interactive) {
-	RemoveTimeOut(ft_poll_id);
-	ft_poll_id = NULL_IOID;
-    }
     ft_update_length();
 }
 
@@ -157,92 +105,11 @@ ft_gui_running(size_t length _is_unused)
 void
 ft_gui_aborting(void)
 {
-#if !defined(_WIN32) /*[*/
-    signal(SIGINT, SIG_IGN);
-#else /*][*/
-    screen_set_ctrlc_fn(NULL);
-#endif /*]*/
 }
-
-#if 0
-/* Check for interactive mode. */
-ft_gui_interact_t 
-ft_gui_interact(ft_conf_t *p)
-{   
-    if (!escaped) {
-	return FGI_NOP;
-    }
-    if (interactive_transfer(p) < 0) {
-	printf("\n");
-	fflush(stdout);
-	action_output("Aborted");
-	return FGI_ABORT;
-    }
-    p->is_interactive = true;
-    return FGI_SUCCESS;
-}
-#endif
-
-#if 0
-#if !defined(_WIN32) /*[*/
-static void
-ft_sigint(int ignored _is_unused)
-{
-    signal(SIGINT, SIG_IGN);
-    ft_sigint_aborting = true;
-}
-#else /*][*/
-static void
-ft_ctrlc_fn(void)
-{
-    screen_set_ctrlc_fn(NULL);
-    ft_sigint_aborting = true;
-}
-#endif /*]*/
-
-static void
-ft_poll_abort(ioid_t id _is_unused)
-{
-    if (ft_sigint_aborting) {
-	ft_sigint_aborting = false;
-	if (!ft_do_cancel()) {
-	    printf("Aborting... waiting for host acknowledgment... ");
-	    fflush(stdout);
-	}
-    } else {
-	/* Poll again. */
-	ft_poll_id = AddTimeOut(500, ft_poll_abort);
-    }
-}
-#endif
 
 /* Display an "Awaiting start of transfer" message. */
 void
 ft_gui_awaiting(void)
 {   
-#if 0
-    if (ftc->is_interactive) {
-	printf("Press ^C to abort\n");
-	printf("Awaiting start of transfer... ");
-	fflush(stdout);
-
-	/* Set up a SIGINT handler. */
-	ft_sigint_aborting = false;
-#if !defined(_WIN32) /*[*/
-	signal(SIGINT, ft_sigint);
-#else /*][*/
-	screen_set_ctrlc_fn(ft_ctrlc_fn);
-#endif /*]*/
-
-	/* Start polling for ^C. */
-	ft_poll_id = AddTimeOut(500, ft_poll_abort);
-	fflush(stdout);
-    } else if (escaped) {
-	printf("Awaiting start of transfer... ");
-	fflush(stdout);
-    } else {
-	popup_an_info("Awaiting start of transfer");
-    }
-#endif
     popup_an_info("Awaiting start of transfer");
 }

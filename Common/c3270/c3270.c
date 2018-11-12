@@ -325,7 +325,6 @@ c3270_connect(bool ignored)
     }
 
     /* Not connected. */
-    screen_suspend();
     if (!appres.secure &&
 	    !PCONNECTED &&
 	    !appres.interactive.reconnect) {
@@ -338,6 +337,7 @@ c3270_connect(bool ignored)
 	    exit_pending = true;
 	} else {
 	    /* Exit right now. */
+	    screen_suspend();
 #if !defined(_WIN32) /*[*/
 	    if (prompt.displayed) {
 		printf("\n");
