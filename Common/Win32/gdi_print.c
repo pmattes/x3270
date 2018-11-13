@@ -80,6 +80,7 @@ static struct {			/* printer characteristics: */
     int pwidth, pheight;	/*  physical width, height */
 } pchar;
 static struct {			/* printer state */
+    bool active;		/*  is GDI printing active? */
     char *caption;		/*  caption */
     int out_row;		/*  next row to print to */
     int screens;		/*  number of screens on current page */
@@ -216,6 +217,7 @@ gdi_print_finish(FILE *f, const char *caption)
     }
     Free(ea_tmp);
 
+    pstate.active = false;
     return GDI_STATUS_SUCCESS;
 
 abort:
@@ -346,6 +348,8 @@ cleanup_fonts(void)
 	DeleteObject(pstate.caption_font);
 	pstate.caption_font = NULL;
     }
+
+    pstate.active = false;
 }
 
 /*
@@ -463,6 +467,11 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	pstate.thread = INVALID_HANDLE_VALUE;
 	pstate.done_event = INVALID_HANDLE_VALUE;
 	pstate_initted = true;
+    }
+
+    if (pstate.active) {
+	*fail = "Only one GDI document at a time";
+	goto failed;
     }
 
     if (pstate.thread != INVALID_HANDLE_VALUE) {
@@ -856,6 +865,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	goto failed;
     }
 
+    pstate.active = true;
     return GDI_STATUS_SUCCESS;
 
 failed:

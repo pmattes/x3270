@@ -336,7 +336,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	name = argv[i];
 	break;
     default:
-	popup_an_error("PrinText: extra arguments or invalid option(s)");
+	popup_an_error("PrintText: extra arguments or invalid option(s)");
 	return false;
     }
 
