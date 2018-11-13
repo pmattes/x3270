@@ -1620,10 +1620,10 @@ command_done(task_cbh handle, bool success, bool abort)
     }
 #endif /*]*/
 
-#if !defined(_WIN32) /*[*/
     /* Send EOF to the pager. */
     stop_pager();
 
+#if !defined(_WIN32) /*[*/
     if (PAGER_RUNNING) {
 	/* Pager process is still running, don't do anything else yet. */
 	return true;
