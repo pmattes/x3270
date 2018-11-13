@@ -1085,7 +1085,8 @@ screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 #endif /*]*/
 	srv = fprint_screen_start(screentracef, ptype,
 		opts | ((how == TSS_PRINTER)? FPS_FF_SEP: 0),
-		default_caption(), screentrace_name, &screentrace_fps);
+		default_caption(), screentrace_name, &screentrace_fps,
+		NULL /* XXX! */);
 	if (FPS_IS_ERROR(srv)) {
 		if (srv == FPS_STATUS_ERROR) {
 			popup_an_error("Screen trace start failed.");

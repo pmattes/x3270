@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2017 Paul Mattes.
+ * Copyright (c) 1994-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include "ctlrc.h"
 
 #include <errno.h>
+#include <assert.h>
 
 #include "resources.h"
 
@@ -49,6 +50,7 @@
 #include "print_screen.h"
 #include "print_gui.h"
 #include "product.h"
+#include "task.h"
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -154,6 +156,63 @@ default_caption(void)
     return r;
 }
 
+/* Saved context for a suspended PrintText(). */
+typedef struct {
+    FILE *f;		/* temporary file */
+    ptype_t ptype;	/* print type */
+    unsigned opts;	/* options */
+    const char *caption; /* caption text */
+    const char *name;	/* printer name */
+    char *temp_name;	/* temporary file name */
+} printtext_t;
+
+/* Extended-wait continue function for PrintText(). */
+static void
+printtext_continue(void *context, bool cancel)
+{
+    printtext_t *pt = (printtext_t *)context;
+    fps_status_t status;
+
+    if (cancel) {
+	vtrace("PrintText canceled\n");
+	fclose(pt->f);
+	if (pt->temp_name != NULL) {
+	    unlink(pt->temp_name);
+	    Free(pt->temp_name);
+	}
+	Free(pt);
+	return;
+    }
+
+    status = fprint_screen(pt->f, pt->ptype, pt->opts | FPS_DIALOG_COMPLETE,
+	    pt->caption, pt->name, NULL);
+    switch (status) {
+    case FPS_STATUS_SUCCESS:
+    case FPS_STATUS_SUCCESS_WRITTEN:
+	vtrace("PrintText: printing succeeded.\n");
+	break;
+    case FPS_STATUS_ERROR:
+	popup_an_error("Screen print failed.");
+	/* fall through */
+    case FPS_STATUS_CANCEL:
+	if (status == FPS_STATUS_CANCEL) {
+	    vtrace("PrintText: printing canceled.\n");
+	}
+	break;
+    case FPS_STATUS_WAIT:
+	/* Can't happen. */
+	assert(status != FPS_STATUS_WAIT);
+	break;
+    }
+
+    fclose(pt->f);
+    if (pt->temp_name != NULL) {
+	unlink(pt->temp_name);
+	Free(pt->temp_name);
+    }
+    Free(pt);
+}
+
 /* Print or save the contents of the screen as text. */
 bool
 PrintText_action(ia_t ia, unsigned argc, const char **argv)
@@ -171,6 +230,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     FILE *f;
     int fd = -1;
     fps_status_t status;
+    printtext_t *pt;
 
     if (!product_has_display()) {
 	opts |= FPS_NO_DIALOG;
@@ -189,7 +249,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  gdi      prints to a GDI printer (Windows only)
      *  nodialog skip print dialog (Windows only)
      *            this is the default for ws3270
-     *  dialog use print dialog (Windows only)
+     *  dialog	 use print dialog (Windows only)
      *            this is the default for wc3270
      *  replace  replace the file
      *  append   append to the file, if it exists (default)
@@ -365,11 +425,13 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	caption = default_caption();
     }
 
-    status = fprint_screen(f, ptype, opts, caption, name);
+    pt = (printtext_t *)Calloc(1, sizeof(printtext_t));
+    status = fprint_screen(f, ptype, opts, caption, name, pt);
     switch (status) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
 	vtrace("PrintText: printing succeeded.\n");
+	Free(pt);
 	break;
     case FPS_STATUS_ERROR:
 	popup_an_error("Screen print failed.");
@@ -378,12 +440,24 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	if (status == FPS_STATUS_CANCEL) {
 	    vtrace("PrintText: printing canceled.\n");
 	}
+	Free(pt);
 	fclose(f);
 	if (temp_name) {
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
 	return false;
+    case FPS_STATUS_WAIT:
+	/* Waiting for asynchronous activity. */
+	assert(ptype == P_GDI);
+	pt->f = f;
+	pt->ptype = ptype;
+	pt->opts = opts;
+	pt->caption = caption;
+	pt->name = name;
+	pt->temp_name = temp_name;
+	task_xwait(pt, printtext_continue, "printing");
+	return true;
     }
 
     if (use_string) {

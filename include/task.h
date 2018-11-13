@@ -133,3 +133,7 @@ void task_cb_abort_ir_state(task_cb_ir_state_t *ir_state);
 
 void task_set_ir_state(const char *name, void *state, ir_state_abort_cb abort);
 void *task_get_ir_state(const char *name);
+
+void task_resume_xwait(void *context, bool cancel, const char *why);
+typedef void xcontinue_fn(void *context, bool cancel);
+void task_xwait(void *context, xcontinue_fn *continue_fn, const char *why);

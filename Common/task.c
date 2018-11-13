@@ -124,7 +124,8 @@ typedef struct task {
 	TS_WAIT_IFIELD,	/* awaiting completion of Wait(InputField) */
 	TS_WAIT_UNLOCK,	/* awaiting completion of Wait(Unlock) */
 	TS_EXPECTING,	/* awaiting completion of Expect() */
-	TS_PASSTHRU	/* awaiting completion of a pass-through action */
+	TS_PASSTHRU,	/* awaiting completion of a pass-through action */
+	TS_XWAIT	/* extended wait */
     } state;
     bool success;
     bool accumulated;	/* accumulated time flag */
@@ -136,6 +137,9 @@ typedef struct task {
     int passthru_index;	/* UI passthru command index */
     int depth;		/* depth on stack */
     bool fatal;		/* tear everything down after completion */
+
+    void *wait_context;	/* opaque context for waiting */
+    xcontinue_fn *xcontinue_fn; /* continue function */
 
     /* Expect() fields. */
     struct {
@@ -196,7 +200,8 @@ static const char *task_state_name[] = {
     "WAIT_IFIELD",
     "WAIT_UNLOCK",
     "EXPECTING",
-    "PASSTHRU"
+    "PASSTHRU",
+    "XWAIT"
 };
 
 static struct macro_def *macro_last = (struct macro_def *) NULL;
@@ -1497,7 +1502,7 @@ task_info(const char *fmt, ...)
 static void
 task_disconnect_abort(task_t *s)
 {
-    vtrace("Aborting" TASK_NAME_FMT "\n", TASK_sNAME(s));
+    vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 
     assert(s->type == ST_MACRO);
     assert(s->next != NULL);
@@ -1725,6 +1730,9 @@ run_taskq(void)
 	    return any;
 
 	case TS_PASSTHRU:
+	    return any;
+
+	case TS_XWAIT:
 	    return any;
 	}
 
@@ -3367,7 +3375,7 @@ abort_script_by_cb(const char *cb_name)
     /* child_ignore_output(); */ /* Needed? */
 #endif /*]*/
 
-    vtrace("Aborting all pending scripts for %s\n", cb_name);
+    vtrace("Canceling all pending scripts for %s\n", cb_name);
 
     FOREACH_LLIST(&taskq, q, taskq_t *) {
 	task_t *s;
@@ -3388,8 +3396,8 @@ abort_script_by_cb(const char *cb_name)
 
 	    /* Abort the cb. */
 	    if (s->type == ST_CB) {
-		vtrace("Aborting " TASK_NAME_FMT "\n", TASK_sNAME(s));
-		task_result(s, "Aborted", false);
+		vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+		task_result(s, "Canceled", false);
 		(*s->cbx.cb->done)(s->cbx.handle, true, true);
 	    }
 
@@ -3422,7 +3430,7 @@ abort_script(void)
     child_ignore_output();
 #endif /*]*/
 
-    vtrace("Aborting all pending scripts\n");
+    vtrace("Canceling all pending scripts\n");
 
     /*
      * - Call the kill callbacks for every cb.
@@ -3444,8 +3452,8 @@ abort_script(void)
 
 	    /* Abort the cb. */
 	    if (s->type == ST_CB) {
-		vtrace("Aborting " TASK_NAME_FMT "\n", TASK_sNAME(s));
-		task_result(s, "Aborted", false);
+		vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+		task_result(s, "Canceled", false);
 		(*s->cbx.cb->done)(s->cbx.handle, true, true);
 	    }
 
@@ -3714,7 +3722,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 	/* Forget about it. */
 	task_abort_input_request_irhandle(irhandle);
 
-	popup_an_error("Action aborted");
+	popup_an_error("Action canceled");
 	return false;
     }
 
@@ -3903,9 +3911,9 @@ sample_abort_input(void *handle)
 {
     sample_per_type_t *state = (sample_per_type_t *)handle;
 
-    vtrace("Aborting RequestInput\n");
+    vtrace("Canceling RequestInput\n");
     if (state != NULL) {
-	Replace(state->previous, NewString("[aborted]"));
+	Replace(state->previous, NewString("[canceled]"));
     }
 }
 
@@ -3915,7 +3923,7 @@ sample_abort_session(void *handle)
 {
     sample_per_type_t *state = (sample_per_type_t *)handle;
 
-    vtrace("Aborting input request session\n");
+    vtrace("Canceling input request session\n");
     if (state != NULL) {
 	Replace(state->previous, NULL);
 	Free(state);
@@ -4119,4 +4127,36 @@ task_passthru_done(const char *tag, bool success, const char *result)
 	    }
 	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+}
+
+/* Continue a task that is blocked by task_xwait(). */
+void
+task_resume_xwait(void *context, bool cancel, const char *why)
+{
+    taskq_t *q;
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	task_t *s;
+
+	for (s = q->top; s != NULL; s = s->next) {
+	    if (s->state == TS_XWAIT && s->wait_context == context) {
+		task_set_state(s, TS_RUNNING,
+			lazyaf("extended wait done%s: %s",
+			    cancel? " - cancel": "", why));
+		s->wait_context = NULL;
+		(*s->xcontinue_fn)(context, cancel);
+		return;
+	    }
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+}
+
+/* Block a task until task_continue_wait() is called. */
+void
+task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
+{
+    assert(current_task != NULL);
+    current_task->wait_context = context;
+    current_task->xcontinue_fn = continue_fn;
+    task_set_state(current_task, TS_XWAIT, lazyaf("extended wait: %s", why));
 }

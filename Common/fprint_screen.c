@@ -200,7 +200,7 @@ html_caption(const char *caption)
  */
 fps_status_t
 fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
-	const char *printer_name, fps_t *fps_ret)
+	const char *printer_name, fps_t *fps_ret, void *wait_context)
 {
     real_fps_t *fps;
     int rv = FPS_STATUS_SUCCESS;
@@ -325,7 +325,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	break;
     case P_GDI:
 #if defined(_WIN32) /*[*/
-	switch (gdi_print_start(printer_name, opts)) {
+	switch (gdi_print_start(printer_name, opts, wait_context)) {
 	case GDI_STATUS_SUCCESS:
 	    break;
 	case GDI_STATUS_ERROR:
@@ -333,6 +333,9 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	    break;
 	case GDI_STATUS_CANCEL:
 	    rv = FPS_STATUS_CANCEL;
+	    break;
+	case GDI_STATUS_WAIT:
+	    rv = FPS_STATUS_WAIT;
 	    break;
 	}
 #endif /*]*/
@@ -808,14 +811,15 @@ fprint_screen_done(fps_t *ofps)
  */
 fps_status_t
 fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
-	const char *printer_name)
+	const char *printer_name, void *wait_context)
 {
 	fps_t fps;
 	fps_status_t srv;
 	fps_status_t srv_body;
 
-	srv = fprint_screen_start(f, ptype, opts, caption, printer_name, &fps);
-	if (FPS_IS_ERROR(srv)) {
+	srv = fprint_screen_start(f, ptype, opts, caption, printer_name, &fps,
+		wait_context);
+	if (FPS_IS_ERROR(srv) || srv == FPS_STATUS_WAIT) {
 		return srv;
 	}
 	srv_body = fprint_screen_body(fps);

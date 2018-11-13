@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +47,12 @@ typedef struct {
 
 typedef enum {
 	GDI_STATUS_SUCCESS = 0,
+	GDI_STATUS_WAIT = 1,
 	GDI_STATUS_ERROR = -1,
 	GDI_STATUS_CANCEL = -2
 } gdi_status_t;
 #define GDI_STATUS_IS_ERROR(gs) ((int)gs < 0)
 
-gdi_status_t gdi_print_start(const char *printer_name, unsigned opts);
+gdi_status_t gdi_print_start(const char *printer_name, unsigned opts,
+	void *wait_context);
 gdi_status_t gdi_print_finish(FILE *f, const char *caption);

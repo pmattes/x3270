@@ -49,6 +49,7 @@
 #include "gdi_print.h"
 #include "nvt.h"
 #include "popups.h"
+#include "task.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -92,12 +93,18 @@ static struct {			/* printer state */
 			        /*  fonts */
     SIZE space_size;		/*  size of a space character */
     INT *dx;			/*  spacing array */
+
+    HANDLE thread;		/* thread to run the print dialog */
+    HANDLE done_event;		/* event to signal dialog is done */
+    bool cancel;		/* true if dialog canceled */
+    void *wait_context;		/* task wait context */
 } pstate;
+static bool pstate_initted = false;
 
 /* Forward declarations. */
 static void gdi_get_params(uparm_t *up);
 static gdi_status_t gdi_init(const char *printer_name, unsigned opts,
-	const char **fail);
+	const char **fail, void *wait_context);
 static int gdi_screenful(struct ea *ea, unsigned short rows,
 	unsigned short cols, const char **fail);
 static int gdi_done(const char **fail);
@@ -110,7 +117,7 @@ static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
  * Initialize printing to a GDI printer.
  */
 gdi_status_t
-gdi_print_start(const char *printer_name, unsigned opts)
+gdi_print_start(const char *printer_name, unsigned opts, void *wait_context)
 {
     const char *fail = "";
 
@@ -131,7 +138,7 @@ gdi_print_start(const char *printer_name, unsigned opts)
     }
 
     /* Initialize the printer and pop up the dialog. */
-    switch (gdi_init(printer_name, opts, &fail)) {
+    switch (gdi_init(printer_name, opts, &fail, wait_context)) {
     case GDI_STATUS_SUCCESS:
 	vtrace("[gdi] initialized\n");
 	break;
@@ -141,6 +148,9 @@ gdi_print_start(const char *printer_name, unsigned opts)
     case GDI_STATUS_CANCEL:
 	vtrace("[gdi] canceled\n");
 	return GDI_STATUS_CANCEL;
+    case GDI_STATUS_WAIT:
+	vtrace("[gdi] waiting\n");
+	return GDI_STATUS_WAIT;
     }
 
     return GDI_STATUS_SUCCESS;
@@ -408,12 +418,35 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
     return buf;
 }
 
+/* Thread to post the print dialog. */
+static DWORD WINAPI
+post_print_dialog(LPVOID lpParameter _is_unused)
+{
+    if (!PrintDlg(&pstate.dlg)) {
+	pstate.cancel = true;
+    }
+    SetEvent(pstate.done_event);
+    return 0;
+}
+
+/* The print dialog is complete. */
+static void
+print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
+{
+    vtrace("Printer dialog complete (%s)\n",
+	    pstate.cancel? "cancel": "continue");
+    pstate.thread = INVALID_HANDLE_VALUE;
+    task_resume_xwait(pstate.wait_context, pstate.cancel,
+	    "print dialog complete");
+}
+
 /*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
  */
 static gdi_status_t
-gdi_init(const char *printer_name, unsigned opts, const char **fail)
+gdi_init(const char *printer_name, unsigned opts, const char **fail,
+	void *wait_context)
 {
     char *default_printer_name = NULL;
     LPDEVMODE devmode;
@@ -426,10 +459,23 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail)
     static char get_fail[1024];
     int fheight, fwidth;
 
-    memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
-    pstate.dlg.lStructSize = sizeof(pstate.dlg);
-    pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
-	PD_NOSELECTION;
+    if (!pstate_initted) {
+	pstate.thread = INVALID_HANDLE_VALUE;
+	pstate.done_event = INVALID_HANDLE_VALUE;
+	pstate_initted = true;
+    }
+
+    if (pstate.thread != INVALID_HANDLE_VALUE) {
+	*fail = "Print dialog already pending";
+	goto failed;
+    }
+
+    if (!(opts & FPS_DIALOG_COMPLETE)) {
+	memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
+	pstate.dlg.lStructSize = sizeof(pstate.dlg);
+	pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
+	    PD_NOSELECTION;
+    }
 
     if (printer_name == NULL || !*printer_name) {
 	default_printer_name = get_default_printer_name(get_fail,
@@ -466,16 +512,24 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail)
 	    *fail = get_fail;
 	    goto failed;
 	}
-    } else {
+    } else if (!(opts & FPS_DIALOG_COMPLETE)) {
 	if (default_printer_name != NULL) {
 	    Free(default_printer_name);
 	    default_printer_name = NULL;
 	}
 
 	/* Pop up the dialog to get the printer characteristics. */
-	if (!PrintDlg(&pstate.dlg)) {
-	    return GDI_STATUS_CANCEL;
+	pstate.cancel = false;
+	pstate.wait_context = wait_context;
+	if (pstate.done_event == INVALID_HANDLE_VALUE) {
+	    pstate.done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	    AddInput(pstate.done_event, print_dialog_complete);
+	} else {
+	    ResetEvent(pstate.done_event); /* just in case */
 	}
+	pstate.cancel = false;
+	pstate.thread = CreateThread(NULL, 0, post_print_dialog, NULL, 0, NULL);
+	return GDI_STATUS_WAIT;
     }
     dc = pstate.dlg.hDC;
 

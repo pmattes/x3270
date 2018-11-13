@@ -1917,6 +1917,16 @@ task_info(const char *fmt, ...)
     Free(buf);
 }
 
+void
+task_resume_xwait(void *context, bool cancel, const char *why)
+{
+}
+
+void
+task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
+{
+}
+
 /*
  * Return true if there is a pending macro.
  */

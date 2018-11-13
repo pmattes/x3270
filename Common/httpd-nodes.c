@@ -40,6 +40,7 @@
 #endif /*]*/
 #include <signal.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "fprint_screen.h"
 #include "varbuf.h"
@@ -98,7 +99,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     }
 
     /* Write the screen to it in HTML. */
-    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER, NULL, NULL)) {
+    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER, NULL, NULL, NULL)) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
 	break;
@@ -110,7 +111,11 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	Free(temp_name);
 	*status = rv;
 	return false;
+    case FPS_STATUS_WAIT:
+	assert(false);
+	return false;
     }
+
 
     /* Read it back into a varbuf_t. */
     fflush(f);
