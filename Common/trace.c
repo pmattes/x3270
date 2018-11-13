@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 
 #include "globals.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -53,6 +54,7 @@
 #include "product.h"
 #include "save.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "toggles.h"
@@ -1029,6 +1031,53 @@ trace_nvt_disc(void)
     trace_skipping = true;
 }
 
+/* Extended wait screen tracing context. */
+typedef struct {
+    ptype_t ptype;
+    unsigned opts;
+    char *caption;
+} screentrace_t;
+
+/*
+ * Extended wait continue function for screen tracing.
+ */
+static void
+screentrace_continue(void *context, bool cancel)
+{
+    screentrace_t *st = (screentrace_t *)context;
+    int srv;
+
+    if (cancel) {
+	vtrace("Toggle(ScreenTrace) canceled\n");
+	Free(st);
+	return;
+    }
+
+    srv = fprint_screen_start(screentracef, st->ptype,
+	    st->opts | FPS_DIALOG_COMPLETE,
+	    st->caption, screentrace_name, &screentrace_fps, NULL);
+    Free(st);
+    if (FPS_IS_ERROR(srv)) {
+	if (srv == FPS_STATUS_ERROR) {
+	    popup_an_error("Screen trace start failed");
+	} else if (srv == FPS_STATUS_CANCEL) {
+	    vtrace("Screen trace canceled.\n");
+	}
+	fclose(screentracef);
+	screentracef = NULL;
+	return;
+    }
+    if (srv == FPS_STATUS_WAIT) {
+	assert(srv != FPS_STATUS_WAIT);
+	return;
+    }
+
+    /* We're really tracing, turn the flag on. */
+    set_toggle(SCREEN_TRACE, true);
+    menubar_retoggle(SCREEN_TRACE);
+    status_screentrace((screentrace_count = 0));
+}
+
 /*
  * Screen tracing callback.
  * Returns true for success, false for failure.
@@ -1036,71 +1085,87 @@ trace_nvt_disc(void)
 static bool
 screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 {
-	char *xtfn = NULL;
-	int srv;
+    char *xtfn = NULL;
+    int srv;
+    char *caption = NULL;
+    unsigned full_opts;
+    screentrace_t *st;
 
+    if (how == TSS_FILE) {
+	xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
+	screentracef = fopen(xtfn, "a");
+    } else {
+	/* Printer. */
+#if !defined(_WIN32) /*[*/
+	screentracef = popen(tfn, "w");
+#else /*][*/
+	int fd;
+
+	fd = win_mkstemp(&screentrace_tmpfn, ptype);
+	if (fd < 0) {
+	    popup_an_errno(errno, "%s", "(temporary file)");
+	    Free(tfn);
+	    return false;
+	}
+	screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
+#endif /*]*/
+    }
+    if (screentracef == NULL) {
 	if (how == TSS_FILE) {
-		xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
-		screentracef = fopen(xtfn, "a");
+	    popup_an_errno(errno, "%s", xtfn);
 	} else {
-		/* Printer. */
 #if !defined(_WIN32) /*[*/
-		screentracef = popen(tfn, "w");
+	    popup_an_errno(errno, "%s", tfn);
 #else /*][*/
-		int fd;
-
-		fd = win_mkstemp(&screentrace_tmpfn, ptype);
-		if (fd < 0) {
-			popup_an_errno(errno, "%s", "(temporary file)");
-			Free(tfn);
-			return false;
-		}
-		screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
+	    popup_an_errno(errno, "%s", "(temporary file)");
 #endif /*]*/
 	}
-	if (screentracef == NULL) {
-		if (how == TSS_FILE)
-			popup_an_errno(errno, "%s", xtfn);
-		else
-#if !defined(_WIN32) /*[*/
-			popup_an_errno(errno, "%s", tfn);
-#else /*][*/
-			popup_an_errno(errno, "%s", "(temporary file)");
-#endif /*]*/
-		Free(xtfn);
+	Free(xtfn);
 #if defined(_WIN32) /*[*/
-		Free(screentrace_tmpfn);
-		screentrace_tmpfn = NULL;
+	Free(screentrace_tmpfn);
+	screentrace_tmpfn = NULL;
 #endif /*]*/
-		return false;
-	}
-	if (how == TSS_FILE)
-		Replace(screentrace_name, NewString(xtfn));
-	else
-		Replace(screentrace_name, NewString(tfn));
-	Free(tfn);
-	(void) SETLINEBUF(screentracef);
+	return false;
+    }
+    if (how == TSS_FILE) {
+	Replace(screentrace_name, NewString(xtfn));
+    } else {
+	Replace(screentrace_name, NewString(tfn));
+    }
+    Free(tfn);
+    (void) SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
-	(void) fcntl(fileno(screentracef), F_SETFD, 1);
+    (void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
-	srv = fprint_screen_start(screentracef, ptype,
-		opts | ((how == TSS_PRINTER)? FPS_FF_SEP: 0),
-		default_caption(), screentrace_name, &screentrace_fps,
-		NULL /* XXX! */);
-	if (FPS_IS_ERROR(srv)) {
-		if (srv == FPS_STATUS_ERROR) {
-			popup_an_error("Screen trace start failed.");
-		} else if (srv == FPS_STATUS_CANCEL) {
-			popup_an_error("Screen trace canceled.");
-		}
-		fclose(screentracef);
-		return false;
+    st = (screentrace_t *)Calloc(1, sizeof(screentrace_t));
+    caption = default_caption();
+    full_opts = opts | ((how == TSS_PRINTER)? FPS_FF_SEP: 0);
+    srv = fprint_screen_start(screentracef, ptype, full_opts,
+	    caption, screentrace_name, &screentrace_fps, st);
+    if (FPS_IS_ERROR(srv)) {
+	if (srv == FPS_STATUS_ERROR) {
+	    popup_an_error("Screen trace start failed.");
+	} else if (srv == FPS_STATUS_CANCEL) {
+	    popup_an_error("Screen trace canceled.");
 	}
+	fclose(screentracef);
+	screentracef = NULL;
+	Free(st);
+	return false;
+    }
+    if (srv == FPS_STATUS_WAIT) {
+	/* Asynchronous. */
+	st->ptype = ptype;
+	st->opts = full_opts;
+	st->caption = caption;
+	task_xwait(st, screentrace_continue, "printing");
+	return false; /* for now */
+    }
 
-	/* We're really tracing, turn the flag on. */
-	set_toggle(SCREEN_TRACE, true);
-	menubar_retoggle(SCREEN_TRACE);
-	return true;
+    /* We're really tracing, turn the flag on. */
+    set_toggle(SCREEN_TRACE, true);
+    menubar_retoggle(SCREEN_TRACE);
+    return true;
 }
 
 /* End the screen trace. */

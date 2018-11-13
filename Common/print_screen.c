@@ -192,7 +192,7 @@ printtext_continue(void *context, bool cancel)
 	vtrace("PrintText: printing succeeded.\n");
 	break;
     case FPS_STATUS_ERROR:
-	popup_an_error("Screen print failed.");
+	popup_an_error("Screen print failed");
 	/* fall through */
     case FPS_STATUS_CANCEL:
 	if (status == FPS_STATUS_CANCEL) {
