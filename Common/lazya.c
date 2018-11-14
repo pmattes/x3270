@@ -60,7 +60,7 @@ static int slot_ix = 0;
  * @return buf, for convenience
  */
 char *
-lazya(char *buf)
+lazya(void *buf)
 {
     if (current_block == NULL || slot_ix >= BLOCK_SLOTS) {
 	/* Allocate a new block. */
