@@ -489,6 +489,7 @@ fprint_screen_body(fps_t ofps)
 			FAIL;
 		}
 		fflush(fps->file);
+		rv = FPS_STATUS_SUCCESS_WRITTEN;
 		goto done;
 #endif /*]*/
 	default:

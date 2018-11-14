@@ -968,6 +968,7 @@ toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
     } else if (!toggled(TRACING) || (toggled(TRACING) && tt == TT_FINAL)) {
 	/* If turning off trace and not still tracing events, close the
 	   trace file. */
+	vtrace("Cleaning up trace\n");
 	tracefile_off();
     }
 }
@@ -982,12 +983,16 @@ static fps_t screentrace_fps = NULL;
 static void
 do_screentrace(bool always _is_unused)
 {
-    /*
-     * XXX: We should do something smarter here should fprint_screen_body()
-     * fail.
-     */
-    (void) fprint_screen_body(screentrace_fps);
-    status_screentrace(++screentrace_count);
+    fps_status_t status;
+
+    status = fprint_screen_body(screentrace_fps);
+    if (FPS_IS_ERROR(status)) {
+	popup_an_error("Screen trace failed");
+    } else if (status == FPS_STATUS_SUCCESS) {
+	vtrace("screentrace: nothing written\n");
+    } else {
+	status_screentrace(++screentrace_count);
+    }
 }
 
 void
@@ -1144,9 +1149,9 @@ screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 	    caption, screentrace_name, &screentrace_fps, st);
     if (FPS_IS_ERROR(srv)) {
 	if (srv == FPS_STATUS_ERROR) {
-	    popup_an_error("Screen trace start failed.");
+	    popup_an_error("Screen trace start failed");
 	} else if (srv == FPS_STATUS_CANCEL) {
-	    popup_an_error("Screen trace canceled.");
+	    popup_an_error("Screen trace canceled");
 	}
 	fclose(screentracef);
 	screentracef = NULL;
@@ -1172,26 +1177,27 @@ screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 static void
 end_screentrace(bool is_final _is_unused)
 {
-	fprint_screen_done(&screentrace_fps);
-	(void) fclose(screentracef);
-	screentracef = NULL;
+    fprint_screen_done(&screentrace_fps);
+    (void) fclose(screentracef);
+    screentracef = NULL;
 
 #if defined(_WIN32) /*[*/
-	if (screentrace_how == TSS_PRINTER) {
-		if (screentrace_ptype == P_RTF) {
-			/* Start up WordPad to print the file. */
-			if (is_final) {
-				start_wordpad_sync("ScreenTrace",
-					screentrace_tmpfn, screentrace_name);
-			} else {
-				start_wordpad_async("ScreenTrace",
-					screentrace_tmpfn, screentrace_name);
-			}
-		} else {
-			/* Get rid of the temp file. */
-			unlink(screentrace_tmpfn);
-		}
+    vtrace("Cleaning up screenTrace\n");
+    if (screentrace_how == TSS_PRINTER) {
+	if (screentrace_ptype == P_RTF) {
+	    /* Start up WordPad to print the file. */
+	    if (is_final) {
+		start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
+			screentrace_name);
+	    } else {
+		start_wordpad_async("ScreenTrace", screentrace_tmpfn,
+			screentrace_name);
+	    }
+	} else {
+	    /* Get rid of the temp file. */
+	    unlink(screentrace_tmpfn);
 	}
+    }
 #endif /*]*/
 }
 

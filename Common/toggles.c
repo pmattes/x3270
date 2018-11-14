@@ -138,6 +138,28 @@ do_menu_toggle(int ix)
 }
 
 /*
+ * Initialize one toggle.
+ */
+static void
+toggle_init_one(toggle_index_t ix)
+{
+    if (toggled(ix)) {
+	toggle_upcalls_t *u;
+
+	for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
+	    if (u->flags & TOGGLE_NEED_INIT) {
+		u->upcall(ix, TT_INITIAL);
+
+		/* It might have failed. Fix up the menu if it did. */
+		if (!toggled(ix)) {
+		    menubar_retoggle(ix);
+		}
+	    }
+	}
+    }
+}
+
+/*
  * Called from system initialization code to handle initial toggle settings.
  */
 void
@@ -145,19 +167,31 @@ initialize_toggles(void)
 {
     toggle_index_t ix;
 
+    /*
+     * Toggle tracing first, so the other toggles can be caught in the trace
+     * file.
+     */
+    toggle_init_one(TRACING);
     for (ix = 0; ix < N_TOGGLES; ix++) {
-	if (toggled(ix)) {
-	    toggle_upcalls_t *u;
+	if (ix != TRACING) {
+	    toggle_init_one(ix);
+	}
+    }
+}
 
-	    for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
-		if (u->flags & TOGGLE_NEED_INIT) {
-		    u->upcall(ix, TT_INITIAL);
+/*
+ * Exit one toggle.
+ */
+static void
+toggle_exit_one(toggle_index_t ix)
+{
+    if (toggled(ix)) {
+	toggle_upcalls_t *u;
 
-		    /* It might have failed. Fix up the menu if it did. */
-		    if (!toggled(ix)) {
-			menubar_retoggle(ix);
-		    }
-		}
+	set_toggle(ix, false);
+	for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
+	    if (u->flags & TOGGLE_NEED_CLEANUP) {
+		u->upcall(ix, TT_FINAL);
 	    }
 	}
     }
@@ -171,17 +205,16 @@ toggle_exiting(bool mode _is_unused)
 {
     toggle_index_t ix;
 
+    /*
+     * Toggle tracing last, so the other toggles can be caught in the trace
+     * file.
+     */
     for (ix = 0; ix < N_TOGGLES; ix++) {
-	if (toggled(ix)) {
-	    toggle_upcalls_t *u;
-
-	    for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
-		if (u->flags & TOGGLE_NEED_CLEANUP) {
-		    u->upcall(ix, TT_FINAL);
-		}
-	    }
+	if (ix != TRACING) {
+	    toggle_exit_one(ix);
 	}
     }
+    toggle_exit_one(TRACING);
 }
 
 /**
