@@ -210,6 +210,7 @@ extern char		*termtype;
 extern bool		visible_control;
 extern int		*xtra_width;
 extern int		x3270_exit_code;
+extern bool		x3270_exiting;
 
 #if defined(_WIN32) /*[*/
 extern char		*instdir;

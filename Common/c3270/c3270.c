@@ -300,6 +300,10 @@ pause_for_errors(void)
 static void
 c3270_3270_mode(bool ignored)
 {
+    if (x3270_exiting) {
+	return;
+    }
+
     if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
 	if (appres.c3270.altscreen != NULL) {
@@ -316,6 +320,10 @@ c3270_3270_mode(bool ignored)
 static void
 c3270_connect(bool ignored)
 {
+    if (x3270_exiting) {
+	return;
+    }
+
     c3270_3270_mode(true);
 
     if (CONNECTED) {

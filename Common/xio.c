@@ -44,6 +44,7 @@
 
 /* Globals. */
 int x3270_exit_code = 0;
+bool x3270_exiting = false;
 
 /* Statics. */
 static ioid_t ns_read_id;
@@ -118,13 +119,11 @@ x_remove_input(void)
 void
 x3270_exit(int n)
 {
-    static bool already_exiting = false;
-
     /* Handle unintentional recursion. */
-    if (already_exiting) {
+    if (x3270_exiting) {
 	return;
     }
-    already_exiting = true;
+    x3270_exiting = true;
 
     /* Set the exit code. */
     x3270_exit_code = n;
