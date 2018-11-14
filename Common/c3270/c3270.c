@@ -626,7 +626,7 @@ main(int argc, char *argv[])
 	(void) process_events(true);
 
 	/* Update the screen. */
-	if (PCONNECTED && !escaped) {
+	if (!escaped) {
 	    screen_disp(false);
 	}
 
