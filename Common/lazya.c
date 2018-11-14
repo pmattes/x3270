@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Paul Mattes.
+ * Copyright (c) 2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,19 +32,28 @@
 
 #include "globals.h"
 
+#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+# include <malloc.h>
+#endif /*]*/
+
 #include "trace.h"
 #include "utils.h"
 
 #include "lazya.h"
 
-#define LAZY_RING  64	/* ring buffer size */
+#define BLOCK_SLOTS  1024	/* slots per block */
 
-static char *lazy_ring[LAZY_RING];
-static int lazy_ix = 0;
-static int wraps = 0;
+typedef struct lazy_block {
+    struct lazy_block *next;
+    void *slot[BLOCK_SLOTS];
+} lazy_block_t;
+static lazy_block_t *blocks;
+static lazy_block_t **last_block = &blocks;
+static lazy_block_t *current_block;
+static int slot_ix = 0;
 
 /**
- * Add a buffer to the lazy allocation ring.
+ * Add a buffer to the lazy allocation table.
  *
  * @param[in] buf	Buffer to store
  * 
@@ -53,22 +62,21 @@ static int wraps = 0;
 char *
 lazya(char *buf)
 {
-    /*
-     * Free whatever element we would overwrite, and store this buffer there.
-     */
-    Replace(lazy_ring[lazy_ix], buf);
-
-    /* Advance to the next slot. */
-    lazy_ix = (lazy_ix + 1) % LAZY_RING;
-    if (!lazy_ix) {
-	wraps++;
+    if (current_block == NULL || slot_ix >= BLOCK_SLOTS) {
+	/* Allocate a new block. */
+	current_block = (lazy_block_t *)Calloc(1, sizeof(lazy_block_t));
+	*last_block = current_block;
+	last_block = &current_block->next;
+	slot_ix = 0;
     }
 
+    /* Remember this element. */
+    current_block->slot[slot_ix++] = buf;
     return buf;
 }
 
 /**
- * Format a string into Malloc'd memory and put it into the lazy ring.
+ * Format a string into Malloc'd memory and put it into the lazy table.
  *
  * @param[in] fmt	Format
  *
@@ -87,7 +95,7 @@ lazyaf(const char *fmt, ...)
 }
 
 /**
- * Format a string into Malloc'd memory and put it into the lazy ring.
+ * Format a string into Malloc'd memory and put it into the lazy table.
  * Varargs version.
  *
  * @param[in] fmt	Format
@@ -101,30 +109,45 @@ vlazyaf(const char *fmt, va_list args)
 }
 
 /**
- * Flush the lazy allocation ring.
+ * Flush the lazy allocation table.
  */
 void
 lazya_flush(void)
 {
-    int i;
-    int nf = 0;
+    unsigned nf = 0;
+#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+    size_t nb = 0;
+#endif /*]*/
+    lazy_block_t *r, *next = NULL;
 
-    for (i = 0; i < LAZY_RING; i++) {
-	if (lazy_ring[i]) {
-	    nf++;
+    for (r = blocks; r != NULL; r = next) {
+	int i;
+
+	next = r->next;
+	for (i = 0; i < BLOCK_SLOTS; i++) {
+	    if (r->slot[i] != NULL) {
+#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+		nb += malloc_usable_size(r->slot[i]);
+#endif /*]*/
+		Free(r->slot[i]);
+		nf++;
+	    }
 	}
-	Replace(lazy_ring[i], NULL);
+	Free(r);
     }
 
-    if (nf) {
-	int nf_total = (wraps * LAZY_RING) + nf;
-
-	if (nf_total >= LAZY_RING / 2) {
-	    vtrace("lazya_flush: %d slot%s\n", nf_total,
-		    (nf_total == 1)? "": "s");
-	}
+#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+    if (nf > 10 || nb > 1024) {
+	vtrace("lazya_flush: %u slot%s, %zu bytes\n", nf, (nf == 1)? "": "s",
+		nb);
     }
-
-    lazy_ix = 0;
-    wraps = 0;
+#else /*][*/
+    if (nf > 10) {
+	vtrace("lazya_flush: %u slot%s\n", nf, (nf == 1)? "": "s");
+    }
+#endif /*]*/
+    current_block = NULL;
+    blocks = NULL;
+    last_block = &blocks;
+    slot_ix = 0;
 }

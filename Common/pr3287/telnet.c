@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -72,6 +72,7 @@
 
 #include "ctlrc.h"
 #include "indent_s.h"
+#include "lazya.h"
 #include "resolver.h"
 #include "telnet_core.h"
 #include "utils.h"
@@ -436,6 +437,7 @@ pr_net_process(socket_t s)
 #endif /*]*/
 	    pr3287_exit(0);
 	}
+	lazya_flush();
     }
     return true;
 }

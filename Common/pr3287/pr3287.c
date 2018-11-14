@@ -372,6 +372,15 @@ Malloc(size_t len)
 	return p;
 }
 
+void *
+Calloc(size_t nelem, size_t elem_size)
+{
+    void *p = Malloc(nelem * elem_size);
+
+    memset(p, 0, nelem * elem_size);
+    return p;
+}
+
 void
 Free(void *p)
 {
