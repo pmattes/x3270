@@ -1202,26 +1202,37 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Add an element to a dynamically-allocated array. */
+static void
+array_add(const char ***s, int ix, const char *v)
+{
+    *s = Realloc(*s, (ix + 1) * sizeof(const char *));
+    (*s)[ix] = v;
+}
+
 /*
  * Start an x3270if-based interactive console, optionally overriding the app
  * name used as the prompt.
+ *
+ * Prompt([prompt[,help-action]])
  */
 bool
 Prompt_action(ia_t ia, unsigned argc, const char **argv)
 {
-    const char *prompt = app;
-    const char *nargv[16];
+    const char *params[2] = { app, NULL };
+    unsigned i;
+    const char **nargv = NULL;
     int nargc = 0;
 
     action_debug("Prompt", ia, argc, argv);
-    if (check_argc("Prompt", argc, 0, 1) < 0) {
+    if (check_argc("Prompt", argc, 0, 2) < 0) {
 	return false;
     }
 
-    if (argc > 0) {
-	const char *in = argv[0];
-	char *new_prompt = lazya(NewString(argv[0]));
-	char *out = new_prompt;
+    for (i = 0; i < argc; i++) {
+	const char *in = argv[i];
+	char *new_param = lazya(NewString(argv[i]));
+	char *out = new_param;
 	char c;
 
 	while ((c = *in++)) {
@@ -1230,36 +1241,40 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	*out = '\0';
-	if (strlen(new_prompt) > 0) {
-	    prompt = new_prompt;
+	if (strlen(new_param) > 0) {
+	    params[i] = new_param;
 	}
     }
 
-    nargv[nargc++] = "-Async";
-    nargv[nargc++] = "-NoLock";
+    array_add(&nargv, nargc++, "-Async");
+    array_add(&nargv, nargc++, "-NoLock");
 #if !defined(_WIN32) /*[*/
-    nargv[nargc++] = "xterm";
-    nargv[nargc++] = "-title";
-    nargv[nargc++] = lazyaf("%s>", prompt);
-    nargv[nargc++] = "-e";
-    nargv[nargc++] = "/bin/sh";
-    nargv[nargc++] = "-c";
-    nargv[nargc++] = lazyaf("x3270if -I '%s' || (echo 'Press <Enter>'; read)",
-	    prompt);
-    nargv[nargc++] = NULL;
+    array_add(&nargv, nargc++, "xterm");
+    array_add(&nargv, nargc++, "-title");
+    array_add(&nargv, nargc++, lazyaf("%s>", params[0]));
+    array_add(&nargv, nargc++, "-e");
+    array_add(&nargv, nargc++, "/bin/sh");
+    array_add(&nargv, nargc++, "-c");
+    array_add(&nargv, nargc++, lazyaf("x3270if -I '%s'%s || (echo 'Press <Enter>'; read)",
+	    params[0],
+	    (params[1] != NULL)? lazyaf(" -H '%s'", params[1]): ""));
 #else /*][*/
-    nargv[nargc++] = "-Single";
-    nargv[nargc++] = "-NoStdoutRedirect";
-    nargv[nargc++] = "cmd.exe";
-    nargv[nargc++] = "/c";
-    nargv[nargc++] = "start";
-    nargv[nargc++] = lazyaf("\"%s\"", prompt);
-    nargv[nargc++] = "/wait";
-    nargv[nargc++] = "x3270if.exe";
-    nargv[nargc++] = "-I";
-    nargv[nargc++] = prompt;
+    array_add(&nargv, nargc++, "-Single");
+    array_add(&nargv, nargc++, "cmd.exe");
+    array_add(&nargv, nargc++, "/c");
+    array_add(&nargv, nargc++, "start");
+    array_add(&nargv, nargc++, lazyaf("\"%s\"", params[0]));
+    array_add(&nargv, nargc++, "/wait");
+    array_add(&nargv, nargc++, "x3270if.exe");
+    array_add(&nargv, nargc++, "-I");
+    array_add(&nargv, nargc++, params[0]);
+    if (params[1] != NULL) {
+	array_add(&nargv, nargc++, "-H");
+	array_add(&nargv, nargc++, params[1]);
+    }
 #endif /*]*/
-    nargv[nargc++] = NULL;
+    array_add(&nargv, nargc++, NULL);
+    lazya((void *)nargv);
 
     return Script_action(ia, nargc - 1, nargv);
 }
