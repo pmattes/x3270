@@ -123,6 +123,7 @@ typedef void abort_fn(void *);
 bool task_request_input(const char *action, const char *prompt,
 	continue_fn *continue_fn, abort_fn *abort_fn, void *handle,
 	bool no_echo);
+bool task_can_request_input(const char *action, bool no_echo);
 
 typedef llist_t task_cb_ir_state_t;
 void task_cb_init_ir_state(task_cb_ir_state_t *ir_state);

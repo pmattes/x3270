@@ -396,6 +396,7 @@ task_register(void)
 	{ "Expect",		Expect_action, 0 },
 	{ "KeyboardDisable",	KeyboardDisable_action, 0 },
 	{ "Macro",		Macro_action, ACTION_KE },
+	{ "Prompt",		Prompt_action, 0 },
 	{ "Query",		Query_action, 0 },
 	{ "ReadBuffer",		ReadBuffer_action, 0 },
 	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
@@ -3783,6 +3784,36 @@ task_nonblocking_connect(void)
  * Request input.
  *
  * @param[in] action		Action name
+ * @param[in] no_echo		True to use no-echo mode
+ *
+ * @returns true if input can be provided
+ */
+bool
+task_can_request_input(const char *action, bool no_echo)
+{
+    task_t *redirect = task_redirect_to();
+    unsigned flags;
+
+    if (redirect == NULL ||
+	    redirect->cbx.cb->getflags == NULL ||
+	    (!(flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
+	     CBF_INTERACTIVE)) {
+	popup_an_error("%s: not an interactive session", action);
+	return false;
+    }
+
+    if (no_echo && !(flags & CBF_PWINPUT)) {
+	popup_an_error("%s: session does not support password input", action);
+	return false;
+    }
+
+    return true;
+}
+
+/**
+ * Request input.
+ *
+ * @param[in] action		Action name
  * @param[in] prompt		Prompt string
  * @param[in] continue_fn	Continue function
  * @param[in] handle		Handle to pass to continue functon
@@ -3954,6 +3985,11 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 	    return false;
 	}
     }
+
+    if (!task_can_request_input("RequestInput", no_echo)) {
+	return false;
+    }
+
     state = (sample_per_type_t *)task_get_ir_state("RequestInput");
     if (state == NULL) {
 	/* Set up some state. */

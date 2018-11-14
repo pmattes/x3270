@@ -937,6 +937,7 @@ setup_cr(child_t *c)
 }
 #endif /*]*/
 
+
 /* "Script" action, runs a script as a child process. */
 bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
@@ -1199,4 +1200,66 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     return true;
+}
+
+/*
+ * Start an x3270if-based interactive console, optionally overriding the app
+ * name used as the prompt.
+ */
+bool
+Prompt_action(ia_t ia, unsigned argc, const char **argv)
+{
+    const char *prompt = app;
+    const char *nargv[16];
+    int nargc = 0;
+
+    action_debug("Prompt", ia, argc, argv);
+    if (check_argc("Prompt", argc, 0, 1) < 0) {
+	return false;
+    }
+
+    if (argc > 0) {
+	const char *in = argv[0];
+	char *new_prompt = lazya(NewString(argv[0]));
+	char *out = new_prompt;
+	char c;
+
+	while ((c = *in++)) {
+	    if (c != '\'' && c != '"' && !isspace((int)c)) {
+		*out++ = c;
+	    }
+	}
+	*out = '\0';
+	if (strlen(new_prompt) > 0) {
+	    prompt = new_prompt;
+	}
+    }
+
+    nargv[nargc++] = "-Async";
+    nargv[nargc++] = "-NoLock";
+#if !defined(_WIN32) /*[*/
+    nargv[nargc++] = "xterm";
+    nargv[nargc++] = "-title";
+    nargv[nargc++] = lazyaf("%s>", prompt);
+    nargv[nargc++] = "-e";
+    nargv[nargc++] = "/bin/sh";
+    nargv[nargc++] = "-c";
+    nargv[nargc++] = lazyaf("x3270if -I '%s' || (echo 'Press <Enter>'; read)",
+	    prompt);
+    nargv[nargc++] = NULL;
+#else /*][*/
+    nargv[nargc++] = "-Single";
+    nargv[nargc++] = "-NoStdoutRedirect";
+    nargv[nargc++] = "cmd.exe";
+    nargv[nargc++] = "/c";
+    nargv[nargc++] = "start";
+    nargv[nargc++] = lazyaf("\"%s\"", prompt);
+    nargv[nargc++] = "/wait";
+    nargv[nargc++] = "x3270if.exe";
+    nargv[nargc++] = "-I";
+    nargv[nargc++] = prompt;
+#endif /*]*/
+    nargv[nargc++] = NULL;
+
+    return Script_action(ia, nargc - 1, nargv);
 }

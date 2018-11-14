@@ -45,5 +45,5 @@ void
 prompt_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    push_macro("Script(-NoLock,xterm,-title,x3270>,-e,/bin/sh,-c,\"x3270if -I x3270 || (echo 'Press <Enter>';read x)\")");
+    push_macro("Prompt()");
 }
