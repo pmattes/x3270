@@ -93,6 +93,15 @@
 # define IS_EILSEQ(e)	0
 #endif /*]*/
 
+/* Typedefs */
+
+/* Extended wait screen tracing context. */
+typedef struct {
+    ptype_t ptype;
+    unsigned opts;
+    char *caption;
+} screentrace_t;
+
 /* Statics */
 static size_t   dscnt = 0;
 #if !defined(_WIN32) /*[*/
@@ -1035,13 +1044,6 @@ trace_nvt_disc(void)
 
     trace_skipping = true;
 }
-
-/* Extended wait screen tracing context. */
-typedef struct {
-    ptype_t ptype;
-    unsigned opts;
-    char *caption;
-} screentrace_t;
 
 /*
  * Extended wait continue function for screen tracing.

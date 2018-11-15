@@ -65,6 +65,16 @@
 
 /* Typedefs */
 
+/* Saved context for a suspended PrintText(). */
+typedef struct {
+    FILE *f;		/* temporary file */
+    ptype_t ptype;	/* print type */
+    unsigned opts;	/* options */
+    const char *caption; /* caption text */
+    const char *name;	/* printer name */
+    char *temp_name;	/* temporary file name */
+} printtext_t;
+
 /* Globals */
 
 /* Statics */
@@ -155,16 +165,6 @@ default_caption(void)
 
     return r;
 }
-
-/* Saved context for a suspended PrintText(). */
-typedef struct {
-    FILE *f;		/* temporary file */
-    ptype_t ptype;	/* print type */
-    unsigned opts;	/* options */
-    const char *caption; /* caption text */
-    const char *name;	/* printer name */
-    char *temp_name;	/* temporary file name */
-} printtext_t;
 
 /* Extended-wait continue function for PrintText(). */
 static void
