@@ -423,7 +423,7 @@ connect_to(int ix, bool noisy, bool *pending)
 
 #if !defined(_WIN32) /*[*/
     /* don't share the socket with our children */
-    (void) fcntl(sock, F_SETFD, 1);
+    fcntl(sock, F_SETFD, 1);
 #endif /*]*/
 
     /* init ssl */
@@ -542,7 +542,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
     } else if (HOST_FLAG(STD_DS_HOST)) {
-	(void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
+	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
 		appres.m3279? '9': '8', model_num);
 	termtype = ttype_tmpval;
     } else {
@@ -563,7 +563,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    connect_error("Unknown passthru host: %s", hn);
 	    return NC_FAILED;
 	}
-	(void) memmove(passthru_haddr, hp->h_addr, hp->h_length);
+	memmove(passthru_haddr, hp->h_addr, hp->h_length);
 	passthru_len = hp->h_length;
 
 	sp = getservbyname("telnet-passthru","tcp");
@@ -599,14 +599,14 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     }
 
     /* fill in the socket address of the given host */
-    (void) memset((char *) &haddr, 0, sizeof(haddr));
+    memset((char *) &haddr, 0, sizeof(haddr));
     if (HOST_FLAG(PASSTHRU_HOST)) {
 	/*
 	 * XXX: We don't try multiple addresses for the passthru
 	 * host.
 	 */
 	haddr[0].sin.sin_family = AF_INET;
-	(void) memmove(&haddr[0].sin.sin_addr, passthru_haddr, passthru_len);
+	memmove(&haddr[0].sin.sin_addr, passthru_haddr, passthru_len);
 	haddr[0].sin.sin_port = passthru_port;
 	ha_len[0] = sizeof(struct sockaddr_in);
 	num_ha = 1;
@@ -672,19 +672,19 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	case 0:	/* child */
 	    putenv("TERM=xterm");
 	    if (strchr(host, ' ') != NULL) {
-		(void) execlp("/bin/sh", "sh", "-c", host, NULL);
+		execlp("/bin/sh", "sh", "-c", host, NULL);
 	    } else {
 		char *arg1;
 
 		arg1 = strrchr(host, '/');
-		(void) execlp(host, (arg1 == NULL)? host: arg1 + 1, NULL);
+		execlp(host, (arg1 == NULL)? host: arg1 + 1, NULL);
 	    }
 	    perror(host);
 	    _exit(1);
 	    break;
 	default:	/* parent */
 	    sock = amaster;
-	    (void) fcntl(sock, F_SETFD, 1);
+	    fcntl(sock, F_SETFD, 1);
 	    connection_complete();
 	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 	    host_set_flag(NO_TELNET_HOST);
@@ -766,7 +766,7 @@ setup_lus(void)
 
     /* Copy each LU into the array. */
     lu = (char *)(lus + n_lus + 1);
-    (void) strcpy(lu, luname);
+    strcpy(lu, luname);
     i = 0;
     do {
 	lus[i++] = lu;
@@ -822,7 +822,7 @@ net_connected_complete(void)
     ibptr = ibuf;
 
     /* clear statistics and flags */
-    (void) time(&ns_time);
+    time(&ns_time);
     ns_brcvd = 0;
     ns_rrcvd = 0;
     ns_bsent = 0;
@@ -841,7 +841,7 @@ net_connected_complete(void)
 	char *buf;
 
 	buf = xs_buffer("%s %d\r\n", hostname, current_port);
-	(void) send(sock, buf, (int)strlen(buf), 0);
+	send(sock, buf, (int)strlen(buf), 0);
 	Free(buf);
     }
 
@@ -1055,9 +1055,9 @@ net_disconnect(bool including_ssl)
 	st_changed(ST_SECURE, false);
     }
     if (CONNECTED) {
-	(void) shutdown(sock, 2);
+	shutdown(sock, 2);
     }
-    (void) SOCK_CLOSE(sock);
+    SOCK_CLOSE(sock);
     sock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
     CloseHandle(sock_handle);
@@ -1115,201 +1115,197 @@ net_disconnect(bool including_ssl)
 void
 net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-	register unsigned char	*cp;
-	int	nr;
-	bool	ignore_ssl = false;
+    register unsigned char *cp;
+    int	nr;
+    bool ignore_ssl = false;
 
 #if defined(_WIN32) /*[*/
-	WSANETWORKEVENTS events;
+    WSANETWORKEVENTS events;
 
-	/*
-	 * Make the socket non-blocking.
-	 * Note that WSAEventSelect does this automatically (and won't allow
-	 * us to change it back to blocking), except on Wine.
-	 */
-	if (sock != INVALID_SOCKET && non_blocking(true) < 0) {
-		    host_disconnect(true);
-		    return;
-	}
+    /*
+     * Make the socket non-blocking.
+     * Note that WSAEventSelect does this automatically (and won't allow
+     * us to change it back to blocking), except on Wine.
+     */
+    if (sock != INVALID_SOCKET && non_blocking(true) < 0) {
+	host_disconnect(true);
+	return;
+    }
 #endif /*]*/
-	if (sock == INVALID_SOCKET) {
-		return;
-	}
+    if (sock == INVALID_SOCKET) {
+	return;
+    }
 
 #if defined(_WIN32) /*[*/
-	if (WSAEnumNetworkEvents(sock, sock_handle, &events) != 0) {
-	    popup_an_error("WSAEnumNetworkEvents failed: %s",
-		    win32_strerror(WSAGetLastError()));
+    if (WSAEnumNetworkEvents(sock, sock_handle, &events) != 0) {
+	popup_an_error("WSAEnumNetworkEvents failed: %s",
+		win32_strerror(WSAGetLastError()));
+	host_disconnect(true);
+	return;
+    }
+    vtrace("net_input: NetworkEvents 0x%lx%s%s%s\n",
+	    events.lNetworkEvents,
+	    (events.lNetworkEvents & FD_CONNECT) ? " CONNECT": "",
+	    (events.lNetworkEvents & FD_CLOSE) ? " CLOSE": "",
+	    (events.lNetworkEvents & FD_READ) ? " READ": "");
+    if (HALF_CONNECTED) {
+	if (events.lNetworkEvents & FD_CONNECT) {
+	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
+		connect_error("Connection failed: %s",
+			win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
+		host_disconnect(true);
+		return;
+	    } else {
+		connection_complete();
+		if (sock == INVALID_SOCKET) {
+		    return;
+		}
+	    }
+	} else {
+	    vtrace("Spurious net_input call\n");
+	    return;
+	}
+    }
+#endif /*]*/
+
+    nvt_data = 0;
+
+    vtrace("Reading host socket%s\n", secure_connection? " via SSL": "");
+
+    if (secure_connection) {
+	/*
+	 * OpenSSL does not like getting refused connections
+	 * when it hasn't done any I/O yet.  So peek ahead to
+	 * see if it's worth getting it involved at all.
+	 */
+	if (HALF_CONNECTED &&
+		(nr = recv(sock, (char *) netrbuf, 1, MSG_PEEK)) <= 0) {
+	    ignore_ssl = true;
+	} else {
+	    nr = sio_read(sio, (char *) netrbuf, BUFSZ);
+	}
+    } else {
+#if defined(LOCAL_PROCESS) /*[*/
+	if (local_process) {
+	    nr = read(sock, (char *) netrbuf, BUFSZ);
+	} else
+#endif /*]*/
+	{
+	    nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
+	}
+    }
+    vtrace("Host socket read complete nr=%d\n", nr);
+    if (nr < 0) {
+	if ((secure_connection && nr == SIO_EWOULDBLOCK) ||
+	    (!secure_connection && socket_errno() == SE_EWOULDBLOCK)) {
+	    vtrace("EWOULDBLOCK\n");
+	    return;
+	}
+	if (secure_connection && !ignore_ssl) {
+	    connect_error("%s", sio_last_error());
 	    host_disconnect(true);
 	    return;
 	}
-	vtrace("net_input: NetworkEvents 0x%lx%s%s%s\n",
-		events.lNetworkEvents,
-		(events.lNetworkEvents & FD_CONNECT) ? " CONNECT": "",
-		(events.lNetworkEvents & FD_CLOSE) ? " CLOSE": "",
-		(events.lNetworkEvents & FD_READ) ? " READ": "");
+	if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
+	    connection_complete();
+	    return;
+	}
+#if defined(LOCAL_PROCESS) /*[*/
+	if (errno == EIO && local_process) {
+	    vtrace("RCVD local process disconnect\n");
+	    host_disconnect(false);
+	    return;
+	}
+#endif /*]*/
+	vtrace("RCVD socket error %d (%s)\n", socket_errno(),
+		socket_strerror(socket_errno()));
 	if (HALF_CONNECTED) {
-	    if (events.lNetworkEvents & FD_CONNECT) {
-		if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
-		    connect_error("Connection failed: %s",
-			    win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
-		    host_disconnect(true);
-		    return;
-		} else {
-		    connection_complete();
-		    if (sock == INVALID_SOCKET) {
+	    if (ha_ix == num_ha - 1) {
+		popup_a_sockerr("Connect to %s, port %d", hostname,
+			current_port);
+	    } else {
+		bool pending;
+		iosrc_t s;
+
+		net_disconnect(false);
+		while (++ha_ix < num_ha) {
+		    s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
+		    if (s != INVALID_IOSRC) {
+			host_newfd(s);
+			host_new_connection(pending);
 			return;
 		    }
 		}
-	    } else {
-		vtrace("Spurious net_input call\n");
-		return;
 	    }
+	} else if (socket_errno() != SE_ECONNRESET) {
+	    popup_a_sockerr("Socket read");
 	}
-#endif /*]*/
+	host_disconnect(true);
+	return;
+    } else if (nr == 0) {
+	/* Host disconnected. */
+	vtrace("RCVD disconnect\n");
+	host_disconnect(false);
+	return;
+    }
 
-	nvt_data = 0;
+    /* Process the data. */
 
-	vtrace("Reading host socket%s\n", secure_connection? " via SSL": "");
+    if (HALF_CONNECTED) {
+	if (non_blocking(false) < 0) {
+	    host_disconnect(true);
+	    return;
+	}
+	host_connected();
+	net_connected();
+	remove_output();
+    }
 
-	if (secure_connection) {
-		/*
-		 * OpenSSL does not like getting refused connections
-		 * when it hasn't done any I/O yet.  So peek ahead to
-		 * see if it's worth getting it involved at all.
-		 */
-		if (HALF_CONNECTED &&
-		    (nr = recv(sock, (char *) netrbuf, 1,
-			       MSG_PEEK)) <= 0) {
-			ignore_ssl = true;
-		} else {
-			nr = sio_read(sio, (char *) netrbuf, BUFSZ);
-		}
+    trace_netdata('<', netrbuf, nr);
+
+    ns_brcvd += nr;
+    for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
+#if defined(LOCAL_PROCESS) /*[*/
+	if (local_process) {
+	    /* More to do here, probably. */
+	    if (cstate == CONNECTED_INITIAL) {
+		host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
+		hisopts[TELOPT_ECHO] = 1;
+		check_linemode(false);
+		kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
+		status_reset();
+		ps_process();
+	    }
+	    nvt_process((unsigned int) *cp);
 	} else {
-#if defined(LOCAL_PROCESS) /*[*/
-		if (local_process) {
-			nr = read(sock, (char *) netrbuf, BUFSZ);
-		} else
 #endif /*]*/
-		{
-			nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
-		}
-	}
-	vtrace("Host socket read complete nr=%d\n", nr);
-	if (nr < 0) {
-	    	if ((secure_connection && nr == SIO_EWOULDBLOCK) ||
-		    (!secure_connection && socket_errno() == SE_EWOULDBLOCK)) {
-			vtrace("EWOULDBLOCK\n");
-			return;
-		}
-		if (secure_connection && !ignore_ssl) {
-		    	connect_error("%s", sio_last_error());
-			host_disconnect(true);
-			return;
-		}
-		if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
-			connection_complete();
-			return;
-		}
-#if defined(LOCAL_PROCESS) /*[*/
-		if (errno == EIO && local_process) {
-			vtrace("RCVD local process disconnect\n");
-			host_disconnect(false);
-			return;
-		}
-#endif /*]*/
-		vtrace("RCVD socket error %d (%s)\n",
-			socket_errno(), socket_strerror(socket_errno()));
-		if (HALF_CONNECTED) {
-			if (ha_ix == num_ha - 1) {
-				popup_a_sockerr("Connect to %s, "
-				    "port %d", hostname, current_port);
-			} else {
-				bool pending;
-				iosrc_t s;
-
-				net_disconnect(false);
-				while (++ha_ix < num_ha) {
-					s = connect_to(ha_ix,
-						(ha_ix == num_ha - 1),
-						&pending);
-					if (s != INVALID_IOSRC) {
-						host_newfd(s);
-						host_new_connection(pending);
-						return;
-					}
-				}
-			}
-		} else if (socket_errno() != SE_ECONNRESET) {
-			popup_a_sockerr("Socket read");
-		}
+	    if (!telnet_fsm(*cp)) {
+		ctlr_dbcs_postprocess();
 		host_disconnect(true);
 		return;
-	} else if (nr == 0) {
-		/* Host disconnected. */
-		vtrace("RCVD disconnect\n");
-		host_disconnect(false);
-		return;
-	}
-
-	/* Process the data. */
-
-	if (HALF_CONNECTED) {
-		if (non_blocking(false) < 0) {
-			host_disconnect(true);
-			return;
-		}
-		host_connected();
-		net_connected();
-		remove_output();
-	}
-
-	trace_netdata('<', netrbuf, nr);
-
-	ns_brcvd += nr;
-	for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
+	    }
 #if defined(LOCAL_PROCESS) /*[*/
-		if (local_process) {
-			/* More to do here, probably. */
-			if (cstate == CONNECTED_INITIAL) {
-				host_in3270(linemode?
-					CONNECTED_NVT: CONNECTED_NVT_CHAR);
-				hisopts[TELOPT_ECHO] = 1;
-				check_linemode(false);
-				kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
-				status_reset();
-				ps_process();
-			}
-			nvt_process((unsigned int) *cp);
-		} else {
-#endif /*]*/
-			if (!telnet_fsm(*cp)) {
-				(void) ctlr_dbcs_postprocess();
-				host_disconnect(true);
-				return;
-			}
-#if defined(LOCAL_PROCESS) /*[*/
-		}
-#endif /*]*/
 	}
+#endif /*]*/
+    }
 
-	if (IN_NVT) {
-		(void) ctlr_dbcs_postprocess();
-	}
-	if (nvt_data) {
-		vtrace("\n");
-		nvt_data = 0;
-	}
+    if (IN_NVT) {
+	ctlr_dbcs_postprocess();
+    }
+    if (nvt_data) {
+	vtrace("\n");
+	nvt_data = 0;
+    }
 
 #if defined(_WIN32) /*[*/
-	if (events.lNetworkEvents & FD_CLOSE) {
-	    vtrace("RCVD disconnect\n");
-	    host_disconnect(false);
-	}
+    if (events.lNetworkEvents & FD_CLOSE) {
+	vtrace("RCVD disconnect\n");
+	host_disconnect(false);
+    }
 #endif /*]*/
 
-	/* See if it's time to roll over the trace file. */
-	trace_rollover_check();
+    /* See if it's time to roll over the trace file. */
+    trace_rollover_check();
 }
 
 
@@ -1321,17 +1317,19 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 static size_t
 set16(char *buf, int n)
 {
-	char *b0 = buf;
+    char *b0 = buf;
 
-	n %= 256 * 256;
-	if ((n / 256) == IAC)
-		*(unsigned char *)buf++ = IAC;
-	*buf++ = (n / 256);
-	n %= 256;
-	if (n == IAC)
-		*(unsigned char *)buf++ = IAC;
-	*buf++ = n;
-	return buf - b0;
+    n %= 256 * 256;
+    if ((n / 256) == IAC) {
+	*(unsigned char *)buf++ = IAC;
+    }
+    *buf++ = (n / 256);
+    n %= 256;
+    if (n == IAC) {
+	*(unsigned char *)buf++ = IAC;
+    }
+    *buf++ = n;
+    return buf - b0;
 }
 
 /*
@@ -1341,19 +1339,17 @@ set16(char *buf, int n)
 static void
 send_naws(void)
 {
-	char naws_msg[14];
-	size_t naws_len = 0;
+    char naws_msg[14];
+    size_t naws_len = 0;
 
-	(void) snprintf(naws_msg, sizeof(naws_msg), "%c%c%c",
-		IAC, SB, TELOPT_NAWS);
-	naws_len += 3;
-	naws_len += set16(naws_msg + naws_len, XMIT_COLS);
-	naws_len += set16(naws_msg + naws_len, XMIT_ROWS);
-	(void) sprintf(naws_msg + naws_len, "%c%c", IAC, SE);
-	naws_len += 2;
-	net_rawout((unsigned char *)naws_msg, naws_len);
-	vtrace("SENT %s NAWS %d %d %s\n", cmd(SB), XMIT_COLS,
-	    XMIT_ROWS, cmd(SE));
+    snprintf(naws_msg, sizeof(naws_msg), "%c%c%c", IAC, SB, TELOPT_NAWS);
+    naws_len += 3;
+    naws_len += set16(naws_msg + naws_len, XMIT_COLS);
+    naws_len += set16(naws_msg + naws_len, XMIT_ROWS);
+    sprintf(naws_msg + naws_len, "%c%c", IAC, SE);
+    naws_len += 2;
+    net_rawout((unsigned char *)naws_msg, naws_len);
+    vtrace("SENT %s NAWS %d %d %s\n", cmd(SB), XMIT_COLS, XMIT_ROWS, cmd(SE));
 }
 
 
@@ -1362,8 +1358,9 @@ send_naws(void)
 static void
 next_lu(void)
 {
-	if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL)
-		curr_lu = NULL;
+    if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL) {
+	curr_lu = NULL;
+    }
 }
 
 #if defined(EBCDIC_HOST) /*[*/
@@ -1375,20 +1372,21 @@ next_lu(void)
 static const char *
 force_ascii(const char *s)
 {
-    	static char buf[256];
-	unsigned char c, e;
-	int i;
+    static char buf[256];
+    unsigned char c, e;
+    int i;
 
-	i = 0;
-	while ((c = *s++) && i < sizeof(buf) - 1) {
-		e = ebc2asc0[c];
-		if (e)
-			buf[i++] = e;
-		else
-			buf[i++] = 0x3f; /* '?' */
+    i = 0;
+    while ((c = *s++) && i < sizeof(buf) - 1) {
+	e = ebc2asc0[c];
+	if (e) {
+	    buf[i++] = e;
+	} else {
+	    buf[i++] = 0x3f; /* '?' */
 	}
-	buf[i] = '\0';
-	return buf;
+    }
+    buf[i] = '\0';
+    return buf;
 }
 #else /*][*/
 #define force_ascii(s) (s)
@@ -1730,7 +1728,7 @@ telnet_fsm(unsigned char c)
 
 		tb_len = 4 + tt_len + 2;
 		tt_out = Malloc(tb_len + 1);
-		(void) sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
+		sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
 			IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
 			force_ascii(termtype),
 			(try_lu != NULL && *try_lu)? "@": "",
@@ -1809,44 +1807,45 @@ telnet_fsm(unsigned char c)
 static void
 tn3270e_request(void)
 {
-	size_t tt_len, tb_len;
-	char *tt_out;
-	char *t;
-	char *xtn;
+    size_t tt_len, tb_len;
+    char *tt_out;
+    char *t;
+    char *xtn;
 
-	/* Convert 3279 to 3278, per the RFC. */
-	xtn = NewString(termtype);
-	if (!strncmp(xtn, "IBM-3279", 8))
-	    	xtn[7] = '8';
+    /* Convert 3279 to 3278, per the RFC. */
+    xtn = NewString(termtype);
+    if (!strncmp(xtn, "IBM-3279", 8)) {
+	xtn[7] = '8';
+    }
 
-	tt_len = strlen(termtype);
-	if (try_lu != NULL && *try_lu)
-		tt_len += strlen(try_lu) + 1;
+    tt_len = strlen(termtype);
+    if (try_lu != NULL && *try_lu) {
+	tt_len += strlen(try_lu) + 1;
+    }
 
-	tb_len = 5 + tt_len + 2;
-	tt_out = Malloc(tb_len + 1);
-	t = tt_out;
-	t += sprintf(tt_out, "%c%c%c%c%c%s",
-	    IAC, SB, TELOPT_TN3270E, TN3270E_OP_DEVICE_TYPE,
-	    TN3270E_OP_REQUEST, force_ascii(xtn));
+    tb_len = 5 + tt_len + 2;
+    tt_out = Malloc(tb_len + 1);
+    t = tt_out;
+    t += sprintf(tt_out, "%c%c%c%c%c%s",
+	IAC, SB, TELOPT_TN3270E, TN3270E_OP_DEVICE_TYPE, TN3270E_OP_REQUEST,
+	force_ascii(xtn));
 
-	if (try_lu != NULL && *try_lu)
-		t += sprintf(t, "%c%s", TN3270E_OP_CONNECT,
-			force_ascii(try_lu));
+    if (try_lu != NULL && *try_lu) {
+	t += sprintf(t, "%c%s", TN3270E_OP_CONNECT, force_ascii(try_lu));
+    }
 
-	(void) sprintf(t, "%c%c", IAC, SE);
+    sprintf(t, "%c%c", IAC, SE);
 
-	net_hexnvt_out_framed((unsigned char *)tt_out, tb_len, true);
-	Free(tt_out);
+    net_hexnvt_out_framed((unsigned char *)tt_out, tb_len, true);
+    Free(tt_out);
 
-	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
-		   "%s\n",
-	    cmd(SB), opt(TELOPT_TN3270E), xtn,
-	    (try_lu != NULL && *try_lu)? " CONNECT ": "",
-	    (try_lu != NULL && *try_lu)? try_lu: "",
-	    cmd(SE));
+    vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s %s\n",
+	cmd(SB), opt(TELOPT_TN3270E), xtn,
+	(try_lu != NULL && *try_lu)? " CONNECT ": "",
+	(try_lu != NULL && *try_lu)? try_lu: "",
+	cmd(SE));
 
-	Free(xtn);
+    Free(xtn);
 }
 
 /*
@@ -1855,19 +1854,19 @@ tn3270e_request(void)
 static void
 backoff_tn3270e(const char *why)
 {
-	vtrace("Aborting TN3270E: %s\n", why);
+    vtrace("Aborting TN3270E: %s\n", why);
 
-	/* Tell the host 'no'. */
-	wont_opt[2] = TELOPT_TN3270E;
-	net_rawout(wont_opt, sizeof(wont_opt));
-	vtrace("SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
+    /* Tell the host 'no'. */
+    wont_opt[2] = TELOPT_TN3270E;
+    net_rawout(wont_opt, sizeof(wont_opt));
+    vtrace("SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
 
-	/* Restore the LU list; we may need to run it again in TN3270 mode. */
-	setup_lus();
+    /* Restore the LU list; we may need to run it again in TN3270 mode. */
+    setup_lus();
 
-	/* Reset our internal state. */
-	myopts[TELOPT_TN3270E] = 0;
-	check_in3270();
+    /* Reset our internal state. */
+    myopts[TELOPT_TN3270E] = 0;
+    check_in3270();
 }
 
 /*
@@ -1878,256 +1877,244 @@ static int
 tn3270e_negotiate(void)
 {
 #define LU_MAX	32
-	static char reported_lu[LU_MAX+1];
-	static char reported_type[LU_MAX+1];
-	int sblen;
-	b8_t e_rcvd;
+    static char reported_lu[LU_MAX+1];
+    static char reported_type[LU_MAX+1];
+    int sblen;
+    b8_t e_rcvd;
 
-	/* Find out how long the subnegotiation buffer is. */
-	for (sblen = 0; ; sblen++) {
-		if (sbbuf[sblen] == SE)
-			break;
+    /* Find out how long the subnegotiation buffer is. */
+    for (sblen = 0; ; sblen++) {
+	if (sbbuf[sblen] == SE) {
+	    break;
 	}
+    }
 
-	vtrace("TN3270E ");
+    vtrace("TN3270E ");
 
-	switch (sbbuf[1]) {
+    switch (sbbuf[1]) {
+    case TN3270E_OP_SEND:
+	if (sbbuf[2] == TN3270E_OP_DEVICE_TYPE) {
+	    /* Host wants us to send our device type. */
+	    vtrace("SEND DEVICE-TYPE SE\n");
+	    tn3270e_request();
+	} else {
+	    vtrace("SEND ??%u SE\n", sbbuf[2]);
+	}
+	break;
 
-	case TN3270E_OP_SEND:
+    case TN3270E_OP_DEVICE_TYPE:
+	/* Device type negotiation. */
+	vtrace("DEVICE-TYPE ");
+	switch (sbbuf[2]) {
+	case TN3270E_OP_IS: {
+	    int tnlen, snlen;
 
-		if (sbbuf[2] == TN3270E_OP_DEVICE_TYPE) {
+	    /* Device type success. */
 
-			/* Host wants us to send our device type. */
-			vtrace("SEND DEVICE-TYPE SE\n");
-
-			tn3270e_request();
-		} else {
-			vtrace("SEND ??%u SE\n", sbbuf[2]);
+	    /* Isolate the terminal type and session. */
+	    tnlen = 0;
+	    while (sbbuf[3+tnlen] != SE &&
+		   sbbuf[3+tnlen] != TN3270E_OP_CONNECT) {
+		tnlen++;
+	    }
+	    snlen = 0;
+	    if (sbbuf[3+tnlen] == TN3270E_OP_CONNECT) {
+		while(sbbuf[3+tnlen+1+snlen] != SE) {
+		    snlen++;
 		}
+	    }
+
+	    /* Remember the LU. */
+	    if (tnlen) {
+		if (tnlen > LU_MAX) {
+		    tnlen = LU_MAX;
+		}
+		strncpy(reported_type, (char *)&sbbuf[3], tnlen);
+		reported_type[tnlen] = '\0';
+		force_local(reported_type);
+		connected_type = reported_type;
+	    }
+	    if (snlen) {
+		if (snlen > LU_MAX) {
+		    snlen = LU_MAX;
+		}
+		strncpy(reported_lu, (char *)&sbbuf[3+tnlen+1], snlen);
+		reported_lu[snlen] = '\0';
+		force_local(reported_lu);
+		connected_lu = reported_lu;
+	    }
+
+	    vtrace("IS %s CONNECT %s SE\n", tnlen? connected_type: "",
+		    snlen? connected_lu: "");
+
+	    if (snlen) {
+		status_lu(connected_lu);
+	    }
+
+	    /* Tell them what we can do. */
+	    tn3270e_subneg_send(TN3270E_OP_REQUEST, &e_funcs);
+	    break;
+	    }
+	case TN3270E_OP_REJECT:
+	    /* Device type failure. */
+	    vtrace("REJECT REASON %s SE\n", rsn(sbbuf[4]));
+	    if (sbbuf[4] == TN3270E_REASON_UNSUPPORTED_REQ) {
+		backoff_tn3270e("Host rejected request type");
 		break;
+	    }
 
-	case TN3270E_OP_DEVICE_TYPE:
+	    next_lu();
+	    if (try_lu != NULL) {
+		/* Try the next LU. */
+		tn3270e_request();
+	    } else if (lus != NULL) {
+		/* No more LUs to try.  Give up. */
+		backoff_tn3270e("Host rejected resource(s)");
+	    } else {
+		backoff_tn3270e("Device type rejected");
+	    }
 
-		/* Device type negotiation. */
-		vtrace("DEVICE-TYPE ");
+	    break;
+	default:
+	    vtrace("??%u SE\n", sbbuf[2]);
+	    break;
+	}
+	break;
 
-		switch (sbbuf[2]) {
-		case TN3270E_OP_IS: {
-			int tnlen, snlen;
+    case TN3270E_OP_FUNCTIONS:
+	/* Functions negotiation. */
+	vtrace("FUNCTIONS ");
 
-			/* Device type success. */
+	switch (sbbuf[2]) {
+	case TN3270E_OP_REQUEST:
+	    /* Host is telling us what functions they want. */
+	    vtrace("REQUEST %s SE\n",
+		    tn3270e_function_names(sbbuf+3, sblen-3));
 
-			/* Isolate the terminal type and session. */
-			tnlen = 0;
-			while (sbbuf[3+tnlen] != SE &&
-			       sbbuf[3+tnlen] != TN3270E_OP_CONNECT)
-				tnlen++;
-			snlen = 0;
-			if (sbbuf[3+tnlen] == TN3270E_OP_CONNECT) {
-				while(sbbuf[3+tnlen+1+snlen] != SE)
-					snlen++;
-			}
+	    tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
+	    if (b8_none_added(&e_funcs, &e_rcvd)) {
+		/* They want what we want, or less.  Done. */
+		b8_copy(&e_funcs, &e_rcvd);
+		tn3270e_subneg_send(TN3270E_OP_IS, &e_funcs);
+		tn3270e_negotiated = 1;
+		vtrace("TN3270E option negotiation complete.\n");
+		check_in3270();
+	    } else {
+		/*
+		 * They want us to do something we can't.
+		 * Request the common subset.
+		 */
+		b8_and(&e_funcs, &e_funcs, &e_rcvd);
+		tn3270e_subneg_send(TN3270E_OP_REQUEST, &e_funcs);
+	    }
+	    break;
 
-			/* Remember the LU. */
-			if (tnlen) {
-				if (tnlen > LU_MAX)
-					tnlen = LU_MAX;
-				(void)strncpy(reported_type,
-				    (char *)&sbbuf[3], tnlen);
-				reported_type[tnlen] = '\0';
-				force_local(reported_type);
-				connected_type = reported_type;
-			}
-			if (snlen) {
-				if (snlen > LU_MAX)
-					snlen = LU_MAX;
-				(void)strncpy(reported_lu,
-				    (char *)&sbbuf[3+tnlen+1], snlen);
-				reported_lu[snlen] = '\0';
-				force_local(reported_lu);
-				connected_lu = reported_lu;
-			}
-
-			vtrace("IS %s CONNECT %s SE\n",
-				tnlen? connected_type: "",
-				snlen? connected_lu: "");
-
-			if (snlen) {
-			    status_lu(connected_lu);
-			}
-
-			/* Tell them what we can do. */
-			tn3270e_subneg_send(TN3270E_OP_REQUEST, &e_funcs);
-			break;
-		}
-		case TN3270E_OP_REJECT:
-
-			/* Device type failure. */
-
-			vtrace("REJECT REASON %s SE\n", rsn(sbbuf[4]));
-			if (sbbuf[4] == TN3270E_REASON_UNSUPPORTED_REQ) {
-				backoff_tn3270e("Host rejected request type");
-				break;
-			}
-
-			next_lu();
-			if (try_lu != NULL) {
-				/* Try the next LU. */
-				tn3270e_request();
-			} else if (lus != NULL) {
-				/* No more LUs to try.  Give up. */
-				backoff_tn3270e("Host rejected resource(s)");
-			} else {
-				backoff_tn3270e("Device type rejected");
-			}
-
-			break;
-		default:
-			vtrace("??%u SE\n", sbbuf[2]);
-			break;
-		}
+	case TN3270E_OP_IS:
+	    /* They accept our last request, or a subset thereof. */
+	    vtrace("IS %s SE\n", tn3270e_function_names(sbbuf+3, sblen-3));
+	    tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
+	    if (b8_none_added(&e_funcs, &e_rcvd)) {
+		/* They want what we want, or less.  Done. */
+		b8_copy(&e_funcs, &e_rcvd);
+	    } else {
+		/*
+		 * They've added something. Abandon TN3270E,
+		 * they're brain dead.
+		 */
+		backoff_tn3270e("Host illegally added function(s)");
 		break;
+	    }
+	    tn3270e_negotiated = 1;
+	    vtrace("TN3270E option negotiation complete.\n");
 
-	case TN3270E_OP_FUNCTIONS:
+	    /*
+	     * If the host does not support BIND_IMAGE, then we
+	     * must go straight to 3270 mode. We do not implicitly
+	     * unlock the keyboard, though -- that requires a
+	     * Write command from the host.
+	     */
+	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
+		tn3270e_submode = E_3270;
+	    }
 
-		/* Functions negotiation. */
-		vtrace("FUNCTIONS ");
-
-		switch (sbbuf[2]) {
-
-		case TN3270E_OP_REQUEST:
-			/* Host is telling us what functions they want. */
-			vtrace("REQUEST %s SE\n",
-			    tn3270e_function_names(sbbuf+3, sblen-3));
-
-			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
-			if (b8_none_added(&e_funcs, &e_rcvd)) {
-				/* They want what we want, or less.  Done. */
-				b8_copy(&e_funcs, &e_rcvd);
-				tn3270e_subneg_send(TN3270E_OP_IS, &e_funcs);
-				tn3270e_negotiated = 1;
-				vtrace("TN3270E option negotiation "
-				    "complete.\n");
-				check_in3270();
-			} else {
-				/*
-				 * They want us to do something we can't.
-				 * Request the common subset.
-				 */
-				b8_and(&e_funcs, &e_funcs, &e_rcvd);
-				tn3270e_subneg_send(TN3270E_OP_REQUEST,
-				    &e_funcs);
-			}
-			break;
-
-		case TN3270E_OP_IS:
-			/* They accept our last request, or a subset thereof. */
-			vtrace("IS %s SE\n",
-			    tn3270e_function_names(sbbuf+3, sblen-3));
-			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
-			if (b8_none_added(&e_funcs, &e_rcvd)) {
-				/* They want what we want, or less.  Done. */
-				b8_copy(&e_funcs, &e_rcvd);
-			} else {
-				/*
-				 * They've added something. Abandon TN3270E,
-				 * they're brain dead.
-				 */
-				backoff_tn3270e("Host illegally added "
-					"function(s)");
-				break;
-			}
-			tn3270e_negotiated = 1;
-			vtrace("TN3270E option negotiation complete.\n");
-
-			/*
-			 * If the host does not support BIND_IMAGE, then we
-			 * must go straight to 3270 mode. We do not implicitly
-			 * unlock the keyboard, though -- that requires a
-			 * Write command from the host.
-			 */
-			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
-				tn3270e_submode = E_3270;
-			}
-
-			check_in3270();
-			break;
-
-		default:
-			vtrace("??%u SE\n", sbbuf[2]);
-			break;
-		}
-		break;
+	    check_in3270();
+	    break;
 
 	default:
-		vtrace("??%u SE\n", sbbuf[1]);
+	    vtrace("??%u SE\n", sbbuf[2]);
+	    break;
 	}
+	break;
 
-	/* Good enough for now. */
-	return 0;
+    default:
+	vtrace("??%u SE\n", sbbuf[1]);
+    }
+
+    /* Good enough for now. */
+    return 0;
 }
 
 /* Expand a string of TN3270E function codes into text. */
 static const char *
 tn3270e_function_names(const unsigned char *buf, int len)
 {
-	int i;
-	static char text_buf[1024];
-	char *s = text_buf;
+    int i;
+    static char text_buf[1024];
+    char *s = text_buf;
 
-	if (!len)
-		return("(null)");
-	for (i = 0; i < len; i++) {
-		s += sprintf(s, "%s%s", (s == text_buf)? "": " ",
-		    fnn(buf[i]));
-	}
-	return text_buf;
+    if (!len) {
+	return("(null)");
+    }
+    for (i = 0; i < len; i++) {
+	s += sprintf(s, "%s%s", (s == text_buf)? "": " ", fnn(buf[i]));
+    }
+    return text_buf;
 }
 
 /* Expand the current TN3270E function codes into text. */
 const char *
 tn3270e_current_opts(void)
 {
-	int i;
-	static char text_buf[1024];
-	char *s = text_buf;
+    int i;
+    static char text_buf[1024];
+    char *s = text_buf;
 
-	if (b8_is_zero(&e_funcs) || !IN_E)
-		return NULL;
-	for (i = 0; i < MX8; i++) {
-		if (b8_bit_is_set(&e_funcs, i)) {
-			s += sprintf(s, "%s%s", (s == text_buf)? "": " ",
-				fnn(i));
-		}
+    if (b8_is_zero(&e_funcs) || !IN_E) {
+	return NULL;
+    }
+    for (i = 0; i < MX8; i++) {
+	if (b8_bit_is_set(&e_funcs, i)) {
+	    s += sprintf(s, "%s%s", (s == text_buf)? "": " ", fnn(i));
 	}
-	return text_buf;
+    }
+    return text_buf;
 }
 
 /* Transmit a TN3270E FUNCTIONS REQUEST or FUNCTIONS IS message. */
 static void
 tn3270e_subneg_send(unsigned char op, b8_t *funcs)
 {
-	unsigned char proto_buf[7 + MX8];
-	int proto_len;
-	int i;
+    unsigned char proto_buf[7 + MX8];
+    int proto_len;
+    int i;
 
-	/* Construct the buffers. */
-	(void) memcpy(proto_buf, functions_req, 4);
-	proto_buf[4] = op;
-	proto_len = 5;
-	for (i = 0; i < MX8; i++) {
-		if (b8_bit_is_set(funcs, (i))) {
-			proto_buf[proto_len++] = i;
-		}
+    /* Construct the buffers. */
+    memcpy(proto_buf, functions_req, 4);
+    proto_buf[4] = op;
+    proto_len = 5;
+    for (i = 0; i < MX8; i++) {
+	if (b8_bit_is_set(funcs, (i))) {
+	    proto_buf[proto_len++] = i;
 	}
+    }
 
-	/* Complete and send out the protocol message. */
-	proto_buf[proto_len++] = IAC;
-	proto_buf[proto_len++] = SE;
-	net_rawout(proto_buf, proto_len);
+    /* Complete and send out the protocol message. */
+    proto_buf[proto_len++] = IAC;
+    proto_buf[proto_len++] = SE;
+    net_rawout(proto_buf, proto_len);
 
-	/* Complete and send out the trace text. */
-	vtrace("SENT %s %s FUNCTIONS %s %s %s\n",
+    /* Complete and send out the trace text. */
+    vtrace("SENT %s %s FUNCTIONS %s %s %s\n",
 	    cmd(SB), opt(TELOPT_TN3270E),
 	    (op == TN3270E_OP_REQUEST)? "REQUEST": "IS",
 	    tn3270e_function_names(proto_buf + 5, proto_len - 7),
@@ -2138,170 +2125,164 @@ tn3270e_subneg_send(unsigned char op, b8_t *funcs)
 static void
 tn3270e_fdecode(const unsigned char *buf, int len, b8_t *r)
 {
-	int i;
+    int i;
 
-	b8_zero(r);
-	for (i = 0; i < len; i++) {
-		b8_set_bit(r, buf[i]);
-	}
+    b8_zero(r);
+    for (i = 0; i < len; i++) {
+	b8_set_bit(r, buf[i]);
+    }
 }
 
 static int
 maxru(unsigned char c)
 {
-    	if (!(c & 0x80))
-	    	return 0;
-	return ((c >> 4) & 0x0f) * (1 << (c & 0xf));
+    if (!(c & 0x80)) {
+	return 0;
+    }
+    return ((c >> 4) & 0x0f) * (1 << (c & 0xf));
 }
 
 static void
 process_bind(unsigned char *buf, size_t buflen)
 {
-	size_t namelen;
-	size_t dest_ix = 0;
+    size_t namelen;
+    size_t dest_ix = 0;
 
-	/* Save the raw image. */
-	Replace(bind_image, (unsigned char *)Malloc(buflen));
-	memcpy(bind_image, buf, buflen);
-	bind_image_len = buflen;
+    /* Save the raw image. */
+    Replace(bind_image, (unsigned char *)Malloc(buflen));
+    memcpy(bind_image, buf, buflen);
+    bind_image_len = buflen;
 
-	/* Clean up the derived state. */
-	if (plu_name == NULL)
-	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX + 1));
-	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX + 1));
-	maxru_sec = 0;
-	maxru_pri = 0;
-	bind_rd = 0;
-	bind_cd = 0;
-	bind_ra = 0;
-	bind_ca = 0;
-	bind_state = 0;
+    /* Clean up the derived state. */
+    if (plu_name == NULL) {
+	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX + 1));
+    }
+    memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX + 1));
+    maxru_sec = 0;
+    maxru_pri = 0;
+    bind_rd = 0;
+    bind_cd = 0;
+    bind_ra = 0;
+    bind_ca = 0;
+    bind_state = 0;
 
-	/* Make sure it's a BIND. */
-	if (buflen < 1 || buf[0] != BIND_RU) {
-		return;
+    /* Make sure it's a BIND. */
+    if (buflen < 1 || buf[0] != BIND_RU) {
+	return;
+    }
+
+    /* Extract the maximum RUs. */
+    if (buflen > BIND_OFF_MAXRU_SEC) {
+	maxru_sec = maxru(buf[BIND_OFF_MAXRU_SEC]);
+    }
+    if (buflen > BIND_OFF_MAXRU_PRI) {
+	maxru_pri = maxru(buf[BIND_OFF_MAXRU_PRI]);
+    }
+
+    /* Extract the screen size. */
+    if (buflen > BIND_OFF_SSIZE) {
+	int bind_ss = buf[BIND_OFF_SSIZE];
+
+	switch (bind_ss) {
+	case 0x00:
+	case 0x02:
+	    bind_rd = MODEL_2_ROWS;
+	    bind_cd = MODEL_2_COLS;
+	    bind_ra = MODEL_2_ROWS;
+	    bind_ca = MODEL_2_COLS;
+	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
+	    break;
+	case 0x03:
+	    bind_rd = MODEL_2_ROWS;
+	    bind_cd = MODEL_2_COLS;
+	    bind_ra = maxROWS;
+	    bind_ca = maxCOLS;
+	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_VALID;
+	    break;
+	case 0x7e:
+	    bind_rd = buf[BIND_OFF_RD];
+	    bind_cd = buf[BIND_OFF_CD];
+	    bind_ra = buf[BIND_OFF_RD];
+	    bind_ca = buf[BIND_OFF_CD];
+	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
+	    break;
+	case 0x7f:
+	    bind_rd = buf[BIND_OFF_RD];
+	    bind_cd = buf[BIND_OFF_CD];
+	    bind_ra = buf[BIND_OFF_RA];
+	    bind_ca = buf[BIND_OFF_CA];
+	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
+	    break;
+	default:
+	    bind_state = 0;
+	    break;
 	}
+    }
 
-	/* Extract the maximum RUs. */
-	if (buflen > BIND_OFF_MAXRU_SEC)
-		maxru_sec = maxru(buf[BIND_OFF_MAXRU_SEC]);
-	if (buflen > BIND_OFF_MAXRU_PRI)
-		maxru_pri = maxru(buf[BIND_OFF_MAXRU_PRI]);
-
-	/* Extract the screen size. */
-	if (buflen > BIND_OFF_SSIZE) {
-	    	int bind_ss = buf[BIND_OFF_SSIZE];
-
-	    	switch (bind_ss) {
-		case 0x00:
-		case 0x02:
-			bind_rd = MODEL_2_ROWS;
-			bind_cd = MODEL_2_COLS;
-			bind_ra = MODEL_2_ROWS;
-			bind_ca = MODEL_2_COLS;
-			bind_state =
-			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
-			break;
-		case 0x03:
-			bind_rd = MODEL_2_ROWS;
-			bind_cd = MODEL_2_COLS;
-			bind_ra = maxROWS;
-			bind_ca = maxCOLS;
-			bind_state =
-			    BIND_DIMS_PRESENT | BIND_DIMS_VALID;
-			break;
-		case 0x7e:
-			bind_rd = buf[BIND_OFF_RD];
-			bind_cd = buf[BIND_OFF_CD];
-			bind_ra = buf[BIND_OFF_RD];
-			bind_ca = buf[BIND_OFF_CD];
-			bind_state =
-			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
-			break;
-		case 0x7f:
-			bind_rd = buf[BIND_OFF_RD];
-			bind_cd = buf[BIND_OFF_CD];
-			bind_ra = buf[BIND_OFF_RA];
-			bind_ca = buf[BIND_OFF_CA];
-			bind_state =
-			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
-			break;
-		default:
-			bind_state = 0;
-			break;
-		}
+    /* Validate and implement the screen size. */
+    if (appres.bind_limit && (bind_state & BIND_DIMS_PRESENT)) {
+	if (bind_rd > maxROWS || bind_cd > maxCOLS) {
+	    popup_an_error("Ignoring invalid BIND image screen "
+		    "size parameters:\n"
+		    " BIND Default Rows-Cols %ux%u > Maximum %ux%u",
+		    bind_rd, bind_cd, maxROWS, maxCOLS);
+	    bind_state &= ~BIND_DIMS_VALID;
+	} else if (bind_rd < MODEL_2_ROWS || bind_cd < MODEL_2_COLS) {
+	    popup_an_error("Ignoring invalid BIND image screen "
+		    "size parameters:\n"
+		    " BIND Default Rows-Cols %ux%u < Minimum %ux%u",
+		    bind_rd, bind_cd, MODEL_2_ROWS, MODEL_2_COLS);
+	    bind_state &= ~BIND_DIMS_VALID;
+	} else if (bind_ra > maxROWS || bind_ca > maxCOLS) {
+	    popup_an_error("Ignoring invalid BIND image screen "
+		    "size parameters:\n"
+		    " BIND Alternate Rows-Cols %ux%u > Maximum %ux%u",
+		    bind_ra, bind_ca, maxROWS, maxCOLS);
+	    bind_state &= ~BIND_DIMS_VALID;
+	} else if (bind_ra < MODEL_2_ROWS || bind_ca < MODEL_2_COLS) {
+	    popup_an_error("Ignoring invalid BIND image screen "
+		    "size parameters:\n"
+		    " BIND Alternate Rows-Cols %ux%u < Minimum %ux%u",
+		    bind_ra, bind_ca, MODEL_2_ROWS, MODEL_2_COLS);
+	    bind_state &= ~BIND_DIMS_VALID;
+	} else {
+	    defROWS = bind_rd;
+	    defCOLS = bind_cd;
+	    altROWS = bind_ra;
+	    altCOLS = bind_ca;
 	}
+    }
 
-	/* Validate and implement the screen size. */
-	if (appres.bind_limit && (bind_state & BIND_DIMS_PRESENT)) {
-		if (bind_rd > maxROWS ||
-		    bind_cd > maxCOLS) {
-			popup_an_error("Ignoring invalid BIND image screen "
-				"size parameters:\n"
-				" BIND Default Rows-Cols %ux%u > Maximum "
-				"%ux%u",
-				bind_rd, bind_cd, maxROWS, maxCOLS);
-			bind_state &= ~BIND_DIMS_VALID;
-		} else if (bind_rd < MODEL_2_ROWS ||
-			   bind_cd < MODEL_2_COLS) {
-			popup_an_error("Ignoring invalid BIND image screen "
-				"size parameters:\n"
-				" BIND Default Rows-Cols %ux%u < Minimum %ux%u",
-				bind_rd, bind_cd, MODEL_2_ROWS, MODEL_2_COLS);
-			bind_state &= ~BIND_DIMS_VALID;
-		} else if (bind_ra > maxROWS ||
-			   bind_ca > maxCOLS) {
-			popup_an_error("Ignoring invalid BIND image screen "
-				"size parameters:\n"
-				" BIND Alternate Rows-Cols %ux%u > Maximum "
-				"%ux%u",
-				bind_ra, bind_ca, maxROWS, maxCOLS);
-			bind_state &= ~BIND_DIMS_VALID;
-		} else if (bind_ra < MODEL_2_ROWS ||
-			   bind_ca < MODEL_2_COLS) {
-			popup_an_error("Ignoring invalid BIND image screen "
-				"size parameters:\n"
-				" BIND Alternate Rows-Cols %ux%u < Minimum "
-				"%ux%u",
-				bind_ra, bind_ca, MODEL_2_ROWS, MODEL_2_COLS);
-			bind_state &= ~BIND_DIMS_VALID;
-		} else {
-			defROWS = bind_rd;
-			defCOLS = bind_cd;
-			altROWS = bind_ra;
-			altCOLS = bind_ca;
-		}
+    ctlr_erase(false);
+
+    /* Extract the PLU name. */
+    if (buflen > BIND_OFF_PLU_NAME_LEN) {
+	namelen = buf[BIND_OFF_PLU_NAME_LEN];
+	if (namelen > BIND_PLU_NAME_MAX) {
+	    namelen = BIND_PLU_NAME_MAX;
 	}
-
-	ctlr_erase(false);
-
-	/* Extract the PLU name. */
-	if (buflen > BIND_OFF_PLU_NAME_LEN) {
-		namelen = buf[BIND_OFF_PLU_NAME_LEN];
-		if (namelen > BIND_PLU_NAME_MAX)
-			namelen = BIND_PLU_NAME_MAX;
-		if ((namelen > 0) && (buflen > BIND_OFF_PLU_NAME + namelen)) {
+	if ((namelen > 0) && (buflen > BIND_OFF_PLU_NAME + namelen)) {
 #if defined(EBCDIC_HOST) /*[*/
-			memcpy(plu_name, &buf[BIND_OFF_PLU_NAME], namelen);
-			plu_name[namelen] = '\0';
+	    memcpy(plu_name, &buf[BIND_OFF_PLU_NAME], namelen);
+	    plu_name[namelen] = '\0';
 #else /*][*/
-		    	size_t i;
+	    size_t i;
 
-			for (i = 0; i < namelen; i++) {
-				size_t nx;
+	    for (i = 0; i < namelen; i++) {
+		size_t nx;
 
-				nx = ebcdic_to_multibyte(
-					buf[BIND_OFF_PLU_NAME + i],
-					plu_name + dest_ix, mb_max_len(1));
-				if (nx > 1)
-					dest_ix += nx - 1;
-			}
-#endif /*]*/
+		nx = ebcdic_to_multibyte(buf[BIND_OFF_PLU_NAME + i],
+			plu_name + dest_ix, mb_max_len(1));
+		if (nx > 1) {
+		    dest_ix += nx - 1;
 		}
+	    }
+#endif /*]*/
 	}
+    }
 
-	/* A BIND implicitly puts us in 3270 mode. */
-	tn3270e_submode = E_3270;
+    /* A BIND implicitly puts us in 3270 mode. */
+    tn3270e_submode = E_3270;
 }
 
 /* Decode an UNBIND reason. */
@@ -2339,121 +2320,120 @@ unbind_reason (unsigned char r)
 static int
 process_eor(void)
 {
-	if (syncing || !(ibptr - ibuf))
-		return(0);
+    if (syncing || !(ibptr - ibuf)) {
+	return(0);
+    }
 
-	if (IN_E) {
-		tn3270e_header *h = (tn3270e_header *)ibuf;
-		unsigned char *s;
-		enum pds rv;
+    if (IN_E) {
+	tn3270e_header *h = (tn3270e_header *)ibuf;
+	unsigned char *s;
+	enum pds rv;
 
-		vtrace("RCVD TN3270E(%s%s %s %u)\n",
-		    e_dt(h->data_type),
-		    e_rq(h->data_type, h->request_flag),
-		    e_rsp(h->data_type, h->response_flag),
-		    h->seq_number[0] << 8 | h->seq_number[1]);
+	vtrace("RCVD TN3270E(%s%s %s %u)\n",
+		e_dt(h->data_type),
+		e_rq(h->data_type, h->request_flag),
+		e_rsp(h->data_type, h->response_flag),
+		h->seq_number[0] << 8 | h->seq_number[1]);
 
-		switch (h->data_type) {
-		case TN3270E_DT_3270_DATA:
-			if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE) &&
-			    !tn3270e_bound) {
-				return 0;
-			}
-			tn3270e_submode = E_3270;
-			check_in3270();
-			response_required = h->response_flag;
-			rv = process_ds(ibuf + EH_SIZE,
-			    (ibptr - ibuf) - EH_SIZE);
-			if (rv < 0 &&
-			    response_required != TN3270E_RSF_NO_RESPONSE)
-				tn3270e_nak(rv);
-			else if (rv == PDS_OKAY_NO_OUTPUT &&
-			    response_required == TN3270E_RSF_ALWAYS_RESPONSE)
-				tn3270e_ack();
-			response_required = TN3270E_RSF_NO_RESPONSE;
-			return 0;
-		case TN3270E_DT_BIND_IMAGE:
-			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
-				return 0;
-			}
-			process_bind(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
-			if (bind_state & BIND_DIMS_PRESENT) {
-				if (bind_state & BIND_DIMS_ALT) {
-					trace_ds("< BIND PLU-name '%s' "
-						"MaxSec-RU %d MaxPri-RU %d "
-						"Rows-Cols Default %dx%d "
-						"Alternate %dx%d%s%s\n",
-						plu_name, maxru_sec, maxru_pri,
-						bind_rd, bind_cd,
-						bind_ra, bind_ca,
-						(bind_state & BIND_DIMS_VALID)?
-						    "": " (invalid)",
-						appres.bind_limit?
-						    "": " (ignored)");
-				} else {
-					trace_ds("< BIND PLU-name '%s' "
-						"MaxSec-RU %d MaxPri-RU %d "
-						"Rows-Cols Default %dx%d%s%s\n",
-						plu_name, maxru_sec, maxru_pri,
-						bind_rd, bind_cd,
-						(bind_state & BIND_DIMS_VALID)?
-						    "": " (invalid)",
-						appres.bind_limit?
-						    "": " (ignored)");
-				}
-			} else {
-				trace_ds("< BIND PLU-name '%s' "
-					"MaxSec-RU %d MaxPri-RU %d\n",
-					plu_name, maxru_sec, maxru_pri);
-			}
-			tn3270e_bound = 1;
-			check_in3270();
-			return 0;
-		case TN3270E_DT_UNBIND:
-			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
-				return 0;
-			}
-			if ((ibptr - ibuf) > EH_SIZE) {
-				trace_ds("< UNBIND %s\n",
-					unbind_reason(ibuf[EH_SIZE]));
-			}
-			tn3270e_bound = 0;
-			/*
-			 * Undo any screen-sizing effects from a previous BIND.
-			 */
-			defROWS = MODEL_2_ROWS;
-			defCOLS = MODEL_2_COLS;
-			altROWS = maxROWS;
-			altCOLS = maxCOLS;
-			ctlr_erase(false);
-			tn3270e_submode = E_UNBOUND;
-			check_in3270();
-			return 0;
-		case TN3270E_DT_NVT_DATA:
-			/* In tn3270e NVT mode */
-			tn3270e_submode = E_NVT;
-			check_in3270();
-			for (s = ibuf; s < ibptr; s++) {
-				nvt_process(*s++);
-			}
-			return 0;
-		case TN3270E_DT_SSCP_LU_DATA:
-			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
-				return 0;
-			}
-			tn3270e_submode = E_SSCP;
-			check_in3270();
-			ctlr_write_sscp_lu(ibuf + EH_SIZE,
-			                   (ibptr - ibuf) - EH_SIZE);
-			return 0;
-		default:
-			/* Should do something more extraordinary here. */
-			return 0;
+	switch (h->data_type) {
+	case TN3270E_DT_3270_DATA:
+	    if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE) &&
+		    !tn3270e_bound) {
+		return 0;
+	    }
+	    tn3270e_submode = E_3270;
+	    check_in3270();
+	    response_required = h->response_flag;
+	    rv = process_ds(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    if (rv < 0 && response_required != TN3270E_RSF_NO_RESPONSE) {
+		tn3270e_nak(rv);
+	    }
+	    else if (rv == PDS_OKAY_NO_OUTPUT &&
+		    response_required == TN3270E_RSF_ALWAYS_RESPONSE) {
+		tn3270e_ack();
+	    }
+	    response_required = TN3270E_RSF_NO_RESPONSE;
+	    return 0;
+	case TN3270E_DT_BIND_IMAGE:
+	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
+		return 0;
+	    }
+	    process_bind(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    if (bind_state & BIND_DIMS_PRESENT) {
+		if (bind_state & BIND_DIMS_ALT) {
+		    trace_ds("< BIND PLU-name '%s' "
+			    "MaxSec-RU %d MaxPri-RU %d "
+			    "Rows-Cols Default %dx%d "
+			    "Alternate %dx%d%s%s\n",
+			    plu_name, maxru_sec, maxru_pri,
+			    bind_rd, bind_cd,
+			    bind_ra, bind_ca,
+			    (bind_state & BIND_DIMS_VALID)?
+				"": " (invalid)",
+			    appres.bind_limit?
+				"": " (ignored)");
+		} else {
+		    trace_ds("< BIND PLU-name '%s' "
+			    "MaxSec-RU %d MaxPri-RU %d "
+			    "Rows-Cols Default %dx%d%s%s\n",
+			    plu_name, maxru_sec, maxru_pri,
+			    bind_rd, bind_cd,
+			    (bind_state & BIND_DIMS_VALID)?
+				"": " (invalid)",
+			    appres.bind_limit?
+				"": " (ignored)");
 		}
-	} else {
-		(void) process_ds(ibuf, ibptr - ibuf);
+	    } else {
+		trace_ds("< BIND PLU-name '%s' "
+			"MaxSec-RU %d MaxPri-RU %d\n",
+			plu_name, maxru_sec, maxru_pri);
+	    }
+	    tn3270e_bound = 1;
+	    check_in3270();
+	    return 0;
+	case TN3270E_DT_UNBIND:
+	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
+		return 0;
+	    }
+	    if ((ibptr - ibuf) > EH_SIZE) {
+		trace_ds("< UNBIND %s\n", unbind_reason(ibuf[EH_SIZE]));
+	    }
+	    tn3270e_bound = 0;
+	    /*
+	     * Undo any screen-sizing effects from a previous BIND.
+	     */
+	    defROWS = MODEL_2_ROWS;
+	    defCOLS = MODEL_2_COLS;
+	    altROWS = maxROWS;
+	    altCOLS = maxCOLS;
+	    ctlr_erase(false);
+	    tn3270e_submode = E_UNBOUND;
+	    check_in3270();
+	    return 0;
+	case TN3270E_DT_NVT_DATA:
+	    /* In tn3270e NVT mode */
+	    tn3270e_submode = E_NVT;
+	    check_in3270();
+	    for (s = ibuf; s < ibptr; s++) {
+		nvt_process(*s++);
+	    }
+	    return 0;
+	case TN3270E_DT_SSCP_LU_DATA:
+	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
+		return 0;
+	    }
+	    tn3270e_submode = E_SSCP;
+	    check_in3270();
+	    ctlr_write_sscp_lu(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    return 0;
+	default:
+	    /* Should do something more extraordinary here. */
+	    return 0;
 	}
-	return 0;
+    } else {
+	process_ds(ibuf, ibptr - ibuf);
+    }
+    return 0;
 }
 
 
@@ -2543,62 +2523,63 @@ net_cookout(const char *buf, size_t len)
 static void
 net_rawout(unsigned const char *buf, size_t len)
 {
-	int	nw;
+    int nw;
 
-	trace_netdata('>', buf, len);
+    trace_netdata('>', buf, len);
 
-	while (len) {
+    while (len) {
 #if defined(OMTU) /*[*/
-		size_t n2w = len;
-		int pause = 0;
+	size_t n2w = len;
+	int pause = 0;
 
-		if (n2w > OMTU) {
-			n2w = OMTU;
-			pause = 1;
-		}
-#else
-#		define n2w len
-#endif
-		if (secure_connection)
-			nw = sio_write(sio, (const char *) buf, (int)n2w);
-		else
-#if defined(LOCAL_PROCESS) /*[*/
-		if (local_process)
-			nw = write(sock, (const char *) buf, (int)n2w);
-		else
-#endif /*]*/
-			nw = send(sock, (const char *) buf, (int)n2w, 0);
-		if (nw < 0) {
-			if (secure_connection) {
-			    	connect_error("%s", sio_last_error());
-				host_disconnect(false);
-				return;
-			}
-			vtrace("RCVD socket error %d (%s)\n",
-				socket_errno(),
-				socket_strerror(socket_errno()));
-			if (socket_errno() == SE_EPIPE ||
-			    socket_errno() == SE_ECONNRESET) {
-				host_disconnect(false);
-				return;
-			} else if (socket_errno() == SE_EINTR) {
-				goto bot;
-			} else {
-				popup_a_sockerr("Socket write");
-				host_disconnect(true);
-				return;
-			}
-		}
-		ns_bsent += nw;
-		len -= nw;
-		buf += nw;
-	    bot:
-#if defined(OMTU) /*[*/
-		if (pause)
-			sleep(1);
-#endif /*]*/
-		;
+	if (n2w > OMTU) {
+	    n2w = OMTU;
+	    pause = 1;
 	}
+#else
+# define n2w len
+#endif
+	if (secure_connection) {
+	    nw = sio_write(sio, (const char *) buf, (int)n2w);
+	} else
+#if defined(LOCAL_PROCESS) /*[*/
+	if (local_process) {
+	    nw = write(sock, (const char *) buf, (int)n2w);
+	} else
+#endif /*]*/
+	{
+	    nw = send(sock, (const char *) buf, (int)n2w, 0);
+	}
+	if (nw < 0) {
+	    if (secure_connection) {
+		connect_error("%s", sio_last_error());
+		host_disconnect(false);
+		return;
+	    }
+	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
+		    socket_strerror(socket_errno()));
+	    if (socket_errno() == SE_EPIPE || socket_errno() == SE_ECONNRESET) {
+		host_disconnect(false);
+		return;
+	    } else if (socket_errno() == SE_EINTR) {
+		goto bot;
+	    } else {
+		popup_a_sockerr("Socket write");
+		host_disconnect(true);
+		return;
+	    }
+	}
+	ns_bsent += nw;
+	len -= nw;
+	buf += nw;
+    bot:
+#if defined(OMTU) /*[*/
+	if (pause) {
+	    sleep(1);
+	}
+#endif /*]*/
+    	;
+    }
 }
 
 
@@ -2668,7 +2649,7 @@ net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
 void
 net_hexnvt_out(unsigned char *buf, int len)
 {
-	net_hexnvt_out_framed(buf, len, false);
+    net_hexnvt_out_framed(buf, len, false);
 }
 
 
@@ -2679,79 +2660,78 @@ net_hexnvt_out(unsigned char *buf, int len)
 static void
 check_in3270(void)
 {
-	enum cstate new_cstate = NOT_CONNECTED;
+    enum cstate new_cstate = NOT_CONNECTED;
 
-	if (myopts[TELOPT_TN3270E]) {
-		if (!tn3270e_negotiated)
-			new_cstate = CONNECTED_UNBOUND;
-		else switch (tn3270e_submode) {
-		case E_UNBOUND:
-			new_cstate = CONNECTED_UNBOUND;
-			break;
-		case E_NVT:
-			new_cstate = CONNECTED_E_NVT;
-			break;
-		case E_3270:
-			new_cstate = CONNECTED_TN3270E;
-			break;
-		case E_SSCP:
-			new_cstate = CONNECTED_SSCP;
-			break;
-		}
-	} else if (myopts[TELOPT_BINARY] &&
-	           myopts[TELOPT_EOR] &&
-	           myopts[TELOPT_TTYPE] &&
-	           hisopts[TELOPT_BINARY] &&
-	           hisopts[TELOPT_EOR]) {
-		new_cstate = CONNECTED_3270;
-	} else if (cstate == CONNECTED_INITIAL) {
-		/* Nothing has happened, yet. */
-		return;
-	} else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-		new_cstate = linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR;
-	} else {
-		new_cstate = CONNECTED_INITIAL;
+    if (myopts[TELOPT_TN3270E]) {
+	if (!tn3270e_negotiated) {
+	    new_cstate = CONNECTED_UNBOUND;
+	} else switch (tn3270e_submode) {
+	    case E_UNBOUND:
+		new_cstate = CONNECTED_UNBOUND;
+		break;
+	    case E_NVT:
+		new_cstate = CONNECTED_E_NVT;
+		break;
+	    case E_3270:
+		new_cstate = CONNECTED_TN3270E;
+		break;
+	    case E_SSCP:
+		new_cstate = CONNECTED_SSCP;
+		break;
+	    }
+    } else if (myopts[TELOPT_BINARY] &&
+	       myopts[TELOPT_EOR] &&
+	       myopts[TELOPT_TTYPE] &&
+	       hisopts[TELOPT_BINARY] &&
+	       hisopts[TELOPT_EOR]) {
+	new_cstate = CONNECTED_3270;
+    } else if (cstate == CONNECTED_INITIAL) {
+	/* Nothing has happened, yet. */
+	return;
+    } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	new_cstate = linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR;
+    } else {
+	new_cstate = CONNECTED_INITIAL;
+    }
+
+    if (new_cstate != cstate) {
+	int was_in_e = IN_E;
+
+	/*
+	 * If we've now switched between non-TN3270E mode and
+	 * TN3270E mode, reset the LU list so we can try again
+	 * in the new mode.
+	 */
+	if (lus != NULL && was_in_e != IN_E) {
+	    curr_lu = lus;
+	    try_lu = *curr_lu;
 	}
 
-	if (new_cstate != cstate) {
-		int was_in_e = IN_E;
-
-		/*
-		 * If we've now switched between non-TN3270E mode and
-		 * TN3270E mode, reset the LU list so we can try again
-		 * in the new mode.
-		 */
-		if (lus != NULL && was_in_e != IN_E) {
-			curr_lu = lus;
-			try_lu = *curr_lu;
-		}
-
-		/* Allocate the initial 3270 input buffer. */
-		if (new_cstate >= CONNECTED_INITIAL && !ibuf_size) {
-			ibuf = (unsigned char *)Malloc(BUFSIZ);
-			ibuf_size = BUFSIZ;
-			ibptr = ibuf;
-		}
-
-		/* Reinitialize line mode. */
-		if ((new_cstate == CONNECTED_NVT && linemode) ||
-		    new_cstate == CONNECTED_E_NVT) {
-			linemode_buf_init();
-		}
-
-		/* If we fell out of TN3270E, remove the state. */
-		if (!myopts[TELOPT_TN3270E]) {
-			tn3270e_negotiated = 0;
-			tn3270e_submode = E_UNBOUND;
-			tn3270e_bound = 0;
-		}
-		vtrace("Now operating in %s mode.\n",
-			state_name[new_cstate]);
-		if (IN_3270 || IN_NVT || IN_SSCP) {
-			any_host_data = true;
-		}
-		host_in3270(new_cstate);
+	/* Allocate the initial 3270 input buffer. */
+	if (new_cstate >= CONNECTED_INITIAL && !ibuf_size) {
+	    ibuf = (unsigned char *)Malloc(BUFSIZ);
+	    ibuf_size = BUFSIZ;
+	    ibptr = ibuf;
 	}
+
+	/* Reinitialize line mode. */
+	if ((new_cstate == CONNECTED_NVT && linemode) ||
+		new_cstate == CONNECTED_E_NVT) {
+	    linemode_buf_init();
+	}
+
+	/* If we fell out of TN3270E, remove the state. */
+	if (!myopts[TELOPT_TN3270E]) {
+	    tn3270e_negotiated = 0;
+	    tn3270e_submode = E_UNBOUND;
+	    tn3270e_bound = 0;
+	}
+	vtrace("Now operating in %s mode.\n", state_name[new_cstate]);
+	if (IN_3270 || IN_NVT || IN_SSCP) {
+	    any_host_data = true;
+	}
+	host_in3270(new_cstate);
+    }
 }
 
 /*
@@ -2762,12 +2742,12 @@ check_in3270(void)
 static void
 store3270in(unsigned char c)
 {
-	if (ibptr - ibuf >= ibuf_size) {
-		ibuf_size += BUFSIZ;
-		ibuf = (unsigned char *)Realloc((char *)ibuf, ibuf_size);
-		ibptr = ibuf + ibuf_size - BUFSIZ;
-	}
-	*ibptr++ = c;
+    if (ibptr - ibuf >= ibuf_size) {
+	ibuf_size += BUFSIZ;
+	ibuf = (unsigned char *)Realloc((char *)ibuf, ibuf_size);
+	ibptr = ibuf + ibuf_size - BUFSIZ;
+    }
+    *ibptr++ = c;
 }
 
 /*
@@ -2779,23 +2759,23 @@ store3270in(unsigned char c)
 void
 space3270out(size_t n)
 {
-	size_t nc = 0;	/* amount of data currently in obuf */
-	unsigned more = 0;
+    size_t nc = 0;	/* amount of data currently in obuf */
+    unsigned more = 0;
 
-	if (obuf_size)
-		nc = obptr - obuf;
+    if (obuf_size) {
+	nc = obptr - obuf;
+    }
 
-	while ((nc + n + EH_SIZE) > (obuf_size + more)) {
-		more += BUFSIZ;
-	}
+    while ((nc + n + EH_SIZE) > (obuf_size + more)) {
+	more += BUFSIZ;
+    }
 
-	if (more) {
-		obuf_size += more;
-		obuf_base = (unsigned char *)Realloc((char *)obuf_base,
-			obuf_size);
-		obuf = obuf_base + EH_SIZE;
-		obptr = obuf + nc;
-	}
+    if (more) {
+	obuf_size += more;
+	obuf_base = (unsigned char *)Realloc((char *)obuf_base, obuf_size);
+	obuf = obuf_base + EH_SIZE;
+	obptr = obuf + nc;
+    }
 }
 
 
@@ -2894,17 +2874,19 @@ opt(unsigned char c)
 void
 trace_netdata(char direction, unsigned const char *buf, size_t len)
 {
-	size_t offset;
+    size_t offset;
 
-	if (!toggled(TRACING))
-		return;
-	for (offset = 0; offset < len; offset++) {
-		if (!(offset % LINEDUMP_MAX))
-			ntvtrace("%s%c 0x%-3x ",
-			    (offset? "\n": ""), direction, (unsigned)offset);
-		ntvtrace("%02x", buf[offset]);
+    if (!toggled(TRACING)) {
+	    return;
+    }
+    for (offset = 0; offset < len; offset++) {
+	if (!(offset % LINEDUMP_MAX)) {
+	    ntvtrace("%s%c 0x%-3x ", (offset? "\n": ""), direction,
+		    (unsigned)offset);
 	}
-	ntvtrace("\n");
+	ntvtrace("%02x", buf[offset]);
+    }
+    ntvtrace("\n");
 }
 
 
@@ -2918,63 +2900,63 @@ trace_netdata(char direction, unsigned const char *buf, size_t len)
 void
 net_output(void)
 {
-	static unsigned char *xobuf = NULL;
-	static int xobuf_len = 0;
-	int need_resize = 0;
-	unsigned char *nxoptr, *xoptr;
+    static unsigned char *xobuf = NULL;
+    static int xobuf_len = 0;
+    int need_resize = 0;
+    unsigned char *nxoptr, *xoptr;
 
 #define BSTART	((IN_TN3270E || IN_SSCP)? obuf_base: obuf)
 
-	/* Set the TN3720E header. */
-	if (IN_TN3270E || IN_SSCP) {
-		tn3270e_header *h = (tn3270e_header *)obuf_base;
+    /* Set the TN3720E header. */
+    if (IN_TN3270E || IN_SSCP) {
+	tn3270e_header *h = (tn3270e_header *)obuf_base;
 
-		/* Check for sending a TN3270E response. */
-		if (response_required == TN3270E_RSF_ALWAYS_RESPONSE) {
-			tn3270e_ack();
-			response_required = TN3270E_RSF_NO_RESPONSE;
-		}
-
-		/* Set the outbound TN3270E header. */
-		h->data_type = IN_TN3270E?
-			TN3270E_DT_3270_DATA: TN3270E_DT_SSCP_LU_DATA;
-		h->request_flag = 0;
-		h->response_flag = 0;
-		h->seq_number[0] = (e_xmit_seq >> 8) & 0xff;
-		h->seq_number[1] = e_xmit_seq & 0xff;
-
-		vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
-			IN_TN3270E? "3270-DATA": "SSCP-LU-DATA", e_xmit_seq);
-		if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
-			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
-		}
+	/* Check for sending a TN3270E response. */
+	if (response_required == TN3270E_RSF_ALWAYS_RESPONSE) {
+	    tn3270e_ack();
+	    response_required = TN3270E_RSF_NO_RESPONSE;
 	}
 
-	/* Reallocate the expanded output buffer. */
-	while (xobuf_len <  (obptr - BSTART + 1) * 2) {
-		xobuf_len += BUFSZ;
-		need_resize++;
-	}
-	if (need_resize) {
-		Replace(xobuf, (unsigned char *)Malloc(xobuf_len));
-	}
+	/* Set the outbound TN3270E header. */
+	h->data_type = IN_TN3270E? TN3270E_DT_3270_DATA:
+	    TN3270E_DT_SSCP_LU_DATA;
+	h->request_flag = 0;
+	h->response_flag = 0;
+	h->seq_number[0] = (e_xmit_seq >> 8) & 0xff;
+	h->seq_number[1] = e_xmit_seq & 0xff;
 
-	/* Copy and expand IACs. */
-	xoptr = xobuf;
-	nxoptr = BSTART;
-	while (nxoptr < obptr) {
-		if ((*xoptr++ = *nxoptr++) == IAC) {
-			*xoptr++ = IAC;
-		}
+	vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
+		IN_TN3270E? "3270-DATA": "SSCP-LU-DATA", e_xmit_seq);
+	if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
+		e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
 	}
+    }
 
-	/* Append the IAC EOR and transmit. */
-	*xoptr++ = IAC;
-	*xoptr++ = EOR;
-	net_rawout(xobuf, xoptr - xobuf);
+    /* Reallocate the expanded output buffer. */
+    while (xobuf_len <  (obptr - BSTART + 1) * 2) {
+	xobuf_len += BUFSZ;
+	need_resize++;
+    }
+    if (need_resize) {
+	Replace(xobuf, (unsigned char *)Malloc(xobuf_len));
+    }
 
-	vtrace("SENT EOR\n");
-	ns_rsent++;
+    /* Copy and expand IACs. */
+    xoptr = xobuf;
+    nxoptr = BSTART;
+    while (nxoptr < obptr) {
+	if ((*xoptr++ = *nxoptr++) == IAC) {
+	    *xoptr++ = IAC;
+	}
+    }
+
+    /* Append the IAC EOR and transmit. */
+    *xoptr++ = IAC;
+    *xoptr++ = EOR;
+    net_rawout(xobuf, xoptr - xobuf);
+
+    vtrace("SENT EOR\n");
+    ns_rsent++;
 #undef BSTART
 }
 
@@ -2982,95 +2964,100 @@ net_output(void)
 static void
 tn3270e_ack(void)
 {
-	unsigned char rsp_buf[10];
-	tn3270e_header *h_in = (tn3270e_header *)ibuf;
-	int rsp_len = 0;
+    unsigned char rsp_buf[10];
+    tn3270e_header *h_in = (tn3270e_header *)ibuf;
+    int rsp_len = 0;
 
-	rsp_len = 0;
-	rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
-	rsp_buf[rsp_len++] = 0;				    /* request_flag */
-	rsp_buf[rsp_len++] = TN3270E_RSF_POSITIVE_RESPONSE; /* response_flag */	
-	rsp_buf[rsp_len++] = h_in->seq_number[0];	    /* seq_number[0] */
-	if (h_in->seq_number[0] == IAC)
-		rsp_buf[rsp_len++] = IAC;
-	rsp_buf[rsp_len++] = h_in->seq_number[1];	    /* seq_number[1] */
-	if (h_in->seq_number[1] == IAC)
-		rsp_buf[rsp_len++] = IAC;
-	rsp_buf[rsp_len++] = TN3270E_POS_DEVICE_END;
+    rsp_len = 0;
+    rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
+    rsp_buf[rsp_len++] = 0;			    /* request_flag */
+    rsp_buf[rsp_len++] = TN3270E_RSF_POSITIVE_RESPONSE; /* response_flag */	
+    rsp_buf[rsp_len++] = h_in->seq_number[0];	    /* seq_number[0] */
+    if (h_in->seq_number[0] == IAC) {
 	rsp_buf[rsp_len++] = IAC;
-	rsp_buf[rsp_len++] = EOR;
-	vtrace("SENT TN3270E(RESPONSE POSITIVE-RESPONSE %u) DEVICE-END\n",
-		h_in->seq_number[0] << 8 | h_in->seq_number[1]);
-	net_rawout(rsp_buf, rsp_len);
+    }
+    rsp_buf[rsp_len++] = h_in->seq_number[1];	    /* seq_number[1] */
+    if (h_in->seq_number[1] == IAC) {
+	rsp_buf[rsp_len++] = IAC;
+    }
+    rsp_buf[rsp_len++] = TN3270E_POS_DEVICE_END;
+    rsp_buf[rsp_len++] = IAC;
+    rsp_buf[rsp_len++] = EOR;
+    vtrace("SENT TN3270E(RESPONSE POSITIVE-RESPONSE %u) DEVICE-END\n",
+	    h_in->seq_number[0] << 8 | h_in->seq_number[1]);
+    net_rawout(rsp_buf, rsp_len);
 }
 
 /* Send a TN3270E negative response to the server. */
 static void
 tn3270e_nak(enum pds rv)
 {
-	unsigned char rsp_buf[10];
-	tn3270e_header *h_in = (tn3270e_header *)ibuf;
-	int rsp_len = 0;
-	char *neg = NULL;
+    unsigned char rsp_buf[10];
+    tn3270e_header *h_in = (tn3270e_header *)ibuf;
+    int rsp_len = 0;
+    char *neg = NULL;
 
-	rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
-	rsp_buf[rsp_len++] = 0;				    /* request_flag */
-	rsp_buf[rsp_len++] = TN3270E_RSF_NEGATIVE_RESPONSE; /* response_flag */
-	rsp_buf[rsp_len++] = h_in->seq_number[0];	    /* seq_number[0] */
-	if (h_in->seq_number[0] == IAC)
-		rsp_buf[rsp_len++] = IAC;
-	rsp_buf[rsp_len++] = h_in->seq_number[1];	    /* seq_number[1] */
-	if (h_in->seq_number[1] == IAC)
-		rsp_buf[rsp_len++] = IAC;
-	switch (rv) {
-	default:
-	case PDS_BAD_CMD:
-		rsp_buf[rsp_len++] = TN3270E_NEG_COMMAND_REJECT;
-		neg = "COMMAND-REJECT";
-		break;
-	case PDS_BAD_ADDR:
-		rsp_buf[rsp_len++] = TN3270E_NEG_OPERATION_CHECK;
-		neg = "OPERATION-CHECK";
-		break;
-	}
+    rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
+    rsp_buf[rsp_len++] = 0;			    /* request_flag */
+    rsp_buf[rsp_len++] = TN3270E_RSF_NEGATIVE_RESPONSE; /* response_flag */
+    rsp_buf[rsp_len++] = h_in->seq_number[0];	    /* seq_number[0] */
+    if (h_in->seq_number[0] == IAC) {
 	rsp_buf[rsp_len++] = IAC;
-	rsp_buf[rsp_len++] = EOR;
-	vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
-		h_in->seq_number[0] << 8 | h_in->seq_number[1], neg);
-	net_rawout(rsp_buf, rsp_len);
+    }
+    rsp_buf[rsp_len++] = h_in->seq_number[1];	    /* seq_number[1] */
+    if (h_in->seq_number[1] == IAC) {
+	rsp_buf[rsp_len++] = IAC;
+    }
+    switch (rv) {
+    default:
+    case PDS_BAD_CMD:
+	rsp_buf[rsp_len++] = TN3270E_NEG_COMMAND_REJECT;
+	neg = "COMMAND-REJECT";
+	break;
+    case PDS_BAD_ADDR:
+	rsp_buf[rsp_len++] = TN3270E_NEG_OPERATION_CHECK;
+	neg = "OPERATION-CHECK";
+	break;
+    }
+    rsp_buf[rsp_len++] = IAC;
+    rsp_buf[rsp_len++] = EOR;
+    vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
+	    h_in->seq_number[0] << 8 | h_in->seq_number[1], neg);
+    net_rawout(rsp_buf, rsp_len);
 }
 
 /* Add a dummy TN3270E header to the output buffer. */
 bool
 net_add_dummy_tn3270e(void)
 {
-	tn3270e_header *h;
+    tn3270e_header *h;
 
-	if (!IN_E || tn3270e_submode == E_UNBOUND)
-		return false;
+    if (!IN_E || tn3270e_submode == E_UNBOUND) {
+	return false;
+    }
 
-	space3270out(EH_SIZE);
-	h = (tn3270e_header *)obptr;
+    space3270out(EH_SIZE);
+    h = (tn3270e_header *)obptr;
 
-	switch (tn3270e_submode) {
-	case E_UNBOUND:
-		break;
-	case E_NVT:
-		h->data_type = TN3270E_DT_NVT_DATA;
-		break;
-	case E_SSCP:
-		h->data_type = TN3270E_DT_SSCP_LU_DATA;
-		break;
-	case E_3270:
-		h->data_type = TN3270E_DT_3270_DATA;
-		break;
-	}
-	h->request_flag = 0;
-	h->response_flag = TN3270E_RSF_NO_RESPONSE;
-	h->seq_number[0] = 0;
-	h->seq_number[1] = 0;
-	obptr += EH_SIZE;
-	return true;
+    switch (tn3270e_submode) {
+    case E_UNBOUND:
+	break;
+    case E_NVT:
+	h->data_type = TN3270E_DT_NVT_DATA;
+	break;
+    case E_SSCP:
+	h->data_type = TN3270E_DT_SSCP_LU_DATA;
+	break;
+    case E_3270:
+	h->data_type = TN3270E_DT_3270_DATA;
+	break;
+    }
+    h->request_flag = 0;
+    h->response_flag = TN3270E_RSF_NO_RESPONSE;
+    h->seq_number[0] = 0;
+    h->seq_number[1] = 0;
+    obptr += EH_SIZE;
+    return true;
 }
 
 /*
@@ -3079,8 +3066,8 @@ net_add_dummy_tn3270e(void)
 void
 net_add_eor(unsigned char *buf, size_t len)
 {
-	buf[len++] = IAC;
-	buf[len++] = EOR;
+    buf[len++] = IAC;
+    buf[len++] = EOR;
 }
 
 
@@ -3091,16 +3078,16 @@ net_add_eor(unsigned char *buf, size_t len)
 void
 net_sendc(char c)
 {
-	if (c == '\r' && !linemode
+    if (c == '\r' && !linemode
 #if defined(LOCAL_PROCESS) /*[*/
-				   && !local_process
+			       && !local_process
 #endif /*]*/
-						    ) {
+						) {
 		/* CR must be quoted */
-		net_cookout("\r\0", 2);
-	} else {
-		net_cookout(&c, 1);
-	}
+	net_cookout("\r\0", 2);
+    } else {
+	net_cookout(&c, 1);
+    }
 }
 
 
@@ -3111,7 +3098,7 @@ net_sendc(char c)
 void
 net_sends(const char *s)
 {
-	net_cookout(s, strlen(s));
+    net_cookout(s, strlen(s));
 }
 
 
@@ -3252,113 +3239,115 @@ net_abort(void)
 bool
 net_snap_options(void)
 {
-	bool any = false;
-	int i;
-	static unsigned char ttype_str[] = {
-		IAC, DO, TELOPT_TTYPE,
-		IAC, SB, TELOPT_TTYPE, TELQUAL_SEND, IAC, SE
-	};
+    bool any = false;
+    int i;
+    static unsigned char ttype_str[] = {
+	IAC, DO, TELOPT_TTYPE,
+	IAC, SB, TELOPT_TTYPE, TELQUAL_SEND, IAC, SE
+    };
 
-	if (!CONNECTED)
-		return false;
+    if (!CONNECTED) {
+	return false;
+    }
 
-	obptr = obuf;
+    obptr = obuf;
 
-	/* Do TTYPE first. */
-	if (myopts[TELOPT_TTYPE]) {
-		unsigned j;
+    /* Do TTYPE first. */
+    if (myopts[TELOPT_TTYPE]) {
+	unsigned j;
 
-		space3270out(sizeof(ttype_str));
-		for (j = 0; j < sizeof(ttype_str); j++)
-			*obptr++ = ttype_str[j];
+	space3270out(sizeof(ttype_str));
+	for (j = 0; j < sizeof(ttype_str); j++) {
+	    *obptr++ = ttype_str[j];
 	}
+    }
 
-	/* Do the other options. */
-	for (i = 0; i < N_OPTS; i++) {
-		space3270out(6);
-		if (i == TELOPT_TTYPE)
-			continue;
-		if (hisopts[i]) {
-			*obptr++ = IAC;
-			*obptr++ = WILL;
-			*obptr++ = (unsigned char)i;
-			any = true;
-		}
-		if (myopts[i]) {
-			*obptr++ = IAC;
-			*obptr++ = DO;
-			*obptr++ = (unsigned char)i;
-			any = true;
-		}
+    /* Do the other options. */
+    for (i = 0; i < N_OPTS; i++) {
+	space3270out(6);
+	if (i == TELOPT_TTYPE) {
+	    continue;
 	}
-
-	/* If we're in TN3270E mode, snap the subnegotations as well. */
-	if (myopts[TELOPT_TN3270E]) {
-		any = true;
-
-		space3270out(5 +
-			((connected_type != NULL)? strlen(connected_type): 0) +
-			((connected_lu != NULL)? + strlen(connected_lu): 0) +
-			2);
-		*obptr++ = IAC;
-		*obptr++ = SB;
-		*obptr++ = TELOPT_TN3270E;
-		*obptr++ = TN3270E_OP_DEVICE_TYPE;
-		*obptr++ = TN3270E_OP_IS;
-		if (connected_type != NULL) {
-			(void) memcpy(obptr, connected_type,
-					strlen(connected_type));
-			obptr += strlen(connected_type);
-		}
-		if (connected_lu != NULL) {
-			*obptr++ = TN3270E_OP_CONNECT;
-			(void) memcpy(obptr, connected_lu,
-					strlen(connected_lu));
-			obptr += strlen(connected_lu);
-		}
-		*obptr++ = IAC;
-		*obptr++ = SE;
-
-		space3270out(38);
-		(void) memcpy(obptr, functions_req, 4);
-		obptr += 4;
-		*obptr++ = TN3270E_OP_IS;
-		for (i = 0; i < MX8; i++) {
-			if (b8_bit_is_set(&e_funcs, i)) {
-				*obptr++ = i;
-			}
-		}
-		*obptr++ = IAC;
-		*obptr++ = SE;
-
-		if (tn3270e_bound) {
-			tn3270e_header *h;
-			size_t i;
-			int xlen = 0;
-
-			for (i = 0; i < bind_image_len; i++)  {
-			    if (bind_image[i] == 0xff)
-				xlen++;
-			}
-
-			space3270out(EH_SIZE + bind_image_len + xlen + 3);
-			h = (tn3270e_header *)obptr;
-			h->data_type = TN3270E_DT_BIND_IMAGE;
-			h->request_flag = 0;
-			h->response_flag = 0;
-			h->seq_number[0] = 0;
-			h->seq_number[1] = 0;
-			obptr += EH_SIZE;
-			for (i = 0; i < bind_image_len; i++) {
-			    if (bind_image[i] == 0xff)
-				*obptr++ = 0xff;
-			    *obptr++ = bind_image[i];
-			}
-			*obptr++ = IAC;
-			*obptr++ = EOR;
-		}
+	if (hisopts[i]) {
+	    *obptr++ = IAC;
+	    *obptr++ = WILL;
+	    *obptr++ = (unsigned char)i;
+	    any = true;
 	}
-	return any;
+	if (myopts[i]) {
+	    *obptr++ = IAC;
+	    *obptr++ = DO;
+	    *obptr++ = (unsigned char)i;
+	    any = true;
+	}
+    }
+
+    /* If we're in TN3270E mode, snap the subnegotations as well. */
+    if (myopts[TELOPT_TN3270E]) {
+	any = true;
+
+	space3270out(5 +
+		((connected_type != NULL)? strlen(connected_type): 0) +
+		((connected_lu != NULL)? + strlen(connected_lu): 0) +
+		2);
+	*obptr++ = IAC;
+	*obptr++ = SB;
+	*obptr++ = TELOPT_TN3270E;
+	*obptr++ = TN3270E_OP_DEVICE_TYPE;
+	*obptr++ = TN3270E_OP_IS;
+	if (connected_type != NULL) {
+	    memcpy(obptr, connected_type, strlen(connected_type));
+	    obptr += strlen(connected_type);
+	}
+	if (connected_lu != NULL) {
+	    *obptr++ = TN3270E_OP_CONNECT;
+	    memcpy(obptr, connected_lu, strlen(connected_lu));
+	    obptr += strlen(connected_lu);
+	}
+	*obptr++ = IAC;
+	*obptr++ = SE;
+
+	space3270out(38);
+	memcpy(obptr, functions_req, 4);
+	obptr += 4;
+	*obptr++ = TN3270E_OP_IS;
+	for (i = 0; i < MX8; i++) {
+	    if (b8_bit_is_set(&e_funcs, i)) {
+		*obptr++ = i;
+	    }
+	}
+	*obptr++ = IAC;
+	*obptr++ = SE;
+
+	if (tn3270e_bound) {
+	    tn3270e_header *h;
+	    size_t i;
+	    int xlen = 0;
+
+	    for (i = 0; i < bind_image_len; i++)  {
+		if (bind_image[i] == 0xff)
+		    xlen++;
+	    }
+
+	    space3270out(EH_SIZE + bind_image_len + xlen + 3);
+	    h = (tn3270e_header *)obptr;
+	    h->data_type = TN3270E_DT_BIND_IMAGE;
+	    h->request_flag = 0;
+	    h->response_flag = 0;
+	    h->seq_number[0] = 0;
+	    h->seq_number[1] = 0;
+	    obptr += EH_SIZE;
+	    for (i = 0; i < bind_image_len; i++) {
+		if (bind_image[i] == 0xff) {
+		    *obptr++ = 0xff;
+		}
+		*obptr++ = bind_image[i];
+	    }
+	    *obptr++ = IAC;
+	    *obptr++ = EOR;
+	}
+    }
+    return any;
 }
 
 /*
