@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015 Paul Mattes.
+ * Copyright (c) 1994-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,15 +53,15 @@
 
 /* Typedefs */
 typedef struct {
-	ptype_t ptype;		/* Type P_XXX (text, html, rtf) */
-	unsigned opts;		/* FPS_XXX options */
-	bool need_separator;	/* Pending page indicator */
-	bool broken;		/* If set, output has failed already. */
-	int spp;		/* Screens per page. */
-	int screens;		/* Screen count this page. */
-	FILE *file;		/* Stream to write to */
-	char *caption;		/* Caption with %T% expanded */
-	char *printer_name;	/* Printer name (used by GDI) */
+    ptype_t ptype;		/* Type P_XXX (text, html, rtf) */
+    unsigned opts;		/* FPS_XXX options */
+    bool need_separator;	/* Pending page indicator */
+    bool broken;		/* If set, output has failed already. */
+    int spp;			/* Screens per page. */
+    int screens;		/* Screen count this page. */
+    FILE *file;			/* Stream to write to */
+    char *caption;		/* Caption with %T% expanded */
+    char *printer_name;		/* Printer name (used by GDI) */
 } real_fps_t;
 
 /* Globals */
@@ -74,19 +74,20 @@ typedef struct {
 static int
 color_from_fa(unsigned char fa)
 {
-	static int field_colors[4] = {
-		HOST_COLOR_GREEN,        /* default */
-		HOST_COLOR_RED,          /* intensified */
-		HOST_COLOR_BLUE,         /* protected */
-		HOST_COLOR_WHITE         /* protected, intensified */
+    static int field_colors[4] = {
+	HOST_COLOR_GREEN,        /* default */
+	HOST_COLOR_RED,          /* intensified */
+	HOST_COLOR_BLUE,         /* protected */
+	HOST_COLOR_WHITE         /* protected, intensified */
 #       define DEFCOLOR_MAP(f) \
-		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
-	};
+	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
+    };
 
-	if (appres.m3279)
-		return field_colors[DEFCOLOR_MAP(fa)];
-	else
-		return HOST_COLOR_GREEN;
+    if (appres.m3279) {
+	return field_colors[DEFCOLOR_MAP(fa)];
+    } else {
+	return HOST_COLOR_GREEN;
+    }
 }
 
 /*
@@ -95,28 +96,29 @@ color_from_fa(unsigned char fa)
 static char *
 html_color(int color)
 {
-	static char *html_color_map[] = {
-		"black",
-		"deepSkyBlue",
-		"red",
-		"pink",
-		"green",
-		"turquoise",
-		"yellow",
-		"white",
-		"black",
-		"blue3",
-		"orange",
-		"purple",
-		"paleGreen",
-		"paleTurquoise2",
-		"grey",
-		"white"
-	};
-	if (color >= HOST_COLOR_NEUTRAL_BLACK && color <= HOST_COLOR_WHITE)
-		return html_color_map[color];
-	else
-		return "black";
+    static char *html_color_map[] = {
+	"black",
+	"deepSkyBlue",
+	"red",
+	"pink",
+	"green",
+	"turquoise",
+	"yellow",
+	"white",
+	"black",
+	"blue3",
+	"orange",
+	"purple",
+	"paleGreen",
+	"paleTurquoise2",
+	"grey",
+	"white"
+    };
+    if (color >= HOST_COLOR_NEUTRAL_BLACK && color <= HOST_COLOR_WHITE) {
+	return html_color_map[color];
+    } else {
+	return "black";
+    }
 }
 
 /* Convert a caption string to UTF-8 RTF. */
@@ -377,382 +379,413 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 fps_status_t
 fprint_screen_body(fps_t ofps)
 {
-	real_fps_t *fps = (real_fps_t *)(void *)ofps;
-	register int i;
-	ucs4_t uc;
-	int ns = 0;
-	int nr = 0;
-	bool any = false;
-	int fa_addr = find_field_attribute(0);
-	unsigned char fa = ea_buf[fa_addr].fa;
-	int fa_fg, current_fg;
-	int fa_bg, current_bg;
-	bool fa_high, current_high;
-	bool fa_ital, current_ital;
-	bool mi;
+    real_fps_t *fps = (real_fps_t *)(void *)ofps;
+    register int i;
+    ucs4_t uc;
+    int ns = 0;
+    int nr = 0;
+    bool any = false;
+    int fa_addr = find_field_attribute(0);
+    unsigned char fa = ea_buf[fa_addr].fa;
+    int fa_fg, current_fg;
+    int fa_bg, current_bg;
+    bool fa_high, current_high;
+    bool fa_ital, current_ital;
+    bool mi;
 #if defined(_WIN32) /*[*/
-	gdi_header_t h;
+    gdi_header_t h;
 #endif /*]*/
-	fps_status_t rv = FPS_STATUS_SUCCESS;
+    fps_status_t rv = FPS_STATUS_SUCCESS;
 
-	/* Quick short-circuit. */
-	if (fps == NULL || fps->broken) {
-		return FPS_STATUS_ERROR;
+    /* Quick short-circuit. */
+    if (fps == NULL || fps->broken) {
+	return FPS_STATUS_ERROR;
+    }
+
+    mi = ((fps->opts & FPS_MODIFIED_ITALIC)) != 0;
+    if (ea_buf[fa_addr].fg) {
+	fa_fg = ea_buf[fa_addr].fg & 0x0f;
+    } else {
+	fa_fg = color_from_fa(fa);
+    }
+    current_fg = fa_fg;
+
+    if (ea_buf[fa_addr].bg) {
+	fa_bg = ea_buf[fa_addr].bg & 0x0f;
+    } else {
+	fa_bg = HOST_COLOR_BLACK;
+    }
+    current_bg = fa_bg;
+
+    if (ea_buf[fa_addr].gr & GR_INTENSIFY) {
+	fa_high = true;
+    } else {
+	fa_high = FA_IS_HIGH(fa);
+    }
+    current_high = fa_high;
+    fa_ital = mi && FA_IS_MODIFIED(fa);
+    current_ital = fa_ital;
+
+    switch (fps->ptype) {
+    case P_RTF:
+	if (fps->need_separator) {
+	    if (fps->screens < fps->spp) {
+		if (fprintf(fps->file, "\\par\n") < 0) {
+		    FAIL;
+		}
+	    } else {
+		if (fprintf(fps->file, "\n\\page\n") < 0) {
+		    FAIL;
+		}
+		fps->screens = 0;
+	    }
 	}
-
-	mi = ((fps->opts & FPS_MODIFIED_ITALIC)) != 0;
-	if (ea_buf[fa_addr].fg)
-		fa_fg = ea_buf[fa_addr].fg & 0x0f;
-	else
-		fa_fg = color_from_fa(fa);
-	current_fg = fa_fg;
-
-	if (ea_buf[fa_addr].bg)
-		fa_bg = ea_buf[fa_addr].bg & 0x0f;
-	else
-		fa_bg = HOST_COLOR_BLACK;
-	current_bg = fa_bg;
-
-	if (ea_buf[fa_addr].gr & GR_INTENSIFY)
-		fa_high = true;
-	else
-		fa_high = FA_IS_HIGH(fa);
-	current_high = fa_high;
-	fa_ital = mi && FA_IS_MODIFIED(fa);
-	current_ital = fa_ital;
-
-	switch (fps->ptype) {
-	case P_RTF:
-		if (fps->need_separator) {
-		    	if (fps->screens < fps->spp) {
-				if (fprintf(fps->file, "\\par\n") < 0) {
-				    	FAIL;
-				}
-			} else {
-				if (fprintf(fps->file, "\n\\page\n") < 0) {
-					FAIL;
-				}
-				fps->screens = 0;
-			}
+	if (current_high) {
+	    if (fprintf(fps->file, "\\b ") < 0) {
+		FAIL;
+	    }
+	}
+	break;
+    case P_HTML:
+	if (fprintf(fps->file, "  <table border=0>"
+	       "<tr bgcolor=black><td>"
+	       "<pre><span style=\"color:%s;"
+				   "background:%s;"
+				   "font-weight:%s;"
+				   "font-style:%s\">",
+	       html_color(current_fg),
+	       html_color(current_bg),
+	       current_high? "bold": "normal",
+	       current_ital? "italic": "normal") < 0) {
+	    FAIL;
+	}
+	break;
+    case P_TEXT:
+	if (fps->need_separator) {
+	    if ((fps->opts & FPS_FF_SEP) && fps->screens >= fps->spp) {
+		if (fputc('\f', fps->file) < 0) {
+		    FAIL;
 		}
-		if (current_high) {
-			if (fprintf(fps->file, "\\b ") < 0) {
-				FAIL;
-			}
-		}
-		break;
-	case P_HTML:
-		if (fprintf(fps->file, "  <table border=0>"
-			   "<tr bgcolor=black><td>"
-			   "<pre><span style=\"color:%s;"
-			                       "background:%s;"
-					       "font-weight:%s;"
-					       "font-style:%s\">",
-			   html_color(current_fg),
-			   html_color(current_bg),
-			   current_high? "bold": "normal",
-			   current_ital? "italic": "normal") < 0)
+		fps->screens = 0;
+	    } else {
+		for (i = 0; i < COLS; i++) {
+		    if (fputc('=', fps->file) < 0) {
 			FAIL;
-		break;
-	case P_TEXT:
-		if (fps->need_separator) {
-			if ((fps->opts & FPS_FF_SEP) &&
-				fps->screens >= fps->spp) {
-
-				if (fputc('\f', fps->file) < 0)
-					FAIL;
-				fps->screens = 0;
-			} else {
-			    	for (i = 0; i < COLS; i++) {
-					if (fputc('=', fps->file) < 0)
-						FAIL;
-				}
-				if (fputc('\n', fps->file) < 0)
-					FAIL;
-			}
+		    }
 		}
-		break;
+		if (fputc('\n', fps->file) < 0) {
+		    FAIL;
+		}
+	    }
+	}
+	break;
 #if defined(_WIN32) /*[*/
-	case P_GDI:
-		/*
-		 * Write the current screen buffer to the file.
-		 * We will read it back and print it when we are done.
-		 */
-		h.signature = GDI_SIGNATURE;
-		h.rows = ROWS;
-		h.cols = COLS;
-		if (fwrite(&h, sizeof(h), 1, fps->file) != 1) {
-			FAIL;
-		}
-		if (fwrite(ea_buf, sizeof(struct ea), ROWS * COLS, fps->file)
-			    != ROWS * COLS) {
-			FAIL;
-		}
-		fflush(fps->file);
-		rv = FPS_STATUS_SUCCESS_WRITTEN;
-		goto done;
+    case P_GDI:
+	/*
+	 * Write the current screen buffer to the file.
+	 * We will read it back and print it when we are done.
+	 */
+	h.signature = GDI_SIGNATURE;
+	h.rows = ROWS;
+	h.cols = COLS;
+	if (fwrite(&h, sizeof(h), 1, fps->file) != 1) {
+	    FAIL;
+	}
+	if (fwrite(ea_buf, sizeof(struct ea), ROWS * COLS, fps->file)
+		    != ROWS * COLS) {
+	    FAIL;
+	}
+	fflush(fps->file);
+	rv = FPS_STATUS_SUCCESS_WRITTEN;
+	goto done;
 #endif /*]*/
-	default:
-		break;
-	}
+    default:
+	break;
+    }
 
-	fps->need_separator = false;
+    fps->need_separator = false;
 
-	for (i = 0; i < ROWS*COLS; i++) {
-		char mb[16];
-		int nmb;
+    for (i = 0; i < ROWS*COLS; i++) {
+	char mb[16];
+	int nmb;
 
-		uc = 0;
+	uc = 0;
 
-		if (i && !(i % COLS)) {
-		    	if (fps->ptype == P_HTML) {
-			    	if (fputc('\n', fps->file) < 0)
-					FAIL;
-			} else
-				nr++;
-			ns = 0;
+	if (i && !(i % COLS)) {
+	    if (fps->ptype == P_HTML) {
+		if (fputc('\n', fps->file) < 0) {
+		    FAIL;
 		}
-		if (ea_buf[i].fa) {
-			uc = ' ';
-			fa = ea_buf[i].fa;
-			if (ea_buf[i].fg)
-				fa_fg = ea_buf[i].fg & 0x0f;
-			else
-				fa_fg = color_from_fa(fa);
-			if (ea_buf[i].bg)
-				fa_bg = ea_buf[i].bg & 0x0f;
-			else
-				fa_bg = HOST_COLOR_BLACK;
-			if (ea_buf[i].gr & GR_INTENSIFY)
-				fa_high = true;
-			else
-				fa_high = FA_IS_HIGH(fa);
-			fa_ital = mi && FA_IS_MODIFIED(fa);
-		}
-		if (FA_IS_ZERO(fa)) {
-			if (ctlr_dbcs_state(i) == DBCS_LEFT)
-			    	uc = 0x3000;
-			else
-				uc = ' ';
-		} else if (is_nvt(&ea_buf[i], false, &uc)) {
-		    	/* NVT-mode text. */
-		    	if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
-			    	continue;
-			}
-		} else {
-		    	/* Convert EBCDIC to Unicode. */
-			switch (ctlr_dbcs_state(i)) {
-			case DBCS_NONE:
-			case DBCS_SB:
-			    	uc = ebcdic_to_unicode(ea_buf[i].ec,
-					ea_buf[i].cs, EUO_NONE);
-				if (uc == 0)
-				    	uc = ' ';
-				break;
-			case DBCS_LEFT:
-				uc = ebcdic_to_unicode(
-					(ea_buf[i].ec << 8) |
-					 ea_buf[i + 1].ec,
-					CS_BASE, EUO_NONE);
-				if (uc == 0)
-				    	uc = 0x3000;
-				break;
-			case DBCS_RIGHT:
-				/* skip altogether, we took care of it above */
-				continue;
-			default:
-				uc = ' ';
-				break;
-			}
-		}
-
-		/* Translate to a type-specific format and write it out. */
-		if (uc == ' ' && fps->ptype != P_HTML) {
-			ns++;
-		} else if (uc == 0x3000) {
-		    	if (fps->ptype == P_HTML) {
-			    	if (fprintf(fps->file, "  ") < 0)
-					FAIL;
-			} else
-				ns += 2;
-		} else {
-			while (nr) {
-			    	if (fps->ptype == P_RTF)
-				    	if (fprintf(fps->file, "\\par") < 0)
-						FAIL;
-				if (fputc('\n', fps->file) < 0)
-					FAIL;
-				nr--;
-			}
-			while (ns) {
-			    	if (fps->ptype == P_RTF) {
-				    	if (fprintf(fps->file, "\\~") < 0)
-						FAIL;
-				} else
-					if (fputc(' ', fps->file) < 0)
-						FAIL;
-				ns--;
-			}
-			if (fps->ptype == P_RTF) {
-				bool high;
-
-				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = true;
-				else
-					high = fa_high;
-				if (high != current_high) {
-					if (high) {
-						if (fprintf(fps->file, "\\b ")
-							    < 0)
-							FAIL;
-					} else
-						if (fprintf(fps->file, "\\b0 ")
-							    < 0)
-							FAIL;
-					current_high = high;
-				}
-			}
-			if (fps->ptype == P_HTML) {
-				int fg_color, bg_color;
-				bool high;
-
-				if (ea_buf[i].fg)
-					fg_color = ea_buf[i].fg & 0x0f;
-				else
-					fg_color = fa_fg;
-				if (ea_buf[i].bg)
-					bg_color = ea_buf[i].bg & 0x0f;
-				else
-					bg_color = fa_bg;
-				if (ea_buf[i].gr & GR_REVERSE) {
-				    	int tmp;
-
-					tmp = fg_color;
-					fg_color = bg_color;
-					bg_color = tmp;
-				}
-
-				if (i == cursor_addr) {
-				    	fg_color = (bg_color == HOST_COLOR_RED)?
-							HOST_COLOR_BLACK: bg_color;
-					bg_color = HOST_COLOR_RED;
-				}
-				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = true;
-				else
-					high = fa_high;
-
-				if (fg_color != current_fg ||
-				    bg_color != current_bg ||
-				    high != current_high ||
-				    fa_ital != current_ital) {
-					if (fprintf(fps->file,
-						"</span><span "
-						"style=\"color:%s;"
-						"background:%s;"
-						"font-weight:%s;"
-						"font-style:%s\">",
-						html_color(fg_color),
-						html_color(bg_color),
-						high? "bold": "normal",
-						fa_ital? "italic": "normal")
-						    < 0)
-					    FAIL;
-					current_fg = fg_color;
-					current_bg = bg_color;
-					current_high = high;
-					current_ital = fa_ital;
-				}
-			}
-			any = true;
-			if (fps->ptype == P_RTF) {
-				if (uc & ~0x7f) {
-					if (fprintf(fps->file, "\\u%u?", uc)
-						    < 0)
-						FAIL;
-				} else {
-					nmb = unicode_to_multibyte(uc,
-						mb, sizeof(mb));
-					if (mb[0] == '\\' ||
-						mb[0] == '{' ||
-						mb[0] == '}') {
-						if (fprintf(fps->file, "\\%c",
-							    mb[0]) < 0)
-							FAIL;
-					} else if (mb[0] == '-') {
-						if (fprintf(fps->file, "\\_")
-							    < 0)
-							FAIL;
-					} else if (mb[0] == ' ') {
-						if (fprintf(fps->file, "\\~")
-							    < 0)
-							FAIL;
-					} else {
-						if (fputc(mb[0], fps->file) < 0)
-							FAIL;
-					}
-				}
-			} else if (fps->ptype == P_HTML) {
-				if (uc == '<') {
-					if (fprintf(fps->file, "&lt;") < 0)
-						FAIL;
-				} else if (uc == '&') {
-				    	if (fprintf(fps->file, "&amp;") < 0)
-						FAIL;
-				} else if (uc == '>') {
-				    	if (fprintf(fps->file, "&gt;") < 0)
-						FAIL;
-				} else {
-					nmb = unicode_to_utf8(uc, mb);
-					{
-					    int k;
-
-					    for (k = 0; k < nmb; k++) {
-						if (fputc(mb[k], fps->file) < 0)
-							FAIL;
-					    }
-					}
-				}
-			} else {
-				nmb = unicode_to_multibyte(uc,
-					mb, sizeof(mb));
-				if (fputs(mb, fps->file) < 0)
-					FAIL;
-			}
-		}
-	}
-
-	if (fps->ptype == P_HTML) {
-	    	if (fputc('\n', fps->file) < 0)
-			FAIL;
-	} else
+	    } else {
 		nr++;
-	if (!any && !(fps->opts & FPS_EVEN_IF_EMPTY) && fps->ptype == P_TEXT) {
-		return FPS_STATUS_SUCCESS;
+	    }
+	    ns = 0;
 	}
-	while (nr) {
-	    	if (fps->ptype == P_RTF)
-		    	if (fprintf(fps->file, "\\par") < 0)
-				FAIL;
-		if (fps->ptype == P_TEXT)
-			if (fputc('\n', fps->file) < 0)
-				FAIL;
-		nr--;
+	if (ea_buf[i].fa) {
+	    uc = ' ';
+	    fa = ea_buf[i].fa;
+	    if (ea_buf[i].fg) {
+		fa_fg = ea_buf[i].fg & 0x0f;
+	    } else {
+		fa_fg = color_from_fa(fa);
+	    }
+	    if (ea_buf[i].bg) {
+		fa_bg = ea_buf[i].bg & 0x0f;
+	    } else {
+		fa_bg = HOST_COLOR_BLACK;
+	    }
+	    if (ea_buf[i].gr & GR_INTENSIFY) {
+		fa_high = true;
+	    } else {
+		fa_high = FA_IS_HIGH(fa);
+	    }
+	    fa_ital = mi && FA_IS_MODIFIED(fa);
 	}
-	if (fps->ptype == P_HTML)
-		if (fprintf(fps->file, "%s</span></pre></td></tr>\n"
-		           "  </table>\n",
-			   current_high? "</b>": "") < 0)
-			FAIL;
-	fps->need_separator = true;
-	fps->screens++;
-	rv = FPS_STATUS_SUCCESS_WRITTEN; /* wrote a screen */
+	if (FA_IS_ZERO(fa)) {
+	    if (ctlr_dbcs_state(i) == DBCS_LEFT) {
+		uc = 0x3000;
+	    } else {
+		uc = ' ';
+	    }
+	} else if (is_nvt(&ea_buf[i], false, &uc)) {
+	    /* NVT-mode text. */
+	    if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
+		continue;
+	    }
+	} else {
+	    /* Convert EBCDIC to Unicode. */
+	    switch (ctlr_dbcs_state(i)) {
+	    case DBCS_NONE:
+	    case DBCS_SB:
+		uc = ebcdic_to_unicode(ea_buf[i].ec, ea_buf[i].cs, EUO_NONE);
+		if (uc == 0) {
+		    uc = ' ';
+		}
+		break;
+	    case DBCS_LEFT:
+		uc = ebcdic_to_unicode((ea_buf[i].ec << 8) | ea_buf[i + 1].ec,
+			CS_BASE, EUO_NONE);
+		if (uc == 0) {
+		    uc = 0x3000;
+		}
+		break;
+	    case DBCS_RIGHT:
+		/* skip altogether, we took care of it above */
+		continue;
+	    default:
+		uc = ' ';
+		break;
+	    }
+	}
 
-    done:
-	if (FPS_IS_ERROR(rv)) {
-		fps->broken = true;
+	/* Translate to a type-specific format and write it out. */
+	if (uc == ' ' && fps->ptype != P_HTML) {
+	    ns++;
+	} else if (uc == 0x3000) {
+	    if (fps->ptype == P_HTML) {
+		if (fprintf(fps->file, "  ") < 0) {
+		    FAIL;
+		}
+	    } else {
+		ns += 2;
+	    }
+	} else {
+	    while (nr) {
+		if (fps->ptype == P_RTF)
+		    if (fprintf(fps->file, "\\par") < 0) {
+			FAIL;
+		    }
+		if (fputc('\n', fps->file) < 0) {
+		    FAIL;
+		}
+		nr--;
+	    }
+	    while (ns) {
+		if (fps->ptype == P_RTF) {
+		    if (fprintf(fps->file, "\\~") < 0) {
+			FAIL;
+		    }
+		} else {
+		    if (fputc(' ', fps->file) < 0) {
+			FAIL;
+		    }
+		}
+		ns--;
+	    }
+	    if (fps->ptype == P_RTF) {
+		bool high;
+
+		if (ea_buf[i].gr & GR_INTENSIFY) {
+		    high = true;
+		} else {
+		    high = fa_high;
+		}
+		if (high != current_high) {
+		    if (high) {
+			if (fprintf(fps->file, "\\b ") < 0) {
+			    FAIL;
+			}
+		    } else {
+			if (fprintf(fps->file, "\\b0 ") < 0) {
+			    FAIL;
+			}
+		    }
+		    current_high = high;
+		}
+	    }
+	    if (fps->ptype == P_HTML) {
+		int fg_color, bg_color;
+		bool high;
+
+		if (ea_buf[i].fg) {
+		    fg_color = ea_buf[i].fg & 0x0f;
+		} else {
+		    fg_color = fa_fg;
+		}
+		if (ea_buf[i].bg) {
+		    bg_color = ea_buf[i].bg & 0x0f;
+		} else {
+		    bg_color = fa_bg;
+		}
+		if (ea_buf[i].gr & GR_REVERSE) {
+		    int tmp;
+
+		    tmp = fg_color;
+		    fg_color = bg_color;
+		    bg_color = tmp;
+		}
+
+		if (i == cursor_addr) {
+		    fg_color = (bg_color == HOST_COLOR_RED)?
+			HOST_COLOR_BLACK: bg_color;
+		    bg_color = HOST_COLOR_RED;
+		}
+		if (ea_buf[i].gr & GR_INTENSIFY) {
+		    high = true;
+		} else {
+		    high = fa_high;
+		}
+
+		if (fg_color != current_fg ||
+		    bg_color != current_bg ||
+		    high != current_high ||
+		    fa_ital != current_ital) {
+		    if (fprintf(fps->file,
+				"</span><span "
+				"style=\"color:%s;"
+				"background:%s;"
+				"font-weight:%s;"
+				"font-style:%s\">",
+				html_color(fg_color),
+				html_color(bg_color),
+				high? "bold": "normal",
+				fa_ital? "italic": "normal") < 0) {
+			FAIL;
+		    }
+		    current_fg = fg_color;
+		    current_bg = bg_color;
+		    current_high = high;
+		    current_ital = fa_ital;
+		}
+	    }
+	    any = true;
+	    if (fps->ptype == P_RTF) {
+		if (uc & ~0x7f) {
+		    if (fprintf(fps->file, "\\u%u?", uc) < 0) {
+			FAIL;
+		    }
+		} else {
+		    nmb = unicode_to_multibyte(uc, mb, sizeof(mb));
+		    if (mb[0] == '\\' || mb[0] == '{' || mb[0] == '}') {
+			if (fprintf(fps->file, "\\%c", mb[0]) < 0) {
+			    FAIL;
+			}
+		    } else if (mb[0] == '-') {
+			if (fprintf(fps->file, "\\_") < 0) {
+			    FAIL;
+			}
+		    } else if (mb[0] == ' ') {
+			if (fprintf(fps->file, "\\~") < 0) {
+			    FAIL;
+			}
+		    } else {
+			if (fputc(mb[0], fps->file) < 0) {
+			    FAIL;
+			}
+		    }
+		}
+	    } else if (fps->ptype == P_HTML) {
+		if (uc == '<') {
+		    if (fprintf(fps->file, "&lt;") < 0) {
+			FAIL;
+		    }
+		} else if (uc == '&') {
+		    if (fprintf(fps->file, "&amp;") < 0) {
+			FAIL;
+		    }
+		} else if (uc == '>') {
+		    if (fprintf(fps->file, "&gt;") < 0) {
+			FAIL;
+		    }
+		} else {
+		    nmb = unicode_to_utf8(uc, mb);
+		    {
+			int k;
+
+			for (k = 0; k < nmb; k++) {
+			    if (fputc(mb[k], fps->file) < 0) {
+				FAIL;
+			    }
+			}
+		    }
+		}
+	    } else {
+		nmb = unicode_to_multibyte(uc, mb, sizeof(mb));
+		if (fputs(mb, fps->file) < 0) {
+		    FAIL;
+		}
+	    }
 	}
-	return rv;
+    }
+
+    if (fps->ptype == P_HTML) {
+	if (fputc('\n', fps->file) < 0) {
+	    FAIL;
+	}
+    } else {
+	nr++;
+    }
+    if (!any && !(fps->opts & FPS_EVEN_IF_EMPTY) && fps->ptype == P_TEXT) {
+	return FPS_STATUS_SUCCESS;
+    }
+    while (nr) {
+	if (fps->ptype == P_RTF) {
+	    if (fprintf(fps->file, "\\par") < 0) {
+		FAIL;
+	    }
+	}
+	if (fps->ptype == P_TEXT) {
+	    if (fputc('\n', fps->file) < 0) {
+		FAIL;
+	    }
+	}
+	nr--;
+    }
+    if (fps->ptype == P_HTML) {
+	if (fprintf(fps->file, "%s</span></pre></td></tr>\n  </table>\n",
+		    current_high? "</b>": "") < 0) {
+	    FAIL;
+	}
+    }
+    fps->need_separator = true;
+    fps->screens++;
+    rv = FPS_STATUS_SUCCESS_WRITTEN; /* wrote a screen */
+
+done:
+    if (FPS_IS_ERROR(rv)) {
+	fps->broken = true;
+    }
+    return rv;
 }
 
 #undef FAIL
@@ -764,47 +797,47 @@ fprint_screen_body(fps_t ofps)
 fps_status_t
 fprint_screen_done(fps_t *ofps)
 {
-	real_fps_t *fps = (real_fps_t *)*(void **)ofps;
-	int rv = FPS_STATUS_SUCCESS;
+    real_fps_t *fps = (real_fps_t *)*(void **)ofps;
+    int rv = FPS_STATUS_SUCCESS;
 
-	if (fps == NULL) {
-		return FPS_STATUS_ERROR;
-	}
+    if (fps == NULL) {
+	return FPS_STATUS_ERROR;
+    }
 
-	if (!fps->broken) {
-		switch (fps->ptype) {
-		case P_RTF:
-			if (fprintf(fps->file, "\n}\n%c", 0) < 0) {
-				rv = FPS_STATUS_ERROR;
-			}
-			break;
-		case P_HTML:
-			if (!(fps->opts & FPS_NO_HEADER) &&
-				fprintf(fps->file, " </body>\n</html>\n") < 0) {
-				rv = FPS_STATUS_ERROR;
-			}
-			break;
+    if (!fps->broken) {
+	switch (fps->ptype) {
+	case P_RTF:
+	    if (fprintf(fps->file, "\n}\n%c", 0) < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	    break;
+	case P_HTML:
+	    if (!(fps->opts & FPS_NO_HEADER) &&
+		    fprintf(fps->file, " </body>\n</html>\n") < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	    break;
 #if defined(_WIN32) /*[*/
-		case P_GDI:
-			vtrace("Printing to GDI printer\n");
-			if (gdi_print_finish(fps->file, fps->caption) < 0) {
-				rv = FPS_STATUS_ERROR;
-			}
-			break;
+	case P_GDI:
+	    vtrace("Printing to GDI printer\n");
+	    if (gdi_print_finish(fps->file, fps->caption) < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	    break;
 #endif /*]*/
-		default:
-			break;
-		}
+	default:
+	    break;
 	}
+    }
 
-	/* Done with the context. */
-	Free(fps->caption);
-	Free(fps->printer_name);
-	memset(fps, '\0', sizeof(*fps));
-	Free(*(void **)ofps);
-	*(void **)ofps = NULL;
+    /* Done with the context. */
+    Free(fps->caption);
+    Free(fps->printer_name);
+    memset(fps, '\0', sizeof(*fps));
+    Free(*(void **)ofps);
+    *(void **)ofps = NULL;
 
-	return rv;
+    return rv;
 }
 
 /*
@@ -814,23 +847,23 @@ fps_status_t
 fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	const char *printer_name, void *wait_context)
 {
-	fps_t fps;
-	fps_status_t srv;
-	fps_status_t srv_body;
+    fps_t fps;
+    fps_status_t srv;
+    fps_status_t srv_body;
 
-	srv = fprint_screen_start(f, ptype, opts, caption, printer_name, &fps,
-		wait_context);
-	if (FPS_IS_ERROR(srv) || srv == FPS_STATUS_WAIT) {
-		return srv;
-	}
-	srv_body = fprint_screen_body(fps);
-	if (FPS_IS_ERROR(srv_body)) {
-		(void) fprint_screen_done(&fps);
-		return srv_body;
-	}
-	srv = fprint_screen_done(&fps);
-	if (FPS_IS_ERROR(srv)) {
-		return srv;
-	}
+    srv = fprint_screen_start(f, ptype, opts, caption, printer_name, &fps,
+	    wait_context);
+    if (FPS_IS_ERROR(srv) || srv == FPS_STATUS_WAIT) {
+	return srv;
+    }
+    srv_body = fprint_screen_body(fps);
+    if (FPS_IS_ERROR(srv_body)) {
+	(void) fprint_screen_done(&fps);
 	return srv_body;
+    }
+    srv = fprint_screen_done(&fps);
+    if (FPS_IS_ERROR(srv)) {
+	return srv;
+    }
+    return srv_body;
 }
