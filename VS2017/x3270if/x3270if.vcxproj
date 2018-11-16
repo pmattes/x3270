@@ -22,7 +22,7 @@
     <ClCompile Include="..\..\Common\x3270if.c" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\wx3270\x3270if.rc" />
+    <ResourceCompile Include="..\..\wx3270if\x3270if.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{25CA97FA-186C-4235-8280-BF1F56FD3CFF}</ProjectGuid>

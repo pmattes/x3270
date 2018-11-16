@@ -1206,7 +1206,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 static void
 array_add(const char ***s, int ix, const char *v)
 {
-    *s = Realloc(*s, (ix + 1) * sizeof(const char *));
+    *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
     (*s)[ix] = v;
 }
 

@@ -30,6 +30,8 @@
  *		popen that exposes the child process ID
  */
 
+#if !defined(_WIN32) /*[*/
 FILE *xpopen(const char *command, const char *mode, pid_t *pidp);
 int xpclose(FILE *fp, unsigned flags);
-#define XPC_NOWAIT	0x1
+# define XPC_NOWAIT	0x1
+#endif /*]*/

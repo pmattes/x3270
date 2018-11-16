@@ -871,7 +871,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 
 #if defined(_WIN32) /*[*/
     if (pager.residual != NULL) {
-	return pager_key_done();
+	pager_key_done();
+	return;
     }
 #endif /*]*/
 
