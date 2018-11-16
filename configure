@@ -622,11 +622,13 @@ enable_s3270
 enable_b3270
 enable_tcl3270
 enable_pr3287
+enable_x3270if
 enable_unix_lib
 enable_wc3270
 enable_ws3270
 enable_wb3270
 enable_wpr3287
+enable_wx3270if
 enable_windows_lib
 '
       ac_precious_vars='build_alias
@@ -639,7 +641,8 @@ c3270
 s3270
 b3270
 tcl3270
-pr3287'
+pr3287
+x3270if'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -1258,11 +1261,13 @@ Optional Features:
   --enable-b3270         build b3270
   --enable-tcl3270       build tcl3270
   --enable-pr3287        build pr3287
+  --enable-x3270if       build x3270if
   --enable-lib           build unix libraries
   --enable-wc3270        build wc3270
   --enable-ws3270        build ws3270
   --enable-wb3270        build wb3270
   --enable-wpr3287       build wpr3287
+  --enable-wx3270if      build Windows x3270if
   --enable-windows-lib   build Windows libraries
 
 Report bugs to the package provider.
@@ -1707,6 +1712,7 @@ if test "x$enable_unix" = xyes; then
     enable_b3270=yes
     enable_tcl3270=yes
     enable_pr3287=yes
+    enable_x3270if=yes
 fi
 
 # Check whether --enable-windows was given.
@@ -1719,6 +1725,7 @@ if test "x$enable_windows" = xyes; then
     enable_ws3270=yes
     enable_wb3270=yes
     enable_wpr3287=yes
+    enable_wx3270if=yes
 fi
 
 # Check whether --enable-x3270 was given.
@@ -1751,6 +1758,11 @@ if test "${enable_pr3287+set}" = set; then :
   enableval=$enable_pr3287;
 fi
 
+# Check whether --enable-x3270if was given.
+if test "${enable_x3270if+set}" = set; then :
+  enableval=$enable_x3270if;
+fi
+
 # Check whether --enable-unix-lib was given.
 if test "${enable_unix_lib+set}" = set; then :
   enableval=$enable_unix_lib;
@@ -1777,6 +1789,11 @@ if test "${enable_wpr3287+set}" = set; then :
   enableval=$enable_wpr3287;
 fi
 
+# Check whether --enable-wx3270if was given.
+if test "${enable_wx3270if+set}" = set; then :
+  enableval=$enable_wx3270if;
+fi
+
 # Check whether --enable-windows-lib was given.
 if test "${enable_windows_lib+set}" = set; then :
   enableval=$enable_windows_lib;
@@ -1789,11 +1806,13 @@ if test "x$enable_x3270" != xyes -a \
         "x$enable_b3270" != xyes -a \
         "x$enable_tcl3270" != xyes -a \
         "x$enable_pr3287" != xyes -a \
+        "x$enable_x3270if" != xyes -a \
 	"x$enable_unix_lib" != xyes -a \
         "x$enable_wc3270" != xyes -a \
         "x$enable_ws3270" != xyes -a \
         "x$enable_wb3270" != xyes -a \
         "x$enable_wpr3287" != xyes -a \
+        "x$enable_wx3270if" != xyes -a \
 	"x$enable_windows_lib" != xyes; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: configuring all emulators... use --enable options to pick a subset" >&5
 $as_echo "$as_me: configuring all emulators... use --enable options to pick a subset" >&6;}
@@ -1803,10 +1822,26 @@ $as_echo "$as_me: configuring all emulators... use --enable options to pick a su
     enable_b3270=yes
     enable_tcl3270=yes
     enable_pr3287=yes
+    enable_x3270if=yes
     enable_wc3270=yes
     enable_ws3270=yes
     enable_wb3270=yes
     enable_wpr3287=yes
+    enable_wx3270if=yes
+fi
+
+if test "x$enable_x3270" = xyes -o \
+        "x$enable_c3270" = xyes -o \
+        "x$enable_s3270" = xyes -o \
+        "x$enable_b3270" = xyes -o \
+	"x$enable_tcl3270" = xyes; then
+    enable_x3270if=yes
+fi
+
+if test "x$enable_wc3270" = xyes -o \
+        "x$enable_ws3270" = xyes -o \
+	"x$enable_wb3270" = xyes; then
+    enable_wx3270if=yes
 fi
 
 # Extract the first word of "x86_64-w64-mingw32-gcc", so it can be a program name with args.
@@ -1952,7 +1987,7 @@ T_CLOBBER=""
 T_INSTALL=""
 T_INSTALL_MAN=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 wc3270 ws3270 wb3270 wc3270 wpr3287; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
@@ -1972,7 +2007,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
         "x$enable_tcl3270" = xyes -o \
-        "x$enable_pr3287" = xyes; then
+	"x$enable_pr3287" = xyes; then
     T_DEPEND="$T_DEPEND unix-lib-depend"
     T_CLEAN="$T_CLEAN unix-lib-clean"
     T_CLOBBER="$T_CLOBBER unix-lib-clobber"
@@ -1981,7 +2016,7 @@ fi
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wb3270" = xyes -o \
-        "x$enable_wpr3287" = xyes; then
+	"x$enable_wpr3287" = xyes; then
     T_DEPEND="$T_DEPEND windows-lib-depend"
     T_CLEAN="$T_CLEAN windows-lib-clean"
     T_CLOBBER="$T_CLOBBER windows-lib-clobber"
@@ -2016,6 +2051,10 @@ if test "x$enable_tcl3270" = xyes; then
 fi
 if test "x$enable_pr3287" = xyes; then
     subdirs="$subdirs pr3287"
+
+fi
+if test "x$enable_x3270if" = xyes; then
+    subdirs="$subdirs x3270if"
 
 fi
 

@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2018 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2018 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,59 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Auxiliary makefile for ws3270
+# Windows Makefile for x3270if
 
-PRODUCT = ws3270
+# Set GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and WIN32_FLAGS.
+include winenv.mk
 
-all:
-	@echo "Must pick a specific make target."
+MKFB = mkfb$(NATIVE_SFX)
 
-DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
-	html/SSL.html html/wc3270-script.html
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/x3270if -I$(TOP)/include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
 
-src.tgz: $(DOCS) Makefile.aux
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include x3270if_files.mk libs.mk
 
-MANDEP = html.m4 m4man Makefile.aux version.txt
-MKHTML = ./m4man -t html -p $(PRODUCT)
+VOBJS = $(X3270IF_OBJECTS)
 
-man: $(DOCS)
+OBJECTS = $(VOBJS) version.o
+LIBS = -lws2_32
+LIBDEPS = $(DEP32XX)
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n ws3270-script -o $@ x3270-script.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+PROGS = x3270if.exe
+all: $(PROGS)
 
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
+	$(RM) $(XVERSION)
+	sh $< x3270if $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+x3270if.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) x3270if "3270 terminal emulator interface" $(WIN64) >$@.tmp
+	/bin/mv -f $@.tmp $@
+
+x3270ifres.o: x3270if.rc x3270if.ico Makefile
+	$(WINDRES) -i $< -o $@
+
+x3270if.exe: $(OBJECTS) x3270if.o base64.o x3270ifres.o $(LIBDEPS)
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
+
+wversion.o: mkwversion.sh version.txt
+	sh $< x3270if $(CC) $(filter %.txt,$^)
+
+clean:
+	rm -f *.o mkfb mkfb.exe fallbacks.c x3270if.exe.manifest
+
+clobber: clean
+	rm -f $(PROGS) *.d
+
+# Include auto-generated eependencies
+-include $(OBJS:.o=.d)

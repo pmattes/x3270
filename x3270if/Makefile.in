@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2018 Paul Mattes.
+# Copyright (c) 2016-2018 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,32 +24,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Auxiliary makefile for ws3270
+# VPATH-based Makefile for x3270if
+top = ../../..
+objdir = ../obj/@host@/x3270if
+this = $(top)/x3270if
 
-PRODUCT = ws3270
+export VPATH = $(this):$(top)/Common/x3270if:$(top)/Common
+export TOP = $(top)
+export THIS = $(this)
 
-all:
-	@echo "Must pick a specific make target."
+MAKEINC = -I$(this) -I$(top)/Common
 
-DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
-	html/SSL.html html/wc3270-script.html
+all: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+install: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+install.man: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clobber: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+depend: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 
-src.tgz: $(DOCS) Makefile.aux
-
-MANDEP = html.m4 m4man Makefile.aux version.txt
-MKHTML = ./m4man -t html -p $(PRODUCT)
-
-man: $(DOCS)
-
-html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n ws3270-script -o $@ x3270-script.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+$(objdir):
+	mkdir -p $(objdir)

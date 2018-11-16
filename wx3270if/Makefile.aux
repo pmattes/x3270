@@ -24,15 +24,14 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Auxiliary makefile for ws3270
+# Auxiliary makefile for wx3270if
 
-PRODUCT = ws3270
+PRODUCT = wx3270if
 
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
-	html/SSL.html html/wc3270-script.html
+DOCS = html/Windows-x3270if.html
 
 src.tgz: $(DOCS) Makefile.aux
 
@@ -41,15 +40,5 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 
 man: $(DOCS)
 
-html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n ws3270-script -o $@ x3270-script.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+html/Windows-x3270if.html:  x3270if.man.m4 $(MANDEP)
+	$(MKHTML) -n x3270if -o $@ x3270if.man.m4

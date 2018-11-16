@@ -53,7 +53,7 @@ fi
 date=`date "+%d %B %Y"`
 # platform
 case $product in
-    x3270|c3270|s3270|tcl3270|b3270|pr3287)
+    x3270|c3270|s3270|tcl3270|b3270|pr3287|x3270if)
 	platform=unix
 	c3270=c3270
 	s3270=s3270
@@ -61,7 +61,7 @@ case $product in
 	x3270=x3270
 	b3270=b3270
 	;;
-    wc3270|ws3270|wb3270|wpr3287)
+    wc3270|ws3270|wb3270|wpr3287|wx3270if)
 	platform=windows
 	c3270=wc3270
 	s3270=ws3270
@@ -70,7 +70,7 @@ case $product in
 	b3270=wb3270
 	;;
     *)  
-	echo >&2 "Unknown product: $1"
+	echo >&2 "Unknown product: $product"
 	exit 1
 esac
 # mode
@@ -116,6 +116,7 @@ rc=$?
 
 if [ -n "$outfile" -a $rc -eq 0 ]
 then	mv $tf $outfile
+    	rc=$?
 fi
 
 exit $rc

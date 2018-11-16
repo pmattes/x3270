@@ -1,4 +1,4 @@
-dnl Copyright (c) 2015-2016, Paul Mattes.
+dnl Copyright (c) 2015-2016, 2018 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@ if test "x$enable_unix" = xyes; then
     enable_b3270=yes
     enable_tcl3270=yes
     enable_pr3287=yes
+    enable_x3270if=yes
 fi
 
 AC_ARG_ENABLE(windows,[  --enable-windows       build all Windows emulators])
@@ -43,6 +44,7 @@ if test "x$enable_windows" = xyes; then
     enable_ws3270=yes
     enable_wb3270=yes
     enable_wpr3287=yes
+    enable_wx3270if=yes
 fi
 
 AC_ARG_ENABLE(x3270,[  --enable-x3270         build x3270])
@@ -51,12 +53,14 @@ AC_ARG_ENABLE(s3270,[  --enable-s3270         build s3270])
 AC_ARG_ENABLE(b3270,[  --enable-b3270         build b3270])
 AC_ARG_ENABLE(tcl3270,[  --enable-tcl3270       build tcl3270])
 AC_ARG_ENABLE(pr3287,[  --enable-pr3287        build pr3287])
+AC_ARG_ENABLE(x3270if,[  --enable-x3270if       build x3270if])
 AC_ARG_ENABLE(unix-lib,[  --enable-lib           build unix libraries])
 
 AC_ARG_ENABLE(wc3270,[  --enable-wc3270        build wc3270])
 AC_ARG_ENABLE(ws3270,[  --enable-ws3270        build ws3270])
 AC_ARG_ENABLE(wb3270,[  --enable-wb3270        build wb3270])
 AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287       build wpr3287])
+AC_ARG_ENABLE(wx3270if,[  --enable-wx3270if      build Windows x3270if])
 AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib   build Windows libraries])
 
 if test "x$enable_x3270" != xyes -a \
@@ -65,11 +69,13 @@ if test "x$enable_x3270" != xyes -a \
         "x$enable_b3270" != xyes -a \
         "x$enable_tcl3270" != xyes -a \
         "x$enable_pr3287" != xyes -a \
+        "x$enable_x3270if" != xyes -a \
 	"x$enable_unix_lib" != xyes -a \
         "x$enable_wc3270" != xyes -a \
         "x$enable_ws3270" != xyes -a \
         "x$enable_wb3270" != xyes -a \
         "x$enable_wpr3287" != xyes -a \
+        "x$enable_wx3270if" != xyes -a \
 	"x$enable_windows_lib" != xyes; then
     AC_MSG_NOTICE(configuring all emulators... use --enable options to pick a subset)
     enable_x3270=yes
@@ -78,10 +84,26 @@ if test "x$enable_x3270" != xyes -a \
     enable_b3270=yes
     enable_tcl3270=yes
     enable_pr3287=yes
+    enable_x3270if=yes
     enable_wc3270=yes
     enable_ws3270=yes
     enable_wb3270=yes
     enable_wpr3287=yes
+    enable_wx3270if=yes
+fi
+
+if test "x$enable_x3270" = xyes -o \
+        "x$enable_c3270" = xyes -o \
+        "x$enable_s3270" = xyes -o \
+        "x$enable_b3270" = xyes -o \
+	"x$enable_tcl3270" = xyes; then
+    enable_x3270if=yes
+fi
+
+if test "x$enable_wc3270" = xyes -o \
+        "x$enable_ws3270" = xyes -o \
+	"x$enable_wb3270" = xyes; then
+    enable_wx3270if=yes
 fi
 
 AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
@@ -119,7 +141,7 @@ T_CLOBBER=""
 T_INSTALL=""
 T_INSTALL_MAN=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 wc3270 ws3270 wb3270 wc3270 wpr3287; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
@@ -139,7 +161,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
         "x$enable_tcl3270" = xyes -o \
-        "x$enable_pr3287" = xyes; then
+	"x$enable_pr3287" = xyes; then
     T_DEPEND="$T_DEPEND unix-lib-depend"
     T_CLEAN="$T_CLEAN unix-lib-clean"
     T_CLOBBER="$T_CLOBBER unix-lib-clobber"
@@ -148,7 +170,7 @@ fi
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wb3270" = xyes -o \
-        "x$enable_wpr3287" = xyes; then
+	"x$enable_wpr3287" = xyes; then
     T_DEPEND="$T_DEPEND windows-lib-depend"
     T_CLEAN="$T_CLEAN windows-lib-clean"
     T_CLOBBER="$T_CLOBBER windows-lib-clobber"
@@ -178,6 +200,9 @@ if test "x$enable_tcl3270" = xyes; then
 fi
 if test "x$enable_pr3287" = xyes; then
     AC_CONFIG_SUBDIRS(pr3287)
+fi
+if test "x$enable_x3270if" = xyes; then
+    AC_CONFIG_SUBDIRS(x3270if)
 fi
 
 dnl Generate to top-level Makefile.
