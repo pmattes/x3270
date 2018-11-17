@@ -132,7 +132,7 @@ string_run(task_cbh handle, bool *success)
 
     /* Any other keyboard lock is fatal, such as disconnect. */
     if (kybdlock) {
-	popup_an_error("Aborted");
+	popup_an_error("Canceled");
 	*success = false;
 	done = true;
 	goto clean_up;
