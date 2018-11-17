@@ -151,6 +151,7 @@ typedef struct task {
     struct {
 	char   *msc;	/* input buffer */
 	char   *dptr;	/* data pointer */
+	bool	more;	/* more commands follow this one */
     } macro;
 
     /* cb fields. */
@@ -766,7 +767,7 @@ cleanup_socket(bool b _is_unused)
  */
 enum em_stat { EM_CONTINUE, EM_ERROR };
 static enum em_stat
-execute_command(enum iaction cause, char *s, char **np)
+execute_command(enum iaction cause, char *s, char **np, bool *more)
 {
 #   define MAX_ANAME	64
     enum {
@@ -809,6 +810,10 @@ execute_command(enum iaction cause, char *s, char **np)
 	/*6*/ "Syntax error: unclosed \""
     };
 #define fail(n) { failreason = n; goto failure; }
+
+    if (more != NULL) {
+	*more = false;
+    }
 
     while ((c = *s++)) {
 
@@ -1031,19 +1036,26 @@ success:
     }
 
     if (c) {
+	/* Skip trailing white space. */
 	while (*s && isspace((unsigned char)*s)) {
 	    s++;
 	}
 	if (*s) {
 	    if (np) {
+		/* Something follows. */
 		*np = s;
+		if (more != NULL) {
+		    *more = true;
+		}
 	    } else {
 		fail(4);
 	    }
 	} else if (np) {
+	    /* Nothing follows the whitespace. */
 	    *np = s;
 	}
     } else if (np) {
+	/* Nothing follows. */
 	*np = s-1;
     }
 
@@ -1182,7 +1194,7 @@ run_macro(void)
 	    ia = IA_MACRO;
 	}
 
-	es = execute_command(ia, a, &nextm);
+	es = execute_command(ia, a, &nextm, &s->macro.more);
 	s->macro.dptr = nextm;
 
 	/*
@@ -4195,4 +4207,39 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
     current_task->wait_context = context;
     current_task->xcontinue_fn = continue_fn;
     task_set_state(current_task, TS_XWAIT, lazyaf("extended wait: %s", why));
+}
+
+/*
+ * Test for the need for an unlock delay.
+ * There are two conditions:
+ * - A macro with more than one action (e.g., Enter() Key(x)).
+ * - A cb that always has unlock delays (e.g., Source() or String()).
+ *
+ * The first condition is optimal, e.g., we know that there is another
+ * action coming blindly after this one, so we should definitelu delay.
+ * The second condition is not quite optimal. Ideally, Source() and String()
+ * should only delay if they know there is another Action coming. String()
+ * could figure that out, but Source cannot.
+ */
+bool
+task_needs_unlock_delay(void)
+{
+    taskq_t *q;
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	task_t *s = q->top;
+
+	if (s->state == TS_KBWAIT) {
+	    return s != NULL &&
+		(((s->type == ST_MACRO) &&
+		  ((s->macro.more ||
+		   ((s->next != NULL
+		    && s->next->type == ST_CB
+		    && (s->next->cbx.cb->flags & CB_ALL_MORE))))))
+		 || (s->type == ST_CB
+		     && s->cbx.cb->flags & CB_ALL_MORE));
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+
+    return false;
 }

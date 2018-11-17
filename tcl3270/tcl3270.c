@@ -1927,6 +1927,12 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
 {
 }
 
+bool
+task_needs_unlock_delay(void)
+{
+    return false;
+}
+
 /*
  * Return true if there is a pending macro.
  */

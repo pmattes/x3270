@@ -107,6 +107,7 @@ typedef struct {
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
 #define CB_NEW_TASKQ	0x4	/* creates a new task queue */
 #define CB_PEER		0x8	/* peer script (don't abort) */
+#define CB_ALL_MORE	0x10	/* treat all commands as macro-with-more */
 
 #define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
 #define CBF_CONNECT_NONBLOCK 0x2 /* do not block Connect()/Open() */
@@ -138,3 +139,5 @@ void *task_get_ir_state(const char *name);
 void task_resume_xwait(void *context, bool cancel, const char *why);
 typedef void xcontinue_fn(void *context, bool cancel);
 void task_xwait(void *context, xcontinue_fn *continue_fn, const char *why);
+
+bool task_needs_unlock_delay(void);

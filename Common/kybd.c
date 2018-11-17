@@ -1851,7 +1851,8 @@ do_reset(bool explicit)
 	|| ft_state != FT_NONE
 	|| !appres.unlock_delay
 	|| (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
-	|| !appres.unlock_delay_ms) {
+	|| !appres.unlock_delay_ms
+	|| !task_needs_unlock_delay()) {
 	    kybdlock_clr(-1, "do_reset");
     } else if (kybdlock &
 (KL_DEFERRED_UNLOCK | KL_OIA_TWAIT | KL_OIA_LOCKED | KL_AWAITING_FIRST)) {

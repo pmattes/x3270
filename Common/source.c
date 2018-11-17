@@ -53,7 +53,7 @@ static bool source_run(task_cbh handle, bool *success);
 static tcb_t source_cb = {
     "Source",
     IA_MACRO,
-    CB_NEEDS_RUN,
+    CB_NEEDS_RUN | CB_ALL_MORE,
     source_data,
     source_done,
     source_run

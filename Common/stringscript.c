@@ -57,7 +57,7 @@ static bool string_child_done(task_cbh handle, bool success, bool abort);
 static tcb_t string_cb = {
     "String",
     IA_MACRO,
-    CB_NEEDS_RUN,
+    CB_NEEDS_RUN | CB_ALL_MORE,
     string_child_data,
     string_child_done,
     string_run
@@ -156,6 +156,12 @@ string_run(task_cbh handle, bool *success)
 	popup_an_error("Operator error");
 	*success = false;
 	done = true;
+    }
+
+    /* Check for some waitable keyboard lock. */
+    if (task_can_kbwait()) {
+	task_kbwait();
+	goto clean_up;
     }
     
 clean_up:
