@@ -4213,14 +4213,29 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
  * Test for the need for an unlock delay.
  * There are two conditions:
  * - A macro with more than one action (e.g., Enter() Key(x)).
- * - A cb that always has unlock delays (e.g., Source() or String()).
- *
- * The first condition is optimal, e.g., we know that there is another
- * action coming blindly after this one, so we should definitelu delay.
- * The second condition is not quite optimal. Ideally, Source() and String()
- * should only delay if they know there is another Action coming. String()
- * could figure that out, but Source cannot.
+ * - A cb that always has unlock delays. There are none of these at present.
+ * - A cb that knows that there are more actions coming (e.g., Source() and
+ *   String()).
  */
+
+static bool
+cb_needs_delay(task_t *s)
+{
+    return s != NULL
+	&& (s->type == ST_CB)
+	&& ((s->cbx.cb->flags & CB_ALL_DELAY)
+	    || (s->cbx.cb->need_delay != NULL
+		&& (*s->cbx.cb->need_delay)(s->cbx.handle)));
+}
+
+static bool
+macro_needs_delay(task_t *s)
+{
+    return s != NULL
+	&& (s->type == ST_MACRO)
+	&& s->macro.more;
+}
+
 bool
 task_needs_unlock_delay(void)
 {
@@ -4230,14 +4245,9 @@ task_needs_unlock_delay(void)
 	task_t *s = q->top;
 
 	if (s->state == TS_KBWAIT) {
-	    return s != NULL &&
-		(((s->type == ST_MACRO) &&
-		  ((s->macro.more ||
-		   ((s->next != NULL
-		    && s->next->type == ST_CB
-		    && (s->next->cbx.cb->flags & CB_ALL_MORE))))))
-		 || (s->type == ST_CB
-		     && s->cbx.cb->flags & CB_ALL_MORE));
+	    return macro_needs_delay(s)
+		|| cb_needs_delay(s)
+		|| cb_needs_delay(s->next);
 	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 

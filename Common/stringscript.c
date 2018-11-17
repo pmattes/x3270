@@ -52,15 +52,21 @@ static bool string_run(task_cbh handle, bool *success);
 static void string_child_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool string_child_done(task_cbh handle, bool success, bool abort);
+static bool string_need_delay(task_cbh handle);
 
 /* Leaf callback block for String. */
 static tcb_t string_cb = {
     "String",
     IA_MACRO,
-    CB_NEEDS_RUN | CB_ALL_MORE,
+    CB_NEEDS_RUN,
     string_child_data,
     string_child_done,
-    string_run
+    string_run,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    string_need_delay
 };
 
 /* State for one instance of String. */
@@ -220,6 +226,14 @@ string_child_done(task_cbh handle, bool success, bool abort)
     }
 
     return false;
+}
+
+static bool
+string_need_delay(task_cbh handle)
+{
+    string_t *s = (string_t *)handle;
+
+    return !s->aborted && (s->len != 0);
 }
 
 /**

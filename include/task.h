@@ -91,6 +91,7 @@ typedef bool (*task_run_cb)(task_cbh handle, bool *success);
 typedef void (*task_closescript_cb)(task_cbh handle);
 typedef void (*task_setflags_cb)(task_cbh handle, unsigned flags);
 typedef unsigned (*task_getflags_cb)(task_cbh handle);
+typedef bool (*task_need_delay_cb)(task_cbh handle);
 typedef struct {
     const char *shortname;
     enum iaction ia;
@@ -102,12 +103,13 @@ typedef struct {
     task_setflags_cb setflags;
     task_getflags_cb getflags;
     irv_t *irv;
+    task_need_delay_cb need_delay;
 } tcb_t;
 #define CB_UI		0x1	/* came from the UI */
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
 #define CB_NEW_TASKQ	0x4	/* creates a new task queue */
 #define CB_PEER		0x8	/* peer script (don't abort) */
-#define CB_ALL_MORE	0x10	/* treat all commands as macro-with-more */
+#define CB_ALL_DELAY	0x10	/* all kbwait actions need delay */
 
 #define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
 #define CBF_CONNECT_NONBLOCK 0x2 /* do not block Connect()/Open() */
