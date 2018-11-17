@@ -3153,41 +3153,26 @@ CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Execute_action(ia_t ia, unsigned argc, const char **argv)
 {
-    int status;
-    bool rv = true;
+    const char **nargv = NULL;
+    int nargc = 0;
 
     action_debug("Execute", ia, argc, argv);
     if (check_argc("Execute", argc, 1, 1) < 0) {
 	return false;
     }
 
-    status = system(argv[0]);
-    if (status < 0) {
-	popup_an_errno(errno, "system(\"%s\") failed", argv[0]);
-	rv = false;
-    } else if (status != 0) {
-#if defined(_WIN32) /*[*/
-	popup_an_error("system(\"%s\") exited with status %d\n", argv[0],
-		status);
+    /* Package it up for Script(). */
+    array_add(&nargv, nargc++, "-NoLock");
+#if !defined(_WIN32) /*[*/
+    array_add(&nargv, nargc++, "/bin/sh");
+    array_add(&nargv, nargc++, "-c");
 #else /*][*/
-	if (WIFEXITED(status)) {
-	    popup_an_error("system(\"%s\") exited with status %d\n", argv[0],
-		    WEXITSTATUS(status));
-	} else if (WIFSIGNALED(status)) {
-	    popup_an_error("system(\"%s\") killed by signal %d\n", argv[0],
-		    WTERMSIG(status));
-	} else if (WIFSTOPPED(status)) {
-	    popup_an_error("system(\"%s\") stopped by signal %d\n", argv[0],
-		    WSTOPSIG(status));
-	}
+    array_add(&nargv, nargc++, "cmd");
+    array_add(&nargv, nargc++, "/c");
 #endif /*]*/
-	rv = false;
-    }
-
-    /* Get back mouse events; system() cancels them. */
-    screen_system_fixup();
-
-    return rv;
+    array_add(&nargv, nargc++, argv[0]);
+    array_add(&nargv, nargc, NULL);
+    return Script_action(ia, nargc, nargv);
 }
 
 /* Timeout for Expect action. */

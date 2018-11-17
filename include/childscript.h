@@ -32,3 +32,5 @@
 
 bool Script_action(ia_t ia, unsigned argc, const char **argv);
 bool Prompt_action(ia_t ia, unsigned argc, const char **argv);
+void array_add(const char ***s, int ix, const char *v);
+

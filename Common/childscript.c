@@ -1203,7 +1203,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Add an element to a dynamically-allocated array. */
-static void
+void
 array_add(const char ***s, int ix, const char *v)
 {
     *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
