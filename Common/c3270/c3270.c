@@ -387,6 +387,17 @@ sigchld_handler(int ignored)
 }
 #endif /*]*/
 
+/**
+ * Redirection for Warning.
+ */
+static void
+c3270_Warning(const char *s)
+{
+    fprintf(stderr, "Warning: %s\n", s);
+    fflush(stderr);
+    any_error_output = true;
+}
+
 #if defined(_WIN32) /*[*/
 /*
  * wc3270 version of Error, that makes sure the user has a chance to see the
@@ -401,17 +412,6 @@ c3270_Error(const char *s)
 
     /* Wait for the <Return> key, and then exit. */
     x3270_exit(1);
-}
-
-/**
- * Redirection for Warning.
- */
-static void
-c3270_Warning(const char *s)
-{
-    fprintf(stderr, "Warning: %s\n", s);
-    fflush(stderr);
-    any_error_output = true;
 }
 
 /* Pause before exiting. */
@@ -436,10 +436,10 @@ main(int argc, char *argv[])
     char	*delenv;
 #endif /*]*/
 
+    Warning_redirect = c3270_Warning;
 #if defined(_WIN32) /*[*/
     /* Redirect Error() so we pause. */
     Error_redirect = c3270_Error;
-    Warning_redirect = c3270_Warning;
 
     /* Register a final exit function, so we pause. */
     register_schange_ordered(ST_EXITING, exit_pause, ORDER_LAST);
