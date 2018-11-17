@@ -92,6 +92,7 @@ typedef void (*task_closescript_cb)(task_cbh handle);
 typedef void (*task_setflags_cb)(task_cbh handle, unsigned flags);
 typedef unsigned (*task_getflags_cb)(task_cbh handle);
 typedef bool (*task_need_delay_cb)(task_cbh handle);
+typedef const char *(*task_command_cb)(task_cbh handle);
 typedef struct {
     const char *shortname;
     enum iaction ia;
@@ -104,6 +105,7 @@ typedef struct {
     task_getflags_cb getflags;
     irv_t *irv;
     task_need_delay_cb need_delay;
+    task_command_cb command;
 } tcb_t;
 #define CB_UI		0x1	/* came from the UI */
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */

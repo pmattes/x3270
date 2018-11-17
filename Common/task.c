@@ -152,6 +152,8 @@ typedef struct task {
 	char   *msc;	/* input buffer */
 	char   *dptr;	/* data pointer */
 	bool	more;	/* more commands follow this one */
+#	define LAST_BUF 64
+	char	last[LAST_BUF]; /* last command */
     } macro;
 
     /* cb fields. */
@@ -767,7 +769,8 @@ cleanup_socket(bool b _is_unused)
  */
 enum em_stat { EM_CONTINUE, EM_ERROR };
 static enum em_stat
-execute_command(enum iaction cause, char *s, char **np, bool *more)
+execute_command(enum iaction cause, char *s, char **np, bool *more, char *buf,
+	size_t buflen)
 {
 #   define MAX_ANAME	64
     enum {
@@ -1090,6 +1093,7 @@ success:
 
     if (any != NULL) {
 	const char **params = NULL;
+	size_t alen;
 
 	if (any->t.ia_restrict != IA_NONE && cause != any->t.ia_restrict) {
 	    popup_an_error("Action %s is invalid in this context",
@@ -1104,6 +1108,14 @@ success:
 		params[i] = vb_buf(&r[i])? vb_buf(&r[i]) : NewString("");
 	    }
 	}
+
+	/* Record the action. */
+	alen = *np - s_orig;
+	if (alen > buflen - 1) {
+	    alen = buflen - 1;
+	}
+	strncpy(buf, s_orig, alen);
+	buf[alen] = '\0';
 
 	run_action_entry(any, cause, param_count, param_count? params: NULL);
 
@@ -1194,7 +1206,8 @@ run_macro(void)
 	    ia = IA_MACRO;
 	}
 
-	es = execute_command(ia, a, &nextm, &s->macro.more);
+	es = execute_command(ia, a, &nextm, &s->macro.more, s->macro.last,
+		LAST_BUF);
 	s->macro.dptr = nextm;
 
 	/*
@@ -3611,13 +3624,23 @@ Tasks_action(ia_t ia, unsigned argc, const char **argv)
 	for (i = 0; i < q->depth; i++) {
 	    task_t *s;
 	    int j;
+	    const char *last = NULL;
 
 	    for (s = q->top, j = 0; j < q->depth - i - 1; s = s->next, j++) {
 	    }
-	    action_output("%*s" TASK_NAME_FMT " %s",
+
+	    if (s->type == ST_MACRO && s->macro.last[0]) {
+		last = s->macro.last;
+	    } else if (s->type == ST_CB && s->cbx.cb->command != NULL) {
+		last = (*s->cbx.cb->command)(s->cbx.handle);
+	    }
+
+	    action_output("%*s" TASK_NAME_FMT " %s%s%s",
 		    s->depth + 1, "",
 		    TASK_sNAME(s),
-		    task_state_name[s->state]);
+		    task_state_name[s->state],
+		    last? " => ": "",
+		    last? last: "");
 	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 

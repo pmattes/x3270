@@ -51,6 +51,7 @@
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "w3misc.h"
 
 #define CHILD_BUF 1024
@@ -68,6 +69,7 @@ static void *child_getir(task_cbh handle);
 static void child_setir_state(task_cbh handle, const char *name, void *state,
 	ir_state_abort_cb abort_cb);
 static void *child_getir_state(task_cbh handle, const char *name);
+static const char *child_command(task_cbh handle);
 
 static irv_t child_irv = {
     child_setir,
@@ -87,7 +89,9 @@ static tcb_t script_cb = {
     child_closescript,
     child_setflags,
     child_getflags,
-    &child_irv
+    &child_irv,
+    NULL,
+    child_command
 };
 
 /* Asynchronous callback block for parent script. */
@@ -101,7 +105,9 @@ static tcb_t async_script_cb = {
     child_closescript,
     child_setflags,
     child_getflags,
-    &child_irv
+    &child_irv,
+    NULL,
+    child_command
 };
 
 #if !defined(_WIN32) /*[*/
@@ -116,7 +122,9 @@ static tcb_t child_cb = {
     child_closescript,
     child_setflags,
     child_getflags,
-    &child_irv
+    &child_irv,
+    NULL,
+    child_command
 };
 #endif /*]*/
 
@@ -141,6 +149,7 @@ typedef struct {
 typedef struct {
     llist_t llist;		/* linkage */
     char *parent_name;		/* cb name */
+    char *command;		/* command text */
     bool done;			/* true if script is complete */
     bool success;		/* success or failure */
     ioid_t exit_id;		/* I/O identifier for child exit */
@@ -181,6 +190,7 @@ free_child(child_t *c)
 {
     llist_unlink(&c->llist);
     Replace(c->parent_name, NULL);
+    Replace(c->command, NULL);
 #if !defined(_WIN32) /*[*/
     Replace(c->child_name, NULL);
 #endif /*]*/
@@ -713,6 +723,8 @@ child_setir_state(task_cbh handle, const char *name, void *state,
  *
  * @param[in] handle    CB handle
  * @param[in] name      Input request type name
+ *
+ * @returns input request state
  */
 static void *
 child_getir_state(task_cbh handle, const char *name)
@@ -720,6 +732,21 @@ child_getir_state(task_cbh handle, const char *name)
     child_t *c = (child_t *)handle;
 
     return task_cb_get_ir_state(&c->ir_state, name);
+}
+
+/**
+ * Get the command text.
+ *
+ * @param[in] handle	CB handle
+ *
+ * @returns command text, or NULL
+ */
+static const char *
+child_command(task_cbh handle)
+{
+    child_t *c = (child_t *)handle;
+
+    return c->command;
 }
 
 #if !defined(_WIN32) /*[*/
@@ -947,6 +974,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     bool async = false;
     bool keyboard_lock = true;
     bool stdout_redirect = true;
+    varbuf_t r;
+    unsigned i;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2];
@@ -961,7 +990,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     STARTUPINFO startupinfo;
     PROCESS_INFORMATION process_information;
     char *args;
-    unsigned i;
     cr_t *cr;
 #endif /*]*/
 
@@ -1069,7 +1097,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	(void) _exit(1);
     }
 
-    c = (child_t *)Calloc(sizeof(child_t), 1);
+    c = (child_t *)Calloc(1, sizeof(child_t));
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
     c->success = true;
@@ -1102,7 +1130,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (port == 0) {
 	return false;
     }
-    sin = (struct sockaddr_in *)Calloc(sizeof(struct sockaddr_in), 1);
+    sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
     sin->sin_family = AF_INET;
     sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     sin->sin_port = htons(port);
@@ -1114,7 +1142,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     putenv(lazyaf(PORT_ENV "=%d", port));
 
     /* Set up the stdout/stderr output pipes. */
-    c = (child_t *)Calloc(sizeof(child_t), 1);
+    c = (child_t *)Calloc(1, sizeof(child_t));
     if (!setup_cr(c)) {
 	Free(c);
 	return false;
@@ -1188,6 +1216,16 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->exit_id = AddInput(process_information.hProcess, child_exited);
 
 #endif /*]*/
+
+    /* Save the arguments. */
+    vb_init(&r);
+    for (i = 0; i < argc; i++) {
+	if (i > 0) {
+	    vb_appends(&r, ",");
+	}
+	vb_appends(&r, argv[i]);
+    }
+    c->command = vb_consume(&r);
 
     /* Create the context. It will be idle. */
     c->keyboard_lock = keyboard_lock;
