@@ -60,10 +60,6 @@
 #include "w3misc.h"
 #include "xio.h"
 
-#if defined(_WIN32) && !defined(WSA_FLAG_NO_HANDLE_INHERIT) /*[*/
-# define WSA_FLAG_NO_HANDLE_INHERIT 0x80
-#endif /*]*/
-
 static void peer_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool peer_done(task_cbh handle, bool success, bool abort);
@@ -526,6 +522,10 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	vtrace("Not closing listener %u (multi mode)\n", listener->port);
     }
 
+#if !defined(_WIN32) /*[*/
+    fcntl(accept_fd, F_SETFD, 1);
+#endif /*]*/
+
 #if defined(_WIN32) /*[*/
     event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (event == NULL) {
@@ -627,6 +627,9 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 #endif /*]*/
 	goto fail;
     }
+#if !defined(_WIN32) /*[*/
+    fcntl(listener->socket, F_SETFD, 1);
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
     listener->event = CreateEvent(NULL, FALSE, FALSE, NULL);

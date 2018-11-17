@@ -411,6 +411,9 @@ typedef SOCKET socket_t;
 # define SOCK_CLOSE(s)  closesocket(s)
 # define socket_errno()	WSAGetLastError()
 # define SE_EWOULDBLOCK WSAEWOULDBLOCK
+# if !defined(WSA_FLAG_NO_HANDLE_INHERIT) /*[*/
+#  define WSA_FLAG_NO_HANDLE_INHERIT 0x80
+# endif /*]*/
 #endif /*]*/
 
 /* Handy stuff. */

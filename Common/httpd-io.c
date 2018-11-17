@@ -263,6 +263,10 @@ hio_connection(iosrc_t fd, ioid_t id)
 	return;
     }
 
+#if !defined(_WIN32) /*[*/
+    fcntl(t, F_SETFD, 1);
+#endif /*]*/
+
     session = Malloc(sizeof(session_t));
     memset(session, 0, sizeof(session_t));
     vb_init(&session->pending.result);
@@ -326,7 +330,12 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
     int on = 1;
 
+#if !defined(_WIN32) /*[*/
     listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
+#else /*][*/
+    listen_s = WSASocket(sa->sa_family, SOCK_STREAM, 0, NULL, 0,
+	    WSA_FLAG_NO_HANDLE_INHERIT);
+#endif /*]*/
     if (listen_s == INVALID_SOCKET) {
 	popup_an_error("httpd socket: %s", socket_errtext());
 	goto done;
@@ -350,6 +359,9 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	listen_s = INVALID_SOCKET;
 	goto done;
     }
+#if !defined(_WIN32) /*[*/
+    fcntl(listen_s, F_SETFD, 1);
+#endif /*]*/
 #if defined(_WIN32) /*[*/
     listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (listen_event == NULL) {

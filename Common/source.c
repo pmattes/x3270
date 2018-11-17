@@ -255,6 +255,9 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_errno(errno, "%s", argv[0]);
 	return false;
     }
+#if !defined(_WIN32) /*[*/
+    fcntl(fd, F_SETFD, 1);
+#endif /*]*/
     Free(expanded_filename);
 
     /* Start reading from the file. */

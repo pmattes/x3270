@@ -40,6 +40,7 @@
 
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <termios.h>
 #endif /*]*/
 #include <signal.h>
@@ -550,6 +551,8 @@ main(int argc, char *argv[])
 	perror("pipe");
 	exit(1);
     }
+    fcntl(signalpipe[0], F_SETFD, 1);
+    fcntl(signalpipe[1], F_SETFD, 1);
     AddInput(signalpipe[0], synchronous_signal);
 #else /*][*/
     sigint_event = CreateEvent(NULL, FALSE, FALSE, NULL);

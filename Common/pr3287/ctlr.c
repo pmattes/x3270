@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2014, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1345,6 +1345,7 @@ popen_no_sigint(const char *command)
 	case 0:		/* child */
 		fclose(f);
 		dup2(fds[0], 0);
+		close(fds[1]);
 		signal(SIGINT, SIG_IGN);
 		execl("/bin/sh", "sh", "-c", command, NULL);
 

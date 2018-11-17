@@ -468,6 +468,9 @@ pr3287_start_now(const char *lu, bool associated)
 	pr3287_ls = INVALID_SOCKET;
 	return;
     }
+#if !defined(_WIN32) /*[*/
+    fcntl(pr3287_ls, F_SETFD, 1);
+#endif /*]*/
 #if defined(_WIN32) /*[*/
     pr3287_ls_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (pr3287_ls_handle == NULL) {
@@ -978,6 +981,9 @@ pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
     } else {
 	vtrace("Accepted sync connection from printer.\n");
 
+#if !defined(_WIN32) /*[*/
+	fcntl(pr3287_sync, F_SETFD, 1);
+#endif /*]*/
 #if defined(_WIN32) /*[*/
 	pr3287_sync_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (pr3287_sync_handle == NULL) {
