@@ -115,13 +115,14 @@ usage:\n\
    shuttle commands and responses between stdin/stdout and emulator\n\
  %s [options] -I <emulator-name> [-H <help-action-name>]\n\
    interactive command window\n\
+ %s --version\n\
 options:\n\
  -v       verbose operation\n"
 #if !defined(_WIN32) /*[*/
 " -p pid   connect to process <pid>\n"
 #endif /*]*/
 " -t port  connect to TCP port <port>\n",
-	    me, me, me, me, me);
+	    me, me, me, me, me, me);
     exit(__LINE__);
 }
 
@@ -174,6 +175,11 @@ main(int argc, char *argv[])
 	me++;
     } else {
 	me = argv[0];
+    }
+
+    if (argc > 0 && !strcmp(argv[1], "--version")) {
+	printf("%s\n", build);
+	return 0;
     }
 
     /* Parse options. */
