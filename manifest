@@ -135,6 +135,7 @@ Common/b3270/ui_stream.c
 Common/b8.c
 Common/base64.c
 Common/bind-opt.c
+Common/boolstr.c
 Common/c3270/c3270.c
 Common/c3270/cmenubar.h
 Common/c3270/cscreen.h
@@ -333,6 +334,7 @@ include/b3270proto.h
 include/b8.h
 include/base64.h
 include/bind-opt.h
+include/boolstr.h
 include/charset.h
 include/child.h
 include/child_popups.h

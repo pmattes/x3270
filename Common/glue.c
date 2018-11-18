@@ -46,6 +46,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "boolstr.h"
 #include "charset.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
@@ -1186,6 +1187,7 @@ parse_xrm(const char *arg, const char *where)
     reslist_t *r;
     char *hide;
     bool arbitrary = false;
+    const char *errmsg;
 
     /* Validate and split. */
     if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0) {
@@ -1230,13 +1232,8 @@ parse_xrm(const char *arg, const char *where)
     }
     switch (type) {
     case XRM_BOOLEAN:
-	if (!strcasecmp(s, "true") || !strcasecmp(s, "t") || !strcmp(s, "1")) {
-	    *(bool *)address = true;
-	} else if (!strcasecmp(s, "false") || !strcasecmp(s, "f") ||
-		!strcmp(s, "0")) {
-	    *(bool *)address = false;
-	} else {
-	    xs_warning("%s: Invalid bool value: %s", where, s);
+	if ((errmsg = boolstr(s, (bool *)address)) != NULL) {
+	    xs_warning("%s %s", where, errmsg);
 	    *(bool *)address = false;
 	}
 	break;

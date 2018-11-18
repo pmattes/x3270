@@ -37,6 +37,7 @@
 #include "appres.h"
 #include "resources.h"
 
+#include "boolstr.h"
 #include "opts.h"
 #include "lazya.h"
 #include "popups.h"
@@ -328,29 +329,12 @@ sio_option_names(void)
 }
 
 /*
- * Parse a Boolean value.
- */
-static bool
-parse_bool(const char *value, bool *res)
-{
-    if (!strcasecmp(value, "true")) {
-	*res = true;
-	return true;
-    }
-    if (!strcasecmp(value, "false")) {
-	*res = false;
-	return true;
-    }
-    return false;
-}
-
-/*
  * Toggle for TLS parameters.
  */
 static bool
 sio_toggle(const char *name, const char *value)
 {
-    bool b;
+    const char *errmsg;
 
     if (cstate != NOT_CONNECTED) {
 	popup_an_error("Toggle(%s): Cannot change while connected", name);
@@ -362,18 +346,16 @@ sio_toggle(const char *name, const char *value)
 	Replace(appres.ssl.accept_hostname, value[0]? NewString(value) : NULL);
 	break;
     case SSL_OPT_VERIFY_HOST_CERT:
-	if (!parse_bool(value, &b)) {
-	    popup_an_error("Toggle(%s): Invalid value '%s'", name, value);
+	if ((errmsg = boolstr(value, &appres.ssl.verify_host_cert)) != NULL) {
+	    popup_an_error("%s %s", name, errmsg);
 	    return false;
 	}
-	appres.ssl.verify_host_cert = b;
 	break;
     case SSL_OPT_STARTTLS:
-	if (!parse_bool(value, &b)) {
-	    popup_an_error("Toggle(%s): Invalid value '%s'", name, value);
+	if ((errmsg = boolstr(value, &appres.ssl.starttls)) != NULL) {
+	    popup_an_error("%s %s", name, errmsg);
 	    return false;
 	}
-	appres.ssl.starttls = b;
 	break;
     case SSL_OPT_CA_DIR:
 	Replace(appres.ssl.ca_dir, value[0]? NewString(value): NULL);

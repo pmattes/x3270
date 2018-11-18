@@ -39,6 +39,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "boolstr.h"
 #include "lazya.h"
 #include "menubar.h"
 #include "popups.h"
@@ -328,6 +329,7 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
     bool success = true;
     int d, du;
     toggle_extended_notifies_t *notifies;
+    const char *value;
 
     action_debug(name, ia, argc, argv);
 
@@ -367,8 +369,17 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
 	/* Check for old syntax. */
 	if (argc - arg == 1) {
 	    if (u != NULL) {
-		popup_an_error("%s: '%s' requires a value", name, argv[arg]);
-		goto failed;
+		/*
+		 * Allow a bool-valued field to be toggled, even if it isn't a
+		 * traditional toggle.
+		 */
+		if (!is_toggle || u->type != XRM_BOOLEAN) {
+		    popup_an_error("%s: '%s' requires a value", name,
+			    argv[arg]);
+		    goto failed;
+		}
+		value = (*(bool *)u->address)? "false": "true";
+		goto have_value;
 	    }
 	    if (is_toggle || !toggled(ix)) {
 		/*
@@ -379,27 +390,22 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
 	    }
 	    goto done;
 	}
+	value = argv[arg + 1];
 
+have_value:
 	if (u == NULL) {
+	    const char *errmsg;
+	    bool b;
+
 	    /* Check for explicit Boolean value. */
-	    if (!strcasecmp(argv[arg + 1], "set") ||
-		    !strcasecmp(argv[arg + 1], "on") ||
-		    !strcasecmp(argv[arg + 1], "true") ||
-		    !strcasecmp(argv[arg + 1], "1")) {
-		if (!toggled(ix)) {
-		    do_toggle_reason(ix, TT_ACTION);
-		}
-	    } else if (!strcasecmp(argv[arg + 1], "clear") ||
-		    !strcasecmp(argv[arg + 1], "off") ||
-		    !strcasecmp(argv[arg + 1], "false") ||
-		    !strcasecmp(argv[arg + 1], "0")) {
-		if (toggled(ix)) {
-		    do_toggle_reason(ix, TT_ACTION);
-		}
-	    } else {
-		popup_an_error("%s: Unknown keyword '%s' (must be 'Set' "
-			"or 'Clear')", name, argv[arg + 1]);
+	    if ((errmsg = boolstr(argv[arg + 1], &b)) != NULL) {
+		popup_an_error("%s: %s %s", name, argv[arg], errmsg);
 		goto failed;
+	    }
+	    if (b && !toggled(ix)) {
+		do_toggle_reason(ix, TT_ACTION);
+	    } else if (!b && toggled(ix)) {
+		do_toggle_reason(ix, TT_ACTION);
 	    }
 	} else {
 	    /*
@@ -418,7 +424,7 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
 		    dones[n_dones++].success = false;
 		}
 	    }
-	    if (!u->upcall(argv[arg], argv[arg + 1])) {
+	    if (!u->upcall(argv[arg], value)) {
 		goto failed;
 	    }
 	    if (u->done == NULL) {

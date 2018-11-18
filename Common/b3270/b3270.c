@@ -50,6 +50,7 @@
 #include "actions.h"
 #include "b3270proto.h"
 #include "bind-opt.h"
+#include "boolstr.h"
 #include "bscreen.h"
 #include "b_password.h"
 #include "charset.h"
@@ -519,12 +520,10 @@ toggle_oversize(const char *name _is_unused, const char *value)
 static bool
 toggle_extended(const char *name _is_unused, const char *value)
 {
-    if (!strcasecmp(value, "true")) {
-	pending_extended_value = true;
-    } else if (!strcasecmp(value, "false")) {
-	pending_extended_value = false;
-    } else {
-	popup_an_error("%s value must be True or False", ResExtended);
+    const char *errmsg = boolstr(value, &pending_extended_value);
+
+    if (errmsg != NULL) {
+	popup_an_error("%s %s", ResExtended, errmsg);
 	return false;
     }
 

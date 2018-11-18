@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\Common\base64.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\boolstr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>

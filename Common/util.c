@@ -38,6 +38,8 @@
 #endif /*]*/
 #include <fcntl.h>
 #include <errno.h>
+
+#include "boolstr.h"
 #include "resources.h"
 #include "charset.h"
 #include "fallbacks.h"
@@ -814,15 +816,16 @@ bool
 get_resource_bool(const char *name)
 {
     char *s = get_resource(name);
+    bool b;
 
     if (s == NULL) {
 	return false;
     }
 
-    return !strcasecmp(s, "true") ||
-	!strcasecmp(s, "set") ||
-	!strcasecmp(s, "on") ||
-	!strcasecmp(s, "1");
+    if (boolstr(s, &b) != NULL) {
+	return false;
+    }
+    return b;
 }
 
 /*

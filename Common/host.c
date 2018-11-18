@@ -45,6 +45,7 @@
 #include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "xio.h"
@@ -224,6 +225,45 @@ host_set_flag(int flag)
 }
 
 /**
+ * Toggle the reconnect flag.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	New value.
+ *
+ * @return true if sucessful
+ */
+static bool
+set_reconnect(const char *name _is_unused, const char *value)
+{
+    bool v;
+
+    if (!strcasecmp(value, "true")
+	    || !strcasecmp(value, "t")
+	    || !strcasecmp(value, "set")
+	    || !strcasecmp(value, "1")) {
+	v = true;
+    } else if (!strcasecmp(value, "false")
+	    || !strcasecmp(value, "f")
+	    || !strcasecmp(value, "clear")
+	    || !strcasecmp(value, "0")) {
+	v = false;
+    } else {
+	popup_an_error("%s: must specify true or false", ResReconnect);
+	return false;
+    }
+
+    if (appres.interactive.reconnect == v) {
+	return true;
+    }
+
+    appres.interactive.reconnect = v;
+    if (!v) {
+	host_cancel_reconnect();
+    }
+    return true;
+}
+
+/**
  * Hosts module registration.
  */
 void
@@ -239,6 +279,10 @@ host_register(void)
 
     /* Register for events. */
     register_schange(ST_EXITING, host_exiting);
+
+    /* Register our toggles. */
+    register_extended_toggle(ResReconnect, set_reconnect, NULL, NULL,
+	    (void **)&appres.interactive.reconnect, XRM_BOOLEAN);
 
     /* Register our actions. */
     register_actions(host_actions, array_count(host_actions));
