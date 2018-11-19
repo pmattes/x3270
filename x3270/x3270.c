@@ -456,6 +456,7 @@ main(int argc, char *argv[])
      * actions, options and callbacks. These functions have no
      * interdependencies and cannot depend on resource values.
      */
+    actions_register();
     charset_register();
     ctlr_register();
     ft_register();

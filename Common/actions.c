@@ -45,6 +45,7 @@
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
+#include "varbuf.h"
 
 llist_t actions_list = LLIST_INIT(actions_list);
 unsigned actions_list_count;
@@ -324,4 +325,77 @@ register_actions(action_table_t *new_actions, unsigned count)
 
 	actions_list_count++;
     }
+}
+
+/**
+ * Compare two action names.
+ *
+ * @param[in] a		First action name.
+ * @param[in] b		Second action name.
+ *
+ * @returns 0 if equal, -1 if a < b, 1 if a > b
+ */
+static int
+action_cmp(const void *a, const void *b)
+{
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+/**
+ * Actions action. Lists all of the known actions.
+ *
+ * @param[in] ia	Cause of action invocation.
+ * @param[in] argc	Argument count.
+ * @param[in] argv	Arguments.
+ *
+ * @returns true for success, false for failure.
+ */
+static bool
+Actions_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_elt_t *e;
+    const char **names;
+    unsigned i;
+    varbuf_t r;
+
+    action_debug("Actions", ia, argc, argv);
+    if (check_argc("Actions", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    /* Gather the names. */
+    names = Calloc(actions_list_count, sizeof(const char *));
+    i = 0;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	names[i++] = e->t.name;
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+
+    /* Sort them. */
+    qsort(names, actions_list_count, sizeof(const char *), action_cmp);
+
+    /* Emit them. */
+    vb_init(&r);
+    for (i = 0; i < actions_list_count; i++) {
+	vb_appendf(&r, "%s%s()", i? " ": "", names[i]);
+    }
+    action_output("%s", vb_buf(&r));
+    vb_free(&r);
+
+    /* Done. */
+    Free(names);
+    return true;
+}
+
+/**
+ * Action registration for the actions module.
+ */
+void
+actions_register(void)
+{
+    static action_table_t actions[] = {
+	{ "Actions",             Actions_action,          ACTION_KE }
+    };
+
+    /* Register our actions. */
+    register_actions(actions, array_count(actions));
 }
