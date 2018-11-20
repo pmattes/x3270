@@ -1453,6 +1453,7 @@ ft_help(bool as_action _is_unused)
     Transfer\n\
   To specify parameters on the command line:\n\
     Transfer <keyword>=<value>...\n\
+    or Transfer <keyword>,<value>...\n\
 Keywords:");
 
     action_output(
@@ -1550,7 +1551,8 @@ Keywords:");
 		conf.avblock);
     }
     action_output(
-"Note that to embed a space in a value, you must quote the keyword, e.g.:\n\
+"Note that when you use <keyword>=<value> syntax, to embed a space in a value,\n\
+you must quote the keyword, e.g.:\n\
   Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm");
 
     if (conf.local_filename) {

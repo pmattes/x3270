@@ -733,26 +733,40 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	for (i = 0; i < N_PARMS; i++) {
 	    char *eq;
 	    size_t kwlen;
+	    const char *value;
 
 	    eq = strchr(argv[j], '=');
-	    if (eq == NULL || eq == argv[j] || !*(eq + 1)) {
-		popup_an_error("Transfer: Invalid option syntax: '%s'",
-			argv[j]);
-		return NULL;
+	    if (eq != NULL) {
+		/* Using 'keyword=value' syntax. */
+		if (eq == argv[j] || !*(eq + 1)) {
+		    popup_an_error("Transfer: Invalid option syntax: '%s'",
+			    argv[j]);
+		    return NULL;
+		}
+		kwlen = eq - argv[j];
+		value = eq + 1;
+	    } else {
+		/* Using 'keyword,value' syntax. */
+		kwlen = strlen(argv[j]);
+		if (j == argc - 1) {
+		    popup_an_error("Transfer: missing value after '%s'",
+			    argv[j]);
+		    return NULL;
+		}
+		value = argv[j + 1];
 	    }
-	    kwlen = eq - argv[j];
 	    if (!strncasecmp(argv[j], tp[i].name, kwlen)
 		    && !tp[i].name[kwlen]) {
 		if (tp[i].keyword[0]) {
 		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
-			if (!strncasecmp(eq + 1, tp[i].keyword[k],
-				    strlen(eq + 1))) {
+			if (!strncasecmp(value, tp[i].keyword[k],
+				    strlen(value))) {
 			    break;
 			}
 		    }
 		    if (k >= 4 || tp[i].keyword[k] == NULL) {
 			popup_an_error("Transfer: Invalid option value: '%s'",
-				eq + 1);
+				value);
 			return NULL;
 		    }
 		} else switch (i) {
@@ -764,23 +778,27 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-			(void) strtol(eq + 1, &ptr, 10);
-			if (ptr == eq + 1 || *ptr) {
+			(void) strtol(value, &ptr, 10);
+			if (ptr == value || *ptr) {
 			    popup_an_error("Transfer: Invalid option value: "
-				    "'%s'", eq + 1);
+				    "'%s'", value);
 			    return NULL;
 			}
 			break;
 		    default:
 			break;
 		}
-		tp[i].value = NewString(eq + 1);
+		tp[i].value = NewString(value);
+		if (eq == NULL) {
+		    /* Skip the parameter. */
+		    j++;
+		}
 		break;
 	    }
-	}
-	if (i >= N_PARMS) {
-	    popup_an_error("Transfer: Unknown option: '%s'", argv[j]);
-	    return NULL;
+	    if (i >= N_PARMS) {
+		popup_an_error("Transfer: Unknown option: '%s'", argv[j]);
+		return NULL;
+	    }
 	}
     }
 
