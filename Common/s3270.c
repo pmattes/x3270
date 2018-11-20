@@ -98,7 +98,7 @@ usage(const char *msg)
 	fprintf(stderr, "%s\n", msg);
     }
     fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
-	    programname);
+	    app);
     fprintf(stderr, "Options:\n");
     cmdline_help(false);
     exit(1);

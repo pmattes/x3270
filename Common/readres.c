@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2009, 2013-2016, 2018 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,11 +52,21 @@ validate_and_split_resource(const char *where, const char *arg,
     static char *me_dot = NULL;
     static char *me_star = NULL;
     static size_t me_len = 0;
+    static char *pgm_dot = NULL;
+    static char *pgm_star = NULL;
+    static size_t pgm_len = 0;
+    static char *alt_dot = "";
 
     if (me_dot == NULL) {
 	me_dot = xs_buffer("%s.", app);
 	me_star = xs_buffer("%s*", app);
 	me_len = strlen(me_dot);
+	pgm_dot = xs_buffer("%s.", programname);
+	pgm_star = xs_buffer("%s*", programname);
+	pgm_len = strlen(pgm_dot);
+	if (strcmp(app, programname)) {
+	    alt_dot = xs_buffer(" or '%s'", pgm_dot);
+	}
     }
 
     /* Enforce "-3270." or "-3270*" or "*". */
@@ -64,11 +74,15 @@ validate_and_split_resource(const char *where, const char *arg,
 	match_len = me_len;
     } else if (!strncmp(arg, me_star, me_len)) {
 	match_len = me_len;
+    } else if (!strncmp(s, pgm_dot, pgm_len)) {
+	match_len = pgm_len;
+    } else if (!strncmp(arg, pgm_star, pgm_len)) {
+	match_len = pgm_len;
     } else if (arg[0] == '*') {
 	match_len = 1;
     } else {
 	xs_warning("%s: Invalid resource syntax '%.*s', name must begin with "
-		"'%s'", where, (int)me_len, arg, me_dot);
+		"'%s', '*'%s", where, (int)me_len, arg, me_dot, alt_dot);
 	return -1;
     }
 

@@ -4201,29 +4201,30 @@ void
 charset_list_dbcs(void)
 {
 #if defined(X3270_DBCS) /*[*/
-    	int i;
-	int j;
-	char *sep = "";
+    int i;
+    int j;
+    char *sep = "";
 
-	printf("DBCS host code pages (with aliases):\n");
-	for (i = 0; uni16[i].name != NULL; i++) {
-		bool any = false;
-		char *asep = " (";
+    fprintf(stderr, "DBCS host code pages (with aliases):\n");
+    for (i = 0; uni16[i].name != NULL; i++) {
+	bool any = false;
+	char *asep = " (";
 
-	    	printf("%s%s", sep, uni16[i].name);
-		for (j = 0; cpaliases16[j].alias != NULL; j++) {
+	fprintf(stderr, "%s%s", sep, uni16[i].name);
+	for (j = 0; cpaliases16[j].alias != NULL; j++) {
 
-		    	if (!strcmp(cpaliases16[j].canon, uni16[i].name)) {
-			    	printf("%s%s", asep, cpaliases16[j].alias);
-				asep = ", ";
-				any = true;
-			}
-		}
-		if (any)
-		    	printf(")");
-		sep = ", ";
+	    if (!strcmp(cpaliases16[j].canon, uni16[i].name)) {
+		fprintf(stderr, "%s%s", asep, cpaliases16[j].alias);
+		asep = ", ";
+		any = true;
+	    }
 	}
-	printf("\n");
+	if (any) {
+	    fprintf(stderr, ")");
+	}
+	sep = ", ";
+    }
+    fprintf(stderr, "\n");
 #endif /*]*/
 }
 

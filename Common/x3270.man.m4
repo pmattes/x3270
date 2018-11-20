@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2017, Paul Mattes.
+dnl Copyright (c) 1993-2018, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -38,17 +38,19 @@ ifelse(XX_PRODUCT,b3270,`back end
 ')dnl
 XX_SH(Synopsis)
 XX_FB(XX_PRODUCT)
-ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script)]
-')dnl
+ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] [-- [options] [host]]',
+`
 [XX_FI(options)]
 ifelse(XX_PRODUCT,b3270,,`[XX_FI(host)]
 ')dnl
-ifelse(XX_PRODUCT,tcl3270,`[XX_DASHED(XX_DASH) XX_FI(script-arg)...]
 ')
 XX_BR
-XX_FB(XX_PRODUCT) [XX_FI(options)] ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script)] ')XX_FI(session-file).XX_PRODUCT
-ifelse(XX_PRODUCT,tcl3270,`[XX_DASHED(XX_DASH) XX_FI(script-arg)...]
-')
+XX_FB(XX_PRODUCT) ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] -- [XX_FI(options)]',`[XX_FI(options)]') XX_FI(session-file).XX_PRODUCT
+ifelse(XX_PRODUCT,tcl3270,`XX_BR
+XX_FB(XX_PRODUCT) -v
+XX_BR
+XX_FB(XX_PRODUCT) --help
+')dnl
 XX_SH(Description)
 XX_FB(XX_PRODUCT) opens a telnet connection to an XX_SM(IBM)
 ifelse(XX_PRODUCT,x3270,`host in an X window.',
@@ -208,6 +210,10 @@ ifelse(XX_PRODUCT,c3270,
 Defines the dimensions and escape sequence for the default (80-column)
 screen mode.
 See XX_LINK(#Screen-Size-Switching,XX_SM(SCREEN SIZE SWITCHING)), below.
+')dnl
+ifelse(XX_PRODUCT,tcl3270,`XX_TP(XX_FB(XX_DASHED(d)))
+Display s3270 I/O debug output. This must be the first option
+after XX_DASHED(-).
 ')dnl
 XX_TP(XX_FB(XX_DASHED(devname)) XX_FI(name))
 Specifies a device name (workstation ID) for RFC 4777 support.
@@ -542,7 +548,12 @@ ifelse(XX_MODE,console,`XX_TP(XX_FB(XX_DASHED(utf8)))
 Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
 ')dnl
 XX_TP(XX_FB(XX_DASHED(v)))
-Display the version and build options for XX_FB(XX_PRODUCT) and exit.
+ifelse(XX_PRODUCT,tcl3270,`If passed before the XX_DASHED(-), displays the
+version information for XX_FB(XX_PRODUCT) and exits.
+If passed after the XX_DASHED(-), displays the version and build information
+for the back end (XX_FB(s3270)) and exits.
+',`Display the version and build options for XX_FB(XX_PRODUCT) and exit.
+')dnl
 XX_TP(XX_FB(XX_DASHED(verifycert)))
 For SSL/TLS connections, verify the host certificate, and do not allow
 the connection to complete unless it can be validated. (This is the default

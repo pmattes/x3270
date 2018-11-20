@@ -3561,7 +3561,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 		if (queries[i].specific && strcmp(s, "")) {
 		    s = "...";
 		}
-		action_output("%s: %s", queries[i].name, s);
+		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
 	    }
 	}
 	break;
@@ -3575,7 +3575,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 		} else {
 		    s = queries[i].string;
 		}
-		action_output("%s\n", *s? s: " ");
+		action_output("%s\n", s);
 		return true;
 	    }
 	}

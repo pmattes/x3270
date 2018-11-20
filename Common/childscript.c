@@ -1257,7 +1257,7 @@ array_add(const char ***s, int ix, const char *v)
 bool
 Prompt_action(ia_t ia, unsigned argc, const char **argv)
 {
-    const char *params[2] = { app, NULL };
+    const char *params[2] = { programname, NULL };
     unsigned i;
     const char **nargv = NULL;
     int nargc = 0;

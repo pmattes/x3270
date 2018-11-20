@@ -335,7 +335,7 @@ charset_list(void)
     int j;
     char *sep = "";
 
-    printf("SBCS host code pages (with aliases):\n");
+    fprintf(stderr, "SBCS host code pages (with aliases):\n");
     for (i = 0; uni[i].name != NULL; i++) {
 	bool any = false;
 	char *asep = " (";
@@ -344,21 +344,21 @@ charset_list(void)
 	    continue;
 	}
 
-	printf("%s%s", sep, uni[i].name);
+	fprintf(stderr, "%s%s", sep, uni[i].name);
 	for (j = 0; cpaliases[j].alias != NULL; j++) {
 
 	    if (!strcmp(cpaliases[j].canon, uni[i].name)) {
-		printf("%s%s", asep, cpaliases[j].alias);
+		fprintf(stderr, "%s%s", asep, cpaliases[j].alias);
 		asep = ", ";
 		any = true;
 	    }
 	}
 	if (any) {
-	    printf(")");
+	    fprintf(stderr, ")");
 	}
 	sep = ", ";
     }
-    printf("\n");
+    fprintf(stderr, "\n");
 
     if (dbcs_allowed) {
 	charset_list_dbcs();

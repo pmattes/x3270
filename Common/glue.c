@@ -90,8 +90,8 @@ static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
 static merge_profile_t *merge_profilep = NULL;
-static char *session_suffix[3];
-static size_t session_suffix_len[3];
+static char *session_suffix[4];
+static size_t session_suffix_len[4];
 static int n_session_suffixes;
 static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
@@ -252,6 +252,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	add_session_suffix(xs_buffer(".%s", app + 1));
 	add_session_suffix(xs_buffer(".%.3s", app));
 #endif /*]*/
+	if (strcmp(programname, app)) {
+	    add_session_suffix(xs_buffer(".%s", programname));
+	}
     }
     if (*cl_hostname != NULL &&
 	(suffix_match = check_session_suffix(*cl_hostname)) >= 0) {
