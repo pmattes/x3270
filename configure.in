@@ -106,6 +106,10 @@ if test "x$enable_wc3270" = xyes -o \
     enable_wx3270if=yes
 fi
 
+if test "x$enable_tcl3270" = xyes; then
+    enable_s3270=yes
+fi
+
 AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
 AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
 if test "$mingw64_found" = "no" -o "$mingw32_found" = "no"
@@ -121,7 +125,6 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
-        "x$enable_tcl3270" = xyes -o \
         "x$enable_pr3287" = xyes -o \
 	"x$enable_unix_lib" = xyes; then
     AC_CONFIG_SUBDIRS(lib)
@@ -135,7 +138,6 @@ if test "x$enable_wc3270" = xyes -o \
 fi
 
 T_ALL=""
-T_DEPEND=""
 T_CLEAN=""
 T_CLOBBER=""
 T_INSTALL=""
@@ -145,7 +147,6 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
-	T_DEPEND="$T_DEPEND $i-depend"
 	T_CLEAN="$T_CLEAN $i-clean"
 	T_CLOBBER="$T_CLOBBER $i-clobber"
 	case "$i" in
@@ -160,9 +161,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
-        "x$enable_tcl3270" = xyes -o \
 	"x$enable_pr3287" = xyes; then
-    T_DEPEND="$T_DEPEND unix-lib-depend"
     T_CLEAN="$T_CLEAN unix-lib-clean"
     T_CLOBBER="$T_CLOBBER unix-lib-clobber"
 fi
@@ -171,13 +170,11 @@ if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wb3270" = xyes -o \
 	"x$enable_wpr3287" = xyes; then
-    T_DEPEND="$T_DEPEND windows-lib-depend"
     T_CLEAN="$T_CLEAN windows-lib-clean"
     T_CLOBBER="$T_CLOBBER windows-lib-clobber"
 fi
 
 AC_SUBST(T_ALL)
-AC_SUBST(T_DEPEND)
 AC_SUBST(T_CLEAN)
 AC_SUBST(T_CLOBBER)
 AC_SUBST(T_INSTALL)

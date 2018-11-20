@@ -568,7 +568,6 @@ T_INSTALL_MAN
 T_INSTALL
 T_CLOBBER
 T_CLEAN
-T_DEPEND
 T_ALL
 subdirs
 mingw32_found
@@ -1844,6 +1843,10 @@ if test "x$enable_wc3270" = xyes -o \
     enable_wx3270if=yes
 fi
 
+if test "x$enable_tcl3270" = xyes; then
+    enable_s3270=yes
+fi
+
 # Extract the first word of "x86_64-w64-mingw32-gcc", so it can be a program name with args.
 set dummy x86_64-w64-mingw32-gcc; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -1934,7 +1937,6 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
-        "x$enable_tcl3270" = xyes -o \
         "x$enable_pr3287" = xyes -o \
 	"x$enable_unix_lib" = xyes; then
     ac_aux_dir=
@@ -1981,7 +1983,6 @@ if test "x$enable_wc3270" = xyes -o \
 fi
 
 T_ALL=""
-T_DEPEND=""
 T_CLEAN=""
 T_CLOBBER=""
 T_INSTALL=""
@@ -1991,7 +1992,6 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
-	T_DEPEND="$T_DEPEND $i-depend"
 	T_CLEAN="$T_CLEAN $i-clean"
 	T_CLOBBER="$T_CLOBBER $i-clobber"
 	case "$i" in
@@ -2006,9 +2006,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
-        "x$enable_tcl3270" = xyes -o \
 	"x$enable_pr3287" = xyes; then
-    T_DEPEND="$T_DEPEND unix-lib-depend"
     T_CLEAN="$T_CLEAN unix-lib-clean"
     T_CLOBBER="$T_CLOBBER unix-lib-clobber"
 fi
@@ -2017,11 +2015,9 @@ if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wb3270" = xyes -o \
 	"x$enable_wpr3287" = xyes; then
-    T_DEPEND="$T_DEPEND windows-lib-depend"
     T_CLEAN="$T_CLEAN windows-lib-clean"
     T_CLOBBER="$T_CLOBBER windows-lib-clobber"
 fi
-
 
 
 
