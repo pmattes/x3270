@@ -686,51 +686,9 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     return TCL_OK;
 }
 
-/* Heap functions. */
-void *
-Malloc(size_t size)
-{
-    void *r = malloc(size);
-
-    if (r == NULL) {
-	fprintf(stderr, "Out of memory");
-	exit(1);
-    }
-    return r;
-}
-
-void *
-Realloc(void *buf, size_t size)
-{
-    void *r = realloc(buf, size);
-
-    if (r == NULL) {
-	fprintf(stderr, "Out of memory");
-	exit(1);
-    }
-    return r;
-}
-
-void *
-Calloc(size_t nelem, size_t elemsize)
-{
-    void *r = Malloc(nelem * elemsize);
-
-    memset(r, 0, nelem * elemsize);
-    return r;
-}
-
 void
-Free(void *buf)
+Error(const char *msg)
 {
-    free(buf);
-}
-
-char *
-NewString(const char *s)
-{
-    char *r = Malloc(strlen(s) + 1);
-
-    strcpy(r, s);
-    return r;
+    fprintf(stderr, "%s\n", msg);
+    exit(1);
 }

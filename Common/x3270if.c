@@ -1299,33 +1299,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     }
 }
 
-/* Auxiliary functions used by base64. */
-void *
-Malloc(size_t size)
-{
-    void *r = malloc(size);
-
-    if (r == NULL) {
-	fprintf(stderr, "Out of memory");
-	exit(1);
-    }
-    return r;
-}
-
-void *
-Realloc(void *buf, size_t size)
-{
-    void *r = realloc(buf, size);
-
-    if (r == NULL) {
-	fprintf(stderr, "Out of memory");
-	exit(1);
-    }
-    return r;
-}
-
 void
-Free(void *buf)
+Error(const char *msg)
 {
-    free(buf);
+    fprintf(stderr, "%s\n", msg);
+    exit(1);
 }

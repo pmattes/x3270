@@ -166,12 +166,14 @@ base64_decode(const char *s)
 
 #if defined UNIT_TEST /*[*/
 #include <assert.h>
-void *Malloc(size_t n)
+void *
+Malloc(size_t n)
 {
     return malloc(n);
 }
 
-void Free(void *buf)
+void
+Free(void *buf)
 {
     free(buf);
 }
