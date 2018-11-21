@@ -3137,7 +3137,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tclver" >&5
 $as_echo "$tclver" >&6; }
 
-pthread=`echo $tclver | awk -F . '{ if ($1 > 8 || ($1 == 8 && $2 >= 6)) print "1"}'`
+pthread=`echo $tclver | awk -F . '{ if ($1 > 8 || $2 >= 6) print "1"}'`
 
 tclvr=`echo $tclver | tr -d .`
 

@@ -464,8 +464,10 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     s3270pipe[0] = from_s3270_pipe[0];
     s3270pipe[1] = to_s3270_pipe[1];
 
+#if defined(NEED_PTHREADS) /*[*/
     /* Set up the mutex. */
     pthread_mutex_init(&cmd_mutex, NULL);
+#endif /*]*/
 
     /* Run 'Actions()' to learn what Tcl commands we need to add. */
     if (run_s3270("Actions()", &success, NULL, &ret) < 0) {
