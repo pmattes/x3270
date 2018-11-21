@@ -100,6 +100,7 @@ typedef struct {
     char	*min_version;
     int		 connect_timeout;
     int		 nop_seconds;
+    char	*alias;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

@@ -252,8 +252,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	add_session_suffix(xs_buffer(".%s", app + 1));
 	add_session_suffix(xs_buffer(".%.3s", app));
 #endif /*]*/
-	if (strcmp(programname, app)) {
-	    add_session_suffix(xs_buffer(".%s", programname));
+	if (appres.alias != NULL) {
+	    add_session_suffix(xs_buffer(".%s", appres.alias));
 	}
     }
     if (*cl_hostname != NULL &&
@@ -496,6 +496,8 @@ set_appres_defaults(void)
 #endif /*]*/
 
 static opt_t base_opts[] = {
+{ OptAlias,    OPT_STRING,  false, ResAlias,   aoffset(alias),
+    "<name>", "Define application alias for -xrm and session file suffix" },
 { OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,
@@ -945,6 +947,7 @@ parse_model_number(char *m)
  */
 
 static res_t base_resources[] = {
+    { ResAlias,		aoffset(alias),		XRM_STRING },
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },

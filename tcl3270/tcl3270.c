@@ -388,7 +388,7 @@ done:
 static int
 tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 {
-    char **nargv = Calloc(argc + 5, sizeof(char *));
+    char **nargv = Calloc(argc + 7, sizeof(char *));
     int i_in, i_out = 0;
     int to_s3270_pipe[2];
     int from_s3270_pipe[2];
@@ -439,10 +439,12 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     }
 
     /* Set up s3270's command-line arguments. */
-    nargv[i_out++] = "tcl3270";
+    nargv[i_out++] = "s3270";
     nargv[i_out++] = "-utf8";
     nargv[i_out++] = "-minversion";
     nargv[i_out++] = "4.0";
+    nargv[i_out++] = "-alias";
+    nargv[i_out++] = "tcl3270";
     if (skip_ix >= 0) {
 	for (i_in = skip_ix + 1; i_in < argc; i_in++) {
 	    nargv[i_out++] = (char *)argv[i_in];

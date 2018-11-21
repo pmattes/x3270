@@ -36,6 +36,7 @@
 #define ResActiveIcon		"activeIcon"
 #define ResAdVersion		"adVersion"
 #define ResAidWait		"aidWait"
+#define ResAlias		"alias"
 #define ResAllBold		"allBold"
 #define ResAllowResize		"allowResize"
 #define ResAltCursor		"altCursor"
@@ -239,6 +240,7 @@
 /* Dotted resource names. */
 #define DotAcceptHostname	"." ResAcceptHostname
 #define DotActiveIcon		"." ResActiveIcon
+#define DotAlias		"." ResAlias
 #define DotAplMode		"." ResAplMode
 #define DotCaDir		"." ResCaDir
 #define DotCaFile		"." ResCaFile
@@ -462,6 +464,7 @@
 /* Options. */
 #define OptAcceptHostname	"-accepthostname"
 #define OptActiveIcon		"-activeicon"
+#define OptAlias		"-alias"
 #define OptAllBold		"-allbold"
 #define OptAltScreen		"-altscreen"
 #define OptAplMode		"-apl"
