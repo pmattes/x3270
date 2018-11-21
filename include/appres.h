@@ -171,6 +171,7 @@ typedef struct {
 	bool	 all_bold_on;
 	bool	 ascii_box_draw;
 	bool	 acs;
+	bool	 color_prompt;
 #if !defined(_WIN32) /*[*/
 	bool	 default_fgbg;
 	bool	 cbreak_mode;

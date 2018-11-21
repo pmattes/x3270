@@ -247,6 +247,8 @@ static BOOL cursor_visible = TRUE;
 static HANDLE cc_event;
 static ioid_t cc_id;
 
+CONSOLE_SCREEN_BUFFER_INFO base_info;
+
 static action_t Paste_action;
 static action_t Redraw_action;
 static action_t Title_action;
@@ -482,7 +484,6 @@ resize_console(void)
 static HANDLE
 initscr(void)
 {
-    CONSOLE_SCREEN_BUFFER_INFO info;
     size_t buffer_size;
     CONSOLE_CURSOR_INFO cursor_info;
 
@@ -509,12 +510,12 @@ initscr(void)
     console_window = get_console_hwnd();
 
     /* Get its dimensions. */
-    if (GetConsoleScreenBufferInfo(cohandle, &info) == 0) {
+    if (GetConsoleScreenBufferInfo(cohandle, &base_info) == 0) {
 	win32_perror("GetConsoleScreenBufferInfo failed");
 	return NULL;
     }
-    console_rows = info.srWindow.Bottom - info.srWindow.Top + 1;
-    console_cols = info.srWindow.Right - info.srWindow.Left + 1;
+    console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
+    console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
 
     /* Get its cursor configuration. */
     if (GetConsoleCursorInfo(cohandle, &cursor_info) == 0) {
@@ -3558,6 +3559,29 @@ screen_send_esc(void)
 {
     if (console_window != NULL) {
 	PostMessage(console_window, WM_KEYDOWN, VK_ESCAPE, 0);
+    }
+}
+
+/* Screen output color map. */
+static DWORD color_attr[] = {
+    0,						/* PC_DEFAULT */
+    FOREGROUND_INTENSITY | FOREGROUND_BLUE,	/* PC_PROMPT */
+    FOREGROUND_INTENSITY | FOREGROUND_RED,	/* PC_ERROR */
+    0,						/* PC_NORMAL */
+};
+
+/* Change the screen output color. */
+void
+screen_color(pc_t pc)
+{
+    if (!appres.c3270.color_prompt) {
+	return;
+    }
+
+    if (!SetConsoleTextAttribute(cohandle,
+		color_attr[pc]? color_attr[pc]: base_info.wAttributes)) {
+	win32_perror("Can't set console text attribute");
+	exit(1);
     }
 }
 

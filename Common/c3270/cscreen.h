@@ -43,7 +43,13 @@ void screen_register(void);
 void screen_final(void);
 void screen_system_fixup(void);
 #if defined(WC3270) /*[*/
-void pager_output(const char *s);
+typedef enum {
+    PC_DEFAULT,
+    PC_PROMPT,
+    PC_ERROR,
+    PC_NORMAL
+} pc_t;
+void screen_color(pc_t sc);
 bool screen_wait_for_key(char *c);
 void screen_title(const char *text);
 typedef void (*ctrlc_fn_t)(void);

@@ -1272,7 +1272,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		    printf("%s\n", ret);
 		} else {
 		    printf("\033[3%cm%s\033[39m\n",
-			    rc? '1': '2',
+			    rc? '1': '9',
 			    ret);
 		}
 # else /*][*/
