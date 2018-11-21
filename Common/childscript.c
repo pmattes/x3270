@@ -1293,7 +1293,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, "-e");
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
-    array_add(&nargv, nargc++, lazyaf("x3270if -I '%s'%s || (echo 'Press <Enter>'; read)",
+    array_add(&nargv, nargc++, lazyaf("x3270if -I '%s'%s || (echo 'Press <Enter>'; read x)",
 	    params[0],
 	    (params[1] != NULL)? lazyaf(" -H '%s'", params[1]): ""));
 #else /*][*/
