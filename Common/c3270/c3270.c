@@ -1612,17 +1612,12 @@ popup_an_info(const char *fmt, ...)
 
     /* Push it out. */
     if (sl) {
-	if (/*escaped*/false) {
-	    printf("%s\n", vmsgbuf);
-	    fflush(stdout);
-	} else {
-	    char *s;
+	char *s;
 
-	    while ((s = strchr(vmsgbuf, '\n')) != NULL) {
-		*s = ' ';
-	    }
-	    status_push(vmsgbuf);
+	while ((s = strchr(vmsgbuf, '\n')) != NULL) {
+	    *s = ' ';
 	}
+	status_push(vmsgbuf);
     }
 }
 
