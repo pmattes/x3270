@@ -58,6 +58,11 @@
 
 #include "s3270_proto.h"
 
+#if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION >= 6 /*[*/
+# define NEED_PTHREADS 1
+# include <pthread.h>
+#endif /*]*/
+
 #define IBS	4096
 /*
  * The following variable is a special hack that is needed in order for
@@ -70,9 +75,11 @@ int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
 static int s3270pipe[2];
-static char status[IBS];	/* status line */
 static bool verbose = false;
 static bool interactive = false;
+#if defined(NEED_PTHREADS) /*[*/
+static pthread_mutex_t cmd_mutex;
+#endif /*]*/
 
 static Tcl_ObjCmdProc x3270_cmd;
 static Tcl_ObjCmdProc Rows_cmd, Cols_cmd, Status_cmd;
@@ -218,19 +225,27 @@ usage(const char *msg)
 
 /* Do a single command, and interpret the results. */
 static int
-run_s3270(const char *cmd, bool *success, char **ret)
+run_s3270(const char *cmd, bool *success, char **status, char **ret)
 {
     int nw = 0;
     char buf[IBS];
     char rbuf[IBS];
     int sl = 0;
     size_t nr;
-    int done = 0;
+    bool complete = false;
     char *cmd_nl;
     size_t ret_sl = 0;
     char *nl;
+    int rv = -1;
+
+#if defined(NEED_PTHREADS) /*[*/
+    pthread_mutex_lock(&cmd_mutex);
+#endif /*]*/
 
     *success = false;
+    if (status != NULL) {
+	*status = NULL;
+    }
     *ret = NULL;
 
     /* Speak to s3270. */
@@ -244,12 +259,13 @@ run_s3270(const char *cmd, bool *success, char **ret)
     nw = write(s3270pipe[1], cmd_nl, strlen(cmd_nl));
     if (nw < 0) {
 	perror("s3270 (back end): write");
-	return -1;
+	Free(cmd_nl);
+	goto done;
     }
     Free(cmd_nl);
 
     /* Get the answer. */
-    while (!done && (nr = read(s3270pipe[0], rbuf, IBS)) > 0) {
+    while (!complete && (nr = read(s3270pipe[0], rbuf, IBS)) > 0) {
 	size_t i;
 	bool get_more = false;
 
@@ -277,11 +293,11 @@ run_s3270(const char *cmd, bool *success, char **ret)
 	    }
 	    if (!strcmp(buf, PROMPT_OK)) {
 		*success = true;
-		done = 1;
+		complete = true;
 		break;
 	    } else if (!strcmp(buf, PROMPT_ERROR)) {
 		*success = false;
-		done = 1;
+		complete = true;
 		break;
 	    } else if (!strncmp(buf, DATA_PREFIX, strlen(DATA_PREFIX))) {
 		*ret = Realloc(*ret, ret_sl + strlen(buf +
@@ -289,8 +305,8 @@ run_s3270(const char *cmd, bool *success, char **ret)
 		*(*ret + ret_sl) = '\0';
 		strcat(strcat(*ret, buf + strlen(DATA_PREFIX)), "\n");
 		ret_sl += strlen(buf + strlen(DATA_PREFIX)) + 1;
-	    } else {
-		(void) strcpy(status, buf);
+	    } else if (status != NULL) {
+		*status = NewString(buf);
 	    }
 
 	    /* Get ready for the next. */
@@ -304,7 +320,15 @@ run_s3270(const char *cmd, bool *success, char **ret)
     }
     if (nr < 0) {
 	perror("s3270 (back end) read");
-	return -1;
+	if (status != NULL && *status != NULL) {
+	    Free(*status);
+	    *status = NULL;
+	}
+	if (*ret != NULL) {
+	    Free(*ret);
+	    *ret = NULL;
+	}
+	goto done;
     } else if (nr == 0) {
 	if (verbose) {
 	    fprintf(stderr, "s3270 EOF\n");
@@ -322,7 +346,12 @@ run_s3270(const char *cmd, bool *success, char **ret)
 	*nl = '\0';
     }
 
-    return 0;
+    rv = 0;
+done:
+#if defined(NEED_PTHREADS) /*[*/
+    pthread_mutex_unlock(&cmd_mutex);
+#endif /*]*/
+    return rv;
 }
 
 /* Initialization procedure for tcl3270. */
@@ -428,15 +457,18 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	/* Parent. */
 	break;
     }
-	
+
     /* Redirect I/O. */
     close(to_s3270_pipe[0]);
     close(from_s3270_pipe[1]);
     s3270pipe[0] = from_s3270_pipe[0];
     s3270pipe[1] = to_s3270_pipe[1];
 
+    /* Set up the mutex. */
+    pthread_mutex_init(&cmd_mutex, NULL);
+
     /* Run 'Actions()' to learn what Tcl commands we need to add. */
-    if (run_s3270("Actions()", &success, &ret) < 0) {
+    if (run_s3270("Actions()", &success, NULL, &ret) < 0) {
 	return TCL_ERROR;
     }
     if (!success) {
@@ -581,7 +613,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     strcat(cmd, ")");
 
     /* Run the action. */
-    rv = run_s3270(cmd, &success, &ret);
+    rv = run_s3270(cmd, &success, NULL, &ret);
     if (rv < 0) {
 	Free(cmd);
 	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
@@ -616,15 +648,22 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     return TCL_OK;
 }
 
+/* Return the status line. */
 static int
 Status_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	Tcl_Obj *CONST objv[])
 {
     bool success;
+    char *status;
     char *ret;
 
-    run_s3270("", &success, &ret);
+    if (run_s3270("", &success, &status, &ret) < 0) {
+	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	return TCL_ERROR;
+    }
     Tcl_SetResult(interp, status, TCL_VOLATILE);
+    Free(status);
+    Free(ret);
     return TCL_OK;
 }
 
@@ -658,34 +697,51 @@ field(const char *status, int index)
     return ret;
 }
 
+/* Report the number of rows. */
 static int
 Rows_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	Tcl_Obj *CONST objv[])
 {
     bool success;
+    char *status;
     char *ret;
     char *f;
 
-    run_s3270("", &success, &ret);
-    Tcl_SetResult(interp, (f = field(status, 7)), TCL_VOLATILE);
+    if (run_s3270("", &success, &status, &ret) < 0) {
+	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    Free(ret);
+    f = field(status, 7);
+    Free(status);
+    Tcl_SetResult(interp, f, TCL_VOLATILE);
     Free(f);
     return TCL_OK;
 }
 
+/* Report the number of columns. */
 static int
 Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	Tcl_Obj *CONST objv[])
 {
     bool success;
+    char *status;
     char *ret;
     char *f;
 
-    run_s3270("", &success, &ret);
-    Tcl_SetResult(interp, (f = field(status, 8)), TCL_VOLATILE);
+    if (run_s3270("", &success, &status, &ret) < 0) {
+	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    Free(ret);
+    f = field(status, 8);
+    Free(status);
+    Tcl_SetResult(interp, f, TCL_VOLATILE);
     Free(f);
     return TCL_OK;
 }
 
+/* Error abort used for Malloc failures. */
 void
 Error(const char *msg)
 {
