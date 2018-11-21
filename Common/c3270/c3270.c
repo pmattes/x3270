@@ -656,7 +656,6 @@ static void
 echo_mode(bool echo)
 {
 #if !defined(_WIN32) /*[*/
-# if defined(HAVE_LIBREADLINE) /*[*/
     struct termios t;
 
     tcgetattr(0, &t);
@@ -666,9 +665,6 @@ echo_mode(bool echo)
 	t.c_lflag &= ~ECHO;
     }
     tcsetattr(0, TCSANOW, &t);
-# else /*[*/
-    rl_tty_set_echoing(echo);
-# endif /*]*/
 #else /*][*/
     screen_echo_mode(echo);
 #endif /*]*/
