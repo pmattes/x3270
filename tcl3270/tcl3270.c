@@ -56,6 +56,9 @@
 
 #include "globals.h"
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "s3270_proto.h"
 
 #if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION >= 6 /*[*/
@@ -77,6 +80,9 @@ int *tclDummyMathPtr = (int *) matherr;
 static int s3270pipe[2];
 static bool verbose = false;
 static bool interactive = false;
+static pid_t s3270_pid;
+static bool s3270_exited = false;
+static char s3270_errmsg[1024];
 #if defined(NEED_PTHREADS) /*[*/
 static pthread_mutex_t cmd_mutex;
 #endif /*]*/
@@ -227,6 +233,7 @@ usage(const char *msg)
 static int
 run_s3270(const char *cmd, bool *success, char **status, char **ret)
 {
+    int st;
     int nw = 0;
     char buf[IBS];
     char rbuf[IBS];
@@ -238,15 +245,38 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     char *nl;
     int rv = -1;
 
-#if defined(NEED_PTHREADS) /*[*/
-    pthread_mutex_lock(&cmd_mutex);
-#endif /*]*/
-
     *success = false;
     if (status != NULL) {
 	*status = NULL;
     }
     *ret = NULL;
+
+#if defined(NEED_PTHREADS) /*[*/
+    pthread_mutex_lock(&cmd_mutex);
+#endif /*]*/
+
+    /* Check s3270. */
+    if (s3270_exited) {
+	*ret = NewString(s3270_errmsg);
+	rv = 0;
+	goto done;
+    }
+    if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
+	s3270_exited = true;
+	if (WIFEXITED(st)) {
+	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
+		    "s3270 exited with status %d", WEXITSTATUS(st));
+	} else if (WIFSIGNALED(st)) {
+	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
+		    "s3270 killed by signal %d", WTERMSIG(st));
+	} else {
+	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
+		    "Unknown s3270 exit status %d", st);
+	}
+	*ret = NewString(s3270_errmsg);
+	rv = 0;
+	goto done;
+    }
 
     /* Speak to s3270. */
     if (verbose) {
@@ -427,7 +457,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     }
 
     /* Start s3270. */
-    switch (fork()) {
+    switch (s3270_pid = fork()) {
     case -1:
 	perror("fork");
 	return TCL_ERROR;
