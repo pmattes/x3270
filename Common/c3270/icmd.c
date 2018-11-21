@@ -1454,6 +1454,8 @@ ft_help(bool as_action _is_unused)
   To specify parameters on the command line:\n\
     Transfer <keyword>=<value>...\n\
     or Transfer <keyword>,<value>...\n\
+  To do a transfer using the current defaults:\n\
+    Transfer Defaults\n\
 Keywords:");
 
     action_output(
