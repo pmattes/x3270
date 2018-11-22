@@ -1279,7 +1279,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		if (!aux_input) {
 		    set_text_attribute(conout,
 			    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
-				 FOREGROUND_GREEN);
+				 info.wAttributes);
 		}
 		fputs(ret, stdout);
 		fflush(stdout);
