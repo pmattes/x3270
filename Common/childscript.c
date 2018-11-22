@@ -539,10 +539,16 @@ cr_collect(child_t *c)
     cr_t *cr = &c->cr;
     if (cr->nr != 0) {
 	vtrace("Got %d bytes of script stdout/stderr\n", (int)cr->nr);
-	c->output_buf = Realloc(c->output_buf, c->output_buflen + cr->nr + 1);
-	memcpy(c->output_buf + c->output_buflen, cr->buf, cr->nr);
-	c->output_buflen += cr->nr;
-	c->output_buf[c->output_buflen] = '\0';
+	if (cr->nr == 2 && !strncmp(cr->buf, "^C", 2)) {
+	    /* Hack, hack, hack. */
+	    vtrace("Suppressing '^C' output from child\n");
+	} else {
+	    c->output_buf = Realloc(c->output_buf,
+		    c->output_buflen + cr->nr + 1);
+	    memcpy(c->output_buf + c->output_buflen, cr->buf, cr->nr);
+	    c->output_buflen += cr->nr;
+	    c->output_buf[c->output_buflen] = '\0';
+	}
 
 	/* Ready for more. */
 	cr->nr = 0;
@@ -1002,6 +1008,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	if (!strcasecmp(argv[0], "-Async")) {
 	    async = true;
+	    keyboard_lock = false;
 	    argc--;
 	    argv++;
 	} else if (!strcasecmp(argv[0], "-NoLock")) {
@@ -1285,7 +1292,6 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     array_add(&nargv, nargc++, "-Async");
-    array_add(&nargv, nargc++, "-NoLock");
 #if !defined(_WIN32) /*[*/
     array_add(&nargv, nargc++, "xterm");
     array_add(&nargv, nargc++, "-title");
