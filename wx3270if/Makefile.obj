@@ -66,8 +66,8 @@ x3270if.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 x3270ifres.o: x3270if.rc x3270if.ico Makefile
 	$(WINDRES) -i $< -o $@
 
-x3270if.exe: $(OBJECTS) x3270if.o base64.o x3270ifres.o $(LIBDEPS)
-	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
+x3270if.exe: $(OBJECTS) x3270ifres.o $(LIBDEPS)
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) x3270ifres.o $(LD32XX) $(LIBS)
 
 wversion.o: mkwversion.sh version.txt
 	sh $< x3270if $(CC) $(filter %.txt,$^)
