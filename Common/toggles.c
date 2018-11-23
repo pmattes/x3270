@@ -311,7 +311,7 @@ toggle_show(void)
  * Toggle/Set action.
  */
 static bool
-toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
+toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	const char **argv)
 {
     int j;
@@ -337,6 +337,11 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
     if (argc == 0) {
 	toggle_show();
 	return true;
+    }
+
+    /* Toggle() only accepts zero, 1 or 2 parameters. */
+    if (is_toggle_action && check_argc(name, argc, 0, 2) < 0) {
+	return false;
     }
 
     dones = (done_success_t *)Malloc(argc * sizeof(done_success_t *));
@@ -368,28 +373,39 @@ toggle_common(const char *name, bool is_toggle, ia_t ia, unsigned argc,
 
 	/* Check for old syntax. */
 	if (argc - arg == 1) {
-	    if (u != NULL) {
-		/*
-		 * Allow a bool-valued field to be toggled, even if it isn't a
-		 * traditional toggle.
-		 */
-		if (!is_toggle || u->type != XRM_BOOLEAN) {
-		    popup_an_error("%s: '%s' requires a value", name,
-			    argv[arg]);
-		    goto failed;
+	    if (is_toggle_action) {
+		/* Flip a Boolean value. */
+		if (u != NULL) {
+		    /*
+		     * Allow a bool-valued field to be toggled, even if it
+		     * isn't a traditional toggle.
+		     */
+		    if (u->type != XRM_BOOLEAN) {
+			popup_an_error("%s: '%s' requires a value", name,
+				argv[arg]);
+			goto failed;
+		    }
+		    value = (*(bool *)u->address)? "false": "true";
+		    goto have_value;
 		}
-		value = (*(bool *)u->address)? "false": "true";
-		goto have_value;
+		if (!toggled(ix)) {
+		    /* Flip the toggle. */
+		    do_toggle_reason(ix, TT_ACTION);
+		}
+		goto done;
+	    } else {
+		/* Display one value. */
+		if (u != NULL) {
+		    char *v = u_value(u);
+
+		    action_output("%s", v? v: " ");
+		} else {
+		    action_output("%s", toggled(ix)? "true": "false");
+		}
+		return true;
 	    }
-	    if (is_toggle || !toggled(ix)) {
-		/*
-		 * The default for the Toggle() action is to flip the toggle.
-		 * The default for the Set() action is to set the toggle.
-		 */
-		do_toggle_reason(ix, TT_ACTION);
-	    }
-	    goto done;
 	}
+
 	value = argv[arg + 1];
 
 have_value:
