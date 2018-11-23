@@ -38,14 +38,14 @@ ifelse(XX_PRODUCT,b3270,`back end
 ')dnl
 XX_SH(Synopsis)
 XX_FB(XX_PRODUCT)
-ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] [-- [options] [host]]',
+ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] [-- [XX_FI(tcl3270-options)] [XX_FI(s3270-options)] [host]]',
 `
 [XX_FI(options)]
 ifelse(XX_PRODUCT,b3270,,`[XX_FI(host)]
 ')dnl
 ')
 XX_BR
-XX_FB(XX_PRODUCT) ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] -- [XX_FI(options)]',`[XX_FI(options)]') XX_FI(session-file).XX_PRODUCT
+XX_FB(XX_PRODUCT) ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script) [XX_FI(script-arg...)]] -- [XX_FI(tcl3270-options)] [XX_FI(s3270-options)]',`[XX_FI(options)]') XX_FI(session-file).XX_PRODUCT
 ifelse(XX_PRODUCT,tcl3270,`XX_BR
 XX_FB(XX_PRODUCT) -v
 XX_BR
@@ -1681,7 +1681,7 @@ XX_FB(KEYBD) Keymap name.
 XX_SH(See Also)
 ifelse(XX_INTERACTIVE,yes,XX_LINK(XX_PR3287-man.html,XX_PR3287`'(1))`, ')dnl
 ifelse(XX_PRODUCT,XX_S3270,,XX_LINK(XX_S3270-man.html,XX_S3270`'(1))`, ')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_LINK(XX_X3270-script.html,`XX_X3270-script`'(1)), ')dnl
+ifelse(XX_PRODUCT,tcl3270,,XX_LINK(XX_X3270-script.html,XX_X3270-script`'(1))`, ')dnl
 ifelse(XX_PLATFORM,unix,`ifelse(XX_PRODUCT,x3270,,XX_LINK(x3270-man.html,x3270(1))`, ')dnl
 ifelse(XX_PRODUCT,c3270,,XX_LINK(c3270-man.html,c3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_LINK(tcl3270-man.html,tcl3270(1))`, ')dnl
