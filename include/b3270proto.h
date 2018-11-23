@@ -37,9 +37,10 @@
 /* Indications. */
 #define IndOia		"oia"
 #define IndRunResult	"run-result"
-#define IndToggle	"toggle"
+#define IndSetting	"setting"
 #define IndTraceFile	"trace-file"
 #define IndUiError	"ui-error"
+#define IndCharset	"charset"
 
 /* Attributes. */
 #define AttrName	"name"

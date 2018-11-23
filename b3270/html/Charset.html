@@ -9,17 +9,21 @@
 <body>
 <a name="charset"></a><h3>charset Indication</h3>
 
-<p>Indicates the name of the host code page. This is a one-time indication.</p>
+<p>Indicates support for a particular host code page. One or more are sent,
+only at initialization. Each indication may include one more more aliases
+with the attributes <b>alias1</b>, <b>alias2</b>, etc.
+</p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>name</td><td>yes</td><td>Canonical code page name</td></tr>
- <tr><td>alias</td><td>no</td><td>Alias used to set code page</td></tr>
+ <tr><td>alias1</td><td>no</td><td>First alias for the code page</td></tr>
+ <tr><td>alias2</td><td>no</td><td>Second alias for the code page</td></tr>
 </table>
 
 <p>Example:
 <pre>
-&lt;charset name="bracket"/&gt;
+&lt;charset name="cp1140" alias1="us-euro"/&gt; 
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -45,6 +45,7 @@
 #include "lazya.h"
 #include "popups.h"
 #include "screen.h"
+#include "toggles.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
@@ -305,39 +306,62 @@ get_charset_name(void)
 	((appres.charset != NULL)? appres.charset: "us");
 }
 
-/*
- * Charset action.
+/**
+ * Return the canonical form of a character set, given a resource value.
+ * This is needed because the resource definition may be a valid alias, but
+ * we always want to display and return the canonical name.
+ *
+ * @param[in] res	Resource value, or NULL
+ *
+ * @returns Canonical representation.
  */
-bool
-Charset_action(ia_t ia, unsigned argc, const char **argv)
+static char *
+canonical_cs(const char *res)
+{
+    const char *canon;
+
+    if (res == NULL) {
+	return NULL;
+    }
+    canon = canonical_charset(res);
+    if (canon == NULL) {
+	return NULL;
+    }
+    return NewString(canon);
+}
+
+/**
+ * Extended toggle for the host character set.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	New value, might be NULL.
+ *
+ * @returns true for success, false for failure.
+ */
+static bool
+toggle_charset(const char *name _is_unused, const char *value)
 {
     enum cs_result result;
 
-    action_debug("Charset", ia, argc, argv);
-    if (check_argc("Charset", argc, 0, 1) < 0) {
-	return false;
+    if (value == NULL) {
+	value = "bracket";
     }
-
-    if (argc == 0) {
-	action_output("%s\n", get_charset_name());
-	return true;
-    }
-
-    result = charset_init(argv[0]);
+    result = charset_init(value);
     switch (result) {
     case CS_OKAY:
 	st_changed(ST_CHARSET, true);
 	charset_changed = true;
+	Replace(appres.charset, canonical_cs(value));
 	return true;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition of host character "
-		"set \"%s\"", argv[0]);
+	popup_an_error("Cannot find definition of host character set \"%s\"",
+		value);
 	return false;
     case CS_BAD:
-	popup_an_error("Invalid charset definition for \"%s\"", argv[0]);
+	popup_an_error("Invalid charset definition for \"%s\"", value);
 	return false;
     case CS_PREREQ:
-	popup_an_error("No fonts for host character set \"%s\"", argv[0]);
+	popup_an_error("No fonts for host character set \"%s\"", value);
 	return false;
     default:
     case CS_ILLEGAL:
@@ -352,10 +376,7 @@ Charset_action(ia_t ia, unsigned argc, const char **argv)
 void
 charset_register(void)
 {
-    static action_table_t charset_actions[] = {
-	{ "Charset",	Charset_action,		ACTION_KE }
-    };
-
-    /* Register the actions. */
-    register_actions(charset_actions, array_count(charset_actions));
+    /* Register the toggle. */
+    register_extended_toggle(ResCharset, toggle_charset, NULL, canonical_cs,
+	    (void **)&appres.charset, XRM_STRING);
 }

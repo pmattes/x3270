@@ -307,6 +307,33 @@ sigchld_handler(int ignored)
 }
 #endif /*]*/
 
+/* Dump the character set list. Called at initialization time. */
+static void
+dump_charsets(void)
+{
+    csname_t *csnames = get_csnames();
+
+    if (csnames != NULL) {
+	int i;
+
+	for (i = 0; csnames[i].name != NULL; i++) {
+	    const char **params = Calloc(2 + (2 * csnames[i].num_aliases) + 1,
+		    sizeof(char *));
+	    int j;
+
+	    params[0] = "name";
+	    params[1] = csnames[i].name;
+	    for (j = 0; j < csnames[i].num_aliases; j++) {
+		params[2 + (j * 2)] = lazyaf("alias%d", j + 1);
+		params[2 + (j * 2) + 1] = csnames[i].aliases[j];
+	    }
+	    ui_leaf(IndCharset, params);
+	    Free(params);
+	}
+	free_csnames(csnames);
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -397,6 +424,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	xs_warning("Cannot find charset \"%s\"", appres.charset);
 	(void) charset_init(NULL);
     }
+    dump_charsets();
     model_init();
     status_reset();
 
@@ -972,7 +1000,7 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 	return;
     }
 
-    ui_vleaf(IndToggle,
+    ui_vleaf(IndSetting,
 	    AttrName, toggle_names[i].name,
 	    AttrValue, toggled(ix)? ValTrue: ValFalse,
 	    NULL);
@@ -991,7 +1019,7 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 static void
 b3270_toggle_notify(const char *name, const char *value)
 {
-    ui_vleaf(IndToggle,
+    ui_vleaf(IndSetting,
 	    AttrName, name,
 	    AttrValue, value,
 	    NULL);

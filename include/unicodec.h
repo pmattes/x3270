@@ -73,3 +73,11 @@ int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp);
 int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
 bool using_iconv(void);
+const char *canonical_charset(const char *alias);
+typedef struct {
+    const char *name;
+    int num_aliases;
+    const char **aliases;
+} csname_t;
+csname_t *get_csnames(void);
+void free_csnames(csname_t *csnames);

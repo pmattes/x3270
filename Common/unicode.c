@@ -656,6 +656,65 @@ charset_matches_alias(const char *alias, const char *canon)
     return false;
 }
 
+/* Translate a possible character set alias to its canonical name. */
+const char *
+canonical_charset(const char *alias)
+{
+    int i;
+
+    for (i = 0; cpaliases[i].alias != NULL; i++) {
+	if (!strcmp(alias, cpaliases[i].alias) ||
+	    !strcmp(alias, cpaliases[i].canon)) {
+	    return cpaliases[i].canon;
+	}
+    }
+    return NULL;
+}
+
+/*
+ * Get the list of character set names.
+ * Returns a NULL-terminated array of names and aliases.
+ */
+csname_t *
+get_csnames(void)
+{
+    csname_t *ret = Calloc(array_count(uni) + 1, sizeof(csname_t));
+    unsigned i;
+
+    for (i = 0; uni[i].name != NULL; i++) {
+	int num_aliases = 0;
+	int j;
+
+	ret[i].name = uni[i].name;
+	for (j = 0; cpaliases[j].alias != NULL; j++) {
+	    if (!strcmp(cpaliases[j].canon, uni[i].name)) {
+		ret[i].aliases = Realloc(ret[i].aliases,
+			(num_aliases + 2) * sizeof(char *));
+		ret[i].aliases[num_aliases++] = cpaliases[j].alias;
+		ret[i].aliases[num_aliases] = NULL;
+	    }
+	}
+	ret[i].num_aliases = num_aliases;
+    }
+    return ret;
+}
+
+/* Free the list returned by get_csnames(). */
+void
+free_csnames(csname_t *csnames)
+{
+    int i;
+
+    for (i = 0; csnames[i].name != NULL; i++) {
+	if (csnames[i].aliases != NULL) {
+	    Free(csnames[i].aliases);
+	}
+    }
+    Free(csnames);
+
+
+}
+
 /* Line-drawing to Unicode table. */
 static ucs4_t ld2uc[32] = {
     /* 00 */	0x2588, 0x25c6, 0x2592, 0x2409, 0x240c, 0x240d, 0x240a, 0x00b0,

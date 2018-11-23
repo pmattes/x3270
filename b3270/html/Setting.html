@@ -2,52 +2,54 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>b3270 toggle indication</title>
+  <title>b3270 setting indication</title>
   <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
 </head>
 
 <body>
-<a name="toggle"></a><h3>toggle Indication</h3>
+<a name="setting"></a><h3>setting Indication</h3>
 
-<p>Notification of a toggle change.</p>
+<p>Notification of a settings change.</p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
- <tr><td>name</td><td>yes</td><td>Toggle <a href=#toggles">name</a></td></tr>
+ <tr><td>name</td><td>yes</td><td>Setting <a href=#settings">name</a></td></tr>
  <tr><td>value</td><td>no</td><td><b>true</b>, <b>false</b> or a specific value</td></tr>
 </table>
 
-<a name="toggles"></a>
-<p>Boolean toggle names are:</p>
+<a name="settings"></a>
+<p>Boolean settings names are:</p>
 <table border cols=3 width="75%">
  <tr><th>Name</th><th>Purpose</th></tr>
- <tr><td>monocase</td><td>Text should be displayed in uppercase</td></tr>
  <tr><td>altCursor</td><td>Use underscore cursor</td></tr>
- <tr><td>cursorBlink</td><td>Cursor should blink</td></tr>
- <tr><td>visibleControl</td><td>Display 3270 orders on the screen</td></tr>
  <tr><td>crosshair</td><td>Display crosshair cursor</td></tr>
+ <tr><td>cursorBlink</td><td>Cursor should blink</td></tr>
+ <tr><td>monocase</td><td>Text should be displayed in uppercase</td></tr>
+ <tr><td>reconnect</td><td>Automatic reconnect mode</td></tr>
  <tr><td>trace</td><td>Tracing is active</td></tr>
+ <tr><td>visibleControl</td><td>Display 3270 orders on the screen</td></tr>
 </table></p>
-<p>Specific-value toggle names are:</p>
+<p>Specific-value settings names are:</p>
 <table border cols=3 width="75%">
- <tr><td>termName</td><td>Terminal name</td></tr>
- <tr><td>model</td><td>3270 model</td></tr>
- <tr><td>oversize</td><td>oversize dimensions</td></tr>
- <tr><td>httpd</td><td>HTTP listening port</td></tr>
- <tr><td>scriptPort</td><td>s3270 listening port</td></tr>
- <tr><td>printerLu</td><td>pr3287 printer logical unit</td></tr>
  <tr><td>acceptHostname</td><td>TLS accept hostname</td></tr>
- <tr><td>verifyHostCert</td><td>TLS verify host certificate option</td></tr>
- <tr><td>startTls</td><td>TLS accept STARTTLS option</td></tr>
  <tr><td>caDir</td><td>TLS CA directory</td></tr>
  <tr><td>caFile</td><td>TLS CA file</td></tr>
  <tr><td>certFile</td><td>TLS certificate file</td></tr>
  <tr><td>certFileType</td><td>TLS certificate file type</td></tr>
  <tr><td>chainFile</td><td>TLS certificate chain file</td></tr>
+ <tr><td>charset</td><td>Host code page</td></tr>
+ <tr><td>clientCert</td><td>TLS certificate name</td></tr>
+ <tr><td>httpd</td><td>HTTP listening port</td></tr>
  <tr><td>keyFile</td><td>TLS certificate private key file</td></tr>
  <tr><td>keyFileType</td><td>TLS certificate private key file type</td></tr>
  <tr><td>keyPasswd</td><td>TLS certificate private key file password</td></tr>
- <tr><td>clientCert</td><td>TLS certificate name</td></tr>
+ <tr><td>model</td><td>3270 model</td></tr>
+ <tr><td>oversize</td><td>oversize dimensions</td></tr>
+ <tr><td>printerLu</td><td>pr3287 printer logical unit</td></tr>
+ <tr><td>scriptPort</td><td>s3270 listening port</td></tr>
+ <tr><td>startTls</td><td>TLS accept STARTTLS option</td></tr>
+ <tr><td>termName</td><td>Terminal name</td></tr>
+ <tr><td>verifyHostCert</td><td>TLS verify host certificate option</td></tr>
 </table>
 
 <p>Example:
