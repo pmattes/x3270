@@ -316,7 +316,6 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 {
     int j;
     int ix;
-    toggle_extended_upcalls_t *u = NULL;
     unsigned arg = 0;
     typedef struct {
 	toggle_extended_done_t *done;
@@ -339,8 +338,15 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	return true;
     }
 
-    /* Toggle() only accepts zero, 1 or 2 parameters. */
     if (is_toggle_action && check_argc(name, argc, 0, 2) < 0) {
+	/* Toggle() only accepts zero, 1 or 2 parameters. */
+	return false;
+    } else if (!is_toggle_action && argc > 2 && (argc % 2)) {
+	/*
+	 * Set() accepts 0 arguments (show all), 1 argument (show one), or
+	 * an even number of arguments (set one or more).
+	 */
+	popup_an_error("%s: '%s' requires a value", name, argv[argc - 1]);
 	return false;
     }
 
@@ -350,6 +356,8 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 
     /* Look up the toggle name. */
     while (arg < argc) {
+	toggle_extended_upcalls_t *u = NULL;
+
 	for (j = 0; toggle_names[j].name != NULL; j++) {
 	    if (!toggle_supported(toggle_names[j].index)) {
 		continue;
