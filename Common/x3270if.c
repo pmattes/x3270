@@ -177,7 +177,7 @@ main(int argc, char *argv[])
 	me = argv[0];
     }
 
-    if (argc > 0 && !strcmp(argv[1], "--version")) {
+    if (argc > 1 && !strcmp(argv[1], "--version")) {
 	printf("%s\n", build);
 	return 0;
     }
