@@ -276,13 +276,19 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
     (*phost)[hlen] = '\0';
 
     /* Copy out the username. */
-    if (at != NULL) {
-	*puser = Malloc((at - s) + 1);
-	strncpy(*puser, s, at - s);
-	(*puser)[at - s] = '\0';
-    } else {
-	*puser = NULL;
+    if (puser != NULL) {
+	if (at != NULL) {
+	    *puser = Malloc((at - s) + 1);
+	    strncpy(*puser, s, at - s);
+	    (*puser)[at - s] = '\0';
+	} else {
+	    *puser = NULL;
+	}
+    } else if (at != NULL) {
+	popup_an_error("Invalid proxy hostname syntax (user@ not supported for this type");
+	return false;
     }
+
     return true;
 }
 
