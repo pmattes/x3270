@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(s3270,3.x)
+AC_INIT(x3270if,3.x)
 AC_PREREQ(2.50)
 
 dnl Checks for programs.
