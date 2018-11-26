@@ -51,6 +51,12 @@ correcponding Tcl command.
 The result of the Tcl command is the output of the XX_S3270 action.
 If the output is one line, the result is a string.
 If the output is multiple lines, the result is a list of strings.
+XX_LP
+On the command line, a session file can be named either
+XX_FI(name).XX_FB(XX_PRODUCT) or XX_FI(name).XX_FB(XX_S3270).
+Resource values, such as those used in XX_FB(XX_DASHED(rm)) options or in a
+session file, can be specified as XX_FB(XX_PRODUCT).XX_FI(resource) or
+XX_FB(XX_S3270).XX_FI(resource).
 XX_SH(XX_PRODUCT-Specific Options)
 XX_TP(XX_FB(XX_DASHED(d)))
 Turns on debugging information, tracing data going between XX_PRODUCT and
