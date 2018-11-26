@@ -51,10 +51,10 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 man: $(PRODUCT).man html/$(PRODUCT)-man.html
 
 # Rules for building man pages and derived HTML documentation.
-$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
-	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
-html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
+$(PRODUCT).man: tcl3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
+	$(MKMAN) -n $(PRODUCT) -o $@ tcl3270.man.m4
+html/$(PRODUCT)-man.html: tcl3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) -o $@ tcl3270.man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt

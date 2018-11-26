@@ -588,9 +588,8 @@ tcl3270/resources.inc
 tcl3270/tcl3270.c
 tcl3270/tcl3270_files.mk
 tcl3270/tcl3270.man
+tcl3270/tcl3270.man.m4
 tcl3270/version.txt
-tcl3270/x3270.man.m4
-tcl3270/x3270-script.man.m4
 VS2017/catf/catf.vcxproj
 VS2017/catf/catf.vcxproj.filters
 VS2017/catf/catf.vcxproj.user
