@@ -1,4 +1,4 @@
-dnl Copyright (c) 1999-2009, 2013 Paul Mattes.
+dnl Copyright (c) 1999-2009, 2013, 2018 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -30,14 +30,16 @@ XX_C3270 and XX_S3270
 XX_SH(Synopsis)
 XX_FB(x3270if) [option]... [ XX_FI(action) ]
 XX_BR
-XX_FB(x3270if XX_DASHED(i))
+XX_FB(x3270if) [option]... XX_DASHED(i)
+XX_BR
+XX_FB(x3270if) [option]... XX_DASHED(I) XX_FI(emulator-name) [XX_DASHED(H) XX_FI(help-action)]
 XX_SH(Description)
 XX_FB(x3270if) provides an interface between scripts and
 the 3270 emulators
 ifelse(XX_PLATFORM,unix,`XX_FI(x3270), ')dnl
 XX_FI(XX_C3270) and XX_FI(XX_S3270).
 XX_LP()
-XX_FB(x3270if) operates in one of two modes.
+XX_FB(x3270if) operates in one of three modes.
 In XX_FB(action mode), it passes a single action and parameters to the
 emulator for execution.
 The result of the action is written to standard output, along with the
@@ -46,6 +48,8 @@ The result of the action is written to standard output, along with the
 emulator status.)
 In XX_FB(iterative mode), it forms a continuous conduit between a script and
 the emulator.
+In XX_FB(interactive prompt) mode, it displays a prompt, and conveys each
+command it receives to the emulator.
 XX_LP()
 The XX_FI(action) takes the form:
 XX_IP()
@@ -69,14 +73,14 @@ XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)) manual page.
 If an XX_FI(action) is specified as well, the status field is written after the
 output of the action, separated by a newline.
 The XX_FB(XX_DASHED(s)) option is mutually exclusive with the
-XX_FB(XX_DASHED(S)) and XX_FB(XX_DASHED(i)) options.
+XX_FB(XX_DASHED(S)), XX_FB(XX_DASHED(i)) and XX_FB(XX_DASHED(I)) options.
 XX_TP(XX_FB(XX_DASHED(S)))
 Causes XX_FB(x3270if) to write to stdout the value of all of the
 emulator status fields.
 If an XX_FI(action) is specified as well, the status fields are written after the
 output of the action, separated by a newline.
 The XX_FB(XX_DASHED(S)) option is mutually exclusive with the
-XX_FB(XX_DASHED(s)) and XX_FB(XX_DASHED(i)) options.
+XX_FB(XX_DASHED(s)), XX_FB(XX_DASHED(i)) and XX_FB(XX_DASHED(I)) options.
 XX_TP(XX_FB(XX_DASHED(i)))
 Puts XX_FB(x3270if) in iterative mode.
 Data from XX_POSESSIVE(XX_FB(x3270if)) standard input is copied to the
@@ -84,7 +88,7 @@ XX_POSESSIVE(emulator) script input; data from the
 XX_POSESSIVE(emulator) script output is copied to
 XX_POSESSIVE(XX_FB(x3270if)) standard output.
 The XX_FB(XX_DASHED(i)) option is mutually exclusive with the
-XX_FB(XX_DASHED(s)) and XX_FB(XX_DASHED(S)) options.
+XX_FB(XX_DASHED(s)), XX_FB(XX_DASHED(S)) and XX_FB(XX_DASHED(I)) options.
 XX_FB(x3270if)
 runs until it detects end-of-file on its standard input or on the
 output from the emulator.
@@ -95,6 +99,13 @@ Causes XX_FI(x3270if) to use a Unix-domain socket to connect to the emulator,
 rather than pipe file descriptors given in environment variables.
 The emulator must have been started with the XX_FB(XX_DASHED(socket)) option.
 ')dnl
+XX_TP(XX_FB(XX_DASHED(I)) XX_FI(emulator-name))
+Puts XX_FB(x3270if) in interactive prompt mode.
+XX_FI(emulator-name) is used as the prompt.
+XX_TP(XX_FB(XX_DASHED(H)) XX_FI(help-action))
+In conjunction with XX_FB(XX_DASHED(I)), specifies the name of an action that
+can be used to get interactive help. This action name is displayed in a
+start-up banner.
 XX_TP(XX_FB(XX_DASHED(t)) XX_FI(port))
 Causes XX_FI(x3270if) to use a TCP socket to connect to the emulator,
 rather than pipe file descriptors given in environment variables.
@@ -110,10 +121,13 @@ XX_FB(x3270if) exits with status 0.
 If the action fails, XX_FB(x3270if) exits with status 1.
 In iterative mode, XX_FB(x3270if)
 exits with status 0 when it encounters end-of-file.
+In interactive prompt mode, XX_FB(x3270if) exits with status 0 when it
+encounters end-of-file, or if a command is given which ends with a '/'
+character.
 If there is an operational error within XX_FB(x3270if)
 itself, such as a command-line syntax error, missing environment
 variable, or an unexpectedly closed pipe,
-XX_FB(x3270if) exits with status 2.
+XX_FB(x3270if) exits with a status greater than 2.
 XX_SH(Environment)
 When a script is run as a child process of one of the emulators via the
 XX_FB(Script) action, the emulator passes information about how to control it
