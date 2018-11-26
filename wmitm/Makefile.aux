@@ -41,11 +41,7 @@ HTML = html/Windows-$(PRODUCT).html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-src.tgz: prepare $(FILES)
-
-prepare: configure
-configure: configure.in
-	autoconf
+src.tgz: $(FILES)
 
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKMAN = ./m4man -t man -p $(PRODUCT)

@@ -38,7 +38,7 @@ src.tgz: prepare man Webpage program-src
 prepare: configure
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare Webpage-prepare
+prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare mitm-prepare Webpage-prepare
 lib-prepare:
 	cd lib && $(MAKE) -f Makefile.aux prepare
 c3270-prepare:
@@ -55,11 +55,13 @@ pr3287-prepare:
 	cd pr3287 && $(MAKE) -f Makefile.aux prepare
 x3270if-prepare:
 	cd x3270if && $(MAKE) -f Makefile.aux prepare
+mitm-prepare:
+	cd mitm && $(MAKE) -f Makefile.aux prepare
 Webpage-prepare:
 	cd Webpage && $(MAKE) -f Makefile.aux prepare
 
 man: prepare
-man: c3270-man s3270-man b3270-man tcl3270-man x3270-man pr3287-man x3270if-man wc3270-man ws3270-man wb3270-man wpr3287-man wx3270if-man
+man: c3270-man s3270-man b3270-man tcl3270-man x3270-man pr3287-man x3270if-man mitm-man wc3270-man ws3270-man wb3270-man wpr3287-man wx3270if-man wmitm-man
 c3270-man:
 	cd c3270 && $(MAKE) -f Makefile.aux man
 s3270-man:
@@ -70,10 +72,12 @@ tcl3270-man:
 	cd tcl3270 && $(MAKE) -f Makefile.aux man
 x3270-man:
 	cd x3270 && $(MAKE) -f Makefile.aux man
-x3270if-man:
-	cd x3270if && $(MAKE) -f Makefile.aux man
 pr3287-man:
 	cd pr3287 && $(MAKE) -f Makefile.aux man
+x3270if-man:
+	cd x3270if && $(MAKE) -f Makefile.aux man
+mitm-man:
+	cd mitm && $(MAKE) -f Makefile.aux man
 wc3270-man:
 	cd wc3270 && $(MAKE) -f Makefile.aux man
 ws3270-man:
@@ -84,11 +88,13 @@ wpr3287-man:
 	cd wpr3287 && $(MAKE) -f Makefile.aux man
 wx3270if-man:
 	cd wx3270if && $(MAKE) -f Makefile.aux man
+wmitm-man:
+	cd wmitm && $(MAKE) -f Makefile.aux man
 
 Webpage: program-src man FORCE
 	cd Webpage && $(MAKE)
 
-program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz lib-src.tgz
+program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz mitm-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz wmitm-src.tgz lib-src.tgz
 lib-src.tgz:
 	cd lib && $(MAKE) -f Makefile.aux src.tgz
 c3270-src.tgz:
@@ -105,6 +111,8 @@ pr3287-src.tgz:
 	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz
 x3270if-src.tgz:
 	cd x3270if && $(MAKE) -f Makefile.aux src.tgz
+mitm-src.tgz:
+	cd mitm && $(MAKE) -f Makefile.aux src.tgz
 wc3270-src.tgz:
 	cd wc3270 && $(MAKE) -f Makefile.aux src.tgz
 ws3270-src.tgz:
@@ -115,6 +123,8 @@ wpr3287-src.tgz:
 	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz
 wx3270if-src.tgz:
 	cd wx3270if && $(MAKE) -f Makefile.aux src.tgz
+wmitm-src.tgz:
+	cd wmitm && $(MAKE) -f Makefile.aux src.tgz
 
 # Target for building the Inno Setup .exe file and the .zip file.
 windows-release: man
