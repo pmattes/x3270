@@ -108,7 +108,7 @@ description
 .
 
 name aidWait
-applies x c s tcl
+applies x c s
 type b
 default false
 switch -set aidWait
@@ -586,14 +586,6 @@ description
 white-on-black device) and white on a printer (a black-on-white device).
 Host color 7 (NeutralWhite) means white on a display screen and black on a
 printer.
-.
-
-name commandTimeout
-applies tcl
-type i
-description
-    Defines the number of seconds to wait for a command to
-    complete before failing it with a timeout error.
 .
 
 name composeMap
@@ -1483,7 +1475,7 @@ description
 
 name hostsFile
 type s
-applies C S tcl
+applies C S
 if u
 default /usr/local/etc/x3270/ibm_hosts
 else
@@ -2651,7 +2643,7 @@ desc
 .
 
 name qrBgColor
-applies C s tcl b
+applies C s b
 type b
 default false
 desc
@@ -3176,7 +3168,7 @@ desc
 .
 
 name unlockDelay
-applies s ws tcl b
+applies s ws b
 type b
 default false
 desc
