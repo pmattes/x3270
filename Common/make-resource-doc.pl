@@ -34,8 +34,6 @@ if ($product eq "x3270") {
 } elsif ($product eq "s3270") {
     $approd{'S'} = 1;
     $approd{'u'} = 1;
-} elsif ($product eq "tcl3270") {
-    $approd{'u'} = 1;
 } elsif ($product eq "b3270") {
     $approd{'B'} = 1;
     $approd{'u'} = 1;
