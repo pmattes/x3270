@@ -41,4 +41,4 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 man: $(DOCS)
 
 html/Windows-x3270if.html:  x3270if.man.m4 $(MANDEP)
-	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
+	$(MKHTML) -n x3270if -o $@ -w x3270if.man.m4
