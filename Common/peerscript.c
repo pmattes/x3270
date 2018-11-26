@@ -72,6 +72,8 @@ static void *peer_getir(task_cbh handle);
 static void peer_setir_state(task_cbh handle, const char *name, void *state,
 	ir_state_abort_cb abort_cb);
 static void *peer_getir_state(task_cbh handle, const char *name);
+static void peer_reqinput(task_cbh handle, const char *buf, size_t len,
+	bool echo);
 
 static irv_t peer_irv = {
     peer_setir,
@@ -91,7 +93,10 @@ static tcb_t peer_cb = {
     peer_closescript,
     peer_setflags,
     peer_getflags,
-    &peer_irv
+    &peer_irv,
+    NULL,
+    NULL,
+    peer_reqinput
 };
 
 /* Peer script context. */
@@ -290,6 +295,24 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+
+    (void) send(p->socket, s, strlen(s), 0);
+}
+
+/**
+ * Callback for input request.
+ *
+ * @param[in] handle	Callback handle
+ * @param[in] buf	Buffer
+ * @param[in] len	Buffer length
+ * @param[in] echo	True to echo input
+ */
+static void
+peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
+{
+    peer_t *p = (peer_t *)handle;
+    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
+	    buf);
 
     (void) send(p->socket, s, strlen(s), 0);
 }

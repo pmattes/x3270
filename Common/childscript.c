@@ -70,6 +70,8 @@ static void child_setir_state(task_cbh handle, const char *name, void *state,
 	ir_state_abort_cb abort_cb);
 static void *child_getir_state(task_cbh handle, const char *name);
 static const char *child_command(task_cbh handle);
+static void child_reqinput(task_cbh handle, const char *buf, size_t len,
+	bool echo);
 
 static irv_t child_irv = {
     child_setir,
@@ -91,7 +93,8 @@ static tcb_t script_cb = {
     child_getflags,
     &child_irv,
     NULL,
-    child_command
+    child_command,
+    child_reqinput
 };
 
 /* Asynchronous callback block for parent script. */
@@ -107,7 +110,8 @@ static tcb_t async_script_cb = {
     child_getflags,
     &child_irv,
     NULL,
-    child_command
+    child_command,
+    child_reqinput,
 };
 
 #if !defined(_WIN32) /*[*/
@@ -124,7 +128,8 @@ static tcb_t child_cb = {
     child_getflags,
     &child_irv,
     NULL,
-    child_command
+    child_command,
+    child_reqinput
 };
 #endif /*]*/
 
@@ -405,6 +410,26 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+
+    (void) write(c->outfd, s, strlen(s));
+#endif /*]*/
+}
+
+/**
+ * Callback for input request
+ *
+ * @param[in] handle    Callback handle
+ * @param[in] buf       Buffer
+ * @param[in] len       Buffer length
+ * @param[in] echo      True to echo input
+ */
+static void
+child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
+{
+#if !defined(_WIN32) /*[*/
+    child_t *c = (child_t *)handle;
+    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
+	    buf);
 
     (void) write(c->outfd, s, strlen(s));
 #endif /*]*/

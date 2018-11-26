@@ -35,16 +35,19 @@
 #define INPUT_ENV	"X3270INPUT"
 #define PORT_ENV	"X3270PORT"
 
+/* Common length for all prefixes. */
+#define PREFIX_LEN	6
+
 /* Prefix for data output. */
 #define DATA_PREFIX	"data: "
+
+/* Prefixes for input. */
+#define INPUT_PREFIX	"inpt: "
+#define PWINPUT_PREFIX	"inpw: "
 
 /* Prompt terminators. */
 #define PROMPT_OK	"ok"
 #define PROMPT_ERROR	"error"
-
-/* Tokens to request interactive input. */
-#define INPUT_TOKEN	"[input] "
-#define PWINPUT_TOKEN	"[pwinput] "
 
 /* Action to continue or abort interactive input. */
 #define RESUME_INPUT	"ResumeInput"

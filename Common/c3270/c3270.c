@@ -251,6 +251,8 @@ static void command_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool command_done(task_cbh handle, bool success, bool abort);
 static unsigned command_getflags(task_cbh handle);
+static void command_reqinput(task_cbh handle, const char *buf, size_t len,
+	bool echo);
 
 /* Callback block for actions. */
 static tcb_t command_cb = {
@@ -263,7 +265,10 @@ static tcb_t command_cb = {
     NULL,
     NULL,
     command_getflags,
-    &command_irv
+    &command_irv,
+    NULL,
+    NULL,
+    command_reqinput
 };
 
 static void c3270_register(void);
@@ -1647,7 +1652,7 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
  * @param[in] handle	Callback handle
  * @param[in] buf	Buffer
  * @param[in] len	Buffer length
- * @param[in] data	True if data, false if error message
+ * @param[in] success	True if data, false if error message
  */
 static void
 command_data(task_cbh handle, const char *buf, size_t len, bool success)
@@ -1657,29 +1662,35 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
 
-    if (!success && !strncmp(buf, INPUT_TOKEN, strlen(INPUT_TOKEN))) {
-	char *p = lazya(base64_decode(buf + strlen(INPUT_TOKEN)));
+    glue_gui_xoutput(lazyaf("%.*s", (int)len, buf), success);
+}
 
-	prompt.string = xs_buffer(
-		appres.c3270.color_prompt? PROMPT_PRE "%s" PROMPT_POST : "%s",
-		p);
-	aux_input = true;
-	aux_pwinput = false;
-	command_output = true; /* a white lie */
-    } else if (!success && !strncmp(buf, PWINPUT_TOKEN,
-		strlen(PWINPUT_TOKEN))) {
-	char *p = lazya(base64_decode(buf + strlen(PWINPUT_TOKEN)));
+/**
+ * Callback for input request.
+ *
+ * @param[in] handle	Callback handle
+ * @param[in] buf	Buffer
+ * @param[in] len	Buffer length
+ * @param[in] echo	True if input should be echoed
+ */
+static void
+command_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
+{
+    char *p;
 
-	prompt.string = xs_buffer(
-		appres.c3270.color_prompt? PROMPT_PRE "%s" PROMPT_POST : "%s",
-		p);
-	aux_input = true;
-	aux_pwinput = true;
-	command_output = true; /* a white lie */
-	echo_mode(false);
-    } else {
-	glue_gui_xoutput(lazyaf("%.*s", (int)len, buf), success);
+    if (handle != (tcb_t *)&command_cb) {
+	vtrace("command_reqinput: no match\n");
+	return;
     }
+
+    p = lazya(base64_decode(buf));
+
+    prompt.string = xs_buffer(
+	    appres.c3270.color_prompt? PROMPT_PRE "%s" PROMPT_POST : "%s", p);
+    aux_input = true;
+    aux_pwinput = !echo;
+    command_output = true; /* a white lie */
+    echo_mode(echo);
 }
 
 /**

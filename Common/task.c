@@ -3849,6 +3849,7 @@ task_request_input(const char *action, const char *prompt,
     task_t *redirect = task_redirect_to();
     unsigned flags;
     input_request_t *ir;
+    char *encoded;
 
     if (redirect == NULL ||
 	    redirect->cbx.cb->getflags == NULL ||
@@ -3875,9 +3876,9 @@ task_request_input(const char *action, const char *prompt,
     (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
-    popup_an_error(
-	    no_echo? PWINPUT_TOKEN "%s": INPUT_TOKEN "%s",
-	    lazya(base64_encode(prompt)));
+    encoded = lazya(base64_encode(prompt));
+    (*redirect->cbx.cb->reqinput)(redirect->cbx.handle, encoded,
+	    strlen(encoded), !no_echo);
     return true;
 }
 

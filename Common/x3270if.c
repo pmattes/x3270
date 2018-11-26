@@ -85,13 +85,20 @@
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
 
+typedef enum {
+    ITYPE_DATA,		/* data: */
+    ITYPE_INPUT,	/* input: */
+    ITYPE_PWINPUT	/* pwinput: */
+} itype_t;
+
 static char *me;
 static int verbose = 0;
 static char buf[IBS];
 
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, socket_t socket, int infd,
-	int outfd, int fn, char *cmd, char **ret);
+	int outfd, int fn, char *cmd, char **data_ret, char **prompt_ret,
+	itype_t *itype);
 static void interactive_io(int port, const char *emulator_name,
 	const char *help_name);
 
@@ -279,7 +286,7 @@ main(int argc, char *argv[])
 	iterative_io(pid, port);
     } else {
 	return single_io(pid, port, INVALID_SOCKET, -1, -1, fn, argv[optind],
-		NULL);
+		NULL, NULL, NULL);
     }
     return 0;
 }
@@ -339,10 +346,26 @@ tsock(unsigned short port)
     return fd;
 }
 
+/* Get the input type from a buffer. */
+static itype_t
+get_itype(const char *buf)
+{
+    if (!strncmp(buf, DATA_PREFIX, PREFIX_LEN)) {
+	return ITYPE_DATA;
+    }
+    if (!strncmp(buf, INPUT_PREFIX, PREFIX_LEN)) {
+	return ITYPE_INPUT;
+    }
+    if (!strncmp(buf, PWINPUT_PREFIX, PREFIX_LEN)) {
+	return ITYPE_PWINPUT;
+    }
+    return ITYPE_DATA; /* wrong */
+}
+
 /* Do a single command, and interpret the results. */
 static int
 single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
-	int fn, char *cmd, char **ret)
+	int fn, char *cmd, char **data_ret, char **prompt_ret, itype_t *itype)
 {
     int port_env;
     int infd = -1, outfd = -1;
@@ -358,6 +381,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
     char *cmd_nl;
     char *wstr;
     size_t ret_sl = 0;
+    itype_t input_itype = ITYPE_DATA;
 
     /* Verify the environment and open files. */
     if (socket != INVALID_SOCKET) {
@@ -399,6 +423,13 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	}
     }
 
+    if (prompt_ret != NULL) {
+	*prompt_ret = NULL;
+    }
+    if (itype != NULL) {
+	*itype = ITYPE_DATA;
+    }
+
     /* Speak to x3270. */
     if (verbose) {
 	(void) fprintf(stderr, "i+ out %s\n", (cmd != NULL) ? cmd : "");
@@ -434,8 +465,8 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 	Free(cmd_nl);
     }
 
-    if (ret != NULL) {
-	*ret = NULL;
+    if (data_ret != NULL) {
+	*data_ret = NULL;
     }
 
 #if defined(_WIN32) /*[*/
@@ -480,15 +511,34 @@ retry:
 		xs = 1;
 		done = 1;
 		break;
-	    } else if (!strncmp(buf, DATA_PREFIX, strlen(DATA_PREFIX))) {
-		if (ret != NULL) {
-		    *ret = Realloc(*ret, ret_sl +
-			    strlen(buf + strlen(DATA_PREFIX)) + 2);
-		    *(*ret + ret_sl) = '\0';
-		    strcat(strcat(*ret, buf + strlen(DATA_PREFIX)), "\n");
-		    ret_sl += strlen(buf + strlen(DATA_PREFIX)) + 1;
+	    } else if (!strncmp(buf, DATA_PREFIX, PREFIX_LEN)
+		    || !strncmp(buf, INPUT_PREFIX, PREFIX_LEN)
+		    || !strncmp(buf, PWINPUT_PREFIX, PREFIX_LEN)) {
+		/*
+		 * The protocol is somewhat ambiguous: You could get multiple
+		 * inpt: and inpw: in the same response.
+		 * We only keep the last.
+		 */
+		if (data_ret != NULL) {
+		    itype_t this_itype;
+
+		    this_itype = get_itype(buf);
+		    if (this_itype == ITYPE_INPUT
+			    || this_itype == ITYPE_PWINPUT) {
+			input_itype = this_itype;
+			if (*prompt_ret != NULL) {
+			    Free(*prompt_ret);
+			}
+			*prompt_ret = NewString(buf + PREFIX_LEN);
+		    } else {
+			*data_ret = Realloc(*data_ret,
+				ret_sl + strlen(buf + PREFIX_LEN) + 2);
+			*(*data_ret + ret_sl) = '\0';
+			strcat(strcat(*data_ret, buf + PREFIX_LEN), "\n");
+			ret_sl += strlen(buf + PREFIX_LEN) + 1;
+		    }
 		} else {
-		    if (printf("%s\n", buf + strlen(DATA_PREFIX)) < 0) {
+		    if (printf("%s\n", buf + PREFIX_LEN) < 0) {
 			perror("x3270if: printf");
 			exit(__LINE__);
 		    }
@@ -568,6 +618,9 @@ retry:
 #endif /*]*/
     }
 
+    if (itype != NULL) {
+	*itype = input_itype;
+    }
     return xs;
 }
 
@@ -947,41 +1000,6 @@ set_text_attribute(HANDLE out, WORD attributes)
 }
 #endif /*[*/
 
-/*
- * Test a return buffer for the [input] tag on the last line,
- * removing the last line if found.
- */
-static bool
-is_input(char *s, char **prompt)
-{
-    char *nl;
-    char *last_line;
-
-    /* Find the last line. */
-    nl = strrchr(s, '\n');
-    if (nl == NULL && !*s) {
-	return false;
-    }
-
-    /* See if the last line starts with the tag. */
-    last_line = (nl? (nl + 1): s);
-    if (strncmp(last_line, INPUT_TOKEN, strlen(INPUT_TOKEN))) {
-	return false;
-    }
-
-    /* Remove the last line. */
-    if (nl) {
-	*nl = '\0';
-    } else {
-	*s = '\0';
-    }
-
-    /* Parse the rest. */
-    *prompt = base64_decode(last_line + strlen(INPUT_TOKEN));
-
-    return true;
-}
-
 static void
 interactive_io(int port, const char *emulator_name, const char *help_name)
 {
@@ -989,8 +1007,10 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     socket_t s = INVALID_SOCKET;
     int infd = -1, outfd = -1;
     size_t prompt_len;
-    char *ret;
+    char *data_ret;
+    char *prompt_ret;
     bool aux_input = false;
+    itype_t itype;
 #if defined(_WIN32) /*[*/
     HANDLE conout;
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -1021,9 +1041,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 #endif /*]*/
 
     /* Announce our capabilities. */
-    ret = NULL;
+    data_ret = NULL;
     single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(Interactive)",
-	    &ret);
+	    &data_ret, NULL, &itype);
 
     prompt_len = strlen(LEFT) + strlen(emulator_name) + strlen(">") +
 	strlen(RIGHT) + strlen(" ") + 1;
@@ -1229,10 +1249,11 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	}
 # endif /*]*/
 
-	ret = NULL;
+	data_ret = NULL;
+	prompt_ret = NULL;
 	if (!aux_input) {
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
-		    &ret);
+		    &data_ret, &prompt_ret, &itype);
 	} else {
 	    char *command_base64 = base64_encode(command);
 	    char *response = Malloc(strlen(command_base64) + 128);
@@ -1245,7 +1266,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		    command_base64[0]? command_base64: "\"\"");
 	    Free(command_base64);
 	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
-		    &ret);
+		    &data_ret, &prompt_ret, &itype);
 	    Free(response);
 	    Free(prompt);
 	    prompt = real_prompt;
@@ -1255,25 +1276,24 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 	Free(command);
 # endif /*]*/
 
-	if (ret != NULL) {
-	    char *p;
+	if (prompt_ret != NULL) {
+	    prompt = base64_decode(prompt_ret);
+	    Free(prompt_ret);
+	    aux_input = true;
+	}
 
-	    if ((sl = strlen(ret)) > 0 && ret[sl - 1] == '\n') {
-		ret[sl - 1] = '\0';
+	if (data_ret != NULL) {
+	    if ((sl = strlen(data_ret)) > 0 && data_ret[sl - 1] == '\n') {
+		data_ret[sl - 1] = '\0';
 	    }
-	    if (rc && is_input(ret, &p)) {
-		prompt = p;
-		aux_input = true;
-		rc = 0;
-	    }
-	    if (*ret) {
+	    if (*data_ret) {
 #if !defined(_WIN32) /*[*/
 		if (aux_input) {
-		    printf("%s\n", ret);
+		    printf("%s\n", data_ret);
 		} else {
 		    printf("\033[3%cm%s\033[39m\n",
 			    rc? '1': '9',
-			    ret);
+			    data_ret);
 		}
 # else /*][*/
 		if (!aux_input) {
@@ -1281,7 +1301,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 			    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
 				 info.wAttributes);
 		}
-		fputs(ret, stdout);
+		fputs(data_ret, stdout);
 		fflush(stdout);
 		if (!aux_input) {
 		    set_text_attribute(conout, info.wAttributes);
@@ -1289,7 +1309,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 		fputc('\n', stdout);
 #endif /*]*/
 	    }
-	    Free(ret);
+	    Free(data_ret);
 	    fflush(stdout);
 	}
 
