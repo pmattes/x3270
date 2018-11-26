@@ -46,15 +46,20 @@
 # include "w3misc.h"
 #endif /*]*/
 
+#include "utils.h"
+
 #if !defined(_WIN32) /*[*/
 # define DIRSEP '/'
+# define sockerr(s)	perror(s)
 #else /*][*/
 # define DIRSEP '\\'
+# define sockerr(s)	win32_perror(s)
 #endif /*]*/
 
 static char *me;
-
+#if 0
 static void sockerr(const char *s);
+#endif
 static void netdump(FILE *f, char direction, unsigned char *buffer,
 	size_t length);
 
@@ -134,10 +139,9 @@ main(int argc, char *argv[])
     /* Open the output file. */
     if (file == NULL) {
 #if !defined(_WIN32) /*[*/
-	file = malloc(1024);
-	snprintf(file, 1024, "/tmp/mitm.%d", (int)getpid());
+	file = xs_buffer("/tmp/mitm.%d", (int)getpid());
 #else /*][*/
-	char *desktop = malloc(MAX_PATH);
+	char desktop[MAX_PATH];
 	HRESULT r;
 
 	r = SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
@@ -147,8 +151,7 @@ main(int argc, char *argv[])
 		    (int)r);
 	    exit(1);
 	}
-	file = malloc(MAX_PATH);
-	snprintf(file, MAX_PATH, "%s\\mitm.%d.txt", desktop, (int)getpid());
+	file = xs_buffer("%s\\mitm.%d.txt", desktop, (int)getpid());
 #endif /*]*/
     }
     f = fopen(file, "w");
@@ -318,6 +321,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
+#if 0
 /* Socket error. */
 static void
 sockerr(const char *s)
@@ -337,6 +341,7 @@ sockerr(const char *s)
     fprintf(stderr, "%s: socket error %s", s, buf);
 #endif /*]*/
 }
+#endif
 
 /* Display a hex dump of a buffer. */
 static void
@@ -372,4 +377,12 @@ netdump(FILE *f, char direction, unsigned char *buffer, size_t length)
 	rgbLine[cbLine++] = 0;
 	fprintf(f, "%c %s\n", direction, rgbLine);
     }
+}
+
+/* Glue for library errors. */
+void
+Error(const char *s)
+{
+    fprintf(stderr, "%s\n", s);
+    exit(1);
 }

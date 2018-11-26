@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2018 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,64 +24,36 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for mitm (man-in-the-middle tracing daemon)
+# Auxiliary makefile for mitm
 
-RM = rm -f
-CC = @CC@
+PRODUCT=mitm
 
-all: mitm
+all:
+	@echo "Must pick a specific make target."
 
-HOST = @host@
-include mitm_files.mk libs.mk
+# Development tools.
 
-VOBJS = $(MITM_OBJECTS)
+include mitm_files.mk
 
-OBJS1 = $(VOBJS) version.o
+MISC = $(PRODUCT).man
 
-LIBDIR = @libdir@
-prefix = @prefix@
-exec_prefix = @exec_prefix@
-sysconfdir = @sysconfdir@
-datarootdir = @datarootdir@
-MANDIR = @mandir@
-BINDIR = @bindir@
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_DATA = @INSTALL_DATA@
+HTML = html/Unix-$(PRODUCT).html
 
-CCOPTIONS = @CCOPTIONS@
-XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
-LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
-	$(RM) $(XVERSION)
-	sh $< mitm $(filter %.txt,$^) >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
-	$(RM) $(XVERSION)
+src.tgz: prepare $(FILES)
 
-mitm: $(OBJS1) $(DEP3270)
-	$(CC) -o $@ $(LDFLAGS) $(OBJS1) $(LD32XX) $(LIBS)
+prepare: configure
+configure: configure.in
+	autoconf
 
-man:: mitm.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
 
-install: mitm
-	[ -d $(DESTDIR)$(BINDIR) ] || \
-		mkdir -p $(DESTDIR)$(BINDIR)
-	$(INSTALL_PROGRAM) mitm $(DESTDIR)$(BINDIR)/mitm
+man: $(PRODUCT).man html/Unix-$(PRODUCT).html
 
-install.man: man
-	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
-		mkdir -p $(DESTDIR)$(MANDIR)/man1
-	$(INSTALL_DATA) mitm.man $(DESTDIR)$(MANDIR)/man1/mitm.1
-
-clean:
-	$(RM) *.o
-clobber: clean
-	$(RM) mitm *.d *.man
-
-# Include auto-generated dependencies.
--include $(OBJS:.o=.d)
+$(PRODUCT).man: mitm.man.m4 $(MANDEP)
+	$(MKMAN) -n mitm -o $@ mitm.man.m4
+html/Unix-$(PRODUCT).html: mitm.man.m4 $(MANDEP)
+	$(MKHTML) -n mitm -o $@ mitm.man.m4
