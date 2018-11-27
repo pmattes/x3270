@@ -609,6 +609,7 @@ toggle_model_done(bool success)
     } old;
     bool oversize_was_pending = (pending_oversize != NULL);
     bool res = true;
+    bool model_changed = (pending_model != NULL || pending_extended);
 
     if (!success ||
 	    (pending_model == NULL &&
@@ -656,7 +657,7 @@ toggle_model_done(bool success)
     if (pending_extended) {
 	extended = pending_extended_value;
 	if (!pending_extended_value) {
-	    /* With extended, no oversize. */
+	    /* Without extended, no oversize. */
 	    Replace(pending_oversize, NewString(""));
 	}
     } else {
@@ -730,6 +731,9 @@ toggle_model_done(bool success)
     if (pending_model != NULL) {
 	Replace(appres.model, pending_model);
 	pending_model = NULL;
+    }
+    if (model_changed) {
+	force_toggle_notify(ResModel);
     }
     if (pending_oversize != NULL) {
 	if (*pending_oversize) {
