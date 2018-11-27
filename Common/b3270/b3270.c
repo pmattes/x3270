@@ -520,17 +520,19 @@ canonical_model(const char *res)
     }
     sl = strlen(res);
 
-    if ((sl != 1 && sl != 6) ||
+    if ((sl != 1 && sl != 6 && sl != 8) ||
 	(sl == 1 &&
 	 (digitp = strchr("2345", res[0])) == NULL) ||
-	(sl == 6 &&
+	(((sl == 6) || (sl == 8)) &&
 	 (strncmp(res, "327", 3) ||
 	  (colorp = strchr("89", res[3])) == NULL ||
 	  res[4] != '-' ||
-	  (digitp = strchr("2345", res[5])) == NULL))) {
+	  (digitp = strchr("2345", res[5])) == NULL)) ||
+	((sl == 8) &&
+	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
 	return NULL;
     }
-    return xs_buffer("327%c-%c", *colorp, *digitp);
+    return xs_buffer("327%c-%c%s", *colorp, *digitp, appres.extended? "-E": "");
 }
 
 /*
