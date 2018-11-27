@@ -47,6 +47,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "screen.h"
+#include "toupper.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -425,8 +426,8 @@ copy_clipboard_unicode(LPTSTR lptstr)
 	    d = ctlr_dbcs_state(baddr);
 	    if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
 		if (!IS_RIGHT(d)) {
-		    if (!IS_LEFT(d) && toggled(MONOCASE) && islower(u)) {
-			u = toupper(u);
+		    if (!IS_LEFT(d) && toggled(MONOCASE)) {
+			u = u_toupper(u);
 		    }
 		} else {
 		    continue;
@@ -459,8 +460,8 @@ copy_clipboard_unicode(LPTSTR lptstr)
 			if (u == 0) {
 			    u = ' ';
 			}
-			if (toggled(MONOCASE) && islower(u)) {
-			    u = toupper(u);
+			if (toggled(MONOCASE)) {
+			    u = u_toupper(u);
 			}
 		    }
 		} else {
@@ -542,8 +543,8 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 		} else if (!IS_RIGHT(d)) {
 		    if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
 			u = ' ';
-		    } else if (toggled(MONOCASE) && islower(u)) {
-			u = toupper(u);
+		    } else if (toggled(MONOCASE)) {
+			u = u_toupper(u);
 		    }
 		    if (u == ' ') {
 			if (!word_selected || last_cjk_space) {
@@ -599,8 +600,8 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 			if (u == 0) {
 			    u = ' ';
 			}
-			if (toggled(MONOCASE) && islower(u)) {
-			    u = toupper(u);
+			if (toggled(MONOCASE)) {
+			    u = u_toupper(u);
 			}
 		    }
 		    if (u == ' ') {
@@ -682,8 +683,8 @@ copy_clipboard_text(LPTSTR lptstr)
 		} else {
 		    u = ' ';
 		}
-		if (toggled(MONOCASE) && islower(u)) {
-		    u = toupper(u);
+		if (toggled(MONOCASE)) {
+		    u = u_toupper(u);
 		}
 	    }
 

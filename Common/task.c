@@ -80,6 +80,7 @@
 #include "stringscript.h"
 #include "task.h"
 #include "telnet.h"
+#include "toupper.h"
 #include "trace.h"
 #include "utf8.h"
 #include "utils.h"
@@ -1917,8 +1918,8 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else {
 		if (is_nvt(&buf[first + i], false, &uc)) {
 		    /* NVT-mode text. */
-		    if (toggled(MONOCASE) && islower((int)uc)) {
-			uc = (ucs4_t)toupper((int)uc);
+		    if (toggled(MONOCASE)) {
+			uc = u_toupper(uc);
 		    }
 		    xlen = unicode_to_multibyte(uc, mb, sizeof(mb));
 		    for (j = 0; j < xlen - 1; j++) {

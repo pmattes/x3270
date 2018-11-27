@@ -48,6 +48,9 @@
     <ClCompile Include="..\..\Common\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\toupper.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\unicode.c">
       <Filter>Source Files</Filter>
     </ClCompile>

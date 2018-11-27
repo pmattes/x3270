@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\Common\Win32\sio_schannel.c" />
     <ClCompile Include="..\..\Common\Win32\snprintf.c" />
     <ClCompile Include="..\..\Common\tables.c" />
+    <ClCompile Include="..\..\Common\toupper.c" />
     <ClCompile Include="..\..\Common\unicode.c" />
     <ClCompile Include="..\..\Common\unicode_dbcs.c" />
     <ClCompile Include="..\..\Common\utf8.c" />

@@ -296,6 +296,7 @@ Common/telnet_gui_stubs.c
 Common/telnet_new_environ.c
 Common/telnet_sio.c
 Common/toggles.c
+Common/toupper.c
 Common/trace.c
 Common/trace_gui_stubs.c
 Common/unicode.c

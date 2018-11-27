@@ -27,7 +27,7 @@
 
 /*
  *	unicode.c
- *		A Windows console-based 3270 Terminal Emulator
+ *		3270 Terminal Emulator
  *		EBCDIC/Unicode translation functions
  */
 #include "globals.h"
@@ -38,6 +38,7 @@
 #include <errno.h>
 #include "3270ds.h"
 #include "apl.h"
+#include "toupper.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
@@ -821,131 +822,131 @@ size_t
 ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	size_t mb_len, unsigned flags, ucs4_t *ucp)
 {
-	ucs4_t uc;
-
+    ucs4_t uc;
 #if defined(_WIN32) /*[*/
-	int nc;
-	BOOL udc;
-	wchar_t wuc;
+    int nc;
+    BOOL udc;
+    wchar_t wuc;
 #elif defined(UNICODE_WCHAR) /*][*/
-	int nc;
+    int nc;
 #else /*][*/
-	char u8b[7];
-	int nu8;
-	ici_t inbuf;
-	char *outbuf;
-	size_t inbytesleft, outbytesleft;
-	size_t nc;
+    char u8b[7];
+    int nu8;
+    ici_t inbuf;
+    char *outbuf;
+    size_t inbytesleft, outbytesleft;
+    size_t nc;
 #endif /*]*/
 
-	/* Translate from EBCDIC to Unicode. */
-	uc = ebcdic_to_unicode(ebc, cs, flags);
-	if (ucp != NULL)
-		*ucp = uc;
-	if (uc == 0) {
-		if (flags & EUO_BLANK_UNDEF) {
-			mb[0] = ' ';
-			mb[1] = '\0';
-			return 2;
-		} else {
-			return 0;
-		}
+    /* Translate from EBCDIC to Unicode. */
+    uc = ebcdic_to_unicode(ebc, cs, flags);
+    if (ucp != NULL) {
+	*ucp = uc;
+    }
+    if (uc == 0) {
+	if (flags & EUO_BLANK_UNDEF) {
+	    mb[0] = ' ';
+	    mb[1] = '\0';
+	    return 2;
+	} else {
+	    return 0;
 	}
+    }
 
-	/* Do uppercase. */
-	if (flags & EUO_TOUPPER) {
-	    	if (islower((int)uc)) {
-		    uc = (ucs4_t)toupper((int)uc);
-		    if (ucp != NULL) {
-			    *ucp = uc;
-		    }
-		}
+    /* Do uppercase. */
+    if (flags & EUO_TOUPPER) {
+	uc = u_toupper(uc);
+	if (ucp != NULL) {
+	    *ucp = uc;
 	}
+    }
 
-	/* Translate from Unicode to local multibyte. */
+    /* Translate from Unicode to local multibyte. */
 
 #if defined(_WIN32) /*[*/
-	/*
-	 * wchar_t's are Unicode.
-	 */
-	wuc = uc;
-	nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
-		(u_local_cp == CP_UTF8)? NULL: "?",
-		(u_local_cp == CP_UTF8)? NULL: &udc);
-	if (nc != 0) {
-		mb[nc++] = '\0';
-		return nc;
-	} else {
-		mb[0] = '?';
-		mb[1] = '\0';
-		return 2;
-	}
+    /*
+     * wchar_t's are Unicode.
+     */
+    wuc = uc;
+    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
+	    (u_local_cp == CP_UTF8)? NULL: "?",
+	    (u_local_cp == CP_UTF8)? NULL: &udc);
+    if (nc != 0) {
+	mb[nc++] = '\0';
+	return nc;
+    } else {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
 
 #elif defined(UNICODE_WCHAR) /*][*/
-	/*
-	 * wchar_t's are Unicode.
-	 * If 'is_utf8' is set, use unicode_to_utf8().  This allows us to set
-	 *  'is_utf8' directly, ignoring the locale, for Tcl.
-	 * Otherwise, use wctomb().
-	 */
-	if (is_utf8) {
-		nc = unicode_to_utf8(uc, mb);
-		if (nc < 0)
-			return 0;
-		mb[nc++] = '\0';
-		return nc;
+    /*
+     * wchar_t's are Unicode.
+     * If 'is_utf8' is set, use unicode_to_utf8().  This allows us to set
+     *  'is_utf8' directly, ignoring the locale, for Tcl.
+     * Otherwise, use wctomb().
+     */
+    if (is_utf8) {
+	nc = unicode_to_utf8(uc, mb);
+	if (nc < 0) {
+	    return 0;
 	}
+	mb[nc++] = '\0';
+	return nc;
+    }
 
-	nc = wctomb(mb, uc);
-	if (nc > 0) {
-		/* Return to the initial shift state and null-terminate. */
-		nc += wctomb(mb + nc, 0);
-		return nc;
-	} else {
-		mb[0] = '?';
-		mb[1] = '\0';
-		return 2;
-	}
+    nc = wctomb(mb, uc);
+    if (nc > 0) {
+	/* Return to the initial shift state and null-terminate. */
+	nc += wctomb(mb + nc, 0);
+	return nc;
+    } else {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
 #else /*][*/
-	/*
-	 * Use iconv.
-	 */
+    /*
+     * Use iconv.
+     */
 
-	/* Translate the wchar_t we got from UCS-4 to UTF-8. */
-	nu8 = unicode_to_utf8(uc, u8b);
-	if (nu8 < 0)
-		return 0;
+    /* Translate the wchar_t we got from UCS-4 to UTF-8. */
+    nu8 = unicode_to_utf8(uc, u8b);
+    if (nu8 < 0) {
+	return 0;
+    }
 
-	/* Local multi-byte might be UTF-8, in which case, we're done. */
-	if (is_utf8) {
-	    memcpy(mb, u8b, nu8);
-	    mb[nu8++] = '\0';
-	    return nu8;
-	}
+    /* Local multi-byte might be UTF-8, in which case, we're done. */
+    if (is_utf8) {
+	memcpy(mb, u8b, nu8);
+	mb[nu8++] = '\0';
+	return nu8;
+    }
 
-	/* Let iconv translate from UTF-8 to local multi-byte. */
-	inbuf = u8b;
-	inbytesleft = nu8;
-	outbuf = mb;
-	outbytesleft = mb_len;
-	nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-	if (nc == (size_t)-1 || inbytesleft == (unsigned)nu8) {
-		mb[0] = '?';
-		mb[1] = '\0';
-		return 2;
-	}
+    /* Let iconv translate from UTF-8 to local multi-byte. */
+    inbuf = u8b;
+    inbytesleft = nu8;
+    outbuf = mb;
+    outbytesleft = mb_len;
+    nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+    if (nc == (size_t)-1 || inbytesleft == (unsigned)nu8) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
 
-	/* Return to the initial shift state. */
-	nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
-	if (nc == (size_t)-1) {
-		mb[0] = '?';
-		mb[1] = '\0';
-		return 0;
-	}
+    /* Return to the initial shift state. */
+    nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
+    if (nc == (size_t)-1) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 0;
+    }
 
-	/* Null-terminate the return the length. */
-	mb[mb_len - outbytesleft--] = '\0';
-	return mb_len - outbytesleft;
+    /* Null-terminate the return the length. */
+    mb[mb_len - outbytesleft--] = '\0';
+    return mb_len - outbytesleft;
 
 #endif /*]*/
 }

@@ -54,6 +54,7 @@
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
+#include "toupper.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
@@ -1287,17 +1288,23 @@ screen_disp(bool erasing _is_unused)
 			display_ge(ea_buf[baddr].ec);
 		    } else {
 			bool done_sbcs = false;
+			ucs4_t uu;
 
-			if (ea_buf[baddr].ucs4 != 0) {
-			    len = unicode_to_multibyte(ea_buf[baddr].ucs4,
-				    mb, sizeof(mb));
+			if ((uu = ea_buf[baddr].ucs4) != 0) {
+			    if (toggled(MONOCASE)) {
+				uu = u_toupper(uu);
+			    }
+			    len = unicode_to_multibyte(uu, mb, sizeof(mb));
 			} else {
+			    unsigned flags = EUO_BLANK_UNDEF |
+			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0) |
+			       (toggled(MONOCASE)? EUO_TOUPPER: 0);
+
 			    len = ebcdic_to_multibyte_x(
 					ea_buf[baddr].ec,
 					CS_BASE, mb,
 					sizeof(mb),
-					EUO_BLANK_UNDEF |
-			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
+					flags,
 					NULL);
 			}
 			if (len > 0) {
@@ -1314,11 +1321,6 @@ screen_disp(bool erasing _is_unused)
 			    if (toggled(UNDERSCORE) && underlined &&
 				    (len == 1) && mb[0] == ' ') {
 				mb[0] = '_';
-			    }
-			    if (toggled(MONOCASE) && (len == 1) &&
-				    !(mb[0] & 0x80) &&
-				    islower((unsigned char)mb[0])) {
-				mb[0] = toupper((unsigned char)mb[0]);
 			    }
 #if defined(CURSES_WIDE) /*[*/
 			    addstr(mb);

@@ -81,6 +81,7 @@
 #include "status.h"
 #include "tables.h"
 #include "telnet.h"
+#include "toupper.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
@@ -2241,8 +2242,8 @@ font_index(ebc_t ebc, int d8_ix, bool upper)
     int d;
 
     ucs4 = ebcdic_base_to_unicode(ebc, EUO_BLANK_UNDEF | EUO_UPRIV);
-    if (upper && ucs4 < 0x80 && islower(ucs4)) {
-	ucs4 = toupper(ucs4);
+    if (upper) {
+	ucs4 = u_toupper(ucs4);
     }
     d = display8_lookup(d8_ix, ucs4);
     if (d < 0) {
@@ -2460,8 +2461,8 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		if (ss->unicode_font) {
 		    ucs4_t u = buffer[i].ucs4;
 
-		    if (toggled(MONOCASE) && islower((int)u)) {
-			u = (ucs4_t)toupper((int)u);
+		    if (toggled(MONOCASE)) {
+			u = u_toupper(u);
 		    }
 		    rt_buf[j].byte1 = (u >> 8) & 0xff;
 		    rt_buf[j].byte2 = u & 0xff;
