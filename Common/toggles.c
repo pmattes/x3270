@@ -379,10 +379,9 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	    goto failed;
 	}
 
-	/* Check for old syntax. */
 	if (argc - arg == 1) {
 	    if (is_toggle_action) {
-		/* Flip a Boolean value. */
+		/* Toggle(x): Flip a Boolean value. */
 		if (u != NULL) {
 		    /*
 		     * Allow a bool-valued field to be toggled, even if it
@@ -396,13 +395,11 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		    value = (*(bool *)u->address)? "false": "true";
 		    goto have_value;
 		}
-		if (!toggled(ix)) {
-		    /* Flip the toggle. */
-		    do_toggle_reason(ix, TT_ACTION);
-		}
+		/* Flip the toggle. */
+		do_toggle_reason(ix, TT_ACTION);
 		goto done;
 	    } else {
-		/* Display one value. */
+		/* Set(x): Display one value. */
 		if (u != NULL) {
 		    char *v = u_value(u);
 
