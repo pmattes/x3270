@@ -3519,20 +3519,26 @@ query_terminal_name(void)
     return (appres.termname != NULL)? appres.termname: full_model_name;
 }
 
+static const char *
+query_build(void)
+{
+    return build;
+}
+
 static bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     static struct {
 	char *name;
 	const char *(*fn)(void);
-	char *string;
+	const char *string;
 	bool hidden;
 	bool specific;
     } queries[] = {
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "CodePage", get_host_codepage, NULL, false, false },
-	{ "Cursor", ctlr_query_cursor, NULL, false, false },
+	{ "Cursor", ctlr_query_cursor, NULL, true, false },
 	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },
 	{ "CursorOffset", query_cursor_offset, NULL, false, false },
 	{ "Formatted", ctlr_query_formatted, NULL, false, false },
@@ -3547,6 +3553,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Tls", net_query_tls, NULL, false, false },
 	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
 	{ "TlsSessionInfo", net_session_info, NULL, false, true },
+	{ "Version", query_build, NULL, false, false },
 	{ NULL, NULL, false, false }
     };
     int i;
