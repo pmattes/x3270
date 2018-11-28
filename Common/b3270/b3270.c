@@ -496,14 +496,15 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 }
 
 /*
- * Canonical representation of the model.
+ * Canonical representation of the model, given specific defaults for
+ * color mode and extended mode.
  */
 static char *
-canonical_model(const char *res)
+canonical_modelx(const char *res, bool color, bool extended)
 {
     size_t sl;
     char *digitp;
-    char *colorp = appres.m3279? "9": "8";
+    char *colorp = color? "9": "8";
 
     if (res == NULL) {
 	return NULL;
@@ -522,7 +523,19 @@ canonical_model(const char *res)
 	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
 	return NULL;
     }
-    return xs_buffer("327%c-%c%s", *colorp, *digitp, appres.extended? "-E": "");
+    if (sl == 8) {
+	extended = true;
+    }
+    return xs_buffer("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
+}
+
+/*
+ * Canonical representation of the model.
+ */
+static char *
+canonical_model(const char *res)
+{
+    return canonical_modelx(res, appres.m3279, appres.extended);
 }
 
 /*
@@ -587,7 +600,7 @@ toggle_nop_seconds(const char *name _is_unused, const char *value)
 }
 
 /*
- * Done function for changing the model and oversize.
+ * Done function for changing the model, oversize and extended mode.
  */
 static bool
 toggle_model_done(bool success)
@@ -609,6 +622,7 @@ toggle_model_done(bool success)
     } old;
     bool oversize_was_pending = (pending_oversize != NULL);
     bool res = true;
+    bool implicit_extended_change = false;
 
     if (!success ||
 	    (pending_model == NULL &&
@@ -623,12 +637,10 @@ toggle_model_done(bool success)
 	goto fail;
     }
 
-    /*
-     * One argument changes the model number and clears oversize.
-     * Two changes both.
-     */
+    /* Reconcile simultaneous changes. */
     if (pending_model != NULL) {
-	char *canon = canonical_model(pending_model);
+	char *canon = canonical_modelx(pending_model, appres.m3279,
+		pending_extended? pending_extended_value: appres.extended);
 
 	if (canon == NULL) {
 	    popup_an_error("Toggle(%s): value must be 327{89}-{2345}[-E]",
@@ -639,6 +651,15 @@ toggle_model_done(bool success)
 	Replace(pending_model, canon);
 	color = pending_model[3];
 	digit = pending_model[5];
+
+	/* Adding -E to the model will implicitly turn on extended mode. */
+	if (strlen(pending_model) == 8 && 
+		!pending_extended &&
+		!appres.extended) {
+	    pending_extended = true;
+	    pending_extended_value = true;
+	    implicit_extended_change = true;
+	}
     }
 
     if (pending_extended) {
@@ -717,9 +738,13 @@ toggle_model_done(bool success)
 
     if (pending_model != NULL) {
 	Replace(appres.model, pending_model);
-	pending_model = NULL;
-    } else if (pending_extended) {
+    }
+    if (pending_extended && pending_model == NULL) {
 	force_toggle_notify(ResModel);
+    }
+    pending_model = NULL;
+    if (implicit_extended_change) {
+	force_toggle_notify(ResExtended);
     }
     if (pending_oversize != NULL) {
 	if (*pending_oversize) {
