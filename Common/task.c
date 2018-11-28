@@ -3513,6 +3513,12 @@ query_cursor_offset(void)
     return lazyaf("%d", cursor_addr);
 }
 
+static const char *
+query_terminal_name(void)
+{
+    return (appres.termname != NULL)? appres.termname: full_model_name;
+}
+
 static bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -3533,10 +3539,11 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Host", net_query_host, NULL, false, false },
 	{ "LocalEncoding", get_codeset, NULL, false, false },
 	{ "LuName", net_query_lu_name, NULL, false, false },
-	{ "Model", NULL, full_model_name, false, false },
+	{ "Model", NULL, full_model_name, true, false },
 	{ "ScreenCurSize", ctlr_query_cur_size, NULL, false, false },
 	{ "ScreenMaxSize", ctlr_query_max_size, NULL, false, false },
 	{ "Ssl", net_query_tls, NULL, true, false },
+	{ "TerminalName", query_terminal_name, NULL, false, false },
 	{ "Tls", net_query_tls, NULL, false, false },
 	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
 	{ "TlsSessionInfo", net_session_info, NULL, false, true },
