@@ -496,16 +496,6 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 }
 
 /*
- * Toggle the model.
- */
-static bool
-toggle_model(const char *name _is_unused, const char *value)
-{
-    Replace(pending_model, *value? NewString(value): NULL);
-    return true;
-}
-
-/*
  * Canonical representation of the model.
  */
 static char *
@@ -513,7 +503,7 @@ canonical_model(const char *res)
 {
     size_t sl;
     char *digitp;
-    char *colorp = "9";
+    char *colorp = appres.m3279? "9": "8";
 
     if (res == NULL) {
 	return NULL;
@@ -533,6 +523,16 @@ canonical_model(const char *res)
 	return NULL;
     }
     return xs_buffer("327%c-%c%s", *colorp, *digitp, appres.extended? "-E": "");
+}
+
+/*
+ * Toggle the model.
+ */
+static bool
+toggle_model(const char *name _is_unused, const char *value)
+{
+    Replace(pending_model, *value? NewString(value): NULL);
+    return true;
 }
 
 /*
@@ -609,7 +609,6 @@ toggle_model_done(bool success)
     } old;
     bool oversize_was_pending = (pending_oversize != NULL);
     bool res = true;
-    bool model_changed = (pending_model != NULL || pending_extended);
 
     if (!success ||
 	    (pending_model == NULL &&
@@ -619,8 +618,8 @@ toggle_model_done(bool success)
     }
 
     if (PCONNECTED) {
-	popup_an_error("Toggle(%s/%s): Cannot change model or oversize while "
-		"connected", ResModel, ResOversize);
+	popup_an_error("Toggle: Cannot change %s, %s or %s while "
+		"connected", ResModel, ResOversize, ResExtended);
 	goto fail;
     }
 
@@ -629,29 +628,17 @@ toggle_model_done(bool success)
      * Two changes both.
      */
     if (pending_model != NULL) {
-	size_t sl = strlen(pending_model);
-	char *digitp;
-	char *colorp = "9";
+	char *canon = canonical_model(pending_model);
 
-	if ((sl != 1 && sl != 6) ||
-	    (sl == 1 &&
-	     (digitp = strchr("2345", pending_model[0])) == NULL) ||
-	    (sl == 6 &&
-	     (strncmp(pending_model, "327", 3) ||
-	      (colorp = strchr("89", pending_model[3])) == NULL ||
-	      pending_model[4] != '-' ||
-	      (digitp = strchr("2345", pending_model[5])) == NULL))) {
-
-	    popup_an_error("Toggle(%s): value must be 327[89]-[2345]",
+	if (canon == NULL) {
+	    popup_an_error("Toggle(%s): value must be 327{89}-{2345}[-E]",
 		    ResModel);
 	    goto fail;
 	}
 
-	color = *colorp;
-	digit = *digitp;
-	if (sl == 1) {
-	    Replace(pending_model, xs_buffer("327%c-%c", color, digit));
-	}
+	Replace(pending_model, canon);
+	color = pending_model[3];
+	digit = pending_model[5];
     }
 
     if (pending_extended) {
@@ -731,8 +718,7 @@ toggle_model_done(bool success)
     if (pending_model != NULL) {
 	Replace(appres.model, pending_model);
 	pending_model = NULL;
-    }
-    if (model_changed) {
+    } else if (pending_extended) {
 	force_toggle_notify(ResModel);
     }
     if (pending_oversize != NULL) {
