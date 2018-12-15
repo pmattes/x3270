@@ -1284,18 +1284,18 @@ array_add(const char ***s, int ix, const char *v)
  * Start an x3270if-based interactive console, optionally overriding the app
  * name used as the prompt.
  *
- * Prompt([prompt[,help-action]])
+ * Prompt([prompt[,help-action][,i18n-file]])
  */
 bool
 Prompt_action(ia_t ia, unsigned argc, const char **argv)
 {
-    const char *params[2] = { programname, NULL };
+    const char *params[3] = { programname, NULL, NULL };
     unsigned i;
     const char **nargv = NULL;
     int nargc = 0;
 
     action_debug("Prompt", ia, argc, argv);
-    if (check_argc("Prompt", argc, 0, 2) < 0) {
+    if (check_argc("Prompt", argc, 0, 3) < 0) {
 	return false;
     }
 
@@ -1306,7 +1306,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	char c;
 
 	while ((c = *in++)) {
-	    if (c != '\'' && c != '"' && !isspace((int)c)) {
+	    if (c != '\'' && c != '"' && (i == 2 || !isspace((int)c))) {
 		*out++ = c;
 	    }
 	}
@@ -1324,9 +1324,11 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, "-e");
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
-    array_add(&nargv, nargc++, lazyaf("x3270if -I '%s'%s || (echo 'Press <Enter>'; read x)",
-	    params[0],
-	    (params[1] != NULL)? lazyaf(" -H '%s'", params[1]): ""));
+    array_add(&nargv, nargc++,
+	    lazyaf("x3270if -I '%s'%s%s || (echo 'Press <Enter>'; read x)",
+		params[0],
+		(params[1] != NULL)? lazyaf(" -H '%s'", params[1]): "",
+		(params[2] != NULL)? lazyaf(" -L '%s'", params[2]): ""));
 #else /*][*/
     array_add(&nargv, nargc++, "-Single");
     array_add(&nargv, nargc++, "cmd.exe");
@@ -1340,6 +1342,10 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     if (params[1] != NULL) {
 	array_add(&nargv, nargc++, "-H");
 	array_add(&nargv, nargc++, params[1]);
+    }
+    if (params[2] != NULL) {
+	array_add(&nargv, nargc++, "-L");
+	array_add(&nargv, nargc++, lazyaf("\"%s\"", params[2]));
     }
 #endif /*]*/
     array_add(&nargv, nargc++, NULL);

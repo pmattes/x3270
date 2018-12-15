@@ -77,11 +77,11 @@
 
 #if defined(_WIN32) /*[*/
 #define DIRSEP	'\\'
-#define OPTS	"H:iI:s:St:v"
+#define OPTS	"H:iI:L:s:St:v"
 #define FD_ENV_REQUIRED	true
 #else /*][*/
 #define DIRSEP '/'
-#define OPTS	"H:iI:p:s:St:v"
+#define OPTS	"H:iI:L:p:s:St:v"
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
 
@@ -100,12 +100,22 @@ static int single_io(int pid, unsigned short port, socket_t socket, int infd,
 	int outfd, int fn, char *cmd, char **data_ret, char **prompt_ret,
 	itype_t *itype);
 static void interactive_io(int port, const char *emulator_name,
-	const char *help_name);
+	const char *help_name, const char *localization);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
 static char *completion_entry(const char *, int);
 #endif /*]*/
+
+/* Localization data. */
+typedef struct i18n {
+    struct i18n *next;
+    char *key;
+    char *translation;
+} i18n_t;
+i18n_t *i18n = NULL;
+#define BANNER	"x3270if.banner"
+#define QUIT	"x3270if.quit"
 
 static void
 x3270if_usage(void)
@@ -170,6 +180,7 @@ main(int argc, char *argv[])
     unsigned short port = 0;
     const char *emulator_name = NULL;
     const char *help_name = NULL;
+    const char *localization = NULL;
 
 #if defined(_WIN32) /*[*/
     if (sockstart() < 0) {
@@ -208,6 +219,9 @@ main(int argc, char *argv[])
 	    }
 	    iterative++;
 	    emulator_name = optarg;
+	    break;
+	case 'L':
+	    localization = optarg;
 	    break;
 #if !defined(_WIN32) /*[*/
 	case 'p':
@@ -281,7 +295,7 @@ main(int argc, char *argv[])
 
     /* Do the I/O. */
     if (iterative && emulator_name != NULL) {
-	interactive_io(port, emulator_name, help_name);
+	interactive_io(port, emulator_name, help_name, localization);
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
@@ -1000,8 +1014,95 @@ set_text_attribute(HANDLE out, WORD attributes)
 }
 #endif /*[*/
 
+/* Copy and translate a translation. */
 static void
-interactive_io(int port, const char *emulator_name, const char *help_name)
+xlcpy(char *dest, const char *src)
+{
+    bool backslash = false;
+    char c;
+
+    /* Skip spaces. */
+    while ((c = *src) == ' ')
+    {
+	src++;
+    }
+
+    /* Copy, translating certain escape sequences. */
+    while ((c = *src++) != '\0') {
+	if (backslash) {
+	    if (c == 'n') {
+		*dest++ = '\n';
+	    } else if (c != 'r') {
+		*dest++ = c;
+	    }
+	    backslash = false;
+	} else if (c == '\\') {
+	    backslash = true;
+	} else {
+	    *dest++ = c;
+	}
+    }
+    *dest = '\0';
+}
+
+/* Read the localization file. */
+static void
+read_localization(const char *filename)
+{
+    FILE *f = fopen(filename, "r");
+    char buf[1024];
+    char *s;
+    int line = 1;
+
+    if (f == NULL) {
+	perror(filename);
+	exit(__LINE__);
+    }
+
+    while ((s = fgets(buf, sizeof(buf), f)) != NULL) {
+	size_t sl;
+	char *colon;
+	i18n_t *ie;
+
+	sl = strlen(s);
+	if (sl > 0 && s[sl - 1] == '\n') {
+	    s[sl - 1] = '\0';
+	}
+	colon = strchr(s, ':');
+	if (colon == NULL || colon == s) {
+	    fprintf(stderr, "%s, line %d: bad format\n", filename, line);
+	    exit(__LINE__);
+	}
+
+	ie = (i18n_t *)Malloc(sizeof(i18n_t) + sl + 2);
+	ie->key = (char *)(ie + 1);
+	strncpy(ie->key, s, colon - s);
+	ie->key[colon - s] = '\0';
+	ie->translation = ie->key + strlen(ie->key) + 1;
+	xlcpy(ie->translation, colon + 1);
+	ie->next = i18n;
+	i18n = ie;
+    }
+}
+
+/* Get a localized string. */
+static const char *
+i18n_get(const char *key)
+{
+    i18n_t *ie;
+
+    for (ie = i18n; ie != NULL; ie = ie->next) {
+	if (!strcmp(key, ie->key))
+	{
+	    return ie->translation;
+	}
+    }
+    return NULL;
+}
+
+static void
+interactive_io(int port, const char *emulator_name, const char *help_name,
+	const char *localization)
 {
     char *prompt, *real_prompt;
     socket_t s = INVALID_SOCKET;
@@ -1011,6 +1112,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     char *prompt_ret;
     bool aux_input = false;
     itype_t itype;
+    const char *l;
 #if defined(_WIN32) /*[*/
     HANDLE conout;
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -1039,6 +1141,11 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 # define LEFT	""
 # define RIGHT	""
 #endif /*]*/
+
+    /* Localize. */
+    if (localization != NULL) {
+	read_localization(localization);
+    }
 
     /* Announce our capabilities. */
     data_ret = NULL;
@@ -1103,11 +1210,16 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
 #endif /*]*/
 
     /* Introduce yourself. */
-    printf("%s Prompt\n\n", emulator_name);
-    printf("To execute one action and close this window, end the command line with '/'.\n");
-    printf("To close this window, enter just '/' as the command line.\n");
-    if (help_name != NULL) {
-	printf("To get help, use the '%s()' action.\n", help_name);
+    l = i18n_get(BANNER);
+    if (l != NULL) {
+	printf("%s\n", l);
+    } else {
+	printf("%s Prompt\n\n", emulator_name);
+	printf("To execute one action and close this window, end the command line with '/'.\n");
+	printf("To close this window, enter just '/' as the command line.\n");
+	if (help_name != NULL) {
+	    printf("To get help, use the '%s()' action.\n", help_name);
+	}
     }
 #if !defined(_WIN32) /*[*/
     printf("\033[33m");
@@ -1115,7 +1227,13 @@ interactive_io(int port, const char *emulator_name, const char *help_name)
     fflush(stdout);
     set_text_attribute(conout, FOREGROUND_GREEN | FOREGROUND_RED);
 #endif /*]*/
-    printf("Note: The 'Quit()' action will cause %s to exit.", emulator_name);
+    l = i18n_get(QUIT);
+    if (l != NULL) {
+	printf("%s", l);
+    } else {
+	printf("Note: The 'Quit()' action will cause %s to exit.",
+		emulator_name);
+    }
 #if !defined(_WIN32) /*[*/
     printf("\033[39m");
 # else /*][*/
