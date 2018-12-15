@@ -1083,6 +1083,8 @@ read_localization(const char *filename)
 	ie->next = i18n;
 	i18n = ie;
     }
+
+    fclose(f);
 }
 
 /* Get a localized string. */
