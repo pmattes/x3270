@@ -2966,7 +2966,9 @@ status_connect(bool connected)
 {
     if (connected) {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
-	if (kybdlock & KL_AWAITING_FIRST) {
+	if (cstate == RECONNECTING) {
+	    other_msg = "X Reconnecting";
+	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    other_msg = "X";
 	} else {
 	    other_msg = NULL;

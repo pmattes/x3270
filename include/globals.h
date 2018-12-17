@@ -228,6 +228,7 @@ extern unsigned		windirs_flags;
 /*   connection state */
 enum cstate {
     NOT_CONNECTED,	/* no socket, unknown mode */
+    RECONNECTING,	/* delay before automatic reconnect */
     SSL_PASS,		/* waiting for interactive SSL password */
     RESOLVING,		/* resolving hostname */
     PENDING,		/* socket connection pending */

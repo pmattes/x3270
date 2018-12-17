@@ -128,6 +128,7 @@ static toggle_register_t toggles[] = {
 };
 static const char *cstate_name[] = {
     "not-connected",
+    "reconnecting",
     "ssl-password-pending",
     "resolving",
     "pending",

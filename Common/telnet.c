@@ -254,6 +254,7 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
 static const char *state_name[] = {
     "unconnected",			/* NOT_CONNECTED */
+    "reconnecting",			/* RECONNECTING */
     "SSL password pending",		/* SSL_PASS */
     "resolving hostname",		/* RESOLVING */
     "TCP connection pending",		/* PENDING */

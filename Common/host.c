@@ -36,6 +36,7 @@
 #include "appres.h"
 #include "resources.h"
 
+#include <assert.h>
 #include "actions.h"
 #include "boolstr.h"
 #include "host.h"
@@ -75,7 +76,6 @@ enum iaction	connect_ia = IA_NONE;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
-static bool auto_reconnect_inprogress = false;
 static iosrc_t net_sock = INVALID_IOSRC;
 static ioid_t reconnect_id = NULL_IOID;
 
@@ -223,6 +223,22 @@ void
 host_set_flag(int flag)
 {
     host_flags |= 1 << flag;
+}
+
+/*
+ * Cancel any pending reconnect attempt.
+ */
+static void
+host_cancel_reconnect(void)
+{
+    if (reconnect_id != NULL_IOID) {
+	RemoveTimeOut(reconnect_id);
+	reconnect_id = NULL_IOID;
+
+	assert(cstate == RECONNECTING);
+	cstate = NOT_CONNECTED;
+	st_changed(ST_CONNECT, PCONNECTED);
+    }
 }
 
 /**
@@ -401,7 +417,12 @@ host_connect(const char *n, enum iaction ia)
     bool has_colons = false;
     net_connect_t nc;
 
-    if (CONNECTED || auto_reconnect_inprogress) {
+    if (cstate == RECONNECTING) {
+	popup_an_error("Reconnect in progress");
+	return false;
+    }
+    if (PCONNECTED) {
+	popup_an_error("Already connected");
 	return true;
     }
 
@@ -503,12 +524,12 @@ host_connect(const char *n, enum iaction ia)
     if (nc == NC_FAILED) {
 	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
-		auto_reconnect_inprogress = true;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
+		cstate = RECONNECTING;
 	    }
 	}
 	/* Redundantly signal a disconnect. */
-	st_changed(ST_CONNECT, false);
+	st_changed(ST_CONNECT, PCONNECTED);
 	goto failure;
     }
 
@@ -550,7 +571,7 @@ host_connect(const char *n, enum iaction ia)
 	} else {
 	    cstate = CONNECTED_INITIAL;
 	}
-	st_changed(ST_CONNECT, true);
+	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
     }
 
@@ -581,24 +602,22 @@ host_new_connection(bool pending)
 	} else {
 	    cstate = CONNECTED_INITIAL;
 	}
-	st_changed(ST_CONNECT, true);
+	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
     }
 }
 
 /*
  * Reconnect to the last host.
+ * Returns true if connection initiated, false otherwise.
  */
-static void
+static bool
 host_reconnect(void)
 {
-    if (auto_reconnect_inprogress || current_host == NULL || CONNECTED ||
-	    HALF_CONNECTED) {
-	return;
+    if (current_host == NULL) {
+	return false;
     }
-    if (host_connect(reconnect_host, connect_ia)) {
-	auto_reconnect_inprogress = false;
-    }
+    return host_connect(reconnect_host, connect_ia);
 }
 
 /*
@@ -607,20 +626,12 @@ host_reconnect(void)
 static void
 try_reconnect(ioid_t id _is_unused)
 {
-    auto_reconnect_inprogress = false;
-    host_reconnect();
-}
+    reconnect_id = NULL_IOID;
+    assert(cstate == RECONNECTING);
+    cstate = NOT_CONNECTED;
 
-/*
- * Cancel any pending reconnect attempt.
- */
-void
-host_cancel_reconnect(void)
-{
-    if (auto_reconnect_inprogress) {
-	RemoveTimeOut(reconnect_id);
-	auto_reconnect_inprogress = false;
-    }
+    host_reconnect();
+    st_changed(ST_CONNECT, PCONNECTED);
 }
 
 void
@@ -634,12 +645,12 @@ host_disconnect(bool failed)
     net_disconnect(true);
     net_sock = INVALID_IOSRC;
     if (!host_gui_disconnect()) {
-	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
+	if (appres.interactive.reconnect && reconnect_id == NULL_IOID) {
 	    /* Schedule an automatic reconnection. */
-	    auto_reconnect_inprogress = true;
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 					      RECONNECT_MS,
 		  try_reconnect);
+	    cstate = RECONNECTING;
 	}
     }
 
@@ -651,10 +662,12 @@ host_disconnect(bool failed)
 	trace_nvt_disc();
     }
 
-    cstate = NOT_CONNECTED;
+    if (cstate != RECONNECTING) {
+	cstate = NOT_CONNECTED;
+    }
 
     /* Propagate the news to everyone else. */
-    st_changed(ST_CONNECT, false);
+    st_changed(ST_CONNECT, PCONNECTED);
 }
 
 /* The host has entered 3270 or NVT mode, or switched between them. */
@@ -677,7 +690,7 @@ void
 host_connected(void)
 {
     cstate = CONNECTED_INITIAL;
-    st_changed(ST_CONNECT, true);
+    st_changed(ST_CONNECT, PCONNECTED);
     host_gui_connected();
 }
 
@@ -926,14 +939,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Connect", argc, 1, 1) < 0) {
 	return false;
     }
-    if (PCONNECTED) {
-	popup_an_error("Already connected");
-	return false;
-    }
-    if (auto_reconnect_inprogress) {
-	popup_an_error("Reconnect already pending");
-	return false;
-    }
+
     if (!host_connect(argv[0], ia)) {
 	return false;
     }
@@ -1004,7 +1010,7 @@ host_query_connection_state(void)
 {
     const char *s = net_query_connection_state();
 
-    if (!*s && auto_reconnect_inprogress) {
+    if (!*s && cstate == RECONNECTING) {
 	return "reconnecting";
     }
     return s;
@@ -1013,5 +1019,5 @@ host_query_connection_state(void)
 bool
 host_reconnecting(void)
 {
-    return auto_reconnect_inprogress;
+    return cstate == RECONNECTING;
 }

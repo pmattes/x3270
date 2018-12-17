@@ -44,7 +44,6 @@ extern enum iaction connect_ia;
 
 /* Host connect/disconnect and state change. */
 void hostfile_init(void);
-void host_cancel_reconnect(void);
 bool host_connect(const char *n, enum iaction ia);
 void host_connected(void);
 void host_new_connection(bool pending);
