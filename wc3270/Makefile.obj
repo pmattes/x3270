@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2018 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -101,7 +101,10 @@ wversion.o: mkwversion.sh version.txt
 wc3270wiz.exe: $(WOBJECTS) $(DEP32XX)
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
-catf.exe: catf.c
+catf_res.o: catf.rc catf.ico
+	$(WINDRES) -i $< -o $@
+
+catf.exe: catf.o catf_res.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
