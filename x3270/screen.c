@@ -2701,7 +2701,7 @@ screen_obscured(void)
  * hammering ss->image and the bitmap.
  */
 void
-screen_scroll(void)
+screen_scroll(unsigned char fg, unsigned char bg)
 {
     bool was_on;
     bool xwo;

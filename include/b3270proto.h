@@ -35,14 +35,24 @@
 #define DocOut		"b3270-out"
 
 /* Indications. */
+#define IndAttr		"attr"
+#define IndChar		"char"
+#define IndCharset	"charset"
+#define IndCursor	"cursor"
+#define IndErase	"erase"
+#define IndFormatted	"formatted"
 #define IndOia		"oia"
 #define IndRunResult	"run-result"
+#define IndScreenMode	"screen-mode"
+#define IndScroll	"scroll"
 #define IndSetting	"setting"
+#define IndThumb	"thumb"
 #define IndTraceFile	"trace-file"
 #define IndUiError	"ui-error"
-#define IndCharset	"charset"
 
 /* Attributes. */
+#define AttrBg		"bg"
+#define AttrFg		"fg"
 #define AttrName	"name"
 #define AttrValue	"value"
 

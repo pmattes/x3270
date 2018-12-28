@@ -92,7 +92,7 @@ screen_obscured(void)
 }
 
 void
-screen_scroll(void)
+screen_scroll(unsigned char fg, unsigned char bg)
 {
 }
 

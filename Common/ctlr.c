@@ -2739,32 +2739,43 @@ ctlr_aclear(int baddr, int count, int clear_ea)
  * operation is common enough to warrant a separate path.
  */
 void
-ctlr_scroll(void)
+ctlr_scroll(unsigned char fg, unsigned char bg)
 {
-	int qty = (ROWS - 1) * COLS;
-	bool obscured;
+    int qty = (ROWS - 1) * COLS;
+    bool obscured;
+    int i;
 
-	/* Make sure nothing is selected. (later this can be fixed) */
-	unselect(0, ROWS*COLS);
+    /* Make sure nothing is selected. (later this can be fixed) */
+    unselect(0, ROWS*COLS);
 
-	/* Synchronize pending changes prior to this. */
-	obscured = screen_obscured();
-	if (!obscured && screen_changed)
-		screen_disp(false);
+    /* Synchronize pending changes prior to this. */
+    obscured = screen_obscured();
+    if (!obscured && screen_changed) {
+	screen_disp(false);
+    }
 
-	/* Move ea_buf. */
-	(void) memmove(&ea_buf[0], &ea_buf[COLS],
-	    qty * sizeof(struct ea));
+    /* Move ea_buf. */
+    memmove(&ea_buf[0], &ea_buf[COLS], qty * sizeof(struct ea));
 
-	/* Clear the last line. */
-	(void) memset((char *) &ea_buf[qty], 0, COLS * sizeof(struct ea));
+    /* Clear the last line. */
+    memset((char *) &ea_buf[qty], 0, COLS * sizeof(struct ea));
+    if ((fg & 0xf0) != 0xf0) {
+	fg = 0;
+    }
+    if ((bg & 0xf0) != 0xf0) {
+	bg = 0;
+    }
+    for (i = 0; i < COLS; i++) {
+	ea_buf[qty + i].fg = fg;
+	ea_buf[qty + i].bg = bg;
+    }
 
-	/* Update the screen. */
-	if (obscured) {
-		ALL_CHANGED;
-	} else {
-		screen_scroll();
-	}
+    /* Update the screen. */
+    if (obscured) {
+	ALL_CHANGED;
+    } else {
+	screen_scroll(fg, bg);
+    }
 }
 
 /*

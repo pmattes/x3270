@@ -114,11 +114,6 @@ screen_obscured(void)
     return false;
 }
 
-void
-screen_scroll(void)
-{
-}
-
 unsigned long
 screen_window_number(void)
 {

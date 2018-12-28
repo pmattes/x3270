@@ -1679,7 +1679,7 @@ nvt_scroll(void)
 	if (scroll_top == 1 && scroll_bottom == ROWS) {
 		if (!is_altbuffer)
 			scroll_save(1);
-		ctlr_scroll();
+		ctlr_scroll(fg, bg);
 		return;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1999-2009, 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ void mcursor_locked(void);
 void mcursor_normal(void);
 void mcursor_waiting(void);
 bool screen_obscured(void);
-void screen_scroll(void);
+void screen_scroll(unsigned char fg, unsigned char bg);
 unsigned long screen_window_number(void);
 bool screen_has_bg_color(void);
 void ring_bell(void);

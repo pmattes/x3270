@@ -34,6 +34,7 @@
 #include "3270ds.h"
 
 #include "appres.h"
+#include "b3270proto.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "ui_stream.h"
@@ -206,11 +207,11 @@ emit_erase(int rows, int cols)
 {
     bool switched = rows > 0 && cols > 0;
 
-    ui_vleaf("erase",
+    ui_vleaf(IndErase,
 	    "logical-rows", switched? lazyaf("%d", rows) : NULL,
 	    "logical-cols", switched? lazyaf("%d", cols) : NULL,
-	    "fg", appres.m3279? "blue": NULL,
-	    "bg", appres.m3279? "neutralBlack": NULL,
+	    AttrFg, appres.m3279? "blue": NULL,
+	    AttrBg, appres.m3279? "neutralBlack": NULL,
 	    NULL);
 }
 
@@ -227,13 +228,13 @@ toggle_visibleControl(toggle_index_t ix _is_unused,
 static void
 internal_screen_init(void)
 {
-    ui_vleaf("screen-mode",
+    ui_vleaf(IndScreenMode,
 	    "model", lazyaf("%d", model_num),
 	    "rows", lazyaf("%d", maxROWS),
 	    "cols", lazyaf("%d", maxCOLS),
-	    "color", appres.m3279? "true": "false",
-	    "oversize", ov_rows || ov_cols? "true": "false",
-	    "extended", appres.extended? "true": "false",
+	    "color", appres.m3279? ValTrue: ValFalse,
+	    "oversize", ov_rows || ov_cols? ValTrue: ValFalse,
+	    "extended", appres.extended? ValTrue: ValFalse,
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);
@@ -760,11 +761,11 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	col_value = xs_buffer("%d", d->start_col + 1);
 	args[aix++] = col_value; /* will explicitly lazya below */
 	if (oldr[d->start_col].fg != newr[d->start_col].fg) {
-	    args[aix++] = "fg";
+	    args[aix++] = AttrFg;
 	    args[aix++] = see_color(0xf0 | newr[d->start_col].fg);
 	}
 	if (oldr[d->start_col].bg != newr[d->start_col].bg) {
-	    args[aix++] = "bg";
+	    args[aix++] = AttrBg;
 	    args[aix++] = see_color(0xf0 | newr[d->start_col].bg);
 	}
 	if (oldr[d->start_col].gr != newr[d->start_col].gr) {
@@ -799,7 +800,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	}
 
 	args[aix++] = NULL;
-	ui_leaf((d->reason == RD_TEXT)? "char": "attr", args);
+	ui_leaf((d->reason == RD_TEXT)? IndChar: IndAttr, args);
 	lazya(col_value);
     }
 }
@@ -896,8 +897,8 @@ screen_disp_cond(bool always)
 
     /* Check for a cursor move. */
     if (cursor_enabled && sent_baddr != saved_baddr) {
-	ui_vleaf("cursor",
-	    "enabled", "true",
+	ui_vleaf(IndCursor,
+	    "enabled", ValTrue,
 	    "row", lazyaf("%d", (saved_baddr / COLS) + 1),
 	    "col", lazyaf("%d", (saved_baddr % COLS) + 1),
 	    NULL);
@@ -934,8 +935,8 @@ screen_disp_cond(bool always)
     }
 
     if (formatted != xformatted) {
-	ui_vleaf("formatted",
-		"state", formatted? "true": "false",
+	ui_vleaf(IndFormatted,
+		"state", formatted? ValTrue: ValFalse,
 		NULL);
 	xformatted = formatted;
     }
@@ -965,6 +966,51 @@ screen_disp(bool erasing _is_unused)
     screen_disp_cond(false);
 }
 
+/*
+ * Scroll the screen.
+ */
+void
+screen_scroll(unsigned char fg, unsigned char bg)
+{
+    int i;
+
+    if (!fg) {
+	fg = appres.m3279? HOST_COLOR_BLUE: HOST_COLOR_NEUTRAL_WHITE;
+    }
+    if (!bg) {
+	bg = HOST_COLOR_NEUTRAL_BLACK;
+    }
+
+    /* Scroll saved_ea. */
+    if (!saved_ea_is_empty) {
+	memmove(saved_ea, saved_ea + COLS,
+		(ROWS - 1) * COLS * sizeof(struct ea));
+	memset(saved_ea + (ROWS - 1) * COLS, 0, COLS * sizeof(struct ea));
+	for (i = 0; i < COLS; i++) {
+	    saved_ea[((ROWS - 1) * COLS) + i].fg = 0xf0 | fg;
+	    saved_ea[((ROWS - 1) * COLS) + i].bg = 0xf0 | bg;
+	}
+    }
+
+    /* Scroll saved_s. */
+    memmove(saved_s, saved_s + COLS,
+	    (maxROWS - 1) * maxCOLS * sizeof(screen_t));
+    memset(saved_s + (maxROWS - 1) * maxCOLS, 0, maxCOLS * sizeof(screen_t));
+    for (i = 0; i < maxCOLS; i++) {
+	int j = ((maxROWS - 1) * maxCOLS) + i;
+
+	saved_s[j].ccode = ' ';
+	saved_s[j].fg = fg & ~0xf0;
+	saved_s[j].bg = bg & ~0xf0;
+    }
+
+    /* Tell the UI. */
+    ui_vleaf(IndScroll,
+	    AttrFg, see_color(0xf0 | fg),
+	    AttrBg, see_color(0xf0 | bg),
+	    NULL);
+}
+
 /* Scrollbar support. */
 
 /*
@@ -975,8 +1021,8 @@ enable_cursor(bool on)
 {
     if (on != cursor_enabled) {
 	if (!(cursor_enabled = on)) {
-	    ui_vleaf("cursor",
-		"enabled", "false",
+	    ui_vleaf(IndCursor,
+		"enabled", ValFalse,
 		NULL);
 	    sent_baddr = -1;
 	}
@@ -1012,7 +1058,7 @@ screen_set_thumb(float top, float shown, int saved, int screen, int back)
     last_shown = shown;
     last_saved = saved;
     last_back = back;
-    ui_vleaf("thumb",
+    ui_vleaf(IndThumb,
 	    "top", lazyaf("%.5f", top),
 	    "shown", lazyaf("%.5f", shown),
 	    "saved", lazyaf("%d", saved),
