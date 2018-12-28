@@ -164,6 +164,7 @@ Common/charset.c
 Common/child.c
 Common/childscript.c
 Common/ckeypad.h
+Common/copyright.c
 Common/ctlr.c
 Common/event.c
 Common/favicon.ico
@@ -343,6 +344,7 @@ include/charset.h
 include/child.h
 include/child_popups.h
 include/childscript.h
+include/copyright.h
 include/ctlrc.h
 include/ctlr.h
 include/fallbacks.h

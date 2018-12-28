@@ -58,6 +58,7 @@
 #include "charset.h"
 #include "child.h"
 #include "childscript.h"
+#include "copyright.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -3538,6 +3539,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "CodePage", get_host_codepage, NULL, false, false },
+	{ "Copyright", show_copyright, NULL, false, true },
 	{ "Cursor", ctlr_query_cursor, NULL, true, false },
 	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },
 	{ "CursorOffset", query_cursor_offset, NULL, false, false },

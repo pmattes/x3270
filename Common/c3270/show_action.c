@@ -41,6 +41,7 @@
 #include "actions.h"
 #include "appres.h"
 #include "charset.h"
+#include "copyright.h"
 #include "cscreen.h"
 #include "host.h"
 #include "keymap.h"
@@ -288,36 +289,7 @@ static void
 copyright_dump(void)
 {
     action_output(" ");
-    action_output("%s", build);
-    action_output(" ");
-    action_output("Copyright (c) 1993-%s, Paul Mattes.", cyear);
-    action_output("Copyright (c) 1990, Jeff Sparkes.");
-    action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
-    action_output(" 30332.");
-    action_output("All rights reserved.");
-    action_output(" ");
-    action_output("Redistribution and use in source and binary forms, with or without");
-    action_output("modification, are permitted provided that the following conditions are met:");
-    action_output("    * Redistributions of source code must retain the above copyright");
-    action_output("      notice, this list of conditions and the following disclaimer.");
-    action_output("    * Redistributions in binary form must reproduce the above copyright");
-    action_output("      notice, this list of conditions and the following disclaimer in the");
-    action_output("      documentation and/or other materials provided with the distribution.");
-    action_output("    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of");
-    action_output("      their contributors may be used to endorse or promote products derived");
-    action_output("      from this software without specific prior written permission.");
-    action_output(" ");
-    action_output("THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC \"AS IS\" AND");
-    action_output("ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE");
-    action_output("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE");
-    action_output("ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE");
-    action_output("LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR");
-    action_output("CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF");
-    action_output("SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS");
-    action_output("INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN");
-    action_output("CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)");
-    action_output("ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE");
-    action_output("POSSIBILITY OF SUCH DAMAGE.");
+    action_output("%s", show_copyright());
     action_output(" ");
 }
 
