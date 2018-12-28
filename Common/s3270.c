@@ -132,7 +132,6 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
-    actions_register();
     charset_register();
     ctlr_register();
     ft_register();

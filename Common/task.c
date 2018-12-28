@@ -3536,6 +3536,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	bool hidden;
 	bool specific;
     } queries[] = {
+	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "CodePage", get_host_codepage, NULL, false, false },

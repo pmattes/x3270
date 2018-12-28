@@ -41,14 +41,14 @@
 #include "copyright.h"
 #include "utils.h"
 
-static const char *copyright = NULL;
-
 /**
  * Dump copyright information.
  */
 const char *
 show_copyright(void)
 {
+    static const char *copyright = NULL;
+
     if (copyright != NULL) {
 	return copyright;
     }

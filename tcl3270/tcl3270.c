@@ -501,12 +501,12 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     pthread_mutex_init(&cmd_mutex, NULL);
 #endif /*]*/
 
-    /* Run 'Actions()' to learn what Tcl commands we need to add. */
-    if (run_s3270("Actions()", &success, NULL, &ret) < 0) {
+    /* Run 'Query(Actions)' to learn what Tcl commands we need to add. */
+    if (run_s3270("Query(Actions)", &success, NULL, &ret) < 0) {
 	return TCL_ERROR;
     }
     if (!success) {
-	fprintf(stderr, "Actions() failed:\n%s\n", ret);
+	fprintf(stderr, "Query(Actions) failed:\n%s\n", ret);
 	return TCL_ERROR;
     }
 
