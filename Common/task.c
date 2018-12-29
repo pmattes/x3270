@@ -3560,6 +3560,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ NULL, NULL, false, false }
     };
     int i;
+    size_t sl;
 
     action_debug("Query", ia, argc, argv);
     if (check_argc("Query", argc, 0, 1) < 0) {
@@ -3584,21 +3585,32 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	break;
     case 1:
+	sl = strlen(argv[0]);
 	for (i = 0; queries[i].name != NULL; i++) {
-	    if (!strcasecmp(argv[0], queries[i].name)) {
+	    if (!strncasecmp(argv[0], queries[i].name, sl)) {
 		const char *s;
+
+		if (strlen(queries[i].name) > sl &&
+			queries[i + 1].name != NULL &&
+			!strncasecmp(argv[0], queries[i + 1].name, sl)) {
+		    popup_an_error("Query: Ambiguous parameter");
+		    return false;
+		}
 
 		if (queries[i].fn) {
 		    s = (*queries[i].fn)();
 		} else {
 		    s = queries[i].string;
 		}
+		if (s == NULL) {
+		    s = "";
+		}
 		action_output("%s\n", s);
 		return true;
 	    }
 	}
 	popup_an_error("Query: Unknown parameter");
-	break;
+	return false;
     }
     return true;
 }
