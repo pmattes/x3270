@@ -52,12 +52,6 @@ ring_bell(void)
     ui_vleaf("bell", NULL);
 }
 
-void
-screen_flip(void)
-{
-    /* No-op: this is a pass-through, if the UI wants it. */
-}
-
 static int cw = 7;
 int *char_width = &cw;
 

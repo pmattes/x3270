@@ -1011,6 +1011,16 @@ screen_scroll(unsigned char fg, unsigned char bg)
 	    NULL);
 }
 
+/* Left-to-right swap support. */
+void
+screen_flip(void)
+{
+    flipped = !flipped;
+    ui_vleaf(IndFlipped,
+	    AttrValue, flipped? ValTrue: ValFalse,
+	    NULL);
+}
+
 /* Scrollbar support. */
 
 /*

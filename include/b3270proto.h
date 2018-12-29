@@ -40,6 +40,7 @@
 #define IndCharset	"charset"
 #define IndCursor	"cursor"
 #define IndErase	"erase"
+#define IndFlipped	"flipped"
 #define IndFormatted	"formatted"
 #define IndOia		"oia"
 #define IndRunResult	"run-result"
