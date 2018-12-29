@@ -225,7 +225,7 @@ static action_table_t kybd_actions[] = {
     { "Key",		Key_action,		ACTION_KE },
     { "Left2",		Left2_action,		ACTION_KE },
     { "Left",		Left_action,		ACTION_KE },
-    { "MonoCase",	MonoCase_action,	ACTION_KE },
+    { "MonoCase",	MonoCase_action,	ACTION_KE | ACTION_HIDDEN },
     { "MoveCursor",	MoveCursor_action,	ACTION_KE },
     { "MoveCursor1",	MoveCursor1_action,	ACTION_KE },
     { "Newline",	Newline_action,		ACTION_KE },

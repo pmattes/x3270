@@ -161,7 +161,6 @@ static struct {
 	{ "Left2", NULL, P_3270, "Move cursor left 2 columns" },
 	{ "Macro", "<name>", P_SCRIPTING, "Execute a predefined macro" },
 	{ "Menu", NULL, P_INTERACTIVE, "Pop up the command menu" },
-	{ "MonoCase", NULL, P_3270, "Toggle monocase mode" },
 	{ "MoveCursor", "<row> <col>", P_3270|P_SCRIPTING,
 	    "Move cursor to specific location (0-origin, deprecated)" },
 	{ "MoveCursor", "<offset>", P_3270|P_SCRIPTING,
