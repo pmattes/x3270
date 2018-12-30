@@ -136,6 +136,11 @@ lazya_flush(void)
 	Free(r);
     }
 
+    current_block = NULL;
+    blocks = NULL;
+    last_block = &blocks;
+    slot_ix = 0;
+
 #if !defined(_WIN32) && defined(__GNUC__) /*[*/
     if (nf > 10 || nb > 1024) {
 	vtrace("lazya_flush: %u slot%s, %zu bytes\n", nf, (nf == 1)? "": "s",
@@ -146,8 +151,4 @@ lazya_flush(void)
 	vtrace("lazya_flush: %u slot%s\n", nf, (nf == 1)? "": "s");
     }
 #endif /*]*/
-    current_block = NULL;
-    blocks = NULL;
-    last_block = &blocks;
-    slot_ix = 0;
 }

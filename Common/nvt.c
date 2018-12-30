@@ -1629,6 +1629,7 @@ xterm_text(int ig1 _is_unused, int ig2 _is_unused)
 static enum state
 xterm_text_do(int ig1 _is_unused, int ig2 _is_unused)
 {
+    net_nvt_break();
     text[tx] = '\0';
     xterm_text_gui(n[0], text);
     return DATA;

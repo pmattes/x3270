@@ -45,6 +45,7 @@
 #include "scroll.h"
 #include "selectc.h"
 #include "status.h"
+#include "telnet.h"
 #include "trace.h"
 #include "utils.h"
 
@@ -139,6 +140,7 @@ static void
 screen_set_thumb_traced(float top, float shown, int saved, int screen,
 	int back)
 {
+    net_nvt_break();
 #if defined(SCROLL_DEBUG) /*[*/
     vtrace(" -> screen_set_thumb(top %f, shown %f)\n", top, shown);
     vtrace(" -> top %f top_base %f shown %f\n",
@@ -175,6 +177,7 @@ scroll_save(int n)
 {
     int row;
 
+    net_nvt_break();
 #if defined(SCROLL_DEBUG) /*[*/
     vtrace("scroll_save(%d)\n", n);
 #endif /*]*/

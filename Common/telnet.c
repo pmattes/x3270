@@ -1293,10 +1293,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (IN_NVT) {
 	ctlr_dbcs_postprocess();
     }
-    if (nvt_data) {
-	vtrace("\n");
-	nvt_data = 0;
-    }
+    net_nvt_break();
 
 #if defined(_WIN32) /*[*/
     if (events.lNetworkEvents & FD_CLOSE) {
@@ -1437,10 +1434,7 @@ telnet_fsm(unsigned char c)
 	if (!HOST_FLAG(NO_TELNET_HOST) && c == IAC) {
 	    /* got a telnet command */
 	    telnet_state = TNS_IAC;
-	    if (nvt_data) {
-		vtrace("\n");
-		nvt_data = 0;
-	    }
+	    net_nvt_break();
 	    break;
 	}
 	if (cstate == CONNECTED_INITIAL) {
@@ -3685,5 +3679,15 @@ net_nop_seconds(void)
     /* Restart with the new interval. */
     if (cstate >= CONNECTED_INITIAL) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
+    }
+}
+
+/* Break NVT data tracing. */
+void
+net_nvt_break(void)
+{
+    if (nvt_data) {
+	vtrace("\n");
+	nvt_data = 0;
     }
 }

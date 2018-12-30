@@ -62,6 +62,7 @@ void net_input(iosrc_t fd, ioid_t id);
 void net_interrupt(char c);
 void net_linemode(void);
 void net_nop_seconds(void);
+void net_nvt_break(void);
 const char *net_query_bind_plu_name(void);
 const char *net_query_connection_state(void);
 const char *net_query_host(void);
