@@ -1538,7 +1538,9 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	    /* Nothing else to do. */
 	} else if (argc == arg0 + 1) {
 	    if (toggled(TRACING)) {
-		popup_an_error("Trace: filename argument ignored.");
+		popup_an_error("Trace: Cannot specify filename when tracing "
+			"is already on");
+		return false;
 	    } else {
 		trace_set_trace_file(argv[arg0]);
 	    }

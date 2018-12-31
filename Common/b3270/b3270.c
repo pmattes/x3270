@@ -825,6 +825,8 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	if (toggled(TRACING)) {
 	    do_toggle(TRACING);
 	    action_output("Off,%s", tracefile_name);
+	} else {
+	    action_output("Off");
 	}
 	return true;
     }
@@ -837,7 +839,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
     /* Turn tracing on. */
     if (argc > 1) {
 	if (toggled(TRACING)) {
-	    popup_an_error("Trace: cannot specify filename when tracing "
+	    popup_an_error("Trace: Cannot specify filename when tracing "
 		    "is already on");
 	    return false;
 	}
@@ -845,8 +847,8 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (!toggled(TRACING)) {
 	do_toggle(TRACING);
-	action_output("On,%s", tracefile_name);
     }
+    action_output("On,%s", tracefile_name);
 
     return true;
 }
