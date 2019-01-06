@@ -792,68 +792,6 @@ toggle_terminal_name(const char *name _is_unused, const char *value)
 }
 
 /*
- * Trace action:
- *  Trace
- *  Trace On
- *  Trace On,file
- *  Trace Off
- */
-static bool
-Trace_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug("Trace", ia, argc, argv);
-    if (check_argc("Trace", argc, 0, 2) < 0) {
-	return false;
-    }
-
-    if (argc == 0) {
-	if (toggled(TRACING) && tracefile_name != NULL) {
-	    action_output("On,%s", tracefile_name);
-	} else {
-	    action_output("Off");
-	}
-	return true;
-    }
-
-    if (!strcasecmp(argv[0], "Off")) {
-
-	/* Turn tracing off. */
-	if (argc > 1) {
-	    popup_an_error("Trace: Too many arguments for 'Off'");
-	    return false;
-	}
-	if (toggled(TRACING)) {
-	    do_toggle(TRACING);
-	    action_output("Off,%s", tracefile_name);
-	} else {
-	    action_output("Off");
-	}
-	return true;
-    }
-
-    if (strcasecmp(argv[0], "On")) {
-	popup_an_error("Trace: Parameter must be On or Off");
-	return false;
-    }
-
-    /* Turn tracing on. */
-    if (argc > 1) {
-	if (toggled(TRACING)) {
-	    popup_an_error("Trace: Cannot specify filename when tracing "
-		    "is already on");
-	    return false;
-	}
-	trace_set_trace_file(argv[1]);
-    }
-    if (!toggled(TRACING)) {
-	do_toggle(TRACING);
-    }
-    action_output("On,%s", tracefile_name);
-
-    return true;
-}
-
-/*
  * ClearRegion action:
  *  ClearRegion row column rows columns
  * Row and column are 1-origin.
@@ -1081,7 +1019,6 @@ static void
 b3270_register(void)
 {
     static action_table_t actions[] = {
-	{ "Trace",	Trace_action,	0 },
 	{ "ClearRegion",ClearRegion_action,0 },
 	{ "Crash",	Crash_action,	0 }
     };
