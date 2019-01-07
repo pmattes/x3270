@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -901,12 +901,11 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s%s%s",
-	    "Build options:"
+    return lazyaf("%s%s%s",
 #if defined(X3270_DBCS) /*[*/
-	    " --enable-dbcs"
+	    "--enable-dbcs"
 #else /*][*/
-	    " --disable-dbcs"
+	    "--disable-dbcs"
 #endif /*]*/
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 	    " --enable-local-process"
@@ -931,7 +930,7 @@ build_options(void)
 void
 dump_version(void)
 {
-    fprintf(stderr, "%s\n%s\n", build, build_options());
+    fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
     charset_list();
     fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"

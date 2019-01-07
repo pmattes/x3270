@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -508,7 +508,7 @@ create_tracefile_header(const char *mode)
     /* Display current status */
     wtrace(true, "Trace %s\n", mode);
     wtrace(false, " Version: %s\n", build);
-    wtrace(false, " %s\n", build_options());
+    wtrace(false, " Build options: %s\n", build_options());
     save_yourself();
     wtrace(false, " Command: %s\n", command_string);
     wtrace(false, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);

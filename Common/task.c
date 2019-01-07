@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -3538,6 +3538,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
     } queries[] = {
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
+	{ "BuildOptions", build_options, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "CodePage", get_host_codepage, NULL, false, false },
 	{ "Copyright", show_copyright, NULL, false, true },
