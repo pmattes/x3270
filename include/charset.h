@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -39,5 +39,6 @@ enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 enum cs_result charset_init(const char *csname);
 const char *get_charset_name(void);
 const char *get_host_codepage(void);
+const char *get_canonical_codepage(void);
 void charset_list(void);
 void charset_register(void);

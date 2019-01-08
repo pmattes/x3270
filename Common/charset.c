@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2018-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -84,6 +84,7 @@ static void set_charset_name(const char *csname);
 
 static char *host_codepage = NULL;
 static char *charset_name = NULL;
+static char *canonical_codepage = NULL;
 
 /*
  * Change character sets.
@@ -129,6 +130,7 @@ charset_init(const char *csname)
 	set_cgcsgids(NULL);
 	set_host_codepage(NULL);
 	set_charset_name(NULL);
+	Replace(canonical_codepage, NULL);
 	(void) screen_new_display_charsets("cp037", "us");
 	(void) set_uni(NULL, LOCAL_CODEPAGE, &codepage, &cgcsgid, NULL, NULL);
 	(void) set_uni_dbcs("", NULL);
@@ -288,6 +290,9 @@ charset_init2(const char *csname, const char *realname, const char *codepage,
     /* Set up the character set name. */
     set_charset_name(csname);
 
+    /* Remember the canonical code page name. */
+    Replace(canonical_codepage, NewString(realname));
+
     return CS_OKAY;
 }
 
@@ -296,6 +301,13 @@ const char *
 get_host_codepage(void)
 {
     return (host_codepage != NULL)? host_codepage: "037";
+}
+
+/* Return the canonical host codepage name. */
+const char *
+get_canonical_codepage(void)
+{
+    return (canonical_codepage != NULL)? canonical_codepage: "cp037";
 }
 
 /* Return the current character set name. */

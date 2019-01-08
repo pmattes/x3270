@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -2966,7 +2966,7 @@ ticking_stop(void)
 const char *
 ctlr_query_cur_size(void)
 {
-    return lazyaf("%u %u", ROWS, COLS);
+    return lazyaf("rows %u columns %u", ROWS, COLS);
 }
 
 const char *
@@ -2978,7 +2978,8 @@ ctlr_query_cursor(void)
 const char *
 ctlr_query_cursor1(void)
 {
-    return lazyaf("%u %u", (cursor_addr / COLS) + 1, (cursor_addr % COLS) + 1);
+    return lazyaf("row %u column %u offset %u",
+	    (cursor_addr / COLS) + 1, (cursor_addr % COLS) + 1, cursor_addr);
 }
 
 const char *
@@ -2990,7 +2991,7 @@ ctlr_query_formatted(void)
 const char *
 ctlr_query_max_size(void)
 {
-    return lazyaf("%u %u", maxROWS, maxCOLS);
+    return lazyaf("rows %u columns %u", maxROWS, maxCOLS);
 }
 
 /*

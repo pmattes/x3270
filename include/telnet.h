@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -86,6 +86,8 @@ const char *net_session_info(void);
 void net_password_continue(const char *password);
 unsigned net_sio_supported(void);
 const char *net_sio_provider(void);
+const char *net_myopts(void);
+const char *net_hisopts(void);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);

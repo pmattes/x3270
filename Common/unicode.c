@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2018 Paul Mattes.
+ * Copyright (c) 2008-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -341,7 +341,7 @@ charset_list(void)
 	bool any = false;
 	char *asep = " (";
 
-	if (!dbcs_allowed && uni[i].is_dbcs) {
+	if (uni[i].is_dbcs) {
 	    continue;
 	}
 
@@ -687,6 +687,7 @@ get_csnames(void)
 	int j;
 
 	ret[i].name = uni[i].name;
+	ret[i].dbcs = uni[i].is_dbcs;
 	for (j = 0; cpaliases[j].alias != NULL; j++) {
 	    if (!strcmp(cpaliases[j].canon, uni[i].name)) {
 		ret[i].aliases = Realloc(ret[i].aliases,

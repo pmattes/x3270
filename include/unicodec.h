@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2015-2018 Paul Mattes.
+ * Copyright (c) 2008-2009, 2015-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,7 @@ bool using_iconv(void);
 const char *canonical_charset(const char *alias);
 typedef struct {
     const char *name;
+    bool dbcs;
     int num_aliases;
     const char **aliases;
 } csname_t;

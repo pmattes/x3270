@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -260,8 +260,8 @@ static const char *state_name[] = {
     "TCP connection pending",		/* PENDING */
     "negotiating SSL or proxy",		/* NEGOTIATING */
     "connected; 3270 state unknown",	/* CONNECTED_INITIAL */
-    "TN3270 NVT",			/* CONNECTED_NVT */
-    "TN3270 NVT charmode",		/* CONNECTED_NVT_CHAR */
+    "NVT",				/* CONNECTED_NVT */
+    "NVT charmode",			/* CONNECTED_NVT_CHAR */
     "TN3270 3270",			/* CONNECTED_3270 */
     "TN3270E unbound",			/* CONNECTED_UNBOUND */
     "TN3270E NVT",			/* CONNECTED_E_NVT */
@@ -3480,7 +3480,7 @@ net_query_connection_state(void)
 	    if (IN_3270) {
 		return "tn3270 3270";
 	    } else {
-		return "tn3270 nvt";
+		return "nvt";
 	    }
 	}
     } else if (HALF_CONNECTED) {
@@ -3593,6 +3593,43 @@ bool
 net_bound(void)
 {
     return (IN_E && tn3270e_bound);
+}
+
+/* Format TELNET options. */
+static const char *
+net_opts(unsigned char opts[])
+{
+    int i;
+    char *ret = NULL;
+    size_t sl = 0;
+
+    for (i = 0; i < N_OPTS; i++) {
+	if (opts[i]) {
+	    const char *o = opt(i);
+
+	    ret = (char *)Realloc(ret, sl + 1 + strlen(o) + 1);
+	    if (sl) {
+		ret[sl++] = ' ';
+	    }
+	    strcpy(ret + sl, o);
+	    sl += strlen(o);
+	}
+    }
+    return ret;
+}
+
+/* Return my TELNET options. */
+const char *
+net_myopts(void)
+{
+    return net_opts(myopts);
+}
+
+/* Return his TELNET options. */
+const char *
+net_hisopts(void)
+{
+    return net_opts(hisopts);
 }
 
 /*

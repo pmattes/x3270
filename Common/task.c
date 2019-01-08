@@ -3509,12 +3509,6 @@ Abort_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 static const char *
-query_cursor_offset(void)
-{
-    return lazyaf("%d", cursor_addr);
-}
-
-static const char *
 query_terminal_name(void)
 {
     return (appres.termname != NULL)? appres.termname: full_model_name;
@@ -3524,6 +3518,95 @@ static const char *
 query_build(void)
 {
     return build;
+}
+
+static const char *
+get_connect_time(void)
+{
+    time_t t, td;
+    long dy, hr, mn, sc;
+
+    if (!CONNECTED) {
+	return NULL;
+    }
+
+    (void) time(&t);
+
+    td = t - ns_time;
+    dy = (long)(td / (3600 * 24));
+    hr = (dy % (3600 * 24)) / 3600;
+    mn = (td % 3600) / 60;
+    sc = td % 60;
+
+    return lazyaf("%ud%02u:%02u:%02u", dy, hr, mn, sc);
+}
+
+static const char *
+get_cgcsgid(void)
+{
+    char *sbcs = lazyaf("sbcs gcsgid %u cpgid %u",
+	    (unsigned short)((cgcsgid >> 16) & 0xffff),
+	    (unsigned short)(cgcsgid & 0xffff));
+    return dbcs? lazyaf("%s dbcs gcsgid %u cpgid %u",
+	    sbcs,
+	    (unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
+	    (unsigned short)(cgcsgid_dbcs & 0xffff)):
+	sbcs;
+}
+
+static const char *
+get_codepages(void)
+{
+    csname_t *c = get_csnames();
+    varbuf_t r;
+    int i, j;
+    char *sep = "";
+
+    vb_init(&r);
+    for (i = 0; c[i].name != NULL; i++) {
+	vb_appendf(&r, "%s%s %cbcs", sep, c[i].name, c[i].dbcs? 'd': 's');
+	sep = "\n";
+	for (j = 0; j < c[i].num_aliases; j++) {
+	    vb_appendf(&r, " %s", c[i].aliases[j]);
+	}
+    }
+
+    free_csnames(c);
+    return lazya(vb_consume(&r));
+}
+
+static const char *
+get_proxy(void)
+{
+    const char *ptype = net_proxy_type();
+
+    return (ptype != NULL)?
+	lazyaf("%s %s %s", ptype, net_proxy_host(), net_proxy_port()):
+	NULL;
+}
+
+static const char *
+get_rx(void)
+{
+    if (!CONNECTED) {
+	return NULL;
+    }
+
+    return IN_3270?
+	lazyaf("records %u bytes %u", ns_rrcvd, ns_brcvd):
+	lazyaf("bytes %u", ns_brcvd);
+}
+
+static const char *
+get_tx(void)
+{
+    if (!CONNECTED) {
+	return NULL;
+    }
+
+    return IN_3270?
+	lazyaf("records %u bytes %u", ns_rsent, ns_bsent):
+	lazyaf("bytes %u", ns_bsent);
 }
 
 static bool
@@ -3539,24 +3622,33 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "BuildOptions", build_options, NULL, false, false },
+	{ "Cgcsgid", get_cgcsgid, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
-	{ "CodePage", get_host_codepage, NULL, false, false },
+	{ "ConnectTime", get_connect_time, NULL, false, false },
+	{ "CodePage", get_canonical_codepage, NULL, false, false },
+	{ "CodePages", get_codepages, NULL, false, true },
 	{ "Copyright", show_copyright, NULL, false, true },
 	{ "Cursor", ctlr_query_cursor, NULL, true, false },
 	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },
-	{ "CursorOffset", query_cursor_offset, NULL, false, false },
 	{ "Formatted", ctlr_query_formatted, NULL, false, false },
 	{ "Host", net_query_host, NULL, false, false },
 	{ "LocalEncoding", get_codeset, NULL, false, false },
 	{ "LuName", net_query_lu_name, NULL, false, false },
 	{ "Model", NULL, full_model_name, true, false },
-	{ "ScreenCurSize", ctlr_query_cur_size, NULL, false, false },
-	{ "ScreenMaxSize", ctlr_query_max_size, NULL, false, false },
+	{ "Proxy", get_proxy, NULL, false, false },
+	{ "ScreenSizeCurrent", ctlr_query_cur_size, NULL, false, false },
+	{ "ScreenSizeMax", ctlr_query_max_size, NULL, false, false },
 	{ "Ssl", net_query_tls, NULL, true, false },
+	{ "StatsRx", get_rx, NULL, false, false },
+	{ "StatsTx", get_tx, NULL, false, false },
+	{ "TelnetMyOptions", net_myopts, NULL, false, false },
+	{ "TelnetHostOptions", net_hisopts, NULL, false, false },
 	{ "TerminalName", query_terminal_name, NULL, false, false },
 	{ "Tls", net_query_tls, NULL, false, false },
 	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
+	{ "TlsProvider", net_sio_provider, NULL, false, false },
 	{ "TlsSessionInfo", net_session_info, NULL, false, true },
+	{ "Tn3270eOptions", tn3270e_current_opts, NULL, false, false },
 	{ "Version", query_build, NULL, false, false },
 	{ NULL, NULL, false, false }
     };
