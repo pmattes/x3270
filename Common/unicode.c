@@ -669,6 +669,11 @@ canonical_charset(const char *alias)
 	    return cpaliases[i].canon;
 	}
     }
+    for (i = 0; uni[i].name != NULL; i++) {
+	if (!strcmp(alias, uni[i].name)) {
+	    return alias;
+	}
+    }
     return NULL;
 }
 
