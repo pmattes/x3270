@@ -3542,9 +3542,10 @@ get_connect_time(void)
 }
 
 static const char *
-get_cgcsgid(void)
+get_codepage(void)
 {
-    char *sbcs = lazyaf("sbcs gcsgid %u cpgid %u",
+    char *sbcs = lazyaf("%s sbcs gcsgid %u cpgid %u",
+	    get_canonical_codepage(),
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));
     return dbcs? lazyaf("%s dbcs gcsgid %u cpgid %u",
@@ -3622,10 +3623,9 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "BuildOptions", build_options, NULL, false, false },
-	{ "Cgcsgid", get_cgcsgid, NULL, false, false },
 	{ "ConnectionState", host_query_connection_state, NULL, false, false },
 	{ "ConnectTime", get_connect_time, NULL, false, false },
-	{ "CodePage", get_canonical_codepage, NULL, false, false },
+	{ "CodePage", get_codepage, NULL, false, false },
 	{ "CodePages", get_codepages, NULL, false, true },
 	{ "Copyright", show_copyright, NULL, false, true },
 	{ "Cursor", ctlr_query_cursor, NULL, true, false },
