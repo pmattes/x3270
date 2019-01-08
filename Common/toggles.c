@@ -236,7 +236,7 @@ u_value(toggle_extended_upcalls_t *u)
 	    value = *(char **)u->address;
 	    break;
 	case XRM_BOOLEAN:
-	    value = *(bool *)u->address? "true": "false";
+	    value = *(bool *)u->address? "True": "False";
 	    break;
 	case XRM_INT:
 	    value = lazyaf("%d", *(int *)u->address);
@@ -392,7 +392,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 				argv[arg]);
 			goto failed;
 		    }
-		    value = (*(bool *)u->address)? "false": "true";
+		    value = (*(bool *)u->address)? "False": "True";
 		    goto have_value;
 		}
 		/* Flip the toggle. */
@@ -405,7 +405,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 
 		    action_output("%s", v? v: " ");
 		} else {
-		    action_output("%s", toggled(ix)? "true": "false");
+		    action_output("%s", toggled(ix)? "True": "False");
 		}
 		return true;
 	    }
