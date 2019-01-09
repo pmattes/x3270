@@ -64,7 +64,7 @@
 #define ResCharset		"charset"
 #define ResCharsetList		"charsetList"
 #define ResClientCert		"clientCert"
-#define ResCodePage		"codepage"
+#define ResCodePage		"codePage"
 #define ResColor8		"color8"
 #define ResColorBackground	"colorBackground"
 #define ResColorScheme		"colorScheme"

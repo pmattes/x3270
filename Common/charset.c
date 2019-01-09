@@ -247,19 +247,53 @@ set_host_codepage(char *codepage)
     }
 }
 
+/**
+ * Return the canonical form of a character set, given a resource value.
+ * This is needed because the resource definition may be a valid alias, but
+ * we always want to display and return the canonical name.
+ *
+ * @param[in] res	Resource value, or NULL
+ *
+ * @returns Canonical representation.
+ */
+static char *
+canonical_cs(const char *res)
+{
+    const char *canon;
+
+    if (res == NULL) {
+	return NULL;
+    }
+    canon = canonical_charset(res);
+    if (canon == NULL) {
+	return NULL;
+    }
+    return NewString(canon);
+}
+
 /* Set the global charset name. */
 static void
 set_charset_name(const char *csname)
 {
+    char *canon;
+
     if (csname == NULL) {
-	Replace(charset_name, NewString("us"));
+	Replace(charset_name, NewString("bracket"));
 	charset_changed = false;
 	return;
     }
-    if ((charset_name != NULL && strcmp(charset_name, csname)) ||
-	    (appres.codepage != NULL && strcmp(appres.codepage, csname))) {
-	Replace(charset_name, NewString(csname));
+
+    canon = canonical_cs(csname);
+    if (canon == NULL) {
+	canon = NewString(csname);
+    }
+
+    if ((charset_name != NULL && strcmp(charset_name, canon)) ||
+	    (appres.codepage != NULL && strcmp(appres.codepage, canon))) {
+	Replace(charset_name, canon);
 	charset_changed = true;
+    } else {
+	Free(canon);
     }
 }
 
@@ -316,30 +350,6 @@ get_charset_name(void)
 {
     return (charset_name != NULL)? charset_name:
 	((appres.codepage != NULL)? appres.codepage: "us");
-}
-
-/**
- * Return the canonical form of a character set, given a resource value.
- * This is needed because the resource definition may be a valid alias, but
- * we always want to display and return the canonical name.
- *
- * @param[in] res	Resource value, or NULL
- *
- * @returns Canonical representation.
- */
-static char *
-canonical_cs(const char *res)
-{
-    const char *canon;
-
-    if (res == NULL) {
-	return NULL;
-    }
-    canon = canonical_charset(res);
-    if (canon == NULL) {
-	return NULL;
-    }
-    return NewString(canon);
 }
 
 /**
