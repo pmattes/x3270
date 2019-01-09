@@ -422,8 +422,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n\
 POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    NULL);
 
-    if (charset_init(appres.charset) != CS_OKAY) {
-	xs_warning("Cannot find charset \"%s\"", appres.charset);
+    if (charset_init(appres.codepage) != CS_OKAY) {
+	xs_warning("Cannot find code page \"%s\"", appres.codepage);
 	(void) charset_init(NULL);
     }
     dump_charsets();

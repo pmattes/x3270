@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -384,8 +384,8 @@ popup_about_config(void)
 	MAKE_VALUE(efont_charset_dbcs);
     }
 
-    MAKE_LABEL(get_message("charset"), 4);
-    xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
+    MAKE_LABEL(get_message("codepage"), 4);
+    xbuf = xs_buffer("%s (%s)", get_charset_name(),
 	    get_host_codepage());
     MAKE_VALUE(xbuf);
     XtFree(xbuf);

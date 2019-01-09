@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2017, Paul Mattes.
+! Copyright (c) 1995-2019, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,6 @@
 x3270.message.buildDisabled:			disabled
 x3270.message.buildEnabled:			enabled
 x3270.message.buildOpts:			Build options:
-x3270.message.characterSet:			EBCDIC character set:
 x3270.message.hostCodePage:			Host code page:
 x3270.message.unnegotiated:			TELNET negotiation incomplete
 #ifdef _WIN32

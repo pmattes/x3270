@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -128,10 +128,8 @@ status_dump(void)
     if (bplu != NULL && bplu[0]) {
 	action_output("%s %s", get_message("bindPluName"), bplu);
     }
-    action_output("%s %s (%s)", get_message("characterSet"),
-	    get_charset_name(), dbcs? "DBCS": "SBCS");
-    action_output("%s %s",
-	    get_message("hostCodePage"),
+    action_output("%s %s (%s) %s", get_message("hostCodePage"),
+	    get_charset_name(), dbcs? "DBCS": "SBCS",
 	    get_host_codepage());
     action_output("%s GCSGID %u, CPGID %u",
 	    get_message("sbcsCgcsgid"),

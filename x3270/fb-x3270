@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2017, Paul Mattes.
+! Copyright (c) 1995-2019, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -830,7 +830,7 @@ x3270*fontsOption.label:			Font
 x3270*modelsOption.label:			Screen Size
 x3270*snapOption.label:				Snap Window Size
 x3270*colorsOption.label:			Color Scheme
-x3270*charsetOption.label:			Character Set
+x3270*codepageOption.label:			Code Page
 x3270*keymapOption.label:			Change Keymap...
 x3270*idleCommandOption.label:			Configure Idle Command
 x3270*keypadOption.label:			Keypad
@@ -872,7 +872,7 @@ x3270.message.emulatorFont:			Emulator font:
 x3270.message.emulatorFontDbcs:			DBCS emulator font:
 x3270.message.xFont:				standard X11 font
 x3270.message.cgFont:				special 3270 CG font
-x3270.message.charset:				Host EBCDIC character set:
+x3270.message.codepage:				Host EBCDIC code page:
 x3270.message.displayCharacterSet:		Display character set:
 x3270.message.displayCharacterSetDbcs:		DBCS display character set:
 x3270.message.require:				require

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2166,7 +2166,7 @@ options_menu_init(bool regen, Position x, Position y)
     }
 
     /* Create the "character set" pullright */
-    if (charset_count && !item_suppressed(options_menu, "charsetOption")) {
+    if (charset_count && !item_suppressed(options_menu, "codepageOption")) {
 	struct charset *cs;
 
 	if (charset_root != NULL) {
@@ -2195,7 +2195,7 @@ options_menu_init(bool regen, Position x, Position y)
 		options_menu,
 		NULL);
 	(void) XtVaCreateManagedWidget(
-		"charsetOption", cmeBSBObjectClass, options_menu,
+		"codepageOption", cmeBSBObjectClass, options_menu,
 		XtNrightBitmap, arrow,
 		XtNmenuName, "charsetMenu",
 		NULL);

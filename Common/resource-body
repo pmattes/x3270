@@ -207,12 +207,10 @@ type b
 default false
 switch -apl
 desc
-    Enables %p% APL mode.  APL mode appends <b>apl</b> to the list of names
-    in %-keymap% (causing the <b>Alt</b> key plus many alphanumeric keys to
-    produce basic APL symbols), sets %-composeMap% to <b>apl</b> (allowing
-    <b>Compose</b> key sequences to construct complex APL symbols), and sets
-    %-charset% to <b>apl</b> (allowing the display of APL symbols using
-    several of the 3270 fonts).
+    Sets %p% APL mode at start-up.
+    APL mode sets up a temporary keymap and compose map to allow the entry of
+    APL symbols.
+    At run-time, APL mode is toggled with the Shift-Esc key.
 .
 
 name asciiBoxDraw
@@ -457,29 +455,6 @@ desc
     of the same name.
 .
 
-name charset
-applies a
-groups c
-type s
-default bracket
-switch -charset
-option Options -&gt; Character Set
-description
-    This defines the host EBCDIC character set, that is, what glyph (image) is
-    displayed for each EBCDIC code sent by the host, and what EBCDIC code is
-    sent to the host for each character typed on the keyboard.
-    This is more correctly referred to as the <i>host code page</i>.
-    <p class="indented">
-    To display the character sets supported by %p%, use the <b>-v</b>
-    command-line option.
-if wc
-    <p class="indented">
-    Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
-    language support must be installed. On Windows Vista and later, the Windows
-    System Locale must be set to a matching language.
-endif
-.
-
 name clientCert
 applies w
 groups s
@@ -498,6 +473,28 @@ switch -clientcert
 desc
     Gives the name of a client certificate, provided during SSL/TLS
     negotiation. (Mac only)
+.
+
+name codepage
+applies a
+groups c
+type s
+default bracket
+switch -codepage
+option Options -&gt; Code Page
+description
+    This defines the host EBCDIC code page, that is, what glyph (image) is
+    displayed for each EBCDIC code sent by the host, and what EBCDIC code is
+    sent to the host for each character typed on the keyboard.
+    <p class="indented">
+    To display the code pages supported by %p%, use the <b>-v</b>
+    command-line option or the <b>Query(CodePages)</> action.
+if wc
+    <p class="indented">
+    Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
+    language support must be installed. On Windows Vista and later, the Windows
+    System Locale must be set to a matching language.
+endif
 .
 
 name color8
@@ -1106,7 +1103,7 @@ description
     available in 8-, 12-, 16-, 24- and 32-pixel sizes.
     Any standard X11 constant-spaced font can also be used, provided that
     it implements a display character set compatible with the host code page
-    (%-charset%).  However, the special
+    (%-codepage%).  However, the special
     OIA (status line) symbols are only available with the 3270 fonts.
 .
 
@@ -2925,7 +2922,7 @@ desc
 &nbsp;&nbsp;&nbsp;modelsMenu.model4Option.suppress<br>
 &nbsp;&nbsp;&nbsp;modelsMenu.model5Option.suppress<br>
 &nbsp;&nbsp;&nbsp;modelsMenu.oversizeOption.suppress<br>
-&nbsp;&nbsp;&nbsp;optionsMenu.charsetOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.codepageOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.colorsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.fontsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.idleCommandOption.suppress<br>

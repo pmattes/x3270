@@ -156,8 +156,8 @@ main(int argc, char *argv[])
 	check_min_version(appres.min_version);
     }
 
-    if (charset_init(appres.charset) != CS_OKAY) {
-	xs_warning("Cannot find charset \"%s\"", appres.charset);
+    if (charset_init(appres.codepage) != CS_OKAY) {
+	xs_warning("Cannot find code page \"%s\"", appres.codepage);
 	(void) charset_init(NULL);
     }
     model_init();
