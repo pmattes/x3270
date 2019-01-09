@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2018, Paul Mattes.
+dnl Copyright (c) 1993-2019, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -161,16 +161,16 @@ intermediate certificates and the CA certificate used to sign that certificate.
 If XX_FB(XX_DASHED(chainfile)) is specified, it
 overrides XX_FB(XX_DASHED(certfile)). (OpenSSL only)
 ')dnl
-XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
-Specifies an XX_SM(EBCDIC) host character set.
-XX_HO(`See XX_LINK(#Character-Sets,XX_SM(CHARACTER SETS)) below.
-')dnl
 XX_TP(XX_FB(XX_DASHED(clear)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(false).
 define(XX_TOGGLEREF,`ifelse(XX_PRODUCT,x3270,Menus,Toggles)')dnl
 define(XX_TOGGLEREFNM,`ifelse(XX_PRODUCT,x3270,MENUS,TOGGLES)')dnl
 XX_HO(`The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
+')dnl
+XX_TP(XX_FB(XX_DASHED(codepage)) XX_FI(name))
+Specifies an XX_SM(EBCDIC) host code page.
+XX_HO(`See XX_LINK(#Code-Pages,XX_SM(CODE PAGES)) below.
 ')dnl
 XX_TP(XX_FB(XX_DASHED(connecttimeout)) XX_FI(seconds))
 Specifies the time that XX_PRODUCT will wait for a host connection to
@@ -606,11 +606,11 @@ ifelse(XX_PRODUCT,c3270,`Ctrl-]',`the Escape key').
 To switch from command-prompt mode to display mode, press XX_FB(Enter)
 (without entering a command) at the XX_FB(XX_PRODUCT`'>) prompt.
 ')dnl
-XX_SH(Character Sets)
-The XX_FB(XX_DASHED(charset))
-option or the "XX_PRODUCT.charset" resource controls the XX_SM(EBCDIC)
-host character set used by XX_FB(XX_PRODUCT).
-Available sets `include':
+XX_SH(Code Pages)
+The XX_FB(XX_DASHED(codepage))
+option or the "XX_PRODUCT.codepage" resource controls the XX_SM(EBCDIC)
+host code page used by XX_FB(XX_PRODUCT).
+Available pages `include':
 XX_PP
 define(XX_CG1A,ifelse(XX_PRODUCT,x3270,3270cg-1a))dnl
 define(XX_CG1,ifelse(XX_PRODUCT,x3270,3270cg-1))dnl
@@ -636,7 +636,7 @@ define(XX_JIS,ifelse(XX_PLATFORM,windows,`',jisx0201.1976-0 + jisx0208.1983-0))d
 XX_TS(3,`center;
 l l l
 lfB l l.')
-XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,`',Character Set))))
+XX_TR(XX_TD(XX_TC(Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,`',Character Set))))
 XX_T_()
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(XX_TC(apl))	XX_TD(XX_TC(037))	XX_TD(XX_TC(XX_CG1A)))
 ')dnl
@@ -679,14 +679,14 @@ XX_TR(XX_TD(XX_TC(us-euro))	XX_TD(XX_TC(1140))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_8
 XX_TR(XX_TD(XX_TC(us-intl))	XX_TD(XX_TC(037))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TE()
 XX_PP
-The default character set is
+The default code page is
 XX_FB(bracket),
 which is useful for common U.S. XX_SM(IBM) hosts which use XX_SM(EBCDIC)
 codes AD and BD for the XX_DQUOTED([) and XX_DQUOTED(]) characters,
 respectively.
 XX_PP
 Note that any of the host code pages listed above can be specified by adding
-XX_FB(cp) to the host code page, e.g., XX_FB(cp037) for host code page 037.
+XX_FB(cp) to the host code page number, e.g., XX_FB(cp037) for host code page 037.
 Also note that the code pages available for a given version of XX_FB(XX_PRODUCT)
 are displayed by the XX_FB(XX_DASHED(v)) command-line option.
 ifelse(XX_PRODUCT,wc3270,`XX_PP

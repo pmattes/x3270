@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -449,7 +449,7 @@ set_appres_defaults(void)
     appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;
     appres.port = "23";
-    appres.charset = NewString("bracket");
+    appres.codepage = NewString("bracket");
     appres.termname = NULL;
     appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
@@ -498,10 +498,12 @@ set_appres_defaults(void)
 static opt_t base_opts[] = {
 { OptAlias,    OPT_STRING,  false, ResAlias,   aoffset(alias),
     "<name>", "Define application alias for -xrm and session file suffix" },
-{ OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
-    "<name>", "Use host ECBDIC character set (code page) <name>"},
+{ OptCharset,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
+    NULL, NULL },
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
+{ OptCodePage,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
+    "<name>", "Use host ECBDIC code page <name>"},
 { OptConnectTimeout, OPT_INT,false,ResConnectTimeout,aoffset(connect_timeout),
     "<seconds>", "Timeout for host connect requests" },
 { OptDevName,  OPT_STRING,  false, ResDevName,   aoffset(devname),
@@ -742,7 +744,11 @@ sort_help(void)
     sorted_help = (opt_t *)Malloc(sorted_help_count * sizeof(opt_t));
     for (o = optlist; o != NULL; o = o->next) {
 	for (j = 0; j < o->count; j++) {
-	    sorted_help[oix++] = o->opts[j];
+	    if (o->opts[j].help_text != NULL) {
+		sorted_help[oix++] = o->opts[j];
+	    } else {
+		sorted_help_count--;
+	    }
 	}
     }
 
@@ -951,7 +957,8 @@ static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
-    { ResCharset,	aoffset(charset),	XRM_STRING },
+    { ResCharset,	aoffset(codepage),	XRM_STRING },
+    { ResCodePage,	aoffset(codepage),	XRM_STRING },
     { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2018, Paul Mattes.
+ * Copyright (c) 1995-2019, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,7 @@
 #define ResCharset		"charset"
 #define ResCharsetList		"charsetList"
 #define ResClientCert		"clientCert"
+#define ResCodePage		"codepage"
 #define ResColor8		"color8"
 #define ResColorBackground	"colorBackground"
 #define ResColorScheme		"colorScheme"
@@ -249,8 +250,8 @@
 #define DotChainFile		"." ResChainFile
 #define DotCbreak		"." ResCbreak
 #define DotCharClass		"." ResCharClass
-#define DotCharset		"." ResCharset
 #define DotClientCert		"." ResClientCert
+#define DotCodePage		"." ResCodePage
 #define DotColorScheme		"." ResColorScheme
 #define DotConnectTimeout	"." ResConnectTimeout
 #define DotDevName		"." ResDevName
@@ -323,6 +324,7 @@
 #define ClsCharClass		"CharClass"
 #define ClsCharset		"Charset"
 #define ClsClientCert		"ClientCert"
+#define ClsCodePage		"CodePage"
 #define ClsColor8		"Color8"
 #define ClsColorBackground	"ColorBackground"
 #define ClsColorScheme		"ColorScheme"
@@ -478,6 +480,7 @@
 #define OptCharset		"-charset"
 #define OptClientCert		"-clientcert"
 #define OptClear		"-clear"
+#define OptCodePage		"-codepage"
 #define OptColorScheme		"-scheme"
 #define OptConnectTimeout	"-connecttimeout"
 #define OptDefaultFgBg		"-defaultfgbg"

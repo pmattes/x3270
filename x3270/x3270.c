@@ -136,9 +136,10 @@ XrmOptionDescRec base_options[]= {
     { OptCertFileType,	DotCertFileType,XrmoptionSepArg,	NULL },
     { OptChainFile,	DotChainFile,	XrmoptionSepArg,	NULL },
     { OptCharClass,	DotCharClass,	XrmoptionSepArg,	NULL },
-    { OptCharset,	DotCharset,	XrmoptionSepArg,	NULL },
+    { OptCharset,	DotCodePage,	XrmoptionSepArg,	NULL },
     { OptClear,		".xxx",		XrmoptionSkipArg,	NULL },
     { OptClientCert,	DotClientCert,	XrmoptionSepArg,	NULL },
+    { OptCodePage,	DotCodePage,	XrmoptionSepArg,	NULL },
     { OptColorScheme,	DotColorScheme,	XrmoptionSepArg,	NULL },
     { OptConnectTimeout,DotConnectTimeout,XrmoptionSepArg,	NULL },
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
@@ -214,11 +215,11 @@ static struct option_help {
     { OptChainFile, "<filename>", "SSL/TLS certificate chain file",
       SSL_OPT_CHAIN_FILE },
     { OptCharClass, "<spec>", "Define characters for word boundaries" },
-    { OptCharset, "<name>",
-	"Use host EBCDIC character set (code page) <name>" },
+    { OptCharset, "<name>", "Alias for " OptCodePage },
     { OptClear, "<toggle>", "Turn on <toggle>" },
     { OptClientCert, "<name>", "SSL/TLS client certificate name",
       SSL_OPT_CLIENT_CERT },
+    { OptCodePage, "<name>", "Use host EBCDIC code page <name>" },
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
@@ -719,22 +720,22 @@ main(int argc, char *argv[])
 
     screen_preinit();
 
-    switch (charset_init(appres.charset)) {
+    switch (charset_init(appres.codepage)) {
     case CS_OKAY:
 	break;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition for host character set \"%s\"",
-		appres.charset);
+	popup_an_error("Cannot find definition for host code page \"%s\"",
+		appres.codepage);
 	(void) charset_init(NULL);
 	break;
     case CS_BAD:
-	popup_an_error("Invalid definition for host character set \"%s\"",
-		appres.charset);
+	popup_an_error("Invalid definition for host code page \"%s\"",
+		appres.codepage);
 	(void) charset_init(NULL);
 	break;
     case CS_PREREQ:
-	popup_an_error("No fonts for host character set \"%s\"",
-		appres.charset);
+	popup_an_error("No fonts for host code page \"%s\"",
+		appres.codepage);
 	(void) charset_init(NULL);
 	break;
     case CS_ILLEGAL:

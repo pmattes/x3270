@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2018 Paul Mattes.
+ * Copyright (c) 2000-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -224,7 +224,7 @@ usage(void)
 "                   specify client certificate chain file\n");
     }
     (void) fprintf(stderr,
-"  " OptCharset " <name>  use built-in alternate EBCDIC-to-ASCII mappings\n");
+"  " OptCodePage " <name>  use built-in alternate EBCDIC-to-ASCII mappings\n");
     if (ssl_options & SSL_OPT_CLIENT_CERT) {
 	(void) fprintf(stderr,
 "  " OptClientCert " <name> use SSL/TLS client certificate <name>\n");
@@ -689,10 +689,11 @@ main(int argc, char *argv[])
 			}
 			options.ssl.client_cert = argv[i + 1];
 			i++;
-		} else if (!strcmp(argv[i], OptCharset)) {
+		} else if (!strcmp(argv[i], OptCharset) ||
+			   !strcmp(argv[i], OptCodePage)) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for " OptCharset "\n");
+				    "Missing value for %s\n", argv[i]);
 				usage();
 			}
 			options.charset = argv[i + 1];

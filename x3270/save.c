@@ -698,7 +698,7 @@ save_options(char *n)
 	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
     }
     if (charset_changed) {
-	save_opt(f, "charset", OptCharset, ResCharset, get_charset_name());
+	save_opt(f, "codepage", OptCodePage, ResCodePage, get_charset_name());
     }
     if (idle_changed) {
 	save_opt(f, "idle command", NULL, ResIdleCommand, idle_command);

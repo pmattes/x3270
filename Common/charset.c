@@ -257,7 +257,7 @@ set_charset_name(const char *csname)
 	return;
     }
     if ((charset_name != NULL && strcmp(charset_name, csname)) ||
-	    (appres.charset != NULL && strcmp(appres.charset, csname))) {
+	    (appres.codepage != NULL && strcmp(appres.codepage, csname))) {
 	Replace(charset_name, NewString(csname));
 	charset_changed = true;
     }
@@ -315,7 +315,7 @@ const char *
 get_charset_name(void)
 {
     return (charset_name != NULL)? charset_name:
-	((appres.charset != NULL)? appres.charset: "us");
+	((appres.codepage != NULL)? appres.codepage: "us");
 }
 
 /**
@@ -343,7 +343,7 @@ canonical_cs(const char *res)
 }
 
 /**
- * Extended toggle for the host character set.
+ * Extended toggle for the host code page.
  *
  * @param[in] name	Toggle name.
  * @param[in] value	New value, might be NULL.
@@ -351,7 +351,7 @@ canonical_cs(const char *res)
  * @returns true for success, false for failure.
  */
 static bool
-toggle_charset(const char *name _is_unused, const char *value)
+toggle_codepage(const char *name _is_unused, const char *value)
 {
     enum cs_result result;
 
@@ -363,17 +363,17 @@ toggle_charset(const char *name _is_unused, const char *value)
     case CS_OKAY:
 	st_changed(ST_CHARSET, true);
 	charset_changed = true;
-	Replace(appres.charset, canonical_cs(value));
+	Replace(appres.codepage, canonical_cs(value));
 	return true;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition of host character set \"%s\"",
+	popup_an_error("Cannot find definition of host code page \"%s\"",
 		value);
 	return false;
     case CS_BAD:
-	popup_an_error("Invalid charset definition for \"%s\"", value);
+	popup_an_error("Invalid code page definition for \"%s\"", value);
 	return false;
     case CS_PREREQ:
-	popup_an_error("No fonts for host character set \"%s\"", value);
+	popup_an_error("No fonts for host code page \"%s\"", value);
 	return false;
     default:
     case CS_ILLEGAL:
@@ -389,6 +389,6 @@ void
 charset_register(void)
 {
     /* Register the toggle. */
-    register_extended_toggle(ResCharset, toggle_charset, NULL, canonical_cs,
-	    (void **)&appres.charset, XRM_STRING);
+    register_extended_toggle(ResCodePage, toggle_codepage, NULL, canonical_cs,
+	    (void **)&appres.codepage, XRM_STRING);
 }

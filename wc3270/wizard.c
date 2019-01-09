@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018 Paul Mattes.
+ * Copyright (c) 2006-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2888,7 +2888,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	} else {
 	    printf(DISPLAY_NONE"\n");
 	}
-	printf("%3d. Character Set .......... : %s (CP %s)\n",
+	printf("%3d. Code Page .............. : %s (CP %s)\n",
 		MN_CHARSET, s->charset, cp);
 	printf("%3d. Crosshair Cursor ....... : %s\n",
 		MN_CROSSHAIR, (s->flags & WF_CROSSHAIR)? "Yes": "No");
@@ -4498,7 +4498,7 @@ write_session_file(const session_t *session, char *us, const char *path)
 	fprintf(f, "wc3270.%s: %ux%u\n", ResOversize,
 		session->ov_cols, session->ov_rows);
     }
-    fprintf(f, "wc3270.%s: %s\n", ResCharset, session->charset);
+    fprintf(f, "wc3270.%s: %s\n", ResCodePage, session->charset);
     if (session->flags & WF_CROSSHAIR) {
 	fprintf(f, "wc3270.%s: %s\n", ResCrosshair, ResTrue);
     }

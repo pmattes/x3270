@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2017 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -73,7 +73,7 @@ typedef struct {
     char	*model;
     char	*hostsfile;
     char	*port;
-    char	*charset;
+    char	*codepage;
     char	*sbcs_cgcsgid;
     char	*termname;
     char	*devname;	/* for 5250 */

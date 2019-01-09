@@ -21,7 +21,7 @@
 
 <h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 4.0</h1>
 4.0 is the current development line for the x3270 suite.
-<h2>Changes in version 4.0alpha1 nn. Month 2018</h2>
+<h2>Changes in version 4.0alpha1 nn. Month 2010</h2>
 <ul>
  <li>A new <b>b3270</b> emulator has been added, intended as a common
   back-end for user interfaces written in any language or framework.</li>
@@ -61,8 +61,8 @@
  <li><b>MoveCursor()</b> and <b>MoveCursor1()</b> now accept a single
   parameter, a screen offset, in addition to the usual row and column
   coordinates.</b>
- <li>A new <b>Query(Actions)()</b> option lists all available actions.</li>
- <li>A new <b>Tasks()</b> action displays currently active tasks (pending
+ <li>A new <b>Query(Actions)</b> option lists all available actions.</li>
+ <li>A new <b>Query(Tasks)</b> optoin displays currently active tasks (pending
   actions and listeners).</li>
  <li>Scripts and files read by <b>Source()</b> now implicitly lock the keyboard
   while they are running. A new <b>KeyboardDisable()</b> action can be used
@@ -101,5 +101,8 @@
  <li>The HTTP and SOCKS proxies can now accept a username and password,
   delimited by an <b>@</b> character. E.g.,
   <b>-proxy http:myuser:mypass@proxyhost:8080</b>.</li>
+ <li>The <b>-charset</b> option and the <b>charset</b> resource have been
+  renamed <b>-codepage</b> and <b>codepage</b> respectively. The old names are
+  still available for backwards compatibility.</li>
  <li>A large number of bug fixes.</li>
 </ul>
