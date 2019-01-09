@@ -278,7 +278,6 @@ static action_t Macro_action;
 static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
-static action_t Tasks_action;
 static action_t Capabilities_action;
 static action_t ResumeInput_action;
 static action_t RequestInput_action;
@@ -407,7 +406,6 @@ task_register(void)
 	{ "Script",		Script_action, ACTION_KE },
 	{ "Snap",		Snap_action, 0 },
 	{ "Source",		Source_action, ACTION_KE },
-	{ "Tasks",		Tasks_action, 0 },
 	{ "Wait",		Wait_action, ACTION_KE }
     };
     static action_table_t task_dactions[] = {
@@ -3527,19 +3525,17 @@ Bell_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Tasks action, dumps out the current task state. */
-static bool
-Tasks_action(ia_t ia, unsigned argc, const char **argv)
+char *
+task_get_tasks(void)
 {
+    varbuf_t r;
     taskq_t *q;
 
-    action_debug("Tasks", ia, argc, argv);
-    if (check_argc("Tasks", argc, 0, 0) < 0) {
-	return false;
-    }
+    vb_init(&r);
 
     FOREACH_LLIST(&taskq, q, taskq_t *) {
 	int i;
-	action_output("CB(%s) #%u", q->name, q->index);
+	vb_appendf(&r, "CB(%s) #%u\n", q->name, q->index);
 
 	/* Walk the list backwards. */
 	for (i = 0; i < q->depth; i++) {
@@ -3556,7 +3552,7 @@ Tasks_action(ia_t ia, unsigned argc, const char **argv)
 		last = (*s->cbx.cb->command)(s->cbx.handle);
 	    }
 
-	    action_output("%*s" TASK_NAME_FMT " %s%s%s",
+	    vb_appendf(&r, "%*s" TASK_NAME_FMT " %s%s%s\n",
 		    s->depth + 1, "",
 		    TASK_sNAME(s),
 		    task_state_name[s->state],
@@ -3565,7 +3561,7 @@ Tasks_action(ia_t ia, unsigned argc, const char **argv)
 	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 
-    return true;
+    return vb_consume(&r);
 }
 
 /* Capabilities action, sets flags in the current CB. */

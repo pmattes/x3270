@@ -148,3 +148,4 @@ typedef void xcontinue_fn(void *context, bool cancel);
 void task_xwait(void *context, xcontinue_fn *continue_fn, const char *why);
 
 bool task_needs_unlock_delay(void);
+char *task_get_tasks(void);

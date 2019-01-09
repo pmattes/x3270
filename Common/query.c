@@ -43,6 +43,7 @@
 #include "popups.h"
 #include "query.h"
 #include "telnet.h"
+#include "task.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
@@ -155,6 +156,18 @@ get_screentracefile(void)
 }
 
 static const char *
+get_tasks(void)
+{
+    char *r = task_get_tasks();
+    size_t sl = strlen(r);
+
+    if (sl > 0 && r[sl - 1] == '\n') {
+	r[sl - 1] = '\0';
+    }
+    return lazya(r);
+}
+
+static const char *
 get_tracefile(void)
 {
     if (!toggled(TRACING)) {
@@ -207,6 +220,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Ssl", net_query_tls, NULL, true, false },
 	{ "StatsRx", get_rx, NULL, false, false },
 	{ "StatsTx", get_tx, NULL, false, false },
+	{ "Tasks", get_tasks, NULL, false, true },
 	{ "TelnetMyOptions", net_myopts, NULL, false, false },
 	{ "TelnetHostOptions", net_hisopts, NULL, false, false },
 	{ "TerminalName", query_terminal_name, NULL, false, false },
