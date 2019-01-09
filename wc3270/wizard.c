@@ -1625,12 +1625,12 @@ get_charset(session_t *s)
     int was_dbcs = s->is_dbcs;
 
     new_screen(s, NULL, "\
-Character Set\n\
+Code Page\n\
 \n\
-This specifies the EBCDIC character set (code page) used by the host.");
+This specifies the EBCDIC code page used by the host.");
 
     printf("\
-\nAvailable character sets:\n\n\
+\nAvailable code pages:\n\n\
   #  Name                Host CP      #  Name                Host CP\n\
  --- ------------------- --------    --- ------------------- --------\n");
     k = 0;
@@ -1657,7 +1657,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
     }
     printf("\n");
     for (;;) {
-	printf("\nCharacter set: [%s] ", s->charset);
+	printf("\nCode page: [%s] ", s->charset);
 	if (get_input(buf, sizeof(buf)) == NULL) {
 	    return -1;
 	}
