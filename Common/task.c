@@ -3599,6 +3599,24 @@ get_rx(void)
 }
 
 static const char *
+get_screentracefile(void)
+{
+    if (!toggled(SCREEN_TRACE)) {
+	return NULL;
+    }
+    return trace_get_screentrace_name();
+}
+
+static const char *
+get_tracefile(void)
+{
+    if (!toggled(TRACING)) {
+	return NULL;
+    }
+    return tracefile_name;
+}
+
+static const char *
 get_tx(void)
 {
     if (!CONNECTED) {
@@ -3638,12 +3656,14 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "Proxy", get_proxy, NULL, false, false },
 	{ "ScreenSizeCurrent", ctlr_query_cur_size, NULL, false, false },
 	{ "ScreenSizeMax", ctlr_query_max_size, NULL, false, false },
+	{ "ScreenTraceFile", get_screentracefile, NULL, false, false },
 	{ "Ssl", net_query_tls, NULL, true, false },
 	{ "StatsRx", get_rx, NULL, false, false },
 	{ "StatsTx", get_tx, NULL, false, false },
 	{ "TelnetMyOptions", net_myopts, NULL, false, false },
 	{ "TelnetHostOptions", net_hisopts, NULL, false, false },
 	{ "TerminalName", query_terminal_name, NULL, false, false },
+	{ "TraceFile", get_tracefile, NULL, false, false },
 	{ "Tls", net_query_tls, NULL, false, false },
 	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
 	{ "TlsProvider", net_sio_provider, NULL, false, false },
