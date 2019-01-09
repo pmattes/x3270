@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -80,6 +80,7 @@
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
+#include "query.h"
 #include "s3270_proto.h"
 #include "screen.h"
 #include "selectc.h"
@@ -501,6 +502,7 @@ main(int argc, char *argv[])
     keypad_register();
     kybd_register();
     task_register();
+    query_register();
     menubar_register();
     nvt_register();
     pr3287_session_register();

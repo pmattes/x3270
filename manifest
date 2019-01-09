@@ -264,6 +264,7 @@ Common/product_stubs2.c
 Common/product_stubs3.c
 Common/product_stubs4.c
 Common/proxy.c
+Common/query.c
 Common/readres.c
 Common/resolver.c
 Common/rpq.c
@@ -387,6 +388,7 @@ include/print_screen.h
 include/product.h
 include/proxy.h
 include/proxy_names.h
+include/query.h
 include/readres.h
 include/resolver.h
 include/resources.h

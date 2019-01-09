@@ -75,6 +75,7 @@
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
+#include "query.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
@@ -366,6 +367,7 @@ main(int argc, char *argv[])
     idle_register();
     kybd_register();
     task_register();
+    query_register();
     nvt_register();
     pr3287_session_register();
     print_screen_register();

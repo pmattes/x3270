@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\Common\print_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\query.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\readres.c">
       <Filter>Source Files</Filter>
     </ClCompile>

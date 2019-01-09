@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -67,6 +67,7 @@
 #include "print_screen.h"
 #include "print_window.h"
 #include "product.h"
+#include "query.h"
 #include "resourcesc.h"
 #include "screen.h"
 #include "selectc.h"
@@ -464,6 +465,7 @@ main(int argc, char *argv[])
     keymap_register();
     kybd_register();
     task_register();
+    query_register();
     menubar_register();
     nvt_register();
     popups_register();

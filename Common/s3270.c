@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -65,6 +65,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "query.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio_glue.h"
@@ -139,6 +140,7 @@ main(int argc, char *argv[])
     idle_register();
     kybd_register();
     task_register();
+    query_register();
     nvt_register();
     print_screen_register();
     s3270_register();

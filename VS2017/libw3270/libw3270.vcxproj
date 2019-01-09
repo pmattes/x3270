@@ -161,6 +161,7 @@
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\nvt.c" />
     <ClCompile Include="..\..\Common\print_screen.c" />
+    <ClCompile Include="..\..\Common\query.c" />
     <ClCompile Include="..\..\Common\readres.c" />
     <ClCompile Include="..\..\Common\Nodisplay/resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
