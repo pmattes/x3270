@@ -338,6 +338,15 @@ enum keytype { KT_STD, KT_GE };
 
 #define Replace(var, value) do { Free(var); var = (value); } while(false)
 
+/* Configuration change masks. */
+#define NO_CHANGE       0x0000  /* no change */
+#define MODEL_CHANGE    0x0001  /* screen dimensions changed */
+#define FONT_CHANGE     0x0002  /* emulator font changed */
+#define COLOR_CHANGE    0x0004  /* color scheme or 3278/9 mode changed */
+#define SCROLL_CHANGE   0x0008  /* scrollbar snapped on or off */
+#define CODEPAGE_CHANGE 0x0010  /* code page changed */
+#define ALL_CHANGE      0xffff  /* everything changed */
+
 /* Portability macros */
 
 /*   Equivalent of setlinebuf */

@@ -161,8 +161,8 @@ main(int argc, char *argv[])
 	(void) codepage_init(NULL);
     }
     model_init();
-    ctlr_init(-1);
-    ctlr_reinit(-1);
+    ctlr_init(ALL_CHANGE);
+    ctlr_reinit(ALL_CHANGE);
     idle_init();
     if (appres.httpd_port) {
 	struct sockaddr *sa;

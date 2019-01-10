@@ -119,15 +119,6 @@
 #define SELECTED(baddr)		(selected[(baddr)/8] & (1 << ((baddr)%8)))
 #define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
 
-/* Configuration change masks. */
-#define NO_CHANGE       0x0000  /* no change */
-#define MODEL_CHANGE    0x0001  /* screen dimensions changed */
-#define FONT_CHANGE     0x0002  /* emulator font changed */
-#define COLOR_CHANGE    0x0004  /* color scheme or 3278/9 mode changed */
-#define SCROLL_CHANGE   0x0008  /* scrollbar snapped on or off */
-#define CODEPAGE_CHANGE 0x0010  /* code page changed */
-#define ALL_CHANGE      0xffff  /* everything changed */
-
 /* Globals */
 Dimension       main_width;		/* desired toplevel width */
 bool            scrollbar_changed = false;

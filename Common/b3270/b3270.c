@@ -443,8 +443,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     COLS = altCOLS;
 
     screen_init();
-    ctlr_init(-1);
-    ctlr_reinit(-1);
+    ctlr_init(ALL_CHANGE);
+    ctlr_reinit(ALL_CHANGE);
     report_terminal_name();
     idle_init();
     if (appres.httpd_port) {
