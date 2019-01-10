@@ -512,6 +512,13 @@ unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl)
     return 0;
 }
 
+/* Returns true if a string contains all digits. */
+bool
+is_all_digits(const char *s)
+{
+    return strspn(s, "0123456789") == strlen(s);
+}
+
 /*
  * Set the SBCS EBCDIC-to-Unicode translation table.
  * Returns true for success, false for failure.
@@ -551,7 +558,7 @@ set_uni(const char *cpname, int local_cp _is_unused,
      * just numbers, so adding a 'cp' to the front of an all-numeric name will
      * not cause any misidentification.
      */
-    if (strspn(realname, "0123456789") == strlen(realname)) {
+    if (is_all_digits(realname)) {
 	realname = lazyaf("cp%s", realname);
     }
 
@@ -652,16 +659,21 @@ const char *
 canonical_codepage(const char *alias)
 {
     int i;
+    const char *realname = alias;
+
+    if (is_all_digits(realname)) {
+	realname = lazyaf("cp%s", alias);
+    }
 
     for (i = 0; cpaliases[i].alias != NULL; i++) {
-	if (!strcmp(alias, cpaliases[i].alias) ||
-	    !strcmp(alias, cpaliases[i].canon)) {
+	if (!strcmp(realname, cpaliases[i].alias) ||
+	    !strcmp(realname, cpaliases[i].canon)) {
 	    return cpaliases[i].canon;
 	}
     }
     for (i = 0; uni[i].name != NULL; i++) {
-	if (!strcmp(alias, uni[i].name)) {
-	    return alias;
+	if (!strcmp(realname, uni[i].name)) {
+	    return realname;
 	}
     }
     return NULL;

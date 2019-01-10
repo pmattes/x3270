@@ -82,3 +82,4 @@ typedef struct {
 } cpname_t;
 cpname_t *get_cpnames(void);
 void free_cpnames(cpname_t *cpnames);
+bool is_all_digits(const char *s);

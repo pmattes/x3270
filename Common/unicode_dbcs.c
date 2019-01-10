@@ -4253,7 +4253,7 @@ set_uni_dbcs(const char *cpname, const char **codepage)
      * just numbers, so adding a 'cp' to the front of an all-numeric name will
      * not cause any misidentification.
      */
-    if (strspn(realname, "0123456789") == strlen(realname)) {
+    if (is_all_digits(realname)) {
 	realname = lazyaf("cp%s", realname);
     }
 
