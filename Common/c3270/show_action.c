@@ -129,8 +129,8 @@ status_dump(void)
 	action_output("%s %s", get_message("bindPluName"), bplu);
     }
     action_output("%s %s (%s) %s", get_message("hostCodePage"),
-	    get_charset_name(), dbcs? "DBCS": "SBCS",
-	    get_host_codepage());
+	    get_codepage_name(), dbcs? "DBCS": "SBCS",
+	    get_codepage_number());
     action_output("%s GCSGID %u, CPGID %u",
 	    get_message("sbcsCgcsgid"),
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),

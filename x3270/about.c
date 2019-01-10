@@ -385,8 +385,7 @@ popup_about_config(void)
     }
 
     MAKE_LABEL(get_message("codepage"), 4);
-    xbuf = xs_buffer("%s (%s)", get_charset_name(),
-	    get_host_codepage());
+    xbuf = xs_buffer("%s (%s)", get_codepage_name(), get_codepage_number());
     MAKE_VALUE(xbuf);
     XtFree(xbuf);
 

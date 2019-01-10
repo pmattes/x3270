@@ -513,7 +513,7 @@ pr3287_start_now(const char *lu, bool associated)
 #endif /*]*/
 
     /* Construct the charset option. */
-    charset_cmd = lazyaf("-charset %s", get_charset_name());
+    charset_cmd = lazyaf(OptCodePage " %s", get_codepage_name());
 
     /* Construct proxy option. */
     if (appres.proxy != NULL) {

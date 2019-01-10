@@ -82,7 +82,7 @@ static bool set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
 static void set_charset_name(const char *csname);
 
-static char *host_codepage = NULL;
+static char *codepage_number = NULL;
 static char *charset_name = NULL;
 static char *canonical_codepage = NULL;
 
@@ -231,11 +231,11 @@ static void
 set_host_codepage(char *codepage)
 {
     if (codepage == NULL) {
-	Replace(host_codepage, NewString("037"));
+	Replace(codepage_number, NewString("037"));
 	return;
     }
-    if (host_codepage == NULL || strcmp(host_codepage, codepage)) {
-	Replace(host_codepage, NewString(codepage));
+    if (codepage_number == NULL || strcmp(codepage_number, codepage)) {
+	Replace(codepage_number, NewString(codepage));
     }
 }
 
@@ -324,9 +324,9 @@ charset_init2(const char *csname, const char *realname, const char *codepage,
 
 /* Return the current host codepage. */
 const char *
-get_host_codepage(void)
+get_codepage_number(void)
 {
-    return (host_codepage != NULL)? host_codepage: "037";
+    return (codepage_number != NULL)? codepage_number: "037";
 }
 
 /* Return the canonical host codepage name. */
@@ -336,9 +336,9 @@ get_canonical_codepage(void)
     return (canonical_codepage != NULL)? canonical_codepage: "cp037";
 }
 
-/* Return the current character set name. */
+/* Return the current code page name. */
 const char *
-get_charset_name(void)
+get_codepage_name(void)
 {
     return (charset_name != NULL)? charset_name:
 	((appres.codepage != NULL)? appres.codepage: "bracket");

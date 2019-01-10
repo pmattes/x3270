@@ -5026,7 +5026,7 @@ screen_newscheme(char *s)
 void
 screen_newcodepage(char *cpname)
 {
-    char *old_codepage = NewString(get_charset_name());
+    char *old_codepage = NewString(get_codepage_name());
 
     switch (codepage_init(cpname)) {
     case CS_OKAY:
@@ -6472,7 +6472,7 @@ screen_snap_size(void)
     screen_reinit(FONT_CHANGE);
 }
 
-/* State change handler for host character sets. */
+/* State change handler for host code pages. */
 static void
 screen_codepage_changed(bool ignored _is_unused)
 {

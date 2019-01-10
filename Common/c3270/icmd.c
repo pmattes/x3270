@@ -1165,7 +1165,7 @@ ask_remap(itc_t *itc)
 #if !defined(WC3270) /*[*/
 	locale_codeset,
 #endif /*]*/
-	get_host_codepage()));
+	get_codepage_number()));
     return xs_buffer("Re-map character set? (yes/no) [%s] ",
 	    p->remap_flag? "yes": "no");
 }

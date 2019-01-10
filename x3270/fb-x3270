@@ -988,7 +988,7 @@ x3270*togglesMenu*background:			grey
 x3270*fontsMenu*background:			grey
 x3270*modelsMenu*background:			grey
 x3270*colorsMenu*background:			grey
-x3270*charsetMenu*background:			grey
+x3270*codepageMenu*background:			grey
 x3270*printerMenu*background:			grey
 #endif
 ! (COLOR)
@@ -1001,7 +1001,7 @@ x3270*togglesMenu.borderWidth:			2
 x3270*fontsMenu.borderWidth:			2
 x3270*modelsMenu.borderWidth:			2
 x3270*colorsMenu.borderWidth:			2
-x3270*charsetMenu.borderWidth:			2
+x3270*codepageMenu.borderWidth:			2
 #ifdef COLOR
 x3270*fileMenu.borderColor:			grey40
 x3270*exitMenu.borderColor:			grey40
@@ -1012,7 +1012,7 @@ x3270*togglesMenu.borderColor:			grey40
 x3270*fontsMenu.borderColor:			grey40
 x3270*modelsMenu.borderColor:			grey40
 x3270*colorsMenu.borderColor:			grey40
-x3270*charsetMenu.borderColor:			grey40
+x3270*codepageMenu.borderColor:			grey40
 #endif
 ! (COLOR)
 x3270*fileMenu*leftMargin:			20
@@ -1024,8 +1024,8 @@ x3270*fontsMenu*rightMargin:			20
 x3270*modelsMenu*leftMargin:			20
 x3270*colorsMenu*leftMargin:			20
 x3270*colorsMenu*rightMargin:			20
-x3270*charsetMenu*leftMargin:			20
-x3270*charsetMenu*rightMargin:			20
+x3270*codepageMenu*leftMargin:			20
+x3270*codepageMenu*rightMargin:			20
 x3270*hostMenu*rightMargin:			20
 x3270*macrosMenu*rightMargin:			20
 !

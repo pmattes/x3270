@@ -103,17 +103,17 @@ static Dimension fm_rightMargin;
 static bool snap_enabled = true;
 static bool keypad_sensitive = true;
 
-static struct charset {
+static struct codepage {
     char **parents;
     char *label;
-    char *charset;
-    struct charset *next;
-} *charsets, *last_charset;
-static int charset_count;
-static Widget  *charset_widgets;
+    char *codepage;
+    struct codepage *next;
+} *codepages, *last_codepage;
+static int codepage_count;
+static Widget  *codepage_widgets;
 
 static void scheme_init(void);
-static void charsets_init(void);
+static void codepages_init(void);
 static void options_menu_init(bool regen, Position x, Position y);
 static void keypad_button_init(Position x, Position y);
 static void ssl_icon_init(Position x, Position y);
@@ -345,7 +345,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 	if (!ever) {
 
 		scheme_init();
-		charsets_init();
+		codepages_init();
 		XtRegisterGrabAction(HandleMenu_xaction, True,
 		    (ButtonPressMask|ButtonReleaseMask),
 		    GrabModeAsync, GrabModeAsync);
@@ -1577,35 +1577,35 @@ do_newscheme(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unu
 	screen_newscheme((char *)userdata);
 }
 
-/* Initialze the character set list. */
+/* Initialze the code page list. */
 static void
-charsets_init(void)
+codepages_init(void)
 {
 	char *cm;
 	char *label;
-	char *charset;
-	struct charset *s;
+	char *codepage;
+	struct codepage *s;
 
 	cm = get_resource(ResCharsetList);
 	if (cm == NULL)
 		return;
 	cm = XtNewString(cm);
 
-	charset_count = 0;
-	while (split_dresource(&cm, &label, &charset) == 1) {
-		s = (struct charset *)XtMalloc(sizeof(struct charset));
+	codepage_count = 0;
+	while (split_dresource(&cm, &label, &codepage) == 1) {
+		s = (struct codepage *)XtMalloc(sizeof(struct codepage));
 		if (!split_hier(label, &s->label, &s->parents)) {
 			XtFree((XtPointer)s);
 			continue;
 		}
-		s->charset = charset;
+		s->codepage = codepage;
 		s->next = NULL;
-		if (last_charset != NULL)
-			last_charset->next = s;
+		if (last_codepage != NULL)
+			last_codepage->next = s;
 		else
-			charsets = s;
-		last_charset = s;
-		charset_count++;
+			codepages = s;
+		last_codepage = s;
+		codepage_count++;
 	}
 }
 
@@ -1795,7 +1795,7 @@ static void
 menubar_codepage(bool ignored _is_unused)
 {
     int i;
-    struct charset *s;
+    struct codepage *s;
     const char *csname;
 
     if (!xappres.suppress_font_menu) {
@@ -1803,12 +1803,12 @@ menubar_codepage(bool ignored _is_unused)
     }
 
     /* Update the code page menu. */
-    csname = get_charset_name();
-    for (i = 0, s = charsets; i < charset_count; i++, s = s->next) {
-	XtVaSetValues(charset_widgets[i],
+    csname = get_codepage_name();
+    for (i = 0, s = codepages; i < codepage_count; i++, s = s->next) {
+	XtVaSetValues(codepage_widgets[i],
 		XtNleftBitmap,
-		(!strcmp(csname, s->charset) ||
-		 charset_matches_alias(s->charset, csname)) ?
+		(!strcmp(csname, s->codepage) ||
+		 codepage_matches_alias(s->codepage, csname)) ?
 		    diamond : no_diamond,
 		NULL);
     }
@@ -1880,7 +1880,7 @@ options_menu_init(bool regen, Position x, Position y)
     static Widget options_menu_button = NULL;
     Widget dummy_font_menu, dummy_font_element;
     static struct menu_hier *scheme_root = NULL;
-    static struct menu_hier *charset_root = NULL;
+    static struct menu_hier *codepage_root = NULL;
     bool spaced = false;
     bool any = false;
     Widget w;
@@ -2165,30 +2165,30 @@ options_menu_init(bool regen, Position x, Position y)
 	any = true;
     }
 
-    /* Create the "character set" pullright */
-    if (charset_count && !item_suppressed(options_menu, "codepageOption")) {
-	struct charset *cs;
+    /* Create the "code page" pullright */
+    if (codepage_count && !item_suppressed(options_menu, "codepageOption")) {
+	struct codepage *cs;
 
-	if (charset_root != NULL) {
-	    free_menu_hier(charset_root);
+	if (codepage_root != NULL) {
+	    free_menu_hier(codepage_root);
 	}
-	charset_root = (struct menu_hier *)XtCalloc(1,
+	codepage_root = (struct menu_hier *)XtCalloc(1,
 		sizeof(struct menu_hier));
-	charset_root->menu_shell = XtVaCreatePopupShell(
-		"charsetMenu", complexMenuWidgetClass, menu_parent,
+	codepage_root->menu_shell = XtVaCreatePopupShell(
+		"codepageMenu", complexMenuWidgetClass, menu_parent,
 		NULL);
 
-	charset_widgets = (Widget *)XtCalloc(charset_count, sizeof(Widget));
-	for (ix = 0, cs = charsets; ix < charset_count; ix++, cs = cs->next) {
-	    t = add_menu_hier(charset_root, cs->parents, NULL, 0);
-	    charset_widgets[ix] = XtVaCreateManagedWidget(
+	codepage_widgets = (Widget *)XtCalloc(codepage_count, sizeof(Widget));
+	for (ix = 0, cs = codepages; ix < codepage_count; ix++, cs = cs->next) {
+	    t = add_menu_hier(codepage_root, cs->parents, NULL, 0);
+	    codepage_widgets[ix] = XtVaCreateManagedWidget(
 		    cs->label, cmeBSBObjectClass, t,
 		    XtNleftBitmap,
-			(strcmp(get_charset_name(), cs->charset))? no_diamond:
+			(strcmp(get_codepage_name(), cs->codepage))? no_diamond:
 								   diamond,
 		    NULL);
-	    XtAddCallback(charset_widgets[ix], XtNcallback, do_newcodepage,
-		    cs->charset);
+	    XtAddCallback(codepage_widgets[ix], XtNcallback, do_newcodepage,
+		    cs->codepage);
 	}
 
 	(void) XtVaCreateManagedWidget("space", cmeLineObjectClass,
@@ -2197,7 +2197,7 @@ options_menu_init(bool regen, Position x, Position y)
 	(void) XtVaCreateManagedWidget(
 		"codepageOption", cmeBSBObjectClass, options_menu,
 		XtNrightBitmap, arrow,
-		XtNmenuName, "charsetMenu",
+		XtNmenuName, "codepageMenu",
 		NULL);
 	any = true;
     }

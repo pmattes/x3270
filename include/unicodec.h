@@ -43,7 +43,7 @@ extern bool dbcs_allowed;
 
 #define IS_UNICODE_DBCS(u)	((u) >= 0x2e80 && (u) <= 0x9fff)
 
-bool charset_matches_alias(const char *alias, const char *canon);
+bool codepage_matches_alias(const char *alias, const char *canon);
 ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);

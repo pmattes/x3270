@@ -650,9 +650,9 @@ set_uni(const char *csname, int local_cp _is_unused,
     return rc;
 }
 
-/* See if the given alias matches the given canonical character set name. */
+/* See if the given alias matches the given canonical code page name. */
 bool
-charset_matches_alias(const char *alias, const char *canon)
+codepage_matches_alias(const char *alias, const char *canon)
 {
     int i;
 
