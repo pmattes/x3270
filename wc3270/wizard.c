@@ -88,7 +88,7 @@ enum {
     MN_PORT,		/* TCP port */
     MN_MODEL,		/* model number */
     MN_OVERSIZE,	/* oversize */
-    MN_CHARSET,		/* character set */
+    MN_CODEPAGE,	/* code page */
     MN_CROSSHAIR,	/* crosshair cursor */
     MN_CURSORTYPE,	/* cursor type */
     MN_TLS,		/* TLS tunnel */
@@ -167,16 +167,6 @@ typedef enum {
 } ws_t;
 
 extern char *wversion;
-
-/* Aliases for obsolete character set names. */
-struct {
-    char	*alias;
-    char	*real;
-} charset_alias[] = {
-    { "japanese-290",  "japanese-kana" },
-    { "japanese-1027", "japanese-latin" },
-    { NULL, NULL }
-};
 
 #define CS_WIDTH	19
 #define CP_WIDTH	8
@@ -1609,14 +1599,14 @@ Asian language support.\n");
 }
 
 /**
- * Prompt for a character set.
+ * Prompt for a code page.
  *
  * @param[in,out] s	Session
  *
  * @return 0 for success, -1 for error
  */
 static int
-get_charset(session_t *s)
+get_codepage(session_t *s)
 {
     char buf[STR_SIZE];
     unsigned i, k;
@@ -1634,7 +1624,7 @@ This specifies the EBCDIC code page used by the host.");
   #  Name                Host CP      #  Name                Host CP\n\
  --- ------------------- --------    --- ------------------- --------\n");
     k = 0;
-    for (i = 0; charsets[i].name != NULL; i++) {
+    for (i = 0; codepages[i].name != NULL; i++) {
 	size_t j;
 
 	if (i) {
@@ -1647,17 +1637,17 @@ This specifies the EBCDIC code page used by the host.");
 	if (!(i % 2)) {
 	    j = k;
 	} else {
-	    j += num_charsets / 2;
+	    j += num_codepages / 2;
 	    k++;
 	}
 	printf(" %2d. %-*s %-*s",
 		(int)(j + 1),
-		CS_WIDTH, charsets[j].name,
-		CP_WIDTH, charsets[j].hostcp);
+		CS_WIDTH, codepages[j].name,
+		CP_WIDTH, codepages[j].hostcp);
     }
     printf("\n");
     for (;;) {
-	printf("\nCode page: [%s] ", s->charset);
+	printf("\nCode page: [%s] ", s->codepage);
 	if (get_input(buf, sizeof(buf)) == NULL) {
 	    return -1;
 	}
@@ -1667,27 +1657,20 @@ This specifies the EBCDIC code page used by the host.");
 	/* Check for numeric value. */
 	u = strtoul(buf, &ptr, 10);
 	if (u > 0 && u <= i && *ptr == '\0') {
-	    strcpy(s->charset, charsets[u - 1].name);
-	    s->is_dbcs = charsets[u - 1].is_dbcs;
+	    strcpy(s->codepage, codepages[u - 1].name);
+	    s->is_dbcs = codepages[u - 1].is_dbcs;
 	    break;
 	}
-	/* Check for alias. */
-	for (i = 0; charset_alias[i].alias != NULL; i++) {
-	    if (!strcmp(buf, charset_alias[i].alias)) {
-		strcpy(buf, charset_alias[i].real);
-		break;
-	    }
-	}
 	/* Check for name match. */
-	for (i = 0; charsets[i].name != NULL; i++) {
-	    if (!strcmp(buf, charsets[i].name)) {
-		strcpy(s->charset, charsets[i].name);
-		s->is_dbcs = charsets[i].is_dbcs;
+	for (i = 0; codepages[i].name != NULL; i++) {
+	    if (!strcmp(buf, codepages[i].name)) {
+		strcpy(s->codepage, codepages[i].name);
+		s->is_dbcs = codepages[i].is_dbcs;
 		break;
 	    }
 	}
 
-	if (charsets[i].name != NULL) {
+	if (codepages[i].name != NULL) {
 	    break;
 	}
 	errout("\nInvalid character set name.");
@@ -2726,15 +2709,15 @@ get_src(const char *name, src_t def)
 }
 
 /**
- * Translate a wc3270 character set name to a font for the console.
+ * Translate a wc3270 host code page name to a font for the console.
  *
- * @param[in] cset	Character set name
+ * @param[in] hcpname	Code page name
  * @param[out] codepage	Windows codepage
  *
  * @return Font name
  */
 static wchar_t *
-reg_font_from_cset(const char *cset, int *codepage)
+reg_font_from_hcp(const char *hcpname, int *codepage)
 {
     unsigned i, j;
     wchar_t *cpname = NULL;
@@ -2747,9 +2730,9 @@ reg_font_from_cset(const char *cset, int *codepage)
     *codepage = 0;
 
     /* Search the table for a match. */
-    for (i = 0; charsets[i].name != NULL; i++) {
-	if (!strcmp(cset, charsets[i].name)) {
-	    cpname = charsets[i].codepage;
+    for (i = 0; codepages[i].name != NULL; i++) {
+	if (!strcmp(hcpname, codepages[i].name)) {
+	    cpname = codepages[i].codepage;
 	    break;
 	}
     }
@@ -2864,9 +2847,9 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	char *cp = "?";
 	int i;
 
-	for (i = 0; charsets[i].name != NULL; i++) {
-	    if (!strcmp(charsets[i].name, s->charset)) {
-		cp = charsets[i].hostcp;
+	for (i = 0; codepages[i].name != NULL; i++) {
+	    if (!strcmp(codepages[i].name, s->codepage)) {
+		cp = codepages[i].hostcp;
 		break;
 	    }
 	}
@@ -2889,7 +2872,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	    printf(DISPLAY_NONE"\n");
 	}
 	printf("%3d. Code Page .............. : %s (CP %s)\n",
-		MN_CHARSET, s->charset, cp);
+		MN_CODEPAGE, s->codepage, cp);
 	printf("%3d. Crosshair Cursor ....... : %s\n",
 		MN_CROSSHAIR, (s->flags & WF_CROSSHAIR)? "Yes": "No");
 	printf("%3d. Cursor Type ............ : %s\n",
@@ -3008,8 +2991,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-	    case MN_CHARSET:
-		if (get_charset(s) < 0) {
+	    case MN_CODEPAGE:
+		if (get_codepage(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -3239,10 +3222,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 done:
     {
 	int old_codepage;
-	wchar_t *old_font = reg_font_from_cset(old_session.charset,
+	wchar_t *old_font = reg_font_from_hcp(old_session.codepage,
 		&old_codepage);
 	int codepage;
-	wchar_t *font = reg_font_from_cset(s->charset, &codepage);
+	wchar_t *font = reg_font_from_hcp(s->codepage, &codepage);
 
 	if (old_session.model != s->model ||
 	    old_session.ov_rows != s->ov_rows ||
@@ -4096,7 +4079,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 	    extra_height += 2;
     }
 
-    font = reg_font_from_cset(s->charset, &codepage);
+    font = reg_font_from_hcp(s->codepage, &codepage);
 
     hres = create_link(
 	    exepath,		/* path to executable */
@@ -4267,7 +4250,7 @@ Edit Session\n");
 	/* Default eveything else. */
 	session.port = 23;
 	session.model = 4;
-	strcpy(session.charset, "bracket");
+	strcpy(session.codepage, "bracket");
 	strcpy(session.printerlu, ".");
 	session.flags2 |= WF2_NEW_VHC_DEFAULT;
 	/* fall through... */
@@ -4498,7 +4481,7 @@ write_session_file(const session_t *session, char *us, const char *path)
 	fprintf(f, "wc3270.%s: %ux%u\n", ResOversize,
 		session->ov_cols, session->ov_rows);
     }
-    fprintf(f, "wc3270.%s: %s\n", ResCodePage, session->charset);
+    fprintf(f, "wc3270.%s: %s\n", ResCodePage, session->codepage);
     if (session->flags & WF_CROSSHAIR) {
 	fprintf(f, "wc3270.%s: %s\n", ResCrosshair, ResTrue);
     }

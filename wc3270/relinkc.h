@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, 2014, 2016 Paul Mattes.
+ * Copyright (c) 2006-2012, 2014, 2016, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ typedef struct {
 	char  proxy_host[STR_SIZE];	/*  proxy host */
 	char  proxy_port[STR_SIZE];	/*  proxy port */
 	DWORD model;			/* model number */
-	char  charset[STR_SIZE];	/* character set name */
+	char  codepage[STR_SIZE];	/* code page name */
 	DWORD is_dbcs;
 	DWORD wpr3287;			/* wpr3287 flag */
 	char  printerlu[STR_SIZE];	/*  printer LU */
@@ -83,9 +83,9 @@ typedef struct {
 	char *hostcp;
 	int is_dbcs;
 	wchar_t *codepage;
-} charsets_t;
-extern charsets_t charsets[];
-extern size_t num_charsets;
+} codepages_t;
+extern codepages_t codepages[];
+extern size_t num_codepages;
 extern int wrows[6];
 extern int wcols[6];
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2006-2009, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@
 
 #include "relinkc.h"
 
-charsets_t charsets[] = {
+codepages_t codepages[] = {
     { "belgian",	"500",	0, L"1252"	},
     { "belgian-euro",	"1148",	0, L"1252"	},
     { "bracket",	"37*",	0, L"1252"	},
@@ -95,7 +95,7 @@ charsets_t charsets[] = {
     { NULL,		NULL,	0, NULL	}
 };
 
-size_t num_charsets = (sizeof(charsets) / sizeof(charsets[0])) - 1;
+size_t num_codepages = (sizeof(codepages) / sizeof(codepages[0])) - 1;
 
 /*  2             3             4             5                 */
 int wrows[6] = { 0, 0,
@@ -117,9 +117,9 @@ reg_font_from_cset(char *cset, int *codepage)
     *codepage = 0;
 
     /* Search the table for a match. */
-    for (i = 0; charsets[i].name != NULL; i++) {
-	if (!strcmp(cset, charsets[i].name)) {
-	    cpname = charsets[i].codepage;
+    for (i = 0; codepages[i].name != NULL; i++) {
+	if (!strcmp(cset, codepages[i].name)) {
+	    cpname = codepages[i].codepage;
 	    break;
 	}
     }
@@ -353,7 +353,7 @@ create_shortcut(session_t *session, char *exepath, char *linkpath, char *args,
     int codepage = 0;
     int extra_height = 1;
 
-    font = reg_font_from_cset(session->charset, &codepage);
+    font = reg_font_from_cset(session->codepage, &codepage);
 
     if (!(session->flags & WF_NO_MENUBAR)) {
 	extra_height += 2;
