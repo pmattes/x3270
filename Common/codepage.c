@@ -30,8 +30,8 @@
  */
 
 /*
- *	charset.c
- *		This module handles character sets.
+ *	codepage.c
+ *		This module handles host code pages.
  */
 
 #include "globals.h"
@@ -68,7 +68,7 @@
 #endif
 
 /* Globals. */
-bool charset_changed = false;
+bool codepage_changed = false;
 #define DEFAULT_CGEN	0x02b90000
 #define DEFAULT_CSET	0x00000025
 unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
@@ -87,10 +87,10 @@ static char *charset_name = NULL;
 static char *canonical_codepage = NULL;
 
 /*
- * Change character sets.
+ * Change host code pages.
  */
 enum cs_result
-charset_init(const char *csname)
+codepage_init(const char *csname)
 {
     enum cs_result rc;
     char *codeset_name;
@@ -271,7 +271,7 @@ set_charset_name(const char *csname)
 
     if (csname == NULL) {
 	Replace(charset_name, NewString("bracket"));
-	charset_changed = false;
+	codepage_changed = false;
 	return;
     }
 
@@ -283,7 +283,7 @@ set_charset_name(const char *csname)
     if ((charset_name != NULL && strcmp(charset_name, canon)) ||
 	    (appres.codepage != NULL && strcmp(appres.codepage, canon))) {
 	Replace(charset_name, canon);
-	charset_changed = true;
+	codepage_changed = true;
     } else {
 	Free(canon);
     }
@@ -360,11 +360,11 @@ toggle_codepage(const char *name _is_unused, const char *value)
     if (value == NULL) {
 	value = "bracket";
     }
-    result = charset_init(value);
+    result = codepage_init(value);
     switch (result) {
     case CS_OKAY:
-	st_changed(ST_CHARSET, true);
-	charset_changed = true;
+	st_changed(ST_CODEPAGE, true);
+	codepage_changed = true;
 	Replace(appres.codepage, canonical_cs(value));
 	return true;
     case CS_NOTFOUND:
@@ -385,10 +385,10 @@ toggle_codepage(const char *name _is_unused, const char *value)
 }
 
 /*
- * Charset module registration.
+ * Codepage module registration.
  */
 void
-charset_register(void)
+codepage_register(void)
 {
     /* Register the toggle. */
     register_extended_toggle(ResCodePage, toggle_codepage, NULL, canonical_cs,

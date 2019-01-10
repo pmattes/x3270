@@ -697,7 +697,7 @@ save_options(char *n)
     if (keymap_changed && current_keymap != NULL) {
 	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
     }
-    if (charset_changed) {
+    if (codepage_changed) {
 	save_opt(f, "codepage", OptCodePage, ResCodePage, get_charset_name());
     }
     if (idle_changed) {

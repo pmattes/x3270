@@ -491,7 +491,7 @@ main(int argc, char *argv[])
      * actions, options and callbacks.
      */
     c3270_register();
-    charset_register();
+    codepage_register();
     ctlr_register();
     ft_register();
     help_register();
@@ -554,9 +554,9 @@ main(int argc, char *argv[])
     }
 #endif /*]*/
 
-    if (charset_init(appres.codepage) != CS_OKAY) {
+    if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
     }
     model_init();
 

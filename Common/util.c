@@ -931,7 +931,7 @@ void
 dump_version(void)
 {
     fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
-    charset_list();
+    codepage_list();
     fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"

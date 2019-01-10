@@ -768,7 +768,7 @@ main(int argc, char *argv[])
 			options.reconnect = 1;
 		} else if (!strcmp(argv[i], "-v")) {
 			printf("%s\n%s\n", build, build_options());
-			charset_list();
+			codepage_list();
 			printf("\n\
 Copyright 1989-%s, Paul Mattes, GTRC and others.\n\
 See the source code or documentation for licensing details.\n\
@@ -886,7 +886,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 
 	/* Set up the character set. */
-	if (charset_init(options.charset) != CS_OKAY) {
+	if (codepage_init(options.charset) != CS_OKAY) {
 		pr3287_exit(1);
 	}
 

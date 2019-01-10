@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Paul Mattes.
+ * Copyright (c) 2015-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -262,9 +262,9 @@ screen_init(void)
     internal_screen_init();
 }
 
-/* Charset change handler. */
+/* Codepage change handler. */
 void
-b3270_new_charset(bool unused _is_unused)
+b3270_new_codepage(bool unused _is_unused)
 {
     screen_disp_cond(true);
 }

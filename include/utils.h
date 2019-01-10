@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -108,7 +108,7 @@ void llist_unlink(llist_t *element);
 #define ST_REMODEL	6
 #define ST_PRINTER	7
 #define ST_EXITING	8
-#define ST_CHARSET	9
+#define ST_CODEPAGE	9
 #define ST_SELECTING	10
 #define ST_SECURE	11
 #define ST_KBD_DISABLE	12

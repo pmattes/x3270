@@ -31,4 +31,4 @@
  */
 
 void screen_init(void);
-void b3270_new_charset(bool);
+void b3270_new_codepage(bool);

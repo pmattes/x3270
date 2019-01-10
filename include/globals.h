@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -337,15 +337,6 @@ enum keytype { KT_STD, KT_GE };
 /* Shorthand macros */
 
 #define Replace(var, value) do { Free(var); var = (value); } while(false)
-
-/* Configuration change masks. */
-#define NO_CHANGE	0x0000	/* no change */
-#define MODEL_CHANGE	0x0001	/* screen dimensions changed */
-#define FONT_CHANGE	0x0002	/* emulator font changed */
-#define COLOR_CHANGE	0x0004	/* color scheme or 3278/9 mode changed */
-#define SCROLL_CHANGE	0x0008	/* scrollbar snapped on or off */
-#define CHARSET_CHANGE	0x0010	/* character set changed */
-#define ALL_CHANGE	0xffff	/* everything changed */
 
 /* Portability macros */
 

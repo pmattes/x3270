@@ -213,7 +213,7 @@ static void relabel(bool ignored);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static HWND get_console_hwnd(void);
-static void charset_changed(bool ignored);
+static void codepage_changed(bool ignored);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
@@ -1287,7 +1287,7 @@ screen_init(void)
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
 
-    register_schange(ST_CHARSET, charset_changed);
+    register_schange(ST_CODEPAGE, codepage_changed);
 
     /* See about all-bold behavior. */
     if (appres.c3270.all_bold_on) {
@@ -2106,7 +2106,7 @@ screen_disp(bool erasing _is_unused)
 }
 
 static void
-charset_changed(bool ignored _is_unused)
+codepage_changed(bool ignored _is_unused)
 {
     screen_changed = true;
     screen_disp(false);

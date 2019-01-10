@@ -65,10 +65,10 @@ char *encoding = NULL;
 char *converters = NULL;
 
 /*
- * Change character sets.
+ * Change host code pages.
  */
 enum cs_result
-charset_init(const char *csname)
+codepage_init(const char *csname)
 {
 #if !defined(_WIN32) /*[*/
     char *codeset_name;

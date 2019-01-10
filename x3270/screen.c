@@ -119,6 +119,15 @@
 #define SELECTED(baddr)		(selected[(baddr)/8] & (1 << ((baddr)%8)))
 #define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
 
+/* Configuration change masks. */
+#define NO_CHANGE       0x0000  /* no change */
+#define MODEL_CHANGE    0x0001  /* screen dimensions changed */
+#define FONT_CHANGE     0x0002  /* emulator font changed */
+#define COLOR_CHANGE    0x0004  /* color scheme or 3278/9 mode changed */
+#define SCROLL_CHANGE   0x0008  /* scrollbar snapped on or off */
+#define CODEPAGE_CHANGE 0x0010  /* code page changed */
+#define ALL_CHANGE      0xffff  /* everything changed */
+
 /* Globals */
 Dimension       main_width;		/* desired toplevel width */
 bool            scrollbar_changed = false;
@@ -907,7 +916,7 @@ screen_reinit(unsigned cmask)
     status_reinit(cmask);
 
     /* Initialize the input method. */
-    if ((cmask & CHARSET_CHANGE) && dbcs) {
+    if ((cmask & CODEPAGE_CHANGE) && dbcs) {
 	    xim_init();
     }
 
@@ -5021,36 +5030,36 @@ screen_newscheme(char *s)
 }
 
 /*
- * Change character sets.
+ * Change host code pages.
  */
 void
-screen_newcharset(char *csname)
+screen_newcodepage(char *cpname)
 {
-    char *old_charset = NewString(get_charset_name());
+    char *old_codepage = NewString(get_charset_name());
 
-    switch (charset_init(csname)) {
+    switch (codepage_init(cpname)) {
     case CS_OKAY:
 	/* Success. */
-	Free(old_charset);
-	st_changed(ST_CHARSET, true);
-	charset_changed = true;
+	Free(old_codepage);
+	st_changed(ST_CODEPAGE, true);
+	codepage_changed = true;
 	break;
     case CS_NOTFOUND:
-	Free(old_charset);
-	popup_an_error("Cannot find definition of host character set \"%s\"",
-		csname);
+	Free(old_codepage);
+	popup_an_error("Cannot find definition of host code page \"%s\"",
+		cpname);
 	break;
     case CS_BAD:
-	Free(old_charset);
-	popup_an_error("Invalid charset definition for \"%s\"", csname);
+	Free(old_codepage);
+	popup_an_error("Invalid code page definition for \"%s\"", cpname);
 	break;
     case CS_PREREQ:
-	Free(old_charset);
-	popup_an_error("No fonts for host character set \"%s\"", csname);
+	Free(old_codepage);
+	popup_an_error("No fonts for host code page \"%s\"", cpname);
 	break;
     case CS_ILLEGAL:
 	/* Error already popped up. */
-	Free(old_charset);
+	Free(old_codepage);
 	break;
 
     }
@@ -6474,9 +6483,9 @@ screen_snap_size(void)
 
 /* State change handler for host character sets. */
 static void
-screen_charset_changed(bool ignored _is_unused)
+screen_codepage_changed(bool ignored _is_unused)
 {
-    screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
+    screen_reinit(CODEPAGE_CHANGE | FONT_CHANGE);
 }
 
 /**
@@ -6515,5 +6524,5 @@ screen_register(void)
     register_schange(ST_HALF_CONNECT, screen_connect);
     register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_3270_MODE, screen_connect);
-    register_schange(ST_CHARSET, screen_charset_changed);
+    register_schange(ST_CODEPAGE, screen_codepage_changed);
 }

@@ -360,7 +360,7 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
-    charset_register();
+    codepage_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -422,9 +422,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n\
 POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    NULL);
 
-    if (charset_init(appres.codepage) != CS_OKAY) {
+    if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
     }
     dump_charsets();
     model_init();
@@ -1070,7 +1070,7 @@ b3270_register(void)
     register_schange(ST_3270_MODE, b3270_connect);
     register_schange(ST_LINE_MODE, b3270_connect);
     register_schange(ST_SECURE, b3270_secure);
-    register_schange(ST_CHARSET, b3270_new_charset);
+    register_schange(ST_CODEPAGE, b3270_new_codepage);
     register_schange(ST_PRINTER, b3270_printer);
 
     /* Register our actions. */

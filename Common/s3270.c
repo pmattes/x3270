@@ -133,7 +133,7 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
-    charset_register();
+    codepage_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -156,9 +156,9 @@ main(int argc, char *argv[])
 	check_min_version(appres.min_version);
     }
 
-    if (charset_init(appres.codepage) != CS_OKAY) {
+    if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
     }
     model_init();
     ctlr_init(-1);

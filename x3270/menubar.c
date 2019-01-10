@@ -126,7 +126,7 @@ static void menubar_linemode(bool in_linemode);
 static void menubar_connect(bool ignored);
 static void menubar_printer(bool printer_on);
 static void menubar_remodel(bool ignored _is_unused);
-static void menubar_charset(bool ignored _is_unused);
+static void menubar_codepage(bool ignored _is_unused);
 static void menubar_keyboard_disable(bool ignored _is_unused);
 static void screensave_option(Widget w, XtPointer client_data,
 	XtPointer call_data);
@@ -1610,10 +1610,10 @@ charsets_init(void)
 }
 
 static void
-do_newcharset(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
+do_newcodepage(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
 {
-    /* Change the character set. */
-    screen_newcharset((char *)userdata);
+    /* Change the code page. */
+    screen_newcodepage((char *)userdata);
 }
 
 static Widget keymap_shell = NULL;
@@ -1790,9 +1790,9 @@ create_font_menu(bool regen, bool even_if_unknown)
 	XtVaSetValues(fonts_option, XtNmenuName, "fontsMenu", NULL);
 }
 
-/* Called when the character set changes. */
+/* Called when the host code page changes. */
 static void
-menubar_charset(bool ignored _is_unused)
+menubar_codepage(bool ignored _is_unused)
 {
     int i;
     struct charset *s;
@@ -1802,7 +1802,7 @@ menubar_charset(bool ignored _is_unused)
 	create_font_menu(false, false);
     }
 
-    /* Update the charsets menu. */
+    /* Update the code page menu. */
     csname = get_charset_name();
     for (i = 0, s = charsets; i < charset_count; i++, s = s->next) {
 	XtVaSetValues(charset_widgets[i],
@@ -2187,7 +2187,7 @@ options_menu_init(bool regen, Position x, Position y)
 			(strcmp(get_charset_name(), cs->charset))? no_diamond:
 								   diamond,
 		    NULL);
-	    XtAddCallback(charset_widgets[ix], XtNcallback, do_newcharset,
+	    XtAddCallback(charset_widgets[ix], XtNcallback, do_newcodepage,
 		    cs->charset);
 	}
 
@@ -2343,7 +2343,7 @@ menubar_register(void)
     register_schange(ST_CONNECT, menubar_connect);
     register_schange(ST_PRINTER, menubar_printer);
     register_schange(ST_REMODEL, menubar_remodel);
-    register_schange(ST_CHARSET, menubar_charset);
+    register_schange(ST_CODEPAGE, menubar_codepage);
     register_schange(ST_KBD_DISABLE, menubar_keyboard_disable);
 }
 

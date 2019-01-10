@@ -329,7 +329,7 @@ cpalias_t cpaliases[] = {
 static uni_t *cur_uni = NULL;
 
 void
-charset_list(void)
+codepage_list(void)
 {
     int i;
     int j;

@@ -458,7 +458,7 @@ main(int argc, char *argv[])
      * actions, options and callbacks. These functions have no
      * interdependencies and cannot depend on resource values.
      */
-    charset_register();
+    codepage_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -720,26 +720,26 @@ main(int argc, char *argv[])
 
     screen_preinit();
 
-    switch (charset_init(appres.codepage)) {
+    switch (codepage_init(appres.codepage)) {
     case CS_OKAY:
 	break;
     case CS_NOTFOUND:
 	popup_an_error("Cannot find definition for host code page \"%s\"",
 		appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
 	break;
     case CS_BAD:
 	popup_an_error("Invalid definition for host code page \"%s\"",
 		appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
 	break;
     case CS_PREREQ:
 	popup_an_error("No fonts for host code page \"%s\"",
 		appres.codepage);
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
 	break;
     case CS_ILLEGAL:
-	(void) charset_init(NULL);
+	(void) codepage_init(NULL);
 	break;
     }
 
