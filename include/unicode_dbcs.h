@@ -33,4 +33,3 @@
 ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
 bool set_uni_dbcs(const char *cpname, const char **codepage);
-void charset_list_dbcs(void);

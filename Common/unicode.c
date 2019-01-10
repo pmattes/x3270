@@ -273,13 +273,8 @@ cpalias_t cpaliases[] = {
     { "brazilian",	"cp275" },
 #if defined(X3270_DBCS) /*[*/
     { "chinese-gb18030","cp1388" },
-    { "cp1027",         "cp939" },	/* historical error */
-    { "cp290",          "cp930" },	/* historical error */
 #endif /*]*/
     { "cp37",           "cp037" },
-#if defined(X3270_DBCS) /*[*/
-    { "cp836",          "cp935" },	/* historical error */
-#endif /*]*/
     { "finnish",	"cp278" },
     { "finnish-euro",	"cp1143" },
     { "french",		"cp297" },
@@ -294,8 +289,6 @@ cpalias_t cpaliases[] = {
     { "italian",	"cp280" },
     { "italian-euro",	"cp1144" },
 #if defined(X3270_DBCS) /*[*/
-    { "japanese-1027",	"cp939" },	/* historical error */
-    { "japanese-290",	"cp930" },	/* historical error */
     { "japanese-kana",  "cp930" },
     { "japanese-latin", "cp939" },
 #endif /*]*/
@@ -328,19 +321,19 @@ cpalias_t cpaliases[] = {
 
 static uni_t *cur_uni = NULL;
 
-void
-codepage_list(void)
+static void
+codepage_list_one(bool dbcs)
 {
     int i;
     int j;
     char *sep = "";
 
-    fprintf(stderr, "SBCS host code pages (with aliases):\n");
+    fprintf(stderr, "%cBCS host code pages (with aliases):\n", dbcs? 'D': 'S');
     for (i = 0; uni[i].name != NULL; i++) {
 	bool any = false;
 	char *asep = " (";
 
-	if (uni[i].is_dbcs) {
+	if (dbcs ^ uni[i].is_dbcs) {
 	    continue;
 	}
 
@@ -359,9 +352,14 @@ codepage_list(void)
 	sep = ", ";
     }
     fprintf(stderr, "\n");
+}
 
+void
+codepage_list(void)
+{
+    codepage_list_one(false);
     if (dbcs_allowed) {
-	charset_list_dbcs();
+	codepage_list_one(true);
     }
 }
 

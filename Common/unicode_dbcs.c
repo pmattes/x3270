@@ -4182,11 +4182,6 @@ typedef struct {
 #if defined(X3270_DBCS) /*[*/
 cpalias_t cpaliases16[] = {
     { "chinese-gb18030",	"cp1388" },
-    { "cp1027",			"cp930" },	/* historical error */
-    { "cp290",			"cp930" },	/* historical error */
-    { "cp936",			"cp935" },	/* historical error */
-    { "japanese-1027",		"cp930" },	/* historical error */
-    { "japanese-290",		"cp930" },	/* historical error */
     { "japanese-kana",		"cp930" },
     { "japanese-latin",		"cp930" },	/* 930 and 939 DBCS are the
 						   same */
@@ -4198,37 +4193,6 @@ cpalias_t cpaliases16[] = {
 #endif /*]*/
 
 static uni16_t *cur_uni16 = NULL;
-
-void
-charset_list_dbcs(void)
-{
-#if defined(X3270_DBCS) /*[*/
-    int i;
-    int j;
-    char *sep = "";
-
-    fprintf(stderr, "DBCS host code pages (with aliases):\n");
-    for (i = 0; uni16[i].name != NULL; i++) {
-	bool any = false;
-	char *asep = " (";
-
-	fprintf(stderr, "%s%s", sep, uni16[i].name);
-	for (j = 0; cpaliases16[j].alias != NULL; j++) {
-
-	    if (!strcmp(cpaliases16[j].canon, uni16[i].name)) {
-		fprintf(stderr, "%s%s", asep, cpaliases16[j].alias);
-		asep = ", ";
-		any = true;
-	    }
-	}
-	if (any) {
-	    fprintf(stderr, ")");
-	}
-	sep = ", ";
-    }
-    fprintf(stderr, "\n");
-#endif /*]*/
-}
 
 /*
  * Translate a single DBCS EBCDIC character to Unicode.
