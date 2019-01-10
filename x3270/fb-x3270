@@ -89,7 +89,6 @@ x3270.schemeList:	Default 3279: default\n\
 !   Character sets listed on the Options menu
 x3270.charsetList:	U.S. English (CP 037): us-intl\n\
 			Bracket (CP 037, modified): bracket\n\
-			APL (CP 037): apl\n\
 			Euro>U.S. English (CP 1140): us-euro\n\
 			Euro>Belgian (CP 1148): belgian-euro\n\
 			Euro>Finnish (CP 1143): finnish-euro\n\
