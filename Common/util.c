@@ -901,16 +901,11 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s%s",
-#if defined(X3270_DBCS) /*[*/
-	    "--enable-dbcs"
-#else /*][*/
-	    "--disable-dbcs"
-#endif /*]*/
+    return lazyaf("%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
-	    " --enable-local-process"
+	    "--enable-local-process"
 #else /*][*/
-	    " --disable-local-process"
+	    "--disable-local-process"
 #endif /*]*/
 	    , p, using_iconv()? " --with-iconv": "",
 #if defined(_MSC_VER) /*[*/

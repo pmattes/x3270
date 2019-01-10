@@ -37,13 +37,6 @@
 #include "unicode_dbcs.h"
 
 /*
- * Note: #undef'ing X3270_DBCS disables the ability to configure a DBCS host
- *  codepage, but it does not disable the internal logic that supports DBCS.
- *  Its purpose is to save space in the executable by removing the translation
- *  tables, not by turning the code into #ifdef spaghetti.
- */
-
-/*
  * DBCS EBCDIC-to-Unicode translation tables.
  */
 
@@ -54,7 +47,6 @@ typedef struct {
     const char *ebc2u[512];	/* EBCDIC to Unicode vectors */
 } uni16_t;
 
-#if defined(X3270_DBCS) /*[*/
 static uni16_t uni16[] = {
     { "cp930", "0x0172012c" /* 370, 300 */,
 /* Unicode to EBCDIC DBCS translation table for ibm-300_P110-1997 */ {
@@ -4170,7 +4162,6 @@ static uni16_t uni16[] = {
     },
     { NULL }
 };
-#endif /*]*/
 
 /* Code page aliases. */
 
@@ -4179,7 +4170,6 @@ typedef struct {
     char *canon;
 } cpalias_t;
 
-#if defined(X3270_DBCS) /*[*/
 cpalias_t cpaliases16[] = {
     { "chinese-gb18030",	"cp1388" },
     { "japanese-kana",		"cp930" },
@@ -4190,7 +4180,6 @@ cpalias_t cpaliases16[] = {
     { "cp939",			"cp930" },
     { NULL,			NULL }
 };
-#endif /*]*/
 
 static uni16_t *cur_uni16 = NULL;
 
@@ -4255,7 +4244,6 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
 bool
 set_uni_dbcs(const char *cpname, const char **codepage)
 {
-#if defined(X3270_DBCS) /*[*/
     int i;
     const char *realname = cpname;
     bool rc = false;
@@ -4296,7 +4284,4 @@ set_uni_dbcs(const char *cpname, const char **codepage)
     }
 
     return rc;
-#else /*][*/
-    return false;
-#endif /*]*/
 }

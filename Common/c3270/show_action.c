@@ -143,13 +143,8 @@ status_dump(void)
     }
 #if !defined(_WIN32) /*[*/
     action_output("%s %s", get_message("localeCodeset"), locale_codeset);
-    action_output("%s DBCS %s, wide curses %s",
+    action_output("%s, wide curses %s",
 	    get_message("buildOpts"),
-# if defined(X3270_DBCS) /*[*/
-	    get_message("buildEnabled"),
-# else /*][*/
-	    get_message("buildDisabled"),
-# endif /*]*/
 # if defined(CURSES_WIDE) /*[*/
 	    get_message("buildEnabled")
 # else /*][*/

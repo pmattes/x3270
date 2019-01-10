@@ -115,9 +115,6 @@ typedef unsigned short ebc_t;
 /*
  * Cancel out contradictory parts.
  */
-#if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) && !defined(_WIN32) /*[*/
-# undef X3270_DBCS
-#endif /*]*/
 #if defined(X3270_IPV6) && !defined(AF_INET6) /*[*/
 # undef X3270_IPV6
 #endif /*]*/

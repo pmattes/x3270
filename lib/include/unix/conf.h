@@ -1,6 +1,6 @@
 /* include/unix/conf.h.  Generated from conf.h.in by configure.  */
 /*
- * Copyright (c) 2000-2015, 2017 Paul Mattes.
+ * Copyright (c) 2000-2015, 2017, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,5 @@
 /* #undef CONNECT_GETPEERNAME */
 
 /* Optional parts. */
-#define X3270_DBCS 1
 #define X3270_LOCAL_PROCESS 1
 #define X3270_IPV6 1

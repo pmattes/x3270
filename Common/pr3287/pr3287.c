@@ -1258,13 +1258,7 @@ build_options(void)
     const char *build = NULL;
 
     if (build == NULL) {
-    	build = xs_buffer("Build options:"
-#if defined(X3270_DBCS) /*[*/
-	    " --enable-dbcs"
-#else /*][*/
-	    " --disable-dbcs"
-#endif /*]*/
-	    "%s"
+    	build = xs_buffer("Build options:%s"
 #if defined(_MSC_VER) /*[*/
 	    " via MSVC " xstr(_MSC_VER)
 #endif /*]*/
