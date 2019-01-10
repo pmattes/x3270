@@ -149,7 +149,7 @@ GC screen_gc(int color);
 void screen_init(void);
 GC screen_invgc(int color);
 void screen_m3279(bool m3279);
-void screen_newcodepage(char *csname);
+void screen_newcodepage(char *cpname);
 void screen_newfont(const char *fontname, bool do_popup, bool is_cs);
 void screen_newscheme(char *s);
 bool screen_obscured(void);

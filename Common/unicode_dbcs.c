@@ -4289,11 +4289,11 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
  * Returns true for success, false for failure.
  */
 bool
-set_uni_dbcs(const char *csname, const char **codepage)
+set_uni_dbcs(const char *cpname, const char **codepage)
 {
 #if defined(X3270_DBCS) /*[*/
     int i;
-    const char *realname = csname;
+    const char *realname = cpname;
     bool rc = false;
 
     /*

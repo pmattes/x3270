@@ -535,7 +535,7 @@ unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl)
  * Returns true for success, false for failure.
  */
 bool
-set_uni(const char *csname, int local_cp _is_unused,
+set_uni(const char *cpname, int local_cp _is_unused,
 	const char **host_codepage, const char **cgcsgid,
 	const char **realnamep, bool *is_dbcs)
 {
@@ -555,14 +555,14 @@ set_uni(const char *csname, int local_cp _is_unused,
     }
 
     /*
-     * If the csname is NULL, this is a fallback to the default
+     * If the cpname is NULL, this is a fallback to the default
      * and the iconv lookup cannot fail.
      */
-    if (csname == NULL) {
-	csname = "bracket";
+    if (cpname == NULL) {
+	cpname = "bracket";
 	cannot_fail = true;
     }
-    realname = csname;
+    realname = cpname;
 
     /*
      * Check for an all-numeric name. There are no names or aliases that are
@@ -665,9 +665,9 @@ codepage_matches_alias(const char *alias, const char *canon)
     return false;
 }
 
-/* Translate a possible character set alias to its canonical name. */
+/* Translate a possible code page alias to its canonical name. */
 const char *
-canonical_charset(const char *alias)
+canonical_codepage(const char *alias)
 {
     int i;
 
@@ -686,13 +686,13 @@ canonical_charset(const char *alias)
 }
 
 /*
- * Get the list of character set names.
+ * Get the list of code page names.
  * Returns a NULL-terminated array of names and aliases.
  */
-csname_t *
-get_csnames(void)
+cpname_t *
+get_cpnames(void)
 {
-    csname_t *ret = Calloc(array_count(uni) + 1, sizeof(csname_t));
+    cpname_t *ret = Calloc(array_count(uni) + 1, sizeof(cpname_t));
     unsigned i;
 
     for (i = 0; uni[i].name != NULL; i++) {
@@ -714,20 +714,18 @@ get_csnames(void)
     return ret;
 }
 
-/* Free the list returned by get_csnames(). */
+/* Free the list returned by get_cpnames(). */
 void
-free_csnames(csname_t *csnames)
+free_cpnames(cpname_t *cpnames)
 {
     int i;
 
-    for (i = 0; csnames[i].name != NULL; i++) {
-	if (csnames[i].aliases != NULL) {
-	    Free(csnames[i].aliases);
+    for (i = 0; cpnames[i].name != NULL; i++) {
+	if (cpnames[i].aliases != NULL) {
+	    Free(cpnames[i].aliases);
 	}
     }
-    Free(csnames);
-
-
+    Free(cpnames);
 }
 
 /* Line-drawing to Unicode table. */

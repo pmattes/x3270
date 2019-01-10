@@ -1796,19 +1796,19 @@ menubar_codepage(bool ignored _is_unused)
 {
     int i;
     struct codepage *s;
-    const char *csname;
+    const char *cpname;
 
     if (!xappres.suppress_font_menu) {
 	create_font_menu(false, false);
     }
 
     /* Update the code page menu. */
-    csname = get_codepage_name();
+    cpname = get_codepage_name();
     for (i = 0, s = codepages; i < codepage_count; i++, s = s->next) {
 	XtVaSetValues(codepage_widgets[i],
 		XtNleftBitmap,
-		(!strcmp(csname, s->codepage) ||
-		 codepage_matches_alias(s->codepage, csname)) ?
+		(!strcmp(cpname, s->codepage) ||
+		 codepage_matches_alias(s->codepage, cpname)) ?
 		    diamond : no_diamond,
 		NULL);
     }

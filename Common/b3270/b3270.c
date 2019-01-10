@@ -311,28 +311,28 @@ sigchld_handler(int ignored)
 
 /* Dump the character set list. Called at initialization time. */
 static void
-dump_charsets(void)
+dump_codepages(void)
 {
-    csname_t *csnames = get_csnames();
+    cpname_t *cpnames = get_cpnames();
 
-    if (csnames != NULL) {
+    if (cpnames != NULL) {
 	int i;
 
-	for (i = 0; csnames[i].name != NULL; i++) {
-	    const char **params = Calloc(2 + (2 * csnames[i].num_aliases) + 1,
+	for (i = 0; cpnames[i].name != NULL; i++) {
+	    const char **params = Calloc(2 + (2 * cpnames[i].num_aliases) + 1,
 		    sizeof(char *));
 	    int j;
 
 	    params[0] = "name";
-	    params[1] = csnames[i].name;
-	    for (j = 0; j < csnames[i].num_aliases; j++) {
+	    params[1] = cpnames[i].name;
+	    for (j = 0; j < cpnames[i].num_aliases; j++) {
 		params[2 + (j * 2)] = lazyaf("alias%d", j + 1);
-		params[2 + (j * 2) + 1] = csnames[i].aliases[j];
+		params[2 + (j * 2) + 1] = cpnames[i].aliases[j];
 	    }
 	    ui_leaf(IndCharset, params);
 	    Free(params);
 	}
-	free_csnames(csnames);
+	free_cpnames(cpnames);
     }
 }
 
@@ -426,7 +426,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
 	(void) codepage_init(NULL);
     }
-    dump_charsets();
+    dump_codepages();
     model_init();
     status_reset();
 

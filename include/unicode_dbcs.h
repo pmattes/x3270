@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2009, 2014-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,5 +32,5 @@
 
 ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
-bool set_uni_dbcs(const char *csname, const char **codepage);
+bool set_uni_dbcs(const char *cpname, const char **codepage);
 void charset_list_dbcs(void);

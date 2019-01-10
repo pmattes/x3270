@@ -36,7 +36,7 @@ extern bool codepage_changed;
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
-enum cs_result codepage_init(const char *csname);
+enum cs_result codepage_init(const char *cpname);
 const char *get_codepage_name(void);
 const char *get_codepage_number(void);
 const char *get_canonical_codepage(void);

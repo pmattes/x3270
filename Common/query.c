@@ -106,7 +106,7 @@ get_codepage(void)
 static const char *
 get_codepages(void)
 {
-    csname_t *c = get_csnames();
+    cpname_t *c = get_cpnames();
     varbuf_t r;
     int i, j;
     char *sep = "";
@@ -120,7 +120,7 @@ get_codepages(void)
 	}
     }
 
-    free_csnames(c);
+    free_cpnames(c);
     return lazya(vb_consume(&r));
 }
 

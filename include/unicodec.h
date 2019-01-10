@@ -48,7 +48,7 @@ ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);
 ebc_t unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl);
-bool set_uni(const char *csname, int local_cp, const char **host_codepage,
+bool set_uni(const char *cpname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
 ucs4_t linedraw_to_unicode(ucs4_t e, bool ascii_art);
 int apl_to_unicode(ebc_t e, unsigned flags);
@@ -73,12 +73,12 @@ int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp);
 int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
 bool using_iconv(void);
-const char *canonical_charset(const char *alias);
+const char *canonical_codepage(const char *alias);
 typedef struct {
     const char *name;
     bool dbcs;
     int num_aliases;
     const char **aliases;
-} csname_t;
-csname_t *get_csnames(void);
-void free_csnames(csname_t *csnames);
+} cpname_t;
+cpname_t *get_cpnames(void);
+void free_cpnames(cpname_t *cpnames);

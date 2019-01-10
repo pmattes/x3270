@@ -75,22 +75,22 @@ unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 unsigned long cgcsgid_dbcs = 0L;
 
 /* Statics. */
-static enum cs_result charset_init2(const char *csname, const char *realname,
+static enum cs_result codepage_init2(const char *cpname, const char *realname,
 	const char *codepage, const char *cgcsgid, bool is_dbcs);
 static void set_cgcsgids(const char *spec);
 static bool set_cgcsgid(char *spec, unsigned long *idp);
-static void set_host_codepage(char *codepage);
-static void set_charset_name(const char *csname);
+static void set_codepage_number(char *codepage);
+static void set_codepage_name(const char *cpname);
 
 static char *codepage_number = NULL;
-static char *charset_name = NULL;
-static char *canonical_codepage = NULL;
+static char *codepage_name = NULL;
+static char *canon_codepage = NULL;
 
 /*
  * Change host code pages.
  */
 enum cs_result
-codepage_init(const char *csname)
+codepage_init(const char *cpname)
 {
     enum cs_result rc;
     char *codeset_name;
@@ -125,25 +125,25 @@ codepage_init(const char *csname)
 #endif /*]*/
     set_codeset(codeset_name, appres.utf8);
 
-    if (csname == NULL) {
-	csname = "bracket";
+    if (cpname == NULL) {
+	cpname = "bracket";
     }
 
-    if (!set_uni(csname, LOCAL_CODEPAGE, &codepage, &cgcsgid, &realname,
+    if (!set_uni(cpname, LOCAL_CODEPAGE, &codepage, &cgcsgid, &realname,
 		&is_dbcs)) {
 	return CS_NOTFOUND;
     }
     if (appres.sbcs_cgcsgid != NULL) {
 	cgcsgid = appres.sbcs_cgcsgid; /* override */
     }
-    if (set_uni_dbcs(csname, &dbcs_cgcsgid)) {
+    if (set_uni_dbcs(cpname, &dbcs_cgcsgid)) {
 	if (appres.dbcs_cgcsgid != NULL) {
 	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
 	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
     }
 
-    rc = charset_init2(csname, realname, codepage, cgcsgid, is_dbcs);
+    rc = codepage_init2(cpname, realname, codepage, cgcsgid, is_dbcs);
     if (rc != CS_OKAY) {
 	return rc;
     }
@@ -226,9 +226,9 @@ set_cgcsgids(const char *spec)
     }
 }
 
-/* Set the host codepage. */
+/* Set the codepage number. */
 static void
-set_host_codepage(char *codepage)
+set_codepage_number(char *codepage)
 {
     if (codepage == NULL) {
 	Replace(codepage_number, NewString("037"));
@@ -240,7 +240,7 @@ set_host_codepage(char *codepage)
 }
 
 /**
- * Return the canonical form of a character set, given a resource value.
+ * Return the canonical form of a code page, given a resource value.
  * This is needed because the resource definition may be a valid alias, but
  * we always want to display and return the canonical name.
  *
@@ -256,42 +256,42 @@ canonical_cs(const char *res)
     if (res == NULL) {
 	return NULL;
     }
-    canon = canonical_charset(res);
+    canon = canonical_codepage(res);
     if (canon == NULL) {
 	return NULL;
     }
     return NewString(canon);
 }
 
-/* Set the global charset name. */
+/* Set the code page name. */
 static void
-set_charset_name(const char *csname)
+set_codepage_name(const char *cpname)
 {
     char *canon;
 
-    if (csname == NULL) {
-	Replace(charset_name, NewString("bracket"));
+    if (cpname == NULL) {
+	Replace(codepage_name, NewString("bracket"));
 	codepage_changed = false;
 	return;
     }
 
-    canon = canonical_cs(csname);
+    canon = canonical_cs(cpname);
     if (canon == NULL) {
-	canon = NewString(csname);
+	canon = NewString(cpname);
     }
 
-    if ((charset_name != NULL && strcmp(charset_name, canon)) ||
+    if ((codepage_name != NULL && strcmp(codepage_name, canon)) ||
 	    (appres.codepage != NULL && strcmp(appres.codepage, canon))) {
-	Replace(charset_name, canon);
+	Replace(codepage_name, canon);
 	codepage_changed = true;
     } else {
 	Free(canon);
     }
 }
 
-/* Character set init, part 2. */
+/* Code page init, part 2. */
 static enum cs_result
-charset_init2(const char *csname, const char *realname, const char *codepage,
+codepage_init2(const char *cpname, const char *realname, const char *codepage,
 	const char *cgcsgid, bool is_dbcs)
 {
     /* Can't swap DBCS modes while connected. */
@@ -300,7 +300,7 @@ charset_init2(const char *csname, const char *realname, const char *codepage,
 	return CS_ILLEGAL;
     }
 
-    if (!screen_new_display_charsets(realname, csname)) {
+    if (!screen_new_display_charsets(realname, cpname)) {
 	return CS_PREREQ;
     }
 
@@ -310,14 +310,14 @@ charset_init2(const char *csname, const char *realname, const char *codepage,
     /* Set up the cgcsgids. */
     set_cgcsgids(cgcsgid);
 
-    /* Set up the host code page. */
-    set_host_codepage((char *)codepage);
+    /* Set up the code page number. */
+    set_codepage_number((char *)codepage);
 
-    /* Set up the character set name. */
-    set_charset_name(csname);
+    /* Set up the code page name. */
+    set_codepage_name(cpname);
 
     /* Remember the canonical code page name. */
-    Replace(canonical_codepage, NewString(realname));
+    Replace(canon_codepage, NewString(realname));
 
     return CS_OKAY;
 }
@@ -333,14 +333,14 @@ get_codepage_number(void)
 const char *
 get_canonical_codepage(void)
 {
-    return (canonical_codepage != NULL)? canonical_codepage: "cp037";
+    return (canon_codepage != NULL)? canon_codepage: "cp037";
 }
 
 /* Return the current code page name. */
 const char *
 get_codepage_name(void)
 {
-    return (charset_name != NULL)? charset_name:
+    return (codepage_name != NULL)? codepage_name:
 	((appres.codepage != NULL)? appres.codepage: "bracket");
 }
 

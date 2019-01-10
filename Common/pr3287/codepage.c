@@ -68,7 +68,7 @@ char *converters = NULL;
  * Change host code pages.
  */
 enum cs_result
-codepage_init(const char *csname)
+codepage_init(const char *cpname)
 {
 #if !defined(_WIN32) /*[*/
     char *codeset_name;
@@ -101,7 +101,7 @@ codepage_init(const char *csname)
     set_codeset(codeset_name, false);
 #endif /*]*/
 
-    if (!set_uni(csname, LOCAL_CODEPAGE, &host_codepage, &cgcsgid_str, NULL,
+    if (!set_uni(cpname, LOCAL_CODEPAGE, &host_codepage, &cgcsgid_str, NULL,
 		NULL)) {
 	return CS_NOTFOUND;
     }
@@ -110,7 +110,7 @@ codepage_init(const char *csname)
 	cgcsgid |= 0x02b90000;
     }
 
-    if (set_uni_dbcs(csname, &cgcsgid_str) == 0) {
+    if (set_uni_dbcs(cpname, &cgcsgid_str) == 0) {
 	dbcs = 1;
 	cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
     }
