@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include "3270ds.h"
 #include "toggles.h"
 
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "nvt.h"

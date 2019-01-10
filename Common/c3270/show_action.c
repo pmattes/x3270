@@ -40,7 +40,7 @@
 #include "3270ds.h"
 #include "actions.h"
 #include "appres.h"
-#include "charset.h"
+#include "codepage.h"
 #include "copyright.h"
 #include "cscreen.h"
 #include "host.h"

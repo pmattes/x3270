@@ -26,7 +26,7 @@
     <ClCompile Include="..\..\wpr3287\ws.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\pr3287\charset.c">
+    <ClCompile Include="..\..\Common\pr3287\codepage.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\pr3287\ctlr.c">

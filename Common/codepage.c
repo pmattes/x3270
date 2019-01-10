@@ -41,7 +41,7 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "lazya.h"
 #include "popups.h"
 #include "screen.h"

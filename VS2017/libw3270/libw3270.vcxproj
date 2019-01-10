@@ -139,7 +139,7 @@
     <ClCompile Include="..\..\Common\actions.c" />
     <ClCompile Include="..\..\Common\b8.c" />
     <ClCompile Include="..\..\Common\bind-opt.c" />
-    <ClCompile Include="..\..\Common\charset.c" />
+    <ClCompile Include="..\..\Common\codepage.c" />
     <ClCompile Include="..\..\Common\ctlr.c" />
     <ClCompile Include="..\..\Common\event.c" />
     <ClCompile Include="..\..\Common\telnet_sio.c" />

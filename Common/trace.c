@@ -42,7 +42,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
-#include "charset.h"
+#include "codepage.h"
 #include "child.h"
 #include "ctlrc.h"
 #include "fprint_screen.h"

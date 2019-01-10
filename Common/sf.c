@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013-2015, 2018 Paul Mattes.
+ * Copyright (c) 1994-2010, 2013-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -39,7 +39,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "ft_dft.h"
 #include "ft_private.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@
  */
 
 /*
- *	charset.c
- *		Limited character set support.
+ *	codepage.c
+ *		Limited code page support.
  */
 
 #include "globals.h"
@@ -46,7 +46,7 @@
 #endif /*]*/
 
 #include "3270ds.h"
-#include "charset.h"
+#include "codepage.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"

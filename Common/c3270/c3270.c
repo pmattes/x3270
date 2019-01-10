@@ -54,7 +54,7 @@
 #include "base64.h"
 #include "bind-opt.h"
 #include "boolstr.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ckeypad.h"
 #include "cscreen.h"
 #include "cstatus.h"

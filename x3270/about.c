@@ -46,7 +46,7 @@
 #include "resources.h"
 
 #include "about.h"
-#include "charset.h"
+#include "codepage.h"
 #include "host.h"
 #include "keymap.h"
 #include "lazya.h"

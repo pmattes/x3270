@@ -48,7 +48,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"

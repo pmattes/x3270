@@ -47,7 +47,7 @@
 
 #include "actions.h"
 #include "boolstr.h"
-#include "charset.h"
+#include "codepage.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
 #include "ctlrc.h"

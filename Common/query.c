@@ -35,7 +35,7 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "copyright.h"
 #include "ctlrc.h"
 #include "host.h"

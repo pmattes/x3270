@@ -49,7 +49,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "host.h"

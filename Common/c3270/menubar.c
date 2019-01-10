@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 Paul Mattes.
+ * Copyright (c) 2010-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,9 +40,9 @@
 #include "ctlr.h"
 
 #include "actions.h"
-#include "charset.h"
 #include "ckeypad.h"
 #include "cmenubar.h"
+#include "codepage.h"
 #include "cscreen.h"
 #include "ctlrc.h"
 #include "unicodec.h"	/* must precede ft.h */

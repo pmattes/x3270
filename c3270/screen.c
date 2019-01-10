@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2018 Paul Mattes.
+ * Copyright (c) 2000-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "cmenubar.h"
 #include "cstatus.h"

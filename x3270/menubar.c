@@ -50,7 +50,7 @@
 
 #include "actions.h"
 #include "about.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ft_private.h"
 #include "ft_gui.h"
 #include "host.h"

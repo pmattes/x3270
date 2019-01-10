@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -45,7 +45,7 @@
 
 #include "actions.h"
 #include "apl.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"

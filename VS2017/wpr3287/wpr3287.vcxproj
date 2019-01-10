@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\pr3287\charset.c" />
+    <ClCompile Include="..\..\Common\pr3287\codepage.c" />
     <ClCompile Include="..\..\Common\pr3287\ctlr.c" />
     <ClCompile Include="..\..\Common\pr3287\pr3287.c" />
     <ClCompile Include="..\..\Common\pr3287\sf.c" />

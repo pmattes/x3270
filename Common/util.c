@@ -41,7 +41,7 @@
 
 #include "boolstr.h"
 #include "resources.h"
-#include "charset.h"
+#include "codepage.h"
 #include "fallbacks.h"
 #include "lazya.h"
 #include "product.h"

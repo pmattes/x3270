@@ -55,7 +55,6 @@
 #include "actions.h"
 #include "base64.h"
 #include "bind-opt.h"
-#include "charset.h"
 #include "child.h"
 #include "childscript.h"
 #include "copyright.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2018 Paul Mattes.
+ * Copyright (c) 1994-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "fprint_screen.h"
 #include "popups.h"
 #include "print_screen.h"

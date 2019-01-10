@@ -161,10 +161,10 @@ Common/c3270/menubar.c
 Common/c3270/mkkeypad.c
 Common/c3270/show_action.c
 Common/c3270/ssl_passwd_gui.c
-Common/charset.c
 Common/child.c
 Common/childscript.c
 Common/ckeypad.h
+Common/codepage.c
 Common/copyright.c
 Common/ctlr.c
 Common/event.c
@@ -239,7 +239,7 @@ Common/nvt_gui_stubs.c
 Common/peerscript.c
 Common/popups_stubs.c
 Common/popups_glue.c
-Common/pr3287/charset.c
+Common/pr3287/codepage.c
 Common/pr3287/ctlr.c
 Common/pr3287/ctlrc.h
 Common/pr3287/globals.h
@@ -342,10 +342,10 @@ include/b8.h
 include/base64.h
 include/bind-opt.h
 include/boolstr.h
-include/charset.h
 include/child.h
 include/child_popups.h
 include/childscript.h
+include/codepage.h
 include/copyright.h
 include/ctlrc.h
 include/ctlr.h

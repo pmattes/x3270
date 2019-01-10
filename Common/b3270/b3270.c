@@ -53,7 +53,7 @@
 #include "boolstr.h"
 #include "bscreen.h"
 #include "b_password.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "unicodec.h"

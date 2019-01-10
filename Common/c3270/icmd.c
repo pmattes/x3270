@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 #include "globals.h"
 #include "appres.h"
 
-#include "charset.h"
+#include "codepage.h"
 #include "ft_dft.h"
 #include "ft_private.h" /* must precede ft_gui */
 #include "ft_gui.h"
