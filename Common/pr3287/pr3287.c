@@ -475,7 +475,7 @@ init_options(void)
 	options.bdaemon			= NOT_DAEMON;
 #endif /*]*/
 	options.blanklines		= 0;
-	options.charset			= "us";
+	options.charset			= "cp037";
 #if !defined(_WIN32) /*[*/
 	options.command			= "lpr";
 #endif /*]*/

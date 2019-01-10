@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2012, 2014-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
  */
 #include "globals.h"
 
+#include "lazya.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 
@@ -4191,6 +4192,7 @@ cpalias_t cpaliases16[] = {
 						   same */
     { "simplified-chinese",	"cp935" },
     { "traditional-chinese",	"cp937" },
+    { "cp939",			"cp930" },
     { NULL,			NULL }
 };
 #endif /*]*/
@@ -4294,9 +4296,18 @@ set_uni_dbcs(const char *csname, const char **codepage)
     const char *realname = csname;
     bool rc = false;
 
+    /*
+     * Check for an all-numeric name. There are no names or aliases that are
+     * just numbers, so adding a 'cp' to the front of an all-numeric name will
+     * not cause any misidentification.
+     */
+    if (strspn(realname, "0123456789") == strlen(realname)) {
+	realname = lazyaf("cp%s", realname);
+    }
+
     /* Search for an alias. */
     for (i = 0; cpaliases16[i].alias != NULL; i++) {
-	if (!strcasecmp(csname, cpaliases16[i].alias)) {
+	if (!strcasecmp(realname, cpaliases16[i].alias)) {
 	    realname = cpaliases16[i].canon;
 	    break;
 	}

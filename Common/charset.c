@@ -125,16 +125,8 @@ charset_init(const char *csname)
 #endif /*]*/
     set_codeset(codeset_name, appres.utf8);
 
-    /* Do nothing, successfully. */
-    if (csname == NULL || !strcasecmp(csname, "us")) {
-	set_cgcsgids(NULL);
-	set_host_codepage(NULL);
-	set_charset_name(NULL);
-	Replace(canonical_codepage, NULL);
-	(void) screen_new_display_charsets("cp037", "us");
-	(void) set_uni(NULL, LOCAL_CODEPAGE, &codepage, &cgcsgid, NULL, NULL);
-	(void) set_uni_dbcs("", NULL);
-	return CS_OKAY;
+    if (csname == NULL) {
+	csname = "bracket";
     }
 
     if (!set_uni(csname, LOCAL_CODEPAGE, &codepage, &cgcsgid, &realname,
@@ -349,7 +341,7 @@ const char *
 get_charset_name(void)
 {
     return (charset_name != NULL)? charset_name:
-	((appres.codepage != NULL)? appres.codepage: "us");
+	((appres.codepage != NULL)? appres.codepage: "bracket");
 }
 
 /**

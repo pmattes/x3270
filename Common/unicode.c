@@ -38,6 +38,7 @@
 #include <errno.h>
 #include "3270ds.h"
 #include "apl.h"
+#include "lazya.h"
 #include "toupper.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
@@ -67,8 +68,6 @@ typedef char *ici_t;		/* old iconv */
 typedef const char *ici_t;	/* new iconv */
 #endif /*]*/
 #endif /*]*/
-
-#define DEFAULT_CSNAME	"us"
 
 #if defined(X3270_DBCS) /*[*/
 bool dbcs_allowed = true;
@@ -321,7 +320,7 @@ cpalias_t cpaliases[] = {
     { "turkish",	"cp1026" },
     { "uk",		"cp285" },
     { "uk-euro",	"cp1146" },
-    { DEFAULT_CSNAME,	"cp037" },
+    { "us",		"cp037" },
     { "us-euro",	"cp1140" },
     { "us-intl",	"cp037" },
     { NULL,		NULL }
@@ -560,14 +559,23 @@ set_uni(const char *csname, int local_cp _is_unused,
      * and the iconv lookup cannot fail.
      */
     if (csname == NULL) {
-	csname = DEFAULT_CSNAME;
+	csname = "bracket";
 	cannot_fail = true;
     }
     realname = csname;
 
+    /*
+     * Check for an all-numeric name. There are no names or aliases that are
+     * just numbers, so adding a 'cp' to the front of an all-numeric name will
+     * not cause any misidentification.
+     */
+    if (strspn(realname, "0123456789") == strlen(realname)) {
+	realname = lazyaf("cp%s", realname);
+    }
+
     /* Search for an alias. */
     for (i = 0; cpaliases[i].alias != NULL; i++) {
-	if (!strcasecmp(csname, cpaliases[i].alias)) {
+	if (!strcasecmp(realname, cpaliases[i].alias)) {
 	    realname = cpaliases[i].canon;
 	    break;
 	}
