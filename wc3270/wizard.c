@@ -750,6 +750,38 @@ fixup_printer(session_t *s)
 }
 
 /**
+ * Canonicalize a code page.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 1 if the name needed fixing, 0 otherwise.
+ */
+static int
+fixup_codepage(session_t *s)
+{
+    int i;
+
+    /* See if it's okay already. */
+    if (!strcmp(s->codepage, "bracket") || !strncmp(s->codepage, "cp", 2)) {
+	return 0;
+    }
+
+    /* Search for a match. */
+    for (i = 0; i < num_codepages; i++) {
+	if (!strcmp(codepages[i].name, "bracket")) {
+	    continue;
+	}
+	if (!strcmp(s->codepage, codepages[i].name)) {
+	    snprintf(s->codepage, STR_SIZE, "cp%s", codepages[i].hostcp);
+	    return 1;
+	}
+    }
+
+    /* No match. This will not be pretty. */
+    return 0;
+}
+
+/**
  * Reformat a quoted UNC path for display.
  *
  * @param[in] expanded		UNC path in session file (quoted) format
@@ -1108,6 +1140,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  * @param[in] explicit_edit	If true, -e was passed on command line; skip
  * 				the 'exists. Edit?' dialog
  * @param[out] src		Where the session file was found, if it exists
+ * @param[out] modified		Session was already modified when read in
  *
  * Returns: gs_t
  *  GS_NEW		file does not exist
@@ -1119,13 +1152,14 @@ legal_session_name(const char *name, char *result, size_t result_size)
  */
 static gs_t
 get_session(const char *session_name, session_t *s, char **us, char *path,
-	bool explicit_edit, src_t *src)
+	bool explicit_edit, src_t *src, bool *modified)
 {
     FILE *f;
     int rc;
     int editable;
 
     *src = SRC_OTHER;
+    *modified = false;
 
     if (session_name != NULL) {
 	size_t sl = strlen(session_name);
@@ -1244,11 +1278,19 @@ shortcut.");
 	fclose(f);
 	if (editable) {
 	    if (fixup_printer(s)) {
-		    printf("\n"
+		printf("\n"
 "NOTE: This session file contains a UNC printer name that needs to be updated\n"
 " to be compatible with the current version of wc3270.  Even if you do not\n"
-" need to make any other changes to the session, please select the Edit and\n"
-" Update options to have this name automatically corrected.\n");
+" need to make any other changes to the session, please update the session\n"
+" file to have this corrected.\n");
+		*modified = true;
+	    }
+	    if (fixup_codepage(s)) {
+		printf("\n"
+"NOTE: This session file contains a code page alias. Even if you do not need\n"
+" to make any other changes to the session, please update the session file\n"
+" have this name changed to the canonical form.\n");
+		*modified = true;
 	    }
 	}
 
@@ -1654,13 +1696,19 @@ This specifies the EBCDIC code page used by the host.");
 	if (!buf[0]) {
 	    break;
 	}
-	/* Check for numeric value. */
+	/* Check for numeric index. */
 	u = strtoul(buf, &ptr, 10);
 	if (u > 0 && u <= i && *ptr == '\0') {
-	    strcpy(s->codepage, codepages[u - 1].name);
+	    if (!strcmp(codepages[u - 1].name, "bracket")) {
+		strcpy(s->codepage, "bracket");
+	    } else {
+		snprintf(s->codepage, STR_SIZE, "cp%s",
+			codepages[u - 1].hostcp);
+	    }
 	    s->is_dbcs = codepages[u - 1].is_dbcs;
 	    break;
 	}
+	/* Check for numeric code page. */
 	if (u > 0 && *ptr == '\0') {
 	    int k;
 	    bool matched = false;
@@ -1668,7 +1716,8 @@ This specifies the EBCDIC code page used by the host.");
 	    for (k = 0; k < num_codepages; k++) {
 		if (strcmp(codepages[k].name, "bracket") &&
 			    u == atoi(codepages[k].hostcp)) {
-		    strcpy(s->codepage, codepages[k].name);
+		    snprintf(s->codepage, STR_SIZE, "cp%s",
+			    codepages[k].hostcp);
 		    s->is_dbcs = codepages[k].is_dbcs;
 		    matched = true;
 		    break;
@@ -1681,7 +1730,7 @@ This specifies the EBCDIC code page used by the host.");
 	/* Check for name match. */
 	for (i = 0; codepages[i].name != NULL; i++) {
 	    if (!strcmp(buf, codepages[i].name)) {
-		strcpy(s->codepage, codepages[i].name);
+		snprintf(s->codepage, STR_SIZE, "cp%s", codepages[i].hostcp);
 		s->is_dbcs = codepages[i].is_dbcs;
 		break;
 	    }
@@ -1696,7 +1745,7 @@ This specifies the EBCDIC code page used by the host.");
 		for (k = 0; k < num_codepages; k++) {
 		    if (strcmp(codepages[k].name, "bracket") &&
 				u == atoi(codepages[k].hostcp)) {
-			strcpy(s->codepage, codepages[k].name);
+			strcpy(s->codepage, buf);
 			s->is_dbcs = codepages[k].is_dbcs;
 			matched = true;
 			break;
@@ -2845,12 +2894,13 @@ reg_font_from_hcp(const char *hcpname, int *codepage)
  * @param[in] session_name Name of session
  * @param[out] change_shortcut Returned as true if the shortcut should be
  *                             changed
+ * @param[in] modified	True if session is already modified
  *
  * @return 0 for success, -1 for failure
  */
 static src_t
 edit_menu(session_t *s, char **us, sp_t how, const char *path,
-	const char *session_name, bool *change_shortcut)
+	const char *session_name, bool *change_shortcut, bool modified)
 {
     int rc;
     char choicebuf[32];
@@ -2886,10 +2936,17 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	int i;
 
 	/* Look up the codepage. */
-	for (i = 0; codepages[i].name != NULL; i++) {
-	    if (!strcmp(codepages[i].name, s->codepage)) {
-		cp = codepages[i].hostcp;
-		break;
+	if (!strcmp(s->codepage, "bracket")) {
+	    cp = "CP 37+";
+	} else if (!strncmp(s->codepage, "cp", 2)) {
+	    for (i = 0; codepages[i].name != NULL; i++) {
+		if (!strcmp(codepages[i].name, "bracket")) {
+		    continue;
+		}
+		if (!strcmp(codepages[i].hostcp, s->codepage + 2)) {
+		    cp = codepages[i].name;
+		    break;
+		}
 	    }
 	}
 
@@ -2910,7 +2967,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	} else {
 	    printf(DISPLAY_NONE"\n");
 	}
-	printf("%3d. Code Page .............. : %s (CP %s)\n",
+	printf("%3d. Code Page .............. : %s (%s)\n",
 		MN_CODEPAGE, s->codepage, cp);
 	printf("%3d. Crosshair Cursor ....... : %s\n",
 		MN_CROSSHAIR, (s->flags & WF_CROSSHAIR)? "Yes": "No");
@@ -3212,7 +3269,9 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     /* Ask if they want to write the file. */
     if (memcmp(s, &old_session, sizeof(session_t)) ||
 	((old_us != NULL) ^ (*us != NULL)) ||
-	(old_us != NULL && strcmp(old_us, *us))) {
+	(old_us != NULL && strcmp(old_us, *us)) ||
+	modified) {
+
 	for (;;) {
 	    printf("\n%s session file '%s'? (y/n) [y] ",
 		    how_name[how], session_name);
@@ -4169,6 +4228,7 @@ session_wizard(const char *session_name, bool explicit_edit, char *result,
     size_t sl;
     char *us = NULL;
     bool change_shortcut;
+    bool modified = false;
 
     /* Start with nothing. */
     (void) memset(&session, '\0', sizeof(session));
@@ -4255,7 +4315,8 @@ Edit Session\n");
     }
 
     /* Get the session name. */
-    rc = get_session(session_name, &session, &us, path, explicit_edit, &src);
+    rc = get_session(session_name, &session, &us, path, explicit_edit, &src,
+	    &modified);
     switch (rc) {
     case GS_NOEDIT_LEAVE:	/* Uneditable, and they don't want to overwrite
 				   it. */
@@ -4298,7 +4359,7 @@ Edit Session\n");
 	src = edit_menu(&session, &us,
 		(rc == GS_OVERWRITE)? SP_REPLACE:
 		 ((rc == GS_NEW)? SP_CREATE: SP_UPDATE),
-		path, session.session, &change_shortcut);
+		path, session.session, &change_shortcut, modified);
 	if (src == SRC_ERR) {
 	    return SW_ERR;
 	} else if (src == SRC_NONE) {
