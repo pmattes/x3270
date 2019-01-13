@@ -1339,7 +1339,7 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 \n\
 \n\
 To create a session file with no hostname (one that just specifies the model\n\
-number, character set, etc.), enter '" CHOICE_NONE "'."
+number, code page, etc.), enter '" CHOICE_NONE "'."
 
     new_screen(s, NULL, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
 	    IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
@@ -1661,6 +1661,23 @@ This specifies the EBCDIC code page used by the host.");
 	    s->is_dbcs = codepages[u - 1].is_dbcs;
 	    break;
 	}
+	if (u > 0 && *ptr == '\0') {
+	    int k;
+	    bool matched = false;
+
+	    for (k = 0; k < num_codepages; k++) {
+		if (strcmp(codepages[k].name, "bracket") &&
+			    u == atoi(codepages[k].hostcp)) {
+		    strcpy(s->codepage, codepages[k].name);
+		    s->is_dbcs = codepages[k].is_dbcs;
+		    matched = true;
+		    break;
+		}
+	    }
+	    if (matched) {
+		break;
+	    }
+	}
 	/* Check for name match. */
 	for (i = 0; codepages[i].name != NULL; i++) {
 	    if (!strcmp(buf, codepages[i].name)) {
@@ -1669,11 +1686,32 @@ This specifies the EBCDIC code page used by the host.");
 		break;
 	    }
 	}
+	/* Check for a 'cpXXX' match. */
+	if (!strncmp(buf, "cp", 2) && strlen(buf) > 2) {
+	    u = strtoul(buf + 2, &ptr, 10);
+	    if (u > 0 && *ptr == '\0') {
+		int k;
+		bool matched = false;
+
+		for (k = 0; k < num_codepages; k++) {
+		    if (strcmp(codepages[k].name, "bracket") &&
+				u == atoi(codepages[k].hostcp)) {
+			strcpy(s->codepage, codepages[k].name);
+			s->is_dbcs = codepages[k].is_dbcs;
+			matched = true;
+			break;
+		    }
+		}
+		if (matched) {
+		    break;
+		}
+	    }
+	}
 
 	if (codepages[i].name != NULL) {
 	    break;
 	}
-	errout("\nInvalid character set name.");
+	errout("\nInvalid code page name.");
     }
 
     if (!was_dbcs && s->is_dbcs) {
@@ -2847,6 +2885,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	char *cp = "?";
 	int i;
 
+	/* Look up the codepage. */
 	for (i = 0; codepages[i].name != NULL; i++) {
 	    if (!strcmp(codepages[i].name, s->codepage)) {
 		cp = codepages[i].hostcp;
