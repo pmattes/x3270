@@ -1730,7 +1730,12 @@ This specifies the EBCDIC code page used by the host.");
 	/* Check for name match. */
 	for (i = 0; codepages[i].name != NULL; i++) {
 	    if (!strcmp(buf, codepages[i].name)) {
-		snprintf(s->codepage, STR_SIZE, "cp%s", codepages[i].hostcp);
+		if (!strcmp(buf, "bracket")) {
+		    strcpy(s->codepage, buf);
+		} else {
+		    snprintf(s->codepage, STR_SIZE, "cp%s",
+			    codepages[i].hostcp);
+		}
 		s->is_dbcs = codepages[i].is_dbcs;
 		break;
 	    }
@@ -1745,7 +1750,8 @@ This specifies the EBCDIC code page used by the host.");
 		for (k = 0; k < num_codepages; k++) {
 		    if (strcmp(codepages[k].name, "bracket") &&
 				u == atoi(codepages[k].hostcp)) {
-			strcpy(s->codepage, buf);
+			snprintf(s->codepage, STR_SIZE, "cp%s",
+				codepages[k].hostcp);
 			s->is_dbcs = codepages[k].is_dbcs;
 			matched = true;
 			break;

@@ -91,7 +91,7 @@ codepages_t codepages[] = {
     { "uk",		"285",	0, L"1252"	},
     { "uk-euro",	"1146",	0, L"1252"	},
     { "us-euro",	"1140",	0, L"1252"	},
-    { "us-intl",	"37",	0, L"1252"	},
+    { "us-intl",	"037",	0, L"1252"	},
     { NULL,		NULL,	0, NULL	}
 };
 
