@@ -224,7 +224,7 @@ usage(void)
 "                   specify client certificate chain file\n");
     }
     (void) fprintf(stderr,
-"  " OptCodePage " <name>  use built-in alternate EBCDIC-to-ASCII mappings\n");
+"  " OptCodePage " <name> specify host code page\n");
     if (ssl_options & SSL_OPT_CLIENT_CERT) {
 	(void) fprintf(stderr,
 "  " OptClientCert " <name> use SSL/TLS client certificate <name>\n");
@@ -475,7 +475,7 @@ init_options(void)
 	options.bdaemon			= NOT_DAEMON;
 #endif /*]*/
 	options.blanklines		= 0;
-	options.charset			= "cp037";
+	options.codepage		= "cp037";
 #if !defined(_WIN32) /*[*/
 	options.command			= "lpr";
 #endif /*]*/
@@ -696,7 +696,7 @@ main(int argc, char *argv[])
 				    "Missing value for %s\n", argv[i]);
 				usage();
 			}
-			options.charset = argv[i + 1];
+			options.codepage = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-blanklines")) {
 			options.blanklines = 1;
@@ -886,7 +886,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 
 	/* Set up the character set. */
-	if (codepage_init(options.charset) != CS_OKAY) {
+	if (codepage_init(options.codepage) != CS_OKAY) {
 		pr3287_exit(1);
 	}
 
