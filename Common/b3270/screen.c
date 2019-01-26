@@ -209,7 +209,7 @@ emit_erase(int rows, int cols)
 
     ui_vleaf(IndErase,
 	    AttrLogicalRows, switched? lazyaf("%d", rows) : NULL,
-	    AttrLogicalCols, switched? lazyaf("%d", cols) : NULL,
+	    AttrLogicalColumns, switched? lazyaf("%d", cols) : NULL,
 	    AttrFg, appres.m3279? "blue": NULL,
 	    AttrBg, appres.m3279? "neutralBlack": NULL,
 	    NULL);
@@ -231,7 +231,7 @@ internal_screen_init(void)
     ui_vleaf(IndScreenMode,
 	    AttrModel, lazyaf("%d", model_num),
 	    AttrRows, lazyaf("%d", maxROWS),
-	    AttrCols, lazyaf("%d", maxCOLS),
+	    AttrColumns, lazyaf("%d", maxCOLS),
 	    AttrColor, appres.m3279? ValTrue: ValFalse,
 	    AttrOversize, ov_rows || ov_cols? ValTrue: ValFalse,
 	    AttrExtended, appres.extended? ValTrue: ValFalse,
@@ -757,7 +757,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	int aix = 0;
 	char *col_value;
 
-	args[aix++] = "col";
+	args[aix++] = AttrColumn;
 	col_value = xs_buffer("%d", d->start_col + 1);
 	args[aix++] = col_value; /* will explicitly lazya below */
 	if (oldr[d->start_col].fg != newr[d->start_col].fg) {
@@ -851,7 +851,7 @@ emit_diff(screen_t *old, screen_t *new)
 	if (memcmp(old + (row * maxCOLS), new + (row * maxCOLS),
 		sizeof(screen_t) * maxCOLS)) {
 	    ui_vpush("row",
-		    "row", lazyaf("%d", row + 1),
+		    AttrRow, lazyaf("%d", row + 1),
 		    NULL);
 	    emit_row(&old[row * maxCOLS], &new[row * maxCOLS]);
 	    ui_pop();
@@ -900,7 +900,7 @@ screen_disp_cond(bool always)
 	ui_vleaf(IndCursor,
 	    AttrEnabled, ValTrue,
 	    AttrRow, lazyaf("%d", (saved_baddr / COLS) + 1),
-	    AttrCol, lazyaf("%d", (saved_baddr % COLS) + 1),
+	    AttrColumn, lazyaf("%d", (saved_baddr % COLS) + 1),
 	    NULL);
 	sent_baddr = saved_baddr;
     }
