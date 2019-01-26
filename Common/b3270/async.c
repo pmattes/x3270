@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include "b3270proto.h"
 #include "ctlr.h"
 #include "lazya.h"
 #include "screen.h"
@@ -49,7 +50,7 @@ screen_selected(int baddr _is_unused)
 void
 ring_bell(void)
 {
-    ui_vleaf("bell", NULL);
+    ui_vleaf(IndBell, NULL);
 }
 
 static int cw = 7;
@@ -144,8 +145,8 @@ screen_system_fixup(void)
 void
 telnet_gui_connecting(const char *hostip, const char *portname)
 {
-    ui_vleaf("connect-attempt",
-	    "host-ip", hostip,
-	    "port", portname,
+    ui_vleaf(IndConnectAttempt,
+	    AttrHostIp, hostip,
+	    AttrPort, portname,
 	    NULL);
 }

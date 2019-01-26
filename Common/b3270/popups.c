@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Paul Mattes.
+ * Copyright (c) 2016, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,14 @@
  */
 
 /*
- *	b_popups.c
+ *	popups.c
  *		A GUI back-end for a 3270 Terminal Emulator
  *		Error and info pop-ups.
  */
 
 #include "globals.h"
 
+#include "b3270proto.h"
 #include "lazya.h"
 #include "popups.h"
 #include "task.h"
@@ -53,9 +54,9 @@ popup_a_verror(const char *fmt, va_list ap)
     if (task_redirect()) {
 	task_error(s);
     } else {
-	ui_vleaf("popup",
-		"type", "error",
-		"text", s,
+	ui_vleaf(IndPopup,
+		AttrType, "error",
+		AttrText, s,
 		NULL);
     }
 }
@@ -97,9 +98,9 @@ popup_an_info(const char *fmt, ...)
     if (task_redirect()) {
 	task_info("%s", s);
     } else {
-	ui_vleaf("popup",
-		"type", "info",
-		"text", s,
+	ui_vleaf(IndPopup,
+		AttrType, "info",
+		AttrText, s,
 		NULL);
     }
 }
@@ -117,9 +118,9 @@ action_output(const char *fmt, ...)
     if (task_redirect()) {
 	task_info("%s", s);
     } else {
-	ui_vleaf("popup",
-		"type", "result",
-		"text", s,
+	ui_vleaf(IndPopup,
+		AttrType, "result",
+		AttrText, s,
 		NULL);
     }
 }
@@ -135,10 +136,10 @@ popup_printer_output(bool is_err, abort_callback_t *a _is_unused,
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    ui_vleaf("popup",
-	    "type", "printer",
-	    "error", is_err? "true": "false",
-	    "text", s,
+    ui_vleaf(IndPopup,
+	    AttrType, "printer",
+	    AttrError, ValTrueFalse(is_err),
+	    AttrText, s,
 	    NULL);
 }
 
@@ -153,10 +154,10 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    ui_vleaf("popup",
-	    "type", "child",
-	    "error", is_err? "true": "false",
-	    "text", s,
+    ui_vleaf(IndPopup,
+	    AttrType, "child",
+	    AttrError, ValTrueFalse(is_err),
+	    AttrText, s,
 	    NULL);
 }
 

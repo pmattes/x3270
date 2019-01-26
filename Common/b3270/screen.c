@@ -208,8 +208,8 @@ emit_erase(int rows, int cols)
     bool switched = rows > 0 && cols > 0;
 
     ui_vleaf(IndErase,
-	    "logical-rows", switched? lazyaf("%d", rows) : NULL,
-	    "logical-cols", switched? lazyaf("%d", cols) : NULL,
+	    AttrLogicalRows, switched? lazyaf("%d", rows) : NULL,
+	    AttrLogicalCols, switched? lazyaf("%d", cols) : NULL,
 	    AttrFg, appres.m3279? "blue": NULL,
 	    AttrBg, appres.m3279? "neutralBlack": NULL,
 	    NULL);
@@ -229,12 +229,12 @@ static void
 internal_screen_init(void)
 {
     ui_vleaf(IndScreenMode,
-	    "model", lazyaf("%d", model_num),
-	    "rows", lazyaf("%d", maxROWS),
-	    "cols", lazyaf("%d", maxCOLS),
-	    "color", appres.m3279? ValTrue: ValFalse,
-	    "oversize", ov_rows || ov_cols? ValTrue: ValFalse,
-	    "extended", appres.extended? ValTrue: ValFalse,
+	    AttrModel, lazyaf("%d", model_num),
+	    AttrRows, lazyaf("%d", maxROWS),
+	    AttrCols, lazyaf("%d", maxCOLS),
+	    AttrColor, appres.m3279? ValTrue: ValFalse,
+	    AttrOversize, ov_rows || ov_cols? ValTrue: ValFalse,
+	    AttrExtended, appres.extended? ValTrue: ValFalse,
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);
@@ -790,7 +790,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 			utf8_buf);
 		vb_appendf(&r, "%.*s", utf8_len, utf8_buf);
 	    }
-	    args[aix++] = "text";
+	    args[aix++] = AttrText;
 	    ccode_value = vb_consume(&r);
 	    args[aix++] = ccode_value;
 	    lazya(ccode_value);
@@ -898,9 +898,9 @@ screen_disp_cond(bool always)
     /* Check for a cursor move. */
     if (cursor_enabled && sent_baddr != saved_baddr) {
 	ui_vleaf(IndCursor,
-	    "enabled", ValTrue,
-	    "row", lazyaf("%d", (saved_baddr / COLS) + 1),
-	    "col", lazyaf("%d", (saved_baddr % COLS) + 1),
+	    AttrEnabled, ValTrue,
+	    AttrRow, lazyaf("%d", (saved_baddr / COLS) + 1),
+	    AttrCol, lazyaf("%d", (saved_baddr % COLS) + 1),
 	    NULL);
 	sent_baddr = saved_baddr;
     }
@@ -936,7 +936,7 @@ screen_disp_cond(bool always)
 
     if (formatted != xformatted) {
 	ui_vleaf(IndFormatted,
-		"state", formatted? ValTrue: ValFalse,
+		AttrState, formatted? ValTrue: ValFalse,
 		NULL);
 	xformatted = formatted;
     }
@@ -1032,7 +1032,7 @@ enable_cursor(bool on)
     if (on != cursor_enabled) {
 	if (!(cursor_enabled = on)) {
 	    ui_vleaf(IndCursor,
-		"enabled", ValFalse,
+		AttrEnabled, ValFalse,
 		NULL);
 	    sent_baddr = -1;
 	}
@@ -1069,10 +1069,10 @@ screen_set_thumb(float top, float shown, int saved, int screen, int back)
     last_saved = saved;
     last_back = back;
     ui_vleaf(IndThumb,
-	    "top", lazyaf("%.5f", top),
-	    "shown", lazyaf("%.5f", shown),
-	    "saved", lazyaf("%d", saved),
-	    "screen", lazyaf("%d", screen),
-	    "back", lazyaf("%d", back),
+	    AttrTop, lazyaf("%.5f", top),
+	    AttrShown, lazyaf("%.5f", shown),
+	    AttrSaved, lazyaf("%d", saved),
+	    AttrScreen, lazyaf("%d", screen),
+	    AttrBack, lazyaf("%d", back),
 	    NULL);
 }

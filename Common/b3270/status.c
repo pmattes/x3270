@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Paul Mattes.
+ * Copyright (c) 2015-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,10 +78,10 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    "field", "compose",
-	    "value", on? "true": "false",
-	    "char", on? lazyaf("U+%04%x", ucs4): NULL,
-	    "type", on? ((keytype == KT_STD)? "std": "ge"): NULL,
+	    AttrField, "compose",
+	    AttrValue, ValTrueFalse(on),
+	    AttrChar, on? lazyaf("U+%04%x", ucs4): NULL,
+	    AttrType, on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }
 
@@ -96,8 +96,8 @@ status_ctlr_done(void)
     oia_undera = true;
 
     ui_vleaf(IndOia,
-	    "field", "not-undera",
-	    "value", "false",
+	    AttrField, "not-undera",
+	    AttrValue, "false",
 	    NULL);
 }
 
@@ -112,8 +112,8 @@ status_insert_mode(bool on)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    "field", "insert",
-	    "value", on? "true": "false",
+	    AttrField, "insert",
+	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }
 
@@ -135,8 +135,8 @@ status_lu(const char *s)
     }
 
     ui_vleaf(IndOia,
-	    "field", "lu",
-	    "value", s,
+	    AttrField, "lu",
+	    AttrValue, s,
 	    NULL);
 }
 
@@ -147,8 +147,8 @@ status_lock(char *msg)
     Replace(saved_lock, msg);
     if (!scrolled && !flashing) {
 	ui_vleaf(IndOia,
-		"field", "lock",
-		"value", saved_lock,
+		AttrField, "lock",
+		AttrValue, saved_lock,
 		NULL);
     }
 }
@@ -224,8 +224,8 @@ void
 status_screentrace(int n)
 {
     ui_vleaf(IndOia,
-	    "field", "screentrace",
-	    "value", (n >= 0)? lazyaf("%d", n): NULL,
+	    AttrField, "screentrace",
+	    AttrValue, (n >= 0)? lazyaf("%d", n): NULL,
 	    NULL);
 }
 
@@ -240,8 +240,8 @@ status_script(bool on)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    "field", "script",
-	    "value", on? "true": "false",
+	    AttrField, "script",
+	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }
 
@@ -256,8 +256,8 @@ status_scrolled(int n)
 	scroll_n = n;
 	if (!flashing) {
 	    ui_vleaf(IndOia,
-		    "field", "lock",
-		    "value", lazyaf("scrolled %d", n),
+		    AttrField, "lock",
+		    AttrValue, lazyaf("scrolled %d", n),
 		    NULL);
 	}
     } else {
@@ -268,8 +268,8 @@ status_scrolled(int n)
 	scroll_n = -1;
 	if (!flashing) {
 	    ui_vleaf(IndOia,
-		    "field", "lock",
-		    "value", saved_lock,
+		    AttrField, "lock",
+		    AttrValue, saved_lock,
 		    NULL);
 	}
     }
@@ -290,8 +290,8 @@ flash_done(ioid_t id _is_unused)
     } else {
 	/* Restore the lock message. */
 	ui_vleaf(IndOia,
-		"field", "lock",
-		"value", saved_lock,
+		AttrField, "lock",
+		AttrValue, saved_lock,
 		NULL);
     }
 }
@@ -301,8 +301,8 @@ status_keyboard_disable_flash(void)
 {
     if (!flashing) {
 	ui_vleaf(IndOia,
-		"field", "lock",
-		"value", "disabled",
+		AttrField, "lock",
+		AttrValue, "disabled",
 		NULL);
     }
     flashing = true;
@@ -333,8 +333,8 @@ status_timing(struct timeval *t0 _is_unused, struct timeval *t1 _is_unused)
     cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	 (t1->tv_usec - t0->tv_usec + 50000) / 100000;
     ui_vleaf(IndOia,
-	    "field", "timing",
-	    "value", lazyaf("%lu.%lu", cs / 10, cs % 10),
+	    AttrField, "timing",
+	    AttrValue, lazyaf("%lu.%lu", cs / 10, cs % 10),
 	    NULL);
 }
 
@@ -347,7 +347,7 @@ status_untiming(void)
     is_timed = false;
 
     ui_vleaf(IndOia,
-	    "field", "timing",
+	    AttrField, "timing",
 	    NULL);
 }
 
@@ -362,8 +362,8 @@ status_twait(void)
     oia_undera = false;
 
     ui_vleaf(IndOia,
-	    "field", "not-undera",
-	    "value", "true",
+	    AttrField, "not-undera",
+	    AttrValue, ValTrue,
 	    NULL);
 
     status_lock(NewString("twait"));
@@ -380,7 +380,7 @@ status_typeahead(bool on _is_unused)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    "field", "typeahead",
-	    "value", on? "true": "false",
+	    AttrField, "typeahead",
+	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }

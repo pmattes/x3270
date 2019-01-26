@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 Paul Mattes.
+ * Copyright (c) 2016-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -359,11 +359,11 @@ ui_action_done(task_cbh handle, bool success, bool abort)
     screen_disp(false);
 
     ui_vleaf(IndRunResult,
-	    "r-tag", uia->tag,
-	    "success", success? "true": "false",
-	    "text", uia->result,
-	    "abort", abort? "true": NULL,
-	    "time", lazyaf("%ld.%03ld", msec / 1000L, msec % 1000L),
+	    AttrRTag, uia->tag,
+	    AttrSuccess, ValTrueFalse(success),
+	    AttrText, uia->result,
+	    AttrAbort, abort? ValTrue: NULL,
+	    AttrTime, lazyaf("%ld.%03ld", msec / 1000L, msec % 1000L),
 	    NULL);
 
     Replace(uia->result, NULL);
@@ -376,12 +376,12 @@ static void
 ui_unknown_attribute(const char *element, const char *attribute)
 {
     ui_vleaf(IndUiError,
-	    "fatal", "false",
-	    "text", "unknown attribute",
-	    "element", element,
-	    "attribute", attribute,
-	    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-	    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+	    AttrFatal, ValFalse,
+	    AttrText, "unknown attribute",
+	    AttrElement, element,
+	    AttrAttribute, attribute,
+	    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+	    AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 	    NULL);
 }
 
@@ -390,12 +390,12 @@ static void
 ui_missing_attribute(const char *element, const char *attribute)
 {
     ui_vleaf(IndUiError,
-	    "fatal", "false",
-	    "text", "missing attribute",
-	    "element", element,
-	    "attribute", attribute,
-	    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-	    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+	    AttrFatal, ValFalse,
+	    AttrText, "missing attribute",
+	    AttrElement, element,
+	    AttrAttribute, attribute,
+	    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+	    AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 	    NULL);
 }
 
@@ -411,19 +411,19 @@ do_run(const char *cmd, const char **attrs)
     tcb_t *tcb;
 
     for (i = 0; attrs[i] != NULL; i += 2) {
-	if (!strcasecmp(attrs[i], "type")) {
+	if (!strcasecmp(attrs[i], AttrType)) {
 	    type = attrs[i + 1];
-	} else if (!strcasecmp(attrs[i], "r-tag")) {
+	} else if (!strcasecmp(attrs[i], AttrRTag)) {
 	    tag = attrs[i + 1];
-	} else if (!strcasecmp(attrs[i], "actions")) {
+	} else if (!strcasecmp(attrs[i], AttrActions)) {
 	    command = attrs[i + 1];
 	} else {
-	    ui_unknown_attribute("run", attrs[i]);
+	    ui_unknown_attribute(OperRun, attrs[i]);
 	}
     }
 
     if (command == NULL) {
-	ui_missing_attribute("run", "actions");
+	ui_missing_attribute(OperRun, AttrActions);
 	return;
     }
 
@@ -462,24 +462,24 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
     passthru_tag = task_set_passthru(&ret_cbh);
 
     /* Tell the UI we are waiting. */
-    args[out_ix++] = "action";
+    args[out_ix++] = AttrAction;
     args[out_ix++] = current_action_name;
-    args[out_ix++] = "p-tag";
+    args[out_ix++] = AttrPTag;
     args[out_ix++] = passthru_tag;
     if (ret_cbh != NULL) {
 	ui_action_t *uia = (ui_action_t *)ret_cbh;
 
 	if (uia->tag) {
-	    args[out_ix++] = "parent-r-tag";
+	    args[out_ix++] = AttrParentRTag;
 	    args[out_ix++] = uia->tag;
 	}
     }
     for (in_ix = 0; in_ix < argc; in_ix++) {
-	args[out_ix++] = lazyaf("arg%d", in_ix + 1);
+	args[out_ix++] = lazyaf(AttrArg "%d", in_ix + 1);
 	args[out_ix++] = argv[in_ix];
     }
     args[out_ix] = NULL;
-    ui_object(true, "passthru", args);
+    ui_object(true, IndPassthru, args);
 
     return true;
 }
@@ -496,29 +496,30 @@ do_register(const char *cmd, const char **attrs)
     action_table_t *a;
 
     for (i = 0; attrs[i] != NULL; i += 2) {
-	if (!strcasecmp(attrs[i], "name")) {
+	if (!strcasecmp(attrs[i], AttrName)) {
 	    name = attrs[i + 1];
-	} else if (!strcasecmp(attrs[i], "help-text")) {
+	} else if (!strcasecmp(attrs[i], AttrHelpText)) {
 	    help_text = attrs[i + 1];
-	} else if (!strcasecmp(attrs[i], "help-parms")) {
+	} else if (!strcasecmp(attrs[i], AttrHelpParms)) {
 	    help_parms = attrs[i + 1];
 	} else {
-	    ui_unknown_attribute("register", attrs[i]);
+	    ui_unknown_attribute(OperRegister, attrs[i]);
 	}
     }
 
     if (name == NULL) {
-	ui_missing_attribute("register", "name");
+	ui_missing_attribute(OperRegister, AttrName);
 	return;
     }
     for (j = 0; name[j]; j++) {
 	if (!isprint((unsigned char)name[j])) {
 	    ui_vleaf(IndUiError,
-		    "fatal", "false",
-		    "text", "invalid name",
-		    "element", "register",
-		    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		    AttrFatal, ValFalse,
+		    AttrText, "invalid name",
+		    AttrElement, OperRegister,
+		    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		    AttrColumn,
+			lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		    NULL);
 	    return;
 	}
@@ -546,9 +547,9 @@ do_passthru_complete(bool success, const char *cmd, const char **attrs)
     int i;
 
     for (i = 0; attrs[i] != NULL; i += 2) {
-	if (!strcasecmp("p-tag", attrs[i])) {
+	if (!strcasecmp(AttrPTag, attrs[i])) {
 	    tag = attrs[i + 1];
-	} else if (!strcasecmp("text", attrs[i])) {
+	} else if (!strcasecmp(AttrText, attrs[i])) {
 	    text = attrs[i + 1];
 	} else {
 	    ui_unknown_attribute(cmd, attrs[i]);
@@ -556,12 +557,12 @@ do_passthru_complete(bool success, const char *cmd, const char **attrs)
     }
 
     if (tag == NULL) {
-	ui_missing_attribute(cmd, "p-tag");
+	ui_missing_attribute(cmd, AttrPTag);
 	return;
     }
 
     if (!success && text == NULL) {
-	ui_missing_attribute(cmd, "text");
+	ui_missing_attribute(cmd, AttrText);
 	return;
     }
 
@@ -576,11 +577,11 @@ process_input(const char *buf, ssize_t nr)
 {
     if (XML_Parse(parser, buf, nr, 0) == 0) {
 	ui_vleaf(IndUiError,
-		"fatal", "true",
-		"text", xs_buffer("XML parsing error: %s",
+		AttrFatal, ValTrue,
+		AttrText, xs_buffer("XML parsing error: %s",
 		    XML_ErrorString(XML_GetErrorCode(parser))),
-		"line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		"column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		NULL);
 	fprintf(stderr, "Fatal XML parsing error: %s\n",
 		XML_ErrorString(XML_GetErrorCode(parser)));
@@ -622,11 +623,12 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	vtrace("UI input EOF, exiting\n");
 	if (input_nest) {
 	    ui_vleaf(IndUiError,
-		    "fatal", "false",
-		    "text", "unclosed elements",
-		    "count", lazyaf("%d", input_nest),
-		    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		    AttrFatal, ValFalse,
+		    AttrText, "unclosed elements",
+		    AttrCount, lazyaf("%d", input_nest),
+		    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		    AttrColumn,
+			lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		    NULL);
 	}
 	x3270_exit(0);
@@ -746,11 +748,11 @@ xml_start(void *userData _is_unused, const XML_Char *name,
     input_nest++;
     if (input_nest > 2) {
 	ui_vleaf(IndUiError,
-		"fatal", "false",
-		"text", "invalid nested element",
-		"element", name,
-		"line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		"column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		AttrFatal, ValFalse,
+		AttrText, "invalid nested element",
+		AttrElement, name,
+		AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		NULL);
 	return;
     }
@@ -760,11 +762,12 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 
 	if (strcasecmp(name, DocIn)) {
 	    ui_vleaf(IndUiError,
-		    "fatal", "true",
-		    "text", "unexpected document element (want " DocIn ")",
-		    "element", name,
-		    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		    AttrFatal, ValTrue,
+		    AttrText, "unexpected document element (want " DocIn ")",
+		    AttrElement, name,
+		    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		    AttrColumn,
+			lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		    NULL);
 	    fprintf(stderr, "UI document element error\n");
 	    x3270_exit(1);
@@ -775,21 +778,21 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 	return;
     }
 
-    if (!strcasecmp(name, "run")) {
+    if (!strcasecmp(name, OperRun)) {
 	do_run(name, atts);
-    } else if (!strcasecmp(name, "register")) {
+    } else if (!strcasecmp(name, OperRegister)) {
 	do_register(name, atts);
-    } else if (!strcasecmp(name, "succeed")) {
+    } else if (!strcasecmp(name, OperSucceed)) {
 	do_passthru_complete(true, name, atts);
-    } else if (!strcasecmp(name, "fail")) {
+    } else if (!strcasecmp(name, OperFail)) {
 	do_passthru_complete(false, name, atts);
     } else {
 	ui_vleaf(IndUiError,
-		"fatal", "false",
-		"text", "unrecognized element",
-		"element", name,
-		"line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		"column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+		AttrFatal, ValFalse,
+		AttrText, "unrecognized element",
+		AttrElement, name,
+		AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+		AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
 		NULL);
     }
 }
@@ -824,11 +827,11 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
     }
 
     ui_vleaf(IndUiError,
-	    "fatal", "false",
-	    "text", "ignoring plain text",
-	    "line", lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-	    "column", lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
-	    "count", lazyaf("%d", len),
+	    AttrFatal, ValFalse,
+	    AttrText, "ignoring plain text",
+	    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
+	    AttrColumn, lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
+	    AttrCount, lazyaf("%d", len),
 	    NULL);
 }
 

@@ -167,11 +167,11 @@ usage(const char *msg)
 static void
 dump_stats()
 {
-    ui_vleaf("stats",
-	    "bytes-received", lazyaf("%d", brcvd),
-	    "records-received", lazyaf("%d", rrcvd),
-	    "bytes-sent", lazyaf("%d", bsent),
-	    "records-sent", lazyaf("%d", rsent),
+    ui_vleaf(IndStats,
+	    AttrBytesReceived, lazyaf("%d", brcvd),
+	    AttrRecordsReceived, lazyaf("%d", rrcvd),
+	    AttrBytesSent, lazyaf("%d", bsent),
+	    AttrRecordsSent, lazyaf("%d", rsent),
 	    NULL);
 }
 
@@ -221,8 +221,8 @@ b3270_connect(bool ignored)
 
     /* Tell the GUI about the new state. */
     if (cstate == NOT_CONNECTED) {
-	ui_vleaf("connection",
-		"state", cstate_name[(int)cstate],
+	ui_vleaf(IndConnection,
+		AttrState, cstate_name[(int)cstate],
 		NULL);
     } else {
 	char *cause = NewString(ia_name[connect_ia]);
@@ -236,10 +236,10 @@ b3270_connect(bool ignored)
 	    }
 	    *s++ = c;
 	}
-	ui_vleaf("connection",
-		"state", cstate_name[(int)cstate],
-		"host", current_host,
-		"cause", cause,
+	ui_vleaf(IndConnection,
+		AttrState, cstate_name[(int)cstate],
+		AttrHost, current_host,
+		AttrCause, cause,
 		NULL);
 	Free(cause);
 
@@ -272,12 +272,13 @@ b3270_secure(bool ignored)
     }
     is_secure = net_secure_connection();
 
-     ui_vleaf("tls",
-	     "secure", net_secure_connection()? "true": "false",
-	     "verified",
-		 net_secure_connection()? (net_secure_unverified()? "false": "true"): NULL,
-	     "session", net_session_info(),
-	     "host-cert", net_server_cert_info(),
+     ui_vleaf(IndTls,
+	     AttrSecure, ValTrueFalse(net_secure_connection()),
+	     AttrVerified,
+		 net_secure_connection()?
+		     ValTrueFalse(net_secure_unverified()): NULL,
+	     AttrSession, net_session_info(),
+	     AttrHostCert, net_server_cert_info(),
 	     NULL);
 }
 
@@ -286,14 +287,14 @@ static void
 report_terminal_name(void)
 {
     if (appres.termname != NULL) {
-	ui_vleaf("terminal-name",
-		"text", appres.termname,
-		"override", "true",
+	ui_vleaf(IndTerminalName,
+		AttrText, appres.termname,
+		AttrOverride, ValTrue,
 		NULL);
     } else {
-	ui_vleaf("terminal-name",
-		"text", (ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name,
-		"override", "false",
+	ui_vleaf(IndTerminalName,
+		AttrText, (ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name,
+		AttrOverride, ValFalse,
 		NULL);
     }
 }
@@ -387,10 +388,10 @@ main(int argc, char *argv[])
     check_min_version(appres.min_version);
 
     ui_io_init();
-    ui_vleaf("hello",
-	    "version", lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
-	    "build", build,
-	    "copyright",
+    ui_vleaf(IndHello,
+	    AttrVersion, lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
+	    AttrBuild, build,
+	    AttrCopyright,
 lazyaf("\
 Copyright © 1993-%s, Paul Mattes.\n\
 Copyright © 1990, Jeff Sparkes.\n\
@@ -473,10 +474,10 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     initialize_toggles();
 
     /* Send SSL set-up */
-    ui_vleaf("tls-hello",
-	    "supported", sio_supported()? "true": "false",
-	    "provider", sio_provider(),
-	    "options", sio_option_names(),
+    ui_vleaf(IndTlsHello,
+	    AttrSupported, ValTrueFalse(sio_supported()),
+	    AttrProvider, sio_provider(),
+	    AttrOptions, sio_option_names(),
 	    NULL);
 
     /*
@@ -488,7 +489,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /* Prepare to run a peer script. */
     peer_script_init();
 
-    ui_vleaf("ready", NULL);
+    ui_vleaf(IndReady, NULL);
 
     /* Process events forever. */
     while (1) {
@@ -906,19 +907,19 @@ void
 xterm_text_gui(int code, const char *text)
 {
     if (code == 0 || code == 1) {
-	ui_vleaf("icon-name",
-		"text", text,
+	ui_vleaf(IndIconName,
+		AttrText, text,
 		NULL);
     }
     if (code == 0 || code == 2) {
-	ui_vleaf("window-title",
-		"text", text,
+	ui_vleaf(IndWindowTitle,
+		AttrText, text,
 		NULL);
     }
 
     if (code == 50) {
-	ui_vleaf("font",
-		"text", text,
+	ui_vleaf(IndFont,
+		AttrText, text,
 		NULL);
     }
 }
@@ -1008,9 +1009,9 @@ static void
 b3270_printer(bool on)
 {
     ui_vleaf(IndOia,
-	    "field", "printer-session",
-	    "value", on? "true": "false",
-	    "lu", on? pr3287_session_lu(): NULL,
+	    AttrField, "printer-session",
+	    AttrValue, ValTrueFalse(on),
+	    AttrLu, on? pr3287_session_lu(): NULL,
 	    NULL);
 }
 
