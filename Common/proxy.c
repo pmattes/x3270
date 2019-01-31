@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -883,7 +883,7 @@ proxy_socks5(socket_t fd, char *user, char *host, unsigned short port,
 	*s++ = 0x04;	/* IPv6 */
 	memcpy(s, &ha.sin6.sin6_addr, sizeof(struct in6_addr));
 	s += sizeof(struct in6_addr);
-	(void) inet_ntop(AF_INET6, &ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
+	inet_ntop(AF_INET6, &ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
 #endif /*]*/
     }
     SET16(s, port);
@@ -1039,7 +1039,7 @@ proxy_socks5(socket_t fd, char *user, char *host, unsigned short port,
 #if defined(X3270_IPV6) /*[*/
     case 0x04: /* IPv6 */
 	memcpy(&ha.sin6.sin6_addr, &buf[4], sizeof(struct in6_addr));
-	(void) inet_ntop(AF_INET6, &ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
+	inet_ntop(AF_INET6, &ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
 	portp = (unsigned char *)&buf[4 + sizeof(struct in6_addr)];
 	break;
 #endif /*]*/

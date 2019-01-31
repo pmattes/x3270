@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -376,9 +376,9 @@ add_keymap_entry(int ncodes, int *codes, int *hints, const char *name,
     k->successor = NULL;
     k->ncodes = ncodes;
     k->codes = Malloc(ncodes * sizeof(int));
-    (void) memcpy(k->codes, codes, ncodes * sizeof(int));
+    memcpy(k->codes, codes, ncodes * sizeof(int));
     k->hints = Malloc(ncodes * sizeof(int));
-    (void) memcpy(k->hints, hints, ncodes * sizeof(int));
+    memcpy(k->hints, hints, ncodes * sizeof(int));
     k->name = NewString(name);
     k->file = NewString(file);
     k->line = line;
@@ -1077,7 +1077,7 @@ keymap_init(void)
     clear_keymap();
 
     /* Read the base keymap. */
-    (void) read_keymap("base", false);
+    read_keymap("base", false);
 
     /* Read the user-defined keymaps. */
     if (appres.interactive.key_map != NULL) {
@@ -1085,12 +1085,12 @@ keymap_init(void)
 	while ((comma = strchr(s, ',')) != NULL) {
 	    *comma = '\0';
 	    if (*s) {
-		(void) read_keymap(s, false);
+		read_keymap(s, false);
 	    }
 	    s = comma + 1;
 	}
 	if (*s) {
-	    (void) read_keymap(s, false);
+	    read_keymap(s, false);
 	}
 	Free(s0);
     }
@@ -1212,25 +1212,25 @@ decode_key(int k, int hint, char *buf)
 
 	/* VK_xxx */
 	n = lookup_cname(k);
-	(void) sprintf(buf, "%s<Key>%s", decode_hint(hint), n? n: "???");
+	sprintf(buf, "%s<Key>%s", decode_hint(hint), n? n: "???");
     } else if (k < ' ') {
-	(void) sprintf(s, "%sCtrl <Key>%c", decode_hint(hint & ~KM_CTRL),
+	sprintf(s, "%sCtrl <Key>%c", decode_hint(hint & ~KM_CTRL),
 		k + '@');
     } else if (k == ':') {
-	(void) sprintf(s, "%s<Key>colon", decode_hint(hint));
+	sprintf(s, "%s<Key>colon", decode_hint(hint));
     } else if (k == ' ') {
-	(void) sprintf(s, "%s<Key>space", decode_hint(hint));
+	sprintf(s, "%s<Key>space", decode_hint(hint));
     } else {
 	wchar_t w = k;
 	char c;
 	BOOL udc = FALSE;
 
 	/* Try translating to OEM for display on the console. */
-	(void)WideCharToMultiByte(CP_OEMCP, 0, &w, 1, &c, 1, "?", &udc);
+	WideCharToMultiByte(CP_OEMCP, 0, &w, 1, &c, 1, "?", &udc);
 	if (!udc) {
-	    (void) sprintf(s, "%s<Key>%c", decode_hint(hint), c);
+	    sprintf(s, "%s<Key>%c", decode_hint(hint), c);
 	} else {
-	    (void) sprintf(s, "%s<Key>U+%04x", decode_hint(hint), k);
+	    sprintf(s, "%s<Key>U+%04x", decode_hint(hint), k);
 	}
     }
     return buf;

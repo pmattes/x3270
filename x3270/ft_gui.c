@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -1140,7 +1140,7 @@ ft_start(void)
 	fts.local_file = fopen(xftc.local_filename,
 		xftc.ascii_flag? "r": "rb");
 	if (fts.local_file != NULL) {
-	    (void) fclose(fts.local_file);
+	    fclose(fts.local_file);
 	    fts.local_file = NULL;
 	    popup_overwrite();
 	    return false;

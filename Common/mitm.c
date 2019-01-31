@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Paul Mattes.
+ * Copyright (c) 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ static void netdump(FILE *f, char direction, unsigned char *buffer,
 static void
 mitm_usage(void)
 {
-    (void) fprintf(stderr, "Usage: %s [-p listenport] [-f outfile]\n", me);
+    fprintf(stderr, "Usage: %s [-p listenport] [-f outfile]\n", me);
     exit(1);
 }
 

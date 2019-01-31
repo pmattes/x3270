@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -120,7 +120,7 @@ i18n_t *i18n = NULL;
 static void
 x3270if_usage(void)
 {
-    (void) fprintf(stderr, "\
+    fprintf(stderr, "\
 usage:\n\
  %s [options] \"action[(param[,...])]\"\n\
    execute the named action\n\
@@ -153,7 +153,7 @@ fd_env(const char *name, bool required)
     fdname = getenv(name);
     if (fdname == NULL) {
 	if (required) {
-	    (void) fprintf(stderr, "%s: %s not set in the environment\n", me,
+	    fprintf(stderr, "%s: %s not set in the environment\n", me,
 		    name);
 	    exit(__LINE__);
 	} else {
@@ -162,7 +162,7 @@ fd_env(const char *name, bool required)
     }
     fd = atoi(fdname);
     if (fd <= 0) {
-	(void) fprintf(stderr, "%s: invalid value '%s' for %s\n", me, fdname,
+	fprintf(stderr, "%s: invalid value '%s' for %s\n", me, fdname,
 		name);
 	exit(__LINE__);
     }
@@ -227,8 +227,7 @@ main(int argc, char *argv[])
 	case 'p':
 	    pid = (int)strtoul(optarg, &ptr, 0);
 	    if (ptr == optarg || *ptr != '\0' || pid <= 0) {
-		(void) fprintf(stderr, "%s: Invalid process ID: '%s'\n", me,
-			optarg);
+		fprintf(stderr, "%s: Invalid process ID: '%s'\n", me, optarg);
 		x3270if_usage();
 	    }
 	    break;
@@ -239,8 +238,7 @@ main(int argc, char *argv[])
 	    }
 	    fn = (int)strtol(optarg, &ptr, 0);
 	    if (ptr == optarg || *ptr != '\0' || fn < 0) {
-		(void) fprintf(stderr, "%s: Invalid field number: '%s'\n", me,
-			optarg);
+		fprintf(stderr, "%s: Invalid field number: '%s'\n", me, optarg);
 		x3270if_usage();
 	    }
 	    break;
@@ -253,7 +251,7 @@ main(int argc, char *argv[])
 	case 't':
 	    port = (unsigned short)strtoul(optarg, &ptr, 0);
 	    if (ptr == optarg || *ptr != '\0' || port <= 0) {
-		(void) fprintf(stderr, "%s: Invalid port: '%s'\n", me, optarg);
+		fprintf(stderr, "%s: Invalid port: '%s'\n", me, optarg);
 		x3270if_usage();
 	    }
 	    break;
@@ -290,7 +288,7 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     /* Ignore broken pipes. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 #endif /*]*/
 
     /* Do the I/O. */
@@ -318,9 +316,9 @@ usock(int pid)
 	perror("socket");
 	exit(__LINE__);
     }
-    (void) memset(&ssun, '\0', sizeof(struct sockaddr_un));
+    memset(&ssun, '\0', sizeof(struct sockaddr_un));
     ssun.sun_family = AF_UNIX;
-    (void) snprintf(ssun.sun_path, sizeof(ssun.sun_path), "/tmp/x3sck.%d", pid);
+    snprintf(ssun.sun_path, sizeof(ssun.sun_path), "/tmp/x3sck.%d", pid);
     if (connect(fd, (struct sockaddr *)&ssun, sizeof(ssun)) < 0) {
 	perror("connect");
 	exit(__LINE__);
@@ -345,7 +343,7 @@ tsock(unsigned short port)
 #endif /*]*/
 	exit(__LINE__);
     }
-    (void) memset(&sin, '\0', sizeof(struct sockaddr_in));
+    memset(&sin, '\0', sizeof(struct sockaddr_in));
     sin.sin_family = AF_INET;
     sin.sin_port = htons(port);
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
@@ -446,7 +444,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 
     /* Speak to x3270. */
     if (verbose) {
-	(void) fprintf(stderr, "i+ out %s\n", (cmd != NULL) ? cmd : "");
+	fprintf(stderr, "i+ out %s\n", (cmd != NULL) ? cmd : "");
     }
 
     if (cmd != NULL) {
@@ -513,15 +511,15 @@ retry:
 	    buf[sl] = '\0';
 
 	    if (verbose) {
-		(void) fprintf(stderr, "i+ in %s\n", buf);
+		fprintf(stderr, "i+ in %s\n", buf);
 	    }
 	    if (!strcmp(buf, PROMPT_OK)) {
-		(void) fflush(stdout);
+		fflush(stdout);
 		xs = 0;
 		done = 1;
 		break;
 	    } else if (!strcmp(buf, PROMPT_ERROR)) {
-		(void) fflush(stdout);
+		fflush(stdout);
 		xs = 1;
 		done = 1;
 		break;
@@ -558,7 +556,7 @@ retry:
 		    }
 		}
 	    } else {
-		(void) strcpy(status, buf);
+		strcpy(status, buf);
 	    }
 
 	    /* Get ready for the next. */
@@ -732,7 +730,7 @@ iterative_io(int pid, unsigned short port)
 		FD_SET(io[i].wfd, &wfds);
 #ifdef DEBUG
 		if (verbose) {
-		    (void) fprintf(stderr, "enabling output %s %d\n",
+		    fprintf(stderr, "enabling output %s %d\n",
 			    io[i].name, io[i].wfd);
 		}
 #endif
@@ -740,7 +738,7 @@ iterative_io(int pid, unsigned short port)
 		FD_SET(io[i].rfd, &rfds);
 #ifdef DEBUG
 		if (verbose) {
-		    (void) fprintf(stderr, "enabling input %s %d\n",
+		    fprintf(stderr, "enabling input %s %d\n",
 			    io[i].name, io[i].rfd);
 		}
 #endif
@@ -752,7 +750,7 @@ iterative_io(int pid, unsigned short port)
 	    exit(__LINE__);
 	}
 	if (verbose) {
-	    (void) fprintf(stderr, "select->%d\n", rv);
+	    fprintf(stderr, "select->%d\n", rv);
 	}
 
 	for (i = 0; i < N_IO; i++) {
@@ -761,7 +759,7 @@ iterative_io(int pid, unsigned short port)
 		    rv = write(io[i].wfd, io[i].buf + io[i].offset,
 			    io[i].count);
 		    if (rv < 0) {
-			(void) fprintf(stderr, "x3270if: write(%s): %s",
+			fprintf(stderr, "x3270if: write(%s): %s",
 				io[i].name, strerror(errno));
 			exit(__LINE__);
 		    }
@@ -769,7 +767,7 @@ iterative_io(int pid, unsigned short port)
 		    io[i].count -= rv;
 #ifdef DEBUG
 		    if (verbose) {
-			(void) fprintf(stderr, "write(%s)->%d\n", io[i].name,
+			fprintf(stderr, "write(%s)->%d\n", io[i].name,
 				rv);
 		    }
 #endif
@@ -777,7 +775,7 @@ iterative_io(int pid, unsigned short port)
 	    } else if (FD_ISSET(io[i].rfd, &rfds)) {
 		rv = read(io[i].rfd, io[i].buf, IBS);
 		if (rv < 0) {
-		    (void) fprintf(stderr, "x3270if: read(%s): %s", io[i].name,
+		    fprintf(stderr, "x3270if: read(%s): %s", io[i].name,
 			    strerror(errno));
 		    exit(__LINE__);
 		}
@@ -788,7 +786,7 @@ iterative_io(int pid, unsigned short port)
 		io[i].count = rv;
 #ifdef DEBUG
 		if (verbose) {
-		    (void) fprintf(stderr, "read(%s)->%d\n", io[i].name, rv);
+		    fprintf(stderr, "read(%s)->%d\n", io[i].name, rv);
 		}
 #endif
 	    }
@@ -940,7 +938,7 @@ iterative_io(int pid, unsigned short port)
 	    if (stdin_nr == 0) {
 		exit(0);
 	    }
-	    (void) send(s, stdin_buf, stdin_nr, 0);
+	    send(s, stdin_buf, stdin_nr, 0);
 	    SetEvent(stdin_enable_event);
 	    break;
 	case WAIT_FAILED:
@@ -1290,7 +1288,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	    FD_ZERO(&rfds);
 	    FD_SET(0, &rfds);
 	    FD_SET(mfd, &rfds);
-	    (void) select(mfd + 1, &rfds, NULL, NULL, NULL);
+	    select(mfd + 1, &rfds, NULL, NULL, NULL);
 	    if (FD_ISSET(mfd, &rfds)) {
 		/* Pipe input (EOF). */
 		done = true;

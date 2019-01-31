@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -158,7 +158,7 @@ Tcl_AppInit(Tcl_Interp *interp)
     if (s == NULL) {
 	return TCL_ERROR;
     }
-    (void) Tcl_SplitList(interp, s, &tcl_argc, &tcl_argv);
+    Tcl_SplitList(interp, s, &tcl_argc, &tcl_argv);
     argc = tcl_argc + 1;
     argv = (const char **)Malloc((argc + 1) * sizeof(char *));
     argv[0] = s0;

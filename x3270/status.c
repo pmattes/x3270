@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -343,7 +343,6 @@ static void status_resolving(bool ignored);
 static void status_half_connect(bool ignored);
 static void status_printer(bool on);
 
-
 /**
  * Status line module registration.
  */
@@ -886,7 +885,6 @@ status_uncursor_pos(void)
     do_cursor(oia_cursor = (char *) 0);
 }
 
-
 /* Internal routines */
 
 /* Set the changed status for a particular status-line column. */

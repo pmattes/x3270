@@ -729,12 +729,12 @@ peer_script_init(void)
 
 	/* Create the listening socket. */
 	ssun = (struct sockaddr_un *)Malloc(sizeof(struct sockaddr_un));
-	(void) memset(ssun, '\0', sizeof(*ssun));
+	memset(ssun, '\0', sizeof(*ssun));
 	ssun->sun_family = AF_UNIX;
-	(void) snprintf(ssun->sun_path, sizeof(ssun->sun_path),
+	snprintf(ssun->sun_path, sizeof(ssun->sun_path),
 		"/tmp/x3sck.%u", (unsigned)getpid());
-	(void) unlink(ssun->sun_path);
-	(void) peer_init((struct sockaddr *)ssun, sizeof(*ssun), PLM_MULTI);
+	unlink(ssun->sun_path);
+	peer_init((struct sockaddr *)ssun, sizeof(*ssun), PLM_MULTI);
 	register_schange(ST_EXITING, cleanup_socket);
 	return;
     }
@@ -757,7 +757,7 @@ peer_script_init(void)
 static void
 cleanup_socket(bool b _is_unused)
 {
-    (void) unlink(lazyaf("/tmp/x3sck.%u", getpid()));
+    unlink(lazyaf("/tmp/x3sck.%u", getpid()));
 }
 #endif /*]*/
 
@@ -1268,7 +1268,7 @@ push_xmacro_onto(taskq_t *q, enum task_type type, const char *st, size_t len,
 
     s = task_push_onto(q, type, is_ui);
     s->macro.msc = Malloc(len + 1);
-    (void) memcpy(s->macro.msc, st, len);
+    memcpy(s->macro.msc, st, len);
     s->macro.msc[len] = '\0';
     s->macro.dptr = s->macro.msc;
     s->fatal = false;
@@ -1468,7 +1468,7 @@ task_error(const char *msg)
 	s->success = false;
 	current_task->success = false;
     } else {
-	(void) fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "%s\n", msg);
 	fflush(stderr);
     }
 }
@@ -1508,7 +1508,7 @@ task_info(const char *fmt, ...)
 		trace_task_output(current_task, "%.*s\n", nc, msg);
 		(*s->cbx.cb->data)(s->cbx.handle, msg, nc, true);
 	    } else {
-		(void) fprintf(stderr, "%.*s\n", (int)nc, msg);
+		fprintf(stderr, "%.*s\n", (int)nc, msg);
 	    }
 	}
 	msg = nl + 1;
@@ -2320,7 +2320,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 			mb[1] = '\0';
 			break;
 		    default:
-			(void) ebcdic_to_multibyte_x(buf[baddr].ec,
+			ebcdic_to_multibyte_x(buf[baddr].ec,
 				buf[baddr].cs, mb, sizeof(mb), EUO_NONE, &uc);
 			break;
 		    }
@@ -2599,7 +2599,7 @@ snap_save(void)
     Replace(snap_status, status_string());
 
     Replace(snap_buf, (struct ea *)Malloc(ROWS*COLS*sizeof(struct ea)));
-    (void) memcpy(snap_buf, ea_buf, ROWS*COLS*sizeof(struct ea));
+    memcpy(snap_buf, ea_buf, ROWS*COLS*sizeof(struct ea));
 
     snap_rows = ROWS;
     snap_cols = COLS;
@@ -3937,7 +3937,7 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
 	action_output("Your last answer was '%s'", state->previous);
     }
 
-    (void) task_request_input("RequestInput", "Input: ",
+    task_request_input("RequestInput", "Input: ",
 	    sample_continue_input, sample_abort_input, state, no_echo);
     return false;
 }

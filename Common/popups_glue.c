@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -62,7 +62,7 @@ popup_an_error(const char *fmt, ...)
     if (task_redirect()) {
 	task_error(s);
     } else if (!glue_gui_error(s)) {
-	(void) fprintf(stderr, "%s\n", s);
+	fprintf(stderr, "%s\n", s);
 	fflush(stderr);
     }
     Free(s);
@@ -100,7 +100,7 @@ action_output(const char *fmt, ...)
 	task_info("%s", s);
     } else {
 	if (!glue_gui_output(s)) {
-	    (void) fprintf(stderr, "%s\n", s);
+	    fprintf(stderr, "%s\n", s);
 	    fflush(stderr);
 	}
     }

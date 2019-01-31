@@ -316,7 +316,7 @@ static struct sstate nss;
 static struct sstate iss;
 static struct sstate *ss = &nss;
 
-#define	INIT_ODD(odd)	(void) memset(odd, '\0', sizeof(odd))
+#define	INIT_ODD(odd)	memset(odd, '\0', sizeof(odd))
 #define SET_ODD(odd, n)	(odd)[(n) / BPW] |= 1 << ((n) % BPW)
 #define IS_ODD(odd, n)	((odd)[(n) / BPW] & 1 << ((n) % BPW))
 
@@ -446,7 +446,6 @@ static struct rsfont *rsfonts;
 #define DEFAULT_PIXEL		(appres.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
-
 /*
  * Save 00 event translations.
  */
@@ -540,7 +539,6 @@ clear_fixed(void)
 	fixed_height = 0;
     }
 }
-
 /*
  * Initialize the screen.
  */
@@ -582,7 +580,7 @@ screen_init(void)
     }
 
     /* Initialize the blank map. */
-    (void) memset((char *)blank_map, '\0', sizeof(blank_map));
+    memset((char *)blank_map, '\0', sizeof(blank_map));
     for (i = 0; i < 256; i++) {
 	if (ebc2asc0[i] == 0x20 || ebc2asc0[i] == 0xa0) {
 	    BKM_SET(i);
@@ -620,7 +618,7 @@ screen_reinit(unsigned cmask)
     if (cmask & COLOR_CHANGE) {
 	if (appres.m3279) {
 	    default_color_scheme();
-	    (void) xfer_color_scheme(xappres.color_scheme, false);
+	    xfer_color_scheme(xappres.color_scheme, false);
 	}
 	allocate_pixels();
 
@@ -668,7 +666,7 @@ screen_reinit(unsigned cmask)
 	Replace(rt_buf,
 	    (XChar2b *)XtMalloc(maxCOLS * sizeof(XChar2b)));
     } else {
-	(void) memset((char *) nss.image, 0,
+	memset((char *) nss.image, 0,
 		      sizeof(struct sp) * maxROWS * maxCOLS);
     }
 
@@ -881,7 +879,7 @@ screen_reinit(unsigned cmask)
     }
     if (kp_placement == kp_integral) {
 	if (xappres.keypad_on) {
-	    (void) keypad_init(container,
+	    keypad_init(container,
 		    menubar_height + nss.screen_height+2,
 		    container_width,
 		    false, false);
@@ -1161,7 +1159,7 @@ screen_connect(bool ignored _is_unused)
 	    ctlr_erase(true);
 	}
 	cursor_enabled = false;
-	(void) cursor_off("connect", true, NULL);
+	cursor_off("connect", true, NULL);
     }
     if (toggled(CROSSHAIR)) {
 	screen_changed = true;
@@ -1235,7 +1233,6 @@ screen_showikeypad(bool on)
     screen_reinit(FONT_CHANGE);
 }
 
-
 /*
  * The host just wrote a blinking character; make sure it blinks
  */
@@ -1543,7 +1540,7 @@ redraw_lower_crosshair(void)
 	ss->cursor_daddr = cursor_addr;
     }
 }
-
+
 /*
  * Make the (displayed) cursor disappear.  Returns a bool indiciating if
  * the cursor was on before the call.
@@ -1580,8 +1577,6 @@ cursor_off(const char *why, bool including_lower_crosshair, bool *xwo)
     return was_on;
 }
 
-
-
 /*
  * Blink the cursor
  */
@@ -1594,7 +1589,7 @@ cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     }
     if (cursor_displayed) {
 	if (in_focus) {
-	    (void) cursor_off("blink", false, NULL);
+	    cursor_off("blink", false, NULL);
 	}
     } else {
 	cursor_on("blink");
@@ -1674,7 +1669,6 @@ cursor_on(const char *why)
     }
 }
 
-
 /*
  * Toggle the cursor (block/underline).
  */
@@ -1696,7 +1690,6 @@ toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
     }
 }
 
-
 /*
  * Move the cursor to the specified buffer address.
  */
@@ -1742,11 +1735,10 @@ enable_cursor(bool on)
 	cursor_on("enable");
 	cursor_changed = true;
     } else {
-	(void) cursor_off("enable", true, NULL);
+	cursor_off("enable", true, NULL);
     }
 }
 
-
 /*
  * Toggle the crosshair cursor.
  */
@@ -1788,7 +1780,6 @@ toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     screen_disp(false);
 }
 
-
 /*
  * Toggle visible control characters.
  */
@@ -1803,7 +1794,6 @@ toggle_visible_control(toggle_index_t ix _is_unused,
     screen_disp(false);
 }
 
-
 /*
  * Redraw the screen.
  */
@@ -1866,7 +1856,7 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	    ncols--;
 	}
 	for (row = startrow; row < endrow; row++) {
-	    (void) memset((char *) &ss->image[ROWCOL_TO_BA(row, startcol)],
+	    memset((char *) &ss->image[ROWCOL_TO_BA(row, startcol)],
 		    0, ncols * sizeof(struct sp));
 	    if (visible_control) {
 		c0 = ROWCOL_TO_BA(row, startcol);
@@ -1882,7 +1872,7 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
     } else {
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)), 0, 0,
 		ss->screen_width, ss->screen_height);
-	(void) memset((char *) ss->image, 0,
+	memset((char *) ss->image, 0,
 		(maxROWS*maxCOLS) * sizeof(struct sp));
 	if (visible_control) {
 	    for (i = 0; i < maxROWS*maxCOLS; i++) {
@@ -2031,7 +2021,6 @@ screen_disp(bool erasing)
     draw_aicon_label();
 }
 
-
 /*
  * Render a blank rectangle on the X display.
  */
@@ -2041,7 +2030,7 @@ render_blanks(int baddr, int height, struct sp *buffer)
     int x, y;
 
 #if defined(_ST) /*[*/
-    (void) printf("render_blanks(baddr=%s, height=%d)\n", rcba(baddr), height);
+    printf("render_blanks(baddr=%s, height=%d)\n", rcba(baddr), height);
 #endif /*]*/
 
     x = ssCOL_TO_X(BA_TO_COL(baddr));
@@ -2052,7 +2041,7 @@ render_blanks(int baddr, int height, struct sp *buffer)
 	x, y - ss->ascent,
 	(ss->char_width * COLS) + 1, (ss->char_height * height));
 
-    (void) memmove(&ss->image[baddr], &buffer[baddr],
+    memmove(&ss->image[baddr], &buffer[baddr],
 	    COLS * height *sizeof(struct sp));
 }
 
@@ -2108,7 +2097,7 @@ resync_text(int baddr, int len, struct sp *buffer)
     static unsigned long gmask = 0L;
 
 #if defined(_ST) /*[*/
-    (void) printf("resync_text(baddr=%s, len=%d)\n", rcba(baddr), len);
+    printf("resync_text(baddr=%s, len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 
     /*
@@ -2152,7 +2141,7 @@ resync_text(int baddr, int len, struct sp *buffer)
 
 	/* All empty, fill a rectangle */
 #if defined(_ST) /*[*/
-	(void) printf("FillRectangle(baddr=%s, len=%d)\n", rcba(baddr), len);
+	printf("FillRectangle(baddr=%s, len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)), x,
 		y - ss->ascent, (ss->char_width * len) + 1, ss->char_height);
@@ -2225,7 +2214,7 @@ resync_text(int baddr, int len, struct sp *buffer)
     }
 
     /* The X display is now correct; update ss->image[]. */
-    (void) memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(struct sp));
+    memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(struct sp));
 }
 
 /*
@@ -2391,7 +2380,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
     int n_dbcs = 0;
 
 #if defined(_ST) /*[*/
-    (void) printf("render_text(baddr=%s, len=%d)\n", rcba(baddr), len);
+    printf("render_text(baddr=%s, len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 
     /*
@@ -2405,7 +2394,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	 * and baddr is greater than zero.
 	 */
 #if defined(_ST) /*[*/
-	(void) printf("render_text: backing off\n");
+	printf("render_text: backing off\n");
 #endif /*]*/
 	buffer--;
 	baddr--;
@@ -2685,7 +2674,6 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		y - ss->ascent + ss->char_height - 1);
     }
 }
-
 
 bool
 screen_obscured(void)
@@ -2711,13 +2699,13 @@ screen_scroll(unsigned char fg, unsigned char bg)
     }
 
     was_on = cursor_off("scroll", true, &xwo);
-    (void) memmove(&ss->image[0], &ss->image[COLS],
+    memmove(&ss->image[0], &ss->image[COLS],
 		       (ROWS - 1) * COLS * sizeof(struct sp));
-    (void) memmove(&temp_image[0], &temp_image[COLS],
+    memmove(&temp_image[0], &temp_image[COLS],
 		       (ROWS - 1) * COLS * sizeof(struct sp));
-    (void) memset((char *)&ss->image[(ROWS - 1) * COLS], 0,
+    memset((char *)&ss->image[(ROWS - 1) * COLS], 0,
 		  COLS * sizeof(struct sp));
-    (void) memset((char *)&temp_image[(ROWS - 1) * COLS], 0,
+    memset((char *)&temp_image[(ROWS - 1) * COLS], 0,
 		  COLS * sizeof(struct sp));
     XCopyArea(display, ss->window, ss->window, get_gc(ss, 0),
 	ssCOL_TO_X(0),
@@ -2740,14 +2728,13 @@ screen_scroll(unsigned char fg, unsigned char bg)
     }
 }
 
-
 /*
  * Toggle mono-/dual-case mode.
  */
 static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    (void) memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(struct sp));
+    memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(struct sp));
     ctlr_changed(0, ROWS*COLS);
 }
 
@@ -3211,7 +3198,6 @@ resync_display(struct sp *buffer, int first, int last)
     }
 }
 
-
 /*
  * Support code for cursor redraw.
  */
@@ -3561,7 +3547,6 @@ put_cursor(int baddr, bool on)
     redraw_char(baddr, true);
 }
 
-
 /* Allocate a named color. */
 static bool
 alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
@@ -3577,7 +3562,7 @@ alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
 
 	rgb = strtoul(name + 1, &endptr, 16);
 	if (endptr != name + 1 && !*endptr && !(rgb & ~0xffffff)) {
-	    (void) memset(&db, '\0', sizeof(db));
+	    memset(&db, '\0', sizeof(db));
 	    db.red = (rgb >> 16) & 0xff;
 	    db.red |= (db.red << 8);
 	    db.green = (rgb >> 8) & 0xff;
@@ -4048,7 +4033,6 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
     }
 }
 
-
 /*
  * Convert an attribute to a color index.
  */
@@ -4084,7 +4068,6 @@ fa_color(unsigned char fa)
     }
 }
 
-
 
 /*
  * Event handlers for toplevel FocusIn, FocusOut, KeymapNotify and
@@ -4298,7 +4281,7 @@ screen_focus(bool in)
      * Change the appearance of the cursor.  Make it hollow out or fill in
      * instantly, even if it was blinked off originally.
      */
-    (void) cursor_off("focus", true, NULL);
+    cursor_off("focus", true, NULL);
     in_focus = in;
     cursor_on("focus");
 
@@ -4616,9 +4599,9 @@ expand_cslist(const char *s)
 	int wl = comma - t;
 
 	if (*r) {
-	    (void) strcat(r, ", ");
+	    strcat(r, ", ");
 	}
-	(void) strncat(r, t, wl);
+	strncat(r, t, wl);
     }
     return strcat(strcat(r, " or "), t);
 }
@@ -5098,7 +5081,7 @@ ring_bell(void)
     XSync(display, 0);
     tv.tv_sec = 0;
     tv.tv_usec = 125000;
-    (void) select(0, NULL, NULL, NULL, &tv);
+    select(0, NULL, NULL, NULL, &tv);
     XFillRectangle(display, ss->window, bgc,
 	0, 0, ss->screen_width, ss->screen_height);
     XSync(display, 0);
@@ -5127,7 +5110,6 @@ PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
     }
 }
 
-
 /* Initialize the icon. */
 void
 icon_init(void)
@@ -5305,8 +5287,7 @@ aicon_reinit(unsigned cmask)
 		NULL);
     }
     if (cmask & (MODEL_CHANGE | FONT_CHANGE | COLOR_CHANGE)) {
-	(void)memset((char *)iss.image, 0, sizeof(struct sp) * maxROWS *
-		maxCOLS);
+	memset((char *)iss.image, 0, sizeof(struct sp) * maxROWS * maxCOLS);
     }
 }
 
@@ -5400,7 +5381,6 @@ lock_icon(enum mcursor_state state)
     flip_icon(icon_inverted, state);
 }
 
-
 /* Check the font menu for an existing name. */
 static bool
 font_in_menu(const char *font)
@@ -5539,7 +5519,7 @@ init_rsfonts(char *charset_name)
     }
 
     /* Add 'fixed' to the menu, so there's at least one alternative. */
-    (void) add_font_to_menu("fixed", "!fixed");
+    add_font_to_menu("fixed", "!fixed");
 
     /* Expand out wild-cards based on the display character set names. */
     buf = dupcsn = NewString(charset_name);
@@ -5568,7 +5548,7 @@ init_rsfonts(char *charset_name)
 			    csn, (int)(dash2 - name - 1), name + 1, dash2 + 1);
 		} else
 		    hier_name = xs_buffer("%s>%s", csn, name);
-		(void) add_font_to_menu(hier_name, name);
+		add_font_to_menu(hier_name, name);
 		Free(hier_name);
 	    }
 	}
@@ -5880,7 +5860,7 @@ PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
 	/*
 	 * Force a screen redraw.
 	 */
-	(void) memset((char *) ss->image, 0,
+	memset((char *) ss->image, 0,
 		(maxROWS*maxCOLS) * sizeof(struct sp));
 	if (visible_control) {
 	    for (i = 0; i < maxROWS*maxCOLS; i++) {
@@ -6444,7 +6424,7 @@ screen_set_select(int baddr)
 void
 screen_unselect_all(void)
 {
-    (void) memset((char *)selected, 0, (ROWS*COLS + 7) / 8);
+    memset((char *)selected, 0, (ROWS*COLS + 7) / 8);
 }
 
 /**

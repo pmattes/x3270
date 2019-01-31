@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2018 Paul Mattes.
+ * Copyright (c) 2014-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -520,13 +520,13 @@ httpd_objects_init(void)
     }
     initted = true;
 
-    (void) httpd_register_dir("/3270", "Emulator state");
-    (void) httpd_register_dyn_term("/3270/screen.html", "Screen image",
+    httpd_register_dir("/3270", "Emulator state");
+    httpd_register_dyn_term("/3270/screen.html", "Screen image",
 	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_screen_image);
-    (void) httpd_register_dyn_term("/3270/interact.html", "Interactive form",
+    httpd_register_dyn_term("/3270/interact.html", "Interactive form",
 	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_interact);
-    (void) httpd_register_dir("/3270/rest", "REST interface");
-    (void) httpd_register_fixed_binary("/favicon.ico", "Browser icon",
+    httpd_register_dir("/3270/rest", "REST interface");
+    httpd_register_fixed_binary("/favicon.ico", "Browser icon",
 	    CT_BINARY, "image/vnd.microsoft.icon", HF_HIDDEN, favicon,
 	    favicon_size);
     nhandle = httpd_register_dyn_nonterm("/3270/rest/text",
@@ -542,7 +542,7 @@ httpd_objects_init(void)
 	    "REST HTML interface", CT_HTML, "text/html; charset=utf-8",
 	    HF_TRAILER, rest_html_dyn);
     httpd_set_alias(nhandle, "html/Query()");
-    (void) httpd_register_dyn_nonterm("/3270/rest/json",
+    httpd_register_dyn_nonterm("/3270/rest/json",
 	    "REST JSON interface", CT_TEXT, "text/plain; charset=utf-8",
 	    HF_NONE, rest_json_dyn);
 }

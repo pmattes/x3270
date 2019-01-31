@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -417,69 +417,74 @@ action_name(XtActionProc action)
 static void
 learn_modifiers(void)
 {
-	XModifierKeymap *mm;
-	int i, j, k;
-	static char *default_modname[] = {
-	    NULL, NULL, "Ctrl",
-	    "Mod1", "Mod2", "Mod3", "Mod4", "Mod5",
-	    "Button1", "Button2", "Button3", "Button4", "Button5"
-	};
+    XModifierKeymap *mm;
+    int i, j, k;
+    static char *default_modname[] = {
+	NULL, NULL, "Ctrl",
+	"Mod1", "Mod2", "Mod3", "Mod4", "Mod5",
+	"Button1", "Button2", "Button3", "Button4", "Button5"
+    };
 
-	mm = XGetModifierMapping(display);
+    mm = XGetModifierMapping(display);
 
-	for (i = 0; i < MODMAP_SIZE; i++) {
-		for (j = 0; j < mm->max_keypermod; j++) {
-			KeyCode kc;
-			const char *name = NULL;
-			bool is_meta = false;
+    for (i = 0; i < MODMAP_SIZE; i++) {
+	for (j = 0; j < mm->max_keypermod; j++) {
+	    KeyCode kc;
+	    const char *name = NULL;
+	    bool is_meta = false;
 
-			kc = mm->modifiermap[(i * mm->max_keypermod) + j];
-			if (!kc)
-				continue;
+	    kc = mm->modifiermap[(i * mm->max_keypermod) + j];
+	    if (!kc) {
+		continue;
+	    }
 
-			switch(XkbKeycodeToKeysym(display, kc, 0, 0)) {
-			    case XK_Meta_L:
-			    case XK_Meta_R:
-				name = "Meta";
-				is_meta = true;
-				break;
-			    case XK_Alt_L:
-			    case XK_Alt_R:
-				name = "Alt";
-				break;
-			    case XK_Super_L:
-			    case XK_Super_R:
-				name = "Super";
-				break;
-			    case XK_Hyper_L:
-			    case XK_Hyper_R:
-				name = "Hyper";
-				break;
-			    default:
-				break;
-			}
-			if (name == NULL)
-				continue;
-			if (is_meta)
-				skeymask[i].is_meta = true;
+	    switch(XkbKeycodeToKeysym(display, kc, 0, 0)) {
+	    case XK_Meta_L:
+	    case XK_Meta_R:
+		name = "Meta";
+		is_meta = true;
+		break;
+	    case XK_Alt_L:
+	    case XK_Alt_R:
+		name = "Alt";
+		break;
+	    case XK_Super_L:
+	    case XK_Super_R:
+		name = "Super";
+		break;
+	    case XK_Hyper_L:
+	    case XK_Hyper_R:
+		name = "Hyper";
+		break;
+	    default:
+		break;
+	    }
+	    if (name == NULL) {
+		continue;
+	    }
+	    if (is_meta) {
+		skeymask[i].is_meta = true;
+	    }
 
-			for (k = 0; k < MAX_MODS_PER; k++) {
-				if (skeymask[i].name[k] == NULL)
-					break;
-				else if (!strcmp(skeymask[i].name[k], name))
-					k = MAX_MODS_PER;
-			}
-			if (k >= MAX_MODS_PER)
-				continue;
-			skeymask[i].name[k] = name;
+	    for (k = 0; k < MAX_MODS_PER; k++) {
+		if (skeymask[i].name[k] == NULL) {
+		    break;
+		} else if (!strcmp(skeymask[i].name[k], name)) {
+		    k = MAX_MODS_PER;
 		}
+	    }
+	    if (k >= MAX_MODS_PER) {
+		continue;
+	    }
+	    skeymask[i].name[k] = name;
 	}
-	for (i = 0; i < MODMAP_SIZE; i++) {
-		if (skeymask[i].name[0] == NULL) {
-			skeymask[i].name[0] = default_modname[i];
-		}
+    }
+    for (i = 0; i < MODMAP_SIZE; i++) {
+	if (skeymask[i].name[0] == NULL) {
+	    skeymask[i].name[0] = default_modname[i];
 	}
-	XFreeModifiermap(mm);
+    }
+    XFreeModifiermap(mm);
 }
 
 /*
@@ -491,72 +496,75 @@ learn_modifiers(void)
 static char *
 key_symbolic_state(unsigned int state, int *iteration)
 {
-	static char rs[64];
-	static int ix[MAP_SIZE];
-	static int ix_ix[MAP_SIZE];
-	static int n_ix = 0;
+    static char rs[64];
+    static int ix[MAP_SIZE];
+    static int ix_ix[MAP_SIZE];
+    static int n_ix = 0;
 #if defined(VERBOSE_EVENTS) /*[*/
-	static int leftover = 0;
+    static int leftover = 0;
 #endif /*]*/
-	const char *comma = "";
-	int i;
+    const char *comma = "";
+    int i;
 
-	if (!know_mods) {
-		learn_modifiers();
-		know_mods = true;
-	}
+    if (!know_mods) {
+	learn_modifiers();
+	know_mods = true;
+    }
 
-	if (*iteration == 0) {
-		/* First time, build the table. */
-		n_ix = 0;
-		for (i = 0; i < MAP_SIZE; i++) {
-			if (skeymask[i].name[0] != NULL &&
-			    (state & skeymask[i].mask)) {
-				ix[i] = 0;
-				state &= ~skeymask[i].mask;
-				ix_ix[n_ix++] = i;
-			} else
-				ix[i] = MAX_MODS_PER;
-		}
-#if defined(VERBOSE_EVENTS) /*[*/
-		leftover = state;
-#endif /*]*/
-	}
-
-	/* Construct this result. */
-	rs[0] = '\0';
-	for (i = 0; i < n_ix;  i++) {
-		(void) strcat(rs, comma);
-		(void) strcat(rs, skeymask[ix_ix[i]].name[ix[ix_ix[i]]]);
-		comma = " ";
+    if (*iteration == 0) {
+	/* First time, build the table. */
+	n_ix = 0;
+	for (i = 0; i < MAP_SIZE; i++) {
+	    if (skeymask[i].name[0] != NULL && (state & skeymask[i].mask)) {
+		ix[i] = 0;
+		state &= ~skeymask[i].mask;
+		ix_ix[n_ix++] = i;
+	    } else {
+		ix[i] = MAX_MODS_PER;
+	    }
 	}
 #if defined(VERBOSE_EVENTS) /*[*/
-	if (leftover)
-		(void) sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
+	leftover = state;
+#endif /*]*/
+    }
+
+    /* Construct this result. */
+    rs[0] = '\0';
+    for (i = 0; i < n_ix;  i++) {
+	strcat(rs, comma);
+	strcat(rs, skeymask[ix_ix[i]].name[ix[ix_ix[i]]]);
+	comma = " ";
+    }
+#if defined(VERBOSE_EVENTS) /*[*/
+    if (leftover) {
+	sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
+    }
 #endif /*]*/
 
-	/*
-	 * Iterate to the next.
-	 * This involves treating each slot like an n-ary number, where n is
-	 * the number of elements in the slot, iterating until the highest-
-	 * ordered slot rolls back over to 0.
-	 */
-	if (n_ix) {
-		i = n_ix - 1;
+    /*
+     * Iterate to the next.
+     * This involves treating each slot like an n-ary number, where n is
+     * the number of elements in the slot, iterating until the highest-
+     * ordered slot rolls back over to 0.
+     */
+    if (n_ix) {
+	i = n_ix - 1;
+	ix[ix_ix[i]]++;
+	while (i >= 0 &&
+	       (ix[ix_ix[i]] >= MAX_MODS_PER ||
+		skeymask[ix_ix[i]].name[ix[ix_ix[i]]] == NULL)) {
+	    ix[ix_ix[i]] = 0;
+	    i = i - 1;
+	    if (i >= 0) {
 		ix[ix_ix[i]]++;
-		while (i >= 0 &&
-		       (ix[ix_ix[i]] >= MAX_MODS_PER ||
-			skeymask[ix_ix[i]].name[ix[ix_ix[i]]] == NULL)) {
-			ix[ix_ix[i]] = 0;
-			i = i - 1;
-			if (i >= 0)
-				ix[ix_ix[i]]++;
-		}
-		*iteration = i >= 0;
-	} else
-		*iteration = 0;
+	    }
+	}
+	*iteration = i >= 0;
+    } else {
+	*iteration = 0;
+    }
 
-	return rs;
+    return rs;
 }
 
 /* Return whether or not an KeyPress event state includes the Meta key. */
@@ -584,43 +592,44 @@ event_is_meta(int state)
 static char *
 key_state(unsigned int state)
 {
-	static char rs[64];
-	const char *comma = "";
-	static struct {
-		const char *name;
-		unsigned int mask;
-	} keymask[] = {
-		{ "Shift", ShiftMask },
-		{ "Lock", LockMask },
-		{ "Control", ControlMask },
-		{ "Mod1", Mod1Mask },
-		{ "Mod2", Mod2Mask },
-		{ "Mod3", Mod3Mask },
-		{ "Mod4", Mod4Mask },
-		{ "Mod5", Mod5Mask },
-		{ "Button1", Button1Mask },
-		{ "Button2", Button2Mask },
-		{ "Button3", Button3Mask },
-		{ "Button4", Button4Mask },
-		{ "Button5", Button5Mask },
-		{ NULL, 0 },
-	};
-	int i;
+    static char rs[64];
+    const char *comma = "";
+    static struct {
+	const char *name;
+	unsigned int mask;
+    } keymask[] = {
+	{ "Shift", ShiftMask },
+	{ "Lock", LockMask },
+	{ "Control", ControlMask },
+	{ "Mod1", Mod1Mask },
+	{ "Mod2", Mod2Mask },
+	{ "Mod3", Mod3Mask },
+	{ "Mod4", Mod4Mask },
+	{ "Mod5", Mod5Mask },
+	{ "Button1", Button1Mask },
+	{ "Button2", Button2Mask },
+	{ "Button3", Button3Mask },
+	{ "Button4", Button4Mask },
+	{ "Button5", Button5Mask },
+	{ NULL, 0 },
+    };
+    int i;
 
-	rs[0] = '\0';
-	for (i = 0; keymask[i].name; i++) {
-		if (state & keymask[i].mask) {
-			(void) strcat(rs, comma);
-			(void) strcat(rs, keymask[i].name);
-			comma = "|";
-			state &= ~keymask[i].mask;
-		}
+    rs[0] = '\0';
+    for (i = 0; keymask[i].name; i++) {
+	if (state & keymask[i].mask) {
+	    strcat(rs, comma);
+	    strcat(rs, keymask[i].name);
+	    comma = "|";
+	    state &= ~keymask[i].mask;
 	}
-	if (!rs[0])
-		(void) sprintf(rs, "%d", state);
-	else if (state)
-		(void) sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
-	return rs;
+    }
+    if (!rs[0]) {
+	sprintf(rs, "%d", state);
+    } else if (state) {
+	sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
+    }
+    return rs;
 }
 #endif /*]*/
 
@@ -676,7 +685,7 @@ trace_event(XEvent *event)
 	press = "Release";
     case KeyPress:
 	kevent = (XKeyEvent *)event;
-	(void) XLookupString(kevent, dummystr, KSBUF, &ks, NULL);
+	XLookupString(kevent, dummystr, KSBUF, &ks, NULL);
 	state = kevent->state;
 
 	/*

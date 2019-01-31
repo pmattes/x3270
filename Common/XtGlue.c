@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1999-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -467,7 +467,7 @@ AddTimeOut(unsigned long interval_ms, tofn_t proc)
     ms_ts(&t_new->ts);
     t_new->ts += interval_ms;
 #else /*][*/
-    (void) gettimeofday(&t_new->tv, NULL);
+    gettimeofday(&t_new->tv, NULL);
     t_new->tv.tv_sec += interval_ms / 1000L;
     t_new->tv.tv_usec += (interval_ms % 1000L) * 1000L;
     if (t_new->tv.tv_usec > MILLION) {
@@ -720,7 +720,7 @@ process_some_events(bool block, bool *processed_any)
 #   else /*][*/
 #    define SOURCE_READY    FD_ISSET(ip->source, &rfds)
 #    define WAIT_BAD        (ns < 0)
-#    define GET_TS(v)       (void) gettimeofday(v, NULL);
+#    define GET_TS(v)       gettimeofday(v, NULL);
 #    define EXPIRED(t, now) (t->tv.tv_sec < now.tv_sec || \
 			     (t->tv.tv_sec == now.tv_sec && \
 			      t->tv.tv_usec < now.tv_usec))

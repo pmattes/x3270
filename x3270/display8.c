@@ -3181,16 +3181,17 @@ d16_t d16[] = {
 int
 display16_init(char *cset)
 {
-    	int i;
+    int i;
 
-	for (i = 0; d16[i].cset; i++) {
-	    	if (!strcasecmp(cset, d16[i].cset)) {
-			return i;
-		}
+    for (i = 0; d16[i].cset; i++) {
+	if (!strcasecmp(cset, d16[i].cset)) {
+	    return i;
 	}
-	if (!strcasecmp(cset, "iso10646-1"))
-		return ISO10646_IX;
-	return -1;
+    }
+    if (!strcasecmp(cset, "iso10646-1")) {
+	return ISO10646_IX;
+    }
+    return -1;
 }
 
 /*
@@ -3200,34 +3201,40 @@ display16_init(char *cset)
 int
 display16_lookup(int d16_ix, ucs4_t ucs4)
 {
-    	int row, col;
-	int ix;
+    int row, col;
+    int ix;
 
-	/* Handle errors. */
-    	if (d16_ix < 0)
-		return -1;
-
-	/* Handle ISO 10646-1. */
-	if (d16_ix == ISO10646_IX)
-		return (int)ucs4;
-
-	/* Handle more errors. */
-	if ((unsigned)d16_ix >= (ND16 - 1))
-	    	return -1;
-
-	/* Check for a match in the proper table. */
-	if (ucs4 > 0xffff)
-	    	return -1;
-	row = (ucs4 >> 7) & 0x1ff;
-	if (d16[d16_ix].u[row] == NULL)
-	    	return -1;
-
-	col = (ucs4 & 0x7f) * 2;
-	ix = ((d16[d16_ix].u[row][col] & 0xff) << 8) |
-	      (d16[d16_ix].u[row][col + 1] & 0xff);
-	if (ix != 0)
-	    return ix;
-
-	/* Give up. */
+    /* Handle errors. */
+    if (d16_ix < 0) {
 	return -1;
+    }
+
+    /* Handle ISO 10646-1. */
+    if (d16_ix == ISO10646_IX) {
+	return (int)ucs4;
+    }
+
+    /* Handle more errors. */
+    if ((unsigned)d16_ix >= (ND16 - 1)) {
+	return -1;
+    }
+
+    /* Check for a match in the proper table. */
+    if (ucs4 > 0xffff) {
+	return -1;
+    }
+    row = (ucs4 >> 7) & 0x1ff;
+    if (d16[d16_ix].u[row] == NULL) {
+	return -1;
+    }
+
+    col = (ucs4 & 0x7f) * 2;
+    ix = ((d16[d16_ix].u[row][col] & 0xff) << 8) |
+	  (d16[d16_ix].u[row][col + 1] & 0xff);
+    if (ix != 0) {
+	return ix;
+    }
+
+    /* Give up. */
+    return -1;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 2006-2010, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ main(int argc, char *argv[])
     char *exe_name;
     char *link_path;
 
-    (void) get_version_info();
+    get_version_info();
 
     /* Pull in the parameter. */
     if (argc != 4) {

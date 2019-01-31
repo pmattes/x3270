@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -479,7 +479,7 @@ ft_complete(const char *errmsg)
 	double bytes_sec;
 	char *buf;
 
-	(void) gettimeofday(&t1, NULL);
+	gettimeofday(&t1, NULL);
 	bytes_sec = (double)fts.length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
@@ -511,7 +511,7 @@ ft_running(bool is_cut)
 	}
     }
     fts.is_cut = is_cut;
-    (void) gettimeofday(&t0, NULL);
+    gettimeofday(&t0, NULL);
     fts.length = 0;
 
     ft_gui_running(fts.length);
@@ -569,7 +569,7 @@ ft_go(ft_conf_t *p)
     if (p->receive_flag && !p->append_flag && !p->allow_overwrite) {
 	f = fopen(p->local_filename, p->ascii_flag? "r": "rb");
 	if (f != NULL) {
-	    (void) fclose(f);
+	    fclose(f);
 	    popup_an_error("Transfer: File exists");
 	    return NULL;
 	}
@@ -683,7 +683,7 @@ ft_go(ft_conf_t *p)
 	popup_an_error("%s", get_message("ftUnable"));
 	return NULL;
     }
-    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
+    emulate_input(vb_buf(&r), vb_len(&r), false);
     vb_free(&r);
 
     /* Now proceed with this context. */
@@ -778,7 +778,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-			(void) strtol(value, &ptr, 10);
+			strtol(value, &ptr, 10);
 			if (ptr == value || *ptr) {
 			    popup_an_error("Transfer: Invalid option value: "
 				    "'%s'", value);
@@ -813,7 +813,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->local_filename = NewString(tp[PARM_LOCAL_FILE].value);
     }
     if (tp[PARM_HOST].value) {
-	(void) ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);
+	ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);
     }
     if (tp[PARM_MODE].value) {
 	p->ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
@@ -838,7 +838,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
     }
     if (tp[PARM_RECFM].value) {
-	(void) ft_encode_recfm(tp[PARM_RECFM].value, &p->recfm);
+	ft_encode_recfm(tp[PARM_RECFM].value, &p->recfm);
     }
     if (tp[PARM_LRECL].value) {
 	p->lrecl = atoi(tp[PARM_LRECL].value);
@@ -847,7 +847,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->blksize = atoi(tp[PARM_BLKSIZE].value);
     }
     if (tp[PARM_ALLOCATION].value) {
-	(void) ft_encode_units(tp[PARM_ALLOCATION].value, &p->units);
+	ft_encode_units(tp[PARM_ALLOCATION].value, &p->units);
     }
     if (tp[PARM_PRIMARY_SPACE].value) {
 	p->primary_space = atoi(tp[PARM_PRIMARY_SPACE].value);

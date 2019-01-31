@@ -78,7 +78,7 @@ typedef struct {
 /* Globals */
 
 /* Statics */
-
+
 /* Print Text popup */
 
 #if !defined(_WIN32) /*[*/
@@ -411,7 +411,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     if (f == NULL) {
 	popup_an_errno(errno, "PrintText: %s", name);
 	if (fd >= 0) {
-	    (void) close(fd);
+	    close(fd);
 	}
 	if (temp_name) {
 	    unlink(temp_name);

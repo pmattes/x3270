@@ -103,7 +103,6 @@ static struct reply {
 #define NSR_ALL	(sizeof(replies)/sizeof(struct reply))
 #define NSR	(NSR_ALL - 1)
 
-
 /*
  * Process a 3270 Write Structured Field command
  */

@@ -297,8 +297,8 @@ c3270_screen_suspend(void)
     if (needed) {
 #if !defined(_WIN32) /*[*/
 	/* screen_init/screen_resume reset these. */
-	(void) signal(SIGINT, common_handler);
-	(void) signal(SIGTSTP, common_handler);
+	signal(SIGINT, common_handler);
+	signal(SIGTSTP, common_handler);
 #endif /*]*/
     }
     return needed;
@@ -406,7 +406,7 @@ static void
 sigchld_handler(int ignored)
 {
 #if !defined(_AIX) /*[*/
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 }
 #endif /*]*/
@@ -447,7 +447,7 @@ exit_pause(bool mode _is_unused)
 
 	printf("\n[Press <Enter>] ");
 	fflush(stdout);
-	(void) fgets(buf, sizeof(buf), stdin);
+	fgets(buf, sizeof(buf), stdin);
     }
 }
 #endif /*]*/
@@ -469,7 +469,7 @@ main(int argc, char *argv[])
     register_schange_ordered(ST_EXITING, exit_pause, ORDER_LAST);
 
     /* Get Windows version and directories. */
-    (void) get_version_info();
+    get_version_info();
     if (!get_dirs("wc3270", &instdir, &mydesktop, NULL, NULL, NULL, NULL, NULL,
 		&mydocs3270, &commondocs3270, &windirs_flags)) {
 	x3270_exit(1);
@@ -556,7 +556,7 @@ main(int argc, char *argv[])
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
     }
     model_init();
 
@@ -623,14 +623,14 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     /* Make sure we can collect child exit status. */
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 
     /* Handle run-time signals. */
-    (void) signal(SIGINT, common_handler);
-    (void) signal(SIGTSTP, common_handler);
+    signal(SIGINT, common_handler);
+    signal(SIGTSTP, common_handler);
 #endif /*]*/
     task_cb_init_ir_state(&command_ir_state);
 
@@ -662,7 +662,7 @@ main(int argc, char *argv[])
     /* Process events forever. */
     while (1) {
 	/* Process some events. */
-	(void) process_events(true);
+	process_events(true);
 
 	/* Update the screen. */
 	if (!escaped) {
@@ -1206,11 +1206,11 @@ start_pager(void)
 	char *s;
 
 	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
-	(void) sprintf(s, "%s%s", pager_cmd, or_cat);
+	sprintf(s, "%s%s", pager_cmd, or_cat);
 	pager.fp = xpopen(s, "w", &pager.pid);
 	Free(s);
 	if (pager.fp == NULL) {
-	    (void) perror(pager_cmd);
+	    perror(pager_cmd);
 	} else {
 	    AddChild(pager.pid, pager_exit);
 	}
@@ -1438,7 +1438,7 @@ attempted_completion(const char *text, int start, int end)
 	     */
 	    if (strchr(h->name, ' ') != NULL) {
 		matches[j] = Malloc(strlen(h->name) + 3);
-		(void) sprintf(matches[j], "\"%s\"", h->name);
+		sprintf(matches[j], "\"%s\"", h->name);
 		j++;
 	    } else {
 		matches[j++] = NewString(h->name);
@@ -1609,7 +1609,7 @@ popup_an_info(const char *fmt, ...)
 
     /* Expand it. */
     va_start(args, fmt);
-    (void) vsprintf(vmsgbuf, fmt, args);
+    vsprintf(vmsgbuf, fmt, args);
     va_end(args);
 
     /* Remove trailing newlines. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2018 Paul Mattes.
+ * Copyright (c) 2000-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -557,10 +557,10 @@ initscr(void)
     /* Allocate and initialize the onscreen and toscreen buffers. */
     buffer_size = sizeof(CHAR_INFO) * console_rows * console_cols;
     onscreen = (CHAR_INFO *)Malloc(buffer_size);
-    (void) memset(onscreen, '\0', buffer_size);
+    memset(onscreen, '\0', buffer_size);
     onscreen_valid = FALSE;
     toscreen = (CHAR_INFO *)Malloc(buffer_size);
-    (void) memset(toscreen, '\0', buffer_size);
+    memset(toscreen, '\0', buffer_size);
 
     /* More will no doubt follow. */
     return chandle;
@@ -1212,7 +1212,7 @@ screen_init(void)
 
     /* Initialize the console. */
     if (initscr() == NULL) {
-	(void) fprintf(stderr, "Can't initialize terminal.\n");
+	fprintf(stderr, "Can't initialize terminal.\n");
 	x3270_exit(1);
     }
     want_ov_rows = ov_rows;
@@ -1237,7 +1237,7 @@ screen_init(void)
 
 	/* If we're at the smallest screen now, give up. */
 	if (model_num == 2) {
-	    (void) fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
+	    fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
 		    console_rows, console_cols);
 	    x3270_exit(1);
 	}
@@ -1293,7 +1293,7 @@ screen_init(void)
     if (appres.c3270.all_bold_on) {
 	ab_mode = TS_ON;
     } else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
-	(void) fprintf(stderr, "invalid %s value: '%s', assuming 'auto'\n",
+	fprintf(stderr, "invalid %s value: '%s', assuming 'auto'\n",
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
@@ -2480,7 +2480,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 	 * file.  It will be converted to OEM by 'catf' for display
 	 * in the trace window.
 	 */
-	(void) WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
+	WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
 	if (udc) {
 	    vb_appendf(&r, "<Key>U+%04lx", xk);
 	} else {
@@ -2944,10 +2944,10 @@ void
 status_lu(const char *lu)
 {
     if (lu != NULL) {
-	(void) strncpy(oia_lu, lu, LUCNT);
+	strncpy(oia_lu, lu, LUCNT);
 	oia_lu[LUCNT] = '\0';
     } else {
-	(void) memset(oia_lu, '\0', sizeof(oia_lu));
+	memset(oia_lu, '\0', sizeof(oia_lu));
     }
 }
 
@@ -3017,9 +3017,9 @@ status_timing(struct timeval *t0, struct timeval *t1)
 	cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
 	if (cs < CM) {
-	    (void) sprintf(oia_timing, ":%02ld.%ld", cs / 10, cs % 10);
+	    sprintf(oia_timing, ":%02ld.%ld", cs / 10, cs % 10);
 	} else {
-	    (void) sprintf(oia_timing, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
+	    sprintf(oia_timing, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
 	}
     }
 }
@@ -3378,9 +3378,9 @@ static void
 set_console_title(const char *text, bool selecting)
 {
     if (selecting) {
-	(void) SetConsoleTitle(lazyaf("%s [select]", text));
+	SetConsoleTitle(lazyaf("%s [select]", text));
     } else {
-	(void) SetConsoleTitle(text);
+	SetConsoleTitle(text);
     }
 }
 

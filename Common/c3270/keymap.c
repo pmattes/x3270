@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -345,9 +345,9 @@ add_keymap_entry(int ncodes, k_t *codes, int *hints, const char *name,
     k->successor = NULL;
     k->ncodes = ncodes;
     k->codes = Malloc(ncodes * sizeof(k_t));
-    (void) memcpy(k->codes, codes, ncodes * sizeof(k_t));
+    memcpy(k->codes, codes, ncodes * sizeof(k_t));
     k->hints = Malloc(ncodes * sizeof(int));
-    (void) memcpy(k->hints, hints, ncodes * sizeof(int));
+    memcpy(k->hints, hints, ncodes * sizeof(int));
     k->name = NewString(name);
     k->file = NewString(file);
     k->line = line;
@@ -866,7 +866,7 @@ lookup_cname(int ccode)
 	if (ccode == KEY_F(i)) {
 	    static char buf[10];
 
-	    (void) sprintf(buf, "F%d", i);
+	    sprintf(buf, "F%d", i);
 	    return buf;
 	}
     }
@@ -963,7 +963,7 @@ keymap_init(void)
     clear_keymap();
 
     /* Read the base keymap. */
-    (void) read_keymap("base", false);
+    read_keymap("base", false);
 
     /* Read the user-defined keymaps. */
     if (appres.interactive.key_map != NULL) {
@@ -971,12 +971,12 @@ keymap_init(void)
 	while ((comma = strchr(s, ',')) != NULL) {
 	    *comma = '\0';
 	    if (*s) {
-		(void) read_keymap(s, false);
+		read_keymap(s, false);
 	    }
 	    s = comma + 1;
 	}
 	if (*s) {
-	    (void) read_keymap(s, false);
+	    read_keymap(s, false);
 	}
 	Free(s0);
     }
@@ -1065,9 +1065,9 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
     if (k) {
 	/* Curses key. */
 	if ((n = lookup_cname(k)) != NULL) {
-	    (void) sprintf(buf, "<Key>%s", n);
+	    sprintf(buf, "<Key>%s", n);
 	} else {
-	    (void) sprintf(buf, "[unknown curses key 0x%x]", k);
+	    sprintf(buf, "[unknown curses key 0x%x]", k);
 	}
 	return buf;
     }
@@ -1083,7 +1083,7 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 	if (latin1_name != NULL) {
 	    strcpy(buf, latin1_name);
 	} else {
-	    (void) sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	    sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
 	}
 	return buf;
     }

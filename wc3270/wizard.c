@@ -668,8 +668,7 @@ save_keymaps_type(src_t src, const char *dirname)
 	if (h != INVALID_HANDLE_VALUE) {
 	    do {
 		sprintf(fpath, "%s%s", dirname, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
-			src);
+		save_keymap_name(fpath, find_data.cFileName, NULL, src);
 	    } while (FindNextFile(h, &find_data) != 0);
 	    FindClose(h);
 	}
@@ -690,7 +689,7 @@ save_keymaps(bool include_public)
     int i;
 
     for (i = 0; builtin_keymaps[i].name != NULL; i++) {
-	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
+	save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
 
@@ -1637,7 +1636,7 @@ Asian language support.\n");
 
     printf("[Press Enter to continue] ");
     fflush(stdout);
-    (void) getchar();
+    getchar();
 }
 
 /**
@@ -2268,7 +2267,7 @@ printer, or specify a remote printer with a UNC path, e.g.,\n\
 '\\\\server\\printer22'.  You can specify the Windows default printer with\n\
 the name 'default'.");
 
-    (void) redisplay_printer(s->printer, cbuf);
+    redisplay_printer(s->printer, cbuf);
 
     enum_printers();
     if (num_printers) {
@@ -2337,7 +2336,7 @@ the name 'default'.");
      * If the resulting printer name is a UNC path, double the
      * backslashes.
      */
-    (void) fixup_printer(s);
+    fixup_printer(s);
     return 0;
 }
 
@@ -2734,7 +2733,7 @@ miscellaneous resources in your session file.");
 failed:
     grayout("[Press <Enter>] ");
     fflush(stdout);
-    (void) fgets(buf, 2, stdin);
+    fgets(buf, 2, stdin);
     if (t != NULL) {
 	free(t);
     }
@@ -3013,7 +3012,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		printf("%3d.  wpr3287 LU ............ : %s\n",
 			MN_3287_LU, s->printerlu);
 	    }
-	    (void) redisplay_printer(s->printer, pbuf);
+	    redisplay_printer(s->printer, pbuf);
 	    printf("%3d.  wpr3287 Windows printer : %s\n",
 		    MN_3287_PRINTER,
 		    s->printer[0]? pbuf: "(system default)");
@@ -3580,7 +3579,7 @@ ask_enter(void)
 
     grayout("[Press <Enter>] ");
     fflush(stdout);
-    (void) fgets(buf, sizeof(buf), stdin);
+    fgets(buf, sizeof(buf), stdin);
 }
 
 /**
@@ -4237,7 +4236,7 @@ session_wizard(const char *session_name, bool explicit_edit, char *result,
     bool modified = false;
 
     /* Start with nothing. */
-    (void) memset(&session, '\0', sizeof(session));
+    memset(&session, '\0', sizeof(session));
 
     /* Find the existing sessions. */
     xs_init(true);
@@ -5024,7 +5023,7 @@ create_wc3270_folder(src_t src)
 	wwrite(f, L"ConfirmFileOp=0\r\n");
 	wwrite(f, L"IconFile=");
 	snprintf(wc3270_exe, MAX_PATH, "%swc3270.exe", installdir);
-	(void) mbstowcs(lwc3270_exe, wc3270_exe, strlen(wc3270_exe) + 1);
+	mbstowcs(lwc3270_exe, wc3270_exe, strlen(wc3270_exe) + 1);
 	wwrite(f, lwc3270_exe);
 	wwrite(f, L"\r\n");
 	wwrite(f, L"IconIndex=0\r\n");

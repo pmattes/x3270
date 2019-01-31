@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -104,27 +104,32 @@ static XtGeometryResult
 QueryGeometry(Widget widget _is_unused, XtWidgetGeometry *constraint _is_unused,
 	XtWidgetGeometry *preferred _is_unused)
 {
-	return XtGeometryYes;
+    return XtGeometryYes;
 }
 
 static XtGeometryResult 
 GeometryManager(Widget w, XtWidgetGeometry *request,
     XtWidgetGeometry *reply _is_unused)
 {
-	/* Always succeed. */
-	if (!(request->request_mode & XtCWQueryOnly)) {
-		if (request->request_mode & CWX)
-			w->core.x = request->x;
-		if (request->request_mode & CWY)
-			w->core.y = request->y;
-		if (request->request_mode & CWWidth)
-			w->core.width = request->width;
-		if (request->request_mode & CWHeight)
-			w->core.height = request->height;
-		if (request->request_mode & CWBorderWidth)
-			w->core.border_width = request->border_width;
+    /* Always succeed. */
+    if (!(request->request_mode & XtCWQueryOnly)) {
+	if (request->request_mode & CWX) {
+	    w->core.x = request->x;
 	}
-	return XtGeometryYes;
+	if (request->request_mode & CWY) {
+	    w->core.y = request->y;
+	}
+	if (request->request_mode & CWWidth) {
+	    w->core.width = request->width;
+	}
+	if (request->request_mode & CWHeight) {
+	    w->core.height = request->height;
+	}
+	if (request->request_mode & CWBorderWidth) {
+	    w->core.border_width = request->border_width;
+	}
+    }
+    return XtGeometryYes;
 }
 
 static void 
@@ -135,28 +140,29 @@ ChangeManaged(Widget w _is_unused)
 static void 
 ClassInitialize(void)
 {
-	XawInitializeWidgetSet();
+    XawInitializeWidgetSet();
 }
 
 static void 
-Initialize(Widget request _is_unused, Widget new _is_unused, ArgList args _is_unused,
-	Cardinal *num_args _is_unused)
+Initialize(Widget request _is_unused, Widget new _is_unused,
+	ArgList args _is_unused, Cardinal *num_args _is_unused)
 {
 }
 
 static void 
 Realize(register Widget w, Mask *valueMask, XSetWindowAttributes *attributes)
 {
-	attributes->bit_gravity = NorthWestGravity;
-	*valueMask |= CWBitGravity;
+    attributes->bit_gravity = NorthWestGravity;
+    *valueMask |= CWBitGravity;
 
-	XtCreateWindow(w, (unsigned)InputOutput, (Visual *)CopyFromParent,
-	       *valueMask, attributes);
+    XtCreateWindow(w, (unsigned)InputOutput, (Visual *)CopyFromParent,
+	   *valueMask, attributes);
 }
 
 static Boolean 
-SetValues(Widget current _is_unused, Widget request _is_unused, Widget new _is_unused,
-	ArgList args _is_unused, Cardinal *num_args _is_unused)
+SetValues(Widget current _is_unused, Widget request _is_unused,
+	Widget new _is_unused, ArgList args _is_unused,
+	Cardinal *num_args _is_unused)
 {
-	return False;
+    return False;
 }

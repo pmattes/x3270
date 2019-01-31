@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -411,7 +411,7 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
     child_t *c = (child_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
-    (void) write(c->outfd, s, strlen(s));
+    write(c->outfd, s, strlen(s));
 #endif /*]*/
 }
 
@@ -431,7 +431,7 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
 	    buf);
 
-    (void) write(c->outfd, s, strlen(s));
+    write(c->outfd, s, strlen(s));
 #endif /*]*/
 }
 
@@ -456,7 +456,7 @@ child_done(task_cbh handle, bool success, bool abort)
     /* Print the prompt. */
     vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
 	success? "ok": "error");
-    (void) write(c->outfd, s, strlen(s));
+    write(c->outfd, s, strlen(s));
 
     if (abort || !c->enabled) {
 	close(c->outfd);
@@ -872,7 +872,7 @@ pick_port(socket_t *sp)
 	popup_an_error("socket: %s\n", win32_strerror(GetLastError()));
 	return 0;
     }
-    (void) memset(&sin, '\0', sizeof(sin));
+    memset(&sin, '\0', sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
@@ -1066,29 +1066,29 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     if (pipe(outpipe) < 0) {
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
+	close(inpipe[0]);
+	close(inpipe[1]);
 	popup_an_error("pipe() failed");
 	return false;
     }
 
     /* Create a pipe to capture child stdout. */
     if (pipe(stdoutpipe) < 0) {
-	(void) close(outpipe[0]);
-	(void) close(outpipe[1]);
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
+	close(outpipe[0]);
+	close(outpipe[1]);
+	close(inpipe[0]);
+	close(inpipe[1]);
 	popup_an_error("pipe() failed");
     }
 
     /* Fork and exec the script process. */
     if ((pid = fork()) < 0) {
-	(void) close(inpipe[0]);
-	(void) close(inpipe[1]);
-	(void) close(outpipe[0]);
-	(void) close(outpipe[1]);
-	(void) close(stdoutpipe[0]);
-	(void) close(stdoutpipe[1]);
+	close(inpipe[0]);
+	close(inpipe[1]);
+	close(outpipe[0]);
+	close(outpipe[1]);
+	close(stdoutpipe[0]);
+	close(stdoutpipe[1]);
 	popup_an_error("fork() failed");
 	return false;
     }
@@ -1102,19 +1102,19 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	setsid();
 
 	/* Clean up the pipes. */
-	(void) close(outpipe[1]);
-	(void) close(inpipe[0]);
-	(void) close(stdoutpipe[0]);
+	close(outpipe[1]);
+	close(inpipe[0]);
+	close(stdoutpipe[0]);
 
 	/* Redirect output. */
 	if (stdout_redirect) {
-	    (void) dup2(stdoutpipe[1], 1);
+	    dup2(stdoutpipe[1], 1);
 	}
-	(void) dup2(stdoutpipe[1], 2);
+	dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
-	(void) putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
-	(void) putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
+	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
+	putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1124,9 +1124,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	child_argv[i] = NULL;
 
 	/* Exec. */
-	(void) execvp(argv[0], child_argv);
-	(void) fprintf(stderr, "exec(%s) failed\n", argv[0]);
-	(void) _exit(1);
+	execvp(argv[0], child_argv);
+	fprintf(stderr, "exec(%s) failed\n", argv[0]);
+	_exit(1);
     }
 
     c = (child_t *)Calloc(1, sizeof(child_t));
@@ -1144,10 +1144,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Clean up our ends of the pipes. */
     c->infd = inpipe[0];
-    (void) close(inpipe[1]);
+    close(inpipe[1]);
     c->outfd = outpipe[1];
-    (void) close(outpipe[0]);
-    (void) close(stdoutpipe[1]);
+    close(outpipe[0]);
+    close(stdoutpipe[1]);
 
     /* Allow child input. */
     c->id = AddInput(c->infd, child_input);
@@ -1183,14 +1183,14 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     cr = &c->cr;
 
     /* Start the child process. */
-    (void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
+    memset(&startupinfo, '\0', sizeof(STARTUPINFO));
     startupinfo.cb = sizeof(STARTUPINFO);
     if (stdout_redirect) {
 	startupinfo.hStdOutput = cr->pipe_wr_handle;
     }
     startupinfo.hStdError = cr->pipe_wr_handle;
     startupinfo.dwFlags |= STARTF_USESTDHANDLES;
-    (void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
+    memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
     args = NewString(argv[0]);
     for (i = 1; i < argc; i++) {
 	char *t;

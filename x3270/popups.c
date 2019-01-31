@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,6 @@ static enum form_type forms[] = { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
 static Dimension wm_width, wm_height;
 
-
 /*
  * General popup support
  */
@@ -818,7 +817,6 @@ create_form_popup(const char *name, XtCallbackProc callback,
     return shell;
 }
 
-
 /*
  * Read-only popups.
  */

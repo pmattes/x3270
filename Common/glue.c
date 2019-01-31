@@ -171,9 +171,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
     cl++;
     command_string = Malloc(cl);
-    (void) strcpy(command_string, programname);
+    strcpy(command_string, programname);
     for (i = 0; i < argc; i++) {
-	(void) strcat(strcat(command_string, " "), argv[i]);
+	strcat(strcat(command_string, " "), argv[i]);
     }
 
     /*
@@ -189,7 +189,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     xcmd_len = 0;
     for (i = 0; i < argc; i++) {
 	xargv[i] = xcmd + xcmd_len;
-	(void) strcpy(xcmd + xcmd_len, argv[i]);
+	strcpy(xcmd + xcmd_len, argv[i]);
 	xcmd_len += strlen(argv[i]) + 1;
     }
     xargv[i] = NULL;
@@ -349,17 +349,8 @@ model_init(void)
 	model_number = 0;
     }
     if (!model_number) {
-#if defined(RESTRICT_3279) /*[*/
-	model_number = 3;
-#else /*][*/
 	model_number = 4;
-#endif /*]*/
     }
-#if defined(RESTRICT_3279) /*[*/
-    if (appres.m3279 && model_number == 4) {
-	model_number = 3;
-    }
-#endif /*]*/
     if (appres.interactive.mono) {
 	appres.m3279 = false;
     }
@@ -423,9 +414,9 @@ parse_local_process(int *argcp, const char **argv, const char **cmds)
 	}
 	e_len++;
 	cmds_buf = Malloc(e_len);
-	(void) strcpy(cmds_buf, OptLocalProcess);
+	strcpy(cmds_buf, OptLocalProcess);
 	for (j = i+1; j < *argcp; j++) {
-	    (void) strcat(strcat(cmds_buf, " "), argv[j]);
+	    strcat(strcat(cmds_buf, " "), argv[j]);
 	}
 
 	/* Stamp out the remaining args. */
@@ -682,7 +673,7 @@ parse_options(int *argcp, const char **argv)
     }
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
+    memcpy((char *)argv, (char *)argv_out,
     (argc_out + 1) * sizeof(char *));
     Free((char *)argv_out);
 }
@@ -872,8 +863,7 @@ parse_set_clear(int *argcp, const char **argv)
     }
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
-	    (argc_out + 1) * sizeof(char *));
+    memcpy((char *)argv, (char *)argv_out, (argc_out + 1) * sizeof(char *));
     Free((char *)argv_out);
 }
 
@@ -1326,7 +1316,7 @@ parse_xrm(const char *arg, const char *where)
 	char *rsname;
 
 	rsname = Malloc(rnlen + 1);
-	(void) strncpy(rsname, name, rnlen);
+	strncpy(rsname, name, rnlen);
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2015, 2018 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -714,7 +714,7 @@ xlate_getc(void)
 	    fts.length++;
 	    mb[mb_len++] = c;
 	    error = ME_NONE;
-	    (void) ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
+	    ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
 	    if (error == ME_INVALID) {
 		mb[0] = '?';
 		mb_len = 1;

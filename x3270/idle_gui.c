@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -447,7 +447,7 @@ idle_start(void)
     Replace(idle_command, NewString(cmd));
     XtVaGetValues(timeout_value, XtNstring, &tmo, NULL);
     its = Malloc(strlen(tmo) + 3);
-    (void) sprintf(its, "%s%s%c", fuzz? "~": "", tmo, hms);
+    sprintf(its, "%s%s%c", fuzz? "~": "", tmo, hms);
     Replace(idle_timeout_string, its);
 
     /* See if they've turned it off. */

@@ -301,7 +301,7 @@ gen_ts(void)
     time_t t;
     struct tm *tm;
 
-    (void) gettimeofday(&tv, NULL);
+    gettimeofday(&tv, NULL);
     t = tv.tv_sec;
     tm = localtime(&t);
     return lazyaf("%d%02d%02d.%02d%02d%02d.%03d ",
@@ -354,10 +354,10 @@ vwtrace(bool do_ts, const char *fmt, va_list args)
 	    if (ts == NULL) {
 		ts = gen_ts();
 	    }
-	    (void) fwrite(ts, strlen(ts), 1, tracef);
+	    fwrite(ts, strlen(ts), 1, tracef);
 	    fflush(tracef);
 	    if (tracef_pipe != NULL) {
-		(void) fwrite(ts, strlen(ts), 1, tracef_pipe);
+		fwrite(ts, strlen(ts), 1, tracef_pipe);
 		fflush(tracef);
 	    }
 	    wrote_ts = true;
@@ -387,7 +387,7 @@ vwtrace(bool do_ts, const char *fmt, va_list args)
 	if (tracef_pipe != NULL) {
 	    nw = fwrite(bp, n2w, 1, tracef_pipe);
 	    if (nw != 1) {
-		(void) fclose(tracef_pipe);
+		fclose(tracef_pipe);
 		tracef_pipe = NULL;
 	    } else {
 		fflush(tracef_pipe);
@@ -428,11 +428,11 @@ static void
 stop_tracing(void)
 {
     if (tracef != NULL && tracef != stdout) {
-	(void) fclose(tracef);
+	fclose(tracef);
     }
     tracef = NULL;
     if (tracef_pipe != NULL) {
-	(void) fclose(tracef_pipe);
+	fclose(tracef_pipe);
 	tracef_pipe = NULL;
     }
     if (toggled(TRACING)) {
@@ -473,8 +473,8 @@ trace_rollover_check(void)
 	{
 	    alt_filename = xs_buffer("%s-", tracefile_name);
 	}
-	(void) unlink(alt_filename);
-	(void) rename(tracefile_name, alt_filename);
+	unlink(alt_filename);
+	rename(tracefile_name, alt_filename);
 	Free(alt_filename);
 	alt_filename = NULL;
 	tracef = fopen(tracefile_name, "w");
@@ -485,7 +485,7 @@ trace_rollover_check(void)
 
 	/* Initialize it. */
 	tracef_size = 0L;
-	(void) SETLINEBUF(tracef);
+	SETLINEBUF(tracef);
 	new_header = create_tracefile_header("rolled over");
 	wtrace(false, new_header);
 	Free(new_header);
@@ -577,7 +577,7 @@ create_tracefile_header(const char *mode)
 		    IN_E? "TN3270E-": "",
 		    formatted? "": "un");
 	    obptr = obuf;
-	    (void) net_add_dummy_tn3270e();
+	    net_add_dummy_tn3270e();
 	    ctlr_snap_buffer();
 	    space3270out(2);
 	    net_add_eor(obuf, obptr - obuf);
@@ -594,7 +594,7 @@ create_tracefile_header(const char *mode)
 	    }
 	} else if (IN_E) {
 	    obptr = obuf;
-	    (void) net_add_dummy_tn3270e();
+	    net_add_dummy_tn3270e();
 	    wtrace(false, " Screen contents (%s):\n",
 		    IN_SSCP? "SSCP-LU": "TN3270E-NVT");
 	    if (IN_SSCP) {
@@ -710,14 +710,14 @@ start_trace_window(const char *path, int pipefd[])
 {
     switch (tracewindow_pid = fork_child()) {
     case 0:	/* child process */
-	(void) execlp("xterm", "xterm", "-title", path? path: "trace",
+	execlp("xterm", "xterm", "-title", path? path: "trace",
 		"-sb", "-e", "/bin/sh", "-c", xs_buffer("cat <&%d", pipefd[0]),
 		NULL);
-	(void) perror("exec(xterm) failed");
+	perror("exec(xterm) failed");
 	_exit(1);
 	break;
     default:	/* parent */
-	(void) close(pipefd[0]);
+	close(pipefd[0]);
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork() failed");
@@ -800,13 +800,13 @@ tracefile_ok(const char *tfn)
 	    pipefile = fdopen(pipefd[1], "w");
 	    if (pipefile == NULL) {
 		popup_an_errno(errno, "fdopen() failed");
-		(void) close(pipefd[0]);
-		(void) close(pipefd[1]);
+		close(pipefd[0]);
+		close(pipefd[1]);
 		Free(stfn);
 		goto done;
 	    }
-	    (void) SETLINEBUF(pipefile);
-	    (void) fcntl(pipefd[1], F_SETFD, 1);
+	    SETLINEBUF(pipefile);
+	    fcntl(pipefd[1], F_SETFD, 1);
 	}
 
 	if (just_piped) {
@@ -837,17 +837,17 @@ tracefile_ok(const char *tfn)
 		if (tracef_pipe != NULL) {
 		    fclose(tracef_pipe);
 		}
-		(void) close(pipefd[0]);
-		(void) close(pipefd[1]);
+		close(pipefd[0]);
+		close(pipefd[1]);
 #endif /*]*/
 		Free(stfn);
 		goto done;
 	    }
 	    tracef_size = ftello(tracef);
 	    Replace(tracefile_name, NewString(append? stfn + 2: stfn));
-	    (void) SETLINEBUF(tracef);
+	    SETLINEBUF(tracef);
 #if !defined(_WIN32) /*[*/
-	    (void) fcntl(fileno(tracef), F_SETFD, 1);
+	    fcntl(fileno(tracef), F_SETFD, 1);
 #endif /*]*/
 	}
     }
@@ -945,7 +945,7 @@ tracefile_off(void)
     wtrace(true, "Trace stopped\n");
 #if !defined(_WIN32) /*[*/
     if (tracewindow_pid != -1) {
-	(void) kill(tracewindow_pid, SIGKILL);
+	kill(tracewindow_pid, SIGKILL);
 	tracewindow_pid = -1;
     }
 #else /*][*/
@@ -1022,7 +1022,7 @@ trace_char(char c)
     if (!toggled(SCREEN_TRACE) || !screentracef) {
 	return;
     }
-    (void) fputc(c, screentracef);
+    fputc(c, screentracef);
 }
 
 /*
@@ -1036,11 +1036,11 @@ trace_nvt_disc(void)
 {
     int i;
 
-    (void) fputc('\n', screentracef);
+    fputc('\n', screentracef);
     for (i = 0; i < COLS; i++) {
-	(void) fputc('=', screentracef);
+	fputc('=', screentracef);
     }
-    (void) fputc('\n', screentracef);
+    fputc('\n', screentracef);
 
     trace_skipping = true;
 }
@@ -1140,9 +1140,9 @@ screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
 	Replace(screentrace_name, NewString(tfn));
     }
     Free(tfn);
-    (void) SETLINEBUF(screentracef);
+    SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
-    (void) fcntl(fileno(screentracef), F_SETFD, 1);
+    fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
     st = (screentrace_t *)Calloc(1, sizeof(screentrace_t));
     caption = default_caption();
@@ -1180,7 +1180,7 @@ static void
 end_screentrace(bool is_final _is_unused)
 {
     fprint_screen_done(&screentrace_fps);
-    (void) fclose(screentracef);
+    fclose(screentracef);
     screentracef = NULL;
 
 #if defined(_WIN32) /*[*/

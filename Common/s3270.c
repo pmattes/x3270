@@ -119,7 +119,7 @@ main(int argc, char *argv[])
     const char	*cl_hostname = NULL;
 
 #if defined(_WIN32) /*[*/
-    (void) get_version_info();
+    get_version_info();
     if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		NULL, &windirs_flags)) {
 	exit(1);
@@ -158,7 +158,7 @@ main(int argc, char *argv[])
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
     }
     model_init();
     ctlr_init(ALL_CHANGE);
@@ -180,7 +180,7 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 #endif /*]*/
 
     /* Handle initial toggle settings. */
@@ -193,7 +193,7 @@ main(int argc, char *argv[])
 	}
 	/* Wait for negotiations to complete or fail. */
 	while (!IN_NVT && !IN_3270) {
-	    (void) process_events(true);
+	    process_events(true);
 	    if (!PCONNECTED) {
 		exit(1);
 	    }
@@ -205,7 +205,7 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	(void) process_events(true);
+	process_events(true);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2018 Paul Mattes.
+ * Copyright (c) 1994-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ typedef struct {
 /* Globals */
 
 /* Statics */
-
+
 /*
  * Map default 3279 colors.  This code is duplicated three times. ;-(
  */
@@ -141,7 +141,7 @@ rtf_caption(const char *caption)
 	if (u & ~0x7f) {
 	    vb_appendf(&r, "\\u%u?", u);
 	} else {
-	    (void) unicode_to_multibyte(u, mb, sizeof(mb));
+	    unicode_to_multibyte(u, mb, sizeof(mb));
 	    if (mb[0] == '\\' || mb[0] == '{' || mb[0] == '}') {
 		vb_appendf(&r, "\\%c", mb[0]);
 	    } else if (mb[0] == '-') {
@@ -858,7 +858,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
     }
     srv_body = fprint_screen_body(fps);
     if (FPS_IS_ERROR(srv_body)) {
-	(void) fprint_screen_done(&fps);
+	fprint_screen_done(&fps);
 	return srv_body;
     }
     srv = fprint_screen_done(&fps);

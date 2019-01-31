@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1681,7 +1681,7 @@ sio_close(sio_t sio)
     }
 
     if (s->negotiated) {
-	(void) disconnect_from_server(s);
+	disconnect_from_server(s);
     }
     sio_free(s);
 }

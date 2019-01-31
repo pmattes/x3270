@@ -76,7 +76,7 @@ get_connect_time(void)
 	return NULL;
     }
 
-    (void) time(&t);
+    time(&t);
 
     td = t - ns_time;
     dy = (long)(td / (3600 * 24));

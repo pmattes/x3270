@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -189,7 +189,7 @@ read_hosts_file(void)
 	    }
 	    last_host = h;
 	}
-	(void) fclose(hf);
+	fclose(hf);
     } else if (appres.hostsfile != NULL) {
 	popup_an_errno(errno, "Cannot open " ResHostsFile " '%s'",
 		appres.hostsfile);
@@ -918,8 +918,8 @@ save_recent(const char *hn)
 		    ctime(&t), build);
 	    for (h = hosts; h != NULL; h = h->next) {
 		if (h->entry_type == RECENT) {
-		    (void) fprintf(lcf, "%lu %s\n",
-			    (unsigned long)h->connect_time, h->name);
+		    fprintf(lcf, "%lu %s\n", (unsigned long)h->connect_time,
+			    h->name);
 		}
 	    }
 	    fclose(lcf);

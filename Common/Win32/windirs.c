@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014-2017 Paul Mattes.
+ * Copyright (c) 2006-2009, 2014-2017, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -396,7 +396,7 @@ get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
 	    common_docs3270? *common_docs3270: "(none)");
     printf("Enter...");
     fflush(stdout);
-    (void) getchar();
+    getchar();
 #endif /*]*/
 
     return true;

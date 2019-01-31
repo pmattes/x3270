@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SmeBSB.c,v 1.16 91/03/15 15:59:41 gildea Exp $ */
 
 /*
- * Copyright (c) 1995-2009, 2013-2014, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -499,7 +499,7 @@ FlipOff(Widget w)
 
     if (menu == NULL) {
 	char error_buf[BUFSIZ];
-	(void) snprintf(error_buf, sizeof(error_buf), "CmeBSB: %s %s.",
+	snprintf(error_buf, sizeof(error_buf), "CmeBSB: %s %s.",
 	    "Could not find menu widget named", entry->cme_bsb.menu_name);
 	XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
 	return;
@@ -657,7 +657,7 @@ GetBitmapInfo(Widget w, Boolean is_left)
 	    if (!XGetGeometry(XtDisplayOfObject(w), 
 			      entry->cme_bsb.left_bitmap, &root, 
 			      &x, &y, &width, &height, &bw, &depth)) {
-		(void) snprintf(buf, sizeof(buf),
+		snprintf(buf, sizeof(buf),
 			"CmeBSB Object: %s %s \"%s\".",
 			"Could not",
 			"get Left Bitmap geometry information for menu entry ",
@@ -665,7 +665,7 @@ GetBitmapInfo(Widget w, Boolean is_left)
 		XtAppError(XtWidgetToApplicationContext(w), buf);
 	    }
 	    if (depth != 1) {
-		(void) snprintf(buf, sizeof(buf),
+		snprintf(buf, sizeof(buf),
 			"CmeBSB Object: %s \"%s\"%s.", 
 			"Left Bitmap of entry ", 
 			XtName(w), " is not one bit deep.");
@@ -679,14 +679,14 @@ GetBitmapInfo(Widget w, Boolean is_left)
 	if (!XGetGeometry(XtDisplayOfObject(w),
 			  entry->cme_bsb.right_bitmap, &root,
 			  &x, &y, &width, &height, &bw, &depth)) {
-	    (void) snprintf(buf, sizeof(buf), "CmeBSB Object: %s %s \"%s\".",
+	    snprintf(buf, sizeof(buf), "CmeBSB Object: %s %s \"%s\".",
 		    "Could not",
 		    "get Right Bitmap geometry information for menu entry ",
 		    XtName(w));
 	    XtAppError(XtWidgetToApplicationContext(w), buf);
 	}
 	if (depth != 1) {
-	    (void) snprintf(buf, sizeof(buf), "CmeBSB Object: %s \"%s\"%s.", 
+	    snprintf(buf, sizeof(buf), "CmeBSB Object: %s \"%s\"%s.", 
 		    "Right Bitmap of entry ", XtName(w),
 		    " is not one bit deep.");
 	    XtAppError(XtWidgetToApplicationContext(w), buf);
@@ -780,7 +780,7 @@ PopupMenu(Widget w)
 
     if (menu == NULL) {
 	char error_buf[BUFSIZ];
-	(void) snprintf(error_buf, sizeof(error_buf), "CmeBSB: %s %s.",
+	snprintf(error_buf, sizeof(error_buf), "CmeBSB: %s %s.",
 	    "Could not find menu widget named", entry->cme_bsb.menu_name);
 	XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
 	return;

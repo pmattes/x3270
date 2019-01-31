@@ -340,7 +340,6 @@ setup_options(void)
     }
 }
 
-
 void
 usage(const char *msg)
 {
@@ -606,7 +605,7 @@ main(int argc, char *argv[])
 	    num_resources, 0, 0);
     XtGetApplicationResources(toplevel, (XtPointer)&xappres, xresources,
 	    num_xresources, 0, 0);
-    (void) XtAppSetWarningMsgHandler(appcontext, old_emh);
+    XtAppSetWarningMsgHandler(appcontext, old_emh);
 
     /* Copy bool values. */
     copy_xres_to_res_bool();
@@ -658,11 +657,7 @@ main(int argc, char *argv[])
 	model_number = 0;
     }
     if (!model_number) {
-#if defined(RESTRICT_3279) /*[*/
-	model_number = 3;
-#else /*][*/
 	model_number = 4;
-#endif /*]*/
     }
     if (screen_depth <= 1 || colormap_failure) {
 	appres.interactive.mono = true;
@@ -726,31 +721,26 @@ main(int argc, char *argv[])
     case CS_NOTFOUND:
 	popup_an_error("Cannot find definition for host code page \"%s\"",
 		appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
 	break;
     case CS_BAD:
 	popup_an_error("Invalid definition for host code page \"%s\"",
 		appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
 	break;
     case CS_PREREQ:
 	popup_an_error("No fonts for host code page \"%s\"",
 		appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
 	break;
     case CS_ILLEGAL:
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
 	break;
     }
 
     /* Initialize fonts. */
     font_init();
 
-#if defined(RESTRICT_3279) /*[*/
-    if (appres.m3279 && model_number == 4) {
-	model_number = 3;
-    }
-#endif /*]*/
     if (!appres.extended || appres.oversize == NULL ||
 	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 	ovc = 0;
@@ -794,13 +784,13 @@ main(int argc, char *argv[])
     save_init(argc, argv[1], argv[2]);
 
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     /*
      * Make sure that exited child processes become zombies, so we can
      * collect their exit status.
      */
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 
     /* Set up the window and icon labels. */
     label_init();
@@ -817,7 +807,7 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	(void) host_connect(cl_hostname, IA_UI);
+	host_connect(cl_hostname, IA_UI);
     }
 
     /* Prepare to run a peer script. */
@@ -862,7 +852,7 @@ static void
 sigchld_handler(int ignored)
 {
 #if !defined(_AIX) /*[*/
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 }
 
@@ -947,7 +937,7 @@ relabel(bool ignored _is_unused)
     title = XtMalloc(10 + ((PCONNECTED || appres.interactive.reconnect)?
 					    strlen(reconnect_host): 0));
     if (PCONNECTED || appres.interactive.reconnect) {
-	(void) sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
+	sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
 		reconnect_host);
 	if (user_title == NULL) {
 	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
@@ -957,8 +947,8 @@ relabel(bool ignored _is_unused)
 	}
 	set_aicon_label(reconnect_host);
     } else {
-	(void) sprintf(title, "x3270-%d", model_num);
-	(void) sprintf(icon_label, "x3270-%d", model_num);
+	sprintf(title, "x3270-%d", model_num);
+	sprintf(icon_label, "x3270-%d", model_num);
 	if (user_title == NULL) {
 	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
 	}
@@ -1049,9 +1039,9 @@ parse_local_process(int *argcp, char **argv, char **cmds)
 	}
 	e_len++;
 	*cmds = XtMalloc(e_len);
-	(void) strcpy(*cmds, OptLocalProcess);
+	strcpy(*cmds, OptLocalProcess);
 	for (j = i + 1; j < *argcp; j++) {
-	    (void) strcat(strcat(*cmds, " "), argv[j]);
+	    strcat(strcat(*cmds, " "), argv[j]);
 	}
 
 	/* Stamp out the remaining args. */
@@ -1134,7 +1124,7 @@ parse_set_clear(int *argcp, char **argv)
 
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
+    memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
     Free(argv_out);
 }

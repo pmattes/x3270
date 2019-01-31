@@ -652,37 +652,37 @@ pr3287_start_now(const char *lu, bool associated)
 	RemoveInput(pr3287_ls_id);
 	return;
     }
-    (void) fcntl(stdout_pipe[0], F_SETFD, 1);
+    fcntl(stdout_pipe[0], F_SETFD, 1);
     if (pipe(stderr_pipe) < 0) {
 	popup_an_errno(errno, "pipe() failed");
-	(void) close(stdout_pipe[0]);
-	(void) close(stdout_pipe[1]);
+	close(stdout_pipe[0]);
+	close(stdout_pipe[1]);
 	Free(cmd_text);
 	SOCK_CLOSE(pr3287_ls);
 	pr3287_ls = INVALID_SOCKET;
 	RemoveInput(pr3287_ls_id);
 	return;
     }
-    (void) fcntl(stderr_pipe[0], F_SETFD, 1);
+    fcntl(stderr_pipe[0], F_SETFD, 1);
 
     /* Fork and exec the printer session. */
     switch (pr3287_pid = fork()) {
     case 0:	/* child process */
-	(void) dup2(stdout_pipe[1], 1);
-	(void) close(stdout_pipe[1]);
-	(void) dup2(stderr_pipe[1], 2);
-	(void) close(stderr_pipe[1]);
+	dup2(stdout_pipe[1], 1);
+	close(stdout_pipe[1]);
+	dup2(stderr_pipe[1], 2);
+	close(stderr_pipe[1]);
 	if (setsid() < 0) {
 	    perror("setsid");
 	    _exit(1);
 	}
-	(void) execlp("/bin/sh", "sh", "-c", cmd_text, NULL);
-	(void) perror("exec(printer)");
+	execlp("/bin/sh", "sh", "-c", cmd_text, NULL);
+	perror("exec(printer)");
 	_exit(1);
     default:	/* parent process */
-	(void) close(stdout_pipe[1]);
+	close(stdout_pipe[1]);
 	pr3287_stdout.fd = stdout_pipe[0];
-	(void) close(stderr_pipe[1]);
+	close(stderr_pipe[1]);
 	pr3287_stderr.fd = stderr_pipe[0];
 	pr3287_stdout.input_id = AddInput(pr3287_stdout.fd, pr3287_output);
 	pr3287_stderr.input_id = AddInput(pr3287_stderr.fd, pr3287_error);
@@ -690,10 +690,10 @@ pr3287_start_now(const char *lu, bool associated)
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork()");
-	(void) close(stdout_pipe[0]);
-	(void) close(stdout_pipe[1]);
-	(void) close(stderr_pipe[0]);
-	(void) close(stderr_pipe[1]);
+	close(stdout_pipe[0]);
+	close(stdout_pipe[1]);
+	close(stderr_pipe[0]);
+	close(stderr_pipe[1]);
 	success = false;
 	break;
     }
@@ -815,7 +815,7 @@ pr3287_data(struct pr3o *p, bool is_err)
 		p->count++;
 		space--;
 	    }
-	    (void) strncpy(p->buf + p->count, exitmsg, space);
+	    strncpy(p->buf + p->count, exitmsg, space);
 	    p->count += strlen(exitmsg);
 	    if (p->count >= PRINTER_BUF) {
 		p->count = PRINTER_BUF - 1;
@@ -1197,7 +1197,7 @@ pr3287_kill(ioid_t id _is_unused)
     TerminateProcess(pr3287_handle, 0);
 #else /*][*/
     assert(pr3287_pid != -1);
-    (void) kill(-pr3287_pid, SIGTERM);
+    kill(-pr3287_pid, SIGTERM);
 #endif /*]*/
 
     pr3287_kill_id = NULL_IOID;

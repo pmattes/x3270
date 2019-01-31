@@ -1119,12 +1119,12 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	    if (xnw == (size_t)-1) {
 		if (errno == EILSEQ) {
 		    *errorp = ME_INVALID;
-		    (void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
+		    iconv(i_mb2u, NULL, NULL, NULL, NULL);
 		    return 0;
 		} else {
 		    if (ibl == mb_len) {
 			*errorp = ME_SHORT;
-			(void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
+			iconv(i_mb2u, NULL, NULL, NULL, NULL);
 			return 0;
 		    }
 		}
@@ -1134,7 +1134,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	*consumedp = ibl - inbytesleft;
 
 	/* Translate from UTF-8 to UCS-4. */
-	(void) utf8_to_unicode(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
+	utf8_to_unicode(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
 #endif /*]*/
     }
 

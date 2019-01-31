@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2017, 2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -61,13 +61,7 @@ XtResource resources[] = {
     { ResConfDir, ClsConfDir, XtRString, sizeof(char *),
       offset(conf_dir), XtRString, LIBX3270DIR },
     { ResModel, ClsModel, XtRString, sizeof(char *),
-      offset(model), XtRString,
-#if defined(RESTRICT_3279) /*[*/
-      "3279-3-E"
-#else /*][*/
-      "3279-4-E"
-#endif /*]*/
-      },
+      offset(model), XtRString, "3279-4-E" },
     { ResKeymap, ClsKeymap, XtRString, sizeof(char *),
       offset(interactive.key_map), XtRString, 0 },
     { ResComposeMap, ClsComposeMap, XtRString, sizeof(char *),

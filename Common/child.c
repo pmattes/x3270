@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013, 2015, 2018 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, 2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -125,8 +125,8 @@ init_child(void)
     }
 
     /* Make sure their read ends are closed in child processes. */
-    (void) fcntl(child_outpipe[0], F_SETFD, 1);
-    (void) fcntl(child_errpipe[0], F_SETFD, 1);
+    fcntl(child_outpipe[0], F_SETFD, 1);
+    fcntl(child_errpipe[0], F_SETFD, 1);
 
     /* Initialize the pop-ups. */
     child_popup_init();
@@ -248,10 +248,10 @@ fork_child(void)
     pid = fork();
     if (pid == 0) {
 	/* Child. */
-	(void) dup2(child_outpipe[1], 1);
-	(void) close(child_outpipe[1]);
-	(void) dup2(child_errpipe[1], 2);
-	(void) close(child_errpipe[1]);
+	dup2(child_outpipe[1], 1);
+	close(child_outpipe[1]);
+	dup2(child_errpipe[1], 2);
+	close(child_errpipe[1]);
     }
     return pid;
 }
@@ -289,7 +289,7 @@ child_data(struct pr3o *p, bool is_err)
      * If we're discarding output, pull it in and drop it on the floor.
      */
     if (child_discarding) {
-	(void) read(p->fd, p->buf, CHILD_BUF);
+	read(p->fd, p->buf, CHILD_BUF);
 	return;
     }
 

@@ -105,17 +105,17 @@ fcatv(FILE *f, char *s)
     while ((c = *s++)) {
 	switch (c) {
 	case '\n':
-	    (void) fprintf(f, "\\n");
+	    fprintf(f, "\\n");
 	    break;
 	case '\t':
-	    (void) fprintf(f, "\\t");
+	    fprintf(f, "\\t");
 	    break;
 	case '\b':
-	    (void) fprintf(f, "\\b");
+	    fprintf(f, "\\b");
 	    break;
 	default:
 	    if ((c & 0x7f) < ' ') {
-		(void) fprintf(f, "\\%03o", c & 0xff);
+		fprintf(f, "\\%03o", c & 0xff);
 	    } else {
 		fputc(c, f);
 	    }
@@ -156,7 +156,7 @@ scatv(const char *s, char *buf, size_t len)
     }
 
     /* Copy what fits. */
-    (void) snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
+    snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
     vb_free(&r);
 
     return buf;
@@ -514,13 +514,13 @@ var_subst(const char *s, unsigned long flags)
 		    if (state == VS_VNB && c != RBR) {
 			*o++ = '$';
 			*o++ = LBR;
-			(void) strncpy(o, vn_start, vn_len);
+			strncpy(o, vn_start, vn_len);
 			o += vn_len;
 			state = VS_BASE;
 			continue;	/* rescan */
 		    }
 		    vn = Malloc(vn_len + 1);
-		    (void) strncpy(vn, vn_start, vn_len);
+		    strncpy(vn, vn_start, vn_len);
 		    vn[vn_len] = '\0';
 		    if ((vv = ex_getenv(vn, flags, &u))) {
 			*o = '\0';
@@ -532,7 +532,7 @@ var_subst(const char *s, unsigned long flags)
 			    + strlen(vv);
 			ob = Realloc(ob, o_len);
 			o = strchr(ob, '\0');
-			(void) strcpy(o, vv);
+			strcpy(o, vv);
 			o += strlen(vv);
 		    }
 		    Free(vn);
@@ -615,7 +615,7 @@ tilde_subst(const char *s)
 	int len = slash - s;
 
 	mname = Malloc(len + 1);
-	(void) strncpy(mname, s, len);
+	strncpy(mname, s, len);
 	mname[len] = '\0';
 	name = mname;
 	rest = slash;
@@ -639,8 +639,8 @@ tilde_subst(const char *s)
 	r = NewString(s);
     } else {
 	r = Malloc(strlen(p->pw_dir) + strlen(rest) + 1);
-	(void) strcpy(r, p->pw_dir);
-	(void) strcat(r, rest);
+	strcpy(r, p->pw_dir);
+	strcat(r, rest);
     }
     return r;
 }

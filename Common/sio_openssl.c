@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -205,12 +205,12 @@ get_ssl_error(char *buf)
 
     e = ERR_get_error();
     if (getenv("SSL_VERBOSE_ERRORS")) {
-	(void) ERR_error_string(e, buf);
+	ERR_error_string(e, buf);
     } else {
 	char xbuf[120];
 	char *colon;
 
-	(void) ERR_error_string(e, xbuf);
+	ERR_error_string(e, xbuf);
 	colon = strrchr(xbuf, ':');
 	if (colon != NULL) {
 	    strcpy(buf, colon + 1);
@@ -657,7 +657,7 @@ client_info_callback(INFO_CONST SSL *s, int where, int ret)
 	    err_buf[0] = '\n';
 	    e = ERR_get_error();
 	    if (e != 0) {
-		(void) ERR_error_string(e, err_buf + 1);
+		ERR_error_string(e, err_buf + 1);
 	    } else if (errno != 0) {
 		strcpy(err_buf + 1, strerror(errno));
 	    } else {
@@ -934,7 +934,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	}
 	e = ERR_get_error();
 	if (e != 0) {
-	    (void) ERR_error_string(e, err_buf);
+	    ERR_error_string(e, err_buf);
 	} else {
 	    strcpy(err_buf, "unknown error");
 	}
@@ -974,7 +974,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
 	char err_buf[120];
 
 	e = ERR_get_error();
-	(void) ERR_error_string(e, err_buf);
+	ERR_error_string(e, err_buf);
 	vtrace("RCVD SSL_write error %ld (%s)\n", e, err_buf);
 	sioc_set_error("SSL_write:\n%s", err_buf);
 	return SIO_FATAL_ERROR;

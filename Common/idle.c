@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -121,68 +121,70 @@ idle_init(void)
 bool
 process_idle_timeout_value(const char *t)
 {
-	const char *s = t;
-	char *ptr;
+    const char *s = t;
+    char *ptr;
 
-	if (s == NULL || *s == '\0') {
-		idle_ms = IDLE_MS;
-		idle_randomize = true;
-		idle_enabled = true;
-		return true;
-	}
-
-	if (*s == '~') {
-		idle_randomize = true;
-		s++;
-	}
-	idle_n = strtoul(s, &ptr, 0);
-	if (idle_n <= 0)
-		goto bad_idle;
-	switch (*ptr) {
-	    case 'H':
-	    case 'h':
-		idle_multiplier = IDLE_HR;
-		break;
-	    case 'M':
-	    case 'm':
-		idle_multiplier = IDLE_MIN;
-		break;
-	    case 'S':
-	    case 's':
-	    case '\0':
-		idle_multiplier = IDLE_SEC;
-		break;
-	    default:
-		goto bad_idle;
-	}
-	idle_ms = idle_n * idle_multiplier * MSEC_PER_SEC;
+    if (s == NULL || *s == '\0') {
+	idle_ms = IDLE_MS;
+	idle_randomize = true;
 	idle_enabled = true;
 	return true;
+    }
 
-    bad_idle:
-	popup_an_error("Invalid idle timeout value '%s'", t);
-	idle_ms = 0L;
-	idle_randomize = false;
-	return false;
+    if (*s == '~') {
+	idle_randomize = true;
+	s++;
+    }
+    idle_n = strtoul(s, &ptr, 0);
+    if (idle_n <= 0) {
+	goto bad_idle;
+    }
+    switch (*ptr) {
+    case 'H':
+    case 'h':
+	idle_multiplier = IDLE_HR;
+	break;
+    case 'M':
+    case 'm':
+	idle_multiplier = IDLE_MIN;
+	break;
+    case 'S':
+    case 's':
+    case '\0':
+	idle_multiplier = IDLE_SEC;
+	break;
+    default:
+	goto bad_idle;
+    }
+    idle_ms = idle_n * idle_multiplier * MSEC_PER_SEC;
+    idle_enabled = true;
+    return true;
+
+bad_idle:
+    popup_an_error("Invalid idle timeout value '%s'", t);
+    idle_ms = 0L;
+    idle_randomize = false;
+    return false;
 }
 
 /* Called when a host connects or disconnects. */
 static void
 idle_in3270(bool in3270 _is_unused)
 {
-	if (IN_3270) {
-		reset_idle_timer();
-	} else {
-		/* Not in 3270 mode any more, turn off the timeout. */
-		if (idle_ticking) {
-			RemoveTimeOut(idle_id);
-			idle_ticking = false;
-		}
-
-		/* If the user didn't want it to be permanent, disable it. */
-		if (idle_user_enabled != IDLE_PERM)
-			idle_user_enabled = IDLE_DISABLED;
+    if (IN_3270) {
+	reset_idle_timer();
+    } else {
+	/* Not in 3270 mode any more, turn off the timeout. */
+	if (idle_ticking) {
+	    RemoveTimeOut(idle_id);
+	    idle_ticking = false;
 	}
+
+	/* If the user didn't want it to be permanent, disable it. */
+	if (idle_user_enabled != IDLE_PERM) {
+	    idle_user_enabled = IDLE_DISABLED;
+	}
+    }
 }
 
 /*
@@ -191,16 +193,16 @@ idle_in3270(bool in3270 _is_unused)
 static void
 idle_timeout(ioid_t id _is_unused)
 {
-	vtrace("Idle timeout\n");
-	idle_ticking = false;
-	if (ft_state != FT_NONE) {
-	    /* Should not happen, but just in case. */
-	    vtrace("File transfer in progress, ignoring\n");
-	    return;
-	} else {
-	    push_idle(idle_command);
-	}
-	reset_idle_timer();
+    vtrace("Idle timeout\n");
+    idle_ticking = false;
+    if (ft_state != FT_NONE) {
+	/* Should not happen, but just in case. */
+	vtrace("File transfer in progress, ignoring\n");
+	return;
+    } else {
+	push_idle(idle_command);
+    }
+    reset_idle_timer();
 }
 
 /*
@@ -210,28 +212,28 @@ idle_timeout(ioid_t id _is_unused)
 void
 reset_idle_timer(void)
 {
-	if (idle_enabled) {
-		unsigned long idle_ms_now;
+    if (idle_enabled) {
+	unsigned long idle_ms_now;
 
-		if (idle_ticking) {
-			RemoveTimeOut(idle_id);
-			idle_ticking = false;
-		}
-		idle_ms_now = idle_ms;
-		if (idle_randomize) {
-			idle_ms_now = idle_ms;
-#if defined(_WIN32) /*[*/
-			idle_ms_now -= rand() % (idle_ms / 10L);
-#else /*][*/
-			idle_ms_now -= random() % (idle_ms / 10L);
-#endif /*]*/
-		}
-#if defined(DEBUG_IDLE_TIMEOUT) /*[*/
-		vtrace("Setting idle timeout to %lu\n", idle_ms_now);
-#endif /*]*/
-		idle_id = AddTimeOut(idle_ms_now, idle_timeout);
-		idle_ticking = true;
+	if (idle_ticking) {
+	    RemoveTimeOut(idle_id);
+	    idle_ticking = false;
 	}
+	idle_ms_now = idle_ms;
+	if (idle_randomize) {
+	    idle_ms_now = idle_ms;
+#if defined(_WIN32) /*[*/
+	    idle_ms_now -= rand() % (idle_ms / 10L);
+#else /*][*/
+	    idle_ms_now -= random() % (idle_ms / 10L);
+#endif /*]*/
+	}
+#if defined(DEBUG_IDLE_TIMEOUT) /*[*/
+	vtrace("Setting idle timeout to %lu\n", idle_ms_now);
+#endif /*]*/
+	idle_id = AddTimeOut(idle_ms_now, idle_timeout);
+	idle_ticking = true;
+    }
 }
 
 /*
@@ -241,11 +243,11 @@ reset_idle_timer(void)
 void
 cancel_idle_timer(void)
 {
-	if (idle_ticking) {
-		RemoveTimeOut(idle_id);
-		idle_ticking = false;
-	}
-	idle_enabled = false;
+    if (idle_ticking) {
+	RemoveTimeOut(idle_id);
+	idle_ticking = false;
+    }
+    idle_enabled = false;
 }
 
 /*
@@ -276,13 +278,13 @@ idle_ft_complete(void)
 char *
 get_idle_command(void)
 {
-	return idle_command;
+    return idle_command;
 }
 
 char *
 get_idle_timeout(void)
 {
-	return idle_timeout_string;
+    return idle_timeout_string;
 }
 
 /* Action support. */

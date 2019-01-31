@@ -106,8 +106,8 @@ static void grab_sel(int start, int end, bool really, Time t);
 #define NS		5
 static Atom     want_sel[NS];
 static struct {			/* owned selections */
-	Atom            atom;	/* atom */
-	char           *buffer;	/* buffer contents (UTF-8) */
+    Atom atom;	/* atom */
+    char *buffer;	/* buffer contents (UTF-8) */
 }               own_sel[NS];
 static bool  cursor_moved = false;
 static int      saved_cursor_addr;
@@ -122,21 +122,25 @@ static bool	any_selected = false;
 #define event_time(event)	event->xbutton.time
 
 #define BOUNDED_XY(event, x, y) {	\
-	x = X_TO_COL(event_x(event));	\
-	if (x < 0)			\
-		x = 0;			\
-	if (x >= COLS)			\
-		x = COLS - 1;		\
-	if (flipped)			\
-		x = (COLS - x) - 1;	\
-	y = Y_TO_ROW(event_y(event) - *descent);	\
-	if (y <= 0)			\
-		y = 0;			\
-	if (y >= ROWS)			\
-		y = ROWS - 1;		\
+    x = X_TO_COL(event_x(event));	\
+    if (x < 0) {			\
+	x = 0;				\
+    }					\
+    if (x >= COLS) {			\
+	x = COLS - 1;			\
+    }					\
+    if (flipped) {			\
+	x = (COLS - x) - 1;		\
+    }					\
+    y = Y_TO_ROW(event_y(event) - *descent);	\
+    if (y <= 0) {			\
+	y = 0;				\
+    }					\
+    if (y >= ROWS) {			\
+	y = ROWS - 1;			\
+    }					\
 }
 
-
 static int char_class[256] = {
 /* nul soh stx etx eot enq ack bel  bs  ht  nl  vt  np  cr  so  si */
     32,  1,  1,  1,  1,  1,  1,  1,  1, 32,  1,  1,  1,  1,  1,  1,
@@ -176,55 +180,66 @@ static int char_class[256] = {
 void
 reclass(char *s)
 {
-	int n;
-	int low, high, value;
-	int i;
-	char c;
+    int n;
+    int low, high, value;
+    int i;
+    char c;
 
-	n = -1;
-	low = -1;
-	high = -1;
-	for (;;) {
-		c = *s++;
-		if (isdigit((unsigned char)c)) {
-			if (n == -1)
-				n = 0;
-			n = (n * 10) + (c - '0');
-			if (n > 255)
-				goto fail;
-		} else if (c == '-') {
-			if (n == -1 || low != -1)
-				goto fail;
-			low = n;
-			n = -1;
-		} else if (c == ':') {
-			if (n == -1)
-				goto fail;
-			high = n;
-			n = -1;
-		} else if (c == ',' || c == '\0') {
-			if (n == -1)
-				goto fail;
-			value = n;
-			n = -1;
-			if (high == -1)
-				goto fail;
-			if (low == -1)
-				low = high;
-			if (high < low)
-				goto fail;
-			for (i = low; i <= high; i++)
-				char_class[i] = value;
-			low = -1;
-			high = -1;
-			if (c == '\0')
-				return;
-		} else
-			goto fail;
+    n = -1;
+    low = -1;
+    high = -1;
+    for (;;) {
+	c = *s++;
+	if (isdigit((unsigned char)c)) {
+	    if (n == -1) {
+		n = 0;
+	    }
+	    n = (n * 10) + (c - '0');
+	    if (n > 255) {
+		goto fail;
+	    }
+	} else if (c == '-') {
+	    if (n == -1 || low != -1) {
+		goto fail;
+	    }
+	    low = n;
+	    n = -1;
+	} else if (c == ':') {
+	    if (n == -1) {
+		goto fail;
+	    }
+	    high = n;
+	    n = -1;
+	} else if (c == ',' || c == '\0') {
+	    if (n == -1) {
+		goto fail;
+	    }
+	    value = n;
+	    n = -1;
+	    if (high == -1) {
+		goto fail;
+	    }
+	    if (low == -1) {
+		low = high;
+	    }
+	    if (high < low) {
+		goto fail;
+	    }
+	    for (i = low; i <= high; i++) {
+		char_class[i] = value;
+	    }
+	    low = -1;
+	    high = -1;
+	    if (c == '\0') {
+		return;
+	    }
+	} else {
+	    goto fail;
 	}
+    }
 
-    fail:
-	popup_an_error("Error in %s string", ResCharClass);
+fail:
+    popup_an_error("Error in %s string", ResCharClass);
 }
 
 static int
@@ -302,11 +317,11 @@ select_word(int baddr, Time t)
 static void
 select_line(int baddr, Time t)
 {
-	f_start = baddr - (baddr % COLS);
-	f_end = f_start + COLS - 1;
-	v_start = f_start;
-	v_end = f_end;
-	grab_sel(f_start, f_end, true, t);
+    f_start = baddr - (baddr % COLS);
+    f_end = f_start + COLS - 1;
+    v_start = f_start;
+    v_end = f_end;
+    grab_sel(f_start, f_end, true, t);
 }
 
 
@@ -1079,7 +1094,6 @@ SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
     grab_sel(0, (ROWS * COLS) - 1, true, event_time(event));
 }
 
-
 /*
  * Screen side.
  */
@@ -1094,20 +1108,21 @@ static Time     sel_time;
 static void
 init_select_buf(void)
 {
-	if (select_buf == NULL)
-		select_buf = XtMalloc(sb_size = SB_CHUNK);
-	sb_ptr = select_buf;
+    if (select_buf == NULL) {
+	select_buf = XtMalloc(sb_size = SB_CHUNK);
+    }
+    sb_ptr = select_buf;
 }
 
 static void
 store_sel(char c)
 {
-	if (sb_ptr - select_buf >= sb_size) {
-		sb_size += SB_CHUNK;
-		select_buf = XtRealloc(select_buf, sb_size);
-		sb_ptr = select_buf + sb_size - SB_CHUNK;
-	}
-	*(sb_ptr++) = c;
+    if (sb_ptr - select_buf >= sb_size) {
+	sb_size += SB_CHUNK;
+	select_buf = XtRealloc(select_buf, sb_size);
+	sb_ptr = select_buf + sb_size - SB_CHUNK;
+    }
+    *(sb_ptr++) = c;
 }
 
 /*
@@ -1119,174 +1134,172 @@ store_sel(char c)
 static unsigned long
 store_icccm_string(XtPointer value, const char *buf)
 {
-    	char *dst = (char *)value;
-	unsigned long len = 0;
-	bool skip = false;
+    char *dst = (char *)value;
+    unsigned long len = 0;
+    bool skip = false;
 
-	while (*buf) {
-	    	int nw;
-		ucs4_t ucs;
+    while (*buf) {
+	int nw;
+	ucs4_t ucs;
 
-		if (*buf == '\033') {
-		    	/* Funky GE sequence.  Skip it. */
-		    	*dst++ = ' ';
-			len++;
-			buf++;
-		    	skip = true;
-			continue;
-		}
-	    	nw = utf8_to_unicode(buf, strlen(buf), &ucs);
-		if (nw <= 0)
-		    	return len;
-		if (skip) {
-		    	skip = false;
-			continue;
-		}
-		if (ucs == '\n' ||
-		    (ucs >= 0x20 && ucs <= 0x7f) ||
-		    (ucs >= 0xa0 && ucs <= 0xff)) {
-			*dst++ = ucs & 0xff;
-			len++;
-		}
-		buf += nw;
+	if (*buf == '\033') {
+	    /* Funky GE sequence.  Skip it. */
+	    *dst++ = ' ';
+	    len++;
+	    buf++;
+	    skip = true;
+	    continue;
 	}
-	return len;
+	nw = utf8_to_unicode(buf, strlen(buf), &ucs);
+	if (nw <= 0) {
+	    return len;
+	}
+	if (skip) {
+	    skip = false;
+	    continue;
+	}
+	if (ucs == '\n' ||
+	    (ucs >= 0x20 && ucs <= 0x7f) ||
+	    (ucs >= 0xa0 && ucs <= 0xff)) {
+	    *dst++ = ucs & 0xff;
+	    len++;
+	}
+	buf += nw;
+    }
+    return len;
 }
 
 static Boolean
 convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
-    XtPointer *value, unsigned long *length, int *format)
+	XtPointer *value, unsigned long *length, int *format)
 {
-	int i;
+    int i;
 
-	/* Find the right selection. */
-	for (i = 0; i < NS; i++)
-		if (own_sel[i].atom == *selection)
-			break;
-	if (i >= NS)	/* not my selection */
-		return False;
-
-	if (*target == XA_TARGETS(display)) {
-		Atom* targetP;
-		Atom* std_targets;
-		unsigned long std_length;
-
-		XmuConvertStandardSelection(w, sel_time, selection,
-		    target, type, (caddr_t*) &std_targets, &std_length, format);
-#if defined(XA_UTF8_STRING) /*[*/
-		*length = std_length + 6;
-#else /*][*/
-		*length = std_length + 5;
-#endif /*]*/
-		*value = (XtPointer) XtMalloc(sizeof(Atom) * (*length));
-		targetP = *(Atom**)value;
-		*targetP++ = XA_STRING;
-		*targetP++ = XA_TEXT(display);
-		*targetP++ = XA_COMPOUND_TEXT(display);
-#if defined(XA_UTF8_STRING) /*[*/
-		*targetP++ = XA_UTF8_STRING(display);
-#endif /*]*/
-		*targetP++ = XA_LENGTH(display);
-		*targetP++ = XA_LIST_LENGTH(display);
-		(void) memmove(targetP,  std_targets,
-				   (int) (sizeof(Atom) * std_length));
-		XtFree((char *) std_targets);
-		*type = XA_ATOM;
-		*format = 32;
-		return True;
+    /* Find the right selection. */
+    for (i = 0; i < NS; i++) {
+	if (own_sel[i].atom == *selection) {
+	    break;
 	}
+    }
+    if (i >= NS) {	/* not my selection */
+	return False;
+    }
 
-	if (*target == XA_STRING ||
-	    *target == XA_TEXT(display) ||
-	    *target == XA_COMPOUND_TEXT(display)
+    if (*target == XA_TARGETS(display)) {
+	Atom* targetP;
+	Atom* std_targets;
+	unsigned long std_length;
+
+	XmuConvertStandardSelection(w, sel_time, selection,
+		target, type, (caddr_t*) &std_targets, &std_length, format);
+#if defined(XA_UTF8_STRING) /*[*/
+	*length = std_length + 6;
+#else /*][*/
+	*length = std_length + 5;
+#endif /*]*/
+	*value = (XtPointer) XtMalloc(sizeof(Atom) * (*length));
+	targetP = *(Atom**)value;
+	*targetP++ = XA_STRING;
+	*targetP++ = XA_TEXT(display);
+	*targetP++ = XA_COMPOUND_TEXT(display);
+#if defined(XA_UTF8_STRING) /*[*/
+	*targetP++ = XA_UTF8_STRING(display);
+#endif /*]*/
+	*targetP++ = XA_LENGTH(display);
+	*targetP++ = XA_LIST_LENGTH(display);
+	memmove(targetP,  std_targets,
+		(int) (sizeof(Atom) * std_length));
+	XtFree((char *) std_targets);
+	*type = XA_ATOM;
+	*format = 32;
+	return True;
+    }
+
+    if (*target == XA_STRING ||
+	*target == XA_TEXT(display) ||
+	*target == XA_COMPOUND_TEXT(display)
+#if defined(XA_UTF8_STRING) /*[*/
+	|| *target == XA_UTF8_STRING(display)
+#endif /*]*/
+	) {
+	if (*target == XA_COMPOUND_TEXT(display)
 #if defined(XA_UTF8_STRING) /*[*/
 	    || *target == XA_UTF8_STRING(display)
 #endif /*]*/
-	    ) {
-		if (*target == XA_COMPOUND_TEXT(display)
+		) {
+		*type = *target;
+	} else {
+		*type = XA_STRING;
+	}
+	*length = strlen(own_sel[i].buffer);
+	*value = XtMalloc(*length);
 #if defined(XA_UTF8_STRING) /*[*/
-		    || *target == XA_UTF8_STRING(display)
+	if (*target == XA_UTF8_STRING(display)) {
+	    memmove(*value, own_sel[i].buffer, (int) *length);
+	} else
 #endif /*]*/
-			)
-			*type = *target;
-		else
-			*type = XA_STRING;
-		*length = strlen(own_sel[i].buffer);
-		*value = XtMalloc(*length);
-#if defined(XA_UTF8_STRING) /*[*/
-		if (*target == XA_UTF8_STRING(display))
-			(void) memmove(*value, own_sel[i].buffer,
-				       (int) *length);
-		else
-#endif /*]*/
-		    	/*
-			 * N.B.: We return a STRING for COMPOUND_TEXT.
-			 * Someday we may do real ISO 2022, but not today.
-			 */
-		    	*length = store_icccm_string(*value,
-				own_sel[i].buffer);
-		*format = 8;
-		return True;
+	{
+	    /*
+	     * N.B.: We return a STRING for COMPOUND_TEXT.
+	     * Someday we may do real ISO 2022, but not today.
+	     */
+	    *length = store_icccm_string(*value, own_sel[i].buffer);
+	    *format = 8;
+	    return True;
 	}
-	if (*target == XA_LIST_LENGTH(display)) {
-		*value = XtMalloc(4);
-		if (sizeof(long) == 4)
-			*(long *)*value = 1;
-		else {
-			long temp = 1;
-			(void) memmove(*value,
-					((char*) &temp) + sizeof(long) - 4,
-					4);
-		}
-		*type = XA_INTEGER;
-		*length = 1;
-		*format = 32;
-		return True;
+    }
+    if (*target == XA_LIST_LENGTH(display)) {
+	*value = XtMalloc(4);
+	if (sizeof(long) == 4) {
+	    *(long *)*value = 1;
+	} else {
+	    long temp = 1;
+	    memmove(*value, ((char*) &temp) + sizeof(long) - 4, 4);
 	}
-	if (*target == XA_LENGTH(display)) {
-		*value = XtMalloc(4);
-		if (sizeof(long) == 4)
-			*(long*)*value = strlen(own_sel[i].buffer);
-		else {
-			long temp = strlen(own_sel[i].buffer);
-			(void) memmove(*value,
-			                   ((char *) &temp) + sizeof(long) - 4,
-					   4);
-		}
-		*type = XA_INTEGER;
-		*length = 1;
-		*format = 32;
-		return True;
+	*type = XA_INTEGER;
+	*length = 1;
+	*format = 32;
+	return True;
+    }
+    if (*target == XA_LENGTH(display)) {
+	*value = XtMalloc(4);
+	if (sizeof(long) == 4) {
+	    *(long*)*value = strlen(own_sel[i].buffer);
+	} else {
+	    long temp = strlen(own_sel[i].buffer);
+	    memmove(*value, ((char *) &temp) + sizeof(long) - 4, 4);
 	}
+	*type = XA_INTEGER;
+	*length = 1;
+	*format = 32;
+	return True;
+    }
 
-	if (XmuConvertStandardSelection(w, sel_time, selection,
-	    target, type, (caddr_t *)value, length, format))
-		return True;
+    if (XmuConvertStandardSelection(w, sel_time, selection,
+	    target, type, (caddr_t *)value, length, format)) {
+	return True;
+    }
 
-	/* else */
-#if 0
-	printf("Unknown conversion request: %s to %s\n",
-	    XGetAtomName(display, *selection),
-	    XGetAtomName(display, *target));
-#endif
-	return False;
+    return False;
 }
 
 static void
 lose_sel(Widget w _is_unused, Atom *selection)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < NS; i++)
-		if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
-			own_sel[i].atom = None;
-			XtFree(own_sel[i].buffer);
-			own_sel[i].buffer = NULL;
-			n_owned--;
-			break;
-		}
-	if (!n_owned)
-		unselect(0, ROWS*COLS);
+    for (i = 0; i < NS; i++) {
+	if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
+	    own_sel[i].atom = None;
+	    XtFree(own_sel[i].buffer);
+	    own_sel[i].buffer = NULL;
+	    n_owned--;
+	    break;
+	}
+    }
+    if (!n_owned) {
+	unselect(0, ROWS*COLS);
+    }
 }
 
 /*
@@ -1301,7 +1314,7 @@ static bool osc_valid = false;
 static void
 osc_start(void)
 {
-	osc_valid = false;
+    osc_valid = false;
 }
 
 /*
@@ -1330,7 +1343,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	 * want and the last address we searched.  If we found a new
 	 * field attribute, save the address for next time.
 	 */
-	(void) get_bounded_field_attribute(baddr, osc_baddr, &fa);
+	get_bounded_field_attribute(baddr, osc_baddr, &fa);
 	osc_baddr = baddr;
     } else {
 	/*
@@ -1437,56 +1450,60 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 static void
 own_sels(Time t)
 {
-	int i, j;
+    int i, j;
 
-	/*
-	 * Try to grab any new selections we may want.
-	 */
-	for (i = 0; i < NS; i++) {
-		bool already_own = false;
+    /*
+     * Try to grab any new selections we may want.
+     */
+    for (i = 0; i < NS; i++) {
+	bool already_own = false;
 
-		if (want_sel[i] == None)
-			continue;
-
-		/* Check if we already own it. */
-		for (j = 0; j < NS; j++)
-			if (own_sel[j].atom == want_sel[i]) {
-				already_own = true;
-				break;
-			}
-
-		/* Find the slot for it. */
-		if (!already_own) {
-			for (j = 0; j < NS; j++)
-				if (own_sel[j].atom == None)
-					break;
-			if (j >= NS)
-				continue;
-		}
-
-		if (XtOwnSelection(*screen, want_sel[i], t, convert_sel,
-		    lose_sel, NULL)) {
-			if (!already_own) {
-				n_owned++;
-				own_sel[j].atom = want_sel[i];
-			}
-			Replace(own_sel[j].buffer,
-			    XtMalloc(strlen(select_buf) + 1));
-			(void) memmove(own_sel[j].buffer, select_buf,
-			    strlen(select_buf) + 1);
-		} else {
-			XtWarning("Could not get selection");
-			if (own_sel[j].atom != None) {
-				XtFree(own_sel[j].buffer);
-				own_sel[j].buffer = NULL;
-				own_sel[j].atom = None;
-				n_owned--;
-			}
-		}
+	if (want_sel[i] == None) {
+	    continue;
 	}
-	if (!n_owned)
-		unselect(0, ROWS*COLS);
-	sel_time = t;
+
+	/* Check if we already own it. */
+	for (j = 0; j < NS; j++) {
+	    if (own_sel[j].atom == want_sel[i]) {
+		already_own = true;
+		break;
+	    }
+	}
+
+	/* Find the slot for it. */
+	if (!already_own) {
+	    for (j = 0; j < NS; j++) {
+		if (own_sel[j].atom == None) {
+		    break;
+		}
+	    }
+	    if (j >= NS) {
+		continue;
+	    }
+	}
+
+	if (XtOwnSelection(*screen, want_sel[i], t, convert_sel, lose_sel,
+		    NULL)) {
+	    if (!already_own) {
+		n_owned++;
+		own_sel[j].atom = want_sel[i];
+	    }
+	    Replace(own_sel[j].buffer, XtMalloc(strlen(select_buf) + 1));
+	    memmove(own_sel[j].buffer, select_buf, strlen(select_buf) + 1);
+	} else {
+	    XtWarning("Could not get selection");
+	    if (own_sel[j].atom != None) {
+		XtFree(own_sel[j].buffer);
+		own_sel[j].buffer = NULL;
+		own_sel[j].atom = None;
+		n_owned--;
+	    }
+	}
+    }
+    if (!n_owned) {
+	unselect(0, ROWS*COLS);
+    }
+    sel_time = t;
 }
 
 /*
@@ -1497,153 +1514,163 @@ own_sels(Time t)
 static void
 grab_sel(int start, int end, bool really, Time t)
 {
-	int i, j;
-	int start_row, end_row;
-	int nulls = 0;
-	unsigned char osc[16];
-	int len;
+    int i, j;
+    int start_row, end_row;
+    int nulls = 0;
+    unsigned char osc[16];
+    int len;
 
-	unselect(0, ROWS*COLS);
+    unselect(0, ROWS*COLS);
 
-	if (start > end) {
-		int exch = end;
+    if (start > end) {
+	int exch = end;
 
-		end = start;
-		start = exch;
+	end = start;
+	start = exch;
+    }
+
+    start_row = start / COLS;
+    end_row = end / COLS;
+
+    init_select_buf();	/* prime the store_sel() routine */
+    osc_start();	/* prime the onscreen_char() routine */
+
+    if (!ever_3270 && !toggled(RECTANGLE_SELECT)) {
+	/* Continuous selections */
+	if (IS_RIGHT(ctlr_dbcs_state(start))) {
+	    DEC_BA(start);
 	}
-
-	start_row = start / COLS;
-	end_row = end / COLS;
-
-	init_select_buf();	/* prime the store_sel() routine */
-	osc_start();		/* prime the onscreen_char() routine */
-
-	if (!ever_3270 && !toggled(RECTANGLE_SELECT)) {
-		/* Continuous selections */
-		if (IS_RIGHT(ctlr_dbcs_state(start)))
-			DEC_BA(start);
-		if (VISUAL_LEFT(ctlr_dbcs_state(end)))
-			INC_BA(end);
-		for (i = start; i <= end; i++) {
-			screen_set_select(i);
-			if (really) {
-				if (i != start && !(i % COLS)) {
-					nulls = 0;
-					store_sel('\n');
-				}
-				onscreen_char(i, osc, &len);
-				for (j = 0; j < len; j++) {
-					if (osc[j]) {
-						while (nulls) {
-							store_sel(' ');
-							nulls--;
-						}
-						store_sel((char)osc[j]);
-					} else
-						nulls++;
-				}
-			}
+	if (VISUAL_LEFT(ctlr_dbcs_state(end))) {
+	    INC_BA(end);
+	}
+	for (i = start; i <= end; i++) {
+	    screen_set_select(i);
+	    if (really) {
+		if (i != start && !(i % COLS)) {
+		    nulls = 0;
+		    store_sel('\n');
 		}
-		/* Check for newline extension on the last line. */
-		if ((end % COLS) != (COLS - 1)) {
-			bool all_blank = true;
-
-			for (i = end; i < end + (COLS - (end % COLS)); i++) {
-				onscreen_char(i, osc, &len);
-				for (j = 0; j < len; j++) {
-					if (osc[j]) {
-						all_blank = false;
-						break;
-					}
-				}
+		onscreen_char(i, osc, &len);
+		for (j = 0; j < len; j++) {
+		    if (osc[j]) {
+			while (nulls) {
+			    store_sel(' ');
+			    nulls--;
 			}
-			if (all_blank) {
-				for (i = end; i < end + (COLS - (end % COLS)); i++) {
-					screen_set_select(i);
-				}
-				if (really)
-					store_sel('\n');
-			}
+			store_sel((char)osc[j]);
+		    } else {
+			nulls++;
+		    }
 		}
+	    }
+	}
+	/* Check for newline extension on the last line. */
+	if ((end % COLS) != (COLS - 1)) {
+	    bool all_blank = true;
+
+	    for (i = end; i < end + (COLS - (end % COLS)); i++) {
+		onscreen_char(i, osc, &len);
+		for (j = 0; j < len; j++) {
+		    if (osc[j]) {
+			all_blank = false;
+			    break;
+		    }
+		}
+	    }
+	    if (all_blank) {
+		for (i = end; i < end + (COLS - (end % COLS)); i++) {
+		    screen_set_select(i);
+		}
+		if (really) {
+		    store_sel('\n');
+		}
+	    }
+	}
+    } else {
+	/* Rectangular selections */
+	if (start_row == end_row) {
+	    if (IS_RIGHT(ctlr_dbcs_state(start))) {
+		DEC_BA(start);
+	    }
+	    if (VISUAL_LEFT(ctlr_dbcs_state(end))) {
+		INC_BA(end);
+	    }
+	    for (i = start; i <= end; i++) {
+		screen_set_select(i);
+		if (really) {
+		    onscreen_char(i, osc, &len);
+		    for (j = 0; j < len; j++) {
+			if (osc[j]) {
+			    while (nulls) {
+				store_sel(' ');
+				nulls--;
+			    }
+			    store_sel((char)osc[j]);
+			} else {
+			    nulls++;
+			}
+		    }
+		}
+	    }
 	} else {
-		/* Rectangular selections */
-		if (start_row == end_row) {
-			if (IS_RIGHT(ctlr_dbcs_state(start)))
-				DEC_BA(start);
-			if (VISUAL_LEFT(ctlr_dbcs_state(end)))
-				INC_BA(end);
-			for (i = start; i <= end; i++) {
-				screen_set_select(i);
-				if (really) {
-					onscreen_char(i, osc, &len);
-					for (j = 0; j < len; j++) {
-						if (osc[j]) {
-							while (nulls) {
-								store_sel(' ');
-								nulls--;
-							}
-							store_sel((char)osc[j]);
-						} else
-							nulls++;
-					}
-				}
-			}
-		} else {
-			int row, col;
-			int start_col = start % COLS;
-			int end_col = end % COLS;
+	    int row, col;
+	    int start_col = start % COLS;
+	    int end_col = end % COLS;
 
-			if (start_col > end_col) {
-				int exch = end_col;
+	    if (start_col > end_col) {
+		int exch = end_col;
 
-				end_col = start_col;
-				start_col = exch;
-			}
+		end_col = start_col;
+		start_col = exch;
+	    }
 
-			for (row = start_row; row <= end_row; row++) {
-				int sc = start_col;
-				int ec = end_col;
+	    for (row = start_row; row <= end_row; row++) {
+		int sc = start_col;
+		int ec = end_col;
 
-				if (sc &&
-				    IS_RIGHT(ctlr_dbcs_state(row*COLS + sc)))
-					sc = sc - 1;
-				if (ec < COLS-1 &&
-				    VISUAL_LEFT(ctlr_dbcs_state(row*COLS + ec)))
-					ec = ec + 1;
-
-				for (col = sc; col <= ec; col++) {
-					screen_set_select(row*COLS + col);
-					if (really) {
-						onscreen_char(row*COLS + col,
-						    osc, &len);
-						for (j = 0; j < len; j++) {
-							if (osc[j]) {
-								while (nulls) {
-									store_sel(' ');
-									nulls--;
-								}
-								store_sel((char)osc[j]);
-							} else
-								nulls++;
-						    }
-					}
-				}
-				nulls = 0;
-				if (really && row < end_row) {
-					store_sel('\n');
-				}
-			}
+		if (sc && IS_RIGHT(ctlr_dbcs_state(row*COLS + sc))) {
+		    sc = sc - 1;
 		}
+		if (ec < COLS-1 &&
+			VISUAL_LEFT(ctlr_dbcs_state(row*COLS + ec))) {
+		    ec = ec + 1;
+		}
+
+		for (col = sc; col <= ec; col++) {
+		    screen_set_select(row*COLS + col);
+		    if (really) {
+			onscreen_char(row*COLS + col, osc, &len);
+			for (j = 0; j < len; j++) {
+			    if (osc[j]) {
+				while (nulls) {
+				    store_sel(' ');
+				    nulls--;
+				}
+				store_sel((char)osc[j]);
+			    } else {
+				nulls++;
+			    }
+			}
+		    }
+		}
+		nulls = 0;
+		if (really && row < end_row) {
+		    store_sel('\n');
+		}
+	    }
 	}
+    }
 
-	/* Terminate the result. */
-	if (really)
-		store_sel('\0');
+    /* Terminate the result. */
+    if (really) {
+	store_sel('\0');
+    }
 
-	any_selected = true;
-	ctlr_changed(0, ROWS*COLS);
-	if (really)
-		own_sels(t);
+    any_selected = true;
+    ctlr_changed(0, ROWS*COLS);
+    if (really) {
+	own_sels(t);
+    }
 }
 
 /*
@@ -1759,7 +1786,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	t_len -= nm;
 	ei_len += nm;
     }
-    (void) emulate_input(ei_buf, ei_len, true);
+    emulate_input(ei_buf, ei_len, true);
 
     XtFree(ei_buf);
     XtFree(value);

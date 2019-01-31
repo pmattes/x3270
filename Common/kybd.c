@@ -250,7 +250,6 @@ static action_table_t kybd_dactions[] = {
     { "Compose",	Compose_action,		ACTION_KE }
 };
 
-
 /*
  * Put a function or action on the typeahead queue.
  */
@@ -354,7 +353,7 @@ run_ta(void)
 		argv[argc++] = ta->parm2;
 	    }
 	}
-	(void) (*ta->fn)(IA_TYPEAHEAD, argc, argv);
+	(*ta->fn)(IA_TYPEAHEAD, argc, argv);
     }
     Free((char *)ta->parm1);
     Free((char *)ta->parm2);
@@ -540,7 +539,7 @@ kybd_connect(bool connected)
 	}
     } else {
 	kybdlock_set(KL_NOT_CONNECTED, "kybd_connect");
-	(void) flush_ta();
+	flush_ta();
     }
 }
 
@@ -676,12 +675,11 @@ operator_error(int error_type, bool oerr_fail)
 	status_oerr(error_type);
 	mcursor_locked();
 	kybdlock_set((unsigned int)error_type, "operator_error");
-	(void) flush_ta();
+	flush_ta();
     }
     return !oerr_fail;
 }
 
-
 /*
  * Handle an AID (Attention IDentifier) key.  This is the common stuff that
  * gets executed for all AID keys (PFs, PAs, Clear and etc).
@@ -799,7 +797,6 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * ATTN key, per RFC 2355.  Sends IP, regardless.
  */
@@ -849,7 +846,6 @@ Interrupt_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 
 /*
  * Prepare for an insert of 'count' bytes.
@@ -989,7 +985,7 @@ key_Character_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     vtrace(" %s -> Key(%s\"%s\")\n",
 	ia_name[(int) ia_cause],
 	with_ge ? "GE " : "", mb);
-    (void) key_Character(ebc, with_ge, pasting, oerr_fail, NULL);
+    key_Character(ebc, with_ge, pasting, oerr_fail, NULL);
     return true;
 }
 
@@ -1246,7 +1242,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	cursor_move(baddr);
     }
 
-    (void) ctlr_dbcs_postprocess();
+    ctlr_dbcs_postprocess();
     if (consumed != NULL) {
 	*consumed = true;
     }
@@ -1267,7 +1263,7 @@ key_WCharacter_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     vtrace(" %s -> Key(X'%04x')\n", ia_name[(int) ia_cause], ebc_wide);
     ebc_pair[0] = (ebc_wide >> 8) & 0xff;
     ebc_pair[1] = ebc_wide & 0xff;
-    (void) key_WCharacter(ebc_pair, oerr_fail);
+    key_WCharacter(ebc_pair, oerr_fail);
     return true;
 }
 
@@ -1307,8 +1303,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
     if (IN_NVT) {
 	char mb[16];
 
-	(void) ebcdic_to_multibyte((ebc_pair[0] << 8) | ebc_pair[1], mb,
-		sizeof(mb));
+	ebcdic_to_multibyte((ebc_pair[0] << 8) | ebc_pair[1], mb, sizeof(mb));
 	net_sends(mb);
 	return true;
     }
@@ -1545,7 +1540,7 @@ retry:
 	    }
 	}
 	cursor_move(baddr);
-	(void) ctlr_dbcs_postprocess();
+	ctlr_dbcs_postprocess();
 	return true;
     } else {
 	return operator_error(KL_OERR_DBCS, oerr_fail);
@@ -1653,10 +1648,10 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
 	    ebc_pair[0] = (ebc & 0xff00)>> 8;
 	    ebc_pair[1] = ebc & 0xff;
-	    (void) key_WCharacter(ebc_pair, oerr_fail);
+	    key_WCharacter(ebc_pair, oerr_fail);
 	} else {
-	    (void) key_Character(ebc, (keytype == KT_GE) || ge,
-		    (cause == IA_PASTE), oerr_fail, NULL);
+	    key_Character(ebc, (keytype == KT_GE) || ge, (cause == IA_PASTE),
+		    oerr_fail, NULL);
 	}
     } else if (IN_NVT) {
 	char mb[16];
@@ -1718,7 +1713,6 @@ Flip_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 
-
 /*
  * Tab forward to next field.
  */
@@ -1739,7 +1733,6 @@ Tab_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Tab backward to previous field.
  */
@@ -1783,7 +1776,6 @@ BackTab_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Deferred keyboard unlock.
  */
@@ -1881,7 +1873,6 @@ Reset_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Move to first unprotected field on screen.
  */
@@ -1906,7 +1897,6 @@ Home_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor left 1 position.
  */
@@ -1956,7 +1946,6 @@ Left_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Delete char key.
  * Returns "true" if succeeds, "false" otherwise.
@@ -2035,7 +2024,7 @@ do_delete(void)
     mdt_set(cursor_addr);
 
     /* Patch up the DBCS state for display. */
-    (void) ctlr_dbcs_postprocess();
+    ctlr_dbcs_postprocess();
     return true;
 }
 
@@ -2069,7 +2058,6 @@ Delete_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * 3270-style backspace.
  */
@@ -2090,7 +2078,7 @@ BackSpace_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
     if (reverse) {
-	(void) do_delete();
+	do_delete();
     } else if (!flipped) {
 	do_left();
     } else {
@@ -2103,7 +2091,6 @@ BackSpace_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Destructive backspace, like Unix "erase".
  */
@@ -2160,7 +2147,7 @@ do_erase(void)
     DEC_BA(baddr);
     if (ea_buf[baddr].ec == EBC_so && ea_buf[cursor_addr].ec == EBC_si) {
 	cursor_move(baddr);
-	(void) do_delete();
+	do_delete();
     }
 }
 
@@ -2188,7 +2175,6 @@ Erase_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor right 1 position.
  */
@@ -2222,7 +2208,6 @@ Right_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor left 2 positions.
  */
@@ -2256,7 +2241,6 @@ Left2_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor to previous word.
  */
@@ -2328,7 +2312,6 @@ PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor right 2 positions.
  */
@@ -2362,7 +2345,6 @@ Right2_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /* Find the next unprotected word, or -1 */
 static int
 nu_word(int baddr)
@@ -2481,7 +2463,6 @@ NextWord_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor up 1 position.
  */
@@ -2508,7 +2489,6 @@ Up_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor down 1 position.
  */
@@ -2532,7 +2512,6 @@ Down_action(ia_t ia, unsigned argc, const char **argv)
     return false;
 }
 
-
 /*
  * Cursor to first field on next line or any lines after that.
  */
@@ -2567,7 +2546,6 @@ Newline_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * DUP key
  */
@@ -2608,7 +2586,6 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
     }
 }
 
-
 /*
  * FM key
  */
@@ -2641,7 +2618,6 @@ FieldMark_action(ia_t ia, unsigned argc, const char **argv)
     return key_Character(EBC_fm, false, false, oerr_fail, NULL);
 }
 
-
 /*
  * Vanilla AID keys.
  */
@@ -2688,7 +2664,6 @@ SysReq_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Clear AID key
  */
@@ -2720,7 +2695,6 @@ Clear_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Cursor Select key (light pen simulator).
  */
@@ -2825,7 +2799,6 @@ CursorSelect_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Erase End Of Field Key.
  */
@@ -2875,11 +2848,10 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 	    ea_buf[cursor_addr].ec = EBC_si;
 	}
     }
-    (void) ctlr_dbcs_postprocess();
+    ctlr_dbcs_postprocess();
     return true;
 }
 
-
 /*
  * Erase all Input Key.
  */
@@ -2939,12 +2911,11 @@ EraseInput_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Synchronize the DBCS state. */
-    (void) ctlr_dbcs_postprocess();
+    ctlr_dbcs_postprocess();
 
     return true;
 }
 
-
 /*
  * Delete word key.  Backspaces the cursor until it hits the front of a word,
  * deletes characters until it hits a blank or null, and deletes all of these
@@ -3011,7 +2982,6 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 
-
 /*
  * Delete field key.  Similar to EraseEOF, but it wipes out the entire field
  * rather than just to the right of the cursor, and it leaves the cursor at
@@ -3057,7 +3027,6 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Set insert mode key.
  */
@@ -3077,7 +3046,6 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Toggle insert mode key.
  */
@@ -3101,7 +3069,6 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Toggle reverse mode key.
  */
@@ -3124,7 +3091,6 @@ ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-
 /*
  * Move the cursor to the first blank after the last nonblank in the
  * field, or if the field is full, to the last character in the field.
@@ -3369,7 +3335,7 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
 	t = argv[i];
 	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2))
 	    t += 2;
-	(void) strcat(s, t);
+	strcat(s, t);
     }
 
     /* Set a pending string. */
@@ -3414,7 +3380,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
 	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
 	}
-	(void) strcat(s, t);
+	strcat(s, t);
     }
 
     /* Set a pending string. */
@@ -3933,7 +3899,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
     switch (state) {
     case BASE:
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    (void) remargin(orig_col);
+	    remargin(orig_col);
 	}
 	break;
     case OCTAL:
@@ -3941,7 +3907,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	key_UCharacter((unsigned char) literal, KT_STD, ia, true);
 	state = BASE;
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    (void) remargin(orig_col);
+	    remargin(orig_col);
 	}
 	break;
     case EBC:
@@ -3949,7 +3915,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	key_Character((unsigned char) literal, false, true, true, NULL);
 	state = BASE;
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    (void) remargin(orig_col);
+	    remargin(orig_col);
 	}
 	break;
     case BACKPF:

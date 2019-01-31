@@ -323,7 +323,6 @@ static void output_possible(iosrc_t fd, ioid_t id);
 # define IS_EINPROGRESS(e)	false
 #endif /*]*/
 
-
 typedef union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
@@ -386,7 +385,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #if defined(OMTU) /*[*/
     int			mtu = OMTU;
 #endif /*]*/
-#   define close_fail	{ (void) SOCK_CLOSE(sock); \
+#   define close_fail	{ SOCK_CLOSE(sock); \
     			  sock = INVALID_SOCKET; \
     			  return INVALID_IOSRC; \
 			}
@@ -1106,7 +1105,6 @@ net_disconnect(bool including_ssl)
     net_connect_pending = false;
 }
 
-
 /*
  * net_input
  *	Called by the toolkit whenever there is input available on the
@@ -1306,7 +1304,6 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     trace_rollover_check();
 }
 
-
 /*
  * set16
  *	Put a 16-bit value in a buffer.
@@ -1350,7 +1347,6 @@ send_naws(void)
     vtrace("SENT %s NAWS %d %d %s\n", cmd(SB), XMIT_COLS, XMIT_ROWS, cmd(SE));
 }
 
-
 
 /* Advance 'try_lu' to the next desired LU name. */
 static void
@@ -2431,7 +2427,6 @@ process_eor(void)
     return 0;
 }
 
-
 /*
  * net_exception
  *	Called when there is an exceptional condition on the socket.
@@ -2506,9 +2501,6 @@ net_cookout(const char *buf, size_t len)
     }
 }
 
-
-
-
 /*
  * net_rawout
  *	Send out raw telnet data.  We assume that there will always be enough
@@ -2577,7 +2569,6 @@ net_rawout(unsigned const char *buf, size_t len)
     }
 }
 
-
 /*
  * net_hexnvt_out_framed
  *	Send uncontrolled user data to the host in NVT mode, performing IAC
@@ -2635,7 +2626,6 @@ net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
     Free(xbuf);
 }
 
-
 /*
  * net_hexnvt_out
  *	Send uncontrolled user data to the host in NVT mode, performing IAC
@@ -2647,7 +2637,6 @@ net_hexnvt_out(unsigned char *buf, int len)
     net_hexnvt_out_framed(buf, len, false);
 }
 
-
 /*
  * check_in3270
  *	Check for switches between NVT, SSCP-LU and 3270 modes.
@@ -2773,7 +2762,6 @@ space3270out(size_t n)
     }
 }
 
-
 /*
  * check_linemode
  *	Set the global variable 'linemode', which says whether we are in
@@ -2819,7 +2807,6 @@ check_linemode(bool init)
     }
 }
 
-
 /*
  * nnn
  *	Expands a number to a character string, for displaying unknown telnet
@@ -2884,7 +2871,6 @@ trace_netdata(char direction, unsigned const char *buf, size_t len)
     ntvtrace("\n");
 }
 
-
 /*
  * net_output
  *	Send 3270 output over the network:
@@ -3065,7 +3051,6 @@ net_add_eor(unsigned char *buf, size_t len)
     buf[len++] = EOR;
 }
 
-
 /*
  * net_sendc
  *	Send a character of user data over the network in NVT mode.
@@ -3085,7 +3070,6 @@ net_sendc(char c)
     }
 }
 
-
 /*
  * net_sends
  *	Send a null-terminated string of user data in NVT mode.
@@ -3096,7 +3080,6 @@ net_sends(const char *s)
     net_cookout(s, strlen(s));
 }
 
-
 /*
  * External entry points to negotiate line or character mode.
  */
@@ -3148,7 +3131,6 @@ net_charmode(void)
     }
 }
 
-
 /*
  * net_break
  *	Send telnet break, which is used to implement 3270 ATTN.

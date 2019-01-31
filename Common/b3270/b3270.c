@@ -305,7 +305,7 @@ static void
 sigchld_handler(int ignored)
 {
 # if !defined(_AIX) /*[*/
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 # endif /*]*/
 }
 #endif /*]*/
@@ -347,7 +347,7 @@ main(int argc, char *argv[])
     }
 
 #if defined(_WIN32) /*[*/
-    (void) get_version_info();
+    get_version_info();
     if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, &windirs_flags)) {
 	exit(1);
@@ -425,7 +425,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	(void) codepage_init(NULL);
+	codepage_init(NULL);
     }
     dump_codepages();
     model_init();
@@ -464,10 +464,10 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     /* Collect child exit status. */
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 
     /* Handle initial toggle settings. */
@@ -493,7 +493,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
     /* Process events forever. */
     while (1) {
-	(void) process_events(true);
+	process_events(true);
 	screen_disp(false);
     }
 }

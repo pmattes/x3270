@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2016, 2019 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -263,7 +263,7 @@ do_qr_rpqnames(void)
 
 /* Utility function used by the RPQNAMES query reply. */
 static bool
-select_rpq_terms(void) 
+select_rpq_terms(void)
 {
     size_t i;
     unsigned j,k;
@@ -652,7 +652,7 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 
 	    if (x + len <= maxlen) {
 		x += len;
-		(void) memcpy(buf, src, len);
+		memcpy(buf, src, len);
 	    } else {
 		rpq_warning("RPQ ADDRESS term incomplete due to space limit");
 	    }
@@ -676,12 +676,12 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 		rpq_warning("RPQ: gethostbyname error");
 		return 0;
 	    }
-	    (void) memcpy(&ia, h->h_addr_list[0], h->h_length);
+	    memcpy(&ia, h->h_addr_list[0], h->h_length);
 	}
 	SET16(buf, AF_INET);
 	x += 2;
 	if (x + (int)sizeof(in_addr_t) <= maxlen) {
-	    (void) memcpy(buf, &ia, sizeof(in_addr_t));
+	    memcpy(buf, &ia, sizeof(in_addr_t));
 	    x += sizeof(in_addr_t);
 	} else {
 	    rpq_warning("RPQ ADDRESS term incomplete due to space limit");
@@ -723,7 +723,7 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	    break;
 	}
 	if (x + len <= maxlen) {
-	    (void) memcpy(buf, src, len);
+	    memcpy(buf, src, len);
 	    x += len;
 	} else {
 	    rpq_warning("RPQ ADDRESS term incomplete due to space limit");

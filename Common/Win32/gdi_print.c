@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2018 Paul Mattes.
+ * Copyright (c) 1994-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,7 +113,6 @@ static void gdi_abort(void);
 static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
 	HGLOBAL *pdevmode);
 
-
 /*
  * Initialize printing to a GDI printer.
  */
@@ -413,7 +412,7 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 
     /* Figure out how much memory to allocate. */
     size = 0;
-    (void) GetDefaultPrinter(NULL, &size);
+    GetDefaultPrinter(NULL, &size);
     buf = Malloc(size);
     if (GetDefaultPrinter(buf, &size) == 0) {
 	snprintf(errbuf, errbuf_size, "Cannot determine default printer");
@@ -1233,10 +1232,10 @@ static void
 gdi_abort(void)
 {
     if (pstate.out_row) {
-	(void) EndPage(pstate.dlg.hDC);
+	EndPage(pstate.dlg.hDC);
 	pstate.out_row = 0;
     }
-    (void) EndDoc(pstate.dlg.hDC);
+    EndDoc(pstate.dlg.hDC);
 
     cleanup_fonts();
 }
@@ -1275,7 +1274,7 @@ get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
     }
 
     /* Get a PRINTER_INFO_2 structure for the printer. */
-    (void) GetPrinter(h, 2, NULL, 0, &len);
+    GetPrinter(h, 2, NULL, 0, &len);
     pi = (PRINTER_INFO_2 *)malloc(len);
     if (!GetPrinter(h, 2, (LPBYTE)pi, len, &len2)) {
 	free(pi);

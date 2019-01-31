@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2016 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,7 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
 	}
     }
 
-    (void) memset(&hints, '\0', sizeof(struct addrinfo));
+    memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_flags = 0;
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -121,7 +121,7 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
 	freeaddrinfo(res);
 	return RHP_FATAL;
     }
-    (void) memcpy(sa, res->ai_addr, res->ai_addrlen);
+    memcpy(sa, res->ai_addr, res->ai_addrlen);
     *sa_len = (socklen_t)res->ai_addrlen;
     if (lastp != NULL) {
 	*lastp = (res->ai_next == NULL);
@@ -193,7 +193,7 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
 	    }
 	}
 	sin->sin_family = hp->h_addrtype;
-	(void) memmove(&sin->sin_addr, hp->h_addr_list[i], hp->h_length);
+	memmove(&sin->sin_addr, hp->h_addr_list[i], hp->h_length);
 	if (lastp != NULL) {
 	    *lastp = (hp->h_addr_list[i + 1] == NULL);
 	}

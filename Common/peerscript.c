@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -296,7 +296,7 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
-    (void) send(p->socket, s, strlen(s), 0);
+    send(p->socket, s, strlen(s), 0);
 }
 
 /**
@@ -314,7 +314,7 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
 	    buf);
 
-    (void) send(p->socket, s, strlen(s), 0);
+    send(p->socket, s, strlen(s), 0);
 }
 
 /**
@@ -337,7 +337,7 @@ peer_done(task_cbh handle, bool success, bool abort)
     /* Print the prompt. */
     vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
 	    success? PROMPT_OK: PROMPT_ERROR);
-    (void) send(p->socket, s, strlen(s), 0);
+    send(p->socket, s, strlen(s), 0);
 
     if (abort || !p->enabled) {
 	close_peer(p);

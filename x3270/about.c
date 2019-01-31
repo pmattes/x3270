@@ -88,7 +88,7 @@ hms(time_t ts)
     time_t t, td;
     long hr, mn, sc;
 
-    (void) time(&t);
+    time(&t);
 
     td = t - ts;
     hr = td / 3600;
