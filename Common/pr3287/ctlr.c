@@ -1179,7 +1179,7 @@ process_scs_contig(unsigned char *buf, size_t buflen)
 		cnt = *cp;
 		trace_ds("(%d)", cnt);
 		if (cnt < 2) {
-			break;	/* no more data */
+		    break;	/* no more data */
 		}
 		/* Skip over the length byte. */
 		cp++;
