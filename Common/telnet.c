@@ -2663,17 +2663,6 @@ net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
 	return;
     }
 
-    /* Trace the data. */
-    if (toggled(TRACING)) {
-	int i;
-
-	vtrace(">");
-	for (i = 0; i < len; i++) {
-	    vtrace(" %s", ctl_see((int) *(buf+i)));
-	}
-	vtrace("\n");
-    }
-
     if (HOST_FLAG(NO_TELNET_HOST)) {
 	net_rawout(buf, len);
 	return;
