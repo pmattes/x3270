@@ -324,10 +324,10 @@ static void output_possible(iosrc_t fd, ioid_t id);
 #endif /*]*/
 
 typedef union {
-	struct sockaddr sa;
-	struct sockaddr_in sin;
+    struct sockaddr sa;
+    struct sockaddr_in sin;
 #if defined(X3270_IPV6) /*[*/
-	struct sockaddr_in6 sin6;
+    struct sockaddr_in6 sin6;
 #endif /*]*/
 } sockaddr_46_t;
 
@@ -338,6 +338,10 @@ static socklen_t ha_len[NUM_HA] = {
 };
 static int num_ha = 0;
 static int ha_ix = 0;
+#if !defined(_WIN32) /*[*/
+static int resolver_pipe[2] = { -1, -1 };
+static int resolver_slot = -1;
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 void
@@ -495,6 +499,94 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 }
 
+/* Complete a connection, now that the hostname has been resolved. */
+static net_connect_t
+finish_connect(iosrc_t *iosrc)
+{
+    iosrc_t s;
+
+    /* Set up the SSL context, whether this is an SSL host or not. */
+    if (sio_supported()) {
+	bool pending = false;
+
+	sio = sio_init_wrapper(NULL, HOST_FLAG(NO_VERIFY_CERT_HOST),
+		net_accept, &pending);
+	if (sio == NULL) {
+	    if (pending) {
+		net_connect_pending = true;
+		return NC_SSL_PASS;
+	    }
+	    net_disconnect(false);
+	    return NC_FAILED;
+	}
+    }
+
+    /* Try each of the haddrs. */
+    ha_ix = 0;
+    while (ha_ix < num_ha) {
+	bool pending = false;
+
+	if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
+			&pending)) != INVALID_IOSRC) {
+	    *iosrc = s;
+	    return pending? NC_CONNECT_PENDING: NC_CONNECTED;
+	}
+	ha_ix++;
+    }
+
+    /* Ran out. */
+    return NC_FAILED;
+}
+
+#if !defined(_WIN32) /*[*/
+/* There is data on the resolver pipe. */
+static void
+resolve_done(iosrc_t fd, ioid_t id)
+{
+    int nr;
+    char slot_byte;
+    int slot;
+    int rv;
+    char *errmsg;
+    iosrc_t iosrc = INVALID_IOSRC;
+    net_connect_t nc;
+
+    /* Read the data, which is the slot number. */
+    nr = read(resolver_pipe[0], &slot_byte, 1);
+    if (nr < 0) {
+	popup_an_errno(errno, "Resolver pipe");
+	return;
+    }
+    if (nr == 0) {
+	popup_an_error("Resolver pipe EOF");
+    }
+
+    /* Might be a canceled request. */
+    slot = (int)slot_byte;
+    if (slot != resolver_slot) {
+	vtrace("Cleaning up canceled resolver slot %d\n", slot);
+	cleanup_host_and_port(slot);
+	return;
+    }
+
+    vtrace("Resolution complete\n");
+    rv = collect_host_and_port(slot, &haddr[0].sa, sizeof(haddr[0]), ha_len,
+	    &current_port, &errmsg, NUM_HA, &num_ha);
+    if (RHP_IS_ERROR(rv)) {
+	connect_error("%s", errmsg);
+	return;
+    }
+
+    /* Proceed with the connection. */
+    nc = finish_connect(&iosrc);
+    if (nc == NC_FAILED) {
+	host_disconnect(true);
+    } else {
+	host_continue_connect(iosrc, nc);
+    }
+}
+#endif /*]*/
+
 /*
  * net_connect
  *	Establish a telnet socket to the given host passed as an argument.
@@ -511,7 +603,6 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     int			passthru_len = 0;
     unsigned short	passthru_port = 0;
     char		*errmsg;
-    iosrc_t		s;
 
     if (sizeof(state_name)/sizeof(state_name[0]) != NUM_CSTATE) {
 	Error("telnet cstate_name has the wrong number of elements");
@@ -617,9 +708,10 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	 * host.
 	 */
 	rhp_t rv;
+	int nr;
 
-	rv = resolve_host_and_port(proxy_host, proxy_portname, 0, &proxy_port,
-		&haddr[0].sa, &ha_len[0], &errmsg, NULL);
+	rv = resolve_host_and_port(proxy_host, proxy_portname, &proxy_port,
+		&haddr[0].sa, sizeof(haddr[0]), &ha_len[0], &errmsg, 1, &nr);
 	if (RHP_IS_ERROR(rv)) {
 	    connect_error("%s", errmsg);
 	    return NC_FAILED;
@@ -632,24 +724,39 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    local_process = true;
 	} else {
 #endif /*]*/
-	    int i;
-	    int last = false;
 	    rhp_t rv;
+#if !defined(_WIN32) /*[*/
+
+	    if (resolver_pipe[0] == -1) {
+		if (pipe(resolver_pipe) < 0) {
+		    connect_error("resolver pipe: %s", strerror(errno));
+		    return NC_FAILED;
+		}
+		AddInput(resolver_pipe[0], resolve_done);
+	    }
+#endif /*]*/
 
 #if defined(LOCAL_PROCESS) /*[*/
 	    local_process = false;
 #endif /*]*/
-	    num_ha = 0;
-	    for (i = 0; i < NUM_HA && !last; i++) {
-		rv = resolve_host_and_port(host, portname, i, &current_port,
-			&haddr[i].sa, &ha_len[i], &errmsg, &last);
-		if (RHP_IS_ERROR(rv)) {
-		    connect_error("%s", errmsg);
-		    return NC_FAILED;
-		}
-		num_ha++;
+#if !defined(_WIN32) /*[*/
+	    rv = resolve_host_and_port_a(host, portname, &current_port,
+		    &haddr[0].sa, sizeof(haddr[0]), ha_len, &errmsg, NUM_HA,
+		    &num_ha, &resolver_slot, resolver_pipe[1]);
+#else /*][*/
+	    rv = resolve_host_and_port(host, portname, &current_port,
+		    &haddr[0].sa, sizeof(haddr[0]), ha_len, &errmsg, NUM_HA,
+		    &num_ha);
+#endif /*]*/
+	    if (RHP_IS_ERROR(rv)) {
+		connect_error("%s", errmsg);
+		return NC_FAILED;
 	    }
 	    ha_ix = 0;
+
+	    if (rv == RHP_PENDING) {
+		return NC_RESOLVING;
+	    }
 #if defined(LOCAL_PROCESS) /*[*/
 	}
 #endif /*]*/
@@ -695,36 +802,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     }
 #endif /*]*/
 
-    /* Set up the SSL context, whether this is an SSL host or not. */
-    if (sio_supported()) {
-	bool pending = false;
-
-	sio = sio_init_wrapper(NULL, HOST_FLAG(NO_VERIFY_CERT_HOST),
-		net_accept, &pending);
-	if (sio == NULL) {
-	    if (pending) {
-		net_connect_pending = true;
-		return NC_SSL_PASS;
-	    }
-	    net_disconnect(false);
-	    return NC_FAILED;
-	}
-    }
-
-    /* Try each of the haddrs. */
-    while (ha_ix < num_ha) {
-	bool pending = false;
-
-	if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
-			&pending)) != INVALID_IOSRC) {
-	    *iosrc = s;
-	    return pending? NC_CONNECT_PENDING: NC_CONNECTED;
-	}
-	ha_ix++;
-    }
-
-    /* Ran out. */
-    return NC_FAILED;
+    return finish_connect(iosrc);
 }
 #undef close_fail
 

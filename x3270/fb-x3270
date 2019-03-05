@@ -896,6 +896,7 @@ x3270.message.statusMinus:			No Function
 x3270.message.statusConnecting:			Connecting
 x3270.message.statusDisabled:			Disabled
 x3270.message.statusReconnecting:		Reconnecting
+x3270.message.statusResolving:			Resolving
 x3270.message.inputMethod:			X11 Input Method (XIM):
 x3270.message.ximState:				state:
 x3270.message.ximDisabled:			failed

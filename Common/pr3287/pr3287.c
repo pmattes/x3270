@@ -1051,10 +1051,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    unsigned long lport;
 	    char *ptr;
 	    struct servent *sp;
+	    int nr;
 
-	    if (resolve_host_and_port(proxy_host, proxy_portname,
-			0, &proxy_port, &ha.sa, &ha_len, &errtxt,
-			NULL) < 0) {
+	    if (resolve_host_and_port(proxy_host, proxy_portname, &proxy_port,
+			&ha.sa, sizeof(ha), &ha_len, &errtxt, 1, &nr) < 0) {
 		popup_an_error("%s", errtxt);
 		rc = 1;
 		goto retry;
@@ -1072,8 +1072,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		    p = (unsigned short)lport;
 	    }
 	} else {
-	    if (resolve_host_and_port(host, port, 0, &p, &ha.sa, &ha_len,
-			&errtxt, NULL) < 0) {
+	    int nr;
+
+	    if (resolve_host_and_port(host, port, &p, &ha.sa, sizeof(ha),
+			&ha_len, &errtxt, 1, &nr) < 0) {
 		popup_an_error("%s", errtxt);
 		rc = 1;
 		goto retry;

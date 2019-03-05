@@ -339,7 +339,6 @@ static void do_cursor(char *buf);
 
 static void status_connect(bool connected);
 static void status_3270_mode(bool connected);
-static void status_resolving(bool ignored);
 static void status_half_connect(bool ignored);
 static void status_printer(bool on);
 
@@ -349,7 +348,6 @@ static void status_printer(bool on);
 void
 status_register(void)
 {
-    register_schange(ST_RESOLVING, status_resolving);
     register_schange(ST_HALF_CONNECT, status_half_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
@@ -536,6 +534,13 @@ status_connect(bool connected)
 	if (cstate == RECONNECTING) {
 	    cancel_disabled_revert();
 	    do_msg(XRECONNECTING);
+	} else if (cstate == RESOLVING) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(XRESOLVING);
+	    status_untiming();
+	    status_uncursor_pos();
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
 	    do_msg(NONSPECIFIC);
@@ -560,18 +565,6 @@ status_3270_mode(bool connected)
     oia_boxsolid = IN_3270 && !IN_SSCP;
     do_ctlr();
     status_untiming();
-}
-
-/* Resolving */
-static void
-status_resolving(bool ignored _is_unused)
-{
-    oia_boxsolid = false;
-    do_ctlr();
-    cancel_disabled_revert();
-    do_msg(XRESOLVING);
-    status_untiming();
-    status_uncursor_pos();
 }
 
 /* Half connected */

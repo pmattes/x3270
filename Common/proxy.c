@@ -681,10 +681,11 @@ proxy_socks5(socket_t fd, char *user, char *host, unsigned short port,
     } else {
 	char *errmsg;
 	rhp_t rv;
+	int nr;
 
 	/* Resolve the hostname. */
-	rv = resolve_host_and_port(host, NULL, 0, &rport, &ha.sa, &ha_len,
-		&errmsg, NULL);
+	rv = resolve_host_and_port(host, NULL, &rport, &ha.sa, sizeof(ha),
+		&ha_len, &errmsg, 1, &nr);
 	if (rv == RHP_CANNOT_RESOLVE) {
 	    use_name = true;
 	} else if (RHP_IS_ERROR(rv)) {

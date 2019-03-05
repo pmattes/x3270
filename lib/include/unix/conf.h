@@ -46,6 +46,7 @@
 #define HAVE_VASPRINTF 1
 #define HAVE_FSEEKO 1
 #define HAVE_FORKPTY 1
+#define HAVE_GETADDRINFO_A 1
 
 /* Configuration options. */
 /* #undef USE_ICONV */

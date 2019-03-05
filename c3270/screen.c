@@ -2048,6 +2048,8 @@ status_connect(bool connected)
 	oia_boxsolid = IN_3270 && !IN_SSCP;
 	if (cstate == RECONNECTING) {
 	    other_msg = "X Reconnecting";
+	} else if (cstate == RESOLVING) {
+	    other_msg = "X Resolving";
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    other_msg = "X";
 	} else {

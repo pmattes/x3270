@@ -264,6 +264,15 @@ extern enum cstate cstate;
 #define IN_TN3270E	cIN_TN3270E(cstate)
 #define IN_E		cIN_E(cstate)
 
+/*   network connection status */
+typedef enum {
+    NC_FAILED,		/* failed */
+    NC_RESOLVING,	/* name resolution in progress */
+    NC_SSL_PASS,	/* SSL password pending */
+    NC_CONNECT_PENDING,	/* connection pending */
+    NC_CONNECTED	/* connected */
+} net_connect_t;
+
 /*   toggles */
 typedef enum {
     MONOCASE,		/* all-uppercase display */

@@ -524,7 +524,7 @@ kybd_inhibit(bool inhibit)
  * Called when a host connects or disconnects.
  */
 static void
-kybd_connect(bool connected)
+kybd_connect(bool connected _is_unused)
 {
     if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
 	RemoveTimeOut(unlock_id);
@@ -532,7 +532,7 @@ kybd_connect(bool connected)
     }
     kybdlock_clr(-1, "kybd_connect");
 
-    if (connected) {
+    if (CONNECTED) {
 	if (!appres.nvt_mode && !HOST_FLAG(ANSI_HOST)) {
 	    /* Wait for any output or a WCC(restore) from the host */
 	    kybdlock_set(KL_AWAITING_FIRST, "kybd_connect");

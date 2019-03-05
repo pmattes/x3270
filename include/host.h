@@ -46,6 +46,7 @@ extern enum iaction connect_ia;
 void hostfile_init(void);
 bool host_connect(const char *n, enum iaction ia);
 void host_connected(void);
+void host_continue_connect(iosrc_t iosrc, net_connect_t nc);
 void host_new_connection(bool pending);
 void host_disconnect(bool disable);
 void host_in3270(enum cstate);

@@ -79,6 +79,9 @@ static struct host *last_host = NULL;
 static iosrc_t net_sock = INVALID_IOSRC;
 static ioid_t reconnect_id = NULL_IOID;
 
+static enum iaction host_ia = IA_NONE;
+static char *host_ps = NULL;
+
 static void save_recent(const char *);
 
 static void try_reconnect(ioid_t id);
@@ -536,7 +539,7 @@ host_connect(const char *n, enum iaction ia)
     /* Still thinking about it? */
     if (nc == NC_RESOLVING) {
 	cstate = RESOLVING;
-	st_changed(ST_RESOLVING, true);
+	st_changed(ST_CONNECT, true);
 	goto success;
     }
     if (nc == NC_SSL_PASS) {
@@ -607,6 +610,43 @@ host_new_connection(bool pending)
     }
 }
 
+/* Continue a connection after hostname resolution completes. */
+void
+host_continue_connect(iosrc_t iosrc, net_connect_t nc)
+{
+    char *ps = host_ps;
+
+    /* Set pending string. */
+    if (ps == NULL) {
+	ps = appres.login_macro;
+    }
+    if (ps != NULL) {
+	login_macro(ps);
+    }
+
+    /* Prepare Xt for I/O. */
+    net_sock = iosrc;
+    if (net_sock != INVALID_IOSRC) {
+	x_add_input(net_sock);
+    }
+
+    /* Set state and tell the world. */
+    connect_ia = host_ia;
+    if (nc == NC_CONNECT_PENDING) {
+	cstate = PENDING;
+	st_changed(ST_HALF_CONNECT, true);
+    } else {
+	/* cstate == NC_CONNECTED */
+	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	    cstate = CONNECTED_NVT;
+	} else {
+	    cstate = CONNECTED_INITIAL;
+	}
+	st_changed(ST_CONNECT, PCONNECTED);
+	host_gui_connect_initial();
+    }
+}
+
 /*
  * Reconnect to the last host.
  * Returns true if connection initiated, false otherwise.
@@ -664,6 +704,10 @@ host_disconnect(bool failed)
 
     if (cstate != RECONNECTING) {
 	cstate = NOT_CONNECTED;
+
+	/* Forget pending state. */
+	host_ia = IA_NONE;
+	host_ps = NULL;
     }
 
     /* Propagate the news to everyone else. */

@@ -357,6 +357,10 @@ c3270_connect(bool ignored)
 	return;
     }
 
+    if (cstate == RESOLVING) {
+	return;
+    }
+
     /* Not connected. */
     if (!appres.secure &&
 	    !PCONNECTED &&
@@ -1743,15 +1747,15 @@ command_done(task_cbh handle, bool success, bool abort)
 	if (sigtstp_pending) {
 	    vtrace("Processing deferred SIGTSTP on command completion\n");
 	    sigtstp_pending = false;
-#if defined(HAVE_LIBREADLINE) /*[*/
+# if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
-#endif /*]*/
+# endif /*]*/
 	    kill(getpid(), SIGSTOP);
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	    if (pager.pid != 0) {
 		return true;
 	    }
-#endif /*]*/
+# endif /*]*/
 	}
 #endif /*]*/
     } else {

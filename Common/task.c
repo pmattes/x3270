@@ -335,7 +335,7 @@ trace_task_output(task_t *s, const char *fmt, ...)
 
 /* Callbacks for state changes. */
 static void
-task_connect(bool connected)
+task_connect(bool connected _is_unused)
 {
 }
 
@@ -1602,6 +1602,9 @@ connect_error(const char *fmt, ...)
     /* Let the GUI handle it. */
     popup_an_error("%s", msg);
     Free(msg);
+
+    /* Propagate elsewhere. */
+    host_disconnect(true);
 }
 
 /**

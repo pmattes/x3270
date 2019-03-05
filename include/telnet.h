@@ -37,14 +37,6 @@
 # error "Do not include this file for pr3287"
 #endif /*]*/
 
-typedef enum {
-    NC_FAILED,			/* failed */
-    NC_RESOLVING,		/* name resolution in progress */
-    NC_SSL_PASS,		/* SSL password pending */
-    NC_CONNECT_PENDING,		/* connection pending */
-    NC_CONNECTED		/* connected */
-} net_connect_t;
-
 extern int ns_brcvd;
 extern int ns_bsent;
 extern int ns_rrcvd;
