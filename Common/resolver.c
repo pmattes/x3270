@@ -54,11 +54,11 @@ static struct {
     struct gaicb gaicb;		/* control block */
     struct gaicb *gaicbs;	/* control blocks (just one) */
     struct sigevent sigevent;	/* sigevent block */
+    struct addrinfo result;	/* result */
     int pipefd;			/* pipe to write status into */
     char *host;			/* host name */
     char *port;			/* port name */
 } gai[GAI_SLOTS];
-static struct addrinfo gai_addrinfo;
 #endif /*]*/
 
 #if defined(X3270_IPV6) /*[*/
@@ -193,15 +193,15 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 	return RHP_TOOMANY;
     }
 
-    gai_addrinfo.ai_flags = 0;
-    gai_addrinfo.ai_family = PF_UNSPEC;
-    gai_addrinfo.ai_socktype = SOCK_STREAM;
-    gai_addrinfo.ai_protocol = IPPROTO_TCP;
+    gai[*slot].result.ai_flags = 0;
+    gai[*slot].result.ai_family = PF_UNSPEC;
+    gai[*slot].result.ai_socktype = SOCK_STREAM;
+    gai[*slot].result.ai_protocol = IPPROTO_TCP;
 
     gai[*slot].gaicbs = &gai[*slot].gaicb;
     gai[*slot].gaicb.ar_name = host;
     gai[*slot].gaicb.ar_service = portname;
-    gai[*slot].gaicb.ar_result = &gai_addrinfo;
+    gai[*slot].gaicb.ar_result = &gai[*slot].result;
 
     gai[*slot].sigevent.sigev_notify = SIGEV_THREAD;
     gai[*slot].sigevent.sigev_value.sival_int = *slot;
