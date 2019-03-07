@@ -338,10 +338,9 @@ static socklen_t ha_len[NUM_HA] = {
 };
 static int num_ha = 0;
 static int ha_ix = 0;
-#if !defined(_WIN32) /*[*/
 static int resolver_pipe[2] = { -1, -1 };
 static int resolver_slot = -1;
-#endif /*]*/
+static iosrc_t resolver_event = INVALID_IOSRC;
 
 #if defined(_WIN32) /*[*/
 void
@@ -538,7 +537,6 @@ finish_connect(iosrc_t *iosrc)
     return NC_FAILED;
 }
 
-#if !defined(_WIN32) /*[*/
 /* There is data on the resolver pipe. */
 static void
 resolve_done(iosrc_t fd, ioid_t id)
@@ -585,7 +583,6 @@ resolve_done(iosrc_t fd, ioid_t id)
 	host_continue_connect(iosrc, nc);
     }
 }
-#endif /*]*/
 
 /*
  * net_connect
@@ -725,29 +722,33 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	} else {
 #endif /*]*/
 	    rhp_t rv;
-#if !defined(_WIN32) /*[*/
 
 	    if (resolver_pipe[0] == -1) {
-		if (pipe(resolver_pipe) < 0) {
+		int rv;
+
+#if !defined(_WIN32) /*[*/
+		rv = pipe(resolver_pipe);
+#else /*][*/
+		rv = _pipe(resolver_pipe, 512, _O_BINARY);
+#endif /*]*/
+		if (rv < 0) {
 		    connect_error("resolver pipe: %s", strerror(errno));
 		    return NC_FAILED;
 		}
+#if !defined(_WIN32) /*[*/
 		AddInput(resolver_pipe[0], resolve_done);
-	    }
+#else /*][*/
+		resolver_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		AddInput(resolver_event, resolve_done);
 #endif /*]*/
+	    }
 
 #if defined(LOCAL_PROCESS) /*[*/
 	    local_process = false;
 #endif /*]*/
-#if !defined(_WIN32) /*[*/
 	    rv = resolve_host_and_port_a(host, portname, &current_port,
 		    &haddr[0].sa, sizeof(haddr[0]), ha_len, &errmsg, NUM_HA,
-		    &num_ha, &resolver_slot, resolver_pipe[1]);
-#else /*][*/
-	    rv = resolve_host_and_port(host, portname, &current_port,
-		    &haddr[0].sa, sizeof(haddr[0]), ha_len, &errmsg, NUM_HA,
-		    &num_ha);
-#endif /*]*/
+		    &num_ha, &resolver_slot, resolver_pipe[1], resolver_event);
 	    if (RHP_IS_ERROR(rv)) {
 		connect_error("%s", errmsg);
 		return NC_FAILED;
@@ -755,6 +756,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    ha_ix = 0;
 
 	    if (rv == RHP_PENDING) {
+		vtrace("Resolver slot is %d\n", resolver_slot);
 		return NC_RESOLVING;
 	    }
 #if defined(LOCAL_PROCESS) /*[*/
