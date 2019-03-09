@@ -255,10 +255,10 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 static const char *state_name[] = {
     "unconnected",			/* NOT_CONNECTED */
     "reconnecting",			/* RECONNECTING */
-    "SSL password pending",		/* SSL_PASS */
+    "TLS password pending",		/* SSL_PASS */
     "resolving hostname",		/* RESOLVING */
     "TCP connection pending",		/* PENDING */
-    "negotiating SSL or proxy",		/* NEGOTIATING */
+    "negotiating TLS or proxy",		/* NEGOTIATING */
     "connected; 3270 state unknown",	/* CONNECTED_INITIAL */
     "NVT",				/* CONNECTED_NVT */
     "NVT charmode",			/* CONNECTED_NVT_CHAR */
@@ -432,7 +432,7 @@ connect_to(int ix, bool noisy, bool *pending)
     /* init ssl */
     if (HOST_FLAG(SSL_HOST)) {
 	if (!sio_supported()) {
-	    popup_an_error("SSL/TLS not supported\n");
+	    popup_an_error("TLS not supported\n");
 	    close_fail;
 	}
     }
@@ -504,7 +504,7 @@ finish_connect(iosrc_t *iosrc)
 {
     iosrc_t s;
 
-    /* Set up the SSL context, whether this is an SSL host or not. */
+    /* Set up the TLS context, whether this is an TLS host or not. */
     if (sio_supported()) {
 	bool pending = false;
 
@@ -879,7 +879,7 @@ send_nop(ioid_t id _is_unused)
 static void
 net_connected_complete(void)
 {
-    /* Done with SSL or proxy. */
+    /* Done with TLS or proxy. */
     if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	host_in3270(CONNECTED_NVT);
     } else {
@@ -964,9 +964,9 @@ net_connected(void)
     }
 
     vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
-	    HOST_FLAG(SSL_HOST)? " via SSL": "");
+	    HOST_FLAG(SSL_HOST)? " via TLS": "");
 
-    /* Set up SSL. */
+    /* Set up TLS. */
     if (HOST_FLAG(SSL_HOST) && sio != NULL && !secure_connection) {
 	bool rv;
 	char *session, *cert;
@@ -1173,7 +1173,7 @@ net_disconnect(bool including_ssl)
 		    "Host requested nested STARTTLS");
 	} else {
 	    connect_error("Connection failed:\n"
-		    "Host requested STARTTLS but TLS/SSL not supported");
+		    "Host requested STARTTLS but TLS not supported");
 	}
     }
     refused_tls = false;
@@ -1249,7 +1249,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     nvt_data = 0;
 
-    vtrace("Reading host socket%s\n", secure_connection? " via SSL": "");
+    vtrace("Reading host socket%s\n", secure_connection? " via TLS": "");
 
     if (secure_connection) {
 	/*
@@ -3476,7 +3476,7 @@ continue_tls(unsigned char *sbbuf, int len)
     /* Success. */
     session = indent_s(sio_session_info(sio));
     cert = indent_s(sio_server_cert_info(sio));
-    vtrace("TLS/SSL negotiated connection complete. "
+    vtrace("TLS negotiated connection complete. "
 	    "Connection is now secure.\n"
 	    "Provider: %s\n"
 	    "Session:\n%s\nServer certificate:\n%s\n",

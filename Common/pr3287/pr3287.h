@@ -62,7 +62,7 @@ typedef struct {
 	int skipcc;		/* -skipcc */
 	int mpp;		/* -mpp */
 	bool ssl_host;		/* L: */
-	ssl_config_t ssl;	/* SSL options */
+	ssl_config_t ssl;	/* TLS options */
 	int syncport;		/* -syncport */
 	const char *tracedir;	/* where we are tracing (-tracedir) */
 	int tracing;		/* are we tracing? (-trace) */

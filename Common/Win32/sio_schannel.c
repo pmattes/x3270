@@ -530,15 +530,14 @@ client_handshake_loop(
 		    break;
 		}
 		if (ns == 0) {
-		    sioc_set_error("receive timeout during SSL/TLS "
-			    "negotiation");
+		    sioc_set_error("receive timeout during TLS negotiation");
 		    ret = WSAECONNABORTED; /* XXX: synthetic error */
 		    break;
 		}
 
 		/* Read it. */
 		nrw = recv(s->sock, s->rcvbuf + s->rcvbuf_len, n2read, 0);
-		vtrace("SSL: %d/%d bytes of handshake data received\n", nrw,
+		vtrace("TLS: %d/%d bytes of handshake data received\n", nrw,
 			n2read);
 		if (nrw == SOCKET_ERROR) {
 		    ret = WSAGetLastError();
@@ -546,7 +545,7 @@ client_handshake_loop(
 			    win32_strerror(ret));
 		    break;
 		} else if (nrw == 0) {
-		    sioc_set_error("server disconnected during SSL/TLS "
+		    sioc_set_error("server disconnected during TLS "
 			    "negotiation");
 		    ret = WSAECONNABORTED; /* XXX: synthetic error */
 		    break;
@@ -607,7 +606,7 @@ client_handshake_loop(
 		&ssp_o_flags,
 		&expiry);
 
-	vtrace("SSL: InitializeSecurityContext -> 0x%x (%s)\n", (unsigned)ret,
+	vtrace("TLS: InitializeSecurityContext -> 0x%x (%s)\n", (unsigned)ret,
 		win32_strerror(ret));
 
 	/*
@@ -629,7 +628,7 @@ client_handshake_loop(
 		    FreeContextBuffer(out_buffers[0].pvBuffer);
 		    break;
 		}
-		vtrace("SSL: %d bytes of handshake data sent\n", nrw);
+		vtrace("TLS: %d bytes of handshake data sent\n", nrw);
 #if defined(VERBOSE) /*[*/
 		print_hex_dump(">enc", nrw, out_buffers[0].pvBuffer);
 #endif /*]*/
@@ -665,11 +664,11 @@ client_handshake_loop(
 	     * application protocol layer stuff. It needs to be saved. The
 	     * application layer will later decrypt it with DecryptMessage.
 	     */
-	    vtrace("SSL: Handshake was successful\n");
+	    vtrace("TLS: Handshake was successful\n");
 
 	    if (in_buffers[1].BufferType == SECBUFFER_EXTRA) {
 		/* Interestingly, in_buffers[1].pvBuffer is NULL here. */
-		vtrace("SSL: %d bytes of encrypted data saved\n",
+		vtrace("TLS: %d bytes of encrypted data saved\n",
 			(int)in_buffers[1].cbBuffer);
 		memmove(s->rcvbuf,
 			s->rcvbuf + s->rcvbuf_len - in_buffers[1].cbBuffer,
@@ -682,11 +681,11 @@ client_handshake_loop(
 	}
 
 	if (ret == SEC_E_UNSUPPORTED_FUNCTION) {
-	    vtrace("SSL: SEC_E_UNSUPPORTED_FUNCTION from InitializeSecurityContext -- usually means requested TLS version not supported by server\n");
+	    vtrace("TLS: SEC_E_UNSUPPORTED_FUNCTION from InitializeSecurityContext -- usually means requested TLS version not supported by server\n");
 	}
 
 	if (ret == SEC_E_WRONG_PRINCIPAL) {
-	    vtrace("SSL: SEC_E_WRONG_PRINCIPAL from InitializeSecurityContext -- bad server certificate\n");
+	    vtrace("TLS: SEC_E_WRONG_PRINCIPAL from InitializeSecurityContext -- bad server certificate\n");
 	}
 
 	/* Check for fatal error. */
@@ -725,7 +724,7 @@ client_handshake_loop(
 	     * Copy any leftover data from the "extra" buffer, and go around
 	     * again.
 	     */
-	    vtrace("SSL: %lu bytes of extra data copied\n",
+	    vtrace("TLS: %lu bytes of extra data copied\n",
 		    in_buffers[1].cbBuffer);
 	    memmove(s->rcvbuf,
 		    s->rcvbuf + s->rcvbuf_len - in_buffers[1].cbBuffer,
@@ -807,7 +806,7 @@ perform_client_handshake(
 	    DeleteSecurityContext(&s->context);
 	    return err;
 	}
-	vtrace("SSL: %d bytes of handshake data sent\n", data);
+	vtrace("TLS: %d bytes of handshake data sent\n", data);
 	FreeContextBuffer(out_buffers[0].pvBuffer);
 	out_buffers[0].pvBuffer = NULL;
     }
@@ -834,7 +833,7 @@ verify_server_certificate(
     DWORD usages_count     = sizeof(rgszUsages) / sizeof(LPSTR);
     PWSTR server_name_wide = NULL;
 
-    vtrace("SSL: Verifying server certificate manually\n");
+    vtrace("TLS: Verifying server certificate manually\n");
 
     /* Convert server name to Unicode. */
     server_name_size = MultiByteToWideChar(CP_ACP, 0, server_name, -1, NULL, 0);
@@ -1088,7 +1087,7 @@ sio_init(ssl_config_t *c, const char *password, sio_t *sio_ret)
 
     /* Create credentials. */
     if (create_credentials(config->client_cert, &s->client_creds, &s->manual)) {
-	vtrace("SSL: Error creating credentials\n");
+	vtrace("TLS: Error creating credentials\n");
 	goto fail;
     }
     s->client_creds_set = true;
@@ -1102,7 +1101,7 @@ fail:
 }
 
 /*
- * Negotiate an SSL connection.
+ * Negotiate a TLS connection.
  * Returns true for success, false for failure.
  * If it returns false, the socket should be disconnected.
  *
@@ -1161,7 +1160,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	}
     }
     if (perform_client_handshake(s, (LPSTR)accept_hostname)) {
-	vtrace("SSL: Error performing handshake\n");
+	vtrace("TLS: Error performing handshake\n");
 	goto fail;
     }
 
@@ -1186,7 +1185,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	status = verify_server_certificate(remote_cert_context,
 		(LPSTR)accept_hostname, 0);
 	if (status) {
-	    vtrace("SSL: Error 0x%x authenticating server credentials\n",
+	    vtrace("TLS: Error 0x%x authenticating server credentials\n",
 		    (unsigned)status);
 	    goto fail;
 	}
@@ -1228,7 +1227,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     }
 
     /* Reallocate the receive buffer. */
-    vtrace("SSL: Sizes: header %d, trailer %d, max message %d\n",
+    vtrace("TLS: Sizes: header %d, trailer %d, max message %d\n",
 	    (int)s->sizes.cbHeader, (int)s->sizes.cbTrailer,
 	    (int)s->sizes.cbMaximumMessage);
     recsz = s->sizes.cbHeader + s->sizes.cbTrailer + s->sizes.cbMaximumMessage;
@@ -1299,7 +1298,7 @@ read_decrypt(
 	if (s->rcvbuf_len == 0 || ret == SEC_E_INCOMPLETE_MESSAGE) {
 	    /* Get the data */
             nr = recv(s->sock, s->rcvbuf + s->rcvbuf_len, n2read, 0);
-	    vtrace("SSL: %d/%d bytes of encrypted application data received\n",
+	    vtrace("TLS: %d/%d bytes of encrypted application data received\n",
 		    nr, n2read);
             if (nr == SOCKET_ERROR) {
 		ret = WSAGetLastError();
@@ -1308,7 +1307,7 @@ read_decrypt(
 		break;
             } else if (nr == 0) {
 		/* Server disconnected. */
-		vtrace("SSL: Server disconnected.\n");
+		vtrace("TLS: Server disconnected.\n");
 		s->negotiated = false;
 		ret = SEC_E_OK;
 		break;
@@ -1336,7 +1335,7 @@ read_decrypt(
 	ret = DecryptMessage(context, &message, 0, NULL);
 	if (ret == SEC_I_CONTEXT_EXPIRED) {
 	    /* Server signalled end of session. Treat it like EOF. */
-	    vtrace("SSL: Server signaled end of session.\n");
+	    vtrace("TLS: Server signaled end of session.\n");
 	    s->negotiated = false;
 	    ret = SEC_E_OK;
 	    break;
@@ -1383,12 +1382,12 @@ read_decrypt(
 		    data_buffer_ptr->cbBuffer);
 	    s->prbuf_len = data_buffer_ptr->cbBuffer;
 	    s->rcvbuf_len = 0;
-	    vtrace("SSL: Got %lu decrypted bytes\n", data_buffer_ptr->cbBuffer);
+	    vtrace("TLS: Got %lu decrypted bytes\n", data_buffer_ptr->cbBuffer);
 	}
 
 	/* Move any "extra" data to the receive buffer for next time. */
 	if (extra_buffer_ptr != NULL) {
-	    vtrace("SSL: %d bytes extra after decryption\n",
+	    vtrace("TLS: %d bytes extra after decryption\n",
 		    (int)extra_buffer_ptr->cbBuffer);
 	    memmove(s->rcvbuf, extra_buffer_ptr->pvBuffer,
 		    extra_buffer_ptr->cbBuffer);
@@ -1402,7 +1401,7 @@ read_decrypt(
 	 */
 	if (ret == SEC_I_RENEGOTIATE) {
 	    /* The server wants to perform another handshake sequence. */
-	    vtrace("SSL: Server requested renegotiate\n");
+	    vtrace("TLS: Server requested renegotiate\n");
 	    ret = client_handshake_loop(s, false);
 	    if (ret != SEC_E_OK) {
 		s->negotiated = false;
@@ -1464,7 +1463,7 @@ encrypt_send(
     /* Send the encrypted data to the server. */
     nw = send(s->sock, s->sendbuf,
 	    buffers[0].cbBuffer + buffers[1].cbBuffer + buffers[2].cbBuffer, 0);
-	vtrace("SSL: %d bytes of encrypted data sent\n", nw);
+	vtrace("TLS: %d bytes of encrypted data sent\n", nw);
     if (nw < 0) {
 	ret = WSAGetLastError();
 	sioc_set_error("send: error %d (%s)", (int)ret, win32_strerror(ret));
@@ -1503,12 +1502,12 @@ disconnect_from_server(schannel_sio_t *s)
 
     status = ApplyControlToken(&s->context, &out_buffer);
     if (FAILED(status)) {
-	vtrace("SSL: ApplyControlToken: error 0x%x (%s)\n", (unsigned)status,
+	vtrace("TLS: ApplyControlToken: error 0x%x (%s)\n", (unsigned)status,
 		win32_strerror(status));
 	return status;
     }
 
-    /* Build an SSL close notify message. */
+    /* Build a TLS close notify message. */
     flags = ISC_REQ_SEQUENCE_DETECT   |
 		  ISC_REQ_REPLAY_DETECT     |
 		  ISC_REQ_CONFIDENTIALITY   |
@@ -1538,7 +1537,7 @@ disconnect_from_server(schannel_sio_t *s)
 	    &expiry);
 
     if (FAILED(status)) {
-	vtrace("SSL: InitializeSecurityContext: error 0x%x (%s)\n",
+	vtrace("TLS: InitializeSecurityContext: error 0x%x (%s)\n",
 		(unsigned)status, win32_strerror(status));
 	return status;
     }
@@ -1551,17 +1550,17 @@ disconnect_from_server(schannel_sio_t *s)
 	nw = send(s->sock, (char *)outbuf, n2w, 0);
 	if (nw == SOCKET_ERROR) {
 	    status = WSAGetLastError();
-	    vtrace("SSL: send: error %d (%s)\n", (int)status,
+	    vtrace("TLS: send: error %d (%s)\n", (int)status,
 		    win32_strerror(status));
 	} else {
-	    vtrace("SSL: %d bytes of handshake data sent\n", nw);
+	    vtrace("TLS: %d bytes of handshake data sent\n", nw);
 #if defined(VERBOSE) /*[*/
 	    print_hex_dump(">enc", nw, outbuf);
 #endif /*]*/
 	}
 	FreeContextBuffer(outbuf);
     }
-    vtrace("SSL: Sent SSL/TLS disconnect\n");
+    vtrace("TLS: Sent TLS disconnect\n");
 
     return status;
 }
@@ -1611,7 +1610,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	    return SIO_EWOULDBLOCK;
 	}
 	s->negotiated = false;
-	vtrace("SSL: sio_read: fatal error, ret = 0x%x\n", (unsigned)ret);
+	vtrace("TLS: sio_read: fatal error, ret = 0x%x\n", (unsigned)ret);
 	return SIO_FATAL_ERROR;
     }
 
@@ -1666,7 +1665,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
     return (int)buflen;
 }
 
-/* Closes the SSL connection. */
+/* Closes the TLS connection. */
 void
 sio_close(sio_t sio)
 {

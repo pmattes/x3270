@@ -504,7 +504,7 @@ sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
     s->config = config;
 
     SSL_set_verify_depth(s->con, 64);
-    vtrace("SSL: will%s verify host certificate\n",
+    vtrace("TLS: will%s verify host certificate\n",
 	    s->config->verify_host_cert? "": " not");
 
     if (password != NULL) {

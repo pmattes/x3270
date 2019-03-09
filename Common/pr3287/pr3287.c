@@ -74,7 +74,7 @@
  *          -nocrlf
  *		expand newlines to CR/LF (Windows only)
  *          -noverifycert
- *          	do not verify host certificates for SSL or SSL/TLS connections
+ *          	do not verify host certificates for TLS connections
  *	    -printer "printer name"
  *	        printer to use (default is $PRINTER or system default,
  *	        Windows only)
@@ -101,7 +101,7 @@
  *          -v
  *              display version information and exit
  *          -verifycert
- *          	verify host certificates for SSL or SSL/TLS connections
+ *          	verify host certificates for TLS connections
  *          -V
  *		verbose output about negotiation
  *	    -xtable file
@@ -227,7 +227,7 @@ usage(void)
 "  " OptCodePage " <name> specify host code page\n");
     if (ssl_options & SSL_OPT_CLIENT_CERT) {
 	fprintf(stderr,
-"  " OptClientCert " <name> use SSL/TLS client certificate <name>\n");
+"  " OptClientCert " <name> use TLS client certificate <name>\n");
     }
     fprintf(stderr,
 #if !defined(_WIN32) /*[*/
@@ -272,7 +272,7 @@ usage(void)
 "                   line length)\n");
     if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
 	fprintf(stderr,
-"  " OptNoVerifyHostCert "    do not verify host certificate for SSL/TLS connections\n");
+"  " OptNoVerifyHostCert "    do not verify host certificate for TLS connections\n");
     }
     fprintf(stderr,
 #if defined(_WIN32) /*[*/
@@ -300,7 +300,7 @@ usage(void)
 "  -v               display version information and exit\n");
     if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
 	fprintf(stderr,
-"  " OptVerifyHostCert "      verify host certificate for SSL/TLS connections (enabled by default)\n");
+"  " OptVerifyHostCert "      verify host certificate for TLS connections (enabled by default)\n");
     }
     fprintf(stderr,
 "  -V               log verbose information about connection negotiation\n"
@@ -1110,7 +1110,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	/* Say hello. */
 	if (options.verbose) {
 	    fprintf(stderr, "Connected to %s, port %u%s\n", host, p,
-		    options.ssl_host? " via SSL": "");
+		    options.ssl_host? " via TLS": "");
 	    if (options.assoc != NULL) {
 		fprintf(stderr, "Associating with LU %s\n", options.assoc);
 	    } else if (lu != NULL) {
@@ -1124,7 +1124,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 	}
 	vtrace("Connected to %s, port %u%s\n", host, p,
-		options.ssl_host? " via SSL": "");
+		options.ssl_host? " via TLS": "");
 	if (options.assoc != NULL) {
 	    vtrace("Associating with LU %s\n", options.assoc);
 	} else if (lu != NULL) {

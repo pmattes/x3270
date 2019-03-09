@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -273,9 +273,9 @@ read_func(SSLConnectionRef connection, void *data, size_t *data_length)
      */
     while (n_read < *data_length) {
 	nr = recv(s->sock, (char *)data + n_read, *data_length - n_read, 0);
-	vtrace("SSL: read %d/%d bytes\n", nr, (int)(*data_length - n_read));
+	vtrace("TLS: read %d/%d bytes\n", nr, (int)(*data_length - n_read));
 	if (nr < 0) {
-	    vtrace("SSL recv: %s\n", strerror(errno));
+	    vtrace("TLS recv: %s\n", strerror(errno));
 	    *data_length = n_read;
 	    return errSecIO;
 	} else if (nr == 0) {
@@ -302,9 +302,9 @@ write_func(SSLConnectionRef connection, const void *data, size_t *data_length)
     }
 
     nw = send(s->sock, data, *data_length, 0);
-    vtrace("SSL: wrote %d/%d bytes\n", nw, (int)*data_length);
+    vtrace("TLS: wrote %d/%d bytes\n", nw, (int)*data_length);
     if (nw < 0) {
-	vtrace("SSL send: %s\n", strerror(errno));
+	vtrace("TLS send: %s\n", strerror(errno));
 	*data_length = 0;
 	return errSecIO;
     } else {
@@ -808,7 +808,7 @@ set_client_cert(stransport_sio_t *s)
     }
 }
 
-/* Free an SSL context. */
+/* Free a TLS context. */
 static void
 sio_free(stransport_sio_t *s)
 {
@@ -893,7 +893,7 @@ fail:
 }
 
 /*
- * Negotiate an SSL connection.
+ * Negotiate a TLS connection.
  * Returns true for success, false for failure.
  * If it returns false, the socket should be disconnected.
  *
@@ -1015,7 +1015,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 
     status = SSLRead(s->context, buf, buflen, &n_read);
     if (status == errSSLClosedGraceful || status == errSSLClosedNoNotify) {
-	vtrace("SSL: EOF\n");
+	vtrace("TLS: EOF\n");
 	return 0;
     }
     if (status != errSecSuccess) {
@@ -1058,7 +1058,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
     return (int)buflen;
 }
 
-/* Closes the SSL connection. */
+/* Closes the TLS connection. */
 void
 sio_close(sio_t sio)
 {

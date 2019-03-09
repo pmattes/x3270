@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ sioc_set_error(const char *fmt, ...)
     t = xs_vbuffer(fmt, args);
     va_end(args);
 
-    u = xs_buffer("SSL: %s", t);
+    u = xs_buffer("TLS: %s", t);
     Free(t);
     Replace(sioc_last_error, u);
 }
@@ -83,7 +83,7 @@ sioc_error_reset(void)
 const char *
 sio_last_error(void)
 {
-    return ((sioc_last_error != NULL)? sioc_last_error: "SSL: No error");
+    return ((sioc_last_error != NULL)? sioc_last_error: "TLS: No error");
 }
 
 /* Expand the contents of a file into a string. */
@@ -156,7 +156,7 @@ sioc_parse_password_spec(const char *spec)
 }
 
 /*
- * Report all supported SSL-related options.
+ * Report all supported TLS-related options.
  */
 unsigned
 sio_all_options_supported(void)

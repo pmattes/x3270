@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Paul Mattes.
+ * Copyright (c) 2017-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -105,45 +105,45 @@ add_ssl_opts(void)
 	{ SSL_OPT_VERIFY_HOST_CERT,
 	    { OptVerifyHostCert, OPT_BOOLEAN, true, ResVerifyHostCert,
 		aoffset(ssl.verify_host_cert),
-		NULL, "Enable SSL/TLS host certificate validation (set by default)" } },
+		NULL, "Enable TLS host certificate validation (set by default)" } },
 	{ SSL_OPT_VERIFY_HOST_CERT,
 	    { OptNoVerifyHostCert, OPT_BOOLEAN, false, ResVerifyHostCert,
 		aoffset(ssl.verify_host_cert),
-		NULL, "Disable SSL/TLS host certificate validation" } },
+		NULL, "Disable TLS host certificate validation" } },
 	{ SSL_OPT_CA_DIR,
 	    { OptCaDir, OPT_STRING, false, ResCaDir, aoffset(ssl.ca_dir),
-		"<directory>","SSL/TLS CA certificate database directory" } },
+		"<directory>","TLS CA certificate database directory" } },
 	{ SSL_OPT_CA_FILE,
 	    { OptCaFile, OPT_STRING, false, ResCaFile, aoffset(ssl.ca_file),
-		"<filename>", "SSL/TLS CA certificate file" } },
+		"<filename>", "TLS CA certificate file" } },
 	{ SSL_OPT_CERT_FILE,
 	    { OptCertFile, OPT_STRING, false, ResCertFile,
 		aoffset(ssl.cert_file),
-		"<filename>", "SSL/TLS client certificate file" } },
+		"<filename>", "TLS client certificate file" } },
 	{ SSL_OPT_CERT_FILE_TYPE,
 	    { OptCertFileType, OPT_STRING, false, ResCertFileType,
 		aoffset(ssl.cert_file_type),
-		"pem|asn1", "SSL/TLS client certificate file type" } },
+		"pem|asn1", "TLS client certificate file type" } },
 	{ SSL_OPT_CHAIN_FILE,
 	    { OptChainFile,OPT_STRING, false,ResChainFile,
 		aoffset(ssl.chain_file),
-		"<filename>", "SSL/TLS certificate chain file" } },
+		"<filename>", "TLS certificate chain file" } },
 	{ SSL_OPT_KEY_FILE,
 	    { OptKeyFile, OPT_STRING, false, ResKeyFile, aoffset(ssl.key_file),
-		"<filename>", "Get SSL/TLS private key from <filename>" } },
+		"<filename>", "Get TLS private key from <filename>" } },
 	{ SSL_OPT_KEY_FILE_TYPE,
 	    { OptKeyFileType, OPT_STRING, false, ResKeyFileType,
 		aoffset(ssl.key_file_type),
-		"pem|asn1", "SSL/TLS private key file type" } },
+		"pem|asn1", "TLS private key file type" } },
 	{ SSL_OPT_KEY_PASSWD,
 	    { OptKeyPasswd,OPT_STRING, false, ResKeyPasswd,
 		aoffset(ssl.key_passwd),
 		"file:<filename>|string:<text>",
-		"SSL/TLS private key password" } },
+		"TLS private key password" } },
 	{ SSL_OPT_CLIENT_CERT,
 	    { OptClientCert, OPT_STRING, false, ResClientCert,
 		aoffset(ssl.client_cert),
-		"<name>", "SSL/TLS client certificate name" } }
+		"<name>", "TLS client certificate name" } }
     };
     int n_opts = (int)array_count(flagged_opts);
     unsigned n_ssl_opts = 0;
