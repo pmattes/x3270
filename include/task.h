@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2016, 2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ typedef void *task_cbh;
 
 void abort_script(void);
 void abort_script_by_cb(const char *cb_name);
+void abort_queue(const char *unique_name);
 void login_macro(char *s);
 void macros_init(void);
 void macro_command(struct macro_def *m);

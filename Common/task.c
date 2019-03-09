@@ -171,7 +171,8 @@ static peer_listen_t global_peer_listen = NULL;
 /* List of active task stacks. */
 typedef struct _taskq {
     llist_t llist;	/* linkage */
-    char *name;		/* name */
+    char *name;		/* simple name */
+    char *unique_name;	/* unique name */
     const tcb_t *cb;	/* callback block */
     task_t *top;	/* top of stack */
     int depth;		/* depth of the stack, for debug display */
@@ -1340,7 +1341,7 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
 	q->deleted = false;
 	q->output_wait_needed = find_owait(cb);
 	LLIST_APPEND(&q->llist, taskq);
-	name = lazyaf("CB(%s)[#%u]", q->name, q->index);
+	name = q->unique_name = xs_buffer("CB(%s)[#%u]", q->name, q->index);
 	vtrace("%s started%s\n", name, q->output_wait_needed? " (owait)": "");
     } else {
 	q = current_task->taskq;
@@ -1811,6 +1812,7 @@ restart:
 	}
 	if (q->deleted) {
 	    llist_unlink(&q->llist);
+	    Free(q->unique_name);
 	    Free(q);
 	    goto restart;
 	}
@@ -3375,6 +3377,46 @@ Printer_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
+ * Abort a queue.
+ */
+static void
+abortq(taskq_t *q)
+{
+    task_t *s;
+    task_t *next;
+
+    for (s = q->top; s != NULL; s = next) {
+	next = s->next;
+
+	/* Don't abort a peer script. */
+	if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
+	    vtrace("Abort skipping peer\n");
+	    continue;
+	}
+
+	/* Abort the cb. */
+	if (s->type == ST_CB) {
+	    vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	    task_result(s, "Canceled", false);
+	    (*s->cbx.cb->done)(s->cbx.handle, true, true);
+	}
+
+	/* Free the task -- this is not a pop */
+	vtrace("Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	free_task(s);
+
+	/* Take it out of the taskq. */
+	q->top = next;
+	q->depth--;
+    }
+
+    /* Mark the taskq as deleted. */
+    if (q->depth == 0) {
+	q->deleted = true;
+    }
+}
+
+/*
  * Abort all scripts using a particular CB.
  */
 void
@@ -3389,42 +3431,35 @@ abort_script_by_cb(const char *cb_name)
     vtrace("Canceling all pending scripts for %s\n", cb_name);
 
     FOREACH_LLIST(&taskq, q, taskq_t *) {
-	task_t *s;
-	task_t *next;
-
-	if (strcmp(cb_name, q->cb->shortname)) {
-	    continue;
+	if (!strcmp(cb_name, q->cb->shortname)) {
+	    abortq(q);
 	}
 
-	for (s = q->top; s != NULL; s = next) {
-	    next = s->next;
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 
-	    /* Don't abort a peer script. */
-	    if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
-		vtrace("Abort skipping peer\n");
-		continue;
-	    }
+    /* Re-evaluate the OIA and menus. */
+    task_status_set();
+}
 
-	    /* Abort the cb. */
-	    if (s->type == ST_CB) {
-		vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
-		task_result(s, "Canceled", false);
-		(*s->cbx.cb->done)(s->cbx.handle, true, true);
-	    }
+/*
+ * Abort all scripts using a particular CB.
+ */
+void
+abort_queue(const char *unique_name)
+{
+    taskq_t *q;
 
-	    /* Free the task -- this is not a pop */
-	    vtrace("Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
-	    free_task(s);
+#if !defined(_WIN32) /*[*/
+    /* child_ignore_output(); */ /* Needed? */
+#endif /*]*/
 
-	    /* Take it out of the taskq. */
-	    q->top = next;
-	    q->depth--;
+    vtrace("Canceling all pending scripts for %s\n", unique_name);
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	if (!strcmp(unique_name, q->unique_name)) {
+	    abortq(q);
 	}
 
-	/* Mark the taskq as deleted. */
-	if (q->depth == 0) {
-	    q->deleted = true;
-	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 
     /* Re-evaluate the OIA and menus. */

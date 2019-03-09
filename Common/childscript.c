@@ -281,6 +281,9 @@ close_child(child_t *c)
 	c->irhandle = NULL;
     }
     task_cb_abort_ir_state(&c->ir_state);
+
+    /* Abort any pending child. */
+    abort_queue(c->child_name);
 }
 
 /**
@@ -631,9 +634,7 @@ child_run(task_cbh handle, bool *success)
 	    action_output("%s", tmp);
 	    Free(tmp);
 	}
-#if defined(_WIN32) /*[*/
 	close_child(c);
-#endif /*]*/
 	if (!c->success) {
 #if !defined(_WIN32) /*[*/
 	    if (WIFEXITED(c->exit_status)) {
