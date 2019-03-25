@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -267,7 +267,7 @@ proxy_negotiate(int type, socket_t fd, char *host, unsigned short port)
 {
     switch (type) {
     case PT_NONE:
-	return 0;
+	return true;
     case PT_PASSTHRU:
 	return proxy_passthru(fd, host, port);
     case PT_HTTP:
@@ -422,7 +422,7 @@ proxy_http(socket_t fd, char *host, unsigned short port)
 	return false;
     }
 
-    return 0;
+    return true;
 }
 
 /* TELNET proxy. */
