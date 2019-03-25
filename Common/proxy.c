@@ -302,7 +302,7 @@ proxy_negotiate(int type, socket_t fd, char *user, char *host,
 {
     switch (type) {
     case PT_NONE:
-	return 0;
+	return true;
     case PT_PASSTHRU:
 	return proxy_passthru(fd, host, port);
     case PT_HTTP:
@@ -473,7 +473,7 @@ proxy_http(socket_t fd, char *user, char *host, unsigned short port)
 	return false;
     }
 
-    return 0;
+    return true;
 }
 
 /* TELNET proxy. */
