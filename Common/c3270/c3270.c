@@ -268,7 +268,6 @@ static tcb_t command_cb = {
     command_getflags,
     &command_irv,
     NULL,
-    NULL,
     command_reqinput
 };
 

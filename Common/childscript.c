@@ -92,7 +92,6 @@ static tcb_t script_cb = {
     child_setflags,
     child_getflags,
     &child_irv,
-    NULL,
     child_command,
     child_reqinput
 };
@@ -109,7 +108,6 @@ static tcb_t async_script_cb = {
     child_setflags,
     child_getflags,
     &child_irv,
-    NULL,
     child_command,
     child_reqinput,
 };
@@ -127,7 +125,6 @@ static tcb_t child_cb = {
     child_setflags,
     child_getflags,
     &child_irv,
-    NULL,
     child_command,
     child_reqinput
 };

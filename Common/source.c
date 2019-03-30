@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,6 @@ static void source_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool source_done(task_cbh handle, bool success, bool abort);
 static bool source_run(task_cbh handle, bool *success);
-static bool source_need_delay(task_cbh handle);
 
 /* Callback block for Source. */
 static tcb_t source_cb = {
@@ -57,12 +56,7 @@ static tcb_t source_cb = {
     CB_NEEDS_RUN,
     source_data,
     source_done,
-    source_run,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    source_need_delay
+    source_run
 };
 
 /* State for one instance of Source. */
@@ -71,8 +65,6 @@ typedef struct {
     char *path;		/* pathname */
     char *name;		/* cb name */
     char *result; 	/* one line of error result */
-    char readahead;	/* one byte of readahead */
-    bool have_readahead; /* readahead is valid */
 } source_t;
 
 /**
@@ -147,7 +139,6 @@ source_run(task_cbh handle, bool *success)
     source_t *s = (source_t *)handle;
     varbuf_t r;
     char *buf;
-    bool done = false;
 
     /* Check for failure. */
     if (s->fd == -1) {
@@ -165,44 +156,31 @@ source_run(task_cbh handle, bool *success)
 	char c;
 	int nr;
 
-	if (s->have_readahead) {
-	    c = s->readahead;
-	    s->have_readahead = false;
-	} else {
-	    nr = read(s->fd, &c, 1);
-	    if (nr < 0) {
-		popup_an_error("Source %s read error\n", s->path);
+	nr = read(s->fd, &c, 1);
+	if (nr < 0) {
+	    popup_an_error("Source %s read error\n", s->path);
+	    vb_free(&r);
+	    close(s->fd);
+	    free_source(s);
+	    *success = false;
+	    return true;
+	}
+	if (nr == 0) {
+	    if (vb_len(&r) == 0) {
+		vtrace("%s %s EOF\n", s->name, s->path);
 		vb_free(&r);
 		close(s->fd);
 		free_source(s);
-		*success = false;
+		*success = true;
 		return true;
-	    }
-	    if (nr == 0) {
-		if (vb_len(&r) == 0) {
-		    vtrace("%s %s EOF\n", s->name, s->path);
-		    vb_free(&r);
-		    close(s->fd);
-		    free_source(s);
-		    *success = true;
-		    return true;
-		} else {
-		    if (!done) {
-			vtrace("%s %s EOF without newline\n", s->name, s->path);
-		    }
-		    break;
-		}
-	    }
-	    if (done) {
-		s->readahead = c;
-		s->have_readahead = true;
+	    } else {
+		vtrace("%s %s EOF without newline\n", s->name, s->path);
 		break;
 	    }
 	}
 	if (c == '\r' || c == '\n') {
 	    if (vb_len(&r)) {
-		done = true;
-		continue;
+		break;
 	    } else {
 		continue;
 	    }
@@ -218,15 +196,6 @@ source_run(task_cbh handle, bool *success)
 
     /* Not done yet. */
     return false;
-}
-
-/* Return true if the current action needs a delay. */
-static bool
-source_need_delay(task_cbh handle)
-{
-    source_t *s = (source_t *)handle;
-
-    return s->have_readahead;
 }
 
 /**
@@ -261,7 +230,7 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     Free(expanded_filename);
 
     /* Start reading from the file. */
-    s = (source_t *)Calloc(1, sizeof(source_t) + strlen(argv[0]) + 1);
+    s = (source_t *)Malloc(sizeof(source_t) + strlen(argv[0]) + 1);
     s->fd = fd;
     s->path = (char *)(s + 1);
     strcpy(s->path, argv[0]);

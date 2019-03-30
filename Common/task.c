@@ -152,7 +152,6 @@ typedef struct task {
     struct {
 	char   *msc;	/* input buffer */
 	char   *dptr;	/* data pointer */
-	bool	more;	/* more commands follow this one */
 #	define LAST_BUF 64
 	char	last[LAST_BUF]; /* last command */
     } macro;
@@ -767,7 +766,7 @@ cleanup_socket(bool b _is_unused)
  */
 enum em_stat { EM_CONTINUE, EM_ERROR };
 static enum em_stat
-execute_command(enum iaction cause, char *s, char **np, bool *more, char *buf,
+execute_command(enum iaction cause, char *s, char **np, char *buf,
 	size_t buflen)
 {
 #   define MAX_ANAME	64
@@ -811,10 +810,6 @@ execute_command(enum iaction cause, char *s, char **np, bool *more, char *buf,
 	/*6*/ "Syntax error: unclosed \""
     };
 #define fail(n) { failreason = n; goto failure; }
-
-    if (more != NULL) {
-	*more = false;
-    }
 
     while ((c = *s++)) {
 
@@ -1045,9 +1040,6 @@ success:
 	    if (np) {
 		/* Something follows. */
 		*np = s;
-		if (more != NULL) {
-		    *more = true;
-		}
 	    } else {
 		fail(4);
 	    }
@@ -1204,8 +1196,7 @@ run_macro(void)
 	    ia = IA_MACRO;
 	}
 
-	es = execute_command(ia, a, &nextm, &s->macro.more, s->macro.last,
-		LAST_BUF);
+	es = execute_command(ia, a, &nextm, s->macro.last, LAST_BUF);
 	s->macro.dptr = nextm;
 
 	/*
@@ -4170,49 +4161,4 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
     current_task->wait_context = context;
     current_task->xcontinue_fn = continue_fn;
     task_set_state(current_task, TS_XWAIT, lazyaf("extended wait: %s", why));
-}
-
-/*
- * Test for the need for an unlock delay.
- * There are two conditions:
- * - A macro with more than one action (e.g., Enter() Key(x)).
- * - A cb that always has unlock delays. There are none of these at present.
- * - A cb that knows that there are more actions coming (e.g., Source() and
- *   String()).
- */
-
-static bool
-cb_needs_delay(task_t *s)
-{
-    return s != NULL
-	&& (s->type == ST_CB)
-	&& ((s->cbx.cb->flags & CB_ALL_DELAY)
-	    || (s->cbx.cb->need_delay != NULL
-		&& (*s->cbx.cb->need_delay)(s->cbx.handle)));
-}
-
-static bool
-macro_needs_delay(task_t *s)
-{
-    return s != NULL
-	&& (s->type == ST_MACRO)
-	&& s->macro.more;
-}
-
-bool
-task_needs_unlock_delay(void)
-{
-    taskq_t *q;
-
-    FOREACH_LLIST(&taskq, q, taskq_t *) {
-	task_t *s = q->top;
-
-	if (s->state == TS_KBWAIT) {
-	    return macro_needs_delay(s)
-		|| cb_needs_delay(s)
-		|| cb_needs_delay(s->next);
-	}
-    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
-
-    return false;
 }

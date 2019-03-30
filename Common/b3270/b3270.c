@@ -931,13 +931,11 @@ void
 product_set_appres_defaults(void)
 {
     /*
-     * Set defaults like s3270 -- operator error locks the keyboard and
-     * no unlock delay.
+     * Set defaults like x3270 -- operator error locks the keyboard.
      *
      * TODO: I need a way to change these from the UI.
      */
     appres.oerr_lock = true;
-    appres.unlock_delay = false;
     appres.interactive.save_lines = 4096;
 }
 

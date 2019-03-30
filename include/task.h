@@ -107,7 +107,6 @@ typedef struct {
     task_setflags_cb setflags;
     task_getflags_cb getflags;
     irv_t *irv;
-    task_need_delay_cb need_delay;
     task_command_cb command;
     task_reqinput_cb reqinput;
 } tcb_t;
@@ -115,7 +114,6 @@ typedef struct {
 #define CB_NEEDS_RUN	0x2	/* needs its run method called */
 #define CB_NEW_TASKQ	0x4	/* creates a new task queue */
 #define CB_PEER		0x8	/* peer script (don't abort) */
-#define CB_ALL_DELAY	0x10	/* all kbwait actions need delay */
 
 #define CBF_INTERACTIVE	0x1	/* settable: interactive (e.g., c3270 prompt) */
 #define CBF_CONNECT_NONBLOCK 0x2 /* do not block Connect()/Open() */
@@ -148,5 +146,4 @@ void task_resume_xwait(void *context, bool cancel, const char *why);
 typedef void xcontinue_fn(void *context, bool cancel);
 void task_xwait(void *context, xcontinue_fn *continue_fn, const char *why);
 
-bool task_needs_unlock_delay(void);
 char *task_get_tasks(void);

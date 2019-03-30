@@ -95,7 +95,6 @@ static tcb_t peer_cb = {
     peer_getflags,
     &peer_irv,
     NULL,
-    NULL,
     peer_reqinput
 };
 
