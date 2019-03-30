@@ -41,11 +41,13 @@
 #include "ctlrc.h"
 #include "kybd.h"
 #include "popups.h"
+#include "resources.h"
 #include "screen.h"
 #include "scroll.h"
 #include "selectc.h"
 #include "status.h"
 #include "telnet.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 
@@ -524,6 +526,32 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
+ * Toggle the length of the scrollback buffer.
+ */
+static bool
+toggle_save_lines(const char *name _is_unused, const char *value)
+{
+    unsigned long l;
+    char *end;
+    int lines;
+
+    if (!*value) {
+	appres.unlock_delay_ms = 0;
+	return true;
+    }
+
+    l = strtoul(value, &end, 10);
+    lines = (int)l;
+    if (*end != '\0' || (unsigned long)lines != l || lines < 0) {
+	popup_an_error("Invalid %s value", ResSaveLines);
+	return false;
+    }
+    appres.interactive.save_lines = lines;
+    scroll_buf_init();
+    return true;
+}
+
+/*
  * Called when a host connects, disconnects or changes NVT/3270 modes.
  */
 static void
@@ -548,6 +576,10 @@ scroll_register(void)
 
     /* Register the actions. */
     register_actions(scroll_actions, array_count(scroll_actions));
+
+    /* Register the toggles. */
+    register_extended_toggle(ResSaveLines, toggle_save_lines, NULL, NULL,
+	    (void **)&appres.interactive.save_lines, XRM_INT);
 
     /* Register the state change callbacks. */
     register_schange(ST_HALF_CONNECT, scroll_connect);

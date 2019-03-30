@@ -45,6 +45,7 @@
 
 #include "actions.h"
 #include "apl.h"
+#include "boolstr.h"
 #include "codepage.h"
 #include "ctlrc.h"
 #include "unicodec.h"
@@ -612,6 +613,61 @@ kybd_in3270(bool in3270 _is_unused)
 }
 
 /*
+ * Toggle the operator error lock  setting.
+ */
+static bool
+toggle_oerr_lock(const char *name _is_unused, const char *value)
+{
+    const char *errmsg = boolstr(value, &appres.oerr_lock);
+
+    if (errmsg != NULL) {
+	popup_an_error("%s %s", ResOerrLock, errmsg);
+	return false;
+    }
+    return true;
+}
+
+/*
+ * Toggle the unlock delay setting.
+ */
+static bool
+toggle_unlock_delay(const char *name _is_unused, const char *value)
+{
+    const char *errmsg = boolstr(value, &appres.unlock_delay);
+
+    if (errmsg != NULL) {
+	popup_an_error("%s %s", ResUnlockDelay, errmsg);
+	return false;
+    }
+    return true;
+}
+
+/*
+ * Toggle the unlock delay milliseconds setting.
+ */
+static bool
+toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
+{
+    unsigned long l;
+    char *end;
+    int ms;
+
+    if (!*value) {
+	appres.unlock_delay_ms = 0;
+	return true;
+    }
+
+    l = strtoul(value, &end, 10);
+    ms = (int)l;
+    if (*end != '\0' || (unsigned long)ms != l || ms < 0) {
+	popup_an_error("Invalid %s value", ResUnlockDelay);
+	return false;
+    }
+    appres.unlock_delay_ms = ms;
+    return true;
+}
+
+/*
  * Keyboard module registration.
  */
 void
@@ -635,6 +691,12 @@ kybd_register(void)
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
+    register_extended_toggle(ResOerrLock, toggle_oerr_lock, NULL, NULL,
+	    (void **)&appres.oerr_lock, XRM_BOOLEAN);
+    register_extended_toggle(ResUnlockDelay, toggle_unlock_delay, NULL, NULL,
+	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
+    register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
+	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
 }
 
 /*

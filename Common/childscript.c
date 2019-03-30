@@ -280,7 +280,9 @@ close_child(child_t *c)
     task_cb_abort_ir_state(&c->ir_state);
 
     /* Abort any pending child. */
-    abort_queue(c->child_name);
+    if (c->child_name != NULL) {
+	abort_queue(c->child_name);
+    }
 }
 
 /**

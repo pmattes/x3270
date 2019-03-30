@@ -932,8 +932,6 @@ product_set_appres_defaults(void)
 {
     /*
      * Set defaults like x3270 -- operator error locks the keyboard.
-     *
-     * TODO: I need a way to change these from the UI.
      */
     appres.oerr_lock = true;
     appres.interactive.save_lines = 4096;
