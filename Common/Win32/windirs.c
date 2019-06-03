@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014-2017 Paul Mattes.
+ * Copyright (c) 2006-2009, 2014-2017, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,9 +50,8 @@ get_dirs_shfp(char **desktop, char **appdata, char **common_desktop,
 	r = SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
 		SHGFP_TYPE_CURRENT, *desktop);
 	if (r != S_OK) {
-	    fprintf(stderr, "SHGetFolderPath(DESKTOPDIRECTORY) failed: 0x%x\n",
-		    (int)r);
-	    return -1;
+	    free(*desktop);
+	    *desktop = NULL;
 	}
     }
 
@@ -260,7 +259,8 @@ get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
 	}
 
 	/* Append a trailing "\" to Desktop. */
-	if (desktop != NULL && (*desktop)[strlen(*desktop) - 1] != '\\') {
+	if (desktop != NULL && *desktop != NULL &&
+		(*desktop)[strlen(*desktop) - 1] != '\\') {
 	    wsl = malloc(strlen(*desktop) + 2);
 	    if (wsl == NULL) {
 		return false;
