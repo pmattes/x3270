@@ -537,6 +537,7 @@ host_connect(const char *n, enum iaction ia)
     }
 
     /* Still thinking about it? */
+    host_ia = ia;
     if (nc == NC_RESOLVING) {
 	cstate = RESOLVING;
 	st_changed(ST_CONNECT, true);
