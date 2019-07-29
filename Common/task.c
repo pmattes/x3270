@@ -1150,6 +1150,50 @@ silent_failure:
 #undef fail
 }
 
+/* Expand control characters in a string. */
+static char *
+no_ctrl(const char *s)
+{
+    varbuf_t r;
+    char c;
+
+    vb_init(&r);
+    while ((c = *s++) != '\0') {
+	unsigned char uc = c;
+
+	if ((uc & 0x7f) >= ' ' && uc != 0x7f) {
+	    /* Printable. */
+	    vb_append(&r, s - 1, 1);
+	    continue;
+	}
+	if (uc >= 0x80 && uc < 0xa0) {
+	    /* 8-bit control. */
+	    vb_appends(&r, lazyaf("\\x%02x", uc));
+	    continue;
+	}
+
+	/* 7-bit control. */
+	switch (c) {
+	case '\r':
+	    vb_appends(&r, "\\r");
+	    break;
+	case '\n':
+	    vb_appends(&r, "\\n");
+	    break;
+	case '\b':
+	    vb_appends(&r, "\\b");
+	    break;
+	case '\t':
+	    vb_appends(&r, "\\t");
+	    break;
+	default:
+	    vb_appends(&r, lazyaf("\\x%02x", uc));
+	    break;
+	}
+    }
+    return lazya(vb_consume(&r));
+}
+
 /* Run the macro at the top of the stack. */
 static void
 run_macro(void)
@@ -1185,7 +1229,7 @@ run_macro(void)
 	}
 
 	task_set_state(s, TS_RUNNING, "executing");
-	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME, a);
+	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME, no_ctrl(a));
 	s->success = true;
 
 	if (s->type == ST_MACRO &&
