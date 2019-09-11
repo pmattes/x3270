@@ -54,6 +54,10 @@
 
 /* Statics */
 
+/* The current set of queries. */
+static query_t *queries;
+static size_t num_queries;
+
 static const char *
 query_terminal_name(void)
 {
@@ -191,13 +195,98 @@ get_tx(void)
 bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
-    static struct {
-	char *name;
-	const char *(*fn)(void);
-	const char *string;
-	bool hidden;
-	bool specific;
-    } queries[] = {
+    size_t i;
+    size_t sl;
+
+    action_debug("Query", ia, argc, argv);
+    if (check_argc("Query", argc, 0, 1) < 0) {
+	return false;
+    }
+
+    switch (argc) {
+    case 0:
+	for (i = 0; i < num_queries; i++) {
+	    if (!queries[i].hidden) {
+		const char *s = (queries[i].fn? (*queries[i].fn)():
+			queries[i].string);
+
+		if (s == NULL) {
+		    s = "";
+		}
+		if (queries[i].specific && strcmp(s, "")) {
+		    s = "...";
+		}
+		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
+	    }
+	}
+	break;
+    case 1:
+	sl = strlen(argv[0]);
+	for (i = 0; i < num_queries; i++) {
+	    if (!strncasecmp(argv[0], queries[i].name, sl)) {
+		const char *s;
+
+		if (strlen(queries[i].name) > sl &&
+			queries[i + 1].name != NULL &&
+			!strncasecmp(argv[0], queries[i + 1].name, sl)) {
+		    popup_an_error("Query: Ambiguous parameter");
+		    return false;
+		}
+
+		if (queries[i].fn) {
+		    s = (*queries[i].fn)();
+		} else {
+		    s = queries[i].string;
+		}
+		if (s == NULL) {
+		    s = "";
+		}
+		action_output("%s\n", s);
+		return true;
+	    }
+	}
+	popup_an_error("Query: Unknown parameter");
+	return false;
+    }
+    return true;
+}
+
+/* Compare two queries by name. */
+static int
+query_compare(const void *a, const void *b)
+{
+    const query_t *qa = (query_t *)a;
+    const query_t *qb = (query_t *)b;
+
+    return strcmp(qa->name, qb->name);
+}
+
+/**
+ * Register a set of queries.
+ */
+void
+register_queries(query_t new_queries[], size_t count)
+{
+    query_t *q = Malloc(sizeof(query_t) * (num_queries + count));
+
+    memcpy(q, queries, sizeof(query_t) * num_queries);
+    memcpy(q + num_queries, new_queries, sizeof(query_t) * count);
+    qsort(q, num_queries + count, sizeof(query_t), query_compare);
+    Free(queries);
+    queries = q;
+    num_queries += count;
+}
+
+/**
+ * Query module registration.
+ */
+void
+query_register(void)
+{
+    static action_table_t actions[] = {
+	{ "Query",		Query_action, 0 }
+    };
+    static query_t base_queries[] = {
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "BuildOptions", build_options, NULL, false, false },
@@ -230,75 +319,12 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	{ "TlsProvider", net_sio_provider, NULL, false, false },
 	{ "TlsSessionInfo", net_session_info, NULL, false, true },
 	{ "Tn3270eOptions", tn3270e_current_opts, NULL, false, false },
-	{ "Version", query_build, NULL, false, false },
-	{ NULL, NULL, false, false }
-    };
-    int i;
-    size_t sl;
-
-    action_debug("Query", ia, argc, argv);
-    if (check_argc("Query", argc, 0, 1) < 0) {
-	return false;
-    }
-
-    switch (argc) {
-    case 0:
-	for (i = 0; queries[i].name != NULL; i++) {
-	    if (!queries[i].hidden) {
-		const char *s = (queries[i].fn? (*queries[i].fn)():
-			queries[i].string);
-
-		if (s == NULL) {
-		    s = "";
-		}
-		if (queries[i].specific && strcmp(s, "")) {
-		    s = "...";
-		}
-		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
-	    }
-	}
-	break;
-    case 1:
-	sl = strlen(argv[0]);
-	for (i = 0; queries[i].name != NULL; i++) {
-	    if (!strncasecmp(argv[0], queries[i].name, sl)) {
-		const char *s;
-
-		if (strlen(queries[i].name) > sl &&
-			queries[i + 1].name != NULL &&
-			!strncasecmp(argv[0], queries[i + 1].name, sl)) {
-		    popup_an_error("Query: Ambiguous parameter");
-		    return false;
-		}
-
-		if (queries[i].fn) {
-		    s = (*queries[i].fn)();
-		} else {
-		    s = queries[i].string;
-		}
-		if (s == NULL) {
-		    s = "";
-		}
-		action_output("%s\n", s);
-		return true;
-	    }
-	}
-	popup_an_error("Query: Unknown parameter");
-	return false;
-    }
-    return true;
-}
-
-/**
- * Query module registration.
- */
-void
-query_register(void)
-{
-    static action_table_t actions[] = {
-	{ "Query",		Query_action, 0 }
+	{ "Version", query_build, NULL, false, false }
     };
 
     /* Register actions.*/
     register_actions(actions, array_count(actions));
+
+    /* Register queries. */
+    register_queries(base_queries, array_count(base_queries));
 }

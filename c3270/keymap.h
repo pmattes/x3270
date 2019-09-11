@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,4 +34,5 @@ void keymap_register(void);
 void keymap_init(void);
 char *lookup_key(int k, ucs4_t ucs4, int modifiers);
 void keymap_dump(void);
+const char *keymap_dump_string(void);
 const char *decode_key(int k, ucs4_t ucs4, int hint, char *buf);

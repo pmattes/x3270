@@ -2275,7 +2275,7 @@ c3270_register(void)
 	    aoffset(c3270.defscreen),
 	    "<string>",
 	    "String to switch terminal from 132-column mode to 80-column mode"
-},
+	},
 #endif /*]*/
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	{ OptDefaultFgBg,OPT_BOOLEAN,true, ResDefaultFgBg,
@@ -2377,6 +2377,9 @@ c3270_register(void)
 	{ ResCursesColorForHostColor,	V_COLOR },
 #endif /*]*/
     };
+    static query_t queries[] = {
+	{ "Keymap", keymap_dump_string, NULL, false, true }
+    };
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, c3270_connect);
@@ -2396,4 +2399,7 @@ c3270_register(void)
     /* Register our toggles. */
     register_extended_toggle(ResColorPrompt, set_color_prompt, NULL, NULL,
 	    (void **)&appres.c3270.color_prompt, XRM_BOOLEAN);
+
+    /* Register our queries. */
+    register_queries(queries, array_count(queries));
 }

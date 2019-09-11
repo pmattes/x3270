@@ -30,4 +30,12 @@
  *              The Query() action.
  */
 
+typedef struct {
+    char *name;
+    const char *(*fn)(void);
+    const char *string;
+    bool hidden;
+    bool specific;
+} query_t;
+void register_queries(query_t queries[], size_t count);
 void query_register(void);

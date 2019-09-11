@@ -40,6 +40,7 @@
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
+#include "lazya.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
@@ -47,6 +48,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
+#include "varbuf.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
@@ -1139,4 +1141,50 @@ keymap_dump(void)
 	    Free(t);
 	}
     }
+}
+
+/* Dump the current keymap as a string. */
+const char *
+keymap_dump_string(void)
+{
+    varbuf_t r;
+    struct keymap *k;
+    char *s;
+    size_t sl;
+
+    vb_init(&r);
+
+    for (k = master_keymap; k != NULL; k = k->next) {
+	if (k->successor != NULL) {
+	    vb_appendf(&r, "[%s:%d%s] -- superceded by %s:%d --\n",
+		    k->file, k->line,
+		    k->temp? " temp": "",
+		    k->successor->file, k->successor->line);
+	} else if (!IS_INACTIVE(k)) {
+	    int i;
+	    char buf[1024];
+	    char *s = buf;
+	    char dbuf[128];
+	    char *t = safe_string(k->action);
+
+	    for (i = 0; i < k->ncodes; i++) {
+		s += sprintf(s, " %s", decode_key(k->codes[i].key,
+			    k->codes[i].ucs4,
+			    (k->hints[i] & KM_HINTS) |
+				KM_KEYMAP | k->codes[i].modifiers,
+			    dbuf));
+	    }
+	    vb_appendf(&r, "[%s:%d%s]%s: %s\n", k->file, k->line,
+		    k->temp? " temp": "", buf, t);
+	    Free(t);
+	}
+    }
+
+    s = vb_consume(&r);
+    sl = strlen(s);
+    if (sl > 0 && s[sl - 1] == '\n') {
+	s[sl - 1] = '\0';
+    }
+
+    return lazya(s);
 }
