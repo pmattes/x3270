@@ -753,6 +753,7 @@ fm_quit(void *ignored _is_unused)
 typedef enum {
     FM_COPYRIGHT,
     FM_STATUS,
+    FM_ABOUT,
     FM_PROMPT,
     FM_PRINT,
     FM_XFER,
@@ -775,8 +776,10 @@ char *file_menu_names[FM_COUNT] = {
     "Copyright",
     "Status",
 #if !defined(_WIN32) /*[*/
+    "About c3270",
     "c3270> Prompt",
 #else /*][*/
+    "About wc3270",
     "wc3270> Prompt",
 #endif /*]*/
     "Print Screen",
@@ -796,6 +799,7 @@ char *file_menu_names[FM_COUNT] = {
 };
 menu_callback file_menu_actions[FM_COUNT] = {
     fm_copyright,
+    fm_status,
     fm_status,
     fm_prompt,
     fm_print,
