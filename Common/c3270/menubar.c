@@ -660,6 +660,12 @@ fm_status(void *ignored _is_unused)
 }
 
 static void
+fm_about(void *ignored _is_unused)
+{
+    push_macro("Escape(\"Show(about)\")");
+}
+
+static void
 fm_prompt(void *ignored _is_unused)
 {
     push_macro("Escape");
@@ -800,7 +806,7 @@ char *file_menu_names[FM_COUNT] = {
 menu_callback file_menu_actions[FM_COUNT] = {
     fm_copyright,
     fm_status,
-    fm_status,
+    fm_about,
     fm_prompt,
     fm_print,
     fm_xfer,

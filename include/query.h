@@ -41,3 +41,5 @@ void register_queries(query_t queries[], size_t count);
 void query_register(void);
 bool Query_action(ia_t ia, unsigned argc, const char **argv);
 bool query_common(const char *name, ia_t ia, unsigned argc, const char **argv);
+const char *get_about(void);
+

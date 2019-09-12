@@ -192,6 +192,15 @@ get_tx(void)
 	lazyaf("bytes %u", ns_bsent);
 }
 
+const char *
+get_about(void)
+{
+    return lazyaf("%s\n\n"
+	    "Copyright 1989-%s by Paul Mattes, GTRC and others.\n"
+	    "Type 'show copyright' for full copyright information.",
+	    build, cyear);
+}
+
 /* Common code for Query() and Show() actions. */
 bool
 query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
@@ -301,6 +310,7 @@ query_register(void)
 	{ "Show",		Show_action, 0 }
     };
     static query_t base_queries[] = {
+	{ "About", get_about, NULL, false, true },
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "BuildOptions", build_options, NULL, false, false },
