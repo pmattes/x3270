@@ -39,3 +39,4 @@ typedef struct {
 } query_t;
 void register_queries(query_t queries[], size_t count);
 void query_register(void);
+bool Query_action(ia_t ia, unsigned argc, const char **argv);

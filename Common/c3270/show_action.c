@@ -54,6 +54,7 @@
 #include "telnet.h"
 #include "utf8.h"
 #include "utils.h"
+#include "varbuf.h"
 
 /* Return a time difference in English */
 static char *
@@ -276,6 +277,195 @@ status_dump(void)
     } else {
 	action_output("%s", get_message("notConnected"));
     }
+}
+
+const char *
+status_dump_string(void)
+{
+    varbuf_t r;
+    const char *emode, *ftype, *ts;
+    const char *clu;
+    const char *eopts;
+    const char *bplu;
+    const char *ptype;
+    char *s;
+    size_t sl;
+
+    vb_init(&r);
+
+    vb_appendf(&r, "%s\n", build);
+    vb_appendf(&r, "%s %s: %d %s x %d %s, %s, %s\n",
+	    get_message("model"), model_name,
+	    maxCOLS, get_message("columns"),
+	    maxROWS, get_message("rows"),
+	    appres.m3279? get_message("fullColor"): get_message("mono"),
+	    (appres.extended && !HOST_FLAG(STD_DS_HOST))?
+		get_message("extendedDs"): get_message("standardDs"));
+    vb_appendf(&r, "%s %s\n", get_message("terminalName"), termtype);
+    clu = net_query_lu_name();
+    if (clu != NULL && clu[0]) {
+	vb_appendf(&r, "%s %s\n", get_message("luName"), clu);
+    }
+    bplu = net_query_bind_plu_name();
+    if (bplu != NULL && bplu[0]) {
+	vb_appendf(&r, "%s %s\n", get_message("bindPluName"), bplu);
+    }
+    vb_appendf(&r, "%s %s (%s) %s\n", get_message("hostCodePage"),
+	    get_codepage_name(), dbcs? "DBCS": "SBCS",
+	    get_codepage_number());
+    vb_appendf(&r, "%s GCSGID %u, CPGID %u\n",
+	    get_message("sbcsCgcsgid"),
+	    (unsigned short)((cgcsgid >> 16) & 0xffff),
+	    (unsigned short)(cgcsgid & 0xffff));
+    if (dbcs) {
+	vb_appendf(&r, "%s GCSGID %u, CPGID %u\n",
+		get_message("dbcsCgcsgid"),
+		(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
+		(unsigned short)(cgcsgid_dbcs & 0xffff));
+    }
+#if !defined(_WIN32) /*[*/
+    vb_appendf(&r, "%s %s\n", get_message("localeCodeset"), locale_codeset);
+    vb_appendf(&r, "%s, wide curses %s\n",
+	    get_message("buildOpts"),
+# if defined(CURSES_WIDE) /*[*/
+	    get_message("buildEnabled")
+# else /*][*/
+	    get_message("buildDisabled")
+# endif /*]*/
+	    );
+#else /*][*/
+    vb_appendf(&r, "%s OEM %d ANSI %d\n", get_message("windowsCodePage"),
+	    windows_cp, GetACP());
+#endif /*]*/
+    if (appres.interactive.key_map) {
+	vb_appendf(&r, "%s %s\n", get_message("keyboardMap"),
+		appres.interactive.key_map);
+    }
+    if (CONNECTED) {
+	vb_appendf(&r, "%s %s\n", get_message("connectedTo"),
+#if defined(LOCAL_PROCESS) /*[*/
+		(local_process && !strlen(current_host))? "(shell)":
+#endif /*]*/
+		current_host);
+#if defined(LOCAL_PROCESS) /*[*/
+	if (!local_process)
+#endif /*]*/
+	{
+	    vb_appendf(&r, "  %s %d\n", get_message("port"), current_port);
+	}
+	if (net_secure_connection()) {
+	    const char *session, *cert;
+
+	    vb_appendf(&r, "  %s%s%s\n", get_message("secure"),
+			net_secure_unverified()? ", ": "",
+			net_secure_unverified()? get_message("unverified"): "");
+	    vb_appendf(&r, "  %s %s\n", get_message("provider"),
+		    net_sio_provider());
+	    if ((session = net_session_info()) != NULL) {
+		vb_appendf(&r, "  %s\n", get_message("sessionInfo"));
+		indent_dump(session);
+	    }
+	    if ((cert = net_server_cert_info()) != NULL) {
+		vb_appendf(&r, "  %s\n", get_message("serverCert"));
+		indent_dump(cert);
+	    }
+	}
+	ptype = net_proxy_type();
+	if (ptype) {
+	    vb_appendf(&r, "  %s %s  %s %s  %s %s\n",
+		    get_message("proxyType"), ptype,
+		    get_message("server"), net_proxy_host(),
+		    get_message("port"), net_proxy_port());
+	}
+	ts = hms(ns_time);
+	if (IN_E) {
+	    emode = "TN3270E ";
+	} else {
+	    emode = "";
+	}
+	if (IN_NVT) {
+	    if (linemode) {
+		ftype = get_message("lineMode");
+	    } else {
+		ftype = get_message("charMode");
+	    }
+	    vb_appendf(&r, "  %s%s, %s\n", emode, ftype, ts);
+	} else if (IN_SSCP) {
+	    vb_appendf(&r, "  %s%s, %s\n", emode, get_message("sscpMode"), ts);
+	} else if (IN_3270) {
+	    vb_appendf(&r, "  %s%s, %s\n", emode, get_message("dsMode"), ts);
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    vb_appendf(&r, "  %s%s, %s\n", emode, get_message("unboundMode"), ts);
+	} else {
+	    vb_appendf(&r, "  %s, %s\n", get_message("unnegotiated"), ts);
+	}
+
+	eopts = tn3270e_current_opts();
+	if (eopts != NULL) {
+	    vb_appendf(&r, "  %s %s\n", get_message("tn3270eOpts"), eopts);
+	} else if (IN_E) {
+	    vb_appendf(&r, "  %s\n", get_message("tn3270eNoOpts"));
+	}
+
+	if (IN_3270) {
+	    vb_appendf(&r, "%s %d %s, %d %s\n%s %d %s, %d %s\n",
+		    get_message("sent"),
+		    ns_bsent, (ns_bsent == 1)?
+			get_message("byte") : get_message("bytes"),
+		    ns_rsent, (ns_rsent == 1)?
+			get_message("record") : get_message("records"),
+		    get_message("Received"), ns_brcvd,
+			(ns_brcvd == 1)? get_message("byte"):
+					 get_message("bytes"),
+		    ns_rrcvd,
+		    (ns_rrcvd == 1)? get_message("record"):
+				     get_message("records"));
+	} else {
+	    vb_appendf(&r, "%s %d %s, %s %d %s\n",
+		    get_message("sent"), ns_bsent,
+		    (ns_bsent == 1)? get_message("byte"):
+				     get_message("bytes"),
+		    get_message("received"), ns_brcvd,
+		    (ns_brcvd == 1)? get_message("byte"):
+				     get_message("bytes"));
+	}
+
+	if (IN_NVT) {
+	    struct ctl_char *c = linemode_chars();
+	    int i;
+	    char buf[128];
+	    char *s = buf;
+
+	    vb_appendf(&r, "%s\n", get_message("specialCharacters"));
+	    for (i = 0; c[i].name; i++) {
+		if (i && !(i % 4)) {
+		    *s = '\0';
+		    vb_appendf(&r, "%s\n", buf);
+		    s = buf;
+		}
+		s += sprintf(s, "  %s %s", c[i].name, c[i].value);
+	    }
+	    if (s != buf) {
+		*s = '\0';
+		vb_appendf(&r, "%s\n", buf);
+	    }
+	}
+    } else if (HALF_CONNECTED) {
+	vb_appendf(&r, "%s %s\n", get_message("connectionPending"),
+	    current_host);
+    } else if (host_reconnecting()) {
+	vb_appendf(&r, "%s\n", get_message("reconnecting"));
+    } else {
+	vb_appendf(&r, "%s\n", get_message("notConnected"));
+    }
+
+    s = vb_consume(&r);
+    sl = strlen(s);
+    if (sl > 0 && s[sl - 1] == '\n') {
+	s[sl - 1] = '\0';
+    }
+    return lazya(s);
+
 }
 
 static void

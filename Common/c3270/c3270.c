@@ -2237,7 +2237,7 @@ c3270_register(void)
 	{ "Escape",		Escape_action,		ACTION_KE },
 	{ "ignore",		ignore_action,		ACTION_KE },
 	{ "Info",		Info_action,		ACTION_KE },
-	{ "Show",		Show_action,		ACTION_KE },
+	{ "Show",		Query_action,		ACTION_KE },
 	{ "Trace",		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {
@@ -2378,7 +2378,9 @@ c3270_register(void)
 #endif /*]*/
     };
     static query_t queries[] = {
-	{ "Keymap", keymap_dump_string, NULL, false, true }
+	{ "Keymap", keymap_dump_string, NULL, false, true },
+	{ "Status", status_dump_string, NULL, false, true },
+	{ "Stats", status_dump_string, NULL, true, true }
     };
 
     /* Register for state changes. */
