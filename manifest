@@ -400,7 +400,6 @@ include/scroll.h
 include/see.h
 include/selectc.h
 include/sf.h
-include/show_action.h
 include/sio.h
 include/sio_glue.h
 include/sio_internal.h
@@ -410,6 +409,7 @@ include/split_host.h
 include/ssl_config.h
 include/ssl_passwd_gui.h
 include/status.h
+include/status_dump.h
 include/stdinscript.h
 include/stringscript.h
 include/tables.h

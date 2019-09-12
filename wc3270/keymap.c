@@ -1238,38 +1238,8 @@ decode_key(int k, int hint, char *buf)
 }
 
 /* Dump the current keymap. */
-void
-keymap_dump(void)
-{
-    struct keymap *k;
-
-    for (k = master_keymap; k != NULL; k = k->next) {
-	if (k->successor != NULL) {
-	    action_output("[%s:%d%s] -- superceded by %s:%d --",
-		    k->file, k->line,
-		    k->temp? " temp": "",
-		    k->successor->file, k->successor->line);
-	} else if (!IS_INACTIVE(k)) {
-	    int i;
-	    char buf[1024];
-	    char *s = buf;
-	    char dbuf[128];
-	    char *t = safe_string(k->action);
-
-	    for (i = 0; i < k->ncodes; i++) {
-		s += sprintf(s, " %s", decode_key(k->codes[i],
-			    (k->hints[i] & KM_HINTS) | KM_KEYMAP, dbuf));
-	    }
-	    action_output("[%s:%d%s]%s: %s", k->file, k->line,
-		k->temp? " temp": "", buf, t);
-	    Free(t);
-	}
-    }
-}
-
-/* Dump the current keymap as a string. */
 const char *
-keymap_dump_string(void)
+keymap_dump(void)
 {
     varbuf_t r;
     struct keymap *k;

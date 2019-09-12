@@ -33,6 +33,5 @@
 void keymap_register(void);
 void keymap_init(void);
 char *lookup_key(int k, ucs4_t ucs4, int modifiers);
-void keymap_dump(void);
-const char *keymap_dump_string(void);
+const char *keymap_dump(void);
 const char *decode_key(int k, ucs4_t ucs4, int hint, char *buf);

@@ -84,10 +84,10 @@
 #include "s3270_proto.h"
 #include "screen.h"
 #include "selectc.h"
-#include "show_action.h"
 #include "sio_glue.h"
 #include "split_host.h"
 #include "status.h"
+#include "status_dump.h"
 #include "task.h"
 #include "telnet.h"
 #include "telnet_gui.h"
@@ -2377,9 +2377,9 @@ c3270_register(void)
 #endif /*]*/
     };
     static query_t queries[] = {
-	{ "Keymap", keymap_dump_string, NULL, false, true },
-	{ "Status", status_dump_string, NULL, false, true },
-	{ "Stats", status_dump_string, NULL, true, true }
+	{ "Keymap", keymap_dump, NULL, false, true },
+	{ "Status", status_dump, NULL, false, true },
+	{ "Stats", status_dump, NULL, true, true }
     };
 
     /* Register for state changes. */

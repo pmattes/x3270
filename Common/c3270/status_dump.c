@@ -50,8 +50,8 @@
 #include "popups.h"
 #include "query.h"
 #include "resources.h"
-#include "show_action.h"
 #include "split_host.h"
+#include "status_dump.h"
 #include "telnet.h"
 #include "utf8.h"
 #include "utils.h"
@@ -105,7 +105,7 @@ indent_dump(varbuf_t *r, const char *s)
 }
 
 const char *
-status_dump_string(void)
+status_dump(void)
 {
     varbuf_t r;
     const char *emode, *ftype, *ts;

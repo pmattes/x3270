@@ -40,8 +40,7 @@
 
 void keymap_init(void);
 char *lookup_key(unsigned long xk, unsigned long state);
-void keymap_dump(void);
-const char *keymap_dump_string(void);
+const char *keymap_dump(void);
 const char *decode_key(int k, int hint, char *buf);
 const char *lookup_cname(unsigned long ccode);
 void keymap_register(void);

@@ -30,9 +30,9 @@
  */
 
 /*
- *	show_action.h
+ *	status_dump.h
  *		A curses-based 3270 Terminal Emulator
- *		'Show()' action.
+ *		'Show(Status)' action.
  */
 
-const char *status_dump_string(void);
+const char *status_dump(void);
