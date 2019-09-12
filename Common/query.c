@@ -192,14 +192,15 @@ get_tx(void)
 	lazyaf("bytes %u", ns_bsent);
 }
 
+/* Common code for Query() and Show() actions. */
 bool
-Query_action(ia_t ia, unsigned argc, const char **argv)
+query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 {
     size_t i;
     size_t sl;
 
-    action_debug("Query", ia, argc, argv);
-    if (check_argc("Query", argc, 0, 1) < 0) {
+    action_debug(name, ia, argc, argv);
+    if (check_argc(name, argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -229,7 +230,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 		if (strlen(queries[i].name) > sl &&
 			queries[i + 1].name != NULL &&
 			!strncasecmp(argv[0], queries[i + 1].name, sl)) {
-		    popup_an_error("Query: Ambiguous parameter");
+		    popup_an_error("%s: Ambiguous parameter", name);
 		    return false;
 		}
 
@@ -245,7 +246,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 		return true;
 	    }
 	}
-	popup_an_error("Query: Unknown parameter");
+	popup_an_error("%s: Unknown parameter", name);
 	return false;
     }
     return true;
@@ -259,6 +260,18 @@ query_compare(const void *a, const void *b)
     const query_t *qb = (query_t *)b;
 
     return strcmp(qa->name, qb->name);
+}
+
+bool
+Query_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return query_common("Query", ia, argc, argv);
+}
+
+bool
+Show_action(ia_t ia, unsigned argc, const char **argv)
+{
+    return query_common("Show", ia, argc, argv);
 }
 
 /**
@@ -284,7 +297,8 @@ void
 query_register(void)
 {
     static action_table_t actions[] = {
-	{ "Query",		Query_action, 0 }
+	{ "Query",		Query_action, 0 },
+	{ "Show",		Show_action, 0 }
     };
     static query_t base_queries[] = {
 	{ "Actions", all_actions, NULL, false, true },

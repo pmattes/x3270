@@ -35,5 +35,4 @@
  *		'Show()' action.
  */
 
-bool Show_action(ia_t ia, unsigned argc, const char **argv);
 const char *status_dump_string(void);

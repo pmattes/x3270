@@ -2237,7 +2237,6 @@ c3270_register(void)
 	{ "Escape",		Escape_action,		ACTION_KE },
 	{ "ignore",		ignore_action,		ACTION_KE },
 	{ "Info",		Info_action,		ACTION_KE },
-	{ "Show",		Query_action,		ACTION_KE },
 	{ "Trace",		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {
