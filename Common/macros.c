@@ -2821,7 +2821,8 @@ script_prompt(bool success)
 
     if (sms != NULL && sms->accumulated) {
 	timing = lazyaf("%ld.%03ld", sms->msec / 1000L, sms->msec % 1000L);
-	sms->accumulated = 0;
+	sms->accumulated = false;
+	sms->msec = 0;
     } else {
 	timing = "-";
     }
