@@ -57,7 +57,7 @@ ft_gui_complete_popup(const char *msg, bool is_error)
 {
     ui_vleaf(IndFt,
 	    AttrState, "complete",
-	    AttrSuccess, ValTrueFalse(is_error),
+	    AttrSuccess, ValTrueFalse(!is_error),
 	    AttrText, msg,
 	    NULL);
 }
