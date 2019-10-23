@@ -1084,7 +1084,8 @@ ask_dest_file(itc_t *itc)
     } else {
 	default_file = "";
     }
-    return xs_buffer("Name of destination file on %s:%s ",
+    return xs_buffer("Name of destination file%s on %s:%s ",
+	    p->receive_flag? " or folder": "",
 	    p->receive_flag? "this workstation": "the host",
 	    default_file);
 }

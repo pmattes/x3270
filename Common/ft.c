@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "appres.h"
 #include "actions.h"
@@ -429,7 +430,7 @@ ft_didnt_start(ioid_t id _is_unused)
 	fclose(fts.local_file);
 	fts.local_file = NULL;
 	if (ftc->receive_flag && !ftc->append_flag) {
-	    unlink(ftc->local_filename);
+	    unlink(fts.resolved_local_filename);
 	}
     }
 
@@ -444,7 +445,7 @@ ft_complete(const char *errmsg)
 {
     /* Close the local file. */
     if (fts.local_file != NULL && fclose(fts.local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", ftc->local_filename);
+	popup_an_errno(errno, "close(%s)", fts.resolved_local_filename);
     }
     fts.local_file = NULL;
 
@@ -545,6 +546,28 @@ ft_in3270(bool ignored _is_unused)
     }
 }
 
+/* Resolve a local file name that might be a directory. */
+char *
+ft_resolve_dir(ft_conf_t *p)
+{
+    struct stat s;
+
+    /* If the local file is a directory, append the host file name to it. */
+    if (stat(p->local_filename, &s) == 0 && (s.st_mode & S_IFDIR)) {
+	return xs_buffer("%s%s%s",
+		p->local_filename,
+#if defined(_WIN32) /*[*/
+		"\\",
+#else /*][*/
+		"/",
+#endif /*]*/
+		p->host_filename);
+
+    } else {
+	return NewString(p->local_filename);
+    }
+}
+
 /*
  * Start a file transfer, based on the contents of an ft_state structure.
  *
@@ -565,9 +588,12 @@ ft_go(ft_conf_t *p)
     /* Adjust the DFT buffer size. */
     p->dft_buffersize = set_dft_buffersize(p->dft_buffersize);
 
+    /* Resolve the local file name. */
+    Replace(fts.resolved_local_filename, ft_resolve_dir(p));
+
     /* See if the local file can be overwritten. */
     if (p->receive_flag && !p->append_flag && !p->allow_overwrite) {
-	f = fopen(p->local_filename, p->ascii_flag? "r": "rb");
+	f = fopen(fts.resolved_local_filename, p->ascii_flag? "r": "rb");
 	if (f != NULL) {
 	    fclose(f);
 	    popup_an_error("Transfer: File exists");
@@ -576,9 +602,9 @@ ft_go(ft_conf_t *p)
     }
 
     /* Open the local file. */
-    f = fopen(p->local_filename, ft_local_fflag(p));
+    f = fopen(fts.resolved_local_filename, ft_local_fflag(p));
     if (f == NULL) {
-	popup_an_errno(errno, "Local file '%s'", p->local_filename);
+	popup_an_errno(errno, "Local file '%s'", fts.resolved_local_filename);
 	return NULL;
     }
 
@@ -677,7 +703,7 @@ ft_go(ft_conf_t *p)
 	if (f != NULL) {
 	    fclose(f);
 	    if (p->receive_flag && !p->append_flag) {
-		unlink(p->local_filename);
+		unlink(fts.resolved_local_filename);
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
