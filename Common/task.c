@@ -1631,6 +1631,9 @@ connect_error(const char *fmt, ...)
 	    s->success = false;
 	    task_set_state(s, TS_RUNNING, "connection failed");
 	    Free(msg);
+
+	    host_disconnect(true);
+
 	    return;
 	}
     }
