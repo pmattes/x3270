@@ -166,23 +166,24 @@ x3270.keymap.base: \n\
             <Key>PPAGE: Scroll(Backward)\n\
             <Key>NPAGE: Scroll(Forward)
 x3270.keymap.base.3270: \n\
- Ctrl<Key>a <Key>a: Attn()\n\
-        Ctrl<Key>c: Clear()\n\
-        Ctrl<Key>d: Dup(NoFailOnError)\n\
-        Ctrl<Key>f: FieldMark(NoFailOnError)\n\
-        Ctrl<Key>h: Erase()\n\
-        Ctrl<Key>i: Tab()\n\
-        Ctrl<Key>j: Newline()\n\
-        Ctrl<Key>k: Keypad()\n\
-        Ctrl<Key>l: Redraw()\n\
-        Ctrl<Key>m: Enter()\n\
-        Ctrl<Key>n: Menu()\n\
-        Ctrl<Key>r: Reset()\n\
-        Ctrl<Key>u: DeleteField()\n\
- Ctrl<Key>a <Key>v: ToggleReverse()\n\
- Ctrl<Key>a <Key>f: Flip()\n\
-           <Key>IC: ToggleInsert()\n\
-    <Key>BACKSPACE: Erase()\n\
-          <Key>END: FieldEnd()
+     Ctrl<Key>a <Key>a: Attn()\n\
+ Ctrl<Key>a Ctrl<Key>i: BackTab()\n\
+            Ctrl<Key>c: Clear()\n\
+            Ctrl<Key>d: Dup(NoFailOnError)\n\
+            Ctrl<Key>f: FieldMark(NoFailOnError)\n\
+            Ctrl<Key>h: Erase()\n\
+            Ctrl<Key>i: Tab()\n\
+            Ctrl<Key>j: Newline()\n\
+            Ctrl<Key>k: Keypad()\n\
+            Ctrl<Key>l: Redraw()\n\
+            Ctrl<Key>m: Enter()\n\
+            Ctrl<Key>n: Menu()\n\
+            Ctrl<Key>r: Reset()\n\
+            Ctrl<Key>u: DeleteField()\n\
+     Ctrl<Key>a <Key>v: ToggleReverse()\n\
+     Ctrl<Key>a <Key>f: Flip()\n\
+               <Key>IC: ToggleInsert()\n\
+        <Key>BACKSPACE: Erase()\n\
+              <Key>END: FieldEnd()
 #endif
 ! (_WIN32)
