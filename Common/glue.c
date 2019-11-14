@@ -451,6 +451,9 @@ set_appres_defaults(void)
     appres.new_environ = true;
     appres.max_recent = 5;
 
+    appres.ft.dft_buffer_size = DFT_BUF;
+    appres.ft.dft_buffer_size_bc = DFT_BUF;
+
     appres.linemode.icrnl = true;
     appres.linemode.onlcr = true;
     appres.linemode.erase = NewString("^H");

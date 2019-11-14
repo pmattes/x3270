@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@ char *locale_codeset = NULL;
 bool is_utf8 = false;
 
 #if defined(_WIN32) /*[*/
-#define STR_HELPER(s) #s
-#define CPNAME(x) "CP" STR_HELPER(x)
+# define _STR_HELPER(s) #s
+# define CPNAME(x) "CP" _STR_HELPER(x)
 #endif /*]*/
 
 /*

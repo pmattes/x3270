@@ -106,6 +106,12 @@ typedef char bool;			/* roll our own for MSC */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
 
 /*
+ * Helpful macros.
+ */
+#define STR_HELPER(x)	#x
+#define STR(x)		STR_HELPER(x)
+
+/*
  * Unicode UCS-4 characters are (hopefully) 32 bits.
  * EBCDIC (including DBCS) is (hopefully) 16 bits.
  */
@@ -365,8 +371,10 @@ enum keytype { KT_STD, KT_GE };
 
 /* Default DFT file transfer buffer size. */
 #if !defined(DFT_BUF) /*[*/
-# define DFT_BUF		(16 * 1024)
+# define DFT_BUF	16384
 #endif /*]*/
+#define DFT_MIN_BUF	256
+#define DFT_MAX_BUF	32767
 
 /* DBCS Preedit Types */
 #define PT_ROOT		"Root"

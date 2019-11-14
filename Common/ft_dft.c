@@ -53,9 +53,6 @@
 #define OPEN_MSG	"FT:MSG"	/* Open request for message */
 #define END_TRANSFER	"TRANS03"	/* Message for xfer complete */
 
-#define DFT_MIN_BUF	256
-#define DFT_MAX_BUF	32767
-
 #define DFT_MAX_UNGETC	32
 
 /* Typedefs. */

@@ -156,7 +156,7 @@ XtResource resources[] = {
       offset(ssl.key_passwd), XtRString, 0 },
 
     { ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
-      offset(ft.dft_buffer_size_bc), XtRString, 0 }, /* deprecated */
+      offset(ft.dft_buffer_size_bc), XtRString, STR(DFT_BUF) }, /* deprecated */
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },
     { ResFtAvblock, ClsFtAvblock, XtRInt, sizeof(int),
@@ -164,7 +164,7 @@ XtResource resources[] = {
     { ResFtBlksize, ClsFtBlksize, XtRInt, sizeof(int),
       offset(ft.blksize), XtRString, "0" },
     { ResFtBufferSize, ClsFtBufferSize, XtRInt, sizeof(int),
-      offset(ft.dft_buffer_size), XtRString, 0 },
+      offset(ft.dft_buffer_size), XtRString, STR(DFT_BUF) },
     { ResFtCr, ClsFtCr, XtRString, sizeof(char *),
       offset(ft.cr), XtRString, 0 },
     { ResFtDirection, ClsFtDirection, XtRString, sizeof(char *),

@@ -52,6 +52,7 @@
 #include "popups.h"
 #include "resources.h"
 #include "task.h"
+#include "toggles.h"
 #include "utils.h"
 #include "varbuf.h"
 
@@ -164,6 +165,34 @@ static void ft_in3270(bool ignored);
 
 static action_t Transfer_action;
 
+/*
+ * Toggle the buffer size.
+ */
+static bool
+toggle_ft_buffer_size(const char *name _is_unused, const char *value)
+{
+    unsigned long l;
+    char *end;
+    int bs;
+
+    if (!*value) {
+	appres.ft.dft_buffer_size = DFT_BUF;
+	return true;
+    }
+
+    l = strtoul(value, &end, 10);
+    bs = (int)l;
+    if (*end != '\0' || (unsigned long)bs != l) {
+	popup_an_error("Invalid %s value", ResUnlockDelay);
+	return false;
+    }
+    if (bs < DFT_MIN_BUF || bs > DFT_MAX_BUF) {
+	bs = DFT_BUF;
+    }
+    appres.ft.dft_buffer_size = bs;
+    return true;
+}
+
 /**
  * File transfer module registration.
  */
@@ -180,6 +209,11 @@ ft_register(void)
 
     /* Register actions. */
     register_actions(ft_actions, array_count(ft_actions));
+
+    /* Register the toggles. */
+    register_extended_toggle(ResFtBufferSize, toggle_ft_buffer_size, NULL,
+	    NULL, (void **)&appres.ft.dft_buffer_size, XRM_INT);
+
 }
 
 /* Encode/decode for host type. */
