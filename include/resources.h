@@ -91,7 +91,6 @@
 #define ResDefaultFgBg		"defaultFgBg"
 #define ResDefScreen		"defScreen"
 #define ResDevName		"devName"
-#define ResDftBufferSize	"dftBufferSize"	/* deprecated */
 #define ResDisconnectClear	"disconnectClear"
 #define ResDoConfirms		"doConfirms"
 #define ResDbcsCgcsgid		"dbcsCgcsgid"
@@ -107,7 +106,6 @@
 #define ResFtBlksize		"ftBlksize"
 #define ResFtBufferSize		"ftBufferSize"
 #define ResFtCr			"ftCr"
-#define ResFtCodePage		"ftCodePage"	/* deprecated */
 #define ResFtDirection		"ftDirection"
 #define ResFtExist		"ftExist"
 #define ResFtHost		"ftHost"
@@ -340,7 +338,6 @@
 #define ClsDbcsCgcsgid		"DbcsCgcsgid"
 #define ClsDebugTracing		"DebugTracing"
 #define ClsDevName		"DevName"
-#define ClsDftBufferSize	"DftBufferSize"	/* deprecated */
 #define ClsDisconnectClear	"DisconnectClear"
 #define ClsDoConfirms		"DoConfirms"
 #define ClsDsTrace		"DsTrace"

@@ -734,10 +734,7 @@ set_dft_buffersize(int size)
      * - Old resource
      * - Hard-coded default
      */
-    if (!size &&
-	!(size = appres.ft.dft_buffer_size) &&
-	!(size = appres.ft.dft_buffer_size_bc)) {
-
+    if (!size && !(size = appres.ft.dft_buffer_size)) {
 	size = DFT_BUF;
     }
 

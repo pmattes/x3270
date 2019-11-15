@@ -452,7 +452,6 @@ set_appres_defaults(void)
     appres.max_recent = 5;
 
     appres.ft.dft_buffer_size = DFT_BUF;
-    appres.ft.dft_buffer_size_bc = DFT_BUF;
 
     appres.linemode.icrnl = true;
     appres.linemode.onlcr = true;
@@ -958,7 +957,6 @@ static res_t base_resources[] = {
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResDevName,	aoffset(devname),	XRM_STRING },
-    { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
     { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
@@ -967,7 +965,6 @@ static res_t base_resources[] = {
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
     { ResFtBufferSize,aoffset(ft.dft_buffer_size),XRM_INT },
 #if defined(_WIN32) /*[*/
-    { ResFtCodePage,	aoffset(ft.codepage_bc),XRM_INT }, /* deprecated */
     { ResFtWindowsCodePage,aoffset(ft.codepage),XRM_INT },
 #endif /*]*/
     { ResFtCr,		aoffset(ft.cr),		XRM_STRING },

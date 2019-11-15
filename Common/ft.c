@@ -329,8 +329,7 @@ ft_init_conf(ft_conf_t *p)
     p->dft_buffersize = set_dft_buffersize(0);
 #if defined(_WIN32) /*[*/
     p->windows_codepage = appres.ft.codepage?
-	appres.ft.codepage:
-	(appres.ft.codepage_bc? appres.ft.codepage_bc: appres.local_cp);
+	appres.ft.codepage: appres.local_cp;
 #endif /*]*/
 
     /* Apply resources. */

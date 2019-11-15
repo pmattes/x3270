@@ -155,8 +155,6 @@ XtResource resources[] = {
     { ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
       offset(ssl.key_passwd), XtRString, 0 },
 
-    { ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
-      offset(ft.dft_buffer_size_bc), XtRString, STR(DFT_BUF) }, /* deprecated */
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },
     { ResFtAvblock, ClsFtAvblock, XtRInt, sizeof(int),

@@ -160,10 +160,8 @@ typedef struct {
 	char	*remap;
 	int	 secondary_space;
 	int	 dft_buffer_size;
-	int	 dft_buffer_size_bc;	/* old resource value */
 #if defined(_WIN32) /*[*/
 	int	 codepage;
-	int	 codepage_bc;		/* old resource value */
 #endif /*]*/
     } ft;
 
