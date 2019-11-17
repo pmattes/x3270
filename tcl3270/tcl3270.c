@@ -264,6 +264,9 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
 	s3270_exited = true;
 	if (WIFEXITED(st)) {
+	    if (WEXITSTATUS(st) == 0) {
+		exit(0);
+	    }
 	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
 		    "s3270 exited with status %d", WEXITSTATUS(st));
 	} else if (WIFSIGNALED(st)) {
@@ -625,6 +628,22 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     char *rest;
     char *nl;
     Tcl_Obj *o = NULL;
+
+    /* Check for control characters. */
+    for (i = 0; i < objc; i++) {
+	char *s = Tcl_GetString(objv[i]);
+	char c;
+
+	while ((c = *s++) != '\0') {
+	    unsigned char uc = (unsigned char)c;
+
+	    if (uc < ' ' || (uc >= 0x80 && (uc & 0x7f) < ' ')) {
+		Tcl_SetResult(interp, "Control character in parameter",
+			TCL_STATIC);
+		return TCL_ERROR;
+	    }
+	}
+    }
 
     /* Marshal the arguments. */
     for (i = 0; i < objc; i++) {
