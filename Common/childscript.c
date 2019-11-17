@@ -41,6 +41,7 @@
 #endif /*]*/
 
 #include "actions.h"
+#include "appres.h"
 #include "child.h"
 #include "popups.h"
 #include "child_popups.h"
@@ -1297,6 +1298,10 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     action_debug("Prompt", ia, argc, argv);
     if (check_argc("Prompt", argc, 0, 3) < 0) {
 	return false;
+    }
+
+    if (appres.alias != NULL) {
+	params[0] = appres.alias;
     }
 
     for (i = 0; i < argc; i++) {
