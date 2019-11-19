@@ -100,7 +100,6 @@ typedef struct {
 	Boolean debug_tracing;
 	Boolean disconnect_clear;
 	Boolean highlight_bold;
-	Boolean color8;
 	Boolean bsd_tm;
 	Boolean trace_monitor;
 	Boolean idle_command_enabled;

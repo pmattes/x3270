@@ -951,7 +951,6 @@ static res_t base_resources[] = {
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
     { ResCharset,	aoffset(codepage),	XRM_STRING },
     { ResCodePage,	aoffset(codepage),	XRM_STRING },
-    { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },

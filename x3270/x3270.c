@@ -1183,7 +1183,6 @@ copy_xres_to_res_bool(void)
     copy_bool(debug_tracing);
     copy_bool(disconnect_clear);
     copy_bool(highlight_bold);
-    copy_bool(color8);
     copy_bool(bsd_tm);
     copy_bool(trace_monitor);
     copy_bool(idle_command_enabled);

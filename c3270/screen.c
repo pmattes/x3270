@@ -321,8 +321,7 @@ screen_init(void)
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
-	ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))?
-	    TS_ON: TS_OFF;
+	ab_mode = (appres.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
     }
     if (ab_mode == TS_ON) {
 	defattr |= A_BOLD;
@@ -528,7 +527,7 @@ finish_screen_init(void)
 	}
 #endif /*]*/
 	if (has_colors() && COLORS >= 8) {
-	    if (!appres.color8 && COLORS >= 16) {
+	    if (COLORS >= 16) {
 		cmap = cmap16;
 		field_colors = field_colors16;
 		defcolor_offset = 8;
@@ -546,9 +545,6 @@ finish_screen_init(void)
 			bg_color);
 		xhattr = get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color);
-	    }
-	    if (COLORS < 16) {
-		appres.color8 = true;
 	    }
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
 	    if (def_screen != alt_screen) {

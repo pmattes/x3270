@@ -315,8 +315,6 @@ XtResource xresources[] = {
       boffset(disconnect_clear), XtRString, ResFalse },
     { ResHighlightBold, ClsHighlightBold, XtRBoolean, sizeof(Boolean),
       boffset(highlight_bold), XtRString, ResFalse },
-    { ResColor8, ClsColor8, XtRBoolean, sizeof(Boolean),
-      boffset(color8), XtRString, ResFalse },
     { ResBsdTm, ClsBsdTm, XtRBoolean, sizeof(Boolean),
       boffset(bsd_tm), XtRString, ResFalse },
     { ResTraceMonitor, ClsTraceMonitor, XtRBoolean, sizeof(Boolean),

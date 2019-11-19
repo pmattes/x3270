@@ -497,24 +497,6 @@ if wc
 endif
 .
 
-name color8
-applies a
-groups p
-type b
-default false
-description
-    If true, %p% will respond to a Query(Color) with a list of 8
-    supported colors.  If false, it will send a list
-    of 16 colors.  The 8-color setting is required for some hosts which
-    abort a session if 16 colors are reported.
-if c
-    <p class=indented>
-    This setting will also cause %p% to assume that the terminal supports
-    no more than 8 colors, and will use only the 8 basic curses colors to draw
-    the screen.
-endif
-.
-
 name colorBackground
 applies x
 groups a

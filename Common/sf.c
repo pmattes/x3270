@@ -710,15 +710,13 @@ static void
 do_qr_color(void)
 {
     int i;
-    int color_max;
+    int color_max = 16;
 
     trace_ds("> QueryReply(Color)\n");
 
-    color_max = (appres.color8 || !appres.m3279)? 8: 16;
-
     space3270out(4 + 2*15);
     *obptr++ = 0x00;		/* no options */
-    *obptr++ = color_max;	/* report on 8 or 16 colors */
+    *obptr++ = color_max;	/* 16 colors */
     *obptr++ = 0x00;		/* default color: */
     *obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
     for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {

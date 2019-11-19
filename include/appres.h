@@ -54,7 +54,6 @@ typedef struct {
     bool	 debug_tracing;
     bool	 disconnect_clear;
     bool	 highlight_bold;
-    bool	 color8;
     bool	 bsd_tm;
     bool	 unlock_delay;
     bool	 qr_bg_color;
