@@ -526,7 +526,7 @@ main(int argc, char *argv[])
 #endif /*]*/
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-    printf("%s\nType 'show copyright' for full copyright information.\n\
+    printf("%s\n\nType 'show copyright' for full copyright information.\n\
 Type 'help' for help information.\n\n",
 	    get_about());
 

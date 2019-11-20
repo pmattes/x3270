@@ -195,7 +195,7 @@ get_tx(void)
 const char *
 get_about(void)
 {
-    return lazyaf("%s\n\nCopyright 1989-%s by Paul Mattes, GTRC and others.",
+    return lazyaf("%s\nCopyright 1989-%s by Paul Mattes, GTRC and others.",
 	    build, cyear);
 }
 
