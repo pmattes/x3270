@@ -526,7 +526,9 @@ main(int argc, char *argv[])
 #endif /*]*/
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-    printf("%s\nType 'help' for help information.\n\n", get_about());
+    printf("%s\nType 'show copyright' for full copyright information.\n\
+Type 'help' for help information.\n\n",
+	    get_about());
 
     if (appres.secure) {
 	/* We don't allow a command line in secure mode. */
