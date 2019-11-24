@@ -2349,6 +2349,7 @@ process_bind(unsigned char *buf, size_t buflen)
 		}
 	    }
 #endif /*]*/
+	    status_lu(plu_name);
 	}
     }
 
@@ -2470,6 +2471,8 @@ process_eor(void)
 		trace_ds("< UNBIND %s\n", unbind_reason(ibuf[EH_SIZE]));
 	    }
 	    tn3270e_bound = 0;
+	    /* Go back to the connected LU. */
+	    status_lu(connected_lu);
 	    /*
 	     * Undo any screen-sizing effects from a previous BIND.
 	     */
