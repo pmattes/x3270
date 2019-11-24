@@ -496,7 +496,7 @@ static int trace_reason;
 
 /* Create a trace file header. */
 static char *
-create_tracefile_header(const char *mode)
+create_tracefile_header(const char *trace_mode)
 {
     char *buf;
     int i;
@@ -506,7 +506,7 @@ create_tracefile_header(const char *mode)
     tracef_bufptr = buf;
 
     /* Display current status */
-    wtrace(true, "Trace %s\n", mode);
+    wtrace(true, "Trace %s\n", trace_mode);
     wtrace(false, " Version: %s\n", build);
     wtrace(false, " Build options: %s\n", build_options());
     save_yourself();
@@ -514,10 +514,10 @@ create_tracefile_header(const char *mode)
     wtrace(false, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
     wtrace(false, ", %s display",
 	    appres.interactive.mono? "monochrome": "color");
-    if (appres.extended) {
+    if (mode.extended) {
 	wtrace(false, ", extended data stream");
     }
-    wtrace(false, ", %s emulation", appres.m3279 ? "color" : "monochrome");
+    wtrace(false, ", %s emulation", mode.m3279 ? "color" : "monochrome");
     wtrace(false, ", code page %s", get_codepage_name());
     if (toggled(APL_MODE)) {
 	wtrace(false, ", APL mode");

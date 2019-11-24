@@ -631,7 +631,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	termtype = "IBM-DYNAMIC";
     } else if (HOST_FLAG(STD_DS_HOST)) {
 	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
-		appres.m3279? '9': '8', model_num);
+		mode.m3279? '9': '8', model_num);
 	termtype = ttype_tmpval;
     } else {
 	termtype = full_model_name;

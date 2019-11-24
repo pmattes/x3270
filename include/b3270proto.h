@@ -139,7 +139,7 @@
 #define AttrVerified	"verified"
 #define AttrVersion	"version"
 
-/* OIA fields */
+/* OIA fields. */
 #define OiaNotUndera	"not-undera"
 #define OiaCompose	"compose"
 #define OiaInsert	"insert"
@@ -150,6 +150,9 @@
 #define OiaScript	"script"
 #define OiaTiming	"timing"
 #define OiaTypeahead	"typeahead"
+
+/* Toggles. */
+#define ToggleExtended	"extended"
 
 /* Values. */
 #define ValTrue		"true"

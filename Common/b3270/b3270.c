@@ -538,7 +538,7 @@ canonical_modelx(const char *res, bool color, bool extended)
 static char *
 canonical_model(const char *res)
 {
-    return canonical_modelx(res, appres.m3279, appres.extended);
+    return canonical_modelx(res, mode.m3279, mode.extended);
 }
 
 /*
@@ -570,7 +570,7 @@ toggle_extended(const char *name _is_unused, const char *value)
     const char *errmsg = boolstr(value, &pending_extended_value);
 
     if (errmsg != NULL) {
-	popup_an_error("%s %s", ResExtended, errmsg);
+	popup_an_error("%s %s", ToggleExtended, errmsg);
 	return false;
     }
 
@@ -636,14 +636,14 @@ toggle_model_done(bool success)
 
     if (PCONNECTED) {
 	popup_an_error("Toggle: Cannot change %s, %s or %s while "
-		"connected", ResModel, ResOversize, ResExtended);
+		"connected", ResModel, ResOversize, ToggleExtended);
 	goto fail;
     }
 
     /* Reconcile simultaneous changes. */
     if (pending_model != NULL) {
-	char *canon = canonical_modelx(pending_model, appres.m3279,
-		pending_extended? pending_extended_value: appres.extended);
+	char *canon = canonical_modelx(pending_model, mode.m3279,
+		pending_extended? pending_extended_value: mode.extended);
 
 	if (canon == NULL) {
 	    popup_an_error("Toggle(%s): value must be 327{89}-{2345}[-E]",
@@ -658,7 +658,7 @@ toggle_model_done(bool success)
 	/* Adding -E to the model will implicitly turn on extended mode. */
 	if (strlen(pending_model) == 8 && 
 		!pending_extended &&
-		!appres.extended) {
+		!mode.extended) {
 	    pending_extended = true;
 	    pending_extended_value = true;
 	    implicit_extended_change = true;
@@ -672,7 +672,7 @@ toggle_model_done(bool success)
 	    Replace(pending_oversize, NewString(""));
 	}
     } else {
-	extended = appres.extended;
+	extended = mode.extended;
     }
 
     if (pending_oversize != NULL) {
@@ -699,30 +699,30 @@ toggle_model_done(bool success)
     old.cols = COLS;
     old.ov_rows = ov_rows;
     old.ov_cols = ov_cols;
-    old.m3279 = appres.m3279;
+    old.m3279 = mode.m3279;
     old.alt = screen_alt;
-    old.extended = appres.extended;
+    old.extended = mode.extended;
 
     /* Change settings. */
     if (pending_model != NULL) {
 	model_number = digit - '0';
-	appres.m3279 = color == '9';
+	mode.m3279 = color == '9';
     } else {
 	model_number = model_num;
     }
-    appres.extended = extended;
+    mode.extended = extended;
     set_rows_cols(model_number, ovc, ovr);
 
     if (model_num != model_number ||
 	    ov_rows != (int)ovr ||
 	    ov_cols != (int)ovc) {
 	/* Failed. Restore the old settings. */
-	appres.m3279 = old.m3279;
+	mode.m3279 = old.m3279;
 	set_rows_cols(old.model_num, old.ov_cols, old.ov_rows);
 	ROWS = old.rows;
 	COLS = old.cols;
 	screen_alt = old.alt;
-	appres.extended = old.extended;
+	mode.extended = old.extended;
 	return false;
     }
 
@@ -743,11 +743,12 @@ toggle_model_done(bool success)
 	Replace(appres.model, pending_model);
     }
     if (pending_extended && pending_model == NULL) {
+	Replace(appres.model, model_name);
 	force_toggle_notify(ResModel);
     }
     pending_model = NULL;
     if (implicit_extended_change) {
-	force_toggle_notify(ResExtended);
+	force_toggle_notify(ToggleExtended);
     }
     if (pending_oversize != NULL) {
 	if (*pending_oversize) {
@@ -1056,8 +1057,8 @@ b3270_register(void)
 	    canonical_model, (void **)&appres.model, XRM_STRING);
     register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
 	    NULL, (void **)&appres.oversize, XRM_STRING);
-    register_extended_toggle(ResExtended, toggle_extended, toggle_model_done,
-	    NULL, (void **)&appres.extended, XRM_BOOLEAN);
+    register_extended_toggle(ToggleExtended, toggle_extended, toggle_model_done,
+	    NULL, (void **)&mode.extended, XRM_BOOLEAN);
     register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,
 	    NULL, (void **)&appres.nop_seconds, XRM_INT);
 

@@ -1297,12 +1297,12 @@ screen_init(void)
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
-	ab_mode = appres.m3279? TS_ON: TS_OFF;
+	ab_mode = mode.m3279? TS_ON: TS_OFF;
     }
 
     /* If the want monochrome, assume they want green. */
     /* XXX: I believe that init_user_colors makes this a no-op. */
-    if (!appres.m3279) {
+    if (!mode.m3279) {
 	defattr |= FOREGROUND_GREEN;
 	xhattr |= FOREGROUND_GREEN;
 	if (ab_mode == TS_ON) {
@@ -1454,7 +1454,7 @@ color3270_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-    if (appres.m3279) {
+    if (mode.m3279) {
 	int fg;
 
 	fg = color3270_from_fa(fa);
@@ -1561,7 +1561,7 @@ init_user_colors(void)
 	init_user_color(host_color[i].name, host_color[i].index);
     }
 
-    if (appres.m3279) {
+    if (mode.m3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	crosshair_color_init();
@@ -1623,7 +1623,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     /* Compute the color. */
 
     /* Monochrome is easy, and so is color if nothing is specified. */
-    if (!appres.m3279 ||
+    if (!mode.m3279 ||
 	    (!ea_buf[baddr].fg &&
 	     !ea_buf[fa_addr].fg &&
 	     !ea_buf[baddr].bg &&
@@ -1664,7 +1664,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     }
 
     if (!toggled(UNDERSCORE) &&
-	    appres.m3279 &&
+	    mode.m3279 &&
 	    (gr & (GR_BLINK | GR_UNDERLINE)) &&
 	    !(gr & GR_REVERSE) &&
 	    !bg) {
@@ -1672,7 +1672,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
 	a |= BACKGROUND_INTENSITY;
     }
 
-    if (!appres.m3279 &&
+    if (!mode.m3279 &&
 	    ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa))) {
 
 	a |= FOREGROUND_INTENSITY;
@@ -3087,7 +3087,7 @@ draw_oia(void)
     int i, j;
     int cursor_col = (cursor_addr % cCOLS);
     int fl_cursor_col = flipped? (console_cols - 1 - cursor_col): cursor_col;
-    int oia_attr = appres.m3279 ?
+    int oia_attr = mode.m3279 ?
 	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
 	   defattr;
     char *status_msg_now;
@@ -3144,7 +3144,7 @@ draw_oia(void)
     }
 
     /* Offsets 0, 1, 2 */
-    if (appres.m3279) {
+    if (mode.m3279) {
 	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | cmap_bg[HOST_COLOR_GREY]);
     } else {
 	attrset(reverse_colors(defattr));

@@ -196,7 +196,7 @@ save_empty(void)
     memset(saved_s, 0, ss);
     for (i = 0; i < maxROWS * maxCOLS; i++) {
 	saved_s[i].ccode = ' ';
-	saved_s[i].fg = appres.m3279? HOST_COLOR_BLUE: HOST_COLOR_NEUTRAL_WHITE;
+	saved_s[i].fg = mode.m3279? HOST_COLOR_BLUE: HOST_COLOR_NEUTRAL_WHITE;
 	saved_s[i].bg = HOST_COLOR_NEUTRAL_BLACK;
     }
 }
@@ -210,8 +210,8 @@ emit_erase(int rows, int cols)
     ui_vleaf(IndErase,
 	    AttrLogicalRows, switched? lazyaf("%d", rows) : NULL,
 	    AttrLogicalColumns, switched? lazyaf("%d", cols) : NULL,
-	    AttrFg, appres.m3279? "blue": NULL,
-	    AttrBg, appres.m3279? "neutralBlack": NULL,
+	    AttrFg, mode.m3279? "blue": NULL,
+	    AttrBg, mode.m3279? "neutralBlack": NULL,
 	    NULL);
 }
 
@@ -232,9 +232,9 @@ internal_screen_init(void)
 	    AttrModel, lazyaf("%d", model_num),
 	    AttrRows, lazyaf("%d", maxROWS),
 	    AttrColumns, lazyaf("%d", maxCOLS),
-	    AttrColor, appres.m3279? ValTrue: ValFalse,
+	    AttrColor, mode.m3279? ValTrue: ValFalse,
 	    AttrOversize, ov_rows || ov_cols? ValTrue: ValFalse,
-	    AttrExtended, appres.extended? ValTrue: ValFalse,
+	    AttrExtended, mode.extended? ValTrue: ValFalse,
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);
@@ -284,7 +284,7 @@ color_from_fa(unsigned char fa)
 	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 };
 
-    if (appres.m3279) {
+    if (mode.m3279) {
 	return field_colors[DEFCOLOR_MAP(fa)];
     } else {
 	return HOST_COLOR_NEUTRAL_WHITE;
@@ -356,7 +356,7 @@ render_screen(struct ea *ea, screen_t *s)
     memset(s, 0, maxROWS * maxCOLS * sizeof(screen_t));
     for (i = 0; i < maxROWS * maxCOLS; i++) {
 	s[i].ccode = ' ';
-	s[i].fg = appres.m3279? HOST_COLOR_BLUE : HOST_COLOR_NEUTRAL_WHITE;
+	s[i].fg = mode.m3279? HOST_COLOR_BLUE : HOST_COLOR_NEUTRAL_WHITE;
 	s[i].bg = HOST_COLOR_NEUTRAL_BLACK;
     }
 
@@ -537,8 +537,8 @@ render_screen(struct ea *ea, screen_t *s)
 
 	    s[si].ccode = (toggled(VISIBLE_CONTROL) && ea[i].fa)?
 		visible_fa(ea[i].fa): uc;
-	    s[si].fg = appres.m3279? fg_color: HOST_COLOR_NEUTRAL_WHITE;
-	    s[si].bg = appres.m3279? bg_color: HOST_COLOR_NEUTRAL_BLACK;
+	    s[si].fg = mode.m3279? fg_color: HOST_COLOR_NEUTRAL_WHITE;
+	    s[si].bg = mode.m3279? bg_color: HOST_COLOR_NEUTRAL_BLACK;
 
 	    if ((fa_gr | ea[i].gr) & GR_UNDERLINE) {
 		s[si].gr |= XX_UNDERLINE;
@@ -552,7 +552,7 @@ render_screen(struct ea *ea, screen_t *s)
 	    if (FA_IS_SELECTABLE(fa)) {
 		s[si].gr |= XX_SELECTABLE;
 	    }
-	    if (!appres.m3279 && ((fa_gr | ea[i].gr) & GR_REVERSE)) {
+	    if (!mode.m3279 && ((fa_gr | ea[i].gr) & GR_REVERSE)) {
 		s[si].gr |= XX_REVERSE;
 	    }
 	    if (dbcs) {
@@ -975,7 +975,7 @@ screen_scroll(unsigned char fg, unsigned char bg)
     int i;
 
     if (!fg) {
-	fg = appres.m3279? HOST_COLOR_BLUE: HOST_COLOR_NEUTRAL_WHITE;
+	fg = mode.m3279? HOST_COLOR_BLUE: HOST_COLOR_NEUTRAL_WHITE;
     }
     if (!bg) {
 	bg = HOST_COLOR_NEUTRAL_BLACK;

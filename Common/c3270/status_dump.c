@@ -123,8 +123,8 @@ status_dump(void)
 	    get_message("model"), model_name,
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
-	    appres.m3279? get_message("fullColor"): get_message("mono"),
-	    (appres.extended && !HOST_FLAG(STD_DS_HOST))?
+	    mode.m3279? get_message("fullColor"): get_message("mono"),
+	    (mode.extended && !HOST_FLAG(STD_DS_HOST))?
 		get_message("extendedDs"): get_message("standardDs"));
     vb_appendf(&r, "%s %s\n", get_message("terminalName"), termtype);
     clu = net_query_lu_name();

@@ -226,6 +226,12 @@ extern char		*commondocs3270;
 extern unsigned		windirs_flags;
 #endif /*]*/
 
+typedef struct {
+    bool		m3279;		/* 3270 (color) mode */
+    bool		extended;	/* 3270 extended (-E) mode */
+} xmode_t;
+extern xmode_t mode;
+
 /* Data types and complex global variables */
 
 /*   connection state */

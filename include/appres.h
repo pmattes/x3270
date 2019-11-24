@@ -43,8 +43,6 @@
 
 typedef struct {
     /* Common options. */
-    bool	 extended;
-    bool	 m3279;
     bool	 modified_sel;
     bool	 once;
     bool	 scripted;

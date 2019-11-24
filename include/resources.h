@@ -98,7 +98,6 @@
 #define ResEof			"eof"
 #define ResErase		"erase"
 #define ResEventTrace		"eventTrace"
-#define ResExtended		"extended"
 #define ResFixedSize		"fixedSize"
 #define ResFtAllocation		"ftAllocation"
 #define ResFtAvblock		"ftAvblock"
@@ -153,7 +152,6 @@
 #define ResLoginMacro		"loginMacro"
 #define ResLockedCursor		"lockedCursor"
 #define ResLuCommandLine	"printer.luCommandLine"
-#define ResM3279		"m3279"
 #define ResMacros		"macros"
 #define ResMarginedPaste	"marginedPaste"
 #define ResMaxRecent		"maxRecent"
@@ -254,7 +252,6 @@
 #define DotDevName		"." ResDevName
 #define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
-#define DotExtended		"." ResExtended
 #define DotHostsFile		"." ResHostsFile
 #define DotHttpd		"." ResHttpd
 #define DotInputMethod		"." ResInputMethod
@@ -264,7 +261,6 @@
 #define DotKeypadOn		"." ResKeypadOn
 #define DotKeyPasswd		"." ResKeyPasswd
 #define DotLoginMacro		"." ResLoginMacro
-#define DotM3279		"." ResM3279
 #define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -343,7 +339,6 @@
 #define ClsEof			"Eof"
 #define ClsErase		"Erase"
 #define ClsEventTrace		"EventTrace"
-#define ClsExtended		"Extended"
 #define ClsFixedSize		"FixedSize"
 #define ClsFtAllocation		"FtAllocation"
 #define ClsFtAvblock		"FtAvblock"
@@ -390,7 +385,6 @@
 #define ClsLnext		"Lnext"
 #define ClsLockedCursor		"LockedCursor"
 #define ClsLoginMacro		"LoginMacro"
-#define ClsM3279		"M3279"
 #define ClsMacros		"Macros"
 #define ClsMarginedPaste	"MarginedPaste"
 #define ClsMaxRecent		"MaxRecent"
@@ -483,7 +477,6 @@
 #define OptDevName		"-devname"
 #define OptTrace		"-trace"
 #define OptEmulatorFont		"-efont"
-#define OptExtended		"-extended"
 #define OptHostsFile		"-hostsfile"
 #define OptHttpd		"-httpd"
 #define OptIconName		"-iconname"
@@ -498,7 +491,6 @@
 #define OptLocalCp		"-localcp"
 #define OptLocalProcess		"-e"
 #define OptLoginMacro		"-loginmacro"
-#define OptM3279		"-color"
 #define OptMinVersion		"-minversion"
 #define OptModel		"-model"
 #define OptMono			"-mono"

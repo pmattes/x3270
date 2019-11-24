@@ -352,16 +352,16 @@ model_init(void)
 	model_number = 4;
     }
     if (appres.interactive.mono) {
-	appres.m3279 = false;
+	mode.m3279 = false;
     }
 
-    if (!appres.extended) {
+    if (!mode.extended) {
 	appres.oversize = NULL;
     }
 
     ovc = 0;
     ovr = 0;
-    if (appres.extended && appres.oversize != NULL) {
+    if (mode.extended && appres.oversize != NULL) {
 	if (product_auto_oversize() && !strcasecmp(appres.oversize, "auto")) {
 	    ovc = -1;
 	    ovr = -1;
@@ -432,8 +432,8 @@ static void
 set_appres_defaults(void)
 {
     /* Set the defaults. */
-    appres.extended = true;
-    appres.m3279 = true;
+    mode.extended = true;
+    mode.m3279 = true;
     appres.debug_tracing = true;
     appres.conf_dir = LIBX3270DIR;
 
@@ -892,9 +892,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = true;
+	    mode.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -958,7 +958,6 @@ static res_t base_resources[] = {
     { ResDevName,	aoffset(devname),	XRM_STRING },
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
-    { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
     { ResFtAllocation,	aoffset(ft.allocation),	XRM_STRING },
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
@@ -991,7 +990,6 @@ static res_t base_resources[] = {
     { ResLocalCp,	aoffset(local_cp),	XRM_INT },
 #endif /*]*/
     { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
-    { ResM3279,	aoffset(m3279),			XRM_BOOLEAN },
     { ResModel,	aoffset(model),			XRM_STRING },
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },

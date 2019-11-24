@@ -425,7 +425,7 @@ status_reinit(unsigned cmask)
     }
     if (cmask & (COLOR_CHANGE | MODEL_CHANGE)) {
 	for (i = 0; i < SSZ; i++) {
-	    status_line[i].color = appres.m3279 ? colors3279[i] : colors[i];
+	    status_line[i].color = mode.m3279 ? colors3279[i] : colors[i];
 	}
     }
 
@@ -1143,7 +1143,7 @@ paint_msg(enum msg t)
     oia_msg = t;
     (*msg_proc[(int)t])();
     if (!appres.interactive.mono) {
-	status_line[WAIT_REGION].color = appres.m3279 ?
+	status_line[WAIT_REGION].color = mode.m3279 ?
 	    msg_color3279[(int)t] : msg_color[(int)t];
     }
 }

@@ -275,10 +275,6 @@ XtResource xresources[] = {
 
     { ResMono, ClsMono, XtRBoolean, sizeof(Boolean),
       boffset(interactive.mono), XtRString, ResFalse },
-    { ResExtended, ClsExtended, XtRBoolean, sizeof(Boolean),
-      boffset(extended), XtRString, ResTrue },
-    { ResM3279, ClsM3279, XtRBoolean, sizeof(Boolean),
-      boffset(m3279), XtRString, ResTrue },
     { ResMenuBar, ClsMenuBar, XtRBoolean, sizeof(Boolean),
       boffset(interactive.menubar), XtRString, ResTrue },
     { ResVisualBell, ClsVisualBell, XtRBoolean, sizeof(Boolean),

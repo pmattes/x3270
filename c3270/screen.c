@@ -321,7 +321,7 @@ screen_init(void)
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
-	ab_mode = (appres.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
+	ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
     }
     if (ab_mode == TS_ON) {
 	defattr |= A_BOLD;
@@ -535,7 +535,7 @@ finish_screen_init(void)
 		    bg_color += defcolor_offset;
 		}
 	    }
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
 			bg_color);
 		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
@@ -566,7 +566,7 @@ finish_screen_init(void)
 #endif /*]*/
 	} else {
 	    appres.interactive.mono = true;
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	    /* Get the terminal name right. */
 	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
@@ -810,7 +810,7 @@ default_color_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-    if (appres.m3279) {
+    if (mode.m3279) {
 	int fg;
 
 	fg = default_color_from_fa(fa);
@@ -888,7 +888,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
      * Monochrome is easy, and so is color if nothing is
      * specified.
      */
-    if (!appres.m3279 ||
+    if (!mode.m3279 ||
 	    (!ea_buf[baddr].fg &&
 	     !ea_buf[fa_addr].fg &&
 	     !ea_buf[baddr].bg &&
@@ -1080,7 +1080,7 @@ screen_disp(bool erasing _is_unused)
 	int norm, high;
 
 	if (menu_is_up) {
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
 	    } else {
@@ -1088,7 +1088,7 @@ screen_disp(bool erasing _is_unused)
 		high = defattr | A_BOLD;
 	    }
 	} else {
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 	    } else {
@@ -1151,7 +1151,7 @@ screen_disp(bool erasing _is_unused)
 		if (!u) {
 		    abort();
 		}
-		if (appres.m3279) {
+		if (mode.m3279) {
 		    if (highlight) {
 			attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
 				    HOST_COLOR_NEUTRAL_WHITE));
@@ -2367,7 +2367,7 @@ draw_oia(void)
 	status_im? 'I': ' ',
 	oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	if (appres.m3279) {
+	if (mode.m3279) {
 	    attrset(get_color_pair(defcolor_offset +
 			((status_secure == SS_SECURE)?
 			 COLOR_GREEN: COLOR_YELLOW),

@@ -145,7 +145,6 @@ XrmOptionDescRec base_options[]= {
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
     { OptTrace,		DotTrace,	XrmoptionNoArg,		ResTrue },
     { OptEmulatorFont,	DotEmulatorFont,XrmoptionSepArg,	NULL },
-    { OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
     { OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
     { OptHttpd,		DotHttpd,	XrmoptionSepArg,	NULL },
     { OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
@@ -157,7 +156,6 @@ XrmOptionDescRec base_options[]= {
     { OptKeypadOn,	DotKeypadOn,	XrmoptionNoArg,		ResTrue },
     { OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
     { OptLoginMacro,	DotLoginMacro,	XrmoptionSepArg,	NULL },
-    { OptM3279,		DotM3279,	XrmoptionNoArg,		ResTrue },
     { OptMinVersion,	DotMinVersion,	XrmoptionSepArg,	NULL },
     { OptModel,		DotModel,	XrmoptionSepArg,	NULL },
     { OptMono,		DotMono,	XrmoptionNoArg,		ResTrue },
@@ -224,7 +222,6 @@ static struct option_help {
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
     { OptEmulatorFont, "<font>", "Font for emulator window" },
-    { OptExtended, NULL, "Extended 3270 data stream (deprecated)" },
     { OptHttpd, "[<addr>:]<port>", "TCP port to listen on for http requests" },
     { OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
     { OptIconName, "<name>", "Title for icon" },
@@ -239,7 +236,6 @@ static struct option_help {
     { OptKeyPasswd, "file:<filename>|string:<text>",
 	"TLS private key password", SSL_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
-    { OptM3279, NULL, "3279 emulation (deprecated)" },
     { OptMinVersion, "<version>", "Fail unless at this version or greater" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
@@ -664,9 +660,9 @@ main(int argc, char *argv[])
     }
     if (appres.interactive.mono) {
 	xappres.use_cursor_color = False;
-	appres.m3279 = false;
+	mode.m3279 = false;
     }
-    if (!appres.extended) {
+    if (!mode.extended) {
 	appres.oversize = NULL;
     }
     if (appres.secure) {
@@ -741,7 +737,7 @@ main(int argc, char *argv[])
     /* Initialize fonts. */
     font_init();
 
-    if (!appres.extended || appres.oversize == NULL ||
+    if (!mode.extended || appres.oversize == NULL ||
 	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 	ovc = 0;
 	ovr = 0;
@@ -879,9 +875,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = true;
+	    mode.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -1167,8 +1163,6 @@ copy_xres_to_res_bool(void)
     int i;
 #   define copy_bool(field)	appres.field = xappres.bools.field
 
-    copy_bool(extended);
-    copy_bool(m3279);
     copy_bool(once);
     copy_bool(scripted);
     copy_bool(modified_sel);
