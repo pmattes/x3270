@@ -139,6 +139,18 @@
 #define AttrVerified	"verified"
 #define AttrVersion	"version"
 
+/* OIA fields */
+#define OiaNotUndera	"not-undera"
+#define OiaCompose	"compose"
+#define OiaInsert	"insert"
+#define OiaLock		"lock"
+#define OiaLu		"lu"
+#define OiaReverseInput	"reverse-input"
+#define OiaScreentrace	"screentrace"
+#define OiaScript	"script"
+#define OiaTiming	"timing"
+#define OiaTypeahead	"typeahead"
+
 /* Values. */
 #define ValTrue		"true"
 #define ValFalse	"false"

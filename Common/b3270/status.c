@@ -78,7 +78,7 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    AttrField, "compose",
+	    AttrField, OiaCompose,
 	    AttrValue, ValTrueFalse(on),
 	    AttrChar, on? lazyaf("U+%04%x", ucs4): NULL,
 	    AttrType, on? ((keytype == KT_STD)? "std": "ge"): NULL,
@@ -96,8 +96,8 @@ status_ctlr_done(void)
     oia_undera = true;
 
     ui_vleaf(IndOia,
-	    AttrField, "not-undera",
-	    AttrValue, "false",
+	    AttrField, OiaNotUndera,
+	    AttrValue, ValFalse,
 	    NULL);
 }
 
@@ -112,7 +112,7 @@ status_insert_mode(bool on)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    AttrField, "insert",
+	    AttrField, OiaInsert,
 	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }
@@ -135,7 +135,7 @@ status_lu(const char *s)
     }
 
     ui_vleaf(IndOia,
-	    AttrField, "lu",
+	    AttrField, OiaLu,
 	    AttrValue, s,
 	    NULL);
 }
@@ -147,7 +147,7 @@ status_lock(char *msg)
     Replace(saved_lock, msg);
     if (!scrolled && !flashing) {
 	ui_vleaf(IndOia,
-		AttrField, "lock",
+		AttrField, OiaLock,
 		AttrValue, saved_lock,
 		NULL);
     }
@@ -217,14 +217,24 @@ status_reset(void)
 void
 status_reverse_mode(bool on)
 {
-    return;
+    static bool is_on = false;
+
+    if (on == is_on) {
+	return;
+    }
+    is_on = on;
+
+    ui_vleaf(IndOia,
+	    AttrField, OiaReverseInput,
+	    AttrValue, ValTrueFalse(on),
+	    NULL);
 }
 
 void
 status_screentrace(int n)
 {
     ui_vleaf(IndOia,
-	    AttrField, "screentrace",
+	    AttrField, OiaScreentrace,
 	    AttrValue, (n >= 0)? lazyaf("%d", n): NULL,
 	    NULL);
 }
@@ -240,7 +250,7 @@ status_script(bool on)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    AttrField, "script",
+	    AttrField, OiaScript,
 	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }
@@ -256,7 +266,7 @@ status_scrolled(int n)
 	scroll_n = n;
 	if (!flashing) {
 	    ui_vleaf(IndOia,
-		    AttrField, "lock",
+		    AttrField, OiaLock,
 		    AttrValue, lazyaf("scrolled %d", n),
 		    NULL);
 	}
@@ -268,7 +278,7 @@ status_scrolled(int n)
 	scroll_n = -1;
 	if (!flashing) {
 	    ui_vleaf(IndOia,
-		    AttrField, "lock",
+		    AttrField, OiaLock,
 		    AttrValue, saved_lock,
 		    NULL);
 	}
@@ -290,7 +300,7 @@ flash_done(ioid_t id _is_unused)
     } else {
 	/* Restore the lock message. */
 	ui_vleaf(IndOia,
-		AttrField, "lock",
+		AttrField, OiaLock,
 		AttrValue, saved_lock,
 		NULL);
     }
@@ -301,7 +311,7 @@ status_keyboard_disable_flash(void)
 {
     if (!flashing) {
 	ui_vleaf(IndOia,
-		AttrField, "lock",
+		AttrField, OiaLock,
 		AttrValue, "disabled",
 		NULL);
     }
@@ -333,7 +343,7 @@ status_timing(struct timeval *t0 _is_unused, struct timeval *t1 _is_unused)
     cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	 (t1->tv_usec - t0->tv_usec + 50000) / 100000;
     ui_vleaf(IndOia,
-	    AttrField, "timing",
+	    AttrField, OiaTiming,
 	    AttrValue, lazyaf("%lu.%lu", cs / 10, cs % 10),
 	    NULL);
 }
@@ -347,7 +357,7 @@ status_untiming(void)
     is_timed = false;
 
     ui_vleaf(IndOia,
-	    AttrField, "timing",
+	    AttrField, OiaTiming,
 	    NULL);
 }
 
@@ -362,7 +372,7 @@ status_twait(void)
     oia_undera = false;
 
     ui_vleaf(IndOia,
-	    AttrField, "not-undera",
+	    AttrField, OiaNotUndera,
 	    AttrValue, ValTrue,
 	    NULL);
 
@@ -380,7 +390,7 @@ status_typeahead(bool on _is_unused)
     is_on = on;
 
     ui_vleaf(IndOia,
-	    AttrField, "typeahead",
+	    AttrField, OiaTypeahead,
 	    AttrValue, ValTrueFalse(on),
 	    NULL);
 }
