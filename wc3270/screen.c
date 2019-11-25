@@ -2738,17 +2738,6 @@ toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     screen_disp(false);
 }
 
-/**
- * Toggle timing display.
- */
-static void
-toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
-{
-    if (!toggled(SHOW_TIMING)) {
-	status_untiming();
-    }
-}
-
 static void
 toggle_visibleControl(toggle_index_t ix _is_unused,
 	enum toggle_type tt _is_unused)
@@ -3204,13 +3193,9 @@ draw_oia(void)
     addch(oia_screentrace);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
-
-    if (toggled(SHOW_TIMING)) {
-	mvprintw(status_row, rmargin-14, "%s", oia_timing);
-    }
-
-    mvprintw(status_row, rmargin-7,
-	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
+    mvprintw(status_row, rmargin-14, "%s", oia_timing);
+    mvprintw(status_row, rmargin-7, "%03d/%03d", cursor_addr/cCOLS + 1,
+	    cursor_addr%cCOLS + 1);
 
     /* Now fill in the crosshair cursor in the status line. */
     if (in_focus &&
@@ -3589,7 +3574,6 @@ screen_register(void)
     static toggle_register_t toggles[] = {
 	{ ALT_CURSOR,		toggle_altCursor,	0 },
 	{ MONOCASE,		toggle_monocase,	0 },
-	{ SHOW_TIMING,		toggle_showTiming,	0 },
 	{ UNDERSCORE,		toggle_underscore,	0 },
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 },

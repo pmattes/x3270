@@ -922,19 +922,6 @@ description
     is used only if %-useCursorColor% is true.
 .
 
-name cursorPos
-applies x C
-groups a
-type b
-default true
-switch -set cursorPos
-switch -clear cursorPos
-option Options -&gt; Toggles -&gt; Track Cursor
-description
-    When true, causes %p% to display the cursor location in the OIA
-    (the status line).
-.
-
 name dbcsCgcsgid
 applies a
 groups p
@@ -2729,19 +2716,6 @@ desc
     X11 displays, selected text is in reverse video.
 .
 
-name showTiming
-applies x
-groups a
-type b
-default false
-switch -set showTiming
-switch -clear showTiming
-option Options -&gt; Toggles -&gt; Show Timing
-desc
-    When true, %p% will display on the OIA (status line) the time
-    that the host takes to unlock the keyboard after an AID is sent.
-.
-
 name socket
 applies u
 type b
@@ -2809,7 +2783,6 @@ desc
 &nbsp;&nbsp;&nbsp;togglesMenu.characterModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.crosshairOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.cursorBlinkOption.suppress<br>
-&nbsp;&nbsp;&nbsp;togglesMenu.cursorPosOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.extendedDsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineWrapOption.suppress<br>
@@ -2820,7 +2793,6 @@ desc
 &nbsp;&nbsp;&nbsp;togglesMenu.overlayPasteOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.rectangleSelectOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.scrollBarOption.suppress<br>
-&nbsp;&nbsp;&nbsp;togglesMenu.showTimingOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.underlineCursorOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.visibleControlOption.suppress
 .

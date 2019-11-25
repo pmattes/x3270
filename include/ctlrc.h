@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015, 2018 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@ int next_unprotected(int baddr0);
 enum pds process_ds(unsigned char *buf, size_t buflen);
 void ps_process(void);
 void set_rows_cols(int mn, int ovc, int ovr);
-void ticking_start(bool anyway);
+void ticking_start(void);
 void ctlr_register(void);
 
 enum dbcs_state {

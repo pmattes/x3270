@@ -2714,17 +2714,6 @@ toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     ctlr_changed(0, ROWS*COLS);
 }
 
-/**
- * Toggle timing display.
- */
-static void
-toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
-{
-    if (!toggled(SHOW_TIMING)) {
-	status_untiming();
-    }
-}
-
 /*
  * Toggle screen flip
  */
@@ -6445,7 +6434,6 @@ screen_register(void)
 	{ MONOCASE,		toggle_monocase,	0 },
 	{ ALT_CURSOR,		toggle_altCursor,	0 },
 	{ CURSOR_BLINK,		toggle_cursorBlink,	0 },
-	{ SHOW_TIMING,		toggle_showTiming,	0 },
 	{ CROSSHAIR,		toggle_crosshair,	0 },
 	{ VISIBLE_CONTROL,	toggle_visible_control, 0 },
 	{ SCROLL_BAR,		toggle_scrollBar,	0 },

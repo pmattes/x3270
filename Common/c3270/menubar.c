@@ -828,7 +828,6 @@ menu_callback file_menu_actions[FM_COUNT] = {
 typedef enum {
     OM_MONOCASE,
     OM_BLANKFILL,
-    OM_TIMING,
     OM_CROSSHAIR,
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
@@ -843,7 +842,6 @@ cmenu_item_t *options_menu_items[OM_COUNT];
 toggle_index_t option_index[OM_COUNT] = {
     MONOCASE,
     BLANK_FILL,
-    SHOW_TIMING,
     CROSSHAIR,
     UNDERSCORE,
 #if defined(WC3270) /*[*/
@@ -856,7 +854,6 @@ toggle_index_t option_index[OM_COUNT] = {
 char *option_names[OM_COUNT] = {
     "Monocase",
     "Blank Fill",
-    "Show Timing",
     "Crosshair Cursor",
     "Underscore Mode",
 #if defined(WC3270) /*[*/

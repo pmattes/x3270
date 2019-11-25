@@ -313,9 +313,8 @@ set_formatted(void)
 static void
 ctlr_half_connect(bool ignored _is_unused)
 {
-    ticking_start(true);
+    ticking_start();
 }
-
 
 /*
  * Called when a host connects, disconnects, or changes NVT/3270 modes.
@@ -2931,14 +2930,11 @@ keep_ticking(ioid_t id _is_unused)
 }
 
 void
-ticking_start(bool anyway)
+ticking_start()
 {
     gettimeofday(&t_start, (struct timezone *) 0);
     mticking = true;
 
-    if (!toggled(SHOW_TIMING) && !anyway) {
-	return;
-    }
     status_untiming();
     if (ticking) {
 	RemoveTimeOut(tick_id);

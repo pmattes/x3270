@@ -290,7 +290,6 @@ typedef enum {
     MONOCASE,		/* all-uppercase display */
     ALT_CURSOR,		/* block cursor */
     CURSOR_BLINK,	/* blinking cursor */
-    SHOW_TIMING,	/* display command execution time in the OIA */
     TRACING,		/* trace data and events */
     SCROLL_BAR,		/* include scroll bar */
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
