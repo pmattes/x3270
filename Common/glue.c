@@ -838,11 +838,15 @@ parse_set_clear(int *argcp, const char **argv)
 		break;
 	    }
 	}
-	if (toggle_names[j].name == NULL) {
+	if (toggle_names[j].name == NULL &&
+		!init_extended_toggle(argv[i], is_set)) {
 	    ccp_t *tn;
 	    int ntn = 0;
+	    int nx;
+	    char **nxnames;
 
-	    tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
+	    nxnames = extended_toggle_names(&nx);
+	    tn = (ccp_t *)Calloc(N_TOGGLES + nx, sizeof(ccp_t));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
 		if (!toggle_supported(toggle_names[j].index)) {
 		    continue;
@@ -851,6 +855,8 @@ parse_set_clear(int *argcp, const char **argv)
 		    tn[ntn++] = toggle_names[j].name;
 		}
 	    }
+	    memcpy(tn + ntn, nxnames, nx * sizeof(ccp_t));
+	    ntn += nx;
 	    qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
 	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
 		    argv[i]);

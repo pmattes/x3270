@@ -754,3 +754,57 @@ force_toggle_notify(const char *name)
     }
     Free(v);
 }
+
+/* Return the list of extended toggle names. */
+char **
+extended_toggle_names(int *countp)
+{
+    int count = 0;
+    toggle_extended_upcalls_t *u;
+    char **ret;
+
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	if (u->type == XRM_BOOLEAN) {
+	    count++;
+	}
+    }
+    *countp = count;
+    ret = (char **)lazya(Malloc(count * sizeof(char *)));
+    count = 0;
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	if (u->type == XRM_BOOLEAN) {
+	    ret[count++] = u->name;
+	}
+    }
+    return ret;
+}
+
+/* Find a Boolean extended toggle. */
+void *
+find_extended_toggle(const char *name, enum resource_type type)
+{
+    toggle_extended_upcalls_t *u;
+
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	if (u->type == type && !strcmp(name, u->name)) {
+	    return u->address;
+	}
+    }
+    return NULL;
+}
+
+/*
+ * Initialize an extended toggle from the command line.
+ * Returns true if there was a match.
+ */
+bool
+init_extended_toggle(const char *name, bool value)
+{
+    void *address = find_extended_toggle(name, XRM_BOOLEAN);
+
+    if (address != NULL) {
+	*(bool *)address = value;
+	return true;
+    }
+    return false;
+}

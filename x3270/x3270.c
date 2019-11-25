@@ -90,6 +90,12 @@
 #include "xselectc.h"
 #include "xstatus.h"
 
+/* Typedefs. */
+typedef struct {
+    bool *address;
+    bool value;
+} retoggle_t;
+
 /* Globals */
 const char     *programname;
 Display        *display;
@@ -120,11 +126,12 @@ static bool  colormap_failure = false;
 static void	parse_local_process(int *argcp, char **argv, char **cmds);
 #endif /*]*/
 static int	parse_model_number(char *m);
-static void	parse_set_clear(int *, char **);
+static retoggle_t *parse_set_clear(int *, char **);
 static void	label_init(void);
 static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
 static void	copy_xres_to_res_bool(void);
+static void	copy_xtoggle(retoggle_t *r);
 
 XrmOptionDescRec base_options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -414,6 +421,7 @@ main(int argc, char *argv[])
     bool mono = false;
     char *session = NULL;
     XtResource *res;
+    retoggle_t *r;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -480,7 +488,7 @@ main(int argc, char *argv[])
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */
-    parse_set_clear(&argc, argv);
+    r = parse_set_clear(&argc, argv);
 
     /* Save a copy of the command-line args for merging later. */
     save_args(argc, argv);
@@ -603,8 +611,12 @@ main(int argc, char *argv[])
 	    num_xresources, 0, 0);
     XtAppSetWarningMsgHandler(appcontext, old_emh);
 
-    /* Copy bool values. */
+    /* Copy bool values from xres to appres. */
     copy_xres_to_res_bool();
+
+    /* Write extended toggle values into appres. */
+    copy_xtoggle(r);
+    Free(r);
 
     /* Duplicate the strings in appres, so they can be reallocated later. */
     dup_resource_strings(res, num_resources);
@@ -1057,17 +1069,20 @@ name_cmp(const void *p1, const void *p2)
 /*
  * Pick out -set and -clear toggle options.
  */
-static void
+static retoggle_t *
 parse_set_clear(int *argcp, char **argv)
 {
     int i, j;
     int argc_out = 0;
     char **argv_out = (char **) XtMalloc((*argcp + 1) * sizeof(char *));
+    retoggle_t *r = NULL;
+    int nr = 0;
 
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
 	bool is_set = false;
+	bool found = false;
 
 	if (!strcmp(argv[i], OptSet)) {
 	    is_set = true;
@@ -1082,21 +1097,41 @@ parse_set_clear(int *argcp, char **argv)
 
 	/* Match the name. */
 	i++;
-	for (j = 0; toggle_names[j].name != NULL; j++)
-	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
+	for (j = 0; toggle_names[j].name != NULL; j++) {
+	    if (toggle_supported(toggle_names[j].index) &&
+		    !strcasecmp(argv[i], toggle_names[j].name)) {
 		appres.toggle[toggle_names[j].index] = is_set;
+		found = true;
 		break;
 	    }
-	if (toggle_names[j].name == NULL) {
+	}
+	if (!found) {
+	    void *address = find_extended_toggle(argv[i], XRM_BOOLEAN);
+
+	    if (address != NULL) {
+		r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
+		r[nr].address = (bool *)address;
+		r[nr].value = is_set;
+		nr++;
+		found = true;
+	    }
+	}
+	if (!found) {
 	    const char **tn;
 	    int ntn = 0;
+	    int nx;
+	    char **nxnames;
 
-	    tn = (const char **)Calloc(N_TOGGLES, sizeof(char **));
+	    nxnames = extended_toggle_names(&nx);
+	    tn = (const char **)Calloc(N_TOGGLES + nx, sizeof(char **));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (!toggle_names[j].is_alias) {
+		if (toggle_supported(toggle_names[j].index) &&
+			!toggle_names[j].is_alias) {
 		    tn[ntn++] = toggle_names[j].name;
 		}
 	    }
+	    memcpy(tn + ntn, nxnames, nx * sizeof(char **));
+	    ntn += nx;
 	    qsort(tn, ntn, sizeof(const char *), name_cmp);
 	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
 		    argv[i]);
@@ -1119,6 +1154,10 @@ parse_set_clear(int *argcp, char **argv)
     memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
     Free(argv_out);
+
+    r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
+    r[nr].address = NULL;
+    return r;
 }
 
 /*
@@ -1196,6 +1235,21 @@ copy_xres_to_res_bool(void)
 
     copy_bool(ssl.starttls);
     copy_bool(ssl.verify_host_cert);
+}
+
+/* Copy extended toggles (-set, -clear) into appres. */
+static void
+copy_xtoggle(retoggle_t *r)
+{
+    int i;
+
+    if (r == NULL) {
+	return;
+    }
+
+    for (i = 0; r[i].address != NULL; i++) {
+	*r[i].address = r[i].value;
+    }
 }
 
 /* Child exit callbacks. */
