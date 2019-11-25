@@ -291,6 +291,8 @@ XtResource xresources[] = {
       boffset(bind_limit), XtRString, ResTrue },
     { ResBindUnlock, ClsBindUnlock, XtRBoolean, sizeof(Boolean),
       boffset(bind_unlock), XtRString, ResFalse },
+    { ResAlwaysInsert, ClsAlwaysInsert, XtRBoolean, sizeof(Boolean),
+      boffset(always_insert), XtRString, ResFalse },
     { ResNewEnviron, ClsNewEnviron, XtRBoolean, sizeof(Boolean),
       boffset(new_environ), XtRString, ResTrue },
     { ResSocket, ClsSocket, XtRBoolean, sizeof(Boolean),

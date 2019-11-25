@@ -1198,6 +1198,7 @@ copy_xres_to_res_bool(void)
     int i;
 #   define copy_bool(field)	appres.field = xappres.bools.field
 
+    copy_bool(always_insert);
     copy_bool(once);
     copy_bool(scripted);
     copy_bool(modified_sel);

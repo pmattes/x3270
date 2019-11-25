@@ -613,7 +613,7 @@ kybd_in3270(bool in3270 _is_unused)
 }
 
 /*
- * Toggle the operator error lock  setting.
+ * Toggle the operator error lock setting.
  */
 static bool
 toggle_oerr_lock(const char *name _is_unused, const char *value)
@@ -668,6 +668,22 @@ toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
 }
 
 /*
+ * Toggle the always insert setting.
+ */
+static bool
+toggle_always_insert(const char *name _is_unused, const char *value)
+{
+    const char *errmsg = boolstr(value, &appres.always_insert);
+
+    if (errmsg != NULL) {
+	popup_an_error("%s %s", ResAlwaysInsert, errmsg);
+	return false;
+    }
+    insert = appres.always_insert;
+    return true;
+}
+
+/*
  * Keyboard module registration.
  */
 void
@@ -697,6 +713,8 @@ kybd_register(void)
 	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
     register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
 	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
+    register_extended_toggle(ResAlwaysInsert, toggle_always_insert, NULL,
+	    NULL, (void **)&appres.always_insert, XRM_BOOLEAN);
 }
 
 /*
@@ -712,7 +730,7 @@ insert_mode(bool on)
 /*
  * Toggle reverse mode.
  */
-static void
+    static void
 reverse_mode(bool on)
 {
     if (!dbcs) {
@@ -799,7 +817,7 @@ key_AID(unsigned char aid_code)
 
     status_twait();
     mcursor_waiting();
-    insert_mode(false);
+    insert_mode(appres.always_insert);
     kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
     aid = aid_code;
     ctlr_read_modified(aid, false);
@@ -1877,16 +1895,17 @@ do_reset(bool explicit)
 	}
     }
 
-    /* Always clear insert mode. */
-    insert_mode(false);
-
     /* Always reset scrolling. */
     scroll_to_bottom();
 
     /* Otherwise, if not connect, reset is a no-op. */
     if (!CONNECTED) {
+	insert_mode(false);
 	return;
     }
+
+    /* Set insert mode according to the default. */
+    insert_mode(appres.always_insert);
 
     /*
      * Remove any deferred keyboard unlock.  We will either unlock the

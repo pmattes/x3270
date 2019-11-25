@@ -150,6 +150,15 @@ description
     will not allow if permitted to resize it.
 .
 
+name alwaysInsert
+applies a
+type b
+default false
+description
+    When true, %p% will set insert mode by default, and insert mode can only
+    be disabled by the ToggleInsert() action.
+.
+
 name altCursor
 applies x wc
 groups a

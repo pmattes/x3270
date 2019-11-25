@@ -951,6 +951,7 @@ parse_model_number(char *m)
 
 static res_t base_resources[] = {
     { ResAlias,		aoffset(alias),		XRM_STRING },
+    { ResAlwaysInsert,	aoffset(always_insert),	XRM_BOOLEAN },
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
