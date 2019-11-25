@@ -931,19 +931,6 @@ description
     is used only if %-useCursorColor% is true.
 .
 
-name cursorPos
-applies x C
-groups a
-type b
-default true
-switch -set cursorPos
-switch -clear cursorPos
-option Options -&gt; Toggles -&gt; Track Cursor
-description
-    When true, causes %p% to display the cursor location in the OIA
-    (the status line).
-.
-
 name dbcsCgcsgid
 applies a
 groups p
@@ -2818,7 +2805,6 @@ desc
 &nbsp;&nbsp;&nbsp;togglesMenu.characterModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.crosshairOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.cursorBlinkOption.suppress<br>
-&nbsp;&nbsp;&nbsp;togglesMenu.cursorPosOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.extendedDsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineWrapOption.suppress<br>

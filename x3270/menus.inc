@@ -86,8 +86,6 @@ field with (apparent) space at the end.
 XX_TP(XX_FB(Show Timing))
 If set, the time taken by the host to process an XX_SM(AID) is displayed on
 the status line.
-XX_TP(XX_FB(Track Cursor))
-If set, the cursor position is displayed on the status line.
 XX_TP(XX_FB(Scrollbar))
 If set, the scrollbar appears.
 XX_TP(XX_FB(Wraparound))
@@ -148,7 +146,6 @@ XX_TR(XX_TD(Monocase)	XX_TD(monoCase))
 XX_TR(XX_TD(Blinking Cursor)	XX_TD(cursorBlink))
 XX_TR(XX_TD(Blank Fill)	XX_TD(blankFill))
 XX_TR(XX_TD(Show Timing)	XX_TD(showTiming))
-XX_TR(XX_TD(Track Cursor)	XX_TD(cursorPos))
 XX_TR(XX_TD(Trace Data and Events)	XX_TD(trace))
 XX_TR(XX_TD(Save Screen(s) in File)	XX_TD(screenTrace))
 XX_TR(XX_TD(Scrollbar)	XX_TD(scrollBar))
