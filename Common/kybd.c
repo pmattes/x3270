@@ -821,7 +821,7 @@ key_AID(unsigned char aid_code)
     kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
     aid = aid_code;
     ctlr_read_modified(aid, false);
-    ticking_start();
+    ticking_start(false);
     status_ctlr_done();
 }
 

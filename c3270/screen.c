@@ -1813,6 +1813,17 @@ toggle_visibleControl(toggle_index_t ix _is_unused,
 }
 
 /**
+ * Toggle timing display.
+ */
+static void
+toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    if (!toggled(SHOW_TIMING)) {
+	status_untiming();
+    }
+}
+
+/**
  * Toggle crosshair cursor.
  */
 static void
@@ -2372,7 +2383,11 @@ draw_oia(void)
     printw("%c", oia_screentrace);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
-    mvprintw(status_row, rmargin-14, "%s", oia_timing);
+
+    if (toggled(SHOW_TIMING)) {
+	mvprintw(status_row, rmargin-14, "%s", oia_timing);
+    }
+
     mvprintw(status_row, rmargin-7, "%03d/%03d ", cursor_addr/cCOLS + 1,
 	    cursor_addr%cCOLS + 1);
 
@@ -2831,6 +2846,7 @@ screen_register(void)
 {
     static toggle_register_t toggles[] = {
 	{ MONOCASE,	toggle_monocase,	0 },
+	{ SHOW_TIMING,	toggle_showTiming,	0 },
 	{ UNDERSCORE,	toggle_underscore,	0 },
 	{ VISIBLE_CONTROL, toggle_visibleControl, 0 },
 	{ CROSSHAIR,	toggle_crosshair,	0 },

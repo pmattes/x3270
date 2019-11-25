@@ -880,6 +880,10 @@ Turns on screen tracing at start-up.
 Each time the screen changes, its contents are appended to the file
 ifelse(XX_PRODUCT,wc3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)
 on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the current directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
+ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
+If set, the time taken by the host to process an XX_SM(AID) is displayed on
+the status line.
+')dnl
 XX_TP(XX_FB(trace))
 Turns on data stream and event tracing at start-up.
 Network traffic (both a hexadecimal representation and its
@@ -974,9 +978,10 @@ The LU name associated with the session, if there is one.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(timing))
 A clock symbol and a time in seconds indicate the time it took to process
 the last XX_SM(AID) or the time to connect to a host.
+This display is optional.
 ')dnl
 XX_TP(XX_FB(cursor position))
-The cursor row and column are displayed, zero padded and separated
+The cursor row and column are optionally displayed, zero padded and separated
 by a "/".
 Location 001/001 is at the upper left, which is different from the row and
 columns parameters used with various actions, where the upper left corner is

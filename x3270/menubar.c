@@ -1973,6 +1973,7 @@ options_menu_init(bool regen, Position x, Position y)
 	toggle_init(t, MONOCASE, "monocaseOption", NULL, &spaced);
 	toggle_init(t, CURSOR_BLINK, "cursorBlinkOption", NULL, &spaced);
 	toggle_init(t, BLANK_FILL, "blankFillOption", NULL, &spaced);
+	toggle_init(t, SHOW_TIMING, "showTimingOption", NULL, &spaced);
 	toggle_init(t, SCROLL_BAR, "scrollBarOption", NULL, &spaced);
 	toggle_init(t, LINE_WRAP, "lineWrapOption", NULL, &spaced);
 	toggle_init(t, MARGINED_PASTE, "marginedPasteOption", NULL, &spaced);
@@ -2024,6 +2025,7 @@ options_menu_init(bool regen, Position x, Position y)
 	    toggle_widget[MONOCASE].w[0] != NULL ||
 	    toggle_widget[CURSOR_BLINK].w[0] != NULL ||
 	    toggle_widget[BLANK_FILL].w[0] != NULL ||
+	    toggle_widget[SHOW_TIMING].w[0] != NULL ||
 	    toggle_widget[SCROLL_BAR].w[0] != NULL ||
 	    toggle_widget[LINE_WRAP].w[0] != NULL ||
 	    toggle_widget[MARGINED_PASTE].w[0] != NULL ||
