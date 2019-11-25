@@ -84,7 +84,6 @@ toggle_name_t toggle_names[] = {
     { ResAltCursor,       ALT_CURSOR,		false },
     { ResCursorBlink,     CURSOR_BLINK,		false },
     { ResShowTiming,      SHOW_TIMING,		false },
-    { ResCursorPos,       CURSOR_POS,		false },
     { ResTrace,           TRACING,		false },
     { ResScrollBar,       SCROLL_BAR,		false },
     { ResLineWrap,        LINE_WRAP,		false },

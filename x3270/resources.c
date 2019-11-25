@@ -332,8 +332,6 @@ XtResource xresources[] = {
       btoffset(CURSOR_BLINK), XtRString, ResFalse },
     { ResShowTiming, ClsShowTiming, XtRBoolean, sizeof(Boolean),
       btoffset(SHOW_TIMING), XtRString, ResFalse },
-    { ResCursorPos, ClsCursorPos, XtRBoolean, sizeof(Boolean),
-      btoffset(CURSOR_POS), XtRString, ResTrue },
     { ResTrace, ClsTrace, XtRBoolean, sizeof(Boolean),
       btoffset(TRACING), XtRString, ResFalse },
     { ResScrollBar, ClsScrollBar, XtRBoolean, sizeof(Boolean),

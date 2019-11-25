@@ -3209,10 +3209,8 @@ draw_oia(void)
 	mvprintw(status_row, rmargin-14, "%s", oia_timing);
     }
 
-    if (toggled(CURSOR_POS)) {
-	mvprintw(status_row, rmargin-7,
+    mvprintw(status_row, rmargin-7,
 	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
-    }
 
     /* Now fill in the crosshair cursor in the status line. */
     if (in_focus &&

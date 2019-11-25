@@ -467,7 +467,6 @@ set_appres_defaults(void)
     appres.unlock_delay = true;
     appres.unlock_delay_ms = 350;
 
-    set_toggle(CURSOR_POS, true);
     set_toggle(AID_WAIT, true);
     set_toggle(TYPEAHEAD, true);
 

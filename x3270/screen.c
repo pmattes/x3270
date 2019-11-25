@@ -371,7 +371,6 @@ static void resync_display(struct sp *buffer, int first, int last);
 static void draw_fields(struct sp *buffer, int first, int last);
 static void render_text(struct sp *buffer, int baddr, int len,
     bool block_cursor, struct sp *attrs);
-static void cursor_pos(void);
 static void cursor_on(const char *why);
 static void schedule_cursor_blink(void);
 static void schedule_text_blink(void);
@@ -1697,31 +1696,8 @@ void
 cursor_move(int baddr)
 {
     cursor_addr = baddr;
-    cursor_pos();
-}
-
-/*
- * Display the cursor position on the status line
- */
-static void
-cursor_pos(void)
-{
-    if (!toggled(CURSOR_POS) || !CONNECTED) {
-	return;
-    }
-    status_cursor_pos(cursor_addr);
-}
-
-/*
- * Toggle the display of the cursor position
- */
-static void
-toggle_cursorPos(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
-{
-    if (toggled(CURSOR_POS)) {
-	cursor_pos();
-    } else {
-	status_uncursor_pos();
+    if (CONNECTED) {
+	status_cursor_pos(cursor_addr);
     }
 }
 
@@ -6470,7 +6446,6 @@ screen_register(void)
 	{ ALT_CURSOR,		toggle_altCursor,	0 },
 	{ CURSOR_BLINK,		toggle_cursorBlink,	0 },
 	{ SHOW_TIMING,		toggle_showTiming,	0 },
-	{ CURSOR_POS,		toggle_cursorPos,	0 },
 	{ CROSSHAIR,		toggle_crosshair,	0 },
 	{ VISIBLE_CONTROL,	toggle_visible_control, 0 },
 	{ SCROLL_BAR,		toggle_scrollBar,	0 },
