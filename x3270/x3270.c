@@ -792,10 +792,6 @@ main(int argc, char *argv[])
     label_init();
 
     /* Handle initial toggle settings. */
-    if (appres.dsTrace_bc || appres.eventTrace_bc) {
-	/* Backwards compatibility with old resource names. */
-	set_toggle_initial(TRACING, true);
-    }
     if (!appres.debug_tracing) {
 	set_toggle_initial(TRACING, false);
     }
@@ -1181,8 +1177,6 @@ copy_xres_to_res_bool(void)
     copy_bool(trace_monitor);
     copy_bool(idle_command_enabled);
     copy_bool(nvt_mode);
-    copy_bool(dsTrace_bc);
-    copy_bool(eventTrace_bc);
     copy_bool(script_port_once);
     copy_bool(utf8);
 

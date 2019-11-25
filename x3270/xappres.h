@@ -102,8 +102,6 @@ typedef struct {
 	Boolean trace_monitor;
 	Boolean idle_command_enabled;
 	Boolean nvt_mode;
-	Boolean dsTrace_bc;
-	Boolean eventTrace_bc;
 	Boolean script_port_once;
 	Boolean utf8;
 	struct {

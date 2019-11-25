@@ -3276,13 +3276,6 @@ ring_bell(void)
 		 */
 		bell_mode = BELL_NOTHING;
 	    }
-	} else if (appres.interactive.visual_bell) {
-	    /*
-	     * Old config: wc3270.visualBell
-	     * 		true		just flash
-	     * 		false		beep and flash
-	     */
-	    bell_mode = BELL_FLASH;
 	} else {
 	    /*
 	     * No config: beep and flash.

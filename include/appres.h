@@ -58,8 +58,6 @@ typedef struct {
     bool	 bind_limit;
     bool	 new_environ;
     bool	 socket;
-    bool	 dsTrace_bc;
-    bool	 eventTrace_bc;
     bool	 trace_monitor;
     bool	 script_port_once;
     bool	 bind_unlock;

@@ -86,12 +86,10 @@ toggle_name_t toggle_names[] = {
     { ResShowTiming,      SHOW_TIMING,		false },
     { ResCursorPos,       CURSOR_POS,		false },
     { ResTrace,           TRACING,		false },
-    { ResDsTrace,         TRACING,		true }, /* compatibility */
     { ResScrollBar,       SCROLL_BAR,		false },
     { ResLineWrap,        LINE_WRAP,		false },
     { ResBlankFill,       BLANK_FILL,		false },
     { ResScreenTrace,     SCREEN_TRACE,		false },
-    { ResEventTrace,      TRACING,		true }, /* compatibility */
     { ResMarginedPaste,   MARGINED_PASTE,	false },
     { ResRectangleSelect, RECTANGLE_SELECT,	false },
     { ResCrosshair,	  CROSSHAIR,		false },

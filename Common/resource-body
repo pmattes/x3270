@@ -1000,19 +1000,6 @@ desc
     and the alternate (27x132) screen.
 .
 
-name dftBufferSize
-applies a
-groups p
-type i
-default 4096
-description
-    <i>Deprecated resource -- replaced by %-ftBufferSize%</i>
-    <p class=indented>
-    Specifies the default buffer size for DFT IND$FILE file transfers.  This
-    value can be overridden in the File Transfer dialog and by a parameter to
-    the <b>Transfer</b> action.
-.
-
 name devName
 applies a
 type s
@@ -1039,36 +1026,6 @@ description
     When true, %p% will display a pop-up to report successful
     completion of certain operations, such as screen printing.  When
     false, these pop-ups are not displayed.
-.
-
-name dsTrace
-applies a
-groups t
-type b
-default false
-switch -trace 
-switch -set dsTrace
-switch -clear dsTrace
-description
-    <i>Deprecated resource -- replaced by %-trace%</i>
-    <p class=indented>
-    When true, %p% writes a hexadecimal representation of all network
-    traffic (and its interpretation) into a file, which defaults to
-if u
-    <b>x3trc.<i>pid</i></b>.
-else
-    <b>x3trc.<i>process-id</i>.txt</b>.
-endif
-if x wc
-    It also pops up a window to watch the file as it
-    is created, with the pathname of the file as the window title.
-endif
-if x
-    The command run in the window is defined by %-traceCommand%.
-endif
-    The directory where the file is written is defined by %-traceDir%.
-    If %-traceFile% is defined, it gives the entire pathname
-    and %-traceDir% is ignored.
 .
 
 name emulatorFont
@@ -1122,49 +1079,6 @@ description
     When connected in character-at-a-time mode (%p% sends each keystroke
     to the host as it is entered), this is the character that will be sent
     to the host by the <b>Erase</b> action.
-.
-
-name eventTrace
-groups t
-type b
-applies a
-default false
-switch -set eventTrace
-switch -clear eventTrace
-description
-    <i>Deprecated resource -- replaced by %-trace%</i>
-    <p class=indented>
-    When true, %p% traces information about keyboard and mouse
-    events into a file.
-    The default file name is
-if u
-    <b>x3trc.<i>pid</i></b>.
-else
-    <b>x3trc.<i>process-id</i>.txt</b>.
-endif
-if x wc
-    It also pops up a
-    window to watch the file as it is created, with the pathname of the file
-    as the window title.
-endif
-if x
-    The command run in the window is defined by %-traceCommand%.
-endif
-    The directory where the file is written is defined by %-traceDir%.
-    If %-traceFile% is defined, it gives the entire pathname
-    and %-traceDir% is ignored.
-.
-
-name extended
-type b
-applies a
-default false
-groups d
-switch -extended
-description
-    <i>Deprecated resource -- replaced by %-model% syntax</i>
-    <p class="indented">
-    Indicates support for the 3270 Extended Data Stream.
 .
 
 name fixedSize
@@ -1229,19 +1143,6 @@ description
     Specifies the default buffer size for DFT IND$FILE file transfers.  This
     value can be overridden in the File Transfer dialog and by a parameter to
     the <b>Transfer</b> action.
-.
-
-name ftCodePage
-type i
-applies w
-groups i
-description
-    <i>Deprecated resource -- replaced by %-ftWindowsCodePage%</i>
-    <p class=indented>
-    The Windows code page to use for translating between EBCDIC and ASCII in
-    IND$FILE file transfers. The default is to use the system ANSI code page.
-    This value can be overridden in the File Transfer dialog and by a parameter
-    to the <b>Transfer</b> action. 
 .
 
 name ftCr
@@ -1948,18 +1849,6 @@ default X_cursor
 description
     The name of the mouse cursor displayed with %p% is not connected to a
     host.
-.
-
-name m3279
-applies a
-type b
-default true
-groups d
-switch -color
-description
-    <i>Deprecated resource -- replaced by %-model% syntax</i>
-    <p class=indented>
-    Indicates support for color (a 3279 terminal).
 .
 
 name macros
@@ -3304,23 +3193,6 @@ default false
 desc
     When true, %p% will flash the screen in response to an ALARM WCC
     or BELL character, rather than ringing the terminal's bell.
-.
-
-name visualBell
-applies wc
-groups i
-type b
-default false
-desc
-    <i>Deprecated resource -- replaced by %-bellMode%</i>
-    <p class="indented">
-    When true, %p% will just flash the screen in response to an ALARM WCC
-    or BELL character, rather than beeping the Windows console.  When false,
-    %p% will beep the console and flash the screen.
-    <p class="indented">
-    Note that this resource is overridden by %-bellMode%.
-    %-bellMode% is the preferred method of controlling the console bell
-    behavior.
 .
 
 name visualSelect

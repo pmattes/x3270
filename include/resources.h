@@ -93,11 +93,9 @@
 #define ResDisconnectClear	"disconnectClear"
 #define ResDoConfirms		"doConfirms"
 #define ResDbcsCgcsgid		"dbcsCgcsgid"
-#define ResDsTrace		"dsTrace"
 #define ResEmulatorFont		"emulatorFont"
 #define ResEof			"eof"
 #define ResErase		"erase"
-#define ResEventTrace		"eventTrace"
 #define ResFixedSize		"fixedSize"
 #define ResFtAllocation		"ftAllocation"
 #define ResFtAvblock		"ftAvblock"
@@ -250,7 +248,6 @@
 #define DotColorScheme		"." ResColorScheme
 #define DotConnectTimeout	"." ResConnectTimeout
 #define DotDevName		"." ResDevName
-#define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotHostsFile		"." ResHostsFile
 #define DotHttpd		"." ResHttpd
@@ -334,11 +331,9 @@
 #define ClsDevName		"DevName"
 #define ClsDisconnectClear	"DisconnectClear"
 #define ClsDoConfirms		"DoConfirms"
-#define ClsDsTrace		"DsTrace"
 #define ClsEmulatorFont		"EmulatorFont"
 #define ClsEof			"Eof"
 #define ClsErase		"Erase"
-#define ClsEventTrace		"EventTrace"
 #define ClsFixedSize		"FixedSize"
 #define ClsFtAllocation		"FtAllocation"
 #define ClsFtAvblock		"FtAvblock"
