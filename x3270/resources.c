@@ -291,8 +291,6 @@ XtResource xresources[] = {
       boffset(bind_limit), XtRString, ResTrue },
     { ResBindUnlock, ClsBindUnlock, XtRBoolean, sizeof(Boolean),
       boffset(bind_unlock), XtRString, ResFalse },
-    { ResAlwaysInsert, ClsAlwaysInsert, XtRBoolean, sizeof(Boolean),
-      boffset(always_insert), XtRString, ResFalse },
     { ResNewEnviron, ClsNewEnviron, XtRBoolean, sizeof(Boolean),
       boffset(new_environ), XtRString, ResTrue },
     { ResSocket, ClsSocket, XtRBoolean, sizeof(Boolean),
@@ -360,6 +358,8 @@ XtResource xresources[] = {
       btoffset(TYPEAHEAD), XtRString, ResTrue },
     { ResAplMode, ClsAplMode, XtRBoolean, sizeof(Boolean),
       btoffset(APL_MODE), XtRString, ResFalse },
+    { ResAlwaysInsert, ClsAlwaysInsert, XtRBoolean, sizeof(Boolean),
+      btoffset(ALWAYS_INSERT), XtRString, ResFalse },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },

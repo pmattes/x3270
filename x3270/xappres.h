@@ -84,7 +84,6 @@ typedef struct {
      * are the same type or not.
      */
     struct {
-	Boolean always_insert;
 	Boolean once;
 	Boolean scripted;
 	Boolean modified_sel;

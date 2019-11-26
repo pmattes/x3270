@@ -522,6 +522,16 @@ kybd_inhibit(bool inhibit)
 }
 
 /*
+ * Toggle insert mode.
+ */
+static void
+insert_mode(bool on)
+{
+    insert = on;
+    status_insert_mode(on);
+}
+
+/*
  * Called when a host connects or disconnects.
  */
 static void
@@ -541,6 +551,7 @@ kybd_connect(bool connected _is_unused)
     } else {
 	kybdlock_set(KL_NOT_CONNECTED, "kybd_connect");
 	flush_ta();
+	insert_mode(false);
     }
 }
 
@@ -554,6 +565,7 @@ kybd_in3270(bool in3270 _is_unused)
 	RemoveTimeOut(unlock_id);
 	unlock_id = NULL_IOID;
     }
+    insert_mode(IN_3270 && toggled(ALWAYS_INSERT));
 
     switch ((int)cstate) {
     case CONNECTED_UNBOUND:
@@ -667,20 +679,11 @@ toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
     return true;
 }
 
-/*
- * Toggle the always insert setting.
- */
-static bool
-toggle_always_insert(const char *name _is_unused, const char *value)
+/* The always-insert toggle changed. */
+static void
+toggle_always_insert(toggle_index_t ix, enum toggle_type type)
 {
-    const char *errmsg = boolstr(value, &appres.always_insert);
-
-    if (errmsg != NULL) {
-	popup_an_error("%s %s", ResAlwaysInsert, errmsg);
-	return false;
-    }
-    insert = appres.always_insert;
-    return true;
+    insert_mode(CONNECTED && IN_3270 && toggled(ALWAYS_INSERT));
 }
 
 /*
@@ -690,7 +693,8 @@ void
 kybd_register(void)
 {
     static toggle_register_t toggles[] = {
-	{ BLANK_FILL,	NULL,	0 }
+	{ BLANK_FILL,	NULL,	0 },
+	{ ALWAYS_INSERT,toggle_always_insert,	0 },
     };
 
     /* Register interest in connect and disconnect events. */
@@ -713,18 +717,6 @@ kybd_register(void)
 	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
     register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
 	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
-    register_extended_toggle(ResAlwaysInsert, toggle_always_insert, NULL,
-	    NULL, (void **)&appres.always_insert, XRM_BOOLEAN);
-}
-
-/*
- * Toggle insert mode.
- */
-static void
-insert_mode(bool on)
-{
-    insert = on;
-    status_insert_mode(on);
 }
 
 /*
@@ -817,7 +809,7 @@ key_AID(unsigned char aid_code)
 
     status_twait();
     mcursor_waiting();
-    insert_mode(appres.always_insert);
+    insert_mode(toggled(ALWAYS_INSERT));
     kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
     aid = aid_code;
     ctlr_read_modified(aid, false);
@@ -1905,7 +1897,7 @@ do_reset(bool explicit)
     }
 
     /* Set insert mode according to the default. */
-    insert_mode(appres.always_insert);
+    insert_mode(IN_3270 && toggled(ALWAYS_INSERT));
 
     /*
      * Remove any deferred keyboard unlock.  We will either unlock the

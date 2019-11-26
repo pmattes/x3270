@@ -1983,6 +1983,7 @@ options_menu_init(bool regen, Position x, Position y)
 	toggle_init(t, CROSSHAIR, "crosshairOption", NULL, &spaced);
 	toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL, &spaced);
 	toggle_init(t, TYPEAHEAD, "typeaheadOption", NULL, &spaced);
+	toggle_init(t, ALWAYS_INSERT, "alwaysInsertOption", NULL, &spaced);
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);
@@ -2033,6 +2034,7 @@ options_menu_init(bool regen, Position x, Position y)
 	    toggle_widget[CROSSHAIR].w[0] != NULL ||
 	    toggle_widget[VISIBLE_CONTROL].w[0] != NULL ||
 	    toggle_widget[ALT_CURSOR].w[0] != NULL ||
+	    toggle_widget[ALWAYS_INSERT].w[0] != NULL ||
 	    linemode_button != NULL ||
 	    charmode_button != NULL ||
 	    m3278_button != NULL ||

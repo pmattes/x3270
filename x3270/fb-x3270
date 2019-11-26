@@ -863,6 +863,7 @@ x3270*model4Option.label:			Model 4 (80x43)
 x3270*model5Option.label:			Model 5 (132x27)
 x3270*oversizeOption.label:			Oversize...
 x3270*saveOption.label:				Save Changed Options
+x3270*alwaysInsertOption.label:			Default Insert Mode
 !
 ! Messages
 x3270.message.processId:			Process ID:

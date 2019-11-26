@@ -98,6 +98,7 @@ toggle_name_t toggle_names[] = {
     { ResOverlayPaste,    OVERLAY_PASTE,	false },
     { ResTypeahead,       TYPEAHEAD,		false },
     { ResAplMode,	  APL_MODE,		false },
+    { ResAlwaysInsert,	  ALWAYS_INSERT,	false },
     { NULL,               0,			false }
 };
 

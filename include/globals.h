@@ -305,6 +305,7 @@ typedef enum {
     OVERLAY_PASTE,	/* overlay protected fields when pasting */
     TYPEAHEAD,		/* typeahead */
     APL_MODE,		/* APL mode */
+    ALWAYS_INSERT,	/* always-insert mode */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);

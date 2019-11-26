@@ -125,7 +125,8 @@ static toggle_register_t toggles[] = {
     { CROSSHAIR,	b3270_toggle,	TOGGLE_NEED_INIT },
     { OVERLAY_PASTE,	b3270_toggle,	TOGGLE_NEED_INIT },
     { TYPEAHEAD,	b3270_toggle,	TOGGLE_NEED_INIT },
-    { APL_MODE,		b3270_toggle,	TOGGLE_NEED_INIT }
+    { APL_MODE,		b3270_toggle,	TOGGLE_NEED_INIT },
+    { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT }
 };
 static const char *cstate_name[] = {
     "not-connected",
