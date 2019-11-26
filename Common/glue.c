@@ -469,6 +469,7 @@ set_appres_defaults(void)
 
     set_toggle(AID_WAIT, true);
     set_toggle(TYPEAHEAD, true);
+    set_toggle(BLANK_FILL, true);
 
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();

@@ -339,7 +339,7 @@ XtResource xresources[] = {
     { ResLineWrap, ClsLineWrap, XtRBoolean, sizeof(Boolean),
       btoffset(LINE_WRAP), XtRString, ResTrue },
     { ResBlankFill, ClsBlankFill, XtRBoolean, sizeof(Boolean),
-      btoffset(BLANK_FILL), XtRString, ResFalse },
+      btoffset(BLANK_FILL), XtRString, ResTrue },
     { ResScreenTrace, ClsScreenTrace, XtRBoolean, sizeof(Boolean),
       btoffset(SCREEN_TRACE), XtRString, ResFalse },
     { ResMarginedPaste, ClsMarginedPaste, XtRBoolean, sizeof(Boolean),

@@ -330,7 +330,7 @@ name blankFill
 applies a
 groups i
 type b
-default false
+default true
 option Options -&gt; Toggles -&gt; Blank Fill
 switch -set blankFill
 switch -clear blankFill

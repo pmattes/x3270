@@ -694,6 +694,7 @@ kybd_register(void)
 {
     static toggle_register_t toggles[] = {
 	{ BLANK_FILL,	NULL,	0 },
+	{ SHOW_TIMING,	NULL,	0 },
 	{ ALWAYS_INSERT,toggle_always_insert,	0 },
     };
 
