@@ -1303,6 +1303,15 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     if (appres.alias != NULL) {
 	params[0] = appres.alias;
     }
+#if defined(_WIN32) /*[*/
+    else {
+	size_t sl = strlen(params[0]);
+
+	if (sl > 4 && !strcasecmp(params[0] + sl - 4, ".exe")) {
+	    params[0] = lazyaf("%.*s", (int)(sl - 4), params[0]);
+	}
+    }
+#endif /*]*/
 
     for (i = 0; i < argc; i++) {
 	const char *in = argv[i];
