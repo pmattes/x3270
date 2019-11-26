@@ -183,7 +183,7 @@ push_action(enum iaction ia, char *s)
 	LLIST_APPEND(&acb->llist, action_cbs);
 	cb->shortname = ia_name[ia];
 	cb->ia = ia;
-	cb->flags = CB_NEW_TASKQ;
+	cb->flags = CB_NEW_TASKQ | CB_UI;
 	cb->data = action_data;
 	cb->done = action_done;
 	cb->run = NULL;

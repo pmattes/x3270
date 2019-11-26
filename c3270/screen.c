@@ -1852,6 +1852,7 @@ static enum keytype oia_compose_keytype = KT_STD;
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
+static char oia_script = ' ';
 
 static ioid_t info_done_timeout = NULL_IOID;
 static ioid_t info_scroll_timeout = NULL_IOID;
@@ -2154,9 +2155,9 @@ status_screentrace(int n)
 }     
 
 void
-status_script(bool on _is_unused)
+status_script(bool on)
 {
-    /* for now, nothing */
+    oia_script = on? 's': ' ';
 }
 
 static void
@@ -2283,11 +2284,14 @@ draw_oia(void)
 
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
-4AN     Status-Message--------------------- Cn TRIPS  LU-Name-   :ss.s  000/000
+4AN    Status-Message--------------------- Cn TRIPS+s LU-Name-   :ss.s  000/000
          7         6         5         4         3         2         1
 98765432109876543210987654321098765432109876543210987654321098765432109876543210
+                                                                        ^ -7
+                                                                 ^ -14
+                                                      ^-25
 
-   On wider displays, there is a bigger gap between TRIPS and LU-Name.
+   On wider displays, there is a bigger gap between TRIPSs and LU-Name.
 
 */
 
@@ -2357,11 +2361,11 @@ draw_oia(void)
     }
 
     attrset(defattr);
-    mvprintw(status_row, 8, "%-35.35s", status_msg_now);
+    mvprintw(status_row, 7, "%-35.35s", status_msg_now);
     mvprintw(status_row, rmargin-35,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
-	oia_compose? oia_compose_char: ' ', /* XXX */
+	oia_compose? oia_compose_char: ' ',
 	status_ta? 'T': ' ',
 	status_rm? 'R': ' ',
 	status_im? 'I': ' ',
@@ -2380,7 +2384,7 @@ draw_oia(void)
     } else {
 	printw(" ");
     }
-    printw("%c", oia_screentrace);
+    printw("%c%c", oia_screentrace,oia_script);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 

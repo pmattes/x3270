@@ -2777,6 +2777,7 @@ static enum keytype oia_compose_keytype = KT_STD;
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
+static char oia_script = ' ';
 
 static ioid_t info_done_timeout = NULL_IOID;
 static ioid_t info_scroll_timeout = NULL_IOID;
@@ -3078,7 +3079,7 @@ status_screentrace(int n)
 void
 status_script(bool on _is_unused)
 {
-    /* for now, nothing */
+    oia_script = on? 's': ' ';
 }
 
 static void
@@ -3183,7 +3184,7 @@ draw_oia(void)
 
     /* Offset 8 */
     attrset(oia_attr);
-    mvprintw(status_row, 8, "%-35.35s", status_msg_now);
+    mvprintw(status_row, 7, "%-35.35s", status_msg_now);
     mvprintw(status_row, rmargin-35,
 	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
@@ -3202,6 +3203,7 @@ draw_oia(void)
 	addch(' ');
     }
     addch(oia_screentrace);
+    addch(oia_script);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
