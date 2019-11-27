@@ -183,7 +183,7 @@ x3270.keymap.base: \
 	<Btn3Motion>:			select-extend()\n\
 	~Shift<BtnUp>:			SelectUp(PRIMARY)\n\
 	Shift<Key>Insert:		insert-selection(PRIMARY)\n\
-	:<Key>Insert:			ToggleInsert()\n\
+	:<Key>Insert:			Toggle(insertMode)\n\
 	Shift<Key>Up:			KybdSelect(Up,PRIMARY)\n\
 	Shift<Key>Down:			KybdSelect(Down,PRIMARY)\n\
 	Shift<Key>Left:			KybdSelect(Left,PRIMARY)\n\
@@ -237,6 +237,8 @@ x3270.keymap.base: \
 	:<Key>F11:			PF(11)\n\
 	:<Key>F12:			PF(12)\n\
 	:<Key>Print:			PrintText()\n\
+	Meta<Key>f:			Toggle(rightToLeftMode)\n\
+	Alt<Key>f:			Toggle(rightToLeftMode)\n\
 	Alt<Key>q:			Quit()\n\
 	:<Key>dead_acute:		Compose() Key(apostrophe)\n\
 	:<Key>dead_grave:	 	Compose() Key(grave)\n\
@@ -283,12 +285,10 @@ x3270.keymap.base.3270: #override \
 	Alt<Key>d:			Delete()\n\
 	Meta<Key>e:			EraseEOF()\n\
 	Alt<Key>e:			EraseEOF()\n\
-	Meta<Key>f:			Flip()\n\
-	Alt<Key>f:			Flip()\n\
 	Meta<Key>h:			Home()\n\
 	Alt<Key>h:			Home()\n\
-	Meta<Key>i:			Insert()\n\
-	Alt<Key>i:			Insert()\n\
+	Meta<Key>i:			Set(insertMode,True)\n\
+	Alt<Key>i:			Set(insertMode,True)\n\
 	Meta<Key>l:			Redraw()\n\
 	Alt<Key>l:			Redraw()\n\
 	Meta<Key>p:			PrintText()\n\
@@ -301,8 +301,8 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
-	Alt<Key>v:			ToggleReverse()\n\
-	Meta<Key>v:			ToggleReverse()\n\
+	Alt<Key>v:			Toggle(reverseInputMode))\n\
+	Meta<Key>v:			Toggle(reverseInputMode)\n\
 	Ctrl<Key>w:			DeleteWord()\n\
 	Ctrl<Key>x:			Cut(CLIPBOARD)
 ! Keymap that restores the old (pre 3.3) mouse-click behavior.
@@ -490,7 +490,7 @@ x3270.keymap.hp-pc: \
 	!Meta<Key>hpInsertChar:	PA(1)\n\
 	!Meta<Key>Home:		PA(2)\n\
 	!Meta<Key>Prior:	PA(3)\n\
-	!<Key>hpInsertChar:	Insert()\n\
+	!<Key>hpInsertChar:	Set(insertMode,True)\n\
 	!<Key>hpDeleteChar:	Delete()\n\
 	!Shift<Key>Menu:	PrintWindow()\n\
 	!<Key>Menu:		PrintText()\n
@@ -512,7 +512,7 @@ x3270.keymap.ibm-xterm: \
 	:<Key>Next:		PA(2)\n\
 	:<Key>Escape:		Reset()\n\
 	:<Key>Control_L:	Reset()\n\
-	:<Key>Insert:		Insert()\n\
+	:<Key>Insert:		Set(insertMode,True)\n\
 	!Shift<Key>Right:	Right2()\n\
 	!Shift<Key>Left:	Left2()\n
 ! Keymap for common 3270 functions on a PC keyboard, from Richard Lennox.

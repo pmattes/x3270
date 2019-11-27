@@ -2739,6 +2739,12 @@ screen_flip(void)
     }
 }
 
+bool
+screen_flipped(void)
+{
+    return flipped;
+}
+
 /*
  * Return a visible control character for a field attribute.
  */

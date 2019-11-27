@@ -306,6 +306,9 @@ typedef enum {
     TYPEAHEAD,		/* typeahead */
     APL_MODE,		/* APL mode */
     ALWAYS_INSERT,	/* always-insert mode */
+    RIGHT_TO_LEFT,	/* right-to-left display */
+    REVERSE_INPUT,	/* reverse input */
+    INSERT_MODE,	/* insert mode */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);

@@ -1021,6 +1021,12 @@ screen_flip(void)
 	    NULL);
 }
 
+bool
+screen_flipped(void)
+{
+    return flipped;
+}
+
 /* Scrollbar support. */
 
 /*

@@ -2431,6 +2431,12 @@ screen_flip(void)
     screen_disp(false);
 }
 
+bool
+screen_flipped(void)
+{
+    return flipped;
+}
+
 #if defined(C3270_80_132) /*[*/
 /* Alt/default screen spec parsing. */
 static void

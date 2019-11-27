@@ -360,6 +360,12 @@ XtResource xresources[] = {
       btoffset(APL_MODE), XtRString, ResFalse },
     { ResAlwaysInsert, ClsAlwaysInsert, XtRBoolean, sizeof(Boolean),
       btoffset(ALWAYS_INSERT), XtRString, ResFalse },
+    { ResRightToLeftMode, ClsRightToLeftMode, XtRBoolean, sizeof(Boolean),
+      btoffset(RIGHT_TO_LEFT), XtRString, ResFalse },
+    { ResReverseInputMode, ClsReverseInputMode, XtRBoolean, sizeof(Boolean),
+      btoffset(REVERSE_INPUT), XtRString, ResFalse },
+    { ResInsertMode, ClsInsertMode, XtRBoolean, sizeof(Boolean),
+      btoffset(INSERT_MODE), XtRString, ResFalse },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -99,6 +99,9 @@ toggle_name_t toggle_names[] = {
     { ResTypeahead,       TYPEAHEAD,		false },
     { ResAplMode,	  APL_MODE,		false },
     { ResAlwaysInsert,	  ALWAYS_INSERT,	false },
+    { ResRightToLeftMode, RIGHT_TO_LEFT,	false },
+    { ResReverseInputMode,REVERSE_INPUT,	false },
+    { ResInsertMode,	  INSERT_MODE,		false },
     { NULL,               0,			false }
 };
 
@@ -504,7 +507,7 @@ done:
  *    sets an explicit value
  * For old-style Boolean toggles, values can be Set/Clear On/Off True/False 1/0
  */
-static bool
+bool
 Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
     return toggle_common("Toggle", true, ia, argc, argv);
@@ -518,7 +521,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
  *    sets an explicit value
  * For old-style Boolean toggles, values can be Set/Clear On/Off True/False 1/0
  */
-static bool
+bool
 Set_action(ia_t ia, unsigned argc, const char **argv)
 {
     return toggle_common("Set", false, ia, argc, argv);

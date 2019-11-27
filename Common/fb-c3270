@@ -86,8 +86,8 @@ keymap.base.3270: \n\
        Alt <Key>f: FieldMark(NoFailOnError)\n\
        Alt <Key>F: FieldMark(NoFailOnError)\n\
       Ctrl <Key>h: Erase()\n\
-       Alt <Key>i: Insert()\n\
-       Alt <Key>I: Insert()\n\
+       Alt <Key>i: Set(insertMode,True)\n\
+       Alt <Key>I: Set(insertMode,True)\n\
       Ctrl <Key>i: Tab()\n\
       Ctrl <Key>j: Newline()\n\
       Ctrl <Key>l: Redraw()\n\
@@ -96,9 +96,9 @@ keymap.base.3270: \n\
        Alt <Key>r: Reset()\n\
        Alt <Key>R: Reset()\n\
       Ctrl <Key>u: DeleteField()\n\
-       Alt <Key>v: ToggleReverse()\n\
-       Alt <Key>x: Flip()\n\
-      <Key>INSERT: ToggleInsert()\n\
+       Alt <Key>v: Toggle(reverseInputMode)\n\
+       Alt <Key>x: Toggle(rightToLeftMode)\n\
+      <Key>INSERT: Toggle(insertMode)\n\
    Shift <Key>TAB: BackTab()\n\
         <Key>BACK: Erase()\n\
    Shift <Key>END: EraseEOF()\n\
@@ -122,7 +122,7 @@ x3270.keymap.base: \n\
  Ctrl<Key>a Ctrl<Key>]: Key(0x1d,NoFailOnError)\n\
      Ctrl<Key>a <Key>c: Clear()\n\
      Ctrl<Key>a <Key>e: Escape()\n\
-     Ctrl<Key>a <Key>i: Insert()\n\
+     Ctrl<Key>a <Key>i: Set(insertMode,True)\n\
      Ctrl<Key>a <Key>r: Reset()\n\
      Ctrl<Key>a <Key>k: Keypad()\n\
      Ctrl<Key>a <Key>l: Redraw()\n\
@@ -180,9 +180,9 @@ x3270.keymap.base.3270: \n\
             Ctrl<Key>n: Menu()\n\
             Ctrl<Key>r: Reset()\n\
             Ctrl<Key>u: DeleteField()\n\
-     Ctrl<Key>a <Key>v: ToggleReverse()\n\
-     Ctrl<Key>a <Key>f: Flip()\n\
-               <Key>IC: ToggleInsert()\n\
+     Ctrl<Key>a <Key>v: Toggle(reverseInputMode)\n\
+     Ctrl<Key>a <Key>f: Toggle(rightToLeftMode)\n\
+               <Key>IC: Toggle(insertMode)\n\
         <Key>BACKSPACE: Erase()\n\
               <Key>END: FieldEnd()
 #endif

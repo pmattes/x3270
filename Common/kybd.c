@@ -686,49 +686,12 @@ toggle_always_insert(toggle_index_t ix, enum toggle_type type)
     insert_mode(CONNECTED && IN_3270 && toggled(ALWAYS_INSERT));
 }
 
-/*
- * Keyboard module registration.
- */
-void
-kybd_register(void)
+/* The right-to-left display toggle changed. */
+static void
+toggle_right_to_left(toggle_index_t ix, enum toggle_type type)
 {
-    static toggle_register_t toggles[] = {
-	{ BLANK_FILL,	NULL,	0 },
-	{ SHOW_TIMING,	NULL,	0 },
-	{ ALWAYS_INSERT,toggle_always_insert,	0 },
-    };
-
-    /* Register interest in connect and disconnect events. */
-    register_schange_ordered(ST_CONNECT, kybd_connect, 1000);
-    register_schange_ordered(ST_3270_MODE, kybd_in3270, 1000);
-
-    /* Register the actions. */
-    register_actions(kybd_actions, array_count(kybd_actions));
-
-    /* Register the interactive actions. */
-    if (product_has_display()) {
-	register_actions(kybd_dactions, array_count(kybd_dactions));
-    }
-
-    /* Register the toggles. */
-    register_toggles(toggles, array_count(toggles));
-    register_extended_toggle(ResOerrLock, toggle_oerr_lock, NULL, NULL,
-	    (void **)&appres.oerr_lock, XRM_BOOLEAN);
-    register_extended_toggle(ResUnlockDelay, toggle_unlock_delay, NULL, NULL,
-	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
-    register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
-	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
-}
-
-/*
- * Toggle reverse mode.
- */
-    static void
-reverse_mode(bool on)
-{
-    if (!dbcs) {
-	reverse = on;
-	status_reverse_mode(on);
+    if (screen_flipped() != toggled(RIGHT_TO_LEFT)) {
+	screen_flip();
     }
 }
 
@@ -751,6 +714,69 @@ operator_error(int error_type, bool oerr_fail)
 	flush_ta();
     }
     return !oerr_fail;
+}
+
+/*
+ * Toggle reverse mode.
+ */
+static void
+reverse_mode(bool on)
+{
+    if (!dbcs) {
+	reverse = on;
+	status_reverse_mode(on);
+    }
+}
+
+/* The reverse input toggle changed. */
+static void
+toggle_reverse_input(toggle_index_t ix, enum toggle_type type)
+{
+    reverse_mode(toggled(REVERSE_INPUT));
+}
+
+/* The insert mode toggle changed. */
+static void
+toggle_insert_mode(toggle_index_t ix, enum toggle_type type)
+{
+    insert_mode(toggled(INSERT_MODE));
+}
+
+/*
+ * Keyboard module registration.
+ */
+void
+kybd_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ BLANK_FILL,	NULL,	0 },
+	{ SHOW_TIMING,	NULL,	0 },
+	{ ALWAYS_INSERT,toggle_always_insert,	0 },
+	{ RIGHT_TO_LEFT,toggle_right_to_left,	0 },
+	{ REVERSE_INPUT,toggle_reverse_input,	0 },
+	{ INSERT_MODE,	toggle_insert_mode,	0 },
+    };
+
+    /* Register interest in connect and disconnect events. */
+    register_schange_ordered(ST_CONNECT, kybd_connect, 1000);
+    register_schange_ordered(ST_3270_MODE, kybd_in3270, 1000);
+
+    /* Register the actions. */
+    register_actions(kybd_actions, array_count(kybd_actions));
+
+    /* Register the interactive actions. */
+    if (product_has_display()) {
+	register_actions(kybd_dactions, array_count(kybd_dactions));
+    }
+
+    /* Register the toggles. */
+    register_toggles(toggles, array_count(toggles));
+    register_extended_toggle(ResOerrLock, toggle_oerr_lock, NULL, NULL,
+	    (void **)&appres.oerr_lock, XRM_BOOLEAN);
+    register_extended_toggle(ResUnlockDelay, toggle_unlock_delay, NULL, NULL,
+	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
+    register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
+	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
 }
 
 /*
@@ -1763,15 +1789,13 @@ MonoCase_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Flip_action(ia_t ia, unsigned argc, const char **argv)
 {
+    const char *toggle_argv[2] = { ResRightToLeftMode, NULL };
+
     action_debug("Flip", ia, argc, argv);
     if (check_argc("Flip", argc, 0, 0) < 0) {
 	return false;
     }
-    if (dbcs) {
-	return false;
-    }
-    screen_flip();
-    return true;
+    return Toggle_action(ia, 1, toggle_argv);
 }
 
 /*
@@ -3068,16 +3092,13 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Insert_action(ia_t ia, unsigned argc, const char **argv)
 {
+    const char *set_argv[3] = { ResInsertMode, "True", NULL };
+
     action_debug("Insert", ia, argc, argv);
     if (check_argc("Insert", argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Insert");
-    if (IN_NVT) {
-	return false;
-    }
-    insert_mode(true);
-    return true;
+    return Set_action(ia, 2, set_argv);
 }
 
 /*
@@ -3086,20 +3107,13 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 {
+    const char *toggle_argv[2] = { ResInsertMode, NULL };
+
     action_debug("ToggleInsert", ia, argc, argv);
     if (check_argc("ToggleInsert", argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("ToggleInsert");
-    if (IN_NVT) {
-	return false;
-    }
-    if (insert) {
-	insert_mode(false);
-    } else {
-	insert_mode(true);
-    }
-    return true;
+    return Toggle_action(ia, 1, toggle_argv);
 }
 
 /*
@@ -3108,15 +3122,13 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
 {
+    const char *toggle_argv[2] = { ResReverseInputMode, NULL };
+
     action_debug("ToggleReverse", ia, argc, argv);
     if (check_argc("ToggleReverse", argc, 0, 0) < 0) {
 	return false;
     }
-    if (IN_NVT) {
-	return false;
-    }
-    reverse_mode(!reverse);
-    return true;
+    return Toggle_action(ia, 1, toggle_argv);
 }
 
 /*

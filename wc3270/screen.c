@@ -3313,6 +3313,12 @@ screen_flip(void)
     screen_disp(false);
 }
 
+bool
+screen_flipped(void)
+{
+    return flipped;
+}
+
 /*
  * Windows-specific Paste action, that takes advantage of the existing x3270
  * instrastructure for multi-line paste.

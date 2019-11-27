@@ -1501,6 +1501,14 @@ description
     will be constructed by Xlib based on the current locale.
 .
 
+name insertMode
+applies a
+type b
+default false
+description
+    Controls 3270 insert mode.
+.
+
 name intr
 applies a
 groups n
@@ -2554,6 +2562,15 @@ desc
     <i>xterm</i>.
 .
 
+name reverseInputMode
+applies a
+type b
+default false
+desc
+    When true in 3270 mode, input fields fill in the opposite direction of the
+    screen display.
+.
+
 name reverseVideo
 applies c
 type b
@@ -2562,6 +2579,15 @@ default false
 option -rv
 desc
     When true, %p% will use a white background instead of a black one.
+.
+
+name rightToLeftMode
+applies x C
+type b
+default false
+desc
+    When true, the %p% display will be in right-to-left mode, with column 1
+    on the right instead of on the left.
 .
 
 name rprnt
