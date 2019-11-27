@@ -1392,7 +1392,7 @@ static void
 do_script(bool on)
 {
     status_add(SCRIPT,
-	    on ? (*standard_font ? 'S' : CG_S) : nullblank, KT_STD);
+	    on ? (*standard_font ? 's' : CG_s) : nullblank, KT_STD);
 }
 
 static void
