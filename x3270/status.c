@@ -117,7 +117,7 @@ static int colors3279[SSZ] =  {
  *   M-30	Reverse input mode indication ("R" or blank)
  *   M-29	Insert mode indication (Special symbol/"I" or blank)
  *   M-28	Printer indication ("P" or blank)
- *   M-27	Script indication ("S" or blank)
+ *   M-27	Script indication ("s" or blank)
  *   M-26..M-16	empty
  *   M-15..M-9	command timing (Clock symbol and m:ss, or blank)
  *   M-7..M	cursor position (rrr/ccc or blank)
