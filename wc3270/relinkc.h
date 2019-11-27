@@ -77,6 +77,7 @@ typedef struct {
 
 #define WF2_NEW_VHC_DEFAULT	0x01	/* has new verify-host-cert default */
 #define WF2_NO_VERIFY_HOST_CERT	0x02	/* do not verify host certificate */
+#define WF2_ALWAYS_INSERT	0x04	/* always use insert mode */
 
 typedef struct {
 	char *name;

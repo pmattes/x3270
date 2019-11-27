@@ -107,6 +107,7 @@ enum {
     MN_BG,		/* background color */
     MN_MENUBAR,		/* menu bar */
     MN_TRACE,		/* trace at start-up */
+    MN_ALWAYS_INSERT,	/* always use insert mode */
     MN_NOTEPAD,		/* use Notepad to edit file (last option) */
     MN_N_OPTS
 } menu_option_t;
@@ -2648,6 +2649,42 @@ be left on your desktop.");
 }
 
 /**
+ * Prompt for always insert mode
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_always_insert(session_t *s)
+{
+    int rc;
+
+    new_screen(s, NULL, "\
+Default to Insert Mode\n\
+\n\
+This option causes wc3270 to use insert mode by default.");
+
+    do {
+	printf("\nDefault to insert mode? (y/n) [%s] ",
+		(s->flags2 & WF2_ALWAYS_INSERT)? "y" : "n");
+	fflush(stdout);
+	rc = getyn((s->flags2 & WF2_ALWAYS_INSERT) != 0);
+	switch (rc) {
+	case YN_ERR:
+	    return -1;
+	case TRUE:
+	    s->flags2 |= WF2_ALWAYS_INSERT;
+	    break;
+	case FALSE:
+	    s->flags2 &= ~WF2_ALWAYS_INSERT;
+	    break;
+	}
+    } while (rc < 0);
+    return 0;
+}
+
+/**
  * Run Notepad on the session file, allowing arbitrary resources to be
  * edited.
  *
@@ -3040,6 +3077,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		(s->flags & WF_NO_MENUBAR)? "No": "Yes");
 	printf("%3d. Trace at start-up ...... : %s\n", MN_TRACE,
 		(s->flags & WF_TRACE)? "Yes": "No");
+	printf("%3d. Always use insert mode . : %s\n", MN_ALWAYS_INSERT,
+		(s->flags2 & WF2_ALWAYS_INSERT)? "Yes": "No");
 	printf("%3d. Edit miscellaneous resources with Notepad\n",
 		MN_NOTEPAD);
 
@@ -3239,6 +3278,12 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		break;
 	    case MN_TRACE:
 		if (get_trace(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
+	    case MN_ALWAYS_INSERT:
+		if (get_always_insert(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -4635,7 +4680,11 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
     }
 
     if (session->flags & WF_TRACE) {
-	    fprintf(f, "wc3270.%s: %s\n", ResTrace, ResTrue);
+	fprintf(f, "wc3270.%s: %s\n", ResTrace, ResTrue);
+    }
+
+    if (session->flags2 & WF2_ALWAYS_INSERT) {
+	fprintf(f, "wc3270.%s: %s\n", ResAlwaysInsert, ResTrue);
     }
 
     /* Emit the warning. */
