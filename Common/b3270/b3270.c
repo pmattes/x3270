@@ -899,6 +899,100 @@ Crash_action(ia_t ia, unsigned argc, const char **argv)
     return false;
 }
 
+/*
+ * ForceStatus action. Used for debug purposes.
+ */
+static bool
+ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
+{
+    static const char *reasons[] = {
+	OiaLockDeferred, OiaLockInhibit, OiaLockMinus, OiaLockNotConnected,
+	OiaLockOerr, OiaLockScrolled, OiaLockSyswait, OiaLockTwait,
+	OiaLockDisabled, "reconnecting", NULL
+    };
+    static const char *oerrs[] = {
+	OiaOerrDbcs, OiaOerrNumeric, OiaOerrOverflow, OiaOerrProtected, NULL
+    };
+    int reason;
+
+    action_debug("ForceStatus", ia, argc, argv);
+    if (check_argc("ForceStatus", argc, 1, 2) < 0) {
+	return false;
+    }
+
+    for (reason = 0; reasons[reason] != NULL; reason++) {
+	if (!strcasecmp(argv[0], reasons[reason])) {
+	    break;
+	}
+    }
+    if (reasons[reason] == NULL) {
+	popup_an_error("ForceStatus: Unknown reason '%s'", argv[0]);
+	return false;
+    }
+    if (!strcmp(argv[0], OiaLockOerr)) {
+	int oerr;
+
+	if (argc < 2) {
+	    popup_an_error("ForceStatus: Reason '%s' requires an argument",
+		    reasons[reason]);
+	    return false;
+	}
+	for (oerr = 0; oerrs[oerr] != NULL; oerr++) {
+	    if (!strcasecmp(argv[1], oerrs[oerr])) {
+		break;
+	    }
+	}
+	if (oerrs[oerr] == NULL) {
+	    popup_an_error("ForceStatus: Unknown %s type '%s'",
+		    reasons[reason], argv[1]);
+	    return false;
+	}
+	ui_vleaf(IndOia,
+		AttrField, OiaLock,
+		AttrValue, lazyaf("%s %s", reasons[reason], oerrs[oerr]),
+		NULL);
+    } else if (!strcmp(argv[0], OiaLockScrolled)) {
+	int n;
+
+	if (argc < 2) {
+	    popup_an_error("ForceStatus: Reason '%s' requires an argument",
+		    reasons[reason]);
+	    return false;
+	}
+	n = atoi(argv[1]);
+	if (n < 1) {
+	    popup_an_error("Invalid %s amount '%s'", reasons[reason], argv[1]);
+	    return false;
+	}
+	
+	ui_vleaf(IndOia,
+		AttrField, OiaLock,
+		AttrValue, lazyaf("%s %d", reasons[reason], n),
+		NULL);
+    } else if (argc > 1) {
+	popup_an_error("ForceStatus: Reason '%s' does not take an argument",
+		reasons[reason]);
+	return false;
+    } else {
+	if (!strcmp(reasons[reason], "reconnecting")) {
+	    ui_vleaf(IndOia,
+		    AttrField, OiaLock,
+		    AttrValue, OiaLockNotConnected,
+		    NULL);
+	    ui_vleaf(IndConnection,
+		    AttrState, cstate_name[(int)RECONNECTING],
+		    NULL);
+	} else {
+	    ui_vleaf(IndOia,
+		    AttrField, OiaLock,
+		    AttrValue, reasons[reason],
+		    NULL);
+	}
+    }
+
+    return true;
+}
+
 /**
  * xterm text escape
  *
@@ -1020,8 +1114,9 @@ static void
 b3270_register(void)
 {
     static action_table_t actions[] = {
-	{ "ClearRegion",ClearRegion_action,0 },
-	{ "Crash",	Crash_action,	0 }
+	{ "ClearRegion",	ClearRegion_action,	0 },
+	{ "Crash",		Crash_action,		ACTION_HIDDEN },
+	{ "ForceStatus",	ForceStatus_action,	ACTION_HIDDEN },
     };
     static opt_t b3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,

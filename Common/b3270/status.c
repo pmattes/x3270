@@ -160,26 +160,26 @@ status_minus(void)
 	return;
     }
     oia_kybdlock = K_MINUS;
-    status_lock(NewString("minus"));
+    status_lock(NewString(OiaLockMinus));
 }
 
 void
 status_oerr(int error_type)
 {
     static const char *oerr_names[] = {
-	"protected",
-	"numeric",
-	"overflow",
-	"dbcs"
+	OiaOerrProtected,
+	OiaOerrNumeric,
+	OiaOerrOverflow,
+	OiaOerrDbcs
     };
     char *name;
 
     oia_kybdlock = K_OERR;
 
     if (error_type >= 1 && error_type <= 4) {
-	name = xs_buffer("oerr %s", oerr_names[error_type - 1]);
+	name = xs_buffer(OiaLockOerr " %s", oerr_names[error_type - 1]);
     } else {
-	name = xs_buffer("oerr %d", error_type);
+	name = xs_buffer(OiaLockOerr " %d", error_type);
     }
     status_lock(name);
 }
@@ -192,19 +192,19 @@ status_reset(void)
 	    return;
 	}
 	oia_kybdlock = K_NOT_CONNECTED;
-	status_lock(NewString("not-connected"));
+	status_lock(NewString(OiaLockNotConnected));
     } else if (kybdlock & KL_ENTER_INHIBIT) {
 	if (oia_kybdlock == K_INHIBIT) {
 	    return;
 	}
 	oia_kybdlock = K_INHIBIT;
-	status_lock(NewString("inhibit"));
+	status_lock(NewString(OiaLockInhibit));
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	if (oia_kybdlock == K_DEFERRED) {
 	    return;
 	}
 	oia_kybdlock = K_DEFERRED;
-	status_lock(NewString("deferred"));
+	status_lock(NewString(OiaLockDeferred));
     } else {
 	if (oia_kybdlock == K_NONE) {
 	    return;
@@ -267,7 +267,7 @@ status_scrolled(int n)
 	if (!flashing) {
 	    ui_vleaf(IndOia,
 		    AttrField, OiaLock,
-		    AttrValue, lazyaf("scrolled %d", n),
+		    AttrValue, lazyaf(OiaLockScrolled " %d", n),
 		    NULL);
 	}
     } else {
@@ -312,7 +312,7 @@ status_keyboard_disable_flash(void)
     if (!flashing) {
 	ui_vleaf(IndOia,
 		AttrField, OiaLock,
-		AttrValue, "disabled",
+		AttrValue, OiaLockDisabled,
 		NULL);
     }
     flashing = true;
@@ -329,7 +329,7 @@ status_syswait(void)
 	return;
     }
     oia_kybdlock = K_SYSWAIT;
-    status_lock(NewString("syswait"));
+    status_lock(NewString(OiaLockSyswait));
 }
 
 static bool is_timed = false;
@@ -376,7 +376,7 @@ status_twait(void)
 	    AttrValue, ValTrue,
 	    NULL);
 
-    status_lock(NewString("twait"));
+    status_lock(NewString(OiaLockTwait));
 }
 
 void

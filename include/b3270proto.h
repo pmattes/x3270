@@ -151,6 +151,23 @@
 #define OiaTiming	"timing"
 #define OiaTypeahead	"typeahead"
 
+/* OIA lock reasons. */
+#define OiaLockNotConnected "not-connected"
+#define OiaLockDeferred "deferred"
+#define OiaLockInhibit "inhibit"
+#define OiaLockMinus	"minus"
+#define OiaLockOerr	"oerr"
+#define OiaLockScrolled	"scrolled"
+#define OiaLockSyswait	"syswait"
+#define OiaLockTwait	"twait"
+#define OiaLockDisabled	"disabled"
+
+/* OIA operator errors */
+#define OiaOerrProtected "protected"
+#define OiaOerrNumeric	"numeric"
+#define OiaOerrOverflow	"overflow"
+#define OiaOerrDbcs	"dbcs"
+
 /* Toggles. */
 #define ToggleExtended	"extended"
 
