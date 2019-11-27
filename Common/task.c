@@ -1364,6 +1364,9 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
     char *name = NULL;
     bool is_ui = (cb->flags & CB_UI) != 0;
 
+    /* We performed some new action, so we're not idle. */
+    reset_idle_timer();
+
     if (cb->flags & CB_NEW_TASKQ) {
 	/* Allocate a new taskq. */
 	q = (taskq_t *)Calloc(sizeof(taskq_t) + strlen(cb->shortname) + 1, 1);
