@@ -332,10 +332,36 @@ dump_codepages(void)
 		params[2 + (j * 2)] = lazyaf("alias%d", j + 1);
 		params[2 + (j * 2) + 1] = cpnames[i].aliases[j];
 	    }
-	    ui_leaf(IndCharset, params);
+	    ui_leaf(IndCodepage, params);
 	    Free(params);
 	}
 	free_cpnames(cpnames);
+    }
+}
+
+/* Dump the model list. Called at initialization time. */
+static void
+dump_models(void)
+{
+    static struct {
+	int model;
+	int rows;
+	int columns;
+    } models[] = {
+	{ 2, MODEL_2_ROWS, MODEL_2_COLS },
+	{ 3, MODEL_3_ROWS, MODEL_3_COLS },
+	{ 4, MODEL_4_ROWS, MODEL_4_COLS },
+	{ 5, MODEL_5_ROWS, MODEL_5_COLS },
+	{ 0, 0, 0 }
+    };
+    int i;
+
+    for (i = 0; models[i].model != 0; i++) {
+	ui_vleaf(IndModel,
+		AttrModel, lazyaf("%d", models[i].model),
+		AttrRows, lazyaf("%d", models[i].rows),
+		AttrColumns, lazyaf("%d", models[i].columns),
+		NULL);
     }
 }
 
@@ -430,6 +456,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	codepage_init(NULL);
     }
     dump_codepages();
+    dump_models();
     model_init();
     status_reset();
 
