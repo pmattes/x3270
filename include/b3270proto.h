@@ -38,7 +38,7 @@
 #define IndAttr		"attr"
 #define IndBell		"bell"
 #define IndChar		"char"
-#define IndCodepage	"codepage"
+#define IndCodePage	"code-page"
 #define IndConnectAttempt "connect-attempt"
 #define IndConnection	"connection"
 #define IndCursor	"cursor"

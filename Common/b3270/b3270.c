@@ -332,7 +332,7 @@ dump_codepages(void)
 		params[2 + (j * 2)] = lazyaf("alias%d", j + 1);
 		params[2 + (j * 2) + 1] = cpnames[i].aliases[j];
 	    }
-	    ui_leaf(IndCodepage, params);
+	    ui_leaf(IndCodePage, params);
 	    Free(params);
 	}
 	free_cpnames(cpnames);
