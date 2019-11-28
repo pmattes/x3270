@@ -335,7 +335,7 @@ status_syswait(void)
 static bool is_timed = false;
 
 void
-status_timing(struct timeval *t0 _is_unused, struct timeval *t1 _is_unused)
+status_timing(struct timeval *t0, struct timeval *t1)
 {
     unsigned long cs;
 

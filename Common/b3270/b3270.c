@@ -126,7 +126,8 @@ static toggle_register_t toggles[] = {
     { OVERLAY_PASTE,	b3270_toggle,	TOGGLE_NEED_INIT },
     { TYPEAHEAD,	b3270_toggle,	TOGGLE_NEED_INIT },
     { APL_MODE,		b3270_toggle,	TOGGLE_NEED_INIT },
-    { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT }
+    { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT },
+    { SHOW_TIMING,	b3270_toggle,	TOGGLE_NEED_INIT },
 };
 static const char *cstate_name[] = {
     "not-connected",
@@ -899,6 +900,9 @@ Crash_action(ia_t ia, unsigned argc, const char **argv)
     return false;
 }
 
+#define STATUS_RECONNECTING	"reconnecting"
+#define STATUS_RESOLVING	"resolving"
+
 /*
  * ForceStatus action. Used for debug purposes.
  */
@@ -908,7 +912,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
     static const char *reasons[] = {
 	OiaLockDeferred, OiaLockInhibit, OiaLockMinus, OiaLockNotConnected,
 	OiaLockOerr, OiaLockScrolled, OiaLockSyswait, OiaLockTwait,
-	OiaLockDisabled, "reconnecting", NULL
+	OiaLockDisabled, STATUS_RECONNECTING, STATUS_RESOLVING, NULL
     };
     static const char *oerrs[] = {
 	OiaOerrDbcs, OiaOerrNumeric, OiaOerrOverflow, OiaOerrProtected, NULL
@@ -974,13 +978,21 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 		reasons[reason]);
 	return false;
     } else {
-	if (!strcmp(reasons[reason], "reconnecting")) {
+	if (!strcmp(reasons[reason], STATUS_RECONNECTING)) {
 	    ui_vleaf(IndOia,
 		    AttrField, OiaLock,
 		    AttrValue, OiaLockNotConnected,
 		    NULL);
 	    ui_vleaf(IndConnection,
 		    AttrState, cstate_name[(int)RECONNECTING],
+		    NULL);
+	} else if (!strcmp(reasons[reason], STATUS_RESOLVING)) {
+	    ui_vleaf(IndOia,
+		    AttrField, OiaLock,
+		    AttrValue, OiaLockNotConnected,
+		    NULL);
+	    ui_vleaf(IndConnection,
+		    AttrState, cstate_name[(int)RESOLVING],
 		    NULL);
 	} else {
 	    ui_vleaf(IndOia,
@@ -1062,6 +1074,9 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 		AttrName, (toggled(ix) && tracefile_name != NULL)?
 		    tracefile_name: NULL,
 		NULL);
+    }
+    if (ix == SHOW_TIMING && !toggled(SHOW_TIMING)) {
+	status_untiming();
     }
 }
 
