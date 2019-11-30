@@ -82,6 +82,7 @@
 #include "sio_glue.h"
 #include "sio_internal.h"
 #include "ssl_passwd_gui.h"
+#include "stats.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -166,8 +167,9 @@ usage(const char *msg)
     exit(1);
 }
 
+/* Dump the current send/receive statistics. */
 static void
-dump_stats()
+dump_stats(void)
 {
     ui_vleaf(IndStats,
 	    AttrBytesReceived, lazyaf("%d", brcvd),
@@ -177,6 +179,7 @@ dump_stats()
 	    NULL);
 }
 
+/* Dump the current send/receive stats out if they have changed. */
 static void
 stats_poll(ioid_t id _is_unused)
 {
@@ -190,7 +193,17 @@ stats_poll(ioid_t id _is_unused)
 	rsent = ns_rsent;
 	dump_stats();
     }
-    stats_ioid = AddTimeOut(STATS_POLL, stats_poll);
+    stats_ioid = NULL_IOID;
+}
+
+/* Send/receive statistics have changed. */
+void
+stats_poke(void)
+{
+    /* Schedule a timeout. */
+    if (stats_ioid == NULL_IOID) {
+	stats_ioid = AddTimeOut(STATS_POLL, stats_poll);
+    }
 }
 
 /**
@@ -252,13 +265,16 @@ b3270_connect(bool ignored)
     }
 
     /* If just connected, dump initial stats. */
-    if (cstate != NOT_CONNECTED && stats_ioid == NULL_IOID) {
-	brcvd = 0;
-	rrcvd = 0;
-	bsent = 0;
-	rsent = 0;
+    if (cstate != NOT_CONNECTED && stats_ioid == NULL_IOID &&
+	(brcvd != ns_brcvd ||
+	 rrcvd != ns_rrcvd ||
+	 bsent != ns_bsent ||
+	 rsent != ns_rsent)) {
+	brcvd = ns_brcvd;
+	rrcvd = ns_rrcvd;
+	bsent = ns_bsent;
+	rsent = ns_rsent;
 	dump_stats();
-	stats_ioid = AddTimeOut(STATS_POLL, stats_poll);
     }
 
     old_cstate = cstate;

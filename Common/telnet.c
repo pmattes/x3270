@@ -76,6 +76,7 @@
 #include "sioc.h"
 #include "split_host.h"
 #include "ssl_passwd_gui.h"
+#include "stats.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -1343,6 +1344,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     trace_netdata('<', netrbuf, nr);
 
     ns_brcvd += nr;
+    stats_poke();
     for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
 #if defined(LOCAL_PROCESS) /*[*/
 	if (local_process) {
@@ -1572,6 +1574,7 @@ telnet_fsm(unsigned char c)
 	case EOR:	/* eor, process accumulated input */
 	    if (IN_3270 || (IN_E && tn3270e_negotiated)) {
 		ns_rrcvd++;
+		stats_poke();
 		if (process_eor()) {
 		    return false;
 		}
@@ -2640,6 +2643,7 @@ net_rawout(unsigned const char *buf, size_t len)
 	    }
 	}
 	ns_bsent += nw;
+	stats_poke();
 	len -= nw;
 	buf += nw;
     bot:
@@ -3010,6 +3014,7 @@ net_output(void)
 
     vtrace("SENT EOR\n");
     ns_rsent++;
+    stats_poke();
 #undef BSTART
 }
 
