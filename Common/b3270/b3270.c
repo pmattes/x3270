@@ -321,6 +321,7 @@ dump_codepages(void)
     if (cpnames != NULL) {
 	int i;
 
+	ui_vpush(IndCodePages, NULL);
 	for (i = 0; cpnames[i].name != NULL; i++) {
 	    const char **params = Calloc(2 + (2 * cpnames[i].num_aliases) + 1,
 		    sizeof(char *));
@@ -335,6 +336,7 @@ dump_codepages(void)
 	    ui_leaf(IndCodePage, params);
 	    Free(params);
 	}
+	ui_pop();
 	free_cpnames(cpnames);
     }
 }
@@ -356,6 +358,7 @@ dump_models(void)
     };
     int i;
 
+    ui_vpush(IndModels, NULL);
     for (i = 0; models[i].model != 0; i++) {
 	ui_vleaf(IndModel,
 		AttrModel, lazyaf("%d", models[i].model),
@@ -363,6 +366,7 @@ dump_models(void)
 		AttrColumns, lazyaf("%d", models[i].columns),
 		NULL);
     }
+    ui_pop();
 }
 
 int

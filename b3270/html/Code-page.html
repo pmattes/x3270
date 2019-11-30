@@ -14,6 +14,9 @@ only at initialization. Each indication may include one more more aliases
 with the attributes <b>alias1</b>, <b>alias2</b>, etc.
 </p>
 
+<p>Appears only within a <a href="Code-pages.html">code-pages</a> element.
+</p>
+
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>name</td><td>yes</td><td>Canonical code page name</td></tr>
@@ -23,7 +26,9 @@ with the attributes <b>alias1</b>, <b>alias2</b>, etc.
 
 <p>Example:
 <pre>
+&lt;code-pages&gt; 
 &lt;code-page name="cp1140" alias1="us-euro"/&gt; 
+&lt;/code-pages&gt; 
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>

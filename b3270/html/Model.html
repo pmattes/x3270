@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>b3270 codepage Indication</title>
+  <title>b3270 model Indication</title>
   <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
 </head>
 
@@ -11,6 +11,9 @@
 
 <p>Indicates support for a particular model. One or more are sent,
 only at initialization.
+</p>
+
+<p>Appears only within a <a href="Models.html">models</a> element.
 </p>
 
 <table border cols=3 width="75%">
@@ -22,7 +25,9 @@ only at initialization.
 
 <p>Example:
 <pre>
+&lt;models&gt;
 &lt;model model="2" rows="24" columns="80"/&gt; 
+&lt;/models&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
