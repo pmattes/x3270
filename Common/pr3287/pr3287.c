@@ -835,7 +835,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	port = "23";
     }
 
-    if (HOST_nFLAG(prefixes, SSL_HOST)) {
+    if (HOST_nFLAG(prefixes, TLS_HOST)) {
 	options.ssl_host = true;
     }
     if (HOST_nFLAG(prefixes, NO_VERIFY_CERT_HOST)) {

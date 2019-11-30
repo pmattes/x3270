@@ -338,6 +338,8 @@ done:
     }
     if (!rc) {
 	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);
+    } else if (HOST_nFLAG(*prefixes, NO_VERIFY_CERT_HOST)) {
+	*prefixes |= (1 << TLS_HOST);
     }
     return rc;
 }

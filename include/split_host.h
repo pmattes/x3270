@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 typedef enum {
     ANSI_HOST,          /* A: */
     NO_LOGIN_HOST,      /* C: */
-    SSL_HOST,           /* L: */
+    TLS_HOST,           /* L: */
     NON_TN3270E_HOST,   /* N: */
     PASSTHRU_HOST,      /* P: */
     STD_DS_HOST,        /* S: */

@@ -430,7 +430,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* init ssl */
-    if (HOST_FLAG(SSL_HOST)) {
+    if (HOST_FLAG(TLS_HOST)) {
 	if (!sio_supported()) {
 	    popup_an_error("TLS not supported\n");
 	    close_fail;
@@ -964,10 +964,10 @@ net_connected(void)
     }
 
     vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
-	    HOST_FLAG(SSL_HOST)? " via TLS": "");
+	    HOST_FLAG(TLS_HOST)? " via TLS": "");
 
     /* Set up TLS. */
-    if (HOST_FLAG(SSL_HOST) && sio != NULL && !secure_connection) {
+    if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
 	bool rv;
 	char *session, *cert;
 
