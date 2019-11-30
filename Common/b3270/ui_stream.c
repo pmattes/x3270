@@ -803,7 +803,9 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 static void
 xml_end(void *userData _is_unused, const XML_Char *name)
 {
-    input_nest--;
+    if (!--input_nest) {
+	x3270_exit(0);
+    }
 }
 
 /**

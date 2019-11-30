@@ -420,6 +420,7 @@ main(int argc, char *argv[])
     check_min_version(appres.min_version);
 
     ui_io_init();
+    ui_vpush(IndInitialize, NULL);
     ui_vleaf(IndHello,
 	    AttrVersion, lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
 	    AttrBuild, build,
@@ -522,7 +523,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /* Prepare to run a peer script. */
     peer_script_init();
 
-    ui_vleaf(IndReady, NULL);
+    /* Done with initialization.*/
+    ui_pop();
 
     /* Process events forever. */
     while (1) {

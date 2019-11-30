@@ -32,17 +32,19 @@ receives end-of-file on its standard input, it exits.</p>
 
 <p>b3270 operations and indications are formatted as UTF-8-encoded XML. b3270
 input is a document called <b>b3270-in</b>. b3270 output is a document called
-<b>b3270-out</b>. So the input session to b3270 must begin with the
+<b>b3270-out</b>. So the input stream to b3270 must begin with the
 following:
 <pre>
  &lt;xml version="1.0" encoding="UTF-8"?&gt;
  &lt;b3270-in&gt;
 </pre>
-(The first line is actually optional, but helpful.) It should also end with:
+(The first line is actually optional, but helpful.) The input stream should
+end with:
 <pre>
  &lt;/b3270-in&gt;
 </pre>
-Similarly, the entire b3270 session output is bracketed by:</p>
+This will cause b3270 to exit.
+Similarly, the entire b3270 output stream is bracketed by:</p>
 <pre>
  &lt;xml version="1.0" encoding="UTF-8"?&gt;
  &lt;b3270-out&gt;
@@ -58,11 +60,10 @@ the protocol. All information is conveyed by elements and their attributes.</p>
 <i>operations</i>. XML elements sent from the emulator to the user interface
 are referred to as <i>indications</i>.
 <p>Operations and indications are transmitted as complete XML elements.
-For example, the <a href="Ready.html">ready</a> indication, which tells the
-user interface that the emulator has sent all of its initial state, looks like
-this:
+For example, the <a href="Bell.html">bell</a> indication, which tells the
+user interface to ring the terminal bell, looks like this:
 <pre>
- &lt;ready/&gt;
+ &lt;bell/&gt;
 </pre></p>
 <p>Similarly, a <a href="Run.html">run</a> operation sent to the emulator might look like this:
 <pre>
@@ -92,23 +93,26 @@ When the UI has processed the action, it uses the
 complete the action, giving back the unique tag and optional result text.</p>
 
 <p>The pass-through mechanism is also used to implement password prompting for
-SSL/TLS certificates. The action name <b>TlsKeyPassword</b> is reserved for
-this purpose. If a password is needed to use an SSL/TLS client certificate,
+TLS certificates. The action name <b>TlsKeyPassword</b> is reserved for
+this purpose. If a password is needed to use an TLS client certificate,
 b3270 will invoke the <b>TlsKeyPassword()</b> action. If the user interface
-has not registered a pass-through for <b>TlsKeyPassword</b>, then the SSL/TLS
+has not registered a pass-through for <b>TlsKeyPassword</b>, then the TLS
 password operation will fail, and the host session will not be established. If
 a pass-through has been registered, a <a href="Passthru.html">passthru</a>
-indication will be generated for it. If that operation succeeds, the TLS/SSL
-password will come from the result text. If the operation fails, the TLS/SSL
+indication will be generated for it. If that operation succeeds, the TLS
+password will come from the result text. If the operation fails, the TLS
 password operation and host session will fail.</p>
 
 <h2>Initialization</h2>
 
-When b3270 starts up, it sends a series of initialization indications to the
-user interface, starting with a <a href="Hello.html">hello</a> and ending with a
-<a href="Ready.html">ready</a>. These indications give the initial state of
+When b3270 starts up, it sends an <a href="Initialize.html">initialize</a>
+indication.
+Within that element are a series of initialization indications to the
+user interface.
+The first is a <a href="Hello.html">hello</a>.
+These indications give the initial state of
 the emulator, with useful information like the character set, model number,
-and SSL/TLS options supported.
+and TLS options supported.
 
 <a name="operations"></a><h2>User Interface Operations</h2>
 
@@ -157,14 +161,14 @@ an asterisk.</p>
   <td><a href="Icon-name.html">icon-name</a></td>
  </tr>
  <tr>
+  <td><a href="Initialize.html">model</a></td>
   <td><a href="Model.html">model</a></td>
   <td><a href="Models.html">models</a></td>
-  <td><a href="Oia.html">oia*</a></td>
  </tr>
  <tr>
+  <td><a href="Oia.html">oia*</a></td>
   <td><a href="Passthru.html">passthru</a></td>
   <td><a href="Popup.html">popup</a></td>
-  <td><a href="Ready.html">ready*</a></td>
  </tr>
  <tr>
   <td><a href="Row.html">row</a></td>
