@@ -301,7 +301,7 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
-	Alt<Key>v:			Toggle(reverseInputMode))\n\
+	Alt<Key>v:			Toggle(reverseInputMode)\n\
 	Meta<Key>v:			Toggle(reverseInputMode)\n\
 	Ctrl<Key>w:			DeleteWord()\n\
 	Ctrl<Key>x:			Cut(CLIPBOARD)
