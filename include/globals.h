@@ -240,7 +240,7 @@ enum cstate {
     RECONNECTING,	/* delay before automatic reconnect */
     SSL_PASS,		/* waiting for interactive SSL password */
     RESOLVING,		/* resolving hostname */
-    PENDING,		/* socket connection pending */
+    TCP_PENDING,	/* socket connection pending */
     NEGOTIATING,	/* SSL/proxy negotiation in progress */
     CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
     CONNECTED_NVT,	/* connected in NVT mode */
@@ -255,7 +255,7 @@ enum cstate {
 extern enum cstate cstate;
 
 #define cPCONNECTED(c)	(c > NOT_CONNECTED)
-#define cHALF_CONNECTED(c) (c == SSL_PASS || c == RESOLVING || c == PENDING)
+#define cHALF_CONNECTED(c) (c == SSL_PASS || c == RESOLVING || c == TCP_PENDING)
 #define cCONNECTED(c)	(c >= CONNECTED_INITIAL)
 #define cIN_NVT(c)	(c == CONNECTED_NVT || \
 			 c == CONNECTED_NVT_CHAR || \

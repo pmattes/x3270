@@ -1757,7 +1757,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    break;
 	case SSL_PASS:
 	case RESOLVING:
-	case PENDING:
+	case TCP_PENDING:
 	case NEGOTIATING:
 	case CONNECTED_INITIAL:
 	default:

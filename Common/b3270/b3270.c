@@ -135,7 +135,7 @@ static const char *cstate_name[] = {
     "reconnecting",
     "ssl-password-pending",
     "resolving",
-    "pending",
+    "tcp-pending",
     "negotiating",
     "connected-initial",
     "connected-nvt",

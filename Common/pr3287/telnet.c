@@ -89,7 +89,7 @@
 /*   connection state */
 enum cstate {
     NOT_CONNECTED,	/* no socket, unknown mode */
-    PENDING,		/* connection pending */
+    TCP_PENDING,	/* connection pending */
     CONNECTED_INITIAL,	/* connected, no mode yet */
     CONNECTED_NVT,	/* connected in NVT mode */
     CONNECTED_3270,	/* connected in old-style 3270 mode */
@@ -101,8 +101,8 @@ enum cstate {
 };
 enum cstate cstate = NOT_CONNECTED;
 
-#define PCONNECTED	((int)cstate >= (int)PENDING)
-#define HALF_CONNECTED	(cstate == PENDING)
+#define PCONNECTED	((int)cstate >= (int)TCP_PENDING)
+#define HALF_CONNECTED	(cstate == TCP_PENDING)
 #define CONNECTED	((int)cstate >= (int)CONNECTED_INITIAL)
 #define IN_NVT		(cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT)
 #define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)

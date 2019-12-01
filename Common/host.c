@@ -566,7 +566,7 @@ host_connect(const char *n, enum iaction ia)
     /* Set state and tell the world. */
     connect_ia = ia;
     if (nc == NC_CONNECT_PENDING) {
-	cstate = PENDING;
+	cstate = TCP_PENDING;
 	st_changed(ST_HALF_CONNECT, true);
     } else {
 	/* cstate == NC_CONNECTED */
@@ -598,7 +598,7 @@ host_new_connection(bool pending)
 {
     /* Set state and tell the world. */
     if (pending) {
-	cstate = PENDING;
+	cstate = TCP_PENDING;
 	st_changed(ST_HALF_CONNECT, true);
     } else {
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
@@ -634,7 +634,7 @@ host_continue_connect(iosrc_t iosrc, net_connect_t nc)
     /* Set state and tell the world. */
     connect_ia = host_ia;
     if (nc == NC_CONNECT_PENDING) {
-	cstate = PENDING;
+	cstate = TCP_PENDING;
 	st_changed(ST_HALF_CONNECT, true);
     } else {
 	/* cstate == NC_CONNECTED */
