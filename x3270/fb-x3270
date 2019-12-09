@@ -897,7 +897,7 @@ x3270.message.statusScrolled:			Scrolled
 x3270.message.statusMinus:			No Function
 x3270.message.statusConnecting:			[TCP]
 x3270.message.statusTlsPending:			[TLS]
-x3270.message.statusProxyPending:		[PROXY]
+x3270.message.statusProxyPending:		[Proxy]
 x3270.message.statusTelnetPending:		[TELNET]
 x3270.message.statusDisabled:			Disabled
 x3270.message.statusReconnecting:		Reconnecting

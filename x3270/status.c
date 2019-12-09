@@ -315,7 +315,7 @@ static int tls_len = sizeof(tls_msg);
 
 static unsigned char proxy_msg[] = {
     CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
-    CG_commlo, CG_space, CG_bracketleft, CG_P, CG_R, CG_O, CG_X, CG_Y,
+    CG_commlo, CG_space, CG_bracketleft, CG_P, CG_r, CG_o, CG_x, CG_y,
     CG_bracketright
 };
 static int proxy_len = sizeof(proxy_msg);

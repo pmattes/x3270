@@ -2045,7 +2045,7 @@ status_connect(bool connected)
 	    oia_boxsolid = false;
 	    status_secure = SS_INSECURE;
 	} else if (cstate == PROXY_PENDING) {
-	    other_msg = "X [PROXY]";
+	    other_msg = "X [Proxy]";
 	    oia_boxsolid = false;
 	    status_secure = SS_INSECURE;
 	} else if (cstate == TELNET_PENDING) {
