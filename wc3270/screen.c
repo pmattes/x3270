@@ -201,7 +201,6 @@ static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
-static void status_half_connect(bool ignored);
 static void status_connect(bool ignored);
 static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
@@ -1278,7 +1277,7 @@ screen_init(void)
     select_init(maxROWS, maxCOLS);
 
     /* Set up callbacks for state changes. */
-    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_HALF_CONNECT, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);
@@ -2953,16 +2952,6 @@ status_lu(const char *lu)
 }
 
 static void
-status_half_connect(bool half_connected)
-{
-    if (half_connected) {
-	other_msg = "X Connecting";
-	oia_boxsolid = false;
-	status_secure = SS_INSECURE;
-    }
-}
-
-static void
 status_connect(bool connected)
 {
     if (connected) {
@@ -2970,7 +2959,23 @@ status_connect(bool connected)
 	if (cstate == RECONNECTING) {
 	    other_msg = "X Reconnecting";
 	} else if (cstate == RESOLVING) {
-	    other_msg = "X Resolving";
+	    other_msg = "X [DNS]";
+	} else if (cstate == TCP_PENDING) {
+	    other_msg = "X [TCP]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TLS_PENDING) {
+	    other_msg = "X [TLS]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == PROXY_PENDING) {
+	    other_msg = "X [PROXY]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TELNET_PENDING) {
+	    other_msg = "X [TELNET]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    other_msg = "X";
 	} else {
@@ -3207,9 +3212,7 @@ draw_oia(void)
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
-    if (toggled(SHOW_TIMING)) {
-	mvprintw(status_row, rmargin-14, "%s", oia_timing);
-    }
+    mvprintw(status_row, rmargin-14, "%s", oia_timing);
 
     mvprintw(status_row, rmargin-7,
 	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
