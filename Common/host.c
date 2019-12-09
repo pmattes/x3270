@@ -539,7 +539,7 @@ host_connect(const char *n, enum iaction ia)
     connect_ia = ia;
     if (nc == NC_RESOLVING) {
 	cstate = RESOLVING;
-	st_changed(ST_CONNECT, true);
+	st_changed(ST_HALF_CONNECT, true);
 	goto success;
     }
     if (nc == NC_TLS_PASS) {

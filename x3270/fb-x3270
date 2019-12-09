@@ -895,10 +895,13 @@ x3270.message.statusOverflow:			Overflow
 x3270.message.statusInhibit:			Inhibit
 x3270.message.statusScrolled:			Scrolled
 x3270.message.statusMinus:			No Function
-x3270.message.statusConnecting:			Connecting
+x3270.message.statusConnecting:			[TCP]
+x3270.message.statusTlsPending:			[TLS]
+x3270.message.statusProxyPending:		[PROXY]
+x3270.message.statusTelnetPending:		[TELNET]
 x3270.message.statusDisabled:			Disabled
 x3270.message.statusReconnecting:		Reconnecting
-x3270.message.statusResolving:			Resolving
+x3270.message.statusResolving:			[DNS]
 x3270.message.inputMethod:			X11 Input Method (XIM):
 x3270.message.ximState:				state:
 x3270.message.ximDisabled:			failed

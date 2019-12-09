@@ -169,6 +169,9 @@ static void do_disconnected(void);
 static void do_reconnecting(void);
 static void do_resolving(void);
 static void do_connecting(void);
+static void do_tls(void);
+static void do_proxy(void);
+static void do_telnet(void);
 static void do_nonspecific(void);
 static void do_inhibit(void);
 static void do_blank(void);
@@ -193,8 +196,11 @@ static enum keytype oia_compose_keytype = KT_STD;
 static enum msg {
     DISCONNECTED,	/* X Not Connected */
     XRECONNECTING,	/* X Reconnecting */
-    XRESOLVING,		/* X Resolving */
-    CONNECTING,		/* X Connecting */
+    XRESOLVING,		/* X [DNS] */
+    CONNECTING,		/* X [TCP] */
+    TLS,		/* X [TLS] */
+    PROXY,		/* X [PROXY] */
+    TELNET,		/* X [TELNET] */
     NONSPECIFIC,	/* X */
     INHIBIT,		/* X Inhibit */
     BLANK,		/* (blank) */
@@ -217,6 +223,9 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_reconnecting,
     do_resolving,
     do_connecting,
+    do_tls,
+    do_proxy,
+    do_telnet,
     do_nonspecific,
     do_inhibit,
     do_blank,
@@ -274,34 +283,57 @@ static bool oia_printer = false;
 static char *oia_cursor = (char *) 0;
 static char *oia_timing = (char *) 0;
 
-static unsigned char disc_pfx[] = {
-    CG_lock, CG_space, CG_badcommhi, CG_commjag, CG_commlo, CG_space
+static unsigned char disc_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space
 };
-static unsigned char *disc_msg;
-static int disc_len = sizeof(disc_pfx);
+static int disc_len = sizeof(disc_msg);
 
-static unsigned char recon_pfx[] = {
-    CG_lock, CG_space, CG_commhi, CG_commjag, CG_commlo, CG_space
+static unsigned char recon_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_clockleft, CG_clockright
 };
-static unsigned char *recon_msg;
-static int recon_len = sizeof(recon_pfx);
+static int recon_len = sizeof(recon_msg);
 
-static unsigned char rslv_pfx[] = {
-    CG_lock, CG_space, CG_commhi, CG_commjag, CG_commlo, CG_space
+static unsigned char rslv_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_D, CG_N, CG_S, CG_bracketright
 };
-static unsigned char *rslv_msg;
-static int rslv_len = sizeof(rslv_pfx);
+static int rslv_len = sizeof(rslv_msg);
 
-static unsigned char cnct_pfx[] = {
-    CG_lock, CG_space, CG_commhi, CG_commjag, CG_commlo, CG_space
+static unsigned char cnct_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_C, CG_P, CG_bracketright
 };
-static unsigned char *cnct_msg;
-static int cnct_len = sizeof(cnct_pfx);
+static int cnct_len = sizeof(cnct_msg);
+
+static unsigned char tls_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_L, CG_S, CG_bracketright
+};
+static int tls_len = sizeof(tls_msg);
+
+static unsigned char proxy_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_P, CG_R, CG_O, CG_X, CG_Y,
+    CG_bracketright
+};
+static int proxy_len = sizeof(proxy_msg);
+
+static unsigned char telnet_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_E, CG_L, CG_N, CG_E, CG_T,
+    CG_bracketright
+};
+static int telnet_len = sizeof(telnet_msg);
 
 static unsigned char *a_not_connected;
 static unsigned char *a_reconnecting;
 static unsigned char *a_resolving;
 static unsigned char *a_connecting;
+static unsigned char *a_tls;
+static unsigned char *a_proxy;
+static unsigned char *a_telnet;
 static unsigned char *a_inhibit;
 static unsigned char *a_twait;
 static unsigned char *a_syswait;
@@ -316,8 +348,6 @@ static unsigned char *a_disabled;
 static ioid_t revert_timer_id = NULL_IOID;
 
 static unsigned char *make_amsg(const char *key);
-static unsigned char *make_emsg(unsigned char prefix[], const char *key,
-	int *len);
 
 static void cancel_disabled_revert(void);
 static void status_render(int region);
@@ -339,7 +369,6 @@ static void do_cursor(char *buf);
 
 static void status_connect(bool connected);
 static void status_3270_mode(bool connected);
-static void status_half_connect(bool ignored);
 static void status_printer(bool on);
 
 /**
@@ -348,7 +377,7 @@ static void status_printer(bool on);
 void
 status_register(void)
 {
-    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_HALF_CONNECT, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);
@@ -359,13 +388,12 @@ void
 status_init(void)
 {
     a_not_connected = make_amsg("statusNotConnected");
-    disc_msg = make_emsg(disc_pfx, "statusNotConnected", &disc_len);
     a_reconnecting = make_amsg("statusReconnecting");
-    recon_msg = make_emsg(recon_pfx, "statusReconnecting", &recon_len);
     a_resolving = make_amsg("statusResolving");
-    rslv_msg = make_emsg(rslv_pfx, "statusResolving", &rslv_len);
     a_connecting = make_amsg("statusConnecting");
-    cnct_msg = make_emsg(cnct_pfx, "statusConnecting", &cnct_len);
+    a_tls = make_amsg("statusTlsPending");
+    a_proxy = make_amsg("statusProxyPending");
+    a_telnet = make_amsg("statusTelnetPending");
     a_inhibit = make_amsg("statusInhibit");
     a_twait = make_amsg("statusTwait");
     a_syswait = make_amsg("statusSyswait");
@@ -541,6 +569,34 @@ status_connect(bool connected)
 	    do_msg(XRESOLVING);
 	    status_untiming();
 	    status_uncursor_pos();
+	} else if (cstate == TCP_PENDING) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(CONNECTING);
+	    status_untiming();
+	    status_uncursor_pos();
+	} else if (cstate == TLS_PENDING) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(TLS);
+	    status_untiming();
+	    status_uncursor_pos();
+	} else if (cstate == PROXY_PENDING) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(PROXY);
+	    status_untiming();
+	    status_uncursor_pos();
+	} else if (cstate == TELNET_PENDING) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(TELNET);
+	    status_untiming();
+	    status_uncursor_pos();
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
 	    do_msg(NONSPECIFIC);
@@ -565,18 +621,6 @@ status_3270_mode(bool connected)
     oia_boxsolid = IN_3270 && !IN_SSCP;
     do_ctlr();
     status_untiming();
-}
-
-/* Half connected */
-static void
-status_half_connect(bool ignored _is_unused)
-{
-    oia_boxsolid = false;
-    do_ctlr();
-    cancel_disabled_revert();
-    do_msg(CONNECTING);
-    status_untiming();
-    status_uncursor_pos();
 }
 
 /* Toggle printer session mode */
@@ -1195,6 +1239,36 @@ do_connecting(void)
 }
 
 static void
+do_tls(void)
+{
+    if (*standard_font) {
+	status_msg_set(a_tls, strlen((char *)a_tls));
+    } else {
+	status_msg_set(tls_msg, tls_len);
+    }
+}
+
+static void
+do_proxy(void)
+{
+    if (*standard_font) {
+	status_msg_set(a_proxy, strlen((char *)a_proxy));
+    } else {
+	status_msg_set(proxy_msg, proxy_len);
+    }
+}
+
+static void
+do_telnet(void)
+{
+    if (*standard_font) {
+	status_msg_set(a_telnet, strlen((char *)a_telnet));
+    } else {
+	status_msg_set(telnet_msg, telnet_len);
+    }
+}
+
+static void
 do_nonspecific(void)
 {
     static unsigned char nonspecific[] = {
@@ -1536,18 +1610,4 @@ static unsigned char *
 make_amsg(const char *key)
 {
     return (unsigned char *)xs_buffer("X %s", get_message(key));
-}
-
-static unsigned char *
-make_emsg(unsigned char prefix[], const char *key, int *len)
-{
-    const char *text = get_message(key);
-    unsigned char *buf = (unsigned char *)XtMalloc(*len + strlen(text));
-
-    memmove(buf, prefix, *len);
-    while (*text) {
-	buf[(*len)++] = asc2cg0[(int)*text++];
-    }
-
-    return buf;
 }
