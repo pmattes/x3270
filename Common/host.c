@@ -543,8 +543,8 @@ host_connect(const char *n, enum iaction ia)
 	st_changed(ST_CONNECT, true);
 	goto success;
     }
-    if (nc == NC_SSL_PASS) {
-	cstate = SSL_PASS;
+    if (nc == NC_TLS_PASS) {
+	cstate = TLS_PASS;
 	goto success;
     }
 
@@ -573,7 +573,7 @@ host_connect(const char *n, enum iaction ia)
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    cstate = CONNECTED_NVT;
 	} else {
-	    cstate = CONNECTED_INITIAL;
+	    cstate = TELNET_PENDING;
 	}
 	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
@@ -604,7 +604,7 @@ host_new_connection(bool pending)
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    cstate = CONNECTED_NVT;
 	} else {
-	    cstate = CONNECTED_INITIAL;
+	    cstate = TELNET_PENDING;
 	}
 	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
@@ -641,7 +641,7 @@ host_continue_connect(iosrc_t iosrc, net_connect_t nc)
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    cstate = CONNECTED_NVT;
 	} else {
-	    cstate = CONNECTED_INITIAL;
+	    cstate = TELNET_PENDING;
 	}
 	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
@@ -734,7 +734,7 @@ host_in3270(enum cstate new_cstate)
 void
 host_connected(void)
 {
-    cstate = CONNECTED_INITIAL;
+    cstate = TELNET_PENDING;
     st_changed(ST_CONNECT, PCONNECTED);
     host_gui_connected();
 }

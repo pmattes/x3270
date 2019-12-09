@@ -253,14 +253,17 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE)? \
 			trsp_flag[(n)]: "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
-static const char *state_name[] = {
-    "unconnected",			/* NOT_CONNECTED */
+static const char *state_name[NUM_CSTATE] = {
+    "not connected",			/* NOT_CONNECTED */
     "reconnecting",			/* RECONNECTING */
-    "TLS password pending",		/* SSL_PASS */
+    "TLS password pending",		/* TLS_PASS */
+
     "resolving hostname",		/* RESOLVING */
-    "TCP connection pending",		/* PENDING */
-    "negotiating TLS or proxy",		/* NEGOTIATING */
-    "connected; 3270 state unknown",	/* CONNECTED_INITIAL */
+    "TCP connection pending",		/* TCP_PENDING */
+    "TLS negotiation pending",		/* TLS_PENDING */
+    "proxy negotiation pending",	/* PROXY_PENDING */
+    "connected; 3270 state unknown",	/* TELNED_PENDING */
+
     "NVT",				/* CONNECTED_NVT */
     "NVT charmode",			/* CONNECTED_NVT_CHAR */
     "TN3270 3270",			/* CONNECTED_3270 */
@@ -514,7 +517,7 @@ finish_connect(iosrc_t *iosrc)
 	if (sio == NULL) {
 	    if (pending) {
 		net_connect_pending = true;
-		return NC_SSL_PASS;
+		return NC_TLS_PASS;
 	    }
 	    net_disconnect(false);
 	    return NC_FAILED;
@@ -884,7 +887,7 @@ net_connected_complete(void)
     if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	host_in3270(CONNECTED_NVT);
     } else {
-	cstate = CONNECTED_INITIAL;
+	cstate = TELNET_PENDING;
     }
 
     /* set up telnet options */
@@ -943,19 +946,16 @@ net_connected(void)
 	connect_timeout_id = NULL_IOID;
     }
 
-    /*
-     * If the connection went through on the first connect() call, then
-     * our state is NOT_CONNECTED, so host_disconnect() will not call back
-     * net_disconnect(). That would be bad. So set the state to something
-     * non-zero.
-     */
-    cstate = NEGOTIATING;
+    vtrace("Connected to %s, port %u.\n", hostname, current_port);
 
     if (proxy_type > 0) {
 
 	/* Negotiate with the proxy. */
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
 		proxy_port);
+
+	cstate = PROXY_PENDING;
+	st_changed(ST_HALF_CONNECT, true);
 
 	if (!proxy_negotiate(proxy_type, sock, proxy_user, hostname,
 		    current_port)) {
@@ -964,13 +964,13 @@ net_connected(void)
 	}
     }
 
-    vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
-	    HOST_FLAG(TLS_HOST)? " via TLS": "");
-
     /* Set up TLS. */
     if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
 	bool rv;
 	char *session, *cert;
+
+	cstate = TLS_PENDING;
+	st_changed(ST_HALF_CONNECT, true);
 
 	rv = sio_negotiate(sio, sock, hostname, &data);
 	if (!rv) {
@@ -1114,7 +1114,7 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
     }
 
-    if (HALF_CONNECTED) {
+    if (cstate == TCP_PENDING) {
 	connection_complete();
     }
     remove_output();
@@ -1228,7 +1228,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    (events.lNetworkEvents & FD_CONNECT) ? " CONNECT": "",
 	    (events.lNetworkEvents & FD_CLOSE) ? " CLOSE": "",
 	    (events.lNetworkEvents & FD_READ) ? " READ": "");
-    if (HALF_CONNECTED) {
+    if (cstate == TCP_PENDING) {
 	if (events.lNetworkEvents & FD_CONNECT) {
 	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
 		connect_error("Connection failed: %s",
@@ -1258,7 +1258,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	 * when it hasn't done any I/O yet.  So peek ahead to
 	 * see if it's worth getting it involved at all.
 	 */
-	if (HALF_CONNECTED &&
+	if (cstate == TLS_PENDING &&
 		(nr = recv(sock, (char *) netrbuf, 1, MSG_PEEK)) <= 0) {
 	    ignore_ssl = true;
 	} else {
@@ -1286,7 +1286,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    host_disconnect(true);
 	    return;
 	}
-	if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
+	if (cstate == TCP_PENDING && socket_errno() == SE_EAGAIN) {
 	    connection_complete();
 	    return;
 	}
@@ -1299,7 +1299,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 	vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 		socket_strerror(socket_errno()));
-	if (HALF_CONNECTED) {
+	if (cstate == TCP_PENDING) {
 	    if (ha_ix == num_ha - 1) {
 		popup_a_sockerr("Connect to %s, port %d", hostname,
 			current_port);
@@ -1331,7 +1331,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     /* Process the data. */
 
-    if (HALF_CONNECTED) {
+    if (cstate == TCP_PENDING) {
 	if (non_blocking(false) < 0) {
 	    host_disconnect(true);
 	    return;
@@ -1349,7 +1349,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #if defined(LOCAL_PROCESS) /*[*/
 	if (local_process) {
 	    /* More to do here, probably. */
-	    if (cstate == CONNECTED_INITIAL) {
+	    if (cstate == TELNET_PENDING) {
 		host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 		hisopts[TELOPT_ECHO] = 1;
 		check_linemode(false);
@@ -1515,7 +1515,7 @@ telnet_fsm(unsigned char c)
 	    net_nvt_break();
 	    break;
 	}
-	if (cstate == CONNECTED_INITIAL) {
+	if (cstate == TELNET_PENDING) {
 	    /* now can assume NVT mode */
 	    if (linemode) {
 		linemode_buf_init();
@@ -2745,13 +2745,13 @@ check_in3270(void)
 	       hisopts[TELOPT_BINARY] &&
 	       hisopts[TELOPT_EOR]) {
 	new_cstate = CONNECTED_3270;
-    } else if (cstate == CONNECTED_INITIAL) {
+    } else if (cstate == TELNET_PENDING) {
 	/* Nothing has happened, yet. */
 	return;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	new_cstate = linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR;
     } else {
-	new_cstate = CONNECTED_INITIAL;
+	new_cstate = TELNET_PENDING;
     }
 
     if (new_cstate != cstate) {
@@ -2768,7 +2768,7 @@ check_in3270(void)
 	}
 
 	/* Allocate the initial 3270 input buffer. */
-	if (new_cstate >= CONNECTED_INITIAL && !ibuf_size) {
+	if (new_cstate >= TELNET_PENDING && !ibuf_size) {
 	    ibuf = (unsigned char *)Malloc(BUFSIZ);
 	    ibuf_size = BUFSIZ;
 	    ibptr = ibuf;
@@ -3773,7 +3773,7 @@ net_nop_seconds(void)
     }
 
     /* Restart with the new interval. */
-    if (cstate >= CONNECTED_INITIAL) {
+    if (cstate >= TELNET_PENDING) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
 }

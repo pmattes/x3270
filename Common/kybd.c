@@ -1753,13 +1753,9 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
 	switch (cstate) {
 	case NOT_CONNECTED:
+	case RECONNECTING:
 	    why = "connected";
 	    break;
-	case SSL_PASS:
-	case RESOLVING:
-	case TCP_PENDING:
-	case NEGOTIATING:
-	case CONNECTED_INITIAL:
 	default:
 	    why = "negotiated";
 	    break;

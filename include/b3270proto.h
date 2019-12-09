@@ -142,6 +142,23 @@
 #define AttrVerified	"verified"
 #define AttrVersion	"version"
 
+/* Connection states. */
+#define CstateNotConnected "not-connected"
+#define CstateReconnecting "reconnecting"
+#define CstateTlsPasswordPending "tls-password-pending"
+#define CstateResolving	"resolving"
+#define CstateTcpPending "tcp-pending"
+#define CstateTlsPending "tls-pending"
+#define CstateProxyPending "proxy-pending"
+#define CstateTelnetPending "telnet-pending"
+#define CstateConnectedNvt "connected-nvt"
+#define CstateConnectedNvtCharmode "connected-nvt-charmode"
+#define CstateConnected3270 "connected-3270"
+#define CstateConnectedUnbound "connected-unbound"
+#define CstateConnectedEnvt "connected-e-nvt"
+#define CstateConnectedSscp "connected-sscp"
+#define CstateConnectedTn3270e "connected-tn3270e"
+
 /* OIA fields. */
 #define OiaNotUndera	"not-undera"
 #define OiaCompose	"compose"

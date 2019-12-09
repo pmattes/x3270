@@ -130,21 +130,24 @@ static toggle_register_t toggles[] = {
     { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT },
     { SHOW_TIMING,	b3270_toggle,	TOGGLE_NEED_INIT },
 };
-static const char *cstate_name[] = {
-    "not-connected",
-    "reconnecting",
-    "ssl-password-pending",
-    "resolving",
-    "tcp-pending",
-    "negotiating",
-    "connected-initial",
-    "connected-nvt",
-    "connected-nvt-charmode",
-    "connected-3270",
-    "connected-unbound",
-    "connected-e-nvt",
-    "connected-sscp",
-    "connected-tn3270e"
+static const char *cstate_name[NUM_CSTATE] = {
+    CstateNotConnected,
+    CstateReconnecting,
+    CstateTlsPasswordPending,
+
+    CstateResolving,
+    CstateTcpPending,
+    CstateTlsPending,
+    CstateProxyPending,
+    CstateTelnetPending,
+
+    CstateConnectedNvt,
+    CstateConnectedNvtCharmode,
+    CstateConnected3270,
+    CstateConnectedUnbound,
+    CstateConnectedEnvt,
+    CstateConnectedSscp,
+    CstateConnectedTn3270e,
 };
 
 static char *pending_model;
@@ -243,6 +246,9 @@ b3270_connect(bool ignored)
 	char *cause = NewString(ia_name[connect_ia]);
 	char *s = cause;
 	char c;
+
+	/* Make sure unlock state is set correctly. */
+	status_reset();
 
 	while ((c = *s)) {
 	    c = tolower((int)(unsigned char)c);

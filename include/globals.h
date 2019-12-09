@@ -238,11 +238,16 @@ extern xmode_t mode;
 enum cstate {
     NOT_CONNECTED,	/* no socket, unknown mode */
     RECONNECTING,	/* delay before automatic reconnect */
-    SSL_PASS,		/* waiting for interactive SSL password */
+    TLS_PASS,		/* waiting for interactive TLS password */
+
+    /* Half-connected states. */
     RESOLVING,		/* resolving hostname */
     TCP_PENDING,	/* socket connection pending */
-    NEGOTIATING,	/* SSL/proxy negotiation in progress */
-    CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
+    TLS_PENDING,	/* TLS negotiation pending */
+    PROXY_PENDING,	/* proxy negotiation pending */
+    TELNET_PENDING,	/* TELNET negotiation pending */
+
+    /* Connected states. */
     CONNECTED_NVT,	/* connected in NVT mode */
     CONNECTED_NVT_CHAR,	/* connected in NVT character-at-a-time mode */
     CONNECTED_3270,	/* connected in RFC 1576 TN3270 mode */
@@ -255,8 +260,8 @@ enum cstate {
 extern enum cstate cstate;
 
 #define cPCONNECTED(c)	(c > NOT_CONNECTED)
-#define cHALF_CONNECTED(c) (c == SSL_PASS || c == RESOLVING || c == TCP_PENDING)
-#define cCONNECTED(c)	(c >= CONNECTED_INITIAL)
+#define cHALF_CONNECTED(c) (c >= RESOLVING && c < CONNECTED_NVT)
+#define cCONNECTED(c)	(c > TCP_PENDING)
 #define cIN_NVT(c)	(c == CONNECTED_NVT || \
 			 c == CONNECTED_NVT_CHAR || \
 			 c == CONNECTED_E_NVT)
@@ -280,7 +285,7 @@ extern enum cstate cstate;
 typedef enum {
     NC_FAILED,		/* failed */
     NC_RESOLVING,	/* name resolution in progress */
-    NC_SSL_PASS,	/* SSL password pending */
+    NC_TLS_PASS,	/* TLS password pending */
     NC_CONNECT_PENDING,	/* connection pending */
     NC_CONNECTED	/* connected */
 } net_connect_t;

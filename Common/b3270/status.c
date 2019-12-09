@@ -51,7 +51,7 @@ typedef enum {
     K_NOT_CONNECTED,
     K_INHIBIT,
     K_DEFERRED,
-    K_TWAIT
+    K_TWAIT,
 } oia_kybdlock_t;
 oia_kybdlock_t oia_kybdlock = K_NONE;
 
@@ -187,7 +187,7 @@ status_oerr(int error_type)
 void
 status_reset(void)
 {
-    if (!CONNECTED) {
+    if (!IN_3270 && !IN_NVT) {
 	if (oia_kybdlock == K_NOT_CONNECTED) {
 	    return;
 	}

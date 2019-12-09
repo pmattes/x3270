@@ -26,10 +26,12 @@
 <table border cols=2 width="75%">
  <tr><th>State</th><th>Meaning</th></tr>
  <tr><td>not-connected</td><td>No connection</td></tr>
+ <tr><td>reconnecting</td><td>Delay before automatic reconnection</td></tr>
  <tr><td>resolving</td><td>Resoving host name to address</td></tr>
- <tr><td>pending</td><td>TCP connection pending</td></tr>
- <tr><td>negotiating</td><td>TELNET option negotiation in progress</td></tr>
- <tr><td>connected-initial</td><td>TN3270 mode negotiation in progress</td></tr>
+ <tr><td>tcp-pending</td><td>TCP connection pending</td></tr>
+ <tr><td>tls-pending</td><td>TLS negotiation in progress</td></tr>
+ <tr><td>proxy-pending</td><td>Proxy negotiation in progress</td></tr>
+ <tr><td>telnet-pending</td><td>TELNET option negotiation in progress</td></tr>
  <tr><td>connected-nvt</td><td>TN3270 NVT mode, line at a time</td></tr>
  <tr><td>connected-nvt-charmode</td><td>TN3270 NVT mode, character at a time</td></tr>
  <tr><td>connected-3270</td><td>TN3270 3270 mode</td></tr>
