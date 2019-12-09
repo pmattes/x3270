@@ -79,7 +79,6 @@ static struct host *last_host = NULL;
 static iosrc_t net_sock = INVALID_IOSRC;
 static ioid_t reconnect_id = NULL_IOID;
 
-static enum iaction host_ia = IA_NONE;
 static char *host_ps = NULL;
 
 static void save_recent(const char *);
@@ -537,7 +536,7 @@ host_connect(const char *n, enum iaction ia)
     }
 
     /* Still thinking about it? */
-    host_ia = ia;
+    connect_ia = ia;
     if (nc == NC_RESOLVING) {
 	cstate = RESOLVING;
 	st_changed(ST_CONNECT, true);
@@ -564,7 +563,6 @@ host_connect(const char *n, enum iaction ia)
     }
 
     /* Set state and tell the world. */
-    connect_ia = ia;
     if (nc == NC_CONNECT_PENDING) {
 	cstate = TCP_PENDING;
 	st_changed(ST_HALF_CONNECT, true);
@@ -632,7 +630,6 @@ host_continue_connect(iosrc_t iosrc, net_connect_t nc)
     }
 
     /* Set state and tell the world. */
-    connect_ia = host_ia;
     if (nc == NC_CONNECT_PENDING) {
 	cstate = TCP_PENDING;
 	st_changed(ST_HALF_CONNECT, true);
@@ -707,7 +704,6 @@ host_disconnect(bool failed)
 	cstate = NOT_CONNECTED;
 
 	/* Forget pending state. */
-	host_ia = IA_NONE;
 	host_ps = NULL;
     }
 
