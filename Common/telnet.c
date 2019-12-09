@@ -185,6 +185,8 @@ static b8_t e_funcs;		/* negotiated TN3270E functions */
 static bool	secure_connection;
 static char	*net_accept;
 
+static enum cstate starttls_pending;
+
 static bool telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, size_t len);
 static void check_in3270(void);
@@ -200,6 +202,7 @@ static void tn3270e_subneg_send(unsigned char, b8_t *);
 static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
+static void net_starttls_continue(void);
 
 static const char *nnn(int c);
 
@@ -470,9 +473,11 @@ connect_to(int ix, bool noisy, bool *pending)
 	    close_fail;
 	}
     } else {
+#if false
 	if (non_blocking(false) < 0) {
 	    close_fail;
 	}
+#endif
 	net_connected();
 
 	/* net_connected() can cause the connection to fail. */
@@ -625,6 +630,8 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
     Replace(hostname, NewString(host));
     net_accept = accept;
+
+    starttls_pending = NOT_CONNECTED;
 
     /* set up temporary termtype */
     if (appres.termname != NULL) {
@@ -946,7 +953,9 @@ net_connected(void)
 	connect_timeout_id = NULL_IOID;
     }
 
-    vtrace("Connected to %s, port %u.\n", hostname, current_port);
+    if (cstate != TLS_PENDING) {
+	vtrace("Connected to %s, port %u.\n", hostname, current_port);
+    }
 
     if (proxy_type > 0) {
 
@@ -962,21 +971,30 @@ net_connected(void)
 	    host_disconnect(true);
 	    return;
 	}
+
+	/* Don't do this again. */
+	proxy_type = 0;
     }
 
     /* Set up TLS. */
     if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
-	bool rv;
+	sio_negotiate_ret_t rv;
 	char *session, *cert;
 
-	cstate = TLS_PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	if (cstate != TLS_PENDING) {
+	    cstate = TLS_PENDING;
+	    st_changed(ST_HALF_CONNECT, true);
+	}
 
 	rv = sio_negotiate(sio, sock, hostname, &data);
-	if (!rv) {
+	if (rv == SIG_FAILURE) {
 	    /* No need to trace the error, it was already displayed. */
 	    connect_error("%s", sio_last_error());
 	    host_disconnect(true);
+	    return;
+	}
+	if (rv == SIG_WANTMORE) {
+	    vtrace("Need more TLS data\n");
 	    return;
 	}
 
@@ -994,6 +1012,14 @@ net_connected(void)
 	/* Tell everyone else again. */
 	host_connected();
     }
+
+#if !defined(_WIN32) /*[*/
+    /* Blocking socket here on out. */
+    if (non_blocking(false) < 0) {
+	host_disconnect(true);
+	return;
+    }
+#endif /*]*/
 
     net_connected_complete();
 
@@ -1065,12 +1091,6 @@ remove_output(void)
 static void
 connection_complete(void)
 {
-#if !defined(_WIN32) /*[*/
-    if (non_blocking(false) < 0) {
-	host_disconnect(true);
-	return;
-    }
-#endif /*]*/
     host_connected();
     net_connected();
     remove_output();
@@ -1180,6 +1200,7 @@ net_disconnect(bool including_ssl)
     refused_tls = false;
     nested_tls = false;
     any_host_data = false;
+    starttls_pending = NOT_CONNECTED;
 
     net_set_default_termtype();
 
@@ -1247,6 +1268,16 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
     }
 #endif /*]*/
+
+    if (cstate == TLS_PENDING) {
+	/* More TLS data available. Process it. */
+	if (starttls_pending != NOT_CONNECTED) {
+	    net_starttls_continue();
+	} else {
+	    net_connected();
+	}
+	return;
+    }
 
     nvt_data = 0;
 
@@ -1332,10 +1363,6 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Process the data. */
 
     if (cstate == TCP_PENDING) {
-	if (non_blocking(false) < 0) {
-	    host_disconnect(true);
-	    return;
-	}
 	host_connected();
 	net_connected();
 	remove_output();
@@ -3450,13 +3477,83 @@ non_blocking(bool on)
     return 0;
 }
 
+/* Continue TLS negotiation in response to a STARTTLS. */
+static void
+net_starttls_continue(void)
+{
+    sio_negotiate_ret_t ret;
+    bool data = false;
+    char *session, *cert;
+
+    /* Negotiate the session. */
+    ret = sio_negotiate(sio, sock, hostname, &data);
+    if (ret == SIG_FAILURE) {
+	connect_error("%s", sio_last_error());
+	host_disconnect(true);
+	return;
+    }
+    if (ret == SIG_WANTMORE) {
+	vtrace("Need more TLS data\n");
+	if (starttls_pending == NOT_CONNECTED) {
+	    starttls_pending = cstate;
+	    cstate = TLS_PENDING;
+	    st_changed(ST_HALF_CONNECT, true);
+	}
+	return;
+    }
+
+#if !defined(_WIN32) /*[*/
+    /* Blocking socket again. */
+    if (non_blocking(false) < 0) {
+	host_disconnect(true);
+	return;
+    }
+#endif /*]*/
+
+    secure_connection = true;
+
+    /* Success. */
+    session = indent_s(sio_session_info(sio));
+    cert = indent_s(sio_server_cert_info(sio));
+    vtrace("TLS negotiated connection complete. "
+	    "Connection is now secure.\n"
+	    "Provider: %s\n"
+	    "Session:\n%s\nServer certificate:\n%s\n",
+	    sio_provider(), session, cert);
+    Free(session);
+    Free(cert);
+
+    if (starttls_pending == TELNET_PENDING) {
+	/*
+	 * TLS negotiation happened before 3270 negotiation (which is the usual
+	 * case).  Tell the world that we are (still) connected, now in secure
+	 * mode.
+	 */
+	host_connected();
+    } else {
+	/*
+	 * The host negotiated TLS while in some other state. Try to restore
+	 * it.
+	 */
+	if (cHALF_CONNECTED(starttls_pending)) {
+	    st_changed(ST_HALF_CONNECT, true);
+	} else {
+	    st_changed(ST_3270_MODE, true);
+	}
+    }
+    starttls_pending = NOT_CONNECTED;
+
+    if (data) {
+	/* Got extra data with the negotiation. */
+	vtrace("Reading extra data after negotiation\n");
+	net_input(INVALID_IOSRC, NULL_IOID);
+    }
+}
+
 /* Process a STARTTLS subnegotiation. */
 static void
 continue_tls(unsigned char *sbbuf, int len)
 {
-    bool data = false;
-    char *session, *cert;
-
     /* Whatever happens, we're not expecting another SB STARTTLS. */
     need_tls_follows = false;
 
@@ -3472,34 +3569,16 @@ continue_tls(unsigned char *sbbuf, int len)
     /* Trace what we got. */
     vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
-    /* Negotiate the session. */
-    if (!sio_negotiate(sio, sock, hostname, &data)) {
-	connect_error("%s", sio_last_error());
+#if !defined(_WIN32) /*[*/
+    /* Non-blocking socket again. */
+    if (non_blocking(true) < 0) {
 	host_disconnect(true);
 	return;
     }
+#endif /*]*/
 
-    secure_connection = true;
-
-    /* Success. */
-    session = indent_s(sio_session_info(sio));
-    cert = indent_s(sio_server_cert_info(sio));
-    vtrace("TLS negotiated connection complete. "
-	    "Connection is now secure.\n"
-	    "Provider: %s\n"
-	    "Session:\n%s\nServer certificate:\n%s\n",
-	    sio_provider(), session, cert);
-    Free(session);
-    Free(cert);
-
-    /* Tell the world that we are (still) connected, now in secure mode. */
-    host_connected();
-
-    if (data) {
-	/* Got extra data with the negotiation. */
-	vtrace("Reading extra data after negotiation\n");
-	net_input(INVALID_IOSRC, NULL_IOID);
-    }
+    /* Negotiate. */
+    net_starttls_continue();
 }
 
 /* Return the current BIND application name, if any. */

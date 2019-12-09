@@ -74,6 +74,7 @@ typedef struct {
     bool secure_unverified;
     char *session_info;
     char *server_cert_info;
+    bool negotiate_pending;
 } ssl_sio_t;
 
 static ssl_sio_t *current_sio;
@@ -793,7 +794,7 @@ display_server_cert(varbuf_t *v, SSL *con)
  * Returns true for success, false for failure.
  * If it returns false, the socket should be disconnected.
  */
-bool
+sio_negotiate_ret_t
 sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 {
     ssl_sio_t *s;
@@ -807,58 +808,69 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     *data = false;
     if (sio == NULL) {
 	sioc_set_error("NULL sio");
-	return false;
+	return SIG_FAILURE;
     }
     s = (ssl_sio_t *)sio;
-    if (s->con == NULL || s->sock != INVALID_SOCKET) {
+    if (s->con == NULL ||
+	    (s->negotiate_pending && s->sock == INVALID_SOCKET) ||
+	    (!s->negotiate_pending && s->sock != INVALID_SOCKET)) {
 	sioc_set_error("Invalid sio");
-	return false;
+	return SIG_FAILURE;
     }
 
-    vtrace("Starting OpenSSL negotiation, host '%s'", hostname);
+    vtrace("%s OpenSSL negotiation, host '%s'",
+	    s->negotiate_pending? "Continuing": "Starting",
+	    hostname);
     if (s->accept_dnsname != NULL) {
 	vtrace(", accept name '%s'", s->accept_dnsname);
     }
     vtrace(".\n");
 
-    s->sock = sock;
-    s->hostname = hostname;
+    if (!s->negotiate_pending) {
+	s->sock = sock;
+	s->hostname = hostname;
 
 #if defined(OPENSSL102) /*[*/
-    /* Have OpenSSL verify the hostname. */
-    if (s->config->verify_host_cert &&
-	    (s->accept_dnsname == NULL || strcmp(s->accept_dnsname, "*"))) {
-	X509_VERIFY_PARAM *param = SSL_get0_param(s->con);
+	/* Have OpenSSL verify the hostname. */
+	if (s->config->verify_host_cert &&
+		(s->accept_dnsname == NULL || strcmp(s->accept_dnsname, "*"))) {
+	    X509_VERIFY_PARAM *param = SSL_get0_param(s->con);
 
-	if (!X509_VERIFY_PARAM_set1_host(param,
-	    (s->accept_dnsname != NULL)? s->accept_dnsname: s->hostname,
-	    0)) {
-	    char err_buf[1024];
+	    if (!X509_VERIFY_PARAM_set1_host(param,
+		(s->accept_dnsname != NULL)? s->accept_dnsname: s->hostname,
+		0)) {
+		char err_buf[1024];
 
-	    sioc_set_error("Set host failed:\n%s", get_ssl_error(err_buf));
-	    return false;
+		sioc_set_error("Set host failed:\n%s", get_ssl_error(err_buf));
+		return SIG_FAILURE;
+	    }
 	}
-    }
 #endif /*]*/
 
-    SSL_set_verify(s->con, SSL_VERIFY_PEER, ssl_verify_callback);
+	SSL_set_verify(s->con, SSL_VERIFY_PEER, ssl_verify_callback);
 
-    /* Set up the TLS/SSL connection. */
-    if (SSL_set_fd(s->con, (int)s->sock) != 1) {
-	vtrace("OpenSSL sio_negotiate: can't set fd\n");
-	return false;
+	/* Set up the TLS/SSL connection. */
+	if (SSL_set_fd(s->con, (int)s->sock) != 1) {
+	    vtrace("OpenSSL sio_negotiate: can't set fd\n");
+	    return SIG_FAILURE;
+	}
     }
 
     current_sio = s;
     rv = SSL_connect(s->con);
     current_sio = NULL;
 
+    if (rv == -1 && SSL_get_error(s->con, rv) == SSL_ERROR_WANT_READ) {
+	s->negotiate_pending = true;
+	return SIG_WANTMORE;
+    }
+
     if (s->config->verify_host_cert) {
 	vr = SSL_get_verify_result(s->con);
 	if (vr != X509_V_OK) {
 	    sioc_set_error("Host certificate verification failed:\n%s (%ld)",
 		    X509_verify_cert_error_string(vr), vr);
-	    return false;
+	    return SIG_FAILURE;
 	}
     } else {
 	s->secure_unverified = true;
@@ -868,14 +880,14 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	char err_buf[120];
 
 	sioc_set_error("SSL_connect failed:\n%s", get_ssl_error(err_buf));
-	return false;
+	return SIG_FAILURE;
     }
 
 #if !defined(OPENSSL102) /*[*/
     /* Check the host certificate. */
     if (!check_cert_name(s)) {
 	vtrace("disconnect: check_cert_name failed\n");
-	return false;
+	return SIG_FAILURE;
     }
 #endif /*]*/
 
@@ -897,7 +909,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	 s->server_cert_info[len - 1] = '\0';
     }
 
-    return true;
+    return SIG_SUCCESS;
 }
 
 /*

@@ -323,7 +323,7 @@ pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
 	    errmsg("%s\n", sio_last_error());
 	    return false;
 	}
-	if (!sio_negotiate(sio, s, host, &data)) {
+	if (sio_negotiate(sio, s, host, &data) != SIG_SUCCESS) {
 	    errmsg("%s\n", sio_last_error());
 	    return false;
 	}
@@ -1872,7 +1872,7 @@ continue_tls(unsigned char *sbbuf, int len)
 	errmsg("%s\n", sio_last_error());
 	return -1;
     }
-    if (!sio_negotiate(sio, sock, hostname, &data)) {
+    if (sio_negotiate(sio, sock, hostname, &data) != SIG_SUCCESS) {
 	errmsg("%s\n", sio_last_error());
 	return -1;
     }

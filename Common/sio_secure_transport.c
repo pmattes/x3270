@@ -899,7 +899,7 @@ fail:
  *
  * Returns 'data' true if there is already protocol data pending.
  */
-bool
+sio_negotiate_ret_t
 sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 {
     stransport_sio_t *s;
@@ -913,12 +913,12 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     *data = false;
     if (sio == NULL) {
 	sioc_set_error("NULL sio");
-	return false;
+	return SIG_FAILURE;
     }
     s = (stransport_sio_t *)sio;
     if (s->sock != INVALID_SOCKET) {
 	sioc_set_error("Invalid sio");
-	return false;
+	return SIG_FAILURE;
     }
 
     s->sock = sock;
@@ -983,10 +983,10 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 
     /* Success. */
     s->secure_unverified = !config->verify_host_cert;
-    return true;
+    return SIG_SUCCESS;
 
 fail:
-    return false;
+    return SIG_FAILURE;
 }
 
 /*
