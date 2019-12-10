@@ -632,6 +632,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     net_accept = accept;
 
     starttls_pending = NOT_CONNECTED;
+    st_changed(ST_SECURE, false);
 
     /* set up temporary termtype */
     if (appres.termname != NULL) {
@@ -896,6 +897,7 @@ net_connected_complete(void)
     } else {
 	change_cstate(TELNET_PENDING, "net_connected_complete");
     }
+    st_changed(ST_SECURE, false);
 
     /* set up telnet options */
     memset((char *)myopts, 0, sizeof(myopts));
@@ -3519,6 +3521,7 @@ net_starttls_continue(void)
 	    sio_provider(), session, cert);
     Free(session);
     Free(cert);
+    st_changed(ST_SECURE, true);
 
     if (starttls_pending == TELNET_PENDING) {
 	/*

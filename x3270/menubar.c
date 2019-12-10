@@ -438,6 +438,34 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 }
 
 /*
+ * TLS status changed.
+ */
+static void
+menubar_secure(bool ignored _is_unused)
+{
+    if (locked_icon != NULL) {
+	if (CONNECTED) {
+	    if (net_secure_connection()) {
+		XtUnmapWidget(unlocked_icon);
+		if (net_secure_unverified()) {
+		    XtMapWidget(unverified_icon);
+		} else {
+		    XtMapWidget(locked_icon);
+		}
+	    } else {
+		XtUnmapWidget(locked_icon);
+		XtUnmapWidget(unverified_icon);
+		XtMapWidget(unlocked_icon);
+	    }
+	} else {
+	    XtUnmapWidget(locked_icon);
+	    XtUnmapWidget(unverified_icon);
+	    XtUnmapWidget(unlocked_icon);
+	}
+    }
+}
+
+/*
  * External entry points
  */
 
@@ -546,26 +574,7 @@ menubar_connect(bool ignored _is_unused)
 	XtVaSetValues(m3279_button, XtNsensitive, !PCONNECTED, NULL);
     }
 
-    if (locked_icon != NULL) {
-	if (CONNECTED) {
-	    if (net_secure_connection()) {
-		XtUnmapWidget(unlocked_icon);
-		if (net_secure_unverified()) {
-		    XtMapWidget(unverified_icon);
-		} else {
-		    XtMapWidget(locked_icon);
-		}
-	    } else {
-		XtUnmapWidget(locked_icon);
-		XtUnmapWidget(unverified_icon);
-		XtMapWidget(unlocked_icon);
-	    }
-	} else {
-	    XtUnmapWidget(locked_icon);
-	    XtUnmapWidget(unverified_icon);
-	    XtUnmapWidget(unlocked_icon);
-	}
-    }
+    menubar_secure(false);
 }
 
 /* Called when the printer starts or stops. */
@@ -2367,5 +2376,6 @@ menubar_register(void)
     register_schange(ST_REMODEL, menubar_remodel);
     register_schange(ST_CODEPAGE, menubar_codepage);
     register_schange(ST_KBD_DISABLE, menubar_keyboard_disable);
+    register_schange(ST_SECURE, menubar_secure);
 }
 
