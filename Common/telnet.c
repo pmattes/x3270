@@ -1205,6 +1205,8 @@ net_disconnect(bool including_ssl)
     net_set_default_termtype();
 
     net_connect_pending = false;
+
+    change_cstate(NOT_CONNECTED, "net_disconnect");
 }
 
 /*
