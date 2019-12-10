@@ -79,6 +79,7 @@
 typedef struct {
     socket_t sock;			/* socket */
     const char *hostname;		/* server name */
+    bool negotiate_pending;		/* true if negotiate pending */
     bool secure_unverified;		/* true if server cert not verified */
     bool negotiated;			/* true if session is negotiated */
 
@@ -512,28 +513,6 @@ client_handshake_loop(
 	if (s->rcvbuf_len == 0 || ret == SEC_E_INCOMPLETE_MESSAGE) {
 	    /* Read data from server. */
             if (do_read) {
-		fd_set rfds;
-		struct timeval tv;
-		int ns;
-
-		/* Wait 5 seconds for the data. */
-		FD_ZERO(&rfds);
-		FD_SET(s->sock, &rfds);
-		tv.tv_sec = 5;
-		tv.tv_usec = 0;
-		ns = select(0, &rfds, NULL, NULL, &tv);
-		if (ns < 0) {
-		    int err = WSAGetLastError();
-                    sioc_set_error("select: error %d (%s)\n", err,
-			    win32_strerror(err));
-		    ret = err;
-		    break;
-		}
-		if (ns == 0) {
-		    sioc_set_error("receive timeout during TLS negotiation");
-		    ret = WSAECONNABORTED; /* XXX: synthetic error */
-		    break;
-		}
 
 		/* Read it. */
 		nrw = recv(s->sock, s->rcvbuf + s->rcvbuf_len, n2read, 0);
@@ -541,8 +520,10 @@ client_handshake_loop(
 			n2read);
 		if (nrw == SOCKET_ERROR) {
 		    ret = WSAGetLastError();
-		    sioc_set_error("recv: error %d (%s)\n", (int)ret,
-			    win32_strerror(ret));
+		    if (ret != WSAEWOULDBLOCK) {
+			sioc_set_error("recv: error %d (%s)\n", (int)ret,
+				win32_strerror(ret));
+		    }
 		    break;
 		} else if (nrw == 0) {
 		    sioc_set_error("server disconnected during TLS "
@@ -736,7 +717,7 @@ client_handshake_loop(
     }
 
     /* Delete the security context in the case of a fatal error. */
-    if (ret != SEC_E_OK) {
+    if (ret != SEC_E_OK && ret != WSAEWOULDBLOCK) {
 	DeleteSecurityContext(&s->context);
     } else {
 	s->context_set = true;
@@ -1127,39 +1108,54 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	return SIG_FAILURE;
     }
     s = (schannel_sio_t *)sio;
-    if (s->sock != INVALID_SOCKET) {
-	sioc_set_error("Invalid sio (already negotiated)");
-	return SIG_FAILURE;
-    }
-
-    s->sock = sock;
-    s->hostname = hostname;
-
-    /*
-     * Allocate the initial receive buffer.
-     * This is temporary, because we can't learn the receive stream sizes until
-     * we have finished negotiating, but we need a receive buffer to negotiate
-     * in the first place.
-     */
-    s->rcvbuf = Malloc(INBUF);
-
-    /* Perform handshake. */
-    if (config->accept_hostname != NULL) {
-	if (!strncasecmp(accept_hostname, "DNS:", 4)) {
-	    accept_hostname = config->accept_hostname + 4;
-	    sioc_set_error("Empty acceptHostname");
-	    goto fail;
-	} else if (!strncasecmp(config->accept_hostname, "IP:", 3)) {
-	    sioc_set_error("Cannot use 'IP:' acceptHostname");
-	    goto fail;
-	} else if (!strcasecmp(config->accept_hostname, "any")) {
-	    sioc_set_error("Cannot use 'any' acceptHostname");
-	    goto fail;
-	} else {
-	    accept_hostname = config->accept_hostname;
+    if (s->negotiate_pending) {
+	if (s->sock == INVALID_SOCKET) {
+	    sioc_set_error("Invalid sio (missing socket)");
+	    return SIG_FAILURE;
 	}
+
+	/* Continue handshake. */
+	status = client_handshake_loop(s, true);
+    } else {
+	if (s->sock != INVALID_SOCKET) {
+	    sioc_set_error("Invalid sio (already negotiated)");
+	    return SIG_FAILURE;
+	}
+	s->sock = sock;
+	s->hostname = hostname;
+
+	/*
+	 * Allocate the initial receive buffer.
+	 * This is temporary, because we can't learn the receive stream sizes
+	 * until we have finished negotiating, but we need a receive buffer to
+	 * negotiate in the first place.
+	 */
+	s->rcvbuf = Malloc(INBUF);
+
+	if (config->accept_hostname != NULL) {
+	    if (!strncasecmp(accept_hostname, "DNS:", 4)) {
+		accept_hostname = config->accept_hostname + 4;
+		sioc_set_error("Empty acceptHostname");
+		goto fail;
+	    } else if (!strncasecmp(config->accept_hostname, "IP:", 3)) {
+		sioc_set_error("Cannot use 'IP:' acceptHostname");
+		goto fail;
+	    } else if (!strcasecmp(config->accept_hostname, "any")) {
+		sioc_set_error("Cannot use 'any' acceptHostname");
+		goto fail;
+	    } else {
+		accept_hostname = config->accept_hostname;
+	    }
+	}
+
+	/* Perform handshake. */
+	status = perform_client_handshake(s, (LPSTR)accept_hostname);
     }
-    if (perform_client_handshake(s, (LPSTR)accept_hostname)) {
+
+    if (status == WSAEWOULDBLOCK) {
+	s->negotiate_pending = true;
+	return SIG_WANTMORE;
+    } else if (status != 0) {
 	vtrace("TLS: Error performing handshake\n");
 	goto fail;
     }

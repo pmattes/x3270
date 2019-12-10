@@ -530,7 +530,7 @@ host_connect(const char *n, enum iaction ia)
 	    }
 	}
 	/* Redundantly signal a disconnect. */
-	st_changed(ST_CONNECT, false);
+	change_cstate(NOT_CONNECTED, "host_connect");
 	goto failure;
     }
 
@@ -591,7 +591,6 @@ void
 host_new_connection(bool pending)
 {
     /* Set state and tell the world. */
-    st_changed(ST_CONNECT, true);
     if (pending) {
 	change_cstate(TCP_PENDING, "host_new_connection");
     } else {
@@ -662,7 +661,6 @@ try_reconnect(ioid_t id _is_unused)
     change_cstate(NOT_CONNECTED, "try_reconnect");
 
     host_reconnect();
-    st_changed(ST_CONNECT, PCONNECTED);
 }
 
 void
@@ -699,9 +697,6 @@ host_disconnect(bool failed)
 	/* Forget pending state. */
 	host_ps = NULL;
     }
-
-    /* Propagate the news to everyone else. */
-    st_changed(ST_CONNECT, PCONNECTED);
 }
 
 /* The host has entered 3270 or NVT mode, or switched between them. */

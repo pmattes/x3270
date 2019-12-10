@@ -133,25 +133,25 @@ change_cstate(enum cstate new_cstate, const char *why)
 {
     enum cstate old_cstate = cstate;
 
-    if (cstate == new_cstate) {
+    if (old_cstate == new_cstate) {
 	return;
     }
     vtrace("cstate [%s] -> [%s] (%s)\n", state_name[cstate],
 	    state_name[new_cstate], why);
 
     cstate = new_cstate;
+
+    /* Handle connected/not connected separately. */
+    if ((old_cstate == NOT_CONNECTED) ^ (new_cstate == NOT_CONNECTED)) {
+	st_changed(ST_CONNECT, PCONNECTED);
+    }
+
     switch (new_cstate) {
-    case NOT_CONNECTED:
-	st_changed(ST_CONNECT, false);
-	break;
     case RESOLVING:
     case TCP_PENDING:
     case TLS_PENDING:
     case PROXY_PENDING:
     case TELNET_PENDING:
-	if (old_cstate == NOT_CONNECTED) {
-	    st_changed(ST_CONNECT, true);
-	}
 	st_changed(ST_NEGOTIATING, true);
 	break;
     case CONNECTED_E_NVT:
@@ -164,6 +164,9 @@ change_cstate(enum cstate new_cstate, const char *why)
     case CONNECTED_TN3270E:
     case CONNECTED_UNBOUND:
     case CONNECTED_SSCP:
+	if (new_cstate == CONNECTED_UNBOUND) {
+	    st_changed(ST_NEGOTIATING, true);
+	}
 	st_changed(ST_3270_MODE, IN_3270);
 	break;
     default:
