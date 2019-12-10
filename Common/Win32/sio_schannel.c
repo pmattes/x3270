@@ -1589,7 +1589,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
     }
 
     if (!s->negotiated) {
-	return 0;
+	return SIO_EOF;
     }
 
     if (s->prbuf_len > 0) {

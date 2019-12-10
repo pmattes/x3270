@@ -6473,7 +6473,6 @@ screen_register(void)
     register_actions(screen_actions, array_count(screen_actions));
 
     /* Register state change callbacks. */
-    register_schange(ST_HALF_CONNECT, screen_connect);
     register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_3270_MODE, screen_connect);
     register_schange(ST_CODEPAGE, screen_codepage_changed);

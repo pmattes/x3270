@@ -1230,7 +1230,7 @@ b3270_register(void)
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);
-    register_schange(ST_HALF_CONNECT, b3270_connect);
+    register_schange(ST_NEGOTIATING, b3270_connect);
     register_schange(ST_3270_MODE, b3270_connect);
     register_schange(ST_LINE_MODE, b3270_connect);
     register_schange(ST_SECURE, b3270_secure);

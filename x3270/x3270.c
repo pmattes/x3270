@@ -981,7 +981,6 @@ label_init(void)
 static void
 x3270_register(void)
 {
-    register_schange(ST_HALF_CONNECT, relabel);
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
     register_schange(ST_REMODEL, relabel);

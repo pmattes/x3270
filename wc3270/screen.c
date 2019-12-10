@@ -1277,12 +1277,11 @@ screen_init(void)
     select_init(maxROWS, maxCOLS);
 
     /* Set up callbacks for state changes. */
-    register_schange(ST_HALF_CONNECT, status_connect);
+    register_schange(ST_NEGOTIATING, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);
 
-    register_schange(ST_HALF_CONNECT, relabel);
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
 

@@ -1389,7 +1389,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #else /*][*/
 	k = wgetch(stdscr);
 #endif /*]*/
-	vtrace("k=%d "
+	vtrace("kbd_input: k=%d "
 # if defined(CURSES_WIDE) /*[*/
 		       "wch=%lu "
 # endif /*]*/
@@ -1407,7 +1407,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		}
 		failed_first = true;
 	    }
-	    vtrace("k == ERR, return\n");
+	    vtrace("kbd_input: k == ERR, return\n");
 	    return;
 	} else {
 	    failed_first = false;
@@ -2873,7 +2873,7 @@ screen_register(void)
     register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
-    register_schange(ST_HALF_CONNECT, status_connect);
+    register_schange(ST_NEGOTIATING, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);

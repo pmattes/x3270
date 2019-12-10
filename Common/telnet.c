@@ -256,7 +256,7 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE)? \
 			trsp_flag[(n)]: "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
-static const char *state_name[NUM_CSTATE] = {
+const char *state_name[NUM_CSTATE] = {
     "not connected",			/* NOT_CONNECTED */
     "reconnecting",			/* RECONNECTING */
     "TLS password pending",		/* TLS_PASS */
@@ -265,7 +265,7 @@ static const char *state_name[NUM_CSTATE] = {
     "TCP connection pending",		/* TCP_PENDING */
     "TLS negotiation pending",		/* TLS_PENDING */
     "proxy negotiation pending",	/* PROXY_PENDING */
-    "connected; 3270 state unknown",	/* TELNED_PENDING */
+    "TELNET negotiation pending",	/* TELNET_PENDING */
 
     "NVT",				/* CONNECTED_NVT */
     "NVT charmode",			/* CONNECTED_NVT_CHAR */
@@ -894,7 +894,7 @@ net_connected_complete(void)
     if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	host_in3270(CONNECTED_NVT);
     } else {
-	cstate = TELNET_PENDING;
+	change_cstate(TELNET_PENDING, "net_connected_complete");
     }
 
     /* set up telnet options */
@@ -963,8 +963,7 @@ net_connected(void)
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
 		proxy_port);
 
-	cstate = PROXY_PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(PROXY_PENDING, "net_connected");
 
 	if (!proxy_negotiate(proxy_type, sock, proxy_user, hostname,
 		    current_port)) {
@@ -982,8 +981,7 @@ net_connected(void)
 	char *session, *cert;
 
 	if (cstate != TLS_PENDING) {
-	    cstate = TLS_PENDING;
-	    st_changed(ST_HALF_CONNECT, true);
+	    change_cstate(TLS_PENDING, "net_connected");
 	}
 
 	rv = sio_negotiate(sio, sock, hostname, &data);
@@ -3496,8 +3494,7 @@ net_starttls_continue(void)
 	vtrace("Need more TLS data\n");
 	if (starttls_pending == NOT_CONNECTED) {
 	    starttls_pending = cstate;
-	    cstate = TLS_PENDING;
-	    st_changed(ST_HALF_CONNECT, true);
+	    change_cstate(TLS_PENDING, "net_starttls_continue");
 	}
 	return;
     }
@@ -3536,7 +3533,7 @@ net_starttls_continue(void)
 	 * it.
 	 */
 	if (cHALF_CONNECTED(starttls_pending)) {
-	    st_changed(ST_HALF_CONNECT, true);
+	    st_changed(ST_NEGOTIATING, true);
 	} else {
 	    st_changed(ST_3270_MODE, true);
 	}

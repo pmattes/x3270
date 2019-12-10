@@ -582,7 +582,6 @@ scroll_register(void)
 	    (void **)&appres.interactive.save_lines, XRM_INT);
 
     /* Register the state change callbacks. */
-    register_schange(ST_HALF_CONNECT, scroll_connect);
     register_schange(ST_CONNECT, scroll_connect);
     register_schange(ST_3270_MODE, scroll_connect);
 }

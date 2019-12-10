@@ -104,7 +104,7 @@ static unsigned char default_bg;
 static unsigned char default_gr;
 static unsigned char default_cs;
 static unsigned char default_ic;
-static void ctlr_half_connect(bool ignored);
+static void ctlr_negotiating(bool ignored);
 static void ctlr_connect(bool ignored);
 static int sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
@@ -160,7 +160,7 @@ void
 ctlr_register(void)
 {
     /* Register callback routines. */
-    register_schange(ST_HALF_CONNECT, ctlr_half_connect);
+    register_schange(ST_NEGOTIATING, ctlr_negotiating);
     register_schange(ST_CONNECT, ctlr_connect);
     register_schange(ST_3270_MODE, ctlr_connect);
 }
@@ -308,10 +308,10 @@ set_formatted(void)
 }
 
 /*
- * Called when a host is half connected.
+ * Called when protocol negotiation is in progress.
  */
 static void
-ctlr_half_connect(bool ignored _is_unused)
+ctlr_negotiating(bool ignored _is_unused)
 {
     ticking_start(true);
 }

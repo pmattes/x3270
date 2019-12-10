@@ -100,25 +100,29 @@ void llist_unlink(llist_t *element);
 #define LLIST_PREPEND(elt, head) llist_insert_before(elt, head.next)
 
 /* State changes. */
-#define ST_RESOLVING	1
-#define ST_HALF_CONNECT	2
-#define ST_CONNECT	3
-#define ST_3270_MODE	4
-#define ST_LINE_MODE	5
-#define ST_REMODEL	6
-#define ST_PRINTER	7
-#define ST_EXITING	8
-#define ST_CODEPAGE	9
-#define ST_SELECTING	10
-#define ST_SECURE	11
-#define ST_KBD_DISABLE	12
-#define N_ST		13
+enum st {
+    ST_NEGOTIATING,	/* protocol negotiation start */
+    ST_CONNECT,		/* connection exists or is in progress */
+    ST_3270_MODE,	/* into 3270 or NVT mode */
+    ST_LINE_MODE,	/* in or out of NVT line mode */
+    ST_REMODEL,		/* model changed */
+    ST_PRINTER,		/* printer session state changed */
+    ST_EXITING,		/* emulator exiting */
+    ST_CODEPAGE,	/* code page changing */
+    ST_SELECTING,	/* screen selection changing */
+    ST_SECURE,		/* secure mode changing */
+    ST_KBD_DISABLE,	/* keyboard disable changing */
+    N_ST
+};
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff
 
 typedef void schange_callback_t(bool);
-void register_schange_ordered(int tx, schange_callback_t *func,
+void register_schange_ordered(enum st tx, schange_callback_t *func,
 	unsigned short order);
-void register_schange(int tx, schange_callback_t *func);
-void st_changed(int tx, bool mode);
+void register_schange(enum st tx, schange_callback_t *func);
+void st_changed(enum st tx, bool mode);
+#if !defined(PR3287) /*[*/
+void change_cstate(enum cstate cstate, const char *why);
+#endif /*]*/

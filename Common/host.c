@@ -238,8 +238,7 @@ host_cancel_reconnect(void)
 	reconnect_id = NULL_IOID;
 
 	assert(cstate == RECONNECTING);
-	cstate = NOT_CONNECTED;
-	st_changed(ST_CONNECT, PCONNECTED);
+	change_cstate(NOT_CONNECTED, "host_cancel_reconnect");
     }
 }
 
@@ -527,23 +526,22 @@ host_connect(const char *n, enum iaction ia)
 	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
-		cstate = RECONNECTING;
+		change_cstate(RECONNECTING, "host_connect");
 	    }
 	}
 	/* Redundantly signal a disconnect. */
-	st_changed(ST_CONNECT, PCONNECTED);
+	st_changed(ST_CONNECT, false);
 	goto failure;
     }
 
     /* Still thinking about it? */
     connect_ia = ia;
     if (nc == NC_RESOLVING) {
-	cstate = RESOLVING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(RESOLVING, "host_connect");
 	goto success;
     }
     if (nc == NC_TLS_PASS) {
-	cstate = TLS_PASS;
+	change_cstate(TLS_PASS, "host_connect");
 	goto success;
     }
 
@@ -564,16 +562,14 @@ host_connect(const char *n, enum iaction ia)
 
     /* Set state and tell the world. */
     if (nc == NC_CONNECT_PENDING) {
-	cstate = TCP_PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(TCP_PENDING, "host_connect");
     } else {
 	/* cstate == NC_CONNECTED */
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    cstate = CONNECTED_NVT;
+	    change_cstate(CONNECTED_NVT, "host_connect");
 	} else {
-	    cstate = TELNET_PENDING;
+	    change_cstate(TELNET_PENDING, "host_connect");
 	}
-	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
     }
 
@@ -595,16 +591,15 @@ void
 host_new_connection(bool pending)
 {
     /* Set state and tell the world. */
+    st_changed(ST_CONNECT, true);
     if (pending) {
-	cstate = TCP_PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(TCP_PENDING, "host_new_connection");
     } else {
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    cstate = CONNECTED_NVT;
+	    change_cstate(CONNECTED_NVT, "host_new_connection");
 	} else {
-	    cstate = TELNET_PENDING;
+	    change_cstate(TELNET_PENDING, "host_new_connection");
 	}
-	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
     }
 }
@@ -631,16 +626,14 @@ host_continue_connect(iosrc_t iosrc, net_connect_t nc)
 
     /* Set state and tell the world. */
     if (nc == NC_CONNECT_PENDING) {
-	cstate = TCP_PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(TCP_PENDING, "host_continue_connect");
     } else {
 	/* cstate == NC_CONNECTED */
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    cstate = CONNECTED_NVT;
+	    change_cstate(CONNECTED_NVT, "host_continue_connect");
 	} else {
-	    cstate = TELNET_PENDING;
+	    change_cstate(TELNET_PENDING, "host_continue_connect");
 	}
-	st_changed(ST_CONNECT, PCONNECTED);
 	host_gui_connect_initial();
     }
 }
@@ -666,7 +659,7 @@ try_reconnect(ioid_t id _is_unused)
 {
     reconnect_id = NULL_IOID;
     assert(cstate == RECONNECTING);
-    cstate = NOT_CONNECTED;
+    change_cstate(NOT_CONNECTED, "try_reconnect");
 
     host_reconnect();
     st_changed(ST_CONNECT, PCONNECTED);
@@ -688,7 +681,7 @@ host_disconnect(bool failed)
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 					      RECONNECT_MS,
 		  try_reconnect);
-	    cstate = RECONNECTING;
+	    change_cstate(RECONNECTING, "host_disconnect");
 	}
     }
 
@@ -701,7 +694,7 @@ host_disconnect(bool failed)
     }
 
     if (cstate != RECONNECTING) {
-	cstate = NOT_CONNECTED;
+	change_cstate(NOT_CONNECTED, "host_disconnect");
 
 	/* Forget pending state. */
 	host_ps = NULL;
@@ -715,23 +708,14 @@ host_disconnect(bool failed)
 void
 host_in3270(enum cstate new_cstate)
 {
-    bool now3270 = cIN_3270(new_cstate);
-    bool was3270 = IN_3270;
-    bool now_nvt = cIN_NVT(new_cstate);
-    bool was_nvt = IN_NVT;
-
-    cstate = new_cstate;
-    ever_3270 = now3270;
-    if (now3270 != was3270 || now_nvt != was_nvt) {
-	st_changed(ST_3270_MODE, now3270);
-    }
+    ever_3270 = cIN_3270(new_cstate);
+    change_cstate(new_cstate, "host_in3270");
 }
 
 void
 host_connected(void)
 {
-    cstate = TELNET_PENDING;
-    st_changed(ST_CONNECT, PCONNECTED);
+    change_cstate(TELNET_PENDING, "host_connected");
     host_gui_connected();
 }
 
