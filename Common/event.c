@@ -142,7 +142,8 @@ change_cstate(enum cstate new_cstate, const char *why)
     cstate = new_cstate;
 
     /* Handle connected/not connected separately. */
-    if ((old_cstate == NOT_CONNECTED) ^ (new_cstate == NOT_CONNECTED)) {
+    if (cCONNECTED(old_cstate) != cCONNECTED(new_cstate) ||
+	cPCONNECTED(old_cstate) != cPCONNECTED(new_cstate)) {
 	st_changed(ST_CONNECT, PCONNECTED);
     }
 
