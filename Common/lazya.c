@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+#if defined(HAVE_MALLOC_H) /*[*/
 # include <malloc.h>
 #endif /*]*/
 
@@ -115,7 +115,7 @@ void
 lazya_flush(void)
 {
     unsigned nf = 0;
-#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+#if defined(HAVE_MALLOC_USABLE_SIZE) /*[*/
     size_t nb = 0;
 #endif /*]*/
     lazy_block_t *r, *next = NULL;
@@ -126,7 +126,7 @@ lazya_flush(void)
 	next = r->next;
 	for (i = 0; i < BLOCK_SLOTS; i++) {
 	    if (r->slot[i] != NULL) {
-#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+#if defined(HAVE_MALLOC_USABLE_SIZE) /*[*/
 		nb += malloc_usable_size(r->slot[i]);
 #endif /*]*/
 		Free(r->slot[i]);
@@ -141,7 +141,7 @@ lazya_flush(void)
     last_block = &blocks;
     slot_ix = 0;
 
-#if !defined(_WIN32) && defined(__GNUC__) /*[*/
+#if defined(HAVE_MALLOC_USABLE_SIZE) /*[*/
     if (nf > 10 || nb > 1024) {
 	vtrace("lazya_flush: %u slot%s, %zu bytes\n", nf, (nf == 1)? "": "s",
 		nb);

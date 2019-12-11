@@ -65,6 +65,7 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(malloc.h)
 
 dnl If SSL is disabled, don't go looking for OpenSSL.
 if test ! "$enable_ssl" = no
@@ -141,6 +142,7 @@ AC_SUBST(ICONV_LIBS)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
+AC_CHECK_FUNCS(malloc_usable_size)
 AC_FUNC_FSEEKO
 
 dnl Check for OpenSSL libraries.

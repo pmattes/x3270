@@ -3727,6 +3727,18 @@ fi
 
 done
 
+for ac_header in malloc.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "malloc.h" "ac_cv_header_malloc_h" "$ac_includes_default"
+if test "x$ac_cv_header_malloc_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MALLOC_H 1
+_ACEOF
+
+fi
+
+done
+
 
 if test ! "$enable_ssl" = no
 then	use_openssl=yes
@@ -4196,6 +4208,17 @@ do :
 if test "x$ac_cv_func_vasprintf" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_VASPRINTF 1
+_ACEOF
+
+fi
+done
+
+for ac_func in malloc_usable_size
+do :
+  ac_fn_c_check_func "$LINENO" "malloc_usable_size" "ac_cv_func_malloc_usable_size"
+if test "x$ac_cv_func_malloc_usable_size" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MALLOC_USABLE_SIZE 1
 _ACEOF
 
 fi

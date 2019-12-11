@@ -40,12 +40,14 @@
 #undef HAVE_LIBUTIL_H
 #undef HAVE_UTIL_H
 #undef HAVE_GETOPT_H
+#undef HAVE_MALLOC_H
 
 /* Uncommon functions. */
 #undef HAVE_VASPRINTF
 #undef HAVE_FSEEKO
 #undef HAVE_FORKPTY
 #undef HAVE_GETADDRINFO_A
+#undef HAVE_MALLOC_USABLE_SIZE
 
 /* Configuration options. */
 #undef USE_ICONV

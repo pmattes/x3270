@@ -41,12 +41,14 @@
 /* #undef HAVE_LIBUTIL_H */
 /* #undef HAVE_UTIL_H */
 #define HAVE_GETOPT_H 1
+#define HAVE_MALLOC_H 1
 
 /* Uncommon functions. */
 #define HAVE_VASPRINTF 1
 #define HAVE_FSEEKO 1
 #define HAVE_FORKPTY 1
 #define HAVE_GETADDRINFO_A 1
+#define HAVE_MALLOC_USABLE_SIZE 1
 
 /* Configuration options. */
 /* #undef USE_ICONV */
