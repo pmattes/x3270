@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,11 @@
  */
 
 /*
- *	proxy.h
- *		Declarations for proxy.c.
+ *	proxy_socks5.h
+ *		SOCKS version 5 proxy definitions.
  */
 
-typedef enum {
-    PX_SUCCESS,		/* success */
-    PX_FAILURE,		/* failure */
-    PX_WANTMORE		/* more input needed */
-} proxy_negotiate_ret_t;
-
-typedef void *proxy_t;
-int proxy_setup(const char *spec, char **puser, char **phost, char **pport);
-proxy_negotiate_ret_t proxy_negotiate(int type, socket_t fd, char *user,
-	char *host, unsigned short port);
-proxy_negotiate_ret_t proxy_continue(void);
-void proxy_close(void);
-char *proxy_type_name(int type);
+proxy_negotiate_ret_t proxy_socks5(socket_t fd, const char *user,
+	const char *host, unsigned short port, bool force_d);
+continue_t proxy_socks5_continue;
+void proxy_socks5_close(void);

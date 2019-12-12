@@ -185,7 +185,7 @@ static b8_t e_funcs;		/* negotiated TN3270E functions */
 static bool	secure_connection;
 static char	*net_accept;
 
-static enum cstate starttls_pending;
+static enum cstate starttls_pending = NOT_CONNECTED;
 
 static bool telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, size_t len);
@@ -960,6 +960,7 @@ net_connected(void)
     }
 
     if (proxy_type > 0) {
+	proxy_negotiate_ret_t ret;
 
 	/* Negotiate with the proxy. */
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
@@ -967,9 +968,14 @@ net_connected(void)
 
 	change_cstate(PROXY_PENDING, "net_connected");
 
-	if (!proxy_negotiate(proxy_type, sock, proxy_user, hostname,
-		    current_port)) {
+	ret = proxy_negotiate(proxy_type, sock, proxy_user, hostname,
+		current_port);
+	if (ret == PX_FAILURE) {
 	    host_disconnect(true);
+	    return;
+	}
+	if (ret == PX_WANTMORE) {
+	    vtrace("Proxy needs more data\n");
 	    return;
 	}
 
@@ -982,9 +988,7 @@ net_connected(void)
 	sio_negotiate_ret_t rv;
 	char *session, *cert;
 
-	if (cstate != TLS_PENDING) {
-	    change_cstate(TLS_PENDING, "net_connected");
-	}
+	change_cstate(TLS_PENDING, "net_connected");
 
 	rv = sio_negotiate(sio, sock, hostname, &data);
 	if (rv == SIG_FAILURE) {
@@ -1166,6 +1170,11 @@ net_disconnect(bool including_ssl)
 #endif /*]*/
     vtrace("SENT disconnect\n");
 
+    /* Cancel proxy. */
+    if (proxy_type > 0) {
+	proxy_close();
+    }
+
     /* Cancel the timeout. */
     if (connect_timeout_id != NULL_IOID) {
 	RemoveTimeOut(connect_timeout_id);
@@ -1270,6 +1279,21 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
     }
 #endif /*]*/
+
+    if (cstate == PROXY_PENDING) {
+	/* More proxy data available. */
+	proxy_negotiate_ret_t ret = proxy_continue();
+
+	if (ret == PX_WANTMORE) {
+	    vtrace("Proxy needs more data\n");
+	    return;
+	}
+	if (ret == PX_FAILURE) {
+	    host_disconnect(true);
+	    return;
+	}
+	change_cstate(TELNET_PENDING, "net_input");
+    }
 
     if (cstate == TLS_PENDING) {
 	/* More TLS data available. Process it. */

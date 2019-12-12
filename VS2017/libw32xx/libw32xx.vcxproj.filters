@@ -39,6 +39,21 @@
     <ClCompile Include="..\..\Common\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_http.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_passthru.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_socks4.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_socks5.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_telnet.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>

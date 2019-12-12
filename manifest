@@ -265,6 +265,11 @@ Common/product_stubs2.c
 Common/product_stubs3.c
 Common/product_stubs4.c
 Common/proxy.c
+Common/proxy_http.c
+Common/proxy_passthru.c
+Common/proxy_socks4.c
+Common/proxy_socks5.c
+Common/proxy_telnet.c
 Common/query.c
 Common/readres.c
 Common/resolver.c
@@ -391,7 +396,13 @@ include/print_gui.h
 include/print_screen.h
 include/product.h
 include/proxy.h
+include/proxy_http.h
 include/proxy_names.h
+include/proxy_passthru.h
+include/proxy_private.h
+include/proxy_socks4.h
+include/proxy_socks5.h
+include/proxy_telnet.h
 include/query.h
 include/readres.h
 include/resolver.h
