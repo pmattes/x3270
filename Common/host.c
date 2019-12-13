@@ -1025,17 +1025,6 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-const char *
-host_query_connection_state(void)
-{
-    const char *s = net_query_connection_state();
-
-    if (!*s && cstate == RECONNECTING) {
-	return "reconnecting";
-    }
-    return s;
-}
-
 bool
 host_reconnecting(void)
 {

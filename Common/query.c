@@ -312,7 +312,7 @@ query_register(void)
 	{ "Actions", all_actions, NULL, false, true },
 	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
 	{ "BuildOptions", build_options, NULL, false, false },
-	{ "ConnectionState", host_query_connection_state, NULL, false, false },
+	{ "ConnectionState", net_query_connection_state, NULL, false, false },
 	{ "ConnectTime", get_connect_time, NULL, false, false },
 	{ "CodePage", get_codepage, NULL, false, false },
 	{ "CodePages", get_codepages, NULL, false, true },

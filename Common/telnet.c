@@ -61,6 +61,7 @@
 #include "appres.h"
 
 #include "actions.h"
+#include "b3270proto.h"
 #include "b8.h"
 #include "ctlrc.h"
 #include "host.h"
@@ -257,23 +258,21 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 			trsp_flag[(n)]: "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
 const char *state_name[NUM_CSTATE] = {
-    "not connected",			/* NOT_CONNECTED */
-    "reconnecting",			/* RECONNECTING */
-    "TLS password pending",		/* TLS_PASS */
-
-    "resolving hostname",		/* RESOLVING */
-    "TCP connection pending",		/* TCP_PENDING */
-    "TLS negotiation pending",		/* TLS_PENDING */
-    "proxy negotiation pending",	/* PROXY_PENDING */
-    "TELNET negotiation pending",	/* TELNET_PENDING */
-
-    "NVT",				/* CONNECTED_NVT */
-    "NVT charmode",			/* CONNECTED_NVT_CHAR */
-    "TN3270 3270",			/* CONNECTED_3270 */
-    "TN3270E unbound",			/* CONNECTED_UNBOUND */
-    "TN3270E NVT",			/* CONNECTED_E_NVT */
-    "TN3270E SSCP-LU",			/* CONNECTED_SSCP */
-    "TN3270E 3270"			/* CONNECTED_TN3270E */
+    CstateNotConnected,
+    CstateReconnecting,
+    CstateTlsPasswordPending,
+    CstateResolving,
+    CstateTcpPending,
+    CstateTlsPending,
+    CstateProxyPending,
+    CstateTelnetPending,
+    CstateConnectedNvt,
+    CstateConnectedNvtCharmode,
+    CstateConnected3270,
+    CstateConnectedUnbound,
+    CstateConnectedEnvt,
+    CstateConnectedSscp,
+    CstateConnectedTn3270e
 };
 
 #if !defined(_WIN32) /*[*/
@@ -3627,31 +3626,7 @@ net_query_bind_plu_name(void)
 const char *
 net_query_connection_state(void)
 {
-    if (CONNECTED) {
-	if (IN_E) {
-	    switch (tn3270e_submode) {
-	    default:
-	    case E_UNBOUND:
-		return "tn3270e unbound";
-	    case E_3270:
-		return "tn3270e 3270";
-	    case E_NVT:
-		return "tn3270e nvt";
-	    case E_SSCP:
-		return "tn3270 sscp-lu";
-	    }
-	} else {
-	    if (IN_3270) {
-		return "tn3270 3270";
-	    } else {
-		return "nvt";
-	    }
-	}
-    } else if (HALF_CONNECTED) {
-	return "connecting";
-    } else {
-	return "";
-    }
+    return state_name[cstate];
 }
 
 /* Return the LU name. */
