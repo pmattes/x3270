@@ -130,25 +130,6 @@ static toggle_register_t toggles[] = {
     { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT },
     { SHOW_TIMING,	b3270_toggle,	TOGGLE_NEED_INIT },
 };
-static const char *cstate_name[NUM_CSTATE] = {
-    CstateNotConnected,
-    CstateReconnecting,
-    CstateTlsPasswordPending,
-
-    CstateResolving,
-    CstateTcpPending,
-    CstateTlsPending,
-    CstateProxyPending,
-    CstateTelnetPending,
-
-    CstateConnectedNvt,
-    CstateConnectedNvtCharmode,
-    CstateConnected3270,
-    CstateConnectedUnbound,
-    CstateConnectedEnvt,
-    CstateConnectedSscp,
-    CstateConnectedTn3270e,
-};
 
 static char *pending_model;
 static char *pending_oversize;
@@ -240,7 +221,7 @@ b3270_connect(bool ignored)
     /* Tell the GUI about the new state. */
     if (cstate == NOT_CONNECTED) {
 	ui_vleaf(IndConnection,
-		AttrState, cstate_name[(int)cstate],
+		AttrState, state_name[(int)cstate],
 		NULL);
     } else {
 	char *cause = NewString(ia_name[connect_ia]);
@@ -258,7 +239,7 @@ b3270_connect(bool ignored)
 	    *s++ = c;
 	}
 	ui_vleaf(IndConnection,
-		AttrState, cstate_name[(int)cstate],
+		AttrState, state_name[(int)cstate],
 		AttrHost, current_host,
 		AttrCause, cause,
 		NULL);
@@ -395,10 +376,6 @@ int
 main(int argc, char *argv[])
 {
     const char *cl_hostname = NULL;
-
-    if (sizeof(cstate_name)/sizeof(cstate_name[0]) != NUM_CSTATE) {
-	Error("b3270 cstate_name has the wrong number of elements");
-    }
 
 #if defined(_WIN32) /*[*/
     get_version_info();
@@ -1039,7 +1016,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 		    AttrValue, OiaLockNotConnected,
 		    NULL);
 	    ui_vleaf(IndConnection,
-		    AttrState, cstate_name[(int)RECONNECTING],
+		    AttrState, state_name[(int)RECONNECTING],
 		    NULL);
 	} else if (!strcmp(reasons[reason], STATUS_RESOLVING)) {
 	    ui_vleaf(IndOia,
@@ -1047,7 +1024,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 		    AttrValue, OiaLockNotConnected,
 		    NULL);
 	    ui_vleaf(IndConnection,
-		    AttrState, cstate_name[(int)RESOLVING],
+		    AttrState, state_name[(int)RESOLVING],
 		    NULL);
 	} else {
 	    ui_vleaf(IndOia,
