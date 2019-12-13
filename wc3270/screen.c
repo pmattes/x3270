@@ -2895,14 +2895,12 @@ status_oerr(int error_type)
 void
 status_reset(void)
 {
-    if (!CONNECTED) {
-	other_msg = "X Not Connected";
-    } else if (kybdlock & KL_ENTER_INHIBIT) {
+    if (kybdlock & KL_ENTER_INHIBIT) {
 	other_msg = "X Inhibit";
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	other_msg = "X";
     } else {
-	other_msg = NULL;
+	status_connect(PCONNECTED);
     }
 }
 
@@ -2975,6 +2973,8 @@ status_connect(bool connected)
 	    other_msg = "X [TELNET]";
 	    oia_boxsolid = false;
 	    status_secure = SS_INSECURE;
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    other_msg = "X [TN3270E]";
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    other_msg = "X";
 	} else {
