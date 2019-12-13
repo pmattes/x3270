@@ -38,8 +38,8 @@ typedef enum {
 
 typedef void *proxy_t;
 int proxy_setup(const char *spec, char **puser, char **phost, char **pport);
-proxy_negotiate_ret_t proxy_negotiate(int type, socket_t fd, char *user,
-	char *host, unsigned short port);
+proxy_negotiate_ret_t proxy_negotiate(socket_t fd, const char *user,
+	const char *host, unsigned short port);
 proxy_negotiate_ret_t proxy_continue(void);
 void proxy_close(void);
 char *proxy_type_name(int type);

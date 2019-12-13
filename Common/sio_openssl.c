@@ -75,6 +75,7 @@ typedef struct {
     char *session_info;
     char *server_cert_info;
     bool negotiate_pending;
+    bool negotiated;
 } ssl_sio_t;
 
 static ssl_sio_t *current_sio;
@@ -813,7 +814,8 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     s = (ssl_sio_t *)sio;
     if (s->con == NULL ||
 	    (s->negotiate_pending && s->sock == INVALID_SOCKET) ||
-	    (!s->negotiate_pending && s->sock != INVALID_SOCKET)) {
+	    (!s->negotiate_pending && s->sock != INVALID_SOCKET) ||
+	    s->negotiated) {
 	sioc_set_error("Invalid sio");
 	return SIG_FAILURE;
     }
@@ -879,7 +881,8 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     if (rv != 1) {
 	char err_buf[120];
 
-	sioc_set_error("SSL_connect failed:\n%s", get_ssl_error(err_buf));
+	sioc_set_error("SSL_connect failed %d:\n%s", rv,
+		get_ssl_error(err_buf));
 	return SIG_FAILURE;
     }
 
@@ -909,6 +912,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	 s->server_cert_info[len - 1] = '\0';
     }
 
+    s->negotiated = true;
     return SIG_SUCCESS;
 }
 
@@ -930,7 +934,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	return SIO_FATAL_ERROR;
     }
     s = (ssl_sio_t *)sio;
-    if (s->con == NULL || s->sock == INVALID_SOCKET) {
+    if (s->con == NULL || s->sock == INVALID_SOCKET || !s->negotiated) {
 	sioc_set_error("Invalid sio");
 	return SIO_FATAL_ERROR;
     }
@@ -975,7 +979,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
 	return SIO_FATAL_ERROR;
     }
     s = (ssl_sio_t *)sio;
-    if (s->con == NULL || s->sock == INVALID_SOCKET) {
+    if (s->con == NULL || s->sock == INVALID_SOCKET || !s->negotiated) {
 	sioc_set_error("Invalid sio");
 	return SIO_FATAL_ERROR;
     }

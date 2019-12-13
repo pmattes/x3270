@@ -1101,7 +1101,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		fprintf(stderr, "Connected to proxy server %s, port %u\n",
 			proxy_host, proxy_port);
 	    }
-	    if (!proxy_negotiate(proxy_type, s, proxy_user, host, p)) {
+	    if (!proxy_negotiate(s, proxy_user, host, p)) {
 		rc = 1;
 		goto retry;
 	    }

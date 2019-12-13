@@ -297,12 +297,12 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
  * Negotiate with the proxy server.
  */
 proxy_negotiate_ret_t
-proxy_negotiate(int type, socket_t fd, char *user, char *host,
+proxy_negotiate(socket_t fd, const char *user, const char *host,
 	unsigned short port)
 {
     proxy_negotiate_ret_t ret;
 
-    switch ((proxytype_t)type) {
+    switch (proxy_type) {
     case PT_NONE:
 	ret = PX_SUCCESS;
 	break;

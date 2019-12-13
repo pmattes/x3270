@@ -961,14 +961,16 @@ net_connected(void)
     if (proxy_type > 0) {
 	proxy_negotiate_ret_t ret;
 
+	/* Don't do this again. */
+	proxy_type = 0;
+
 	/* Negotiate with the proxy. */
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
 		proxy_port);
 
 	change_cstate(PROXY_PENDING, "net_connected");
 
-	ret = proxy_negotiate(proxy_type, sock, proxy_user, hostname,
-		current_port);
+	ret = proxy_negotiate(sock, proxy_user, hostname, current_port);
 	if (ret == PX_FAILURE) {
 	    host_disconnect(true);
 	    return;
@@ -977,9 +979,6 @@ net_connected(void)
 	    vtrace("Proxy needs more data\n");
 	    return;
 	}
-
-	/* Don't do this again. */
-	proxy_type = 0;
     }
 
     /* Set up TLS. */
@@ -1302,6 +1301,14 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    net_connected();
 	}
 	return;
+    }
+
+    if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
+	/* Set up TLS tunnel after proxy connection. */
+	net_connected();
+	if (cstate == NOT_CONNECTED) {
+	    return;
+	}
     }
 
     nvt_data = 0;
