@@ -174,7 +174,7 @@ proxy_socks5_process_auth_reply(void)
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
-	    popup_a_sockerr("SOCKS5 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS5 Proxy: unexpected EOF");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
@@ -273,7 +273,7 @@ proxy_socks5_process_cred_reply(void)
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
-	    popup_a_sockerr("SOCKS5 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS5 Proxy: unexpected EOF");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
