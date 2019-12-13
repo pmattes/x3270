@@ -195,6 +195,7 @@ static char *disabled_msg = NULL;	/* layer 0 (top) */
 static char *scrolled_msg = NULL;	/* layer 1 */
 static char *info_msg = NULL;		/* layer 2 */
 static char *other_msg = NULL;		/* layer 3 */
+static int other_attr;			/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
@@ -2874,6 +2875,7 @@ void
 status_minus(void)
 {
     other_msg = "X -f";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
 }
 
 void
@@ -2890,6 +2892,7 @@ status_oerr(int error_type)
 	other_msg = "X Overflow";
 	break;
     }
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
 }
 
 void
@@ -2902,6 +2905,8 @@ status_reset(void)
     } else {
 	status_connect(PCONNECTED);
     }
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
@@ -2914,6 +2919,8 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
@@ -2921,6 +2928,8 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
@@ -2994,6 +3003,8 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 static void
@@ -3096,6 +3107,7 @@ draw_oia(void)
 	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
 	   defattr;
     char *status_msg_now;
+    int msg_attr;
 
     rmargin = maxCOLS - 1;
 
@@ -3171,24 +3183,32 @@ draw_oia(void)
     }
 
     /* Figure out the status message. */
+    msg_attr = oia_attr;
     if (disabled_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	    FOREGROUND_BLUE;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	    FOREGROUND_BLUE;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
+	msg_attr = other_attr;
 	status_msg_now = other_msg;
     } else {
 	status_msg_now = "";
     }
 
     /* Offset 8 */
-    attrset(oia_attr);
+    attrset(msg_attr);
     mvprintw(status_row, 7, "%-35.35s", status_msg_now);
+    attrset(oia_attr);
     mvprintw(status_row, rmargin-35,
 	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',

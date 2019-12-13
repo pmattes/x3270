@@ -222,6 +222,7 @@ static char *disabled_msg = NULL;	/* layer 0 (top) */
 static char *scrolled_msg = NULL;	/* layer 1 */
 static char *info_msg = NULL;		/* layer 2 */
 static char *other_msg = NULL;		/* layer 3 */
+static int other_attr;			/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
@@ -1951,6 +1952,8 @@ void
 status_minus(void)
 {
     other_msg = "X -f";
+    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	A_BOLD;
 }
 
 void
@@ -1967,6 +1970,8 @@ status_oerr(int error_type)
 	other_msg = "X Overflow";
 	break;
     }
+    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	A_BOLD;
 }
 
 void
@@ -1979,6 +1984,8 @@ status_reset(void)
     } else {
 	status_connect(PCONNECTED);
     }
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
@@ -1991,6 +1998,8 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
@@ -1998,6 +2007,8 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
@@ -2071,6 +2082,8 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 static void
@@ -2174,6 +2187,7 @@ draw_oia(void)
     int cursor_col = cursor_addr % cCOLS;
     int fl_cursor_col = flipped? (cursesCOLS - 1 - cursor_col): cursor_col;
     char *status_msg_now;
+    int msg_attr;
     static struct {
 	ucs4_t u;
 	unsigned char acs;
@@ -2350,23 +2364,32 @@ draw_oia(void)
     }
 
     /* Figure out the status message. */
+    msg_attr = defattr;
     if (disabled_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	    A_BOLD;
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	    A_BOLD;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	    A_BOLD;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
 	status_msg_now = other_msg;
+	msg_attr = other_attr;
     } else {
 	status_msg_now = "";
     }
 
-    attrset(defattr);
+    attrset(msg_attr);
     mvprintw(status_row, 7, "%-35.35s", status_msg_now);
+    attrset(defattr);
     mvprintw(status_row, rmargin-35,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
