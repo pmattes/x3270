@@ -243,40 +243,48 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_disabled
 };
 static int msg_color[N_MSGS] = {
-    FA_INT_HIGH_SEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_NSEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL,
-    FA_INT_NORM_SEL
+    FA_INT_NORM_NSEL,	/* disconnected */
+    FA_INT_NORM_NSEL,	/* reconnecting */
+    FA_INT_NORM_NSEL,	/* resolving */
+    FA_INT_NORM_NSEL,	/* connecting */
+    FA_INT_NORM_NSEL,	/* tls */
+    FA_INT_NORM_NSEL,	/* proxy */
+    FA_INT_NORM_NSEL,	/* telnet */
+    FA_INT_NORM_NSEL,	/* tn3270e */
+    FA_INT_NORM_NSEL,	/* nonspecific */
+    FA_INT_NORM_NSEL,	/* inhibit */
+    FA_INT_NORM_NSEL,	/* blank */
+    FA_INT_NORM_NSEL,	/* twait */
+    FA_INT_NORM_NSEL,	/* syswait */
+    FA_INT_HIGH_SEL,	/* protected */
+    FA_INT_HIGH_SEL,	/* numeric */
+    FA_INT_HIGH_SEL,	/* overflow */
+    FA_INT_HIGH_SEL,	/* dbcs */
+    FA_INT_NORM_NSEL,	/* scrolled */
+    FA_INT_HIGH_SEL,	/* minus */
+    FA_INT_HIGH_SEL,	/* disabled */
 };
 static int msg_color3279[N_MSGS] = {
-    HOST_COLOR_WHITE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_BLUE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_RED,
-    HOST_COLOR_RED,
-    HOST_COLOR_RED,
-    HOST_COLOR_RED,
-    HOST_COLOR_WHITE,
-    HOST_COLOR_RED,
-    HOST_COLOR_RED,
-    HOST_COLOR_RED
+    HOST_COLOR_WHITE,	/* disconnected */
+    HOST_COLOR_WHITE,	/* reconnecting */
+    HOST_COLOR_WHITE,	/* resolving */
+    HOST_COLOR_WHITE,	/* connecting */
+    HOST_COLOR_WHITE,	/* tls */
+    HOST_COLOR_WHITE,	/* proxy */
+    HOST_COLOR_WHITE,	/* telnet */
+    HOST_COLOR_WHITE,	/* tn3270e */
+    HOST_COLOR_WHITE,	/* nonspecific */
+    HOST_COLOR_WHITE,	/* inhibit */
+    HOST_COLOR_BLUE,	/* blank */
+    HOST_COLOR_WHITE,	/* twait */
+    HOST_COLOR_WHITE,	/* syswait */
+    HOST_COLOR_RED,	/* protected */
+    HOST_COLOR_RED,	/* numeric */
+    HOST_COLOR_RED,	/* overflow */
+    HOST_COLOR_RED,	/* dbcs */
+    HOST_COLOR_WHITE,	/* scrolled */
+    HOST_COLOR_RED,	/* minus */
+    HOST_COLOR_RED,	/* disabled */
 };
 static bool oia_insert = false;
 static bool oia_reverse = false;
