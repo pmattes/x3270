@@ -172,6 +172,7 @@ static void do_connecting(void);
 static void do_tls(void);
 static void do_proxy(void);
 static void do_telnet(void);
+static void do_tn3270e(void);
 static void do_nonspecific(void);
 static void do_inhibit(void);
 static void do_blank(void);
@@ -201,6 +202,7 @@ static enum msg {
     TLS,		/* X [TLS] */
     PROXY,		/* X [PROXY] */
     TELNET,		/* X [TELNET] */
+    TN3270E,		/* X [TN3270E] */
     NONSPECIFIC,	/* X */
     INHIBIT,		/* X Inhibit */
     BLANK,		/* (blank) */
@@ -226,6 +228,7 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_tls,
     do_proxy,
     do_telnet,
+    do_tn3270e,
     do_nonspecific,
     do_inhibit,
     do_blank,
@@ -327,6 +330,13 @@ static unsigned char telnet_msg[] = {
 };
 static int telnet_len = sizeof(telnet_msg);
 
+static unsigned char tn3270e_msg[] = {
+    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
+    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_N, CG_3, CG_2, CG_7, CG_0,
+    CG_E, CG_bracketright
+};
+static int tn3270e_len = sizeof(tn3270e_msg);
+
 static unsigned char *a_not_connected;
 static unsigned char *a_reconnecting;
 static unsigned char *a_resolving;
@@ -334,6 +344,7 @@ static unsigned char *a_connecting;
 static unsigned char *a_tls;
 static unsigned char *a_proxy;
 static unsigned char *a_telnet;
+static unsigned char *a_tn3270e;
 static unsigned char *a_inhibit;
 static unsigned char *a_twait;
 static unsigned char *a_syswait;
@@ -394,6 +405,7 @@ status_init(void)
     a_tls = make_amsg("statusTlsPending");
     a_proxy = make_amsg("statusProxyPending");
     a_telnet = make_amsg("statusTelnetPending");
+    a_tn3270e = make_amsg("statusTn3270ePending");
     a_inhibit = make_amsg("statusInhibit");
     a_twait = make_amsg("statusTwait");
     a_syswait = make_amsg("statusSyswait");
@@ -597,6 +609,13 @@ status_connect(bool connected)
 	    do_msg(TELNET);
 	    status_untiming();
 	    status_uncursor_pos();
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    oia_boxsolid = false;
+	    do_ctlr();
+	    cancel_disabled_revert();
+	    do_msg(TN3270E);
+	    status_untiming();
+	    status_uncursor_pos();
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
 	    do_msg(NONSPECIFIC);
@@ -785,14 +804,12 @@ void
 status_reset(void)
 {
     cancel_disabled_revert();
-    if (!CONNECTED) {
-	do_msg(DISCONNECTED);
-    } else if (kybdlock & KL_ENTER_INHIBIT) {
+    if (kybdlock & KL_ENTER_INHIBIT) {
 	do_msg(INHIBIT);
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	do_msg(NONSPECIFIC);
     } else {
-	do_msg(BLANK);
+	status_connect(PCONNECTED);
     }
 }
 
@@ -1265,6 +1282,16 @@ do_telnet(void)
 	status_msg_set(a_telnet, strlen((char *)a_telnet));
     } else {
 	status_msg_set(telnet_msg, telnet_len);
+    }
+}
+
+static void
+do_tn3270e(void)
+{
+    if (*standard_font) {
+	status_msg_set(a_tn3270e, strlen((char *)a_tn3270e));
+    } else {
+	status_msg_set(tn3270e_msg, tn3270e_len);
     }
 }
 

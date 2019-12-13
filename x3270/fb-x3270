@@ -899,6 +899,7 @@ x3270.message.statusConnecting:			[TCP]
 x3270.message.statusTlsPending:			[TLS]
 x3270.message.statusProxyPending:		[Proxy]
 x3270.message.statusTelnetPending:		[TELNET]
+x3270.message.statusTn3270ePending:		[TN3270E]
 x3270.message.statusDisabled:			Disabled
 x3270.message.statusReconnecting:		Reconnecting
 x3270.message.statusResolving:			[DNS]
