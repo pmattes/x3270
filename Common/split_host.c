@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -338,8 +338,6 @@ done:
     }
     if (!rc) {
 	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);
-    } else if (HOST_nFLAG(*prefixes, NO_VERIFY_CERT_HOST)) {
-	*prefixes |= (1 << TLS_HOST);
     }
     return rc;
 }
