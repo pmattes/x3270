@@ -39,8 +39,8 @@
 #define fCHAR_WIDTH(f)	((f)->max_bounds.width)
 #define fCHAR_HEIGHT(f)	((f)->ascent + (f)->descent)
 
-#define HHALO  2       /* number of pixels to pad screen left-right */
-#define VHALO  1       /* number of pixels to pad screen top-bottom */
+#define HHALO  rescale(2)       /* number of pixels to pad screen left-right */
+#define VHALO  rescale(1)       /* number of pixels to pad screen top-bottom */
 
 #define cwX_TO_COL(x_pos, cw) 	(((x_pos)-hhalo) / (cw))
 #define chY_TO_ROW(y_pos, ch) 	(((y_pos)-vhalo) / (ch))
@@ -163,6 +163,7 @@ void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 void screen_register(void);
 XChar2b screen_vcrosshair(void);
+Dimension rescale(Dimension d);
 
 /* font list */
 struct font_list {

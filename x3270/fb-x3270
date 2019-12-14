@@ -1084,20 +1084,20 @@ x3270*dialog*foreground:			black
 ! Fixed popup sizes
 x3270.errorPopup.width:				500
 x3270.printerErrorPopup.width:			500
-x3270.childErrorPopup.width:			500
-x3270.infoPopup.width:				500
-x3270.printerInfoPopup.width:			500
-x3270.childInfoPopup.width:			500
-x3270.printerLuPopup.width:			300
-x3270.connectPopup.width:			500
-x3270.fontPopup.width:				300
-x3270.keymapPopup.width:			300
-x3270.oversizePopup.width:			300
-x3270.printWindowPopup.width:			300
-x3270.tracePopup.width:				300
-x3270.executeActionPopup.width:			300
-x3270.saveOptionsPopup.width:			300
-x3270.passwordPopup.width:			300
+!x3270.childErrorPopup.width:			500
+!x3270.infoPopup.width:				500
+!x3270.printerInfoPopup.width:			500
+!x3270.childInfoPopup.width:			500
+!x3270.printerLuPopup.width:			300
+!x3270.connectPopup.width:			500
+!x3270.fontPopup.width:				300
+!x3270.keymapPopup.width:			300
+!x3270.oversizePopup.width:			300
+!x3270.printWindowPopup.width:			300
+!x3270.tracePopup.width:				300
+!x3270.executeActionPopup.width:			300
+!x3270.saveOptionsPopup.width:			300
+!x3270.passwordPopup.width:			300
 !
 ! Nondefault definitions for complex pop-ups
 #ifdef COLOR
@@ -1283,7 +1283,7 @@ x3270.screenTracePopup*value.translations:	#override \n\
 x3270*value.translations:		#override \n\
 	<Key>Return:			PA-confirm()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
-x3270*value.width:			200
+x3270*value.width:			300
 ! Workaround for Xaw MenuButton bug that keeps menu items from highlighting
 ! when CapsLock or NumLock are down.  Technically, this would require
 ! translations for all permutations of all 8 modifiers: shift, lock, control,

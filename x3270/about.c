@@ -124,7 +124,7 @@ hms(time_t ts)
 	    XtNlabel, label, \
 	    XtNfromVert, w, \
 	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, (n), \
+	    XtNvertDistance, rescale(n), \
 	    NULL); \
 	vd = n; \
 	}
@@ -138,7 +138,7 @@ hms(time_t ts)
 	    XtNfromVert, w, \
 	    XtNfromHoriz, left_anchor, \
 	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, (n), \
+	    XtNvertDistance, rescale(n), \
 	    NULL); \
 	vd = n; \
 	}
@@ -151,7 +151,7 @@ hms(time_t ts)
 	    XtNfromVert, w_prev, \
 	    XtNfromHoriz, w, \
 	    XtNhorizDistance, 0, \
-	    XtNvertDistance, vd, \
+	    XtNvertDistance, rescale(vd), \
 	    XtNleft, XtChainLeft, \
 	    NULL); \
 	}
@@ -164,7 +164,7 @@ hms(time_t ts)
 	    XtNfromVert, w_prev, \
 	    XtNfromHoriz, v, \
 	    XtNhorizDistance, 0, \
-	    XtNvertDistance, vd, \
+	    XtNvertDistance, rescale(vd), \
 	    XtNleft, XtChainLeft, \
 	    NULL); \
 	}
@@ -331,14 +331,15 @@ popup_about_config(void)
 
     /* Miscellany */
     MAKE_LABEL(build, 4);
-    MAKE_LABEL(get_message("processId"), 4);
-    MAKE_VALUE(lazyaf("%d", getpid()));
-    MAKE_LABEL2(get_message("windowId"));
-    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
 
     /* Everything else at the left margin under the bitmap */
     w = left_anchor;
     left_anchor = NULL;
+
+    MAKE_LABEL(get_message("processId"), 4);
+    MAKE_VALUE(lazyaf("%d", getpid()));
+    MAKE_LABEL2(get_message("windowId"));
+    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
 
     MAKE_LABEL(lazyaf("%s %s: %d %s x %d %s, %s, %s",
 	get_message("model"), model_name,

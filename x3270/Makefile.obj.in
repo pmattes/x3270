@@ -42,7 +42,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
 	3270h.pcf.gz
 
-all: x3270 $(FONTS) dryrun
+all: x3270 $(FONTS) dryrun autoscale
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -85,6 +85,9 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	bdftopcf $< | gzip -n9 >$@
 
 dryrun: dryrun.in
+	/bin/cp $< $@
+
+autoscale: autoscale.in
 	/bin/cp $< $@
 
 man:: x3270.man

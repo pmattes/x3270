@@ -757,6 +757,7 @@ create_form_popup(const char *name, XtCallbackProc callback,
     Widget shell;
     Widget dialog;
     Widget w;
+    Dimension width;
 
     /* Create the popup shell */
 
@@ -804,6 +805,10 @@ create_form_popup(const char *name, XtCallbackProc callback,
     if (w == NULL) {
 	xs_warning("Cannot find \"%s\" in dialog", XtNvalue);
     }
+
+    /* Modify the width of the value. */
+    XtVaGetValues(w, XtNwidth, &width, NULL);
+    XtVaSetValues(w, XtNwidth, rescale(width), NULL);
 
     /* Set a callback for text modifications */
     w = XawTextGetSource(w);
@@ -982,6 +987,15 @@ rop_init(struct rop *rop)
 
     /* Force it into existence so it sizes itself with 4-line text */
     XtRealizeWidget(rop->shell);
+
+    /* Rescale the error dialogs, which have no initial value. */
+    if (rop->is_error) {
+	Dimension width;
+
+	XtVaGetValues(rop->shell, XtNwidth, &width, NULL);
+	XtVaSetValues(rop->shell, XtNwidth, rescale(width), NULL);
+
+    }
 
     /* If there's a pending message, pop it up now. */
     if ((r = rop->rsms) != NULL) {

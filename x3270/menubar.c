@@ -193,19 +193,19 @@ static int	n_bye;
 
 static bool	toggle_init(Widget, int, const char *, const char *, bool *);
 
-#define TOP_MARGIN	3
-#define BOTTOM_MARGIN	3
-#define LEFT_MARGIN	3
-#define KEY_HEIGHT	18
-#define KEY_WIDTH	70
-#define BORDER		1
-#define SPACING		3
+#define TOP_MARGIN	rescale(3)
+#define BOTTOM_MARGIN	rescale(3)
+#define LEFT_MARGIN	rescale(3)
+#define KEY_HEIGHT	rescale(18)
+#define KEY_WIDTH	rescale(70)
+#define BORDER		rescale(1)
+#define SPACING		rescale(3)
 
 #define BUTTON_X(n)	(LEFT_MARGIN + (n)*(KEY_WIDTH + 2 * BORDER + SPACING))
 
-#define MENU_BORDER	2
+#define MENU_BORDER	rescale(2)
 
-#define KY_WIDTH	(ky_width + 8)
+#define KY_WIDTH	(ky_width + rescale(8))
 
 #define	MENU_MIN_WIDTH	(LEFT_MARGIN + 3 * (KEY_WIDTH + 2 * BORDER + SPACING) + \
 			 LEFT_MARGIN + KY_WIDTH + 2 * BORDER + SPACING + \
@@ -425,14 +425,14 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
     ssl_icon_init(
 	    (Position) (current_width - LEFT_MARGIN -
-			(ky_width + 8) -
-			4 * BORDER - 2 * MENU_BORDER - (locked_width + 8)),
+			(ky_width + rescale(8)) -
+			4 * BORDER - 2 * MENU_BORDER - (locked_width + rescale(8))),
 	    TOP_MARGIN);
 
     /* Keypad button */
 
     keypad_button_init(
-	    (Position) (current_width - LEFT_MARGIN - (ky_width + 8) -
+	    (Position) (current_width - LEFT_MARGIN - (ky_width + rescale(8)) -
 			    2 * BORDER - 2 * MENU_BORDER),
 	    TOP_MARGIN);
 }
@@ -1354,7 +1354,7 @@ keypad_button_init(Position x, Position y)
 		XtNbitmap, pixmap,
 		XtNx, x,
 		XtNy, y,
-		XtNwidth, ky_width + 8,
+		XtNwidth, ky_width + rescale(8),
 		XtNheight, KEY_HEIGHT,
 		XtNsensitive, keypad_sensitive,
 		NULL);

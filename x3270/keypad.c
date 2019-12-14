@@ -58,15 +58,15 @@ enum kp_placement kp_placement;
 
 #define NUM_ROWS	4
 #define NUM_VROWS	15
-#define BORDER		1
-#define TOP_MARGIN	6
-#define BOTTOM_MARGIN	6
+#define BORDER		rescale(1)
+#define TOP_MARGIN	rescale(6)
+#define BOTTOM_MARGIN	rescale(6)
 
-#define SPACING		2
-#define FAT_SPACING	3
-#define VGAP		4
-#define HGAP		4
-#define SIDE_MARGIN	4
+#define SPACING		rescale(2)
+#define FAT_SPACING	rescale(3)
+#define VGAP		rescale(4)
+#define HGAP		rescale(4)
+#define SIDE_MARGIN	rescale(4)
 
 #define HORIZ_WIDTH \
 	(SIDE_MARGIN + \
@@ -495,7 +495,7 @@ get_keypad_dimension(const char *name)
     if ((v = strtol(d, (char **)0, 0)) <= 0) {
 	xs_error("Illegal %s resource", ResKeypad);
     }
-    return (Dimension)v;
+    return rescale((Dimension)v);
 }
 
 static void

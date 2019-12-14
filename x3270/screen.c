@@ -141,7 +141,10 @@ char	       *full_efontname_dbcs;
 bool		visible_control = false;
 unsigned	fixed_width, fixed_height;
 bool		user_resize_allowed = true;
-int		hhalo = HHALO, vhalo = VHALO;
+int		hhalo, vhalo;
+int		dpi = 96;
+int		dpi_scale = 100;
+bool		dpi_override = false;
 
 #define gray_width 2
 #define gray_height 2
@@ -446,6 +449,15 @@ static struct rsfont *rsfonts;
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
 /*
+ * Rescale a dimension according to the DPI settings.
+ */
+Dimension
+rescale(Dimension d)
+{
+    return (d * dpi_scale) / 100;
+}
+
+/*
  * Save 00 event translations.
  */
 void
@@ -538,6 +550,41 @@ clear_fixed(void)
 	fixed_height = 0;
     }
 }
+
+/*
+ * Get the DPI of the display.
+ */
+static void
+dpi_init(void)
+{
+    int rdpi = 0;
+    char *env_dpi;
+    char *type;
+    XrmValue value;
+
+    env_dpi = getenv("DPI");
+    if (env_dpi != NULL) {
+	rdpi = atoi(env_dpi);
+    } else if (XrmGetResource(rdb, "Xft.dpi", "Xft.dpi", &type, &value) == True
+	    && !strcmp(type, "String")) {
+	rdpi = atoi(value.addr);
+    }
+
+    if (rdpi > 0) {
+	dpi = rdpi;
+	dpi_scale = (dpi * 100) / 96;
+	dpi_override = true;
+    }
+
+#if defined(DPI_DEBUG) /*[*/
+    printf("display dpi %d -> scale %d (%s)\n", dpi, dpi_scale,
+	    dpi_override? "override": "default");
+#endif /*]*/
+
+    hhalo = HHALO;
+    vhalo = VHALO;
+}
+
 /*
  * Initialize the screen.
  */
@@ -545,6 +592,8 @@ void
 screen_init(void)
 {
     int i;
+
+    dpi_init();
 
     visible_control = toggled(VISIBLE_CONTROL);
 
@@ -776,7 +825,7 @@ screen_reinit(unsigned cmask)
     /* Set up a container for the menubar, screen and keypad */
 
     if (toggled(SCROLL_BAR)) {
-	scrollbar_width = SCROLLBAR_WIDTH;
+	scrollbar_width = rescale(SCROLLBAR_WIDTH);
     } else {
 	scrollbar_width = 0;
     }
@@ -1118,7 +1167,7 @@ toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     scrollbar_changed = true;
 
     if (toggled(SCROLL_BAR)) {
-	scrollbar_width = SCROLLBAR_WIDTH;
+	scrollbar_width = rescale(SCROLLBAR_WIDTH);
 	screen_redo = REDO_SCROLLBAR;
     } else {
 	scroll_to_bottom();
