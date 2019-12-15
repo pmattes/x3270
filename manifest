@@ -862,6 +862,7 @@ x3270/about.c
 x3270/about.h
 x3270/apl.inc
 x3270/arrow.bm
+x3270/autoscale.in
 x3270/cg.h
 x3270/CmeBSB.c
 x3270/CmeBSB.h
