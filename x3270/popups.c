@@ -951,6 +951,7 @@ rop_init(struct rop *rop)
 {
     Widget w;
     struct rsm *r;
+    Dimension width;
 
     if (rop->shell != NULL) {
 	return;
@@ -989,13 +990,8 @@ rop_init(struct rop *rop)
     XtRealizeWidget(rop->shell);
 
     /* Rescale the error dialogs, which have no initial value. */
-    if (rop->is_error) {
-	Dimension width;
-
-	XtVaGetValues(rop->shell, XtNwidth, &width, NULL);
-	XtVaSetValues(rop->shell, XtNwidth, rescale(width), NULL);
-
-    }
+    XtVaGetValues(rop->shell, XtNwidth, &width, NULL);
+    XtVaSetValues(rop->shell, XtNwidth, rescale(width), NULL);
 
     /* If there's a pending message, pop it up now. */
     if ((r = rop->rsms) != NULL) {

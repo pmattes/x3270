@@ -1084,10 +1084,10 @@ x3270*dialog*foreground:			black
 ! Fixed popup sizes
 x3270.errorPopup.width:				500
 x3270.printerErrorPopup.width:			500
-!x3270.childErrorPopup.width:			500
-!x3270.infoPopup.width:				500
-!x3270.printerInfoPopup.width:			500
-!x3270.childInfoPopup.width:			500
+x3270.childErrorPopup.width:			500
+x3270.infoPopup.width:				500
+x3270.printerInfoPopup.width:			500
+x3270.childInfoPopup.width:			500
 !x3270.printerLuPopup.width:			300
 !x3270.connectPopup.width:			500
 !x3270.fontPopup.width:				300
