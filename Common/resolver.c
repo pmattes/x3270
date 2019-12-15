@@ -37,6 +37,7 @@
 # include <netinet/in.h>
 # include <netdb.h>
 # include <arpa/inet.h>
+# include <signal.h>
 #endif /*]*/
 
 #include <stdio.h>
