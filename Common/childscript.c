@@ -51,7 +51,7 @@
 #include "popups.h"
 #include "child_popups.h"
 #include "childscript.h"
-#include "find_terminal.h"
+#include "find_console.h"
 #include "lazya.h"
 #include "peerscript.h"
 #include "s3270_proto.h"
@@ -1355,7 +1355,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     const char **nargv = NULL;
     int nargc = 0;
 #if !defined(_WIN32) /*[*/
-    terminal_desc_t *t;
+    console_desc_t *t;
 #endif /*]*/
 
     action_debug("Prompt", ia, argc, argv);
@@ -1364,10 +1364,10 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     }
 
 #if !defined(_WIN32) /*[*/
-    /* Find a terminal emulator to run the prompt in. */
-    t = find_terminal();
+    /* Find a console emulator to run the prompt in. */
+    t = find_console();
     if (t == NULL)  {
-	popup_an_error("Prompt: can't find a terminal program");
+	popup_an_error("Prompt: can't find a console program");
 	return false;
     }
 
@@ -1412,13 +1412,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, "-UseSocket");
     array_add(&nargv, nargc++, "-Single");
 #if !defined(_WIN32) /*[*/
-    array_add(&nargv, nargc++, t->program);
-    array_add(&nargv, nargc++, t->title_opt);
-    array_add(&nargv, nargc++, lazyaf("%s>", params[0]));
-    if (t->extra_opt != NULL) {
-	array_add(&nargv, nargc++, t->extra_opt);
-    }
-    array_add(&nargv, nargc++, t->exec_opt);
+    nargc = console_args(t, lazyaf("%s>", params[0]), &nargv, nargc);
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
     array_add(&nargv, nargc++,

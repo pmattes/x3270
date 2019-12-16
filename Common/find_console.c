@@ -26,7 +26,7 @@
  */
 
 /*
- *      find_terminal.c
+ *      find_console.c
  *              Console window support.
  */
 
@@ -37,11 +37,12 @@
 #include "globals.h"
 
 #include "appres.h"
-#include "find_terminal.h"
+#include "childscript.h"
+#include "find_console.h"
 #include "lazya.h"
 
 /* Well-known consoles, in order of preference. */
-static terminal_desc_t terminals[] = {
+static console_desc_t consoles[] = {
     { "gnome-terminal", "--title", NULL, "--" },
     { "konsole", "--caption", NULL, "-e" },
     { "xfce4-terminal", "-T", NULL, "-x" },
@@ -76,14 +77,14 @@ find_in_path(const char *program)
     return false;
 }
 
-/* Find the preferred terminal emulator for the prompt. */
-terminal_desc_t *
-find_terminal(void)
+/* Find the preferred console emulator for the prompt. */
+console_desc_t *
+find_console(void)
 {
     int i;
 
     do {
-	static terminal_desc_t t_ret;
+	static console_desc_t t_ret;
 	char *override = appres.interactive.console;
 	char *program, *title_opt, *extra_opt, *exec_opt;
 
@@ -104,10 +105,10 @@ find_terminal(void)
 	    }
 
 	    /* They just specified the name. */
-	    for (i = 0; terminals[i].program != NULL; i++) {
-		if (!strcmp(program, terminals[i].program) &&
+	    for (i = 0; consoles[i].program != NULL; i++) {
+		if (!strcmp(program, consoles[i].program) &&
 			find_in_path(program)) {
-		    return &terminals[i];
+		    return &consoles[i];
 		}
 	    }
 	    break;
@@ -145,10 +146,25 @@ find_terminal(void)
     } while (false);
 
     /* No override. Find the best one. */
-    for (i = 0; terminals[i].program != NULL; i++) {
-	if (find_in_path(terminals[i].program)) {
-	    return &terminals[i];
+    for (i = 0; consoles[i].program != NULL; i++) {
+	if (find_in_path(consoles[i].program)) {
+	    return &consoles[i];
 	}
     }
     return NULL;
+}
+
+/* Copy console arguments to an argv array. */
+int
+console_args(console_desc_t *t, const char *title, const char ***s, int ix)
+{
+    array_add(s, ix++, t->program);
+    array_add(s, ix++, t->program);
+    array_add(s, ix++, t->title_opt);
+    array_add(s, ix++, title);
+    if (t->extra_opt != NULL) {
+	array_add(s, ix++, t->extra_opt);
+    }
+    array_add(s, ix++, t->exec_opt);
+    return ix;
 }

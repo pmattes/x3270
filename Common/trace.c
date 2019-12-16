@@ -44,8 +44,9 @@
 
 #include "codepage.h"
 #include "child.h"
+#include "childscript.h"
 #include "ctlrc.h"
-#include "find_terminal.h"
+#include "find_console.h"
 #include "fprint_screen.h"
 #include "lazya.h"
 #include "menubar.h"
@@ -689,8 +690,8 @@ get_devfd(const char *pathname)
 static void
 start_trace_window(const char *path)
 {
-    terminal_desc_t *t = find_terminal();
-    char *argv[10];
+    console_desc_t *t = find_console();
+    const char **argv = NULL;
     int argc = 0;
 
     if (t == NULL) {
@@ -700,18 +701,12 @@ start_trace_window(const char *path)
 
     switch (tracewindow_pid = fork_child()) {
     case 0:	/* child process */
-	argv[argc++] = (char *)t->program;
-	argv[argc++] = (char *)t->title_opt;
-	argv[argc++] = (char *)path;
-	if (t->extra_opt != NULL) {
-	    argv[argc++] = (char *)t->extra_opt;
-	}
-	argv[argc++] = (char *)t->exec_opt;
-	argv[argc++] = (char *)"/bin/sh";
-	argv[argc++] = (char *)"-c";
-	argv[argc++] = xs_buffer("tail -n+0 -f %s", path);
-	argv[argc++] = NULL;
-	execvp(t->program, argv);
+	argc = console_args(t, path, &argv, argc);
+	array_add(&argv, argc++, "/bin/sh");
+	array_add(&argv, argc++, "-c");
+	array_add(&argv, argc++, xs_buffer("tail -n+0 -f %s", path));
+	array_add(&argv, argc++, NULL);
+	execvp(t->program, (char *const*)argv);
 	perror(xs_buffer("exec(%s) failed", t->program));
 	_exit(1);
 	break;
