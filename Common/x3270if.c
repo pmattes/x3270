@@ -641,10 +641,21 @@ static void
 get_ports(socket_t *socket, int *infd, int *outfd)
 {
 #if !defined(_WIN32) /*[*/
-    *infd = fd_env(OUTPUT_ENV, true);
-    *outfd = fd_env(INPUT_ENV, true);
+    int socketport = -1;
+
+    if (socket != NULL) {
+	socketport = fd_env(PORT_ENV, false);
+    }
+    if (socketport == -1) {
+	*infd = fd_env(OUTPUT_ENV, true);
+	*outfd = fd_env(INPUT_ENV, true);
+    } else {
+	*socket = tsock(socketport);
+    }
     if (verbose) {
-	fprintf(stderr, "input: %d, output: %d\n", *infd, *outfd);
+	fprintf(stderr, "socket: %d, input: %d, output: %d\n",
+		(socket != NULL)? *socket: -1,
+		*infd, *outfd);
     }
 #else /*][*/
     int socketport = fd_env(PORT_ENV, true);
@@ -1123,7 +1134,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	s = tsock(port);
     } else {
 #if !defined(_WIN32) /*[*/
-	get_ports(NULL, &infd, &outfd);
+	get_ports(&s, &infd, &outfd);
 #else /*][*/
 	get_ports(&s, NULL, NULL);
 #endif /*]*/

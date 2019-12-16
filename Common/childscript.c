@@ -38,6 +38,11 @@
 # include <signal.h>
 # include <sys/signal.h>
 # include <sys/wait.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <sys/un.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 #endif /*]*/
 
 #include "actions.h"
@@ -50,6 +55,7 @@
 #include "peerscript.h"
 #include "s3270_proto.h"
 #include "task.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -153,6 +159,7 @@ typedef struct {
     llist_t llist;		/* linkage */
     char *parent_name;		/* cb name */
     char *command;		/* command text */
+    bool use_socket;		/* true if script uses a socket */
     bool done;			/* true if script is complete */
     bool success;		/* success or failure */
     ioid_t exit_id;		/* I/O identifier for child exit */
@@ -160,6 +167,7 @@ typedef struct {
     bool enabled;		/* enabled */
     char *output_buf;		/* output buffer */
     size_t output_buflen;	/* size of output buffer */
+    peer_listen_t listener;	/* listener for child commands */
     bool keyboard_lock;		/* lock/unlock keyboard while running */
     unsigned capabilities;	/* self-reported capabilities */
     void *irhandle;		/* input request handle */
@@ -167,7 +175,6 @@ typedef struct {
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
-    peer_listen_t listener;	/* listener for child commands */
     cr_t cr;			/* stdout read context */
 #else /*][*/
     char *child_name;		/* cb name */
@@ -182,6 +189,23 @@ typedef struct {
 #endif /*]*/
 } child_t;
 static llist_t child_scripts = LLIST_INIT(child_scripts);
+
+#if !defined(_WIN32) /*[*/
+/* How to start a terminal in a window. */
+typedef struct {
+    const char *program;	/* program name */
+    const char *title_opt;	/* option to set title */
+    const char *exec_opt;	/* option to specify command and args */
+} terminal_desc_t;
+
+static terminal_desc_t terminals[] = {
+    { "gnome-terminal", "--title", "--" },
+    { "konsole", "--caption", "-e" },
+    { "xfce4-terminal", "-T", "-x" },
+    { "xterm", "-title", "-e" },
+    { NULL, NULL, NULL }
+};
+#endif /*]*/
 
 /**
  * Free a child.
@@ -412,9 +436,12 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
-    write(c->outfd, s, strlen(s));
+    if (!c->use_socket) {
+	char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+
+	write(c->outfd, s, strlen(s));
+    }
 #endif /*]*/
 }
 
@@ -431,10 +458,13 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
-	    buf);
 
-    write(c->outfd, s, strlen(s));
+    if (!c->use_socket) {
+	char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX,
+		(int)len, buf);
+
+	write(c->outfd, s, strlen(s));
+    }
 #endif /*]*/
 }
 
@@ -451,41 +481,57 @@ static bool
 child_done(task_cbh handle, bool success, bool abort)
 {
     child_t *c = (child_t *)handle;
+
 #if !defined(_WIN32) /*[*/
-    bool new_child = false;
-    char *prompt = task_cb_prompt(handle);
-    char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
-
-    /* Print the prompt. */
-    vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
-	success? "ok": "error");
-    write(c->outfd, s, strlen(s));
-
-    if (abort || !c->enabled) {
-	close(c->outfd);
-	c->outfd = -1;
+    if (c->use_socket) {
 	if (abort) {
-	    vtrace("%s killing process %d\n", c->child_name, (int)c->pid);
-	    killpg(c->pid, SIGKILL);
+	    if (c->listener != NULL) {
+		peer_shutdown(c->listener);
+		c->listener = NULL;
+	    }
+	    vtrace("%s terminating script process\n", c->parent_name);
+	    kill(c->pid, SIGTERM);
 	    if (c->keyboard_lock) {
 		disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
 	    }
 	}
 	return true;
-    }
+    } else {
+	bool new_child = false;
+	char *prompt = task_cb_prompt(handle);
+	char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
 
-    /* Run any pending command that we already read in. */
-    new_child = run_next(c);
-    if (!new_child && c->id == NULL_IOID && c->infd != -1) {
-	/* Allow more input. */
-	c->id = AddInput(c->infd, child_input);
-    }
+	/* Print the prompt. */
+	vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
+	    success? "ok": "error");
+	write(c->outfd, s, strlen(s));
 
-    /*
-     * If there was a new child, we're still active. Otherwise, let our sms
-     * be popped.
-     */
-    return !new_child;
+	if (abort || !c->enabled) {
+	    close(c->outfd);
+	    c->outfd = -1;
+	    if (abort) {
+		vtrace("%s killing process %d\n", c->child_name, (int)c->pid);
+		killpg(c->pid, SIGKILL);
+		if (c->keyboard_lock) {
+		    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+		}
+	    }
+	    return true;
+	}
+
+	/* Run any pending command that we already read in. */
+	new_child = run_next(c);
+	if (!new_child && c->id == NULL_IOID && c->infd != -1) {
+	    /* Allow more input. */
+	    c->id = AddInput(c->infd, child_input);
+	}
+
+	/*
+	 * If there was a new child, we're still active. Otherwise, let our sms
+	 * be popped.
+	 */
+	return !new_child;
+    }
 
 #else /*][*/
 
@@ -816,6 +862,43 @@ child_exited(ioid_t id, int status)
 }
 #endif /*]*/
 
+/* Let the system pick a TCP port to bind to. */
+static unsigned short
+pick_port(socket_t *sp)
+{
+    socket_t s;
+    struct sockaddr_in sin;
+    socklen_t len;
+    int on = 1;
+
+    s = socket(PF_INET, SOCK_STREAM, 0);
+    if (s == INVALID_SOCKET) {
+	popup_a_sockerr("socket");
+	return 0;
+    }
+    memset(&sin, '\0', sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+	popup_a_sockerr("bind");
+	SOCK_CLOSE(s);
+	return 0;
+    }
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
+	popup_a_sockerr("setsockopt");
+	SOCK_CLOSE(s);
+	return 0;
+    }
+    len = sizeof(sin);
+    if (getsockname(s, (struct sockaddr *)&sin, &len) < 0) {
+	popup_a_sockerr("getsockaddr");
+	SOCK_CLOSE(s);
+	return 0;
+    }
+    *sp = s;
+    return ntohs(sin.sin_port);
+}
+
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (a process exit). */
 static void
@@ -857,43 +940,6 @@ child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	c->done = true;
 	task_activate((task_cbh *)c);
     }
-}
-
-/* Let the system pick a TCP port to bind to. */
-static unsigned short
-pick_port(socket_t *sp)
-{
-    socket_t s;
-    struct sockaddr_in sin;
-    socklen_t len;
-    int on = 1;
-
-    s = socket(PF_INET, SOCK_STREAM, 0);
-    if (s == INVALID_SOCKET) {
-	popup_an_error("socket: %s\n", win32_strerror(GetLastError()));
-	return 0;
-    }
-    memset(&sin, '\0', sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-	popup_an_error("bind: %s\n", win32_strerror(GetLastError()));
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-	popup_an_error("setsockopt: %s\n", win32_strerror(GetLastError()));
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    len = sizeof(sin);
-    if (getsockname(s, (struct sockaddr *)&sin, &len) < 0) {
-	popup_an_error("getsockaddr: %s\n", win32_strerror(GetLastError()));
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    *sp = s;
-    return ntohs(sin.sin_port);
 }
 
 /* Read from the child's stdout or stderr. */
@@ -1006,19 +1052,22 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     bool async = false;
     bool keyboard_lock = true;
     bool stdout_redirect = true;
+#if !defined(_WIN32) /*[*/
+    bool use_socket = false;
+#else /*][*/
+    bool use_socket = true;
+#endif /*]*/
+    peer_listen_mode mode = PLM_MULTI;
+    peer_listen_t listener = NULL;
     varbuf_t r;
     unsigned i;
+    socket_t s;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
-    int inpipe[2];
-    int outpipe[2];
+    int inpipe[2] = { -1, -1 };
+    int outpipe[2] = { -1, -1 };
     int stdoutpipe[2];
 #else /*][*/
-    peer_listen_mode mode = PLM_MULTI;
-    unsigned short port;
-    socket_t s;
-    struct sockaddr_in *sin;
-    peer_listen_t listener;
     STARTUPINFO startupinfo;
     PROCESS_INFORMATION process_information;
     char *args;
@@ -1042,13 +1091,15 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    argc--;
 	    argv++;
 	} else if (!strcasecmp(argv[0], "-Single")) {
-#if defined(_WIN32) /*[*/
 	    mode = PLM_SINGLE;
-#endif /*]*/
 	    argc--;
 	    argv++;
 	} else if (!strcasecmp(argv[0], "-NoStdoutRedirect")) {
 	    stdout_redirect = false;
+	    argc--;
+	    argv++;
+	} else if (!strcasecmp(argv[0], "-UseSocket")) {
+	    use_socket = true;
 	    argc--;
 	    argv++;
 	} else {
@@ -1056,40 +1107,69 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
-#if !defined(_WIN32) /*[*/
-    /*
-     * Create pipes and stdout stream for the script process.
-     *  inpipe[] is read by x3270, written by the script
-     *  outpipe[] is written by x3270, read by the script
-     */
-    if (pipe(inpipe) < 0) {
-	popup_an_error("pipe() failed");
-	return false;
+    if (use_socket) {
+	/* Set up X3270PORT for the child process. */
+	unsigned short port = pick_port(&s);
+	struct sockaddr_in *sin;
+
+	if (port == 0) {
+	    return false;
+	}
+	sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
+	sin->sin_family = AF_INET;
+	sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	sin->sin_port = htons(port);
+	listener = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
+	SOCK_CLOSE(s);
+	if (listener == NULL) {
+	    return false;
+	}
+	putenv(lazyaf(PORT_ENV "=%d", port));
     }
-    if (pipe(outpipe) < 0) {
-	close(inpipe[0]);
-	close(inpipe[1]);
-	popup_an_error("pipe() failed");
-	return false;
+
+#if !defined(_WIN32) /*[*/
+    if (!use_socket) {
+	/*
+	 * Create pipes and stdout stream for the script process.
+	 *  inpipe[] is read by x3270, written by the script
+	 *  outpipe[] is written by x3270, read by the script
+	 */
+	if (pipe(inpipe) < 0) {
+	    popup_an_error("pipe() failed");
+	    return false;
+	}
+	if (pipe(outpipe) < 0) {
+	    close(inpipe[0]);
+	    close(inpipe[1]);
+	    popup_an_error("pipe() failed");
+	    return false;
+	}
     }
 
     /* Create a pipe to capture child stdout. */
     if (pipe(stdoutpipe) < 0) {
-	close(outpipe[0]);
-	close(outpipe[1]);
-	close(inpipe[0]);
-	close(inpipe[1]);
+	if (!use_socket) {
+	    close(outpipe[0]);
+	    close(outpipe[1]);
+	    close(inpipe[0]);
+	    close(inpipe[1]);
+	}
 	popup_an_error("pipe() failed");
     }
 
     /* Fork and exec the script process. */
     if ((pid = fork()) < 0) {
-	close(inpipe[0]);
-	close(inpipe[1]);
-	close(outpipe[0]);
-	close(outpipe[1]);
+	if (!use_socket) {
+	    close(inpipe[0]);
+	    close(inpipe[1]);
+	    close(outpipe[0]);
+	    close(outpipe[1]);
+	}
 	close(stdoutpipe[0]);
 	close(stdoutpipe[1]);
+	if (listener != NULL) {
+	    peer_shutdown(listener);
+	}
 	popup_an_error("fork() failed");
 	return false;
     }
@@ -1103,8 +1183,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	setsid();
 
 	/* Clean up the pipes. */
-	close(outpipe[1]);
-	close(inpipe[0]);
+	if (!use_socket) {
+	    close(outpipe[1]);
+	    close(inpipe[0]);
+	}
 	close(stdoutpipe[0]);
 
 	/* Redirect output. */
@@ -1114,8 +1196,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
-	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
-	putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
+	if (!use_socket) {
+	    putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
+	    putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
+	}
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1133,6 +1217,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c = (child_t *)Calloc(1, sizeof(child_t));
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
+    c->use_socket = use_socket;
     c->success = true;
     c->done = false;
     c->buf = NULL;
@@ -1144,35 +1229,25 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     task_cb_init_ir_state(&c->ir_state);
 
     /* Clean up our ends of the pipes. */
-    c->infd = inpipe[0];
-    close(inpipe[1]);
-    c->outfd = outpipe[1];
-    close(outpipe[0]);
+    if (use_socket) {
+	c->infd = -1;
+    } else {
+	c->infd = inpipe[0];
+	close(inpipe[1]);
+	c->outfd = outpipe[1];
+	close(outpipe[0]);
+    }
     close(stdoutpipe[1]);
 
     /* Allow child input. */
-    c->id = AddInput(c->infd, child_input);
+    if (!use_socket) {
+	c->id = AddInput(c->infd, child_input);
+    }
 
     /* Capture child output. */
     c->stdout_id = AddInput(c->stdoutpipe, child_stdout);
 
 #else /*]*/
-
-    /* Set up X3270PORT for the child process. */
-    port = pick_port(&s);
-    if (port == 0) {
-	return false;
-    }
-    sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
-    sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin->sin_port = htons(port);
-    listener = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
-    SOCK_CLOSE(s);
-    if (listener == NULL) {
-	return false;
-    }
-    putenv(lazyaf(PORT_ENV "=%d", port));
 
     /* Set up the stdout/stderr output pipes. */
     c = (child_t *)Calloc(1, sizeof(child_t));
@@ -1234,6 +1309,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Create a new script description. */
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
+    c->use_socket = use_socket;
     c->success = true;
     c->done = false;
     c->child_handle = process_information.hProcess;
@@ -1273,6 +1349,68 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+#if !defined(_WIN32) /*[*/
+/* Find an executable in $PATH. */
+static bool
+find_in_path(const char *program)
+{
+    char *path = getenv("PATH");
+    char *colon;
+
+    while ((colon = strchr(path, ':')) != NULL) {
+	if (colon != path) {
+	    char *xpath = lazyaf("%.*s/%s", (int)(colon - path), path, program);
+
+	    if (access(xpath, X_OK) == 0) {
+		return true;
+	    }
+	}
+	path = colon + 1;
+    }
+    if (*path) {
+	char *xpath = lazyaf("%s/%s", path, program);
+
+	if (access(xpath, X_OK) == 0) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+/* Find the preferred terminal emulator for the prompt. */
+static terminal_desc_t *
+find_terminal(void)
+{
+    char *override;
+    int i;
+
+    override = getenv("X3270_CONSOLE");
+    if (override != NULL) {
+	static terminal_desc_t t_ret;
+	char *colon = strchr(override, ':');
+	char *colon2 = (colon != NULL)? strchr(colon + 1, ':'): NULL;
+
+	if (colon != NULL && *(colon + 1) != ':' &&
+		colon2 != NULL && *(colon2 + 1) != '\0') {
+	    t_ret.program = lazyaf("%.*s", (int)(colon - override), override);
+	    t_ret.title_opt = lazyaf("%.*s", (int)(colon2 - (colon + 1)),
+		    colon + 1);
+	    t_ret.exec_opt = colon2 + 1;
+	    if (find_in_path(t_ret.program)) {
+		return &t_ret;
+	    }
+	}
+    }
+
+    for (i = 0; terminals[i].program != NULL; i++) {
+	if (find_in_path(terminals[i].program)) {
+	    return &terminals[i];
+	}
+    }
+    return NULL;
+}
+#endif /*]*/
+
 /* Add an element to a dynamically-allocated array. */
 void
 array_add(const char ***s, int ix, const char *v)
@@ -1294,11 +1432,29 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     unsigned i;
     const char **nargv = NULL;
     int nargc = 0;
+#if !defined(_WIN32) /*[*/
+    terminal_desc_t *t;
+#endif /*]*/
 
     action_debug("Prompt", ia, argc, argv);
     if (check_argc("Prompt", argc, 0, 3) < 0) {
 	return false;
     }
+
+#if !defined(_WIN32) /*[*/
+    /* Find a terminal emulator to run the prompt in. */
+    t = find_terminal();
+    if (t == NULL)  {
+	popup_an_error("Prompt: can't find a terminal program");
+	return false;
+    }
+
+    /* Make sure x3270if is available. */
+    if (!find_in_path("x3270if")) {
+	popup_an_error("Prompt: can't find x3270if");
+	return false;
+    }
+#endif /*]*/
 
     if (appres.alias != NULL) {
 	params[0] = appres.alias;
@@ -1331,11 +1487,13 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     array_add(&nargv, nargc++, "-Async");
+    array_add(&nargv, nargc++, "-UseSocket");
+    array_add(&nargv, nargc++, "-Single");
 #if !defined(_WIN32) /*[*/
-    array_add(&nargv, nargc++, "xterm");
-    array_add(&nargv, nargc++, "-title");
+    array_add(&nargv, nargc++, t->program);
+    array_add(&nargv, nargc++, t->title_opt);
     array_add(&nargv, nargc++, lazyaf("%s>", params[0]));
-    array_add(&nargv, nargc++, "-e");
+    array_add(&nargv, nargc++, t->exec_opt);
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
     array_add(&nargv, nargc++,
