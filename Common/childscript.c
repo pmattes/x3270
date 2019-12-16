@@ -51,6 +51,7 @@
 #include "popups.h"
 #include "child_popups.h"
 #include "childscript.h"
+#include "find_terminal.h"
 #include "lazya.h"
 #include "peerscript.h"
 #include "s3270_proto.h"
@@ -189,23 +190,6 @@ typedef struct {
 #endif /*]*/
 } child_t;
 static llist_t child_scripts = LLIST_INIT(child_scripts);
-
-#if !defined(_WIN32) /*[*/
-/* How to start a terminal in a window. */
-typedef struct {
-    const char *program;	/* program name */
-    const char *title_opt;	/* option to set title */
-    const char *exec_opt;	/* option to specify command and args */
-} terminal_desc_t;
-
-static terminal_desc_t terminals[] = {
-    { "gnome-terminal", "--title", "--" },
-    { "konsole", "--caption", "-e" },
-    { "xfce4-terminal", "-T", "-x" },
-    { "xterm", "-title", "-e" },
-    { NULL, NULL, NULL }
-};
-#endif /*]*/
 
 /**
  * Free a child.
@@ -1348,68 +1332,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
     return true;
 }
-
-#if !defined(_WIN32) /*[*/
-/* Find an executable in $PATH. */
-static bool
-find_in_path(const char *program)
-{
-    char *path = getenv("PATH");
-    char *colon;
-
-    while ((colon = strchr(path, ':')) != NULL) {
-	if (colon != path) {
-	    char *xpath = lazyaf("%.*s/%s", (int)(colon - path), path, program);
-
-	    if (access(xpath, X_OK) == 0) {
-		return true;
-	    }
-	}
-	path = colon + 1;
-    }
-    if (*path) {
-	char *xpath = lazyaf("%s/%s", path, program);
-
-	if (access(xpath, X_OK) == 0) {
-	    return true;
-	}
-    }
-    return false;
-}
-
-/* Find the preferred terminal emulator for the prompt. */
-static terminal_desc_t *
-find_terminal(void)
-{
-    char *override;
-    int i;
-
-    override = getenv("X3270_CONSOLE");
-    if (override != NULL) {
-	static terminal_desc_t t_ret;
-	char *colon = strchr(override, ':');
-	char *colon2 = (colon != NULL)? strchr(colon + 1, ':'): NULL;
-
-	if (colon != NULL && *(colon + 1) != ':' &&
-		colon2 != NULL && *(colon2 + 1) != '\0') {
-	    t_ret.program = lazyaf("%.*s", (int)(colon - override), override);
-	    t_ret.title_opt = lazyaf("%.*s", (int)(colon2 - (colon + 1)),
-		    colon + 1);
-	    t_ret.exec_opt = colon2 + 1;
-	    if (find_in_path(t_ret.program)) {
-		return &t_ret;
-	    }
-	}
-    }
-
-    for (i = 0; terminals[i].program != NULL; i++) {
-	if (find_in_path(terminals[i].program)) {
-	    return &terminals[i];
-	}
-    }
-    return NULL;
-}
-#endif /*]*/
 
 /* Add an element to a dynamically-allocated array. */
 void

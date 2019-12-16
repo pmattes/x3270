@@ -715,7 +715,6 @@ x3270.passwordPopup.dialog*value*background:	white
 x3270.tracePopup.title:				x3270 Tracing
 x3270.tracePopup.dialog.label:			Enter Trace File Name
 x3270.tracePopup*confirmButton.label:		Trace
-x3270.tracePopup*confirm2Button.label:		No File
 x3270.screenTracePopup.title:			x3270 Screen Save
 x3270.screenTracePopup*continuously.label:	Continuously
 x3270.screenTracePopup*once.label:		Once

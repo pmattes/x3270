@@ -175,6 +175,7 @@ Common/fb-common
 Common/fb-composeMap
 Common/fb-messages
 Common/fb-printSession
+Common/find_terminal.c
 Common/fprint_screen.c
 Common/ft.c
 Common/ft_cut.c
@@ -359,6 +360,7 @@ include/copyright.h
 include/ctlrc.h
 include/ctlr.h
 include/fallbacks.h
+include/find_terminal.h
 include/fprint_screen.h
 include/ft_cut_ds.h
 include/ft_cut.h

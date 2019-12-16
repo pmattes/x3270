@@ -45,6 +45,7 @@
 #include "codepage.h"
 #include "child.h"
 #include "ctlrc.h"
+#include "find_terminal.h"
 #include "fprint_screen.h"
 #include "lazya.h"
 #include "menubar.h"
@@ -110,7 +111,6 @@ static int      tracewindow_pid = -1;
 static HANDLE	tracewindow_handle = NULL;
 #endif /*]*/
 static FILE    *tracef = NULL;
-static FILE    *tracef_pipe = NULL;
 static char    *tracef_bufptr = NULL;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
@@ -356,10 +356,6 @@ vwtrace(bool do_ts, const char *fmt, va_list args)
 	    }
 	    fwrite(ts, strlen(ts), 1, tracef);
 	    fflush(tracef);
-	    if (tracef_pipe != NULL) {
-		fwrite(ts, strlen(ts), 1, tracef_pipe);
-		fflush(tracef);
-	    }
 	    wrote_ts = true;
 	}
 
@@ -381,16 +377,6 @@ vwtrace(bool do_ts, const char *fmt, va_list args)
 	    if (!IS_EILSEQ(errno)) {
 		stop_tracing();
 		goto done;
-	    }
-	}
-
-	if (tracef_pipe != NULL) {
-	    nw = fwrite(bp, n2w, 1, tracef_pipe);
-	    if (nw != 1) {
-		fclose(tracef_pipe);
-		tracef_pipe = NULL;
-	    } else {
-		fflush(tracef_pipe);
 	    }
 	}
 
@@ -431,10 +417,6 @@ stop_tracing(void)
 	fclose(tracef);
     }
     tracef = NULL;
-    if (tracef_pipe != NULL) {
-	fclose(tracef_pipe);
-	tracef_pipe = NULL;
-    }
     if (toggled(TRACING)) {
 	toggle_toggle(TRACING);
 	menubar_retoggle(TRACING);
@@ -701,23 +683,28 @@ get_devfd(const char *pathname)
 /*
  * Start up a window to monitor the trace file.
  *
- * @param[in] path	Trace file path. On Unix, this can be NULL to indicate
- * 			that the trace is just being piped.
- * @param[in] pipefd	Array of pipe file descriptors.
+ * @param[in] path	Trace file path.
+ * @param[in] port	Port to connect to.
  */
 static void
-start_trace_window(const char *path, int pipefd[])
+start_trace_window(const char *path)
 {
+    terminal_desc_t *t = find_terminal();
+
+    if (t == NULL) {
+	perror("Cannot find console application for trace window");
+	return;
+    }
+
     switch (tracewindow_pid = fork_child()) {
     case 0:	/* child process */
-	execlp("xterm", "xterm", "-title", path? path: "trace",
-		"-sb", "-e", "/bin/sh", "-c", xs_buffer("cat <&%d", pipefd[0]),
-		NULL);
-	perror("exec(xterm) failed");
+	execlp(t->program, t->program, t->title_opt, path? path: "trace",
+		t->exec_opt, "/bin/sh", "-c",
+		xs_buffer("tail -n+0 -f %s", path), NULL);
+	perror(xs_buffer("exec(%s) failed", t->program));
 	_exit(1);
 	break;
     default:	/* parent */
-	close(pipefd[0]);
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork() failed");
@@ -759,10 +746,6 @@ void
 tracefile_ok(const char *tfn)
 {
     int devfd = -1;
-#if !defined(_WIN32) /*[*/
-    int pipefd[2];
-    bool just_piped = false;
-#endif /*]*/
     char *buf;
     char *stfn;
 
@@ -779,83 +762,41 @@ tracefile_ok(const char *tfn)
     if (!strcmp(stfn, "stdout")) {
 	tracef = stdout;
     } else {
-#if !defined(_WIN32) /*[*/
-	FILE *pipefile = NULL;
+	bool append = false;
 
 	if (!strcmp(stfn, "none") || !stfn[0]) {
-	    just_piped = true;
-	    if (!appres.trace_monitor) {
-		popup_an_error("Must specify a trace file name");
-		free(stfn);
-		goto done;
-	    }
+	    popup_an_error("Must specify a trace file name");
 	}
 
-	if (appres.trace_monitor) {
-	    if (pipe(pipefd) < 0) {
-		popup_an_errno(errno, "pipe() failed");
-		Free(stfn);
-		goto done;
-	    }
-	    pipefile = fdopen(pipefd[1], "w");
-	    if (pipefile == NULL) {
-		popup_an_errno(errno, "fdopen() failed");
-		close(pipefd[0]);
-		close(pipefd[1]);
-		Free(stfn);
-		goto done;
-	    }
-	    SETLINEBUF(pipefile);
-	    fcntl(pipefd[1], F_SETFD, 1);
+	/* Get the trace file maximum. */
+	get_tracef_max();
+
+	/* Open and configure the file. */
+	if ((devfd = get_devfd(stfn)) >= 0)
+	    tracef = fdopen(dup(devfd), "a");
+	else if (!strncmp(stfn, ">>", 2)) {
+	    append = true;
+	    tracef = fopen(stfn + 2, "a");
+	} else {
+	    tracef = fopen(stfn, "w");
 	}
-
-	if (just_piped) {
-	    tracef = pipefile;
-	} else
-#endif /*]*/
-	{
-	    bool append = false;
-
-#if !defined(_WIN32) /*[*/
-	    tracef_pipe = pipefile;
-#endif /*]*/
-	    /* Get the trace file maximum. */
-	    get_tracef_max();
-
-	    /* Open and configure the file. */
-	    if ((devfd = get_devfd(stfn)) >= 0)
-		tracef = fdopen(dup(devfd), "a");
-	    else if (!strncmp(stfn, ">>", 2)) {
-		append = true;
-		tracef = fopen(stfn + 2, "a");
-	    } else {
-		tracef = fopen(stfn, "w");
-	    }
-	    if (tracef == NULL) {
-		popup_an_errno(errno, "%s", stfn);
-#if !defined(_WIN32) /*[*/
-		if (tracef_pipe != NULL) {
-		    fclose(tracef_pipe);
-		}
-		close(pipefd[0]);
-		close(pipefd[1]);
-#endif /*]*/
-		Free(stfn);
-		goto done;
-	    }
-	    tracef_size = ftello(tracef);
-	    Replace(tracefile_name, NewString(append? stfn + 2: stfn));
-	    SETLINEBUF(tracef);
-#if !defined(_WIN32) /*[*/
-	    fcntl(fileno(tracef), F_SETFD, 1);
-#endif /*]*/
+	if (tracef == NULL) {
+	    popup_an_errno(errno, "%s", stfn);
+	    Free(stfn);
+	    goto done;
 	}
+	tracef_size = ftello(tracef);
+	Replace(tracefile_name, NewString(append? stfn + 2: stfn));
+	SETLINEBUF(tracef);
+#if !defined(_WIN32) /*[*/
+	fcntl(fileno(tracef), F_SETFD, 1);
+#endif /*]*/
     }
 
     /* Start the monitor window. */
     if (tracef != stdout && appres.trace_monitor && product_has_display()) {
 #if !defined(_WIN32) /*[*/
-	start_trace_window(just_piped? NULL: stfn, pipefd);
+	start_trace_window(stfn);
 #else /*][*/
 	if (windirs_flags && GD_CATF) {
 	    start_trace_window(stfn);

@@ -961,7 +961,7 @@ file_menu_init(bool regen, Dimension x, Dimension y)
        Trace X Events
        Save Screen(s) in File */
     spaced = false;
-    if (appres.debug_tracing) {
+    if (!appres.secure && appres.debug_tracing) {
 	any |= toggle_init(file_menu, TRACING, "traceOption", NULL, &spaced);
     }
     if (!appres.secure) {
