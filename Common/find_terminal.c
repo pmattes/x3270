@@ -41,11 +41,11 @@
 
 /* Well-known consoles, in order of preference. */
 static terminal_desc_t terminals[] = {
-    { "gnome-terminal", "--title", "--" },
-    { "konsole", "--caption", "-e" },
-    { "xfce4-terminal", "-T", "-x" },
-    { "xterm", "-title", "-e" },
-    { NULL, NULL, NULL }
+    { "gnome-terminal", "--title", NULL, "--" },
+    { "konsole", "--caption", NULL, "-e" },
+    { "xfce4-terminal", "-T", NULL, "-x" },
+    { "xterm", "-title", "-sb", "-e" },
+    { NULL, NULL, NULL, NULL }
 };
 
 /* Find an executable in $PATH. */
@@ -79,27 +79,71 @@ find_in_path(const char *program)
 terminal_desc_t *
 find_terminal(void)
 {
-    char *override;
     int i;
 
-    override = getenv("X3270_CONSOLE");
-    if (override != NULL) {
+    do {
 	static terminal_desc_t t_ret;
-	char *colon = strchr(override, ':');
-	char *colon2 = (colon != NULL)? strchr(colon + 1, ':'): NULL;
+	char *override = getenv("X3270_CONSOLE");
+	char *program, *title_opt, *extra_opt, *exec_opt;
 
-	if (colon != NULL && *(colon + 1) != ':' &&
-		colon2 != NULL && *(colon2 + 1) != '\0') {
-	    t_ret.program = lazyaf("%.*s", (int)(colon - override), override);
-	    t_ret.title_opt = lazyaf("%.*s", (int)(colon2 - (colon + 1)),
-		    colon + 1);
-	    t_ret.exec_opt = colon2 + 1;
-	    if (find_in_path(t_ret.program)) {
-		return &t_ret;
-	    }
+	/*
+	 * The format is:
+	 *   title_opt:title-opt:extra-opt:exec-opt.
+	 **/
+	if (override == NULL) {
+	    break;
 	}
-    }
+	program = lazya(NewString(override));
+	title_opt = strchr(program, ':');
+	if (title_opt != NULL) {
+	    *(title_opt++) = '\0';
+	} else {
+	    if (*program == '\0') {
+		break;
+	    }
 
+	    /* They just specified the name. */
+	    for (i = 0; terminals[i].program != NULL; i++) {
+		if (!strcmp(program, terminals[i].program) &&
+			find_in_path(program)) {
+		    return &terminals[i];
+		}
+	    }
+	    break;
+	}
+
+	extra_opt = strchr(title_opt, ':');
+	if (extra_opt != NULL) {
+	    *(extra_opt++) = '\0';
+	} else {
+	    break;
+	}
+
+	exec_opt = strchr(extra_opt, ':');
+	if (exec_opt != NULL) {
+	    *(exec_opt++) = '\0';
+	} else {
+	    break;
+	}
+
+	if (*program == '\0' || *title_opt == '\0' || *exec_opt == '\0') {
+	    break;
+	}
+
+	t_ret.program = program;
+	t_ret.title_opt = title_opt;
+	if (*extra_opt != '\0') {
+	    t_ret.extra_opt = extra_opt;
+	} else {
+	    t_ret.extra_opt = NULL;
+	}
+	t_ret.exec_opt = exec_opt;
+	if (find_in_path(t_ret.program)) {
+	    return &t_ret;
+	}
+    } while (false);
+
+    /* No override. Find the best one. */
     for (i = 0; terminals[i].program != NULL; i++) {
 	if (find_in_path(terminals[i].program)) {
 	    return &terminals[i];

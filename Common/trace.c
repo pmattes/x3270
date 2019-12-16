@@ -690,6 +690,8 @@ static void
 start_trace_window(const char *path)
 {
     terminal_desc_t *t = find_terminal();
+    char *argv[10];
+    int argc = 0;
 
     if (t == NULL) {
 	perror("Cannot find console application for trace window");
@@ -698,9 +700,18 @@ start_trace_window(const char *path)
 
     switch (tracewindow_pid = fork_child()) {
     case 0:	/* child process */
-	execlp(t->program, t->program, t->title_opt, path? path: "trace",
-		t->exec_opt, "/bin/sh", "-c",
-		xs_buffer("tail -n+0 -f %s", path), NULL);
+	argv[argc++] = (char *)t->program;
+	argv[argc++] = (char *)t->title_opt;
+	argv[argc++] = (char *)path;
+	if (t->extra_opt != NULL) {
+	    argv[argc++] = (char *)t->extra_opt;
+	}
+	argv[argc++] = (char *)t->exec_opt;
+	argv[argc++] = (char *)"/bin/sh";
+	argv[argc++] = (char *)"-c";
+	argv[argc++] = xs_buffer("tail -n+0 -f %s", path);
+	argv[argc++] = NULL;
+	execvp(t->program, argv);
 	perror(xs_buffer("exec(%s) failed", t->program));
 	_exit(1);
 	break;

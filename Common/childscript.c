@@ -1415,6 +1415,9 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, t->program);
     array_add(&nargv, nargc++, t->title_opt);
     array_add(&nargv, nargc++, lazyaf("%s>", params[0]));
+    if (t->extra_opt != NULL) {
+	array_add(&nargv, nargc++, t->extra_opt);
+    }
     array_add(&nargv, nargc++, t->exec_opt);
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
