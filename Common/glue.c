@@ -960,6 +960,7 @@ static res_t base_resources[] = {
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
+    { ResConsole,aoffset(interactive.console),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResDevName,	aoffset(devname),	XRM_STRING },
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },

@@ -74,6 +74,7 @@ typedef struct {
     char	*input_method;
     char	*preedit_type;
     char	*ad_version;
+    char	*dpi;
 
     /*
      * Common resources that have type 'bool', which we need to parse as type

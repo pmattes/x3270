@@ -110,6 +110,8 @@ XtResource resources[] = {
       offset(interactive.crosshair_color), XtRString, "purple" },
     { ResConnectTimeout, ClsConnectTimeout, XtRInt, sizeof(int),
       offset(connect_timeout), XtRString, "0" },
+    { ResConsole, ClsConsole, XtRString, sizeof(char *),
+      offset(interactive.console), XtRString, 0 },
     { ResNopSeconds, ClsNopSeconds, XtRInt, sizeof(int),
       offset(nop_seconds), XtRString, "0" },
     { ResMinVersion, ClsMinVersion, XtRString, sizeof(String),
@@ -267,6 +269,8 @@ XtResource xresources[] = {
       offset(input_method), XtRString, 0 },
     { ResPreeditType, ClsPreeditType, XtRString, sizeof(char *),
       offset(preedit_type), XtRString, PT_OVER_THE_SPOT "+1" },
+    { ResDpi, ClsDpi, XtRString, sizeof(char *),
+      offset(dpi), XtRString, 0 },
 
 #if defined(USE_APP_DEFAULTS) /*[*/
     { ResAdVersion, ClsAdVersion, XtRString, sizeof(char *),

@@ -558,13 +558,13 @@ static void
 dpi_init(void)
 {
     int rdpi = 0;
-    char *env_dpi;
+    char *res_dpi;
     char *type;
     XrmValue value;
 
-    env_dpi = getenv("DPI");
-    if (env_dpi != NULL) {
-	rdpi = atoi(env_dpi);
+    res_dpi = xappres.dpi;
+    if (res_dpi != NULL) {
+	rdpi = atoi(res_dpi);
     } else if (XrmGetResource(rdb, "Xft.dpi", "Xft.dpi", &type, &value) == True
 	    && !strcmp(type, "String")) {
 	rdpi = atoi(value.addr);

@@ -36,6 +36,7 @@
 
 #include "globals.h"
 
+#include "appres.h"
 #include "find_terminal.h"
 #include "lazya.h"
 
@@ -83,7 +84,7 @@ find_terminal(void)
 
     do {
 	static terminal_desc_t t_ret;
-	char *override = getenv("X3270_CONSOLE");
+	char *override = appres.interactive.console;
 	char *program, *title_opt, *extra_opt, *exec_opt;
 
 	/*
