@@ -1333,14 +1333,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-/* Add an element to a dynamically-allocated array. */
-void
-array_add(const char ***s, int ix, const char *v)
-{
-    *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
-    (*s)[ix] = v;
-}
-
 /*
  * Start an x3270if-based interactive console, optionally overriding the app
  * name used as the prompt.

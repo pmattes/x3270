@@ -44,7 +44,6 @@
 
 #include "codepage.h"
 #include "child.h"
-#include "childscript.h"
 #include "ctlrc.h"
 #include "find_console.h"
 #include "fprint_screen.h"

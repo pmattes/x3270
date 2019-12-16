@@ -76,6 +76,7 @@ bool split_hier(char *label, char **base, char ***parents);
 const char *build_options(void);
 void dump_version(void);
 const char *display_scale(double d);
+void array_add(const char ***s, int ix, const char *v);
 
 /* Doubly-linked lists. */
 bool llist_isempty(llist_t *l);

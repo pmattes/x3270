@@ -497,7 +497,7 @@ description
     sent to the host for each character typed on the keyboard.
     <p class="indented">
     To display the code pages supported by %p%, use the <b>-v</b>
-    command-line option or the <b>Query(CodePages)</> action.
+    command-line option or the <b>Query(CodePages)</b> action.
 if wc
     <p class="indented">
     Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
@@ -641,6 +641,33 @@ description
     to complete. If this is not set, the timeout will be determined by the
     operating system. Note that %p% will wait for the lesser of the two times
     (the specified timeout and the system-defined timeout).
+.
+
+name console
+applies x
+type s
+desc
+    Overrides the default console emulator program used for the %p%&gt; prompt
+    and the trace monitor window.
+    <p class=indented>
+    The resource can take two forms. If it is just a keyword, it is the name
+    of a well-known console: <b>gnome-terminal</b>, <b>konsole</b>,
+    <b>xfce4-terminal</b> or <b>xterm</b>.
+    If the string includes colons (:), it defines a console, and consists of
+    four fields: <i>program-name</i>:<i>title-option</i>:<i>extra-option</i>:<i>exec-option</i>.
+    <p class=indented>
+    <i>program-name</i> is the name of the executable program.
+    <p class=indented>
+    <i>title-option</i> is the option used to set the window title.
+    <p class=indented>
+    <i>extra-option</i> is an extra command-line option to pass, such as
+    <b>-sb</b> to turn on the xterm scroll bar. It can be empty.
+    <p class=indented>
+    <i>exec-option</i> is the option used to end the argument list, with the
+    remaining options specifying the command and arguments to run inside the
+    console window.
+    <p class=indented>
+    For example, the specification for gnome-terimnal is <b>gnome-terminal:--title::--</b>.
 .
 
 name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
@@ -1022,6 +1049,16 @@ description
     When true, %p% will display a pop-up to report successful
     completion of certain operations, such as screen printing.  When
     false, these pop-ups are not displayed.
+.
+
+name dpi
+applies x
+type i
+default 96
+description
+    Overrides the system DPI (screen resolution) setting, normally retrieved
+    from Xft.dpi. This resource modifies the sizes of visual elements on the
+    screen, but not fonts.
 .
 
 name emulatorFont

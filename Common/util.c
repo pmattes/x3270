@@ -948,3 +948,11 @@ display_scale(double d)
 	return lazyaf("%.3g ", d);
     }
 }
+
+/* Add an element to a dynamically-allocated array. */
+void
+array_add(const char ***s, int ix, const char *v)
+{
+    *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
+    (*s)[ix] = v;
+}

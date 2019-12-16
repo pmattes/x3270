@@ -37,9 +37,9 @@
 #include "globals.h"
 
 #include "appres.h"
-#include "childscript.h"
 #include "find_console.h"
 #include "lazya.h"
+#include "utils.h"
 
 /* Well-known consoles, in order of preference. */
 static console_desc_t consoles[] = {
