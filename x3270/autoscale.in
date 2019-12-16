@@ -2,6 +2,15 @@
 # Run x3270 with cheesy automatic font scaling.
 #  autoscale [-d] [x3270-options]
 
+# Figure out the pathname of the directory dryrun is in.
+d=`dirname $0`
+case "$d" in
+    .)	d=`pwd`
+	;;
+    /*)	;;
+    *)	d=`pwd`/$d
+esac
+
 if [ "$1" = "-d" ]
 then	debug=1
 	shift
@@ -28,7 +37,8 @@ decho "display is ${dpi}dpi, scale is $scale"
 
 # 96dpi needs no mods
 if [ $scale -eq 100 ]
-then	exec x3270 $*
+then	set -x
+    	exec $d/x3270 "$@"
 fi
 
 # These are hand-tuned.
@@ -59,7 +69,8 @@ else	efont=3270
 fi
 decho "efont is $efont"
 
-exec x3270 \
+set -x
+exec $d/x3270 \
  -xrm "x3270*keyPad*large*font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1" \
  -xrm "x3270*keyPad*small*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
  -xrm "x3270*value*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
@@ -70,4 +81,4 @@ exec x3270 \
  -xrm "x3270*dialog*value*font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
  -xrm "x3270*font: -*-helvetica-bold-r-normal--$s32-*-*-*-p-*-iso8859-1" \
  -efont $efont \
- $*
+ "$@"
