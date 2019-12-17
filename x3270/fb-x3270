@@ -884,16 +884,16 @@ x3270.message.activeIcon:			Active icon
 x3270.message.iconFont:				Icon font:
 x3270.message.iconLabelFont:			Icon label font:
 x3270.message.staticIcon:			Static bitmap icon
-x3270.message.statusDbcs:			DBCS
+x3270.message.statusDbcs:			<S>
 x3270.message.statusNotConnected:		Not Connected
 x3270.message.statusTwait:			Wait
-x3270.message.statusSyswait:			System
+x3270.message.statusSyswait:			SYSTEM
 x3270.message.statusProtected:			Protected
-x3270.message.statusNumeric:			Numeric
+x3270.message.statusNumeric:			NUM
 x3270.message.statusOverflow:			Overflow
 x3270.message.statusInhibit:			Inhibit
 x3270.message.statusScrolled:			Scrolled
-x3270.message.statusMinus:			No Function
+x3270.message.statusMinus:			-f
 x3270.message.statusConnecting:			[TCP]
 x3270.message.statusTlsPending:			[TLS]
 x3270.message.statusProxyPending:		[Proxy]
