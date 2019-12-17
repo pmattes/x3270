@@ -1464,7 +1464,7 @@ static void
 do_disabled(void)
 {
     static unsigned char disabled[] = {
-	CG_lock, CG_space, CG_D, CG_i, CG_s, CG_a, CG_b, CG_l, CG_e, CG_d
+	CG_lock, CG_space, CG_keyleft, CG_keyright
     };
 
     if (*standard_font) {
