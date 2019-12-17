@@ -260,7 +260,7 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
     ta_t *ta;
 
     /* If no connection, forget it. */
-    if (!CONNECTED) {
+    if (!IN_3270 && !IN_NVT && !IN_SSCP) {
 	vtrace("  dropped (not connected)\n");
 	return;
     }
@@ -2737,7 +2737,7 @@ Clear_action(ia_t ia, unsigned argc, const char **argv)
     if (kybdlock & KL_OIA_MINUS) {
 	return false;
     }
-    if (kybdlock && CONNECTED) {
+    if (kybdlock && (IN_3270 || IN_NVT || IN_SSCP)) {
 	enq_ta("Clear", NULL, NULL);
 	return true;
     }
