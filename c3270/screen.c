@@ -1964,7 +1964,7 @@ status_oerr(int error_type)
 	other_msg = "X Protected";
 	break;
     case KL_OERR_NUMERIC:
-	other_msg = "X Numeric";
+	other_msg = "X NUM";
 	break;
     case KL_OERR_OVERFLOW:
 	other_msg = "X Overflow";
