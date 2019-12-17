@@ -904,10 +904,6 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Attn", argc, 0, 0) < 0) {
 	return false;
     }
-    if (!IN_3270) {
-	return false;
-    }
-
     if (IN_E) {
 	if (net_bound()) {
 	    net_interrupt(0);
@@ -915,10 +911,13 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 	    status_minus();
 	    kybdlock_set(KL_OIA_MINUS, "Attn");
 	}
-    } else {
-	net_break(0);
+	return true;
     }
-    return true;
+    if (IN_3270) {
+	net_break(0);
+	return true;
+    }
+    return false;
 }
 
 /*
