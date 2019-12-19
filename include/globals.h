@@ -271,6 +271,7 @@ extern enum cstate cstate;
 #define cIN_SSCP(c)	(c == CONNECTED_SSCP)
 #define cIN_TN3270E(c)	(c == CONNECTED_TN3270E)
 #define cIN_E(c)	(c >= CONNECTED_UNBOUND)
+#define cFULL_SESSION(c) (cIN_NVT(c) || cIN_3270(c) || cIN_SSCP(c))
 
 #define PCONNECTED	cPCONNECTED(cstate)
 #define HALF_CONNECTED	cHALF_CONNECTED(cstate)
@@ -280,6 +281,7 @@ extern enum cstate cstate;
 #define IN_SSCP		cIN_SSCP(cstate)
 #define IN_TN3270E	cIN_TN3270E(cstate)
 #define IN_E		cIN_E(cstate)
+#define FULL_SESSION	cFULL_SESSION(cstate)
 
 /*   network connection status */
 typedef enum {

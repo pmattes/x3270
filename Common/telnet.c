@@ -2846,7 +2846,7 @@ check_in3270(void)
 	    tn3270e_bound = 0;
 	}
 	vtrace("Now operating in %s mode.\n", state_name[new_cstate]);
-	if (IN_3270 || IN_NVT || IN_SSCP) {
+	if (FULL_SESSION) {
 	    any_host_data = true;
 	}
 	host_in3270(new_cstate);

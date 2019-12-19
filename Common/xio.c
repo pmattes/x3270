@@ -163,7 +163,7 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
      * read in a file that includes a Quit(). If we are connected, it will
      * fail.
      */
-    if (!IA_IS_KEY(ia) || !CONNECTED) {
+    if (!IA_IS_KEY(ia) || !FULL_SESSION) {
 	x3270_exit(0);
     }
     return false;

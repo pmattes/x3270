@@ -2737,7 +2737,7 @@ Clear_action(ia_t ia, unsigned argc, const char **argv)
     if (kybdlock & KL_OIA_MINUS) {
 	return false;
     }
-    if (kybdlock && (IN_3270 || IN_NVT || IN_SSCP)) {
+    if (kybdlock && FULL_SESSION) {
 	enq_ta("Clear", NULL, NULL);
 	return true;
     }
@@ -2748,7 +2748,7 @@ Clear_action(ia_t ia, unsigned argc, const char **argv)
     buffer_addr = 0;
     ctlr_clear(true);
     cursor_move(0);
-    if (CONNECTED) {
+    if (IN_3270 || IN_SSCP) {
 	key_AID(AID_CLEAR);
     }
     return true;
