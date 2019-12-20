@@ -53,7 +53,7 @@
 #include "w3misc.h"
 
 /* proxy type names -- keep these in sync with proxytype_t! */
-char *type_name[PT_MAX] = {
+const char *type_name[PT_MAX] = {
     "unknown",
     "passthru",
     "HTTP",
@@ -95,7 +95,7 @@ static proxytype_t proxy_type = PT_NONE;
 static bool proxy_pending = false;
 
 /* Return the name for a given proxy type. */
-char *
+const char *
 proxy_type_name(int type)
 {
     if (type < 1 || type >= PT_MAX) {

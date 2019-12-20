@@ -176,6 +176,7 @@ static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
 
 static int	proxy_type = 0;
+static int	pending_proxy_type = 0;
 static char	*proxy_user = NULL;
 static char	*proxy_host = NULL;
 static char	*proxy_portname = NULL;
@@ -671,30 +672,31 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	} else {
 	    passthru_port = htons(3514);
 	}
-    } else if (appres.proxy != NULL && !proxy_type) {
+    } else if (appres.proxy != NULL) {
+	unsigned long lport;
+	char *ptr;
+	struct servent *sp;
+
 	proxy_type = proxy_setup(appres.proxy, &proxy_user, &proxy_host,
 		&proxy_portname);
-	if (proxy_type > 0) {
-	    unsigned long lport;
-	    char *ptr;
-	    struct servent *sp;
-
-	    lport = strtoul(portname, &ptr, 0);
-	    if (ptr == portname || *ptr != '\0' || lport == 0L ||
-		    lport & ~0xffff) {
-		if (!(sp = getservbyname(portname, "tcp"))) {
-		    connect_error("Unknown port number or service: %s",
-			    portname);
-		    return NC_FAILED;
-		}
-		current_port = ntohs(sp->s_port);
-	    } else {
-		current_port = (unsigned short)lport;
-	    }
-	}
 	if (proxy_type < 0) {
 	    return NC_FAILED;
 	}
+
+	lport = strtoul(portname, &ptr, 0);
+	if (ptr == portname || *ptr != '\0' || lport == 0L ||
+		lport & ~0xffff) {
+	    if (!(sp = getservbyname(portname, "tcp"))) {
+		connect_error("Unknown port number or service: %s",
+			portname);
+		proxy_type = 0;
+		return NC_FAILED;
+	    }
+	    current_port = ntohs(sp->s_port);
+	} else {
+	    current_port = (unsigned short)lport;
+	}
+	pending_proxy_type = proxy_type;
     }
 
     /* fill in the socket address of the given host */
@@ -710,7 +712,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	ha_len[0] = sizeof(struct sockaddr_in);
 	num_ha = 1;
 	ha_ix = 0;
-    } else if (proxy_type > 0) {
+    } else if (pending_proxy_type > 0) {
 	/*
 	 * XXX: We don't try multiple addresses for a proxy
 	 * host.
@@ -958,11 +960,11 @@ net_connected(void)
 	vtrace("Connected to %s, port %u.\n", hostname, current_port);
     }
 
-    if (proxy_type > 0) {
+    if (pending_proxy_type > 0) {
 	proxy_negotiate_ret_t ret;
 
 	/* Don't do this again. */
-	proxy_type = 0;
+	pending_proxy_type = 0;
 
 	/* Negotiate with the proxy. */
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
@@ -1171,6 +1173,8 @@ net_disconnect(bool including_ssl)
     /* Cancel proxy. */
     if (proxy_type > 0) {
 	proxy_close();
+	proxy_type = 0;
+	pending_proxy_type = 0;
     }
 
     /* Cancel the timeout. */
@@ -3691,7 +3695,7 @@ net_getsockname(void *buf, int *len)
 }
 
 /* Return a text version of the current proxy type, or NULL. */
-char *
+const char *
 net_proxy_type(void)
 {
     if (proxy_type > 0) {
@@ -3702,7 +3706,7 @@ net_proxy_type(void)
 }
 
 /* Return the current proxy user, or NULL. */
-char *
+const char *
 net_proxy_user(void)
 {
     if (proxy_type > 0) {
@@ -3713,7 +3717,7 @@ net_proxy_user(void)
 }
 
 /* Return the current proxy host, or NULL. */
-char *
+const char *
 net_proxy_host(void)
 {
     if (proxy_type > 0) {
@@ -3724,7 +3728,7 @@ net_proxy_host(void)
 }
 
 /* Return the current proxy port, or NULL. */
-char *
+const char *
 net_proxy_port(void)
 {
     if (proxy_type > 0) {

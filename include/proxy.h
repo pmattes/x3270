@@ -42,4 +42,4 @@ proxy_negotiate_ret_t proxy_negotiate(socket_t fd, const char *user,
 	const char *host, unsigned short port);
 proxy_negotiate_ret_t proxy_continue(void);
 void proxy_close(void);
-char *proxy_type_name(int type);
+const char *proxy_type_name(int type);
