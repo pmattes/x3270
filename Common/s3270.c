@@ -65,6 +65,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "proxy_toggle.h"
 #include "query.h"
 #include "screen.h"
 #include "selectc.h"
@@ -149,6 +150,7 @@ main(int argc, char *argv[])
     xio_register();
     sio_glue_register();
     hio_register();
+    proxy_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

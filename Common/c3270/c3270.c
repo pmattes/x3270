@@ -80,6 +80,7 @@
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
+#include "proxy_toggle.h"
 #include "query.h"
 #include "s3270_proto.h"
 #include "screen.h"
@@ -520,6 +521,7 @@ main(int argc, char *argv[])
     xio_register();
     sio_glue_register();
     hio_register();
+    proxy_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

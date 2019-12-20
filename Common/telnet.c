@@ -1132,7 +1132,8 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (errno != EISCONN) {
 	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 		    strerror(errno));
-	    popup_a_sockerr("Connection failed");
+	    popup_a_sockerr("Connection%s failed",
+		    proxy_pending? " to proxy server": "");
 	    host_disconnect(true);
 	    return;
 	}
@@ -1265,7 +1266,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (cstate == TCP_PENDING) {
 	if (events.lNetworkEvents & FD_CONNECT) {
 	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
-		connect_error("Connection failed: %s",
+		connect_error("Connection%s failed: %s",
+			proxy_pending? " to proxy server": "",
 			win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
 		host_disconnect(true);
 		return;

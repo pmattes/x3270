@@ -67,6 +67,7 @@
 #include "print_screen.h"
 #include "print_window.h"
 #include "product.h"
+#include "proxy_toggle.h"
 #include "query.h"
 #include "resourcesc.h"
 #include "screen.h"
@@ -485,6 +486,7 @@ main(int argc, char *argv[])
     x3270_register();
     xio_register();
     hio_register();
+    proxy_register();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */
