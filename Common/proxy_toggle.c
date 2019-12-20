@@ -33,10 +33,37 @@
 #include "globals.h"
 
 #include "appres.h"
+#include "lazya.h"
 #include "proxy.h"
-#include "proxy_toggle.h"
+#include "query.h"
 #include "resources.h"
 #include "toggles.h"
+#include "varbuf.h"
+
+#include "proxy_toggle.h"
+
+/*
+ * Proxy query.
+ */
+static const char *
+proxy_dump(void)
+{
+    varbuf_t r;
+    proxytype_t type;
+
+    vb_init(&r);
+    for (type = PT_FIRST; type < PT_MAX; type++) {
+	int port = proxy_default_port(type);
+
+	vb_appendf(&r, "%s %s%s%s",
+		proxy_type_name(type),
+		proxy_takes_username(type)? "username": "no-username",
+		port? lazyaf(" %d", port): "",
+		(type < PT_MAX - 1)? "\n": "");
+    }
+
+    return lazya(vb_consume(&r));
+}
 
 /*
  * Proxy toggle.
@@ -63,7 +90,14 @@ toggle_proxy(const char *name _is_unused, const char *value)
 void
 proxy_register(void)
 {
-    /* Register the toggle. */
+    static query_t queries[] = {
+	{ "Proxies", proxy_dump, NULL, false, true }
+    };
+
+    /* Register the toggles. */
     register_extended_toggle(ResProxy, toggle_proxy, NULL, NULL,
 	    (void **)&appres.proxy, XRM_STRING);
+
+    /* Register the queries. */
+    register_queries(queries, array_count(queries));
 }
