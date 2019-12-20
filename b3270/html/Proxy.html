@@ -12,19 +12,20 @@
 <p>Indicates support for a particular proxy.
 </p>
 
-<p>Appears only within a <a href="Models.html">proxies</a> element.
+<p>Appears only within a <a href="Proxies.html">proxies</a> element.
 </p>
 
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>name</td><td>yes</td><td>Proxy name</td></tr>
  <tr><td>username</td><td>yes</td><td>True if type supports user names</td></tr>
+ <tr><td>port</td><td>no</td><td>Default port number</td></tr>
 </table>
 
 <p>Example:
 <pre>
 &lt;proxies&gt;
-&lt;proxy name="SOCKS4" username="true"/&gt;
+&lt;proxy name="socks4" username="true" port="1080"/&gt;
 &lt;/proxies&gt;
 </pre></p>
 <hr>

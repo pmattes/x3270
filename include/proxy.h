@@ -64,3 +64,4 @@ proxy_negotiate_ret_t proxy_continue(void);
 void proxy_close(void);
 const char *proxy_type_name(int type);
 bool proxy_takes_username(int type);
+int proxy_default_port(proxytype_t type);

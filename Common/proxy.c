@@ -45,6 +45,7 @@
 #include "proxy_private.h"
 #include "proxy_passthru.h"
 #include "proxy_http.h"
+#include "proxy_names.h"
 #include "proxy_telnet.h"
 #include "proxy_socks4.h"
 #include "proxy_socks5.h"
@@ -55,13 +56,24 @@
 /* proxy type names -- keep these in sync with proxytype_t! */
 const char *type_name[PT_MAX] = {
     "unknown",
-    "passthru",
-    "HTTP",
-    "TELNET",
-    "SOCKS4",
-    "SOCKS4A",
-    "SOCKS5",
-    "SOCKS5D"
+    PROXY_PASSTHRU,
+    PROXY_HTTP,
+    PROXY_TELNET,
+    PROXY_SOCKS4,
+    PROXY_SOCKS4A,
+    PROXY_SOCKS5,
+    PROXY_SOCKS5D
+};
+
+int proxy_ports[PT_MAX] = {
+    0,
+    NPORT_PASSTHRU,
+    NPORT_HTTP,
+    0,
+    NPORT_SOCKS4,
+    NPORT_SOCKS4A,
+    NPORT_SOCKS5,
+    NPORT_SOCKS5D
 };
 
 static bool parse_host_port(char *s, char **puser, char **phost, char **pport);
@@ -121,6 +133,17 @@ proxy_takes_username(proxytype_t type)
     }
 }
 
+/* Return the default port for a proxy type. */
+int
+proxy_default_port(proxytype_t type)
+{
+    if (type <= PT_NONE || type >= PT_MAX) {
+	return 0;
+    } else {
+	return proxy_ports[type];
+    }
+}
+
 /*
  * Resolve the type, hostname and port for a proxy.
  * Returns -1 for failure, 0 for no proxy, >0 (the proxy type) for success.
@@ -129,17 +152,13 @@ int
 proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
 {
     char *colon;
-    char *lbracket;
     size_t sl;
 
     if (proxy == NULL) {
 	return PT_NONE;
     }
 
-    lbracket = strchr(proxy, '[');
-    if ((colon = strchr(proxy, ':')) == NULL ||
-	    (colon == proxy) ||
-	    (lbracket != NULL && colon > lbracket)) {
+    if ((colon = strchr(proxy, ':')) == NULL || (colon == proxy)) {
 	popup_an_error("Invalid proxy syntax");
 	return -1;
     }

@@ -382,9 +382,11 @@ dump_proxies(void)
 
     ui_vpush(IndProxies, NULL);
     for (type = PT_FIRST; type < PT_MAX; type++) {
+	int default_port = proxy_default_port(type);
 	ui_vleaf(IndProxy,
 		AttrName, proxy_type_name(type),
 		AttrUsername, ValTrueFalse(proxy_takes_username(type)),
+		AttrPort, default_port? lazyaf("%d", default_port): NULL,
 		NULL);
     }
     ui_pop();
