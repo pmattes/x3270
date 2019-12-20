@@ -46,10 +46,13 @@ toggle_proxy(const char *name _is_unused, const char *value)
 {
     char *user, *host, *port;
 
+    if (value == NULL || !*value) {
+	Replace(appres.proxy, NULL);
+	return true;
+    }
     if (proxy_setup(value, &user, &host, &port) < 0) {
 	return false;
     }
-
     Replace(appres.proxy, NewString(value));
     return true;
 }
