@@ -271,6 +271,7 @@ Common/proxy_passthru.c
 Common/proxy_socks4.c
 Common/proxy_socks5.c
 Common/proxy_telnet.c
+Common/proxy_toggle.c
 Common/query.c
 Common/readres.c
 Common/resolver.c
@@ -405,6 +406,7 @@ include/proxy_private.h
 include/proxy_socks4.h
 include/proxy_socks5.h
 include/proxy_telnet.h
+include/proxy_toggle.h
 include/query.h
 include/readres.h
 include/resolver.h

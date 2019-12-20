@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\Common\proxy_telnet.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\proxy_toggle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
