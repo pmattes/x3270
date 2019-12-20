@@ -96,12 +96,28 @@ static bool proxy_pending = false;
 
 /* Return the name for a given proxy type. */
 const char *
-proxy_type_name(int type)
+proxy_type_name(proxytype_t type)
 {
-    if (type < 1 || type >= PT_MAX) {
+    if (type <= PT_NONE || type >= PT_MAX) {
 	return "unknown";
     } else {
 	return type_name[type];
+    }
+}
+
+/* Return whether a proxy type accepts a username. */
+bool
+proxy_takes_username(proxytype_t type)
+{
+    switch (type) {
+    case PT_HTTP:
+    case PT_SOCKS4:
+    case PT_SOCKS4A:
+    case PT_SOCKS5:
+    case PT_SOCKS5D:
+	return true;
+    default:
+	return false;
     }
 }
 

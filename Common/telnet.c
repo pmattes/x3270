@@ -175,7 +175,7 @@ static char	**lus = NULL;
 static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
 
-static int	proxy_type = 0;
+static proxytype_t proxy_type = PT_NONE;
 static bool	proxy_pending = false;
 static char	*proxy_user = NULL;
 static char	*proxy_host = NULL;
@@ -673,13 +673,14 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    passthru_port = htons(3514);
 	}
     } else if (appres.proxy != NULL) {
+	proxytype_t pt;
 	unsigned long lport;
 	char *ptr;
 	struct servent *sp;
 
-	proxy_type = proxy_setup(appres.proxy, &proxy_user, &proxy_host,
+	pt = proxy_setup(appres.proxy, &proxy_user, &proxy_host,
 		&proxy_portname);
-	if (proxy_type < 0) {
+	if (pt == PT_ERROR) {
 	    return NC_FAILED;
 	}
 
@@ -689,13 +690,13 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    if (!(sp = getservbyname(portname, "tcp"))) {
 		connect_error("Unknown port number or service: %s",
 			portname);
-		proxy_type = 0;
 		return NC_FAILED;
 	    }
 	    current_port = ntohs(sp->s_port);
 	} else {
 	    current_port = (unsigned short)lport;
 	}
+	proxy_type = pt;
 	proxy_pending = true;
     }
 
@@ -1172,9 +1173,9 @@ net_disconnect(bool including_ssl)
     vtrace("SENT disconnect\n");
 
     /* Cancel proxy. */
-    if (proxy_type > 0) {
+    if (proxy_type != PT_NONE) {
 	proxy_close();
-	proxy_type = 0;
+	proxy_type = PT_NONE;
 	proxy_pending = false;
     }
 
@@ -3700,7 +3701,7 @@ net_getsockname(void *buf, int *len)
 const char *
 net_proxy_type(void)
 {
-    if (proxy_type > 0) {
+    if (proxy_type != PT_NONE) {
 	return proxy_type_name(proxy_type);
     } else {
 	return NULL;
@@ -3711,7 +3712,7 @@ net_proxy_type(void)
 const char *
 net_proxy_user(void)
 {
-    if (proxy_type > 0) {
+    if (proxy_type != PT_NONE) {
 	return proxy_user;
     } else {
 	return NULL;
@@ -3722,7 +3723,7 @@ net_proxy_user(void)
 const char *
 net_proxy_host(void)
 {
-    if (proxy_type > 0) {
+    if (proxy_type != PT_NONE) {
 	return proxy_host;
     } else {
 	return NULL;
@@ -3733,7 +3734,7 @@ net_proxy_host(void)
 const char *
 net_proxy_port(void)
 {
-    if (proxy_type > 0) {
+    if (proxy_type != PT_NONE) {
 	return proxy_portname;
     } else {
 	return NULL;

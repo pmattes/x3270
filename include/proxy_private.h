@@ -42,19 +42,4 @@
 # define SE_EWOULDBLOCK EWOULDBLOCK
 #endif /*]*/
 
-/*
- * Supported proxy types.
- */
-typedef enum {
-    PT_NONE,
-    PT_PASSTHRU,/* Sun telnet-passthru */
-    PT_HTTP,	/* RFC 2817 CONNECT tunnel */
-    PT_TELNET,	/* 'connect host port' proxy */
-    PT_SOCKS4,	/* SOCKS version 4 (or 4A if necessary) */
-    PT_SOCKS4A,	/* SOCKS version 4A (force remote name resolution) */
-    PT_SOCKS5,	/* SOCKS version 5 (RFC 1928) */
-    PT_SOCKS5D,	/* SOCKS version 5D (force remote name resolution) */
-    PT_MAX
-} proxytype_t;
-
 typedef proxy_negotiate_ret_t continue_t(void);

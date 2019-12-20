@@ -75,6 +75,7 @@
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
+#include "proxy.h"
 #include "proxy_toggle.h"
 #include "query.h"
 #include "screen.h"
@@ -316,7 +317,7 @@ sigchld_handler(int ignored)
 }
 #endif /*]*/
 
-/* Dump the character set list. Called at initialization time. */
+/* Dump the code page list. Called at initialization time. */
 static void
 dump_codepages(void)
 {
@@ -368,6 +369,22 @@ dump_models(void)
 		AttrModel, lazyaf("%d", models[i].model),
 		AttrRows, lazyaf("%d", models[i].rows),
 		AttrColumns, lazyaf("%d", models[i].columns),
+		NULL);
+    }
+    ui_pop();
+}
+
+/* Dump the proxy list. */
+static void
+dump_proxies(void)
+{
+    proxytype_t type;
+
+    ui_vpush(IndProxies, NULL);
+    for (type = PT_FIRST; type < PT_MAX; type++) {
+	ui_vleaf(IndProxy,
+		AttrName, proxy_type_name(type),
+		AttrUsername, ValTrueFalse(proxy_takes_username(type)),
 		NULL);
     }
     ui_pop();
@@ -463,6 +480,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     }
     dump_codepages();
     dump_models();
+    dump_proxies();
     model_init();
     status_reset();
 
