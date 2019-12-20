@@ -176,7 +176,7 @@ static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
 
 static int	proxy_type = 0;
-static int	pending_proxy_type = 0;
+static bool	proxy_pending = false;
 static char	*proxy_user = NULL;
 static char	*proxy_host = NULL;
 static char	*proxy_portname = NULL;
@@ -696,7 +696,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	} else {
 	    current_port = (unsigned short)lport;
 	}
-	pending_proxy_type = proxy_type;
+	proxy_pending = true;
     }
 
     /* fill in the socket address of the given host */
@@ -712,7 +712,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	ha_len[0] = sizeof(struct sockaddr_in);
 	num_ha = 1;
 	ha_ix = 0;
-    } else if (pending_proxy_type > 0) {
+    } else if (proxy_pending) {
 	/*
 	 * XXX: We don't try multiple addresses for a proxy
 	 * host.
@@ -960,11 +960,11 @@ net_connected(void)
 	vtrace("Connected to %s, port %u.\n", hostname, current_port);
     }
 
-    if (pending_proxy_type > 0) {
+    if (proxy_pending) {
 	proxy_negotiate_ret_t ret;
 
 	/* Don't do this again. */
-	pending_proxy_type = 0;
+	proxy_pending = false;
 
 	/* Negotiate with the proxy. */
 	vtrace("Connected to proxy server %s, port %u.\n", proxy_host,
@@ -1174,7 +1174,7 @@ net_disconnect(bool including_ssl)
     if (proxy_type > 0) {
 	proxy_close();
 	proxy_type = 0;
-	pending_proxy_type = 0;
+	proxy_pending = false;
     }
 
     /* Cancel the timeout. */
