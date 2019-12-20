@@ -113,13 +113,17 @@ int
 proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
 {
     char *colon;
+    char *lbracket;
     size_t sl;
 
     if (proxy == NULL) {
 	return PT_NONE;
     }
 
-    if ((colon = strchr(proxy, ':')) == NULL || (colon == proxy)) {
+    lbracket = strchr(proxy, '[');
+    if ((colon = strchr(proxy, ':')) == NULL ||
+	    (colon == proxy) ||
+	    (lbracket != NULL && colon > lbracket)) {
 	popup_an_error("Invalid proxy syntax");
 	return -1;
     }
