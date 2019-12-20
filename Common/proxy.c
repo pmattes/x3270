@@ -198,7 +198,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_SOCKS4) && !strncasecmp(proxy, PROXY_SOCKS4, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -209,7 +209,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS4A) &&
 	    !strncasecmp(proxy, PROXY_SOCKS4A, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -355,10 +355,10 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
 	ret = proxy_telnet(fd, host, port);
 	break;
     case PT_SOCKS4:
-	ret = proxy_socks4(fd, host, port, false);
+	ret = proxy_socks4(fd, user, host, port, false);
 	break;
     case PT_SOCKS4A:
-	ret = proxy_socks4(fd, host, port, true);
+	ret = proxy_socks4(fd, user, host, port, true);
 	break;
     case PT_SOCKS5:
 	ret = proxy_socks5(fd, user, host, port, false);

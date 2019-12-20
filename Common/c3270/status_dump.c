@@ -196,11 +196,16 @@ status_dump(void)
 	    }
 	}
 	ptype = net_proxy_type();
-	if (ptype) {
-	    vb_appendf(&r, "  %s %s  %s %s  %s %s\n",
+	if (ptype != NULL) {
+	    vb_appendf(&r, "  %s %s  %s %s  %s %s",
 		    get_message("proxyType"), ptype,
 		    get_message("server"), net_proxy_host(),
 		    get_message("port"), net_proxy_port());
+	    if (net_proxy_user() != NULL) {
+		vb_appendf(&r, "  %s %s", get_message("user"),
+			net_proxy_user());
+	    }
+	    vb_appendf(&r, "\n");
 	}
 	ts = hms(ns_time);
 	if (IN_E) {

@@ -63,11 +63,12 @@ static struct {
 
 /* SOCKS version 4 proxy. */
 proxy_negotiate_ret_t
-proxy_socks4(socket_t fd, const char *host, unsigned short port, bool force_a)
+proxy_socks4(socket_t fd, const char *user, const char *host,
+	unsigned short port, bool force_a)
 {
     struct hostent *hp;
     struct in_addr ipaddr;
-    char *user;
+    const char *ruser;
     char *sbuf;
     char *s;
 
@@ -91,26 +92,34 @@ proxy_socks4(socket_t fd, const char *host, unsigned short port, bool force_a)
     }
 
     /* Resolve the username. */
-    user = getenv("USER");
-    if (user == NULL) {
-	user = "nobody";
+    if (user != NULL) {
+	ruser = user;
+    } else {
+#if !defined(_WIN32) /*[*/
+	ruser = getenv("USER");
+#else /*][*/
+	ruser = getenv("USERNAME");
+#endif /*]*/
+	if (ruser == NULL) {
+	    ruser = "nobody";
+	}
     }
 
     /* Send the request to the server. */
     if (ps.use_4a) {
-	sbuf = Malloc(32 + strlen(user) + strlen(host));
+	sbuf = Malloc(32 + strlen(ruser) + strlen(host));
 	s = sbuf;
 	*s++ = 0x04;
 	*s++ = 0x01;
 	SET16(s, port);
 	SET32(s, 0x00000001);
-	strcpy(s, user);
-	s += strlen(user) + 1;
+	strcpy(s, ruser);
+	s += strlen(ruser) + 1;
 	strcpy(s, host);
 	s += strlen(host) + 1;
 
 	vtrace("SOCKS4 Proxy: version 4 connect port %u address 0.0.0.1 user "
-		"'%s' host '%s'\n", port, user, host);
+		"'%s' host '%s'\n", port, ruser, host);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {
@@ -122,18 +131,18 @@ proxy_socks4(socket_t fd, const char *host, unsigned short port, bool force_a)
     } else {
 	unsigned long u;
 
-	sbuf = Malloc(32 + strlen(user));
+	sbuf = Malloc(32 + strlen(ruser));
 	s = sbuf;
 	*s++ = 0x04;
 	*s++ = 0x01;
 	SET16(s, port);
 	u = ntohl(ipaddr.s_addr);
 	SET32(s, u);
-	strcpy(s, user);
-	s += strlen(user) + 1;
+	strcpy(s, ruser);
+	s += strlen(ruser) + 1;
 
 	vtrace("SOCKS4 Proxy: xmit version 4 connect port %u address %s user "
-		"'%s'\n", port, inet_ntoa(ipaddr), user);
+		"'%s'\n", port, inet_ntoa(ipaddr), ruser);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {

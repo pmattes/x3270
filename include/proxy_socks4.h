@@ -30,7 +30,7 @@
  *		SOCKS version 4 proxy definitions.
  */
 
-proxy_negotiate_ret_t proxy_socks4(socket_t fd, const char *host,
-	unsigned short port, bool force_a);
+proxy_negotiate_ret_t proxy_socks4(socket_t fd, const char *user,
+	const char *host, unsigned short port, bool force_a);
 continue_t proxy_socks4_continue;
 void proxy_socks4_close(void);

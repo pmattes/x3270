@@ -132,9 +132,15 @@ static const char *
 get_proxy(void)
 {
     const char *ptype = net_proxy_type();
+    const char *user = net_proxy_user();
 
     return (ptype != NULL)?
-	lazyaf("%s %s %s", ptype, net_proxy_host(), net_proxy_port()):
+	lazyaf("%s %s %s%s%s",
+		ptype,
+		net_proxy_host(),
+		net_proxy_port(),
+		(user != NULL)? " ": "",
+		(user != NULL)? user: ""):
 	NULL;
 }
 
