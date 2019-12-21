@@ -76,7 +76,8 @@ void register_extended_toggle(const char *name,
 	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
 	toggle_extended_canonicalize_t canonicalize, void **appres_address,
 	enum resource_type resource_type);
-typedef void toggle_extended_notify_t(const char *name, const char *value);
+typedef void toggle_extended_notify_t(const char *name, const char *value,
+	ia_t ia);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
 void force_toggle_notify(const char *name);
 char **extended_toggle_names(int *countp);

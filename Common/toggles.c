@@ -455,7 +455,7 @@ have_value:
 		     notifies = notifies->next) {
 		    char *v = u_value(u);
 
-		    (*notifies->notify)(u->name, v);
+		    (*notifies->notify)(u->name, v, ia);
 		    Free(v);
 		}
 	    }
@@ -489,7 +489,7 @@ done:
 	     notifies = notifies->next) {
 	    char *v = u_value(done_u[du]);
 
-	    (*notifies->notify)(done_u[du]->name, v);
+	    (*notifies->notify)(done_u[du]->name, v, ia);
 	    Free(v);
 	}
     }
@@ -697,7 +697,7 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
 	 notifies != NULL;
 	 notifies = notifies->next) {
 
-	(*notifies->notify)(name, v);
+	(*notifies->notify)(name, v, IA_NONE);
     }
     Free(v);
 }
@@ -726,7 +726,7 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
     /* Call it with everything registered so far. */
     for (u = extended_upcalls; u != NULL; u = u->next) {
 	char *v = u_value(u);
-	(*notify)(u->name, v);
+	(*notify)(u->name, v, IA_NONE);
 	Free(v);
     }
 }
@@ -753,7 +753,7 @@ force_toggle_notify(const char *name)
     /* Notify with the current value. */
     v = u_value(u);
     for (n = extended_notifies; n != NULL; n = n->next) {
-	(*n->notify)(name, v);
+	(*n->notify)(name, v, IA_NONE);
     }
     Free(v);
 }

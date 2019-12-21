@@ -139,7 +139,7 @@ static bool pending_extended;
 static bool pending_extended_value;
 
 static void b3270_register(void);
-static void b3270_toggle_notify(const char *name, const char *value);
+static void b3270_toggle_notify(const char *name, const char *value, ia_t ia);
 
 void
 usage(const char *msg)
@@ -1138,12 +1138,14 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
  * Handle a generic toggle change.
  */
 static void
-b3270_toggle_notify(const char *name, const char *value)
+b3270_toggle_notify(const char *name, const char *value, ia_t cause)
 {
-    ui_vleaf(IndSetting,
-	    AttrName, name,
-	    AttrValue, value,
-	    NULL);
+    if (cause != IA_UI) {
+	ui_vleaf(IndSetting,
+		AttrName, name,
+		AttrValue, value,
+		NULL);
+    }
 }
 
 /**
