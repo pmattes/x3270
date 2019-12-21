@@ -830,8 +830,9 @@ child_exited(ioid_t id, int status)
 	return;
     }
 
-    vtrace("%s script %d exited with status %d\n", c->child_name, (int)c->pid,
-	    status);
+    vtrace("%s script %d exited with status %d\n",
+	    (c->child_name != NULL) ? c->child_name : "socket",
+	    (int)c->pid, status);
 
     c->exit_status = status;
     if (status != 0) {
@@ -1215,6 +1216,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Clean up our ends of the pipes. */
     if (use_socket) {
 	c->infd = -1;
+	c->outfd = -1;
     } else {
 	c->infd = inpipe[0];
 	close(inpipe[1]);
