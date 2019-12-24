@@ -420,8 +420,8 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 #if defined(_WIN32) /*[*/
 	    return -1;
 #else /*][*/
-	    infd  = fd_env(INPUT_ENV, true);
-	    outfd = fd_env(OUTPUT_ENV, true);
+	    infd  = fd_env(OUTPUT_ENV, true);
+	    outfd = fd_env(INPUT_ENV, true);
 #endif /*]*/
 	}
 	if ((!is_socket && infd < 0) || (is_socket && insocket == INVALID_SOCKET)) {
@@ -627,6 +627,7 @@ retry:
 	closesocket(insocket);
 #else /*][*/
 	close(insocket);
+	fprintf(stderr, "closed %d\n", insocket);
 #endif /*]*/
     }
 
