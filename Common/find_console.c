@@ -159,7 +159,6 @@ int
 console_args(console_desc_t *t, const char *title, const char ***s, int ix)
 {
     array_add(s, ix++, t->program);
-    array_add(s, ix++, t->program);
     array_add(s, ix++, t->title_opt);
     array_add(s, ix++, title);
     if (t->extra_opt != NULL) {
