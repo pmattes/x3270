@@ -52,9 +52,9 @@ unsigned actions_list_count;
 
 enum iaction ia_cause;
 const char *ia_name[] = {
-    "None", "String", "Paste", "Screen redraw", "Keypad", "Default", "Macro",
-    "Script", "Peek", "Typeahead", "File transfer", "Command", "Keymap",
-    "Idle", "Password", "UI"
+    "none", "string", "paste", "screen-redraw", "keypad", "default", "macro",
+    "script", "peek", "typeahead", "file-transfer", "command", "keymap",
+    "idle", "password", "ui"
 };
 static int keyboard_implicit_disables = 0;
 static int keyboard_explicit_disables = 0;

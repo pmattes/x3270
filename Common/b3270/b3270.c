@@ -1140,12 +1140,11 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 static void
 b3270_toggle_notify(const char *name, const char *value, ia_t cause)
 {
-    if (cause != IA_UI) {
-	ui_vleaf(IndSetting,
-		AttrName, name,
-		AttrValue, value,
-		NULL);
-    }
+    ui_vleaf(IndSetting,
+	    AttrName, name,
+	    AttrValue, value,
+	    AttrCause, ia_name[cause],
+	    NULL);
 }
 
 /**

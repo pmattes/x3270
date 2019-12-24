@@ -15,6 +15,7 @@
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>name</td><td>yes</td><td>Setting <a href=#settings">name</a></td></tr>
  <tr><td>value</td><td>no</td><td><b>true</b>, <b>false</b> or a specific value</td></tr>
+ <tr><td>cause</td><td>yes</td><td><a href=#causes">Cause</a> of the setting change</td></tr>
 </table>
 
 <a name="settings"></a>
@@ -31,6 +32,7 @@
 </table></p>
 <p>Specific-value settings names are:</p>
 <table border cols=3 width="75%">
+ <tr><th>Name</th><th>Purpose</th></tr>
  <tr><td>acceptHostname</td><td>TLS accept hostname</td></tr>
  <tr><td>caDir</td><td>TLS CA directory</td></tr>
  <tr><td>caFile</td><td>TLS CA file</td></tr>
@@ -52,11 +54,33 @@
  <tr><td>verifyHostCert</td><td>TLS verify host certificate option</td></tr>
 </table>
 
+<a name="causes"></a>
+<p>Causes are:</p>
+<table border cols=3 width="75%">
+ <tr><th>Name</th><th>Description</th></tr>
+ <tr><td>none</td><td>No cause</td></tr>
+ <tr><td>string</td><td>The String() action</td></tr>
+ <tr><td>paste</td><td>The Paste() action</td></tr>
+ <tr><td>screen-redraw</td><td>Screen redraw operation</td></tr>
+ <tr><td>keypad</td><td>Keypad key</td></tr>
+ <tr><td>default</td><td>Default key handler</td></tr>
+ <tr><td>macro</td><td>Macro operation</td></tr>
+ <tr><td>script</td><td>Script operation (usually HTTP)</td></tr>
+ <tr><td>peek</td><td>Event peek-ahead</td></tr>
+ <tr><td>typeahead</td><td>Stored type-ahead</td></tr>
+ <tr><td>file-transfer</td><td>IND$FILE file transfer</td></tr>
+ <tr><td>command</td><td>x3270&gt; prompt</td></tr>
+ <tr><td>keymap</td><td>Keyboard map</td></tr>
+ <tr><td>idle</td><td>Idle command</td></tr>
+ <tr><td>password</td><td>Restricted password action</td></tr>
+ <tr><td>ui</td><td>User interface talking to b3270</td></tr>
+</table>
+
 <p>Example:
 <pre>
-&lt;toggle name="altCursor" value="true"/&gt;
-&lt;toggle name="printerLu" value="POOL27"/&gt;
-&lt;toggle name="printerLu"/&gt;
+&lt;toggle name="altCursor" value="true" cause="keymap"/&gt;
+&lt;toggle name="printerLu" value="POOL27" cause="ui"/&gt;
+&lt;toggle name="printerLu" cause="ui"/&gt;
 </pre></p>
 <hr>
 b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
