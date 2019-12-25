@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,27 @@
 
 #define IDLE_MAX	15
 
+typedef struct {
+    llist_t link;	/* list linkage */
+    int n_sessions;
+    socket_t listen_s;
+#if defined(_WIN32) /*[*/
+    HANDLE listen_event;
+#endif /*]*/
+    ioid_t listen_id;
+} hio_listener_t;
+
+static hio_listener_t global_listener = {
+    { NULL, NULL },
+    0,
+    INVALID_SOCKET,
+#if defined(_WIN32) /*[*/
+    INVALID_HANDLE_VALUE,
+#endif /*]*/
+    NULL_IOID
+};
+static llist_t listeners = LLIST_INIT(listeners);
+
 #define N_SESSIONS	32
 typedef struct {
     llist_t link;	/* list linkage */
@@ -83,14 +104,9 @@ typedef struct {
 	varbuf_t result; /* accumulated result data */
 	bool done;	/* is the command done? */
     } pending;
+    hio_listener_t *listener;
 } session_t;
 llist_t sessions = LLIST_INIT(sessions);
-static int n_sessions;
-static socket_t listen_s = INVALID_SOCKET;
-#if defined(_WIN32) /*[*/
-static HANDLE listen_event = INVALID_HANDLE_VALUE;
-#endif /*]*/
-static ioid_t listen_id = NULL_IOID;
 
 /**
  * Return the text for the most recent socket error.
@@ -129,7 +145,9 @@ hio_socket_close(session_t *session)
     vb_free(&session->pending.result);
     llist_unlink(&session->link);
     Free(session);
-    n_sessions--;
+    if (session->listener != NULL) {
+	session->listener->n_sessions--;
+    }
 }
 
 /**
@@ -238,6 +256,8 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 void
 hio_connection(iosrc_t fd, ioid_t id)
 {
+    hio_listener_t *l;
+    bool found = false;
     socket_t t;
     union {
 	struct sockaddr sa;
@@ -250,14 +270,27 @@ hio_connection(iosrc_t fd, ioid_t id)
     char hostbuf[128];
     session_t *session;
 
+    /* Find the listener. */
+    FOREACH_LLIST(&listeners, l, hio_listener_t *) {
+	if (l->listen_id == id) {
+	    found = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (!found) {
+	vtrace("httpd accept: session not found\n");
+	return;
+    }
+
+    /* Accept the connection. */
     len = sizeof(sa);
-    t = accept(listen_s, &sa.sa, &len);
+    t = accept(l->listen_s, &sa.sa, &len);
     if (t == INVALID_SOCKET) {
 	vtrace("httpd accept error: %s%s\n", socket_errtext(),
 		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
 	return;
     }
-    if (n_sessions >= N_SESSIONS) {
+    if (l->n_sessions >= N_SESSIONS) {
 	vtrace("Too many connections.\n");
 	SOCK_CLOSE(t);
 	return;
@@ -269,6 +302,7 @@ hio_connection(iosrc_t fd, ioid_t id)
 
     session = Malloc(sizeof(session_t));
     memset(session, 0, sizeof(session_t));
+    session->listener = l;
     vb_init(&session->pending.result);
     session->s = t;
 #if defined(_WIN32) /*[*/
@@ -316,7 +350,78 @@ hio_connection(iosrc_t fd, ioid_t id)
     session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
 
     LLIST_APPEND(&session->link, sessions);
-    n_sessions++;
+    l->n_sessions++;
+}
+
+/**
+ * Initialize an httpd socket.
+ *
+ * @param[in] l		listener
+ * @param[in] sa	address and port to listen on
+ * @param[in] sa_len	length of sa
+ */
+void
+hio_init_x(hio_listener_t *l, struct sockaddr *sa, socklen_t sa_len)
+{
+    int on = 1;
+
+#if !defined(_WIN32) /*[*/
+    l->listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
+#else /*][*/
+    l->listen_s = WSASocket(sa->sa_family, SOCK_STREAM, 0, NULL, 0,
+	    WSA_FLAG_NO_HANDLE_INHERIT);
+#endif /*]*/
+    if (l->listen_s == INVALID_SOCKET) {
+	popup_an_error("httpd socket: %s", socket_errtext());
+	goto done;
+    }
+    if (setsockopt(l->listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
+		sizeof(on)) < 0) {
+	popup_an_error("httpd setsockopt: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto done;
+    }
+    if (bind(l->listen_s, sa, sa_len) < 0) {
+	popup_an_error("httpd bind: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto done;
+    }
+    if (listen(l->listen_s, 10) < 0) {
+	popup_an_error("httpd listen: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto done;
+    }
+#if !defined(_WIN32) /*[*/
+    fcntl(l->listen_s, F_SETFD, 1);
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+    l->listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (l->listen_event == NULL) {
+	popup_an_error("httpd: cannot create listen handle");
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto done;
+    }
+    if (WSAEventSelect(l->listen_s, l->listen_event, FD_ACCEPT) != 0) {
+	popup_an_error("httpd: WSAEventSelect failed: %s",
+		socket_errtext());
+	CloseHandle(l->listen_event);
+	l->listen_event = INVALID_HANDLE_VALUE;
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto done;
+    }
+    l->listen_id = AddInput(l->listen_event, hio_connection);
+#else /*][*/
+    l->listen_id = AddInput(l->listen_s, hio_connection);
+#endif /*]*/
+
+done:
+    Free(sa);
+    return;
 }
 
 /**
@@ -328,65 +433,45 @@ hio_connection(iosrc_t fd, ioid_t id)
 void
 hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
-    int on = 1;
+    if (llist_isempty(&listeners)) {
+	llist_init(&global_listener.link);
+	LLIST_APPEND(&global_listener.link, listeners);
+    }
 
-#if !defined(_WIN32) /*[*/
-    listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
-#else /*][*/
-    listen_s = WSASocket(sa->sa_family, SOCK_STREAM, 0, NULL, 0,
-	    WSA_FLAG_NO_HANDLE_INHERIT);
-#endif /*]*/
-    if (listen_s == INVALID_SOCKET) {
-	popup_an_error("httpd socket: %s", socket_errtext());
-	goto done;
+    hio_init_x(&global_listener, sa, sa_len);
+}
+
+/**
+ * Stop listening for HTTP connections.
+ */
+void
+hio_stop_x(hio_listener_t *l)
+{
+    session_t *session;
+
+    if (l->listen_id == NULL_IOID) {
+	return;
     }
-    if (setsockopt(listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
-		sizeof(on)) < 0) {
-	popup_an_error("httpd setsockopt: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	goto done;
-    }
-    if (bind(listen_s, sa, sa_len) < 0) {
-	popup_an_error("httpd bind: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	goto done;
-    }
-    if (listen(listen_s, 10) < 0) {
-	popup_an_error("httpd listen: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	goto done;
-    }
-#if !defined(_WIN32) /*[*/
-    fcntl(listen_s, F_SETFD, 1);
-#endif /*]*/
+
+    RemoveInput(l->listen_id);
+    l->listen_id = NULL_IOID;
+
+    SOCK_CLOSE(l->listen_s);
+    l->listen_s = INVALID_SOCKET;
+
 #if defined(_WIN32) /*[*/
-    listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (listen_event == NULL) {
-	popup_an_error("httpd: cannot create listen handle");
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	goto done;
-    }
-    if (WSAEventSelect(listen_s, listen_event, FD_ACCEPT) != 0) {
-	popup_an_error("httpd: WSAEventSelect failed: %s",
-		socket_errtext());
-	CloseHandle(listen_event);
-	listen_event = INVALID_HANDLE_VALUE;
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	goto done;
-    }
-    listen_id = AddInput(listen_event, hio_connection);
-#else /*][*/
-    listen_id = AddInput(listen_s, hio_connection);
+    CloseHandle(l->listen_event);
+    l->listen_event = INVALID_HANDLE_VALUE;
 #endif /*]*/
 
-done:
-    Free(sa);
-    return;
+    /* Detach any sessions. */
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (session->listener == l) {
+	    session->listener = NULL;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+
+    l->n_sessions = 0;
 }
 
 /**
@@ -395,20 +480,7 @@ done:
 void
 hio_stop(void)
 {
-    if (listen_id == NULL_IOID) {
-	return;
-    }
-
-    RemoveInput(listen_id);
-    listen_id = NULL_IOID;
-
-    SOCK_CLOSE(listen_s);
-    listen_s = INVALID_SOCKET;
-
-#if defined(_WIN32) /*[*/
-    CloseHandle(listen_event);
-    listen_event = INVALID_HANDLE_VALUE;
-#endif /*]*/
+    hio_stop_x(&global_listener);
 }
 
 /**
@@ -597,7 +669,7 @@ hio_async_done(void *dhandle, httpd_status_t rv)
 }
 
 /**
- * Upcall for toggling the HTTP listener on and off.
+ * Upcall for toggling the global HTTP listener on and off.
  *
  * @param[in] name	Name of toggle
  * @param[in] value	Toggle value

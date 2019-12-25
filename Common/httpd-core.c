@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -135,7 +135,6 @@ typedef struct _httpd_reg {
 	} fixed_binary;		/* fixed binary */
 	reg_dyn_t *dyn;		/* dynamic output */
     } u;
-    httpd_t *async_session;
 } httpd_reg_t;
 
 /* Globals */
@@ -977,23 +976,10 @@ httpd_reply(httpd_t *h, httpd_reg_t *reg, const char *uri)
     request_t *r = &h->request;
     const char *nonterm;
 
-    /* Check for a busy object. */
-    if (reg->async_session != NULL) {
-	char *q_uri;
-
-	q_uri = html_quote(uri);
-	httpd_error(h, ERRMODE_NONFATAL, 409,
-		"<p>Object is busy.</p><p>Only one client may access '%s' at "
-		"a time.", q_uri);
-	Free(q_uri);
-	return HS_ERROR_OPEN;
-    }
-
     switch (reg->type) {
     case OR_DYN_TERM:
     case OR_DYN_NONTERM:
 	/* Save state. */
-	reg->async_session = h;
 	r->async_node = reg;
 
 	/*
@@ -1905,8 +1891,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
     httpd_reg_t *reg = r->async_node;
     va_list ap;
 
-    /* Un-mark the node and session as busy. */
-    reg->async_session = NULL;
+    /* Un-mark the node. */
     r->async_node = NULL;
 
     /* Generate the output. */
@@ -1970,8 +1955,7 @@ httpd_dyn_error(void *dhandle, int status_code, const char *format, ...)
     va_list ap;
     httpd_status_t rv;
 
-    /* Un-mark the node and session as busy. */
-    r->async_node->async_session = NULL;
+    /* Un-mark the node. */
     r->async_node = NULL;
 
     va_start(ap, format);
