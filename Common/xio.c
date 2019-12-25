@@ -39,6 +39,7 @@
 
 #include "actions.h"
 #include "telnet.h"
+#include "trace.h"
 #include "utils.h"
 #include "xio.h"
 
@@ -125,6 +126,8 @@ x3270_exit(int n)
     }
     x3270_exiting = true;
 
+    vtrace("Exiting with status %d\n", n);
+
     /* Set the exit code. */
     x3270_exit_code = n;
 
@@ -147,6 +150,17 @@ x3270_exit(int n)
 #endif /*]*/
 }
 
+/*
+ * Delayed Quit.
+ * Called with a zero timeout so that the Quit() action can return
+ * successfully.
+ */
+static void
+delayed_quit(ioid_t id)
+{
+    x3270_exit(0);
+}
+
 static bool
 Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -164,7 +178,8 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
      * fail.
      */
     if (!IA_IS_KEY(ia) || !FULL_SESSION) {
-	x3270_exit(0);
+	AddTimeOut(0, delayed_quit);
+	return true;
     }
     return false;
 }
