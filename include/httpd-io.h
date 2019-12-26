@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2018 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,8 @@ typedef enum {
     SC_SYSTEM_ERROR     /* system error (500) */
 } sendto_cbs_t;
 
+typedef struct hio_listener hio_listener_t;
+
 /* Callback function for hio_to3270(). */
 typedef void sendto_callback_t(void *, sendto_cbs_t, const char *buf,
 	size_t len, const char *slbuf, size_t sl_len);
@@ -55,5 +57,7 @@ void hio_send(void *mhandle, const char *buf, size_t len);
 void hio_async_done(void *dhandle, httpd_status_t rv);
 
 void hio_init(struct sockaddr *sa, socklen_t sa_len);
+hio_listener_t *hio_init_x(struct sockaddr *sa, socklen_t sa_len);
 void hio_stop(void);
+void hio_stop_x(hio_listener_t *l);
 void hio_register(void);

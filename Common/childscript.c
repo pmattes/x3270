@@ -52,6 +52,8 @@
 #include "child_popups.h"
 #include "childscript.h"
 #include "find_console.h"
+#include "httpd-core.h"
+#include "httpd-io.h"
 #include "lazya.h"
 #include "peerscript.h"
 #include "s3270_proto.h"
@@ -62,7 +64,8 @@
 #include "varbuf.h"
 #include "w3misc.h"
 
-#define CHILD_BUF 1024
+#define CHILD_BUF		1024
+#define DELAYED_CLOSE_MS	3000
 
 static void child_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
@@ -155,12 +158,20 @@ typedef struct {
 } cr_t;
 #endif /*]*/
 
+typedef union {
+    peer_listen_t peer;
+    hio_listener_t *httpd;
+    void *either;
+} listener_t;
+
 /* Child script context. */
 typedef struct {
     llist_t llist;		/* linkage */
     char *parent_name;		/* cb name */
     char *command;		/* command text */
     bool use_socket;		/* true if script uses a socket */
+    bool use_httpd;		/* true if script uses httpd */
+    bool is_async;		/* true if script is async */
     bool done;			/* true if script is complete */
     bool success;		/* success or failure */
     ioid_t exit_id;		/* I/O identifier for child exit */
@@ -168,7 +179,7 @@ typedef struct {
     bool enabled;		/* enabled */
     char *output_buf;		/* output buffer */
     size_t output_buflen;	/* size of output buffer */
-    peer_listen_t listener;	/* listener for child commands */
+    listener_t listener;	/* listener for child commands */
     bool keyboard_lock;		/* lock/unlock keyboard while running */
     unsigned capabilities;	/* self-reported capabilities */
     void *irhandle;		/* input request handle */
@@ -190,6 +201,16 @@ typedef struct {
 #endif /*]*/
 } child_t;
 static llist_t child_scripts = LLIST_INIT(child_scripts);
+
+#if !defined(_WIN32) /*[*/
+typedef struct {
+    llist_t llist;		/* linkage */
+    ioid_t id;			/* I/O identifier for timeout */
+    bool use_httpd;		/* true if using HTTP */
+    listener_t listener;	/* listener */
+} delayed_close_t;
+static llist_t delayed_closes = LLIST_INIT(delayed_closes);
+#endif /*]*/
 
 /**
  * Free a child.
@@ -254,6 +275,34 @@ run_next(child_t *c)
 }
 
 /**
+ * Delayed close of a child script listener.
+ *
+ * @param[in] id	I/O identifier.
+ */
+static void
+delayed_close(ioid_t id)
+{
+    delayed_close_t *dc;
+
+    FOREACH_LLIST(&delayed_closes, dc, delayed_close_t *) {
+	if (dc->id == id) {
+	    vtrace("Delayed shutdown of %s listener\n",
+		    dc->use_httpd? "HTTP": "socket");
+	    if (dc->use_httpd) {
+		hio_stop_x(dc->listener.httpd);
+	    } else {
+		peer_shutdown(dc->listener.peer);
+	    }
+	    llist_unlink(&dc->llist);
+	    Free(dc);
+	    return;
+	}
+    } FOREACH_LLIST_END(&delayed_closes, dc, delayed_close_t *);
+
+    vtrace("Error: Delayed shutdown record not found\n");
+}
+
+/**
  * Tear down a child.
  *
  * @param[in,out] c	Child.
@@ -261,6 +310,29 @@ run_next(child_t *c)
 static void
 close_child(child_t *c)
 {
+    if (c->listener.either != NULL) {
+	if (c->is_async) {
+	    delayed_close_t *dc = Calloc(sizeof(delayed_close_t), 1);
+
+	    /*
+	     * Delay the close. gnome-terminal, for example, forks and execs a
+	     * new process for the console. We need to wait a while for it to
+	     * connect.
+	     */
+	    llist_init(&dc->llist);
+	    dc->use_httpd = c->use_httpd;
+	    dc->listener = c->listener;
+	    LLIST_APPEND(&dc->llist, delayed_closes);
+	    dc->id = AddTimeOut(DELAYED_CLOSE_MS, delayed_close);
+	} else {
+	    if (c->use_httpd) {
+		hio_stop_x(c->listener.httpd);
+	    } else {
+		peer_shutdown(c->listener.peer);
+	    }
+	}
+	c->listener.either = NULL;
+    }
     if (c->infd != -1) {
 	close(c->infd);
 	c->infd = -1;
@@ -453,7 +525,8 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 }
 
 /**
- * Callback for completion of one command executed from the child script.
+ * Callback for completion of one command executed from the child script in
+ * s3270 mode.
  *
  * @param[in] handle		Callback handle
  * @param[in] success		True if child succeeded
@@ -469,9 +542,13 @@ child_done(task_cbh handle, bool success, bool abort)
 #if !defined(_WIN32) /*[*/
     if (c->use_socket) {
 	if (abort) {
-	    if (c->listener != NULL) {
-		peer_shutdown(c->listener);
-		c->listener = NULL;
+	    if (c->listener.either != NULL) {
+		if (c->use_httpd) {
+		    hio_stop_x(c->listener.httpd);
+		} else {
+		    peer_shutdown(c->listener.peer);
+		}
+		c->listener.either = NULL;
 	    }
 	    vtrace("%s terminating script process\n", c->parent_name);
 	    kill(c->pid, SIGTERM);
@@ -511,7 +588,7 @@ child_done(task_cbh handle, bool success, bool abort)
 	}
 
 	/*
-	 * If there was a new child, we're still active. Otherwise, let our sms
+	 * If there was a new child, we're still active. Otherwise, let our CB
 	 * be popped.
 	 */
 	return !new_child;
@@ -520,8 +597,12 @@ child_done(task_cbh handle, bool success, bool abort)
 #else /*][*/
 
     if (abort) {
-	peer_shutdown(c->listener);
-	c->listener = NULL;
+	if (c->use_httpd) {
+	    hio_stop_x(c->listener.httpd);
+	} else {
+	    peer_shutdown(c->listener.peer);
+	}
+	c->listener.either = NULL;
 	vtrace("%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
 	if (c->keyboard_lock) {
@@ -575,9 +656,13 @@ close_child(child_t *c)
 	CloseHandle(c->child_handle);
 	c->child_handle = INVALID_HANDLE_VALUE;
     }
-    if (c->listener != NULL) {
-	peer_shutdown(c->listener);
-	c->listener = NULL;
+    if (c->listener.either != NULL) {
+	if (c->use_httpd) {
+	    hio_stop_x(c->listener.httpd);
+	} else {
+	    peer_shutdown(c->listener.peer);
+	}
+	c->listener.either = NULL;
     }
     cr_teardown(&c->cr);
     if (c->irhandle != NULL) {
@@ -840,7 +925,7 @@ child_exited(ioid_t id, int status)
     }
     c->exit_id = NULL_IOID;
     if (c->id == NULL_IOID) {
-	/* Tell sms that this should be run. */
+	/* This task should be run. */
 	c->done = true;
 	task_activate((task_cbh *)c);
     }
@@ -921,7 +1006,7 @@ child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	RemoveInput(c->exit_id);
 	c->exit_id = NULL_IOID;
 
-	/* Tell sms that this should be run. */
+	/* This task should be run. */
 	c->done = true;
 	task_activate((task_cbh *)c);
     }
@@ -1042,8 +1127,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 #else /*][*/
     bool use_socket = true;
 #endif /*]*/
+    bool use_httpd = false;
     peer_listen_mode mode = PLM_MULTI;
-    peer_listen_t listener = NULL;
+    listener_t listener;
     varbuf_t r;
     unsigned i;
     socket_t s;
@@ -1087,13 +1173,20 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    use_socket = true;
 	    argc--;
 	    argv++;
+	} else if (!strcasecmp(argv[0], "-Http")) {
+	    use_socket = true;
+	    use_httpd = true;
+	    argc--;
+	    argv++;
 	} else {
 	    break;
 	}
     }
 
+    listener.either = NULL;
+
     if (use_socket) {
-	/* Set up X3270PORT for the child process. */
+	/* Set up X3270PORT or X3270URL for the child process. */
 	unsigned short port = pick_port(&s);
 	struct sockaddr_in *sin;
 
@@ -1104,12 +1197,21 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	sin->sin_family = AF_INET;
 	sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	sin->sin_port = htons(port);
-	listener = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
+	if (use_httpd) {
+	    listener.httpd = hio_init_x((struct sockaddr *)sin, sizeof(*sin));
+	} else {
+	    listener.peer = peer_init((struct sockaddr *)sin, sizeof(*sin),
+		    mode);
+	}
 	SOCK_CLOSE(s);
-	if (listener == NULL) {
+	if (listener.either == NULL) {
 	    return false;
 	}
-	putenv(lazyaf(PORT_ENV "=%d", port));
+	if (use_httpd) {
+	    putenv(lazyaf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", port));
+	} else {
+	    putenv(lazyaf(PORT_ENV "=%d", port));
+	}
     }
 
 #if !defined(_WIN32) /*[*/
@@ -1152,8 +1254,12 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	close(stdoutpipe[0]);
 	close(stdoutpipe[1]);
-	if (listener != NULL) {
-	    peer_shutdown(listener);
+	if (listener.either != NULL) {
+	    if (use_httpd) {
+		hio_stop_x(listener.httpd);
+	    } else {
+		peer_shutdown(listener.peer);
+	    }
 	}
 	popup_an_error("fork() failed");
 	return false;
@@ -1203,6 +1309,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
     c->use_socket = use_socket;
+    c->use_httpd = use_httpd;
     c->success = true;
     c->done = false;
     c->buf = NULL;
@@ -1224,6 +1331,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	close(outpipe[0]);
     }
     close(stdoutpipe[1]);
+
+    /* Link the listener. */
+    if (use_socket) {
+	c->listener = listener;
+    }
 
     /* Allow child input. */
     if (!use_socket) {
@@ -1272,7 +1384,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 		NULL, NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));
-	peer_shutdown(listener);
+	if (use_httpd) {
+	    hio_stop_x(listener.httpd);
+	} else {
+	    peer_shutdown(listener.peer);
+	}
 
 	/* Let the read thread complete. */
 	CloseHandle(cr->pipe_wr_handle);
@@ -1323,6 +1439,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->command = vb_consume(&r);
 
     /* Create the context. It will be idle. */
+    c->is_async = async;
     c->keyboard_lock = keyboard_lock;
     name = push_cb(NULL, 0, async? &async_script_cb: &script_cb, (task_cbh)c);
     Replace(c->parent_name, NewString(name));

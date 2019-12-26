@@ -65,7 +65,7 @@
 
 #define IDLE_MAX	15
 
-typedef struct {
+struct hio_listener {
     llist_t link;	/* list linkage */
     int n_sessions;
     socket_t listen_s;
@@ -73,17 +73,9 @@ typedef struct {
     HANDLE listen_event;
 #endif /*]*/
     ioid_t listen_id;
-} hio_listener_t;
-
-static hio_listener_t global_listener = {
-    { NULL, NULL },
-    0,
-    INVALID_SOCKET,
-#if defined(_WIN32) /*[*/
-    INVALID_HANDLE_VALUE,
-#endif /*]*/
-    NULL_IOID
 };
+
+static hio_listener_t *global_listener = NULL;
 static llist_t listeners = LLIST_INIT(listeners);
 
 #define N_SESSIONS	32
@@ -356,14 +348,18 @@ hio_connection(iosrc_t fd, ioid_t id)
 /**
  * Initialize an httpd socket.
  *
- * @param[in] l		listener
  * @param[in] sa	address and port to listen on
  * @param[in] sa_len	length of sa
+ *
+ * @returns listen context
  */
-void
-hio_init_x(hio_listener_t *l, struct sockaddr *sa, socklen_t sa_len)
+hio_listener_t *
+hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 {
     int on = 1;
+
+    hio_listener_t *l = Calloc(sizeof(hio_listener_t), 1);
+    llist_init(&l->link);
 
 #if !defined(_WIN32) /*[*/
     l->listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
@@ -373,26 +369,26 @@ hio_init_x(hio_listener_t *l, struct sockaddr *sa, socklen_t sa_len)
 #endif /*]*/
     if (l->listen_s == INVALID_SOCKET) {
 	popup_an_error("httpd socket: %s", socket_errtext());
-	goto done;
+	goto fail;
     }
     if (setsockopt(l->listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
 		sizeof(on)) < 0) {
 	popup_an_error("httpd setsockopt: %s", socket_errtext());
 	SOCK_CLOSE(l->listen_s);
 	l->listen_s = INVALID_SOCKET;
-	goto done;
+	goto fail;
     }
     if (bind(l->listen_s, sa, sa_len) < 0) {
 	popup_an_error("httpd bind: %s", socket_errtext());
 	SOCK_CLOSE(l->listen_s);
 	l->listen_s = INVALID_SOCKET;
-	goto done;
+	goto fail;
     }
     if (listen(l->listen_s, 10) < 0) {
 	popup_an_error("httpd listen: %s", socket_errtext());
 	SOCK_CLOSE(l->listen_s);
 	l->listen_s = INVALID_SOCKET;
-	goto done;
+	goto fail;
     }
 #if !defined(_WIN32) /*[*/
     fcntl(l->listen_s, F_SETFD, 1);
@@ -403,7 +399,7 @@ hio_init_x(hio_listener_t *l, struct sockaddr *sa, socklen_t sa_len)
 	popup_an_error("httpd: cannot create listen handle");
 	SOCK_CLOSE(l->listen_s);
 	l->listen_s = INVALID_SOCKET;
-	goto done;
+	goto fail;
     }
     if (WSAEventSelect(l->listen_s, l->listen_event, FD_ACCEPT) != 0) {
 	popup_an_error("httpd: WSAEventSelect failed: %s",
@@ -412,20 +408,26 @@ hio_init_x(hio_listener_t *l, struct sockaddr *sa, socklen_t sa_len)
 	l->listen_event = INVALID_HANDLE_VALUE;
 	SOCK_CLOSE(l->listen_s);
 	l->listen_s = INVALID_SOCKET;
-	goto done;
+	goto fail;
     }
     l->listen_id = AddInput(l->listen_event, hio_connection);
 #else /*][*/
     l->listen_id = AddInput(l->listen_s, hio_connection);
 #endif /*]*/
+    LLIST_APPEND(&l->link, listeners);
+    goto done;
+
+fail:
+    Free(l);
+    l = NULL;
 
 done:
     Free(sa);
-    return;
+    return l;
 }
 
 /**
- * Initialize the httpd socket.
+ * Initialize the global httpd socket.
  *
  * @param[in] sa	address and port to listen on
  * @param[in] sa_len	length of sa
@@ -433,16 +435,13 @@ done:
 void
 hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
-    if (llist_isempty(&listeners)) {
-	llist_init(&global_listener.link);
-	LLIST_APPEND(&global_listener.link, listeners);
+    if (global_listener == NULL) {
+	global_listener = hio_init_x(sa, sa_len);
     }
-
-    hio_init_x(&global_listener, sa, sa_len);
 }
 
 /**
- * Stop listening for HTTP connections.
+ * Stop listening globally for HTTP connections.
  */
 void
 hio_stop_x(hio_listener_t *l)
@@ -472,6 +471,7 @@ hio_stop_x(hio_listener_t *l)
     } FOREACH_LLIST_END(&sessions, session, session_t *);
 
     l->n_sessions = 0;
+    llist_unlink(&l->link);
 }
 
 /**
@@ -480,7 +480,10 @@ hio_stop_x(hio_listener_t *l)
 void
 hio_stop(void)
 {
-    hio_stop_x(&global_listener);
+    if (global_listener != NULL) {
+	hio_stop_x(global_listener);
+	Replace(global_listener, NULL);
+    }
 }
 
 /**
