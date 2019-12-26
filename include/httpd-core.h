@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 typedef enum {
     CT_HTML,
     CT_TEXT,
+    CT_JSON,
     CT_BINARY
 } content_t;
 

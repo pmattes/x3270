@@ -543,7 +543,41 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 		break;
 	    }
 	}
+    } else if (s->pending.content_type == CT_JSON) {
+	size_t i;
+	char c;
+
+	/* Quote JSON in the response. */
+	vb_appends(&s->pending.result, "  \"");
+	for (i = 0; i < len; i++) {
+	    c = buf[i];
+	    switch (c) {
+	    case '"':
+		vb_appends(&s->pending.result, "\\\"");
+		break;
+	    case '\\':
+		vb_appends(&s->pending.result, "\\\\");
+		break;
+	    case '\r':
+		vb_appends(&s->pending.result, "\\r");
+		break;
+	    case '\n':
+		vb_appends(&s->pending.result, "\\n");
+		break;
+	    case '\t':
+		vb_appends(&s->pending.result, "\\t");
+		break;
+	    case '\f':
+		vb_appends(&s->pending.result, "\\f");
+		break;
+	    default:
+		vb_append(&s->pending.result, &c, 1);
+		break;
+	    }
+	}
+	vb_appends(&s->pending.result, "\",");
     } else {
+	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);
     }
     vb_appends(&s->pending.result, "\n");
