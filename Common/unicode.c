@@ -965,8 +965,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 size_t
 ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len)
 {
-    	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF,
-		NULL);
+    return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF,
+	    NULL);
 }
 
 /*
@@ -978,21 +978,21 @@ size_t
 ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
 	size_t mb_len)
 {
-    	size_t nmb = 0;
+    size_t nmb = 0;
 
-    	while (ebc_len && mb_len) {
-	    	size_t xlen;
+    while (ebc_len && mb_len) {
+	size_t xlen;
 
-		xlen = ebcdic_to_multibyte(*ebc, mb, mb_len);
-		if (xlen) {
-		    	mb += xlen - 1;
-			mb_len -= (xlen - 1);
-			nmb += xlen - 1;
-		}
-		ebc++;
-		ebc_len--;
+	xlen = ebcdic_to_multibyte(*ebc, mb, mb_len);
+	if (xlen) {
+	    mb += xlen - 1;
+	    mb_len -= (xlen - 1);
+	    nmb += xlen - 1;
 	}
-	return nmb;
+	ebc++;
+	ebc_len--;
+    }
+    return nmb;
 }
 
 /*
