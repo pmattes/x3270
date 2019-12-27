@@ -55,6 +55,8 @@ keymap.base: \n\
         Alt <Key>N: Menu()\n\
         Alt <Key>p: PrintText()\n\
         Alt <Key>P: PrintText()\n\
+        Alt <Key>q: Quit()\n\
+        Alt <Key>Q: Quit()\n\
        Ctrl <Key>v: Paste()\n\
        Ctrl <Key>x: Cut()\n\
        Ctrl <Key>]: Escape()\n\
@@ -129,6 +131,7 @@ x3270.keymap.base: \n\
      Ctrl<Key>a <Key>m: Compose()\n\
      Ctrl<Key>a <Key>n: Menu()\n\
      Ctrl<Key>a <Key>p: PrintText()\n\
+     Ctrl<Key>a <Key>q: Quit()\n\
      Ctrl<Key>a <Key>^: Key(notsign,NoFailOnError)\n\
                <Key>DC: Delete()\n\
                <Key>UP: Up()\n\

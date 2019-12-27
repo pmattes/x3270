@@ -164,9 +164,16 @@ delayed_quit(ioid_t id)
 static bool
 Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
+    bool force = false;
+
     action_debug("Quit", ia, argc, argv);
-    if (check_argc("Quit", argc, 0, 0) < 0) {
+    if (check_argc("Quit", argc, 0, 1) < 0) {
 	return false;
+    }
+
+    if (argc > 0 &&
+	    (!strcasecmp(argv[0], "-Force") || !strcasecmp(argv[0], "Force"))) {
+	force = true;
     }
 
     /*
@@ -177,7 +184,7 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
      * read in a file that includes a Quit(). If we are connected, it will
      * fail.
      */
-    if (!IA_IS_KEY(ia) || !FULL_SESSION) {
+    if (force || (!IA_IS_KEY(ia) || !FULL_SESSION)) {
 	AddTimeOut(0, delayed_quit);
 	return true;
     }
