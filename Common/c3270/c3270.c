@@ -397,6 +397,7 @@ main_exiting(bool ignored)
 #if defined(HAVE_LIBREADLINE) /*[*/
 	rl_callback_handler_remove();
 #endif /*]*/
+	printf("\n");
     } else {
 	if (c3270_screen_suspend()) {
 	    screen_final();
