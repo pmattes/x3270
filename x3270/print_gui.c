@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, Paul Mattes.
+ * Copyright (c) 1994-2015, 2019, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,8 @@ print_text_gui(bool use_file)
 {
     if (ia_cause == IA_COMMAND ||
 	ia_cause == IA_MACRO ||
-	ia_cause == IA_SCRIPT) {
+	ia_cause == IA_SCRIPT ||
+	ia_cause == IA_HTTPD) {
 
 	/* Invoked by a script. Run the guts now. */
 	return false;

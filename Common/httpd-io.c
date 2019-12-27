@@ -629,7 +629,7 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 {
     static tcb_t httpd_cb = {
 	"httpd",
-	IA_SCRIPT,
+	IA_HTTPD,
 	CB_NEW_TASKQ,
 	hio_data,
 	hio_complete,

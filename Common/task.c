@@ -94,6 +94,9 @@
 /* Maximum size of a macro. */
 #define MSC_BUF	1024
 
+/* IA test for UTF-8 overrides. */
+#define IA_UTF8(ia)	((ia) == IA_HTTPD)
+
 /* Globals */
 struct macro_def *macro_defs = NULL;
 
@@ -1911,9 +1914,69 @@ set_output_needed(bool needed)
  * Macro- and script-specific actions.
  */
 
+/* Unicode to multibyte conversion, with UTF-8 override. */
+static int
+u2m(ucs4_t ucs4, char *mb, size_t mb_len, bool force_utf8)
+{
+    if (force_utf8) {
+	int len;
+
+	if (mb_len < 7) {
+	    mb[0] = '\0';
+	    return 1;
+	}
+	len = unicode_to_utf8(ucs4, mb);
+	if (len < 0) {
+	    len = 0;
+	}
+	mb[len++] = '\0';
+	return len;
+    } else {
+	return unicode_to_multibyte(ucs4, mb, mb_len);
+    }
+}
+
+/* Specific EBCDIC to multibyte conversion, with UTF-8 override. */
+static size_t
+e2m_x(ebc_t ebc, unsigned char cs, char mb[], size_t mb_len, unsigned flags,
+	ucs4_t *ucp, bool force_utf8)
+{
+    if (force_utf8) {
+	ucs4_t ucs4;
+	int len;
+
+	if (mb_len < 7) {
+	    mb[0] = '\0';
+	    return 1;
+	}
+	ucs4 = ebcdic_to_unicode(ebc, cs, flags);
+	if (ucs4 == 0 && (flags & EUO_BLANK_UNDEF) != 0) {
+	    ucs4 = ' ';
+	}
+	*ucp = ucs4;
+	len = unicode_to_utf8(ucs4, mb);
+	if (len < 0) {
+	    len = 0;
+	}
+	mb[len++] = '\0';
+	return len;
+    } else {
+	return ebcdic_to_multibyte_x(ebc, cs, mb, mb_len, flags, ucp);
+    }
+}
+
+/* Common EBCDIC to multibyte conversion, with UTF-8 override. */
+static size_t
+e2m(ebc_t ebc, char mb[], size_t mb_len, bool force_utf8)
+{
+    ucs4_t ucs4;
+
+    return e2m_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF, &ucs4, force_utf8);
+}
+
 static void
 dump_range(int first, int len, bool in_ascii, struct ea *buf,
-    int rel_rows _is_unused, int rel_cols)
+    int rel_rows _is_unused, int rel_cols, bool force_utf8)
 {
     int i;
     bool any = false;
@@ -1963,28 +2026,25 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		    if (toggled(MONOCASE)) {
 			uc = u_toupper(uc);
 		    }
-		    xlen = unicode_to_multibyte(uc, mb, sizeof(mb));
+		    xlen = u2m(uc, mb, sizeof(mb), force_utf8);
 		    for (j = 0; j < xlen - 1; j++) {
 			vb_appendf(&r, "%c", mb[j]);
 		    }
 		} else {
 		    /* 3270-mode text. */
 		    if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-			xlen = ebcdic_to_multibyte(
-				(buf[first + i].ec << 8) |
-				 buf[first + i + 1].ec,
-				mb, sizeof(mb));
+			xlen = e2m((buf[first + i].ec << 8) |
+				buf[first + i + 1].ec,
+				mb, sizeof(mb), force_utf8);
 			for (j = 0; j < xlen - 1; j++) {
 			    vb_appendf(&r, "%c", mb[j]);
 			}
 		    } else {
-			xlen = ebcdic_to_multibyte_x(
-				buf[first + i].ec,
-				buf[first + i].cs,
+			xlen = e2m_x(buf[first + i].ec, buf[first + i].cs,
 				mb, sizeof(mb),
 				EUO_BLANK_UNDEF |
 				 (toggled(MONOCASE)? EUO_TOUPPER: 0),
-				&uc);
+				&uc, force_utf8);
 			for (j = 0; j < xlen - 1; j++) {
 			    vb_appendf(&r, "%c", mb[j]);
 			}
@@ -2020,7 +2080,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 static bool
 dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	bool in_ascii, struct ea *buf, int rel_rows, int rel_cols,
-	int caddr)
+	int caddr, bool force_utf8)
 {
     int row, col, len, rows = 0, cols = 0;
 
@@ -2072,20 +2132,20 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
     }
     if (count < 4) {
 	dump_range((row * rel_cols) + col, len, in_ascii, buf, rel_rows,
-		rel_cols);
+		rel_cols, force_utf8);
     } else {
 	int i;
 
 	for (i = 0; i < rows; i++) {
 	    dump_range(((row+i) * rel_cols) + col, cols, in_ascii, buf,
-		    rel_rows, rel_cols);
+		    rel_rows, rel_cols, force_utf8);
 	}
     }
     return true;
 }
 
 static bool
-dump_field(unsigned count, const char *name, bool in_ascii)
+dump_field(unsigned count, const char *name, bool in_ascii, bool force_utf8)
 {
     int faddr;
     int start, baddr;
@@ -2110,7 +2170,7 @@ dump_field(unsigned count, const char *name, bool in_ascii)
 	len++;
 	INC_BA(baddr);
     } while (baddr != start);
-    dump_range(start, len, in_ascii, ea_buf, ROWS, COLS);
+    dump_range(start, len, in_ascii, ea_buf, ROWS, COLS, force_utf8);
     return true;
 }
 
@@ -2118,40 +2178,40 @@ static bool
 Ascii_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, 0, "Ascii", true, ea_buf, ROWS, COLS,
-	    cursor_addr);
+	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 Ascii1_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, 1, "Ascii1", true, ea_buf, ROWS, COLS,
-	    cursor_addr);
+	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 AsciiField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "AsciiField", true);
+    return dump_field(argc, "AsciiField", true, IA_UTF8(ia));
 }
 
 static bool
 Ebcdic_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, 0, "Ebcdic", false, ea_buf, ROWS, COLS,
-	    cursor_addr);
+	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 Ebcdic1_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, 1, "Ebcdic1", false, ea_buf, ROWS, COLS,
-	    cursor_addr);
+	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "EbcdicField", false);
+    return dump_field(argc, "EbcdicField", false, IA_UTF8(ia));
 }
 
 static unsigned char
@@ -2175,7 +2235,8 @@ calc_cs(unsigned char cs)
  * screen buffer 'ea_buf' or a copy saved with 'Snap'.
  */
 static bool
-do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
+do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
+	bool force_utf8)
 {
     int	baddr;
     unsigned char current_fg = 0x00;
@@ -2331,12 +2392,11 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    if (buf[baddr].ucs4) {
 			/* NVT-mode text. */
-			len = unicode_to_multibyte(buf[baddr].ucs4, mb,
-				sizeof(mb));
+			len = u2m(buf[baddr].ucs4, mb, sizeof(mb), force_utf8);
 		    } else {
 			/* 3270-mode text. */
-			len = ebcdic_to_multibyte((buf[baddr].ec << 8) |
-				buf[baddr + 1].ec, mb, sizeof(mb));
+			len = e2m((buf[baddr].ec << 8) | buf[baddr + 1].ec, mb,
+				sizeof(mb), force_utf8);
 		    }
 		    vb_appends(&r, " ");
 		    for (j = 0; j < len-1; j++) {
@@ -2350,7 +2410,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 
 		if (is_nvt(&buf[baddr], false, &uc)) {
 		    /* NVT-mode text. */
-		    len = unicode_to_multibyte(uc, mb, sizeof(mb));
+		    len = u2m(uc, mb, sizeof(mb), force_utf8);
 		} else {
 		    /* 3270-mode text. */
 		    switch (buf[baddr].ec) {
@@ -2366,8 +2426,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 			mb[1] = '\0';
 			break;
 		    default:
-			ebcdic_to_multibyte_x(buf[baddr].ec,
-				buf[baddr].cs, mb, sizeof(mb), EUO_NONE, &uc);
+			e2m_x(buf[baddr].ec, buf[baddr].cs, mb, sizeof(mb),
+				EUO_NONE, &uc, force_utf8);
 			break;
 		    }
 		}
@@ -2436,7 +2496,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 static bool
 ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return do_read_buffer(argv, argc, ea_buf);
+    return do_read_buffer(argv, argc, ea_buf, IA_UTF8(ia));
 }
 
 /*
@@ -2798,34 +2858,34 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    return false;
 	}
 	return dump_fixed(argv + 1, argc - 1, 0, "Ascii", true, snap_buf,
-		snap_rows, snap_cols, snap_caddr);
+		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
     } else if (!strcasecmp(argv[0], "Ascii1")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
 	    return false;
 	}
 	return dump_fixed(argv + 1, argc - 1, 1, "Ascii1", true, snap_buf,
-		snap_rows, snap_cols, snap_caddr);
+		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
     } else if (!strcasecmp(argv[0], "Ebcdic")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
 	    return false;
 	}
 	return dump_fixed(argv + 1, argc - 1, 0, "Ebcdic", false, snap_buf,
-		snap_rows, snap_cols, snap_caddr);
+		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
     } else if (!strcasecmp(argv[0], "Ebcdic1")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
 	    return false;
 	}
 	return dump_fixed(argv + 1, argc - 1, 1, "Ebcdic1", false, snap_buf,
-		snap_rows, snap_cols, snap_caddr);
+		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
     } else if (!strcasecmp(argv[0], "ReadBuffer")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
 	    return false;
 	}
-	return do_read_buffer(argv + 1, argc - 1, snap_buf);
+	return do_read_buffer(argv + 1, argc - 1, snap_buf, IA_UTF8(ia));
     } else {
 	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
 		"Wait, Ascii, Ascii1, Ebcdic, Ebcdic1 or ReadBuffer");

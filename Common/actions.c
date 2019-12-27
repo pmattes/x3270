@@ -54,7 +54,7 @@ enum iaction ia_cause;
 const char *ia_name[] = {
     "none", "string", "paste", "screen-redraw", "keypad", "default", "macro",
     "script", "peek", "typeahead", "file-transfer", "command", "keymap",
-    "idle", "password", "ui"
+    "idle", "password", "ui", "httpd"
 };
 static int keyboard_implicit_disables = 0;
 static int keyboard_explicit_disables = 0;
