@@ -52,11 +52,15 @@ bool set_uni(const char *cpname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
 ucs4_t linedraw_to_unicode(ucs4_t e, bool ascii_art);
 int apl_to_unicode(ebc_t e, unsigned flags);
+size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
+size_t ebcdic_to_multibyte_f(ebc_t ebc, char mb[], size_t mb_len, bool
+	force_utf8);
+size_t ebcdic_to_multibyte_fx(ebc_t ebc, unsigned char cs, char mb[],
+	size_t mb_len, unsigned flags, ucs4_t *ucp, bool force_utf8);
+size_t ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len,
+	char mb[], size_t mb_len);
 size_t ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	size_t mb_len, unsigned flags, ucs4_t *uc);
-size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
-size_t ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
-	size_t mb_len);
 int mb_max_len(int len);
 enum me_fail {
     ME_NONE,		/* no error */
@@ -72,6 +76,8 @@ ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp);
 int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
+int unicode_to_multibyte_f(ucs4_t ucs4, char *mb, size_t mb_len,
+	bool force_utf8);
 bool using_iconv(void);
 const char *canonical_codepage(const char *alias);
 typedef struct {
@@ -83,3 +89,4 @@ typedef struct {
 cpname_t *get_cpnames(void);
 void free_cpnames(cpname_t *cpnames);
 bool is_all_digits(const char *s);
+

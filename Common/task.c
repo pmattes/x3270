@@ -1914,66 +1914,6 @@ set_output_needed(bool needed)
  * Macro- and script-specific actions.
  */
 
-/* Unicode to multibyte conversion, with UTF-8 override. */
-static int
-u2m(ucs4_t ucs4, char *mb, size_t mb_len, bool force_utf8)
-{
-    if (force_utf8) {
-	int len;
-
-	if (mb_len < 7) {
-	    mb[0] = '\0';
-	    return 1;
-	}
-	len = unicode_to_utf8(ucs4, mb);
-	if (len < 0) {
-	    len = 0;
-	}
-	mb[len++] = '\0';
-	return len;
-    } else {
-	return unicode_to_multibyte(ucs4, mb, mb_len);
-    }
-}
-
-/* Specific EBCDIC to multibyte conversion, with UTF-8 override. */
-static size_t
-e2m_x(ebc_t ebc, unsigned char cs, char mb[], size_t mb_len, unsigned flags,
-	ucs4_t *ucp, bool force_utf8)
-{
-    if (force_utf8) {
-	ucs4_t ucs4;
-	int len;
-
-	if (mb_len < 7) {
-	    mb[0] = '\0';
-	    return 1;
-	}
-	ucs4 = ebcdic_to_unicode(ebc, cs, flags);
-	if (ucs4 == 0 && (flags & EUO_BLANK_UNDEF) != 0) {
-	    ucs4 = ' ';
-	}
-	*ucp = ucs4;
-	len = unicode_to_utf8(ucs4, mb);
-	if (len < 0) {
-	    len = 0;
-	}
-	mb[len++] = '\0';
-	return len;
-    } else {
-	return ebcdic_to_multibyte_x(ebc, cs, mb, mb_len, flags, ucp);
-    }
-}
-
-/* Common EBCDIC to multibyte conversion, with UTF-8 override. */
-static size_t
-e2m(ebc_t ebc, char mb[], size_t mb_len, bool force_utf8)
-{
-    ucs4_t ucs4;
-
-    return e2m_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF, &ucs4, force_utf8);
-}
-
 static void
 dump_range(int first, int len, bool in_ascii, struct ea *buf,
     int rel_rows _is_unused, int rel_cols, bool force_utf8)
@@ -2026,22 +1966,23 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		    if (toggled(MONOCASE)) {
 			uc = u_toupper(uc);
 		    }
-		    xlen = u2m(uc, mb, sizeof(mb), force_utf8);
+		    xlen = unicode_to_multibyte_f(uc, mb, sizeof(mb),
+			    force_utf8);
 		    for (j = 0; j < xlen - 1; j++) {
 			vb_appendf(&r, "%c", mb[j]);
 		    }
 		} else {
 		    /* 3270-mode text. */
 		    if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-			xlen = e2m((buf[first + i].ec << 8) |
+			xlen = ebcdic_to_multibyte_f((buf[first + i].ec << 8) |
 				buf[first + i + 1].ec,
 				mb, sizeof(mb), force_utf8);
 			for (j = 0; j < xlen - 1; j++) {
 			    vb_appendf(&r, "%c", mb[j]);
 			}
 		    } else {
-			xlen = e2m_x(buf[first + i].ec, buf[first + i].cs,
-				mb, sizeof(mb),
+			xlen = ebcdic_to_multibyte_fx(buf[first + i].ec,
+				buf[first + i].cs, mb, sizeof(mb),
 				EUO_BLANK_UNDEF |
 				 (toggled(MONOCASE)? EUO_TOUPPER: 0),
 				&uc, force_utf8);
@@ -2392,10 +2333,11 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    if (buf[baddr].ucs4) {
 			/* NVT-mode text. */
-			len = u2m(buf[baddr].ucs4, mb, sizeof(mb), force_utf8);
+			len = unicode_to_multibyte_f(buf[baddr].ucs4, mb,
+				sizeof(mb), force_utf8);
 		    } else {
 			/* 3270-mode text. */
-			len = e2m((buf[baddr].ec << 8) | buf[baddr + 1].ec, mb,
+			len = ebcdic_to_multibyte_f((buf[baddr].ec << 8) | buf[baddr + 1].ec, mb,
 				sizeof(mb), force_utf8);
 		    }
 		    vb_appends(&r, " ");
@@ -2410,7 +2352,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 
 		if (is_nvt(&buf[baddr], false, &uc)) {
 		    /* NVT-mode text. */
-		    len = u2m(uc, mb, sizeof(mb), force_utf8);
+		    len = unicode_to_multibyte_f(uc, mb, sizeof(mb),
+			    force_utf8);
 		} else {
 		    /* 3270-mode text. */
 		    switch (buf[baddr].ec) {
@@ -2426,8 +2369,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 			mb[1] = '\0';
 			break;
 		    default:
-			e2m_x(buf[baddr].ec, buf[baddr].cs, mb, sizeof(mb),
-				EUO_NONE, &uc, force_utf8);
+			ebcdic_to_multibyte_fx(buf[baddr].ec, buf[baddr].cs,
+				mb, sizeof(mb), EUO_NONE, &uc, force_utf8);
 			break;
 		    }
 		}

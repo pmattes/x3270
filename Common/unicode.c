@@ -970,6 +970,49 @@ ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len)
 }
 
 /*
+ * ebcdic_to_multibyte with UTF-8 override.
+ */
+size_t
+ebcdic_to_multibyte_f(ebc_t ebc, char mb[], size_t mb_len, bool force_utf8)
+{
+    ucs4_t ucs4;
+
+    return ebcdic_to_multibyte_fx(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF,
+	    &ucs4, force_utf8);
+}
+
+/*
+ * ebcdic_to_multibyte_x with UTF-8 override.
+ */
+size_t
+ebcdic_to_multibyte_fx(ebc_t ebc, unsigned char cs, char mb[], size_t mb_len,
+	unsigned flags, ucs4_t *ucp, bool force_utf8)
+{
+    if (force_utf8) {
+	ucs4_t ucs4;
+	int len;
+
+	if (mb_len < 7) {
+	    mb[0] = '\0';
+	    return 1;
+	}
+	ucs4 = ebcdic_to_unicode(ebc, cs, flags);
+	if (ucs4 == 0 && (flags & EUO_BLANK_UNDEF) != 0) {
+	    ucs4 = ' ';
+	}
+	*ucp = ucs4;
+	len = unicode_to_utf8(ucs4, mb);
+	if (len < 0) {
+	    len = 0;
+	}
+	mb[len++] = '\0';
+	return len;
+    } else {
+	return ebcdic_to_multibyte_x(ebc, cs, mb, mb_len, flags, ucp);
+    }
+}
+
+/*
  * Convert an EBCDIC string to a multibyte string.
  * Makes lots of assumptions: standard character set, EUO_BLANK_UNDEF.
  * Returns the length of the multibyte string.
@@ -1344,6 +1387,30 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     mb[mb_len - outbytesleft--] = '\0';
     return mb_len - outbytesleft;
 #endif /*]*/
+}
+
+/*
+ * Unicode to multibyte conversion, with UTF-8 override.
+ */
+int
+unicode_to_multibyte_f(ucs4_t ucs4, char *mb, size_t mb_len, bool force_utf8)
+{
+    if (force_utf8) {
+	int len;
+
+	if (mb_len < 7) {
+	    mb[0] = '\0';
+	    return 1;
+	}
+	len = unicode_to_utf8(ucs4, mb);
+	if (len < 0) {
+	    len = 0;
+	}
+	mb[len++] = '\0';
+	return len;
+    } else {
+	return unicode_to_multibyte(ucs4, mb, mb_len);
+    }
 }
 
 /* Returns true if using iconv. */
