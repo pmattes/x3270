@@ -1786,7 +1786,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	t_len -= nm;
 	ei_len += nm;
     }
-    emulate_input(ei_buf, ei_len, true);
+    emulate_input(ei_buf, ei_len, true, false);
 
     XtFree(ei_buf);
     XtFree(value);

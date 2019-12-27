@@ -3328,9 +3328,21 @@ String_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Set a pending string. */
-    ps_set(s, false);
+    ps_set(s, false, ia == IA_HTTPD);
     Free(s);
     return true;
+}
+
+/*
+ * Return the value of a hexadecimal nybble.
+ */
+static int
+nybble(unsigned char c)
+{
+    static char hex_digits[] = "0123456789abcdef";
+    char *index = strchr(hex_digits, tolower((int)c));
+
+    return (index == NULL)? -1: (int)(index - hex_digits);
 }
 
 /*
@@ -3339,12 +3351,22 @@ String_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 HexString_action(ia_t ia, unsigned argc, const char **argv)
 {
-    unsigned i;
+    bool is_ascii;
+    unsigned i, j;
     size_t len = 0;
     char *s;
+    size_t sl;
     const char *t;
+    int out;
 
     action_debug("HexString", ia, argc, argv);
+
+    /* Pick off the -Ascii option. */
+    if (argc > 0 && !strcasecmp(argv[0], "-Ascii")) {
+	is_ascii = true;
+	argc--;
+	argv++;
+    }
 
     /* Determine the total length of the strings. */
     for (i = 0; i < argc; i++) {
@@ -3352,24 +3374,52 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
 	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2)) {
 	    t += 2;
 	}
-	len += strlen(t);
+	sl = strlen(t);
+	for (j = 0; j < (unsigned)sl; j++) {
+	    if (nybble((unsigned char)t[j]) < 0) {
+		popup_an_error("HexString: Invalid hex character");
+		return false;
+	    }
+	}
+	len += sl;
     }
     if (!len) {
 	return true;
+    }
+    if (len % 2) {
+	popup_an_error("HexString: Odd number of nybbles");
+	return false;
     }
 
     /* Allocate a block of memory and copy them in. */
     s = Malloc(len + 1);
     *s = '\0';
+    out = 0;
     for (i = 0; i < argc; i++) {
 	t = argv[i];
-	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2))
+	if (!strncmp(t, "0x", 2) || !strncmp(t, "0X", 2)) {
 	    t += 2;
-	strcat(s, t);
+	}
+	if (is_ascii) {
+	    sl = strlen(t);
+	    for (j = 0; j < (unsigned)sl; j += 2) {
+		int u = nybble((unsigned char)t[j]);
+		int l = nybble((unsigned char)t[j + 1]);
+
+		s[out++] = (char)((u * 16) + l);
+	    }
+	} else {
+	    strcat(s, t);
+	}
     }
 
     /* Set a pending string. */
-    ps_set(s, true);
+    if (is_ascii) {
+	s[out] = '\0';
+	ps_set(s, false, ia == IA_HTTPD);
+    } else {
+	ps_set(s, true, ia == IA_HTTPD);
+    }
     return true;
 }
 
@@ -3413,7 +3463,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Set a pending string. */
-    push_string(s, true, true);
+    push_string(s, true, true, ia == IA_HTTPD);
     return true;
 }
 
@@ -3968,7 +4018,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 
 /* Multibyte version of emulate_uinput. */
 size_t
-emulate_input(const char *s, size_t len, bool pasting)
+emulate_input(const char *s, size_t len, bool pasting, bool force_utf8)
 {
     static ucs4_t *w_ibuf = NULL;
     static size_t w_ibuf_len = 0;
@@ -3979,7 +4029,8 @@ emulate_input(const char *s, size_t len, bool pasting)
 	w_ibuf_len = len + 1;
 	w_ibuf = (ucs4_t *)Realloc(w_ibuf, w_ibuf_len * sizeof(ucs4_t));
     }
-    xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
+    xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len,
+	    force_utf8);
     if (xlen < 0) {
 	return 0; /* failed */
     }

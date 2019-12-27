@@ -1068,6 +1068,13 @@ mb_max_len(int len)
 #endif /*]*/
 }
 
+ucs4_t
+multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp)
+{
+    return multibyte_to_unicode_f(mb, mb_len, consumedp, errorp, false);
+}
+
 /*
  * Translate a multi-byte character in the current locale to UCS-4.
  *
@@ -1078,13 +1085,13 @@ mb_max_len(int len)
  * an incomplete sequence.
  */
 ucs4_t
-multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
-	enum me_fail *errorp)
+multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp, bool force_utf8)
 {
     int nw;
     ucs4_t ucs4;
 
-    if (is_utf8) {
+    if (is_utf8 || force_utf8) {
 	/* Translate from UTF-8 to UCS-4. */
 	nw = utf8_to_unicode(mb, (int)mb_len, &ucs4);
 	if (nw < 0) {
@@ -1191,7 +1198,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
  */
 int
 multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
-	size_t u_len)
+	size_t u_len, bool force_utf8)
 {
     int consumed;
     enum me_fail error;
@@ -1200,8 +1207,8 @@ multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
     error = ME_NONE;
 
     while (u_len && mb_len &&
-	    (*ucs4++ = multibyte_to_unicode(mb, mb_len, &consumed,
-					    &error)) != 0) {
+	    (*ucs4++ = multibyte_to_unicode_f(mb, mb_len, &consumed,
+					    &error, force_utf8)) != 0) {
 	u_len--;
 	mb += consumed;
 	mb_len -= consumed;

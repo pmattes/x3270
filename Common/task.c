@@ -1456,9 +1456,9 @@ task_activate(task_cbh handle)
 
 /* Set a pending string. */
 void
-ps_set(char *s, bool is_hex)
+ps_set(char *s, bool is_hex, bool force_utf8)
 {
-    push_string(s, is_hex, false);
+    push_string(s, is_hex, false, force_utf8);
 }
 
 /* Callback for macros menu. */

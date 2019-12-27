@@ -72,6 +72,7 @@ typedef struct {
     ia_t ia;		/* cause */
     bool is_hex;	/* true if data is hexadecimal */
     bool is_paste;	/* true to use paste mode */
+    bool force_utf8;	/* true to force UTF-8 conversion */
     char *result;	/* error message from child action */
     bool aborted;	/* action aborted due to child error */
 } string_t;
@@ -142,7 +143,7 @@ string_run(task_cbh handle, bool *success)
 	done = true;
     } else {
 	/* Run what we can. */
-	size_t len_left = emulate_input(s->data, s->len, false);
+	size_t len_left = emulate_input(s->data, s->len, false, s->force_utf8);
 
 	s->data += s->len - len_left;
 	s->len = len_left;
@@ -245,11 +246,12 @@ hex_to_nybble(char c)
  *
  * @param[in] s		String
  * @param[out] lenp	Returned length (number of ucs4 elements)
+ * @param[in] force_utf8 True to force UTF-8 conversion
  *
  * @return Translated string, or NULL for an error.
  */
 static ucs4_t *
-hex_to_unicode(const char *s, size_t *lenp)
+hex_to_unicode(const char *s, size_t *lenp, bool force_utf8)
 {
     size_t text_len;
     size_t utf8_len;
@@ -277,7 +279,8 @@ hex_to_unicode(const char *s, size_t *lenp)
 
     /* Translate to Unicode. */
     ucs4_buf = (ucs4_t *)Malloc(utf8_len * sizeof(ucs4_t));
-    len = multibyte_to_unicode_string(utf8_buf, utf8_len, ucs4_buf, utf8_len);
+    len = multibyte_to_unicode_string(utf8_buf, utf8_len, ucs4_buf, utf8_len,
+	    force_utf8);
     if (len < 0) {
 	Free(utf8_buf);
 	Free(ucs4_buf);
@@ -295,9 +298,10 @@ hex_to_unicode(const char *s, size_t *lenp)
  * @param[in] st	String to execute
  * @param[in] is_hex	True if string is in hex
  * @param[in] is_paste	True if paste mode
+ * @param[in] force_utf8 True to force UTF-8 conversion
  */
 void
-push_string(char *st, bool is_hex, bool is_paste)
+push_string(char *st, bool is_hex, bool is_paste, bool force_utf8)
 {
     string_t *s;
     ucs4_t *pdata = NULL;
@@ -309,14 +313,14 @@ push_string(char *st, bool is_hex, bool is_paste)
     }
 
     if (is_paste) {
-	if ((pdata = hex_to_unicode(st, &pdata_len)) == NULL) {
+	if ((pdata = hex_to_unicode(st, &pdata_len, force_utf8)) == NULL) {
 	    popup_an_error("Invalid hexadecimal paste data");
 	    return;
 	}
     }
 
     /* Construct the context. */
-    s = (string_t *)Malloc(sizeof(string_t) + strlen(st) + 1);
+    s = (string_t *)Calloc(sizeof(string_t) + strlen(st) + 1, 1);
     s->data = (char *)(s + 1);
     strcpy(s->data, st);
     s->len = strlen(st);
@@ -325,6 +329,7 @@ push_string(char *st, bool is_hex, bool is_paste)
     s->ia = IA_MACRO; /* XXX: wrong */
     s->is_hex = is_hex;
     s->is_paste = is_paste;
+    s->force_utf8 = force_utf8;
     s->result = NULL;
     s->aborted = false;
 

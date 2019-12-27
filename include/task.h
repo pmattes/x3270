@@ -49,7 +49,7 @@ void macro_command(struct macro_def *m);
 void peer_script_init(void);
 void connect_error(const char *fmt, ...);
 void connect_errno(int e, const char *fmt, ...);
-void ps_set(char *s, bool is_hex);
+void ps_set(char *s, bool is_hex, bool force_utf8);
 void push_keymap_action(char *);
 void push_macro(char *);
 void push_stack_macro(char *);

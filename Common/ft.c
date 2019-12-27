@@ -742,7 +742,7 @@ ft_go(ft_conf_t *p)
 	popup_an_error("%s", get_message("ftUnable"));
 	return NULL;
     }
-    emulate_input(vb_buf(&r), vb_len(&r), false);
+    emulate_input(vb_buf(&r), vb_len(&r), false, false);
     vb_free(&r);
 
     /* Now proceed with this context. */

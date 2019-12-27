@@ -69,8 +69,10 @@ enum me_fail {
 };
 ucs4_t multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp);
+ucs4_t multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp, bool force_utf8);
 int multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
-	size_t u_len);
+	size_t u_len, bool force_utf8);
 ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp);
 int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
