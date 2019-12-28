@@ -746,7 +746,10 @@ start_trace_window(const char *path)
     startupinfo.lpTitle = (char *)path;
     memset(&process_information, 0, sizeof(PROCESS_INFORMATION));
     if (CreateProcess(lazyaf("%scatf.exe", instdir),
-		lazyaf("\"%scatf.exe\" \"%s\"", instdir, path),
+		lazyaf("\"%scatf.exe\"%s \"%s\"",
+		    instdir,
+		    appres.utf8? " -utf8": "",
+		    path),
 		NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL,
 		NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%scatf.exe \"%s\") failed: %s", instdir,

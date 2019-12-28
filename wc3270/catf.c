@@ -41,23 +41,38 @@
 #include "wincmn.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE	16384
 
-static int catf(char *filename);
+static int catf(char *filename, bool utf8);
 
 int
 main(int argc, char *argv[])
 {
+    int argi = 1;
+    bool utf8 = false;
     int rv;
 
-    if (argc != 2) {
-	fprintf(stderr, "usage: catf <filename>\n");
+    if (argc > 1) {
+	if (!strcmp(argv[argi], "-utf8")) {
+	    utf8 = true;
+	}
+	argi++;
+    }
+
+    if (argc - argi != 1) {
+	fprintf(stderr, "usage: catf [-utf8] <filename>\n");
 	exit(1);
     }
 
+    if (utf8) {
+	/* Set the console to UTF-8 mode. */
+	SetConsoleOutputCP(65001);
+    }
+
     do {
-	rv = catf(argv[1]);
+	rv = catf(argv[argi], utf8);
     } while (rv == 0);
 
     exit(1);
@@ -68,7 +83,7 @@ main(int argc, char *argv[])
  * Returns -1 for error, 0 for retry (file shrank or possibly disappeared).
  */
 static int
-catf(char *filename)
+catf(char *filename, bool utf8)
 {
     int fd;
     struct stat buf;
@@ -112,10 +127,12 @@ catf(char *filename)
 		return 0;
 	    }
 
-	    /* Translate ANSI to OEM. */
-	    MultiByteToWideChar(CP_ACP, 0, rbuf, nr, rbuf_w, BUFFER_SIZE);
-	    WideCharToMultiByte(CP_OEMCP, 0, rbuf_w, BUFFER_SIZE, rbuf, nr,
-		    "?", &udc);
+	    if (!utf8) {
+		/* Translate ANSI to OEM. */
+		MultiByteToWideChar(CP_ACP, 0, rbuf, nr, rbuf_w, BUFFER_SIZE);
+		WideCharToMultiByte(CP_OEMCP, 0, rbuf_w, BUFFER_SIZE, rbuf, nr,
+			"?", &udc);
+	    }
 
 	    write(1, rbuf, nr);
 	    fp += nr;
