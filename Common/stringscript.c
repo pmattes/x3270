@@ -326,7 +326,7 @@ push_string(char *st, bool is_hex, bool is_paste, bool force_utf8)
     s->len = strlen(st);
     s->pdata = pdata;
     s->pdata_len = pdata_len;
-    s->ia = IA_MACRO; /* XXX: wrong */
+    s->ia = IA_MACRO;
     s->is_hex = is_hex;
     s->is_paste = is_paste;
     s->force_utf8 = force_utf8;

@@ -120,6 +120,14 @@ static tcb_t cb_command = {
     ui_action_done,
     NULL
 };
+static tcb_t cb_keypad = {
+    "ui",
+    IA_KEYPAD,
+    CB_UI | CB_NEW_TASKQ,
+    ui_action_data,
+    ui_action_done,
+    NULL
+};
 static tcb_t cb_ui = {
     "ui",
     IA_UI,
@@ -441,6 +449,8 @@ do_run(const char *cmd, const char **attrs)
 	tcb = &cb_command;
     } else if (type != NULL && !strcasecmp(type, "macro")) {
 	tcb = &cb_macro;
+    } else if (type != NULL && !strcasecmp(type, "keypad")) {
+	tcb = &cb_keypad;
     } else {
 	tcb = &cb_ui;
     }

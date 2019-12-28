@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ static void stdin_closescript(task_cbh handle);
 /* Callback block for stdin. */
 static tcb_t stdin_cb = {
     "stdin",
-    IA_MACRO,
+    IA_SCRIPT,
     CB_NEW_TASKQ,
     stdin_data,
     stdin_done,

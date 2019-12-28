@@ -94,7 +94,7 @@ static irv_t child_irv = {
 /* Callback block for parent script. */
 static tcb_t script_cb = {
     "child",
-    IA_MACRO,
+    IA_SCRIPT,
     0,
     child_data,
     child_done,
@@ -110,7 +110,7 @@ static tcb_t script_cb = {
 /* Asynchronous callback block for parent script. */
 static tcb_t async_script_cb = {
     "child",
-    IA_MACRO,
+    IA_SCRIPT,
     CB_NEW_TASKQ,
     child_data,
     child_done,
@@ -127,7 +127,7 @@ static tcb_t async_script_cb = {
 /* Callback block for child (creates new taskq). */
 static tcb_t child_cb = {
     "child",
-    IA_MACRO,
+    IA_SCRIPT,
     CB_NEW_TASKQ,
     child_data,
     child_done,

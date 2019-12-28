@@ -52,7 +52,7 @@ static bool source_run(task_cbh handle, bool *success);
 /* Callback block for Source. */
 static tcb_t source_cb = {
     "Source",
-    IA_MACRO,
+    IA_SCRIPT,
     CB_NEEDS_RUN,
     source_data,
     source_done,

@@ -85,7 +85,7 @@ static irv_t peer_irv = {
 /* Callback block for peer. */
 static tcb_t peer_cb = {
     "peer",
-    IA_MACRO,
+    IA_SCRIPT,
     CB_NEW_TASKQ | CB_PEER,
     peer_data,
     peer_done,
