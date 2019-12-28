@@ -98,6 +98,22 @@ static tcb_t peer_cb = {
     peer_reqinput
 };
 
+/* Callback block for an interactive peer. */
+static tcb_t interactive_cb = {
+    "peer",
+    IA_COMMAND,
+    CB_NEW_TASKQ | CB_PEER,
+    peer_data,
+    peer_done,
+    NULL,
+    peer_closescript,
+    peer_setflags,
+    peer_getflags,
+    &peer_irv,
+    NULL,
+    peer_reqinput
+};
+
 /* Peer script context. */
 typedef struct {
     llist_t llist;	/* list linkage */
@@ -193,7 +209,9 @@ run_next(peer_t *p)
      * cmdlen is the number of characters in the command, not including the
      * newline.
      */
-    name = push_cb(p->buf, cmdlen, &peer_cb, (task_cbh)p);
+    name = push_cb(p->buf, cmdlen,
+	    (p->capabilities & CBF_INTERACTIVE)? &interactive_cb : &peer_cb,
+	    (task_cbh)p);
     Replace(p->name, NewString(name));
 
     /* If there is more, shift it over. */
