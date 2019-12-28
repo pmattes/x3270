@@ -57,8 +57,8 @@ main(int argc, char *argv[])
     if (argc > 1) {
 	if (!strcmp(argv[argi], "-utf8")) {
 	    utf8 = true;
+	    argi++;
 	}
-	argi++;
     }
 
     if (argc - argi != 1) {
