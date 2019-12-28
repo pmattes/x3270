@@ -2462,7 +2462,7 @@ ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
  *     N not connected
  *     C connected in NVT character mode
  *     L connected in NVT line mode
- *     P 3270 negotiation pending
+ *     P negotiation pending
  *     I connected in 3270 mode
  *  6 model number
  *  7 rows
@@ -2506,13 +2506,13 @@ status_string(void)
 	}
     }
 
-    if (CONNECTED) {
+    if (HALF_CONNECTED) {
 	connect_stat = xs_buffer("C(%s)", current_host);
     } else {
 	connect_stat = NewString("N");
     }
 
-    if (CONNECTED) {
+    if (PCONNECTED) {
 	if (IN_NVT) {
 	    if (linemode) {
 		em_mode = 'L';
