@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2018 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2019 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -105,7 +105,7 @@ catf_res.o: catf.rc catf.ico
 	$(WINDRES) -i $< -o $@
 
 catf.exe: catf.o catf_res.o
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ catf.o catf_res.o
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c wc3270.exe.manifest
