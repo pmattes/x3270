@@ -683,7 +683,7 @@ toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
 static void
 toggle_always_insert(toggle_index_t ix, enum toggle_type type)
 {
-    insert_mode(CONNECTED && IN_3270 && toggled(ALWAYS_INSERT));
+    insert_mode(IN_3270 && toggled(ALWAYS_INSERT));
 }
 
 /* The right-to-left display toggle changed. */
@@ -1896,7 +1896,7 @@ do_reset(bool explicit)
     /* Always reset scrolling. */
     scroll_to_bottom();
 
-    /* Otherwise, if not connect, reset is a no-op. */
+    /* Otherwise, if not connected, reset is a no-op. */
     if (!CONNECTED) {
 	insert_mode(false);
 	return;
