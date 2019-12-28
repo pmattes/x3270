@@ -482,6 +482,9 @@ create_tracefile_header(const char *trace_mode)
 {
     char *buf;
     int i;
+    tnv_t *tnv;
+    char *setting;
+    size_t len;
 
     /* Create a buffer and redirect output. */
     buf = Malloc(MAX_HEADER_SIZE);
@@ -523,21 +526,30 @@ create_tracefile_header(const char *trace_mode)
     wtrace(false, " Install dir: %s\n", instdir? instdir: "(null)");
     wtrace(false, " Desktop: %s\n", mydesktop? mydesktop: "(null)");
 #endif /*]*/
-    wtrace(false, " Toggles:");
-    for (i = 0; toggle_names[i].name != NULL; i++) {
-	if (toggle_supported(toggle_names[i].index) &&
-	    !toggle_names[i].is_alias &&
-	    toggled(toggle_names[i].index)) {
-
-	    wtrace(false, " %s", toggle_names[i].name);
+    wtrace(false, " Settings:");
+    len = 10;
+    tnv = toggle_values();
+    for (i = 0; tnv[i].name != NULL; i++) {
+	if (tnv[i].value != NULL) {
+	    setting = xs_buffer("%s=%s", tnv[i].name, tnv[i].value);
+	} else {
+	    setting = xs_buffer("%s=", tnv[i].name);
 	}
+	if (len + 1 + strlen(setting) >= 80) {
+	    wtrace(false, "\n ");
+	    len = 1;
+	}
+	wtrace(false, " %s", setting);
+	len += 1 + strlen(setting);
+	Free(setting);
     }
     wtrace(false, "\n");
 
-    if (CONNECTED) {
+    if (HALF_CONNECTED) {
 	wtrace(false, " Connected to %s, port %u\n", current_host,
 		current_port);
     }
+    wtrace(false, " Connection state: %s\n", state_name[cstate]);
 
     /* Snap the current TELNET options. */
     if (net_snap_options()) {

@@ -250,12 +250,6 @@ u_value(toggle_extended_upcalls_t *u)
     return (*u->canonicalize)(value);
 }
 
-/* A toggle name and its (possibly NULL) value. */
-typedef struct {
-    const char *name;
-    const char *value;
-} tnv_t;
-
 /* Compare two toggles by name. Used by qsort. */
 static int
 toggle_compare(const void *a, const void *b)
@@ -267,10 +261,10 @@ toggle_compare(const void *a, const void *b)
 }
 
 /*
- * Show all toggles.
+ * Return the list of all toggle values.
  */
-static void
-toggle_show(void)
+tnv_t *
+toggle_values(void)
 {
     int i;
     toggle_extended_upcalls_t *u;
@@ -293,19 +287,35 @@ toggle_show(void)
 	n_tnv++;
     }
 
+
     /* Sort the array by name. */
     qsort(tnv, n_tnv, sizeof(tnv_t), toggle_compare);
 
+    /* NULL terminate and return. */
+    tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
+    tnv[n_tnv].name = NULL;
+    tnv[n_tnv].value = NULL;
+    lazya(tnv);
+    return tnv;
+}
+
+/*
+ * Show all toggles.
+ */
+static void
+toggle_show(void)
+{
+    tnv_t *tnv = toggle_values();
+    int i;
+
     /* Walk the array. */
-    for (i = 0; i < n_tnv; i++) {
+    for (i = 0; tnv[i].name != NULL; i++) {
 	if (tnv[i].value != NULL) {
 	    action_output("%s: %s", tnv[i].name, tnv[i].value);
 	} else {
 	    action_output("%s:", tnv[i].name);
 	}
     }
-
-    Free(tnv);
 }
 
 /*

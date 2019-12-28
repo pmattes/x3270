@@ -86,3 +86,9 @@ bool init_extended_toggle(const char *name, bool value);
 
 bool Set_action(ia_t ia, unsigned argc, const char **argv);
 bool Toggle_action(ia_t ia, unsigned argc, const char **argv);
+
+typedef struct {
+    const char *name;
+    const char *value;
+} tnv_t;
+tnv_t *toggle_values(void);
