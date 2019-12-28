@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2009, 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -412,7 +412,7 @@ keypad_click(int x, int y)
 	for (i = 0; i < NUM_SENSE; i++) {
 		if (x >= sens[i].ul_x && y >= sens[i].ul_y &&
 		    x <= sens[i].lr_x && y <= sens[i].lr_y) {
-			push_macro(sens[i].callback);
+			push_keypad_action(sens[i].callback);
 			break;
 		}
 	}
@@ -442,7 +442,7 @@ keypad_key(int k, ucs4_t u)
 		for (i = 0; i < NUM_SENSE; i++) {
 			if (m.x >= sens[i].ul_x && m.y >= sens[i].ul_y &&
 			    m.x <= sens[i].lr_x && m.y <= sens[i].lr_y) {
-				push_macro(sens[i].callback);
+				push_keypad_action(sens[i].callback);
 				break;
 			}
 		}
@@ -478,7 +478,7 @@ keypad_key(int k, ucs4_t u)
 		break;
 
 	case MK_ENTER:
-		push_macro(current_sens->callback);
+		push_keypad_action(current_sens->callback);
 		pop_up_keypad(false);
 		break;
 
@@ -486,7 +486,7 @@ keypad_key(int k, ucs4_t u)
 		switch (u) {
 		case '\r':
 		case '\n':
-			push_macro(current_sens->callback);
+			push_keypad_action(current_sens->callback);
 			break;
 		default:
 			break;

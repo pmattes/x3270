@@ -224,6 +224,17 @@ push_macro(char *s)
 }
 
 /**
+ * Push a floating keypad action.
+ *
+ * @param[in] s		Text of action.
+ */
+void
+push_keypad_action(char *s)
+{
+    push_action(IA_KEYPAD, s);
+}
+
+/**
  * Run an action.
  *
  * @param[in] name	Action name
