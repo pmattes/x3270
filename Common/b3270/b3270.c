@@ -396,6 +396,7 @@ int
 main(int argc, char *argv[])
 {
     const char *cl_hostname = NULL;
+    toggle_index_t ix;
 
 #if defined(_WIN32) /*[*/
     get_version_info();
@@ -538,8 +539,15 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /*
      * Register for extended toggle notifies, which will cause a dump of the
      * current values.
+     *
+     * Then dump the traditional toggles.
      */
     register_extended_toggle_notify(b3270_toggle_notify);
+    for (ix = MONOCASE; ix < N_TOGGLES; ix++) {
+	if (toggle_supported(ix)) {
+	    b3270_toggle(ix, TT_INITIAL);
+	}
+    }
 
     /* Prepare to run a peer script. */
     peer_script_init();
