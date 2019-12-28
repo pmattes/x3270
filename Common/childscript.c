@@ -1283,6 +1283,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	/* Redirect output. */
 	if (stdout_redirect) {
 	    dup2(stdoutpipe[1], 1);
+	} else {
+	    dup2(open("/dev/null", O_WRONLY), 1);
 	}
 	dup2(stdoutpipe[1], 2);
 
