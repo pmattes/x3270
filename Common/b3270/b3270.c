@@ -570,14 +570,13 @@ canonical_model_x(const char *res, int *model, bool *is_color,
 {
     size_t sl;
     char *digitp;
-    char *colorp;
+    char *colorp = "9";
     bool extended = false;
 
     if (res == NULL) {
 	return NULL;
     }
     sl = strlen(res);
-
     if ((sl != 1 && sl != 6 && sl != 8) ||
 	(sl == 1 &&
 	 (digitp = strchr("2345", res[0])) == NULL) ||
@@ -590,7 +589,7 @@ canonical_model_x(const char *res, int *model, bool *is_color,
 	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
 	return NULL;
     }
-    if (sl == 8) {
+    if (sl == 1 || sl == 8) {
 	extended = true;
     }
     *model = *digitp - '0';
@@ -602,7 +601,7 @@ canonical_model_x(const char *res, int *model, bool *is_color,
 /*
  * Canonical representation of the model.
  */
-static char *
+    static char *
 canonical_model(const char *res)
 {
     int model;
