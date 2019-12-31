@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -154,7 +154,7 @@ win32_perror(const char *fmt, ...)
     char *buf;
 
     va_start(ap, fmt);
-    (void) vasprintf(&buf, fmt, ap);
+    vasprintf(&buf, fmt, ap);
     va_end(ap);
 
     fprintf(stderr, "%s: %s\n", buf, win32_strerror(GetLastError()));

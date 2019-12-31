@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -52,7 +52,7 @@ void ft_gui_clear_progress(void)
 }
 
 void
-ft_gui_complete_popup(const char *msg _is_unused)
+ft_gui_complete_popup(const char *msg _is_unused, bool is_error _is_unused)
 {
 }
 

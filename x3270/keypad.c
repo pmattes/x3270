@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,15 +58,15 @@ enum kp_placement kp_placement;
 
 #define NUM_ROWS	4
 #define NUM_VROWS	15
-#define BORDER		1
-#define TOP_MARGIN	6
-#define BOTTOM_MARGIN	6
+#define BORDER		rescale(1)
+#define TOP_MARGIN	rescale(6)
+#define BOTTOM_MARGIN	rescale(6)
 
-#define SPACING		2
-#define FAT_SPACING	3
-#define VGAP		4
-#define HGAP		4
-#define SIDE_MARGIN	4
+#define SPACING		rescale(2)
+#define FAT_SPACING	rescale(3)
+#define VGAP		rescale(4)
+#define HGAP		rescale(4)
+#define SIDE_MARGIN	rescale(4)
 
 #define HORIZ_WIDTH \
 	(SIDE_MARGIN + \
@@ -263,7 +263,6 @@ static Widget key_pad = NULL;
 static XtTranslations keypad_t00 = (XtTranslations) NULL;
 static XtTranslations keypad_t0 = (XtTranslations) NULL;
 static XtTranslations saved_xt = (XtTranslations) NULL;
-
 
 /* Initialize the keypad placement from the keypad resource. */
 void
@@ -302,15 +301,16 @@ callfn(Widget w _is_unused, XtPointer client_data, XtPointer
  */
 static Widget
 make_a_button(Widget container, Position x, Position y, Dimension w,
-    Dimension h, struct button_list *keyd)
+	Dimension h, struct button_list *keyd)
 {
-	Widget command;
-	Pixmap pixmap;
+    Widget command;
+    Pixmap pixmap;
 
-	if (!keyd->label)
-		return (Widget) 0;
+    if (!keyd->label) {
+	return (Widget) 0;
+    }
 
-	command = XtVaCreateManagedWidget(
+    command = XtVaCreateManagedWidget(
 	    keyd->name, commandWidgetClass, container,
 	    XtNx, x,
 	    XtNy, y,
@@ -318,14 +318,15 @@ make_a_button(Widget container, Position x, Position y, Dimension w,
 	    XtNheight, h,
 	    XtNresize, False,
 	    NULL);
-	XtAddCallback(command, XtNcallback, callfn, (XtPointer)keyd);
-	if (keyd->bits) {
-		pixmap = XCreateBitmapFromData(display, root_window,
-		    keyd->bits, keyd->width, keyd->height);
-		XtVaSetValues(command, XtNbitmap, pixmap, NULL);
-	} else
-		XtVaSetValues(command, XtNlabel, keyd->label, NULL);
-	return command;
+    XtAddCallback(command, XtNcallback, callfn, (XtPointer)keyd);
+    if (keyd->bits) {
+	pixmap = XCreateBitmapFromData(display, root_window, keyd->bits,
+		keyd->width, keyd->height);
+	XtVaSetValues(command, XtNbitmap, pixmap, NULL);
+    } else {
+	XtVaSetValues(command, XtNlabel, keyd->label, NULL);
+    }
+    return command;
 }
 
 /*
@@ -334,62 +335,63 @@ make_a_button(Widget container, Position x, Position y, Dimension w,
 static void
 keypad_keys_horiz(Widget container)
 {
-	unsigned i;
-	Position row, col;
-	Position x0, y0;
+    unsigned i;
+    Position row, col;
+    Position x0, y0;
 
-	/* PF Keys */
-	row = col = 0;
-	x0 = SIDE_MARGIN;
-	y0 = TOP_MARGIN;
-	for (i = 0; i < PF_SZ; i++) {
-		(void) make_a_button(container,
-		    (Position)(x0 + (col*(pf_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    pf_width,
-		    key_height,
-		    &pf_list[i]);
-		if (++col >= 12) {
-			col = 0;
-			row++;
-		}
+    /* PF Keys */
+    row = col = 0;
+    x0 = SIDE_MARGIN;
+    y0 = TOP_MARGIN;
+    for (i = 0; i < PF_SZ; i++) {
+	make_a_button(container,
+		(Position)(x0 + (col*(pf_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		pf_width,
+		key_height,
+		&pf_list[i]);
+	if (++col >= 12) {
+	    col = 0;
+	    row++;
 	}
+    }
 
-	/* Keypad */
-	row = col = 0;
-	x0 = SIDE_MARGIN + 12*(pf_width+2*BORDER+SPACING) + HGAP;
-	y0 = TOP_MARGIN;
-	for (i = 0; i < PAD_SZ; i++) {
-		(void) make_a_button(container,
-		    (Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    pa_width,
-		    key_height,
-		    &pad_list[i]);
-		if (++col >= 3) {
-			col = 0;
-			if (++row == 1)
-				y0 += VGAP;
-		}
+    /* Keypad */
+    row = col = 0;
+    x0 = SIDE_MARGIN + 12*(pf_width+2*BORDER+SPACING) + HGAP;
+    y0 = TOP_MARGIN;
+    for (i = 0; i < PAD_SZ; i++) {
+	make_a_button(container,
+		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		pa_width,
+		key_height,
+		&pad_list[i]);
+	if (++col >= 3) {
+	    col = 0;
+	    if (++row == 1) {
+		y0 += VGAP;
+	    }
 	}
+    }
 
-	/* Bottom */
-	row = col = 0;
-	x0 = SIDE_MARGIN;
-	y0 = TOP_MARGIN + 2*(key_height+2*BORDER+SPACING) + VGAP;
+    /* Bottom */
+    row = col = 0;
+    x0 = SIDE_MARGIN;
+    y0 = TOP_MARGIN + 2*(key_height+2*BORDER+SPACING) + VGAP;
 
-	for (i = 0; i < LOWER_SZ; i++) {
-		(void) make_a_button(container,
-		    (Position)(x0 + (col*(key_width+2*BORDER+FAT_SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    key_width,
-		    key_height,
-		    &lower_list[i]);
-		if (++row >= 2) {
-			++col;
-			row = 0;
-		}
+    for (i = 0; i < LOWER_SZ; i++) {
+	make_a_button(container,
+		(Position)(x0 + (col*(key_width+2*BORDER+FAT_SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		key_width,
+		key_height,
+		&lower_list[i]);
+	if (++row >= 2) {
+	    ++col;
+	    row = 0;
 	}
+    }
 }
 
 static bool vert_keypad = false;
@@ -454,7 +456,7 @@ keypad_keys_vert(Widget container)
 
     /* Cursor and PA keys */
     for (i = 0; i < VPAD_SZ; i++) {
-	(void) make_a_button(container,
+	make_a_button(container,
 		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pa_width,
@@ -468,7 +470,7 @@ keypad_keys_vert(Widget container)
 
     /* Other keys */
     for (i = 0; i < VFN_SZ; i++) {
-	(void) make_a_button(container,
+	make_a_button(container,
 		(Position)(x0 + (col*(large_key_width+2*BORDER+SPACING))),
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		large_key_width,
@@ -484,45 +486,48 @@ keypad_keys_vert(Widget container)
 static Dimension
 get_keypad_dimension(const char *name)
 {
-	char *d;
-	long v;
+    char *d;
+    long v;
 
-	if ((d = get_fresource("%s.%s", ResKeypad, name)) == NULL)
-		xs_error("Cannot find %s resource", ResKeypad);
-	if ((v = strtol(d, (char **)0, 0)) <= 0)
-		xs_error("Illegal %s resource", ResKeypad);
-	return (Dimension)v;
+    if ((d = get_fresource("%s.%s", ResKeypad, name)) == NULL) {
+	xs_error("Cannot find %s resource", ResKeypad);
+    }
+    if ((v = strtol(d, (char **)0, 0)) <= 0) {
+	xs_error("Illegal %s resource", ResKeypad);
+    }
+    return rescale((Dimension)v);
 }
 
 static void
 init_keypad_dimensions(void)
 {
-	static bool done = false;
+    static bool done = false;
 
-	if (done)
-		return;
-	key_height = get_keypad_dimension(ResKeyHeight);
-	key_width = get_keypad_dimension(ResKeyWidth);
-	pf_width = get_keypad_dimension(ResPfWidth);
-	pa_width = get_keypad_dimension(ResPaWidth);
-	large_key_width = get_keypad_dimension(ResLargeKeyWidth);
-	done = true;
+    if (done) {
+	return;
+    }
+    key_height = get_keypad_dimension(ResKeyHeight);
+    key_width = get_keypad_dimension(ResKeyWidth);
+    pf_width = get_keypad_dimension(ResPfWidth);
+    pa_width = get_keypad_dimension(ResPaWidth);
+    large_key_width = get_keypad_dimension(ResLargeKeyWidth);
+    done = true;
 }
 
 Dimension
 min_keypad_width(void)
 {
-	init_keypad_dimensions();
-	return HORIZ_WIDTH;
+    init_keypad_dimensions();
+    return HORIZ_WIDTH;
 }
 
 Dimension
 keypad_qheight(void)
 {
-	init_keypad_dimensions();
-	return TOP_MARGIN +
-	    (NUM_ROWS*(key_height+2*BORDER)) + (NUM_ROWS-1)*SPACING + VGAP +
-	    BOTTOM_MARGIN;
+    init_keypad_dimensions();
+    return TOP_MARGIN +
+	(NUM_ROWS*(key_height+2*BORDER)) + (NUM_ROWS-1)*SPACING + VGAP +
+	BOTTOM_MARGIN;
 }
 
 /*
@@ -532,61 +537,65 @@ Widget
 keypad_init(Widget container, Dimension voffset, Dimension screen_width,
 	bool floating, bool vert)
 {
-	Dimension height;
-	Dimension width = screen_width;
-	Dimension hoffset;
+    Dimension height;
+    Dimension width = screen_width;
+    Dimension hoffset;
 
-	init_keypad_dimensions();
+    init_keypad_dimensions();
 
-	/* Figure out what dimensions to use */
-	if (vert)
-		width = VERT_WIDTH;
-	else
-		width = HORIZ_WIDTH;
+    /* Figure out what dimensions to use */
+    if (vert) {
+	width = VERT_WIDTH;
+    } else {
+	width = HORIZ_WIDTH;
+    }
 
-	if (vert)
-		height = TOP_MARGIN +
-		   (NUM_VROWS*(key_height+2*BORDER)) + (NUM_VROWS-1)*SPACING +
-		   BOTTOM_MARGIN;
-	else
-		height = keypad_qheight();
+    if (vert) {
+	height = TOP_MARGIN +
+	    (NUM_VROWS*(key_height+2*BORDER)) + (NUM_VROWS-1)*SPACING +
+	    BOTTOM_MARGIN;
+    } else {
+	height = keypad_qheight();
+    }
 
-	/* Create a container */
-	if (screen_width > width)
-		hoffset = ((screen_width - width) / (unsigned) 2) & ~1;
-	else
-		hoffset = 0;
-	if (voffset & 1)
-		voffset++;
-	if (key_pad == NULL) {
-		key_pad = XtVaCreateManagedWidget(
-		    "keyPad", compositeWidgetClass, container,
-		    XtNx, hoffset,
-		    XtNy, voffset,
-		    XtNborderWidth, (Dimension) (floating ? 1 : 0),
-		    XtNwidth, width,
-		    XtNheight, height,
-		    NULL);
-		if (appres.interactive.mono)
-			XtVaSetValues(key_pad, XtNbackgroundPixmap, gray,
-			    NULL);
-		else
-			XtVaSetValues(key_pad, XtNbackground, keypadbg_pixel,
-			    NULL);
-
-		/* Create the keys */
-		if (vert)
-			keypad_keys_vert(key_pad);
-		else
-			keypad_keys_horiz(key_pad);
+    /* Create a container */
+    if (screen_width > width) {
+	hoffset = ((screen_width - width) / (unsigned) 2) & ~1;
+    } else {
+	hoffset = 0;
+    }
+    if (voffset & 1) {
+	voffset++;
+    }
+    if (key_pad == NULL) {
+	key_pad = XtVaCreateManagedWidget(
+		"keyPad", compositeWidgetClass, container,
+		XtNx, hoffset,
+		XtNy, voffset,
+		XtNborderWidth, (Dimension) (floating ? 1 : 0),
+		XtNwidth, width,
+		XtNheight, height,
+		NULL);
+	if (appres.interactive.mono) {
+	    XtVaSetValues(key_pad, XtNbackgroundPixmap, gray, NULL);
 	} else {
-		XtVaSetValues(key_pad,
-		    XtNx, hoffset,
-		    XtNy, voffset,
-		    NULL);
+	    XtVaSetValues(key_pad, XtNbackground, keypadbg_pixel, NULL);
 	}
 
-	return key_pad;
+	/* Create the keys */
+	if (vert) {
+	    keypad_keys_vert(key_pad);
+	} else {
+	    keypad_keys_horiz(key_pad);
+	}
+    } else {
+	XtVaSetValues(key_pad,
+		XtNx, hoffset,
+		XtNy, voffset,
+		NULL);
+    }
+
+    return key_pad;
 }
 
 /*
@@ -596,18 +605,19 @@ keypad_init(Widget container, Dimension voffset, Dimension screen_width,
 void
 keypad_shift(void)
 {
-	if (!vert_keypad ||
-		(spf_container == NULL) ||
-		!XtIsRealized(spf_container))
-		return;
+    if (!vert_keypad ||
+	    (spf_container == NULL) ||
+	    !XtIsRealized(spf_container)) {
+	return;
+    }
 
-	if (shifted)
-		XtMapWidget(spf_container);
-	else
-		XtUnmapWidget(spf_container);
+    if (shifted) {
+	XtMapWidget(spf_container);
+    } else {
+	XtUnmapWidget(spf_container);
+    }
 }
 
-
 /*
  * Keypad popup
  */
@@ -657,70 +667,71 @@ keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 void
 keypad_popup_init(void)
 {
-	Widget w;
-	Dimension height, width, border;
-	bool vert = false;
+    Widget w;
+    Dimension height, width, border;
+    bool vert = false;
 
-	if (keypad_shell != NULL)
-		return;
+    if (keypad_shell != NULL) {
+	return;
+    }
 
-	switch (kp_placement) {
-	    case kp_left:
-		vert = true;
-		pp = LeftP;
-		break;
-	    case kp_right:
-		vert = true;
-		pp = RightP;
-		break;
-	    case kp_bottom:
-		vert = false;
-		pp = BottomP;
-		break;
-	    case kp_integral:	/* can't happen */
-		return;
-	    case kp_inside_right:
-		vert = true;
-		pp = InsideRightP;
-		break;
-	}
+    switch (kp_placement) {
+    case kp_left:
+	vert = true;
+	pp = LeftP;
+	break;
+    case kp_right:
+	vert = true;
+	pp = RightP;
+	break;
+    case kp_bottom:
+	vert = false;
+	pp = BottomP;
+	break;
+    case kp_integral:	/* can't happen */
+	return;
+    case kp_inside_right:
+	vert = true;
+	pp = InsideRightP;
+	break;
+    }
 
-	/* Create a popup shell */
+    /* Create a popup shell */
 
-	keypad_shell = XtVaCreatePopupShell(
+    keypad_shell = XtVaCreatePopupShell(
 	    "keypadPopup", transientShellWidgetClass, toplevel,
 	    NULL);
-	/*XtAddCallback(keypad_shell, XtNpopupCallback, place_popup,
-	    (XtPointer)pp);*/
-	XtAddCallback(keypad_shell, XtNpopupCallback, keypad_updown,
+    /*XtAddCallback(keypad_shell, XtNpopupCallback, place_popup,
+	(XtPointer)pp);*/
+    XtAddCallback(keypad_shell, XtNpopupCallback, keypad_updown,
 	    (XtPointer) TrueP);
-	XtAddCallback(keypad_shell, XtNpopdownCallback, keypad_updown,
+    XtAddCallback(keypad_shell, XtNpopdownCallback, keypad_updown,
 	    (XtPointer) FalseP);
 
-	/* Create a keypad in the popup */
+    /* Create a keypad in the popup */
 
-	keypad_container = XtVaCreateManagedWidget(
+    keypad_container = XtVaCreateManagedWidget(
 	    "container", compositeWidgetClass, keypad_shell,
 	    XtNborderWidth, 0,
 	    XtNheight, 10,
 	    XtNwidth, 10,
 	    NULL);
-	w = keypad_init(keypad_container, 0, 0, true, vert);
+    w = keypad_init(keypad_container, 0, 0, true, vert);
 
-	/* Fix the window size */
+    /* Fix the window size */
 
-	XtVaGetValues(w,
+    XtVaGetValues(w,
 	    XtNheight, &height,
 	    XtNwidth, &width,
 	    XtNborderWidth, &border,
 	    NULL);
-	height += 2*border;
-	width += 2*border;
-	XtVaSetValues(keypad_container,
+    height += 2*border;
+    width += 2*border;
+    XtVaSetValues(keypad_container,
 	    XtNheight, height,
 	    XtNwidth, width,
 	    NULL);
-	XtVaSetValues(keypad_shell,
+    XtVaSetValues(keypad_shell,
 	    XtNheight, height,
 	    XtNwidth, width,
 	    XtNbaseHeight, height,
@@ -731,59 +742,63 @@ keypad_popup_init(void)
 	    XtNmaxWidth, width,
 	    NULL);
 
-	/* Make keystrokes in the popup apply to the main window */
+    /* Make keystrokes in the popup apply to the main window */
 
-	save_00translations(keypad_container, &keypad_t00);
-	set_translations(keypad_container, NULL, &keypad_t0);
-	if (saved_xt != (XtTranslations) NULL) {
-		XtOverrideTranslations(keypad_container, saved_xt);
-		saved_xt = (XtTranslations) NULL;
-	}
+    save_00translations(keypad_container, &keypad_t00);
+    set_translations(keypad_container, NULL, &keypad_t0);
+    if (saved_xt != (XtTranslations) NULL) {
+	XtOverrideTranslations(keypad_container, saved_xt);
+	saved_xt = (XtTranslations) NULL;
+    }
 }
 
 /* Set a temporary keymap. */
 void
 keypad_set_temp_keymap(XtTranslations trans)
 {
-	if (keypad_container != (Widget) NULL) {
-		if (trans == NULL) {
-			trans = keypad_t0;
-			XtUninstallTranslations(keypad_container);
-		}
-		XtOverrideTranslations(keypad_container, trans);
-		saved_xt = (XtTranslations) NULL;
-	} else
-		saved_xt = trans;
+    if (keypad_container != (Widget) NULL) {
+	if (trans == NULL) {
+	    trans = keypad_t0;
+	    XtUninstallTranslations(keypad_container);
+	}
+	XtOverrideTranslations(keypad_container, trans);
+	saved_xt = (XtTranslations) NULL;
+    } else {
+	saved_xt = trans;
+    }
 }
 
 /* Change the baseleve keymap. */
 void
 keypad_set_keymap(void)
 {
-	if (keypad_container == NULL)
-		return;
-	XtUninstallTranslations(keypad_container);
-	set_translations(keypad_container, &keypad_t00, &keypad_t0);
+    if (keypad_container == NULL) {
+	return;
+    }
+    XtUninstallTranslations(keypad_container);
+    set_translations(keypad_container, &keypad_t00, &keypad_t0);
 }
 
 /* Move the keypad. */
 void
 keypad_move(void)
 {
-	if (!keypad_popped)
-		return;
+    if (!keypad_popped) {
+	    return;
+    }
 
-	move_popup(keypad_shell, pp, NULL);
+    move_popup(keypad_shell, pp, NULL);
 }
 
 void
 keypad_popdown(bool *was_up)
 {
-    	if (keypad_popped) {
-	    	*was_up = true;
-		XtPopdown(keypad_shell);
-	} else
-	    	*was_up = false;
+    if (keypad_popped) {
+	*was_up = true;
+	XtPopdown(keypad_shell);
+    } else {
+	*was_up = false;
+    }
 }
 
 void

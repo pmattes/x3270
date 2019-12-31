@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015, 2017-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  */
 
 /* glue.c */
-extern bool any_error_output;
 struct host_color {
     char *name;
     int index;
@@ -47,6 +46,7 @@ void cmdline_help(bool as_action);
 void model_init(void);
 typedef bool merge_profile_t(void);
 void register_merge_profile(merge_profile_t *);
+char *clean_termname(const char *tn);
 
 /* XtGlue.c */
 void (*Error_redirect)(const char *);

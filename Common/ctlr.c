@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -47,7 +47,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -56,7 +56,6 @@
 #include "host.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "scroll.h"
@@ -65,47 +64,49 @@
 #include "sf.h"
 #include "status.h"
 #include "tables.h"
+#include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
 #include "utils.h"
 
 /* Globals */
-int             ROWS, COLS;
-int             maxROWS, maxCOLS;
-int             defROWS, defCOLS;
-int             altROWS, altCOLS;
-int		ov_rows, ov_cols;
-bool		ov_auto;
-int             model_num;
-int             cursor_addr, buffer_addr;
-bool         screen_alt = false;	/* alternate screen? */
-bool         is_altbuffer = false;
-struct ea      *ea_buf;		/* 3270 device buffer */
+int ROWS, COLS;
+int maxROWS, maxCOLS;
+int defROWS, defCOLS;
+int altROWS, altCOLS;
+int ov_rows, ov_cols;
+bool ov_auto;
+int model_num;
+int cursor_addr, buffer_addr;
+bool screen_alt = false;	/* alternate screen? */
+bool is_altbuffer = false;
+struct ea *ea_buf;		/* 3270 device buffer */
 				/* ea_buf[-1] is the dummy default field
 				   attribute */
-struct ea      *aea_buf;	/* alternate 3270 extended attribute buffer */
-bool         formatted = false;	/* set in screen_disp */
-bool         screen_changed = false;
-int             first_changed = -1;
-int             last_changed = -1;
-unsigned char   reply_mode = SF_SRM_FIELD;
-int             crm_nattr = 0;
-unsigned char   crm_attr[16];
-bool		dbcs = false;
+struct ea *aea_buf;	/* alternate 3270 extended attribute buffer */
+bool formatted = false;	/* set in screen_disp */
+bool screen_changed = false;
+int first_changed = -1;
+int last_changed = -1;
+unsigned char reply_mode = SF_SRM_FIELD;
+int crm_nattr = 0;
+unsigned char crm_attr[16];
+bool dbcs = false;
+xmode_t mode = { true, true };
 
 /* Statics */
 static unsigned char *zero_buf;	/* empty buffer, for area clears */
 static void set_formatted(void);
 static void ctlr_blanks(void);
-static bool  trace_primed = false;
+static bool trace_primed = false;
 static unsigned char default_fg;
 static unsigned char default_bg;
 static unsigned char default_gr;
 static unsigned char default_cs;
 static unsigned char default_ic;
-static void	ctlr_half_connect(bool ignored);
-static void	ctlr_connect(bool ignored);
-static int	sscp_start;
+static void ctlr_negotiating(bool ignored);
+static void ctlr_connect(bool ignored);
+static int sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
 
 static void ticking_stop(void);
@@ -114,15 +115,15 @@ static void ticking_stop(void);
  * code_table is used to translate buffer addresses and attributes to the 3270
  * datastream representation
  */
-static unsigned char	code_table[64] = {
-	0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
-	0xC8, 0xC9, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
-	0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
-	0xD8, 0xD9, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
-	0x60, 0x61, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7,
-	0xE8, 0xE9, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
-	0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
-	0xF8, 0xF9, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
+static unsigned char code_table[64] = {
+    0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
+    0xC8, 0xC9, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
+    0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
+    0xD8, 0xD9, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
+    0x60, 0x61, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7,
+    0xE8, 0xE9, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+    0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
+    0xF8, 0xF9, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
 };
 
 #define IsBlank(c)	((c == EBC_null) || (c == EBC_space))
@@ -152,7 +153,6 @@ static unsigned char	code_table[64] = {
 	} \
     }
 
-
 /**
  * Controller module registration.
  */
@@ -160,7 +160,7 @@ void
 ctlr_register(void)
 {
     /* Register callback routines. */
-    register_schange(ST_HALF_CONNECT, ctlr_half_connect);
+    register_schange(ST_NEGOTIATING, ctlr_negotiating);
     register_schange(ST_CONNECT, ctlr_connect);
     register_schange(ST_3270_MODE, ctlr_connect);
 }
@@ -180,29 +180,31 @@ ctlr_init(unsigned cmask)
 void
 ctlr_reinit(unsigned cmask)
 {
-	static struct ea *real_ea_buf = NULL;
-	static struct ea *real_aea_buf = NULL;
+    static struct ea *real_ea_buf = NULL;
+    static struct ea *real_aea_buf = NULL;
 
-	if (cmask & MODEL_CHANGE) {
-		/* Allocate buffers */
-		if (real_ea_buf)
-			Free((char *)real_ea_buf);
-		real_ea_buf = (struct ea *)Calloc(sizeof(struct ea),
-					     (maxROWS * maxCOLS) + 1);
-		ea_buf = real_ea_buf + 1;
-		if (real_aea_buf)
-			Free((char *)real_aea_buf);
-		real_aea_buf = (struct ea *)Calloc(sizeof(struct ea),
-					      (maxROWS * maxCOLS) + 1);
-		aea_buf = real_aea_buf + 1;
-		Replace(zero_buf, (unsigned char *)Calloc(sizeof(struct ea),
-							  maxROWS * maxCOLS));
-		cursor_addr = 0;
-		buffer_addr = 0;
-
-		ea_buf[-1].fa  = FA_PRINTABLE | FA_MODIFY;
-		aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
+    if (cmask & MODEL_CHANGE) {
+	/* Allocate buffers */
+	if (real_ea_buf) {
+	    Free((char *)real_ea_buf);
 	}
+	real_ea_buf = (struct ea *)Calloc(sizeof(struct ea),
+		(maxROWS * maxCOLS) + 1);
+	ea_buf = real_ea_buf + 1;
+	if (real_aea_buf) {
+	    Free((char *)real_aea_buf);
+	}
+	real_aea_buf = (struct ea *)Calloc(sizeof(struct ea),
+		(maxROWS * maxCOLS) + 1);
+	aea_buf = real_aea_buf + 1;
+	Replace(zero_buf, (unsigned char *)Calloc(sizeof(struct ea),
+		    maxROWS * maxCOLS));
+	cursor_addr = 0;
+	buffer_addr = 0;
+
+	ea_buf[-1].fa  = FA_PRINTABLE | FA_MODIFY;
+	aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
+    }
 }
 
 /*
@@ -211,102 +213,80 @@ ctlr_reinit(unsigned cmask)
 void
 set_rows_cols(int mn, int ovc, int ovr)
 {
-	int defmod;
+    int defmod;
 
-	if (ovc < 0 || ovr < 0) {
-	    	ov_auto = true;
-		ovc = 0;
-		ovr = 0;
+    if (ovc < 0 || ovr < 0) {
+	ov_auto = true;
+	ovc = 0;
+	ovr = 0;
+    }
+
+    switch (mn) {
+    case 2:
+	maxCOLS = MODEL_2_COLS;
+	maxROWS = MODEL_2_ROWS; 
+	model_num = 2;
+	break;
+    case 3:
+	maxCOLS = MODEL_3_COLS;
+	maxROWS = MODEL_3_ROWS; 
+	model_num = 3;
+	break;
+    case 4:
+	maxCOLS = MODEL_4_COLS;
+	maxROWS = MODEL_4_ROWS; 
+	model_num = 4;
+	break;
+    case 5:
+	maxCOLS = MODEL_5_COLS;
+	maxROWS = MODEL_5_ROWS; 
+	model_num = 5;
+	break;
+    default:
+	defmod = 4;
+	popup_an_error("Unknown model: %d\nDefaulting to %d", mn, defmod);
+	set_rows_cols(defmod, ovc, ovr);
+	return;
+    }
+
+    /* Apply oversize. */
+    ov_cols = 0;
+    ov_rows = 0;
+    if (ovc != 0 || ovr != 0) {
+	if (ovc <= 0 || ovr <= 0) {
+	    popup_an_error("Invalid %s %dx%d:\nNegative or zero", ResOversize,
+		    ovc, ovr);
+	} else if (ovc * ovr >= 0x4000) {
+	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit",
+		    ResOversize, ovc, ovr);
+	} else if (ovc > 0 && ovc < maxCOLS) {
+	    popup_an_error("Invalid %s cols (%d):\nLess than model %d cols "
+		    "(%d)", ResOversize, ovc, model_num, maxCOLS);
+	} else if (ovr > 0 && ovr < maxROWS) {
+	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows "
+		    "(%d)", ResOversize, ovr, model_num, maxROWS);
+	} else {
+	    ov_cols = maxCOLS = ovc;
+	    ov_rows = maxROWS = ovr;
 	}
+    }
 
-	switch (mn) {
-	case 2:
-		maxCOLS = MODEL_2_COLS;
-		maxROWS = MODEL_2_ROWS; 
-		model_num = 2;
-		break;
-	case 3:
-		maxCOLS = MODEL_3_COLS;
-		maxROWS = MODEL_3_ROWS; 
-		model_num = 3;
-		break;
-	case 4:
-#if defined(RESTRICT_3279) /*[*/
-		if (appres.m3279) {
-			popup_an_error("No 3279 Model 4\nDefaulting to model 3");
-			set_rows_cols("3", ovc, ovr);
-			return;
-		}
-#endif /*]*/
-		maxCOLS = MODEL_4_COLS;
-		maxROWS = MODEL_4_ROWS; 
-		model_num = 4;
-		break;
-	case 5:
-#if defined(RESTRICT_3279) /*[*/
-		if (appres.m3279) {
-			popup_an_error("No 3279 Model 5\nDefaulting to model 3");
-			set_rows_cols(3, ovc, ovr);
-			return;
-		}
-#endif /*]*/
-		maxCOLS = MODEL_5_COLS;
-		maxROWS = MODEL_5_ROWS; 
-		model_num = 5;
-		break;
-	default:
-#if defined(RESTRICT_3279) /*[*/
-		defmod = appres.m3279 ? 3 : 4;
-#else /*][*/
-		defmod = 4;
-#endif
-		popup_an_error("Unknown model: %d\nDefaulting to %d", mn,
-		    defmod);
-		set_rows_cols(defmod, ovc, ovr);
-		return;
-	}
+    /* Update the model name. */
+    sprintf(model_name, "327%c-%d%s",
+	mode.m3279 ? '9' : '8',
+	model_num,
+	mode.extended ? "-E" : "");
 
-	/* Apply oversize. */
-	ov_cols = 0;
-	ov_rows = 0;
-	if (ovc != 0 || ovr != 0) {
-		if (ovc <= 0 || ovr <= 0)
-			popup_an_error("Invalid %s %dx%d:\nNegative or zero",
-			    ResOversize, ovc, ovr);
-		else if (ovc * ovr >= 0x4000)
-			popup_an_error("Invalid %s %dx%d:\nExceeds protocol "
-				"limit", ResOversize, ovc, ovr);
-		else if (ovc > 0 && ovc < maxCOLS)
-			popup_an_error("Invalid %s cols (%d):\nLess than "
-				"model %d cols (%d)", ResOversize, ovc,
-				model_num, maxCOLS);
-		else if (ovr > 0 && ovr < maxROWS)
-			popup_an_error("Invalid %s rows (%d):\nLess than "
-				"model %d rows (%d)", ResOversize, ovr,
-				model_num, maxROWS);
-		else {
-			ov_cols = maxCOLS = ovc;
-			ov_rows = maxROWS = ovr;
-		}
-	}
+    /* Make sure that the current rows/cols are still 24x80. */
+    COLS = defCOLS = MODEL_2_COLS;
+    ROWS = defROWS = MODEL_2_ROWS;
+    screen_alt = false;
 
-	/* Update the model name. */
-	(void) sprintf(model_name, "327%c-%d%s",
-	    appres.m3279 ? '9' : '8',
-	    model_num,
-	    appres.extended ? "-E" : "");
-
-	/* Make sure that the current rows/cols are still 24x80. */
-	COLS = defCOLS = MODEL_2_COLS;
-	ROWS = defROWS = MODEL_2_ROWS;
-	screen_alt = false;
-
-	/* Set the defaults for the alternate screen size. */
-	altROWS = maxROWS;
-	altCOLS = maxCOLS;
+    /* Set the defaults for the alternate screen size. */
+    altROWS = maxROWS;
+    altCOLS = maxCOLS;
 }
 
-
 /*
  * Set the formatted screen flag.  A formatted screen is a screen that
  * has at least one field somewhere on it.
@@ -314,24 +294,24 @@ set_rows_cols(int mn, int ovc, int ovr)
 static void
 set_formatted(void)
 {
-	register int	baddr;
+    int baddr;
 
-	formatted = false;
-	baddr = 0;
-	do {
-		if (ea_buf[baddr].fa) {
-			formatted = true;
-			break;
-		}
-		INC_BA(baddr);
-	} while (baddr != 0);
+    formatted = false;
+    baddr = 0;
+    do {
+	if (ea_buf[baddr].fa) {
+	    formatted = true;
+	    break;
+	}
+	INC_BA(baddr);
+    } while (baddr != 0);
 }
 
 /*
- * Called when a host is half connected.
+ * Called when protocol negotiation is in progress.
  */
 static void
-ctlr_half_connect(bool ignored _is_unused)
+ctlr_negotiating(bool ignored _is_unused)
 {
     ticking_start(true);
 }
@@ -365,11 +345,8 @@ ctlr_connect(bool ignored _is_unused)
 	defCOLS = MODEL_2_COLS;
 	altROWS = maxROWS;
 	altCOLS = maxCOLS;
-	ctlr_erase(false);
     }
 }
-
-
 
 /*
  * Find the buffer address of the field attribute for a given buffer address.
@@ -378,16 +355,16 @@ ctlr_connect(bool ignored _is_unused)
 int
 find_field_attribute_ea(int baddr, struct ea *ea)
 {
-	int sbaddr;
+    int sbaddr;
 
-	sbaddr = baddr;    
-	do {   
-		if (ea[baddr].fa) {
-			return baddr;
-		}
-		DEC_BA(baddr);
-	} while (baddr != sbaddr);
-	return -1;
+    sbaddr = baddr;    
+    do {   
+	if (ea[baddr].fa) {
+	    return baddr;
+	}
+	DEC_BA(baddr);
+    } while (baddr != sbaddr);
+    return -1;
 }
 
 /*
@@ -397,10 +374,10 @@ find_field_attribute_ea(int baddr, struct ea *ea)
 int
 find_field_attribute(int baddr)
 {
-	if (!formatted) {
-		return -1;
-	}
-	return find_field_attribute_ea(baddr, ea_buf);
+    if (!formatted) {
+	return -1;
+    }
+    return find_field_attribute_ea(baddr, ea_buf);
 }
 
 /*
@@ -410,7 +387,7 @@ find_field_attribute(int baddr)
 unsigned char
 get_field_attribute(register int baddr)
 {
-	return ea_buf[find_field_attribute(baddr)].fa;
+    return ea_buf[find_field_attribute(baddr)].fa;
 }
 
 /*
@@ -421,32 +398,32 @@ get_field_attribute(register int baddr)
  */
 bool
 get_bounded_field_attribute(register int baddr, register int bound,
-    unsigned char *fa_out)
+	unsigned char *fa_out)
 {
-	int	sbaddr;
+    int sbaddr;
 
-	if (!formatted) {
-		*fa_out = ea_buf[-1].fa;
-		return true;
+    if (!formatted) {
+	*fa_out = ea_buf[-1].fa;
+	return true;
+    }
+
+    sbaddr = baddr;
+    do {
+	if (ea_buf[baddr].fa) {
+	    *fa_out = ea_buf[baddr].fa;
+	    return true;
 	}
+	DEC_BA(baddr);
+    } while (baddr != sbaddr && baddr != bound);
 
-	sbaddr = baddr;
-	do {
-		if (ea_buf[baddr].fa) {
-			*fa_out = ea_buf[baddr].fa;
-			return true;
-		}
-		DEC_BA(baddr);
-	} while (baddr != sbaddr && baddr != bound);
+    /* Screen is unformatted (and 'formatted' is inaccurate). */
+    if (baddr == sbaddr) {
+	*fa_out = ea_buf[-1].fa;
+	return true;
+    }
 
-	/* Screen is unformatted (and 'formatted' is inaccurate). */
-	if (baddr == sbaddr) {
-		*fa_out = ea_buf[-1].fa;
-		return true;
-	}
-
-	/* Wrapped to boundary. */
-	return false;
+    /* Wrapped to boundary. */
+    return false;
 }
 
 /*
@@ -456,7 +433,7 @@ get_bounded_field_attribute(register int baddr, register int bound,
 struct ea *
 fa2ea(int baddr)
 {
-	return &ea_buf[baddr];
+    return &ea_buf[baddr];
 }
 
 /*
@@ -467,18 +444,19 @@ fa2ea(int baddr)
 int
 next_unprotected(int baddr0)
 {
-	register int baddr, nbaddr;
+    register int baddr, nbaddr;
 
-	nbaddr = baddr0;
-	do {
-		baddr = nbaddr;
-		INC_BA(nbaddr);
-		if (ea_buf[baddr].fa &&
-		    !FA_IS_PROTECTED(ea_buf[baddr].fa) &&
-		    !ea_buf[nbaddr].fa)
-			return nbaddr;
-	} while (nbaddr != baddr0);
-	return 0;
+    nbaddr = baddr0;
+    do {
+	baddr = nbaddr;
+	INC_BA(nbaddr);
+	if (ea_buf[baddr].fa &&
+		!FA_IS_PROTECTED(ea_buf[baddr].fa) &&
+		!ea_buf[nbaddr].fa) {
+	    return nbaddr;
+	}
+    } while (nbaddr != baddr0);
+    return 0;
 }
 
 /*
@@ -488,142 +466,139 @@ next_unprotected(int baddr0)
 void
 ctlr_erase(bool alt)
 {
-    	int newROWS, newCOLS;
+    int newROWS, newCOLS;
 
-	kybd_inhibit(false);
+    kybd_inhibit(false);
 
-	ctlr_clear(true);
+    ctlr_clear(true);
 
-	/* Let a script go. */
-	sms_host_output();
+    /* Let a blocked task go. */
+    task_host_output();
 
-	if (alt) {
-	    	newROWS = altROWS;
-		newCOLS = altCOLS;
-	} else {
-	    	newROWS = defROWS;
-		newCOLS = defCOLS;
-	}
+    if (alt) {
+	newROWS = altROWS;
+	newCOLS = altCOLS;
+    } else {
+	newROWS = defROWS;
+	newCOLS = defCOLS;
+    }
 
-	if (alt == screen_alt && ROWS == newROWS && COLS == newCOLS)
-		return;
+    if (alt == screen_alt && ROWS == newROWS && COLS == newCOLS) {
+	return;
+    }
 
-	screen_disp(true);
-	if (visible_control) {
-	    	/* Blank the entire display. */
-		ctlr_blanks();
-		ROWS = maxROWS;
-		COLS = maxCOLS;
-		screen_disp(false);
-	}
+    screen_disp(true);
+    if (visible_control) {
+	/* Blank the entire display. */
+	ctlr_blanks();
+	ROWS = maxROWS;
+	COLS = maxCOLS;
+	screen_disp(false);
+    }
 
-	ROWS = newROWS;
-	COLS = newCOLS;
-	if (visible_control) {
-		/* Fill the active part of the screen with NULLs again. */
-		ctlr_clear(false);
-		screen_disp(false);
-	}
+    ROWS = newROWS;
+    COLS = newCOLS;
+    if (visible_control) {
+	/* Fill the active part of the screen with NULLs again. */
+	ctlr_clear(false);
+	screen_disp(false);
+    }
 
-	screen_alt = alt;
+    screen_alt = alt;
 }
 
-
 /*
  * Interpret an incoming 3270 command.
  */
 enum pds
 process_ds(unsigned char *buf, size_t buflen)
 {
-	enum pds rv;
+    enum pds rv;
 
-	if (!buflen)
-		return PDS_OKAY_NO_OUTPUT;
+    if (!buflen) {
+	return PDS_OKAY_NO_OUTPUT;
+    }
 
-	scroll_to_bottom();
+    scroll_to_bottom();
 
-	switch (buf[0]) {	/* 3270 command */
-	case CMD_EAU:	/* erase all unprotected */
-	case SNA_CMD_EAU:
-		ctlr_erase_all_unprotected();
-		trace_ds("< EraseAllUnprotected\n");
-		return PDS_OKAY_NO_OUTPUT;
-		break;
-	case CMD_EWA:	/* erase/write alternate */
-	case SNA_CMD_EWA:
-		ctlr_erase(true);
-		trace_ds("< EraseWriteAlternate");
-		if ((rv = ctlr_write(buf, buflen, true)) < 0)
-			return rv;
-		return PDS_OKAY_NO_OUTPUT;
-		break;
-	case CMD_EW:	/* erase/write */
-	case SNA_CMD_EW:
-		ctlr_erase(false);
-		trace_ds("< EraseWrite");
-		if ((rv = ctlr_write(buf, buflen, true)) < 0)
-			return rv;
-		return PDS_OKAY_NO_OUTPUT;
-		break;
-	case CMD_W:	/* write */
-	case SNA_CMD_W:
-		trace_ds("< Write");
-		if ((rv = ctlr_write(buf, buflen, false)) < 0)
-			return rv;
-		return PDS_OKAY_NO_OUTPUT;
-		break;
-	case CMD_RB:	/* read buffer */
-	case SNA_CMD_RB:
-		trace_ds("< ReadBuffer\n");
-		ctlr_read_buffer(aid);
-		return PDS_OKAY_OUTPUT;
-		break;
-	case CMD_RM:	/* read modifed */
-	case SNA_CMD_RM:
-		trace_ds("< ReadModified\n");
-		ctlr_read_modified(aid, false);
-		return PDS_OKAY_OUTPUT;
-		break;
-	case CMD_RMA:	/* read modifed all */
-	case SNA_CMD_RMA:
-		trace_ds("< ReadModifiedAll\n");
-		ctlr_read_modified(aid, true);
-		return PDS_OKAY_OUTPUT;
-		break;
-	case CMD_WSF:	/* write structured field */
-	case SNA_CMD_WSF:
-		trace_ds("< WriteStructuredField");
-		return write_structured_field(buf, buflen);
-		break;
-	case CMD_NOP:	/* no-op */
-		trace_ds("< NoOp\n");
-		return PDS_OKAY_NO_OUTPUT;
-		break;
-	default:
-		/* unknown 3270 command */
-		popup_an_error("Unknown 3270 Data Stream command: 0x%X\n",
-		    buf[0]);
-		return PDS_BAD_CMD;
+    switch (buf[0]) {	/* 3270 command */
+    case CMD_EAU:	/* erase all unprotected */
+    case SNA_CMD_EAU:
+	ctlr_erase_all_unprotected();
+	trace_ds("< EraseAllUnprotected\n");
+	return PDS_OKAY_NO_OUTPUT;
+    case CMD_EWA:	/* erase/write alternate */
+    case SNA_CMD_EWA:
+	ctlr_erase(true);
+	trace_ds("< EraseWriteAlternate");
+	if ((rv = ctlr_write(buf, buflen, true)) < 0) {
+	    return rv;
 	}
+	return PDS_OKAY_NO_OUTPUT;
+    case CMD_EW:	/* erase/write */
+    case SNA_CMD_EW:
+	ctlr_erase(false);
+	trace_ds("< EraseWrite");
+	if ((rv = ctlr_write(buf, buflen, true)) < 0) {
+	    return rv;
+	}
+	return PDS_OKAY_NO_OUTPUT;
+    case CMD_W:	/* write */
+    case SNA_CMD_W:
+	trace_ds("< Write");
+	if ((rv = ctlr_write(buf, buflen, false)) < 0) {
+	    return rv;
+	}
+	return PDS_OKAY_NO_OUTPUT;
+    case CMD_RB:	/* read buffer */
+    case SNA_CMD_RB:
+	trace_ds("< ReadBuffer\n");
+	ctlr_read_buffer(aid);
+	return PDS_OKAY_OUTPUT;
+    case CMD_RM:	/* read modifed */
+    case SNA_CMD_RM:
+	trace_ds("< ReadModified\n");
+	ctlr_read_modified(aid, false);
+	return PDS_OKAY_OUTPUT;
+    case CMD_RMA:	/* read modifed all */
+    case SNA_CMD_RMA:
+	trace_ds("< ReadModifiedAll\n");
+	ctlr_read_modified(aid, true);
+	return PDS_OKAY_OUTPUT;
+    case CMD_WSF:	/* write structured field */
+    case SNA_CMD_WSF:
+	trace_ds("< WriteStructuredField");
+	return write_structured_field(buf, buflen);
+    case CMD_NOP:	/* no-op */
+	trace_ds("< NoOp\n");
+	return PDS_OKAY_NO_OUTPUT;
+    default:
+	/* unknown 3270 command */
+	popup_an_error("Unknown 3270 Data Stream command: 0x%X\n", buf[0]);
+	return PDS_BAD_CMD;
+    }
 }
 
 /*
  * Functions to insert SA attributes into the inbound data stream.
  */
 static void
-insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp, bool *anyp)
+insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp,
+	bool *anyp)
 {
-	if (value == *currentp)
-		return;
-	*currentp = value;
-	space3270out(3);
-	*obptr++ = ORDER_SA;
-	*obptr++ = attr;
-	*obptr++ = value;
-	if (*anyp)
-		trace_ds("'");
-	trace_ds(" SetAttribute(%s)", see_efa(attr, value));
-	*anyp = false;
+    if (value == *currentp) {
+	return;
+    }
+    *currentp = value;
+    space3270out(3);
+    *obptr++ = ORDER_SA;
+    *obptr++ = attr;
+    *obptr++ = value;
+    if (*anyp) {
+	trace_ds("'");
+    }
+    trace_ds(" SetAttribute(%s)", see_efa(attr, value));
+    *anyp = false;
 }
 
 /*
@@ -632,15 +607,15 @@ insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp, boo
 static unsigned char
 host_cs(unsigned char cs)
 {
-	switch (cs & CS_MASK) {
-	case CS_APL:
-	case CS_LINEDRAW:
-	    return 0xf0 | (cs & CS_MASK);
-	case CS_DBCS:
-	    return 0xf8;
-	default:
-	    return 0;
-	}
+    switch (cs & CS_MASK) {
+    case CS_APL:
+    case CS_LINEDRAW:
+	return 0xf0 | (cs & CS_MASK);
+    case CS_DBCS:
+	return 0xf8;
+    default:
+	return 0;
+    }
 }
 
 static void
@@ -648,25 +623,28 @@ insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
 	unsigned char *current_grp, unsigned char *current_csp,
 	unsigned char *current_icp, bool *anyp)
 {
-	if (reply_mode != SF_SRM_CHAR)
-		return;
+    if (reply_mode != SF_SRM_CHAR) {
+	return;
+    }
 
-	if (memchr((char *)crm_attr, XA_FOREGROUND, crm_nattr))
-		insert_sa1(XA_FOREGROUND, ea_buf[baddr].fg, current_fgp, anyp);
-	if (memchr((char *)crm_attr, XA_BACKGROUND, crm_nattr))
-		insert_sa1(XA_BACKGROUND, ea_buf[baddr].bg, current_bgp, anyp);
-	if (memchr((char *)crm_attr, XA_HIGHLIGHTING, crm_nattr)) {
-		unsigned char gr;
+    if (memchr((char *)crm_attr, XA_FOREGROUND, crm_nattr)) {
+	insert_sa1(XA_FOREGROUND, ea_buf[baddr].fg, current_fgp, anyp);
+    }
+    if (memchr((char *)crm_attr, XA_BACKGROUND, crm_nattr)) {
+	insert_sa1(XA_BACKGROUND, ea_buf[baddr].bg, current_bgp, anyp);
+    }
+    if (memchr((char *)crm_attr, XA_HIGHLIGHTING, crm_nattr)) {
+	unsigned char gr;
 
-		gr = ea_buf[baddr].gr;
-		if (gr)
-			gr |= 0xf0;
-		insert_sa1(XA_HIGHLIGHTING, gr, current_grp, anyp);
+	gr = ea_buf[baddr].gr;
+	if (gr) {
+	    gr |= 0xf0;
 	}
-	if (memchr((char *)crm_attr, XA_CHARSET, crm_nattr)) {
-		insert_sa1(XA_CHARSET, host_cs(ea_buf[baddr].cs), current_csp,
-			   anyp);
-	}
+	insert_sa1(XA_HIGHLIGHTING, gr, current_grp, anyp);
+    }
+    if (memchr((char *)crm_attr, XA_CHARSET, crm_nattr)) {
+	insert_sa1(XA_CHARSET, host_cs(ea_buf[baddr].cs), current_csp, anyp);
+    }
 }
 
 
@@ -677,189 +655,202 @@ insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
 void
 ctlr_read_modified(unsigned char aid_byte, bool all)
 {
-	register int	baddr, sbaddr;
-	bool		send_data = true;
-	bool		short_read = false;
-	unsigned char	current_fg = 0x00;
-	unsigned char	current_bg = 0x00;
-	unsigned char	current_gr = 0x00;
-	unsigned char	current_cs = 0x00;
-	unsigned char	current_ic = 0x00;
+    int baddr, sbaddr;
+    bool send_data = true;
+    bool short_read = false;
+    unsigned char current_fg = 0x00;
+    unsigned char current_bg = 0x00;
+    unsigned char current_gr = 0x00;
+    unsigned char current_cs = 0x00;
+    unsigned char current_ic = 0x00;
 
-	if (IN_SSCP && aid_byte != AID_ENTER)
-		return;
+    if (IN_SSCP && aid_byte != AID_ENTER) {
+	return;
+    }
 
-	if (aid_byte == AID_SF) {
-		dft_read_modified();
-		return;
-	}
+    if (aid_byte == AID_SF) {
+	dft_read_modified();
+	return;
+    }
 
-	trace_ds("> ");
-	obptr = obuf;
+    trace_ds("> ");
+    obptr = obuf;
 
-	switch (aid_byte) {
+    switch (aid_byte) {
 
-	    case AID_SYSREQ:			/* test request */
-		space3270out(4);
-		*obptr++ = EBC_soh;
-		*obptr++ = EBC_percent;
-		*obptr++ = EBC_slash;
-		*obptr++ = EBC_stx;
-		trace_ds("SysReq");
-		break;
+    case AID_SYSREQ:			/* test request */
+	space3270out(4);
+	*obptr++ = EBC_soh;
+	*obptr++ = EBC_percent;
+	*obptr++ = EBC_slash;
+	*obptr++ = EBC_stx;
+	trace_ds("SysReq");
+	break;
 
-	    case AID_PA1:			/* short-read AIDs */
-	    case AID_PA2:
-	    case AID_PA3:
-	    case AID_CLEAR:
-		if (!all)
-			short_read = true;
-		/* fall through... */
+	case AID_PA1:			/* short-read AIDs */
+	case AID_PA2:
+	case AID_PA3:
+	case AID_CLEAR:
+	    if (!all) {
+		short_read = true;
+	    }
+	    /* fall through... */
 
-	    case AID_SELECT:			/* No data on READ MODIFIED */
-		if (!all)
-			send_data = false;
-		/* fall through... */
+	case AID_SELECT:		/* No data on READ MODIFIED */
+	    if (!all) {
+		send_data = false;
+	    }
+	    /* fall through... */
 
-	    default:				/* ordinary AID */
-		if (!IN_SSCP) {
-			space3270out(3);
-			*obptr++ = aid_byte;
-			trace_ds("%s", see_aid(aid_byte));
-			if (short_read)
-			    goto rm_done;
-			ENCODE_BADDR(obptr, cursor_addr);
-			trace_ds("%s", rcba(cursor_addr));
-		} else {
-			space3270out(1);	/* just in case */
+	default:			/* ordinary AID */
+	    if (!IN_SSCP) {
+		space3270out(3);
+		*obptr++ = aid_byte;
+		trace_ds("%s", see_aid(aid_byte));
+		if (short_read) {
+		    goto rm_done;
 		}
+		ENCODE_BADDR(obptr, cursor_addr);
+		trace_ds("%s", rcba(cursor_addr));
+	    } else {
+		space3270out(1);	/* just in case */
+	    }
+	    break;
+    }
+
+    baddr = 0;
+    if (formatted) {
+	/* find first field attribute */
+	do {
+	    if (ea_buf[baddr].fa) {
 		break;
+	    }
+	    INC_BA(baddr);
+	} while (baddr != 0);
+	sbaddr = baddr;
+	do {
+	    if (FA_IS_MODIFIED(ea_buf[baddr].fa)) {
+		bool any = false;
+
+		INC_BA(baddr);
+		space3270out(3);
+		*obptr++ = ORDER_SBA;
+		ENCODE_BADDR(obptr, baddr);
+		trace_ds(" SetBufferAddress%s", rcba(baddr));
+		while (!ea_buf[baddr].fa) {
+		    if (send_data && ea_buf[baddr].ec) {
+			insert_sa(baddr,
+			    &current_fg,
+			    &current_bg,
+			    &current_gr,
+			    &current_cs,
+			    &current_ic,
+			    &any);
+			if (ea_buf[baddr].cs & CS_GE) {
+			    space3270out(1);
+			    *obptr++ = ORDER_GE;
+			    if (any) {
+				trace_ds("'");
+			    }
+			    trace_ds(" GraphicEscape");
+			    any = false;
+			}
+			space3270out(1);
+			*obptr++ = ea_buf[baddr].ec;
+			if (ea_buf[baddr].ec <= 0x3f ||
+			    ea_buf[baddr].ec == 0xff) {
+			    if (any) {
+				trace_ds("'");
+			    }
+
+			    trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
+			    any = false;
+			} else {
+			    if (!any) {
+				trace_ds(" '");
+			    }
+			    trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+			    any = true;
+			}
+		    }
+		    INC_BA(baddr);
+		}
+		if (any) {
+		    trace_ds("'");
+		}
+	    } else {	/* not modified - skip */
+		do {
+		    INC_BA(baddr);
+		} while (!ea_buf[baddr].fa);
+	    }
+	} while (baddr != sbaddr);
+    } else {
+	bool any = false;
+	int nbytes = 0;
+
+	/*
+	 * If we're in SSCP-LU mode, the starting point is where the
+	 * host left the cursor.
+	 */
+	if (IN_SSCP) {
+	    baddr = sscp_start;
 	}
 
-	baddr = 0;
-	if (formatted) {
-		/* find first field attribute */
-		do {
-			if (ea_buf[baddr].fa)
-				break;
-			INC_BA(baddr);
-		} while (baddr != 0);
-		sbaddr = baddr;
-		do {
-			if (FA_IS_MODIFIED(ea_buf[baddr].fa)) {
-				bool	any = false;
-
-				INC_BA(baddr);
-				space3270out(3);
-				*obptr++ = ORDER_SBA;
-				ENCODE_BADDR(obptr, baddr);
-				trace_ds(" SetBufferAddress%s", rcba(baddr));
-				while (!ea_buf[baddr].fa) {
-					if (send_data &&
-					    ea_buf[baddr].cc) {
-						insert_sa(baddr,
-						    &current_fg,
-						    &current_bg,
-						    &current_gr,
-						    &current_cs,
-						    &current_ic,
-						    &any);
-						if (ea_buf[baddr].cs & CS_GE) {
-							space3270out(1);
-							*obptr++ = ORDER_GE;
-							if (any)
-								trace_ds("'");
-							trace_ds(" GraphicEscape");
-							any = false;
-						}
-						space3270out(1);
-						*obptr++ = ea_buf[baddr].cc;
-						if (ea_buf[baddr].cc <= 0x3f ||
-						    ea_buf[baddr].cc == 0xff) {
-							if (any)
-								trace_ds("'");
-
-							trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-							any = false;
-						} else {
-							if (!any)
-								trace_ds(" '");
-							trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-							any = true;
-						}
-					}
-					INC_BA(baddr);
-				}
-				if (any)
-					trace_ds("'");
-			}
-			else {	/* not modified - skip */
-				do {
-					INC_BA(baddr);
-				} while (!ea_buf[baddr].fa);
-			}
-		} while (baddr != sbaddr);
-	} else {
-		bool	any = false;
-		int nbytes = 0;
-
-		/*
-		 * If we're in SSCP-LU mode, the starting point is where the
-		 * host left the cursor.
-		 */
-		if (IN_SSCP)
-			baddr = sscp_start;
-
-		do {
-			if (ea_buf[baddr].cc) {
-				insert_sa(baddr,
-				    &current_fg,
-				    &current_bg,
-				    &current_gr,
-				    &current_cs,
-				    &current_ic,
-				    &any);
-				if (ea_buf[baddr].cs & CS_GE) {
-					space3270out(1);
-					*obptr++ = ORDER_GE;
-					if (any)
-						trace_ds("' ");
-					trace_ds(" GraphicEscape ");
-					any = false;
-				}
-				space3270out(1);
-				*obptr++ = ea_buf[baddr].cc;
-				if (ea_buf[baddr].cc <= 0x3f ||
-				    ea_buf[baddr].cc == 0xff) {
-					if (any)
-						trace_ds("'");
-
-					trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-					any = false;
-				} else {
-					if (!any)
-						trace_ds(" '");
-					trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-					any = true;
-				}
-				nbytes++;
-			}
-			INC_BA(baddr);
-
-			/*
-			 * If we're in SSCP-LU mode, end the return value at
-			 * 255 bytes, or where the screen wraps.
-			 */
-			if (IN_SSCP && (nbytes >= 255 || !baddr))
-				break;
-		} while (baddr != 0);
-		if (any)
+	do {
+	    if (ea_buf[baddr].ec) {
+		insert_sa(baddr,
+		    &current_fg,
+		    &current_bg,
+		    &current_gr,
+		    &current_cs,
+		    &current_ic,
+		    &any);
+		if (ea_buf[baddr].cs & CS_GE) {
+		    space3270out(1);
+		    *obptr++ = ORDER_GE;
+		    if (any) {
+			trace_ds("' ");
+		    }
+		    trace_ds(" GraphicEscape ");
+		    any = false;
+		}
+		space3270out(1);
+		*obptr++ = ea_buf[baddr].ec;
+		if (ea_buf[baddr].ec <= 0x3f ||
+		    ea_buf[baddr].ec == 0xff) {
+		    if (any) {
 			trace_ds("'");
-	}
+		    }
 
-    rm_done:
-	trace_ds("\n");
-	net_output();
+		    trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
+		    any = false;
+		} else {
+		    if (!any) {
+			trace_ds(" '");
+		    }
+		    trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+		    any = true;
+		}
+		nbytes++;
+	    }
+	    INC_BA(baddr);
+
+	    /*
+	     * If we're in SSCP-LU mode, end the return value at
+	     * 255 bytes, or where the screen wraps.
+	     */
+	    if (IN_SSCP && (nbytes >= 255 || !baddr)) {
+		break;
+	    }
+	} while (baddr != 0);
+	if (any) {
+	    trace_ds("'");
+	}
+    }
+
+rm_done:
+    trace_ds("\n");
+    net_output();
 }
 
 /*
@@ -869,123 +860,126 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 void
 ctlr_read_buffer(unsigned char aid_byte)
 {
-	register int	baddr;
-	unsigned char	fa;
-	bool		any = false;
-	size_t		attr_count = 0;
-	unsigned char	current_fg = 0x00;
-	unsigned char	current_bg = 0x00;
-	unsigned char	current_gr = 0x00;
-	unsigned char	current_cs = 0x00;
-	unsigned char	current_ic = 0x00;
+    int baddr;
+    unsigned char fa;
+    bool any = false;
+    size_t attr_count = 0;
+    unsigned char current_fg = 0x00;
+    unsigned char current_bg = 0x00;
+    unsigned char current_gr = 0x00;
+    unsigned char current_cs = 0x00;
+    unsigned char current_ic = 0x00;
 
-	if (aid_byte == AID_SF) {
-		dft_read_modified();
-		return;
-	}
+    if (aid_byte == AID_SF) {
+	dft_read_modified();
+	return;
+    }
 
-	trace_ds("> ");
-	obptr = obuf;
+    trace_ds("> ");
+    obptr = obuf;
 
-	space3270out(3);
-	*obptr++ = aid_byte;
-	ENCODE_BADDR(obptr, cursor_addr);
-	trace_ds("%s%s", see_aid(aid_byte), rcba(cursor_addr));
+    space3270out(3);
+    *obptr++ = aid_byte;
+    ENCODE_BADDR(obptr, cursor_addr);
+    trace_ds("%s%s", see_aid(aid_byte), rcba(cursor_addr));
 
-	baddr = 0;
-	do {
-		if (ea_buf[baddr].fa) {
-			if (reply_mode == SF_SRM_FIELD) {
-				space3270out(2);
-				*obptr++ = ORDER_SF;
-			} else {
-				space3270out(4);
-				*obptr++ = ORDER_SFE;
-				attr_count = obptr - obuf;
-				*obptr++ = 1; /* for now */
-				*obptr++ = XA_3270;
-			}
-			fa = ea_buf[baddr].fa & ~FA_PRINTABLE;
-			*obptr++ = code_table[fa];
-			if (any)
-				trace_ds("'");
-			trace_ds(" StartField%s%s%s",
-			    (reply_mode == SF_SRM_FIELD) ? "" : "Extended",
-			    rcba(baddr), see_attr(fa));
-			if (reply_mode != SF_SRM_FIELD) {
-				if (ea_buf[baddr].fg) {
-					space3270out(2);
-					*obptr++ = XA_FOREGROUND;
-					*obptr++ = ea_buf[baddr].fg;
-					trace_ds("%s", see_efa(XA_FOREGROUND,
-					    ea_buf[baddr].fg));
-					(*(obuf + attr_count))++;
-				}
-				if (ea_buf[baddr].bg) {
-					space3270out(2);
-					*obptr++ = XA_BACKGROUND;
-					*obptr++ = ea_buf[baddr].bg;
-					trace_ds("%s", see_efa(XA_BACKGROUND,
-					    ea_buf[baddr].bg));
-					(*(obuf + attr_count))++;
-				}
-				if (ea_buf[baddr].gr) {
-					space3270out(2);
-					*obptr++ = XA_HIGHLIGHTING;
-					*obptr++ = ea_buf[baddr].gr | 0xf0;
-					trace_ds("%s", see_efa(XA_HIGHLIGHTING,
-					    ea_buf[baddr].gr | 0xf0));
-					(*(obuf + attr_count))++;
-				}
-				if (ea_buf[baddr].cs & CS_MASK) {
-					space3270out(2);
-					*obptr++ = XA_CHARSET;
-					*obptr++ = host_cs(ea_buf[baddr].cs);
-					trace_ds("%s", see_efa(XA_CHARSET,
-					    host_cs(ea_buf[baddr].cs)));
-					(*(obuf + attr_count))++;
-				}
-			}
-			any = false;
-		} else {
-			insert_sa(baddr,
-			    &current_fg,
-			    &current_bg,
-			    &current_gr,
-			    &current_cs,
-			    &current_ic,
-			    &any);
-			if (ea_buf[baddr].cs & CS_GE) {
-				space3270out(1);
-				*obptr++ = ORDER_GE;
-				if (any)
-					trace_ds("'");
-				trace_ds(" GraphicEscape");
-				any = false;
-			}
-			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
-			if (ea_buf[baddr].cc <= 0x3f ||
-			    ea_buf[baddr].cc == 0xff) {
-				if (any)
-					trace_ds("'");
-
-				trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-				any = false;
-			} else {
-				if (!any)
-					trace_ds(" '");
-				trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-				any = true;
-			}
-		}
-		INC_BA(baddr);
-	} while (baddr != 0);
-	if (any)
+    baddr = 0;
+    do {
+	if (ea_buf[baddr].fa) {
+	    if (reply_mode == SF_SRM_FIELD) {
+		space3270out(2);
+		*obptr++ = ORDER_SF;
+	    } else {
+		space3270out(4);
+		*obptr++ = ORDER_SFE;
+		attr_count = obptr - obuf;
+		*obptr++ = 1; /* for now */
+		*obptr++ = XA_3270;
+	    }
+	    fa = ea_buf[baddr].fa & ~FA_PRINTABLE;
+	    *obptr++ = code_table[fa];
+	    if (any) {
 		trace_ds("'");
+	    }
+	    trace_ds(" StartField%s%s%s",
+		    (reply_mode == SF_SRM_FIELD) ? "" : "Extended",
+		    rcba(baddr), see_attr(fa));
+	    if (reply_mode != SF_SRM_FIELD) {
+		if (ea_buf[baddr].fg) {
+		    space3270out(2);
+		    *obptr++ = XA_FOREGROUND;
+		    *obptr++ = ea_buf[baddr].fg;
+		    trace_ds("%s", see_efa(XA_FOREGROUND, ea_buf[baddr].fg));
+		    (*(obuf + attr_count))++;
+		}
+		if (ea_buf[baddr].bg) {
+		    space3270out(2);
+		    *obptr++ = XA_BACKGROUND;
+		    *obptr++ = ea_buf[baddr].bg;
+		    trace_ds("%s", see_efa(XA_BACKGROUND, ea_buf[baddr].bg));
+		    (*(obuf + attr_count))++;
+		}
+		if (ea_buf[baddr].gr) {
+		    space3270out(2);
+		    *obptr++ = XA_HIGHLIGHTING;
+		    *obptr++ = ea_buf[baddr].gr | 0xf0;
+		    trace_ds("%s", see_efa(XA_HIGHLIGHTING,
+				ea_buf[baddr].gr | 0xf0));
+		    (*(obuf + attr_count))++;
+		}
+		if (ea_buf[baddr].cs & CS_MASK) {
+		    space3270out(2);
+		    *obptr++ = XA_CHARSET;
+		    *obptr++ = host_cs(ea_buf[baddr].cs);
+		    trace_ds("%s", see_efa(XA_CHARSET,
+				host_cs(ea_buf[baddr].cs)));
+		    (*(obuf + attr_count))++;
+		}
+	    }
+	    any = false;
+	} else {
+	    insert_sa(baddr,
+		&current_fg,
+		&current_bg,
+		&current_gr,
+		&current_cs,
+		&current_ic,
+		&any);
+	    if (ea_buf[baddr].cs & CS_GE) {
+		space3270out(1);
+		*obptr++ = ORDER_GE;
+		if (any) {
+		    trace_ds("'");
+		}
+		trace_ds(" GraphicEscape");
+		any = false;
+	    }
+	    space3270out(1);
+	    *obptr++ = ea_buf[baddr].ec;
+	    if (ea_buf[baddr].ec <= 0x3f ||
+		ea_buf[baddr].ec == 0xff) {
+		if (any) {
+		    trace_ds("'");
+		}
 
-	trace_ds("\n");
-	net_output();
+		trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
+		any = false;
+	    } else {
+		if (!any) {
+		    trace_ds(" '");
+		}
+		trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+		any = true;
+	    }
+	}
+	INC_BA(baddr);
+    } while (baddr != 0);
+    if (any) {
+	trace_ds("'");
+    }
+
+    trace_ds("\n");
+    net_output();
 }
 
 /*
@@ -995,110 +989,112 @@ ctlr_read_buffer(unsigned char aid_byte)
 void
 ctlr_snap_buffer(void)
 {
-	register int	baddr = 0;
-	size_t		attr_count;
-	unsigned char	current_fg = 0x00;
-	unsigned char	current_bg = 0x00;
-	unsigned char	current_gr = 0x00;
-	unsigned char	current_cs = 0x00;
-	unsigned char	current_ic = 0x00;
-	unsigned char   av;
+    int baddr = 0;
+    size_t attr_count;
+    unsigned char current_fg = 0x00;
+    unsigned char current_bg = 0x00;
+    unsigned char current_gr = 0x00;
+    unsigned char current_cs = 0x00;
+    unsigned char current_ic = 0x00;
+    unsigned char av;
 
-	space3270out(2);
-	*obptr++ = screen_alt ? CMD_EWA : CMD_EW;
-	*obptr++ = code_table[0];
+    space3270out(2);
+    *obptr++ = screen_alt ? CMD_EWA : CMD_EW;
+    *obptr++ = code_table[0];
 
-	do {
-		if (ea_buf[baddr].fa) {
-			space3270out(4);
-			*obptr++ = ORDER_SFE;
-			attr_count = obptr - obuf;
-			*obptr++ = 1; /* for now */
-			*obptr++ = XA_3270;
-			*obptr++ = code_table[ea_buf[baddr].fa & ~FA_PRINTABLE];
-			if (ea_buf[baddr].fg) {
-				space3270out(2);
-				*obptr++ = XA_FOREGROUND;
-				*obptr++ = ea_buf[baddr].fg;
-				(*(obuf + attr_count))++;
-			}
-			if (ea_buf[baddr].bg) {
-				space3270out(2);
-				*obptr++ = XA_BACKGROUND;
-				*obptr++ = ea_buf[baddr].fg;
-				(*(obuf + attr_count))++;
-			}
-			if (ea_buf[baddr].gr) {
-				space3270out(2);
-				*obptr++ = XA_HIGHLIGHTING;
-				*obptr++ = ea_buf[baddr].gr | 0xf0;
-				(*(obuf + attr_count))++;
-			}
-			if (ea_buf[baddr].cs & CS_MASK) {
-				space3270out(2);
-				*obptr++ = XA_CHARSET;
-				*obptr++ = host_cs(ea_buf[baddr].cs);
-				(*(obuf + attr_count))++;
-			}
-		} else {
-			av = ea_buf[baddr].fg;
-			if (current_fg != av) {
-				current_fg = av;
-				space3270out(3);
-				*obptr++ = ORDER_SA;
-				*obptr++ = XA_FOREGROUND;
-				*obptr++ = av;
-			}
-			av = ea_buf[baddr].bg;
-			if (current_bg != av) {
-				current_bg = av;
-				space3270out(3);
-				*obptr++ = ORDER_SA;
-				*obptr++ = XA_BACKGROUND;
-				*obptr++ = av;
-			}
-			av = ea_buf[baddr].gr;
-			if (av)
-				av |= 0xf0;
-			if (current_gr != av) {
-				current_gr = av;
-				space3270out(3);
-				*obptr++ = ORDER_SA;
-				*obptr++ = XA_HIGHLIGHTING;
-				*obptr++ = av;
-			}
-			av = ea_buf[baddr].cs & CS_MASK;
-			if (av)
-				av = host_cs(av);
-			if (current_cs != av) {
-				current_cs = av;
-				space3270out(3);
-				*obptr++ = ORDER_SA;
-				*obptr++ = XA_CHARSET;
-				*obptr++ = av;
-			}
-			av = ea_buf[baddr].ic;
-			if (current_ic != av) {
-				current_ic = av;
-				space3270out(3);
-				*obptr++ = ORDER_SA;
-				*obptr++ = XA_INPUT_CONTROL;
-				*obptr++ = av;
-			}
-			if (ea_buf[baddr].cs & CS_GE) {
-				space3270out(1);
-				*obptr++ = ORDER_GE;
-			}
-			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
-		}
-		INC_BA(baddr);
-	} while (baddr != 0);
+    do {
+	if (ea_buf[baddr].fa) {
+	    space3270out(4);
+	    *obptr++ = ORDER_SFE;
+	    attr_count = obptr - obuf;
+	    *obptr++ = 1; /* for now */
+	    *obptr++ = XA_3270;
+	    *obptr++ = code_table[ea_buf[baddr].fa & ~FA_PRINTABLE];
+	    if (ea_buf[baddr].fg) {
+		space3270out(2);
+		*obptr++ = XA_FOREGROUND;
+		*obptr++ = ea_buf[baddr].fg;
+		(*(obuf + attr_count))++;
+	    }
+	    if (ea_buf[baddr].bg) {
+		space3270out(2);
+		*obptr++ = XA_BACKGROUND;
+		*obptr++ = ea_buf[baddr].fg;
+		(*(obuf + attr_count))++;
+	    }
+	    if (ea_buf[baddr].gr) {
+		space3270out(2);
+		*obptr++ = XA_HIGHLIGHTING;
+		*obptr++ = ea_buf[baddr].gr | 0xf0;
+		(*(obuf + attr_count))++;
+	    }
+	    if (ea_buf[baddr].cs & CS_MASK) {
+		space3270out(2);
+		*obptr++ = XA_CHARSET;
+		*obptr++ = host_cs(ea_buf[baddr].cs);
+		(*(obuf + attr_count))++;
+	    }
+	} else {
+	    av = ea_buf[baddr].fg;
+	    if (current_fg != av) {
+		current_fg = av;
+		space3270out(3);
+		*obptr++ = ORDER_SA;
+		*obptr++ = XA_FOREGROUND;
+		*obptr++ = av;
+	    }
+	    av = ea_buf[baddr].bg;
+	    if (current_bg != av) {
+		current_bg = av;
+		space3270out(3);
+		*obptr++ = ORDER_SA;
+		*obptr++ = XA_BACKGROUND;
+		*obptr++ = av;
+	    }
+	    av = ea_buf[baddr].gr;
+	    if (av) {
+		av |= 0xf0;
+	    }
+	    if (current_gr != av) {
+		current_gr = av;
+		space3270out(3);
+		*obptr++ = ORDER_SA;
+		*obptr++ = XA_HIGHLIGHTING;
+		*obptr++ = av;
+	    }
+	    av = ea_buf[baddr].cs & CS_MASK;
+	    if (av) {
+		av = host_cs(av);
+	    }
+	    if (current_cs != av) {
+		current_cs = av;
+		space3270out(3);
+		*obptr++ = ORDER_SA;
+		*obptr++ = XA_CHARSET;
+		*obptr++ = av;
+	    }
+	    av = ea_buf[baddr].ic;
+	    if (current_ic != av) {
+		current_ic = av;
+		space3270out(3);
+		*obptr++ = ORDER_SA;
+		*obptr++ = XA_INPUT_CONTROL;
+		*obptr++ = av;
+	    }
+	    if (ea_buf[baddr].cs & CS_GE) {
+		space3270out(1);
+		*obptr++ = ORDER_GE;
+	    }
+	    space3270out(1);
+	    *obptr++ = ea_buf[baddr].ec;
+	}
+	INC_BA(baddr);
+    } while (baddr != 0);
 
-	space3270out(4);
-	*obptr++ = ORDER_SBA;
-	ENCODE_BADDR(obptr, cursor_addr);
-	*obptr++ = ORDER_IC;
+    space3270out(4);
+    *obptr++ = ORDER_SBA;
+    ENCODE_BADDR(obptr, cursor_addr);
+    *obptr++ = ORDER_IC;
 }
 
 /*
@@ -1108,22 +1104,25 @@ ctlr_snap_buffer(void)
 bool
 ctlr_snap_modes(void)
 {
-	int i;
+    int i;
 
-	if (!IN_3270 || reply_mode == SF_SRM_FIELD)
-		return false;
+    if (!IN_3270 || reply_mode == SF_SRM_FIELD) {
+	return false;
+    }
 
-	space3270out(6 + crm_nattr);
-	*obptr++ = CMD_WSF;
-	*obptr++ = 0x00;	/* implicit length */
-	*obptr++ = 0x00;
-	*obptr++ = SF_SET_REPLY_MODE;
-	*obptr++ = 0x00;	/* partition 0 */
-	*obptr++ = reply_mode;
-	if (reply_mode == SF_SRM_CHAR)
-		for (i = 0; i < crm_nattr; i++)
-			*obptr++ = crm_attr[i];
-	return true;
+    space3270out(6 + crm_nattr);
+    *obptr++ = CMD_WSF;
+    *obptr++ = 0x00;	/* implicit length */
+    *obptr++ = 0x00;
+    *obptr++ = SF_SET_REPLY_MODE;
+    *obptr++ = 0x00;	/* partition 0 */
+    *obptr++ = reply_mode;
+    if (reply_mode == SF_SRM_CHAR) {
+	for (i = 0; i < crm_nattr; i++) {
+	    *obptr++ = crm_attr[i];
+	}
+    }
+    return true;
 }
 
 /*
@@ -1133,88 +1132,86 @@ ctlr_snap_modes(void)
 void
 ctlr_snap_buffer_sscp_lu(void)
 {
-	register int	baddr = 0;
+    int baddr = 0;
 
-	/* Write out the screen contents once. */
-	do {
-	    	if (ea_buf[baddr].cc == 0xff) {
-			space3270out(1);
-			*obptr++ = 0xff;
-		}
-		space3270out(1);
-		*obptr++ = ea_buf[baddr].cc;
-		INC_BA(baddr);
-	} while (baddr != 0);
-
-	/* Write them out again, until we hit where the cursor is. */
-	if (cursor_addr != baddr) {
-		do {
-			if (ea_buf[baddr].cc == 0xff) {
-				space3270out(1);
-				*obptr++ = 0xff;
-			}
-			space3270out(1);
-			*obptr++ = ea_buf[baddr].cc;
-			INC_BA(baddr);
-		} while (baddr != cursor_addr);
+    /* Write out the screen contents once. */
+    do {
+	if (ea_buf[baddr].ec == 0xff) {
+	    space3270out(1);
+	    *obptr++ = 0xff;
 	}
+	space3270out(1);
+	*obptr++ = ea_buf[baddr].ec;
+	INC_BA(baddr);
+    } while (baddr != 0);
+
+    /* Write them out again, until we hit where the cursor is. */
+    if (cursor_addr != baddr) {
+	do {
+	    if (ea_buf[baddr].ec == 0xff) {
+		space3270out(1);
+		*obptr++ = 0xff;
+	    }
+	    space3270out(1);
+	    *obptr++ = ea_buf[baddr].ec;
+	    INC_BA(baddr);
+	} while (baddr != cursor_addr);
+    }
 }
 
-
 /*
  * Process a 3270 Erase All Unprotected command.
  */
 void
 ctlr_erase_all_unprotected(void)
 {
-	register int	baddr, sbaddr;
-	unsigned char	fa;
-	bool		f;
+    int baddr, sbaddr;
+    unsigned char fa;
+    bool f;
 
-	kybd_inhibit(false);
+    kybd_inhibit(false);
 
-	ALL_CHANGED;
-	if (formatted) {
-		/* find first field attribute */
-		baddr = 0;
+    ALL_CHANGED;
+    if (formatted) {
+	/* find first field attribute */
+	baddr = 0;
+	do {
+	    if (ea_buf[baddr].fa) {
+		break;
+	    }
+	    INC_BA(baddr);
+	} while (baddr != 0);
+	sbaddr = baddr;
+	f = false;
+	do {
+	    fa = ea_buf[baddr].fa;
+	    if (!FA_IS_PROTECTED(fa)) {
+		mdt_clear(baddr);
 		do {
-			if (ea_buf[baddr].fa)
-				break;
-			INC_BA(baddr);
-		} while (baddr != 0);
-		sbaddr = baddr;
-		f = false;
+		    INC_BA(baddr);
+		    if (!f) {
+			cursor_move(baddr);
+			    f = true;
+		    }
+		    if (!ea_buf[baddr].fa) {
+			ctlr_add(baddr, EBC_null, 0);
+		    }
+		} while (!ea_buf[baddr].fa);
+	    } else {
 		do {
-			fa = ea_buf[baddr].fa;
-			if (!FA_IS_PROTECTED(fa)) {
-				mdt_clear(baddr);
-				do {
-					INC_BA(baddr);
-					if (!f) {
-						cursor_move(baddr);
-						f = true;
-					}
-					if (!ea_buf[baddr].fa) {
-						ctlr_add(baddr, EBC_null, 0);
-					}
-				} while (!ea_buf[baddr].fa);
-			}
-			else {
-				do {
-					INC_BA(baddr);
-				} while (!ea_buf[baddr].fa);
-			}
-		} while (baddr != sbaddr);
-		if (!f)
-			cursor_move(0);
-	} else {
-		ctlr_clear(true);
+		    INC_BA(baddr);
+		} while (!ea_buf[baddr].fa);
+	    }
+	} while (baddr != sbaddr);
+	if (!f) {
+	    cursor_move(0);
 	}
-	aid = AID_NO;
-	do_reset(false);
+    } else {
+	ctlr_clear(true);
+    }
+    aid = AID_NO;
+    do_reset(false);
 }
-
-
 
 /*
  * Process a 3270 Write command.
@@ -1222,31 +1219,33 @@ ctlr_erase_all_unprotected(void)
 enum pds
 ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 {
-	register unsigned char	*cp;
-	register int	baddr;
-	unsigned char	current_fa;
-	bool		last_cmd;
-	bool		last_zpt;
-	bool		wcc_keyboard_restore, wcc_sound_alarm;
-	bool		ra_ge;
-	int		i;
-	unsigned char	na;
-	int		any_fa;
-	unsigned char	efa_fg;
-	unsigned char	efa_bg;
-	unsigned char	efa_gr;
-	unsigned char	efa_cs;
-	unsigned char	efa_ic;
-	const char	*paren = "(";
-	enum { NONE, ORDER, SBA, TEXT, NULLCH } previous = NONE;
-	enum pds	rv = PDS_OKAY_NO_OUTPUT;
-	int		fa_addr;
-	bool		add_dbcs;
-	unsigned char	add_c1, add_c2 = 0;
-	enum dbcs_state	d;
-	enum dbcs_why	why = DBCS_FIELD;
-	bool		aborted = false;
-	char		mb[16];
+    unsigned char *cp;
+    int baddr;
+    unsigned char current_fa;
+    bool last_cmd;
+    bool last_zpt;
+    bool wcc_keyboard_restore, wcc_sound_alarm;
+    bool ra_ge;
+    int i;
+    unsigned char na;
+    int any_fa;
+    unsigned char efa_fg;
+    unsigned char efa_bg;
+    unsigned char efa_gr;
+    unsigned char efa_cs;
+    unsigned char efa_ic;
+    const char *paren = "(";
+    enum { NONE, ORDER, SBA, TEXT, NULLCH } previous = NONE;
+    enum pds rv = PDS_OKAY_NO_OUTPUT;
+    int fa_addr;
+    bool add_dbcs;
+    unsigned char add_c1, add_c2 = 0;
+    enum dbcs_state d;
+    enum dbcs_why why = DBCS_FIELD;
+    bool aborted = false;
+    char mb[16];
+    bool insert_cursor = false;
+    int ic_baddr = 0;
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
 #define END_TEXT(cmd)	{ END_TEXT0; trace_ds(" %s", cmd); }
@@ -1264,725 +1263,741 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 			formatted = true; \
 		}
 
-	kybd_inhibit(false);
+    kybd_inhibit(false);
 
-	if (buflen < 2)
-		return PDS_BAD_CMD;
+    if (buflen < 2) {
+	return PDS_BAD_CMD;
+    }
 
-	default_fg = 0;
-	default_bg = 0;
-	default_gr = 0;
-	default_cs = 0;
-	default_ic = 0;
-	trace_primed = true;
-	buffer_addr = cursor_addr;
-	if (WCC_RESET(buf[1])) {
-		if (erase)
-			reply_mode = SF_SRM_FIELD;
-		trace_ds("%sreset", paren);
-		paren = ",";
+    default_fg = 0;
+    default_bg = 0;
+    default_gr = 0;
+    default_cs = 0;
+    default_ic = 0;
+    trace_primed = true;
+    buffer_addr = cursor_addr;
+    if (WCC_RESET(buf[1])) {
+	if (erase) {
+	    reply_mode = SF_SRM_FIELD;
 	}
-	wcc_sound_alarm = WCC_SOUND_ALARM(buf[1]);
-	if (wcc_sound_alarm) {
-		trace_ds("%salarm", paren);
-		paren = ",";
-	}
-	wcc_keyboard_restore = WCC_KEYBOARD_RESTORE(buf[1]);
-	if (wcc_keyboard_restore)
-		ticking_stop();
-	if (wcc_keyboard_restore) {
-		trace_ds("%srestore", paren);
-		paren = ",";
-	}
+	trace_ds("%sreset", paren);
+	paren = ",";
+    }
+    wcc_sound_alarm = WCC_SOUND_ALARM(buf[1]);
+    if (wcc_sound_alarm) {
+	trace_ds("%salarm", paren);
+	paren = ",";
+    }
+    wcc_keyboard_restore = WCC_KEYBOARD_RESTORE(buf[1]);
+    if (wcc_keyboard_restore) {
+	ticking_stop();
+    }
+    if (wcc_keyboard_restore) {
+	trace_ds("%srestore", paren);
+	    paren = ",";
+    }
 
-	if (WCC_RESET_MDT(buf[1])) {
-		trace_ds("%sresetMDT", paren);
-		paren = ",";
-		baddr = 0;
-		if (appres.modified_sel)
-			ALL_CHANGED;
-		do {
-			if (ea_buf[baddr].fa) {
-				mdt_clear(baddr);
-			}
-			INC_BA(baddr);
-		} while (baddr != 0);
+    if (WCC_RESET_MDT(buf[1])) {
+	trace_ds("%sresetMDT", paren);
+	paren = ",";
+	baddr = 0;
+	if (appres.modified_sel) {
+	    ALL_CHANGED;
 	}
-	if (strcmp(paren, "("))
-		trace_ds(")");
+	do {
+	    if (ea_buf[baddr].fa) {
+		mdt_clear(baddr);
+	    }
+	    INC_BA(baddr);
+	} while (baddr != 0);
+    }
+    if (strcmp(paren, "(")) {
+	trace_ds(")");
+    }
 
-	last_cmd = true;
-	last_zpt = false;
-	current_fa = get_field_attribute(buffer_addr);
+    last_cmd = true;
+    last_zpt = false;
+    current_fa = get_field_attribute(buffer_addr);
 
 #define ABORT_WRITEx { \
-	rv = PDS_BAD_ADDR; \
-	aborted = true; \
-	break; \
+    rv = PDS_BAD_ADDR; \
+    aborted = true; \
+    break; \
 }
 #define ABORT_WRITE(s) { \
-	trace_ds(" [" s "; write aborted]\n"); \
-	ABORT_WRITEx; \
+    trace_ds(" [" s "; write aborted]\n"); \
+    ABORT_WRITEx; \
 } \
 
-	for (cp = &buf[2]; !aborted && cp < (buf + buflen); cp++) {
-		switch (*cp) {
-		case ORDER_SF:	/* start field */
-			END_TEXT("StartField");
-			if (previous != SBA)
-				trace_ds("%s", rcba(buffer_addr));
-			previous = ORDER;
-			cp++;		/* skip field attribute */
-			START_FIELD(*cp);
-			ctlr_add_fg(buffer_addr, 0);
-			ctlr_add_bg(buffer_addr, 0);
-			INC_BA(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_SBA:	/* set buffer address */
-			cp += 2;	/* skip buffer address */
-			buffer_addr = DECODE_BADDR(*(cp-1), *cp);
-			END_TEXT("SetBufferAddress");
-			previous = SBA;
-			trace_ds("%s", rcba(buffer_addr));
-			if (buffer_addr >= COLS * ROWS) {
-			    	trace_ds("COLS %d ROWS %d\n", COLS, ROWS);
-				ABORT_WRITE("invalid SBA address");
-			}
-			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_IC:	/* insert cursor */
-			END_TEXT("InsertCursor");
-			if (previous != SBA)
-				trace_ds("%s", rcba(buffer_addr));
-			previous = ORDER;
-			cursor_move(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_PT:	/* program tab */
-			END_TEXT("ProgramTab");
-			previous = ORDER;
-			/*
-			 * If the buffer address is the field attribute of
-			 * of an unprotected field, simply advance one
-			 * position.
-			 */
-			if (ea_buf[buffer_addr].fa &&
-			    !FA_IS_PROTECTED(ea_buf[buffer_addr].fa)) {
-				INC_BA(buffer_addr);
-				last_zpt = false;
-				last_cmd = true;
-				break;
-			}
-			/*
-			 * Otherwise, advance to the first position of the
-			 * next unprotected field.
-			 */
-			baddr = next_unprotected(buffer_addr);
-			if (baddr < buffer_addr)
-				baddr = 0;
-			/*
-			 * Null out the remainder of the current field -- even
-			 * if protected -- if the PT doesn't follow a command
-			 * or order, or (honestly) if the last order we saw was
-			 * a null-filling PT that left the buffer address at 0.
-			 * XXX: There's some funky DBCS rule here.
-			 */
-			if (!last_cmd || last_zpt) {
-				trace_ds("(nulling)");
-				while ((buffer_addr != baddr) &&
-				       (!ea_buf[buffer_addr].fa)) {
-					ctlr_add(buffer_addr, EBC_null, 0);
-					ctlr_add_cs(buffer_addr, 0);
-					ctlr_add_fg(buffer_addr, 0);
-					ctlr_add_bg(buffer_addr, 0);
-					ctlr_add_gr(buffer_addr, 0);
-					ctlr_add_ic(buffer_addr, 0);
-					INC_BA(buffer_addr);
-				}
-				if (baddr == 0)
-					last_zpt = true;
-			} else
-				last_zpt = false;
-			buffer_addr = baddr;
-			last_cmd = true;
-			break;
-		case ORDER_RA:	/* repeat to address */
-			END_TEXT("RepeatToAddress");
-			cp += 2;	/* skip buffer address */
-			baddr = DECODE_BADDR(*(cp-1), *cp);
-			trace_ds("%s", rcba(baddr));
-			cp++;		/* skip char to repeat */
-			add_dbcs = false;
-			ra_ge = false;
-			previous = ORDER;
-			if (dbcs) {
-				d = ctlr_lookleft_state(buffer_addr, &why);
-				if (d == DBCS_RIGHT) {
-					ABORT_WRITE("RA over right half of DBCS character");
-				}
-				if (default_cs == CS_DBCS || d == DBCS_LEFT) {
-					add_dbcs = true;
-				}
-			}
-			if (add_dbcs) {
-				if ((baddr - buffer_addr) % 2) {
-					ABORT_WRITE("DBCS RA with odd length");
-				}
-				add_c1 = *cp;
-				cp++;
-				if (cp >= buf + buflen) {
-					ABORT_WRITE("missing second half of DBCS character");
-				}
-				add_c2 = *cp;
-				if (add_c1 == EBC_null) {
-					switch (add_c2) {
-					case EBC_null:
-					case EBC_nl:
-					case EBC_em:
-					case EBC_ff:
-					case EBC_cr:
-					case EBC_dup:
-					case EBC_fm:
-						break;
-					default:
-						trace_ds(" [invalid DBCS RA control character X'%02x%02x'; write aborted]",
-							add_c1, add_c2);
-						ABORT_WRITEx;
-					}
-				} else if (add_c1 < 0x40 || add_c1 > 0xfe ||
-					   add_c2 < 0x40 || add_c2 > 0xfe) {
-					trace_ds(" [invalid DBCS RA character X'%02x%02x'; write aborted]",
-						add_c1, add_c2);
-					ABORT_WRITEx;
-			        }
-				(void) ebcdic_to_multibyte(
-					   (add_c1 << 8) | add_c2,
-					   mb, sizeof(mb));
-			        trace_ds("'%s'", mb);
-			} else {
-				if (*cp == ORDER_GE) {
-					ra_ge = true;
-					trace_ds("GraphicEscape");
-					cp++;
-				}
-				add_c1 = *cp;
-				if (add_c1)
-					trace_ds("'");
-				trace_ds("%s", see_ebc(add_c1));
-				if (add_c1)
-					trace_ds("'");
-			}
-			if (baddr >= COLS * ROWS) {
-				ABORT_WRITE("invalid RA address");
-			}
-			do {
-				if (add_dbcs) {
-					ctlr_add(buffer_addr, add_c1,
-					    default_cs);
-				} else {
-					if (ra_ge)
-						ctlr_add(buffer_addr, add_c1,
-						    CS_GE);
-					else if (default_cs)
-						ctlr_add(buffer_addr, add_c1,
-						    default_cs);
-					else
-						ctlr_add(buffer_addr, add_c1,
-						    0);
-				}
-				ctlr_add_fg(buffer_addr, default_fg);
-				ctlr_add_gr(buffer_addr, default_gr);
-				ctlr_add_ic(buffer_addr, default_ic);
-				INC_BA(buffer_addr);
-				if (add_dbcs) {
-					ctlr_add(buffer_addr, add_c2,
-					    default_cs);
-					ctlr_add_fg(buffer_addr, default_fg);
-					ctlr_add_bg(buffer_addr, default_bg);
-					ctlr_add_gr(buffer_addr, default_gr);
-					ctlr_add_ic(buffer_addr, default_ic);
-					INC_BA(buffer_addr);
-				}
-			} while (buffer_addr != baddr);
-			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_EUA:	/* erase unprotected to address */
-			cp += 2;	/* skip buffer address */
-			baddr = DECODE_BADDR(*(cp-1), *cp);
-			END_TEXT("EraseUnprotectedAll");
-			if (previous != SBA)
-				trace_ds("%s", rcba(baddr));
-			previous = ORDER;
-			if (baddr >= COLS * ROWS) {
-				ABORT_WRITE("invalid EUA address");
-			}
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (d == DBCS_RIGHT) {
-				ABORT_WRITE("EUA overwriting right half of DBCS character");
-			}
-			d = ctlr_lookleft_state(baddr, &why);
-			if (d == DBCS_LEFT) {
-				ABORT_WRITE("EUA overwriting left half of DBCS character");
-			}
-			do {
-				if (ea_buf[buffer_addr].fa)
-					current_fa = ea_buf[buffer_addr].fa;
-				else if (!FA_IS_PROTECTED(current_fa)) {
-					ctlr_add(buffer_addr, EBC_null,
-					    CS_BASE);
-				}
-				INC_BA(buffer_addr);
-			} while (buffer_addr != baddr);
-			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_GE:	/* graphic escape */
-			/* XXX: DBCS? */
-			END_TEXT("GraphicEscape ");
-			cp++;		/* skip char */
-			previous = ORDER;
-			if (*cp)
-				trace_ds("'");
-			trace_ds("%s", see_ebc(*cp));
-			if (*cp)
-				trace_ds("'");
-			ctlr_add(buffer_addr, *cp, CS_GE);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = false;
-			last_zpt = false;
-			break;
-		case ORDER_MF:	/* modify field */
-			END_TEXT("ModifyField");
-			if (previous != SBA)
-				trace_ds("%s", rcba(buffer_addr));
-			previous = ORDER;
-			cp++;
-			na = *cp;
-			if (ea_buf[buffer_addr].fa) {
-				for (i = 0; i < (int)na; i++) {
-					cp++;
-					if (*cp == XA_3270) {
-						trace_ds(" 3270");
-						cp++;
-						ctlr_add_fa(buffer_addr, *cp,
-							ea_buf[buffer_addr].cs);
-						trace_ds("%s", see_attr(*cp));
-					} else if (*cp == XA_FOREGROUND) {
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						cp++;
-						if (appres.m3279)
-							ctlr_add_fg(buffer_addr, *cp);
-					} else if (*cp == XA_BACKGROUND) {
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						cp++;
-						if (appres.m3279)
-							ctlr_add_bg(buffer_addr, *cp);
-					} else if (*cp == XA_HIGHLIGHTING) {
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						cp++;
-						ctlr_add_gr(buffer_addr, *cp & 0x0f);
-					} else if (*cp == XA_CHARSET) {
-						int cs = 0;
-
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						cp++;
-						if (*cp == 0xf1)
-							cs = CS_APL;
-						else if (*cp == 0xf8)
-							cs = CS_DBCS;
-						ctlr_add_cs(buffer_addr, cs);
-					} else if (*cp == XA_ALL) {
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						cp++;
-					} else if (*cp == XA_INPUT_CONTROL) {
-						trace_ds("%s",
-						    see_efa(*cp,
-							*(cp + 1)));
-						ctlr_add_ic(buffer_addr,
-						    (*(cp + 1) == 1));
-						cp++;
-					} else {
-						trace_ds("%s[unsupported]", see_efa(*cp, *(cp + 1)));
-						cp++;
-					}
-				}
-				INC_BA(buffer_addr);
-			} else
-				cp += na * 2;
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_SFE:	/* start field extended */
-			END_TEXT("StartFieldExtended");
-			if (previous != SBA)
-				trace_ds("%s", rcba(buffer_addr));
-			previous = ORDER;
-			cp++;	/* skip order */
-			na = *cp;
-			any_fa = 0;
-			efa_fg = 0;
-			efa_bg = 0;
-			efa_gr = 0;
-			efa_cs = 0;
-			efa_ic = 0;
-			for (i = 0; i < (int)na; i++) {
-				cp++;
-				if (*cp == XA_3270) {
-					trace_ds(" 3270");
-					cp++;
-					START_FIELD(*cp);
-					any_fa++;
-				} else if (*cp == XA_FOREGROUND) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					cp++;
-					if (appres.m3279)
-						efa_fg = *cp;
-				} else if (*cp == XA_BACKGROUND) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					cp++;
-					if (appres.m3279)
-						efa_bg = *cp;
-				} else if (*cp == XA_HIGHLIGHTING) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					cp++;
-					efa_gr = *cp & 0x07;
-				} else if (*cp == XA_CHARSET) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					cp++;
-					if (*cp == 0xf1)
-						efa_cs = CS_APL;
-					else if (dbcs && (*cp == 0xf8))
-						efa_cs = CS_DBCS;
-					else
-						efa_cs = CS_BASE;
-				} else if (*cp == XA_ALL) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					cp++;
-				} else if (*cp == XA_INPUT_CONTROL) {
-					trace_ds("%s", see_efa(*cp, *(cp + 1)));
-					if (dbcs)
-					    efa_ic = (*(cp + 1) == 1);
-					cp++;
-				} else {
-					trace_ds("%s[unsupported]", see_efa(*cp, *(cp + 1)));
-					cp++;
-				}
-			}
-			if (!any_fa)
-				START_FIELD(0);
-			ctlr_add_cs(buffer_addr, efa_cs);
-			ctlr_add_fg(buffer_addr, efa_fg);
-			ctlr_add_bg(buffer_addr, efa_bg);
-			ctlr_add_gr(buffer_addr, efa_gr);
-			ctlr_add_ic(buffer_addr, efa_ic);
-			INC_BA(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case ORDER_SA:	/* set attribute */
-			END_TEXT("SetAttribute");
-			previous = ORDER;
-			cp++;
-			if (*cp == XA_FOREGROUND)  {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				if (appres.m3279)
-					default_fg = *(cp + 1);
-			} else if (*cp == XA_BACKGROUND)  {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				if (appres.m3279)
-					default_bg = *(cp + 1);
-			} else if (*cp == XA_HIGHLIGHTING)  {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				default_gr = *(cp + 1) & 0x0f;
-			} else if (*cp == XA_ALL)  {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				default_fg = 0;
-				default_bg = 0;
-				default_gr = 0;
-				default_cs = 0;
-				default_ic = 0;
-			} else if (*cp == XA_CHARSET) {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				switch (*(cp + 1)) {
-				case 0xf1:
-				    default_cs = CS_APL;
-				    break;
-				case 0xf8:
-				    default_cs = CS_DBCS;
-				    break;
-				default:
-				    default_cs = CS_BASE;
-				    break;
-				}
-			} else if (*cp == XA_INPUT_CONTROL) {
-				trace_ds("%s", see_efa(*cp, *(cp + 1)));
-				if (*(cp + 1) == 1)
-					default_ic = 1;
-				else
-					default_ic = 0;
-			} else
-				trace_ds("%s[unsupported]",
-				    see_efa(*cp, *(cp + 1)));
-			cp++;
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case FCORDER_SUB:	/* format control orders */
-		case FCORDER_DUP:
-		case FCORDER_FM:
-		case FCORDER_FF:
-		case FCORDER_CR:
-		case FCORDER_NL:
-		case FCORDER_EM:
-		case FCORDER_LF:
-		case FCORDER_EO:
-			END_TEXT(see_ebc(*cp));
-			previous = ORDER;
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (default_cs == CS_DBCS || d != DBCS_NONE) {
-				ABORT_WRITE("invalid format control order in DBCS field");
-			}
-			ctlr_add(buffer_addr, *cp, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case FCORDER_SO:
-			/* Look left for errors. */
-			END_TEXT(see_ebc(*cp));
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (d == DBCS_RIGHT) {
-				ABORT_WRITE("SO overwriting right half of DBCS character");
-			}
-			if (d != DBCS_NONE && why == DBCS_FIELD) {
-				ABORT_WRITE("SO in DBCS field");
-			}
-			if (d != DBCS_NONE && why == DBCS_SUBFIELD) {
-				ABORT_WRITE("double SO");
-			}
-			/* All is well. */
-			previous = ORDER;
-			ctlr_add(buffer_addr, *cp, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case FCORDER_SI:
-			/* Look left for errors. */
-			END_TEXT(see_ebc(*cp));
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (d == DBCS_RIGHT) {
-				ABORT_WRITE("SI overwriting right half of DBCS character");
-			}
-			if (d != DBCS_NONE && why == DBCS_FIELD) {
-				ABORT_WRITE("SI in DBCS field");
-			}
-			fa_addr = find_field_attribute(buffer_addr);
-			baddr = buffer_addr;
-			DEC_BA(baddr);
-			while (!aborted &&
-			       ((fa_addr >= 0 && baddr != fa_addr) ||
-			        (fa_addr < 0 && baddr != ROWS*COLS - 1))) {
-				if (ea_buf[baddr].cc == FCORDER_SI) {
-					ABORT_WRITE("double SI");
-				}
-				if (ea_buf[baddr].cc == FCORDER_SO)
-					break;
-				DEC_BA(baddr);
-			}
-			if (aborted)
-				break;
-			if (ea_buf[baddr].cc != FCORDER_SO) {
-				ABORT_WRITE("SI without SO");
-			}
-			/* All is well. */
-			previous = ORDER;
-			ctlr_add(buffer_addr, *cp, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			last_cmd = true;
-			last_zpt = false;
-			break;
-		case FCORDER_NULL:	/* NULL or DBCS control char */
-			add_dbcs = false;
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (d == DBCS_RIGHT) {
-				ABORT_WRITE("NULL overwriting right half of DBCS character");
-			}
-			if (d != DBCS_NONE || default_cs == CS_DBCS) {
-				add_c1 = EBC_null;
-				cp++;
-				if (cp >= buf + buflen) {
-					ABORT_WRITE("missing second half of DBCS character");
-				}
-				add_c2 = *cp;
-				switch (add_c2) {
-				case EBC_null:
-				case EBC_nl:
-				case EBC_em:
-				case EBC_ff:
-				case EBC_cr:
-				case EBC_dup:
-				case EBC_fm:
-					/* DBCS control code */
-					END_TEXT(see_ebc(add_c2));
-					add_dbcs = true;
-					break;
-				case ORDER_SF:
-				case ORDER_SFE:
-					/* Dead position */
-					END_TEXT("DeadNULL");
-					cp--;
-					break;
-				default:
-					trace_ds(" [invalid DBCS control character X'%02x%02x'; write aborted]",
-						add_c1, add_c2);
-					ABORT_WRITEx;
-					break;
-				}
-				if (aborted)
-					break;
-			} else {
-				END_TEXT("NULL");
-				add_c1 = *cp;
-			}
-			previous = NULLCH;
-			ctlr_add(buffer_addr, add_c1, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			if (add_dbcs) {
-				ctlr_add(buffer_addr, add_c2, default_cs);
-				ctlr_add_fg(buffer_addr, default_fg);
-				ctlr_add_bg(buffer_addr, default_bg);
-				ctlr_add_gr(buffer_addr, default_gr);
-				ctlr_add_ic(buffer_addr, default_ic);
-				INC_BA(buffer_addr);
-			}
-			last_cmd = false;
-			last_zpt = false;
-			break;
-		default:	/* enter character */
-			if (*cp <= 0x3F) {
-				END_TEXT("UnsupportedOrder");
-				trace_ds("(%02X)", *cp);
-				previous = ORDER;
-				last_cmd = true;
-				last_zpt = false;
-				break;
-			}
-			if (previous != TEXT)
-				trace_ds(" '");
-			previous = TEXT;
-			add_dbcs = false;
-			d = ctlr_lookleft_state(buffer_addr, &why);
-			if (d == DBCS_RIGHT) {
-				ABORT_WRITE("overwriting right half of DBCS character");
-			}
-			if (d != DBCS_NONE || default_cs == CS_DBCS) {
-				add_c1 = *cp;
-				cp++;
-				if (cp >= buf + buflen) {
-					ABORT_WRITE("missing second half of DBCS character");
-				}
-				add_c2 = *cp;
-				if (add_c1 < 0x40 || add_c1 > 0xfe ||
-				    add_c2 < 0x40 || add_c2 > 0xfe) {
-					trace_ds(" [invalid DBCS character X'%02x%02x'; write aborted]",
-						add_c1, add_c2);
-					ABORT_WRITEx;
-			        }
-			        add_dbcs = true;
-				(void) ebcdic_to_multibyte(
-					   (add_c1 << 8) | add_c2, mb,
-					   sizeof(mb));
-			        trace_ds("%s", mb);
-			} else {
-				add_c1 = *cp;
-				trace_ds("%s", see_ebc(*cp));
-			}
-			ctlr_add(buffer_addr, add_c1, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			if (add_dbcs) {
-				ctlr_add(buffer_addr, add_c2, default_cs);
-				ctlr_add_fg(buffer_addr, default_fg);
-				ctlr_add_bg(buffer_addr, default_bg);
-				ctlr_add_gr(buffer_addr, default_gr);
-				ctlr_add_ic(buffer_addr, default_ic);
-				INC_BA(buffer_addr);
-			}
-			last_cmd = false;
-			last_zpt = false;
-			break;
+    for (cp = &buf[2]; !aborted && cp < (buf + buflen); cp++) {
+	switch (*cp) {
+	case ORDER_SF:	/* start field */
+	    END_TEXT("StartField");
+	    if (previous != SBA) {
+		trace_ds("%s", rcba(buffer_addr));
+	    }
+	    previous = ORDER;
+	    cp++;		/* skip field attribute */
+	    START_FIELD(*cp);
+	    ctlr_add_fg(buffer_addr, 0);
+	    ctlr_add_bg(buffer_addr, 0);
+	    INC_BA(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_SBA:	/* set buffer address */
+	    cp += 2;	/* skip buffer address */
+	    buffer_addr = DECODE_BADDR(*(cp-1), *cp);
+	    END_TEXT("SetBufferAddress");
+	    previous = SBA;
+	    trace_ds("%s", rcba(buffer_addr));
+	    if (buffer_addr >= COLS * ROWS) {
+		trace_ds("COLS %d ROWS %d\n", COLS, ROWS);
+		ABORT_WRITE("invalid SBA address");
+	    }
+	    current_fa = get_field_attribute(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_IC:	/* insert cursor */
+	    END_TEXT("InsertCursor");
+	    if (previous != SBA) {
+		trace_ds("%s", rcba(buffer_addr));
+	    }
+	    previous = ORDER;
+	    insert_cursor = true;
+	    ic_baddr = buffer_addr;
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+    case ORDER_PT:	/* program tab */
+	    END_TEXT("ProgramTab");
+	    previous = ORDER;
+	    /*
+	     * If the buffer address is the field attribute of
+	     * of an unprotected field, simply advance one
+	     * position.
+	     */
+	    if (ea_buf[buffer_addr].fa &&
+		!FA_IS_PROTECTED(ea_buf[buffer_addr].fa)) {
+		INC_BA(buffer_addr);
+		last_zpt = false;
+		last_cmd = true;
+		break;
+	    }
+	    /*
+	     * Otherwise, advance to the first position of the
+	     * next unprotected field.
+	     */
+	    baddr = next_unprotected(buffer_addr);
+	    if (baddr < buffer_addr) {
+		baddr = 0;
+	    }
+	    /*
+	     * Null out the remainder of the current field -- even
+	     * if protected -- if the PT doesn't follow a command
+	     * or order, or (honestly) if the last order we saw was
+	     * a null-filling PT that left the buffer address at 0.
+	     * XXX: There's some funky DBCS rule here.
+	     */
+	    if (!last_cmd || last_zpt) {
+		trace_ds("(nulling)");
+		while ((buffer_addr != baddr) && (!ea_buf[buffer_addr].fa)) {
+		    ctlr_add(buffer_addr, EBC_null, 0);
+		    ctlr_add_cs(buffer_addr, 0);
+		    ctlr_add_fg(buffer_addr, 0);
+		    ctlr_add_bg(buffer_addr, 0);
+		    ctlr_add_gr(buffer_addr, 0);
+		    ctlr_add_ic(buffer_addr, 0);
+		    INC_BA(buffer_addr);
 		}
+		if (baddr == 0) {
+		    last_zpt = true;
+		}
+	    } else {
+		last_zpt = false;
+	    }
+	    buffer_addr = baddr;
+	    last_cmd = true;
+	    break;
+	case ORDER_RA:	/* repeat to address */
+	    END_TEXT("RepeatToAddress");
+	    cp += 2;	/* skip buffer address */
+	    baddr = DECODE_BADDR(*(cp-1), *cp);
+	    trace_ds("%s", rcba(baddr));
+	    cp++;		/* skip char to repeat */
+	    add_dbcs = false;
+	    ra_ge = false;
+	    previous = ORDER;
+	    if (dbcs) {
+		d = ctlr_lookleft_state(buffer_addr, &why);
+		if (d == DBCS_RIGHT) {
+		    ABORT_WRITE("RA over right half of DBCS character");
+		}
+		if (default_cs == CS_DBCS || d == DBCS_LEFT) {
+		    add_dbcs = true;
+		}
+	    }
+	    if (add_dbcs) {
+		if ((baddr - buffer_addr) % 2) {
+		    ABORT_WRITE("DBCS RA with odd length");
+		}
+		add_c1 = *cp;
+		cp++;
+		if (cp >= buf + buflen) {
+		    ABORT_WRITE("missing second half of DBCS character");
+		}
+		add_c2 = *cp;
+		if (add_c1 == EBC_null) {
+		    switch (add_c2) {
+		    case EBC_null:
+		    case EBC_nl:
+		    case EBC_em:
+		    case EBC_ff:
+		    case EBC_cr:
+		    case EBC_dup:
+		    case EBC_fm:
+			break;
+		    default:
+			trace_ds(" [invalid DBCS RA control character "
+				"X'%02x%02x'; write aborted]", add_c1, add_c2);
+			ABORT_WRITEx;
+		    }
+		} else if (add_c1 < 0x40 || add_c1 > 0xfe || add_c2 < 0x40 ||
+			add_c2 > 0xfe) {
+		    trace_ds(" [invalid DBCS RA character X'%02x%02x'; write "
+			    "aborted]", add_c1, add_c2);
+			ABORT_WRITEx;
+		}
+		ebcdic_to_multibyte((add_c1 << 8) | add_c2, mb, sizeof(mb));
+		trace_ds("'%s'", mb);
+	    } else {
+		if (*cp == ORDER_GE) {
+		    ra_ge = true;
+		    trace_ds("GraphicEscape");
+		    cp++;
+		}
+		add_c1 = *cp;
+		if (add_c1) {
+		    trace_ds("'");
+		}
+		trace_ds("%s", see_ebc(add_c1));
+		if (add_c1) {
+		    trace_ds("'");
+		}
+	    }
+	    if (baddr >= COLS * ROWS) {
+		ABORT_WRITE("invalid RA address");
+	    }
+	    do {
+		if (add_dbcs) {
+		    ctlr_add(buffer_addr, add_c1, default_cs);
+		} else {
+		    if (ra_ge) {
+			ctlr_add(buffer_addr, add_c1, CS_GE);
+		    } else if (default_cs) {
+			ctlr_add(buffer_addr, add_c1, default_cs);
+		    } else {
+			ctlr_add(buffer_addr, add_c1, 0);
+		    }
+		}
+		ctlr_add_fg(buffer_addr, default_fg);
+		ctlr_add_gr(buffer_addr, default_gr);
+		ctlr_add_ic(buffer_addr, default_ic);
+		INC_BA(buffer_addr);
+		if (add_dbcs) {
+		    ctlr_add(buffer_addr, add_c2, default_cs);
+		    ctlr_add_fg(buffer_addr, default_fg);
+		    ctlr_add_bg(buffer_addr, default_bg);
+		    ctlr_add_gr(buffer_addr, default_gr);
+		    ctlr_add_ic(buffer_addr, default_ic);
+		    INC_BA(buffer_addr);
+		}
+	    } while (buffer_addr != baddr);
+	    current_fa = get_field_attribute(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_EUA:	/* erase unprotected to address */
+	    cp += 2;	/* skip buffer address */
+	    baddr = DECODE_BADDR(*(cp-1), *cp);
+	    END_TEXT("EraseUnprotectedAll");
+	    if (previous != SBA) {
+		trace_ds("%s", rcba(baddr));
+	    }
+	    previous = ORDER;
+	    if (baddr >= COLS * ROWS) {
+		ABORT_WRITE("invalid EUA address");
+	    }
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (d == DBCS_RIGHT) {
+		ABORT_WRITE("EUA overwriting right half of DBCS character");
+	    }
+	    d = ctlr_lookleft_state(baddr, &why);
+	    if (d == DBCS_LEFT) {
+		ABORT_WRITE("EUA overwriting left half of DBCS character");
+	    }
+	    do {
+		if (ea_buf[buffer_addr].fa) {
+		    current_fa = ea_buf[buffer_addr].fa;
+		} else if (!FA_IS_PROTECTED(current_fa)) {
+		    ctlr_add(buffer_addr, EBC_null, CS_BASE);
+		}
+		INC_BA(buffer_addr);
+	    } while (buffer_addr != baddr);
+	    current_fa = get_field_attribute(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_GE:	/* graphic escape */
+	    /* XXX: DBCS? */
+	    END_TEXT("GraphicEscape ");
+	    cp++;		/* skip char */
+	    previous = ORDER;
+	    if (*cp) {
+		trace_ds("'");
+	    }
+	    trace_ds("%s", see_ebc(*cp));
+	    if (*cp) {
+		trace_ds("'");
+	    }
+
+	    ctlr_add(buffer_addr, *cp, CS_GE);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    current_fa = get_field_attribute(buffer_addr);
+	    last_cmd = false;
+	    last_zpt = false;
+	    break;
+	case ORDER_MF:	/* modify field */
+	    END_TEXT("ModifyField");
+	    if (previous != SBA) {
+		trace_ds("%s", rcba(buffer_addr));
+	    }
+	    previous = ORDER;
+	    cp++;
+	    na = *cp;
+	    if (ea_buf[buffer_addr].fa) {
+		for (i = 0; i < (int)na; i++) {
+		    cp++;
+		    if (*cp == XA_3270) {
+			trace_ds(" 3270");
+			cp++;
+			ctlr_add_fa(buffer_addr, *cp, ea_buf[buffer_addr].cs);
+			trace_ds("%s", see_attr(*cp));
+		    } else if (*cp == XA_FOREGROUND) {
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			cp++;
+			if (mode.m3279) {
+			    ctlr_add_fg(buffer_addr, *cp);
+			}
+		    } else if (*cp == XA_BACKGROUND) {
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			cp++;
+			if (mode.m3279) {
+			    ctlr_add_bg(buffer_addr, *cp);
+			}
+		    } else if (*cp == XA_HIGHLIGHTING) {
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			cp++;
+			ctlr_add_gr(buffer_addr, *cp & 0x0f);
+		    } else if (*cp == XA_CHARSET) {
+			int cs = 0;
+
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			cp++;
+			if (*cp == 0xf1) {
+			    cs = CS_APL;
+			} else if (*cp == 0xf8) {
+			    cs = CS_DBCS;
+			}
+			ctlr_add_cs(buffer_addr, cs);
+		    } else if (*cp == XA_ALL) {
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			cp++;
+		    } else if (*cp == XA_INPUT_CONTROL) {
+			trace_ds("%s", see_efa(*cp, *(cp + 1)));
+			ctlr_add_ic(buffer_addr, (*(cp + 1) == 1));
+			cp++;
+		    } else {
+			trace_ds("%s[unsupported]", see_efa(*cp, *(cp + 1)));
+			cp++;
+		    }
+		}
+		INC_BA(buffer_addr);
+	    } else {
+		cp += na * 2;
+	    }
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_SFE:	/* start field extended */
+	    END_TEXT("StartFieldExtended");
+	    if (previous != SBA) {
+		trace_ds("%s", rcba(buffer_addr));
+	    }
+	    previous = ORDER;
+	    cp++;	/* skip order */
+	    na = *cp;
+	    any_fa = 0;
+	    efa_fg = 0;
+	    efa_bg = 0;
+	    efa_gr = 0;
+	    efa_cs = 0;
+	    efa_ic = 0;
+	    for (i = 0; i < (int)na; i++) {
+		cp++;
+		if (*cp == XA_3270) {
+		    trace_ds(" 3270");
+		    cp++;
+		    START_FIELD(*cp);
+		    any_fa++;
+		} else if (*cp == XA_FOREGROUND) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		    if (mode.m3279) {
+			efa_fg = *cp;
+		    }
+		} else if (*cp == XA_BACKGROUND) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		    if (mode.m3279) {
+			efa_bg = *cp;
+		    }
+		} else if (*cp == XA_HIGHLIGHTING) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		    efa_gr = *cp & 0x07;
+		} else if (*cp == XA_CHARSET) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		    if (*cp == 0xf1) {
+			efa_cs = CS_APL;
+		    } else if (dbcs && (*cp == 0xf8)) {
+			efa_cs = CS_DBCS;
+		    } else {
+			efa_cs = CS_BASE;
+		    }
+		} else if (*cp == XA_ALL) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		} else if (*cp == XA_INPUT_CONTROL) {
+		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		    if (dbcs) {
+			efa_ic = (*(cp + 1) == 1);
+		    }
+		    cp++;
+		} else {
+		    trace_ds("%s[unsupported]", see_efa(*cp, *(cp + 1)));
+		    cp++;
+		}
+	    }
+	    if (!any_fa) {
+		START_FIELD(0);
+	    }
+	    ctlr_add_cs(buffer_addr, efa_cs);
+	    ctlr_add_fg(buffer_addr, efa_fg);
+	    ctlr_add_bg(buffer_addr, efa_bg);
+	    ctlr_add_gr(buffer_addr, efa_gr);
+	    ctlr_add_ic(buffer_addr, efa_ic);
+	    INC_BA(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case ORDER_SA:	/* set attribute */
+	    END_TEXT("SetAttribute");
+	    previous = ORDER;
+	    cp++;
+	    if (*cp == XA_FOREGROUND)  {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		if (mode.m3279) {
+		    default_fg = *(cp + 1);
+		}
+	    } else if (*cp == XA_BACKGROUND)  {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		if (mode.m3279) {
+		    default_bg = *(cp + 1);
+		}
+	    } else if (*cp == XA_HIGHLIGHTING)  {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		default_gr = *(cp + 1) & 0x0f;
+	    } else if (*cp == XA_ALL)  {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		default_fg = 0;
+		default_bg = 0;
+		default_gr = 0;
+		default_cs = 0;
+		default_ic = 0;
+	    } else if (*cp == XA_CHARSET) {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		switch (*(cp + 1)) {
+		case 0xf1:
+		    default_cs = CS_APL;
+		    break;
+		case 0xf8:
+		    default_cs = CS_DBCS;
+		    break;
+		default:
+		    default_cs = CS_BASE;
+		    break;
+		}
+	    } else if (*cp == XA_INPUT_CONTROL) {
+		trace_ds("%s", see_efa(*cp, *(cp + 1)));
+		if (*(cp + 1) == 1) {
+		    default_ic = 1;
+		} else {
+		    default_ic = 0;
+		}
+	    } else {
+		trace_ds("%s[unsupported]", see_efa(*cp, *(cp + 1)));
+	    }
+	    cp++;
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case FCORDER_SUB:	/* format control orders */
+	case FCORDER_DUP:
+	case FCORDER_FM:
+	case FCORDER_FF:
+	case FCORDER_CR:
+	case FCORDER_NL:
+	case FCORDER_EM:
+	case FCORDER_LF:
+	case FCORDER_EO:
+	    END_TEXT(see_ebc(*cp));
+	    previous = ORDER;
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (default_cs == CS_DBCS || d != DBCS_NONE) {
+		ABORT_WRITE("invalid format control order in DBCS field");
+	    }
+	    ctlr_add(buffer_addr, *cp, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case FCORDER_SO:
+	    /* Look left for errors. */
+	    END_TEXT(see_ebc(*cp));
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (d == DBCS_RIGHT) {
+		ABORT_WRITE("SO overwriting right half of DBCS character");
+	    }
+	    if (d != DBCS_NONE && why == DBCS_FIELD) {
+		ABORT_WRITE("SO in DBCS field");
+	    }
+	    if (d != DBCS_NONE && why == DBCS_SUBFIELD) {
+		ABORT_WRITE("double SO");
+	    }
+	    /* All is well. */
+	    previous = ORDER;
+	    ctlr_add(buffer_addr, *cp, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case FCORDER_SI:
+	    /* Look left for errors. */
+	    END_TEXT(see_ebc(*cp));
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (d == DBCS_RIGHT) {
+		ABORT_WRITE("SI overwriting right half of DBCS character");
+	    }
+	    if (d != DBCS_NONE && why == DBCS_FIELD) {
+		ABORT_WRITE("SI in DBCS field");
+	    }
+	    fa_addr = find_field_attribute(buffer_addr);
+	    baddr = buffer_addr;
+	    DEC_BA(baddr);
+	    while (!aborted &&
+		   ((fa_addr >= 0 && baddr != fa_addr) ||
+		    (fa_addr < 0 && baddr != ROWS*COLS - 1))) {
+		if (ea_buf[baddr].ec == FCORDER_SI) {
+		    ABORT_WRITE("double SI");
+		}
+		if (ea_buf[baddr].ec == FCORDER_SO) {
+		    break;
+		}
+		DEC_BA(baddr);
+	    }
+	    if (aborted) {
+		break;
+	    }
+	    if (ea_buf[baddr].ec != FCORDER_SO) {
+		ABORT_WRITE("SI without SO");
+	    }
+	    /* All is well. */
+	    previous = ORDER;
+	    ctlr_add(buffer_addr, *cp, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    last_cmd = true;
+	    last_zpt = false;
+	    break;
+	case FCORDER_NULL:	/* NULL or DBCS control char */
+	    add_dbcs = false;
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (d == DBCS_RIGHT) {
+		ABORT_WRITE("NULL overwriting right half of DBCS character");
+	    }
+	    if (d != DBCS_NONE || default_cs == CS_DBCS) {
+		add_c1 = EBC_null;
+		cp++;
+		if (cp >= buf + buflen) {
+		    ABORT_WRITE("missing second half of DBCS character");
+		}
+		add_c2 = *cp;
+		switch (add_c2) {
+		case EBC_null:
+		case EBC_nl:
+		case EBC_em:
+		case EBC_ff:
+		case EBC_cr:
+		case EBC_dup:
+		case EBC_fm:
+		    /* DBCS control code */
+		    END_TEXT(see_ebc(add_c2));
+		    add_dbcs = true;
+		    break;
+		case ORDER_SF:
+		case ORDER_SFE:
+		    /* Dead position */
+		    END_TEXT("DeadNULL");
+		    cp--;
+		    break;
+		default:
+		    trace_ds(" [invalid DBCS control character X'%02x%02x'; "
+			    "write aborted]", add_c1, add_c2);
+		    ABORT_WRITEx;
+		    break;
+		}
+		if (aborted) {
+		    break;
+		}
+	    } else {
+		END_TEXT("NULL");
+		add_c1 = *cp;
+	    }
+	    previous = NULLCH;
+	    ctlr_add(buffer_addr, add_c1, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    if (add_dbcs) {
+		ctlr_add(buffer_addr, add_c2, default_cs);
+		ctlr_add_fg(buffer_addr, default_fg);
+		ctlr_add_bg(buffer_addr, default_bg);
+		ctlr_add_gr(buffer_addr, default_gr);
+		ctlr_add_ic(buffer_addr, default_ic);
+		INC_BA(buffer_addr);
+	    }
+	    last_cmd = false;
+	    last_zpt = false;
+	    break;
+	default:	/* enter character */
+	    if (*cp <= 0x3F) {
+		END_TEXT("UnsupportedOrder");
+		trace_ds("(%02X)", *cp);
+		previous = ORDER;
+		last_cmd = true;
+		last_zpt = false;
+		break;
+	    }
+	    if (previous != TEXT) {
+		trace_ds(" '");
+	    }
+	    previous = TEXT;
+	    add_dbcs = false;
+	    d = ctlr_lookleft_state(buffer_addr, &why);
+	    if (d == DBCS_RIGHT) {
+		ABORT_WRITE("overwriting right half of DBCS character");
+	    }
+	    if (d != DBCS_NONE || default_cs == CS_DBCS) {
+		add_c1 = *cp;
+		cp++;
+		if (cp >= buf + buflen) {
+		    ABORT_WRITE("missing second half of DBCS character");
+		}
+		add_c2 = *cp;
+		if (add_c1 < 0x40 || add_c1 > 0xfe ||
+		    add_c2 < 0x40 || add_c2 > 0xfe) {
+		    trace_ds(" [invalid DBCS character X'%02x%02x'; write "
+			    "aborted]", add_c1, add_c2);
+		    ABORT_WRITEx;
+		}
+		add_dbcs = true;
+		ebcdic_to_multibyte((add_c1 << 8) | add_c2, mb, sizeof(mb));
+		trace_ds("%s", mb);
+	    } else {
+		add_c1 = *cp;
+		trace_ds("%s", see_ebc(*cp));
+	    }
+	    ctlr_add(buffer_addr, add_c1, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    if (add_dbcs) {
+		ctlr_add(buffer_addr, add_c2, default_cs);
+		ctlr_add_fg(buffer_addr, default_fg);
+		ctlr_add_bg(buffer_addr, default_bg);
+		ctlr_add_gr(buffer_addr, default_gr);
+		ctlr_add_ic(buffer_addr, default_ic);
+		INC_BA(buffer_addr);
+	    }
+	    last_cmd = false;
+	    last_zpt = false;
+	    break;
 	}
-	set_formatted();
-	END_TEXT0;
-	trace_ds("\n");
-	kybdlock_clr(KL_AWAITING_FIRST, "ctlr_write");
-	if (wcc_keyboard_restore) {
-		aid = AID_NO;
-		do_reset(false);
-	} else if (kybdlock & KL_OIA_TWAIT) {
-		kybdlock_clr(KL_OIA_TWAIT, "ctlr_write");
-		status_syswait();
-	}
-	if (wcc_sound_alarm)
-		ring_bell();
+    }
+    set_formatted();
+    END_TEXT0;
+    trace_ds("\n");
+    if (insert_cursor) {
+	cursor_move(ic_baddr);
+    }
+    kybdlock_clr(KL_AWAITING_FIRST, "ctlr_write");
+    if (wcc_keyboard_restore) {
+	aid = AID_NO;
+	do_reset(false);
+    } else if (kybdlock & KL_OIA_TWAIT) {
+	kybdlock_clr(KL_OIA_TWAIT, "ctlr_write");
+	status_syswait();
+    }
+    if (wcc_sound_alarm) {
+	ring_bell();
+    }
 
-	/* Set up the DBCS state. */
-	if (ctlr_dbcs_postprocess() < 0 && rv == PDS_OKAY_NO_OUTPUT)
-		rv = PDS_BAD_ADDR;
+    /* Set up the DBCS state. */
+    if (ctlr_dbcs_postprocess() < 0 && rv == PDS_OKAY_NO_OUTPUT) {
+	rv = PDS_BAD_ADDR;
+    }
 
-	trace_primed = false;
+    trace_primed = false;
 
-	ps_process();
+    ps_process();
 
-	/* Let a script go. */
-	sms_host_output();
+    /* Let a blocked task go. */
+    task_host_output();
 
-	/* Tell 'em what happened. */
-	return rv;
+    /* Tell 'em what happened. */
+    return rv;
 }
 
 #undef START_FIELDx
@@ -2000,124 +2015,126 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 void
 ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 {
-	size_t i;
-	unsigned char *cp = buf;
-	int s_row;
-	unsigned char c;
-	int baddr;
-	int text = false;
+    size_t i;
+    unsigned char *cp = buf;
+    int s_row;
+    unsigned char c;
+    int baddr;
+    int text = false;
 
-	/*
-	 * The 3174 Functionl Description says that anything but NL, NULL, FM,
-	 * or DUP is to be displayed as a graphic.  However, to deal with
-	 * badly-behaved hosts, we filter out SF, IC and SBA sequences, and
-	 * we display other control codes as spaces.
-	 */
+    /*
+     * The 3174 Functionl Description says that anything but NL, NULL, FM,
+     * or DUP is to be displayed as a graphic.  However, to deal with
+     * badly-behaved hosts, we filter out SF, IC and SBA sequences, and
+     * we display other control codes as spaces.
+     */
 
-	trace_ds("SSCP-LU data\n< ");
-	for (i = 0; i < buflen; cp++, i++) {
-		switch (*cp) {
-		case FCORDER_NL:
-			/*
-			 * Insert NULLs to the end of the line and advance to
-			 * the beginning of the next line.
-			 */
-		        if (text) {
-			    trace_ds("'");
-			    text = false;
-			}
-		        trace_ds(" NL");
-			s_row = buffer_addr / COLS;
-			while ((buffer_addr / COLS) == s_row) {
-				ctlr_add(buffer_addr, EBC_null, default_cs);
-				ctlr_add_fg(buffer_addr, default_fg);
-				ctlr_add_bg(buffer_addr, default_bg);
-				ctlr_add_gr(buffer_addr, default_gr);
-				ctlr_add_ic(buffer_addr, default_ic);
-				INC_BA(buffer_addr);
-			}
-			break;
+    trace_ds("SSCP-LU data\n< ");
+    for (i = 0; i < buflen; cp++, i++) {
+	switch (*cp) {
+	case FCORDER_NL:
+	    /*
+	     * Insert NULLs to the end of the line and advance to
+	     * the beginning of the next line.
+	     */
+	    if (text) {
+		trace_ds("'");
+		text = false;
+	    }
+	    trace_ds(" NL");
+	    s_row = buffer_addr / COLS;
+	    while ((buffer_addr / COLS) == s_row) {
+		ctlr_add(buffer_addr, EBC_null, default_cs);
+		ctlr_add_fg(buffer_addr, default_fg);
+		ctlr_add_bg(buffer_addr, default_bg);
+		ctlr_add_gr(buffer_addr, default_gr);
+		ctlr_add_ic(buffer_addr, default_ic);
+		INC_BA(buffer_addr);
+	    }
+	    break;
 
-		case ORDER_SF:
-			/* Some hosts forget they're talking SSCP-LU. */
-			cp++;
-			i++;
-			if (text) {
-			    trace_ds("'");
-			    text = false;
-			}
-			trace_ds(" SF%s %s [translated to space]\n",
-			    rcba(buffer_addr), see_attr(*cp));
-			ctlr_add(buffer_addr, EBC_space, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			break;
-		case ORDER_IC:
-			if (text) {
-			    trace_ds("'");
-			    text = false;
-			}
-			trace_ds(" IC%s [ignored]\n",
-			    rcba(buffer_addr));
-			break;
-		case ORDER_SBA:
-			baddr = DECODE_BADDR(*(cp+1), *(cp+2));
-			trace_ds(" SBA%s [ignored]\n", rcba(baddr));
-			cp += 2;
-			i += 2;
-			break;
+	case ORDER_SF:
+	    /* Some hosts forget they're talking SSCP-LU. */
+	    cp++;
+	    i++;
+	    if (text) {
+		trace_ds("'");
+		text = false;
+	    }
+	    trace_ds(" SF%s %s [translated to space]\n", rcba(buffer_addr),
+		    see_attr(*cp));
+	    ctlr_add(buffer_addr, EBC_space, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    break;
+	case ORDER_IC:
+	    if (text) {
+		trace_ds("'");
+		text = false;
+	    }
+	    trace_ds(" IC%s [ignored]\n", rcba(buffer_addr));
+	    break;
+	case ORDER_SBA:
+	    baddr = DECODE_BADDR(*(cp+1), *(cp+2));
+	    trace_ds(" SBA%s [ignored]\n", rcba(baddr));
+	    cp += 2;
+	    i += 2;
+	    break;
 
-		case ORDER_GE:
-			cp++;
-			if (++i >= buflen)
-				break;
-			if (*cp <= 0x40)
-				c = EBC_space;
-			else
-				c = *cp;
-			if (text) {
-			    trace_ds("'");
-			    text = false;
-			}
-			trace_ds(" GE '%s'", see_ebc(c));
-			ctlr_add(buffer_addr, c, CS_GE);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			break;
+	case ORDER_GE:
+	    cp++;
+	    if (++i >= buflen) {
+		break;
+	    }
+	    if (*cp <= 0x40) {
+		c = EBC_space;
+	    } else {
+		c = *cp;
+	    }
+	    if (text) {
+		trace_ds("'");
+		text = false;
+	    }
+	    trace_ds(" GE '%s'", see_ebc(c));
+	    ctlr_add(buffer_addr, c, CS_GE);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    break;
 
-		default:
-			if (!text) {
-			    trace_ds(" '");
-			    text = true;
-			}
-			trace_ds("%s", see_ebc(*cp));
-			ctlr_add(buffer_addr, *cp, default_cs);
-			ctlr_add_fg(buffer_addr, default_fg);
-			ctlr_add_bg(buffer_addr, default_bg);
-			ctlr_add_gr(buffer_addr, default_gr);
-			ctlr_add_ic(buffer_addr, default_ic);
-			INC_BA(buffer_addr);
-			break;
-		}
+	default:
+	    if (!text) {
+		trace_ds(" '");
+		text = true;
+	    }
+	    trace_ds("%s", see_ebc(*cp));
+	    ctlr_add(buffer_addr, *cp, default_cs);
+	    ctlr_add_fg(buffer_addr, default_fg);
+	    ctlr_add_bg(buffer_addr, default_bg);
+	    ctlr_add_gr(buffer_addr, default_gr);
+	    ctlr_add_ic(buffer_addr, default_ic);
+	    INC_BA(buffer_addr);
+	    break;
 	}
-	if (text)
-	    trace_ds("'");
-	trace_ds("\n");
-	cursor_move(buffer_addr);
-	sscp_start = buffer_addr;
+    }
+    if (text) {
+	trace_ds("'");
+    }
+    trace_ds("\n");
+    cursor_move(buffer_addr);
+    sscp_start = buffer_addr;
 
-	/* Unlock the keyboard. */
-	aid = AID_NO;
-	do_reset(false);
+    /* Unlock the keyboard. */
+    aid = AID_NO;
+    do_reset(false);
 
-	/* Let a script go. */
-	sms_host_output();
+    /* Let a blocked task go. */
+    task_host_output();
 }
 
 /*
@@ -2135,95 +2152,99 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 enum dbcs_state
 ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 {
-	int faddr;
-	int fdist;
-	int xaddr;
-	bool si = false;
+    int faddr;
+    int fdist;
+    int xaddr;
+    bool si = false;
 #define	AT_END(f, b) \
-	(((f) < 0 && (b) == ROWS*COLS - 1) || \
-	 ((f) >= 0 && (b) == (f)))
+    (((f) < 0 && (b) == ROWS*COLS - 1) || \
+     ((f) >= 0 && (b) == (f)))
 
-	 /* If we're not in DBCS state, everything is DBCS_NONE. */
-	 if (!dbcs)
-		return DBCS_NONE;
+     /* If we're not in DBCS state, everything is DBCS_NONE. */
+     if (!dbcs) {
+	return DBCS_NONE;
+     }
 
-	/* Find the field attribute, if any. */
-	faddr = find_field_attribute(baddr);
+    /* Find the field attribute, if any. */
+    faddr = find_field_attribute(baddr);
 
-	/*
-	 * First in precedence is a DBCS field.
-	 * DBCS SA and SO/SI inside a DBCS field are errors, but are considered
-	 * defective DBCS characters.
-	 */
-	if (ea_buf[faddr].cs == CS_DBCS) {
-		*why = DBCS_FIELD;
-		fdist = (baddr + ROWS*COLS) - faddr;
-		return (fdist % 2)? DBCS_LEFT: DBCS_RIGHT;
+    /*
+     * First in precedence is a DBCS field.
+     * DBCS SA and SO/SI inside a DBCS field are errors, but are considered
+     * defective DBCS characters.
+     */
+    if (ea_buf[faddr].cs == CS_DBCS) {
+	*why = DBCS_FIELD;
+	fdist = (baddr + ROWS*COLS) - faddr;
+	return (fdist % 2)? DBCS_LEFT: DBCS_RIGHT;
+    }
+
+    /*
+     * The DBCS attribute takes precedence next.
+     * SO and SI can appear within such a region, but they are single-byte
+     * characters which effectively split it.
+     */
+    if (ea_buf[baddr].cs == CS_DBCS) {
+	if (ea_buf[baddr].ec == EBC_so || ea_buf[baddr].ec == EBC_si) {
+	    return DBCS_NONE;
 	}
+	xaddr = baddr;
+	while (!AT_END(faddr, xaddr) &&
+	       ea_buf[xaddr].cs == CS_DBCS &&
+	       ea_buf[xaddr].ec != EBC_so &&
+	       ea_buf[xaddr].ec != EBC_si) {
+	    DEC_BA(xaddr);
+	}
+	*why = DBCS_ATTRIBUTE;
+	fdist = (baddr + ROWS*COLS) - xaddr;
+	return (fdist % 2)? DBCS_LEFT: DBCS_RIGHT;
+    }
 
-	/*
-	 * The DBCS attribute takes precedence next.
-	 * SO and SI can appear within such a region, but they are single-byte
-	 * characters which effectively split it.
-	 */
-	if (ea_buf[baddr].cs == CS_DBCS) {
-		if (ea_buf[baddr].cc == EBC_so || ea_buf[baddr].cc == EBC_si)
-			return DBCS_NONE;
-		xaddr = baddr;
-		while (!AT_END(faddr, xaddr) &&
-		       ea_buf[xaddr].cs == CS_DBCS &&
-		       ea_buf[xaddr].cc != EBC_so &&
-		       ea_buf[xaddr].cc != EBC_si) {
-			DEC_BA(xaddr);
-		}
-		*why = DBCS_ATTRIBUTE;
+    /*
+     * Finally, look for a SO not followed by an SI.
+     */
+    xaddr = baddr;
+    DEC_BA(xaddr);
+    while (!AT_END(faddr, xaddr)) {
+	if (ea_buf[xaddr].ec == EBC_si) {
+	    si = true;
+	} else if (ea_buf[xaddr].ec == EBC_so) {
+	    if (si) {
+		si = false;
+	    } else {
+		*why = DBCS_SUBFIELD;
 		fdist = (baddr + ROWS*COLS) - xaddr;
 		return (fdist % 2)? DBCS_LEFT: DBCS_RIGHT;
+	    }
 	}
-
-	/*
-	 * Finally, look for a SO not followed by an SI.
-	 */
-	xaddr = baddr;
 	DEC_BA(xaddr);
-	while (!AT_END(faddr, xaddr)) {
-		if (ea_buf[xaddr].cc == EBC_si)
-			si = true;
-		else if (ea_buf[xaddr].cc == EBC_so) {
-			if (si)
-				si = false;
-			else {
-				*why = DBCS_SUBFIELD;
-				fdist = (baddr + ROWS*COLS) - xaddr;
-				return (fdist % 2)? DBCS_LEFT: DBCS_RIGHT;
-			}
-		}
-		DEC_BA(xaddr);
-	}
+    }
 
-	/* Nada. */
-	return DBCS_NONE;
+    /* Nada. */
+    return DBCS_NONE;
 }
 
 static bool
 valid_dbcs_char(unsigned char c1, unsigned char c2)
 {
-	if (c1 >= 0x40 && c1 < 0xff && c2 >= 0x40 && c2 < 0xff)
-		return true;
-	if (c1 != 0x00 || c2 < 0x40 || c2 >= 0xff)
-		return false;
-	switch (c2) {
-	case EBC_null:
-	case EBC_nl:
-	case EBC_em:
-	case EBC_ff:
-	case EBC_cr:
-	case EBC_dup:
-	case EBC_fm:
-		return true;
-	default:
-		return false;
-	}
+    if (c1 >= 0x40 && c1 < 0xff && c2 >= 0x40 && c2 < 0xff) {
+	return true;
+    }
+    if (c1 != 0x00 || c2 < 0x40 || c2 >= 0xff) {
+	return false;
+    }
+    switch (c2) {
+    case EBC_null:
+    case EBC_nl:
+    case EBC_em:
+    case EBC_ff:
+    case EBC_cr:
+    case EBC_dup:
+    case EBC_fm:
+	return true;
+    default:
+	return false;
+    }
 }
 
 /*
@@ -2243,158 +2264,151 @@ valid_dbcs_char(unsigned char c1, unsigned char c2)
 int
 ctlr_dbcs_postprocess(void)
 {
-	int baddr;		/* current buffer address */
-	int faddr0;		/* address of first field attribute */
-	int faddr;		/* address of current field attribute */
-	int last_baddr;		/* last buffer address to search */
-	int pbaddr = -1;	/* previous buffer address */
-	int dbaddr = -1;	/* first data position of current DBCS (sub-)
-				   field */
-	bool so = false, si = false;
-	bool dbcs_field = false;
-	int rc = 0;
+    int baddr;		/* current buffer address */
+    int faddr0;		/* address of first field attribute */
+    int faddr;		/* address of current field attribute */
+    int last_baddr;	/* last buffer address to search */
+    int pbaddr = -1;	/* previous buffer address */
+    int dbaddr = -1;	/* first data position of current DBCS (sub-)
+		           field */
+    bool so = false, si = false;
+    bool dbcs_field = false;
+    int rc = 0;
 
-	/* If we're not in DBCS mode, do nothing. */
-	if (!dbcs)
-		return 0;
+    /* If we're not in DBCS mode, do nothing. */
+    if (!dbcs) {
+	return 0;
+    }
+
+    /*
+     * Find the field attribute for location 0.  If unformatted, it's the
+     * dummy at -1.  Also compute the starting and ending points for the
+     * scan: the first location after that field attribute.
+     */
+    faddr0 = find_field_attribute(0);
+    baddr = faddr0;
+    INC_BA(baddr);
+    if (faddr0 < 0) {
+	last_baddr = 0;
+    } else {
+	last_baddr = faddr0;
+    }
+    faddr = faddr0;
+    dbcs_field = (ea_buf[faddr].cs & CS_MASK) == CS_DBCS;
+
+    do {
+	if (ea_buf[baddr].fa) {
+	    faddr = baddr;
+	    ea_buf[faddr].db = DBCS_NONE;
+	    dbcs_field = (ea_buf[faddr].cs & CS_MASK) == CS_DBCS;
+	    if (dbcs_field) {
+		dbaddr = baddr;
+		INC_BA(dbaddr);
+	    } else {
+		dbaddr = -1;
+	    }
+	    /*
+	     * An SI followed by a field attribute shouldn't be
+	     * displayed with a wide cursor.
+	     */
+	    if (pbaddr >= 0 && ea_buf[pbaddr].db == DBCS_SI) {
+		ea_buf[pbaddr].db = DBCS_NONE;
+	    }
+	} else {
+	    switch (ea_buf[baddr].ec) {
+	    case EBC_so:
+		/* Two SO's or SO in DBCS field are invalid. */
+		if (so || dbcs_field) {
+		    trace_ds("DBCS postprocess: invalid SO found at %s\n",
+			    rcba(baddr));
+		    rc = -1;
+		} else {
+		    dbaddr = baddr;
+		    INC_BA(dbaddr);
+		}
+		ea_buf[baddr].db = DBCS_NONE;
+		so = true;
+		si = false;
+		break;
+	    case EBC_si:
+		/* Two SI's or SI in DBCS field are invalid. */
+		if (si || dbcs_field) {
+		    trace_ds("Postprocess: Invalid SO found at %s\n",
+			    rcba(baddr));
+		    rc = -1;
+		    ea_buf[baddr].db = DBCS_NONE;
+		} else {
+		    ea_buf[baddr].db = DBCS_SI;
+		}
+		dbaddr = -1;
+		si = true;
+		so = false;
+		break;
+	    default:
+		/* Non-base CS in DBCS subfield is invalid. */
+		if (so && ea_buf[baddr].cs != CS_BASE) {
+		    trace_ds("DBCS postprocess: invalid character set found "
+			    "at %s\n", rcba(baddr));
+		    rc = -1;
+		    ea_buf[baddr].cs = CS_BASE;
+		}
+		if ((ea_buf[baddr].cs & CS_MASK) == CS_DBCS) {
+		    /* Beginning or continuation of an SA DBCS subfield. */
+		    if (dbaddr < 0) {
+			dbaddr = baddr;
+		    }
+		} else if (!so && !dbcs_field) {
+		    /* End of SA DBCS subfield. */
+		    dbaddr = -1;
+		}
+		if (dbaddr >= 0) {
+		    /* Turn invalid characters into spaces, silently. */
+		    if ((baddr + ROWS*COLS - dbaddr) % 2) {
+			if (!valid_dbcs_char( ea_buf[pbaddr].ec,
+				    ea_buf[baddr].ec)) {
+			    ea_buf[pbaddr].ec = EBC_space;
+			    ea_buf[baddr].ec = EBC_space;
+			}
+			MAKE_RIGHT(baddr);
+		    } else {
+			MAKE_LEFT(baddr);
+		    }
+		} else {
+		    ea_buf[baddr].db = DBCS_NONE;
+		}
+		break;
+	    }
+	}
 
 	/*
-	 * Find the field attribute for location 0.  If unformatted, it's the
-	 * dummy at -1.  Also compute the starting and ending points for the
-	 * scan: the first location after that field attribute.
+	 * Check for dead positions.
+	 * Turn them into NULLs, silently.
 	 */
-	faddr0 = find_field_attribute(0);
-	baddr = faddr0;
+	if (pbaddr >= 0 &&
+		IS_LEFT(ea_buf[pbaddr].db) &&
+		!IS_RIGHT(ea_buf[baddr].db) &&
+		ea_buf[pbaddr].db != DBCS_DEAD) {
+	    if (!ea_buf[baddr].fa) {
+		trace_ds("DBCS postprocess: dead position at %s\n",
+			rcba(pbaddr));
+		rc = -1;
+	    }
+	    ea_buf[pbaddr].ec = EBC_null;
+	    ea_buf[pbaddr].db = DBCS_DEAD;
+	}
+
+	/* Check for SB's, which follow SIs. */
+	if (pbaddr >= 0 && ea_buf[pbaddr].db == DBCS_SI) {
+	    ea_buf[baddr].db = DBCS_SB;
+	}
+
+	/* Save this position as the previous and increment. */
+	pbaddr = baddr;
 	INC_BA(baddr);
-	if (faddr0 < 0)
-		last_baddr = 0;
-	else
-		last_baddr = faddr0;
-	faddr = faddr0;
-	dbcs_field = (ea_buf[faddr].cs & CS_MASK) == CS_DBCS;
 
-	do {
-		if (ea_buf[baddr].fa) {
-			faddr = baddr;
-			ea_buf[faddr].db = DBCS_NONE;
-			dbcs_field = (ea_buf[faddr].cs & CS_MASK) == CS_DBCS;
-			if (dbcs_field) {
-				dbaddr = baddr;
-				INC_BA(dbaddr);
-			} else {
-				dbaddr = -1;
-			}
-			/*
-			 * An SI followed by a field attribute shouldn't be
-			 * displayed with a wide cursor.
-			 */
-			if (pbaddr >= 0 && ea_buf[pbaddr].db == DBCS_SI)
-				ea_buf[pbaddr].db = DBCS_NONE;
-		} else {
-			switch (ea_buf[baddr].cc) {
-			case EBC_so:
-			    /* Two SO's or SO in DBCS field are invalid. */
-			    if (so || dbcs_field) {
-				    trace_ds("DBCS postprocess: invalid SO "
-					"found at %s\n", rcba(baddr));
-				    rc = -1;
-			    } else {
-				    dbaddr = baddr;
-				    INC_BA(dbaddr);
-			    }
-			    ea_buf[baddr].db = DBCS_NONE;
-			    so = true;
-			    si = false;
-			    break;
-			case EBC_si:
-			    /* Two SI's or SI in DBCS field are invalid. */
-			    if (si || dbcs_field) {
-				    trace_ds("Postprocess: Invalid SO found "
-					"at %s\n", rcba(baddr));
-				    rc = -1;
-				    ea_buf[baddr].db = DBCS_NONE;
-			    } else {
-				    ea_buf[baddr].db = DBCS_SI;
-			    }
-			    dbaddr = -1;
-			    si = true;
-			    so = false;
-			    break;
-			default:
-			    /* Non-base CS in DBCS subfield is invalid. */
-			    if (so && ea_buf[baddr].cs != CS_BASE) {
-				    trace_ds("DBCS postprocess: invalid "
-					"character set found at %s\n",
-					rcba(baddr));
-				    rc = -1;
-				    ea_buf[baddr].cs = CS_BASE;
-			    }
-			    if ((ea_buf[baddr].cs & CS_MASK) == CS_DBCS) {
-				    /*
-				     * Beginning or continuation of an SA DBCS
-				     * subfield.
-				     */
-				    if (dbaddr < 0) {
-					    dbaddr = baddr;
-				    }
-			    } else if (!so && !dbcs_field) {
-				    /*
-				     * End of SA DBCS subfield.
-				     */
-				    dbaddr = -1;
-			    }
-			    if (dbaddr >= 0) {
-				    /*
-				     * Turn invalid characters into spaces,
-				     * silently.
-				     */
-				    if ((baddr + ROWS*COLS - dbaddr) % 2) {
-					    if (!valid_dbcs_char(
-							ea_buf[pbaddr].cc,
-							ea_buf[baddr].cc)) {
-						    ea_buf[pbaddr].cc =
-							EBC_space;
-						    ea_buf[baddr].cc =
-							EBC_space;
-					    }
-					    MAKE_RIGHT(baddr);
-				    } else {
-					    MAKE_LEFT(baddr);
-				    }
-			    } else
-				    ea_buf[baddr].db = DBCS_NONE;
-			    break;
-			}
-		}
+    } while (baddr != last_baddr);
 
-		/*
-		 * Check for dead positions.
-		 * Turn them into NULLs, silently.
-		 */
-		if (pbaddr >= 0 &&
-		    IS_LEFT(ea_buf[pbaddr].db) &&
-		    !IS_RIGHT(ea_buf[baddr].db) &&
-		    ea_buf[pbaddr].db != DBCS_DEAD) {
-			if (!ea_buf[baddr].fa) {
-				trace_ds("DBCS postprocess: dead position "
-				    "at %s\n", rcba(pbaddr));
-				rc = -1;
-			}
-			ea_buf[pbaddr].cc = EBC_null;
-			ea_buf[pbaddr].db = DBCS_DEAD;
-		}
-
-		/* Check for SB's, which follow SIs. */
-		if (pbaddr >= 0 && ea_buf[pbaddr].db == DBCS_SI)
-			ea_buf[baddr].db = DBCS_SB;
-
-		/* Save this position as the previous and increment. */
-		pbaddr = baddr;
-		INC_BA(baddr);
-
-	} while (baddr != last_baddr);
-
-	return rc;
+    return rc;
 }
 
 /*
@@ -2403,19 +2417,18 @@ ctlr_dbcs_postprocess(void)
 void
 ps_process(void)
 {
-	while (run_ta())
-		;
-	sms_continue();
+    while (run_ta())
+	;
 
-	/* Process file transfers. */
-	if (ft_state != FT_NONE &&      /* transfer in progress */
+    /* Process file transfers. */
+    if (ft_state != FT_NONE &&      /* transfer in progress */
 	    formatted &&                /* screen is formatted */
 	    !screen_alt &&              /* 24x80 screen */
 	    !kybdlock &&                /* keyboard not locked */
 	    /* magic field */
 	    ea_buf[1919].fa && FA_IS_SKIP(ea_buf[1919].fa)) {
-		ft_cut_data();
-	}
+	ft_cut_data();
+    }
 }
 
 /*
@@ -2424,16 +2437,18 @@ ps_process(void)
 bool
 ctlr_any_data(void)
 {
-	register int i;
+    int i;
 
-	if (ea_buf == NULL)
-		return false;
-
-	for (i = 0; i < ROWS*COLS; i++) {
-		if (!IsBlank(ea_buf[i].cc))
-			return true;
-	}
+    if (ea_buf == NULL) {
 	return false;
+    }
+
+    for (i = 0; i < ROWS*COLS; i++) {
+	if (!IsBlank(ea_buf[i].ec)) {
+	    return true;
+	}
+    }
+    return false;
 }
 
 /*
@@ -2443,27 +2458,27 @@ ctlr_any_data(void)
 void
 ctlr_clear(bool can_snap)
 {
-	/* Snap any data that is about to be lost into the trace file. */
-	if (ctlr_any_data()) {
-		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE)) {
-			trace_screen(true);
-		}
-		scroll_save(maxROWS, ever_3270 ? false : true);
+    /* Snap any data that is about to be lost into the trace file. */
+    if (ctlr_any_data()) {
+	if (can_snap && !trace_skipping && toggled(SCREEN_TRACE)) {
+	    trace_screen(true);
 	}
-	trace_skipping = false;
+	scroll_save(maxROWS);
+    }
+    trace_skipping = false;
 
-	/* Clear the screen. */
-	(void) memset((char *)ea_buf, 0, ROWS*COLS*sizeof(struct ea));
-	ALL_CHANGED;
-	cursor_move(0);
-	buffer_addr = 0;
-	unselect(0, ROWS*COLS);
-	formatted = false;
-	default_fg = 0;
-	default_bg = 0;
-	default_gr = 0;
-	default_ic = 0;
-	sscp_start = 0;
+    /* Clear the screen. */
+    memset((char *)ea_buf, 0, ROWS*COLS*sizeof(struct ea));
+    ALL_CHANGED;
+    cursor_move(0);
+    buffer_addr = 0;
+    unselect(0, ROWS*COLS);
+    formatted = false;
+    default_fg = 0;
+    default_bg = 0;
+    default_gr = 0;
+    default_ic = 0;
+    sscp_start = 0;
 }
 
 /*
@@ -2472,21 +2487,20 @@ ctlr_clear(bool can_snap)
 static void
 ctlr_blanks(void)
 {
-	int baddr;
+    int baddr;
 
-	for (baddr = 0; baddr < maxROWS*maxCOLS; baddr++) {
-		ea_buf[baddr].cc = EBC_space;
-	}
-	ALL_CHANGED;
-	cursor_move(0);
-	buffer_addr = 0;
-	unselect(0, ROWS*COLS);
-	formatted = false;
+    for (baddr = 0; baddr < maxROWS*maxCOLS; baddr++) {
+	ea_buf[baddr].ec = EBC_space;
+    }
+    ALL_CHANGED;
+    cursor_move(0);
+    buffer_addr = 0;
+    unselect(0, ROWS*COLS);
+    formatted = false;
 }
 
-
 /*
- * Change a character in the 3270 buffer.
+ * Change a character in the 3270 buffer, EBCDIC mode.
  * Removes any field attribute defined at that location.
  */
 void
@@ -2495,21 +2509,56 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
     unsigned char oc = 0;
 
     if (ea_buf[baddr].fa ||
-	((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
+	ea_buf[baddr].ucs4 ||
+	((oc = ea_buf[baddr].ec) != c || ea_buf[baddr].cs != cs)) {
 	if (trace_primed && !IsBlank(oc)) {
 	    if (toggled(SCREEN_TRACE)) {
 		trace_screen(false);
 	    }
-	    scroll_save(maxROWS, false);
+	    scroll_save(maxROWS);
 	    trace_primed = false;
 	}
 	if (screen_selected(baddr)) {
 	    unselect(baddr, 1);
 	}
 	ONE_CHANGED(baddr);
-	ea_buf[baddr].cc = c;
+	ea_buf[baddr].ec = c;
 	ea_buf[baddr].cs = cs;
 	ea_buf[baddr].fa = 0;
+	ea_buf[baddr].ucs4 = 0;
+    }
+}
+
+/*
+ * Change a character in the 3270 buffer, NVT mode.
+ * Removes any field attribute defined at that location.
+ */
+void
+ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs)
+{
+    if (ea_buf[baddr].fa ||
+	ea_buf[baddr].ucs4 != ucs4 ||
+	ea_buf[baddr].ec != 0 ||
+	ea_buf[baddr].cs != cs) {
+	if (trace_primed && !IsBlank(ea_buf[baddr].ec)) {
+	    if (toggled(SCREEN_TRACE)) {
+		trace_screen(false);
+	    }
+	    scroll_save(maxROWS);
+	    trace_primed = false;
+	}
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
+	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].ucs4 = ucs4;
+	ea_buf[baddr].ec = 0;
+	ea_buf[baddr].cs = cs;
+	ea_buf[baddr].fa = 0;
+
+	if (cs == CS_DBCS) {
+	    ea_buf[baddr].db = ucs4 == ' '? DBCS_RIGHT: DBCS_LEFT;
+	}
     }
 }
 
@@ -2568,7 +2617,7 @@ ctlr_add_gr(int baddr, unsigned char gr)
 void
 ctlr_add_fg(int baddr, unsigned char color)
 {
-    if (!appres.m3279) {
+    if (!mode.m3279) {
 	return;
     }
     if ((color & 0xf0) != 0xf0) {
@@ -2589,7 +2638,7 @@ ctlr_add_fg(int baddr, unsigned char color)
 void
 ctlr_add_bg(int baddr, unsigned char color)
 {
-    if (!appres.m3279) {
+    if (!mode.m3279) {
 	return;
     }
     if ((color & 0xf0) != 0xf0) {
@@ -2619,33 +2668,32 @@ ctlr_add_ic(int baddr, unsigned char ic)
 void
 ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count)
 {
-	/*
-	 * The 'to' region, the 'from' region, or both can wrap the screen,
-	 * and can overlap each other.  memmove() is smart enough to deal with
-	 * overlaps, but not across a screen wrap.
-	 *
-	 * It's faster to figure out if none of this is true, then do a slow
-	 * location-at-a-time version only if it happens.
-	 */
-	if (baddr_from + count <= ROWS*COLS &&
-	    baddr_to + count <= ROWS*COLS) {
-		ctlr_bcopy(baddr_from, baddr_to, count, true);
-	} else {
-		int i, from, to;
+    /*
+     * The 'to' region, the 'from' region, or both can wrap the screen,
+     * and can overlap each other.  memmove() is smart enough to deal with
+     * overlaps, but not across a screen wrap.
+     *
+     * It's faster to figure out if none of this is true, then do a slow
+     * location-at-a-time version only if it happens.
+     */
+    if (baddr_from + count <= ROWS*COLS && baddr_to + count <= ROWS*COLS) {
+	ctlr_bcopy(baddr_from, baddr_to, count, true);
+    } else {
+	int i, from, to;
 
-		for (i = 0; i < count; i++) {
-		    if (baddr_to > baddr_from) {
-			/* Shifting right, move left. */
-			to = (baddr_to + count - 1 - i) % ROWS*COLS;
-			from = (baddr_from + count - 1 - i) % ROWS*COLS;
-		    } else {
-			/* Shifting left, move right. */
-			to = (baddr_to + i) % ROWS*COLS;
-			from = (baddr_from + i) % ROWS*COLS;
-		    }
-		    ctlr_bcopy(from, to, 1, true);
-		}
+	for (i = 0; i < count; i++) {
+	    if (baddr_to > baddr_from) {
+		/* Shifting right, move left. */
+		to = (baddr_to + count - 1 - i) % ROWS*COLS;
+		from = (baddr_from + count - 1 - i) % ROWS*COLS;
+	    } else {
+		/* Shifting left, move right. */
+		to = (baddr_to + i) % ROWS*COLS;
+		from = (baddr_from + i) % ROWS*COLS;
+	    }
+	    ctlr_bcopy(from, to, 1, true);
 	}
+    }
 }
 
 /*
@@ -2656,23 +2704,23 @@ ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count)
 void
 ctlr_bcopy(int baddr_from, int baddr_to, int count, int move_ea)
 {
-	/* Move the characters. */
-	if (memcmp((char *) &ea_buf[baddr_from],
-	           (char *) &ea_buf[baddr_to],
-		   count * sizeof(struct ea))) {
-		(void) memmove(&ea_buf[baddr_to], &ea_buf[baddr_from],
-			           count * sizeof(struct ea));
-		REGION_CHANGED(baddr_to, baddr_to + count);
-		/*
-		 * For the time being, if any selected text shifts around on
-		 * the screen, unhighlight it.  Eventually there should be
-		 * logic for preserving the highlight if the *all* of the
-		 * selected text moves.
-		 */
-		if (area_is_selected(baddr_to, count))
-			unselect(baddr_to, count);
+    /* Move the characters. */
+    if (memcmp((char *) &ea_buf[baddr_from], (char *) &ea_buf[baddr_to],
+		count * sizeof(struct ea))) {
+	memmove(&ea_buf[baddr_to], &ea_buf[baddr_from],
+		count * sizeof(struct ea));
+	REGION_CHANGED(baddr_to, baddr_to + count);
+	/*
+	 * For the time being, if any selected text shifts around on
+	 * the screen, unhighlight it.  Eventually there should be
+	 * logic for preserving the highlight if the *all* of the
+	 * selected text moves.
+	 */
+	if (area_is_selected(baddr_to, count)) {
+	    unselect(baddr_to, count);
 	}
-	/* XXX: What about move_ea? */
+    }
+    /* XXX: What about move_ea? */
 }
 
 /*
@@ -2682,15 +2730,15 @@ ctlr_bcopy(int baddr_from, int baddr_to, int count, int move_ea)
 void
 ctlr_aclear(int baddr, int count, int clear_ea)
 {
-	if (memcmp((char *) &ea_buf[baddr], (char *) zero_buf,
-		    count * sizeof(struct ea))) {
-		(void) memset((char *) &ea_buf[baddr], 0,
-				count * sizeof(struct ea));
-		REGION_CHANGED(baddr, baddr + count);
-		if (area_is_selected(baddr, count))
-			unselect(baddr, count);
+    if (memcmp((char *)&ea_buf[baddr], (char *)zero_buf,
+		count * sizeof(struct ea))) {
+	memset((char *) &ea_buf[baddr], 0, count * sizeof(struct ea));
+	REGION_CHANGED(baddr, baddr + count);
+	if (area_is_selected(baddr, count)) {
+	    unselect(baddr, count);
 	}
-	/* XXX: What about clear_ea? */
+    }
+    /* XXX: What about clear_ea? */
 }
 
 /*
@@ -2700,32 +2748,43 @@ ctlr_aclear(int baddr, int count, int clear_ea)
  * operation is common enough to warrant a separate path.
  */
 void
-ctlr_scroll(void)
+ctlr_scroll(unsigned char fg, unsigned char bg)
 {
-	int qty = (ROWS - 1) * COLS;
-	bool obscured;
+    int qty = (ROWS - 1) * COLS;
+    bool obscured;
+    int i;
 
-	/* Make sure nothing is selected. (later this can be fixed) */
-	unselect(0, ROWS*COLS);
+    /* Make sure nothing is selected. (later this can be fixed) */
+    unselect(0, ROWS*COLS);
 
-	/* Synchronize pending changes prior to this. */
-	obscured = screen_obscured();
-	if (!obscured && screen_changed)
-		screen_disp(false);
+    /* Synchronize pending changes prior to this. */
+    obscured = screen_obscured();
+    if (!obscured && screen_changed) {
+	screen_disp(false);
+    }
 
-	/* Move ea_buf. */
-	(void) memmove(&ea_buf[0], &ea_buf[COLS],
-	    qty * sizeof(struct ea));
+    /* Move ea_buf. */
+    memmove(&ea_buf[0], &ea_buf[COLS], qty * sizeof(struct ea));
 
-	/* Clear the last line. */
-	(void) memset((char *) &ea_buf[qty], 0, COLS * sizeof(struct ea));
+    /* Clear the last line. */
+    memset((char *) &ea_buf[qty], 0, COLS * sizeof(struct ea));
+    if ((fg & 0xf0) != 0xf0) {
+	fg = 0;
+    }
+    if ((bg & 0xf0) != 0xf0) {
+	bg = 0;
+    }
+    for (i = 0; i < COLS; i++) {
+	ea_buf[qty + i].fg = fg;
+	ea_buf[qty + i].bg = bg;
+    }
 
-	/* Update the screen. */
-	if (obscured) {
-		ALL_CHANGED;
-	} else {
-		screen_scroll();
-	}
+    /* Update the screen. */
+    if (obscured) {
+	ALL_CHANGED;
+    } else {
+	screen_scroll(fg, bg);
+    }
 }
 
 /*
@@ -2734,7 +2793,7 @@ ctlr_scroll(void)
 void
 ctlr_changed(int bstart, int bend)
 {
-	REGION_CHANGED(bstart, bend);
+    REGION_CHANGED(bstart, bend);
 }
 
 /*
@@ -2743,72 +2802,72 @@ ctlr_changed(int bstart, int bend)
 void
 ctlr_altbuffer(bool alt)
 {
-	struct ea *etmp;
+    struct ea *etmp;
 
-	if (alt != is_altbuffer) {
+    if (alt != is_altbuffer) {
 
-		etmp = ea_buf;
-		ea_buf = aea_buf;
-		aea_buf = etmp;
+	etmp = ea_buf;
+	ea_buf = aea_buf;
+	aea_buf = etmp;
 
-		is_altbuffer = alt;
-		ALL_CHANGED;
-		unselect(0, ROWS*COLS);
+	is_altbuffer = alt;
+	ALL_CHANGED;
+	unselect(0, ROWS*COLS);
 
-		/*
-		 * There may be blinkers on the alternate screen; schedule one
-		 * iteration just in case.
-		 */
-		blink_start();
-	}
+	/*
+	 * There may be blinkers on the alternate screen; schedule one
+	 * iteration just in case.
+	 */
+	blink_start();
+    }
 }
 
-
 /*
  * Set or clear the MDT on an attribute
  */
 void
 mdt_set(int baddr)
 {
-	int faddr;
+    int faddr;
 
-	faddr = find_field_attribute(baddr);
-	if (faddr >= 0 && !(ea_buf[faddr].fa & FA_MODIFY)) {
-		ea_buf[faddr].fa |= FA_MODIFY;
-		if (appres.modified_sel)
-			ALL_CHANGED;
+    faddr = find_field_attribute(baddr);
+    if (faddr >= 0 && !(ea_buf[faddr].fa & FA_MODIFY)) {
+	ea_buf[faddr].fa |= FA_MODIFY;
+	if (appres.modified_sel) {
+	    ALL_CHANGED;
 	}
+    }
 }
 
 void
 mdt_clear(int baddr)
 {
-	int faddr;
+    int faddr;
 
-	faddr = find_field_attribute(baddr);
-	if (faddr >= 0 && (ea_buf[faddr].fa & FA_MODIFY)) {
-		ea_buf[faddr].fa &= ~FA_MODIFY;
-		if (appres.modified_sel)
-			ALL_CHANGED;
+    faddr = find_field_attribute(baddr);
+    if (faddr >= 0 && (ea_buf[faddr].fa & FA_MODIFY)) {
+	ea_buf[faddr].fa &= ~FA_MODIFY;
+	if (appres.modified_sel) {
+	    ALL_CHANGED;
 	}
+    }
 }
 
-
 /*
  * Support for screen-size swapping for scrolling
  */
 void
 ctlr_shrink(void)
 {
-	int baddr;
+    int baddr;
 
-	for (baddr = 0; baddr < ROWS*COLS; baddr++) {
-		if (!ea_buf[baddr].fa)
-			ea_buf[baddr].cc =
-			    visible_control? EBC_space : EBC_null;
+    for (baddr = 0; baddr < ROWS*COLS; baddr++) {
+	if (!ea_buf[baddr].fa) {
+	    ea_buf[baddr].ec = visible_control? EBC_space : EBC_null;
 	}
-	ALL_CHANGED;
-	screen_disp(false);
+    }
+    ALL_CHANGED;
+    screen_disp(false);
 }
 
 /*
@@ -2827,16 +2886,15 @@ ctlr_shrink(void)
 enum dbcs_state
 ctlr_dbcs_state_ea(int baddr, struct ea *ea)
 {
-	return dbcs? ea[baddr].db: DBCS_NONE;
+    return (ea[baddr].ucs4 || dbcs)? ea[baddr].db: DBCS_NONE;
 }
 
 enum dbcs_state
 ctlr_dbcs_state(int baddr)
 {
-	return ctlr_dbcs_state_ea(baddr, ea_buf);
+    return ctlr_dbcs_state_ea(baddr, ea_buf);
 }
 
-
 /*
  * Transaction timing.  The time between sending an interrupt (PF, PA, Enter,
  * Clear) and the host unlocking the keyboard is indicated on the status line
@@ -2864,7 +2922,7 @@ keep_ticking(ioid_t id _is_unused)
     long msec;
 
     do {
-	(void) gettimeofday(&t1, (struct timezone *) 0);
+	gettimeofday(&t1, (struct timezone *) 0);
 	t_want.tv_sec++;
 	msec = delta_msec(&t_want, &t1);
     } while (msec <= 0);
@@ -2875,7 +2933,7 @@ keep_ticking(ioid_t id _is_unused)
 void
 ticking_start(bool anyway)
 {
-    (void) gettimeofday(&t_start, (struct timezone *) 0);
+    gettimeofday(&t_start, (struct timezone *) 0);
     mticking = true;
 
     if (!toggled(SHOW_TIMING) && !anyway) {
@@ -2895,9 +2953,8 @@ ticking_stop(void)
 {
     struct timeval t1;
 
-    (void) gettimeofday(&t1, (struct timezone *) 0);
+    gettimeofday(&t1, (struct timezone *) 0);
     if (mticking) {
-	sms_accumulate_time(&t_start, &t1);
 	mticking = false;
     } else {
 	return;
@@ -2917,13 +2974,20 @@ ticking_stop(void)
 const char *
 ctlr_query_cur_size(void)
 {
-    return lazyaf("%u %u", ROWS, COLS);
+    return lazyaf("rows %u columns %u", ROWS, COLS);
 }
 
 const char *
 ctlr_query_cursor(void)
 {
     return lazyaf("%u %u", cursor_addr / COLS, cursor_addr % COLS);
+}
+
+const char *
+ctlr_query_cursor1(void)
+{
+    return lazyaf("row %u column %u offset %u",
+	    (cursor_addr / COLS) + 1, (cursor_addr % COLS) + 1, cursor_addr);
 }
 
 const char *
@@ -2935,5 +2999,29 @@ ctlr_query_formatted(void)
 const char *
 ctlr_query_max_size(void)
 {
-    return lazyaf("%u %u", maxROWS, maxCOLS);
+    return lazyaf("rows %u columns %u", maxROWS, maxCOLS);
 }
+
+/*
+ * Cursor enable/disable.
+ */
+void
+ctlr_enable_cursor(bool enable, unsigned source)
+{
+    static unsigned disables = 0;
+    int new_disables;
+
+    /* Compute the new disable mask. */
+    if (enable) {
+	new_disables = disables & ~source;
+    } else {
+	new_disables = disables | source;
+    }
+
+    if (!!disables ^ !!new_disables) {
+	/* Overall state change. */
+	enable_cursor(!new_disables);
+    }
+    disables = new_disables;
+}
+

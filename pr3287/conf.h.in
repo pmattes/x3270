@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2014-2015, 2017 Paul Mattes.
+ * Copyright (c) 2000-2009, 2014-2015, 2017, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,5 +43,4 @@
 /* Configuration options. */
 
 /* Optional parts. */
-#undef X3270_DBCS
 #undef X3270_IPV6

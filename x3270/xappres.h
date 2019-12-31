@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015-2016 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -74,6 +74,7 @@ typedef struct {
     char	*input_method;
     char	*preedit_type;
     char	*ad_version;
+    char	*dpi;
 
     /*
      * Common resources that have type 'bool', which we need to parse as type
@@ -84,9 +85,6 @@ typedef struct {
      * are the same type or not.
      */
     struct {
-	Boolean extended;
-	Boolean m3279;
-	Boolean apl_mode;
 	Boolean once;
 	Boolean scripted;
 	Boolean modified_sel;
@@ -98,18 +96,15 @@ typedef struct {
 	Boolean numeric_lock;
 	Boolean secure;
 	Boolean oerr_lock;
-	Boolean typeahead;
 	Boolean debug_tracing;
 	Boolean disconnect_clear;
 	Boolean highlight_bold;
-	Boolean color8;
 	Boolean bsd_tm;
 	Boolean trace_monitor;
 	Boolean idle_command_enabled;
 	Boolean nvt_mode;
-	Boolean dsTrace_bc;
-	Boolean eventTrace_bc;
 	Boolean script_port_once;
+	Boolean utf8;
 	struct {
 	    Boolean mono;
 	    Boolean menubar;

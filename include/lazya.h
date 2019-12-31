@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Paul Mattes.
+ * Copyright (c) 2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  *              Lazy allocations.
  */
 
-char *lazya(char *buf);
+char *lazya(void *buf);
 char *lazyaf(const char *fmt, ...);
 char *vlazyaf(const char *fmt, va_list args);
 void lazya_flush();

@@ -1,0 +1,65 @@
+# Copyright (c) 1995-2016, 2018 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Auxiliary makefile for wb3270
+
+PRODUCT = wb3270
+
+all:
+	@echo "Must pick a specific make target."
+
+DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
+	html/SSL.html
+
+src.tgz: $(DOCS) Makefile.aux
+
+MANDEP = html.m4 m4man Makefile.aux version.txt
+MKHTML = ./m4man -t html -p $(PRODUCT)
+
+man: $(DOCS)
+
+html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+
+# Special rule to build the SSL documentation, which comes from a template.
+html/SSL.html: documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
+
+
+# Generate a zipfile for import into wx3270.
+include ../Common/Win32/release.mk
+ZIP64 = b3270-$(VERSION)-noinstall-64.zip
+release-files: $(ZIP64)
+wx3270-release: release-files
+	@$(RM) /tmp/pass
+
+$(ZIPITDEP64): buildexe
+$(ZIP64): $(ZIPITDEP64) b3270-64.zipit version.txt Makefile.aux sign-files
+	$(ZIPIT) -c "b3270 $(VERSION)" -o $@ b3270-64.zipit

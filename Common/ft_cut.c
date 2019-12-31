@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -390,7 +390,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 void
 ft_cut_data(void)
 {
-    switch (ea_buf[O_FRAME_TYPE].cc) {
+    switch (ea_buf[O_FRAME_TYPE].ec) {
     case FT_CONTROL_CODE:
 	cut_control_code();
 	break;
@@ -404,7 +404,7 @@ ft_cut_data(void)
 	cut_data();
 	break;
     default:
-	trace_ds("< FT unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].cc);
+	trace_ds("< FT unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].ec);
 	cut_abort(get_message("ftCutUnknownFrame"), SC_ABORT_XMIT);
 	break;
     }
@@ -422,8 +422,8 @@ cut_control_code(void)
     int i;
 
     trace_ds("< FT CONTROL_CODE ");
-    code = (ea_buf[O_CC_STATUS_CODE].cc << 8) |
-	    ea_buf[O_CC_STATUS_CODE + 1].cc;
+    code = (ea_buf[O_CC_STATUS_CODE].ec << 8) |
+	    ea_buf[O_CC_STATUS_CODE + 1].ec;
     switch (code) {
     case SC_HOST_ACK:
 	trace_ds("HOST_ACK\n");
@@ -457,7 +457,7 @@ cut_control_code(void)
 	    for (i = 0; i < 80; i++) {
 		size_t xlen;
 
-		xlen = ft_ebcdic_to_multibyte(ea_buf[O_CC_MESSAGE + i].cc, bp,
+		xlen = ft_ebcdic_to_multibyte(ea_buf[O_CC_MESSAGE + i].ec, bp,
 			mb_len);
 		if (xlen) {
 		    bp += xlen - 1;
@@ -494,7 +494,7 @@ cut_control_code(void)
 static void
 cut_data_request(void)
 {
-    unsigned char seq = ea_buf[O_DR_FRAME_SEQ].cc;
+    unsigned char seq = ea_buf[O_DR_FRAME_SEQ].ec;
     int count;
     unsigned char cs;
     int c;
@@ -546,7 +546,7 @@ cut_data_request(void)
     ctlr_add(O_UP_FRAME_SEQ, seq, 0);
     cs = 0;
     for (i = 0; i < count; i++) {
-	cs ^= ea_buf[O_UP_DATA + i].cc;
+	cs ^= ea_buf[O_UP_DATA + i].ec;
     }
     ctlr_add(O_UP_CSUM, asc2ebc0[(int)table6[cs & 0x3f]], 0);
     ctlr_add(O_UP_LEN, asc2ebc0[(int)table6[(count >> 6) & 0x3f]], 0);
@@ -609,14 +609,14 @@ cut_data(void)
     }
 
     /* Copy and convert the data. */
-    raw_length = from6(ea_buf[O_DT_LEN].cc) << 6 |
-		 from6(ea_buf[O_DT_LEN + 1].cc);
+    raw_length = from6(ea_buf[O_DT_LEN].ec) << 6 |
+		 from6(ea_buf[O_DT_LEN + 1].ec);
     if ((int)raw_length > O_RESPONSE - O_DT_DATA) {
 	cut_abort(get_message("ftCutOversize"), SC_ABORT_XMIT);
 	return;
     }
     for (i = 0; i < (int)raw_length; i++) {
-	cvbuf[i] = ea_buf[O_DT_DATA + i].cc;
+	cvbuf[i] = ea_buf[O_DT_DATA + i].ec;
     }
 
     if (raw_length == 2 && cvbuf[0] == EOF_DATA1 && cvbuf[1] == EOF_DATA2) {
@@ -664,7 +664,7 @@ cut_abort(const char *s, unsigned short reason)
 
     /* Send the abort sequence. */
     ctlr_add(RO_FRAME_TYPE, RFT_CONTROL_CODE, 0);
-    ctlr_add(RO_FRAME_SEQ, ea_buf[O_DT_FRAME_SEQ].cc, 0);
+    ctlr_add(RO_FRAME_SEQ, ea_buf[O_DT_FRAME_SEQ].ec, 0);
     ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
     ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
     trace_ds("> FT CONTROL_CODE ABORT\n");
@@ -714,7 +714,7 @@ xlate_getc(void)
 	    fts.length++;
 	    mb[mb_len++] = c;
 	    error = ME_NONE;
-	    (void) ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
+	    ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
 	    if (error == ME_INVALID) {
 		mb[0] = '?';
 		mb_len = 1;

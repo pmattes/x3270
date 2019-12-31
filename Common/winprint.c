@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2018 Paul Mattes.
+ * Copyright (c) 1994-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ typedef struct {	/* Windows screen print context */
 /* Globals */
 
 /* Statics */
-
+
 /*
  * A Windows version of something like mkstemp().  Creates a temporary
  * file in $TEMP, returning its path and an open file descriptor.
@@ -213,7 +213,7 @@ run_wordpad(LPVOID lpParameter)
     Free(cmdline);
 
     /* Unlink the temporary file. */
-    (void) unlink(w->filename);
+    unlink(w->filename);
 
     /*
      * Free the memory.
@@ -331,5 +331,5 @@ start_wordpad_async(const char *action_name, const char *filename,
      * Make sure the thread handle is closed when the screen printing is
      * done.
      */
-    (void) AddInput(print_thread, close_wsh);
+    AddInput(print_thread, close_wsh);
 }

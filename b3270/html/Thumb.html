@@ -1,0 +1,30 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 thumb Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="thumb"></a><h3>thumb Indication</h3>
+
+<p>Scrollbar thumb has changed.</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>top</td><td>yes</td><td>Fraction of scrollbar to top of thumb (0.0..1.0)</td></tr>
+ <tr><td>shown</td><td>yes</td><td>Fraction of scrollbar to for thumb display (0.0..1.0)</td></tr>
+ <tr><td>saved</td><td>yes</td><td>Number of lines saved</td></tr>
+ <tr><td>screen</td><td>yes</td><td>Size of a screen</td></tr>
+ <tr><td>back</td><td>yes</td><td>Number of lines scrolled back</td></tr>
+</table>
+
+<p>Example:
+<pre>
+&lt;thumb top="0.01031" shown="0.98969" saved="43" screen="43" back="0"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

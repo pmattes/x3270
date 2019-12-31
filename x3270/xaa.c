@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,49 +27,23 @@
 
 /*
  *      xaa.c
- *              The Execute an Action menu item.
+ *              The x3270> prompt menu item.
  */
 
 #include "globals.h"
 
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
-
-#include "macros.h"
-#include "popups.h"
+#include "task.h"
 #include "xaa.h"
-#include "xpopups.h"
 
 /* Macros */
 
 /* Globals */
 
 /* Statics */
-static Widget execute_action_shell = NULL;
-
-/* Callback for "OK" button on execute action popup */
-static void
-execute_action_callback(Widget w _is_unused, XtPointer client_data,
-	XtPointer call_data _is_unused)
-{
-    char *text;
-
-    text = XawDialogGetValueString((Widget)client_data);
-    XtPopdown(execute_action_shell);
-    if (!text) {
-	return;
-    }
-    push_macro(text, false);
-}
 
 void
-execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
+prompt_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    if (execute_action_shell == NULL) {
-	execute_action_shell = create_form_popup("ExecuteAction",
-		execute_action_callback, NULL, FORM_NO_CC);
-    }
-
-    popup_popup(execute_action_shell, XtGrabExclusive);
+    push_macro("Prompt()");
 }

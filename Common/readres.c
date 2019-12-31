@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2009, 2013-2016, 2018 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@
 
 #include <errno.h>
 
+#include "appres.h"
 #include "glue.h"
 #include "readres.h"
 #include "utils.h"
@@ -52,11 +53,23 @@ validate_and_split_resource(const char *where, const char *arg,
     static char *me_dot = NULL;
     static char *me_star = NULL;
     static size_t me_len = 0;
+    static char *alias_dot = NULL;
+    static char *alias_star = NULL;
+    static size_t alias_len = 0;
+    static char *or_alias = "";
 
     if (me_dot == NULL) {
 	me_dot = xs_buffer("%s.", app);
 	me_star = xs_buffer("%s*", app);
 	me_len = strlen(me_dot);
+	if (appres.alias != NULL) {
+	    alias_dot = xs_buffer("%s.", appres.alias);
+	    alias_star = xs_buffer("%s*", appres.alias);
+	    alias_len = strlen(alias_dot);
+	    if (strcmp(app, appres.alias)) {
+		or_alias = xs_buffer(" or '%s'", alias_dot);
+	    }
+	}
     }
 
     /* Enforce "-3270." or "-3270*" or "*". */
@@ -64,11 +77,15 @@ validate_and_split_resource(const char *where, const char *arg,
 	match_len = me_len;
     } else if (!strncmp(arg, me_star, me_len)) {
 	match_len = me_len;
+    } else if (alias_len != 0 && !strncmp(s, alias_dot, alias_len)) {
+	match_len = alias_len;
+    } else if (alias_len != 0 && !strncmp(arg, alias_star, alias_len)) {
+	match_len = alias_len;
     } else if (arg[0] == '*') {
 	match_len = 1;
     } else {
 	xs_warning("%s: Invalid resource syntax '%.*s', name must begin with "
-		"'%s'", where, (int)me_len, arg, me_dot);
+		"'%s', '*'%s", where, (int)me_len, arg, me_dot, or_alias);
 	return -1;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -39,71 +39,44 @@
 #include "globals.h"
 
 #include "appres.h"
-#include "screen.h"
-# if defined(WC3270) /*[*/
-#  include "cscreen.h"
-# endif /*]*/
-# include "ssl_passwd_gui.h"
+#include "host.h"
+#include "popups.h"
+#include "ssl_passwd_gui.h"
+#include "task.h"
+#include "telnet.h"
 
 /* Statics. */
-static bool ssl_password_prompted;
 
-/* Prompt for a password on the console. */
-static char *
-gets_noecho(char *buf, int size)
+/* Proceed with password input. */
+static bool
+ssl_passwd_continue_input(void *handle, const char *text)
 {
-# if !defined(_WIN32) /*[*/
-    char *s;
-    size_t sl;
+    /* Send the password back to TLS. */
+    net_password_continue(text);
+    return true;
+}
 
-    (void) system("stty -echo");
-    s = fgets(buf, size - 1, stdin);
-    (void) system("stty echo");
-    if (s != NULL) {
-	sl = strlen(buf);
-	if (sl && buf[sl - 1] == '\n') {
-	    buf[sl - 1] = '\0';
-	}
-    }
-    return s;
-# else /*][*/
-    int cc = 0;
-
-    while (true) {
-	char c;
-
-	(void) screen_wait_for_key(&c);
-	if (c == '\r') {
-	    buf[cc] = '\0';
-	    return buf;
-	} else if (c == '\b' || c == 0x7f) {
-	    if (cc) {
-		    cc--;
-	    }
-	} else if (c == 0x1b) {
-	    cc = 0;
-	} else if ((unsigned char)c >= ' ' && cc < size - 1) {
-	    buf[cc++] = c;
-	}
-    }
-# endif /*]*/
+/* Password input aborted. */
+static void
+ssl_passwd_abort_input(void *handle)
+{
+    connect_error("Password input aborted");
+    host_disconnect(true);
 }
 
 /* Password callback. */
 ssl_passwd_ret_t
 ssl_passwd_gui_callback(char *buf, int size, bool again)
 {
-    char *s;
-
-    screen_suspend();
     if (again) {
-	fprintf(stdout, "\nPassword is incorrect.");
+	action_output("Password is incorrect.");
+    } else {
+	action_output("TLS certificate private key requires a password.");
     }
-    fprintf(stdout, "\nEnter password for Private Key: ");
-    fflush(stdout);
-    s = gets_noecho(buf, size);
-    fprintf(stdout, "\n");
-    fflush(stdout);
-    ssl_password_prompted = true;
-    return (s && strlen(s))? SP_SUCCESS: SP_FAILURE;
+    if (task_request_input("Connect", "Enter password: ",
+		ssl_passwd_continue_input, ssl_passwd_abort_input, NULL,
+		true)) {
+	return SP_PENDING;
+    }
+    return SP_FAILURE;
 }

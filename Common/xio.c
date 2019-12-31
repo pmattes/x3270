@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, 2015 Paul Mattes.
+ * Copyright (c) 1993-2013, 2015, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -39,11 +39,13 @@
 
 #include "actions.h"
 #include "telnet.h"
+#include "trace.h"
 #include "utils.h"
 #include "xio.h"
 
 /* Globals. */
 int x3270_exit_code = 0;
+bool x3270_exiting = false;
 
 /* Statics. */
 static ioid_t ns_read_id;
@@ -118,13 +120,13 @@ x_remove_input(void)
 void
 x3270_exit(int n)
 {
-    static bool already_exiting = false;
-
     /* Handle unintentional recursion. */
-    if (already_exiting) {
+    if (x3270_exiting) {
 	return;
     }
-    already_exiting = true;
+    x3270_exiting = true;
+
+    vtrace("Exiting with status %d\n", n);
 
     /* Set the exit code. */
     x3270_exit_code = n;
@@ -148,12 +150,30 @@ x3270_exit(int n)
 #endif /*]*/
 }
 
+/*
+ * Delayed Quit.
+ * Called with a zero timeout so that the Quit() action can return
+ * successfully.
+ */
+static void
+delayed_quit(ioid_t id)
+{
+    x3270_exit(0);
+}
+
 static bool
 Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
+    bool force = false;
+
     action_debug("Quit", ia, argc, argv);
-    if (check_argc("Quit", argc, 0, 0) < 0) {
+    if (check_argc("Quit", argc, 0, 1) < 0) {
 	return false;
+    }
+
+    if (argc > 0 &&
+	    (!strcasecmp(argv[0], "-Force") || !strcasecmp(argv[0], "Force"))) {
+	force = true;
     }
 
     /*
@@ -164,8 +184,9 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
      * read in a file that includes a Quit(). If we are connected, it will
      * fail.
      */
-    if (ia != IA_KEYMAP || !CONNECTED) {
-	x3270_exit(0);
+    if (force || (!IA_IS_KEY(ia) || !FULL_SESSION)) {
+	AddTimeOut(0, delayed_quit);
+	return true;
     }
     return false;
 }

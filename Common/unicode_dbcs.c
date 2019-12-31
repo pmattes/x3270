@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2012, 2014-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,9 @@
  */
 #include "globals.h"
 
+#include "lazya.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
-
-/*
- * Note: #undef'ing X3270_DBCS disables the ability to configure a DBCS host
- *  codepage, but it does not disable the internal logic that supports DBCS.
- *  Its purpose is to save space in the executable by removing the translation
- *  tables, not by turning the code into #ifdef spaghetti.
- */
 
 /*
  * DBCS EBCDIC-to-Unicode translation tables.
@@ -53,7 +47,6 @@ typedef struct {
     const char *ebc2u[512];	/* EBCDIC to Unicode vectors */
 } uni16_t;
 
-#if defined(X3270_DBCS) /*[*/
 static uni16_t uni16[] = {
     { "cp930", "0x0172012c" /* 370, 300 */,
 /* Unicode to EBCDIC DBCS translation table for ibm-300_P110-1997 */ {
@@ -4169,7 +4162,6 @@ static uni16_t uni16[] = {
     },
     { NULL }
 };
-#endif /*]*/
 
 /* Code page aliases. */
 
@@ -4178,54 +4170,18 @@ typedef struct {
     char *canon;
 } cpalias_t;
 
-#if defined(X3270_DBCS) /*[*/
 cpalias_t cpaliases16[] = {
     { "chinese-gb18030",	"cp1388" },
-    { "cp1027",			"cp930" },	/* historical error */
-    { "cp290",			"cp930" },	/* historical error */
-    { "cp936",			"cp935" },	/* historical error */
-    { "japanese-1027",		"cp930" },	/* historical error */
-    { "japanese-290",		"cp930" },	/* historical error */
     { "japanese-kana",		"cp930" },
     { "japanese-latin",		"cp930" },	/* 930 and 939 DBCS are the
 						   same */
     { "simplified-chinese",	"cp935" },
     { "traditional-chinese",	"cp937" },
+    { "cp939",			"cp930" },
     { NULL,			NULL }
 };
-#endif /*]*/
 
 static uni16_t *cur_uni16 = NULL;
-
-void
-charset_list_dbcs(void)
-{
-#if defined(X3270_DBCS) /*[*/
-    	int i;
-	int j;
-	char *sep = "";
-
-	printf("DBCS host code pages (with aliases):\n");
-	for (i = 0; uni16[i].name != NULL; i++) {
-		bool any = false;
-		char *asep = " (";
-
-	    	printf("%s%s", sep, uni16[i].name);
-		for (j = 0; cpaliases16[j].alias != NULL; j++) {
-
-		    	if (!strcmp(cpaliases16[j].canon, uni16[i].name)) {
-			    	printf("%s%s", asep, cpaliases16[j].alias);
-				asep = ", ";
-				any = true;
-			}
-		}
-		if (any)
-		    	printf(")");
-		sep = ", ";
-	}
-	printf("\n");
-#endif /*]*/
-}
 
 /*
  * Translate a single DBCS EBCDIC character to Unicode.
@@ -4286,16 +4242,24 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
  * Returns true for success, false for failure.
  */
 bool
-set_uni_dbcs(const char *csname, const char **codepage)
+set_uni_dbcs(const char *cpname, const char **codepage)
 {
-#if defined(X3270_DBCS) /*[*/
     int i;
-    const char *realname = csname;
+    const char *realname = cpname;
     bool rc = false;
+
+    /*
+     * Check for an all-numeric name. There are no names or aliases that are
+     * just numbers, so adding a 'cp' to the front of an all-numeric name will
+     * not cause any misidentification.
+     */
+    if (is_all_digits(realname)) {
+	realname = lazyaf("cp%s", realname);
+    }
 
     /* Search for an alias. */
     for (i = 0; cpaliases16[i].alias != NULL; i++) {
-	if (!strcasecmp(csname, cpaliases16[i].alias)) {
+	if (!strcasecmp(realname, cpaliases16[i].alias)) {
 	    realname = cpaliases16[i].canon;
 	    break;
 	}
@@ -4320,7 +4284,4 @@ set_uni_dbcs(const char *csname, const char **codepage)
     }
 
     return rc;
-#else /*][*/
-    return false;
-#endif /*]*/
 }

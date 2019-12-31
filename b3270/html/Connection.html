@@ -1,0 +1,61 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 connection Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="connection"></a><h3>connection Indication</h3>
+
+<p>The host connection has changed state.</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr>
+  <td>state</td>
+  <td>yes</td>
+  <td>New connection <a href="#connectionState">state</a></td>
+ </tr>
+ <tr><td>host</td><td>no</td><td>Host name, if connected</td></tr>
+ <tr><td>cause</td><td>no</td><td><a href="#cause">Source</a> of connection</td></tr>
+</table>
+
+<a name="connectionState"></a><p>Connection states are listed here.</p>
+<table border cols=2 width="75%">
+ <tr><th>State</th><th>Meaning</th></tr>
+ <tr><td>not-connected</td><td>No connection</td></tr>
+ <tr><td>reconnecting</td><td>Delay before automatic reconnection</td></tr>
+ <tr><td>resolving</td><td>Resoving host name to address</td></tr>
+ <tr><td>tcp-pending</td><td>TCP connection pending</td></tr>
+ <tr><td>tls-pending</td><td>TLS negotiation in progress</td></tr>
+ <tr><td>proxy-pending</td><td>Proxy negotiation in progress</td></tr>
+ <tr><td>telnet-pending</td><td>TELNET option negotiation in progress</td></tr>
+ <tr><td>connected-nvt</td><td>TN3270 NVT mode, line at a time</td></tr>
+ <tr><td>connected-nvt-charmode</td><td>TN3270 NVT mode, character at a time</td></tr>
+ <tr><td>connected-3270</td><td>TN3270 3270 mode</td></tr>
+ <tr><td>connected-unbound</td><td>TN3270E unbound mode</td></tr>
+ <tr><td>connected-e-nvt</td><td>TN3270E NVT mode</td></tr>
+ <tr><td>connected-e-sscp</td><td>TN3270E SSCP-LU mode</td></tr>
+ <tr><td>connected-tn3270e</td><td>TN3270E 3270 mode</td></tr>
+</table>
+
+<a name="cause"></a><p>Connection sources are listed here.</p>
+<table border cols=2 width="75%">
+ <tr><th>Cause</th><th>Meaning</th></tr>
+ <tr><td>macro</td><td>Macro invocation</td></tr>
+ <tr><td>script</td><td>Action from script</td></tr>
+ <tr><td>command</td><td>x3270&gt; prompt</td></tr>
+ <tr><td>keymap</td><td>Action from keymap</td></tr>
+ <tr><td>ui</td><td>Generated from user interface</td></tr>
+</table>
+
+<p>Example:
+<pre>
+&lt;connection state="connected-tn3270e" host="foo.bar.com" cause="ui"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

@@ -1,0 +1,84 @@
+#!/bin/bash
+# Run x3270 with cheesy automatic font scaling.
+#  autoscale [-d] [x3270-options]
+
+# Figure out the pathname of the directory dryrun is in.
+d=`dirname $0`
+case "$d" in
+    .)	d=`pwd`
+	;;
+    /*)	;;
+    *)	d=`pwd`/$d
+esac
+
+if [ "$1" = "-d" ]
+then	debug=1
+	shift
+fi
+
+# Debug echo function.
+function decho
+{
+    [ -n "$debug" ] && echo $*
+}
+
+# Figure out the display dpi and the scale relative to 96.
+if [ -n "$DPI" ]
+then	dpi=$DPI
+else	dpi=$(xrdb -query | awk '/^Xft\.dpi:/ { print $2 }')
+	if [ -z "$dpi" ]
+	then	echo >&2 "Display DPI is unknown"
+		exit 1
+	fi
+fi
+typeset -i scale
+let "scale = ($dpi*100)/96"
+decho "display is ${dpi}dpi, scale is $scale"
+
+# 96dpi needs no mods
+if [ $scale -eq 100 ]
+then	set -x
+    	exec $d/x3270 "$@"
+fi
+
+# These are hand-tuned.
+typeset -i s20
+let "s20 = ($scale * 10) / 130"
+decho "s20 is $s20"
+typeset -i s24
+let "s24 = ($scale * 10) / 108"
+decho "s24 is $s24"
+typeset -i s32
+let "s32 = ($scale * 10) / 81"
+decho "s32 is $s32"
+typeset -i s40
+let "s40 = ($scale * 10) / 65"
+decho "s40 is $s40"
+
+# x3270 fonts only come in discrete sizes (12, 16, 20, 24, 32).
+# Pick something big enough.
+if [ $s32 -ge 29 ]
+then	efont=3270gt32
+elif [ $s32 -ge 23 ]
+then	efont=3270gt24
+elif [ $s32 -ge 19 ]
+then	efont=3270-20
+elif [ $s32 -ge 15 ]
+then	efont=3270gt16
+else	efont=3270
+fi
+decho "efont is $efont"
+
+set -x
+exec $d/x3270 \
+ -xrm "x3270*keyPad*large*font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*keyPad*small*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*value*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*filename*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*smallLabel.font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*dataLabel.font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*dialog*value*font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
+ -xrm "x3270*font: -*-helvetica-bold-r-normal--$s32-*-*-*-p-*-iso8859-1" \
+ -efont $efont \
+ "$@"

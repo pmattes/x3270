@@ -602,6 +602,8 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SSL_MODULES
 LIBX3270DIR
+HAVE_GETADDRINFO_A
+GAI_LIBS
 SSL_LIBS
 SSL_LDFLAGS
 ICONV_LIBS
@@ -3232,20 +3234,20 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 ansi="-std=c99 -pedantic"
 case "$host_os" in
-*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
     		ansi=""
 		;;
-hpux|*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+hpux|*cygwin*)	CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		;;
 solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		$as_echo "#define CONNECT_GETPEERNAME 1" >>confdefs.h
 
 		;;
 darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
-		CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED"
+		CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		mac_os=1
 		;;
-linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
@@ -3725,6 +3727,18 @@ fi
 
 done
 
+for ac_header in malloc.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "malloc.h" "ac_cv_header_malloc_h" "$ac_includes_default"
+if test "x$ac_cv_header_malloc_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MALLOC_H 1
+_ACEOF
+
+fi
+
+done
+
 
 if test ! "$enable_ssl" = no
 then	use_openssl=yes
@@ -4125,6 +4139,63 @@ fi
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing getaddrinfo_a" >&5
+$as_echo_n "checking for library containing getaddrinfo_a... " >&6; }
+if ${ac_cv_search_getaddrinfo_a+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char getaddrinfo_a ();
+int
+main ()
+{
+return getaddrinfo_a ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' anl; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_getaddrinfo_a=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_getaddrinfo_a+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_getaddrinfo_a+:} false; then :
+
+else
+  ac_cv_search_getaddrinfo_a=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_getaddrinfo_a" >&5
+$as_echo "$ac_cv_search_getaddrinfo_a" >&6; }
+ac_res=$ac_cv_search_getaddrinfo_a
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  $as_echo "#define HAVE_GETADDRINFO_A 1" >>confdefs.h
+
+fi
+
 
 if echo "$LIBS" | grep -e '-liconv\>' >/dev/null
 then	ICONV_LIBS="-liconv"
@@ -4137,6 +4208,17 @@ do :
 if test "x$ac_cv_func_vasprintf" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_VASPRINTF 1
+_ACEOF
+
+fi
+done
+
+for ac_func in malloc_usable_size
+do :
+  ac_fn_c_check_func "$LINENO" "malloc_usable_size" "ac_cv_func_malloc_usable_size"
+if test "x$ac_cv_func_malloc_usable_size" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MALLOC_USABLE_SIZE 1
 _ACEOF
 
 fi
@@ -4351,6 +4433,11 @@ $as_echo "$as_me: WARNING: Disabling OpenSSL -- missing libs" >&2;}
 	fi
 fi
 
+
+
+if echo "$LIBS" | grep -e '-lanl\>' >/dev/null
+then	GAI_LIBS="-lanl"
+fi
 
 
 LIBX3270DIR='${sysconfdir}/x3270'

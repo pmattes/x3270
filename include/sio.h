@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,13 +45,18 @@ typedef enum {
     SI_WRONG_PASSWORD	/* password is wrong */
 } sio_init_ret_t;
 
+/* Return values from sio_negotiate. */
+typedef enum {
+    SIG_SUCCESS,	/* success */
+    SIG_FAILURE,	/* failure */
+    SIG_WANTMORE	/* more input needed */
+} sio_negotiate_ret_t;
+
 typedef void *sio_t;
 
 /* Implemented in common code. */
-void sio_register(void);
 const char *sio_last_error(void);
 unsigned sio_all_options_supported();
-const char *sio_option_name(unsigned option);
 
 /* Implemented in platform-specific code. */
 bool sio_supported(void);
@@ -59,7 +64,8 @@ const char *sio_provider(void);
 unsigned sio_options_supported(void);
 sio_init_ret_t sio_init(ssl_config_t *config, const char *password,
 	sio_t *sio_ret);
-bool sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data);
+sio_negotiate_ret_t sio_negotiate(sio_t sio, socket_t sock,
+	const char *hostname, bool *data);
 int sio_read(sio_t sio, char *buf, size_t buflen);
 int sio_write(sio_t sio, const char *buf, size_t buflen);
 void sio_close(sio_t sio);

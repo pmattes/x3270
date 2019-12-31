@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 1994-2010, 2013-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -39,7 +39,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "ft_dft.h"
 #include "ft_private.h"
@@ -103,7 +103,6 @@ static struct reply {
 #define NSR_ALL	(sizeof(replies)/sizeof(struct reply))
 #define NSR	(NSR_ALL - 1)
 
-
 /*
  * Process a 3270 Write Structured Field command
  */
@@ -711,20 +710,18 @@ static void
 do_qr_color(void)
 {
     int i;
-    int color_max;
+    int color_max = 16;
 
     trace_ds("> QueryReply(Color)\n");
 
-    color_max = (appres.color8 || !appres.m3279)? 8: 16;
-
     space3270out(4 + 2*15);
     *obptr++ = 0x00;		/* no options */
-    *obptr++ = color_max;	/* report on 8 or 16 colors */
+    *obptr++ = color_max;	/* 16 colors */
     *obptr++ = 0x00;		/* default color: */
     *obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
     for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
 	*obptr++ = i;
-	if (appres.m3279) {
+	if (mode.m3279) {
 	    *obptr++ = i;
 	} else {
 	    *obptr++ = 0x00;
@@ -733,7 +730,7 @@ do_qr_color(void)
 
     if (screen_has_bg_color()) {
 	/* Add background color. */
-	if (appres.m3279 && appres.qr_bg_color) {
+	if (mode.m3279 && appres.qr_bg_color) {
 	    space3270out(4);
 	    *obptr++ = 4;	/* length */
 	    *obptr++ = 0x02;	/* background color */
@@ -839,12 +836,8 @@ do_qr_charsets(void)
 
 	/* special 3270 font, includes APL */
 	*obptr++ = 0x01;/* SET 1: */
-	if (appres.apl_mode)
-		*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
-					    single-byte, no compare */
-	else
-		*obptr++ = 0x10;	/*  FLAGS: non-loadable, single-plane,
-					    single-byte, no compare */
+	*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
+				    single-byte, no compare */
 	*obptr++ = 0xf1;		/*  LCID */
 	if (dbcs) {
 		*obptr++ = 0x00;	/*  SW 0 */
@@ -879,7 +872,8 @@ do_qr_ddm(void)
 	    size = set_dft_buffersize(0);
 	}
 
-	trace_ds("> QueryReply(DistributedDataManagement)\n");
+	trace_ds("> QueryReply(DistributedDataManagement INLIM/OUTLIM=%d)\n",
+		size);
 	space3270out(8);
 	SET16(obptr,0);			/* set reserved field to 0 */
 	SET16(obptr, size);		/* set inbound length limit INLIM */

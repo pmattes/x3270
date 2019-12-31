@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2019 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@ MKFB = mkfb$(NATIVE_SFX)
 MKKEYPAD = mkkeypad$(NATIVE_SFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -I$(TOP)/include
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -Wno-format-zero-length -MMD -MP $(XCPPFLAGS)
 
 ifdef WIN64
 HOST = win64
@@ -49,14 +49,15 @@ OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
 MKSHORTOBJECTS = mkshort.o shortcut.o wc3270res.o
 LIBS = -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
 SHRTLIBS = $(LD32XX) -lole32 -luuid
 WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe
+PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe
 all: $(PROGS)
 
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) xversion.c
 	sh $< wc3270 $(filter %.txt,$^) >xversion.c
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
@@ -85,8 +86,11 @@ wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico wc3270.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
+wc3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+c3270.exe: wc3270.exe
+	/bin/cp -p wc3270.exe $@
 
 mkshort.exe: $(MKSHORTOBJECTS) $(DEP32XX)
 	$(CC) -o mkshort.exe $(CFLAGS) $(MKSHORTOBJECTS) $(SHRTLIBS)
@@ -97,8 +101,11 @@ wversion.o: mkwversion.sh version.txt
 wc3270wiz.exe: $(WOBJECTS) $(DEP32XX)
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
-catf.exe: catf.c
-	$(CC) $(CFLAGS) -o $@ $^
+catf_res.o: catf.rc catf.ico
+	$(WINDRES) -i $< -o $@
+
+catf.exe: catf.o catf_res.o
+	$(CC) $(CFLAGS) -o $@ catf.o catf_res.o
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c wc3270.exe.manifest

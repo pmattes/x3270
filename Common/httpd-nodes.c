@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Paul Mattes.
+ * Copyright (c) 2014-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #endif /*]*/
 #include <signal.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "fprint_screen.h"
 #include "varbuf.h"
@@ -98,7 +99,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     }
 
     /* Write the screen to it in HTML. */
-    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER, NULL, NULL)) {
+    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER, NULL, NULL, NULL)) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
 	break;
@@ -110,7 +111,11 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	Free(temp_name);
 	*status = rv;
 	return false;
+    case FPS_STATUS_WAIT:
+	assert(false);
+	return false;
     }
+
 
     /* Read it back into a varbuf_t. */
     fflush(f);
@@ -457,6 +462,56 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 }
 
 /**
+ * Completion callback for the 3270 json command node (/3270/rest/json).
+ *
+ * @param[in] dhandle	daemon handle
+ * @param[in] cbs	completion status
+ * @param[in] buf	data buffer
+ * @param[in] len	length of data buffer
+ * @param[in] sl_buf	status-line buffer
+ * @param[in] sl_len	length of status-line buffer
+ */
+static void
+rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
+	size_t len, const char *sl_buf, size_t sl_len)
+{
+    httpd_status_t rv = HS_CONTINUE;
+
+    switch (cbs) {
+    case SC_SUCCESS:
+	if (len) {
+	    if (len > 2 && !strcmp(buf + len - 2, ",\n")) {
+		len -= 2;
+	    }
+	    rv = httpd_dyn_complete(dhandle,
+"{\n\
+ \"status\": \"%.*s\",\n\
+ \"result\": [\n\
+%.*s\n\
+ ]\n\
+}\n",
+		sl_len, sl_buf,
+		len, buf);
+	} else {
+	    rv = httpd_dyn_complete(dhandle,
+"{\n\
+ \"status\": \"%.*s\",\n\
+ \"result\": null\n\
+}\n",
+		sl_len, sl_buf);
+	}
+	break;
+    case SC_USER_ERROR:
+	rv = httpd_dyn_error(dhandle, 400, "%.*s", len, buf);
+	break;
+    case SC_SYSTEM_ERROR:
+	rv = httpd_dyn_error(dhandle, 500, "%.*s", len, buf);
+	break;
+    }
+    hio_async_done(dhandle, rv);
+}
+
+/**
  * Callback for the REST API HTML nonterminal dynamic node (/3270/rest/html).
  *
  * @param[in] url	URL fragment
@@ -495,10 +550,21 @@ rest_html_dyn(const char *url, void *dhandle)
 static httpd_status_t
 rest_json_dyn(const char *url, void *dhandle)
 {
-    httpd_status_t rv;
+    if (!*url) {
+	return httpd_dyn_error(dhandle, 400, "Missing 3270 action.\n");
+    }
 
-    rv = httpd_dyn_error(dhandle, 501, "JSON support coming soon.\n");
-    return rv;
+    switch (hio_to3270(url, rest_dyn_json_complete, dhandle, CT_JSON)) {
+    case SENDTO_COMPLETE:
+	return HS_SUCCESS_OPEN; /* not strictly accurate */
+    case SENDTO_PENDING:
+	return HS_PENDING;
+    case SENDTO_INVALID:
+	return httpd_dyn_error(dhandle, 400, "Invalid 3270 action.\n");
+    default:
+    case SENDTO_FAILURE:
+	return httpd_dyn_error(dhandle, 500, "Processing error.\n");
+    }
 }
 
 /**
@@ -507,15 +573,21 @@ rest_json_dyn(const char *url, void *dhandle)
 void
 httpd_objects_init(void)
 {
+    static bool initted = false;
     void *nhandle;
 
-    (void) httpd_register_dir("/3270", "Emulator state");
-    (void) httpd_register_dyn_term("/3270/screen.html", "Screen image",
+    if (initted) {
+	return;
+    }
+    initted = true;
+
+    httpd_register_dir("/3270", "Emulator state");
+    httpd_register_dyn_term("/3270/screen.html", "Screen image",
 	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_screen_image);
-    (void) httpd_register_dyn_term("/3270/interact.html", "Interactive form",
+    httpd_register_dyn_term("/3270/interact.html", "Interactive form",
 	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_interact);
-    (void) httpd_register_dir("/3270/rest", "REST interface");
-    (void) httpd_register_fixed_binary("/favicon.ico", "Browser icon",
+    httpd_register_dir("/3270/rest", "REST interface");
+    httpd_register_fixed_binary("/favicon.ico", "Browser icon",
 	    CT_BINARY, "image/vnd.microsoft.icon", HF_HIDDEN, favicon,
 	    favicon_size);
     nhandle = httpd_register_dyn_nonterm("/3270/rest/text",
@@ -531,7 +603,8 @@ httpd_objects_init(void)
 	    "REST HTML interface", CT_HTML, "text/html; charset=utf-8",
 	    HF_TRAILER, rest_html_dyn);
     httpd_set_alias(nhandle, "html/Query()");
-    (void) httpd_register_dyn_nonterm("/3270/rest/json",
-	    "REST JSON interface", CT_TEXT, "text/plain; charset=utf-8",
+    nhandle = httpd_register_dyn_nonterm("/3270/rest/json",
+	    "REST JSON interface", CT_TEXT, "application/json; charset=utf-8",
 	    HF_NONE, rest_json_dyn);
+    httpd_set_alias(nhandle, "json/Query()");
 }

@@ -64,8 +64,8 @@ A different options file can be specified by the XX_FB(X3270PRO)
 environment variable.
 If the environment variable XX_FB(NOX3270PRO)
 is set, no options file will be read.
-XX_TP(XX_FB(Execute an Action))
-Allows an action name and parameters to be entered from the keyboard.
+XX_TP(XX_FB(x3270 Prompt))
+Opens an interactive window for entering actions and viewing their output.
 This allows experimentation with actions without having to edit keymaps
 and repeatedly restart XX_FB(x3270).
 XX_TP(XX_FB(Toggles))
@@ -86,8 +86,6 @@ field with (apparent) space at the end.
 XX_TP(XX_FB(Show Timing))
 If set, the time taken by the host to process an XX_SM(AID) is displayed on
 the status line.
-XX_TP(XX_FB(Track Cursor))
-If set, the cursor position is displayed on the status line.
 XX_TP(XX_FB(Scrollbar))
 If set, the scrollbar appears.
 XX_TP(XX_FB(Wraparound))
@@ -148,7 +146,6 @@ XX_TR(XX_TD(Monocase)	XX_TD(monoCase))
 XX_TR(XX_TD(Blinking Cursor)	XX_TD(cursorBlink))
 XX_TR(XX_TD(Blank Fill)	XX_TD(blankFill))
 XX_TR(XX_TD(Show Timing)	XX_TD(showTiming))
-XX_TR(XX_TD(Track Cursor)	XX_TD(cursorPos))
 XX_TR(XX_TD(Trace Data and Events)	XX_TD(trace))
 XX_TR(XX_TD(Save Screen(s) in File)	XX_TD(screenTrace))
 XX_TR(XX_TD(Scrollbar)	XX_TD(scrollBar))
@@ -157,6 +154,7 @@ XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
 XX_TR(XX_TD(Select by Rectangles)	XX_TD(rectangleSelect))
 XX_TR(XX_TD(Crosshair Cursor)	XX_TD(crosshair))
 XX_TR(XX_TD(Visible Control Chars)	XX_TD(visibleControl))
+XX_TR(XX_TD(Typeahead)	XX_TD(typeahead))
 XX_TE()
 XX_LP
 In addition, the toggle XX_FB(altCursor) can be used to select the cursor type.

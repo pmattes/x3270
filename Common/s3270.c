@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -48,7 +48,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -59,15 +59,18 @@
 #include "httpd-io.h"
 #include "idle.h"
 #include "kybd.h"
-#include "macros.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "proxy_toggle.h"
+#include "query.h"
 #include "screen.h"
 #include "selectc.h"
-#include "sio.h"
+#include "sio_glue.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -88,7 +91,6 @@ char *commondocs3270 = NULL;
 unsigned windirs_flags;
 #endif /*]*/
 
-static void check_min_version(const char *min_version);
 static void s3270_register(void);
 
 void
@@ -98,7 +100,7 @@ usage(const char *msg)
 	fprintf(stderr, "%s\n", msg);
     }
     fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
-	    programname);
+	    app);
     fprintf(stderr, "Options:\n");
     cmdline_help(false);
     exit(1);
@@ -118,7 +120,7 @@ main(int argc, char *argv[])
     const char	*cl_hostname = NULL;
 
 #if defined(_WIN32) /*[*/
-    (void) get_version_info();
+    get_version_info();
     if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		NULL, &windirs_flags)) {
 	exit(1);
@@ -132,19 +134,23 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
+    codepage_register();
     ctlr_register();
     ft_register();
     host_register();
     idle_register();
     kybd_register();
-    macros_register();
+    task_register();
+    query_register();
     nvt_register();
     print_screen_register();
     s3270_register();
     toggles_register();
     trace_register();
     xio_register();
-    sio_register();
+    sio_glue_register();
+    hio_register();
+    proxy_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -152,13 +158,13 @@ main(int argc, char *argv[])
 	check_min_version(appres.min_version);
     }
 
-    if (charset_init(appres.charset) != CS_OKAY) {
-	xs_warning("Cannot find charset \"%s\"", appres.charset);
-	(void) charset_init(NULL);
+    if (codepage_init(appres.codepage) != CS_OKAY) {
+	xs_warning("Cannot find code page \"%s\"", appres.codepage);
+	codepage_init(NULL);
     }
     model_init();
-    ctlr_init(-1);
-    ctlr_reinit(-1);
+    ctlr_init(ALL_CHANGE);
+    ctlr_reinit(ALL_CHANGE);
     idle_init();
     if (appres.httpd_port) {
 	struct sockaddr *sa;
@@ -176,7 +182,7 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 #endif /*]*/
 
     /* Handle initial toggle settings. */
@@ -184,12 +190,12 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	if (!host_connect(cl_hostname)) {
+	if (!host_connect(cl_hostname, IA_UI)) {
 	    exit(1);
 	}
 	/* Wait for negotiations to complete or fail. */
 	while (!IN_NVT && !IN_3270) {
-	    (void) process_events(true);
+	    process_events(true);
 	    if (!PCONNECTED) {
 		exit(1);
 	    }
@@ -201,13 +207,7 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	(void) process_events(true);
-
-#if !defined(_WIN32) /*[*/
-	if (children && waitpid(-1, (int *)0, WNOHANG) > 0) {
-	    --children;
-	}
-#endif /*]*/
+	process_events(true);
     }
 }
 
@@ -222,111 +222,9 @@ product_set_appres_defaults(void)
     appres.unlock_delay = false;
 }
 
-/**
- * Parse a version number.
- * Version numbers are of the form: <major>.<minor>text<iteration>, such as
- *  3.4ga10 (3, 4, 10)
- *  3.5apha3 (3, 5, 3)
- * The version can be under-specified, e.g.:
- *  3.4 (3, 4, 0)
- *  3 (3, 0, 0)
- * Numbers are limited to 0..999.
- * @param[in] text		String to decode.
- * @param[out] major		Major number.
- * @param[out] minor		Minor number.
- * @param[out] iteration	Iteration.
- *
- * @return true if parse successful.
- */
-#define MAX_VERSION 999
-static bool
-parse_version(const char *text, int *major, int *minor, int *iteration)
-{
-    const char *t = text;
-    unsigned long n;
-    char *ptr;
-
-    *major = 0;
-    *minor = 0;
-    *iteration = 0;
-
-    /* Parse the major number. */
-    n = strtoul(t, &ptr, 10);
-    if (ptr == t || (*ptr != '.' && *ptr != '\0') || n > MAX_VERSION) {
-	return false;
-    }
-    *major = (int)n;
-
-    if (*ptr == '\0') {
-	/* Just a major number. */
-	return true;
-    }
-
-    /* Parse the minor number. */
-    t = ptr + 1;
-    n = strtoul(t, &ptr, 10);
-    if (ptr == text || n > MAX_VERSION) {
-	return false;
-    }
-    *minor = (int)n;
-
-    if (*ptr == '\0') {
-	/* Just a major and minor number. */
-	return true;
-    }
-
-    /* Parse the iteration. */
-    t = ptr;
-    while (!isdigit((unsigned char)*t) && *t != '\0')
-    {
-	t++;
-    }
-    if (*t == '\0') {
-	return false;
-    }
-
-    n = strtoul(t, &ptr, 10);
-    if (ptr == t || *ptr != '\0' || n > MAX_VERSION) {
-	return false;
-    }
-    *iteration = (int)n;
-
-    return true;
-}
-
-/**
- * Check the requested version against the actual version.
- * @param[in] min_version	Desired minimum version
- */
 static void
-check_min_version(const char *min_version)
+s3270_toggle(toggle_index_t ix, enum toggle_type tt)
 {
-    int our_major, our_minor, our_iteration;
-    int min_major, min_minor, min_iteration;
-
-    /* Parse our version. */
-    if (!parse_version(build_rpq_version, &our_major, &our_minor,
-		&our_iteration)) {
-	fprintf(stderr, "Internal error: Can't parse version: %s\n",
-		build_rpq_version);
-	exit(1);
-    }
-
-    /* Parse the desired version. */
-    if (!parse_version(min_version, &min_major, &min_minor, &min_iteration)) {
-	fprintf(stderr, "Invalid %s: %s\n", ResMinVersion, min_version);
-	exit(1);
-    }
-
-    /* Compare. */
-    if (our_major < min_major ||
-	(our_major == min_major && our_minor < min_minor) ||
-	(our_major == min_major && our_minor == min_minor && our_iteration < min_iteration))
-    {
-	fprintf(stderr, "Version %s < requested %s, aborting\n",
-		build_rpq_version, min_version);
-	exit(1);
-    }
 }
 
 /**
@@ -335,13 +233,14 @@ check_min_version(const char *min_version)
 static void
 s3270_register(void)
 {
+    static toggle_register_t toggles[] = {
+	{ MONOCASE,         s3270_toggle,   0 }
+    };
     static opt_t s3270_opts[] = {
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
-	    NULL, "Force local codeset to be UTF-8" },
-	{ OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
-	    "<version>", "Fail unless at this version or greater" }
+	    NULL, "Force local codeset to be UTF-8" }
     };
     static res_t s3270_resources[] = {
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
@@ -362,6 +261,9 @@ s3270_register(void)
 	{ ResPrintTextCommand,		V_FLAT },
 #endif /*]*/
     };
+
+    /* Register our toggles. */
+    register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, s3270_connect);

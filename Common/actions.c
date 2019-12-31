@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -39,21 +39,27 @@
 
 #include "actions.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
+#include "status.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
+#include "varbuf.h"
 
 llist_t actions_list = LLIST_INIT(actions_list);
 unsigned actions_list_count;
 
 enum iaction ia_cause;
 const char *ia_name[] = {
-    "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
-    "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
-    "Keymap", "Idle"
+    "none", "string", "paste", "screen-redraw", "keypad", "default", "macro",
+    "script", "peek", "typeahead", "file-transfer", "command", "keymap",
+    "idle", "password", "ui", "httpd"
 };
+static int keyboard_implicit_disables = 0;
+static int keyboard_explicit_disables = 0;
+
+const char *current_action_name;
 
 typedef struct {
     llist_t list;
@@ -106,7 +112,7 @@ init_suppressed(const char *actions)
 	s->name = (char *)(s + 1);
 	strcpy(s->name, action);
 	llist_init(&s->list);
-	llist_insert_before(&s->list, &suppressed);
+	LLIST_APPEND(&s->list, suppressed);
     }
 }
 
@@ -149,11 +155,13 @@ check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
     if (nargs_min == nargs_max) {
 	popup_an_error("%s requires %d argument%s",
 		aname, nargs_min, nargs_min == 1 ? "" : "s");
-    } else {
+    } else if (nargs_max == nargs_min + 1) {
 	popup_an_error("%s requires %d or %d arguments",
 		aname, nargs_min, nargs_max);
+    } else {
+	popup_an_error("%s requires %d to %d arguments",
+		aname, nargs_min, nargs_max);
     }
-    cancel_if_idle_command();
     return -1;
 }
 
@@ -181,60 +189,65 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * Run an emulator action by name, given 0, 1 or 2 parameters.
+ * Disable or re-enable the keyboard.
  */
-bool
-run_action(const char *name, enum iaction cause, const char *parm1,
-	const char *parm2)
+void
+disable_keyboard(bool disable, bool explicit, const char *why)
 {
-    action_elt_t *e;
-    action_t *action = NULL;
-    unsigned count = 0;
-    const char *parms[2];
+    bool disabled_before, disabled_after, would_enable;
+    int *countp = explicit?
+	&keyboard_explicit_disables:
+	&keyboard_implicit_disables;
+    int incr = disable? 1 : -1;
 
-    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (!strcasecmp(e->t.name, name)) {
-	    action = e->t.action;
-	    break;
-	}
-    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (action == NULL) {
-	return false; /* XXX: And do something? */
+    if (*countp + incr < 0) {
+	vtrace("Redundant %splicit keyboard enable ignored\n",
+		explicit? "ex": "im");
+	return;
     }
 
-    if (parm1 != NULL) {
-	parms[0] = parm1;
-	count++;
-	if (parm2 != NULL) {
-	    parms[1] = parm2;
-	    count++;
-	}
-    }
+    vtrace("Keyboard %sabled %splicitly by %s (%d->%d)",
+	    disable? "dis": "en",
+	    explicit? "ex": "im",
+	    why,
+	    *countp,
+	    *countp + incr);
 
-    return run_action_entry(e, cause, count, parms);
+    disabled_before = keyboard_explicit_disables || keyboard_implicit_disables;
+    *countp += incr;
+    disabled_after = keyboard_explicit_disables || keyboard_implicit_disables;
+    would_enable = (*countp == 0);
+
+    vtrace(", %s %sabled",
+	  (disabled_before == disabled_after)? "still": "now",
+	  disabled_after? "dis": "en");
+    if (would_enable && disabled_after) {
+	vtrace(" %splicitly", explicit? "im": "ex");
+    }
+    vtrace("\n");
+
+    st_changed(ST_KBD_DISABLE, keyboard_disabled());
 }
 
 /*
- * Run an emulator action by name, given an array of parameters.
+ * Force a keyboard enable (both explicit and implicit).
+ */
+void
+force_enable_keyboard(void)
+{
+    vtrace("Forcing keyboard enable\n");
+    keyboard_implicit_disables = 0;
+    keyboard_explicit_disables = 0;
+    st_changed(ST_KBD_DISABLE, keyboard_disabled());
+}
+
+/*
+ * Test for keyboard disable.
  */
 bool
-run_action_a(const char *name, enum iaction cause, unsigned count,
-	const char **parms)
+keyboard_disabled(void)
 {
-    action_elt_t *e;
-    action_t *action = NULL;
-
-    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (!strcasecmp(e->t.name, name)) {
-	    action = e->t.action;
-	    break;
-	}
-    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (action == NULL) {
-	return false; /* XXX: And do something? */
-    }
-
-    return run_action_entry(e, cause, count, parms);
+    return keyboard_implicit_disables || keyboard_explicit_disables;
 }
 
 /*
@@ -245,13 +258,25 @@ bool
 run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms)
 {
+    bool ret;
+
     if (action_suppressed(e->t.name)) {
 	vtrace("%s() [suppressed]\n", e->t.name);
 	return false;
     }
 
+    if ((keyboard_explicit_disables || keyboard_implicit_disables) &&
+	    IA_IS_KEY(cause)) {
+	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
+	status_keyboard_disable_flash();
+	return false;
+    }
+
     ia_cause = cause;
-    return (*e->t.action)(cause, count, parms);
+    current_action_name = e->t.name;
+    ret = (*e->t.action)(cause, count, parms);
+    current_action_name = NULL;
+    return ret;
 }
 
 /*
@@ -294,10 +319,65 @@ register_actions(action_table_t *new_actions, unsigned count)
 	    /* Insert before found element. */
 	    llist_insert_before(&e->list, &before->list);
 	} else {
-		/* Insert before head (at the end of the list). */
-	    llist_insert_before(&e->list, actions_list.next);
+	    /* Append. */
+	    LLIST_APPEND(&e->list, actions_list);
 	}
 
 	actions_list_count++;
     }
+}
+
+/**
+ * Compare two action names.
+ *
+ * @param[in] a		First action name.
+ * @param[in] b		Second action name.
+ *
+ * @returns 0 if equal, -1 if a < b, 1 if a > b
+ */
+static int
+action_cmp(const void *a, const void *b)
+{
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+
+/**
+ * Return the names of all defined actions.
+ *
+ * @returns Names of all actions.
+ */
+const char *
+all_actions(void)
+{
+    static const char *actions = NULL;
+    action_elt_t *e;
+    const char **names;
+    unsigned i;
+    varbuf_t r;
+
+    if (actions != NULL) {
+	return actions;
+    }
+
+    /* Gather the names. */
+    names = Calloc(actions_list_count, sizeof(const char *));
+    i = 0;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	names[i++] = e->t.name;
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+
+    /* Sort them. */
+    qsort(names, actions_list_count, sizeof(const char *), action_cmp);
+
+    /* Emit them. */
+    vb_init(&r);
+    for (i = 0; i < actions_list_count; i++) {
+	vb_appendf(&r, "%s%s()", i? " ": "", names[i]);
+    }
+    actions = vb_consume(&r);
+    vb_free(&r);
+
+    /* Done. */
+    Free(names);
+    return actions;
 }

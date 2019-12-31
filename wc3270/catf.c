@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,26 +41,41 @@
 #include "wincmn.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE	16384
 
-static int catf(char *filename);
+static int catf(char *filename, bool utf8);
 
 int
 main(int argc, char *argv[])
 {
-    	int rv;
+    int argi = 1;
+    bool utf8 = false;
+    int rv;
 
-    	if (argc != 2) {
-	    	fprintf(stderr, "usage: catf <filename>\n");
-		exit(1);
+    if (argc > 1) {
+	if (!strcmp(argv[argi], "-utf8")) {
+	    utf8 = true;
+	    argi++;
 	}
+    }
 
-	do {
-	    	rv = catf(argv[1]);
-	} while (rv == 0);
-
+    if (argc - argi != 1) {
+	fprintf(stderr, "usage: catf [-utf8] <filename>\n");
 	exit(1);
+    }
+
+    if (utf8) {
+	/* Set the console to UTF-8 mode. */
+	SetConsoleOutputCP(65001);
+    }
+
+    do {
+	rv = catf(argv[argi], utf8);
+    } while (rv == 0);
+
+    exit(1);
 }
 
 /*
@@ -68,72 +83,74 @@ main(int argc, char *argv[])
  * Returns -1 for error, 0 for retry (file shrank or possibly disappeared).
  */
 static int
-catf(char *filename)
+catf(char *filename, bool utf8)
 {
-    	int fd;
-	struct stat buf;
-	off_t size;
-	off_t fp = 0;
-	char rbuf[BUFFER_SIZE];
-	wchar_t rbuf_w[BUFFER_SIZE];
+    int fd;
+    struct stat buf;
+    off_t size;
+    off_t fp = 0;
+    char rbuf[BUFFER_SIZE];
+    wchar_t rbuf_w[BUFFER_SIZE];
 
-	fd = open(filename, O_RDONLY | O_BINARY);
-	if (fd < 0) {
-	    	perror(filename);
-		return -1;
+    fd = open(filename, O_RDONLY | O_BINARY);
+    if (fd < 0) {
+	perror(filename);
+	return -1;
+    }
+
+    if (fstat(fd, &buf) < 0) {
+	perror(filename);
+	return -1;
+    }
+
+    size = buf.st_size;
+
+    for (;;) {
+	while (fp < size) {
+	    int n2r, nr;
+	    BOOL udc;
+
+	    if (size - fp > BUFFER_SIZE) {
+		n2r = BUFFER_SIZE;
+	    } else {
+		n2r = size - fp;
+	    }
+	    nr = read(fd, rbuf, n2r);
+	    if (nr < 0) {
+		perror(filename);
+		close(fd);
+		return 0;
+	    }
+	    if (nr == 0) {
+		printf("\nUNEXPECTED EOF\n");
+		close(fd);
+		return 0;
+	    }
+
+	    if (!utf8) {
+		/* Translate ANSI to OEM. */
+		MultiByteToWideChar(CP_ACP, 0, rbuf, nr, rbuf_w, BUFFER_SIZE);
+		WideCharToMultiByte(CP_OEMCP, 0, rbuf_w, BUFFER_SIZE, rbuf, nr,
+			"?", &udc);
+	    }
+
+	    write(1, rbuf, nr);
+	    fp += nr;
 	}
-
-	if (fstat(fd, &buf) < 0) {
-	    	perror(filename);
+	do {
+	    if (fstat(fd, &buf) < 0) {
+		perror(filename);
 		return -1;
-	}
-
+	    }
+	    if (buf.st_size < size) {
+		printf("\ncatf: '%s' shrank -- reopening\n", filename);
+		close(fd);
+		return 0;
+	    }
+	    if (buf.st_size == size) {
+		Sleep(1 * 1000);
+	    }
+	} while (buf.st_size == size);
 	size = buf.st_size;
-
-	for (;;) {
-	    	while (fp < size) {
-		    	int n2r, nr;
-			BOOL udc;
-
-		    	if (size - fp > BUFFER_SIZE)
-			    	n2r = BUFFER_SIZE;
-			else
-			    	n2r = size - fp;
-			nr = read(fd, rbuf, n2r);
-			if (nr < 0) {
-			    	perror(filename);
-				close(fd);
-				return 0;
-			}
-			if (nr == 0) {
-				printf("\nUNEXPECTED EOF\n");
-			    	close(fd);
-				return 0;
-			}
-
-			/* Translate ANSI to OEM. */
-			(void) MultiByteToWideChar(CP_ACP, 0, rbuf, nr, rbuf_w,
-				BUFFER_SIZE);
-			(void) WideCharToMultiByte(CP_OEMCP, 0, rbuf_w,
-				BUFFER_SIZE, rbuf, nr, "?", &udc);
-
-			(void) write(1, rbuf, nr);
-			fp += nr;
-		}
-		do {
-			if (fstat(fd, &buf) < 0) {
-			    	perror(filename);
-				return -1;
-			}
-			if (buf.st_size < size) {
-			    	printf("\ncatf: '%s' shrank -- reopening\n",
-					filename);
-			    	close(fd);
-				return 0;
-			}
-			if (buf.st_size == size)
-				Sleep(1 * 1000);
-		} while (buf.st_size == size);
-		size = buf.st_size;
-	}
+    }
 }

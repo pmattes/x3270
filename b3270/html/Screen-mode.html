@@ -1,0 +1,39 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 screen-mode Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="screen-mode"></a><h3>screen-mode Indication</h3>
+
+<p>Indicates the screen dimensions and characteristics. This is reported at
+initialization time, and any time these parameters change (which can only
+happen when disconnected).</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>model</td><td>yes</td><td>Model number (2, 3, 4 or 5)</td></tr>
+ <tr><td>rows</td><td>yes</td><td>Number of rows</td></tr>
+ <tr><td>cols</td><td>yes</td><td>Number of columns</td></tr>
+ <tr><td>color</td><td>yes</td><td><b>true</b> or <b>false</b></td></tr>
+ <tr><td>oversize</td><td>yes</td><td><b>true</b> or <b>false</b></td></tr>
+ <tr><td>extended</td><td>yes</td><td>Extended data stream: <b>true</b> or <b>false</b></td></tr>
+</table>
+
+<p>If <i>color</i> is true, the emulator will report the screen contents with
+specific colors. If <i>color</i> is false, the screen will be reported without
+color information.</p>
+
+<p>If <i>oversize</i> is true, the screen dimensions are larger than the
+default for that model number.</p>
+<p>Example:
+<pre>
+&lt;screen-mode model="2" rows="24" cols="80" color="true" oversize="false"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

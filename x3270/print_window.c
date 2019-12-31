@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015 Paul Mattes.
+ * Copyright (c) 1994-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,7 +141,7 @@ print_window_callback(Widget w _is_unused, XtPointer client_data,
 	Replace(print_window_command, expand_print_window_command(cmd));
 
 	/* In 1 second, snap the window. */
-	(void) XtAppAddTimeOut(appcontext, 1000, snap_it, 0);
+	XtAppAddTimeOut(appcontext, 1000, snap_it, 0);
     }
 }
 
@@ -201,7 +201,7 @@ void
 print_window_option(Widget w, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
-    (void) PrintWindow_action(IA_KEYMAP, 0, NULL);
+    PrintWindow_action(IA_KEYMAP, 0, NULL);
 }
 
 /**

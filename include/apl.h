@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,5 +30,6 @@
  *		Global declarations for apl.c.
  */
 
-ks_t apl_string_to_key(const char *s, int *is_gep);
-const char *key_to_apl_string(ks_t k);
+void check_apl_consistency(ucs4_t apl2uc[]);
+ucs4_t apl_key_to_ucs4(const char *s, bool *is_ge);
+const char *ucs4_to_apl_key(ucs4_t ucs4);

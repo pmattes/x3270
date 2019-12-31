@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,12 +81,7 @@ struct {
 
 unsigned long is_defined =
     MODE_COLOR | MODE_APL |
-#if defined(X3270_DBCS)
-    MODE_DBCS
-#else
-    0
-#endif
-|
+    MODE_DBCS |
 #if defined(FOR_WIN32) || defined(_WIN32)
     MODE__WIN32
 #else

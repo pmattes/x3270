@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,13 @@
 #include <limits.h>
 #include <errno.h>
 #if !defined(_WIN32) /*[*/
+# include <arpa/inet.h>
 # include <netinet/in.h>
 #endif /*]*/
 
+#include "wincmn.h"
 #include "resolver.h"
+#include "utils.h"
 
 #include "bind-opt.h"
 
@@ -86,6 +89,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     char *port_str;
     unsigned short port;
     rhp_t rv;
+    int nr;
 
     /* Start with nothing. */
     *addr = NULL;
@@ -155,8 +159,8 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 
     /* Use the resolver to resolve the components we've split apart. */
     *addr = Malloc(sizeof(sau_t));
-    rv = resolve_host_and_port(host_str, port_str, 0, &port, *addr, addrlen,
-	    NULL, NULL);
+    rv = resolve_host_and_port(host_str, port_str, &port, *addr, sizeof(sau_t),
+	    addrlen, NULL, 1, &nr);
     Free(host_str);
     Free(port_str);
     if (RHP_IS_ERROR(rv)) {
@@ -166,4 +170,57 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     }
 
     return true;
+}
+
+/**
+ * Return the canonical form of a bind option.
+ *
+ * @param[in] sa	Sockaddr to encode
+ *
+ * @returns encoded address and port
+ */
+char *
+canonical_bind_opt(struct sockaddr *sa)
+{
+#   define RET_LEN 128
+    char addrbuf[RET_LEN];
+    struct sockaddr_in *sin;
+    struct sockaddr_in6 *sin6;
+
+    switch (sa->sa_family) {
+    case AF_INET:
+	sin = (struct sockaddr_in *)sa;
+	return xs_buffer("[%s]:%u",
+	    inet_ntop(sa->sa_family, &sin->sin_addr, addrbuf, RET_LEN),
+	    ntohs(sin->sin_port));
+    case AF_INET6:
+	sin6 = (struct sockaddr_in6 *)sa;
+	return xs_buffer("[%s]:%u",
+	    inet_ntop(sa->sa_family, &sin6->sin6_addr, addrbuf, RET_LEN),
+	    ntohs(sin6->sin6_port));
+    default:
+	return NewString("unknown");
+    }
+}
+
+/**
+ * Return the canonical form of a bind option, given a resource value.
+ *
+ * @param[in] res	Resource value (might be NULL)
+ *
+ * @returns Canonical representation
+ */
+char *
+canonical_bind_opt_res(const char *res)
+{
+    struct sockaddr *sa;
+    socklen_t len;
+    char *ret;
+
+    if (res == NULL || !parse_bind_opt(res, &sa, &len)) {
+	return NULL;
+    }
+    ret = canonical_bind_opt(sa);
+    Free(sa);
+    return ret;
 }

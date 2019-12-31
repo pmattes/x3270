@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -38,8 +38,11 @@
 #endif /*]*/
 #include <fcntl.h>
 #include <errno.h>
+
+#include "boolstr.h"
 #include "resources.h"
-#include "charset.h"
+#include "codepage.h"
+#include "fallbacks.h"
 #include "lazya.h"
 #include "product.h"
 #include "unicodec.h"
@@ -48,6 +51,12 @@
 #include "utils.h"
 
 #define my_isspace(c)	isspace((unsigned char)c)
+
+static struct dresource {
+    struct dresource *next;
+    const char *name;
+    char *value;
+} *drdb = NULL, **drdb_next = &drdb;
 
 /**
  * printf-like interface to Warning().
@@ -96,17 +105,17 @@ fcatv(FILE *f, char *s)
     while ((c = *s++)) {
 	switch (c) {
 	case '\n':
-	    (void) fprintf(f, "\\n");
+	    fprintf(f, "\\n");
 	    break;
 	case '\t':
-	    (void) fprintf(f, "\\t");
+	    fprintf(f, "\\t");
 	    break;
 	case '\b':
-	    (void) fprintf(f, "\\b");
+	    fprintf(f, "\\b");
 	    break;
 	default:
 	    if ((c & 0x7f) < ' ') {
-		(void) fprintf(f, "\\%03o", c & 0xff);
+		fprintf(f, "\\%03o", c & 0xff);
 	    } else {
 		fputc(c, f);
 	    }
@@ -147,7 +156,7 @@ scatv(const char *s, char *buf, size_t len)
     }
 
     /* Copy what fits. */
-    (void) snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
+    snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
     vb_free(&r);
 
     return buf;
@@ -505,13 +514,13 @@ var_subst(const char *s, unsigned long flags)
 		    if (state == VS_VNB && c != RBR) {
 			*o++ = '$';
 			*o++ = LBR;
-			(void) strncpy(o, vn_start, vn_len);
+			strncpy(o, vn_start, vn_len);
 			o += vn_len;
 			state = VS_BASE;
 			continue;	/* rescan */
 		    }
 		    vn = Malloc(vn_len + 1);
-		    (void) strncpy(vn, vn_start, vn_len);
+		    strncpy(vn, vn_start, vn_len);
 		    vn[vn_len] = '\0';
 		    if ((vv = ex_getenv(vn, flags, &u))) {
 			*o = '\0';
@@ -523,7 +532,7 @@ var_subst(const char *s, unsigned long flags)
 			    + strlen(vv);
 			ob = Realloc(ob, o_len);
 			o = strchr(ob, '\0');
-			(void) strcpy(o, vv);
+			strcpy(o, vv);
 			o += strlen(vv);
 		    }
 		    Free(vn);
@@ -606,7 +615,7 @@ tilde_subst(const char *s)
 	int len = slash - s;
 
 	mname = Malloc(len + 1);
-	(void) strncpy(mname, s, len);
+	strncpy(mname, s, len);
 	mname[len] = '\0';
 	name = mname;
 	rest = slash;
@@ -630,8 +639,8 @@ tilde_subst(const char *s)
 	r = NewString(s);
     } else {
 	r = Malloc(strlen(p->pw_dir) + strlen(rest) + 1);
-	(void) strcpy(r, p->pw_dir);
-	(void) strcat(r, rest);
+	strcpy(r, p->pw_dir);
+	strcat(r, rest);
     }
     return r;
 }
@@ -711,6 +720,60 @@ ctl_see(int c)
     return buf;
 }
 
+/**
+ * Add a resource value.
+ *
+ * @param[in] name	Resource name.
+ * @param[in] value	Resource value.
+ */
+void
+add_resource(const char *name, const char *value)
+{
+    struct dresource *d;
+
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    Replace(d->value, NewString(value));
+	    return;
+	}
+    }
+    d = Malloc(sizeof(struct dresource));
+    d->next = NULL;
+    d->name = name;
+    d->value = NewString(value);
+    *drdb_next = d;
+    drdb_next = &d->next;
+}
+
+/**
+ * Get a string-valued resource.
+ *
+ * @param[in] name	Resource name.
+ *
+ * @returns Resource value.
+ */
+char *
+get_resource(const char *name)
+{
+    struct dresource *d;
+    int i;
+
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    return d->value;
+	}
+    }
+
+    for (i = 0; fallbacks[i] != NULL; i++) {
+	if (!strncmp(fallbacks[i], name, strlen(name)) &&
+		*(fallbacks[i] + strlen(name)) == ':') {
+	    return fallbacks[i] + strlen(name) + 2;
+	}
+    }
+
+    return get_underlying_resource(name);
+}
+
 /* A version of get_resource that accepts sprintf arguments. */
 char *
 get_fresource(const char *fmt, ...)
@@ -725,6 +788,44 @@ get_fresource(const char *fmt, ...)
     r = get_resource(name);
     Free(name);
     return r;
+}
+
+/**
+ * Get an integer-valued resource.
+ *
+ * @param[in] name	Resource name
+ *
+ * @returns Resource value
+ */
+int
+get_resource_int(const char *name)
+{
+    char *s = get_resource(name);
+
+    return s? atoi(s): 0;
+}
+
+/**
+ * Get a Boolean-valued resource.
+ *
+ * @param[in] name	Resource name
+ *
+ * @returns Resource value
+ */
+bool
+get_resource_bool(const char *name)
+{
+    char *s = get_resource(name);
+    bool b;
+
+    if (s == NULL) {
+	return false;
+    }
+
+    if (boolstr(s, &b) != NULL) {
+	return false;
+    }
+    return b;
 }
 
 /*
@@ -800,17 +901,11 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s%s%s",
-	    "Build options:"
-#if defined(X3270_DBCS) /*[*/
-	    " --enable-dbcs"
-#else /*][*/
-	    " --disable-dbcs"
-#endif /*]*/
+    return lazyaf("%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
-	    " --enable-local-process"
+	    "--enable-local-process"
 #else /*][*/
-	    " --disable-local-process"
+	    "--disable-local-process"
 #endif /*]*/
 	    , p, using_iconv()? " --with-iconv": "",
 #if defined(_MSC_VER) /*[*/
@@ -830,13 +925,14 @@ build_options(void)
 void
 dump_version(void)
 {
-    printf("%s\n%s\n", build, build_options());
-    charset_list();
-    printf("\n"
+    fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
+    codepage_list();
+    fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"
 "Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
+    fflush(stderr);
     exit(0);
 }
 
@@ -851,4 +947,12 @@ display_scale(double d)
     } else {
 	return lazyaf("%.3g ", d);
     }
+}
+
+/* Add an element to a dynamically-allocated array. */
+void
+array_add(const char ***s, int ix, const char *v)
+{
+    *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
+    (*s)[ix] = v;
 }

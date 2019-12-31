@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,18 @@
 #include "appres.h"
 #include "resources.h"
 
+#include <assert.h>
 #include "actions.h"
+#include "boolstr.h"
 #include "host.h"
 #include "host_gui.h"
-#include "macros.h"
 #include "popups.h"
 #include "product.h"
 #include "split_host.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "xio.h"
@@ -69,12 +72,14 @@ char           *full_current_host = NULL;
 unsigned short  current_port;
 char	       *reconnect_host = NULL;
 char	       *qualified_host = NULL;
+enum iaction	connect_ia = IA_NONE;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
-static bool auto_reconnect_inprogress = false;
 static iosrc_t net_sock = INVALID_IOSRC;
 static ioid_t reconnect_id = NULL_IOID;
+
+static char *host_ps = NULL;
 
 static void save_recent(const char *);
 
@@ -186,7 +191,7 @@ read_hosts_file(void)
 	    }
 	    last_host = h;
 	}
-	(void) fclose(hf);
+	fclose(hf);
     } else if (appres.hostsfile != NULL) {
 	popup_an_errno(errno, "Cannot open " ResHostsFile " '%s'",
 		appres.hostsfile);
@@ -212,6 +217,58 @@ host_exiting(bool mode _is_unused)
 }
 
 /**
+ * Set a host flag.
+ * 
+ * @param[in] flag	Flag to set.
+ */
+void
+host_set_flag(int flag)
+{
+    host_flags |= 1 << flag;
+}
+
+/*
+ * Cancel any pending reconnect attempt.
+ */
+static void
+host_cancel_reconnect(void)
+{
+    if (reconnect_id != NULL_IOID) {
+	RemoveTimeOut(reconnect_id);
+	reconnect_id = NULL_IOID;
+
+	assert(cstate == RECONNECTING);
+	change_cstate(NOT_CONNECTED, "host_cancel_reconnect");
+    }
+}
+
+/**
+ * Toggle the reconnect flag.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	New value.
+ *
+ * @return true if sucessful
+ */
+static bool
+set_reconnect(const char *name _is_unused, const char *value)
+{
+    bool previous = appres.interactive.reconnect;
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.interactive.reconnect)) != NULL) {
+	popup_an_error("%s", errmsg);
+	return false;
+    }
+
+    if (appres.interactive.reconnect != previous &&
+	    !appres.interactive.reconnect) {
+	host_cancel_reconnect();
+    }
+    return true;
+}
+
+/**
  * Hosts module registration.
  */
 void
@@ -227,6 +284,10 @@ host_register(void)
 
     /* Register for events. */
     register_schange(ST_EXITING, host_exiting);
+
+    /* Register our toggles. */
+    register_extended_toggle(ResReconnect, set_reconnect, NULL, NULL,
+	    (void **)&appres.interactive.reconnect, XRM_BOOLEAN);
 
     /* Register our actions. */
     register_actions(host_actions, array_count(host_actions));
@@ -344,7 +405,7 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
  * side-effects.
  */
 bool
-host_connect(const char *n)
+host_connect(const char *n, enum iaction ia)
 {
     char *nb;		/* name buffer */
     char *s;		/* temporary */
@@ -357,7 +418,12 @@ host_connect(const char *n)
     bool has_colons = false;
     net_connect_t nc;
 
-    if (CONNECTED || auto_reconnect_inprogress) {
+    if (cstate == RECONNECTING) {
+	popup_an_error("Reconnect in progress");
+	return false;
+    }
+    if (PCONNECTED) {
+	popup_an_error("Already connected");
 	return true;
     }
 
@@ -444,8 +510,8 @@ host_connect(const char *n)
 
     has_colons = (strchr(chost, ':') != NULL);
     Replace(qualified_host, xs_buffer("%s%s%s%s%s:%s%s%s",
-		HOST_FLAG(SSL_HOST)? "L:": "",
-		HOST_FLAG(SSL_HOST)? "Y:": "",
+		HOST_FLAG(TLS_HOST)? "L:": "",
+		HOST_FLAG(NO_VERIFY_CERT_HOST)? "Y:": "",
 		has_colons? "[": "",
 		chost,
 		has_colons? "]": "",
@@ -459,23 +525,23 @@ host_connect(const char *n)
     if (nc == NC_FAILED) {
 	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
-		auto_reconnect_inprogress = true;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
+		change_cstate(RECONNECTING, "host_connect");
 	    }
 	}
 	/* Redundantly signal a disconnect. */
-	st_changed(ST_CONNECT, false);
+	change_cstate(NOT_CONNECTED, "host_connect");
 	goto failure;
     }
 
     /* Still thinking about it? */
+    connect_ia = ia;
     if (nc == NC_RESOLVING) {
-	cstate = RESOLVING;
-	st_changed(ST_RESOLVING, true);
+	change_cstate(RESOLVING, "host_connect");
 	goto success;
     }
-    if (nc == NC_SSL_PASS) {
-	cstate = SSL_PASS;
+    if (nc == NC_TLS_PASS) {
+	change_cstate(TLS_PASS, "host_connect");
 	goto success;
     }
 
@@ -496,16 +562,14 @@ host_connect(const char *n)
 
     /* Set state and tell the world. */
     if (nc == NC_CONNECT_PENDING) {
-	cstate = PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(TCP_PENDING, "host_connect");
     } else {
 	/* cstate == NC_CONNECTED */
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    cstate = CONNECTED_NVT;
+	    change_cstate(CONNECTED_NVT, "host_connect");
 	} else {
-	    cstate = CONNECTED_INITIAL;
+	    change_cstate(TELNET_PENDING, "host_connect");
 	}
-	st_changed(ST_CONNECT, true);
 	host_gui_connect_initial();
     }
 
@@ -528,32 +592,62 @@ host_new_connection(bool pending)
 {
     /* Set state and tell the world. */
     if (pending) {
-	cstate = PENDING;
-	st_changed(ST_HALF_CONNECT, true);
+	change_cstate(TCP_PENDING, "host_new_connection");
     } else {
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	    cstate = CONNECTED_NVT;
+	    change_cstate(CONNECTED_NVT, "host_new_connection");
 	} else {
-	    cstate = CONNECTED_INITIAL;
+	    change_cstate(TELNET_PENDING, "host_new_connection");
 	}
-	st_changed(ST_CONNECT, true);
+	host_gui_connect_initial();
+    }
+}
+
+/* Continue a connection after hostname resolution completes. */
+void
+host_continue_connect(iosrc_t iosrc, net_connect_t nc)
+{
+    char *ps = host_ps;
+
+    /* Set pending string. */
+    if (ps == NULL) {
+	ps = appres.login_macro;
+    }
+    if (ps != NULL) {
+	login_macro(ps);
+    }
+
+    /* Prepare Xt for I/O. */
+    net_sock = iosrc;
+    if (net_sock != INVALID_IOSRC) {
+	x_add_input(net_sock);
+    }
+
+    /* Set state and tell the world. */
+    if (nc == NC_CONNECT_PENDING) {
+	change_cstate(TCP_PENDING, "host_continue_connect");
+    } else {
+	/* cstate == NC_CONNECTED */
+	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
+	    change_cstate(CONNECTED_NVT, "host_continue_connect");
+	} else {
+	    change_cstate(TELNET_PENDING, "host_continue_connect");
+	}
 	host_gui_connect_initial();
     }
 }
 
 /*
  * Reconnect to the last host.
+ * Returns true if connection initiated, false otherwise.
  */
-static void
+static bool
 host_reconnect(void)
 {
-    if (auto_reconnect_inprogress || current_host == NULL || CONNECTED ||
-	    HALF_CONNECTED) {
-	return;
+    if (current_host == NULL) {
+	return false;
     }
-    if (host_connect(reconnect_host)) {
-	auto_reconnect_inprogress = false;
-    }
+    return host_connect(reconnect_host, connect_ia);
 }
 
 /*
@@ -562,20 +656,11 @@ host_reconnect(void)
 static void
 try_reconnect(ioid_t id _is_unused)
 {
-    auto_reconnect_inprogress = false;
-    host_reconnect();
-}
+    reconnect_id = NULL_IOID;
+    assert(cstate == RECONNECTING);
+    change_cstate(NOT_CONNECTED, "try_reconnect");
 
-/*
- * Cancel any pending reconnect attempt.
- */
-void
-host_cancel_reconnect(void)
-{
-    if (auto_reconnect_inprogress) {
-	RemoveTimeOut(reconnect_id);
-	auto_reconnect_inprogress = false;
-    }
+    host_reconnect();
 }
 
 void
@@ -589,12 +674,12 @@ host_disconnect(bool failed)
     net_disconnect(true);
     net_sock = INVALID_IOSRC;
     if (!host_gui_disconnect()) {
-	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
+	if (appres.interactive.reconnect && reconnect_id == NULL_IOID) {
 	    /* Schedule an automatic reconnection. */
-	    auto_reconnect_inprogress = true;
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 					      RECONNECT_MS,
 		  try_reconnect);
+	    change_cstate(RECONNECTING, "host_disconnect");
 	}
     }
 
@@ -606,39 +691,26 @@ host_disconnect(bool failed)
 	trace_nvt_disc();
     }
 
-    cstate = NOT_CONNECTED;
+    if (cstate != RECONNECTING) {
+	change_cstate(NOT_CONNECTED, "host_disconnect");
 
-    /* Propagate the news to everyone else. */
-    st_changed(ST_CONNECT, false);
+	/* Forget pending state. */
+	host_ps = NULL;
+    }
 }
 
 /* The host has entered 3270 or NVT mode, or switched between them. */
 void
 host_in3270(enum cstate new_cstate)
 {
-    bool now3270 = (new_cstate == CONNECTED_3270 ||
-		    new_cstate == CONNECTED_SSCP ||
-		    new_cstate == CONNECTED_TN3270E);
-    bool was3270 = (cstate == CONNECTED_3270 ||
-	    	    cstate == CONNECTED_SSCP ||
-		    cstate == CONNECTED_TN3270E);
-    bool now_nvt = (new_cstate == CONNECTED_NVT ||
-		    new_cstate == CONNECTED_E_NVT);
-    bool was_nvt = (cstate == CONNECTED_NVT ||
-		    cstate == CONNECTED_E_NVT);
-
-    cstate = new_cstate;
-    ever_3270 = now3270;
-    if (now3270 != was3270 || now_nvt != was_nvt) {
-	st_changed(ST_3270_MODE, now3270);
-    }
+    ever_3270 = cIN_3270(new_cstate);
+    change_cstate(new_cstate, "host_in3270");
 }
 
 void
 host_connected(void)
 {
-    cstate = CONNECTED_INITIAL;
-    st_changed(ST_CONNECT, true);
+    change_cstate(TELNET_PENDING, "host_connected");
     host_gui_connected();
 }
 
@@ -866,8 +938,8 @@ save_recent(const char *hn)
 		    ctime(&t), build);
 	    for (h = hosts; h != NULL; h = h->next) {
 		if (h->entry_type == RECENT) {
-		    (void) fprintf(lcf, "%lu %s\n",
-			    (unsigned long)h->connect_time, h->name);
+		    fprintf(lcf, "%lu %s\n", (unsigned long)h->connect_time,
+			    h->name);
 		}
 	    }
 	    fclose(lcf);
@@ -887,11 +959,10 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Connect", argc, 1, 1) < 0) {
 	return false;
     }
-    if (PCONNECTED) {
-	popup_an_error("Already connected");
+
+    if (!host_connect(argv[0], ia)) {
 	return false;
     }
-    (void) host_connect(argv[0]);
 
     /*
      * If not called from a keymap and the connection was successful (or
@@ -903,8 +974,8 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
      * since someone could put a Source() in a keymap for a file that includes
      * a Connect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP) {
-	sms_connect_wait();
+    if (!task_nonblocking_connect() && !IA_IS_KEY(ia)) {
+	task_connect_wait();
     }
     return true;
 }
@@ -936,10 +1007,11 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
      * since someone could put a Source() in a keymap for a file that includes
      * a Reconnect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP) {
-	sms_connect_wait();
+    if (!IA_IS_KEY(ia)) {
+	task_connect_wait();
     }
-    return true;
+
+    return cstate != NOT_CONNECTED;
 }
 
 static bool
@@ -951,4 +1023,10 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
     }
     host_disconnect(false);
     return true;
+}
+
+bool
+host_reconnecting(void)
+{
+    return cstate == RECONNECTING;
 }

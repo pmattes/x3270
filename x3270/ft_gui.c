@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -135,8 +135,8 @@ static void overwrite_okay_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
 static void overwrite_popdown(Widget w, XtPointer client_data,
     XtPointer call_data);
-static void overwrite_popup_init(void);
-static void popup_overwrite(void);
+static void overwrite_popup_init(const char *path);
+static void popup_overwrite(const char *path);
 static void popup_progress(void);
 static void progress_cancel_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
@@ -1098,6 +1098,7 @@ static bool
 ft_start(void)
 {
     int size;
+    char *path;
 
     /*
      * Get the DFT buffer size, and update the widget with the default if they
@@ -1136,13 +1137,14 @@ ft_start(void)
     }
 
     /* Prompt for local file overwrite. */
+    path = ft_resolve_dir(&xftc);
     if (xftc.receive_flag && !xftc.append_flag && !xftc.allow_overwrite) {
-	fts.local_file = fopen(xftc.local_filename,
-		xftc.ascii_flag? "r": "rb");
+	fts.local_file = fopen(path, xftc.ascii_flag? "r": "rb");
 	if (fts.local_file != NULL) {
-	    (void) fclose(fts.local_file);
+	    fclose(fts.local_file);
 	    fts.local_file = NULL;
-	    popup_overwrite();
+	    popup_overwrite(path);
+	    Free(path);
 	    return false;
 	}
     }
@@ -1279,10 +1281,10 @@ progress_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     XtVaSetValues(from_file, XtNlabel,
-	    xftc.receive_flag? xftc.host_filename: xftc.local_filename,
+	    xftc.receive_flag? xftc.host_filename: fts.resolved_local_filename,
 	    NULL);
     XtVaSetValues(to_file, XtNlabel,
-	    xftc.receive_flag? xftc.local_filename: xftc.host_filename,
+	    xftc.receive_flag? fts.resolved_local_filename: xftc.host_filename,
 	    NULL);
 
     switch (ft_state) {
@@ -1324,11 +1326,11 @@ progress_cancel_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 
 /* Pop up the "overwrite" pop-up. */
 static void
-popup_overwrite(void)
+popup_overwrite(const char *path)
 {
     /* Initialize it. */
     if (overwrite_shell == NULL) {
-	overwrite_popup_init();
+	overwrite_popup_init(path);
     }
 
     /* Pop it up. */
@@ -1337,10 +1339,10 @@ popup_overwrite(void)
 
 /* Initialize the "overwrite" pop-up. */
 static void
-overwrite_popup_init(void)
+overwrite_popup_init(const char *path)
 {
     Widget overwrite_pop, overwrite_name, okay_button, cancel_button;
-    String overwrite_string, label, lf;
+    String overwrite_string, label;
     Dimension d;
 
     /* Create the shell. */
@@ -1366,8 +1368,7 @@ overwrite_popup_init(void)
 	    XtNresizable, True,
 	    NULL);
     XtVaGetValues(overwrite_name, XtNlabel, &overwrite_string, NULL);
-    XtVaGetValues(local_file, XtNstring, &lf, NULL);
-    label = xs_buffer(overwrite_string, lf);
+    label = xs_buffer(overwrite_string, path);
     XtVaSetValues(overwrite_name, XtNlabel, label, NULL);
     XtFree(label);
     XtVaGetValues(overwrite_name, XtNwidth, &d, NULL);
@@ -1462,9 +1463,11 @@ ft_gui_clear_progress(void)
 
 /* Pop up a successful completion message. */
 void
-ft_gui_complete_popup(const char *msg)
+ft_gui_complete_popup(const char *msg, bool is_error)
 {
-    if (!ftc->is_action) {
+    if (is_error) {
+	popup_an_error("%s", msg);
+    } else if (!ftc->is_action) {
 	popup_an_info("%s", msg);
     }
 }
@@ -1512,10 +1515,12 @@ ft_gui_awaiting(void)
     if (ftc->is_action) {
 	popup_progress();
 	XtVaSetValues(from_file, XtNlabel,
-		ftc->receive_flag? ftc->host_filename: ftc->local_filename,
+		ftc->receive_flag? ftc->host_filename:
+				   fts.resolved_local_filename,
 		NULL);
 	XtVaSetValues(to_file, XtNlabel,
-		ftc->receive_flag? ftc->local_filename: ftc->host_filename,
+		ftc->receive_flag? fts.resolved_local_filename:
+				   ftc->host_filename,
 		NULL);
     }
 }

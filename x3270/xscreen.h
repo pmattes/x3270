@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -39,8 +39,8 @@
 #define fCHAR_WIDTH(f)	((f)->max_bounds.width)
 #define fCHAR_HEIGHT(f)	((f)->ascent + (f)->descent)
 
-#define HHALO  2       /* number of pixels to pad screen left-right */
-#define VHALO  1       /* number of pixels to pad screen top-bottom */
+#define HHALO  rescale(2)       /* number of pixels to pad screen left-right */
+#define VHALO  rescale(1)       /* number of pixels to pad screen top-bottom */
 
 #define cwX_TO_COL(x_pos, cw) 	(((x_pos)-hhalo) / (cw))
 #define chY_TO_ROW(y_pos, ch) 	(((y_pos)-vhalo) / (ch))
@@ -65,6 +65,12 @@
 			(chROW_TO_Y(maxROWS, ch, _vhalo) + \
 			 _vhalo+SGAP(descent)+_vhalo)
 
+/* keyboard modifer bitmap */
+#define ShiftKeyDown 0x01
+#define MetaKeyDown  0x02
+#define AltKeyDown   0x04
+#define AplMode      0x08
+
 /* selections */
 
 void screen_set_select(int baddr);
@@ -73,15 +79,18 @@ void screen_unselect_all(void);
 /*
  * Screen position structure.
  */
-union sp {
-    struct {
-	unsigned cc  : 8;	/* character code */
-	unsigned sel : 1;	/* selection status */
-	unsigned fg  : 6;	/* foreground color (flag/inv/0-15) */
-	unsigned gr  : 4;	/* graphic rendition */
-	unsigned cs  : 3;	/* character set */
-    } bits;
-    unsigned long word;
+struct sp {
+    union {
+	struct {
+	    unsigned ec  : 8;	/* EBCDIC character code */
+	    unsigned sel : 1;	/* selection status */
+	    unsigned fg  : 6;	/* foreground color (flag/inv/0-15) */
+	    unsigned gr  : 4;	/* graphic rendition */
+	    unsigned cs  : 3;	/* character set */
+	} bits;
+	unsigned long word;
+    } u;
+    ucs4_t ucs4;		/* NVT-mode character */
 };
 
 /*
@@ -140,7 +149,7 @@ GC screen_gc(int color);
 void screen_init(void);
 GC screen_invgc(int color);
 void screen_m3279(bool m3279);
-void screen_newcharset(char *csname);
+void screen_newcodepage(char *cpname);
 void screen_newfont(const char *fontname, bool do_popup, bool is_cs);
 void screen_newscheme(char *s);
 bool screen_obscured(void);
@@ -154,6 +163,7 @@ void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 void screen_register(void);
 XChar2b screen_vcrosshair(void);
+Dimension rescale(Dimension d);
 
 /* font list */
 struct font_list {

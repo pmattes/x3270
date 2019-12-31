@@ -11,10 +11,13 @@ It can also be invoked with parameters to define the entire transfer.
 ')dnl
 XX_LP
 Because of the complexity and number of options for file transfer, the
-parameters to the XX_FB(Transfer) XX_action take the unique form
-of XX_FI(option)=XX_FI(value), and can appear in any order.
+parameters to the XX_FB(Transfer) XX_action can take the unique form
+of XX_FI(option)=XX_FI(value).
+They can also be given with their parameters separately.
+Options can appear in any order.
 Note that if the XX_FI(value) contains spaces (such as a VM/CMS file name),
-then the entire parameter must be quoted, e.g., "HostFile=xxx foo a".
+then the entire parameter must be quoted, e.g., XX_FB("HostFile=xxx foo a").
+With sequential options, this would be XX_FB(`HostFile,"xxx foo a"').
 The options are:
 XX_LP
 XX_TS(4,l c l l.)

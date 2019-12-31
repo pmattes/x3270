@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -106,6 +106,12 @@ typedef char bool;			/* roll our own for MSC */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
 
 /*
+ * Helpful macros.
+ */
+#define STR_HELPER(x)	#x
+#define STR(x)		STR_HELPER(x)
+
+/*
  * Unicode UCS-4 characters are (hopefully) 32 bits.
  * EBCDIC (including DBCS) is (hopefully) 16 bits.
  */
@@ -115,9 +121,6 @@ typedef unsigned short ebc_t;
 /*
  * Cancel out contradictory parts.
  */
-#if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) && !defined(_WIN32) /*[*/
-# undef X3270_DBCS
-#endif /*]*/
 #if defined(X3270_IPV6) && !defined(AF_INET6) /*[*/
 # undef X3270_IPV6
 #endif /*]*/
@@ -173,7 +176,6 @@ extern const char	*build;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;
-extern int		children;
 extern char		*connected_lu;
 extern char		*connected_type;
 extern char		*current_host;
@@ -211,6 +213,7 @@ extern char		*termtype;
 extern bool		visible_control;
 extern int		*xtra_width;
 extern int		x3270_exit_code;
+extern bool		x3270_exiting;
 
 #if defined(_WIN32) /*[*/
 extern char		*instdir;
@@ -223,76 +226,126 @@ extern char		*commondocs3270;
 extern unsigned		windirs_flags;
 #endif /*]*/
 
+typedef struct {
+    bool		m3279;		/* 3270 (color) mode */
+    bool		extended;	/* 3270 extended (-E) mode */
+} xmode_t;
+extern xmode_t mode;
+
 /* Data types and complex global variables */
 
 /*   connection state */
 enum cstate {
     NOT_CONNECTED,	/* no socket, unknown mode */
-    SSL_PASS,		/* waiting for interactive SSL password */
+    RECONNECTING,	/* delay before automatic reconnect */
+    TLS_PASS,		/* waiting for interactive TLS password */
+
+    /* Half-connected states. */
     RESOLVING,		/* resolving hostname */
-    PENDING,		/* socket connection pending */
-    NEGOTIATING,	/* SSL/proxy negotiation in progress */
-    CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
+    TCP_PENDING,	/* socket connection pending */
+    TLS_PENDING,	/* TLS negotiation pending */
+    PROXY_PENDING,	/* proxy negotiation pending */
+    TELNET_PENDING,	/* TELNET negotiation pending */
+
+    /* Connected states. */
     CONNECTED_NVT,	/* connected in NVT mode */
-    CONNECTED_3270,	/* connected in old-style 3270 mode */
+    CONNECTED_NVT_CHAR,	/* connected in NVT character-at-a-time mode */
+    CONNECTED_3270,	/* connected in RFC 1576 TN3270 mode */
     CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
     CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
     CONNECTED_SSCP,	/* connected in TN3270E mode, SSCP-LU mode */
-    CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
+    CONNECTED_TN3270E,	/* connected in TN3270E mode, 3270 mode */
+    NUM_CSTATE		/* number of cstates */
 };
 extern enum cstate cstate;
 
-#define PCONNECTED	(cstate > NOT_CONNECTED)
-#define HALF_CONNECTED	(cstate == RESOLVING || cstate == PENDING)
-#define CONNECTED	(cstate >= CONNECTED_INITIAL)
-#define IN_NVT		(cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT)
-#define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
-#define IN_SSCP		(cstate == CONNECTED_SSCP)
-#define IN_TN3270E	(cstate == CONNECTED_TN3270E)
-#define IN_E		(cstate >= CONNECTED_UNBOUND)
+#define cPCONNECTED(c)	(c > NOT_CONNECTED)
+#define cHALF_CONNECTED(c) (c >= RESOLVING && c < CONNECTED_NVT)
+#define cCONNECTED(c)	(c > TCP_PENDING)
+#define cIN_NVT(c)	(c == CONNECTED_NVT || \
+			 c == CONNECTED_NVT_CHAR || \
+			 c == CONNECTED_E_NVT)
+#define cIN_3270(c)	(c == CONNECTED_3270 || \
+			 c == CONNECTED_TN3270E || \
+			 c == CONNECTED_SSCP)
+#define cIN_SSCP(c)	(c == CONNECTED_SSCP)
+#define cIN_TN3270E(c)	(c == CONNECTED_TN3270E)
+#define cIN_E(c)	(c >= CONNECTED_UNBOUND)
+#define cFULL_SESSION(c) (cIN_NVT(c) || cIN_3270(c) || cIN_SSCP(c))
 
-/*   keyboard modifer bitmap */
-#define ShiftKeyDown	0x01
-#define MetaKeyDown	0x02
-#define AltKeyDown	0x04
+#define PCONNECTED	cPCONNECTED(cstate)
+#define HALF_CONNECTED	cHALF_CONNECTED(cstate)
+#define CONNECTED	cCONNECTED(cstate)
+#define IN_NVT		cIN_NVT(cstate)
+#define IN_3270		cIN_3270(cstate)
+#define IN_SSCP		cIN_SSCP(cstate)
+#define IN_TN3270E	cIN_TN3270E(cstate)
+#define IN_E		cIN_E(cstate)
+#define FULL_SESSION	cFULL_SESSION(cstate)
+
+/*   network connection status */
+typedef enum {
+    NC_FAILED,		/* failed */
+    NC_RESOLVING,	/* name resolution in progress */
+    NC_TLS_PASS,	/* TLS password pending */
+    NC_CONNECT_PENDING,	/* connection pending */
+    NC_CONNECTED	/* connected */
+} net_connect_t;
 
 /*   toggles */
 typedef enum {
     MONOCASE,		/* all-uppercase display */
-    ALT_CURSOR,		/* block cursor (x3270) */
-    CURSOR_BLINK,	/* blinking cursor (x3270) */
-    SHOW_TIMING,	/* display command execution time in the OIA
-			   (interactive) */
-    CURSOR_POS,		/* display cursor position in the OIA (interactive) */
+    ALT_CURSOR,		/* block cursor */
+    CURSOR_BLINK,	/* blinking cursor */
+    SHOW_TIMING,	/* display command execution time in the OIA */
     TRACING,		/* trace data and events */
-    SCROLL_BAR,		/* include scroll bar (x3270) */
+    SCROLL_BAR,		/* include scroll bar */
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
     BLANK_FILL,		/* treat trailing blanks like NULLs on input */
     SCREEN_TRACE,	/* trace screen contents to file or printer */
-    MARGINED_PASTE,	/* respect left margin when pasting (x3270 and
-			   wc3270) */
-    RECTANGLE_SELECT,	/* select by rectangles (x3270) */
-    CROSSHAIR,		/* display cursor crosshair (x3270) */
-    VISIBLE_CONTROL,	/* display visible control characters (x3270) */
+    MARGINED_PASTE,	/* respect left margin when pasting */
+    RECTANGLE_SELECT,	/* select by rectangles */
+    CROSSHAIR,		/* display cursor crosshair */
+    VISIBLE_CONTROL,	/* display visible control characters */
     AID_WAIT,		/* make scripts wait for AIDs to complete */
-    UNDERSCORE,		/* special c3270/wc3270 underscore display mode
-			   (c3270 and wc320) */
-    OVERLAY_PASTE,	/* overlay protected fields when pasting (x3270 and
-			   wc3270) */
+    UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
+    OVERLAY_PASTE,	/* overlay protected fields when pasting */
+    TYPEAHEAD,		/* typeahead */
+    APL_MODE,		/* APL mode */
+    ALWAYS_INSERT,	/* always-insert mode */
+    RIGHT_TO_LEFT,	/* right-to-left display */
+    REVERSE_INPUT,	/* reverse input */
+    INSERT_MODE,	/* insert mode */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);
 
+/*
+ * ea.ucs4 (Unicode) will be non-zero if the buffer location was set in NVT
+ *  mode.
+ * ea.ec (EBCDIC) will be non-zero if the buffer location was set in 3270 mode.
+ * They will *never* both be non-zero.
+ *
+ * We translate between the two values as needed for display or for the Ascii()
+ * action, but when getting a raw buffer dump via ReadBuffer(Ebcdic) or sending
+ * the buffer to the host (Read Modified), we only send EBCDIC: If there is
+ * Unicode in a buffer location, we consider it an EBCDIC X'00' (NUL).
+ *
+ * Note that the right-hand location of a DBCS pair is ec=0 in 3270 mode, but
+ * ucs4=0x20 (a space) in NVT mode.
+ */
+
 /*   extended attributes */
 struct ea {
-    unsigned char cc;	/* EBCDIC or ASCII character code */
-    unsigned char fa;	/* field attribute, it nonzero */
+    unsigned char ec;	/* EBCDIC code */
+    unsigned char fa;	/* field attribute, if nonzero */
     unsigned char fg;	/* foreground color (0x00 or 0xf<n>) */
     unsigned char bg;	/* background color (0x00 or 0xf<n>) */
     unsigned char gr;	/* ANSI graphics rendition bits */
     unsigned char cs;	/* character set (GE flag, or 0..2) */
     unsigned char ic;	/* input control (DBCS) */
     unsigned char db;	/* DBCS state */
+    ucs4_t ucs4;	/* Unicode value, if set in NVT mode */
 };
 #define GR_BLINK	0x01
 #define GR_REVERSE	0x02
@@ -314,13 +367,13 @@ enum keytype { KT_STD, KT_GE };
 #define Replace(var, value) do { Free(var); var = (value); } while(false)
 
 /* Configuration change masks. */
-#define NO_CHANGE	0x0000	/* no change */
-#define MODEL_CHANGE	0x0001	/* screen dimensions changed */
-#define FONT_CHANGE	0x0002	/* emulator font changed */
-#define COLOR_CHANGE	0x0004	/* color scheme or 3278/9 mode changed */
-#define SCROLL_CHANGE	0x0008	/* scrollbar snapped on or off */
-#define CHARSET_CHANGE	0x0010	/* character set changed */
-#define ALL_CHANGE	0xffff	/* everything changed */
+#define NO_CHANGE       0x0000  /* no change */
+#define MODEL_CHANGE    0x0001  /* screen dimensions changed */
+#define FONT_CHANGE     0x0002  /* emulator font changed */
+#define COLOR_CHANGE    0x0004  /* color scheme or 3278/9 mode changed */
+#define SCROLL_CHANGE   0x0008  /* scrollbar snapped on or off */
+#define CODEPAGE_CHANGE 0x0010  /* code page changed */
+#define ALL_CHANGE      0xffff  /* everything changed */
 
 /* Portability macros */
 
@@ -334,8 +387,10 @@ enum keytype { KT_STD, KT_GE };
 
 /* Default DFT file transfer buffer size. */
 #if !defined(DFT_BUF) /*[*/
-# define DFT_BUF		(4 * 1024)
+# define DFT_BUF	16384
 #endif /*]*/
+#define DFT_MIN_BUF	256
+#define DFT_MAX_BUF	32767
 
 /* DBCS Preedit Types */
 #define PT_ROOT		"Root"
@@ -363,9 +418,12 @@ void usage(const char *);
 /* Emulator actions. */
 /* types of internal actions */
 typedef enum iaction {
-    IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_KEY, IA_MACRO,
-    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE
+    IA_NONE, IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_MACRO,
+    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE,
+    IA_PASSWORD, IA_UI, IA_HTTPD
 } ia_t;
+#define IA_IS_KEY(ia)	\
+    ((ia) == IA_KEYPAD || (ia) == IA_KEYMAP || (ia) == IA_DEFAULT)
 extern enum iaction ia_cause;
 
 typedef bool (action_t)(ia_t ia, unsigned argc, const char **argv);
@@ -384,6 +442,9 @@ typedef SOCKET socket_t;
 # define SOCK_CLOSE(s)  closesocket(s)
 # define socket_errno()	WSAGetLastError()
 # define SE_EWOULDBLOCK WSAEWOULDBLOCK
+# if !defined(WSA_FLAG_NO_HANDLE_INHERIT) /*[*/
+#  define WSA_FLAG_NO_HANDLE_INHERIT 0x80
+# endif /*]*/
 #endif /*]*/
 
 /* Handy stuff. */
@@ -394,3 +455,10 @@ typedef struct llist {
     struct llist *next;
     struct llist *prev;
 } llist_t;
+
+/* Resource types. */
+enum resource_type {
+  XRM_STRING,     /* char * */
+  XRM_BOOLEAN,    /* bool */
+  XRM_INT         /* int */
+};

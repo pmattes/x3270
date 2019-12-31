@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,30 +45,30 @@ sio_supported(void)
 sio_init_ret_t
 sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
 {
-    sioc_set_error("SSL/TLS not supported");
+    sioc_set_error("TLS not supported");
     *sio_ret = NULL;
     return SI_FAILURE;
 }
 
-bool
+sio_negotiate_ret_t
 sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 {
-    sioc_set_error("SSL/TLS not supported");
+    sioc_set_error("TLS not supported");
     *data = false;
-    return false;
+    return SIG_FAILURE;
 }
 
 int
 sio_read(sio_t sio, char *buf, size_t buflen)
 {
-    sioc_set_error("SSL/TLS not supported");
+    sioc_set_error("TLS not supported");
     return SIO_FATAL_ERROR;
 }
 
 int
 sio_write(sio_t sio, const char *buf, size_t buflen)
 {
-    sioc_set_error("SSL/TLS not supported");
+    sioc_set_error("TLS not supported");
     return SIO_FATAL_ERROR;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include "scroll.h"
 
 void
-scroll_save(int n _is_unused, bool trim_blanks _is_unused)
+scroll_save(int n _is_unused)
 {
 }
 

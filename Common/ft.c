@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -36,6 +36,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "appres.h"
 #include "actions.h"
@@ -48,9 +49,10 @@
 #include "host.h"
 #include "idle.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
+#include "task.h"
+#include "toggles.h"
 #include "utils.h"
 #include "varbuf.h"
 
@@ -163,6 +165,34 @@ static void ft_in3270(bool ignored);
 
 static action_t Transfer_action;
 
+/*
+ * Toggle the buffer size.
+ */
+static bool
+toggle_ft_buffer_size(const char *name _is_unused, const char *value)
+{
+    unsigned long l;
+    char *end;
+    int bs;
+
+    if (!*value) {
+	appres.ft.dft_buffer_size = DFT_BUF;
+	return true;
+    }
+
+    l = strtoul(value, &end, 10);
+    bs = (int)l;
+    if (*end != '\0' || (unsigned long)bs != l) {
+	popup_an_error("Invalid %s value", ResUnlockDelay);
+	return false;
+    }
+    if (bs < DFT_MIN_BUF || bs > DFT_MAX_BUF) {
+	bs = DFT_BUF;
+    }
+    appres.ft.dft_buffer_size = bs;
+    return true;
+}
+
 /**
  * File transfer module registration.
  */
@@ -179,6 +209,11 @@ ft_register(void)
 
     /* Register actions. */
     register_actions(ft_actions, array_count(ft_actions));
+
+    /* Register the toggles. */
+    register_extended_toggle(ResFtBufferSize, toggle_ft_buffer_size, NULL,
+	    NULL, (void **)&appres.ft.dft_buffer_size, XRM_INT);
+
 }
 
 /* Encode/decode for host type. */
@@ -294,8 +329,7 @@ ft_init_conf(ft_conf_t *p)
     p->dft_buffersize = set_dft_buffersize(0);
 #if defined(_WIN32) /*[*/
     p->windows_codepage = appres.ft.codepage?
-	appres.ft.codepage:
-	(appres.ft.codepage_bc? appres.ft.codepage_bc: appres.local_cp);
+	appres.ft.codepage: appres.local_cp;
 #endif /*]*/
 
     /* Apply resources. */
@@ -429,7 +463,7 @@ ft_didnt_start(ioid_t id _is_unused)
 	fclose(fts.local_file);
 	fts.local_file = NULL;
 	if (ftc->receive_flag && !ftc->append_flag) {
-	    unlink(ftc->local_filename);
+	    unlink(fts.resolved_local_filename);
 	}
     }
 
@@ -444,7 +478,7 @@ ft_complete(const char *errmsg)
 {
     /* Close the local file. */
     if (fts.local_file != NULL && fclose(fts.local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", ftc->local_filename);
+	popup_an_errno(errno, "close(%s)", fts.resolved_local_filename);
     }
     fts.local_file = NULL;
 
@@ -472,14 +506,14 @@ ft_complete(const char *errmsg)
 	ft_gui_clear_progress();
 
 	/* Pop up the error. */
-	popup_an_error("%s", msg_copy);
+	ft_gui_complete_popup(msg_copy, true);
 	Free(msg_copy);
     } else {
 	struct timeval t1;
 	double bytes_sec;
 	char *buf;
 
-	(void) gettimeofday(&t1, NULL);
+	gettimeofday(&t1, NULL);
 	bytes_sec = (double)fts.length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
@@ -487,12 +521,9 @@ ft_complete(const char *errmsg)
 		display_scale(bytes_sec),
 		fts.is_cut ? "CUT" : "DFT");
 	ft_gui_clear_progress();
-	ft_gui_complete_popup(buf);
+	ft_gui_complete_popup(buf, false);
 	Free(buf);
     }
-
-    /* I hope I can do this unconditionally. */
-    sms_continue();
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -514,7 +545,7 @@ ft_running(bool is_cut)
 	}
     }
     fts.is_cut = is_cut;
-    (void) gettimeofday(&t0, NULL);
+    gettimeofday(&t0, NULL);
     fts.length = 0;
 
     ft_gui_running(fts.length);
@@ -548,6 +579,28 @@ ft_in3270(bool ignored _is_unused)
     }
 }
 
+/* Resolve a local file name that might be a directory. */
+char *
+ft_resolve_dir(ft_conf_t *p)
+{
+    struct stat s;
+
+    /* If the local file is a directory, append the host file name to it. */
+    if (stat(p->local_filename, &s) == 0 && (s.st_mode & S_IFDIR)) {
+	return xs_buffer("%s%s%s",
+		p->local_filename,
+#if defined(_WIN32) /*[*/
+		"\\",
+#else /*][*/
+		"/",
+#endif /*]*/
+		p->host_filename);
+
+    } else {
+	return NewString(p->local_filename);
+    }
+}
+
 /*
  * Start a file transfer, based on the contents of an ft_state structure.
  *
@@ -568,20 +621,23 @@ ft_go(ft_conf_t *p)
     /* Adjust the DFT buffer size. */
     p->dft_buffersize = set_dft_buffersize(p->dft_buffersize);
 
+    /* Resolve the local file name. */
+    Replace(fts.resolved_local_filename, ft_resolve_dir(p));
+
     /* See if the local file can be overwritten. */
     if (p->receive_flag && !p->append_flag && !p->allow_overwrite) {
-	f = fopen(p->local_filename, p->ascii_flag? "r": "rb");
+	f = fopen(fts.resolved_local_filename, p->ascii_flag? "r": "rb");
 	if (f != NULL) {
-	    (void) fclose(f);
+	    fclose(f);
 	    popup_an_error("Transfer: File exists");
 	    return NULL;
 	}
     }
 
     /* Open the local file. */
-    f = fopen(p->local_filename, ft_local_fflag(p));
+    f = fopen(fts.resolved_local_filename, ft_local_fflag(p));
     if (f == NULL) {
-	popup_an_errno(errno, "Local file '%s'", p->local_filename);
+	popup_an_errno(errno, "Local file '%s'", fts.resolved_local_filename);
 	return NULL;
     }
 
@@ -680,13 +736,13 @@ ft_go(ft_conf_t *p)
 	if (f != NULL) {
 	    fclose(f);
 	    if (p->receive_flag && !p->append_flag) {
-		unlink(p->local_filename);
+		unlink(fts.resolved_local_filename);
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
 	return NULL;
     }
-    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
+    emulate_input(vb_buf(&r), vb_len(&r), false, false);
     vb_free(&r);
 
     /* Now proceed with this context. */
@@ -736,26 +792,40 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	for (i = 0; i < N_PARMS; i++) {
 	    char *eq;
 	    size_t kwlen;
+	    const char *value;
 
 	    eq = strchr(argv[j], '=');
-	    if (eq == NULL || eq == argv[j] || !*(eq + 1)) {
-		popup_an_error("Transfer: Invalid option syntax: '%s'",
-			argv[j]);
-		return NULL;
+	    if (eq != NULL) {
+		/* Using 'keyword=value' syntax. */
+		if (eq == argv[j] || !*(eq + 1)) {
+		    popup_an_error("Transfer: Invalid option syntax: '%s'",
+			    argv[j]);
+		    return NULL;
+		}
+		kwlen = eq - argv[j];
+		value = eq + 1;
+	    } else {
+		/* Using 'keyword,value' syntax. */
+		kwlen = strlen(argv[j]);
+		if (j == argc - 1) {
+		    popup_an_error("Transfer: missing value after '%s'",
+			    argv[j]);
+		    return NULL;
+		}
+		value = argv[j + 1];
 	    }
-	    kwlen = eq - argv[j];
 	    if (!strncasecmp(argv[j], tp[i].name, kwlen)
 		    && !tp[i].name[kwlen]) {
 		if (tp[i].keyword[0]) {
 		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
-			if (!strncasecmp(eq + 1, tp[i].keyword[k],
-				    strlen(eq + 1))) {
+			if (!strncasecmp(value, tp[i].keyword[k],
+				    strlen(value))) {
 			    break;
 			}
 		    }
 		    if (k >= 4 || tp[i].keyword[k] == NULL) {
 			popup_an_error("Transfer: Invalid option value: '%s'",
-				eq + 1);
+				value);
 			return NULL;
 		    }
 		} else switch (i) {
@@ -767,23 +837,27 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-			(void) strtol(eq + 1, &ptr, 10);
-			if (ptr == eq + 1 || *ptr) {
+			strtol(value, &ptr, 10);
+			if (ptr == value || *ptr) {
 			    popup_an_error("Transfer: Invalid option value: "
-				    "'%s'", eq + 1);
+				    "'%s'", value);
 			    return NULL;
 			}
 			break;
 		    default:
 			break;
 		}
-		tp[i].value = NewString(eq + 1);
+		tp[i].value = NewString(value);
+		if (eq == NULL) {
+		    /* Skip the parameter. */
+		    j++;
+		}
 		break;
 	    }
-	}
-	if (i >= N_PARMS) {
-	    popup_an_error("Transfer: Unknown option: '%s'", argv[j]);
-	    return NULL;
+	    if (i >= N_PARMS) {
+		popup_an_error("Transfer: Unknown option: '%s'", argv[j]);
+		return NULL;
+	    }
 	}
     }
 
@@ -798,7 +872,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->local_filename = NewString(tp[PARM_LOCAL_FILE].value);
     }
     if (tp[PARM_HOST].value) {
-	(void) ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);
+	ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);
     }
     if (tp[PARM_MODE].value) {
 	p->ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
@@ -823,7 +897,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
     }
     if (tp[PARM_RECFM].value) {
-	(void) ft_encode_recfm(tp[PARM_RECFM].value, &p->recfm);
+	ft_encode_recfm(tp[PARM_RECFM].value, &p->recfm);
     }
     if (tp[PARM_LRECL].value) {
 	p->lrecl = atoi(tp[PARM_LRECL].value);
@@ -832,7 +906,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->blksize = atoi(tp[PARM_BLKSIZE].value);
     }
     if (tp[PARM_ALLOCATION].value) {
-	(void) ft_encode_units(tp[PARM_ALLOCATION].value, &p->units);
+	ft_encode_units(tp[PARM_ALLOCATION].value, &p->units);
     }
     if (tp[PARM_PRIMARY_SPACE].value) {
 	p->primary_space = atoi(tp[PARM_PRIMARY_SPACE].value);
@@ -950,6 +1024,25 @@ parse_ft_keywords(unsigned argc, const char **argv)
     return p;
 }
 
+/* Start a transfer. */
+bool
+ft_start_backend(ft_conf_t *p)
+{
+    fts.local_file = ft_go(p);
+    if (fts.local_file == NULL) {
+	return false;
+    }
+
+    /* If interactive, tell the user we're waiting. */
+    ft_gui_awaiting();
+
+    /* Set a timeout for failed command start. */
+    ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
+
+    /* Success. */
+    return true;
+}
+
 /*
  * Script/macro action for file transfer.
  *  Transfer(option=value[,...])
@@ -986,6 +1079,20 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
+    /* Check for cancel first. */
+    if (argc == 1 && !strcasecmp(argv[0], "Cancel")) {
+	if (ft_state == FT_NONE) {
+	    action_output("No transfer pending.");
+	} else {
+	    if (ft_do_cancel()) {
+		action_output("Canceled.");
+	    } else {
+		action_output("Cancel initiated.");
+	    }
+	}
+	return true;
+    }
+
     /* Check for interactive mode. */
     if (argc == 0) {
 	if (!gui_conf_initted) {
@@ -1004,6 +1111,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	case FGI_ABORT:
 	    /* User said no. */
 	    return false;
+	case FGI_ASYNC:
+	    /* Asynchronous dialog running. */
+	    return true;
 	}
     }
 
@@ -1017,19 +1127,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Start the transfer. */
-    fts.local_file = ft_go(p);
-    if (fts.local_file == NULL) {
-	return false;
-    }
-
-    /* If interactive, tell the user we're waiting. */
-    ft_gui_awaiting();
-
-    /* Set a timeout for failed command start. */
-    ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
-
-    /* Success. */
-    return true;
+    return ft_start_backend(p);
 }
 
 /*

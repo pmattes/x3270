@@ -62,17 +62,14 @@ then	AC_ERROR(Can't figure out Tcl version)
 fi
 AC_MSG_RESULT($tclver)
 
-dnl If Tcl > 8.6, we need pthreads.
-pthread=`echo $tclver | awk -F . '{ if ($1 > 8 || ($1 == 8 && $2 >= 6)) print "1"}'`
+dnl If Tcl >= 8.6, we need pthreads.
+pthread=`echo $tclver | awk -F . '{ if ($1 > 8 || $2 >= 6) print "1"}'`
 
 dnl Set up tclvr (tclver without the period, for BSD)
 tclvr=`echo $tclver | tr -d .`
 
 dnl Checks for header files.
 AC_CONFIG_HEADER(conf.h)
-AC_CHECK_HEADERS(sys/select.h)
-AC_CHECK_HEADERS(pty.h)
-AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 
 dnl Check for pthreads.
@@ -107,8 +104,6 @@ dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
 LDFLAGS="$LDFLAGS -lm"
-AC_SEARCH_LIBS(forkpty, util)
-AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 ORIG_LDFLAGS="$LDFLAGS"

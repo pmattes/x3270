@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2015, 2017 Paul Mattes.
+! Copyright (c) 1995-2015, 2017-2019 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@ x3270.message.localeCodeset:		Locale codeset:
 x3270.message.luName:			LU name:
 x3270.message.model:			Model
 x3270.message.mono:			monochrome
+x3270.message.reconnecting:		Reconnection pending
 x3270.message.notConnected:		Not connected
 x3270.message.port:			Port:
 x3270.message.provider:			Provider:
@@ -72,3 +73,4 @@ x3270.message.tn3270eNoOpts:		No TN3270E options
 x3270.message.tn3270eOpts:		TN3270E options:
 x3270.message.unboundMode:		unbound mode
 x3270.message.unverified:		unverified
+x3270.message.user:			User:

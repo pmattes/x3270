@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015 Paul Mattes.
+ * Copyright (c) 1994-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,20 +35,23 @@
 #define FPS_FF_SEP		0x4	/* use FFs to divide pages in text */
 #define FPS_NO_HEADER		0x8	/* do not generate HTML header */
 #define FPS_NO_DIALOG		0x10	/* do not use Windows print dialog */
+#define FPS_DIALOG_COMPLETE	0x20	/* Windows dialog is complete */
 
 typedef struct _fps *fps_t;
 
 typedef enum {
 	FPS_STATUS_SUCCESS = 0,
 	FPS_STATUS_SUCCESS_WRITTEN = 1,
+	FPS_STATUS_WAIT = 2,
 	FPS_STATUS_ERROR = -1,
 	FPS_STATUS_CANCEL = -2
 } fps_status_t;
 #define FPS_IS_ERROR(fps) ((int)fps < 0)
 
 fps_status_t fprint_screen(FILE *f, ptype_t ptype, unsigned opts,
-	const char *caption, const char *printer_name);
+	const char *caption, const char *printer_name, void *wait_context);
 fps_status_t fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
-	const char *caption, const char *printer_name, fps_t *fps);
+	const char *caption, const char *printer_name, fps_t *fps,
+	void *wait_context);
 fps_status_t fprint_screen_body(fps_t fps);
 fps_status_t fprint_screen_done(fps_t *fps);

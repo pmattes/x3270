@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -68,3 +68,27 @@ typedef struct {
     unsigned flags;
 } toggle_register_t;
 void register_toggles(toggle_register_t toggles[], unsigned count);
+
+typedef bool toggle_extended_upcall_t(const char *name, const char *value);
+typedef bool toggle_extended_done_t(bool success);
+typedef char *toggle_extended_canonicalize_t(const char *value);
+void register_extended_toggle(const char *name,
+	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
+	toggle_extended_canonicalize_t canonicalize, void **appres_address,
+	enum resource_type resource_type);
+typedef void toggle_extended_notify_t(const char *name, const char *value,
+	ia_t ia);
+void register_extended_toggle_notify(toggle_extended_notify_t notify);
+void force_toggle_notify(const char *name, ia_t ia);
+char **extended_toggle_names(int *countp);
+void *find_extended_toggle(const char *name, enum resource_type type);
+bool init_extended_toggle(const char *name, bool value);
+
+bool Set_action(ia_t ia, unsigned argc, const char **argv);
+bool Toggle_action(ia_t ia, unsigned argc, const char **argv);
+
+typedef struct {
+    const char *name;
+    const char *value;
+} tnv_t;
+tnv_t *toggle_values(void);

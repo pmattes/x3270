@@ -166,26 +166,26 @@ main(int argc, char *argv[])
 	/* Grab the username. */
 	user = getenv("USERNAME");
 	if (user == NULL) {
-		fprintf(stderr, "No %USERNAME%?\n");
+		fprintf(stderr, "No %%USERNAME%%?\n");
 		return 1;
 	}
 
 	/* Format the dates. */
 	_time64(&t);
-	builddate = NewString(_ctime64(&t));
-	builddate[strlen(builddate) - 1] = '\0';
-	tm = _localtime64(&t);
+	tm = _gmtime64(&t);
 	sprintf(sccsdate, "%d/%02d/%02d",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday);
-	sprintf(rpqtime, "%02d%02d%02d%02d%02d",
+	sprintf(rpqtime, "%02d%02d%02d%02d%02d%02d",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday,
 		tm->tm_hour,
 		tm->tm_min,
 		tm->tm_sec);
+	builddate = NewString(asctime(tm));
+	builddate[strlen(builddate) - 1] = '\0';
 
 	/* Create the code. */
 	f = fopen(ofile, "w");

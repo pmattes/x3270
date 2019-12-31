@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015, 2017 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015, 2017-2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,14 +40,17 @@ struct host {
     struct host *prev, *next;
 };
 extern struct host *hosts;
+extern enum iaction connect_ia;
 
 /* Host connect/disconnect and state change. */
 void hostfile_init(void);
-void host_cancel_reconnect(void);
-bool host_connect(const char *n);
+bool host_connect(const char *n, enum iaction ia);
 void host_connected(void);
+void host_continue_connect(iosrc_t iosrc, net_connect_t nc);
 void host_new_connection(bool pending);
 void host_disconnect(bool disable);
 void host_in3270(enum cstate);
 void host_newfd(iosrc_t s);
+bool host_reconnecting(void);
 void host_register(void);
+void host_set_flag(int flag);

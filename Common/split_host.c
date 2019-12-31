@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 #include "split_host.h"
 #include "utils.h"
 
-static char *pfxstr = "AaCcLlNnPpSsBbYy";
+static char *pfxstr = "AaCcLlNnPpSsBbYyTt";
 
 /**
  * Hostname parser.
@@ -48,8 +48,8 @@ static char *pfxstr = "AaCcLlNnPpSsBbYy";
  * @param[out] host	Returned Malloc'd hostname, isolated from other parts
  * @param[out] port	Returned Malloc'd port, or NULL
  * @param[out] accept	Returned Malloc'd accept hostname, or NULL
- * @param[out] prefixes	Returned bitmap of prefixes, indexed by ACLNPSBY (bit 0
- * 			 is A, bit 1 is C, bit 2 is L, etc.)
+ * @param[out] prefixes	Returned bitmap of prefixes, indexed by ACLNPSBYT (bit
+ * 			 0 is A, bit 1 is C, bit 2 is L, etc.)
  * @param[out] error	Returned error text for failure, or NULL
  *
  * @return true for success, false for syntax error.

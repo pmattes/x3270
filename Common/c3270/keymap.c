@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,13 +40,15 @@
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
-#include "macros.h"
+#include "lazya.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
+#include "task.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
+#include "varbuf.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
@@ -345,9 +347,9 @@ add_keymap_entry(int ncodes, k_t *codes, int *hints, const char *name,
     k->successor = NULL;
     k->ncodes = ncodes;
     k->codes = Malloc(ncodes * sizeof(k_t));
-    (void) memcpy(k->codes, codes, ncodes * sizeof(k_t));
+    memcpy(k->codes, codes, ncodes * sizeof(k_t));
     k->hints = Malloc(ncodes * sizeof(int));
-    (void) memcpy(k->hints, hints, ncodes * sizeof(int));
+    memcpy(k->hints, hints, ncodes * sizeof(int));
     k->name = NewString(name);
     k->file = NewString(file);
     k->line = line;
@@ -866,7 +868,7 @@ lookup_cname(int ccode)
 	if (ccode == KEY_F(i)) {
 	    static char buf[10];
 
-	    (void) sprintf(buf, "F%d", i);
+	    sprintf(buf, "F%d", i);
 	    return buf;
 	}
     }
@@ -963,7 +965,7 @@ keymap_init(void)
     clear_keymap();
 
     /* Read the base keymap. */
-    (void) read_keymap("base", false);
+    read_keymap("base", false);
 
     /* Read the user-defined keymaps. */
     if (appres.interactive.key_map != NULL) {
@@ -971,12 +973,12 @@ keymap_init(void)
 	while ((comma = strchr(s, ',')) != NULL) {
 	    *comma = '\0';
 	    if (*s) {
-		(void) read_keymap(s, false);
+		read_keymap(s, false);
 	    }
 	    s = comma + 1;
 	}
 	if (*s) {
-	    (void) read_keymap(s, false);
+	    read_keymap(s, false);
 	}
 	Free(s0);
     }
@@ -1065,9 +1067,9 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
     if (k) {
 	/* Curses key. */
 	if ((n = lookup_cname(k)) != NULL) {
-	    (void) sprintf(buf, "<Key>%s", n);
+	    sprintf(buf, "<Key>%s", n);
 	} else {
-	    (void) sprintf(buf, "[unknown curses key 0x%x]", k);
+	    sprintf(buf, "[unknown curses key 0x%x]", k);
 	}
 	return buf;
     }
@@ -1083,7 +1085,7 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 	if (latin1_name != NULL) {
 	    strcpy(buf, latin1_name);
 	} else {
-	    (void) sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	    sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
 	}
 	return buf;
     }
@@ -1109,14 +1111,19 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 }
 
 /* Dump the current keymap. */
-void
+const char *
 keymap_dump(void)
 {
+    varbuf_t r;
     struct keymap *k;
+    char *s;
+    size_t sl;
+
+    vb_init(&r);
 
     for (k = master_keymap; k != NULL; k = k->next) {
 	if (k->successor != NULL) {
-	    action_output("[%s:%d%s] -- superceded by %s:%d --",
+	    vb_appendf(&r, "[%s:%d%s] -- superceded by %s:%d --\n",
 		    k->file, k->line,
 		    k->temp? " temp": "",
 		    k->successor->file, k->successor->line);
@@ -1134,9 +1141,17 @@ keymap_dump(void)
 				KM_KEYMAP | k->codes[i].modifiers,
 			    dbuf));
 	    }
-	    action_output("[%s:%d%s]%s: %s", k->file, k->line,
+	    vb_appendf(&r, "[%s:%d%s]%s: %s\n", k->file, k->line,
 		    k->temp? " temp": "", buf, t);
 	    Free(t);
 	}
     }
+
+    s = vb_consume(&r);
+    sl = strlen(s);
+    if (sl > 0 && s[sl - 1] == '\n') {
+	s[sl - 1] = '\0';
+    }
+
+    return lazya(s);
 }

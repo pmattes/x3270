@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -53,7 +53,7 @@ typedef enum {
     SM_READ_EOF,		/* sio_read always returns EOF */
     SM_READ_EWOULDBLOCK,	/* sio_read always returns EWOULDBLOCK */
     SM_WRITE_FAIL,		/* Fail sio_write */
-    SM_TRANSPARENT,		/* No SSL at all */
+    SM_TRANSPARENT,		/* No TLS at all */
     N_MODES
 } fail_mode_t;
 fail_mode_t fail_mode = SM_UNKNOWN;
@@ -120,7 +120,7 @@ sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
     set_fail_mode();
     switch (fail_mode) {
     case SM_UNSUPPORTED:
-	sioc_set_error("SSL/TLS not supported");
+	sioc_set_error("TLS not supported");
 	*sio_ret = NULL;
 	return SI_FAILURE;
     case SM_INIT_FAIL:
@@ -159,7 +159,7 @@ sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
     }
 }
 
-bool
+sio_negotiate_ret_t
 sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 {
     test_sio_t *t = (test_sio_t *)sio;
@@ -168,14 +168,14 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     *data = false;
     switch (fail_mode) {
     case SM_UNSUPPORTED:
-	sioc_set_error("SSL/TLS not supported");
-	return false;
+	sioc_set_error("TLS not supported");
+	return SIG_FAILURE;
     case SM_NEGOTIATE_FAIL:
 	sioc_set_error("Host does not like us");
-	return false;
+	return SIG_FAILURE;
     default:
 	t->sock = sock;
-	return true;
+	return SIG_SUCCESS;
     }
 }
 
@@ -187,7 +187,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
     set_fail_mode();
     switch (fail_mode) {
     case SM_UNSUPPORTED:
-	sioc_set_error("SSL/TLS not supported");
+	sioc_set_error("TLS not supported");
 	return false;
     case SM_READ_FAIL:
 	sioc_set_error("Socket not feeling well");
@@ -209,7 +209,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
     set_fail_mode();
     switch (fail_mode) {
     case SM_UNSUPPORTED:
-	sioc_set_error("SSL/TLS not supported");
+	sioc_set_error("TLS not supported");
 	return false;
     case SM_WRITE_FAIL:
 	sioc_set_error("Socket not feeling well");

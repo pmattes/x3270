@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2017 Paul Mattes.
+ * Copyright (c) 2000-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,12 +51,13 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "macros.h"
+#include "nvt.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
 #include "selectc.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -187,22 +188,32 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   top of the display. */
 static int rmargin;
 
+static ioid_t disabled_done_id = NULL_IOID;
+
+/* Layered OIA messages. */
+static char *disabled_msg = NULL;	/* layer 0 (top) */
+static char *scrolled_msg = NULL;	/* layer 1 */
+static char *info_msg = NULL;		/* layer 2 */
+static char *other_msg = NULL;		/* layer 3 */
+static int other_attr;			/* layer 3 color */
+
+static char *info_base_msg = NULL;	/* original info message (unscrolled) */
+
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
-static void status_half_connect(bool ignored);
 static void status_connect(bool ignored);
 static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char fa);
-static void screen_connect(bool connected);
 static void set_status_row(int screen_rows, int emulator_rows);
 static bool ts_value(const char *s, enum ts *tsp);
 static void relabel(bool ignored);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static HWND get_console_hwnd(void);
+static void codepage_changed(bool ignored);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
@@ -232,6 +243,11 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 static char *window_title;
 static bool selecting;
 static BOOL cursor_visible = TRUE;
+
+static HANDLE cc_event;
+static ioid_t cc_id;
+
+CONSOLE_SCREEN_BUFFER_INFO base_info;
 
 static action_t Paste_action;
 static action_t Redraw_action;
@@ -266,34 +282,42 @@ BOOL WINAPI
 cc_handler(DWORD type)
 {
     if (type == CTRL_C_EVENT) {
-	char *action;
-
-	/* Process it as a Ctrl-C. */
-	vtrace("Control-C received via Console Event Handler%s\n",
-		escaped? " (should be ignored)": "");
-	if (escaped) {
-	    if (ctrlc_fn) {
-		(*ctrlc_fn)();
-	    }
-	    return TRUE;
-	}
-	action = lookup_key(0x03, LEFT_CTRL_PRESSED);
-	if (action != NULL) {
-	    if (strcmp(action, "[ignore]")) {
-		push_keymap_action(action);
-	    }
-	} else {
-	    run_action("Key", IA_DEFAULT, "0x03", NULL);
-	}
-
+	/* Set the synchronous event so we can process it in the main loop. */
+	SetEvent(cc_event);
 	return TRUE;
     } else if (type == CTRL_CLOSE_EVENT) {
+	/* Exit gracefully. */
 	vtrace("Window closed\n");
 	x3270_exit(0);
 	return TRUE;
     } else {
-	/* Let Windows have its way with it. */
+	/* Let Windows process it. */
 	return FALSE;
+    }
+}
+
+/*
+ * Synchronous ^C handler.
+ */
+static void
+synchronous_cc(iosrc_t fd _is_unused, ioid_t id _is_unused)
+{
+    char *action;
+
+    vtrace("^C received %s\n", escaped? "at prompt": "in session");
+    if (escaped) {
+	if (ctrlc_fn) {
+	    (*ctrlc_fn)();
+	}
+	return;
+    }
+    action = lookup_key(0x03, LEFT_CTRL_PRESSED);
+    if (action != NULL) {
+	if (strcmp(action, "[ignore]")) {
+	    push_keymap_action(action);
+	}
+    } else {
+	run_action("Key", IA_DEFAULT, "0x03", NULL);
     }
 }
 
@@ -460,7 +484,6 @@ resize_console(void)
 static HANDLE
 initscr(void)
 {
-    CONSOLE_SCREEN_BUFFER_INFO info;
     size_t buffer_size;
     CONSOLE_CURSOR_INFO cursor_info;
 
@@ -487,12 +510,12 @@ initscr(void)
     console_window = get_console_hwnd();
 
     /* Get its dimensions. */
-    if (GetConsoleScreenBufferInfo(cohandle, &info) == 0) {
+    if (GetConsoleScreenBufferInfo(cohandle, &base_info) == 0) {
 	win32_perror("GetConsoleScreenBufferInfo failed");
 	return NULL;
     }
-    console_rows = info.srWindow.Bottom - info.srWindow.Top + 1;
-    console_cols = info.srWindow.Right - info.srWindow.Left + 1;
+    console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
+    console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
 
     /* Get its cursor configuration. */
     if (GetConsoleCursorInfo(cohandle, &cursor_info) == 0) {
@@ -524,14 +547,20 @@ initscr(void)
 	win32_perror("SetConsoleCtrlHandler failed");
 	return NULL;
     }
+    cc_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (cc_event == NULL) {
+	win32_perror("CreateEvent for ^C failed");
+	return NULL;
+    }
+    cc_id = AddInput(cc_event, synchronous_cc);
 
     /* Allocate and initialize the onscreen and toscreen buffers. */
     buffer_size = sizeof(CHAR_INFO) * console_rows * console_cols;
     onscreen = (CHAR_INFO *)Malloc(buffer_size);
-    (void) memset(onscreen, '\0', buffer_size);
+    memset(onscreen, '\0', buffer_size);
     onscreen_valid = FALSE;
     toscreen = (CHAR_INFO *)Malloc(buffer_size);
-    (void) memset(toscreen, '\0', buffer_size);
+    memset(toscreen, '\0', buffer_size);
 
     /* More will no doubt follow. */
     return chandle;
@@ -558,7 +587,7 @@ attrset(int a)
 }
 
 static void
-addch(int c)
+addch(ucs4_t c)
 {
     CHAR_INFO *ch = &toscreen[(cur_row * console_cols) + cur_col];
 
@@ -1117,6 +1146,26 @@ set_console_cooked(void)
     }
 }
 
+/* Toggle cooked echo/noecho modes. */
+void
+screen_echo_mode(bool echo)
+{
+    if (echo) {
+	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
+				    ENABLE_LINE_INPUT |
+				    ENABLE_PROCESSED_INPUT |
+				    ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	}
+    } else {
+	if (SetConsoleMode(chandle, ENABLE_LINE_INPUT |
+				    ENABLE_PROCESSED_INPUT |
+				    ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	}
+    }
+}
+
 /* Go back to the original screen. */
 static void
 endwin(void)
@@ -1163,7 +1212,7 @@ screen_init(void)
 
     /* Initialize the console. */
     if (initscr() == NULL) {
-	(void) fprintf(stderr, "Can't initialize terminal.\n");
+	fprintf(stderr, "Can't initialize terminal.\n");
 	x3270_exit(1);
     }
     want_ov_rows = ov_rows;
@@ -1188,7 +1237,7 @@ screen_init(void)
 
 	/* If we're at the smallest screen now, give up. */
 	if (model_num == 2) {
-	    (void) fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
+	    fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
 		    console_rows, console_cols);
 	    x3270_exit(1);
 	}
@@ -1229,30 +1278,30 @@ screen_init(void)
     select_init(maxROWS, maxCOLS);
 
     /* Set up callbacks for state changes. */
-    register_schange(ST_CONNECT, screen_connect);
-    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_NEGOTIATING, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);
 
-    register_schange(ST_HALF_CONNECT, relabel);
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
+
+    register_schange(ST_CODEPAGE, codepage_changed);
 
     /* See about all-bold behavior. */
     if (appres.c3270.all_bold_on) {
 	ab_mode = TS_ON;
     } else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
-	(void) fprintf(stderr, "invalid %s value: '%s', assuming 'auto'\n",
+	fprintf(stderr, "invalid %s value: '%s', assuming 'auto'\n",
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
-	ab_mode = appres.m3279? TS_ON: TS_OFF;
+	ab_mode = mode.m3279? TS_ON: TS_OFF;
     }
 
     /* If the want monochrome, assume they want green. */
     /* XXX: I believe that init_user_colors makes this a no-op. */
-    if (!appres.m3279) {
+    if (!mode.m3279) {
 	defattr |= FOREGROUND_GREEN;
 	xhattr |= FOREGROUND_GREEN;
 	if (ab_mode == TS_ON) {
@@ -1281,17 +1330,6 @@ screen_init(void)
 
     /* Finish screen initialization. */
     set_console_cooked();
-}
-
-static void
-screen_connect(bool connected)
-{
-    static bool initted = false;
-
-    if (!initted && connected) {
-	initted = true;
-	screen_resume();
-    }
 }
 
 /* Calculate where the status line goes now. */
@@ -1415,7 +1453,7 @@ color3270_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-    if (appres.m3279) {
+    if (mode.m3279) {
 	int fg;
 
 	fg = color3270_from_fa(fa);
@@ -1522,7 +1560,7 @@ init_user_colors(void)
 	init_user_color(host_color[i].name, host_color[i].index);
     }
 
-    if (appres.m3279) {
+    if (mode.m3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	crosshair_color_init();
@@ -1584,7 +1622,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     /* Compute the color. */
 
     /* Monochrome is easy, and so is color if nothing is specified. */
-    if (!appres.m3279 ||
+    if (!mode.m3279 ||
 	    (!ea_buf[baddr].fg &&
 	     !ea_buf[fa_addr].fg &&
 	     !ea_buf[baddr].bg &&
@@ -1625,7 +1663,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     }
 
     if (!toggled(UNDERSCORE) &&
-	    appres.m3279 &&
+	    mode.m3279 &&
 	    (gr & (GR_BLINK | GR_UNDERLINE)) &&
 	    !(gr & GR_REVERSE) &&
 	    !bg) {
@@ -1633,7 +1671,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
 	a |= BACKGROUND_INTENSITY;
     }
 
-    if (!appres.m3279 &&
+    if (!mode.m3279 &&
 	    ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa))) {
 
 	a |= FOREGROUND_INTENSITY;
@@ -1684,8 +1722,8 @@ blink_em(ioid_t id _is_unused)
  * Note that blinked-off spaces are underscores, if in underscore mode.
  * Also sets up the timeout for the next blink if needed.
  */
-static int
-blinkmap(bool blinking, bool underlined, int c)
+static ucs4_t
+blinkmap(bool blinking, bool underlined, ucs4_t c)
 {
     if (!blinking) {
 	return c;
@@ -1719,7 +1757,7 @@ visible_fa(unsigned char fa)
     return varr[ix];
 }
 
-static int
+static ucs4_t
 crosshair_blank(int baddr)
 {
     if (in_focus && toggled(CROSSHAIR)) {
@@ -1745,7 +1783,6 @@ screen_disp(bool erasing _is_unused)
     int a;
     bool a_underlined = false;
     bool a_blinking = false;
-    int c;
     unsigned char fa;
     enum dbcs_state d;
     int fa_addr;
@@ -1908,25 +1945,25 @@ screen_disp(bool erasing _is_unused)
 					     baddr));
 			addch(visible_fa(fa));
 		    } else {
-			c = crosshair_blank(baddr);
-			if (c != ' ') {
+			u = crosshair_blank(baddr);
+			if (u != ' ') {
 			    attrset(apply_select(xhattr, baddr));
 			} else {
 			    attrset(apply_select(defattr, baddr));
 			}
-			addch(c);
+			addch(u);
 		    }
 		}
 	    } else if (FA_IS_ZERO(fa)) {
 		/* Blank. */
 		if (!is_menu) {
-		    c = crosshair_blank(baddr);
-		    if (c == ' ') {
+		    u = crosshair_blank(baddr);
+		    if (u == ' ') {
 			attrset(apply_select(a, baddr));
 		    } else {
 			attrset(apply_select(xhattr, baddr));
 		    }
-		    addch(c);
+		    addch(u);
 		}
 	    } else {
 		int attr_this;
@@ -1958,66 +1995,95 @@ screen_disp(bool erasing _is_unused)
 		    blinking = b_blinking;
 		}
 		d = ctlr_dbcs_state(baddr);
-		if (IS_LEFT(d)) {
-		    int xaddr = baddr;
-
-		    INC_BA(xaddr);
-		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null &&
-			    ea_buf[xaddr].cc == EBC_null) {
-			attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-				             cmap_bg[HOST_COLOR_YELLOW],
-					     baddr));
-			addch('.');
-			addch('.');
-		    } else {
-			c = ebcdic_to_unicode(
-				(ea_buf[baddr].cc << 8) |
-				ea_buf[xaddr].cc,
-				CS_BASE, EUO_NONE);
+		if (is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
+		    /* NVT-mode text. */
+		    if (IS_LEFT(d)) {
 			attrset(attr_this);
 			cur_attr |= COMMON_LVB_LEAD_BYTE;
-			addch(c);
+			addch(ea_buf[baddr].ucs4);
 			cur_attr &= ~COMMON_LVB_LEAD_BYTE;
 			cur_attr |= COMMON_LVB_TRAILING_BYTE;
 			addch(' ');
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
-		    }
-		} else if (!IS_RIGHT(d)) {
-		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null) {
-			c = '.';
-		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_so) {
-			c = '<';
-		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_si) {
-			c = '>';
-		    } else {
-			c = ebcdic_to_unicode(ea_buf[baddr].cc,
-				ea_buf[baddr].cs,
-				appres.c3270.ascii_box_draw?
-				    EUO_ASCII_BOX: 0);
-			if (c == 0) {
-			    c = crosshair_blank(baddr);
-			    if (c != ' ') {
-				attr_this = apply_select(xhattr, baddr);
-			    }
-			} else if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
-			    c = crosshair_blank(baddr);
-			    if (c != ' ') {
+		    } else if (!IS_RIGHT(d)) {
+			if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
+			    u = crosshair_blank(baddr);
+			    if (u != ' ') {
 				attr_this = apply_select(xhattr, baddr);
 			    }
 			}
-			if (underlined && c == ' ') {
-			    c = '_';
+			if (underlined && u == ' ') {
+			    u = '_';
 			}
-			if (toggled(MONOCASE) && iswlower(c)) {
-			    c = towupper(c);
+			if (toggled(MONOCASE) && iswlower((int)u)) {
+			    u = (ucs4_t)towupper((int)u);
 			}
+			attrset(attr_this);
+			addch(blinkmap(blinking, underlined, u));
 		    }
-		    attrset(attr_this);
-		    addch(blinkmap(blinking, underlined, c));
+		} else {
+		    /* 3270-mode text. */
+		    if (IS_LEFT(d)) {
+			int xaddr = baddr;
+
+			INC_BA(xaddr);
+			if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_null &&
+				ea_buf[xaddr].ec == EBC_null) {
+			    attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+						 cmap_bg[HOST_COLOR_YELLOW],
+						 baddr));
+			    addch('.');
+			    addch('.');
+			} else {
+			    u = ebcdic_to_unicode(
+				    (ea_buf[baddr].ec << 8) |
+				    ea_buf[xaddr].ec,
+				    CS_BASE, EUO_NONE);
+			    attrset(attr_this);
+			    cur_attr |= COMMON_LVB_LEAD_BYTE;
+			    addch(u);
+			    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
+			    cur_attr |= COMMON_LVB_TRAILING_BYTE;
+			    addch(' ');
+			    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
+			}
+		    } else if (!IS_RIGHT(d)) {
+			if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_null) {
+			    u = '.';
+			} else if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_so) {
+			    u = '<';
+			} else if (toggled(VISIBLE_CONTROL) &&
+				ea_buf[baddr].ec == EBC_si) {
+			    u = '>';
+			} else {
+			    u = ebcdic_to_unicode(ea_buf[baddr].ec,
+				    ea_buf[baddr].cs,
+				    appres.c3270.ascii_box_draw?
+					EUO_ASCII_BOX: 0);
+			    if (u == 0) {
+				u = crosshair_blank(baddr);
+				if (u != ' ') {
+				    attr_this = apply_select(xhattr, baddr);
+				}
+			    } else if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
+				u = crosshair_blank(baddr);
+				if (u != ' ') {
+				    attr_this = apply_select(xhattr, baddr);
+				}
+			    }
+			    if (underlined && u == ' ') {
+				u = '_';
+			    }
+			    if (toggled(MONOCASE) && iswlower((int)u)) {
+				u = towupper((int)u);
+			    }
+			}
+			attrset(attr_this);
+			addch(blinkmap(blinking, underlined, u));
+		    }
 		}
 	    }
 	}
@@ -2035,7 +2101,14 @@ screen_disp(bool erasing _is_unused)
     }
     refresh();
 
-    screen_changed = FALSE;
+    screen_changed = false;
+}
+
+static void
+codepage_changed(bool ignored _is_unused)
+{
+    screen_changed = true;
+    screen_disp(false);
 }
 
 static const char *
@@ -2406,7 +2479,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 	 * file.  It will be converted to OEM by 'catf' for display
 	 * in the trace window.
 	 */
-	(void) WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
+	WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
 	if (udc) {
 	    vb_appendf(&r, "<Key>U+%04lx", xk);
 	} else {
@@ -2562,7 +2635,8 @@ kybd_input2(INPUT_RECORD *ir)
     /* Then any other character. */
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
 	run_action("Key", IA_DEFAULT,
-		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar), NULL);
+		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
+		NULL);
     } else {
 	vtrace(" dropped (no default)\n");
     }
@@ -2608,6 +2682,9 @@ screen_system_fixup(void)
 void
 screen_resume(void)
 {
+    if (!escaped) {
+	return;
+    }
     escaped = false;
 
     screen_disp(false);
@@ -2693,31 +2770,16 @@ static bool oia_boxsolid = false;
 static bool oia_undera = true;
 static bool oia_compose = false;
 static bool oia_printer = false;
-static unsigned char oia_compose_char = 0;
+static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
+static char oia_script = ' ';
 
-static char *status_msg = "X Not Connected";
-static char *saved_status_msg = NULL;
-static ioid_t saved_status_timeout = NULL_IOID;
-static ioid_t oia_scroll_timeout = NULL_IOID;
-
-static void
-cancel_status_push(void)
-{
-    saved_status_msg = NULL;
-    if (saved_status_timeout != NULL_IOID) {
-	RemoveTimeOut(saved_status_timeout);
-	saved_status_timeout = NULL_IOID;
-    }
-    if (oia_scroll_timeout != NULL_IOID) {
-	RemoveTimeOut(oia_scroll_timeout);
-	oia_scroll_timeout = NULL_IOID;
-    }
-}
+static ioid_t info_done_timeout = NULL_IOID;
+static ioid_t info_scroll_timeout = NULL_IOID;
 
 void
 status_ctlr_done(void)
@@ -2731,84 +2793,120 @@ status_insert_mode(bool on)
     status_im = on;
 }
 
+/* Remove the info message. */
 static void
-status_pop(ioid_t id _is_unused)
+info_done(ioid_t id _is_unused)
 {
-    status_msg = saved_status_msg;
-    saved_status_msg = NULL;
-    saved_status_timeout = NULL_IOID;
+    Replace(info_base_msg, NULL);
+    info_msg = NULL;
+    info_done_timeout = NULL_IOID;
 }
 
+/* Scroll the info message. */
 static void
-oia_scroll(ioid_t id _is_unused)
+info_scroll(ioid_t id _is_unused)
 {
-    status_msg++;
-    if (strlen(status_msg) > 35) {
-	oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS, oia_scroll);
+    ++info_msg;
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS, info_scroll);
     } else {
-	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
-	oia_scroll_timeout = NULL_IOID;
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
+	info_scroll_timeout = NULL_IOID;
     }
 }
 
+/* Pop up an info message. */
 void
 status_push(char *msg)
 {
-    if (saved_status_msg != NULL) {
-	/* Already showing something. */
-	RemoveTimeOut(saved_status_timeout);
-	saved_status_timeout = NULL_IOID;
-    } else {
-	saved_status_msg = status_msg;
+    char *new_msg = msg? NewString(msg): NULL;
+
+    Replace(info_base_msg, new_msg);
+    info_msg = info_base_msg;
+
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
+
+/*
+ * Reset the info message, so when it is revealed, it starts at the beginning.
+ */
+static void
+reset_info(void)
+{
+    if (info_base_msg != NULL) {
+	info_msg = info_base_msg;
     }
 
-    status_msg = msg;
+    /* Stop any timers. */
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
 
-    if (strlen(msg) > 35) {
-	oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS, oia_scroll);
+/*
+ * The info message has been displayed. Set the timer to scroll or erase it.
+ */
+static void
+set_info_timer(void)
+{
+    if (info_scroll_timeout != NULL_IOID || info_done_timeout != NULL_IOID) {
+	return;
+    }
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS, info_scroll);
     } else {
-	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
     }
 }
 
 void
 status_minus(void)
 {
-    cancel_status_push();
-    status_msg = "X -f";
+    other_msg = "X -f";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
 }
 
 void
 status_oerr(int error_type)
 {
-    cancel_status_push();
     switch (error_type) {
     case KL_OERR_PROTECTED:
-	status_msg = "X Protected";
+	other_msg = "X Protected";
 	break;
     case KL_OERR_NUMERIC:
-	status_msg = "X Numeric";
+	other_msg = "X NUM";
 	break;
     case KL_OERR_OVERFLOW:
-	status_msg = "X Overflow";
+	other_msg = "X Overflow";
 	break;
     }
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
 }
 
 void
 status_reset(void)
 {
-    cancel_status_push();
-
-    if (!CONNECTED) {
-	status_msg = "X Not Connected";
-    } else if (kybdlock & KL_ENTER_INHIBIT) {
-	status_msg = "X Inhibit";
+    if (kybdlock & KL_ENTER_INHIBIT) {
+	other_msg = "X Inhibit";
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-	status_msg = "X";
+	other_msg = "X";
     } else {
-	status_msg = "";
+	status_connect(PCONNECTED);
     }
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
@@ -2820,16 +2918,18 @@ status_reverse_mode(bool on)
 void
 status_syswait(void)
 {
-    cancel_status_push();
-    status_msg = "X SYSTEM";
+    other_msg = "X SYSTEM";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
 status_twait(void)
 {
-    cancel_status_push();
     oia_undera = false;
-    status_msg = "X Wait";
+    other_msg = "X Wait";
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 void
@@ -2839,10 +2939,10 @@ status_typeahead(bool on)
 }
 
 void    
-status_compose(bool on, unsigned char c, enum keytype keytype)
+status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
     oia_compose = on;
-    oia_compose_char = c;
+    oia_compose_char = ucs4;
     oia_compose_keytype = keytype;
 }
 
@@ -2850,39 +2950,44 @@ void
 status_lu(const char *lu)
 {
     if (lu != NULL) {
-	(void) strncpy(oia_lu, lu, LUCNT);
+	strncpy(oia_lu, lu, LUCNT);
 	oia_lu[LUCNT] = '\0';
     } else {
-	(void) memset(oia_lu, '\0', sizeof(oia_lu));
-    }
-}
-
-static void
-status_half_connect(bool half_connected)
-{
-    if (half_connected) {
-	/* Push the 'Connecting' status under whatever is popped up. */
-	if (saved_status_msg != NULL) {
-	    saved_status_msg = "X Connecting";
-	} else {
-	    status_msg = "X Connecting";
-	}
-	oia_boxsolid = false;
-	status_secure = SS_INSECURE;
+	memset(oia_lu, '\0', sizeof(oia_lu));
     }
 }
 
 static void
 status_connect(bool connected)
 {
-    cancel_status_push();
-
     if (connected) {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
-	if (kybdlock & KL_AWAITING_FIRST) {
-	    status_msg = "X";
+	if (cstate == RECONNECTING) {
+	    other_msg = "X Reconnecting";
+	} else if (cstate == RESOLVING) {
+	    other_msg = "X [DNS]";
+	} else if (cstate == TCP_PENDING) {
+	    other_msg = "X [TCP]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TLS_PENDING) {
+	    other_msg = "X [TLS]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == PROXY_PENDING) {
+	    other_msg = "X [Proxy]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TELNET_PENDING) {
+	    other_msg = "X [TELNET]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    other_msg = "X [TN3270E]";
+	} else if (kybdlock & KL_AWAITING_FIRST) {
+	    other_msg = "X";
 	} else {
-	    status_msg = "";
+	    other_msg = NULL;
 	}
 	if (net_secure_connection()) {
 	    if (net_secure_unverified()) {
@@ -2895,9 +3000,11 @@ status_connect(bool connected)
 	}
     } else {
 	oia_boxsolid = false;
-	status_msg = "X Not Connected";
+	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
+    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	FOREGROUND_BLUE;
 }
 
 static void
@@ -2928,9 +3035,9 @@ status_timing(struct timeval *t0, struct timeval *t1)
 	cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
 	if (cs < CM) {
-	    (void) sprintf(oia_timing, ":%02ld.%ld", cs / 10, cs % 10);
+	    sprintf(oia_timing, ":%02ld.%ld", cs / 10, cs % 10);
 	} else {
-	    (void) sprintf(oia_timing, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
+	    sprintf(oia_timing, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
 	}
     }
 }
@@ -2944,15 +3051,32 @@ status_untiming(void)
 void
 status_scrolled(int n)
 {
-    static char ssbuf[128];
-
-    cancel_status_push();
     if (n) {
-	snprintf(ssbuf, sizeof(ssbuf), "X Scrolled %d", n);
-	status_msg = ssbuf;
+	Replace(scrolled_msg, xs_buffer("X Scrolled %d", n));
     } else {
-	status_msg = "";
+	Replace(scrolled_msg, NULL);
     }
+}
+
+/* Remove 'X Disabled'. */
+static void
+disabled_done(ioid_t id _is_unused)
+{
+    disabled_msg = NULL;
+    disabled_done_id = NULL_IOID;
+}
+
+/* Flash 'X Disabled' in the OIA. */
+void
+status_keyboard_disable_flash(void)
+{
+    if (disabled_done_id == NULL_IOID) {
+	disabled_msg = "X Disabled";
+    } else {
+	RemoveTimeOut(disabled_done_id);
+	disabled_done_id = NULL_IOID;
+    }
+    disabled_done_id = AddTimeOut(1000L, disabled_done);
 }
 
 void
@@ -2970,7 +3094,7 @@ status_screentrace(int n)
 void
 status_script(bool on _is_unused)
 {
-    /* for now, nothing */
+    oia_script = on? 's': ' ';
 }
 
 static void
@@ -2979,9 +3103,11 @@ draw_oia(void)
     int i, j;
     int cursor_col = (cursor_addr % cCOLS);
     int fl_cursor_col = flipped? (console_cols - 1 - cursor_col): cursor_col;
-    int oia_attr = appres.m3279 ?
+    int oia_attr = mode.m3279 ?
 	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
 	   defattr;
+    char *status_msg_now;
+    int msg_attr;
 
     rmargin = maxCOLS - 1;
 
@@ -3035,7 +3161,7 @@ draw_oia(void)
     }
 
     /* Offsets 0, 1, 2 */
-    if (appres.m3279) {
+    if (mode.m3279) {
 	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | cmap_bg[HOST_COLOR_GREY]);
     } else {
 	attrset(reverse_colors(defattr));
@@ -3056,13 +3182,37 @@ draw_oia(void)
 	addch('?');
     }
 
+    /* Figure out the status message. */
+    msg_attr = oia_attr;
+    if (disabled_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
+	status_msg_now = disabled_msg;
+	reset_info();
+    } else if (scrolled_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	    FOREGROUND_BLUE;
+	status_msg_now = scrolled_msg;
+	reset_info();
+    } else if (info_msg != NULL) {
+	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
+	    FOREGROUND_BLUE;
+	status_msg_now = info_msg;
+	set_info_timer();
+    } else if (other_msg != NULL) {
+	msg_attr = other_attr;
+	status_msg_now = other_msg;
+    } else {
+	status_msg_now = "";
+    }
+
     /* Offset 8 */
+    attrset(msg_attr);
+    mvprintw(status_row, 7, "%-35.35s", status_msg_now);
     attrset(oia_attr);
-    mvprintw(status_row, 8, "%-35.35s", status_msg);
     mvprintw(status_row, rmargin-35,
 	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
-	    oia_compose? oia_compose_char: ' ',
+	    oia_compose? oia_compose_char: ' ', /* XXX */
 	    status_ta? 'T': ' ',
 	    status_rm? 'R': ' ',
 	    status_im? 'I': ' ',
@@ -3077,17 +3227,14 @@ draw_oia(void)
 	addch(' ');
     }
     addch(oia_screentrace);
+    addch(oia_script);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
-    if (toggled(SHOW_TIMING)) {
-	mvprintw(status_row, rmargin-14, "%s", oia_timing);
-    }
+    mvprintw(status_row, rmargin-14, "%s", oia_timing);
 
-    if (toggled(CURSOR_POS)) {
-	mvprintw(status_row, rmargin-7,
+    mvprintw(status_row, rmargin-7,
 	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
-    }
 
     /* Now fill in the crosshair cursor in the status line. */
     if (in_focus &&
@@ -3151,13 +3298,6 @@ ring_bell(void)
 		 */
 		bell_mode = BELL_NOTHING;
 	    }
-	} else if (appres.interactive.visual_bell) {
-	    /*
-	     * Old config: wc3270.visualBell
-	     * 		true		just flash
-	     * 		false		beep and flash
-	     */
-	    bell_mode = BELL_FLASH;
 	} else {
 	    /*
 	     * No config: beep and flash.
@@ -3193,6 +3333,12 @@ screen_flip(void)
     flipped = !flipped;
     screen_changed = true;
     screen_disp(false);
+}
+
+bool
+screen_flipped(void)
+{
+    return flipped;
 }
 
 /*
@@ -3255,9 +3401,9 @@ static void
 set_console_title(const char *text, bool selecting)
 {
     if (selecting) {
-	(void) SetConsoleTitle(lazyaf("%s [select]", text));
+	SetConsoleTitle(lazyaf("%s [select]", text));
     } else {
-	(void) SetConsoleTitle(text);
+	SetConsoleTitle(text);
     }
 }
 
@@ -3408,9 +3554,13 @@ get_console_size(int *rows, int *cols)
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)
+ * @param[in] saved	Number of lines saved
+ * @param[in] screen	Size of a screen
+ * @param[in] back	Number of lines scrolled back
  */
 void
-screen_set_thumb(float top _is_unused, float shown _is_unused)
+screen_set_thumb(float top _is_unused, float shown _is_unused,
+	int saved _is_unused, int screen _is_unused, int back _is_unused)
 {
 }
 
@@ -3427,6 +3577,40 @@ enable_cursor(bool on)
 }
 
 /**
+ * Send yourself an ESC, to cancel any pending input.
+ */
+void
+screen_send_esc(void)
+{
+    if (console_window != NULL) {
+	PostMessage(console_window, WM_KEYDOWN, VK_ESCAPE, 0);
+    }
+}
+
+/* Screen output color map. */
+static DWORD color_attr[] = {
+    0,						/* PC_DEFAULT */
+    FOREGROUND_INTENSITY | FOREGROUND_BLUE,	/* PC_PROMPT */
+    FOREGROUND_INTENSITY | FOREGROUND_RED,	/* PC_ERROR */
+    0,						/* PC_NORMAL */
+};
+
+/* Change the screen output color. */
+void
+screen_color(pc_t pc)
+{
+    if (!appres.c3270.color_prompt) {
+	return;
+    }
+
+    if (!SetConsoleTextAttribute(cohandle,
+		color_attr[pc]? color_attr[pc]: base_info.wAttributes)) {
+	win32_perror("Can't set console text attribute");
+	exit(1);
+    }
+}
+
+/**
  * Screen module registration.
  */
 void
@@ -3440,7 +3624,8 @@ screen_register(void)
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 },
 	{ VISIBLE_CONTROL,	toggle_visibleControl,	0 },
-	{ CROSSHAIR,		toggle_crosshair,	0 }
+	{ CROSSHAIR,		toggle_crosshair,	0 },
+	{ TYPEAHEAD,		NULL,			0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Paste",	Paste_action,	ACTION_KE },

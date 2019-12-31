@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -46,7 +46,8 @@
 #include "resources.h"
 
 #include "about.h"
-#include "charset.h"
+#include "codepage.h"
+#include "host.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "linemode.h"
@@ -87,7 +88,7 @@ hms(time_t ts)
     time_t t, td;
     long hr, mn, sc;
 
-    (void) time(&t);
+    time(&t);
 
     td = t - ts;
     hr = td / 3600;
@@ -123,7 +124,7 @@ hms(time_t ts)
 	    XtNlabel, label, \
 	    XtNfromVert, w, \
 	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, (n), \
+	    XtNvertDistance, rescale(n), \
 	    NULL); \
 	vd = n; \
 	}
@@ -137,7 +138,7 @@ hms(time_t ts)
 	    XtNfromVert, w, \
 	    XtNfromHoriz, left_anchor, \
 	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, (n), \
+	    XtNvertDistance, rescale(n), \
 	    NULL); \
 	vd = n; \
 	}
@@ -150,7 +151,7 @@ hms(time_t ts)
 	    XtNfromVert, w_prev, \
 	    XtNfromHoriz, w, \
 	    XtNhorizDistance, 0, \
-	    XtNvertDistance, vd, \
+	    XtNvertDistance, rescale(vd), \
 	    XtNleft, XtChainLeft, \
 	    NULL); \
 	}
@@ -163,7 +164,7 @@ hms(time_t ts)
 	    XtNfromVert, w_prev, \
 	    XtNfromHoriz, v, \
 	    XtNhorizDistance, 0, \
-	    XtNvertDistance, vd, \
+	    XtNvertDistance, rescale(vd), \
 	    XtNleft, XtChainLeft, \
 	    NULL); \
 	}
@@ -330,23 +331,24 @@ popup_about_config(void)
 
     /* Miscellany */
     MAKE_LABEL(build, 4);
-    MAKE_LABEL(get_message("processId"), 4);
-    MAKE_VALUE(lazyaf("%d", getpid()));
-    MAKE_LABEL2(get_message("windowId"));
-    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
 
     /* Everything else at the left margin under the bitmap */
     w = left_anchor;
     left_anchor = NULL;
+
+    MAKE_LABEL(get_message("processId"), 4);
+    MAKE_VALUE(lazyaf("%d", getpid()));
+    MAKE_LABEL2(get_message("windowId"));
+    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
 
     MAKE_LABEL(lazyaf("%s %s: %d %s x %d %s, %s, %s",
 	get_message("model"), model_name,
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
 	appres.interactive.mono? get_message("mono"):
-	    (appres.m3279? get_message("fullColor"):
+	    (mode.m3279? get_message("fullColor"):
 		get_message("pseudoColor")),
-	(appres.extended && !HOST_FLAG(STD_DS_HOST))?
+	(mode.extended && !HOST_FLAG(STD_DS_HOST))?
 	    get_message("extendedDs"): get_message("standardDs")), 4);
 
     MAKE_LABEL(get_message("terminalName"), 4);
@@ -383,9 +385,8 @@ popup_about_config(void)
 	MAKE_VALUE(efont_charset_dbcs);
     }
 
-    MAKE_LABEL(get_message("charset"), 4);
-    xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
-	    get_host_codepage());
+    MAKE_LABEL(get_message("codepage"), 4);
+    xbuf = xs_buffer("%s (%s)", get_codepage_name(), get_codepage_number());
     MAKE_VALUE(xbuf);
     XtFree(xbuf);
 
@@ -698,6 +699,8 @@ popup_about_status(void)
     } else if (HALF_CONNECTED) {
 	MAKE_LABEL(get_message("connectionPending"), 4);
 	MAKE_VALUE(current_host);
+    } else if (host_reconnecting()) {
+	MAKE_LABEL(get_message("reconnecting"), 4);
     } else {
 	MAKE_LABEL(get_message("notConnected"), 4);
     }

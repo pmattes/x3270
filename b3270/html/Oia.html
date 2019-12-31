@@ -1,0 +1,71 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 oia Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="oia"></a><h3>oia Indication</h3>
+
+<p>State change in the Operator Information Area (OIA).</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>field</td><td>yes</td><td>OIA <a href="#oiaField">field name</a></td></tr>
+ <tr><td>value</td><td>no</td><td>New field value</td></tr>
+ <tr><td>char</td><td>no</td><td>Compose character (<b>U+nnnn</b>)</td></tr>
+ <tr><td>type</td><td>no</td><td>Compose type (<b>std<b> or <b>ge</b>)</td></tr>
+ <tr><td>lu</td><td>no</td><td>Printer session LU name</td></tr>
+</table>
+
+</p>Fields listed as true/false always have values of <b>true</b> or <b>false</b>,
+and the default is always <b>false</b>.
+For other fields, a missing <b>value</b> tag means that the field is now empty.
+</p>
+
+<a name="oiaField"></a><p>Field names are as follows.
+<table border cols=3 width="75%">
+ <tr><th>Field</th><th>True/False?</th><th>Purpose</th></tr>
+ <tr><td>compose</td><td>yes</td><td>Composite character in progress</td></tr>
+ <tr><td>insert</td><td>yes</td><td>Insert mode</td></tr>
+ <tr><td>lock</td><td>no</td><td><a href="#lock">Keyboard lock</a></td></tr>
+ <tr><td>lu</td><td>no</td><td>LU name</td></tr>
+ <tr><td>not-undera</td><td>yes</td><td>Communication incomplete</td></tr>
+ <tr><td>printer-session</td><td>yes</td><td>3287 printer session active</td></tr>
+ <tr><td>reverse-input</td><td>yes</td><td>Reverse input mode</td></tr>
+ <tr><td>screentrace</td><td>no</td><td>Screen trace count</td></tr>
+ <tr><td>script</td><td>yes</td><td>Running script indication</td></tr>
+ <tr><td>timing</td><td>no</td><td>Host command timer (<b>min:sec</b>)</td></tr>
+ <tr><td>typeahead</td><td>yes</td><td>Keystrokes buffered</td></tr>
+</table>
+<a name="lock"></a><p>Reasons for the keyboard lock are:</p>
+<table border cols=2 width="75%">
+ <tr><th>State</th><th>Meaning</th></tr>
+ <tr><td>deferred</td><td>Time delay after host unlock</td></tr>
+ <tr><td>inhibit</td><td>Awaiting Query Reply acknowledgment</td></tr>
+ <tr><td>minus</td><td>Invalid SSCP-LU AID (-f indication)</td></tr>
+ <tr><td>not-connected</i></td><td>No (or incomplete) host connection</td></tr>
+ <tr><td>oerr <a href="#oerrType"><i>type</i></a></td><td>Operator error</td></tr>
+ <tr><td>scrolled <i>n</i></td><td>Scrolled back <i>n</i> screens</td></tr>
+ <tr><td>syswait</td><td>Awaiting AID completion (WAIT indication)</td></tr>
+ <tr><td>twait</td><td>Awaiting AID acknowledgment (clock)</td></tr>
+ <tr><td>disabled</td><td>Keyboard disabled by a script</td></tr>
+</table>
+<a name="oerrType"></a><p>Operator error types are:</p>
+<table border cols=2 width="75%">
+ <tr><th>Error type</th><th>Meaning</th></tr>
+ <tr><td>dbcs</td><td>Invalid DBCS operation</td></tr>
+ <tr><td>numeric</td><td>Attempt to alpha data in numeric field</td></tr>
+ <tr><td>overflow</td><td>Attempt insert into full field</td></tr>
+ <tr><td>protected</td><td>Attempt to modify protected field</td></tr>
+</table>
+<p>Example:
+<pre>
+&lt;oia field="lock" value="oerr protected"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

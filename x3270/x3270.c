@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -49,7 +49,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "host.h"
@@ -59,18 +59,22 @@
 #include "idle.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
+#include "lazya.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "print_screen.h"
 #include "print_window.h"
 #include "product.h"
+#include "proxy_toggle.h"
+#include "query.h"
 #include "resourcesc.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -86,6 +90,12 @@
 #include "xscroll.h"
 #include "xselectc.h"
 #include "xstatus.h"
+
+/* Typedefs. */
+typedef struct {
+    bool *address;
+    bool value;
+} retoggle_t;
 
 /* Globals */
 const char     *programname;
@@ -104,7 +114,6 @@ Pixmap          gray;
 XrmDatabase     rdb;
 AppRes		appres;
 xappres_t	xappres;
-int		children = 0;
 bool		exiting = false;
 char           *user_title = NULL;
 
@@ -118,11 +127,12 @@ static bool  colormap_failure = false;
 static void	parse_local_process(int *argcp, char **argv, char **cmds);
 #endif /*]*/
 static int	parse_model_number(char *m);
-static void	parse_set_clear(int *, char **);
+static retoggle_t *parse_set_clear(int *, char **);
 static void	label_init(void);
 static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
 static void	copy_xres_to_res_bool(void);
+static void	copy_xtoggle(retoggle_t *r);
 
 XrmOptionDescRec base_options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -134,15 +144,15 @@ XrmOptionDescRec base_options[]= {
     { OptCertFileType,	DotCertFileType,XrmoptionSepArg,	NULL },
     { OptChainFile,	DotChainFile,	XrmoptionSepArg,	NULL },
     { OptCharClass,	DotCharClass,	XrmoptionSepArg,	NULL },
-    { OptCharset,	DotCharset,	XrmoptionSepArg,	NULL },
+    { OptCharset,	DotCodePage,	XrmoptionSepArg,	NULL },
     { OptClear,		".xxx",		XrmoptionSkipArg,	NULL },
     { OptClientCert,	DotClientCert,	XrmoptionSepArg,	NULL },
+    { OptCodePage,	DotCodePage,	XrmoptionSepArg,	NULL },
     { OptColorScheme,	DotColorScheme,	XrmoptionSepArg,	NULL },
     { OptConnectTimeout,DotConnectTimeout,XrmoptionSepArg,	NULL },
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
     { OptTrace,		DotTrace,	XrmoptionNoArg,		ResTrue },
     { OptEmulatorFont,	DotEmulatorFont,XrmoptionSepArg,	NULL },
-    { OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
     { OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
     { OptHttpd,		DotHttpd,	XrmoptionSepArg,	NULL },
     { OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
@@ -154,7 +164,7 @@ XrmOptionDescRec base_options[]= {
     { OptKeypadOn,	DotKeypadOn,	XrmoptionNoArg,		ResTrue },
     { OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
     { OptLoginMacro,	DotLoginMacro,	XrmoptionSepArg,	NULL },
-    { OptM3279,		DotM3279,	XrmoptionNoArg,		ResTrue },
+    { OptMinVersion,	DotMinVersion,	XrmoptionSepArg,	NULL },
     { OptModel,		DotModel,	XrmoptionSepArg,	NULL },
     { OptMono,		DotMono,	XrmoptionNoArg,		ResTrue },
     { OptNoScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResFalse },
@@ -180,6 +190,7 @@ XrmOptionDescRec base_options[]= {
     { OptInputMethod,	DotInputMethod,	XrmoptionSepArg,	NULL },
     { OptPreeditType,	DotPreeditType,	XrmoptionSepArg,	NULL },
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
+    { OptUtf8,		DotUtf8,	XrmoptionNoArg,		ResTrue },
     { OptV,		DotV,		XrmoptionNoArg,		ResTrue },
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
     { OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
@@ -201,44 +212,43 @@ static struct option_help {
 	SSL_OPT_ACCEPT_HOSTNAME },
     { OptActiveIcon, NULL, "Make icon a miniature of the display" },
     { OptAplMode, NULL,    "Turn on APL mode" },
-    { OptCaDir, "<directory>", "SSL/TLS CA certificate database directory",
+    { OptCaDir, "<directory>", "TLS CA certificate database directory",
       SSL_OPT_CA_DIR },
-    { OptCaFile, "<filename>", "SSL/TLS CA certificate file", SSL_OPT_CA_FILE },
-    { OptCertFile, "<file>", "SSL/TLS certificate file", SSL_OPT_CERT_FILE },
-    { OptCertFileType, "pem|asn1", "SSL/TLS certificate file type",
+    { OptCaFile, "<filename>", "TLS CA certificate file", SSL_OPT_CA_FILE },
+    { OptCertFile, "<file>", "TLS certificate file", SSL_OPT_CERT_FILE },
+    { OptCertFileType, "pem|asn1", "TLS certificate file type",
       SSL_OPT_CERT_FILE_TYPE },
-    { OptChainFile, "<filename>", "SSL/TLS certificate chain file",
+    { OptChainFile, "<filename>", "TLS certificate chain file",
       SSL_OPT_CHAIN_FILE },
     { OptCharClass, "<spec>", "Define characters for word boundaries" },
-    { OptCharset, "<name>",
-	"Use host EBCDIC character set (code page) <name>" },
+    { OptCharset, "<name>", "Alias for " OptCodePage },
     { OptClear, "<toggle>", "Turn on <toggle>" },
-    { OptClientCert, "<name>", "SSL/TLS client certificate name",
+    { OptClientCert, "<name>", "TLS client certificate name",
       SSL_OPT_CLIENT_CERT },
+    { OptCodePage, "<name>", "Use host EBCDIC code page <name>" },
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
     { OptEmulatorFont, "<font>", "Font for emulator window" },
-    { OptExtended, NULL, "Extended 3270 data stream (deprecated)" },
     { OptHttpd, "[<addr>:]<port>", "TCP port to listen on for http requests" },
     { OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
     { OptIconName, "<name>", "Title for icon" },
     { OptIconX, "<x>", "X position for icon" },
     { OptIconY, "<y>", "Y position for icon" },
-    { OptKeyFile, "<filename>", "Get SSL/TLS private key from <filename>",
+    { OptKeyFile, "<filename>", "Get TLS private key from <filename>",
       SSL_OPT_KEY_FILE },
-    { OptKeyFileType, "pem|asn1", "SSL/TLS private key file type",
+    { OptKeyFileType, "pem|asn1", "TLS private key file type",
       SSL_OPT_KEY_FILE_TYPE },
     { OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
     { OptKeypadOn, NULL, "Turn on pop-up keypad at start-up" },
     { OptKeyPasswd, "file:<filename>|string:<text>",
-	"SSL/TLS private key password", SSL_OPT_KEY_PASSWD },
+	"TLS private key password", SSL_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
-    { OptM3279, NULL, "3279 emulation (deprecated)" },
+    { OptMinVersion, "<version>", "Fail unless at this version or greater" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
     { OptNoScrollBar, NULL, "Disable scroll bar" },
-    { OptNoVerifyHostCert, NULL, "Do not verify SSL/TLS host certificate",
+    { OptNoVerifyHostCert, NULL, "Do not verify TLS host certificate",
 	SSL_OPT_VERIFY_HOST_CERT },
     { OptNvtMode, NULL, "Begin in NVT mode" },
     { OptOnce, NULL, "Exit as soon as the host disconnects" },
@@ -264,8 +274,9 @@ static struct option_help {
     { OptInputMethod, "<name>", "Multi-byte input method" },
     { OptPreeditType, "<style>", "Define input method pre-edit type" },
     { OptUser, "<name>", "User name for RFC 4777" },
+    { OptUtf8, NULL, "Force script I/O to use UTF-8" },
     { OptV, NULL, "Display build options and character sets" },
-    { OptVerifyHostCert, NULL, "Verify SSL/TLS host certificate (enabled by default)",
+    { OptVerifyHostCert, NULL, "Verify TLS host certificate (enabled by default)",
 	SSL_OPT_VERIFY_HOST_CERT },
     { OptVersion, NULL, "Display build options and character sets" },
     { "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
@@ -279,6 +290,7 @@ static String fallbacks[] = {
 };
 
 static void x3270_register(void);
+static void poll_children(void);
 
 /* Find an option in the help list. */
 static struct option_help *
@@ -332,7 +344,6 @@ setup_options(void)
     }
 }
 
-
 void
 usage(const char *msg)
 {
@@ -376,6 +387,26 @@ cleanup_Xt(bool b _is_unused)
     XtDestroyApplicationContext(appcontext);
 }
 
+/* Duplicate string resources so they can be reallocated later. */
+static void
+dup_resource_strings(XtResourceList res, Cardinal num)
+{
+    Cardinal c;
+
+    for (c = 0; c < num; c++) {
+	char **value;
+	XtResource *r = &res[c];
+
+	if (r->resource_type != XtRString) {
+	    continue;
+	}
+	value = (char **)(void *)((char *)(void *)&appres + r->resource_offset);
+	if (*value != NULL) {
+	    *value = NewString(*value);
+	}
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -390,6 +421,8 @@ main(int argc, char *argv[])
     int	model_number;
     bool mono = false;
     char *session = NULL;
+    XtResource *res;
+    retoggle_t *r;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -429,13 +462,15 @@ main(int argc, char *argv[])
      * actions, options and callbacks. These functions have no
      * interdependencies and cannot depend on resource values.
      */
+    codepage_register();
     ctlr_register();
     ft_register();
     host_register();
     idle_register();
     keymap_register();
     kybd_register();
-    macros_register();
+    task_register();
+    query_register();
     menubar_register();
     nvt_register();
     popups_register();
@@ -450,10 +485,12 @@ main(int argc, char *argv[])
     trace_register();
     x3270_register();
     xio_register();
+    hio_register();
+    proxy_register();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */
-    parse_set_clear(&argc, argv);
+    r = parse_set_clear(&argc, argv);
 
     /* Save a copy of the command-line args for merging later. */
     save_args(argc, argv);
@@ -560,6 +597,13 @@ main(int argc, char *argv[])
     /* Merge in the profile or session file. */
     merge_profile(&rdb, session, mono);
 
+    /*
+     * Save copies of resources, because it turns out that
+     * XtGetApplicationResources overwrites it.
+     */
+    res = (XtResource *)Malloc(num_resources * sizeof(XtResource));
+    memcpy(res, resources, num_resources * sizeof(XtResource));
+
     /* Fill in appres. */
     old_emh = XtAppSetWarningMsgHandler(appcontext,
 	    (XtErrorMsgHandler)trap_colormaps);
@@ -567,8 +611,20 @@ main(int argc, char *argv[])
 	    num_resources, 0, 0);
     XtGetApplicationResources(toplevel, (XtPointer)&xappres, xresources,
 	    num_xresources, 0, 0);
+    XtAppSetWarningMsgHandler(appcontext, old_emh);
+
+    /* Copy bool values from xres to appres. */
     copy_xres_to_res_bool();
-    (void) XtAppSetWarningMsgHandler(appcontext, old_emh);
+
+    /* Write extended toggle values into appres. */
+    copy_xtoggle(r);
+    Free(r);
+
+    /* Duplicate the strings in appres, so they can be reallocated later. */
+    dup_resource_strings(res, num_resources);
+
+    /* Check the minimum version. */
+    check_min_version(appres.min_version);
 
     /*
      * If the hostname is specified as a resource and not specified as a
@@ -611,20 +667,16 @@ main(int argc, char *argv[])
 	model_number = 0;
     }
     if (!model_number) {
-#if defined(RESTRICT_3279) /*[*/
-	model_number = 3;
-#else /*][*/
 	model_number = 4;
-#endif /*]*/
     }
     if (screen_depth <= 1 || colormap_failure) {
 	appres.interactive.mono = true;
     }
     if (appres.interactive.mono) {
 	xappres.use_cursor_color = False;
-	appres.m3279 = false;
+	mode.m3279 = false;
     }
-    if (!appres.extended) {
+    if (!mode.extended) {
 	appres.oversize = NULL;
     }
     if (appres.secure) {
@@ -668,45 +720,38 @@ main(int argc, char *argv[])
     /* Define the keymap. */
     keymap_init(appres.interactive.key_map, false);
 
-    if (appres.apl_mode) {
-	appres.interactive.compose_map = XtNewString(Apl);
-	appres.charset = XtNewString(Apl);
+    if (toggled(APL_MODE)) {
     }
 
     screen_preinit();
 
-    switch (charset_init(appres.charset)) {
+    switch (codepage_init(appres.codepage)) {
     case CS_OKAY:
 	break;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition for host character set \"%s\"",
-		appres.charset);
-	(void) charset_init(NULL);
+	popup_an_error("Cannot find definition for host code page \"%s\"",
+		appres.codepage);
+	codepage_init(NULL);
 	break;
     case CS_BAD:
-	popup_an_error("Invalid definition for host character set \"%s\"",
-		appres.charset);
-	(void) charset_init(NULL);
+	popup_an_error("Invalid definition for host code page \"%s\"",
+		appres.codepage);
+	codepage_init(NULL);
 	break;
     case CS_PREREQ:
-	popup_an_error("No fonts for host character set \"%s\"",
-		appres.charset);
-	(void) charset_init(NULL);
+	popup_an_error("No fonts for host code page \"%s\"",
+		appres.codepage);
+	codepage_init(NULL);
 	break;
     case CS_ILLEGAL:
-	(void) charset_init(NULL);
+	codepage_init(NULL);
 	break;
     }
 
     /* Initialize fonts. */
     font_init();
 
-#if defined(RESTRICT_3279) /*[*/
-    if (appres.m3279 && model_number == 4) {
-	model_number = 3;
-    }
-#endif /*]*/
-    if (!appres.extended || appres.oversize == NULL ||
+    if (!mode.extended || appres.oversize == NULL ||
 	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 	ovc = 0;
 	ovr = 0;
@@ -749,22 +794,18 @@ main(int argc, char *argv[])
     save_init(argc, argv[1], argv[2]);
 
     /* Make sure we don't fall over any SIGPIPEs. */
-    (void) signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     /*
      * Make sure that exited child processes become zombies, so we can
      * collect their exit status.
      */
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 
     /* Set up the window and icon labels. */
     label_init();
 
     /* Handle initial toggle settings. */
-    if (appres.dsTrace_bc || appres.eventTrace_bc) {
-	/* Backwards compatibility with old resource names. */
-	set_toggle_initial(TRACING, true);
-    }
     if (!appres.debug_tracing) {
 	set_toggle_initial(TRACING, false);
     }
@@ -772,17 +813,21 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	(void) host_connect(cl_hostname);
+	host_connect(cl_hostname, IA_UI);
     }
 
     /* Prepare to run a peer script. */
     peer_script_init();
 
+    /* Initialize APL mode. */
+    if (toggled(APL_MODE)) {
+	temporary_keymap(Apl);
+	temporary_compose_map(Apl, "Init");
+    }
+
     /* Process X events forever. */
     while (1) {
 	XEvent event;
-	pid_t pid;
-	int status;
 
 	while (XtAppPending(appcontext) & (XtIMXEvent | XtIMTimer)) {
 	    if (XtAppPeekEvent(appcontext, &event)) {
@@ -793,10 +838,14 @@ main(int argc, char *argv[])
 	screen_disp(false);
 	XtAppProcessEvent(appcontext, XtIMAll);
 
-	if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-	    pr3287_session_check(pid, status);
-	    --children;
-	}
+	/* Poll for exited children. */
+	poll_children();
+
+	/* Run tasks. */
+	run_tasks();
+
+	/* Flush the lazy allocation ring. */
+	lazya_flush();
     }
 }
 
@@ -809,7 +858,7 @@ static void
 sigchld_handler(int ignored)
 {
 #if !defined(_AIX) /*[*/
-    (void) signal(SIGCHLD, sigchld_handler);
+    signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 }
 
@@ -836,9 +885,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = true;
+	    mode.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -894,7 +943,7 @@ relabel(bool ignored _is_unused)
     title = XtMalloc(10 + ((PCONNECTED || appres.interactive.reconnect)?
 					    strlen(reconnect_host): 0));
     if (PCONNECTED || appres.interactive.reconnect) {
-	(void) sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
+	sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
 		reconnect_host);
 	if (user_title == NULL) {
 	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
@@ -904,8 +953,8 @@ relabel(bool ignored _is_unused)
 	}
 	set_aicon_label(reconnect_host);
     } else {
-	(void) sprintf(title, "x3270-%d", model_num);
-	(void) sprintf(icon_label, "x3270-%d", model_num);
+	sprintf(title, "x3270-%d", model_num);
+	sprintf(icon_label, "x3270-%d", model_num);
 	if (user_title == NULL) {
 	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
 	}
@@ -934,7 +983,6 @@ label_init(void)
 static void
 x3270_register(void)
 {
-    register_schange(ST_HALF_CONNECT, relabel);
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
     register_schange(ST_REMODEL, relabel);
@@ -996,9 +1044,9 @@ parse_local_process(int *argcp, char **argv, char **cmds)
 	}
 	e_len++;
 	*cmds = XtMalloc(e_len);
-	(void) strcpy(*cmds, OptLocalProcess);
+	strcpy(*cmds, OptLocalProcess);
 	for (j = i + 1; j < *argcp; j++) {
-	    (void) strcat(strcat(*cmds, " "), argv[j]);
+	    strcat(strcat(*cmds, " "), argv[j]);
 	}
 
 	/* Stamp out the remaining args. */
@@ -1022,17 +1070,20 @@ name_cmp(const void *p1, const void *p2)
 /*
  * Pick out -set and -clear toggle options.
  */
-static void
+static retoggle_t *
 parse_set_clear(int *argcp, char **argv)
 {
     int i, j;
     int argc_out = 0;
     char **argv_out = (char **) XtMalloc((*argcp + 1) * sizeof(char *));
+    retoggle_t *r = NULL;
+    int nr = 0;
 
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
 	bool is_set = false;
+	bool found = false;
 
 	if (!strcmp(argv[i], OptSet)) {
 	    is_set = true;
@@ -1047,21 +1098,41 @@ parse_set_clear(int *argcp, char **argv)
 
 	/* Match the name. */
 	i++;
-	for (j = 0; toggle_names[j].name != NULL; j++)
-	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
+	for (j = 0; toggle_names[j].name != NULL; j++) {
+	    if (toggle_supported(toggle_names[j].index) &&
+		    !strcasecmp(argv[i], toggle_names[j].name)) {
 		appres.toggle[toggle_names[j].index] = is_set;
+		found = true;
 		break;
 	    }
-	if (toggle_names[j].name == NULL) {
+	}
+	if (!found) {
+	    void *address = find_extended_toggle(argv[i], XRM_BOOLEAN);
+
+	    if (address != NULL) {
+		r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
+		r[nr].address = (bool *)address;
+		r[nr].value = is_set;
+		nr++;
+		found = true;
+	    }
+	}
+	if (!found) {
 	    const char **tn;
 	    int ntn = 0;
+	    int nx;
+	    char **nxnames;
 
-	    tn = (const char **)Calloc(N_TOGGLES, sizeof(char **));
+	    nxnames = extended_toggle_names(&nx);
+	    tn = (const char **)Calloc(N_TOGGLES + nx, sizeof(char **));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (!toggle_names[j].is_alias) {
+		if (toggle_supported(toggle_names[j].index) &&
+			!toggle_names[j].is_alias) {
 		    tn[ntn++] = toggle_names[j].name;
 		}
 	    }
+	    memcpy(tn + ntn, nxnames, nx * sizeof(char **));
+	    ntn += nx;
 	    qsort(tn, ntn, sizeof(const char *), name_cmp);
 	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
 		    argv[i]);
@@ -1081,9 +1152,13 @@ parse_set_clear(int *argcp, char **argv)
 
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
+    memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
     Free(argv_out);
+
+    r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
+    r[nr].address = NULL;
+    return r;
 }
 
 /*
@@ -1124,9 +1199,6 @@ copy_xres_to_res_bool(void)
     int i;
 #   define copy_bool(field)	appres.field = xappres.bools.field
 
-    copy_bool(extended);
-    copy_bool(m3279);
-    copy_bool(apl_mode);
     copy_bool(once);
     copy_bool(scripted);
     copy_bool(modified_sel);
@@ -1138,18 +1210,15 @@ copy_xres_to_res_bool(void)
     copy_bool(numeric_lock);
     copy_bool(secure);
     copy_bool(oerr_lock);
-    copy_bool(typeahead);
     copy_bool(debug_tracing);
     copy_bool(disconnect_clear);
     copy_bool(highlight_bold);
-    copy_bool(color8);
     copy_bool(bsd_tm);
     copy_bool(trace_monitor);
     copy_bool(idle_command_enabled);
     copy_bool(nvt_mode);
-    copy_bool(dsTrace_bc);
-    copy_bool(eventTrace_bc);
     copy_bool(script_port_once);
+    copy_bool(utf8);
 
     copy_bool(interactive.mono);
     copy_bool(interactive.menubar);
@@ -1167,4 +1236,69 @@ copy_xres_to_res_bool(void)
 
     copy_bool(ssl.starttls);
     copy_bool(ssl.verify_host_cert);
+}
+
+/* Copy extended toggles (-set, -clear) into appres. */
+static void
+copy_xtoggle(retoggle_t *r)
+{
+    int i;
+
+    if (r == NULL) {
+	return;
+    }
+
+    for (i = 0; r[i].address != NULL; i++) {
+	*r[i].address = r[i].value;
+    }
+}
+
+/* Child exit callbacks. */
+typedef struct child_exit {
+    struct child_exit *next;
+    pid_t pid;
+    childfn_t proc;
+} child_exit_t;
+static child_exit_t *child_exits = NULL;
+
+ioid_t
+AddChild(pid_t pid, childfn_t fn)
+{
+    child_exit_t *cx;
+
+    assert(pid != 0 && pid != -1);
+
+    cx = (child_exit_t *)Malloc(sizeof(child_exit_t));
+    cx->pid = pid;
+    cx->proc = fn;
+    cx->next = child_exits;
+    child_exits = cx;
+    return (ioid_t)cx;
+}
+
+static void
+poll_children(void)
+{
+    pid_t pid;
+    int status = 0;
+    child_exit_t *c;
+    child_exit_t *next = NULL;
+    child_exit_t *prev = NULL;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+	for (c = child_exits; c != NULL; c = next) {
+	    next = c->next;
+	    if (c->pid == pid) {
+		(*c->proc)((ioid_t)c, status);
+		if (prev) {
+		    prev->next = next;
+		} else {
+		    child_exits = next;
+		}
+		Free(c);
+	    } else {
+		prev = c;
+	    }
+	}
+    }
 }

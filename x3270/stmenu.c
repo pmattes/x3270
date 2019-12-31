@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Paul Mattes.
+ * Copyright (c) 2013-2015, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -94,19 +94,21 @@ static void
 screentrace_ok(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	String name;
+    String name;
 
-	if (file_flag)
-		XtVaGetValues(filename, XtNstring, &name, NULL);
-	else
-		XtVaGetValues(print_command, XtNstring, &name, NULL);
-	trace_set_screentrace_file(file_flag? TSS_FILE: TSS_PRINTER,
-		file_flag? stm_ptype: P_TEXT, name);
+    if (file_flag) {
+	XtVaGetValues(filename, XtNstring, &name, NULL);
+    } else {
+	XtVaGetValues(print_command, XtNstring, &name, NULL);
+    }
+    trace_set_screentrace_file(file_flag? TSS_FILE: TSS_PRINTER,
+	    file_flag? stm_ptype: P_TEXT, 0, name);
+    do_toggle(SCREEN_TRACE);
+    if (!continuously_flag && toggled(SCREEN_TRACE)) {
 	do_toggle(SCREEN_TRACE);
-	if (!continuously_flag && toggled(SCREEN_TRACE))
-		do_toggle(SCREEN_TRACE);
+    }
 
-	XtPopdown(stmenu_shell);
+    XtPopdown(stmenu_shell);
 }
 
 /* Called when Cancel is pressed in the screentrace popup. */
@@ -114,7 +116,7 @@ static void
 screentrace_cancel(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	XtPopdown(stmenu_shell);
+    XtPopdown(stmenu_shell);
 }
 
 /* Screentrace pop-up popping up. */
@@ -122,10 +124,10 @@ static void
 stmenu_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	/* Set the focus to the file or printer text widget. */
-	XawTextDisplayCaret(filename, file_flag);
-	XawTextDisplayCaret(print_command, !file_flag);
-	XtSetKeyboardFocus(stmenu_form, file_flag? filename: print_command);
+    /* Set the focus to the file or printer text widget. */
+    XawTextDisplayCaret(filename, file_flag);
+    XawTextDisplayCaret(print_command, !file_flag);
+    XtSetKeyboardFocus(stmenu_form, file_flag? filename: print_command);
 }
 
 /* Continuously/Once toggle callback. */
@@ -133,14 +135,14 @@ static void
 toggle_continuously(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-	/* Toggle the flag. */
-    	continuously_flag = *(bool *)client_data;
+    /* Toggle the flag. */
+    continuously_flag = *(bool *)client_data;
 
-	/* Change the widget states. */
-	dialog_mark_toggle(continuously_toggle,
-		continuously_flag? diamond: no_diamond);
-	dialog_mark_toggle(once_toggle,
-		continuously_flag? no_diamond: diamond);
+    /* Change the widget states. */
+    dialog_mark_toggle(continuously_toggle,
+	    continuously_flag? diamond: no_diamond);
+    dialog_mark_toggle(once_toggle,
+	    continuously_flag? no_diamond: diamond);
 }
 
 /* File/Printer toggle callback. */
@@ -148,22 +150,22 @@ static void
 toggle_file(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-	/* Toggle the flag. */
-    	file_flag = *(bool *)client_data;
+    /* Toggle the flag. */
+    file_flag = *(bool *)client_data;
 
-	/* Change the widget states. */
-	dialog_mark_toggle(file_toggle, file_flag? diamond: no_diamond);
-	dialog_mark_toggle(printer_toggle, file_flag? no_diamond: diamond);
-	XtVaSetValues(filename_label, XtNsensitive, file_flag, NULL);
-	XtVaSetValues(filename, XtNsensitive, file_flag, NULL);
-	XtVaSetValues(text_toggle, XtNsensitive, file_flag, NULL);
-	XtVaSetValues(html_toggle, XtNsensitive, file_flag, NULL);
-	XtVaSetValues(rtf_toggle, XtNsensitive, file_flag, NULL);
-	XtVaSetValues(print_command_label, XtNsensitive, !file_flag, NULL);
-	XtVaSetValues(print_command, XtNsensitive, !file_flag, NULL);
-	XawTextDisplayCaret(filename, file_flag);
-	XawTextDisplayCaret(print_command, !file_flag);
-	XtSetKeyboardFocus(stmenu_form, file_flag? filename: print_command);
+    /* Change the widget states. */
+    dialog_mark_toggle(file_toggle, file_flag? diamond: no_diamond);
+    dialog_mark_toggle(printer_toggle, file_flag? no_diamond: diamond);
+    XtVaSetValues(filename_label, XtNsensitive, file_flag, NULL);
+    XtVaSetValues(filename, XtNsensitive, file_flag, NULL);
+    XtVaSetValues(text_toggle, XtNsensitive, file_flag, NULL);
+    XtVaSetValues(html_toggle, XtNsensitive, file_flag, NULL);
+    XtVaSetValues(rtf_toggle, XtNsensitive, file_flag, NULL);
+    XtVaSetValues(print_command_label, XtNsensitive, !file_flag, NULL);
+    XtVaSetValues(print_command, XtNsensitive, !file_flag, NULL);
+    XawTextDisplayCaret(filename, file_flag);
+    XawTextDisplayCaret(print_command, !file_flag);
+    XtSetKeyboardFocus(stmenu_form, file_flag? filename: print_command);
 }
 
 /* Text/HTML toggle callback. */
@@ -171,31 +173,31 @@ static void
 toggle_ptype(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-	char *d;
-	XawTextBlock b;
-	String name;
+    char *d;
+    XawTextBlock b;
+    String name;
 
-	XtVaGetValues(filename, XtNstring, &name, NULL);
+    XtVaGetValues(filename, XtNstring, &name, NULL);
 
-	/* Toggle the flag. */
-    	stm_ptype = *(bool *)client_data;
+    /* Toggle the flag. */
+    stm_ptype = *(bool *)client_data;
 
-	/* Change the widget states. */
-	dialog_mark_toggle(text_toggle,
-		(stm_ptype == P_TEXT)? diamond: no_diamond);
-	dialog_mark_toggle(html_toggle,
-		(stm_ptype == P_HTML)? diamond: no_diamond);
-	dialog_mark_toggle(rtf_toggle,
-		(stm_ptype == P_RTF)? diamond: no_diamond);
+    /* Change the widget states. */
+    dialog_mark_toggle(text_toggle,
+	    (stm_ptype == P_TEXT)? diamond: no_diamond);
+    dialog_mark_toggle(html_toggle,
+	    (stm_ptype == P_HTML)? diamond: no_diamond);
+    dialog_mark_toggle(rtf_toggle,
+	    (stm_ptype == P_RTF)? diamond: no_diamond);
 
-	d = screentrace_default_file(stm_ptype);
-	b.firstPos = 0;
-	b.length = strlen(d);
-	b.ptr = d;
-	b.format = XawFmt8Bit;
-	XawTextReplace(filename, 0, strlen(name), &b);
-	XawTextSetInsertionPoint(filename, strlen(d));
-	XtFree(d);
+    d = screentrace_default_file(stm_ptype);
+    b.firstPos = 0;
+    b.length = strlen(d);
+    b.ptr = d;
+    b.format = XawFmt8Bit;
+    XawTextReplace(filename, 0, strlen(name), &b);
+    XawTextSetInsertionPoint(filename, strlen(d));
+    XtFree(d);
 }
 
 /*
@@ -218,206 +220,208 @@ toggle_ptype(Widget w _is_unused, XtPointer client_data,
 void
 init_screentrace_popup(void)
 {
-	Widget w = NULL;
-	Widget confirm_button, cancel_button;
-	char *d;
-	XawTextBlock b;
+    Widget w = NULL;
+    Widget confirm_button, cancel_button;
+    char *d;
+    XawTextBlock b;
 
-	/* Create the popup. */
-	stmenu_shell = XtVaCreatePopupShell(
+    /* Create the popup. */
+    stmenu_shell = XtVaCreatePopupShell(
 	    "screenTracePopup", transientShellWidgetClass, toplevel,
 	    NULL);
-	XtAddCallback(stmenu_shell, XtNpopupCallback, place_popup,
+    XtAddCallback(stmenu_shell, XtNpopupCallback, place_popup,
 	    (XtPointer) CenterP);
-	XtAddCallback(stmenu_shell, XtNpopupCallback, stmenu_popup_callback,
+    XtAddCallback(stmenu_shell, XtNpopupCallback, stmenu_popup_callback,
 	    NULL);
 
-	/* Create a form in the popup. */
-	stmenu_form = XtVaCreateManagedWidget(
+    /* Create a form in the popup. */
+    stmenu_form = XtVaCreateManagedWidget(
 	    ObjDialog, formWidgetClass, stmenu_shell,
 	    NULL);
 
-	/* Create the Continuously/Once radio buttons. */
-	continuously_toggle = XtVaCreateManagedWidget(
-		"continuously", commandWidgetClass, stmenu_form,
-		XtNvertDistance, MARGIN,
-		XtNhorizDistance, MARGIN,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		NULL);
-	dialog_apply_bitmap(continuously_toggle,
-		continuously_flag? diamond: no_diamond);
-	XtAddCallback(continuously_toggle, XtNcallback, toggle_continuously,
-		(XtPointer)&s_true);
-	once_toggle = XtVaCreateManagedWidget(
-		"once", commandWidgetClass, stmenu_form,
-		XtNfromVert, continuously_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, MARGIN,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		NULL);
-	dialog_apply_bitmap(once_toggle,
-		continuously_flag? no_diamond: diamond);
-	XtAddCallback(once_toggle, XtNcallback, toggle_continuously,
-		(XtPointer)&s_false);
-	dialog_match_dimension(continuously_toggle, once_toggle, XtNwidth);
+    /* Create the Continuously/Once radio buttons. */
+    continuously_toggle = XtVaCreateManagedWidget(
+	    "continuously", commandWidgetClass, stmenu_form,
+	    XtNvertDistance, MARGIN,
+	    XtNhorizDistance, MARGIN,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    NULL);
+    dialog_apply_bitmap(continuously_toggle,
+	    continuously_flag? diamond: no_diamond);
+    XtAddCallback(continuously_toggle, XtNcallback, toggle_continuously,
+	    (XtPointer)&s_true);
+    once_toggle = XtVaCreateManagedWidget(
+	    "once", commandWidgetClass, stmenu_form,
+	    XtNfromVert, continuously_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, MARGIN,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    NULL);
+    dialog_apply_bitmap(once_toggle,
+	    continuously_flag? no_diamond: diamond);
+    XtAddCallback(once_toggle, XtNcallback, toggle_continuously,
+	    (XtPointer)&s_false);
+    dialog_match_dimension(continuously_toggle, once_toggle, XtNwidth);
 
-	/* Create the File radio button. */
-	file_toggle = XtVaCreateManagedWidget(
-		"file", commandWidgetClass, stmenu_form,
-		XtNfromVert, once_toggle,
-		XtNvertDistance, FAR_VGAP,
-		XtNhorizDistance, MARGIN,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		NULL);
-	dialog_apply_bitmap(file_toggle,
-		file_flag? diamond: no_diamond);
-	XtAddCallback(file_toggle, XtNcallback, toggle_file,
-		(XtPointer)&s_true);
+    /* Create the File radio button. */
+    file_toggle = XtVaCreateManagedWidget(
+	    "file", commandWidgetClass, stmenu_form,
+	    XtNfromVert, once_toggle,
+	    XtNvertDistance, FAR_VGAP,
+	    XtNhorizDistance, MARGIN,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    NULL);
+    dialog_apply_bitmap(file_toggle,
+	    file_flag? diamond: no_diamond);
+    XtAddCallback(file_toggle, XtNcallback, toggle_file,
+	    (XtPointer)&s_true);
 
-	/* Create the file name label and text widgets. */
-	filename_label = XtVaCreateManagedWidget(
-		"fileName", labelWidgetClass, stmenu_form,
-		XtNfromVert, file_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, FAR_HGAP,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		XtNsensitive, file_flag,
-		NULL);
-	filename = XtVaCreateManagedWidget(
-		"value", asciiTextWidgetClass, stmenu_form,
-		XtNeditType, XawtextEdit,
-		XtNwidth, FILE_WIDTH,
-		XtNfromVert, file_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNfromHoriz, filename_label,
-		XtNhorizDistance, 0,
-		XtNsensitive, file_flag,
-		NULL);
-	dialog_match_dimension(filename_label, filename, XtNheight);
-	w = XawTextGetSource(filename);
-	if (w == NULL)
-		XtWarning("Cannot find text source in dialog");
-	else
-		XtAddCallback(w, XtNcallback, dialog_text_callback,
-			(XtPointer)&t_unixfile);
-	d = screentrace_default_file(stm_ptype);
-	b.firstPos = 0;
-	b.length = strlen(d);
-	b.ptr = d;
-	b.format = XawFmt8Bit;
-	XawTextReplace(filename, 0, 0, &b);
-	XawTextSetInsertionPoint(filename, strlen(d));
-	XtFree(d);
+    /* Create the file name label and text widgets. */
+    filename_label = XtVaCreateManagedWidget(
+	    "fileName", labelWidgetClass, stmenu_form,
+	    XtNfromVert, file_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, FAR_HGAP,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    XtNsensitive, file_flag,
+	    NULL);
+    filename = XtVaCreateManagedWidget(
+	    "value", asciiTextWidgetClass, stmenu_form,
+	    XtNeditType, XawtextEdit,
+	    XtNwidth, FILE_WIDTH,
+	    XtNfromVert, file_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNfromHoriz, filename_label,
+	    XtNhorizDistance, 0,
+	    XtNsensitive, file_flag,
+	    NULL);
+    dialog_match_dimension(filename_label, filename, XtNheight);
+    w = XawTextGetSource(filename);
+    if (w == NULL) {
+	XtWarning("Cannot find text source in dialog");
+    } else {
+	XtAddCallback(w, XtNcallback, dialog_text_callback,
+		(XtPointer)&t_unixfile);
+    }
+    d = screentrace_default_file(stm_ptype);
+    b.firstPos = 0;
+    b.length = strlen(d);
+    b.ptr = d;
+    b.format = XawFmt8Bit;
+    XawTextReplace(filename, 0, 0, &b);
+    XawTextSetInsertionPoint(filename, strlen(d));
+    XtFree(d);
 
-	/* Create the Text/HTML/RTF radio buttons. */
-	text_toggle = XtVaCreateManagedWidget(
-		"text", commandWidgetClass, stmenu_form,
-		XtNfromVert, filename_label,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, FAR_HGAP,
-		XtNborderWidth, 0,
-		XtNsensitive, file_flag,
-		NULL);
-	dialog_apply_bitmap(text_toggle,
-		(stm_ptype == P_TEXT)? diamond: no_diamond);
-	XtAddCallback(text_toggle, XtNcallback, toggle_ptype,
-		(XtPointer)&s_text);
-	html_toggle = XtVaCreateManagedWidget(
-		"html", commandWidgetClass, stmenu_form,
-		XtNfromVert, text_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, FAR_HGAP,
-		XtNborderWidth, 0,
-		XtNsensitive, file_flag,
-		NULL);
-	dialog_apply_bitmap(html_toggle,
-		(stm_ptype == P_HTML)? diamond: no_diamond);
-	XtAddCallback(html_toggle, XtNcallback, toggle_ptype,
-		(XtPointer)&s_html);
-	rtf_toggle = XtVaCreateManagedWidget(
-		"rtf", commandWidgetClass, stmenu_form,
-		XtNfromVert, html_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, FAR_HGAP,
-		XtNborderWidth, 0,
-		XtNsensitive, file_flag,
-		NULL);
-	dialog_apply_bitmap(rtf_toggle,
-		(stm_ptype == P_RTF)? diamond: no_diamond);
-	XtAddCallback(rtf_toggle, XtNcallback, toggle_ptype,
-		(XtPointer)&s_rtf);
+    /* Create the Text/HTML/RTF radio buttons. */
+    text_toggle = XtVaCreateManagedWidget(
+	    "text", commandWidgetClass, stmenu_form,
+	    XtNfromVert, filename_label,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, FAR_HGAP,
+	    XtNborderWidth, 0,
+	    XtNsensitive, file_flag,
+	    NULL);
+    dialog_apply_bitmap(text_toggle,
+	    (stm_ptype == P_TEXT)? diamond: no_diamond);
+    XtAddCallback(text_toggle, XtNcallback, toggle_ptype,
+	    (XtPointer)&s_text);
+    html_toggle = XtVaCreateManagedWidget(
+	    "html", commandWidgetClass, stmenu_form,
+	    XtNfromVert, text_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, FAR_HGAP,
+	    XtNborderWidth, 0,
+	    XtNsensitive, file_flag,
+	    NULL);
+    dialog_apply_bitmap(html_toggle,
+	    (stm_ptype == P_HTML)? diamond: no_diamond);
+    XtAddCallback(html_toggle, XtNcallback, toggle_ptype,
+	    (XtPointer)&s_html);
+    rtf_toggle = XtVaCreateManagedWidget(
+	    "rtf", commandWidgetClass, stmenu_form,
+	    XtNfromVert, html_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, FAR_HGAP,
+	    XtNborderWidth, 0,
+	    XtNsensitive, file_flag,
+	    NULL);
+    dialog_apply_bitmap(rtf_toggle,
+	    (stm_ptype == P_RTF)? diamond: no_diamond);
+    XtAddCallback(rtf_toggle, XtNcallback, toggle_ptype,
+	    (XtPointer)&s_rtf);
 
-	/* Create the printer toggle. */
-	printer_toggle = XtVaCreateManagedWidget(
-		"printer", commandWidgetClass, stmenu_form,
-		XtNhorizDistance, MARGIN,
-		XtNfromVert, rtf_toggle,
-		XtNvertDistance, FAR_VGAP,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		NULL);
-	dialog_apply_bitmap(printer_toggle,
-		file_flag? no_diamond: diamond);
-	XtAddCallback(printer_toggle, XtNcallback, toggle_file,
-		(XtPointer)&s_false);
+    /* Create the printer toggle. */
+    printer_toggle = XtVaCreateManagedWidget(
+	    "printer", commandWidgetClass, stmenu_form,
+	    XtNhorizDistance, MARGIN,
+	    XtNfromVert, rtf_toggle,
+	    XtNvertDistance, FAR_VGAP,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    NULL);
+    dialog_apply_bitmap(printer_toggle,
+	    file_flag? no_diamond: diamond);
+    XtAddCallback(printer_toggle, XtNcallback, toggle_file,
+	    (XtPointer)&s_false);
 
-	/* Create the print command label and text widgets. */
-	print_command_label = XtVaCreateManagedWidget(
-		"printCommand", labelWidgetClass, stmenu_form,
-		XtNfromVert, printer_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNhorizDistance, FAR_HGAP,
-		XtNborderWidth, 0,
-		XtNjustify, XtJustifyLeft,
-		XtNsensitive, !file_flag,
-		NULL);
-	print_command = XtVaCreateManagedWidget(
-		"value", asciiTextWidgetClass, stmenu_form,
-		XtNeditType, XawtextEdit,
-		XtNwidth, FILE_WIDTH,
-		XtNfromVert, printer_toggle,
-		XtNvertDistance, CLOSE_VGAP,
-		XtNfromHoriz, print_command_label,
-		XtNhorizDistance, 0,
-		XtNsensitive, !file_flag,
-		NULL);
-	dialog_match_dimension(print_command_label, print_command, XtNheight);
-	dialog_match_dimension(filename_label, print_command_label, XtNwidth);
-	w = XawTextGetSource(print_command);
-	if (w == NULL)
-		XtWarning("Cannot find text source in dialog");
-	else
-		XtAddCallback(w, XtNcallback, dialog_text_callback,
-			(XtPointer)&t_command);
-	d = screentrace_default_printer();
-	b.firstPos = 0;
-	b.length = strlen(d);
-	b.ptr = d;
-	b.format = XawFmt8Bit;
-	XawTextReplace(print_command, 0, 0, &b);
-	XawTextSetInsertionPoint(print_command, strlen(d));
-	XtFree(d);
+    /* Create the print command label and text widgets. */
+    print_command_label = XtVaCreateManagedWidget(
+	    "printCommand", labelWidgetClass, stmenu_form,
+	    XtNfromVert, printer_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, FAR_HGAP,
+	    XtNborderWidth, 0,
+	    XtNjustify, XtJustifyLeft,
+	    XtNsensitive, !file_flag,
+	    NULL);
+    print_command = XtVaCreateManagedWidget(
+	    "value", asciiTextWidgetClass, stmenu_form,
+	    XtNeditType, XawtextEdit,
+	    XtNwidth, FILE_WIDTH,
+	    XtNfromVert, printer_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNfromHoriz, print_command_label,
+	    XtNhorizDistance, 0,
+	    XtNsensitive, !file_flag,
+	    NULL);
+    dialog_match_dimension(print_command_label, print_command, XtNheight);
+    dialog_match_dimension(filename_label, print_command_label, XtNwidth);
+    w = XawTextGetSource(print_command);
+    if (w == NULL) {
+	    XtWarning("Cannot find text source in dialog");
+    } else {
+	    XtAddCallback(w, XtNcallback, dialog_text_callback,
+		    (XtPointer)&t_command);
+    }
+    d = screentrace_default_printer();
+    b.firstPos = 0;
+    b.length = strlen(d);
+    b.ptr = d;
+    b.format = XawFmt8Bit;
+    XawTextReplace(print_command, 0, 0, &b);
+    XawTextSetInsertionPoint(print_command, strlen(d));
+    XtFree(d);
 
-	/* Create the buttons. */
-	confirm_button = XtVaCreateManagedWidget(
-		ObjConfirmButton, commandWidgetClass, stmenu_form,
-		XtNfromVert, print_command_label,
-		XtNvertDistance, FAR_VGAP,
-		XtNhorizDistance, MARGIN,
-		NULL);
-	XtAddCallback(confirm_button, XtNcallback, screentrace_ok, NULL);
-	cancel_button = XtVaCreateManagedWidget(
-		ObjCancelButton, commandWidgetClass, stmenu_form,
-		XtNfromVert, print_command_label,
-		XtNvertDistance, FAR_VGAP,
-		XtNfromHoriz, confirm_button,
-		XtNhorizDistance, BUTTON_GAP,
-		NULL);
-	XtAddCallback(cancel_button, XtNcallback, screentrace_cancel, NULL);
+    /* Create the buttons. */
+    confirm_button = XtVaCreateManagedWidget(
+	    ObjConfirmButton, commandWidgetClass, stmenu_form,
+	    XtNfromVert, print_command_label,
+	    XtNvertDistance, FAR_VGAP,
+	    XtNhorizDistance, MARGIN,
+	    NULL);
+    XtAddCallback(confirm_button, XtNcallback, screentrace_ok, NULL);
+    cancel_button = XtVaCreateManagedWidget(
+	    ObjCancelButton, commandWidgetClass, stmenu_form,
+	    XtNfromVert, print_command_label,
+	    XtNvertDistance, FAR_VGAP,
+	    XtNfromHoriz, confirm_button,
+	    XtNhorizDistance, BUTTON_GAP,
+	    NULL);
+    XtAddCallback(cancel_button, XtNcallback, screentrace_cancel, NULL);
 }
 
 /*
@@ -427,37 +431,43 @@ init_screentrace_popup(void)
 void
 stmenu_popup(stmp_t stmp)
 {
-	/* If the toggle is set, clear it. */
-	if (toggled(SCREEN_TRACE)) {
-		do_toggle(SCREEN_TRACE);
-		return;
+    /* If the toggle is set, clear it. */
+    if (toggled(SCREEN_TRACE)) {
+	do_toggle(SCREEN_TRACE);
+	return;
+    }
+
+    /* Initialize it. */
+    if (stmenu_shell == NULL) {
+	init_screentrace_popup();
+    }
+
+    switch (stmp) {
+    case STMP_AS_IS:
+	break;
+    case STMP_TEXT:
+	/* Force a text file. */
+	if (!file_flag) {
+	    toggle_file(NULL, &s_true, NULL);
 	}
-
-	/* Initialize it. */
-	if (stmenu_shell == NULL)
-		init_screentrace_popup();
-
-	switch (stmp) {
-	case STMP_AS_IS:
-		break;
-	case STMP_TEXT:
-		/* Force a text file. */
-		if (!file_flag)
-			toggle_file(NULL, &s_true, NULL);
-		if (stm_ptype != P_TEXT)
-			toggle_ptype(NULL, &s_text, NULL);
-		if (continuously_flag)
-			toggle_continuously(NULL, &s_false, NULL);
-		break;
-	case STMP_PRINTER:
-		/* Force a printer. */
-		if (file_flag)
-			toggle_file(NULL, &s_false, NULL);
-		if (continuously_flag)
-			toggle_continuously(NULL, &s_false, NULL);
-		break;
+	if (stm_ptype != P_TEXT) {
+	    toggle_ptype(NULL, &s_text, NULL);
 	}
+	if (continuously_flag) {
+	    toggle_continuously(NULL, &s_false, NULL);
+	}
+	break;
+    case STMP_PRINTER:
+	/* Force a printer. */
+	if (file_flag) {
+	    toggle_file(NULL, &s_false, NULL);
+	}
+	if (continuously_flag) {
+	    toggle_continuously(NULL, &s_false, NULL);
+	}
+	break;
+    }
 
-	/* Pop it up. */
-	popup_popup(stmenu_shell, XtGrabExclusive);
+    /* Pop it up. */
+    popup_popup(stmenu_shell, XtGrabExclusive);
 }

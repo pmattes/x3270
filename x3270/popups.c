@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,10 +48,10 @@
 
 #include "actions.h"
 #include "host.h"
-#include "macros.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
 #include "screen.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "xio.h"
@@ -71,7 +71,6 @@ static enum form_type forms[] = { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
 static Dimension wm_width, wm_height;
 
-
 /*
  * General popup support
  */
@@ -758,6 +757,7 @@ create_form_popup(const char *name, XtCallbackProc callback,
     Widget shell;
     Widget dialog;
     Widget w;
+    Dimension width;
 
     /* Create the popup shell */
 
@@ -806,6 +806,10 @@ create_form_popup(const char *name, XtCallbackProc callback,
 	xs_warning("Cannot find \"%s\" in dialog", XtNvalue);
     }
 
+    /* Modify the width of the value. */
+    XtVaGetValues(w, XtNwidth, &width, NULL);
+    XtVaSetValues(w, XtNwidth, rescale(width), NULL);
+
     /* Set a callback for text modifications */
     w = XawTextGetSource(w);
     if (w == NULL) {
@@ -818,7 +822,6 @@ create_form_popup(const char *name, XtCallbackProc callback,
     return shell;
 }
 
-
 /*
  * Read-only popups.
  */
@@ -948,6 +951,7 @@ rop_init(struct rop *rop)
 {
     Widget w;
     struct rsm *r;
+    Dimension width;
 
     if (rop->shell != NULL) {
 	return;
@@ -984,6 +988,10 @@ rop_init(struct rop *rop)
 
     /* Force it into existence so it sizes itself with 4-line text */
     XtRealizeWidget(rop->shell);
+
+    /* Rescale the error dialogs, which have no initial value. */
+    XtVaGetValues(rop->shell, XtNwidth, &width, NULL);
+    XtVaSetValues(rop->shell, XtNwidth, rescale(width), NULL);
 
     /* If there's a pending message, pop it up now. */
     if ((r = rop->rsms) != NULL) {
@@ -1022,8 +1030,8 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 	vtrace("Error: %s\n", buf);
     }
 
-    if (rop->is_error && sms_redirect()) {
-	sms_error(buf);
+    if (rop->is_error && task_redirect()) {
+	task_error(buf);
 	Free(buf);
 	return;
     }
@@ -1118,11 +1126,11 @@ action_output(const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    if (sms_redirect()) {
+    if (task_redirect()) {
 	char *s;
 
 	s = xs_vbuffer(fmt, args);
-	sms_info("%s", s);
+	task_info("%s", s);
 	Free(s);
     } else {
 	popup_rop(&info_popup, NULL, fmt, args);

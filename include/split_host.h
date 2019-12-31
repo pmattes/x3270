@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,12 +34,13 @@
 typedef enum {
     ANSI_HOST,          /* A: */
     NO_LOGIN_HOST,      /* C: */
-    SSL_HOST,           /* L: */
+    TLS_HOST,           /* L: */
     NON_TN3270E_HOST,   /* N: */
     PASSTHRU_HOST,      /* P: */
     STD_DS_HOST,        /* S: */
     BIND_LOCK_HOST,     /* B:, now a no-op */
-    NO_VERIFY_CERT_HOST /* Y: */
+    NO_VERIFY_CERT_HOST,/* Y: */
+    NO_TELNET_HOST	/* T: */
 } host_flags_t;
 #define HOST_nFLAG(flags, t)    ((flags & (1 << t)) != 0)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -414,6 +414,13 @@
 #define UPRIV_eo	0xf8fd
 #define UPRIV_fm	0xf8fe
 #define UPRIV_dup	0xf8ff
+
+/* Second set of PUA definitions. */
+#define UPRIV2		0xe000
+#define UPRIV2_dup	(UPRIV2 + '*')
+#define UPRIV2_fm	(UPRIV2 + ';')
+#define UPRIV2_Aunderline	(UPRIV2 + 'A')
+#define UPRIV2_Zunderline	(UPRIV2 + 'Z')
 
 /* BIND definitions. */
 #define BIND_RU			0x31

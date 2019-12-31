@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2017 Paul Mattes.
+ * Copyright (c) 2000-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "codepage.h"
 #include "ctlrc.h"
 #include "cmenubar.h"
 #include "cstatus.h"
@@ -48,12 +48,13 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
+#include "toupper.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
@@ -101,60 +102,60 @@
 static int cp[16][16][2];
 
 static int cmap8[16] = {
-	COLOR_BLACK,	/* neutral black */
-	COLOR_BLUE,	/* blue */
-	COLOR_RED,	/* red */
-	COLOR_MAGENTA,	/* pink */
-	COLOR_GREEN,	/* green */
-	COLOR_CYAN,	/* turquoise */
-	COLOR_YELLOW,	/* yellow */
-	COLOR_WHITE,	/* neutral white */
+    COLOR_BLACK,	/* neutral black */
+    COLOR_BLUE,	/* blue */
+    COLOR_RED,	/* red */
+    COLOR_MAGENTA,	/* pink */
+    COLOR_GREEN,	/* green */
+    COLOR_CYAN,	/* turquoise */
+    COLOR_YELLOW,	/* yellow */
+    COLOR_WHITE,	/* neutral white */
 
-	COLOR_BLACK,	/* black */ /* alas, this may be gray */
-	COLOR_BLUE,	/* deep blue */
-	COLOR_YELLOW,	/* orange */
-	COLOR_MAGENTA,	/* purple */
-	COLOR_GREEN,	/* pale green */
-	COLOR_CYAN,	/* pale turquoise */
-	COLOR_BLACK,	/* gray */
-	COLOR_WHITE	/* white */
+    COLOR_BLACK,	/* black */ /* alas, this may be gray */
+    COLOR_BLUE,	/* deep blue */
+    COLOR_YELLOW,	/* orange */
+    COLOR_MAGENTA,	/* purple */
+    COLOR_GREEN,	/* pale green */
+    COLOR_CYAN,	/* pale turquoise */
+    COLOR_BLACK,	/* gray */
+    COLOR_WHITE	/* white */
 };
 
 static int cmap16[16] = {
-	COLOR_BLACK,	/* neutral black */
-	8 + COLOR_BLUE,	/* blue */
-	COLOR_RED,	/* red */
-	8 + COLOR_MAGENTA,	/* pink */
-	8 + COLOR_GREEN,	/* green */
-	8 + COLOR_CYAN,	/* turquoise */
-	8 + COLOR_YELLOW,	/* yellow */
-	8 + COLOR_WHITE,	/* neutral white */
+    COLOR_BLACK,	/* neutral black */
+    8 + COLOR_BLUE,	/* blue */
+    COLOR_RED,	/* red */
+    8 + COLOR_MAGENTA,	/* pink */
+    8 + COLOR_GREEN,	/* green */
+    8 + COLOR_CYAN,	/* turquoise */
+    8 + COLOR_YELLOW,	/* yellow */
+    8 + COLOR_WHITE,	/* neutral white */
 
-	COLOR_BLACK,	/* black */ /* alas, this may be gray */
-	COLOR_BLUE,	/* deep blue */
-	8 + COLOR_RED,	/* orange */
-	COLOR_MAGENTA,	/* purple */
-	COLOR_GREEN,	/* pale green */
-	COLOR_CYAN,	/* pale turquoise */
-	COLOR_WHITE,	/* gray */
-	8 + COLOR_WHITE	/* white */
+    COLOR_BLACK,	/* black */ /* alas, this may be gray */
+    COLOR_BLUE,	/* deep blue */
+    8 + COLOR_RED,	/* orange */
+    COLOR_MAGENTA,	/* purple */
+    COLOR_GREEN,	/* pale green */
+    COLOR_CYAN,	/* pale turquoise */
+    COLOR_WHITE,	/* gray */
+    8 + COLOR_WHITE	/* white */
 };
 
 static int *cmap = cmap8;
 static int defcolor_offset = 0;
 
 static int field_colors8[4] = {
-	COLOR_GREEN,	/* default */
-	COLOR_RED,	/* intensified */
-	COLOR_BLUE,	/* protected */
-	COLOR_WHITE	/* protected, intensified */
+    COLOR_GREEN,	/* default */
+    COLOR_RED,	/* intensified */
+    COLOR_BLUE,	/* protected */
+    COLOR_WHITE	/* protected, intensified */
 };
 
 static int field_colors16[4] = {
-	8 + COLOR_GREEN,/* default */
-	COLOR_RED,	/* intensified */
-	8 + COLOR_BLUE,	/* protected */
-	8 + COLOR_WHITE	/* protected, intensified */
+    8 + COLOR_GREEN,/* default */
+    COLOR_RED,	/* intensified */
+    8 + COLOR_BLUE,	/* protected */
+    8 + COLOR_WHITE	/* protected, intensified */
 };
 
 static int *field_colors = field_colors8;
@@ -163,7 +164,7 @@ static int bg_color = COLOR_BLACK;
 
 static int defattr = A_NORMAL;
 static int xhattr = A_NORMAL;
-static unsigned long input_id;
+static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
 
@@ -176,8 +177,8 @@ enum ts ab_mode = TS_AUTO;
 
 #if defined(C3270_80_132) /*[*/
 struct screen_spec {
-	int rows, cols;
-	char *mode_switch;
+    int rows, cols;
+    char *mode_switch;
 } screen_spec;
 struct screen_spec altscreen_spec, defscreen_spec;
 static SCREEN *def_screen = NULL, *alt_screen = NULL;
@@ -186,18 +187,18 @@ static void parse_screen_spec(const char *str, struct screen_spec *spec);
 #endif /*]*/
 
 static struct {
-	char *name;
-	int index;
+    char *name;
+    int index;
 } cc_name[] = {
-	{ "black",	COLOR_BLACK },
-	{ "red",	COLOR_RED },
-	{ "green",	COLOR_GREEN },
-	{ "yellow",	COLOR_YELLOW },
-	{ "blue",	COLOR_BLUE },
-	{ "magenta",    COLOR_MAGENTA },
-	{ "cyan",	COLOR_CYAN },
-	{ "white",	COLOR_WHITE },
-	{ NULL,	0 }
+    { "black",	COLOR_BLACK },
+    { "red",	COLOR_RED },
+    { "green",	COLOR_GREEN },
+    { "yellow",	COLOR_YELLOW },
+    { "blue",	COLOR_BLUE },
+    { "magenta",    COLOR_MAGENTA },
+    { "cyan",	COLOR_CYAN },
+    { "white",	COLOR_WHITE },
+    { NULL,	0 }
 };
 
 static int status_row = 0;	/* Row to display the status line on */
@@ -214,11 +215,20 @@ static bool default_colors = false;
 #endif /*]*/
 static bool screen_initted = false;
 
+static ioid_t disabled_done_id = NULL_IOID;
+
+/* Layered OIA messages. */
+static char *disabled_msg = NULL;	/* layer 0 (top) */
+static char *scrolled_msg = NULL;	/* layer 1 */
+static char *info_msg = NULL;		/* layer 2 */
+static char *other_msg = NULL;		/* layer 3 */
+static int other_attr;			/* layer 3 color */
+
+static char *info_base_msg = NULL;	/* original info message (unscrolled) */
+
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
-static void screen_connect(bool connected);
-static void status_half_connect(bool ignored);
 static void status_connect(bool ignored);
 static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
@@ -226,7 +236,7 @@ static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char);
 static void set_status_row(int screen_rows, int emulator_rows);
 static bool ts_value(const char *s, enum ts *tsp);
-static void display_linedraw(unsigned char ebc);
+static void display_linedraw(ucs4_t ucs);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
@@ -259,82 +269,83 @@ crosshair_color_init(void)
 void
 screen_init(void)
 {
-    	menu_init();
+    menu_init();
 
 #if defined(C3270_80_132) /*[*/
-	/* Parse altscreen/defscreen. */
-	if ((appres.c3270.altscreen != NULL) ^
-	    (appres.c3270.defscreen != NULL)) {
-		(void) fprintf(stderr,
-		    "Must specify both altscreen and defscreen\n");
-		exit(1);
+    /* Parse altscreen/defscreen. */
+    if ((appres.c3270.altscreen != NULL) ^
+	(appres.c3270.defscreen != NULL)) {
+	fprintf(stderr, "Must specify both altscreen and defscreen\n");
+	exit(1);
+    }
+    if (appres.c3270.altscreen != NULL) {
+	parse_screen_spec(appres.c3270.altscreen, &altscreen_spec);
+	if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
+	    fprintf(stderr, "Rows and/or cols too small on "
+		"alternate screen (mininum 27x132)\n");
+	    exit(1);
 	}
-	if (appres.c3270.altscreen != NULL) {
-		parse_screen_spec(appres.c3270.altscreen, &altscreen_spec);
-		if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
-		    (void) fprintf(stderr, "Rows and/or cols too small on "
-			"alternate screen (mininum 27x132)\n");
-		    exit(1);
-		}
-		parse_screen_spec(appres.c3270.defscreen, &defscreen_spec);
-		if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
-		    (void) fprintf(stderr, "Rows and/or cols too small on "
-			"default screen (mininum 24x80)\n");
-		    exit(1);
-		}
+	parse_screen_spec(appres.c3270.defscreen, &defscreen_spec);
+	if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
+	    fprintf(stderr, "Rows and/or cols too small on "
+		"default screen (mininum 24x80)\n");
+	    exit(1);
 	}
+    }
 #endif /*]*/
 
-	/*
-	 * See about keyboard Meta-key behavior.
-	 *
-	 * Note: Formerly, "auto" meant to use the terminfo 'km' capability (if
-	 * set, then disable metaEscape).  But popular terminals like the
-	 * Linux console and xterms are actually configurable, though they have
-	 * fixed terminfo capabilities.  It is harmless to enable metaEscape
-	 * when the terminal supports it, so the default is now 'on'.
-	 *
-	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
-	 * so we no loger support it.
-	 */
-	if (!ts_value(appres.c3270.meta_escape, &me_mode))
-		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResMetaEscape,
-		    appres.c3270.meta_escape);
-	if (me_mode == TS_AUTO)
-		me_mode = TS_ON;
+    /*
+     * See about keyboard Meta-key behavior.
+     *
+     * Note: Formerly, "auto" meant to use the terminfo 'km' capability (if
+     * set, then disable metaEscape).  But popular terminals like the
+     * Linux console and xterms are actually configurable, though they have
+     * fixed terminfo capabilities.  It is harmless to enable metaEscape
+     * when the terminal supports it, so the default is now 'on'.
+     *
+     * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
+     * so we no loger support it.
+     */
+    if (!ts_value(appres.c3270.meta_escape, &me_mode))
+	popup_an_error("Invalid %s value: '%s', assuming 'auto'\n",
+		ResMetaEscape, appres.c3270.meta_escape);
+    if (me_mode == TS_AUTO) {
+	me_mode = TS_ON;
+    }
 
-	/* See about all-bold behavior. */
-	if (appres.c3270.all_bold_on)
-		ab_mode = TS_ON;
-	else if (!ts_value(appres.c3270.all_bold, &ab_mode))
-		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.c3270.all_bold);
-	if (ab_mode == TS_AUTO)
-		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
-		    TS_ON: TS_OFF;
-	if (ab_mode == TS_ON)
-		defattr |= A_BOLD;
+    /* See about all-bold behavior. */
+    if (appres.c3270.all_bold_on) {
+	ab_mode = TS_ON;
+    } else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
+	popup_an_error("Invalid %s value: '%s', assuming 'auto'\n",
+		ResAllBold, appres.c3270.all_bold);
+    }
+    if (ab_mode == TS_AUTO) {
+	ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
+    }
+    if (ab_mode == TS_ON) {
+	defattr |= A_BOLD;
+    }
 
-	/*
-	 * If they don't want ACS and they're not in a UTF-8 locale, switch
-	 * to ASCII-art mode for box drawing.
-	 */
-	if (
+    /*
+     * If they don't want ACS and they're not in a UTF-8 locale, switch
+     * to ASCII-art mode for box drawing.
+     */
+    if (
 #if defined(CURSES_WIDE) /*[*/
-	    !appres.c3270.acs &&
+	!appres.c3270.acs &&
 #endif /*]*/
-				 !is_utf8) {
-	    appres.c3270.ascii_box_draw = true;
-	}
+			     !is_utf8) {
+	appres.c3270.ascii_box_draw = true;
+    }
 
-	/* Pull in the user's color mappings. */
-	init_user_colors();
-	init_user_attribute_colors();
-	crosshair_color_init();
+    /* Pull in the user's color mappings. */
+    init_user_colors();
+    init_user_attribute_colors();
+    crosshair_color_init();
 
-	/* Initialize the controller. */
-	ctlr_init(ALL_CHANGE);
+    /* Initialize the controller. */
+    ctlr_init(ALL_CHANGE);
 }
 
 /*
@@ -362,7 +373,7 @@ finish_screen_init(void)
 	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
     }
 #endif /*]*/
-    (void) setupterm(NULL, fileno(stdout), NULL);
+    setupterm(NULL, fileno(stdout), NULL);
     if ((cl = tigetstr("clear")) != NULL) {
 	putp(cl);
     }
@@ -370,7 +381,7 @@ finish_screen_init(void)
 #if !defined(C3270_80_132) /*[*/
     /* Initialize curses. */
     if (initscr() == NULL) {
-	(void) fprintf(stderr, "Can't initialize terminal.\n");
+	fprintf(stderr, "Can't initialize terminal.\n");
 	exit(1);
     }
     initscr_done = true;
@@ -382,8 +393,7 @@ finish_screen_init(void)
 	def_screen = newterm(NULL, stdout, stdin);
 	initscr_done = true;
 	if (def_screen == NULL) {
-	    (void) fprintf(stderr,
-		    "Can't initialize %dx%d defscreen terminal.\n",
+	    fprintf(stderr, "Can't initialize %dx%d defscreen terminal.\n",
 		    defscreen_spec.rows, defscreen_spec.cols);
 	    exit(1);
 	}
@@ -517,7 +527,7 @@ finish_screen_init(void)
 	}
 #endif /*]*/
 	if (has_colors() && COLORS >= 8) {
-	    if (!appres.color8 && COLORS >= 16) {
+	    if (COLORS >= 16) {
 		cmap = cmap16;
 		field_colors = field_colors16;
 		defcolor_offset = 8;
@@ -525,7 +535,7 @@ finish_screen_init(void)
 		    bg_color += defcolor_offset;
 		}
 	    }
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
 			bg_color);
 		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
@@ -535,9 +545,6 @@ finish_screen_init(void)
 			bg_color);
 		xhattr = get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color);
-	    }
-	    if (COLORS < 16) {
-		appres.color8 = true;
 	    }
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
 	    if (def_screen != alt_screen) {
@@ -551,7 +558,7 @@ finish_screen_init(void)
 		}
 		start_color();
 		curses_alt = !curses_alt;
-		(void) get_color_pair(field_colors[2], bg_color);
+		get_color_pair(field_colors[2], bg_color);
 		curses_alt = !curses_alt;
 		set_term(s);
 
@@ -559,7 +566,7 @@ finish_screen_init(void)
 #endif /*]*/
 	} else {
 	    appres.interactive.mono = true;
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	    /* Get the terminal name right. */
 	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
@@ -569,14 +576,6 @@ finish_screen_init(void)
     scroll_buf_init();
 
     screen_init2();
-}
-
-/* When the host connects, really initialize the screen. */
-static void
-screen_connect(bool connected)
-{
-	if (connected && !screen_initted)
-	    	finish_screen_init();
 }
 
 /* Configure the TTY settings for a curses screen. */
@@ -605,8 +604,8 @@ setup_tty(void)
 static void
 swap_screens(SCREEN *new_screen)
 {
-	set_term(new_screen);
-	cur_screen = new_screen;
+    set_term(new_screen);
+    cur_screen = new_screen;
 }
 #endif /*]*/
 
@@ -647,7 +646,9 @@ screen_init2(void)
 #endif /*]*/
 
     /* Subscribe to input events. */
-    input_id = AddInput(0, kybd_input);
+    if (input_id == NULL_IOID) {
+	input_id = AddInput(0, kybd_input);
+    }
 
     /* Ignore SIGINT and SIGTSTP. */
     signal(SIGINT, SIG_IGN);
@@ -695,58 +696,64 @@ set_status_row(int screen_rows, int emulator_rows)
 static bool
 ts_value(const char *s, enum ts *tsp)
 {
-	*tsp = TS_AUTO;
+    *tsp = TS_AUTO;
 
-	if (s != NULL && s[0]) {
-		int sl = strlen(s);
+    if (s != NULL && s[0]) {
+	int sl = strlen(s);
 
-		if (!strncasecmp(s, "true", sl))
-			*tsp = TS_ON;
-		else if (!strncasecmp(s, "false", sl))
-			*tsp = TS_OFF;
-		else if (strncasecmp(s, "auto", sl))
-			return false;
+	if (!strncasecmp(s, "true", sl)) {
+	    *tsp = TS_ON;
+	} else if (!strncasecmp(s, "false", sl)) {
+	    *tsp = TS_OFF;
+	} else if (strncasecmp(s, "auto", sl)) {
+	    return false;
 	}
-	return true;
+    }
+    return true;
 }
 
 /* Allocate a color pair. */
 static int
 get_color_pair(int fg, int bg)
 {
-	static int next_pair[2] = { 1, 1 };
-	int pair;
+    static int next_pair[2] = { 1, 1 };
+    int pair;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION) /*[*/
-		/* ncurses allocates colors for each screen. */
-	int pair_index = !!curses_alt;
+	    /* ncurses allocates colors for each screen. */
+    int pair_index = !!curses_alt;
 #else /*][*/
-		/* curses allocates colors globally. */
-	const int pair_index = 0;
+	    /* curses allocates colors globally. */
+    const int pair_index = 0;
 #endif /*]*/
-	int bg_arg = bg;
-	int fg_arg = fg;
+    int bg_arg = bg;
+    int fg_arg = fg;
 
-	if ((pair = cp[fg][bg][pair_index]))
-		return COLOR_PAIR(pair);
-	if (next_pair[pair_index] >= COLOR_PAIRS)
-		return 0;
-#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-	/*
-	 * Assume that by default, the terminal displays some sort of 'white'
-	 * against some sort of 'black', and that looks better than the
-	 * explicit curses COLOR_WHITE over COLOR_BLACK.
-	 */
-	if (default_colors) {
-	    if (bg == COLOR_BLACK)
-		bg_arg = -1; /* use the default background, not black */
-	    if (fg == COLOR_WHITE)
-		fg_arg = -1; /* use the default foreground, not white */
-	}
-#endif /*]*/
-	if (init_pair(next_pair[pair_index], fg_arg, bg_arg) != OK)
-		return 0;
-	pair = cp[fg][bg][pair_index] = next_pair[pair_index]++;
+    if ((pair = cp[fg][bg][pair_index])) {
 	return COLOR_PAIR(pair);
+    }
+    if (next_pair[pair_index] >= COLOR_PAIRS) {
+	return 0;
+    }
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+    /*
+     * Assume that by default, the terminal displays some sort of 'white'
+     * against some sort of 'black', and that looks better than the
+     * explicit curses COLOR_WHITE over COLOR_BLACK.
+     */
+    if (default_colors) {
+	if (bg == COLOR_BLACK) {
+	    bg_arg = -1; /* use the default background, not black */
+	}
+	if (fg == COLOR_WHITE) {
+	    fg_arg = -1; /* use the default foreground, not white */
+	}
+    }
+#endif /*]*/
+    if (init_pair(next_pair[pair_index], fg_arg, bg_arg) != OK) {
+	return 0;
+    }
+    pair = cp[fg][bg][pair_index] = next_pair[pair_index]++;
+    return COLOR_PAIR(pair);
 }
 
 /*
@@ -755,38 +762,36 @@ get_color_pair(int fg, int bg)
 static void
 init_user_attribute_color(int *a, const char *resname)
 {
-    	char *r;
-	unsigned long l;
-	char *ptr;
-	int i;
+    char *r;
+    unsigned long l;
+    char *ptr;
+    int i;
 
-    	if ((r = get_resource(resname)) == NULL)
-		return;
-	for (i = 0; cc_name[i].name != NULL; i++) {
-	    	if (!strcasecmp(r, cc_name[i].name)) {
-		    	*a = cc_name[i].index;
-			return;
-		}
+    if ((r = get_resource(resname)) == NULL) {
+	return;
+    }
+    for (i = 0; cc_name[i].name != NULL; i++) {
+	if (!strcasecmp(r, cc_name[i].name)) {
+	    *a = cc_name[i].index;
+	    return;
 	}
-	l = strtoul(r, &ptr, 0);
-	if (ptr == r || *ptr != '\0' || (int)l >= COLORS) {
-	    	xs_warning("Invalid %s value: %s", resname, r);
-	    	return;
-	}
-	*a = (int)l;
+    }
+    l = strtoul(r, &ptr, 0);
+    if (ptr == r || *ptr != '\0' || (int)l >= COLORS) {
+	xs_warning("Invalid %s value: %s", resname, r);
+	return;
+    }
+    *a = (int)l;
 }
 
 static void
 init_user_attribute_colors(void)
 {
-	init_user_attribute_color(&field_colors[0],
-		ResCursesColorForDefault);
-	init_user_attribute_color(&field_colors[1],
-		ResCursesColorForIntensified);
-	init_user_attribute_color(&field_colors[2],
-		ResCursesColorForProtected);
-	init_user_attribute_color(&field_colors[3],
-		ResCursesColorForProtectedIntensified);
+    init_user_attribute_color(&field_colors[0], ResCursesColorForDefault);
+    init_user_attribute_color(&field_colors[1], ResCursesColorForIntensified);
+    init_user_attribute_color(&field_colors[2], ResCursesColorForProtected);
+    init_user_attribute_color(&field_colors[3],
+	    ResCursesColorForProtectedIntensified);
 }
 
 /*
@@ -796,29 +801,28 @@ init_user_attribute_colors(void)
 static int
 default_color_from_fa(unsigned char fa)
 {
-#	define DEFCOLOR_MAP(f) \
-		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
+#    define DEFCOLOR_MAP(f) \
+	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 
-	return field_colors[DEFCOLOR_MAP(fa)];
+    return field_colors[DEFCOLOR_MAP(fa)];
 }
 
 static int
 color_from_fa(unsigned char fa)
 {
-	if (appres.m3279) {
-		int fg;
+    if (mode.m3279) {
+	int fg;
 
-		fg = default_color_from_fa(fa);
-		return get_color_pair(fg, bg_color) |
-		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
-	} else if (!appres.interactive.mono) {
-		return get_color_pair(defcolor_offset + COLOR_GREEN,
-			bg_color) |
-		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
-	} else {
-	    	/* No color at all. */
-		return ((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL;
-	}
+	fg = default_color_from_fa(fa);
+	return get_color_pair(fg, bg_color) |
+	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
+    } else if (!appres.interactive.mono) {
+	return get_color_pair(defcolor_offset + COLOR_GREEN, bg_color) |
+	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
+    } else {
+	/* No color at all. */
+	return ((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL;
+    }
 }
 
 /*
@@ -827,41 +831,43 @@ color_from_fa(unsigned char fa)
 /*static*/ void
 init_user_color(const char *name, int ix)
 {
-    	char *r;
-	int i;
-	unsigned long l;
-	char *ptr;
+    char *r;
+    int i;
+    unsigned long l;
+    char *ptr;
 
-	r = get_fresource("%s%s", ResCursesColorForHostColor, name);
-	if (r == NULL)
-		r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
-	if (r == NULL)
-	    	return;
+    r = get_fresource("%s%s", ResCursesColorForHostColor, name);
+    if (r == NULL) {
+	r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
+    }
+    if (r == NULL) {
+	return;
+    }
 
-	for (i = 0; cc_name[i].name != NULL; i++) {
-	    	if (!strcasecmp(r, cc_name[i].name)) {
-		    	cmap[ix] = cc_name[i].index;
-			return;
-		}
+    for (i = 0; cc_name[i].name != NULL; i++) {
+	if (!strcasecmp(r, cc_name[i].name)) {
+	    cmap[ix] = cc_name[i].index;
+	    return;
 	}
+    }
 
-	l = strtoul(r, &ptr, 0);
-	if (ptr != r && *ptr == '\0' && (int)l < COLORS) {
-	    	cmap[ix] = (int)l;
-		return;
-	}
+    l = strtoul(r, &ptr, 0);
+    if (ptr != r && *ptr == '\0' && (int)l < COLORS) {
+	cmap[ix] = (int)l;
+	return;
+    }
 
-	xs_warning("Invalid %s value '%s'", ResCursesColorForHostColor, r);
+    xs_warning("Invalid %s value '%s'", ResCursesColorForHostColor, r);
 }
 
 static void
 init_user_colors(void)
 {
-	int i;
+    int i;
 
-	for (i = 0; host_color[i].name != NULL; i++) {
-	    	init_user_color(host_color[i].name, host_color[i].index);
-	}
+    for (i = 0; host_color[i].name != NULL; i++) {
+	init_user_color(host_color[i].name, host_color[i].index);
+    }
 }
 
 /*
@@ -870,67 +876,70 @@ init_user_colors(void)
 static int
 calc_attrs(int baddr, int fa_addr, int fa)
 {
-    	int fg, bg, gr, a;
+    int fg, bg, gr, a;
 
-	if (FA_IS_ZERO(fa)) {
-		return color_from_fa(fa);
-	}
+    if (FA_IS_ZERO(fa)) {
+	return color_from_fa(fa);
+    }
 
-	/* Compute the color. */
+    /* Compute the color. */
 
-	/*
-	 * Monochrome is easy, and so is color if nothing is
-	 * specified.
-	 */
-	if (!appres.m3279 ||
-		(!ea_buf[baddr].fg &&
-		 !ea_buf[fa_addr].fg &&
-		 !ea_buf[baddr].bg &&
-		 !ea_buf[fa_addr].bg)) {
+    /*
+     * Monochrome is easy, and so is color if nothing is
+     * specified.
+     */
+    if (!mode.m3279 ||
+	    (!ea_buf[baddr].fg &&
+	     !ea_buf[fa_addr].fg &&
+	     !ea_buf[baddr].bg &&
+	     !ea_buf[fa_addr].bg)) {
 
-	    	a = color_from_fa(fa);
+	a = color_from_fa(fa);
 
+    } else {
+	/* The current location or the fa specifies the fg or bg. */
+	if (ea_buf[baddr].fg) {
+	    fg = cmap[ea_buf[baddr].fg & 0x0f];
+	} else if (ea_buf[fa_addr].fg) {
+	    fg = cmap[ea_buf[fa_addr].fg & 0x0f];
 	} else {
-
-		/* The current location or the fa specifies the fg or bg. */
-
-		if (ea_buf[baddr].fg)
-			fg = cmap[ea_buf[baddr].fg & 0x0f];
-		else if (ea_buf[fa_addr].fg)
-			fg = cmap[ea_buf[fa_addr].fg & 0x0f];
-		else
-			fg = default_color_from_fa(fa);
-
-		if (ea_buf[baddr].bg)
-			bg = cmap[ea_buf[baddr].bg & 0x0f];
-		else if (ea_buf[fa_addr].bg)
-			bg = cmap[ea_buf[fa_addr].bg & 0x0f];
-		else
-			bg = cmap[HOST_COLOR_NEUTRAL_BLACK];
-
-		a = get_color_pair(fg, bg);
-
+	    fg = default_color_from_fa(fa);
 	}
 
-	/* Compute the display attributes. */
+	if (ea_buf[baddr].bg) {
+	    bg = cmap[ea_buf[baddr].bg & 0x0f];
+	} else if (ea_buf[fa_addr].bg) {
+	    bg = cmap[ea_buf[fa_addr].bg & 0x0f];
+	} else {
+	    bg = cmap[HOST_COLOR_NEUTRAL_BLACK];
+	}
 
-	if (ea_buf[baddr].gr)
-		gr = ea_buf[baddr].gr;
-	else if (ea_buf[fa_addr].gr)
-		gr = ea_buf[fa_addr].gr;
-	else
-		gr = 0;
+	a = get_color_pair(fg, bg);
+    }
 
-	if (gr & GR_BLINK)
-		a |= A_BLINK;
-	if (gr & GR_REVERSE)
-		a |= A_REVERSE;
-	if (gr & GR_UNDERLINE)
-		a |= A_UNDERLINE;
-	if ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa))
-		a |= A_BOLD;
+    /* Compute the display attributes. */
+    if (ea_buf[baddr].gr) {
+	gr = ea_buf[baddr].gr;
+    } else if (ea_buf[fa_addr].gr) {
+	gr = ea_buf[fa_addr].gr;
+    } else {
+	gr = 0;
+    }
 
-	return a;
+    if (gr & GR_BLINK) {
+	a |= A_BLINK;
+    }
+    if (gr & GR_REVERSE) {
+	a |= A_REVERSE;
+    }
+    if (gr & GR_UNDERLINE) {
+	a |= A_UNDERLINE;
+    }
+    if ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa)) {
+	a |= A_BOLD;
+    }
+
+    return a;
 }
 
 /*
@@ -999,7 +1008,7 @@ draw_crosshair(ucs4_t u, bool acs)
 {
     char mb[16];
 
-    (void) attrset(xhattr);
+    attrset(xhattr);
 #if defined(CURSES_WIDE) /*[*/
     if (u < 0x100 || acs) {
 	addch(u);
@@ -1071,7 +1080,7 @@ screen_disp(bool erasing _is_unused)
 	int norm, high;
 
 	if (menu_is_up) {
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
 	    } else {
@@ -1079,7 +1088,7 @@ screen_disp(bool erasing _is_unused)
 		high = defattr | A_BOLD;
 	    }
 	} else {
-	    if (appres.m3279) {
+	    if (mode.m3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 	    } else {
@@ -1092,7 +1101,7 @@ screen_disp(bool erasing _is_unused)
 	    move(row, 0);
 	    for (col = 0; col < cCOLS; col++) {
 		if (menu_char(row, col, true, &u, &highlight, &acs)) {
-		    (void) attrset(highlight? high: norm);
+		    attrset(highlight? high: norm);
 #if defined(CURSES_WIDE) /*[*/
 		    if (u < 0x100 || acs) {
 			addch(u);
@@ -1105,7 +1114,7 @@ screen_disp(bool erasing _is_unused)
 		    addch(u);
 #endif /*]*/
 		} else {
-		    (void) attrset(norm);
+		    attrset(norm);
 		    addch(' ');
 		}
 	    }
@@ -1142,19 +1151,19 @@ screen_disp(bool erasing _is_unused)
 		if (!u) {
 		    abort();
 		}
-		if (appres.m3279) {
+		if (mode.m3279) {
 		    if (highlight) {
-			(void) attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
+			attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
 				    HOST_COLOR_NEUTRAL_WHITE));
 		    } else {
-			(void) attrset(get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
+			attrset(get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
 				    HOST_COLOR_NEUTRAL_BLACK));
 		    }
 		} else {
 		    if (highlight) {
-			(void) attrset(defattr | A_BOLD);
+			attrset(defattr | A_BOLD);
 		    } else {
-			(void) attrset(defattr);
+			attrset(defattr);
 		    }
 		}
 #if defined(CURSES_WIDE) /*[*/
@@ -1177,7 +1186,7 @@ screen_disp(bool erasing _is_unused)
 		field_attrs = calc_attrs(baddr, baddr, fa);
 		if (!is_menu) {
 		    if (toggled(VISIBLE_CONTROL)) {
-			(void) attrset(get_color_pair(COLOR_YELLOW,
+			attrset(get_color_pair(COLOR_YELLOW,
 				    COLOR_BLACK) | A_BOLD | A_UNDERLINE);
 			addch(visible_fa(fa));
 		    } else {
@@ -1194,7 +1203,7 @@ screen_disp(bool erasing _is_unused)
 		if (!is_menu) {
 		    u = crosshair_blank(baddr, &acs);
 		    if (u == ' ') {
-			(void) attrset(field_attrs & attr_mask);
+			attrset(field_attrs & attr_mask);
 			addch(' ');
 		    } else {
 			draw_crosshair(u, acs);
@@ -1216,7 +1225,7 @@ screen_disp(bool erasing _is_unused)
 		      ea_buf[baddr].fg ||
 		      ea_buf[baddr].bg)) {
 		    attrs = field_attrs & attr_mask;
-		    (void) attrset(attrs);
+		    attrset(attrs);
 		    if (field_attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
@@ -1226,7 +1235,7 @@ screen_disp(bool erasing _is_unused)
 
 		    buf_attrs = calc_attrs(baddr, fa_addr, fa);
 		    attrs = buf_attrs & attr_mask;
-		    (void) attrset(attrs);
+		    attrset(attrs);
 		    if (buf_attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
@@ -1237,45 +1246,62 @@ screen_disp(bool erasing _is_unused)
 
 		    INC_BA(xaddr);
 		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null &&
-			    ea_buf[xaddr].cc == EBC_null) {
-			(void) attrset(attrs | A_UNDERLINE);
+			    ea_buf[baddr].ec == EBC_null &&
+			    ea_buf[xaddr].ec == EBC_null) {
+			attrset(attrs | A_UNDERLINE);
 			addstr("..");
 		    } else {
-			len = ebcdic_to_multibyte(
-				(ea_buf[baddr].cc << 8) |
-				 ea_buf[xaddr].cc,
-				mb, sizeof(mb));
+			if (ea_buf[baddr].ucs4 != 0) {
+			    len = unicode_to_multibyte(ea_buf[baddr].ucs4,
+				    mb, sizeof(mb));
+			} else {
+			    len = ebcdic_to_multibyte(
+				    (ea_buf[baddr].ec << 8) |
+				     ea_buf[xaddr].ec,
+				    mb, sizeof(mb));
+			}
 			addstr(mb);
 		    }
 		} else if (!IS_RIGHT(d)) {
 		    if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_null) {
-			(void) attrset(attrs | A_UNDERLINE);
+			    ea_buf[baddr].ucs4 == 0 &&
+			    ea_buf[baddr].ec == EBC_null) {
+			attrset(attrs | A_UNDERLINE);
 			addstr(".");
 		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_so) {
-			(void) attrset(attrs | A_UNDERLINE);
+			    ea_buf[baddr].ec == EBC_so) {
+			attrset(attrs | A_UNDERLINE);
 			addstr("<");
 		    } else if (toggled(VISIBLE_CONTROL) &&
-			    ea_buf[baddr].cc == EBC_si) {
-			(void) attrset(attrs | A_UNDERLINE);
+			    ea_buf[baddr].ec == EBC_si) {
+			attrset(attrs | A_UNDERLINE);
 			addstr(">");
 		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
-			display_linedraw(ea_buf[baddr].cc);
+			display_linedraw(ea_buf[baddr].ucs4);
 		    } else if (ea_buf[baddr].cs == CS_APL ||
 			    (ea_buf[baddr].cs & CS_GE)) {
-			display_ge(ea_buf[baddr].cc);
+			display_ge(ea_buf[baddr].ec);
 		    } else {
 			bool done_sbcs = false;
+			ucs4_t uu;
 
-			len = ebcdic_to_multibyte_x(
-				    ea_buf[baddr].cc,
-				    CS_BASE, mb,
-				    sizeof(mb),
-				    EUO_BLANK_UNDEF |
-			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
-				    NULL);
+			if ((uu = ea_buf[baddr].ucs4) != 0) {
+			    if (toggled(MONOCASE)) {
+				uu = u_toupper(uu);
+			    }
+			    len = unicode_to_multibyte(uu, mb, sizeof(mb));
+			} else {
+			    unsigned flags = EUO_BLANK_UNDEF |
+			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0) |
+			       (toggled(MONOCASE)? EUO_TOUPPER: 0);
+
+			    len = ebcdic_to_multibyte_x(
+					ea_buf[baddr].ec,
+					CS_BASE, mb,
+					sizeof(mb),
+					flags,
+					NULL);
+			}
 			if (len > 0) {
 			    len--;
 			}
@@ -1290,11 +1316,6 @@ screen_disp(bool erasing _is_unused)
 			    if (toggled(UNDERSCORE) && underlined &&
 				    (len == 1) && mb[0] == ' ') {
 				mb[0] = '_';
-			    }
-			    if (toggled(MONOCASE) && (len == 1) &&
-				    !(mb[0] & 0x80) &&
-				    islower((unsigned char)mb[0])) {
-				mb[0] = toupper((unsigned char)mb[0]);
 			    }
 #if defined(CURSES_WIDE) /*[*/
 			    addstr(mb);
@@ -1314,7 +1335,7 @@ screen_disp(bool erasing _is_unused)
     if (status_row) {
 	draw_oia();
     }
-    (void) attrset(defattr);
+    attrset(defattr);
     if (menu_is_up) {
 	menu_cursor(&row, &col);
 	move(row, col);
@@ -1337,174 +1358,168 @@ static bool meta_escape = false;
 static void
 escape_timeout(ioid_t id _is_unused)
 {
-	vtrace("Timeout waiting for key following Escape, processing "
-	    "separately\n");
-	eto = 0L;
-	meta_escape = false;
-	kybd_input2(0, 0x1b, 0);
+    vtrace("Timeout waiting for key following Escape, processing separately\n");
+    eto = 0L;
+    meta_escape = false;
+    kybd_input2(0, 0x1b, 0);
 }
 
 /* Keyboard input. */
 static void
 kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-	int k = 0;		/* KEY_XXX, or 0 */
-	ucs4_t ucs4 = 0;	/* input character, or 0 */
-	bool first = true;
-	static bool failed_first = false;
+    int k = 0;		/* KEY_XXX, or 0 */
+    ucs4_t ucs4 = 0;	/* input character, or 0 */
+    bool first = true;
+    static bool failed_first = false;
 
-	for (;;) {
-		volatile int alt = 0;
-		char dbuf[128];
+    for (;;) {
+	volatile int alt = 0;
+	char dbuf[128];
 #if defined(CURSES_WIDE) /*[*/
-		wint_t wch;
-		size_t sz;
+	wint_t wch;
+	size_t sz;
 #endif /*]*/
 
-		if (isendwin())
-			return;
-		ucs4 = 0;
+	if (isendwin()) {
+	    return;
+	}
+	ucs4 = 0;
 #if defined(CURSES_WIDE) /*[*/
-		k = wget_wch(stdscr, &wch);
+	k = wget_wch(stdscr, &wch);
 #else /*][*/
-		k = wgetch(stdscr);
+	k = wgetch(stdscr);
 #endif /*]*/
-		vtrace("k=%d "
+	vtrace("kbd_input: k=%d "
 # if defined(CURSES_WIDE) /*[*/
-			            "wch=%lu "
+		       "wch=%lu "
 # endif /*]*/
-				              "\n",
-			                            k
+				  "\n",
+					k
 # if defined(CURSES_WIDE) /*[*/
-			                             , (unsigned long)wch
+					 , (unsigned long)wch
 # endif /*]*/
-			                                  );
-		if (k == ERR) {
-			if (first) {
-				if (failed_first) {
-					vtrace("End of File, exiting.\n");
-					x3270_exit(1);
-				}
-				failed_first = true;
-			}
-			vtrace("k == ERR, return\n");
-			return;
-		} else {
-			failed_first = false;
+						             );
+	if (k == ERR) {
+	    if (first) {
+		if (failed_first) {
+		    vtrace("End of File, exiting.\n");
+		    x3270_exit(1);
 		}
+		failed_first = true;
+	    }
+	    vtrace("kbd_input: k == ERR, return\n");
+	    return;
+	} else {
+	    failed_first = false;
+	}
 #if !defined(CURSES_WIDE) /*[*/
-		/* Differentiate between KEY_XXX and regular input. */
-		if (!(k & ~0xff)) {
-			char mb[2];
-			int consumed;
-			enum me_fail error;
+	/* Differentiate between KEY_XXX and regular input. */
+	if (!(k & ~0xff)) {
+	    char mb[2];
+	    int consumed;
+	    enum me_fail error;
 
-			/* Convert from local multi-byte to Unicode. */
-			mb[0] = k;
-			mb[1] = '\0';
-			ucs4 = multibyte_to_unicode(mb, 1, &consumed, &error);
-			if (ucs4 == 0) {
-				vtrace("Invalid input char 0x%x\n", k);
-				return;
-			}
-			k = 0;
-		}
+	    /* Convert from local multi-byte to Unicode. */
+	    mb[0] = k;
+	    mb[1] = '\0';
+	    ucs4 = multibyte_to_unicode(mb, 1, &consumed, &error);
+	    if (ucs4 == 0) {
+		vtrace("Invalid input char 0x%x\n", k);
+		return;
+	    }
+	    k = 0;
+	}
 #endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
-		if (k == KEY_CODE_YES)
-			k = (int)wch;	/* KEY_XXX */
-		else {
-			char mbs[16];
-			wchar_t wcs[2];
+	if (k == KEY_CODE_YES)
+	    k = (int)wch;	/* KEY_XXX */
+	else {
+	    char mbs[16];
+	    wchar_t wcs[2];
 
-			k = 0;
-			wcs[0] = wch;
-			wcs[1] = 0;
-			sz = wcstombs(mbs, wcs, sizeof(mbs));
-			if (sz == (size_t)-1) {
-				vtrace("Invalid input wchar 0x%lx\n",
-					(unsigned long)wch);
-				return;
-			}
-			if (sz == 1) {
-				ucs4 = mbs[0] & 0xff;
-			} else {
-			    	int consumed;
-				enum me_fail error;
+	    k = 0;
+	    wcs[0] = wch;
+	    wcs[1] = 0;
+	    sz = wcstombs(mbs, wcs, sizeof(mbs));
+	    if (sz == (size_t)-1) {
+		vtrace("Invalid input wchar 0x%lx\n", (unsigned long)wch);
+		return;
+	    }
+	    if (sz == 1) {
+		ucs4 = mbs[0] & 0xff;
+	    } else {
+		int consumed;
+		enum me_fail error;
 
-			    	ucs4 = multibyte_to_unicode(mbs, sz, &consumed,
-					&error);
-				if (ucs4 == 0) {
-					vtrace("Unsupported input "
-						"wchar 0x%lx\n",
-						(unsigned long)wch);
-					return;
-				}
-			}
+		ucs4 = multibyte_to_unicode(mbs, sz, &consumed, &error);
+		if (ucs4 == 0) {
+		    vtrace("Unsupported input wchar 0x%lx\n",
+			    (unsigned long)wch);
+		    return;
 		}
+	    }
+	}
 #endif /*]*/
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-		if (k == KEY_MOUSE) {
-		    	MEVENT m;
+	if (k == KEY_MOUSE) {
+	    MEVENT m;
 
-			if (menu_is_up) {
-			    menu_key(MK_MOUSE, 0);
-			    return;
-			}
-			if (getmouse(&m) != OK)
-			    return;
-			if ((m.bstate & BUTTON1_RELEASED)) {
-			    	vtrace("Mouse BUTTON1_RELEASED "
-					"(x=%d,y=%d)\n",
-					m.x, m.y);
-				if (screen_yoffset != 0 && m.y == 0) {
-					popup_menu(m.x, (screen_yoffset != 0));
-					screen_disp(false);
-				} else if (status_row &&
-					m.x == rmargin - 28 &&
-					m.y == status_row) {
-				    run_action("Show", IA_DEFAULT, "Stats",
-					    NULL);
-				} else if (m.x < cCOLS &&
-					   m.y - screen_yoffset >= 0 &&
-					   m.y - screen_yoffset < ROWS) {
-					if (flipped)
-						cursor_move(((m.y - screen_yoffset) * cCOLS) +
-							(cCOLS - m.x));
-					else
-						cursor_move(((m.y - screen_yoffset) * cCOLS) +
-							m.x);
-					move(m.y + screen_yoffset, m.x);
-					refresh();
-				}
-			}
-			return;
+	    if (menu_is_up) {
+		menu_key(MK_MOUSE, 0);
+		return;
+	    }
+	    if (getmouse(&m) != OK) {
+		return;
+	    }
+	    if ((m.bstate & BUTTON1_RELEASED)) {
+		vtrace("Mouse BUTTON1_RELEASED (x=%d,y=%d)\n", m.x, m.y);
+		if (screen_yoffset != 0 && m.y == 0) {
+		    popup_menu(m.x, (screen_yoffset != 0));
+		    screen_disp(false);
+		} else if (status_row &&
+		    m.x == rmargin - 28 &&
+		    m.y == status_row) {
+			run_action("Show", IA_DEFAULT, "Stats", NULL);
+		} else if (m.x < cCOLS &&
+			   m.y - screen_yoffset >= 0 &&
+			   m.y - screen_yoffset < ROWS) {
+		    if (flipped) {
+			cursor_move(((m.y - screen_yoffset) * cCOLS) +
+				(cCOLS - m.x));
+		    } else {
+			cursor_move(((m.y - screen_yoffset) * cCOLS) + m.x);
+		    }
+		    move(m.y + screen_yoffset, m.x);
+		    refresh();
 		}
+	    }
+	    return;
+	}
 #endif /*]*/
 
-		/* Handle Meta-Escapes. */
-		if (meta_escape) {
-			if (eto != 0L) {
-				RemoveTimeOut(eto);
-				eto = 0L;
-			}
-			meta_escape = false;
-			alt = KM_ALT;
-		} else if (me_mode == TS_ON && ucs4 == 0x1b) {
-			vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
-				decode_key(k, ucs4, alt, dbuf), k, ucs4);
-			eto = AddTimeOut(100L, escape_timeout);
-			vtrace(" waiting to see if Escape is followed by"
-			    " another key\n");
-			meta_escape = true;
-			continue;
-		}
-		vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
-			decode_key(k, ucs4, alt, dbuf), k, ucs4);
-		kybd_input2(k, ucs4, alt);
-		first = false;
+	/* Handle Meta-Escapes. */
+	if (meta_escape) {
+	    if (eto != 0L) {
+		RemoveTimeOut(eto);
+		eto = 0L;
+	    }
+	    meta_escape = false;
+	    alt = KM_ALT;
+	} else if (me_mode == TS_ON && ucs4 == 0x1b) {
+	    vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+		    decode_key(k, ucs4, alt, dbuf), k, ucs4);
+	    eto = AddTimeOut(100L, escape_timeout);
+	    vtrace(" waiting to see if Escape is followed by another key\n");
+	    meta_escape = true;
+	    continue;
 	}
+	vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+		decode_key(k, ucs4, alt, dbuf), k, ucs4);
+	kybd_input2(k, ucs4, alt);
+	first = false;
+    }
 }
 
 /* Translate a curses key to a menubar abstract key. */
@@ -1540,222 +1555,242 @@ key_to_mkey(int k)
 static void
 kybd_input2(int k, ucs4_t ucs4, int alt)
 {
-	char buf[16];
-	char *action;
-	int i;
+    char buf[16];
+    char *action;
+    int i;
 
-	if (menu_is_up) {
-	    menu_key(key_to_mkey(k), ucs4);
-	    screen_disp(false);
-	    return;
+    if (menu_is_up) {
+	menu_key(key_to_mkey(k), ucs4);
+	screen_disp(false);
+	return;
+    }
+
+    action = lookup_key(k, ucs4, alt);
+    if (action != NULL) {
+	if (strcmp(action, "[ignore]")) {
+	    push_keymap_action(action);
 	}
+	return;
+    }
+    ia_cause = IA_DEFAULT;
 
-	action = lookup_key(k, ucs4, alt);
-	if (action != NULL) {
-		if (strcmp(action, "[ignore]"))
-			push_keymap_action(action);
-		return;
-	}
-	ia_cause = IA_DEFAULT;
+    /* These first cases apply to both 3270 and NVT modes. */
+    switch (k) {
+    case KEY_UP:
+	run_action("Up", IA_DEFAULT, NULL, NULL);
+	return;
+    case KEY_DOWN:
+	run_action("Down", IA_DEFAULT, NULL, NULL);
+	return;
+    case KEY_LEFT:
+	run_action("Left", IA_DEFAULT, NULL, NULL);
+	return;
+    case KEY_RIGHT:
+	run_action("Right", IA_DEFAULT, NULL, NULL);
+	return;
+    case KEY_HOME:
+	run_action("Right", IA_DEFAULT, NULL, NULL);
+	return;
+    default:
+	break;
+    }
+    switch (ucs4) {
+    case 0x1d:
+	run_action("Escape", IA_DEFAULT, NULL, NULL);
+	return;
+    }
 
-	/* These first cases apply to both 3270 and NVT modes. */
+    /* Then look for 3270-only cases. */
+    if (IN_3270) {
 	switch (k) {
-	case KEY_UP:
-		run_action("Up", IA_DEFAULT, NULL, NULL);
-		return;
-	case KEY_DOWN:
-		run_action("Down", IA_DEFAULT, NULL, NULL);
-		return;
-	case KEY_LEFT:
-		run_action("Left", IA_DEFAULT, NULL, NULL);
-		return;
-	case KEY_RIGHT:
-		run_action("Right", IA_DEFAULT, NULL, NULL);
-		return;
+	case KEY_DC:
+	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    return;
+	case KEY_BACKSPACE:
+	    run_action("BackSpace", IA_DEFAULT, NULL, NULL);
+	    return;
 	case KEY_HOME:
-		run_action("Right", IA_DEFAULT, NULL, NULL);
-		return;
+	    run_action("Home", IA_DEFAULT, NULL, NULL);
+	    return;
 	default:
-		break;
+	    break;
 	}
 	switch (ucs4) {
-	case 0x1d:
-		run_action("Escape", IA_DEFAULT, NULL, NULL);
-		return;
+	case 0x03:
+	    run_action("Clear", IA_DEFAULT, NULL, NULL);
+	    return;
+	case 0x12:
+	    run_action("Reset", IA_DEFAULT, NULL, NULL);
+	    return;
+	case 'L' & 0x1f:
+	    run_action("Redraw", IA_DEFAULT, NULL, NULL);
+	    return;
+	case '\t':
+	    run_action("Tab", IA_DEFAULT, NULL, NULL);
+	    return;
+	case 0177:
+	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    return;
+	case '\b':
+	    run_action("BackSpace", IA_DEFAULT, NULL, NULL);
+	    return;
+	case '\r':
+	    run_action("Enter", IA_DEFAULT, NULL, NULL);
+	    return;
+	case '\n':
+	    run_action("Newline", IA_DEFAULT, NULL, NULL);
+	    return;
+	default:
+	    break;
 	}
+    }
 
-	/* Then look for 3270-only cases. */
-	if (IN_3270) {
-	    	switch(k) {
-		case KEY_DC:
-			run_action("Delete", IA_DEFAULT, NULL, NULL);
-			return;
-		case KEY_BACKSPACE:
-			run_action("BackSpace", IA_DEFAULT, NULL, NULL);
-			return;
-		case KEY_HOME:
-			run_action("Home", IA_DEFAULT, NULL, NULL);
-			return;
-		default:
-			break;
-		}
-	    	switch(ucs4) {
-		case 0x03:
-			run_action("Clear", IA_DEFAULT, NULL, NULL);
-			return;
-		case 0x12:
-			run_action("Reset", IA_DEFAULT, NULL, NULL);
-			return;
-		case 'L' & 0x1f:
-			run_action("Redraw", IA_DEFAULT, NULL, NULL);
-			return;
-		case '\t':
-			run_action("Tab", IA_DEFAULT, NULL, NULL);
-			return;
-		case 0177:
-			run_action("Delete", IA_DEFAULT, NULL, NULL);
-			return;
-		case '\b':
-			run_action("BackSpace", IA_DEFAULT, NULL, NULL);
-			return;
-		case '\r':
-			run_action("Enter", IA_DEFAULT, NULL, NULL);
-			return;
-		case '\n':
-			run_action("Newline", IA_DEFAULT, NULL, NULL);
-			return;
-		default:
-			break;
-		}
-
-	}
-
-	/* Do some NVT-only translations. */
-	if (IN_NVT) switch (k) {
+    /* Do some NVT-only translations. */
+    if (IN_NVT) {
+	switch (k) {
 	case KEY_DC:
-	    	ucs4 = 0x7f;
-		k = 0;
-		break;
+	    ucs4 = 0x7f;
+	    k = 0;
+	    break;
 	case KEY_BACKSPACE:
-		ucs4 = '\b';
-		k = 0;
-		break;
+	    ucs4 = '\b';
+	    k = 0;
+	    break;
 	}
+    }
 
-	/* Catch PF keys. */
-	for (i = 1; i <= 24; i++) {
-		if (k == KEY_F(i)) {
-			(void) sprintf(buf, "%d", i);
-			run_action("PF", IA_DEFAULT, buf, NULL);
-			return;
-		}
+    /* Catch PF keys. */
+    for (i = 1; i <= 24; i++) {
+	if (k == KEY_F(i)) {
+	    sprintf(buf, "%d", i);
+	    run_action("PF", IA_DEFAULT, buf, NULL);
+	    return;
 	}
+    }
 
-	/* Then any other 8-bit ASCII character. */
-	if (ucs4) {
-		char ks[16];
+    /* Then any other 8-bit ASCII character. */
+    if (ucs4) {
+	char ks[16];
 
-		sprintf(ks, "U+%04x", ucs4);
-		run_action("Key", IA_DEFAULT, ks, NULL);
-		return;
-	}
-	vtrace(" dropped (no default)\n");
+	sprintf(ks, "U+%04x", ucs4);
+	run_action("Key", IA_DEFAULT, ks, NULL);
+	return;
+    }
+
+    vtrace(" dropped (no default)\n");
 }
 
 bool
 screen_suspend(void)
 {
-	static bool need_to_scroll = false;
-	bool needed = false;
+    static bool need_to_scroll = false;
+    bool needed = false;
 
-	if (!initscr_done) {
-		return false;
-	}
+    if (!initscr_done) {
+	return false;
+    }
 
-	if (!isendwin()) {
+    if (!isendwin()) {
 #if defined(C3270_80_132) /*[*/
-		if (def_screen != alt_screen) {
-			/*
-			 * Call endwin() for the last-defined screen
-			 * (altscreen) first.  Note that this will leave
-			 * the curses screen set to defscreen when this
-			 * function exits; if the 3270 is really in altscreen
-			 * mode, we will have to switch it back when we resume
-			 * the screen, below.
-			 */
-			if (!curses_alt)
-				swap_screens(alt_screen);
-			endwin();
-			swap_screens(def_screen);
-			endwin();
-		} else {
-			endwin();
-		}
+	if (def_screen != alt_screen) {
+	    /*
+	     * Call endwin() for the last-defined screen
+	     * (altscreen) first.  Note that this will leave
+	     * the curses screen set to defscreen when this
+	     * function exits; if the 3270 is really in altscreen
+	     * mode, we will have to switch it back when we resume
+	     * the screen, below.
+	     */
+	    if (!curses_alt) {
+		swap_screens(alt_screen);
+	    }
+	    endwin();
+	    swap_screens(def_screen);
+	    endwin();
+	} else {
+	    endwin();
+	}
 #else /*][*/
-		endwin();
+	endwin();
 #endif /*]*/
-		needed = true;
+	needed = true;
+    }
+
+    if (!escaped) {
+	escaped = true;
+
+	if (need_to_scroll) {
+	    printf("\n");
+	} else {
+	    need_to_scroll = true;
 	}
-
-	if (!escaped) {
-		escaped = true;
-
-		if (need_to_scroll)
-			printf("\n");
-		else
-			need_to_scroll = true;
 #if defined(C3270_80_132) /*[*/
-		if (curses_alt && def_screen != alt_screen) {
-			if (write(1, defscreen_spec.mode_switch,
-			    strlen(defscreen_spec.mode_switch)) < 0)
-			    	x3270_exit(1);
-		}
-#endif /*]*/
-		RemoveInput(input_id);
+	if (curses_alt && def_screen != alt_screen) {
+	    if (write(1, defscreen_spec.mode_switch,
+			strlen(defscreen_spec.mode_switch)) < 0) {
+		x3270_exit(1);
+	    }
 	}
+#endif /*]*/
+	RemoveInput(input_id);
+	input_id = NULL_IOID;
+    }
 
-	return needed;
+    return needed;
 }
 
 void
 screen_resume(void)
 {
-    	char *cl;
+    char *cl;
 
-	escaped = false;
+    if (!escaped) {
+	return;
+    }
 
-	/*
-	 * Clear the screen first, if possible, so future command output
-	 * starts at the bottom of the screen.
-	 */
-	if ((cl = tigetstr("clear")) != NULL)
-	    	putp(cl);
+    escaped = false;
 
-	/* Finish screen initialization. */
-	if (!screen_initted)
-	    	finish_screen_init();
+    /* Ignore signals we don't like. */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+
+    /*
+     * Clear the screen first, if possible, so future command output
+     * starts at the bottom of the screen.
+     */
+    if ((cl = tigetstr("clear")) != NULL) {
+	putp(cl);
+    }
+
+    /* Finish screen initialization. */
+    if (!screen_initted) {
+	finish_screen_init();
+    }
 
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != alt_screen && curses_alt) {
-		/*
-		 * When we suspended the screen, we switched to defscreen so
-		 * that endwin() got called in the right order.  Switch back.
-		 */
-		swap_screens(alt_screen);
-		if (write(1, altscreen_spec.mode_switch,
-		    strlen(altscreen_spec.mode_switch)) < 0)
-		    	x3270_exit(1);
+    if (def_screen != alt_screen && curses_alt) {
+	/*
+	 * When we suspended the screen, we switched to defscreen so
+	 * that endwin() got called in the right order.  Switch back.
+	 */
+	swap_screens(alt_screen);
+	if (write(1, altscreen_spec.mode_switch,
+	    strlen(altscreen_spec.mode_switch)) < 0) {
+	    x3270_exit(1);
 	}
+    }
 #endif /*]*/
-	screen_disp(false);
-	refresh();
+    screen_disp(false);
+    refresh();
+    if (input_id == NULL_IOID) {
 	input_id = AddInput(0, kybd_input);
+    }
 }
 
 void
 cursor_move(int baddr)
 {
-	cursor_addr = baddr;
+    cursor_addr = baddr;
 }
 
 static void
@@ -1811,264 +1846,318 @@ static bool oia_boxsolid = false;
 static bool oia_undera = true;
 static bool oia_compose = false;
 static bool oia_printer = false;
-static unsigned char oia_compose_char = 0;
+static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
+static char oia_script = ' ';
 
-static char *status_msg = "X Not Connected";
-static char *saved_status_msg = NULL;
-static ioid_t saved_status_timeout = NULL_IOID;
-static ioid_t oia_scroll_timeout = NULL_IOID;
-
-static void
-cancel_status_push(void)
-{
-    	saved_status_msg = NULL;
-	if (saved_status_timeout != NULL_IOID) {
-	    	RemoveTimeOut(saved_status_timeout);
-		saved_status_timeout = NULL_IOID;
-	}
-	if (oia_scroll_timeout != NULL_IOID) {
-		RemoveTimeOut(oia_scroll_timeout);
-		oia_scroll_timeout = NULL_IOID;
-	}
-}
+static ioid_t info_done_timeout = NULL_IOID;
+static ioid_t info_scroll_timeout = NULL_IOID;
 
 void
 status_ctlr_done(void)
 {
-	oia_undera = true;
+    oia_undera = true;
 }
 
 void
 status_insert_mode(bool on)
 {
-	status_im = on;
+    status_im = on;
 }
 
+/* Remove the info message. */
 static void
-status_pop(ioid_t id _is_unused)
+info_done(ioid_t id _is_unused)
 {
-    	status_msg = saved_status_msg;
-	saved_status_msg = NULL;
-	saved_status_timeout = NULL_IOID;
+    Replace(info_base_msg, NULL);
+    info_msg = NULL;
+    info_done_timeout = NULL_IOID;
 }
 
+/* Scroll the info message. */
 static void
-oia_scroll(ioid_t id _is_unused)
+info_scroll(ioid_t id _is_unused)
 {
-	status_msg++;
-	if (strlen(status_msg) > 35)
-		oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS,
-			oia_scroll);
-	else {
-		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
-		oia_scroll_timeout = NULL_IOID;
-	}
+    ++info_msg;
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS, info_scroll);
+    } else {
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
+	info_scroll_timeout = NULL_IOID;
+    }
 }
 
+/* Pop up an info message. */
 void
 status_push(char *msg)
 {
-    	if (saved_status_msg != NULL) {
-	    	/* Already showing something. */
-	    	RemoveTimeOut(saved_status_timeout);
-		saved_status_timeout = NULL_IOID;
-	} else {
-	    	saved_status_msg = status_msg;
-	}
+    char *new_msg = msg? NewString(msg): NULL;
 
-	status_msg = msg;
+    Replace(info_base_msg, new_msg);
+    info_msg = info_base_msg;
 
-	if (strlen(msg) > 35)
-		oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS,
-			oia_scroll);
-	else
-		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
+
+/*
+ * Reset the info message, so when it is revealed, it starts at the beginning.
+ */
+static void
+reset_info(void)
+{
+    if (info_base_msg != NULL) {
+	info_msg = info_base_msg;
+    }
+
+    /* Stop any timers. */
+    if (info_scroll_timeout != NULL_IOID) {
+	RemoveTimeOut(info_scroll_timeout);
+	info_scroll_timeout = NULL_IOID;
+    }
+    if (info_done_timeout != NULL_IOID) {
+	RemoveTimeOut(info_done_timeout);
+	info_done_timeout = NULL_IOID;
+    }
+}
+
+/*
+ * The info message has been displayed. Set the timer to scroll or erase it.
+ */
+static void
+set_info_timer(void)
+{
+    if (info_scroll_timeout != NULL_IOID || info_done_timeout != NULL_IOID) {
+	return;
+
+    }
+    if (strlen(info_msg) > 35) {
+	info_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS, info_scroll);
+    } else {
+	info_done_timeout = AddTimeOut(STATUS_PUSH_MS, info_done);
+    }
 }
 
 void
 status_minus(void)
 {
-    	cancel_status_push();
-	status_msg = "X -f";
+    other_msg = "X -f";
+    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	A_BOLD;
 }
 
 void
 status_oerr(int error_type)
 {
-    	cancel_status_push();
-
-	switch (error_type) {
-	case KL_OERR_PROTECTED:
-		status_msg = "X Protected";
-		break;
-	case KL_OERR_NUMERIC:
-		status_msg = "X Numeric";
-		break;
-	case KL_OERR_OVERFLOW:
-		status_msg = "X Overflow";
-		break;
-	}
+    switch (error_type) {
+    case KL_OERR_PROTECTED:
+	other_msg = "X Protected";
+	break;
+    case KL_OERR_NUMERIC:
+	other_msg = "X NUM";
+	break;
+    case KL_OERR_OVERFLOW:
+	other_msg = "X Overflow";
+	break;
+    }
+    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	A_BOLD;
 }
 
 void
 status_reset(void)
 {
-    	cancel_status_push();
-
-	if (!CONNECTED)
-	    	status_msg = "X Not Connected";
-	else if (kybdlock & KL_ENTER_INHIBIT)
-		status_msg = "X Inhibit";
-	else if (kybdlock & KL_DEFERRED_UNLOCK)
-		status_msg = "X";
-	else
-		status_msg = "";
+    if (kybdlock & KL_ENTER_INHIBIT) {
+	other_msg = "X Inhibit";
+    } else if (kybdlock & KL_DEFERRED_UNLOCK) {
+	other_msg = "X";
+    } else {
+	status_connect(PCONNECTED);
+    }
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
 status_reverse_mode(bool on)
 {
-	status_rm = on;
+    status_rm = on;
 }
 
 void
 status_syswait(void)
 {
-    	cancel_status_push();
-
-	status_msg = "X SYSTEM";
+    other_msg = "X SYSTEM";
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
 status_twait(void)
 {
-    	cancel_status_push();
-
-	oia_undera = false;
-	status_msg = "X Wait";
+    oia_undera = false;
+    other_msg = "X Wait";
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 void
 status_typeahead(bool on)
 {
-	status_ta = on;
+    status_ta = on;
 }
 
 void    
-status_compose(bool on, unsigned char c, enum keytype keytype)
+status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
-        oia_compose = on;
-        oia_compose_char = c;
-        oia_compose_keytype = keytype;
+    oia_compose = on;
+    oia_compose_char = ucs4;
+    oia_compose_keytype = keytype;
 }
 
 void
 status_lu(const char *lu)
 {
-	if (lu != NULL) {
-		(void) strncpy(oia_lu, lu, LUCNT);
-		oia_lu[LUCNT] = '\0';
-	} else
-		(void) memset(oia_lu, '\0', sizeof(oia_lu));
-}
-
-static void
-status_half_connect(bool half_connected)
-{
-	if (half_connected) {
-		/* Push the 'Connecting' status under whatever is popped up. */
-		if (saved_status_msg != NULL)
-			saved_status_msg = "X Connecting";
-		else
-			status_msg = "X Connecting";
-		oia_boxsolid = false;
-		status_secure = SS_INSECURE;
-	}
+    if (lu != NULL) {
+	strncpy(oia_lu, lu, LUCNT);
+	oia_lu[LUCNT] = '\0';
+    } else {
+	memset(oia_lu, '\0', sizeof(oia_lu));
+    }
 }
 
 static void
 status_connect(bool connected)
 {
-    	cancel_status_push();
-
-	if (connected) {
-		oia_boxsolid = IN_3270 && !IN_SSCP;
-		if (kybdlock & KL_AWAITING_FIRST)
-			status_msg = "X";
-		else
-			status_msg = "";
-		if (net_secure_connection()) {
-		    	if (net_secure_unverified())
-			    	status_secure = SS_UNVERIFIED;
-			else
-			    	status_secure = SS_SECURE;
-		} else
-			status_secure = SS_INSECURE;
+    if (connected) {
+	oia_boxsolid = IN_3270 && !IN_SSCP;
+	if (cstate == RECONNECTING) {
+	    other_msg = "X Reconnecting";
+	} else if (cstate == RESOLVING) {
+	    other_msg = "X [DNS]";
+	} else if (cstate == TCP_PENDING) {
+	    other_msg = "X [TCP]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TLS_PENDING) {
+	    other_msg = "X [TLS]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == PROXY_PENDING) {
+	    other_msg = "X [Proxy]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == TELNET_PENDING) {
+	    other_msg = "X [TELNET]";
+	    oia_boxsolid = false;
+	    status_secure = SS_INSECURE;
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    other_msg = "X [TN3270E]";
+	} else if (kybdlock & KL_AWAITING_FIRST) {
+	    other_msg = "X";
 	} else {
-		oia_boxsolid = false;
-		status_msg = "X Not Connected";
-		status_secure = SS_INSECURE;
-	}       
+	    other_msg = NULL;
+	}
+	if (net_secure_connection()) {
+	    if (net_secure_unverified()) {
+		status_secure = SS_UNVERIFIED;
+	    } else {
+		status_secure = SS_SECURE;
+	    }
+	} else {
+	    status_secure = SS_INSECURE;
+	}
+    } else {
+	oia_boxsolid = false;
+	other_msg = "X Not Connected";
+	status_secure = SS_INSECURE;
+    }       
+    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	A_BOLD;
 }
 
 static void
 status_3270_mode(bool ignored _is_unused)
 {
-	oia_boxsolid = IN_3270 && !IN_SSCP;
-	if (oia_boxsolid)
-		oia_undera = true;
+    oia_boxsolid = IN_3270 && !IN_SSCP;
+    if (oia_boxsolid) {
+	oia_undera = true;
+    }
 }
 
 static void
 status_printer(bool on)
 {
-	oia_printer = on;
+    oia_printer = on;
 }
 
 void
 status_timing(struct timeval *t0, struct timeval *t1)
 {
-	static char	no_time[] = ":??.?";
+    static char no_time[] = ":??.?";
 
-	if (t1->tv_sec - t0->tv_sec > (99*60)) {
-	    	strcpy(oia_timing, no_time);
+    if (t1->tv_sec - t0->tv_sec > (99*60)) {
+	strcpy(oia_timing, no_time);
+    } else {
+	unsigned long cs;	/* centiseconds */
+
+	cs = (t1->tv_sec - t0->tv_sec) * 10 +
+	     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
+	if (cs < CM) {
+	    sprintf(oia_timing,
+		    ":%02ld.%ld", cs / 10, cs % 10);
 	} else {
-		unsigned long cs;	/* centiseconds */
-
-		cs = (t1->tv_sec - t0->tv_sec) * 10 +
-		     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
-		if (cs < CM)
-			(void) sprintf(oia_timing,
-				":%02ld.%ld", cs / 10, cs % 10);
-		else
-			(void) sprintf(oia_timing,
-				"%02ld:%02ld", cs / CM, (cs % CM) / 10);
+	    sprintf(oia_timing,
+		    "%02ld:%02ld", cs / CM, (cs % CM) / 10);
 	}
+    }
 }
 
 void
 status_untiming(void)
 {
-    	oia_timing[0] = '\0';
+    oia_timing[0] = '\0';
 }
 
 void
 status_scrolled(int n)
 {
-	static char ssbuf[128];
+    if (n) {
+	Replace(scrolled_msg, xs_buffer("X Scrolled %d", n));
+    } else {
+	Replace(scrolled_msg, NULL);
+    }
+}
 
-	cancel_status_push();
-	if (n) {
-		snprintf(ssbuf, sizeof(ssbuf), "X Scrolled %d", n);
-		status_msg = ssbuf;
-	} else {
-	    	status_msg = "";
-	}
+/* Remove 'X Disabled'. */
+static void
+disabled_done(ioid_t id _is_unused)
+{
+    disabled_msg = NULL;
+    disabled_done_id = NULL_IOID;
+}
+
+/* Flash 'X Disabled' in the OIA. */
+void
+status_keyboard_disable_flash(void)
+{
+    if (disabled_done_id == NULL_IOID) {
+	disabled_msg = "X Disabled";
+    } else {
+	RemoveTimeOut(disabled_done_id);
+	disabled_done_id = NULL_IOID;
+    }
+    disabled_done_id = AddTimeOut(1000L, disabled_done);
 }
 
 void    
@@ -2084,9 +2173,9 @@ status_screentrace(int n)
 }     
 
 void
-status_script(bool on _is_unused)
+status_script(bool on)
 {
-    /* for now, nothing */
+    oia_script = on? 's': ' ';
 }
 
 static void
@@ -2097,6 +2186,8 @@ draw_oia(void)
     int cursor_row = cursor_addr / cCOLS;
     int cursor_col = cursor_addr % cCOLS;
     int fl_cursor_col = flipped? (cursesCOLS - 1 - cursor_col): cursor_col;
+    char *status_msg_now;
+    int msg_attr;
     static struct {
 	ucs4_t u;
 	unsigned char acs;
@@ -2127,7 +2218,7 @@ draw_oia(void)
     if (!appres.interactive.mono && !filled_extra[!!curses_alt]) {
 	int r, c;
 
-	(void) attrset(defattr);
+	attrset(defattr);
 	for (r = 0; r <= status_row; r++) {
 	    int c0;
 
@@ -2147,7 +2238,7 @@ draw_oia(void)
     if (!appres.interactive.mono) {
 	int i;
 
-	(void) attrset(defattr);
+	attrset(defattr);
 	if (status_skip) {
 	    move(status_skip + screen_yoffset, 0);
 	    for (i = 0; i < rmargin; i++) {
@@ -2212,11 +2303,14 @@ draw_oia(void)
 
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
-4AN     Status-Message--------------------- Cn TRIPS  LU-Name-   :ss.s  000/000
+4AN    Status-Message--------------------- Cn TRIPS+s LU-Name-   :ss.s  000/000
          7         6         5         4         3         2         1
 98765432109876543210987654321098765432109876543210987654321098765432109876543210
+                                                                        ^ -7
+                                                                 ^ -14
+                                                      ^-25
 
-   On wider displays, there is a bigger gap between TRIPS and LU-Name.
+   On wider displays, there is a bigger gap between TRIPSs and LU-Name.
 
 */
 
@@ -2228,7 +2322,7 @@ draw_oia(void)
      */
     if (status_row > screen_yoffset + maxROWS) {
 	int i;
-	(void) attrset(A_UNDERLINE | defattr);
+	attrset(A_UNDERLINE | defattr);
 	move(status_row - 1, 0);
 	for (i = 0; i < rmargin; i++) {
 	    if (toggled(CROSSHAIR) && i == fl_cursor_col) {
@@ -2244,21 +2338,21 @@ draw_oia(void)
 	int i;
 
 	move(status_row, 0);
-	(void) attrset(defattr);
+	attrset(defattr);
 	for (i = 0; i < cursesCOLS - 1; i++) {
 	    printw(" ");
 	}
     }
 
-    (void) attrset(A_REVERSE | defattr);
+    attrset(A_REVERSE | defattr);
     mvprintw(status_row, 0, "4");
-    (void) attrset(A_UNDERLINE | defattr);
+    attrset(A_UNDERLINE | defattr);
     if (oia_undera) {
 	printw("%c", IN_E? 'B': 'A');
     } else {
 	printw(" ");
     }
-    (void) attrset(A_REVERSE | defattr);
+    attrset(A_REVERSE | defattr);
     if (IN_NVT) {
 	printw("N");
     } else if (oia_boxsolid) {
@@ -2269,8 +2363,33 @@ draw_oia(void)
 	printw("?");
     }
 
-    (void) attrset(defattr);
-    mvprintw(status_row, 8, "%-35.35s", status_msg);
+    /* Figure out the status message. */
+    msg_attr = defattr;
+    if (disabled_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
+	    A_BOLD;
+	status_msg_now = disabled_msg;
+	reset_info();
+    } else if (scrolled_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	    A_BOLD;
+	status_msg_now = scrolled_msg;
+	reset_info();
+    } else if (info_msg != NULL) {
+	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
+	    A_BOLD;
+	status_msg_now = info_msg;
+	set_info_timer();
+    } else if (other_msg != NULL) {
+	status_msg_now = other_msg;
+	msg_attr = other_attr;
+    } else {
+	status_msg_now = "";
+    }
+
+    attrset(msg_attr);
+    mvprintw(status_row, 7, "%-35.35s", status_msg_now);
+    attrset(defattr);
     mvprintw(status_row, rmargin-35,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
@@ -2280,31 +2399,27 @@ draw_oia(void)
 	status_im? 'I': ' ',
 	oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	if (appres.m3279) {
-	    (void) attrset(get_color_pair(defcolor_offset +
+	if (mode.m3279) {
+	    attrset(get_color_pair(defcolor_offset +
 			((status_secure == SS_SECURE)?
 			 COLOR_GREEN: COLOR_YELLOW),
 			bg_color) | A_BOLD);
 	} else {
-	    (void) attrset(A_BOLD);
+	    attrset(A_BOLD);
 	}
 	printw("S");
-	(void) attrset(defattr);
+	attrset(defattr);
     } else {
 	printw(" ");
     }
-    printw("%c", oia_screentrace);
+    printw("%c%c", oia_screentrace,oia_script);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
-    if (toggled(SHOW_TIMING)) {
-	mvprintw(status_row, rmargin-14, "%s", oia_timing);
-    }
+    mvprintw(status_row, rmargin-14, "%s", oia_timing);
 
-    if (toggled(CURSOR_POS)) {
-	mvprintw(status_row, rmargin-7, "%03d/%03d ", cursor_addr/cCOLS + 1,
-		cursor_addr%cCOLS + 1);
-    }
+    mvprintw(status_row, rmargin-7, "%03d/%03d ", cursor_addr/cCOLS + 1,
+	    cursor_addr%cCOLS + 1);
 
     /* Draw the crosshair in the OIA. */
     if (toggled(CROSSHAIR) &&
@@ -2332,14 +2447,20 @@ Redraw_action(ia_t ia, unsigned argc, const char **argv)
 void
 ring_bell(void)
 {
-	beep();
+    beep();
 }
 
 void
 screen_flip(void)
 {
-	flipped = !flipped;
-	screen_disp(false);
+    flipped = !flipped;
+    screen_disp(false);
+}
+
+bool
+screen_flipped(void)
+{
+    return flipped;
 }
 
 #if defined(C3270_80_132) /*[*/
@@ -2347,50 +2468,51 @@ screen_flip(void)
 static void
 parse_screen_spec(const char *str, struct screen_spec *spec)
 {
-	char msbuf[3];
-	char *s, *t, c;
-	bool escaped = false;
+    char msbuf[3];
+    char *s, *t, c;
+    bool escaped = false;
 
-	if (sscanf(str, "%dx%d=%2s", &spec->rows, &spec->cols, msbuf) != 3) {
-		(void) fprintf(stderr, "Invalid screen screen spec '%s', must "
-		    "be '<rows>x<cols>=<init_string>'\n", str);
-		exit(1);
+    if (sscanf(str, "%dx%d=%2s", &spec->rows, &spec->cols, msbuf) != 3) {
+	fprintf(stderr, "Invalid screen screen spec '%s', must "
+		"be '<rows>x<cols>=<init_string>'\n", str);
+	exit(1);
+    }
+    s = strchr(str, '=') + 1;
+    spec->mode_switch = Malloc(strlen(s) + 1);
+    t = spec->mode_switch;
+    while ((c = *s++)) {
+	if (escaped) {
+	    switch (c) {
+	    case 'E':
+		*t++ = 0x1b;
+		break;
+	    case 'n':
+		*t++ = '\n';
+		break;
+	    case 'r':
+		*t++ = '\r';
+		break;
+	    case 'b':
+		*t++ = '\b';
+		break;
+	    case 't':
+		*t++ = '\t';
+		break;
+	    case '\\':
+		*t++ = '\\';
+		break;
+	    default:
+		*t++ = c;
+		break;
+	    }
+	    escaped = false;
+	} else if (c == '\\') {
+	    escaped = true;
+	} else {
+	    *t++ = c;
 	}
-	s = strchr(str, '=') + 1;
-	spec->mode_switch = Malloc(strlen(s) + 1);
-	t = spec->mode_switch;
-	while ((c = *s++)) {
-		if (escaped) {
-			switch (c) {
-			case 'E':
-			    *t++ = 0x1b;
-			    break;
-			case 'n':
-			    *t++ = '\n';
-			    break;
-			case 'r':
-			    *t++ = '\r';
-			    break;
-			case 'b':
-			    *t++ = '\b';
-			    break;
-			case 't':
-			    *t++ = '\t';
-			    break;
-			case '\\':
-			    *t++ = '\\';
-			    break;
-			default:
-			    *t++ = c;
-			    break;
-			}
-			escaped = false;
-		} else if (c == '\\')
-			escaped = true;
-		else
-			*t++ = c;
-	}
-	*t = '\0';
+    }
+    *t = '\0';
 }
 #endif /*]*/
 
@@ -2398,14 +2520,15 @@ void
 screen_132(void)
 {
 #if defined(C3270_80_132) /*[*/
-	if (cur_screen != alt_screen) {
-		swap_screens(alt_screen);
-		if (write(1, altscreen_spec.mode_switch,
-		    strlen(altscreen_spec.mode_switch)) < 0)
-		    	x3270_exit(1);
-		ctlr_erase(true);
-		screen_disp(true);
+    if (cur_screen != alt_screen) {
+	swap_screens(alt_screen);
+	if (write(1, altscreen_spec.mode_switch,
+		    strlen(altscreen_spec.mode_switch)) < 0) {
+	    x3270_exit(1);
 	}
+	ctlr_erase(true);
+	screen_disp(true);
+    }
 #endif /*]*/
 }
 
@@ -2413,14 +2536,15 @@ void
 screen_80(void)
 {
 #if defined(C3270_80_132) /*[*/
-	if (cur_screen != def_screen) {
-		swap_screens(def_screen);
-		if (write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch)) < 0)
-		    	x3270_exit(1);
-		ctlr_erase(false);
-		screen_disp(true);
+    if (cur_screen != def_screen) {
+	swap_screens(def_screen);
+	if (write(1, defscreen_spec.mode_switch,
+		    strlen(defscreen_spec.mode_switch)) < 0) {
+	    x3270_exit(1);
 	}
+	ctlr_erase(false);
+	screen_disp(true);
+    }
 #endif /*]*/
 }
 
@@ -2433,128 +2557,127 @@ screen_80(void)
 static int
 linedraw_to_acs(unsigned char c)
 {
-	switch (c) {
+    switch (c) {
 #if defined(ACS_BLOCK) /*[*/
-	case 0x0:
-		return ACS_BLOCK;
+    case 0x0:
+	return ACS_BLOCK;
 #endif /*]*/
 #if defined(ACS_DIAMOND) /*[*/
-	case 0x1:
-		return ACS_DIAMOND;
+    case 0x1:
+	return ACS_DIAMOND;
 #endif /*]*/
 #if defined(ACS_CKBOARD) /*[*/
-	case 0x2:
-		return ACS_CKBOARD;
+    case 0x2:
+	return ACS_CKBOARD;
 #endif /*]*/
 #if defined(ACS_DEGREE) /*[*/
-	case 0x7:
-		return ACS_DEGREE;
+    case 0x7:
+	return ACS_DEGREE;
 #endif /*]*/
 #if defined(ACS_PLMINUS) /*[*/
-	case 0x8:
-		return ACS_PLMINUS;
+    case 0x8:
+	return ACS_PLMINUS;
 #endif /*]*/
 #if defined(ACS_BOARD) /*[*/
-	case 0x9:
-		return ACS_BOARD;
+    case 0x9:
+	return ACS_BOARD;
 #endif /*]*/
 #if defined(ACS_LANTERN) /*[*/
-	case 0xa:
-		return ACS_LANTERN;
+    case 0xa:
+	return ACS_LANTERN;
 #endif /*]*/
 #if defined(ACS_LRCORNER) /*[*/
-	case 0xb:
-		return ACS_LRCORNER;
+    case 0xb:
+	return ACS_LRCORNER;
 #endif /*]*/
 #if defined(ACS_URCORNER) /*[*/
-	case 0xc:
-		return ACS_URCORNER;
+    case 0xc:
+	return ACS_URCORNER;
 #endif /*]*/
 #if defined(ACS_ULCORNER) /*[*/
-	case 0xd:
-		return ACS_ULCORNER;
+    case 0xd:
+	return ACS_ULCORNER;
 #endif /*]*/
 #if defined(ACS_LLCORNER) /*[*/
-	case 0xe:
-		return ACS_LLCORNER;
+    case 0xe:
+	return ACS_LLCORNER;
 #endif /*]*/
 #if defined(ACS_PLUS) /*[*/
-	case 0xf:
-		return ACS_PLUS;
+    case 0xf:
+	return ACS_PLUS;
 #endif /*]*/
 #if defined(ACS_S1) /*[*/
-	case 0x10:
-		return ACS_S1;
+    case 0x10:
+	return ACS_S1;
 #endif /*]*/
 #if defined(ACS_S3) /*[*/
-	case 0x11:
-		return ACS_S3;
+    case 0x11:
+	return ACS_S3;
 #endif /*]*/
 #if defined(ACS_HLINE) /*[*/
-	case 0x12:
-		return ACS_HLINE;
+    case 0x12:
+	return ACS_HLINE;
 #endif /*]*/
 #if defined(ACS_S7) /*[*/
-	case 0x13:
-		return ACS_S7;
+    case 0x13:
+	return ACS_S7;
 #endif /*]*/
 #if defined(ACS_S9) /*[*/
-	case 0x14:
-		return ACS_S9;
+    case 0x14:
+	return ACS_S9;
 #endif /*]*/
 #if defined(ACS_LTEE) /*[*/
-	case 0x15:
-		return ACS_LTEE;
+    case 0x15:
+	return ACS_LTEE;
 #endif /*]*/
 #if defined(ACS_RTEE) /*[*/
-	case 0x16:
-		return ACS_RTEE;
+    case 0x16:
+	return ACS_RTEE;
 #endif /*]*/
 #if defined(ACS_BTEE) /*[*/
-	case 0x17:
-		return ACS_BTEE;
+    case 0x17:
+	return ACS_BTEE;
 #endif /*]*/
 #if defined(ACS_TTEE) /*[*/
-	case 0x18:
-		return ACS_TTEE;
+    case 0x18:
+	return ACS_TTEE;
 #endif /*]*/
 #if defined(ACS_VLINE) /*[*/
-	case 0x19:
-		return ACS_VLINE;
+    case 0x19:
+	return ACS_VLINE;
 #endif /*]*/
 #if defined(ACS_LEQUAL) /*[*/
-	case 0x1a:
-		return ACS_LEQUAL;
+    case 0x1a:
+	return ACS_LEQUAL;
 #endif /*]*/
 #if defined(ACS_GEQUAL) /*[*/
-	case 0x1b:
-		return ACS_GEQUAL;
+    case 0x1b:
+	return ACS_GEQUAL;
 #endif /*]*/
 #if defined(ACS_PI) /*[*/
-	case 0x1c:
-		return ACS_PI;
+    case 0x1c:
+	return ACS_PI;
 #endif /*]*/
 #if defined(ACS_NEQUAL) /*[*/
-	case 0x1d:
-		return ACS_NEQUAL;
+    case 0x1d:
+	return ACS_NEQUAL;
 #endif /*]*/
 #if defined(ACS_STERLING) /*[*/
-	case 0x1e:
-		return ACS_STERLING;
+    case 0x1e:
+	return ACS_STERLING;
 #endif /*]*/
 #if defined(ACS_BULLET) /*[*/
-	case 0x1f:
-		return ACS_BULLET;
+    case 0x1f:
+	return ACS_BULLET;
 #endif /*]*/
-	default:
-		return -1;
-	}
+    default:
+	return -1;
+    }
 }
 
 static void
-display_linedraw(unsigned char ebc)
+display_linedraw(ucs4_t u)
 {
-    int c;
     char mb[16];
     int len;
 
@@ -2562,8 +2685,9 @@ display_linedraw(unsigned char ebc)
     if (appres.c3270.acs)
 #endif /*]*/
     {
-	/* Try UCS first. */
-	c = linedraw_to_acs(ebc);
+	/* Try ACS first. */
+	int c = linedraw_to_acs(u);
+
 	if (c != -1) {
 	    addch(c);
 	    return;
@@ -2571,9 +2695,9 @@ display_linedraw(unsigned char ebc)
     }
 
     /* Then try Unicode. */
-    len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
-	    EUO_BLANK_UNDEF | (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
-	    NULL);
+    len = unicode_to_multibyte(
+	    linedraw_to_unicode(u, appres.c3270.ascii_box_draw),
+	    mb, sizeof(mb));
     if (len > 0) {
 	len--;
     }
@@ -2591,78 +2715,78 @@ display_linedraw(unsigned char ebc)
 static int
 apl_to_acs(unsigned char c)
 {
-	switch (c) {
+    switch (c) {
 #if defined(ACS_DEGREE) /*[*/
-	case 0xaf: /* CG 0xd1 */
-		return ACS_DEGREE;
+    case 0xaf: /* CG 0xd1 */
+	return ACS_DEGREE;
 #endif /*]*/
 #if defined(ACS_LRCORNER) /*[*/
-	case 0xd4: /* CG 0xac */
-		return ACS_LRCORNER;
+    case 0xd4: /* CG 0xac */
+	return ACS_LRCORNER;
 #endif /*]*/
 #if defined(ACS_URCORNER) /*[*/
-	case 0xd5: /* CG 0xad */
-		return ACS_URCORNER;
+    case 0xd5: /* CG 0xad */
+	return ACS_URCORNER;
 #endif /*]*/
 #if defined(ACS_ULCORNER) /*[*/
-	case 0xc5: /* CG 0xa4 */
-		return ACS_ULCORNER;
+    case 0xc5: /* CG 0xa4 */
+	return ACS_ULCORNER;
 #endif /*]*/
 #if defined(ACS_LLCORNER) /*[*/
-	case 0xc4: /* CG 0xa3 */
-		return ACS_LLCORNER;
+    case 0xc4: /* CG 0xa3 */
+	return ACS_LLCORNER;
 #endif /*]*/
 #if defined(ACS_PLUS) /*[*/
-	case 0xd3: /* CG 0xab */
-		return ACS_PLUS;
+    case 0xd3: /* CG 0xab */
+	return ACS_PLUS;
 #endif /*]*/
 #if defined(ACS_HLINE) /*[*/
-	case 0xa2: /* CG 0x92 */
-		return ACS_HLINE;
+    case 0xa2: /* CG 0x92 */
+	return ACS_HLINE;
 #endif /*]*/
 #if defined(ACS_LTEE) /*[*/
-	case 0xc6: /* CG 0xa5 */
-		return ACS_LTEE;
+    case 0xc6: /* CG 0xa5 */
+	return ACS_LTEE;
 #endif /*]*/
 #if defined(ACS_RTEE) /*[*/
-	case 0xd6: /* CG 0xae */
-		return ACS_RTEE;
+    case 0xd6: /* CG 0xae */
+	return ACS_RTEE;
 #endif /*]*/
 #if defined(ACS_BTEE) /*[*/
-	case 0xc7: /* CG 0xa6 */
-		return ACS_BTEE;
+    case 0xc7: /* CG 0xa6 */
+	return ACS_BTEE;
 #endif /*]*/
 #if defined(ACS_TTEE) /*[*/
-	case 0xd7: /* CG 0xaf */
-		return ACS_TTEE;
+    case 0xd7: /* CG 0xaf */
+	return ACS_TTEE;
 #endif /*]*/
 #if defined(ACS_VLINE) /*[*/
-	case 0x85: /* CG 0xa84? */
-		return ACS_VLINE;
+    case 0x85: /* CG 0xa84? */
+	return ACS_VLINE;
 #endif /*]*/
 #if defined(ACS_LEQUAL) /*[*/
-	case 0x8c: /* CG 0xf7 */
-		return ACS_LEQUAL;
+    case 0x8c: /* CG 0xf7 */
+	return ACS_LEQUAL;
 #endif /*]*/
 #if defined(ACS_GEQUAL) /*[*/
-	case 0xae: /* CG 0xd9 */
-		return ACS_GEQUAL;
+    case 0xae: /* CG 0xd9 */
+	return ACS_GEQUAL;
 #endif /*]*/
 #if defined(ACS_NEQUAL) /*[*/
-	case 0xbe: /* CG 0x3e */
-		return ACS_NEQUAL;
+    case 0xbe: /* CG 0x3e */
+	return ACS_NEQUAL;
 #endif /*]*/
 #if defined(ACS_BULLET) /*[*/
-	case 0xa3: /* CG 0x93 */
-		return ACS_BULLET;
+    case 0xa3: /* CG 0x93 */
+	return ACS_BULLET;
 #endif /*]*/
-	case 0xad:
-		return '[';
-	case 0xbd:
-		return ']';
-	default:
-		return -1;
-	}
+    case 0xad:
+	return '[';
+    case 0xbd:
+	return ']';
+    default:
+	return -1;
+    }
 }
 
 static void
@@ -2729,9 +2853,13 @@ screen_selected(int baddr _is_unused)
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)
+ * @param[in] saved	Number of lines saved
+ * @param[in] screen	Size of a screen
+ * @param[in] back	Number of lines scrolled back
  */
 void
-screen_set_thumb(float top _is_unused, float shown _is_unused)
+screen_set_thumb(float top _is_unused, float shown _is_unused,
+	int saved _is_unused, int screen _is_unused, int back _is_unused)
 {
 }
 
@@ -2757,7 +2885,8 @@ screen_register(void)
 	{ SHOW_TIMING,	toggle_showTiming,	0 },
 	{ UNDERSCORE,	toggle_underscore,	0 },
 	{ VISIBLE_CONTROL, toggle_visibleControl, 0 },
-	{ CROSSHAIR,	toggle_crosshair,	0 }
+	{ CROSSHAIR,	toggle_crosshair,	0 },
+	{ TYPEAHEAD,	NULL,			0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Redraw",	Redraw_action,	ACTION_KE }
@@ -2767,8 +2896,7 @@ screen_register(void)
     register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
-    register_schange(ST_CONNECT, screen_connect);
-    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_NEGOTIATING, status_connect);
     register_schange(ST_CONNECT, status_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);

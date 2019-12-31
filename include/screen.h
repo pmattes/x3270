@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1999-2009, 2014-2015, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ void mcursor_locked(void);
 void mcursor_normal(void);
 void mcursor_waiting(void);
 bool screen_obscured(void);
-void screen_scroll(void);
+void screen_scroll(unsigned char fg, unsigned char bg);
 unsigned long screen_window_number(void);
 bool screen_has_bg_color(void);
 void ring_bell(void);
@@ -49,9 +49,10 @@ void screen_disp(bool erasing);
 void screen_80(void);
 void screen_132(void);
 void screen_flip(void);
+bool screen_flipped(void);
 bool screen_selected(int baddr);
 bool screen_new_display_charsets(const char *realname, const char *csnames);
 void screen_system_fixup(void);
 bool screen_suspend(void);
-void screen_set_thumb(float top, float shown);
+void screen_set_thumb(float top, float shown, int saved, int screen, int back);
 void enable_cursor(bool on);

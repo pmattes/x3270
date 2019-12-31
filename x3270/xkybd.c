@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -51,10 +51,10 @@
 #include "keymap.h"
 #include "keysym2ucs.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "selectc.h"
+#include "task.h"
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -62,7 +62,6 @@
 #include "xscreen.h"
 #include "xselectc.h"
 
-
 /*
  * Handle an ordinary character key, given its NULL-terminated multibyte
  * representation.
@@ -70,21 +69,21 @@
 static void
 key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 {
-	ucs4_t ucs4;
-	int consumed;
-	enum me_fail error;
+    ucs4_t ucs4;
+    int consumed;
+    enum me_fail error;
 
-	reset_idle_timer();
+    reset_idle_timer();
 
-	/* Convert the multibyte string to UCS4. */
-	ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
-	if (ucs4 == 0) {
-		vtrace(" %s -> Key(?)\n", ia_name[(int) cause]);
-		vtrace("  dropped (invalid multibyte sequence)\n");
-		return;
-	}
+    /* Convert the multibyte string to UCS4. */
+    ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
+    if (ucs4 == 0) {
+	vtrace(" %s -> Key(?)\n", ia_name[(int) cause]);
+	vtrace("  dropped (invalid multibyte sequence)\n");
+	return;
+    }
 
-	key_UCharacter(ucs4, keytype, cause);
+    key_UCharacter(ucs4, keytype, cause, false);
 }
 
 static bool
@@ -158,7 +157,6 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
     cursor_move(mouse_baddr(w, event));
 }
 
-
 /*
  * Run a KeyPress through XIM.
  * Returns true if there is further processing to do, false otherwise.
@@ -166,54 +164,55 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
 static bool
 xim_lookup(XKeyEvent *event)
 {
-	static char *buf = NULL;
-	static int buf_len = 0, rlen;
-	KeySym k;
-	Status status;
-	int i;
-	bool rv = false;
+    static char *buf = NULL;
+    static int buf_len = 0, rlen;
+    KeySym k;
+    Status status;
+    int i;
+    bool rv = false;
 #define BASE_BUFSIZE 50
 
-	if (ic == NULL)
-		return true;
+    if (ic == NULL) {
+	return true;
+    }
 
-	if (buf == NULL) {
-		buf_len = BASE_BUFSIZE;
-		buf = Malloc(buf_len);
-	}
+    if (buf == NULL) {
+	buf_len = BASE_BUFSIZE;
+	buf = Malloc(buf_len);
+    }
 
-	for (;;) {
-		memset(buf, '\0', buf_len);
-		rlen = XmbLookupString(ic, event, buf, buf_len - 1, &k,
-					&status);
-		if (status != XBufferOverflow)
-			break;
-		buf_len += BASE_BUFSIZE;
-		buf = Realloc(buf, buf_len);
+    for (;;) {
+	memset(buf, '\0', buf_len);
+	rlen = XmbLookupString(ic, event, buf, buf_len - 1, &k, &status);
+	if (status != XBufferOverflow) {
+	    break;
 	}
+	buf_len += BASE_BUFSIZE;
+	buf = Realloc(buf, buf_len);
+    }
 
-	switch (status) {
-	case XLookupNone:
-		rv = false;
-		break;
-	case XLookupKeySym:
-		rv = true;
-		break;
-	case XLookupChars:
-		vtrace("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
-		for (i = 0; i < rlen; i++) {
-			vtrace(" %02x", buf[i] & 0xff);
-		}
-		vtrace("\n");
-		buf[rlen] = '\0';
-		key_ACharacter(buf, KT_STD, ia_cause);
-		rv = false;
-		break;
-	case XLookupBoth:
-		rv = true;
-		break;
+    switch (status) {
+    case XLookupNone:
+	rv = false;
+	break;
+    case XLookupKeySym:
+	rv = true;
+	break;
+    case XLookupChars:
+	vtrace("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
+	for (i = 0; i < rlen; i++) {
+	    vtrace(" %02x", buf[i] & 0xff);
 	}
-	return rv;
+	vtrace("\n");
+	buf[rlen] = '\0';
+	key_ACharacter(buf, KT_STD, ia_cause);
+	rv = false;
+	break;
+    case XLookupBoth:
+	rv = true;
+	break;
+    }
+    return rv;
 }
 
 void
@@ -236,31 +235,31 @@ ignore_xaction(Widget w _is_unused, XEvent *event, String *params,
 int
 state_from_keymap(char keymap[32])
 {
-	static bool	initted = false;
-	static KeyCode	kc_Shift_L, kc_Shift_R;
-	static KeyCode	kc_Meta_L, kc_Meta_R;
-	static KeyCode	kc_Alt_L, kc_Alt_R;
-	int	pseudo_state = 0;
+    static bool initted = false;
+    static KeyCode kc_Shift_L, kc_Shift_R;
+    static KeyCode kc_Meta_L, kc_Meta_R;
+    static KeyCode kc_Alt_L, kc_Alt_R;
+    int	pseudo_state = 0;
 
-	if (!initted) {
-		kc_Shift_L = XKeysymToKeycode(display, XK_Shift_L);
-		kc_Shift_R = XKeysymToKeycode(display, XK_Shift_R);
-		kc_Meta_L  = XKeysymToKeycode(display, XK_Meta_L);
-		kc_Meta_R  = XKeysymToKeycode(display, XK_Meta_R);
-		kc_Alt_L   = XKeysymToKeycode(display, XK_Alt_L);
-		kc_Alt_R   = XKeysymToKeycode(display, XK_Alt_R);
-		initted = true;
-	}
-	if (key_is_down(kc_Shift_L, keymap) ||
-	    key_is_down(kc_Shift_R, keymap))
-		pseudo_state |= ShiftKeyDown;
-	if (key_is_down(kc_Meta_L, keymap) ||
-	    key_is_down(kc_Meta_R, keymap))
-		pseudo_state |= MetaKeyDown;
-	if (key_is_down(kc_Alt_L, keymap) ||
-	    key_is_down(kc_Alt_R, keymap))
-		pseudo_state |= AltKeyDown;
-	return pseudo_state;
+    if (!initted) {
+	kc_Shift_L = XKeysymToKeycode(display, XK_Shift_L);
+	kc_Shift_R = XKeysymToKeycode(display, XK_Shift_R);
+	kc_Meta_L  = XKeysymToKeycode(display, XK_Meta_L);
+	kc_Meta_R  = XKeysymToKeycode(display, XK_Meta_R);
+	kc_Alt_L   = XKeysymToKeycode(display, XK_Alt_L);
+	kc_Alt_R   = XKeysymToKeycode(display, XK_Alt_R);
+	initted = true;
+    }
+    if (key_is_down(kc_Shift_L, keymap) || key_is_down(kc_Shift_R, keymap)) {
+	pseudo_state |= ShiftKeyDown;
+    }
+    if (key_is_down(kc_Meta_L, keymap) || key_is_down(kc_Meta_R, keymap)) {
+	pseudo_state |= MetaKeyDown;
+    }
+    if (key_is_down(kc_Alt_L, keymap) || key_is_down(kc_Alt_R, keymap)) {
+	pseudo_state |= AltKeyDown;
+    }
+    return pseudo_state;
 }
 #undef key_is_down
 
@@ -491,14 +490,14 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
 	default:
 	    if (ks >= XK_F1 && ks <= XK_F24) {
-		(void) snprintf(buf, sizeof(buf), "%ld", ks - XK_F1 + 1);
+		snprintf(buf, sizeof(buf), "%ld", ks - XK_F1 + 1);
 		run_action("PF", IA_DEFAULT, buf, NULL);
 	    } else {
 		ucs4_t ucs4;
 
 		ucs4 = keysym2ucs(ks);
 		if (ucs4 != (ucs4_t)-1) {
-		    key_UCharacter(ucs4, KT_STD, IA_KEY);
+		    key_UCharacter(ucs4, KT_STD, IA_DEFAULT, false);
 		} else {
 		    vtrace(" Default: dropped (unknown keysym)\n");
 		}
@@ -536,14 +535,13 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
     reset_idle_timer();
 
     if (argc == 0 || !strcmp(argv[0], "None")) {
-	(void) temporary_keymap(NULL);
+	temporary_keymap(NULL);
 	return true;
     }
 
     if (!temporary_keymap(argv[0])) {
 	popup_an_error("TemporaryKeymap: Can't find %s %s", ResKeymap,
 		argv[0]);
-	cancel_if_idle_command();
 	return false;
     }
     return true;

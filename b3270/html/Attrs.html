@@ -1,0 +1,102 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 Graphic Rendition Attributes</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="attrs"></a><h3>Graphic Rendition Attributes</h3>
+<p>Graphic rendition attributes are a comma-separated list of the following
+values.</p>
+<table border cols=2 width="75%">
+ <tr><th>Attribute</th><th>Notes</th></tr>
+ <tr><td>underline</td></tr>
+ <tr><td>blink</td></tr>
+ <tr><td>highlight</td></tr>
+ <tr><td>selectable</td><td>Light pen</td></tr>
+ <tr><td>reverse</td><td>Monochrome displays only</td></tr>
+ <tr><td>wide</td><td>Each character takes two columns</td></tr>
+ <tr><td>order</td><td>3270 <a href="#orders">order</a> made visible</td></tr>
+ <tr><td>private-use</td><td>Use <a href="#pua">Private Use Area</a> for
+	 copy/paste</td></tr>
+ <tr><td>no-copy</td><td><a href="#nocopy">Do not copy</a> into paste buffer</td></tr>
+</table>
+<p>An empty value indicates the default (none of the above properties are
+set).</p>
+<a name="orders"></a><p>When a location has the <b>order</b> attribute, the
+contents are a visible representation of a 3270 order that would normally be
+displayed as a blank.
+This is done when b3270 has the <b>visibleControl</b> toggle set.</p>
+<p>Note that except when the <a href="#pua">private-use</a> attribute is also
+set, visible orders should be copied into a paste buffer as a space
+(U+0020).</p>
+The set of orders displayed this way are:</p>
+<table border cols=2 width="75%">
+ <tr><th>Character</th><th>Meaning</th></tr>
+ <tr><td>.</td><td>NUL, X'00'</td></tr>
+ <tr><td>&lt;</td><td>SO (shift to DBCS), X'0E'</td></tr>
+ <tr><td>&gt;</td><td>SI (shift to SBCS), X'0F'</td></tr>
+ <tr><td>0</td><td>Start Field, default (visible; not highlighted, selectable, numeric or modified)</td></tr>
+ <tr><td>1</td><td>Start Field, modified</td></tr>
+ <tr><td>2</td><td>Start Field, selectable</td></tr>
+ <tr><td>3</td><td>Start Field, selectable, modified</td></tr>
+ <tr><td>4</td><td>Start Field, highlighted, selectable</td></tr>
+ <tr><td>5</td><td>Start Field, highlighted, selectable, modified</td></tr>
+ <tr><td>6</td><td>Start Field, invisible</td></tr>
+ <tr><td>7</td><td>Start Field, invisible, modified</td></tr>
+ <tr><td>8</td><td>Start Field, numeric</td></tr>
+ <tr><td>9</td><td>Start Field, numeric, modified</td></tr>
+ <tr><td>A</td><td>Start Field, selectable, numeric</td></tr>
+ <tr><td>B</td><td>Start Field, selectable, numeric, modified</td></tr>
+ <tr><td>C</td><td>Start Field, highlighted, selectable, numeric</td></tr>
+ <tr><td>D</td><td>Start Field, highlighted, selectable, numeric, modified</td></tr>
+ <tr><td>E</td><td>Start Field, invisible, numeric</td></tr>
+ <tr><td>F</td><td>Start Field, invisible, numeric, modified</td></tr>
+ <tr><td>G</td><td>Start Field, protected</td></tr>
+ <tr><td>H</td><td>Start Field, protected, modified</td></tr>
+ <tr><td>I</td><td>Start Field, selectable, protected</td></tr>
+ <tr><td>J</td><td>Start Field, selectable, protected, modified</td></tr>
+ <tr><td>K</td><td>Start Field, highlighted, selectable, protected</td></tr>
+ <tr><td>L</td><td>Start Field, highlighted, selectable, protected, modified</td></tr>
+ <tr><td>M</td><td>Start Field, invisible, protected</td></tr>
+ <tr><td>N</td><td>Start Field, invisible, protected, modified</td></tr>
+ <tr><td>O</td><td>Start Field, protected, numeric</td></tr>
+ <tr><td>P</td><td>Start Field, protected, numeric, modified</td></tr>
+ <tr><td>Q</td><td>Start Field, selectable, protected, numeric</td></tr>
+ <tr><td>R</td><td>Start Field, selectable, protected, numeric, modified</td></tr>
+ <tr><td>S</td><td>Start Field, highlighted, selectable, protected, numeric</td></tr>
+ <tr><td>T</td><td>Start Field, highlighted, selectable, protected, numeric, modified</td></tr>
+ <tr><td>U</td><td>Start Field, invisible, protected, numeric</td></tr>
+ <tr><td>V</td><td>Start Field, invisible, protected, numeric, modified</td></tr>
+</table>
+<a name="pua"></a><p>When a location has the <b>private-use</b> attribute, it
+should be treated specially when copied into a paste buffer: the character
+value should be offset by the value 0xe000 to put it in the Unicode BMP Private
+Use Area.
+For example, the <b>*</b> character (U+002a), when marked with
+<b>private-use</b>, represents the EBCDIC character <b>DUP</b> (X'1C'). It
+should be encoded in the paste buffer as U+e02a. The <b>Z</b> character
+(U+005a), when marked with <b>private-use</b>, represents the APL EBCDIC
+character <b>Underlined Z</b> (GE X'69'). It should be encoded in the paste
+buffer as U+e05a.
+This rule applies even if the <b>order</b> attribute it set (normally orders
+are represented as U+0020 in the paste buffer).</p>
+<a name="nocopy"></a><p>When a location has the <b>no-copy</b> attribute, it
+should not be copied into a paste buffer. This is generally the case for EBCDIC
+<b>SO</b> (X'0E') and <b>SI</b> (X'0F') orders, which can be inferred from
+other data.</p>
+<p>
+So the hierarchy for selecting a value to copy into the paste buffer is:
+<ul>
+ <li>if <b>no-copy</b> is set, do not copy anything</li>
+ <li>else if <b>private-use</b> is set, add 0xe000</li>
+ <li>else if <b>order</b> is set, substitute U+0020</li>
+ <li>else copy the value as-is</li>
+</ul>
+</p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

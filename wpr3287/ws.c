@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ ws_start(const char *printer_name)
     }
 
     /* Talk to the printer. */
-    (void) memset(&defaults, '\0', sizeof(defaults));
+    memset(&defaults, '\0', sizeof(defaults));
     defaults.pDatatype = "RAW";
     defaults.pDevMode = NULL;
     defaults.DesiredAccess = PRINTER_ACCESS_USE;
@@ -104,13 +104,13 @@ ws_flush(void)
     int rv = 0;
 
     switch (printer_state) {
-	case PRINTER_IDLE:
-	    errmsg("ws_endjob: printer not open");
-	    return -1;
-	case PRINTER_OPEN:
-	    return 0;
-	case PRINTER_JOB:
-	    break;
+    case PRINTER_IDLE:
+	errmsg("ws_endjob: printer not open");
+	return -1;
+    case PRINTER_OPEN:
+	return 0;
+    case PRINTER_JOB:
+	break;
     }
 
     if (pbcnt != 0) {
@@ -137,26 +137,26 @@ ws_putc(char c)
 
     switch (printer_state) {
 
-	case PRINTER_IDLE:
-	    errmsg("ws_putc: printer not open");
+    case PRINTER_IDLE:
+	errmsg("ws_putc: printer not open");
+	return -1;
+
+    case PRINTER_OPEN:
+	/* Start a new document. */
+	doc_info.pDocName = "wpr3287 print job";
+	doc_info.pOutputFile = NULL;
+	doc_info.pDatatype = "RAW";
+	if (StartDocPrinter(printer_handle, 1, (LPBYTE)&doc_info) == 0) {
+	    errmsg("ws_putc: StartDocPrinter failed, "
+		    "Win32 error %d", GetLastError());
 	    return -1;
+	}
+	printer_state = PRINTER_JOB;
+	pbcnt = 0;
+	break;
 
-	case PRINTER_OPEN:
-	    /* Start a new document. */
-	    doc_info.pDocName = "wpr3287 print job";
-	    doc_info.pOutputFile = NULL;
-	    doc_info.pDatatype = "RAW";
-	    if (StartDocPrinter(printer_handle, 1, (LPBYTE)&doc_info) == 0) {
-		errmsg("ws_putc: StartDocPrinter failed, "
-			"Win32 error %d", GetLastError());
-		return -1;
-	    }
-	    printer_state = PRINTER_JOB;
-	    pbcnt = 0;
-	    break;
-
-	case PRINTER_JOB:
-	    break;
+    case PRINTER_JOB:
+	break;
     }
 
     /* Flush if needed. */
@@ -192,13 +192,13 @@ ws_endjob(void)
     int rv = 0;
 
     switch (printer_state) {
-	case PRINTER_IDLE:
-	    errmsg("ws_endjob: printer not open");
-	    return -1;
-	case PRINTER_OPEN:
-	    return 0;
-	case PRINTER_JOB:
-	    break;
+    case PRINTER_IDLE:
+	errmsg("ws_endjob: printer not open");
+	return -1;
+    case PRINTER_OPEN:
+	return 0;
+    case PRINTER_JOB:
+	break;
     }
 
     /* Flush whatever's pending. */

@@ -67,3 +67,9 @@ void
 screen_flip(void)
 {
 }
+
+bool
+screen_flipped(void)
+{
+    return false;
+}

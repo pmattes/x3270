@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2018 Paul Mattes.
+ * Copyright (c) 2006-2019 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -88,7 +88,7 @@ enum {
     MN_PORT,		/* TCP port */
     MN_MODEL,		/* model number */
     MN_OVERSIZE,	/* oversize */
-    MN_CHARSET,		/* character set */
+    MN_CODEPAGE,	/* code page */
     MN_CROSSHAIR,	/* crosshair cursor */
     MN_CURSORTYPE,	/* cursor type */
     MN_TLS,		/* TLS tunnel */
@@ -107,6 +107,7 @@ enum {
     MN_BG,		/* background color */
     MN_MENUBAR,		/* menu bar */
     MN_TRACE,		/* trace at start-up */
+    MN_ALWAYS_INSERT,	/* always use insert mode */
     MN_NOTEPAD,		/* use Notepad to edit file (last option) */
     MN_N_OPTS
 } menu_option_t;
@@ -167,16 +168,6 @@ typedef enum {
 } ws_t;
 
 extern char *wversion;
-
-/* Aliases for obsolete character set names. */
-struct {
-    char	*alias;
-    char	*real;
-} charset_alias[] = {
-    { "japanese-290",  "japanese-kana" },
-    { "japanese-1027", "japanese-latin" },
-    { NULL, NULL }
-};
 
 #define CS_WIDTH	19
 #define CP_WIDTH	8
@@ -678,8 +669,7 @@ save_keymaps_type(src_t src, const char *dirname)
 	if (h != INVALID_HANDLE_VALUE) {
 	    do {
 		sprintf(fpath, "%s%s", dirname, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
-			src);
+		save_keymap_name(fpath, find_data.cFileName, NULL, src);
 	    } while (FindNextFile(h, &find_data) != 0);
 	    FindClose(h);
 	}
@@ -700,7 +690,7 @@ save_keymaps(bool include_public)
     int i;
 
     for (i = 0; builtin_keymaps[i].name != NULL; i++) {
-	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
+	save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
 
@@ -757,6 +747,38 @@ fixup_printer(session_t *s)
     } else {
 	return 0;
     }
+}
+
+/**
+ * Canonicalize a code page.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 1 if the name needed fixing, 0 otherwise.
+ */
+static int
+fixup_codepage(session_t *s)
+{
+    int i;
+
+    /* See if it's okay already. */
+    if (!strcmp(s->codepage, "bracket") || !strncmp(s->codepage, "cp", 2)) {
+	return 0;
+    }
+
+    /* Search for a match. */
+    for (i = 0; i < num_codepages; i++) {
+	if (!strcmp(codepages[i].name, "bracket")) {
+	    continue;
+	}
+	if (!strcmp(s->codepage, codepages[i].name)) {
+	    snprintf(s->codepage, STR_SIZE, "cp%s", codepages[i].hostcp);
+	    return 1;
+	}
+    }
+
+    /* No match. This will not be pretty. */
+    return 0;
 }
 
 /**
@@ -1118,6 +1140,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  * @param[in] explicit_edit	If true, -e was passed on command line; skip
  * 				the 'exists. Edit?' dialog
  * @param[out] src		Where the session file was found, if it exists
+ * @param[out] modified		Session was already modified when read in
  *
  * Returns: gs_t
  *  GS_NEW		file does not exist
@@ -1129,13 +1152,14 @@ legal_session_name(const char *name, char *result, size_t result_size)
  */
 static gs_t
 get_session(const char *session_name, session_t *s, char **us, char *path,
-	bool explicit_edit, src_t *src)
+	bool explicit_edit, src_t *src, bool *modified)
 {
     FILE *f;
     int rc;
     int editable;
 
     *src = SRC_OTHER;
+    *modified = false;
 
     if (session_name != NULL) {
 	size_t sl = strlen(session_name);
@@ -1254,11 +1278,19 @@ shortcut.");
 	fclose(f);
 	if (editable) {
 	    if (fixup_printer(s)) {
-		    printf("\n"
+		printf("\n"
 "NOTE: This session file contains a UNC printer name that needs to be updated\n"
 " to be compatible with the current version of wc3270.  Even if you do not\n"
-" need to make any other changes to the session, please select the Edit and\n"
-" Update options to have this name automatically corrected.\n");
+" need to make any other changes to the session, please update the session\n"
+" file to have this corrected.\n");
+		*modified = true;
+	    }
+	    if (fixup_codepage(s)) {
+		printf("\n"
+"NOTE: This session file contains a code page alias. Even if you do not need\n"
+" to make any other changes to the session, please update the session file\n"
+" have this name changed to the canonical form.\n");
+		*modified = true;
 	    }
 	}
 
@@ -1349,7 +1381,7 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 \n\
 \n\
 To create a session file with no hostname (one that just specifies the model\n\
-number, character set, etc.), enter '" CHOICE_NONE "'."
+number, code page, etc.), enter '" CHOICE_NONE "'."
 
     new_screen(s, NULL, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
 	    IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
@@ -1605,18 +1637,18 @@ Asian language support.\n");
 
     printf("[Press Enter to continue] ");
     fflush(stdout);
-    (void) getchar();
+    getchar();
 }
 
 /**
- * Prompt for a character set.
+ * Prompt for a code page.
  *
  * @param[in,out] s	Session
  *
  * @return 0 for success, -1 for error
  */
 static int
-get_charset(session_t *s)
+get_codepage(session_t *s)
 {
     char buf[STR_SIZE];
     unsigned i, k;
@@ -1625,16 +1657,16 @@ get_charset(session_t *s)
     int was_dbcs = s->is_dbcs;
 
     new_screen(s, NULL, "\
-Character Set\n\
+Code Page\n\
 \n\
-This specifies the EBCDIC character set (code page) used by the host.");
+This specifies the EBCDIC code page used by the host.");
 
     printf("\
-\nAvailable character sets:\n\n\
+\nAvailable code pages:\n\n\
   #  Name                Host CP      #  Name                Host CP\n\
  --- ------------------- --------    --- ------------------- --------\n");
     k = 0;
-    for (i = 0; charsets[i].name != NULL; i++) {
+    for (i = 0; codepages[i].name != NULL; i++) {
 	size_t j;
 
 	if (i) {
@@ -1647,50 +1679,94 @@ This specifies the EBCDIC character set (code page) used by the host.");
 	if (!(i % 2)) {
 	    j = k;
 	} else {
-	    j += num_charsets / 2;
+	    j += num_codepages / 2;
 	    k++;
 	}
 	printf(" %2d. %-*s %-*s",
 		(int)(j + 1),
-		CS_WIDTH, charsets[j].name,
-		CP_WIDTH, charsets[j].hostcp);
+		CS_WIDTH, codepages[j].name,
+		CP_WIDTH, codepages[j].hostcp);
     }
     printf("\n");
     for (;;) {
-	printf("\nCharacter set: [%s] ", s->charset);
+	printf("\nCode page: [%s] ", s->codepage);
 	if (get_input(buf, sizeof(buf)) == NULL) {
 	    return -1;
 	}
 	if (!buf[0]) {
 	    break;
 	}
-	/* Check for numeric value. */
+	/* Check for numeric index. */
 	u = strtoul(buf, &ptr, 10);
 	if (u > 0 && u <= i && *ptr == '\0') {
-	    strcpy(s->charset, charsets[u - 1].name);
-	    s->is_dbcs = charsets[u - 1].is_dbcs;
+	    if (!strcmp(codepages[u - 1].name, "bracket")) {
+		strcpy(s->codepage, "bracket");
+	    } else {
+		snprintf(s->codepage, STR_SIZE, "cp%s",
+			codepages[u - 1].hostcp);
+	    }
+	    s->is_dbcs = codepages[u - 1].is_dbcs;
 	    break;
 	}
-	/* Check for alias. */
-	for (i = 0; charset_alias[i].alias != NULL; i++) {
-	    if (!strcmp(buf, charset_alias[i].alias)) {
-		strcpy(buf, charset_alias[i].real);
+	/* Check for numeric code page. */
+	if (u > 0 && *ptr == '\0') {
+	    int k;
+	    bool matched = false;
+
+	    for (k = 0; k < num_codepages; k++) {
+		if (strcmp(codepages[k].name, "bracket") &&
+			    u == atoi(codepages[k].hostcp)) {
+		    snprintf(s->codepage, STR_SIZE, "cp%s",
+			    codepages[k].hostcp);
+		    s->is_dbcs = codepages[k].is_dbcs;
+		    matched = true;
+		    break;
+		}
+	    }
+	    if (matched) {
 		break;
 	    }
 	}
 	/* Check for name match. */
-	for (i = 0; charsets[i].name != NULL; i++) {
-	    if (!strcmp(buf, charsets[i].name)) {
-		strcpy(s->charset, charsets[i].name);
-		s->is_dbcs = charsets[i].is_dbcs;
+	for (i = 0; codepages[i].name != NULL; i++) {
+	    if (!strcmp(buf, codepages[i].name)) {
+		if (!strcmp(buf, "bracket")) {
+		    strcpy(s->codepage, buf);
+		} else {
+		    snprintf(s->codepage, STR_SIZE, "cp%s",
+			    codepages[i].hostcp);
+		}
+		s->is_dbcs = codepages[i].is_dbcs;
 		break;
 	    }
 	}
+	/* Check for a 'cpXXX' match. */
+	if (!strncmp(buf, "cp", 2) && strlen(buf) > 2) {
+	    u = strtoul(buf + 2, &ptr, 10);
+	    if (u > 0 && *ptr == '\0') {
+		int k;
+		bool matched = false;
 
-	if (charsets[i].name != NULL) {
+		for (k = 0; k < num_codepages; k++) {
+		    if (strcmp(codepages[k].name, "bracket") &&
+				u == atoi(codepages[k].hostcp)) {
+			snprintf(s->codepage, STR_SIZE, "cp%s",
+				codepages[k].hostcp);
+			s->is_dbcs = codepages[k].is_dbcs;
+			matched = true;
+			break;
+		    }
+		}
+		if (matched) {
+		    break;
+		}
+	    }
+	}
+
+	if (codepages[i].name != NULL) {
 	    break;
 	}
-	errout("\nInvalid character set name.");
+	errout("\nInvalid code page name.");
     }
 
     if (!was_dbcs && s->is_dbcs) {
@@ -2192,7 +2268,7 @@ printer, or specify a remote printer with a UNC path, e.g.,\n\
 '\\\\server\\printer22'.  You can specify the Windows default printer with\n\
 the name 'default'.");
 
-    (void) redisplay_printer(s->printer, cbuf);
+    redisplay_printer(s->printer, cbuf);
 
     enum_printers();
     if (num_printers) {
@@ -2261,7 +2337,7 @@ the name 'default'.");
      * If the resulting printer name is a UNC path, double the
      * backslashes.
      */
-    (void) fixup_printer(s);
+    fixup_printer(s);
     return 0;
 }
 
@@ -2573,6 +2649,42 @@ be left on your desktop.");
 }
 
 /**
+ * Prompt for always insert mode
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_always_insert(session_t *s)
+{
+    int rc;
+
+    new_screen(s, NULL, "\
+Default to Insert Mode\n\
+\n\
+This option causes wc3270 to use insert mode by default.");
+
+    do {
+	printf("\nDefault to insert mode? (y/n) [%s] ",
+		(s->flags2 & WF2_ALWAYS_INSERT)? "y" : "n");
+	fflush(stdout);
+	rc = getyn((s->flags2 & WF2_ALWAYS_INSERT) != 0);
+	switch (rc) {
+	case YN_ERR:
+	    return -1;
+	case TRUE:
+	    s->flags2 |= WF2_ALWAYS_INSERT;
+	    break;
+	case FALSE:
+	    s->flags2 &= ~WF2_ALWAYS_INSERT;
+	    break;
+	}
+    } while (rc < 0);
+    return 0;
+}
+
+/**
  * Run Notepad on the session file, allowing arbitrary resources to be
  * edited.
  *
@@ -2658,7 +2770,7 @@ miscellaneous resources in your session file.");
 failed:
     grayout("[Press <Enter>] ");
     fflush(stdout);
-    (void) fgets(buf, 2, stdin);
+    fgets(buf, 2, stdin);
     if (t != NULL) {
 	free(t);
     }
@@ -2726,15 +2838,15 @@ get_src(const char *name, src_t def)
 }
 
 /**
- * Translate a wc3270 character set name to a font for the console.
+ * Translate a wc3270 host code page name to a font for the console.
  *
- * @param[in] cset	Character set name
+ * @param[in] hcpname	Code page name
  * @param[out] codepage	Windows codepage
  *
  * @return Font name
  */
 static wchar_t *
-reg_font_from_cset(const char *cset, int *codepage)
+reg_font_from_hcp(const char *hcpname, int *codepage)
 {
     unsigned i, j;
     wchar_t *cpname = NULL;
@@ -2747,9 +2859,9 @@ reg_font_from_cset(const char *cset, int *codepage)
     *codepage = 0;
 
     /* Search the table for a match. */
-    for (i = 0; charsets[i].name != NULL; i++) {
-	if (!strcmp(cset, charsets[i].name)) {
-	    cpname = charsets[i].codepage;
+    for (i = 0; codepages[i].name != NULL; i++) {
+	if (!strcmp(hcpname, codepages[i].name)) {
+	    cpname = codepages[i].codepage;
 	    break;
 	}
     }
@@ -2824,12 +2936,13 @@ reg_font_from_cset(const char *cset, int *codepage)
  * @param[in] session_name Name of session
  * @param[out] change_shortcut Returned as true if the shortcut should be
  *                             changed
+ * @param[in] modified	True if session is already modified
  *
  * @return 0 for success, -1 for failure
  */
 static src_t
 edit_menu(session_t *s, char **us, sp_t how, const char *path,
-	const char *session_name, bool *change_shortcut)
+	const char *session_name, bool *change_shortcut, bool modified)
 {
     int rc;
     char choicebuf[32];
@@ -2864,10 +2977,18 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	char *cp = "?";
 	int i;
 
-	for (i = 0; charsets[i].name != NULL; i++) {
-	    if (!strcmp(charsets[i].name, s->charset)) {
-		cp = charsets[i].hostcp;
-		break;
+	/* Look up the codepage. */
+	if (!strcmp(s->codepage, "bracket")) {
+	    cp = "CP 37+";
+	} else if (!strncmp(s->codepage, "cp", 2)) {
+	    for (i = 0; codepages[i].name != NULL; i++) {
+		if (!strcmp(codepages[i].name, "bracket")) {
+		    continue;
+		}
+		if (!strcmp(codepages[i].hostcp, s->codepage + 2)) {
+		    cp = codepages[i].name;
+		    break;
+		}
 	    }
 	}
 
@@ -2888,8 +3009,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	} else {
 	    printf(DISPLAY_NONE"\n");
 	}
-	printf("%3d. Character Set .......... : %s (CP %s)\n",
-		MN_CHARSET, s->charset, cp);
+	printf("%3d. Code Page .............. : %s (%s)\n",
+		MN_CODEPAGE, s->codepage, cp);
 	printf("%3d. Crosshair Cursor ....... : %s\n",
 		MN_CROSSHAIR, (s->flags & WF_CROSSHAIR)? "Yes": "No");
 	printf("%3d. Cursor Type ............ : %s\n",
@@ -2928,7 +3049,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		printf("%3d.  wpr3287 LU ............ : %s\n",
 			MN_3287_LU, s->printerlu);
 	    }
-	    (void) redisplay_printer(s->printer, pbuf);
+	    redisplay_printer(s->printer, pbuf);
 	    printf("%3d.  wpr3287 Windows printer : %s\n",
 		    MN_3287_PRINTER,
 		    s->printer[0]? pbuf: "(system default)");
@@ -2956,6 +3077,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		(s->flags & WF_NO_MENUBAR)? "No": "Yes");
 	printf("%3d. Trace at start-up ...... : %s\n", MN_TRACE,
 		(s->flags & WF_TRACE)? "Yes": "No");
+	printf("%3d. Always use insert mode . : %s\n", MN_ALWAYS_INSERT,
+		(s->flags2 & WF2_ALWAYS_INSERT)? "Yes": "No");
 	printf("%3d. Edit miscellaneous resources with Notepad\n",
 		MN_NOTEPAD);
 
@@ -3008,8 +3131,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-	    case MN_CHARSET:
-		if (get_charset(s) < 0) {
+	    case MN_CODEPAGE:
+		if (get_codepage(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -3159,6 +3282,12 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
+	    case MN_ALWAYS_INSERT:
+		if (get_always_insert(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
 	    case MN_NOTEPAD:
 		if (run_notepad(s, us) < 0) {
 		    ret = SRC_ERR;
@@ -3190,7 +3319,9 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     /* Ask if they want to write the file. */
     if (memcmp(s, &old_session, sizeof(session_t)) ||
 	((old_us != NULL) ^ (*us != NULL)) ||
-	(old_us != NULL && strcmp(old_us, *us))) {
+	(old_us != NULL && strcmp(old_us, *us)) ||
+	modified) {
+
 	for (;;) {
 	    printf("\n%s session file '%s'? (y/n) [y] ",
 		    how_name[how], session_name);
@@ -3239,10 +3370,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 done:
     {
 	int old_codepage;
-	wchar_t *old_font = reg_font_from_cset(old_session.charset,
+	wchar_t *old_font = reg_font_from_hcp(old_session.codepage,
 		&old_codepage);
 	int codepage;
-	wchar_t *font = reg_font_from_cset(s->charset, &codepage);
+	wchar_t *font = reg_font_from_hcp(s->codepage, &codepage);
 
 	if (old_session.model != s->model ||
 	    old_session.ov_rows != s->ov_rows ||
@@ -3493,7 +3624,7 @@ ask_enter(void)
 
     grayout("[Press <Enter>] ");
     fflush(stdout);
-    (void) fgets(buf, sizeof(buf), stdin);
+    fgets(buf, sizeof(buf), stdin);
 }
 
 /**
@@ -4096,7 +4227,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 	    extra_height += 2;
     }
 
-    font = reg_font_from_cset(s->charset, &codepage);
+    font = reg_font_from_hcp(s->codepage, &codepage);
 
     hres = create_link(
 	    exepath,		/* path to executable */
@@ -4147,9 +4278,10 @@ session_wizard(const char *session_name, bool explicit_edit, char *result,
     size_t sl;
     char *us = NULL;
     bool change_shortcut;
+    bool modified = false;
 
     /* Start with nothing. */
-    (void) memset(&session, '\0', sizeof(session));
+    memset(&session, '\0', sizeof(session));
 
     /* Find the existing sessions. */
     xs_init(true);
@@ -4233,7 +4365,8 @@ Edit Session\n");
     }
 
     /* Get the session name. */
-    rc = get_session(session_name, &session, &us, path, explicit_edit, &src);
+    rc = get_session(session_name, &session, &us, path, explicit_edit, &src,
+	    &modified);
     switch (rc) {
     case GS_NOEDIT_LEAVE:	/* Uneditable, and they don't want to overwrite
 				   it. */
@@ -4267,7 +4400,7 @@ Edit Session\n");
 	/* Default eveything else. */
 	session.port = 23;
 	session.model = 4;
-	strcpy(session.charset, "bracket");
+	strcpy(session.codepage, "bracket");
 	strcpy(session.printerlu, ".");
 	session.flags2 |= WF2_NEW_VHC_DEFAULT;
 	/* fall through... */
@@ -4276,7 +4409,7 @@ Edit Session\n");
 	src = edit_menu(&session, &us,
 		(rc == GS_OVERWRITE)? SP_REPLACE:
 		 ((rc == GS_NEW)? SP_CREATE: SP_UPDATE),
-		path, session.session, &change_shortcut);
+		path, session.session, &change_shortcut, modified);
 	if (src == SRC_ERR) {
 	    return SW_ERR;
 	} else if (src == SRC_NONE) {
@@ -4498,7 +4631,7 @@ write_session_file(const session_t *session, char *us, const char *path)
 	fprintf(f, "wc3270.%s: %ux%u\n", ResOversize,
 		session->ov_cols, session->ov_rows);
     }
-    fprintf(f, "wc3270.%s: %s\n", ResCharset, session->charset);
+    fprintf(f, "wc3270.%s: %s\n", ResCodePage, session->codepage);
     if (session->flags & WF_CROSSHAIR) {
 	fprintf(f, "wc3270.%s: %s\n", ResCrosshair, ResTrue);
     }
@@ -4547,7 +4680,11 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
     }
 
     if (session->flags & WF_TRACE) {
-	    fprintf(f, "wc3270.%s: %s\n", ResTrace, ResTrue);
+	fprintf(f, "wc3270.%s: %s\n", ResTrace, ResTrue);
+    }
+
+    if (session->flags2 & WF2_ALWAYS_INSERT) {
+	fprintf(f, "wc3270.%s: %s\n", ResAlwaysInsert, ResTrue);
     }
 
     /* Emit the warning. */
@@ -4935,7 +5072,7 @@ create_wc3270_folder(src_t src)
 	wwrite(f, L"ConfirmFileOp=0\r\n");
 	wwrite(f, L"IconFile=");
 	snprintf(wc3270_exe, MAX_PATH, "%swc3270.exe", installdir);
-	(void) mbstowcs(lwc3270_exe, wc3270_exe, strlen(wc3270_exe) + 1);
+	mbstowcs(lwc3270_exe, wc3270_exe, strlen(wc3270_exe) + 1);
 	wwrite(f, lwc3270_exe);
 	wwrite(f, L"\r\n");
 	wwrite(f, L"IconIndex=0\r\n");

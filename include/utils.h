@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,9 @@ void fcatv(FILE *f, char *s);
 const char *get_message(const char *key);
 char *get_fresource(const char *fmt, ...) printflike(1, 2);
 char *get_resource(const char *name);
+int get_resource_int(const char *name);
+bool get_resource_bool(const char *name);
+char *get_underlying_resource(const char *name);
 char *scatv(const char *s, char *buf, size_t len);
 int split_dbcs_resource(const char *value, char sep, char **part1,
 	char **part2);
@@ -54,9 +57,13 @@ void xs_warning(const char *fmt, ...) printflike(1, 2);
 
 typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
+typedef void (*childfn_t)(ioid_t id, int status);
 ioid_t AddInput(iosrc_t fd, iofn_t fn);
 ioid_t AddExcept(iosrc_t fd, iofn_t fn);
 ioid_t AddOutput(iosrc_t fd, iofn_t fn);
+#if !defined(_WIN32) /*[*/
+ioid_t AddChild(pid_t pid, childfn_t fn);
+#endif /*]*/
 void RemoveInput(ioid_t);
 ioid_t AddTimeOut(unsigned long msec, tofn_t);
 void RemoveTimeOut(ioid_t id);
@@ -69,6 +76,7 @@ bool split_hier(char *label, char **base, char ***parents);
 const char *build_options(void);
 void dump_version(void);
 const char *display_scale(double d);
+void array_add(const char ***s, int ix, const char *v);
 
 /* Doubly-linked lists. */
 bool llist_isempty(llist_t *l);
@@ -89,24 +97,33 @@ void llist_unlink(llist_t *element);
     } \
 }
 
+#define LLIST_APPEND(elt, head)	llist_insert_before(elt, &head)
+#define LLIST_PREPEND(elt, head) llist_insert_before(elt, head.next)
+
 /* State changes. */
-#define ST_RESOLVING	1
-#define ST_HALF_CONNECT	2
-#define ST_CONNECT	3
-#define ST_3270_MODE	4
-#define ST_LINE_MODE	5
-#define ST_REMODEL	6
-#define ST_PRINTER	7
-#define ST_EXITING	8
-#define ST_CHARSET	9
-#define ST_SELECTING	10
-#define N_ST		11
+enum st {
+    ST_NEGOTIATING,	/* protocol negotiation start */
+    ST_CONNECT,		/* connection exists or is in progress */
+    ST_3270_MODE,	/* into 3270 or NVT mode */
+    ST_LINE_MODE,	/* in or out of NVT line mode */
+    ST_REMODEL,		/* model changed */
+    ST_PRINTER,		/* printer session state changed */
+    ST_EXITING,		/* emulator exiting */
+    ST_CODEPAGE,	/* code page changing */
+    ST_SELECTING,	/* screen selection changing */
+    ST_SECURE,		/* secure mode changing */
+    ST_KBD_DISABLE,	/* keyboard disable changing */
+    N_ST
+};
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff
 
 typedef void schange_callback_t(bool);
-void register_schange_ordered(int tx, schange_callback_t *func,
+void register_schange_ordered(enum st tx, schange_callback_t *func,
 	unsigned short order);
-void register_schange(int tx, schange_callback_t *func);
-void st_changed(int tx, bool mode);
+void register_schange(enum st tx, schange_callback_t *func);
+void st_changed(enum st tx, bool mode);
+#if !defined(PR3287) /*[*/
+void change_cstate(enum cstate cstate, const char *why);
+#endif /*]*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
 
 #include "globals.h"
 
+#include "telnet.h"
+#include "trace.h"
 #include "utils.h"
 
 typedef struct st_callback {
@@ -68,7 +70,7 @@ init_schange(void)
  *   0 through 65533		specific ordering
  */
 void
-register_schange_ordered(int tx, schange_callback_t *func,
+register_schange_ordered(enum st tx, schange_callback_t *func,
 	unsigned short order)
 {
     st_callback_t *st;
@@ -89,23 +91,86 @@ register_schange_ordered(int tx, schange_callback_t *func,
 	}
     } FOREACH_LLIST_END(&st_callbacks[tx], before, st_callback_t *);
 
-    llist_insert_before(&st->list, &st_callbacks[tx]);
+    /* Put it at the end. */
+    LLIST_APPEND(&st->list, st_callbacks[tx]);
 }
 
 /* Register a function interested in a state change. */
 void
-register_schange(int tx, schange_callback_t *func)
+register_schange(enum st tx, schange_callback_t *func)
 {
     register_schange_ordered(tx, func, ORDER_DONTCARE);
 }
 
 /* Signal a state change. */
 void
-st_changed(int tx, bool mode)
+st_changed(enum st tx, bool mode)
 {
+    static const char *st_name[N_ST] = {
+	"negotiating",
+	"connect",
+	"3270-mode",
+	"line-mode",
+	"remodel",
+	"printer",
+	"exiting",
+	"codepage",
+	"selecting",
+	"secure",
+	"kbd-disable"
+    };
     struct st_callback *st;
 
+    vtrace("st_changed(%s,%s)\n", st_name[tx], mode? "true": "false");
     FOREACH_LLIST(&st_callbacks[tx], st, st_callback_t *) {
 	(*st->func)(mode);
     } FOREACH_LLIST_END(&st_callbacks[tx], st, st_callback_t *);
+}
+
+/* Change connection state. */
+void
+change_cstate(enum cstate new_cstate, const char *why)
+{
+    enum cstate old_cstate = cstate;
+
+    if (old_cstate == new_cstate) {
+	return;
+    }
+    vtrace("cstate [%s] -> [%s] (%s)\n", state_name[cstate],
+	    state_name[new_cstate], why);
+
+    cstate = new_cstate;
+
+    /* Handle connected/not connected separately. */
+    if (cCONNECTED(old_cstate) != cCONNECTED(new_cstate) ||
+	cPCONNECTED(old_cstate) != cPCONNECTED(new_cstate)) {
+	st_changed(ST_CONNECT, PCONNECTED);
+    }
+
+    switch (new_cstate) {
+    case RESOLVING:
+    case TCP_PENDING:
+    case TLS_PENDING:
+    case PROXY_PENDING:
+    case TELNET_PENDING:
+	st_changed(ST_NEGOTIATING, true);
+	break;
+    case CONNECTED_E_NVT:
+    case CONNECTED_NVT:
+    case CONNECTED_NVT_CHAR:
+	st_changed(ST_LINE_MODE,
+		cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT);
+	/* fall through... */
+    case CONNECTED_3270:
+    case CONNECTED_TN3270E:
+    case CONNECTED_UNBOUND:
+    case CONNECTED_SSCP:
+	if (new_cstate == CONNECTED_UNBOUND) {
+	    st_changed(ST_NEGOTIATING, true);
+	}
+	st_changed(ST_3270_MODE, IN_3270);
+	break;
+    default:
+	break;
+    }
 }

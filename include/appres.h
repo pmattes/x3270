@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2017 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -43,28 +43,21 @@
 
 typedef struct {
     /* Common options. */
-    bool	 extended;
-    bool	 m3279;
     bool	 modified_sel;
     bool	 once;
-    bool	 apl_mode;
     bool	 scripted;
     bool	 numeric_lock;
     bool	 secure;
     bool	 oerr_lock;
-    bool	 typeahead;
     bool	 debug_tracing;
     bool	 disconnect_clear;
     bool	 highlight_bold;
-    bool	 color8;
     bool	 bsd_tm;
     bool	 unlock_delay;
     bool	 qr_bg_color;
     bool	 bind_limit;
     bool	 new_environ;
     bool	 socket;
-    bool	 dsTrace_bc;
-    bool	 eventTrace_bc;
     bool	 trace_monitor;
     bool	 script_port_once;
     bool	 bind_unlock;
@@ -75,7 +68,7 @@ typedef struct {
     char	*model;
     char	*hostsfile;
     char	*port;
-    char	*charset;
+    char	*codepage;
     char	*sbcs_cgcsgid;
     char	*termname;
     char	*devname;	/* for 5250 */
@@ -102,6 +95,7 @@ typedef struct {
     char	*min_version;
     int		 connect_timeout;
     int		 nop_seconds;
+    char	*alias;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;
@@ -141,6 +135,7 @@ typedef struct {
 	char	*printer_opts;
 	int	 save_lines;
 	char	*crosshair_color;
+	char	*console;
     } interactive;
 
     /* File transfer fields. */
@@ -161,10 +156,8 @@ typedef struct {
 	char	*remap;
 	int	 secondary_space;
 	int	 dft_buffer_size;
-	int	 dft_buffer_size_bc;	/* old resource value */
 #if defined(_WIN32) /*[*/
 	int	 codepage;
-	int	 codepage_bc;		/* old resource value */
 #endif /*]*/
     } ft;
 
@@ -173,6 +166,7 @@ typedef struct {
 	bool	 all_bold_on;
 	bool	 ascii_box_draw;
 	bool	 acs;
+	bool	 color_prompt;
 #if !defined(_WIN32) /*[*/
 	bool	 default_fgbg;
 	bool	 cbreak_mode;

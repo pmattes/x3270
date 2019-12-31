@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,11 @@
  *		Global declarations for status.c.
  */
 
-void status_compose(bool on, unsigned char c, enum keytype keytype);
+void status_compose(bool on, ucs4_t ucs4, enum keytype keytype);
 void status_ctlr_done(void);
 void status_cursor_pos(int ca);
 void status_insert_mode(bool on);
+void status_keyboard_disable_flash(void);
 void status_lu(const char *);
 void status_minus(void);
 void status_oerr(int error_type);

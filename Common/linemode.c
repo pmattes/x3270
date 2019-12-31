@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, Paul Mattes.
+ * Copyright (c) 1993-2016, 2018 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -334,7 +334,7 @@ do_intr(char c)
     }
     nvt_process_s(ctl_see((int)c));
     linemode_buf_init();
-    net_interrupt();
+    net_interrupt(c);
 }
 
 static void
@@ -346,7 +346,7 @@ do_quit(char c)
     }
     nvt_process_s(ctl_see((int)c));
     linemode_buf_init();
-    net_break();
+    net_break(c);
 }
 
 /**

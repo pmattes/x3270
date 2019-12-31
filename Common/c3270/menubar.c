@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 Paul Mattes.
+ * Copyright (c) 2010-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,22 +40,23 @@
 #include "ctlr.h"
 
 #include "actions.h"
-#include "charset.h"
 #include "ckeypad.h"
 #include "cmenubar.h"
+#include "codepage.h"
 #include "cscreen.h"
 #include "ctlrc.h"
+#include "unicodec.h"	/* must precede ft.h */
+#include "ft.h"
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
 #include "menubar.h"
 #include "popups.h"
 #include "screen.h"
+#include "task.h"
 #include "toggles.h"
 #include "trace.h"
-#include "unicodec.h"
 #include "utils.h"
 
 #if defined(_WIN32) /*[*/
@@ -336,80 +337,6 @@ draw_menu(cmenu_t *cmenu)
 	    map_acs('j', &menu_screen[ix], &menu_acs[ix]);
 	}
     }
-}
-
-/* Pop up a menu. */
-void
-popup_menu(int x, int click)
-{
-    cmenu_t *cmenu;
-    cmenu_t *c;
-    int row, col;
-    int next_col;
-
-    if (!appres.interactive.menubar) {
-	return;
-    }
-
-    /* Find which menu to start with. */
-    for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
-	if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH) {
-	    break;
-	}
-    }
-    if (cmenu == NULL) {
-	return;
-    }
-
-    /* If it was a direct click, see if the menu has a direct callback. */
-    if (click && cmenu->callback != NULL) {
-	(*cmenu->callback)(cmenu->param);
-	if (after_callback != NULL) {
-	    (*after_callback)(after_param);
-	    after_callback = NULL;
-	    after_param = NULL;
-	}
-	return;
-    }
-
-    /* Start with nothing. */
-    basic_menu_init();
-
-    /*
-     * Draw the menu names on the top line, with the active one highlighted.
-     */
-    row = 0;
-    col = 0;
-    next_col = MENU_WIDTH;
-    for (c = menus; c != NULL; c = c->next) {
-	char *d;
-
-	for (d = c->title; *d; d++) {
-	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
-	    menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
-	    col++;
-	}
-	while (col < next_col) {
-	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
-	    col++;
-	}
-	next_col += MENU_WIDTH;
-    }
-    current_menu = cmenu;
-
-    /* Draw the current menu, with the active item highlighted. */
-    if (cmenu->items) {
-	current_item = cmenu->items;
-	while (current_item && !current_item->enabled) {
-	    current_item = current_item->next;
-	}
-	draw_menu(cmenu);
-    } else {
-	current_item = NULL;
-    }
-
-    /* We're up. */
-    menu_is_up |= MENU_IS_UP;
 }
 
 #if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
@@ -723,42 +650,50 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro("Show(copyright)", false);
-    sms_continue();
+    push_macro("Escape(\"Show(copyright)\")");
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro("Show(status)", false);
-    sms_continue();
+    push_macro("Escape(\"Show(status)\")");
+}
+
+static void
+fm_about(void *ignored _is_unused)
+{
+    push_macro("Escape(\"Show(about)\")");
 }
 
 static void
 fm_prompt(void *ignored _is_unused)
 {
-    push_macro("Escape", false);
+    push_macro("Escape");
 }
 
 static void
 fm_print(void *ignored _is_unused)
 {
-    push_macro("PrintText", false);
+    push_macro("PrintText");
 }
 
 static void
 fm_xfer(void *ignored _is_unused)
 {
-    push_macro("Escape() Transfer()", false);
+    if (ft_state == FT_NONE) {
+	push_macro("Escape(\"Transfer()\")");
+    } else {
+	push_macro("Transfer(Cancel)");
+    }
 }
 
 static void
 fm_trace(void *ignored _is_unused)
 {
     if (toggled(TRACING)) {
-	push_macro("Trace(off)", false);
+	push_macro("Trace(off)");
     } else {
-	push_macro("Trace(on)", false);
+	push_macro("Trace(on)");
     }
 }
 
@@ -766,9 +701,9 @@ static void
 fm_screentrace(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", false);
+	push_macro("ScreenTrace(off)");
     } else {
-	push_macro("ScreenTrace(on)", false);
+	push_macro("ScreenTrace(on)");
     }
 }
 
@@ -776,16 +711,16 @@ static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", false);
+	push_macro("ScreenTrace(off)");
     } else {
-	push_macro("ScreenTrace(on,printer,gdi)", false);
+	push_macro("ScreenTrace(on,printer,gdi)");
     }
 }
 
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro("Show(keymap)", false);
+    push_macro("Escape(\"Show(keymap)\")");
 }
 
 #if defined(_WIN32) /*[*/
@@ -803,21 +738,28 @@ fm_wizard(void *session)
 #endif /*]*/
 
 static void
+fm_reenable(void *ignored _is_unused)
+{
+    push_macro("KeyboardDisable(ForceEnable)");
+}
+
+static void
 fm_disconnect(void *ignored _is_unused)
 {
-    push_macro("Disconnect", false);
+    push_macro("Disconnect");
 }
 
 static void
 fm_quit(void *ignored _is_unused)
 {
-    push_macro("Quit", false);
+    push_macro("Quit");
 }
 
 /* File menu. */
 typedef enum {
     FM_COPYRIGHT,
     FM_STATUS,
+    FM_ABOUT,
     FM_PROMPT,
     FM_PRINT,
     FM_XFER,
@@ -830,6 +772,7 @@ typedef enum {
     FM_WIZARD,
     FM_WIZARD_SESS,
 #endif /*]*/
+    FM_REENABLE,
     FM_DISC,
     FM_QUIT,
     FM_COUNT
@@ -839,8 +782,10 @@ char *file_menu_names[FM_COUNT] = {
     "Copyright",
     "Status",
 #if !defined(_WIN32) /*[*/
+    "About c3270",
     "c3270> Prompt",
 #else /*][*/
+    "About wc3270",
     "wc3270> Prompt",
 #endif /*]*/
     "Print Screen",
@@ -854,12 +799,14 @@ char *file_menu_names[FM_COUNT] = {
     "Session Wizard",
     "Edit Session",
 #endif /*]*/
+    "Re-enable Keyboard",
     "Disconnect",
     "Quit"
 };
 menu_callback file_menu_actions[FM_COUNT] = {
     fm_copyright,
     fm_status,
+    fm_about,
     fm_prompt,
     fm_print,
     fm_xfer,
@@ -872,6 +819,7 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_wizard,
     fm_wizard,
 #endif /*]*/
+    fm_reenable,
     fm_disconnect,
     fm_quit
 };
@@ -881,7 +829,6 @@ typedef enum {
     OM_MONOCASE,
     OM_BLANKFILL,
     OM_TIMING,
-    OM_CURSOR,
     OM_CROSSHAIR,
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
@@ -889,6 +836,8 @@ typedef enum {
     OM_OVERLAY_PASTE,
 #endif /*]*/
     OM_VISIBLE_CONTROL,
+    OM_TYPEAHEAD,
+    OM_ALWAYS_INSERT,
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -896,27 +845,29 @@ toggle_index_t option_index[OM_COUNT] = {
     MONOCASE,
     BLANK_FILL,
     SHOW_TIMING,
-    CURSOR_POS,
     CROSSHAIR,
     UNDERSCORE,
 #if defined(WC3270) /*[*/
     MARGINED_PASTE,
     OVERLAY_PASTE,
 #endif /*]*/
-    VISIBLE_CONTROL
+    VISIBLE_CONTROL,
+    TYPEAHEAD,
+    ALWAYS_INSERT
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
     "Blank Fill",
     "Show Timing",
-    "Track Cursor",
     "Crosshair Cursor",
     "Underscore Mode",
 #if defined(WC3270) /*[*/
     "Margined Paste",
     "Overlay Paste",
 #endif /*]*/
-    "Visible Control"
+    "Visible Control",
+    "Typeahead",
+    "Default Insert Mode",
 };
 
 cmenu_t *file_menu;
@@ -955,7 +906,8 @@ menu_init(void)
 
     file_menu = add_menu("File");
     for (j = 0; j < FM_COUNT; j++) {
-	if (appres.secure && j == FM_PROMPT) {
+	if (appres.secure &&
+		(j == FM_PROMPT || j == FM_XFER || j == FM_TRACE)) {
 	    continue;
 	}
 #if defined(WC3270) /*[*/
@@ -1058,6 +1010,86 @@ menubar_retoggle(toggle_index_t ix)
 	    enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], true);
 	}
     }
+}
+
+/* Pop up a menu. */
+void
+popup_menu(int x, int click)
+{
+    cmenu_t *cmenu;
+    cmenu_t *c;
+    int row, col;
+    int next_col;
+
+    if (!appres.interactive.menubar) {
+	return;
+    }
+
+    /* Find which menu to start with. */
+    for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
+	if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH) {
+	    break;
+	}
+    }
+    if (cmenu == NULL) {
+	return;
+    }
+
+    /* If it was a direct click, see if the menu has a direct callback. */
+    if (click && cmenu->callback != NULL) {
+	(*cmenu->callback)(cmenu->param);
+	if (after_callback != NULL) {
+	    (*after_callback)(after_param);
+	    after_callback = NULL;
+	    after_param = NULL;
+	}
+	return;
+    }
+
+    /* Start with nothing. */
+    basic_menu_init();
+
+    /* Switch the name of the File Transfer menu. */
+    if (!appres.secure) {
+	rename_item(file_menu_items[FM_XFER],
+		(ft_state == FT_NONE)? "File Transfer": "Cancel File Transfer");
+    }
+
+    /*
+     * Draw the menu names on the top line, with the active one highlighted.
+     */
+    row = 0;
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
+
+	for (d = c->title; *d; d++) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
+	    menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
+	    col++;
+	}
+	while (col < next_col) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
+	    col++;
+	}
+	next_col += MENU_WIDTH;
+    }
+    current_menu = cmenu;
+
+    /* Draw the current menu, with the active item highlighted. */
+    if (cmenu->items) {
+	current_item = cmenu->items;
+	while (current_item && !current_item->enabled) {
+	    current_item = current_item->next;
+	}
+	draw_menu(cmenu);
+    } else {
+	current_item = NULL;
+    }
+
+    /* We're up. */
+    menu_is_up |= MENU_IS_UP;
 }
 
 /*

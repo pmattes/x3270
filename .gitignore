@@ -25,3 +25,5 @@ wversion.c
 *.aps
 *-deplibs.mk
 .*.swp
+*.pyc
+__pycache__

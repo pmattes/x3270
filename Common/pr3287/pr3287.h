@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, 2017 Paul Mattes.
+ * Copyright (c) 2013-2014, 2017, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ typedef struct {
 	enum { NOT_DAEMON, WILL_DAEMON, AM_DAEMON } bdaemon; /* daemon mode */
 #endif /*]*/
 	int blanklines;		/* -blanklines */
-	const char *charset;	/* character set (-charset) */
+	const char *codepage;	/* code page (-codepage) */
 #if !defined(_WIN32) /*[*/
 	const char *command;	/* command to run for printing */
 #endif /*]*/
@@ -62,7 +62,7 @@ typedef struct {
 	int skipcc;		/* -skipcc */
 	int mpp;		/* -mpp */
 	bool ssl_host;		/* L: */
-	ssl_config_t ssl;	/* SSL options */
+	ssl_config_t ssl;	/* TLS options */
 	int syncport;		/* -syncport */
 	const char *tracedir;	/* where we are tracing (-tracedir) */
 	int tracing;		/* are we tracing? (-trace) */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,3 +43,5 @@ void nvt_send_up(void);
 void nvt_snap(void);
 void nvt_snap_modes(void);
 void nvt_register(void);
+
+bool is_nvt(struct ea *ea, bool ascii_box_draw, ucs4_t *u);

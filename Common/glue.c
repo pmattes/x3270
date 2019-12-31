@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2019 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -46,7 +46,8 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "charset.h"
+#include "boolstr.h"
+#include "codepage.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
 #include "ctlrc.h"
@@ -54,7 +55,6 @@
 #include "glue_gui.h"
 #include "host.h"
 #include "kybd.h"
-#include "macros.h"
 #include "nvt.h"
 #include "opts.h"
 #include "product.h"
@@ -62,6 +62,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -89,12 +90,9 @@ static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
 static merge_profile_t *merge_profilep = NULL;
-static char *session_suffix;
-static size_t session_suffix_len;
-#if defined(_WIN32) /*[*/
-static char *session_short_suffix;
-static size_t session_short_suffix_len;
-#endif /*]*/
+static char *session_suffix[4];
+static size_t session_suffix_len[4];
+static int n_session_suffixes;
 static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
 
@@ -103,18 +101,41 @@ const char     *programname;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 AppRes          appres;
-int		children = 0;
 bool		exiting = false;
 char	       *command_string = NULL;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
-bool		any_error_output = false;
 
 /* Register a profile merge function. */
 void
 register_merge_profile(merge_profile_t *m)
 {
     merge_profilep = m;
+}
+
+/* Add a session suffix to the list. */
+static void
+add_session_suffix(char *suffix)
+{
+    session_suffix[n_session_suffixes] = suffix;
+    session_suffix_len[n_session_suffixes++] = strlen(suffix);
+}
+
+/* Check a name for ending in a session suffix. */
+static int
+check_session_suffix(const char *name)
+{
+    int i;
+    size_t sl = strlen(name);
+
+    for (i = 0; i < n_session_suffixes; i++) {
+	if (sl > session_suffix_len[i] &&
+	  !strcasecmp(name + sl - session_suffix_len[i], session_suffix[i])) {
+	    return i;
+	}
+    }
+
+    return -1;
 }
 
 /* Parse the command line and read in any session file. */
@@ -124,12 +145,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     size_t cl;
     int i;
     int hn_argc;
-    size_t sl;
     size_t xcmd_len = 0;
     char *xcmd;
     int xargc;
     const char **xargv;
     bool read_session_or_profile = false;
+    int suffix_match = -1;
 
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -150,9 +171,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
     cl++;
     command_string = Malloc(cl);
-    (void) strcpy(command_string, programname);
+    strcpy(command_string, programname);
     for (i = 0; i < argc; i++) {
-	(void) strcat(strcat(command_string, " "), argv[i]);
+	strcat(strcat(command_string, " "), argv[i]);
     }
 
     /*
@@ -168,7 +189,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     xcmd_len = 0;
     for (i = 0; i < argc; i++) {
 	xargv[i] = xcmd + xcmd_len;
-	(void) strcpy(xcmd + xcmd_len, argv[i]);
+	strcpy(xcmd + xcmd_len, argv[i]);
 	xcmd_len += strlen(argv[i]) + 1;
     }
     xargv[i] = NULL;
@@ -225,25 +246,18 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 
     /* Merge in the session. */
-    if (session_suffix == NULL) {
-	session_suffix = xs_buffer(".%s", app);
-	session_suffix_len = strlen(session_suffix);
-    }
+    if (n_session_suffixes == 0) {
+	add_session_suffix(xs_buffer(".%s", app));
 #if defined(_WIN32) /*[*/
-    if (session_short_suffix == NULL) {
-	session_short_suffix = xs_buffer(".%.3s", app);
-	session_short_suffix_len = strlen(session_short_suffix);
-    }
+	add_session_suffix(xs_buffer(".%s", app + 1));
+	add_session_suffix(xs_buffer(".%.3s", app));
 #endif /*]*/
+	if (appres.alias != NULL) {
+	    add_session_suffix(xs_buffer(".%s", appres.alias));
+	}
+    }
     if (*cl_hostname != NULL &&
-	(((sl = strlen(*cl_hostname)) > session_suffix_len &&
-	  !strcasecmp(*cl_hostname + sl - session_suffix_len, session_suffix))
-#if defined(_WIN32) /*[*/
-	 || ((sl = strlen(*cl_hostname)) > session_short_suffix_len &&
-	  !strcasecmp(*cl_hostname + sl - session_short_suffix_len,
-	      session_short_suffix))
-#endif /*]*/
-	 )) {
+	(suffix_match = check_session_suffix(*cl_hostname)) >= 0) {
 
 	const char *pname;
 
@@ -261,20 +275,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	}
 	profile_name = NewString(pname);
 	Replace(profile_path, NewString(profile_name));
-
-	sl = strlen(profile_name);
-	if (sl > session_suffix_len &&
-		!strcasecmp(profile_name + sl - session_suffix_len,
-		    session_suffix)) {
-	    profile_name[sl - session_suffix_len] = '\0';
-#if defined(_WIN32) /*[*/
-	} else if (sl > session_short_suffix_len &&
-		!strcasecmp(profile_name + sl - session_short_suffix_len,
-			session_short_suffix)) {
-	    profile_name[sl - session_short_suffix_len] = '\0';
-#endif /*]*/
-	}
-
+	profile_name[strlen(profile_name) - session_suffix_len[suffix_match]]
+	    = '\0';
 	*cl_hostname = appres.hostname; /* might be NULL */
     } else {
 	/* There is no session file. */
@@ -309,10 +311,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      * All right, we have all of the resources defined.
      * Sort out the contradictory and implicit settings.
      */
-
-    if (appres.apl_mode) {
-	appres.charset = Apl;
-    }
     if (*cl_hostname == NULL) {
 	appres.once = false;
     }
@@ -326,6 +324,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.local_cp = CP_UTF8;
     }
 #endif /*]*/
+
+    appres.termname = clean_termname(appres.termname);
 
     return argc;
 }
@@ -349,28 +349,19 @@ model_init(void)
 	model_number = 0;
     }
     if (!model_number) {
-#if defined(RESTRICT_3279) /*[*/
-	model_number = 3;
-#else /*][*/
 	model_number = 4;
-#endif /*]*/
     }
-#if defined(RESTRICT_3279) /*[*/
-    if (appres.m3279 && model_number == 4) {
-	model_number = 3;
-    }
-#endif /*]*/
     if (appres.interactive.mono) {
-	appres.m3279 = false;
+	mode.m3279 = false;
     }
 
-    if (!appres.extended) {
+    if (!mode.extended) {
 	appres.oversize = NULL;
     }
 
     ovc = 0;
     ovr = 0;
-    if (appres.extended && appres.oversize != NULL) {
+    if (mode.extended && appres.oversize != NULL) {
 	if (product_auto_oversize() && !strcasecmp(appres.oversize, "auto")) {
 	    ovc = -1;
 	    ovr = -1;
@@ -423,9 +414,9 @@ parse_local_process(int *argcp, const char **argv, const char **cmds)
 	}
 	e_len++;
 	cmds_buf = Malloc(e_len);
-	(void) strcpy(cmds_buf, OptLocalProcess);
+	strcpy(cmds_buf, OptLocalProcess);
 	for (j = i+1; j < *argcp; j++) {
-	    (void) strcat(strcat(cmds_buf, " "), argv[j]);
+	    strcat(strcat(cmds_buf, " "), argv[j]);
 	}
 
 	/* Stamp out the remaining args. */
@@ -441,42 +432,44 @@ static void
 set_appres_defaults(void)
 {
     /* Set the defaults. */
-    appres.extended = true;
-    appres.m3279 = true;
-    appres.typeahead = true;
+    mode.extended = true;
+    mode.m3279 = true;
     appres.debug_tracing = true;
     appres.conf_dir = LIBX3270DIR;
 
-    appres.model = "4";
+    appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;
     appres.port = "23";
-    appres.charset = "bracket";
+    appres.codepage = NewString("bracket");
     appres.termname = NULL;
     appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
-    appres.trace_dir = "/tmp";
+    appres.trace_dir = NewString("/tmp");
 #endif /*]*/
     appres.oversize = NULL;
     appres.bind_limit = true;
     appres.new_environ = true;
     appres.max_recent = 5;
 
+    appres.ft.dft_buffer_size = DFT_BUF;
+
     appres.linemode.icrnl = true;
     appres.linemode.onlcr = true;
-    appres.linemode.erase = "^H";
-    appres.linemode.kill = "^U";
-    appres.linemode.werase = "^W";
-    appres.linemode.rprnt = "^R";
-    appres.linemode.lnext = "^V";
-    appres.linemode.intr = "^C";
-    appres.linemode.quit = "^\\";
-    appres.linemode.eof = "^D";
+    appres.linemode.erase = NewString("^H");
+    appres.linemode.kill = NewString("^U");
+    appres.linemode.werase = NewString("^W");
+    appres.linemode.rprnt = NewString("^R");
+    appres.linemode.lnext = NewString("^V");
+    appres.linemode.intr = NewString("^C");
+    appres.linemode.quit = NewString("^\\");
+    appres.linemode.eof = NewString("^D");
 
     appres.unlock_delay = true;
     appres.unlock_delay_ms = 350;
 
-    set_toggle(CURSOR_POS, true);
     set_toggle(AID_WAIT, true);
+    set_toggle(TYPEAHEAD, true);
+    set_toggle(BLANK_FILL, true);
 
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();
@@ -496,12 +489,14 @@ set_appres_defaults(void)
 #endif /*]*/
 
 static opt_t base_opts[] = {
-{ OptAplMode,  OPT_BOOLEAN, true,  ResAplMode,   aoffset(apl_mode),
-    NULL, "Turn on APL mode" },
-{ OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
-    "<name>", "Use host ECBDIC character set (code page) <name>"},
+{ OptAlias,    OPT_STRING,  false, ResAlias,   aoffset(alias),
+    "<name>", "Define application alias for -xrm and session file suffix" },
+{ OptCharset,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
+    NULL, NULL },
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
+{ OptCodePage,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
+    "<name>", "Use host ECBDIC code page <name>"},
 { OptConnectTimeout, OPT_INT,false,ResConnectTimeout,aoffset(connect_timeout),
     "<seconds>", "Timeout for host connect requests" },
 { OptDevName,  OPT_STRING,  false, ResDevName,   aoffset(devname),
@@ -523,6 +518,8 @@ static opt_t base_opts[] = {
 { OptLoginMacro, OPT_STRING, false, ResLoginMacro, aoffset(login_macro),
     "Action([arg[,arg...]]) [...]"
 },
+{ OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
+    "<version>", "Fail unless at this version or greater" },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
@@ -636,7 +633,7 @@ parse_options(int *argcp, const char **argv)
 		popup_an_error("Missing value for '%s'", argv[i]);
 		continue;
 	    }
-	    *(const char **)opts[j].aoff = argv[++i];
+	    *(const char **)opts[j].aoff = NewString(argv[++i]);
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].res_name), NewString(argv[i]));
 	    }
@@ -678,7 +675,7 @@ parse_options(int *argcp, const char **argv)
     }
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
+    memcpy((char *)argv, (char *)argv_out,
     (argc_out + 1) * sizeof(char *));
     Free((char *)argv_out);
 }
@@ -740,7 +737,11 @@ sort_help(void)
     sorted_help = (opt_t *)Malloc(sorted_help_count * sizeof(opt_t));
     for (o = optlist; o != NULL; o = o->next) {
 	for (j = 0; j < o->count; j++) {
-	    sorted_help[oix++] = o->opts[j];
+	    if (o->opts[j].help_text != NULL) {
+		sorted_help[oix++] = o->opts[j];
+	    } else {
+		sorted_help_count--;
+	    }
 	}
     }
 
@@ -837,11 +838,15 @@ parse_set_clear(int *argcp, const char **argv)
 		break;
 	    }
 	}
-	if (toggle_names[j].name == NULL) {
+	if (toggle_names[j].name == NULL &&
+		!init_extended_toggle(argv[i], is_set)) {
 	    ccp_t *tn;
 	    int ntn = 0;
+	    int nx;
+	    char **nxnames;
 
-	    tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
+	    nxnames = extended_toggle_names(&nx);
+	    tn = (ccp_t *)Calloc(N_TOGGLES + nx, sizeof(ccp_t));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
 		if (!toggle_supported(toggle_names[j].index)) {
 		    continue;
@@ -850,6 +855,8 @@ parse_set_clear(int *argcp, const char **argv)
 		    tn[ntn++] = toggle_names[j].name;
 		}
 	    }
+	    memcpy(tn + ntn, nxnames, nx * sizeof(ccp_t));
+	    ntn += nx;
 	    qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
 	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
 		    argv[i]);
@@ -864,8 +871,7 @@ parse_set_clear(int *argcp, const char **argv)
     }
     *argcp = argc_out;
     argv_out[argc_out] = NULL;
-    (void) memcpy((char *)argv, (char *)argv_out,
-	    (argc_out + 1) * sizeof(char *));
+    memcpy((char *)argv, (char *)argv_out, (argc_out + 1) * sizeof(char *));
     Free((char *)argv_out);
 }
 
@@ -892,9 +898,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = false;
+	    mode.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = true;
+	    mode.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -945,26 +951,25 @@ parse_model_number(char *m)
  */
 
 static res_t base_resources[] = {
+    { ResAlias,		aoffset(alias),		XRM_STRING },
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
-    { ResCharset,	aoffset(charset),	XRM_STRING },
-    { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
+    { ResCharset,	aoffset(codepage),	XRM_STRING },
+    { ResCodePage,	aoffset(codepage),	XRM_STRING },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
+    { ResConsole,aoffset(interactive.console),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResDevName,	aoffset(devname),	XRM_STRING },
-    { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
-    { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
     { ResFtAllocation,	aoffset(ft.allocation),	XRM_STRING },
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
     { ResFtBufferSize,aoffset(ft.dft_buffer_size),XRM_INT },
 #if defined(_WIN32) /*[*/
-    { ResFtCodePage,	aoffset(ft.codepage_bc),XRM_INT }, /* deprecated */
     { ResFtWindowsCodePage,aoffset(ft.codepage),XRM_INT },
 #endif /*]*/
     { ResFtCr,		aoffset(ft.cr),		XRM_STRING },
@@ -981,6 +986,7 @@ static res_t base_resources[] = {
     { ResFtSecondarySpace,aoffset(ft.secondary_space),XRM_INT },
     { ResHostname,	aoffset(hostname),	XRM_STRING },
     { ResHostsFile,	aoffset(hostsfile),	XRM_STRING },
+    { ResHttpd,		aoffset(httpd_port),		XRM_STRING },
     { ResIcrnl,		aoffset(linemode.icrnl),	XRM_BOOLEAN },
     { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
     { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
@@ -991,7 +997,6 @@ static res_t base_resources[] = {
     { ResLocalCp,	aoffset(local_cp),	XRM_INT },
 #endif /*]*/
     { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
-    { ResM3279,	aoffset(m3279),			XRM_BOOLEAN },
     { ResModel,	aoffset(model),			XRM_STRING },
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
@@ -1008,13 +1013,13 @@ static res_t base_resources[] = {
     { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
+    { ResScriptPortOnce,aoffset(script_port_once),	XRM_BOOLEAN },
     { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
     { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
     { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
     { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
-    { ResTypeahead,	aoffset(typeahead),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING }
@@ -1189,6 +1194,7 @@ parse_xrm(const char *arg, const char *where)
     reslist_t *r;
     char *hide;
     bool arbitrary = false;
+    const char *errmsg;
 
     /* Validate and split. */
     if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0) {
@@ -1233,13 +1239,8 @@ parse_xrm(const char *arg, const char *where)
     }
     switch (type) {
     case XRM_BOOLEAN:
-	if (!strcasecmp(s, "true") || !strcasecmp(s, "t") || !strcmp(s, "1")) {
-	    *(bool *)address = true;
-	} else if (!strcasecmp(s, "false") || !strcasecmp(s, "f") ||
-		!strcmp(s, "0")) {
-	    *(bool *)address = false;
-	} else {
-	    xs_warning("%s: Invalid bool value: %s", where, s);
+	if ((errmsg = boolstr(s, (bool *)address)) != NULL) {
+	    xs_warning("%s %s", where, errmsg);
 	    *(bool *)address = false;
 	}
 	break;
@@ -1319,7 +1320,7 @@ parse_xrm(const char *arg, const char *where)
 	char *rsname;
 
 	rsname = Malloc(rnlen + 1);
-	(void) strncpy(rsname, name, rnlen);
+	strncpy(rsname, name, rnlen);
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
     }
@@ -1407,111 +1408,35 @@ read_resource_file(const char *filename, bool fatal)
     return read_resource_filex(filename, fatal);
 }
 
+/* Clean the terminal name. */
+char *
+clean_termname(const char *tn)
+{
+    const char *s = tn;
+    size_t sl;
+    char *ret;
+
+    if (tn == NULL) {
+	return (char *)tn;
+    }
+
+    while (*s && isspace((unsigned char)*s)) {
+	s++;
+    }
+    if (!*s) {
+	return NULL;
+    }
+    sl = strlen(s);
+    ret = NewString(s);
+    while (sl && isspace((unsigned char)ret[sl - 1])) {
+	ret[--sl] = 0;
+    }
+
+    return ret;
+}
+
 /* Screen globals. */
 
 bool visible_control = false;
 
 bool flipped = false;
-
-/* Replacements for functions in popups.c. */
-
-bool error_popup_visible = false;
-
-/* Pop up an error dialog. */
-void
-popup_an_error(const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-
-    /* Log to the trace file. */
-    vtrace("%s\n", s);
-
-    if (sms_redirect()) {
-	sms_error(s);
-    } else {
-	screen_suspend();
-	(void) fprintf(stderr, "%s\n", s);
-	fflush(stderr);
-	any_error_output = true;
-	macro_output = true;
-    }
-    Free(s);
-}
-
-/* Pop up an error dialog, based on an error number. */
-void
-popup_an_errno(int errn, const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-
-    if (errn > 0) {
-	popup_an_error("%s: %s", s, strerror(errn));
-    } else {
-	popup_an_error("%s", s);
-    }
-    Free(s);
-}
-
-void
-action_output(const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-    if (sms_redirect()) {
-	sms_info("%s", s);
-    } else {
-	if (!glue_gui_output(s)) {
-	    (void) printf("%s\n", s);
-	}
-	any_error_output = true;
-	macro_output = true;
-    }
-    Free(s);
-}
-
-void
-popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
-    va_end(args);
-    action_output("%s", m);
-    Free(m);
-}
-
-void
-popup_child_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
-    va_end(args);
-    action_output("%s", m);
-    Free(m);
-}
-
-void
-child_popup_init(void)
-{
-}

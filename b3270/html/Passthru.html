@@ -1,0 +1,34 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 passthru Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="passthru"></a><h3>passthru Indication</h3>
+<p>A registered pass-through action has been invoked.</p>
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>p-tag</td><td>yes</td><td>Emulator-generated tag</td></tr>
+ <tr><td>parent-r-tag</td><td>no</td><td>UI-generated tag of parent</td></tr>
+ <tr><td>action</td><td>yes</td><td>Action name</td></tr>
+ <tr><td>arg1</td><td>no</td><td>First argument</td></tr>
+ <tr><td>arg<i>n</i></td><td>no</td><td>Last argument</td></tr>
+</table>
+<p>The UI must respond to this indicatation with a
+<a href="Succeed.html">suceed</a> or <a href="Fail.html">fail</a> operation,
+passing back in the same <i>p-tag</i> value to identify this particular
+invocation.</p>
+<p>If the action was invoked by the UI (through the <a href="Run.html">run</a>
+operation), directly or indirectly, the <b>parent-r-tag</b> will indicate the
+<b>r-tag</b> passed to <b>run</b>.</p>
+<p>Example:
+<pre>
+&ltpassthru p-tag="ui-1234" action="NewKeymap" arg1="special" arg2="foo"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

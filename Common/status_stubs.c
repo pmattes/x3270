@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015, 2018 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include "status.h"
 
 void
-status_compose(bool on _is_unused, unsigned char c _is_unused,
+status_compose(bool on _is_unused, ucs4_t ucs4 _is_unused,
 	enum keytype keytype _is_unused)
 {
 }
@@ -49,6 +49,11 @@ status_ctlr_done(void)
 
 void
 status_insert_mode(bool on _is_unused)
+{
+}
+
+void
+status_keyboard_disable_flash(void)
 {
 }
 

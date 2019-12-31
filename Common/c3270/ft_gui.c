@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -41,9 +41,9 @@
 #include "ft.h"
 #include "ft_private.h"
 #include "icmdc.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
+#include "task.h"
 #include "utils.h"
 
 #include "ft_gui.h"
@@ -53,8 +53,6 @@
 /* Globals. */
 
 /* Statics. */
-static bool ft_sigint_aborting = false;
-static ioid_t ft_poll_id = NULL_IOID;
 
 /* Entry points called from the common FT logic. */
 
@@ -74,32 +72,17 @@ ft_gui_errmsg_prepare(char *msg _is_unused)
 void
 ft_gui_clear_progress(void)
 {
-    if (ftc->is_interactive || escaped) {
-	printf("\r%79s\r", "");
-	fflush(stdout);
-    } else {
-	popup_an_info(" ");
-    }
+    popup_an_info(" ");
 }
 
-/* Pop up a successful completion message. */
+/* Pop up a completion message. */
 void
-ft_gui_complete_popup(const char *msg)
+ft_gui_complete_popup(const char *msg, bool is_error)
 {
-#if !defined(_WIN32) /*[*/
-    signal(SIGINT, SIG_IGN);
-#else /*][*/
-    screen_set_ctrlc_fn(NULL);
-#endif /*]*/
-    if (ftc->is_interactive) {
-	/*
-	 * We call sms_info here instead of plain printf, so that
-	 * macro_output is set and the user will stay at the c3270> prompt.
-	 */
-	sms_info("%s\n", msg);
-    } else if (escaped) {
-	printf("%s\n", msg);
-	fflush(stdout);
+    if (is_error) {
+	popup_an_error("%s", msg);
+    } else {
+	popup_an_info("%s", msg);
     }
 }
 
@@ -107,31 +90,14 @@ ft_gui_complete_popup(const char *msg)
 void
 ft_gui_update_length(size_t length)
 {
-    if (ftc->is_interactive || escaped) {
-	if (ft_sigint_aborting) {
-	    ft_sigint_aborting = false;
-	    if (!ft_do_cancel()) {
-		printf("Aborting... waiting for host acknowledgment... ");
-	    }
-	} else {
-	    printf("\r%79s\rTransferred %lu bytes ", "",
-		    (unsigned long)length);
-	}
-	fflush(stdout);
-    } else {
-	/* Not interactive, put it in the OIA. */
-	popup_an_info("Transferred %lu bytes", (unsigned long)length);
-    }
+    /* Put it in the OIA. */
+    popup_an_info("Transferred %lu bytes", (unsigned long)length);
 }
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */
 void
 ft_gui_running(size_t length _is_unused)
 {
-    if (ftc->is_interactive) {
-	RemoveTimeOut(ft_poll_id);
-	ft_poll_id = NULL_IOID;
-    }
     ft_update_length();
 }
 
@@ -139,85 +105,11 @@ ft_gui_running(size_t length _is_unused)
 void
 ft_gui_aborting(void)
 {
-#if !defined(_WIN32) /*[*/
-    signal(SIGINT, SIG_IGN);
-#else /*][*/
-    screen_set_ctrlc_fn(NULL);
-#endif /*]*/
-}
-
-/* Check for interactive mode. */
-ft_gui_interact_t 
-ft_gui_interact(ft_conf_t *p)
-{   
-    if (!escaped) {
-	return FGI_NOP;
-    }
-    if (interactive_transfer(p) < 0) {
-	printf("\n");
-	fflush(stdout);
-	action_output("Aborted");
-	return FGI_ABORT;
-    }
-    p->is_interactive = true;
-    return FGI_SUCCESS;
-}
-
-#if !defined(_WIN32) /*[*/
-static void
-ft_sigint(int ignored _is_unused)
-{
-    signal(SIGINT, SIG_IGN);
-    ft_sigint_aborting = true;
-}
-#else /*][*/
-static void
-ft_ctrlc_fn(void)
-{
-    screen_set_ctrlc_fn(NULL);
-    ft_sigint_aborting = true;
-}
-#endif /*]*/
-
-static void
-ft_poll_abort(ioid_t id _is_unused)
-{
-    if (ft_sigint_aborting) {
-	ft_sigint_aborting = false;
-	if (!ft_do_cancel()) {
-	    printf("Aborting... waiting for host acknowledgment... ");
-	    fflush(stdout);
-	}
-    } else {
-	/* Poll again. */
-	ft_poll_id = AddTimeOut(500, ft_poll_abort);
-    }
 }
 
 /* Display an "Awaiting start of transfer" message. */
 void
 ft_gui_awaiting(void)
 {   
-    if (ftc->is_interactive) {
-	printf("Press ^C to abort\n");
-	printf("Awaiting start of transfer... ");
-	fflush(stdout);
-
-	/* Set up a SIGINT handler. */
-	ft_sigint_aborting = false;
-#if !defined(_WIN32) /*[*/
-	signal(SIGINT, ft_sigint);
-#else /*][*/
-	screen_set_ctrlc_fn(ft_ctrlc_fn);
-#endif /*]*/
-
-	/* Start polling for ^C. */
-	ft_poll_id = AddTimeOut(500, ft_poll_abort);
-	fflush(stdout);
-    } else if (escaped) {
-	printf("Awaiting start of transfer... ");
-	fflush(stdout);
-    } else {
-	popup_an_info("Awaiting start of transfer");
-    }
+    popup_an_info("Awaiting start of transfer");
 }

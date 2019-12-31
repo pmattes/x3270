@@ -40,6 +40,13 @@ case "$d" in
 *)	d=`pwd`/$d
 esac
 
+# Process the -a option to do autoscale.
+pgm=x3270
+if [ "$1" = "-a" ]
+then	pgm=autoscale
+    	shift
+fi
+
 # Say what you're doing
 set -x
 
@@ -57,12 +64,12 @@ then  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/ucblib
 fi
 export LD_LIBRARY_PATH
 
-# Set up the PATH to include pr3287 and s3270 (for x3270if).
-export PATH=$d/pr3287:$d/s3270:$PATH
+# Set up the PATH to include pr3287 and x3270if.
+export PATH=$d/../pr3287:$d/../x3270if:$PATH
 
 # Run x3270, pointing it to the build directory for its configuration files
 set +e
-$d/x3270 -xrm "x3270.confDir: $d" "$@"
+$d/$pgm -xrm "x3270.confDir: $d" "$@"
 
 # Clean up
 xset -fp $d/

@@ -57,49 +57,23 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 html/SSL.html: documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
 
+include ../Common/Win32/release.mk
+
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
 
 LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
 	./mkiss <LICENSE.txt.tmpl >LICENSE.txt
 
-# Find Inno Setup and kSign.
-# On 32-bit Wine, they are in C:\Program Files.
-# On 64-bit Wine, they are in C:\Program Files (x86).
-ifeq ($(shell test -d "`winepath -u \"C:\\Program Files (x86)\"`" && echo yes),yes)
-PFX = C:\Program Files (x86)
-QPFX = C:\\Program Files (x86)
-QQPFX = C:\\Program\ Files\ \(x86\)
-else
-PFX = C:\Program Files
-QPFX = C:\\Program Files
-QQPFX = C:\\Program\ Files
-endif
-
 # Generate the Inno Setup .exe and the no-install zip file.
 # This depends on external targets, and is intended to be built recursively
 # from the top-level Makefile, which builds those targets first.
-VERSION = $(shell . ./version.txt && echo $$version)
 release-files: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall-32.zip wc3270-$(VERSION)-noinstall-64.zip
 windows-release: release-files
 	$(RM) /tmp/pass
 
 # Sign the binaries using ksign.
-SIGNFILES = $(shell awk '/Source:.*exe/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-\\\\-g')
-CERT = z:\\hd\\xfer\\Cert2019.p12
 PASS = /p `cat /tmp/pass`
-sign-files:
-	./readpass
-	@(/bin/echo '@echo off'; \
-	 for i in $(SIGNFILES); \
-	    do /bin/echo -E "\"$(QPFX)\\kSign\\ksigncmd.exe\" /f $(CERT) /p \"`sed 's/%/%%/' /tmp/pass`\" $$i"; \
-	       /bin/echo "if errorlevel 1 ("; \
-	       /bin/echo "    goto :EOF"; \
-	       /bin/echo ")"; \
-	       /bin/echo -E "echo ==== $$i ===="; \
-	done) >/tmp/sign.bat
-	wine cmd /c Z:\\tmp\\sign.bat
-	$(RM) /tmp/sign.bat
 
 # Rule for building the Inno Setup .exe file, deriving dependencies from the
 # .iss.tmpl file.
@@ -111,9 +85,7 @@ wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux sign-files
 
 # Rule for building the noinstall.zip file, deriving dependencies from the
 # .zipit file.
-ZIPITDEP32 = $(shell awk '/^F/ { print $$2; }' wc3270-32.zipit)
 wc3270-$(VERSION)-noinstall-32.zip: $(ZIPITDEP32) wc3270-32.zipit version.txt Makefile.aux sign-files
-	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-32.zip wc3270-32.zipit
-ZIPITDEP64 = $(shell awk '/^F/ { print $$2; }' wc3270-64.zipit)
+	$(ZIPIT) -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-32.zip wc3270-32.zipit
 wc3270-$(VERSION)-noinstall-64.zip: $(ZIPITDEP64) wc3270-64.zipit version.txt Makefile.aux sign-files
-	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-64.zip wc3270-64.zipit
+	$(ZIPIT) -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-64.zip wc3270-64.zipit

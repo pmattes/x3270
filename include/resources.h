@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2017, Paul Mattes.
+ * Copyright (c) 1995-2019, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,12 @@
 #define ResActiveIcon		"activeIcon"
 #define ResAdVersion		"adVersion"
 #define ResAidWait		"aidWait"
+#define ResAlias		"alias"
 #define ResAllBold		"allBold"
 #define ResAllowResize		"allowResize"
 #define ResAltCursor		"altCursor"
 #define ResAltScreen		"altScreen"
+#define ResAlwaysInsert		"alwaysInsert"
 #define ResAplCircledAlpha	"aplCircledAlpha"
 #define ResAplMode		"aplMode"
 #define ResAsciiBoxDraw		"asciiBoxDraw"
@@ -63,14 +65,16 @@
 #define ResCharset		"charset"
 #define ResCharsetList		"charsetList"
 #define ResClientCert		"clientCert"
-#define ResColor8		"color8"
+#define ResCodePage		"codePage"
 #define ResColorBackground	"colorBackground"
 #define ResColorScheme		"colorScheme"
+#define ResColorPrompt		"colorPrompt"
 #define ResCommandTimeout	"commandTimeout"
 #define ResComposeMap		"composeMap"
 #define ResConfDir		"confDir"
 #define ResConnectFileName	"connectFileName"
 #define ResConnectTimeout	"connectTimeout"
+#define ResConsole		"console"
 #define ResConsoleColorForHostColor "consoleColorForHostColor"
 #define ResCrosshair		"crosshair"
 #define ResCrosshairColor	"crosshairColor"
@@ -83,28 +87,23 @@
 #define ResCursesKeypad		"cursesKeypad"
 #define ResCursorBlink		"cursorBlink"
 #define ResCursorColor		"cursorColor"
-#define ResCursorPos		"cursorPos"
+#define ResDbcsCgcsgid		"dbcsCgcsgid"
 #define ResDebugTracing		"debugTracing"
 #define ResDefaultFgBg		"defaultFgBg"
 #define ResDefScreen		"defScreen"
 #define ResDevName		"devName"
-#define ResDftBufferSize	"dftBufferSize"	/* deprecated */
 #define ResDisconnectClear	"disconnectClear"
 #define ResDoConfirms		"doConfirms"
-#define ResDbcsCgcsgid		"dbcsCgcsgid"
-#define ResDsTrace		"dsTrace"
+#define ResDpi			"dpi"
 #define ResEmulatorFont		"emulatorFont"
 #define ResEof			"eof"
 #define ResErase		"erase"
-#define ResEventTrace		"eventTrace"
-#define ResExtended		"extended"
 #define ResFixedSize		"fixedSize"
 #define ResFtAllocation		"ftAllocation"
 #define ResFtAvblock		"ftAvblock"
 #define ResFtBlksize		"ftBlksize"
 #define ResFtBufferSize		"ftBufferSize"
 #define ResFtCr			"ftCr"
-#define ResFtCodePage		"ftCodePage"	/* deprecated */
 #define ResFtDirection		"ftDirection"
 #define ResFtExist		"ftExist"
 #define ResFtHost		"ftHost"
@@ -135,6 +134,7 @@
 #define ResInlcr		"inlcr"
 #define ResInputColor		"inputColor"
 #define ResInputMethod		"inputMethod"
+#define ResInsertMode		"insertMode"
 #define ResIntr			"intr"
 #define ResInvertKeypadShift	"invertKeypadShift"
 #define ResKeyFile		"keyFile"
@@ -153,7 +153,6 @@
 #define ResLoginMacro		"loginMacro"
 #define ResLockedCursor		"lockedCursor"
 #define ResLuCommandLine	"printer.luCommandLine"
-#define ResM3279		"m3279"
 #define ResMacros		"macros"
 #define ResMarginedPaste	"marginedPaste"
 #define ResMaxRecent		"maxRecent"
@@ -192,7 +191,9 @@
 #define ResQrBgColor		"qrBgColor"
 #define ResReconnect		"reconnect"
 #define ResRectangleSelect	"rectangleSelect"
+#define ResReverseInputMode	"reverseInputMode"
 #define ResReverseVideo		"reverseVideo"
+#define ResRightToLeftMode	"rightToLeftMode"
 #define ResRprnt		"rprnt"
 #define ResSaveLines		"saveLines"
 #define ResSchemeList		"schemeList"
@@ -238,6 +239,7 @@
 /* Dotted resource names. */
 #define DotAcceptHostname	"." ResAcceptHostname
 #define DotActiveIcon		"." ResActiveIcon
+#define DotAlias		"." ResAlias
 #define DotAplMode		"." ResAplMode
 #define DotCaDir		"." ResCaDir
 #define DotCaFile		"." ResCaFile
@@ -246,14 +248,12 @@
 #define DotChainFile		"." ResChainFile
 #define DotCbreak		"." ResCbreak
 #define DotCharClass		"." ResCharClass
-#define DotCharset		"." ResCharset
 #define DotClientCert		"." ResClientCert
+#define DotCodePage		"." ResCodePage
 #define DotColorScheme		"." ResColorScheme
 #define DotConnectTimeout	"." ResConnectTimeout
 #define DotDevName		"." ResDevName
-#define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
-#define DotExtended		"." ResExtended
 #define DotHostsFile		"." ResHostsFile
 #define DotHttpd		"." ResHttpd
 #define DotInputMethod		"." ResInputMethod
@@ -263,7 +263,6 @@
 #define DotKeypadOn		"." ResKeypadOn
 #define DotKeyPasswd		"." ResKeyPasswd
 #define DotLoginMacro		"." ResLoginMacro
-#define DotM3279		"." ResM3279
 #define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -290,6 +289,7 @@
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
+#define DotUtf8			"." ResUtf8
 #define DotV			"." ResV
 #define DotVerifyHostCert	"." ResVerifyHostCert
 
@@ -301,6 +301,7 @@
 #define ClsAllBold		"AllBold"
 #define ClsAllowResize		"AllowResize"
 #define ClsAltCursor		"AltCursor"
+#define ClsAlwaysInsert		"AlwaysInsert"
 #define ClsAplCircledAlpha	"AplCircledAlpha"
 #define ClsAplMode		"AplMode"
 #define ClsBaselevelTranslations	"BaselevelTranslations"
@@ -319,30 +320,27 @@
 #define ClsCharClass		"CharClass"
 #define ClsCharset		"Charset"
 #define ClsClientCert		"ClientCert"
-#define ClsColor8		"Color8"
+#define ClsCodePage		"CodePage"
 #define ClsColorBackground	"ColorBackground"
 #define ClsColorScheme		"ColorScheme"
 #define ClsComposeMap		"ComposeMap"
 #define ClsConfDir		"ConfDir"
 #define ClsConnectFileName	"ConnectFileName"
 #define ClsConnectTimeout	"ConnectTimeout"
+#define ClsConsole		"Console"
 #define ClsCrosshair		"Crosshair"
 #define ClsCrosshairColor	"CrosshairColor"
 #define ClsCursorBlink		"CursorBlink"
 #define ClsCursorColor		"CursorColor"
-#define ClsCursorPos		"CursorPos"
 #define ClsDbcsCgcsgid		"DbcsCgcsgid"
 #define ClsDebugTracing		"DebugTracing"
 #define ClsDevName		"DevName"
-#define ClsDftBufferSize	"DftBufferSize"	/* deprecated */
 #define ClsDisconnectClear	"DisconnectClear"
 #define ClsDoConfirms		"DoConfirms"
-#define ClsDsTrace		"DsTrace"
+#define ClsDpi			"Dpi"
 #define ClsEmulatorFont		"EmulatorFont"
 #define ClsEof			"Eof"
 #define ClsErase		"Erase"
-#define ClsEventTrace		"EventTrace"
-#define ClsExtended		"Extended"
 #define ClsFixedSize		"FixedSize"
 #define ClsFtAllocation		"FtAllocation"
 #define ClsFtAvblock		"FtAvblock"
@@ -374,6 +372,7 @@
 #define ClsInlcr		"Inlcr"
 #define ClsInputColor		"InputColor"
 #define ClsInputMethod		"InputMethod"
+#define ClsInsertMode		"InsertMode"
 #define ClsIntr			"Intr"
 #define ClsInvertKeypadShift	"InvertKeypadShift"
 #define ClsKeyFile		"KeyFile"
@@ -389,7 +388,6 @@
 #define ClsLnext		"Lnext"
 #define ClsLockedCursor		"LockedCursor"
 #define ClsLoginMacro		"LoginMacro"
-#define ClsM3279		"M3279"
 #define ClsMacros		"Macros"
 #define ClsMarginedPaste	"MarginedPaste"
 #define ClsMaxRecent		"MaxRecent"
@@ -420,6 +418,8 @@
 #define ClsQuit			"Quit"
 #define ClsReconnect		"Reconnect"
 #define ClsRectangleSelect	"RectangleSelect"
+#define ClsReverseInputMode	"ReverseInputMode"
+#define ClsRightToLeftMode	"RightToLeftMode"
 #define ClsRprnt		"Rprnt"
 #define ClsSaveLines		"SaveLines"
 #define ClsSbcsCgcsgid		"SbcsSgcsgid"
@@ -448,6 +448,7 @@
 #define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
 #define ClsUser			"User"
+#define ClsUtf8			"Utf8"
 #define ClsVerifyHostCert	"VerifyHostCert"
 #define ClsVisibleControl	"VisibleControl"
 #define ClsVisualBell		"VisualBell"
@@ -459,6 +460,7 @@
 /* Options. */
 #define OptAcceptHostname	"-accepthostname"
 #define OptActiveIcon		"-activeicon"
+#define OptAlias		"-alias"
 #define OptAllBold		"-allbold"
 #define OptAltScreen		"-altscreen"
 #define OptAplMode		"-apl"
@@ -472,6 +474,7 @@
 #define OptCharset		"-charset"
 #define OptClientCert		"-clientcert"
 #define OptClear		"-clear"
+#define OptCodePage		"-codepage"
 #define OptColorScheme		"-scheme"
 #define OptConnectTimeout	"-connecttimeout"
 #define OptDefaultFgBg		"-defaultfgbg"
@@ -479,7 +482,6 @@
 #define OptDevName		"-devname"
 #define OptTrace		"-trace"
 #define OptEmulatorFont		"-efont"
-#define OptExtended		"-extended"
 #define OptHostsFile		"-hostsfile"
 #define OptHttpd		"-httpd"
 #define OptIconName		"-iconname"
@@ -494,7 +496,6 @@
 #define OptLocalCp		"-localcp"
 #define OptLocalProcess		"-e"
 #define OptLoginMacro		"-loginmacro"
-#define OptM3279		"-color"
 #define OptMinVersion		"-minversion"
 #define OptModel		"-model"
 #define OptMono			"-mono"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,15 +44,19 @@
 #include <assert.h>
 
 #include "appres.h"
+#include "bind-opt.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
+#include "resources.h"
+#include "task.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"
 #include "httpd-io.h"
+#include "httpd-nodes.h"
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
@@ -60,6 +64,19 @@
 #endif /*]*/
 
 #define IDLE_MAX	15
+
+struct hio_listener {
+    llist_t link;	/* list linkage */
+    int n_sessions;
+    socket_t listen_s;
+#if defined(_WIN32) /*[*/
+    HANDLE listen_event;
+#endif /*]*/
+    ioid_t listen_id;
+};
+
+static hio_listener_t *global_listener = NULL;
+static llist_t listeners = LLIST_INIT(listeners);
 
 #define N_SESSIONS	32
 typedef struct {
@@ -79,13 +96,9 @@ typedef struct {
 	varbuf_t result; /* accumulated result data */
 	bool done;	/* is the command done? */
     } pending;
+    hio_listener_t *listener;
 } session_t;
 llist_t sessions = LLIST_INIT(sessions);
-static int n_sessions;
-static socket_t listen_s;
-#if defined(_WIN32) /*[*/
-static HANDLE listen_event;
-#endif /*]*/
 
 /**
  * Return the text for the most recent socket error.
@@ -124,7 +137,9 @@ hio_socket_close(session_t *session)
     vb_free(&session->pending.result);
     llist_unlink(&session->link);
     Free(session);
-    n_sessions--;
+    if (session->listener != NULL) {
+	session->listener->n_sessions--;
+    }
 }
 
 /**
@@ -179,7 +194,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 
     /* Move this session to the front of the list. */
     llist_unlink(&session->link);
-    llist_insert_before(&session->link, sessions.next);
+    LLIST_PREPEND(&session->link, sessions);
 
     session->idle = 0;
 
@@ -233,6 +248,8 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 void
 hio_connection(iosrc_t fd, ioid_t id)
 {
+    hio_listener_t *l;
+    bool found = false;
     socket_t t;
     union {
 	struct sockaddr sa;
@@ -245,21 +262,39 @@ hio_connection(iosrc_t fd, ioid_t id)
     char hostbuf[128];
     session_t *session;
 
+    /* Find the listener. */
+    FOREACH_LLIST(&listeners, l, hio_listener_t *) {
+	if (l->listen_id == id) {
+	    found = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (!found) {
+	vtrace("httpd accept: session not found\n");
+	return;
+    }
+
+    /* Accept the connection. */
     len = sizeof(sa);
-    t = accept(listen_s, &sa.sa, &len);
+    t = accept(l->listen_s, &sa.sa, &len);
     if (t == INVALID_SOCKET) {
 	vtrace("httpd accept error: %s%s\n", socket_errtext(),
 		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
 	return;
     }
-    if (n_sessions >= N_SESSIONS) {
+    if (l->n_sessions >= N_SESSIONS) {
 	vtrace("Too many connections.\n");
 	SOCK_CLOSE(t);
 	return;
     }
 
+#if !defined(_WIN32) /*[*/
+    fcntl(t, F_SETFD, 1);
+#endif /*]*/
+
     session = Malloc(sizeof(session_t));
     memset(session, 0, sizeof(session_t));
+    session->listener = l;
     vb_init(&session->pending.result);
     session->s = t;
 #if defined(_WIN32) /*[*/
@@ -306,12 +341,93 @@ hio_connection(iosrc_t fd, ioid_t id)
     /* Set the timeout for the first line of input. */
     session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
 
-    llist_insert_before(&session->link, sessions.next);
-    n_sessions++;
+    LLIST_APPEND(&session->link, sessions);
+    l->n_sessions++;
 }
 
 /**
- * Initialize the httpd socket.
+ * Initialize an httpd socket.
+ *
+ * @param[in] sa	address and port to listen on
+ * @param[in] sa_len	length of sa
+ *
+ * @returns listen context
+ */
+hio_listener_t *
+hio_init_x(struct sockaddr *sa, socklen_t sa_len)
+{
+    int on = 1;
+
+    hio_listener_t *l = Calloc(sizeof(hio_listener_t), 1);
+    llist_init(&l->link);
+
+#if !defined(_WIN32) /*[*/
+    l->listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
+#else /*][*/
+    l->listen_s = WSASocket(sa->sa_family, SOCK_STREAM, 0, NULL, 0,
+	    WSA_FLAG_NO_HANDLE_INHERIT);
+#endif /*]*/
+    if (l->listen_s == INVALID_SOCKET) {
+	popup_an_error("httpd socket: %s", socket_errtext());
+	goto fail;
+    }
+    if (setsockopt(l->listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
+		sizeof(on)) < 0) {
+	popup_an_error("httpd setsockopt: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
+    if (bind(l->listen_s, sa, sa_len) < 0) {
+	popup_an_error("httpd bind: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
+    if (listen(l->listen_s, 10) < 0) {
+	popup_an_error("httpd listen: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
+#if !defined(_WIN32) /*[*/
+    fcntl(l->listen_s, F_SETFD, 1);
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+    l->listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (l->listen_event == NULL) {
+	popup_an_error("httpd: cannot create listen handle");
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
+    if (WSAEventSelect(l->listen_s, l->listen_event, FD_ACCEPT) != 0) {
+	popup_an_error("httpd: WSAEventSelect failed: %s",
+		socket_errtext());
+	CloseHandle(l->listen_event);
+	l->listen_event = INVALID_HANDLE_VALUE;
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
+    l->listen_id = AddInput(l->listen_event, hio_connection);
+#else /*][*/
+    l->listen_id = AddInput(l->listen_s, hio_connection);
+#endif /*]*/
+    LLIST_APPEND(&l->link, listeners);
+    goto done;
+
+fail:
+    Free(l);
+    l = NULL;
+
+done:
+    Free(sa);
+    return l;
+}
+
+/**
+ * Initialize the global httpd socket.
  *
  * @param[in] sa	address and port to listen on
  * @param[in] sa_len	length of sa
@@ -319,52 +435,55 @@ hio_connection(iosrc_t fd, ioid_t id)
 void
 hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
-    int on = 1;
+    if (global_listener == NULL) {
+	global_listener = hio_init_x(sa, sa_len);
+    }
+}
 
-    listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
-    if (listen_s == INVALID_SOCKET) {
-	popup_an_error("httpd socket: %s", socket_errtext());
+/**
+ * Stop listening globally for HTTP connections.
+ */
+void
+hio_stop_x(hio_listener_t *l)
+{
+    session_t *session;
+
+    if (l->listen_id == NULL_IOID) {
 	return;
     }
-    if (setsockopt(listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
-		sizeof(on)) < 0) {
-	popup_an_error("httpd setsockopt: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	return;
-    }
-    if (bind(listen_s, sa, sa_len) < 0) {
-	popup_an_error("httpd bind: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	return;
-    }
-    if (listen(listen_s, 10) < 0) {
-	popup_an_error("httpd listen: %s", socket_errtext());
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	return;
-    }
+
+    RemoveInput(l->listen_id);
+    l->listen_id = NULL_IOID;
+
+    SOCK_CLOSE(l->listen_s);
+    l->listen_s = INVALID_SOCKET;
+
 #if defined(_WIN32) /*[*/
-    listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (listen_event == NULL) {
-	popup_an_error("httpd: cannot create listen handle");
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-	return;
-    }
-    if (WSAEventSelect(listen_s, listen_event, FD_ACCEPT) != 0) {
-	popup_an_error("httpd: WSAEventSelect failed: %s",
-		socket_errtext());
-	CloseHandle(listen_event);
-	listen_event = INVALID_HANDLE_VALUE;
-	SOCK_CLOSE(listen_s);
-	listen_s = INVALID_SOCKET;
-    }
-    (void) AddInput(listen_event, hio_connection);
-#else /*][*/
-    (void) AddInput(listen_s, hio_connection);
+    CloseHandle(l->listen_event);
+    l->listen_event = INVALID_HANDLE_VALUE;
 #endif /*]*/
+
+    /* Detach any sessions. */
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (session->listener == l) {
+	    session->listener = NULL;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+
+    l->n_sessions = 0;
+    llist_unlink(&l->link);
+}
+
+/**
+ * Stop listening for HTTP connections.
+ */
+void
+hio_stop(void)
+{
+    if (global_listener != NULL) {
+	hio_stop_x(global_listener);
+	Replace(global_listener, NULL);
+    }
 }
 
 /**
@@ -392,9 +511,10 @@ hio_send(void *mhandle, const char *buf, size_t len)
  * @param[in] handle	handle
  * @param[in] buf	buffer
  * @param[in] len	size of buffer
+ * @param[in] success	true if data, false if error message
  */
 static void
-hio_data(sms_cbh handle, const char *buf, size_t len)
+hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     session_t *s = handle;
 
@@ -423,7 +543,41 @@ hio_data(sms_cbh handle, const char *buf, size_t len)
 		break;
 	    }
 	}
+    } else if (s->pending.content_type == CT_JSON) {
+	size_t i;
+	char c;
+
+	/* Quote JSON in the response. */
+	vb_appends(&s->pending.result, "  \"");
+	for (i = 0; i < len; i++) {
+	    c = buf[i];
+	    switch (c) {
+	    case '"':
+		vb_appends(&s->pending.result, "\\\"");
+		break;
+	    case '\\':
+		vb_appends(&s->pending.result, "\\\\");
+		break;
+	    case '\r':
+		vb_appends(&s->pending.result, "\\r");
+		break;
+	    case '\n':
+		vb_appends(&s->pending.result, "\\n");
+		break;
+	    case '\t':
+		vb_appends(&s->pending.result, "\\t");
+		break;
+	    case '\f':
+		vb_appends(&s->pending.result, "\\f");
+		break;
+	    default:
+		vb_append(&s->pending.result, &c, 1);
+		break;
+	    }
+	}
+	vb_appends(&s->pending.result, "\",");
     } else {
+	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);
     }
     vb_appends(&s->pending.result, "\n");
@@ -434,25 +588,29 @@ hio_data(sms_cbh handle, const char *buf, size_t len)
  *
  * @param[in] handle	handle
  * @param[in] success	true if command succeeded
- * @param[in] status_buf status line buffer
- * @param[in] status_len size of status line buffer
+ * @param[in] abort	true if aborting
+ *
+ * @return True if the context is complete
  */
-static void
-hio_complete(sms_cbh handle, bool success, const char *status_buf,
-	size_t status_len)
+static bool
+hio_complete(task_cbh handle, bool success, bool abort)
 {
     session_t *s = handle;
+    char *prompt = task_cb_prompt(handle);
 
     /* We're done. */
     s->pending.done = true;
 
     /* Pass the result up to the node. */
     s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
-	    vb_buf(&s->pending.result), vb_len(&s->pending.result), status_buf,
-	    status_len);
+	    vb_buf(&s->pending.result), vb_len(&s->pending.result), prompt,
+	    strlen(prompt));
 
     /* Get ready for the next command. */
     vb_reset(&s->pending.result);
+
+    /* This is always the end of the command. */
+    return true;
 }
 
 /**
@@ -469,7 +627,14 @@ sendto_t
 hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 	content_t content_type)
 {
-    static sms_cb_t httpd_cb = { "HTTPD", IA_SCRIPT, hio_data, hio_complete };
+    static tcb_t httpd_cb = {
+	"httpd",
+	IA_HTTPD,
+	CB_NEW_TASKQ,
+	hio_data,
+	hio_complete,
+	NULL
+    };
     size_t sl;
     session_t *s = httpd_mhandle(dhandle);
 
@@ -538,4 +703,44 @@ hio_async_done(void *dhandle, httpd_status_t rv)
     if (session->toid == NULL_IOID) {
 	session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
     }
+}
+
+/**
+ * Upcall for toggling the global HTTP listener on and off.
+ *
+ * @param[in] name	Name of toggle
+ * @param[in] value	Toggle value
+ * @param[out] canonical_value	Returned canonical form of value
+ * @returns true if toggle changed successfully
+ */
+static bool
+hio_toggle_upcall(const char *name, const char *value)
+{
+    struct sockaddr *sa;
+    socklen_t sa_len;
+
+    hio_stop();
+    if (value == NULL || !*value) {
+	Replace(appres.httpd_port, NULL);
+	return true;
+    }
+
+    if (!parse_bind_opt(value, &sa, &sa_len)) {
+	popup_an_error("Invalid %s: %s", name, value);
+	return false;
+    }
+    Replace(appres.httpd_port, canonical_bind_opt(sa));
+    httpd_objects_init();
+    hio_init(sa, sa_len);
+    return true;
+}
+
+/**
+ * Register httpd with the rest of the system.
+ */
+void
+hio_register(void)
+{
+    register_extended_toggle(ResHttpd, hio_toggle_upcall, NULL,
+	    canonical_bind_opt_res, (void **)&appres.httpd_port, XRM_STRING);
 }

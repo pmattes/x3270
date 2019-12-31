@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@ extern int last_changed;
 
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);
+void ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs);
 void ctlr_add_bg(int baddr, unsigned char color);
 void ctlr_add_cs(int baddr, unsigned char cs);
 void ctlr_add_fa(int baddr, unsigned char fa, unsigned char cs);
@@ -62,12 +63,13 @@ void ctlr_erase_all_unprotected(void);
 void ctlr_init(unsigned cmask);
 const char *ctlr_query_cur_size(void);
 const char *ctlr_query_cursor(void);
+const char *ctlr_query_cursor1(void);
 const char *ctlr_query_formatted(void);
 const char *ctlr_query_max_size(void);
 void ctlr_read_buffer(unsigned char aid_byte);
 void ctlr_read_modified(unsigned char aid_byte, bool all);
 void ctlr_reinit(unsigned cmask);
-void ctlr_scroll(void);
+void ctlr_scroll(unsigned char fg, unsigned char bg);
 void ctlr_shrink(void);
 void ctlr_snap_buffer(void);
 void ctlr_snap_buffer_sscp_lu(void);
@@ -123,3 +125,7 @@ enum dbcs_state ctlr_dbcs_state(int baddr);
 enum dbcs_state ctlr_dbcs_state_ea(int baddr, struct ea *ea);
 enum dbcs_state ctlr_lookleft_state(int baddr, enum dbcs_why *why);
 int ctlr_dbcs_postprocess(void);
+
+#define EC_SCROLL	0x01	/* Enable cursor from scroll logic */
+#define EC_NVT		0x02	/* Enable cursor from NVT */
+void ctlr_enable_cursor(bool enable, unsigned source);

@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2017, Paul Mattes.
+# Copyright (c) 2007-2018, Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
 	WindowsInstall.html Wishlist.html c3270-Resources.html c3270-man.html \
 	c3270Keymap.html del.jpg delta.jpg ibm_hosts.html man/FAQ.html \
 	pr3287-man.html rest.html s3270-Resources.html s3270-man.html \
-	styles.css tcl3270-Resources.html tcl3270-man.html \
+	styles.css tcl3270-man.html \
 	wc3270-Resources.html wc3270-man.html wc3270-script.html \
 	wc3270Keymap.html wpr3287-man.html ws3270-Resources.html \
 	ws3270-man.html x026.gif x3270-Resources.html x3270-man.html \

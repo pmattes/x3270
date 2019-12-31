@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, 2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,15 +78,6 @@ tracefile_callback(Widget w, XtPointer client_data,
     }
 }
 
-/* Callback for "No File" button on trace popup. */
-static void
-no_tracefile_callback(Widget w, XtPointer client_data,
-	XtPointer call_data _is_unused)
-{
-    tracefile_ok("");
-    XtPopdown(trace_shell);
-}
-
 /*
  * Tracing has been started. Pop up the dialog, if appropriate.
  * Returns true for dialog up, false to go ahead and start tracing.
@@ -102,7 +93,7 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
     if (trace_shell == NULL) {
 	trace_shell = create_form_popup("trace",
 		tracefile_callback,
-		appres.trace_monitor? no_tracefile_callback: NULL,
+		NULL,
 		FORM_NO_WHITE);
 	XtVaSetValues(XtNameToWidget(trace_shell, ObjDialog),
 		XtNvalue, tracefile,

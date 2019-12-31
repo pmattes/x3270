@@ -34,8 +34,8 @@ AR = ar
 
 all: $(LIB32XX)
 
-include lib32xx_files.mk
-OBJS = $(LIB32XX_OBJECTS) @SSL_MODULES@
+include lib32xx_files.mk lib32xxu_files.mk
+OBJS = $(LIB32XX_OBJECTS) $(LIB32XXU_OBJECTS) @SSL_MODULES@
 
 LIBDIR = @libdir@
 prefix = @prefix@

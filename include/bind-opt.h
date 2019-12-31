@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,3 +33,5 @@
 
 bool parse_bind_opt(const char *spec, struct sockaddr **addr,
 	socklen_t *addrlen);
+char *canonical_bind_opt(struct sockaddr *sa);
+char *canonical_bind_opt_res(const char *res);

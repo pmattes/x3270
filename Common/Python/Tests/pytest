@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+
+import sys
+import x3270if
+
+x = x3270if.new_emulator(debug=True,emulator='x3270')
+
+r = x.run_action('Query')
+sys.stderr.write(r + '\n')
+
+#r = x.run_action('Query', 'Cursor1', 'a\\nb', '"x"', ',', ')')
+#r = x.run_action('#')
+#r = x.run_action(('Query', 'Cursor1', 'foo'))
+r = x.run_action('Query', 'Cursor1')
+sys.stderr.write(r + '\n')
+
+try:
+    r = x.run_action('Quisp',['Quake','Foo',9,10])
+except x3270if.ActionFailException as err:
+    sys.stderr.write('Run failed: {0}\n'.format(err))
+
+try:
+    r = x.run_action('Quisp','Quake','Foo',9,10)
+except x3270if.ActionFailException as err:
+    sys.stderr.write('Run failed: {0}\n'.format(err))
+
+sys.stderr.write('Quote(a,b,c) -> ' + x3270if.quote('a,b,c') + '\n')

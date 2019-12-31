@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -35,14 +35,15 @@
 void ft_gui_progress_popdown(void);
 void ft_gui_errmsg_prepare(char *msg);
 void ft_gui_clear_progress(void);
-void ft_gui_complete_popup(const char *msg);
+void ft_gui_complete_popup(const char *msg, bool is_error);
 void ft_gui_update_length(size_t length);
 void ft_gui_running(size_t length);
 void ft_gui_aborting(void);
 typedef enum {
     FGI_NOP,		/* interaction not supported */
     FGI_SUCCESS,	/* parameters set, proceed */
-    FGI_ABORT		/* user aborted transfer */
+    FGI_ABORT,		/* user aborted transfer */
+    FGI_ASYNC		/* dialog running asynchronously */
 } ft_gui_interact_t;
 ft_gui_interact_t ft_gui_interact(ft_conf_t *p);
 void ft_gui_awaiting(void);

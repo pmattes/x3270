@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2019 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -54,6 +54,7 @@
 typedef struct {
     socket_t sock;			/* socket */
     const char *hostname;		/* server name */
+    bool negotiate_pending;		/* true if negotiation pending */
     bool secure_unverified;		/* true if server cert not verified */
     SSLContextRef context;		/* secure transport context */
     char *session_info;			/* session information */
@@ -269,13 +270,16 @@ read_func(SSLConnectionRef connection, void *data, size_t *data_length)
 
     /*
      * They want us to return all of the data, or errSSLWouldBlock.
-     * For now, we operate in blocking mode, so we just keep trying.
      */
     while (n_read < *data_length) {
 	nr = recv(s->sock, (char *)data + n_read, *data_length - n_read, 0);
-	vtrace("SSL: read %d/%d bytes\n", nr, (int)(*data_length - n_read));
+	vtrace("TLS: read %d/%d bytes\n", nr, (int)(*data_length - n_read));
 	if (nr < 0) {
-	    vtrace("SSL recv: %s\n", strerror(errno));
+	    if (errno == EWOULDBLOCK) {
+		*data_length = n_read;
+		return errSSLWouldBlock;
+	    }
+	    vtrace("TLS recv: %s\n", strerror(errno));
 	    *data_length = n_read;
 	    return errSecIO;
 	} else if (nr == 0) {
@@ -302,9 +306,9 @@ write_func(SSLConnectionRef connection, const void *data, size_t *data_length)
     }
 
     nw = send(s->sock, data, *data_length, 0);
-    vtrace("SSL: wrote %d/%d bytes\n", nw, (int)*data_length);
+    vtrace("TLS: wrote %d/%d bytes\n", nw, (int)*data_length);
     if (nw < 0) {
-	vtrace("SSL send: %s\n", strerror(errno));
+	vtrace("TLS send: %s\n", strerror(errno));
 	*data_length = 0;
 	return errSecIO;
     } else {
@@ -808,7 +812,7 @@ set_client_cert(stransport_sio_t *s)
     }
 }
 
-/* Free an SSL context. */
+/* Free a TLS context. */
 static void
 sio_free(stransport_sio_t *s)
 {
@@ -893,13 +897,13 @@ fail:
 }
 
 /*
- * Negotiate an SSL connection.
+ * Negotiate a TLS connection.
  * Returns true for success, false for failure.
  * If it returns false, the socket should be disconnected.
  *
  * Returns 'data' true if there is already protocol data pending.
  */
-bool
+sio_negotiate_ret_t
 sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 {
     stransport_sio_t *s;
@@ -913,43 +917,53 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     *data = false;
     if (sio == NULL) {
 	sioc_set_error("NULL sio");
-	return false;
+	return SIG_FAILURE;
     }
     s = (stransport_sio_t *)sio;
-    if (s->sock != INVALID_SOCKET) {
-	sioc_set_error("Invalid sio");
-	return false;
-    }
+    if (s->negotiate_pending) {
+	if (s->sock == INVALID_SOCKET) {
+	    sioc_set_error("Invalid sio");
+	    return SIG_FAILURE;
+	}
+    } else {
+	if (s->sock != INVALID_SOCKET) {
+	    sioc_set_error("Invalid sio");
+	    return SIG_FAILURE;
+	}
 
-    s->sock = sock;
-    s->hostname = hostname;
+	s->sock = sock;
+	s->hostname = hostname;
 
+	if (config->accept_hostname != NULL) {
+	    if (!strncasecmp(accept_hostname, "DNS:", 4)) {
+		accept_hostname = config->accept_hostname + 4;
+		sioc_set_error("Empty acceptHostname");
+		goto fail;
+	    } else if (!strncasecmp(config->accept_hostname, "IP:", 3)) {
+		sioc_set_error("Cannot use 'IP:' acceptHostname");
+		goto fail;
+	    } else if (!strcasecmp(config->accept_hostname, "any")) {
+		sioc_set_error("Cannot use 'any' acceptHostname");
+		goto fail;
+	    } else {
+		accept_hostname = config->accept_hostname;
+	    }
+	}
 
-    /* Perform handshake. */
-    if (config->accept_hostname != NULL) {
-	if (!strncasecmp(accept_hostname, "DNS:", 4)) {
-	    accept_hostname = config->accept_hostname + 4;
-	    sioc_set_error("Empty acceptHostname");
+	status = SSLSetPeerDomainName(s->context, accept_hostname,
+		strlen(accept_hostname));
+	if (status != errSecSuccess) {
+	    set_oserror(status, "SSLSetPeerDomainName");
 	    goto fail;
-	} else if (!strncasecmp(config->accept_hostname, "IP:", 3)) {
-	    sioc_set_error("Cannot use 'IP:' acceptHostname");
-	    goto fail;
-	} else if (!strcasecmp(config->accept_hostname, "any")) {
-	    sioc_set_error("Cannot use 'any' acceptHostname");
-	    goto fail;
-	} else {
-	    accept_hostname = config->accept_hostname;
 	}
     }
 
-    status = SSLSetPeerDomainName(s->context, accept_hostname,
-	    strlen(accept_hostname));
-    if (status != errSecSuccess) {
-	set_oserror(status, "SSLSetPeerDomainName");
-	goto fail;
-    }
-
+    /* Perform handshake. */
     status = SSLHandshake(s->context);
+    if (status == errSSLWouldBlock) {
+	s->negotiate_pending = true;
+	return SIG_WANTMORE;
+    }
     if (status != errSecSuccess && status != errSSLServerAuthCompleted) {
 	set_oserror(status, "SSLHandshake");
 	goto fail;
@@ -957,6 +971,10 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     if (status == errSSLServerAuthCompleted) {
 	/* Do it again, to complete the handshake. */
 	status = SSLHandshake(s->context);
+	if (status == errSSLWouldBlock) {
+	    s->negotiate_pending = true;
+	    return SIG_WANTMORE;
+	}
 	if (status != errSecSuccess) {
 	    set_oserror(status, "SSLHandshake");
 	    goto fail;
@@ -983,10 +1001,10 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 
     /* Success. */
     s->secure_unverified = !config->verify_host_cert;
-    return true;
+    return SIG_SUCCESS;
 
 fail:
-    return false;
+    return SIG_FAILURE;
 }
 
 /*
@@ -1015,7 +1033,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 
     status = SSLRead(s->context, buf, buflen, &n_read);
     if (status == errSSLClosedGraceful || status == errSSLClosedNoNotify) {
-	vtrace("SSL: EOF\n");
+	vtrace("TLS: EOF\n");
 	return 0;
     }
     if (status != errSecSuccess) {
@@ -1058,7 +1076,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
     return (int)buflen;
 }
 
-/* Closes the SSL connection. */
+/* Closes the TLS connection. */
 void
 sio_close(sio_t sio)
 {

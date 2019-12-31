@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, 2014-2015 Paul Mattes.
+ * Copyright (c) 1999-2010, 2014-2015, 2018 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +43,18 @@ void screen_register(void);
 void screen_final(void);
 void screen_system_fixup(void);
 #if defined(WC3270) /*[*/
-void pager_output(const char *s);
+typedef enum {
+    PC_DEFAULT,
+    PC_PROMPT,
+    PC_ERROR,
+    PC_NORMAL
+} pc_t;
+void screen_color(pc_t sc);
 bool screen_wait_for_key(char *c);
 void screen_title(const char *text);
 typedef void (*ctrlc_fn_t)(void);
 void screen_set_ctrlc_fn(ctrlc_fn_t fn);
 void get_console_size(int *rows, int *cols);
+void screen_send_esc(void);
+void screen_echo_mode(bool echo);
 #endif /*]*/

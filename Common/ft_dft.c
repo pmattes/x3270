@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2019 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -52,9 +52,6 @@
 /* Macros. */
 #define OPEN_MSG	"FT:MSG"	/* Open request for message */
 #define END_TRANSFER	"TRANS03"	/* Message for xfer complete */
-
-#define DFT_MIN_BUF	256
-#define DFT_MAX_BUF	32767
 
 #define DFT_MAX_UNGETC	32
 
@@ -159,7 +156,7 @@ dft_open_request(unsigned short len, unsigned char *cp)
 	return;
     }
 
-    (void) memcpy(namebuf, name, 7);
+    memcpy(namebuf, name, 7);
     namebuf[7] = '\0';
     s = &namebuf[6];
     while (s >= namebuf && *s == ' ') {
@@ -487,7 +484,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	    }
 	    error = ME_NONE;
 	    inbuf[in_ix++] = c;
-	    (void) ft_multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+	    ft_multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
 	    if (error == ME_INVALID) {
 		inbuf[0] = '?';
 		in_ix = 1;
@@ -663,7 +660,7 @@ dft_get_request(void)
 	dft_savebuf_max = dft_savebuf_len;
 	Replace(dft_savebuf, (unsigned char *)Malloc(dft_savebuf_max));
     }
-    (void) memcpy(dft_savebuf, obuf, dft_savebuf_len);
+    memcpy(dft_savebuf, obuf, dft_savebuf_len);
     aid = AID_SF;
 
     /* Write the data. */
@@ -737,10 +734,7 @@ set_dft_buffersize(int size)
      * - Old resource
      * - Hard-coded default
      */
-    if (!size &&
-	!(size = appres.ft.dft_buffer_size) &&
-	!(size = appres.ft.dft_buffer_size_bc)) {
-
+    if (!size && !(size = appres.ft.dft_buffer_size)) {
 	size = DFT_BUF;
     }
 

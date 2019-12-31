@@ -108,7 +108,7 @@ description
 .
 
 name aidWait
-applies x c s tcl
+applies x c s
 type b
 default false
 switch -set aidWait
@@ -148,6 +148,15 @@ description
     options.  The purpose of disabling mouse resizing is to allow a window
     bigger than will fit on the screen, which some window managers (e.g., mwm)
     will not allow if permitted to resize it.
+.
+
+name alwaysInsert
+applies a
+type b
+default false
+description
+    When true, %p% will set insert mode by default, and insert mode can only
+    be disabled by the ToggleInsert() action.
 .
 
 name altCursor
@@ -207,12 +216,10 @@ type b
 default false
 switch -apl
 desc
-    Enables %p% APL mode.  APL mode appends <b>apl</b> to the list of names
-    in %-keymap% (causing the <b>Alt</b> key plus many alphanumeric keys to
-    produce basic APL symbols), sets %-composeMap% to <b>apl</b> (allowing
-    <b>Compose</b> key sequences to construct complex APL symbols), and sets
-    %-charset% to <b>apl</b> (allowing the display of APL symbols using
-    several of the 3270 fonts).
+    Sets %p% APL mode at start-up.
+    APL mode sets up a temporary keymap and compose map to allow the entry of
+    APL symbols.
+    At run-time, APL mode is toggled with the Shift-Esc key.
 .
 
 name asciiBoxDraw
@@ -323,7 +330,7 @@ name blankFill
 applies a
 groups i
 type b
-default false
+default true
 option Options -&gt; Toggles -&gt; Blank Fill
 switch -set blankFill
 switch -clear blankFill
@@ -457,29 +464,6 @@ desc
     of the same name.
 .
 
-name charset
-applies a
-groups c
-type s
-default bracket
-switch -charset
-option Options -&gt; Character Set
-description
-    This defines the host EBCDIC character set, that is, what glyph (image) is
-    displayed for each EBCDIC code sent by the host, and what EBCDIC code is
-    sent to the host for each character typed on the keyboard.
-    This is more correctly referred to as the <i>host code page</i>.
-    <p class="indented">
-    To display the character sets supported by %p%, use the <b>-v</b>
-    command-line option.
-if wc
-    <p class="indented">
-    Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
-    language support must be installed. On Windows Vista and later, the Windows
-    System Locale must be set to a matching language.
-endif
-.
-
 name clientCert
 applies w
 groups s
@@ -500,21 +484,25 @@ desc
     negotiation. (Mac only)
 .
 
-name color8
+name codepage
 applies a
-groups p
-type b
-default false
+groups c
+type s
+default bracket
+switch -codepage
+option Options -&gt; Code Page
 description
-    If true, %p% will respond to a Query(Color) with a list of 8
-    supported colors.  If false, it will send a list
-    of 16 colors.  The 8-color setting is required for some hosts which
-    abort a session if 16 colors are reported.
-if c
-    <p class=indented>
-    This setting will also cause %p% to assume that the terminal supports
-    no more than 8 colors, and will use only the 8 basic curses colors to draw
-    the screen.
+    This defines the host EBCDIC code page, that is, what glyph (image) is
+    displayed for each EBCDIC code sent by the host, and what EBCDIC code is
+    sent to the host for each character typed on the keyboard.
+    <p class="indented">
+    To display the code pages supported by %p%, use the <b>-v</b>
+    command-line option or the <b>Query(CodePages)</b> action.
+if wc
+    <p class="indented">
+    Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
+    language support must be installed. On Windows Vista and later, the Windows
+    System Locale must be set to a matching language.
 endif
 .
 
@@ -588,14 +576,6 @@ Host color 7 (NeutralWhite) means white on a display screen and black on a
 printer.
 .
 
-name commandTimeout
-applies tcl
-type i
-description
-    Defines the number of seconds to wait for a command to
-    complete before failing it with a timeout error.
-.
-
 name composeMap
 applies x C
 type s
@@ -661,6 +641,33 @@ description
     to complete. If this is not set, the timeout will be determined by the
     operating system. Note that %p% will wait for the lesser of the two times
     (the specified timeout and the system-defined timeout).
+.
+
+name console
+applies x
+type s
+desc
+    Overrides the default console emulator program used for the %p%&gt; prompt
+    and the trace monitor window.
+    <p class=indented>
+    The resource can take two forms. If it is just a keyword, it is the name
+    of a well-known console: <b>gnome-terminal</b>, <b>konsole</b>,
+    <b>xfce4-terminal</b> or <b>xterm</b>.
+    If the string includes colons (:), it defines a console, and consists of
+    four fields: <i>program-name</i>:<i>title-option</i>:<i>extra-option</i>:<i>exec-option</i>.
+    <p class=indented>
+    <i>program-name</i> is the name of the executable program.
+    <p class=indented>
+    <i>title-option</i> is the option used to set the window title.
+    <p class=indented>
+    <i>extra-option</i> is an extra command-line option to pass, such as
+    <b>-sb</b> to turn on the xterm scroll bar. It can be empty.
+    <p class=indented>
+    <i>exec-option</i> is the option used to end the argument list, with the
+    remaining options specifying the command and arguments to run inside the
+    console window.
+    <p class=indented>
+    For example, the specification for gnome-terimnal is <b>gnome-terminal:--title::--</b>.
 .
 
 name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
@@ -951,19 +958,6 @@ description
     is used only if %-useCursorColor% is true.
 .
 
-name cursorPos
-applies x C
-groups a
-type b
-default true
-switch -set cursorPos
-switch -clear cursorPos
-option Options -&gt; Toggles -&gt; Track Cursor
-description
-    When true, causes %p% to display the cursor location in the OIA
-    (the status line).
-.
-
 name dbcsCgcsgid
 applies a
 groups p
@@ -1029,19 +1023,6 @@ desc
     and the alternate (27x132) screen.
 .
 
-name dftBufferSize
-applies a
-groups p
-type i
-default 4096
-description
-    <i>Deprecated resource -- replaced by %-ftBufferSize%</i>
-    <p class=indented>
-    Specifies the default buffer size for DFT IND$FILE file transfers.  This
-    value can be overridden in the File Transfer dialog and by a parameter to
-    the <b>Transfer</b> action.
-.
-
 name devName
 applies a
 type s
@@ -1070,34 +1051,14 @@ description
     false, these pop-ups are not displayed.
 .
 
-name dsTrace
-applies a
-groups t
-type b
-default false
-switch -trace 
-switch -set dsTrace
-switch -clear dsTrace
+name dpi
+applies x
+type i
+default 96
 description
-    <i>Deprecated resource -- replaced by %-trace%</i>
-    <p class=indented>
-    When true, %p% writes a hexadecimal representation of all network
-    traffic (and its interpretation) into a file, which defaults to
-if u
-    <b>x3trc.<i>pid</i></b>.
-else
-    <b>x3trc.<i>process-id</i>.txt</b>.
-endif
-if x wc
-    It also pops up a window to watch the file as it
-    is created, with the pathname of the file as the window title.
-endif
-if x
-    The command run in the window is defined by %-traceCommand%.
-endif
-    The directory where the file is written is defined by %-traceDir%.
-    If %-traceFile% is defined, it gives the entire pathname
-    and %-traceDir% is ignored.
+    Overrides the system DPI (screen resolution) setting, normally retrieved
+    from Xft.dpi. This resource modifies the sizes of visual elements on the
+    screen, but not fonts.
 .
 
 name emulatorFont
@@ -1114,7 +1075,7 @@ description
     available in 8-, 12-, 16-, 24- and 32-pixel sizes.
     Any standard X11 constant-spaced font can also be used, provided that
     it implements a display character set compatible with the host code page
-    (%-charset%).  However, the special
+    (%-codepage%).  However, the special
     OIA (status line) symbols are only available with the 3270 fonts.
 .
 
@@ -1151,49 +1112,6 @@ description
     When connected in character-at-a-time mode (%p% sends each keystroke
     to the host as it is entered), this is the character that will be sent
     to the host by the <b>Erase</b> action.
-.
-
-name eventTrace
-groups t
-type b
-applies a
-default false
-switch -set eventTrace
-switch -clear eventTrace
-description
-    <i>Deprecated resource -- replaced by %-trace%</i>
-    <p class=indented>
-    When true, %p% traces information about keyboard and mouse
-    events into a file.
-    The default file name is
-if u
-    <b>x3trc.<i>pid</i></b>.
-else
-    <b>x3trc.<i>process-id</i>.txt</b>.
-endif
-if x wc
-    It also pops up a
-    window to watch the file as it is created, with the pathname of the file
-    as the window title.
-endif
-if x
-    The command run in the window is defined by %-traceCommand%.
-endif
-    The directory where the file is written is defined by %-traceDir%.
-    If %-traceFile% is defined, it gives the entire pathname
-    and %-traceDir% is ignored.
-.
-
-name extended
-type b
-applies a
-default false
-groups d
-switch -extended
-description
-    <i>Deprecated resource -- replaced by %-model% syntax</i>
-    <p class="indented">
-    Indicates support for the 3270 Extended Data Stream.
 .
 
 name fixedSize
@@ -1258,19 +1176,6 @@ description
     Specifies the default buffer size for DFT IND$FILE file transfers.  This
     value can be overridden in the File Transfer dialog and by a parameter to
     the <b>Transfer</b> action.
-.
-
-name ftCodePage
-type i
-applies w
-groups i
-description
-    <i>Deprecated resource -- replaced by %-ftWindowsCodePage%</i>
-    <p class=indented>
-    The Windows code page to use for translating between EBCDIC and ASCII in
-    IND$FILE file transfers. The default is to use the system ANSI code page.
-    This value can be overridden in the File Transfer dialog and by a parameter
-    to the <b>Transfer</b> action. 
 .
 
 name ftCr
@@ -1483,7 +1388,7 @@ description
 
 name hostsFile
 type s
-applies C S tcl
+applies C S
 if u
 default /usr/local/etc/x3270/ibm_hosts
 else
@@ -1631,6 +1536,14 @@ description
     Specifies the name of the multi-byte input method.  The
     default is specified by the XMODIFIERS environment variable, if set, or
     will be constructed by Xlib based on the current locale.
+.
+
+name insertMode
+applies a
+type b
+default false
+description
+    Controls 3270 insert mode.
 .
 
 name intr
@@ -1979,18 +1892,6 @@ description
     host.
 .
 
-name m3279
-applies a
-type b
-default true
-groups d
-switch -color
-description
-    <i>Deprecated resource -- replaced by %-model% syntax</i>
-    <p class=indented>
-    Indicates support for color (a 3279 terminal).
-.
-
 name macros
 applies x
 type s
@@ -2322,7 +2223,7 @@ desc
 .
 
 name once
-applies a
+applies x C S t
 type b
 default false
 switch -once
@@ -2420,7 +2321,7 @@ switch -proxy
 desc
     Defines a proxy server that %p% will use to connect to hosts.
     The value is of the form
-    <b><i>type</i>:<i>server</i></b>[<b>:<i>port</i></b>],
+    <b><i>type</i>:[<i>username</i>:<i>password</i>@]<i>server</i></b>[<b>:<i>port</i></b>],
     where options for <i>type</i> are described on the %p% manual page.
 .
 
@@ -2651,7 +2552,7 @@ desc
 .
 
 name qrBgColor
-applies C s tcl
+applies C s b
 type b
 default false
 desc
@@ -2698,6 +2599,15 @@ desc
     <i>xterm</i>.
 .
 
+name reverseInputMode
+applies a
+type b
+default false
+desc
+    When true in 3270 mode, input fields fill in the opposite direction of the
+    screen display.
+.
+
 name reverseVideo
 applies c
 type b
@@ -2706,6 +2616,15 @@ default false
 option -rv
 desc
     When true, %p% will use a white background instead of a black one.
+.
+
+name rightToLeftMode
+applies x C
+type b
+default false
+desc
+    When true, the %p% display will be in right-to-left mode, with column 1
+    on the right instead of on the left.
 .
 
 name rprnt
@@ -2850,7 +2769,7 @@ default false
 desc
     When true, %p% will prevent users from executing arbitrary
     commands from within the program.
-    In particular, the <b>File -&gt; Execute an Action</b> menu option is
+    In particular, the <b>File -&gt; x3270&gt; Prompt</b> menu option is
     disabled, as are the pop-ups which allow editing the commands
     for <b>File -&gt; Print Screen Text</b> and
     <b>File -&gt; Print Window Bitmap</b>, and
@@ -2911,8 +2830,8 @@ groups s
 type b
 desc
     When true, suppresses a menu item.  For example, setting
-    <b>x3270*executeActionOption.suppress</b> to true will remove
-    the <b>Execute an Action</b> option on the <b>File</b> menu.
+    <b>x3270*aboutConfig.suppress</b> to true will remove
+    the <b>Configuration</b> option from the <b>About</b> menu.
     The names of the menu items are:<br>
 &nbsp;&nbsp;&nbsp;aboutMenu.aboutConfig.suppress<br>
 &nbsp;&nbsp;&nbsp;aboutMenu.aboutCopyright.suppress<br>
@@ -2920,11 +2839,11 @@ desc
 &nbsp;&nbsp;&nbsp;fileMenu.abortScriptOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.aboutOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.disconnectOption.suppress<br>
-&nbsp;&nbsp;&nbsp;fileMenu.executeActionOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.exitOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.ftOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.printerOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.printWindowOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.promptOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.saveOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.screenTraceOption.suppress<br>
 &nbsp;&nbsp;&nbsp;fileMenu.traceOption.suppress<br>
@@ -2933,7 +2852,7 @@ desc
 &nbsp;&nbsp;&nbsp;modelsMenu.model4Option.suppress<br>
 &nbsp;&nbsp;&nbsp;modelsMenu.model5Option.suppress<br>
 &nbsp;&nbsp;&nbsp;modelsMenu.oversizeOption.suppress<br>
-&nbsp;&nbsp;&nbsp;optionsMenu.charsetOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.codepageOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.colorsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.fontsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;optionsMenu.idleCommandOption.suppress<br>
@@ -2949,7 +2868,6 @@ desc
 &nbsp;&nbsp;&nbsp;togglesMenu.characterModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.crosshairOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.cursorBlinkOption.suppress<br>
-&nbsp;&nbsp;&nbsp;togglesMenu.cursorPosOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.extendedDsOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineModeOption.suppress<br>
 &nbsp;&nbsp;&nbsp;togglesMenu.lineWrapOption.suppress<br>
@@ -2972,7 +2890,7 @@ type s
 desc
     A list of whitespace-separated action names, with or without parentheses,
     which are to be ignored.  The actions will be completely inaccessible,
-    whether by keymaps, scripts, macros or the Execute an Action menu option.
+    whether by keymaps, scripts, macros or at the prompt.
     This resource is intended to be used as a security precaution for users
     who can define their own keymaps, but who do not have access to resource
     definitions or command-line options.
@@ -3125,9 +3043,11 @@ endif
 .
 
 name typeahead
-applies w C
+applies C x b
 type b
 default true
+switch -set typeahead
+switch -clear typeahead
 desc
     When true, %p% will store keystrokes in a buffer when the
     keyboard is locked.  When false, these keystrokes will be dropped.
@@ -3174,7 +3094,7 @@ desc
 .
 
 name unlockDelay
-applies s ws tcl
+applies s ws b
 type b
 default false
 desc
@@ -3331,23 +3251,6 @@ default false
 desc
     When true, %p% will flash the screen in response to an ALARM WCC
     or BELL character, rather than ringing the terminal's bell.
-.
-
-name visualBell
-applies wc
-groups i
-type b
-default false
-desc
-    <i>Deprecated resource -- replaced by %-bellMode%</i>
-    <p class="indented">
-    When true, %p% will just flash the screen in response to an ALARM WCC
-    or BELL character, rather than beeping the Windows console.  When false,
-    %p% will beep the console and flash the screen.
-    <p class="indented">
-    Note that this resource is overridden by %-bellMode%.
-    %-bellMode% is the preferred method of controlling the console bell
-    behavior.
 .
 
 name visualSelect

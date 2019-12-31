@@ -60,9 +60,13 @@ Type: files; Name: "{group}\wc3270 Explore AppData"
 
 [Files]
 Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win32\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win64\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
+Source: "..\obj\win32\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
 Source: "..\obj\win64\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
+Source: "..\obj\win64\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
 Source: "..\obj\win32\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
@@ -71,8 +75,8 @@ Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversio
 Source: "..\obj\win64\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: wizard
 Source: "..\obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: wizard
-Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win64\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
+Source: "..\obj\win32\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
+Source: "..\obj\win64\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
@@ -88,7 +92,7 @@ Source: "html\wc3270-script.html"; DestDir: "{app}\html"; Components: help; Flag
 Source: "..\ws3270\html\ws3270-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "..\wpr3287\html\wpr3287-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\Wishlist.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "..\ws3270\html\Windows-x3270if.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "..\wx3270if\html\Windows-x3270if.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

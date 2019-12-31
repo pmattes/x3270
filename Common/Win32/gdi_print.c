@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2018 Paul Mattes.
+ * Copyright (c) 1994-2019 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,9 @@
 
 #include "fprint_screen.h"
 #include "gdi_print.h"
+#include "nvt.h"
 #include "popups.h"
+#include "task.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -78,6 +80,7 @@ static struct {			/* printer characteristics: */
     int pwidth, pheight;	/*  physical width, height */
 } pchar;
 static struct {			/* printer state */
+    bool active;		/*  is GDI printing active? */
     char *caption;		/*  caption */
     int out_row;		/*  next row to print to */
     int screens;		/*  number of screens on current page */
@@ -91,12 +94,18 @@ static struct {			/* printer state */
 			        /*  fonts */
     SIZE space_size;		/*  size of a space character */
     INT *dx;			/*  spacing array */
+
+    HANDLE thread;		/* thread to run the print dialog */
+    HANDLE done_event;		/* event to signal dialog is done */
+    bool cancel;		/* true if dialog canceled */
+    void *wait_context;		/* task wait context */
 } pstate;
+static bool pstate_initted = false;
 
 /* Forward declarations. */
 static void gdi_get_params(uparm_t *up);
 static gdi_status_t gdi_init(const char *printer_name, unsigned opts,
-	const char **fail);
+	const char **fail, void *wait_context);
 static int gdi_screenful(struct ea *ea, unsigned short rows,
 	unsigned short cols, const char **fail);
 static int gdi_done(const char **fail);
@@ -104,12 +113,11 @@ static void gdi_abort(void);
 static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
 	HGLOBAL *pdevmode);
 
-
 /*
  * Initialize printing to a GDI printer.
  */
 gdi_status_t
-gdi_print_start(const char *printer_name, unsigned opts)
+gdi_print_start(const char *printer_name, unsigned opts, void *wait_context)
 {
     const char *fail = "";
 
@@ -130,7 +138,7 @@ gdi_print_start(const char *printer_name, unsigned opts)
     }
 
     /* Initialize the printer and pop up the dialog. */
-    switch (gdi_init(printer_name, opts, &fail)) {
+    switch (gdi_init(printer_name, opts, &fail, wait_context)) {
     case GDI_STATUS_SUCCESS:
 	vtrace("[gdi] initialized\n");
 	break;
@@ -140,6 +148,9 @@ gdi_print_start(const char *printer_name, unsigned opts)
     case GDI_STATUS_CANCEL:
 	vtrace("[gdi] canceled\n");
 	return GDI_STATUS_CANCEL;
+    case GDI_STATUS_WAIT:
+	vtrace("[gdi] waiting\n");
+	return GDI_STATUS_WAIT;
     }
 
     return GDI_STATUS_SUCCESS;
@@ -188,7 +199,7 @@ gdi_print_finish(FILE *f, const char *caption)
 
 	/* Read the screen image in. */
 	if (fread(ea_tmp + 1, sizeof(struct ea), h.rows * h.cols, f) !=
-		    h.rows * h.cols) {
+		h.rows * h.cols) {
 	    popup_an_error("Truncated temporary file");
 	    goto abort;
 	}
@@ -205,6 +216,7 @@ gdi_print_finish(FILE *f, const char *caption)
     }
     Free(ea_tmp);
 
+    pstate.active = false;
     return GDI_STATUS_SUCCESS;
 
 abort:
@@ -335,6 +347,8 @@ cleanup_fonts(void)
 	DeleteObject(pstate.caption_font);
 	pstate.caption_font = NULL;
     }
+
+    pstate.active = false;
 }
 
 /*
@@ -398,7 +412,7 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 
     /* Figure out how much memory to allocate. */
     size = 0;
-    (void) GetDefaultPrinter(NULL, &size);
+    GetDefaultPrinter(NULL, &size);
     buf = Malloc(size);
     if (GetDefaultPrinter(buf, &size) == 0) {
 	snprintf(errbuf, errbuf_size, "Cannot determine default printer");
@@ -407,12 +421,35 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
     return buf;
 }
 
+/* Thread to post the print dialog. */
+static DWORD WINAPI
+post_print_dialog(LPVOID lpParameter _is_unused)
+{
+    if (!PrintDlg(&pstate.dlg)) {
+	pstate.cancel = true;
+    }
+    SetEvent(pstate.done_event);
+    return 0;
+}
+
+/* The print dialog is complete. */
+static void
+print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
+{
+    vtrace("Printer dialog complete (%s)\n",
+	    pstate.cancel? "cancel": "continue");
+    pstate.thread = INVALID_HANDLE_VALUE;
+    task_resume_xwait(pstate.wait_context, pstate.cancel,
+	    "print dialog complete");
+}
+
 /*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
  */
 static gdi_status_t
-gdi_init(const char *printer_name, unsigned opts, const char **fail)
+gdi_init(const char *printer_name, unsigned opts, const char **fail,
+	void *wait_context)
 {
     char *default_printer_name = NULL;
     LPDEVMODE devmode;
@@ -425,10 +462,28 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail)
     static char get_fail[1024];
     int fheight, fwidth;
 
-    memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
-    pstate.dlg.lStructSize = sizeof(pstate.dlg);
-    pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
-	PD_NOSELECTION;
+    if (!pstate_initted) {
+	pstate.thread = INVALID_HANDLE_VALUE;
+	pstate.done_event = INVALID_HANDLE_VALUE;
+	pstate_initted = true;
+    }
+
+    if (pstate.active) {
+	*fail = "Only one GDI document at a time";
+	goto failed;
+    }
+
+    if (pstate.thread != INVALID_HANDLE_VALUE) {
+	*fail = "Print dialog already pending";
+	goto failed;
+    }
+
+    if (!(opts & FPS_DIALOG_COMPLETE)) {
+	memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
+	pstate.dlg.lStructSize = sizeof(pstate.dlg);
+	pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
+	    PD_NOSELECTION;
+    }
 
     if (printer_name == NULL || !*printer_name) {
 	default_printer_name = get_default_printer_name(get_fail,
@@ -465,16 +520,24 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail)
 	    *fail = get_fail;
 	    goto failed;
 	}
-    } else {
+    } else if (!(opts & FPS_DIALOG_COMPLETE)) {
 	if (default_printer_name != NULL) {
 	    Free(default_printer_name);
 	    default_printer_name = NULL;
 	}
 
 	/* Pop up the dialog to get the printer characteristics. */
-	if (!PrintDlg(&pstate.dlg)) {
-	    return GDI_STATUS_CANCEL;
+	pstate.cancel = false;
+	pstate.wait_context = wait_context;
+	if (pstate.done_event == INVALID_HANDLE_VALUE) {
+	    pstate.done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	    AddInput(pstate.done_event, print_dialog_complete);
+	} else {
+	    ResetEvent(pstate.done_event); /* just in case */
 	}
+	pstate.cancel = false;
+	pstate.thread = CreateThread(NULL, 0, post_print_dialog, NULL, 0, NULL);
+	return GDI_STATUS_WAIT;
     }
     dc = pstate.dlg.hDC;
 
@@ -801,6 +864,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail)
 	goto failed;
     }
 
+    pstate.active = true;
     return GDI_STATUS_SUCCESS;
 
 failed:
@@ -829,7 +893,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     bool fa_high, high;
     bool fa_underline, underline;
     bool fa_reverse, reverse;
-    unsigned long uc;
+    ucs4_t uc;
     int usable_rows;
     HFONT got_font = NULL, want_font;
 #if defined(GDI_DEBUG) /*[*/
@@ -926,6 +990,9 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    break;
 	}
 	for (col = 0; col < COLS; col++, baddr++) {
+	    wchar_t w;
+	    INT wdx;
+
 	    if (ea[baddr].fa) {
 		fa = ea[baddr].fa;
 		if (ea[baddr].gr & GR_INTENSIFY) {
@@ -948,20 +1015,33 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		} else {
 		    uc = ' ';
 		}
+	    } else if (is_nvt(&ea[baddr], false, &uc)) {
+		switch (ctlr_dbcs_state(baddr)) {
+		case DBCS_NONE:
+		case DBCS_SB:
+		case DBCS_LEFT:
+		    break;
+		case DBCS_RIGHT:
+		    /* skip altogether, we took care of it above */
+		    continue;
+		default:
+		    uc = ' ';
+		    break;
+		}
 	    } else {
 		/* Convert EBCDIC to Unicode. */
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
 		case DBCS_SB:
-		    uc = ebcdic_to_unicode(ea[baddr].cc, ea[baddr].cs,
+		    uc = ebcdic_to_unicode(ea[baddr].ec, ea[baddr].cs,
 			    EUO_NONE);
 		    if (uc == 0) {
 			uc = ' ';
 		    }
 		    break;
 		case DBCS_LEFT:
-		    uc = ebcdic_to_unicode((ea[baddr].cc << 8) |
-				ea[baddr + 1].cc,
+		    uc = ebcdic_to_unicode((ea[baddr].ec << 8) |
+				ea[baddr + 1].ec,
 			    CS_BASE, EUO_NONE);
 		    if (uc == 0) {
 			uc = 0x3000;
@@ -1075,20 +1155,19 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	     * strings of characters with the same attributes.
 	     */
 #if defined(GDI_DEBUG) /*[*/
-	    if (c != ' ') {
-		vtrace("[gdi] row %d col %d x=%ld y=%ld '%c'\n",
+	    if (uc != ' ') {
+		vtrace("[gdi] row %d col %d x=%ld y=%ld uc=%lx\n",
 			row, col,
 			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
 			    pchar.poffX,
 			pstate.vmargin_pixels +
-			    ((pstate.out_row + row + 1) * pstate.space_size.cy) -
+			  ((pstate.out_row + row + 1) * pstate.space_size.cy) -
 			    pchar.poffY,
-			c);
+			uc);
 	    }
 #endif /*]*/
 	    w = (wchar_t)uc;
 	    wdx = pstate.space_size.cx;
-
 	    status = ExtTextOutW(dc,
 		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
 			pchar.poffX,
@@ -1156,10 +1235,10 @@ static void
 gdi_abort(void)
 {
     if (pstate.out_row) {
-	(void) EndPage(pstate.dlg.hDC);
+	EndPage(pstate.dlg.hDC);
 	pstate.out_row = 0;
     }
-    (void) EndDoc(pstate.dlg.hDC);
+    EndDoc(pstate.dlg.hDC);
 
     cleanup_fonts();
 }
@@ -1198,7 +1277,7 @@ get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
     }
 
     /* Get a PRINTER_INFO_2 structure for the printer. */
-    (void) GetPrinter(h, 2, NULL, 0, &len);
+    GetPrinter(h, 2, NULL, 0, &len);
     pi = (PRINTER_INFO_2 *)malloc(len);
     if (!GetPrinter(h, 2, (LPBYTE)pi, len, &len2)) {
 	free(pi);
