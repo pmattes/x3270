@@ -983,9 +983,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     fa_underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
 
     for (baddr = 0, row = 0; row < ROWS; row++) {
-	wchar_t w;
-	INT wdx;
-
 	if (pstate.out_row + row >= usable_rows) {
 	    break;
 	}
