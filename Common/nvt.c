@@ -790,26 +790,6 @@ ansi_vertical_position_absolute(int n1, int n2 _is_unused)
 }
 
 static enum state
-ansi_cursor_horizontal_absolute(int n1, int n2 _is_unused)
-{
-	if (n1 < 1) n1 = 1;
-	if (n1 > COLS) n1 = COLS;
-	cursor_move((cursor_addr / COLS) * COLS + (n1 - 1));
-	held_wrap = false;
-	return DATA;
-}
-
-static enum state
-ansi_vertical_position_absolute(int n1, int n2 _is_unused)
-{
-	if (n1 < 1) n1 = 1;
-	if (n1 > ROWS) n1 = ROWS;
-	cursor_move(((n1 - 1) * COLS) + (cursor_addr % COLS));
-	held_wrap = false;
-	return DATA;
-}
-
-static enum state
 ansi_erase_in_display(int nn, int ig2 _is_unused)
 {
     switch (nn) {
