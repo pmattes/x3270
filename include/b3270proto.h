@@ -191,9 +191,6 @@
 #define OiaOerrOverflow	"overflow"
 #define OiaOerrDbcs	"dbcs"
 
-/* Toggles. */
-#define ToggleExtended	"extended"
-
 /* Values. */
 #define ValTrue		"true"
 #define ValFalse	"false"

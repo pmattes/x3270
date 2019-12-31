@@ -79,7 +79,7 @@ void register_extended_toggle(const char *name,
 typedef void toggle_extended_notify_t(const char *name, const char *value,
 	ia_t ia);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
-void force_toggle_notify(const char *name);
+void force_toggle_notify(const char *name, ia_t ia);
 char **extended_toggle_names(int *countp);
 void *find_extended_toggle(const char *name, enum resource_type type);
 bool init_extended_toggle(const char *name, bool value);

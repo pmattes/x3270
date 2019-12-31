@@ -745,7 +745,7 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
  * Force notification of a toggle change.
  */
 void
-force_toggle_notify(const char *name)
+force_toggle_notify(const char *name, ia_t ia)
 {
     toggle_extended_upcalls_t *u;
     toggle_extended_notifies_t *n;
@@ -763,7 +763,7 @@ force_toggle_notify(const char *name)
     /* Notify with the current value. */
     v = u_value(u);
     for (n = extended_notifies; n != NULL; n = n->next) {
-	(*n->notify)(name, v, IA_NONE);
+	(*n->notify)(name, v, ia);
     }
     Free(v);
 }
