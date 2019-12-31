@@ -173,11 +173,13 @@ class Parser:
         if (tag == "cursor" and "row" in attrs):
             # Process the cursor address.
             self.state.row = int(attrs["row"]) - 1
-            self.state.col = int(attrs["col"]) - 1
+            self.state.col = int(attrs["column"]) - 1
 
     # Process the end of an element.
     def end(self, tag):
         Debug("END " + repr(tag))
+	if (tag == "initialize"):
+            self.canRead = True
 
     # Process inter-element data.
     def data(self, data):
@@ -214,10 +216,7 @@ s = State()
 p = Parser(s)
 
 # Create the b3270 process.
-if (os.name == "nt"):
-    b3270 = "wb3270"
-else:
-    b3270 = "b3270"
+b3270 = "b3270"
 if (args.trace):
     command = [b3270,"-trace"]
 else:
@@ -225,7 +224,7 @@ else:
 command += ["-xrm","*unlockDelay: false","-xrm","*oerrLock: true"]
 Debug("Command line is: " + repr(command))
 b = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-b.stdin.write(b'<ui3270-in>\n')
+b.stdin.write(b'<b3270-in>\n')
 
 # Select from stdin and the parser until something breaks.
 while (True):
@@ -235,7 +234,7 @@ while (True):
         Debug("Got " + repr(text))
         if (text == ""):
             Debug("stdin EOF")
-            b.stdin.write(b'</ui3270-in>\n')
+            b.stdin.write(b'</b3270-in>\n')
             break
         text = XmlSafe(text.rstrip('\r\n'))
         Debug("Expanded text is " + repr(text))
