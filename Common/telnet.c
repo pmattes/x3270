@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -467,8 +467,10 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 	} else {
 	    if (noisy) {
-		popup_a_sockerr("Connect to %s, port %d", hostname,
-			current_port);
+		popup_a_sockerr("Connect to %s%s, port %d",
+			(proxy_type != PT_NONE)? "proxy ": "",
+			(proxy_type != PT_NONE)? proxy_host : hostname,
+			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    }
 	    close_fail;
 	}
@@ -1373,8 +1375,10 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		socket_strerror(socket_errno()));
 	if (cstate == TCP_PENDING) {
 	    if (ha_ix == num_ha - 1) {
-		popup_a_sockerr("Connect to %s, port %d", hostname,
-			current_port);
+		popup_a_sockerr("Connect to %s%s, port %d",
+			(proxy_type != PT_NONE)? "proxy ": "",
+			(proxy_type != PT_NONE)? proxy_host : hostname,
+			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    } else {
 		bool pending;
 		iosrc_t s;
