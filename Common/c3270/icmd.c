@@ -1484,7 +1484,7 @@ Keywords:");
 "  LocalFile=<path>                     %s", s);
 
     action_output(
-"  Host=tso|vm                          default '%s'",
+"  Host=tso|vm|cics                     default '%s'",
 	    ft_decode_host_type(conf.host_type));
     action_output(
 "  Mode=ascii|binary                    default '%s'",
@@ -1553,6 +1553,9 @@ Keywords:");
 "                                        default %d",
 		conf.avblock);
     }
+    action_output(
+"  BufferSize=<n>                       default %d",
+		conf.dft_buffersize? conf.dft_buffersize: DFT_BUF);
     action_output(
 "Note that when you use <keyword>=<value> syntax, to embed a space in a value,\n\
 you must quote the keyword, e.g.:\n\
