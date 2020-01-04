@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -146,7 +146,6 @@ GC screen_crosshair_gc(void);
 void screen_disp(bool erasing);
 void screen_extended(bool extended);
 GC screen_gc(int color);
-void screen_init(void);
 GC screen_invgc(int color);
 void screen_m3279(bool m3279);
 void screen_newcodepage(char *cpname);

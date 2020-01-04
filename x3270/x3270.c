@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -61,6 +61,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "min_version.h"
+#include "model.h"
 #include "nvt.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -487,6 +488,7 @@ main(int argc, char *argv[])
     xio_register();
     hio_register();
     proxy_register();
+    model_register();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */

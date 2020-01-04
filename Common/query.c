@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,8 @@ static size_t num_queries;
 static const char *
 query_terminal_name(void)
 {
-    return (appres.termname != NULL)? appres.termname: full_model_name;
+    return (appres.termname != NULL)? appres.termname:
+	((ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name);
 }
 
 static const char *

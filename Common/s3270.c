@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -60,6 +60,7 @@
 #include "idle.h"
 #include "kybd.h"
 #include "min_version.h"
+#include "model.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -151,6 +152,7 @@ main(int argc, char *argv[])
     sio_glue_register();
     hio_register();
     proxy_register();
+    model_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -224,6 +226,17 @@ product_set_appres_defaults(void)
 
 static void
 s3270_toggle(toggle_index_t ix, enum toggle_type tt)
+{
+}
+
+bool
+model_can_change(void)
+{
+    return true;
+}
+
+void
+screen_init(void)
 {
 }
 

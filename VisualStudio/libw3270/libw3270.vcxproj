@@ -158,6 +158,7 @@
     <ClCompile Include="..\..\Common\kybd.c" />
     <ClCompile Include="..\..\Common\linemode.c" />
     <ClCompile Include="..\..\Common\llist.c" />
+    <ClCompile Include="..\..\Common\model.c" />
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\nvt.c" />
     <ClCompile Include="..\..\Common\print_screen.c" />

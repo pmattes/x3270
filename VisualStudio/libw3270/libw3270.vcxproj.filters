@@ -78,6 +78,9 @@
     <ClCompile Include="..\..\Common\llist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\model.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\Malloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>

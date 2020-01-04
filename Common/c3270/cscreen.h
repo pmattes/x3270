@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, 2014-2015, 2018 Paul Mattes.
+ * Copyright (c) 1999-2010, 2014-2015, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@ extern int windows_cp;
 extern HWND console_window;
 #endif /*]*/
 
-void screen_init(void);
 void screen_resume(void);
 FILE *start_pager(void);
 void screen_register(void);

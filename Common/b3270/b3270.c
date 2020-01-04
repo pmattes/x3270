@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -68,6 +68,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "min_version.h"
+#include "model.h"
 #include "nvt.h"
 #include "nvt_gui.h"
 #include "opts.h"
@@ -132,9 +133,6 @@ static toggle_register_t toggles[] = {
     { ALWAYS_INSERT,	b3270_toggle,	TOGGLE_NEED_INIT },
     { SHOW_TIMING,	b3270_toggle,	TOGGLE_NEED_INIT },
 };
-
-static char *pending_model;
-static char *pending_oversize;
 
 static void b3270_register(void);
 static void b3270_toggle_notify(const char *name, const char *value, ia_t ia);
@@ -430,6 +428,7 @@ main(int argc, char *argv[])
     sio_glue_register();
     hio_register();
     proxy_register();
+    model_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {
@@ -558,260 +557,6 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	process_events(true);
 	screen_disp(false);
     }
-}
-
-/*
- * Canonical representation of the model, returning color and extended
- * state.
- */
-static char *
-canonical_model_x(const char *res, int *model, bool *is_color,
-	bool *is_extended)
-{
-    size_t sl;
-    char *digitp;
-    char *colorp = "9";
-    bool extended = false;
-
-    if (res == NULL) {
-	return NULL;
-    }
-    sl = strlen(res);
-    if ((sl != 1 && sl != 6 && sl != 8) ||
-	(sl == 1 &&
-	 (digitp = strchr("2345", res[0])) == NULL) ||
-	(((sl == 6) || (sl == 8)) &&
-	 (strncmp(res, "327", 3) ||
-	  (colorp = strchr("89", res[3])) == NULL ||
-	  res[4] != '-' ||
-	  (digitp = strchr("2345", res[5])) == NULL)) ||
-	((sl == 8) &&
-	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
-	return NULL;
-    }
-    if (sl == 1 || sl == 8) {
-	extended = true;
-    }
-    *model = *digitp - '0';
-    *is_color = (*colorp == '9');
-    *is_extended = extended;
-    return xs_buffer("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
-}
-
-/*
- * Canonical representation of the model.
- */
-    static char *
-canonical_model(const char *res)
-{
-    int model;
-    bool color, extended;
-
-    return canonical_model_x(res, &model, &color, &extended);
-}
-
-/*
- * Toggle the model.
- */
-static bool
-toggle_model(const char *name _is_unused, const char *value)
-{
-    Replace(pending_model, *value? NewString(value): NULL);
-    return true;
-}
-
-/*
- * Toggle oversize.
- */
-static bool
-toggle_oversize(const char *name _is_unused, const char *value)
-{
-    Replace(pending_oversize, NewString(value));
-    return true;
-}
-
-static bool
-toggle_nop_seconds(const char *name _is_unused, const char *value)
-{
-    unsigned long l;
-    char *end;
-    int secs;
-
-    if (!*value) {
-	appres.nop_seconds = 0;
-	net_nop_seconds();
-	return true;
-    }
-
-    l = strtoul(value, &end, 10);
-    secs = (int)l;
-    if (*end != '\0' || (unsigned long)secs != l || secs < 0) {
-	popup_an_error("Invalid %s value", ResNopSeconds);
-	return false;
-    }
-    appres.nop_seconds = secs;
-    net_nop_seconds();
-    return true;
-}
-
-/*
- * Done function for changing the model, oversize and extended mode.
- */
-static bool
-toggle_model_done(bool success)
-{
-    unsigned ovr = 0, ovc = 0;
-    int model_number = model_num;
-    bool is_color = mode.m3279;
-    bool is_extended = mode.extended;
-    struct {
-	int model_num;
-	int rows;
-	int cols;
-	int ov_cols;
-	int ov_rows;
-	bool m3279;
-	bool alt;
-	bool extended;
-    } old;
-    bool oversize_was_pending = (pending_oversize != NULL);
-    bool res = true;
-
-    if (!success ||
-	    (pending_model == NULL &&
-	     pending_oversize == NULL)) {
-	goto done;
-    }
-
-    if (PCONNECTED) {
-	popup_an_error("Toggle: Cannot change %s or %s while connected",
-		ResModel, ResOversize);
-	goto fail;
-    }
-
-    /* Reconcile simultaneous changes. */
-    if (pending_model != NULL) {
-	char *canon = canonical_model_x(pending_model, &model_number,
-		&is_color, &is_extended);
-
-	if (canon == NULL) {
-	    popup_an_error("Toggle(%s): value must be 327{89}-{2345}[-E]",
-		    ResModel);
-	    goto fail;
-	}
-
-	Replace(pending_model, canon);
-    }
-
-    if (!is_extended) {
-	/* Without extended, no oversize. */
-	Replace(pending_oversize, NewString(""));
-    }
-
-    if (pending_oversize != NULL) {
-	if (*pending_oversize) {
-	    char x, junk;
-	    if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
-		    || x != 'x') {
-		popup_an_error("Toggle(%s): Oversize must be <cols>x<rows>",
-			ResOversize);
-		goto fail;
-	    }
-	} else {
-	    ovc = 0;
-	    ovr = 0;
-	}
-    } else {
-	ovc = ov_cols;
-	ovr = ov_rows;
-    }
-
-    /* Save the current settings. */
-    old.model_num = model_num;
-    old.rows = ROWS;
-    old.cols = COLS;
-    old.ov_rows = ov_rows;
-    old.ov_cols = ov_cols;
-    old.m3279 = mode.m3279;
-    old.alt = screen_alt;
-    old.extended = mode.extended;
-
-    /* Change settings. */
-    mode.m3279 = is_color;
-    mode.extended = is_extended;
-    set_rows_cols(model_number, ovc, ovr);
-
-    if (model_num != model_number ||
-	    ov_rows != (int)ovr ||
-	    ov_cols != (int)ovc) {
-	/* Failed. Restore the old settings. */
-	mode.m3279 = old.m3279;
-	set_rows_cols(old.model_num, old.ov_cols, old.ov_rows);
-	ROWS = old.rows;
-	COLS = old.cols;
-	screen_alt = old.alt;
-	mode.extended = old.extended;
-	return false;
-    }
-
-    ROWS = maxROWS;
-    COLS = maxCOLS;
-    ctlr_reinit(MODEL_CHANGE);
-
-    /* Reset the screen state. */
-    screen_init();
-    ctlr_erase(true);
-
-    /* Report the new terminal name. */
-    if (appres.termname == NULL) {
-	report_terminal_name();
-    }
-
-    if (pending_model != NULL) {
-	Replace(appres.model, pending_model);
-    }
-    pending_model = NULL;
-    if (pending_oversize != NULL) {
-	if (*pending_oversize) {
-	    Replace(appres.oversize, pending_oversize);
-	    pending_oversize = NULL;
-	} else {
-	    bool force = !oversize_was_pending && appres.oversize != NULL;
-
-	    Replace(appres.oversize, NULL);
-	    if (force) {
-		/* Turning off extended killed oversize. */
-		force_toggle_notify(ResOversize, IA_NONE);
-	    }
-	}
-    }
-
-goto done;
-
-fail:
-    res = false;
-
-done:
-    Replace(pending_model, NULL);
-    Replace(pending_oversize, NULL);
-    return res;
-}
-
-/*
- * Terminal name toggle.
- */
-static bool
-toggle_terminal_name(const char *name _is_unused, const char *value)
-{
-    if (PCONNECTED) {
-	popup_an_error("Toggle(%s): Cannot change while connected",
-		ResTermName);
-	return false;
-    }
-
-    appres.termname = clean_termname(*value? value: NULL);
-    report_terminal_name();
-    return true;
 }
 
 /*
@@ -1140,6 +885,20 @@ b3270_printer(bool on)
 	    NULL);
 }
 
+/* State change for the terminal name. */
+static void
+b3270_terminal_name(bool on _is_unused)
+{
+    report_terminal_name();
+}
+
+/* Give the model change logic permission to run. */
+bool
+model_can_change(void)
+{
+    return true;
+}
+
 /**
  * Main module registration.
  */
@@ -1180,14 +939,6 @@ b3270_register(void)
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
-    register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL,
-	    (void **)&appres.termname, XRM_STRING);
-    register_extended_toggle(ResModel, toggle_model, toggle_model_done,
-	    canonical_model, (void **)&appres.model, XRM_STRING);
-    register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
-	    NULL, (void **)&appres.oversize, XRM_STRING);
-    register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,
-	    NULL, (void **)&appres.nop_seconds, XRM_INT);
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, b3270_connect);
@@ -1197,6 +948,7 @@ b3270_register(void)
     register_schange(ST_SECURE, b3270_secure);
     register_schange(ST_CODEPAGE, b3270_new_codepage);
     register_schange(ST_PRINTER, b3270_printer);
+    register_schange(ST_TERMINAL_NAME, b3270_terminal_name);
 
     /* Register our actions. */
     register_actions(actions, array_count(actions));

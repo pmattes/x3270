@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1999-2009, 2014-2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,3 +56,4 @@ void screen_system_fixup(void);
 bool screen_suspend(void);
 void screen_set_thumb(float top, float shown, int saved, int screen, int back);
 void enable_cursor(bool on);
+void screen_init(void);

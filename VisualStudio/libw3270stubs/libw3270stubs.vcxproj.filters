@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\Common\menubar_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\model_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\nvt_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -955,4 +955,31 @@ array_add(const char ***s, int ix, const char *v)
 {
     *s = Realloc((void *)*s, (ix + 1) * sizeof(const char *));
     (*s)[ix] = v;
+}
+
+/* Clean the terminal name. */
+char *
+clean_termname(const char *tn)
+{
+    const char *s = tn;
+    size_t sl;
+    char *ret;
+
+    if (tn == NULL) {
+	return (char *)tn;
+    }
+
+    while (*s && isspace((unsigned char)*s)) {
+	s++;
+    }
+    if (!*s) {
+	return NULL;
+    }
+    sl = strlen(s);
+    ret = NewString(s);
+    while (sl && isspace((unsigned char)ret[sl - 1])) {
+	ret[--sl] = 0;
+    }
+
+    return ret;
 }

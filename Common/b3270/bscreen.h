@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Paul Mattes.
+ * Copyright (c) 2016, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,5 +30,4 @@
  *		b3270 screen declarations.
  */
 
-void screen_init(void);
 void b3270_new_codepage(bool);

@@ -235,6 +235,8 @@ Common/min_version.c
 Common/mkfb.c
 Common/mkicon.c
 Common/mkversion.sh
+Common/model.c
+Common/model_stubs.c
 Common/Nodisplay/resources.c
 Common/nvt.c
 Common/nvt_gui_stubs.c
@@ -389,6 +391,7 @@ include/linemode.h
 include/Makefile.aux
 include/menubar.h
 include/min_version.h
+include/model.h
 include/nvt_gui.h
 include/nvt.h
 include/opts.h

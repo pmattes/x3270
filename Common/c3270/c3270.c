@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -74,6 +74,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "model.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -523,6 +524,7 @@ main(int argc, char *argv[])
     sio_glue_register();
     hio_register();
     proxy_register();
+    model_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

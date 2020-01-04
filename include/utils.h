@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,7 @@ enum st {
     ST_SELECTING,	/* screen selection changing */
     ST_SECURE,		/* secure mode changing */
     ST_KBD_DISABLE,	/* keyboard disable changing */
+    ST_TERMINAL_NAME,	/* terminal name changing */
     N_ST
 };
 
@@ -127,3 +128,4 @@ void st_changed(enum st tx, bool mode);
 #if !defined(PR3287) /*[*/
 void change_cstate(enum cstate cstate, const char *why);
 #endif /*]*/
+char *clean_termname(const char *tn);
