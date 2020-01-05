@@ -489,6 +489,7 @@ main(int argc, char *argv[])
     hio_register();
     proxy_register();
     model_register();
+    net_register();
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */

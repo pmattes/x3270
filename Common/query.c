@@ -61,8 +61,7 @@ static size_t num_queries;
 static const char *
 query_terminal_name(void)
 {
-    return (appres.termname != NULL)? appres.termname:
-	((ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name);
+    return termtype;
 }
 
 static const char *

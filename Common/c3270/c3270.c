@@ -525,6 +525,7 @@ main(int argc, char *argv[])
     hio_register();
     proxy_register();
     model_register();
+    net_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

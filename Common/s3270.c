@@ -153,6 +153,7 @@ main(int argc, char *argv[])
     hio_register();
     proxy_register();
     model_register();
+    net_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

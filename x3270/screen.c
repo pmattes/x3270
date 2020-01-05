@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -4987,7 +4987,6 @@ screen_change_model(int mn, int ovc, int ovr)
 	oversize_changed = true;
     }
     set_rows_cols(mn, ovc, ovr);
-    st_changed(ST_REMODEL, true);
     screen_reinit(MODEL_CHANGE);
 
     /* Redo the terminal type. */

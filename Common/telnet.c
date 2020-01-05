@@ -639,19 +639,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     st_changed(ST_SECURE, false);
 
     /* set up temporary termtype */
-    if (appres.termname != NULL) {
-	termtype = appres.termname;
-    } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	termtype = "xterm";
-    } else if (ov_rows || ov_cols) {
-	termtype = "IBM-DYNAMIC";
-    } else if (HOST_FLAG(STD_DS_HOST)) {
-	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
-		mode.m3279? '9': '8', model_num);
-	termtype = ttype_tmpval;
-    } else {
-	termtype = full_model_name;
-    }
+    net_set_default_termtype();
 
     /* get the passthru host and port number */
     if (HOST_FLAG(PASSTHRU_HOST)) {
@@ -1218,8 +1206,6 @@ net_disconnect(bool including_ssl)
     nested_tls = false;
     any_host_data = false;
     starttls_pending = NOT_CONNECTED;
-
-    net_set_default_termtype();
 
     net_connect_pending = false;
 
@@ -3809,9 +3795,22 @@ net_set_default_termtype(void)
 	termtype = "xterm";
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
+    } else if (HOST_FLAG(STD_DS_HOST)) {
+	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
+		mode.m3279? '9': '8', model_num);
+	termtype = ttype_tmpval;
     } else {
 	termtype = full_model_name;
     }
+
+    st_changed(ST_TERMINAL_NAME, true);
+}
+
+/* Handle an ST_REMODEL indication. */
+static void
+net_remodel(bool ignored _is_unused)
+{
+    net_set_default_termtype();
 }
 
 bool
@@ -3886,4 +3885,12 @@ net_nvt_break(void)
 	vtrace("\n");
 	nvt_data = 0;
     }
+}
+
+/* Module registration. */
+void
+net_register(void)
+{
+    /* Register for state changes. */
+    register_schange(ST_REMODEL, net_remodel);
 }

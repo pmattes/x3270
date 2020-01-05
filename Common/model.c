@@ -283,7 +283,7 @@ toggle_terminal_name(const char *name _is_unused, const char *value)
     }
 
     appres.termname = clean_termname(*value? value: NULL);
-    st_changed(ST_TERMINAL_NAME, appres.termname != NULL);
+    net_set_default_termtype();
     return true;
 }
 

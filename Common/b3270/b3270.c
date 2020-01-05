@@ -289,17 +289,10 @@ b3270_secure(bool ignored)
 static void
 report_terminal_name(void)
 {
-    if (appres.termname != NULL) {
-	ui_vleaf(IndTerminalName,
-		AttrText, appres.termname,
-		AttrOverride, ValTrue,
-		NULL);
-    } else {
-	ui_vleaf(IndTerminalName,
-		AttrText, (ov_rows || ov_cols)? "IBM-DYNAMIC": full_model_name,
-		AttrOverride, ValFalse,
-		NULL);
-    }
+    ui_vleaf(IndTerminalName,
+	    AttrText, termtype,
+	    AttrOverride, ValTrueFalse(appres.termname != NULL),
+	    NULL);
 }
 
 #if !defined(_WIN32) /*[*/
@@ -429,6 +422,7 @@ main(int argc, char *argv[])
     hio_register();
     proxy_register();
     model_register();
+    net_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {

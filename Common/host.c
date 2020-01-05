@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -697,6 +697,10 @@ host_disconnect(bool failed)
 	/* Forget pending state. */
 	host_ps = NULL;
     }
+
+    /* No more host, no more host flags. */
+    host_flags = 0;
+    net_set_default_termtype();
 }
 
 /* The host has entered 3270 or NVT mode, or switched between them. */

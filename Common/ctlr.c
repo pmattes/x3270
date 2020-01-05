@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -285,6 +285,9 @@ set_rows_cols(int mn, int ovc, int ovr)
     /* Set the defaults for the alternate screen size. */
     altROWS = maxROWS;
     altCOLS = maxCOLS;
+
+    /* The model changed. */
+    st_changed(ST_REMODEL, true);
 }
 
 /*
