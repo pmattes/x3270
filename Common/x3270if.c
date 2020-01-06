@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -679,7 +679,7 @@ get_ports(socket_t *socket, int *infd, int *outfd)
 static void
 iterative_io(int pid, unsigned short port)
 {
-#   define N_IO 2
+# define N_IO 2
     struct {
 	const char *name;
 	int rfd, wfd;
@@ -691,31 +691,17 @@ iterative_io(int pid, unsigned short port)
     int i;
     int port_env = -1;
 
-#ifdef DEBUG
-    if (verbose) {
-	freopen("/tmp/x3270if.dbg", "w", stderr);
-	setlinebuf(stderr);
-    }
-#endif
-
     /* Get the x3270 file descriptors. */
     io[0].name = "script->emulator";
     io[0].rfd = fileno(stdin);
-#if !defined(_WIN32) /*[*/
     if (pid) {
 	io[0].wfd = usock(pid);
-    } else
-#endif /*]*/
-    if (port) {
+    } else if (port) {
 	io[0].wfd = tsock(port);
     } else if ((port_env = fd_env(PORT_ENV, FD_ENV_REQUIRED)) >= 0) {
 	io[0].wfd = tsock(port_env);
     } else {
-#if defined(_WIN32) /*[*/
-	return;
-#else /*][ */
 	io[0].wfd = fd_env(INPUT_ENV, true);
-#endif /*]*/
     }
     io[1].name = "emulator->script";
     if (pid || port || (port_env >= 0)) {
@@ -745,20 +731,16 @@ iterative_io(int pid, unsigned short port)
 	for (i = 0; i < N_IO; i++) {
 	    if (io[i].count) {
 		FD_SET(io[i].wfd, &wfds);
-#ifdef DEBUG
 		if (verbose) {
 		    fprintf(stderr, "enabling output %s %d\n",
 			    io[i].name, io[i].wfd);
 		}
-#endif
 	    } else {
 		FD_SET(io[i].rfd, &rfds);
-#ifdef DEBUG
 		if (verbose) {
 		    fprintf(stderr, "enabling input %s %d\n",
 			    io[i].name, io[i].rfd);
 		}
-#endif
 	    }
 	}
 
@@ -782,12 +764,10 @@ iterative_io(int pid, unsigned short port)
 		    }
 		    io[i].offset += rv;
 		    io[i].count -= rv;
-#ifdef DEBUG
 		    if (verbose) {
 			fprintf(stderr, "write(%s)->%d\n", io[i].name,
 				rv);
 		    }
-#endif
 		}
 	    } else if (FD_ISSET(io[i].rfd, &rfds)) {
 		rv = read(io[i].rfd, io[i].buf, IBS);
@@ -801,11 +781,9 @@ iterative_io(int pid, unsigned short port)
 		}
 		io[i].offset = 0;
 		io[i].count = rv;
-#ifdef DEBUG
 		if (verbose) {
 		    fprintf(stderr, "read(%s)->%d\n", io[i].name, rv);
 		}
-#endif
 	    }
 	}
     }
