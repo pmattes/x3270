@@ -54,6 +54,7 @@
 #include "s3270_proto.h"
 #include "source.h"
 #include "task.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -312,8 +313,12 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+    ssize_t ns;
 
-    send(p->socket, s, strlen(s), 0);
+    ns = send(p->socket, s, strlen(s), 0);
+    if (ns < 0) {
+	popup_a_sockerr("peer send");
+    }
 }
 
 /**
@@ -330,8 +335,12 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
 	    buf);
+    size_t ns;
 
-    send(p->socket, s, strlen(s), 0);
+    ns = send(p->socket, s, strlen(s), 0);
+    if (ns < 0) {
+	popup_a_sockerr("peer send");
+    }
 }
 
 /**

@@ -93,7 +93,8 @@ typedef enum {
 
 static char *me;
 static int verbose = 0;
-static char buf[IBS];
+static char *buf;
+static size_t buf_size = 0;
 
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, socket_t socket, int infd,
@@ -383,12 +384,12 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
     int infd = -1, outfd = -1;
     socket_t insocket, outsocket;
     bool is_socket = false;
-    char status[IBS] = "";
+    char *status = NULL;
     int nr;
     int xs = -1;
     int nw = 0;
     char rbuf[IBS];
-    int sl = 0;
+    size_t sl = 0;
     int done = 0;
     char *cmd_nl;
     char *wstr;
@@ -495,9 +496,11 @@ retry:
 	do {
 	    /* Copy from rbuf into buf until '\n'. */
 	    while (i < nr && rbuf[i] != '\n') {
-		if (sl < IBS - 1) {
-		    buf[sl++] = rbuf[i++];
+		if (sl + 2 > buf_size) {
+		    buf = Realloc(buf, buf_size + IBS);
+		    buf_size += IBS;
 		}
+		buf[sl++] = rbuf[i++];
 	    }
 	    if (rbuf[i] == '\n') {
 		i++;
@@ -556,7 +559,7 @@ retry:
 		    }
 		}
 	    } else {
-		strcpy(status, buf);
+		Replace(status, NewString(buf));
 	    }
 
 	    /* Get ready for the next. */
@@ -634,6 +637,8 @@ retry:
     if (itype != NULL) {
 	*itype = input_itype;
     }
+
+    Free(status);
     return xs;
 }
 

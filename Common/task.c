@@ -2188,6 +2188,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     enum { RB_ASCII, RB_EBCDIC, RB_UNICODE } mode = RB_ASCII;
     varbuf_t r;
     bool field = false;
+    int field_baddr;
     bool any = false;
 
     if (num_params > 0) {
@@ -2226,10 +2227,13 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     }
 
     if (field) {
-	baddr = find_field_attribute(cursor_addr);
-	if (baddr < 0) {
-	    baddr = 0;
+	if (!formatted) {
+	    popup_an_error("ReadBuffer: no field");
+	    return false;
 	}
+	baddr = find_field_attribute(cursor_addr);
+	assert(baddr >= 0);
+	field_baddr = baddr;
 	action_output("Start1: %d %d", (baddr / COLS) + 1, (baddr % COLS) + 1);
 	action_output("StartOffset: %d", baddr);
 	action_output("Cursor1: %d %d", (cursor_addr / COLS) + 1,
@@ -2424,6 +2428,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	}
 	INC_BA(baddr);
 	if ((!field || !formatted) && baddr == 0) {
+	    break;
+	}
+	if (field && baddr == field_baddr) {
 	    break;
 	}
 	any = true;
