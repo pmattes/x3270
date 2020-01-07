@@ -2513,7 +2513,7 @@ status_string(void)
 	}
     }
 
-    if (HALF_CONNECTED) {
+    if (cstate > RECONNECTING) {
 	connect_stat = xs_buffer("C(%s)", current_host);
     } else {
 	connect_stat = NewString("N");
