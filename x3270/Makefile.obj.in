@@ -42,7 +42,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
 	3270h.pcf.gz
 
-all: x3270 $(FONTS) dryrun autoscale
+all: x3270 x3270a $(FONTS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -87,7 +87,7 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 dryrun: dryrun.in
 	/bin/cp $< $@
 
-autoscale: autoscale.in
+x3270a: x3270a.in
 	/bin/cp $< $@
 
 man:: x3270.man
@@ -101,6 +101,10 @@ install:: x3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) x3270 $(DESTDIR)$(BINDIR)/x3270
+install:: x3270a
+	[ -d $(DESTDIR)$(BINDIR) ] || \
+		mkdir -p $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) x3270a $(DESTDIR)$(BINDIR)/x3270a
 install:: ibm_hosts
 	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
 		mkdir -p $(DESTDIR)$(LIBX3270DIR)
@@ -129,7 +133,7 @@ install.man: man
 clean:
 	$(RM) *.o *pcf.gz mkfb fallbacks.c
 clobber: clean
-	$(RM) x3270 *.d *.man dryrun
+	$(RM) x3270 x3270a *.d *.man dryrun
 
 # Include auto-generated dependencies.
 -include $(OBJS:.o=.d) mkfb.d
