@@ -1236,17 +1236,18 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 #if defined(XA_UTF8_STRING) /*[*/
 	if (*target == XA_UTF8_STRING(display)) {
 	    memmove(*value, own_sel[i].buffer, (int) *length);
-	} else
+	} else {
 #endif /*]*/
-	{
 	    /*
 	     * N.B.: We return a STRING for COMPOUND_TEXT.
 	     * Someday we may do real ISO 2022, but not today.
 	     */
 	    *length = store_icccm_string(*value, own_sel[i].buffer);
-	    *format = 8;
-	    return True;
+#if defined(XA_UTF8_STRING) /*[*/
 	}
+#endif /*]*/
+	*format = 8;
+	return True;
     }
     if (*target == XA_LIST_LENGTH(display)) {
 	*value = XtMalloc(4);
@@ -1717,10 +1718,10 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	Atom *selection _is_unused, Atom *type _is_unused, XtPointer value,
 	unsigned long *length, int *format _is_unused)
 {
-    char *s, *t;
-    unsigned long s_len, t_len;
-    char *ei_buf;
-    int ei_len;
+    char *s;
+    unsigned long s_len;
+    ucs4_t *u_buf;
+    size_t u_len;
 
     if ((value == NULL) || (*length == 0)) {
 	XtFree(value);
@@ -1749,16 +1750,14 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	return;
     }
 
-    /* Convert the selection to local multibyte. */
-    t_len = 2 * *length;
-    t = ei_buf = Malloc(t_len);
+    /* Convert the selection to Unicode. */
     s_len = *length;
     s = (char *)value;
-    ei_len = 0;
+    u_buf = (ucs4_t *)Malloc(*length * sizeof(ucs4_t));
+    u_len = 0;
 
     while (s_len) {
 	ucs4_t uc;
-	int nm;
 
 #if defined(XA_UTF8_STRING) /*[*/
 	if (paste_utf8) {
@@ -1773,22 +1772,16 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	} else
 #endif /*]*/
 	{
-	    /* ISO 8859-1. */
+	    /* Assume it's ISO 8859-1. */
 	    uc = *s & 0xff;
 	    s++;
 	    s_len--;
 	}
-	nm = unicode_to_multibyte(uc, t, t_len);
-	if (nm > 0) {
-	    nm--;
-	}
-	t += nm;
-	t_len -= nm;
-	ei_len += nm;
+	u_buf[u_len++] = uc;
     }
-    emulate_input(ei_buf, ei_len, true, false);
+    emulate_uinput(u_buf, u_len, true);
 
-    XtFree(ei_buf);
+    Free(u_buf);
     XtFree(value);
 
     n_pasting = 0;
