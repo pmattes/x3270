@@ -201,6 +201,7 @@ fi
 if test "x$enable_x3270if" = xyes; then
     AC_CONFIG_SUBDIRS(x3270if)
 fi
+AC_CONFIG_SUBDIRS(mitm)
 
 dnl Generate to top-level Makefile.
 AC_OUTPUT(Makefile)
