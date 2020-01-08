@@ -100,5 +100,5 @@ case "$enable_ipv6" in
 esac
 
 dnl Generate the Makefiles.
-AC_OUTPUT(Makefile)
-AC_OUTPUT(Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_OUTPUT

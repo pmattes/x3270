@@ -118,5 +118,5 @@ dnl Generate conf.h.
 AC_CONFIG_HEADER(conf.h)
 
 dnl Generate the Makefiles.
-AC_OUTPUT(Makefile)
-AC_OUTPUT(Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_OUTPUT

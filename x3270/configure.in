@@ -155,5 +155,5 @@ then	XLIB=-L$x_libraries
 fi
 AC_SUBST(XINC)
 AC_SUBST(XLIB)
-AC_OUTPUT(Makefile)
-AC_OUTPUT(Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_OUTPUT
