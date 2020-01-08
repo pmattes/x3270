@@ -127,14 +127,13 @@
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
-# define CSI(x)		"\033[" x "m"
 # if defined(HAVE_LIBREADLINE) /*[*/
-#  define RLQ(x)	"\001" x "\002"
-#  define PROMPT_PRE	RLQ(CSI("34"))
-#  define PROMPT_POST	RLQ(CSI("39"))
+#  define PROMPT_PRE	xs_buffer("%c%s%c", '\001', \
+				screen_setaf(ACOLOR_BLUE), '\002')
+#  define PROMPT_POST	xs_buffer("%c%s%c", '\001', screen_op(), '\002')
 # else /*][*/
-#  define PROMPT_PRE	CSI("34")
-#  define PROMPT_POST	CSI("39")
+#  define PROMPT_PRE	screen_setaf(ACOLOR_BLUE)
+#  define PROMPT_POST	screen_op()
 # endif /*]*/
 #else /*][*/
 # define PROMPT_PRE	""
@@ -156,6 +155,8 @@ static char *completion_entry(const char *, int);
 static char *readline_command;
 static bool readline_done = false;
 #endif /*]*/
+
+static bool color_prompt;
 
 /* Pager state. */
 #if !defined(_WIN32) /*[*/
@@ -536,16 +537,6 @@ main(int argc, char *argv[])
 Type 'help' for help information.\n\n",
 	    get_about());
 
-    if (appres.secure) {
-	/* We don't allow a command line in secure mode. */
-	prompt.default_string = prompt.string = "[Press <Enter>] ";
-    } else {
-	prompt.default_string = prompt.string =
-	    xs_buffer(appres.c3270.color_prompt?
-			PROMPT_PRE "%s>" PROMPT_POST " " : "%s> ",
-		    app);
-    }
-
 #if defined(_WIN32) /*[*/
     /* Delete the link file, if we've been told do. */
     delenv = getenv(DELENV);
@@ -597,6 +588,19 @@ Type 'help' for help information.\n\n",
 
     /* Get the screen set up as early as possible. */
     screen_init();
+#if !defined(_WIN32) /*[*/
+    color_prompt = screen_has_ansi_color();
+#endif /*]*/
+
+    if (appres.secure) {
+	/* We don't allow a command line in secure mode. */
+	prompt.default_string = prompt.string = "[Press <Enter>] ";
+    } else {
+	prompt.default_string = prompt.string =
+	    color_prompt?
+		xs_buffer("%s%s> %s", PROMPT_PRE, app, PROMPT_POST):
+		xs_buffer("%s> ", app);
+    }
 
 #if defined(_WIN32) /*[*/
     /* Create a thread to read data from stdin. */
@@ -848,16 +852,16 @@ display_prompt(void)
 {
     if (error_pending != NULL) {
 #if !defined(_WIN32) /*[*/
-	if (appres.c3270.color_prompt) {
-	    printf(CSI("31"));
+	if (color_prompt) {
+	    printf("%s", screen_setaf(ACOLOR_RED));
 	}
 #else /*][*/
 	screen_color(PC_ERROR);
 #endif /*]*/
 	printf("%s", error_pending);
 #if !defined(_WIN32) /*[*/
-	if (appres.c3270.color_prompt) {
-	    printf(CSI("39"));
+	if (color_prompt) {
+	    printf("%s", screen_op());
 	}
 #else /*][*/
 	screen_color(PC_DEFAULT);
@@ -875,8 +879,8 @@ display_prompt(void)
     if (!appres.secure && !aux_input) {
 	if (ft_state != FT_NONE) {
 #if !defined(_WIN32) /*[*/
-	    if (appres.c3270.color_prompt) {
-		printf(CSI("33"));
+	    if (color_prompt) {
+		printf("%s", screen_setaf(ACOLOR_YELLOW));
 	    }
 #else /*][*/
 	    screen_color(PC_PROMPT);
@@ -884,8 +888,8 @@ display_prompt(void)
 	    printf("File transfer in progress. Use Transfer(Cancel) to "
 		    "cancel.");
 #if !defined(_WIN32) /*[*/
-	    if (appres.c3270.color_prompt) {
-		printf(CSI("39"));
+	    if (color_prompt) {
+		printf("%s", screen_op());
 	    }
 #else /*][*/
 	    screen_color(PC_DEFAULT);
@@ -895,16 +899,16 @@ display_prompt(void)
 	}
 	if (PCONNECTED) {
 #if !defined(_WIN32) /*[*/
-	    if (appres.c3270.color_prompt) {
-		printf(CSI("34"));
+	    if (color_prompt) {
+		printf("%s", screen_setaf(ACOLOR_BLUE));
 	    }
 #else /*][*/
 	    screen_color(PC_PROMPT);
 #endif /*]*/
 	    printf("Press <Enter> to resume session.");
 #if !defined(_WIN32) /*[*/
-	    if (appres.c3270.color_prompt) {
-		printf(CSI("39"));
+	    if (color_prompt) {
+		printf("%s", screen_op());
 	    }
 #else /*][*/
 	    screen_color(PC_DEFAULT);
@@ -1695,8 +1699,10 @@ command_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 
     p = lazya(base64_decode(buf));
 
-    prompt.string = xs_buffer(
-	    appres.c3270.color_prompt? PROMPT_PRE "%s" PROMPT_POST : "%s", p);
+    prompt.string =
+	color_prompt?
+	    xs_buffer("%s%s%s", PROMPT_PRE, p, PROMPT_POST):
+	    NewString(p);
     aux_input = true;
     aux_pwinput = !echo;
     command_output = true; /* a white lie */
@@ -2084,7 +2090,6 @@ product_set_appres_defaults(void)
     appres.c3270.mouse = true;
 #endif /*]*/
 
-    appres.c3270.color_prompt = true;
 #if !defined(_WIN32) /*[*/
 # if defined(CURSES_WIDE) /*[*/
     appres.c3270.acs = true;
@@ -2112,11 +2117,11 @@ glue_gui_xoutput(const char *s, bool success)
     c3270_screen_suspend();
 
 #if !defined(_WIN32) /*[*/
-    if (appres.c3270.color_prompt) {
-	fprintf(start_pager(),
-		"%s%s" CSI("39") "\n",
-		success? CSI("39"): CSI("31"),
-		s);
+    if (color_prompt) {
+	fprintf(start_pager(), "%s%s%s\n",
+		success? "": screen_setaf(ACOLOR_RED),
+		s,
+		success? "": screen_op());
     } else {
 	fprintf(start_pager(), "%s\n", s);
     }
@@ -2181,7 +2186,10 @@ glue_gui_error(const char *s)
 	fflush(stdout);
     }
 #if !defined(_WIN32) /*[*/
-    printf(appres.c3270.color_prompt? CSI("31") "%s" CSI("39") "\n": "%s\n", s);
+    printf("%s%s%s\n",
+	    color_prompt? screen_setaf(ACOLOR_RED): "",
+	    s,
+	    color_prompt? screen_op(): "");
 #else /*][*/
     screen_color(PC_ERROR);
     printf("%s", s);
@@ -2203,29 +2211,6 @@ glue_gui_error(const char *s)
 #else /*][*/
 	prompt.displayed = false;
 #endif /*]*/
-    }
-
-    return true;
-}
-
-/* The color prompt setting changed. */
-static bool
-set_color_prompt(const char *name _is_unused, const char *value _is_unused)
-{
-    const char *errmsg;
-
-    if ((errmsg = boolstr(value, &appres.c3270.color_prompt)) != NULL) {
-	popup_an_error("%s", errmsg);
-	return false;
-    }
-
-    /* Redefine the prompt. */
-    Replace(prompt.default_string,
-	    xs_buffer(appres.c3270.color_prompt?
-		PROMPT_PRE "%s>" PROMPT_POST " " : "%s> ",
-		app));
-    if (!aux_input) {
-	prompt.string = prompt.default_string;
     }
 
     return true;
@@ -2313,7 +2298,6 @@ c3270_register(void)
     static res_t c3270_resources[] = {
 	{ ResAllBold,	aoffset(c3270.all_bold_on),	XRM_STRING },
 	{ ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
-	{ ResColorPrompt,aoffset(c3270.color_prompt),	XRM_BOOLEAN },
 	{ ResIdleCommand,aoffset(idle_command),		XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),		XRM_STRING },
@@ -2400,10 +2384,6 @@ c3270_register(void)
     /* Register our resources. */
     register_resources(c3270_resources, array_count(c3270_resources));
     register_xresources(c3270_xresources, array_count(c3270_xresources));
-
-    /* Register our toggles. */
-    register_extended_toggle(ResColorPrompt, set_color_prompt, NULL, NULL,
-	    (void **)&appres.c3270.color_prompt, XRM_BOOLEAN);
 
     /* Register our queries. */
     register_queries(queries, array_count(queries));

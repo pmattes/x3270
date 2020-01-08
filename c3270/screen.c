@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2019 Paul Mattes.
+ * Copyright (c) 2000-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,8 @@
 #include "utils.h"
 #include "xio.h"
 #include "xscroll.h"
+
+#include "cscreen.h"
 
 /*
  * The usual x3270 COLS variable (current number of columns in the 3270
@@ -269,6 +271,8 @@ crosshair_color_init(void)
 void
 screen_init(void)
 {
+    setupterm(NULL, fileno(stdout), NULL);
+
     menu_init();
 
 #if defined(C3270_80_132) /*[*/
@@ -349,6 +353,38 @@ screen_init(void)
 }
 
 /*
+ * Returns true if the screen support ANSI color sequences.
+ */
+bool
+screen_has_ansi_color(void)
+{
+    return
+	tigetstr("setaf") != NULL && tigetstr("setaf") != (char *)-1 &&
+	tigetstr("op") != NULL && tigetstr("op") != (char *)-1;
+}
+
+/*
+ * Returns the "op" (original pair) string.
+ */
+const char *
+screen_op(void)
+{
+    return tigetstr("op");
+}
+
+/*
+ * Returns the sequene to set a foreground color.
+ */
+const char *
+screen_setaf(acolor_t color)
+{
+    int color_map[] = { COLOR_BLUE, COLOR_RED, COLOR_YELLOW };
+
+    char *s = tiparm(tigetstr("setaf"), color_map[color]);
+    return s;
+}
+
+/*
  * Finish screen initialization, when a host connects or when we go into
  * 'zombie' mode (no prompt, no connection).
  */
@@ -373,7 +409,6 @@ finish_screen_init(void)
 	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
     }
 #endif /*]*/
-    setupterm(NULL, fileno(stdout), NULL);
     if ((cl = tigetstr("clear")) != NULL) {
 	putp(cl);
     }

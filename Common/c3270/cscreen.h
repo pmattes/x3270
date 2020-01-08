@@ -57,3 +57,13 @@ void get_console_size(int *rows, int *cols);
 void screen_send_esc(void);
 void screen_echo_mode(bool echo);
 #endif /*]*/
+#if !defined(_WIN32) /*[*/
+bool screen_has_ansi_color(void);
+const char *screen_op(void);
+typedef enum {
+    ACOLOR_BLUE,	/* 34 */
+    ACOLOR_RED,		/* 31 */
+    ACOLOR_YELLOW	/* 33 */
+} acolor_t;
+const char *screen_setaf(acolor_t color);
+#endif /*]*/

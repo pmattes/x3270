@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2019 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -166,7 +166,6 @@ typedef struct {
 	bool	 all_bold_on;
 	bool	 ascii_box_draw;
 	bool	 acs;
-	bool	 color_prompt;
 #if !defined(_WIN32) /*[*/
 	bool	 default_fgbg;
 	bool	 cbreak_mode;
