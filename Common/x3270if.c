@@ -59,6 +59,23 @@
 # include <arpa/inet.h>
 #endif /*]*/
 
+#if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+# include <ncursesw/ncurses.h>
+#elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+# include <ncurses/ncurses.h>
+#elif defined(HAVE_NCURSES_H) /*][*/
+# include <ncurses.h>
+#else /*][*/
+# include <curses.h>
+#endif /*]*/
+#if defined(HAVE_NCURSESW_TERM_H) /*[*/
+# include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_TERM_H) /*][*/
+# include <ncurses/term.h>
+#elif defined(HAVE_TERM_H) /*][*/
+# include <term.h>
+#endif /*]*/
+
 #if defined(HAVE_LIBREADLINE) /*[*/
 # include <readline/readline.h>
 # if defined(HAVE_READLINE_HISTORY_H) /*[*/
@@ -1095,6 +1112,13 @@ i18n_get(const char *key)
     return NULL;
 }
 
+/* Get an ANSI color setting attribute. */
+static const char *
+xsetaf(const char *setaf, int color)
+{
+    return (setaf != NULL)? tiparm(setaf, color) : "";
+}
+
 static void
 interactive_io(int port, const char *emulator_name, const char *help_name,
 	const char *localization)
@@ -1112,7 +1136,23 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     HANDLE conout;
     CONSOLE_SCREEN_BUFFER_INFO info;
     HANDLE socket_event;
+#else /*][*/
+    const char *op;
+    const char *setaf;
+    char *prompt_setaf;
 #endif /*]*/
+
+#if !defined(_WIN32) /*[*/
+    /* Set up terminfo and check for ANSI color. */
+    setupterm(NULL, fileno(stdout), NULL);
+    op = tigetstr("op");
+    setaf = tigetstr("setaf");
+    if (op == NULL || op == (char *)-1 ||
+	    setaf == NULL || setaf == (char *)-1) {
+	op = "";
+	setaf = NULL;
+    }
+#endif
 
     if (port) {
 	s = tsock(port);
@@ -1124,15 +1164,12 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 #endif /*]*/
     }
 
-#if !defined(_WIN32) /*[*/
-# if defined(HAVE_LIBREADLINE) /*[*/
-#  define LEFT	"\001\033[34m\002"
-#  define RIGHT	"\001\033[39m\002"
-# else /*]*/
-#  define LEFT	"\033[34m"
-#  define RIGHT	"\033[39m"
-# endif /*]*/
+#if defined(HAVE_LIBREADLINE) /*[*/
+# define MLEN	1
+# define LEFT	"\001"
+# define RIGHT	"\002"
 #else /*]*/
+# define MLEN	0
 # define LEFT	""
 # define RIGHT	""
 #endif /*]*/
@@ -1147,10 +1184,22 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(Interactive)",
 	    &data_ret, NULL, &itype);
 
-    prompt_len = strlen(LEFT) + strlen(emulator_name) + strlen(">") +
-	strlen(RIGHT) + strlen(" ") + 1;
-    real_prompt = prompt = Malloc(prompt_len);
-    snprintf(prompt, prompt_len, LEFT "%s>" RIGHT " ", emulator_name);
+    /* Set up the prompt. */
+#if !defined(_WIN32) /*[*/
+    prompt_setaf = (char *)xsetaf(setaf, COLOR_BLUE);
+    prompt_setaf = Malloc(strlen(prompt_setaf) + 1);
+    strcpy(prompt_setaf, xsetaf(setaf, COLOR_BLUE));
+    prompt_len = MLEN + strlen(prompt_setaf) + MLEN + strlen(emulator_name)
+	+ strlen("> ") + MLEN + strlen(op) + MLEN + 1;
+    prompt = Malloc(prompt_len);
+    snprintf(prompt, prompt_len, LEFT "%s" RIGHT "%s> " LEFT "%s" RIGHT,
+	    prompt_setaf, emulator_name, op);
+#else /*][*/
+    prompt_len = strlen(emulator_name) + strlen("> ") + 1;
+    prompt = Malloc(prompt_len);
+    snprintf(prompt, prompt_len, "%s> ", emulator_name);
+#endif /*]*/
+    real_prompt = prompt;
 
 # if defined(HAVE_LIBREADLINE) /*[*/
     /* Set up readline. */
@@ -1217,7 +1266,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	}
     }
 #if !defined(_WIN32) /*[*/
-    printf("\033[33m");
+    printf("%s", xsetaf(setaf, COLOR_YELLOW));
 # else /*][*/
     fflush(stdout);
     set_text_attribute(conout, FOREGROUND_GREEN | FOREGROUND_RED);
@@ -1230,7 +1279,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 		emulator_name);
     }
 #if !defined(_WIN32) /*[*/
-    printf("\033[39m");
+    printf("%s", op);
 # else /*][*/
     fflush(stdout);
     set_text_attribute(conout, info.wAttributes);
@@ -1404,9 +1453,12 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 		if (aux_input) {
 		    printf("%s\n", data_ret);
 		} else {
-		    printf("\033[3%cm%s\033[39m\n",
-			    rc? '1': '9',
-			    data_ret);
+		    if (rc) {
+			printf("%s%s%s\n", xsetaf(setaf, COLOR_RED), data_ret,
+				op);
+		    } else {
+			printf("%s\n", data_ret);
+		    }
 		}
 # else /*][*/
 		if (!aux_input) {
