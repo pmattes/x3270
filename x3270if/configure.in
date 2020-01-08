@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2014-2018 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2014-2018, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,15 @@ AC_CHECK_HEADERS(getopt.h)
 if test "$with_readline" != no; then
 AC_CHECK_HEADERS(readline/history.h)
 fi
+dnl Find the best curses header file and hope it's consistent with the library
+dnl we found.
+AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
+ [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
+  [AC_CHECK_HEADERS(ncurses.h, ,
+   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
+AC_CHECK_HEADERS(ncursesw/term.h, ,
+ [AC_CHECK_HEADERS(ncurses/term.h, ,
+  [AC_CHECK_HEADERS(term.h)])])
 
 dnl Check for --without-readline
 AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library]) 
@@ -72,6 +81,7 @@ AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library]
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
+AC_CHECK_LIB(ncursesw, newterm, , [AC_CHECK_LIB(ncurses, newterm, , [AC_CHECK_LIB(curses, newterm, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])])])
 if test "$with_readline" != no; then
 AC_CHECK_LIB(readline, rl_initialize)
 fi
@@ -80,9 +90,7 @@ dnl Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)
 
-dnl Generate conf.h.
+dnl Generate the files.
 AC_CONFIG_HEADER(conf.h)
-
-dnl Generate the Makefiles.
-AC_OUTPUT(Makefile)
-AC_OUTPUT(Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_OUTPUT

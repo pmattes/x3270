@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2015, 2017-2019 Paul Mattes.
+ * Copyright (c) 2000-2009, 2015, 2017-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,13 @@
 #undef HAVE_UTIL_H
 #undef HAVE_GETOPT_H
 #undef HAVE_READLINE_HISTORY_H
+#undef HAVE_NCURSESW_NCURSES_H
+#undef HAVE_NCURSES_NCURSES_H
+#undef HAVE_NCURSES_H
+#undef HAVE_CURSES_H
+#undef HAVE_NCURSESW_TERM_H
+#undef HAVE_NCURSES_TERM_H
+#undef HAVE_TERM_H
 
 /* Uncommon functions. */
 #undef HAVE_VASPRINTF

@@ -1,6 +1,6 @@
 /* conf.h.  Generated from conf.h.in by configure.  */
 /*
- * Copyright (c) 2000-2009, 2015, 2017-2019 Paul Mattes.
+ * Copyright (c) 2000-2009, 2015, 2017-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,13 @@
 /* #undef HAVE_UTIL_H */
 #define HAVE_GETOPT_H 1
 #define HAVE_READLINE_HISTORY_H 1
+#define HAVE_NCURSESW_NCURSES_H 1
+/* #undef HAVE_NCURSES_NCURSES_H */
+/* #undef HAVE_NCURSES_H */
+/* #undef HAVE_CURSES_H */
+#define HAVE_NCURSESW_TERM_H 1
+/* #undef HAVE_NCURSES_TERM_H */
+/* #undef HAVE_TERM_H */
 
 /* Uncommon functions. */
 #define HAVE_VASPRINTF 1
