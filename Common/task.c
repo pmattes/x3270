@@ -1933,7 +1933,10 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
      *
      * Any of the following actions will enable Wait(Output):
      * - Ascii
+     * - Ascii1
      * - Ebcdic
+     * - Ebcdic1
+     * - ReadBuffer
      */     
     if (current_task != NULL && buf == ea_buf) {
 	set_output_needed(true);
