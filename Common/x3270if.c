@@ -59,29 +59,30 @@
 # include <arpa/inet.h>
 #endif /*]*/
 
-#if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-# include <ncursesw/ncurses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-# include <ncurses/ncurses.h>
-#elif defined(HAVE_NCURSES_H) /*][*/
-# include <ncurses.h>
-#else /*][*/
-# include <curses.h>
-#endif /*]*/
-#if defined(HAVE_NCURSESW_TERM_H) /*[*/
-# include <ncursesw/term.h>
-#elif defined(HAVE_NCURSES_TERM_H) /*][*/
-# include <ncurses/term.h>
-#elif defined(HAVE_TERM_H) /*][*/
-# include <term.h>
-#endif /*]*/
-
-#if defined(HAVE_LIBREADLINE) /*[*/
-# include <readline/readline.h>
-# if defined(HAVE_READLINE_HISTORY_H) /*[*/
-#  include <readline/history.h>
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+#  include <ncursesw/ncurses.h>
+# elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+#  include <ncurses/ncurses.h>
+# elif defined(HAVE_NCURSES_H) /*][*/
+#  include <ncurses.h>
+# else /*][*/
+#  include <curses.h>
 # endif /*]*/
-#endif /*]*/
+# if defined(HAVE_NCURSESW_TERM_H) /*[*/
+#  include <ncursesw/term.h>
+# elif defined(HAVE_NCURSES_TERM_H) /*][*/
+#  include <ncurses/term.h>
+# elif defined(HAVE_TERM_H) /*][*/
+#  include <term.h>
+# endif /*]*/
+# if defined(HAVE_LIBREADLINE) /*[*/
+#  include <readline/readline.h>
+#  if defined(HAVE_READLINE_HISTORY_H) /*[*/
+#   include <readline/history.h>
+#  endif /*]*/
+# endif /*]*/
+#endif
 
 #include "base64.h"
 #include "s3270_proto.h"
@@ -1112,12 +1113,14 @@ i18n_get(const char *key)
     return NULL;
 }
 
+#if !defined(_WIN32) /*[*/
 /* Get an ANSI color setting attribute. */
 static const char *
 xsetaf(const char *setaf, int color)
 {
     return (setaf != NULL)? tiparm(setaf, color) : "";
 }
+#endif /*]*/
 
 static void
 interactive_io(int port, const char *emulator_name, const char *help_name,

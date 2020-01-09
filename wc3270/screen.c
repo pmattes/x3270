@@ -3599,10 +3599,6 @@ static DWORD color_attr[] = {
 void
 screen_color(pc_t pc)
 {
-    if (!appres.c3270.color_prompt) {
-	return;
-    }
-
     if (!SetConsoleTextAttribute(cohandle,
 		color_attr[pc]? color_attr[pc]: base_info.wAttributes)) {
 	win32_perror("Can't set console text attribute");
