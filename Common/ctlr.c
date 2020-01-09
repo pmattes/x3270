@@ -2981,6 +2981,12 @@ ctlr_query_cur_size(void)
 }
 
 const char *
+ctlr_query_cur_size_old(void)
+{
+    return lazyaf("%u %u", ROWS, COLS);
+}
+
+const char *
 ctlr_query_cursor(void)
 {
     return lazyaf("%u %u", cursor_addr / COLS, cursor_addr % COLS);
@@ -3003,6 +3009,12 @@ const char *
 ctlr_query_max_size(void)
 {
     return lazyaf("rows %u columns %u", maxROWS, maxCOLS);
+}
+
+const char *
+ctlr_query_max_size_old(void)
+{
+    return lazyaf("%u %u", maxROWS, maxCOLS);
 }
 
 /*

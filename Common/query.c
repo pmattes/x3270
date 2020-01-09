@@ -331,6 +331,8 @@ query_register(void)
 	{ "LuName", net_query_lu_name, NULL, false, false },
 	{ "Model", NULL, full_model_name, true, false },
 	{ "Proxy", get_proxy, NULL, false, false },
+	{ "ScreenCurSize", ctlr_query_cur_size_old, NULL, true, false },
+	{ "ScreenMaxSize", ctlr_query_max_size_old, NULL, true, false },
 	{ "ScreenSizeCurrent", ctlr_query_cur_size, NULL, false, false },
 	{ "ScreenSizeMax", ctlr_query_max_size, NULL, false, false },
 	{ "ScreenTraceFile", get_screentracefile, NULL, false, false },
