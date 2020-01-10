@@ -325,6 +325,17 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 #endif /*]*/
 
+    /*
+     * Handle the deprecated 'charset' resource.
+     * It's an alias for 'codePage', but it doesn't override it.
+     */
+    if (appres.codepage == NULL) {
+	appres.codepage = appres.charset;
+    }
+    if (appres.codepage == NULL) {
+	appres.codepage = "bracket";
+    }
+
     appres.termname = clean_termname(appres.termname);
 
     return argc;
@@ -440,7 +451,8 @@ set_appres_defaults(void)
     appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;
     appres.port = "23";
-    appres.codepage = NewString("bracket");
+    /* Do this when we finally deprecate 'charset'. */
+    /* appres.codepage = NewString("bracket"); */
     appres.termname = NULL;
     appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
@@ -955,7 +967,7 @@ static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
-    { ResCharset,	aoffset(codepage),	XRM_STRING },
+    { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResCodePage,	aoffset(codepage),	XRM_STRING },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },

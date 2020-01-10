@@ -623,6 +623,17 @@ main(int argc, char *argv[])
     copy_xtoggle(r);
     Free(r);
 
+    /*
+     * Handle the deprecated 'charset' resource. It is an alias for
+     * 'codepage', but does not override it.
+     */
+    if (appres.codepage == NULL) {
+	appres.codepage = appres.charset;
+    }
+    if (appres.codepage == NULL) {
+	appres.codepage = "bracket";
+    }
+
     /* Duplicate the strings in appres, so they can be reallocated later. */
     dup_resource_strings(res, num_resources);
 

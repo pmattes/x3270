@@ -69,6 +69,7 @@ typedef struct {
     char	*hostsfile;
     char	*port;
     char	*codepage;
+    char	*charset;	/* deprecated */
     char	*sbcs_cgcsgid;
     char	*termname;
     char	*devname;	/* for 5250 */
