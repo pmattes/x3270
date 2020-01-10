@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2019 Paul Mattes.
+ * Copyright (c) 2000-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,10 @@
  *	    -certfiletype type
  *	    -chainfile file
  *	    -clientcert name
+ *          -codepage name
+ *		use the specified character set
  *	    -command "string"
  *		command to use to print (default "lpr", POSIX only)
- *          -charset name
- *		use the specified character set
  *          -crlf
  *		expand newlines to CR/LF (POSIX only)
  *          -crthru
