@@ -813,7 +813,7 @@ find_extended_toggle(const char *name, enum resource_type type)
  */
 int
 init_extended_toggle(const char *name, size_t nlen, bool bool_only,
-	const char *value)
+	const char *value, const char **proper_name)
 {
     toggle_extended_upcalls_t *u;
     const char *err;
@@ -831,24 +831,34 @@ init_extended_toggle(const char *name, size_t nlen, bool bool_only,
 	return 0;
     }
 
+    if (proper_name != NULL) {
+	*proper_name = u->name;
+    }
+
     switch (u->type) {
     default:
     case XRM_STRING:
-	*(char **)u->address = NewString(value);
+	if (proper_name == NULL) {
+	    *(char **)u->address = NewString(value);
+	}
 	break;
     case XRM_BOOLEAN:
 	err = boolstr(value, &v);
 	if (err != NULL) {
 	    return -1;
 	}
-	*(bool *)u->address = v;
+	if (proper_name == NULL) {
+	    *(bool *)u->address = v;
+	}
 	break;
     case XRM_INT:
 	ul = strtoul(value, &p, 10);
 	if (p == value || *p != '\0' || ul > INT_MAX) {
 	    return -1;
 	}
-	*(int *)u->address = ul;
+	if (proper_name == NULL) {
+	    *(int *)u->address = ul;
+	}
 	break;
     }
     return 1;

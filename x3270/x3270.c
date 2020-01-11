@@ -49,6 +49,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
+#include "boolstr.h"
 #include "codepage.h"
 #include "ctlrc.h"
 #include "ft.h"
@@ -92,12 +93,6 @@
 #include "xselectc.h"
 #include "xstatus.h"
 
-/* Typedefs. */
-typedef struct {
-    bool *address;
-    bool value;
-} retoggle_t;
-
 /* Globals */
 const char     *programname;
 Display        *display;
@@ -128,12 +123,14 @@ static bool  colormap_failure = false;
 static void	parse_local_process(int *argcp, char **argv, char **cmds);
 #endif /*]*/
 static int	parse_model_number(char *m);
-static retoggle_t *parse_set_clear(int *, char **);
+#if defined(DEBUG_SET_CLEAR) /*[*/
+static void	dump_argv(const char *, int, char **);
+#endif /*]*/
+static void	parse_set_clear(int *, char **);
 static void	label_init(void);
 static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
 static void	copy_xres_to_res_bool(void);
-static void	copy_xtoggle(retoggle_t *r);
 
 XrmOptionDescRec base_options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -423,7 +420,6 @@ main(int argc, char *argv[])
     bool mono = false;
     char *session = NULL;
     XtResource *res;
-    retoggle_t *r;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -493,7 +489,13 @@ main(int argc, char *argv[])
     xkybd_register();
 
     /* Translate and validate -set and -clear toggle options. */
-    r = parse_set_clear(&argc, argv);
+#if defined(DEBUG_SET_CLEAR) /*[*/
+    dump_argv("before", argc, argv);
+#endif /*]*/
+    parse_set_clear(&argc, argv);
+#if defined(DEBUG_SET_CLEAR) /*[*/
+    dump_argv("after", argc, argv);
+#endif /*]*/
 
     /* Save a copy of the command-line args for merging later. */
     save_args(argc, argv);
@@ -618,10 +620,6 @@ main(int argc, char *argv[])
 
     /* Copy bool values from xres to appres. */
     copy_xres_to_res_bool();
-
-    /* Write extended toggle values into appres. */
-    copy_xtoggle(r);
-    Free(r);
 
     /*
      * Handle the deprecated 'charset' resource. It is an alias for
@@ -1071,6 +1069,21 @@ parse_local_process(int *argcp, char **argv, char **cmds)
 }
 #endif /*]*/
 
+#if defined(DEBUG_SET_CLEAR) /*[*/
+/* Dump the contents of argc/argv. */
+static void
+dump_argv(const char *when, int argc, char **argv)
+{
+    int i;
+
+    printf("%s: ", when);
+    for (i = 0; i < argc; i++) {
+	printf(" '%s'", argv[i]);
+    }
+    printf("\n");
+}
+#endif /*]*/
+
 /* Comparison function for toggle name qsort. */
 static int
 name_cmp(const void *p1, const void *p2)
@@ -1084,20 +1097,21 @@ name_cmp(const void *p1, const void *p2)
 /*
  * Pick out -set and -clear toggle options.
  */
-static retoggle_t *
+static void
 parse_set_clear(int *argcp, char **argv)
 {
     int i, j;
     int argc_out = 0;
     char **argv_out = (char **) XtMalloc((*argcp + 1) * sizeof(char *));
-    retoggle_t *r = NULL;
-    int nr = 0;
 
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
 	bool is_set = false;
 	bool found = false;
+	const char *eq = NULL;
+	size_t nlen;
+	bool bool_only;
 
 	if (!strcmp(argv[i], OptSet)) {
 	    is_set = true;
@@ -1110,24 +1124,59 @@ parse_set_clear(int *argcp, char **argv)
 	    continue;
 	}
 
-	/* Match the name. */
 	i++;
+
+	if (argv[i][0] != '=' && (eq = strchr(argv[i], '=')) != NULL) {
+	    /* -set foo=bar */
+	    if (!is_set) {
+		fprintf(stderr, "Error: " OptClear
+			" parameter cannot include a value\n");
+		exit(1);
+	    }
+	    nlen = eq - argv[i];
+	} else {
+	    nlen = strlen(argv[i]);
+	}
+	bool_only = !is_set || !eq;
+
 	for (j = 0; toggle_names[j].name != NULL; j++) {
 	    if (toggle_supported(toggle_names[j].index) &&
-		    !strcasecmp(argv[i], toggle_names[j].name)) {
-		appres.toggle[toggle_names[j].index] = is_set;
+		    !strncasecmp(argv[i], toggle_names[j].name, nlen) &&
+		    toggle_names[j].name[nlen] == '\0') {
+		bool value;
+
+		if (eq == NULL) {
+		    value = is_set;
+		} else {
+		    const char *err = boolstr(eq + 1, &value);
+
+		    if (err != NULL) {
+			fprintf(stderr, "Error: " OptSet " %s: %s\n", argv[i],
+				err);
+			exit(1);
+		    }
+		}
+		argv_out[argc_out++] = "-xrm";
+		argv_out[argc_out++] = xs_buffer("x3270.%s: %s",
+			toggle_names[j].name, value? ResTrue: ResFalse);
 		found = true;
 		break;
 	    }
 	}
 	if (!found) {
-	    void *address = find_extended_toggle(argv[i], XRM_BOOLEAN);
+	    const char *proper_name;
+	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
+		    eq? eq + 1: (is_set? ResTrue: ResFalse), &proper_name);
 
-	    if (address != NULL) {
-		r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
-		r[nr].address = (bool *)address;
-		r[nr].value = is_set;
-		nr++;
+	    if (xt < 0) {
+		fprintf(stderr, "Error: " OptSet " %s: invalid value\n",
+			 argv[i]);
+		exit(1);
+	    }
+	    if (xt == 1) {
+		argv_out[argc_out++] = "-xrm";
+		argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
+			eq? eq + 1: (is_set? ResTrue: ResFalse));
 		found = true;
 	    }
 	}
@@ -1137,7 +1186,7 @@ parse_set_clear(int *argcp, char **argv)
 	    int nx;
 	    char **nxnames;
 
-	    nxnames = extended_toggle_names(&nx, true);
+	    nxnames = extended_toggle_names(&nx, bool_only);
 	    tn = (const char **)Calloc(N_TOGGLES + nx, sizeof(char **));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
 		if (toggle_supported(toggle_names[j].index) &&
@@ -1148,8 +1197,8 @@ parse_set_clear(int *argcp, char **argv)
 	    memcpy(tn + ntn, nxnames, nx * sizeof(char **));
 	    ntn += nx;
 	    qsort(tn, ntn, sizeof(const char *), name_cmp);
-	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
-		    argv[i]);
+	    fprintf(stderr, "Unknown %stoggle name '%.*s'. Toggle names are:\n",
+		    bool_only? "Boolean ": "", (int)nlen, argv[i]);
 	    for (j = 0; j < ntn; j++) {
 		fprintf(stderr, " %s", tn[j]);
 	    }
@@ -1157,11 +1206,6 @@ parse_set_clear(int *argcp, char **argv)
 	    Free(tn);
 	    exit(1);
 	}
-
-	/* Substitute. */
-	argv_out[argc_out++] = "-xrm";
-	argv_out[argc_out++] = xs_buffer("x3270.%s: %s",
-		toggle_names[j].name, is_set? ResTrue: ResFalse);
     }
 
     *argcp = argc_out;
@@ -1169,10 +1213,6 @@ parse_set_clear(int *argcp, char **argv)
     memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
     Free(argv_out);
-
-    r = (retoggle_t *)Realloc(r, (nr + 1) * sizeof(retoggle_t));
-    r[nr].address = NULL;
-    return r;
 }
 
 /*
@@ -1250,21 +1290,6 @@ copy_xres_to_res_bool(void)
 
     copy_bool(ssl.starttls);
     copy_bool(ssl.verify_host_cert);
-}
-
-/* Copy extended toggles (-set, -clear) into appres. */
-static void
-copy_xtoggle(retoggle_t *r)
-{
-    int i;
-
-    if (r == NULL) {
-	return;
-    }
-
-    for (i = 0; r[i].address != NULL; i++) {
-	*r[i].address = r[i].value;
-    }
 }
 
 /* Child exit callbacks. */

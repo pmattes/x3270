@@ -83,7 +83,7 @@ void force_toggle_notify(const char *name, ia_t ia);
 char **extended_toggle_names(int *countp, bool bool_only);
 void *find_extended_toggle(const char *name, enum resource_type type);
 int init_extended_toggle(const char *name, size_t nlen, bool bool_only,
-	const char *value);
+	const char *value, const char **proper_namep);
 
 bool Set_action(ia_t ia, unsigned argc, const char **argv);
 bool Toggle_action(ia_t ia, unsigned argc, const char **argv);

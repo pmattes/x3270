@@ -875,14 +875,14 @@ parse_set_clear(int *argcp, const char **argv)
 			exit(1);
 		    }
 		}
-		appres.toggle[toggle_names[j].index] = is_set;
+		appres.toggle[toggle_names[j].index] = value;
 		break;
 	    }
 	}
 	if (toggle_names[j].name == NULL) {
 	    bool bool_only = !is_set || !eq;
 	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
-		    eq? eq + 1: (is_set? "true": "false"));
+		    eq? eq + 1: (is_set? ResTrue: ResFalse), NULL);
 
 	    if (xt < 0) {
 		fprintf(stderr, "Error: " OptSet " %s: invalid value\n",
