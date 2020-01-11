@@ -35,6 +35,7 @@
  */
 
 #include "globals.h"
+#include <limits.h>
 #include "appres.h"
 #include "resources.h"
 
@@ -770,14 +771,14 @@ force_toggle_notify(const char *name, ia_t ia)
 
 /* Return the list of extended toggle names. */
 char **
-extended_toggle_names(int *countp)
+extended_toggle_names(int *countp, bool bool_only)
 {
     int count = 0;
     toggle_extended_upcalls_t *u;
     char **ret;
 
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	if (u->type == XRM_BOOLEAN) {
+	if (!bool_only || u->type == XRM_BOOLEAN) {
 	    count++;
 	}
     }
@@ -785,7 +786,7 @@ extended_toggle_names(int *countp)
     ret = (char **)lazya(Malloc(count * sizeof(char *)));
     count = 0;
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	if (u->type == XRM_BOOLEAN) {
+	if (!bool_only || u->type == XRM_BOOLEAN) {
 	    ret[count++] = u->name;
 	}
     }
@@ -808,16 +809,47 @@ find_extended_toggle(const char *name, enum resource_type type)
 
 /*
  * Initialize an extended toggle from the command line.
- * Returns true if there was a match.
+ * Returns 0 for no match, 1 for match and success, -1 for failure.
  */
-bool
-init_extended_toggle(const char *name, bool value)
+int
+init_extended_toggle(const char *name, size_t nlen, bool bool_only,
+	const char *value)
 {
-    void *address = find_extended_toggle(name, XRM_BOOLEAN);
+    toggle_extended_upcalls_t *u;
+    const char *err;
+    bool v;
+    unsigned long ul;
+    char *p;
 
-    if (address != NULL) {
-	*(bool *)address = value;
-	return true;
+    for (u = extended_upcalls; u != NULL; u = u->next) {
+	if (!strncasecmp(name, u->name, nlen) && u->name[nlen] == '\0'
+		&& (!bool_only || u->type == XRM_BOOLEAN)) {
+	    break;
+	}
     }
-    return false;
+    if (u == NULL) {
+	return 0;
+    }
+
+    switch (u->type) {
+    default:
+    case XRM_STRING:
+	*(char **)u->address = NewString(value);
+	break;
+    case XRM_BOOLEAN:
+	err = boolstr(value, &v);
+	if (err != NULL) {
+	    return -1;
+	}
+	*(bool *)u->address = v;
+	break;
+    case XRM_INT:
+	ul = strtoul(value, &p, 10);
+	if (p == value || *p != '\0' || ul > INT_MAX) {
+	    return -1;
+	}
+	*(int *)u->address = ul;
+	break;
+    }
+    return 1;
 }

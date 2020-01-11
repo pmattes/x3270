@@ -1137,7 +1137,7 @@ parse_set_clear(int *argcp, char **argv)
 	    int nx;
 	    char **nxnames;
 
-	    nxnames = extended_toggle_names(&nx);
+	    nxnames = extended_toggle_names(&nx, true);
 	    tn = (const char **)Calloc(N_TOGGLES + nx, sizeof(char **));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
 		if (toggle_supported(toggle_names[j].index) &&

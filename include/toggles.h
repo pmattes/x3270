@@ -80,9 +80,10 @@ typedef void toggle_extended_notify_t(const char *name, const char *value,
 	ia_t ia);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
 void force_toggle_notify(const char *name, ia_t ia);
-char **extended_toggle_names(int *countp);
+char **extended_toggle_names(int *countp, bool bool_only);
 void *find_extended_toggle(const char *name, enum resource_type type);
-bool init_extended_toggle(const char *name, bool value);
+int init_extended_toggle(const char *name, size_t nlen, bool bool_only,
+	const char *value);
 
 bool Set_action(ia_t ia, unsigned argc, const char **argv);
 bool Toggle_action(ia_t ia, unsigned argc, const char **argv);

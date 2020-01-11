@@ -826,6 +826,8 @@ parse_set_clear(int *argcp, const char **argv)
 
     for (i = 1; i < *argcp; i++) {
 	bool is_set = false;
+	const char *eq = NULL;
+	size_t nlen;
 
 	if (!strcmp(argv[i], OptSet)) {
 	    is_set = true;
@@ -841,43 +843,81 @@ parse_set_clear(int *argcp, const char **argv)
 	/* Delete the argument. */
 	i++;
 
+	if (argv[i][0] != '=' &&
+		(eq = strchr(argv[i], '=')) != NULL) {
+	    /* -set foo=bar */
+	    if (!is_set) {
+		fprintf(stderr, "Error: " OptClear
+			" parameter cannot include a value\n");
+		exit(1);
+	    }
+	    nlen = eq - argv[i];
+	} else {
+	    nlen = strlen(argv[i]);
+	}
+
 	for (j = 0; toggle_names[j].name != NULL; j++) {
 	    if (!toggle_supported(toggle_names[j].index)) {
 		continue;
 	    }
-	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
+	    if (!strcasecmp(argv[i], toggle_names[j].name) &&
+		    toggle_names[j].name[nlen] == '\0') {
+		bool value;
+
+		if (eq == NULL) {
+		    value = is_set;
+		} else {
+		    const char *err = boolstr(eq + 1, &value);
+
+		    if (err != NULL) {
+			fprintf(stderr, "Error: " OptSet " %s: %s\n", argv[i],
+				err);
+			exit(1);
+		    }
+		}
 		appres.toggle[toggle_names[j].index] = is_set;
 		break;
 	    }
 	}
-	if (toggle_names[j].name == NULL &&
-		!init_extended_toggle(argv[i], is_set)) {
-	    ccp_t *tn;
-	    int ntn = 0;
-	    int nx;
-	    char **nxnames;
+	if (toggle_names[j].name == NULL) {
+	    bool bool_only = !is_set || !eq;
+	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
+		    eq? eq + 1: (is_set? "true": "false"));
 
-	    nxnames = extended_toggle_names(&nx);
-	    tn = (ccp_t *)Calloc(N_TOGGLES + nx, sizeof(ccp_t));
-	    for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (!toggle_supported(toggle_names[j].index)) {
-		    continue;
-		}
-		if (!toggle_names[j].is_alias) {
-		    tn[ntn++] = toggle_names[j].name;
-		}
+	    if (xt < 0) {
+		fprintf(stderr, "Error: " OptSet " %s: invalid value\n",
+			argv[i]);
+		exit(1);
 	    }
-	    memcpy(tn + ntn, nxnames, nx * sizeof(ccp_t));
-	    ntn += nx;
-	    qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
-	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
-		    argv[i]);
-	    for (j = 0; j < ntn; j++) {
-		fprintf(stderr, " %s", tn[j]);
+
+	    if (xt == 0) {
+		ccp_t *tn;
+		int ntn = 0;
+		int nx;
+		char **nxnames;
+
+		nxnames = extended_toggle_names(&nx, bool_only);
+		tn = (ccp_t *)Calloc(N_TOGGLES + nx, sizeof(ccp_t));
+		for (j = 0; toggle_names[j].name != NULL; j++) {
+		    if (!toggle_supported(toggle_names[j].index)) {
+			continue;
+		    }
+		    if (!toggle_names[j].is_alias) {
+			tn[ntn++] = toggle_names[j].name;
+		    }
+		}
+		memcpy(tn + ntn, nxnames, nx * sizeof(ccp_t));
+		ntn += nx;
+		qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
+		fprintf(stderr, "Unknown %stoggle '%.*s'. Toggle names are:\n",
+			bool_only? "Boolean ": "", (int)nlen, argv[i]);
+		for (j = 0; j < ntn; j++) {
+		    fprintf(stderr, " %s", tn[j]);
+		}
+		fprintf(stderr, "\n");
+		Free((void *)tn);
+		exit(1);
 	    }
-	    fprintf(stderr, "\n");
-	    Free((void *)tn);
-	    exit(1);
 	}
 
     }
