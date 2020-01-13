@@ -617,6 +617,7 @@ Type 'help' for help information.\n\n",
     idle_init();
     keymap_init();
     hostfile_init();
+    httpd_objects_init();
 
     if (appres.httpd_port) {
 	struct sockaddr *sa;
@@ -625,7 +626,6 @@ Type 'help' for help information.\n\n",
 	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
 	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
-	    httpd_objects_init();
 	    hio_init(sa, sa_len);
 	}
     }

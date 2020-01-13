@@ -755,7 +755,6 @@ hio_toggle_upcall(const char *name, const char *value)
 	return false;
     }
     Replace(appres.httpd_port, canonical_bind_opt(sa));
-    httpd_objects_init();
     hio_init(sa, sa_len);
     return true;
 }

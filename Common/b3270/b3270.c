@@ -495,6 +495,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     ctlr_reinit(ALL_CHANGE);
     report_terminal_name();
     idle_init();
+    httpd_objects_init();
     if (appres.httpd_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
@@ -502,7 +503,6 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
 	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
-	    httpd_objects_init();
 	    hio_init(sa, sa_len);
 	}
     }

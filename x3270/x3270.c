@@ -712,6 +712,7 @@ main(int argc, char *argv[])
     xaction_init();
 
     idle_init();
+    httpd_objects_init();
     if (appres.httpd_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
@@ -719,7 +720,6 @@ main(int argc, char *argv[])
 	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
 	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
-	    httpd_objects_init();
 	    hio_init(sa, sa_len);
 	}
     }

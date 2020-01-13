@@ -692,6 +692,7 @@ child_run(task_cbh handle, bool *success)
 
 	if (!cr->collected_eof) {
 	    do {
+		vtrace("Waiting for child final stdout/stderr\n");
 		WaitForSingleObject(cr->done_event, INFINITE);
 	    } while (cr_collect(c));
 	}
