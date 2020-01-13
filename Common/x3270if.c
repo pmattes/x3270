@@ -99,7 +99,7 @@
 #define FD_ENV_REQUIRED	true
 #else /*][*/
 #define DIRSEP '/'
-#define OPTS	"H:iI:L:p:s:St:v"
+#define OPTS	"H:iI:L:p:Ps:St:v"
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
 
@@ -185,6 +185,9 @@ fd_env(const char *name, bool required)
 		name);
 	exit(__LINE__);
     }
+    if (verbose) {
+	fprintf(stderr, "%s is %d\n", name, fd);
+    }
     return fd;
 }
 
@@ -200,6 +203,9 @@ main(int argc, char *argv[])
     const char *emulator_name = NULL;
     const char *help_name = NULL;
     const char *localization = NULL;
+#if !defined(_WIN32) /*[*/
+    bool force_pipes = false;
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
     if (sockstart() < 0) {
@@ -249,6 +255,9 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: Invalid process ID: '%s'\n", me, optarg);
 		x3270if_usage();
 	    }
+	    break;
+	case 'P':
+	    force_pipes = true;
 	    break;
 #endif /*]*/
 	case 's':
@@ -316,8 +325,17 @@ main(int argc, char *argv[])
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
-	return single_io(pid, port, INVALID_SOCKET, -1, -1, fn, argv[optind],
-		NULL, NULL, NULL);
+	int infd = -1;
+	int outfd = -1;
+
+#if !defined(_WIN32) /*[*/
+	if (force_pipes) {
+	    infd  = fd_env(OUTPUT_ENV, true);
+	    outfd = fd_env(INPUT_ENV, true);
+	}
+#endif /*]*/
+	return single_io(pid, port, INVALID_SOCKET, infd, outfd, fn,
+		argv[optind], NULL, NULL, NULL);
     }
     return 0;
 }
@@ -648,7 +666,9 @@ retry:
 	closesocket(insocket);
 #else /*][*/
 	close(insocket);
-	fprintf(stderr, "closed %d\n", insocket);
+	if (verbose) {
+	    fprintf(stderr, "closed %d\n", insocket);
+	}
 #endif /*]*/
     }
 
