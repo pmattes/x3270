@@ -604,7 +604,7 @@ httpd_objects_init(void)
 	    HF_TRAILER, rest_html_dyn);
     httpd_set_alias(nhandle, "html/Query()");
     nhandle = httpd_register_dyn_nonterm("/3270/rest/json",
-	    "REST JSON interface", CT_TEXT, "application/json; charset=utf-8",
+	    "REST JSON interface", CT_JSON, "application/json; charset=utf-8",
 	    HF_NONE, rest_json_dyn);
     httpd_set_alias(nhandle, "json/Query()");
 }

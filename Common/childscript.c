@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -158,19 +158,16 @@ typedef struct {
 } cr_t;
 #endif /*]*/
 
-typedef union {
+typedef struct {
     peer_listen_t peer;
     hio_listener_t *httpd;
-    void *either;
-} listener_t;
+} listeners_t;
 
 /* Child script context. */
 typedef struct {
     llist_t llist;		/* linkage */
     char *parent_name;		/* cb name */
     char *command;		/* command text */
-    bool use_socket;		/* true if script uses a socket */
-    bool use_httpd;		/* true if script uses httpd */
     bool is_async;		/* true if script is async */
     bool done;			/* true if script is complete */
     bool success;		/* success or failure */
@@ -179,7 +176,7 @@ typedef struct {
     bool enabled;		/* enabled */
     char *output_buf;		/* output buffer */
     size_t output_buflen;	/* size of output buffer */
-    listener_t listener;	/* listener for child commands */
+    listeners_t listeners;	/* listeners for child commands */
     bool keyboard_lock;		/* lock/unlock keyboard while running */
     unsigned capabilities;	/* self-reported capabilities */
     void *irhandle;		/* input request handle */
@@ -206,8 +203,7 @@ static llist_t child_scripts = LLIST_INIT(child_scripts);
 typedef struct {
     llist_t llist;		/* linkage */
     ioid_t id;			/* I/O identifier for timeout */
-    bool use_httpd;		/* true if using HTTP */
-    listener_t listener;	/* listener */
+    listeners_t listeners;	/* listeners */
 } delayed_close_t;
 static llist_t delayed_closes = LLIST_INIT(delayed_closes);
 #endif /*]*/
@@ -228,6 +224,24 @@ free_child(child_t *c)
 #endif /*]*/
     Replace(c->output_buf, NULL);
     Free(c);
+}
+
+/**
+ * Close a set of listeners.
+ *
+ * @param[in] l		Listeners.
+ */
+static void
+close_listeners(listeners_t *l)
+{
+    if (l->httpd != NULL) {
+	hio_stop_x(l->httpd);
+	l->httpd = NULL;
+    }
+    if (l->peer != NULL) {
+	peer_shutdown(l->peer);
+	l->peer = NULL;
+    }
 }
 
 #if !defined(_WIN32) /*[*/
@@ -286,13 +300,8 @@ delayed_close(ioid_t id)
 
     FOREACH_LLIST(&delayed_closes, dc, delayed_close_t *) {
 	if (dc->id == id) {
-	    vtrace("Delayed shutdown of %s listener\n",
-		    dc->use_httpd? "HTTP": "socket");
-	    if (dc->use_httpd) {
-		hio_stop_x(dc->listener.httpd);
-	    } else {
-		peer_shutdown(dc->listener.peer);
-	    }
+	    vtrace("Delayed shutdown of listeners\n");
+	    close_listeners(&dc->listeners);
 	    llist_unlink(&dc->llist);
 	    Free(dc);
 	    return;
@@ -310,29 +319,23 @@ delayed_close(ioid_t id)
 static void
 close_child(child_t *c)
 {
-    if (c->listener.either != NULL) {
-	if (c->is_async) {
-	    delayed_close_t *dc = Calloc(sizeof(delayed_close_t), 1);
+    if (c->is_async && c->listeners.httpd != NULL) {
+	delayed_close_t *dc = Calloc(sizeof(delayed_close_t), 1);
 
-	    /*
-	     * Delay the close. gnome-terminal, for example, forks and execs a
-	     * new process for the console. We need to wait a while for it to
-	     * connect.
-	     */
-	    llist_init(&dc->llist);
-	    dc->use_httpd = c->use_httpd;
-	    dc->listener = c->listener;
-	    LLIST_APPEND(&dc->llist, delayed_closes);
-	    dc->id = AddTimeOut(DELAYED_CLOSE_MS, delayed_close);
-	} else {
-	    if (c->use_httpd) {
-		hio_stop_x(c->listener.httpd);
-	    } else {
-		peer_shutdown(c->listener.peer);
-	    }
-	}
-	c->listener.either = NULL;
+	/*
+	 * Delay the close. gnome-terminal, for example, forks and execs a
+	 * new process for the console. We need to wait a while for it to
+	 * connect.
+	 */
+	llist_init(&dc->llist);
+	dc->listeners = c->listeners; /* struct copy */
+	LLIST_APPEND(&dc->llist, delayed_closes);
+	dc->id = AddTimeOut(DELAYED_CLOSE_MS, delayed_close);
+    } else {
+	close_listeners(&c->listeners);
     }
+    c->listeners.httpd = NULL;
+    c->listeners.peer = NULL;
     if (c->infd != -1) {
 	close(c->infd);
 	c->infd = -1;
@@ -480,7 +483,7 @@ child_stdout(iosrc_t fd _is_unused, ioid_t id)
 #endif /*]*/
 
 /**
- * Callback for data returned to child script command.
+ * Callback for data returned to child script command via a pipe.
  *
  * @param[in] handle    Callback handle
  * @param[in] buf       Buffer
@@ -492,12 +495,9 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
+    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
 
-    if (!c->use_socket) {
-	char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
-
-	write(c->outfd, s, strlen(s));
-    }
+    write(c->outfd, s, strlen(s));
 #endif /*]*/
 }
 
@@ -514,13 +514,9 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-
-    if (!c->use_socket) {
-	char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX,
-		(int)len, buf);
-
-	write(c->outfd, s, strlen(s));
-    }
+    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX,
+	    (int)len, buf);
+    write(c->outfd, s, strlen(s));
 #endif /*]*/
 }
 
@@ -538,71 +534,45 @@ static bool
 child_done(task_cbh handle, bool success, bool abort)
 {
     child_t *c = (child_t *)handle;
-
 #if !defined(_WIN32) /*[*/
-    if (c->use_socket) {
-	if (abort) {
-	    if (c->listener.either != NULL) {
-		if (c->use_httpd) {
-		    hio_stop_x(c->listener.httpd);
-		} else {
-		    peer_shutdown(c->listener.peer);
-		}
-		c->listener.either = NULL;
-	    }
-	    vtrace("%s terminating script process\n", c->parent_name);
-	    kill(c->pid, SIGTERM);
-	    if (c->keyboard_lock) {
-		disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
-	    }
+    bool new_child;
+    char *prompt;
+    char *s;
+
+    if (abort || !c->enabled) {
+	close_listeners(&c->listeners);
+	vtrace("%s terminating script process\n", c->parent_name);
+	kill(c->pid, SIGTERM);
+	if (c->keyboard_lock) {
+	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
 	}
 	return true;
-    } else {
-	bool new_child = false;
-	char *prompt = task_cb_prompt(handle);
-	char *s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
-
-	/* Print the prompt. */
-	vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
-	    success? "ok": "error");
-	write(c->outfd, s, strlen(s));
-
-	if (abort || !c->enabled) {
-	    close(c->outfd);
-	    c->outfd = -1;
-	    if (abort) {
-		vtrace("%s killing process %d\n", c->child_name, (int)c->pid);
-		killpg(c->pid, SIGKILL);
-		if (c->keyboard_lock) {
-		    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
-		}
-	    }
-	    return true;
-	}
-
-	/* Run any pending command that we already read in. */
-	new_child = run_next(c);
-	if (!new_child && c->id == NULL_IOID && c->infd != -1) {
-	    /* Allow more input. */
-	    c->id = AddInput(c->infd, child_input);
-	}
-
-	/*
-	 * If there was a new child, we're still active. Otherwise, let our CB
-	 * be popped.
-	 */
-	return !new_child;
     }
+
+    /* Print the prompt. */
+    prompt = task_cb_prompt(handle);
+    s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
+    vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
+	success? "ok": "error");
+    write(c->outfd, s, strlen(s));
+
+    /* Run any pending command that we already read in. */
+    new_child = run_next(c);
+    if (!new_child && c->id == NULL_IOID && c->infd != -1) {
+	/* Allow more input. */
+	c->id = AddInput(c->infd, child_input);
+    }
+
+    /*
+     * If there was a new child, we're still active. Otherwise, let our CB
+     * be popped.
+     */
+    return !new_child;
 
 #else /*][*/
 
     if (abort) {
-	if (c->use_httpd) {
-	    hio_stop_x(c->listener.httpd);
-	} else {
-	    peer_shutdown(c->listener.peer);
-	}
-	c->listener.either = NULL;
+	close_listeners(&c->listeners);
 	vtrace("%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
 	if (c->keyboard_lock) {
@@ -656,14 +626,7 @@ close_child(child_t *c)
 	CloseHandle(c->child_handle);
 	c->child_handle = INVALID_HANDLE_VALUE;
     }
-    if (c->listener.either != NULL) {
-	if (c->use_httpd) {
-	    hio_stop_x(c->listener.httpd);
-	} else {
-	    peer_shutdown(c->listener.peer);
-	}
-	c->listener.either = NULL;
-    }
+    close_listeners(&c->listeners);
     cr_teardown(&c->cr);
     if (c->irhandle != NULL) {
 	task_abort_input_request_irhandle(c->irhandle);
@@ -1122,17 +1085,14 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     bool async = false;
     bool keyboard_lock = true;
     bool stdout_redirect = true;
-#if !defined(_WIN32) /*[*/
-    bool use_socket = false;
-#else /*][*/
-    bool use_socket = true;
-#endif /*]*/
-    bool use_httpd = false;
     peer_listen_mode mode = PLM_MULTI;
-    listener_t listener;
+    listeners_t listeners;
     varbuf_t r;
     unsigned i;
     socket_t s;
+    unsigned short httpd_port;
+    unsigned short script_port;
+    struct sockaddr_in *sin;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2] = { -1, -1 };
@@ -1169,99 +1129,87 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    stdout_redirect = false;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], "-UseSocket")) {
-	    use_socket = true;
-	    argc--;
-	    argv++;
-	} else if (!strcasecmp(argv[0], "-Http")) {
-	    use_socket = true;
-	    use_httpd = true;
-	    argc--;
-	    argv++;
 	} else {
 	    break;
 	}
     }
 
-    listener.either = NULL;
+    listeners.peer = NULL;
+    listeners.httpd = NULL;
 
-    if (use_socket) {
-	/* Set up X3270PORT or X3270URL for the child process. */
-	unsigned short port = pick_port(&s);
-	struct sockaddr_in *sin;
-
-	if (port == 0) {
-	    return false;
-	}
-	sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	sin->sin_port = htons(port);
-	if (use_httpd) {
-	    listener.httpd = hio_init_x((struct sockaddr *)sin, sizeof(*sin));
-	} else {
-	    listener.peer = peer_init((struct sockaddr *)sin, sizeof(*sin),
-		    mode);
-	}
-	SOCK_CLOSE(s);
-	if (listener.either == NULL) {
-	    return false;
-	}
-	if (use_httpd) {
-	    putenv(lazyaf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", port));
-	} else {
-	    putenv(lazyaf(PORT_ENV "=%d", port));
-	}
+    /* Set up X3270PORT or X3270URL for the child process. */
+    httpd_port = pick_port(&s);
+    if (httpd_port == 0) {
+	return false;
+    }
+    sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
+    sin->sin_family = AF_INET;
+    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin->sin_port = htons(httpd_port);
+    listeners.httpd = hio_init_x((struct sockaddr *)sin, sizeof(*sin));
+    SOCK_CLOSE(s);
+    if (listeners.httpd == NULL) {
+	return false;
     }
 
+    script_port = pick_port(&s);
+    if (script_port == 0) {
+	hio_stop_x(listeners.httpd);
+	return false;
+    }
+    sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
+    sin->sin_family = AF_INET;
+    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin->sin_port = htons(script_port);
+    listeners.peer = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
+    SOCK_CLOSE(s);
+    if (listeners.peer == NULL) {
+	hio_stop_x(listeners.httpd);
+	return false;
+    }
+
+    putenv(lazyaf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
+    putenv(lazyaf(PORT_ENV "=%d", script_port));
+
 #if !defined(_WIN32) /*[*/
-    if (!use_socket) {
-	/*
-	 * Create pipes and stdout stream for the script process.
-	 *  inpipe[] is read by x3270, written by the script
-	 *  outpipe[] is written by x3270, read by the script
-	 */
-	if (pipe(inpipe) < 0) {
-	    popup_an_error("pipe() failed");
-	    return false;
-	}
-	if (pipe(outpipe) < 0) {
-	    close(inpipe[0]);
-	    close(inpipe[1]);
-	    popup_an_error("pipe() failed");
-	    return false;
-	}
+    /*
+     * Create pipes and stdout stream for the script process.
+     *  inpipe[] is read by x3270, written by the script
+     *  outpipe[] is written by x3270, read by the script
+     */
+    if (pipe(inpipe) < 0) {
+	popup_an_error("pipe() failed");
+	close_listeners(&listeners);
+	return false;
+    }
+    if (pipe(outpipe) < 0) {
+	popup_an_error("pipe() failed");
+	close(inpipe[0]);
+	close(inpipe[1]);
+	close_listeners(&listeners);
+	return false;
     }
 
     /* Create a pipe to capture child stdout. */
     if (pipe(stdoutpipe) < 0) {
-	if (!use_socket) {
-	    close(outpipe[0]);
-	    close(outpipe[1]);
-	    close(inpipe[0]);
-	    close(inpipe[1]);
-	}
 	popup_an_error("pipe() failed");
+	close(outpipe[0]);
+	close(outpipe[1]);
+	close(inpipe[0]);
+	close(inpipe[1]);
+	close_listeners(&listeners);
     }
 
     /* Fork and exec the script process. */
     if ((pid = fork()) < 0) {
-	if (!use_socket) {
-	    close(inpipe[0]);
-	    close(inpipe[1]);
-	    close(outpipe[0]);
-	    close(outpipe[1]);
-	}
+	popup_an_error("fork() failed");
+	close(inpipe[0]);
+	close(inpipe[1]);
+	close(outpipe[0]);
+	close(outpipe[1]);
 	close(stdoutpipe[0]);
 	close(stdoutpipe[1]);
-	if (listener.either != NULL) {
-	    if (use_httpd) {
-		hio_stop_x(listener.httpd);
-	    } else {
-		peer_shutdown(listener.peer);
-	    }
-	}
-	popup_an_error("fork() failed");
+	close_listeners(&listeners);
 	return false;
     }
 
@@ -1274,10 +1222,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	setsid();
 
 	/* Clean up the pipes. */
-	if (!use_socket) {
-	    close(outpipe[1]);
-	    close(inpipe[0]);
-	}
+	close(outpipe[1]);
+	close(inpipe[0]);
 	close(stdoutpipe[0]);
 
 	/* Redirect output. */
@@ -1289,10 +1235,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
-	if (!use_socket) {
-	    putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
-	    putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
-	}
+	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
+	putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1310,8 +1254,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c = (child_t *)Calloc(1, sizeof(child_t));
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
-    c->use_socket = use_socket;
-    c->use_httpd = use_httpd;
     c->success = true;
     c->done = false;
     c->buf = NULL;
@@ -1323,26 +1265,17 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     task_cb_init_ir_state(&c->ir_state);
 
     /* Clean up our ends of the pipes. */
-    if (use_socket) {
-	c->infd = -1;
-	c->outfd = -1;
-    } else {
-	c->infd = inpipe[0];
-	close(inpipe[1]);
-	c->outfd = outpipe[1];
-	close(outpipe[0]);
-    }
+    c->infd = inpipe[0];
+    close(inpipe[1]);
+    c->outfd = outpipe[1];
+    close(outpipe[0]);
     close(stdoutpipe[1]);
 
-    /* Link the listener. */
-    if (use_socket) {
-	c->listener = listener;
-    }
+    /* Link the listeners. */
+    c->listeners = listeners; /* struct copy */
 
-    /* Allow child input. */
-    if (!use_socket) {
-	c->id = AddInput(c->infd, child_input);
-    }
+    /* Allow child pipe input. */
+    c->id = AddInput(c->infd, child_input);
 
     /* Capture child output. */
     c->stdout_id = AddInput(c->stdoutpipe, child_stdout);
@@ -1386,11 +1319,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 		NULL, NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));
-	if (use_httpd) {
-	    hio_stop_x(listener.httpd);
-	} else {
-	    peer_shutdown(listener.peer);
-	}
+	close_listeners(&listeners);
 
 	/* Let the read thread complete. */
 	CloseHandle(cr->pipe_wr_handle);
@@ -1413,12 +1342,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Create a new script description. */
     llist_init(&c->llist);
     LLIST_APPEND(&c->llist, child_scripts);
-    c->use_socket = use_socket;
     c->success = true;
     c->done = false;
     c->child_handle = process_information.hProcess;
     c->pid = (int)process_information.dwProcessId;
-    c->listener = listener;
+    c->listeners = listeners; /* struct copy */
     c->enabled = true;
 
     /*
@@ -1522,7 +1450,6 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     array_add(&nargv, nargc++, "-Async");
-    array_add(&nargv, nargc++, "-UseSocket");
     array_add(&nargv, nargc++, "-Single");
 #if !defined(_WIN32) /*[*/
     nargc = console_args(t, lazyaf("%s>", params[0]), &nargv, nargc);

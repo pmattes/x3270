@@ -1216,6 +1216,111 @@ httpd_notfound(httpd_t *h, const char *uri)
 }
 
 /**
+ * Compare a candidate URI to a target URI.
+ *
+ * @param[in] candidate	Candidate URI
+ * @param[in] target	Target URI
+ *
+ * @return 0 for success, 1 for failure
+ */
+static int
+uricmp(const char *candidate, const char *target)
+{
+    const char *cp = candidate;
+    const char *tp = target;
+    char c, t;
+
+    c = *cp++;
+    t = *tp++;
+    while (c != '\0' && t != '\0') {
+	if (c != t) {
+	    return 1;
+	}
+
+	/*
+	 * Allow a single '/' in the target to match multiple '/'s in the
+	 * candidate.
+	 */
+	if (c == '/') {
+	    while ((c = *cp++) == '/') {
+	    }
+	} else {
+	    c = *cp++;
+	}
+	t = *tp++;
+    }
+
+    /* If we exhausted the target, we succeeded. */
+    return !(c == '\0' && t == '\0');
+}
+
+/**
+ * Compare a candidate URI to a partial target URI.
+ *
+ * @param[in] candidate	Candidate URI
+ * @param[in] target	Target URI
+ * @param[out] canonp	Returned canonical candidate URI
+ *
+ * @return 0 for success, 1 for failure
+ */
+static int
+uricmpp(const char *candidate, const char *target, char **canonp)
+{
+    const char *cp = candidate;
+    const char *tp = target;
+    char c, t;
+    char *canon = Malloc(strlen(candidate) + 1);
+    char *retp = canon;
+
+    /* Compare until we exhaust the target. */
+    c = *cp++;
+    t = *tp++;
+    while (c != '\0' && t != '\0') {
+	if (c != t) {
+	    Free(canon);
+	    return 1;
+	}
+	*retp++ = c;
+
+	/*
+	 * Allow a single '/' in the target to match multiple '/'s in the
+	 * candidate. Copy only the first.
+	 */
+	if (c == '/') {
+	    while (c == '/') {
+		c = *cp++;
+	    }
+	} else {
+	    c = *cp++;
+	}
+	t = *tp++;
+    }
+
+    if (t != '\0' || (c != '\0' && c != '/')) {
+	Free(canon);
+	return 1;
+    }
+
+    if (c == '/') {
+	/* Copy one trailing '/'. */
+	*retp++ = c;
+	while ((c = *cp++) == '/') {
+	}
+
+	/* Copy the rest. */
+	*retp++ = c;
+	if (c != '\0') {
+	    while ((c = *cp++) != '\0') {
+		*retp++ = c;
+	    }
+	    *retp = '\0';
+	}
+    }
+    *canonp = canon;
+    return 0;
+}
+
+/**
  * Look up a URI in the registry and act on it.
  * 
  * @param[in,out] h	State
@@ -1227,8 +1332,9 @@ static httpd_status_t
 httpd_lookup_uri(httpd_t *h, const char *uri)
 {
     httpd_reg_t *reg;
+    char *canon;
 
-    if (!strcmp(uri, "/") || !strcmp(uri, "//")) {
+    if (!uricmp(uri, "/")) {
 	return httpd_dirlist(h, "/");
     }
 
@@ -1236,32 +1342,40 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
     for (reg = httpd_reg; reg != NULL; reg = reg->next) {
 	switch (reg->type) {
 	case OR_DIR:
-	    if (!strcmp(uri, reg->path)) {
+	    if (!uricmp(uri, reg->path)) {
 		/* Directory without trailing slash. */
 		return httpd_redirect(h, uri);
 	    }
-	    if (uri[strlen(uri) - 1] == '/' &&
-		    strlen(reg->path) == strlen(uri) - 1 &&
-		    !strncmp(uri, reg->path, strlen(reg->path))) {
-		/* Directory with a trailing slash. */
-		return httpd_dirlist(h, uri);
+
+	    if (uri[strlen(uri) - 1] == '/') {
+		char *copy = NewString(uri);
+		size_t sl = strlen(uri);
+
+		/* Directory with trailing slash(es). */
+		while (copy[sl - 1] == '/') {
+		    copy[--sl] = '\0';
+		}
+		if (!uricmp(copy, reg->path)) {
+		    Free(copy);
+		    return httpd_dirlist(h, uri);
+		}
 	    }
 	    break;
 	case OR_FIXED:
 	case OR_FIXED_BINARY:
 	case OR_DYN_TERM:
 	    /* Terminal object. */
-	    if (!strcmp(uri, reg->path)) {
+	    if (!uricmp(uri, reg->path)) {
 		return httpd_reply(h, reg, uri);
 	    }
 	    break;
 	case OR_DYN_NONTERM:
 	    /* Nonterminal object. */
-	    if (strlen(uri) >= strlen(reg->path) &&
-		    !strncmp(uri, reg->path, strlen(reg->path)) &&
-		    (strlen(uri) == strlen(reg->path) ||
-		     uri[strlen(reg->path)] == '/')) {
-		return httpd_reply(h, reg, uri);
+	    if (!uricmpp(uri, reg->path, &canon)) {
+		httpd_status_t s = httpd_reply(h, reg, canon);
+
+		Free(canon);
+		return s;
 	    }
 	    break;
 	}

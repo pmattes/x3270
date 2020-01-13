@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,7 @@ struct hio_listener {
     HANDLE listen_event;
 #endif /*]*/
     ioid_t listen_id;
+    char *desc;
 };
 
 static hio_listener_t *global_listener = NULL;
@@ -357,6 +358,7 @@ hio_listener_t *
 hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 {
     int on = 1;
+    char hostbuf[128];
 
     hio_listener_t *l = Calloc(sizeof(hio_listener_t), 1);
     llist_init(&l->link);
@@ -415,6 +417,26 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
     l->listen_id = AddInput(l->listen_s, hio_connection);
 #endif /*]*/
     LLIST_APPEND(&l->link, listeners);
+
+    if (sa->sa_family == AF_INET) {
+	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+
+	l->desc = xs_buffer("%s:%u", inet_ntop(sa->sa_family,
+		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
+		ntohs(sin->sin_port));
+	vtrace("Listening for HTTP on %s\n", l->desc);
+    }
+#if defined(X3270_IPV6) /*[*/
+    else if (sa->sa_family == AF_INET6) {
+	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+
+	l->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
+		&sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
+	    ntohs(sin6->sin6_port));
+	vtrace("Listening for HTTP on %s\n", l->desc);
+    }
+#endif /*]*/
+
     goto done;
 
 fail:
@@ -471,7 +493,10 @@ hio_stop_x(hio_listener_t *l)
     } FOREACH_LLIST_END(&sessions, session, session_t *);
 
     l->n_sessions = 0;
+    vtrace("Stopped listening for HTTP connections on %s\n", l->desc);
+    Replace(l->desc, NULL);
     llist_unlink(&l->link);
+    Free(l);
 }
 
 /**
@@ -482,7 +507,7 @@ hio_stop(void)
 {
     if (global_listener != NULL) {
 	hio_stop_x(global_listener);
-	Replace(global_listener, NULL);
+	global_listener = NULL;
     }
 }
 

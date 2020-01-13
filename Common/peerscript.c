@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,7 +143,7 @@ struct _peer_listen {
 #endif /*]*/
     ioid_t id;		/* I/O identifier */
     peer_listen_mode mode; /* listen mode */
-    u_short port;	/* TCP port */
+    char *desc;		/* listener description */
 };
 static llist_t peer_listeners = LLIST_INIT(peer_listeners);
 
@@ -552,7 +552,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 
     if (listener->mode == PLM_SINGLE || listener->mode == PLM_ONCE) {
 	/* Close the listener. */
-	vtrace("Closing listener %u (single mode)\n", listener->port);
+	vtrace("Closing listener %s (single mode)\n", listener->desc);
 	if (listener->socket != INVALID_SOCKET) {
 	    SOCK_CLOSE(listener->socket);
 	    listener->socket = INVALID_SOCKET;
@@ -568,7 +568,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	    listener->id = NULL_IOID;
 	}
     } else {
-	vtrace("Not closing listener %u (multi mode)\n", listener->port);
+	vtrace("Not closing listener %s (multi mode)\n", listener->desc);
     }
 
 #if !defined(_WIN32) /*[*/
@@ -622,7 +622,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
     int on = 1;
 
     /* Create the listening socket. */
-    listener = (peer_listen_t)Malloc(sizeof(struct _peer_listen));
+    listener = (peer_listen_t)Calloc(sizeof(struct _peer_listen), 1);
     listener->socket = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
     listener->event = INVALID_HANDLE_VALUE;
@@ -700,28 +700,27 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
     if (sa->sa_family == AF_INET) {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
-	listener->port = ntohs(sin->sin_port);
-	vtrace("Listening for peer scripts on %s, port %u.\n",
-		inet_ntop(sa->sa_family, &sin->sin_addr, hostbuf,
-		    sizeof(hostbuf)),
-		listener->port);
+	listener->desc = xs_buffer("%s:%u", inet_ntop(sa->sa_family,
+		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
+		ntohs(sin->sin_port));
+	vtrace("Listening for peer scripts on %s\n", listener->desc);
     }
 #if defined(X3270_IPV6) /*[*/
     else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
-	listener->port = ntohs(sin6->sin6_port);
-	vtrace("Listening for peer scripts on %s, port %u.\n",
-		inet_ntop(sa->sa_family, &sin6->sin6_addr, hostbuf,
-		    sizeof(hostbuf)),
-		listener->port);
+	listener->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
+		    &sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
+		ntohs(sin6->sin6_port));
+	vtrace("Listening for peer scripts on %s\n", listener->desc);
     }
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
     else if (sa->sa_family == AF_UNIX) {
 	struct sockaddr_un *ssun = (struct sockaddr_un *)sa;
 
-	vtrace("Listening for peer scripts on %s\n", ssun->sun_path);
+	listener->desc = NewString(ssun->sun_path);
+	vtrace("Listening for peer scripts on %s\n", listener->desc);
     }
 #endif /*]*/
 
@@ -743,6 +742,7 @@ fail:
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;
     }
+    Replace(listener->desc, NULL);
     Free(listener);
     listener = NULL;
 
@@ -760,6 +760,7 @@ void
 peer_shutdown(peer_listen_t listener)
 {
     if (listener->socket != INVALID_SOCKET) {
+	vtrace("Stopped listening for peer scripts on %s\n", listener->desc);
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;
     }
@@ -774,5 +775,6 @@ peer_shutdown(peer_listen_t listener)
 	listener->id = NULL_IOID;
     }
     llist_unlink(&listener->llist);
+    Replace(listener->desc, NULL);
     Free(listener);
 }
