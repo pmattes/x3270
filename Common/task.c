@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1398,7 +1398,7 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
 
     /* Push the command as a macro on top of the callback. */
     if (buf) {
-	task_set_state(s, TS_RUNNING, "child to be pushed next");
+	task_set_state(s, TS_RUNNING, "child task to be pushed next");
 	push_xmacro_onto(q, ST_MACRO, buf, len, is_ui);
     } else if (cb->flags & CB_NEEDS_RUN) {
 	/* Must call the run callback to get a child. */
@@ -2584,7 +2584,7 @@ task_done(bool success)
 
     assert(current_task->type == ST_CB);
 
-    vtrace(TASK_NAME_FMT " child done, %s\n", TASK_NAME,
+    vtrace(TASK_NAME_FMT " child task done, %s\n", TASK_NAME,
 	    success? "success": "failure");
 
     /* Tell the callback its child is done. */

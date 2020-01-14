@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@ static void stdin_closescript(task_cbh handle);
 
 /* Callback block for stdin. */
 static tcb_t stdin_cb = {
-    "stdin",
+    "s3stdin",
     IA_SCRIPT,
     CB_NEW_TASKQ,
     stdin_data,
@@ -101,13 +101,13 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 	nr = read(fileno(stdin), &c, 1);
 	if (nr < 0) {
-	    vtrace("Stdin read error: %s\n", strerror(errno));
+	    vtrace("s3stdin read error: %s\n", strerror(errno));
 	    vb_free(&r);
 	    x3270_exit(1);
 	}
 	if (nr == 0) {
 	    if (len == 0) {
-		vtrace("Stdin EOF\n");
+		vtrace("s3stdin EOF\n");
 		vb_free(&r);
 		x3270_exit(0);
 	    } else {
@@ -126,7 +126,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     /* Run the command as a macro. */
     buf = vb_consume(&r);
-    vtrace("Stdin read '%s'\n", buf);
+    vtrace("s3stdin read '%s'\n", buf);
     push_cb(buf, len, &stdin_cb, NULL);
     Free(buf);
 }
@@ -142,11 +142,11 @@ static void
 stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     if (stdin_nr < 0) {
-	vtrace("Stdin read error: %s\n", strerror(stdin_errno));
+	vtrace("s3stdin read error: %s\n", strerror(stdin_errno));
 	x3270_exit(1);
     }
     if (stdin_nr == 0) {
-	vtrace("Stdin EOF\n");
+	vtrace("s3stdin EOF\n");
 	x3270_exit(0);
     }
 
@@ -156,7 +156,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\r') {
 	stdin_nr--;
     }
-    vtrace("Stdin read '%.*s'\n", stdin_nr, stdin_buf);
+    vtrace("s3stdin read '%.*s'\n", stdin_nr, stdin_buf);
     push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
 }
 
@@ -194,7 +194,7 @@ stdin_done(task_cbh handle, bool success, bool abort)
     if (!pushed_wait) {
 	char *prompt = task_cb_prompt(handle);
 
-	vtrace("Output for stdin: %s/%s\n", prompt,
+	vtrace("Output for s3stdin: %s/%s\n", prompt,
 		success? PROMPT_OK: PROMPT_ERROR);
 	printf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
 	fflush(stdout);
@@ -271,7 +271,7 @@ stdin_init(void)
     stdin_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
     if (stdin_thread == NULL) {
-	popup_an_error("Cannot create peer script thread: %s\n",
+	popup_an_error("Cannot create s3stdin read thread: %s\n",
 		win32_strerror(GetLastError()));
     }
 #endif /*]*/

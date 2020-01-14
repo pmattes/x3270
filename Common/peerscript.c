@@ -85,7 +85,7 @@ static irv_t peer_irv = {
 
 /* Callback block for peer. */
 static tcb_t peer_cb = {
-    "peer",
+    "s3sock",
     IA_SCRIPT,
     CB_NEW_TASKQ | CB_PEER,
     peer_data,
@@ -101,7 +101,7 @@ static tcb_t peer_cb = {
 
 /* Callback block for an interactive peer. */
 static tcb_t interactive_cb = {
-    "peer",
+    "s3sock",
     IA_COMMAND,
     CB_NEW_TASKQ | CB_PEER,
     peer_data,
@@ -258,17 +258,18 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 #if defined(_WIN32) /*[*/
 	if (GetLastError() != WSAECONNRESET) {
 	    /* Windows does this habitually. */
-	    popup_an_error("peer recv: %s", win32_strerror(GetLastError()));
+	    popup_an_error("s3sock recv: %s",
+		    win32_strerror(GetLastError()));
 	}
 #else /*][*/
-	popup_an_errno(errno, "peer read");
+	popup_an_errno(errno, "s3sock read");
 #endif /*]*/
 	close_peer(p);
 	return;
     }
-    vtrace("Input for peer complete, nr=%d\n", (int)nr);
+    vtrace("Input for s3sock complete, nr=%d\n", (int)nr);
     if (nr == 0) {
-	vtrace("peer EOF\n");
+	vtrace("s3sock EOF\n");
 	close_peer(p);
 	return;
     }
@@ -317,7 +318,7 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 
     ns = send(p->socket, s, strlen(s), 0);
     if (ns < 0) {
-	popup_a_sockerr("peer send");
+	popup_a_sockerr("s3sock send");
     }
 }
 
@@ -339,7 +340,7 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 
     ns = send(p->socket, s, strlen(s), 0);
     if (ns < 0) {
-	popup_a_sockerr("peer send");
+	popup_a_sockerr("s3sock send");
     }
 }
 
@@ -703,7 +704,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	listener->desc = xs_buffer("%s:%u", inet_ntop(sa->sa_family,
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
-	vtrace("Listening for peer scripts on %s\n", listener->desc);
+	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
     }
 #if defined(X3270_IPV6) /*[*/
     else if (sa->sa_family == AF_INET6) {
@@ -712,7 +713,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	listener->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
 		    &sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin6->sin6_port));
-	vtrace("Listening for peer scripts on %s\n", listener->desc);
+	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
     }
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
@@ -720,7 +721,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	struct sockaddr_un *ssun = (struct sockaddr_un *)sa;
 
 	listener->desc = NewString(ssun->sun_path);
-	vtrace("Listening for peer scripts on %s\n", listener->desc);
+	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
     }
 #endif /*]*/
 
@@ -760,7 +761,8 @@ void
 peer_shutdown(peer_listen_t listener)
 {
     if (listener->socket != INVALID_SOCKET) {
-	vtrace("Stopped listening for peer scripts on %s\n", listener->desc);
+	vtrace("Stopped listening for s3sock scripts on %s\n",
+		listener->desc);
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;
     }
