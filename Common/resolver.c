@@ -328,6 +328,9 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	/* Return the addresses. */
 	res = gaip->gaicb.ar_result;
 	for (i = 0; i < max && res != NULL; i++, res = res->ai_next) {
+	    if (res->ai_socktype != SOCK_STREAM) {
+		continue;
+	    }
 	    memcpy(rsa, res->ai_addr, res->ai_addrlen);
 	    sa_rlen[*nr] = (socklen_t)res->ai_addrlen;
 	    if (i == 0) {
@@ -353,7 +356,16 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    (*nr)++;
 	}
 	freeaddrinfo(gaip->gaicb.ar_result);
-	return RHP_SUCCESS;
+	if (*nr) {
+	    return RHP_SUCCESS;
+	} else {
+	    if (errmsg) {
+		*errmsg = lazyaf("%s/%s:\n%s", gaip->host,
+			gaip->port? gaip->port: "*(none)",
+			"no suitable resolution");
+	    }
+	    return RHP_CANNOT_RESOLVE;
+	}
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
 	assert(rc != EAI_INPROGRESS && rc != EAI_CANCELED);

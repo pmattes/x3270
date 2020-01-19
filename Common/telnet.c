@@ -578,13 +578,14 @@ resolve_done(iosrc_t fd, ioid_t id)
 	return;
     }
 
-    vtrace("Resolution complete\n");
     rv = collect_host_and_port(slot, &haddr[0].sa, sizeof(haddr[0]), ha_len,
 	    &current_port, &errmsg, NUM_HA, &num_ha);
     if (RHP_IS_ERROR(rv)) {
 	connect_error("%s", errmsg);
 	return;
     }
+    vtrace("Resolution complete, %d address%s\n", num_ha, 
+	    (num_ha == 1)? "": "es");
 
     /* Proceed with the connection. */
     nc = finish_connect(&iosrc);
