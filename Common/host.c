@@ -666,7 +666,7 @@ try_reconnect(ioid_t id _is_unused)
 void
 host_disconnect(bool failed)
 {
-    if (!PCONNECTED) {
+    if (cstate <= RECONNECTING) {
 	return;
     }
 
