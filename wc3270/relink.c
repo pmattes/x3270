@@ -85,7 +85,7 @@ codepages_t codepages[] = {
     { "simplified-chinese","935",1,L"936"	},
     { "spanish",	"284",	0, L"1252"	},
     { "spanish-euro",	"1145",	0, L"1252"	},
-    { "thai",		"838",	0, L"1252"	},
+    { "thai",		"1160",	0, L"874"	},
     { "traditional-chinese","937",1,L"950"	},
     { "turkish",	"1026",	0, L"1254"	},
     { "uk",		"285",	0, L"1252"	},
