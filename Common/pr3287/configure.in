@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2010, 2014-2017 Paul Mattes.
+dnl Copyright (c) 2000-2010, 2014-2017, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ AC_CHECK_HEADERS(iconv.h)
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
-if test "$enable_ssl" != no
+if test "$enable_tls" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
 	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
@@ -88,8 +88,8 @@ then	orig_CPPFLAGS="$CPPFLAGS"
 		any=1
 	done
 	if test $header_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL)
-		enable_ssl="no"
+	then	AC_MSG_WARN(Disabling TLS)
+		enable_tls="no"
 		unset HAVE_LIBSSL
 	fi
 fi

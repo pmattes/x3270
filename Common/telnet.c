@@ -76,7 +76,6 @@
 #include "sio.h"
 #include "sioc.h"
 #include "split_host.h"
-#include "ssl_passwd_gui.h"
 #include "stats.h"
 #include "status.h"
 #include "task.h"
@@ -85,6 +84,7 @@
 #include "telnet_gui.h"
 #include "telnet_private.h"
 #include "telnet_sio.h"
+#include "tls_passwd_gui.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -436,7 +436,7 @@ connect_to(int ix, bool noisy, bool *pending)
     fcntl(sock, F_SETFD, 1);
 #endif /*]*/
 
-    /* init ssl */
+    /* Init TLS. */
     if (HOST_FLAG(TLS_HOST)) {
 	if (!sio_supported()) {
 	    popup_an_error("TLS not supported\n");
@@ -1146,9 +1146,9 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
  *	Shut down the socket.
  */
 void
-net_disconnect(bool including_ssl)
+net_disconnect(bool including_tls)
 {
-    if (including_ssl && sio != NULL) {
+    if (including_tls && sio != NULL) {
 	sio_close(sio);
 	sio = NULL;
 	secure_connection = false;
@@ -1192,7 +1192,7 @@ net_disconnect(bool including_ssl)
 
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
-	if (!appres.ssl.starttls) {
+	if (!appres.tls.starttls) {
 	    connect_error("Connection failed:\n"
 		    "Host requested STARTTLS but STARTTLS disabled");
 	} else if (nested_tls) {
@@ -1224,7 +1224,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     register unsigned char *cp;
     int	nr;
-    bool ignore_ssl = false;
+    bool ignore_tls = false;
 
 #if defined(_WIN32) /*[*/
     WSANETWORKEVENTS events;
@@ -1321,7 +1321,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	 */
 	if (cstate == TLS_PENDING &&
 		(nr = recv(sock, (char *) netrbuf, 1, MSG_PEEK)) <= 0) {
-	    ignore_ssl = true;
+	    ignore_tls = true;
 	} else {
 	    nr = sio_read(sio, (char *) netrbuf, BUFSZ);
 	}
@@ -1342,7 +1342,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    vtrace("EWOULDBLOCK\n");
 	    return;
 	}
-	if (secure_connection && !ignore_ssl) {
+	if (secure_connection && !ignore_tls) {
 	    connect_error("%s", sio_last_error());
 	    host_disconnect(true);
 	    return;
@@ -1748,7 +1748,7 @@ telnet_fsm(unsigned char c)
 	case TELOPT_STARTTLS:
 	    if (c == TELOPT_STARTTLS &&
 		    (!sio_supported() ||
-		     !appres.ssl.starttls ||
+		     !appres.tls.starttls ||
 		     secure_connection)) {
 		refused_tls = true;
 		if (secure_connection) {

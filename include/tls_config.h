@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2017 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2017, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	ssl_config.h
+ *	tls_config.h
  *		Secure I/O configuration.
  */
 
@@ -46,37 +46,37 @@ typedef struct {
     char	*key_file_type;
     char	*key_passwd;
     char	*client_cert;
-} ssl_config_t;
+} tls_config_t;
 
 /* Required options. */
-#define SSL_OPT_ACCEPT_HOSTNAME		0x00000001
-#define SSL_OPT_VERIFY_HOST_CERT	0x00000002
-#define SSL_OPT_STARTTLS		0x00000004
-#define SSL_REQUIRED_OPTS \
-    (SSL_OPT_ACCEPT_HOSTNAME | SSL_OPT_VERIFY_HOST_CERT | SSL_OPT_STARTTLS)
+#define TLS_OPT_ACCEPT_HOSTNAME		0x00000001
+#define TLS_OPT_VERIFY_HOST_CERT	0x00000002
+#define TLS_OPT_STARTTLS		0x00000004
+#define TLS_REQUIRED_OPTS \
+    (TLS_OPT_ACCEPT_HOSTNAME | TLS_OPT_VERIFY_HOST_CERT | TLS_OPT_STARTTLS)
 
 /* Options optionally supported by specific implementations. */
-#define SSL_OPT_CA_DIR			0x00000008
-#define SSL_OPT_CA_FILE			0x00000010
-#define SSL_OPT_CERT_FILE		0x00000020
-#define SSL_OPT_CERT_FILE_TYPE		0x00000040
-#define SSL_OPT_CHAIN_FILE		0x00000080
-#define SSL_OPT_KEY_FILE		0x00000100
-#define SSL_OPT_KEY_FILE_TYPE		0x00000200
-#define SSL_OPT_KEY_PASSWD		0x00000400
-#define SSL_OPT_CLIENT_CERT		0x00000800
+#define TLS_OPT_CA_DIR			0x00000008
+#define TLS_OPT_CA_FILE			0x00000010
+#define TLS_OPT_CERT_FILE		0x00000020
+#define TLS_OPT_CERT_FILE_TYPE		0x00000040
+#define TLS_OPT_CHAIN_FILE		0x00000080
+#define TLS_OPT_KEY_FILE		0x00000100
+#define TLS_OPT_KEY_FILE_TYPE		0x00000200
+#define TLS_OPT_KEY_PASSWD		0x00000400
+#define TLS_OPT_CLIENT_CERT		0x00000800
 
-#define SSL_OPTIONAL_OPTS \
-    (SSL_OPT_CA_DIR | SSL_OPT_CA_FILE | SSL_OPT_CERT_FILE | \
-     SSL_OPT_CERT_FILE_TYPE | SSL_OPT_CHAIN_FILE | SSL_OPT_KEY_FILE | \
-     SSL_OPT_KEY_FILE_TYPE | SSL_OPT_KEY_PASSWD | SSL_OPT_CLIENT_CERT)
+#define TLS_OPTIONAL_OPTS \
+    (TLS_OPT_CA_DIR | TLS_OPT_CA_FILE | TLS_OPT_CERT_FILE | \
+     TLS_OPT_CERT_FILE_TYPE | TLS_OPT_CHAIN_FILE | TLS_OPT_KEY_FILE | \
+     TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD | TLS_OPT_CLIENT_CERT)
 
-#define SSL_ALL_OPTS	(SSL_REQUIRED_OPTS | SSL_OPTIONAL_OPTS)
+#define TLS_ALL_OPTS	(TLS_REQUIRED_OPTS | TLS_OPTIONAL_OPTS)
 
-#define FOREACH_SSL_OPTS(opt) { \
+#define FOREACH_TLS_OPTS(opt) { \
 	unsigned opt = 1; \
-	while (SSL_ALL_OPTS & opt) {
-#define FOREACH_SSL_OPTS_END(opt) \
+	while (TLS_ALL_OPTS & opt) {
+#define FOREACH_TLS_OPTS_END(opt) \
 	    opt <<= 1; \
 	} \
     }

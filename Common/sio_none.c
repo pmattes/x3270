@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,8 @@
 
 #include "globals.h"
 
-#include "ssl_config.h"
+#include "tls_config.h"
+
 #include "sio.h"
 #include "sioc.h"
 
@@ -43,7 +44,7 @@ sio_supported(void)
 }
 
 sio_init_ret_t
-sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
+sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
 {
     sioc_set_error("TLS not supported");
     *sio_ret = NULL;

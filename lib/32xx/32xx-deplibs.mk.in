@@ -1,2 +1,2 @@
 # lib32xx depends on various libraries found by autoconf.
-LIB32XX_DEPLIBS = @SSL_LDFLAGS@ @SSL_LIBS@ @ICONV_LIBS@ @GAI_LIBS@
+LIB32XX_DEPLIBS = @TLS_LDFLAGS@ @TLS_LIBS@ @ICONV_LIBS@ @GAI_LIBS@

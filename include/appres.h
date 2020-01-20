@@ -35,9 +35,9 @@
 
 /*
  * Alas, a nested #include here, so everyone who wants the appres definitions
- * does not need to explicitly include ssl_config.h.
+ * does not need to explicitly include tls_config.h.
  */
-#include "ssl_config.h"
+#include "tls_config.h"
 
 /* Application resources */
 
@@ -120,8 +120,8 @@ typedef struct {
 	char	*eof;
     } linemode;
 
-    /* SSL fields. */
-    ssl_config_t ssl;
+    /* TLS fields. */
+    tls_config_t tls;
 
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {

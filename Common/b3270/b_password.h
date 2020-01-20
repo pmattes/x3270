@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 
 /*
  *	b_password.h
- *		SSL/TLS password for b3270.
+ *		TLS password for b3270.
  */
 
 bool push_password(bool again);

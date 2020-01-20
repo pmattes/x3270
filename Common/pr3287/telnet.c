@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -239,7 +239,6 @@ const char *neg_type[4] = { "COMMAND-REJECT", "INTERVENTION-REQUIRED",
 #define e_neg_type(n)	(((n) <= TN3270E_NEG_COMPONENT_DISCONNECTED) ? \
 			    neg_type[n]: "??")
 
-bool ssl_supported = true;
 bool secure_connection = false;
 bool secure_unverified = false;
 static sio_t sio;
@@ -315,11 +314,11 @@ pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
     fcntl(s, F_SETFD, 1);
 #endif /*]*/
 
-	/* init ssl */
-    if (options.ssl_host && !secure_connection) {
+    /* Init TLS */
+    if (options.tls_host && !secure_connection) {
 	char *session, *cert;
 
-	if (sio_init(&options.ssl, NULL, &sio) != SI_SUCCESS) {
+	if (sio_init(&options.tls, NULL, &sio) != SI_SUCCESS) {
 	    errmsg("%s\n", sio_last_error());
 	    return false;
 	}
@@ -331,7 +330,7 @@ pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
 	secure_connection = true;
 	session = indent_s(sio_session_info(sio));
 	cert = indent_s(sio_server_cert_info(sio));
-	vtrace("TLS/SSL tunneled connection complete.  "
+	vtrace("TLS tunneled connection complete.  "
 		"Connection is now secure.\n"
 		"Session:\n%s\nServer certificate:\n%s\n",
 		   session, cert);
@@ -443,7 +442,7 @@ pr_net_process(socket_t s)
 
 /* Disconnect from the host. */
 void
-net_disconnect(bool including_ssl)
+net_disconnect(bool including_tls)
 {
     if (sock != INVALID_SOCKET) {
 	vtrace("SENT disconnect\n");
@@ -458,7 +457,7 @@ net_disconnect(bool including_ssl)
 
 	if (refused_tls && !ever_3270) {
 	    errmsg("Connection failed:\n"
-		    "Host requested TLS but SSL not supported");
+		    "Host requested TLS but TLS not supported");
 	}
 	refused_tls = false;
 	ever_3270 = false;
@@ -1867,8 +1866,8 @@ continue_tls(unsigned char *sbbuf, int len)
     /* Trace what we got. */
     vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
-    /* Initialize the SSL library. */
-    if (sio_init(&options.ssl, NULL, &sio) != SI_SUCCESS) {
+    /* Initialize the TLS library. */
+    if (sio_init(&options.tls, NULL, &sio) != SI_SUCCESS) {
 	errmsg("%s\n", sio_last_error());
 	return -1;
     }
@@ -1882,7 +1881,7 @@ continue_tls(unsigned char *sbbuf, int len)
     /* Success. */
     session = indent_s(sio_session_info(sio));
     cert = indent_s(sio_server_cert_info(sio));
-    vtrace("TLS/SSL negotiated connection complete.  "
+    vtrace("TLS negotiated connection complete.  "
 	      "Connection is now secure.\n"
 	      "Session:\n%s\nServer certificate:\n%s\n",
 	      session, cert);

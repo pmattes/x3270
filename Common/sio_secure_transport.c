@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,11 +37,12 @@
 
 #include <string.h>
 
+#include "tls_config.h"
+
 #include "lazya.h"
-#include "ssl_config.h"
 #include "sio.h"
 #include "sioc.h"
-#include "ssl_passwd_gui.h"
+#include "tls_passwd_gui.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -61,7 +62,7 @@ typedef struct {
     char *server_cert_info;		/* server cert information */
 } stransport_sio_t;
 
-static ssl_config_t *config;
+static tls_config_t *config;
 static char *interactive_password;
 
 #define CIPHER(s)	{ s, #s }
@@ -842,7 +843,7 @@ sio_supported(void)
  * Create a new connection.
  */
 sio_init_ret_t
-sio_init(ssl_config_t *c, const char *password, sio_t *sio_ret)
+sio_init(tls_config_t *c, const char *password, sio_t *sio_ret)
 {
     stransport_sio_t *s;
     OSStatus status;
@@ -1109,7 +1110,7 @@ sio_secure_unverified(sio_t sio)
 unsigned
 sio_options_supported(void)
 {   
-    return SSL_OPT_CERT_FILE | SSL_OPT_CLIENT_CERT | SSL_OPT_KEY_PASSWD;
+    return TLS_OPT_CERT_FILE | TLS_OPT_CLIENT_CERT | TLS_OPT_KEY_PASSWD;
 }
 
 const char *

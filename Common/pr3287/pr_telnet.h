@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2013, 2015, 2017 Paul Mattes.
+ * Copyright (c) 1995-2013, 2015, 2017, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,5 +34,3 @@
 extern bool pr_net_negotiate(const char *host, struct sockaddr *sa,
 	socklen_t len, socket_t s, char *lu, const char *assoc);
 extern bool pr_net_process(socket_t s);
-
-extern void pr_ssl_base_init(void);

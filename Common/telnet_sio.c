@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Paul Mattes.
+ * Copyright (c) 2017-2018, 2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@
 
 #include "popups.h"
 #include "sio.h"
-#include "ssl_passwd_gui.h"
 #include "telnet_sio.h"
+#include "tls_passwd_gui.h"
 #include "trace.h"
 
 /*
@@ -50,7 +50,7 @@
  */
 typedef struct _password_cache {
     struct _password_cache *next;
-    ssl_config_t config;
+    tls_config_t config;
     char *password;
 } password_cache_t;
 
@@ -71,7 +71,7 @@ static char *nstrdup(const char *a)
 
 /* Add or update an entry in the password cache. */
 static void
-add_to_cache(ssl_config_t *config, const char *password)
+add_to_cache(tls_config_t *config, const char *password)
 {
     password_cache_t *p;
 
@@ -91,7 +91,7 @@ add_to_cache(ssl_config_t *config, const char *password)
 
     /* Create a new entry. */
     p = (password_cache_t *)Malloc(sizeof(password_cache_t));
-    memset(&p->config, 0, sizeof(ssl_config_t));
+    memset(&p->config, 0, sizeof(tls_config_t));
     p->config.cert_file = nstrdup(config->cert_file);
     p->config.cert_file_type = nstrdup(config->cert_file_type);
     p->config.chain_file = nstrdup(config->chain_file);
@@ -105,7 +105,7 @@ add_to_cache(ssl_config_t *config, const char *password)
 
 /* Look up an entry in the password cache. */
 static char *
-lookup_cache(ssl_config_t *config)
+lookup_cache(tls_config_t *config)
 {
     password_cache_t *p;
 
@@ -133,11 +133,11 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
     char password_buf[1024];
     sio_t s;
     bool again = false;
-    static ssl_config_t *config = NULL;
+    static tls_config_t *config = NULL;
 
     /* Create a temporary config for sio to consume. */
-    Replace(config, Malloc(sizeof(ssl_config_t)));
-    memcpy(config, &appres.ssl, sizeof(ssl_config_t));
+    Replace(config, Malloc(sizeof(tls_config_t)));
+    memcpy(config, &appres.tls, sizeof(tls_config_t));
     if (force_no_verify) {
 	config->verify_host_cert = false;
     }
@@ -146,12 +146,12 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
     }
 
     if (password == NULL) {
-	password = lookup_cache(&appres.ssl);
+	password = lookup_cache(&appres.tls);
 	if (password != NULL) {
 	    vtrace("TLS: Using cached password\n");
 	}
     } else {
-	add_to_cache(&appres.ssl, password);
+	add_to_cache(&appres.tls, password);
     }
 
     *pending = false;
@@ -173,13 +173,13 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 	    again = true;
 	    /* else fall through, letting them enter another password */
 	case SI_NEED_PASSWORD:
-	    switch (ssl_passwd_gui_callback(password_buf,
+	    switch (tls_passwd_gui_callback(password_buf,
 			sizeof(password_buf), again)) {
 	    case SP_SUCCESS:
 		/* Got it right away. */
 		vtrace("TLS: Password needed, supplied by GUI\n");
 		password = password_buf;
-		add_to_cache(&appres.ssl, password);
+		add_to_cache(&appres.tls, password);
 		/* Try again. */
 		break;
 	    case SP_FAILURE:

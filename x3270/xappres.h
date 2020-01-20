@@ -121,7 +121,7 @@ typedef struct {
 	struct {
 	    Boolean starttls;
 	    Boolean verify_host_cert;
-	} ssl;
+	} tls;
     } bools;
 } xappres_t, *xappresptr_t;
 

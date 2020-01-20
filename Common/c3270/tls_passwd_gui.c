@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2018, 2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -32,8 +32,8 @@
  */
 
 /*
- *	ssl_passwd_gui.c
- *		SSL certificate password dialog for c3270.
+ *	tls_passwd_gui.c
+ *		TLS certificate password dialog for c3270.
  */
 
 #include "globals.h"
@@ -41,15 +41,15 @@
 #include "appres.h"
 #include "host.h"
 #include "popups.h"
-#include "ssl_passwd_gui.h"
 #include "task.h"
 #include "telnet.h"
+#include "tls_passwd_gui.h"
 
 /* Statics. */
 
 /* Proceed with password input. */
 static bool
-ssl_passwd_continue_input(void *handle, const char *text)
+tls_passwd_continue_input(void *handle, const char *text)
 {
     /* Send the password back to TLS. */
     net_password_continue(text);
@@ -58,15 +58,15 @@ ssl_passwd_continue_input(void *handle, const char *text)
 
 /* Password input aborted. */
 static void
-ssl_passwd_abort_input(void *handle)
+tls_passwd_abort_input(void *handle)
 {
     connect_error("Password input aborted");
     host_disconnect(true);
 }
 
 /* Password callback. */
-ssl_passwd_ret_t
-ssl_passwd_gui_callback(char *buf, int size, bool again)
+tls_passwd_ret_t
+tls_passwd_gui_callback(char *buf, int size, bool again)
 {
     if (again) {
 	action_output("Password is incorrect.");
@@ -74,7 +74,7 @@ ssl_passwd_gui_callback(char *buf, int size, bool again)
 	action_output("TLS certificate private key requires a password.");
     }
     if (task_request_input("Connect", "Enter password: ",
-		ssl_passwd_continue_input, ssl_passwd_abort_input, NULL,
+		tls_passwd_continue_input, tls_passwd_abort_input, NULL,
 		true)) {
 	return SP_PENDING;
     }

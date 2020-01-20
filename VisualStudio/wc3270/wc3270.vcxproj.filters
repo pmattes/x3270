@@ -62,10 +62,10 @@
     <ClCompile Include="..\..\Common\c3270\menubar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\c3270\ssl_passwd_gui.c">
+    <ClCompile Include="..\..\Common\c3270\status_dump.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\c3270\status_dump.c">
+    <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

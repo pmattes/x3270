@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Paul Mattes.
+ * Copyright (c) 2014-2017, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,17 @@
  */
 
 /*
- *	ssl_passwd_gui.h
- *		Global declarations for ssl_passwd_gui.c.
+ *	tls_passwd_gui_stubs.c
+ *		Stubs for the TLS password GUI.
  */
 
-typedef enum {
-    SP_SUCCESS,		/* got a password */
-    SP_FAILURE,		/* aborted */
-    SP_PENDING,		/* pending */
-    SP_NOT_SUPPORTED	/* can't prompt */
-} ssl_passwd_ret_t;
-ssl_passwd_ret_t ssl_passwd_gui_callback(char *buf, int size, bool again);
+#include "globals.h"
+
+#include "tls_passwd_gui.h"
+
+tls_passwd_ret_t
+tls_passwd_gui_callback(char *buf _is_unused, int size _is_unused,
+	bool again _is_unused)
+{
+    return SP_NOT_SUPPORTED; /* not supported */
+}

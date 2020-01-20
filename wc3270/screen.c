@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2019 Paul Mattes.
+ * Copyright (c) 2000-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2219,13 +2219,13 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	}
     }
 
-    /* Check for SSL pop-up. */
+    /* Check for TLS pop-up. */
     if (me->dwEventFlags == 0 &&
 	    me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED &&
 	    status_row &&
 	    x == rmargin - 28 &&
 	    y == status_row) {
-	run_action("Show", IA_DEFAULT, "Stats", NULL);
+	run_action("Show", IA_DEFAULT, "Status", NULL);
 	return;
     }
 

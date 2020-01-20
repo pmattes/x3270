@@ -42,9 +42,9 @@
     <ClCompile Include="..\..\Common\scroll_stubs.c" />
     <ClCompile Include="..\..\Common\select_stubs.c" />
     <ClCompile Include="..\..\Common\sio_none.c" />
-    <ClCompile Include="..\..\Common\ssl_passwd_gui_stubs.c" />
     <ClCompile Include="..\..\Common\status_stubs.c" />
     <ClCompile Include="..\..\Common\telnet_gui_stubs.c" />
+    <ClCompile Include="..\..\Common\tls_passwd_gui_stubs.c" />
     <ClCompile Include="..\..\Common\trace_gui_stubs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

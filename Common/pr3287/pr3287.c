@@ -189,43 +189,43 @@ const char *build_options(void);
 static void
 usage(void)
 {
-    unsigned ssl_options = sio_all_options_supported();
+    unsigned tls_options = sio_all_options_supported();
 
     fprintf(stderr,
 	    "usage: %s [options] [lu[,lu...]@]host[:port]\nOptions:\n",
 	    programname);
-    if (ssl_options & SSL_OPT_ACCEPT_HOSTNAME) {
+    if (tls_options & TLS_OPT_ACCEPT_HOSTNAME) {
 	fprintf(stderr,
 "  " OptAcceptHostname " <name>\n"
 "                   accept a specific name in host cert\n");
     }
     fprintf(stderr,
 "  -assoc <session> associate with a session (TN3270E only)\n");
-    if (ssl_options & SSL_OPT_CA_DIR) {
+    if (tls_options & TLS_OPT_CA_DIR) {
 	fprintf(stderr,
 "  " OptCaDir " <dir>     find CA certificate database in <dir>\n");
     }
-    if (ssl_options & SSL_OPT_CA_FILE) {
+    if (tls_options & TLS_OPT_CA_FILE) {
 	fprintf(stderr,
 "  " OptCaFile " <file>   find CA certificates in <file>\n");
     }
-    if (ssl_options & SSL_OPT_CERT_FILE) {
+    if (tls_options & TLS_OPT_CERT_FILE) {
 	fprintf(stderr,
 "  " OptCertFile " <file> find client certificate in <file>\n");
     }
-    if (ssl_options & SSL_OPT_CERT_FILE_TYPE) {
+    if (tls_options & TLS_OPT_CERT_FILE_TYPE) {
 	fprintf(stderr,
 "  " OptCertFileType " pem|asn1\n"
 "                   specify client certificate file type\n");
     }
-    if (ssl_options & SSL_OPT_CHAIN_FILE) {
+    if (tls_options & TLS_OPT_CHAIN_FILE) {
 	fprintf(stderr,
 "  " OptChainFile " <file>\n"
 "                   specify client certificate chain file\n");
     }
     fprintf(stderr,
 "  " OptCodePage " <name> specify host code page\n");
-    if (ssl_options & SSL_OPT_CLIENT_CERT) {
+    if (tls_options & TLS_OPT_CLIENT_CERT) {
 	fprintf(stderr,
 "  " OptClientCert " <name> use TLS client certificate <name>\n");
     }
@@ -252,16 +252,16 @@ usage(void)
 "  -ffeoj           assume FF at the end of each print job\n"
 "  -ffthru          pass through SCS FF orders\n"
 "  -ffskip          skip FF orders at top of page\n");
-    if (ssl_options & SSL_OPT_KEY_FILE) {
+    if (tls_options & TLS_OPT_KEY_FILE) {
 	fprintf(stderr,
 "  " OptKeyFile " <file>  find certificate private key in <file>\n");
     }
-    if (ssl_options & SSL_OPT_KEY_FILE_TYPE) {
+    if (tls_options & TLS_OPT_KEY_FILE_TYPE) {
 	fprintf(stderr,
 "  " OptKeyFileType " pem|asn1\n"
 "                   specify private key file type\n");
     }
-    if (ssl_options & SSL_OPT_KEY_PASSWD) {
+    if (tls_options & TLS_OPT_KEY_PASSWD) {
 	fprintf(stderr,
 "  " OptKeyPasswd " file:<file>|string:<string>\n"
 "                   specify private key password\n");
@@ -270,7 +270,7 @@ usage(void)
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
 "  -mpp <n>         define the Maximum Presentation Position (unformatted\n"
 "                   line length)\n");
-    if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
+    if (tls_options & TLS_OPT_VERIFY_HOST_CERT) {
 	fprintf(stderr,
 "  " OptNoVerifyHostCert "    do not verify host certificate for TLS connections\n");
     }
@@ -298,7 +298,7 @@ usage(void)
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n");
-    if (ssl_options & SSL_OPT_VERIFY_HOST_CERT) {
+    if (tls_options & TLS_OPT_VERIFY_HOST_CERT) {
 	fprintf(stderr,
 "  " OptVerifyHostCert "      verify host certificate for TLS connections (enabled by default)\n");
     }
@@ -500,18 +500,18 @@ init_options(void)
     options.reconnect		= 0;
     options.skipcc		= 0;
     options.mpp			= DEFAULT_UNF_MPP;
-    options.ssl.accept_hostname	= NULL;
-    options.ssl.ca_dir		= NULL;
-    options.ssl.ca_file		= NULL;
-    options.ssl.cert_file	= NULL;
-    options.ssl.cert_file_type	= NULL;
-    options.ssl.chain_file	= NULL;
-    options.ssl.key_file	= NULL;
-    options.ssl.key_file_type	= NULL;
-    options.ssl.key_passwd	= NULL;
-    options.ssl.client_cert	= NULL;
-    options.ssl_host		= false;
-    options.ssl.verify_host_cert= true;
+    options.tls.accept_hostname	= NULL;
+    options.tls.ca_dir		= NULL;
+    options.tls.ca_file		= NULL;
+    options.tls.cert_file	= NULL;
+    options.tls.cert_file_type	= NULL;
+    options.tls.chain_file	= NULL;
+    options.tls.key_file	= NULL;
+    options.tls.key_file_type	= NULL;
+    options.tls.key_passwd	= NULL;
+    options.tls.client_cert	= NULL;
+    options.tls_host		= false;
+    options.tls.verify_host_cert= true;
     options.syncport		= 0;
 #if !defined(_WIN32) /*[*/
     options.tracedir		= "/tmp";
@@ -547,7 +547,7 @@ main(int argc, char *argv[])
     socket_t s = INVALID_SOCKET;
     int rc = 0;
     int report_success = 0;
-    unsigned ssl_options = sio_all_options_supported();
+    unsigned tls_options = sio_all_options_supported();
 
     /* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -585,13 +585,13 @@ main(int argc, char *argv[])
 	    options.bdaemon = WILL_DAEMON;
 	} else
 #endif /*]*/
-	if ((ssl_options & SSL_OPT_ACCEPT_HOSTNAME) &&
+	if ((tls_options & TLS_OPT_ACCEPT_HOSTNAME) &&
 		!strcmp(argv[i], OptAcceptHostname)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptAcceptHostname "\n");
 		usage();
 	    }
-	    options.ssl.accept_hostname = argv[i + 1];
+	    options.tls.accept_hostname = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-assoc")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -609,77 +609,77 @@ main(int argc, char *argv[])
 	    options.command = argv[i + 1];
 	    i++;
 #endif /*]*/
-	} else if ((ssl_options & SSL_OPT_CA_DIR) &&
+	} else if ((tls_options & TLS_OPT_CA_DIR) &&
 		!strcmp(argv[i], OptCaDir)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptCaDir "\n");
 		usage();
 	    }
-	    options.ssl.ca_dir = argv[i + 1];
+	    options.tls.ca_dir = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_CA_FILE) &&
+	} else if ((tls_options & TLS_OPT_CA_FILE) &&
 		!strcmp(argv[i], OptCaFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptCaFile "\n");
 		usage();
 	    }
-	    options.ssl.ca_file = argv[i + 1];
+	    options.tls.ca_file = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_CERT_FILE) &&
+	} else if ((tls_options & TLS_OPT_CERT_FILE) &&
 		!strcmp(argv[i], OptCertFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptCertFile "\n");
 		usage();
 	    }
-	    options.ssl.cert_file = argv[i + 1];
+	    options.tls.cert_file = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_CERT_FILE_TYPE) &&
+	} else if ((tls_options & TLS_OPT_CERT_FILE_TYPE) &&
 		!strcmp(argv[i], OptCertFileType)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptCertFileType "\n");
 		usage();
 	    }
-	    options.ssl.cert_file_type = argv[i + 1];
+	    options.tls.cert_file_type = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_CHAIN_FILE) &&
+	} else if ((tls_options & TLS_OPT_CHAIN_FILE) &&
 		!strcmp(argv[i], OptChainFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptChainFile "\n");
 		usage();
 	    }
-	    options.ssl.chain_file = argv[i + 1];
+	    options.tls.chain_file = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_KEY_FILE) &&
+	} else if ((tls_options & TLS_OPT_KEY_FILE) &&
 		!strcmp(argv[i], OptKeyFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptKeyFile "\n");
 		usage();
 	    }
-	    options.ssl.key_file = argv[i + 1];
+	    options.tls.key_file = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_KEY_FILE_TYPE) &&
+	} else if ((tls_options & TLS_OPT_KEY_FILE_TYPE) &&
 		!strcmp(argv[i], OptKeyFileType)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptKeyFileType "\n");
 		usage();
 	    }
-	    options.ssl.key_file_type = argv[i + 1];
+	    options.tls.key_file_type = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_KEY_PASSWD) &&
+	} else if ((tls_options & TLS_OPT_KEY_PASSWD) &&
 		!strcmp(argv[i], OptKeyPasswd)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptKeyPasswd "\n");
 		usage();
 	    }
-	    options.ssl.key_passwd = argv[i + 1];
+	    options.tls.key_passwd = argv[i + 1];
 	    i++;
-	} else if ((ssl_options & SSL_OPT_CLIENT_CERT) &&
+	} else if ((tls_options & TLS_OPT_CLIENT_CERT) &&
 		!strcmp(argv[i], OptClientCert)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		fprintf(stderr, "Missing value for " OptClientCert "\n");
 		usage();
 	    }
-	    options.ssl.client_cert = argv[i + 1];
+	    options.tls.client_cert = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], OptCharset) ||
 		   !strcmp(argv[i], OptCodePage)) {
@@ -746,9 +746,9 @@ main(int argc, char *argv[])
 		usage();
 	    }
 	    i++;
-	} else if ((ssl_options & SSL_OPT_VERIFY_HOST_CERT) &&
+	} else if ((tls_options & TLS_OPT_VERIFY_HOST_CERT) &&
 		!strcmp(argv[i], OptNoVerifyHostCert)) {
-	    options.ssl.verify_host_cert = false;
+	    options.tls.verify_host_cert = false;
 	} else if (!strcmp(argv[i], OptReconnect)) {
 	    options.reconnect = 1;
 	} else if (!strcmp(argv[i], "-v")) {
@@ -760,9 +760,9 @@ See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    exit(0);
-	} else if ((ssl_options & SSL_OPT_VERIFY_HOST_CERT) &&
+	} else if ((tls_options & TLS_OPT_VERIFY_HOST_CERT) &&
 		!strcmp(argv[i], OptVerifyHostCert)) {
-	    options.ssl.verify_host_cert = true;
+	    options.tls.verify_host_cert = true;
 	} else if (!strcmp(argv[i], "-V")) {
 	    options.verbose = 1;
 	} else if (!strcmp(argv[i], "-syncport")) {
@@ -836,13 +836,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
     }
 
     if (HOST_nFLAG(prefixes, TLS_HOST)) {
-	options.ssl_host = true;
+	options.tls_host = true;
     }
     if (HOST_nFLAG(prefixes, NO_VERIFY_CERT_HOST)) {
-	options.ssl.verify_host_cert = false;
+	options.tls.verify_host_cert = false;
     }
     if (accept != NULL) {
-	options.ssl.accept_hostname = accept;
+	options.tls.accept_hostname = accept;
     }
 
     if (HOST_nFLAG(prefixes, NO_LOGIN_HOST) ||
@@ -853,7 +853,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	usage();
     }
 
-    if (options.ssl_host && !sio_supported()) {
+    if (options.tls_host && !sio_supported()) {
 	fprintf(stderr, "Secure connections not supported.\n");
 	pr3287_exit(1);
     }
@@ -1110,7 +1110,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	/* Say hello. */
 	if (options.verbose) {
 	    fprintf(stderr, "Connected to %s, port %u%s\n", host, p,
-		    options.ssl_host? " via TLS": "");
+		    options.tls_host? " via TLS": "");
 	    if (options.assoc != NULL) {
 		fprintf(stderr, "Associating with LU %s\n", options.assoc);
 	    } else if (lu != NULL) {
@@ -1124,7 +1124,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 	}
 	vtrace("Connected to %s, port %u%s\n", host, p,
-		options.ssl_host? " via TLS": "");
+		options.tls_host? " via TLS": "");
 	if (options.assoc != NULL) {
 	    vtrace("Associating with LU %s\n", options.assoc);
 	} else if (lu != NULL) {

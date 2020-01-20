@@ -3623,7 +3623,7 @@ if test "${with_ssl+set}" = set; then :
   withval=$with_ssl;
 fi
 
-if test "$enable_ssl" != no
+if test "$enable_tls" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
 	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
@@ -3661,9 +3661,9 @@ done
 		any=1
 	done
 	if test $header_fail -eq 1
-	then	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling OpenSSL" >&5
-$as_echo "$as_me: WARNING: Disabling OpenSSL" >&2;}
-		enable_ssl="no"
+	then	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Disabling TLS" >&5
+$as_echo "$as_me: WARNING: Disabling TLS" >&2;}
+		enable_tls="no"
 		unset HAVE_LIBSSL
 	fi
 fi

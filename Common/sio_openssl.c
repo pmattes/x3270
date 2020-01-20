@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017, 2019 Paul Mattes.
+ * Copyright (c) 1993-2017, 2019-2020 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,7 +42,7 @@
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
  
-#include "ssl_config.h"
+#include "tls_config.h"
 
 #include "sio.h"
 #include "sioc.h"
@@ -63,7 +63,7 @@
 
 /* Statics */
 typedef struct {
-    ssl_config_t *config;
+    tls_config_t *config;
     SSL_CTX *ctx;
     SSL *con;
     socket_t sock;
@@ -467,7 +467,7 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
  * Create a new OpenSSL connection.
  */
 sio_init_ret_t
-sio_init(ssl_config_t *config, const char *password, sio_t *sio_ret)
+sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
 {
     ssl_sio_t *s = NULL;
     char err_buf[120];
@@ -1055,9 +1055,9 @@ sio_secure_unverified(sio_t sio)
 unsigned
 sio_options_supported(void)
 {
-    return SSL_OPT_CA_DIR | SSL_OPT_CA_FILE | SSL_OPT_CERT_FILE
-	| SSL_OPT_CERT_FILE_TYPE | SSL_OPT_CHAIN_FILE | SSL_OPT_KEY_FILE
-	| SSL_OPT_KEY_FILE_TYPE | SSL_OPT_KEY_PASSWD;
+    return TLS_OPT_CA_DIR | TLS_OPT_CA_FILE | TLS_OPT_CERT_FILE
+	| TLS_OPT_CERT_FILE_TYPE | TLS_OPT_CHAIN_FILE | TLS_OPT_KEY_FILE
+	| TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD;
 }
 
 /*

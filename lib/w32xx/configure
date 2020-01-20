@@ -563,7 +563,7 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-WIN_SSL_MODULES
+WIN_TLS_MODULES
 target_alias
 host_alias
 build_alias
@@ -605,7 +605,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_ssl
+enable_tls
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1221,7 +1221,7 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-ssl           leave out SSL/TLS support
+  --disable-tls           leave out TLS support
 
 Report bugs to the package provider.
 _ACEOF
@@ -1653,14 +1653,14 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-# Check whether --enable-ssl was given.
-if test "${enable_ssl+set}" = set; then :
-  enableval=$enable_ssl;
+# Check whether --enable-tls was given.
+if test "${enable_tls+set}" = set; then :
+  enableval=$enable_tls;
 fi
 
-if test "$enable_ssl" = no
-then	WIN_SSL_MODULES=""
-else	WIN_SSL_MODULES=sio_schannel.o
+if test "$enable_tls" = no
+then	WIN_TLS_MODULES=""
+else	WIN_TLS_MODULES=sio_schannel.o
 fi
 
 

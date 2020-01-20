@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2017, 2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -32,8 +32,8 @@
  */
 
 /*
- *	ssl_passwd_gui.c
- *		SSL certificate password dialog for x3270.
+ *	tls_passwd_gui.c
+ *		TLS certificate password dialog for x3270.
  */
 
 #include "globals.h"
@@ -46,14 +46,14 @@
 #include "objects.h"
 #include "popups.h"
 #include "sio.h"
-#include "ssl_passwd_gui.h"
 #include "telnet.h"
 #include "telnet_private.h"
+#include "tls_passwd_gui.h"
 #include "xglobals.h"
 #include "xpopups.h"
 
 /* Statics. */
-static char *ssl_password;
+static char *tls_password;
 static Widget password_shell = NULL;
 
 /* Callback for "OK" button on the password popup. */
@@ -64,10 +64,10 @@ password_callback(Widget w _is_unused, XtPointer client_data,
     char *password;
 
     password = XawDialogGetValueString((Widget)client_data);
-    ssl_password = NewString(password);
+    tls_password = NewString(password);
     XtPopdown(password_shell);
 
-    net_password_continue(ssl_password);
+    net_password_continue(tls_password);
 }
 
 /* The password dialog was popped down. */
@@ -76,7 +76,7 @@ password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* If there's no password (they cancelled), don't pop up again. */
-    if (ssl_password == NULL) {
+    if (tls_password == NULL) {
 	/* We might want to do something more sophisticated here. */
 	host_disconnect(true);
     }
@@ -95,7 +95,7 @@ popup_password(void)
     XtVaSetValues(XtNameToWidget(password_shell, ObjDialog),
 	    XtNvalue, "",
 	    NULL);
-    Replace(ssl_password, NULL);
+    Replace(tls_password, NULL);
 
     popup_popup(password_shell, XtGrabExclusive);
 }
@@ -103,8 +103,8 @@ popup_password(void)
 /*
  * Password callback.
  */
-ssl_passwd_ret_t
-ssl_passwd_gui_callback(char *buf, int size, bool again)
+tls_passwd_ret_t
+tls_passwd_gui_callback(char *buf, int size, bool again)
 {
     /* Pop up the dialog. */
     popup_password();

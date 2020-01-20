@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ static void scheme_init(void);
 static void codepages_init(void);
 static void options_menu_init(bool regen, Position x, Position y);
 static void keypad_button_init(Position x, Position y);
-static void ssl_icon_init(Position x, Position y);
+static void tls_icon_init(Position x, Position y);
 static void connect_menu_init(bool regen, Position x, Position y);
 static void macros_menu_init(bool regen, Position x, Position y);
 static void file_menu_init(bool regen, Dimension x, Dimension y);
@@ -421,9 +421,9 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 	    BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 	    TOP_MARGIN);
 
-    /* SSL icon */
+    /* TLS icon */
 
-    ssl_icon_init(
+    tls_icon_init(
 	    (Position) (current_width - LEFT_MARGIN -
 			(ky_width + rescale(8)) -
 			4 * BORDER - 2 * MENU_BORDER - (locked_width + rescale(8))),
@@ -1366,7 +1366,7 @@ keypad_button_init(Position x, Position y)
 }
 
 static void
-ssl_icon_init(Position x, Position y)
+tls_icon_init(Position x, Position y)
 {
     if (!menubar_buttons) {
 	return;
@@ -1423,7 +1423,7 @@ ssl_icon_init(Position x, Position y)
 void
 menubar_resize(Dimension width)
 {
-    ssl_icon_init(
+    tls_icon_init(
 	    (Position) (width - LEFT_MARGIN -
 			    (ky_width + 8) -
 			    4 * BORDER - 2 * MENU_BORDER - (locked_width + 8)),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017, 2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -33,7 +33,6 @@
  */
 
 extern sio_t sio;
-extern bool *ssl_pending;
 extern const char *telquals[];
 
 const char *cmd(int c);

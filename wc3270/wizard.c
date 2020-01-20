@@ -1875,13 +1875,13 @@ tunnel.\n\
 TLS is also known as the Secure Sockets Layer (SSL).");
 
     do {
-	printf("\nUse a TLS tunnel? (y/n) [%s] ", s->ssl? "y" : "n");
+	printf("\nUse a TLS tunnel? (y/n) [%s] ", s->tls? "y" : "n");
 	fflush(stdout);
-	s->ssl = getyn(s->ssl);
-	if (s->ssl == YN_ERR) {
+	s->tls = getyn(s->tls);
+	if (s->tls == YN_ERR) {
 	    return -1;
 	}
-    } while (s->ssl < 0);
+    } while (s->tls < 0);
     return 0;
 }
 
@@ -3017,7 +3017,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		MN_CURSORTYPE, (s->flags & WF_ALTCURSOR)?
 		    "Underscore": "Block");
 	printf("%3d. TLS (SSL) Tunnel ....... : %s\n", MN_TLS,
-		s->ssl? "Yes": "No");
+		s->tls? "Yes": "No");
 	printf("%3d. Verify host certificates : %s", MN_VERIFY,
 		(s->flags2 & WF2_NO_VERIFY_HOST_CERT)? "No": "Yes");
 	fflush(stdout);
@@ -4597,7 +4597,7 @@ write_session_file(const session_t *session, char *us, const char *path)
     if (strcmp(session->host, CHOICE_NONE)) {
 	bracket = (strchr(session->host, ':') != NULL);
 	fprintf(f, "wc3270.%s: ", ResHostname);
-	if (session->ssl) {
+	if (session->tls) {
 	    fprintf(f, "L:");
 	}
 	if (session->luname[0]) {

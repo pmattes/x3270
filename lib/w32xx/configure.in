@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2017 Paul Mattes.
+dnl Copyright (c) 2000-2017, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,12 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(suite3270-lib,3.x)
 AC_PREREQ(2.50)
 
-AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out SSL/TLS support])
-if test "$enable_ssl" = no
-then	WIN_SSL_MODULES=""
-else	WIN_SSL_MODULES=sio_schannel.o
+AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
+if test "$enable_tls" = no
+then	WIN_TLS_MODULES=""
+else	WIN_TLS_MODULES=sio_schannel.o
 fi
-AC_SUBST(WIN_SSL_MODULES)
+AC_SUBST(WIN_TLS_MODULES)
 
 dnl Generate the files.
 AC_CONFIG_FILES(Makefile.obj)

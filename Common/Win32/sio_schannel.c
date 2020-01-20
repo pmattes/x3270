@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,11 +42,12 @@
 #include <security.h>
 #include <sspi.h>
 
+#include "tls_config.h"
+
 #include "indent_s.h"
-#include "ssl_config.h"
 #include "sio.h"
 #include "sioc.h"
-#include "ssl_passwd_gui.h"
+#include "tls_passwd_gui.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -104,7 +105,7 @@ typedef struct {
     char *sendbuf;			/* send buffer */
 } schannel_sio_t;
 
-static ssl_config_t *config;
+static tls_config_t *config;
 static HCERTSTORE my_cert_store;
 
 /* Display the certificate chain. */
@@ -1054,7 +1055,7 @@ sio_supported(void)
  * Create a new context.
  */
 sio_init_ret_t
-sio_init(ssl_config_t *c, const char *password, sio_t *sio_ret)
+sio_init(tls_config_t *c, const char *password, sio_t *sio_ret)
 {
     schannel_sio_t *s;
 
@@ -1697,7 +1698,7 @@ sio_secure_unverified(sio_t sio)
 unsigned
 sio_options_supported(void)
 { 
-    return SSL_OPT_CLIENT_CERT;
+    return TLS_OPT_CLIENT_CERT;
 }
 
 /*

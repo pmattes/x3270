@@ -199,8 +199,8 @@
     <ClCompile Include="..\..\wc3270\screen.c" />
     <ClCompile Include="..\..\wc3270\select.c" />
     <ClCompile Include="..\..\wc3270\shortcut.c" />
-    <ClCompile Include="..\..\Common\c3270\ssl_passwd_gui.c" />
     <ClCompile Include="..\..\Common\c3270\status_dump.c" />
+    <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c" />
     <ClCompile Include="..\..\wc3270\version.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

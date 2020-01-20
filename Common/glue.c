@@ -487,8 +487,8 @@ set_appres_defaults(void)
     appres.local_cp = GetACP();
 #endif /*]*/
 
-    appres.ssl.verify_host_cert = true;
-    appres.ssl.starttls = true;
+    appres.tls.verify_host_cert = true;
+    appres.tls.starttls = true;
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();

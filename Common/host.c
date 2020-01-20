@@ -586,7 +586,7 @@ failure:
     return false;
 }
 
-/* Process a new connection, when it happens after SSL validation. */
+/* Process a new connection, when it happens after TLS validation. */
 void
 host_new_connection(bool pending)
 {

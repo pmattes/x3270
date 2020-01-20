@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ unsigned sio_all_options_supported();
 bool sio_supported(void);
 const char *sio_provider(void);
 unsigned sio_options_supported(void);
-sio_init_ret_t sio_init(ssl_config_t *config, const char *password,
+sio_init_ret_t sio_init(tls_config_t *config, const char *password,
 	sio_t *sio_ret);
 sio_negotiate_ret_t sio_negotiate(sio_t sio, socket_t sock,
 	const char *hostname, bool *data);

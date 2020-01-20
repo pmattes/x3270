@@ -160,7 +160,7 @@ Common/c3270/keypad.outline
 Common/c3270/localdefs.h
 Common/c3270/menubar.c
 Common/c3270/mkkeypad.c
-Common/c3270/ssl_passwd_gui.c
+Common/c3270/tls_passwd_gui.c
 Common/c3270/status_dump.c
 Common/child.c
 Common/childscript.c
@@ -301,7 +301,6 @@ Common/sio_openssl.c
 Common/sio_secure_transport.c
 Common/source.c
 Common/split_host.c
-Common/ssl_passwd_gui_stubs.c
 Common/stats_stubs.c
 Common/status_stubs.c
 Common/stdinscript.c
@@ -312,6 +311,7 @@ Common/telnet.c
 Common/telnet_gui_stubs.c
 Common/telnet_new_environ.c
 Common/telnet_sio.c
+Common/tls_passwd_gui_stubs.c
 Common/toggles.c
 Common/toupper.c
 Common/trace.c
@@ -428,8 +428,6 @@ include/sio_internal.h
 include/sioc.h
 include/source.h
 include/split_host.h
-include/ssl_config.h
-include/ssl_passwd_gui.h
 include/stats.h
 include/status.h
 include/status_dump.h
@@ -442,6 +440,8 @@ include/telnet_gui.h
 include/telnet.h
 include/telnet_private.h
 include/telnet_sio.h
+include/tls_config.h
+include/tls_passwd_gui.h
 include/tn3270e.h
 include/toggles.h
 include/toupper.h

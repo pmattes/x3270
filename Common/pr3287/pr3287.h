@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, 2017, 2019 Paul Mattes.
+ * Copyright (c) 2013-2014, 2017, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  * 	Global declarations.
  */
 
-/* Nested include for ssl_config_t. */
-#include "ssl_config.h"
+/* Nested include for tls_config_t. */
+#include "tls_config.h"
 
 /* Options. */
 typedef struct {
@@ -61,8 +61,8 @@ typedef struct {
 	int reconnect;		/* -reconnect */
 	int skipcc;		/* -skipcc */
 	int mpp;		/* -mpp */
-	bool ssl_host;		/* L: */
-	ssl_config_t ssl;	/* TLS options */
+	bool tls_host;		/* L: */
+	tls_config_t tls;	/* TLS options */
 	int syncport;		/* -syncport */
 	const char *tracedir;	/* where we are tracing (-tracedir) */
 	int tracing;		/* are we tracing? (-trace) */

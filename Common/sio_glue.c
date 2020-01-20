@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 Paul Mattes.
+ * Copyright (c) 2017-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,138 +61,138 @@ typedef struct {
 
 /* Note: These are ordered by bitmap (flag) value, lowest to highest. */
 static flagged_res_t sio_flagged_res[] = {
-    { SSL_OPT_ACCEPT_HOSTNAME,
-	{ ResAcceptHostname, aoffset(ssl.accept_hostname), XRM_STRING } },
-    { SSL_OPT_VERIFY_HOST_CERT,
-	{ ResVerifyHostCert, aoffset(ssl.verify_host_cert), XRM_BOOLEAN } },
-    { SSL_OPT_STARTTLS,
-	{ ResStartTls, aoffset(ssl.starttls), XRM_BOOLEAN } },
-    { SSL_OPT_CA_DIR,
-	{ ResCaDir, aoffset(ssl.ca_dir), XRM_STRING } },
-    { SSL_OPT_CA_FILE,
-	{ ResCaFile, aoffset(ssl.ca_file), XRM_STRING } },
-    { SSL_OPT_CERT_FILE,
-	{ ResCertFile, aoffset(ssl.cert_file), XRM_STRING } },
-    { SSL_OPT_CERT_FILE_TYPE,
-	{ ResCertFileType,aoffset(ssl.cert_file_type), XRM_STRING } },
-    { SSL_OPT_CHAIN_FILE,
-	{ ResChainFile, aoffset(ssl.chain_file), XRM_STRING } },
-    { SSL_OPT_KEY_FILE,
-	{ ResKeyFile, aoffset(ssl.key_file), XRM_STRING } },
-    { SSL_OPT_KEY_FILE_TYPE,
-	{ ResKeyFileType, aoffset(ssl.key_file_type),XRM_STRING } },
-    { SSL_OPT_KEY_PASSWD,
-	{ ResKeyPasswd, aoffset(ssl.key_passwd), XRM_STRING } },
-    { SSL_OPT_CLIENT_CERT,
-	{ ResClientCert, aoffset(ssl.client_cert), XRM_STRING } }
+    { TLS_OPT_ACCEPT_HOSTNAME,
+	{ ResAcceptHostname, aoffset(tls.accept_hostname), XRM_STRING } },
+    { TLS_OPT_VERIFY_HOST_CERT,
+	{ ResVerifyHostCert, aoffset(tls.verify_host_cert), XRM_BOOLEAN } },
+    { TLS_OPT_STARTTLS,
+	{ ResStartTls, aoffset(tls.starttls), XRM_BOOLEAN } },
+    { TLS_OPT_CA_DIR,
+	{ ResCaDir, aoffset(tls.ca_dir), XRM_STRING } },
+    { TLS_OPT_CA_FILE,
+	{ ResCaFile, aoffset(tls.ca_file), XRM_STRING } },
+    { TLS_OPT_CERT_FILE,
+	{ ResCertFile, aoffset(tls.cert_file), XRM_STRING } },
+    { TLS_OPT_CERT_FILE_TYPE,
+	{ ResCertFileType,aoffset(tls.cert_file_type), XRM_STRING } },
+    { TLS_OPT_CHAIN_FILE,
+	{ ResChainFile, aoffset(tls.chain_file), XRM_STRING } },
+    { TLS_OPT_KEY_FILE,
+	{ ResKeyFile, aoffset(tls.key_file), XRM_STRING } },
+    { TLS_OPT_KEY_FILE_TYPE,
+	{ ResKeyFileType, aoffset(tls.key_file_type),XRM_STRING } },
+    { TLS_OPT_KEY_PASSWD,
+	{ ResKeyPasswd, aoffset(tls.key_passwd), XRM_STRING } },
+    { TLS_OPT_CLIENT_CERT,
+	{ ResClientCert, aoffset(tls.client_cert), XRM_STRING } }
 };
 static int n_sio_flagged_res = (int)array_count(sio_flagged_res);
 
 /*
- * Add SSL options.
+ * Add TLS options.
  */
 static void
-add_ssl_opts(void)
+add_tls_opts(void)
 {
     struct {
 	unsigned flag;
 	opt_t opt;
     } flagged_opts[] = {
-	{ SSL_OPT_ACCEPT_HOSTNAME,
+	{ TLS_OPT_ACCEPT_HOSTNAME,
 	    { OptAcceptHostname, OPT_STRING, false, ResAcceptHostname,
-		aoffset(ssl.accept_hostname), "[DNS:]<name>",
+		aoffset(tls.accept_hostname), "[DNS:]<name>",
 		"Host name to accept from server certificate" } },
-	{ SSL_OPT_VERIFY_HOST_CERT,
+	{ TLS_OPT_VERIFY_HOST_CERT,
 	    { OptVerifyHostCert, OPT_BOOLEAN, true, ResVerifyHostCert,
-		aoffset(ssl.verify_host_cert),
+		aoffset(tls.verify_host_cert),
 		NULL, "Enable TLS host certificate validation (set by default)" } },
-	{ SSL_OPT_VERIFY_HOST_CERT,
+	{ TLS_OPT_VERIFY_HOST_CERT,
 	    { OptNoVerifyHostCert, OPT_BOOLEAN, false, ResVerifyHostCert,
-		aoffset(ssl.verify_host_cert),
+		aoffset(tls.verify_host_cert),
 		NULL, "Disable TLS host certificate validation" } },
-	{ SSL_OPT_CA_DIR,
-	    { OptCaDir, OPT_STRING, false, ResCaDir, aoffset(ssl.ca_dir),
+	{ TLS_OPT_CA_DIR,
+	    { OptCaDir, OPT_STRING, false, ResCaDir, aoffset(tls.ca_dir),
 		"<directory>","TLS CA certificate database directory" } },
-	{ SSL_OPT_CA_FILE,
-	    { OptCaFile, OPT_STRING, false, ResCaFile, aoffset(ssl.ca_file),
+	{ TLS_OPT_CA_FILE,
+	    { OptCaFile, OPT_STRING, false, ResCaFile, aoffset(tls.ca_file),
 		"<filename>", "TLS CA certificate file" } },
-	{ SSL_OPT_CERT_FILE,
+	{ TLS_OPT_CERT_FILE,
 	    { OptCertFile, OPT_STRING, false, ResCertFile,
-		aoffset(ssl.cert_file),
+		aoffset(tls.cert_file),
 		"<filename>", "TLS client certificate file" } },
-	{ SSL_OPT_CERT_FILE_TYPE,
+	{ TLS_OPT_CERT_FILE_TYPE,
 	    { OptCertFileType, OPT_STRING, false, ResCertFileType,
-		aoffset(ssl.cert_file_type),
+		aoffset(tls.cert_file_type),
 		"pem|asn1", "TLS client certificate file type" } },
-	{ SSL_OPT_CHAIN_FILE,
+	{ TLS_OPT_CHAIN_FILE,
 	    { OptChainFile,OPT_STRING, false,ResChainFile,
-		aoffset(ssl.chain_file),
+		aoffset(tls.chain_file),
 		"<filename>", "TLS certificate chain file" } },
-	{ SSL_OPT_KEY_FILE,
-	    { OptKeyFile, OPT_STRING, false, ResKeyFile, aoffset(ssl.key_file),
+	{ TLS_OPT_KEY_FILE,
+	    { OptKeyFile, OPT_STRING, false, ResKeyFile, aoffset(tls.key_file),
 		"<filename>", "Get TLS private key from <filename>" } },
-	{ SSL_OPT_KEY_FILE_TYPE,
+	{ TLS_OPT_KEY_FILE_TYPE,
 	    { OptKeyFileType, OPT_STRING, false, ResKeyFileType,
-		aoffset(ssl.key_file_type),
+		aoffset(tls.key_file_type),
 		"pem|asn1", "TLS private key file type" } },
-	{ SSL_OPT_KEY_PASSWD,
+	{ TLS_OPT_KEY_PASSWD,
 	    { OptKeyPasswd,OPT_STRING, false, ResKeyPasswd,
-		aoffset(ssl.key_passwd),
+		aoffset(tls.key_passwd),
 		"file:<filename>|string:<text>",
 		"TLS private key password" } },
-	{ SSL_OPT_CLIENT_CERT,
+	{ TLS_OPT_CLIENT_CERT,
 	    { OptClientCert, OPT_STRING, false, ResClientCert,
-		aoffset(ssl.client_cert),
+		aoffset(tls.client_cert),
 		"<name>", "TLS client certificate name" } }
     };
     int n_opts = (int)array_count(flagged_opts);
-    unsigned n_ssl_opts = 0;
-    opt_t *ssl_opts;
+    unsigned n_tls_opts = 0;
+    opt_t *tls_opts;
     int add_ix = 0;
 
     /* Fetch the list from the implementation. */
     unsigned supported_options = sio_all_options_supported();
 
     /* Match options against the supported ones. */
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
 	    for (j = 0; j < n_opts; j++) {
 		if (flagged_opts[j].flag == opt) {
-		    n_ssl_opts++;
+		    n_tls_opts++;
 		}
 	    }
 	}
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 
-    if (!n_ssl_opts) {
+    if (!n_tls_opts) {
 	return;
     }
 
     /* Construct the list of options to add. */
-    ssl_opts = (opt_t *)Malloc(n_ssl_opts * sizeof(opt_t));
-    FOREACH_SSL_OPTS(opt) {
+    tls_opts = (opt_t *)Malloc(n_tls_opts * sizeof(opt_t));
+    FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
 	    for (j = 0; j < n_opts; j++) {
 		if (flagged_opts[j].flag == opt) {
-		    ssl_opts[add_ix++] = flagged_opts[j].opt; /* struct copy */
+		    tls_opts[add_ix++] = flagged_opts[j].opt; /* struct copy */
 		}
 	    }
 	}
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 
     /* Add them. */
-    register_opts(ssl_opts, n_ssl_opts);
+    register_opts(tls_opts, n_tls_opts);
 }
 
 static void
-add_ssl_resources(void)
+add_tls_resources(void)
 {
-    unsigned n_ssl_res = 0;
-    res_t *ssl_res;
+    unsigned n_tls_res = 0;
+    res_t *tls_res;
     int add_ix = 0;
     int i;
 
@@ -200,41 +200,41 @@ add_ssl_resources(void)
     unsigned supported_options = sio_all_options_supported();
 
     /* Match options against the supported ones. */
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
 	    for (j = 0; j < n_sio_flagged_res; j++) {
 		if (sio_flagged_res[j].flag == opt) {
-		    n_ssl_res++;
+		    n_tls_res++;
 		    break;
 		}
 	    }
 	}
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 
-    if (!n_ssl_res) {
+    if (!n_tls_res) {
 	return;
     }
 
     /* Construct the list of resources to add. */
-    ssl_res = (res_t *)Malloc(n_ssl_res * sizeof(res_t));
+    tls_res = (res_t *)Malloc(n_tls_res * sizeof(res_t));
     i = 0;
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
 
 	    for (j = 0; j < n_sio_flagged_res; j++) {
 		if (sio_flagged_res[j].flag == opt) {
-		    ssl_res[add_ix++] = sio_flagged_res[j].res; /* struct copy */
+		    tls_res[add_ix++] = sio_flagged_res[j].res; /* struct copy */
 		}
 	    }
 	}
 	i++;
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 
     /* Add them. */
-    register_resources(ssl_res, n_ssl_res);
+    register_resources(tls_res, n_tls_res);
 }
 
 /*
@@ -245,12 +245,12 @@ sio_option_name(unsigned option)
 {
     int i = 0;
 
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (option & opt) {
 	    return sio_flagged_res[i].res.name;
 	}
 	i++;
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
     return NULL;
 }
 
@@ -262,12 +262,12 @@ sio_address(unsigned option)
 {
     int i = 0;
 
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (option & opt) {
 	    return sio_flagged_res[i].res.address;
 	}
 	i++;
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
     return NULL;
 }
 
@@ -279,12 +279,12 @@ sio_type(unsigned option)
 {
     int i = 0;
 
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (option & opt) {
 	    return sio_flagged_res[i].res.type;
 	}
 	i++;
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
     return XRM_INT + 1; /* XXX */
 }
 
@@ -296,16 +296,16 @@ sio_toggle_value(const char *name)
 {
     int i = 0;
 
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (!strcasecmp(sio_flagged_res[i].res.name, name)) {
 	    return opt;
 	}
 	i++;
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
     return 0;
 }
 
-/* Translate supported SSL options to a list of names. */
+/* Translate supported TLS options to a list of names. */
 char *
 sio_option_names(void)
 {
@@ -314,7 +314,7 @@ sio_option_names(void)
     char *sep = "";
 
     vb_init(&v);
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (options & opt) {
 	    const char *opt_name = sio_option_name(opt);
 
@@ -323,7 +323,7 @@ sio_option_names(void)
 		sep = " ";
 	    }
 	}
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 
     return lazya(vb_consume(&v));
 }
@@ -342,47 +342,47 @@ sio_toggle(const char *name, const char *value)
     }
 
     switch (sio_toggle_value(name)) {
-    case SSL_OPT_ACCEPT_HOSTNAME:
-	Replace(appres.ssl.accept_hostname, value[0]? NewString(value) : NULL);
+    case TLS_OPT_ACCEPT_HOSTNAME:
+	Replace(appres.tls.accept_hostname, value[0]? NewString(value) : NULL);
 	break;
-    case SSL_OPT_VERIFY_HOST_CERT:
-	if ((errmsg = boolstr(value, &appres.ssl.verify_host_cert)) != NULL) {
+    case TLS_OPT_VERIFY_HOST_CERT:
+	if ((errmsg = boolstr(value, &appres.tls.verify_host_cert)) != NULL) {
 	    popup_an_error("%s %s", name, errmsg);
 	    return false;
 	}
 	break;
-    case SSL_OPT_STARTTLS:
-	if ((errmsg = boolstr(value, &appres.ssl.starttls)) != NULL) {
+    case TLS_OPT_STARTTLS:
+	if ((errmsg = boolstr(value, &appres.tls.starttls)) != NULL) {
 	    popup_an_error("%s %s", name, errmsg);
 	    return false;
 	}
 	break;
-    case SSL_OPT_CA_DIR:
-	Replace(appres.ssl.ca_dir, value[0]? NewString(value): NULL);
+    case TLS_OPT_CA_DIR:
+	Replace(appres.tls.ca_dir, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_CA_FILE:
-	Replace(appres.ssl.ca_file, value[0]? NewString(value): NULL);
+    case TLS_OPT_CA_FILE:
+	Replace(appres.tls.ca_file, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_CERT_FILE:
-	Replace(appres.ssl.cert_file, value[0]? NewString(value): NULL);
+    case TLS_OPT_CERT_FILE:
+	Replace(appres.tls.cert_file, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_CERT_FILE_TYPE:
-	Replace(appres.ssl.cert_file_type, value[0]? NewString(value): NULL);
+    case TLS_OPT_CERT_FILE_TYPE:
+	Replace(appres.tls.cert_file_type, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_CHAIN_FILE:
-	Replace(appres.ssl.chain_file, value[0]? NewString(value): NULL);
+    case TLS_OPT_CHAIN_FILE:
+	Replace(appres.tls.chain_file, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_KEY_FILE:
-	Replace(appres.ssl.key_file, value[0]? NewString(value): NULL);
+    case TLS_OPT_KEY_FILE:
+	Replace(appres.tls.key_file, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_KEY_FILE_TYPE:
-	Replace(appres.ssl.key_file_type, value[0]? NewString(value): NULL);
+    case TLS_OPT_KEY_FILE_TYPE:
+	Replace(appres.tls.key_file_type, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_KEY_PASSWD:
-	Replace(appres.ssl.key_passwd, value[0]? NewString(value): NULL);
+    case TLS_OPT_KEY_PASSWD:
+	Replace(appres.tls.key_passwd, value[0]? NewString(value): NULL);
 	break;
-    case SSL_OPT_CLIENT_CERT:
-	Replace(appres.ssl.client_cert, value[0]? NewString(value): NULL);
+    case TLS_OPT_CLIENT_CERT:
+	Replace(appres.tls.client_cert, value[0]? NewString(value): NULL);
 	break;
     default:
 	popup_an_error("Toggle(%s): Unknown name", name);
@@ -393,20 +393,20 @@ sio_toggle(const char *name, const char *value)
 }
 
 /*
- * Register SSL-specific options and resources.
+ * Register TLS-specific options and resources.
  */
 void
 sio_glue_register(void)
 {
     unsigned supported_options = sio_all_options_supported();
 
-    add_ssl_opts();
-    add_ssl_resources();
+    add_tls_opts();
+    add_tls_resources();
 
-    FOREACH_SSL_OPTS(opt) {
+    FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    register_extended_toggle(sio_option_name(opt), sio_toggle, NULL,
 		    NULL, sio_address(opt), sio_type(opt));
 	}
-    } FOREACH_SSL_OPTS_END(opt);
+    } FOREACH_TLS_OPTS_END(opt);
 }

@@ -203,26 +203,26 @@ static struct option_help {
     char *opt;
     char *args;
     char *help;
-    unsigned ssl_flag;
+    unsigned tls_flag;
 } option_help[] = {
     { OptAcceptHostname, "[DNS:]<name>",
 	"Host name to accept from server certificate",
-	SSL_OPT_ACCEPT_HOSTNAME },
+	TLS_OPT_ACCEPT_HOSTNAME },
     { OptActiveIcon, NULL, "Make icon a miniature of the display" },
     { OptAplMode, NULL,    "Turn on APL mode" },
     { OptCaDir, "<directory>", "TLS CA certificate database directory",
-      SSL_OPT_CA_DIR },
-    { OptCaFile, "<filename>", "TLS CA certificate file", SSL_OPT_CA_FILE },
-    { OptCertFile, "<file>", "TLS certificate file", SSL_OPT_CERT_FILE },
+      TLS_OPT_CA_DIR },
+    { OptCaFile, "<filename>", "TLS CA certificate file", TLS_OPT_CA_FILE },
+    { OptCertFile, "<file>", "TLS certificate file", TLS_OPT_CERT_FILE },
     { OptCertFileType, "pem|asn1", "TLS certificate file type",
-      SSL_OPT_CERT_FILE_TYPE },
+      TLS_OPT_CERT_FILE_TYPE },
     { OptChainFile, "<filename>", "TLS certificate chain file",
-      SSL_OPT_CHAIN_FILE },
+      TLS_OPT_CHAIN_FILE },
     { OptCharClass, "<spec>", "Define characters for word boundaries" },
     { OptCharset, "<name>", "Alias for " OptCodePage },
     { OptClear, "<toggle>", "Turn on <toggle>" },
     { OptClientCert, "<name>", "TLS client certificate name",
-      SSL_OPT_CLIENT_CERT },
+      TLS_OPT_CLIENT_CERT },
     { OptCodePage, "<name>", "Use host EBCDIC code page <name>" },
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
@@ -234,20 +234,20 @@ static struct option_help {
     { OptIconX, "<x>", "X position for icon" },
     { OptIconY, "<y>", "Y position for icon" },
     { OptKeyFile, "<filename>", "Get TLS private key from <filename>",
-      SSL_OPT_KEY_FILE },
+      TLS_OPT_KEY_FILE },
     { OptKeyFileType, "pem|asn1", "TLS private key file type",
-      SSL_OPT_KEY_FILE_TYPE },
+      TLS_OPT_KEY_FILE_TYPE },
     { OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
     { OptKeypadOn, NULL, "Turn on pop-up keypad at start-up" },
     { OptKeyPasswd, "file:<filename>|string:<text>",
-	"TLS private key password", SSL_OPT_KEY_PASSWD },
+	"TLS private key password", TLS_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
     { OptMinVersion, "<version>", "Fail unless at this version or greater" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
     { OptNoScrollBar, NULL, "Disable scroll bar" },
     { OptNoVerifyHostCert, NULL, "Do not verify TLS host certificate",
-	SSL_OPT_VERIFY_HOST_CERT },
+	TLS_OPT_VERIFY_HOST_CERT },
     { OptNvtMode, NULL, "Begin in NVT mode" },
     { OptOnce, NULL, "Exit as soon as the host disconnects" },
     { OptOversize,  "<cols>x<rows>", "Larger screen dimensions" },
@@ -275,7 +275,7 @@ static struct option_help {
     { OptUtf8, NULL, "Force script I/O to use UTF-8" },
     { OptV, NULL, "Display build options and character sets" },
     { OptVerifyHostCert, NULL, "Verify TLS host certificate (enabled by default)",
-	SSL_OPT_VERIFY_HOST_CERT },
+	TLS_OPT_VERIFY_HOST_CERT },
     { OptVersion, NULL, "Display build options and character sets" },
     { "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };
@@ -308,7 +308,7 @@ find_option_help(const char *opt)
 static void
 setup_options(void)
 {
-    unsigned ssl_options = sio_all_options_supported();
+    unsigned tls_options = sio_all_options_supported();
     int i;
     int n_filtered = 0;
 
@@ -319,7 +319,7 @@ setup_options(void)
 	    Error(xs_buffer("Option %s has no help", base_options[i].option));
 	}
 
-	if (!help->ssl_flag || (help->ssl_flag & ssl_options)) {
+	if (!help->tls_flag || (help->tls_flag & tls_options)) {
 	    n_filtered++;
 	}
     }
@@ -336,7 +336,7 @@ setup_options(void)
 	    Error(xs_buffer("Option %s has no help", base_options[i].option));
 	}
 
-	if (!help->ssl_flag || (help->ssl_flag & ssl_options)) {
+	if (!help->tls_flag || (help->tls_flag & tls_options)) {
 	    options[n_filtered++] = base_options[i]; /* struct copy */
 	}
     }
@@ -346,7 +346,7 @@ void
 usage(const char *msg)
 {
     unsigned i;
-    unsigned ssl_options = sio_all_options_supported();
+    unsigned tls_options = sio_all_options_supported();
 
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
@@ -356,8 +356,8 @@ usage(const char *msg)
 	    programname);
     fprintf(stderr, "Options:\n");
     for (i = 0; i < XtNumber(option_help); i++) {
-	if (option_help[i].ssl_flag == 0
-		|| (option_help[i].ssl_flag & ssl_options)) {
+	if (option_help[i].tls_flag == 0
+		|| (option_help[i].tls_flag & tls_options)) {
 	    fprintf(stderr, " %s%s%s\n   %s\n",
 		    option_help[i].opt,
 		    option_help[i].args? " ": "",
@@ -1288,8 +1288,8 @@ copy_xres_to_res_bool(void)
     copy_bool(linemode.inlcr);
     copy_bool(linemode.onlcr);
 
-    copy_bool(ssl.starttls);
-    copy_bool(ssl.verify_host_cert);
+    copy_bool(tls.starttls);
+    copy_bool(tls.verify_host_cert);
 }
 
 /* Child exit callbacks. */

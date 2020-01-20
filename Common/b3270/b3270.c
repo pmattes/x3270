@@ -84,11 +84,11 @@
 #include "sio.h"
 #include "sio_glue.h"
 #include "sio_internal.h"
-#include "ssl_passwd_gui.h"
 #include "stats.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
+#include "tls_passwd_gui.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
@@ -520,7 +520,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /* Handle initial toggle settings. */
     initialize_toggles();
 
-    /* Send SSL set-up */
+    /* Send TLS set-up. */
     ui_vleaf(IndTlsHello,
 	    AttrSupported, ValTrueFalse(sio_supported()),
 	    AttrProvider, sio_provider(),
@@ -850,7 +850,7 @@ b3270_toggle_notify(const char *name, const char *value, ia_t cause)
 }
 
 /**
- * SSL password GUI.
+ * TLS password GUI.
  * @param[out] buf	Returned password
  * @param[in] size	Buffer size
  * @param[in] again	true if this is a re-prompt (old password was bad)
@@ -858,8 +858,8 @@ b3270_toggle_notify(const char *name, const char *value, ia_t cause)
  *  indicate that a prompt was displayed and there is no answer yet,
  *  SP_NOT_SUPPORTED to indicate that password prompting is not supported.
  */
-ssl_passwd_ret_t
-ssl_passwd_gui_callback(char *buf, int size, bool again)
+tls_passwd_ret_t
+tls_passwd_gui_callback(char *buf, int size, bool again)
 {
     if (push_password(again)) {
 	return SP_PENDING;

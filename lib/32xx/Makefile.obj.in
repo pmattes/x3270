@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017, 2020 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ AR = ar
 all: $(LIB32XX)
 
 include lib32xx_files.mk lib32xxu_files.mk
-OBJS = $(LIB32XX_OBJECTS) $(LIB32XXU_OBJECTS) @SSL_MODULES@
+OBJS = $(LIB32XX_OBJECTS) $(LIB32XXU_OBJECTS) @TLS_MODULES@
 
 LIBDIR = @libdir@
 prefix = @prefix@

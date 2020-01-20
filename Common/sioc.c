@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,8 @@
 #include <stdarg.h>
 
 #include "utils.h"
-#include "ssl_config.h"
+#include "tls_config.h"
+
 #include "sio.h"
 #include "sioc.h"
 #include "varbuf.h"
@@ -162,7 +163,7 @@ unsigned
 sio_all_options_supported(void)
 {
     if (sio_supported()) {
-	return SSL_REQUIRED_OPTS | sio_options_supported();
+	return TLS_REQUIRED_OPTS | sio_options_supported();
     } else {
 	return 0;
     }

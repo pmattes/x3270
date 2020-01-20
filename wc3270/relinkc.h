@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, 2014, 2016, 2019 Paul Mattes.
+ * Copyright (c) 2006-2012, 2014, 2016, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ typedef struct {
 	char  host[STR_SIZE];		/* host name */
 	DWORD port;			/* TCP port */
 	char  luname[STR_SIZE];		/* LU name */
-	DWORD ssl;			/* SSL tunnel flag */
+	DWORD tls;			/* TKS tunnel flag */
 	char  proxy_type[STR_SIZE];	/* proxy type */
 	char  proxy_host[STR_SIZE];	/*  proxy host */
 	char  proxy_port[STR_SIZE];	/*  proxy port */
