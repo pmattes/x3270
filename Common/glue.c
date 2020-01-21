@@ -333,7 +333,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.codepage = appres.charset;
     }
     if (appres.codepage == NULL) {
-	appres.codepage = "bracket";
+	appres.codepage = NewString("bracket");
     }
 
     appres.termname = clean_termname(appres.termname);
