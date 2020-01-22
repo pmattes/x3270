@@ -162,6 +162,18 @@ toggle_model_done(bool success)
 	goto fail;
     }
 
+    if (pending_model != NULL && !strcmp(pending_model, appres.model)) {
+	Replace(pending_model, NULL);
+    }
+    if (pending_oversize != NULL &&
+	    appres.oversize != NULL &&
+	    !strcmp(pending_oversize, appres.oversize)) {
+	Replace(pending_oversize, NULL);
+    }
+    if (pending_model == NULL && pending_oversize == NULL) {
+	goto done;
+    }
+
     /* Reconcile simultaneous changes. */
     if (pending_model != NULL) {
 	char *canon = canonical_model_x(pending_model, &model_number,

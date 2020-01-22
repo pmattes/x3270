@@ -289,10 +289,18 @@ b3270_secure(bool ignored)
 static void
 report_terminal_name(void)
 {
-    ui_vleaf(IndTerminalName,
-	    AttrText, termtype,
-	    AttrOverride, ValTrueFalse(appres.termname != NULL),
-	    NULL);
+    static char *last_term_name = NULL;
+    static bool last_override = false;
+
+    if (last_term_name == NULL || strcmp(last_term_name, termtype)
+	    || last_override != (appres.termname != NULL)) {
+	Replace(last_term_name, NewString(termtype));
+	last_override = appres.termname != NULL;
+	ui_vleaf(IndTerminalName,
+		AttrText, last_term_name,
+		AttrOverride, ValTrueFalse(last_override),
+		NULL);
+    }
 }
 
 #if !defined(_WIN32) /*[*/
