@@ -320,6 +320,44 @@ toggle_show(void)
 }
 
 /*
+ * Split x=y into separate arguments.
+ */
+static void
+split_equals(unsigned *argc, const char ***argv)
+{
+    bool left = true;
+    const char **out_argv = (const char **)Calloc((*argc * 2) + 1,
+	    sizeof(char *));
+    int out_ix = 0;
+    unsigned i;
+
+    lazya(out_argv);
+    for (i = 0; i < *argc; i++) {
+	const char *arg = (*argv)[i];
+
+	if (left) {
+	    char *colon = strchr(arg, '=');
+
+	    if (colon == NULL || colon == arg) {
+		out_argv[out_ix++] = arg;
+	    } else {
+		out_argv[out_ix++] = lazyaf("%.*s", (int)(colon - arg), arg);
+		out_argv[out_ix++] = lazya(NewString(colon + 1));
+		left = false;
+	    }
+	} else {
+	    out_argv[out_ix++] = arg;
+	}
+
+	left = !left;
+    }
+
+    out_argv[out_ix] = NULL;
+    *argc = out_ix;
+    *argv = out_argv;
+}
+
+/*
  * Toggle/Set action.
  */
 static bool
@@ -350,8 +388,12 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	return true;
     }
 
-    if (is_toggle_action && check_argc(name, argc, 0, 2) < 0) {
-	/* Toggle() only accepts zero, 1 or 2 parameters. */
+    /* Split arguments along "x=y" boundaries. */
+    split_equals(&argc, &argv);
+
+    if (is_toggle_action && argc > 2) {
+	/* Toggle() can only set one value. */
+	popup_an_error("%s can only set one value", name);
 	return false;
     } else if (!is_toggle_action && argc > 2 && (argc % 2)) {
 	/*
