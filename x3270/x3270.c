@@ -1094,6 +1094,24 @@ name_cmp(const void *p1, const void *p2)
     return strcmp(s1, s2);
 }
 
+/* Double backslashes in a value so it gets past -xrm. */
+static char *
+requote(const char *s)
+{
+    char *ret = Malloc((strlen(s) * 2) + 1);
+    char *r = ret;
+    char c;
+
+    while ((c = *s++) != '\0') {
+	if ((*r++ = c) == '\\') {
+	    *r++ = c;
+	}
+    }
+    *r = '\0';
+    lazya(ret);
+    return ret;
+}
+
 /*
  * Pick out -set and -clear toggle options.
  */
@@ -1176,7 +1194,7 @@ parse_set_clear(int *argcp, char **argv)
 	    if (xt == 1) {
 		argv_out[argc_out++] = "-xrm";
 		argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
-			eq? eq + 1: (is_set? ResTrue: ResFalse));
+			eq? requote(eq + 1): (is_set? ResTrue: ResFalse));
 		found = true;
 	    }
 	}
