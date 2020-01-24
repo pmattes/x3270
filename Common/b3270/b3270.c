@@ -84,6 +84,7 @@
 #include "sio.h"
 #include "sio_glue.h"
 #include "sio_internal.h"
+#include "split_host.h"
 #include "stats.h"
 #include "status.h"
 #include "task.h"
@@ -389,6 +390,15 @@ dump_proxies(void)
     ui_pop();
 }
 
+/* Dump the supported host prefix list. */
+static void
+dump_prefixes(void)
+{
+    ui_vleaf(IndPrefixes,
+	    AttrValue, host_prefixes(),
+	    NULL);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -483,6 +493,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     dump_codepages();
     dump_models();
     dump_proxies();
+    dump_prefixes();
     model_init();
     status_reset();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,33 @@
 #include "split_host.h"
 #include "utils.h"
 
-static char *pfxstr = "AaCcLlNnPpSsBbYyTt";
+static const char *pfxstr = "AaCcLlNnPpSsBbYyTt";
+
+/**
+ * Return the set of host prefixes.
+ *
+ * @returns Set of host prefixes.
+ */
+const char *
+host_prefixes(void)
+{
+    static char *ret = NULL;
+    size_t sl;
+    char *r;
+    size_t i;
+
+    if (ret != NULL) {
+	return ret;
+    }
+
+    sl = strlen(pfxstr);
+    r = ret = Malloc((sl / 2) + 1);
+    for (i = 0; i < sl; i += 2) {
+	*r++ = pfxstr[i];
+    }
+    *r = '\0';
+    return ret;
+}
 
 /**
  * Hostname parser.

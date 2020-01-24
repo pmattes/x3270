@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Paul Mattes.
+ * Copyright (c) 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@
 #define IndModel	"model"
 #define IndOia		"oia"
 #define IndPassthru	"passthru"
+#define IndPrefixes	"prefixes"
 #define IndProxies	"proxies"
 #define IndProxy	"proxy"
 #define IndPopup	"popup"

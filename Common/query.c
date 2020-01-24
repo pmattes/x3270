@@ -42,6 +42,7 @@
 #include "lazya.h"
 #include "popups.h"
 #include "query.h"
+#include "split_host.h"
 #include "telnet.h"
 #include "task.h"
 #include "trace.h"
@@ -330,6 +331,7 @@ query_register(void)
 	{ "LocalEncoding", get_codeset, NULL, false, false },
 	{ "LuName", net_query_lu_name, NULL, false, false },
 	{ "Model", NULL, full_model_name, true, false },
+	{ "Prefixes", host_prefixes, NULL, false, false },
 	{ "Proxy", get_proxy, NULL, false, false },
 	{ "ScreenCurSize", ctlr_query_cur_size_old, NULL, true, false },
 	{ "ScreenMaxSize", ctlr_query_max_size_old, NULL, true, false },
