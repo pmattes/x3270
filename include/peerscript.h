@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018 Paul Mattes.
+ * Copyright (c) 2016, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,3 +39,4 @@ typedef enum {
 peer_listen_t peer_init(struct sockaddr *sa, socklen_t sa_len,
 	peer_listen_mode mode);
 void peer_shutdown(peer_listen_t listener);
+void peer_accepted(socket_t s, void *listener);

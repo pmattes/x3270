@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Paul Mattes.
+ * Copyright (c) 2016-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include "appres.h"
 #include "3270ds.h"
 #include "b3270proto.h"
+#include "bind-opt.h"
 #include "b_password.h"
 #include "lazya.h"
 #include "popups.h"
@@ -137,6 +138,8 @@ static tcb_t cb_ui = {
     NULL
 };
 
+static socket_t ui_socket = INVALID_SOCKET;
+
 /* Write to the UI socket. */
 static void
 uprintf(const char *fmt, ...)
@@ -144,11 +147,16 @@ uprintf(const char *fmt, ...)
     va_list ap;
     char *s;
     static bool eol = true;
+    size_t nw;
 
     va_start(ap, fmt);
     s = xs_vbuffer(fmt, ap);
     va_end(ap);
-    write(fileno(stdout), s, strlen(s));
+    if (ui_socket != INVALID_SOCKET) {
+	nw = send(ui_socket, s, strlen(s), 0);
+    } else {
+	nw = write(fileno(stdout), s, strlen(s));
+    }
 
     if (eol) {
 	vtrace("ui> ");
@@ -159,6 +167,10 @@ uprintf(const char *fmt, ...)
 	eol = true;
     }
     Free(s);
+    if (nw < 0) {
+	vtrace("UI write failure\n");
+	x3270_exit(1);
+    }
 }
 
 /* Dump a string in HTML quoted format, if needed. */
@@ -611,21 +623,29 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     static unsigned char bom_value[BOM_SIZE] = { 0xef, 0xbb, 0xbf };
 
     /* Read the data. */
-#if !defined(_WIN32) /*[*/
-    nr = read(fileno(stdin), buf, INBUF_SIZE);
-#else /*][*/
-    nr = peer_nr;
-    peer_nr = 0;
-    if (nr < 0) {
-	errno = peer_errno;
+    if (ui_socket != INVALID_SOCKET) {
+	nr = recv(ui_socket, buf, INBUF_SIZE, 0);
     } else {
-	memcpy(buf, peer_buf, nr);
-	SetEvent(peer_enable_event);
-    }
+#if !defined(_WIN32) /*[*/
+	nr = read(fileno(stdin), buf, INBUF_SIZE);
+#else /*][*/
+	nr = peer_nr;
+	peer_nr = 0;
+	if (nr < 0) {
+	    errno = peer_errno;
+	} else {
+	    memcpy(buf, peer_buf, nr);
+	    SetEvent(peer_enable_event);
+	}
 #endif /*]*/
+    }
 
     if (nr < 0) {
+#if !defined(_WIN32) /*[*/
 	popup_an_errno(errno, "UI input");
+#else /*][*/
+	popup_an_error("UI input: %s\n", win32_strerror(GetLastError()));
+#endif /*]*/
 	fprintf(stderr, "UI read error\n");
 	x3270_exit(1);
     }
@@ -856,6 +876,35 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
 void
 ui_io_init()
 {
+    /* See if we need to call out or use stdin/stdout. */
+    if (appres.scripting.callback != NULL) {
+	struct sockaddr *sa;
+	socklen_t sa_len;
+
+	if (!parse_bind_opt(appres.scripting.callback, &sa, &sa_len)) {
+	    Error("Cannot parse " ResCallback);
+	}
+	if ((ui_socket = socket(sa->sa_family, SOCK_STREAM, 0))
+		== INVALID_SOCKET) {
+#if !defined(_WIN32) /*[*/
+	    perror("socket");
+#else /*][*/
+	    fprintf(stderr, "socket: %s\n", win32_strerror(WSAGetLastError()));
+	    fflush(stdout);
+#endif /*]*/
+	    exit(1);
+	}
+	if (connect(ui_socket, sa, sa_len) < 0) {
+#if !defined(_WIN32) /*[*/
+	    perror("connect");
+#else /*][*/
+	    fprintf(stderr, "connect: %s\n", win32_strerror(WSAGetLastError()));
+	    fflush(stdout);
+#endif /*]*/
+	    exit(1);
+	}
+    }
+
     /* Create the XML parser. */
     parser = XML_ParserCreate("UTF-8");
     if (parser == NULL) {
@@ -865,23 +914,27 @@ ui_io_init()
     XML_SetCharacterDataHandler(parser, xml_data);
 
 #if !defined(_WIN32) /*[*/
-    AddInput(fileno(stdin), ui_input);
+    AddInput((ui_socket != INVALID_SOCKET)? ui_socket: fileno(stdin), ui_input);
 #else /*][*/
     /* Set up the peer thread. */
-    peer_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    peer_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    peer_thread = CreateThread(NULL,
-	    0,
-	    peer_read,
-	    NULL,
-	    0,
-	    NULL);
-    if (peer_thread == NULL) {
-	popup_an_error("Cannot create peer script thread: %s\n",
-		win32_strerror(GetLastError()));
+    if (ui_socket != INVALID_SOCKET) {
+	AddInput(CreateEvent(NULL, FALSE, FALSE, NULL), ui_input);
+    } else {
+	peer_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	peer_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	peer_thread = CreateThread(NULL,
+		0,
+		peer_read,
+		NULL,
+		0,
+		NULL);
+	if (peer_thread == NULL) {
+	    popup_an_error("Cannot create peer script thread: %s\n",
+		    win32_strerror(GetLastError()));
+	}
+	SetEvent(peer_enable_event);
+	AddInput(peer_done_event, ui_input);
     }
-    SetEvent(peer_enable_event);
-    AddInput(peer_done_event, ui_input);
 #endif /*]*/
 
     /* Start the XML stream. */

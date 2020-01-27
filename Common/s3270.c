@@ -63,6 +63,7 @@
 #include "model.h"
 #include "nvt.h"
 #include "opts.h"
+#include "peerscript.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
@@ -114,6 +115,46 @@ s3270_connect(bool ignored)
 	ctlr_erase(true);
     }
 } 
+
+/**
+ * Set up a callback session.
+ */
+static void
+callback_init(void)
+{
+    struct sockaddr *sa;
+    socklen_t sa_len;
+    socket_t s;
+
+    if (appres.scripting.callback == NULL) {
+	return;
+    }
+
+    if (!parse_bind_opt(appres.scripting.callback, &sa, &sa_len)) {
+	Error("Cannot parse " ResCallback);
+    }
+    if ((s = socket(sa->sa_family, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+#if !defined(_WIN32) /*[*/
+	perror("socket");
+#else /*][*/
+	fprintf(stderr, "socket: %s\n", win32_strerror(WSAGetLastError()));
+	fflush(stdout);
+#endif /*]*/
+	exit(1);
+    }
+    if (connect(s, sa, sa_len) < 0) {
+#if !defined(_WIN32) /*[*/
+	perror(ResCallback " connect");
+#else /*][*/
+	fprintf(stderr, "connect: %s\n", win32_strerror(WSAGetLastError()));
+	fflush(stdout);
+#endif /*]*/
+	exit(1);
+    }
+
+    /* Get ready for I/O. */
+    peer_accepted(s, NULL);
+}
 
 int
 main(int argc, char *argv[])
@@ -208,6 +249,9 @@ main(int argc, char *argv[])
     /* Prepare to run a peer script. */
     peer_script_init();
 
+    /* Prepare a callback session. */
+    callback_init();
+
     /* Process events forever. */
     while (1) {
 	process_events(true);
@@ -254,9 +298,13 @@ s3270_register(void)
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
-	    NULL, "Force local codeset to be UTF-8" }
+	    NULL, "Force local codeset to be UTF-8" },
+	{ OptCallback, OPT_STRING,  false, ResCallback,
+	    aoffset(scripting.callback), NULL, "Callback address and port" },
+
     };
     static res_t s3270_resources[] = {
+	{ ResCallback, aoffset(scripting.callback), XRM_STRING },
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING }

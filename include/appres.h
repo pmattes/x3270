@@ -189,10 +189,10 @@ typedef struct {
 #endif /*]*/
     } c3270;
 
-    /* tcl3270-specific fields. */
+    /* scripting-specific fields. */
     struct {
-	int	 command_timeout;
-    } tcl3270;
+	char	*callback;
+    } scripting;
 
 } AppRes, *AppResptr;
 

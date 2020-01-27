@@ -173,7 +173,7 @@ close_peer(peer_t *p)
     Replace(p->buf, NULL);
     Replace(p->name, NULL);
 
-    if (p->listener->mode == PLM_ONCE) {
+    if (p->listener == NULL || p->listener->mode == PLM_ONCE) {
 	vtrace("once-only socket closed, exiting\n");
 	x3270_exit(0);
     }
@@ -498,10 +498,6 @@ static void
 peer_connection(iosrc_t fd _is_unused, ioid_t id)
 {
     socket_t accept_fd;
-#if defined(_WIN32) /*[*/
-    HANDLE event;
-#endif /*]*/
-    peer_t *p;
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
@@ -572,27 +568,41 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	vtrace("Not closing listener %s (multi mode)\n", listener->desc);
     }
 
-#if !defined(_WIN32) /*[*/
-    fcntl(accept_fd, F_SETFD, 1);
+    /* Allocate the peer state and remember it. */
+    peer_accepted(accept_fd, listener);
+}
+
+/**
+ * Set up for I/O on an accepted peer.
+ *
+ * @param[in] s		Socket
+ * @param[in] listener	Listener, or null
+ */
+void
+peer_accepted(socket_t s, void *listener)
+{
+    peer_t *p = (peer_t *)Calloc(1, sizeof(peer_t));
+#if defined(_WIN32) /*[*/
+    HANDLE event;
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
+    fcntl(s, F_SETFD, 1);
+#else /*][*/
     event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (event == NULL) {
 	fprintf(stderr, "Can't create socket handle\n");
 	exit(1);
     }
-    if (WSAEventSelect(accept_fd, event, FD_READ | FD_CLOSE) != 0) {
+    if (WSAEventSelect(s, event, FD_READ | FD_CLOSE) != 0) {
 	fprintf(stderr, "Can't set socket handle events\n");
 	exit(1);
     }
 #endif /*]*/
 
-    /* Allocate the peer state and remember it. */
-    p = (peer_t *)Calloc(1, sizeof(peer_t));
     llist_init(&p->llist);
     p->listener = listener;
-    p->socket = accept_fd;
+    p->socket = s;
 #if defined(_WIN32) /*[*/
     p->event = event;
     p->id = AddInput(p->event, peer_input);

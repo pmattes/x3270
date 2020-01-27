@@ -747,7 +747,7 @@ peer_script_init(void)
 	appres.scripted = false;
     }
 
-    if (!appres.scripted) {
+    if (!appres.scripted || appres.scripting.callback != NULL) {
 	return;
     }
 

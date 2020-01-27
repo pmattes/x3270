@@ -924,16 +924,19 @@ b3270_register(void)
 	{ "ForceStatus",	ForceStatus_action,	ACTION_HIDDEN },
     };
     static opt_t b3270_opts[] = {
+	{ OptCallback, OPT_STRING,  false, ResCallback,
+	    aoffset(scripting.callback), NULL, "Callback address and port" },
 	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
-	    NULL, "Force local codeset to be UTF-8" }
+	    NULL, "Force local codeset to be UTF-8" },
     };
     static res_t b3270_resources[] = {
+	{ ResCallback,		aoffset(scripting.callback), XRM_STRING },
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
-	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN }
+	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN },
     };
     static xres_t b3270_xresources[] = {
 	{ ResPrintTextScreensPerPage,	V_FLAT },
