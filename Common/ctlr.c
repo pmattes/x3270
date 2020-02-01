@@ -67,6 +67,7 @@
 #include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utils.h"
 
 /* Globals */

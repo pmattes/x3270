@@ -166,6 +166,7 @@
     <ClCompile Include="..\..\Common\readres.c" />
     <ClCompile Include="..\..\Common\Nodisplay/resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
+    <ClCompile Include="..\..\Common\screentrace.c" />
     <ClCompile Include="..\..\Common\sf.c" />
     <ClCompile Include="..\..\Common\task.c" />
     <ClCompile Include="..\..\Common\telnet.c" />

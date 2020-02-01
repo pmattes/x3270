@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2013-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,7 @@
 #include "stmenu.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "xmenubar.h"
 #include "xpopups.h"
 
@@ -224,6 +225,10 @@ init_screentrace_popup(void)
     Widget confirm_button, cancel_button;
     char *d;
     XawTextBlock b;
+
+    /* Get the defaults. */
+    file_flag = trace_get_screentrace_target() == TSS_FILE;
+    stm_ptype = trace_get_screentrace_type();
 
     /* Create the popup. */
     stmenu_shell = XtVaCreatePopupShell(

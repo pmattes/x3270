@@ -283,6 +283,7 @@ Common/run_action.c
 Common/s3270.c
 Common/s3270/localdefs.h
 Common/save_stubs.c
+Common/screentrace.c
 Common/screen_stubs1.c
 Common/screen_stubs2.c
 Common/screen_stubs3.c
@@ -419,6 +420,7 @@ include/rpq.h
 include/s3270_proto.h
 include/save.h
 include/screen.h
+include/screentrace.h
 include/scroll.h
 include/see.h
 include/selectc.h

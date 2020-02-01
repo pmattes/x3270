@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "unicodec.h"
 #include "utils.h"
 

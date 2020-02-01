@@ -46,6 +46,7 @@
 #include "telnet.h"
 #include "task.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"

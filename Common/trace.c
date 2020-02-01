@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "resources.h"
 #include "save.h"
 #include "status.h"
 #include "task.h"
@@ -96,13 +97,6 @@
 
 /* Typedefs */
 
-/* Extended wait screen tracing context. */
-typedef struct {
-    ptype_t ptype;
-    unsigned opts;
-    char *caption;
-} screentrace_t;
-
 /* Statics */
 static size_t   dscnt = 0;
 #if !defined(_WIN32) /*[*/
@@ -115,24 +109,15 @@ static char    *tracef_bufptr = NULL;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = NULL;
-static tss_t	screentrace_how = TSS_FILE;
-static ptype_t	screentrace_ptype = P_TEXT;
-static unsigned	screentrace_opts = 0; /* initialized in register function */
-static tss_t	screentrace_last_how = TSS_FILE;
-static char    *onetime_screentrace_name = NULL;
+
 static void	vwtrace(bool do_ts, const char *fmt, va_list args);
 static void	wtrace(bool do_ts, const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
 static void	stop_tracing(void);
-static char    *screentrace_name = NULL;
-#if defined(_WIN32) /*[*/
-static char    *screentrace_tmpfn;
-#endif /*]*/
-static int 	screentrace_count;
 
 /* Globals */
-bool          trace_skipping = false;
-char		*tracefile_name = NULL;
+bool		trace_skipping = false;
+char	       *tracefile_name = NULL;
 
 /* Statics */
 static bool 	 wrote_ts = false;
@@ -943,352 +928,6 @@ toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
     }
 }
 
-/* Screen trace file support. */
-static FILE *screentracef = NULL;
-static fps_t screentrace_fps = NULL;
-
-/*
- * Screen trace function, called when the host clears the screen.
- */
-static void
-do_screentrace(bool always _is_unused)
-{
-    fps_status_t status;
-
-    status = fprint_screen_body(screentrace_fps);
-    if (FPS_IS_ERROR(status)) {
-	popup_an_error("Screen trace failed");
-    } else if (status == FPS_STATUS_SUCCESS) {
-	vtrace("screentrace: nothing written\n");
-    } else {
-	status_screentrace(++screentrace_count);
-    }
-}
-
-void
-trace_screen(bool is_clear)
-{
-    trace_skipping = false;
-
-    if (!toggled(SCREEN_TRACE) || !screentracef) {
-	return;
-    }
-    do_screentrace(is_clear);
-}
-
-/* Called from NVT emulation code to log a single character. */
-void
-trace_char(char c)
-{
-    if (!toggled(SCREEN_TRACE) || !screentracef) {
-	return;
-    }
-    fputc(c, screentracef);
-}
-
-/*
- * Called when disconnecting in NVT mode, to finish off the trace file
- * and keep the next screen clear from re-recording the screen image.
- * (In a gross violation of data hiding and modularity, trace_skipping is
- * manipulated directly in ctlr_clear()).
- */
-void
-trace_nvt_disc(void)
-{
-    int i;
-
-    fputc('\n', screentracef);
-    for (i = 0; i < COLS; i++) {
-	fputc('=', screentracef);
-    }
-    fputc('\n', screentracef);
-
-    trace_skipping = true;
-}
-
-/*
- * Extended wait continue function for screen tracing.
- */
-static void
-screentrace_continue(void *context, bool cancel)
-{
-    screentrace_t *st = (screentrace_t *)context;
-    int srv;
-
-    if (cancel) {
-	vtrace("Toggle(ScreenTrace) canceled\n");
-	Free(st);
-	return;
-    }
-
-    srv = fprint_screen_start(screentracef, st->ptype,
-	    st->opts | FPS_DIALOG_COMPLETE,
-	    st->caption, screentrace_name, &screentrace_fps, NULL);
-    Free(st);
-    if (FPS_IS_ERROR(srv)) {
-	if (srv == FPS_STATUS_ERROR) {
-	    popup_an_error("Screen trace start failed");
-	} else if (srv == FPS_STATUS_CANCEL) {
-	    vtrace("Screen trace canceled.\n");
-	}
-	fclose(screentracef);
-	screentracef = NULL;
-	return;
-    }
-    if (srv == FPS_STATUS_WAIT) {
-	assert(srv != FPS_STATUS_WAIT);
-	return;
-    }
-
-    /* We're really tracing, turn the flag on. */
-    set_toggle(SCREEN_TRACE, true);
-    menubar_retoggle(SCREEN_TRACE);
-    status_screentrace((screentrace_count = 0));
-}
-
-/*
- * Screen tracing callback.
- * Returns true for success, false for failure.
- */
-static bool
-screentrace_cb(tss_t how, ptype_t ptype, unsigned opts, char *tfn)
-{
-    char *xtfn = NULL;
-    int srv;
-    char *caption = NULL;
-    unsigned full_opts;
-    screentrace_t *st;
-
-    if (how == TSS_FILE) {
-	xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
-	screentracef = fopen(xtfn, "a");
-    } else {
-	/* Printer. */
-#if !defined(_WIN32) /*[*/
-	screentracef = popen(tfn, "w");
-#else /*][*/
-	int fd;
-
-	fd = win_mkstemp(&screentrace_tmpfn, ptype);
-	if (fd < 0) {
-	    popup_an_errno(errno, "%s", "(temporary file)");
-	    Free(tfn);
-	    return false;
-	}
-	screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
-#endif /*]*/
-    }
-    if (screentracef == NULL) {
-	if (how == TSS_FILE) {
-	    popup_an_errno(errno, "%s", xtfn);
-	} else {
-#if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "%s", tfn);
-#else /*][*/
-	    popup_an_errno(errno, "%s", "(temporary file)");
-#endif /*]*/
-	}
-	Free(xtfn);
-#if defined(_WIN32) /*[*/
-	Free(screentrace_tmpfn);
-	screentrace_tmpfn = NULL;
-#endif /*]*/
-	return false;
-    }
-    if (how == TSS_FILE) {
-	Replace(screentrace_name, NewString(xtfn));
-    } else {
-	Replace(screentrace_name, NewString(tfn));
-    }
-    Free(tfn);
-    SETLINEBUF(screentracef);
-#if !defined(_WIN32) /*[*/
-    fcntl(fileno(screentracef), F_SETFD, 1);
-#endif /*]*/
-    st = (screentrace_t *)Calloc(1, sizeof(screentrace_t));
-    caption = default_caption();
-    full_opts = opts | ((how == TSS_PRINTER)? FPS_FF_SEP: 0);
-    srv = fprint_screen_start(screentracef, ptype, full_opts,
-	    caption, screentrace_name, &screentrace_fps, st);
-    if (FPS_IS_ERROR(srv)) {
-	if (srv == FPS_STATUS_ERROR) {
-	    popup_an_error("Screen trace start failed");
-	} else if (srv == FPS_STATUS_CANCEL) {
-	    popup_an_error("Screen trace canceled");
-	}
-	fclose(screentracef);
-	screentracef = NULL;
-	Free(st);
-	return false;
-    }
-    if (srv == FPS_STATUS_WAIT) {
-	/* Asynchronous. */
-	st->ptype = ptype;
-	st->opts = full_opts;
-	st->caption = caption;
-	task_xwait(st, screentrace_continue, "printing");
-	return false; /* for now */
-    }
-
-    /* We're really tracing, turn the flag on. */
-    set_toggle(SCREEN_TRACE, true);
-    menubar_retoggle(SCREEN_TRACE);
-    return true;
-}
-
-/* End the screen trace. */
-static void
-end_screentrace(bool is_final _is_unused)
-{
-    fprint_screen_done(&screentrace_fps);
-    fclose(screentracef);
-    screentracef = NULL;
-
-#if defined(_WIN32) /*[*/
-    vtrace("Cleaning up screenTrace\n");
-    if (screentrace_how == TSS_PRINTER) {
-	if (screentrace_ptype == P_RTF) {
-	    /* Start up WordPad to print the file. */
-	    if (is_final) {
-		start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
-	    } else {
-		start_wordpad_async("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
-	    }
-	} else {
-	    /* Get rid of the temp file. */
-	    unlink(screentrace_tmpfn);
-	}
-    }
-#endif /*]*/
-}
-
-void
-trace_set_screentrace_file(tss_t how, ptype_t ptype, unsigned opts,
-	const char *name)
-{
-	screentrace_how = how;
-	screentrace_ptype = ptype;
-	screentrace_opts = opts;
-    	Replace(onetime_screentrace_name, name? NewString(name): NULL);
-}
-
-tss_t
-trace_get_screentrace_how(void)
-{
-	return screentrace_how;
-}
-
-tss_t
-trace_get_screentrace_last_how(void)
-{
-	return screentrace_last_how;
-}
-
-const char *
-trace_get_screentrace_name(void)
-{
-	return (screentrace_name && screentrace_name[0])? screentrace_name:
-							  "(system default)";
-}
-
-/* Return the default filename for screen tracing. */
-char *
-screentrace_default_file(ptype_t ptype)
-{
-	const char *suffix;
-
-	switch (ptype) {
-	default:
-	case P_TEXT:
-		suffix = "txt";
-		break;
-	case P_HTML:
-		suffix = "html";
-		break;
-	case P_RTF:
-		suffix = "rtf";
-		break;
-	}
-#if defined(_WIN32) /*[*/
-	return xs_buffer("%s%sx3scr.$UNIQUE.%s",
-		appres.trace_dir? appres.trace_dir: default_trace_dir(),
-		appres.trace_dir? "\\": "",
-		suffix);
-#else /*][*/
-	return xs_buffer("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);
-#endif /*]*/
-}
-
-/* Return the default printer for screen tracing. */
-char *
-screentrace_default_printer(void)
-{
-#if defined(_WIN32) /*[*/
-	return NewString("");
-#else /*][*/
-	return NewString("lpr");
-#endif /*]*/
-}
-
-/*
- * Turn screen tracing on or off.
- *
- * If turning it on, screentrace_how contains TSS_FILE or TSS_PRINTER,
- *  and screentrace_name is NULL (use the default) or the name of a
- *  file, printer command (Unix) or printer (Windows).
- */
-static void
-toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
-{
-    char *tracefile_buf = NULL;
-    char *tracefile;
-
-    if (toggled(SCREEN_TRACE)) {
-	/* Turn it on. */
-	status_screentrace((screentrace_count = 0));
-	if (onetime_screentrace_name != NULL) {
-	    tracefile = tracefile_buf = onetime_screentrace_name;
-	    onetime_screentrace_name = NULL;
-	} else if (screentrace_how == TSS_FILE &&
-		appres.screentrace_file != NULL) {
-	    tracefile = appres.screentrace_file;
-	} else {
-	    if (screentrace_how == TSS_FILE) {
-		tracefile = tracefile_buf =
-		    screentrace_default_file(screentrace_ptype);
-	    } else {
-		tracefile = tracefile_buf = screentrace_default_printer();
-	    }
-	}
-	if (!screentrace_cb(screentrace_how, screentrace_ptype,
-		    screentrace_opts, NewString(tracefile))) {
-
-	    set_toggle(SCREEN_TRACE, false);
-	    status_screentrace((screentrace_count = -1));
-	}
-    } else {
-	/* Turn it off. */
-	if (ctlr_any_data() && !trace_skipping) {
-	    do_screentrace(false);
-	}
-	end_screentrace(tt == TT_FINAL);
-	screentrace_last_how = screentrace_how;
-	screentrace_how = TSS_FILE; /* back to the default */
-	screentrace_ptype = P_TEXT; /* back to the default */
-	screentrace_opts = product_has_display()? 0: FPS_NO_DIALOG;
-				    /* back to the default */
-	status_screentrace((screentrace_count = -1));
-    }
-
-    if (tracefile_buf != NULL) {
-	Free(tracefile_buf);
-    }
-
-    trace_gui_toggle();
-}
-
 /**
  * Trace module registration.
  */
@@ -1299,13 +938,7 @@ trace_register(void)
 	{ TRACING,
 	  toggle_tracing,
 	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP },
-	{ SCREEN_TRACE,
-	  toggle_screenTrace,
-	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP }
     };
 
     register_toggles(toggles, array_count(toggles));
-
-    /* Initialize default screentrace flags. */
-    screentrace_opts = product_has_display()? 0: FPS_NO_DIALOG;
 }

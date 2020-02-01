@@ -26,27 +26,20 @@
  */
 
 /*
- *	trace.h
- *		Global declarations for trace.c.
+ *	screentrace.h
+ *		Global declarations for screentrace.c.
  */
 
-typedef enum {
-    TSS_FILE,	/* trace to file */
-    TSS_PRINTER	/* trace to printer */
-} tss_t;
-
-extern bool trace_skipping;
-extern char *tracefile_name;
-extern struct timeval ds_ts;
-
-const char *rcba(int baddr);
-void trace_ds(const char *fmt, ...) printflike(1, 2);
-void vtrace(const char *fmt, ...) printflike(1, 2);
-void ntvtrace(const char *fmt, ...) printflike(1, 2);
-void trace_set_trace_file(const char *path);
-void trace_rollover_check(void);
-void tracefile_ok(const char *tfn);
-#if defined(_WIN32) /*[*/
-const char *default_trace_dir(void);
-#endif
-void trace_register(void);
+char *screentrace_default_file(ptype_t ptype);
+char *screentrace_default_printer(void);
+void screentrace_resource_setup(void);
+void trace_nvt_disc(void);
+void trace_char(char c);
+tss_t trace_get_screentrace_target(void);
+tss_t trace_get_screentrace_last_target(void);
+const char *trace_get_screentrace_name(void);
+ptype_t trace_get_screentrace_type(void);
+void trace_screen(bool is_clear);
+void trace_set_screentrace_file(tss_t target, ptype_t ptype, unsigned opts,
+	const char *name);
+void screentrace_register(void);

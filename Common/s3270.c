@@ -76,6 +76,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utils.h"
 #include "xio.h"
 
@@ -189,6 +190,7 @@ main(int argc, char *argv[])
     s3270_register();
     toggles_register();
     trace_register();
+    screentrace_register();
     xio_register();
     sio_glue_register();
     hio_register();

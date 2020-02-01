@@ -49,6 +49,7 @@
 #include "telnet_core.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utils.h"
 #include "xio.h"
 

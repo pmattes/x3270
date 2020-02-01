@@ -490,6 +490,10 @@ set_appres_defaults(void)
     appres.tls.verify_host_cert = true;
     appres.tls.starttls = true;
 
+#if defined(_WIN32) /*[*/
+    appres.interactive.print_dialog = product_has_display();
+#endif /*]*/
+
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
 }
@@ -1057,11 +1061,16 @@ static res_t base_resources[] = {
     { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
     { ResOversize,	aoffset(oversize),	XRM_STRING },
     { ResPort,	aoffset(port),			XRM_STRING },
+#if defined(_WIN32) /*[*/
+    { ResPrintDialog,	aoffset(interactive.print_dialog), XRM_BOOLEAN },
+#endif /*]*/
     { ResProxy,		aoffset(proxy),		XRM_STRING },
     { ResQrBgColor,	aoffset(qr_bg_color),	XRM_BOOLEAN },
     { ResQuit,		aoffset(linemode.quit),	XRM_STRING },
     { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
-    { ResScreenTraceFile,aoffset(screentrace_file),XRM_STRING },
+    { ResScreenTraceFile,aoffset(screentrace.file),XRM_STRING },
+    { ResScreenTraceTarget,aoffset(screentrace.target),XRM_STRING },
+    { ResScreenTraceType,aoffset(screentrace.type),XRM_STRING },
     { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },

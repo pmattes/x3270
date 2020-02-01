@@ -80,6 +80,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utils.h"
 #include "xactions.h"
 #include "xappres.h"
@@ -480,6 +481,7 @@ main(int argc, char *argv[])
     status_register();
     toggles_register();
     trace_register();
+    screentrace_register();
     x3270_register();
     xio_register();
     hio_register();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Paul Mattes.
+ * Copyright (c) 2010-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,7 @@
 #include "task.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utils.h"
 
 #if defined(_WIN32) /*[*/
@@ -989,7 +990,7 @@ menubar_retoggle(toggle_index_t ix)
     }
     if (ix == SCREEN_TRACE) {
 	if (toggled(SCREEN_TRACE)) {
-	    switch (trace_get_screentrace_how()) {
+	    switch (trace_get_screentrace_target()) {
 	    case TSS_FILE:
 		rename_item(file_menu_items[FM_SCREENTRACE],
 			"Stop Saving Screen Images");

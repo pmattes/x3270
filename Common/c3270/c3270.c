@@ -95,6 +95,7 @@
 #include "telnet_gui.h"
 #include "toggles.h"
 #include "trace.h"
+#include "screentrace.h"
 #include "utf8.h"
 #include "utils.h"
 #include "xio.h"
@@ -521,6 +522,7 @@ main(int argc, char *argv[])
     scroll_register();
     toggles_register();
     trace_register();
+    screentrace_register();
     xio_register();
     sio_glue_register();
     hio_register();

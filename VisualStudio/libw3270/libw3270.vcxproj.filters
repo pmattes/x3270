@@ -102,6 +102,9 @@
     <ClCompile Include="..\..\Common\rpq.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\screentrace.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\sf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

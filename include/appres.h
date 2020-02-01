@@ -78,7 +78,6 @@ typedef struct {
     char	*macros;
     char	*trace_dir;
     char	*trace_file;
-    char	*screentrace_file;
     char	*trace_file_size;
     char	*oversize;
     char	*ft_command;
@@ -137,6 +136,7 @@ typedef struct {
 	int	 save_lines;
 	char	*crosshair_color;
 	char	*console;
+	bool	 print_dialog;	/* Windows only */
     } interactive;
 
     /* File transfer fields. */
@@ -188,6 +188,13 @@ typedef struct {
 	char	*title;
 #endif /*]*/
     } c3270;
+
+    /* screen tracing */
+    struct {
+	char	*file;
+	char	*target;
+	char	*type;
+    } screentrace;
 
     /* scripting-specific fields. */
     struct {
