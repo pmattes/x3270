@@ -312,19 +312,8 @@ end_screentrace(bool is_final _is_unused)
 #if defined(_WIN32) /*[*/
     vtrace("Cleaning up screenTrace\n");
     if (screentrace_current.target == TSS_PRINTER) {
-	if (screentrace_current.ptype == P_RTF) {
-	    /* Start up WordPad to print the file. */
-	    if (is_final) {
-		start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
-	    } else {
-		start_wordpad_async("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
-	    }
-	} else {
-	    /* Get rid of the temp file. */
-	    unlink(screentrace_tmpfn);
-	}
+	/* Get rid of the temp file. */
+	unlink(screentrace_tmpfn);
     }
 #endif /*]*/
 }
@@ -514,16 +503,13 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
  * ScreenTrace(On,File[,Text|Html|Rtf],filename)	 preferred
  * ScreenTrace(On,Printer)
  * ScreenTrace(On,Printer,"print command")	 Unix
- * ScreenTrace(On,Printer[,Gdi[,Dialog]|WordPad],printername) Windows
+ * ScreenTrace(On,Printer[,Gdi[,Dialog|NoDialog]],printername) Windows
  * ScreenTrace(Off)
  */
 static bool
 ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
     bool on = false;
-#if defined(_WIN32) /*[*/
-    bool is_file = false;
-#endif /*]*/
     tss_t how = TSS_FILE;
     ptype_t ptype = P_TEXT;
     const char *name = NULL;
@@ -586,9 +572,6 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (!strcasecmp(argv[px], "File")) {
 	px++;
-#if defined(_WIN32) /*[*/
-	is_file = true;
-#endif /*]*/
 	if (px < argc && !strcasecmp(argv[px], "Text")) {
 	    ptype = P_TEXT;
 	    px++;
@@ -599,22 +582,19 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	    ptype = P_RTF;
 	    px++;
 	}
-    } else if (!strcasecmp(argv[px], "Printer")) {
+    } else if (!strcasecmp(argv[px], "Printer") 
+#if defined(WIN32) /*[*/
+	    || strcasecmp(argv[px], "Gdi")
+#endif /*]*/
+	    ) {
 	px++;
 	how = TSS_PRINTER;
 #if defined(WIN32) /*[*/
 	ptype = P_GDI;
-#endif /*]*/
-    }
-#if defined(_WIN32) /*[*/
-    if (px < argc && !strcasecmp(argv[px], "Gdi")) {
-	if (is_file) {
-	    popup_an_error("ScreenTrace(): Cannot specify 'File' and 'Gdi'.");
-	    return false;
+	if (px < argc && !strcasecmp(argv[px], "Gdi")) {
+	    px++;
 	}
-	px++;
-	how = TSS_PRINTER;
-	ptype = P_GDI;
+#endif /*]*/
 	if (px < argc && !strcasecmp(argv[px], "Dialog")) {
 	    px++;
 	    opts &= ~FPS_NO_DIALOG;
@@ -623,17 +603,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	    px++;
 	    opts |= FPS_NO_DIALOG;
 	}
-    } else if (px < argc && !strcasecmp(argv[px], "WordPad")) {
-	if (is_file) {
-	    popup_an_error("ScreenTrace(): Cannot specify 'File' and "
-		    "'WordPad'.");
-	    return false;
-	}
-	px++;
-	how = TSS_PRINTER;
-	ptype = P_RTF;
     }
-#endif /*]*/
     if (px < argc) {
 	name = argv[px];
 	px++;

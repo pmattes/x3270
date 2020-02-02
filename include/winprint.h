@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Paul Mattes.
+ * Copyright (c) 2013-2015, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,3 @@
  */
 
 int win_mkstemp(char **path, ptype_t ptype);
-void start_wordpad_sync(const char *action_name, const char *filename,
-	const char *printer);
-void start_wordpad_async(const char *action_name, const char *filename,
-	const char *printer);

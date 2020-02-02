@@ -186,7 +186,7 @@ static struct {
         { "PrintText",
 	    "[Modi] [Caption <caption>] "
 #if defined(WC3270) /*[*/
-	    "[Gdi|Wordpad] [NoDialog] [<printer-name>]",
+	    "[Dialog][NoDialog] [<printer-name>]",
 #else /*][*/
 	    "[<print-command>]",
 #endif /*]*/
@@ -210,7 +210,7 @@ static struct {
 	    "Save screen images to file" },
 	{ "ScreenTrace",
 # if defined(_WIN32) /*[*/
-	    "On Printer [Gdi|WordPad] [<printer-name>]",
+	    "On Printer [<printer-name>]",
 # else /*][*/
 	    "On Printer [<print-command>]",
 # endif /*]*/

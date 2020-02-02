@@ -253,7 +253,6 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *            this is the default for wc3270
      *  replace  replace the file
      *  append   append to the file, if it exists (default)
-     *  wordpad  prints via WordPad (wc3270 only)
      *  modi     print modified fields in italics
      *  caption "text"
      *           Adds caption text above the screen
@@ -284,8 +283,6 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 	else if (!strcasecmp(argv[i], "gdi")) {
 	    ptype = P_GDI;
-	} else if (!strcasecmp(argv[i], "wordpad")) {
-	    ptype = P_RTF;
 	} else if (!strcasecmp(argv[i], "nodialog")) {
 	    opts |= FPS_NO_DIALOG;
 	} else if (!strcasecmp(argv[i], "dialog")) {
@@ -486,19 +483,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     print_text_done(f);
 #else /*][*/
     fclose(f);
-    if (ptype == P_RTF) {
-	if (product_has_display()) {
-	    /* Run WordPad to print the file, asynchronusly. */
-	    start_wordpad_async("PrintText", temp_name, name);
-	} else {
-	    /* Run WordPad to print the file, synchronusly. */
-	    start_wordpad_sync("PrintText", temp_name, name);
-	    unlink(temp_name);
-	}
-    } else if (ptype == P_GDI) {
-	/* All done with the temp file. */
-	unlink(temp_name);
-    }
+    unlink(temp_name);
     if (appres.interactive.do_confirms) {
 	popup_an_info("Screen image printing.\n");
     }
