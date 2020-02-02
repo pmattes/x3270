@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1994-2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,8 @@
  */
 
 #include "globals.h"
+
+#include <assert.h>
 
 #include "appres.h"
 #include "3270ds.h"
@@ -340,7 +342,12 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	    rv = FPS_STATUS_WAIT;
 	    break;
 	}
+#else /*][*/
+	assert(ptype != P_GDI);
 #endif /*]*/
+	break;
+    case P_NONE:
+	assert(ptype != P_NONE);
 	break;
     }
 

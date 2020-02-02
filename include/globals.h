@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -410,7 +410,7 @@ typedef uintptr_t ioid_t;
 #define NULL_IOID	0L
 
 /* Screen print types. */
-typedef enum { P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;
+typedef enum { P_NONE, P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;
 
 /* Usage message with error exit. */
 void usage(const char *);

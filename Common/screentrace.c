@@ -407,6 +407,7 @@ screentrace_resource_setup(void)
     }
     done = true;
 
+    screentrace_default.ptype = P_NONE;
     if (appres.screentrace.type != NULL) {
 	if (!strcasecmp(appres.screentrace.type, "text")) {
 	    screentrace_default.ptype = P_TEXT;
@@ -414,10 +415,6 @@ screentrace_resource_setup(void)
 	    screentrace_default.ptype = P_HTML;
 	} else if (!strcasecmp(appres.screentrace.type, "rtf")) {
 	    screentrace_default.ptype = P_RTF;
-#if defined(_WIN32) /*]*/
-	} else if (!strcasecmp(appres.screentrace.type, "gdi")) {
-	    screentrace_default.ptype = P_GDI;
-#endif /*]*/
 	} else {
 	    xs_warning("Unknown %s: %s", ResScreenTraceType,
 		    appres.screentrace.type);
@@ -511,7 +508,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
     bool on = false;
     tss_t how = TSS_FILE;
-    ptype_t ptype = P_TEXT;
+    ptype_t ptype = P_NONE;
     const char *name = NULL;
     unsigned px;
     unsigned opts = screentrace_default.opts;
@@ -519,7 +516,6 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     action_debug("ScreenTrace", ia, argc, argv);
 
     screentrace_resource_setup();
-    ptype = screentrace_default.ptype;
 
     if (argc == 0) {
 	how = trace_get_screentrace_target();
@@ -562,62 +558,79 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     on = true;
-    px = 1;
 
-    if (px >= argc) {
-	/*
-	 * No more parameters. Trace to a file, and generate the name.
-	 */
-	goto toggle_it;
-    }
-    if (!strcasecmp(argv[px], "File")) {
-	px++;
-	if (px < argc && !strcasecmp(argv[px], "Text")) {
+    /* Parse the arguments. */
+    for (px = 1; px < argc; px++) {
+	if (!strcasecmp(argv[px], "File")) {
+	    how = TSS_FILE;
+	} else if (!strcasecmp(argv[px], "Printer")
+#if defined(_WIN32) /*[*/
+		|| !strcasecmp(argv[px], "Gdi")
+#endif /*]*/
+					       ) {
+	    how = TSS_PRINTER;
+	} else if (!strcasecmp(argv[px], "Text")) {
 	    ptype = P_TEXT;
-	    px++;
-	} else if (px < argc && !strcasecmp(argv[px], "Html")) {
+	} else if (!strcasecmp(argv[px], "Html")) {
 	    ptype = P_HTML;
-	    px++;
-	} else if (px < argc && !strcasecmp(argv[px], "Rtf")) {
+	} else if (!strcasecmp(argv[px], "Rtf")) {
 	    ptype = P_RTF;
-	    px++;
-	}
-    } else if (!strcasecmp(argv[px], "Printer") 
-#if defined(WIN32) /*[*/
-	    || strcasecmp(argv[px], "Gdi")
-#endif /*]*/
-	    ) {
-	px++;
-	how = TSS_PRINTER;
-#if defined(WIN32) /*[*/
-	ptype = P_GDI;
-	if (px < argc && !strcasecmp(argv[px], "Gdi")) {
-	    px++;
-	}
-#endif /*]*/
-	if (px < argc && !strcasecmp(argv[px], "Dialog")) {
-	    px++;
+#if defined(_WIN32) /*[*/
+	} else if (!strcasecmp(argv[px], "Dialog")) {
 	    opts &= ~FPS_NO_DIALOG;
-	}
-	if (px < argc && !strcasecmp(argv[px], "NoDialog")) {
-	    px++;
+	} else if (!strcasecmp(argv[px], "NoDialog")) {
 	    opts |= FPS_NO_DIALOG;
+	} else if (!strcasecmp(argv[px], "WordPad")) {
+	    popup_an_error("ScreenTrace(): WordPad printing is not supported");
+	    return false;
+#endif /*]*/
+	} else {
+	    if (name == NULL) {
+		name = argv[px];
+	    } else {
+		popup_an_error("ScreenTrace(): Syntax error");
+		return false;
+	    }
 	}
     }
-    if (px < argc) {
-	name = argv[px];
-	px++;
-    }
-    if (px < argc) {
-	popup_an_error("ScreenTrace(): Too many arguments.");
-	return false;
-    }
-    if (how == TSS_PRINTER && name == NULL) {
+
+    /* Sort them out. */
+    if (how == TSS_PRINTER) {
+	if (ptype != P_NONE) {
+	    popup_an_error("ScreenTrace(): Cannot specify Printer and a type");
+	    return false;
+	}
 #if !defined(_WIN32) /*[*/
-	name = get_resource(ResPrintTextCommand);
+	ptype = P_TEXT;
 #else /*][*/
-	name = get_resource(ResPrinterName);
+	ptype = P_GDI;
 #endif /*]*/
+	if (name == NULL) {
+#if !defined(_WIN32) /*[*/
+	    name = get_resource(ResPrintTextCommand);
+#else /*][*/
+	    name = get_resource(ResPrinterName);
+#endif /*]*/
+	}
+    } else {
+	/* Trace to a file. */
+	if (ptype == P_NONE &&
+		screentrace_default.ptype == P_NONE &&
+		name != NULL) {
+	    size_t sl = strlen(name);
+
+	    /* Infer the type from the suffix. */
+	    if ((sl > 5 && !strcasecmp(name + sl - 5, ".html")) ||
+		(sl > 4 && !strcasecmp(name + sl - 4, ".htm"))) {
+		ptype = P_HTML;
+	    } else if (sl > 4 && !strcasecmp(name + sl - 4, ".rtf")) {
+		ptype = P_RTF;
+	    }
+	}
+	if (ptype == P_NONE) {
+	    ptype = (screentrace_default.ptype != P_NONE)?
+		screentrace_default.ptype: P_TEXT;
+	}
     }
 
 toggle_it:
@@ -628,6 +641,7 @@ toggle_it:
 	do_toggle(SCREEN_TRACE);
     }
     if (on && !toggled(SCREEN_TRACE)) {
+	/* Toggled on. We're done. */
 	return true;
     }
 
