@@ -322,11 +322,26 @@ void
 trace_set_screentrace_file(tss_t target, ptype_t ptype, unsigned opts,
 	const char *name)
 {
+    char *xname;
+
     screentrace_resource_setup();
     screentrace_current.target = target;
     screentrace_current.ptype = ptype;
     screentrace_current.opts = opts;
-    Replace(onetime_screentrace_name, name? NewString(name): NULL);
+
+    if (name != NULL) {
+	char *pct_e;
+
+	if ((pct_e = strstr(name, "%E%")) != NULL) {
+	    xname = xs_buffer("%.*s%s%s",
+		    (int)(pct_e - name), name,
+		    programname,
+		    pct_e + 3);
+	} else {
+	    xname = NewString(name);
+	}
+    }
+    Replace(onetime_screentrace_name, xname);
 }
 
 tss_t

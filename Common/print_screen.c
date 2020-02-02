@@ -46,6 +46,7 @@
 #include "actions.h"
 #include "codepage.h"
 #include "fprint_screen.h"
+#include "lazya.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "print_gui.h"
@@ -411,7 +412,18 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
     } else {
 #if !defined(_WIN32) /*[*/
-	f = popen(name, "w");
+	const char *expanded_name;
+	char *pct_e;
+
+	if ((pct_e = strstr(name, "%E%")) != NULL) {
+	    expanded_name = lazyaf("%.*s%s%s",
+		    (int)(pct_e - name), name,
+		    programname,
+		    pct_e + 3);
+	} else {
+	    expanded_name = name;
+	}
+	f = popen(expanded_name, "w");
 #else /*][*/
 	fd = win_mkstemp(&temp_name, ptype);
 	if (fd < 0) {

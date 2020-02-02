@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2015, Paul Mattes.
+! Copyright (c) 1995-2015, 2020 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 ! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
 ! Printer session commands
-x3270.printTextCommand:			lpr
+x3270.printTextCommand:			lpr -J "%E% screen"
 ! Printer session options
 #ifdef _WIN32
 x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %V% %S% %I% %O% %H%
