@@ -220,7 +220,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     unsigned i;
     const char *name = NULL;
     bool secure = appres.secure;
-    ptype_t ptype = P_TEXT;
+    ptype_t ptype = P_NONE;
     bool use_file = false;
     bool use_string = false;
     bool replace = false;
@@ -292,10 +292,11 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	else if (!strcasecmp(argv[i], "secure")) {
 	    secure = true;
 	} else if (!strcasecmp(argv[i], "command")) {
-	    if ((ptype != P_TEXT) || use_file) {
+	    if ((ptype != P_NONE) || use_file) {
 		popup_an_error("PrintText: contradictory options");
 		return false;
 	    }
+	    ptype = P_TEXT;
 	    i++;
 	    break;
 	} else if (!strcasecmp(argv[i], "string")) {
@@ -337,12 +338,32 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-#if defined(_WIN32) /*[*/
-    /* On Windows, use GDI as the default. */
-    if (!use_string && !use_file && ptype == P_TEXT) {
+    if (!use_string && !use_file) {
+	if (ptype != P_NONE) {
+	    popup_an_error("PrintText: cannot specify printer and type");
+	    return false;
+	}
+#if !defined(_WIN32) /*[*/
+	ptype = P_TEXT;
+#else /*]*/
 	ptype = P_GDI;
-    }
 #endif /*]*/
+    }
+
+    if (ptype == P_NONE && use_file && name != NULL) {
+	size_t sl = strlen(name);
+
+	if ((sl > 5 && !strcasecmp(name + sl - 5, ".html")) ||
+	    (sl > 4 && !strcasecmp(name + sl - 4, ".htm"))) {
+	    ptype = P_HTML;
+	} else if (sl > 4 && !strcasecmp(name + sl - 4, ".rtf")) {
+	    ptype = P_RTF;
+	}
+    }
+
+    if (ptype == P_NONE) {
+	ptype = P_TEXT;
+    }
 
     if (name != NULL && name[0] == '@') {
 	/*
