@@ -49,5 +49,5 @@ typedef bool merge_profile_t(void);
 void register_merge_profile(merge_profile_t *);
 
 /* XtGlue.c */
-void (*Error_redirect)(const char *);
-void (*Warning_redirect)(const char *);
+extern void (*Error_redirect)(const char *);
+extern void (*Warning_redirect)(const char *);
