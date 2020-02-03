@@ -172,5 +172,5 @@ struct font_list {
     struct font_list	*next;
     char		*mlabel;
 };
-struct font_list *font_list;
-int font_count;
+extern struct font_list *font_list;
+extern int font_count;
