@@ -525,7 +525,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     tss_t how = TSS_FILE;
     ptype_t ptype = P_NONE;
     const char *name = NULL;
-    unsigned px;
+    unsigned px = 0;
     unsigned opts = screentrace_default.opts;
 
     action_debug("ScreenTrace", ia, argc, argv);
@@ -561,9 +561,8 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	goto toggle_it;
     }
-    if (strcasecmp(argv[0], "On")) {
-	popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
-	return false;
+    if (!strcasecmp(argv[0], "On")) {
+	px++;
     }
 
     /* Process 'On'. */
@@ -575,7 +574,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     on = true;
 
     /* Parse the arguments. */
-    for (px = 1; px < argc; px++) {
+    for (; px < argc; px++) {
 	if (!strcasecmp(argv[px], "File")) {
 	    how = TSS_FILE;
 	} else if (!strcasecmp(argv[px], "Printer")
@@ -590,6 +589,10 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	    ptype = P_HTML;
 	} else if (!strcasecmp(argv[px], "Rtf")) {
 	    ptype = P_RTF;
+	} else if (!strcasecmp(argv[px], "On") ||
+		!strcasecmp(argv[px], "Off")) {
+	    popup_an_error("ScreenTrace(): Syntax error");
+	    return false;
 #if defined(_WIN32) /*[*/
 	} else if (!strcasecmp(argv[px], "Dialog")) {
 	    opts &= ~FPS_NO_DIALOG;
