@@ -212,6 +212,25 @@ screentrace_continue(void *context, bool cancel)
 }
 
 /*
+ * Extract the type from a filename suffix.
+ */
+static ptype_t
+type_from_file(const char *filename)
+{
+    size_t sl = strlen(filename);
+
+    /* Infer the type from the suffix. */
+    if ((sl > 5 && !strcasecmp(filename + sl - 5, ".html")) ||
+	(sl > 4 && !strcasecmp(filename + sl - 4, ".htm"))) {
+	return P_HTML;
+    } else if (sl > 4 && !strcasecmp(filename + sl - 4, ".rtf")) {
+	return P_RTF;
+    } else {
+	return P_NONE;
+    }
+}
+
+/*
  * Begin screen tracing.
  * Returns true for success, false for failure.
  */
@@ -227,10 +246,39 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
     if (target == TSS_FILE) {
 	xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 	screentracef = fopen(xtfn, "a");
+	if (ptype == P_NONE) {
+	    if (screentrace_default.ptype != P_NONE) {
+		ptype = screentrace_default.ptype;
+	    } else {
+		ptype_t t = type_from_file(xtfn);
+
+		if (t != P_NONE) {
+		    ptype = t;
+		} else {
+		    ptype = P_TEXT;
+		}
+	    }
+	}
     } else {
 	/* Printer. */
 #if !defined(_WIN32) /*[*/
-	screentracef = popen(tfn, "w");
+	char *pct_e;
+
+	if (tfn == NULL) {
+	    tfn = screentrace_default_printer();
+	}
+
+	/* Do %E% substitution. */
+	if ((pct_e = strstr(tfn, "%E%")) != NULL) {
+	    xtfn = xs_buffer("%.*s%s%s",
+		    (int)(pct_e - tfn), tfn,
+		    programname,
+		    pct_e + 3);
+	} else {
+	    xtfn = NewString(tfn);
+	}
+
+	screentracef = popen(xtfn, "w");
 #else /*][*/
 	int fd;
 
@@ -242,13 +290,20 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
 	}
 	screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
 #endif /*]*/
+	if (ptype == P_NONE) {
+#if !defined(_WIN32) /*[*/
+	    ptype = P_TEXT;
+#else /*][*/
+	    ptype = P_GDI;
+#endif /*]*/
+	}
     }
     if (screentracef == NULL) {
 	if (target == TSS_FILE) {
 	    popup_an_errno(errno, "%s", xtfn);
 	} else {
 #if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "%s", tfn);
+	    popup_an_errno(errno, "%s", xtfn);
 #else /*][*/
 	    popup_an_errno(errno, "%s", "(temporary file)");
 #endif /*]*/
@@ -260,11 +315,7 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
 #endif /*]*/
 	return false;
     }
-    if (target == TSS_FILE) {
-	Replace(screentrace_name, NewString(xtfn));
-    } else {
-	Replace(screentrace_name, NewString(tfn));
-    }
+    Replace(screentrace_name, NewString(xtfn)); /* Leak? */
     Free(tfn);
     SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
@@ -322,26 +373,11 @@ void
 trace_set_screentrace_file(tss_t target, ptype_t ptype, unsigned opts,
 	const char *name)
 {
-    char *xname;
-
     screentrace_resource_setup();
     screentrace_current.target = target;
     screentrace_current.ptype = ptype;
     screentrace_current.opts = opts;
-
-    if (name != NULL) {
-	char *pct_e;
-
-	if ((pct_e = strstr(name, "%E%")) != NULL) {
-	    xname = xs_buffer("%.*s%s%s",
-		    (int)(pct_e - name), name,
-		    programname,
-		    pct_e + 3);
-	} else {
-	    xname = NewString(name);
-	}
-    }
-    Replace(onetime_screentrace_name, xname);
+    Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
 tss_t
@@ -404,11 +440,20 @@ screentrace_default_file(ptype_t ptype)
 char *
 screentrace_default_printer(void)
 {
-#if defined(_WIN32) /*[*/
-    return NewString("");
+    char *name;
+
+#if !defined(_WIN32) /*[*/
+    name = get_resource(ResPrintTextCommand);
+    if (name == NULL) {
+	name = "lpr";
+    }
 #else /*][*/
-    return NewString("lpr");
+    name = get_resource(ResPrinterName);
+    if (name == NULL) {
+	name = "";
+    }
 #endif /*]*/
+    return name;
 }
 
 /* Set up screen tracing resources. */
@@ -481,7 +526,8 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 		tracefile = tracefile_buf =
 		    screentrace_default_file(screentrace_current.ptype);
 	    } else {
-		tracefile = tracefile_buf = screentrace_default_printer();
+		tracefile = tracefile_buf =
+		    NewString(screentrace_default_printer());
 	    }
 	}
 	if (!screentrace_go(screentrace_current.target,
@@ -635,14 +681,10 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	if (ptype == P_NONE &&
 		screentrace_default.ptype == P_NONE &&
 		name != NULL) {
-	    size_t sl = strlen(name);
+	    ptype_t t = type_from_file(name);
 
-	    /* Infer the type from the suffix. */
-	    if ((sl > 5 && !strcasecmp(name + sl - 5, ".html")) ||
-		(sl > 4 && !strcasecmp(name + sl - 4, ".htm"))) {
-		ptype = P_HTML;
-	    } else if (sl > 4 && !strcasecmp(name + sl - 4, ".rtf")) {
-		ptype = P_RTF;
+	    if (t != P_NONE) {
+		ptype = t;
 	    }
 	}
 	if (ptype == P_NONE) {
