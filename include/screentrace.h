@@ -36,7 +36,6 @@ void screentrace_resource_setup(void);
 void trace_nvt_disc(void);
 void trace_char(char c);
 tss_t trace_get_screentrace_target(void);
-tss_t trace_get_screentrace_last_target(void);
 const char *trace_get_screentrace_name(void);
 ptype_t trace_get_screentrace_type(void);
 void trace_screen(bool is_clear);

@@ -96,9 +96,6 @@ static screentrace_opts_t screentrace_default = {
 static screentrace_opts_t screentrace_current = {
     TSS_FILE, P_TEXT, 0
 };
-static screentrace_opts_t screentrace_last = {
-    TSS_FILE, P_TEXT, 0
-};
 
 static char    *screentrace_name = NULL;
 #if defined(_WIN32) /*[*/
@@ -387,13 +384,6 @@ trace_get_screentrace_target(void)
     return screentrace_current.target;
 }
 
-tss_t
-trace_get_screentrace_last_target(void)
-{
-    screentrace_resource_setup();
-    return screentrace_last.target;
-}
-
 ptype_t
 trace_get_screentrace_type(void)
 {
@@ -543,7 +533,6 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 	    do_screentrace(false);
 	}
 	end_screentrace(tt == TT_FINAL);
-	screentrace_last = screentrace_current; /* struct copy */
 	screentrace_current = screentrace_default; /* struct copy */
 	status_screentrace((screentrace_count = -1));
     }
@@ -555,120 +544,217 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
     trace_gui_toggle();
 }
 
+static bool
+screentrace_show(bool as_info)
+{
+    char *message;
+
+    if (toggled(SCREEN_TRACE)) {
+	message = xs_buffer("Screen tracing is enabled, %s: %s.",
+		(screentrace_current.target == TSS_FILE)? "file":
+#if !defined(_WIN32) /*[*/
+		"with print command",
+#else /*]*/
+		"to printer",
+#endif /*]*/
+		trace_get_screentrace_name());
+    } else {
+	message = NewString("Screen tracing is disabled.");
+    }
+    if (as_info) {
+	popup_an_info("%s", message);
+    } else {
+	action_output("%s", message);
+    }
+    Free(message);
+    return true;
+}
+
 /*
- * ScreenTrace(On)
- * ScreenTrace(On,filename)			 backwards-compatible
- * ScreenTrace(On,File[,Text|Html|Rtf],filename)	 preferred
- * ScreenTrace(On,Printer)
- * ScreenTrace(On,Printer,"print command")	 Unix
- * ScreenTrace(On,Printer[,Gdi[,Dialog|NoDialog]],printername) Windows
- * ScreenTrace(Off)
+ * Turn screen tracing off.
+ */
+static bool
+screentrace_off(bool as_info)
+{
+    tss_t target;
+    const char *name = NULL;
+    char *message;
+
+    if (!toggled(SCREEN_TRACE)) {
+	popup_an_error("Screen tracing is already disabled.");
+	return false;
+    }
+
+    /* Get the current parameters and turn it off. */
+    target = screentrace_current.target;
+    if (target == TSS_FILE) {
+	name = lazya(NewString(trace_get_screentrace_name()));
+    }
+    do_toggle(SCREEN_TRACE);
+
+    /* Display what it was. */
+    if (target == TSS_FILE) {
+	message = xs_buffer("Screen tracing complete. Trace file is %s.", name);
+    } else {
+	message = NewString("Screen tracing to printer complete.");
+    }
+    if (as_info) {
+	popup_an_info("%s", message);
+    } else {
+	action_output("%s", message);
+    }
+    Free(message);
+
+    return true;
+}
+
+/* Keyword masks. */
+#define STK_ON		0x1
+#define STK_OFF		0x2
+#define STK_INFO	0x4
+#define STK_FILE	0x8
+#define STK_PRINTER	0x10
+#define STK_TEXT	0x20
+#define STK_HTML	0x40
+#define STK_RTF		0x80
+#define STK_GDI		0x100
+#define STK_DIALOG	0x200
+#define STK_NODIALOG	0x400
+#define STK_WORDPAD	0x800
+#define STK_NAME	0x1000
+
+#define STK_TYPES	(STK_TEXT | STK_HTML | STK_RTF)
+#define STK_FILE_SET	(STK_FILE | STK_TYPES)
+#define STK_PRINTER_SET (STK_PRINTER | STK_GDI | STK_DIALOG | STK_NODIALOG | \
+			    STK_WORDPAD)
+
+/* Keyword database. */
+typedef struct {
+    const char *keyword;
+    unsigned mask;
+    unsigned mutex;
+} stk_t;
+stk_t stk[] = {
+    { "On",	STK_ON,		STK_ON | STK_OFF },
+    { "Off",	STK_OFF,	STK_OFF | STK_ON | STK_FILE_SET |
+				    STK_PRINTER_SET },
+    { "Info",	STK_INFO,	STK_INFO },
+    { "File",	STK_FILE,	STK_FILE | STK_OFF | STK_PRINTER_SET },
+    { "Printer", STK_PRINTER,	STK_PRINTER | STK_OFF | STK_FILE_SET },
+    { "Text",	STK_TEXT,	STK_TEXT | STK_OFF | STK_TYPES |
+				    STK_PRINTER_SET },
+    { "Html",	STK_HTML,	STK_HTML | STK_OFF | STK_TYPES |
+				    STK_PRINTER_SET },
+    { "Rtf",	STK_RTF,	STK_RTF | STK_OFF | STK_TYPES |
+				    STK_PRINTER_SET },
+#if defined(WIN32) /*[*/
+    { "Gdi",	STK_GDI,	STK_GDI | STK_OFF | STK_FILE_SET },
+    { "Dialog",	STK_DIALOG,	STK_DIALOG | STK_OFF | STK_NODIALOG |
+				    STK_FILE_SET },
+    { "NoDialog", STK_NODIALOG,	STK_NODIALOG | STK_OFF | STK_DIALOG |
+				    STK_FILE_SET },
+    { "WordPad", STK_WORDPAD,	STK_WORDPAD | STK_OFF | STK_FILE_SET },
+#endif /*]*/
+    { "(name)",	STK_NAME,	STK_NAME | STK_OFF },
+    { NULL, 0, 0 },
+};
+
+/* Return the first keyword present in the mask. */
+const char *
+stk_name(unsigned mask)
+{
+    int i;
+
+    for (i = 0; stk[i].keyword != NULL; i++) {
+	if (mask & stk[i].mask) {
+	    return stk[i].keyword;
+	}
+    }
+    return "(none)";
+}
+
+/*
+ * ScreenTrace()
+ * ScreenTrace(On[,Info])
+ * ScreenTrace(On[,Info],filename)			 backwards-compatible
+ * ScreenTrace(On[,Info],File[,Text|Html|Rtf],filename)	 preferred
+ * ScreenTrace(On[,Info],Printer)
+ * ScreenTrace(On[,Info],Printer,"print command")	 Unix
+ * ScreenTrace(On[,Info],Printer[,Gdi[,Dialog|NoDialog]],printername) Windows
+ * ScreenTrace(Off[,Info])
  */
 static bool
 ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool on = false;
-    tss_t how = TSS_FILE;
+    tss_t target = TSS_FILE;
     ptype_t ptype = P_NONE;
     const char *name = NULL;
-    unsigned px = 0;
+    unsigned i;
+    int kx;
     unsigned opts = screentrace_default.opts;
+    bool as_info = false;
+    unsigned kw_mask = 0;
 
     action_debug("ScreenTrace", ia, argc, argv);
 
     screentrace_resource_setup();
 
     if (argc == 0) {
-	how = trace_get_screentrace_target();
-	if (toggled(SCREEN_TRACE)) {
-	    action_output("Screen tracing is enabled, %s \"%s\".",
-		    (how == TSS_FILE)? "file":
-#if !defined(_WIN32) /*[*/
-		    "with print command",
-#else /*]*/
-		    "to printer",
-#endif /*]*/
-		    trace_get_screentrace_name());
-	} else {
-	    action_output("Screen tracing is disabled.");
-	}
-	return true;
+	/* Display current status. */
+	return screentrace_show(as_info);
     }
-
-    if (!strcasecmp(argv[0], "Off")) {
-	if (!toggled(SCREEN_TRACE)) {
-	    popup_an_error("Screen tracing is already disabled.");
-	    return false;
-	}
-	on = false;
-	if (argc > 1) {
-	    popup_an_error("ScreenTrace(): Too many arguments for 'Off'");
-	    return false;
-	}
-	goto toggle_it;
-    }
-    if (!strcasecmp(argv[0], "On")) {
-	px++;
-    }
-
-    /* Process 'On'. */
-    if (toggled(SCREEN_TRACE)) {
-	popup_an_error("Screen tracing is already enabled.");
-	return true;
-    }
-
-    on = true;
 
     /* Parse the arguments. */
-    for (; px < argc; px++) {
-	if (!strcasecmp(argv[px], "File")) {
-	    how = TSS_FILE;
-	} else if (!strcasecmp(argv[px], "Printer")
-#if defined(_WIN32) /*[*/
-		|| !strcasecmp(argv[px], "Gdi")
-#endif /*]*/
-					       ) {
-	    how = TSS_PRINTER;
-	} else if (!strcasecmp(argv[px], "Text")) {
-	    ptype = P_TEXT;
-	} else if (!strcasecmp(argv[px], "Html")) {
-	    ptype = P_HTML;
-	} else if (!strcasecmp(argv[px], "Rtf")) {
-	    ptype = P_RTF;
-	} else if (!strcasecmp(argv[px], "On") ||
-		!strcasecmp(argv[px], "Off")) {
+    for (i = 0; i < argc; i++) {
+	for (kx = 0; stk[kx].keyword != NULL; kx++) {
+	    if ((stk[kx].mask != STK_NAME &&
+			!strcasecmp(argv[i], stk[kx].keyword))
+		    || (i == argc - 1 && stk[kx].mask == STK_NAME)) {
+		unsigned bad_match = kw_mask & stk[kx].mutex;
+
+		if (bad_match) {
+		    popup_an_error("ScreenTrace(): Keyword conflict (%s, %s)",
+			    stk_name(bad_match), stk[kx].keyword);
+		    return false;
+		}
+
+		kw_mask |= stk[kx].mask;
+		if (stk[kx].mask == STK_NAME) {
+		    name = argv[i];
+		}
+		break;
+	    }
+	}
+	if (stk[kx].keyword == NULL) {
 	    popup_an_error("ScreenTrace(): Syntax error");
 	    return false;
-#if defined(_WIN32) /*[*/
-	} else if (!strcasecmp(argv[px], "Dialog")) {
-	    opts &= ~FPS_NO_DIALOG;
-	} else if (!strcasecmp(argv[px], "NoDialog")) {
-	    opts |= FPS_NO_DIALOG;
-	} else if (!strcasecmp(argv[px], "WordPad")) {
-	    popup_an_error("ScreenTrace(): WordPad printing is not supported");
-	    return false;
-#endif /*]*/
-	} else {
-	    if (name == NULL) {
-		name = argv[px];
-	    } else {
-		popup_an_error("ScreenTrace(): Syntax error");
-		return false;
-	    }
 	}
     }
 
-    /* Sort them out. */
-    if (how == TSS_PRINTER) {
-	if (ptype != P_NONE) {
-	    popup_an_error("ScreenTrace(): Cannot specify Printer and a type");
+    /* Sort them out. Conflicts have already been caught. */
+    if (kw_mask & STK_INFO) {
+	as_info = true;
+    }
+    if (kw_mask & STK_OFF) {
+	return screentrace_off(as_info);
+    }
+    if (kw_mask & (STK_PRINTER | STK_GDI | STK_DIALOG | STK_NODIALOG)) {
+	/* Send to printer. */
+	if (kw_mask & STK_WORDPAD) {
+	    popup_an_error("ScreenTrace(): WordPad printing is not supported");
 	    return false;
 	}
+	target = TSS_PRINTER;
 #if !defined(_WIN32) /*[*/
 	ptype = P_TEXT;
 #else /*][*/
 	ptype = P_GDI;
 #endif /*]*/
+	if (kw_mask & STK_DIALOG) {
+	    opts |= FPS_NO_DIALOG;
+	} else if (kw_mask & STK_NODIALOG) {
+	    opts &= ~FPS_NO_DIALOG;
+	}
 	if (name == NULL) {
 #if !defined(_WIN32) /*[*/
 	    name = get_resource(ResPrintTextCommand);
@@ -677,10 +763,15 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 	}
     } else {
-	/* Trace to a file. */
-	if (ptype == P_NONE &&
-		screentrace_default.ptype == P_NONE &&
-		name != NULL) {
+	/* Send to a file. */
+	target = TSS_FILE;
+	if (kw_mask & STK_TEXT) {
+	    ptype = P_TEXT;
+	} else if (kw_mask & STK_HTML) {
+	    ptype = P_HTML;
+	} else if (kw_mask & STK_RTF) {
+	    ptype = P_RTF;
+	} else if (screentrace_default.ptype == P_NONE && name != NULL) {
 	    ptype_t t = type_from_file(name);
 
 	    if (t != P_NONE) {
@@ -693,51 +784,22 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
-toggle_it:
-    if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
-	if (on) {
-	    trace_set_screentrace_file(how, ptype, opts, name);
-	}
-	do_toggle(SCREEN_TRACE);
-    }
-    if (on && !toggled(SCREEN_TRACE)) {
-	/* Toggled on. We're done. */
-	return true;
+    if (toggled(SCREEN_TRACE)) {
+	popup_an_error("Screen tracing is already enabled.");
+	return false;
     }
 
-    name = trace_get_screentrace_name();
-    if (name != NULL) {
-	if (on) {
-	    if (how == TSS_FILE) {
-		if (ia_cause == IA_COMMAND) {
-		    action_output("Trace file is %s.", name);
-		} else {
-		    popup_an_info("Trace file is %s.", name);
-		}
-	    } else {
-		if (ia_cause == IA_COMMAND) {
-		    action_output("Tracing to printer.");
-		} else {
-		    popup_an_info("Tracing to printer.");
-		}
-	    }
-	} else {
-	    if (trace_get_screentrace_last_target() == TSS_FILE) {
-		if (ia_cause == IA_COMMAND) {
-		    action_output("Tracing complete. Trace file is %s.", name);
-		} else {
-		    popup_an_info("Tracing complete. Trace file is %s.", name);
-		}
-	    } else {
-		if (ia_cause == IA_COMMAND) {
-		    action_output("Tracing to printer complete.");
-		} else {
-		    popup_an_info("Tracing to printer complete.");
-		}
-	    }
-	}
+    /* Attempt to turn on tracing. */
+    trace_set_screentrace_file(target, ptype, opts, name);
+    do_toggle(SCREEN_TRACE);
+
+    if (!toggled(SCREEN_TRACE)) {
+	/* Failed to turn it on. */
+	return false;
     }
-    return true;
+
+    /* Display the result. */
+    return screentrace_show(as_info);
 }
 
 /**

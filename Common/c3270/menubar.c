@@ -702,9 +702,9 @@ static void
 fm_screentrace(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)");
+	push_macro("ScreenTrace(off,info)");
     } else {
-	push_macro("ScreenTrace(on)");
+	push_macro("ScreenTrace(on,info)");
     }
 }
 
@@ -712,9 +712,9 @@ static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)");
+	push_macro("ScreenTrace(off,info)");
     } else {
-	push_macro("ScreenTrace(on,printer,gdi)");
+	push_macro("ScreenTrace(on,info,printer)");
     }
 }
 
