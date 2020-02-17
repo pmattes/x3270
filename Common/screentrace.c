@@ -627,6 +627,7 @@ screentrace_off(bool as_info)
 #define STK_FILE_SET	(STK_FILE | STK_TYPES)
 #define STK_PRINTER_SET (STK_PRINTER | STK_GDI | STK_DIALOG | STK_NODIALOG | \
 			    STK_WORDPAD)
+#define STK_WINDOWS	(STK_GDI | STK_DIALOG | STK_NODIALOG | STK_WORDPAD)
 
 /* Keyword database. */
 typedef struct {
@@ -647,14 +648,12 @@ stk_t stk[] = {
 				    STK_PRINTER_SET },
     { "Rtf",	STK_RTF,	STK_RTF | STK_OFF | STK_TYPES |
 				    STK_PRINTER_SET },
-#if defined(WIN32) /*[*/
     { "Gdi",	STK_GDI,	STK_GDI | STK_OFF | STK_FILE_SET },
     { "Dialog",	STK_DIALOG,	STK_DIALOG | STK_OFF | STK_NODIALOG |
 				    STK_FILE_SET },
     { "NoDialog", STK_NODIALOG,	STK_NODIALOG | STK_OFF | STK_DIALOG |
 				    STK_FILE_SET },
     { "WordPad", STK_WORDPAD,	STK_WORDPAD | STK_OFF | STK_FILE_SET },
-#endif /*]*/
     { "(name)",	STK_NAME,	STK_NAME | STK_OFF },
     { NULL, 0, 0 },
 };
@@ -718,10 +717,19 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 		    return false;
 		}
 
+#if !defined(_WIN32) /*[*/
+		if (stk[kx].mask & STK_WINDOWS) {
+		    popup_an_error("ScreenTrace(): %s is for Windows only",
+			    stk[kx].keyword);
+		    return false;
+		}
+#endif /*]*/
+
 		kw_mask |= stk[kx].mask;
 		if (stk[kx].mask == STK_NAME) {
 		    name = argv[i];
 		}
+
 		break;
 	    }
 	}
