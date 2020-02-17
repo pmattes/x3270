@@ -2003,7 +2003,7 @@ screen_disp(bool erasing _is_unused)
 			addch(ea_buf[baddr].ucs4);
 			cur_attr &= ~COMMON_LVB_LEAD_BYTE;
 			cur_attr |= COMMON_LVB_TRAILING_BYTE;
-			addch(' ');
+			addch(ea_buf[baddr].ucs4);
 			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		    } else if (!IS_RIGHT(d)) {
 			if (u == ' ' && in_focus && toggled(CROSSHAIR)) {
@@ -2045,7 +2045,7 @@ screen_disp(bool erasing _is_unused)
 			    addch(u);
 			    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
 			    cur_attr |= COMMON_LVB_TRAILING_BYTE;
-			    addch(' ');
+			    addch(u);
 			    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 			}
 		    } else if (!IS_RIGHT(d)) {
