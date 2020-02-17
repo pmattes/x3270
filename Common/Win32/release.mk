@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2016, 2018-2019 Paul Mattes.
+# Copyright (c) 1995-2016, 2018-2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ SIGNFILES = $(SIGNFILES32) $(SIGNFILES64)
 BUILDFILES = $(shell awk '/\.exe/ { print $$3 }' *-64.zipit | sed -e 's/.exe//' -e 's/^[^w]/w&/')
 
 # Set the certificate file path.
-CERT = z:\\hd\xfer\Cert2019.p12
+CERT = z:\\hd\xfer\Cert2020.p12
 
 # How to sign files.
 sign-files:

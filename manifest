@@ -989,10 +989,10 @@ x3270/resources.inc
 x3270/save.c
 x3270/screen.c
 x3270/select.c
-x3270/ssl_passwd_gui.c
 x3270/status.c
 x3270/stmenu.c
 x3270/stmenu.h
+x3270/tls_passwd_gui.c
 x3270/trace_gui.c
 x3270/unlocked.bm
 x3270/version.txt
