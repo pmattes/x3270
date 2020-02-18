@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270\mkicon.c">
+    <ClCompile Include="..\..\Common\mkicon.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

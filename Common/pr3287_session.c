@@ -77,12 +77,12 @@ static HANDLE	pr3287_handle = NULL;
 #endif /*]*/
 static ioid_t	pr3287_id = NULL_IOID;
 static enum {
-    PS_NONE,		/* no printer session */
-    PS_DELAY,		/* delay before (re)starting pr3287 */
-    PS_RUNNING,		/* pr3287 process running */
-    PS_SHUTDOWN,		/* pr3287 graceful shutdown requested */
-    PS_TERMINATING	/* pr3287 forcible termination requested */
-} pr3287_state = PS_NONE;
+    PRS_NONE,		/* no printer session */
+    PRS_DELAY,		/* delay before (re)starting pr3287 */
+    PRS_RUNNING,		/* pr3287 process running */
+    PRS_SHUTDOWN,		/* pr3287 graceful shutdown requested */
+    PRS_TERMINATING	/* pr3287 forcible termination requested */
+} pr3287_state = PRS_NONE;
 static socket_t	pr3287_ls = INVALID_SOCKET;	/* printer sync listening socket */
 static ioid_t	pr3287_ls_id = NULL_IOID; /* input ID */
 #if defined(_WIN32) /*[*/
@@ -206,7 +206,7 @@ pr3287_reap_now(void)
     char *stderr_text;
 #endif /*]*/
 
-    assert(pr3287_state == PS_TERMINATING);
+    assert(pr3287_state == PRS_TERMINATING);
 
     vtrace("Waiting for old printer session to exit.\n");
 #if !defined(_WIN32) /*[*/
@@ -254,7 +254,7 @@ pr3287_reap_now(void)
 #endif /*]*/
 
     vtrace("Old printer session exited.\n");
-    pr3287_state = PS_NONE;
+    pr3287_state = PRS_NONE;
     st_changed(ST_PRINTER, false);
 }
 
@@ -262,12 +262,12 @@ pr3287_reap_now(void)
 static void
 delayed_start(ioid_t id _is_unused)
 {
-    assert(pr3287_state == PS_DELAY);
+    assert(pr3287_state == PRS_DELAY);
 
     vtrace("Printer session start delay complete.\n");
 
     /* Start the printer. */
-    pr3287_state = PS_NONE;
+    pr3287_state = PRS_NONE;
     assert(pr3287_delay_lu != NULL);
     pr3287_start_now(pr3287_delay_lu, pr3287_delay_associated);
 
@@ -318,7 +318,7 @@ pr3287_session_start(const char *lu)
 
     /* Can't start two. */
     switch (pr3287_state) {
-    case PS_NONE:
+    case PRS_NONE:
 	/*
 	 * Remember what was requested, and set a timeout to start the
 	 * new session.
@@ -326,15 +326,15 @@ pr3287_session_start(const char *lu)
 	vtrace("Delaying printer session start %dms.\n", PRINTER_DELAY_MS);
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
-	pr3287_state = PS_DELAY;
+	pr3287_state = PRS_DELAY;
 	pr3287_delay_id = AddTimeOut(PRINTER_DELAY_MS, delayed_start);
 	break;
-    case PS_DELAY:
-    case PS_RUNNING:
+    case PRS_DELAY:
+    case PRS_RUNNING:
 	/* Redundant start request. */
 	popup_an_error("Printer is already started or running");
 	return;
-    case PS_SHUTDOWN:
+    case PRS_SHUTDOWN:
 	/*
 	 * Remember what was requested, and let the state change or
 	 * timeout functions start the new session.
@@ -348,7 +348,7 @@ pr3287_session_start(const char *lu)
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
 	return;
-    case PS_TERMINATING:
+    case PRS_TERMINATING:
 	/* Collect the exit status now and start the new session. */
 	pr3287_reap_now();
 	pr3287_start_now(lu, pr3287_associated);
@@ -424,7 +424,7 @@ pr3287_start_now(const char *lu, bool associated)
     char *syncopt;
     varbuf_t r;
 
-    assert(pr3287_state == PS_NONE);
+    assert(pr3287_state == PRS_NONE);
 
     /* Select the command line to use. */
     if (associated) {
@@ -776,7 +776,7 @@ done:
 
     /* Tell everyone else. */
     if (success) {
-	pr3287_state = PS_RUNNING;
+	pr3287_state = PRS_RUNNING;
 	Replace(pr3287_running_lu, associated? NewString("."): NewString(lu));
 	st_changed(ST_PRINTER, true);
     }
@@ -929,7 +929,7 @@ static void
 pr3287_sync_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     vtrace("Input or EOF on printer sync socket.\n");
-    assert(pr3287_state >= PS_RUNNING);
+    assert(pr3287_state >= PRS_RUNNING);
 
     /*
      * We don't do anything at this point, besides clean up the state
@@ -974,7 +974,7 @@ pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
     socklen_t len = sizeof(sin);
 
     /* Accept the connection. */
-    assert(pr3287_state == PS_RUNNING);
+    assert(pr3287_state == PRS_RUNNING);
     pr3287_sync = accept(pr3287_ls, (struct sockaddr *)&sin, &len);
     if (pr3287_sync == INVALID_SOCKET) {
 	popup_a_sockerr("accept(printer sync)");
@@ -1079,7 +1079,7 @@ pr3287_session_check(
     DWORD exit_code;
 #endif /*]*/
 
-    if (pr3287_state == PS_NONE) {
+    if (pr3287_state == PRS_NONE) {
 	return;
     }
 
@@ -1092,7 +1092,7 @@ pr3287_session_check(
      * If we didn't stop it on purpose, decode and display the printer's
      * exit status.
      */
-    if (pr3287_state == PS_RUNNING) {
+    if (pr3287_state == PRS_RUNNING) {
 	if (WIFEXITED(status)) {
 	    popup_an_error("Printer process exited with status %d",
 		    WEXITSTATUS(status));
@@ -1121,7 +1121,7 @@ pr3287_session_check(
 	CloseHandle(pr3287_stderr_rd);
 	pr3287_stderr_rd = NULL;
 
-	if (pr3287_state == PS_RUNNING) {
+	if (pr3287_state == PRS_RUNNING) {
 	    popup_printer_output(true, NULL,
 		    "%s%sPrinter process exited with status 0x%lx",
 		    (stderr_text != NULL)? stderr_text: "",
@@ -1142,11 +1142,11 @@ pr3287_session_check(
     vtrace("Printer session exited.\n");
 
     /* Stop any pending printer kill request. */
-    if (pr3287_state == PS_SHUTDOWN) {
+    if (pr3287_state == PRS_SHUTDOWN) {
 	assert(pr3287_kill_id != NULL_IOID);
 	RemoveTimeOut(pr3287_kill_id);
 	pr3287_kill_id = NULL_IOID;
-	pr3287_state = PS_NONE;
+	pr3287_state = PRS_NONE;
     }
 
     /* No need for sync input any more. */
@@ -1170,7 +1170,7 @@ pr3287_session_check(
     /* Clean up I/O. */
     pr3287_cleanup_io();
 
-    pr3287_state = PS_NONE;
+    pr3287_state = PRS_NONE;
 
     /* Propagate the state. */
     st_changed(ST_PRINTER, false);
@@ -1180,7 +1180,7 @@ pr3287_session_check(
      * start it.
      */
     if (pr3287_delay_lu != NULL) {
-	pr3287_state = PS_DELAY;
+	pr3287_state = PRS_DELAY;
 	pr3287_delay_id = AddTimeOut(PRINTER_DELAY_MS, delayed_start);
     }
 }
@@ -1201,7 +1201,7 @@ pr3287_kill(ioid_t id _is_unused)
 #endif /*]*/
 
     pr3287_kill_id = NULL_IOID;
-    pr3287_state = PS_TERMINATING;
+    pr3287_state = PRS_TERMINATING;
 }
 
 
@@ -1210,7 +1210,7 @@ void
 pr3287_session_stop()
 {
     switch (pr3287_state) {
-    case PS_DELAY:
+    case PRS_DELAY:
 	vtrace("Canceling delayed printer session start.\n");
 	assert(pr3287_delay_id != NULL_IOID);
 	RemoveTimeOut(pr3287_delay_id);
@@ -1219,7 +1219,7 @@ pr3287_session_stop()
 	Free(pr3287_delay_lu);
 	pr3287_delay_lu = NULL;
 	break;
-    case PS_RUNNING:
+    case PRS_RUNNING:
 	/* Run through the logic below. */
 	break;
     default:
@@ -1232,7 +1232,7 @@ pr3287_session_stop()
     pr3287_cleanup_io();
 
     /* Set a timeout to terminate it not so gracefully. */
-    pr3287_state = PS_SHUTDOWN;
+    pr3287_state = PRS_SHUTDOWN;
     pr3287_kill_id = AddTimeOut(PRINTER_KILL_MS, pr3287_kill);
 }
 
@@ -1240,7 +1240,7 @@ pr3287_session_stop()
 static void
 pr3287_exiting(bool b _is_unused)
 {
-    if (pr3287_state >= PS_RUNNING && pr3287_state < PS_TERMINATING) {
+    if (pr3287_state >= PRS_RUNNING && pr3287_state < PRS_TERMINATING) {
 	pr3287_kill(NULL_IOID);
     }
 }
@@ -1292,8 +1292,8 @@ pr3287_disconnected(void)
 	/*
 	 * Forget state associated with printer start-up.
 	 */
-	if (pr3287_state == PS_DELAY) {
-	    pr3287_state = PS_NONE;
+	if (pr3287_state == PRS_DELAY) {
+	    pr3287_state = PRS_NONE;
 	}
 	if (pr3287_delay_id != NULL_IOID) {
 	    RemoveTimeOut(pr3287_delay_id);
@@ -1320,7 +1320,7 @@ pr3287_host_connect(bool connected _is_unused)
 bool
 pr3287_session_running(void)
 {
-    return (pr3287_state == PS_RUNNING);
+    return (pr3287_state == PRS_RUNNING);
 }
 
 /*

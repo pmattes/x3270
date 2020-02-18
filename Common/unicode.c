@@ -697,7 +697,7 @@ get_cpnames(void)
 	ret[i].dbcs = uni[i].is_dbcs;
 	for (j = 0; cpaliases[j].alias != NULL; j++) {
 	    if (!strcmp(cpaliases[j].canon, uni[i].name)) {
-		ret[i].aliases = Realloc(ret[i].aliases,
+		ret[i].aliases = Realloc((void *)ret[i].aliases,
 			(num_aliases + 2) * sizeof(char *));
 		ret[i].aliases[num_aliases++] = cpaliases[j].alias;
 		ret[i].aliases[num_aliases] = NULL;
@@ -716,7 +716,7 @@ free_cpnames(cpname_t *cpnames)
 
     for (i = 0; cpnames[i].name != NULL; i++) {
 	if (cpnames[i].aliases != NULL) {
-	    Free(cpnames[i].aliases);
+	    Free((void *)cpnames[i].aliases);
 	}
     }
     Free(cpnames);

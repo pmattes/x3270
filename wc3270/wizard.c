@@ -759,7 +759,7 @@ fixup_printer(session_t *s)
 static int
 fixup_codepage(session_t *s)
 {
-    int i;
+    unsigned i;
 
     /* See if it's okay already. */
     if (!strcmp(s->codepage, "bracket") || !strncmp(s->codepage, "cp", 2)) {
@@ -1710,7 +1710,7 @@ This specifies the EBCDIC code page used by the host.");
 	}
 	/* Check for numeric code page. */
 	if (u > 0 && *ptr == '\0') {
-	    int k;
+	    unsigned k;
 	    bool matched = false;
 
 	    for (k = 0; k < num_codepages; k++) {
@@ -1744,7 +1744,7 @@ This specifies the EBCDIC code page used by the host.");
 	if (!strncmp(buf, "cp", 2) && strlen(buf) > 2) {
 	    u = strtoul(buf + 2, &ptr, 10);
 	    if (u > 0 && *ptr == '\0') {
-		int k;
+		unsigned k;
 		bool matched = false;
 
 		for (k = 0; k < num_codepages; k++) {

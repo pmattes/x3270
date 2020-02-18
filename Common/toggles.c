@@ -331,7 +331,7 @@ split_equals(unsigned *argc, const char ***argv)
     int out_ix = 0;
     unsigned i;
 
-    lazya(out_argv);
+    lazya((void *)out_argv);
     for (i = 0; i < *argc; i++) {
 	const char *arg = (*argv)[i];
 

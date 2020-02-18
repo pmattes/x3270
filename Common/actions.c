@@ -367,7 +367,7 @@ all_actions(void)
     } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
 
     /* Sort them. */
-    qsort(names, actions_list_count, sizeof(const char *), action_cmp);
+    qsort((void *)names, actions_list_count, sizeof(const char *), action_cmp);
 
     /* Emit them. */
     vb_init(&r);
@@ -378,6 +378,6 @@ all_actions(void)
     vb_free(&r);
 
     /* Done. */
-    Free(names);
+    Free((void *)names);
     return actions;
 }

@@ -709,6 +709,8 @@ wb3270/wb3270.ico
 wb3270/wb3270.rc
 wb3270/x3270.man.m4
 wc3270/catf.c
+wc3270/catf.ico
+wc3270/catf.rc
 wc3270/conf.h
 wc3270/documentation-ssl-body.html
 wc3270/ft.inc

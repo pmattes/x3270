@@ -3588,7 +3588,7 @@ screen_send_esc(void)
 }
 
 /* Screen output color map. */
-static DWORD color_attr[] = {
+static WORD color_attr[] = {
     0,						/* PC_DEFAULT */
     FOREGROUND_INTENSITY | FOREGROUND_BLUE,	/* PC_PROMPT */
     FOREGROUND_INTENSITY | FOREGROUND_RED,	/* PC_ERROR */

@@ -910,7 +910,7 @@ parse_set_clear(int *argcp, const char **argv)
 			tn[ntn++] = toggle_names[j].name;
 		    }
 		}
-		memcpy(tn + ntn, nxnames, nx * sizeof(ccp_t));
+		memcpy((void *)(tn + ntn), nxnames, nx * sizeof(ccp_t));
 		ntn += nx;
 		qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
 		fprintf(stderr, "Unknown %stoggle '%.*s'. Toggle names are:\n",

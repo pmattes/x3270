@@ -338,7 +338,7 @@ dump_codepages(void)
 		params[2 + (j * 2) + 1] = cpnames[i].aliases[j];
 	    }
 	    ui_leaf(IndCodePage, params);
-	    Free(params);
+	    Free((void *)params);
 	}
 	ui_pop();
 	free_cpnames(cpnames);

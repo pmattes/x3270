@@ -18,9 +18,18 @@
     <ClCompile Include="..\..\Common\x3270if.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\base64.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\Malloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\x3270if\version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\wx3270\x3270if.rc">
+    <ResourceCompile Include="..\..\wx3270if\x3270if.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
