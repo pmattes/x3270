@@ -443,7 +443,7 @@ screentrace_default_printer(void)
 	name = "";
     }
 #endif /*]*/
-    return name;
+    return NewString(name);
 }
 
 /* Set up screen tracing resources. */
@@ -516,8 +516,7 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 		tracefile = tracefile_buf =
 		    screentrace_default_file(screentrace_current.ptype);
 	    } else {
-		tracefile = tracefile_buf =
-		    NewString(screentrace_default_printer());
+		tracefile = tracefile_buf = screentrace_default_printer();
 	    }
 	}
 	if (!screentrace_go(screentrace_current.target,
