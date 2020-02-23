@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -162,6 +162,7 @@ string_run(task_cbh handle, bool *success)
     /* Check for some waitable keyboard lock. */
     if (task_can_kbwait()) {
 	task_kbwait();
+	done = false;
 	goto clean_up;
     }
     
