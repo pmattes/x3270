@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2017, 2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1414,8 +1414,6 @@ bool visible_control = false;
 bool flipped = false;
 
 /* Replacements for functions in popups.c. */
-
-bool error_popup_visible = false;
 
 /* Pop up an error dialog. */
 void
