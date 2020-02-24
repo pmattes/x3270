@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019 Paul Mattes.
+ * Copyright (c) 2015-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,7 @@ typedef enum {
     K_INHIBIT,
     K_DEFERRED,
     K_TWAIT,
+    K_FIELD,
 } oia_kybdlock_t;
 oia_kybdlock_t oia_kybdlock = K_NONE;
 
@@ -205,6 +206,12 @@ status_reset(void)
 	}
 	oia_kybdlock = K_DEFERRED;
 	status_lock(NewString(OiaLockDeferred));
+    } else if (kybdlock & KL_AWAITING_FIRST) {
+	if (oia_kybdlock == K_FIELD) {
+	    return;
+	}
+	oia_kybdlock = K_FIELD;
+	status_lock(NewString(OiaLockField));
     } else {
 	if (oia_kybdlock == K_NONE) {
 	    return;

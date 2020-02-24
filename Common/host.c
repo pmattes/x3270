@@ -41,6 +41,7 @@
 #include "boolstr.h"
 #include "host.h"
 #include "host_gui.h"
+#include "login_macro.h"
 #include "popups.h"
 #include "product.h"
 #include "split_host.h"

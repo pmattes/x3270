@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -173,7 +173,8 @@ static void do_tls(void);
 static void do_proxy(void);
 static void do_telnet(void);
 static void do_tn3270e(void);
-static void do_nonspecific(void);
+static void do_awaiting_first(void);
+static void do_unlock_delay(void);
 static void do_inhibit(void);
 static void do_blank(void);
 static void do_twait(void);
@@ -203,7 +204,8 @@ static enum msg {
     PROXY,		/* X [PROXY] */
     TELNET,		/* X [TELNET] */
     TN3270E,		/* X [TN3270E] */
-    NONSPECIFIC,	/* X */
+    AWAITING_FIRST,	/* X [Field] */
+    UNLOCK_DELAY,	/* X */
     INHIBIT,		/* X Inhibit */
     BLANK,		/* (blank) */
     TWAIT,		/* X Wait */
@@ -229,7 +231,8 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_proxy,
     do_telnet,
     do_tn3270e,
-    do_nonspecific,
+    do_awaiting_first,
+    do_unlock_delay,
     do_inhibit,
     do_blank,
     do_twait,
@@ -251,7 +254,8 @@ static int msg_color[N_MSGS] = {
     FA_INT_NORM_NSEL,	/* proxy */
     FA_INT_NORM_NSEL,	/* telnet */
     FA_INT_NORM_NSEL,	/* tn3270e */
-    FA_INT_NORM_NSEL,	/* nonspecific */
+    FA_INT_NORM_NSEL,	/* awaiting_first */
+    FA_INT_NORM_NSEL,	/* unlock_delay */
     FA_INT_NORM_NSEL,	/* inhibit */
     FA_INT_NORM_NSEL,	/* blank */
     FA_INT_NORM_NSEL,	/* twait */
@@ -273,7 +277,8 @@ static int msg_color3279[N_MSGS] = {
     HOST_COLOR_WHITE,	/* proxy */
     HOST_COLOR_WHITE,	/* telnet */
     HOST_COLOR_WHITE,	/* tn3270e */
-    HOST_COLOR_WHITE,	/* nonspecific */
+    HOST_COLOR_WHITE,	/* awaiting_first */
+    HOST_COLOR_WHITE,	/* unlock_delay */
     HOST_COLOR_WHITE,	/* inhibit */
     HOST_COLOR_BLUE,	/* blank */
     HOST_COLOR_WHITE,	/* twait */
@@ -345,6 +350,12 @@ static unsigned char tn3270e_msg[] = {
 };
 static int tn3270e_len = sizeof(tn3270e_msg);
 
+static unsigned char awaiting_first_msg[] = {
+    CG_lock, CG_space, CG_bracketleft, CG_F, CG_i, CG_e, CG_l, CG_d,
+    CG_bracketright
+};
+static int awaiting_first_len = sizeof(awaiting_first_msg);
+
 static unsigned char *a_not_connected;
 static unsigned char *a_reconnecting;
 static unsigned char *a_resolving;
@@ -353,6 +364,7 @@ static unsigned char *a_tls;
 static unsigned char *a_proxy;
 static unsigned char *a_telnet;
 static unsigned char *a_tn3270e;
+static unsigned char *a_awaiting_first;
 static unsigned char *a_inhibit;
 static unsigned char *a_twait;
 static unsigned char *a_syswait;
@@ -414,6 +426,7 @@ status_init(void)
     a_proxy = make_amsg("statusProxyPending");
     a_telnet = make_amsg("statusTelnetPending");
     a_tn3270e = make_amsg("statusTn3270ePending");
+    a_awaiting_first = make_amsg("statusAwaitingFirst");
     a_inhibit = make_amsg("statusInhibit");
     a_twait = make_amsg("statusTwait");
     a_syswait = make_amsg("statusSyswait");
@@ -626,7 +639,7 @@ status_connect(bool connected)
 	    status_uncursor_pos();
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
-	    do_msg(NONSPECIFIC);
+	    do_msg(AWAITING_FIRST);
 	} else {
 	    cancel_disabled_revert();
 	    do_msg(BLANK);
@@ -648,6 +661,7 @@ status_3270_mode(bool connected)
     oia_boxsolid = IN_3270 && !IN_SSCP;
     do_ctlr();
     status_untiming();
+    status_connect(CONNECTED);
 }
 
 /* Toggle printer session mode */
@@ -815,7 +829,7 @@ status_reset(void)
     if (kybdlock & KL_ENTER_INHIBIT) {
 	do_msg(INHIBIT);
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-	do_msg(NONSPECIFIC);
+	do_msg(UNLOCK_DELAY);
     } else {
 	status_connect(PCONNECTED);
     }
@@ -1304,16 +1318,26 @@ do_tn3270e(void)
 }
 
 static void
-do_nonspecific(void)
+do_awaiting_first(void)
 {
-    static unsigned char nonspecific[] = {
+    if (*standard_font) {
+	status_msg_set(a_awaiting_first, strlen((char *)a_awaiting_first));
+    } else {
+	status_msg_set(awaiting_first_msg, awaiting_first_len);
+    }
+}
+
+static void
+do_unlock_delay(void)
+{
+    static unsigned char unlock_delay[] = {
 	CG_lock
     };
 
     if (*standard_font) {
 	status_msg_set((unsigned const char *)"X", 1);
     } else {
-	status_msg_set(nonspecific, sizeof(nonspecific));
+	status_msg_set(unlock_delay, sizeof(unlock_delay));
     }
 }
 

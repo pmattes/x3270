@@ -74,6 +74,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "login_macro.h"
 #include "model.h"
 #include "nvt.h"
 #include "opts.h"
@@ -529,6 +530,7 @@ main(int argc, char *argv[])
     proxy_register();
     model_register();
     net_register();
+    login_macro_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

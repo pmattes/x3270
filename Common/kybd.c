@@ -544,7 +544,8 @@ kybd_connect(bool connected _is_unused)
     kybdlock_clr(-1, "kybd_connect");
 
     if (CONNECTED) {
-	if (!appres.nvt_mode && !HOST_FLAG(ANSI_HOST)) {
+	if (!appres.nvt_mode && !HOST_FLAG(ANSI_HOST) &&
+		    !HOST_FLAG(NO_LOGIN_HOST)) {
 	    /* Wait for any output or a WCC(restore) from the host */
 	    kybdlock_set(KL_AWAITING_FIRST, "kybd_connect");
 	}
@@ -574,7 +575,9 @@ kybd_in3270(bool in3270 _is_unused)
 	 * for a BIND, or data to switch us to 3270, NVT or SSCP-LU
 	 * mode.
 	 */
-	kybdlock_set(KL_AWAITING_FIRST, "kybd_in3270");
+	if (!HOST_FLAG(NO_LOGIN_HOST)) {
+	    kybdlock_set(KL_AWAITING_FIRST, "kybd_in3270");
+	}
 	break;
     case CONNECTED_NVT:
     case CONNECTED_NVT_CHAR:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,11 +37,16 @@
 #include <fcntl.h>
 
 #include "actions.h"
+#include "appres.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "login_macro.h"
 #include "popups.h"
+#include "resources.h"
 #include "source.h"
+#include "split_host.h"
 #include "task.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -146,9 +151,41 @@ login_macro(char *s)
     }
 
     if (is_actions) {
-	action = lazyaf("Wait(InputField) %s", s);
+	action = lazyaf("%s%s",
+		HOST_FLAG(NO_LOGIN_HOST)? "": "Wait(InputField) ", s);
     } else {
-	action = lazyaf("Wait(InputField) String(%s)", safe_param(s));
+	action = lazyaf("%sString(%s)",
+		HOST_FLAG(NO_LOGIN_HOST)? "": "Wait(InputField) ",
+		safe_param(s));
     }
     push_cb(action, strlen(action), &login_cb, (task_cbh)&login_cb);
+}
+
+/**
+ * Extended toggle for the login macro.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	Toggle value.
+ * @returns true for success, false for failure.
+ */
+static bool
+toggle_login_macro(const char *name _is_unused, const char *value)
+{
+    if (!*value) {
+	Replace(appres.login_macro, NULL);
+    } else {
+	Replace(appres.login_macro, NewString(value));
+    }
+    return true;
+}
+
+/**
+ * Login module registration.
+ */
+void
+login_macro_register(void)
+{
+    /* Register the toggles. */
+    register_extended_toggle(ResLoginMacro, toggle_login_macro, NULL, NULL,
+	    (void **)&appres.login_macro, XRM_STRING);
 }

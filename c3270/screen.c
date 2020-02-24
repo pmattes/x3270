@@ -2099,7 +2099,7 @@ status_connect(bool connected)
 	} else if (cstate == CONNECTED_UNBOUND) {
 	    other_msg = "X [TN3270E]";
 	} else if (kybdlock & KL_AWAITING_FIRST) {
-	    other_msg = "X";
+	    other_msg = "X [Field]";
 	} else {
 	    other_msg = NULL;
 	}
@@ -2128,6 +2128,7 @@ status_3270_mode(bool ignored _is_unused)
     if (oia_boxsolid) {
 	oia_undera = true;
     }
+    status_connect(CONNECTED);
 }
 
 static void

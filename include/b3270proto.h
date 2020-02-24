@@ -185,6 +185,7 @@
 #define OiaLockSyswait	"syswait"
 #define OiaLockTwait	"twait"
 #define OiaLockDisabled	"disabled"
+#define OiaLockField	"field"
 
 /* OIA operator errors */
 #define OiaOerrProtected "protected"

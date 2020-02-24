@@ -61,6 +61,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
 #include "nvt.h"
@@ -489,6 +490,7 @@ main(int argc, char *argv[])
     model_register();
     net_register();
     xkybd_register();
+    login_macro_register();
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/

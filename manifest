@@ -390,6 +390,7 @@ include/kybd.h
 include/latin1.h
 include/lazya.h
 include/linemode.h
+include/login_macro.h
 include/Makefile.aux
 include/menubar.h
 include/min_version.h

@@ -67,6 +67,7 @@
 #include "idle.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
 #include "nvt.h"
@@ -443,6 +444,7 @@ main(int argc, char *argv[])
     proxy_register();
     model_register();
     net_register();
+    login_macro_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {
