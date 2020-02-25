@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2019 Paul Mattes.
+ * Copyright (c) 2006-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2120,24 +2120,24 @@ wc3270 to use a proxy server to make the connection.");
 }
 
 /**
- * Prompt for wpr3287 session
+ * Prompt for pr3287 session
  *
  * @param[in,out] s	Session
  *
  * @return 0 for success, -1 for failure
  */
 static int
-get_wpr3287(session_t *s)
+get_pr3287(session_t *s)
 {
     new_screen(s, NULL, "\
-wpr3287 Session\n\
+pr3287 Session\n\
 \n\
-This option allows wc3270 to automatically start a wpr3287 printer session\n\
+This option allows wc3270 to automatically start a pr3287 printer session\n\
 when it connects to the host, allowing the host to direct print jobs to a\n\
 Windows printer.");
 
     do {
-	printf("\nAutomatically start a wpr3287 printer session? (y/n) [n] ");
+	printf("\nAutomatically start a pr3287 printer session? (y/n) [n] ");
 	fflush(stdout);
 	s->wpr3287 = getyn(s->wpr3287);
 	if (s->wpr3287 == YN_ERR) {
@@ -2151,7 +2151,7 @@ Windows printer.");
 }
 
 /**
- * Prompt for wpr3287 session mode (associate/LU)
+ * Prompt for pr3287 session mode (associate/LU)
  *
  * @param[in,out] s	Session
  *
@@ -2163,9 +2163,9 @@ get_printer_mode(session_t *s)
     int rc;
 
     new_screen(s, NULL, "\
-wpr3287 Session -- Printer Mode\n\
+pr3287 Session -- Printer Mode\n\
 \n\
-The wpr3287 printer session can be configured in one of two ways.  The first\n\
+The pr3287 printer session can be configured in one of two ways.  The first\n\
 method automatically associates the printer session with the current login\n\
 session.  The second method specifies a particular Logical Unit (LU) to use\n\
 for the printer session.");
@@ -2197,7 +2197,7 @@ for the printer session.");
 }
 
 /**
- * Prompt for wpr3287 session LU name
+ * Prompt for pr3287 session LU name
  *
  * @param[in,out] s	Session
  *
@@ -2208,9 +2208,9 @@ get_printerlu(session_t *s, int explain)
 {
     if (explain) {
 	new_screen(s, NULL, "\
-wpr3287 Session -- Printer Logical Unit (LU) Name\n\
+pr3287 Session -- Printer Logical Unit (LU) Name\n\
 \n\
-If the wpr3287 printer session is associated with a particular Logical Unit,\n\
+If the pr3287 printer session is associated with a particular Logical Unit,\n\
 then that Logical Unit must be configured explicitly.");
     }
 
@@ -2243,7 +2243,7 @@ then that Logical Unit must be configured explicitly.");
 }
 
 /**
- * Prompt for wpr3287 session printer name
+ * Prompt for pr3287 session printer name
  *
  * @param[in,out] s	Session
  *
@@ -2260,9 +2260,9 @@ get_printer(session_t *s)
     int matching_printer = -1;
 
     new_screen(s, NULL, "\
-wpr3287 Session -- Windows Printer Name\n\
+pr3287 Session -- Windows Printer Name\n\
 \n\
-The wpr3287 session can use the Windows default printer as its real printer,\n\
+The pr3287 session can use the Windows default printer as its real printer,\n\
 or you can specify a particular Windows printer.  You can specify a local\n\
 printer, or specify a remote printer with a UNC path, e.g.,\n\
 '\\\\server\\printer22'.  You can specify the Windows default printer with\n\
@@ -2342,7 +2342,7 @@ the name 'default'.");
 }
 
 /**
- * Prompt for wpr3287 session printer code page
+ * Prompt for pr3287 session printer code page
  *
  * @param[in,out] s	Session
  *
@@ -2354,9 +2354,9 @@ get_printercp(session_t *s)
     char buf[STR_SIZE];
 
     new_screen(s, NULL, "\
-wpr3287 Session -- Printer Code Page\n\
+pr3287 Session -- Printer Code Page\n\
 \n\
-By default, wpr3287 uses the system's default ANSI code page.  You can\n\
+By default, pr3287 uses the system's default ANSI code page.  You can\n\
 override that code page here, or specify 'default' to use the system ANSI code\n\
 page.");
 
@@ -3035,25 +3035,25 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 			MN_PROXY_PORT, s->proxy_port);
 	    }
 	}
-	printf("%3d. wpr3287 Printer Session  : %s\n", MN_3287,
+	printf("%3d. pr3287 Printer Session . : %s\n", MN_3287,
 		s->wpr3287? "Yes": "No");
 	if (s->wpr3287) {
 	    char pbuf[STR_SIZE];
 
-	    printf("%3d.  wpr3287 Mode .......... : ",
+	    printf("%3d.  pr3287 Mode ........... : ",
 		    MN_3287_MODE);
 	    if (!strcmp(s->printerlu, ".")) {
 		printf("Associate\n");
 	    } else {
 		printf("LU\n");
-		printf("%3d.  wpr3287 LU ............ : %s\n",
+		printf("%3d.  pr3287 LU ............. : %s\n",
 			MN_3287_LU, s->printerlu);
 	    }
 	    redisplay_printer(s->printer, pbuf);
-	    printf("%3d.  wpr3287 Windows printer : %s\n",
+	    printf("%3d.  pr3287 Windows printer  : %s\n",
 		    MN_3287_PRINTER,
 		    s->printer[0]? pbuf: "(system default)");
-	    printf("%3d.  wpr3287 Code Page ..... : ",
+	    printf("%3d.  pr3287 Code Page ...... : ",
 		    MN_3287_CODEPAGE);
 	    if (s->printercp[0]) {
 		printf("%s\n", s->printercp);
@@ -3084,7 +3084,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 
 	for (;;) {
 	    int invalid = 0;
-	    int was_wpr3287 = 0;
+	    int was_pr3287 = 0;
 
 	    printf("\nEnter item number to change: [%s] ", CHOICE_NONE);
 	    fflush(stdout);
@@ -3190,12 +3190,12 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		}
 		break;
 	    case MN_3287:
-		was_wpr3287 = s->wpr3287;
-		if (get_wpr3287(s) < 0) {
+		was_pr3287 = s->wpr3287;
+		if (get_pr3287(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
-		if (s->wpr3287 && !was_wpr3287) {
+		if (s->wpr3287 && !was_pr3287) {
 		    if (get_printer_mode(s) < 0) {
 			ret = SRC_ERR;
 			goto done;

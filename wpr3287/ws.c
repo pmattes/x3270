@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2019 Paul Mattes.
+ * Copyright (c) 2007-2009, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -143,7 +143,7 @@ ws_putc(char c)
 
     case PRINTER_OPEN:
 	/* Start a new document. */
-	doc_info.pDocName = "wpr3287 print job";
+	doc_info.pDocName = "pr3287 print job";
 	doc_info.pOutputFile = NULL;
 	doc_info.pDatatype = "RAW";
 	if (StartDocPrinter(printer_handle, 1, (LPBYTE)&doc_info) == 0) {

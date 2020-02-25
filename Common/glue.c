@@ -498,11 +498,7 @@ set_appres_defaults(void)
     product_set_appres_defaults();
 }
 
-#if defined(_WIN32) /*[*/
-# define PR3287_NAME "wpr3287"
-#else /*][*/
-# define PR3287_NAME "pr3287"
-#endif /*]*/
+#define PR3287_NAME	"pr3287"
 
 static opt_t base_opts[] = {
 { OptAlias,    OPT_STRING,  false, ResAlias,   aoffset(alias),

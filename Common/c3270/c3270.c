@@ -122,11 +122,7 @@
 # define DELENV		"WC3DEL"
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-# define PR3287_NAME "wpr3287"
-#else /*][*/
-# define PR3287_NAME "pr3287"
-#endif /*]*/
+#define PR3287_NAME	"pr3287"
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_LIBREADLINE) /*[*/

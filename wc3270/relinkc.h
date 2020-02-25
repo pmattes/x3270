@@ -51,10 +51,10 @@ typedef struct {
 	DWORD model;			/* model number */
 	char  codepage[STR_SIZE];	/* code page name */
 	DWORD is_dbcs;
-	DWORD wpr3287;			/* wpr3287 flag */
+	DWORD wpr3287;			/* pr3287 flag */
 	char  printerlu[STR_SIZE];	/*  printer LU */
 	char  printer[STR_SIZE];	/*  Windows printer name */
-	char  printercp[STR_SIZE];	/*  wpr3287 code page */
+	char  printercp[STR_SIZE];	/*  pr3287 code page */
 	char  keymaps[STR_SIZE];	/* keymap names */
 
 	/* Field added for wc3270 3.3.10 (Wizard version 2) */

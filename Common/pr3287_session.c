@@ -703,8 +703,9 @@ pr3287_start_now(const char *lu, bool associated)
 	putenv(lazyaf("PRINTER=%s", printerName));
     }
 
-    /* Create the wpr3287 process. */
-    if (!strncasecmp(cmd_text, "wpr3287.exe", 11)) {
+    /* Create the pr3287 process. */
+    if (!strncasecmp(cmd_text, "pr3287.exe", 10) ||
+	    !strncasecmp(cmd_text, "wpr3287.exe", 11)) {
 	cp_cmdline = lazyaf("%s%s", instdir, cmd_text);
     } else {
 	cp_cmdline = cmd_text;

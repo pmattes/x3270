@@ -562,7 +562,7 @@ main(int argc, char *argv[])
     }
 #if !defined(_WIN32) /*[*/
     if (!programname[0]) {
-	programname = "wpr3287";
+	programname = "pr3287";
     }
 #endif /*]*/
 
