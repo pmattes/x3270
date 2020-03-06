@@ -380,7 +380,7 @@ screen_setaf(acolor_t color)
 {
     int color_map[] = { COLOR_BLUE, COLOR_RED, COLOR_YELLOW };
 
-    char *s = tiparm(tigetstr("setaf"), color_map[color]);
+    char *s = tparm(tigetstr("setaf"), color_map[color]);
     return s;
 }
 

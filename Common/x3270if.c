@@ -1138,7 +1138,7 @@ i18n_get(const char *key)
 static const char *
 xsetaf(const char *setaf, int color)
 {
-    return (setaf != NULL)? tiparm(setaf, color) : "";
+    return (setaf != NULL)? tparm(setaf, color) : "";
 }
 #endif /*]*/
 
