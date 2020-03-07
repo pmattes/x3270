@@ -3090,7 +3090,7 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Insert_action(ia_t ia, unsigned argc, const char **argv)
 {
-    const char *set_argv[3] = { ResInsertMode, "True", NULL };
+    const char *set_argv[3] = { ResInsertMode, ResTrue, NULL };
 
     action_debug("Insert", ia, argc, argv);
     if (check_argc("Insert", argc, 0, 0) < 0) {

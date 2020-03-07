@@ -801,7 +801,7 @@ item_suppressed(Widget parent, const char *name)
 		suppress? suppress: "(null)");
 #endif /*]*/
 	return suppress != NULL &&
-	       !strncasecmp(suppress, "True", strlen(suppress));
+	       !strncasecmp(suppress, ResTrue, strlen(suppress));
 }
 
 /*

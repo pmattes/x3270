@@ -194,6 +194,6 @@
 #define OiaOerrDbcs	"dbcs"
 
 /* Values. */
-#define ValTrue		"true"
-#define ValFalse	"false"
+#define ValTrue		ResTrue
+#define ValFalse	ResFalse
 #define ValTrueFalse(b)	((b)? ValTrue: ValFalse)

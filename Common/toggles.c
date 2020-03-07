@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -238,7 +238,7 @@ u_value(toggle_extended_upcalls_t *u)
 	    value = *(char **)u->address;
 	    break;
 	case XRM_BOOLEAN:
-	    value = *(bool *)u->address? "True": "False";
+	    value = *(bool *)u->address? ResTrue: ResFalse;
 	    break;
 	case XRM_INT:
 	    value = lazyaf("%d", *(int *)u->address);
@@ -277,7 +277,8 @@ toggle_values(void)
 	if (toggle_supported(toggle_names[i].index)) {
 	    tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
 	    tnv[n_tnv].name = toggle_names[i].name;
-	    tnv[n_tnv].value = toggled(toggle_names[i].index)? "True": "False";
+	    tnv[n_tnv].value =
+		toggled(toggle_names[i].index)? ResTrue: ResFalse;
 	    n_tnv++;
 	}
     }
@@ -446,7 +447,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 				argv[arg]);
 			goto failed;
 		    }
-		    value = (*(bool *)u->address)? "False": "True";
+		    value = (*(bool *)u->address)? ResFalse: ResTrue;
 		    goto have_value;
 		}
 		/* Flip the toggle. */
@@ -459,7 +460,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 
 		    action_output("%s", v? v: " ");
 		} else {
-		    action_output("%s", toggled(ix)? "True": "False");
+		    action_output("%s", toggled(ix)? ResTrue: ResFalse);
 		}
 		return true;
 	    }

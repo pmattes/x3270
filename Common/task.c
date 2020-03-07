@@ -3371,9 +3371,9 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
     if (argc == 0) {
 	disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
     } else {
-	if (!strcasecmp(argv[0], "True")) {
+	if (!strcasecmp(argv[0], ResTrue)) {
 	    disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
-	} else if (!strcasecmp(argv[0], "False")) {
+	} else if (!strcasecmp(argv[0], ResFalse)) {
 	    disable_keyboard(ENABLE, EXPLICIT, "KeyboardDisable() action");
 	} else if (!strcasecmp(argv[0], "ForceEnable")) {
 	    force_enable_keyboard();

@@ -718,7 +718,7 @@ save_options(char *n)
 	save_opt(f, "idle command", NULL, ResIdleCommand, idle_command);
 	save_opt(f, "idle timeout", NULL, ResIdleTimeout, idle_timeout_string);
 	save_opt(f, "idle enabled", NULL, ResIdleCommandEnabled,
-		(idle_user_enabled == IDLE_PERM)?  "True": "False");
+		(idle_user_enabled == IDLE_PERM)?  ResTrue: ResFalse);
     }
 
     /* Done. */
