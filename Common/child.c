@@ -123,6 +123,7 @@ init_child(void)
 	child_broken = true;
 	return;
     }
+    vtrace("init_child: child_outpipe is %d %d\n", child_outpipe[0], child_outpipe[1]);
 
     /* Make sure their read ends are closed in child processes. */
     fcntl(child_outpipe[0], F_SETFD, 1);
@@ -251,10 +252,6 @@ fork_child(void)
 	dup2(child_outpipe[1], 1);
 	close(child_outpipe[1]);
 	dup2(child_errpipe[1], 2);
-	close(child_errpipe[1]);
-    } else if (pid >= 0) {
-	/* Parent. */
-	close(child_outpipe[1]);
 	close(child_errpipe[1]);
     }
     return pid;
