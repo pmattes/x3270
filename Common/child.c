@@ -252,8 +252,6 @@ fork_child(void)
 	close(child_outpipe[1]);
 	dup2(child_errpipe[1], 2);
 	close(child_errpipe[1]);
-	close(child_outpipe[0]);
-	close(child_errpipe[0]);
     } else if (pid >= 0) {
 	/* Parent. */
 	close(child_outpipe[1]);
