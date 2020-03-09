@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Paul Mattes.
+ * Copyright (c) 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -90,7 +90,7 @@ find_console(void)
 
 	/*
 	 * The format is:
-	 *   title_opt:title-opt:extra-opt:exec-opt.
+	 *   program:title-opt:extra-opt:exec-opt.
 	 **/
 	if (override == NULL) {
 	    break;
