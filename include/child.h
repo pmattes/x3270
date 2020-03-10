@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013, 2014, 2018 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, 2014, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,3 +36,4 @@ int fork_child(void);
 void get_child_handles(HANDLE *out, HANDLE *err);
 #endif /*]*/
 void child_ignore_output(void);
+FILE *printer_open(const char *command, void (*fail_callback)(void));

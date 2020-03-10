@@ -227,6 +227,18 @@ type_from_file(const char *filename)
     }
 }
 
+#if !defined(_WIN32) /*[*/
+/* Abort screen tracing because the printer process failed. */
+static void
+screentrace_abort(void)
+{
+    if (toggled(SCREEN_TRACE)) {
+	vtrace("Turning off screen tracing due to print failure\n");
+	do_toggle(SCREEN_TRACE);
+    }
+}
+#endif /*]*/
+
 /*
  * Begin screen tracing.
  * Returns true for success, false for failure.
@@ -275,7 +287,7 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
 	    xtfn = NewString(tfn);
 	}
 
-	screentracef = popen(xtfn, "w");
+	screentracef = printer_open(xtfn, screentrace_abort);
 #else /*][*/
 	int fd;
 

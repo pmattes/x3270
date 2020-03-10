@@ -33,6 +33,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "child.h"
 #include "popups.h" /* must be before child_popups.h */
@@ -463,5 +464,140 @@ cr_output(iosrc_t fd, ioid_t id)
 
     /* Ready for more. */
     SetEvent(cr->enable_event);
+}
+#endif /*]*/
+
+#if !defined(_WIN32) /*[*/
+typedef struct {
+    llist_t link;
+    ioid_t id;
+    int from_cmd;
+    void (*fail_callback)(void);
+} printer_command_t;
+llist_t printer_commands = LLIST_INIT(printer_commands);
+
+static void
+printer_exited(ioid_t id, int status)
+{
+    printer_command_t *c;
+    bool found = false;
+
+    FOREACH_LLIST(&printer_commands, c, printer_command_t *) {
+	if (c->id == id) {
+	    found = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&printer_commands, c, printer_command_t *);
+    assert(found);
+
+    if (WIFEXITED(status)) {
+	int exit_status = WEXITSTATUS(status);
+
+	if (exit_status != 0) {
+	    char *errout = NULL;
+	    size_t nerr = 0, nerrbuf = 0;
+
+	    while (true) {
+		size_t nr;
+
+		nerrbuf += 1024;
+		errout = Realloc(errout, nerrbuf);
+		nr = read(c->from_cmd, errout + nerr, nerrbuf - nerr);
+		if (nr <= 0) {
+		    break;
+		}
+		nerr += nr;
+	    }
+
+	    if (nerr > 0 && errout[nerr - 1] == '\n') {
+		nerr--;
+	    }
+	    popup_an_error("%.*s%sPrinter process exited with status %d",
+		    (int)nerr, errout,
+		    nerr? "\n": "",
+		    exit_status);
+	    Free(errout);
+
+	    if (c->fail_callback != NULL) {
+		(*c->fail_callback)();
+	    }
+	}
+    } else if (WIFSIGNALED(status)) {
+	popup_an_error("Printer process killed by signal %d",
+		WTERMSIG(status));
+	if (c->fail_callback != NULL) {
+	    (*c->fail_callback)();
+	}
+    } else {
+	popup_an_error("Printer process stopped by unknown status %d", status);
+    }
+
+    close(c->from_cmd);
+    llist_unlink(&c->link);
+    Free(c);
+}
+
+/* Create an asynchronous printer session. */
+FILE *
+printer_open(const char *command, void (*fail_callback)(void))
+{
+    int to_cmd[2] = { -1, -1 };		/* data to printer command */
+    int from_cmd[2] = { -1, -1 };	/* data from printer command */
+    pid_t pid;
+    printer_command_t *c;
+
+    if (pipe(to_cmd) < 0) {
+	popup_an_errno(errno, "pipe");
+	goto fail;
+	return NULL;
+    }
+    fcntl(to_cmd[1], F_SETFD, 1);
+
+    if (pipe(from_cmd) < 0) {
+	popup_an_errno(errno, "pipe");
+	goto fail;
+    }
+    fcntl(from_cmd[0], F_SETFD, 1);
+
+    switch ((pid = fork())) {
+    case -1:
+	popup_an_errno(errno, "fork");
+	goto fail;
+    case 0:
+	/* child */
+	dup2(to_cmd[0], 0);
+	dup2(from_cmd[1], 1);
+	dup2(from_cmd[1], 2);
+	execlp("/bin/sh", "sh", "-c", command, NULL);
+	exit(1);
+	break;
+    default:
+	close(to_cmd[0]);
+	close(from_cmd[1]);
+	break;
+    }
+
+    c = (printer_command_t *)Calloc(1, sizeof(printer_command_t));
+    llist_init(&c->link);
+    c->from_cmd = from_cmd[0];
+    c->id = AddChild(pid, printer_exited);
+    c->fail_callback = fail_callback;
+    llist_insert_before(&c->link, &printer_commands);
+    return fdopen(to_cmd[1], "w");
+
+fail:
+    if (to_cmd[0] != -1) {
+	close(to_cmd[0]);
+    }
+    if (to_cmd[1] != -1) {
+	close(to_cmd[1]);
+    }
+    if (from_cmd[0] != -1) {
+	close(from_cmd[0]);
+    }
+    if (from_cmd[1] != -1) {
+	close(from_cmd[1]);
+    }
+    return NULL;
 }
 #endif /*]*/

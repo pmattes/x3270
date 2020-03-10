@@ -44,6 +44,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "child.h"
 #include "codepage.h"
 #include "fprint_screen.h"
 #include "lazya.h"
@@ -79,27 +80,6 @@ typedef struct {
 /* Globals */
 
 /* Statics */
-
-/* Print Text popup */
-
-#if !defined(_WIN32) /*[*/
-/* Termination code for print text process. */
-static void
-print_text_done(FILE *f)
-{
-    int status;
-
-    status = pclose(f);
-    if (status) {
-	popup_an_error("Print program exited with status %d.",
-		(status & 0xff00) > 8);
-    } else {
-	if (appres.interactive.do_confirms) {
-	    popup_an_info("Screen image printed.");
-	}
-    }
-}
-#endif /*]*/
 
 /**
  * Default caption.
@@ -423,7 +403,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    expanded_name = name;
 	}
-	f = popen(expanded_name, "w");
+	f = printer_open(expanded_name, NULL);
 #else /*][*/
 	fd = win_mkstemp(&temp_name, ptype);
 	if (fd < 0) {
@@ -512,9 +492,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Print to printer. */
-#if !defined(_WIN32) /*[*/
-    print_text_done(f);
-#else /*][*/
+#if defined(_WIN32) /*[*/
     fclose(f);
     unlink(temp_name);
     if (appres.interactive.do_confirms) {
