@@ -44,7 +44,6 @@
 
 #include "actions.h"
 #include "codepage.h"
-#include "child.h"
 #include "ctlrc.h"
 #include "find_console.h"
 #include "fprint_screen.h"
@@ -52,6 +51,7 @@
 #include "menubar.h"
 #include "nvt.h"
 #include "popups.h"
+#include "print_command.h"
 #include "print_screen.h"
 #include "product.h"
 #include "resources.h"

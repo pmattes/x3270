@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013, 2014, 2018, 2020 Paul Mattes.
+ * Copyright (c) 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,10 @@
  */
 
 /*
- *	child.h
- *		Global declarations for child.c.
+ *	print_command.h
+ *		Global declarations for print_command.c.
  */
 
 #if !defined(_WIN32) /*[*/
-int fork_child(void);
-#else /*][*/
-void get_child_handles(HANDLE *out, HANDLE *err);
+FILE *printer_open(const char *command, void (*fail_callback)(void));
 #endif /*]*/
-void child_ignore_output(void);

@@ -44,11 +44,11 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "child.h"
 #include "codepage.h"
 #include "fprint_screen.h"
 #include "lazya.h"
 #include "popups.h"
+#include "print_command.h"
 #include "print_screen.h"
 #include "print_gui.h"
 #include "product.h"

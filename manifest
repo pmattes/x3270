@@ -262,6 +262,7 @@ Common/pr3287/trace.c
 Common/pr3287/trace.h
 Common/pr3287/xtable.c
 Common/pr3287/xtablec.h
+Common/print_command.c
 Common/print_gui_stubs.c
 Common/print_screen.c
 Common/product_stubs1.c
@@ -401,6 +402,7 @@ include/opts.h
 include/peerscript.h
 include/popups.h
 include/pr3287_session.h
+include/print_command.h
 include/print_gui.h
 include/print_screen.h
 include/product.h
