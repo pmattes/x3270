@@ -38,6 +38,7 @@
 
 #include "actions.h"
 #include "kybd.h"
+#include "names.h"
 #include "popups.h"
 #include "s3270_proto.h"
 #include "source.h"
@@ -263,7 +264,7 @@ stdin_closescript(task_cbh handle _is_unused)
 void
 stdin_init(void)
 {
-    static char *wait = "Wait(InputField)";
+    static char *wait = AnWait "(" KwInputField ")";
 
 #if defined(_WIN32) /*[*/
     /* Set up the thread that reads from stdin. */

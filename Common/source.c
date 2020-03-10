@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include <fcntl.h>
 
 #include "actions.h"
+#include "names.h"
 #include "popups.h"
 #include "source.h"
 #include "task.h"
@@ -122,7 +123,7 @@ free_source(source_t *s)
 {
     Replace(s->name, NULL);
     Free(s);
-    disable_keyboard(ENABLE, IMPLICIT, "Source() completion");
+    disable_keyboard(ENABLE, IMPLICIT, AnSource "() completion");
 }
 
 /**
@@ -143,7 +144,7 @@ source_run(task_cbh handle, bool *success)
     /* Check for failure. */
     if (s->fd == -1) {
 	/* Aborted. */
-	popup_an_error("Source: %s", s->result? s->result: "failed");
+	popup_an_error(AnSource "(): %s", s->result? s->result: "failed");
 	free_source(s);
 	*success = false;
 	return true;
@@ -158,7 +159,7 @@ source_run(task_cbh handle, bool *success)
 
 	nr = read(s->fd, &c, 1);
 	if (nr < 0) {
-	    popup_an_error("Source %s read error\n", s->path);
+	    popup_an_error(AnSource "(%s) read error\n", s->path);
 	    vb_free(&r);
 	    close(s->fd);
 	    free_source(s);
@@ -213,8 +214,8 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     source_t *s;
     char *name;
 
-    action_debug("Source", ia, argc, argv);
-    if (check_argc("Source", argc, 1, 1) < 0) {
+    action_debug(AnSource, ia, argc, argv);
+    if (check_argc(AnSource, argc, 1, 1) < 0) {
 	return false;
     }
     expanded_filename = do_subst(argv[0], DS_VARS | DS_TILDE);
@@ -237,6 +238,6 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     s->result = NULL;
     name = push_cb(NULL, 0, &source_cb, (task_cbh)s);
     s->name = NewString(name);
-    disable_keyboard(DISABLE, IMPLICIT, "Source() start");
+    disable_keyboard(DISABLE, IMPLICIT, AnSource "() start");
     return true;
 }

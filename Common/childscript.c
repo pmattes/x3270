@@ -55,6 +55,7 @@
 #include "httpd-core.h"
 #include "httpd-io.h"
 #include "lazya.h"
+#include "names.h"
 #include "peerscript.h"
 #include "s3270_proto.h"
 #include "task.h"
@@ -544,7 +545,7 @@ child_done(task_cbh handle, bool success, bool abort)
 	vtrace("%s terminating script process\n", c->parent_name);
 	kill(c->pid, SIGTERM);
 	if (c->keyboard_lock) {
-	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	    disable_keyboard(ENABLE, IMPLICIT, AnScript "() abort");
 	}
 	return true;
     }
@@ -576,7 +577,7 @@ child_done(task_cbh handle, bool success, bool abort)
 	vtrace("%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
 	if (c->keyboard_lock) {
-	    disable_keyboard(ENABLE, IMPLICIT, "Script() abort");
+	    disable_keyboard(ENABLE, IMPLICIT, AnScript "() abort");
 	}
     }
     return true;
@@ -1106,27 +1107,27 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     cr_t *cr;
 #endif /*]*/
 
-    action_debug("Script", ia, argc, argv);
+    action_debug(AnScript, ia, argc, argv);
 
     for (;;) {
 	if (argc < 1) {
-	    popup_an_error("Script requires at least one argument");
+	    popup_an_error(AnScript "() requires at least one argument");
 	    return false;
 	}
-	if (!strcasecmp(argv[0], "-Async")) {
+	if (!strcasecmp(argv[0], KwAsync)) {
 	    async = true;
 	    keyboard_lock = false;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], "-NoLock")) {
+	} else if (!strcasecmp(argv[0], KwNoLock)) {
 	    keyboard_lock = false;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], "-Single")) {
+	} else if (!strcasecmp(argv[0], KwSingle)) {
 	    mode = PLM_SINGLE;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], "-NoStdoutRedirect")) {
+	} else if (!strcasecmp(argv[0], KwNoStdoutRedirect)) {
 	    stdout_redirect = false;
 	    argc--;
 	    argv++;
@@ -1377,7 +1378,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     vtrace("%s script process is %d\n", c->parent_name, (int)c->pid);
 
     if (keyboard_lock) {
-	disable_keyboard(DISABLE, IMPLICIT, "Script() start");
+	disable_keyboard(DISABLE, IMPLICIT, AnScript "() start");
     }
 
     return true;
@@ -1400,8 +1401,8 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     console_desc_t *t;
 #endif /*]*/
 
-    action_debug("Prompt", ia, argc, argv);
-    if (check_argc("Prompt", argc, 0, 3) < 0) {
+    action_debug(AnPrompt, ia, argc, argv);
+    if (check_argc(AnPrompt, argc, 0, 3) < 0) {
 	return false;
     }
 
@@ -1409,13 +1410,13 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     /* Find a console emulator to run the prompt in. */
     t = find_console();
     if (t == NULL)  {
-	popup_an_error("Prompt: can't find a console program");
+	popup_an_error(AnPrompt "(): can't find a console program");
 	return false;
     }
 
     /* Make sure x3270if is available. */
     if (!find_in_path("x3270if")) {
-	popup_an_error("Prompt: can't find x3270if");
+	popup_an_error(AnPrompt "(): can't find x3270if");
 	return false;
     }
 #endif /*]*/

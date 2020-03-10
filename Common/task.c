@@ -66,6 +66,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "menubar.h"
+#include "names.h"
 #include "nvt.h"
 #include "peerscript.h"
 #include "popups.h"
@@ -385,32 +386,32 @@ void
 task_register(void)
 {
     static action_table_t task_actions[] = {
-	{ "Abort",		Abort_action, ACTION_KE },
-	{ "AnsiText",		AnsiText_action, 0 },
-	{ "Ascii",		Ascii_action, 0 },
-	{ "Ascii1",		Ascii1_action, 0 },
-	{ "AsciiField",		AsciiField_action, 0 },
-	{ "Bell",		Bell_action, 0 },
-	{ "Capabilities",	Capabilities_action, ACTION_HIDDEN },
-	{ "CloseScript",	CloseScript_action, 0 },
-	{ "Ebcdic",		Ebcdic_action, 0 },
-	{ "Ebcdic1",		Ebcdic1_action, 0 },
-	{ "EbcdicField",	EbcdicField_action, 0 },
-	{ "Execute",		Execute_action, ACTION_KE },
-	{ "Expect",		Expect_action, 0 },
-	{ "KeyboardDisable",	KeyboardDisable_action, 0 },
-	{ "Macro",		Macro_action, ACTION_KE },
-	{ "Prompt",		Prompt_action, 0 },
-	{ "ReadBuffer",		ReadBuffer_action, 0 },
+	{ AnAbort,		Abort_action, ACTION_KE },
+	{ AnAnsiText,		AnsiText_action, 0 },
+	{ AnAscii,		Ascii_action, 0 },
+	{ AnAscii1,		Ascii1_action, 0 },
+	{ AnAsciiField,		AsciiField_action, 0 },
+	{ AnBell,		Bell_action, 0 },
+	{ AnCapabilities,	Capabilities_action, ACTION_HIDDEN },
+	{ AnCloseScript,	CloseScript_action, 0 },
+	{ AnEbcdic,		Ebcdic_action, 0 },
+	{ AnEbcdic1,		Ebcdic1_action, 0 },
+	{ AnEbcdicField,	EbcdicField_action, 0 },
+	{ AnExecute,		Execute_action, ACTION_KE },
+	{ AnExpect,		Expect_action, 0 },
+	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
+	{ AnMacro,		Macro_action, ACTION_KE },
+	{ AnPrompt,		Prompt_action, 0 },
+	{ AnReadBuffer,		ReadBuffer_action, 0 },
 	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
-	{ "RequestInput",	RequestInput_action, ACTION_HIDDEN },
-	{ "Script",		Script_action, ACTION_KE },
-	{ "Snap",		Snap_action, 0 },
-	{ "Source",		Source_action, ACTION_KE },
-	{ "Wait",		Wait_action, ACTION_KE }
+	{ AnRequestInput,	RequestInput_action, ACTION_HIDDEN },
+	{ AnScript,		Script_action, ACTION_KE },
+	{ AnSnap,		Snap_action, 0 },
+	{ AnSource,		Source_action, ACTION_KE },
+	{ AnWait,		Wait_action, ACTION_KE }
     };
     static action_table_t task_dactions[] = {
-	{ "Printer",		Printer_action, ACTION_KE },
+	{ AnPrinter,		Printer_action, ACTION_KE },
     };
     static toggle_register_t toggles[] = {
 	{ AID_WAIT,	NULL,	0 }
@@ -2120,41 +2121,47 @@ dump_field(unsigned count, const char *name, bool in_ascii, bool force_utf8)
 static bool
 Ascii_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, 0, "Ascii", true, ea_buf, ROWS, COLS,
+    action_debug(AnAscii, ia, argc, argv);
+    return dump_fixed(argv, argc, 0, AnAscii, true, ea_buf, ROWS, COLS,
 	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 Ascii1_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, 1, "Ascii1", true, ea_buf, ROWS, COLS,
+    action_debug(AnAscii1, ia, argc, argv);
+    return dump_fixed(argv, argc, 1, AnAscii1, true, ea_buf, ROWS, COLS,
 	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 AsciiField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "AsciiField", true, IA_UTF8(ia));
+    action_debug(AnAsciiField, ia, argc, argv);
+    return dump_field(argc, AnAsciiField, true, IA_UTF8(ia));
 }
 
 static bool
 Ebcdic_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, 0, "Ebcdic", false, ea_buf, ROWS, COLS,
+    action_debug(AnEbcdic, ia, argc, argv);
+    return dump_fixed(argv, argc, 0, AnEbcdic, false, ea_buf, ROWS, COLS,
 	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 Ebcdic1_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, 1, "Ebcdic1", false, ea_buf, ROWS, COLS,
+    action_debug(AnEbcdic1, ia, argc, argv);
+    return dump_fixed(argv, argc, 1, AnEbcdic1, false, ea_buf, ROWS, COLS,
 	    cursor_addr, IA_UTF8(ia));
 }
 
 static bool
 EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "EbcdicField", false, IA_UTF8(ia));
+    action_debug(AnEbcdicField, ia, argc, argv);
+    return dump_field(argc, AnEbcdicField, false, IA_UTF8(ia));
 }
 
 static unsigned char
@@ -2197,17 +2204,17 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	unsigned i;
 
 	for (i = 0; i < num_params; i++) {
-	    if (!strncasecmp(params[i], "Ascii", strlen(params[i]))) {
+	    if (!strncasecmp(params[i], KwAscii, strlen(params[i]))) {
 		mode = RB_ASCII;
-	    } else if (!strncasecmp(params[i], "Ebcdic", strlen(params[i]))) {
+	    } else if (!strncasecmp(params[i], KwEbcdic, strlen(params[i]))) {
 		mode = RB_EBCDIC;
-	    } else if (!strncasecmp(params[i], "Unicode", strlen(params[i]))) {
+	    } else if (!strncasecmp(params[i], KwUnicode, strlen(params[i]))) {
 		mode = RB_UNICODE;
-	    } else if (!strncasecmp(params[i], "Field", strlen(params[i]))) {
+	    } else if (!strncasecmp(params[i], KwField, strlen(params[i]))) {
 		field = true;
 	    } else {
-		popup_an_error("ReadBuffer: parameter must be Ascii, "
-			"Ebcdic, Unicode or Field");
+		popup_an_error(AnReadBuffer "(): parameter must be " KwAscii
+			", " KwEbcdic ", " KwUnicode " or " KwField);
 		return false;
 	    }
 	}
@@ -2230,7 +2237,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 
     if (field) {
 	if (!formatted) {
-	    popup_an_error("ReadBuffer: no field");
+	    popup_an_error(AnReadBuffer "(): no field");
 	    return false;
 	}
 	baddr = find_field_attribute(cursor_addr);
@@ -2448,6 +2455,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 static bool
 ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
+    action_debug(AnReadBuffer, ia, argc, argv);
     return do_read_buffer(argv, argc, ea_buf, IA_UTF8(ia));
 }
 
@@ -2705,8 +2713,10 @@ snap_save(void)
 static bool
 Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
+    action_debug(AnSnap, ia, argc, argv);
+
     if (current_task == NULL || current_task->state != TS_RUNNING) {
-	popup_an_error("Snap can only be called from scripts or macros");
+	popup_an_error(AnSnap "() can only be called from scripts or macros");
 	return false;
     }
 
@@ -2716,7 +2726,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     }
 
     /* Handle 'Snap Wait' separately. */
-    if (!strcasecmp(argv[0], "Wait")) {
+    if (!strcasecmp(argv[0], AnWait)) {
 	long tmo = -1;
 	char *ptr;
 	unsigned maxp = 0;
@@ -2731,21 +2741,21 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    maxp = 2;
 	}
 	if (argc > maxp) {
-	    popup_an_error("Too many arguments to Snap(Wait)");
+	    popup_an_error("Too many arguments to " AnSnap "(" AnWait ")");
 	    return false;
 	}
 	if (argc < maxp) {
-	    popup_an_error("Too few arguments to Snap(Wait)");
+	    popup_an_error("Too few arguments to " AnSnap "(" AnWait ")");
 	    return false;
 	}
 	if (strcasecmp(argv[argc - 1], "Output")) {
-	    popup_an_error("Unknown parameter to Snap(Wait)");
+	    popup_an_error("Unknown parameter to " AnSnap "(" AnWait ")");
 	    return false;
 	}
 
 	/* Must be connected. */
 	if (!(CONNECTED || HALF_CONNECTED)) {
-	    popup_an_error("Snap: Not connected");
+	    popup_an_error(AnSnap "(): Not connected");
 	    return false;
 	}
 
@@ -2759,7 +2769,8 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 
 	/* Set the new state. */
-	task_set_state(current_task, TS_SWAIT_OUTPUT, "Wait(Output)");
+	task_set_state(current_task, TS_SWAIT_OUTPUT,
+		AnWait "(" KwOutput ")");
 
 	/* Set up a timeout, if they want one. */
 	if (tmo >= 0) {
@@ -2768,79 +2779,80 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	return true;
     }
 
-    if (!strcasecmp(argv[0], "Save")) {
+    if (!strcasecmp(argv[0], KwSave)) {
 	if (argc != 1) {
-	    popup_an_error("Extra argument(s)");
+	    popup_an_error(AnSnap "(): Extra argument(s)");
 	    return false;
 	}
 	snap_save();
-    } else if (!strcasecmp(argv[0], "Status")) {
+    } else if (!strcasecmp(argv[0], KwStatus)) {
 	if (argc != 1) {
-	    popup_an_error("Extra argument(s)");
+	    popup_an_error(AnSnap "(): Extra argument(s)");
 	    return false;
 	}
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
 	action_output("%s", snap_status);
-    } else if (!strcasecmp(argv[0], "Rows")) {
+    } else if (!strcasecmp(argv[0], KwRows)) {
 	if (argc != 1) {
-	    popup_an_error("Extra argument(s)");
+	    popup_an_error(AnSnap "(): Extra argument(s)");
 	    return false;
 	}
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
 	action_output("%d", snap_rows);
-    } else if (!strcasecmp(argv[0], "Cols")) {
+    } else if (!strcasecmp(argv[0], KwCols)) {
 	if (argc != 1) {
-	    popup_an_error("Extra argument(s)");
+	    popup_an_error(AnSnap "(): Extra argument(s)");
 	    return false;
 	}
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
 	action_output("%d", snap_cols);
-    } else if (!strcasecmp(argv[0], "Ascii")) {
+    } else if (!strcasecmp(argv[0], AnAscii)) {
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, 0, "Ascii", true, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 0, AnAscii, true, snap_buf,
 		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
-    } else if (!strcasecmp(argv[0], "Ascii1")) {
+    } else if (!strcasecmp(argv[0], AnAscii1)) {
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, 1, "Ascii1", true, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 1, AnAscii1, true, snap_buf,
 		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
-    } else if (!strcasecmp(argv[0], "Ebcdic")) {
+    } else if (!strcasecmp(argv[0], AnEbcdic)) {
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, 0, "Ebcdic", false, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 0, AnEbcdic, false, snap_buf,
 		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
-    } else if (!strcasecmp(argv[0], "Ebcdic1")) {
+    } else if (!strcasecmp(argv[0], AnEbcdic1)) {
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, 1, "Ebcdic1", false, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, 1, AnEbcdic1, false, snap_buf,
 		snap_rows, snap_cols, snap_caddr, IA_UTF8(ia));
-    } else if (!strcasecmp(argv[0], "ReadBuffer")) {
+    } else if (!strcasecmp(argv[0], AnReadBuffer)) {
 	if (snap_status == NULL) {
-	    popup_an_error("No saved state");
+	    popup_an_error(AnSnap "(): No saved state");
 	    return false;
 	}
 	return do_read_buffer(argv + 1, argc - 1, snap_buf, IA_UTF8(ia));
     } else {
-	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
-		"Wait, Ascii, Ascii1, Ebcdic, Ebcdic1 or ReadBuffer");
+	popup_an_error(AnSnap "(): Argument must be " KwSave ", " KwStatus ", "
+		KwRows ", " KwCols ", " AnWait ", " AnAscii ", " AnAscii1 ", "
+		AnEbcdic ", " AnEbcdic1 " or " AnReadBuffer);
 	return false;
     }
     return true;
@@ -2858,6 +2870,8 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     unsigned np;
     const char **pr;
 
+    action_debug(AnWait, ia, argc, argv);
+
     /* Pick off the timeout parameter first. */
     if (argc > 0 &&
 	(tmo = strtof(argv[0], &ptr)) >= 0.0 &&
@@ -2872,52 +2886,53 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     }
 
     if (np > 1) {
-	popup_an_error("Too many arguments to Wait or invalid timeout value");
+	popup_an_error("Too many arguments to " AnWait " ()"
+		"or invalid timeout value");
 	return false;
     }
     if (current_task == NULL || current_task->state != TS_RUNNING) {
-	popup_an_error("Wait can only be called from scripts or macros");
+	popup_an_error(AnWait "() can only be called from scripts or macros");
 	return false;
     }
     if (np == 1) {
-	if (!strcasecmp(pr[0], "NVTMode") || !strcasecmp(pr[0], "ansi")) {
+	if (!strcasecmp(pr[0], KwNvtMode) || !strcasecmp(pr[0], KwAnsi)) {
 	    if (!IN_NVT) {
 		next_state = TS_WAIT_NVT;
 	    }
-	} else if (!strcasecmp(pr[0], "3270Mode") ||
-		   !strcasecmp(pr[0], "3270")) {
+	} else if (!strcasecmp(pr[0], Kw3270Mode) ||
+		   !strcasecmp(pr[0], Kw3270)) {
 	    if (!IN_3270) {
 		next_state = TS_WAIT_3270;
 	    }
-	} else if (!strcasecmp(pr[0], "Output")) {
+	} else if (!strcasecmp(pr[0], KwOutput)) {
 	    if (current_task->taskq->output_wait_needed) {
 		next_state = TS_WAIT_OUTPUT;
 	    } else {
 		return true;
 	    }
-	} else if (!strcasecmp(pr[0], "Disconnect")) {
+	} else if (!strcasecmp(pr[0], KwDisconnect)) {
 	    if (CONNECTED) {
 		next_state = TS_WAIT_DISC;
 	    } else {
 		return true;
 	    }
-	} else if (!strcasecmp(pr[0], "Unlock")) {
+	} else if (!strcasecmp(pr[0], KwUnlock)) {
 	    if (KBWAIT) {
 		next_state = TS_WAIT_UNLOCK;
 	    } else {
 		return true;
 	    }
-	} else if (tmo > 0.0 && !strcasecmp(pr[0], "Seconds")) {
+	} else if (tmo > 0.0 && !strcasecmp(pr[0], KwSeconds)) {
 	    next_state = TS_TIME_WAIT;
-	} else if (strcasecmp(pr[0], "InputField")) {
-	    popup_an_error("Wait argument must be InputField, "
-		    "NVTmode, 3270Mode, Output, Seconds, Disconnect "
-		    "or Unlock");
+	} else if (strcasecmp(pr[0], KwInputField)) {
+	    popup_an_error(AnWait "() argument must be " KwInputField ", "
+		    KwNvtMode ", " Kw3270Mode ", " KwOutput ", " KwSeconds
+		    ", " KwDisconnect " or " KwUnlock);
 	    return false;
 	}
     }
     if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) {
-	popup_an_error("Wait: Not connected");
+	popup_an_error(AnWait "(): Not connected");
 	return false;
     }
 
@@ -2927,7 +2942,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     }
 
     /* No, wait for it to happen. */
-    task_set_state(current_task, next_state, "Wait()");
+    task_set_state(current_task, next_state, AnWait "()");
 
     /* Set up a timeout, if they want one. */
     if (tmo >= 0.0) {
@@ -3158,8 +3173,8 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     unsigned char c;
     varbuf_t r;
 
-    action_debug("AnsiText", ia, argc, argv);
-    if (check_argc("AnsiText", argc, 0, 0) < 0) {
+    action_debug(AnAnsiText, ia, argc, argv);
+    if (check_argc(AnAnsiText, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -3201,8 +3216,8 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("CloseScript", ia, argc, argv);
-    if (check_argc("CloseScript", argc, 0, 1) < 0) {
+    action_debug(AnCloseScript, ia, argc, argv);
+    if (check_argc(AnCloseScript, argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -3212,7 +3227,8 @@ CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 	(*current_task->next->cbx.cb->closescript)(current_task->next->cbx.handle);
 	return true;
     } else {
-	popup_an_error("CloseScript not supported for this type of script");
+	popup_an_error(AnCloseScript "() not supported for this type of "
+		"script");
 	return false;
     }
 }
@@ -3224,8 +3240,8 @@ Execute_action(ia_t ia, unsigned argc, const char **argv)
     const char **nargv = NULL;
     int nargc = 0;
 
-    action_debug("Execute", ia, argc, argv);
-    if (check_argc("Execute", argc, 1, 1) < 0) {
+    action_debug(AnExecute, ia, argc, argv);
+    if (check_argc(AnExecute, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -3271,11 +3287,11 @@ expect_timed_out(ioid_t id)
     Replace(s->expect.text, NULL);
 
     current_task = s;
-    popup_an_error("Expect: Timed out");
+    popup_an_error(AnExpect "(): Timed out");
     current_task = NULL;
 
     s->expect_id = NULL_IOID;
-    task_set_state(s, TS_RUNNING, "Expect timed out");
+    task_set_state(s, TS_RUNNING, AnExpect "()timed out");
     s->success = false;
 }
 
@@ -3309,17 +3325,17 @@ wait_timed_out(ioid_t id)
     /* If they just wanted a delay, succeed. */
     if (s->state == TS_TIME_WAIT) {
 	s->success = true;
-	task_set_state(s, TS_RUNNING, "Wait() timed out");
+	task_set_state(s, TS_RUNNING, AnWait "() timed out");
 	s->wait_id = NULL_IOID;
 	return;
     }
 
     /* Pop up the error message. */
-    popup_an_error_to(s, "Wait: Timed out");
+    popup_an_error_to(s, AnWait "(): Timed out");
 
     /* Forget the ID. */
     s->success = false;
-    task_set_state(s, TS_RUNNING, "Wait() timed out");
+    task_set_state(s, TS_RUNNING, AnWait "() timed out");
     s->wait_id = NULL_IOID;
 }
 
@@ -3329,20 +3345,20 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
 {
     int tmo;
 
-    action_debug("Expect", ia, argc, argv);
-    if (check_argc("Expect", argc, 1, 2) < 0) {
+    action_debug(AnExpect, ia, argc, argv);
+    if (check_argc(AnExpect, argc, 1, 2) < 0) {
 	return false;
     }
 
     /* Verify the environment and parameters. */
     if (!IN_NVT) {
-	popup_an_error("Expect is valid only when connected in NVT mode");
+	popup_an_error(AnExpect "() is valid only when connected in NVT mode");
 	return false;
     }
     if (argc == 2) {
 	tmo = atoi(argv[1]);
 	if (tmo < 1 || tmo > 600) {
-	    popup_an_error("Expect: Invalid timeout: %s", argv[1]);
+	    popup_an_error(AnExpect "(): Invalid timeout: %s", argv[1]);
 	    return false;
 	}
     } else {
@@ -3353,7 +3369,7 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
     expand_expect(current_task, argv[0]);
     if (!expect_matches(current_task)) {
 	current_task->expect_id = AddTimeOut(tmo * 1000, expect_timed_out);
-	task_set_state(current_task, TS_EXPECTING, "Expect()");
+	task_set_state(current_task, TS_EXPECTING, AnExpect "()");
     }
     /* else allow task to proceed */
     return true;
@@ -3363,23 +3379,23 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("KeyboardDisable", ia, argc, argv);
-    if (check_argc("KeyboardDisable", argc, 0, 1) < 0) {
+    action_debug(AnKeyboardDisable, ia, argc, argv);
+    if (check_argc(AnKeyboardDisable, argc, 0, 1) < 0) {
 	return false;
     }
 
     if (argc == 0) {
-	disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
+	disable_keyboard(DISABLE, EXPLICIT, AnKeyboardDisable "() action");
     } else {
 	if (!strcasecmp(argv[0], ResTrue)) {
-	    disable_keyboard(DISABLE, EXPLICIT, "KeyboardDisable() action");
+	    disable_keyboard(DISABLE, EXPLICIT, AnKeyboardDisable "() action");
 	} else if (!strcasecmp(argv[0], ResFalse)) {
-	    disable_keyboard(ENABLE, EXPLICIT, "KeyboardDisable() action");
-	} else if (!strcasecmp(argv[0], "ForceEnable")) {
+	    disable_keyboard(ENABLE, EXPLICIT, AnKeyboardDisable "() action");
+	} else if (!strcasecmp(argv[0], KwForceEnable)) {
 	    force_enable_keyboard();
 	} else {
-	    popup_an_error("KeyboardDisable(): parameter must be True, "
-		    "False or ForceEnable");
+	    popup_an_error(AnKeyboardDisable "(): parameter must be " ResTrue
+		    ", " ResFalse " or " KwForceEnable);
 	    return false;
 	}
     }
@@ -3392,8 +3408,8 @@ Macro_action(ia_t ia, unsigned argc, const char **argv)
 {
     struct macro_def *m;
 
-    action_debug("Macro", ia, argc, argv);
-    if (check_argc("Macro", argc, 1, 1) < 0) {
+    action_debug(AnMacro, ia, argc, argv);
+    if (check_argc(AnMacro, argc, 1, 1) < 0) {
 	return false;
     }
     for (m = macro_defs; m != NULL; m = m->next) {
@@ -3402,7 +3418,7 @@ Macro_action(ia_t ia, unsigned argc, const char **argv)
 	    return true;
 	}
     }
-    popup_an_error("no such macro: '%s'", argv[0]);
+    popup_an_error(AnMacro "(): No such macro: '%s'", argv[0]);
     return false;
 }
 
@@ -3410,20 +3426,21 @@ Macro_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Printer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Printer", ia, argc, argv);
-    if (check_argc("Printer", argc, 1, 2) < 0) {
+    action_debug(AnPrinter, ia, argc, argv);
+    if (check_argc(AnPrinter, argc, 1, 2) < 0) {
 	return false;
     }
-    if (!strcasecmp(argv[0], "Start")) {
+    if (!strcasecmp(argv[0], KwStart)) {
 	pr3287_session_start((argc > 1)? argv[1] : NULL);
-    } else if (!strcasecmp(argv[0], "Stop")) {
+    } else if (!strcasecmp(argv[0], KwStop)) {
 	if (argc != 1) {
-	    popup_an_error("Printer: Extra argument(s)");
+	    popup_an_error(AnPrinter "(): Extra argument(s)");
 	    return false;
 	}
 	pr3287_session_stop();
     } else {
-	popup_an_error("Printer: Argument must be Start or Stop");
+	popup_an_error(AnPrinter "(): Argument must be " KwStart " or "
+		KwStop);
 	return false;
     }
     return true;
@@ -3579,8 +3596,8 @@ abort_script(void)
 static bool
 Abort_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Abort", ia, argc, argv);
-    if (check_argc("Abort", argc, 0, 0) < 0) {
+    action_debug(AnAbort, ia, argc, argv);
+    if (check_argc(AnAbort, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -3601,8 +3618,8 @@ Abort_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Bell_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Bell", ia, argc, argv);
-    if (check_argc("Bell", argc, 0, 0) < 0) {
+    action_debug(AnBell, ia, argc, argv);
+    if (check_argc(AnBell, argc, 0, 0) < 0) {
 	return false;
     }
     if (product_has_display()) {
@@ -3671,7 +3688,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 	{ 0, NULL }
     };
 
-    action_debug("Capabilities", ia, argc, argv);
+    action_debug(AnCapabilities, ia, argc, argv);
 
     redirect = task_redirect_to();
 
@@ -3690,7 +3707,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (redirect == NULL || redirect->cbx.cb->setflags == NULL) {
-	popup_an_error("Capabilities: cannot set on this task type");
+	popup_an_error(AnCapabilities "(): cannot set on this task type");
 	return false;
     }
 
@@ -3702,7 +3719,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	if (fname[j].name == NULL) {
-	    popup_an_error("Capabilities: Unknown flag '%s'", argv[i]);
+	    popup_an_error(AnCapabilities "(): Unknown flag '%s'", argv[i]);
 	    return false;
 	}
     }
@@ -4000,35 +4017,35 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
     sample_per_type_t *state;
     bool no_echo = false;
 
-    action_debug("RequestInput", ia, argc, argv);
-    if (check_argc("RequestInput", argc, 0, 1) < 0) {
+    action_debug(AnRequestInput, ia, argc, argv);
+    if (check_argc(AnRequestInput, argc, 0, 1) < 0) {
 	return false;
     }
 
     if (argc > 0) {
-	if (!strcasecmp(argv[0], "-NoEcho")) {
+	if (!strcasecmp(argv[0], KwNoEcho)) {
 	    no_echo = true;
 	} else {
-	    popup_an_error("RequestInput: unknown keyword '%s'", argv[0]);
+	    popup_an_error(AnRequestInput "(): unknown keyword '%s'", argv[0]);
 	    return false;
 	}
     }
 
-    if (!task_can_request_input("RequestInput", no_echo)) {
+    if (!task_can_request_input(AnRequestInput, no_echo)) {
 	return false;
     }
 
-    state = (sample_per_type_t *)task_get_ir_state("RequestInput");
+    state = (sample_per_type_t *)task_get_ir_state(AnRequestInput);
     if (state == NULL) {
 	/* Set up some state. */
 	state = (sample_per_type_t *)Malloc(sizeof(*state));
 	state->previous = NULL;
-	task_set_ir_state("RequestInput", state, sample_abort_session);
+	task_set_ir_state(AnRequestInput, state, sample_abort_session);
     } else if (state->previous != NULL) {
 	action_output("Your last answer was '%s'", state->previous);
     }
 
-    task_request_input("RequestInput", "Input: ",
+    task_request_input(AnRequestInput, "Input: ",
 	    sample_continue_input, sample_abort_input, state, no_echo);
     return false;
 }

@@ -396,6 +396,7 @@ include/Makefile.aux
 include/menubar.h
 include/min_version.h
 include/model.h
+include/names.h
 include/nvt_gui.h
 include/nvt.h
 include/opts.h

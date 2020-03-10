@@ -41,6 +41,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "login_macro.h"
+#include "names.h"
 #include "popups.h"
 #include "resources.h"
 #include "source.h"
@@ -152,10 +153,11 @@ login_macro(char *s)
 
     if (is_actions) {
 	action = lazyaf("%s%s",
-		HOST_FLAG(NO_LOGIN_HOST)? "": "Wait(InputField) ", s);
+		HOST_FLAG(NO_LOGIN_HOST)? "": AnWait "(" KwInputField ") ",
+		s);
     } else {
 	action = lazyaf("%sString(%s)",
-		HOST_FLAG(NO_LOGIN_HOST)? "": "Wait(InputField) ",
+		HOST_FLAG(NO_LOGIN_HOST)? "": AnWait "(" KwInputField ") ",
 		safe_param(s));
     }
     push_cb(action, strlen(action), &login_cb, (task_cbh)&login_cb);

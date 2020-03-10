@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, 2018 Paul Mattes.
+ * Copyright (c) 1993-2015, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include "names.h"
 #include "task.h"
 #include "xaa.h"
 
@@ -45,5 +46,5 @@ void
 prompt_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    push_macro("Prompt()");
+    push_macro(AnPrompt "()");
 }
