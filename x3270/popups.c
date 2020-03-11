@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@
 
 #include "actions.h"
 #include "host.h"
+#include "names.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
 #include "screen.h"
@@ -1284,7 +1285,7 @@ void
 popups_register(void)
 {
     static action_table_t popup_actions[] = {
-	{ "Info",		Info_action	}
+	{ AnInfo,		Info_action	}
     };
 
     /* Register actions. */

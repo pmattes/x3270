@@ -140,7 +140,7 @@ static char *aliased_actions[] = {
 
 /* Pure Xt actions. */
 static XtActionsRec xactions[] = {
-    { "Cut",		Cut_xaction },
+    { AnCut,		Cut_xaction },
     { "Default",	Default_xaction },
     { "HandleMenu",	HandleMenu_xaction },
     { Anignore,		ignore_xaction },

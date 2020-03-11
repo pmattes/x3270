@@ -90,8 +90,8 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 static bool
 AltCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("AltCursor", ia, argc, argv);
-    if (check_argc("AltCursor", argc, 0, 0) < 0) {
+    action_debug(AnAltCursor, ia, argc, argv);
+    if (check_argc(AnAltCursor, argc, 0, 0) < 0) {
 	return false;
     }
     reset_idle_timer();
@@ -426,7 +426,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    run_action(AnAttn, IA_DEFAULT, NULL, NULL);
 	    break;
 	case XK_3270_AltCursor:
-	    run_action("AltCursor", IA_DEFAULT, NULL, NULL);
+	    run_action(AnAltCursor, IA_DEFAULT, NULL, NULL);
 	    break;
 	case XK_3270_CursorSelect:
 	    run_action(AnCursorSelect, IA_DEFAULT, NULL, NULL);
@@ -555,7 +555,7 @@ void
 xkybd_register(void)
 {
     static action_table_t xkybd_actions[] = {
-	{ "AltCursor",		AltCursor_action,	ACTION_KE },
+	{ AnAltCursor,		AltCursor_action,	ACTION_KE },
 	{ AnKeymap,		TemporaryKeymap_action,	ACTION_KE },
 	{ AnTemporaryKeymap,	TemporaryKeymap_action,	ACTION_KE }
     };

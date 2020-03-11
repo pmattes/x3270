@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2019 Paul Mattes.
+ * Copyright (c) 1994-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "names.h"
 #include "popups.h"
 #include "print_window.h"
 #include "trace.h"
@@ -152,7 +153,7 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
     const char *command;
     bool secure = appres.secure;
 
-    action_debug("PrintWindow", ia, argc, argv);
+    action_debug(AnPrintWindow, ia, argc, argv);
 
     /* Figure out what the command is. */
     command = get_resource(ResPrintWindowCommand);
@@ -160,10 +161,10 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 	command = argv[0];
     }
     if (argc > 1) {
-	popup_an_error("PrintWindow: extra arguments ignored");
+	popup_an_error(AnPrintWindow "(): Extra arguments ignored");
     }
     if (command == NULL || !*command) {
-	popup_an_error("PrintWindow: no %s defined", ResPrintWindowCommand);
+	popup_an_error(AnPrintWindow "(): No %s defined", ResPrintWindowCommand);
 	return false;
     }
 
@@ -171,7 +172,7 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
     if (command[0] == '@') {
 	secure = true;
 	if (!*++command) {
-	    popup_an_error("PrintWindow: Invalid %s", ResPrintWindowCommand);
+	    popup_an_error(AnPrintWindow "(): Invalid %s", ResPrintWindowCommand);
 	    return false;
 	}
     }
@@ -211,7 +212,7 @@ void
 print_window_register(void)
 {
     static action_table_t print_window_actions[] = {
-	{ "PrintWindow",	PrintWindow_action,	ACTION_KE }
+	{ AnPrintWindow,	PrintWindow_action,	ACTION_KE }
     };
 
     /* Register the actions. */

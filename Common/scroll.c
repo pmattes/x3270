@@ -572,7 +572,7 @@ void
 scroll_register(void)
 {
     static action_table_t scroll_actions[] = {
-	{ "Scroll",		Scroll_action,	ACTION_KE }
+	{ AnScroll,		Scroll_action,	ACTION_KE }
     };
 
     /* Register the actions. */

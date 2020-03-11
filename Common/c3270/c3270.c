@@ -1644,7 +1644,7 @@ popup_an_info(const char *fmt, ...)
 static bool
 Info_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Info", ia, argc, argv);
+    action_debug(AnInfo, ia, argc, argv);
 
     if (!argc) {
 	return true;
@@ -2226,7 +2226,7 @@ c3270_register(void)
     static action_table_t actions[] = {
 	{ AnEscape,		Escape_action,		ACTION_KE },
 	{ Anignore,		ignore_action,		ACTION_KE },
-	{ "Info",		Info_action,		ACTION_KE },
+	{ AnInfo,		Info_action,		ACTION_KE },
 	{ AnTrace,		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {

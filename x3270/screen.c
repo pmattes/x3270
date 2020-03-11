@@ -72,6 +72,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "save.h"
@@ -4342,8 +4343,8 @@ screen_focus(bool in)
 static bool
 SetFont_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SetFont", ia, argc, argv);
-    if (check_argc("SetFont", argc, 1, 1) < 0) {
+    action_debug(AnSetFont, ia, argc, argv);
+    if (check_argc(AnSetFont, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -6231,17 +6232,18 @@ WindowState_action(ia_t ia, unsigned argc, const char **argv)
 {
     int state;
 
-    action_debug("WindowState", ia, argc, argv);
-    if (check_argc("WindowState", argc, 1, 1) < 0) {
+    action_debug(AnWindowState, ia, argc, argv);
+    if (check_argc(AnWindowState, argc, 1, 1) < 0) {
 	return false;
     }
 
-    if (!strcasecmp(argv[0], "Iconic")) {
+    if (!strcasecmp(argv[0], KwIconic)) {
 	state = true;
-    } else if (!strcasecmp(argv[0], "Normal")) {
+    } else if (!strcasecmp(argv[0], KwNormal)) {
 	state = false;
     } else {
-	popup_an_error("WindowState argument must be Iconic or Normal");
+	popup_an_error(AnWindowState "(): Argument must be " KwIconic " or "
+		KwNormal);
 	return false;
     }
     XtVaSetValues(toplevel, XtNiconic, state, NULL);
@@ -6509,9 +6511,9 @@ screen_register(void)
 	{ APL_MODE,		toggle_aplMode,		0 }
     };
     static action_table_t screen_actions[] = {
-	{ "SetFont",		SetFont_action,		ACTION_KE },
+	{ AnSetFont,		SetFont_action,		ACTION_KE },
 	{ AnTitle,		Title_action,		ACTION_KE },
-	{ "WindowState",	WindowState_action,	ACTION_KE }
+	{ AnWindowState,	WindowState_action,	ACTION_KE }
     };
 
     /* Register our toggles. */

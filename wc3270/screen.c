@@ -3354,8 +3354,8 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
     LPTSTR lptstr;
     UINT format = CF_UNICODETEXT;
 
-    action_debug("Paste", ia, argc, argv);
-    if (check_argc("Paste", argc, 0, 0) < 0) {
+    action_debug(AnPaste, ia, argc, argv);
+    if (check_argc(AnPaste, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -3626,7 +3626,7 @@ screen_register(void)
 	{ TYPEAHEAD,		NULL,			0 }
     };
     static action_table_t screen_actions[] = {
-	{ "Paste",	Paste_action,	ACTION_KE },
+	{ AnPaste,	Paste_action,	ACTION_KE },
 	{ AnRedraw,	Redraw_action,	ACTION_KE },
 	{ AnTitle,	Title_action,	ACTION_KE }
     };

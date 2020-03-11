@@ -1241,8 +1241,8 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 bool
 Menu_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Menu", ia, argc, argv);
-    if (check_argc("Menu", argc, 0, 0) < 0) {
+    action_debug(AnMenu, ia, argc, argv);
+    if (check_argc(AnMenu, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -1263,7 +1263,7 @@ void
 menubar_register(void)
 {
     static action_table_t menubar_actions[] = {
-	{ "Menu",	Menu_action,	ACTION_KE }
+	{ AnMenu,	Menu_action,	ACTION_KE }
     };
 
     /* Register our actions. */

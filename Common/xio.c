@@ -200,8 +200,8 @@ void
 xio_register(void)
 {
     static action_table_t xio_actions[] = {
-	{ "Quit",		Quit_action,	ACTION_KE },
-	{ "Exit",		Quit_action,	ACTION_KE }
+	{ AnQuit,		Quit_action,	ACTION_KE },
+	{ AnExit,		Quit_action,	ACTION_KE }
     };
 
     /* Register our actions. */

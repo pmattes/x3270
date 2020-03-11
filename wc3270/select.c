@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016, 2018 Paul Mattes.
+ * Copyright (c) 2013-2016, 2018, 2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "kybd.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "screen.h"
@@ -326,7 +327,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    } else {
 		/* Selection pending: Copy. */
 		vtrace("  Copy\n");
-		run_action("Copy", IA_KEYMAP, NULL, NULL);
+		run_action(AnCopy, IA_KEYMAP, NULL, NULL);
 	    }
 	    break;
 	default:
@@ -381,7 +382,7 @@ bool
 select_return_key(void)
 {
     if (memchr(s_pending, 1, COLS * ROWS) != NULL) {
-	run_action("Copy", IA_KEYMAP, NULL, NULL);
+	run_action(AnCopy, IA_KEYMAP, NULL, NULL);
 	return true;
     } else {
 	return false;
@@ -854,8 +855,8 @@ copy_cut_action(bool cutting)
 static bool
 Copy_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Copy", ia, argc, argv);
-    if (check_argc("Copy", argc, 0, 0) < 0) {
+    action_debug(AnCopy, ia, argc, argv);
+    if (check_argc(AnCopy, argc, 0, 0) < 0) {
 	return false;
     }
     copy_cut_action(false);
@@ -868,8 +869,8 @@ Copy_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Cut_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Cut", ia, argc, argv);
-    if (check_argc("Cut", argc, 0, 0) < 0) {
+    action_debug(AnCut, ia, argc, argv);
+    if (check_argc(AnCut, argc, 0, 0) < 0) {
 	return false;
     }
     copy_cut_action(true);
@@ -956,8 +957,8 @@ keyboard_cursor_select(void)
 static bool
 SelectLeft_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SelectLeft", ia, argc, argv);
-    if (check_argc("SelectLeft", argc, 0, 0) < 0) {
+    action_debug(AnSelectLeft, ia, argc, argv);
+    if (check_argc(AnSelectLeft, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -974,8 +975,8 @@ SelectLeft_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 SelectRight_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SelectRight", ia, argc, argv);
-    if (check_argc("SelectRight", argc, 0, 0) < 0) {
+    action_debug(AnSelectRight, ia, argc, argv);
+    if (check_argc(AnSelectRight, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -991,8 +992,8 @@ SelectRight_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 SelectUp_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SelectUp", ia, argc, argv);
-    if (check_argc("SelectUp", argc, 0, 0) < 0) {
+    action_debug(AnSelectUp, ia, argc, argv);
+    if (check_argc(AnSelectUp, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -1008,8 +1009,8 @@ SelectUp_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 SelectDown_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SelectDown", ia, argc, argv);
-    if (check_argc("SelectDown", argc, 0, 0) < 0) {
+    action_debug(AnSelectDown, ia, argc, argv);
+    if (check_argc(AnSelectDown, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -1026,12 +1027,12 @@ void
 select_register(void)
 {
     static action_table_t select_actions[] = {
-	{ "Copy",	Copy_action,		ACTION_KE },
-	{ "Cut",	Cut_action,		ACTION_KE },
-	{ "SelectDown",	SelectDown_action,	ACTION_KE },
-	{ "SelectLeft",	SelectLeft_action,	ACTION_KE },
-	{ "SelectRight",SelectRight_action,	ACTION_KE },
-	{ "SelectUp",	SelectUp_action,	ACTION_KE }
+	{ AnCopy,	Copy_action,		ACTION_KE },
+	{ AnCut,	Cut_action,		ACTION_KE },
+	{ AnSelectDown,	SelectDown_action,	ACTION_KE },
+	{ AnSelectLeft,	SelectLeft_action,	ACTION_KE },
+	{ AnSelectRight,SelectRight_action,	ACTION_KE },
+	{ AnSelectUp,	SelectUp_action,	ACTION_KE }
     };
 
     register_actions(select_actions, array_count(select_actions));

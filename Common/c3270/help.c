@@ -99,12 +99,12 @@ static struct {
 	    "Open connection to a local shell or command" },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-	{ "Copy", NULL, P_3270, "Copy selected text to Windows clipboard" },
+	{ AnCopy, NULL, P_3270, "Copy selected text to Windows clipboard" },
 #endif /*]*/
 	{ AnCursorSelect, NULL, P_3270,
 	    "Light pen select at cursor location" },
 #if defined(WC3270) /*[*/
-	{ "Cut", NULL, P_3270,
+	{ AnCut, NULL, P_3270,
 	    "Copy selected text to Windows clipboard, then erase" },
 #endif /*]*/
 	{ AnDelete, NULL, P_3270, "Delete character at cursor" },
@@ -158,7 +158,7 @@ static struct {
 	{ AnLeft, NULL, P_3270, "Move cursr left" },
 	{ AnLeft2, NULL, P_3270, "Move cursor left 2 columns" },
 	{ AnMacro, "<name>", P_SCRIPTING, "Execute a predefined macro" },
-	{ "Menu", NULL, P_INTERACTIVE, "Pop up the command menu" },
+	{ AnMenu, NULL, P_INTERACTIVE, "Pop up the command menu" },
 	{ AnMoveCursor, "<row> <col>", P_3270|P_SCRIPTING,
 	    "Move cursor to specific location (0-origin, deprecated)" },
 	{ AnMoveCursor, "<offset>", P_3270|P_SCRIPTING,

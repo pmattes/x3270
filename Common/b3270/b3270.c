@@ -70,6 +70,7 @@
 #include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
+#include "names.h"
 #include "nvt.h"
 #include "nvt_gui.h"
 #include "opts.h"
@@ -590,8 +591,8 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     int ba2;
 
-    action_debug("ClearRegion", ia, argc, argv);
-    if (check_argc("ClearRegion", argc, 4, 4) < 0) {
+    action_debug(AnClearRegion, ia, argc, argv);
+    if (check_argc(AnClearRegion, argc, 4, 4) < 0) {
 	return false;
     }
 
@@ -601,12 +602,12 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
     columns = atoi(argv[3]);
 
     if (row <= 0 || row > ROWS || column <= 0 || column > COLS) {
-	popup_an_error("ClearRegion: invalid coordinates");
+	popup_an_error(AnClearRegion "(): invalid coordinates");
     }
 
     if (rows < 0 || columns < 0 ||
 	    row - 1 + rows > ROWS || column - 1 + columns > COLS) {
-	popup_an_error("ClearRegion: invalid size");
+	popup_an_error(AnClearRegion "(): invalid size");
     }
 
     if (rows == 0 || columns == 0) {
@@ -656,24 +657,25 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Crash_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Crash", ia, argc, argv);
-    if (check_argc("Crash", argc, 1, 1) < 0) {
+    action_debug(AnCrash, ia, argc, argv);
+    if (check_argc(AnCrash, argc, 1, 1) < 0) {
 	return false;
     }
-    if (!strcasecmp(argv[0], "Assert")) {
+    if (!strcasecmp(argv[0], KwAssert)) {
 	assert(false);
-	popup_an_error("Crash: Assert did not work");
-    } else if (!strcasecmp(argv[0], "Exit")) {
+	popup_an_error(AnCrash "(): Assert did not work");
+    } else if (!strcasecmp(argv[0], KwExit)) {
 	exit(999);
-	popup_an_error("Crash: Exit did not work");
-    } else if (!strcasecmp(argv[0], "Null")) {
+	popup_an_error(AnCrash "(): Exit did not work");
+    } else if (!strcasecmp(argv[0], KwNull)) {
 	char *s = NULL;
 	char c;
 
 	printf("%c\n", c = *s);
-	popup_an_error("Crash: Null did not work");
+	popup_an_error(AnCrash "(): Null did not work");
     } else {
-	popup_an_error("Crash: Must specify Assert, Exit or Null");
+	popup_an_error(AnCrash "(): Must specify " KwAssert ", " KwExit " or "
+		KwNull);
     }
 
     return false;
@@ -923,8 +925,8 @@ static void
 b3270_register(void)
 {
     static action_table_t actions[] = {
-	{ "ClearRegion",	ClearRegion_action,	0 },
-	{ "Crash",		Crash_action,		ACTION_HIDDEN },
+	{ AnClearRegion,	ClearRegion_action,	0 },
+	{ AnCrash,		Crash_action,		ACTION_HIDDEN },
 	{ "ForceStatus",	ForceStatus_action,	ACTION_HIDDEN },
     };
     static opt_t b3270_opts[] = {
