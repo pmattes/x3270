@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -153,13 +153,13 @@ check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	return 0;
     }
     if (nargs_min == nargs_max) {
-	popup_an_error("%s requires %d argument%s",
+	popup_an_error("%s() requires %d argument%s",
 		aname, nargs_min, nargs_min == 1 ? "" : "s");
     } else if (nargs_max == nargs_min + 1) {
-	popup_an_error("%s requires %d or %d arguments",
+	popup_an_error("%s() requires %d or %d arguments",
 		aname, nargs_min, nargs_max);
     } else {
-	popup_an_error("%s requires %d to %d arguments",
+	popup_an_error("%s() requires %d to %d arguments",
 		aname, nargs_min, nargs_max);
     }
     return -1;

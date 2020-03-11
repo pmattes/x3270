@@ -48,6 +48,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
+#include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
@@ -1612,19 +1613,19 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     /* These first cases apply to both 3270 and NVT modes. */
     switch (k) {
     case KEY_UP:
-	run_action("Up", IA_DEFAULT, NULL, NULL);
+	run_action(AnUp, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_DOWN:
-	run_action("Down", IA_DEFAULT, NULL, NULL);
+	run_action(AnDown, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_LEFT:
-	run_action("Left", IA_DEFAULT, NULL, NULL);
+	run_action(AnLeft, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_RIGHT:
-	run_action("Right", IA_DEFAULT, NULL, NULL);
+	run_action(AnRight, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_HOME:
-	run_action("Right", IA_DEFAULT, NULL, NULL);
+	run_action(AnRight, IA_DEFAULT, NULL, NULL);
 	return;
     default:
 	break;
@@ -1639,41 +1640,41 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     if (IN_3270) {
 	switch (k) {
 	case KEY_DC:
-	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case KEY_BACKSPACE:
-	    run_action("BackSpace", IA_DEFAULT, NULL, NULL);
+	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case KEY_HOME:
-	    run_action("Home", IA_DEFAULT, NULL, NULL);
+	    run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
 	    break;
 	}
 	switch (ucs4) {
 	case 0x03:
-	    run_action("Clear", IA_DEFAULT, NULL, NULL);
+	    run_action(AnClear, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 0x12:
-	    run_action("Reset", IA_DEFAULT, NULL, NULL);
+	    run_action(AnReset, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 'L' & 0x1f:
 	    run_action("Redraw", IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\t':
-	    run_action("Tab", IA_DEFAULT, NULL, NULL);
+	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 0177:
-	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\b':
-	    run_action("BackSpace", IA_DEFAULT, NULL, NULL);
+	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\r':
-	    run_action("Enter", IA_DEFAULT, NULL, NULL);
+	    run_action(AnEnter, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\n':
-	    run_action("Newline", IA_DEFAULT, NULL, NULL);
+	    run_action(AnNewline, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
 	    break;
@@ -1698,7 +1699,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     for (i = 1; i <= 24; i++) {
 	if (k == KEY_F(i)) {
 	    sprintf(buf, "%d", i);
-	    run_action("PF", IA_DEFAULT, buf, NULL);
+	    run_action(AnPF, IA_DEFAULT, buf, NULL);
 	    return;
 	}
     }
@@ -1708,7 +1709,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	char ks[16];
 
 	sprintf(ks, "U+%04x", ucs4);
-	run_action("Key", IA_DEFAULT, ks, NULL);
+	run_action(AnKey, IA_DEFAULT, ks, NULL);
 	return;
     }
 

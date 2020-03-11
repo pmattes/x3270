@@ -51,6 +51,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "screen.h"
@@ -317,7 +318,7 @@ synchronous_cc(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    push_keymap_action(action);
 	}
     } else {
-	run_action("Key", IA_DEFAULT, "0x03", NULL);
+	run_action(AnKey, IA_DEFAULT, "0x03", NULL);
     }
 }
 
@@ -2587,19 +2588,19 @@ kybd_input2(INPUT_RECORD *ir)
 	run_action("Escape", IA_DEFAULT, NULL, NULL);
 	return;
     case VK_UP:
-	run_action("Up", IA_DEFAULT, NULL, NULL);
+	run_action(AnUp, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_DOWN:
-	run_action("Down", IA_DEFAULT, NULL, NULL);
+	run_action(AnDown, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_LEFT:
-	run_action("Left", IA_DEFAULT, NULL, NULL);
+	run_action(AnLeft, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_RIGHT:
-	run_action("Right", IA_DEFAULT, NULL, NULL);
+	run_action(AnRight, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_HOME:
-	run_action("Home", IA_DEFAULT, NULL, NULL);
+	run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	return;
     default:
 	break;
@@ -2610,16 +2611,16 @@ kybd_input2(INPUT_RECORD *ir)
 	switch(k) {
 	/* These cases apply only to 3270 mode. */
 	case VK_TAB:
-	    run_action("Tab", IA_DEFAULT, NULL, NULL);
+	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_DELETE:
-	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_BACK:
-	    run_action("BackSpace", IA_DEFAULT, NULL, NULL);
+	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_RETURN:
-	    run_action("Enter", IA_DEFAULT, NULL, NULL);
+	    run_action(AnEnter, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
 	    break;
@@ -2628,13 +2629,13 @@ kybd_input2(INPUT_RECORD *ir)
 
     /* Catch PF keys. */
     if (k >= VK_F1 && k <= VK_F24) {
-	run_action("PF", IA_DEFAULT, lazyaf("%d", k - VK_F1 + 1), NULL);
+	run_action(AnPF, IA_DEFAULT, lazyaf("%d", k - VK_F1 + 1), NULL);
 	return;
     }
 
     /* Then any other character. */
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
-	run_action("Key", IA_DEFAULT,
+	run_action(AnKey, IA_DEFAULT,
 		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
 		NULL);
     } else {

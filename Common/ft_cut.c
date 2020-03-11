@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@
 #include "ft_private.h"
 #include "unicodec.h"
 #include "ft.h"
+#include "names.h"
 #include "tables.h"
 #include "trace.h"
 #include "utils.h"
@@ -561,7 +562,7 @@ cut_data_request(void)
     trace_ds("> FT DATA %u\n", from6(seq));
     ft_update_length();
     expanded_length += count;
-    run_action("Enter", IA_FT, NULL, NULL);
+    run_action(AnEnter, IA_FT, NULL, NULL);
 }
 
 /*
@@ -650,7 +651,7 @@ static void
 cut_ack(void)
 {
     trace_ds("> FT ACK\n");
-    run_action("Enter", IA_FT, NULL, NULL);
+    run_action(AnEnter, IA_FT, NULL, NULL);
 }
 
 /*

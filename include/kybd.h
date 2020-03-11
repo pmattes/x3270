@@ -46,9 +46,6 @@ extern unsigned int kybdlock;
 #define KL_SCROLLED		0x0400
 #define KL_OIA_MINUS		0x0800
 
-#define FailOnError "FailOnError"
-#define NoFailOnError "NoFailOnError"
-
 extern unsigned char aid;
 
 void do_reset(bool explicit);

@@ -38,6 +38,7 @@
 
 #include "actions.h"
 #include "kybd.h"
+#include "names.h"
 #include "popups.h"
 #include "stringscript.h"
 #include "task.h"
@@ -99,12 +100,12 @@ string_run(task_cbh handle, bool *success)
 	if (!IA_IS_KEY(s->ia)) {
 	    /* For anything but a keymap, pop up an error message. */
 	    if (s->result) {
-		popup_an_error("String failed: %s", s->result);
+		popup_an_error(AnString "() failed: %s", s->result);
 	    } else {
-		popup_an_error("String terminated due to error");
+		popup_an_error(AnString "() terminated due to error");
 	    }
 	} else {
-	    vtrace("String terminated due to error\n");
+	    vtrace(AnString "() terminated due to error\n");
 	}
 	*success = false;
 	done = true;

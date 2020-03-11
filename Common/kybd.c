@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -56,6 +56,7 @@
 #include "latin1.h"
 #include "lazya.h"
 #include "linemode.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
@@ -201,54 +202,54 @@ static action_t ToggleInsert_action;
 static action_t ToggleReverse_action;
 
 static action_table_t kybd_actions[] = {
-    { "Attn",		Attn_action,		ACTION_KE },
-    { "BackSpace",	BackSpace_action,	ACTION_KE },
-    { "BackTab",	BackTab_action,		ACTION_KE },
-    { "CircumNot",	CircumNot_action,	ACTION_KE },
-    { "Clear",		Clear_action,		ACTION_KE },
-    { "CursorSelect",	CursorSelect_action,	ACTION_KE },
-    { "Delete",		Delete_action,		ACTION_KE },
-    { "DeleteField",	DeleteField_action,	ACTION_KE },
-    { "DeleteWord",	DeleteWord_action,	ACTION_KE },
-    { "Down",		Down_action,		ACTION_KE },
-    { "Dup",		Dup_action,		ACTION_KE },
-    { "Enter",		Enter_action,		ACTION_KE },
-    { "Erase",		Erase_action,		ACTION_KE },
-    { "EraseEOF",	EraseEOF_action,	ACTION_KE },
-    { "EraseInput",	EraseInput_action,	ACTION_KE },
-    { "FieldEnd",	FieldEnd_action,	ACTION_KE },
-    { "FieldMark",	FieldMark_action,	ACTION_KE },
-    { "Flip",		Flip_action,		ACTION_KE },
-    { "HexString",	HexString_action,	ACTION_KE },
-    { "Home",		Home_action,		ACTION_KE },
-    { "Insert",		Insert_action,		ACTION_KE },
-    { "Interrupt",	Interrupt_action,	ACTION_KE },
-    { "Key",		Key_action,		ACTION_KE },
-    { "Left2",		Left2_action,		ACTION_KE },
-    { "Left",		Left_action,		ACTION_KE },
-    { "MonoCase",	MonoCase_action,	ACTION_KE | ACTION_HIDDEN },
-    { "MoveCursor",	MoveCursor_action,	ACTION_KE },
-    { "MoveCursor1",	MoveCursor1_action,	ACTION_KE },
-    { "Newline",	Newline_action,		ACTION_KE },
-    { "NextWord",	NextWord_action,	ACTION_KE },
-    { "PA",		PA_action,		ACTION_KE },
-    { "PasteString",	PasteString_action,	ACTION_KE },
-    { "PF",		PF_action,		ACTION_KE },
-    { "PreviousWord",	PreviousWord_action,	ACTION_KE },
-    { "Reset",		Reset_action,		ACTION_KE },
-    { "Right2",		Right2_action,		ACTION_KE },
-    { "Right",		Right_action,		ACTION_KE },
-    { "String",		String_action,		ACTION_KE },
-    { "SysReq",		SysReq_action,		ACTION_KE },
-    { "Tab",		Tab_action,		ACTION_KE },
-    { "TemporaryComposeMap",TemporaryComposeMap_action,ACTION_KE },
-    { "ToggleInsert",	ToggleInsert_action,	ACTION_KE },
-    { "ToggleReverse",	ToggleReverse_action,	ACTION_KE },
-    { "Up",		Up_action,		ACTION_KE }
+    { AnAttn,		Attn_action,		ACTION_KE },
+    { AnBackSpace,	BackSpace_action,	ACTION_KE },
+    { AnBackTab,	BackTab_action,		ACTION_KE },
+    { AnCircumNot,	CircumNot_action,	ACTION_KE },
+    { AnClear,		Clear_action,		ACTION_KE },
+    { AnCursorSelect,	CursorSelect_action,	ACTION_KE },
+    { AnDelete,		Delete_action,		ACTION_KE },
+    { AnDeleteField,	DeleteField_action,	ACTION_KE },
+    { AnDeleteWord,	DeleteWord_action,	ACTION_KE },
+    { AnDown,		Down_action,		ACTION_KE },
+    { AnDup,		Dup_action,		ACTION_KE },
+    { AnEnter,		Enter_action,		ACTION_KE },
+    { AnErase,		Erase_action,		ACTION_KE },
+    { AnEraseEOF,	EraseEOF_action,	ACTION_KE },
+    { AnEraseInput,	EraseInput_action,	ACTION_KE },
+    { AnFieldEnd,	FieldEnd_action,	ACTION_KE },
+    { AnFieldMark,	FieldMark_action,	ACTION_KE },
+    { AnFlip,		Flip_action,		ACTION_KE },
+    { AnHexString,	HexString_action,	ACTION_KE },
+    { AnHome,		Home_action,		ACTION_KE },
+    { AnInsert,		Insert_action,		ACTION_KE },
+    { AnInterrupt,	Interrupt_action,	ACTION_KE },
+    { AnKey,		Key_action,		ACTION_KE },
+    { AnLeft,		Left_action,		ACTION_KE },
+    { AnLeft2,		Left2_action,		ACTION_KE },
+    { AnMonoCase,	MonoCase_action,	ACTION_KE | ACTION_HIDDEN },
+    { AnMoveCursor,	MoveCursor_action,	ACTION_KE },
+    { AnMoveCursor1,	MoveCursor1_action,	ACTION_KE },
+    { AnNewline,	Newline_action,		ACTION_KE },
+    { AnNextWord,	NextWord_action,	ACTION_KE },
+    { AnPA,		PA_action,		ACTION_KE },
+    { AnPasteString,	PasteString_action,	ACTION_KE },
+    { AnPF,		PF_action,		ACTION_KE },
+    { AnPreviousWord,	PreviousWord_action,	ACTION_KE },
+    { AnReset,		Reset_action,		ACTION_KE },
+    { AnRight,		Right_action,		ACTION_KE },
+    { AnRight2,		Right2_action,		ACTION_KE },
+    { AnString,		String_action,		ACTION_KE },
+    { AnSysReq,		SysReq_action,		ACTION_KE },
+    { AnTab,		Tab_action,		ACTION_KE },
+    { AnTemporaryComposeMap,TemporaryComposeMap_action,ACTION_KE },
+    { AnToggleInsert,	ToggleInsert_action,	ACTION_KE },
+    { AnToggleReverse,	ToggleReverse_action,	ACTION_KE },
+    { AnUp,		Up_action,		ACTION_KE }
 };
 
 static action_table_t kybd_dactions[] = {
-    { "Compose",	Compose_action,		ACTION_KE }
+    { AnCompose,	Compose_action,		ACTION_KE }
 };
 
 /*
@@ -852,20 +853,20 @@ PF_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
 
-    action_debug("PF", ia, argc, argv);
-    if (check_argc("PF", argc, 1, 1) < 0) {
+    action_debug(AnPF, ia, argc, argv);
+    if (check_argc(AnPF, argc, 1, 1) < 0) {
 	return false;
     }
     k = atoi(argv[0]);
     if (k < 1 || k > PF_SZ) {
-	popup_an_error("PF: Invalid argument '%s'", argv[0]);
+	popup_an_error(AnPF "(): Invalid argument '%s'", argv[0]);
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
 	return true;
     }
     if (kybdlock) {
-	enq_ta("PF", argv[0], NULL);
+	enq_ta(AnPF, argv[0], NULL);
     } else {
 	key_AID(pf_xlate[k-1]);
     }
@@ -877,20 +878,20 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
 
-    action_debug("PA", ia, argc, argv);
-    if (check_argc("PA", argc, 1, 1) < 0) {
+    action_debug(AnPA, ia, argc, argv);
+    if (check_argc(AnPA, argc, 1, 1) < 0) {
 	return false;
     }
     k = atoi(argv[0]);
     if (k < 1 || k > PA_SZ) {
-	popup_an_error("PA: Invalid argument '%s'", argv[0]);
+	popup_an_error(AnPA "(): Invalid argument '%s'", argv[0]);
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
 	return true;
     }
     if (kybdlock) {
-	enq_ta("PA", argv[0], NULL);
+	enq_ta(AnPA, argv[0], NULL);
     } else {
 	key_AID(pa_xlate[k-1]);
     }
@@ -903,8 +904,8 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Attn_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Attn", ia, argc, argv);
-    if (check_argc("Attn", argc, 0, 0) < 0) {
+    action_debug(AnAttn, ia, argc, argv);
+    if (check_argc(AnAttn, argc, 0, 0) < 0) {
 	return false;
     }
     if (IN_E) {
@@ -912,7 +913,7 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 	    net_interrupt(0);
 	} else {
 	    status_minus();
-	    kybdlock_set(KL_OIA_MINUS, "Attn");
+	    kybdlock_set(KL_OIA_MINUS, AnAttn);
 	}
 	return true;
     }
@@ -932,8 +933,8 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Interrupt_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Interrupt", ia, argc, argv);
-    if (check_argc("Interrupt", argc, 0, 0) < 0) {
+    action_debug(AnInterrupt, ia, argc, argv);
+    if (check_argc(AnInterrupt, argc, 0, 0) < 0) {
 	return false;
     }
     if (!IN_3270) {
@@ -1065,7 +1066,7 @@ key_Character_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     ucs4_t uc;
     bool oerr_fail = false;
 
-    if (argc > 1 && !strcasecmp(argv[1], FailOnError)) {
+    if (argc > 1 && !strcasecmp(argv[1], KwFailOnError)) {
 	oerr_fail = true;
     }
     ebc = atoi(argv[0]);
@@ -1116,7 +1117,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		(with_ge ? GE_WFLAG : 0) |
 		(pasting ? PASTE_WFLAG : 0));
 	enq_fta(key_Character_wrapper, codename,
-		oerr_fail ? FailOnError : NoFailOnError);
+		oerr_fail ? KwFailOnError : KwNoFailOnError);
 	return true;
     }
     baddr = cursor_addr;
@@ -1352,7 +1353,7 @@ key_WCharacter_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     unsigned char ebc_pair[2];
     bool oerr_fail = false;
 
-    if (argc > 1 && !strcasecmp(argv[1], FailOnError)) {
+    if (argc > 1 && !strcasecmp(argv[1], KwFailOnError)) {
 	oerr_fail = true;
     }
     ebc_wide = atoi(argv[0]);
@@ -1384,7 +1385,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
 
 	codename = lazyaf("%d", (ebc_pair[0] << 8) | ebc_pair[1]);
 	enq_fta(key_WCharacter_wrapper, codename,
-		oerr_fail ? FailOnError : NoFailOnError);
+		oerr_fail ? KwFailOnError : KwNoFailOnError);
 	return false;
     }
 
@@ -1661,14 +1662,14 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	const char *apl_name;
 
 	if (keytype == KT_STD) {
-	    enq_ta("Key", lazyaf("U+%04x", ucs4),
-		    oerr_fail ? FailOnError : NoFailOnError);
+	    enq_ta(AnKey, lazyaf("U+%04x", ucs4),
+		    oerr_fail ? KwFailOnError : KwNoFailOnError);
 	} else {
 	    /* APL character */
 	    apl_name = ucs4_to_apl_key(ucs4);
 	    if (apl_name != NULL) {
-		enq_ta("Key", lazyaf("apl_%s", apl_name),
-			oerr_fail ? FailOnError : NoFailOnError);
+		enq_ta(AnKey, lazyaf("apl_%s", apl_name),
+			oerr_fail ? KwFailOnError : KwNoFailOnError);
 	    } else {
 		vtrace("  dropped (invalid key type or name)\n");
 	    }
@@ -1773,8 +1774,8 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 static bool
 MonoCase_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("MonoCase", ia, argc, argv);
-    if (check_argc("MonoCase", argc, 0, 0) < 0) {
+    action_debug(AnMonoCase, ia, argc, argv);
+    if (check_argc(AnMonoCase, argc, 0, 0) < 0) {
 	return false;
     }
     do_toggle(MONOCASE);
@@ -1789,8 +1790,8 @@ Flip_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *toggle_argv[2] = { ResRightToLeftMode, NULL };
 
-    action_debug("Flip", ia, argc, argv);
-    if (check_argc("Flip", argc, 0, 0) < 0) {
+    action_debug(AnFlip, ia, argc, argv);
+    if (check_argc(AnFlip, argc, 0, 0) < 0) {
 	return false;
     }
     return Toggle_action(ia, 1, toggle_argv);
@@ -1802,11 +1803,11 @@ Flip_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Tab_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Tab", ia, argc, argv);
-    if (check_argc("Tab", argc, 0, 0) < 0) {
+    action_debug(AnTab, ia, argc, argv);
+    if (check_argc(AnTab, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Tab");
+    OERR_CLEAR_OR_ENQ(AnTab);
     if (IN_NVT) {
 	net_sendc('\t');
 	return true;
@@ -1824,11 +1825,11 @@ BackTab_action(ia_t ia, unsigned argc, const char **argv)
     int baddr, nbaddr;
     int	sbaddr;
 
-    action_debug("BackTab", ia, argc, argv);
-    if (check_argc("BackTab", argc, 0, 0) < 0) {
+    action_debug(AnBackTab, ia, argc, argv);
+    if (check_argc(AnBackTab, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("BackTab");
+    OERR_CLEAR_OR_ENQ(AnBackTab);
     if (!IN_3270) {
 	return false;
     }
@@ -1945,8 +1946,8 @@ do_reset(bool explicit)
 static bool
 Reset_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Reset", ia, argc, argv);
-    if (check_argc("Reset", argc, 0, 0) < 0) {
+    action_debug(AnReset, ia, argc, argv);
+    if (check_argc(AnReset, argc, 0, 0) < 0) {
 	return false;
     }
     do_reset(true);
@@ -1959,11 +1960,11 @@ Reset_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Home_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Home", ia, argc, argv);
-    if (check_argc("Home", argc, 0, 0) < 0) {
+    action_debug(AnHome, ia, argc, argv);
+    if (check_argc(AnHome, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Home");
+    OERR_CLEAR_OR_ENQ(AnHome);
     if (IN_NVT) {
 	nvt_send_home();
 	return true;
@@ -2003,11 +2004,11 @@ do_left(void)
 bool
 Left_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Left", ia, argc, argv);
-    if (check_argc("Left", argc, 0, 0) < 0) {
+    action_debug(AnLeft, ia, argc, argv);
+    if (check_argc(AnLeft, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Left");
+    OERR_CLEAR_OR_ENQ(AnLeft);
     if (IN_NVT) {
 	nvt_send_left();
 	return true;
@@ -2109,12 +2110,12 @@ do_delete(void)
 static bool
 Delete_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Delete", ia, argc, argv);
-    if (check_argc("Delete", argc, 0, 0) < 0) {
+    action_debug(AnDelete, ia, argc, argv);
+    if (check_argc(AnDelete, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("Delete", NULL, NULL);
+	enq_ta(AnDelete, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2141,12 +2142,12 @@ Delete_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 BackSpace_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("BackSpace", ia, argc, argv);
-    if (check_argc("BackSpace", argc, 0, 0) < 0) {
+    action_debug(AnBackSpace, ia, argc, argv);
+    if (check_argc(AnBackSpace, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("BackSpace", NULL, NULL);
+	enq_ta(AnBackSpace, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2230,12 +2231,12 @@ do_erase(void)
 static bool
 Erase_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Erase", ia, argc, argv);
-    if (check_argc("Erase", argc, 0, 0) < 0) {
+    action_debug(AnErase, ia, argc, argv);
+    if (check_argc(AnErase, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("Erase", NULL, NULL);
+	enq_ta(AnErase, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2259,11 +2260,11 @@ Right_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     enum dbcs_state d;
 
-    action_debug("Right", ia, argc, argv);
-    if (check_argc("Right", argc, 0, 0) < 0) {
+    action_debug(AnRight, ia, argc, argv);
+    if (check_argc(AnRight, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Right");
+    OERR_CLEAR_OR_ENQ(AnRight);
     if (IN_NVT) {
 	nvt_send_right();
 	return true;
@@ -2291,11 +2292,11 @@ Left2_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     enum dbcs_state d;
 
-    action_debug("Left2", ia, argc, argv);
-    if (check_argc("Left2", argc, 0, 0) < 0) {
+    action_debug(AnLeft2, ia, argc, argv);
+    if (check_argc(AnLeft2, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Left2");
+    OERR_CLEAR_OR_ENQ(AnLeft2);
     if (IN_NVT) {
 	return false;
     }
@@ -2325,12 +2326,12 @@ PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
     unsigned char c;
     bool prot;
 
-    action_debug("PreviousWord", ia, argc, argv);
-    if (check_argc("PreviousWord", argc, 0, 0) < 0) {
+    action_debug(AnPreviousWord, ia, argc, argv);
+    if (check_argc(AnPreviousWord, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("PreviousWord", NULL, NULL);
+	enq_ta(AnPreviousWord, NULL, NULL);
 	return true;
     }
     if (IN_NVT || !formatted) {
@@ -2393,11 +2394,11 @@ Right2_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     enum dbcs_state d;
 
-    action_debug("Right2", ia, argc, argv);
-    if (check_argc("Right2", argc, 0, 0) < 0) {
+    action_debug(AnRight2, ia, argc, argv);
+    if (check_argc(AnRight2, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Right2");
+    OERR_CLEAR_OR_ENQ(AnRight2);
     if (IN_NVT) {
 	return false;
     }
@@ -2476,12 +2477,12 @@ NextWord_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     unsigned char c;
 
-    action_debug("NextWord", ia, argc, argv);
-    if (check_argc("NextWord", argc, 0, 0) < 0) {
+    action_debug(AnNextWord, ia, argc, argv);
+    if (check_argc(AnNextWord, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("NextWord", NULL, NULL);
+	enq_ta(AnNextWord, NULL, NULL);
 	return true;
     }
     if (IN_NVT || !formatted) {
@@ -2541,11 +2542,11 @@ Up_action(ia_t ia, unsigned argc, const char **argv)
 {
     register int baddr;
 
-    action_debug("Up", ia, argc, argv);
-    if (check_argc("Up", argc, 0, 0) < 0) {
+    action_debug(AnUp, ia, argc, argv);
+    if (check_argc(AnUp, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Up");
+    OERR_CLEAR_OR_ENQ(AnUp);
     if (IN_NVT) {
 	nvt_send_up();
 	return true;
@@ -2566,11 +2567,11 @@ Down_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
 
-    action_debug("Down", ia, argc, argv);
-    if (check_argc("Down", argc, 0, 0) < 0) {
+    action_debug(AnDown, ia, argc, argv);
+    if (check_argc(AnDown, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("Down");
+    OERR_CLEAR_OR_ENQ(AnDown);
     if (IN_NVT) {
 	nvt_send_down();
 	return true;
@@ -2589,12 +2590,12 @@ Newline_action(ia_t ia, unsigned argc, const char **argv)
     int baddr, faddr;
     unsigned char fa;
 
-    action_debug("Newline", ia, argc, argv);
-    if (check_argc("Newline", argc, 0, 0) < 0) {
+    action_debug(AnNewline, ia, argc, argv);
+    if (check_argc(AnNewline, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("Newline", NULL, NULL);
+	enq_ta(AnNewline, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2622,21 +2623,21 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
     bool oerr_fail = !IA_IS_KEY(ia);
     bool consumed = false;
 
-    action_debug("Dup", ia, argc, argv);
-    if (check_argc("Dup", argc, 0, 1) < 0) {
+    action_debug(AnDup, ia, argc, argv);
+    if (check_argc(AnDup, argc, 0, 1) < 0) {
 	return false;
     }
     if (argc > 0) {
-	if (!strcasecmp(argv[0], FailOnError)) {
+	if (!strcasecmp(argv[0], KwFailOnError)) {
 	    oerr_fail = true;
-	} else if (strcasecmp(argv[0], NoFailOnError)) {
-	    popup_an_error("Dup: parameter must be " FailOnError " or "
-		NoFailOnError);
+	} else if (strcasecmp(argv[0], KwNoFailOnError)) {
+	    popup_an_error(AnDup "(): parameter must be " KwFailOnError " or "
+		KwNoFailOnError);
 	    return false;
 	}
     }
     if (kybdlock) {
-	enq_ta("Dup", oerr_fail ? FailOnError : NoFailOnError, NULL);
+	enq_ta(AnDup, oerr_fail ? KwFailOnError : KwNoFailOnError, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2660,21 +2661,21 @@ FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 {
     bool oerr_fail = !IA_IS_KEY(ia);
 
-    action_debug("FieldMark", ia, argc, argv);
-    if (check_argc("FieldMark", argc, 0, 1) < 0) {
+    action_debug(AnFieldMark, ia, argc, argv);
+    if (check_argc(AnFieldMark, argc, 0, 1) < 0) {
 	return false;
     }
     if (argc > 0) {
-	if (!strcasecmp(argv[0], FailOnError)) {
+	if (!strcasecmp(argv[0], KwFailOnError)) {
 	    oerr_fail = true;
-	} else if (strcasecmp(argv[0], NoFailOnError)) {
-	    popup_an_error("FieldMark: parameter must be " FailOnError " or "
-		    NoFailOnError);
+	} else if (strcasecmp(argv[0], KwNoFailOnError)) {
+	    popup_an_error(AnFieldMark "(): parameter must be " KwFailOnError
+		    " or " KwNoFailOnError);
 	    return false;
 	}
     }
     if (kybdlock) {
-	enq_ta("FieldMark", oerr_fail ? FailOnError : NoFailOnError, NULL);
+	enq_ta(AnFieldMark, oerr_fail ? KwFailOnError : KwNoFailOnError, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2689,14 +2690,14 @@ FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Enter_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Enter", ia, argc, argv);
-    if (check_argc("Enter", argc, 0, 0) < 0) {
+    action_debug(AnEnter, ia, argc, argv);
+    if (check_argc(AnEnter, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
 	return false;
     } else if (kybdlock) {
-	enq_ta("Enter", NULL, NULL);
+	enq_ta(AnEnter, NULL, NULL);
     } else {
 	key_AID(AID_ENTER);
     }
@@ -2706,8 +2707,8 @@ Enter_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 SysReq_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("SysReq", ia, argc, argv);
-    if (check_argc("SysReq", argc, 0, 0) < 0) {
+    action_debug(AnSysReq, ia, argc, argv);
+    if (check_argc(AnSysReq, argc, 0, 0) < 0) {
 	return false;
     }
     if (IN_NVT) {
@@ -2719,7 +2720,7 @@ SysReq_action(ia_t ia, unsigned argc, const char **argv)
 	if (kybdlock & KL_OIA_MINUS) {
 	    return false;
 	} else if (kybdlock) {
-	    enq_ta("SysReq", NULL, NULL);
+	    enq_ta(AnSysReq, NULL, NULL);
 	} else {
 	    key_AID(AID_SYSREQ);
 	}
@@ -2733,15 +2734,15 @@ SysReq_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Clear_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Clear", ia, argc, argv);
-    if (check_argc("Clear", argc, 0, 0) < 0) {
+    action_debug(AnClear, ia, argc, argv);
+    if (check_argc(AnClear, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
 	return false;
     }
     if (kybdlock && FULL_SESSION) {
-	enq_ta("Clear", NULL, NULL);
+	enq_ta(AnClear, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2845,12 +2846,12 @@ lightpen_select(int baddr)
 static bool
 CursorSelect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("CursorSelect", ia, argc, argv);
-    if (check_argc("CursorSelect", argc, 0, 0) < 0) {
+    action_debug(AnCursorSelect, ia, argc, argv);
+    if (check_argc(AnCursorSelect, argc, 0, 0) < 0) {
 	return false;
     }
     if (kybdlock) {
-	enq_ta("CursorSelect", NULL, NULL);
+	enq_ta(AnCursorSelect, NULL, NULL);
 	return true;
     }
     if (IN_NVT) {
@@ -2871,11 +2872,11 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
     enum dbcs_state d;
     enum dbcs_why why = DBCS_FIELD;
 
-    action_debug("EraseEOF", ia, argc, argv);
-    if (check_argc("EraseEOF", argc, 0, 0) < 0) {
+    action_debug(AnEraseEOF, ia, argc, argv);
+    if (check_argc(AnEraseEOF, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("EraseEOF");
+    OERR_CLEAR_OR_ENQ(AnEraseEOF);
     if (IN_NVT) {
 	return false;
     }
@@ -2922,11 +2923,11 @@ EraseInput_action(ia_t ia, unsigned argc, const char **argv)
     unsigned char fa;
     bool f;
 
-    action_debug("EraseInput", ia, argc, argv);
-    if (check_argc("EraseInput", argc, 0, 0) < 0) {
+    action_debug(AnEraseInput, ia, argc, argv);
+    if (check_argc(AnEraseInput, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("EraseInput");
+    OERR_CLEAR_OR_ENQ(AnEraseInput);
     if (IN_NVT) {
 	return false;
     }
@@ -2988,11 +2989,11 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     unsigned char fa;
 
-    action_debug("DeleteWord", ia, argc, argv);
-    if (check_argc("DeleteWord", argc, 0, 0) < 0) {
+    action_debug(AnDeleteWord, ia, argc, argv);
+    if (check_argc(AnDeleteWord, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("DeleteWord");
+    OERR_CLEAR_OR_ENQ(AnDeleteWord);
     if (IN_NVT) {
 	linemode_send_werase();
 	return true;
@@ -3053,11 +3054,11 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
     int baddr;
     unsigned char fa;
 
-    action_debug("DeleteField", ia, argc, argv);
-    if (check_argc("DeleteField", argc, 0, 0) < 0) {
+    action_debug(AnDeleteField, ia, argc, argv);
+    if (check_argc(AnDeleteField, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("DeleteField");
+    OERR_CLEAR_OR_ENQ(AnDeleteField);
     if (IN_NVT) {
 	linemode_send_kill();
 	return true;
@@ -3092,8 +3093,8 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *set_argv[3] = { ResInsertMode, ResTrue, NULL };
 
-    action_debug("Insert", ia, argc, argv);
-    if (check_argc("Insert", argc, 0, 0) < 0) {
+    action_debug(AnInsert, ia, argc, argv);
+    if (check_argc(AnInsert, argc, 0, 0) < 0) {
 	return false;
     }
     return Set_action(ia, 2, set_argv);
@@ -3107,8 +3108,8 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *toggle_argv[2] = { ResInsertMode, NULL };
 
-    action_debug("ToggleInsert", ia, argc, argv);
-    if (check_argc("ToggleInsert", argc, 0, 0) < 0) {
+    action_debug(AnToggleInsert, ia, argc, argv);
+    if (check_argc(AnToggleInsert, argc, 0, 0) < 0) {
 	return false;
     }
     return Toggle_action(ia, 1, toggle_argv);
@@ -3122,8 +3123,8 @@ ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *toggle_argv[2] = { ResReverseInputMode, NULL };
 
-    action_debug("ToggleReverse", ia, argc, argv);
-    if (check_argc("ToggleReverse", argc, 0, 0) < 0) {
+    action_debug(AnToggleReverse, ia, argc, argv);
+    if (check_argc(AnToggleReverse, argc, 0, 0) < 0) {
 	return false;
     }
     return Toggle_action(ia, 1, toggle_argv);
@@ -3140,11 +3141,11 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
     unsigned char fa, c;
     int	last_nonblank = -1;
 
-    action_debug("FieldEnd", ia, argc, argv);
-    if (check_argc("FieldEnd", argc, 0, 0) < 0) {
+    action_debug(AnFieldEnd, ia, argc, argv);
+    if (check_argc(AnFieldEnd, argc, 0, 0) < 0) {
 	return false;
     }
-    OERR_CLEAR_OR_ENQ("FieldEnd");
+    OERR_CLEAR_OR_ENQ(AnFieldEnd);
     if (IN_NVT) {
 	return false;
     }
@@ -3238,7 +3239,7 @@ MoveCursor_common(int origin, const char *name, ia_t ia, unsigned argc,
 static bool
 MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return MoveCursor_common(0, "MoveCursor", ia, argc, argv);
+    return MoveCursor_common(0, AnMoveCursor, ia, argc, argv);
 }
 
 /*
@@ -3247,7 +3248,7 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 MoveCursor1_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return MoveCursor_common(1, "MoveCursor1", ia, argc, argv);
+    return MoveCursor_common(1, AnMoveCursor1, ia, argc, argv);
 }
 
 /*
@@ -3262,16 +3263,16 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
     ucs4_t ucs4;
     bool oerr_fail = !IA_IS_KEY(ia);
 
-    action_debug("Key", ia, argc, argv);
+    action_debug(AnKey, ia, argc, argv);
 
     /*
      * Allow FailOnError or NoFailOnError anywhere, but only pay attention to
      * the last.
      */
     for (i = 0; i < argc; i++) {
-	if (!strcasecmp(argv[i], FailOnError)) {
+	if (!strcasecmp(argv[i], KwFailOnError)) {
 	    oerr_fail = true;
-	} else if (!strcasecmp(argv[0], NoFailOnError)) {
+	} else if (!strcasecmp(argv[0], KwNoFailOnError)) {
 	    oerr_fail = false;
 	}
     }
@@ -3279,19 +3280,19 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
     for (i = 0; i < argc; i++) {
 	const char *s = argv[i];
 
-	if (!strcasecmp(s, FailOnError) || !strcasecmp(s, NoFailOnError)) {
+	if (!strcasecmp(s, KwFailOnError) || !strcasecmp(s, KwNoFailOnError)) {
 	    continue;
 	}
 	k = my_string_to_key(s, &keytype, &ucs4);
 	if (k == KS_NONE && !ucs4) {
-	    popup_an_error("Key: Nonexistent or invalid name: %s", s);
+	    popup_an_error(AnKey "(): Nonexistent or invalid name: %s", s);
 	    continue;
 	}
 	if (k & ~0xff) {
 	    /*
 	     * Can't pass symbolic names that aren't in the range 0x01..0xff.
 	     */
-	    popup_an_error("Key: Invalid name: %s", s);
+	    popup_an_error(AnKey "(): Invalid name: %s", s);
 	    continue;
 	}
 	if (k != KS_NONE) {
@@ -3313,7 +3314,7 @@ String_action(ia_t ia, unsigned argc, const char **argv)
     size_t len = 0;
     char *s;
 
-    action_debug("String", ia, argc, argv);
+    action_debug(AnString, ia, argc, argv);
 
     /* Determine the total length of the strings. */
     for (i = 0; i < argc; i++) {
@@ -3362,10 +3363,10 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
     const char *t;
     int out;
 
-    action_debug("HexString", ia, argc, argv);
+    action_debug(AnHexString, ia, argc, argv);
 
     /* Pick off the -Ascii option. */
-    if (argc > 0 && !strcasecmp(argv[0], "-Ascii")) {
+    if (argc > 0 && !strcasecmp(argv[0], KwDashAscii)) {
 	is_ascii = true;
 	argc--;
 	argv++;
@@ -3380,7 +3381,7 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
 	sl = strlen(t);
 	for (j = 0; j < (unsigned)sl; j++) {
 	    if (nybble((unsigned char)t[j]) < 0) {
-		popup_an_error("HexString: Invalid hex character");
+		popup_an_error(AnHexString "(): Invalid hex character");
 		return false;
 	    }
 	}
@@ -3390,7 +3391,7 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
     if (len % 2) {
-	popup_an_error("HexString: Odd number of nybbles");
+	popup_an_error(AnHexString "(): Odd number of nybbles");
 	return false;
     }
 
@@ -3437,8 +3438,8 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     char *s;
     const char *t;
 
-    action_debug("PasteString", ia, argc, argv);
-    if (check_argc("PasteString", argc, 1, 2) < 0) {
+    action_debug(AnPasteString, ia, argc, argv);
+    if (check_argc(AnPasteString, argc, 1, 2) < 0) {
 	return false;
     }
 
@@ -3480,8 +3481,8 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 CircumNot_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("CircumNot", ia, argc, argv);
-    if (check_argc("CircumNot", argc, 0, 0) < 0) {
+    action_debug(AnCircumNot, ia, argc, argv);
+    if (check_argc(AnCircumNot, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -3498,11 +3499,11 @@ static void
 do_pa(unsigned n)
 {
     if (n < 1 || n > PA_SZ) {
-	popup_an_error("Unknown PA key %d", n);
+	popup_an_error(AnString "(): Unknown PA key %d", n);
 	return;
     }
     if (kybdlock) {
-	enq_ta("PA", lazyaf("%d", n), NULL);
+	enq_ta(AnPA, lazyaf("%d", n), NULL);
 	return;
     }
     key_AID(pa_xlate[n-1]);
@@ -3513,11 +3514,11 @@ static void
 do_pf(unsigned n)
 {
     if (n < 1 || n > PF_SZ) {
-	popup_an_error("Unknown PF key %d", n);
+	popup_an_error(AnString "(): Unknown PF key %d", n);
 	return;
     }
     if (kybdlock) {
-	enq_ta("PF", lazyaf("%d", n), NULL);
+	enq_ta(AnPF, lazyaf("%d", n), NULL);
 	return;
     }
     key_AID(pf_xlate[n-1]);
@@ -3789,7 +3790,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	case BACKSLASH:	/* last character was a backslash */
 	    switch (c) {
 	    case 'a':
-		popup_an_error("String: Bell not supported");
+		popup_an_error(AnString "(): Bell not supported");
 		state = BASE;
 		break;
 	    case 'b':
@@ -3826,7 +3827,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		state = BASE;
 		break;
 	    case 'v':
-		popup_an_error("String: Vertical tab not supported");
+		popup_an_error(AnString "(): Vertical tab not supported");
 		state = BASE;
 		break;
 	    case 'u':
@@ -3871,7 +3872,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		state = BACKPF;
 		break;
 	    default:
-		popup_an_error("String: Unknown character after \\p");
+		popup_an_error(AnString "(): Unknown character after \\p");
 		state = BASE;
 		break;
 	    }
@@ -3882,7 +3883,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		literal = (literal * 10) + (c - '0');
 		nc++;
 	    } else if (!nc) {
-		popup_an_error("String: Unknown character after \\pf");
+		popup_an_error(AnString "(): Unknown character after \\pf");
 		state = BASE;
 	    } else {
 		do_pf(literal);
@@ -3899,7 +3900,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		literal = (literal * 10) + (c - '0');
 		nc++;
 	    } else if (!nc) {
-		popup_an_error("String: Unknown character after \\pa");
+		popup_an_error(AnString "(): Unknown character after \\pa");
 		state = BASE;
 	    } else {
 		do_pa(literal);
@@ -3917,7 +3918,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		nc = 0;
 		continue;
 	    } else {
-		popup_an_error("String: Missing hex digits after \\x");
+		popup_an_error(AnString "(): Missing hex digits after \\x");
 		state = BASE;
 		continue;
 	    }
@@ -3928,7 +3929,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		nc = 0;
 		continue;
 	    } else {
-		popup_an_error("String: Missing hex digits after \\e");
+		popup_an_error(AnString "(): Missing hex digits after \\e");
 		state = BASE;
 		continue;
 	    }
@@ -4012,7 +4013,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	}
 	break;
     default:
-	popup_an_error("String: Missing data after \\");
+	popup_an_error(AnString "(): Missing data after \\");
 	break;
     }
 
@@ -4061,7 +4062,8 @@ hex_input(const char *s)
 
     /* Validate the string. */
     if (strlen(s) % 2) {
-	popup_an_error("HexString: Odd number of characters in specification");
+	popup_an_error(AnHexString "(): Odd number of characters in "
+		"specification");
 	return;
     }
     t = s;
@@ -4073,22 +4075,23 @@ hex_input(const char *s)
 		nbytes++;
 	} else if (!strncmp(t, "\\E", 2) || !strncmp(t, "\\e", 2)) {
 	    if (escaped) {
-		popup_an_error("HexString: Double \\E");
+		popup_an_error(AnHexString "(): Double \\E");
 		return;
 	    }
 	    if (!IN_3270) {
-		popup_an_error("HexString: \\E in NVT mode");
+		popup_an_error(AnHexString "(): \\E in NVT mode");
 		return;
 	    }
 	    escaped = true;
 	} else {
-	    popup_an_error("HexString: Illegal character in specification");
+	    popup_an_error(AnHexString "(): Illegal character in "
+		    "specification");
 	    return;
 	}
 	t += 2;
     }
     if (escaped) {
-	popup_an_error("HexString: Nothing follows \\E");
+	popup_an_error(AnHexString "(): Nothing follows \\E");
 	return;
     }
 
@@ -4326,12 +4329,12 @@ build_composites(const char *how)
 static bool
 Compose_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Compose", ia, argc, argv);
-    if (check_argc("Compose", argc, 0, 0) < 0) {
+    action_debug(AnCompose, ia, argc, argv);
+    if (check_argc(AnCompose, argc, 0, 0) < 0) {
 	return false;
     }
 
-    if (!composites && !build_composites("Compose")) {
+    if (!composites && !build_composites(AnCompose)) {
 	return true;
     }
 
@@ -4388,11 +4391,11 @@ temporary_compose_map(const char *name, const char *how)
 static bool
 TemporaryComposeMap_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("TemporaryComposeMap", ia, argc, argv);
-    if (check_argc("TemporaryComposeMap", argc, 0, 1) < 0) {
+    action_debug(AnTemporaryComposeMap, ia, argc, argv);
+    if (check_argc(AnTemporaryComposeMap, argc, 0, 1) < 0) {
 	return false;
     }
 
     return temporary_compose_map((argc > 0)? argv[0]: NULL,
-	    "TemporaryComposeMap");
+	    AnTemporaryComposeMap);
 }
