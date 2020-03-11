@@ -323,7 +323,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
 		/* No selection pending: Paste. */
 		vtrace("  Paste\n");
-		run_action("Paste", IA_KEYMAP, NULL, NULL);
+		run_action(AnPaste, IA_KEYMAP, NULL, NULL);
 	    } else {
 		/* Selection pending: Copy. */
 		vtrace("  Copy\n");

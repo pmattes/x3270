@@ -94,7 +94,7 @@ static bool know_mods = false;
 
 /* Actions that are aliases for other actions. */
 static char *aliased_actions[] = {
-    AnClose, "HardPrint", AnOpen, NULL
+    AnClose, AnOpen, NULL
 };
 
 /*
@@ -140,14 +140,14 @@ static char *aliased_actions[] = {
 
 /* Pure Xt actions. */
 static XtActionsRec xactions[] = {
-    { AnCut,		Cut_xaction },
+    { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
     { "HandleMenu",	HandleMenu_xaction },
-    { Anignore,		ignore_xaction },
+    { "ignore",		ignore_xaction },
     { "insert-selection",	insert_selection_xaction },
     { "KybdSelect",	KybdSelect_xaction },
     { "MouseSelect",	MouseSelect_xaction },
-    { AnMoveCursor,	MoveCursor_xaction },
+    { "MoveCursor",	MoveCursor_xaction },
     { "move-select",	move_select_xaction },
     { PA_END,		PA_End_xaction },
     { PA_KEYMAP_TRACE,	PA_KeymapTrace_xaction },
@@ -371,7 +371,7 @@ xaction_init2(void)
 
     /* Fill in the table. */
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (strcmp(e->t.name, AnMoveCursor) && (e->t.flags & ACTION_KE)) {
+	if (strcmp(e->t.name, "MoveCursor") && (e->t.flags & ACTION_KE)) {
 	    wrapper_actions[nwrappers].string = (String)e->t.name;
 	    wrapper_actions[nwrappers].proc = xt_mapped_actions[nwrappers];
 	    nwrappers++;

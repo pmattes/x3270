@@ -58,6 +58,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "menubar.h"
+#include "names.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "print_window.h"
@@ -710,7 +711,7 @@ static void
 reenable_keyboard_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    push_macro("KeyboardDisable(ForceEnable)");
+    push_macro(AnKeyboardDisable "(" KwForceEnable ")");
 }
 
 /* Called from the "Abort Script" button on the "File..." menu */
