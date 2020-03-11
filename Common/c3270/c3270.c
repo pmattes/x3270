@@ -1519,7 +1519,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
     bool on = false;
     unsigned arg0 = 0;
 
-    action_debug("Trace", ia, argc, argv);
+    action_debug(AnTrace, ia, argc, argv);
 
     if (argc == 0) {
 	if (toggled(TRACING) && tracefile_name != NULL) {
@@ -1535,35 +1535,35 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	/* Skip. */
 	arg0++;
     }
-    if (!strcasecmp(argv[arg0], "Off")) {
+    if (!strcasecmp(argv[arg0], KwOff)) {
 	on = false;
 	arg0++;
 	if (argc > arg0) {
-	    popup_an_error("Trace: Too many arguments for 'Off'");
+	    popup_an_error(AnTrace "(): Too many arguments for '" KwOff "'");
 	    return false;
 	}
 	if (!toggled(TRACING)) {
 	    return true;
 	}
-    } else if (!strcasecmp(argv[arg0], "On")) {
+    } else if (!strcasecmp(argv[arg0], KwOn)) {
 	on = true;
 	arg0++;
 	if (argc == arg0) {
 	    /* Nothing else to do. */
 	} else if (argc == arg0 + 1) {
 	    if (toggled(TRACING)) {
-		popup_an_error("Trace: Cannot specify filename when tracing "
+		popup_an_error(AnTrace "(): Cannot specify filename when tracing "
 			"is already on");
 		return false;
 	    } else {
 		trace_set_trace_file(argv[arg0]);
 	    }
 	} else {
-	    popup_an_error("Trace: Too many arguments for 'On'");
+	    popup_an_error(AnTrace "(): Too many arguments for '" KwOn "'");
 	    return false;
 	}
     } else {
-	popup_an_error("Trace: Parameter must be On or Off");
+	popup_an_error(AnTrace "(): Parameter must be On or Off");
 	return false;
     }
 
@@ -1657,7 +1657,7 @@ Info_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 ignore_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("ignore", ia, argc, argv);
+    action_debug(Anignore, ia, argc, argv);
     return true;
 }
 
@@ -2225,9 +2225,9 @@ c3270_register(void)
 {
     static action_table_t actions[] = {
 	{ AnEscape,		Escape_action,		ACTION_KE },
-	{ "ignore",		ignore_action,		ACTION_KE },
+	{ Anignore,		ignore_action,		ACTION_KE },
 	{ "Info",		Info_action,		ACTION_KE },
-	{ "Trace",		Trace_action,		ACTION_KE },
+	{ AnTrace,		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {
 	{ OptAllBold,  OPT_BOOLEAN, true,  ResAllBold,
@@ -2366,9 +2366,9 @@ c3270_register(void)
 #endif /*]*/
     };
     static query_t queries[] = {
-	{ "Keymap", keymap_dump, NULL, false, true },
-	{ "Status", status_dump, NULL, false, true },
-	{ "Stats", status_dump, NULL, true, true }
+	{ KwKeymap, keymap_dump, NULL, false, true },
+	{ KwStatus, status_dump, NULL, false, true },
+	{ KwStats, status_dump, NULL, true, true }
     };
 
     /* Register for state changes. */

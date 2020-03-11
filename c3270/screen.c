@@ -1517,7 +1517,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		} else if (status_row &&
 		    m.x == rmargin - 28 &&
 		    m.y == status_row) {
-			run_action("Show", IA_DEFAULT, "Stats", NULL);
+			run_action(AnShow, IA_DEFAULT, KwStatus, NULL);
 		} else if (m.x < cCOLS &&
 			   m.y - screen_yoffset >= 0 &&
 			   m.y - screen_yoffset < ROWS) {
@@ -1659,7 +1659,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	    run_action(AnReset, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 'L' & 0x1f:
-	    run_action("Redraw", IA_DEFAULT, NULL, NULL);
+	    run_action(AnRedraw, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\t':
 	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
@@ -2469,8 +2469,8 @@ draw_oia(void)
 bool
 Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Redraw", ia, argc, argv);
-    if (check_argc("Redraw", argc, 0, 0) < 0) {
+    action_debug(AnRedraw, ia, argc, argv);
+    if (check_argc(AnRedraw, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -2926,7 +2926,7 @@ screen_register(void)
 	{ TYPEAHEAD,	NULL,			0 }
     };
     static action_table_t screen_actions[] = {
-	{ "Redraw",	Redraw_action,	ACTION_KE }
+	{ AnRedraw,	Redraw_action,	ACTION_KE }
     };
 
     /* Register the toggles. */

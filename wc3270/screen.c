@@ -2226,7 +2226,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	    status_row &&
 	    x == rmargin - 28 &&
 	    y == status_row) {
-	run_action("Show", IA_DEFAULT, "Status", NULL);
+	run_action(AnShow, IA_DEFAULT, KwStatus, NULL);
 	return;
     }
 
@@ -3419,8 +3419,8 @@ screen_title(const char *text)
 static bool
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Title", ia, argc, argv);
-    if (check_argc("Title", argc, 1, 1) < 0) {
+    action_debug(AnTitle, ia, argc, argv);
+    if (check_argc(AnTitle, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -3627,8 +3627,8 @@ screen_register(void)
     };
     static action_table_t screen_actions[] = {
 	{ "Paste",	Paste_action,	ACTION_KE },
-	{ "Redraw",	Redraw_action,	ACTION_KE },
-	{ "Title",	Title_action,	ACTION_KE }
+	{ AnRedraw,	Redraw_action,	ACTION_KE },
+	{ AnTitle,	Title_action,	ACTION_KE }
     };
 
     /* Register the toggles. */

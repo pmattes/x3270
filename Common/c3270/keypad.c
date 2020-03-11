@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2009, 2013-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include "ckeypad.h"
 #include "cmenubar.h"
 #include "ctlrc.h"
+#include "names.h"
 #include "task.h"
 
 #if !defined(_WIN32) /*[*/
@@ -506,8 +507,8 @@ keypad_key(int k, ucs4_t u)
 bool
 Keypad_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Keypad", ia, argc, argv);
-    if (check_argc("Keypad", argc, 0, 0) < 0) {
+    action_debug(AnKeypad, ia, argc, argv);
+    if (check_argc(AnKeypad, argc, 0, 0) < 0) {
 	return false;
     }
     pop_up_keypad(true);
@@ -521,7 +522,7 @@ void
 keypad_register(void)
 {
     static action_table_t keypad_actions[] = {
-	{ "Keypad",	Keypad_action,	ACTION_KE }
+	{ AnKeypad,	Keypad_action,	ACTION_KE }
     };
 
     /* Register the actions. */

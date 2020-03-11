@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -59,6 +59,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "names.h"
 #include "s3270_proto.h"
 
 #if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION >= 6 /*[*/
@@ -505,11 +506,11 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 #endif /*]*/
 
     /* Run 'Query(Actions)' to learn what Tcl commands we need to add. */
-    if (run_s3270("Query(Actions)", &success, NULL, &ret) < 0) {
+    if (run_s3270(AnQuery "(" KwActions ")", &success, NULL, &ret) < 0) {
 	return TCL_ERROR;
     }
     if (!success) {
-	fprintf(stderr, "Query(Actions) failed:\n%s\n", ret);
+	fprintf(stderr, AnQuery "(" KwActions ") failed:\n%s\n", ret);
 	return TCL_ERROR;
     }
 

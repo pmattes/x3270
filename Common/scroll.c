@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2017, 2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #include "actions.h"
 #include "ctlrc.h"
 #include "kybd.h"
+#include "names.h"
 #include "popups.h"
 #include "resources.h"
 #include "screen.h"
@@ -485,25 +486,25 @@ rethumb(void)
 static bool
 Scroll_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Scroll", ia, argc, argv);
-    if (check_argc("Scroll", argc, 1, 2) < 0) {
+    action_debug(AnScroll, ia, argc, argv);
+    if (check_argc(AnScroll, argc, 1, 2) < 0) {
 	return false;
     }
 
-    if (argc == 1 && !strcasecmp(argv[0], "Forward")) {
+    if (argc == 1 && !strcasecmp(argv[0], KwForward)) {
 	scroll_n(maxROWS, +1);
-    } else if (argc == 1 && !strcasecmp(argv[0], "Backward")) {
+    } else if (argc == 1 && !strcasecmp(argv[0], KwBackward)) {
 	scroll_n(maxROWS, -1);
-    } else if (argc == 1 && !strcasecmp(argv[0], "Reset")) {
+    } else if (argc == 1 && !strcasecmp(argv[0], KwReset)) {
 	scroll_reset();
-    } else if (argc == 2 && !strcasecmp(argv[0], "Set")) {
+    } else if (argc == 2 && !strcasecmp(argv[0], KwSet)) {
 	int n;
 	char *ptr;
 	int curr = scrolled_back;
 
 	n = strtol(argv[1], &ptr, 10);
 	if (n < 0 || ptr == argv[1] || *ptr != '\0') {
-	    popup_an_error("Invalid Scroll(Set,n) value");
+	    popup_an_error(AnScroll "(): Invalid " KwSet ",n value");
 	    return false;
 	}
 	if (n > n_saved) {
@@ -518,8 +519,8 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
 	    scroll_n(curr - n, +1);
 	}
     } else {
-	popup_an_error("Scroll parameter must be Forward, Backward, Reset or "
-		"Set,<n>");
+	popup_an_error(AnScroll "(): Parameter must be " KwForward ", "
+		KwBackward ", " KwReset " or " KwSet",<n>");
 	return false;
     }
     return true;

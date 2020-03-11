@@ -652,19 +652,19 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro(AnEscape "(\"Show(copyright)\")");
+    push_macro(AnEscape "(\"" AnShow "(" KwCopyright ")\")");
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro(AnEscape "(\"Show(status)\")");
+    push_macro(AnEscape "(\"" AnShow "(" KwStatus ")\")");
 }
 
 static void
 fm_about(void *ignored _is_unused)
 {
-    push_macro(AnEscape "(\"Show(about)\")");
+    push_macro(AnEscape "(\"" AnShow "(" KwAbout ")\")");
 }
 
 static void
@@ -676,16 +676,16 @@ fm_prompt(void *ignored _is_unused)
 static void
 fm_print(void *ignored _is_unused)
 {
-    push_macro("PrintText");
+    push_macro(AnPrintText "()");
 }
 
 static void
 fm_xfer(void *ignored _is_unused)
 {
     if (ft_state == FT_NONE) {
-	push_macro(AnEscape "(\"Transfer()\")");
+	push_macro(AnEscape "(\"" AnTransfer "()\")");
     } else {
-	push_macro("Transfer(Cancel)");
+	push_macro(AnTransfer "(" KwCancel ")");
     }
 }
 
@@ -693,9 +693,9 @@ static void
 fm_trace(void *ignored _is_unused)
 {
     if (toggled(TRACING)) {
-	push_macro("Trace(off)");
+	push_macro(AnTrace "(" KwOff ")");
     } else {
-	push_macro("Trace(on)");
+	push_macro(AnTrace "(" KwOn ")");
     }
 }
 
@@ -703,9 +703,9 @@ static void
 fm_screentrace(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off,info)");
+	push_macro(AnScreenTrace "(" KwOff "," KwInfo ")");
     } else {
-	push_macro("ScreenTrace(on,info)");
+	push_macro(AnScreenTrace "(" KwOn "," KwInfo ")");
     }
 }
 
@@ -713,16 +713,16 @@ static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off,info)");
+	push_macro(AnScreenTrace "(" KwOff "," KwInfo ")");
     } else {
-	push_macro("ScreenTrace(on,info,printer)");
+	push_macro(AnScreenTrace "(" KwOn "," KwInfo "," KwPrinter ")");
     }
 }
 
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro(AnEscape "(\"Show(keymap)\")");
+    push_macro(AnEscape "(\"" AnShow "(" KwKeymap ")\")");
 }
 
 #if defined(_WIN32) /*[*/
@@ -754,7 +754,7 @@ fm_disconnect(void *ignored _is_unused)
 static void
 fm_quit(void *ignored _is_unused)
 {
-    push_macro("Quit");
+    push_macro(AnQuit "()");
 }
 
 /* File menu. */

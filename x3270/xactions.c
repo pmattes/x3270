@@ -143,7 +143,7 @@ static XtActionsRec xactions[] = {
     { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
     { "HandleMenu",	HandleMenu_xaction },
-    { "ignore",		ignore_xaction },
+    { Anignore,		ignore_xaction },
     { "insert-selection",	insert_selection_xaction },
     { "KybdSelect",	KybdSelect_xaction },
     { "MouseSelect",	MouseSelect_xaction },

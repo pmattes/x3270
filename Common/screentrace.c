@@ -49,6 +49,7 @@
 #include "fprint_screen.h"
 #include "lazya.h"
 #include "menubar.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "print_command.h"
@@ -647,24 +648,24 @@ typedef struct {
     unsigned mutex;
 } stk_t;
 stk_t stk[] = {
-    { "On",	STK_ON,		STK_ON | STK_OFF },
-    { "Off",	STK_OFF,	STK_OFF | STK_ON | STK_FILE_SET |
+    { KwOn,	STK_ON,		STK_ON | STK_OFF },
+    { KwOff,	STK_OFF,	STK_OFF | STK_ON | STK_FILE_SET |
 				    STK_PRINTER_SET },
-    { "Info",	STK_INFO,	STK_INFO },
-    { "File",	STK_FILE,	STK_FILE | STK_OFF | STK_PRINTER_SET },
-    { "Printer", STK_PRINTER,	STK_PRINTER | STK_OFF | STK_FILE_SET },
-    { "Text",	STK_TEXT,	STK_TEXT | STK_OFF | STK_TYPES |
+    { KwInfo,	STK_INFO,	STK_INFO },
+    { KwFile,	STK_FILE,	STK_FILE | STK_OFF | STK_PRINTER_SET },
+    { KwPrinter, STK_PRINTER,	STK_PRINTER | STK_OFF | STK_FILE_SET },
+    { KwText,	STK_TEXT,	STK_TEXT | STK_OFF | STK_TYPES |
 				    STK_PRINTER_SET },
-    { "Html",	STK_HTML,	STK_HTML | STK_OFF | STK_TYPES |
+    { KwHtml,	STK_HTML,	STK_HTML | STK_OFF | STK_TYPES |
 				    STK_PRINTER_SET },
-    { "Rtf",	STK_RTF,	STK_RTF | STK_OFF | STK_TYPES |
+    { KwRtf,	STK_RTF,	STK_RTF | STK_OFF | STK_TYPES |
 				    STK_PRINTER_SET },
-    { "Gdi",	STK_GDI,	STK_GDI | STK_OFF | STK_FILE_SET },
-    { "Dialog",	STK_DIALOG,	STK_DIALOG | STK_OFF | STK_NODIALOG |
+    { KwGdi,	STK_GDI,	STK_GDI | STK_OFF | STK_FILE_SET },
+    { KwDialog,	STK_DIALOG,	STK_DIALOG | STK_OFF | STK_NODIALOG |
 				    STK_FILE_SET },
-    { "NoDialog", STK_NODIALOG,	STK_NODIALOG | STK_OFF | STK_DIALOG |
+    { KwNoDialog, STK_NODIALOG,	STK_NODIALOG | STK_OFF | STK_DIALOG |
 				    STK_FILE_SET },
-    { "WordPad", STK_WORDPAD,	STK_WORDPAD | STK_OFF | STK_FILE_SET },
+    { KwWordPad, STK_WORDPAD,	STK_WORDPAD | STK_OFF | STK_FILE_SET },
     { "(name)",	STK_NAME,	STK_NAME | STK_OFF },
     { NULL, 0, 0 },
 };
@@ -705,7 +706,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     bool as_info = false;
     unsigned kw_mask = 0;
 
-    action_debug("ScreenTrace", ia, argc, argv);
+    action_debug(AnScreenTrace, ia, argc, argv);
 
     screentrace_resource_setup();
 
@@ -723,14 +724,14 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 		unsigned bad_match = kw_mask & stk[kx].mutex;
 
 		if (bad_match) {
-		    popup_an_error("ScreenTrace(): Keyword conflict (%s, %s)",
+		    popup_an_error(AnScreenTrace "(): Keyword conflict (%s, %s)",
 			    stk_name(bad_match), stk[kx].keyword);
 		    return false;
 		}
 
 #if !defined(_WIN32) /*[*/
 		if (stk[kx].mask & STK_WINDOWS) {
-		    popup_an_error("ScreenTrace(): %s is for Windows only",
+		    popup_an_error(AnScreenTrace "(): %s is for Windows only",
 			    stk[kx].keyword);
 		    return false;
 		}
@@ -745,7 +746,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	if (stk[kx].keyword == NULL) {
-	    popup_an_error("ScreenTrace(): Syntax error");
+	    popup_an_error(AnScreenTrace "(): Syntax error");
 	    return false;
 	}
     }
@@ -760,7 +761,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     if (kw_mask & (STK_PRINTER | STK_GDI | STK_DIALOG | STK_NODIALOG)) {
 	/* Send to printer. */
 	if (kw_mask & STK_WORDPAD) {
-	    popup_an_error("ScreenTrace(): WordPad printing is not supported");
+	    popup_an_error(AnScreenTrace "(): WordPad printing is not supported");
 	    return false;
 	}
 	target = TSS_PRINTER;
@@ -804,7 +805,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (toggled(SCREEN_TRACE)) {
-	popup_an_error("Screen tracing is already enabled.");
+	popup_an_error(AnScreenTrace "(): Screen tracing is already enabled.");
 	return false;
     }
 
@@ -833,7 +834,7 @@ screentrace_register(void)
 	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP }
     };
     static action_table_t actions[] = {
-	{ "ScreenTrace",        ScreenTrace_action,     ACTION_KE }
+	{ AnScreenTrace,        ScreenTrace_action,     ACTION_KE }
     };
 
     /* Register the toggles. */

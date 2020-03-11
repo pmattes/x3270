@@ -47,6 +47,7 @@
 #include "codepage.h"
 #include "fprint_screen.h"
 #include "lazya.h"
+#include "names.h"
 #include "popups.h"
 #include "print_command.h"
 #include "print_screen.h"
@@ -217,7 +218,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	opts |= FPS_NO_DIALOG;
     }
 
-    action_debug("PrintText", ia, argc, argv);
+    action_debug(AnPrintText, ia, argc, argv);
 
     /*
      * Pick off optional arguments:
@@ -274,7 +275,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    secure = true;
 	} else if (!strcasecmp(argv[i], "command")) {
 	    if ((ptype != P_NONE) || use_file) {
-		popup_an_error("PrintText: contradictory options");
+		popup_an_error(AnPrintText "(): contradictory options");
 		return false;
 	    }
 	    ptype = P_TEXT;
@@ -287,7 +288,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    opts |= FPS_MODIFIED_ITALIC;
 	} else if (!strcasecmp(argv[i], "caption")) {
 	    if (i == argc - 1) {
-		popup_an_error("PrintText: mising caption parameter");
+		popup_an_error(AnPrintText "(): mising caption parameter");
 		return false;
 	    }
 	    caption = argv[++i];
@@ -309,19 +310,19 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	break;
     case 1:
 	if (use_string) {
-	    popup_an_error("PrintText: extra arguments or invalid option(s)");
+	    popup_an_error(AnPrintText "(): extra arguments or invalid option(s)");
 	    return false;
 	}
 	name = argv[i];
 	break;
     default:
-	popup_an_error("PrintText: extra arguments or invalid option(s)");
+	popup_an_error(AnPrintText "(): extra arguments or invalid option(s)");
 	return false;
     }
 
     if (!use_string && !use_file) {
 	if (ptype != P_NONE) {
-	    popup_an_error("PrintText: cannot specify printer and type");
+	    popup_an_error(AnPrintText "(): cannot specify printer and type");
 	    return false;
 	}
 #if !defined(_WIN32) /*[*/
@@ -385,7 +386,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    vtrace("PrintText: using '%s'\n", temp_name);
 	} else {
 	    if (name == NULL || !*name) {
-		popup_an_error("PrintText: missing filename");
+		popup_an_error(AnPrintText "(): missing filename");
 		return false;
 	    }
 	    f = fopen(name, replace? "w": "a");
@@ -419,7 +420,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
     }
     if (f == NULL) {
-	popup_an_errno(errno, "PrintText: %s", name);
+	popup_an_errno(errno, AnPrintText "(): %s", name);
 	if (fd >= 0) {
 	    close(fd);
 	}
@@ -510,7 +511,7 @@ void
 print_screen_register(void)
 {
     static action_table_t print_text_actions[] = {
-	{ "PrintText",		PrintText_action,	ACTION_KE },
+	{ AnPrintText,		PrintText_action,	ACTION_KE },
     };
 
     /* Register the actions. */

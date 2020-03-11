@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "lazya.h"
+#include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
@@ -1009,8 +1010,8 @@ free_keymap(struct keymap *k)
 static bool
 Keymap_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Keymap", ia, argc, argv);
-    if (check_argc("Keymap", argc, 0, 1) < 0) {
+    action_debug(AnKeymap, ia, argc, argv);
+    if (check_argc(AnKeymap, argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -1055,8 +1056,8 @@ void
 keymap_register(void)
 {
     static action_table_t keymap_actions[] = {
-	{ "Keymap",		Keymap_action, ACTION_KE },
-	{ "TemporaryKeymap",	Keymap_action, ACTION_KE }
+	{ AnKeymap,		Keymap_action, ACTION_KE },
+	{ AnTemporaryKeymap,	Keymap_action, ACTION_KE }
     };
 
     /* Register for state changes. */

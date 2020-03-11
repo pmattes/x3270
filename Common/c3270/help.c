@@ -139,12 +139,12 @@ static struct {
 	{ AnFieldEnd, NULL, P_3270, "Move to end of field" },
 	{ AnFieldMark, NULL, P_3270, "3270 FIELD MARK key (X'1E')" },
 	{ AnFlip, NULL, P_3270, "Flip display left-to-right" },
-	{ "Help", "all|interactive|3270|scripting|transfer|<cmd>",
+	{ AnHelp, "all|interactive|3270|scripting|transfer|<cmd>",
 	    P_INTERACTIVE, "Get help" },
 	{ AnHexString, "<digits>", P_3270|P_SCRIPTING,
 	    "Input field data in hex" },
 	{ AnHome, NULL, P_3270, "Move cursor to first field" },
-	{ "ignore", NULL, P_3270, "Do nothing" },
+	{ Anignore, NULL, P_3270, "Do nothing" },
 	{ "Info", "<text>", P_SCRIPTING|P_INTERACTIVE, "Display text in OIA" },
 	{ AnInsert, NULL, P_3270, "Set 3270 insert mode" },
 	{ AnInterrupt, NULL, P_3270, "In NVT mode, send IAC IP" },
@@ -152,9 +152,9 @@ static struct {
 	{ AnKeyboardDisable, "[" ResTrue "|" ResFalse "|" KwForceEnable "]",
 	    P_SCRIPTING|P_INTERACTIVE,
 	    "Modify automatic script keyboard locking" },
-	{ "Keymap", "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
+	{ AnKeymap, "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
 	    "Push temporary keymap, or pop if none specified" },
-	{ "Keypad", NULL, P_INTERACTIVE, "Pop up the 3270 keypad" },
+	{ AnKeypad, NULL, P_INTERACTIVE, "Pop up the 3270 keypad" },
 	{ AnLeft, NULL, P_3270, "Move cursr left" },
 	{ AnLeft2, NULL, P_3270, "Move cursor left 2 columns" },
 	{ AnMacro, "<name>", P_SCRIPTING, "Execute a predefined macro" },
@@ -176,11 +176,11 @@ static struct {
 	{ AnPreviousWord, NULL, P_3270, "Move cursor to previous word" },
 	{ AnPrinter, KwStart "[,lu]|" KwStop, P_3270|P_SCRIPTING|P_INTERACTIVE,
 	    "Start or stop " HELP_W "pr3287 printer session" },
-        { "PrintText",
+        { AnPrintText,
 	    "[Html] [Rtf] [Modi] [Caption <caption>] [Replace|Append] File <filename>",
 	    P_INTERACTIVE|P_SCRIPTING,
 	    "Save screen image in a file" },
-        { "PrintText",
+        { AnPrintText,
 	    "[Modi] [Caption <caption>] "
 #if defined(WC3270) /*[*/
 	    "[Dialog][NoDialog] [<printer-name>]",
@@ -191,34 +191,34 @@ static struct {
 	    "Print screen image" },
 	{ AnPrompt, "[app-name]", P_SCRIPTING|P_INTERACTIVE,
 	    "Start an external prompt" },
-        { "Query", "<keyword>", P_SCRIPTING|P_INTERACTIVE,
+        { AnQuery, "<keyword>", P_SCRIPTING|P_INTERACTIVE,
 	    "Query operational parameters" },
-	{ "Quit", NULL, P_INTERACTIVE, "Exit " HELP_W "3270" },
+	{ AnQuit, NULL, P_INTERACTIVE, "Exit " HELP_W "3270" },
         { AnReadBuffer, "[" KwAscii "|" KwEbcdic "|" KwUnicode "]", P_SCRIPTING,
 	    "Dump display buffer" },
         { AnReadBuffer, "[" KwAscii "| " KwEbcdic "|" KwUnicode "] " KwField, P_SCRIPTING,
 	    "Dump display buffer for current field" },
 	{ AnReconnect, NULL, P_INTERACTIVE, "Reconnect to previous host" },
-	{ "Redraw", NULL, P_INTERACTIVE|P_3270, "Redraw screen" },
+	{ AnRedraw, NULL, P_INTERACTIVE|P_3270, "Redraw screen" },
 	{ AnReset, NULL, P_3270, "Clear keyboard lock" },
 	{ AnRight, NULL, P_3270, "Move cursor right" },
 	{ AnRight2, NULL, P_3270, "Move cursor right 2 columns" },
-	{ "ScreenTrace", "On [[File] <filename>]",  P_INTERACTIVE,
+	{ AnScreenTrace, KwOn " [[" KwFile "] <filename>]",  P_INTERACTIVE,
 	    "Save screen images to file" },
-	{ "ScreenTrace",
+	{ AnScreenTrace,
 # if defined(_WIN32) /*[*/
-	    "On Printer [<printer-name>]",
+	    KwOn " " KwPrinter " [<printer-name>]",
 # else /*][*/
-	    "On Printer [<print-command>]",
+	    KwOn " " KwPrinter " [<print-command>]",
 # endif /*]*/
 	    P_INTERACTIVE, "Save screen images to printer" },
-	{ "ScreenTrace", "Off", P_INTERACTIVE, "Stop saving screen images" },
-	{ AnScript, "[-Async] [-NoLock] [-Single] <path> [<arg>...]",
+	{ AnScreenTrace, KwOff, P_INTERACTIVE, "Stop saving screen images" },
+	{ AnScript, "[" KwDashAsync "] [" KwDashNoLock "] [" KwDashSingle "] <path> [<arg>...]",
 	    P_SCRIPTING, "Run a child script" },
-	{ "Scroll", "Forward|Backward", P_INTERACTIVE, "Scroll screen" },
+	{ AnScroll, KwForward "|" KwBackward, P_INTERACTIVE, "Scroll screen" },
 	{ AnSet, "[<setting-name> value]", P_INTERACTIVE|P_SCRIPTING,
 	    "Change a setting or display all settings" },
-	{ "Show", "Copyright|Stats|Keymap", P_INTERACTIVE,
+	{ AnShow, KwCopyright "|" KwStatus "|" KwKeymap, P_INTERACTIVE,
 	    "Display status and settings" },
 	{ AnSnap, "<args>", P_SCRIPTING, "Screen snapshot manipulation" },
         { AnSource, "<file>", P_SCRIPTING|P_INTERACTIVE, "Read actions from file" },
@@ -226,20 +226,19 @@ static struct {
 	{ AnSysReq, NULL, P_3270,
 	    "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ AnTab, NULL, P_3270, "Move cursor to next field" },
-	{ "Tasks", NULL, P_INTERACTIVE, "Display tasks" },
 	{ AnTemporaryComposeMap, "[<compose-map-name>]",
 	    P_SCRIPTING|P_INTERACTIVE, "Set or clear temporary compose map" },
-	{ "TemporaryKeymap", "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
-	    "Alias for Keymap" },
+	{ AnTemporaryKeymap, "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
+	    "Alias for " AnKeymap },
 #if defined(WC3270) /*[*/
-	{ "Title", "<text>", P_SCRIPTING|P_INTERACTIVE, "Change window title" },
+	{ AnTitle, "<text>", P_SCRIPTING|P_INTERACTIVE, "Change window title" },
 #endif /*]*/
 	{ AnToggle, "[<toggle-name> [value]]", P_INTERACTIVE|P_SCRIPTING,
 	    "Change a toggle" },
 	{ AnToggleInsert, NULL, P_3270, "Set or clear 3270 insert mode" },
 	{ AnToggleReverse, NULL, P_3270, "Set or clear reverse-input mode" },
-	{ "Trace", "On [<file>]|Off", P_INTERACTIVE, "Configure tracing" },
-	{ "Transfer", "[<args>]", P_INTERACTIVE,
+	{ AnTrace, KwOn " [<file>]| " KwOff, P_INTERACTIVE, "Configure tracing" },
+	{ AnTransfer, "[<args>]", P_INTERACTIVE,
 	    "IND$FILE file transfer (see 'help file-transfer')" },
 	{ AnUp, NULL, P_3270, "Move cursor up" },
 	{ AnWait, "<args>", P_SCRIPTING, "Wait for host events" },
@@ -278,8 +277,8 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     int match = 0;
     bool any = false;
 
-    action_debug("Help", ia, argc, argv);
-    if (check_argc("Help", argc, 0, 1) < 0) {
+    action_debug(AnHelp, ia, argc, argv);
+    if (check_argc(AnHelp, argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -421,7 +420,7 @@ void
 help_register(void)
 {
     static action_table_t help_actions[] = {
-	{ "Help",	Help_action,	ACTION_KE }
+	{ AnHelp,	Help_action,	ACTION_KE }
     };
 
     /* Register the actions. */

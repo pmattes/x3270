@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, 2015, 2018 Paul Mattes.
+ * Copyright (c) 1993-2013, 2015, 2018, 2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -38,6 +38,7 @@
 #include "globals.h"
 
 #include "actions.h"
+#include "names.h"
 #include "telnet.h"
 #include "trace.h"
 #include "utils.h"
@@ -166,13 +167,14 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
     bool force = false;
 
-    action_debug("Quit", ia, argc, argv);
-    if (check_argc("Quit", argc, 0, 1) < 0) {
+    action_debug(AnQuit, ia, argc, argv);
+    if (check_argc(AnQuit, argc, 0, 1) < 0) {
 	return false;
     }
 
     if (argc > 0 &&
-	    (!strcasecmp(argv[0], "-Force") || !strcasecmp(argv[0], "Force"))) {
+	    (!strcasecmp(argv[0], KwDashForce) ||
+	     !strcasecmp(argv[0], KwForce))) {
 	force = true;
     }
 

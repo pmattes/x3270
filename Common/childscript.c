@@ -1114,20 +1114,20 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    popup_an_error(AnScript "() requires at least one argument");
 	    return false;
 	}
-	if (!strcasecmp(argv[0], KwAsync)) {
+	if (!strcasecmp(argv[0], KwDashAsync)) {
 	    async = true;
 	    keyboard_lock = false;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], KwNoLock)) {
+	} else if (!strcasecmp(argv[0], KwDashNoLock)) {
 	    keyboard_lock = false;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], KwSingle)) {
+	} else if (!strcasecmp(argv[0], KwDashSingle)) {
 	    mode = PLM_SINGLE;
 	    argc--;
 	    argv++;
-	} else if (!strcasecmp(argv[0], KwNoStdoutRedirect)) {
+	} else if (!strcasecmp(argv[0], KwDashNoStdoutRedirect)) {
 	    stdout_redirect = false;
 	    argc--;
 	    argv++;

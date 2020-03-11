@@ -6215,8 +6215,8 @@ send_spot_loc(void)
 static bool
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Title", ia, argc, argv);
-    if (check_argc("Title", argc, 1, 1) < 0) {
+    action_debug(AnTitle, ia, argc, argv);
+    if (check_argc(AnTitle, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -6510,7 +6510,7 @@ screen_register(void)
     };
     static action_table_t screen_actions[] = {
 	{ "SetFont",		SetFont_action,		ACTION_KE },
-	{ "Title",		Title_action,		ACTION_KE },
+	{ AnTitle,		Title_action,		ACTION_KE },
 	{ "WindowState",	WindowState_action,	ACTION_KE }
     };
 

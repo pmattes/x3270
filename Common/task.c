@@ -4023,7 +4023,7 @@ RequestInput_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (argc > 0) {
-	if (!strcasecmp(argv[0], KwNoEcho)) {
+	if (!strcasecmp(argv[0], KwDashNoEcho)) {
 	    no_echo = true;
 	} else {
 	    popup_an_error(AnRequestInput "(): unknown keyword '%s'", argv[0]);

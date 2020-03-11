@@ -40,6 +40,7 @@
 #include "ctlrc.h"
 #include "host.h"
 #include "lazya.h"
+#include "names.h"
 #include "popups.h"
 #include "query.h"
 #include "split_host.h"
@@ -280,13 +281,13 @@ query_compare(const void *a, const void *b)
 bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return query_common("Query", ia, argc, argv);
+    return query_common(AnQuery, ia, argc, argv);
 }
 
 bool
 Show_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return query_common("Show", ia, argc, argv);
+    return query_common(AnShow, ia, argc, argv);
 }
 
 /**
@@ -312,47 +313,47 @@ void
 query_register(void)
 {
     static action_table_t actions[] = {
-	{ "Query",		Query_action, 0 },
-	{ "Show",		Show_action, 0 }
+	{ AnQuery,		Query_action, 0 },
+	{ AnShow,		Show_action, 0 }
     };
     static query_t base_queries[] = {
-	{ "About", get_about, NULL, false, true },
-	{ "Actions", all_actions, NULL, false, true },
-	{ "BindPluName", net_query_bind_plu_name, NULL, false, false },
-	{ "BuildOptions", build_options, NULL, false, false },
-	{ "ConnectionState", net_query_connection_state, NULL, false, false },
-	{ "ConnectTime", get_connect_time, NULL, false, false },
-	{ "CodePage", get_codepage, NULL, false, false },
-	{ "CodePages", get_codepages, NULL, false, true },
-	{ "Copyright", show_copyright, NULL, false, true },
-	{ "Cursor", ctlr_query_cursor, NULL, true, false },
-	{ "Cursor1", ctlr_query_cursor1, NULL, false, false },
-	{ "Formatted", ctlr_query_formatted, NULL, false, false },
-	{ "Host", net_query_host, NULL, false, false },
-	{ "LocalEncoding", get_codeset, NULL, false, false },
-	{ "LuName", net_query_lu_name, NULL, false, false },
-	{ "Model", NULL, full_model_name, true, false },
-	{ "Prefixes", host_prefixes, NULL, false, false },
-	{ "Proxy", get_proxy, NULL, false, false },
-	{ "ScreenCurSize", ctlr_query_cur_size_old, NULL, true, false },
-	{ "ScreenMaxSize", ctlr_query_max_size_old, NULL, true, false },
-	{ "ScreenSizeCurrent", ctlr_query_cur_size, NULL, false, false },
-	{ "ScreenSizeMax", ctlr_query_max_size, NULL, false, false },
-	{ "ScreenTraceFile", get_screentracefile, NULL, false, false },
-	{ "Ssl", net_query_tls, NULL, true, false },
-	{ "StatsRx", get_rx, NULL, false, false },
-	{ "StatsTx", get_tx, NULL, false, false },
-	{ "Tasks", get_tasks, NULL, false, true },
-	{ "TelnetMyOptions", net_myopts, NULL, false, false },
-	{ "TelnetHostOptions", net_hisopts, NULL, false, false },
-	{ "TerminalName", query_terminal_name, NULL, false, false },
-	{ "TraceFile", get_tracefile, NULL, false, false },
-	{ "Tls", net_query_tls, NULL, false, false },
-	{ "TlsCertInfo", net_server_cert_info, NULL, false, true },
-	{ "TlsProvider", net_sio_provider, NULL, false, false },
-	{ "TlsSessionInfo", net_session_info, NULL, false, true },
-	{ "Tn3270eOptions", tn3270e_current_opts, NULL, false, false },
-	{ "Version", query_build, NULL, false, false }
+	{ KwAbout, get_about, NULL, false, true },
+	{ KwActions, all_actions, NULL, false, true },
+	{ KwBindPluName, net_query_bind_plu_name, NULL, false, false },
+	{ KwBuildOptions, build_options, NULL, false, false },
+	{ KwConnectionState, net_query_connection_state, NULL, false, false },
+	{ KwConnectTime, get_connect_time, NULL, false, false },
+	{ KwCodePage, get_codepage, NULL, false, false },
+	{ KwCodePages, get_codepages, NULL, false, true },
+	{ KwCopyright, show_copyright, NULL, false, true },
+	{ KwCursor, ctlr_query_cursor, NULL, true, false },
+	{ KwCursor1, ctlr_query_cursor1, NULL, false, false },
+	{ KwFormatted, ctlr_query_formatted, NULL, false, false },
+	{ KwHost, net_query_host, NULL, false, false },
+	{ KwLocalEncoding, get_codeset, NULL, false, false },
+	{ KwLuName, net_query_lu_name, NULL, false, false },
+	{ KwModel, NULL, full_model_name, true, false },
+	{ KwPrefixes, host_prefixes, NULL, false, false },
+	{ KwProxy, get_proxy, NULL, false, false },
+	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, true, false },
+	{ KwScreenMaxSize, ctlr_query_max_size_old, NULL, true, false },
+	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, false, false },
+	{ KwScreenSizeMax, ctlr_query_max_size, NULL, false, false },
+	{ KwScreenTraceFile, get_screentracefile, NULL, false, false },
+	{ KwSsl, net_query_tls, NULL, true, false },
+	{ KwStatsRx, get_rx, NULL, false, false },
+	{ KwStatsTx, get_tx, NULL, false, false },
+	{ KwTasks, get_tasks, NULL, false, true },
+	{ KwTelnetMyOptions, net_myopts, NULL, false, false },
+	{ KwTelnetHostOptions, net_hisopts, NULL, false, false },
+	{ KwTerminalName, query_terminal_name, NULL, false, false },
+	{ KwTraceFile, get_tracefile, NULL, false, false },
+	{ KwTls, net_query_tls, NULL, false, false },
+	{ KwTlsCertInfo, net_server_cert_info, NULL, false, true },
+	{ KwTlsProvider, net_sio_provider, NULL, false, false },
+	{ KwTlsSessionInfo, net_session_info, NULL, false, true },
+	{ KwTn3270eOptions, tn3270e_current_opts, NULL, false, false },
+	{ KwVersion, query_build, NULL, false, false }
     };
 
     /* Register actions.*/
