@@ -337,7 +337,7 @@ sio_toggle(const char *name, const char *value)
     const char *errmsg;
 
     if (cstate != NOT_CONNECTED) {
-	popup_an_error("Toggle(%s): Cannot change while connected", name);
+	popup_an_error("%s cannot change while connected", name);
 	return false;
     }
 
@@ -385,7 +385,7 @@ sio_toggle(const char *name, const char *value)
 	Replace(appres.tls.client_cert, value[0]? NewString(value): NULL);
 	break;
     default:
-	popup_an_error("Toggle(%s): Unknown name", name);
+	popup_an_error("Unknown name '%s'", name);
 	return false;
     }
 

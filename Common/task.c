@@ -2967,7 +2967,7 @@ task_connect_wait(void)
 	current_task->state != TS_WAIT_IFIELD &&
 	(HALF_CONNECTED || (CONNECTED && (kybdlock & KL_AWAITING_FIRST)))) {
 
-	task_set_state(current_task, TS_CONNECT_WAIT, "Connect() or Reconnect()");
+	task_set_state(current_task, TS_CONNECT_WAIT, AnConnect "() or Reconnect()");
     }
 }
 

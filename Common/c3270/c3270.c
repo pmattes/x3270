@@ -76,6 +76,7 @@
 #include "lazya.h"
 #include "login_macro.h"
 #include "model.h"
+#include "names.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -657,7 +658,7 @@ Type 'help' for help information.\n\n",
 	if (!appres.interactive.reconnect) {
 	    connect_once = true;
 	}
-	c3270_push_command(lazyaf("Open(\"%s\")", cl_hostname));
+	c3270_push_command(lazyaf(AnConnect "(\"%s\")", cl_hostname));
 	screen_resume();
     } else {
 	/* Drop to the prompt. */
@@ -1399,8 +1400,8 @@ attempted_completion(const char *text, int start, int end)
 	 * we might do other expansions, and this code would need to
 	 * be generalized.
 	 */
-	if (!((!strncasecmp(s, "Open", 4) && isspace(*(s + 4))) ||
-	      (!strncasecmp(s, "Connect", 7) && isspace(*(s + 7))))) {
+	if (!((!strncasecmp(s, AnOpen, 4) && isspace(*(s + 4))) ||
+	      (!strncasecmp(s, AnConnect, 7) && isspace(*(s + 7))))) {
 	    return NULL;
 	}
 
@@ -1587,13 +1588,13 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Escape", ia, argc, argv);
-    if (check_argc("Escape", argc, 0, 1) < 0) {
+    action_debug(AnEscape, ia, argc, argv);
+    if (check_argc(AnEscape, argc, 0, 1) < 0) {
 	return false;
     }
 
     if (escaped && argc > 0) {
-	popup_an_error("Cannot nest Escape()");
+	popup_an_error("Cannot nest " AnEscape "()");
 	return false;
     }
 
@@ -2223,7 +2224,7 @@ static void
 c3270_register(void)
 {
     static action_table_t actions[] = {
-	{ "Escape",		Escape_action,		ACTION_KE },
+	{ AnEscape,		Escape_action,		ACTION_KE },
 	{ "ignore",		ignore_action,		ACTION_KE },
 	{ "Info",		Info_action,		ACTION_KE },
 	{ "Trace",		Trace_action,		ACTION_KE },

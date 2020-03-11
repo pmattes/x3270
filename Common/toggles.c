@@ -43,6 +43,7 @@
 #include "boolstr.h"
 #include "lazya.h"
 #include "menubar.h"
+#include "names.h"
 #include "popups.h"
 #include "toggles.h"
 #include "utils.h"
@@ -394,14 +395,14 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 
     if (is_toggle_action && argc > 2) {
 	/* Toggle() can only set one value. */
-	popup_an_error("%s can only set one value", name);
+	popup_an_error("%s() can only set one value", name);
 	return false;
     } else if (!is_toggle_action && argc > 2 && (argc % 2)) {
 	/*
 	 * Set() accepts 0 arguments (show all), 1 argument (show one), or
 	 * an even number of arguments (set one or more).
 	 */
-	popup_an_error("%s: '%s' requires a value", name, argv[argc - 1]);
+	popup_an_error("%s(): '%s' requires a value", name, argv[argc - 1]);
 	return false;
     }
 
@@ -430,7 +431,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	    }
 	}
 	if (toggle_names[j].name == NULL && u == NULL) {
-	    popup_an_error("%s: Unknown toggle name '%s'", name, argv[arg]);
+	    popup_an_error("%s(): Unknown toggle name '%s'", name, argv[arg]);
 	    goto failed;
 	}
 
@@ -443,7 +444,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		     * isn't a traditional toggle.
 		     */
 		    if (u->type != XRM_BOOLEAN) {
-			popup_an_error("%s: '%s' requires a value", name,
+			popup_an_error("%s(): '%s' requires a value", name,
 				argv[arg]);
 			goto failed;
 		    }
@@ -475,7 +476,7 @@ have_value:
 
 	    /* Check for explicit Boolean value. */
 	    if ((errmsg = boolstr(argv[arg + 1], &b)) != NULL) {
-		popup_an_error("%s: %s %s", name, argv[arg], errmsg);
+		popup_an_error("%s(): %s %s", name, argv[arg], errmsg);
 		goto failed;
 	    }
 	    if (b && !toggled(ix)) {
@@ -564,7 +565,7 @@ done:
 bool
 Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return toggle_common("Toggle", true, ia, argc, argv);
+    return toggle_common(AnToggle, true, ia, argc, argv);
 }
 
 /*
@@ -578,7 +579,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 bool
 Set_action(ia_t ia, unsigned argc, const char **argv)
 {
-    return toggle_common("Set", false, ia, argc, argv);
+    return toggle_common(AnSet, false, ia, argc, argv);
 }
 
 /**
@@ -588,8 +589,8 @@ void
 toggles_register(void)
 {
     static action_table_t toggle_actions[] = {
-	{ "Toggle",		Toggle_action,	ACTION_KE },
-	{ "Set",		Set_action,	ACTION_KE }
+	{ AnToggle,		Toggle_action,	ACTION_KE },
+	{ AnSet,		Set_action,	ACTION_KE }
     };
 
     /* Register the cleanup routine. */

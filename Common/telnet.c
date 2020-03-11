@@ -69,6 +69,7 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "proxy.h"
@@ -467,7 +468,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 	} else {
 	    if (noisy) {
-		popup_a_sockerr("Connect to %s%s, port %d",
+		popup_a_sockerr(AnConnect "() to %s%s, port %d",
 			(proxy_type != PT_NONE)? "proxy ": "",
 			(proxy_type != PT_NONE)? proxy_host : hostname,
 			(proxy_type != PT_NONE)? proxy_port : current_port);
@@ -1362,7 +1363,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		socket_strerror(socket_errno()));
 	if (cstate == TCP_PENDING) {
 	    if (ha_ix == num_ha - 1) {
-		popup_a_sockerr("Connect to %s%s, port %d",
+		popup_a_sockerr(AnConnect "() to %s%s, port %d",
 			(proxy_type != PT_NONE)? "proxy ": "",
 			(proxy_type != PT_NONE)? proxy_host : hostname,
 			(proxy_type != PT_NONE)? proxy_port : current_port);

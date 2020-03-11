@@ -94,7 +94,7 @@ static bool know_mods = false;
 
 /* Actions that are aliases for other actions. */
 static char *aliased_actions[] = {
-    "Close", "HardPrint", "Open", NULL
+    AnClose, "HardPrint", AnOpen, NULL
 };
 
 /*

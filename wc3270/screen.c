@@ -2585,7 +2585,7 @@ kybd_input2(INPUT_RECORD *ir)
     /* These first cases apply to both 3270 and NVT modes. */
     switch (k) {
     case VK_ESCAPE:
-	run_action("Escape", IA_DEFAULT, NULL, NULL);
+	run_action(AnEscape, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_UP:
 	run_action(AnUp, IA_DEFAULT, NULL, NULL);

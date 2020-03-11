@@ -52,6 +52,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "menubar.h"
+#include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "task.h"
@@ -651,25 +652,25 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro("Escape(\"Show(copyright)\")");
+    push_macro(AnEscape "(\"Show(copyright)\")");
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro("Escape(\"Show(status)\")");
+    push_macro(AnEscape "(\"Show(status)\")");
 }
 
 static void
 fm_about(void *ignored _is_unused)
 {
-    push_macro("Escape(\"Show(about)\")");
+    push_macro(AnEscape "(\"Show(about)\")");
 }
 
 static void
 fm_prompt(void *ignored _is_unused)
 {
-    push_macro("Escape");
+    push_macro(AnEscape "()");
 }
 
 static void
@@ -682,7 +683,7 @@ static void
 fm_xfer(void *ignored _is_unused)
 {
     if (ft_state == FT_NONE) {
-	push_macro("Escape(\"Transfer()\")");
+	push_macro(AnEscape "(\"Transfer()\")");
     } else {
 	push_macro("Transfer(Cancel)");
     }
@@ -721,7 +722,7 @@ fm_screentrace_printer(void *ignored _is_unused)
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro("Escape(\"Show(keymap)\")");
+    push_macro(AnEscape "(\"Show(keymap)\")");
 }
 
 #if defined(_WIN32) /*[*/
@@ -741,13 +742,13 @@ fm_wizard(void *session)
 static void
 fm_reenable(void *ignored _is_unused)
 {
-    push_macro("KeyboardDisable(ForceEnable)");
+    push_macro(AnKeyboardDisable "(" KwForceEnable ")");
 }
 
 static void
 fm_disconnect(void *ignored _is_unused)
 {
-    push_macro("Disconnect");
+    push_macro(AnDisconnect "()");
 }
 
 static void

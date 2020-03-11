@@ -157,7 +157,7 @@ toggle_model_done(bool success)
     }
 
     if (PCONNECTED) {
-	popup_an_error("Toggle: Cannot change %s or %s while connected",
+	popup_an_error("Cannot change %s or %s while connected",
 		ResModel, ResOversize);
 	goto fail;
     }
@@ -180,7 +180,7 @@ toggle_model_done(bool success)
 		&is_color, &is_extended);
 
 	if (canon == NULL) {
-	    popup_an_error("Toggle(%s): value must be 327{89}-{2345}[-E]",
+	    popup_an_error("%s value must be 327{89}-{2345}[-E]",
 		    ResModel);
 	    goto fail;
 	}
@@ -198,7 +198,7 @@ toggle_model_done(bool success)
 	    char x, junk;
 	    if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
 		    || x != 'x') {
-		popup_an_error("Toggle(%s): Oversize must be <cols>x<rows>",
+		popup_an_error("%s value must be <cols>x<rows>",
 			ResOversize);
 		goto fail;
 	    }
@@ -289,7 +289,7 @@ static bool
 toggle_terminal_name(const char *name _is_unused, const char *value)
 {
     if (PCONNECTED) {
-	popup_an_error("Toggle(%s): Cannot change while connected",
+	popup_an_error("%s cannot change while connected",
 		ResTermName);
 	return false;
     }

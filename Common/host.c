@@ -42,6 +42,7 @@
 #include "host.h"
 #include "host_gui.h"
 #include "login_macro.h"
+#include "names.h"
 #include "popups.h"
 #include "product.h"
 #include "split_host.h"
@@ -277,11 +278,11 @@ void
 host_register(void)
 {
     static action_table_t host_actions[] = {
-	{ "Close",	Disconnect_action,	ACTION_KE },
-	{ "Connect",	Connect_action,		ACTION_KE },
-	{ "Disconnect",	Disconnect_action,	ACTION_KE },
-	{ "Open",	Connect_action,		ACTION_KE },
-	{ "Reconnect",	Reconnect_action,	ACTION_KE }
+	{ AnClose,	Disconnect_action,	ACTION_KE },
+	{ AnConnect,	Connect_action,		ACTION_KE },
+	{ AnDisconnect,	Disconnect_action,	ACTION_KE },
+	{ AnOpen,	Connect_action,		ACTION_KE },
+	{ AnReconnect,	Reconnect_action,	ACTION_KE }
     };
 
     /* Register for events. */
@@ -961,8 +962,8 @@ save_recent(const char *hn)
 static bool
 Connect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Connect", ia, argc, argv);
-    if (check_argc("Connect", argc, 1, 1) < 0) {
+    action_debug(AnConnect, ia, argc, argv);
+    if (check_argc(AnConnect, argc, 1, 1) < 0) {
 	return false;
     }
 
@@ -989,16 +990,16 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Reconnect", ia, argc, argv);
-    if (check_argc("Reconnect", argc, 0, 0) < 0) {
+    action_debug(AnReconnect, ia, argc, argv);
+    if (check_argc(AnReconnect, argc, 0, 0) < 0) {
 	return false;
     }
     if (PCONNECTED) {
-	popup_an_error("Already connected");
+	popup_an_error(AnReconnect "(): Already connected");
 	return false;
     }
     if (current_host == NULL) {
-	popup_an_error("No previous host to connect to");
+	popup_an_error(AnReconnect "(): No previous host to connect to");
 	return false;
     }
     host_reconnect();
@@ -1023,8 +1024,8 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug("Disconnect", ia, argc, argv);
-    if (check_argc("Disconnect", argc, 0, 0) < 0) {
+    action_debug(AnDisconnect, ia, argc, argv);
+    if (check_argc(AnDisconnect, argc, 0, 0) < 0) {
 	return false;
     }
     host_disconnect(false);

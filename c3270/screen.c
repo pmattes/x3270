@@ -1632,7 +1632,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     }
     switch (ucs4) {
     case 0x1d:
-	run_action("Escape", IA_DEFAULT, NULL, NULL);
+	run_action(AnEscape, IA_DEFAULT, NULL, NULL);
 	return;
     }
 
