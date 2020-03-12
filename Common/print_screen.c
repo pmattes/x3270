@@ -247,33 +247,33 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  string   returns the data as a string, allowed only from scripts
      */
     for (i = 0; i < argc; i++) {
-	if (!strcasecmp(argv[i], "file")) {
+	if (!strcasecmp(argv[i], KwFile)) {
 	    use_file = true;
 	    i++;
 	    break;
-	} else if (!strcasecmp(argv[i], "html")) {
+	} else if (!strcasecmp(argv[i], KwHtml)) {
 	    ptype = P_HTML;
 	    use_file = true;
-	} else if (!strcasecmp(argv[i], "rtf")) {
+	} else if (!strcasecmp(argv[i], KwRtf)) {
 	    ptype = P_RTF;
 	    use_file = true;
-	} else if (!strcasecmp(argv[i], "replace")) {
+	} else if (!strcasecmp(argv[i], KwReplace)) {
 	    replace = true;
-	} else if (!strcasecmp(argv[i], "append")) {
+	} else if (!strcasecmp(argv[i], KwAppend)) {
 	    replace = false;
 	}
 #if defined(_WIN32) /*[*/
-	else if (!strcasecmp(argv[i], "gdi")) {
+	else if (!strcasecmp(argv[i], KwGdi)) {
 	    ptype = P_GDI;
-	} else if (!strcasecmp(argv[i], "nodialog")) {
+	} else if (!strcasecmp(argv[i], KwNoDialog)) {
 	    opts |= FPS_NO_DIALOG;
-	} else if (!strcasecmp(argv[i], "dialog")) {
+	} else if (!strcasecmp(argv[i], KwDialog)) {
 	    opts &= ~FPS_NO_DIALOG;
 	}
 #endif /*]*/
-	else if (!strcasecmp(argv[i], "secure")) {
+	else if (!strcasecmp(argv[i], KwSecure)) {
 	    secure = true;
-	} else if (!strcasecmp(argv[i], "command")) {
+	} else if (!strcasecmp(argv[i], KwCommand)) {
 	    if ((ptype != P_NONE) || use_file) {
 		popup_an_error(AnPrintText "(): contradictory options");
 		return false;
@@ -281,12 +281,12 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    ptype = P_TEXT;
 	    i++;
 	    break;
-	} else if (!strcasecmp(argv[i], "string")) {
+	} else if (!strcasecmp(argv[i], KwString)) {
 	    use_string = true;
 	    use_file = true;
-	} else if (!strcasecmp(argv[i], "modi")) {
+	} else if (!strcasecmp(argv[i], KwModi)) {
 	    opts |= FPS_MODIFIED_ITALIC;
-	} else if (!strcasecmp(argv[i], "caption")) {
+	} else if (!strcasecmp(argv[i], KwCaption)) {
 	    if (i == argc - 1) {
 		popup_an_error(AnPrintText "(): mising caption parameter");
 		return false;

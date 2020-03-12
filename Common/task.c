@@ -2785,7 +2785,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    return false;
 	}
 	snap_save();
-    } else if (!strcasecmp(argv[0], KwStatus)) {
+    } else if (!strcasecmp(argv[0], KwSnapStatus)) {
 	if (argc != 1) {
 	    popup_an_error(AnSnap "(): Extra argument(s)");
 	    return false;
@@ -2850,9 +2850,9 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 	return do_read_buffer(argv + 1, argc - 1, snap_buf, IA_UTF8(ia));
     } else {
-	popup_an_error(AnSnap "(): Argument must be " KwSave ", " KwStatus ", "
-		KwRows ", " KwCols ", " AnWait ", " AnAscii ", " AnAscii1 ", "
-		AnEbcdic ", " AnEbcdic1 " or " AnReadBuffer);
+	popup_an_error(AnSnap "(): Argument must be " KwSave ", " KwSnapStatus
+		", " KwRows ", " KwCols ", " AnWait ", " AnAscii ", " AnAscii1
+		", " AnEbcdic ", " AnEbcdic1 " or " AnReadBuffer);
 	return false;
     }
     return true;
