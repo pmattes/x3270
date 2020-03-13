@@ -497,7 +497,7 @@ ifelse(XX_PRODUCT,x3270,`Unlike turning it on from a menu option,
 there is no pop-up to confirm the file name, which defaults to',
 `The default trace file name is')
 ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) on the
-current XX_POSESSIVE(user) Desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) in the current directory',`XX_FB(/tmp/x3trc)').
+current XX_POSESSIVE(user) Desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) in the current directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
 If the name starts with XX_DQUOTED(>>), data will be appended to the file.
@@ -1042,80 +1042,80 @@ XX_TR(XX_TDH(`Ascii'`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_COMMA`'XX_
 XX_TR(XX_TDH(`Ascii'`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_COMMA`'XX_FI(rows)`'XX_COMMA`'XX_FI(cols)`'XX_RPAREN`')	XX_TD(return screen region as text))
 XX_TR(XX_TDH(`AsciiField')	XX_TD(return current field as text))
 ')dnl
-XX_TR(XX_TDH(XX_BLOCK()`Attn')	XX_TD(attention key))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(AltCursor)	XX_TD(switch between block and underscore cursor))
+XX_TR(XX_TDH(XX_BLOCK()`Attn()')	XX_TD(attention key))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(AltCursor())	XX_TD(switch between block and underscore cursor))
 ')dnl
-XX_TR(XX_TDH(`BackSpace')	XX_TD(move cursor left (or send XX_SM(ASCII BS))))
-XX_TR(XX_TDH(`BackTab')	XX_TD(tab to start of previous input field))
+XX_TR(XX_TDH(`BackSpace()')	XX_TD(move cursor left (or send XX_SM(ASCII BS))))
+XX_TR(XX_TDH(`BackTab()')	XX_TD(tab to start of previous input field))
 XX_TR(XX_TDH(`Charset'XX_LPAREN`'XX_FI(charset)`'XX_RPAREN`')	XX_TD(change host code page))
-XX_TR(`XX_TDH(CircumNot)	XX_TD(`input "^" in XX_SM(NVT) mode, or "XX_NOT" in 3270 mode''))
-XX_TR(XX_TDH(XX_BLOCK()`Clear')	XX_TD(clear screen))
+XX_TR(`XX_TDH(CircumNot())	XX_TD(`input "^" in XX_SM(NVT) mode, or "XX_NOT" in 3270 mode''))
+XX_TR(XX_TDH(XX_BLOCK()`Clear()')	XX_TD(clear screen))
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(`Cols')	XX_TD(report screen size))
 ')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,`XX_TR(XX_TDH(Compose)	XX_TD(next two keys form a special symbol))
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,`XX_TR(XX_TDH(Compose())	XX_TD(next two keys form a special symbol))
 ')dnl
 XX_TR(XX_TDH(XX_BLOCK()Connect`'XX_LPAREN`'XX_FI(host)`'XX_RPAREN)	XX_TD(connect to XX_FI(host)))
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Copy')	XX_TD(copy highlighted area to clipboard))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Copy()')	XX_TD(copy highlighted area to clipboard))
 ')dnl
-XX_TR(XX_TDH(XX_BLOCK()`CursorSelect')	XX_TD(Cursor Select XX_SM(AID)))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Cut)	XX_TD(copy highlighted area to clipboard and erase))
-XX_TR(XX_TDH(Default)	XX_TD(enter key literally))
+XX_TR(XX_TDH(XX_BLOCK()`CursorSelect()')	XX_TD(Cursor Select XX_SM(AID)))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Cut())	XX_TD(copy highlighted area to clipboard and erase))
+XX_TR(XX_TDH(Default())	XX_TD(enter key literally))
 ')dnl
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Cut')	XX_TD(copy highlighted area to clipboard and erase))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Cut()')	XX_TD(copy highlighted area to clipboard and erase))
 ')dnl
-XX_TR(XX_TDH(`Delete')	XX_TD(delete character under cursor (or send XX_SM(ASCII DEL))))
-XX_TR(XX_TDH(`DeleteField')	XX_TD(delete the entire field))
-XX_TR(XX_TDH(`DeleteWord')	XX_TD(delete the current or previous word))
-XX_TR(XX_TDH(XX_BLOCK()`Disconnect')	XX_TD(disconnect from host))
-XX_TR(XX_TDH(`Down')	XX_TD(move cursor down))
-XX_TR(XX_TDH(`Dup'`'XX_LPAREN`'[failonerror|nofailonerror]`'XX_RPAREN)	XX_TD(duplicate field))
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(`Ebcdic'`')	XX_TD(return entire screen contents in XX_SM(EBCDIC)))
+XX_TR(XX_TDH(`Delete()')	XX_TD(delete character under cursor (or send XX_SM(ASCII DEL))))
+XX_TR(XX_TDH(`DeleteField()')	XX_TD(delete the entire field))
+XX_TR(XX_TDH(`DeleteWord()')	XX_TD(delete the current or previous word))
+XX_TR(XX_TDH(XX_BLOCK()`Disconnect()')	XX_TD(disconnect from host))
+XX_TR(XX_TDH(`Down()')	XX_TD(move cursor down))
+XX_TR(XX_TDH(`Dup()'`'XX_LPAREN`'[failonerror|nofailonerror]`'XX_RPAREN)	XX_TD(duplicate field))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(`Ebcdic()'`')	XX_TD(return entire screen contents in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(`Ebcdic'`'XX_LPAREN`'XX_FI(length)`'XX_RPAREN`')	XX_TD(return screen contents at cursor in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(`Ebcdic'`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_COMMA`'XX_FI(length)`'XX_RPAREN)	XX_TD(return screen contents in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(`Ebcdic'`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_COMMA`'XX_FI(rows)`'XX_COMMA`'XX_FI(cols)`'XX_RPAREN`')	XX_TD(return screen region in XX_SM(EBCDIC)))
-XX_TR(XX_TDH(`EbcdicField')	XX_TD(return current field in XX_SM(EBCDIC)))
+XX_TR(XX_TDH(`EbcdicField()')	XX_TD(return current field in XX_SM(EBCDIC)))
 ')dnl
-XX_TR(XX_TDH(XX_BLOCK()`Enter')	XX_TD(Enter XX_SM(AID) (or send XX_SM(ASCII CR))))
-XX_TR(XX_TDH(`Erase')	XX_TD(erase previous character (or send XX_SM(ASCII BS))))
-XX_TR(XX_TDH(`EraseEOF')	XX_TD(erase to end of current field))
-XX_TR(XX_TDH(`EraseInput')	XX_TD(erase all input fields))
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(Escape)	XX_TD(escape to XX_FB(c3270>) prompt))
+XX_TR(XX_TDH(XX_BLOCK()`Enter()')	XX_TD(Enter XX_SM(AID) (or send XX_SM(ASCII CR))))
+XX_TR(XX_TDH(`Erase()')	XX_TD(erase previous character (or send XX_SM(ASCII BS))))
+XX_TR(XX_TDH(`EraseEOF()')	XX_TD(erase to end of current field))
+XX_TR(XX_TDH(`EraseInput()')	XX_TD(erase all input fields))
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(Escape())	XX_TD(escape to XX_FB(c3270>) prompt))
 ')dnl
 ifelse(`XX_TR(XX_TDH(Execute(XX_FI(cmd)))	XX_TD(execute a command in a shell))
 ')dnl
-XX_TR(XX_TDH(`FieldEnd')	XX_TD(move cursor to end of field))
-XX_TR(XX_TDH(`FieldMark'`'XX_LPAREN`'[failonerror|nofailonError]`'XX_RPAREN)	XX_TD(mark field))
+XX_TR(XX_TDH(`FieldEnd()')	XX_TD(move cursor to end of field))
+XX_TR(XX_TDH(`FieldMark()'`'XX_LPAREN`'[failonerror|nofailonError]`'XX_RPAREN)	XX_TD(mark field))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(HandleMenu(XX_FI(name)))	XX_TD(pop up a menu))
 ')dnl
 XX_TR(XX_TDH(`HexString'`'XX_LPAREN`'XX_FI(hex_digits)`'XX_RPAREN)	XX_TD(insert control-character string))
-XX_TR(XX_TDH(`Home')	XX_TD(move cursor to first input field))
-XX_TR(XX_TDH(`Insert')	XX_TD(set insert mode))
-XX_TR(XX_TDH(XX_BLOCK()`Interrupt')	XX_TD(send XX_SM(TELNET IP) to host))
-ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Keypad')	XX_TD(Display pop-up keypad))
+XX_TR(XX_TDH(`Home()')	XX_TD(move cursor to first input field))
+XX_TR(XX_TDH(`Insert()')	XX_TD(set insert mode))
+XX_TR(XX_TDH(XX_BLOCK()`Interrupt()')	XX_TD(send XX_SM(TELNET IP) to host))
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Keypad()')	XX_TD(Display pop-up keypad))
 ')dnl
 XX_TR(XX_TDH(Key`'XX_LPAREN`'XX_FI(keysym)[,failonerror|nofailonerror]`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
 XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)[,failonError|nofailonerror]`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Keymap(XX_FI(keymap)))	XX_TD(toggle alternate XX_FI(keymap) (or remove with XX_FB(None))))
 XX_TR(XX_TDH(KybdSelect(XX_FI(direction) [,XX_FI(atom)...]))	XX_TD(Extend selection by one row or column))
 ')dnl
-XX_TR(XX_TDH(`Left')	XX_TD(move cursor left))
-XX_TR(XX_TDH(`Left2')	XX_TD(move cursor left 2 positions))
+XX_TR(XX_TDH(`Left()')	XX_TD(move cursor left))
+XX_TR(XX_TDH(`Left2()')	XX_TD(move cursor left 2 positions))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Macro(XX_FI(macro)))	XX_TD(run a macro))
 ')dnl
-ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Menu')	XX_TD(Display menu bar))
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Menu()')	XX_TD(Display menu bar))
 ')dnl
-XX_TR(XX_TDH(`MonoCase')	XX_TD(toggle uppercase-only mode))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor)	XX_TD(move cursor to mouse position))
+XX_TR(XX_TDH(`MonoCase()')	XX_TD(toggle uppercase-only mode))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor())	XX_TD(move cursor to mouse position))
 ')dnl
 XX_TR(XX_TDH(MoveCursor`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_RPAREN)	XX_TD(move cursor to zero-origin (XX_FI(row),XX_FI(col))))
 ifelse(XX_PRODUCT,x3270,`XX_TR(`XX_TDH(XX_BLOCK()MoveCursorSelect)	XX_TD(`move cursor to mouse position, light pen selection''))
 ')dnl
-XX_TR(XX_TDH(`Newline')	XX_TD(move cursor to first field on next line (or send XX_SM(ASCII LF))))
-XX_TR(XX_TDH(`NextWord')	XX_TD(move cursor to next word))
+XX_TR(XX_TDH(`Newline()')	XX_TD(move cursor to first field on next line (or send XX_SM(ASCII LF))))
+XX_TR(XX_TDH(`NextWord()')	XX_TD(move cursor to next word))
 XX_TR(XX_TDH(XX_BLOCK()PA`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Attention XX_SM(AID) (XX_FI(n) from 1 to 3)))
 XX_TR(XX_TDH(XX_BLOCK()PF`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Function XX_SM(AID) (XX_FI(n) from 1 to 24)))
-XX_TR(XX_TDH(`PreviousWord')	XX_TD(move cursor to previous word))
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste')	XX_TD(insert clipboard contents))')dnl
+XX_TR(XX_TDH(`PreviousWord()')	XX_TD(move cursor to previous word))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste()')	XX_TD(insert clipboard contents))')dnl
 XX_TR(XX_TDH(`PasteString'`'XX_LPAREN`'XX_FI(hex_digits)`'XX_RPAREN)	XX_TD(insert string using pasting behavior))
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,
 `XX_TR(XX_TDH(Printer(start[,XX_FI(lu)]|stop))	XX_TD(start or stop printer session))
@@ -1127,17 +1127,17 @@ ifelse(XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')dnl
-XX_TR(XX_TDH(Quit)	XX_TD(exit XX_FB(XX_PRODUCT)))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Reconnect)	XX_TD(reconnect to previous host))
+XX_TR(XX_TDH(Quit())	XX_TD(exit XX_FB(XX_PRODUCT)))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Reconnect())	XX_TD(reconnect to previous host))
 ')dnl
-XX_TR(XX_TDH(`Redraw')	XX_TD(redraw window))
-XX_TR(XX_TDH(`Reset')	XX_TD(reset locked keyboard))
-XX_TR(XX_TDH(`Right')	XX_TD(move cursor right))
-XX_TR(XX_TDH(`Right2')	XX_TD(move cursor right 2 positions))
+XX_TR(XX_TDH(`Redraw()')	XX_TD(redraw window))
+XX_TR(XX_TDH(`Reset()')	XX_TD(reset locked keyboard))
+XX_TR(XX_TDH(`Right()')	XX_TD(move cursor right))
+XX_TR(XX_TDH(`Right2()')	XX_TD(move cursor right 2 positions))
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(ReadBuffer`'XX_SPACE`'Ascii`')	XX_TD(dump screen buffer as text))
 XX_TR(XX_TDH(ReadBuffer`'XX_SPACE`'Ebcdic`')	XX_TD(dump screen buffer in EBCDIC))
 ')dnl
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(`Rows')	XX_TD(report screen size))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(`Rows()')	XX_TD(report screen size))
 ')dnl
 XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
 ifelse(XX_INTERACTIVE,yes,`XX_TR(XX_TDH(Scroll(forward|backward))	XX_TD(scroll screen))
@@ -1148,20 +1148,20 @@ ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SetFont(XX_FI(font)))	XX_TD(change emulato
 ')dnl
 XX_TR(XX_TDH(XX_BLOCK()String`'XX_LPAREN`'XX_FI(string)`'XX_RPAREN)	XX_TD(insert string (simple macro facility)))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_BLOCK()`SelectDown')	XX_TD(Extend selection down))
-XX_TR(XX_TDH(SelectLeft)	XX_TD(Extend selection left))
-XX_TR(XX_TDH(SelectUp)	XX_TD(Extend selection up))
-XX_TR(XX_TDH(SelectDown)	XX_TD(Extend selection down))
-XX_TR(XX_TDH(SysReq)	XX_TD(System Request XX_SM(AID)))
+XX_TR(XX_TDH(SelectLeft())	XX_TD(Extend selection left))
+XX_TR(XX_TDH(SelectUp())	XX_TD(Extend selection up))
+XX_TR(XX_TDH(SelectDown())	XX_TD(Extend selection down))
+XX_TR(XX_TDH(SysReq())	XX_TD(System Request XX_SM(AID)))
 ')dnl
-XX_TR(XX_TDH(`Tab')	XX_TD(move cursor to next input field))
+XX_TR(XX_TDH(`Tab()')	XX_TD(move cursor to next input field))
 XX_TR(XX_TDH(`Toggle'XX_LPAREN`'XX_FI(option)[,XX_FI(set|clear)]XX_RPAREN)	XX_TD(toggle an option))
-XX_TR(XX_TDH(`ToggleInsert')	XX_TD(toggle insert mode))
-XX_TR(XX_TDH(`ToggleReverse')	XX_TD(toggle reverse-input mode))
+XX_TR(XX_TDH(`ToggleInsert()')	XX_TD(toggle insert mode))
+XX_TR(XX_TDH(`ToggleReverse()')	XX_TD(toggle reverse-input mode))
 XX_TR(XX_TDH(XX_BLOCK()Transfer`'XX_LPAREN`'XX_FI(option)=XX_FI(value)...'`'XX_RPAREN)	XX_TD(file transfer))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Unselect)	XX_TD(release selection))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Unselect())	XX_TD(release selection))
 ')dnl
-XX_TR(XX_TDH(`Up')	XX_TD(move cursor up))
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(ignore)	XX_TD(do nothing))
+XX_TR(XX_TDH(`Up()')	XX_TD(move cursor up))
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(ignore())	XX_TD(do nothing))
 ')dnl
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,
 `XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(3270mode))	XX_TD(wait for 3270 mode))
@@ -1175,12 +1175,12 @@ XX_TR(XX_TDH((the following are similar to xterm),COLSPAN="2"))
 XX_T_()
 XX_TR(XX_TDH(ignore)	XX_TD(do nothing))
 XX_TR(`XX_TDH(insert-selection([XX_FI(atom)[,XX_FI(atom)...]]))	XX_TD(``paste' selection')')
-XX_TR(XX_TDH(move-select)	XX_TD(a combination of XX_FB(MoveCursor) and XX_FB(select-start)))
+XX_TR(XX_TDH(move-select())	XX_TD(a combination of XX_FB(MoveCursor) and XX_FB(select-start)))
 XX_TR(XX_TDH(select-end(XX_FI(atom)[,XX_FI(atom)...]]))	XX_TD(complete selection and assign to atom(s)))
-XX_TR(XX_TDH(select-extend)	XX_TD(move the end of a selection))
-XX_TR(XX_TDH(select-start)	XX_TD(mark the beginning of a selection))
+XX_TR(XX_TDH(select-extend())	XX_TD(move the end of a selection))
+XX_TR(XX_TDH(select-start())	XX_TD(mark the beginning of a selection))
 XX_TR(XX_TDH(set-select(XX_FI(atom)[,XX_FI(atom)...]]))	XX_TD(assign existing selection to atom(s)))
-XX_TR(XX_TDH(start-extend)	XX_TD(begin marking the end of a selection))
+XX_TR(XX_TDH(start-extend())	XX_TD(begin marking the end of a selection))
 ')dnl
 XX_TE()
 ifelse(XX_MODE,console,`XX_LP
@@ -1197,9 +1197,9 @@ commas, and parentheses to be used.
 XX_LP
 XX_FB(XX_PRODUCT) also supports the following interactive actions:
 XX_TPS()dnl
-XX_TP(XX_FB(Help))
+XX_TP(XX_FB(Help()))
 Displays a list of available actions.
-XX_TP(XX_FB(ScreenTrace))
+XX_TP(XX_FB(ScreenTrace()))
 Turns screen tracing (saving screen images to a file) on or off.
 The action XX_FB(ScreenTrace(on)) enables screen tracing;
 the action XX_FB(ScreenTrace(off)) disables it.
@@ -1209,9 +1209,9 @@ ifelse(XX_PLATFORM,windows,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)',`XX_FB(/tmp/
 The keyword XX_FB(on) can also be followed by the keyword XX_FB(printer) and an optional
 ifelse(XX_PRODUCT,wc3270,printer name,print command)
 to direct screen traces directly to the printer.
-XX_TP(XX_FB(Show))
+XX_TP(XX_FB(Show()))
 Displays statistics and settings.
-XX_TP(XX_FB(Trace))
+XX_TP(XX_FB(Trace()))
 Turns tracing on or off.
 The action XX_FB(Trace(on)) enables data stream and keyboard event tracing;
 the action XX_FB(Trace(off)) disables it.
@@ -1533,8 +1533,6 @@ The command receives the screen text as its standard input.
 For example, the following keymap will save the screen text in a file:
 XX_IP
 XX_RS(XX_KEY(Meta,f): PrintText("cat >screen.image"))
-XX_PP
-Note: XX_FB(HardPrint) is an alias for XX_FB(PrintText).
 XX_PP
 The XX_FB(PrintWindow) action (usually assigned to the key XX_LT()Meta>b) sends the current
 screen image to the printer as a bitmap.
