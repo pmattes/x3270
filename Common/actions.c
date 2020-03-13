@@ -189,6 +189,49 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
+ * Display an error message about parameter names.
+ */
+bool
+action_args_are(const char *aname, ...)
+{
+    va_list ap;
+    const char *keyword;
+    const char **keywords = NULL;
+    int nkw = 0;
+    int i;
+    varbuf_t r;
+    char *buf;
+
+    va_start(ap, aname);
+    while ((keyword = va_arg(ap, const char *)) != NULL) {
+	keywords = (const char **)Realloc(keywords, (nkw + 1) * sizeof(char *));
+	keywords[nkw++] = keyword;
+    }
+    if (nkw == 0) {
+	return false;
+    }
+
+    vb_init(&r);
+    for (i = 0; i < nkw; i++) {
+	const char *sep = "";
+
+	if (nkw > 1) {
+	    if (i == nkw - 1) {
+		sep = " or ";
+	    } else if (i > 0) {
+		sep = ", ";
+	    }
+	}
+	vb_appendf(&r, "%s%s", sep, keywords[i]);
+    }
+    buf = vb_consume(&r);
+    popup_an_error("%s(): Parameter must be %s", aname, buf);
+    Free(buf);
+    Free(keywords);
+    return false;
+}
+
+/*
  * Disable or re-enable the keyboard.
  */
 void

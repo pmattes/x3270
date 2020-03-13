@@ -92,11 +92,6 @@ static struct {
 };
 static bool know_mods = false;
 
-/* Actions that are aliases for other actions. */
-static char *aliased_actions[] = {
-    AnClose, AnOpen, NULL
-};
-
 /*
  * The set-up of Xt actions is not straightforward.
  *
@@ -393,18 +388,7 @@ action_name(XtActionProc action)
 
     for (i = 0; i < xactioncount; i++) {
 	if (xactions[i].proc == action) {
-	    int j;
-	    bool aliased = false;
-
-	    for (j = 0; aliased_actions[j] != NULL; j++) {
-		if (!strcmp(aliased_actions[j], xactions[i].string)) {
-		    aliased = true;
-		    break;
-		}
-	    }
-	    if (!aliased) {
-		return xactions[i].string;
-	    }
+	    return xactions[i].string;
 	}
     }
 

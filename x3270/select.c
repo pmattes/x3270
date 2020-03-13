@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2018-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -337,11 +337,6 @@ select_start_xaction(Widget w, XEvent *event, String *params,
     int baddr;
 
     xaction_debug(select_start_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(select_start_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -373,11 +368,6 @@ move_select_xaction(Widget w, XEvent *event, String *params,
     int baddr;
 
     xaction_debug(move_select_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(move_select_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -418,11 +408,6 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
     bool continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
 
     xaction_debug(start_extend_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(start_extend_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -495,11 +480,6 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
     int baddr;
 
     xaction_debug(select_extend_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(select_extend_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -565,11 +545,6 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
     int x, y;
 
     xaction_debug(select_end_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(select_end_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -654,11 +629,6 @@ SelectDown_xaction(Widget w _is_unused, XEvent *event, String *params,
     int baddr;
 
     xaction_debug(SelectDown_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(SelectDown_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -687,11 +657,6 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
     int baddr;
 
     xaction_debug(SelectMotion_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(SelectMotion_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -748,11 +713,6 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
     Cardinal i;
 
     xaction_debug(SelectUp_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(SelectUp_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -954,17 +914,12 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     Cardinal i;
 
     xaction_debug(KybdSelect_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(select_start_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
 
     if (*num_params < 1) {
-	popup_an_error("%s requires one argument",
+	popup_an_error("%s(): Requires one argument",
 		action_name(KybdSelect_xaction));
 	return;
     }
@@ -977,7 +932,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     } else if (!strcasecmp(params[0], "Right")) {
 	direction = RIGHT;
     } else {
-	popup_an_error("%s first argument must be Up, Down, Left, or "
+	popup_an_error("%s(): First argument must be Up, Down, Left, or "
 		"Right", action_name(KybdSelect_xaction));
 	return;
     }
@@ -1065,11 +1020,6 @@ SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
     Cardinal i;
 
     xaction_debug(SelectUp_xaction, event, params, num_params);
-    if (event == NULL) {
-	popup_an_error("%s can only be used as a keymap action",
-		action_name(SelectAll_xaction));
-	return;
-    }
     if (w != *screen) {
 	return;
     }
@@ -1797,17 +1747,11 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
 
     xaction_debug(insert_selection_xaction, event, params, num_params);
 
-    if (event == NULL) {
-	popup_an_error("%s must be called from a keymap\n",
-		    action_name(insert_selection_xaction));
-	return;
-    }
-
     n_pasting = 0;
     for (i = 0; i < *num_params; i++) {
 	a = XInternAtom(display, params[i], true);
 	if (a == None) {
-	    popup_an_error("%s: No atom for selection",
+	    popup_an_error("%s(): No atom for selection",
 		    action_name(insert_selection_xaction));
 	    continue;
 	}

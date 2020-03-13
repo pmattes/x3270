@@ -1563,8 +1563,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	    return false;
 	}
     } else {
-	popup_an_error(AnTrace "(): Parameter must be On or Off");
-	return false;
+	return action_args_are(AnTrace, KwOn, KwOff, NULL);
     }
 
     if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {

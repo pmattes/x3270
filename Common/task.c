@@ -2213,8 +2213,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    } else if (!strncasecmp(params[i], KwField, strlen(params[i]))) {
 		field = true;
 	    } else {
-		popup_an_error(AnReadBuffer "(): parameter must be " KwAscii
-			", " KwEbcdic ", " KwUnicode " or " KwField);
+		return action_args_are(AnReadBuffer, KwAscii, KwEbcdic,
+			KwUnicode, KwField, NULL);
 		return false;
 	    }
 	}
@@ -2850,9 +2850,9 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 	return do_read_buffer(argv + 1, argc - 1, snap_buf, IA_UTF8(ia));
     } else {
-	popup_an_error(AnSnap "(): Argument must be " KwSave ", " KwSnapStatus
-		", " KwRows ", " KwCols ", " AnWait ", " AnAscii ", " AnAscii1
-		", " AnEbcdic ", " AnEbcdic1 " or " AnReadBuffer);
+	return action_args_are(AnSnap, KwSave, KwSnapStatus, KwRows, KwCols,
+		AnWait, AnAscii, AnAscii1, AnEbcdic, AnEbcdic1, AnReadBuffer,
+		NULL);
 	return false;
     }
     return true;
@@ -2925,10 +2925,8 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	} else if (tmo > 0.0 && !strcasecmp(pr[0], KwSeconds)) {
 	    next_state = TS_TIME_WAIT;
 	} else if (strcasecmp(pr[0], KwInputField)) {
-	    popup_an_error(AnWait "() argument must be " KwInputField ", "
-		    KwNvtMode ", " Kw3270Mode ", " KwOutput ", " KwSeconds
-		    ", " KwDisconnect " or " KwUnlock);
-	    return false;
+	    return action_args_are(AnWait, KwInputField, KwNvtMode, Kw3270Mode,
+		    KwOutput, KwSeconds, KwDisconnect, KwUnlock, NULL);
 	}
     }
     if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) {
@@ -3394,9 +3392,8 @@ KeyboardDisable_action(ia_t ia, unsigned argc, const char **argv)
 	} else if (!strcasecmp(argv[0], KwForceEnable)) {
 	    force_enable_keyboard();
 	} else {
-	    popup_an_error(AnKeyboardDisable "(): parameter must be " ResTrue
-		    ", " ResFalse " or " KwForceEnable);
-	    return false;
+	    return action_args_are(AnKeyboardDisable, ResTrue, ResFalse,
+		    KwForceEnable, NULL);
 	}
     }
     return true;
@@ -3439,9 +3436,7 @@ Printer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	pr3287_session_stop();
     } else {
-	popup_an_error(AnPrinter "(): Argument must be " KwStart " or "
-		KwStop);
-	return false;
+	return action_args_are(AnPrinter, KwStart, KwStop, NULL);
     }
     return true;
 }

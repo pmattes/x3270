@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2016, 2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2016, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,3 +74,4 @@ void disable_keyboard(bool disable, bool explicit, const char *why);
 void force_enable_keyboard(void);
 bool keyboard_disabled(void);
 const char *all_actions(void);
+bool action_args_are(const char *name, ...);

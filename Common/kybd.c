@@ -2631,8 +2631,8 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
 	if (!strcasecmp(argv[0], KwFailOnError)) {
 	    oerr_fail = true;
 	} else if (strcasecmp(argv[0], KwNoFailOnError)) {
-	    popup_an_error(AnDup "(): parameter must be " KwFailOnError " or "
-		KwNoFailOnError);
+	    return action_args_are(AnDup, KwFailOnError, KwNoFailOnError,
+		    NULL);
 	    return false;
 	}
     }
@@ -2669,9 +2669,8 @@ FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 	if (!strcasecmp(argv[0], KwFailOnError)) {
 	    oerr_fail = true;
 	} else if (strcasecmp(argv[0], KwNoFailOnError)) {
-	    popup_an_error(AnFieldMark "(): parameter must be " KwFailOnError
-		    " or " KwNoFailOnError);
-	    return false;
+	    return action_args_are(AnFieldMark, KwFailOnError, KwNoFailOnError,
+		    NULL);
 	}
     }
     if (kybdlock) {

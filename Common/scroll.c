@@ -519,8 +519,8 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
 	    scroll_n(curr - n, +1);
 	}
     } else {
-	popup_an_error(AnScroll "(): Parameter must be " KwForward ", "
-		KwBackward ", " KwReset " or " KwSet",<n>");
+	return action_args_are(AnScroll, KwForward, KwBackward, KwReset,
+		KwSet, NULL);
 	return false;
     }
     return true;

@@ -6242,9 +6242,7 @@ WindowState_action(ia_t ia, unsigned argc, const char **argv)
     } else if (!strcasecmp(argv[0], KwNormal)) {
 	state = false;
     } else {
-	popup_an_error(AnWindowState "(): Argument must be " KwIconic " or "
-		KwNormal);
-	return false;
+	return action_args_are(AnWindowState, KwIconic, KwNormal, NULL);
     }
     XtVaSetValues(toplevel, XtNiconic, state, NULL);
     return true;

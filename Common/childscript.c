@@ -1451,8 +1451,8 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
-    array_add(&nargv, nargc++, "-Async");
-    array_add(&nargv, nargc++, "-Single");
+    array_add(&nargv, nargc++, KwDashAsync);
+    array_add(&nargv, nargc++, KwDashSingle);
 #if !defined(_WIN32) /*[*/
     nargc = console_args(t, lazyaf("%s>", params[0]), &nargv, nargc);
     array_add(&nargv, nargc++, "/bin/sh");
@@ -1463,7 +1463,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 		(params[1] != NULL)? lazyaf(" -H '%s'", params[1]): "",
 		(params[2] != NULL)? lazyaf(" -L '%s'", params[2]): ""));
 #else /*][*/
-    array_add(&nargv, nargc++, "-Single");
+    array_add(&nargv, nargc++, KwDashSingle);
     array_add(&nargv, nargc++, "cmd.exe");
     array_add(&nargv, nargc++, "/c");
     array_add(&nargv, nargc++, "start");
