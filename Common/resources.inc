@@ -122,7 +122,7 @@ ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(marg
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(mono)	XX_TD(XX_LINK(#rn5, `(note 5)'))	XX_TD(XX_DASHED(mono))	XX_TD(Ignore terminal color capabilities))
 ')dnl
 XX_TR(XX_TD(monoCase)	XX_TD(False)	XX_TD(XX_DASHED(set) monoCase)	XX_TD(Mono-case mode))
-ifelse(XX_MODE,console,`XX_TR(XX_TD(noPrompt)	XX_TD(False)	XX_TD(XX_DASHED(noprompt))	XX_TD(Disable command-prompt mode))
+ifelse(XX_MODE,console,`XX_TR(XX_TD(noPrompt)	XX_TD(False)	XX_TD(XX_DASHED(noprompt))	XX_TD(Disable XX_FB(XX_PRODUCT>)-prompt mode))
 ')dnl
 XX_TR(XX_TD(numericLock)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for numeric field error))
 XX_TR(XX_TD(oerrLock)	XX_TD(ifelse(XX_PRODUCT,c3270,True,False))	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for input error))

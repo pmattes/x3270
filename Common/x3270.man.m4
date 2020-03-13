@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2019, Paul Mattes.
+dnl Copyright (c) 1993-2020, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -216,7 +216,7 @@ TCP port 4080.
 XX_IP
 Note that this option is mutually-exclusive with the XX_DASHED(scriptport)
 option
-ifelse(XX_MODE,script,`and disables reading commands from standard input.',.)
+ifelse(XX_MODE,script,`and disables reading actions from standard input.',.)
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(iconname)) XX_FI(name))
 Specifies an alternate title for the program icon.
 XX_TP(XX_FB(XX_DASHED(iconx)) XX_FI(x))
@@ -409,9 +409,9 @@ XX_HO(`See XX_LINK(#Color-Schemes,XX_SM(COLOR SCHEMES)) below.
 XX_TP(XX_FB(XX_DASHED(script)))
 Causes
 XX_FB(XX_PRODUCT)
-to read commands from standard input, with the results written to standard
+to read actions from standard input, with the results written to standard
 output.
-The protocol for these commands is documented in
+The protocol for these actions is documented in
 XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
 ')dnl 
 ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
@@ -437,7 +437,7 @@ TCP port 4081.
 XX_IP
 Note that this option is mutually-exclusive with the XX_DASHED(httpd)
 option
-ifelse(XX_MODE,script,`and disables reading commands from standard input.',.)
+ifelse(XX_MODE,script,`and disables reading actions from standard input.',.)
 XX_TP(XX_FB(XX_DASHED(scriptportonce)))
 Allows XX_PRODUCT to accept only one script connection. When that connection is
 broken, XX_PRODUCT will exit.
@@ -449,7 +449,7 @@ When used, a hostname must be provided on the command line.
 ifelse(XX_PRODUCT,x3270,
 `XX_TP(XX_FB(XX_DASHED(secure)))
 Disables run-time features that could compromise system security
-(user-specified file names and commands, etc.).
+(user-specified file names and actions, etc.).
 ')dnl
 XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
@@ -459,7 +459,7 @@ below.
 ifelse(XX_PLATFORM,windows,,
 `XX_TP(XX_FB(XX_DASHED(socket)))
 Causes the emulator to create a Unix-domain socket when it starts, for use
-by script processes to send commands to the emulator.
+by script processes to send actions to the emulator.
 The socket is named XX_FB(/tmp/x3sck.)`'XX_FI(pid).
 ')dnl
 The XX_FB(XX_DASHED(p)) option of XX_FI(x3270if) causes it to use this socket,
@@ -587,24 +587,22 @@ window with the mouse: if the window is made larger, XX_PRODUCT will try to
 change to a larger font, and vice-versa.
 ')dnl
 ifelse(XX_MODE,console,`XX_SH(Modes)
-XX_FB(XX_PRODUCT) has two basic modes: XX_FI(command-prompt) and XX_FI(session).
+XX_FB(XX_PRODUCT) has two basic modes: XX_FB(XX_PRODUCT>) prompt and XX_FI(session).
 XX_PP
-XX_FI(Command-prompt) mode is where the XX_FB(XX_PRODUCT`'>) prompt is
-displayed.
-Interactive commands can be entered at this prompt, to connect to a host,
+Interactive actions can be entered at the XX_FB(XX_PRODUCT>) prompt, to connect to a host,
 disconnect from a host, transfer files, display statistics, exit
 XX_FB(XX_PRODUCT), etc.
-The complete list of interactive commands is listed under
+The complete list of interactive actions is listed under
 XX_LINK(#Actions,XX_SM(ACTIONS)).
 XX_PP
 XX_FI(Session) mode is where the emulated 3270 screen is displayed;
-keyboard commands cause the display buffer to be modified or data to be
+keyboard actions cause the display buffer to be modified or data to be
 sent to the host.
 XX_PP
-To switch from display mode to command-prompt mode, press
+To switch from display mode to XX_FB(XX_PRODUCT>) prompt mode, press
 ifelse(XX_PRODUCT,c3270,`Ctrl-]',`the Escape key').
-To switch from command-prompt mode to display mode, press XX_FB(Enter)
-(without entering a command) at the XX_FB(XX_PRODUCT`'>) prompt.
+To switch from XX_FB(XX_PRODUCT>) prompt mode to display mode, press XX_FB(Enter)
+(without entering an action) at the XX_FB(XX_PRODUCT`'>) prompt.
 ')dnl
 XX_SH(Code Pages)
 The XX_FB(XX_DASHED(codepage))
@@ -841,7 +839,7 @@ host (XX_FB(Enter),
 XX_FB(Clear), XX_FB(PA) and XX_FB(PF)).
 When set, these actions no longer block until the host unlocks the keyboard.
 It is up to the script to poll the prompt for the unlocked state, or to use
-the XX_FB(Wait(Unlock)) action to wait for the unlock.
+the XX_FB(Wait(unlock)) action to wait for the unlock.
 ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(altCursor))
 If set, the cursor will be an underline. If clear, it will be a solid block.
 ')dnl
@@ -861,7 +859,7 @@ XX_TP(XX_FB(lineWrap))
 If set, the XX_SM(NVT) terminal emulator automatically assumes
 a XX_SM(NEWLINE) character when it reaches the end of a line.
 ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
-If set, pasting multi-line input via the XX_FB(Paste) action will maintain a
+If set, pasting multi-line input via the XX_FB(Paste()) action will maintain a
 left margin (it will not move the cursor further left than where the paste
 begins).
 ')dnl
@@ -893,7 +891,7 @@ on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX
 directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
 The directory for the trace file can be changed with
 the "XX_PRODUCT.traceDir" resource.
-Script commands are also traced.
+Script actions are also traced.
 XX_TP(XX_FB(typeahead))
 If set, characters typed while the keyboard is locked will be stored and played
 back when the host unlocks the keyboard.
@@ -1070,7 +1068,7 @@ XX_TR(XX_TDH(`DeleteField')	XX_TD(delete the entire field))
 XX_TR(XX_TDH(`DeleteWord')	XX_TD(delete the current or previous word))
 XX_TR(XX_TDH(XX_BLOCK()`Disconnect')	XX_TD(disconnect from host))
 XX_TR(XX_TDH(`Down')	XX_TD(move cursor down))
-XX_TR(XX_TDH(`Dup'`'XX_LPAREN`'[FailOnError|NoFailOnError]`'XX_RPAREN)	XX_TD(duplicate field))
+XX_TR(XX_TDH(`Dup'`'XX_LPAREN`'[failonerror|nofailonerror]`'XX_RPAREN)	XX_TD(duplicate field))
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(`Ebcdic'`')	XX_TD(return entire screen contents in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(`Ebcdic'`'XX_LPAREN`'XX_FI(length)`'XX_RPAREN`')	XX_TD(return screen contents at cursor in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(`Ebcdic'`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_COMMA`'XX_FI(length)`'XX_RPAREN)	XX_TD(return screen contents in XX_SM(EBCDIC)))
@@ -1086,7 +1084,7 @@ ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(Escape)	XX_TD(escape to XX_FB(c3270>) prom
 ifelse(`XX_TR(XX_TDH(Execute(XX_FI(cmd)))	XX_TD(execute a command in a shell))
 ')dnl
 XX_TR(XX_TDH(`FieldEnd')	XX_TD(move cursor to end of field))
-XX_TR(XX_TDH(`FieldMark'`'XX_LPAREN`'[FailOnError|NoFailOnError]`'XX_RPAREN)	XX_TD(mark field))
+XX_TR(XX_TDH(`FieldMark'`'XX_LPAREN`'[failonerror|nofailonError]`'XX_RPAREN)	XX_TD(mark field))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(HandleMenu(XX_FI(name)))	XX_TD(pop up a menu))
 ')dnl
 XX_TR(XX_TDH(`HexString'`'XX_LPAREN`'XX_FI(hex_digits)`'XX_RPAREN)	XX_TD(insert control-character string))
@@ -1095,8 +1093,8 @@ XX_TR(XX_TDH(`Insert')	XX_TD(set insert mode))
 XX_TR(XX_TDH(XX_BLOCK()`Interrupt')	XX_TD(send XX_SM(TELNET IP) to host))
 ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Keypad')	XX_TD(Display pop-up keypad))
 ')dnl
-XX_TR(XX_TDH(Key`'XX_LPAREN`'XX_FI(keysym)[,FailOnError|NoFailOnError]`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
-XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)[,FailOnError|NoFailOnError]`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
+XX_TR(XX_TDH(Key`'XX_LPAREN`'XX_FI(keysym)[,failonerror|nofailonerror]`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
+XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)[,failonError|nofailonerror]`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Keymap(XX_FI(keymap)))	XX_TD(toggle alternate XX_FI(keymap) (or remove with XX_FB(None))))
 XX_TR(XX_TDH(KybdSelect(XX_FI(direction) [,XX_FI(atom)...]))	XX_TD(Extend selection by one row or column))
 ')dnl
@@ -1120,7 +1118,7 @@ XX_TR(XX_TDH(`PreviousWord')	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste')	XX_TD(insert clipboard contents))')dnl
 XX_TR(XX_TDH(`PasteString'`'XX_LPAREN`'XX_FI(hex_digits)`'XX_RPAREN)	XX_TD(insert string using pasting behavior))
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,
-`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
+`XX_TR(XX_TDH(Printer(start[,XX_FI(lu)]|stop))	XX_TD(start or stop printer session))
 ')dnl
 ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,][dialog|nodialog,]XX_FI([printer-name])))	XX_TD(print screen text on printer))
 ')dnl
@@ -1142,7 +1140,7 @@ XX_TR(XX_TDH(ReadBuffer`'XX_SPACE`'Ebcdic`')	XX_TD(dump screen buffer in EBCDIC)
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(`Rows')	XX_TD(report screen size))
 ')dnl
 XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
-ifelse(XX_INTERACTIVE,yes,`XX_TR(XX_TDH(Scroll(Forward|Backward))	XX_TD(scroll screen))
+ifelse(XX_INTERACTIVE,yes,`XX_TR(XX_TDH(Scroll(forward|backward))	XX_TD(scroll screen))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SelectAll(XX_FI(atom)))	XX_TD(select entire screen))
 ')dnl
@@ -1167,10 +1165,10 @@ ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(ignore)	XX_TD(do nothing))
 ')dnl
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,
 `XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(3270mode))	XX_TD(wait for 3270 mode))
-XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(Disconnect))	XX_TD(wait for host to disconnect))
-XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(InputField))	XX_TD(wait for valid input field))
-XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(NVTMode))	XX_TD(wait for NVT mode))
-XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(Output))	XX_TD(wait for more host output))
+XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(disconnect))	XX_TD(wait for host to disconnect))
+XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(inputfield))	XX_TD(wait for valid input field))
+XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(nvtmode))	XX_TD(wait for NVT mode))
+XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(output))	XX_TD(wait for more host output))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_T_()
 XX_TR(XX_TDH((the following are similar to xterm),COLSPAN="2"))
@@ -1187,7 +1185,7 @@ XX_TR(XX_TDH(start-extend)	XX_TD(begin marking the end of a selection))
 XX_TE()
 ifelse(XX_MODE,console,`XX_LP
 Any of the above actions may be entered at the XX_FB(XX_PRODUCT>) prompt;
-these commands are also available for use in keymaps
+these actions are also available for use in keymaps
 (see XX_LINK(#Keymaps,XX_SM(KEYMAPS))).
 Command names are case-insensitive.
 Parameters can be specified with parentheses and commas, e.g.:
@@ -1197,26 +1195,26 @@ XX_RS(PF 1)
 Parameters can be quoted with double-quote characters, to allow spaces,
 commas, and parentheses to be used.
 XX_LP
-XX_FB(XX_PRODUCT) also supports the following interactive commands:
+XX_FB(XX_PRODUCT) also supports the following interactive actions:
 XX_TPS()dnl
 XX_TP(XX_FB(Help))
-Displays a list of available commands.
+Displays a list of available actions.
 XX_TP(XX_FB(ScreenTrace))
 Turns screen tracing (saving screen images to a file) on or off.
-The command XX_FB(screentrace on) enables screen tracing;
-the command XX_FB(screentrace off) disables it.
+The action XX_FB(ScreenTrace(on)) enables screen tracing;
+the action XX_FB(ScreenTrace(off)) disables it.
 After XX_FB(on), a filename may be specified to override the default
 trace file name of
 ifelse(XX_PLATFORM,windows,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
-The keyaord XX_FB(on) can also be followed by the keyword XX_FB(printer) and an optional
+The keyword XX_FB(on) can also be followed by the keyword XX_FB(printer) and an optional
 ifelse(XX_PRODUCT,wc3270,printer name,print command)
 to direct screen traces directly to the printer.
 XX_TP(XX_FB(Show))
 Displays statistics and settings.
 XX_TP(XX_FB(Trace))
 Turns tracing on or off.
-The command XX_FB(trace on) enables data stream and keyboard event tracing;
-the command XX_FB(trace off) disables it.
+The action XX_FB(Trace(on)) enables data stream and keyboard event tracing;
+the action XX_FB(Trace(off)) disables it.
 The qualifier XX_FB(data) or XX_FB(keyboard) can be specified
 before XX_FB(on) or XX_FB(off) to enable or disable a particular trace.
 After XX_FB(on), a filename may be specified to override the default
@@ -1287,7 +1285,7 @@ In GDI mode, skip the usual Windows print dialog.
 ifelse(XX_PRODUCT,ws3270,`(This is the default.)
 ')dnl
 ')dnl
-XX_TP(XX_FB(file) XX_FI(filename))
+XX_TP(XX_FB(file)`,'XX_FI(filename))
 Save the output in a file.
 XX_TP(XX_FB(html))
 Save the output as HTML.  This option implies XX_FB(file).
@@ -1302,14 +1300,14 @@ Return the output as a string.  This can only be used from scripts.
 ')dnl
 XX_TP(XX_FB(modi))
 Render modified fields in italics.
-XX_TP(XX_FB(caption) XX_FI(text))
+XX_TP(XX_FB(caption)`,'XX_FI(text))
 Add the specified XX_FI(text) as a caption above the output.
 Within XX_FI(text), the special sequence XX_FB(%T%) will be replaced with
 a timestamp.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(secure))
 Disables the pop-up dialog.
 ')dnl
-ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(command) XX_FI(command))
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(command)`,'XX_FI(command))
 Directs the output to a command.
 This allows one or more of the other keywords to be specified, while still
 sending the output to the printer.
@@ -1331,25 +1329,25 @@ The simplest method for
 ifelse(XX_PRODUCT,x3270,`macros ',
 XX_PRODUCT,c3270,`scripting ',
 `nested scripts ')dnl
-is provided via the XX_FB(String)
+is provided via the XX_FB(String())
 action`'ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,`, which
 can be bound to any key in a keymap').
-The arguments to XX_FB(String) are one or more double-quoted strings which are
+The arguments to XX_FB(String()) are one or more double-quoted strings which are
 inserted directly as if typed.
 The C backslash conventions are honored as follows.
 (Entries marked * mean that after sending the XX_SM(AID) code to the host,
 XX_FB(XX_PRODUCT) will wait for the host to unlock the keyboard before further
 processing the string.)
 XX_TS(2,l l.)
-XX_TR(XX_TD(XX_BS()b)	XX_TD(Left))
+XX_TR(XX_TD(XX_BS()b)	XX_TD(Left()))
 XX_TR(XX_TD(XX_BS()`e'XX_FI(xxxx))	XX_TD(EBCDIC character in hex))
-XX_TR(XX_TD(XX_BS()f)	XX_TD(Clear*))
-XX_TR(XX_TD(XX_BS()n)	XX_TD(Enter*))
+XX_TR(XX_TD(XX_BS()f)	XX_TD(Clear()*))
+XX_TR(XX_TD(XX_BS()n)	XX_TD(Enter()*))
 XX_TR(XX_TD(XX_BS()`pa'XX_FI(n))	XX_TD(PA(XX_FI(n))*))
 XX_TR(XX_TD(XX_BS()`pf'XX_FI(nn))	XX_TD(PF(XX_FI(nn))*))
-XX_TR(XX_TD(XX_BS()r)	XX_TD(Newline))
-XX_TR(XX_TD(XX_BS()t)	XX_TD(Tab))
-XX_TR(XX_TD(XX_BS()T)	XX_TD(BackTab))
+XX_TR(XX_TD(XX_BS()r)	XX_TD(Newline()))
+XX_TR(XX_TD(XX_BS()t)	XX_TD(Tab()))
+XX_TR(XX_TD(XX_BS()T)	XX_TD(BackTab()))
 XX_TR(XX_TD(XX_BS()`u'XX_FI(xxxx))	XX_TD(Unicode character in hex))
 XX_TR(XX_TD(XX_BS()`x'XX_FI(xxxx))	XX_TD(Unicode character in hex))
 XX_TE()
@@ -1377,9 +1375,9 @@ ifelse(XX_PRODUCT,x3270,`Also, a backslash before a XX_FB(p) may need to be
 doubled so it will not be removed when a resource file is read.
 ')dnl
 XX_IP
-There is also an alternate form of the XX_FB(String) action, XX_FB(HexString),
+There is also an alternate form of the XX_FB(String()) action, XX_FB(HexString()),
 which is used to enter non-printing data.
-The argument to XX_FB(HexString) is a string of hexadecimal digits, two per
+The argument to XX_FB(HexString()) is a string of hexadecimal digits, two per
 character.  A leading 0x or 0X is optional.
 In 3270 mode, the hexadecimal data represent XX_SM(EBCDIC) characters, which
 are entered into the current field.
@@ -1394,7 +1392,7 @@ dynamically-generated TCP port.
 ',
 `Standard input and output from the child process are piped back to
 XX_FB(XX_PRODUCT).
-The XX_FB(Script) action is fully documented in
+The XX_FB(Script()) action is fully documented in
 XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
 ')dnl
 ifelse(XX_PRODUCT,x3270,
@@ -1406,7 +1404,7 @@ These names are displayed on a Macros menu that appears when XX_FB(XX_PRODUCT)
 is connected to a host.
 Selecting one of the names on the menu executes the X actions associated with
 it.
-Typically the actions are XX_FB(String) calls, but any action may be specified.
+Typically the actions are XX_FB(String()) calls, but any action may be specified.
 Here is a sample macros resource definition, which would result in a four-entry
 Macros menu:
 XX_RS(XX_PRODUCT.macros: XX_BS()
@@ -1457,19 +1455,19 @@ ifelse(XX_PRODUCT,x3270,`the "Multi_key" keysym',`XX_KEY(Meta,m)')
 as the "Compose" key.
 ifelse(XX_PRODUCT,x3270,`If your keyboard lacks such a key, you',`You')
 may set up your own "Compose" key with
-a keymap that maps some other keysym onto the XX_FB(Compose) action.
+a keymap that maps some other keysym onto the XX_FB(Compose()) action.
 ')dnl
 ifelse(XX_PRODUCT,x3270,`include(apl.inc)')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_SH(Printer Session Support)
 XX_PRODUCT supports associated printer sessions via the XX_FI(pr3287)(1)
 program.
-The XX_FB(Printer) action is used to start or stop a XX_FI(pr3287) session.
+The XX_FB(Printer()) action is used to start or stop a XX_FI(pr3287) session.
 XX_LP
-The action XX_FB(Printer Start) starts a printer session, associated with the
+The action XX_FB(Printer(Start)) starts a printer session, associated with the
 current LU.  (This works only if the host supports TN3270E.)
 XX_LP
-The action XX_FB(Printer Start) XX_FI(lu) starts a printer session, associated
+The action XX_FB(Printer)(Start,XX_FI(lu)) starts a printer session, associated
 with a specific XX_FI(lu).
 XX_LP
 The action XX_FB(Printer Stop) stops a printer session.
