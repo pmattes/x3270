@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2014, 2016, 2018 Paul Mattes.
+dnl Copyright (c) 2000-2014, 2016, 2018, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@ In this mode, the emulator process looks for commands on its standard input,
 and places the responses on standard output.
 XX_PP
 The second method is the XX_FB(child script)
-facility, invoked by the emulator's XX_FB(Script) action.
+facility, invoked by the emulator's XX_FB(Script()) action.
 This runs a script as a child process of the emulator.
 ifelse(XX_PLATFORM,unix,`The child has access to pipes connected to the
 emulator; the emulator looks for commands on one pipe, and places the responses on the other.
@@ -87,7 +87,7 @@ The XX_FB(XX_DASHED(scrpiptport)) command-line option causes the emulator to
 bind a socket to the specified port (on the IPv4 loopback address, 127.0.0.1).
 The emulator accepts TCP connections on that port.
 Multiple commands and responses can be sent over each connection.
-ifelse(XX_PLATFORM,windows,`(Note that if the XX_FB(Script) action is used
+ifelse(XX_PLATFORM,windows,`(Note that if the XX_FB(Script()) action is used
 with XX_FB(XX_DASHED(scriptport)), it will pass the scriptport port number to child
 scripts, rather than creating a new socket.)
 ')dnl
@@ -100,7 +100,7 @@ Multiple commands and responses can be sent over each connection.
 ')dnl
 XX_PP
 It is possible to nest the methods.
-For example, a peer or TCP socket script can invoke the XX_FB(Script) action.
+For example, a peer or TCP socket script can invoke the XX_FB(Script()) action.
 The calling script will be resumed when the nested script completes.
 XX_PP
 Commands are emulator XX_FI(actions); the syntax is the same as for the
@@ -197,40 +197,40 @@ Instead, the text is written to standard output.
 XX_PP
 If end-of-file is detected on standard input, the emulator exits.
 (A script can exit without killing the emulator
-by using the XX_FB(CloseScript) action, below.)
+by using the XX_FB(CloseScript()) action, below.)
 Note that this applies to peer scripts only; end-of-file on the pipe
 connected to a child script simply causes the pipes to be closed and
 the
-XX_FB(Script)
+XX_FB(Script())
 action to complete.
 XX_PP
-The XX_FB(Quit) action always causes the emulator to exit.
+The XX_FB(Quit()) action always causes the emulator to exit.
 (When called from the keyboard, it will exit only if not connected to a host.)
 XX_PP
-Normally, the AID actions (XX_FB(Clear),
-XX_FB(Enter),
-XX_FB(PF),
+Normally, the AID actions (XX_FB(Clear()),
+XX_FB(Enter()),
+XX_FB(PF()),
 and
-XX_FB(PA))
+XX_FB(PA()))
 will not complete until the host unlocks the keyboard.
 If the parameter to a
-XX_FB(String)
+XX_FB(String())
 action includes a code for one these actions,
 it will also wait for the keyboard to unlock before proceeding.
 XX_PP
 The XX_FB(AidWait) toggle controls with behavior.
 When this toggle is set (the default), actions block as described above.
 When the toggle is clear, AID actions complete immediately.
-The XX_FB(Wait(Output)) action can then be used to delay a script until the
+The XX_FB(Wait(output)) action can then be used to delay a script until the
 host changes something on the screen, and the
-XX_FB(Wait(Unlock)) action can be used to delay a script until the host
+XX_FB(Wait(unlock)) action can be used to delay a script until the host
 unlocks the keyboard, regardless of the state of the XX_FB(AidWait) toggle.
 XX_PP
 Note that the
-XX_FB(Script)
+XX_FB(Script())
 action does not complete until
 ifelse(XX_PLATFORM,unix,`end-of-file is detected on the pipe or ')dnl
-the XX_FB(CloseScript) action is called by the child process.
+the XX_FB(CloseScript()) action is called by the child process.
 This behavior is not affected by the state of the XX_FB(AidWait) toggle.
 XX_SH(Basic Programming Strategies)
 3270 session scripting can be more difficult than other kinds of scripting,
@@ -251,26 +251,26 @@ XX_LP
 Another complication is that host I/O and script operation are asynchronous.
 That is, the host can update the screen at any time, even between actions that
 are reading the screen contents, so a script can get inconsistent results.
-Assistance for this problem is provided by the XX_FB(Snap) action.
-The XX_FB(Snap(Save)) action saves a snapshot of the screen in a special
-buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii1) and
-XX_FB(Ebcdic1) actions (XX_FB(Snap(Ascii1)) and XX_FB(Snap(Ebcdic1))) to query
+Assistance for this problem is provided by the XX_FB(Snap()) action.
+The XX_FB(Snap(save)) action saves a snapshot of the screen in a special
+buffer. Then the script can use XX_FB(Snap()) variants of the XX_FB(Ascii1()) and
+XX_FB(Ebcdic1()) actions (XX_FB(Snap(Ascii1)) and XX_FB(Snap(Ebcdic1))) to query
 the saved buffer -- which the host cannot modify -- to get the data it wants.
-Finally, XX_FB(Snap(Wait Output)) blocks the script until the host
-modifies the screen, specifically since the last call to XX_FB(Snap(Save)).
+Finally, XX_FB(Snap(wait,output)) blocks the script until the host
+modifies the screen, specifically since the last call to XX_FB(Snap(save)).
 Thus a script can poll the screen efficiently by writing a loop that begins
-with XX_FB(Snap(Save)) and ends with XX_FB(Snap(Wait Output)).
+with XX_FB(Snap(save)) and ends with XX_FB(Snap(wait,output)).
 XX_SH(Script-Specific Actions)
 The following actions have been defined or modified for use with scripts.
 Note that actions that use row and column coordinates generally use an origin
 of 1, with row 1 at the top and column 1 at the left. This is consistent with
 the on-screen cursor position and data stream trace messages.
 XX_TPS()dnl
-XX_TP(XX_FB(AnsiText))
+XX_TP(XX_FB(AnsiText()))
 Outputs whatever data that has been output by the host in
 XX_SM(NVT) mode
 since the last time that
-XX_FB(AnsiText)
+XX_FB(AnsiText())
 was called.
 The data is preceded by the string "data:XX_NBSP", and has had all control characters
 expanded into C backslash sequences.
@@ -282,7 +282,7 @@ contents.
 XX_TP(XX_FB(Ascii1)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
 XX_TP(XX_FB(Ascii1)(XX_FI(row),XX_FI(col),XX_FI(length)))
 XX_TP(XX_FB(Ascii1)(XX_FI(length)))
-XX_TP(XX_FB(Ascii1))
+XX_TP(XX_FB(Ascii1)())
 Outputs an XX_SM(ASCII) text representation of the screen contents.
 Each line is preceded by the string "data:XX_NBSP", and there are no control
 characters.
@@ -302,10 +302,10 @@ XX_IP
 If no parameters are given, the entire screen is output.
 XX_IP
 The XX_SM(EBCDIC)-to-XX_SM(ASCII) translation and output character set depend on the both the
-emulator character set (the XX_FB(XX_DASHED(charset)) option) and the locale.
+emulator host code page (the XX_FB(XX_DASHED(codepage)) option) and the locale.
 UTF-8 and certain XX_SM(DBCS) locales may result in multi-byte expansions of XX_SM(EBCDIC)
 characters that translate to XX_SM(ASCII) codes greater than 0x7f.
-XX_TP(XX_FB(AsciiField))
+XX_TP(XX_FB(AsciiField()))
 Outputs an XX_SM(ASCII) text representation of the field containing the cursor.
 The text is preceded by the string "data:XX_NBSP".
 XX_TP(XX_FB(Connect)(XX_FI(hostname)))
@@ -319,33 +319,33 @@ proceeding interactively.
 (Without this command, the emulator
 would exit when it detected end-of-file on standard input.)
 If the script was invoked by the
-XX_FB(Script)
+XX_FB(Script())
 action, the optional
 XX_FI(status)
 is used as the return status of
-XX_FB(Script);
+XX_FB(Script());
 if nonzero,
-XX_FB(Script)
+XX_FB(Script())
 will complete with an error, and if this script was invoked as part of
 login through the
 XX_FB(ibm_hosts)
 file, the connection will be broken.
-XX_TP(XX_FB(Disconnect))
+XX_TP(XX_FB(Disconnect()))
 Disconnects from the host.
 XX_TP(XX_FB(Ebcdic1)(XX_FI(row),XX_FI(col),XX_FI(rows),XX_FI(cols)))
 XX_TP(XX_FB(Ebcdic1)(XX_FI(row),XX_FI(col),XX_FI(length)))
 XX_TP(XX_FB(Ebcdic1)(XX_FI(length)))
-XX_TP(XX_FB(Ebcdic1))
+XX_TP(XX_FB(Ebcdic1()))
 The same function as
-XX_FB(Ascii1)
+XX_FB(Ascii1())
 above, except that rather than generating
 XX_SM(ASCII)
 text, each character is output as a 2-digit or 4-digit hexadecimal
 XX_SM(EBCDIC)
 code.
-XX_TP(XX_FB(EbcdicField))
+XX_TP(XX_FB(EbcdicField()))
 The same function as
-XX_FB(AsciiField)
+XX_FB(AsciiField())
 above, except that it generates hexadecimal
 XX_SM(EBCDIC)
 codes.
@@ -366,7 +366,7 @@ is specified, the default is 30 seconds.
 XX_FI(Text)
 can contain standard C-language escape (backslash) sequences.
 No wild-card characters or pattern anchor characters are understood.
-XX_FB(Expect)
+XX_FB(Expect())
 is valid only in
 XX_SM(NVT)
 mode.
@@ -398,7 +398,7 @@ Keywords are:
 XX_PP
 XX_TS(3,`center;
 l l .')
-XX_TR(XX_TD(Keyword)	XX_TD(Output))
+XX_TR(XX_TD(Keyword)	XX_TD(output))
 XX_T_
 XX_TR(XX_TD(BindPluName)	XX_TD(BIND PLU returned by the host))
 XX_TR(XX_TD(ConnectionState)	XX_TD(TN3270/TN3270E mode and submode))
@@ -412,12 +412,12 @@ XX_TR(XX_TD(LuName)	XX_TD(Host name LU name))
 XX_TR(XX_TD(Model)	XX_TD(3270 model name (IBM-327x-n)))
 XX_TR(XX_TD(ScreenCurSize)	XX_TD(Current screen size (rows cols)))
 XX_TR(XX_TD(ScreenMaxSize)	XX_TD(Maximum screen size (rows cols)))
-XX_TR(XX_TD(Ssl)	XX_TD(SSL state (secure or not-secure) and host validation state (host-verified or host-unverified)))
+XX_TR(XX_TD(Tls)	XX_TD(TLS state (secure or not-secure) and host validation state (host-verified or host-unverified)))
 XX_TE
 XX_IP
-Without a XX_FI(keyword), XX_FB(Query) returns each of the defined attributes,
+Without a XX_FI(keyword), XX_FB(Query()) returns each of the defined attributes,
 one per line, labeled by its name.
-XX_TP(XX_FB(ReadBuffer)(XX_FB(Ascii)))
+XX_TP(XX_FB(ReadBuffer)(XX_FB(ascii)))
 Dumps the contents of the screen buffer, one line per row.
 Each buffer position inside a data field is generally output as a 2-digit
 hexadecimal code, translated from the host XX_SM(EBCDIC) code page to the
@@ -476,19 +476,19 @@ appear as an extended attribute).
 XX_IP
 XX_SM(NULL) characters in the screen buffer are reported as XX_SM(ASCII)
 character 00 instead of 20, even though they are displayed as blanks.
-XX_TP(XX_FB(ReadBuffer)(XX_FB(Ebcdic)))
-Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output as
+XX_TP(XX_FB(ReadBuffer)(XX_FB(ebcdic)))
+Equivalent to XX_FB(ReadBuffer)(XX_FB(ascii)), but with the data fields output as
 hexadecimal XX_SM(EBCDIC) codes.
 If a buffer position has the Graphic Escape attribute, it is
 displayed as XX_FB(GE)`('XX_FI(xx)`)'.
 If a buffer position was written in NVT mode, it does not have an
 EBCDIC value, and will be displayed as 00.
-XX_TP(XX_FB(ReadBuffer)(XX_FB(Unicode)))
-Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output
+XX_TP(XX_FB(ReadBuffer)(XX_FB(unicode)))
+Equivalent to XX_FB(ReadBuffer)(XX_FB(ascii)), but with the data fields output
 as 4-digit hexadecimal Unicode values.
-XX_TP(XX_FB(ReadBuffer)(XX_FB(Field)))
+XX_TP(XX_FB(ReadBuffer)(XX_FB(field)))
 Dumps information about the current field.
-XX_FB(Ascii), XX_FB(Ebcdic) and XX_FB(Unicode) keywords are also accepted.
+XX_FB(ascii), XX_FB(ebcdic) and XX_FB(unicode) keywords are also accepted.
 The output consists of keywords and parameters.
 Note that XX_DQUOTED(field start) is the location of the start-of-field
 character, which is displayed on the screen as a blank to the left of the
@@ -501,57 +501,57 @@ XX_TR(XX_TD(XX_TC(Start1))	XX_TD(XX_TC(row col))	XX_TD(XX_TC(Field start coordin
 XX_TR(XX_TD(XX_TC(StartOffset))	XX_TD(XX_TC(offset))	XX_TD(XX_TC(Field start location as offset)))
 XX_TR(XX_TD(XX_TC(Cursor1))	XX_TD(XX_TC(row col))	XX_TD(XX_TC(Cursor coordinates (1-origin))))
 XX_TR(XX_TD(XX_TC(CursorOffset))	XX_TD(XX_TC(offset))	XX_TD(XX_TC(Cursor location as offset)))
-XX_TR(XX_TD(XX_TC(Contents))	XX_TD(XX_TC(contents))	XX_TD(XX_TC(Field contents on one line in XX_FB(ReadBuffer) format)))
+XX_TR(XX_TD(XX_TC(Contents))	XX_TD(XX_TC(contents))	XX_TD(XX_TC(Field contents on one line in XX_FB(ReadBuffer()) format)))
 XX_TE()
 XX_TP(XX_FB(Script)(XX_FI(path)[,arg...]))
 Runs a child script, passing it optional command-line arguments.
 XX_FI(path) must specify an executable (binary) program: the emulator will
 create a new process and execute it. If you simply want the emulator to read
-commands from a file, use the XX_FB(Source) action.
-XX_TP(XX_FB(Snap))
-Equivalent to XX_FB(Snap)(XX_FB(Save)) (see XX_LINK(#save,below)).
+commands from a file, use the XX_FB(Source()) action.
+XX_TP(XX_FB(Snap()))
+Equivalent to XX_FB(Snap(save)) (see XX_LINK(#save,below)).
 XX_TP(XX_FB(Snap)(XX_FB(Ascii1),...))
 Performs the XX_FB(Ascii1) action on the saved screen image.
 XX_TP(XX_FB(Snap)(XX_FB(Cols)))
 Returns the number of columns in the saved screen image.
 XX_TP(XX_FB(Snap)(`XX_FB(Ebcdic1),...'))
-Performs the XX_FB(Ebcdic1) action on the saved screen image.
+Performs the XX_FB(Ebcdic1()) action on the saved screen image.
 XX_TP(XX_FB(Snap)(XX_FB(ReadBuffer)))
-Performs the XX_FB(ReadBuffer) action on the saved screen image.
+Performs the XX_FB(ReadBuffer()) action on the saved screen image.
 XX_TP(XX_FB(Snap(XX_FB(Rows))))
 Returns the number of rows in the saved screen image.
 XX_TARGET(save)dnl
-XX_TP(XX_FB(Snap)(XX_FB(Save)))
+XX_TP(XX_FB(Snap)(XX_FB(save)))
 Saves a copy of the screen image and status in a temporary buffer.
 This copy can be queried with other
-XX_FB(Snap)
+XX_FB(Snap())
 actions to allow a script to examine a consistent screen image, even when the
 host may be changing the image (or even the screen dimensions) dynamically.
-XX_TP(XX_FB(Snap)(XX_FB(Status)))
+XX_TP(XX_FB(Snap)(XX_FB(status)))
 Returns the status line from when the screen was last saved.
-XX_TP(XX_FB(Snap)(XX_FB(Wait)[`,'XX_FI(timeout)]`,'XX_FB(Output)))
+XX_TP(XX_FB(Snap)(XX_FB(wait)[`,'XX_FI(timeout)]`,'XX_FB(output)))
 Pauses the script until the host sends further output, then updates the snap
 buffer with the new screen contents.
 Used when the host unlocks the keyboard (allowing the script to proceed after
 an
-XX_FB(Enter),
-XX_FB(PF)
+XX_FB(Enter()),
+XX_FB(PF())
 or
-XX_FB(PA)
+XX_FB(PA())
 action), but has not finished updating the screen.
 This action is usually invoked in a loop that uses the
-XX_FB(Snap)(XX_FB(Ascii1))
+XX_FB(Snap(Ascii1))
 or
-XX_FB(Snap)(XX_FB(Ebcdic1))
+XX_FB(Snap(Ebcdic1))
 action to scan the screen for some pattern that indicates that the host has
 fully processed the last command.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Snap) action.  The default is to wait indefinitely.
+before failing the XX_FB(Snap()) action.  The default is to wait indefinitely.
 XX_TP(XX_FB(Source)(XX_FI(file)))
 Read and execute commands from XX_FI(file).
-Any output from those commands will become the output from XX_FB(Source).
-If any of the commands fails, the XX_FB(Source) command will XX_FI(not) abort;
+Any output from those commands will become the output from XX_FB(Source()).
+If any of the commands fails, the XX_FB(Source()) command will XX_FI(not) abort;
 it will continue reading commands until EOF.
 XX_TP(XX_FB(Title)(XX_FI(text)))
 Changes the
@@ -560,20 +560,20 @@ window title to XX_FI(text).
 XX_TP(XX_FB(Transfer)(XX_FI(keyword)=XX_FI(value),...))
 Invokes IND$FILE file transfer.
 See XX_LINK(#File-Transfer,XX_SM(FILE TRANSFER)) below.
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(3270Mode)))
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(3270mode)))
 Used when communicating with a host that switches between
 XX_SM(NVT) mode and 3270 mode.
 Pauses the script or macro until the host negotiates 3270 mode, then waits for
 a formatted screen as above.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
 XX_IP
 For backwards compatibility,
 XX_FB(Wait(3270))
 is equivalent to
-XX_FB(Wait)(XX_FB(3270Mode))
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(Disconnect)))
+XX_FB(Wait)(XX_FB(3270mode))
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(disconnect)))
 Pauses the script until the host disconnects.
 Often used to after sending a
 XX_FI(logoff)
@@ -583,22 +583,22 @@ XX_FB(disconnected)
 state.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(InputField)))
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(inputfield)))
 A useful utility for use at the beginning of scripts and after the
-XX_FB(Connect) action.
+XX_FB(Connect()) action.
 In 3270 mode, waits until the screen is formatted, and the host has positioned
 the cursor on a modifiable field.
 In XX_SM(NVT) mode, waits until the host sends at least one byte of data.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
 XX_IP
 For backwards compatibility,
 XX_FB(Wait)
 is equivalent to
-XX_FB(Wait)(XX_FB(InputField)).
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(NVTMode)))
+XX_FB(Wait)(XX_FB(inputfield)).
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(nvtmode)))
 Used when communicating with a host that switches between 3270 mode and
 XX_SM(NVT) mode.
 Pauses the script or macro until the host negotiates XX_SM(NVT)
@@ -606,47 +606,47 @@ mode, then waits for
 a byte from the host as above.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
 XX_IP
 For backwards compatibility,
 XX_FB(Wait)(XX_FB(ansi))
 is equivalent to
-XX_FB(Wait)(XX_FB(NVTMode)).
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(Output)))
+XX_FB(Wait)(XX_FB(nvtmode)).
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(output)))
 Pauses the script until the host sends further output.
 Often needed when the host unlocks the keyboard (allowing the script to
 proceed after a
-XX_FB(Clear),
-XX_FB(Enter),
-XX_FB(PF)
+XX_FB(Clear()),
+XX_FB(Enter()),
+XX_FB(PF())
 or
-XX_FB(PA)
+XX_FB(PA())
 action), but has not finished updating the screen.
 Also used in non-blocking AID mode (see XX_LINK(#Differences,XX_SM(DIFFERENCES))
 for details).
 This action is usually invoked in a loop that uses the
-XX_FB(Ascii1)
+XX_FB(Ascii1())
 or
-XX_FB(Ebcdic1)
+XX_FB(Ebcdic1())
 action to scan the screen for some pattern that indicates that the host has
 fully processed the last command.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
-XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(Unlock)))
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
+XX_TP(XX_FB(Wait)([XX_FI(timeout)`,'] XX_FB(unlock)))
 Pauses the script until the host unlocks the keyboard.
 This is useful when operating in non-blocking AID mode
 (XX_FB(toggle AidWait clear)), to wait for a host command to complete.
 See XX_LINK(#Differences,XX_SM(DIFFERENCES)) for details).
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
-before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
-XX_TP(XX_FB(Wait)(XX_FI(timeout)`,' XX_FB(Seconds)))
+before failing the XX_FB(Wait()) action.  The default is to wait indefinitely.
+XX_TP(XX_FB(Wait)(XX_FI(timeout)`,' XX_FB(seconds)))
 Delays the script XX_FI(timeout) seconds.
-Unlike the other forms of XX_FB(Wait), the timeout is not optional.
+Unlike the other forms of XX_FB(Wait()), the timeout is not optional.
 ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(WindowState)(XX_FI(mode)))
-If XX_FI(mode) is XX_FB(Iconic), changes the x3270 window into an icon.
-If XX_FI(mode) is XX_FB(Normal), changes the x3270 window from an icon to a
+If XX_FI(mode) is XX_FB(iconic), changes the x3270 window into an icon.
+If XX_FI(mode) is XX_FB(normal), changes the x3270 window from an icon to a
 normal window.
 ')dnl
 XX_TPE()dnl
@@ -660,10 +660,10 @@ XX_TPS()
 XX_TP(XX_FB(Ascii)(...))
 XX_TP(XX_FB(Ebcdic)(...))
 XX_TP(XX_FB(MoveCursor)(...))
-Identical to XX_FB(Ascii1), XX_FB(Ebcdic1) and XX_FB(MoveCursor1), but using
+Identical to XX_FB(Ascii1()), XX_FB(Ebcdic1()) and XX_FB(MoveCursor1()), but using
 zero-origin coordinates.
 XX_PP
-The XX_FB(Snap) action also accepts XX_FB(Ascii) and XX_FB(Ebcdic) keywords,
+The XX_FB(Snap()) action also accepts XX_FB(Ascii) and XX_FB(Ebcdic) keywords,
 allowing zero-origin coordinates.
 XX_TPE()
 XX_SH(See Also)
