@@ -177,15 +177,15 @@ static struct {
 	{ AnPrinter, KwStart "[,lu]|" KwStop, P_3270|P_SCRIPTING|P_INTERACTIVE,
 	    "Start or stop " HELP_W "pr3287 printer session" },
         { AnPrintText,
-	    "[" KwHtml "|" KwRtf "][," KwModi "][," KwCaption ",<caption>][," KwReplace "|" KwAppend "]," KwFile ",<filename>",
+	    "[" KwHtml "|" KwRtf ",][" KwModi ",][" KwCaption ",<caption>,][" KwReplace "|" KwAppend ",]" KwFile ",<filename>",
 	    P_INTERACTIVE|P_SCRIPTING,
 	    "Save screen image in a file" },
         { AnPrintText,
-	    "[" KwModi "][," KwCaption ",<caption>]"
+	    "[" KwModi ",][" KwCaption ",<caption>],"
 #if defined(WC3270) /*[*/
-	    "[," KwDialog "|" KwNoDialog "][,<printer-name>]",
+	    "[" KwDialog "|" KwNoDialog ",][<printer-name>]",
 #else /*][*/
-	    "[,<print-command>]",
+	    "[<print-command>]",
 #endif /*]*/
 	    P_INTERACTIVE|P_SCRIPTING,
 	    "Print screen image" },
@@ -196,14 +196,14 @@ static struct {
 	{ AnQuit, NULL, P_INTERACTIVE, "Exit " HELP_W "3270" },
         { AnReadBuffer, "[" KwAscii "|" KwEbcdic "|" KwUnicode "]", P_SCRIPTING,
 	    "Dump display buffer" },
-        { AnReadBuffer, "[" KwAscii "|" KwEbcdic "|" KwUnicode "]," KwField, P_SCRIPTING,
+        { AnReadBuffer, "[" KwAscii "|" KwEbcdic "|" KwUnicode ",]" KwField, P_SCRIPTING,
 	    "Dump display buffer for current field" },
 	{ AnReconnect, NULL, P_INTERACTIVE, "Reconnect to previous host" },
 	{ AnRedraw, NULL, P_INTERACTIVE|P_3270, "Redraw screen" },
 	{ AnReset, NULL, P_3270, "Clear keyboard lock" },
 	{ AnRight, NULL, P_3270, "Move cursor right" },
 	{ AnRight2, NULL, P_3270, "Move cursor right 2 columns" },
-	{ AnScreenTrace, KwOn "[,[" KwFile "],<filename>]",  P_INTERACTIVE,
+	{ AnScreenTrace, KwOn "[[," KwFile "],<filename>]",  P_INTERACTIVE,
 	    "Save screen images to file" },
 	{ AnScreenTrace,
 # if defined(_WIN32) /*[*/
@@ -213,7 +213,7 @@ static struct {
 # endif /*]*/
 	    P_INTERACTIVE, "Save screen images to printer" },
 	{ AnScreenTrace, KwOff, P_INTERACTIVE, "Stop saving screen images" },
-	{ AnScript, "[" KwDashAsync "][," KwDashNoLock "][," KwDashSingle "],<path>[,<arg>...]",
+	{ AnScript, "[" KwDashAsync ",][" KwDashNoLock ",][" KwDashSingle ",]<path>[,<arg>...]",
 	    P_SCRIPTING, "Run a child script" },
 	{ AnScroll, KwForward "|" KwBackward, P_INTERACTIVE, "Scroll screen" },
 	{ AnSet, "[<setting-name>,value]", P_INTERACTIVE|P_SCRIPTING,

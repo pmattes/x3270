@@ -58,13 +58,13 @@ Use XX_FB(ascii) (the default) for a text file, which will be translated
 between XX_SM(EBCDIC) and XX_SM(ASCII) as necessary.
 Use XX_FB(binary) for non-text files.
 XX_TP(XX_FB(cr))
-Controls how XX_FB(Newline) characters are handled when transferring
+Controls how newline characters are handled when transferring
 XX_FB(mode=ascii) files.
-XX_FB(remove) (the default) strips XX_FB(Newline) characters in local files
+XX_FB(remove) (the default) strips newline characters in local files
 before transferring them to the host.
-XX_FB(add) adds XX_FB(Newline) characters to each host file record before
+XX_FB(add) adds newline characters to each host file record before
 transferring it to the local workstation.
-XX_FB(keep) preserves XX_FB(Newline) characters when transferring a local file
+XX_FB(keep) preserves newline characters when transferring a local file
 to the host.
 XX_TP(XX_FB(remap))
 Controls text translation for XX_FB(mode=ascii) files.

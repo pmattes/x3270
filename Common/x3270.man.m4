@@ -60,7 +60,7 @@ ifelse(XX_PRODUCT,x3270,
 `The window created by XX_FB(XX_PRODUCT)
 can use its own font for displaying characters, so it is a fairly accurate
 representation of an XX_SM(IBM) 3278 or 3279.
-It is similar to XX_FI(tn3270)(1) except that it is X-based, not curses-based.
+It is similar to XX_FI(tn3270)(1) except that it is X11-based, not curses-based.
 ')dnl
 ifelse(XX_PRODUCT,c3270,
 `If the console is capable of displaying colors, then XX_FB(c3270) emulates an
@@ -326,7 +326,7 @@ XX_TP(XX_FB(XX_DASHED(noprompt)))
 An alias for XX_DASHED(secure).
 ')dnl
 XX_TP(XX_FB(XX_DASHED(noverifycert)))
-For SSL/TLS connections, do not verify the host certificate.
+For TLS connections, do not verify the host certificate.
 XX_TP(XX_FB(XX_DASHED(nvt)))
 Start in NVT mode instead of waiting for the host to send data, and make the
 default terminal type XX_FB(xterm).
@@ -486,7 +486,7 @@ XX_IP
 Some hosts are confused by the XX_FB(XX_DASHED(E))
 suffix on the terminal name, and will ignore the extra screen area on
 models 3, 4 and 5.
-Prepending an XX_FB(s:) on the hostname, or setting the "XX_PRODUCT.extended"
+Prepending an XX_FB(S:) on the hostname, or setting the "XX_PRODUCT.extended"
 resource to "false", removes the XX_FB(XX_DASHED(E))
 from the terminal name when connecting to such hosts.
 XX_IP
@@ -527,10 +527,10 @@ Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
 XX_TP(XX_FB(XX_DASHED(v)))
 Display the version and build options for XX_FB(XX_PRODUCT) and exit.
 XX_TP(XX_FB(XX_DASHED(verifycert)))
-For SSL/TLS connections, verify the host certificate, and do not allow
+For TLS connections, verify the host certificate, and do not allow
 the connection to complete unless it can be validated. (This is the default
 setting.)
-This option is overridden by a XX_FB(y:) prepended to the hostname when
+This option is overridden by a XX_FB(Y:) prepended to the hostname when
 connecting.
 ifelse(XX_PRODUCT,x3270,,
 `XX_TP(XX_FB(XX_DASHED(xrm)) "XX_PRODUCT.XX_FI(resource): XX_FI(value)")
@@ -969,7 +969,7 @@ ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(script))
 The letter "S" indicates that a script is active.
 ')dnl
 ifelse(XX_PRODUCT,x3270,,`XX_TP(XX_FB(secure connection))
-A green letter "S" indicates that the connection is secured via SSL/TLS.
+A green letter "S" indicates that the connection is secured via TLS.
 ')dnl
 XX_TP(XX_FB(LU name))
 The LU name associated with the session, if there is one.
@@ -1108,7 +1108,7 @@ XX_TR(XX_TDH(`MonoCase()')	XX_TD(toggle uppercase-only mode))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor())	XX_TD(move cursor to mouse position))
 ')dnl
 XX_TR(XX_TDH(MoveCursor`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_RPAREN)	XX_TD(move cursor to zero-origin (XX_FI(row),XX_FI(col))))
-ifelse(XX_PRODUCT,x3270,`XX_TR(`XX_TDH(XX_BLOCK()MoveCursorSelect)	XX_TD(`move cursor to mouse position, light pen selection''))
+ifelse(XX_PRODUCT,x3270,`XX_TR(`XX_TDH(XX_BLOCK()MoveCursorSelect())	XX_TD(`move cursor to mouse position, light pen selection''))
 ')dnl
 XX_TR(XX_TDH(`Newline()')	XX_TD(move cursor to first field on next line (or send XX_SM(ASCII LF))))
 XX_TR(XX_TDH(`NextWord()')	XX_TD(move cursor to next word))
@@ -1247,7 +1247,7 @@ ifelse(XX_PRODUCT,wc3270,`include(keymaps.inc)
 ifelse(XX_PRODUCT,x3270,,`include(ft.inc)
 ')dnl
 XX_SH(The PrintText Action)
-The XX_FB(PrintText) produces screen snapshots in a number of different
+The XX_FB(PrintText()) produces screen snapshots in a number of different
 forms.
 The default form wth no arguments sends a copy of the screen to the default
 printer.
@@ -1269,7 +1269,7 @@ page orientation as XX_FB(portrait) or XX_FB(landscape).
 ')dnl
 XX_LP
 Multiple arguments can include keywords to control the output of
-XX_FB(PrintText):
+XX_FB(PrintText()):
 XX_TPS()dnl
 ifelse(XX_PLATFORM,windows,`XX_TP(XX_FB(gdi))
 Print directly to the printer using GDI, instead of creating an RTF file and
@@ -1502,7 +1502,7 @@ print each job.
 It defaults to the value of the XX_FB($PRINTER) environment
 variable, if set.
 Otherwise the default system printer is used.
-This resource also controls the printer used by the XX_FB(PrintText) action.
+This resource also controls the printer used by the XX_FB(PrintText()) action.
 XX_LP
 The resource XX_FB(wc3270.printer.options) specifies extra options, such as
 XX_FB(-trace) to pass to XX_FI(wpr3287).
@@ -1518,23 +1518,23 @@ associated with the specified LU.
 ifelse(XX_PRODUCT,x3270,
 `XX_SH(Screen Printing)
 Screen printing is handled through options on the XX_FB(File) menu or by the
-XX_FB(PrintText) and XX_FB(PrintWindow) actions.
+XX_FB(PrintText()) and XX_FB(PrintWindow()) actions.
 Each results in a pop-up to confirm the print command.
 XX_PP
-The XX_FB(PrintText) action (usually assigned to the key XX_LT()Meta>p) sends
+The XX_FB(PrintText()) action (usually assigned to the key XX_LT()Meta>p) sends
 the current
 screen image to the printer as XX_SM(ASCII) characters.
 The default command used to print the data is controlled by
 the "XX_PRODUCT.printTextCommand" resource; the default is
 XX_FB(lpr).
 You may also use a keymap definition to pass a print command the
-XX_FB(PrintText) action itself.
+XX_FB(PrintText()) action itself.
 The command receives the screen text as its standard input.
 For example, the following keymap will save the screen text in a file:
 XX_IP
 XX_RS(XX_KEY(Meta,f): PrintText("cat >screen.image"))
 XX_PP
-The XX_FB(PrintWindow) action (usually assigned to the key XX_LT()Meta>b) sends the current
+The XX_FB(PrintWindow()) action (usually assigned to the key XX_LT()Meta>b) sends the current
 screen image to the printer as a bitmap.
 The default command used to print the data is controlled by
 the "XX_PRODUCT.printWindowCommand" resource; the default is
@@ -1542,7 +1542,7 @@ XX_IP
 XX_RS(XX_FB(xwd XX_DASHED(id) %d | xpr | lpr).)
 XX_PP
 You may also use a keymap definition to pass a print command to the
-XX_FB(PrintWindow) action itself.
+XX_FB(PrintWindow()) action itself.
 If the command contains the text "%d", the window ID of
 XX_FB(XX_PRODUCT) will be substituted before it is run.
 For example, the following keymap will pop up a duplicate of the current
@@ -1550,7 +1550,7 @@ screen image:
 XX_IP
 XX_RS(XX_KEY(Meta,g): PrintWindow("xwd XX_DASHED(id) %d | xwud &"))
 XX_LP
-If the command for PrintWindow or PrintText begins with an "@" character,
+If the command for PrintWindow() or PrintText() begins with an "@" character,
 the initial pop-up menu to confirm the print command is not displayed and
 the command cannot be edited.
 ')dnl
@@ -1564,7 +1564,7 @@ XX_SH(Passthru)
 XX_FB(XX_PRODUCT) supports the Sun XX_FI(telnet-passthru)
 service provided by the XX_FI(in.telnet-gw) server.
 This allows outbound telnet connections through a firewall machine.
-When a XX_FB(p:) is prepended to a hostname, XX_FB(XX_PRODUCT)
+When a XX_FB(P:) is prepended to a hostname, XX_FB(XX_PRODUCT)
 acts much like the XX_FI(itelnet)(1) command.
 It contacts the machine named XX_FB(internet-gateway) at the port defined in
 XX_FB(/etc/services) as XX_FB(telnet-passthru)

@@ -14,15 +14,15 @@ Prepending an XX_FB(N:) onto XX_FI(hostname)
 turns off TN3270E support for the session.
 XX_LP
 Prepending an XX_FB(L:) onto XX_FI(hostname)
-causes XX_FB(XX_PRODUCT) to first create an SSL/TLS tunnel to the host, and then
+causes XX_FB(XX_PRODUCT) to first create a TLS tunnel to the host, and then
 create a TN3270 session inside the tunnel.  (This function is supported only if
-XX_FB(XX_PRODUCT) was built with SSL/TLS support).
+XX_FB(XX_PRODUCT) was built with TLS support).
 Note that TLS-encrypted sessions using the TELNET START-TLS option are
 negotiated with the host automatically; for these sessions the XX_FB(L:) prefix
 should not be used.
 XX_LP
 Prepending a XX_FB(Y:) onto XX_FI(hostname)
-causes XX_FB(XX_PRODUCT) to skip validation of host SSL/TLS certificates.
+causes XX_FB(XX_PRODUCT) to skip validation of host TLS certificates.
 This overrides any other configuration or command-line options.
 XX_LP
 Prepending an XX_FB(A:) onto XX_FI(hostname) is equivalent to setting the
@@ -58,7 +58,7 @@ XX_DQUOTED(XX_FB(:)).
 and with XX_FI(tn3270)(1), the XX_FI(port)
 may also be specified as a second, separate argument.)
 XX_LP
-An optional accept name (a hostname to accept in the host's SSL/TLS
+An optional accept name (a hostname to accept in the host's TLS
 certificate) may be specified by appending it to the hostname with an equals
 sign (XX_DQUOTED(XX_FB(=))).
 The accept name can also be specified with the XX_FB(XX_DASHED(accepthostname))
