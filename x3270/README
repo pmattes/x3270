@@ -1,4 +1,4 @@
-x3270 3.3 General Release
+x3270 4.0 General Release
 
 x3270 is an IBM 3278/3279 terminal emulator for X11.
 
@@ -40,7 +40,7 @@ Updates to x3270, as well as the current status of development and bugs, are
 available from the x3270 Web Page, http://x3270.sourceforge.net/.
 
 Feel free to send comments, criticism, suggestions, complaints, etc., to
-Paul Mattes, Paul.Mattes@usa.net. Requests will be addressed as time and
+Paul Mattes, paul.mattes@case.edu. Requests will be addressed as time and
 resources permit.
 
 There is also an x3270 mailing list, which receives news about new releases.

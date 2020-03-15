@@ -1,4 +1,4 @@
-ws3270 3.3 Release
+ws3270 4.0 Release
 
 ws3270 is a scripted IBM 3278/3279 terminal emulator.
 
@@ -28,7 +28,7 @@ Updates to ws3270, as well as the current status of development and bugs, are
 available from the x3270 Web Page, http://x3270.sourceforge.net/.
 
 Feel free to send comments, criticism, suggestions, complaints, etc., to
-Paul Mattes, Paul.Mattes@usa.net. Requests will be addressed as time and
+Paul Mattes, paul.mattes@case.edu. Requests will be addressed as time and
 resources permit.
 
 There is also an x3270 mailing list, which also includes information about
