@@ -193,15 +193,23 @@ static struct {
     char *name;
     int index;
 } cc_name[] = {
-    { "black",	COLOR_BLACK },
-    { "red",	COLOR_RED },
-    { "green",	COLOR_GREEN },
-    { "yellow",	COLOR_YELLOW },
-    { "blue",	COLOR_BLUE },
-    { "magenta",    COLOR_MAGENTA },
-    { "cyan",	COLOR_CYAN },
-    { "white",	COLOR_WHITE },
-    { NULL,	0 }
+    { "black",			COLOR_BLACK },
+    { "red",			COLOR_RED },
+    { "green",			COLOR_GREEN },
+    { "yellow",			COLOR_YELLOW },
+    { "blue",			COLOR_BLUE },
+    { "magenta",    		COLOR_MAGENTA },
+    { "cyan",			COLOR_CYAN },
+    { "white",			COLOR_WHITE },
+    { "intensified-black",	8 + COLOR_BLACK },
+    { "intensified-red",	8 + COLOR_RED },
+    { "intensified-green",	8 + COLOR_GREEN },
+    { "intensified-yellow",	8 + COLOR_YELLOW },
+    { "intensified-blue",	8 + COLOR_BLUE },
+    { "intensified-magenta",    8 + COLOR_MAGENTA },
+    { "intensified-cyan",	8 + COLOR_CYAN },
+    { "intensified-white",	8 + COLOR_WHITE },
+    { NULL,			0 }
 };
 
 static int status_row = 0;	/* Row to display the status line on */
@@ -343,11 +351,6 @@ screen_init(void)
 			     !is_utf8) {
 	appres.c3270.ascii_box_draw = true;
     }
-
-    /* Pull in the user's color mappings. */
-    init_user_colors();
-    init_user_attribute_colors();
-    crosshair_color_init();
 
     /* Initialize the controller. */
     ctlr_init(ALL_CHANGE);
@@ -552,6 +555,11 @@ finish_screen_init(void)
 	char *colorterm;
 #endif /*]*/
 	start_color();
+
+	init_user_colors();
+	init_user_attribute_colors();
+	crosshair_color_init();
+
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	if ((appres.c3270.default_fgbg ||
 	     (((colorterm = getenv("COLORTERM")) != NULL &&
@@ -808,13 +816,23 @@ init_user_attribute_color(int *a, const char *resname)
     }
     for (i = 0; cc_name[i].name != NULL; i++) {
 	if (!strcasecmp(r, cc_name[i].name)) {
+	    if (cc_name[i].index >= COLORS) {
+		xs_warning("Invalid %s value %s [%d] exceeds maximum color "
+			"index %d", resname, r, cc_name[i].index, COLORS - 1);
+		return;
+	    }
 	    *a = cc_name[i].index;
 	    return;
 	}
     }
     l = strtoul(r, &ptr, 0);
-    if (ptr == r || *ptr != '\0' || (int)l >= COLORS) {
+    if (ptr == r || *ptr != '\0') {
 	xs_warning("Invalid %s value: %s", resname, r);
+	return;
+    }
+    if ((int)l >= COLORS) {
+	xs_warning("Invalid %s value %s exceeds maximum color index %d",
+		resname, r, COLORS - 1);
 	return;
     }
     *a = (int)l;

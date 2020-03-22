@@ -423,9 +423,19 @@ sigchld_handler(int ignored)
 static void
 c3270_Warning(const char *s)
 {
-    fprintf(stderr, "Warning: %s\n", s);
-    fflush(stderr);
-    any_error_output = true;
+    if (!escaped) {
+	if (error_pending != NULL) {
+	    char *xerror = xs_buffer("%s\n%s", error_pending, s);
+
+	    Replace(error_pending, xerror);
+	} else {
+	    Replace(error_pending, NewString(s));
+	}
+    } else {
+	fprintf(stderr, "Warning: %s\n", s);
+	fflush(stderr);
+	any_error_output = true;
+    }
 }
 
 #if defined(_WIN32) /*[*/
@@ -679,6 +689,14 @@ Type 'help' for help information.\n\n",
 	/* Update the screen. */
 	if (!escaped) {
 	    screen_disp(false);
+	}
+
+	/*
+	 * If an error popped up while initializing the screen, force an
+	 * escape.
+	 */
+	if (error_pending != NULL) {
+	    c3270_screen_suspend();
 	}
 
 	/* Display the prompt. */
