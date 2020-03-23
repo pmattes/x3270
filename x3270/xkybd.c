@@ -135,8 +135,8 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
 
     /* With arguments, this isn't a mouse call. */
     if (*num_params != 0) {
-	if (*num_params != 2) {
-	    popup_an_error(AnMoveCursor "() takes 0 or 2 arguments");
+	if (*num_params > 2) {
+	    popup_an_error(AnMoveCursor "() takes 0, 1 or 2 arguments");
 	    return;
 	}
 	run_action(AnMoveCursor, IA_KEYMAP, params[0], params[1]);
