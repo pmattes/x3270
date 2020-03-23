@@ -426,7 +426,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    run_action(AnAttn, IA_DEFAULT, NULL, NULL);
 	    break;
 	case XK_3270_AltCursor:
-	    run_action(AnAltCursor, IA_DEFAULT, NULL, NULL);
+	    run_action(AnToggle, IA_DEFAULT, ResAltCursor, NULL);
 	    break;
 	case XK_3270_CursorSelect:
 	    run_action(AnCursorSelect, IA_DEFAULT, NULL, NULL);
