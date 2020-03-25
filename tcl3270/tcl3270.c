@@ -111,6 +111,20 @@ static int tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[]);
 int
 main(int argc, char **argv)
 {
+    char *programname = strrchr(argv[0], '/');
+
+    if (programname) {
+	char *path = getenv("PATH");
+	size_t path_len = programname - argv[0];
+	size_t buf_len = 5 + path_len + (path? strlen(path + 1): 0) + 1;
+	char *buf = Malloc(buf_len);
+
+	/* Add our path to $PATH so we can find s3270 and x3270if. */
+	snprintf(buf, buf_len, "PATH=%.*s%s%s", (int)path_len, argv[0],
+		path? ":": "", path? path: "");
+	putenv(buf);
+    }
+
     Tcl_Main(argc, argv, Tcl_AppInit);
     return 0;
 }

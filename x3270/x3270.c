@@ -445,6 +445,13 @@ main(int argc, char *argv[])
     /* Figure out who we are */
     programname = strrchr(argv[0], '/');
     if (programname) {
+	char *path = getenv("PATH");
+
+	/* Add our path to $PATH so we can find x3270if. */
+	putenv(xs_buffer("PATH=%.*s%s%s", 
+		    (int)(programname - argv[0]), argv[0],
+		    path? ":": "",
+		    path? path: ""));
 	++programname;
     } else {
 	programname = argv[0];
