@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2018 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ LIBDEPS = $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = ws3270.exe s3270.exe
+PROGS = ws3270.exe s3270.exe x3270if.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
@@ -80,6 +80,9 @@ ws3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 
 s3270.exe: ws3270.exe
 	/bin/cp -p ws3270.exe $@
+
+x3270if.exe: ../x3270if/x3270if.exe
+	/bin/cp -p ../x3270if/x3270if.exe $@
 
 wversion.o: mkwversion.sh version.txt
 	sh $< ws3270 $(CC) $(filter %.txt,$^)

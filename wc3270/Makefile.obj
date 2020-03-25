@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2019 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ SHRTLIBS = $(LD32XX) -lole32 -luuid
 WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe
+PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe x3270if.exe
 all: $(PROGS)
 
 version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
@@ -106,6 +106,9 @@ catf_res.o: catf.rc catf.ico
 
 catf.exe: catf.o catf_res.o
 	$(CC) $(CFLAGS) -o $@ catf.o catf_res.o
+
+x3270if.exe: ../x3270if/x3270if.exe
+	/bin/cp -p ../x3270if/x3270if.exe $@
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c wc3270.exe.manifest

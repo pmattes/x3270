@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017, 2020 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 RM = rm -f
 CC = @CC@
 
-all: c3270
+all: c3270 x3270if
 
 HOST = @host@
 include c3270_files.mk libs.mk
@@ -78,6 +78,9 @@ compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.ca
 
 c3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+x3270if: ../x3270if/x3270if
+	/bin/cp -p ../x3270if/x3270if $@
 
 man:: c3270.man
 	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
