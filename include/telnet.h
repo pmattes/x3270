@@ -43,6 +43,7 @@ extern int ns_rrcvd;
 extern int ns_rsent;
 extern time_t ns_time;
 extern const char *state_name[];
+extern struct timeval net_last_recv_ts;
 
 void net_abort(void);
 void net_break(char c);

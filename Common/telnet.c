@@ -120,6 +120,7 @@ bool            linemode = true;
 bool		local_process = false;
 #endif /*]*/
 char           *termtype;
+struct timeval	net_last_recv_ts;
 
 const char *telquals[3] = { "IS", "SEND", "INFO" };
 
@@ -1336,6 +1337,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
 	}
     }
+    gettimeofday(&net_last_recv_ts, NULL);
     vtrace("Host socket read complete nr=%d\n", nr);
     if (nr < 0) {
 	if ((secure_connection && nr == SIO_EWOULDBLOCK) ||

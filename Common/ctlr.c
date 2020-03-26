@@ -66,6 +66,7 @@
 #include "tables.h"
 #include "task.h"
 #include "telnet_core.h"
+#include "telnet.h"
 #include "trace.h"
 #include "screentrace.h"
 #include "utils.h"
@@ -110,7 +111,7 @@ static void ctlr_connect(bool ignored);
 static int sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
 
-static void ticking_stop(void);
+static void ticking_stop(struct timeval *tp);
 
 /*
  * code_table is used to translate buffer addresses and attributes to the 3270
@@ -327,7 +328,7 @@ ctlr_negotiating(bool ignored _is_unused)
 static void
 ctlr_connect(bool ignored _is_unused)
 {
-    ticking_stop();
+    ticking_stop(NULL);
     status_untiming();
 
     if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
@@ -1294,9 +1295,6 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     }
     wcc_keyboard_restore = WCC_KEYBOARD_RESTORE(buf[1]);
     if (wcc_keyboard_restore) {
-	ticking_stop();
-    }
-    if (wcc_keyboard_restore) {
 	trace_ds("%srestore", paren);
 	    paren = ",";
     }
@@ -1986,6 +1984,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     }
     if (wcc_sound_alarm) {
 	ring_bell();
+    }
+    if (wcc_keyboard_restore) {
+	ticking_stop(&net_last_recv_ts);
     }
 
     /* Set up the DBCS state. */
@@ -2908,6 +2909,7 @@ ctlr_dbcs_state(int baddr)
 static struct timeval t_start;
 static bool ticking = false;
 static bool mticking = false;
+static bool ticking_anyway = false;
 static ioid_t tick_id;
 static struct timeval t_want;
 
@@ -2926,7 +2928,7 @@ keep_ticking(ioid_t id _is_unused)
     long msec;
 
     do {
-	gettimeofday(&t1, (struct timezone *) 0);
+	gettimeofday(&t1, NULL);
 	t_want.tv_sec++;
 	msec = delta_msec(&t_want, &t1);
     } while (msec <= 0);
@@ -2937,27 +2939,29 @@ keep_ticking(ioid_t id _is_unused)
 void
 ticking_start(bool anyway)
 {
-    gettimeofday(&t_start, (struct timezone *) 0);
+    gettimeofday(&t_start, NULL);
     mticking = true;
 
-    if (!toggled(SHOW_TIMING) && !anyway) {
-	return;
-    }
     status_untiming();
     if (ticking) {
 	RemoveTimeOut(tick_id);
     }
     ticking = true;
+    ticking_anyway = anyway;
     tick_id = AddTimeOut(1000, keep_ticking);
     t_want = t_start;
 }
 
 static void
-ticking_stop(void)
+ticking_stop(struct timeval *tp)
 {
     struct timeval t1;
+    unsigned long cs;
 
-    gettimeofday(&t1, (struct timezone *) 0);
+    if (tp == NULL) {
+	gettimeofday(&t1, NULL);
+	tp = &t1;
+    }
     if (mticking) {
 	mticking = false;
     } else {
@@ -2969,7 +2973,18 @@ ticking_stop(void)
     }
     RemoveTimeOut(tick_id);
     ticking = false;
-    status_timing(&t_start, &t1);
+
+    if (toggled(SHOW_TIMING) || ticking_anyway) {
+	status_timing(&t_start, tp);
+    }
+
+    cs = ((tp->tv_sec - t_start.tv_sec) * 1000000L) +
+	(tp->tv_usec - t_start.tv_usec);
+    vtrace("Host %s took %ld.%06lds to complete\n",
+	    ticking_anyway? "negotiation step": "operation",
+	    cs / 1000000L,
+	    cs % 1000000L);
+    ticking_anyway = false;
 }
 
 /*
