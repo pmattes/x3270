@@ -31,6 +31,7 @@
  */
 
 #include "globals.h"
+#include "resources.h"
 
 #include "b3270proto.h"
 #include "ctlr.h"

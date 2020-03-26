@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2019 Paul Mattes.
+ * Copyright (c) 2016, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
  */
 
 #include "globals.h"
+#include "resources.h"
 
 #include "b3270proto.h"
 #include "lazya.h"

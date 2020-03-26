@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019 Paul Mattes.
+ * Copyright (c) 2015-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include "globals.h"
 #include "3270ds.h"
+#include "resources.h"
 
 #include "appres.h"
 #include "b3270proto.h"
