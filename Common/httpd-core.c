@@ -530,6 +530,7 @@ httpd_html_trailer(httpd_t *h, httpd_print_t type)
  *
  * @param[in,out] h		State
  * @param[in] mode		Error mode (how far we got before the error)
+ * @param[in] content_type	Content type CT_xxx
  * @param[in] status_code	HTTP status code
  * @param[in] verb		Request verb
  * @param[in] format		printf format for extended error message
@@ -538,8 +539,8 @@ httpd_html_trailer(httpd_t *h, httpd_print_t type)
  * @return httpd_status_t
  */
 static httpd_status_t
-httpd_verror(httpd_t *h, errmode_t mode, int status_code, verb_t verb,
-	const char *format, va_list ap)
+httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
+	int status_code, verb_t verb, const char *format, va_list ap)
 {
     request_t *r = &h->request;
 
@@ -565,19 +566,47 @@ httpd_verror(httpd_t *h, errmode_t mode, int status_code, verb_t verb,
 
     if (verb != VERB_HEAD) {
 	/* Generate the body. */
-	httpd_print(h, HP_BUFFER,
-		"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	httpd_print(h, HP_BUFFER, "<html>\n");
-	httpd_print(h, HP_BUFFER, " <head>\n");
-	httpd_print(h, HP_BUFFER, "  <title>%d %s</title>\n", status_code,
-		status_text(status_code));
-	httpd_print(h, HP_BUFFER, " </head>\n");
-	httpd_print(h, HP_BUFFER, " <body>\n");
-	httpd_print(h, HP_BUFFER, " <h1>%d %s</h1>\n", status_code,
-		status_text(status_code));
-	httpd_vprint(h, HP_BUFFER, format, ap);
-	httpd_html_trailer(h, HP_BUFFER);
-	httpd_print(h, HP_BUFFER, "</html>\n");
+	switch (content_type) {
+	case CT_HTML:
+	    httpd_print(h, HP_BUFFER,
+		    "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
+	    httpd_print(h, HP_BUFFER, "<html>\n");
+	    httpd_print(h, HP_BUFFER, " <head>\n");
+	    httpd_print(h, HP_BUFFER, "  <title>%d %s</title>\n", status_code,
+		    status_text(status_code));
+	    httpd_print(h, HP_BUFFER, " </head>\n");
+	    httpd_print(h, HP_BUFFER, " <body>\n");
+	    httpd_print(h, HP_BUFFER, " <h1>%d %s</h1>\n", status_code,
+		    status_text(status_code));
+	    httpd_vprint(h, HP_BUFFER, format, ap);
+	    httpd_html_trailer(h, HP_BUFFER);
+	    httpd_print(h, HP_BUFFER, "</html>\n");
+	    break;
+	case CT_TEXT:
+	    httpd_vprint(h, HP_BUFFER, format, ap);
+	    break;
+	case CT_JSON:
+	    {
+		char *buf = xs_vbuffer(format, ap);
+		size_t sl = strlen(buf);
+
+		if (sl > 2 && !strcmp(buf + sl - 2, ",\n")) {
+		    sl -= 2;
+		}
+		if (sl) {
+		    httpd_print(h, HP_BUFFER,
+"{\n\
+ \"result\": [\n\
+ %.*s\n\
+  ]\n\
+}\n",
+			    (int)sl, buf);
+		}
+	    }
+	    break;
+	case CT_BINARY:
+	    break;
+	}
 
 	/*
 	 * Dump the Content-Length (if HTTP) now and terminate the response
@@ -604,21 +633,22 @@ httpd_verror(httpd_t *h, errmode_t mode, int status_code, verb_t verb,
  *
  * @param[in,out] h		State
  * @param[in] mode		Error mode (how far we got before the error)
+ * @param[in] content_type	Content type CT_xxx
  * @param[in] status_code	HTTP status code
  * @param[in] format		printf format for extended error message
  *
  * @return httpd_status_t
  */
 static httpd_status_t
-httpd_error(httpd_t *h, errmode_t mode, int status_code,
-	const char *format, ...)
+httpd_error(httpd_t *h, errmode_t mode, content_t content_type,
+	int status_code, const char *format, ...)
 {
     request_t *r = &h->request;
     va_list ap;
     httpd_status_t rv;
 
     va_start(ap, format);
-    rv = httpd_verror(h, mode, status_code, r->verb, format, ap);
+    rv = httpd_verror(h, mode, content_type, status_code, r->verb, format, ap);
     va_end(ap);
 
     return rv;
@@ -699,7 +729,7 @@ httpd_digest_request_line(httpd_t *h)
 
     /* White space at the beginning of the input is bad. */
     if (isspace((unsigned char)rq[0])) {
-	return httpd_error(h, errmode, 400, "<p>Invalid request "
+	return httpd_error(h, errmode, CT_HTML, 400, "<p>Invalid request "
 		"syntax.</p>\n<p>Whitespace at the beginning of the "
 		"request.</p>");
     }
@@ -714,7 +744,7 @@ httpd_digest_request_line(httpd_t *h)
 	junk = NULL;
     }
     if (verb == NULL || r->uri == NULL || junk != NULL) {
-	return httpd_error(h, errmode, 400, "<p>Invalid request "
+	return httpd_error(h, errmode, CT_HTML, 400, "<p>Invalid request "
 		"syntax.</p>\n<p>Invalid number of tokens.</p>");
     }
 
@@ -731,7 +761,7 @@ httpd_digest_request_line(httpd_t *h)
 	    if (!strcmp(verb, "HEAD")) {
 		r->verb = VERB_HEAD;
 	    }
-	    return httpd_error(h, errmode, 400, "Invalid protocol '%s'.",
+	    return httpd_error(h, errmode, CT_HTML, 400, "Invalid protocol '%s'.",
 		    protocol);
 	}
 	r->http_1_0 = (major == 1 && minor == 0);
@@ -750,7 +780,7 @@ httpd_digest_request_line(httpd_t *h)
 	}
     }
     if (known_verbs[i] == NULL) {
-	return httpd_error(h, errmode, 400, "Unknown verb '%s'.", verb);
+	return httpd_error(h, errmode, CT_HTML, 400, "Unknown verb '%s'.", verb);
     }
     for (i = 0; supported_verbs[i] != NULL; i++) {
 	if (!strcmp(verb, supported_verbs[i])) {
@@ -759,7 +789,7 @@ httpd_digest_request_line(httpd_t *h)
 	}
     }
     if (supported_verbs[i] == NULL) {
-	return httpd_error(h, errmode, 501, "Unsupported verb '%s'.", verb);
+	return httpd_error(h, errmode, CT_HTML, 501, "Unsupported verb '%s'.", verb);
     }
 
     return HS_CONTINUE;
@@ -1172,11 +1202,11 @@ httpd_redirect(httpd_t *h, const char *uri)
     const char *host = lookup_field("Host", r->fields);
 
     if (host == NULL) {
-	return httpd_error(h, ERRMODE_NONFATAL, 404, "Document not found.");
+	return httpd_error(h, ERRMODE_NONFATAL, CT_HTML, 404, "Document not found.");
     }
 
     r->location = xs_buffer("http://%s%s/", host, uri);
-    httpd_error(h, ERRMODE_NONFATAL, 301, "The document has moved "
+    httpd_error(h, ERRMODE_NONFATAL, CT_HTML, 301, "The document has moved "
 	    "<a href=\"http://%s%s/\">here.</a>.", host, uri);
     Free(r->location);
     r->location = NULL;
@@ -1203,7 +1233,7 @@ httpd_notfound(httpd_t *h, const char *uri)
     request_t *r = &h->request;
     char *q_uri = html_quote(uri);
 
-    httpd_error(h, ERRMODE_NONFATAL, 404,
+    httpd_error(h, ERRMODE_NONFATAL, CT_HTML, 404,
 	    "The requested URL %s was not found on this server.", q_uri);
     Free(q_uri);
 
@@ -1480,14 +1510,14 @@ httpd_digest_request(httpd_t *h)
 	    if (iscntrl((unsigned char)*s) ||
 		    isspace((unsigned char)*s) ||
 		    *s == ':') {
-		return httpd_error(h, ERRMODE_FATAL, 400, "Malformed "
+		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Malformed "
 			"field name in request.");
 	    }
 
 	    /* Parse the rest of the name. */
 	    while (*s != '\n' && *s != ':' && !isspace((unsigned char)*s)) {
 		if (iscntrl((unsigned char)*s)) {
-		    return httpd_error(h, ERRMODE_FATAL, 400,
+		    return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400,
 			    "Malformed field name in request.");
 		}
 		s++;
@@ -1501,7 +1531,7 @@ httpd_digest_request(httpd_t *h)
 
 	    /* Now we need a colon. */
 	    if (*s != ':') {
-		return httpd_error(h, ERRMODE_FATAL, 400, "Malformed "
+		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Malformed "
 			"field (missing colon) in request.");
 	    }
 	    s++;
@@ -1523,7 +1553,7 @@ httpd_digest_request(httpd_t *h)
 		value_len--;
 	    }
 	    if (value_len == 0) {
-		return httpd_error(h, ERRMODE_FATAL, 400, "Malformed "
+		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Malformed "
 			"field (missing value) in request.");
 	    }
 
@@ -1538,7 +1568,7 @@ httpd_digest_request(httpd_t *h)
 
 	    /* Choke on duplicates. */
 	    if (lookup_field(f->name, r->fields) != NULL) {
-		return httpd_error(h, ERRMODE_FATAL, 400, "Duplicate "
+		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Duplicate "
 			"field in request.");
 	    }
 
@@ -1551,7 +1581,7 @@ httpd_digest_request(httpd_t *h)
 
     /* For HTTP 1.1, require a 'Host:' field. */
     if (!r->http_1_0 && lookup_field("Host", r->fields) == NULL) {
-	return httpd_error(h, ERRMODE_FATAL, 400, "Missing hostname.");
+	return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Missing hostname.");
     }
 
     /* Check for connection close request. */
@@ -1582,7 +1612,7 @@ httpd_digest_request(httpd_t *h)
     /* Do percent substitution on the URI. */
     cand_uri = percent_decode(r->uri, strlen(r->uri), false);
     if (cand_uri == NULL) {
-	return httpd_error(h, ERRMODE_FATAL, 400,
+	return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400,
 		"Invalid URI (percent substution error).");
     }
 
@@ -1599,7 +1629,7 @@ httpd_digest_request(httpd_t *h)
 
 	if (slash == NULL) {
 	    Free(cand_uri);
-	    return httpd_error(h, ERRMODE_FATAL, 400, "Invalid URI "
+	    return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Invalid URI "
 		    "syntax after http://.");
 	} else {
 	    uri = slash;
@@ -1609,7 +1639,7 @@ httpd_digest_request(httpd_t *h)
     }
     if (uri[0] != '/') {
 	Free(cand_uri);
-	return httpd_error(h, ERRMODE_FATAL, 400, "Invalid URI");
+	return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Invalid URI");
     }
 
     /* Pick apart the query fields. */
@@ -1662,7 +1692,7 @@ httpd_input_char(httpd_t *h, char c)
     if (r->nr >= MAX_HTTPD_REQUEST) {
 	return httpd_error(h,
 		r->saw_first? ERRMODE_FATAL: ERRMODE_NON_HTTP,
-		400, "The request is too big.");
+		CT_HTML, 400, "The request is too big.");
     }
 
     /* Store the character. */
@@ -1673,7 +1703,7 @@ httpd_input_char(httpd_t *h, char c)
 	if (r->rll == 0) {
 	    /* Empty line: digest the entire request. */
 	    if (!r->saw_first) {
-		return httpd_error(h, ERRMODE_FATAL, 400,
+		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400,
 			"Missing request.");
 	    }
 	    r->request_buf[r->nr] = '\0';
@@ -2055,6 +2085,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
  * Writes the entire response back to the socket.
  *
  * @param[in] dhandle	Connection handle
+ * @param[in] content_type Content type
  * @param[in] status_code HTTP error code
  * @param[in] format	text to display
  *
@@ -2062,7 +2093,8 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
  *  (HS_ERROR_OPEN or HS_ERROR_CLOSE).
  */
 httpd_status_t
-httpd_dyn_error(void *dhandle, int status_code, const char *format, ...)
+httpd_dyn_error(void *dhandle, content_t content_type, int status_code,
+	const char *format, ...)
 {
     httpd_t *h = dhandle;
     request_t *r = &h->request;
@@ -2073,7 +2105,8 @@ httpd_dyn_error(void *dhandle, int status_code, const char *format, ...)
     r->async_node = NULL;
 
     va_start(ap, format);
-    rv = httpd_verror(h, ERRMODE_NONFATAL, status_code, r->verb, format, ap);
+    rv = httpd_verror(h, ERRMODE_NONFATAL, content_type, status_code, r->verb,
+	    format, ap);
     va_end(ap);
 
     return rv;

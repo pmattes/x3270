@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2019 Paul Mattes.
+ * Copyright (c) 2014-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,8 +77,8 @@ void httpd_close(void *dhandle, const char *why);
 /* Callable from methods. */
 httpd_status_t httpd_dyn_complete(void *dhandle,
 	const char *format, ...);
-httpd_status_t httpd_dyn_error(void *dhandle, int status_code,
-	const char *format, ...);
+httpd_status_t httpd_dyn_error(void *dhandle, content_t content_type,
+	int status_code, const char *format, ...);
 char *html_quote(const char *text);
 char *uri_quote(const char *text);
 const char *httpd_fetch_query(void *dhandle, const char *name);
