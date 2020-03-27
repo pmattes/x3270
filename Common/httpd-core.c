@@ -542,12 +542,18 @@ static httpd_status_t
 httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	int status_code, verb_t verb, const char *format, va_list ap)
 {
+    static const char *type_map[] = {
+	"text/html",
+	"text/plain",
+	"application/json",
+	"text/plain"
+    };
     request_t *r = &h->request;
 
     /* If the request wasn't complete junk, wrap the error response in HTTP. */
     if (mode != ERRMODE_NON_HTTP) {
 	httpd_http_header(h, status_code, mode <= ERRMODE_FATAL,
-		"text/html; charset=iso8859-1");
+		lazyaf("%s; charset=iso8859-1", type_map[content_type]));
     } else {
 	vtrace("h> [%lu] Response: %d %s\n", h->seq, status_code,
 		status_text(status_code));
