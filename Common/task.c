@@ -277,6 +277,7 @@ static action_t Execute_action;
 static action_t Expect_action;
 static action_t KeyboardDisable_action;
 static action_t Macro_action;
+static action_t NvtText_action;
 static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
@@ -401,6 +402,7 @@ task_register(void)
 	{ AnExpect,		Expect_action, 0 },
 	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
 	{ AnMacro,		Macro_action, ACTION_KE },
+	{ AnNvtText,		NvtText_action, 0 },
 	{ AnPrompt,		Prompt_action, 0 },
 	{ AnReadBuffer,		ReadBuffer_action, 0 },
 	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
@@ -3164,15 +3166,15 @@ task_store(unsigned char c)
 
 /* Dump whatever NVT data has been sent by the host since last called. */
 static bool
-AnsiText_action(ia_t ia, unsigned argc, const char **argv)
+NvtText_action(ia_t ia, unsigned argc, const char **argv)
 {
     size_t i;
     size_t ix;
     unsigned char c;
     varbuf_t r;
 
-    action_debug(AnAnsiText, ia, argc, argv);
-    if (check_argc(AnAnsiText, argc, 0, 0) < 0) {
+    action_debug(AnNvtText, ia, argc, argv);
+    if (check_argc(AnNvtText, argc, 0, 0) < 0) {
 	return false;
     }
 
@@ -3208,6 +3210,13 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     nvt_save_cnt = 0;
     nvt_save_ix = 0;
     return true;
+}
+
+static bool
+AnsiText_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnAnsiText, ia, argc, argv);
+    return NvtText_action(ia, argc, argv);
 }
 
 /* Stop listening to stdin. */

@@ -93,6 +93,7 @@
 #define AnMoveCursor1	"MoveCursor1"
 #define AnNewline	"Newline"
 #define AnNextWord	"NextWord"
+#define AnNvtText	"NvtText"
 #define AnOpen		"Open"
 #define AnPA		"PA"
 #define AnPaste		"Paste"
