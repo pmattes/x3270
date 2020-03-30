@@ -1204,7 +1204,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
     /* Announce our capabilities. */
     data_ret = NULL;
-    single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(Interactive)",
+    single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(interactive)",
 	    &data_ret, NULL, &itype);
 
     /* Set up the prompt. */
