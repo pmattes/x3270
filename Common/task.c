@@ -265,7 +265,6 @@ typedef struct {
 } ir_state_t;
 
 static action_t Abort_action;
-static action_t AnsiText_action;
 static action_t Ascii_action;
 static action_t Ascii1_action;
 static action_t AsciiField_action;
@@ -388,7 +387,7 @@ task_register(void)
 {
     static action_table_t task_actions[] = {
 	{ AnAbort,		Abort_action, ACTION_KE },
-	{ AnAnsiText,		AnsiText_action, 0 },
+	{ AnAnsiText,		NvtText_action, 0 },
 	{ AnAscii,		Ascii_action, 0 },
 	{ AnAscii1,		Ascii1_action, 0 },
 	{ AnAsciiField,		AsciiField_action, 0 },
@@ -2098,11 +2097,11 @@ dump_field(unsigned count, const char *name, bool in_ascii, bool force_utf8)
     int len = 0;
 
     if (count != 0) {
-	popup_an_error("%s requires 0 arguments", name);
+	popup_an_error("%s() requires 0 arguments", name);
 	return false;
     }
     if (!formatted) {
-	popup_an_error("%s: Screen is not formatted", name);
+	popup_an_error("%s(): Screen is not formatted", name);
 	return false;
     }
     faddr = find_field_attribute(cursor_addr);
@@ -3212,13 +3211,6 @@ NvtText_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-static bool
-AnsiText_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(AnAnsiText, ia, argc, argv);
-    return NvtText_action(ia, argc, argv);
-}
-
 /* Stop listening to stdin. */
 static bool
 CloseScript_action(ia_t ia, unsigned argc, const char **argv)
@@ -3687,8 +3679,8 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 	unsigned flag;
 	const char *name;
     } fname[] = {
-	{ CBF_INTERACTIVE, "Interactive" },
-	{ CBF_PWINPUT, "PwInput" },
+	{ CBF_INTERACTIVE, "interactive" },
+	{ CBF_PWINPUT, "pwinput" },
 	{ 0, NULL }
     };
 
