@@ -932,8 +932,6 @@ b3270_register(void)
     static opt_t b3270_opts[] = {
 	{ OptCallback, OPT_STRING,  false, ResCallback,
 	    aoffset(scripting.callback), NULL, "Callback address and port" },
-	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
-	    NULL, "Turn on scripting" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
 	    NULL, "Force local codeset to be UTF-8" },
     };
