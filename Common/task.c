@@ -3072,6 +3072,10 @@ expand_expect(task_t *task, const char *s)
 		*t++ = '\b';
 		state = XS_BASE;
 		break;
+	    case 't':
+		*t++ = '\t';
+		state = XS_BASE;
+		break;
 	    default:
 		if (c >= '0' && c <= '7') {
 		    nd = 1;
@@ -3290,7 +3294,7 @@ expect_timed_out(ioid_t id)
     current_task = NULL;
 
     s->expect_id = NULL_IOID;
-    task_set_state(s, TS_RUNNING, AnExpect "()timed out");
+    task_set_state(s, TS_RUNNING, AnExpect "() timed out");
     s->success = false;
 }
 
