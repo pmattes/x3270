@@ -518,10 +518,10 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
  *   TemporaryKeymap(None)	removes the previous keymap, if any
  */
 static bool
-TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
+Keymap_action(ia_t ia, unsigned argc, const char **argv)
 {
-    action_debug(AnTemporaryKeymap, ia, argc, argv);
-    if (check_argc(AnTemporaryKeymap, argc, 0, 1) < 0) {
+    action_debug(AnKeymap, ia, argc, argv);
+    if (check_argc(AnKeymap, argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -533,8 +533,7 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!temporary_keymap(argv[0])) {
-	popup_an_error(AnTemporaryKeymap "(): Can't find %s %s", ResKeymap,
-		argv[0]);
+	popup_an_error(AnKeymap "(): Can't find %s %s", ResKeymap, argv[0]);
 	return false;
     }
     return true;
@@ -548,8 +547,8 @@ xkybd_register(void)
 {
     static action_table_t xkybd_actions[] = {
 	{ AnAltCursor,		AltCursor_action,	ACTION_KE },
-	{ AnKeymap,		TemporaryKeymap_action,	ACTION_KE },
-	{ AnTemporaryKeymap,	TemporaryKeymap_action,	ACTION_KE }
+	{ AnKeymap,		Keymap_action,		ACTION_KE },
+	{ AnTemporaryKeymap,	Keymap_action,		ACTION_KE }
     };
 
     /* Register the actions. */
