@@ -379,6 +379,24 @@ scriptport_toggle_upcall(const char *name, const char *value)
     return true;
 }
 
+static bool
+Info_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnInfo, ia, argc, argv);
+    if (check_argc(AnInfo, argc, 1, 1) < 0) {
+	return false;
+    }
+    popup_an_info("%s", argv[0]);
+    return true;
+}
+
+static bool
+ignore_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(Anignore, ia, argc, argv);
+    return true;
+}
+
 /**
  * Task module registration.
  */
@@ -399,6 +417,8 @@ task_register(void)
 	{ AnEbcdicField,	EbcdicField_action, 0 },
 	{ AnExecute,		Execute_action, ACTION_KE },
 	{ AnExpect,		Expect_action, 0 },
+	{ Anignore,		ignore_action, ACTION_KE },
+	{ AnInfo,		Info_action, 0 },
 	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
 	{ AnMacro,		Macro_action, ACTION_KE },
 	{ AnNvtText,		NvtText_action, 0 },

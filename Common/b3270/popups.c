@@ -96,14 +96,10 @@ popup_an_info(const char *fmt, ...)
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    if (task_redirect()) {
-	task_info("%s", s);
-    } else {
-	ui_vleaf(IndPopup,
-		AttrType, "info",
-		AttrText, s,
-		NULL);
-    }
+    ui_vleaf(IndPopup,
+	    AttrType, "info",
+	    AttrText, s,
+	    NULL);
 }
 
 /* Output from an action. */

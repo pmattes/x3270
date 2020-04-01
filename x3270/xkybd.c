@@ -216,14 +216,6 @@ xim_lookup(XKeyEvent *event)
     return rv;
 }
 
-void
-ignore_xaction(Widget w _is_unused, XEvent *event, String *params,
-	Cardinal *num_params)
-{
-    xaction_debug(ignore_xaction, event, params, num_params);
-    reset_idle_timer();
-}
-
 /*
  * X-dependent code starts here.
  */

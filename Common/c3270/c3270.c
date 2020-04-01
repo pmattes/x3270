@@ -1658,26 +1658,6 @@ popup_an_info(const char *fmt, ...)
     }
 }
 
-static bool
-Info_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(AnInfo, ia, argc, argv);
-
-    if (!argc) {
-	return true;
-    }
-
-    popup_an_info("%s", argv[0]);
-    return true;
-}
-
-static bool
-ignore_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(Anignore, ia, argc, argv);
-    return true;
-}
-
 /**
  * Callback for data returned to action.
  *
@@ -2242,8 +2222,6 @@ c3270_register(void)
 {
     static action_table_t actions[] = {
 	{ AnEscape,		Escape_action,		ACTION_KE },
-	{ Anignore,		ignore_action,		ACTION_KE },
-	{ AnInfo,		Info_action,		ACTION_KE },
 	{ AnTrace,		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {

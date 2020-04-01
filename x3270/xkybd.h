@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,6 @@
  */
 
 void Default_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-void ignore_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void MouseSelect_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);

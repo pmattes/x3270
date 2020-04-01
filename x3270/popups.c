@@ -1240,20 +1240,6 @@ popup_child_output(bool is_err, abort_callback_t *a, const char *fmt, ...)
 }
 
 /*
- * Script actions
- */
-bool
-Info_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug("Info", ia, argc, argv);
-    if (check_argc("Info", argc, 1, 1) < 0) {
-	return false;
-    }
-    popup_an_info("%s", argv[0]);
-    return true;
-}
-
-/*
  * Move the popups that need moving.
  */
 void
@@ -1284,13 +1270,6 @@ popups_move(void)
 void
 popups_register(void)
 {
-    static action_table_t popup_actions[] = {
-	{ AnInfo,		Info_action	}
-    };
-
-    /* Register actions. */
-    register_actions(popup_actions, array_count(popup_actions));
-
     /* Register for status change notifications. */
     register_schange(ST_EXITING, dump_errmsgs);
 }
