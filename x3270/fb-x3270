@@ -245,8 +245,8 @@ x3270.keymap.base: \
         :<Key>dead_circumflex:          Compose() Key(asciicircum)\n\
 	:<Key>dead_tilde:	        Compose() Key(asciitilde)\n\
 	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n\
-	:<Key>Prior:			Scroll(Backward)\n\
-	:<Key>Next:			Scroll(Forward)\n\
+	:<Key>Prior:			Scroll(backward)\n\
+	:<Key>Next:			Scroll(forward)\n\
 	Shift<Key>Escape:		TemporaryKeymap(apl) TemporaryComposeMap(apl) Toggle(AplMode)\n
 !
 ! Base keymap for 3270 mode.  These mappings are added to the base keymap,
@@ -287,8 +287,8 @@ x3270.keymap.base.3270: #override \
 	Alt<Key>e:			EraseEOF()\n\
 	Meta<Key>h:			Home()\n\
 	Alt<Key>h:			Home()\n\
-	Meta<Key>i:			Set(insertMode,True)\n\
-	Alt<Key>i:			Set(insertMode,True)\n\
+	Meta<Key>i:			Set(insertMode,true)\n\
+	Alt<Key>i:			Set(insertMode,true)\n\
 	Meta<Key>l:			Redraw()\n\
 	Alt<Key>l:			Redraw()\n\
 	Meta<Key>p:			PrintText()\n\
@@ -357,10 +357,10 @@ x3270.keymap.sun_k4: \
 	:<Key>KP_Decimal:	Key(.)\n\
 	:<Key>F18:		insert-selection(PRIMARY)\n\
 	:<Key>F19:		SysReq()\n\
-	:<Key>F20:		FieldMark(NoFailOnError)\n\
+	:<Key>F20:		FieldMark()\n\
 	:<Key>F21:		PA(1)\n\
 	:<Key>F22:		PA(2)\n\
-	:<Key>F23:		Dup(NoFailOnError)\n\
+	:<Key>F23:		Dup()\n\
 	:<Key>F24:		Reset()\n\
 	:<Key>F25:		EraseEOF()\n\
 	:<Key>F26:		EraseInput()\n\
@@ -376,9 +376,9 @@ x3270.keymap.sun_k3: \
 	Shift<Key>F23:		PF(24)\n\
 	:Meta<Key>F21:		PA(1)\n\
 	:Meta<Key>F22:		PA(2)\n\
-	:Meta<Key>F23:		Dup(NoFailOnError)\n\
+	:Meta<Key>F23:		Dup()\n\
 	:<Key>F19:		SysReq()\n\
-	:<Key>0x0:		FieldMark(NoFailOnError)\n\
+	:<Key>0x0:		FieldMark()\n\
 	:<Key>F21:		PF(10)\n\
 	:<Key>F22:		PF(11)\n\
 	:<Key>F23:		PF(12)\n\
@@ -391,10 +391,10 @@ x3270.keymap.sun_k3: \
 	:<Key>KP_Enter:		Newline()\n\
 	:<Key>F35:		Delete()\n
 x3270.keymap.ncd: \
-	:<Key>F13:		Dup(NoFailOnError)\n\
-	:<Key>Linefeed:		Dup(NoFailOnError)\n\
-	:<Key>F14:		FieldMark(NoFailOnError)\n\
-	:<Key>Break:		FieldMark(NoFailOnError)\n\
+	:<Key>F13:		Dup()\n\
+	:<Key>Linefeed:		Dup()\n\
+	:<Key>F14:		FieldMark()\n\
+	:<Key>Break:		FieldMark()\n\
 	:<Key>Home:		Home()\n\
 	:<Key>F17:		Home()\n\
 	:<Key>End:		EraseEOF()\n\
@@ -484,13 +484,13 @@ x3270.keymap.hp-pc: \
 	!<Key>Break:		Reset()\n\
 	!Shift<Key>Break:	Attn()\n\
 	!Meta<Key>Break:	SysReq()\n\
-	!<Key>Prior:		Dup(NoFailOnError)\n\
-	!<Key>Next:		FieldMark(NoFailOnError)\n\
+	!<Key>Prior:		Dup()\n\
+	!<Key>Next:		FieldMark()\n\
 	!<Key>Select:		EraseEOF()\n\
 	!Meta<Key>hpInsertChar:	PA(1)\n\
 	!Meta<Key>Home:		PA(2)\n\
 	!Meta<Key>Prior:	PA(3)\n\
-	!<Key>hpInsertChar:	Set(insertMode,True)\n\
+	!<Key>hpInsertChar:	Set(insertMode,true)\n\
 	!<Key>hpDeleteChar:	Delete()\n\
 	!Shift<Key>Menu:	PrintWindow()\n\
 	!<Key>Menu:		PrintText()\n
@@ -512,7 +512,7 @@ x3270.keymap.ibm-xterm: \
 	:<Key>Next:		PA(2)\n\
 	:<Key>Escape:		Reset()\n\
 	:<Key>Control_L:	Reset()\n\
-	:<Key>Insert:		Set(insertMode,True)\n\
+	:<Key>Insert:		Set(insertMode,true)\n\
 	!Shift<Key>Right:	Right2()\n\
 	!Shift<Key>Left:	Left2()\n
 ! Keymap for common 3270 functions on a PC keyboard, from Richard Lennox.
