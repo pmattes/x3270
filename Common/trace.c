@@ -42,6 +42,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
+#include "actions.h"
 #include "codepage.h"
 #include "child.h"
 #include "ctlrc.h"
@@ -49,6 +50,7 @@
 #include "fprint_screen.h"
 #include "lazya.h"
 #include "menubar.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
@@ -928,17 +930,95 @@ toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
     }
 }
 
+/* Trace([data|keyboard][on [filename]|off]) */
+static bool
+Trace_action(ia_t ia, unsigned argc, const char **argv)
+{
+    bool on = false;
+    unsigned arg0 = 0;
+
+    action_debug(AnTrace, ia, argc, argv);
+
+    if (argc == 0) {
+	if (toggled(TRACING) && tracefile_name != NULL) {
+	    action_output("Trace file is %s.", tracefile_name);
+	} else {
+	    action_output("Tracing is %sabled.",
+		    toggled(TRACING)? "en": "dis");
+	}
+	return true;
+    }
+
+    if (!strcasecmp(argv[0], "Data") || !strcasecmp(argv[0], "Keyboard")) {
+	/* Skip. */
+	arg0++;
+    }
+    if (!strcasecmp(argv[arg0], KwOff)) {
+	on = false;
+	arg0++;
+	if (argc > arg0) {
+	    popup_an_error(AnTrace "(): Too many arguments for '" KwOff "'");
+	    return false;
+	}
+	if (!toggled(TRACING)) {
+	    return true;
+	}
+    } else if (!strcasecmp(argv[arg0], KwOn)) {
+	on = true;
+	arg0++;
+	if (argc == arg0) {
+	    /* Nothing else to do. */
+	} else if (argc == arg0 + 1) {
+	    if (toggled(TRACING)) {
+		popup_an_error(AnTrace "(): Cannot specify filename when tracing "
+			"is already on");
+		return false;
+	    } else {
+		trace_set_trace_file(argv[arg0]);
+	    }
+	} else {
+	    popup_an_error(AnTrace "(): Too many arguments for '" KwOn "'");
+	    return false;
+	}
+    } else {
+	return action_args_are(AnTrace, KwOn, KwOff, NULL);
+    }
+
+    if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
+	do_toggle(TRACING);
+	if (!on) {
+	    action_output("Tracing stopped.");
+	}
+    }
+
+    if (tracefile_name != NULL) {
+	if (task_is_interactive()) {
+	    action_output("Trace file is %s.", tracefile_name);
+	} else {
+	    popup_an_info("Trace file is %s.", tracefile_name);
+	}
+    }
+    return true;
+}
+
 /**
  * Trace module registration.
  */
 void
 trace_register(void)
 {
+     static action_table_t actions[] = {
+	 { AnTrace,	Trace_action,	ACTION_KE },
+     };
     static toggle_register_t toggles[] = {
 	{ TRACING,
 	  toggle_tracing,
 	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP },
     };
 
+    /* Register our actions. */
+    register_actions(actions, array_count(actions));
+
+    /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, 2019 Paul Mattes.
+ * Copyright (c) 1993-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,7 @@ tracefile_callback(Widget w, XtPointer client_data,
 bool
 trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 {
-    if (tt == TT_INITIAL || tt == TT_ACTION) {
+    if (tt != TT_XMENU || tt == TT_ACTION) {
 	/* Start tracing now. */
 	return false;
     }

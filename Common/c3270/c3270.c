@@ -1530,77 +1530,6 @@ completion_entry(const char *text, int state)
 
 /* c3270-specific actions. */
 
-/* Trace([data|keyboard][on [filename]|off]) */
-static bool
-Trace_action(ia_t ia, unsigned argc, const char **argv)
-{
-    bool on = false;
-    unsigned arg0 = 0;
-
-    action_debug(AnTrace, ia, argc, argv);
-
-    if (argc == 0) {
-	if (toggled(TRACING) && tracefile_name != NULL) {
-	    action_output("Trace file is %s.", tracefile_name);
-	} else {
-	    action_output("Tracing is %sabled.",
-		    toggled(TRACING)? "en": "dis");
-	}
-	return true;
-    }
-
-    if (!strcasecmp(argv[0], "Data") || !strcasecmp(argv[0], "Keyboard")) {
-	/* Skip. */
-	arg0++;
-    }
-    if (!strcasecmp(argv[arg0], KwOff)) {
-	on = false;
-	arg0++;
-	if (argc > arg0) {
-	    popup_an_error(AnTrace "(): Too many arguments for '" KwOff "'");
-	    return false;
-	}
-	if (!toggled(TRACING)) {
-	    return true;
-	}
-    } else if (!strcasecmp(argv[arg0], KwOn)) {
-	on = true;
-	arg0++;
-	if (argc == arg0) {
-	    /* Nothing else to do. */
-	} else if (argc == arg0 + 1) {
-	    if (toggled(TRACING)) {
-		popup_an_error(AnTrace "(): Cannot specify filename when tracing "
-			"is already on");
-		return false;
-	    } else {
-		trace_set_trace_file(argv[arg0]);
-	    }
-	} else {
-	    popup_an_error(AnTrace "(): Too many arguments for '" KwOn "'");
-	    return false;
-	}
-    } else {
-	return action_args_are(AnTrace, KwOn, KwOff, NULL);
-    }
-
-    if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
-	do_toggle(TRACING);
-	if (!on) {
-	    action_output("Tracing stopped.");
-	}
-    }
-
-    if (tracefile_name != NULL) {
-	if (task_is_interactive()) {
-	    action_output("Trace file is %s.", tracefile_name);
-	} else {
-	    popup_an_info("Trace file is %s.", tracefile_name);
-	}
-    }
-    return true;
-}
-
 /* Break to the command prompt. */
 static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
@@ -2221,8 +2150,7 @@ static void
 c3270_register(void)
 {
     static action_table_t actions[] = {
-	{ AnEscape,		Escape_action,		ACTION_KE },
-	{ AnTrace,		Trace_action,		ACTION_KE },
+	{ AnEscape,		Escape_action,		ACTION_KE }
     };
     static opt_t c3270_opts[] = {
 	{ OptAllBold,  OPT_BOOLEAN, true,  ResAllBold,
