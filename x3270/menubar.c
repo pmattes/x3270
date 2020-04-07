@@ -1276,7 +1276,6 @@ macros_menu_init(bool regen, Position x, Position y)
 
     /* Walk the list */
 
-    macros_init();	/* possibly different for each host */
     root = (struct menu_hier *)XtCalloc(1, sizeof(struct menu_hier));
     for (m = macro_defs; m; m = m->next) {
 	if (!any) {
@@ -2372,7 +2371,7 @@ menubar_register(void)
     /* Register interest in state transtions. */
     register_schange(ST_3270_MODE, menubar_in3270);
     register_schange(ST_LINE_MODE, menubar_linemode);
-    register_schange(ST_CONNECT, menubar_connect);
+    register_schange_ordered(ST_CONNECT, menubar_connect, ORDER_LAST);
     register_schange(ST_PRINTER, menubar_printer);
     register_schange(ST_REMODEL, menubar_remodel);
     register_schange(ST_CODEPAGE, menubar_codepage);

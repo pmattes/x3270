@@ -65,6 +65,7 @@
 #include "min_version.h"
 #include "model.h"
 #include "nvt.h"
+#include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "print_screen.h"
@@ -1369,4 +1370,10 @@ poll_children(void)
 	    }
 	}
     }
+}
+
+/* Horrific glue for task.c. */
+void
+register_xresources(xres_t *res, unsigned num_xres)
+{
 }

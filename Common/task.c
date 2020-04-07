@@ -68,6 +68,7 @@
 #include "menubar.h"
 #include "names.h"
 #include "nvt.h"
+#include "opts.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -115,7 +116,7 @@ typedef struct task {
 	TS_IDLE,	/* no command active */
 	TS_RUNNING,	/* command executing */
 	TS_NEED_RUN,	/* need run callback */
-			/* --- all states after this are blocked --- */
+	/* --- all states after this are blocked --- */
 #define MIN_WAITING_STATE TS_KBWAIT
 	TS_KBWAIT,	/* command awaiting keyboard unlock */
 	TS_CONNECT_WAIT,/* command awaiting connection to complete */
@@ -242,10 +243,10 @@ static bool expect_matches(task_t *task);
 
 /* Macro that defines when it's safe to continue a Wait()ing task. */
 #define CAN_PROCEED ( \
-    IN_SSCP || \
-    (IN_3270 && formatted && cursor_addr && !CKBWAIT) || \
-    (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
-)
+	IN_SSCP || \
+	(IN_3270 && formatted && cursor_addr && !CKBWAIT) || \
+	(IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
+	)
 
 /* An input request. */
 typedef struct {
@@ -296,7 +297,7 @@ static unsigned char calc_cs(unsigned char cs);
  *
  * @return Its name
  */
-static const char *
+    static const char *
 stsname(task_t *s)
 {
     if (s->type == ST_CB) {
@@ -306,7 +307,7 @@ stsname(task_t *s)
     }
 }
 
-static void
+    static void
 trace_task_output(task_t *s, const char *fmt, ...)
 {
     va_list args;
@@ -336,131 +337,8 @@ trace_task_output(task_t *s, const char *fmt, ...)
     Free(msgbuf);
 }
 
-/* Callbacks for state changes. */
-static void
-task_connect(bool connected _is_unused)
-{
-}
-
-static void
-task_in3270(bool in3270)
-{
-}
-
-/**
- * Upcall for toggling the script listener on and off.
- *
- * @param[in] name	Name of toggle
- * @param[in] value	Toggle value
- * @param[out] canonical_value	Returned canonical value
- * @returns true if toggle changed successfully
- */
-static bool
-scriptport_toggle_upcall(const char *name, const char *value)
-{
-    struct sockaddr *sa;
-    socklen_t sa_len;
-
-    if (global_peer_listen != NULL) {
-	peer_shutdown(global_peer_listen);
-	global_peer_listen = NULL;
-    }
-    if (value == NULL || !*value) {
-	Replace(appres.script_port, NULL);
-	return true;
-    }
-
-    if (!parse_bind_opt(value, &sa, &sa_len)) {
-	popup_an_error("Invalid %s: %s", name, value);
-	return false;
-    }
-    Replace(appres.script_port, canonical_bind_opt(sa));
-    global_peer_listen = peer_init(sa, sa_len, PLM_MULTI);
-    return true;
-}
-
-static bool
-Info_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(AnInfo, ia, argc, argv);
-    if (check_argc(AnInfo, argc, 1, 1) < 0) {
-	return false;
-    }
-    popup_an_info("%s", argv[0]);
-    return true;
-}
-
-static bool
-ignore_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(Anignore, ia, argc, argv);
-    return true;
-}
-
-/**
- * Task module registration.
- */
-void
-task_register(void)
-{
-    static action_table_t task_actions[] = {
-	{ AnAbort,		Abort_action, ACTION_KE },
-	{ AnAnsiText,		NvtText_action, 0 },
-	{ AnAscii,		Ascii_action, 0 },
-	{ AnAscii1,		Ascii1_action, 0 },
-	{ AnAsciiField,		AsciiField_action, 0 },
-	{ AnBell,		Bell_action, 0 },
-	{ AnCapabilities,	Capabilities_action, ACTION_HIDDEN },
-	{ AnCloseScript,	CloseScript_action, 0 },
-	{ AnEbcdic,		Ebcdic_action, 0 },
-	{ AnEbcdic1,		Ebcdic1_action, 0 },
-	{ AnEbcdicField,	EbcdicField_action, 0 },
-	{ AnExecute,		Execute_action, ACTION_KE },
-	{ AnExpect,		Expect_action, 0 },
-	{ Anignore,		ignore_action, ACTION_KE },
-	{ AnInfo,		Info_action, 0 },
-	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
-	{ AnMacro,		Macro_action, ACTION_KE },
-	{ AnNvtText,		NvtText_action, 0 },
-	{ AnPrompt,		Prompt_action, 0 },
-	{ AnReadBuffer,		ReadBuffer_action, 0 },
-	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
-	{ AnRequestInput,	RequestInput_action, ACTION_HIDDEN },
-	{ AnScript,		Script_action, ACTION_KE },
-	{ AnSnap,		Snap_action, 0 },
-	{ AnSource,		Source_action, ACTION_KE },
-	{ AnWait,		Wait_action, ACTION_KE }
-    };
-    static action_table_t task_dactions[] = {
-	{ AnPrinter,		Printer_action, ACTION_KE },
-    };
-    static toggle_register_t toggles[] = {
-	{ AID_WAIT,	NULL,	0 }
-    };
-
-    /* Register for state changes. */
-    register_schange_ordered(ST_CONNECT, task_connect, 2000);
-    register_schange_ordered(ST_3270_MODE, task_in3270, 2000);
-
-    /* Register actions.*/
-    register_actions(task_actions, array_count(task_actions));
-    if (product_has_display()) {
-	register_actions(task_dactions, array_count(task_dactions));
-    }
-
-    /* Register toggles. */
-    register_toggles(toggles, array_count(toggles));
-
-    /* Register extended toggle. */
-    register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL,
-	   canonical_bind_opt_res, (void **)&appres.script_port, XRM_STRING);
-
-    /* This doesn't go here, but it needs to happen once. */
-    nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
-}
-
 /* Parse the macros resource into the macro list */
-void
+static void
 macros_init(void)
 {
     char *s = NULL;
@@ -524,6 +402,136 @@ macros_init(void)
     if (ns < 0) {
 	xs_warning("Error in macro %d", ix);
     }
+}
+
+/* Callbacks for state changes. */
+    static void
+task_connect(bool connected _is_unused)
+{
+    macros_init();
+}
+
+    static void
+task_in3270(bool in3270)
+{
+}
+
+/**
+ * Upcall for toggling the script listener on and off.
+ *
+ * @param[in] name	Name of toggle
+ * @param[in] value	Toggle value
+ * @param[out] canonical_value	Returned canonical value
+ * @returns true if toggle changed successfully
+ */
+    static bool
+scriptport_toggle_upcall(const char *name, const char *value)
+{
+    struct sockaddr *sa;
+    socklen_t sa_len;
+
+    if (global_peer_listen != NULL) {
+	peer_shutdown(global_peer_listen);
+	global_peer_listen = NULL;
+    }
+    if (value == NULL || !*value) {
+	Replace(appres.script_port, NULL);
+	return true;
+    }
+
+    if (!parse_bind_opt(value, &sa, &sa_len)) {
+	popup_an_error("Invalid %s: %s", name, value);
+	return false;
+    }
+    Replace(appres.script_port, canonical_bind_opt(sa));
+    global_peer_listen = peer_init(sa, sa_len, PLM_MULTI);
+    return true;
+}
+
+    static bool
+Info_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnInfo, ia, argc, argv);
+    if (check_argc(AnInfo, argc, 1, 1) < 0) {
+	return false;
+    }
+    popup_an_info("%s", argv[0]);
+    return true;
+}
+
+    static bool
+ignore_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(Anignore, ia, argc, argv);
+    return true;
+}
+
+/**
+ * Task module registration.
+ */
+    void
+task_register(void)
+{
+    static action_table_t task_actions[] = {
+	{ AnAbort,		Abort_action, ACTION_KE },
+	{ AnAnsiText,		NvtText_action, 0 },
+	{ AnAscii,		Ascii_action, 0 },
+	{ AnAscii1,		Ascii1_action, 0 },
+	{ AnAsciiField,		AsciiField_action, 0 },
+	{ AnBell,		Bell_action, 0 },
+	{ AnCapabilities,	Capabilities_action, ACTION_HIDDEN },
+	{ AnCloseScript,	CloseScript_action, 0 },
+	{ AnEbcdic,		Ebcdic_action, 0 },
+	{ AnEbcdic1,		Ebcdic1_action, 0 },
+	{ AnEbcdicField,	EbcdicField_action, 0 },
+	{ AnExecute,		Execute_action, ACTION_KE },
+	{ AnExpect,		Expect_action, 0 },
+	{ Anignore,		ignore_action, ACTION_KE },
+	{ AnInfo,		Info_action, 0 },
+	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
+	{ AnMacro,		Macro_action, ACTION_KE },
+	{ AnNvtText,		NvtText_action, 0 },
+	{ AnPrompt,		Prompt_action, 0 },
+	{ AnReadBuffer,		ReadBuffer_action, 0 },
+	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
+	{ AnRequestInput,	RequestInput_action, ACTION_HIDDEN },
+	{ AnScript,		Script_action, ACTION_KE },
+	{ AnSnap,		Snap_action, 0 },
+	{ AnSource,		Source_action, ACTION_KE },
+	{ AnWait,		Wait_action, ACTION_KE }
+    };
+    static action_table_t task_dactions[] = {
+	{ AnPrinter,		Printer_action, ACTION_KE },
+    };
+    static toggle_register_t toggles[] = {
+	{ AID_WAIT,	NULL,	0 }
+    };
+    static xres_t task_xresources[] = {
+	{ ResMacros,		V_WILD },
+    };
+
+    /* Register for state changes. */
+    register_schange_ordered(ST_CONNECT, task_connect, 2000);
+    register_schange_ordered(ST_3270_MODE, task_in3270, 2000);
+
+    /* Register actions.*/
+    register_actions(task_actions, array_count(task_actions));
+    if (product_has_display()) {
+	register_actions(task_dactions, array_count(task_dactions));
+    }
+
+    /* Register toggles. */
+    register_toggles(toggles, array_count(toggles));
+
+    /* Register extended toggle. */
+    register_extended_toggle(ResScriptPort, scriptport_toggle_upcall, NULL,
+	   canonical_bind_opt_res, (void **)&appres.script_port, XRM_STRING);
+
+    /* Register resources. */
+    register_xresources(task_xresources, array_count(task_xresources));
+
+    /* This doesn't go here, but it needs to happen once. */
+    nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
 }
 
 /**

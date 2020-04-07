@@ -43,7 +43,6 @@ typedef void *task_cbh;
 void abort_script(void);
 void abort_script_by_cb(const char *cb_name);
 void abort_queue(const char *unique_name);
-void macros_init(void);
 void macro_command(struct macro_def *m);
 void peer_script_init(void);
 void connect_error(const char *fmt, ...);
