@@ -326,20 +326,6 @@ screen_init(void)
 	me_mode = TS_ON;
     }
 
-    /* See about all-bold behavior. */
-    if (appres.c3270.all_bold_on) {
-	ab_mode = TS_ON;
-    } else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
-	popup_an_error("Invalid %s value: '%s', assuming 'auto'\n",
-		ResAllBold, appres.c3270.all_bold);
-    }
-    if (ab_mode == TS_AUTO) {
-	ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
-    }
-    if (ab_mode == TS_ON) {
-	defattr |= A_BOLD;
-    }
-
     /*
      * If they don't want ACS and they're not in a UTF-8 locale, switch
      * to ASCII-art mode for box drawing.
@@ -560,6 +546,20 @@ finish_screen_init(void)
 	init_user_attribute_colors();
 	crosshair_color_init();
 
+	/* See about all-bold behavior. */
+	if (appres.c3270.all_bold_on) {
+	    ab_mode = TS_ON;
+	} else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
+	    popup_an_error("Invalid %s value: '%s', assuming 'auto'\n",
+		    ResAllBold, appres.c3270.all_bold);
+	}
+	if (ab_mode == TS_AUTO) {
+	    ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
+	}
+	if (ab_mode == TS_ON) {
+	    defattr |= A_BOLD;
+	}
+
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	if ((appres.c3270.default_fgbg ||
 	     (((colorterm = getenv("COLORTERM")) != NULL &&
@@ -582,6 +582,9 @@ finish_screen_init(void)
 	    if (mode.m3279) {
 		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
 			bg_color);
+		if (defcolor_offset == 0 && ab_mode == TS_ON) {
+		    defattr |= A_BOLD;
+		}
 		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
 			bg_color);
 	    } else {
