@@ -48,6 +48,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
+#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "screen.h"
@@ -102,9 +103,14 @@
 
 #define CM (60*10)	/* csec per minute */
 
-static int cp[16][16][2];
+typedef int curses_color;
+typedef int curses_attr;
+typedef int host_color_ix;
+typedef int color_pair;
 
-static int cmap8[16] = {
+static color_pair cp[16][16][2];
+
+static curses_color cmap8[16] = {
     COLOR_BLACK,	/* neutral black */
     COLOR_BLUE,	/* blue */
     COLOR_RED,	/* red */
@@ -124,7 +130,7 @@ static int cmap8[16] = {
     COLOR_WHITE	/* white */
 };
 
-static int cmap16[16] = {
+static curses_color cmap16[16] = {
     COLOR_BLACK,	/* neutral black */
     8 + COLOR_BLUE,	/* blue */
     COLOR_RED,	/* red */
@@ -144,29 +150,39 @@ static int cmap16[16] = {
     8 + COLOR_WHITE	/* white */
 };
 
-static int *cmap = cmap8;
+static curses_color *cmap = cmap8;
+static curses_attr cattrmap[16] = {
+    A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
+    A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
+    A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
+    A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL
+};
 static int defcolor_offset = 0;
 
-static int field_colors8[4] = {
+static curses_color field_colors8[4] = {
     COLOR_GREEN,	/* default */
-    COLOR_RED,	/* intensified */
-    COLOR_BLUE,	/* protected */
-    COLOR_WHITE	/* protected, intensified */
+    COLOR_RED,		/* intensified */
+    COLOR_BLUE,		/* protected */
+    COLOR_WHITE		/* protected, intensified */
 };
 
-static int field_colors16[4] = {
-    8 + COLOR_GREEN,/* default */
-    COLOR_RED,	/* intensified */
+static curses_color field_colors16[4] = {
+    8 + COLOR_GREEN,	/* default */
+    COLOR_RED,		/* intensified */
     8 + COLOR_BLUE,	/* protected */
     8 + COLOR_WHITE	/* protected, intensified */
 };
 
-static int *field_colors = field_colors8;
+static curses_color *field_colors = field_colors8;
 
-static int bg_color = COLOR_BLACK;
+static curses_attr field_cattrmap[4] = {
+    A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL
+};
 
-static int defattr = A_NORMAL;
-static int xhattr = A_NORMAL;
+static curses_color bg_color = COLOR_BLACK;
+
+static curses_attr defattr = A_NORMAL;
+static curses_attr xhattr = A_NORMAL;
 static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
@@ -191,7 +207,7 @@ static void parse_screen_spec(const char *str, struct screen_spec *spec);
 
 static struct {
     char *name;
-    int index;
+    curses_color index;
 } cc_name[] = {
     { "black",			COLOR_BLACK },
     { "red",			COLOR_RED },
@@ -219,7 +235,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If nonzero (2, actually), menu bar is at the
 				    top of the display. */
 
-static int crosshair_color = HOST_COLOR_PURPLE;
+static host_color_ix crosshair_color = HOST_COLOR_PURPLE;
 static bool curses_alt = false;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 static bool default_colors = false;
@@ -236,6 +252,16 @@ static char *other_msg = NULL;		/* layer 3 */
 static int other_attr;			/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
+
+/* Terminfo state. */
+static struct {
+    int colors;		/* number of colors */
+    char *op;		/* original pair (restore color) */
+    char *setaf;	/* set foreground */
+    char *sgr;		/* set graphic rendition */
+    char *sgr0;		/* reset graphic rendition */
+    bool bold;		/* use bold SGR for certain colors */
+} ti;
 
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -343,14 +369,60 @@ screen_init(void)
 }
 
 /*
- * Returns true if the screen support ANSI color sequences.
+ * Find and save a terminfo string.
+ */
+static char *
+ti_save(const char *name)
+{
+    char *str = tigetstr(name);
+    if (str != NULL && str != (char *)-1) {
+	return NewString(str);
+    }
+    return NULL;
+}
+
+/*
+ * Returns true if the screen supports ANSI color sequences.
  */
 bool
 screen_has_ansi_color(void)
 {
-    return
-	tigetstr("setaf") != NULL && tigetstr("setaf") != (char *)-1 &&
-	tigetstr("op") != NULL && tigetstr("op") != (char *)-1;
+    /* Check for disqualifying conditions. */
+    if (appres.interactive.mono ||
+        ((ti.colors = tigetnum("colors")) < 8) ||
+        ((ti.setaf = ti_save("setaf")) == NULL) ||
+        ((ti.op = ti_save("op")) == NULL)) {
+	return false;
+    }
+
+    /* Save the other strings, which are optional. */
+    ti.sgr = ti_save("sgr");
+    ti.sgr0 = ti_save("sgr0");
+
+    /* Figure out bold mode. */
+    if (ti.sgr != NULL && ti.sgr0 != NULL) {
+	if (appres.c3270.all_bold_on) {
+	    ti.bold = true;
+	} else {
+	    enum ts ab;
+
+	    if (!ts_value(appres.c3270.all_bold, &ab)) {
+		ab = TS_AUTO;
+	    }
+	    if (ab == TS_AUTO) {
+		ti.bold = ti.colors < 16;
+	    } else {
+		ti.bold = (ab == TS_ON);
+	    }
+	}
+    }
+
+    /* Recompute 'op'. */
+    if (ti.op != NULL && ti.sgr0 != NULL) {
+	Replace(ti.op, xs_buffer("%s%s", ti.op, ti.sgr0));
+    }
+
+    return true;
 }
 
 /*
@@ -359,19 +431,29 @@ screen_has_ansi_color(void)
 const char *
 screen_op(void)
 {
-    return tigetstr("op");
+    return ti.op;
 }
 
 /*
- * Returns the sequene to set a foreground color.
+ * Returns the sequence to set a foreground color.
  */
 const char *
 screen_setaf(acolor_t color)
 {
-    int color_map[] = { COLOR_BLUE, COLOR_RED, COLOR_YELLOW };
+    static int color_map8[] = { COLOR_BLUE, COLOR_RED, COLOR_YELLOW };
+    static int color_map16[] = { 8 + COLOR_BLUE, COLOR_RED, 8 + COLOR_YELLOW };
+    char *setaf;
 
-    char *s = tparm(tigetstr("setaf"), color_map[color]);
-    return s;
+    setaf = tparm(ti.setaf,
+	    (ti.colors >= 16)? color_map16[color]: color_map8[color]);
+    setaf = lazya(NewString(setaf));
+    if (ti.bold && color_map16[color] >= 8) {
+	char *sgr = tparm(ti.sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+
+	return lazyaf("%s%s", sgr, setaf);
+    } else {
+	return setaf;
+    }
 }
 
 /*
@@ -586,7 +668,7 @@ finish_screen_init(void)
 		    defattr |= A_BOLD;
 		}
 		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
-			bg_color);
+			bg_color) | cattrmap[crosshair_color];
 	    } else {
 		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color);
@@ -760,11 +842,11 @@ ts_value(const char *s, enum ts *tsp)
 }
 
 /* Allocate a color pair. */
-static int
-get_color_pair(int fg, int bg)
+static curses_attr
+get_color_pair(curses_color fg, curses_color bg)
 {
     static int next_pair[2] = { 1, 1 };
-    int pair;
+    color_pair pair;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION) /*[*/
 	    /* ncurses allocates colors for each screen. */
     int pair_index = !!curses_alt;
@@ -772,8 +854,8 @@ get_color_pair(int fg, int bg)
 	    /* curses allocates colors globally. */
     const int pair_index = 0;
 #endif /*]*/
-    int bg_arg = bg;
-    int fg_arg = fg;
+    curses_color bg_arg = bg;
+    curses_color fg_arg = fg;
 
     if ((pair = cp[fg][bg][pair_index])) {
 	return COLOR_PAIR(pair);
@@ -807,7 +889,8 @@ get_color_pair(int fg, int bg)
  * Initialize the user-specified attribute color mappings.
  */
 static void
-init_user_attribute_color(int *a, const char *resname)
+init_user_attribute_color(curses_color *color, curses_attr *attr,
+	const char *resname)
 {
     char *r;
     unsigned long l;
@@ -819,12 +902,12 @@ init_user_attribute_color(int *a, const char *resname)
     }
     for (i = 0; cc_name[i].name != NULL; i++) {
 	if (!strcasecmp(r, cc_name[i].name)) {
-	    if (cc_name[i].index >= COLORS) {
-		xs_warning("Invalid %s value %s [%d] exceeds maximum color "
-			"index %d", resname, r, cc_name[i].index, COLORS - 1);
-		return;
+	    if (cc_name[i].index < COLORS) {
+		*color = cc_name[i].index;
+	    } else {
+		*color = cc_name[i].index - 8;
+		*attr = A_BOLD;
 	    }
-	    *a = cc_name[i].index;
 	    return;
 	}
     }
@@ -834,20 +917,28 @@ init_user_attribute_color(int *a, const char *resname)
 	return;
     }
     if ((int)l >= COLORS) {
-	xs_warning("Invalid %s value %s exceeds maximum color index %d",
-		resname, r, COLORS - 1);
-	return;
+	if (l < 16 && COLORS == 8) {
+	    *color = (int)l;
+	    *attr = A_BOLD;
+	} else {
+	    xs_warning("Invalid %s value %s exceeds maximum color index %d",
+		    resname, r, COLORS - 1);
+	    return;
+	}
     }
-    *a = (int)l;
+    *color = (int)l;
 }
 
 static void
 init_user_attribute_colors(void)
 {
-    init_user_attribute_color(&field_colors[0], ResCursesColorForDefault);
-    init_user_attribute_color(&field_colors[1], ResCursesColorForIntensified);
-    init_user_attribute_color(&field_colors[2], ResCursesColorForProtected);
-    init_user_attribute_color(&field_colors[3],
+    init_user_attribute_color(&field_colors[0], &field_cattrmap[0],
+	    ResCursesColorForDefault);
+    init_user_attribute_color(&field_colors[1], &field_cattrmap[0],
+	    ResCursesColorForIntensified);
+    init_user_attribute_color(&field_colors[2], &field_cattrmap[2],
+	    ResCursesColorForProtected);
+    init_user_attribute_color(&field_colors[3], &field_cattrmap[3],
 	    ResCursesColorForProtectedIntensified);
 }
 
@@ -855,24 +946,30 @@ init_user_attribute_colors(void)
  * Map a field attribute to a curses color index.
  * Applies only to m3279 mode -- does not work for mono.
  */
-static int
+#define DEFCOLOR_MAP(f) \
+	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
+static curses_color
 default_color_from_fa(unsigned char fa)
 {
-#    define DEFCOLOR_MAP(f) \
-	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
-
     return field_colors[DEFCOLOR_MAP(fa)];
 }
 
 static int
+attrmap_from_fa(unsigned char fa)
+{
+    return DEFCOLOR_MAP(fa);
+}
+
+static curses_attr
 color_from_fa(unsigned char fa)
 {
     if (mode.m3279) {
-	int fg;
+	int ai = attrmap_from_fa(fa);
+	curses_color fg = default_color_from_fa(fa);
 
-	fg = default_color_from_fa(fa);
 	return get_color_pair(fg, bg_color) |
-	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
+	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL) |
+	    field_cattrmap[ai];
     } else if (!appres.interactive.mono) {
 	return get_color_pair(defcolor_offset + COLOR_GREEN, bg_color) |
 	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
@@ -885,12 +982,13 @@ color_from_fa(unsigned char fa)
 /*
  * Set up the user-specified color mappings.
  */
-/*static*/ void
-init_user_color(const char *name, int ix)
+void
+init_user_color(const char *name, host_color_ix ix)
 {
     char *r;
     int i;
     unsigned long l;
+    curses_color il;
     char *ptr;
 
     r = get_fresource("%s%s", ResCursesColorForHostColor, name);
@@ -904,17 +1002,36 @@ init_user_color(const char *name, int ix)
     for (i = 0; cc_name[i].name != NULL; i++) {
 	if (!strcasecmp(r, cc_name[i].name)) {
 	    cmap[ix] = cc_name[i].index;
+	    if (COLORS < 16 && cmap[ix] > 8) {
+		/*
+		 * When there are only 8 colors, the intensified colors are
+		 * mapped to bold.
+		 */
+		cmap[ix] -= 8;
+		cattrmap[ix] = A_BOLD;
+	    }
 	    return;
 	}
     }
 
     l = strtoul(r, &ptr, 0);
-    if (ptr != r && *ptr == '\0' && (int)l < COLORS) {
-	cmap[ix] = (int)l;
+    if (ptr == r || *ptr == '\0') {
+	xs_warning("Invalid %s value '%s'", ResCursesColorForHostColor, r);
+	return;
+    }
+    il = (curses_color)l;
+    if (COLORS < 16 && il > 8 && il <= 16) {
+	/* Map 9..15 to 0..8 + bold as above. */
+	cmap[ix] = il - 8;
+	cattrmap[ix] = A_BOLD;
+	return;
+    }
+    if (il < COLORS) {
+	cmap[ix] = il;
 	return;
     }
 
-    xs_warning("Invalid %s value '%s'", ResCursesColorForHostColor, r);
+    xs_warning("Out of range %s value '%s'", ResCursesColorForHostColor, r);
 }
 
 static void
@@ -930,10 +1047,12 @@ init_user_colors(void)
 /*
  * Find the display attributes for a baddr, fa_addr and fa.
  */
-static int
+static curses_attr
 calc_attrs(int baddr, int fa_addr, int fa)
 {
-    int fg, bg, gr, a;
+    curses_color fg, bg;
+    int gr;
+    curses_attr a;
 
     if (FA_IS_ZERO(fa)) {
 	return color_from_fa(fa);
@@ -954,13 +1073,22 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	a = color_from_fa(fa);
 
     } else {
+	host_color_ix hc;
+	curses_attr attr;
+
 	/* The current location or the fa specifies the fg or bg. */
 	if (ea_buf[baddr].fg) {
-	    fg = cmap[ea_buf[baddr].fg & 0x0f];
+	    hc = ea_buf[baddr].fg & 0x0f;
+	    fg = cmap[hc];
+	    attr = cattrmap[hc];
 	} else if (ea_buf[fa_addr].fg) {
-	    fg = cmap[ea_buf[fa_addr].fg & 0x0f];
+	    hc = ea_buf[fa_addr].fg & 0x0f;
+	    fg = cmap[hc];
+	    attr = cattrmap[hc];
 	} else {
+	    hc = attrmap_from_fa(fa);
 	    fg = default_color_from_fa(fa);
+	    attr = field_cattrmap[attrmap_from_fa(fa)];
 	}
 
 	if (ea_buf[baddr].bg) {
@@ -971,7 +1099,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	    bg = cmap[HOST_COLOR_NEUTRAL_BLACK];
 	}
 
-	a = get_color_pair(fg, bg);
+	a = get_color_pair(fg, bg) | attr;
     }
 
     /* Compute the display attributes. */
@@ -1084,7 +1212,7 @@ void
 screen_disp(bool erasing _is_unused)
 {
     int row, col;
-    int field_attrs;
+    curses_attr field_attrs;
     unsigned char fa;
     struct screen_spec *cur_spec;
     enum dbcs_state d;
@@ -1134,7 +1262,7 @@ screen_disp(bool erasing _is_unused)
 	ucs4_t u = 0;
 	bool highlight;
 	unsigned char acs;
-	int norm, high;
+	curses_attr norm, high;
 
 	if (menu_is_up) {
 	    if (mode.m3279) {
@@ -1189,7 +1317,7 @@ screen_disp(bool erasing _is_unused)
 	}
 	for (col = 0; col < cCOLS; col++) {
 	    bool underlined = false;
-	    int attr_mask = toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
+	    curses_attr attr_mask = toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
 	    bool is_menu = false;
 	    ucs4_t u = 0;
 	    bool highlight = false;
@@ -2005,12 +2133,18 @@ set_info_timer(void)
     }
 }
 
+/* Compute the color pair for an OIA field. */
+static curses_attr
+status_colors(curses_color fg)
+{
+    return mode.m3279? get_color_pair(fg, bg_color): defattr;
+}
+
 void
 status_minus(void)
 {
     other_msg = "X -f";
-    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
 }
 
 void
@@ -2027,8 +2161,7 @@ status_oerr(int error_type)
 	other_msg = "X Overflow";
 	break;
     }
-    other_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
 }
 
 void
@@ -2041,8 +2174,7 @@ status_reset(void)
     } else {
 	status_connect(PCONNECTED);
     }
-    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 }
 
 void
@@ -2055,8 +2187,7 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
-    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 }
 
 void
@@ -2064,8 +2195,7 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
-    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 }
 
 void
@@ -2139,8 +2269,7 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
-    other_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	A_BOLD;
+    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 }
 
 static void
@@ -2424,18 +2553,15 @@ draw_oia(void)
     /* Figure out the status message. */
     msg_attr = defattr;
     if (disabled_msg != NULL) {
-	msg_attr = get_color_pair(defcolor_offset + COLOR_RED, bg_color) |
-	    A_BOLD;
+	msg_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
-	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	    A_BOLD;
+	msg_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
-	msg_attr = get_color_pair(defcolor_offset + COLOR_WHITE, bg_color) |
-	    A_BOLD;
+	msg_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
@@ -2457,14 +2583,9 @@ draw_oia(void)
 	status_im? 'I': ' ',
 	oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	if (mode.m3279) {
-	    attrset(get_color_pair(defcolor_offset +
-			((status_secure == SS_SECURE)?
-			 COLOR_GREEN: COLOR_YELLOW),
-			bg_color) | A_BOLD);
-	} else {
-	    attrset(A_BOLD);
-	}
+	attrset(status_colors(defcolor_offset +
+		    ((status_secure == SS_SECURE)? COLOR_GREEN: COLOR_YELLOW))
+		| A_BOLD);
 	printw("S");
 	attrset(defattr);
     } else {
