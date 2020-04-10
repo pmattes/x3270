@@ -623,6 +623,14 @@ finish_screen_init(void)
 	char *colorterm;
 #endif /*]*/
 	start_color();
+	if (has_colors() && COLORS >= 16) {
+	    cmap = cmap16;
+	    field_colors = field_colors16;
+	    defcolor_offset = 8;
+	    if (appres.c3270.reverse_video) {
+		bg_color += defcolor_offset;
+	    }
+	}
 
 	init_user_colors();
 	init_user_attribute_colors();
@@ -639,7 +647,12 @@ finish_screen_init(void)
 	    ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
 	}
 	if (ab_mode == TS_ON) {
+	    int i;
+
 	    defattr |= A_BOLD;
+	    for (i = 0; i < 4; i++) {
+		field_cattrmap[i] = A_BOLD;
+	    }
 	}
 
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
@@ -653,20 +666,10 @@ finish_screen_init(void)
 	}
 #endif /*]*/
 	if (has_colors() && COLORS >= 8) {
-	    if (COLORS >= 16) {
-		cmap = cmap16;
-		field_colors = field_colors16;
-		defcolor_offset = 8;
-		if (appres.c3270.reverse_video) {
-		    bg_color += defcolor_offset;
-		}
-	    }
 	    if (mode.m3279) {
-		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
-			bg_color);
-		if (defcolor_offset == 0 && ab_mode == TS_ON) {
-		    defattr |= A_BOLD;
-		}
+		/* Use 'protected' attributes for the OIA. */
+		defattr = get_color_pair(field_colors[2], bg_color) |
+		    field_cattrmap[2];
 		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
 			bg_color) | cattrmap[crosshair_color];
 	    } else {
@@ -1073,20 +1076,20 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	a = color_from_fa(fa);
 
     } else {
-	host_color_ix hc;
+	host_color_ix ix;
 	curses_attr attr;
 
 	/* The current location or the fa specifies the fg or bg. */
 	if (ea_buf[baddr].fg) {
-	    hc = ea_buf[baddr].fg & 0x0f;
-	    fg = cmap[hc];
-	    attr = cattrmap[hc];
+	    ix = ea_buf[baddr].fg & 0x0f;
+	    fg = cmap[ix];
+	    attr = cattrmap[ix];
 	} else if (ea_buf[fa_addr].fg) {
-	    hc = ea_buf[fa_addr].fg & 0x0f;
-	    fg = cmap[hc];
-	    attr = cattrmap[hc];
+	    ix = ea_buf[fa_addr].fg & 0x0f;
+	    fg = cmap[ix];
+	    attr = cattrmap[ix];
 	} else {
-	    hc = attrmap_from_fa(fa);
+	    ix = attrmap_from_fa(fa);
 	    fg = default_color_from_fa(fa);
 	    attr = field_cattrmap[attrmap_from_fa(fa)];
 	}
