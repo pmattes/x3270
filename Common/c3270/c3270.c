@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017 Paul Mattes.
+ * Copyright (c) 1993-2017, 2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1857,7 +1857,7 @@ c3270_register(void)
 #endif /*]*/
     };
     static res_t c3270_resources[] = {
-	{ ResAllBold,	aoffset(c3270.all_bold_on),	XRM_STRING },
+	{ ResAllBold,	aoffset(c3270.all_bold),	XRM_STRING },
 	{ ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
 	{ ResIdleCommand,aoffset(idle_command),		XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
