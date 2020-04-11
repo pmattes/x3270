@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Paul Mattes.
+ * Copyright (c) 2019-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 typedef struct {
     const char *program;	/* program name */
     const char *title_opt;	/* option to set title */
-    const char *extra_opt;	/* extra option */
+    const char *extra_opts;	/* extra options */
     const char *exec_opt;	/* option to specify command and args */
 } console_desc_t;
 

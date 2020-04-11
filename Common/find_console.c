@@ -46,7 +46,7 @@ static console_desc_t consoles[] = {
     { "gnome-terminal", "--title", NULL, "--" },
     { "konsole", "--caption", NULL, "-e" },
     { "xfce4-terminal", "-T", NULL, "-x" },
-    { "xterm", "-title", "-sb", "-e" },
+    { "xterm", "-title", "-sb -tn xterm-256color -rv", "-e" },
     { NULL, NULL, NULL, NULL }
 };
 
@@ -54,9 +54,13 @@ static console_desc_t consoles[] = {
 bool
 find_in_path(const char *program)
 {
-    char *path = getenv("PATH");
+    char *path;
     char *colon;
 
+    if (program[0] == '/') {
+	return access(program, X_OK) == 0;
+    }
+    path = getenv("PATH");
     while ((colon = strchr(path, ':')) != NULL) {
 	if (colon != path) {
 	    char *xpath = lazyaf("%.*s/%s", (int)(colon - path), path, program);
@@ -86,7 +90,7 @@ find_console(void)
     do {
 	static console_desc_t t_ret;
 	char *override = appres.interactive.console;
-	char *program, *title_opt, *extra_opt, *exec_opt;
+	char *program, *title_opt, *extra_opts, *exec_opt;
 
 	/*
 	 * The format is:
@@ -114,14 +118,14 @@ find_console(void)
 	    break;
 	}
 
-	extra_opt = strchr(title_opt, ':');
-	if (extra_opt != NULL) {
-	    *(extra_opt++) = '\0';
+	extra_opts = strchr(title_opt, ':');
+	if (extra_opts != NULL) {
+	    *(extra_opts++) = '\0';
 	} else {
 	    break;
 	}
 
-	exec_opt = strchr(extra_opt, ':');
+	exec_opt = strchr(extra_opts, ':');
 	if (exec_opt != NULL) {
 	    *(exec_opt++) = '\0';
 	} else {
@@ -134,10 +138,10 @@ find_console(void)
 
 	t_ret.program = program;
 	t_ret.title_opt = title_opt;
-	if (*extra_opt != '\0') {
-	    t_ret.extra_opt = extra_opt;
+	if (*extra_opts != '\0') {
+	    t_ret.extra_opts = extra_opts;
 	} else {
-	    t_ret.extra_opt = NULL;
+	    t_ret.extra_opts = NULL;
 	}
 	t_ret.exec_opt = exec_opt;
 	if (find_in_path(t_ret.program)) {
@@ -161,8 +165,15 @@ console_args(console_desc_t *t, const char *title, const char ***s, int ix)
     array_add(s, ix++, t->program);
     array_add(s, ix++, t->title_opt);
     array_add(s, ix++, title);
-    if (t->extra_opt != NULL) {
-	array_add(s, ix++, t->extra_opt);
+    if (t->extra_opts != NULL) {
+	char *opts = lazya(NewString(t->extra_opts));
+	char *token;
+	char *saveptr = NULL;
+
+	while ((token = strtok_r(opts, " ", &saveptr)) != NULL) {
+	    array_add(s, ix++, token);
+	    opts = NULL;
+	}
     }
     array_add(s, ix++, t->exec_opt);
     return ix;
