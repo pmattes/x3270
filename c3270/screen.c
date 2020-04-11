@@ -112,28 +112,28 @@ static color_pair cp[16][16][2];
 
 static curses_color cmap8[16] = {
     COLOR_BLACK,	/* neutral black */
-    COLOR_BLUE,	/* blue */
-    COLOR_RED,	/* red */
+    COLOR_BLUE,		/* blue */
+    COLOR_RED,		/* red */
     COLOR_MAGENTA,	/* pink */
     COLOR_GREEN,	/* green */
-    COLOR_CYAN,	/* turquoise */
+    COLOR_CYAN,		/* turquoise */
     COLOR_YELLOW,	/* yellow */
     COLOR_WHITE,	/* neutral white */
 
     COLOR_BLACK,	/* black */ /* alas, this may be gray */
-    COLOR_BLUE,	/* deep blue */
+    COLOR_BLUE,		/* deep blue */
     COLOR_YELLOW,	/* orange */
     COLOR_MAGENTA,	/* purple */
     COLOR_GREEN,	/* pale green */
-    COLOR_CYAN,	/* pale turquoise */
+    COLOR_CYAN,		/* pale turquoise */
     COLOR_BLACK,	/* gray */
-    COLOR_WHITE	/* white */
+    COLOR_WHITE		/* white */
 };
 
 static curses_color cmap16[16] = {
     COLOR_BLACK,	/* neutral black */
     8 + COLOR_BLUE,	/* blue */
-    COLOR_RED,	/* red */
+    COLOR_RED,		/* red */
     8 + COLOR_MAGENTA,	/* pink */
     8 + COLOR_GREEN,	/* green */
     8 + COLOR_CYAN,	/* turquoise */
@@ -141,11 +141,11 @@ static curses_color cmap16[16] = {
     8 + COLOR_WHITE,	/* neutral white */
 
     COLOR_BLACK,	/* black */ /* alas, this may be gray */
-    COLOR_BLUE,	/* deep blue */
+    COLOR_BLUE,		/* deep blue */
     8 + COLOR_RED,	/* orange */
     COLOR_MAGENTA,	/* purple */
     COLOR_GREEN,	/* pale green */
-    COLOR_CYAN,	/* pale turquoise */
+    COLOR_CYAN,		/* pale turquoise */
     COLOR_WHITE,	/* gray */
     8 + COLOR_WHITE	/* white */
 };
@@ -249,7 +249,7 @@ static char *disabled_msg = NULL;	/* layer 0 (top) */
 static char *scrolled_msg = NULL;	/* layer 1 */
 static char *info_msg = NULL;		/* layer 2 */
 static char *other_msg = NULL;		/* layer 3 */
-static int other_attr;			/* layer 3 color */
+static curses_attr other_attr;		/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
@@ -604,7 +604,7 @@ finish_screen_init(void)
 
     /* Implement reverse video. */
     if (appres.c3270.reverse_video) {
-	int c;
+	curses_color c;
 
 	bg_color = COLOR_WHITE;
 
@@ -615,6 +615,9 @@ finish_screen_init(void)
 	c = cmap16[HOST_COLOR_NEUTRAL_BLACK];
 	cmap16[HOST_COLOR_NEUTRAL_BLACK] = cmap16[HOST_COLOR_NEUTRAL_WHITE];
 	cmap16[HOST_COLOR_NEUTRAL_WHITE] = c;
+
+	field_colors8[3] = COLOR_BLACK;
+	field_colors16[3] = COLOR_BLACK;
     }
 
     /* Play with curses color. */
@@ -2140,6 +2143,10 @@ set_info_timer(void)
 static curses_attr
 status_colors(curses_color fg)
 {
+    if (appres.c3270.reverse_video &&
+	    (fg == COLOR_WHITE || fg == defcolor_offset + COLOR_WHITE)) {
+	fg = COLOR_BLACK;
+    }
     return mode.m3279? get_color_pair(fg, bg_color): defattr;
 }
 

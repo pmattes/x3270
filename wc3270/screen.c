@@ -152,6 +152,10 @@ static int field_colors[4] = {
 };
 
 static int defattr = 0;
+static int oia_attr = 0;
+static int oia_bold_attr = 0;
+static int oia_red_attr = 0;
+static int oia_white_attr = 0;
 static int xhattr = 0;
 static ioid_t input_id;
 
@@ -1313,6 +1317,21 @@ screen_init(void)
     /* Pull in the user's color mappings. */
     init_user_colors();
     init_user_attribute_colors();
+
+    if (mode.m3279) {
+	oia_attr = cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	oia_bold_attr = oia_attr; /* not used */
+	oia_red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY |
+	    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	oia_white_attr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+	    FOREGROUND_INTENSITY | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+    } else {
+	oia_attr = defattr;
+	oia_bold_attr = FOREGROUND_GREEN | FOREGROUND_INTENSITY |
+	    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	oia_red_attr = oia_bold_attr;
+	oia_white_attr = oia_bold_attr;
+    }
 
     /* Set up the controller. */
     ctlr_init(ALL_CHANGE);
@@ -2876,7 +2895,7 @@ void
 status_minus(void)
 {
     other_msg = "X -f";
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
+    other_attr = oia_red_attr;
 }
 
 void
@@ -2893,7 +2912,7 @@ status_oerr(int error_type)
 	other_msg = "X Overflow";
 	break;
     }
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
+    other_attr = oia_red_attr;
 }
 
 void
@@ -2906,8 +2925,7 @@ status_reset(void)
     } else {
 	status_connect(PCONNECTED);
     }
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	FOREGROUND_BLUE;
+    other_attr = oia_white_attr;
 }
 
 void
@@ -2920,8 +2938,7 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	FOREGROUND_BLUE;
+    other_attr = oia_white_attr;
 }
 
 void
@@ -2929,8 +2946,7 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	FOREGROUND_BLUE;
+    other_attr = oia_white_attr;
 }
 
 void
@@ -3004,8 +3020,7 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
-    other_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	FOREGROUND_BLUE;
+    other_attr = oia_white_attr;
 }
 
 static void
@@ -3105,9 +3120,6 @@ draw_oia(void)
     int i, j;
     int cursor_col = (cursor_addr % cCOLS);
     int fl_cursor_col = flipped? (console_cols - 1 - cursor_col): cursor_col;
-    int oia_attr = mode.m3279 ?
-	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
-	   defattr;
     char *status_msg_now;
     int msg_attr;
 
@@ -3187,17 +3199,15 @@ draw_oia(void)
     /* Figure out the status message. */
     msg_attr = oia_attr;
     if (disabled_msg != NULL) {
-	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED;
+	msg_attr = oia_red_attr;
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
-	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	    FOREGROUND_BLUE;
+	msg_attr = oia_white_attr;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
-	msg_attr = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN |
-	    FOREGROUND_BLUE;
+	msg_attr = oia_white_attr;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
@@ -3220,9 +3230,11 @@ draw_oia(void)
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	attrset(cmap_fg[(status_secure == SS_SECURE)?
-			    HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
-		cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
+	attrset(mode.m3279?
+		    (cmap_fg[(status_secure == SS_SECURE)?
+				HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
+		    cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
+		oia_attr);
 	addch('S');
 	attrset(oia_attr);
     } else {
