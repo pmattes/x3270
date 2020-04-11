@@ -1134,11 +1134,50 @@ i18n_get(const char *key)
 }
 
 #if !defined(_WIN32) /*[*/
+static char *
+tigetstr_def(const char *name, char *def)
+{
+    char *s = tigetstr(name);
+
+    if (s != NULL && s != (char *)-1) {
+	return s;
+    }
+    return def;
+}
+
 /* Get an ANSI color setting attribute. */
 static const char *
-xsetaf(const char *setaf, int color)
+xsetaf(const char *setaf, int color, const char *sgr)
 {
-    return (setaf != NULL)? tparm(setaf, color) : "";
+    static char *x_ret = NULL;
+
+    /* Clean up the previous value. */
+    if (x_ret != NULL) {
+	Free(x_ret);
+	x_ret = NULL;
+    }
+
+    if (setaf != NULL) {
+	char *a, *s;
+
+	/* Encode AF. */
+	a = tparm(setaf, color);
+	if (sgr == NULL) {
+	    return a;
+	}
+
+	/* Save encoded AF and encode SGR. */
+	a = NewString(a);
+	s = tparm(sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+	x_ret = Malloc(strlen(a) + strlen(s) + 1);
+	sprintf(x_ret, "%s%s", s, a);
+	Free(a);
+	
+	/* Return combined SGR and AF. */
+	return x_ret;
+    } else {
+	return "";
+    }
 }
 #endif /*]*/
 
@@ -1160,20 +1199,47 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     CONSOLE_SCREEN_BUFFER_INFO info;
     HANDLE socket_event;
 #else /*][*/
-    const char *op;
-    const char *setaf;
+    int colors;
+    char *setaf;
+    char *op;
+    char *sgr;
+    char *sgr0;
     char *prompt_setaf;
+    int color_offset = 0;
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
     /* Set up terminfo and check for ANSI color. */
     setupterm(NULL, fileno(stdout), NULL);
-    op = tigetstr("op");
-    setaf = tigetstr("setaf");
-    if (op == NULL || op == (char *)-1 ||
-	    setaf == NULL || setaf == (char *)-1) {
-	op = "";
+    colors = tigetnum("colors");
+    setaf = tigetstr_def("setaf", NULL);
+    op = tigetstr_def("op", "");
+    if (!op[0]) {
 	setaf = NULL;
+    }
+    sgr = tigetstr_def("sgr", NULL);
+    sgr0 = tigetstr_def("sgr0", "");
+    if (!sgr0[0]) {
+	sgr = NULL;
+    }
+    if (colors < 8 || setaf == NULL) {
+	/* No usable color. */
+	setaf = NULL;
+	op = "";
+	sgr = NULL;
+	sgr0 = "";
+    } else if (colors >= 16 && sgr != NULL) {
+	/* Use brighter colors. */
+	color_offset = 8;
+	sgr = NULL;
+	sgr0 = "";
+    }
+    if (op[0] && sgr0[0]) {
+	/* Combine OP and SGR0. */
+	char *s = Malloc(strlen(op) + strlen(sgr0) + 1);
+
+	sprintf(s, "%s%s", op, sgr0);
+	op = s;
     }
 #endif
 
@@ -1209,9 +1275,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
     /* Set up the prompt. */
 #if !defined(_WIN32) /*[*/
-    prompt_setaf = (char *)xsetaf(setaf, COLOR_BLUE);
+    prompt_setaf = (char *)xsetaf(setaf, color_offset + COLOR_BLUE, sgr);
     prompt_setaf = Malloc(strlen(prompt_setaf) + 1);
-    strcpy(prompt_setaf, xsetaf(setaf, COLOR_BLUE));
+    strcpy(prompt_setaf, xsetaf(setaf, color_offset + COLOR_BLUE, sgr));
     prompt_len = MLEN + strlen(prompt_setaf) + MLEN + strlen(emulator_name)
 	+ strlen("> ") + MLEN + strlen(op) + MLEN + 1;
     prompt = Malloc(prompt_len);
@@ -1289,7 +1355,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	}
     }
 #if !defined(_WIN32) /*[*/
-    printf("%s", xsetaf(setaf, COLOR_YELLOW));
+    printf("%s", xsetaf(setaf, color_offset + COLOR_YELLOW, sgr));
 # else /*][*/
     fflush(stdout);
     set_text_attribute(conout, FOREGROUND_GREEN | FOREGROUND_RED);
@@ -1477,7 +1543,8 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 		    printf("%s\n", data_ret);
 		} else {
 		    if (rc) {
-			printf("%s%s%s\n", xsetaf(setaf, COLOR_RED), data_ret,
+			printf("%s%s%s\n", xsetaf(setaf,
+				    color_offset + COLOR_RED, sgr), data_ret,
 				op);
 		    } else {
 			printf("%s\n", data_ret);
