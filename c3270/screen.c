@@ -130,6 +130,26 @@ static curses_color cmap8[16] = {
     COLOR_WHITE		/* white */
 };
 
+static curses_color cmap8_rv[16] = {
+    COLOR_WHITE,	/* neutral black (reversed) */
+    COLOR_BLUE,		/* blue */
+    COLOR_RED,		/* red */
+    COLOR_MAGENTA,	/* pink */
+    COLOR_GREEN,	/* green */
+    COLOR_CYAN,		/* turquoise */
+    COLOR_YELLOW,	/* yellow */
+    COLOR_BLACK,	/* neutral white (reversed) */
+
+    COLOR_BLACK,	/* black */ /* alas, this may be gray */
+    COLOR_BLUE,		/* deep blue */
+    COLOR_YELLOW,	/* orange */
+    COLOR_MAGENTA,	/* purple */
+    COLOR_GREEN,	/* pale green */
+    COLOR_CYAN,		/* pale turquoise */
+    COLOR_BLACK,	/* gray */
+    COLOR_WHITE		/* white */
+};
+
 static curses_color cmap16[16] = {
     COLOR_BLACK,	/* neutral black */
     8 + COLOR_BLUE,	/* blue */
@@ -150,6 +170,26 @@ static curses_color cmap16[16] = {
     8 + COLOR_WHITE	/* white */
 };
 
+static curses_color cmap16_rv[16] = {
+    8 + COLOR_WHITE,	/* neutral black (reversed) */
+    COLOR_BLUE,		/* blue */
+    COLOR_RED,		/* red */
+    8 + COLOR_MAGENTA,	/* pink */
+    COLOR_GREEN,	/* green */
+    COLOR_CYAN,		/* turquoise */
+    COLOR_YELLOW,	/* yellow */
+    COLOR_BLACK,	/* neutral white (reversed) */
+
+    COLOR_BLACK,	/* black */ /* alas, this may be gray */
+    COLOR_BLUE,		/* deep blue */
+    8 + COLOR_RED,	/* orange */
+    COLOR_MAGENTA,	/* purple */
+    8 + COLOR_GREEN,	/* pale green */
+    8 + COLOR_CYAN,	/* pale turquoise */
+    8 + COLOR_WHITE,	/* gray */
+    8 + COLOR_WHITE	/* white */
+};
+
 static curses_color *cmap = cmap8;
 static curses_attr cattrmap[16] = {
     A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
@@ -166,11 +206,25 @@ static curses_color field_colors8[4] = {
     COLOR_WHITE		/* protected, intensified */
 };
 
+static curses_color field_colors8_rv[4] = {
+    COLOR_GREEN,	/* default */
+    COLOR_RED,		/* intensified */
+    COLOR_BLUE,		/* protected */
+    COLOR_BLACK		/* protected, intensified */
+};
+
 static curses_color field_colors16[4] = {
     8 + COLOR_GREEN,	/* default */
     COLOR_RED,		/* intensified */
     8 + COLOR_BLUE,	/* protected */
     8 + COLOR_WHITE	/* protected, intensified */
+};
+
+static curses_color field_colors16_rv[4] = {
+    COLOR_GREEN,	/* default */
+    COLOR_RED,		/* intensified */
+    COLOR_BLUE,		/* protected */
+    COLOR_BLACK		/* protected, intensified */
 };
 
 static curses_color *field_colors = field_colors8;
@@ -604,20 +658,7 @@ finish_screen_init(void)
 
     /* Implement reverse video. */
     if (appres.c3270.reverse_video) {
-	curses_color c;
-
 	bg_color = COLOR_WHITE;
-
-	c = cmap8[HOST_COLOR_NEUTRAL_BLACK];
-	cmap8[HOST_COLOR_NEUTRAL_BLACK] = cmap8[HOST_COLOR_NEUTRAL_WHITE];
-	cmap8[HOST_COLOR_NEUTRAL_WHITE] = c;
-
-	c = cmap16[HOST_COLOR_NEUTRAL_BLACK];
-	cmap16[HOST_COLOR_NEUTRAL_BLACK] = cmap16[HOST_COLOR_NEUTRAL_WHITE];
-	cmap16[HOST_COLOR_NEUTRAL_WHITE] = c;
-
-	field_colors8[3] = COLOR_BLACK;
-	field_colors16[3] = COLOR_BLACK;
     }
 
     /* Play with curses color. */
@@ -627,12 +668,17 @@ finish_screen_init(void)
 #endif /*]*/
 	start_color();
 	if (has_colors() && COLORS >= 16) {
-	    cmap = cmap16;
-	    field_colors = field_colors16;
-	    defcolor_offset = 8;
+	    cmap = appres.c3270.reverse_video? cmap16_rv: cmap16;
+	    field_colors = appres.c3270.reverse_video? field_colors16_rv:
+		field_colors16;
 	    if (appres.c3270.reverse_video) {
-		bg_color += defcolor_offset;
+		bg_color += 8;
+	    } else {
+		defcolor_offset = 8;
 	    }
+	} else if (appres.c3270.reverse_video) {
+	    cmap = cmap8_rv;
+	    field_colors = field_colors8_rv;
 	}
 
 	init_user_colors();
@@ -647,7 +693,8 @@ finish_screen_init(void)
 		    ResAllBold, appres.c3270.all_bold);
 	}
 	if (ab_mode == TS_AUTO) {
-	    ab_mode = (mode.m3279 && (COLORS < 16))? TS_ON: TS_OFF;
+	    ab_mode = (mode.m3279 && (COLORS < 16) &&
+		    !appres.c3270.reverse_video)? TS_ON: TS_OFF;
 	}
 	if (ab_mode == TS_ON) {
 	    int i;
