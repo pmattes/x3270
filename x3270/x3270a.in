@@ -52,6 +52,8 @@ function decho
 # Figure out the display dpi and the scale relative to 96.
 if [ -n "$DPI" ]
 then	dpi=$DPI
+    	dpi_xrm="-xrm"
+    	dpi_opt="Xft.dpi: $DPI"
 else	dpi=$(xrdb -query | awk '/^Xft\.dpi:/ { print $2 }')
 	if [ -z "$dpi" ]
 	then	echo >&2 "Display DPI is unknown"
@@ -108,4 +110,4 @@ exec $d/x3270 \
  -xrm "x3270*dialog*value*font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
  -xrm "x3270*font: -*-helvetica-bold-r-normal--$s32-*-*-*-p-*-iso8859-1" \
  -efont $efont \
- "$@"
+ $dpi_xrm "$dpi_opt" "$@"

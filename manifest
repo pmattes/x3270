@@ -878,6 +878,8 @@ x3270/about.c
 x3270/about.h
 x3270/apl.inc
 x3270/arrow.bm
+x3270/arrow15.bm
+x3270/arrow20.bm
 x3270/x3270a.in
 x3270/cg.h
 x3270/CmeBSB.c
@@ -898,6 +900,8 @@ x3270/configure.in
 x3270/dialog.c
 x3270/dialog.h
 x3270/diamond.bm
+x3270/diamond15.bm
+x3270/diamond20.bm
 x3270/display8.c
 x3270/display8.h
 x3270/display_charsets.c
@@ -906,6 +910,8 @@ x3270/display_charsets_dbcs.h
 x3270/display_charsets.h
 x3270/documentation-ssl-body.html
 x3270/dot.bm
+x3270/dot15.bm
+x3270/dot20.bm
 x3270/dryrun.in
 x3270/Examples/child_script.bash
 x3270/Examples/child_script.ksh
@@ -961,9 +967,13 @@ x3270/keypad.c
 x3270/keysym2ucs.c
 x3270/keysym2ucs.h
 x3270/ky.bm
+x3270/ky15.bm
+x3270/ky20.bm
 x3270/LICENSE
 x3270/localdefs.h
 x3270/locked.bm
+x3270/locked15.bm
+x3270/locked20.bm
 x3270/m4man
 x3270/Makefile.aux
 x3270/Makefile.in
@@ -975,7 +985,11 @@ x3270/menus.inc
 x3270/mkstand.bash
 x3270/mkversion.sh
 x3270/no_diamond.bm
+x3270/no_diamond15.bm
+x3270/no_diamond20.bm
 x3270/no_dot.bm
+x3270/no_dot15.bm
+x3270/no_dot20.bm
 x3270/null.bm
 x3270/nvt_gui.c
 x3270/objects.h
@@ -1001,6 +1015,8 @@ x3270/stmenu.h
 x3270/tls_passwd_gui.c
 x3270/trace_gui.c
 x3270/unlocked.bm
+x3270/unlocked15.bm
+x3270/unlocked20.bm
 x3270/version.txt
 x3270/wait.bm
 x3270/x3270.bm
