@@ -135,13 +135,37 @@ static void screensave_option(Widget w, XtPointer client_data,
 #define NO_BANG(s)	(((s)[0] == '!')? (s) + 1: (s))
 
 #include "dot.bm"
+#include "dot15.bm"
+#include "dot20.bm"
+
 #include "no_dot.bm"
+#include "no_dot15.bm"
+#include "no_dot20.bm"
+
 #include "arrow.bm"
+#include "arrow15.bm"
+#include "arrow20.bm"
+
 #include "diamond.bm"
+#include "diamond15.bm"
+#include "diamond20.bm"
+
 #include "no_diamond.bm"
+#include "no_diamond15.bm"
+#include "no_diamond20.bm"
+
 #include "ky.bm"
+#include "ky15.bm"
+#include "ky20.bm"
+
 #include "locked.bm"
+#include "locked15.bm"
+#include "locked20.bm"
+
 #include "unlocked.bm"
+#include "unlocked15.bm"
+#include "unlocked20.bm"
+
 #include "null.bm"
 
 /*
@@ -149,7 +173,7 @@ static void screensave_option(Widget w, XtPointer client_data,
  */
 
 static Widget	menu_parent;
-static bool  menubar_buttons;
+static bool  	menubar_buttons;
 static Widget   disconnect_button;
 static Widget   exit_button;
 static Widget   exit_menu;
@@ -183,6 +207,35 @@ static Widget	idle_button;
 static Widget	snap_button;
 static Widget	reenable_button;
 
+static int scaled_locked_width;
+static int scaled_locked_height;
+static int scaled_unlocked_width;
+static int scaled_unlocked_height;
+static unsigned char *scaled_locked_bits;
+static unsigned char *scaled_unlocked_bits;
+
+static int scaled_dot_width;
+static int scaled_dot_height;
+static int scaled_no_dot_width;
+static int scaled_no_dot_height;
+static unsigned char *scaled_dot_bits;
+static unsigned char *scaled_no_dot_bits;
+
+static int scaled_diamond_width;
+static int scaled_diamond_height;
+static int scaled_no_diamond_width;
+static int scaled_no_diamond_height;
+static unsigned char *scaled_diamond_bits;
+static unsigned char *scaled_no_diamond_bits;
+
+static int scaled_ky_width;
+static int scaled_ky_height;
+static unsigned char *scaled_ky_bits;
+
+static int scaled_arrow_width;
+static int scaled_arrow_height;
+static unsigned char *scaled_arrow_bits;
+
 static Pixmap   arrow;
 Pixmap	dot;
 Pixmap	no_dot;
@@ -206,7 +259,7 @@ static bool	toggle_init(Widget, int, const char *, const char *, bool *);
 
 #define MENU_BORDER	rescale(2)
 
-#define KY_WIDTH	(ky_width + rescale(8))
+#define KY_WIDTH	(scaled_ky_width + rescale(8))
 
 #define	MENU_MIN_WIDTH	(LEFT_MARGIN + 3 * (KEY_WIDTH + 2 * BORDER + SPACING) + \
 			 LEFT_MARGIN + KY_WIDTH + 2 * BORDER + SPACING + \
@@ -354,19 +407,122 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 		(ButtonPressMask|ButtonReleaseMask),
 		GrabModeAsync, GrabModeAsync);
 
+	/* Figure out which bitmaps to use. */
+	if (rescale(locked_width) >= locked20_width) {
+	    scaled_locked_width = locked20_width;
+	    scaled_locked_height = locked20_height;
+	    scaled_locked_bits = locked20_bits;
+	    scaled_unlocked_width = unlocked20_width;
+	    scaled_unlocked_height = unlocked20_height;
+	    scaled_unlocked_bits = unlocked20_bits;
+	} else if (rescale(locked_width) >= locked15_width) {
+	    scaled_locked_width = locked15_width;
+	    scaled_locked_height = locked15_height;
+	    scaled_locked_bits = locked15_bits;
+	    scaled_unlocked_width = unlocked15_width;
+	    scaled_unlocked_height = unlocked15_height;
+	    scaled_unlocked_bits = unlocked15_bits;
+	} else {
+	    scaled_locked_width = locked_width;
+	    scaled_locked_height = locked_height;
+	    scaled_locked_bits = locked_bits;
+	    scaled_unlocked_width = unlocked_width;
+	    scaled_unlocked_height = unlocked_height;
+	    scaled_unlocked_bits = unlocked_bits;
+	}
+
+	if (rescale(dot_width) >= dot20_width) {
+	    scaled_dot_width = dot20_width;
+	    scaled_dot_height = dot20_height;
+	    scaled_dot_bits = dot20_bits;
+	    scaled_no_dot_width = no_dot20_width;
+	    scaled_no_dot_height = no_dot20_height;
+	    scaled_no_dot_bits = no_dot20_bits;
+	} else if (rescale(dot_width) >= dot15_width) {
+	    scaled_dot_width = dot15_width;
+	    scaled_dot_height = dot15_height;
+	    scaled_dot_bits = dot15_bits;
+	    scaled_no_dot_width = no_dot15_width;
+	    scaled_no_dot_height = no_dot15_height;
+	    scaled_no_dot_bits = no_dot15_bits;
+	} else {
+	    scaled_dot_width = dot_width;
+	    scaled_dot_height = dot_height;
+	    scaled_dot_bits = dot_bits;
+	    scaled_no_dot_width = no_dot_width;
+	    scaled_no_dot_height = no_dot_height;
+	    scaled_no_dot_bits = no_dot_bits;
+	}
+
+	if (rescale(diamond_width) >= diamond20_width) {
+	    scaled_diamond_width = diamond20_width;
+	    scaled_diamond_height = diamond20_height;
+	    scaled_diamond_bits = diamond20_bits;
+	    scaled_no_diamond_width = no_diamond20_width;
+	    scaled_no_diamond_height = no_diamond20_height;
+	    scaled_no_diamond_bits = no_diamond20_bits;
+	} else if (rescale(diamond_width) >= diamond15_width) {
+	    scaled_diamond_width = diamond15_width;
+	    scaled_diamond_height = diamond15_height;
+	    scaled_diamond_bits = diamond15_bits;
+	    scaled_no_diamond_width = no_diamond15_width;
+	    scaled_no_diamond_height = no_diamond15_height;
+	    scaled_no_diamond_bits = no_diamond15_bits;
+	} else {
+	    scaled_diamond_width = diamond_width;
+	    scaled_diamond_height = diamond_height;
+	    scaled_diamond_bits = diamond_bits;
+	    scaled_no_diamond_width = no_diamond_width;
+	    scaled_no_diamond_height = no_diamond_height;
+	    scaled_no_diamond_bits = no_diamond_bits;
+	}
+
+	if (rescale(ky_width) >= ky20_width) {
+	    scaled_ky_width = ky20_width;
+	    scaled_ky_height = ky20_height;
+	    scaled_ky_bits = ky20_bits;
+	} else if (rescale(ky_width) >= ky15_width) {
+	    scaled_ky_width = ky15_width;
+	    scaled_ky_height = ky15_height;
+	    scaled_ky_bits = ky15_bits;
+	} else {
+	    scaled_ky_width = ky_width;
+	    scaled_ky_height = ky_height;
+	    scaled_ky_bits = ky_bits;
+	}
+
+	if (rescale(arrow_width) >= arrow20_width) {
+	    scaled_arrow_width = arrow20_width;
+	    scaled_arrow_height = arrow20_height;
+	    scaled_arrow_bits = arrow20_bits;
+	} else if (rescale(arrow_width) >= arrow15_width) {
+	    scaled_arrow_width = arrow15_width;
+	    scaled_arrow_height = arrow15_height;
+	    scaled_arrow_bits = arrow15_bits;
+	} else {
+	    scaled_arrow_width = arrow_width;
+	    scaled_arrow_height = arrow_height;
+	    scaled_arrow_bits = arrow_bits;
+	}
+
 	/* Create bitmaps. */
 	dot = XCreateBitmapFromData(display, root_window,
-		(char *) dot_bits, dot_width, dot_height);
+		(char *)scaled_dot_bits, scaled_dot_width, scaled_dot_height);
 	no_dot = XCreateBitmapFromData(display, root_window,
-		(char *) no_dot_bits, no_dot_width, no_dot_height);
+		(char *)scaled_no_dot_bits, scaled_no_dot_width,
+		scaled_no_dot_height);
 	arrow = XCreateBitmapFromData(display, root_window,
-		(char *) arrow_bits, arrow_width, arrow_height);
+		(char *)scaled_arrow_bits, scaled_arrow_width,
+		scaled_arrow_height);
 	diamond = XCreateBitmapFromData(display, root_window,
-		(char *) diamond_bits, diamond_width, diamond_height);
+		(char *)scaled_diamond_bits, scaled_diamond_width,
+		scaled_diamond_height);
 	no_diamond = XCreateBitmapFromData(display, root_window,
-		(char *) no_diamond_bits, no_diamond_width, no_diamond_height);
+		(char *)scaled_no_diamond_bits, scaled_no_diamond_width,
+		scaled_no_diamond_height);
 	null = XCreateBitmapFromData(display, root_window,
 		(char *) null_bits, null_width, null_height);
+
 	ever = true;
     }
 
@@ -426,14 +582,14 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
     tls_icon_init(
 	    (Position) (current_width - LEFT_MARGIN -
-			(ky_width + rescale(8)) -
-			4 * BORDER - 2 * MENU_BORDER - (locked_width + rescale(8))),
+			(scaled_ky_width + rescale(8)) -
+			4 * BORDER - 2 * MENU_BORDER - (scaled_locked_width + rescale(8))),
 	    TOP_MARGIN);
 
     /* Keypad button */
 
     keypad_button_init(
-	    (Position) (current_width - LEFT_MARGIN - (ky_width + rescale(8)) -
+	    (Position) (current_width - LEFT_MARGIN - (scaled_ky_width + rescale(8)) -
 			    2 * BORDER - 2 * MENU_BORDER),
 	    TOP_MARGIN);
 }
@@ -1348,13 +1504,13 @@ keypad_button_init(Position x, Position y)
 	Pixmap pixmap;
 
 	pixmap = XCreateBitmapFromData(display, root_window,
-		(char *) ky_bits, ky_width, ky_height);
+		(char *)scaled_ky_bits, scaled_ky_width, scaled_ky_height);
 	keypad_button = XtVaCreateManagedWidget(
 		"keypadButton", commandWidgetClass, menu_parent,
 		XtNbitmap, pixmap,
 		XtNx, x,
 		XtNy, y,
-		XtNwidth, ky_width + rescale(8),
+		XtNwidth, scaled_ky_width + rescale(8),
 		XtNheight, KEY_HEIGHT,
 		XtNsensitive, keypad_sensitive,
 		NULL);
@@ -1376,16 +1532,18 @@ tls_icon_init(Position x, Position y)
 	Pixmap pixmap;
 
 	pixmap = XCreateBitmapFromData(display, root_window,
-		(char *) locked_bits, locked_width, locked_height);
+		(char *)scaled_locked_bits, scaled_locked_width,
+		scaled_locked_height);
 	locked_icon = XtVaCreateManagedWidget(
 		"lockedIcon", commandWidgetClass, menu_parent,
 		XtNbitmap, pixmap,
 		XtNx, x,
 		XtNy, y,
-		XtNwidth, locked_width + 8,
+		XtNwidth, scaled_locked_width + rescale(8),
 		XtNheight, KEY_HEIGHT,
 		XtNmappedWhenManaged,
-		    CONNECTED && net_secure_connection() && !net_secure_unverified(),
+		    CONNECTED && net_secure_connection() &&
+			!net_secure_unverified(),
 		NULL);
 	XtAddCallback(locked_icon, XtNcallback,
 		show_about_status, NULL);
@@ -1394,21 +1552,23 @@ tls_icon_init(Position x, Position y)
 		XtNbitmap, pixmap,
 		XtNx, x,
 		XtNy, y,
-		XtNwidth, locked_width + 8,
+		XtNwidth, scaled_locked_width + rescale(8),
 		XtNheight, KEY_HEIGHT,
 		XtNmappedWhenManaged,
-		    CONNECTED && net_secure_connection() && net_secure_unverified(),
+		    CONNECTED && net_secure_connection() &&
+			net_secure_unverified(),
 		NULL);
 	XtAddCallback(unverified_icon, XtNcallback,
 		show_about_status, NULL);
 	pixmap = XCreateBitmapFromData(display, root_window,
-		(char *) unlocked_bits, unlocked_width, unlocked_height);
+		(char *)scaled_unlocked_bits, scaled_unlocked_width,
+		scaled_unlocked_height);
 	unlocked_icon = XtVaCreateManagedWidget(
 		"unlockedIcon", commandWidgetClass, menu_parent,
 		XtNbitmap, pixmap,
 		XtNx, x,
 		XtNy, y,
-		XtNwidth, unlocked_width + 8,
+		XtNwidth, scaled_unlocked_width + rescale(8),
 		XtNheight, KEY_HEIGHT,
 		XtNmappedWhenManaged, CONNECTED && !net_secure_connection(),
 		NULL);
@@ -1425,11 +1585,11 @@ menubar_resize(Dimension width)
 {
     tls_icon_init(
 	    (Position) (width - LEFT_MARGIN -
-			    (ky_width + 8) -
-			    4 * BORDER - 2 * MENU_BORDER - (locked_width + 8)),
+			    (scaled_ky_width + rescale(8)) -
+			    4 * BORDER - 2 * MENU_BORDER - (scaled_locked_width + rescale(8))),
 	    TOP_MARGIN);
     keypad_button_init(
-	    (Position) (width - LEFT_MARGIN - (ky_width + 8) - 2 * BORDER),
+	    (Position) (width - LEFT_MARGIN - (scaled_ky_width + rescale(8)) - 2 * BORDER),
 	    TOP_MARGIN);
 }
 
