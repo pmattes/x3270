@@ -88,13 +88,13 @@ enum kp_placement kp_placement;
  * Table of 3278 key labels and actions
  */
 struct button_list {
-	const char *label;
-	const char *name;
-	const char *bits;
-	int width;
-	int height;
-	const char *action_name;
-	const char *parm;
+    const char *label;
+    const char *name;
+    const char *bits;
+    int width;
+    int height;
+    const char *action_name;
+    const char *parm;
 };
 
 bool keypad_changed = false;
@@ -103,81 +103,34 @@ static char Lg[] = "large";
 static char Bm[] = "bm";
 static char Sm[] = "small";
 
-static struct button_list pf_list[] = {
-    { "PF13",           Lg, NULL, 0, 0, AnPF,       "13" },
-    { "PF14",           Lg, NULL, 0, 0, AnPF,       "14" },
-    { "PF15",           Lg, NULL, 0, 0, AnPF,       "15" },
-    { "PF16",           Lg, NULL, 0, 0, AnPF,       "16" },
-    { "PF17",           Lg, NULL, 0, 0, AnPF,       "17" },
-    { "PF18",           Lg, NULL, 0, 0, AnPF,       "18" },
-    { "PF19",           Lg, NULL, 0, 0, AnPF,       "19" },
-    { "PF20",           Lg, NULL, 0, 0, AnPF,       "20" },
-    { "PF21",           Lg, NULL, 0, 0, AnPF,       "21" },
-    { "PF22",           Lg, NULL, 0, 0, AnPF,       "22" },
-    { "PF23",           Lg, NULL, 0, 0, AnPF,       "23" },
-    { "PF24",           Lg, NULL, 0, 0, AnPF,       "24" },
-    { "PF1",            Lg, NULL, 0, 0, AnPF,       "1" },
-    { "PF2",            Lg, NULL, 0, 0, AnPF,       "2" },
-    { "PF3",            Lg, NULL, 0, 0, AnPF,       "3" },
-    { "PF4",            Lg, NULL, 0, 0, AnPF,       "4" },
-    { "PF5",            Lg, NULL, 0, 0, AnPF,       "5" },
-    { "PF6",            Lg, NULL, 0, 0, AnPF,       "6" },
-    { "PF7",            Lg, NULL, 0, 0, AnPF,       "7" },
-    { "PF8",            Lg, NULL, 0, 0, AnPF,       "8" },
-    { "PF9",            Lg, NULL, 0, 0, AnPF,       "9" },
-    { "PF10",           Lg, NULL, 0, 0, AnPF,       "10" },
-    { "PF11",           Lg, NULL, 0, 0, AnPF,       "11" },
-    { "PF12",           Lg, NULL, 0, 0, AnPF,       "12" }
+enum scaled_button {
+    BTAB, DEL, DOWN, HOME, INS, LEFT, RIGHT, TAB, NEWLINE, UP, NUM_SCALED
 };
-#define PF_SZ (sizeof(pf_list)/sizeof(pf_list[0]))
 
-static struct button_list pad_list[] = {
-    { "PA1",            Lg, NULL, 0, 0, AnPA,       "1" },
-    { "PA2",            Lg, NULL, 0, 0, AnPA,       "2" },
-    { "PA3",            Lg, NULL, 0, 0, AnPA,       "3" },
-    { 0, 0, 0, 0 },
-    { "Up" ,            Bm, (char *)up_bits, up_width, up_height,
-                                      AnUp,       NULL },
-    { 0, 0, 0, 0 },
-    { "Left",           Bm, (char *)left_bits, left_width, left_height,
-                                      AnLeft,     NULL },
-    { "Home",           Bm, (char *)home_bits, home_width, home_height,
-                                      AnHome,     NULL },
-    { "Right",          Bm, (char *)right_bits, right_width, right_height,
-                                      AnRight,    NULL },
-    { 0, 0, 0, 0 },
-    { "Down",           Bm, (char *)down_bits, down_width, down_height,
-                                      AnDown,     NULL },
-    { 0, 0, 0, 0 },
+struct button_list scaled_list[NUM_SCALED] = {
+    { "Btab",  Bm, NULL, 0, 0, AnBackTab,  NULL },
+    { "Del",   Bm, NULL, 0, 0, AnDelete,   NULL },
+    { "Down",  Bm, NULL, 0, 0, AnDown,     NULL },
+    { "Home",  Bm, NULL, 0, 0, AnHome,     NULL },
+    { "Ins",   Bm, NULL, 0, 0, AnInsert,   NULL },
+    { "Left",  Bm, NULL, 0, 0, AnLeft,     NULL },
+    { "Right", Bm, NULL, 0, 0, AnRight,    NULL },
+    { "Tab",   Bm, NULL, 0, 0, AnTab,      NULL },
+    { "Tab",   Bm, NULL, 0, 0, AnNewline,  NULL },
+    { "Up" ,   Bm, NULL, 0, 0, AnUp,       NULL },
 };
-#define PAD_SZ (sizeof(pad_list)/sizeof(pad_list[0]))
 
-static struct button_list lower_list[] = {
-    { "Clear",          Sm, NULL, 0, 0, AnClear,    NULL },
-    { "Reset",          Sm, NULL, 0, 0, AnReset,    NULL },
-    { "Ins",            Bm, (char *)ins_bits, ins_width, ins_height,
-                                      AnInsert,   NULL },
-    { "Del",            Bm, (char *)del_bits, del_width, del_height,
-                                      AnDelete,   NULL },
-    { "Erase\nEOF",     Sm, NULL, 0, 0, AnEraseEOF, NULL },
-    { "Erase\nInput",   Sm, NULL, 0, 0, AnEraseInput,NULL },
-    { "Dup",            Sm, NULL, 0, 0, AnDup,      NULL },
-    { "Field\nMark",    Sm, NULL, 0, 0, AnFieldMark,NULL },
-    { "Sys\nReq",       Sm, NULL, 0, 0, AnSysReq,   NULL },
-    { "Cursor\nSelect", Sm, NULL, 0, 0, AnCursorSelect,NULL },
-    { "Attn",           Sm, NULL, 0, 0, AnAttn,     NULL },
-    { "Compose",        Sm, NULL, 0, 0, AnCompose,  NULL },
-    { "Btab",           Bm, (char *)btab_bits, btab_width, btab_height,
-                                      AnBackTab,  NULL },
-    { "Tab",            Bm, (char *)tab_bits, tab_width, tab_height,
-                                      AnTab,      NULL },
-    { "Newline",	Bm, (char *)newline_bits, newline_width, newline_height,
-				      AnNewline,  NULL },
-    { "Enter",          Sm, NULL, 0, 0, AnEnter,    NULL }
+enum unscaled_button {
+    NONE,
+    PF1, PF2, PF3, PF4, PF5, PF6, PF7, PF8, PF9, PF10, PF11, PF12,
+    PF13, PF14, PF15, PF16, PF17, PF18, PF19, PF20, PF21, PF22, PF23, PF24,
+    PA1, PA2, PA3,
+    CLEAR, RESET, ERASE_EOF, ERASE_INPUT, DUP, FIELD_MARK, SYS_REQ,
+    CURSOR_SELECT, ATTN, COMPOSE, ENTER, NUM_UNSCALED
 };
-#define LOWER_SZ (sizeof(lower_list)/sizeof(lower_list[0]))
 
-static struct button_list vpf_list[] = {
+struct button_list unscaled_list[NUM_UNSCALED] = {
+    { NULL,		NULL, NULL, 0, 0, NULL,     NULL },
     { "PF1",            Lg, NULL, 0, 0, AnPF,       "1" },
     { "PF2",            Lg, NULL, 0, 0, AnPF,       "2" },
     { "PF3",            Lg, NULL, 0, 0, AnPF,       "3" },
@@ -190,10 +143,6 @@ static struct button_list vpf_list[] = {
     { "PF10",           Lg, NULL, 0, 0, AnPF,       "10" },
     { "PF11",           Lg, NULL, 0, 0, AnPF,       "11" },
     { "PF12",           Lg, NULL, 0, 0, AnPF,       "12" },
-};
-#define VPF_SZ (sizeof(vpf_list)/sizeof(vpf_list[0]))
-
-static struct button_list vspf_list[] = {
     { "PF13",           Lg, NULL, 0, 0, AnPF,       "13" },
     { "PF14",           Lg, NULL, 0, 0, AnPF,       "14" },
     { "PF15",           Lg, NULL, 0, 0, AnPF,       "15" },
@@ -206,37 +155,9 @@ static struct button_list vspf_list[] = {
     { "PF22",           Lg, NULL, 0, 0, AnPF,       "22" },
     { "PF23",           Lg, NULL, 0, 0, AnPF,       "23" },
     { "PF24",           Lg, NULL, 0, 0, AnPF,       "24" },
-};
-static Widget vpf_w[2][VPF_SZ];
-
-static struct button_list vpad_list[] = {
-    { 0, 0, 0 },
-    { "Up" ,            Bm, (char *)up_bits, up_width, up_height,
-                                      AnUp,       NULL },
-    { 0, 0, 0 },
-    { "Left" ,          Bm, (char *)left_bits, left_width, left_height,
-                                      AnLeft,     NULL },
-    { "Home",           Bm, (char *)home_bits, home_width, home_height,
-                                      AnHome,     NULL },
-    { "Right" ,         Bm, (char *)right_bits, right_width, right_height,
-                                      AnRight,    NULL },
-    { "Ins",            Bm, (char *)ins_bits, ins_width, ins_height,
-                                      AnInsert,   NULL },
-    { "Down" ,          Bm, (char *)down_bits, down_width, down_height,
-                                      AnDown,     NULL },
-    { "Del",            Bm, (char *)del_bits, del_width, del_height,
-                                      AnDelete,   NULL },
     { "PA1",            Lg, NULL, 0, 0, AnPA,       "1" },
     { "PA2",            Lg, NULL, 0, 0, AnPA,       "2" },
     { "PA3",            Lg, NULL, 0, 0, AnPA,       "3" },
-};
-#define VPAD_SZ (sizeof(vpad_list)/sizeof(vpad_list[0]))
-
-static struct button_list vfn_list[] = {
-    { "Btab",           Bm, (char *)btab_bits, btab_width, btab_height,
-                                      AnBackTab,  NULL },
-    { "Tab",            Bm, (char *)tab_bits, tab_width, tab_height,       
-                                      AnTab,      NULL },
     { "Clear",          Sm, NULL, 0, 0, AnClear,    NULL },
     { "Reset",          Sm, NULL, 0, 0, AnReset,    NULL },
     { "Erase\nEOF",     Sm, NULL, 0, 0, AnEraseEOF, NULL },
@@ -247,9 +168,136 @@ static struct button_list vfn_list[] = {
     { "Cursor\nSelect", Sm, NULL, 0, 0, AnCursorSelect,NULL },
     { "Attn",           Sm, NULL, 0, 0, AnAttn,     NULL },
     { "Compose",        Sm, NULL, 0, 0, AnCompose,  NULL },
-    { "Newline",	Bm, (char *)newline_bits, newline_width, newline_height,
-				      AnNewline,  NULL },
     { "Enter",          Sm, NULL, 0, 0, AnEnter,    NULL },
+};
+
+static struct button_list *pf_list[] = {
+    &unscaled_list[PF13],
+    &unscaled_list[PF14],
+    &unscaled_list[PF15],
+    &unscaled_list[PF16],
+    &unscaled_list[PF17],
+    &unscaled_list[PF18],
+    &unscaled_list[PF19],
+    &unscaled_list[PF20],
+    &unscaled_list[PF21],
+    &unscaled_list[PF22],
+    &unscaled_list[PF23],
+    &unscaled_list[PF24],
+    &unscaled_list[PF1],
+    &unscaled_list[PF2],
+    &unscaled_list[PF3],
+    &unscaled_list[PF4],
+    &unscaled_list[PF5],
+    &unscaled_list[PF6],
+    &unscaled_list[PF7],
+    &unscaled_list[PF8],
+    &unscaled_list[PF9],
+    &unscaled_list[PF10],
+    &unscaled_list[PF11],
+    &unscaled_list[PF12],
+};
+#define PF_SZ (sizeof(pf_list)/sizeof(pf_list[0]))
+
+static struct button_list *pad_list[] = {
+    &unscaled_list[PA1],
+    &unscaled_list[PA2],
+    &unscaled_list[PA3],
+    &unscaled_list[NONE],
+    &scaled_list[UP],
+    &unscaled_list[NONE],
+    &scaled_list[LEFT],
+    &scaled_list[HOME],
+    &scaled_list[RIGHT],
+    &unscaled_list[NONE],
+    &scaled_list[DOWN],
+    &unscaled_list[NONE],
+};
+#define PAD_SZ (sizeof(pad_list)/sizeof(pad_list[0]))
+
+static struct button_list *lower_list[] = {
+    &unscaled_list[CLEAR],
+    &unscaled_list[RESET],
+    &scaled_list[INS],
+    &scaled_list[DEL],
+    &unscaled_list[ERASE_EOF],
+    &unscaled_list[ERASE_INPUT],
+    &unscaled_list[DUP],
+    &unscaled_list[FIELD_MARK],
+    &unscaled_list[SYS_REQ],
+    &unscaled_list[CURSOR_SELECT],
+    &unscaled_list[ATTN],
+    &unscaled_list[COMPOSE],
+    &scaled_list[BTAB],
+    &scaled_list[TAB],
+    &scaled_list[NEWLINE],
+    &unscaled_list[ENTER],
+};
+#define LOWER_SZ (sizeof(lower_list)/sizeof(lower_list[0]))
+
+static struct button_list *vpf_list[] = {
+    &unscaled_list[PF1],
+    &unscaled_list[PF2],
+    &unscaled_list[PF3],
+    &unscaled_list[PF4],
+    &unscaled_list[PF5],
+    &unscaled_list[PF6],
+    &unscaled_list[PF7],
+    &unscaled_list[PF8],
+    &unscaled_list[PF9],
+    &unscaled_list[PF10],
+    &unscaled_list[PF11],
+    &unscaled_list[PF12],
+};
+#define VPF_SZ (sizeof(vpf_list)/sizeof(vpf_list[0]))
+
+static struct button_list *vspf_list[] = {
+    &unscaled_list[PF13],
+    &unscaled_list[PF14],
+    &unscaled_list[PF15],
+    &unscaled_list[PF16],
+    &unscaled_list[PF17],
+    &unscaled_list[PF18],
+    &unscaled_list[PF19],
+    &unscaled_list[PF20],
+    &unscaled_list[PF21],
+    &unscaled_list[PF22],
+    &unscaled_list[PF23],
+    &unscaled_list[PF24],
+};
+static Widget vpf_w[2][VPF_SZ];
+
+static struct button_list *vpad_list[] = {
+    &unscaled_list[NONE],
+    &scaled_list[UP],
+    &unscaled_list[NONE],
+    &scaled_list[LEFT],
+    &scaled_list[HOME],
+    &scaled_list[RIGHT],
+    &scaled_list[INS],
+    &scaled_list[DOWN],
+    &scaled_list[DEL],
+    &unscaled_list[PA1],
+    &unscaled_list[PA2],
+    &unscaled_list[PA3],
+};
+#define VPAD_SZ (sizeof(vpad_list)/sizeof(vpad_list[0]))
+
+static struct button_list *vfn_list[] = {
+    &scaled_list[BTAB],
+    &scaled_list[TAB],
+    &unscaled_list[CLEAR],
+    &unscaled_list[RESET],
+    &unscaled_list[ERASE_EOF],
+    &unscaled_list[ERASE_INPUT],
+    &unscaled_list[DUP],
+    &unscaled_list[FIELD_MARK],
+    &unscaled_list[SYS_REQ],
+    &unscaled_list[CURSOR_SELECT],
+    &unscaled_list[ATTN],
+    &unscaled_list[COMPOSE],
+    &scaled_list[NEWLINE],
+    &unscaled_list[ENTER],
 };
 #define VFN_SZ (sizeof(vfn_list)/sizeof(vfn_list[0]))
 
@@ -350,7 +398,7 @@ keypad_keys_horiz(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pf_width,
 		key_height,
-		&pf_list[i]);
+		pf_list[i]);
 	if (++col >= 12) {
 	    col = 0;
 	    row++;
@@ -367,7 +415,7 @@ keypad_keys_horiz(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pa_width,
 		key_height,
-		&pad_list[i]);
+		pad_list[i]);
 	if (++col >= 3) {
 	    col = 0;
 	    if (++row == 1) {
@@ -387,7 +435,7 @@ keypad_keys_horiz(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		key_width,
 		key_height,
-		&lower_list[i]);
+		lower_list[i]);
 	if (++row >= 2) {
 	    ++col;
 	    row = 0;
@@ -442,13 +490,13 @@ keypad_keys_vert(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pa_width,
 		key_height,
-		&vpf_list[i]);
+		vpf_list[i]);
 	vpf_w[1][i] = make_a_button(c2,
 		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pa_width,
 		key_height,
-		&vspf_list[i]);
+		vspf_list[i]);
 	if (++col >= 3) {
 	    col = 0;
 	    row++;
@@ -462,7 +510,7 @@ keypad_keys_vert(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		pa_width,
 		key_height,
-		&vpad_list[i]);
+		vpad_list[i]);
 	if (++col >= 3) {
 	    col = 0;
 	    row++;
@@ -476,7 +524,7 @@ keypad_keys_vert(Widget container)
 		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
 		large_key_width,
 		key_height,
-		&vfn_list[i]);
+		vfn_list[i]);
 	if (++col >= 2) {
 	    col = 0;
 	    row++;
@@ -512,6 +560,102 @@ init_keypad_dimensions(void)
     pf_width = get_keypad_dimension(ResPfWidth);
     pa_width = get_keypad_dimension(ResPaWidth);
     large_key_width = get_keypad_dimension(ResLargeKeyWidth);
+
+    if (rescale(btab_width) >= btab20_width) {
+	scaled_list[BTAB].bits = (char *)btab20_bits;
+	scaled_list[BTAB].width = btab20_width;
+	scaled_list[BTAB].height = btab20_height;
+	scaled_list[DEL].bits = (char *)del20_bits;
+	scaled_list[DEL].width = del20_width;
+	scaled_list[DEL].height = del20_height;
+	scaled_list[DOWN].bits = (char *)down20_bits;
+	scaled_list[DOWN].width = down20_width;
+	scaled_list[DOWN].height = down20_height;
+	scaled_list[HOME].bits = (char *)home20_bits;
+	scaled_list[HOME].width = home20_width;
+	scaled_list[HOME].height = home20_height;
+	scaled_list[INS].bits = (char *)ins20_bits;
+	scaled_list[INS].width = ins20_width;
+	scaled_list[INS].height = ins20_height;
+	scaled_list[LEFT].bits = (char *)left20_bits;
+	scaled_list[LEFT].width = left20_width;
+	scaled_list[LEFT].height = left20_height;
+	scaled_list[NEWLINE].bits = (char *)newline20_bits;
+	scaled_list[NEWLINE].width = newline20_width;
+	scaled_list[NEWLINE].height = newline20_height;
+	scaled_list[RIGHT].bits = (char *)right20_bits;
+	scaled_list[RIGHT].width = right20_width;
+	scaled_list[RIGHT].height = right20_height;
+	scaled_list[TAB].bits = (char *)tab20_bits;
+	scaled_list[TAB].width = tab20_width;
+	scaled_list[TAB].height = tab20_height;
+	scaled_list[UP].bits = (char *)up20_bits;
+	scaled_list[UP].width = up20_width;
+	scaled_list[UP].height = up20_height;
+    } else if (rescale(btab_width) >= btab15_width) {
+	scaled_list[BTAB].bits = (char *)btab15_bits;
+	scaled_list[BTAB].width = btab15_width;
+	scaled_list[BTAB].height = btab15_height;
+	scaled_list[DEL].bits = (char *)del15_bits;
+	scaled_list[DEL].width = del15_width;
+	scaled_list[DEL].height = del15_height;
+	scaled_list[DOWN].bits = (char *)down15_bits;
+	scaled_list[DOWN].width = down15_width;
+	scaled_list[DOWN].height = down15_height;
+	scaled_list[HOME].bits = (char *)home15_bits;
+	scaled_list[HOME].width = home15_width;
+	scaled_list[HOME].height = home15_height;
+	scaled_list[INS].bits = (char *)ins15_bits;
+	scaled_list[INS].width = ins15_width;
+	scaled_list[INS].height = ins15_height;
+	scaled_list[LEFT].bits = (char *)left15_bits;
+	scaled_list[LEFT].width = left15_width;
+	scaled_list[LEFT].height = left15_height;
+	scaled_list[NEWLINE].bits = (char *)newline15_bits;
+	scaled_list[NEWLINE].width = newline15_width;
+	scaled_list[NEWLINE].height = newline15_height;
+	scaled_list[RIGHT].bits = (char *)right15_bits;
+	scaled_list[RIGHT].width = right15_width;
+	scaled_list[RIGHT].height = right15_height;
+	scaled_list[TAB].bits = (char *)tab15_bits;
+	scaled_list[TAB].width = tab15_width;
+	scaled_list[TAB].height = tab15_height;
+	scaled_list[UP].bits = (char *)up15_bits;
+	scaled_list[UP].width = up15_width;
+	scaled_list[UP].height = up15_height;
+    } else {
+	scaled_list[BTAB].bits = (char *)btab_bits;
+	scaled_list[BTAB].width = btab_width;
+	scaled_list[BTAB].height = btab_height;
+	scaled_list[DEL].bits = (char *)del_bits;
+	scaled_list[DEL].width = del_width;
+	scaled_list[DEL].height = del_height;
+	scaled_list[DOWN].bits = (char *)down_bits;
+	scaled_list[DOWN].width = down_width;
+	scaled_list[DOWN].height = down_height;
+	scaled_list[HOME].bits = (char *)home_bits;
+	scaled_list[HOME].width = home_width;
+	scaled_list[HOME].height = home_height;
+	scaled_list[INS].bits = (char *)ins_bits;
+	scaled_list[INS].width = ins_width;
+	scaled_list[INS].height = ins_height;
+	scaled_list[LEFT].bits = (char *)left_bits;
+	scaled_list[LEFT].width = left_width;
+	scaled_list[LEFT].height = left_height;
+	scaled_list[NEWLINE].bits = (char *)newline_bits;
+	scaled_list[NEWLINE].width = newline_width;
+	scaled_list[NEWLINE].height = newline_height;
+	scaled_list[RIGHT].bits = (char *)right_bits;
+	scaled_list[RIGHT].width = right_width;
+	scaled_list[RIGHT].height = right_height;
+	scaled_list[TAB].bits = (char *)tab_bits;
+	scaled_list[TAB].width = tab_width;
+	scaled_list[TAB].height = tab_height;
+	scaled_list[UP].bits = (char *)up_bits;
+	scaled_list[UP].width = up_width;
+	scaled_list[UP].height = up_height;
+    }
+
     done = true;
 }
 
