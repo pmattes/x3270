@@ -679,6 +679,13 @@ get_devfd(const char *pathname)
 }
 
 #if !defined(_WIN32) /*[*/
+/* The trace window process exited. */
+static void
+trace_exited(ioid_t id, int status)
+{
+    tracewindow_pid = -1;
+}
+
 /*
  * Start up a window to monitor the trace file.
  *
@@ -710,6 +717,7 @@ start_trace_window(const char *path)
 	_exit(1);
 	break;
     default:	/* parent */
+	AddChild(tracewindow_pid, trace_exited);
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork() failed");
