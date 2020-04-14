@@ -1399,6 +1399,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     int nargc = 0;
 #if !defined(_WIN32) /*[*/
     console_desc_t *t;
+    const char *errmsg;
 #endif /*]*/
 
     action_debug(AnPrompt, ia, argc, argv);
@@ -1408,9 +1409,9 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 
 #if !defined(_WIN32) /*[*/
     /* Find a console emulator to run the prompt in. */
-    t = find_console();
+    t = find_console(&errmsg);
     if (t == NULL)  {
-	popup_an_error(AnPrompt "(): can't find a console program");
+	popup_an_error(AnPrompt "(): console program:\n%s", errmsg);
 	return false;
     }
 

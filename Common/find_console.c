@@ -43,11 +43,16 @@
 
 /* Well-known consoles, in order of preference. */
 static console_desc_t consoles[] = {
-    { "gnome-terminal", "--title", NULL, "--" },
-    { "konsole", "--caption", NULL, "-e" },
-    { "xfce4-terminal", "-T", NULL, "-x" },
-    { "xterm", "-title", "-sb -tn xterm-256color -rv", "-e" },
-    { NULL, NULL, NULL, NULL }
+    { "gnome-terminal",
+	"gnome-terminal --title " TITLE_SUBST " -- " COMMAND_SUBST },
+    { "konsole",
+	"konsole --caption " TITLE_SUBST " -e " COMMAND_SUBST },
+    { "xfce4-terminal",
+	"xfce4-terminal -T " TITLE_SUBST " -x " COMMAND_SUBST },
+    { "xterm",
+	"xterm -sb -tn xterm-256color -rv -title " TITLE_SUBST " -e "
+	    COMMAND_SUBST },
+    { NULL, NULL }
 };
 
 /* Find an executable in $PATH. */
@@ -83,78 +88,54 @@ find_in_path(const char *program)
 
 /* Find the preferred console emulator for the prompt. */
 console_desc_t *
-find_console(void)
+find_console(const char **errmsg)
 {
     int i;
+    char *override = appres.interactive.console;
+    char *pctc, *space, *dup;
 
-    do {
-	static console_desc_t t_ret;
-	char *override = appres.interactive.console;
-	char *program, *title_opt, *extra_opts, *exec_opt;
-
-	/*
-	 * The format is:
-	 *   program:title-opt:extra-opt:exec-opt.
-	 **/
-	if (override == NULL) {
-	    break;
-	}
-	program = lazya(NewString(override));
-	title_opt = strchr(program, ':');
-	if (title_opt != NULL) {
-	    *(title_opt++) = '\0';
-	} else {
-	    if (*program == '\0') {
-		break;
+    if (override == NULL) {
+	/* No override. Find the best one. */
+	for (i = 0; consoles[i].program != NULL; i++) {
+	    if (find_in_path(consoles[i].program)) {
+		return &consoles[i];
 	    }
-
-	    /* They just specified the name. */
-	    for (i = 0; consoles[i].program != NULL; i++) {
-		if (!strcmp(program, consoles[i].program) &&
-			find_in_path(program)) {
-		    return &consoles[i];
-		}
-	    }
-	    break;
 	}
-
-	extra_opts = strchr(title_opt, ':');
-	if (extra_opts != NULL) {
-	    *(extra_opts++) = '\0';
-	} else {
-	    break;
-	}
-
-	exec_opt = strchr(extra_opts, ':');
-	if (exec_opt != NULL) {
-	    *(exec_opt++) = '\0';
-	} else {
-	    break;
-	}
-
-	if (*program == '\0' || *title_opt == '\0' || *exec_opt == '\0') {
-	    break;
-	}
-
-	t_ret.program = program;
-	t_ret.title_opt = title_opt;
-	if (*extra_opts != '\0') {
-	    t_ret.extra_opts = extra_opts;
-	} else {
-	    t_ret.extra_opts = NULL;
-	}
-	t_ret.exec_opt = exec_opt;
-	if (find_in_path(t_ret.program)) {
-	    return &t_ret;
-	}
-    } while (false);
-
-    /* No override. Find the best one. */
-    for (i = 0; consoles[i].program != NULL; i++) {
-	if (find_in_path(consoles[i].program)) {
-	    return &consoles[i];
-	}
+	*errmsg = "None found";
+	return NULL;
     }
+
+    if (strchr(override, ' ') == NULL) {
+	/* They just specified the name. */
+	for (i = 0; consoles[i].program != NULL; i++) {
+	    if (!strcmp(override, consoles[i].program) &&
+		    find_in_path(override)) {
+		return &consoles[i];
+	    }
+	}
+	*errmsg = "Specified name not found";
+	return NULL;
+    }
+
+    /* The specified a full override. */
+    pctc = strstr(override, " " COMMAND_SUBST);
+    if (pctc == NULL || pctc[strlen(" " COMMAND_SUBST)] != '\0')  {
+	*errmsg = "Specified command does not end with " COMMAND_SUBST;
+	return NULL;
+    }
+
+    space = strchr(override, ' ');
+    dup = lazya(NewString(override));
+    dup[space - override] = '\0';
+    if (find_in_path(dup)) {
+	static console_desc_t t_ret;
+
+	t_ret.program = dup;
+	t_ret.command_string = override;
+	return &t_ret;
+    }
+
+    *errmsg = "Specified command not found";
     return NULL;
 }
 
@@ -162,19 +143,18 @@ find_console(void)
 int
 console_args(console_desc_t *t, const char *title, const char ***s, int ix)
 {
-    array_add(s, ix++, t->program);
-    array_add(s, ix++, t->title_opt);
-    array_add(s, ix++, title);
-    if (t->extra_opts != NULL) {
-	char *opts = lazya(NewString(t->extra_opts));
-	char *token;
-	char *saveptr = NULL;
+    char *str = lazya(NewString(t->command_string));
+    char *saveptr;
+    char *token;
 
-	while ((token = strtok_r(opts, " ", &saveptr)) != NULL) {
+    /* Split the command string into tokens. */
+    while ((token = strtok_r(str, " ", &saveptr)) != NULL) {
+	str = NULL;
+	if (!strcmp(token, TITLE_SUBST)) {
+	    array_add(s, ix++, title);
+	} else if (strcmp(token, COMMAND_SUBST)) {
 	    array_add(s, ix++, token);
-	    opts = NULL;
 	}
     }
-    array_add(s, ix++, t->exec_opt);
     return ix;
 }

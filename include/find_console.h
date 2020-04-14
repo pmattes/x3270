@@ -30,14 +30,15 @@
  *              Console window support.
  */
 
+#define TITLE_SUBST	"%T%"	/* Window title substitution */
+#define COMMAND_SUBST	"%C%"	/* Command substitution */
+
 /* How to start a console in a window. */
 typedef struct {
     const char *program;	/* program name */
-    const char *title_opt;	/* option to set title */
-    const char *extra_opts;	/* extra options */
-    const char *exec_opt;	/* option to specify command and args */
+    const char *command_string;	/* command string */
 } console_desc_t;
 
 bool find_in_path(const char *program);
-console_desc_t *find_console(void);
+console_desc_t *find_console(const char **errmsg);
 int console_args(console_desc_t *t, const char *title, const char ***s, int ix);

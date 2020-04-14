@@ -688,12 +688,13 @@ get_devfd(const char *pathname)
 static void
 start_trace_window(const char *path)
 {
-    console_desc_t *t = find_console();
+    const char *errmsg;
+    console_desc_t *t = find_console(&errmsg);
     const char **argv = NULL;
     int argc = 0;
 
     if (t == NULL) {
-	perror("Cannot find console application for trace window");
+	popup_an_error("Trace window: %s", errmsg);
 	return;
     }
 
