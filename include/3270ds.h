@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013, 2018 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2018, 2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -258,11 +258,16 @@
 #define  XAI_ENABLED	0x01
 
 /* WCC definitions */
-#define WCC_RESET(c)		((c) & 0x40)
-#define WCC_START_PRINTER(c)	((c) & 0x08)
-#define WCC_SOUND_ALARM(c)	((c) & 0x04)
-#define WCC_KEYBOARD_RESTORE(c)	((c) & 0x02)
-#define WCC_RESET_MDT(c)	((c) & 0x01)
+#define WCC_RESET_BIT		0x40
+#define WCC_START_PRINTER_BIT	0x08
+#define WCC_SOUND_ALARM_BIT	0x04
+#define WCC_KEYBOARD_RESTORE_BIT 0x02
+#define WCC_RESET_MDT_BIT	0x01
+#define WCC_RESET(c)		((c) & WCC_RESET_BIT)
+#define WCC_START_PRINTER(c)	((c) & WCC_START_PRINTER_BIT)
+#define WCC_SOUND_ALARM(c)	((c) & WCC_SOUND_ALARM_BIT)
+#define WCC_KEYBOARD_RESTORE(c)	((c) & WCC_KEYBOARD_RESTORE_BIT)
+#define WCC_RESET_MDT(c)	((c) & WCC_RESET_MDT_BIT)
 
 /* AIDs */
 #define AID_NO		0x60	/* no AID generated */

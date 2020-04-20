@@ -1005,7 +1005,9 @@ ctlr_snap_buffer(void)
 
     space3270out(2);
     *obptr++ = screen_alt ? CMD_EWA : CMD_EW;
-    *obptr++ = code_table[0];
+    *obptr++ = code_table[(kybdlock &
+		(KL_OERR_MASK | KL_OIA_TWAIT | KL_OIA_LOCKED))? 0:
+	    WCC_KEYBOARD_RESTORE_BIT];
 
     do {
 	if (ea_buf[baddr].fa) {
