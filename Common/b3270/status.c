@@ -214,6 +214,7 @@ status_reset(void)
 	oia_kybdlock = K_FIELD;
 	status_lock(NewString(OiaLockField));
     } else {
+	status_untiming();
 	if (oia_kybdlock == K_NONE) {
 	    return;
 	}
