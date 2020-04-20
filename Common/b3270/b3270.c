@@ -198,7 +198,7 @@ stats_poke(void)
 static void
 b3270_connect(bool ignored)
 {       
-    static enum cstate old_cstate = (int)NOT_CONNECTED;
+    static enum cstate old_cstate = NOT_CONNECTED;
 
     if (cstate == old_cstate) {
 	return;
