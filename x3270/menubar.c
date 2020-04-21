@@ -74,6 +74,7 @@
 #include "xappres.h"
 #include "xactions.h"
 #include "xkeypad.h"
+#include "xft_gui.h"
 #include "xio.h"
 #include "xmenubar.h"
 #include "xpopups.h"

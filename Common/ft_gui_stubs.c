@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018, 2020 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -71,17 +71,7 @@ ft_gui_aborting(void)
 {
 }
 
-ft_gui_interact_t
-ft_gui_interact(ft_conf_t *p)
-{
-    return FGI_NOP;
-}
-
 void
 ft_gui_awaiting(void)
-{
-}
-
-void ft_gui_popup_ft(void)
 {
 }

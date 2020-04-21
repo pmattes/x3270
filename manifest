@@ -149,8 +149,6 @@ Common/c3270/cstatus.h
 Common/c3270/ft_gui.c
 Common/c3270/help.c
 Common/c3270/help.h
-Common/c3270/icmd.c
-Common/c3270/icmdc.h
 Common/c3270/keymap.c
 Common/c3270/keypad.c
 Common/c3270/keypad.callbacks
@@ -189,6 +187,7 @@ Common/host_gui_stubs.c
 Common/httpd-core.c
 Common/httpd-io.c
 Common/httpd-nodes.c
+Common/icmd.c
 Common/idle.c
 Common/idle_stubs.c
 Common/indent_s.c
@@ -384,6 +383,7 @@ include/host.h
 include/httpd-core.h
 include/httpd-io.h
 include/httpd-nodes.h
+include/icmdc.h
 include/idle.h
 include/include_files.mk
 include/indent_s.h
@@ -1033,6 +1033,7 @@ x3270/xaa.h
 x3270/xactions.c
 x3270/xactions.h
 x3270/xappres.h
+x3270/xft_gui.h
 x3270/xglobals.h
 x3270/xkeymaps.inc
 x3270/xkeypad.h

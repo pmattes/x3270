@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1996-2009, 2014-2015, 2020 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -40,6 +40,7 @@ enum ft_state {
     FT_ABORT_SENT	/* Abort sent; awaiting response */
 };
 extern enum ft_state ft_state;
+extern enum iaction ft_cause;
 extern unsigned char i_ft2asc[], i_asc2ft[];
 
 void ft_aborting(void);

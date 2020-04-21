@@ -644,7 +644,6 @@ status_connect(bool connected)
 	    cancel_disabled_revert();
 	    do_msg(BLANK);
 	}
-	status_untiming();
     } else {
 	oia_boxsolid = false;
 	do_ctlr();
@@ -652,6 +651,7 @@ status_connect(bool connected)
 	do_msg(DISCONNECTED);
 	status_uncursor_pos();
     }
+    status_untiming();
 }
 
 /* Changed 3270 mode */

@@ -14,6 +14,7 @@
 <table border cols=3 width="75%">
  <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
  <tr><td>state</td><td>yes</td><td>New file transfer state</td></tr>
+ <tr><td>cause</td><td>yes</td><td>Source of transfer request</td></tr>
  <tr><td>bytes</td><td>no</td><td>Number of bytes transferred</td></tr>
  <tr><td>success</td><td>no</td><td><b>true</b> or <b>false</b></td></tr>
  <tr><td>text</td><td>no</td><td>Completion message</td></tr>
@@ -30,7 +31,6 @@ States are:
  <tr><td>running</td><td>Transfer in progress</td></tr>
  <tr><td>aborting</td><td>Abort initiated</td></tr>
  <tr><td>complete</td><td>Transfer complete</td></tr>
- <tr><td>requested</td><td>Interactive dialog requested</td></tr>
 </table></p>
 
 <p>Example:</p>

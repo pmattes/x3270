@@ -69,8 +69,9 @@ typedef enum {
 
 static enum form_type forms[] = { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
-
 static Dimension wm_width, wm_height;
+
+static ioid_t info_id = NULL_IOID;
 
 /*
  * General popup support
@@ -1110,6 +1111,31 @@ popup_an_info(const char *fmt, ...)
     va_end(args);
 }
 
+/* Timeout for a timed info dialog. */
+static void
+timed_info_popdown(ioid_t id)
+{
+    info_id = NULL_IOID;
+    XtPopdown(info_popup.shell);
+}
+
+/* Popup a timed info dialog. */
+void
+popup_a_timed_info(int timeout_ms, const char *fmt, ...)
+{
+    va_list args;
+
+    if (info_id != NULL_IOID) {
+	RemoveTimeOut(info_id);
+	info_id = NULL_IOID;
+    }
+    info_id = AddTimeOut(timeout_ms, timed_info_popdown);
+
+    va_start(args, fmt);
+    popup_rop(&info_popup, NULL, fmt, args);
+    va_end(args);
+}
+
 /* Add a callback to the error popup. */
 void
 add_error_popdown_callback(void (*callback)(void))
@@ -1166,10 +1192,21 @@ error_popup_init(void)
     rop_init(&error_popup);
 }
 
+/* Callback for the info pop-up popping down. */
+static void
+info_popdown(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
+{
+    if (info_id != NULL_IOID) {
+	RemoveTimeOut(info_id);
+	info_id = NULL_IOID;
+    }
+}
+
 void
 info_popup_init(void)
 {
     rop_init(&info_popup);
+    XtAddCallback(info_popup.shell, XtNpopdownCallback, info_popdown, NULL);
 }
 
 void

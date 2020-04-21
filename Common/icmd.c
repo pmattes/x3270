@@ -164,7 +164,8 @@ fmt80(const char *s)
  *  if not receive
  *      if not CICS
  *          ask for recfm
- *          ask for lrecl
+ *          if not default recfm
+ *              ask for lrecl
  *      if tso
  *          ask for blksz
  *          ask for units
@@ -418,7 +419,8 @@ it_resume(void *handle, const char *response)
 	return false;
     }
     if (ret == ITR_GO) {
-	bool rv = ft_start_backend(&itc->conf);
+	/* IA_COMMAND is a lie here, but it is harmless. */
+	bool rv = ft_start_backend(&itc->conf, IA_COMMAND);
 
 	if (rv) {
 	    action_output("Transfer initiated.");
@@ -485,6 +487,7 @@ interactive_transfer_start(void)
     if (itc == NULL) {
 	itc = (itc_t *)Calloc(1, sizeof(itc_t));
 	ft_init_conf(&itc->conf);
+	itc->conf.is_action = true;
 	task_set_ir_state("Transfer", itc, interactive_transfer_type_abort);
     }
 
@@ -960,7 +963,8 @@ pred_recfm(ft_conf_t *p)
 static bool
 pred_lrecl(ft_conf_t *p)
 {
-    return !p->receive_flag && p->host_type != HT_CICS;
+    return !p->receive_flag && p->recfm != DEFAULT_RECFM &&
+	p->host_type != HT_CICS;
 }
 
 static bool

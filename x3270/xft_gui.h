@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020, Paul Mattes.
+ * Copyright (c) 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -20,87 +20,14 @@
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
- *	ft.c
- *		UI back-end file transfer logic.
+ *	xft_gui.h
+ *		Header for IND$FILE file transfer dialogs.
  */
 
-#include "globals.h"
-#include "resources.h"
-#include "unicodec.h"
-
-#include "actions.h"
-#include "b3270proto.h"
-#include "ft.h"
-#include "ft_private.h"
-#include "ft_gui.h"
-#include "lazya.h"
-#include "ui_stream.h"
-
-void
-ft_gui_progress_popdown(void)
-{
-}
-
-void
-ft_gui_errmsg_prepare(char *msg)
-{
-}
-
-void ft_gui_clear_progress(void)
-{
-}
-
-void
-ft_gui_complete_popup(const char *msg, bool is_error)
-{
-    ui_vleaf(IndFt,
-	    AttrState, "complete",
-	    AttrSuccess, ValTrueFalse(!is_error),
-	    AttrText, msg,
-	    AttrCause, ia_name[ft_cause],
-	    NULL);
-}
-
-void
-ft_gui_update_length(size_t length)
-{
-    ui_vleaf(IndFt,
-	    AttrState, "running",
-	    AttrBytes, lazyaf("%lu", (unsigned long)length),
-	    AttrCause, ia_name[ft_cause],
-	    NULL);
-}
-
-void
-ft_gui_running(size_t length)
-{
-    ui_vleaf(IndFt,
-	    AttrState, "running",
-	    AttrBytes, lazyaf("%lu", (unsigned long)length),
-	    AttrCause, ia_name[ft_cause],
-	    NULL);
-}
-
-void
-ft_gui_aborting(void)
-{
-    ui_vleaf(IndFt,
-	    AttrState, "aborting",
-	    AttrCause, ia_name[ft_cause],
-	    NULL);
-}
-
-void
-ft_gui_awaiting(void)
-{
-    ui_vleaf(IndFt,
-	    AttrState, "awaiting",
-	    AttrCause, ia_name[ft_cause],
-	    NULL);
-}
+void ft_gui_popup_ft(void);

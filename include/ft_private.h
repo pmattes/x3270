@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, 2018-2019 Paul Mattes.
+ * Copyright (c) 1996-2014, 2018-2020 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -83,14 +83,13 @@ typedef struct {
 
     /* Invocation state. */
     bool is_action;
-    bool is_interactive;
 } ft_conf_t;
 extern ft_conf_t *ftc;
 
 char *ft_resolve_dir(ft_conf_t *p);
-FILE *ft_go(ft_conf_t *p);
+FILE *ft_go(ft_conf_t *p, enum iaction cause);
 void ft_init_conf(ft_conf_t *p);
-bool ft_start_backend(ft_conf_t *p);
+bool ft_start_backend(ft_conf_t *p, enum iaction cause);
 
 /* Transient state. */
 typedef struct {

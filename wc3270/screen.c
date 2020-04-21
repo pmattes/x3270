@@ -3021,6 +3021,7 @@ status_connect(bool connected)
 	status_secure = SS_INSECURE;
     }       
     other_attr = oia_white_attr;
+    status_untiming();
 }
 
 static void

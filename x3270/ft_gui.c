@@ -60,6 +60,7 @@
 #include "popups.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "xft_gui.h"
 #include "xmenubar.h"
 #include "xpopups.h"
 
@@ -184,10 +185,6 @@ ft_popup_init(void)
     Widget lrecl_label, blksize_label, primspace_label, secspace_label;
     Widget avblock_size_label;
     Widget h_ref = NULL;
-#if 0
-    Dimension d1;
-    Dimension maxw = 0;
-#endif
     Widget recfm_label, units_label;
     Widget buffersize_label;
     Widget start_button;
@@ -514,22 +511,6 @@ ft_popup_init(void)
 	    &host_is_tso, true);
 
     /* Find the widest widget in the left column. */
-#if 0
-    XtVaGetValues(send_toggle, XtNwidth, &maxw, NULL);
-    h_ref = send_toggle;
-#define REMAX(w) { \
-	XtVaGetValues((w), XtNwidth, &d1, NULL); \
-	if (d1 > maxw) { \
-	    maxw = d1; \
-	    h_ref = (w); \
-	} \
-    }
-    REMAX(receive_toggle);
-    REMAX(ascii_toggle);
-    REMAX(binary_toggle);
-    REMAX(append_widget);
-#undef REMAX
-#endif
     h_ref = blksize_widget;
 
     /* Create the right column buttons. */
@@ -1150,7 +1131,7 @@ ft_start(void)
     }
 
     /* Start the transfer. */
-    fts.local_file = ft_go(&xftc);
+    fts.local_file = ft_go(&xftc, IA_UI);
     if (fts.local_file == NULL) {
 	return false;
     }
@@ -1169,10 +1150,6 @@ popup_progress(void)
     if (progress_shell == NULL) {
 	progress_popup_init();
     }
-
-    /* Set the sensitivity of the cancel button. */
-    XtVaSetValues(inprogress_cancel_button, XtNsensitive, !ftc->is_action,
-	    NULL);
 
     /* Pop it up. */
     popup_popup(progress_shell, XtGrabNone);
@@ -1469,6 +1446,8 @@ ft_gui_complete_popup(const char *msg, bool is_error)
 	popup_an_error("%s", msg);
     } else if (!ftc->is_action) {
 	popup_an_info("%s", msg);
+    } else {
+	popup_a_timed_info(5000, "%s", msg);
     }
 }
 
@@ -1499,13 +1478,6 @@ ft_gui_aborting(void)
     XtUnmapWidget(waiting);
     XtUnmapWidget(ft_status);
     XtMapWidget(aborting);
-}
-
-/* Check for interactive mode. */
-ft_gui_interact_t
-ft_gui_interact(ft_conf_t *p)
-{
-    return FGI_NOP;
 }
 
 /* Display an "Awaiting start of transfer" message. */

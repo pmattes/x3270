@@ -62,6 +62,7 @@
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 ft_conf_t *ftc;				/* Current file transfer config */
+enum iaction ft_cause;			/* Cause of current file transfer */
 
 /* Statics. */
 static ft_conf_t transfer_ft_conf;	/* FT config for Transfer() action */
@@ -613,7 +614,7 @@ ft_resolve_dir(ft_conf_t *p)
  * message.
  */
 FILE *
-ft_go(ft_conf_t *p)
+ft_go(ft_conf_t *p, enum iaction cause)
 {
     FILE *f;
     varbuf_t r;
@@ -756,6 +757,7 @@ ft_go(ft_conf_t *p)
     fts.dbcs_state = FT_DBCS_NONE;
 
     ft_state = FT_AWAIT_ACK;
+    ft_cause = cause;
     idle_ft_start();
 
     return f;
@@ -1027,9 +1029,9 @@ parse_ft_keywords(unsigned argc, const char **argv)
 
 /* Start a transfer. */
 bool
-ft_start_backend(ft_conf_t *p)
+ft_start_backend(ft_conf_t *p, enum iaction cause)
 {
-    fts.local_file = ft_go(p);
+    fts.local_file = ft_go(p, cause);
     if (fts.local_file == NULL) {
 	return false;
     }
@@ -1124,11 +1126,11 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	if (p == NULL) {
 	    return false;
 	}
-	p->is_interactive = (ia == IA_COMMAND);
+	p->is_action = true;
     }
 
     /* Start the transfer. */
-    return ft_start_backend(p);
+    return ft_start_backend(p, ia);
 }
 
 /*

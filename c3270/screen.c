@@ -2327,6 +2327,7 @@ status_connect(bool connected)
 	status_secure = SS_INSECURE;
     }       
     other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+    status_untiming();
 }
 
 static void
