@@ -190,7 +190,6 @@
     <ClCompile Include="..\..\wc3270\fallbacks.c" />
     <ClCompile Include="..\..\Common\c3270\ft_gui.c" />
     <ClCompile Include="..\..\Common\c3270\help.c" />
-    <ClCompile Include="..\..\Common\c3270\icmd.c" />
     <ClCompile Include="..\..\wc3270\keymap.c" />
     <ClCompile Include="..\..\Common\c3270\keypad.c" />
     <ClCompile Include="..\..\Common\c3270\menubar.c" />

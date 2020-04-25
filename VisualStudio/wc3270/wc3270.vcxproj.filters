@@ -53,9 +53,6 @@
     <ClCompile Include="..\..\Common\c3270\help.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\c3270\icmd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\c3270\keypad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
