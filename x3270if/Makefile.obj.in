@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018, 2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ x3270if: $(OBJS1)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS1) $(LIBS)
 
 man:: x3270if.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install: x3270if
 	[ -d $(DESTDIR)$(BINDIR) ] || \

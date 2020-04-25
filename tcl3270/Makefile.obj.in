@@ -76,16 +76,16 @@ tcl3270: $(OBJS1)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)
 
 x3270if: ../x3270if/x3270if
-	/bin/cp -p ../x3270if/x3270if $@
+	cp -p ../x3270if/x3270if $@
 
 s3270: ../s3270/s3270
-	/bin/cp -p ../s3270/s3270 $@
+	cp -p ../s3270/s3270 $@
 
 man:: tcl3270.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 man:: tcl3270.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install: tcl3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \

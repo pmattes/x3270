@@ -85,20 +85,20 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	bdftopcf $< | gzip -n9 >$@
 
 dryrun: dryrun.in
-	/bin/cp $< $@
+	cp $< $@
 
 x3270a: x3270a.in
-	/bin/cp $< $@
+	cp $< $@
 
 x3270if: ../x3270if/x3270if
-	/bin/cp -p ../x3270if/x3270if $@
+	cp -p ../x3270if/x3270if $@
 
 man:: x3270.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 man:: x3270-script.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 man:: ibm_hosts.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install:: x3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \

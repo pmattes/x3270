@@ -75,12 +75,12 @@ s3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 x3270if: ../x3270if/x3270if
-	/bin/cp -p ../x3270if/x3270if $@
+	cp -p ../x3270if/x3270if $@
 
 man:: s3270.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 man:: x3270-script.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install: s3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \

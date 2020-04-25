@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2010, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2010, 2013-2017, 2020 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ pr3287: $(OBJECTS) version.o $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 man:: pr3287.man
-	if [ ! -f $(notdir $^) ]; then /bin/cp $< $(notdir $^); fi
+	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \

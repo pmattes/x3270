@@ -77,10 +77,10 @@ wb3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o wb3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
 
 b3270.exe: wb3270.exe
-	/bin/cp -p wb3270.exe $@
+	cp -p wb3270.exe $@
 
 x3270if.exe: ../x3270if/x3270if.exe
-	/bin/cp -p ../x3270if/x3270if.exe $@
+	cp -p ../x3270if/x3270if.exe $@
 
 wversion.o: mkwversion.sh version.txt
 	sh $< wb3270 $(CC) $(filter %.txt,$^)

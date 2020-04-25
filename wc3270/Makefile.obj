@@ -81,7 +81,7 @@ $(MKKEYPAD): mkkeypad.c
 
 wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wc3270 "wc3270 terminal emulator" $(WIN64) >$@.tmp
-	/bin/mv -f $@.tmp $@
+	mv -f $@.tmp $@
 
 wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico wc3270.exe.manifest
 	$(WINDRES) -i $< -o $@
@@ -90,7 +90,7 @@ wc3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 c3270.exe: wc3270.exe
-	/bin/cp -p wc3270.exe $@
+	cp -p wc3270.exe $@
 
 mkshort.exe: $(MKSHORTOBJECTS) $(DEP32XX)
 	$(CC) -o mkshort.exe $(CFLAGS) $(MKSHORTOBJECTS) $(SHRTLIBS)
@@ -108,7 +108,7 @@ catf.exe: catf.o catf_res.o
 	$(CC) $(CFLAGS) -o $@ catf.o catf_res.o
 
 x3270if.exe: ../x3270if/x3270if.exe
-	/bin/cp -p ../x3270if/x3270if.exe $@
+	cp -p ../x3270if/x3270if.exe $@
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c wc3270.exe.manifest

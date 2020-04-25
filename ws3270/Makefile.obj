@@ -70,7 +70,7 @@ $(MKFB): mkfb.c
 
 ws3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) ws3270 "ws3270 scripting terminal emulator" $(WIN64) >$@.tmp
-	/bin/mv -f $@.tmp $@
+	mv -f $@.tmp $@
 
 ws3270res.o: ws3270.rc ws3270.ico Makefile ws3270.exe.manifest
 	$(WINDRES) -i $< -o $@
@@ -79,10 +79,10 @@ ws3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 s3270.exe: ws3270.exe
-	/bin/cp -p ws3270.exe $@
+	cp -p ws3270.exe $@
 
 x3270if.exe: ../x3270if/x3270if.exe
-	/bin/cp -p ../x3270if/x3270if.exe $@
+	cp -p ../x3270if/x3270if.exe $@
 
 wversion.o: mkwversion.sh version.txt
 	sh $< ws3270 $(CC) $(filter %.txt,$^)

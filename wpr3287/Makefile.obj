@@ -59,7 +59,7 @@ version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 
 wpr3287.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wpr3287 "wpr3287 printer emulator" $(WIN64) >$@.tmp
-	/bin/mv -f $@.tmp $@
+	mv -f $@.tmp $@
 
 wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
 	$(WINDRES) -i $< -o $@
