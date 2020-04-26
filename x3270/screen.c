@@ -4763,7 +4763,6 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	    return xs_buffer("Font %s\nhas invalid spacing property '%s'",
 		    name, spacing);
 	}
-	printf("Spacing: %s\n", spacing);
 	if (XGetFontProperty(f, a_registry, &svalue)) {
 	    family_name = XGetAtomName(display, svalue);
 	} else {
