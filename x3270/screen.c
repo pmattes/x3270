@@ -415,7 +415,6 @@ static void xlate_dbcs_unicode(ucs4_t, XChar2b *);
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
-static bool dfc_search_name(const char *name);
 
 static action_t SetFont_action;
 static action_t Title_action;
@@ -4746,17 +4745,25 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	int count;
 	XFontStruct *f;
 	unsigned long svalue;
-	char *family_name, *font_encoding, *fe, *charset;
-
-	if (!dfc_search_name(name)) {
-	    return xs_buffer("Font %s\nnot found", name);
-	}
+	char *spacing, *family_name, *font_encoding, *fe, *charset;
 
 	/* Check the character set */
 	names = XListFontsWithInfo(display, name, 1, &count, &f);
 	if (names == NULL) {
 	    return xs_buffer("Font %s\nnot found", name);
 	}
+	if (XGetFontProperty(f, a_spacing, &svalue)) {
+	    spacing = XGetAtomName(display, svalue);
+	} else {
+	    XFreeFontInfo(names, f, count);
+	    return xs_buffer("Font %s\nhas no spacing property", name);
+	}
+	if (strcasecmp(spacing, "c") && strcasecmp(spacing, "m")) {
+	    XFreeFontInfo(names, f, count);
+	    return xs_buffer("Font %s\nhas invalid spacing property '%s'",
+		    name, spacing);
+	}
+	printf("Spacing: %s\n", spacing);
 	if (XGetFontProperty(f, a_registry, &svalue)) {
 	    family_name = XGetAtomName(display, svalue);
 	} else {
@@ -6400,21 +6407,6 @@ dfc_search_family(const char *charset, dfc_t **dp, void **cookie)
     }
     *cookie = NULL;
     return NULL;
-}
-
-/* Search for a font by name. */
-static bool
-dfc_search_name(const char *name)
-{
-    dfc_t *d;
-
-    for (d = dfc; d != NULL; d = d->next) {
-	if (!strcasecmp(name, d->name)) {
-	    return true;
-	}
-    }
-
-    return false;
 }
 
 /* Return the window for the screen. */

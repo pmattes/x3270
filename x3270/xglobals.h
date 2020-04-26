@@ -50,6 +50,7 @@ extern Atom		a_net_wm_state;
 extern Atom		a_net_wm_state_maximized_horz;
 extern Atom		a_net_wm_state_maximized_vert;
 extern Atom		a_atom;
+extern Atom		a_spacing;
 extern Display		*display;
 extern Pixmap		gray;
 extern Pixel		keypadbg_pixel;
