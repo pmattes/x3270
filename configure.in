@@ -1,4 +1,4 @@
-dnl Copyright (c) 2015-2016, 2018 Paul Mattes.
+dnl Copyright (c) 2015-2016, 2018, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -27,57 +27,76 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(suite3270,3.x)
 AC_PREREQ(2.50)
 
-AC_ARG_ENABLE(unix,[  --enable-unix          build all Unix emulators])
+AC_ARG_ENABLE(unix,[  --enable-unix           build all Unix emulators])
+AC_ARG_ENABLE(windows,[  --enable-windows        build all Windows emulators])
+
+AC_ARG_ENABLE(x3270,[  --enable-x3270          build x3270])
+AC_ARG_ENABLE(c3270,[  --enable-c3270          build c3270])
+AC_ARG_ENABLE(s3270,[  --enable-s3270          build s3270])
+AC_ARG_ENABLE(b3270,[  --enable-b3270          build b3270])
+AC_ARG_ENABLE(tcl3270,[  --enable-tcl3270        build tcl3270])
+AC_ARG_ENABLE(pr3287,[  --enable-pr3287         build pr3287])
+AC_ARG_ENABLE(x3270if,[  --enable-x3270if        build x3270if])
+AC_ARG_ENABLE(unix-lib,[  --enable-lib            build Unix libraries])
+
+AC_ARG_ENABLE(wc3270,[  --enable-wc3270         build wc3270])
+AC_ARG_ENABLE(ws3270,[  --enable-ws3270         build Windows s3270])
+AC_ARG_ENABLE(wb3270,[  --enable-wb3270         build Windows b3270])
+AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287        build Windows pr3287])
+AC_ARG_ENABLE(wx3270if,[  --enable-wx3270if       build Windows x3270if])
+AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib    build Windows libraries])
+
+dnl Handle expansion of enable-unix.
 if test "x$enable_unix" = xyes; then
-    enable_x3270=yes
-    enable_c3270=yes
-    enable_s3270=yes
-    enable_b3270=yes
-    enable_tcl3270=yes
-    enable_pr3287=yes
-    enable_x3270if=yes
+    if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
+    if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
+    if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
+    if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
+    if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
+fi
+if test "x$enable_unix" = xno; then
+    enable_x3270=no
+    enable_s3270=no
+    enable_b3270=no
+    enable_tcl3270=no
+    enable_pr3287=no
+    enable_x3270if=no
 fi
 
-AC_ARG_ENABLE(windows,[  --enable-windows       build all Windows emulators])
+dnl Handle expansion of enable-windows.
 if test "x$enable_windows" = xyes; then
-    enable_wc3270=yes
-    enable_ws3270=yes
-    enable_wb3270=yes
-    enable_wpr3287=yes
-    enable_wx3270if=yes
+    if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
+    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
+    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
+    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
+    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
+fi
+if test "x$enable_windows" = xno; then
+    enable_wc3270=no
+    enable_ws3270=no
+    enable_wb3270=no
+    enable_wpr3287=no
+    enable_wx3270if=no
 fi
 
-AC_ARG_ENABLE(x3270,[  --enable-x3270         build x3270])
-AC_ARG_ENABLE(c3270,[  --enable-c3270         build c3270])
-AC_ARG_ENABLE(s3270,[  --enable-s3270         build s3270])
-AC_ARG_ENABLE(b3270,[  --enable-b3270         build b3270])
-AC_ARG_ENABLE(tcl3270,[  --enable-tcl3270       build tcl3270])
-AC_ARG_ENABLE(pr3287,[  --enable-pr3287        build pr3287])
-AC_ARG_ENABLE(x3270if,[  --enable-x3270if       build x3270if])
-AC_ARG_ENABLE(unix-lib,[  --enable-lib           build unix libraries])
-
-AC_ARG_ENABLE(wc3270,[  --enable-wc3270        build wc3270])
-AC_ARG_ENABLE(ws3270,[  --enable-ws3270        build ws3270])
-AC_ARG_ENABLE(wb3270,[  --enable-wb3270        build wb3270])
-AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287       build wpr3287])
-AC_ARG_ENABLE(wx3270if,[  --enable-wx3270if      build Windows x3270if])
-AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib   build Windows libraries])
-
-if test "x$enable_x3270" != xyes -a \
-        "x$enable_c3270" != xyes -a \
-        "x$enable_s3270" != xyes -a \
-        "x$enable_b3270" != xyes -a \
-        "x$enable_tcl3270" != xyes -a \
-        "x$enable_pr3287" != xyes -a \
-        "x$enable_x3270if" != xyes -a \
-	"x$enable_unix_lib" != xyes -a \
-        "x$enable_wc3270" != xyes -a \
-        "x$enable_ws3270" != xyes -a \
-        "x$enable_wb3270" != xyes -a \
-        "x$enable_wpr3287" != xyes -a \
-        "x$enable_wx3270if" != xyes -a \
-	"x$enable_windows_lib" != xyes; then
-    AC_MSG_NOTICE(configuring all emulators... use --enable options to pick a subset)
+dnl Handle all-default case.
+AC_MSG_NOTICE(ae is $ae)
+if test "x$enable_x3270" = x -a \
+        "x$enable_c3270" = x -a \
+        "x$enable_s3270" = x  -a \
+        "x$enable_b3270" = x -a \
+        "x$enable_tcl3270" = x -a \
+        "x$enable_pr3287" = x -a \
+        "x$enable_x3270if" = x -a \
+	"x$enable_unix_lib" = x -a \
+        "x$enable_wc3270" = x -a \
+        "x$enable_ws3270" = x -a \
+        "x$enable_wb3270" = x -a \
+        "x$enable_wpr3287" = x -a \
+        "x$enable_wx3270if" = x -a \
+	"x$enable_windows_lib" = x; then
+    AC_MSG_NOTICE(configuring all emulators... use --enable or --disable options to pick a subset)
     enable_x3270=yes
     enable_c3270=yes
     enable_s3270=yes
@@ -92,6 +111,52 @@ if test "x$enable_x3270" != xyes -a \
     enable_wx3270if=yes
 fi
 
+dnl Handle the just-disable case.
+lparen="("
+rparen=")"
+if test "x$enable_x3270" != xyes -a \
+	"x$enable_c3270" != xyes -a \
+	"x$enable_s3270" != xyes  -a \
+	"x$enable_b3270" != xyes -a \
+	"x$enable_tcl3270" != xyes -a \
+	"x$enable_pr3287" != xyes -a \
+	"x$enable_x3270if" != xyes -a \
+	"x$enable_unix_lib" != xyes -a \
+	"x$enable_wc3270" != xyes -a \
+	"x$enable_ws3270" != xyes -a \
+	"x$enable_wb3270" != xyes -a \
+	"x$enable_wpr3287" != xyes -a \
+	"x$enable_wx3270if" != xyes -a \
+	"x$enable_windows_lib" != xyes -a \
+	$lparen "x$enable_x3270" = xno -o \
+	 "x$enable_c3270" = xno -o \
+	 "x$enable_s3270" = xno -o \
+	 "x$enable_b3270" = xno -o \
+	 "x$enable_tcl3270" = xno -o \
+	 "x$enable_pr3287" = xno -o \
+	 "x$enable_x3270if" = xno -o \
+	 "x$enable_unix_lib" = xno -o \
+	 "x$enable_wc3270" = xno -o \
+	 "x$enable_ws3270" = xno -o \
+	 "x$enable_wb3270" = xno -o \
+	 "x$enable_wpr3287" = xno -o \
+	 "x$enable_wx3270if" = xno -o \
+	 "x$enable_windows_lib" = xno $rparen; then
+    dnl Enable everything that wasn't explicitly disabled.
+    if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
+    if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
+    if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
+    if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
+    if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
+    if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
+    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
+    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
+    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
+    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
+fi
+
+dnl Handle dependencies.
 if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
@@ -110,6 +175,7 @@ if test "x$enable_tcl3270" = xyes; then
     enable_s3270=yes
 fi
 
+dnl Handle missing Windows tools.
 AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
 AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
 if test "$mingw64_found" = "no" -o "$mingw32_found" = "no"
@@ -201,7 +267,7 @@ fi
 if test "x$enable_x3270if" = xyes; then
     AC_CONFIG_SUBDIRS(x3270if)
 fi
-AC_CONFIG_SUBDIRS(mitm)
+dnl AC_CONFIG_SUBDIRS(mitm)
 
 dnl Generate to top-level Makefile.
 AC_OUTPUT(Makefile)

@@ -641,8 +641,7 @@ s3270
 b3270
 tcl3270
 pr3287
-x3270if
-mitm'
+x3270if'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -1253,22 +1252,22 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-unix          build all Unix emulators
-  --enable-windows       build all Windows emulators
-  --enable-x3270         build x3270
-  --enable-c3270         build c3270
-  --enable-s3270         build s3270
-  --enable-b3270         build b3270
-  --enable-tcl3270       build tcl3270
-  --enable-pr3287        build pr3287
-  --enable-x3270if       build x3270if
-  --enable-lib           build unix libraries
-  --enable-wc3270        build wc3270
-  --enable-ws3270        build ws3270
-  --enable-wb3270        build wb3270
-  --enable-wpr3287       build wpr3287
-  --enable-wx3270if      build Windows x3270if
-  --enable-windows-lib   build Windows libraries
+  --enable-unix           build all Unix emulators
+  --enable-windows        build all Windows emulators
+  --enable-x3270          build x3270
+  --enable-c3270          build c3270
+  --enable-s3270          build s3270
+  --enable-b3270          build b3270
+  --enable-tcl3270        build tcl3270
+  --enable-pr3287         build pr3287
+  --enable-x3270if        build x3270if
+  --enable-lib            build Unix libraries
+  --enable-wc3270         build wc3270
+  --enable-ws3270         build Windows s3270
+  --enable-wb3270         build Windows b3270
+  --enable-wpr3287        build Windows pr3287
+  --enable-wx3270if       build Windows x3270if
+  --enable-windows-lib    build Windows libraries
 
 Report bugs to the package provider.
 _ACEOF
@@ -1705,28 +1704,11 @@ if test "${enable_unix+set}" = set; then :
   enableval=$enable_unix;
 fi
 
-if test "x$enable_unix" = xyes; then
-    enable_x3270=yes
-    enable_c3270=yes
-    enable_s3270=yes
-    enable_b3270=yes
-    enable_tcl3270=yes
-    enable_pr3287=yes
-    enable_x3270if=yes
-fi
-
 # Check whether --enable-windows was given.
 if test "${enable_windows+set}" = set; then :
   enableval=$enable_windows;
 fi
 
-if test "x$enable_windows" = xyes; then
-    enable_wc3270=yes
-    enable_ws3270=yes
-    enable_wb3270=yes
-    enable_wpr3287=yes
-    enable_wx3270if=yes
-fi
 
 # Check whether --enable-x3270 was given.
 if test "${enable_x3270+set}" = set; then :
@@ -1800,22 +1782,56 @@ if test "${enable_windows_lib+set}" = set; then :
 fi
 
 
-if test "x$enable_x3270" != xyes -a \
-        "x$enable_c3270" != xyes -a \
-        "x$enable_s3270" != xyes -a \
-        "x$enable_b3270" != xyes -a \
-        "x$enable_tcl3270" != xyes -a \
-        "x$enable_pr3287" != xyes -a \
-        "x$enable_x3270if" != xyes -a \
-	"x$enable_unix_lib" != xyes -a \
-        "x$enable_wc3270" != xyes -a \
-        "x$enable_ws3270" != xyes -a \
-        "x$enable_wb3270" != xyes -a \
-        "x$enable_wpr3287" != xyes -a \
-        "x$enable_wx3270if" != xyes -a \
-	"x$enable_windows_lib" != xyes; then
-    { $as_echo "$as_me:${as_lineno-$LINENO}: configuring all emulators... use --enable options to pick a subset" >&5
-$as_echo "$as_me: configuring all emulators... use --enable options to pick a subset" >&6;}
+if test "x$enable_unix" = xyes; then
+    if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
+    if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
+    if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
+    if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
+    if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
+fi
+if test "x$enable_unix" = xno; then
+    enable_x3270=no
+    enable_s3270=no
+    enable_b3270=no
+    enable_tcl3270=no
+    enable_pr3287=no
+    enable_x3270if=no
+fi
+
+if test "x$enable_windows" = xyes; then
+    if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
+    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
+    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
+    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
+    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
+fi
+if test "x$enable_windows" = xno; then
+    enable_wc3270=no
+    enable_ws3270=no
+    enable_wb3270=no
+    enable_wpr3287=no
+    enable_wx3270if=no
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: ae is $ae" >&5
+$as_echo "$as_me: ae is $ae" >&6;}
+if test "x$enable_x3270" = x -a \
+        "x$enable_c3270" = x -a \
+        "x$enable_s3270" = x  -a \
+        "x$enable_b3270" = x -a \
+        "x$enable_tcl3270" = x -a \
+        "x$enable_pr3287" = x -a \
+        "x$enable_x3270if" = x -a \
+	"x$enable_unix_lib" = x -a \
+        "x$enable_wc3270" = x -a \
+        "x$enable_ws3270" = x -a \
+        "x$enable_wb3270" = x -a \
+        "x$enable_wpr3287" = x -a \
+        "x$enable_wx3270if" = x -a \
+	"x$enable_windows_lib" = x; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: configuring all emulators... use --enable or --disable options to pick a subset" >&5
+$as_echo "$as_me: configuring all emulators... use --enable or --disable options to pick a subset" >&6;}
     enable_x3270=yes
     enable_c3270=yes
     enable_s3270=yes
@@ -1828,6 +1844,49 @@ $as_echo "$as_me: configuring all emulators... use --enable options to pick a su
     enable_wb3270=yes
     enable_wpr3287=yes
     enable_wx3270if=yes
+fi
+
+lparen="("
+rparen=")"
+if test "x$enable_x3270" != xyes -a \
+	"x$enable_c3270" != xyes -a \
+	"x$enable_s3270" != xyes  -a \
+	"x$enable_b3270" != xyes -a \
+	"x$enable_tcl3270" != xyes -a \
+	"x$enable_pr3287" != xyes -a \
+	"x$enable_x3270if" != xyes -a \
+	"x$enable_unix_lib" != xyes -a \
+	"x$enable_wc3270" != xyes -a \
+	"x$enable_ws3270" != xyes -a \
+	"x$enable_wb3270" != xyes -a \
+	"x$enable_wpr3287" != xyes -a \
+	"x$enable_wx3270if" != xyes -a \
+	"x$enable_windows_lib" != xyes -a \
+	$lparen "x$enable_x3270" = xno -o \
+	 "x$enable_c3270" = xno -o \
+	 "x$enable_s3270" = xno -o \
+	 "x$enable_b3270" = xno -o \
+	 "x$enable_tcl3270" = xno -o \
+	 "x$enable_pr3287" = xno -o \
+	 "x$enable_x3270if" = xno -o \
+	 "x$enable_unix_lib" = xno -o \
+	 "x$enable_wc3270" = xno -o \
+	 "x$enable_ws3270" = xno -o \
+	 "x$enable_wb3270" = xno -o \
+	 "x$enable_wpr3287" = xno -o \
+	 "x$enable_wx3270if" = xno -o \
+	 "x$enable_windows_lib" = xno $rparen; then
+        if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
+    if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
+    if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
+    if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
+    if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
+    if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
+    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
+    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
+    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
+    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
 fi
 
 if test "x$enable_x3270" = xyes -o \
@@ -2054,8 +2113,6 @@ if test "x$enable_x3270if" = xyes; then
     subdirs="$subdirs x3270if"
 
 fi
-subdirs="$subdirs mitm"
-
 
 ac_config_files="$ac_config_files Makefile"
 
