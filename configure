@@ -1814,8 +1814,6 @@ if test "x$enable_windows" = xno; then
     enable_wx3270if=no
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: ae is $ae" >&5
-$as_echo "$as_me: ae is $ae" >&6;}
 if test "x$enable_x3270" = x -a \
         "x$enable_c3270" = x -a \
         "x$enable_s3270" = x  -a \
