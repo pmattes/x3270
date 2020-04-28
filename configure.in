@@ -69,7 +69,6 @@ if test "x$enable_windows" = xno; then
 fi
 
 dnl Handle all-default case.
-AC_MSG_NOTICE(ae is $ae)
 if test "x$enable_x3270" = x -a \
         "x$enable_c3270" = x -a \
         "x$enable_s3270" = x  -a \
