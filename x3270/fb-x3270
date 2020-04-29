@@ -182,7 +182,8 @@ x3270.keymap.base: \
 	<Btn2Up>:			insert-selection(PRIMARY)\n\
 	<Btn3Down>:			start-extend()\n\
 	<Btn3Motion>:			select-extend()\n\
-	~Shift<BtnUp>:			SelectUp(PRIMARY)\n\
+	~Shift<Btn1Up>:			SelectUp(PRIMARY)\n\
+	~Shift<Btn3Up>:			SelectUp(PRIMARY)\n\
 	Shift<Key>Insert:		insert-selection(PRIMARY)\n\
 	Shift<Key>Up:			KybdSelect(Up,PRIMARY)\n\
 	Shift<Key>Down:			KybdSelect(Down,PRIMARY)\n\
