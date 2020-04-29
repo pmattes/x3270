@@ -51,6 +51,8 @@ endif
 ifdef M1
 	@echo "  <program>           build <program>"
 endif
+	@echo " install              install programs"
+	@echo " install.man          install man pages"
 	@echo " clean                remove all intermediate files"
 ifdef MIXED
 	@echo "  unix-clean          remove Unix intermediate files"
