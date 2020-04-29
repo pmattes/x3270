@@ -1,0 +1,5369 @@
+'\" t
+.TH x3270 1 "28 April 2020"
+.SH "NAME"
+x3270 \-
+\s-1IBM\s+1 host access tool
+.SH "SYNOPSIS"
+\fBx3270\fP
+[\fIoptions\fP]
+[\fIhost\fP]
+
+.br
+\fBx3270\fP [\fIoptions\fP] \fIsession-file\fP.x3270
+
+.SH "DESCRIPTION"
+\fBx3270\fP opens a telnet connection to an \s-1IBM\s+1
+host in an X window.
+It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection),
+and supports IND$FILE file transfer.
+The window created by \fBx3270\fP
+can use its own font for displaying characters, so it is a fairly accurate
+representation of an \s-1IBM\s+1 3278 or 3279.
+It is similar to \fItn3270\fP(1) except that it is X-based, not curses-based.
+The full syntax for \fIhost\fP is:
+.RS
+[\fIprefix\fP:]...[\fILUname\fP@]\fIhostname\fP[:\fIport\fP][=\fIaccept\fP]
+.RE
+.LP
+Prepending a \fBP:\fP onto \fIhostname\fP causes the connection to go
+through the \fItelnet-passthru\fP service rather than directly to the host.
+See \s-1PASSTHRU\s+1 below.
+.LP
+Prepending an \fBS:\fP onto \fIhostname\fP removes the "extended data
+stream" option reported to the host.
+See \fB\-tn\fP below for further information.
+.LP
+Prepending an \fBN:\fP onto \fIhostname\fP
+turns off TN3270E support for the session.
+.LP
+Prepending an \fBL:\fP onto \fIhostname\fP
+causes \fBx3270\fP to first create an SSL/TLS tunnel to the host, and then
+create a TN3270 session inside the tunnel.  (This function is supported only if
+\fBx3270\fP was built with SSL/TLS support).
+Note that TLS-encrypted sessions using the TELNET START-TLS option are
+negotiated with the host automatically; for these sessions the \fBL:\fP prefix
+should not be used.
+.LP
+Prepending a \fBY:\fP onto \fIhostname\fP
+causes \fBx3270\fP to skip validation of host SSL/TLS certificates.
+This overrides any other configuration or command-line options.
+.LP
+Prepending an \fBA:\fP onto \fIhostname\fP is equivalent to setting the
+\fB\-nvt\fP option; it forces an NVT-mode session instead of a
+3270-mode session.
+.LP
+A specific Logical Unit (LU) name to use may be specified by prepending it to
+the \fIhostname\fP with an `\fB@\fP'.
+Multiple LU names to try can be separated by commas.
+An empty LU can be placed in the list with an extra comma.
+(Note that the LU name is used for different purposes by different kinds of
+hosts.
+For example, CICS uses the LU name as the Terminal ID.)
+.LP
+The \fIhostname\fP may optionally be placed inside square-bracket
+characters `\fB[\fP' and `\fB]\fP'.
+This will prevent any colon `\fB:\fP' characters in the hostname
+from being interpreted as indicating option prefixes or port numbers.
+This allows numeric IPv6 addresses to be used as hostnames.
+.LP
+On systems that support the \fIforkpty\fP library call, the
+\fIhostname\fP may be replaced with \fB\-e\fP and a command string.
+This will cause \fBx3270\fP to connect to a local child process, such as
+a shell.
+.LP
+The port to connect to defaults to
+\fBtelnet\fP.
+This can be overridden with the \fB\-port\fP option, or by appending
+a \fIport\fP to the \fIhostname\fP with a colon
+`\fB:\fP'.
+(For compatability with previous versions of \fBx3270\fP
+and with \fItn3270\fP(1), the \fIport\fP
+may also be specified as a second, separate argument.)
+.LP
+An optional accept name (a hostname to accept in the host's SSL/TLS
+certificate) may be specified by appending it to the hostname with an equals
+sign (`\fB=\fP').
+The accept name can also be specified with the \fB\-accepthostname\fP
+option.
+
+.SH "OPTIONS"
+\fBx3270\fP is a toolkit based program, so it understands standard Xt options and
+resources.
+It also understands
+the following options:
+.TP
+\fB\-accepthostname\fP \fIname\fP
+Specifies a particular hostname to accept when validating the name presented
+in the server SSL certificate, instead of comparing to the name
+used to make the connection.
+.TP
+\fB\-activeicon\fP
+Specifies that the icon should be a miniature version of the screen image.
+See \s-1ICONS\s+1 below.
+.TP
+\fB\-apl\fP
+Sets up \s-1APL\s+1 mode.
+This is actually an abbreviation for several options.
+See \s-1APL SUPPORT\s+1 below.
+.TP
+\fB\-cadir\fP \fIdirectory\fP
+Specifies a directory containing CA (root) certificates to use when verifying a
+certificate provided by the host. (OpenSSL only)
+.TP
+\fB\-cafile\fP \fIfilename\fP
+Specifies a \s-1PEM\s+1-format file containing CA (root) certificates to use
+when verifying a certificate provided by the host. (OpenSSL only)
+.TP
+\fB\-cc\fP \fIrange\fP:\fIvalue\fP[,...]
+Sets character classes.
+.TP
+\fB\-certfile\fP \fIfilename\fP
+Specifies a file containing a client certificate to provide to the host.
+The default file type is \s-1PEM\s+1.
+.TP
+\fB\-clientcert\fP \fIname\fP
+Specifies the name of a client certificate to provide to the host.
+(MacOS only)
+.TP
+\fB\-certfiletype\fP \fItype\fP
+Specifies the type of the certificate file specified
+by \fB\-certfile\fP.
+\fIType\fP can be \fBpem\fP or \fBasn1\fP. (OpenSSL only)
+.TP
+\fB\-chainfile \fIfilename\fP\fP
+Specifies a certificate chain file in \s-1PEM\s+1 format, containing a
+certificate to provide to the host, as well as one or more
+intermediate certificates and the CA certificate used to sign that certificate.
+If \fB\-chainfile\fP is specified, it
+overrides \fB\-certfile\fP. (OpenSSL only)
+.TP
+\fB\-charset\fP \fIname\fP
+Specifies an \s-1EBCDIC\s+1 host character set.
+.TP
+\fB\-clear\fP \fItoggle\fP
+Sets the initial value of \fItoggle\fP to \fBfalse\fP.
+.TP
+\fB\-connecttimeout\fP \fIseconds\fP
+Specifies the time that x3270 will wait for a host connection to
+complete.
+.TP
+\fB\-devname\fP \fIname\fP
+Specifies a device name (workstation ID) for RFC 4777 support.
+.TP
+\fB\-efont\fP \fIname\fP
+Specifies a font for the emulator window.
+.TP
+\fB\-hostsfile\fP \fIfile\fP
+Uses \fIfile\fP as the hosts file, which allows aliases for host names and
+scripts to be executed at login.
+See \fIibm_hosts\fP(1) for details.
+.TP
+\fB\-httpd\fP \fB[\fP\fIaddr\fP\fB:]\fP\fIport\fP
+Specifies a port and optional address to listen on for HTTP connections.
+\fIAddr\fP can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4080 to specify the IPv6 loopback address and
+TCP port 4080.
+.IP
+Note that this option is mutually-exclusive with the \-scriptport
+option
+.
+.TP
+\fB\-iconname\fP \fIname\fP
+Specifies an alternate title for the program icon.
+.TP
+\fB\-iconx\fP \fIx\fP
+Specifies the initial x coordinate for the program icon.
+.TP
+\fB\-icony\fP \fIy\fP
+Specifies the initial y coordinate for the program icon.
+.TP
+\fB\-im\fP \fImethod\fP
+Specifies the name of the input method to use for multi-byte input.
+(Supported only when x3270 is compiled with DBCS support.)
+.TP
+\fB\-keyfile\fP \fIfilename\fP
+Specifies a file containing the private key for the certificate file
+(specified via \fB\-certfile\fP or \fB\-chainfile\fP).
+The default file type is \s-1PEM\s+1. (OpenSSL only)
+.TP
+\fB\-keyfiletype\fP \fItype\fP
+Specifies the type of the private key file specified
+by \fB\-keyfile\fP.
+\fIType\fP can be \fBpem\fP or \fBasn1\fP. (OpenSSL only)
+.TP
+\fB\-keypasswd\fP \fItype\fP:\fIvalue\fP
+Specifies the password for the private key file (OpenSSL) or client
+certificate file (MacOS), if it is encrypted.
+The argument can be \fBfile\fP:\fIfilename\fP, specifying that the
+password is in a file, or \fBstring\fP:\fIstring\fP, specifying the
+password on the command-line directly.
+If the private key file is encrypted and no \fB\-keypasswd\fP
+option is given,
+the password will be prompted for interactively.
+.TP
+\fB\-keymap\fP \fIname\fP
+Specifies a keymap name and optional modifiers.
+See \s-1KEYMAPS\s+1 below.
+.TP
+\fB\-keypad\fP
+Turns on the keypad as soon as \fBx3270\fP starts.
+.TP
+\fB\-km\fP \fIname\fP
+Specifies the local encoding method for multi-byte text.
+\fIname\fP is an encoding name recognized by the ICU library.
+(Supported only when x3270 is compiled with DBCS support, and necessary
+only when x3270 cannot figure it out from the locale.)
+.TP
+\fB\-loginmacro\fP \fIAction(arg...) ...\fP
+Specifies a macro to run at login time.
+.TP
+\fB\-model\fP \fIname\fP
+The model of 3270 display to be emulated.
+The model name is in two parts, either of which may be omitted:
+.IP
+The first part is the
+\fBbase model\fP,
+which is either \fB3278\fP or \fB3279\fP.
+\fB3278\fP specifies a monochrome (green on black) 3270 display;
+\fB3279\fP specifies a color 3270 display.
+.IP
+The second part is the
+\fBmodel number\fP,
+which specifies the number of rows and columns.
+Model 4 is the default.
+.PP
+.TS
+center;
+c c c .
+T{
+.na
+.nh
+Model Number
+T}	T{
+.na
+.nh
+Columns
+T}	T{
+.na
+.nh
+Rows
+T}
+_
+T{
+.na
+.nh
+2
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+24
+T}
+T{
+.na
+.nh
+3
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+32
+T}
+T{
+.na
+.nh
+4
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+43
+T}
+T{
+.na
+.nh
+5
+T}	T{
+.na
+.nh
+132
+T}	T{
+.na
+.nh
+27
+T}
+.TE
+.IP
+Note: Technically, there is no such 3270 display as a 3279-4 or 3279-5, but
+most hosts seem to work with them anyway.
+.IP
+The default model
+for a color X display
+is \fB3279\-4\fP.
+For a monochrome X display, it is
+\fB3278\-4\fP.
+.TP
+\fB\-mono\fP
+Forces \fBx3270\fP to believe it is running on a monochrome X display.
+.TP
+\fB\-noverifycert\fP
+For SSL/TLS connections, do not verify the host certificate.
+.TP
+\fB\-nvt\fP
+Start in NVT mode instead of waiting for the host to send data, and make the
+default terminal type \fBxterm\fP.
+.TP
+\fB\-once\fP
+Causes \fBx3270\fP to exit after a host disconnects.
+This option has effect only if a hostname is specified on the command line.
+.TP
+\fB\-oversize\fP \fIcols\fP\fBx\fP\fIrows\fP
+Makes the screen larger than the default for the chosen model number.
+This option has effect only in combination with extended data stream support
+(controlled by the "x3270.extended" resource), and only if the host
+supports the Query Reply structured field.
+The number of columns multiplied by the number of rows must not exceed
+16383 (3fff hex), the limit of 14-bit 3270 buffer addressing.
+.TP
+\fB\-port\fP \fIn\fP
+Specifies a different \s-1TCP\s+1 port to connect to.
+\fIn\fP can be a name from \fB/etc/services\fP like \fBtelnet\fP, or a
+number.
+This option changes the default port number used for all connections.
+(The positional parameter affects only the initial connection.)
+.TP
+\fB\-printerlu \fIluname\fP\fP
+Causes \fBx3270\fP to automatically start a \fIpr3287\fP printer
+session.
+If \fIluname\fP is ".", then the printer session will be associated with the
+interactive terminal session (this requires that the host support TN3270E).
+Otherwise, the value is used as the explicit LU name to associate with the
+printer session.
+.TP
+\fB\-proxy \fItype\fP:\fIhost\fP[:\fIport\fP]\fP
+Causes \fBx3270\fP to connect via the specified proxy, instead of
+using a direct connection.
+The \fIhost\fP can be an IP address or hostname.
+The optional \fIport\fP can be a number or a service name.
+For a list of supported proxy \fItypes\fP, see \s-1PROXY\s+1
+below.
+.TP
+\fB\-pt\fP \fItype\fP
+Specifies the preedit type for the multi-byte input method.
+Valid values are \fBOverTheSpot\fP, \fBOffTheSpot\fP, \fBRoot\fP and
+\fBOnTheSpot\fP.
+The value for \fBOverTheSpot\fP can include an optional suffix, a signed
+number indicating the vertical distance in rows of the preedit window from the
+cursor position, e.g. \fBOverTheSpot+1\fP or \fBOverTheSpot-2\fP.
+The default value is \fBOverTheSpot+1\fP.
+(Supported only when x3270 is compiled with DBCS support.)
+.TP
+\fB\-reconnect\fP
+Causes \fBx3270\fP
+to automatically reconnect to the host if it ever disconnects.
+This option has effect only if a hostname is specified on the command line.
+.TP
+\fB\-sb\fP
+Turns on the scrollbar.
+.TP
+\fB+sb\fP
+Turns the scrollbar off.
+.TP
+\fB\-scheme\fP \fIname\fP
+Specifes a color scheme to use in 3279 mode.
+This option has effect only in combination with 3279 emulation.
+.TP
+\fB\-script\fP
+Causes
+\fBx3270\fP
+to read commands from standard input, with the results written to standard
+output.
+The protocol for these commands is documented in
+\fIx3270-script\fP(1).
+.TP
+\fB\-sl\fP \fIn\fP
+Specifies that \fIn\fP lines should be saved for scrolling back.
+The default is 4096.
+.TP
+\fB\-scriptport\fP \fB[\fP\fIaddr\fP\fB:]\fP\fIport\fP
+Specifies a port and optional address to listen on for scripting connections.
+\fIAddr\fP can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4081 to specify the IPv6 loopback address and
+TCP port 4081.
+.IP
+Note that this option is mutually-exclusive with the \-httpd
+option
+.
+.TP
+\fB\-scriptportonce\fP
+Allows x3270 to accept only one script connection. When that connection is
+broken, x3270 will exit.
+.TP
+\fB\-secure\fP
+Disables run-time features that could compromise system security
+(user-specified file names and commands, etc.).
+.TP
+\fB\-set\fP \fItoggle\fP
+Sets the initial value of \fItoggle\fP to \fBtrue\fP.
+.TP
+\fB\-socket\fP
+Causes the emulator to create a Unix-domain socket when it starts, for use
+by script processes to send commands to the emulator.
+The socket is named \fB/tmp/x3sck.\fP\fIpid\fP.
+The \fB\-p\fP option of \fIx3270if\fP causes it to use this socket,
+instead of pipes specified by environment variables.
+.TP
+\fB\-tn\fP \fIname\fP
+Specifies the terminal name to be transmitted over the telnet connection.
+The default name is
+\fBIBM\-\fP\fImodel_name\fP\fB\-E\fP,
+for example,
+\fBIBM\-3279\-4\-E\fP
+for a color X display, or
+\fBIBM\-3278\-4\-E\fP
+for a monochrome X display.
+.IP
+Some hosts are confused by the \fB\-E\fP
+suffix on the terminal name, and will ignore the extra screen area on
+models 3, 4 and 5.
+Prepending an \fBs:\fP on the hostname, or setting the "x3270.extended"
+resource to "false", removes the \fB\-E\fP
+from the terminal name when connecting to such hosts.
+.IP
+The name can also be specified with the "x3270.termName" resource.
+.TP
+\fB\-trace\fP
+Turns on data stream tracing at startup.
+Unlike turning it on from a menu option,
+there is no pop-up to confirm the file name, which defaults to
+\fB/tmp/x3trc\fP.
+.TP
+\fB\-tracefile\fP \fIfile\fP
+Specifies a file to save data stream and event traces into.
+If the name starts with `>>', data will be appended to the file.
+If the value \fBstdout\fP
+is given, then traces will be written to standard output.
+If the value \fBnone\fP
+is given, then traces will be piped directly to the monitor window, and no
+file will be created.
+.TP
+\fB\-tracefilesize\fP \fIsize\fP
+Places a limit on the size of a trace file.
+If this option is not specified, or is specified as \fB0\fP or \fBnone\fP,
+the trace file size will be unlimited.
+The minimum size is 64 Kbytes.
+The value of \fIsize\fP can have a \fBK\fP or \fBM\fP suffix, indicating
+kilobytes or megabytes respectively.
+When the trace file reaches the size limit, it will be renamed with a 
+`-' appended and a new file started.
+.TP
+\fB\-user\fP \fIname\fP
+Specifies the user name for RFC 4777 support.
+.TP
+\fB\-v\fP
+Display the version and build options for \fBx3270\fP and exit.
+.TP
+\fB\-verifycert\fP
+For SSL/TLS connections, verify the host certificate, and do not allow
+the connection to complete unless it can be validated. (This is the default
+setting.)
+This option is overridden by a \fBy:\fP prepended to the hostname when
+connecting.
+.LP
+After reading resource definitions from the X server
+and any standandard X11 resource definition files
+(\fB$HOME/.Xdefaults\fP, etc.), \fBx3270\fP will read definitions
+from the file \fB$HOME/.x3270pro\fP.
+This file contains local customizations and is also used to save changed
+options by the \fBSave Changed Options in File\fP menu option.
+.LP
+Note that \fB\-xrm\fP options override any definitions in
+the \fB.x3270pro\fP file.
+.SH "STATUS LINE"
+The \fBx3270\fP status line contains a variety of information.
+From left to right, the fields are:
+.TP
+\fBcomm status\fP
+The first symbol is always a \fB4\fP.
+If \fBx3270\fP is in TN3270E mode, the second symbol is a \fBB\fP;
+otherwise it is an \fBA\fP.
+If \fBx3270\fP is disconnected, the third symbol
+is a question mark.  Otherwise, if 
+\fBx3270\fP is in SSCP-LU mode, the third symbol is an \fBS\fP.
+Otherwise it is blank.
+.TP
+\fBkeyboard lock\fP
+If the keyboard is locked, an "X" symbol and a message field indicate the
+reason for the keyboard lock.
+.TP
+\fBshift\fP
+Three characters indicate the keyboard modifier status.
+"M" indicates the Meta key, "A" the Alt key, and an up-arrow or "^"
+indicates the Shift key.
+.TP
+\fBcompose\fP
+The letter "C" indicates that a composite character is in progress.
+If another symbol follows the "C", it is the first character of the
+composite.
+.TP
+\fBtypeahead\fP
+The letter "T" indicates that one or more keystrokes are in the typeahead
+buffer.
+.TP
+\fBtemporary keymap\fP
+The letter "K" indicates that a temporary keymap is in effect.
+.TP
+\fBreverse\fP
+The letter "R" indicates that the keyboard is in reverse field entry mode.
+.TP
+\fBinsert mode\fP
+A thick caret "^" or the 
+letter "I" indicates that the keyboard is in insert mode.
+.TP
+\fBprinter session\fP
+The letter "P" indicates that a \fIpr3287\fP session is active.
+.TP
+\fBscript\fP
+The letter "S" indicates that a script is active.
+.TP
+\fBLU name\fP
+The LU name associated with the session, if there is one.
+.TP
+\fBtiming\fP
+A clock symbol and a time in seconds indicate the time it took to process
+the last \s-1AID\s+1 or the time to connect to a host.
+This display is optional.
+.TP
+\fBcursor position\fP
+The cursor row and column are optionally displayed, zero padded and separated
+by a "/".
+Location 001/001 is at the upper left, which is different from the row and
+columns parameters used with various actions, where the upper left corner is
+row 0, column 0.
+.SH "ICONS"
+If the \fB\-activeicon\fP
+option is given (or the "x3270.activeIcon" resource is set to
+\fBtrue\fP),
+\fBx3270\fP will attempt to make its icon a miniature version of the
+current screen image.
+This function is highly dependent on your window manager:
+.TP
+\fBmwm\fP
+The size of the icon is limited by the "Mwm.iconImageMaximum" resource, which
+defaults to \fB50x50\fP.
+The image will be clipped at the bottom and right.
+The icon cannot accept keyboard input.
+.TP
+\fBolwm\fP
+The full screen image of all 3270 models can be displayed on the icon.
+However, the icon cannot be resized, so if the model is later changed with an
+\fBx3270\fP menu option, the icon image will be corrupted.
+The icon cannot accept keyboard input.
+.TP
+\fBtwm\fP and \fBtvtwm\fP
+The full screen image of all 3270 models can be displayed on the icon, and the
+icon can be resized.
+The icon can accept keyboard input.
+.IP
+However, \fBtwm\fP does not put labels on application-supplied icon windows.
+You can have \fBx3270\fP
+add its own label to the icon by setting the "x3270.labelIcon" resource to
+\fBtrue\fP.
+The default font for icon labels is
+\fB8x13\fP;
+you may change it with the "x3270.iconLabelFont" resource.
+.SH "KEYMAPS"
+.PP
+The type of keyboard may be specified with the \fB\-keymap\fP
+switch or using either the \s-1KEYMAP\s+1 or \s-1KEYBD\s+1 environment variables.
+The types of supported keyboards include
+\fBsun_k3\fP,
+\fBsun_k4\fP,
+\fBsun_k5\fP,
+\fBhp\-k1\fP,
+\fBhp\-pc\fP
+and
+\fBncd\fP.
+.PP
+The keymap may also be specified as a comma-separated list of names.
+Later definitions override earlier ones.
+This is used to specify both a primary keyboard type and a set of modifiers.
+The modifiers defined include:
+.TP
+\fBow\fP
+(OpenWindows) Swaps the middle and right mouse button definitions, so the
+middle button performs the "Extend" function and the right-hand button
+performs the "Paste" function.
+Also changes the cut and paste actions to use the OpenWindows \s-1CLIPBOARD\s+1.
+.TP
+\fBapl\fP
+Allows entry of \s-1APL\s+1 characters (see \s-1APL SUPPORT\s+1
+below).
+.TP
+\fBfinnish7\fP
+Replaces the bracket, brace and bar keys with common Finnish characters.
+.TP
+\fBnorwegian7\fP
+Replaces the bracket, brace and bar keys with common Norwegian characters.
+.PP
+A temporary keymap can also be specified while \fBx3270\fP
+is running with the \fBKeymap\fP action.
+When the action \fBKeymap\fP(\fIn\fP) is executed, temporary keymap
+\fIn\fP
+is added to or deleted from the current keymap.
+Multiple temporary keymaps can be active simultaneously.
+The action \fBKeymap(None)\fP restores the original keymap.
+\fBNote:\fP
+When Keymap() is specified as part of a list of multiple actions in a keymap,
+it must be the last action in the list.
+.PP
+The temporary keymap \fBhebrew\fP
+is provided to allow entry of Hebrew characters.
+.PP
+The X Toolkit translation mechanism is used to provide keyboard emulation.
+It maps \fBevents\fP into \fBactions.\fP
+The best documentation can be found with X toolkit documents, but the
+following should suffice for simple customization.
+.PP
+An Xt event consists of (at least) four fields.  The first is called a
+\fBmodifier\fP.
+It may be any combination of \fBMeta\fP, \fBShift\fP and \fBCtrl\fP.  If it
+is prefaced by \fB!\fP,
+it means those modifiers only.  The second field is the specific event,
+in \fBx3270\fP
+usually just <Key>.
+The third field is the detail field, which gives the actual key.
+The name of the key may be determined using the \fIxev\fP
+program or with the "Trace X Events" menu option.
+The last field is the action, which is the internal emulator function.
+A complete list of actions may be found later in the manual.
+.PP
+There are three levels of translation tables in \fBx3270\fP.
+The first is a defined by the resource
+\fBx3270.keymap.base\fP.
+It defines alphabetic, numeric,
+function keys, and such basic functions as Enter and Delete.
+It allows a minimal useful functionality.
+It is generally compiled in \fBx3270\fP, but can be overridden.
+.PP
+The second level is a keyboard specific table, which is selected by the
+\fBx3270.keymap\fP resource, and defined by the
+\fBx3270.keymap.\fP\fIname\fP resource (where \fIname\fP is the value
+of the \fBx3270.keymap\fP resource).
+This keymap defines actions for such things as keypad
+keys, and keys unique to certain keyboards.
+Several predefined keymaps are included with \fBx3270\fP.
+.PP
+The third level is a user customizable table which may be used to augment or
+override key definitions.
+This keymap is defined by the \fBx3270.keymap.\fP\fIname\fP\fB.user\fP
+resource.
+.PP
+In addition, keymaps may be defined for use in 3270 mode or \s-1NVT\s+1 mode
+only.
+These keymaps use the suffixes \fB.3270\fP and \fB.nvt\fP in their names,
+respectively.
+If a keymap \fBx3270.keymap.\fP\fIname\fP.\fImode\fP is defined, it
+will augment the keymap \fBx3270.keymap.\fP\fIname\fP when \fBx3270\fP
+is in the given \fImode\fP.
+If a keymap \fBx3270.keymap.\fP\fIname\fP.\fBuser\fP.\fImode\fP is
+defined, it will augment the
+keymap \fBx3270.keymap\fP.\fIname\fP.\fBuser\fP when
+\fBx3270\fP
+is in the given \fImode\fP.
+.PP
+The default translation table \fBx3270.keymap.base\fP is:
+.TS
+l l .
+T{
+.na
+.nh
+<Key>Multi_key
+T}	T{
+.na
+.nh
+Compose()
+T}
+T{
+.na
+.nh
+Shift<Key>Left
+T}	T{
+.na
+.nh
+KybdSelect(Left,PRIMARY)
+T}
+T{
+.na
+.nh
+<Key>Left
+T}	T{
+.na
+.nh
+Left()
+T}
+T{
+.na
+.nh
+Meta<Key>Right
+T}	T{
+.na
+.nh
+NextWord()
+T}
+T{
+.na
+.nh
+Shift<Key>Right
+T}	T{
+.na
+.nh
+KybdSelect(Right,PRIMARY)
+T}
+T{
+.na
+.nh
+<Key>Right
+T}	T{
+.na
+.nh
+Right()
+T}
+T{
+.na
+.nh
+Shift<Key>Up
+T}	T{
+.na
+.nh
+KybdSelect(Up,PRIMARY)
+T}
+T{
+.na
+.nh
+<Key>Up
+T}	T{
+.na
+.nh
+Up()
+T}
+T{
+.na
+.nh
+Shift<Key>Down
+T}	T{
+.na
+.nh
+KybdSelect(Down,PRIMARY)
+T}
+T{
+.na
+.nh
+<Key>Down
+T}	T{
+.na
+.nh
+Down()
+T}
+T{
+.na
+.nh
+Ctrl<Btn1Down>
+T}	T{
+.na
+.nh
+HandleMenu(quitMenu)
+T}
+T{
+.na
+.nh
+Ctrl<Btn2Down>
+T}	T{
+.na
+.nh
+HandleMenu(optionsMenu)
+T}
+T{
+.na
+.nh
+Ctrl<Btn3Down>
+T}	T{
+.na
+.nh
+HandleMenu(hostMenu)
+T}
+T{
+.na
+.nh
+Shift<Btn1Down>
+T}	T{
+.na
+.nh
+MoveCursor()
+T}
+T{
+.na
+.nh
+<Btn1Down>
+T}	T{
+.na
+.nh
+select\-start()
+T}
+T{
+.na
+.nh
+<Btn1Motion>
+T}	T{
+.na
+.nh
+select\-extend()
+T}
+T{
+.na
+.nh
+<Btn2Down>
+T}	T{
+.na
+.nh
+ignore()
+T}
+T{
+.na
+.nh
+<Btn2Motion>
+T}	T{
+.na
+.nh
+ignore()
+T}
+T{
+.na
+.nh
+<Btn2Up>
+T}	T{
+.na
+.nh
+insert\-selection(PRIMARY)
+T}
+T{
+.na
+.nh
+<Btn3Down>
+T}	T{
+.na
+.nh
+start\-extend()
+T}
+T{
+.na
+.nh
+<Btn3Motion>
+T}	T{
+.na
+.nh
+select\-extend()
+T}
+T{
+.na
+.nh
+<BtnUp>
+T}	T{
+.na
+.nh
+select\-end(PRIMARY)
+T}
+T{
+.na
+.nh
+Meta<Key>F1
+T}	T{
+.na
+.nh
+PF(13)
+T}
+T{
+.na
+.nh
+Shift<Key>F1
+T}	T{
+.na
+.nh
+PF(13)
+T}
+T{
+.na
+.nh
+Meta<Key>F2
+T}	T{
+.na
+.nh
+PF(14)
+T}
+T{
+.na
+.nh
+Shift<Key>F2
+T}	T{
+.na
+.nh
+PF(14)
+T}
+T{
+.na
+.nh
+Meta<Key>F3
+T}	T{
+.na
+.nh
+PF(15)
+T}
+T{
+.na
+.nh
+Shift<Key>F3
+T}	T{
+.na
+.nh
+PF(15)
+T}
+T{
+.na
+.nh
+Meta<Key>F4
+T}	T{
+.na
+.nh
+PF(16)
+T}
+T{
+.na
+.nh
+Shift<Key>F4
+T}	T{
+.na
+.nh
+PF(16)
+T}
+T{
+.na
+.nh
+Meta<Key>F5
+T}	T{
+.na
+.nh
+PF(17)
+T}
+T{
+.na
+.nh
+Shift<Key>F5
+T}	T{
+.na
+.nh
+PF(17)
+T}
+T{
+.na
+.nh
+Meta<Key>F6
+T}	T{
+.na
+.nh
+PF(18)
+T}
+T{
+.na
+.nh
+Shift<Key>F6
+T}	T{
+.na
+.nh
+PF(18)
+T}
+T{
+.na
+.nh
+Meta<Key>F7
+T}	T{
+.na
+.nh
+PF(19)
+T}
+T{
+.na
+.nh
+Shift<Key>F7
+T}	T{
+.na
+.nh
+PF(19)
+T}
+T{
+.na
+.nh
+Meta<Key>F8
+T}	T{
+.na
+.nh
+PF(20)
+T}
+T{
+.na
+.nh
+Shift<Key>F8
+T}	T{
+.na
+.nh
+PF(20)
+T}
+T{
+.na
+.nh
+Meta<Key>F9
+T}	T{
+.na
+.nh
+PF(21)
+T}
+T{
+.na
+.nh
+Shift<Key>F9
+T}	T{
+.na
+.nh
+PF(21)
+T}
+T{
+.na
+.nh
+Meta<Key>F10
+T}	T{
+.na
+.nh
+PF(22)
+T}
+T{
+.na
+.nh
+Shift<Key>F10
+T}	T{
+.na
+.nh
+PF(22)
+T}
+T{
+.na
+.nh
+Meta<Key>F11
+T}	T{
+.na
+.nh
+PF(23)
+T}
+T{
+.na
+.nh
+Shift<Key>F11
+T}	T{
+.na
+.nh
+PF(23)
+T}
+T{
+.na
+.nh
+Meta<Key>F12
+T}	T{
+.na
+.nh
+PF(24)
+T}
+T{
+.na
+.nh
+Shift<Key>F12
+T}	T{
+.na
+.nh
+PF(24)
+T}
+T{
+.na
+.nh
+<Key>F1
+T}	T{
+.na
+.nh
+PF(1)
+T}
+T{
+.na
+.nh
+<Key>F2
+T}	T{
+.na
+.nh
+PF(2)
+T}
+T{
+.na
+.nh
+<Key>F3
+T}	T{
+.na
+.nh
+PF(3)
+T}
+T{
+.na
+.nh
+<Key>F4
+T}	T{
+.na
+.nh
+PF(4)
+T}
+T{
+.na
+.nh
+<Key>F5
+T}	T{
+.na
+.nh
+PF(5)
+T}
+T{
+.na
+.nh
+<Key>F6
+T}	T{
+.na
+.nh
+PF(6)
+T}
+T{
+.na
+.nh
+<Key>F7
+T}	T{
+.na
+.nh
+PF(7)
+T}
+T{
+.na
+.nh
+<Key>F8
+T}	T{
+.na
+.nh
+PF(8)
+T}
+T{
+.na
+.nh
+<Key>F9
+T}	T{
+.na
+.nh
+PF(9)
+T}
+T{
+.na
+.nh
+<Key>F10
+T}	T{
+.na
+.nh
+PF(10)
+T}
+T{
+.na
+.nh
+<Key>F11
+T}	T{
+.na
+.nh
+PF(11)
+T}
+T{
+.na
+.nh
+<Key>F12
+T}	T{
+.na
+.nh
+PF(12)
+T}
+T{
+.na
+.nh
+Alt<Key>q
+T}	T{
+.na
+.nh
+Quit()
+T}
+T{
+.na
+.nh
+<Key>Prior
+T}	T{
+.na
+.nh
+Scroll(Backward)
+T}
+T{
+.na
+.nh
+<Key>Next
+T}	T{
+.na
+.nh
+Scroll(Forward)
+T}
+T{
+.na
+.nh
+:<Key>
+T}	T{
+.na
+.nh
+Default()
+T}
+.TE
+.PP
+The default 3270-mode table \fBx3270.keymap.base.3270\fP adds the
+following definitions:
+.TS
+l l .
+T{
+.na
+.nh
+Shift<Key>Return
+T}	T{
+.na
+.nh
+Newline()
+T}
+T{
+.na
+.nh
+<Key>Return
+T}	T{
+.na
+.nh
+Enter()
+T}
+T{
+.na
+.nh
+<Key>Linefeed
+T}	T{
+.na
+.nh
+Newline()
+T}
+T{
+.na
+.nh
+Shift<Key>Tab
+T}	T{
+.na
+.nh
+BackTab()
+T}
+T{
+.na
+.nh
+<Key>Tab
+T}	T{
+.na
+.nh
+Tab()
+T}
+T{
+.na
+.nh
+<Key>Home
+T}	T{
+.na
+.nh
+Home()
+T}
+T{
+.na
+.nh
+Meta<Key>Left
+T}	T{
+.na
+.nh
+PreviousWord()
+T}
+T{
+.na
+.nh
+Meta<Key>Right
+T}	T{
+.na
+.nh
+NextWord()
+T}
+T{
+.na
+.nh
+<Key>Insert
+T}	T{
+.na
+.nh
+Insert()
+T}
+T{
+.na
+.nh
+<Key>Delete
+T}	T{
+.na
+.nh
+Delete()
+T}
+T{
+.na
+.nh
+<Key>BackSpace
+T}	T{
+.na
+.nh
+BackSpace()
+T}
+T{
+.na
+.nh
+Ctrl Shift<Btn1Down>
+T}	T{
+.na
+.nh
+MouseSelect()
+T}
+T{
+.na
+.nh
+Shift<Btn1Down>
+T}	T{
+.na
+.nh
+MoveCursor()
+T}
+T{
+.na
+.nh
+Meta<Key>1
+T}	T{
+.na
+.nh
+PA(1)
+T}
+T{
+.na
+.nh
+Meta<Key>2
+T}	T{
+.na
+.nh
+PA(2)
+T}
+T{
+.na
+.nh
+Meta<Key>3
+T}	T{
+.na
+.nh
+PA(3)
+T}
+T{
+.na
+.nh
+Ctrl<Key>a
+T}	T{
+.na
+.nh
+SelectAll(PRIMARY)
+T}
+T{
+.na
+.nh
+Meta<Key>a
+T}	T{
+.na
+.nh
+Attn()
+T}
+T{
+.na
+.nh
+Meta<Key>b
+T}	T{
+.na
+.nh
+PrintWindow()
+T}
+T{
+.na
+.nh
+Ctrl<Key>c
+T}	T{
+.na
+.nh
+set-select(CLIPBOARD)
+T}
+T{
+.na
+.nh
+Meta<Key>c
+T}	T{
+.na
+.nh
+Clear()
+T}
+T{
+.na
+.nh
+Meta<Key>d
+T}	T{
+.na
+.nh
+Delete()
+T}
+T{
+.na
+.nh
+Meta<Key>e
+T}	T{
+.na
+.nh
+EraseEOF()
+T}
+T{
+.na
+.nh
+Meta<Key>f
+T}	T{
+.na
+.nh
+Flip()
+T}
+T{
+.na
+.nh
+Meta<Key>h
+T}	T{
+.na
+.nh
+Home()
+T}
+T{
+.na
+.nh
+Meta<Key>i
+T}	T{
+.na
+.nh
+Insert()
+T}
+T{
+.na
+.nh
+Meta<Key>l
+T}	T{
+.na
+.nh
+Redraw()
+T}
+T{
+.na
+.nh
+Meta<Key>p
+T}	T{
+.na
+.nh
+PrintText()
+T}
+T{
+.na
+.nh
+Meta<Key>r
+T}	T{
+.na
+.nh
+Reset()
+T}
+T{
+.na
+.nh
+Meta<Key>u
+T}	T{
+.na
+.nh
+Unselect()
+T}
+T{
+.na
+.nh
+Ctrl<Key>u
+T}	T{
+.na
+.nh
+DeleteField()
+T}
+T{
+.na
+.nh
+Ctrl<Key>v
+T}	T{
+.na
+.nh
+insert-selection(CLIPBOARD)
+T}
+T{
+.na
+.nh
+Meta<Key>v
+T}	T{
+.na
+.nh
+ToggleReverse()
+T}
+T{
+.na
+.nh
+Ctrl<Key>w
+T}	T{
+.na
+.nh
+DeleteWord()
+T}
+T{
+.na
+.nh
+Ctrl<Key>x
+T}	T{
+.na
+.nh
+Cut(CLIPBOARD)
+T}
+.TE
+.PP
+Meta is the diamond shaped key on a sun_k4, "Alt" on an \s-1NCD\s+1,
+"Extend Char" on an \s-1HP\s+1.
+The following
+\fIxmodmap\fP
+command must be used on the \s-1NCD\s+1 to allow use the the "Alt"
+key:
+.PP
+.RS
+xmodmap \-e "keysym Alt_L = Meta_L"
+.RE
+.PP
+The left mouse button may be used to make a selection.
+Clicking once unselects the current selection.
+Clicking twice selects the word under the mouse cursor.
+Clicking three times selects the line under the mouse cursor.
+Clicking and dragging selects a rectangular area of the display.
+.PP
+The middle mouse button may be used to paste a selection.
+.PP
+The right mouse button may also be used for selections, selecting the
+rectangular area between the current position and where the left button was
+last pressed.
+.PP
+.PP
+On color X displays, the "x3270.selectBackground" resource is used to
+distinguish the selected text from the rest of the screen.
+On monochrome X displays, selected text is in reverse video.
+(It can be distinguished from a block cursor because the block cursor covers
+slightly less than an entire character position on the screen.)
+.PP
+The left mouse button, when pressed with the "Shift" key held down, moves the
+3270 cursor to the where the mouse cursor is pointing.
+.PP
+This is the complete list of keymap-callable actions.
+Other actions are defined for use by scripts and are documented in
+\fIx3270-script\fP(1);
+still others are defined for internal use by \fBx3270\fP
+and are not documented here.
+Note that when an action with no parameters is used in a keymap, the
+parentheses and empty argument list are still required.
+
+).PP
+Actions marked with an asterisk (*) may block, sending data to the host and
+possibly waiting for a response.
+.PP
+.TS
+center; lw(3i) lw(3i).
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Attn
+T}	T{
+.na
+.nh
+attention key
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+AltCursor
+T}	T{
+.na
+.nh
+switch between block and underscore cursor
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+BackSpace
+T}	T{
+.na
+.nh
+move cursor left (or send \s-1ASCII BS\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+BackTab
+T}	T{
+.na
+.nh
+tab to start of previous input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+CircumNot
+T}	T{
+.na
+.nh
+input "^" in \s-1NVT\s+1 mode, or "notsign" in 3270 mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Clear
+T}	T{
+.na
+.nh
+clear screen
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Compose
+T}	T{
+.na
+.nh
+next two keys form a special symbol
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Connect(\fIhost\fP)
+T}	T{
+.na
+.nh
+connect to \fIhost\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*CursorSelect
+T}	T{
+.na
+.nh
+Cursor Select \s-1AID\s+1
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Cut
+T}	T{
+.na
+.nh
+copy highlighted area to clipboard and erase
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Default
+T}	T{
+.na
+.nh
+enter key literally
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Delete
+T}	T{
+.na
+.nh
+delete character under cursor (or send \s-1ASCII DEL\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+DeleteField
+T}	T{
+.na
+.nh
+delete the entire field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+DeleteWord
+T}	T{
+.na
+.nh
+delete the current or previous word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Disconnect
+T}	T{
+.na
+.nh
+disconnect from host
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Down
+T}	T{
+.na
+.nh
+move cursor down
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Dup
+T}	T{
+.na
+.nh
+duplicate field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Enter
+T}	T{
+.na
+.nh
+Enter \s-1AID\s+1 (or send \s-1ASCII CR\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Erase
+T}	T{
+.na
+.nh
+erase previous character (or send \s-1ASCII BS\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+EraseEOF
+T}	T{
+.na
+.nh
+erase to end of current field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+EraseInput
+T}	T{
+.na
+.nh
+erase all input fields
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Execute(\fIcmd\fP)
+T}	T{
+.na
+.nh
+execute a command in a shell
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+FieldEnd
+T}	T{
+.na
+.nh
+move cursor to end of field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+FieldMark
+T}	T{
+.na
+.nh
+mark field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+HandleMenu(\fIname\fP)
+T}	T{
+.na
+.nh
+pop up a menu
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+HexString(\fIhex_digits\fP)
+T}	T{
+.na
+.nh
+insert control-character string
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Home
+T}	T{
+.na
+.nh
+move cursor to first input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Insert
+T}	T{
+.na
+.nh
+set insert mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Interrupt
+T}	T{
+.na
+.nh
+send \s-1TELNET IP\s+1 to host
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Key(\fIkeysym\fP)
+T}	T{
+.na
+.nh
+insert key \fIkeysym\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Key(0x\fIxx\fP)
+T}	T{
+.na
+.nh
+insert key with character code \fIxx\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Keymap(\fIkeymap\fP)
+T}	T{
+.na
+.nh
+toggle alternate \fIkeymap\fP (or remove with \fBNone\fP)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+KybdSelect(\fIdirection\fP [,\fIatom\fP...])
+T}	T{
+.na
+.nh
+Extend selection by one row or column
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Left
+T}	T{
+.na
+.nh
+move cursor left
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Left2
+T}	T{
+.na
+.nh
+move cursor left 2 positions
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Macro(\fImacro\fP)
+T}	T{
+.na
+.nh
+run a macro
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+MonoCase
+T}	T{
+.na
+.nh
+toggle uppercase-only mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+MoveCursor
+T}	T{
+.na
+.nh
+move cursor to mouse position
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+MoveCursor(\fIrow\fP, \fIcol\fP)
+T}	T{
+.na
+.nh
+move cursor to zero-origin (\fIrow\fP,\fIcol\fP)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*MoveCursorSelect
+T}	T{
+.na
+.nh
+move cursor to mouse position, light pen selection
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Newline
+T}	T{
+.na
+.nh
+move cursor to first field on next line (or send \s-1ASCII LF\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+NextWord
+T}	T{
+.na
+.nh
+move cursor to next word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*PA(\fIn\fP)
+T}	T{
+.na
+.nh
+Program Attention \s-1AID\s+1 (\fIn\fP from 1 to 3)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*PF(\fIn\fP)
+T}	T{
+.na
+.nh
+Program Function \s-1AID\s+1 (\fIn\fP from 1 to 24)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PreviousWord
+T}	T{
+.na
+.nh
+move cursor to previous word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Printer(Start[,\fIlu\fP]|Stop)
+T}	T{
+.na
+.nh
+start or stop printer session
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PrintText(\fIcommand\fP)
+T}	T{
+.na
+.nh
+print screen text on printer
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PrintWindow(\fIcommand\fP)
+T}	T{
+.na
+.nh
+print screen image (bitmap) on printer
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Quit
+T}	T{
+.na
+.nh
+exit \fBx3270\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Reconnect
+T}	T{
+.na
+.nh
+reconnect to previous host
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Redraw
+T}	T{
+.na
+.nh
+redraw window
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Reset
+T}	T{
+.na
+.nh
+reset locked keyboard
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Right
+T}	T{
+.na
+.nh
+move cursor right
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Right2
+T}	T{
+.na
+.nh
+move cursor right 2 positions
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Script(\fIcommand\fP[,\fIarg\fP...])
+T}	T{
+.na
+.nh
+run a script
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Scroll(Forward|Backward)
+T}	T{
+.na
+.nh
+scroll screen
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+SelectAll(\fIatom\fP)
+T}	T{
+.na
+.nh
+select entire screen
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+SetFont(\fIfont\fP)
+T}	T{
+.na
+.nh
+change emulator font
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*String(\fIstring\fP)
+T}	T{
+.na
+.nh
+insert string (simple macro facility)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Tab
+T}	T{
+.na
+.nh
+move cursor to next input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Toggle(\fIoption\fP[,\fIset|clear\fP])
+T}	T{
+.na
+.nh
+toggle an option
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+ToggleInsert
+T}	T{
+.na
+.nh
+toggle insert mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+ToggleReverse
+T}	T{
+.na
+.nh
+toggle reverse-input mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Transfer(\fIoption\fP=\fIvalue\fP...')
+T}	T{
+.na
+.nh
+file transfer
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Unselect
+T}	T{
+.na
+.nh
+release selection
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Up
+T}	T{
+.na
+.nh
+move cursor up
+T}
+_
+T{
+.na
+.nh
+.in +2
+.ti -2
+(the following are similar to xterm)
+T}
+_
+T{
+.na
+.nh
+.in +2
+.ti -2
+ignore
+T}	T{
+.na
+.nh
+do nothing
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+insert-selection([\fIatom\fP[,\fIatom\fP...]])
+T}	T{
+.na
+.nh
+paste selection
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+move-select
+T}	T{
+.na
+.nh
+a combination of \fBMoveCursor\fP and \fBselect-start\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+select-end(\fIatom\fP[,\fIatom\fP...]])
+T}	T{
+.na
+.nh
+complete selection and assign to atom(s)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+select-extend
+T}	T{
+.na
+.nh
+move the end of a selection
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+select-start
+T}	T{
+.na
+.nh
+mark the beginning of a selection
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+set-select(\fIatom\fP[,\fIatom\fP...]])
+T}	T{
+.na
+.nh
+assign existing selection to atom(s)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+start-extend
+T}	T{
+.na
+.nh
+begin marking the end of a selection
+T}
+.TE
+.LP
+Note that certain parameters to x3270 actions (such as the names of files
+and keymaps) are subject to \fIsubstitutions\fP:
+.LP
+The character \fB~\fP at the beginning of a string is replaced with the user's
+home directory.
+A \fB~\fP character followed by a username is
+replaced with that user's home directory.
+.LP
+Environment variables are substituted using the Unix shell convention of
+$\fIname\fP or ${\fIname\fP}.
+.LP
+Two special pseudo-environment variables are supported. ${TIMESTAMP} is
+replaced with a microsecond-resolution timestamp; ${UNIQUE} is replaced with a
+string guaranteed to make a unique filename (the process ID optionally
+followed by a dash and a string of digits). ${UNIQUE} is used to form trace
+file names.
+.SH "THE PRINTTEXT ACTION"
+The \fBPrintText\fP produces screen snapshots in a number of different
+forms.
+The default form wth no arguments sends a copy of the screen to the default
+printer.
+A single argument is
+the command to use to print, e.g., \fBlpr\fP.
+.LP
+Multiple arguments can include keywords to control the output of
+\fBPrintText\fP:
+.TP
+\fBfile\fP \fIfilename\fP
+Save the output in a file.
+.TP
+\fBhtml\fP
+Save the output as HTML.  This option implies \fBfile\fP.
+.TP
+\fBrtf\fP
+Save the output as RichText.  This option implies \fBfile\fP.
+The font defaults to \fBCourier New\fP and the
+point size defaults to 8.
+These can be overridden by the \fBprintTextFont\fP and \fBprintTextSize\fP
+resources, respectively.
+.TP
+\fBstring\fP
+Return the output as a string.  This can only be used from scripts.
+.TP
+\fBmodi\fP
+Render modified fields in italics.
+.TP
+\fBcaption\fP \fItext\fP
+Add the specified \fItext\fP as a caption above the output.
+Within \fItext\fP, the special sequence \fB%T%\fP will be replaced with
+a timestamp.
+.TP
+\fBsecure\fP
+Disables the pop-up dialog.
+.TP
+\fBcommand\fP \fIcommand\fP
+Directs the output to a command.
+This allows one or more of the other keywords to be specified, while still
+sending the output to the printer.
+
+.SH "MACROS AND SCRIPTS"
+There are several types of
+macros and script functions available.
+.TP
+\fBThe String Action\fP
+The simplest method for
+macros is provided via the \fBString\fP
+action.
+The arguments to \fBString\fP are one or more double-quoted strings which are
+inserted directly as if typed.
+The C backslash conventions are honored as follows.
+(Entries marked * mean that after sending the \s-1AID\s+1 code to the host,
+\fBx3270\fP will wait for the host to unlock the keyboard before further
+processing the string.)
+.TS
+l l.
+T{
+.na
+.nh
+\eb
+T}	T{
+.na
+.nh
+Left
+T}
+T{
+.na
+.nh
+\ee\fIxxxx\fP
+T}	T{
+.na
+.nh
+EBCDIC character in hex
+T}
+T{
+.na
+.nh
+\ef
+T}	T{
+.na
+.nh
+Clear*
+T}
+T{
+.na
+.nh
+\en
+T}	T{
+.na
+.nh
+Enter*
+T}
+T{
+.na
+.nh
+\epa\fIn\fP
+T}	T{
+.na
+.nh
+PA(\fIn\fP)*
+T}
+T{
+.na
+.nh
+\epf\fInn\fP
+T}	T{
+.na
+.nh
+PF(\fInn\fP)*
+T}
+T{
+.na
+.nh
+\er
+T}	T{
+.na
+.nh
+Newline
+T}
+T{
+.na
+.nh
+\et
+T}	T{
+.na
+.nh
+Tab
+T}
+T{
+.na
+.nh
+\eT
+T}	T{
+.na
+.nh
+BackTab
+T}
+T{
+.na
+.nh
+\eu\fIxxxx\fP
+T}	T{
+.na
+.nh
+Unicode character in hex
+T}
+T{
+.na
+.nh
+\ex\fIxxxx\fP
+T}	T{
+.na
+.nh
+Unicode character in hex
+T}
+.TE
+.IP
+Note that the numeric values for the \ee, \eu and \ex sequences
+can be abbreviated to 2 digits.
+Note also that EBCDIC codes greater than 255 and some Unicode character codes
+represent DBCS characters, which will work only if x3270 is built with
+DBCS support and the host allows DBCS input in the current field.
+.IP
+An example keymap entry would be:
+.RS
+Meta<Key>p: String("probs clearrdr\en")
+.RE
+.IP
+\fBNote:\fP
+The strings are in \s-1ASCII\s+1 and converted to \s-1EBCDIC\s+1,
+so beware of inserting
+control codes.
+Also, a backslash before a \fBp\fP may need to be
+doubled so it will not be removed when a resource file is read.
+.IP
+There is also an alternate form of the \fBString\fP action, \fBHexString\fP,
+which is used to enter non-printing data.
+The argument to \fBHexString\fP is a string of hexadecimal digits, two per
+character.  A leading 0x or 0X is optional.
+In 3270 mode, the hexadecimal data represent \s-1EBCDIC\s+1 characters, which
+are entered into the current field.
+In \s-1NVT\s+1 mode, the hexadecimal data represent \s-1ASCII\s+1 characters,
+which are sent directly to the host.
+.TP
+\fBThe Script Action\fP
+This action causes \fBx3270\fP to start a child process which can
+execute \fBx3270\fP actions.
+Standard input and output from the child process are piped back to
+\fBx3270\fP.
+The \fBScript\fP action is fully documented in
+\fIx3270-script\fP(1).
+.TP
+\fBThe macros Resource\fP
+An alternate method of defining macros is the "x3270.macros" resource.
+This resource is similar to a keymap, but instead of defining keyboard
+mappings, it associates a list of X actions with a name.
+These names are displayed on a Macros menu that appears when \fBx3270\fP
+is connected to a host.
+Selecting one of the names on the menu executes the X actions associated with
+it.
+Typically the actions are \fBString\fP calls, but any action may be specified.
+Here is a sample macros resource definition, which would result in a four-entry
+Macros menu:
+.RS
+x3270.macros: \e
+.br
+	log off: String("logout\en")\en\e
+.br
+	vtam: String("dial vtam\en")\en\e
+.br
+	pa1: PA(1)\en\e
+.br
+	alt printer: PrintText("lpr -Plw2")
+.RE
+.IP
+You can also define a different set of macros for each host.
+If there is a resource named
+`x3270.\fImacros\fP.\fIsomehost\fP',
+it defines the macros menu for when \fBx3270\fP
+is connected to \fIsomehost\fP.
+.TP
+\fBThe \-script Option\fP
+This facility allows \fBx3270\fP
+to operate under the complete control of a script.
+\fBx3270\fP
+accepts actions from standard input, and prints results on standard output.
+The \fB\-script\fP option is fully documented in
+\fIx3270-script\fP(1).
+.SH "COMPOSITE CHARACTERS"
+\fBx3270\fP
+allows the direct entry of accented letters and special symbols.
+Pressing and releasing the "Compose" key, followed by two other keys, causes
+entry of the symbol combining those two keys.
+For example, "Compose" followed by the "C" key and the "," (comma) key, enters
+the "C-cedilla" symbol.
+A C on the status line indicates a pending composite character.
+.PP
+The mappings between these pairs of ordinary keys and the symbols they
+represent is controlled by the "x3270.composeMap" resource; it gives the
+name of the map to use.
+The maps themselves are named "x3270.composeMap.\fIname\fP".
+The default is "latin1", which gives mappings for most of the symbols in
+the \s-1ISO\s+1 8859-1 Latin-1 character set that are not in the
+7-bit \s-1ASCII\s+1
+character set.
+.PP
+\fBNote:\fP
+The default keymap defines
+the "Multi_key" keysym
+as the "Compose" key.
+If your keyboard lacks such a key, you
+may set up your own "Compose" key with
+a keymap that maps some other keysym onto the \fBCompose\fP action.
+.SH "APL SUPPORT"
+\fBx3270\fP supports the full \s-1APL2\s+1 character set and the entry of
+\s-1APL\s+1 characters from the keyboard.
+.PP
+\s-1APL\s+1 characters are supported only in the special \fB3270\fP font.
+.PP
+Keyboard entry of \s-1APL\s+1 characters is supported through the \fBapl\fP
+keymap modifier.
+This modifier defines the "Alt" key as an \s-1APL\s+1 shift key, with a
+typical \s-1APL\s+1 keyboard layout, e.g.,
+"Alt" pressed with the \fBA\fP key results in the \s-1APL\s+1 "alpha" symbol.
+Overstruck characters such as "quad-quote" are not defined as single
+keystrokes; instead they are entered as
+composites (see \s-1COMPOSITE CHARACTERS\s+1
+above).
+A special composite map,
+\fBapl\fP,
+is provided for this purpose.
+.PP
+\fBNote:\fP
+Some keyboards do not define the "Alt" key as a modifier, so keymaps that use
+the "Alt" key will not function.
+On a Sun for example, this can be remedied with the command:
+.IP
+.RS
+xmodmap \-e "add mod2 = Alt_L"
+.RE
+.PP
+For convenience, an \fB\-apl\fP
+option is defined, which is an abbreviation for the following resource
+definitions:
+.RS
+x3270.keymap: \fIyour_keymap_name\fP,apl
+.br
+x3270.charset: apl
+.br
+x3270.composeMap: apl
+.br
+.RE
+.PP
+There are a number of \s-1APL\s+1 characters that are similar in appearance to
+non-\s-1APL\s+1
+characters.
+In particular, the \s-1APL\s+1 "stile", "slope," "tilde" and "quotedot"
+characters are similar to the \s-1EBCDIC\s+1 "bar", "backslash," "tilde"
+and "exclaim" characters.
+The \s-1APL\s+1 characters are entered with the "Alt" key, and have slightly
+different appearances.
+.PP
+The complete list of special \s-1APL\s+1 keysyms is as follows.
+Entries marked with an asterisk (*) represent
+simple aliases for standard \s-1EBCDIC\s+1 characters.
+Entries marked with an (S) represent Sharp APL charatcers.
+.PP
+.TS
+l c l l l.
+T{
+.na
+.nh
+APL Symbol
+T}	T{
+.na
+.nh
+Hex
+T}	T{
+.na
+.nh
+x3270 \fIapl_\fP Keysym 
+T}	T{
+.na
+.nh
+x3270 Key
+T}	T{
+.na
+.nh
+x3270 Composed Keys
+T}
+_
+T{
+.na
+.nh
+A underbar
+T}	T{
+.na
+.nh
+41
+T}	T{
+.na
+.nh
+Aunderbar
+T}	T{
+.na
+.nh
+Alt-A
+T}	T{
+.na
+.nh
+A + underbar
+T}
+T{
+.na
+.nh
+alpha
+T}	T{
+.na
+.nh
+B0
+T}	T{
+.na
+.nh
+alpha
+T}	T{
+.na
+.nh
+Alt-a
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+B underbar
+T}	T{
+.na
+.nh
+42
+T}	T{
+.na
+.nh
+Bunderbar
+T}	T{
+.na
+.nh
+Alt-B
+T}	T{
+.na
+.nh
+B + underbar
+T}
+T{
+.na
+.nh
+bar
+T}	T{
+.na
+.nh
+60*
+T}	T{
+.na
+.nh
+bar
+T}	T{
+.na
+.nh
+-
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+brace left
+T}	T{
+.na
+.nh
+C0
+T}	T{
+.na
+.nh
+braceleft
+T}	T{
+.na
+.nh
+Alt-{
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+brace right
+T}	T{
+.na
+.nh
+D0
+T}	T{
+.na
+.nh
+braceright
+T}	T{
+.na
+.nh
+Alt-}
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+C underbar
+T}	T{
+.na
+.nh
+43
+T}	T{
+.na
+.nh
+Cunderbar
+T}	T{
+.na
+.nh
+Alt-C
+T}	T{
+.na
+.nh
+C + underbar
+T}
+T{
+.na
+.nh
+circle
+T}	T{
+.na
+.nh
+9D
+T}	T{
+.na
+.nh
+circle
+T}	T{
+.na
+.nh
+Alt-o
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+circle bar
+T}	T{
+.na
+.nh
+ED
+T}	T{
+.na
+.nh
+circlebar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+circle + bar
+T}
+T{
+.na
+.nh
+circle slope
+T}	T{
+.na
+.nh
+CF
+T}	T{
+.na
+.nh
+circleslope
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+circle + slope
+T}
+T{
+.na
+.nh
+circle star
+T}	T{
+.na
+.nh
+FD
+T}	T{
+.na
+.nh
+circlestar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+circle + star
+T}
+T{
+.na
+.nh
+circle stile
+T}	T{
+.na
+.nh
+CD
+T}	T{
+.na
+.nh
+circlestile
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+circle + stile
+T}
+T{
+.na
+.nh
+colon
+T}	T{
+.na
+.nh
+7A*
+T}	T{
+.na
+.nh
+colon
+T}	T{
+.na
+.nh
+:
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+comma
+T}	T{
+.na
+.nh
+6B*
+T}	T{
+.na
+.nh
+comma
+T}	T{
+.na
+.nh
+,
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+comma bar (S)
+T}	T{
+.na
+.nh
+E5
+T}	T{
+.na
+.nh
+commabar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+comma + bar
+T}
+T{
+.na
+.nh
+D underbar
+T}	T{
+.na
+.nh
+44
+T}	T{
+.na
+.nh
+Dunderbar
+T}	T{
+.na
+.nh
+Alt-D
+T}	T{
+.na
+.nh
+D + underbar
+T}
+T{
+.na
+.nh
+del
+T}	T{
+.na
+.nh
+BA
+T}	T{
+.na
+.nh
+del
+T}	T{
+.na
+.nh
+Alt-g
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+del stile
+T}	T{
+.na
+.nh
+DC
+T}	T{
+.na
+.nh
+delstile
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+del + stile
+T}
+T{
+.na
+.nh
+del tilde
+T}	T{
+.na
+.nh
+FB
+T}	T{
+.na
+.nh
+deltilde
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+del + tilde
+T}
+T{
+.na
+.nh
+delta
+T}	T{
+.na
+.nh
+BB
+T}	T{
+.na
+.nh
+delta
+T}	T{
+.na
+.nh
+Alt-h
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+delta stile
+T}	T{
+.na
+.nh
+DD
+T}	T{
+.na
+.nh
+deltastile
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+delta + stile
+T}
+T{
+.na
+.nh
+delta underbar
+T}	T{
+.na
+.nh
+FC
+T}	T{
+.na
+.nh
+deltaunderbar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+delta + underbar
+T}
+T{
+.na
+.nh
+diamond
+T}	T{
+.na
+.nh
+70
+T}	T{
+.na
+.nh
+diamond
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+up caret + down caret
+T}
+T{
+.na
+.nh
+dieresis
+T}	T{
+.na
+.nh
+72
+T}	T{
+.na
+.nh
+dieresis
+T}	T{
+.na
+.nh
+Alt-1
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+dieresis circle (S)
+T}	T{
+.na
+.nh
+E5
+T}	T{
+.na
+.nh
+dieresis\%circle
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+dieresis + circle
+T}
+T{
+.na
+.nh
+dieresis dot
+T}	T{
+.na
+.nh
+EC
+T}	T{
+.na
+.nh
+dieresisdot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+dieresis + dot
+T}
+T{
+.na
+.nh
+dieresis jot (S)
+T}	T{
+.na
+.nh
+E4
+T}	T{
+.na
+.nh
+dieresisjot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+dieresis + jot
+T}
+T{
+.na
+.nh
+divide
+T}	T{
+.na
+.nh
+B8
+T}	T{
+.na
+.nh
+divide
+T}	T{
+.na
+.nh
+Alt-+
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+dot
+T}	T{
+.na
+.nh
+4B*
+T}	T{
+.na
+.nh
+dot
+T}	T{
+.na
+.nh
+.
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down arrow
+T}	T{
+.na
+.nh
+8B
+T}	T{
+.na
+.nh
+downarrow
+T}	T{
+.na
+.nh
+Alt-u
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down caret
+T}	T{
+.na
+.nh
+78
+T}	T{
+.na
+.nh
+downcaret
+T}	T{
+.na
+.nh
+Alt-9
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down caret tilde
+T}	T{
+.na
+.nh
+CB
+T}	T{
+.na
+.nh
+downcaret\%tilde
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+down caret + tilde
+T}
+T{
+.na
+.nh
+down shoe
+T}	T{
+.na
+.nh
+AB
+T}	T{
+.na
+.nh
+downshoe
+T}	T{
+.na
+.nh
+Alt-v
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down stile
+T}	T{
+.na
+.nh
+8E
+T}	T{
+.na
+.nh
+downstile
+T}	T{
+.na
+.nh
+Alt-d
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down tack
+T}	T{
+.na
+.nh
+AC
+T}	T{
+.na
+.nh
+downtack
+T}	T{
+.na
+.nh
+Alt-b
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+down tack jot
+T}	T{
+.na
+.nh
+FE
+T}	T{
+.na
+.nh
+downtackjot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+down tack + jot
+T}
+T{
+.na
+.nh
+down tack up tack
+T}	T{
+.na
+.nh
+DA
+T}	T{
+.na
+.nh
+downtack\%uptack
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+down tack + up tack
+T}
+T{
+.na
+.nh
+E underbar
+T}	T{
+.na
+.nh
+45
+T}	T{
+.na
+.nh
+Eunderbar
+T}	T{
+.na
+.nh
+Alt-E
+T}	T{
+.na
+.nh
+E + underbar
+T}
+T{
+.na
+.nh
+epsilon
+T}	T{
+.na
+.nh
+B1
+T}	T{
+.na
+.nh
+epsilon
+T}	T{
+.na
+.nh
+Alt-e
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+epsilon underbar
+T}	T{
+.na
+.nh
+75
+T}	T{
+.na
+.nh
+epsilon\%underbar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+epsilon + underbar
+T}
+T{
+.na
+.nh
+equal
+T}	T{
+.na
+.nh
+7E*
+T}	T{
+.na
+.nh
+equal
+T}	T{
+.na
+.nh
+"="
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+equal underbar
+T}	T{
+.na
+.nh
+E1
+T}	T{
+.na
+.nh
+equalunderbar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+equal + underbar
+T}
+T{
+.na
+.nh
+euro (S)
+T}	T{
+.na
+.nh
+E7
+T}	T{
+.na
+.nh
+euro
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+C + =
+T}
+T{
+.na
+.nh
+F underbar
+T}	T{
+.na
+.nh
+46
+T}	T{
+.na
+.nh
+Funderbar
+T}	T{
+.na
+.nh
+Alt-F
+T}	T{
+.na
+.nh
+F + underbar
+T}
+T{
+.na
+.nh
+G underbar
+T}	T{
+.na
+.nh
+47
+T}	T{
+.na
+.nh
+Gunderbar
+T}	T{
+.na
+.nh
+Alt-G
+T}	T{
+.na
+.nh
+G + underbar
+T}
+T{
+.na
+.nh
+greater
+T}	T{
+.na
+.nh
+6E*
+T}	T{
+.na
+.nh
+greater
+T}	T{
+.na
+.nh
+>
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+H underbar
+T}	T{
+.na
+.nh
+48
+T}	T{
+.na
+.nh
+Hunderbar
+T}	T{
+.na
+.nh
+Alt-H
+T}	T{
+.na
+.nh
+H + underbar
+T}
+T{
+.na
+.nh
+I underbar
+T}	T{
+.na
+.nh
+49
+T}	T{
+.na
+.nh
+Iunderbar
+T}	T{
+.na
+.nh
+Alt-I
+T}	T{
+.na
+.nh
+I + underbar
+T}
+T{
+.na
+.nh
+iota
+T}	T{
+.na
+.nh
+B2
+T}	T{
+.na
+.nh
+iota
+T}	T{
+.na
+.nh
+Alt-i
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+iota underbar
+T}	T{
+.na
+.nh
+74
+T}	T{
+.na
+.nh
+iotaunderbar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+iota + underbar
+T}
+T{
+.na
+.nh
+J underbar
+T}	T{
+.na
+.nh
+51
+T}	T{
+.na
+.nh
+Junderbar
+T}	T{
+.na
+.nh
+Alt-J
+T}	T{
+.na
+.nh
+J + underbar
+T}
+T{
+.na
+.nh
+jot
+T}	T{
+.na
+.nh
+AF
+T}	T{
+.na
+.nh
+jot
+T}	T{
+.na
+.nh
+alt-j
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+K underbar
+T}	T{
+.na
+.nh
+52
+T}	T{
+.na
+.nh
+Kunderbar
+T}	T{
+.na
+.nh
+Alt-K
+T}	T{
+.na
+.nh
+K + underbar
+T}
+T{
+.na
+.nh
+L underbar
+T}	T{
+.na
+.nh
+53
+T}	T{
+.na
+.nh
+Lunderbar
+T}	T{
+.na
+.nh
+Alt-L
+T}	T{
+.na
+.nh
+L + underbar
+T}
+T{
+.na
+.nh
+left arrow
+T}	T{
+.na
+.nh
+9F
+T}	T{
+.na
+.nh
+leftarrow
+T}	T{
+.na
+.nh
+Alt-[
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+left bracket
+T}	T{
+.na
+.nh
+AD
+T}	T{
+.na
+.nh
+leftbracket
+T}	T{
+.na
+.nh
+[
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+left paren
+T}	T{
+.na
+.nh
+4D*
+T}	T{
+.na
+.nh
+leftparen
+T}	T{
+.na
+.nh
+(
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+left shoe
+T}	T{
+.na
+.nh
+9B
+T}	T{
+.na
+.nh
+leftshoe
+T}	T{
+.na
+.nh
+Alt-z
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+less
+T}	T{
+.na
+.nh
+4C*
+T}	T{
+.na
+.nh
+less
+T}	T{
+.na
+.nh
+<
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+M underbar
+T}	T{
+.na
+.nh
+54
+T}	T{
+.na
+.nh
+Munderbar
+T}	T{
+.na
+.nh
+Alt-M
+T}	T{
+.na
+.nh
+M + underbar
+T}
+T{
+.na
+.nh
+N underbar
+T}	T{
+.na
+.nh
+55
+T}	T{
+.na
+.nh
+Nunderbar
+T}	T{
+.na
+.nh
+Alt-N
+T}	T{
+.na
+.nh
+N + underbar
+T}
+T{
+.na
+.nh
+not equal
+T}	T{
+.na
+.nh
+BE
+T}	T{
+.na
+.nh
+notequal
+T}	T{
+.na
+.nh
+Alt-8
+T}	T{
+.na
+.nh
+equal + slash
+T}
+T{
+.na
+.nh
+not greater
+T}	T{
+.na
+.nh
+8C
+T}	T{
+.na
+.nh
+notgreater
+T}	T{
+.na
+.nh
+Alt-4
+T}	T{
+.na
+.nh
+less + equal
+T}
+T{
+.na
+.nh
+not less
+T}	T{
+.na
+.nh
+AE
+T}	T{
+.na
+.nh
+notless
+T}	T{
+.na
+.nh
+Alt-6
+T}	T{
+.na
+.nh
+greater + equal
+T}
+T{
+.na
+.nh
+O underbar
+T}	T{
+.na
+.nh
+56
+T}	T{
+.na
+.nh
+Ounderbar
+T}	T{
+.na
+.nh
+Alt-O
+T}	T{
+.na
+.nh
+O + underbar
+T}
+T{
+.na
+.nh
+omega
+T}	T{
+.na
+.nh
+B4
+T}	T{
+.na
+.nh
+omega
+T}	T{
+.na
+.nh
+Alt-w
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+overbar
+T}	T{
+.na
+.nh
+A0
+T}	T{
+.na
+.nh
+overbar
+T}	T{
+.na
+.nh
+Alt-2
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+P underbar
+T}	T{
+.na
+.nh
+57
+T}	T{
+.na
+.nh
+Punderbar
+T}	T{
+.na
+.nh
+Alt-P
+T}	T{
+.na
+.nh
+P + underbar
+T}
+T{
+.na
+.nh
+plus
+T}	T{
+.na
+.nh
+4E*
+T}	T{
+.na
+.nh
+plus
+T}	T{
+.na
+.nh
++
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+Q underbar
+T}	T{
+.na
+.nh
+58
+T}	T{
+.na
+.nh
+Qunderbar
+T}	T{
+.na
+.nh
+Alt-Q
+T}	T{
+.na
+.nh
+Q + underbar
+T}
+T{
+.na
+.nh
+quad
+T}	T{
+.na
+.nh
+90
+T}	T{
+.na
+.nh
+quad
+T}	T{
+.na
+.nh
+Alt-l
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+quad divide
+T}	T{
+.na
+.nh
+EE
+T}	T{
+.na
+.nh
+quaddivide
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quad + divide
+T}
+T{
+.na
+.nh
+quad jot
+T}	T{
+.na
+.nh
+73
+T}	T{
+.na
+.nh
+quadjot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quad + jot
+T}
+T{
+.na
+.nh
+quad quote
+T}	T{
+.na
+.nh
+DE
+T}	T{
+.na
+.nh
+quadquote
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quad + quote
+T}
+T{
+.na
+.nh
+quad slope
+T}	T{
+.na
+.nh
+CE
+T}	T{
+.na
+.nh
+quadslope
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quad + slope
+T}
+T{
+.na
+.nh
+query
+T}	T{
+.na
+.nh
+6F*
+T}	T{
+.na
+.nh
+query
+T}	T{
+.na
+.nh
+?
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+quote
+T}	T{
+.na
+.nh
+7D*
+T}	T{
+.na
+.nh
+quote
+T}	T{
+.na
+.nh
+'
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+quote dot
+T}	T{
+.na
+.nh
+DB
+T}	T{
+.na
+.nh
+quotedot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quote + dot
+T}
+T{
+.na
+.nh
+R underbar
+T}	T{
+.na
+.nh
+59
+T}	T{
+.na
+.nh
+Runderbar
+T}	T{
+.na
+.nh
+Alt-R
+T}	T{
+.na
+.nh
+R + underbar
+T}
+T{
+.na
+.nh
+rho
+T}	T{
+.na
+.nh
+B3
+T}	T{
+.na
+.nh
+rho
+T}	T{
+.na
+.nh
+Alt-r
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+right arrow
+T}	T{
+.na
+.nh
+8F
+T}	T{
+.na
+.nh
+rightarrow
+T}	T{
+.na
+.nh
+Alt-]
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+right bracket
+T}	T{
+.na
+.nh
+BD
+T}	T{
+.na
+.nh
+rightbracket
+T}	T{
+.na
+.nh
+]
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+right paren
+T}	T{
+.na
+.nh
+5D*
+T}	T{
+.na
+.nh
+rightparen
+T}	T{
+.na
+.nh
+)
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+right shoe
+T}	T{
+.na
+.nh
+9A
+T}	T{
+.na
+.nh
+rightshoe
+T}	T{
+.na
+.nh
+Alt-x
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+S underbar
+T}	T{
+.na
+.nh
+62
+T}	T{
+.na
+.nh
+Sunderbar
+T}	T{
+.na
+.nh
+Alt-S
+T}	T{
+.na
+.nh
+S + underbar
+T}
+T{
+.na
+.nh
+semicolon
+T}	T{
+.na
+.nh
+5E*
+T}	T{
+.na
+.nh
+semicolon
+T}	T{
+.na
+.nh
+;
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+slash
+T}	T{
+.na
+.nh
+61*
+T}	T{
+.na
+.nh
+slash
+T}	T{
+.na
+.nh
+/
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+slash bar
+T}	T{
+.na
+.nh
+EA
+T}	T{
+.na
+.nh
+slashbar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+slash + bar
+T}
+T{
+.na
+.nh
+slope
+T}	T{
+.na
+.nh
+B7
+T}	T{
+.na
+.nh
+slope
+T}	T{
+.na
+.nh
+Alt-\e
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+slope bar
+T}	T{
+.na
+.nh
+EB
+T}	T{
+.na
+.nh
+slopebar
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+slope + bar
+T}
+T{
+.na
+.nh
+squad
+T}	T{
+.na
+.nh
+CC
+T}	T{
+.na
+.nh
+squad
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+quad + quad
+T}
+T{
+.na
+.nh
+star
+T}	T{
+.na
+.nh
+5C*
+T}	T{
+.na
+.nh
+star
+T}	T{
+.na
+.nh
+*
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+stile
+T}	T{
+.na
+.nh
+BF
+T}	T{
+.na
+.nh
+stile
+T}	T{
+.na
+.nh
+Alt-|
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+T underbar
+T}	T{
+.na
+.nh
+63
+T}	T{
+.na
+.nh
+Tunderbar
+T}	T{
+.na
+.nh
+Alt-T
+T}	T{
+.na
+.nh
+T + underbar
+T}
+T{
+.na
+.nh
+tilde
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+tilde
+T}	T{
+.na
+.nh
+Alt-~
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+times
+T}	T{
+.na
+.nh
+B6
+T}	T{
+.na
+.nh
+times
+T}	T{
+.na
+.nh
+Alt-=
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+U underbar
+T}	T{
+.na
+.nh
+64
+T}	T{
+.na
+.nh
+Uunderbar
+T}	T{
+.na
+.nh
+Alt-U
+T}	T{
+.na
+.nh
+U + underbar
+T}
+T{
+.na
+.nh
+underbar
+T}	T{
+.na
+.nh
+6D*
+T}	T{
+.na
+.nh
+underbar
+T}	T{
+.na
+.nh
+"_"
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up arrow
+T}	T{
+.na
+.nh
+8A
+T}	T{
+.na
+.nh
+uparrow
+T}	T{
+.na
+.nh
+Alt-y
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up caret
+T}	T{
+.na
+.nh
+71
+T}	T{
+.na
+.nh
+upcaret
+T}	T{
+.na
+.nh
+Alt-0
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up caret tilde
+T}	T{
+.na
+.nh
+CA
+T}	T{
+.na
+.nh
+upcarettilde
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+up caret + tilde
+T}
+T{
+.na
+.nh
+up shoe
+T}	T{
+.na
+.nh
+AA
+T}	T{
+.na
+.nh
+upshoe
+T}	T{
+.na
+.nh
+Alt-c
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up shoe jot
+T}	T{
+.na
+.nh
+DF
+T}	T{
+.na
+.nh
+upshoejot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+up shoe + jot
+T}
+T{
+.na
+.nh
+up stile
+T}	T{
+.na
+.nh
+8D
+T}	T{
+.na
+.nh
+upstile
+T}	T{
+.na
+.nh
+Alt-s
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up tack
+T}	T{
+.na
+.nh
+BC
+T}	T{
+.na
+.nh
+uptack
+T}	T{
+.na
+.nh
+Alt-n
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+up tack jot
+T}	T{
+.na
+.nh
+EF
+T}	T{
+.na
+.nh
+uptackjot
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+up tack + jot
+T}
+T{
+.na
+.nh
+V underbar
+T}	T{
+.na
+.nh
+65
+T}	T{
+.na
+.nh
+Vunderbar
+T}	T{
+.na
+.nh
+Alt-V
+T}	T{
+.na
+.nh
+V + underbar
+T}
+T{
+.na
+.nh
+W underbar
+T}	T{
+.na
+.nh
+66
+T}	T{
+.na
+.nh
+Wunderbar
+T}	T{
+.na
+.nh
+Alt-W
+T}	T{
+.na
+.nh
+W + underbar
+T}
+T{
+.na
+.nh
+X underbar
+T}	T{
+.na
+.nh
+67
+T}	T{
+.na
+.nh
+Xunderbar
+T}	T{
+.na
+.nh
+Alt-X
+T}	T{
+.na
+.nh
+X + underbar
+T}
+T{
+.na
+.nh
+Y underbar
+T}	T{
+.na
+.nh
+68
+T}	T{
+.na
+.nh
+Yunderbar
+T}	T{
+.na
+.nh
+Alt-Y
+T}	T{
+.na
+.nh
+Y + underbar
+T}
+T{
+.na
+.nh
+Z underbar
+T}	T{
+.na
+.nh
+69
+T}	T{
+.na
+.nh
+Zunderbar
+T}	T{
+.na
+.nh
+Alt-Z
+T}	T{
+.na
+.nh
+Z + underbar
+T}
+.TE
+.SH "XIM SUPPORT"
+When compiled with DBCS support, \fBx3270\fP supports multi-byte input methods
+via the XIM protocol.
+.LP
+The input method is selected by the XMODIFIERS environment variable or the
+\fB\-im\fP command-line option.
+.LP
+The preedit type is specified by the \fB\-pt\fP command-line option,
+with a default of \fBOverTheSpot+1\fP.
+.SH "SCREEN PRINTING"
+Screen printing is handled through options on the \fBFile\fP menu or by the
+\fBPrintText\fP and \fBPrintWindow\fP actions.
+Each results in a pop-up to confirm the print command.
+.PP
+The \fBPrintText\fP action (usually assigned to the key <Meta>p) sends
+the current
+screen image to the printer as \s-1ASCII\s+1 characters.
+The default command used to print the data is controlled by
+the "x3270.printTextCommand" resource; the default is
+\fBlpr\fP.
+You may also use a keymap definition to pass a print command the
+\fBPrintText\fP action itself.
+The command receives the screen text as its standard input.
+For example, the following keymap will save the screen text in a file:
+.IP
+.RS
+Meta<Key>f: PrintText("cat >screen.image")
+.RE
+.PP
+Note: \fBHardPrint\fP is an alias for \fBPrintText\fP.
+.PP
+The \fBPrintWindow\fP action (usually assigned to the key <Meta>b) sends the current
+screen image to the printer as a bitmap.
+The default command used to print the data is controlled by
+the "x3270.printWindowCommand" resource; the default is
+.IP
+.RS
+\fBxwd \-id %d | xpr | lpr\fP.
+.RE
+.PP
+You may also use a keymap definition to pass a print command to the
+\fBPrintWindow\fP action itself.
+If the command contains the text "%d", the window ID of
+\fBx3270\fP will be substituted before it is run.
+For example, the following keymap will pop up a duplicate of the current
+screen image:
+.IP
+.RS
+Meta<Key>g: PrintWindow("xwd \-id %d | xwud &")
+.RE
+.LP
+If the command for PrintWindow or PrintText begins with an "@" character,
+the initial pop-up menu to confirm the print command is not displayed and
+the command cannot be edited.
+.SH "BUGS"
+Cursor highlighting will not work with if you use the \fBNoTitleFocus\fP
+option in your .twmrc file.
+
+.SH "PASSTHRU"
+\fBx3270\fP supports the Sun \fItelnet-passthru\fP
+service provided by the \fIin.telnet-gw\fP server.
+This allows outbound telnet connections through a firewall machine.
+When a \fBp:\fP is prepended to a hostname, \fBx3270\fP
+acts much like the \fIitelnet\fP(1) command.
+It contacts the machine named \fBinternet-gateway\fP at the port defined in
+\fB/etc/services\fP as \fBtelnet-passthru\fP
+(which defaults to 3514).
+It then passes the requested hostname and port to the
+\fBin.telnet-gw\fP server.
+.SH "PROXY"
+The \fB\-proxy\fP option or the \fBx3270.proxy\fP resource
+causes x3270 to use a proxy server to connect to the host.
+The syntax of the option or resource is:
+.RS
+\fItype\fP:\fIhost\fP[:\fIport\fP]
+
+.RE
+The supported values for \fItype\fP are:
+.TS
+center;
+c l c .
+T{
+.na
+.nh
+Proxy Type
+T}	T{
+.na
+.nh
+Protocol
+T}	T{
+.na
+.nh
+Default Port
+T}
+_
+T{
+.na
+.nh
+http
+T}	T{
+.na
+.nh
+RFC 2817 HTTP tunnel (squid)
+T}	T{
+.na
+.nh
+3128
+T}
+T{
+.na
+.nh
+passthru
+T}	T{
+.na
+.nh
+Sun in.telnet-gw
+T}	T{
+.na
+.nh
+none
+T}
+T{
+.na
+.nh
+socks4
+T}	T{
+.na
+.nh
+SOCKS version 4
+T}	T{
+.na
+.nh
+1080
+T}
+T{
+.na
+.nh
+socks5
+T}	T{
+.na
+.nh
+SOCKS version 5 (RFC 1928)
+T}	T{
+.na
+.nh
+1080
+T}
+T{
+.na
+.nh
+telnet
+T}	T{
+.na
+.nh
+No protocol (just send \fBconnect\fP \fIhost port\fP)
+T}	T{
+.na
+.nh
+none
+T}
+.TE
+.LP
+The special types \fBsocks4a\fP and \fBsocks5d\fP can also be used to force
+the proxy server to do the hostname resolution for the SOCKS protocol.
+.SH "FILES"
+/usr/lib/X11/x3270/ibm_hosts
+.br
+$HOME/.x3270pro
+
+.SH "ENVIRONMENT VARIABLES"
+\fB3270PRO\fP Path of profile file, containing resource definitions.
+Merged after the system resource database, but before \fBX3270RDB\fP.
+Defaults to $HOME/.x3270pro.
+.br
+\fBNOX3270PRO\fP If set, do not read the profile.
+.br
+\fBX3270RDB\fP Additional resource definitions, merged after the profile
+file but before the command-line options.
+.br
+\fBKEYMAP\fP Keymap name.
+.br
+\fBKEYBD\fP Keymap name.
+.SH "SEE ALSO"
+pr3287(1), s3270(1), x3270-script(1), c3270(1), tcl3270(1), telnet(1), tn3270(1), ibm_hosts(5)
+.br
+X Toolkit Intrinsics
+.br
+Data Stream Programmer's Reference, IBM GA23-0059
+.br
+Character Set Reference, IBM GA27-3831
+.br
+RFC 1576, TN3270 Current Practices
+.br
+RFC 1646, TN3270 Extensions for LUname and Printer Selection
+.br
+RFC 2355, TN3270 Enhancements
+.SH "COPYRIGHTS"
+Copyright 1993-2020, Paul Mattes.
+.br
+Copyright 2004-2005, Don Russell.
+.br
+Copyright 2004, Dick Altenbern.
+.br
+Copyright 1990, Jeff Sparkes.
+.br
+Copyright 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+.br
+All rights reserved.
+.LP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+.TP
+*
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+.TP
+*
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+.TP
+*
+Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
+GTRC nor
+the names of their contributors may be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+
+.LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
+SPARKES AND GTRC
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
+ALTENBERN, JEFF
+SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.SH "VERSION"
+x3270 3.6ga12
