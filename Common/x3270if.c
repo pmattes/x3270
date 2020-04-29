@@ -1137,7 +1137,7 @@ i18n_get(const char *key)
 static char *
 tigetstr_def(const char *name, char *def)
 {
-    char *s = tigetstr(name);
+    char *s = tigetstr((char *)name);
 
     if (s != NULL && s != (char *)-1) {
 	return s;
@@ -1161,14 +1161,14 @@ xsetaf(const char *setaf, int color, const char *sgr)
 	char *a, *s;
 
 	/* Encode AF. */
-	a = tparm(setaf, color);
+	a = tparm((char *)setaf, color);
 	if (sgr == NULL) {
 	    return a;
 	}
 
 	/* Save encoded AF and encode SGR. */
 	a = NewString(a);
-	s = tparm(sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+	s = tparm((char *)sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
 	x_ret = Malloc(strlen(a) + strlen(s) + 1);
 	sprintf(x_ret, "%s%s", s, a);
 	Free(a);

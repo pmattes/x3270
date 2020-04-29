@@ -144,7 +144,7 @@ proxy_http_continue(void)
      * Read a byte at a time until \n or EOF.
      */
     for (;;) {
-	size_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
 		if (ps.nread) {

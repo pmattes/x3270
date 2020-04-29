@@ -165,7 +165,7 @@ proxy_socks4_continue(void)
      * Read the response.
      */
     for (;;) {
-	size_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {

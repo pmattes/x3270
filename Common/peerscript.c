@@ -336,7 +336,7 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
 	    buf);
-    size_t ns;
+    ssize_t ns;
 
     ns = send(p->socket, s, strlen(s), 0);
     if (ns < 0) {

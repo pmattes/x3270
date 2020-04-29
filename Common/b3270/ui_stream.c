@@ -147,7 +147,7 @@ uprintf(const char *fmt, ...)
     va_list ap;
     char *s;
     static bool eol = true;
-    size_t nw;
+    ssize_t nw;
 
     va_start(ap, fmt);
     s = xs_vbuffer(fmt, ap);

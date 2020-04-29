@@ -158,7 +158,7 @@ proxy_socks5_process_auth_reply(void)
      * Read 2 bytes of response.
      */
     for (;;) {
-	size_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
@@ -257,7 +257,7 @@ proxy_socks5_process_cred_reply(void)
 {
     /* Read the response. */
     for (;;) {
-	size_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
@@ -376,7 +376,7 @@ proxy_socks5_process_connect_reply(void)
      */
     while (!done) {
 	unsigned char r;
-	size_t nr = recv(ps.fd, (char *)&r, 1, 0);
+	ssize_t nr = recv(ps.fd, (char *)&r, 1, 0);
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {

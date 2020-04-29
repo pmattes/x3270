@@ -253,7 +253,7 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     char buf[IBS];
     char rbuf[IBS];
     int sl = 0;
-    size_t nr;
+    ssize_t nr;
     bool complete = false;
     char *cmd_nl;
     size_t ret_sl = 0;
@@ -314,7 +314,7 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
 
     /* Get the answer. */
     while (!complete && (nr = read(s3270pipe[0], rbuf, IBS)) > 0) {
-	size_t i;
+	ssize_t i;
 	bool get_more = false;
 
 	i = 0;
