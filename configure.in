@@ -46,6 +46,9 @@ AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287        build Windows pr3287])
 AC_ARG_ENABLE(wx3270if,[  --enable-wx3270if       build Windows x3270if])
 AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib    build Windows libraries])
 
+AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
+AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
+
 dnl Handle expansion of enable-unix.
 if test "x$enable_unix" = xyes; then
     if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
@@ -64,6 +67,12 @@ if test "x$enable_unix" = xno; then
     enable_x3270if=no
 fi
 
+dnl Handle missing Windows tools.
+if test "$mingw64_found" = "no" -o "$mingw32_found" = "no"
+then	AC_MSG_WARN(Disabling Windows cross-compile)
+	enable_windows=no
+fi
+
 dnl Handle expansion of enable-windows.
 if test "x$enable_windows" = xyes; then
     if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
@@ -78,6 +87,7 @@ if test "x$enable_windows" = xno; then
     enable_wb3270=no
     enable_wpr3287=no
     enable_wx3270if=no
+    enable_windows_lib=no
 fi
 
 dnl Handle all-default case.
@@ -170,19 +180,6 @@ if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
 	"x$enable_wb3270" = xyes; then
     enable_wx3270if=yes
-fi
-
-dnl Handle missing Windows tools.
-AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
-AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
-if test "$mingw64_found" = "no" -o "$mingw32_found" = "no"
-then	AC_MSG_WARN(Disabling Windows cross-compile)
-	windows_notfound=1
-	enable_wc3270=no
-	enable_ws3270=no
-	enable_wb3270=no
-	enable_wpr3287=no
-	enable_windows_lib=no
 fi
 
 if test "x$enable_x3270" = xyes -o \
