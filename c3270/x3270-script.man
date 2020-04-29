@@ -1,0 +1,1537 @@
+'\" t
+.TH X3270-SCRIPT 1 "25 April 2020"
+.SH "NAME"
+Scripting Facilities for
+x3270,
+c3270 and s3270
+.SH "SYNOPSIS"
+\fBx3270\fP \fB\-script\fP [ \fIx3270-options\fP ]
+.br
+\fBx3270\fP \fB\-socket\fP [ \fIx3270-options\fP ]
+.br
+\fBx3270\fP \fB\-scriptport \fIport\fP\fP [ \fIx3270-options\fP ]
+.br
+\fBc3270\fP \fB\-socket\fP [ \fIc3270-options\fP ]
+.br
+\fBc3270\fP \fB\-scriptport\fP \fIport\fP [ \fIs3270-options\fP ]
+.br
+\fBs3270\fP [ \fIs3270-options\fP ]
+.br
+\fBScript\fP ( \fIcommand\fP [ ,\fIarg\fP... ] )
+.SH "DESCRIPTION"
+The \fBx3270\fP scripting facilities allow the interactive 3270
+emulators \fBx3270\fP and \fBc3270\fP
+to be operated under the control of another
+program, and forms the basis for the script-only emulator \fBs3270\fP.
+.PP
+There are
+four
+basic scripting methods.
+The first is the \fBpeer script\fP facility,
+invoked by the \fBx3270\fP
+\fB\-script\fP switch, and the default mode for \fBs3270\fP.
+This runs the emulator as a child of another process.
+Typically this would be a script using
+\fIexpect\fP(1), \fIperl\fP(1),
+or the co-process facility of the Korn Shell
+\fIksh\fP(1).
+In this mode, the emulator process looks for commands on its standard input,
+and places the responses on standard output.
+.PP
+The second method is the \fBchild script\fP
+facility, invoked by the emulator's \fBScript()\fP action.
+This runs a script as a child process of the emulator.
+The child has access to pipes connected to the
+emulator; the emulator looks for commands on one pipe, and places the responses on the other.
+The file descriptor of the pipe for commands to the emulator
+is passed in the environment variable X3270INPUT (e.g., the text string "7" if
+the file descriptor is 7); the file descriptor
+of the pipe for responses from the emulator is passed in the environment
+variable X3270OUTPUT.
+.PP
+The third method uses a TCP socket.
+The \fB\-scrpiptport\fP command-line option causes the emulator to
+bind a socket to the specified port (on the IPv4 loopback address, 127.0.0.1).
+The emulator accepts TCP connections on that port.
+Multiple commands and responses can be sent over each connection.
+.PP
+The fourth method uses a Unix-domain socket.
+The \fB\-socket\fP command-line option causes the emulator to
+create a Unix-domain stream socket named \fB/tmp/x3sck.\fP\fIpid\fP.
+The emulator accepts connections to that socket.
+Multiple commands and responses can be sent over each connection.
+.PP
+It is possible to nest the methods.
+For example, a peer or TCP socket script can invoke the \fBScript()\fP action.
+The calling script will be resumed when the nested script completes.
+.PP
+Commands are emulator \fIactions\fP; the syntax is the same as for the
+right-hand side of
+an \fBx3270\fP or
+\fBc3270\fP keymap.
+Unlike translation tables, action names are case-insensitive, can be
+uniquely abbreviated, and the parentheses may be omitted if there are
+no parameters.
+Any input line that begins with \fB#\fP or \fB!\fP is treaded as a comment
+and will be ignored.
+.PP
+Any emulator action may be specified.
+Several specific actions have been defined for use by scripts, and the behavior
+of certain other actions (and of the emulators in general) is different when
+an action is initiated by a script.
+.PP
+Some actions generate output; some may delay completion until the certain
+external events occur, such as the host unlocking the keyboard.
+The completion of every command is marked by a two-line message.
+The first line is the current status of the emulator, documented below.
+If the command is successful, the second line is the string "ok"; otherwise it
+is the string "error".
+.SH "STATUS FORMAT"
+The status message consists of 12 blank-separated fields:
+.TP
+1 Keyboard State
+If the keyboard is unlocked, the letter
+\fBU\fP.
+If the keyboard is locked waiting for a response from the host, or if not
+connected to a host, the letter
+\fBL\fP.
+If the keyboard is locked because of an operator error (field overflow,
+protected field, etc.), the letter
+\fBE\fP.
+.TP
+2 Screen Formatting
+If the screen is formatted, the letter
+\fBF\fP.
+If unformatted or in \s-1NVT\s+1 mode, the letter \fBU\fP.
+.TP
+3 Field Protection
+If the field containing the cursor is protected, the letter
+\fBP\fP.
+If unprotected or unformatted, the letter
+\fBU\fP.
+.TP
+4 Connection State
+If connected to a host, the string
+\fBC(\fP\fIhostname\fP\fB)\fP.
+Otherwise, the letter
+\fBN\fP.
+.TP
+5 Emulator Mode
+If connected in 3270 mode, the letter
+\fBI\fP.
+If connected in \s-1NVT\s+1 line mode, the letter
+\fBL\fP.
+If connected in \s-1NVT\s+1 character mode, the letter
+\fBC\fP.
+If connected in unnegotiated mode (no BIND active from the host), the letter
+\fBP\fP.
+If not connected, the letter
+\fBN\fP.
+.TP
+6 Model Number (2-5)
+.TP
+7 Number of Rows
+The current number of rows defined on the screen.
+The host can request that the emulator
+use a 24x80 screen, so this number may be smaller than the maximum number of
+rows possible with the current model.
+.TP
+8 Number of Columns
+The current number of columns defined on the screen, subject to the same
+difference for rows, above.
+.TP
+9 Cursor Row
+The current cursor row (zero-origin).
+.TP
+10 Cursor Column
+The current cursor column (zero-origin).
+.TP
+11 Window ID
+The X window identifier for the main
+\fBx3270\fP
+window, in hexadecimal preceded by
+\fB0x\fP.
+For
+\fBs3270\fP and \fBc3270\fP,
+this is zero.
+.TP
+12 Command Execution Time
+The time that it took for the host to respond to the previous commnd, in
+seconds with milliseconds after the decimal.
+If the previous command did not require a host response, this is a dash.
+.SH "DIFFERENCES"
+When an action is initiated by a script, the emulators
+behave in several different ways:
+.PP
+If an error occurs in processing an action, the usual pop-up window does not
+appear.
+Instead, the text is written to standard output.
+.PP
+If end-of-file is detected on standard input, the emulator exits.
+(A script can exit without killing the emulator
+by using the \fBCloseScript()\fP action, below.)
+Note that this applies to peer scripts only; end-of-file on the pipe
+connected to a child script simply causes the pipes to be closed and
+the
+\fBScript()\fP
+action to complete.
+.PP
+The \fBQuit()\fP action always causes the emulator to exit.
+(When called from the keyboard, it will exit only if not connected to a host.)
+.PP
+Normally, the AID actions (\fBClear()\fP,
+\fBEnter()\fP,
+\fBPF()\fP,
+and
+\fBPA()\fP)
+will not complete until the host unlocks the keyboard.
+If the parameter to a
+\fBString()\fP
+action includes a code for one these actions,
+it will also wait for the keyboard to unlock before proceeding.
+.PP
+The \fBAidWait\fP toggle controls with behavior.
+When this toggle is set (the default), actions block as described above.
+When the toggle is clear, AID actions complete immediately.
+The \fBWait(output)\fP action can then be used to delay a script until the
+host changes something on the screen, and the
+\fBWait(unlock)\fP action can be used to delay a script until the host
+unlocks the keyboard, regardless of the state of the \fBAidWait\fP toggle.
+.PP
+Note that the
+\fBScript()\fP
+action does not complete until
+end-of-file is detected on the pipe or the \fBCloseScript()\fP action is called by the child process.
+This behavior is not affected by the state of the \fBAidWait\fP toggle.
+.SH "BASIC PROGRAMMING STRATEGIES"
+3270 session scripting can be more difficult than other kinds of scripting,
+because it can be hard to tell when the host is finished processing a
+command.
+There is a well-defined 3270 Data Stream facility for doing this: The emulator
+locks the keyboard when it sends the host an AID, and the later host unlocks
+the keyboard.
+The emulator supports this facility directly by not allowing an AID action
+to complete until the keyboard is unlocked.
+Unfortunately, some hosts and some host applications unlock the keyboard as
+soon as they begin processing the command, instead of after it is finished.
+A human operator can see on the screen when the command is finished (e.g.,
+when a READY prompt is displayed), but it can be difficult for a script to
+do this. For such early-unlock hosts, the only option in a script is to poll the
+screen until it can determine that the command is complete.
+.LP
+Another complication is that host I/O and script operation are asynchronous.
+That is, the host can update the screen at any time, even between actions that
+are reading the screen contents, so a script can get inconsistent results.
+Assistance for this problem is provided by the \fBSnap()\fP action.
+The \fBSnap(save)\fP action saves a snapshot of the screen in a special
+buffer. Then the script can use \fBSnap()\fP variants of the \fBAscii1()\fP and
+\fBEbcdic1()\fP actions (\fBSnap(Ascii1)\fP and \fBSnap(Ebcdic1)\fP) to query
+the saved buffer -- which the host cannot modify -- to get the data it wants.
+Finally, \fBSnap(wait,output)\fP blocks the script until the host
+modifies the screen, specifically since the last call to \fBSnap(save)\fP.
+Thus a script can poll the screen efficiently by writing a loop that begins
+with \fBSnap(save)\fP and ends with \fBSnap(wait,output)\fP.
+.SH "SCRIPT-SPECIFIC ACTIONS"
+The following actions have been defined or modified for use with scripts.
+Note that actions that use row and column coordinates generally use an origin
+of 1, with row 1 at the top and column 1 at the left. This is consistent with
+the on-screen cursor position and data stream trace messages.
+.TP
+\fBAnsiText()\fP
+Outputs whatever data that has been output by the host in
+\s-1NVT\s+1 mode
+since the last time that
+\fBAnsiText()\fP
+was called.
+The data is preceded by the string "data:\ ", and has had all control characters
+expanded into C backslash sequences.
+.IP
+This is a convenient way to capture
+\s-1NVT\s+1
+mode output in a synchronous manner without trying to decode the screen
+contents.
+.TP
+\fBAscii1\fP(\fIrow\fP,\fIcol\fP,\fIrows\fP,\fIcols\fP)
+.TP
+\fBAscii1\fP(\fIrow\fP,\fIcol\fP,\fIlength\fP)
+.TP
+\fBAscii1\fP(\fIlength\fP)
+.TP
+\fBAscii1\fP()
+Outputs an \s-1ASCII\s+1 text representation of the screen contents.
+Each line is preceded by the string "data:\ ", and there are no control
+characters.
+.IP
+If four parameters are given, a rectangular region of the screen is output.
+(Note that the row and column are 1-origin.)
+.IP
+If three parameters are given,
+\fIlength\fP
+characters are output, starting at the specified 1-origin row and column.
+.IP
+If only the
+\fIlength\fP
+parameter is given, that many characters are output, starting at the cursor
+position.
+.IP
+If no parameters are given, the entire screen is output.
+.IP
+The \s-1EBCDIC\s+1-to-\s-1ASCII\s+1 translation and output character set depend on the both the
+emulator host code page (the \fB\-codepage\fP option) and the locale.
+UTF-8 and certain \s-1DBCS\s+1 locales may result in multi-byte expansions of \s-1EBCDIC\s+1
+characters that translate to \s-1ASCII\s+1 codes greater than 0x7f.
+.TP
+\fBAsciiField()\fP
+Outputs an \s-1ASCII\s+1 text representation of the field containing the cursor.
+The text is preceded by the string "data:\ ".
+.TP
+\fBConnect\fP(\fIhostname\fP)
+Connects to a host.
+The command does not return until the emulator
+is successfully connected in the proper mode, or the connection fails.
+.TP
+\fBCloseScript\fP(\fIstatus\fP)
+Causes the emulator to stop reading commands from the script.
+This is useful to allow a peer script to exit, with the emulator
+proceeding interactively.
+(Without this command, the emulator
+would exit when it detected end-of-file on standard input.)
+If the script was invoked by the
+\fBScript()\fP
+action, the optional
+\fIstatus\fP
+is used as the return status of
+\fBScript()\fP;
+if nonzero,
+\fBScript()\fP
+will complete with an error, and if this script was invoked as part of
+login through the
+\fBibm_hosts\fP
+file, the connection will be broken.
+.TP
+\fBDisconnect()\fP
+Disconnects from the host.
+.TP
+\fBEbcdic1\fP(\fIrow\fP,\fIcol\fP,\fIrows\fP,\fIcols\fP)
+.TP
+\fBEbcdic1\fP(\fIrow\fP,\fIcol\fP,\fIlength\fP)
+.TP
+\fBEbcdic1\fP(\fIlength\fP)
+.TP
+\fBEbcdic1()\fP
+The same function as
+\fBAscii1()\fP
+above, except that rather than generating
+\s-1ASCII\s+1
+text, each character is output as a 2-digit or 4-digit hexadecimal
+\s-1EBCDIC\s+1
+code.
+.TP
+\fBEbcdicField()\fP
+The same function as
+\fBAsciiField()\fP
+above, except that it generates hexadecimal
+\s-1EBCDIC\s+1
+codes.
+.TP
+\fBInfo\fP(\fImessage\fP)
+In x3270, pops up an informational message.
+In c3270 and wc3270, writes an informational message to the OIA (the line below
+the display).
+Not defined for s3270 or tcl3270.
+.TP
+\fBExpect\fP(\fItext\fP[,\fItimeout\fP])
+Pauses the script until the specified
+\fItext\fP
+appears in the data stream from the host, or the specified
+\fItimeout\fP
+(in seconds) expires.
+If no
+\fItimeout\fP
+is specified, the default is 30 seconds.
+\fIText\fP
+can contain standard C-language escape (backslash) sequences.
+No wild-card characters or pattern anchor characters are understood.
+\fBExpect()\fP
+is valid only in
+\s-1NVT\s+1
+mode.
+.TP
+\fBKeymap([\fIkeymap\fP])\fP
+Adds or removes a temporary keymap.
+If the \fIkeymap\fP parameter is given, the named keymap is added.
+If no parameter is given, the most recently added keymap is removed.
+.TP
+\fBMoveCursor1\fP(\fIrow\fP,\fIcol\fP)
+Moves the cursor to the specified 1-origin coordinates.
+.TP
+\fBMoveCursor1\fP(\fIoffset\fP)
+Moves the cursor to the specified offset. Offset 0 is the upper left-hand
+corner of the screen.
+.TP
+\fBPrintText\fP([\fBcommand\fP,]\fIfilter\fP)
+Pipes an \s-1ASCII\s+1 representation of the current screen image through the named
+\fIfilter\fP, e.g., \fBlpr\fP.
+.TP
+\fBPrintText\fP([\fBhtml\fP,][\fBappend\fP,][\fBreplace\fP,]\fBfile\fP,\fIfilename\fP)
+Saves the current screen contents in a file.
+With the \fBhtml\fP option, saves it as HTML, otherwise saves it as plain
+\s-1ASCII\s+1.
+The \fBappend\fP option (the default) causes the data to be appended to the
+file if it already exists. The \fBreplace\fP option causes the file to be
+overwritten instead.
+.TP
+\fBPrintText\fP(\fBhtml,string\fP)
+Returns the current screen contents as HTML.
+.TP
+\fBQuery\fP(\fIkeyword\fP)
+Returns state information.
+Keywords are:
+.PP
+.TS
+center;
+l l .
+T{
+.na
+.nh
+Keyword
+T}	T{
+.na
+.nh
+output
+T}
+_
+T{
+.na
+.nh
+BindPluName
+T}	T{
+.na
+.nh
+BIND PLU returned by the host
+T}
+T{
+.na
+.nh
+ConnectionState
+T}	T{
+.na
+.nh
+TN3270/TN3270E mode and submode
+T}
+T{
+.na
+.nh
+CodePage
+T}	T{
+.na
+.nh
+Host code page
+T}
+T{
+.na
+.nh
+Cursor
+T}	T{
+.na
+.nh
+Cursor position (row col) zero-origin
+T}
+T{
+.na
+.nh
+Cursor1
+T}	T{
+.na
+.nh
+Cursor position (row col) 1-origin
+T}
+T{
+.na
+.nh
+Formatted
+T}	T{
+.na
+.nh
+3270 format state (formatted or unformatted)
+T}
+T{
+.na
+.nh
+Host
+T}	T{
+.na
+.nh
+Host name and port
+T}
+T{
+.na
+.nh
+LocalEncoding
+T}	T{
+.na
+.nh
+Local character encoding
+T}
+T{
+.na
+.nh
+LuName
+T}	T{
+.na
+.nh
+Host name LU name
+T}
+T{
+.na
+.nh
+Model
+T}	T{
+.na
+.nh
+3270 model name (IBM-327x-n)
+T}
+T{
+.na
+.nh
+ScreenCurSize
+T}	T{
+.na
+.nh
+Current screen size (rows cols)
+T}
+T{
+.na
+.nh
+ScreenMaxSize
+T}	T{
+.na
+.nh
+Maximum screen size (rows cols)
+T}
+T{
+.na
+.nh
+Tls
+T}	T{
+.na
+.nh
+TLS state (secure or not-secure) and host validation state (host-verified or host-unverified)
+T}
+.TE
+.IP
+Without a \fIkeyword\fP, \fBQuery()\fP returns each of the defined attributes,
+one per line, labeled by its name.
+.TP
+\fBReadBuffer\fP(\fBascii\fP)
+Dumps the contents of the screen buffer, one line per row.
+Each buffer position inside a data field is generally output as a 2-digit
+hexadecimal code, translated from the host \s-1EBCDIC\s+1 code page to the
+current locale.
+(E.g., the \s-1EBCDIC\s+1 value for the letter A in host code page 037 is
+X'C1'. In \s-1ASCII\s+1, this is 0x41, so it is output as \fB41\fP.)
+If the current locale specifies a multi-byte character set such as UTF-8, some
+positions may be output as 4-, 6- or 8-digit codes.
+(E.g., in host code page 037, the \s-1EBCDIC\s+1 value for a U+00ac NOT symbol
+is X'5F'. In UTF-8, this is 0xc2, 0xac, so it is output as \fBc2ac\fP.)
+\s-1DBCS\s+1 characters take two positions in the screen buffer; the first location
+is output as a multi-byte code, and the second location is output as a dash.
+Start-of-field characters (each of which takes up a display position) are
+output as \fBSF(aa=nn[,...])\fP, where \fIaa\fP is a field
+attribute type and \fInn\fP is its value.
+.PP
+.TS
+center;
+l l .
+T{
+.na
+.nh
+Attribute
+T}	T{
+.na
+.nh
+Values
+T}
+_
+T{
+.na
+.nh
+c0 basic 3270
+T}	T{
+.na
+.nh
+20 protected
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+10 numeric
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+04 detectable
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+08 intensified
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+0c non-display
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+01 modified
+T}
+T{
+.na
+.nh
+41 highlighting
+T}	T{
+.na
+.nh
+f1 blink
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f2 reverse
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f4 underscore
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f8 intensify
+T}
+T{
+.na
+.nh
+42 foreground
+T}	T{
+.na
+.nh
+f0 neutral black
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f1 blue
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f2 red
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f3 pink
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f4 green
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f5 turquoise
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f6 yellow
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f7 neutral white
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f8 black
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f9 deep blue
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+fa orange
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+fb purple
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+fc pale green
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+fd pale turquoise
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+fe grey
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+ff white
+T}
+T{
+.na
+.nh
+43 character set
+T}	T{
+.na
+.nh
+f0 default
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f1 APL
+T}
+T{
+.na
+.nh
+
+T}	T{
+.na
+.nh
+f8 DBCS
+T}
+.TE
+.IP
+Extended attributes (which do not take up display positions) are output as
+\fBSA(aa=nn)\fP, with \fIaa\fP and \fInn\fP having
+the same definitions as above (though the basic 3270 attribute will never
+appear as an extended attribute).
+.IP
+\s-1NULL\s+1 characters in the screen buffer are reported as \s-1ASCII\s+1
+character 00 instead of 20, even though they are displayed as blanks.
+.TP
+\fBReadBuffer\fP(\fBebcdic\fP)
+Equivalent to \fBReadBuffer\fP(\fBascii\fP), but with the data fields output as
+hexadecimal \s-1EBCDIC\s+1 codes.
+If a buffer position has the Graphic Escape attribute, it is
+displayed as \fBGE\fP(\fIxx\fP).
+If a buffer position was written in NVT mode, it does not have an
+EBCDIC value, and will be displayed as 00.
+.TP
+\fBReadBuffer\fP(\fBunicode\fP)
+Equivalent to \fBReadBuffer\fP(\fBascii\fP), but with the data fields output
+as 4-digit hexadecimal Unicode values.
+.TP
+\fBReadBuffer\fP(\fBfield\fP)
+Dumps information about the current field.
+\fBascii\fP, \fBebcdic\fP and \fBunicode\fP keywords are also accepted.
+The output consists of keywords and parameters.
+Note that `field start' is the location of the start-of-field
+character, which is displayed on the screen as a blank to the left of the
+field, and is dumped as \fBSF\fP. The \fBContents\fP line is always last.
+.TS
+center;
+l l l .
+T{
+.na
+.nh
+Keyword
+T}	T{
+.na
+.nh
+Parameters
+T}	T{
+.na
+.nh
+Meaning
+T}
+_
+T{
+.na
+.nh
+Start1
+T}	T{
+.na
+.nh
+row col
+T}	T{
+.na
+.nh
+Field start coordinates (1-origin)
+T}
+T{
+.na
+.nh
+StartOffset
+T}	T{
+.na
+.nh
+offset
+T}	T{
+.na
+.nh
+Field start location as offset
+T}
+T{
+.na
+.nh
+Cursor1
+T}	T{
+.na
+.nh
+row col
+T}	T{
+.na
+.nh
+Cursor coordinates (1-origin)
+T}
+T{
+.na
+.nh
+CursorOffset
+T}	T{
+.na
+.nh
+offset
+T}	T{
+.na
+.nh
+Cursor location as offset
+T}
+T{
+.na
+.nh
+Contents
+T}	T{
+.na
+.nh
+contents
+T}	T{
+.na
+.nh
+Field contents on one line in \fBReadBuffer()\fP format
+T}
+.TE
+.TP
+\fBScript\fP(\fIpath\fP[,arg...])
+Runs a child script, passing it optional command-line arguments.
+\fIpath\fP must specify an executable (binary) program: the emulator will
+create a new process and execute it. If you simply want the emulator to read
+commands from a file, use the \fBSource()\fP action.
+.TP
+\fBSnap()\fP
+Equivalent to \fBSnap(save)\fP (see below).
+.TP
+\fBSnap\fP(\fBAscii1\fP,...)
+Performs the \fBAscii1\fP action on the saved screen image.
+.TP
+\fBSnap\fP(\fBCols\fP)
+Returns the number of columns in the saved screen image.
+.TP
+\fBSnap\fP(\fBEbcdic1\fP,...)
+Performs the \fBEbcdic1()\fP action on the saved screen image.
+.TP
+\fBSnap\fP(\fBReadBuffer\fP)
+Performs the \fBReadBuffer()\fP action on the saved screen image.
+.TP
+\fBSnap(\fBRows\fP)\fP
+Returns the number of rows in the saved screen image.
+.TP
+\fBSnap\fP(\fBsave\fP)
+Saves a copy of the screen image and status in a temporary buffer.
+This copy can be queried with other
+\fBSnap()\fP
+actions to allow a script to examine a consistent screen image, even when the
+host may be changing the image (or even the screen dimensions) dynamically.
+.TP
+\fBSnap\fP(\fBstatus\fP)
+Returns the status line from when the screen was last saved.
+.TP
+\fBSnap\fP(\fBwait\fP[,\fItimeout\fP],\fBoutput\fP)
+Pauses the script until the host sends further output, then updates the snap
+buffer with the new screen contents.
+Used when the host unlocks the keyboard (allowing the script to proceed after
+an
+\fBEnter()\fP,
+\fBPF()\fP
+or
+\fBPA()\fP
+action), but has not finished updating the screen.
+This action is usually invoked in a loop that uses the
+\fBSnap(Ascii1)\fP
+or
+\fBSnap(Ebcdic1)\fP
+action to scan the screen for some pattern that indicates that the host has
+fully processed the last command.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBSnap()\fP action.  The default is to wait indefinitely.
+.TP
+\fBSource\fP(\fIfile\fP)
+Read and execute commands from \fIfile\fP.
+Any output from those commands will become the output from \fBSource()\fP.
+If any of the commands fails, the \fBSource()\fP command will \fInot\fP abort;
+it will continue reading commands until EOF.
+.TP
+\fBTitle\fP(\fItext\fP)
+Changes the
+x3270
+window title to \fItext\fP.
+.TP
+\fBTransfer\fP(\fIkeyword\fP=\fIvalue\fP,...)
+Invokes IND$FILE file transfer.
+See \s-1FILE TRANSFER\s+1 below.
+.TP
+\fBWait\fP([\fItimeout\fP,] \fB3270mode\fP)
+Used when communicating with a host that switches between
+\s-1NVT\s+1 mode and 3270 mode.
+Pauses the script or macro until the host negotiates 3270 mode, then waits for
+a formatted screen as above.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.IP
+For backwards compatibility,
+\fBWait(3270)\fP
+is equivalent to
+\fBWait\fP(\fB3270mode\fP)
+.TP
+\fBWait\fP([\fItimeout\fP,] \fBdisconnect\fP)
+Pauses the script until the host disconnects.
+Often used to after sending a
+\fIlogoff\fP
+command to a \s-1VM/CMS\s+1 host, to ensure that the session is not unintentionally
+set to
+\fBdisconnected\fP
+state.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.TP
+\fBWait\fP([\fItimeout\fP,] \fBinputfield\fP)
+A useful utility for use at the beginning of scripts and after the
+\fBConnect()\fP action.
+In 3270 mode, waits until the screen is formatted, and the host has positioned
+the cursor on a modifiable field.
+In \s-1NVT\s+1 mode, waits until the host sends at least one byte of data.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.IP
+For backwards compatibility,
+\fBWait\fP
+is equivalent to
+\fBWait\fP(\fBinputfield\fP).
+.TP
+\fBWait\fP([\fItimeout\fP,] \fBnvtmode\fP)
+Used when communicating with a host that switches between 3270 mode and
+\s-1NVT\s+1 mode.
+Pauses the script or macro until the host negotiates \s-1NVT\s+1
+mode, then waits for
+a byte from the host as above.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.IP
+For backwards compatibility,
+\fBWait\fP(\fBansi\fP)
+is equivalent to
+\fBWait\fP(\fBnvtmode\fP).
+.TP
+\fBWait\fP([\fItimeout\fP,] \fBoutput\fP)
+Pauses the script until the host sends further output.
+Often needed when the host unlocks the keyboard (allowing the script to
+proceed after a
+\fBClear()\fP,
+\fBEnter()\fP,
+\fBPF()\fP
+or
+\fBPA()\fP
+action), but has not finished updating the screen.
+Also used in non-blocking AID mode (see \s-1DIFFERENCES\s+1
+for details).
+This action is usually invoked in a loop that uses the
+\fBAscii1()\fP
+or
+\fBEbcdic1()\fP
+action to scan the screen for some pattern that indicates that the host has
+fully processed the last command.
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.TP
+\fBWait\fP([\fItimeout\fP,] \fBunlock\fP)
+Pauses the script until the host unlocks the keyboard.
+This is useful when operating in non-blocking AID mode
+(\fBtoggle AidWait clear\fP), to wait for a host command to complete.
+See \s-1DIFFERENCES\s+1 for details).
+.IP
+The optional \fItimeout\fP parameter specifies a number of seconds to wait
+before failing the \fBWait()\fP action.  The default is to wait indefinitely.
+.TP
+\fBWait\fP(\fItimeout\fP, \fBseconds\fP)
+Delays the script \fItimeout\fP seconds.
+Unlike the other forms of \fBWait()\fP, the timeout is not optional.
+.TP
+\fBWindowState\fP(\fImode\fP)
+If \fImode\fP is \fBiconic\fP, changes the x3270 window into an icon.
+If \fImode\fP is \fBnormal\fP, changes the x3270 window from an icon to a
+normal window.
+.SH "FILE TRANSFER"
+The \fBTransfer()\fP action implements \fBIND$FILE\fP file transfer.
+This action requires that the \fBIND$FILE\fP
+program be installed on the \s-1IBM\s+1 host, and that the 3270 cursor
+be located in a field that will accept a \s-1TSO\s+1 or \s-1VM/CMS\s+1 command.
+.LP
+The \fBTransfer()\fP action
+can be entered at the \fBc3270>\fP prompt with no parameters, which will cause it
+to prompt interactively for the file names and options.
+It can also be invoked with parameters to define the entire transfer.
+.LP
+Because of the complexity and number of options for file transfer, the
+parameters to the \fBTransfer()\fP action can take the unique form
+of \fIoption\fP=\fIvalue\fP.
+They can also be given with their parameters separately.
+Options can appear in any order.
+Note that if the \fIvalue\fP contains spaces (such as a VM/CMS file name),
+then the entire parameter must be quoted, e.g., \fB"hostfile=xxx foo a"\fP.
+With sequential options, this would be \fBhostfile,"xxx foo a"\fP.
+The options are:
+.LP
+.TS
+l c l l.
+T{
+.na
+.nh
+Option
+T}	T{
+.na
+.nh
+Required?
+T}	T{
+.na
+.nh
+Default
+T}	T{
+.na
+.nh
+Other Values
+T}
+_
+T{
+.na
+.nh
+direction
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+receive
+T}	T{
+.na
+.nh
+send
+T}
+T{
+.na
+.nh
+hostfile
+T}	T{
+.na
+.nh
+Yes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+localfile
+T}	T{
+.na
+.nh
+Yes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+host
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+tso
+T}	T{
+.na
+.nh
+vm, cics
+T}
+T{
+.na
+.nh
+mode
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+ascii
+T}	T{
+.na
+.nh
+binary
+T}
+T{
+.na
+.nh
+cr
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+remove
+T}	T{
+.na
+.nh
+add, keep
+T}
+T{
+.na
+.nh
+remap
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+yes
+T}	T{
+.na
+.nh
+no
+T}
+T{
+.na
+.nh
+exist
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+keep
+T}	T{
+.na
+.nh
+replace, append
+T}
+T{
+.na
+.nh
+recfm
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+fixed, variable, undefined
+T}
+T{
+.na
+.nh
+lrecl
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+blksize
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+allocation
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+tracks, cylinders, avblock
+T}
+T{
+.na
+.nh
+primaryspace
+T}	T{
+.na
+.nh
+Sometimes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+secondaryspace
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+avblock
+T}	T{
+.na
+.nh
+Sometimes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+buffersize
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+4096
+T}	T{
+.na
+.nh
+\ 
+T}
+.TE
+.LP
+The option details are as follows.
+.TP
+\fBdirection\fP
+\fBsend\fP to send a file to the host,
+\fBreceive\fP to receive a file from the host.
+.TP
+\fBhostfile\fP
+The name of the file on the host.
+.TP
+\fBlocalfile\fP
+The name of the file on the local workstation.
+.TP
+\fBhost\fP
+The type of host (which dictates the form of the \fBIND$FILE\fP command):
+\fBtso\fP (the default), \fBvm\fP or \fBcics\fP.
+.TP
+\fBmode\fP
+Use \fBascii\fP (the default) for a text file, which will be translated
+between \s-1EBCDIC\s+1 and \s-1ASCII\s+1 as necessary.
+Use \fBbinary\fP for non-text files.
+.TP
+\fBcr\fP
+Controls how newline characters are handled when transferring
+\fBmode=ascii\fP files.
+\fBremove\fP (the default) strips newline characters in local files
+before transferring them to the host.
+\fBadd\fP adds newline characters to each host file record before
+transferring it to the local workstation.
+\fBkeep\fP preserves newline characters when transferring a local file
+to the host.
+.TP
+\fBremap\fP
+Controls text translation for \fBmode=ascii\fP files.
+The value \fByes\fP (the default) causes c3270 to remap the text to ensure
+maximum compatibility between the workstation's character set and encoding
+and the host's \s-1EBCDIC\s+1 code page.
+The value \fBno\fP causes c3270 to pass the text to or from the host
+as-is, leaving all translation to the \fBIND$FILE\fP program on the host.
+.TP
+\fBexist\fP
+Controls what happens when the destination file already exists.
+\fBkeep\fP (the default) preserves the file, causing the
+\fBTransfer()\fP action to fail.
+\fBreplace\fP overwrites the destination file with the source file.
+\fBappend\fP appends the source file to the destination file.
+.TP
+\fBrecfm\fP
+Controls the record format of files created on the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+\fBfixed\fP creates a file with fixed-length records.
+\fBvariable\fP creates a file with variable-length records.
+\fBundefined\fP creates a file with undefined-length records (\s-1TSO\s+1 hosts
+only).
+The \fBlrecl\fP option controls the record length or maximum record length for
+\fBrecfm=fixed\fP and \fBrecfm=variable\fP files, respectively.
+.TP
+\fBlrecl\fP
+Specifies the record length (or maximum record length) for files created on
+the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+.TP
+\fBblksize\fP
+Specifies the block size for files created on the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+.TP
+\fBallocation\fP
+Specifies the units for the \fBprimaryspace\fP and
+\fBsecondaryspace\fP options: \fBtracks\fP, \fBcylinders\fP or
+\fBavblock\fP. (\s-1TSO\s+1 hosts only.)
+.TP
+\fBprimaryspace\fP
+Primary allocation for a file.
+The units are given by the \fBallocation\fP option.
+Required when the \fBallocation\fP is specified as something other than
+\fBdefault\fP.
+(\s-1TSO\s+1 hosts only.)
+.TP
+\fBsecondaryspace\fP
+Secondary allocation for a file.
+The units are given by the \fBallocation\fP option. (\s-1TSO\s+1 hosts only.) 
+.TP
+\fBavblock\fP
+Average block size, required when \fBallocation\fP specifies \fBavblock\fP.
+(\s-1TSO\s+1 hosts only.)
+.TP
+\fBbuffersize\fP
+Buffer size for DFT-mode transfers.
+Can range from 256 to 32768.
+Larger values give better performance, but some hosts may not be able to
+support them.
+.LP
+There are also resources that control the default values for each of the
+file transfer parameters.
+These resources have the same names as the \fBTransfer()\fP keywords, but with
+\fBft\fP prepended and the option name capitalized. E.g., the default for the \fBmode\fP keyword is the
+\fBc3270.ftMode\fP resource.
+.SH "DEPRECATED/COMPATIBILITY ACTIONS"
+For comptibility with earlier versions, there are alternate versions of
+several of these actions. These versions use zero-origin coordinates, with row
+0 at the top and column 0 on the left.
+
+.TP
+\fBAscii\fP(...)
+.TP
+\fBEbcdic\fP(...)
+.TP
+\fBMoveCursor\fP(...)
+Identical to \fBAscii1()\fP, \fBEbcdic1()\fP and \fBMoveCursor1()\fP, but using
+zero-origin coordinates.
+.PP
+The \fBSnap()\fP action also accepts \fBAscii\fP and \fBEbcdic\fP keywords,
+allowing zero-origin coordinates.
+
+.SH "SEE ALSO"
+expect(1)
+.br
+perl(1)
+.br
+ksh(1)
+.br
+x3270(1)
+.br
+x3270if(1)
+.br
+c3270(1)
+.br
+s3270(1)
+.SH "VERSION"
+Version 4.0beta7

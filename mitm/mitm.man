@@ -1,0 +1,73 @@
+'\" t
+.TH mitm 1 "25 April 2020"
+.SH "NAME"
+mitm \- network stream trace facility
+.SH "SYNOPSIS"
+\fBmitm\fP [\-p \fIlistenport\fP] [\-f \fIoutfile\fP]
+.SH "DESCRIPTION"
+\fBmitm\fP is a proxy server that traces the data passing through it.
+It supports the Sun \fIpassthru\fP protocol, where the client writes the
+desired host name and port, separated by a space and terminated by a carriage
+return and line feed, at the beginning of the session.
+.LP
+Network data is written in hexadecimal to the specified file.
+.LP
+The name is derived from its position in the network stream: the man in the
+middle.
+.SH "OPTIONS"
+.TP
+\fB\-p\fP \fIlistenport\fP
+Specifies the port to listen on.
+The default port is 4200.
+.TP
+\fB\-f\fP \fIoutfile\fP
+Specifies the trace file to create.
+The default is
+/tmp/mitm.\fIpid\fP.
+.SH "EXAMPLE"
+The emulator command-line option to route connection through \fBmitm\fP
+is:
+.IP
+.RS
+\-proxy passthru:127.0.0.1:4200
+.RE
+.SH "SEE ALSO"
+s3270(1), 
+x3270(1), c3270(1)
+.SH "COPYRIGHTS"
+Copyright 2018-2020, Paul Mattes.
+.br
+All rights reserved.
+.LP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+.TP
+*
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+.TP
+*
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+.TP
+*
+Neither the name of Paul Mattes nor the names of his contributors may be used
+to endorse or promote products derived from this software without specific
+prior written permission.
+
+.LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.SH "VERSION"
+mitm 4.0beta7

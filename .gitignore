@@ -9,7 +9,7 @@ fallbacks.c
 favicon.c
 Makefile
 Makefile.bak
-*.man
+instlist.man
 mkfb
 mkicon
 obj/

@@ -1,0 +1,172 @@
+'\" t
+.TH X3270IF 1 "25 April 2020"
+.SH "NAME"
+x3270if \- command interface to
+x3270, c3270 and s3270
+.SH "SYNOPSIS"
+\fBx3270if\fP [option]... [ \fIaction\fP ]
+.br
+\fBx3270if\fP [option]... \-i
+.br
+\fBx3270if\fP [option]... \-I \fIemulator-name\fP [\-H \fIhelp-action\fP]
+.SH "DESCRIPTION"
+\fBx3270if\fP provides an interface between scripts and
+the 3270 emulators
+\fIx3270\fP, \fIc3270\fP and \fIs3270\fP.
+.LP
+\fBx3270if\fP operates in one of three modes.
+In \fBaction mode\fP, it passes a single action and parameters to the
+emulator for execution.
+The result of the action is written to standard output, along with the
+(optional) status of the emulator.
+(The action is optional as well, so that \fBx3270if\fP can just reports the
+emulator status.)
+In \fBiterative mode\fP, it forms a continuous conduit between a script and
+the emulator.
+In \fBinteractive prompt\fP mode, it displays a prompt, and conveys each
+command it receives to the emulator.
+.LP
+The \fIaction\fP takes the form:
+.IP
+\fIaction-name\fP(\fIparam\fP[,\fIparam\fP]...)
+.LP
+The parentheses are manatory, and usually must be quoted when \fBx3270if\fP is
+called from a shell script.
+.LP
+If any \fIparam\fP contains a space or comma, it must be surrounded by
+double quotes.
+.SH "OPTIONS"
+.TP
+\fB\-s\fP \fIfield\fP
+Causes \fBx3270if\fP to write to stdout the value of one of the
+emulator status fields.
+\fIField\fP is an integer in the range 0 through 11.
+The value 0 is a no-op and is used only to return exit status indicating the
+state of the emulator.
+The indices 1-11 and meanings of each field are documented on the
+\fIx3270-script\fP(1) manual page.
+If an \fIaction\fP is specified as well, the status field is written after the
+output of the action, separated by a newline.
+The \fB\-s\fP option is mutually exclusive with the
+\fB\-S\fP, \fB\-i\fP and \fB\-I\fP options.
+.TP
+\fB\-S\fP
+Causes \fBx3270if\fP to write to stdout the value of all of the
+emulator status fields.
+If an \fIaction\fP is specified as well, the status fields are written after the
+output of the action, separated by a newline.
+The \fB\-S\fP option is mutually exclusive with the
+\fB\-s\fP, \fB\-i\fP and \fB\-I\fP options.
+.TP
+\fB\-i\fP
+Puts \fBx3270if\fP in iterative mode.
+Data from \fBx3270if\fP's standard input is copied to the
+emulator's script input; data from the
+emulator's script output is copied to
+\fBx3270if\fP's standard output.
+The \fB\-i\fP option is mutually exclusive with the
+\fB\-s\fP, \fB\-S\fP and \fB\-I\fP options.
+\fBx3270if\fP
+runs until it detects end-of-file on its standard input or on the
+output from the emulator.
+(This mode exists primarily to give \fIexpect\fP(1)
+a process to run, on systems which do not support bidirectional pipes.)
+.TP
+\fB\-p\fP \fIprocess-id\fP
+Causes \fIx3270if\fP to use a Unix-domain socket to connect to the emulator,
+rather than pipe file descriptors given in environment variables.
+The emulator must have been started with the \fB\-socket\fP option.
+.TP
+\fB\-I\fP \fIemulator-name\fP
+Puts \fBx3270if\fP in interactive prompt mode.
+\fIemulator-name\fP is used as the prompt.
+.TP
+\fB\-H\fP \fIhelp-action\fP
+In conjunction with \fB\-I\fP, specifies the name of an action that
+can be used to get interactive help. This action name is displayed in a
+start-up banner.
+.TP
+\fB\-t\fP \fIport\fP
+Causes \fIx3270if\fP to use a TCP socket to connect to the emulator,
+rather than pipe file descriptors given in environment variables.
+The emulator must have been started with the \fB\-scriptport\fP
+option.
+.TP
+\fB\-v\fP
+Turns on verbose debug messages, showing on stderr the literal data that is
+passed between the emulator and \fBx3270if\fP.
+.SH "EXIT STATUS"
+In action mode, if the requested \fIaction\fP succeeds,
+\fBx3270if\fP exits with status 0.
+If the action fails, \fBx3270if\fP exits with status 1.
+In iterative mode, \fBx3270if\fP
+exits with status 0 when it encounters end-of-file.
+In interactive prompt mode, \fBx3270if\fP exits with status 0 when it
+encounters end-of-file, or if a command is given which ends with a '/'
+character.
+If there is an operational error within \fBx3270if\fP
+itself, such as a command-line syntax error, missing environment
+variable, or an unexpectedly closed pipe,
+\fBx3270if\fP exits with a status greater than 2.
+.SH "ENVIRONMENT"
+When a script is run as a child process of one of the emulators via the
+\fBScript\fP action, the emulator passes information about how to control it
+in environment variables.
+.LP
+On Unix, the emulator process creates a pair of pipes for communication with
+the child script process.
+The values of the file descriptors for these pipes are encoded as text
+in two environment variables:
+.TP
+\fBX3270OUTPUT\fP
+Output from the emulator, input to the child process.
+.TP
+\fBX3270INPUT\fP
+Input to the emulator, output from the child process.
+.LP
+When an emulator is started with the
+\fB\-scriptport\fP option, the 
+emulator will pass the scriptport port number
+encoded as text in the \fBX3270PORT\fP environment variable.
+\fIx3270if\fP will use that value as if it had been passed to it via the
+\fB\-t\fP option.
+\fBX3270PORT\fP takes precedence over
+\fBX3270OUTPUT\fP and \fBX3270INPUT\fP.
+.SH "SEE ALSO"
+x3270(1), c3270(1),
+s3270(1),
+x3270-script(1)
+.SH "COPYRIGHT"
+Copyright 1999-2009, 2020 Paul Mattes.
+.br
+All rights reserved.
+.LP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+.TP
+*
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+.TP
+*
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+.TP
+*
+Neither the names of Paul Mattes nor the names of his contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+.LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES `AS IS' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

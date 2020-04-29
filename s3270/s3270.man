@@ -1,0 +1,2264 @@
+'\" t
+.TH s3270 1 "25 April 2020"
+.SH "NAME"
+s3270 \-
+\s-1IBM\s+1 host access tool
+.SH "SYNOPSIS"
+\fBs3270\fP
+[\fIoptions\fP]
+[\fIhost\fP]
+.br
+\fBs3270\fP [\fIoptions\fP] \fIsession-file\fP.s3270
+.SH "DESCRIPTION"
+\fBs3270\fP opens a telnet connection to an \s-1IBM\s+1
+host, then allows a script to control the host login session.
+It is derived from
+\fIx3270\fP(1),
+an X-windows IBM 3270 emulator.
+It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection),
+and supports IND$FILE file transfer.
+The full syntax for \fIhost\fP is:
+.RS
+[\fIprefix\fP:]...[\fILUname\fP@]\fIhostname\fP[:\fIport\fP][=\fIaccept\fP]
+.RE
+.LP
+Prepending a \fBP:\fP onto \fIhostname\fP causes the connection to go
+through the \fItelnet-passthru\fP service rather than directly to the host.
+See \s-1PASSTHRU\s+1 below.
+.LP
+Prepending an \fBS:\fP onto \fIhostname\fP removes the "extended data
+stream" option reported to the host.
+See \fB\-tn\fP below for further information.
+.LP
+Prepending an \fBN:\fP onto \fIhostname\fP
+turns off TN3270E support for the session.
+.LP
+Prepending an \fBL:\fP onto \fIhostname\fP
+causes \fBs3270\fP to first create a TLS tunnel to the host, and then
+create a TN3270 session inside the tunnel.  (This function is supported only if
+\fBs3270\fP was built with TLS support).
+Note that TLS-encrypted sessions using the TELNET START-TLS option are
+negotiated with the host automatically; for these sessions the \fBL:\fP prefix
+should not be used.
+.LP
+Prepending a \fBY:\fP onto \fIhostname\fP
+causes \fBs3270\fP to skip validation of host TLS certificates.
+This overrides any other configuration or command-line options.
+.LP
+Prepending an \fBA:\fP onto \fIhostname\fP is equivalent to setting the
+\fB\-nvt\fP option; it forces an NVT-mode session instead of a
+3270-mode session.
+.LP
+A specific Logical Unit (LU) name to use may be specified by prepending it to
+the \fIhostname\fP with an `\fB@\fP'.
+Multiple LU names to try can be separated by commas.
+An empty LU can be placed in the list with an extra comma.
+(Note that the LU name is used for different purposes by different kinds of
+hosts.
+For example, CICS uses the LU name as the Terminal ID.)
+.LP
+The \fIhostname\fP may optionally be placed inside square-bracket
+characters `\fB[\fP' and `\fB]\fP'.
+This will prevent any colon `\fB:\fP' characters in the hostname
+from being interpreted as indicating option prefixes or port numbers.
+This allows numeric IPv6 addresses to be used as hostnames.
+.LP
+On systems that support the \fIforkpty\fP library call, the
+\fIhostname\fP may be replaced with \fB\-e\fP and a command string.
+This will cause \fBs3270\fP to connect to a local child process, such as
+a shell.
+.LP
+The port to connect to defaults to
+\fBtelnet\fP.
+This can be overridden with the \fB\-port\fP option, or by appending
+a \fIport\fP to the \fIhostname\fP with a colon
+`\fB:\fP'.
+(For compatability with previous versions of \fBs3270\fP
+and with \fItn3270\fP(1), the \fIport\fP
+may also be specified as a second, separate argument.)
+.LP
+An optional accept name (a hostname to accept in the host's TLS
+certificate) may be specified by appending it to the hostname with an equals
+sign (`\fB=\fP').
+The accept name can also be specified with the \fB\-accepthostname\fP
+option.
+
+.SH "OPTIONS"
+ \fBs3270\fP understands
+the following options:
+.TP
+\fB\-accepthostname\fP \fIname\fP
+Specifies a particular hostname to accept when validating the name presented
+in the server SSL certificate, instead of comparing to the name
+used to make the connection.
+.TP
+\fB\-cadir\fP \fIdirectory\fP
+Specifies a directory containing CA (root) certificates to use when verifying a
+certificate provided by the host. (OpenSSL only)
+.TP
+\fB\-cafile\fP \fIfilename\fP
+Specifies a \s-1PEM\s+1-format file containing CA (root) certificates to use
+when verifying a certificate provided by the host. (OpenSSL only)
+.TP
+\fB\-certfile\fP \fIfilename\fP
+Specifies a file containing a client certificate to provide to the host.
+The default file type is \s-1PEM\s+1.
+.TP
+\fB\-clientcert\fP \fIname\fP
+Specifies the name of a client certificate to provide to the host.
+(MacOS only)
+.TP
+\fB\-certfiletype\fP \fItype\fP
+Specifies the type of the certificate file specified
+by \fB\-certfile\fP.
+\fIType\fP can be \fBpem\fP or \fBasn1\fP. (OpenSSL only)
+.TP
+\fB\-chainfile \fIfilename\fP\fP
+Specifies a certificate chain file in \s-1PEM\s+1 format, containing a
+certificate to provide to the host, as well as one or more
+intermediate certificates and the CA certificate used to sign that certificate.
+If \fB\-chainfile\fP is specified, it
+overrides \fB\-certfile\fP. (OpenSSL only)
+.TP
+\fB\-clear\fP \fItoggle\fP
+Sets the initial value of \fItoggle\fP to \fBfalse\fP.
+.TP
+\fB\-codepage\fP \fIname\fP
+Specifies an \s-1EBCDIC\s+1 host code page.
+.TP
+\fB\-connecttimeout\fP \fIseconds\fP
+Specifies the time that s3270 will wait for a host connection to
+complete.
+.TP
+\fB\-devname\fP \fIname\fP
+Specifies a device name (workstation ID) for RFC 4777 support.
+.TP
+\fB\-httpd\fP \fB[\fP\fIaddr\fP\fB:]\fP\fIport\fP
+Specifies a port and optional address to listen on for HTTP connections.
+\fIAddr\fP can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4080 to specify the IPv6 loopback address and
+TCP port 4080.
+.IP
+Note that this option is mutually-exclusive with the \-scriptport
+option
+and disables reading actions from standard input.
+.TP
+\fB\-keyfile\fP \fIfilename\fP
+Specifies a file containing the private key for the certificate file
+(specified via \fB\-certfile\fP or \fB\-chainfile\fP).
+The default file type is \s-1PEM\s+1. (OpenSSL only)
+.TP
+\fB\-keyfiletype\fP \fItype\fP
+Specifies the type of the private key file specified
+by \fB\-keyfile\fP.
+\fIType\fP can be \fBpem\fP or \fBasn1\fP. (OpenSSL only)
+.TP
+\fB\-keypasswd\fP \fItype\fP:\fIvalue\fP
+Specifies the password for the private key file (OpenSSL) or client
+certificate file (MacOS), if it is encrypted.
+The argument can be \fBfile\fP:\fIfilename\fP, specifying that the
+password is in a file, or \fBstring\fP:\fIstring\fP, specifying the
+password on the command-line directly.
+If the private key file is encrypted and no \fB\-keypasswd\fP
+option is given,
+secure connections will not be allowed.
+.TP
+\fB\-km\fP \fIname\fP
+Specifies the local encoding method for multi-byte text.
+\fIname\fP is an encoding name recognized by the ICU library.
+(Supported only when s3270 is compiled with DBCS support, and necessary
+only when s3270 cannot figure it out from the locale.)
+.TP
+\fB\-loginmacro\fP \fIAction(arg...) ...\fP
+Specifies a macro to run at login time.
+.TP
+\fB\-minversion\fP \fIversion\fP
+The minimum required version of \fBs3270\fP, e.g., 4.0beta7.
+If the running version is less than the specified version, \fBs3270\fP
+will abort.
+The format of a version is
+\fImajor\fP\fB.\fP\fIminor\fP\fBtype\fP\fIiteration\fP. \fBtype\fP is
+ignored, and \fIminor\fP and \fIiteration\fP can be omitted.
+.TP
+\fB\-model\fP \fIname\fP
+The model of 3270 display to be emulated.
+The model name is in two parts, either of which may be omitted:
+.IP
+The first part is the
+\fBbase model\fP,
+which is either \fB3278\fP or \fB3279\fP.
+\fB3278\fP specifies a monochrome (green on black) 3270 display;
+\fB3279\fP specifies a color 3270 display.
+.IP
+The second part is the
+\fBmodel number\fP,
+which specifies the number of rows and columns.
+Model 4 is the default.
+.PP
+.TS
+center;
+c c c .
+T{
+.na
+.nh
+Model Number
+T}	T{
+.na
+.nh
+Columns
+T}	T{
+.na
+.nh
+Rows
+T}
+_
+T{
+.na
+.nh
+2
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+24
+T}
+T{
+.na
+.nh
+3
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+32
+T}
+T{
+.na
+.nh
+4
+T}	T{
+.na
+.nh
+80
+T}	T{
+.na
+.nh
+43
+T}
+T{
+.na
+.nh
+5
+T}	T{
+.na
+.nh
+132
+T}	T{
+.na
+.nh
+27
+T}
+.TE
+.IP
+Note: Technically, there is no such 3270 display as a 3279-4 or 3279-5, but
+most hosts seem to work with them anyway.
+.IP
+The default model
+is \fB3279\-4\fP.
+.TP
+\fB\-noverifycert\fP
+For TLS connections, do not verify the host certificate.
+.TP
+\fB\-nvt\fP
+Start in NVT mode instead of waiting for the host to send data, and make the
+default terminal type \fBxterm\fP.
+.TP
+\fB\-oversize\fP \fIcols\fP\fBx\fP\fIrows\fP
+Makes the screen larger than the default for the chosen model number.
+This option has effect only in combination with extended data stream support
+(controlled by the "s3270.extended" resource), and only if the host
+supports the Query Reply structured field.
+The number of columns multiplied by the number of rows must not exceed
+16383 (3fff hex), the limit of 14-bit 3270 buffer addressing.
+.TP
+\fB\-port\fP \fIn\fP
+Specifies a different \s-1TCP\s+1 port to connect to.
+\fIn\fP can be a name from \fB/etc/services\fP like \fBtelnet\fP, or a
+number.
+This option changes the default port number used for all connections.
+(The positional parameter affects only the initial connection.)
+.TP
+\fB\-proxy \fItype\fP:\fIhost\fP[:\fIport\fP]\fP
+Causes \fBs3270\fP to connect via the specified proxy, instead of
+using a direct connection.
+The \fIhost\fP can be an IP address or hostname.
+The optional \fIport\fP can be a number or a service name.
+For a list of supported proxy \fItypes\fP, see \s-1PROXY\s+1
+below.
+.TP
+\fB\-scriptport\fP \fB[\fP\fIaddr\fP\fB:]\fP\fIport\fP
+Specifies a port and optional address to listen on for scripting connections.
+\fIAddr\fP can be specified as `*' to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4081 to specify the IPv6 loopback address and
+TCP port 4081.
+.IP
+Note that this option is mutually-exclusive with the \-httpd
+option
+and disables reading actions from standard input.
+.TP
+\fB\-scriptportonce\fP
+Allows s3270 to accept only one script connection. When that connection is
+broken, s3270 will exit.
+.TP
+\fB\-set\fP \fItoggle\fP
+Sets the initial value of \fItoggle\fP to \fBtrue\fP.
+.TP
+\fB\-socket\fP
+Causes the emulator to create a Unix-domain socket when it starts, for use
+by script processes to send actions to the emulator.
+The socket is named \fB/tmp/x3sck.\fP\fIpid\fP.
+The \fB\-p\fP option of \fIx3270if\fP causes it to use this socket,
+instead of pipes specified by environment variables.
+.TP
+\fB\-tn\fP \fIname\fP
+Specifies the terminal name to be transmitted over the telnet connection.
+The default name is
+\fBIBM\-\fP\fImodel_name\fP\fB\-E\fP,
+for example,
+\fBIBM\-3278\-4\-E\fP.
+.IP
+Some hosts are confused by the \fB\-E\fP
+suffix on the terminal name, and will ignore the extra screen area on
+models 3, 4 and 5.
+Prepending an \fBS:\fP on the hostname, or setting the "s3270.extended"
+resource to "false", removes the \fB\-E\fP
+from the terminal name when connecting to such hosts.
+.IP
+The name can also be specified with the "s3270.termName" resource.
+.TP
+\fB\-trace\fP
+Turns on data stream and event tracing at startup.
+The default trace file name is
+\fB/tmp/x3trc.\fP\fIpid\fP.
+.TP
+\fB\-tracefile\fP \fIfile\fP
+Specifies a file to save data stream and event traces into.
+If the name starts with `>>', data will be appended to the file.
+.TP
+\fB\-tracefilesize\fP \fIsize\fP
+Places a limit on the size of a trace file.
+If this option is not specified, or is specified as \fB0\fP or \fBnone\fP,
+the trace file size will be unlimited.
+The minimum size is 64 Kbytes.
+The value of \fIsize\fP can have a \fBK\fP or \fBM\fP suffix, indicating
+kilobytes or megabytes respectively.
+When the trace file reaches the size limit, it will be renamed with a 
+`-' appended and a new file started.
+.TP
+\fB\-user\fP \fIname\fP
+Specifies the user name for RFC 4777 support.
+.TP
+\fB\-utf8\fP
+Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
+.TP
+\fB\-v\fP
+Display the version and build options for \fBs3270\fP and exit.
+.TP
+\fB\-verifycert\fP
+For TLS connections, verify the host certificate, and do not allow
+the connection to complete unless it can be validated. (This is the default
+setting.)
+This option is overridden by a \fBY:\fP prepended to the hostname when
+connecting.
+.TP
+\fB\-xrm\fP "s3270.\fIresource\fP: \fIvalue\fP"
+Sets the value of the named \fIresource\fP to \fIvalue\fP.
+Resources control less common \fBs3270\fP
+options, and are defined under \s-1RESOURCES\s+1 below.
+
+.SH "ACTIONS"
+Here is a complete list of basic s3270 actions.
+Script-specific actions are described on the
+\fIx3270-script\fP(1) manual page.
+.PP
+Actions marked with an asterisk (*) may block, sending data to the host and
+possibly waiting for a response.
+.PP
+.TS
+center; lw(3i) lw(3i).
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Attn()
+T}	T{
+.na
+.nh
+attention key
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+BackSpace()
+T}	T{
+.na
+.nh
+move cursor left (or send \s-1ASCII BS\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+BackTab()
+T}	T{
+.na
+.nh
+tab to start of previous input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Charset(\fIcharset\fP)
+T}	T{
+.na
+.nh
+change host code page
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+CircumNot()
+T}	T{
+.na
+.nh
+input "^" in \s-1NVT\s+1 mode, or "notsign" in 3270 mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Clear()
+T}	T{
+.na
+.nh
+clear screen
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Connect(\fIhost\fP)
+T}	T{
+.na
+.nh
+connect to \fIhost\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*CursorSelect()
+T}	T{
+.na
+.nh
+Cursor Select \s-1AID\s+1
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Delete()
+T}	T{
+.na
+.nh
+delete character under cursor (or send \s-1ASCII DEL\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+DeleteField()
+T}	T{
+.na
+.nh
+delete the entire field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+DeleteWord()
+T}	T{
+.na
+.nh
+delete the current or previous word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Disconnect()
+T}	T{
+.na
+.nh
+disconnect from host
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Down()
+T}	T{
+.na
+.nh
+move cursor down
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Dup()([failonerror|nofailonerror])
+T}	T{
+.na
+.nh
+duplicate field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Enter()
+T}	T{
+.na
+.nh
+Enter \s-1AID\s+1 (or send \s-1ASCII CR\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Erase()
+T}	T{
+.na
+.nh
+erase previous character (or send \s-1ASCII BS\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+EraseEOF()
+T}	T{
+.na
+.nh
+erase to end of current field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+EraseInput()
+T}	T{
+.na
+.nh
+erase all input fields
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+FieldEnd()
+T}	T{
+.na
+.nh
+move cursor to end of field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+FieldMark()([failonerror|nofailonError])
+T}	T{
+.na
+.nh
+mark field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+HexString(\fIhex_digits\fP)
+T}	T{
+.na
+.nh
+insert control-character string
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Home()
+T}	T{
+.na
+.nh
+move cursor to first input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Insert()
+T}	T{
+.na
+.nh
+set insert mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Interrupt()
+T}	T{
+.na
+.nh
+send \s-1TELNET IP\s+1 to host
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Key(\fIkeysym\fP[,failonerror|nofailonerror])
+T}	T{
+.na
+.nh
+insert key \fIkeysym\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Key(0x\fIxx\fP[,failonError|nofailonerror])
+T}	T{
+.na
+.nh
+insert key with character code \fIxx\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Left()
+T}	T{
+.na
+.nh
+move cursor left
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Left2()
+T}	T{
+.na
+.nh
+move cursor left 2 positions
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+MonoCase()
+T}	T{
+.na
+.nh
+toggle uppercase-only mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+MoveCursor(\fIrow\fP,\fIcol\fP)
+T}	T{
+.na
+.nh
+move cursor to zero-origin (\fIrow\fP,\fIcol\fP)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Newline()
+T}	T{
+.na
+.nh
+move cursor to first field on next line (or send \s-1ASCII LF\s+1)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+NextWord()
+T}	T{
+.na
+.nh
+move cursor to next word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*PA(\fIn\fP)
+T}	T{
+.na
+.nh
+Program Attention \s-1AID\s+1 (\fIn\fP from 1 to 3)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*PF(\fIn\fP)
+T}	T{
+.na
+.nh
+Program Function \s-1AID\s+1 (\fIn\fP from 1 to 24)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PreviousWord()
+T}	T{
+.na
+.nh
+move cursor to previous word
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PasteString(\fIhex_digits\fP)
+T}	T{
+.na
+.nh
+insert string using pasting behavior
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+PrintText(\fIcommand\fP)
+T}	T{
+.na
+.nh
+print screen text on printer
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Quit()
+T}	T{
+.na
+.nh
+exit \fBs3270\fP
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Redraw()
+T}	T{
+.na
+.nh
+redraw window
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Reset()
+T}	T{
+.na
+.nh
+reset locked keyboard
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Right()
+T}	T{
+.na
+.nh
+move cursor right
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Right2()
+T}	T{
+.na
+.nh
+move cursor right 2 positions
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Script(\fIcommand\fP[,\fIarg\fP...])
+T}	T{
+.na
+.nh
+run a script
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*String(\fIstring\fP)
+T}	T{
+.na
+.nh
+insert string (simple macro facility)
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Tab()
+T}	T{
+.na
+.nh
+move cursor to next input field
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Toggle(\fIoption\fP[,\fIset|clear\fP])
+T}	T{
+.na
+.nh
+toggle an option
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+ToggleInsert()
+T}	T{
+.na
+.nh
+toggle insert mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+ToggleReverse()
+T}	T{
+.na
+.nh
+toggle reverse-input mode
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+*Transfer(\fIoption\fP=\fIvalue\fP...')
+T}	T{
+.na
+.nh
+file transfer
+T}
+T{
+.na
+.nh
+.in +2
+.ti -2
+Up()
+T}	T{
+.na
+.nh
+move cursor up
+T}
+.TE
+.LP
+Note that certain parameters to s3270 actions (such as the names of files
+and keymaps) are subject to \fIsubstitutions\fP:
+.LP
+The character \fB~\fP at the beginning of a string is replaced with the user's
+home directory.
+A \fB~\fP character followed by a username is
+replaced with that user's home directory.
+.LP
+Environment variables are substituted using the Unix shell convention of
+$\fIname\fP or ${\fIname\fP}.
+.LP
+Two special pseudo-environment variables are supported. ${TIMESTAMP} is
+replaced with a microsecond-resolution timestamp; ${UNIQUE} is replaced with a
+string guaranteed to make a unique filename (the process ID optionally
+followed by a dash and a string of digits). ${UNIQUE} is used to form trace
+file names.
+.SH "FILE TRANSFER"
+The \fBTransfer()\fP action implements \fBIND$FILE\fP file transfer.
+This action requires that the \fBIND$FILE\fP
+program be installed on the \s-1IBM\s+1 host, and that the 3270 cursor
+be located in a field that will accept a \s-1TSO\s+1 or \s-1VM/CMS\s+1 command.
+.LP
+.LP
+Because of the complexity and number of options for file transfer, the
+parameters to the \fBTransfer()\fP action can take the unique form
+of \fIoption\fP=\fIvalue\fP.
+They can also be given with their parameters separately.
+Options can appear in any order.
+Note that if the \fIvalue\fP contains spaces (such as a VM/CMS file name),
+then the entire parameter must be quoted, e.g., \fB"hostfile=xxx foo a"\fP.
+With sequential options, this would be \fBhostfile,"xxx foo a"\fP.
+The options are:
+.LP
+.TS
+l c l l.
+T{
+.na
+.nh
+Option
+T}	T{
+.na
+.nh
+Required?
+T}	T{
+.na
+.nh
+Default
+T}	T{
+.na
+.nh
+Other Values
+T}
+_
+T{
+.na
+.nh
+direction
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+receive
+T}	T{
+.na
+.nh
+send
+T}
+T{
+.na
+.nh
+hostfile
+T}	T{
+.na
+.nh
+Yes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+localfile
+T}	T{
+.na
+.nh
+Yes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+host
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+tso
+T}	T{
+.na
+.nh
+vm, cics
+T}
+T{
+.na
+.nh
+mode
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+ascii
+T}	T{
+.na
+.nh
+binary
+T}
+T{
+.na
+.nh
+cr
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+remove
+T}	T{
+.na
+.nh
+add, keep
+T}
+T{
+.na
+.nh
+remap
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+yes
+T}	T{
+.na
+.nh
+no
+T}
+T{
+.na
+.nh
+exist
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+keep
+T}	T{
+.na
+.nh
+replace, append
+T}
+T{
+.na
+.nh
+recfm
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+fixed, variable, undefined
+T}
+T{
+.na
+.nh
+lrecl
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+blksize
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+allocation
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+tracks, cylinders, avblock
+T}
+T{
+.na
+.nh
+primaryspace
+T}	T{
+.na
+.nh
+Sometimes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+secondaryspace
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+avblock
+T}	T{
+.na
+.nh
+Sometimes
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}
+T{
+.na
+.nh
+buffersize
+T}	T{
+.na
+.nh
+No
+T}	T{
+.na
+.nh
+4096
+T}	T{
+.na
+.nh
+\ 
+T}
+.TE
+.LP
+The option details are as follows.
+.TP
+\fBdirection\fP
+\fBsend\fP to send a file to the host,
+\fBreceive\fP to receive a file from the host.
+.TP
+\fBhostfile\fP
+The name of the file on the host.
+.TP
+\fBlocalfile\fP
+The name of the file on the local workstation.
+.TP
+\fBhost\fP
+The type of host (which dictates the form of the \fBIND$FILE\fP command):
+\fBtso\fP (the default), \fBvm\fP or \fBcics\fP.
+.TP
+\fBmode\fP
+Use \fBascii\fP (the default) for a text file, which will be translated
+between \s-1EBCDIC\s+1 and \s-1ASCII\s+1 as necessary.
+Use \fBbinary\fP for non-text files.
+.TP
+\fBcr\fP
+Controls how newline characters are handled when transferring
+\fBmode=ascii\fP files.
+\fBremove\fP (the default) strips newline characters in local files
+before transferring them to the host.
+\fBadd\fP adds newline characters to each host file record before
+transferring it to the local workstation.
+\fBkeep\fP preserves newline characters when transferring a local file
+to the host.
+.TP
+\fBremap\fP
+Controls text translation for \fBmode=ascii\fP files.
+The value \fByes\fP (the default) causes s3270 to remap the text to ensure
+maximum compatibility between the workstation's character set and encoding
+and the host's \s-1EBCDIC\s+1 code page.
+The value \fBno\fP causes s3270 to pass the text to or from the host
+as-is, leaving all translation to the \fBIND$FILE\fP program on the host.
+.TP
+\fBexist\fP
+Controls what happens when the destination file already exists.
+\fBkeep\fP (the default) preserves the file, causing the
+\fBTransfer()\fP action to fail.
+\fBreplace\fP overwrites the destination file with the source file.
+\fBappend\fP appends the source file to the destination file.
+.TP
+\fBrecfm\fP
+Controls the record format of files created on the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+\fBfixed\fP creates a file with fixed-length records.
+\fBvariable\fP creates a file with variable-length records.
+\fBundefined\fP creates a file with undefined-length records (\s-1TSO\s+1 hosts
+only).
+The \fBlrecl\fP option controls the record length or maximum record length for
+\fBrecfm=fixed\fP and \fBrecfm=variable\fP files, respectively.
+.TP
+\fBlrecl\fP
+Specifies the record length (or maximum record length) for files created on
+the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+.TP
+\fBblksize\fP
+Specifies the block size for files created on the host.
+(\s-1TSO\s+1 and \s-1VM\s+1 hosts only.)
+.TP
+\fBallocation\fP
+Specifies the units for the \fBprimaryspace\fP and
+\fBsecondaryspace\fP options: \fBtracks\fP, \fBcylinders\fP or
+\fBavblock\fP. (\s-1TSO\s+1 hosts only.)
+.TP
+\fBprimaryspace\fP
+Primary allocation for a file.
+The units are given by the \fBallocation\fP option.
+Required when the \fBallocation\fP is specified as something other than
+\fBdefault\fP.
+(\s-1TSO\s+1 hosts only.)
+.TP
+\fBsecondaryspace\fP
+Secondary allocation for a file.
+The units are given by the \fBallocation\fP option. (\s-1TSO\s+1 hosts only.) 
+.TP
+\fBavblock\fP
+Average block size, required when \fBallocation\fP specifies \fBavblock\fP.
+(\s-1TSO\s+1 hosts only.)
+.TP
+\fBbuffersize\fP
+Buffer size for DFT-mode transfers.
+Can range from 256 to 32768.
+Larger values give better performance, but some hosts may not be able to
+support them.
+.LP
+There are also resources that control the default values for each of the
+file transfer parameters.
+These resources have the same names as the \fBTransfer()\fP keywords, but with
+\fBft\fP prepended and the option name capitalized. E.g., the default for the \fBmode\fP keyword is the
+\fBs3270.ftMode\fP resource.
+
+.SH "THE PRINTTEXT ACTION"
+The \fBPrintText()\fP produces screen snapshots in a number of different
+forms.
+The default form wth no arguments sends a copy of the screen to the default
+printer.
+A single argument is
+the command to use to print, e.g., \fBlpr\fP.
+.LP
+Multiple arguments can include keywords to control the output of
+\fBPrintText()\fP:
+.TP
+\fBfile\fP,\fIfilename\fP
+Save the output in a file.
+.TP
+\fBhtml\fP
+Save the output as HTML.  This option implies \fBfile\fP.
+.TP
+\fBrtf\fP
+Save the output as RichText.  This option implies \fBfile\fP.
+The font defaults to \fBCourier New\fP and the
+point size defaults to 8.
+These can be overridden by the \fBprintTextFont\fP and \fBprintTextSize\fP
+resources, respectively.
+.TP
+\fBstring\fP
+Return the output as a string.  This can only be used from scripts.
+.TP
+\fBmodi\fP
+Render modified fields in italics.
+.TP
+\fBcaption\fP,\fItext\fP
+Add the specified \fItext\fP as a caption above the output.
+Within \fItext\fP, the special sequence \fB%T%\fP will be replaced with
+a timestamp.
+.TP
+\fBcommand\fP,\fIcommand\fP
+Directs the output to a command.
+This allows one or more of the other keywords to be specified, while still
+sending the output to the printer.
+
+.SH "NESTED SCRIPTS"
+There are several types of
+nested script functions available.
+.TP
+\fBThe String Action\fP
+The simplest method for
+nested scripts is provided via the \fBString()\fP
+action.
+The arguments to \fBString()\fP are one or more double-quoted strings which are
+inserted directly as if typed.
+The C backslash conventions are honored as follows.
+(Entries marked * mean that after sending the \s-1AID\s+1 code to the host,
+\fBs3270\fP will wait for the host to unlock the keyboard before further
+processing the string.)
+.TS
+l l.
+T{
+.na
+.nh
+\eb
+T}	T{
+.na
+.nh
+Left()
+T}
+T{
+.na
+.nh
+\ee\fIxxxx\fP
+T}	T{
+.na
+.nh
+EBCDIC character in hex
+T}
+T{
+.na
+.nh
+\ef
+T}	T{
+.na
+.nh
+Clear()*
+T}
+T{
+.na
+.nh
+\en
+T}	T{
+.na
+.nh
+Enter()*
+T}
+T{
+.na
+.nh
+\epa\fIn\fP
+T}	T{
+.na
+.nh
+PA(\fIn\fP)*
+T}
+T{
+.na
+.nh
+\epf\fInn\fP
+T}	T{
+.na
+.nh
+PF(\fInn\fP)*
+T}
+T{
+.na
+.nh
+\er
+T}	T{
+.na
+.nh
+Newline()
+T}
+T{
+.na
+.nh
+\et
+T}	T{
+.na
+.nh
+Tab()
+T}
+T{
+.na
+.nh
+\eT
+T}	T{
+.na
+.nh
+BackTab()
+T}
+T{
+.na
+.nh
+\eu\fIxxxx\fP
+T}	T{
+.na
+.nh
+Unicode character in hex
+T}
+T{
+.na
+.nh
+\ex\fIxxxx\fP
+T}	T{
+.na
+.nh
+Unicode character in hex
+T}
+.TE
+.IP
+Note that the numeric values for the \ee, \eu and \ex sequences
+can be abbreviated to 2 digits.
+Note also that EBCDIC codes greater than 255 and some Unicode character codes
+represent DBCS characters, which will work only if s3270 is built with
+DBCS support and the host allows DBCS input in the current field.
+.IP
+\fBNote:\fP
+The strings are in \s-1ASCII\s+1 and converted to \s-1EBCDIC\s+1,
+so beware of inserting
+control codes.
+.IP
+There is also an alternate form of the \fBString()\fP action, \fBHexString()\fP,
+which is used to enter non-printing data.
+The argument to \fBHexString()\fP is a string of hexadecimal digits, two per
+character.  A leading 0x or 0X is optional.
+In 3270 mode, the hexadecimal data represent \s-1EBCDIC\s+1 characters, which
+are entered into the current field.
+In \s-1NVT\s+1 mode, the hexadecimal data represent \s-1ASCII\s+1 characters,
+which are sent directly to the host.
+.TP
+\fBThe Script Action\fP
+This action causes \fBs3270\fP to start a child process which can
+execute \fBs3270\fP actions.
+Standard input and output from the child process are piped back to
+\fBs3270\fP.
+The \fBScript()\fP action is fully documented in
+\fIx3270-script\fP(1).
+
+.SH "PASSTHRU"
+\fBs3270\fP supports the Sun \fItelnet-passthru\fP
+service provided by the \fIin.telnet-gw\fP server.
+This allows outbound telnet connections through a firewall machine.
+When a \fBP:\fP is prepended to a hostname, \fBs3270\fP
+acts much like the \fIitelnet\fP(1) command.
+It contacts the machine named \fBinternet-gateway\fP at the port defined in
+\fB/etc/services\fP as \fBtelnet-passthru\fP
+(which defaults to 3514).
+It then passes the requested hostname and port to the
+\fBin.telnet-gw\fP server.
+.SH "PROXY"
+The \fB\-proxy\fP option or the \fBs3270.proxy\fP resource
+causes s3270 to use a proxy server to connect to the host.
+The syntax of the option or resource is:
+.RS
+\fItype\fP:[\fIusername\fP:\fIpassword\fP@]\fIhost\fP[:\fIport\fP]
+
+.RE
+The supported values for \fItype\fP are:
+.TS
+center;
+c l c .
+T{
+.na
+.nh
+Proxy Type
+T}	T{
+.na
+.nh
+Protocol
+T}	T{
+.na
+.nh
+Default Port
+T}
+_
+T{
+.na
+.nh
+http
+T}	T{
+.na
+.nh
+RFC 2817 HTTP tunnel (squid)
+T}	T{
+.na
+.nh
+3128
+T}
+T{
+.na
+.nh
+passthru
+T}	T{
+.na
+.nh
+Sun in.telnet-gw
+T}	T{
+.na
+.nh
+none
+T}
+T{
+.na
+.nh
+socks4
+T}	T{
+.na
+.nh
+SOCKS version 4
+T}	T{
+.na
+.nh
+1080
+T}
+T{
+.na
+.nh
+socks5
+T}	T{
+.na
+.nh
+SOCKS version 5 (RFC 1928)
+T}	T{
+.na
+.nh
+1080
+T}
+T{
+.na
+.nh
+telnet
+T}	T{
+.na
+.nh
+No protocol (just send \fBconnect\fP \fIhost port\fP)
+T}	T{
+.na
+.nh
+none
+T}
+.TE
+.LP
+The special types \fBsocks4a\fP and \fBsocks5d\fP can also be used to force
+the proxy server to do the hostname resolution for the SOCKS protocol.
+Note that only the \fBhttp\fP and \fBsocks5\fP proxies support a username and
+password.
+.SH "RESOURCES"
+Certain \fBs3270\fP
+options can be configured via resources.
+Resources are defined
+by \fB\-xrm\fP options.
+The definitions are similar to X11 resources, and use a similar syntax.
+The resources available in \fBs3270\fP are:
+.LP
+.TS
+l l l l.
+T{
+.na
+.nh
+Resource
+T}	T{
+.na
+.nh
+Default
+T}	T{
+.na
+.nh
+Option
+T}	T{
+.na
+.nh
+Purpose
+T}
+_
+T{
+.na
+.nh
+blankFill
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\-set blankFill
+T}	T{
+.na
+.nh
+Blank Fill mode
+T}
+T{
+.na
+.nh
+charset
+T}	T{
+.na
+.nh
+bracket
+T}	T{
+.na
+.nh
+\-charset
+T}	T{
+.na
+.nh
+\s-1EBCDIC\s+1 character set
+T}
+T{
+.na
+.nh
+dbcsCgcsgid
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Override DBCS CGCSGID
+T}
+T{
+.na
+.nh
+dsTrace
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\-trace
+T}	T{
+.na
+.nh
+Data stream tracing
+T}
+T{
+.na
+.nh
+eof
+T}	T{
+.na
+.nh
+^D
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode \s-1EOF\s+1 character
+T}
+T{
+.na
+.nh
+erase
+T}	T{
+.na
+.nh
+^H
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode erase character
+T}
+T{
+.na
+.nh
+extended
+T}	T{
+.na
+.nh
+True
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Use 3270 extended data stream
+T}
+T{
+.na
+.nh
+eventTrace
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\-trace
+T}	T{
+.na
+.nh
+Event tracing
+T}
+T{
+.na
+.nh
+icrnl
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Map \s-1CR\s+1 to \s-1NL\s+1 on \s-1NVT\s+1-mode input
+T}
+T{
+.na
+.nh
+inlcr
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Map \s-1NL\s+1 to \s-1CR\s+1 in \s-1NVT\s+1-mode input
+T}
+T{
+.na
+.nh
+intr
+T}	T{
+.na
+.nh
+^C
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode interrupt character
+T}
+T{
+.na
+.nh
+kill
+T}	T{
+.na
+.nh
+^U
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode kill character
+T}
+T{
+.na
+.nh
+lineWrap
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\-set lineWrap
+T}	T{
+.na
+.nh
+\s-1NVT\s+1 line wrap mode
+T}
+T{
+.na
+.nh
+lnext
+T}	T{
+.na
+.nh
+^V
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode lnext character
+T}
+T{
+.na
+.nh
+m3279
+T}	T{
+.na
+.nh
+(note 1)
+T}	T{
+.na
+.nh
+\-model
+T}	T{
+.na
+.nh
+3279 (color) emulation
+T}
+T{
+.na
+.nh
+monoCase
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\-set monoCase
+T}	T{
+.na
+.nh
+Mono-case mode
+T}
+T{
+.na
+.nh
+numericLock
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Lock keyboard for numeric field error
+T}
+T{
+.na
+.nh
+oerrLock
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Lock keyboard for input error
+T}
+T{
+.na
+.nh
+oversize
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\-oversize
+T}	T{
+.na
+.nh
+Oversize screen dimensions
+T}
+T{
+.na
+.nh
+port
+T}	T{
+.na
+.nh
+telnet
+T}	T{
+.na
+.nh
+\-port
+T}	T{
+.na
+.nh
+Non-default TCP port
+T}
+T{
+.na
+.nh
+quit
+T}	T{
+.na
+.nh
+^\e
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode quit character
+T}
+T{
+.na
+.nh
+rprnt
+T}	T{
+.na
+.nh
+^R
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode reprint character
+T}
+T{
+.na
+.nh
+sbcsCgcsgid
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Override SBCS CGCSGID
+T}
+T{
+.na
+.nh
+secure
+T}	T{
+.na
+.nh
+False
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Disable "dangerous" options
+T}
+T{
+.na
+.nh
+termName
+T}	T{
+.na
+.nh
+(note 2)
+T}	T{
+.na
+.nh
+\-tn
+T}	T{
+.na
+.nh
+\s-1TELNET\s+1 terminal type string
+T}
+T{
+.na
+.nh
+traceDir
+T}	T{
+.na
+.nh
+/tmp
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+Directory for trace files
+T}
+T{
+.na
+.nh
+traceFile
+T}	T{
+.na
+.nh
+(note 3)
+T}	T{
+.na
+.nh
+\-tracefile
+T}	T{
+.na
+.nh
+File for trace output
+T}
+T{
+.na
+.nh
+werase
+T}	T{
+.na
+.nh
+^W
+T}	T{
+.na
+.nh
+\ 
+T}	T{
+.na
+.nh
+\s-1NVT\s+1-mode word-erase character
+T}
+.TE
+.LP
+.RS
+\fINote 1\fP: \fBm3279\fP defaults to
+\fBFalse\fP.
+It can be forced to \fBTrue\fP with the proper \fB\-model\fP
+option.
+.LP
+\fINote 2\fP:
+The default terminal type string is constructed from the model number, color
+emulation, and extended data stream modes.
+E.g., a model 2 with color emulation and the extended data stream option
+would be sent as \fBIBM-3279-2-E\fP.
+Note also that when \s-1TN3270E\s+1
+mode is used, the terminal type is always sent as 3278, but this does not
+affect color capabilities.
+.LP
+\fINote 3\fP: The default trace file is
+\fBx3trc.\fP\fIpid\fP in the directory specified by
+the \fBtraceDir\fP resource.
+
+
+
+
+.RE
+.LP
+If more than one \fB\-xrm\fP option is given for the same resource,
+the last one on the command line is used.
+.SH "FILES"
+/usr/local/lib/x3270/ibm_hosts
+.br
+
+.SH "SEE ALSO"
+x3270-script(1), 
+x3270(1), c3270(1), telnet(1), tn3270(1)
+.br
+Data Stream Programmer's Reference, IBM GA23-0059
+.br
+Character Set Reference, IBM GA27-3831
+.br
+RFC 1576, TN3270 Current Practices
+.br
+RFC 1646, TN3270 Extensions for LUname and Printer Selection
+.br
+RFC 2355, TN3270 Enhancements
+.SH "COPYRIGHTS"
+Copyright 1993-2020, Paul Mattes.
+.br
+Copyright 2004-2005, Don Russell.
+.br
+Copyright 2004, Dick Altenbern.
+.br
+Copyright 1990, Jeff Sparkes.
+.br
+Copyright 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+.br
+All rights reserved.
+.LP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+.TP
+*
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+.TP
+*
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+.TP
+*
+Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
+GTRC nor
+the names of their contributors may be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+
+.LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
+SPARKES AND GTRC
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
+ALTENBERN, JEFF
+SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.SH "VERSION"
+s3270 4.0beta7

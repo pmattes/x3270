@@ -1,0 +1,87 @@
+'\" t
+.TH tcl3270 1 "25 April 2020"
+.SH "NAME"
+tcl3270 \-
+\s-1IBM\s+1 host access tool
+.SH "SYNOPSIS"
+\fBtcl3270\fP
+[\fIscript\fP [\fIscript-arg...\fP]] [-- [\fItcl3270-options\fP] [\fIs3270-options\fP] [\fIhost\fP|\fIsession-file\fP.tcl3270]
+.br
+\fBtcl3270\fP -v
+.br
+\fBtcl3270\fP --help
+.SH "DESCRIPTION"
+\fBtcl3270\fP opens a telnet connection to an \s-1IBM\s+1
+host, then allows a Tcl script to control the host login session.
+It is derived from
+\fIs3270\fP(1),
+a script-based IBM 3270 emulator.
+.LP
+For each action supported by s3270, tcl3270 defines a
+correcponding Tcl command.
+The result of the Tcl command is the output of the s3270 action.
+If the output is one line, the result is a string.
+If the output is multiple lines, the result is a list of strings.
+.LP
+On the command line, a session file can be named either
+\fIname\fP.\fBtcl3270\fP or \fIname\fP.\fBs3270\fP.
+Resource values, such as those used in \fB\-rm\fP options or in a
+session file, can be specified as \fBtcl3270\fP.\fIresource\fP or
+\fBs3270\fP.\fIresource\fP.
+.SH "TCL3270-SPECIFIC OPTIONS"
+.TP
+\fB\-d\fP
+Turns on debugging information, tracing data going between tcl3270 and
+s3270.
+.SH "SEE ALSO"
+s3270(1)
+.SH "COPYRIGHTS"
+Copyright 1993-2020, Paul Mattes.
+.br
+Copyright 2004-2005, Don Russell.
+.br
+Copyright 2004, Dick Altenbern.
+.br
+Copyright 1990, Jeff Sparkes.
+.br
+Copyright 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+.br
+All rights reserved.
+.LP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+.TP
+*
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+.TP
+*
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+.TP
+*
+Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
+GTRC nor
+the names of their contributors may be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+
+.LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
+SPARKES AND GTRC
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
+ALTENBERN, JEFF
+SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.SH "VERSION"
+tcl3270 4.0beta7
