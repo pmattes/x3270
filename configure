@@ -1887,6 +1887,9 @@ if test "x$enable_x3270" != xyes -a \
     if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
 fi
 
+if test "x$enable_tcl3270" = xyes; then
+    enable_s3270=yes
+fi
 if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
@@ -1894,15 +1897,10 @@ if test "x$enable_x3270" = xyes -o \
 	"x$enable_tcl3270" = xyes; then
     enable_x3270if=yes
 fi
-
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
 	"x$enable_wb3270" = xyes; then
     enable_wx3270if=yes
-fi
-
-if test "x$enable_tcl3270" = xyes; then
-    enable_s3270=yes
 fi
 
 # Extract the first word of "x86_64-w64-mingw32-gcc", so it can be a program name with args.
@@ -1987,6 +1985,7 @@ $as_echo "$as_me: WARNING: Disabling Windows cross-compile" >&2;}
 	windows_notfound=1
 	enable_wc3270=no
 	enable_ws3270=no
+	enable_wb3270=no
 	enable_wpr3287=no
 	enable_windows_lib=no
 fi
@@ -2034,6 +2033,7 @@ fi
 
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
+        "x$enable_wb3270" = xyes -o \
 	"x$enable_wpr3287" = xyes -o \
 	"x$enable_windows_lib" = xyes; then
     subdirs="$subdirs lib/w32xx"

@@ -156,6 +156,9 @@ if test "x$enable_x3270" != xyes -a \
 fi
 
 dnl Handle dependencies.
+if test "x$enable_tcl3270" = xyes; then
+    enable_s3270=yes
+fi
 if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
@@ -163,15 +166,10 @@ if test "x$enable_x3270" = xyes -o \
 	"x$enable_tcl3270" = xyes; then
     enable_x3270if=yes
 fi
-
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
 	"x$enable_wb3270" = xyes; then
     enable_wx3270if=yes
-fi
-
-if test "x$enable_tcl3270" = xyes; then
-    enable_s3270=yes
 fi
 
 dnl Handle missing Windows tools.
@@ -182,6 +180,7 @@ then	AC_MSG_WARN(Disabling Windows cross-compile)
 	windows_notfound=1
 	enable_wc3270=no
 	enable_ws3270=no
+	enable_wb3270=no
 	enable_wpr3287=no
 	enable_windows_lib=no
 fi
@@ -197,6 +196,7 @@ fi
 
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
+        "x$enable_wb3270" = xyes -o \
 	"x$enable_wpr3287" = xyes -o \
 	"x$enable_windows_lib" = xyes; then
     AC_CONFIG_SUBDIRS(lib/w32xx)
