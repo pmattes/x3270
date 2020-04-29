@@ -428,7 +428,8 @@ screen_init(void)
 static char *
 ti_save(const char *name)
 {
-    char *str = tigetstr(name);
+    char *str = tigetstr((char *)name);
+
     if (str != NULL && str != (char *)-1) {
 	return NewString(str);
     }
