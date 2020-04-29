@@ -564,6 +564,13 @@ PACKAGE_URL=''
 enable_option_checking=no
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+T_WINDOWS_CLOBBER
+T_WINDOWS_CLEAN
+T_UNIX_CLOBBER
+T_UNIX_CLEAN
+T_LIB_CLOBBER
+T_LIB_CLEAN
+T_LIB
 T_INSTALL_MAN
 T_INSTALL
 T_CLOBBER
@@ -1986,13 +1993,21 @@ if test "x$enable_wc3270" = xyes -o \
 	"x$enable_wb3270" = xyes; then
     enable_wx3270if=yes
 fi
-
 if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
-        "x$enable_pr3287" = xyes -o \
-	"x$enable_unix_lib" = xyes; then
+	"x$enable_pr3287" = xyes; then
+    enable_unix_lib=yes
+fi
+if test "x$enable_wc3270" = xyes -o \
+        "x$enable_ws3270" = xyes -o \
+        "x$enable_wb3270" = xyes -o \
+	"x$enable_wpr3287" = xyes; then
+    enable_windows_lib=yes
+fi
+
+if test "x$enable_unix_lib" = xyes; then
     ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
   if test -f "$ac_dir/install-sh"; then
@@ -2028,11 +2043,7 @@ subdirs="$subdirs lib"
 
 fi
 
-if test "x$enable_wc3270" = xyes -o \
-        "x$enable_ws3270" = xyes -o \
-        "x$enable_wb3270" = xyes -o \
-	"x$enable_wpr3287" = xyes -o \
-	"x$enable_windows_lib" = xyes; then
+if test "x$enable_windows_lib" = xyes; then
     subdirs="$subdirs lib/w32xx"
 
 fi
@@ -2042,6 +2053,13 @@ T_CLEAN=""
 T_CLOBBER=""
 T_INSTALL=""
 T_INSTALL_MAN=""
+T_LIB=""
+T_LIB_CLEAN=""
+T_LIB_CLOBBER=""
+T_UNIX_CLEAN=""
+T_UNIX_CLOBBER=""
+T_WINDOWS_CLEAN=""
+T_WINDOWS_CLOBBER=""
 
 for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
     eval x=\$enable_$i
@@ -2057,57 +2075,102 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if wc3270 ws3270 wb3270 wc3
     fi
 done
 
-if test "x$enable_x3270" = xyes -o \
-        "x$enable_c3270" = xyes -o \
-        "x$enable_s3270" = xyes -o \
-        "x$enable_b3270" = xyes -o \
-	"x$enable_pr3287" = xyes; then
+if test "x$enable_unix_lib" = xyes; then
     T_CLEAN="$T_CLEAN unix-lib-clean"
     T_CLOBBER="$T_CLOBBER unix-lib-clobber"
+    T_LIB="$T_LIB unix-lib"
+    T_LIB_CLEAN="$T_LIB_CLEAN unix-lib-clean"
+    T_LIB_CLOBBER="$T_LIB_CLOBBER unix-lib-clobber"
+    T_UNIX_CLEAN="$T_UNIX_CLEAN unix-lib-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER unix-lib-clobber"
 fi
 
-if test "x$enable_wc3270" = xyes -o \
-        "x$enable_ws3270" = xyes -o \
-        "x$enable_wb3270" = xyes -o \
-	"x$enable_wpr3287" = xyes; then
+if test "x$enable_windows_lib" = xyes; then
     T_CLEAN="$T_CLEAN windows-lib-clean"
     T_CLOBBER="$T_CLOBBER windows-lib-clobber"
+    T_LIB="$T_LIB windows-lib"
+    T_LIB_CLEAN="$T_LIB_CLEAN windows-lib-clean"
+    T_LIB_CLOBBER="$T_LIB_CLOBBER windows-lib-clobber"
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN windows-lib-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER windows-lib-clobber"
 fi
-
-
-
-
-
-
 
 if test "x$enable_x3270" = xyes; then
     subdirs="$subdirs x3270"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN x3270-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER x3270-clobber"
 fi
 if test "x$enable_c3270" = xyes; then
     subdirs="$subdirs c3270"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN c3270-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER c3270-clobber"
 fi
 if test "x$enable_s3270" = xyes; then
     subdirs="$subdirs s3270"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN s3270-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER s3270-clobber"
 fi
 if test "x$enable_b3270" = xyes; then
     subdirs="$subdirs b3270"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN b3270-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER b3270-clobber"
 fi
 if test "x$enable_tcl3270" = xyes; then
     subdirs="$subdirs tcl3270"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN tcl3270-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER tcl3270-clobber"
 fi
 if test "x$enable_pr3287" = xyes; then
     subdirs="$subdirs pr3287"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN pr3287-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER pr3287-clobber"
 fi
 if test "x$enable_x3270if" = xyes; then
     subdirs="$subdirs x3270if"
 
+    T_UNIX_CLEAN="$T_UNIX_CLEAN x3270if-clean"
+    T_UNIX_CLOBBER="$T_UNIX_CLOBBER x3270if-clobber"
 fi
+
+if test "x$enable_wc3270" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wc3270-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wc3270-clobber"
+fi
+if test "x$enable_ws3270" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN ws3270-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER ws3270-clobber"
+fi
+if test "x$enable_wb3270" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wb3270-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wb3270-clobber"
+fi
+if test "x$enable_wpr3287" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wpr3287-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wpr3287-clobber"
+fi
+if test "x$enable_wx3270if" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wwx3270if-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wwx3270if-clobber"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ac_config_files="$ac_config_files Makefile"
 

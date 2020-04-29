@@ -98,7 +98,7 @@ tcl3270: s3270
 # Individual targets.
 unix-lib: lib3270 lib3270i lib32xx lib3270stubs
 windows-lib: libw3270 libw3270i libw32xx libw3270stubs libexpat
-lib: unix-lib windows-lib
+lib: @T_LIB@
 lib3270:
 	cd lib/3270 && $(MAKE)
 lib3270i:
@@ -215,9 +215,9 @@ x3270if-install.man: x3270if
 clean: @T_CLEAN@
 unix-lib-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean
 windows-lib-clean: libw3270-clean libw3270i-clean libw32xx-clean libw3270stubs-clean libexpat-clean
-lib-clean: unix-lib-clean windows-lib-clean
-unix-clean: x3270-clean c3270-clean s3270-clean b3270-clean tcl3270-clean pr3287-clean x3270if-clean unix-lib-clean
-windows-clean: wc3270-clean ws3270-clean wb3270-clean wpr3287-clean wx3270if-clean windows-lib-clean
+lib-clean: @T_LIB_CLEAN@
+unix-clean: @T_UNIX_CLEAN@
+windows-clean: @T_WINDOWS_CLEAN@
 lib3270-clean:
 	cd lib/3270 && $(MAKE) clean
 lib3270i-clean:
@@ -289,9 +289,9 @@ wx3270if-clean-64:
 clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
 windows-lib-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber libexpat-clobber
-lib-clobber: unix-lib-clobber windows-lib-clobber
-unix-clobber: x3270-clobber c3270-clobber s3270-clobber b3270-clobber tcl3270-clobber pr3287-clobber x3270if-clobber unix-lib-clobber
-windows-clobber: wc3270-clobber ws3270-clobber wb3270-clobber wpr3287-clobber wx3270if-clobber windows-lib-clobber
+lib-clobber: @T_LIB_CLOBBER@
+unix-clobber: @T_UNIX_CLOBBER@
+windows-clobber: @T_WINDOWS_CLOBBER@
 lib3270-clobber:
 	cd lib/3270 && $(MAKE) clobber
 lib3270i-clobber:
