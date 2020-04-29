@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Copyright (c) 1995-2009, 2014-2015, 2018 Paul Mattes.
+# Copyright (c) 1995-2009, 2014-2015, 2018, 2020 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 # 
@@ -50,7 +50,7 @@ user=${LOGNAME-$USER}
 # rpq.c will return this string of numbers in bcd format
 # It is OK to change the length (+ or -), but use
 # decimal (0-9) digits only. Length must be even number of digits.
-rpq_timestamp=`date +%Y%m%d%H%M%S`
+rpq_timestamp=`$date +%Y%m%d%H%M%S`
 
 app=${1-x3270}
 cat <<EOF
