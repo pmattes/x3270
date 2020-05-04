@@ -81,7 +81,8 @@ AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library]
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
-AC_CHECK_LIB(ncursesw, newterm, , [AC_CHECK_LIB(ncurses, newterm, , [AC_CHECK_LIB(curses, newterm, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])])])
+AC_SEARCH_LIBS(newterm, ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
+AC_SEARCH_LIBS(setupterm, tinfow tinfo, , [AC_MSG_ERROR(Can't find terminfo library)])
 if test "$with_readline" != no; then
 AC_CHECK_LIB(readline, rl_initialize)
 fi

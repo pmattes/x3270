@@ -3747,13 +3747,12 @@ _ACEOF
 fi
 done
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for newterm in -lncursesw" >&5
-$as_echo_n "checking for newterm in -lncursesw... " >&6; }
-if ${ac_cv_lib_ncursesw_newterm+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing newterm" >&5
+$as_echo_n "checking for library containing newterm... " >&6; }
+if ${ac_cv_search_newterm+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncursesw  $LIBS"
+  ac_func_search_save_LIBS=$LIBS
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3772,118 +3771,96 @@ return newterm ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ncursesw_newterm=yes
-else
-  ac_cv_lib_ncursesw_newterm=no
+for ac_lib in '' ncursesw ncurses curses; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_newterm=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+    conftest$ac_exeext
+  if ${ac_cv_search_newterm+:} false; then :
+  break
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncursesw_newterm" >&5
-$as_echo "$ac_cv_lib_ncursesw_newterm" >&6; }
-if test "x$ac_cv_lib_ncursesw_newterm" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBNCURSESW 1
-_ACEOF
-
-  LIBS="-lncursesw $LIBS"
+done
+if ${ac_cv_search_newterm+:} false; then :
 
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for newterm in -lncurses" >&5
-$as_echo_n "checking for newterm in -lncurses... " >&6; }
-if ${ac_cv_lib_ncurses_newterm+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncurses  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char newterm ();
-int
-main ()
-{
-return newterm ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ncurses_newterm=yes
-else
-  ac_cv_lib_ncurses_newterm=no
+  ac_cv_search_newterm=no
 fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncurses_newterm" >&5
-$as_echo "$ac_cv_lib_ncurses_newterm" >&6; }
-if test "x$ac_cv_lib_ncurses_newterm" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBNCURSES 1
-_ACEOF
-
-  LIBS="-lncurses $LIBS"
-
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for newterm in -lcurses" >&5
-$as_echo_n "checking for newterm in -lcurses... " >&6; }
-if ${ac_cv_lib_curses_newterm+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcurses  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char newterm ();
-int
-main ()
-{
-return newterm ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_curses_newterm=yes
-else
-  ac_cv_lib_curses_newterm=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curses_newterm" >&5
-$as_echo "$ac_cv_lib_curses_newterm" >&6; }
-if test "x$ac_cv_lib_curses_newterm" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBCURSES 1
-_ACEOF
-
-  LIBS="-lcurses $LIBS"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_newterm" >&5
+$as_echo "$ac_cv_search_newterm" >&6; }
+ac_res=$ac_cv_search_newterm
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 
 else
   as_fn_error $? "Can't find libncurses or new-enough libcurses" "$LINENO" 5
 fi
 
-fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing setupterm" >&5
+$as_echo_n "checking for library containing setupterm... " >&6; }
+if ${ac_cv_search_setupterm+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char setupterm ();
+int
+main ()
+{
+return setupterm ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' tinfow tinfo; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_setupterm=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_setupterm+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_setupterm+:} false; then :
+
+else
+  ac_cv_search_setupterm=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_setupterm" >&5
+$as_echo "$ac_cv_search_setupterm" >&6; }
+ac_res=$ac_cv_search_setupterm
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "Can't find terminfo library" "$LINENO" 5
 fi
 
 if test "$with_readline" != no; then
@@ -4146,14 +4123,12 @@ $as_echo "#define HAVE_FSEEKO 1" >>confdefs.h
 fi
 
 
-if test "$ac_cv_lib_ncursesw_newterm" = yes
-then	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for wadd_wch in -lncursesw" >&5
-$as_echo_n "checking for wadd_wch in -lncursesw... " >&6; }
-if ${ac_cv_lib_ncursesw_wadd_wch+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing wadd_wch" >&5
+$as_echo_n "checking for library containing wadd_wch... " >&6; }
+if ${ac_cv_search_wadd_wch+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncursesw  $LIBS"
+  ac_func_search_save_LIBS=$LIBS
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4172,115 +4147,43 @@ return wadd_wch ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ncursesw_wadd_wch=yes
-else
-  ac_cv_lib_ncursesw_wadd_wch=no
+for ac_lib in '' ncursesw ncurses curses; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_wadd_wch=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+    conftest$ac_exeext
+  if ${ac_cv_search_wadd_wch+:} false; then :
+  break
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncursesw_wadd_wch" >&5
-$as_echo "$ac_cv_lib_ncursesw_wadd_wch" >&6; }
-if test "x$ac_cv_lib_ncursesw_wadd_wch" = xyes; then :
+done
+if ${ac_cv_search_wadd_wch+:} false; then :
+
+else
+  ac_cv_search_wadd_wch=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_wadd_wch" >&5
+$as_echo "$ac_cv_search_wadd_wch" >&6; }
+ac_res=$ac_cv_search_wadd_wch
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   $as_echo "#define CURSES_WIDE 1" >>confdefs.h
 
 Cw=1
-fi
-
-elif test "$ac_cv_lib_ncurses_newterm" = yes
-then	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for wadd_wch in -lncurses" >&5
-$as_echo_n "checking for wadd_wch in -lncurses... " >&6; }
-if ${ac_cv_lib_ncurses_wadd_wch+:} false; then :
-  $as_echo_n "(cached) " >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncurses  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char wadd_wch ();
-int
-main ()
-{
-return wadd_wch ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_ncurses_wadd_wch=yes
-else
-  ac_cv_lib_ncurses_wadd_wch=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ncurses_wadd_wch" >&5
-$as_echo "$ac_cv_lib_ncurses_wadd_wch" >&6; }
-if test "x$ac_cv_lib_ncurses_wadd_wch" = xyes; then :
-  $as_echo "#define CURSES_WIDE 1" >>confdefs.h
-
-Cw=1
-fi
-
-elif test "$ac_cv_lib_curses_newterm" = yes
-then	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for wadd_wch in -lcurses" >&5
-$as_echo_n "checking for wadd_wch in -lcurses... " >&6; }
-if ${ac_cv_lib_curses_wadd_wch+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcurses  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char wadd_wch ();
-int
-main ()
-{
-return wadd_wch ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_curses_wadd_wch=yes
-else
-  ac_cv_lib_curses_wadd_wch=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curses_wadd_wch" >&5
-$as_echo "$ac_cv_lib_curses_wadd_wch" >&6; }
-if test "x$ac_cv_lib_curses_wadd_wch" = xyes; then :
-  $as_echo "#define CURSES_WIDE 1" >>confdefs.h
-
-Cw=1
-fi
-
-else	echo "What??? "
-fi
-if test "$Cw" != "1"
-then	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Wide curses not found -- c3270 will not be able to support multi-byte character encodings" >&5
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Wide curses not found -- c3270 will not be able to support multi-byte character encodings" >&5
 $as_echo "$as_me: WARNING: Wide curses not found -- c3270 will not be able to support multi-byte character encodings" >&2;}
 fi
+
 
 
 # Extract the first word of "less", so it can be a program name with args.
