@@ -2360,10 +2360,10 @@ status_timing(struct timeval *t0, struct timeval *t1)
 	cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
 	if (cs < CM) {
-	    sprintf(oia_timing,
+	    snprintf(oia_timing, sizeof(oia_timing),
 		    ":%02ld.%ld", cs / 10, cs % 10);
 	} else {
-	    sprintf(oia_timing,
+	    snprintf(oia_timing, sizeof(oia_timing),
 		    "%02ld:%02ld", cs / CM, (cs % CM) / 10);
 	}
     }
