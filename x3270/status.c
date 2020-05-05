@@ -51,6 +51,7 @@
 #include "trace.h" /* temp */
 #include "unicodec.h"
 #include "utils.h"
+#include "xappres.h"
 #include "xscreen.h"
 #include "xtables.h"
 
@@ -950,7 +951,12 @@ status_cursor_pos(int ca)
 {
     static char buf[CCNT+1];
 
-    snprintf(buf, sizeof(buf), "%03d/%03d", ca/COLS + 1, ca%COLS + 1);
+    if (xappres.xquartz_hack) {
+	snprintf(buf, sizeof(buf), "%02d/%03d", (ca/COLS + 1) % 100,
+		ca%COLS + 1);
+    } else {
+	snprintf(buf, sizeof(buf), "%03d/%03d", ca/COLS + 1, ca%COLS + 1);
+    }
     do_cursor(oia_cursor = buf);
 }
 

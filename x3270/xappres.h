@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015-2016, 2018, 2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -54,6 +54,7 @@ typedef struct {
     Boolean	 suppress_font_menu;
     Boolean	 keypad_on;
     Boolean	 apl_circled_alpha;
+    Boolean	 xquartz_hack;
     char	*keypad;
     char	*efontname;
     char	*fixed_size;

@@ -275,6 +275,8 @@ XtResource xresources[] = {
       offset(preedit_type), XtRString, PT_OVER_THE_SPOT "+1" },
     { ResDpi, ClsDpi, XtRString, sizeof(char *),
       offset(dpi), XtRString, 0 },
+    { ResXQuartzHack, ClsXQuartzHack, XtRBoolean, sizeof(Boolean),
+      offset(xquartz_hack), XtRString, "false" },
 
 #if defined(USE_APP_DEFAULTS) /*[*/
     { ResAdVersion, ClsAdVersion, XtRString, sizeof(char *),

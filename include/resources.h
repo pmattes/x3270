@@ -237,6 +237,7 @@
 #define ResVisualSelectColor	"visualSelectColor"
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
+#define ResXQuartzHack		"xQuartzHack"
 
 /* Dotted resource names. */
 #define DotAcceptHostname	"." ResAcceptHostname
@@ -460,6 +461,7 @@
 #define ClsVisualSelectColor	"VisualSelectColor"
 #define ClsWaitCursor		"WaitCursor"
 #define ClsWerase		"Werase"
+#define ClsXQuartzHack		"XQuartzHack"
 
 /* Options. */
 #define OptAcceptHostname	"-accepthostname"
