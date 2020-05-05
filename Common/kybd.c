@@ -103,9 +103,6 @@ static ks_t my_string_to_key(const char *s, enum keytype *keytypep,
 
 static bool key_WCharacter(unsigned char code[], bool oerr_fail);
 
-static bool		insert = false;		/* insert mode */
-static bool		reverse = false;	/* reverse-input mode */
-
 /* Globals */
 unsigned int	kybdlock = KL_NOT_CONNECTED;
 unsigned char	aid = AID_NO;		/* current attention ID */
@@ -528,9 +525,11 @@ kybd_inhibit(bool inhibit)
 static void
 insert_mode(bool on)
 {
-    insert = on;
-    status_insert_mode(on);
+    if (on != toggled(INSERT_MODE)) {
+	do_toggle(INSERT_MODE);
+    }
 }
+
 
 /*
  * Called when a host connects or disconnects.
@@ -720,30 +719,18 @@ operator_error(int error_type, bool oerr_fail)
     return !oerr_fail;
 }
 
-/*
- * Toggle reverse mode.
- */
-static void
-reverse_mode(bool on)
-{
-    if (!dbcs) {
-	reverse = on;
-	status_reverse_mode(on);
-    }
-}
-
 /* The reverse input toggle changed. */
 static void
 toggle_reverse_input(toggle_index_t ix, enum toggle_type type)
 {
-    reverse_mode(toggled(REVERSE_INPUT));
+    status_reverse_mode(toggled(REVERSE_INPUT));
 }
 
 /* The insert mode toggle changed. */
 static void
 toggle_insert_mode(toggle_index_t ix, enum toggle_type type)
 {
-    insert_mode(toggled(INSERT_MODE));
+    status_insert_mode(toggled(INSERT_MODE));
 }
 
 /*
@@ -997,7 +984,7 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
     printf("need %d at %d, tb_start at %d\n", count, baddr, tb_start);
 #endif /*]*/
     if (need - ntb > 0) {
-	if (!reverse) {
+	if (!toggled(REVERSE_INPUT)) {
 	    return operator_error(KL_OERR_OVERFLOW, oerr_fail);
 	} else {
 	    *no_room = true;
@@ -1163,7 +1150,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     /* Add the character. */
     if (ea_buf[baddr].ec == EBC_so) {
 
-	if (insert) {
+	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
 		return false;
 	    }
@@ -1196,7 +1183,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	/* fall through... */
     case DBCS_LEFT:
 	if (why == DBCS_ATTRIBUTE) {
-	    if (insert) {
+	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
 		    return false;
 		}
@@ -1211,7 +1198,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	} else {
 	    bool was_si;
 
-	    if (insert) {
+	    if (toggled(INSERT_MODE)) {
 		/*
 		 * Inserting SBCS into a DBCS subfield.  If this is the first
 		 * position, we can just insert one character in front of the
@@ -1264,8 +1251,8 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	break;
     default:
     case DBCS_NONE:
-	if ((reverse || insert) && !ins_prep(faddr, baddr, 1, &no_room,
-		    oerr_fail)) {
+	if ((toggled(REVERSE_INPUT) || toggled(INSERT_MODE)) &&
+		!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
 	    return false;
 	}
 	break;
@@ -1279,7 +1266,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		(unsigned char)(with_ge ? CS_GE : 0));
 	ctlr_add_fg(baddr, 0);
 	ctlr_add_gr(baddr, 0);
-	if (!reverse) {
+	if (!toggled(REVERSE_INPUT)) {
 	    INC_BA(baddr);
 	}
     }
@@ -1431,7 +1418,7 @@ retry:
     case DBCS_LEFT:
     case DBCS_LEFT_WRAP:
 	/* Overwrite the existing character. */
-	if (insert) {
+	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
 		return false;
 	    }
@@ -1448,7 +1435,7 @@ retry:
 	/* fall through... */
     case DBCS_SI:
 	/* Extend the subfield to the right. */
-	if (insert) {
+	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
 		return false;
 	    }
@@ -1483,7 +1470,7 @@ retry:
 	    bool extend_left = false;
 
 	    /* Is there room? */
-	    if (insert) {
+	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 4, &no_room, oerr_fail)) {
 		    return false;
 		}
@@ -1589,7 +1576,7 @@ retry:
 	    done = true;
 	} else if (reply_mode == SF_SRM_CHAR) {
 	    /* Use the character attribute. */
-	    if (insert) {
+	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
 		    return false;
 		}
@@ -2125,7 +2112,7 @@ Delete_action(ia_t ia, unsigned argc, const char **argv)
     if (!do_delete()) {
 	return true;
     }
-    if (reverse) {
+    if (toggled(REVERSE_INPUT)) {
 	int baddr = cursor_addr;
 
 	DEC_BA(baddr);
@@ -2154,7 +2141,7 @@ BackSpace_action(ia_t ia, unsigned argc, const char **argv)
 	linemode_send_erase();
 	return true;
     }
-    if (reverse) {
+    if (toggled(REVERSE_INPUT)) {
 	do_delete();
     } else if (!flipped) {
 	do_left();
@@ -2243,7 +2230,7 @@ Erase_action(ia_t ia, unsigned argc, const char **argv)
 	linemode_send_erase();
 	return true;
     }
-    if (reverse) {
+    if (toggled(REVERSE_INPUT)) {
 	do_delete();
     } else {
 	do_erase();
