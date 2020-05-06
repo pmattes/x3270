@@ -497,8 +497,12 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+    ssize_t nw;
 
-    write(c->outfd, s, strlen(s));
+    nw = write(c->outfd, s, strlen(s));
+    if (nw != (ssize_t)strlen(s)) {
+	vtrace("child_data: short write\n");
+    }
 #endif /*]*/
 }
 
@@ -517,7 +521,12 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     child_t *c = (child_t *)handle;
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX,
 	    (int)len, buf);
-    write(c->outfd, s, strlen(s));
+    ssize_t nw;
+
+    nw = write(c->outfd, s, strlen(s));
+    if (nw != (ssize_t)strlen(s)) {
+	vtrace("child_reqinput: short write\n");
+    }
 #endif /*]*/
 }
 
@@ -539,6 +548,7 @@ child_done(task_cbh handle, bool success, bool abort)
     bool new_child;
     char *prompt;
     char *s;
+    ssize_t nw;
 
     if (abort || !c->enabled) {
 	close_listeners(&c->listeners);
@@ -555,7 +565,10 @@ child_done(task_cbh handle, bool success, bool abort)
     s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
     vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
 	success? "ok": "error");
-    write(c->outfd, s, strlen(s));
+    nw = write(c->outfd, s, strlen(s));
+    if (nw != (ssize_t)strlen(s)) {
+	vtrace("child_done: short write\n");
+    }
 
     /* Run any pending command that we already read in. */
     new_child = run_next(c);

@@ -1232,7 +1232,7 @@ run_macro(void)
 {
     task_t *s = current_task;
     char *a = s->macro.dptr;
-    char *nextm;
+    char *nextm = NULL;
     enum em_stat es;
     bool fatal = false;
 
@@ -2226,7 +2226,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     enum { RB_ASCII, RB_EBCDIC, RB_UNICODE } mode = RB_ASCII;
     varbuf_t r;
     bool field = false;
-    int field_baddr;
+    int field_baddr = 0;
     bool any = false;
 
     if (num_params > 0) {

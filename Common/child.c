@@ -285,13 +285,13 @@ static void
 child_data(struct pr3o *p, bool is_err)
 {
     int space;
-    int nr;
+    ssize_t nr;
 
     /*
      * If we're discarding output, pull it in and drop it on the floor.
      */
     if (child_discarding) {
-	read(p->fd, p->buf, CHILD_BUF);
+	nr = read(p->fd, p->buf, CHILD_BUF);
 	return;
     }
 

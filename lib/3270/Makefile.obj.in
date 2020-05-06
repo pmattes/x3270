@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017, 2020 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ LIBX3270DIR = @LIBX3270DIR@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
+CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 
 $(LIB3270): $(OBJS)
 	$(AR) cr $@ $(OBJS)

@@ -56,7 +56,7 @@ canonical_model_x(const char *res, int *model, bool *is_color,
 	bool *is_extended)
 {
     size_t sl;
-    char *digitp;
+    char *digitp = NULL;
     char *colorp = "9";
     bool extended = false;
 

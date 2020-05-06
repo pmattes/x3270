@@ -776,6 +776,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
     int i, k;
     unsigned j;
     char *ptr;
+    long l;
 
     /* Unlike the GUIs, always set everything to defaults. */
     ft_init_conf(p);
@@ -840,8 +841,8 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-			strtol(value, &ptr, 10);
-			if (ptr == value || *ptr) {
+			l = strtol(value, &ptr, 10);
+			if (l <= 0 || ptr == value || *ptr) {
 			    popup_an_error(AnTransfer "(): Invalid option value: "
 				    "'%s'", value);
 			    return NULL;

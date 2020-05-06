@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2016, 2019 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2016, 2019, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,6 +160,7 @@ gai_notify(union sigval sigval)
 {
     char slot = (char)sigval.sival_int;
     struct gai *gaip = &gai[(int)slot];
+    ssize_t nw;
 
     assert(gaip->busy == true);
     assert(gaip->done == false);
@@ -169,7 +170,8 @@ gai_notify(union sigval sigval)
      * Write our slot number into the pipe, so the main thread can poll us for
      * the completion status.
      */
-    write(gaip->pipe, &slot, 1);
+    nw = write(gaip->pipe, &slot, 1);
+    assert(nw == 1);
 }
 
 # else /*][*/
@@ -181,6 +183,7 @@ async_resolve(LPVOID parameter)
     struct gai *gaip = (struct gai *)parameter;
     char slot = (char)(gaip - gai);
     struct addrinfo hints;
+    ssize_t nw;
 
     assert(gaip->busy == true);
     assert(gaip->done == false);
@@ -196,7 +199,8 @@ async_resolve(LPVOID parameter)
      * Write our slot number into the pipe, so the main thread can poll us for
      * the completion status.
      */
-    write(gaip->pipe, &slot, 1);
+    nw = write(gaip->pipe, &slot, 1);
+    assert(nw == 1);
 
     /* Tell the main thread we are done. */
     SetEvent(gaip->event);

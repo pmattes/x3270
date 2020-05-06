@@ -231,7 +231,7 @@ toggle_exiting(bool mode _is_unused)
 static char *
 u_value(toggle_extended_upcalls_t *u)
 {
-    char *value;
+    char *value = NULL;
 
     if (u->address != NULL) {
 	switch (u->type) {
@@ -367,7 +367,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	const char **argv)
 {
     int j;
-    int ix;
+    int ix = -1;
     unsigned arg = 0;
     typedef struct {
 	toggle_extended_done_t *done;

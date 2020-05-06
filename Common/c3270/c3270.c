@@ -813,6 +813,7 @@ common_handler(int signum)
 {
     char dummy = '\0';
     sigset_t temp_sigset, old_sigset;
+    ssize_t nw;
 
     /* Make sure this signal handler continues to be in effect. */
     signal(signum, common_handler);
@@ -827,7 +828,8 @@ common_handler(int signum)
     sigprocmask(SIG_SETMASK, &old_sigset, NULL);
 
     /* Write to the pipe, so we process this synchronously. */
-    write(signalpipe[1], &dummy, 1);
+    nw = write(signalpipe[1], &dummy, 1);
+    assert(nw == 1);
 }
 #else /*][*/
 /* Control-C handler. */
