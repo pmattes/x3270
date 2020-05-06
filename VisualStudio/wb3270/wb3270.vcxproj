@@ -100,7 +100,8 @@
       <ImageHasSafeExceptionHandlers />
     </Link>
     <PostBuildEvent>
-      <Command>cmd.exe /c copy "$(OutDir)\wb3270.exe" "$(OutDir)\b3270.exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

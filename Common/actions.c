@@ -204,7 +204,7 @@ action_args_are(const char *aname, ...)
 
     va_start(ap, aname);
     while ((keyword = va_arg(ap, const char *)) != NULL) {
-	keywords = (const char **)Realloc(keywords, (nkw + 1) * sizeof(char *));
+	keywords = (const char **)Realloc((void *)keywords, (nkw + 1) * sizeof(char *));
 	keywords[nkw++] = keyword;
     }
     if (nkw == 0) {
@@ -227,7 +227,7 @@ action_args_are(const char *aname, ...)
     buf = vb_consume(&r);
     popup_an_error("%s(): Parameter must be %s", aname, buf);
     Free(buf);
-    Free(keywords);
+    Free((void *)keywords);
     return false;
 }
 
