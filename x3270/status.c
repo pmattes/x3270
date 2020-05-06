@@ -920,7 +920,7 @@ void
 status_timing(struct timeval *t0, struct timeval *t1)
 {
     static char no_time[] = ":??.?";
-    static char buf[TCNT+1];
+    static char buf[32];
 
     if (t1->tv_sec - t0->tv_sec > (99*60)) {
 	do_timing(oia_timing = no_time);

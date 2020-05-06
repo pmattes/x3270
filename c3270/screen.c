@@ -2089,7 +2089,7 @@ static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
-static char oia_timing[6]; /* :ss.s*/
+static char oia_timing[32]; /* :ss.s*/
 static char oia_screentrace = ' ';
 static char oia_script = ' ';
 
