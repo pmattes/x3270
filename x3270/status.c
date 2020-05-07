@@ -952,8 +952,8 @@ status_cursor_pos(int ca)
     static char buf[CCNT+1];
 
     if (xappres.xquartz_hack) {
-	snprintf(buf, sizeof(buf), "%02d/%03d", (ca/COLS + 1) % 100,
-		ca%COLS + 1);
+	snprintf(buf, sizeof(buf), "%02d/%02d", (ca/COLS + 1) % 100,
+		(ca%COLS + 1) % 100);
     } else {
 	snprintf(buf, sizeof(buf), "%03d/%03d", ca/COLS + 1, ca%COLS + 1);
     }
