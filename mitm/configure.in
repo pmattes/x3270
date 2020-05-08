@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2014-2018 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2014-2018, 2020 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(mitm,3.x)
+AC_INIT(mitm,4.0)
 AC_PREREQ(2.50)
 
 dnl Checks for programs.
