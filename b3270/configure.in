@@ -72,6 +72,7 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(expat.h, , [AC_MSG_ERROR(Cannot find libexpat header file)])
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
