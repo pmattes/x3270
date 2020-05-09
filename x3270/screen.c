@@ -906,8 +906,6 @@ screen_reinit(unsigned cmask)
 	set_translations(container, NULL, &container_t0);
 	if (appres.interactive.mono) {
 	    XtVaSetValues(container, XtNbackgroundPixmap, gray, NULL);
-	} else {
-	    XtVaSetValues(container, XtNbackground, keypadbg_pixel, NULL);
 	}
     }
 
@@ -1128,8 +1126,6 @@ scrollbar_init(bool is_reset)
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
 		    XtNheight, nss.screen_height,
-		    XtNbackground, appres.interactive.mono?
-			xappres.background: keypadbg_pixel,
 		    NULL);
 		XtAddCallback(scrollbar, XtNscrollProc,
 		    screen_scroll_proc, NULL);
@@ -1141,8 +1137,6 @@ scrollbar_init(bool is_reset)
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
 		    XtNheight, nss.screen_height,
-		    XtNbackground, appres.interactive.mono?
-			xappres.background: keypadbg_pixel,
 		    NULL);
 		XtMapWidget(scrollbar);
 	}

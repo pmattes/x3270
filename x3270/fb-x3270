@@ -949,6 +949,7 @@ x3270*font:			-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1
 ! Menu configuration
 x3270*menuBarContainer.borderWidth:		2
 #ifdef COLOR
+x3270*scrollbar.background:			grey
 x3270.keypadBackground:				grey
 x3270*menuBarContainer.background:		grey
 x3270*menuBarContainer.borderColor:		grey40
