@@ -418,7 +418,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
 {
     int port_env;
     int infd = -1, outfd = -1;
-    socket_t insocket, outsocket;
+    socket_t insocket = INVALID_SOCKET, outsocket = INVALID_SOCKET;
     bool is_socket = false;
     char *status = NULL;
     int nr;
