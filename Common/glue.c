@@ -155,10 +155,14 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
     programname = strrchr(argv[0], '\\');
+    if (programname == NULL) {
+	/* '/' is the alternate directory separator. */
+	programname = strrchr(argv[0], '/');
+    }
 #else /*][*/
     programname = strrchr(argv[0], '/');
 #endif /*]*/
-    if (programname) {
+    if (programname != NULL) {
 	char *path = getenv("PATH");
 
 	/* Add our path to $PATH so we can find x3270if. */

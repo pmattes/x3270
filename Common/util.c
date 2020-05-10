@@ -46,6 +46,7 @@
 #include "lazya.h"
 #include "popups.h"
 #include "product.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "varbuf.h"
 
@@ -1021,8 +1022,10 @@ start_help(void)
     command = xs_buffer("cygstart -o %s", url);
 #endif /*]*/
     if (command != NULL) {
-	int rc = system(command);
+	int rc;
 
+	vtrace("Starting help command: %s\n", command);
+	rc = system(command);
 	if (rc != 0) {
 	    popup_an_error("Help failed, return code %d", rc);
 	}
