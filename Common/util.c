@@ -44,6 +44,7 @@
 #include "codepage.h"
 #include "fallbacks.h"
 #include "lazya.h"
+#include "popups.h"
 #include "product.h"
 #include "unicodec.h"
 #include "varbuf.h"
@@ -983,3 +984,50 @@ clean_termname(const char *tn)
 
     return ret;
 }
+
+#if defined(HAVE_START) /*[*/
+void
+start_help(void)
+{
+    /* Figure out the version. */
+    const char *s = build_rpq_version;
+    char *url;
+    char *command = NULL;
+    size_t pnl;
+
+    pnl = strlen(programname);
+#if defined(_WIN32) /*[*/
+    if (pnl > 4 && !strcasecmp(programname + pnl - 4, ".exe")) {
+	pnl -= 4;
+    }
+#endif /*]*/
+
+    while (*s != '\0' && (*s == '.' || isdigit((unsigned char)*s))) {
+	s++;
+    }
+    url = xs_buffer("http://x3270.bgp.nu/%.*s-help/%.*s/",
+	    (int)pnl, programname,
+	    (int)(s - build_rpq_version), build_rpq_version);
+
+    /* Get appropriate help. */
+#if defined(_WIN32) /*[*/
+    command = xs_buffer("start \"%.*s help\" \"%s\"", (int)pnl, programname,
+	url);
+#elif defined(linux) || defined(__linux__) /*[*/
+    command = xs_buffer("xdg-open %s", url);
+#elif defined(__APPLE__) /*][*/
+    command = xs_buffer("open %s", url);
+#elif defined(__CYGWIN__) /*][*/
+    command = xs_buffer("cygstart -o %s", url);
+#endif /*]*/
+    if (command != NULL) {
+	int rc = system(command);
+
+	if (rc != 0) {
+	    popup_an_error("Help failed, return code %d", rc);
+	}
+	Free(command);
+    }
+    Free(url);
+}
+#endif /*]*/

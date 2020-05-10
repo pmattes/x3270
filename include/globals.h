@@ -143,6 +143,11 @@ typedef unsigned short ebc_t;
 /* Stop conflicting with curses' COLS, even if we don't link with it. */
 #define COLS cCOLS
 
+/* Check for some version of 'start' or 'open'. */
+#if defined(_WIN32) || defined(linux) || defined(__linux__) || defined(__APPLE__) || defined(__CYGWIN__) /*[*/
+#define HAVE_START	1
+#endif /*]*/
+
 /* Memory allocation. */
 void *Malloc(size_t);
 void Free(void *);

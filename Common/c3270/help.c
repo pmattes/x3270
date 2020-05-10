@@ -35,6 +35,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "c3270.h"
 #include "glue.h"
 #include "help.h"
 #include "icmdc.h"
@@ -245,9 +246,7 @@ static struct {
 	{ NULL,  NULL, 0, NULL }
 };
 
-#if defined(WC3270) /*[*/
 static void html_help(bool);
-#endif /*]*/
 
 static struct {
 	const char *name;
@@ -256,6 +255,9 @@ static struct {
 	const char **block;
 	void (*fn)(bool);
 } help_subcommand[] = {
+#if defined(HAVE_START) /*[*/
+	{ "online",		P_HTML,		NULL, NULL, html_help },
+#endif /*]*/
 	{ "all",		-1,		NULL, NULL, NULL },
 	{ "3270",		P_3270,		NULL, NULL, NULL },
 	{ "interactive",	P_INTERACTIVE,	NULL, NULL, NULL },
@@ -284,6 +286,9 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 
     if (argc != 1) {
 	action_output(
+#if defined(HAVE_START) /*[*/
+"  help online        launch online help\n"
+#endif /*]*/
 "  help all           all actions\n"
 "  help 3270          3270 actions\n"
 "  help interactive   interactive (command-prompt) actions\n"
@@ -292,7 +297,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 "  help scripting     scripting actions\n"
 "  help file-transfer file transfer options\n"
 #if defined(WC3270) /*[*/
-"  help html          display HTML help file\n"
+"  help html          alias for 'help online'\n"
 #endif /*]*/
 	);
 	return true;
@@ -405,13 +410,11 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-#if defined(WC3270) /*[*/
 static void
 html_help(bool ignored _is_unused)
 {
-	start_html_help();
+    start_html_help();
 }
-#endif /*]*/
 
 /**
  * Help module registration.

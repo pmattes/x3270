@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2020 Paul Mattes.
+ * Copyright (c) 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,8 @@
  */
 
 /*
- *	wc3270.h
- *		A curses-based 3270 Terminal Emulator
- *		Declarations for functions that are exclusive to wc3270.
+ *	c3270.h
+ *		Common declarations for c3270.c.
  */
 
-void start_wizard(const char *session);
+extern void start_html_help(void);

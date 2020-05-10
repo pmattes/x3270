@@ -143,6 +143,7 @@ Common/base64.c
 Common/bind-opt.c
 Common/boolstr.c
 Common/c3270/c3270.c
+Common/c3270/c3270.h
 Common/c3270/cmenubar.h
 Common/c3270/cscreen.h
 Common/c3270/cstatus.h

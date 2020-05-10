@@ -917,40 +917,15 @@ save_button_callback(Widget w _is_unused, XtPointer client_data,
     }
 }
 
+#if defined(HAVE_START) /*[*/
 /* Called from the "Help" button on the "File..." menu. */
 static void
 do_help(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    /* Figure out the version. */
-    const char *s = build_rpq_version;
-    char *url;
-    char *command = NULL;
-
-    while (*s != '\0' && (*s == '.' || isdigit((unsigned char)*s))) {
-	s++;
-    }
-    url = xs_buffer("http://x3270.bgp.nu/x3270-help/%.*s/",
-	    (int)(s - build_rpq_version), build_rpq_version);
-
-    /* Get appropriate help. */
-#if defined(linux) || defined(__linux__) /*[*/
-    command = xs_buffer("xdg-open %s", url);
-#elif defined(__APPLE__) /*][*/
-    command = xs_buffer("open %s", url);
-#elif defined(__CYGWIN__) /*][*/
-    command = xs_buffer("cygstart -o %s", url);
-#endif /*]*/
-    if (command != NULL) {
-	int rc = system(command);
-
-	if (rc != 0) {
-	    popup_an_error("Help failed, return code %d", rc);
-	}
-	Free(command);
-    }
-    Free(url);
+    start_help();
 }
+#endif /*]*/
 
 /* Called from the "Save Options in File" button on the "File..." menu */
 static void
@@ -1082,7 +1057,7 @@ file_menu_init(bool regen, Dimension x, Dimension y)
     }
 
     /* Online help */
-#if defined(linux) || defined(__linux__) || defined(__APPLE__) || defined(__CYGWIN__) /*[*/
+#if defined(HAVE_START) /*[*/
     if (!item_suppressed(file_menu, "helpOption")) {
 	w = add_menu_itemv("helpOption", file_menu,
 		do_help, NULL, &spaced,

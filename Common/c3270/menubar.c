@@ -40,6 +40,7 @@
 #include "ctlr.h"
 
 #include "actions.h"
+#include "c3270.h"
 #include "ckeypad.h"
 #include "cmenubar.h"
 #include "codepage.h"
@@ -725,13 +726,15 @@ fm_keymap(void *ignored _is_unused)
     push_macro(AnEscape "(\"" AnShow "(" KwKeymap ")\")");
 }
 
-#if defined(_WIN32) /*[*/
+#if defined(HAVE_START) /*[*/
 static void
 fm_help(void *ignored _is_unused)
 {
     start_html_help();
 }
+#endif /*]*/
 
+#if defined(_WIN32) /*[*/
 static void
 fm_wizard(void *session)
 {
@@ -769,8 +772,10 @@ typedef enum {
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
     FM_KEYMAP,
-#if defined(_WIN32) /*[*/
+#if defined(HAVE_START) /*[*/
     FM_HELP,
+#endif /*]*/
+#if defined(_WIN32) /*[*/
     FM_WIZARD,
     FM_WIZARD_SESS,
 #endif /*]*/
@@ -796,8 +801,10 @@ char *file_menu_names[FM_COUNT] = {
     "Save Screen Images in File",
     "Save Screen Images to Printer",
     "Display Keymap",
-#if defined(_WIN32) /*[*/
+#if defined(HAVE_START) /*[*/
     "Help",
+#endif /*]*/
+#if defined(_WIN32) /*[*/
     "Session Wizard",
     "Edit Session",
 #endif /*]*/
@@ -816,8 +823,10 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_screentrace,
     fm_screentrace_printer,
     fm_keymap,
-#if defined(_WIN32) /*[*/
+#if defined(HAVE_START) /*[*/
     fm_help,
+#endif /*]*/
+#if defined(_WIN32) /*[*/
     fm_wizard,
     fm_wizard,
 #endif /*]*/

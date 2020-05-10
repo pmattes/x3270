@@ -26,7 +26,7 @@
  */
 
 /*
- *	util.h
+ *	utils.h
  *		Global declarations for util.c.
  */
 
@@ -129,3 +129,4 @@ void st_changed(enum st tx, bool mode);
 void change_cstate(enum cstate cstate, const char *why);
 #endif /*]*/
 char *clean_termname(const char *tn);
+void start_help(void);

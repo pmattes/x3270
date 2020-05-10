@@ -1928,16 +1928,6 @@ start_auto_shortcut(void)
     exit(0);
 }
 
-/* Start a browser window to display wc3270 help. */
-void
-start_html_help(void)
-{
-    system(lazyaf("start \"wc3270 Help\" \"%shtml\\README.html\"", instdir));
-
-    /* Get back mouse events */
-    screen_system_fixup();
-}
-
 /* Start a copy of the Session Wizard. */
 void
 start_wizard(const char *session)
@@ -1959,6 +1949,20 @@ start_wizard(const char *session)
 }
 
 #endif /*]*/
+
+/* Start a browser window to display c3270/wc3270 help. */
+void
+start_html_help(void)
+{
+#if defined(HAVE_START) /*[*/
+    start_help();
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+    /* Get back mouse events */
+    screen_system_fixup();
+#endif /*]*/
+}
 
 /*
  * Product information functions.
