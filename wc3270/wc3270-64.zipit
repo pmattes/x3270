@@ -1,27 +1,12 @@
 # zipit template for wc3270, 64-bit mode
-D html
 F README-zip.txt
 F LICENSE.txt
 F NO-INSTALL.txt
-F html/Bugs.html
-F html/Build.html
-F html/FAQ.html
-F html/Intro.html
-F html/Keymap.html
-F html/Lineage.html
-F html/README.html
-F html/ReleaseNotes.html
-F html/Resources.html
-F html/SSL.html
-F html/wc3270-man.html
-F html/Wishlist.html
-F ../wx3270if/html/Windows-x3270if.html html/x3270if.html
-F html/wc3270-script.html
-F ../wpr3287/html/wpr3287-man.html html/wpr3287.html
-F ../ws3270/html/ws3270-man.html html/ws3270-man.html
 F ../obj/win64/wc3270/wc3270.exe wc3270.exe
 F ../obj/win64/wc3270/wc3270wiz.exe wc3270wiz.exe
+F ../obj/win64/wpr3287/pr3287.exe pr3287.exe
 F ../obj/win64/wpr3287/wpr3287.exe wpr3287.exe
+F ../obj/win64/ws3270/s3270.exe s3270.exe
 F ../obj/win64/ws3270/ws3270.exe ws3270.exe
 F ../obj/win64/x3270if/x3270if.exe x3270if.exe
 F ../obj/win64/wc3270/catf.exe catf.exe

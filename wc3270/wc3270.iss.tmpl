@@ -29,8 +29,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Components]
 Name: "base"; Description: "Basic executables"; Types: full compact custom; Flags: fixed
 Name: "wizard"; Description: "Session Wizard"; Types: full compact custom
-Name: "ws3270"; Description: "ws3270 (scripting app)"; Types: full custom
-Name: "help"; Description: "Help files"; Types: full custom
+Name: "s3270"; Description: "s3270 (scripting app)"; Types: full custom
 
 [InstallDelete]
 ; Get rid of the AppData CA root certs files. The new install puts it in {app}.
@@ -63,36 +62,22 @@ Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\obj\win32\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win64\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
-Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win32\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win64\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win64\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
+Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
+Source: "..\obj\win32\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
+Source: "..\obj\win64\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
+Source: "..\obj\win64\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
 Source: "..\obj\win32\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win32\wpr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win64\wpr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: wizard
 Source: "..\obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: wizard
-Source: "..\obj\win32\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: ws3270
-Source: "..\obj\win64\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: ws3270
-Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Build.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\FAQ.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Intro.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Keymap.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Lineage.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\ReleaseNotes.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Resources.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\README.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\SSL.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\wc3270-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\wc3270-script.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "..\ws3270\html\ws3270-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "..\wpr3287\html\wpr3287-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "html\Wishlist.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
-Source: "..\wx3270if\html\Windows-x3270if.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "..\obj\win32\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -103,8 +88,8 @@ Name: "migratefiles"; Description: "Migrate existing session files from AppData 
 [Code]
 function myHelp(Param: String): String;
 begin
-; result := '/c start /b ' + GetShortName(ExpandConstant('{app}') + '\html\README.html');
- result := '/c start ' + GetShortName(ExpandConstant('{app}') + '\html\README.html');
+; result := '/c start /b http://x3270.bgp.nu/wc3270-help/%VERSION%/'
+ result := '/c start http://x3270.bgp.nu/wc3270-help/%VERSION%/'
 end;
 function InitializeSetup(): Boolean;
 var
@@ -142,7 +127,6 @@ end; // InitializeSetup
 [Icons]
 Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"; Components: wizard
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
-Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"; Components: help
 
 [Registry]
 Root: HKCR; Subkey: ".wc3270"; ValueType: string; ValueName: ""; ValueData: "wc3270"; Flags: uninsdeletevalue
@@ -158,7 +142,7 @@ Root: HKCR; Subkey: "wc3270 keymap\shell\edit\command"; ValueType: string; Value
 
 [Run]
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
-Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Components: help; Flags: nowait postinstall skipifsilent
+Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Flags: nowait postinstall skipifsilent
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait runhidden; Tasks: desktopicons
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait runhidden; Tasks: desktopicons; Components: wizard
 ; Run the upgrade wizard.
