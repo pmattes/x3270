@@ -82,23 +82,12 @@ then	AC_SEARCH_LIBS(pthread_create, pthread)
 fi
 
 dnl Check for TCL header files.
-orig_CPPFLAGS="$CPPFLAGS"
-for dir in "" -I/usr/include/tcl$tclver /usr/include/tcl$tclvr -I/usr/local/include -I/usr/local/include/tcl$tclver -I/usr/local/include/tcl$tclvr
-do	header_fail=0
-	if test -n "$dir"
-	then	AC_MSG_NOTICE(retrying with $dir)
+for dir in /usr/include/tcl$tclver /usr/include/tcl$tclvr /usr/local/include /usr/local/include/tcl$tclver /usr/local/include/tcl$tclvr
+do	if test -d $dir
+    	then	CPPFLAGS="$CPPFLAGS -I$dir"
 	fi
-	CPPFLAGS="$orig_CPPFLAGS $dir"
-	AC_CHECK_HEADERS(tcl.h, ,[header_fail=1])
-	if test "$header_fail" -eq 0
-	then	break
-	fi
-	unset `echo ac_cv_header_tcl.h | $as_tr_sh`
-	CPPFLAGS="$orig_CPPFLAGS"
 done
-if test $header_fail -eq 1
-then	AC_ERROR(Can't find tcl header file)
-fi
+AC_CHECK_HEADERS(tcl.h, ,[AC_ERROR(Cannot find tcl header file)])
 
 dnl Checks for orindary library functions.
 AC_CHECK_FUNCS(vasprintf)
@@ -110,28 +99,14 @@ dnl first, so that objects in them can be used by subsequent libraries.
 LDFLAGS="$LDFLAGS -lm"
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
-ORIG_LDFLAGS="$LDFLAGS"
-for dir in "" -L/usr/local/lib
-do	LDFLAGS="$ORIG_LDFLAGS $dir"
-	tcl_failed=0
-	if test -n "$dir"
-	then	AC_MSG_NOTICE(retrying with $dir)
-	fi
-	AC_CHECK_LIB(tcl$tclver, Tcl_Init, , [tcl_failed=1])
-	if test "$tcl_failed" -eq 0
-	then	break
-	fi
-	unset `echo ac_cv_lib_tcl${tclver}___Tcl_Init | $as_tr_sh`
-	tcl_failed=0
-	AC_CHECK_LIB(tcl$tclvr, Tcl_Init, , [tcl_failed=1])
-	if test "$tcl_failed" = 0
-	then	break
-	fi
-	unset `echo ac_cv_lib_tcl${tclvr}___Tcl_Init | $as_tr_sh`
-	LDFLAGS="$ORIG_LDFLAGS"
-done
-if test "$tcl_failed" = 1
-then	AC_ERROR(Can't find TCL library)
+
+if test -d /usr/local/lib
+then	LDFLAGS="$LDFLAGS -L/usr/local/lib"
+fi
+tcl_failed=0
+AC_CHECK_LIB(tcl$tclver, Tcl_Init, , [tcl_failed=1])
+if test $tcl_failed = 1
+then	AC_CHECK_LIB(tcl$tclvr, Tcl_Init, , [AC_ERROR(Cannot find TCL library)])
 fi
 
 dnl Set up the configuration directory.
