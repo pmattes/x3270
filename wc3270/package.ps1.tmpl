@@ -1,0 +1,35 @@
+﻿# Set up constants.
+$inno = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+$cert = 'C:\Users\Paul Mattes\Documents\Cert2020.p12'
+$signtool = 'C:\Program Files (x86)\Windows Kits\10\bin\x86\signtool.exe'
+$version = '%VERSION%'
+
+# Any error kills the script.
+$ErrorActionPreference = 'Stop'
+
+# Read the password.
+$p = Read-Host 'Enter key password' -AsSecureString
+$pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))
+
+# Sign the binaries.
+Write-Host -ForegroundColor Green 'Signing binaries'
+$files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName
+& $signtool sign /q /f $cert /p $pass /td SHA256 /tr http://timestamp.comodoca.com $files
+
+# Create the noinstall files.
+Write-Host -ForegroundColor Gray 'Creating no-install zipfiles'
+if (Test-Path wc3270-$version-noinstall-32.zip) {
+    Remove-Item wc3270-$version-noinstall-32.zip
+}
+$zip32 = Get-Content .\wc3270\wc3270-32.zipit
+Compress-Archive -Path $zip32 -DestinationPath wc3270-$version-noinstall-32.zip
+if (Test-Path wc3270-$version-noinstall-64.zip) {
+    Remove-Item wc3270-$version-noinstall-64.zip
+}
+$zip64 = Get-Content .\wc3270\wc3270-64.zipit
+Compress-Archive -Path $zip64 -DestinationPath wc3270-$version-noinstall-64.zip
+
+# Run Inno Setup to create the installer.
+Write-Host -ForegroundColor Green 'Running Inno Setup'
+$signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr http://timestamp.comodoca.com `$p" + '"'
+& $inno $signparm wc3270.iss

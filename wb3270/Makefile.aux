@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2016, 2018 Paul Mattes.
+# Copyright (c) 1995-2016, 2018, 2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -51,15 +51,3 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 # Special rule to build the SSL documentation, which comes from a template.
 html/SSL.html: documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
-
-
-# Generate a zipfile for import into wx3270.
-include ../Common/Win32/release.mk
-ZIP64 = b3270-$(VERSION)-noinstall-64.zip
-release-files: $(ZIP64)
-wx3270-release: release-files
-	@$(RM) /tmp/pass
-
-$(ZIPITDEP64): buildexe
-$(ZIP64): $(ZIPITDEP64) b3270-64.zipit version.txt Makefile.aux sign-files
-	$(ZIPIT) -c "b3270 $(VERSION)" -o $@ b3270-64.zipit

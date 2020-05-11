@@ -1,4 +1,0 @@
-# zipit template for wc3270, 32-bit mode
-F ../obj/win32/wb3270/b3270.exe b3270.exe
-F ../obj/win32/wpr3287/wpr3287.exe wpr3287.exe
-F ../obj/win32/x3270if/x3270if.exe x3270if.exe
