@@ -776,6 +776,9 @@ main(int argc, char *argv[])
     /* Initialize fonts. */
     font_init();
 
+    /* Set up the window and icon labels. */
+    label_init();
+
     if (!mode.extended || appres.oversize == NULL ||
 	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 	ovc = 0;
@@ -826,9 +829,6 @@ main(int argc, char *argv[])
      * collect their exit status.
      */
     signal(SIGCHLD, sigchld_handler);
-
-    /* Set up the window and icon labels. */
-    label_init();
 
     /* Handle initial toggle settings. */
     if (!appres.debug_tracing) {
