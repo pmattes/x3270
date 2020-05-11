@@ -56,6 +56,8 @@ Type: files; Name: "{app}\shf.dll"
 Type: files; Name: "{app}\ead3270.exe"
 ; Get rid of Explore AppData on the Start menu.
 Type: files; Name: "{group}\wc3270 Explore AppData"
+; Get rid of the old pre-4.0 HTML directory.
+Type: filesandordirs; Name: {app}\html
 
 [Files]
 Source: "obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
