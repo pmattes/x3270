@@ -3072,7 +3072,11 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+ansi="-std=c99 -pedantic"
 case "$host_os" in
+cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+		ansi=""
+		;;
 solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
 darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
@@ -3082,7 +3086,7 @@ linux*)		CPPFLAGS="-D_XOPEN_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE"
 esac
 if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
-    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -Wno-long-long -MMD -MP"
+    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -Wno-long-long -MMD -MP"
 fi
 
 
