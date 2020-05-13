@@ -547,60 +547,57 @@ x3270.keymap.ow:	#override \
 	:<Key>F20:		set-select(CLIPBOARD) Cut()\n
 ! APL keymap modifier.
 x3270.keymap.apl:	#override \
-	!:Alt<Key>asciitilde:	Key(apl_tilde)\n\
-	!:Meta<Key>asciitilde:	Key(apl_tilde)\n\
+	:<Key>asciitilde:	Key(apl_tilde)\n\
 	:Alt<Key>grave:		Key(apl_diamond)\n\
 	:Meta<Key>grave:	Key(apl_diamond)\n\
-	!:Alt<Key>1:		Key(apl_diaeresis)\n\
-	!:Meta<Key>1:		Key(apl_diaeresis)\n\
-	!:Alt<Key>!:		Key(apl_downtackup)\n\
-	!:Meta<Key>!:		Key(apl_downtackup)\n\
-	!:Alt<Key>2:		Key(apl_overbar)\n\
-	!:Meta<Key>2:		Key(apl_overbar)\n\
-	!:Alt<Key>@:		Key(apl_deltilde)\n\
-	!:Meta<Key>@:		Key(apl_deltilde)\n\
-	!:Alt<Key>3:		Key(less)\n\
-	!:Meta<Key>3:		Key(less)\n\
-	!:Alt<Key>#:		Key(apl_delstile)\n\
-	!:Meta<Key>#:		Key(apl_delstile)\n\
-	!:Alt<Key>4:		Key(apl_notgreater)\n\
-	!:Meta<Key>4:		Key(apl_notgreater)\n\
-	!:Alt<Key>$:		Key(apl_deltastile)\n\
-	!:Meta<Key>$:		Key(apl_deltastile)\n\
-	!:Alt<Key>5:		Key(equal)\n\
-	!:Meta<Key>5:		Key(equal)\n\
-	!:Alt<Key>%:		Key(apl_circlestile)\n\
-	!:Meta<Key>%:		Key(apl_circlestile)\n\
-	!:Alt<Key>6:		Key(apl_notless)\n\
-	!:Meta<Key>6:		Key(apl_notless)\n\
-	!:Alt<Key>^:		Key(apl_circleslope)\n\
-	!:Meta<Key>^:		Key(apl_circleslope)\n\
-	!:Alt<Key>7:		Key(greater)\n\
-	!:Meta<Key>7:		Key(greater)\n\
-	!:Alt<Key>&:		Key(apl_circlebar)\n\
-	!:Meta<Key>&:		Key(apl_circlebar)\n\
-	!:Alt<Key>8:		Key(apl_notequal)\n\
-	!:Meta<Key>8:		Key(apl_notequal)\n\
-	!:Alt<Key>*:		Key(apl_circlestar)\n\
-	!:Meta<Key>*:		Key(apl_circlestar)\n\
-	!:Alt<Key>9:		Key(apl_downcaret)\n\
-	!:Meta<Key>9:		Key(apl_downcaret)\n\
-	!:Alt<Key>(:		Key(apl_downcarettilde)\n\
-	!:Meta<Key>(:		Key(apl_downcarettilde)\n\
-	!:Alt<Key>0:		Key(apl_upcaret)\n\
-	!:Meta<Key>0:		Key(apl_upcaret)\n\
-	!:Alt<Key>0:		Key(apl_upcarettilde)\n\
-	!:Meta<Key>0:		Key(apl_upcarettilde)\n\
-	!:Alt<Key>):		Key(apl_downcarettilde)\n\
-	!:Meta<Key>):		Key(apl_downcarettilde)\n\
-	!:Alt<Key>minus:	Key(apl_multiply)\n\
-	!:Meta<Key>minus:	Key(apl_multiply)\n\
-	!:Alt<Key>underscore:	Key(apl_quotedot)\n\
-	!:Meta<Key>underscore:	Key(apl_quotedot)\n\
-	!:Alt<Key>=:		Key(apl_divide)\n\
-	!:Meta<Key>=:		Key(apl_divide)\n\
-	!:Alt<Key>+:		Key(apl_quaddivide)\n\
-	!:Meta<Key>+:		Key(apl_quaddivide)\n\
+	:Alt<Key>1:		Key(apl_diaeresis)\n\
+	:Meta<Key>1:		Key(apl_diaeresis)\n\
+	:Alt<Key>!:		Key(apl_downtackup)\n\
+	:Meta<Key>!:		Key(apl_downtackup)\n\
+	:Alt<Key>2:		Key(apl_overbar)\n\
+	:Meta<Key>2:		Key(apl_overbar)\n\
+	:Alt<Key>@:		Key(apl_deltilde)\n\
+	:Meta<Key>@:		Key(apl_deltilde)\n\
+	:Alt<Key>3:		Key(less)\n\
+	:Meta<Key>3:		Key(less)\n\
+	:Alt<Key>#:		Key(apl_delstile)\n\
+	:Meta<Key>#:		Key(apl_delstile)\n\
+	:Alt<Key>4:		Key(apl_notgreater)\n\
+	:Meta<Key>4:		Key(apl_notgreater)\n\
+	:Alt<Key>$:		Key(apl_deltastile)\n\
+	:Meta<Key>$:		Key(apl_deltastile)\n\
+	:Alt<Key>5:		Key(equal)\n\
+	:Meta<Key>5:		Key(equal)\n\
+	:Alt<Key>%:		Key(apl_circlestile)\n\
+	:Meta<Key>%:		Key(apl_circlestile)\n\
+	:Alt<Key>6:		Key(apl_notless)\n\
+	:Meta<Key>6:		Key(apl_notless)\n\
+	:Alt<Key>^:		Key(apl_circleslope)\n\
+	:Meta<Key>^:		Key(apl_circleslope)\n\
+	:Alt<Key>7:		Key(greater)\n\
+	:Meta<Key>7:		Key(greater)\n\
+	:Alt<Key>&:		Key(apl_circlebar)\n\
+	:Meta<Key>&:		Key(apl_circlebar)\n\
+	:Alt<Key>8:		Key(apl_notequal)\n\
+	:Meta<Key>8:		Key(apl_notequal)\n\
+	:Alt<Key>*:		Key(apl_circlestar)\n\
+	:Meta<Key>*:		Key(apl_circlestar)\n\
+	:Alt<Key>9:		Key(apl_downcaret)\n\
+	:Meta<Key>9:		Key(apl_downcaret)\n\
+	:Alt<Key>(:		Key(apl_downcarettilde)\n\
+	:Meta<Key>(:		Key(apl_downcarettilde)\n\
+	:Alt<Key>0:		Key(apl_upcaret)\n\
+	:Meta<Key>0:		Key(apl_upcaret)\n\
+	:Alt<Key>):		Key(apl_upcarettilde)\n\
+	:Meta<Key>):		Key(apl_upcarettilde)\n\
+	:Alt<Key>minus:		Key(apl_multiply)\n\
+	:Meta<Key>minus:	Key(apl_multiply)\n\
+	:Alt<Key>underscore:	Key(apl_quotedot)\n\
+	:Meta<Key>underscore:	Key(apl_quotedot)\n\
+	:Alt<Key>=:		Key(apl_divide)\n\
+	:Meta<Key>=:		Key(apl_divide)\n\
+	:Alt<Key>+:		Key(apl_quaddivide)\n\
+	:Meta<Key>+:		Key(apl_quaddivide)\n\
 	:Alt<Key>q:		Key(question)\n\
 	:Meta<Key>q:		Key(question)\n\
 	:Alt<Key>Q:		Key(apl_Qunderbar)\n\
@@ -641,20 +638,20 @@ x3270.keymap.apl:	#override \
 	:Meta<Key>p:		Key(asterisk)\n\
 	:Alt<Key>P:		Key(apl_Punderbar)\n\
 	:Meta<Key>P:		Key(apl_Punderbar)\n\
-	!:Alt<Key>bracketleft:	Key(apl_leftarrow)\n\
-	!:Meta<Key>bracketleft:	Key(apl_leftarrow)\n\
+	:Alt<Key>bracketleft:	Key(apl_leftarrow)\n\
+	:Meta<Key>bracketleft:	Key(apl_leftarrow)\n\
 	:<Key>bracketleft:	Key(apl_bracketleft)\n\
-	!:Alt<Key>braceleft:	Key(apl_quadquote)\n\
-	!:Meta<Key>braceleft:	Key(apl_quadquote)\n\
-	!:Alt<Key>bracketright: Key(apl_rightarrow)\n\
-	!:Meta<Key>bracketright: Key(apl_rightarrow)\n\
+	:Alt<Key>braceleft:	Key(apl_quadquote)\n\
+	:Meta<Key>braceleft:	Key(apl_quadquote)\n\
+	:Alt<Key>bracketright: Key(apl_rightarrow)\n\
+	:Meta<Key>bracketright: Key(apl_rightarrow)\n\
 	:<Key>bracketright:	Key(apl_bracketright)\n\
-	!:Alt<Key>backslash:	Key(apl_righttack)\n\
-	!:Meta<Key>backslash:	Key(apl_righttack)\n\
-	!:Alt<Key>bar:		Key(apl_lefttack)\n\
-	!:Meta<Key>bar:		Key(apl_lefttack)\n\
-	!<Key>backslash:	Key(apl_slope)\n\
-	<Key>bar:		Key(apl_stile)\n\
+	:Alt<Key>backslash:	Key(apl_righttack)\n\
+	:Meta<Key>backslash:	Key(apl_righttack)\n\
+	:Alt<Key>bar:		Key(apl_lefttack)\n\
+	:Meta<Key>bar:		Key(apl_lefttack)\n\
+	:<Key>backslash:	Key(apl_slope)\n\
+	:<Key>bar:		Key(apl_stile)\n\
 	:Alt<Key>a:		Key(apl_alpha)\n\
 	:Meta<Key>a:		Key(apl_alpha)\n\
 	:Alt<Key>A:		Key(apl_Aunderbar)\n\
