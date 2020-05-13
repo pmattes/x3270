@@ -1639,6 +1639,10 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
     register int i;
     struct akey ak;
 
+    if (toggled(APL_MODE) && islower(ucs4)) {
+	ucs4 = toupper(ucs4);
+    }
+
     if (keyboard_disabled() && IA_IS_KEY(cause)) {
 	vtrace("  [suppressed, keyboard disabled]\n");
 	status_keyboard_disable_flash();
