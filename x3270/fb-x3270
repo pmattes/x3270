@@ -238,8 +238,6 @@ x3270.keymap.base: \
 	:<Key>F11:			PF(11)\n\
 	:<Key>F12:			PF(12)\n\
 	:<Key>Print:			PrintText()\n\
-	Meta<Key>f:			Toggle(rightToLeftMode)\n\
-	Alt<Key>f:			Toggle(rightToLeftMode)\n\
 	Alt<Key>q:			Quit()\n\
 	:<Key>dead_acute:		Compose() Key(apostrophe)\n\
 	:<Key>dead_grave:	 	Compose() Key(grave)\n\
@@ -302,8 +300,6 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
-	Alt<Key>v:			Toggle(reverseInputMode)\n\
-	Meta<Key>v:			Toggle(reverseInputMode)\n\
 	Ctrl<Key>w:			DeleteWord()\n\
 	Ctrl<Key>x:			Cut(CLIPBOARD)
 ! Keymap that restores the old (pre 3.3) mouse-click behavior.
@@ -322,6 +318,12 @@ x3270.keymap.oldclick: #override\n\
 x3270.keymap.oldclick.3270: #override\n\
 	:Ctrl Shift<Btn1Down>:          MouseSelect()\n\
 	Shift<Btn1Down>:                MoveCursor()
+! Support for right-to-left languages.
+x3270.keymap.righttoleft: #override\n\
+	Meta<Key>f:			Toggle(rightToLeftMode)\n\
+	Alt<Key>f:			Toggle(rightToLeftMode)\n\
+	Alt<Key>v:			Toggle(reverseInputMode)\n\
+	Meta<Key>v:			Toggle(reverseInputMode)\n
 !
 ! Start of keyboard-specific mappings.
 !

@@ -1,4 +1,4 @@
-!
+
 ! Copyright (c) 1995-2019, Paul Mattes.
 ! All rights reserved.
 !
@@ -98,8 +98,6 @@ keymap.base.3270: \n\
        Alt <Key>r: Reset()\n\
        Alt <Key>R: Reset()\n\
       Ctrl <Key>u: DeleteField()\n\
-       Alt <Key>v: Toggle(reverseInputMode)\n\
-       Alt <Key>x: Toggle(rightToLeftMode)\n\
       <Key>INSERT: Toggle(insertMode)\n\
    Shift <Key>TAB: BackTab()\n\
         <Key>BACK: Erase()\n\
@@ -116,6 +114,10 @@ keymap.base.3270: \n\
 x3270.keymap.rctrl.3270: \
 	RightCtrl<Key>CTRL: Enter()\n\
 	<Key>Return: Newline()
+! Support for right-to-left languages.
+x3270.keymap.righttoleft: \
+       Alt <Key>v: Toggle(reverseInputMode)\n\
+       Alt <Key>x: Toggle(rightToLeftMode)
 #else
 x3270.keymap.base: \n\
             Ctrl<Key>]: Escape()\n\
@@ -183,10 +185,12 @@ x3270.keymap.base.3270: \n\
             Ctrl<Key>n: Menu()\n\
             Ctrl<Key>r: Reset()\n\
             Ctrl<Key>u: DeleteField()\n\
-     Ctrl<Key>a <Key>v: Toggle(reverseInputMode)\n\
-     Ctrl<Key>a <Key>f: Toggle(rightToLeftMode)\n\
                <Key>IC: Toggle(insertMode)\n\
         <Key>BACKSPACE: Erase()\n\
               <Key>END: FieldEnd()
+! Support for right-to-left languages.
+x3270.keymap.righttoleft: \
+     Ctrl<Key>a <Key>v: Toggle(reverseInputMode)\n\
+     Ctrl<Key>a <Key>f: Toggle(rightToLeftMode)
 #endif
 ! (_WIN32)

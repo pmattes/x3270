@@ -184,6 +184,7 @@ static struct {
     char *description;
 } builtin_keymaps[] = {
     { "rctrl",	"Map PC Right Ctrl key to 3270 'Enter' and PC Enter key to 3270 'Newline'" },
+    { "righttoleft",	"Mappings for right-to-left language support" },
     { NULL,		NULL }
 };
 
@@ -2410,7 +2411,9 @@ user-defined keymaps, separated by commas.");
     for (km = km_first; km != NULL; km = km->next) {
 	printf(" %s\n", km->name);
 	if (km->description[0]) {
-		printf("  %s", km->description);
+	    printf("  %s", km->description);
+	} else {
+	    printf("  (no description)");
 	}
 	printf("\n");
     }
