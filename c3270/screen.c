@@ -474,7 +474,9 @@ screen_has_ansi_color(void)
 
     /* Recompute 'op'. */
     if (ti.op != NULL && ti.sgr0 != NULL) {
-	Replace(ti.op, xs_buffer("%s%s", ti.op, ti.sgr0));
+	char *s = xs_buffer("%s%s", ti.op, ti.sgr0);
+
+	Replace(ti.op, s);
     }
 
     return true;
