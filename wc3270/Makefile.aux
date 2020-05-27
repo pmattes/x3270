@@ -34,7 +34,7 @@ all:
 DOCS = LICENSE.txt html/$(PRODUCT)-man.html html/ReleaseNotes.html \
 	html/Resources.html html/SSL.html html/wc3270-script.html
 
-src.tgz: $(DOCS) wc3270.iss package.ps1 package.zip Makefile.aux
+src.tgz: $(DOCS) wc3270.iss package.ps1 Makefile.aux
 
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKHTML = ./m4man -t html -p $(PRODUCT)
