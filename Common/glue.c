@@ -86,9 +86,10 @@ static void parse_local_process(int *argcp, const char **argv,
 	const char **cmds);
 #endif /*]*/
 static void set_appres_defaults(void);
-static void parse_options(int *argcp, const char **argv);
-static void parse_set_clear(int *argcp, const char **argv);
+static void parse_options(int *argcp, const char **argv, bool warn);
+static void parse_set_clear(int *argcp, const char **argv, bool warn);
 static int parse_model_number(char *m);
+static void xparse_xrm(const char *arg, const char *where, bool warn);
 static merge_profile_t *merge_profilep = NULL;
 static char *session_suffix[4];
 static size_t session_suffix_len[4];
@@ -216,10 +217,10 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     set_appres_defaults();
 
     /* Parse command-line options. */
-    parse_options(&argc, argv);
+    parse_options(&argc, argv, true);
 
     /* Pick out the remaining -set and -clear toggle options. */
-    parse_set_clear(&argc, argv);
+    parse_set_clear(&argc, argv, true);
 
     /* Now figure out if there's a hostname. */
     for (hn_argc = 1; hn_argc < argc; hn_argc++) {
@@ -312,8 +313,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      * precedence over the session file or profile.
      */
     if (read_session_or_profile) {
-	parse_options(&xargc, xargv);
-	parse_set_clear(&xargc, xargv);
+	parse_options(&xargc, xargv, false);
+	parse_set_clear(&xargc, xargv, false);
     }
     /* Can't free xcmd, parts of it are still in use. */
     Free((char *)xargv);
@@ -613,7 +614,7 @@ register_opts(opt_t *opts, unsigned num_opts)
  * Pick out command-line options and set up appres.
  */
 static void
-parse_options(int *argcp, const char **argv)
+parse_options(int *argcp, const char **argv, bool warn)
 {
     int i;
     unsigned j;
@@ -666,7 +667,7 @@ parse_options(int *argcp, const char **argv)
 		popup_an_error("Missing value for '%s'", argv[i]);
 		continue;
 	    }
-	    parse_xrm(argv[++i], "-xrm");
+	    xparse_xrm(argv[++i], "-xrm", warn);
 	    break;
 	case OPT_SKIP2:
 	    argv_out[argc_out++] = argv[i++];
@@ -826,7 +827,7 @@ name_cmp(const void *p1, const void *p2)
  * Pick out -set and -clear toggle options.
  */
 static void
-parse_set_clear(int *argcp, const char **argv)
+parse_set_clear(int *argcp, const char **argv, bool warn)
 {
     int i, j;
     int argc_out = 0;
@@ -1247,8 +1248,8 @@ valid_explicit(const char *resname, size_t len)
     return -1;
 }
 
-void
-parse_xrm(const char *arg, const char *where)
+static void
+xparse_xrm(const char *arg, const char *where, bool warn)
 {
     const char *name;
     size_t rnlen;
@@ -1302,13 +1303,18 @@ parse_xrm(const char *arg, const char *where)
 	arbitrary = true;
     }
     if (address == NULL) {
-	xs_warning("%s: Unknown resource name: %.*s", where, (int)rnlen, name);
+	if (warn) {
+	    xs_warning("%s: Unknown resource name: %.*s", where, (int)rnlen,
+		    name);
+	}
 	return;
     }
     switch (type) {
     case XRM_BOOLEAN:
 	if ((errmsg = boolstr(s, (bool *)address)) != NULL) {
-	    xs_warning("%s %s", where, errmsg);
+	    if (warn) {
+		xs_warning("%s %s", where, errmsg);
+	    }
 	    *(bool *)address = false;
 	}
 	break;
@@ -1375,7 +1381,9 @@ parse_xrm(const char *arg, const char *where)
 
 	n = strtol(s, &ptr, 0);
 	if (*ptr != '\0') {
-	    xs_warning("%s: Invalid Integer value: %s", where, s);
+	    if (warn) {
+		xs_warning("%s: Invalid Integer value: %s", where, s);
+	    }
 	} else {
 	    *(int *)address = (int)n;
 	}
@@ -1392,6 +1400,12 @@ parse_xrm(const char *arg, const char *where)
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
     }
+}
+
+void
+parse_xrm(const char *arg, const char *where)
+{
+    xparse_xrm(arg, where, true);
 }
 
 /*
