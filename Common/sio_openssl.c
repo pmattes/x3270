@@ -497,15 +497,8 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
     SSL_CTX_set_default_passwd_cb_userdata(s->ctx, s);
     SSL_CTX_set_default_passwd_cb(s->ctx, passwd_cb);
 
-    s->con = SSL_new(s->ctx);
-    if (s->con == NULL) {
-	sioc_set_error("SSL_new failed");
-	goto fail;
-    }
-
     s->config = config;
 
-    SSL_set_verify_depth(s->con, 64);
     vtrace("TLS: will%s verify host certificate\n",
 	    s->config->verify_host_cert? "": " not");
 
@@ -614,6 +607,13 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
 	sioc_set_error("Private key check failed:\n%s", get_ssl_error(err_buf));
 	goto fail;
     }
+
+    s->con = SSL_new(s->ctx);
+    if (s->con == NULL) {
+	sioc_set_error("SSL_new failed");
+	goto fail;
+    }
+    SSL_set_verify_depth(s->con, 64);
 
     /* Success. */
     *sio_ret = (sio_t *)s;
