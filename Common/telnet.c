@@ -477,11 +477,6 @@ connect_to(int ix, bool noisy, bool *pending)
 	    close_fail;
 	}
     } else {
-#if false
-	if (non_blocking(false) < 0) {
-	    close_fail;
-	}
-#endif
 	net_connected();
 
 	/* net_connected() can cause the connection to fail. */
@@ -1012,14 +1007,6 @@ net_connected(void)
 	/* Tell everyone else again. */
 	host_connected();
     }
-
-#if !defined(_WIN32) /*[*/
-    /* Blocking socket here on out. */
-    if (non_blocking(false) < 0) {
-	host_disconnect(true);
-	return;
-    }
-#endif /*]*/
 
     net_connected_complete();
 
@@ -3536,14 +3523,6 @@ net_starttls_continue(void)
 	return;
     }
 
-#if !defined(_WIN32) /*[*/
-    /* Blocking socket again. */
-    if (non_blocking(false) < 0) {
-	host_disconnect(true);
-	return;
-    }
-#endif /*]*/
-
     secure_connection = true;
 
     /* Success. */
@@ -3603,14 +3582,6 @@ continue_tls(unsigned char *sbbuf, int len)
 
     /* Trace what we got. */
     vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
-
-#if !defined(_WIN32) /*[*/
-    /* Non-blocking socket again. */
-    if (non_blocking(true) < 0) {
-	host_disconnect(true);
-	return;
-    }
-#endif /*]*/
 
     /* Negotiate. */
     net_starttls_continue();
