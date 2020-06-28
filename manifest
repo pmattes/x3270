@@ -123,6 +123,7 @@ c3270/x3270_glue.expect
 c3270/x3270.man.m4
 c3270/x3270-script.man
 c3270/x3270-script.man.m4
+configure.in
 Common/actions.c
 Common/apl.c
 Common/asprintf.c
