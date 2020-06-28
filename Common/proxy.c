@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,9 +49,12 @@
 #include "proxy_telnet.h"
 #include "proxy_socks4.h"
 #include "proxy_socks5.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "w3misc.h"
+
+#define PROXY_MSEC	(15 * 1000)
 
 /* proxy type names -- keep these in sync with proxytype_t! */
 const char *type_name[PT_MAX] = {
@@ -105,6 +108,7 @@ static close_t *closes[PT_MAX] = {
 
 static proxytype_t proxy_type = PT_NONE;
 static bool proxy_pending = false;
+static ioid_t proxy_timeout_id = NULL_IOID;
 
 /* Return the name for a given proxy type. */
 const char *
@@ -333,13 +337,28 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
 }
 
 /*
+ * Proxy negotiation timed out.
+ */
+static void
+proxy_timeout(ioid_t id _is_unused)
+{
+    proxy_timeout_id = NULL_IOID;
+    connect_error("%s proxy timed out", type_name[proxy_type]);
+}
+
+/*
  * Negotiate with the proxy server.
  */
 proxy_negotiate_ret_t
 proxy_negotiate(socket_t fd, const char *user, const char *host,
-	unsigned short port)
+	unsigned short port, bool blocking)
 {
     proxy_negotiate_ret_t ret;
+
+    if (proxy_timeout_id != NULL_IOID) {
+	RemoveTimeOut(proxy_timeout_id);
+	proxy_timeout_id = NULL_IOID;
+    }
 
     switch (proxy_type) {
     case PT_NONE:
@@ -372,6 +391,30 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
     }
 
     proxy_pending = (ret == PX_WANTMORE);
+    if (proxy_pending) {
+	if (blocking) {
+	    do {
+		fd_set rfds;
+		struct timeval tv;
+
+		/* Wait for more input. */
+		FD_ZERO(&rfds);
+		FD_SET(fd, &rfds);
+		tv.tv_sec = PROXY_MSEC / 1000;
+		tv.tv_usec = (PROXY_MSEC % 1000) * 10;
+		if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) <= 0) {
+		    popup_an_error("%s proxy timeout", type_name[proxy_type]);
+		    return PX_FAILURE;
+		}
+
+		ret = proxy_continue();
+	    } while (ret == PX_WANTMORE);
+	} else {
+	    /* Set a timeout in case the input never arrives. */
+	    proxy_timeout_id = AddTimeOut(PROXY_MSEC, proxy_timeout);
+	}
+    }
+
     return ret;
 }
 
@@ -411,4 +454,8 @@ proxy_close(void)
     }
     proxy_type = PT_NONE;
     proxy_pending = false;
+    if (proxy_timeout_id != NULL_IOID) {
+	RemoveTimeOut(proxy_timeout_id);
+	proxy_timeout_id = NULL_IOID;
+    }
 }

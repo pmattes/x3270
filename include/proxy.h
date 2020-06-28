@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2009, 2015, 2018-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ typedef enum {
 typedef void *proxy_t;
 int proxy_setup(const char *spec, char **puser, char **phost, char **pport);
 proxy_negotiate_ret_t proxy_negotiate(socket_t fd, const char *user,
-	const char *host, unsigned short port);
+	const char *host, unsigned short port, bool blocking);
 proxy_negotiate_ret_t proxy_continue(void);
 void proxy_close(void);
 const char *proxy_type_name(int type);

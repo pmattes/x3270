@@ -963,7 +963,7 @@ net_connected(void)
 
 	change_cstate(PROXY_PENDING, "net_connected");
 
-	ret = proxy_negotiate(sock, proxy_user, hostname, current_port);
+	ret = proxy_negotiate(sock, proxy_user, hostname, current_port, false);
 	if (ret == PX_FAILURE) {
 	    host_disconnect(true);
 	    return;
