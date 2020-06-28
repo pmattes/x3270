@@ -342,6 +342,81 @@ c3270_3270_mode(bool ignored)
     }
 } 
 
+/**
+ * GUI redirect function for popup_an_error.
+ * This handles asynchronous errors, such as file transfers that do not start
+ * or abort.
+ *
+ * @param[in] s		Text to display
+ * @param[in] any_error	true to set any_error_output
+ * @returns true
+ */
+static bool
+glue_gui_error_cond(const char *s, bool set_any_error)
+{
+    bool was_escaped = escaped;
+
+    if (command_running || PAGER_RUNNING) {
+	/* You can't interrupt a running command. */
+	if (error_pending != NULL) {
+	    char *xerror = xs_buffer("%s\n%s", error_pending, s);
+
+	    Replace(error_pending, xerror);
+	} else {
+	    Replace(error_pending, NewString(s));
+	}
+	return true;
+    }
+
+    if (!was_escaped) {
+	c3270_screen_suspend();
+    } else {
+#if defined(_WIN32) /*[*/
+	/*
+	 * Send yourself an ESC to flush current input.
+	 * This needs to happen before displaying the text.
+	 */
+	screen_send_esc();
+#endif /*]*/
+    }
+
+    if (prompt.displayed) {
+	printf("\n");
+	fflush(stdout);
+    }
+#if !defined(_WIN32) /*[*/
+    printf("%s%s%s\n",
+	    color_prompt? screen_setaf(ACOLOR_RED): "",
+	    s,
+	    color_prompt? screen_op(): "");
+#else /*][*/
+    screen_color(PC_ERROR);
+    printf("%s", s);
+    screen_color(PC_DEFAULT);
+    printf("\n");
+#endif /*]*/
+    fflush(stdout);
+    if (set_any_error) {
+	any_error_output = true;
+    }
+
+    if (was_escaped) {
+	/* Interrupted the prompt. */
+#if defined(HAVE_LIBREADLINE) /*[*/
+	/* Redisplay the prompt and any pending input. */
+	rl_forced_update_display();
+#elif !defined(_WIN32) /*[*/
+	/* Discard any pending input. */
+	tcflush(0, TCIFLUSH);
+	prompt.displayed = false;
+#else /*][*/
+	prompt.displayed = false;
+#endif /*]*/
+    }
+
+    return true;
+}
+
 /* Callback for connection state changes. */
 static void
 c3270_connect(bool ignored)
@@ -366,7 +441,7 @@ c3270_connect(bool ignored)
     if (!appres.secure &&
 	    !PCONNECTED &&
 	    !appres.interactive.reconnect) {
-	glue_gui_error("Disconnected.");
+	glue_gui_error_cond("Disconnected.", false);
     }
     if (connect_once) {
 	/* Exit after the connection is broken. */
@@ -2088,65 +2163,7 @@ glue_gui_output(const char *s)
 bool
 glue_gui_error(const char *s)
 {
-    bool was_escaped = escaped;
-
-    if (command_running || PAGER_RUNNING) {
-	/* You can't interrupt a running command. */
-	if (error_pending != NULL) {
-	    char *xerror = xs_buffer("%s\n%s", error_pending, s);
-
-	    Replace(error_pending, xerror);
-	} else {
-	    Replace(error_pending, NewString(s));
-	}
-	return true;
-    }
-
-    if (!was_escaped) {
-	c3270_screen_suspend();
-    } else {
-#if defined(_WIN32) /*[*/
-	/*
-	 * Send yourself an ESC to flush current input.
-	 * This needs to happen before displaying the text.
-	 */
-	screen_send_esc();
-#endif /*]*/
-    }
-
-    if (prompt.displayed) {
-	printf("\n");
-	fflush(stdout);
-    }
-#if !defined(_WIN32) /*[*/
-    printf("%s%s%s\n",
-	    color_prompt? screen_setaf(ACOLOR_RED): "",
-	    s,
-	    color_prompt? screen_op(): "");
-#else /*][*/
-    screen_color(PC_ERROR);
-    printf("%s", s);
-    screen_color(PC_DEFAULT);
-    printf("\n");
-#endif /*]*/
-    fflush(stdout);
-    any_error_output = true;
-
-    if (was_escaped) {
-	/* Interrupted the prompt. */
-#if defined(HAVE_LIBREADLINE) /*[*/
-	/* Redisplay the prompt and any pending input. */
-	rl_forced_update_display();
-#elif !defined(_WIN32) /*[*/
-	/* Discard any pending input. */
-	tcflush(0, TCIFLUSH);
-	prompt.displayed = false;
-#else /*][*/
-	prompt.displayed = false;
-#endif /*]*/
-    }
-
-    return true;
+    return glue_gui_error_cond(s, true);
 }
 
 /**
