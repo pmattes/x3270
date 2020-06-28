@@ -961,13 +961,14 @@ relabel(bool ignored _is_unused)
 {
     char *title;
     char icon_label[8];
+    bool reconnect = appres.interactive.reconnect && reconnect_host != NULL;
 
     if (user_title != NULL && user_icon_name != NULL) {
 	return;
     }
-    title = XtMalloc(10 + ((PCONNECTED || appres.interactive.reconnect)?
-					    strlen(reconnect_host): 0));
-    if (PCONNECTED || appres.interactive.reconnect) {
+    title = XtMalloc(10 + ((PCONNECTED || reconnect)?
+		strlen(reconnect_host): 0));
+    if (PCONNECTED || reconnect) {
 	sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
 		reconnect_host);
 	if (user_title == NULL) {
