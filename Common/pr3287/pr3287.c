@@ -132,6 +132,7 @@
 #include <time.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "globals.h"
 #include "codepage.h"
@@ -1101,7 +1102,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		fprintf(stderr, "Connected to proxy server %s, port %u\n",
 			proxy_host, proxy_port);
 	    }
-	    if (!proxy_negotiate(s, proxy_user, host, p)) {
+	    if (proxy_negotiate(s, proxy_user, host, p, true) != PX_SUCCESS) {
 		rc = 1;
 		goto retry;
 	    }
@@ -1247,4 +1248,24 @@ build_options(void)
 	    , using_iconv()? " -with-iconv": "");
     }
     return build;
+}
+
+/* Glue functions to allow proxy.c to link. */
+void
+connect_error(const char *fmt, ...)
+{
+    assert(false);
+}
+
+ioid_t
+AddTimeOut(unsigned long msec, tofn_t fn)
+{
+    assert(false);
+    return NULL_IOID;
+}
+
+void
+RemoveTimeOut(ioid_t cookie)
+{
+    assert(false);
 }
