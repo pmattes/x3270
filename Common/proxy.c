@@ -415,6 +415,9 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
 	}
     }
 
+    if (ret == PX_SUCCESS) {
+	proxy_close();
+    }
     return ret;
 }
 
@@ -435,8 +438,8 @@ proxy_continue(void)
     }
 
     ret = (*continues[proxy_type])();
-    if (ret != PX_WANTMORE) {
-	proxy_pending = false;
+    if (ret == PX_SUCCESS) {
+	proxy_close();
     }
     return ret;
 }
