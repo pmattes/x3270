@@ -297,7 +297,7 @@ static unsigned char calc_cs(unsigned char cs);
  *
  * @return Its name
  */
-    static const char *
+static const char *
 stsname(task_t *s)
 {
     if (s->type == ST_CB) {
@@ -307,7 +307,7 @@ stsname(task_t *s)
     }
 }
 
-    static void
+static void
 trace_task_output(task_t *s, const char *fmt, ...)
 {
     va_list args;
@@ -405,13 +405,13 @@ macros_init(void)
 }
 
 /* Callbacks for state changes. */
-    static void
+static void
 task_connect(bool connected _is_unused)
 {
     macros_init();
 }
 
-    static void
+static void
 task_in3270(bool in3270)
 {
 }
@@ -424,7 +424,7 @@ task_in3270(bool in3270)
  * @param[out] canonical_value	Returned canonical value
  * @returns true if toggle changed successfully
  */
-    static bool
+static bool
 scriptport_toggle_upcall(const char *name, const char *value)
 {
     struct sockaddr *sa;
@@ -448,7 +448,7 @@ scriptport_toggle_upcall(const char *name, const char *value)
     return true;
 }
 
-    static bool
+static bool
 Info_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug(AnInfo, ia, argc, argv);
@@ -459,7 +459,7 @@ Info_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-    static bool
+static bool
 ignore_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug(Anignore, ia, argc, argv);
@@ -469,7 +469,7 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 /**
  * Task module registration.
  */
-    void
+void
 task_register(void)
 {
     static action_table_t task_actions[] = {
