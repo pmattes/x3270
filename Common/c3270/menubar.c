@@ -158,6 +158,55 @@ add_menu(char *title)
     return c;
 }
 
+/* Remove a menu. */
+static void
+remove_menu(cmenu_t *cmenu)
+{
+    cmenu_t *c;
+    cmenu_t *prev = NULL;
+    cmenu_item_t *i;
+
+    if (cmenu == NULL) {
+	return;
+    }
+
+    /* Find the menu. */
+    for (c = menus; c != NULL; c = c->next) {
+	if (c == cmenu) {
+	    break;
+	}
+	prev = c;
+    }
+    if (c == NULL) {
+	return;
+    }
+
+    /* Free its items. */
+    while ((i = cmenu->items) != NULL) {
+	Free(i->label);
+	cmenu->items = i->next;
+	Free(i);
+    }
+
+    /* Restore the linked list. */
+    if (prev != NULL) {
+	prev->next = cmenu->next;
+    }
+    if (cmenu->next == NULL) {
+	menu_last = prev;
+    }
+
+    /* Free it. */
+    Free(cmenu);
+
+    /* Correct the offsets. */
+    current_offset = 0;
+    for (c = menus; c != NULL; c = c->next) {
+	c->offset = current_offset;
+	current_offset += MENU_WIDTH;
+    }
+}
+
 /* Add an item to a menu. */
 cmenu_item_t *
 add_item(cmenu_t *cmenu, char *label, void (*action)(void *), void *param)
@@ -884,6 +933,10 @@ char *option_names[OM_COUNT] = {
 cmenu_t *file_menu;
 cmenu_t *options_menu;
 cmenu_t *keypad_menu;
+cmenu_t *macros_menu;
+
+static struct macro_def **macro_save;
+static int n_ms;
 
 static void
 toggle_option(void *param)
@@ -906,12 +959,44 @@ popup_keypad(void *ignored _is_unused)
     after_param = NULL;
 }
 
+/* Run an item from the Macros menu. */
+static void
+run_macro(void *param)
+{
+    struct macro_def *m = (struct macro_def *)param;
+
+    push_macro(m->action);
+}
+
+/* Draw the top line (the menu bar). */
+static void
+draw_topline(void)
+{
+    int col, next_col;
+    cmenu_t *c;
+
+    memset(menu_topline, 0, sizeof(menu_topline));
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
+
+	for (d = c->title; *d; d++) {
+	    menu_topline[col] = *d & 0xff;
+	    col++;
+	}
+	while (col < next_col) {
+	    menu_topline[col] = ' ';
+	    col++;
+	}
+	next_col += MENU_WIDTH;
+    }
+}
+
 void
 menu_init(void)
 {
     int j;
-    int col, next_col;
-    cmenu_t *c;
 
     basic_menu_init();
 
@@ -954,20 +1039,66 @@ menu_init(void)
     set_callback(keypad_menu, popup_keypad, NULL);
 
     /* Draw the menu names on the top line. */
-    col = 0;
-    next_col = MENU_WIDTH;
-    for (c = menus; c != NULL; c = c->next) {
-	char *d;
+    draw_topline();
+}
 
-	for (d = c->title; *d; d++) {
-	    menu_topline[col] = *d & 0xff;
-	    col++;
+/* Connect state change callback for the menu bar. */
+static void
+menubar_connect(bool connected)
+{
+    static bool created_menu = false;
+
+    if (connected) {
+	if (macro_defs != NULL && !created_menu) {
+	    struct macro_def *m;
+
+	    /* Create the macros menu. */
+	    macros_menu = add_menu("Macros");
+	    n_ms = 0;
+	    for (m = macro_defs; m != NULL; m = m->next) {
+		struct macro_def *mm = (struct macro_def *)
+		    Malloc(sizeof(struct macro_def) + strlen(m->name) + 1 +
+			    strlen(m->action) + 1);
+
+		/*
+		 * Save a copy of the macro definition, since it could change
+		 * at any time.
+		 */
+		mm->name = (char *)(mm + 1);
+		strcpy(mm->name, m->name);
+		mm->action = mm->name + strlen(mm->name) + 1;
+		strcpy(mm->action, m->action);
+		add_item(macros_menu, m->name, run_macro, mm);
+
+		macro_save = (struct macro_def **)Realloc(macro_save,
+			(n_ms + 1) * sizeof(struct macro_def *));
+		macro_save[n_ms++] = mm;
+	    }
+
+	    /* Re-create the menu bar and force a screen redraw. */
+	    draw_topline();
+	    screen_changed = true;
+	    created_menu = true;
 	}
-	while (col < next_col) {
-	    menu_topline[col] = ' ';
-	    col++;
+    } else {
+	int i;
+
+	/* Free the saved macro definitions. */
+	for (i = 0; i < n_ms; i++) {
+	    Free(macro_save[i]);
 	}
-	next_col += MENU_WIDTH;
+	Replace(macro_save, NULL);
+	n_ms = 0;
+
+	/*
+	 * Remove the macros menu, re-draw the menu bar and force a screen
+	 * redraw.
+	 */
+	remove_menu(macros_menu);
+	macros_menu = NULL;
+	draw_topline();
+	screen_changed = true;
+	created_menu = false;
     }
 }
 
@@ -1274,6 +1405,9 @@ menubar_register(void)
     static action_table_t menubar_actions[] = {
 	{ AnMenu,	Menu_action,	ACTION_KE }
     };
+
+    /* Register for events. */
+    register_schange_ordered(ST_CONNECT, menubar_connect, ORDER_LAST);
 
     /* Register our actions. */
     register_actions(menubar_actions, array_count(menubar_actions));
