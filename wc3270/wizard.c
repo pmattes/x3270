@@ -96,6 +96,8 @@ enum {
     MN_PROXY,		/* use proxy host */
     MN_PROXY_SERVER,	/* proxy host name */
     MN_PROXY_PORT,	/* proxy port number */
+    MN_PROXY_USER,	/* proxy user name */
+    MN_PROXY_PASSWORD,	/* proxy password */
     MN_3287,		/* printer session */
     MN_3287_MODE,	/* printer mode */
     MN_3287_LU,		/* printer logical unit */
@@ -188,17 +190,43 @@ static struct {
     { NULL,		NULL }
 };
 
-static struct {
+static struct proxy_desc {
     char *name;
     char *protocol;
     char *port;
+    bool user;
 } proxies[] = {
-    { PROXY_HTTP,	"HTTP tunnel (RFC 2817, e.g., squid)",	PORT_HTTP },
-    { PROXY_PASSTHRU,	"Sun telnet-passthru",			NULL   },
-    { PROXY_SOCKS4,	"SOCKS version 4",			PORT_SOCKS4 },
-    { PROXY_SOCKS5,	"SOCKS version 5 (RFC 1928)",		PORT_SOCKS5 },
-    { PROXY_TELNET,	"None (just send 'connect host port')",	NULL   },
-    { NULL,		NULL,					NULL   }
+    {
+	PROXY_HTTP,
+	"HTTP tunnel (RFC 2817, e.g., squid)",
+	PORT_HTTP,
+	true
+    },
+    {
+	PROXY_PASSTHRU,
+	"Sun telnet-passthru",
+	NULL,
+	false
+    },
+    {
+	PROXY_SOCKS4,
+	"SOCKS version 4",
+	PORT_SOCKS4,
+	true
+    },
+    {
+	PROXY_SOCKS5,
+	"SOCKS version 5 (RFC 1928)",
+	PORT_SOCKS5,
+	true
+    },
+    {
+	PROXY_TELNET,
+	"None (just send 'connect host port')",
+	NULL,
+	false
+    },
+    { NULL, NULL, NULL, false }
 };
 
 static int write_session_file(const session_t *s, char *us, const char *path);
@@ -236,6 +264,7 @@ static xsb_t xs_my;	/* current-user sessions */
 static xsb_t xs_public;	/* public sessions */
 
 static session_t empty_session;
+static HANDLE conin_handle = INVALID_HANDLE_VALUE;
 static HANDLE stdout_handle = INVALID_HANDLE_VALUE;
 
 static void write_user_settings(char *us, FILE *f);
@@ -1971,6 +2000,26 @@ get_proxy_server(session_t *s)
 }
 
 /**
+ * Find a proxy descriptor.
+ *
+ * @param[in] name	Proxy name
+ *
+ * @return proxy descriptor, or NULL
+ */
+static struct proxy_desc *
+find_proxy(char *name)
+{
+    int i;
+
+    for (i = 0; proxies[i].name != NULL; i++) {
+	if (!strcmp(name, proxies[i].name)) {
+	    return &proxies[i];
+	}
+    }
+    return NULL;
+}
+
+/**
  * Prompt for proxy server port
  *
  * @param[in,out] s	Session
@@ -1980,14 +2029,10 @@ get_proxy_server(session_t *s)
 static int
 get_proxy_server_port(session_t *s)
 {
+    struct proxy_desc *d;
     char pbuf[STR_SIZE];
-    int i;
 
-    for (i = 0; proxies[i].name != NULL; i++) {
-	if (!strcmp(s->proxy_type, proxies[i].name))
-	    break;
-    }
-    if (proxies[i].name == NULL) {
+    if ((d = find_proxy(s->proxy_type)) == NULL) {
 	errout("Internal error\n");
 	return -1;
     }
@@ -1998,21 +2043,21 @@ get_proxy_server_port(session_t *s)
 
 	if (s->proxy_port[0]) {
 	    printf("\nProxy server TCP port: [%s] ", s->proxy_port);
-	} else if (proxies[i].port != NULL) {
-	    printf("\nProxy server TCP port: [%s] ", proxies[i].port);
+	} else if (d->port != NULL) {
+	    printf("\nProxy server TCP port: [%s] ", d->port);
 	} else {
 	    printf("\nProxy server TCP port: ");
 	}
 	if (get_input(pbuf, STR_SIZE) == NULL) {
 	    return -1;
-	} else if (!strcmp(pbuf, "default") && proxies[i].port != NULL) {
-	    strcpy(s->proxy_port, proxies[i].port);
+	} else if (!strcmp(pbuf, "default") && d->port != NULL) {
+	    strcpy(s->proxy_port, d->port);
 	    break;
 	} else if (!pbuf[0]) {
 	    if (s->proxy_port[0]) {
 		break;
-	    } else if (proxies[i].port != NULL) {
-		strcpy(s->proxy_port, proxies[i].port);
+	    } else if (d->port != NULL) {
+		strcpy(s->proxy_port, d->port);
 		break;
 	    } else {
 		continue;
@@ -2039,9 +2084,10 @@ get_proxy_server_port(session_t *s)
 static int
 get_proxy(session_t *s)
 {
-    int i, j;
+    int i;
     char tbuf[STR_SIZE];
     char old_proxy[STR_SIZE];
+    struct proxy_desc *d;
 
     new_screen(s, NULL, "\
 Proxy\n\
@@ -2076,12 +2122,8 @@ wc3270 to use a proxy server to make the connection.");
 	    s->proxy_port[0] = '\0';
 	    return 0;
 	}
-	for (j = 0; proxies[j].name != NULL; j++) {
-	    if (!strcasecmp(tbuf, proxies[j].name)) {
-		break;
-	    }
-	}
-	if (proxies[j].name != NULL) {
+	d = find_proxy(tbuf);
+	if (d != NULL) {
 	    strcpy(s->proxy_type, tbuf);
 	    break;
 	}
@@ -2091,10 +2133,12 @@ wc3270 to use a proxy server to make the connection.");
 		s->proxy_type[0] = '\0';
 		s->proxy_host[0] = '\0';
 		s->proxy_port[0] = '\0';
+		s->proxy_user[0] = '\0';
+		s->proxy_password[0] = '\0';
 		return 0;
 	    } else {
-		j = n - 2;
-		strcpy(s->proxy_type, proxies[j].name);
+		d = &proxies[n - 2];
+		strcpy(s->proxy_type, d->name);
 		break;
 	    }
 	}
@@ -2105,18 +2149,131 @@ wc3270 to use a proxy server to make the connection.");
     if (strcmp(old_proxy, s->proxy_type)) {
 	s->proxy_host[0] = '\0';
 	s->proxy_port[0] = '\0';
+	s->proxy_user[0] = '\0';
+	s->proxy_password[0] = '\0';
 
 	if (get_proxy_server(s) < 0) {
 	    return -1;
 	}
 
-	if (proxies[j].port != NULL) {
-	    strcpy(s->proxy_port, proxies[j].port);
+	if (d->port != NULL) {
+	    strcpy(s->proxy_port, d->port);
 	} else if (get_proxy_server_port(s) < 0) {
 	    return -1;
 	}
     }
 
+    return 0;
+}
+
+/**
+ * Prompt for proxy user name.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_proxy_user(session_t *s)
+{
+    struct proxy_desc *d;
+    char pbuf[STR_SIZE];
+
+    if ((d = find_proxy(s->proxy_type)) == NULL) {
+	errout("Internal error\n");
+	return -1;
+    }
+
+    new_screen(s, NULL, "\
+Proxy User Name\n\
+\n\
+Enter the optional user name to use with the proxy. To specify no user name,\n\
+enter 'none'.");
+
+    for (;;) {
+	if (s->proxy_user[0]) {
+	    printf("\nProxy user name: [%s] ", s->proxy_user);
+	} else {
+	    printf("\nProxy user name: ");
+	}
+	if (get_input(pbuf, STR_SIZE) == NULL) {
+	    return -1;
+	} else if (!pbuf[0]) {
+	    if (s->proxy_user[0]) {
+		break;
+	    }
+	    continue;
+	}
+	if (!strcmp(pbuf, "none")) {
+	    s->proxy_user[0] = '\0';
+	    break;
+	} else if (strchr(pbuf, ':') || strchr(pbuf, '@')) {
+	    errout("\nInvalid user name.");
+	} else {
+	    strcpy(s->proxy_user, pbuf);
+	    break;
+	}
+    }
+    return 0;
+}
+
+/**
+ * Prompt for proxy password.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_proxy_password(session_t *s)
+{
+    struct proxy_desc *d;
+    char pbuf[STR_SIZE];
+
+    if ((d = find_proxy(s->proxy_type)) == NULL) {
+	errout("Internal error\n");
+	return -1;
+    }
+
+    new_screen(s, NULL, "\
+Proxy Password\n\
+\n\
+Enter the optional password to use with the proxy. To specify no password,\n\
+enter 'none'.\n\
+\n\
+The password will not be echoed.");
+
+    for (;;) {
+	char *input;
+
+	if (s->proxy_password[0]) {
+	    printf("\nProxy password: [***] ");
+	} else {
+	    printf("\nProxy password: ");
+	}
+	SetConsoleMode(conin_handle, ENABLE_LINE_INPUT |
+		ENABLE_PROCESSED_INPUT);
+	input = get_input(pbuf, STR_SIZE);
+	SetConsoleMode(conin_handle, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT |
+		ENABLE_PROCESSED_INPUT);
+	if (input == NULL) {
+	    return -1;
+	} else if (!pbuf[0]) {
+	    if (s->proxy_password[0]) {
+		break;
+	    }
+	    continue;
+	}
+	if (!strcmp(pbuf, "none")) {
+	    s->proxy_password[0] = '\0';
+	    break;
+	} else if (strchr(pbuf, ':') || strchr(pbuf, '@')) {
+	    errout("\nInvalid password.");
+	} else {
+	    strcpy(s->proxy_password, pbuf);
+	    break;
+	}
+    }
     return 0;
 }
 
@@ -2952,6 +3109,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     session_t old_session;
     char *old_us = NULL;
     src_t ret = SRC_NONE;
+    struct proxy_desc *d;
 
     *change_shortcut = false;
 
@@ -3031,11 +3189,22 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	printf("%3d. Proxy .................. : %s\n", MN_PROXY,
 		s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 	if (s->proxy_type[0]) {
+	    d = find_proxy(s->proxy_type);
 	    printf("%3d.  Proxy Server .......... : %s\n",
 		    MN_PROXY_SERVER, s->proxy_host);
 	    if (s->proxy_port[0]) {
 		printf("%3d.  Proxy Server TCP Port . : %s\n",
 			MN_PROXY_PORT, s->proxy_port);
+	    }
+	    if (d != NULL && d->user) {
+		printf("%3d.  Proxy user name ....... : %s\n",
+			MN_PROXY_USER,
+			s->proxy_user[0]? s->proxy_user: "(none)");
+		if (s->proxy_user[0]) {
+		    printf("%3d.  Proxy password ........ : %s\n",
+			    MN_PROXY_PASSWORD,
+			    s->proxy_password[0]? "***": "(none)");
+		}
 	    }
 	}
 	printf("%3d. pr3287 Printer Session . : %s\n", MN_3287,
@@ -3184,6 +3353,33 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	    case MN_PROXY_PORT:
 		if (s->proxy_type[0]) {
 		    if (get_proxy_server_port(s) < 0) {
+			ret = SRC_ERR;
+			goto done;
+		    }
+		} else {
+		    errout("Invalid entry.\n");
+		    invalid = 1;
+		}
+		break;
+	    case MN_PROXY_USER:
+		if (s->proxy_type[0] &&
+			(d = find_proxy(s->proxy_type)) != NULL &&
+			d->user) {
+		    if (get_proxy_user(s) < 0) {
+			ret = SRC_ERR;
+			goto done;
+		    }
+		} else {
+		    errout("Invalid entry.\n");
+		    invalid = 1;
+		}
+		break;
+	    case MN_PROXY_PASSWORD:
+		if (s->proxy_type[0] &&
+			s->proxy_user[0] &&
+			(d = find_proxy(s->proxy_type)) != NULL &&
+			d->user) {
+		    if (get_proxy_password(s) < 0) {
 			ret = SRC_ERR;
 			goto done;
 		    }
@@ -4619,9 +4815,13 @@ write_session_file(const session_t *session, char *us, const char *path)
     }
 
     if (session->proxy_type[0]) {
-	fprintf(f, "wc3270.%s: %s:%s%s%s%s%s\n",
+	fprintf(f, "wc3270.%s: %s:%s%s%s%s%s%s%s%s%s\n",
 		ResProxy,
 		session->proxy_type,
+		session->proxy_user[0]? session->proxy_user: "",
+		session->proxy_password[0]? ":": "",
+		session->proxy_password[0]? session->proxy_password: "",
+		session->proxy_user[0]? "@": "",
 		strchr(session->proxy_host, ':')? "[": "",
 		session->proxy_host,
 		strchr(session->proxy_host, ':')? "]": "",
@@ -4901,6 +5101,14 @@ main(int argc, char *argv[])
     name_size = sizeof(username) / sizeof(TCHAR);
     if (GetUserName(username, &name_size) == 0) {
 	errout("GetUserName failed, error %ld\n", (long)GetLastError());
+	return 1;
+    }
+
+    /* Get the console input handle. */
+    conin_handle = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+	    FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (conin_handle == NULL) {
+	errout("CreateFile(CONIN$) failed, error %ld\n", (long)GetLastError());
 	return 1;
     }
 

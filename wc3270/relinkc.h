@@ -36,7 +36,7 @@
 
 #define STR_SIZE	256
 
-#define WIZARD_VER	2
+#define WIZARD_VER	3
 
 typedef struct {
     	/* Fields for wc3270 3.3.9 (Wizard version 1) */
@@ -57,12 +57,16 @@ typedef struct {
 	char  printercp[STR_SIZE];	/*  pr3287 code page */
 	char  keymaps[STR_SIZE];	/* keymap names */
 
-	/* Field added for wc3270 3.3.10 (Wizard version 2) */
+	/* Fields added for wc3270 3.3.10 (Wizard version 2) */
 	unsigned char flags;		/* miscellaneous flags */
 	unsigned char ov_rows;		/* oversize rows */
 	unsigned char ov_cols;		/* oversize columns */
 	unsigned char point_size;	/* font point size */
 	unsigned char flags2;		/* more flags */
+
+	/* Fields added for wc3270 4.0ga10 (Wizard version 3) */
+	char  proxy_user[STR_SIZE];	/* proxy username */
+	char  proxy_password[STR_SIZE];	/* proxy password */
 } session_t;
 
 #define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */
