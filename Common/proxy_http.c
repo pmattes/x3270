@@ -138,10 +138,11 @@ proxy_negotiate_ret_t
 proxy_http_continue(void)
 {
     char *space;
+    bool nl = false;
 
     /*
      * Process the reply.
-     * Read a byte at a time until \n or EOF.
+     * Read a byte at a time until two \n or EOF.
      */
     for (;;) {
 	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
@@ -165,20 +166,32 @@ proxy_http_continue(void)
 	    popup_an_error("HTTP Proxy: unexpected EOF");
 	    return PX_FAILURE;
 	}
-	if (ps.rbuf[ps.nread] == '\r') {
-	    continue;
-	}
-	if (ps.rbuf[ps.nread] == '\n') {
-	    break;
-	}
 	if (++ps.nread >= RBUF) {
 	    ps.nread = RBUF - 1;
 	    break;
 	}
+	if (ps.nread && ps.rbuf[ps.nread - 1] == '\n') {
+	    if (nl) {
+		break;
+	    }
+	    nl = true;
+	}
     }
-    ps.rbuf[ps.nread] = '\0';
 
     trace_netdata('<', ps.rbuf, ps.nread);
+    if (ps.rbuf[ps.nread - 1] == '\n') {
+	--ps.nread;
+    }
+    if (ps.rbuf[ps.nread - 1] == '\r') {
+	--ps.nread;
+    }
+    if (ps.rbuf[ps.nread - 1] == '\n') {
+	--ps.nread;
+    }
+    if (ps.rbuf[ps.nread - 1] == '\r') {
+	--ps.nread;
+    }
+    ps.rbuf[ps.nread] = '\0';
     vtrace("HTTP Proxy: recv '%s'\n", (char *)ps.rbuf);
 
     if (strncmp((char *)ps.rbuf, "HTTP/", 5) ||
