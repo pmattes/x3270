@@ -99,7 +99,7 @@ x3270-man.html:
 x3270-script.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-script.html
 Unix-x3270if.html:
-	cd ../s3270 && $(MAKE) -f Makefile.aux html/Unix-x3270if.html
+	cd ../x3270if && $(MAKE) -f Makefile.aux html/Unix-x3270if.html
 
 wc3270-man.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
@@ -110,7 +110,7 @@ wpr3287-man.html:
 ws3270-man.html:
 	cd ../ws3270 && $(MAKE) -f Makefile.aux html/ws3270-man.html
 Windows-x3270if.html:
-	cd ../ws3270 && $(MAKE) -f Makefile.aux html/Windows-x3270if.html
+	cd ../wx3270if && $(MAKE) -f Makefile.aux html/Windows-x3270if.html
 
 c3270-Resources.html:
 	cd ../c3270 && $(MAKE) -f Makefile.aux html/Resources.html
