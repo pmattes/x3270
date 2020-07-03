@@ -1061,6 +1061,7 @@ static res_t base_resources[] = {
     { ResLocalCp,	aoffset(local_cp),	XRM_INT },
 #endif /*]*/
     { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
+    { ResMacros,	aoffset(macros),	XRM_STRING },
     { ResModel,	aoffset(model),			XRM_STRING },
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
