@@ -1147,7 +1147,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    argv++;
 #if defined(_WIN32) /*[*/
 	} else if (!strcasecmp(argv[0], KwDashShareConsole)) {
-	    share_console = false;
+	    share_console = true;
 	    argc--;
 	    argv++;
 #endif /*]*/
