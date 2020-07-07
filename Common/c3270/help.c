@@ -214,7 +214,11 @@ static struct {
 # endif /*]*/
 	    P_INTERACTIVE, "Save screen images to printer" },
 	{ AnScreenTrace, KwOff, P_INTERACTIVE, "Stop saving screen images" },
-	{ AnScript, "[" KwDashAsync ",][" KwDashNoLock ",][" KwDashSingle ",]<path>[,<arg>...]",
+	{ AnScript, "[" KwDashAsync ",][" KwDashNoLock ",][" KwDashSingle ",]"
+#if defined(_WIN32) /*[*/
+	    "[" KwDashShareConsole ",]"
+#endif /*]*/
+	    "<path>[,<arg>...]",
 	    P_SCRIPTING, "Run a child script" },
 	{ AnScroll, KwForward "|" KwBackward, P_INTERACTIVE, "Scroll screen" },
 	{ AnSet, "[<setting-name>,value]", P_INTERACTIVE|P_SCRIPTING,
