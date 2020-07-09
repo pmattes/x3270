@@ -271,8 +271,9 @@ safe_param(const char *s)
     varbuf_t r;
     char c;
     char *ret;
+    bool quoted = false;
 
-    if (strcspn(s, " ,()\\\"") == strlen(s)) {
+    if (strcspn(s, " ,()\\\b\f\r\n\t\v\"") == strlen(s)) {
 	/* Safe already. */
 	return (char *)s;
     }
@@ -281,18 +282,30 @@ safe_param(const char *s)
     vb_init(&r);
     vb_appends(&r, "\"");
     while ((c = *s++)) {
-	switch (c) {
-	case '\\':
-	    vb_appends(&r, "\\\\");
-	    break;
-	case '"':
-	    vb_appends(&r, "\\\"");
-	    break;
-	default:
+	if (quoted) {
+	    /* Pass the backslash and whatever follows. */
+	    vb_appends(&r, "\\");
 	    vb_append(&r, &c, 1);
-	    break;
+	    quoted = false;
+	} else {
+	    if (c == '\\') {
+		/* Remember a backslash. */
+		quoted = true;
+	    } else if (c == '"') {
+		/* Double quotes need to be escaped. */
+		vb_appends(&r, "\\\"");
+	    } else {
+		/* Pass through anything else. */
+		vb_append(&r, &c, 1);
+	    }
 	}
     }
+
+    if (quoted) {
+	/* Trailing backslash must be quoted. */
+	vb_appends(&r, "\\\\");
+    }
+
     vb_appends(&r, "\"");
     ret = vb_consume(&r);
     lazya(ret);
