@@ -1944,9 +1944,8 @@ start_auto_shortcut(int argc, char *argv[])
     }
 
 #if defined(AS_DEBUG) /*[*/
-    printf("Running auto-shortcut\n");
+    printf("Running auto-shortcut, profile path is %s\n", profile_path);
     fflush(stdout);
-    Sleep(5);
 #endif /*]*/
 
     /* Read the session file into 's'. */
