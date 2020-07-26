@@ -58,7 +58,7 @@ all: $(PROGS)
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
-	sh $< wb3270 $(filter %.txt,$^) >$(XVERSION)
+	sh $< b3270 $(filter %.txt,$^) >$(XVERSION)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 

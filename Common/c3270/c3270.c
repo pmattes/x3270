@@ -100,6 +100,7 @@
 #include "screentrace.h"
 #include "utf8.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "xio.h"
 #include "xpopen.h"
 #include "xscroll.h"
@@ -220,7 +221,7 @@ char *mydesktop = NULL;
 char *mydocs3270 = NULL;
 char *commondocs3270 = NULL;
 unsigned windirs_flags;
-static void start_auto_shortcut(void);
+static void start_auto_shortcut(int argc, char *argv[]);
 
 static struct {
     HANDLE thread;		/* thread handle */
@@ -549,6 +550,9 @@ main(int argc, char *argv[])
     const char	*cl_hostname = NULL;
 #if defined(_WIN32) /*[*/
     char	*delenv;
+    int		save_argc;
+    char	**save_argv;
+    int		i;
 #endif /*]*/
 
     Warning_redirect = c3270_Warning;
@@ -616,7 +620,18 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);
+#endif
+
+#if defined(_WIN32) /*[*/
+    /* Save the command-line arguments for auto-shortcut mode. */
+    save_argc = argc;
+    save_argv = (char **)Malloc((argc + 1) * sizeof(char *));
+    for (i = 0; i < argc; i++) {
+	save_argv[i] = NewString(argv[i]);
+    }
+    save_argv[i] = NULL;
 #endif /*]*/
+
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
     printf("%s\n\nType 'show copyright' for full copyright information.\n\
@@ -633,7 +648,7 @@ Type 'help' for help information.\n\n",
 
     /* Check for auto-shortcut mode. */
     if (appres.c3270.auto_shortcut) {
-	start_auto_shortcut();
+	start_auto_shortcut(save_argc, save_argv);
 	exit(0);
     }
 #endif /*]*/
@@ -1905,7 +1920,7 @@ merge_profile(void)
 #if defined(_WIN32) /*[*/
 /* Start a auto-shortcut-mode copy of wc3270.exe. */
 static void
-start_auto_shortcut(void)
+start_auto_shortcut(int argc, char *argv[])
 {
     char *tempdir;
     FILE *f;
@@ -1915,9 +1930,10 @@ start_auto_shortcut(void)
     char linkpath[MAX_PATH];
     char sesspath[MAX_PATH];
     char delenv[32 + MAX_PATH];
-    char args[1024];
     HINSTANCE h;
     char *cwd;
+    varbuf_t r;
+    int i;
 
     /* Make sure there is a session file. */
     if (profile_path == NULL) {
@@ -1928,7 +1944,7 @@ start_auto_shortcut(void)
     }
 
 #if defined(AS_DEBUG) /*[*/
-    printf("Running auto-shortcut\n");
+    printf("Running auto-shortcut, profile path is %s\n", profile_path);
     fflush(stdout);
 #endif /*]*/
 
@@ -1968,18 +1984,35 @@ start_auto_shortcut(void)
 	fflush(stderr);
 	x3270_exit(1);
     }
-    sprintf(args, "+S \"%s\"", sesspath);
+
+    /*
+     * Copy the command-line arguments. Surround each argument with double
+     * quotes, and hope that is sufficient.
+     */
+    vb_init(&r);
+    for (i = 1; i < argc; i++) {
+	if (strcmp(argv[i], OptAutoShortcut) && strcmp(argv[i], profile_path)) {
+	    vb_appendf(&r, "\"%s\" ", argv[i]);
+	}
+    }
+    vb_appendf(&r, OptNoAutoShortcut " \"%s\"", sesspath);
+#if defined(AS_DEBUG) /*[*/
+    printf("args are '%s'\n", vb_buf(&r));
+    fflush(stdout);
+#endif /*]*/
+
     cwd = getcwd(NULL, 0);
     hres = create_shortcut(&s,		/* session */
 			   exepath,	/* .exe    */
 			   linkpath,	/* .lnk    */
-			   args,	/* args    */
+			   (char *)vb_buf(&r),	/* args    */
 			   cwd		/* cwd     */);
     if (!SUCCEEDED(hres)) {
 	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
 	fflush(stderr);
 	x3270_exit(1);
     }
+    vb_free(&r);
 #if defined(AS_DEBUG) /*[*/
     printf("Created ShellLink '%s'\n", linkpath);
     fflush(stdout);

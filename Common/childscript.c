@@ -1114,6 +1114,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     int outpipe[2] = { -1, -1 };
     int stdoutpipe[2];
 #else /*][*/
+    bool share_console = false;
     STARTUPINFO startupinfo;
     PROCESS_INFORMATION process_information;
     char *args;
@@ -1144,6 +1145,12 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    stdout_redirect = false;
 	    argc--;
 	    argv++;
+#if defined(_WIN32) /*[*/
+	} else if (!strcasecmp(argv[0], KwDashShareConsole)) {
+	    share_console = true;
+	    argc--;
+	    argv++;
+#endif /*]*/
 	} else {
 	    break;
 	}
@@ -1330,7 +1337,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	args = t;
     }
     if (CreateProcess(NULL, args, NULL, NULL, TRUE,
-		stdout_redirect? DETACHED_PROCESS: 0,
+		(stdout_redirect && !share_console)? DETACHED_PROCESS: 0,
 		NULL, NULL, &startupinfo, &process_information) == 0) {
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));

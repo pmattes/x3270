@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2006-2009, 2013-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -322,7 +322,7 @@ read_session(FILE *f, session_t *s, char **usp)
 		}
 		if (s_off > sizeof(*s)) {
 #if defined(DEBUG_EDIT) /*[*/
-		    printf("[s overflow: %d > %d]\n", s_off, sizeof(*s));
+		    printf("[s overflow: %d > %d]\n", s_off, (int)sizeof(*s));
 #endif /*]*/
 		    return 0;
 		}

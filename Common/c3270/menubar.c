@@ -1013,7 +1013,7 @@ menu_init(void)
 	if (j == FM_WIZARD_SESS) {
 	    char *text;
 
-	    text = xs_buffer("Edit Session %s", profile_path);
+	    text = xs_buffer("Edit Session %s", profile_name);
 
 	    file_menu_items[j] = add_item(file_menu, text,
 		    file_menu_actions[j], profile_path);

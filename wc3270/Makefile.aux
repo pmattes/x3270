@@ -68,11 +68,11 @@ package.ps1: version.txt package.ps1.tmpl mkiss
 
 # Create the packaging archive.
 .PHONY: package.zip
-package.zip: wc3270.iss package.ps1 wc3270-32.zipit wc3270-64.zipit
+package.zip: wc3270.iss package.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.zipit wx3270-32.zipit wx3270-64.zipit
 	(cd .. && \
 	    rm -f wc3270/package.zip && \
 	    zip wc3270/package.zip obj/win32 obj/win64 -r -i '*.exe' && \
 	    zip wc3270/package.zip wc3270/*.txt wc3270/*.zipit wc3270/wc3270.iss wc3270/x3270-icon2.bmp && \
-	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/wc3270.iss)
+	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/CopyToWx3270.ps1 wc3270/wc3270.iss)
 
 windows-release: package.zip

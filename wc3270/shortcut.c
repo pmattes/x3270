@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2015-2017 Paul Mattes.
+ * Copyright (c) 1996-2009, 2015-2017, 2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,40 +42,32 @@
 #include "shortcutc.h"
 #include "winvers.h"
 
-#if !defined EXP_PROPERTYSTORAGE_SIG /*[*/
-# define EXP_PROPERTYSTORAGE_SIG 0xa0000009
-#endif /*]*/
-
-#define MASK16	0xffff
-
-/*
- * An opaque EXP_PROPERTYSTORAGE block that has "Ctrl key shortcuts" disabled.
- */
-static unsigned short new9block[] = {
-    0x0150, 0x0000, 0x0009, 0xa000, 0x0089, 0x0000, 0x5331, 0x5350,
-    0x8ae2, 0x4658, 0x4cbc, 0x4338, 0xfcbb, 0x9313, 0x9826, 0xce6d,
-    0x006d, 0x0000, 0x0004, 0x0000, 0x1f00, 0x0000, 0x2d00, 0x0000,
-    0x5300, 0x2d00, 0x3100, 0x2d00, 0x3500, 0x2d00, 0x3200, 0x3100,
-    0x2d00, 0x3800, 0x3300, 0x3400, 0x3400, 0x3900, 0x3900, 0x3600,
-    0x3400, 0x2d00, 0x3100, 0x3800, 0x3200, 0x3100, 0x3900, 0x3100,
-    0x3900, 0x3700, 0x3600, 0x3300, 0x2d00, 0x3200, 0x3100, 0x3000,
-    0x3600, 0x3900, 0x3500, 0x3300, 0x3200, 0x3700, 0x3700, 0x2d00,
-    0x3100, 0x3000, 0x3000, 0x3100, 0x0000, 0x0000, 0x0000, 0x0000,
-    0x8200, 0x0000, 0x3100, 0x5053, 0x0753, 0x5706, 0x960c, 0xde03,
-    0x9d43, 0xe361, 0xd721, 0x50df, 0x1126, 0x0000, 0x0300, 0x0000,
-    0x0000, 0x000b, 0x0000, 0xffff, 0x0000, 0x0011, 0x0000, 0x0001,
-    0x0000, 0x0b00, 0x0000, 0xff00, 0x00ff, 0x1100, 0x0000, 0x0200,
-    0x0000, 0x0000, 0x000b, 0x0000, 0xffff, 0x0000, 0x0011, 0x0000,
-    0x0004, 0x0000, 0x0b00, 0x0000, 0xff00, 0x00ff, 0x1100, 0x0000,
-    0x0600, 0x0000, 0x0000, 0x0002, 0x0000, 0x00ff, 0x0000, 0x0011,
-    0x0000, 0x0005, 0x0000, 0x0b00, 0x0000, 0xff00, 0x00ff, 0x0000,
-    0x0000, 0x3900, 0x0000, 0x3100, 0x5053, 0xb153, 0x6d16, 0xad44,
-    0x708d, 0xa748, 0x4048, 0xa42e, 0x783d, 0x1d8c, 0x0000, 0x6800,
-    0x0000, 0x0000, 0x0048, 0x0000, 0xf10d, 0x4e87, 0x0000, 0x0000,
-    0x0000, 0x0660, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+/* Block to append to the shortcut to turn off 'Enable Ctrl key shortcuts'. */
+static unsigned char append[] = {
+    0xf4, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0xa0, 0xe8, 0x00, 0x00, 0x00,
+    0x31, 0x53, 0x50, 0x53, 0x07, 0x06, 0x57, 0x0c, 0x96, 0x03, 0xde, 0x43,
+    0x9d, 0x61, 0xe3, 0x21, 0xd7, 0xdf, 0x50, 0x26, 0x11, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00,
+    0x00, 0x11, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x13, 0x00,
+    0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11, 0x00, 0x00, 0x00, 0x0c, 0x00,
+    0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11,
+    0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x11, 0x00, 0x00,
+    0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff,
+    0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0b,
+    0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x06,
+    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00,
+    0x11, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00,
+    0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11, 0x00,
+    0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff,
+    0xff, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00,
+    0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static void substitute9block(const char *path_link);
+static void clear_ccs(const char *path_link);
 
 /*
  * create_link - uses the shell's IShellLink and IPersistFile interfaces to
@@ -243,30 +235,25 @@ out:
     }
 
     if (SUCCEEDED(hres) && IsWindowsVersionOrGreater(10, 0, 0)) {
-	substitute9block(path_link);
+	clear_ccs(path_link);
     }
 
     return hres;
 } 
 
 /*
- * Substitute the opaque EXP_PROPERTYSTORAGE block in a completed link with
- * one that disables Windows 10 "Ctrl key shortcuts".
+ * Clear the "Enable Ctrl key shortcuts" option in a link.
  *
  * Obviously this is a hack, owing to the lack of documentation of the opaque
  * block, and the apparent lack of any other way to accomplish this.
  */
 static void
-substitute9block(const char *path_link)
+clear_ccs(const char *path_link)
 {
-#   define WINDOW	4
     char temp_path[MAX_PATH];
     FILE *f, *g;
-    unsigned short window[WINDOW];
-    int head = 0;
-    int tail = 0;
-    int count = 0;
-    bool matched = false;
+    unsigned char buf[1024];
+    size_t nr;
 
     /* Create the temporary name. */
     strcpy(temp_path, path_link);
@@ -275,7 +262,7 @@ substitute9block(const char *path_link)
     /* Open the existing link. */
     f = fopen(path_link, "rb+");
     if (f == NULL) {
-	fprintf(stderr, "substitute9block: Re-open of link '%s' failed: %s\n",
+	fprintf(stderr, "clear_ccs: Re-open of link '%s' failed: %s\n",
 		path_link, strerror(errno));
 	return;
     }
@@ -284,102 +271,34 @@ substitute9block(const char *path_link)
     g = fopen(temp_path, "wb");
     if (g == NULL) {
 	fclose(f);
-	fprintf(stderr, "substitute9block: Open of temporary link '%s' "
+	fprintf(stderr, "clear_ccs: Open of temporary link '%s' "
 		"failed: %s\n", temp_path, strerror(errno));
 	return;
     }
 
-    /*
-     * Read until we get to the two-DWORD sequence:
-     *  xxxxyyyy a0000009
-     * xxxxyyyy is the length.
-     * a0000009 identifies the EXP_PROPERTYSTORAGE block.
-     *
-     * The file is 16-bit (but not 32-bit) aligned, so we need to read two
-     * bytes at a time.
-     *
-     * Store the chunks in a 4-element array. As we read new value into the
-     * tail, write out the head.
-     */
-    for (;;) {
-	unsigned skip_short;
-	unsigned short skip_buf;
-
-	/* Write out the head. */
-	if (count == WINDOW) {
-	    if (fwrite(&window[head], sizeof(unsigned short), 1, g) != 1) {
-		fprintf(stderr, "substitute9block: Write/copy to temp link "
-			"failed: %s\n", strerror(errno));
-	    }
-	    head = (head + 1) % WINDOW;
-	}
-
-	/* Read into the tail. */
-	if (fread(&window[tail], sizeof(unsigned short), 1, f) != 1) {
-	    /* All done. */
+    /* Copy. */
+    while (true) {
+	nr = fread(buf, 1, 1024, f);
+	if (nr > 0) {
+	    fwrite(buf, 1, nr, g);
+	} else {
 	    break;
 	}
-	if (++count > WINDOW) {
-	    count = WINDOW;
-	}
-	tail = (tail + 1) % WINDOW;
-
-	/* Check for a match. */
-	if ((count != WINDOW) ||
-		(window[(head + 2) % WINDOW] !=
-		    (EXP_PROPERTYSTORAGE_SIG & MASK16)) ||
-		(window[(head + 3) % WINDOW] !=
-		    EXP_PROPERTYSTORAGE_SIG >> 16)) {
-	    /* No match. */
-	    continue;
-	}
-
-	/*
-	 * A match. The two elements at the head are the length in bytes to
-	 * skip, including what has already been read into the window.
-	 */
-	matched = true;
-	skip_short = (((window[(head + 1) % WINDOW] << 16) + window[head])
-		/ sizeof(unsigned short)) - WINDOW;
-	while (skip_short--) {
-	    fread(&skip_buf, sizeof(unsigned short), 1, f);
-	}
-
-	/* Substitute a different block. */
-	if (fwrite(new9block, sizeof(new9block), 1, g) != 1) {
-	    fprintf(stderr, "substitute9block: Write/subst to temp link "
-		    "failed: %s\n", strerror(errno));
-	}
-
-	/* Keep on reading. */
-	count = 0;
-	head = 0;
-	tail = 0;
     }
     fclose(f);
 
-    /* Write out the remainder of the window. */
-    while (count--) {
-	if (fwrite(&window[head], sizeof(unsigned short), 1, g) != 1) {
-	    fprintf(stderr, "substitute9block: Write/tail to temp link "
-		    "failed: %s\n", strerror(errno));
-	}
-	head = (head + 1) % WINDOW;
-    }
+    /* Back up four bytes and append. */
+    fseek(g, -4, SEEK_END);
+    fwrite(append, 1, sizeof(append), g);
     fclose(g);
 
     /* Delete the old file and rename the temporary to that name. */
     if (unlink(path_link) < 0) {
-	fprintf(stderr, "substitute9block: Unlink of original link failed: "
+	fprintf(stderr, "clear_ccs: Unlink of original link failed: "
 		"%s\n", strerror(errno));
     }
     if (rename(temp_path, path_link) < 0) {
-	fprintf(stderr, "substitute9block: Rename of temp link failed: %s\n",
+	fprintf(stderr, "clear_ccs: Rename of temp link failed: %s\n",
 		strerror(errno));
-    }
-
-    if (!matched) {
-	fprintf(stderr, "substitute9block: No match for EXP_PROPERTYSTORAGE "
-		"block!\n");
     }
 }

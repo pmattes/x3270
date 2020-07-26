@@ -240,6 +240,7 @@
 #define KwDashNoLock	"-nolock"
 #define KwDashSingle	"-single"
 #define KwDashNoStdoutRedirect "-nostdoutredirect"
+#define KwDashShareConsole "-shareconsole"
 /*  Parameters to Scroll(). */
 #define KwForward	"forward"
 #define KwBackward	"backward"

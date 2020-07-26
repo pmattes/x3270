@@ -53,7 +53,7 @@ all: wpr3287.exe pr3287.exe
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
-	sh $< wpr3287 $(filter %.txt,$^) >$(XVERSION)
+	sh $< pr3287 $(filter %.txt,$^) >$(XVERSION)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
