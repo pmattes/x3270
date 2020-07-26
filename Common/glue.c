@@ -286,7 +286,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	    pname = *cl_hostname;
 	}
 	profile_name = NewString(pname);
-	Replace(profile_path, NewString(profile_name));
+	Replace(profile_path, NewString(*cl_hostname));
 	profile_name[strlen(profile_name) - session_suffix_len[suffix_match]]
 	    = '\0';
 	*cl_hostname = appres.hostname; /* might be NULL */
