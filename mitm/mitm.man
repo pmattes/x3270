@@ -1,5 +1,5 @@
 '\" t
-.TH mitm 1 "07 July 2020"
+.TH mitm 1 "26 July 2020"
 .SH "NAME"
 mitm \- network stream trace facility
 .SH "SYNOPSIS"
