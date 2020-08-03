@@ -132,6 +132,16 @@ cat <<EOF
     </td>
     <td class=content valign="top">
 EOF
+ case "$html" in
+ documentation*)
+     cat <<EOF
+<hr>
+<p><b>Note:</b> This page is no longer being maintained for x3270 4.0 and later.
+Please refer to the <a href="https://x3270.miraheze.org/wiki/Main_Page">the x3270 Wiki</a> for up-to-date documentation.</p>
+<hr>
+EOF
+     ;;
+ esac
  sed "s/CYEAR/$cyear/g" ${html}-body.html
  cat <<EOF
     </td>
