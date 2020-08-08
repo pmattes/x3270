@@ -293,6 +293,17 @@ set_rows_cols(int mn, int ovc, int ovr)
 }
 
 /*
+ * Stop the timeout in the OIA.
+ * Called when there is an explicit Reset().
+ */
+void
+ctlr_reset(void)
+{
+    ticking_stop(NULL);
+    status_untiming();
+}
+
+/*
  * Set the formatted screen flag.  A formatted screen is a screen that
  * has at least one field somewhere on it.
  */

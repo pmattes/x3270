@@ -71,6 +71,7 @@ const char *ctlr_query_max_size_old(void);
 void ctlr_read_buffer(unsigned char aid_byte);
 void ctlr_read_modified(unsigned char aid_byte, bool all);
 void ctlr_reinit(unsigned cmask);
+void ctlr_reset(void);
 void ctlr_scroll(unsigned char fg, unsigned char bg);
 void ctlr_shrink(void);
 void ctlr_snap_buffer(void);
