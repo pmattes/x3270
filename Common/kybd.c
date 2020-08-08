@@ -1128,10 +1128,17 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	    return operator_error(KL_OERR_PROTECTED, oerr_fail);
 	}
     }
-    if (appres.numeric_lock && FA_IS_NUMERIC(fa) &&
+    if (FA_IS_NUMERIC(fa) &&
 	    !((ebc >= EBC_0 && ebc <= EBC_9) ||
-		ebc == EBC_minus || ebc == EBC_period)) {
-	return operator_error(KL_OERR_NUMERIC, oerr_fail);
+	      ebc == EBC_minus ||
+	      ebc == EBC_period)) {
+	if (appres.numeric_lock) {
+	    return operator_error(KL_OERR_NUMERIC, oerr_fail);
+	} else {
+	    /* Ignore it, successfully. */
+	    vtrace("Ignoring non-numeric character in numeric field\n");
+	    return true;
+	}
     }
 
     /* Can't put an SBCS in a DBCS field. */
@@ -1400,8 +1407,14 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
     }
 
     /* Numeric? */
-    if (appres.numeric_lock && FA_IS_NUMERIC(fa)) {
-	return operator_error(KL_OERR_NUMERIC, oerr_fail);
+    if (FA_IS_NUMERIC(fa)) {
+	if (appres.numeric_lock) {
+	    return operator_error(KL_OERR_NUMERIC, oerr_fail);
+	} else {
+	    /* Ignore it, successfully. */
+	    vtrace("Ignoring non-numeric character in numeric field\n");
+	    return true;
+	}
     }
 
     /*
