@@ -1941,6 +1941,9 @@ do_reset(bool explicit)
     mcursor_normal();
     composing = NONE;
     status_compose(false, 0, KT_STD);
+    if (explicit) {
+	ctlr_reset();
+    }
 }
 
 static bool
