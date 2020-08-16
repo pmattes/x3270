@@ -567,5 +567,4 @@
 #define ResPrintTextSize	"printTextSize"
 #define ResPrintTextVerticalMargin "printTextVerticalMargin"
 #define ResPrintWindowCommand	"printWindowCommand"
-#define ResTraceCommand		"traceCommand"
 #define ResUser			"user"
