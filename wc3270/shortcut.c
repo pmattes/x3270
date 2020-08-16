@@ -42,32 +42,14 @@
 #include "shortcutc.h"
 #include "winvers.h"
 
-/* Block to append to the shortcut to turn off 'Enable Ctrl key shortcuts'. */
-static unsigned char append[] = {
-    0xf4, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0xa0, 0xe8, 0x00, 0x00, 0x00,
-    0x31, 0x53, 0x50, 0x53, 0x07, 0x06, 0x57, 0x0c, 0x96, 0x03, 0xde, 0x43,
-    0x9d, 0x61, 0xe3, 0x21, 0xd7, 0xdf, 0x50, 0x26, 0x11, 0x00, 0x00, 0x00,
-    0x03, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00,
-    0x00, 0x11, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x13, 0x00,
-    0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11, 0x00, 0x00, 0x00, 0x0c, 0x00,
-    0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11,
-    0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-    0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x11, 0x00, 0x00,
-    0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff, 0xff,
-    0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0b,
-    0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x06,
-    0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00,
-    0x11, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00,
-    0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x11, 0x00,
-    0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0xff,
-    0xff, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00,
-    0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+/* GUID for Windows 10 v2 console properties. */
+#define GUID_DATA1	0x0c570607
+#define GUID_DATA2	0x0396
+#define GUID_DATA3	0x43de
+#define GUID_DATA4	0x9d, 0x61, 0xe3, 0x21, 0xd7, 0xdf, 0x50, 0x26 
 
-static void clear_ccs(const char *path_link);
+#define PID_FORCE_V2	1	/* Force V2 console mode. */
+#define PID_DISABLE_CTRL_KEYS 4	/* Disable control key shortcuts */
 
 /*
  * create_link - uses the shell's IShellLink and IPersistFile interfaces to
@@ -88,6 +70,7 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     IShellLink*		psl = NULL; 
     IShellLinkDataList*	psldl = NULL; 
     IPersistFile*	ppf = NULL;
+    IPropertyStore*	pps = NULL;
     NT_CONSOLE_PROPS	p;
     WORD		wsz[MAX_PATH];
 
@@ -198,6 +181,49 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     }
 
     /*
+     * On Windows 10, add (just) the v2 console properties we need.
+     */
+    if (IsWindowsVersionOrGreater(10, 0, 0)) {
+	PROPVARIANT propvarBool;
+	PROPERTYKEY key;
+	static unsigned char guid_bytes[] = { GUID_DATA4 };
+
+	hres = psl->lpVtbl->QueryInterface(psl, &IID_IPropertyStore,
+		(void **)&pps);
+	if (!SUCCEEDED(hres)) {
+	    fprintf(stderr, "create_link: QueryInterface(PropertyStore) "
+		    "failed: %ld\n", hres);
+	    goto out;
+	}
+
+	/* Set a Boolean property to True. */
+	propvarBool.vt = VT_BOOL;
+	propvarBool.boolVal = VARIANT_TRUE;
+
+	/* Set up the GUID for the key. */
+	key.fmtid.Data1 = GUID_DATA1;
+	key.fmtid.Data2 = GUID_DATA2;
+	key.fmtid.Data3 = GUID_DATA3;
+	memcpy(key.fmtid.Data4, guid_bytes, sizeof(key.fmtid.Data4));
+
+	/* Set 'force v2' to true. */
+	key.pid = PID_FORCE_V2;
+	pps->lpVtbl->SetValue(pps, &key, &propvarBool);
+
+	/* Set 'ctrl keys disable' to true. */
+	key.pid = PID_DISABLE_CTRL_KEYS;
+	pps->lpVtbl->SetValue(pps, &key, &propvarBool);
+
+	/* Commit the changes. */
+	hres = pps->lpVtbl->Commit(pps);
+	if (!SUCCEEDED(hres)) {
+	    fprintf(stderr, "create_link: PropertyStore Commit() failed: "
+		    "%ld\n", hres);
+	    goto out;
+	}
+    }
+
+    /*
      * Query IShellLink for the IPersistFile interface for saving the
      * shortcut in persistent storage.
      */
@@ -229,76 +255,13 @@ out:
     if (psl != NULL) {
 	psl->lpVtbl->Release(psl);
     }
+    if (pps != NULL) {
+	pps->lpVtbl->Release(pps);
+    }
 
     if (initialized) {
 	CoUninitialize();
     }
 
-    if (SUCCEEDED(hres) && IsWindowsVersionOrGreater(10, 0, 0)) {
-	clear_ccs(path_link);
-    }
-
     return hres;
 } 
-
-/*
- * Clear the "Enable Ctrl key shortcuts" option in a link.
- *
- * Obviously this is a hack, owing to the lack of documentation of the opaque
- * block, and the apparent lack of any other way to accomplish this.
- */
-static void
-clear_ccs(const char *path_link)
-{
-    char temp_path[MAX_PATH];
-    FILE *f, *g;
-    unsigned char buf[1024];
-    size_t nr;
-
-    /* Create the temporary name. */
-    strcpy(temp_path, path_link);
-    strcat(temp_path, ".tmp");
-
-    /* Open the existing link. */
-    f = fopen(path_link, "rb+");
-    if (f == NULL) {
-	fprintf(stderr, "clear_ccs: Re-open of link '%s' failed: %s\n",
-		path_link, strerror(errno));
-	return;
-    }
-
-    /* Open the temporary link. */
-    g = fopen(temp_path, "wb");
-    if (g == NULL) {
-	fclose(f);
-	fprintf(stderr, "clear_ccs: Open of temporary link '%s' "
-		"failed: %s\n", temp_path, strerror(errno));
-	return;
-    }
-
-    /* Copy. */
-    while (true) {
-	nr = fread(buf, 1, 1024, f);
-	if (nr > 0) {
-	    fwrite(buf, 1, nr, g);
-	} else {
-	    break;
-	}
-    }
-    fclose(f);
-
-    /* Back up four bytes and append. */
-    fseek(g, -4, SEEK_END);
-    fwrite(append, 1, sizeof(append), g);
-    fclose(g);
-
-    /* Delete the old file and rename the temporary to that name. */
-    if (unlink(path_link) < 0) {
-	fprintf(stderr, "clear_ccs: Unlink of original link failed: "
-		"%s\n", strerror(errno));
-    }
-    if (rename(temp_path, path_link) < 0) {
-	fprintf(stderr, "clear_ccs: Rename of temp link failed: %s\n",
-		strerror(errno));
-    }
-}
