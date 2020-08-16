@@ -1,5 +1,5 @@
 '\" t
-.TH X3270-SCRIPT 1 "26 July 2020"
+.TH X3270-SCRIPT 1 "16 August 2020"
 .SH "NAME"
 Scripting Facilities for
 x3270,

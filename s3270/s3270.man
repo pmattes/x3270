@@ -1,5 +1,5 @@
 '\" t
-.TH s3270 1 "26 July 2020"
+.TH s3270 1 "16 August 2020"
 .SH "NAME"
 s3270 \-
 \s-1IBM\s+1 host access tool
@@ -174,7 +174,11 @@ only when s3270 cannot figure it out from the locale.)
 Specifies a macro to run at login time.
 .TP
 \fB\-minversion\fP \fIversion\fP
+<<<<<<< HEAD
 The minimum required version of \fBs3270\fP, e.g., 4.1alpha3.
+=======
+The minimum required version of \fBs3270\fP, e.g., 4.0ga11.
+>>>>>>> 972eee2... 4.0ga11 trial
 If the running version is less than the specified version, \fBs3270\fP
 will abort.
 The format of a version is

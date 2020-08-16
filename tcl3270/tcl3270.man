@@ -1,5 +1,5 @@
 '\" t
-.TH tcl3270 1 "26 July 2020"
+.TH tcl3270 1 "16 August 2020"
 .SH "NAME"
 tcl3270 \-
 \s-1IBM\s+1 host access tool
