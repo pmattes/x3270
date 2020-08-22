@@ -131,4 +131,5 @@ int ctlr_dbcs_postprocess(void);
 
 #define EC_SCROLL	0x01	/* Enable cursor from scroll logic */
 #define EC_NVT		0x02	/* Enable cursor from NVT */
+#define EC_CONNECT	0x04	/* Enable cursor from connection state */
 void ctlr_enable_cursor(bool enable, unsigned source);
