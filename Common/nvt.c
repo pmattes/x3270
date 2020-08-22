@@ -513,7 +513,7 @@ static int	pmi = 0;
 static char	pending_mbs[MB_MAX];
 static int	pe = 0;
 static unsigned char ped[PE_MAX];
-static bool	cursor_enabled = true;
+static bool	cursor_enabled = false;
 
 static bool  held_wrap = false;
 
@@ -1788,6 +1788,16 @@ nvt_in3270(bool in3270)
     }
 }
 
+/* Callback for when we change connection state. */
+static void
+nvt_connect(bool connected)
+{
+    if (cursor_enabled != CONNECTED) {
+	cursor_enabled = CONNECTED;
+	ctlr_enable_cursor(cursor_enabled, EC_NVT);
+    }
+}
+
 /*
  * External entry points
  */
@@ -2551,6 +2561,7 @@ nvt_register(void)
 
     /* Register for state changes. */
     register_schange(ST_3270_MODE, nvt_in3270);
+    register_schange(ST_CONNECT, nvt_connect);
 }
 
 /**

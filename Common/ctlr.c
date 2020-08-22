@@ -356,7 +356,10 @@ ctlr_connect(bool ignored _is_unused)
     crm_nattr = 0;
 
     /* On disconnect, reset the default and alternate dimensions. */
-    if (!CONNECTED) {
+    if (CONNECTED) {
+	ctlr_enable_cursor(true, EC_CONNECT);
+    } else {
+	ctlr_enable_cursor(false, EC_CONNECT);
 	defROWS = MODEL_2_ROWS;
 	defCOLS = MODEL_2_COLS;
 	altROWS = maxROWS;
@@ -3054,6 +3057,16 @@ ctlr_enable_cursor(bool enable, unsigned source)
 {
     static unsigned disables = 0;
     int new_disables;
+    static const char *source_name[] = {
+	NULL,
+	"scroll",
+	"nvt",
+	NULL,
+	"connect"
+    };
+
+    vtrace("ctlr_enable_cursor(%s, %s)\n", enable? ResTrue: ResFalse,
+	    source_name[source]);
 
     /* Compute the new disable mask. */
     if (enable) {
