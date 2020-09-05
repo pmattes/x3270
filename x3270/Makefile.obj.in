@@ -76,7 +76,7 @@ fallbacks.c: mkfb $(FALLBACKS)
 	./mkfb -o $@ $(filter-out mkfb,$^)
 
 mkfb: mkfb.c
-	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(filter %.c,$^)
 
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
