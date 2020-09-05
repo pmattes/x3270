@@ -496,8 +496,8 @@ static int      appl_cursor = 0;
 static int      saved_appl_cursor = 0;
 static int      wraparound_mode = 1;
 static int      saved_wraparound_mode = 1;
-static int      rev_wraparound_mode = 0;
-static int      saved_rev_wraparound_mode = 0;
+static bool     rev_wraparound_mode = false;
+static bool     saved_rev_wraparound_mode = false;
 static int	allow_wide_mode = 0;
 static int	saved_allow_wide_mode = 0;
 static int	wide_mode = 0;
@@ -629,8 +629,8 @@ ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
     saved_appl_cursor = 0;
     wraparound_mode = 1;
     saved_wraparound_mode = 1;
-    rev_wraparound_mode = 0;
-    saved_rev_wraparound_mode = 0;
+    rev_wraparound_mode = false;
+    saved_rev_wraparound_mode = false;
     allow_wide_mode = 0;
     saved_allow_wide_mode = 0;
     wide_mode = 0;
@@ -1538,7 +1538,7 @@ dec_set(int ig1 _is_unused, int ig2 _is_unused)
 	    allow_wide_mode = 1;
 	    break;
 	case 45:	/* reverse-wraparound mode */
-	    rev_wraparound_mode = 1;
+	    rev_wraparound_mode = true;
 	    break;
 	case 47:	/* alt buffer */
 	case 1049:
@@ -1575,7 +1575,7 @@ dec_reset(int ig1 _is_unused, int ig2 _is_unused)
 	    allow_wide_mode = 0;
 	    break;
 	case 45:	/* no reverse-wraparound mode */
-	    rev_wraparound_mode = 0;
+	    rev_wraparound_mode = false;
 	    break;
 	case 47:	/* alt buffer */
 	case 1049:
@@ -2585,4 +2585,15 @@ is_nvt(struct ea *ea, bool ascii_box_draw, ucs4_t *u)
 	return true;
     }
     return false;
+}
+
+/* Do a backspace with wraparound. */
+void
+nvt_wrapping_backspace(void)
+{
+    bool prev = rev_wraparound_mode;
+
+    rev_wraparound_mode = true;
+    nvt_process((unsigned int)'\b');
+    rev_wraparound_mode = prev;
 }

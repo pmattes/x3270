@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -299,7 +299,18 @@ nvt_process_s(const char *data)
 static void
 nvt_backspace(bool dbcs)
 {
-    nvt_process_s(dbcs? "\b\b  \b\b" : "\b \b");
+    nvt_wrapping_backspace();
+    if (dbcs) {
+	nvt_wrapping_backspace();
+    }
+    nvt_process_s(" ");
+    if (dbcs) {
+	nvt_process_s(" ");
+    }
+    nvt_wrapping_backspace();
+    if (dbcs) {
+	nvt_wrapping_backspace();
+    }
 }
 
 static void
@@ -362,7 +373,7 @@ do_cerase(char c)
 
     if (backslashed) {
 	lbptr--;
-	nvt_process_s("\b");
+	nvt_wrapping_backspace();
 	do_data(c);
 	return;
     }
@@ -438,7 +449,7 @@ do_kill(char c)
 
     if (backslashed) {
 	lbptr--;
-	nvt_process_s("\b");
+	nvt_wrapping_backspace();
 	do_data(c);
 	return;
     }
@@ -511,7 +522,7 @@ do_eof(char c)
 {
     if (backslashed) {
 	lbptr--;
-	nvt_process_s("\b");
+	nvt_wrapping_backspace();
 	do_data(c);
 	return;
     }
@@ -548,7 +559,8 @@ do_lnext(char c)
 	return;
     }
     lnext = true;
-    nvt_process_s("^\b");
+    nvt_process_s("^");
+    nvt_wrapping_backspace();
 }
 
 /*
