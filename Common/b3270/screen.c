@@ -541,7 +541,7 @@ render_screen(struct ea *ea, screen_t *s)
 	    s[si].fg = mode.m3279? fg_color: HOST_COLOR_NEUTRAL_WHITE;
 	    s[si].bg = mode.m3279? bg_color: HOST_COLOR_NEUTRAL_BLACK;
 
-	    if ((fa_gr | ea[i].gr) & GR_UNDERLINE) {
+	    if (!ea[i].fa && ((fa_gr | ea[i].gr) & GR_UNDERLINE)) {
 		s[si].gr |= XX_UNDERLINE;
 	    }
 	    if ((fa_gr | ea[i].gr) & GR_BLINK) {
@@ -562,7 +562,7 @@ render_screen(struct ea *ea, screen_t *s)
 	    if (order || (toggled(VISIBLE_CONTROL) && ea[i].fa)) {
 		s[si].gr |= XX_ORDER;
 	    }
-	    if (extra_underline) {
+	    if (!ea[i].fa && extra_underline) {
 		s[si].gr |= XX_UNDERLINE;
 	    }
 	    if (pua) {
