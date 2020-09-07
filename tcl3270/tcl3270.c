@@ -241,6 +241,8 @@ usage(const char *msg)
     fprintf(stderr, "  -?          display usage\n");
     fprintf(stderr, "tcl3270-options:\n");
     fprintf(stderr, "  -d          debug s3270 I/O\n");
+    fprintf(stderr, "s3270-options:\n");
+    system("s3270 --help 2>&1 | tail -n +3 - >&2");
     exit(1);
 }
 

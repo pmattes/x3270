@@ -576,6 +576,14 @@ static opt_t base_opts[] = {
     NULL, "Display build options and character sets" },
 { OptVersion,  OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
+{ OptHelp1,     OPT_HELP, false, NULL,            NULL,
+    NULL, "Display command-line help" },
+{ OptHelp2,     OPT_HELP, false, NULL,            NULL,
+    NULL, "Display command-line help" },
+#if defined(_WIN32) /*[*/
+{ OptHelp3,     OPT_HELP, false, NULL,            NULL,
+    NULL, "Display command-line help" },
+#endif /*]*/
 { "-xrm",      OPT_XRM,     false, NULL,         NULL,
     "'*.<resource>: <value>'", "Set <resource> to <value>"
 },
@@ -690,6 +698,10 @@ parse_options(int *argcp, const char **argv, bool warn)
 	case OPT_V:
 	    dump_version();
 	    break;
+	case OPT_HELP:
+	    cmdline_help(false);
+	    exit(0);
+	    break;
 	case OPT_DONE:
 	    while (i < *argcp) {
 		argv_out[argc_out++] = argv[i++];
@@ -775,10 +787,16 @@ sort_help(void)
 
 /* Disply command-line help. */
 void
-cmdline_help (bool as_action)
+cmdline_help(bool as_action)
 {
     unsigned i;
-    
+
+    if (!as_action) {
+	 fprintf(stderr, "Usage: "
+		 "%s [options] [[prefix:][LUname@]hostname[:port]]\n",
+		 programname);
+	 fprintf(stderr, "Options:\n");
+    }
     sort_help();
     for (i = 0; i < sorted_help_count; i++) {
 	char *h = sorted_help[i].help_opts;

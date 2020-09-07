@@ -192,9 +192,7 @@ XrmOptionDescRec base_options[]= {
     { OptPreeditType,	DotPreeditType,	XrmoptionSepArg,	NULL },
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
     { OptUtf8,		DotUtf8,	XrmoptionNoArg,		ResTrue },
-    { OptV,		DotV,		XrmoptionNoArg,		ResTrue },
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
-    { OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
     { "-xrm",		NULL,		XrmoptionResArg,	NULL }
 };
 int num_base_options = XtNumber(base_options);
@@ -348,14 +346,23 @@ setup_options(void)
 void
 usage(const char *msg)
 {
-    unsigned i;
-    unsigned tls_options = sio_all_options_supported();
-
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
     }
 
-    fprintf(stderr, "Usage: %s [options] [[ps:][LUname@]hostname[:port]]\n",
+    fprintf(stderr, "Usage: %s [options] [[prefix:][LUname@]hostname[:port]]\n",
+	    programname);
+    fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
+    exit(1);
+}
+
+static void
+cmdline_help(void)
+{
+    unsigned i;
+    unsigned tls_options = sio_all_options_supported();
+
+    fprintf(stderr, "Usage: %s [options] [[prefix:][LUname@]hostname[:port]]\n",
 	    programname);
     fprintf(stderr, "Options:\n");
     for (i = 0; i < XtNumber(option_help); i++) {
@@ -370,7 +377,6 @@ usage(const char *msg)
     }
     fprintf(stderr,
 	    " Plus standard Xt options like '-title' and '-geometry'\n");
-    exit(1);
 }
 
 static void
@@ -458,10 +464,15 @@ main(int argc, char *argv[])
 	programname = argv[0];
     }
 
-    /* Parse a lone "-v" first, without contacting a server. */
+    /* Parse a lone "-v" or "--help" first, without contacting a server. */
     if (argc == 2 && (!strcmp(argv[1], OptV) ||
 		      !strcmp(argv[1], OptVersion))) {
 	dump_version();
+    }
+    if (argc == 2 && (!strcmp(argv[1], OptHelp1) ||
+		      !strcmp(argv[1], OptHelp2))) {
+	cmdline_help();
+	exit(0);
     }
 
     /*
@@ -554,10 +565,6 @@ main(int argc, char *argv[])
 	    NULL);
     display = XtDisplay(toplevel);
     rdb = XtDatabase(display);
-
-    if (get_resource(ResV)) {
-	dump_version();
-    }
 
     register_schange(ST_EXITING, cleanup_Xt);
 

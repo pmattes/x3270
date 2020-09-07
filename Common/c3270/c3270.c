@@ -282,10 +282,9 @@ usage(const char *msg)
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
     }
-    fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
+    fprintf(stderr, "Usage: %s [options] [prefix:][LUname@]hostname[:port]\n",
 	    programname);
-    fprintf(stderr, "Options:\n");
-    cmdline_help(false);
+    fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     exit(1);
 }
 

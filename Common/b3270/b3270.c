@@ -148,8 +148,7 @@ usage(const char *msg)
 	fprintf(stderr, "%s\n", msg);
     }
     fprintf(stderr, "Usage: %s [options] [profile-file.b3270]\n", programname);
-    fprintf(stderr, "Options:\n");
-    cmdline_help(false);
+    fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     exit(1);
 }
 

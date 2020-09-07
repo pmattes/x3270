@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 Paul Mattes.
+ * Copyright (c) 2015, 2018, 2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@ typedef struct {
 	OPT_NOP,	/* do nothing */
 	OPT_INT,	/* set an integer */
 	OPT_V,		/* special for "-v" */
+	OPT_HELP,	/* special for "--help */
 	OPT_DONE	/* option-list terminator */
     } type;
     bool flag;	/* value if OPT_BOOLEAN */

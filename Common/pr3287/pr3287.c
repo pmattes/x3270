@@ -190,11 +190,23 @@ const char *build_options(void);
 static void
 usage(void)
 {
+    fprintf(stderr,
+	    "usage: %s [options] [lu[,lu...]@]host[:port]\n",
+	    programname);
+    fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
+    pr3287_exit(1);
+}
+
+/* Print command-line help. */
+static void
+cmdline_help(void)
+{
     unsigned tls_options = sio_all_options_supported();
 
     fprintf(stderr,
-	    "usage: %s [options] [lu[,lu...]@]host[:port]\nOptions:\n",
+	    "Usage: %s [options] [lu[,lu...]@]host[:port]\n",
 	    programname);
+    fprintf(stderr, "Options:\n");
     if (tls_options & TLS_OPT_ACCEPT_HOSTNAME) {
 	fprintf(stderr,
 "  " OptAcceptHostname " <name>\n"
@@ -580,7 +592,13 @@ main(int argc, char *argv[])
 
     /* Gather the options. */
     init_options();
-    for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+    for (i = 1;
+	    i < argc && (argv[i][0] == '-'
+#if defined(_WIN32) /*[*/
+		         || !strcmp(argv[i], OptHelp3)
+#endif /*]*/
+			                              );
+	    i++) {
 #if !defined(_WIN32) /*[*/
 	if (!strcmp(argv[i], "-daemon")) {
 	    options.bdaemon = WILL_DAEMON;
@@ -752,7 +770,7 @@ main(int argc, char *argv[])
 	    options.tls.verify_host_cert = false;
 	} else if (!strcmp(argv[i], OptReconnect)) {
 	    options.reconnect = 1;
-	} else if (!strcmp(argv[i], "-v")) {
+	} else if (!strcmp(argv[i], OptV) || !strcmp(argv[i], OptVersion)) {
 	    printf("%s\n%s\n", build, build_options());
 	    codepage_list();
 	    printf("\n\
@@ -812,8 +830,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    i++;
 	} else if (!strcmp(argv[i], "-skipcc")) {
 	    options.skipcc = 1;
-	} else if (!strcmp(argv[i], "--help")) {
-	    usage();
+	} else if (!strcmp(argv[i], OptHelp1)
+		|| !strcmp(argv[i], OptHelp2)
+#if defined(_WIN32) /*[*/
+		|| !strcmp(argv[i], OptHelp3)
+#endif /*]*/
+		                             ) {
+	    cmdline_help();
+	    exit(0);
 	} else {
 	    fprintf(stderr, "Unknown option '%s'\n", argv[i]);
 	    usage();

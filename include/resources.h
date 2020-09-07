@@ -229,7 +229,6 @@
 #define ResUseCursorColor	"useCursorColor"
 #define ResUser			"user"
 #define ResUtf8			"utf8"
-#define ResV			"v"
 #define ResVerifyHostCert	"verifyHostCert"
 #define ResVisibleControl	"visibleControl"
 #define ResVisualBell		"visualBell"
@@ -293,7 +292,6 @@
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
 #define DotUtf8			"." ResUtf8
-#define DotV			"." ResV
 #define DotVerifyHostCert	"." ResVerifyHostCert
 
 /* Resource classes. */
@@ -490,6 +488,9 @@
 #define OptTrace		"-trace"
 #define OptEmulatorFont		"-efont"
 #define OptHostsFile		"-hostsfile"
+#define OptHelp1		"--help"
+#define OptHelp2		"-?"
+#define OptHelp3		"/?"
 #define OptHttpd		"-httpd"
 #define OptIconName		"-iconname"
 #define OptIconX		"-iconx"
