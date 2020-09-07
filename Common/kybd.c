@@ -3702,7 +3702,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		}
 		break;
 	    case '\n':
-		if (pasting) {
+		if (pasting && !IN_NVT) {
 		    if (auto_skip) {
 			if (!just_wrapped) {
 			    ns_action(Newline_action, ia, NULL);
