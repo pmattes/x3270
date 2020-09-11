@@ -1037,6 +1037,10 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	vtrace("TLS: EOF\n");
 	return 0;
     }
+    if (status == errSSLWouldBlock) {
+	vtrace("TLS: EWOULDBLOCK\n");
+	return SIO_EWOULDBLOCK;
+    }
     if (status != errSecSuccess) {
 	set_oserror(status, "SSLRead %d", status);
 	return SIO_FATAL_ERROR;
