@@ -242,11 +242,13 @@ static bool expect_matches(task_t *task);
 #define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
 
 /* Macro that defines when it's safe to continue a Wait()ing task. */
-#define CAN_PROCEED ( \
-	IN_SSCP || \
-	(IN_3270 && formatted && cursor_addr && !CKBWAIT) || \
-	(IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
-	)
+#define CAN_PROCEED \
+    (IN_SSCP || \
+     (IN_3270 && \
+      (HOST_FLAG(NO_LOGIN_HOST) || \
+       (formatted && cursor_addr)) && !CKBWAIT) || \
+     (IN_NVT && \
+      !(kybdlock & KL_AWAITING_FIRST)))
 
 /* An input request. */
 typedef struct {
