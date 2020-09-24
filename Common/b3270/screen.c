@@ -838,6 +838,30 @@ emit_row(screen_t *oldr, screen_t *newr)
 }
 
 /*
+ * Emit a cursor move indication, with or without its own screen update
+ * wrapper.
+ */
+static void
+emit_cursor_cond(bool with_screen)
+{
+    /* Check for a cursor move. */
+    if (cursor_enabled && sent_baddr != saved_baddr) {
+	if (with_screen) {
+	    ui_vpush(IndScreen, NULL);
+	}
+	ui_vleaf(IndCursor,
+	    AttrEnabled, ValTrue,
+	    AttrRow, lazyaf("%d", (saved_baddr / COLS) + 1),
+	    AttrColumn, lazyaf("%d", (saved_baddr % COLS) + 1),
+	    NULL);
+	sent_baddr = saved_baddr;
+	if (with_screen) {
+	    ui_pop();
+	}
+    }
+}
+
+/*
  * Emit the diff between two screens.
  */
 static void
@@ -845,7 +869,8 @@ emit_diff(screen_t *old, screen_t *new)
 {
     int row;
 
-    ui_vpush("screen", NULL);
+    ui_vpush(IndScreen, NULL);
+    emit_cursor_cond(false);
 
     for (row = 0; row < maxROWS; row++) {
 
@@ -896,21 +921,12 @@ screen_disp_cond(bool always)
 	save_empty();
     }
 
-    /* Check for a cursor move. */
-    if (cursor_enabled && sent_baddr != saved_baddr) {
-	ui_vleaf(IndCursor,
-	    AttrEnabled, ValTrue,
-	    AttrRow, lazyaf("%d", (saved_baddr / COLS) + 1),
-	    AttrColumn, lazyaf("%d", (saved_baddr % COLS) + 1),
-	    NULL);
-	sent_baddr = saved_baddr;
-    }
-
     /* Check for no change. */
     if (!always &&
 	saved_rows == ROWS &&
 	saved_cols == COLS &&
 	!memcmp(saved_ea, ea_buf, se)) {
+	emit_cursor_cond(true);
 	return;
     }
 
@@ -932,6 +948,7 @@ screen_disp_cond(bool always)
 	}
 	/* Remember that the screen is empty. */
 	save_empty();
+	emit_cursor_cond(true);
 	return;
     }
 

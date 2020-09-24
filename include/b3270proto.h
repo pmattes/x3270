@@ -61,6 +61,7 @@
 #define IndPopup	"popup"
 #define IndRow		"row"
 #define IndRunResult	"run-result"
+#define IndScreen	"screen"
 #define IndScreenMode	"screen-mode"
 #define IndScroll	"scroll"
 #define IndSetting	"setting"
