@@ -537,6 +537,12 @@ host_connect(const char *n, enum iaction ia)
 	goto failure;
     }
 
+    /* Save the pending string. */
+    if (ps == NULL) {
+	ps = appres.login_macro;
+    }
+    host_ps = NewString(ps);
+
     /* Still thinking about it? */
     connect_ia = ia;
     if (nc == NC_RESOLVING) {
@@ -551,6 +557,7 @@ host_connect(const char *n, enum iaction ia)
     /* Success. */
 
     /* Set pending string. */
+    Replace(host_ps, NULL);
     if (ps == NULL) {
 	ps = appres.login_macro;
     }
@@ -698,7 +705,7 @@ host_disconnect(bool failed)
 	change_cstate(NOT_CONNECTED, "host_disconnect");
 
 	/* Forget pending state. */
-	host_ps = NULL;
+	Replace(host_ps, NULL);
     }
 
     /* No more host, no more host flags. */
