@@ -820,9 +820,11 @@ product_set_appres_defaults(void)
 {
     /*
      * Set defaults like x3270 -- operator error locks the keyboard.
+     * But also set unlock_delay to false, to help with responsiveness.
      */
     appres.oerr_lock = true;
     appres.interactive.save_lines = 4096;
+    appres.unlock_delay = false;
 }
 
 /**
