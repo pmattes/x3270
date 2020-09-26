@@ -3085,7 +3085,7 @@ solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
 darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
 		;;
-linux*)		CPPFLAGS="-D_POSIX_SOURCE"
+linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE"
 		;;
 esac
 if test "$GCC" = yes

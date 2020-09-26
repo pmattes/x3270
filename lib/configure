@@ -3234,20 +3234,20 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 ansi="-std=c99 -pedantic"
 case "$host_os" in
-*cygwin*)	CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
     		ansi=""
 		;;
-hpux|*cygwin*)	CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+hpux|*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		;;
 solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		$as_echo "#define CONNECT_GETPEERNAME 1" >>confdefs.h
 
 		;;
 darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
-		CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		mac_os=1
 		;;
-linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
+linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
