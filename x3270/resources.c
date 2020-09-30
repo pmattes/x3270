@@ -116,6 +116,8 @@ XtResource resources[] = {
       offset(connect_timeout), XtRString, "0" },
     { ResConsole, ClsConsole, XtRString, sizeof(char *),
       offset(interactive.console), XtRString, 0 },
+    { ResNoTelnetInputMode, ClsNoTelnetInputMode, XtRString, sizeof(char *),
+      offset(interactive.no_telnet_input_mode), XtRString, "line" },
     { ResNopSeconds, ClsNopSeconds, XtRInt, sizeof(int),
       offset(nop_seconds), XtRString, "0" },
     { ResMinVersion, ClsMinVersion, XtRString, sizeof(String),

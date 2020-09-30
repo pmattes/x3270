@@ -75,6 +75,7 @@
 #include "popups.h"
 #include "proxy.h"
 #include "resolver.h"
+#include "resources.h"
 #include "sio.h"
 #include "sioc.h"
 #include "split_host.h"
@@ -109,6 +110,10 @@
 #define N_OPTS		256
 
 #define LINEMODE_NAME	"lineMode"
+
+#if !defined(LOCAL_PROCESS) /*[*/
+# define local_process false
+#endif /*]*/
 
 /* Globals */
 char    	*hostname = NULL;
@@ -195,6 +200,18 @@ static bool	secure_connection;
 static char	*net_accept;
 
 static enum cstate starttls_pending = NOT_CONNECTED;
+
+typedef enum {
+    NTIM_LINE,
+    NTIM_CHARACTER,
+    NTIM_CHARACTER_CRLF,
+    NTIM_UNKNOWN
+} ntim_t;
+static const char *ntim_name[] = {
+    "line", "character", "characterCrLf", NULL
+};
+static ntim_t ntim = NTIM_UNKNOWN;
+static ntim_t parse_ntim(const char *value);
 
 static bool telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, size_t len);
@@ -895,6 +912,21 @@ net_connected_complete(void)
 	change_cstate(TELNET_PENDING, "net_connected_complete");
     }
     st_changed(ST_SECURE, false);
+
+    /* Check no-TELNET input mode. */
+    if (ntim == NTIM_UNKNOWN) {
+	ntim_t n = parse_ntim(appres.interactive.no_telnet_input_mode);
+
+	if (n == NTIM_UNKNOWN) {
+	    xs_warning("Unknown %s value '%s', defaulting to %s",
+		    ResNoTelnetInputMode,
+		    appres.interactive.no_telnet_input_mode,
+		    ntim_name[NTIM_LINE]);
+	    ntim = NTIM_LINE;
+	} else {
+	    ntim = n;
+	}
+    }
 
     /* set up telnet options */
     memset((char *)myopts, 0, sizeof(myopts));
@@ -2904,21 +2936,25 @@ check_linemode(bool init)
 {
     bool wasline = linemode;
 
-    /*
-     * The next line is a deliberate kluge to effectively ignore the SGA
-     * option.  If the host will echo for us, we assume
-     * character-at-a-time; otherwise we assume fully cooked by us.
-     *
-     * This allows certain IBM hosts which volunteer SGA but refuse
-     * ECHO to operate more-or-less normally, at the expense of
-     * implementing the (hopefully useless) "character-at-a-time, local
-     * echo" mode.
-     *
-     * We still implement "switch to line mode" and "switch to character
-     * mode" properly by asking for both SGA and ECHO to be off or on, but
-     * we basically ignore the reply for SGA.
-     */
-    linemode = !hisopts[TELOPT_ECHO] /* && !hisopts[TELOPT_SGA] */;
+    if (HOST_FLAG(NO_TELNET_HOST)) {
+	linemode = (ntim == NTIM_LINE);
+    } else {
+	/*
+	 * The next line is a deliberate kluge to effectively ignore the SGA
+	 * option.  If the host will echo for us, we assume
+	 * character-at-a-time; otherwise we assume fully cooked by us.
+	 *
+	 * This allows certain IBM hosts which volunteer SGA but refuse
+	 * ECHO to operate more-or-less normally, at the expense of
+	 * implementing the (hopefully useless) "character-at-a-time, local
+	 * echo" mode.
+	 *
+	 * We still implement "switch to line mode" and "switch to character
+	 * mode" properly by asking for both SGA and ECHO to be off or on, but
+	 * we basically ignore the reply for SGA.
+	 */
+	linemode = !hisopts[TELOPT_ECHO] /* && !hisopts[TELOPT_SGA] */;
+    }
 
     if (init || linemode != wasline) {
 	if (cstate == CONNECTED_NVT || cstate == CONNECTED_NVT_CHAR) {
@@ -2937,6 +2973,10 @@ check_linemode(bool init)
 	    }
 	}
     }
+
+    /* Set output newline expansion. */
+    charmode_onlcr = !local_process && HOST_FLAG(NO_TELNET_HOST) &&
+	ntim == NTIM_CHARACTER_CRLF;
 }
 
 /*
@@ -3191,16 +3231,18 @@ net_add_eor(unsigned char *buf, size_t len)
 void
 net_sendc(char c)
 {
-    if (c == '\r' && !linemode
-#if defined(LOCAL_PROCESS) /*[*/
-			       && !local_process
-#endif /*]*/
-						) {
-		/* CR must be quoted */
-	net_cookout("\r\0", 2);
-    } else {
-	net_cookout(&c, 1);
+    if (c == '\r' && !local_process) {
+	if (HOST_FLAG(NO_TELNET_HOST) && ntim == NTIM_CHARACTER_CRLF) {
+	    net_cookout("\n", 1);
+	    return;
+	}
+	if (!linemode) {
+	    /* CR must be quoted */
+	    net_cookout("\r\0", 2);
+	    return;
+	}
     }
+    net_cookout(&c, 1);
 }
 
 /*
@@ -3210,6 +3252,18 @@ net_sendc(char c)
 void
 net_sends(const char *s)
 {
+    if (strlen(s) == 1 && *s == '\r' && !local_process) {
+	if (HOST_FLAG(NO_TELNET_HOST) && ntim == NTIM_CHARACTER_CRLF) {
+	    net_cookout("\n", 1);
+	    return;
+	}
+	if (!linemode) {
+	    /* CR must be quoted */
+	    net_cookout("\r\0", 2);
+	    return;
+	}
+    }
+
     net_cookout(s, strlen(s));
 }
 
@@ -3893,6 +3947,60 @@ toggle_linemode(const char *name, const char *value)
     return true;
 }
 
+/* Canonicalization for no-TELNET input mode. */
+static char *
+canonicalize_ntim(const char *value)
+{
+    int i;
+
+    if (value == NULL) {
+	return NULL;
+    }
+    for (i = 0; ntim_name[i] != NULL; i++) {
+	if (!strcasecmp(value, ntim_name[i])) {
+	    return NewString(ntim_name[i]);
+	}
+    }
+    return NewString("?");
+}
+
+/* Parse a no-TELNET input mode value. */
+static ntim_t
+parse_ntim(const char *value)
+{
+    int i;
+
+    /* Validate and translate the value. */
+    for (i = 0; ntim_name[i] != NULL; i++) {
+	if (!strcasecmp(value, ntim_name[i])) {
+	    return (ntim_t)i;
+	}
+    }
+    return NTIM_UNKNOWN;
+}
+
+/* Toggle no-TELNET input mode. */
+static bool
+toggle_ntim(const char *name, const char *value)
+{
+    ntim_t n;
+
+    /* Validate and translate the value. */
+    n = parse_ntim(value);
+    if (n == NTIM_UNKNOWN) {
+	popup_an_error("Invalid %s value '%s'", ResNoTelnetInputMode, value);
+	return false;
+    }
+
+    /* Implement it. */
+    ntim = n;
+    Replace(appres.interactive.no_telnet_input_mode, NewString(value));
+    if (CONNECTED && HOST_FLAG(NO_TELNET_HOST)) {
+	check_linemode(false);
+    }
+    return true;
+}
+
 /* Module registration. */
 void
 net_register(void)
@@ -3903,4 +4011,7 @@ net_register(void)
     /* Register extended toggles. */
     register_extended_toggle(LINEMODE_NAME, toggle_linemode, NULL, NULL,
 	    (void **)&linemode, XRM_BOOLEAN);
+    register_extended_toggle(ResNoTelnetInputMode, toggle_ntim, NULL,
+	    canonicalize_ntim,
+	    (void **)&appres.interactive.no_telnet_input_mode, XRM_STRING);
 }

@@ -505,6 +505,7 @@ set_appres_defaults(void)
 #if defined(_WIN32) /*[*/
     appres.interactive.print_dialog = product_has_display();
 #endif /*]*/
+    appres.interactive.no_telnet_input_mode = NewString("line");
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -1084,6 +1085,8 @@ static res_t base_resources[] = {
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
     { ResNopSeconds,aoffset(nop_seconds),	XRM_INT },
+    { ResNoTelnetInputMode,aoffset(interactive.no_telnet_input_mode),
+	XRM_STRING },
     { ResNumericLock, aoffset(numeric_lock),	XRM_BOOLEAN },
     { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
     { ResOversize,	aoffset(oversize),	XRM_STRING },

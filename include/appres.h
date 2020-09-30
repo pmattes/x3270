@@ -137,6 +137,7 @@ typedef struct {
 	char	*crosshair_color;
 	char	*console;
 	bool	 print_dialog;	/* Windows only */
+	char	*no_telnet_input_mode;
     } interactive;
 
     /* File transfer fields. */
