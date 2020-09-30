@@ -63,6 +63,7 @@
 #include "actions.h"
 #include "b3270proto.h"
 #include "b8.h"
+#include "boolstr.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "indent_s.h"
@@ -86,6 +87,7 @@
 #include "telnet_private.h"
 #include "telnet_sio.h"
 #include "tls_passwd_gui.h"
+#include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
@@ -106,6 +108,8 @@
 
 #define N_OPTS		256
 
+#define LINEMODE_NAME	"lineMode"
+
 /* Globals */
 char    	*hostname = NULL;
 time_t          ns_time;
@@ -116,6 +120,7 @@ int             ns_rsent;
 unsigned char  *obuf;		/* 3270 output buffer */
 unsigned char  *obptr = (unsigned char *) NULL;
 bool            linemode = true;
+bool		charmode_onlcr = false;
 #if defined(LOCAL_PROCESS) /*[*/
 bool		local_process = false;
 #endif /*]*/
@@ -1587,7 +1592,9 @@ telnet_fsm(unsigned char c)
 	    }
 	    vtrace("%s", see_chr);
 	    if (!syncing) {
-		if (linemode && appres.linemode.onlcr && c == '\n') {
+		if (((linemode && appres.linemode.onlcr) ||
+		     (!linemode && charmode_onlcr))
+			&& c == '\n') {
 		    nvt_process((unsigned int) '\r');
 		}
 		nvt_process((unsigned int) c);
@@ -3212,7 +3219,7 @@ net_sends(const char *s)
 void
 net_linemode(void)
 {
-    if (!CONNECTED) {
+    if (!IN_NVT) {
 	return;
     }
     if (!HOST_FLAG(NO_TELNET_HOST)) {
@@ -3236,7 +3243,7 @@ net_linemode(void)
 void
 net_charmode(void)
 {
-    if (!CONNECTED) {
+    if (!IN_NVT) {
 	return;
     }
     if (!HOST_FLAG(NO_TELNET_HOST)) {
@@ -3862,10 +3869,38 @@ net_nvt_break(void)
     }
 }
 
+/* Toggle line mode. */
+static bool
+toggle_linemode(const char *name, const char *value)
+{
+    bool v;
+    const char *errmsg;
+
+    if (!IN_NVT || HOST_FLAG(NO_TELNET_HOST)) {
+	popup_an_error("Can only change %s in NVT mode", LINEMODE_NAME);
+	return false;
+    }
+    errmsg = boolstr(value, &v);
+    if (errmsg != NULL) {
+	popup_an_error("%s %s", LINEMODE_NAME, errmsg);
+	return false;
+    }
+    if (v) {
+	net_linemode();
+    } else {
+	net_charmode();
+    }
+    return true;
+}
+
 /* Module registration. */
 void
 net_register(void)
 {
     /* Register for state changes. */
     register_schange(ST_REMODEL, net_remodel);
+
+    /* Register extended toggles. */
+    register_extended_toggle(LINEMODE_NAME, toggle_linemode, NULL, NULL,
+	    (void **)&linemode, XRM_BOOLEAN);
 }
