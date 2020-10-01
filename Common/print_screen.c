@@ -199,12 +199,11 @@ printtext_continue(void *context, bool cancel)
 bool
 PrintText_action(ia_t ia, unsigned argc, const char **argv)
 {
+    enum { PM_NONE, PM_FILE, PM_GDI, PM_COMMAND, PM_STRING } mode = PM_NONE;
     unsigned i;
     const char *name = NULL;
     bool secure = appres.secure;
     ptype_t ptype = P_NONE;
-    bool use_file = false;
-    bool use_string = false;
     bool replace = false;
     char *temp_name = NULL;
     unsigned opts = FPS_EVEN_IF_EMPTY;
@@ -213,6 +212,11 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     int fd = -1;
     fps_status_t status;
     printtext_t *pt;
+    bool any_file_options = false;
+#if defined(_WIN32) /*[*/
+    bool any_gdi_options = false;
+#endif /*]*/
+    bool use_file = false;
 
     if (!appres.interactive.print_dialog) {
 	opts |= FPS_NO_DIALOG;
@@ -244,51 +248,82 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  command  directs the output to a command (this is the default, but
      *            allows the command to be one of the other keywords);
      *  	      must be the last keyword
-     *  string   returns the data as a string, allowed only from scripts
-     */
+     *  string   returns the data as a string */
     for (i = 0; i < argc; i++) {
 	if (!strcasecmp(argv[i], KwFile)) {
-	    use_file = true;
+	    if (mode != PM_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
+		return false;
+	    }
+	    mode = PM_FILE;
 	    i++;
 	    break;
 	} else if (!strcasecmp(argv[i], KwHtml)) {
+	    if (ptype != P_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
+		return false;
+	    }
 	    ptype = P_HTML;
-	    use_file = true;
 	} else if (!strcasecmp(argv[i], KwRtf)) {
+	    if (ptype != P_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
+		return false;
+	    }
 	    ptype = P_RTF;
-	    use_file = true;
 	} else if (!strcasecmp(argv[i], KwReplace)) {
 	    replace = true;
+	    any_file_options = true;
 	} else if (!strcasecmp(argv[i], KwAppend)) {
 	    replace = false;
+	    any_file_options = true;
 	}
 #if defined(_WIN32) /*[*/
 	else if (!strcasecmp(argv[i], KwGdi)) {
-	    ptype = P_GDI;
+	    if (mode != PM_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
+		return false;
+	    }
+	    mode = PM_GDI;
 	} else if (!strcasecmp(argv[i], KwNoDialog)) {
 	    opts |= FPS_NO_DIALOG;
+	    any_gdi_options = true;
 	} else if (!strcasecmp(argv[i], KwDialog)) {
 	    opts &= ~FPS_NO_DIALOG;
+	    any_gdi_options = true;
 	}
 #endif /*]*/
 	else if (!strcasecmp(argv[i], KwSecure)) {
 	    secure = true;
-	} else if (!strcasecmp(argv[i], KwCommand)) {
-	    if ((ptype != P_NONE) || use_file) {
-		popup_an_error(AnPrintText "(): contradictory options");
+	}
+#if !defined(_WIN32) /*[*/
+	else if (!strcasecmp(argv[i], KwCommand)) {
+	    if (mode != PM_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
 		return false;
 	    }
-	    ptype = P_TEXT;
+	    mode = PM_COMMAND;
 	    i++;
 	    break;
-	} else if (!strcasecmp(argv[i], KwString)) {
-	    use_string = true;
-	    use_file = true;
+	}
+#endif /*]*/
+	else if (!strcasecmp(argv[i], KwString)) {
+	    if (mode != PM_NONE) {
+		popup_an_error(AnPrintText "(): contradictory option '%s'",
+			argv[i]);
+		return false;
+	    }
+	    mode = PM_STRING;
 	} else if (!strcasecmp(argv[i], KwModi)) {
 	    opts |= FPS_MODIFIED_ITALIC;
 	} else if (!strcasecmp(argv[i], KwCaption)) {
 	    if (i == argc - 1) {
-		popup_an_error(AnPrintText "(): mising caption parameter");
+		popup_an_error(AnPrintText "(): missing " KwCaption
+			" parameter");
 		return false;
 	    }
 	    caption = argv[++i];
@@ -297,42 +332,61 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
+    /* Set the default mode, if none has been selected. */
+    if (mode == PM_NONE) {
+#if !defined(_WIN32) /*[*/
+	mode = PM_COMMAND;
+#else /*][*/
+	mode = PM_GDI;
+#endif /*]*/
+    }
+
+    /* Root out some additional option conflicts. */
+    if (any_file_options && mode != PM_FILE) {
+	popup_an_error(AnPrintText "(): " KwFile "-related option(s) given "
+		"when not printing to file");
+	return false;
+    }
+#if defined(_WIN32) /*[*/
+    if (any_gdi_options && mode != PM_GDI) {
+	popup_an_error(AnPrintText "(): " KwGdi "-related option(s) given "
+		"when not printing via GDI");
+	return false;
+    }
+#endif /*]*/
+
+    /* Handle positional options. */
     switch (argc - i) {
     case 0:
-	/* Use the default. */
-	if (!use_file) {
+	/* Use the default command or printer. */
 #if !defined(_WIN32) /*[*/
+	if (mode == PM_COMMAND) {
 	    name = get_resource(ResPrintTextCommand);
-#else /*][*/
-	    name = get_resource(ResPrinterName); /* XXX */
-#endif /*]*/
+	    if (name == NULL || !*name) {
+		name = "lpr";
+	    }
 	}
+#else /*][*/
+	if (mode == PM_GDI) {
+	    name = get_resource(ResPrinterName);
+	}
+#endif /*]*/
 	break;
     case 1:
-	if (use_string) {
-	    popup_an_error(AnPrintText "(): extra arguments or invalid option(s)");
+	if (mode == PM_STRING) {
+	    popup_an_error(AnPrintText "(): extra argument "
+		    "with '" KwString "'");
 	    return false;
 	}
 	name = argv[i];
 	break;
     default:
-	popup_an_error(AnPrintText "(): extra arguments or invalid option(s)");
+	popup_an_error(AnPrintText "(): extra arguments");
 	return false;
     }
 
-    if (!use_string && !use_file) {
-	if (ptype != P_NONE) {
-	    popup_an_error(AnPrintText "(): cannot specify printer and type");
-	    return false;
-	}
-#if !defined(_WIN32) /*[*/
-	ptype = P_TEXT;
-#else /*]*/
-	ptype = P_GDI;
-#endif /*]*/
-    }
-
-    if (ptype == P_NONE && use_file && name != NULL) {
+    /* Infer the type from the file suffix. */
+    if (mode == PM_FILE && ptype == P_NONE && name != NULL) {
 	size_t sl = strlen(name);
 
 	if ((sl > 5 && !strcasecmp(name + sl - 5, ".html")) ||
@@ -343,8 +397,13 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
+    /* Figure out the default ptype, if still not selected. */
     if (ptype == P_NONE) {
-	ptype = P_TEXT;
+	if (mode == PM_GDI) {
+	    ptype = P_GDI;
+	} else {
+	    ptype = P_TEXT;
+	}
     }
 
     if (name != NULL && name[0] == '@') {
@@ -356,22 +415,16 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	secure = true;
 	name++;
     }
-    if (!use_file && (name == NULL || !*name)) {
-#if !defined(_WIN32) /*[*/
-	name = "lpr";
-#else /*][*/
-	name = NULL;
-#endif /*]*/
-    }
 
     /* See if the GUI wants to handle it. */
-    if (!secure && print_text_gui(use_file)) {
+    if (!secure && print_text_gui(mode == PM_FILE)) {
 	return true;
     }
 
     /* Do the real work. */
+    use_file = (mode == PM_FILE || mode == PM_STRING);
     if (use_file) {
-	if (use_string) {
+	if (mode == PM_STRING) {
 #if defined(_WIN32) /*[*/
 	    fd = win_mkstemp(&temp_name, ptype);
 #else /*][*/
@@ -471,7 +524,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
-    if (use_string) {
+    if (mode == PM_STRING) {
 	char buf[8192];
 
 	/* Print to string. */
