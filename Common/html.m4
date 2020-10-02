@@ -77,6 +77,10 @@ divert(1)dnl
 </head>
 <body>
 <h1>XX_PAGENAME Manual Page</h1>
+<hr>
+<p><b>Note:</b> This page is no longer being maintained for XX_PAGENAME 4.0 and later.
+Please refer to the <a href="https://x3270.miraheze.org/wiki/Main_Page">the x3270 Wiki</a> for up-to-date documentation.</p>
+<hr>
 <h2>Contents</h2>
 <blockquote>
 divert(3)dnl
