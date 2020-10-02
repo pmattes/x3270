@@ -101,17 +101,17 @@ EOF
 case "$html" in
 documentation*)
 	cat <<EOF
-      <a href="@HOME@documentation-relnotes.html">&nbsp;&nbsp;Release Notes</a><br>
-      <a href="@HOME@documentation-bugs.html">&nbsp;&nbsp;Known Bugs</a><br>
+      <a href="https://x3270.miraheze.org/wiki/Release_Notes/suite3270/@VERSION@">&nbsp;&nbsp;Release Notes</a><br>
+      <a href="https://x3270.miraheze.org/wiki/Release_Notes/suite3270/@VERSION@">&nbsp;&nbsp;Known Bugs</a><br>
       <a href="@HOME@documentation-manpages.html">&nbsp;&nbsp;Manual Pages</a><br>
-      <a href="@HOME@documentation-faq.html">&nbsp;&nbsp;FAQ</a><br>
+      <a href="https://x3270.miraheze.org/wiki/Category:Frequently-asked_questions">&nbsp;&nbsp;FAQ</a><br>
       <a href="@HOME@documentation-misc.html">&nbsp;&nbsp;Miscellaneous</a><br>
       <a href="@HOME@documentation-other.html">&nbsp;&nbsp;Other Resources</a><br>
 EOF
 	;;
 esac
 cat <<EOF
-<a href="@HOME@license.html">License</a><br>
+<a href="https://x3270.miraheze.org/wiki/X3270_license">License</a><br>
       <a href="@HOME@download.html">Download</a><br>
       <a href="@HOME@credits.html">Credits</a><br>
       <p>
