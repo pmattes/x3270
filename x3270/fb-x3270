@@ -319,11 +319,11 @@ x3270.keymap.oldclick.3270: #override\n\
 	:Ctrl Shift<Btn1Down>:          MouseSelect()\n\
 	Shift<Btn1Down>:                MoveCursor()
 ! Support for right-to-left languages.
-x3270.keymap.righttoleft: #override\n\
+x3270.keymap.righttoleft: #override \
 	Meta<Key>f:			Toggle(rightToLeftMode)\n\
 	Alt<Key>f:			Toggle(rightToLeftMode)\n\
-	Alt<Key>v:			Toggle(reverseInputMode)\n\
-	Meta<Key>v:			Toggle(reverseInputMode)\n
+	Meta<Key>v:			Toggle(reverseInputMode)\n\
+	Alt<Key>v:			Toggle(reverseInputMode)
 !
 ! Start of keyboard-specific mappings.
 !
@@ -501,7 +501,7 @@ x3270.keymap.hp-pc: \
 x3270.keymap.ibm-xterm: \
 	:<Key>Execute:		Enter()\n\
 	!<Key>Pause:		Clear()\n\
-	!<Key>BackSpace:	BackSpace()\Delete()\n\
+	!<Key>BackSpace:	BackSpace() Delete()\n\
 	!<Key>End:		FieldEnd()\n\
 	!Alt<Key>c:		Clear()\n\
 	!Alt<Key>Print:		SysReq()\n\
