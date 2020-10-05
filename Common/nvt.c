@@ -1099,6 +1099,9 @@ ansi_nop(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 #define PWRAP { \
+    if ((cursor_addr % COLS) == COLS - 1) { \
+	ctlr_add_gr(cursor_addr, ea_buf[cursor_addr].gr | GR_WRAP); \
+    } \
     nc = cursor_addr + 1; \
     if (nc < scroll_bottom * COLS) { \
 	cursor_move(nc); \

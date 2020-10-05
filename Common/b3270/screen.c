@@ -71,6 +71,7 @@
 #define XX_ORDER	0x0040	/* visible order */
 #define XX_PUA		0x0080	/* private use area */
 #define XX_NO_COPY	0x0100	/* do not copy into paste buffer */
+#define XX_WRAP		0x0200	/* NVT text wrapped here */
 
 typedef struct {
     u_int ccode;	/* unicode character to display */
@@ -172,6 +173,10 @@ see_gr(u_short gr)
     }
     if (gr & XX_NO_COPY) {
 	vb_appendf(&r, "%sno-copy", sep);
+	sep = ",";
+    }
+    if (gr & XX_WRAP) {
+	vb_appendf(&r, "%swrap", sep);
 	sep = ",";
     }
     return lazya(vb_consume(&r));
@@ -570,6 +575,9 @@ render_screen(struct ea *ea, screen_t *s)
 	    }
 	    if (no_copy) {
 		s[si].gr |= XX_NO_COPY;
+	    }
+	    if (ea[i].gr & GR_WRAP) {
+		s[si].gr |= XX_WRAP;
 	    }
 	}
     }
@@ -1055,9 +1063,11 @@ enable_cursor(bool on)
 {
     if (on != cursor_enabled) {
 	if (!(cursor_enabled = on)) {
+	    ui_vpush(IndScreen, NULL);
 	    ui_vleaf(IndCursor,
 		AttrEnabled, ValFalse,
 		NULL);
+	    ui_pop();
 	    sent_baddr = -1;
 	}
     }

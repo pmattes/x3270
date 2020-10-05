@@ -823,6 +823,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    connection_complete();
 	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 	    host_set_flag(NO_TELNET_HOST);
+	    ntim = NTIM_CHARACTER;
 	    break;
 	}
 	*iosrc = sock;
@@ -2936,7 +2937,9 @@ check_linemode(bool init)
 {
     bool wasline = linemode;
 
-    if (HOST_FLAG(NO_TELNET_HOST)) {
+    if (local_process) {
+	linemode = false;
+    } else if (HOST_FLAG(NO_TELNET_HOST)) {
 	linemode = (ntim == NTIM_LINE);
     } else {
 	/*

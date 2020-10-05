@@ -356,6 +356,7 @@ struct ea {
 #define GR_REVERSE	0x02
 #define GR_UNDERLINE	0x04
 #define GR_INTENSIFY	0x08
+#define GR_WRAP		0x10
 
 #define CS_MASK		0x03	/* mask for specific character sets */
 #define CS_BASE		0x00	/*  base character set (X'00') */
