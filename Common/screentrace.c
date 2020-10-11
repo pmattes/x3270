@@ -771,9 +771,9 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	ptype = P_GDI;
 #endif /*]*/
 	if (kw_mask & STK_DIALOG) {
-	    opts |= FPS_NO_DIALOG;
-	} else if (kw_mask & STK_NODIALOG) {
 	    opts &= ~FPS_NO_DIALOG;
+	} else if (kw_mask & STK_NODIALOG) {
+	    opts |= FPS_NO_DIALOG;
 	}
 	if (name == NULL) {
 #if !defined(_WIN32) /*[*/
