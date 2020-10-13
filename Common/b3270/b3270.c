@@ -837,6 +837,10 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 {
     int i;
 
+    if (tt != TT_INITIAL) {
+	return;
+    }
+
     for (i = 0; toggle_names[i].name; i++) {
 	if (toggle_names[i].index == ix) {
 	    break;
@@ -860,6 +864,17 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
     if (ix == SHOW_TIMING && !toggled(SHOW_TIMING)) {
 	status_untiming();
     }
+}
+
+void
+menubar_retoggle(toggle_index_t ix)
+{
+    b3270_toggle(ix, TT_INITIAL);
+}
+
+void
+menubar_as_set(bool sensitive _is_unused)
+{
 }
 
 /**

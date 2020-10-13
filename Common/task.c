@@ -4256,6 +4256,9 @@ task_resume_xwait(void *context, bool cancel, const char *why)
 			    cancel? " - cancel": "", why));
 		s->wait_context = NULL;
 		(*s->xcontinue_fn)(context, cancel);
+		if (cancel) {
+		    s->success = false;
+		}
 		return;
 	    }
 	}
