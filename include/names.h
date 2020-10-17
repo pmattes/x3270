@@ -103,6 +103,7 @@
 #define AnPrinter	"Printer"
 #define AnPrintText	"PrintText"
 #define AnPrintWindow	"PrintWindow"
+#define AnPause		"Pause"
 #define AnPrompt	"Prompt"
 #define AnQuery		"Query"
 #define AnQuit		"Quit"

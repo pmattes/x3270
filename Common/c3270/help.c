@@ -174,6 +174,7 @@ static struct {
 	{ "Paste", NULL, P_3270, "Paste clipboard contents" },
 #endif /*]*/
 	{ AnPF, "<n>", P_3270, "Send 3270 PF AID" },
+	{ AnPause, NULL, P_SCRIPTING, "Wait for 350ms" },
 	{ AnPreviousWord, NULL, P_3270, "Move cursor to previous word" },
 	{ AnPrinter, KwStart "[,lu]|" KwStop, P_3270|P_SCRIPTING|P_INTERACTIVE,
 	    "Start or stop " HELP_W "pr3287 printer session" },

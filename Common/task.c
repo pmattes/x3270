@@ -280,6 +280,7 @@ static action_t Expect_action;
 static action_t KeyboardDisable_action;
 static action_t Macro_action;
 static action_t NvtText_action;
+static action_t Pause_action;
 static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
@@ -493,6 +494,7 @@ task_register(void)
 	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },
 	{ AnMacro,		Macro_action, ACTION_KE },
 	{ AnNvtText,		NvtText_action, 0 },
+	{ AnPause,		Pause_action, 0 },
 	{ AnPrompt,		Prompt_action, 0 },
 	{ AnReadBuffer,		ReadBuffer_action, 0 },
 	{ RESUME_INPUT,		ResumeInput_action, ACTION_HIDDEN },
@@ -2982,6 +2984,59 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 	current_task->wait_id = AddTimeOut(tmo_msec, wait_timed_out);
     }
+    return true;
+}
+
+/* Timeout for Pause action. */
+static void
+pause_timed_out(ioid_t id)
+{
+    taskq_t *q;
+    task_t *s;
+    bool found = false;
+
+    assert(current_task == NULL);
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	for (s = q->top; s != NULL; s = s->next) {
+	    if (s->wait_id == id) {
+		found = true;
+		break;
+	    }
+	}
+	if (found) {
+	    break;
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+
+    if (!found) {
+	vtrace("pause_timed_out: no match\n");
+	return;
+    }
+
+    /* If they just wanted a delay, succeed. */
+    s->success = true;
+    task_set_state(s, TS_RUNNING, AnPause "() completed");
+    s->wait_id = NULL_IOID;
+}
+
+/*
+ * Pause for unlockDelayMs milliseconds.
+ */
+static bool
+Pause_action(ia_t ia _is_unused, unsigned argc, const char **argv)
+{
+    action_debug(AnPause, ia, argc, argv);
+    if (check_argc(AnPause, argc, 0, 0) < 0) {
+	return false;
+    }
+    if (appres.unlock_delay_ms == 0) {
+	return true;
+    }
+
+    task_set_state(current_task, TS_TIME_WAIT, AnPause "()");
+    current_task->wait_id = AddTimeOut(appres.unlock_delay_ms,
+	    pause_timed_out);
     return true;
 }
 
