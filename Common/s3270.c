@@ -269,7 +269,6 @@ product_set_appres_defaults(void)
 {
     appres.scripted = true;
     appres.oerr_lock = true;
-    appres.unlock_delay = false;
 }
 
 static void

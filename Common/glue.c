@@ -488,7 +488,7 @@ set_appres_defaults(void)
     appres.linemode.quit = NewString("^\\");
     appres.linemode.eof = NewString("^D");
 
-    appres.unlock_delay = true;
+    appres.unlock_delay = false;
     appres.unlock_delay_ms = 350;
 
     set_toggle(AID_WAIT, true);

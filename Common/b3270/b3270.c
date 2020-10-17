@@ -824,7 +824,6 @@ product_set_appres_defaults(void)
      */
     appres.oerr_lock = true;
     appres.interactive.save_lines = 4096;
-    appres.unlock_delay = false;
 }
 
 /**

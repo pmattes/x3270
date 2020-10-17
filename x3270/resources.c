@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017, 2019 Paul Mattes.
+ * Copyright (c) 1993-2017, 2019-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -298,7 +298,7 @@ XtResource xresources[] = {
     { ResModifiedSel, ClsModifiedSel, XtRBoolean, sizeof(Boolean),
       boffset(modified_sel), XtRString, ResFalse },
     { ResUnlockDelay, ClsUnlockDelay, XtRBoolean, sizeof(Boolean),
-      boffset(unlock_delay), XtRString, ResTrue },
+      boffset(unlock_delay), XtRString, ResFalse },
     { ResBindLimit, ClsBindLimit, XtRBoolean, sizeof(Boolean),
       boffset(bind_limit), XtRString, ResTrue },
     { ResBindUnlock, ClsBindUnlock, XtRBoolean, sizeof(Boolean),
