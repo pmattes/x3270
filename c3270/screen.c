@@ -243,6 +243,7 @@ static int rmargin;
 
 bool escaped = true;
 bool initscr_done = false;
+int curs_set_state = -1;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts me_mode = TS_AUTO;
@@ -1945,13 +1946,17 @@ screen_suspend(void)
 	    if (!curses_alt) {
 		swap_screens(alt_screen);
 	    }
+	    curs_set_state = curs_set(1);
 	    endwin();
 	    swap_screens(def_screen);
+	    (void) curs_set(1);
 	    endwin();
 	} else {
+	    curs_set_state = curs_set(1);
 	    endwin();
 	}
 #else /*][*/
+	curs_set_state = curs_set(1);
 	endwin();
 #endif /*]*/
 	needed = true;
@@ -2023,6 +2028,10 @@ screen_resume(void)
 #endif /*]*/
     screen_disp(false);
     refresh();
+    if (curs_set_state != -1) {
+	curs_set(curs_set_state);
+	curs_set_state = -1;
+    }
     if (input_id == NULL_IOID) {
 	input_id = AddInput(0, kybd_input);
     }
@@ -3111,7 +3120,9 @@ screen_set_thumb(float top _is_unused, float shown _is_unused,
 void
 enable_cursor(bool on)
 {
-    curs_set(on? 1: 0);
+    if (!isendwin()) {
+	curs_set(on? 1: 0);
+    }
 }
 
 /**
