@@ -1,0 +1,1 @@
+RedirectMatch permanent "(?i)^/c3270-help/[0-9.]+/.*$" "https://x3270.miraheze.org/wiki/c3270"

@@ -45,7 +45,9 @@ OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
 	wc3270-Resources.html wc3270-man.html wc3270-script.html \
 	wc3270Keymap.html wpr3287-man.html ws3270-Resources.html \
 	ws3270-man.html x026.gif x3270-Resources.html x3270-man.html \
-	x3270-script.html x3270.jpg
+	x3270-script.html x3270.jpg \
+	.htaccess c3270-help/.htaccess wc3270-help/.htaccess \
+	wx3270-help/.htaccess x3270-help/.htaccess
 
 all: $(PAGES) webpage.tgz
 
