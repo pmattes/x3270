@@ -1,1 +1,0 @@
-../Common/make-resource-doc.pl

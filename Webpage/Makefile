@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2018, Paul Mattes.
+# Copyright (c) 2007-2018, 2020 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,29 +25,21 @@
 # 
 # Makefile for the Webpage directory
 
-PAGES = credits.html documentation-bugs.html documentation-faq.html \
-	documentation-manpages.html documentation-misc.html \
-	documentation-other.html documentation-relnotes.html \
-	documentation-ssl.html documentation.html download.html index.html \
-	license.html screenshots.html x026.html
+PAGES = documentation-bugs.html documentation-manpages.html \
+	documentation-misc.html documentation-other.html documentation.html \
+	index.html screenshots.html x026.html
 
 SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 	japanese-thumb.png japanese.png keypad-thumb.png keypad.png \
 	wc3270-thumb.png wc3270.png x3270_main-thumb.png x3270_main.png
 
-OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
-	Build-x3270.html Build.html Charset.html HotBugs.html Keymap.html \
-	SS-HCS12-1372-00.pdf Unix-x3270if.html Windows-x3270if.html \
-	WindowsInstall.html Wishlist.html c3270-Resources.html c3270-man.html \
-	c3270Keymap.html del.jpg delta.jpg ibm_hosts.html man/FAQ.html \
-	pr3287-man.html rest.html s3270-Resources.html s3270-man.html \
-	styles.css tcl3270-man.html \
-	wc3270-Resources.html wc3270-man.html wc3270-script.html \
-	wc3270Keymap.html wpr3287-man.html ws3270-Resources.html \
-	ws3270-man.html x026.gif x3270-Resources.html x3270-man.html \
-	x3270-script.html x3270.jpg \
-	.htaccess c3270-help/.htaccess wc3270-help/.htaccess \
-	wx3270-help/.htaccess x3270-help/.htaccess
+OTHERS = $(SCREENS) SS-HCS12-1372-00.pdf Unix-x3270if.html \
+	 Windows-x3270if.html c3270-man.html ibm_hosts.html \
+	 man/FAQ.html pr3287-man.html s3270-man.html styles.css \
+	 tcl3270-man.html wc3270-man.html wc3270-script.html \
+	 wpr3287-man.html ws3270-man.html x026.gif x3270-man.html \
+	 x3270-script.html x3270.jpg .htaccess c3270-help/.htaccess \
+	 wc3270-help/.htaccess wx3270-help/.htaccess x3270-help/.htaccess
 
 all: $(PAGES) webpage.tgz
 
@@ -55,14 +47,10 @@ clean:
 	$(RM) $(PAGES) webpage.tgz
 
 # Rules for HTML files with the navigation bar.
-credits.html: credits-body.html mkpages.bash version.txt
-	./mkpages.bash credits
 documentation.html: documentation-body.html mkpages.bash version.txt
 	./mkpages.bash documentation
 documentation-bugs.html: documentation-bugs-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-bugs
-documentation-faq.html: documentation-faq-body.html mkpages.bash version.txt
-	./mkpages.bash documentation-faq
 documentation-manpages.html: documentation-manpages-body.html mkpages.bash \
     	version.txt
 	./mkpages.bash documentation-manpages
@@ -70,17 +58,8 @@ documentation-misc.html: documentation-misc-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-misc
 documentation-other.html: documentation-other-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-other
-documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash \
-    	version.txt
-	./mkpages.bash documentation-relnotes
-documentation-ssl.html: documentation-ssl-body.html mkpages.bash version.txt
-	./mkpages.bash documentation-ssl
-download.html: download-body.html mkpages.bash version.txt
-	./mkpages.bash download
 index.html: index-body.html mkpages.bash version.txt
 	./mkpages.bash index
-license.html: license-body.html mkpages.bash version.txt
-	./mkpages.bash license
 screenshots.html: screenshots-body.html mkpages.bash version.txt
 	./mkpages.bash screenshots
 x026.html: x026-body.html mkpages.bash version.txt
@@ -113,19 +92,6 @@ ws3270-man.html:
 	cd ../ws3270 && $(MAKE) -f Makefile.aux html/ws3270-man.html
 Windows-x3270if.html:
 	cd ../wx3270if && $(MAKE) -f Makefile.aux html/Windows-x3270if.html
-
-c3270-Resources.html:
-	cd ../c3270 && $(MAKE) -f Makefile.aux html/Resources.html
-s3270-Resources.html:
-	cd ../s3270 && $(MAKE) -f Makefile.aux html/Resources.html
-tcl3270-Resources.html:
-	cd ../tcl3270 && $(MAKE) -f Makefile.aux html/Resources.html
-wc3270-Resources.html:
-	cd ../wc3270 && $(MAKE) -f Makefile.aux html/Resources.html
-ws3270-Resources.html:
-	cd ../ws3270 && $(MAKE) -f Makefile.aux html/Resources.html
-x3270-Resources.html:
-	cd ../x3270 && $(MAKE) -f Makefile.aux html/Resources.html
 
 webpage.tgz: $(PAGES) $(OTHERS) mkpages.bash Makefile
 	tar -czhf webpage.tgz $(PAGES) $(OTHERS)

@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013-2015, 2017-2018 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2015, 2017-2018, 2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,7 @@ PRODUCT = tcl3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html html/ReleaseNotes.html \
-	html/SSL.html
+DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html
 
  # Rule for building the source tarball: run autoconf and build the
  # documentation.
@@ -55,9 +54,3 @@ $(PRODUCT).man: tcl3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ tcl3270.man.m4
 html/$(PRODUCT)-man.html: tcl3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ tcl3270.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@

@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013-2017 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2017, 2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -33,15 +33,10 @@ all:
 
 # Development tools.
 
-MISC = $(PRODUCT).man LICENSE Makefile.in README \
-	conf.h.in configure configure.in \
-	version.txt \
-	x3270-script.man
+MISC = $(PRODUCT).man Makefile.in conf.h.in configure configure.in \
+       version.txt x3270-script.man
 
-HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/README.html html/ReleaseNotes.html \
-	html/Resources.html html/SSL.html html/Wishlist.html \
-	html/x3270-script.html html/x3270.xbm
+HTML = html/$(PRODUCT)-man.html html/x3270-script.html html/x3270.xbm
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -65,11 +60,3 @@ x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
 html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@

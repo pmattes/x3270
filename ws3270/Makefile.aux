@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2018 Paul Mattes.
+# Copyright (c) 1995-2018, 2020 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,7 @@ PRODUCT = ws3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
-	html/SSL.html html/wc3270-script.html
+DOCS = html/$(PRODUCT)-man.html html/wc3270-script.html
 
 src.tgz: $(DOCS) Makefile.aux
 
@@ -45,11 +44,3 @@ html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n ws3270-script -o $@ x3270-script.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@

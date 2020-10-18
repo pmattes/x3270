@@ -31,8 +31,7 @@ PRODUCT = wc3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = LICENSE.txt html/$(PRODUCT)-man.html html/ReleaseNotes.html \
-	html/Resources.html html/SSL.html html/wc3270-script.html
+DOCS = html/$(PRODUCT)-man.html html/wc3270-script.html
 
 src.tgz: $(DOCS) wc3270.iss package.ps1 Makefile.aux
 
@@ -46,22 +45,11 @@ man: $(DOCS)
 html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc \
     	keymaps.inc $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n wc3270-script -o $@ x3270-script.man.m4
-html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-
-# Special rule to build the SSL documentation.
-html/SSL.html: documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and TLS" documentation-ssl-body.html $@
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
-
-LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
-	./mkiss <LICENSE.txt.tmpl >LICENSE.txt
 
 package.ps1: version.txt package.ps1.tmpl mkiss
 	./mkiss <package.ps1.tmpl >package.ps1
