@@ -26,19 +26,10 @@
 
 # Auxiliary makefile for wb3270
 
-PRODUCT = wb3270
-
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html
+src.tgz:
 
-src.tgz: $(DOCS) Makefile.aux
+man:
 
-MANDEP = html.m4 m4man Makefile.aux version.txt
-MKHTML = ./m4man -t html -p $(PRODUCT)
-
-man: $(DOCS)
-
-html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
