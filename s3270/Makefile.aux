@@ -38,7 +38,7 @@ include s3270_files.mk
 MISC = $(PRODUCT).man Examples/cms_cmd.expect Makefile.in \
 	conf.h.in configure configure.in mkversion.sh \
 	parts.h.in s3270_files.mk s3270_glue.bash version.txt \
-	x3270-script.man x3270_glue.expect
+	x3270_glue.expect
 
 HTML = html/$(PRODUCT)-man.html html/x3270.xbm
 
@@ -54,13 +54,9 @@ MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
 MKMAN = ./m4man -t man -p $(PRODUCT)
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
-man: $(PRODUCT).man x3270-script.man $(HTML)
+man: $(PRODUCT).man $(HTML)
 
 $(PRODUCT).man: x3270.man.m4 $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
 html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
-html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4

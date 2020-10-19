@@ -34,9 +34,9 @@ all:
 # Development tools.
 
 MISC = $(PRODUCT).man Makefile.in conf.h.in configure configure.in \
-       version.txt x3270-script.man
+       version.txt
 
-HTML = html/$(PRODUCT)-man.html html/x3270-script.html html/x3270.xbm
+HTML = html/$(PRODUCT)-man.html html/x3270.xbm
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -50,13 +50,9 @@ MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
 MKMAN = ./m4man -t man -p $(PRODUCT)
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
-man: $(PRODUCT).man x3270-script.man $(HTML)
+man: $(PRODUCT).man $(HTML)
 
 $(PRODUCT).man: x3270.man.m4 $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
 html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
-html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4

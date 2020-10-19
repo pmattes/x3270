@@ -35,10 +35,9 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 
 OTHERS = $(SCREENS) SS-HCS12-1372-00.pdf c3270-man.html ibm_hosts.html \
 	 man/FAQ.html pr3287-man.html s3270-man.html styles.css \
-	 tcl3270-man.html wc3270-man.html wc3270-script.html \
-	 x026.gif x3270-man.html \
-	 x3270-script.html x3270.jpg .htaccess c3270-help/.htaccess \
-	 wc3270-help/.htaccess wx3270-help/.htaccess x3270-help/.htaccess
+	 tcl3270-man.html wc3270-man.html x026.gif x3270-man.html \
+	 x3270.jpg .htaccess c3270-help/.htaccess wc3270-help/.htaccess \
+	 wx3270-help/.htaccess x3270-help/.htaccess
 
 all: $(PAGES) webpage.tgz
 
@@ -76,13 +75,8 @@ tcl3270-man.html:
 	cd ../tcl3270 && $(MAKE) -f Makefile.aux html/tcl3270-man.html
 x3270-man.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-man.html
-x3270-script.html:
-	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-script.html
-
 wc3270-man.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
-wc3270-script.html:
-	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-script.html
 
 webpage.tgz: $(PAGES) $(OTHERS) mkpages.bash Makefile
 	tar -czhf webpage.tgz $(PAGES) $(OTHERS)

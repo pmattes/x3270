@@ -31,7 +31,7 @@ PRODUCT = wc3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html html/wc3270-script.html
+DOCS = html/$(PRODUCT)-man.html
 
 src.tgz: $(DOCS) wc3270.iss package.ps1 Makefile.aux
 
@@ -44,8 +44,6 @@ man: $(DOCS)
 # Rules for building man pages and derived HTML documentation.
 html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
-html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n wc3270-script -o $@ x3270-script.man.m4
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss

@@ -84,8 +84,6 @@ x3270if: ../x3270if/x3270if
 
 man:: c3270.man
 	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
-man:: x3270-script.man
-	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 man:: ibm_hosts.man
 	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
@@ -105,7 +103,6 @@ install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man5
 	$(INSTALL_DATA) c3270.man $(DESTDIR)$(MANDIR)/man1/c3270.1
-	$(INSTALL_DATA) x3270-script.man $(DESTDIR)$(MANDIR)/man1/x3270-script.1
 	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 
 clean:

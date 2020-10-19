@@ -1,5 +1,5 @@
 '\" t
-.TH c3270 1 "18 October 2020"
+.TH c3270 1 "19 October 2020"
 .SH "NAME"
 c3270 \-
 curses-based 

@@ -1,1 +1,0 @@
-../Common/x3270-script.man.m4

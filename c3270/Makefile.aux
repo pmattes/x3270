@@ -32,9 +32,7 @@ PRODUCT = c3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html \
-	html/x3270-script.html \
-	ibm_hosts.man x3270-script.man
+DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html
 
 # Rule for building the source tarball: run autoconf and build the
 # documentation.
@@ -61,7 +59,3 @@ ibm_hosts.man: ibm_hosts.man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
 html/ibm_hosts.html: ibm_hosts.man.m4 $(MANDEP)
 	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
-x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
-html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4
