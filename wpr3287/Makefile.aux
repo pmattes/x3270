@@ -26,21 +26,9 @@
 
 # Auxiliary makefile for wpr3287
 
-PRODUCT = wpr3287
-
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html
+src.tgz:
 
-src.tgz: $(DOCS) Makefile.aux
-
-MANDEP = html.m4 m4man Makefile.aux version.txt
-MKHTML = ./m4man -t html -p $(PRODUCT)
-
-# Rule for building the documentation.
-man: $(DOCS)
-
-# Rules for building man pages and derived HTML documentation.
-html/$(PRODUCT)-man.html: pr3287.man.m4 $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) -o $@ pr3287.man.m4
+man:
