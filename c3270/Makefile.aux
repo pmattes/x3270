@@ -53,13 +53,13 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 man: $(DOCS)
 
 # Rules for building man pages and derived HTML documentation.
-$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc keymaps.inc hostname.inc $(MANDEP)
+$(PRODUCT).man: x3270.man.m4 $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
-html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc hostname.inc $(MANDEP)
+html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 ibm_hosts.man: ibm_hosts.man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
-html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
+html/ibm_hosts.html: ibm_hosts.man.m4 $(MANDEP)
 	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
 x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4

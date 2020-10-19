@@ -34,7 +34,10 @@ XX_PRODUCT XX_DASH
 XX_SM(IBM) host access tool
 XX_SH(Synopsis)
 XX_FB(XX_PRODUCT)
-[XX_FI(script) [XX_FI(script-arg...)]] [-- [XX_FI(tcl3270-options)] [XX_FI(XX_S3270`'-options)] [XX_FI(host)|XX_FI(session-file).XX_PRODUCT]
+[XX_FI(script) [XX_FI(script-arg...)]] [-- [XX_FI(tcl3270-options)] [XX_FI(XX_S3270`'-options)] [XX_FI(host)]
+XX_BR
+XX_FB(XX_PRODUCT)
+[XX_FI(script) [XX_FI(script-arg...)]] [-- [XX_FI(tcl3270-options)] [XX_FI(XX_S3270`'-options)] [XX_FI(session-file).XX_PRODUCT]
 XX_BR
 XX_FB(XX_PRODUCT) -v
 XX_BR
@@ -54,7 +57,7 @@ If the output is multiple lines, the result is a list of strings.
 XX_LP
 On the command line, a session file can be named either
 XX_FI(name).XX_FB(XX_PRODUCT) or XX_FI(name).XX_FB(XX_S3270).
-Resource values, such as those used in XX_FB(XX_DASHED(rm)) options or in a
+Resource values, such as those used in XX_FB(XX_DASHED(xrm)) options or in a
 session file, can be specified as XX_FB(XX_PRODUCT).XX_FI(resource) or
 XX_FB(XX_S3270).XX_FI(resource).
 XX_SH(XX_PRODUCT-Specific Options)
@@ -63,50 +66,7 @@ Turns on debugging information, tracing data going between XX_PRODUCT and
 XX_S3270.
 XX_SH(See Also)
 XX_LINK(XX_S3270-man.html,XX_S3270`'(1))
-XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-XX_CYEAR, Paul Mattes.
-XX_BR
-Copyright`'XX_COPY()2004-2005, Don Russell.
-XX_BR
-Copyright`'XX_COPY()2004, Dick Altenbern.
-XX_BR
-Copyright`'XX_COPY()1990, Jeff Sparkes.
-XX_BR
-Copyright`'XX_COPY()1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
- 30332.
-XX_BR
-All rights reserved.
-XX_LP
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-XX_TPS()
-XX_TP(*)
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-XX_TP(*)
-Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-XX_TP(*)
-Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
-GTRC nor
-the names of their contributors may be used to endorse or promote
-products derived from this software without specific prior written
-permission.
-XX_TPE()
-XX_LP
-THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
-SPARKES AND GTRC
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
-ALTENBERN, JEFF
-SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+XX_SH(Wiki)
+Primary documentation for XX_PRODUCT is on the XX_FB(x3270 Wiki), XX_LINK(https://x3270.miraheze.org/wiki/Main_Page,https://x3270.miraheze.org/wiki/Main_Page).
 XX_SH(Version)
 XX_PRODUCT XX_VERSION_NUMBER

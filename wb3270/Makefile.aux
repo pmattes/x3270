@@ -40,5 +40,5 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 
 man: $(DOCS)
 
-html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
+html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
