@@ -33,11 +33,10 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 	japanese-thumb.png japanese.png keypad-thumb.png keypad.png \
 	wc3270-thumb.png wc3270.png x3270_main-thumb.png x3270_main.png
 
-OTHERS = $(SCREENS) SS-HCS12-1372-00.pdf Unix-x3270if.html \
-	 Windows-x3270if.html c3270-man.html ibm_hosts.html \
+OTHERS = $(SCREENS) SS-HCS12-1372-00.pdf c3270-man.html ibm_hosts.html \
 	 man/FAQ.html pr3287-man.html s3270-man.html styles.css \
 	 tcl3270-man.html wc3270-man.html wc3270-script.html \
-	 wpr3287-man.html ws3270-man.html x026.gif x3270-man.html \
+	 x026.gif x3270-man.html \
 	 x3270-script.html x3270.jpg .htaccess c3270-help/.htaccess \
 	 wc3270-help/.htaccess wx3270-help/.htaccess x3270-help/.htaccess
 
@@ -79,19 +78,11 @@ x3270-man.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-man.html
 x3270-script.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-script.html
-Unix-x3270if.html:
-	cd ../x3270if && $(MAKE) -f Makefile.aux html/Unix-x3270if.html
 
 wc3270-man.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
 wc3270-script.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-script.html
-wpr3287-man.html:
-	cd ../wpr3287 && $(MAKE) -f Makefile.aux html/wpr3287-man.html
-ws3270-man.html:
-	cd ../ws3270 && $(MAKE) -f Makefile.aux html/ws3270-man.html
-Windows-x3270if.html:
-	cd ../wx3270if && $(MAKE) -f Makefile.aux html/Windows-x3270if.html
 
 webpage.tgz: $(PAGES) $(OTHERS) mkpages.bash Makefile
 	tar -czhf webpage.tgz $(PAGES) $(OTHERS)

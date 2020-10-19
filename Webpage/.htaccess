@@ -18,3 +18,5 @@ Redirect /ws3270-Resources.html "https://x3270.miraheze.org/wiki/Category:S3270_
 Redirect /wc3270Keymap.html "https://x3270.miraheze.org/wiki/Wc3270/Keymap"
 Redirect /WindowsInstall.html "https://x3270.miraheze.org/wiki/Wc3270/Installer"
 Redirect /x3270-Resources.html "https://x3270.miraheze.org/wiki/Category:X3270_resources"
+Redirect /Unix-x3270if.html "https://x3270.miraheze.org/wiki/X3270if"
+Redirect /Windows-x3270if.html "https://x3270.miraheze.org/wiki/X3270if"
