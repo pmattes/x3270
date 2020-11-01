@@ -4813,7 +4813,10 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
     }
 
     g = XLoadQueryFont(display, best);
-    set_font_globals(g, /*name*/best, best, g->fid, is_dbcs);
+    if (g == NULL) {
+	return xs_buffer("Font %s could not be loaded", best);
+    }
+    set_font_globals(g, best, best, g->fid, is_dbcs);
     return NULL;
 }
 
