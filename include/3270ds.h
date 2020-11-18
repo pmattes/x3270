@@ -369,6 +369,7 @@
 #define EBC_period	0x4b    
 #define EBC_ampersand	0x50    
 #define EBC_slash	0x61
+#define EBC_comma	0x6b
 #define EBC_percent	0x6c
 #define EBC_underscore	0x6d
 #define EBC_greater	0x6e    
