@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2019 Paul Mattes.
+ * Copyright (c) 2008-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -452,10 +452,12 @@ unicode_to_ebcdic(ucs4_t u)
     int i;
     ebc_t d;
 
-    if (!u)
+    if (!u) {
 	return 0;
-    if (u == 0x0020)
+    }
+    if (u == 0x0020) {
 	return 0x40;
+    }
 
     for (i = 0; i < UT_SIZE; i++) {
 	if (cur_uni->code[i] == u) {
@@ -464,8 +466,9 @@ unicode_to_ebcdic(ucs4_t u)
     }
     /* See if it's DBCS. */
     d = unicode_to_ebcdic_dbcs(u);
-    if (d)
+    if (d) {
 	return d;
+    }
 
     return 0;
 }
