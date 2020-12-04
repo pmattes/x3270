@@ -2476,12 +2476,13 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		    rt_buf[j].byte2 = u & 0xff;
 		} else {
 		    /* Only draw if there is an EBCDIC mapping. */
-		    ebc_t e = unicode_to_ebcdic(buffer[i].ucs4);
+		    bool ge;
+		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge, true);
 
-		    rt_buf[j].byte1 = 0;
+		    rt_buf[j].byte1 = ge? 1 : 0;
 		    if (e != 0) {
 			rt_buf[j].byte2 = font_index(e, d8_ix,
-				toggled(MONOCASE));
+				!ge && toggled(MONOCASE));
 		    } else {
 			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
 		    }
