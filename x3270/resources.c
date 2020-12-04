@@ -365,7 +365,7 @@ XtResource xresources[] = {
     { ResAidWait, ClsAidWait, XtRBoolean, sizeof(Boolean),
       btoffset(AID_WAIT), XtRString, ResTrue },
     { ResOverlayPaste, ClsOverlayPaste, XtRBoolean, sizeof(Boolean),
-      btoffset(OVERLAY_PASTE), XtRString, ResFalse },
+      btoffset(OVERLAY_PASTE), XtRString, ResTrue },
     { ResTypeahead, ClsTypeahead, XtRBoolean, sizeof(Boolean),
       btoffset(TYPEAHEAD), XtRString, ResTrue },
     { ResAplMode, ClsAplMode, XtRBoolean, sizeof(Boolean),
