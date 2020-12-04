@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall -Werror -ansi -pedantic -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_BSD_SOURCE
+CFLAGS = -g -Wall -Werror -ansi -pedantic -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_DEFAULT_SOURCE
 
 all: playback
 
