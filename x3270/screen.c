@@ -2479,12 +2479,25 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		    bool ge;
 		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge, true);
 
-		    rt_buf[j].byte1 = ge? 1 : 0;
-		    if (e != 0) {
-			rt_buf[j].byte2 = font_index(e, d8_ix,
-				!ge && toggled(MONOCASE));
+		    if (ge) {
+			if (ss->extended_3270font) {
+			    rt_buf[j].byte1 = 1;
+			    rt_buf[j].byte2 = ebc2cg0[e];
+			} else {
+			    if (ss->font_16bit) {
+				rt_buf[j] = apl_to_udisplay(d8_ix, e);
+			    } else {
+				rt_buf[j] = apl_to_ldisplay(e);
+			    }
+			}
 		    } else {
-			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
+			rt_buf[j].byte1 = 0;
+			if (e != 0) {
+			    rt_buf[j].byte2 = font_index(e, d8_ix,
+				    !ge && toggled(MONOCASE));
+			} else {
+			    rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
+			}
 		    }
 		}
 	    } else {
