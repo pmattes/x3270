@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2014-2015, 2019 Paul Mattes.
+ * Copyright (c) 2008-2009, 2014-2015, 2019-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 #define ISO10646_IX	100
 
 typedef struct {
-    char *cset;			/* Character set name */
+    char *cset;		/* Character set name */
     ucs4_t u[256];	/* UCS-4 values for each display position */
 } d8_t;
 
@@ -1032,16 +1032,17 @@ static d8_t d8[] = {
 int
 display8_init(char *cset)
 {
-    	int i;
+    int i;
 
-	for (i = 0; d8[i].cset; i++) {
-	    	if (!strcasecmp(cset, d8[i].cset)) {
-			return i;
-		}
+    for (i = 0; d8[i].cset; i++) {
+	if (!strcasecmp(cset, d8[i].cset)) {
+	    return i;
 	}
-	if (!strcasecmp(cset, "iso10646-1"))
-		return ISO10646_IX;
-	return -1;
+    }
+    if (!strcasecmp(cset, "iso10646-1")) {
+	return ISO10646_IX;
+    }
+    return -1;
 }
 
 /*
@@ -1051,44 +1052,50 @@ display8_init(char *cset)
 int
 display8_lookup(int d8_ix, ucs4_t ucs4)
 {
-    	int i;
+    int i;
 
-	/* Handle errors. */
-    	if (d8_ix < 0)
-		return -1;
-
-	/* Handle ISO 10646-1 (almost-direct mapping). */
-	if (d8_ix == ISO10646_IX) {
-		if (ucs4 == UPRIV_fm)
-			return ';';
-		else if (ucs4 == UPRIV_dup)
-			return '*';
-		else if (ucs4 == UPRIV_eo)
-		    	return 0x25cf;
-		else if (ucs4 == UPRIV_sub)
-		    	return 0x25a0;
-		else
-			return (int)ucs4;
-	}
-
-	/* Handle more errors. */
-	if ((unsigned)d8_ix >= (ND8 - 1))
-	    	return -1;
-
-	/* Check for a match in the proper table. */
-	for (i = 0; i < 256; i++) {
-	    	if (d8[d8_ix].u[i] == ucs4)
-		    	return i;
-	}
-
-	/* Handle the private-use values for FM and DUP. */
-	if (ucs4 == UPRIV_fm)
-	    	return ';';
-	if (ucs4 == UPRIV_dup)
-	    	return '*';
-
-	/* Give up. */
+    /* Handle errors. */
+    if (d8_ix < 0) {
 	return -1;
+    }
+
+    /* Handle ISO 10646-1 (almost-direct mapping). */
+    if (d8_ix == ISO10646_IX) {
+	if (ucs4 == UPRIV_fm) {
+	    return ';';
+	} else if (ucs4 == UPRIV_dup) {
+	    return '*';
+	} else if (ucs4 == UPRIV_eo) {
+	    return 0x25cf;
+	} else if (ucs4 == UPRIV_sub) {
+	    return 0x25a0;
+	} else {
+	    return (int)ucs4;
+	}
+    }
+
+    /* Handle more errors. */
+    if ((unsigned)d8_ix >= (ND8 - 1)) {
+	return -1;
+    }
+
+    /* Check for a match in the proper table. */
+    for (i = 0; i < 256; i++) {
+	if (d8[d8_ix].u[i] == ucs4) {
+	    return i;
+	}
+    }
+
+    /* Handle the private-use values for FM and DUP. */
+    if (ucs4 == UPRIV_fm) {
+	return ';';
+    }
+    if (ucs4 == UPRIV_dup) {
+	return '*';
+    }
+
+    /* Give up. */
+    return -1;
 }
 
 /*
