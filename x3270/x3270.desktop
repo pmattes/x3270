@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=x3270
+Comment=IBM 3270 Terminal Emulator
+TryExec=x3270
+Exec=x3270
+Icon=x3270
+Terminal=false
+Categories=Utility;TerminalEmulator;

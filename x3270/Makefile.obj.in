@@ -56,6 +56,8 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 CIFONTDIR = @CIFONTDIR@
+ICONDIR = /usr/share/icons/hicolor/48x48/apps
+APPDIR = /usr/share/applications
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @XINC@ -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
@@ -121,6 +123,11 @@ install::
 	mkfontdir $(DESTDIR)$(CIFONTDIR)
 	chmod u=rwx,go=rx $(DESTDIR)$(CIFONTDIR)
 	chmod a=r $(DESTDIR)$(CIFONTDIR)/fonts.dir
+install::
+	[ -d $(DESTDIR)$(ICONDIR) ] && \
+		$(INSTALL_DATA) x3270.png $(DESTDIR)$(ICONDIR)/x3270.png
+	[ -d $(DESTDIR)$(APPDIR) ] && \
+		$(INSTALL_DATA) x3270.desktop $(DESTDIR)$(APPDIR)/x3270.desktop
 
 install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
