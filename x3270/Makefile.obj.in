@@ -89,8 +89,8 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 %.pcf.gz: %.bdf
 	bdftopcf $< | gzip -n9 >$@
 
-%.png.in: %.png
-	cp %< $@
+%.png: %.png.in
+	cp $< $@
 
 dryrun: dryrun.in
 	cp $< $@
