@@ -134,13 +134,14 @@ install::
 	chmod a=r $(DESTDIR)$(CIFONTDIR)/fonts.dir
 install::
 	if [ -d $(DESTDIR)$(ICONDIR) ]; \
-	then	foreach icon in $(ICONS); \
-		do	res=`echo $icon sed -e s/x3270-// -e s/.png.in//`; \
-			$(INSTALL_DATA) $icon $(DESTDIR)$(ICONDIR)/$res/apps/x3270.png; \
+	then	for icon in $(ICONS); \
+		do	res=`echo $$icon | sed -e s/x3270-// -e s/.png//`; \
+			$(INSTALL_DATA) $$icon $(DESTDIR)$(ICONDIR)/$$res/apps/x3270.png; \
 		done; \
 	fi
-	[ -d $(DESTDIR)$(APPDIR) ] && \
-		$(INSTALL_DATA) x3270.desktop $(DESTDIR)$(APPDIR)/x3270.desktop
+	if [ -d $(DESTDIR)$(APPDIR) ]; \
+	then	$(INSTALL_DATA) x3270.desktop $(DESTDIR)$(APPDIR)/x3270.desktop; \
+	fi
 
 install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
