@@ -78,22 +78,18 @@ AC_SUBST(DEFINE_UAD)
 AC_SUBST(FALLBACKS_O)
 
 dnl Check for --with-fontdir=DIR
-AC_ARG_WITH(fontdir,[  --with-fontdir=DIR      install fonts in directory DIR [DIR=misc]])
+AC_ARG_WITH(fontdir,[  --with-fontdir=DIR      install fonts in directory DIR [DIR=PREFIX/share/fonts/X11/misc]])
 case "$with_fontdir" in
 ""|yes|no)
-	IFONTDIR='$'"(FONTDIR)/misc"
-	CIFONTDIR='$'"(exec_prefix)/fonts/misc"
+	CIFONTDIR='$'"(prefix)/share/fonts/X11/misc"
 	;;
 /*)
-	IFONTDIR="$with_fontdir"
 	CIFONTDIR="$with_fontdir"
 	;;
 *)
-	IFONTDIR='$'"(FONTDIR)/$with_fontdir"
 	CIFONTDIR='$'"(exec_prefix)/fonts/$with_fontdir"
 	;;
 esac
-AC_SUBST(IFONTDIR)
 AC_SUBST(CIFONTDIR)
 
 # Set up the configuration directory.

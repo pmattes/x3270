@@ -626,7 +626,6 @@ mkfontdir_found
 bdftopcf_found
 LIBX3270DIR
 CIFONTDIR
-IFONTDIR
 FALLBACKS_O
 DEFINE_UAD
 UAD_FLAGS
@@ -1349,7 +1348,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-x                use the X Window System
-  --with-fontdir=DIR      install fonts in directory DIR DIR=misc
+  --with-fontdir=DIR      install fonts in directory DIR DIR=PREFIX/share/fonts/X11/misc
 
 Some influential environment variables:
   CC          C compiler command
@@ -3822,19 +3821,15 @@ fi
 
 case "$with_fontdir" in
 ""|yes|no)
-	IFONTDIR='$'"(FONTDIR)/misc"
-	CIFONTDIR='$'"(exec_prefix)/fonts/misc"
+	CIFONTDIR='$'"(prefix)/share/fonts/X11/misc"
 	;;
 /*)
-	IFONTDIR="$with_fontdir"
 	CIFONTDIR="$with_fontdir"
 	;;
 *)
-	IFONTDIR='$'"(FONTDIR)/$with_fontdir"
 	CIFONTDIR='$'"(exec_prefix)/fonts/$with_fontdir"
 	;;
 esac
-
 
 
 # Set up the configuration directory.
