@@ -2137,6 +2137,8 @@ product_set_appres_defaults(void)
     appres.c3270.ascii_box_draw = true;
 # endif /*]*/
 #endif /*]*/
+
+    set_toggle(SELECT_URL, true);
 }
 
 /*

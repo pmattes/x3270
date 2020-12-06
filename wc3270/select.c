@@ -48,6 +48,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "screen.h"
+#include "toggles.h"
 #include "toupper.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -59,6 +60,9 @@
 
 /* Unicode DBCS (double-width) blank. */
 #define IDEOGRAPHIC_SPACE	0x3000
+
+#define HTTP_PREFIX    "http://"
+#define HTTPS_PREFIX   "https://"
 
 static char *s_pending;
 static char *s_onscreen;
@@ -217,6 +221,115 @@ is_blank(int baddr)
 }
 
 /*
+ * Test a character for being valid in a URL.
+ */
+static bool
+is_url_char(ucs4_t u)
+{
+    return u > ' ' && u <= 0xff &&
+	strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:@[]/", u) != NULL;
+}
+
+/*
+ * Test a screen location for holding a valid URL character.
+ */
+static bool
+is_url_ea(int baddr)
+{
+    if (ea_buf[baddr].cs != CS_BASE) {
+	return false;
+    }
+    return is_url_char(ea_buf[baddr].ucs4?
+		ea_buf[baddr].ucs4:
+		ebcdic_to_unicode(ea_buf[baddr].ec, ea_buf[baddr].cs, EUO_NONE));
+}
+
+/*
+ * Test a double-click for a URL, and execute it if found.
+ *
+ * Returns true if a URL was found.
+ */
+static bool
+url_click(int row, int col)
+{
+    int baddr = (row * COLS) + col;
+    int first, last;
+    char *url;
+    int i;
+    char *command;
+    int rc;
+
+    if (!is_url_ea(baddr)) {
+	return false;
+    }
+
+    /* Look left, including NVT-mode wrapping. */
+    first = baddr;
+    while (true) {
+	if (!(first % COLS)) {
+	    if (!first) {
+		break;
+	    }
+	    if (!(ea_buf[first - 1].gr & GR_WRAP)) {
+		break;
+	    }
+	}
+	if (!is_url_ea(first - 1)) {
+	    break;
+	}
+	first--;
+    }
+
+    /* Look right, including NVT-mode wrapping. */
+    last = baddr;
+    while (true) {
+	if (!is_url_ea(last)) {
+	    last--;
+	    break;
+	}
+	if (!((last + 1) % COLS)) {
+	    if (last == ROWS * COLS) {
+		break;
+	    }
+	    if (!(ea_buf[last].gr & GR_WRAP)) {
+		break;
+	    }
+	}
+	last++;
+    }
+
+    /* Extract the string. */
+    url = Malloc(last - first + 2);
+    for (i = 0; i < last - first + 1; i++) {
+	url[i] = (ea_buf[first + i].ucs4?
+		ea_buf[first + i].ucs4:
+		ebcdic_to_unicode(ea_buf[first + i].ec, ea_buf[first + i].cs, EUO_NONE)) & 0xff;
+    }
+    url[i] = '\0';
+
+    if (strncmp(url, HTTP_PREFIX, strlen(HTTP_PREFIX)) &&
+	    strncmp(url, HTTPS_PREFIX, strlen(HTTPS_PREFIX))) {
+	Free(url);
+	return false;
+    }
+
+    /* Launch the browser. */
+    command = xs_buffer("start \"browser\" \"%s\"", url);
+    Free(url);
+    vtrace("Starting URL: %s\n", url);
+    rc = system(command);
+    if (rc != 0) {
+	popup_an_error("URL failed, return code %d", rc);
+    }
+    Free(command);
+
+    /* Get back mouse events */
+    screen_system_fixup();
+
+    return true;
+}
+
+/*
  * Find the starting and ending columns of a 'word'.
  *
  * The rules, from Windows, are a bit strange.
@@ -306,6 +419,14 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    break;
 	case SE_DOUBLE_CLICK:
 	    vtrace("  Word select\n");
+	    if (toggled(SELECT_URL) && url_click(row, col)) {
+		if (click_cursor_addr != -1) {
+		    /* Move the cursor back from the first click. */
+		    cursor_move(click_cursor_addr);
+		    click_cursor_addr = -1;
+		}
+		break;
+	    }
 	    rubber_banding = false;
 	    select_start_row = row;
 	    select_end_row = row;
@@ -1034,6 +1155,10 @@ select_register(void)
 	{ AnSelectRight,SelectRight_action,	ACTION_KE },
 	{ AnSelectUp,	SelectUp_action,	ACTION_KE }
     };
+    static toggle_register_t toggles[] = {
+	{ SELECT_URL, NULL, 0 }
+    };
 
     register_actions(select_actions, array_count(select_actions));
+    register_toggles(toggles, array_count(toggles));
 }
