@@ -75,6 +75,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "tables.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
@@ -83,6 +84,9 @@
 
 #define Max(x, y)	(((x) > (y))? (x): (y))
 #define Min(x, y)	(((x) < (y))? (x): (y))
+
+#define HTTP_PREFIX	"http://"
+#define HTTPS_PREFIX	"https://"
 
 /*
  * Mouse side.
@@ -102,7 +106,7 @@ static Dimension down1_x, down1_y;
 static unsigned long up_time = 0;
 static int      saw_motion = 0;
 static int      num_clicks = 0;
-static void grab_sel(int start, int end, bool really, Time t);
+static bool grab_sel(int start, int end, bool really, Time t, bool as_url);
 #define NS		5
 static Atom     want_sel[NS];
 static struct {			/* owned selections */
@@ -141,6 +145,7 @@ static bool	any_selected = false;
     }					\
 }
 
+/* Default character class. */
 static int char_class[256] = {
 /* nul soh stx etx eot enq ack bel  bs  ht  nl  vt  np  cr  so  si */
     32,  1,  1,  1,  1,  1,  1,  1,  1, 32,  1,  1,  1,  1,  1,  1,
@@ -154,6 +159,42 @@ static int char_class[256] = {
     64, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
 /*   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _ */
     48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 91, 92, 93, 94, 48,
+/*   `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o */
+    96, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
+/*   p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~  del */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,123,124,125,126,   1,
+/* ---,---,---,---,---,---,---,---,---,---,---,---,---,---,---,--- */
+     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+/* ---,---,---,---,---,---,---,---,---,---,---,---,---,---,---,--- */
+     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+/* nob exc cen ste cur yen bro sec dia cop ord gui not hyp reg mac */
+    32,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
+/* deg plu two thr acu mu  par per ce  one mas gui one one thr que */
+   176,177,178,179,180,181,182,183,184,185,186,178,188,189,190,191,
+/* Agr Aac Aci Ati Adi Ari AE  Cce Egr Eac Eci Edi Igr Iac Ici Idi */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
+/* ETH Nti Ogr Oac Oci Oti Odi mul Oob Ugr Uac Uci Udi Yac THO ssh */
+    48, 48, 48, 48, 48, 48, 48,215, 48, 48, 48, 48, 48, 48, 48, 48,
+/* agr aac aci ati adi ari ae  cce egr eac eci edi igr iac ici idi */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
+/* eth nti ogr oac oci oti odi div osl ugr uac uci udi yac tho ydi */
+    48, 48, 48, 48, 48, 48, 48,247, 48, 48, 48, 48, 48, 48, 48, 48
+};
+
+/* Character class for isolating URLs. */
+static int url_char_class[256] = {
+/* nul soh stx etx eot enq ack bel  bs  ht  nl  vt  np  cr  so  si */
+    32,  1,  1,  1,  1,  1,  1,  1,  1, 32,  1,  1,  1,  1,  1,  1,
+/* dle dc1 dc2 dc3 dc4 nak syn etb can  em sub esc  fs  gs  rs  us */
+     1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
+/*  sp   !   "   #   $   %   &   '   (   )   *   +   ,   -   .   / */
+    32, 33, 34, 35, 36, 48, 48, 39, 40, 41, 42, 43, 44, 45, 48, 48,
+/*   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ? */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 59, 60, 61, 62, 48,
+/*   @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
+/*   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _ */
+    48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 92, 48, 94, 48,
 /*   `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o */
     96, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,
 /*   p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~  del */
@@ -248,8 +289,20 @@ ucs4_class(ucs4_t u)
     return (u < 0x100)? char_class[u]: (int)u;
 }
 
-static void
-select_word(int baddr, Time t)
+static int
+ucs4_url_class(ucs4_t u)
+{
+    return (u < 0x100)? url_char_class[u]: (int)u;
+}
+
+static int
+xchar_class(ucs4_t u, bool as_url)
+{
+    return as_url? ucs4_url_class(u): ucs4_class(u);
+}
+
+static bool
+select_word_x(int baddr, Time t, bool as_url)
 {
     unsigned char fa = get_field_attribute(baddr);
     unsigned char ch;
@@ -257,22 +310,22 @@ select_word(int baddr, Time t)
 
     /* Find the initial character class */
     if (ea_buf[baddr].ucs4) {
-	class = ucs4_class(ea_buf[baddr].ucs4);
+	class = xchar_class(ea_buf[baddr].ucs4, as_url);
     } else {
 	if (FA_IS_ZERO(fa)) {
 	    ch = EBC_space;
 	} else {
 	    ch = ea_buf[baddr].ec;
 	}
-	class = char_class[ebc2asc0[ch]];
+	class = xchar_class(ebc2asc0[ch], as_url);
     }
 
     /* Find the beginning */
-    for (f_start = baddr; f_start % COLS; f_start--) {
+    for (f_start = baddr; ; f_start--) {
 	int xclass;
 
 	if (ea_buf[f_start].ucs4) {
-	    xclass = ucs4_class(ea_buf[f_start].ucs4);
+	    xclass = xchar_class(ea_buf[f_start].ucs4, as_url);
 	} else {
 	    fa = get_field_attribute(f_start);
 	    if (FA_IS_ZERO(fa)) {
@@ -280,20 +333,32 @@ select_word(int baddr, Time t)
 	    } else {
 		ch = ea_buf[f_start].ec;
 	    }
-	    xclass = char_class[ebc2asc0[ch]];
+	    xclass = xchar_class(ebc2asc0[ch], as_url);
 	}
 	if (xclass != class) {
 	    f_start++;
 	    break;
 	}
+
+	/*
+	 * If there was a line wrap, the last postion on the previous row will
+	 * have GR_WRAP set.
+	 */
+	if (!(f_start % COLS) && f_start && (ea_buf[f_start - 1].gr & GR_WRAP)) {
+	    continue;
+	}
+
+	if (!(f_start % COLS)) {
+	    break;
+	}
     }
 
     /* Find the end */
-    for (f_end = baddr; (f_end+1) % COLS; f_end++) {
+    for (f_end = baddr; ; f_end++) {
 	int xclass;
 
 	if (ea_buf[f_start].ucs4) {
-	    xclass = ucs4_class(ea_buf[f_end].ucs4);
+	    xclass = xchar_class(ea_buf[f_end].ucs4, as_url);
 	} else {
 	    fa = get_field_attribute(f_end);
 	    if (FA_IS_ZERO(fa)) {
@@ -301,17 +366,41 @@ select_word(int baddr, Time t)
 	    } else {
 		ch = ea_buf[f_end].ec;
 	    }
-	    xclass = char_class[ebc2asc0[ch]];
+	    xclass = xchar_class(ebc2asc0[ch], as_url);
 	}
 	if (xclass != class) {
 	    f_end--;
+	    break;
+	}
+
+	/*
+	 * If there was a line wrap, the last postion in the row will have GR_WRAP
+	 * set.
+	 */
+	if (f_end != ((ROWS * COLS) - 1) && (ea_buf[f_end].gr & GR_WRAP)) {
+	    continue;
+	}
+
+	if (!((f_end + 1) % COLS)) {
 	    break;
 	}
     }
 
     v_start = f_start;
     v_end = f_end;
-    grab_sel(f_start, f_end, true, t);
+    return grab_sel(f_start, f_end, true, t, as_url);
+}
+
+/* Select a word. Incorporates URL selection. */
+static void
+select_word(int baddr, Time t)
+{
+#if defined(HAVE_START) /*[*/
+    if (select_word_x(baddr, t, true)) {
+	return;
+    }
+#endif /*]*/
+    select_word_x(baddr, t, false);
 }
 
 static void
@@ -321,7 +410,7 @@ select_line(int baddr, Time t)
     f_end = f_start + COLS - 1;
     v_start = f_start;
     v_end = f_end;
-    grab_sel(f_start, f_end, true, t);
+    grab_sel(f_start, f_end, true, t, false);
 }
 
 
@@ -463,7 +552,7 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
 	v_end = (vrow_lr * COLS) + vcol_lr;
     }
 
-    grab_sel(v_start, v_end, true, event_time(event));
+    grab_sel(v_start, v_end, true, event_time(event), false);
     saw_motion = 1;
     num_clicks = 0;
 }
@@ -530,7 +619,7 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
 
     num_clicks = 0;
     saw_motion = 1;
-    grab_sel(v_start, v_end, false, event_time(event));
+    grab_sel(v_start, v_end, false, event_time(event), false);
 }
 
 /*
@@ -582,7 +671,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	if (saw_motion) {
 	    f_start = v_start;
 	    f_end = v_end;
-	    grab_sel(f_start, f_end, true, event_time(event));
+	    grab_sel(f_start, f_end, true, event_time(event), false);
 	}
 	break;
     case 2:
@@ -701,7 +790,7 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     num_clicks = 0;
     saw_motion = 1;
-    grab_sel(v_start, v_end, false, event_time(event));
+    grab_sel(v_start, v_end, false, event_time(event), false);
 }
 
 void
@@ -764,7 +853,7 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 	if (saw_motion) {
 	    f_start = v_start;
 	    f_end = v_end;
-	    grab_sel(f_start, f_end, true, event_time(event));
+	    grab_sel(f_start, f_end, true, event_time(event), false);
 	} else if (IN_3270) {
 	    cursor_move(baddr);
 	}
@@ -997,7 +1086,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     /* Grab the selection. */
     f_start = v_start = x_start;
     f_end = v_end = x_end;
-    grab_sel(f_start, f_end, true, event_time(event));
+    grab_sel(f_start, f_end, true, event_time(event), false);
 }
 
 /*
@@ -1041,7 +1130,7 @@ SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
 	want_sel[0] = XA_PRIMARY;
     }
 
-    grab_sel(0, (ROWS * COLS) - 1, true, event_time(event));
+    grab_sel(0, (ROWS * COLS) - 1, true, event_time(event), false);
 }
 
 /*
@@ -1462,8 +1551,8 @@ own_sels(Time t)
  * own the selections in want_sel[].
  */
 #define VISUAL_LEFT(d)	((IS_LEFT(d)) || ((d) == DBCS_SI))
-static void
-grab_sel(int start, int end, bool really, Time t)
+static bool
+grab_sel(int start, int end, bool really, Time t, bool as_url)
 {
     int i, j;
     int start_row, end_row;
@@ -1488,6 +1577,8 @@ grab_sel(int start, int end, bool really, Time t)
 
     if (!ever_3270 && !toggled(RECTANGLE_SELECT)) {
 	/* Continuous selections */
+	bool last_wrap = false;
+
 	if (IS_RIGHT(ctlr_dbcs_state(start))) {
 	    DEC_BA(start);
 	}
@@ -1497,7 +1588,7 @@ grab_sel(int start, int end, bool really, Time t)
 	for (i = start; i <= end; i++) {
 	    screen_set_select(i);
 	    if (really) {
-		if (i != start && !(i % COLS)) {
+		if (i != start && !(i % COLS) && !last_wrap) {
 		    nulls = 0;
 		    store_sel('\n');
 		}
@@ -1513,6 +1604,7 @@ grab_sel(int start, int end, bool really, Time t)
 			nulls++;
 		    }
 		}
+		last_wrap = (ea_buf[i].gr & GR_WRAP) != 0;
 	    }
 	}
 	/* Check for newline extension on the last line. */
@@ -1619,9 +1711,37 @@ grab_sel(int start, int end, bool really, Time t)
 
     any_selected = true;
     ctlr_changed(0, ROWS*COLS);
+
     if (really) {
 	own_sels(t);
     }
+
+#if defined(HAVE_START) /*[*/
+    if (as_url &&
+	toggled(SELECT_URL) &&
+	(!strncmp(select_buf, HTTP_PREFIX, strlen(HTTP_PREFIX)) ||
+	 !strncmp(select_buf, HTTPS_PREFIX, strlen(HTTPS_PREFIX)))) {
+#if defined(_WIN32) /*[*/
+	char *command = xs_buffer("start %s", select_buf);
+#elif defined(linux) || defined(__linux__) /*[*/
+	char *command = xs_buffer("xdg-open %s", select_buf);
+#elif defined(__APPLE__) /*][*/
+	char *command = xs_buffer("open %s", select_buf);
+#elif defined(__CYGWIN__) /*][*/
+	char *command = xs_buffer("cygstart -o %s", select_buf);
+#endif /*]*/
+	int rc;
+
+	vtrace("Starting URL open command: %s\n", command);
+	rc = system(command);
+	if (rc != 0) {
+	    popup_an_error("URL open failed, return code %d", rc);
+	}
+	Free(command);
+	return true;
+    }
+#endif /*]*/
+    return false;
 }
 
 /*
@@ -1784,6 +1904,10 @@ select_register(void)
 {
     static toggle_register_t toggles[] = {
 	{ RECTANGLE_SELECT,	NULL,	0 }
+#if defined(HAVE_START) /*[*/
+					   ,
+	{ SELECT_URL,		NULL,	0 }
+#endif /*]*/
     };
 
     register_toggles(toggles, array_count(toggles));

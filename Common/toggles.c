@@ -104,6 +104,7 @@ toggle_name_t toggle_names[] = {
     { ResRightToLeftMode, RIGHT_TO_LEFT,	false },
     { ResReverseInputMode,REVERSE_INPUT,	false },
     { ResInsertMode,	  INSERT_MODE,		false },
+    { ResSelectUrl,	  SELECT_URL,		false },
     { NULL,               0,			false }
 };
 

@@ -2174,6 +2174,7 @@ options_menu_init(bool regen, Position x, Position y)
 	toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL, &spaced);
 	toggle_init(t, TYPEAHEAD, "typeaheadOption", NULL, &spaced);
 	toggle_init(t, ALWAYS_INSERT, "alwaysInsertOption", NULL, &spaced);
+	toggle_init(t, SELECT_URL, "selectUrlOption", NULL, &spaced);
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);

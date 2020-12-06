@@ -378,6 +378,8 @@ XtResource xresources[] = {
       btoffset(REVERSE_INPUT), XtRString, ResFalse },
     { ResInsertMode, ClsInsertMode, XtRBoolean, sizeof(Boolean),
       btoffset(INSERT_MODE), XtRString, ResFalse },
+    { ResSelectUrl, ClsSelectUrl, XtRBoolean, sizeof(Boolean),
+      btoffset(SELECT_URL), XtRString, ResTrue },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },

@@ -321,6 +321,7 @@ typedef enum {
     RIGHT_TO_LEFT,	/* right-to-left display */
     REVERSE_INPUT,	/* reverse input */
     INSERT_MODE,	/* insert mode */
+    SELECT_URL,		/* double-click on a URL opens the browser */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);

@@ -979,6 +979,7 @@ x3270*model5Option.label:			Model 5 (132x27)
 x3270*oversizeOption.label:			Oversize...
 x3270*saveOption.label:				Save Changed Options
 x3270*alwaysInsertOption.label:			Default Insert Mode
+x3270*selectUrlOption.label:			Open selected URLs
 !
 ! Messages
 x3270.message.processId:			Process ID:
