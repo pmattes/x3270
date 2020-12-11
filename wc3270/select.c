@@ -127,26 +127,46 @@ unselect(int baddr, int len)
 static void
 reselect(bool generate_event)
 {
-    int rowA, colA, rowZ, colZ;
-    int row, col;
     bool any = false;
 
     /* Clear out the current selection. */
     memset(s_pending, 0, ROWS * COLS);
 
     /* Fill in from start to end, which may be backwards. */
-    rowA = (select_start_row < select_end_row)?
-	select_start_row: select_end_row;
-    rowZ = (select_start_row > select_end_row)?
-	select_start_row: select_end_row;
-    colA = (select_start_col < select_end_col)?
-	select_start_col: select_end_col;
-    colZ = (select_start_col > select_end_col)?
-	select_start_col: select_end_col;
 
-    for (row = rowA; row <= rowZ; row++) {
-	for (col = colA; col <= colZ; col++) {
-	    s_pending[(row * COLS) + col] = 1;
+    if (ever_3270) {
+	/* Rectangular selections. */
+	int rowA, colA, rowZ, colZ;
+	int row, col;
+
+	rowA = (select_start_row < select_end_row)?
+	    select_start_row: select_end_row;
+	rowZ = (select_start_row > select_end_row)?
+	    select_start_row: select_end_row;
+	colA = (select_start_col < select_end_col)?
+	    select_start_col: select_end_col;
+	colZ = (select_start_col > select_end_col)?
+	    select_start_col: select_end_col;
+	for (row = rowA; row <= rowZ; row++) {
+	    for (col = colA; col <= colZ; col++) {
+		s_pending[(row * COLS) + col] = 1;
+		any = true;
+	    }
+	}
+    } else {
+	/* Continuous selections. */
+	int baddrA = (select_start_row * COLS) + select_start_col;
+	int baddrZ = (select_end_row * COLS) + select_end_col;
+	int baddr;
+	if (baddrA > baddrZ) {
+	    baddr = baddrZ;
+
+	    baddrZ = baddrA;
+	    baddrA = baddr;
+	}
+
+	for (baddr = baddrA; baddr <= baddrZ; baddr++) {
+	    s_pending[baddr] = 1;
 	    any = true;
 	}
     }
@@ -537,7 +557,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
 	    if (!s_pending[baddr]) {
 		continue;
 	    }
-	    if (any_row >= 0 && any_row != r) {
+	    if (any_row >= 0 && any_row != r && !(ea_buf[baddr - 1].gr & GR_WRAP)) {
 		*bp++ = '\r';
 		*bp++ = '\n';
 		ns = 0;
@@ -640,7 +660,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 	    if (!s_pending[baddr]) {
 		continue;
 	    }
-	    if (any_row >= 0 && any_row != r) {
+	    if (any_row >= 0 && any_row != r && !(ea_buf[baddr - 1].gr & GR_WRAP)) {
 		*bp++ = '\r';
 		*bp++ = '\n';
 		ns = 0;
@@ -779,7 +799,7 @@ copy_clipboard_text(LPTSTR lptstr)
 	    if (!s_pending[baddr]) {
 		continue;
 	    }
-	    if (any_row >= 0 && any_row != r) {
+	    if (any_row >= 0 && any_row != r && !(ea_buf[baddr - 1].gr & GR_WRAP)) {
 		*bp++ = '\r';
 		*bp++ = '\n';
 		ns = 0;
