@@ -382,7 +382,18 @@ find_word_end(int row, int col, int *start_rowp, int *start_colp, int *end_rowp,
 	while (col && !is_blank((row * COLS) + (col - 1))) {
 	    col--;
 	}
-	*end_colp = col;
+	while (!col &&
+		row &&
+		(ea_buf[(row * COLS) - 1].gr & GR_WRAP) &&
+		!is_blank((row * COLS) - 1)) {
+	    row--;
+	    col = COLS - 1;
+	    while (col && !is_blank((row * COLS) + (col - 1))) {
+		col--;
+	    }
+	}
+	*start_rowp = row;
+	*start_colp = col;
 	return;
     }
 
@@ -390,15 +401,38 @@ find_word_end(int row, int col, int *start_rowp, int *start_colp, int *end_rowp,
     while (col && !is_blank((row * COLS) + (col - 1))) {
 	col--;
     }
+    while (!col &&
+	    row &&
+	    (ea_buf[(row * COLS) - 1].gr & GR_WRAP) &&
+	    !is_blank((row * COLS) - 1)) {
+	row--;
+	col = COLS - 1;
+	while (col && !is_blank((row * COLS) + (col - 1))) {
+	    col--;
+	}
+    }
+    *start_rowp = row;
     *start_colp = col;
 
     /* Search right. */
     while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
 	col++;
     }
+    while (col == (COLS - 1) &&
+	    (row < (ROWS - 1)) &&
+	    (ea_buf[(row * COLS) + col].gr & GR_WRAP) &&
+	    !is_blank(((row + 1) * COLS))) {
+	row++;
+	col = 0;
+	while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
+	    col++;
+	}
+    }
+
     if (col < (COLS -1)) {
 	col++;
     }
+    *end_rowp = row;
     *end_colp = col;
 }
 
