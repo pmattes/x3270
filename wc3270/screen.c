@@ -2330,7 +2330,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
      * it as a cursor move.
      */
     if (!select_event(row, col, event,
-		(me->dwControlKeyState & SHIFT_PRESSED) != 0)) {
+		(me->dwControlKeyState & SHIFT_PRESSED) != 0) && ever_3270) {
 	vtrace(" cursor move\n");
 	cursor_move((row * COLS) + col);
     }

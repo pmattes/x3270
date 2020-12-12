@@ -93,6 +93,9 @@ static int select_start_col;
 static int select_end_row;
 static int select_end_col;
 
+/* True if the mouse moved while the button was down. */
+static bool moved;
+
 /*
  * Initialize the selection logic, given the maximum screen dimensions.
  */
@@ -359,23 +362,27 @@ url_click(int row, int col)
  * well.
  */
 static void
-find_word_end(int row, int col, int *startp, int *endp)
+find_word_end(int row, int col, int *start_rowp, int *start_colp, int *end_rowp,
+	int *end_colp)
 {
     int baddr = (row * COLS) + col;
 
     assert(row <= ROWS);
     assert(col <= COLS);
 
+    *start_rowp = row;
+    *end_rowp = row;
+
     /*
      * If on a blank now, return just that, or that plus the word to the
      * left.
      */
     if (is_blank(baddr)) {
-	*endp = col;
+	*end_colp = col;
 	while (col && !is_blank((row * COLS) + (col - 1))) {
 	    col--;
 	}
-	*endp = col;
+	*end_colp = col;
 	return;
     }
 
@@ -383,7 +390,7 @@ find_word_end(int row, int col, int *startp, int *endp)
     while (col && !is_blank((row * COLS) + (col - 1))) {
 	col--;
     }
-    *startp = col;
+    *start_colp = col;
 
     /* Search right. */
     while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
@@ -392,7 +399,7 @@ find_word_end(int row, int col, int *startp, int *endp)
     if (col < (COLS -1)) {
 	col++;
     }
-    *endp = col;
+    *end_colp = col;
 }
 
 /*
@@ -436,6 +443,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect(false);
+	    moved = false;
 	    break;
 	case SE_DOUBLE_CLICK:
 	    vtrace("  Word select\n");
@@ -448,16 +456,15 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 		break;
 	    }
 	    rubber_banding = false;
-	    select_start_row = row;
-	    select_end_row = row;
-	    find_word_end(row, col, &select_start_col, &select_end_col);
+	    find_word_end(row, col, &select_start_row, &select_start_col, &select_end_row,
+		    &select_end_col);
 	    word_selected = true;
 	    reselect(true);
 
 	    /* If we moved the cursor for the first click, move it back now. */
 	    if (click_cursor_addr != -1) {
 		cursor_move(click_cursor_addr);
-		click_cursor_addr = -1;
+		    click_cursor_addr = -1;
 	    }
 	    break;
 	case SE_RIGHT_BUTTON_DOWN:
@@ -480,15 +487,17 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	case SE_BUTTON_UP:
 	    rubber_banding = false;
 	    word_selected = false;
-	    if (row == select_start_row && col == select_start_col) {
+	    if (row == select_start_row && col == select_start_col && !moved) {
 		/*
 		 * No movement. Call it a cursor move,
 		 * but they might extend it later.
 		 */
-		vtrace("  Cursor move\n");
 		s_pending[(row * COLS) + col] = 0;
 		screen_changed = true;
-		click_cursor_addr = cursor_addr;
+		if (ever_3270) {
+		    vtrace("  Cursor move\n");
+		    click_cursor_addr = cursor_addr;
+		}
 		/* We did not consume the event. */
 		return false;
 	    }
@@ -496,6 +505,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect(true);
+	    moved = false;
 	    break;
 	case SE_MOVE:
 	    /* Extend. */
@@ -503,6 +513,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect(true);
+	    moved = true;
 	    break;
 	default:
 	    break;
