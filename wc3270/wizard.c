@@ -5261,13 +5261,16 @@ create_wc3270_folder(src_t src)
 	    exit(1);
 	}
 	printf("Created folder %s.\n", wc3270_dir);
-
-	/* Make it a system folder. */
-	if (!SetFileAttributes(wc3270_dir, FILE_ATTRIBUTE_SYSTEM)) {
-	    errout("SetFileAttributes(%s) failed", wc3270_dir);
-	    exit(1);
-	}
     }
+
+    /*
+     * Mark it read-only, so file explorer looks for Desktop.ini.
+     * Also clear the SYSTEM flag, in case it was set by an earlier version.
+     */
+    SetFileAttributes(wc3270_dir,
+	    FILE_ATTRIBUTE_READONLY |
+	    (GetFileAttributes(wc3270_dir) & ~FILE_ATTRIBUTE_SYSTEM));
+
     snprintf(desktop_ini, MAX_PATH, "%swc3270\\Desktop.ini", parent);
     if (access(desktop_ini, R_OK) != 0) {
 
