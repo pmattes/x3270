@@ -650,8 +650,6 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
     environ_init();
 
-    environ_init();
-
     Replace(hostname, NewString(host));
     net_accept = accept;
 
