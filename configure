@@ -1939,7 +1939,7 @@ fi
 
 if test "x$enable_x3270" = x -a \
         "x$enable_c3270" = x -a \
-        "x$enable_s3270" = x  -a \
+        "x$enable_s3270" = x -a \
         "x$enable_b3270" = x -a \
         "x$enable_tcl3270" = x -a \
         "x$enable_pr3287" = x -a \
@@ -1971,7 +1971,7 @@ lparen="("
 rparen=")"
 if test "x$enable_x3270" != xyes -a \
 	"x$enable_c3270" != xyes -a \
-	"x$enable_s3270" != xyes  -a \
+	"x$enable_s3270" != xyes -a \
 	"x$enable_b3270" != xyes -a \
 	"x$enable_tcl3270" != xyes -a \
 	"x$enable_pr3287" != xyes -a \
@@ -1998,6 +1998,7 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_wx3270if" = xno -o \
 	 "x$enable_windows_lib" = xno $rparen; then
         if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
     if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
     if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
     if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
