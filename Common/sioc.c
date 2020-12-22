@@ -40,8 +40,8 @@
 #include "tls_config.h"
 
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
-#include "varbuf.h"
 
 #define READ_BUF	1024
 
@@ -169,3 +169,59 @@ sio_all_options_supported(void)
     }
 }
 
+/*
+ * Add a string to a list of subjects.
+ */
+void
+sioc_subject_add(char ***subjects, char *s, ssize_t len)
+{
+    int count = 0;
+
+    /* Patch up the length. */
+    if (len == (ssize_t)-1) {
+	len = strlen(s);
+    }
+
+    /* See if we really need to add anything. */
+    if (*subjects != (char **)NULL) {
+	int i;
+
+	for (i = 0; (*subjects)[i] != NULL; i++) {
+	    if (!strncmp((*subjects)[i], s, len) &&
+			(*subjects)[i][len] == '\0') {
+		return;
+	    }
+	}
+    }
+
+    if (*subjects != (char **)NULL) {
+	while ((*subjects)[count] != NULL) {
+	    count++;
+	}
+    }
+    *subjects = (char **)Realloc(*subjects, (count + 2) * sizeof(char *));
+    (*subjects)[count] = Malloc(len + 1);
+    strncpy((*subjects)[count], s, len);
+    (*subjects)[count][len] = '\0';
+    (*subjects)[count + 1] = NULL;
+}
+
+/*
+ * Dump a list of subjects into a varbuf and free the list.
+ */
+void
+sioc_subject_print(varbuf_t *v, char ***subjects)
+{
+    int i;
+
+    if (*subjects == (char **)NULL) {
+	return;
+    }
+
+    for (i = 0; (*subjects)[i] != NULL; i++) {
+	vb_appendf(v, "%s\n", (*subjects)[i]);
+	Free((*subjects)[i]);
+    }
+    Free(*subjects);
+    *subjects = NULL;
+}

@@ -72,3 +72,4 @@ void sio_close(sio_t sio);
 bool sio_secure_unverified(sio_t sio);
 const char *sio_session_info(sio_t sio);
 const char *sio_server_cert_info(sio_t sio);
+const char *sio_server_subjects(sio_t sio);

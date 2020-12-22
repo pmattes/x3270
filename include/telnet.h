@@ -76,6 +76,7 @@ bool net_secure_connection();
 void net_set_default_termtype(void);
 bool net_secure_unverified(void);
 const char *net_server_cert_info(void);
+const char *net_server_subjects(void);
 const char *net_session_info(void);
 void net_password_continue(const char *password);
 unsigned net_sio_supported(void);

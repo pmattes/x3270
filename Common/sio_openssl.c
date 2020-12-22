@@ -45,10 +45,10 @@
 #include "tls_config.h"
 
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 #include "trace.h"
 #include "utils.h"
-#include "varbuf.h"
 
 #if !defined(LIBRESSL_VERSION_NUMBER) /*[*/
 # if OPENSSL_VERSION_NUMBER >= 0x10100000L /*[*/
@@ -58,6 +58,9 @@
 #  define OPENSSL102
 # endif /*]*/
 #endif /*]*/
+
+#define CN_EQ		"CN = "
+#define CN_EQ_SIZE	strlen(CN_EQ)
 
 /* Globals */
 
@@ -74,6 +77,7 @@ typedef struct {
     bool secure_unverified;
     char *session_info;
     char *server_cert_info;
+    char *server_subjects;
     bool negotiate_pending;
     bool negotiated;
 } ssl_sio_t;
@@ -790,6 +794,69 @@ display_server_cert(varbuf_t *v, SSL *con)
     }
 }
 
+/* Display server subject names. */
+static void
+display_server_subjects(varbuf_t *v, SSL *con)
+{
+    X509 *cert;
+    STACK_OF(X509) *chain;
+    BIO *mem;
+    long nw;
+    char *p;
+    char *pcopy;
+    char *cn;
+    GENERAL_NAMES *values;
+    GENERAL_NAME *value;
+    int num_an, j, len;
+    unsigned char *dns;
+    char **subjects = NULL;
+
+    chain = SSL_get_peer_cert_chain(con);
+    if (chain == NULL) {
+	cert = SSL_get_peer_certificate(con);
+	if (cert == NULL) {
+	    vb_appendf(v, "Error getting server cert\n");
+	    return;
+	}
+	chain = sk_X509_new_null();
+	sk_X509_push(chain, cert);
+    }
+
+    /*
+     * Get the subject name from the server cert. This is a bit of a hack
+     * because it understands the format of the output of the print_ex
+     * function.
+     */
+    cert = sk_X509_value(chain, 0);
+    mem = BIO_new(BIO_s_mem());
+    X509_NAME_print_ex(mem, X509_get_subject_name(cert), 0,
+	    XN_FLAG_ONELINE | XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_FN_SN);
+    nw = BIO_get_mem_data(mem, &p);
+    pcopy = Malloc(nw + 1);
+    strncpy(pcopy, p, nw);
+    pcopy[nw] = '\0';
+    cn = strstr(pcopy, CN_EQ);
+    if (cn != NULL) {
+	sioc_subject_add(&subjects, cn + CN_EQ_SIZE, (ssize_t)-1);
+    }
+    Free(pcopy);
+    BIO_free(mem);
+
+    /* Add the alternate names. */
+    if ((values = X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0))) {
+	num_an = sk_GENERAL_NAME_num(values);
+	for (j = 0; j < num_an; j++) {
+	    value = sk_GENERAL_NAME_value(values, j);
+	    if (value->type == GEN_DNS) {
+		len = ASN1_STRING_to_UTF8(&dns, value->d.dNSName);
+		sioc_subject_add(&subjects, (char *)dns, len);
+		OPENSSL_free(dns);
+	    }
+	}
+    }
+    sioc_subject_print(v, &subjects);
+}
+
 /*
  * Negotiate an SSL connection.
  * Returns true for success, false for failure.
@@ -912,6 +979,15 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	 s->server_cert_info[len - 1] = '\0';
     }
 
+    /* Display the server subject name. */
+    vb_init(&v);
+    display_server_subjects(&v, s->con);
+    s->server_subjects = vb_consume(&v);
+    len = strlen(s->server_subjects);
+    if (len > 0 && s->server_subjects[len - 1] == '\n') {
+	 s->server_subjects[len - 1] = '\0';
+    }
+
     s->negotiated = true;
     return SIG_SUCCESS;
 }
@@ -1029,6 +1105,10 @@ sio_close(sio_t sio)
 	Free(s->server_cert_info);
 	s->server_cert_info = NULL;
     }
+    if (s->server_subjects != NULL) {
+	Free(s->server_subjects);
+	s->server_subjects = NULL;
+    }
 
     SSL_shutdown(s->con);
     SSL_free(s->con);
@@ -1078,6 +1158,16 @@ sio_server_cert_info(sio_t sio)
 {
     ssl_sio_t *s = (ssl_sio_t *)sio;
     return (s != NULL)? s->server_cert_info: NULL;
+}
+
+/*
+ * Returns server subject names.
+ */
+const char *
+sio_server_subjects(sio_t sio)
+{
+    ssl_sio_t *s = (ssl_sio_t *)sio;
+    return (s != NULL)? s->server_subjects: NULL;
 }
 
 /*

@@ -91,6 +91,7 @@ static void try_reconnect(ioid_t id);
 static action_t Connect_action;
 static action_t Disconnect_action;
 static action_t Reconnect_action;
+static action_t Subject_action;
 
 static char *
 stoken(char **s)
@@ -282,7 +283,8 @@ host_register(void)
 	{ AnConnect,	Connect_action,		ACTION_KE },
 	{ AnDisconnect,	Disconnect_action,	ACTION_KE },
 	{ AnOpen,	Connect_action,		ACTION_KE },
-	{ AnReconnect,	Reconnect_action,	ACTION_KE }
+	{ AnReconnect,	Reconnect_action,	ACTION_KE },
+	{ AnSubject,	Subject_action,		ACTION_KE }
     };
 
     /* Register for events. */
@@ -1036,6 +1038,22 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     host_disconnect(false);
+    return true;
+}
+
+static bool
+Subject_action(ia_t ia, unsigned argc, const char **argv)
+{
+    char *s;
+
+    action_debug(AnSubject, ia, argc, argv);
+    if (check_argc(AnSubject, argc, 1, 1) < 0) {
+	return false;
+    }
+    s = xs_buffer(AnConnect "(Y:%s) " AnShow "(" KwTlsSubject ") "
+	    AnDisconnect "()", argv[0]);
+    push_stack_macro(s);
+    Free(s);
     return true;
 }
 

@@ -46,11 +46,11 @@
 
 #include "indent_s.h"
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 #include "tls_passwd_gui.h"
 #include "trace.h"
 #include "utils.h"
-#include "varbuf.h"
 #include "w3misc.h"
 #include "winvers.h"
 
@@ -74,6 +74,13 @@
 					   record */
 #define INBUF		(16 * 1024)	/* preliminary input buffer size */
 
+#define CN_EQ			"CN="
+#define CN_EQ_SIZE		strlen(CN_EQ)
+#define DNS_NAME		"DNS Name="
+#define DNS_NAME_SIZE		strlen(DNS_NAME)
+#define COMMA_SPACE		", "
+#define COMMA_SPACE_SIZE	strlen(COMMA_SPACE)
+
 /* Globals */
 
 /* Statics */
@@ -95,6 +102,7 @@ typedef struct {
 
     char *session_info;			/* session information */
     char *server_cert_info;		/* server cert information */
+    char *server_subjects;		/* server subject names */
 
     char *rcvbuf;			/* receive buffer */
     size_t rcvbuf_len;			/* receive buffer length */
@@ -223,6 +231,92 @@ display_cert_chain(varbuf_t *v, PCCERT_CONTEXT cert)
 	current_cert = issuer_cert;
 	issuer_cert = NULL;
     }
+}
+
+/* Display the certificate subjects. */
+static void
+display_cert_subjects(varbuf_t *v, PCCERT_CONTEXT cert)
+{
+    CHAR name[1024];
+    WCHAR *wcbuf = NULL;
+    char *mbbuf = NULL;
+    char **subjects = NULL;
+
+    /* Display leaf name. */
+    if (!CertNameToStr(cert->dwCertEncodingType,
+		&cert->pCertInfo->Subject,
+		CERT_X500_NAME_STR | CERT_NAME_STR_NO_PLUS_FLAG,
+		name, sizeof(name))) {
+	int err = GetLastError();
+	vtrace("CertNameToStr(subject): error 0x%x (%s)\n", err,
+		win32_strerror(err));
+    } else {
+	char *cn = strstr(name, CN_EQ);
+	if (cn != NULL) {
+	    sioc_subject_add(&subjects, cn + CN_EQ_SIZE, (ssize_t)-1);
+	}
+    }
+
+    /* Display the alternate names. */
+    do {
+	DWORD wcsize;
+	DWORD mbsize;
+	PCERT_EXTENSION ext = CertFindExtension(szOID_SUBJECT_ALT_NAME2,
+		cert->pCertInfo->cExtension,
+		cert->pCertInfo->rgExtension);
+
+	if (ext == NULL) {
+	    break;
+	}
+	if (!CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL,
+		    szOID_SUBJECT_ALT_NAME2, ext->Value.pbData,
+		    ext->Value.cbData, NULL, &wcsize)) {
+	    break;
+	}
+	wcsize *= 4;
+	wcbuf = (WCHAR *)Malloc(wcsize);
+	if (!CryptFormatObject(X509_ASN_ENCODING, 0, 0, NULL,
+		    szOID_SUBJECT_ALT_NAME2, ext->Value.pbData,
+		    ext->Value.cbData, wcbuf, &wcsize)) {
+	    break;
+	}
+	mbsize = WideCharToMultiByte(CP_ACP, 0, wcbuf, -1, NULL, 0, NULL, NULL);
+	mbbuf = Malloc(mbsize);
+	if (WideCharToMultiByte(CP_ACP, 0, wcbuf, -1, mbbuf, mbsize, NULL,
+		    NULL) != mbsize) {
+	    break;
+	}
+    } while (false);
+
+    if (wcbuf != NULL) {
+	Free(wcbuf);
+    }
+    if (mbbuf != NULL) {
+	char *n;
+
+	/*
+	 * The string looks like:
+	 *  XXX Name=nnn, ...
+	 * XXX is DNS for DNS names; not sure about others.
+	 */
+	char *s = mbbuf;
+
+	while ((n = strstr(s, DNS_NAME)) != NULL) {
+	    char *comma = strstr(n, COMMA_SPACE);
+
+	    if (comma != NULL) {
+		sioc_subject_add(&subjects, n + DNS_NAME_SIZE,
+			comma - (n + DNS_NAME_SIZE));
+		s = comma + COMMA_SPACE_SIZE;
+	    } else {
+		sioc_subject_add(&subjects, n + DNS_NAME_SIZE, (ssize_t)-1);
+		break;
+	    }
+	}
+
+	Free(mbbuf);
+    }
+    sioc_subject_print(v, &subjects);
 }
 
 /* Create security credentials. */
@@ -1041,6 +1135,12 @@ sio_free(schannel_sio_t *s)
 	s->server_cert_info = NULL;
     }
 
+    /* Free the server subject. */
+    if (s->server_subjects != NULL) {
+	Free(s->server_subjects);
+	s->server_subjects = NULL;
+    }
+
     Free(s);
 }
 
@@ -1099,6 +1199,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     size_t recsz;
     varbuf_t v;
     char *cert_desc = NULL;
+    char *cert_subjects = NULL;
     size_t sl;
 
     sioc_error_reset();
@@ -1177,6 +1278,10 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     display_cert_chain(&v, remote_cert_context);
     cert_desc = vb_consume(&v);
 
+    vb_init(&v);
+    display_cert_subjects(&v, remote_cert_context);
+    cert_subjects = vb_consume(&v);
+
     /* Attempt to validate the server certificate. */
     if (s->manual && config->verify_host_cert) {
 	status = verify_server_certificate(remote_cert_context,
@@ -1216,6 +1321,14 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     sl = strlen(s->server_cert_info);
     if (sl > 0 && s->server_cert_info[sl - 1] == '\n') {
 	s->server_cert_info[sl - 1] = '\0';
+    }
+
+    /* Display server subject. */
+    s->server_subjects = cert_subjects;
+    cert_subjects = NULL;
+    sl = strlen(s->server_subjects);
+    if (sl > 0 && s->server_subjects[sl - 1] == '\n') {
+	s->server_subjects[sl - 1] = '\0';
     }
 
     /* Account for any extra data. */
@@ -1262,6 +1375,9 @@ fail:
 
     if (cert_desc != NULL) {
 	Free(cert_desc);
+    }
+    if (cert_subjects != NULL) {
+	Free(cert_subjects);
     }
 
     return SIG_FAILURE;
@@ -1719,6 +1835,16 @@ sio_server_cert_info(sio_t sio)
 {
     schannel_sio_t *s = (schannel_sio_t *)sio;
     return s? s->server_cert_info: NULL;
+}
+
+/*
+ * Returns server subject names.
+ */
+const char *
+sio_server_subjects(sio_t sio)
+{
+    schannel_sio_t *s = (schannel_sio_t *)sio;
+    return s? s->server_subjects: NULL;
 }
 
 /*

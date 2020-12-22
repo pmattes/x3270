@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017, 2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,3 +35,5 @@ void sioc_set_error(const char *fmt, ...);
 void sioc_error_reset(void);
 char *sioc_string_from_file(const char *path, size_t *len_ret);
 char *sioc_parse_password_spec(const char *spec);
+void sioc_subject_add(char ***subjects, char *s, ssize_t len);
+void sioc_subject_print(varbuf_t *v, char ***subjects);

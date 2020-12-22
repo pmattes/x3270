@@ -350,6 +350,7 @@ query_register(void)
 	{ KwTraceFile, get_tracefile, NULL, false, false },
 	{ KwTls, net_query_tls, NULL, false, false },
 	{ KwTlsCertInfo, net_server_cert_info, NULL, false, true },
+	{ KwTlsSubject, net_server_subjects, NULL, false, true },
 	{ KwTlsProvider, net_sio_provider, NULL, false, false },
 	{ KwTlsSessionInfo, net_session_info, NULL, false, true },
 	{ KwTn3270eOptions, tn3270e_current_opts, NULL, false, false },

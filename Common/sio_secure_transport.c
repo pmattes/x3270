@@ -41,11 +41,11 @@
 
 #include "lazya.h"
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 #include "tls_passwd_gui.h"
 #include "trace.h"
 #include "utils.h"
-#include "varbuf.h"
 
 #define ARRAY_SIZE(n)	(int)(sizeof(n) / sizeof(n[0]))
 
@@ -60,6 +60,7 @@ typedef struct {
     SSLContextRef context;		/* secure transport context */
     char *session_info;			/* session information */
     char *server_cert_info;		/* server cert information */
+    char *server_subjects;		/* server cert subjects */
 } stransport_sio_t;
 
 static tls_config_t *config;
@@ -580,6 +581,104 @@ display_server_cert(varbuf_t *v, stransport_sio_t *s)
     }
 }
 
+/* Display server subjects. */
+static void
+display_subjects(varbuf_t *v, stransport_sio_t *s)
+{
+    OSStatus status;
+    SecTrustRef trust = NULL;
+    char **subjects = NULL;
+
+    status = SSLCopyPeerTrust(s->context, &trust);
+    if (status == errSecSuccess && trust != NULL) {
+	CFIndex count = SecTrustGetCertificateCount(trust);
+
+	if (count > 0) {
+	    SecCertificateRef cert = SecTrustGetCertificateAtIndex(trust, 0);
+	    CFErrorRef error;
+	    const void *keys[] = {
+		kSecOIDX509V1SubjectName,
+		kSecOIDSubjectAltName
+	    };
+	    CFArrayRef keySelection = CFArrayCreate(NULL, keys, ARRAY_SIZE(keys),
+		&kCFTypeArrayCallBacks);
+	    CFDictionaryRef certDict = SecCertificateCopyValues(cert,
+		    keySelection, &error);
+
+	    /* Get the subject name. */
+	    CFDictionaryRef dict = CFDictionaryGetValue(certDict,
+		    kSecOIDX509V1SubjectName);
+
+	    if (dict != NULL) {
+		CFArrayRef values = CFDictionaryGetValue(dict,
+			kSecPropertyKeyValue);
+
+		if (values != NULL) {
+		    CFIndex n;
+
+		    for (n = 0; n < CFArrayGetCount(values); n++) {
+			CFTypeRef dictkey;
+			CFStringRef str;
+			char buf[1024];
+			CFDictionaryRef dict2 = CFArrayGetValueAtIndex(values, n);
+
+			if (CFGetTypeID(dict2) != CFDictionaryGetTypeID()) {
+			    continue;
+			}
+			dictkey = CFDictionaryGetValue(dict2,
+				kSecPropertyKeyLabel);
+			if (!CFEqual(dictkey, kSecOIDCommonName)) {
+			    continue;
+			}
+			str = (CFStringRef)CFDictionaryGetValue(dict2,
+				kSecPropertyKeyValue);
+			if (FStringGetCString(str, buf, sizeof(buf),
+				    kCFStringEncodingUTF8)) {
+			    sioc_subject_add(&subjects, str, (ssize_t)-1);
+			}
+		    }
+		}
+	    }
+
+	    /* Get the alternate names. */
+	    dict = CFDictionaryGetValue(certDict, kSecOIDSubjectAltName);
+	    if (dict != NULL) {
+		CFArrayRef values = CFDictionaryGetValue(dict,
+			kSecPropertyKeyValue);
+		if (values != NULL) {
+		    CFIndex n;
+
+		    for (n = 0; n < CFArrayGetCount(values); n++) {
+			CFTypeRef dictkey;
+			CFStringRef str;
+			char buf[1024];
+			CFDictionaryRef dict2 = CFArrayGetValueAtIndex(values,
+				n);
+
+			if (CFGetTypeID(dict2) != CFDictionaryGetTypeID()) {
+			    continue;
+			}
+			dictkey = CFDictionaryGetValue(dict2,
+				kSecPropertyKeyLabel);
+			if (!CFEqual(dictkey, CFSTR("DNS Name"))) {
+			    continue;
+			}
+			str = (CFStringRef)CFDictionaryGetValue(dict2,
+				kSecPropertyKeyValue);
+			if (FStringGetCString(str, buf, sizeof(buf),
+				    kCFStringEncodingUTF8)) {
+			    sioc_subject_add(&subjects, str, (ssize_t)-1);
+			}
+		    }
+		}
+	    }
+	    CFRelease(certDict);
+	}
+	CFRelease(trust);
+    }
+    sioc_subject_print(v, &subjects);
+}
+
 /* Create a CFDataRef from the contents of a file. */
 static CFDataRef
 dataref_from_file(const char *path)
@@ -829,6 +928,10 @@ sio_free(stransport_sio_t *s)
 	Free(s->server_cert_info);
 	s->server_cert_info = NULL;
     }
+    if (s->server_subjects != NULL) {
+	Free(s->server_subjects);
+	s->server_subjects = NULL;
+    }
     Free(s);
 }
 
@@ -1000,6 +1103,15 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	s->server_cert_info[sl - 1] = '\0';
     }
 
+    /* Display subject info. */
+    vb_init(&v);
+    display_subjects(&v, s);
+    s->server_subjects = vb_consume(&v);
+    sl = strlen(s->server_subjects);
+    if (sl > 0 && s->server_subjects[sl - 1] == '\n') {
+	s->server_subjects[sl - 1] = '\0';
+    }
+
     /* Success. */
     s->secure_unverified = !config->verify_host_cert;
     return SIG_SUCCESS;
@@ -1130,6 +1242,14 @@ sio_server_cert_info(sio_t sio)
     stransport_sio_t *s = (stransport_sio_t *)sio;
     return (s != NULL)? s->server_cert_info: NULL;
 }
+
+const char *
+sio_server_subjects(sio_t sio)
+{
+    ssl_sio_t *s = (ssl_sio_t *)sio;
+    return (s != NULL)? s->server_subjects: NULL;
+}
+
 
 const char *
 sio_provider(void)

@@ -77,6 +77,7 @@
 #include "resolver.h"
 #include "resources.h"
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 #include "split_host.h"
 #include "stats.h"
@@ -3872,6 +3873,15 @@ net_server_cert_info(void)
 	return NULL;
     }
     return sio_server_cert_info(sio);
+}
+
+const char *
+net_server_subjects(void)
+{
+    if (sio == NULL) {
+	return NULL;
+    }
+    return sio_server_subjects(sio);
 }
 
 bool

@@ -35,6 +35,7 @@
 #include "tls_config.h"
 
 #include "sio.h"
+#include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 
 bool
@@ -98,6 +99,12 @@ sio_session_info(sio_t sio)
 
 const char *
 sio_server_cert_info(sio_t sio)
+{
+    return "None";
+}
+
+const char *
+sio_server_subjects(sio_t sio)
 {
     return "None";
 }
