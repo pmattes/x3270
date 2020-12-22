@@ -1023,7 +1023,7 @@ set_inactive(void)
 	    }
     }
 
-    /* Compute superceded entries. */
+    /* Compute superseded entries. */
     for (k = master_keymap; k != NULL; k = k->next) {
 	if (k->hints[0] & KM_INACTIVE) {
 	    continue;
@@ -1124,7 +1124,7 @@ keymap_dump(void)
 
     for (k = master_keymap; k != NULL; k = k->next) {
 	if (k->successor != NULL) {
-	    vb_appendf(&r, "[%s:%d%s] -- superceded by %s:%d --\n",
+	    vb_appendf(&r, "[%s:%d%s] -- superseded by %s:%d --\n",
 		    k->file, k->line,
 		    k->temp? " temp": "",
 		    k->successor->file, k->successor->line);

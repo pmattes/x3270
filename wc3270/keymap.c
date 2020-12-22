@@ -337,7 +337,7 @@ locate_keymap(const char *name, char **fullname, char **r)
 }
 
 /*
- * Compare a pair of keymaps for compatablity (could k2 match k1).
+ * Compare a pair of keymaps for compatiblity (could k2 match k1).
  * N.B.: This functon may need to be further parameterized for equality versus
  * (ambiguous) matching.
  */
@@ -1136,7 +1136,7 @@ set_inactive(void)
 	}
     }
 
-    /* Compute superceded entries. */
+    /* Compute superseded entries. */
     for (k = master_keymap; k != NULL; k = k->next) {
 	if (k->hints[0] & KM_INACTIVE) {
 	    continue;
@@ -1145,7 +1145,7 @@ set_inactive(void)
 	    if (j->hints[0] & KM_INACTIVE) {
 		continue;
 	    }
-	    /* It may supercede other entries. */
+	    /* It may supersede other entries. */
 	    if (j->ncodes == k->ncodes && !codecmp(j, k, k->ncodes)) {
 		j->hints[0] |= KM_INACTIVE;
 		j->successor = k;

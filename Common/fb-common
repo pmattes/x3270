@@ -41,4 +41,4 @@ x3270.message.ftCutConversionError:	Data conversion error
 x3270.message.ftCutOversize:		Illegal frame length
 x3270.message.ftDisconnected:		Host disconnected, transfer cancelled
 x3270.message.ftNot3270:		Not in 3270 mode, transfer cancelled
-x3270.message.ftDftUnknownOpen:		Uknown DFT Open type from host
+x3270.message.ftDftUnknownOpen:		Unknown DFT Open type from host

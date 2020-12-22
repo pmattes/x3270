@@ -40,7 +40,7 @@ It can also include an LU name, separated by an `@' character, e.g.,
 Finally, it can include a non-default \fIport\fP number, appended to the
 \fIhostname\fP with a colon `:' character, e.g.,
 \fBbluehost:97\fP.
-(For compatability with earlier versions of \fIx3270\fP,
+(For compatibility with earlier versions of \fIx3270\fP,
 the \fIport\fP can also be separated by a slash `/' character.)
 .LP
 The optional \fIactions\fP

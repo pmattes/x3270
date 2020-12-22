@@ -529,7 +529,7 @@ static opt_t base_opts[] = {
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,false, NULL,         NULL,
-    "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
+    "<command> [<arg>...]", "Run <command> instead of making TELNET connection"
 },
 #endif /*]*/
 { OptHostsFile,OPT_STRING,  false, ResHostsFile, aoffset(hostsfile),

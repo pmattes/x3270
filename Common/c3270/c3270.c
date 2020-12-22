@@ -834,7 +834,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
     }
 
     if (!escaped) {
-	vtrace("Ingoring synchronous signals\n");
+	vtrace("Ignoring synchronous signals\n");
 	return;
     }
 
@@ -856,7 +856,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    vtrace("SIGINT while running an action\n");
 	    abort_script_by_cb(command_cb.shortname);
 	} else if (!aux_input) {
-	    vtrace("SIGINT at the normal prompt -- ignorning\n");
+	    vtrace("SIGINT at the normal prompt -- ignoring\n");
 	} else {
 	    vtrace("SIGINT with aux input -- aborting action\n");
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -937,7 +937,7 @@ windows_sigint(iosrc_t fd, ioid_t id)
 	vtrace("SIGINT while running an action\n");
 	abort_script_by_cb(command_cb.shortname);
     } else if (!aux_input) {
-	vtrace("SIGINT at the normal prompt -- ignorning\n");
+	vtrace("SIGINT at the normal prompt -- ignoring\n");
     } else {
 	vtrace("SIGINT with aux input -- handled when 0-length read arrives\n");
     }
