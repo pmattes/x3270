@@ -632,9 +632,9 @@ display_subjects(varbuf_t *v, stransport_sio_t *s)
 			}
 			str = (CFStringRef)CFDictionaryGetValue(dict2,
 				kSecPropertyKeyValue);
-			if (FStringGetCString(str, buf, sizeof(buf),
+			if (CFStringGetCString(str, buf, sizeof(buf),
 				    kCFStringEncodingUTF8)) {
-			    sioc_subject_add(&subjects, str, (ssize_t)-1);
+			    sioc_subject_add(&subjects, buf, (ssize_t)-1);
 			}
 		    }
 		}
@@ -665,9 +665,9 @@ display_subjects(varbuf_t *v, stransport_sio_t *s)
 			}
 			str = (CFStringRef)CFDictionaryGetValue(dict2,
 				kSecPropertyKeyValue);
-			if (FStringGetCString(str, buf, sizeof(buf),
+			if (CFStringGetCString(str, buf, sizeof(buf),
 				    kCFStringEncodingUTF8)) {
-			    sioc_subject_add(&subjects, str, (ssize_t)-1);
+			    sioc_subject_add(&subjects, buf, (ssize_t)-1);
 			}
 		    }
 		}
@@ -1246,7 +1246,7 @@ sio_server_cert_info(sio_t sio)
 const char *
 sio_server_subjects(sio_t sio)
 {
-    ssl_sio_t *s = (ssl_sio_t *)sio;
+    stransport_sio_t *s = (stransport_sio_t *)sio;
     return (s != NULL)? s->server_subjects: NULL;
 }
 
