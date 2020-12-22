@@ -40,6 +40,7 @@
 #include "tls_config.h"
 
 #include "lazya.h"
+#include "names.h"
 #include "sio.h"
 #include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
@@ -241,18 +242,25 @@ set_oserror(OSStatus status, const char *fmt, ...)
     va_list args;
     char *t;
     CFStringRef errmsg;
+    char *explanation = "";
 
     va_start(args, fmt);
     t = xs_vbuffer(fmt, args);
     va_end(args);
 
+    if (status == errSSLXCertChainInvalid) {
+	explanation = "\nPossibly use " AnSubjects
+	    "() to list the host cert names";
+    }
+
     errmsg = SecCopyErrorMessageString(status, NULL);
     if (errmsg != NULL) {
-	sioc_set_error("%s: %s", t,
-		CFStringGetCStringPtr(errmsg, kCFStringEncodingASCII));
+	sioc_set_error("%s: %s%s", t,
+		CFStringGetCStringPtr(errmsg, kCFStringEncodingASCII),
+		explanation);
 	CFRelease(errmsg);
     } else {
-	sioc_set_error("%s: Error %d", t, (int)status);
+	sioc_set_error("%s: Error %d%s", t, (int)status, explanation);
     }
     Free(t);
 }

@@ -45,6 +45,7 @@
 #include "tls_config.h"
 
 #include "indent_s.h"
+#include "names.h"
 #include "sio.h"
 #include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
@@ -574,6 +575,22 @@ print_hex_dump(const char *prefix, int length, unsigned char *buffer)
 }
 #endif /*]*/
 
+/* Add some helpful info to a TLS failue. */
+static const char *
+explain_error(SECURITY_STATUS ret)
+{
+    switch (ret)
+    {
+	case CERT_E_CN_NO_MATCH:
+	case SEC_E_WRONG_PRINCIPAL:
+	    return "\nPossibly use " AnSubjects "() to display the host cert names";
+	case SEC_E_UNSUPPORTED_FUNCTION:
+	    return "\nHost may not support the requested TLS version";
+	default:
+	    return "";
+    }
+}
+
 /* Client handshake, second phase. */
 static SECURITY_STATUS
 client_handshake_loop(
@@ -766,8 +783,8 @@ client_handshake_loop(
 
 	/* Check for fatal error. */
 	if (FAILED(ret)) {
-	    sioc_set_error("InitializeSecurityContext: error 0x%x (%s)\n", ret,
-		    win32_strerror(ret));
+	    sioc_set_error("InitializeSecurityContext: error 0x%x (%s)%s\n", ret,
+		    win32_strerror(ret), explain_error(ret));
 	    break;
 	}
 
@@ -866,8 +883,8 @@ perform_client_handshake(
 	    &expiry);
 
     if (scRet != SEC_I_CONTINUE_NEEDED) {
-	sioc_set_error("InitializeSecurityContext: error %d (%s)\n", scRet,
-		win32_strerror(scRet));
+	sioc_set_error("InitializeSecurityContext: error %d (%s)%s\n", scRet,
+		win32_strerror(scRet), explain_error(scRet));
 	return scRet;
     }
 
@@ -956,15 +973,17 @@ verify_server_certificate(
     if (!CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL, chain_context,
 		&policy_params, &policy_status)) {
 	status = GetLastError();
-	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)\n",
-		status, win32_strerror(status));
+	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)%s\n",
+		status, win32_strerror(status),
+		explain_error(status));
 	goto done;
     }
 
     if (policy_status.dwError) {
 	status = policy_status.dwError;
-	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)\n",
-		status, win32_strerror(status));
+	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)%s\n",
+		status, win32_strerror(status),
+		explain_error(status));
 	goto done;
     }
 
@@ -1650,8 +1669,9 @@ disconnect_from_server(schannel_sio_t *s)
 	    &expiry);
 
     if (FAILED(status)) {
-	vtrace("TLS: InitializeSecurityContext: error 0x%x (%s)\n",
-		(unsigned)status, win32_strerror(status));
+	vtrace("TLS: InitializeSecurityContext: error 0x%x (%s)%s\n",
+		(unsigned)status, win32_strerror(status),
+		explain_error(status));
 	return status;
     }
 

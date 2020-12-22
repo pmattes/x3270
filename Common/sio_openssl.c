@@ -44,6 +44,7 @@
  
 #include "tls_config.h"
 
+#include "names.h"
 #include "sio.h"
 #include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
@@ -937,8 +938,11 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     if (s->config->verify_host_cert) {
 	vr = SSL_get_verify_result(s->con);
 	if (vr != X509_V_OK) {
-	    sioc_set_error("Host certificate verification failed:\n%s (%ld)",
-		    X509_verify_cert_error_string(vr), vr);
+	    sioc_set_error("Host certificate verification failed:\n%s (%ld)%s",
+		    X509_verify_cert_error_string(vr), vr,
+		    (vr == X509_V_ERR_HOSTNAME_MISMATCH)?
+			"\nPossibly use " AnSubjects "() to list the host cert names":
+			"");
 	    return SIG_FAILURE;
 	}
     } else {
