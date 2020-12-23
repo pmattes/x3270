@@ -63,7 +63,7 @@ XX_FB(oddlu@bluehost).
 Finally, it can include a non-default XX_FI(port) number, appended to the
 XX_FI(hostname) with a colon ``:'' character, e.g.,
 XX_FB(bluehost:97).
-(For compatability with earlier versions of XX_FI(x3270),
+(For compatibility with earlier versions of XX_FI(x3270),
 the XX_FI(port) can also be separated by a slash ``/'' character.)
 XX_LP
 The optional XX_FI(actions)

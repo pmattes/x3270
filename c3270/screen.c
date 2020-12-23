@@ -376,13 +376,13 @@ screen_init(void)
 	parse_screen_spec(appres.c3270.altscreen, &altscreen_spec);
 	if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
 	    fprintf(stderr, "Rows and/or cols too small on "
-		"alternate screen (mininum 27x132)\n");
+		"alternate screen (minimum 27x132)\n");
 	    exit(1);
 	}
 	parse_screen_spec(appres.c3270.defscreen, &defscreen_spec);
 	if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
 	    fprintf(stderr, "Rows and/or cols too small on "
-		"default screen (mininum 24x80)\n");
+		"default screen (minimum 24x80)\n");
 	    exit(1);
 	}
     }
