@@ -104,7 +104,7 @@ sio_server_cert_info(sio_t sio)
 }
 
 const char *
-sio_server_subjects(sio_t sio)
+sio_server_subject_names(sio_t sio)
 {
     return "None";
 }

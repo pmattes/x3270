@@ -583,7 +583,7 @@ explain_error(SECURITY_STATUS ret)
     {
 	case CERT_E_CN_NO_MATCH:
 	case SEC_E_WRONG_PRINCIPAL:
-	    return "\nPossibly use " AnSubjects "() to display the host cert names";
+	    return "\nPossibly use " AnSubjectNames "() to display the host cert names";
 	case SEC_E_UNSUPPORTED_FUNCTION:
 	    return "\nHost may not support the requested TLS version";
 	default:
@@ -1861,7 +1861,7 @@ sio_server_cert_info(sio_t sio)
  * Returns server subject names.
  */
 const char *
-sio_server_subjects(sio_t sio)
+sio_server_subject_names(sio_t sio)
 {
     schannel_sio_t *s = (schannel_sio_t *)sio;
     return s? s->server_subjects: NULL;

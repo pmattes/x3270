@@ -3876,12 +3876,12 @@ net_server_cert_info(void)
 }
 
 const char *
-net_server_subjects(void)
+net_server_subject_names(void)
 {
     if (sio == NULL) {
 	return NULL;
     }
-    return sio_server_subjects(sio);
+    return sio_server_subject_names(sio);
 }
 
 bool

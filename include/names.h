@@ -127,7 +127,7 @@
 #define AnSnap		"Snap"
 #define AnSource	"Source"
 #define AnString	"String"
-#define AnSubjects	"Subjects"
+#define AnSubjectNames	"SubjectNames"
 #define AnSysReq	"SysReq"
 #define AnTab		"Tab"
 #define AnTemporaryComposeMap "TemporaryComposeMap"
@@ -213,7 +213,7 @@
 #define KwTlsCertInfo	"TlsCertInfo"
 #define KwTlsProvider	"TlsProvider"
 #define KwTlsSessionInfo "TlsSessionInfo"
-#define KwTlsSubjects	"TlsSubjects"
+#define KwTlsSubjectNames "TlsSubjectNames"
 #define KwVersion	"Version"
 /*  Parameters to Quit(). */
 #define KwDashForce	"-force"

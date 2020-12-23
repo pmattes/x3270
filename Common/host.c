@@ -91,7 +91,7 @@ static void try_reconnect(ioid_t id);
 static action_t Connect_action;
 static action_t Disconnect_action;
 static action_t Reconnect_action;
-static action_t Subjects_action;
+static action_t SubjectNames_action;
 
 static char *
 stoken(char **s)
@@ -284,7 +284,7 @@ host_register(void)
 	{ AnDisconnect,	Disconnect_action,	ACTION_KE },
 	{ AnOpen,	Connect_action,		ACTION_KE },
 	{ AnReconnect,	Reconnect_action,	ACTION_KE },
-	{ AnSubjects,	Subjects_action,	ACTION_KE }
+	{ AnSubjectNames,SubjectNames_action,	ACTION_KE }
     };
 
     /* Register for events. */
@@ -1045,15 +1045,15 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
  * Display the subject names for a host.
  */
 static bool
-Subjects_action(ia_t ia, unsigned argc, const char **argv)
+SubjectNames_action(ia_t ia, unsigned argc, const char **argv)
 {
     char *s;
 
-    action_debug(AnSubjects, ia, argc, argv);
-    if (check_argc(AnSubjects, argc, 1, 1) < 0) {
+    action_debug(AnSubjectNames, ia, argc, argv);
+    if (check_argc(AnSubjectNames, argc, 1, 1) < 0) {
 	return false;
     }
-    s = xs_buffer(AnConnect "(Y:%s) " AnShow "(" KwTlsSubjects ") "
+    s = xs_buffer(AnConnect "(Y:%s) " AnShow "(" KwTlsSubjectNames ") "
 	    AnDisconnect "()", argv[0]);
     push_stack_macro(s);
     Free(s);

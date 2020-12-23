@@ -941,7 +941,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	    sioc_set_error("Host certificate verification failed:\n%s (%ld)%s",
 		    X509_verify_cert_error_string(vr), vr,
 		    (vr == X509_V_ERR_HOSTNAME_MISMATCH)?
-			"\nPossibly use " AnSubjects "() to list the host cert names":
+			"\nPossibly use " AnSubjectNames "() to list the host cert names":
 			"");
 	    return SIG_FAILURE;
 	}
@@ -1168,7 +1168,7 @@ sio_server_cert_info(sio_t sio)
  * Returns server subject names.
  */
 const char *
-sio_server_subjects(sio_t sio)
+sio_server_subject_names(sio_t sio)
 {
     ssl_sio_t *s = (ssl_sio_t *)sio;
     return (s != NULL)? s->server_subjects: NULL;

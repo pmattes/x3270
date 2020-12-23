@@ -249,7 +249,7 @@ set_oserror(OSStatus status, const char *fmt, ...)
     va_end(args);
 
     if (status == errSSLXCertChainInvalid) {
-	explanation = "\nPossibly use " AnSubjects
+	explanation = "\nPossibly use " AnSubjectNames
 	    "() to list the host cert names";
     }
 
@@ -1252,7 +1252,7 @@ sio_server_cert_info(sio_t sio)
 }
 
 const char *
-sio_server_subjects(sio_t sio)
+sio_server_subject_names(sio_t sio)
 {
     stransport_sio_t *s = (stransport_sio_t *)sio;
     return (s != NULL)? s->server_subjects: NULL;
