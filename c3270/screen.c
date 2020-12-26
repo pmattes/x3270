@@ -3115,7 +3115,7 @@ screen_set_thumb(float top _is_unused, float shown _is_unused,
 void
 enable_cursor(bool on)
 {
-    if (initscr_done) {
+    if (initscr_done && !isendwin()) {
 	curs_set(on? 1: 0);
     }
 }
