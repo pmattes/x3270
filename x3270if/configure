@@ -3927,6 +3927,17 @@ else
   as_fn_error $? "Can't find terminfo library" "$LINENO" 5
 fi
 
+for ac_func in tiparm
+do :
+  ac_fn_c_check_func "$LINENO" "tiparm" "ac_cv_func_tiparm"
+if test "x$ac_cv_func_tiparm" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TIPARM 1
+_ACEOF
+
+fi
+done
+
 if test "$with_readline" != no; then
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for rl_initialize in -lreadline" >&5
 $as_echo_n "checking for rl_initialize in -lreadline... " >&6; }

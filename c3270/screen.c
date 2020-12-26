@@ -103,6 +103,10 @@
 
 #define CM (60*10)	/* csec per minute */
 
+#if !defined(HAVE_TIPARM) /*[*/
+#define tiparm		tparm
+#endif /*]*/
+
 typedef int curses_color;
 typedef int curses_attr;
 typedef int host_color_ix;
@@ -501,11 +505,11 @@ screen_setaf(acolor_t color)
     static int color_map16[] = { 8 + COLOR_BLUE, COLOR_RED, 8 + COLOR_YELLOW };
     char *setaf;
 
-    setaf = tparm(ti.setaf,
+    setaf = tiparm(ti.setaf,
 	    (ti.colors >= 16)? color_map16[color]: color_map8[color]);
     setaf = lazya(NewString(setaf));
     if (ti.bold && color_map16[color] >= 8) {
-	char *sgr = tparm(ti.sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+	char *sgr = tiparm(ti.sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
 
 	return lazyaf("%s%s", sgr, setaf);
     } else {
@@ -1622,7 +1626,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	size_t sz;
 #endif /*]*/
 
-	if (isendwin()) {
+	if (!initscr_done || isendwin()) {
 	    return;
 	}
 	ucs4 = 0;

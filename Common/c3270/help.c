@@ -250,7 +250,9 @@ static struct {
 	{ NULL,  NULL, 0, NULL }
 };
 
+#if defined(HAVE_START) || defined(WC3270) /*[*/
 static void html_help(bool);
+#endif /*]*/
 
 static struct {
 	const char *name;
@@ -414,11 +416,13 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+#if defined(HAVE_START) || defined(WC3270) /*[*/
 static void
 html_help(bool ignored _is_unused)
 {
     start_html_help();
 }
+#endif /*]*/
 
 /**
  * Help module registration.

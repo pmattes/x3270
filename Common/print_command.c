@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <sys/wait.h>
 
 #include "popups.h"
 #include "print_command.h"

@@ -4185,6 +4185,17 @@ $as_echo "$as_me: WARNING: Wide curses not found -- c3270 will not be able to su
 fi
 
 
+for ac_func in tiparm
+do :
+  ac_fn_c_check_func "$LINENO" "tiparm" "ac_cv_func_tiparm"
+if test "x$ac_cv_func_tiparm" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TIPARM 1
+_ACEOF
+
+fi
+done
+
 
 # Extract the first word of "less", so it can be a program name with args.
 set dummy less; ac_word=$2

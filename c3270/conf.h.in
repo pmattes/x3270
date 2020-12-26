@@ -58,6 +58,7 @@
 #undef HAVE_FSEEKO
 #undef HAVE_FORKPTY
 #undef HAVE_USE_DEFAULT_COLORS
+#undef HAVE_TIPARM
 
 /* Default pager. */
 #define LESSPATH ""

@@ -83,6 +83,7 @@ AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
 AC_SEARCH_LIBS(newterm, ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
 AC_SEARCH_LIBS(setupterm, tinfow tinfo, , [AC_MSG_ERROR(Can't find terminfo library)])
+AC_CHECK_FUNCS(tiparm)
 if test "$with_readline" != no; then
 AC_CHECK_LIB(readline, rl_initialize)
 fi

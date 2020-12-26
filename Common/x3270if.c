@@ -103,6 +103,10 @@
 #define FD_ENV_REQUIRED	false
 #endif /*]*/
 
+#if !defined(HAVE_TIPARM) /*[*/
+#define tiparm		tparm
+#endif /*]*/
+
 typedef enum {
     ITYPE_DATA,		/* data: */
     ITYPE_INPUT,	/* input: */
@@ -1161,14 +1165,14 @@ xsetaf(const char *setaf, int color, const char *sgr)
 	char *a, *s;
 
 	/* Encode AF. */
-	a = tparm((char *)setaf, color);
+	a = tiparm((char *)setaf, color);
 	if (sgr == NULL) {
 	    return a;
 	}
 
 	/* Save encoded AF and encode SGR. */
 	a = NewString(a);
-	s = tparm((char *)sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+	s = tiparm((char *)sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
 	x_ret = Malloc(strlen(a) + strlen(s) + 1);
 	sprintf(x_ret, "%s%s", s, a);
 	Free(a);
