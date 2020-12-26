@@ -57,6 +57,7 @@ MANDIR = @mandir@
 BINDIR = @bindir@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_DATA = @INSTALL_DATA@
 CIFONTDIR = @CIFONTDIR@
 ICONDIR = /usr/share/icons/hicolor
@@ -116,7 +117,7 @@ install:: x3270
 install:: x3270a
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
-	$(INSTALL_PROGRAM) x3270a $(DESTDIR)$(BINDIR)/x3270a
+	$(INSTALL_SCRIPT) x3270a $(DESTDIR)$(BINDIR)/x3270a
 install:: ibm_hosts
 	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
 		mkdir -p $(DESTDIR)$(LIBX3270DIR)
