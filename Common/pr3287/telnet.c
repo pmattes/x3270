@@ -77,6 +77,7 @@
 #include "telnet_core.h"
 #include "utils.h"
 #include "sio.h"
+#include "varbuf.h"	/* needed for sioc.h */
 #include "sioc.h"
 #include "trace.h"
 #include "pr_telnet.h"
