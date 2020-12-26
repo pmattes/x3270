@@ -433,7 +433,7 @@ c3270_connect(bool ignored)
 	return;
     }
 
-    if (cstate == RESOLVING) {
+    if (cstate == RESOLVING || cstate == TCP_PENDING) {
 	return;
     }
 
