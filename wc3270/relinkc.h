@@ -36,7 +36,7 @@
 
 #define STR_SIZE	256
 
-#define WIZARD_VER	3
+#define WIZARD_VER	4
 
 typedef struct {
     	/* Fields for wc3270 3.3.9 (Wizard version 1) */
@@ -67,6 +67,9 @@ typedef struct {
 	/* Fields added for wc3270 4.0ga10 (Wizard version 3) */
 	char  proxy_user[STR_SIZE];	/* proxy username */
 	char  proxy_password[STR_SIZE];	/* proxy password */
+
+	/* Fields added for wc3270 4.1alpha7 (Wizard version 4) */
+	char  accept_hostname[STR_SIZE]; /* accept hostname */
 } session_t;
 
 #define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */

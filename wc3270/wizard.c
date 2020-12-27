@@ -93,6 +93,7 @@ enum {
     MN_CURSORTYPE,	/* cursor type */
     MN_TLS,		/* TLS tunnel */
     MN_VERIFY,		/* verify host certificate */
+    MN_ACCEPT,		/* accept hostname */
     MN_PROXY,		/* use proxy host */
     MN_PROXY_SERVER,	/* proxy host name */
     MN_PROXY_PORT,	/* proxy port number */
@@ -1961,6 +1962,52 @@ Note: The default for this option has changed from 'n' to 'y'.\n");
 }
 
 /**
+ * Prompt for accept host name.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for error
+ */
+static int
+get_accept(session_t *s)
+{
+    char inbuf[STR_SIZE];
+
+    new_screen(s, NULL, "\
+Accept host name\n\
+\n\
+This option specifies the name to match against in the TLS certificate\n\
+provided by the host. It is needed if the certificate contains a different\n\
+name than the one used to connect to it.\n\
+\n\
+To remove an existing accept host name, enter '" CHOICE_NONE "'.");
+
+    while (true) {
+	if (s->accept_hostname[0]) {
+	    printf("\nAccept host name: [%s] ", s->accept_hostname);
+	} else {
+	    printf("\nAccept host name: ");
+	}
+	fflush(stdout);
+	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
+	    return -1;
+	} else if (!strcmp(inbuf, CHOICE_NONE)) {
+	    memset(s->accept_hostname, 0, STR_SIZE);
+	    break;
+	} else if (!inbuf[0]) {
+	    break;
+	}
+	if (strchr(inbuf, ' ') != NULL) {
+	    errout("\nName cannot contain spaces.");
+	    continue;
+	}
+	strcpy(s->accept_hostname, inbuf);
+	break;
+    }
+    return 0;
+}
+
+/**
  * Prompt for proxy server name
  *
  * @param[in,out] s	Session
@@ -3186,6 +3233,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	    yellowout(" [default has changed]");
 	}
 	printf("\n");
+	printf("%3d. Accept host name ....... : %s\n", MN_ACCEPT,
+		s->accept_hostname[0]? s->accept_hostname: DISPLAY_NONE);
 	printf("%3d. Proxy .................. : %s\n", MN_PROXY,
 		s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 	if (s->proxy_type[0]) {
@@ -3329,6 +3378,12 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		break;
 	    case MN_VERIFY:
 		if (get_verify(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
+	    case MN_ACCEPT:
+		if (get_accept(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -4877,6 +4932,11 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 
     fprintf(f, "wc3270.%s: %s\n", ResVerifyHostCert,
 	    (session->flags2 & WF2_NO_VERIFY_HOST_CERT)? ResFalse: ResTrue);
+
+    if (session->accept_hostname[0]) {
+	fprintf(f, "wc3270.%s: %s\n", ResAcceptHostname,
+		session->accept_hostname);
+    }
 
     if (session->flags & WF_NO_MENUBAR) {
 	fprintf(f, "wc3270.%s: %s\n", ResMenuBar, ResFalse);
