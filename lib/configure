@@ -3268,11 +3268,11 @@ case "$host_os" in
 		;;
 hpux|*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		;;
-solaris2*)	CPPFLAGS=-D__EXTENSIONS__
+solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		$as_echo "#define CONNECT_GETPEERNAME 1" >>confdefs.h
 
 		;;
-darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
+darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		mac_os=1
 		;;

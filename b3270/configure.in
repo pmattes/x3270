@@ -41,9 +41,9 @@ AC_CANONICAL_HOST
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
-solaris2*)	CPPFLAGS=-D__EXTENSIONS__
+solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
-darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
+darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE"
 		;;
