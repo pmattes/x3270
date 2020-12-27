@@ -40,12 +40,12 @@ dnl of the usual Unix functions are visible.
 ansi="-std=c99 -pedantic"
 AC_CANONICAL_HOST
 case "$host_os" in
-*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
     		dnl On Cygwin, gcc -ansi or -std=xxx hides POSIX declarations,
 		dnl and there is no macro you can set to get them back.
     		ansi=""
 		;;
-hpux)		CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+hpux)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
@@ -56,7 +56,7 @@ linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_
 		;;
 aix*)		BROKEN_NEWTERM=1
 		;;
-*netbsd*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+*netbsd*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 esac
 if test "$GCC" = yes
