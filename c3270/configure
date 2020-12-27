@@ -3086,10 +3086,10 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
 case "$host_os" in
-*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
     				    		ansi=""
 		;;
-hpux)		CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+hpux)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
@@ -3099,6 +3099,8 @@ darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 aix*)		BROKEN_NEWTERM=1
+		;;
+*netbsd*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 esac
 if test "$GCC" = yes
