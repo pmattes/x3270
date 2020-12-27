@@ -56,6 +56,8 @@ linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_
 		;;
 aix*)		BROKEN_NEWTERM=1
 		;;
+*netbsd*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
+		;;
 esac
 if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
