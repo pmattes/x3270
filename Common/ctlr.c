@@ -2465,7 +2465,10 @@ ctlr_any_data(void)
     }
 
     for (i = 0; i < ROWS*COLS; i++) {
-	if (!IsBlank(ea_buf[i].ec)) {
+	if (!IsBlank(ea_buf[i].ec) ||
+		(ea_buf[i].ucs4 != 0 &&
+		 ea_buf[i].ucs4 != ' ' &&
+		 ea_buf[i].ucs4 != 0x3000)) {
 	    return true;
 	}
     }
