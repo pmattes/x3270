@@ -1053,7 +1053,18 @@ SubjectNames_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc(AnSubjectNames, argc, 1, 1) < 0) {
 	return false;
     }
-    s = xs_buffer(AnConnect "(Y:%s) " AnShow "(" KwTlsSubjectNames ") "
+
+    /*
+     * Run the following commands in a macro:
+     *  Connect(Y:<hostname>)
+     *  Wait(InputField)	# needed for the c3270> prompt, which
+     *  			# does non-blocking connects
+     *  Show(TlsSubjectNames)
+     *  Disconnect()
+     */
+    s = xs_buffer(AnConnect "(Y:%s) "
+	    AnWait "(" KwInputField ") "
+	    AnShow "(" KwTlsSubjectNames ") "
 	    AnDisconnect "()", argv[0]);
     push_stack_macro(s);
     Free(s);
