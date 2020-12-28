@@ -1947,7 +1947,11 @@ set_output_needed(bool needed)
  * Macro- and script-specific actions.
  */
 
-static void
+/*
+ * Dump a range of screen locations.
+ * Returns true if anything was dumped.
+ */
+static bool
 dump_range(int first, int len, bool in_ascii, struct ea *buf,
     int rel_rows _is_unused, int rel_cols, bool force_utf8)
 {
@@ -2052,6 +2056,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	action_output("%s", vb_buf(&r));
     }
     vb_free(&r);
+    return any;
 }
 
 static bool
@@ -2060,6 +2065,7 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	int caddr, bool force_utf8)
 {
     int row, col, len, rows = 0, cols = 0;
+    bool any = false;
 
     switch (count) {
     case 0:	/* everything */
@@ -2108,15 +2114,18 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	return false;
     }
     if (count < 4) {
-	dump_range((row * rel_cols) + col, len, in_ascii, buf, rel_rows,
+	any |= dump_range((row * rel_cols) + col, len, in_ascii, buf, rel_rows,
 		rel_cols, force_utf8);
     } else {
 	int i;
 
 	for (i = 0; i < rows; i++) {
-	    dump_range(((row+i) * rel_cols) + col, cols, in_ascii, buf,
+	    any |= dump_range(((row+i) * rel_cols) + col, cols, in_ascii, buf,
 		    rel_rows, rel_cols, force_utf8);
 	}
+    }
+    if (!any) {
+	action_output("%s", "\n");
     }
     return true;
 }
@@ -3267,6 +3276,7 @@ NvtText_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!nvt_save_cnt) {
+	action_output("%s", "\n");
 	return true;
     }
 

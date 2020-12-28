@@ -2158,20 +2158,22 @@ glue_gui_xoutput(const char *s, bool success)
 {
     c3270_screen_suspend();
 
+    if (*s) {
 #if !defined(_WIN32) /*[*/
-    if (color_prompt) {
-	fprintf(start_pager(), "%s%s%s\n",
-		success? "": screen_setaf(ACOLOR_RED),
-		s,
-		success? "": screen_op());
-    } else {
-	fprintf(start_pager(), "%s\n", s);
-    }
-    fflush(start_pager());
+	if (color_prompt) {
+	    fprintf(start_pager(), "%s%s%s\n",
+		    success? "": screen_setaf(ACOLOR_RED),
+		    s,
+		    success? "": screen_op());
+	} else {
+	    fprintf(start_pager(), "%s\n", s);
+	}
+	fflush(start_pager());
 #else /*][*/
-    start_pager();
-    pager_output(s, success);
+	start_pager();
+	pager_output(s, success);
 #endif /*]*/
+    }
     command_output = true;
     /* any_error_output = true; */ /* XXX: Needed? */
     return true;

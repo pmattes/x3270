@@ -460,7 +460,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		if (u != NULL) {
 		    char *v = u_value(u);
 
-		    action_output("%s", v? v: " ");
+		    action_output("%s", v? v: "\n");
 		} else {
 		    action_output("%s", toggled(ix)? ResTrue: ResFalse);
 		}
