@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017, 2020-2021 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,8 @@ LIBSTUBS = lib3270stubs.a
 
 RM = rm -f
 CC = @CC@
-AR = ar
+AR = @AR@
+RANLIB = @RANLIB@
 
 all: $(LIBSTUBS)
 
@@ -51,7 +52,7 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 
 $(LIBSTUBS): $(OBJS)
 	$(AR) cr $@ $(OBJS)
-	ranlib $@
+	$(RANLIB) $@
 
 clean:
 	$(RM) *.o

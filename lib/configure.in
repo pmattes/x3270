@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2017, 2019-2020 Paul Mattes.
+dnl Copyright (c) 2000-2017, 2019-2021 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_CHECK_TOOLS(AR, [ar])
 
 dnl Figure out what sort of host this is.
 AC_CANONICAL_HOST
