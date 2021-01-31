@@ -1277,7 +1277,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    host_disconnect(true);
 	    return;
 	}
-	change_cstate(TELNET_PENDING, "net_input");
+	net_connected_complete();
     }
 
     if (cstate == TLS_PENDING) {
