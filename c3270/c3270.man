@@ -1,5 +1,5 @@
 '\" t
-.TH c3270 1 "27 December 2020"
+.TH c3270 1 "31 January 2021"
 .SH "NAME"
 c3270 \-
 curses-based 
@@ -3450,7 +3450,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 .br
 RFC 2355, TN3270 Enhancements
 .SH "COPYRIGHTS"
-Copyright 1993-2020, Paul Mattes.
+Copyright 1993-2021, Paul Mattes.
 .br
 Copyright 2004-2005, Don Russell.
 .br
@@ -3498,4 +3498,4 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .SH "VERSION"
-c3270 4.0ga13
+c3270 4.0ga14

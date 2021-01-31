@@ -1,5 +1,5 @@
 '\" t
-.TH X3270IF 1 "27 December 2020"
+.TH X3270IF 1 "31 January 2021"
 .SH "NAME"
 x3270if \- command interface to
 x3270, c3270 and s3270
@@ -137,7 +137,7 @@ x3270(1), c3270(1),
 s3270(1),
 x3270-script(1)
 .SH "COPYRIGHT"
-Copyright 1999-2009, 2020 Paul Mattes.
+Copyright 1999-2009, 2021 Paul Mattes.
 .br
 All rights reserved.
 .LP
