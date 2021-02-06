@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #include "utils.h"
 #include "xappres.h"
 #include "xscreen.h"
+#include "xstatus.h"
 #include "xtables.h"
 
 static XChar2b *status_2b;

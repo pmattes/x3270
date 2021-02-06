@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2020 Paul Mattes.
+ * Copyright (c) 1994-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -240,6 +240,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  replace  replace the file
      *  append   append to the file, if it exists (default)
      *  modi     print modified fields in italics
+     *  oia	 include the OIA in the output
      *  caption "text"
      *           Adds caption text above the screen
      *           %T% is replaced by a timestamp
@@ -248,7 +249,8 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  command  directs the output to a command (this is the default, but
      *            allows the command to be one of the other keywords);
      *  	      must be the last keyword
-     *  string   returns the data as a string */
+     *  string   returns the data as a string
+     */
     for (i = 0; i < argc; i++) {
 	if (!strcasecmp(argv[i], KwFile)) {
 	    if (mode != PM_NONE) {
@@ -327,6 +329,8 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 		return false;
 	    }
 	    caption = argv[++i];
+	} else if (!strcasecmp(argv[i], KwOia)) {
+	    opts |= FPS_OIA;
 	} else {
 	    break;
 	}

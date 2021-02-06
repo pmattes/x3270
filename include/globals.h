@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -357,7 +357,8 @@ struct ea {
 #define GR_REVERSE	0x02
 #define GR_UNDERLINE	0x04
 #define GR_INTENSIFY	0x08
-#define GR_WRAP		0x10
+#define GR_WRAP		0x10	/* NVT-mode wrap occurred after this position */
+#define GR_RESET	0x20	/* ignore preceding field attribute */
 
 #define CS_MASK		0x03	/* mask for specific character sets */
 #define CS_BASE		0x00	/*  base character set (X'00') */

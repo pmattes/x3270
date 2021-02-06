@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2018 Paul Mattes.
+ * Copyright (c) 1994-2015, 2018, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #define FPS_NO_HEADER		0x8	/* do not generate HTML header */
 #define FPS_NO_DIALOG		0x10	/* do not use Windows print dialog */
 #define FPS_DIALOG_COMPLETE	0x20	/* Windows dialog is complete */
+#define FPS_OIA			0x40	/* include the OIA */
 
 typedef struct _fps *fps_t;
 

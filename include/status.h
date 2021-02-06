@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015, 2018 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015, 2018, 2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,6 @@
 
 void status_compose(bool on, ucs4_t ucs4, enum keytype keytype);
 void status_ctlr_done(void);
-void status_cursor_pos(int ca);
 void status_insert_mode(bool on);
 void status_keyboard_disable_flash(void);
 void status_lu(const char *);
@@ -49,5 +48,4 @@ void status_syswait(void);
 void status_timing(struct timeval *t0, struct timeval *t1);
 void status_twait(void);
 void status_typeahead(bool on);
-void status_uncursor_pos(void);
 void status_untiming(void);

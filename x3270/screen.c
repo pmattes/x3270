@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -87,6 +87,7 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utils.h"
+#include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"
@@ -2778,7 +2779,7 @@ static void
 toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     if (!toggled(SHOW_TIMING)) {
-	status_untiming();
+	vstatus_untiming();
     }
 }
 

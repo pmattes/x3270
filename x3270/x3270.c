@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -84,6 +84,7 @@
 #include "trace.h"
 #include "screentrace.h"
 #include "utils.h"
+#include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"
@@ -510,6 +511,7 @@ main(int argc, char *argv[])
     net_register();
     xkybd_register();
     login_macro_register();
+    vstatus_register();
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/

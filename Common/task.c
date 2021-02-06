@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,7 +77,6 @@
 #include "screen.h"
 #include "source.h"
 #include "split_host.h"
-#include "status.h"
 #include "stdinscript.h"
 #include "stringscript.h"
 #include "task.h"
@@ -87,6 +86,7 @@
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "vstatus.h"
 #include "xio.h"
 
 #include "w3misc.h"
@@ -604,7 +604,7 @@ task_status_set(void)
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 
     menubar_as_set(any);
-    status_script(any);
+    vstatus_script(any);
 }
 
 /*

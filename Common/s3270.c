@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -79,6 +79,7 @@
 #include "trace.h"
 #include "screentrace.h"
 #include "utils.h"
+#include "vstatus.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
@@ -198,6 +199,7 @@ main(int argc, char *argv[])
     model_register();
     net_register();
     login_macro_register();
+    vstatus_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

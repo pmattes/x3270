@@ -81,7 +81,6 @@
 #include "sioc.h"
 #include "split_host.h"
 #include "stats.h"
-#include "status.h"
 #include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
@@ -93,6 +92,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
+#include "vstatus.h"
 #include "w3misc.h"
 #include "xio.h"
 
@@ -1211,7 +1211,7 @@ net_disconnect(bool including_tls)
     }
 
     /* We're not connected to an LU any more. */
-    status_lu(NULL);
+    vstatus_lu(NULL);
 
     /* We have no more interest in output buffer space. */
     remove_output();
@@ -1440,7 +1440,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		hisopts[TELOPT_ECHO] = 1;
 		check_linemode(false);
 		kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
-		status_reset();
+		vstatus_reset();
 		ps_process();
 	    }
 	    nvt_process((unsigned int) *cp);
@@ -1608,7 +1608,7 @@ telnet_fsm(unsigned char c)
 	    }
 	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 	    kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
-	    status_reset();
+	    vstatus_reset();
 	    ps_process();
 	}
 	if (IN_NVT && !IN_E) {
@@ -1899,7 +1899,7 @@ telnet_fsm(unsigned char c)
 		net_hexnvt_out_framed((unsigned char *)tt_out, tb_len, true);
 		Free(tt_out);
 
-		status_lu(connected_lu);
+		vstatus_lu(connected_lu);
 
 		vtrace("SENT %s %s %s %s%s%s %s\n", cmd(SB), opt(TELOPT_TTYPE),
 			telquals[TELQUAL_IS], termtype,
@@ -2110,7 +2110,7 @@ tn3270e_negotiate(void)
 		    snlen? connected_lu: "");
 
 	    if (snlen) {
-		status_lu(connected_lu);
+		vstatus_lu(connected_lu);
 	    }
 
 	    /* Tell them what we can do. */
@@ -2440,7 +2440,7 @@ process_bind(unsigned char *buf, size_t buflen)
 		}
 	    }
 #endif /*]*/
-	    status_lu(plu_name);
+	    vstatus_lu(plu_name);
 	}
     }
 
@@ -2563,7 +2563,7 @@ process_eor(void)
 	    }
 	    tn3270e_bound = 0;
 	    /* Go back to the connected LU. */
-	    status_lu(connected_lu);
+	    vstatus_lu(connected_lu);
 	    /*
 	     * Undo any screen-sizing effects from a previous BIND.
 	     */

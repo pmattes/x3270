@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,6 @@
 #include "product.h"
 #include "resources.h"
 #include "save.h"
-#include "status.h"
 #include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
@@ -66,6 +65,7 @@
 #include "trace_gui.h"
 #include "utf8.h"
 #include "utils.h"
+#include "vstatus.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
 # include "windirs.h"
@@ -124,7 +124,7 @@ do_screentrace(bool always _is_unused)
     } else if (status == FPS_STATUS_SUCCESS) {
 	vtrace("screentrace: nothing written\n");
     } else {
-	status_screentrace(++screentrace_count);
+	vstatus_screentrace(++screentrace_count);
     }
 }
 
@@ -206,7 +206,7 @@ screentrace_continue(void *context, bool cancel)
     /* We're really tracing, turn the flag on. */
     set_toggle(SCREEN_TRACE, true);
     menubar_retoggle(SCREEN_TRACE);
-    status_screentrace((screentrace_count = 0));
+    vstatus_screentrace((screentrace_count = 0));
 }
 
 /*
@@ -517,7 +517,7 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
     if (toggled(SCREEN_TRACE)) {
 	/* Turn it on. */
 	screentrace_resource_setup();
-	status_screentrace((screentrace_count = 0));
+	vstatus_screentrace((screentrace_count = 0));
 	if (onetime_screentrace_name != NULL) {
 	    tracefile = tracefile_buf = onetime_screentrace_name;
 	    onetime_screentrace_name = NULL;
@@ -537,7 +537,7 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 		    screentrace_current.opts, NewString(tracefile))) {
 
 	    set_toggle(SCREEN_TRACE, false);
-	    status_screentrace((screentrace_count = -1));
+	    vstatus_screentrace((screentrace_count = -1));
 	}
     } else {
 	/* Turn it off. */
@@ -546,7 +546,7 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 	}
 	end_screentrace(tt == TT_FINAL);
 	screentrace_current = screentrace_default; /* struct copy */
-	status_screentrace((screentrace_count = -1));
+	vstatus_screentrace((screentrace_count = -1));
     }
 
     if (tracefile_buf != NULL) {

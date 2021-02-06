@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -64,7 +64,6 @@
 #include "screen.h"
 #include "scroll.h"
 #include "split_host.h"
-#include "status.h"
 #include "stringscript.h"
 #include "task.h"
 #include "telnet.h"
@@ -73,6 +72,7 @@
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "vstatus.h"
 
 /*#define KYBDLOCK_TRACE	1*/
 
@@ -145,7 +145,7 @@ static char dxl[] = "0123456789abcdef";
     if (kybdlock) { \
 	if (KYBDLOCK_IS_OERR) { \
 	    kybdlock_clr(KL_OERR_MASK, action); \
-	    status_reset(); \
+	    vstatus_reset(); \
 	} else { \
 	    enq_ta(action, NULL, NULL); \
 	    return true; \
@@ -298,7 +298,7 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
 	ta_tail->next = ta;
     } else {
 	ta_head = ta;
-	status_typeahead(true);
+	vstatus_typeahead(true);
     }
     ta_tail = ta;
 
@@ -337,7 +337,7 @@ run_ta(void)
 
     if ((ta_head = ta->next) == NULL) {
 	ta_tail = NULL;
-	status_typeahead(false);
+	vstatus_typeahead(false);
     }
 
     if (ta->efn_name) {
@@ -379,7 +379,7 @@ flush_ta(void)
 	any = true;
     }
     ta_head = ta_tail = NULL;
-    status_typeahead(false);
+    vstatus_typeahead(false);
     return any;
 }
 
@@ -509,12 +509,12 @@ kybd_inhibit(bool inhibit)
     if (inhibit) {
 	kybdlock_set(KL_ENTER_INHIBIT, "kybd_inhibit");
 	if (kybdlock == KL_ENTER_INHIBIT) {
-	    status_reset();
+	    vstatus_reset();
 	}
     } else {
 	kybdlock_clr(KL_ENTER_INHIBIT, "kybd_inhibit");
 	if (!kybdlock) {
-	    status_reset();
+	    vstatus_reset();
 	}
     }
 }
@@ -711,7 +711,7 @@ operator_error(int error_type, bool oerr_fail)
 	popup_an_error("Keyboard locked");
     }
     if (appres.oerr_lock || oerr_fail) {
-	status_oerr(error_type);
+	vstatus_oerr(error_type);
 	mcursor_locked();
 	kybdlock_set((unsigned int)error_type, "operator_error");
 	flush_ta();
@@ -723,14 +723,14 @@ operator_error(int error_type, bool oerr_fail)
 static void
 toggle_reverse_input(toggle_index_t ix, enum toggle_type type)
 {
-    status_reverse_mode(toggled(REVERSE_INPUT));
+    vstatus_reverse_mode(toggled(REVERSE_INPUT));
 }
 
 /* The insert mode toggle changed. */
 static void
 toggle_insert_mode(toggle_index_t ix, enum toggle_type type)
 {
-    status_insert_mode(toggled(INSERT_MODE));
+    vstatus_insert_mode(toggled(INSERT_MODE));
 }
 
 /*
@@ -814,25 +814,25 @@ key_AID(unsigned char aid_code)
 	    buffer_addr = cursor_addr;
 	    aid = aid_code;
 	    ctlr_read_modified(aid, false);
-	    status_ctlr_done();
+	    vstatus_ctlr_done();
 	    break;
 	default:
 	    /* Everything else is invalid in SSCP-LU mode. */
-	    status_minus();
+	    vstatus_minus();
 	    kybdlock_set(KL_OIA_MINUS, "key_AID");
 	    return;
 	}
 	return;
     }
 
-    status_twait();
+    vstatus_twait();
     mcursor_waiting();
     insert_mode(toggled(ALWAYS_INSERT));
     kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
     aid = aid_code;
     ctlr_read_modified(aid, false);
     ticking_start(false);
-    status_ctlr_done();
+    vstatus_ctlr_done();
 }
 
 static bool
@@ -899,7 +899,7 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 	if (net_bound()) {
 	    net_interrupt(0);
 	} else {
-	    status_minus();
+	    vstatus_minus();
 	    kybdlock_set(KL_OIA_MINUS, AnAttn);
 	}
 	return true;
@@ -1659,7 +1659,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
     if (keyboard_disabled() && IA_IS_KEY(cause)) {
 	vtrace("  [suppressed, keyboard disabled]\n");
-	status_keyboard_disable_flash();
+	vstatus_keyboard_disable_flash();
 	return;
     }
 
@@ -1698,16 +1698,16 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    cc_first.ucs4 = ucs4;
 	    cc_first.keytype = keytype;
 	    composing = FIRST;
-	    status_compose(true, ucs4, keytype);
+	    vstatus_compose(true, ucs4, keytype);
 	} else {
 	    ring_bell();
 	    composing = NONE;
-	    status_compose(false, 0, KT_STD);
+	    vstatus_compose(false, 0, KT_STD);
 	}
 	return;
     case FIRST:
 	composing = NONE;
-	status_compose(false, 0, KT_STD);
+	vstatus_compose(false, 0, KT_STD);
 	for (i = 0; i < n_composites; i++) {
 	    if ((ak_eq(composites[i].k1, cc_first) &&
 		 ak_eq(composites[i].k2, ak)) ||
@@ -1870,7 +1870,7 @@ static void
 defer_unlock(ioid_t id _is_unused)
 {
     kybdlock_clr(KL_DEFERRED_UNLOCK, "defer_unlock");
-    status_reset();
+    vstatus_reset();
     if (CONNECTED) {
 	ps_process();
     }
@@ -1894,7 +1894,7 @@ do_reset(bool explicit)
 	}
 	if (composing != NONE) {
 	    composing = NONE;
-	    status_compose(false, 0, KT_STD);
+	    vstatus_compose(false, 0, KT_STD);
 	    half_reset = true;
 	}
 	if (half_reset) {
@@ -1942,10 +1942,10 @@ do_reset(bool explicit)
     }
 
     /* Clean up other modes. */
-    status_reset();
+    vstatus_reset();
     mcursor_normal();
     composing = NONE;
-    status_compose(false, 0, KT_STD);
+    vstatus_compose(false, 0, KT_STD);
     if (explicit) {
 	ctlr_reset();
     }
@@ -4346,7 +4346,7 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     composing = COMPOSE;
-    status_compose(true, 0, KT_STD);
+    vstatus_compose(true, 0, KT_STD);
     return true;
 }
 
@@ -4355,7 +4355,7 @@ static void
 destroy_compose_map(void)
 {
     composing = NONE;
-    status_compose(false, 0, KT_STD);
+    vstatus_compose(false, 0, KT_STD);
 
     Replace(composites, NULL);
     n_composites = 0;

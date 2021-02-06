@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2016, 2019-2020 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2016, 2019-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@
 #include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "vstatus.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
@@ -590,9 +591,9 @@ status_ret(char *s, struct keymap *k)
 {
     /* Set the compose indicator based on the new value of current_match. */
     if (k != NULL) {
-	status_compose(true, ' ', KT_STD);
+	vstatus_compose(true, ' ', KT_STD);
     } else {
-	status_compose(false, 0, KT_STD);
+	vstatus_compose(false, 0, KT_STD);
     }
 
     if (s != NULL && s != ignore) {

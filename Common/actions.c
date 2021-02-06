@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018, 2020-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -41,11 +41,11 @@
 #include "lazya.h"
 #include "popups.h"
 #include "resources.h"
-#include "status.h"
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "vstatus.h"
 
 llist_t actions_list = LLIST_INIT(actions_list);
 unsigned actions_list_count;
@@ -311,7 +311,7 @@ run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
     if ((keyboard_explicit_disables || keyboard_implicit_disables) &&
 	    IA_IS_KEY(cause)) {
 	vtrace("%s() [suppressed, keyboard disabled]\n", e->t.name);
-	status_keyboard_disable_flash();
+	vstatus_keyboard_disable_flash();
 	return false;
     }
 

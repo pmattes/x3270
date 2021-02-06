@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Paul Mattes.
+ * Copyright (c) 2020-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -173,6 +173,7 @@
 #define KwString	"string"
 #define KwModi		"modi"
 #define KwCaption	"caption"
+#define KwOia		"oia"
 /*  Parameters to Query(). */
 #define KwAbout		"About"
 #define KwActions	"Actions"

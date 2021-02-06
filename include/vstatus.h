@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015, 2018, 2021 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015, 2018, 2020-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -28,96 +28,26 @@
  */
 
 /*
- *	status_stubs.c
- *		Stub functions for status.c.
+ *	vstatus.h
+ *		Global declarations for vstatus.c.
  */
 
-#include "globals.h"
-
-#include "status.h"
-
-void
-status_compose(bool on _is_unused, ucs4_t ucs4 _is_unused,
-	enum keytype keytype _is_unused)
-{
-}
-
-void
-status_ctlr_done(void)
-{
-}
-
-void
-status_insert_mode(bool on _is_unused)
-{
-}
-
-void
-status_keyboard_disable_flash(void)
-{
-}
-
-void
-status_lu(const char *s _is_unused)
-{
-}
-
-void
-status_minus(void)
-{
-}
-
-void
-status_oerr(int error_type _is_unused)
-{
-}
-
-void
-status_reset(void)
-{
-}
-
-void
-status_reverse_mode(bool on _is_unused)
-{
-}
-
-void
-status_screentrace(int n _is_unused)
-{
-}
-
-void
-status_script(bool on _is_unused)
-{
-}
-
-void
-status_scrolled(int n _is_unused)
-{
-}
-
-void
-status_syswait(void)
-{
-}
-
-void
-status_timing(struct timeval *t0 _is_unused, struct timeval *t1 _is_unused)
-{
-}
-
-void
-status_twait(void)
-{
-}
-
-void
-status_typeahead(bool on _is_unused)
-{
-}
-
-void
-status_untiming(void)
-{
-}
+void vstatus_compose(bool on, ucs4_t ucs4, enum keytype keytype);
+void vstatus_ctlr_done(void);
+void vstatus_insert_mode(bool on);
+void vstatus_keyboard_disable_flash(void);
+void vstatus_line(struct ea *ea);
+void vstatus_lu(const char *);
+void vstatus_minus(void);
+void vstatus_oerr(int error_type);
+void vstatus_register(void);
+void vstatus_reset(void);
+void vstatus_reverse_mode(bool on);
+void vstatus_screentrace(int n);
+void vstatus_script(bool on);
+void vstatus_scrolled(int n);
+void vstatus_syswait(void);
+void vstatus_timing(struct timeval *t0, struct timeval *t1);
+void vstatus_twait(void);
+void vstatus_typeahead(bool on);
+void vstatus_untiming(void);

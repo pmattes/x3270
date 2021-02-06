@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -62,7 +62,6 @@
 #include "see.h"
 #include "selectc.h"
 #include "sf.h"
-#include "status.h"
 #include "tables.h"
 #include "task.h"
 #include "telnet_core.h"
@@ -70,6 +69,7 @@
 #include "trace.h"
 #include "screentrace.h"
 #include "utils.h"
+#include "vstatus.h"
 
 /* Globals */
 int ROWS, COLS;
@@ -300,7 +300,7 @@ void
 ctlr_reset(void)
 {
     ticking_stop(NULL);
-    status_untiming();
+    vstatus_untiming();
 }
 
 /*
@@ -340,11 +340,11 @@ static void
 ctlr_connect(bool ignored _is_unused)
 {
     ticking_stop(NULL);
-    status_untiming();
+    vstatus_untiming();
 
     if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
 	kybdlock_clr(KL_OIA_TWAIT, "ctlr_connect");
-	status_reset();
+	vstatus_reset();
     }
 
     default_fg = 0x00;
@@ -1996,7 +1996,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	do_reset(false);
     } else if (kybdlock & KL_OIA_TWAIT) {
 	kybdlock_clr(KL_OIA_TWAIT, "ctlr_write");
-	status_syswait();
+	vstatus_syswait();
     }
     if (wcc_sound_alarm) {
 	ring_bell();
@@ -2952,7 +2952,7 @@ keep_ticking(ioid_t id _is_unused)
 	msec = delta_msec(&t_want, &t1);
     } while (msec <= 0);
     tick_id = AddTimeOut(msec, keep_ticking);
-    status_timing(&t_start, &t1);
+    vstatus_timing(&t_start, &t1);
 }
 
 void
@@ -2961,7 +2961,7 @@ ticking_start(bool anyway)
     gettimeofday(&t_start, NULL);
     mticking = true;
 
-    status_untiming();
+    vstatus_untiming();
     if (ticking) {
 	RemoveTimeOut(tick_id);
     }
@@ -2994,7 +2994,7 @@ ticking_stop(struct timeval *tp)
     ticking = false;
 
     if (toggled(SHOW_TIMING) || ticking_anyway) {
-	status_timing(&t_start, tp);
+	vstatus_timing(&t_start, tp);
     }
 
     cs = ((tp->tv_sec - t_start.tv_sec) * 1000000L) +

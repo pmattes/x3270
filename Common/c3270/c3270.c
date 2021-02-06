@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -101,6 +101,7 @@
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "vstatus.h"
 #include "xio.h"
 #include "xpopen.h"
 #include "xscroll.h"
@@ -616,6 +617,7 @@ main(int argc, char *argv[])
     model_register();
     net_register();
     login_macro_register();
+    vstatus_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

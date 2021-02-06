@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2017, 2020 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2017, 2020-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,11 +46,11 @@
 #include "screen.h"
 #include "scroll.h"
 #include "selectc.h"
-#include "status.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
+#include "vstatus.h"
 
 /* Globals */
 bool	scroll_initted = false;
@@ -326,9 +326,9 @@ sync_scroll(int sb)
 
     /* Update the status line. */
     if (scroll_has_3270) {
-	status_scrolled(sb / maxROWS);
+	vstatus_scrolled(sb / maxROWS);
     } else {
-	status_scrolled(0);
+	vstatus_scrolled(0);
     }
 
     /* Swap screen sizes. */
