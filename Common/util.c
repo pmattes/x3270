@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -98,46 +98,29 @@ xs_error(const char *fmt, ...)
     Free(r);
 }
 
-/* Prettyprinter for strings with unprintable data. */
-void
-fcatv(FILE *f, char *s)
-{
-    char c;
-
-    while ((c = *s++)) {
-	switch (c) {
-	case '\n':
-	    fprintf(f, "\\n");
-	    break;
-	case '\t':
-	    fprintf(f, "\\t");
-	    break;
-	case '\b':
-	    fprintf(f, "\\b");
-	    break;
-	default:
-	    if ((c & 0x7f) < ' ') {
-		fprintf(f, "\\%03o", c & 0xff);
-	    } else {
-		fputc(c, f);
-	    }
-	    break;
-	}
-    }
-}
-
-/* String version of fcatv. */
-char *
-scatv(const char *s, char *buf, size_t len)
+/**
+ * Expand control characters in a string.
+ *
+ * @param[in] s		String to format
+ * @param[in] quoted	If true, quote the string.
+ *
+ * @returns Expanded string
+ */
+static char *
+catv_common(const char *s, bool quoted)
 {
     char c;
     varbuf_t r;
 
     vb_init(&r);
+    if (quoted) {
+	vb_appends(&r, "\"");
+    }
     while ((c = *s++)) {
+	unsigned char uc = c;
 
 	/* Expand this character. */
-	switch (c) {
+	switch (uc) {
 	case '\n':
 	    vb_appends(&r, "\\n");
 	    break;
@@ -147,21 +130,51 @@ scatv(const char *s, char *buf, size_t len)
 	case '\b':
 	    vb_appends(&r, "\\b");
 	    break;
+	case '"':
+	    if (quoted) {
+		vb_appends(&r, "\\\"");
+		break;
+	    }
+	    /* else fall through */
 	default:
-	    if ((c & 0x7f) < ' ') {
-		vb_appendf(&r, "\\%03o", c & 0xff);
+	    if (uc < ' ' || uc == 0x7f) {
+		vb_appendf(&r, "\\%03o", uc);
 	    } else {
 		vb_append(&r, &c, 1);
 	    }
 	    break;
 	}
     }
+    if (quoted) {
+	vb_appends(&r, "\"");
+    }
+    return lazya(vb_consume(&r));
+}
 
-    /* Copy what fits. */
-    snprintf(buf, len, "%s", vb_buf(&r)? vb_buf(&r): "");
-    vb_free(&r);
+/**
+ * Expand control characters in a string.
+ *
+ * @param[in] s		String to format
+ *
+ * @returns Expanded string
+ */
+char *
+scatv(const char *s)
+{
+    return catv_common(s, false);
+}
 
-    return buf;
+/**
+ * Expand control characters in a string, quoting the result.
+ *
+ * @param[in] s		String to format
+ *
+ * @returns Expanded string
+ */
+char *
+qscatv(const char *s)
+{
+    return catv_common(s, true);
 }
 
 /*

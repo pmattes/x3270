@@ -172,16 +172,13 @@ void
 action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
-    char pbuf[1024];
 
     if (!toggled(TRACING)) {
 	return;
     }
     vtrace("%s -> %s(", ia_name[(int)ia], aname);
     for (i = 0; i < argc; i++) {
-	vtrace("%s\"%s\"",
-		i? ", ": "",
-		scatv(argv[i], pbuf, sizeof(pbuf)));
+	vtrace("%s%s", i? ", ": "", qscatv(argv[i]));
     }
     vtrace(")\n");
 

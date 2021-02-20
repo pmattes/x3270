@@ -797,13 +797,20 @@ cleanup_socket(bool b _is_unused)
 }
 #endif /*]*/
 
-/*
- * Interpret and execute a script or macro command.
+/**
+ * Split a command into an action and arguments.
+ *
+ * @param[in] s		string to parse
+ * @param[out] np	returned pointer to additional commands
+ * @param[out] entryp	returned action entry
+ * @param[out] argsp	returned arguments
+ * @param[out] errorp	returned error text (if false returned)
+ *
+ * @returns true for success, false for failure
  */
-enum em_stat { EM_CONTINUE, EM_ERROR };
-static enum em_stat
-execute_command(enum iaction cause, char *s, char **np, char *buf,
-	size_t buflen)
+static bool
+parse_command(char *s, char **np, action_elt_t **entryp, char ***argsp,
+	char **errorp)
 {
 #   define MAX_ANAME	64
     enum {
@@ -827,7 +834,7 @@ execute_command(enum iaction cause, char *s, char **np, char *buf,
     char c;
     char aname[MAX_ANAME+1];
     int nx = 0;
-    unsigned param_count = 0;		/* parameter count */
+    unsigned param_count = 0;	/* parameter count */
     unsigned vbcount = 0;	/* allocated parameter count */
     varbuf_t *r = NULL;		/* accumulated parameters */
     int failreason = 0;
@@ -835,7 +842,7 @@ execute_command(enum iaction cause, char *s, char **np, char *buf,
     action_elt_t *any = NULL;
     action_elt_t *exact = NULL;
     unsigned i;
-    enum em_stat rc = EM_ERROR;	/* failure return code */
+    bool rc = false;	/* failure return code */
     char *s_orig = s;
     static const char *fail_text[] = {
 	/*1*/ "Action name must begin with an alphanumeric character",
@@ -846,6 +853,11 @@ execute_command(enum iaction cause, char *s, char **np, char *buf,
 	/*6*/ "Syntax error: unclosed \""
     };
 #define fail(n) { failreason = n; goto failure; }
+
+    *np = NULL;
+    *entryp = NULL;
+    *argsp = NULL;
+    *errorp = NULL;
 
     while ((c = *s++)) {
 
@@ -1044,7 +1056,7 @@ execute_command(enum iaction cause, char *s, char **np, char *buf,
 	if (np) {
 	    *np = s - 1;
 	}
-	rc = EM_CONTINUE;
+	rc = true;
 	goto silent_failure;
     case ME_S_PARMx:	/* space after space-style parameter */
 	break;
@@ -1088,16 +1100,6 @@ success:
 	*np = s-1;
     }
 
-    /*
-     * There used to be logic to do variable substituion here under most
-     * circumstances. That's just plain wrong.
-     *
-     * Substitutions should be handled for specific arguments to specific
-     * actions. If substitutions are needed for special situations, they
-     * should be added explicitly, or new actions or variants of actions
-     * should be added that include the substitutions.
-     */
-
     /* Search the action list. */
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	if (!strcasecmp(aname, e->t.name)) {
@@ -1109,7 +1111,7 @@ success:
 	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	    if (!strncasecmp(aname, e->t.name, strlen(aname))) {
 		if (any != NULL) {
-		    popup_an_error("Ambiguous action name: %s", aname);
+		    *errorp = xs_buffer("Ambiguous action name: %s", aname);
 		    goto silent_failure;
 		}
 		any = e;
@@ -1118,61 +1120,29 @@ success:
     }
 
     if (any != NULL) {
-	const char **params = NULL;
-	size_t alen;
+	/* Return the action entry. */
+	*entryp = any;
 
-	if (any->t.ia_restrict != IA_NONE && cause != any->t.ia_restrict) {
-	    popup_an_error("Action %s is invalid in this context",
-		    any->t.name);
-	    goto silent_failure;
+	/* Return the arguments. */
+	*argsp = (char **)Malloc((param_count + 1) * sizeof(const char *));
+	for (i = 0; i < param_count; i++) {
+	    (*argsp)[i] = vb_consume(&r[i]);
 	}
-
-	if (param_count) {
-	    /* Create the parameter array. */
-	    params = (const char **)Malloc(param_count * sizeof(const char *));
-	    for (i = 0; i < param_count; i++) {
-		params[i] = vb_buf(&r[i])? vb_buf(&r[i]) : NewString("");
-	    }
-	}
-
-	/* Record the action. */
-	alen = *np - s_orig;
-	if (alen > buflen - 1) {
-	    alen = buflen - 1;
-	}
-	strncpy(buf, s_orig, alen);
-	buf[alen] = '\0';
-
-	run_action_entry(any, cause, param_count, param_count? params: NULL);
-
-	if (vbcount) {
-	    /* Free the varbuf array. */
-	    Free((char *)params);
-	    for (i = 0; i < vbcount; i++) {
-		vb_free(&r[i]);
-	    }
-	    Free(r);
-	    r = NULL;
-	}
-
-	/* Refresh the screen, in case the action changed it. */
-	screen_disp(false);
+	(*argsp)[i] = NULL;
     } else {
-	popup_an_error("Unknown action: %s", aname);
+	*errorp = xs_buffer("Unknown action: %s", aname);
 	goto silent_failure;
     }
 
     /* If it produced an error message, it failed. */
     if (!current_task->success) {
-	return EM_ERROR;
+	return false;
     }
 
-    trace_rollover_check();
-
-    return EM_CONTINUE;
+    return true;
 
 failure:
-    popup_an_error("%s at column %d", fail_text[failreason-1],
+    *errorp = xs_buffer("%s at column %d", fail_text[failreason-1],
 	    (int)(s - s_orig) );
 silent_failure:
     if (vbcount) {
@@ -1186,48 +1156,77 @@ silent_failure:
 #undef fail
 }
 
-/* Expand control characters in a string. */
-static char *
-no_ctrl(const char *s)
+/**
+ * Interpret and execute a script or macro command.
+ *
+ * @param[in] cause	Origin of action
+ * @param[in] s		Buffer containing action and paramters
+ * @param[out] np	Returned pointer to next action
+ * @param[out] last	Returned action and paramters, canonicalized
+ * @param[in] last_len	Length of the last
+ *
+ * @return success or failure
+ */
+static bool
+execute_command(enum iaction cause, char *s, char **np, char *last,
+	size_t last_len)
 {
+    bool stat;
+    action_elt_t *entry;
+    char **args;
+    char *error;
+    int i;
     varbuf_t r;
-    char c;
 
-    vb_init(&r);
-    while ((c = *s++) != '\0') {
-	unsigned char uc = c;
-
-	if ((uc & 0x7f) >= ' ' && uc != 0x7f) {
-	    /* Printable. */
-	    vb_append(&r, s - 1, 1);
-	    continue;
-	}
-	if (uc >= 0x80 && uc < 0xa0) {
-	    /* 8-bit control. */
-	    vb_appends(&r, lazyaf("\\x%02x", uc));
-	    continue;
-	}
-
-	/* 7-bit control. */
-	switch (c) {
-	case '\r':
-	    vb_appends(&r, "\\r");
-	    break;
-	case '\n':
-	    vb_appends(&r, "\\n");
-	    break;
-	case '\b':
-	    vb_appends(&r, "\\b");
-	    break;
-	case '\t':
-	    vb_appends(&r, "\\t");
-	    break;
-	default:
-	    vb_appends(&r, lazyaf("\\x%02x", uc));
-	    break;
-	}
+    /* Parse the command. */
+    stat = parse_command(s, np, &entry, &args, &error);
+    if (!stat) {
+	popup_an_error("%s", error);
+	Free(error);
+	return stat;
     }
-    return lazya(vb_consume(&r));
+
+    /* Check for restrictions. */
+    if (entry->t.ia_restrict != IA_NONE && cause != entry->t.ia_restrict) {
+	popup_an_error("Action %s is invalid in this context",
+		entry->t.name);
+	stat = false;
+	goto done;
+    }
+
+    /* Record the action. */
+    vb_init(&r);
+    vb_appendf(&r, "%s(", entry->t.name);
+    for (i = 0; args[i] != NULL; i++) {
+	vb_appendf(&r, "%s%s", i? ",": "", qscatv(args[i]));
+    }
+    vb_appends(&r, ")");
+    strncpy(last, vb_consume(&r), last_len - 1);
+    last[last_len - 1] = '\0';
+
+    /* Run the action. */
+    for (i = 0; args[i] != NULL; i++) {
+    }
+    (void) run_action_entry(entry, cause, i, (const char **)args);
+
+    /* Refresh the screen, in case the action changed it. */
+    screen_disp(false);
+
+    /* If it produced an error message, it failed. */
+    if (!current_task->success) {
+	stat = false;
+    }
+
+    /* Check for trace file rollover. */
+    trace_rollover_check();
+
+done:
+    /* Free the arguments. */
+    for (i = 0; args[i] != NULL; i++) {
+	Free(args[i]);
+    }
+    Replace(args, NULL);
+    return stat;
 }
 
 /* Run the macro at the top of the stack. */
@@ -1237,7 +1236,7 @@ run_macro(void)
     task_t *s = current_task;
     char *a = s->macro.dptr;
     char *nextm = NULL;
-    enum em_stat es;
+    bool es;
     bool fatal = false;
 
     vtrace(TASK_NAME_FMT " running\n", TASK_NAME);
@@ -1265,7 +1264,7 @@ run_macro(void)
 	}
 
 	task_set_state(s, TS_RUNNING, "executing");
-	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME, no_ctrl(a));
+	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME, scatv(a));
 	s->success = true;
 
 	if (s->type == ST_MACRO &&
@@ -1288,7 +1287,7 @@ run_macro(void)
 	}
 
 	/* Macro could not execute.  Abort it. */
-	if (es == EM_ERROR) {
+	if (!es) {
 	    vtrace(TASK_NAME_FMT " error\n", TASK_NAME);
 
 	    /* Propagate it. */

@@ -804,7 +804,6 @@ xaction_ndebug(const char *aname, XEvent *event, String *params,
 	Cardinal *num_params)
 {
     Cardinal i;
-    char pbuf[1024];
 
     if (!toggled(TRACING)) {
 	return;
@@ -812,9 +811,9 @@ xaction_ndebug(const char *aname, XEvent *event, String *params,
     trace_event(event);
     vtrace(" -> %s(", aname);
     for (i = 0; i < *num_params; i++) {
-	vtrace("%s\"%s\"",
+	vtrace("%s%s",
 		i? ", ": "",
-		scatv(params[i], pbuf, sizeof(pbuf)));
+		qscatv(params[i]));
     }
     vtrace(")\n");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1996-2010, 2013-2016, 2019, 2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1139,9 +1139,8 @@ format_xlations(String s, FILE *f)
 	case SORT_ACTION:
 	    break;
 	}
-	fprintf(f, "%-26s %-16s ", xs->event, xs->full_keymap);
-	fcatv(f, xs->actions);
-	fputc('\n', f);
+	fprintf(f, "%-26s %-16s %s\n", xs->event, xs->full_keymap,
+		scatv(xs->actions));
     }
 
     /* Free it. */

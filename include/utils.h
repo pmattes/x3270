@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,14 @@ char *do_subst(const char *s, unsigned flags);
 #define DS_VARS		0x1
 #define DS_TILDE	0x2
 #define DS_UNIQUE	0x4
-void fcatv(FILE *f, char *s);
 const char *get_message(const char *key);
 char *get_fresource(const char *fmt, ...) printflike(1, 2);
 char *get_resource(const char *name);
 int get_resource_int(const char *name);
 bool get_resource_bool(const char *name);
 char *get_underlying_resource(const char *name);
-char *scatv(const char *s, char *buf, size_t len);
+char *qscatv(const char *s);
+char *scatv(const char *s);
 int split_dbcs_resource(const char *value, char sep, char **part1,
 	char **part2);
 int split_dresource(char **st, char **left, char **right);
