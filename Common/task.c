@@ -401,7 +401,7 @@ macros_init(void)
 	    Free(m);
 	    continue;
 	}
-	if (!validate_command(action, &action_error)) {
+	if (!validate_command(action, (int)(action - name), &action_error)) {
 	    popup_an_error("Error in %s line %d:\n%s", macros_resource, ix,
 		    action_error);
 	    Free(action_error);
@@ -842,6 +842,7 @@ lookup_action(const char *action, char **errorp)
  * Split a command into an action and arguments.
  *
  * @param[in] s		string to parse
+ * @param[in] offset	offset into string for error message
  * @param[out] np	returned pointer to additional commands
  * @param[out] entryp	returned action entry
  * @param[out] argsp	returned arguments
@@ -850,8 +851,8 @@ lookup_action(const char *action, char **errorp)
  * @returns true for success, false for failure
  */
 static bool
-parse_command(const char *s, const char **np, action_elt_t **entryp,
-	char ***argsp, char **errorp)
+parse_command(const char *s, int offset, const char **np,
+	action_elt_t **entryp, char ***argsp, char **errorp)
 {
 #   define MAX_ANAME	64
     enum {
@@ -1151,16 +1152,11 @@ success:
     }
     (*argsp)[i] = NULL;
 
-    /* If it produced an error message, it failed. */
-    if (!current_task->success) {
-	return false;
-    }
-
     return true;
 
 failure:
     *errorp = xs_buffer("%s at column %d", fail_text[failreason-1],
-	    (int)(s - s_orig) );
+	    (int)(s - s_orig) + offset);
 silent_failure:
     if (vbcount) {
 	for (i = 0; i < vbcount; i++) {
@@ -1196,7 +1192,7 @@ execute_command(enum iaction cause, const char *s, const char **np, char *last,
     varbuf_t r;
 
     /* Parse the command. */
-    stat = parse_command(s, np, &entry, &args, &error);
+    stat = parse_command(s, 0, np, &entry, &args, &error);
     if (!stat) {
 	popup_an_error("%s", error);
 	Free(error);
@@ -1250,19 +1246,24 @@ done:
  * Validate that a macro contains valid syntax and defined actions.
  *
  * @param[in] command	Command to check
+ * @param[in] offset	Offset for error message
  * @param[out] error	Returned error message
  * 
  * @return true for success, false for failure
  */
 bool
-validate_command(const char *command, char **error)
+validate_command(const char *command, int offset, char **error)
 {
     action_elt_t *entry;
     const char *np;
     char **args;
 
-    if (!parse_command(command, &np, &entry, &args, error)) {
-	return false;
+    np = command;
+    while (*np) {
+	if (!parse_command(np, (int)(np - command) + offset, &np, &entry,
+		    &args, error)) {
+	    return false;
+	}
     }
     Free(args);
     return true;

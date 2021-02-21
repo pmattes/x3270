@@ -464,6 +464,7 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
     static int *codes = NULL, *hints = NULL;
     int rc = 0;
     char *xfn = NULL;
+    char *action_error;
 
     /* Find the resource or file. */
     if (r0 != NULL) {
@@ -514,6 +515,12 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
 	    popup_an_error("Keymap %s, line %d: syntax error", name, line);
 	    goto done;
 	}
+	if (!validate_command(right, (int)(right - left), &action_error)) {
+            popup_an_error("Keymap %s, line %d: error:\n%s", fn, line,
+                    action_error);
+            Free(action_error);
+            goto done;
+        }
 
 	pkr = parse_keydef(&left, &ccode, &hint);
 	if (pkr == 0) {
