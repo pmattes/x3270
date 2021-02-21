@@ -147,3 +147,4 @@ typedef void xcontinue_fn(void *context, bool cancel);
 void task_xwait(void *context, xcontinue_fn *continue_fn, const char *why);
 
 char *task_get_tasks(void);
+bool validate_command(const char *command, char **error);

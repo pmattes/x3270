@@ -394,10 +394,19 @@ macros_init(void)
     macro_defs = NULL;
 
     while ((ns = split_dresource(&s, &name, &action)) == 1) {
+	char *action_error;
+
 	m = (struct macro_def *)Malloc(sizeof(*m));
 	if (!split_hier(name, &m->name, &m->parents)) {
 	    Free(m);
 	    continue;
+	}
+	if (!validate_command(action, &action_error)) {
+	    popup_an_error("Error in %s line %d:\n%s", macros_resource, ix,
+		    action_error);
+	    Free(action_error);
+	    ns = 0;
+	    break;
 	}
 	m->action = action;
 	if (macro_last) {
@@ -1245,12 +1254,14 @@ done:
  * 
  * @return true for success, false for failure
  */
-bool validate_command(const char *command, char **error)
+bool
+validate_command(const char *command, char **error)
 {
     action_elt_t *entry;
+    const char *np;
     char **args;
 
-    if (!parse_command(command, NULL, &entry, &args, error)) {
+    if (!parse_command(command, &np, &entry, &args, error)) {
 	return false;
     }
     Free(args);
