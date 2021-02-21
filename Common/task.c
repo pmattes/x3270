@@ -156,7 +156,7 @@ typedef struct task {
     /* Macro fields. */
     struct {
 	char   *msc;	/* input buffer */
-	char   *dptr;	/* data pointer */
+	const char *dptr; /* data pointer */
 #	define LAST_BUF 64
 	char	last[LAST_BUF]; /* last command */
     } macro;
@@ -349,20 +349,8 @@ macros_init(void)
     struct macro_def *m;
     int ns;
     int ix = 1;
-    static char *last_s = NULL;
-
-    /* Free the previous macro definitions. */
-    while (macro_defs) {
-	m = macro_defs->next;
-	Free(macro_defs);
-	macro_defs = m;
-    }
-    macro_defs = NULL;
-    macro_last = NULL;
-    if (last_s) {
-	Free(last_s);
-	last_s = NULL;
-    }
+    static char *last_macros_resource = NULL;
+    const char *macros_resource = NULL;
 
     /* Search for new ones. */
     if (PCONNECTED) {
@@ -374,6 +362,9 @@ macros_init(void)
 	    *space = '\0';
 	}
 	s = get_fresource("%s.%s", ResMacros, rname);
+	if (s != NULL) {
+	    macros_resource = lazyaf("%s.%s", ResMacros, rname);
+	}
 	Free(rname);
     }
     if (s == NULL) {
@@ -381,10 +372,26 @@ macros_init(void)
 	    return;
 	}
 	s = NewString(appres.macros);
+	macros_resource = ResMacros;
     } else {
 	s = NewString(s);
     }
-    last_s = s;
+
+    /* See if this is a repeat call. */
+    if (last_macros_resource != NULL &&
+	    !strcmp(last_macros_resource, macros_resource)) {
+	Free(s);
+	return;
+    }
+    Replace(last_macros_resource, NewString(macros_resource));
+
+    /* Free the previous macro definitions. */
+    while (macro_defs) {
+	m = macro_defs->next;
+	Free(macro_defs);
+	macro_defs = m;
+    }
+    macro_defs = NULL;
 
     while ((ns = split_dresource(&s, &name, &action)) == 1) {
 	m = (struct macro_def *)Malloc(sizeof(*m));
@@ -403,7 +410,7 @@ macros_init(void)
 	ix++;
     }
     if (ns < 0) {
-	popup_an_error("Format error in macro definition %d", ix);
+	popup_an_error("Format error in %s line %d", macros_resource, ix);
     }
 }
 
@@ -782,6 +789,47 @@ cleanup_socket(bool b _is_unused)
 #endif /*]*/
 
 /**
+ * Look up an action.
+ *
+ * @param[in] action	Action name
+ * @param[out] errorp	Returned error text
+ *
+ * @return action structure, or null
+ */
+static action_elt_t *
+lookup_action(const char *action, char **errorp)
+{
+    action_elt_t *e;
+    action_elt_t *any = NULL;
+    action_elt_t *exact = NULL;
+
+    /* Search the action list. */
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcasecmp(action, e->t.name)) {
+	    exact = any = e;
+	    break;
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (exact == NULL) {
+	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	    if (!strncasecmp(action, e->t.name, strlen(action))) {
+		if (any != NULL) {
+		    *errorp = xs_buffer("Ambiguous action name: %s", action);
+		    return NULL;
+		}
+		any = e;
+	    }
+	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    }
+
+    if (any == NULL) {
+	*errorp = xs_buffer("Unknown action: %s", action);
+    }
+
+    return any;
+}
+
+/**
  * Split a command into an action and arguments.
  *
  * @param[in] s		string to parse
@@ -793,8 +841,8 @@ cleanup_socket(bool b _is_unused)
  * @returns true for success, false for failure
  */
 static bool
-parse_command(char *s, char **np, action_elt_t **entryp, char ***argsp,
-	char **errorp)
+parse_command(const char *s, const char **np, action_elt_t **entryp,
+	char ***argsp, char **errorp)
 {
 #   define MAX_ANAME	64
     enum {
@@ -822,12 +870,9 @@ parse_command(char *s, char **np, action_elt_t **entryp, char ***argsp,
     unsigned vbcount = 0;	/* allocated parameter count */
     varbuf_t *r = NULL;		/* accumulated parameters */
     int failreason = 0;
-    action_elt_t *e;
-    action_elt_t *any = NULL;
-    action_elt_t *exact = NULL;
     unsigned i;
     bool rc = false;	/* failure return code */
-    char *s_orig = s;
+    const char *s_orig = s;
     static const char *fail_text[] = {
 	/*1*/ "Action name must begin with an alphanumeric character",
 	/*2*/ "Syntax error in action name",
@@ -1084,39 +1129,18 @@ success:
 	*np = s-1;
     }
 
-    /* Search the action list. */
-    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (!strcasecmp(aname, e->t.name)) {
-	    exact = any = e;
-	    break;
-	}
-    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (exact == NULL) {
-	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	    if (!strncasecmp(aname, e->t.name, strlen(aname))) {
-		if (any != NULL) {
-		    *errorp = xs_buffer("Ambiguous action name: %s", aname);
-		    goto silent_failure;
-		}
-		any = e;
-	    }
-	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    }
-
-    if (any != NULL) {
-	/* Return the action entry. */
-	*entryp = any;
-
-	/* Return the arguments. */
-	*argsp = (char **)Malloc((param_count + 1) * sizeof(const char *));
-	for (i = 0; i < param_count; i++) {
-	    (*argsp)[i] = vb_consume(&r[i]);
-	}
-	(*argsp)[i] = NULL;
-    } else {
-	*errorp = xs_buffer("Unknown action: %s", aname);
+    /* Look up the action. */
+    *entryp = lookup_action(aname, errorp);
+    if (*entryp == NULL) {
 	goto silent_failure;
     }
+
+    /* Return the arguments. */
+    *argsp = (char **)Malloc((param_count + 1) * sizeof(const char *));
+    for (i = 0; i < param_count; i++) {
+	(*argsp)[i] = vb_consume(&r[i]);
+    }
+    (*argsp)[i] = NULL;
 
     /* If it produced an error message, it failed. */
     if (!current_task->success) {
@@ -1152,7 +1176,7 @@ silent_failure:
  * @return success or failure
  */
 static bool
-execute_command(enum iaction cause, char *s, char **np, char *last,
+execute_command(enum iaction cause, const char *s, const char **np, char *last,
 	size_t last_len)
 {
     bool stat;
@@ -1213,13 +1237,33 @@ done:
     return stat;
 }
 
+/**
+ * Validate that a macro contains valid syntax and defined actions.
+ *
+ * @param[in] command	Command to check
+ * @param[out] error	Returned error message
+ * 
+ * @return true for success, false for failure
+ */
+bool validate_command(const char *command, char **error)
+{
+    action_elt_t *entry;
+    char **args;
+
+    if (!parse_command(command, NULL, &entry, &args, error)) {
+	return false;
+    }
+    Free(args);
+    return true;
+}
+
 /* Run the macro at the top of the stack. */
 static void
 run_macro(void)
 {
     task_t *s = current_task;
-    char *a = s->macro.dptr;
-    char *nextm = NULL;
+    const char *a = s->macro.dptr;
+    const char *nextm = NULL;
     bool es;
     bool fatal = false;
 
