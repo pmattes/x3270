@@ -822,6 +822,7 @@ main(int argc, char *argv[])
     screen_init();
     info_popup_init();
     error_popup_init();
+    macros_init();
 
     protocols[0] = a_delete_me;
     protocols[1] = a_save_yourself;
@@ -1001,6 +1002,15 @@ relabel(bool ignored _is_unused)
     XtFree(title);
 }
 
+static void
+x3270_connect(bool ignored _is_unused)
+{
+    if (PCONNECTED) {
+	macros_init();
+    }
+    relabel(true);
+}
+
 /* Respect the user's label/icon wishes and set up the label/icon callbacks. */
 static void
 label_init(void)
@@ -1018,7 +1028,7 @@ label_init(void)
 static void
 x3270_register(void)
 {
-    register_schange(ST_CONNECT, relabel);
+    register_schange(ST_CONNECT, x3270_connect);
     register_schange(ST_3270_MODE, relabel);
     register_schange(ST_REMODEL, relabel);
 }

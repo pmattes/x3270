@@ -341,7 +341,7 @@ trace_task_output(task_t *s, const char *fmt, ...)
 }
 
 /* Parse the macros resource into the macro list */
-static void
+void
 macros_init(void)
 {
     char *s = NULL;
@@ -403,20 +403,8 @@ macros_init(void)
 	ix++;
     }
     if (ns < 0) {
-	xs_warning("Error in macro %d", ix);
+	popup_an_error("Format error in macro definition %d", ix);
     }
-}
-
-/* Callbacks for state changes. */
-static void
-task_connect(bool connected _is_unused)
-{
-    macros_init();
-}
-
-static void
-task_in3270(bool in3270)
-{
 }
 
 /**
@@ -513,10 +501,6 @@ task_register(void)
     static xres_t task_xresources[] = {
 	{ ResMacros,		V_WILD },
     };
-
-    /* Register for state changes. */
-    register_schange_ordered(ST_CONNECT, task_connect, 2000);
-    register_schange_ordered(ST_3270_MODE, task_in3270, 2000);
 
     /* Register actions.*/
     register_actions(task_actions, array_count(task_actions));

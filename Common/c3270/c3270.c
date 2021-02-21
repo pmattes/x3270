@@ -426,6 +426,10 @@ c3270_connect(bool ignored)
 	return;
     }
 
+    if (PCONNECTED) {
+	macros_init();
+    }
+
     c3270_3270_mode(true);
 
     if (CONNECTED) {
@@ -752,6 +756,9 @@ Type 'help' for help information.\n\n",
 
     /* Set up the peer script. */
     peer_script_init();
+
+    /* Set up macros. */
+    macros_init();
 
     if (cl_hostname != NULL) {
 	pause_for_errors();
