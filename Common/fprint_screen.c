@@ -818,11 +818,7 @@ fprint_screen_body(fps_t ofps)
 	}
     }
 
-    if (fps->ptype == P_HTML) {
-	if (fputc('\n', fps->file) < 0) {
-	    FAIL;
-	}
-    } else {
+    if (fps->ptype != P_HTML) {
 	nr++;
     }
     if (!any && !(fps->opts & FPS_EVEN_IF_EMPTY) && fps->ptype == P_TEXT) {

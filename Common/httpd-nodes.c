@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2019 Paul Mattes.
+ * Copyright (c) 2014-2019, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,7 +99,8 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     }
 
     /* Write the screen to it in HTML. */
-    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER, NULL, NULL, NULL)) {
+    switch (fprint_screen(f, P_HTML, FPS_NO_HEADER | FPS_OIA, NULL, NULL,
+		NULL)) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
 	break;

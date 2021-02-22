@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Paul Mattes.
+ * Copyright (c) 2020-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,8 +53,8 @@ static bool voia_undera = true;
 static bool voia_im = false;
 #define LUCNT   8
 static char voia_lu[LUCNT+1];
-static const char *voia_msg;
-static unsigned char voia_msg_color = HOST_COLOR_NEUTRAL_BLACK;
+static const char *voia_msg = "X Not Connected";
+static unsigned char voia_msg_color = HOST_COLOR_WHITE;
 static bool voia_rm = false;
 static char voia_screentrace = 0;
 static char voia_script = 0;
