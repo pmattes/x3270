@@ -1256,7 +1256,7 @@ validate_command(const char *command, int offset, char **error)
 {
     action_elt_t *entry;
     const char *np;
-    char **args;
+    char **args = NULL;
 
     np = command;
     while (*np) {
@@ -1264,8 +1264,8 @@ validate_command(const char *command, int offset, char **error)
 		    &args, error)) {
 	    return false;
 	}
+	Free(args);
     }
-    Free(args);
     return true;
 }
 

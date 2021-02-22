@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016, 2019, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,8 @@
 #include "idle_gui.h"
 #include "objects.h"
 #include "popups.h"
+#include "task.h"
+#include "utils.h"
 #include "xmenubar.h"
 #include "xpopups.h"
 
@@ -441,13 +443,14 @@ static bool
 idle_start(void)
 {
     char *cmd, *tmo, *its;
+    char *s;
+    char *error;
 
     /* Update the globals, so the dialog has the same values next time. */
     XtVaGetValues(command_value, XtNstring, &cmd, NULL);
-    Replace(idle_command, NewString(cmd));
     XtVaGetValues(timeout_value, XtNstring, &tmo, NULL);
-    its = Malloc(strlen(tmo) + 3);
-    sprintf(its, "%s%s%c", fuzz? "~": "", tmo, hms);
+    Replace(idle_command, NewString(cmd));
+    its = xs_buffer("%s%s%c", fuzz? "~": "", tmo, hms);
     Replace(idle_timeout_string, its);
 
     /* See if they've turned it off. */
@@ -457,16 +460,33 @@ idle_start(void)
 	return true;
     }
 
-    /* They've turned it on, and possibly reconfigured it. */
+    /* Validate the command. */
+    s = cmd;
+    while (isspace((int)*s)) {
+	s++;
+    }
+    if (!*s) {
+	popup_an_error("Missing idle command");
+	return false;
+    }
+    if (!validate_command(cmd, 0, &error)) {
+	popup_an_error("Invalid idle command:\n%s", error);
+	Free(error);
+	return false;
+    }
 
-    /* Validate the timeout.  It should work, yes? */
+    /* Validate the timeout. */
+    if (!isdigit((int)its[0])) {
+	popup_an_error("Missing timeout");
+	return false;
+    }
     if (!process_idle_timeout_value(its)) {
 	return false;
     }
 
-    /* Seems okay.  Reset to the new interval and command. */
+    /* Reset to the new interval and command. */
     if (IN_3270) {
-	    reset_idle_timer();
+	reset_idle_timer();
     }
     return true;
 }
