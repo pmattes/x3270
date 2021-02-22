@@ -42,7 +42,37 @@
 #include "trace.h"
 #include "ui_stream.h"
 
+#include "b3270_popups.h"
+
 bool error_popup_visible = false;
+
+typedef struct stored_popup {
+    struct stored_popup *next;
+    bool is_error;
+    char *text;
+} stored_popup_t;
+static stored_popup_t *sp_first = NULL;
+static stored_popup_t *sp_last = NULL;
+static bool popups_ready = false;
+
+/* Store a pending pop-up. */
+static void
+popup_store(bool is_error, char *text)
+{
+    stored_popup_t *sp =
+	(stored_popup_t *)Malloc(sizeof(stored_popup_t) + strlen(text) + 1);
+    sp->is_error = is_error;
+    sp->text = (char *)(sp + 1);
+    strcpy(sp->text, text);
+
+    sp->next = NULL;
+    if (sp_last != NULL) {
+	sp_last->next = sp;
+    } else {
+	sp_first = sp;
+    }
+    sp_last = sp;
+}
 
 /* Pop up an error message, given a va_list. */
 void
@@ -54,6 +84,8 @@ popup_a_verror(const char *fmt, va_list ap)
     vtrace("Error: %s\n", s);
     if (task_redirect()) {
 	task_error(s);
+    } else if (!popups_ready) {
+	popup_store(true, s);
     } else {
 	ui_vleaf(IndPopup,
 		AttrType, "error",
@@ -96,10 +128,14 @@ popup_an_info(const char *fmt, ...)
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    ui_vleaf(IndPopup,
-	    AttrType, "info",
-	    AttrText, s,
-	    NULL);
+    if (!popups_ready) {
+	popup_store(true, s);
+    } else {
+	ui_vleaf(IndPopup,
+		AttrType, "info",
+		AttrText, s,
+		NULL);
+    }
 }
 
 /* Output from an action. */
@@ -161,4 +197,23 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
 void
 child_popup_init(void)
 {
+}
+
+/* Initialization is complete. */
+void
+popups_dump(void)
+{
+    stored_popup_t *sp;
+
+    while ((sp = sp_first) != NULL) {
+	ui_vleaf(IndPopup,
+		AttrType, sp->is_error? "error": "info",
+		AttrText, sp->text,
+		NULL);
+	sp_first = sp->next;
+	Free(sp);
+    }
+    sp_last = NULL;
+
+    popups_ready = true;
 }

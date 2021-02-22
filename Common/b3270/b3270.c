@@ -48,6 +48,7 @@
 #include "resources.h"
 
 #include "actions.h"
+#include "b3270_popups.h"
 #include "b3270proto.h"
 #include "bind-opt.h"
 #include "boolstr.h"
@@ -570,6 +571,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 
     /* Done with initialization.*/
     ui_pop();
+    popups_dump();
 
     /* Process events forever. */
     while (1) {

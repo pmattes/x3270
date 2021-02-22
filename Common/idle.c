@@ -88,9 +88,18 @@ void
 idle_init(void)
 {
     char *cmd, *tmo;
+    char *error;
 
     /* Get values from resources. */
     cmd = appres.idle_command;
+    if (cmd != NULL) {
+	while (isspace((int)*cmd)) {
+	    cmd++;
+	}
+	if (!*cmd) {
+	    cmd = NULL;
+	}
+    }
     idle_command = cmd? NewString(cmd): NULL;
     tmo = appres.idle_timeout;
     idle_timeout_string = tmo? NewString(tmo): NULL;
@@ -99,10 +108,19 @@ idle_init(void)
     } else {
 	idle_user_enabled = IDLE_DISABLED;
     }
-    if (idle_user_enabled &&
-	idle_command != NULL &&
-	process_idle_timeout_value(idle_timeout_string)) {
-	;
+
+    /* Validate. */
+    if (idle_user_enabled) {
+	if (idle_command == NULL) {
+	    idle_user_enabled = IDLE_DISABLED;
+	} else if (!validate_command(cmd, 0, &error)) {
+	    popup_an_error("Invalid %s:\n%s", ResIdleCommand, error);
+	    Free(error);
+	    idle_user_enabled = IDLE_DISABLED;
+	}
+	if (!process_idle_timeout_value(idle_timeout_string)) {
+	    idle_user_enabled = IDLE_DISABLED;
+	}
     }
 
     /* Seed the random number generator (we seem to be the only user). */
@@ -117,6 +135,8 @@ idle_init(void)
  * Process a timeout value: <empty> or ~?[0-9]+[HhMmSs]
  * Returns true for success, false for failure.
  * Sets idle_enabled, idle_ms and idle_randomize as side-effects.
+ *
+ * Returns true for success, false for failure.
  */
 bool
 process_idle_timeout_value(const char *t)
