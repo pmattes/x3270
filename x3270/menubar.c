@@ -1876,6 +1876,23 @@ do_snap(Widget w _is_unused, XtPointer userdata _is_unused,
     screen_snap_size();
 }
 
+/* Callback from the "Snap" menu option */
+static void
+do_save_screen(Widget w _is_unused, XtPointer userdata _is_unused,
+	XtPointer calldata _is_unused)
+{
+    save_screen();
+}
+
+/* Callback from the "Snap" menu option */
+static void
+do_recall_screen(Widget w _is_unused, XtPointer userdata _is_unused,
+	XtPointer calldata _is_unused)
+{
+    recall_screen();
+}
+
+
 /* Called to change telnet modes */
 static void
 linemode_callback(Widget w _is_unused, XtPointer client_data _is_unused,
@@ -2174,7 +2191,6 @@ options_menu_init(bool regen, Position x, Position y)
 	toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL, &spaced);
 	toggle_init(t, TYPEAHEAD, "typeaheadOption", NULL, &spaced);
 	toggle_init(t, ALWAYS_INSERT, "alwaysInsertOption", NULL, &spaced);
-	toggle_init(t, SELECT_URL, "selectUrlOption", NULL, &spaced);
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);
@@ -2291,6 +2307,31 @@ options_menu_init(bool regen, Position x, Position y)
 		NULL);
 	any |= (snap_button != NULL);
     }
+    
+
+    /* Create the "save" option. */
+    if (!item_suppressed(options_menu, "saveScreen")) {
+	spaced = false;
+	snap_button = add_menu_itemv("Save Screen", options_menu,
+		do_save_screen, NULL,
+		&spaced,
+		XtNsensitive, snap_enabled,
+		NULL);
+	any |= (snap_button != NULL);
+    }
+
+    /* Create the "recall" option. */
+    if (!item_suppressed(options_menu, "recallScreen")) {
+	spaced = false;
+	snap_button = add_menu_itemv("Recall Screen", options_menu,
+		do_recall_screen, NULL,
+		&spaced,
+		XtNsensitive, snap_enabled,
+		NULL);
+	any |= (snap_button != NULL);
+    }
+
+
 
     /* Create the "models" pullright */
     if (!item_suppressed(options_menu, "modelsOption")) {

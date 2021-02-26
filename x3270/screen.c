@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -87,7 +87,6 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utils.h"
-#include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"
@@ -318,6 +317,7 @@ struct sstate {
     int            nhx_text;
 };
 static struct sstate nss;
+
 static struct sstate iss;
 static struct sstate *ss = &nss;
 
@@ -365,6 +365,8 @@ typedef struct dfc {
 	char *charset;
 	bool good;
 } dfc_t;
+
+
 
 static void aicon_init(void);
 static void aicon_reinit(unsigned cmask);
@@ -414,6 +416,9 @@ static void hollow_cursor(int baddr);
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
 static void xlate_dbcs_unicode(ucs4_t, XChar2b *);
 static void dfc_init(void);
+
+
+
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
 
@@ -449,6 +454,10 @@ static struct rsfont *rsfonts;
 #define DEFAULT_PIXEL		(mode.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
+static struct sstate nss_backup;
+static struct sp* nss_backup_image;
+static struct ea* ea_buf_backup;
+
 /*
  * Rescale a dimension according to the DPI settings.
  */
@@ -457,6 +466,27 @@ rescale(Dimension d)
 {
     return (d * dpi_scale) / 100;
 }
+
+void
+save_image()
+{
+    nss_backup = nss;
+    memcpy( nss_backup_image, nss.image, sizeof(struct sp) * maxROWS * maxCOLS);
+    memcpy( ea_buf_backup, ea_buf, sizeof(struct ea) * ((maxROWS * maxCOLS) + 1));
+    printf("saving image \n");
+}
+
+void
+recall_image()
+{
+    nss = nss_backup;
+    memcpy( temp_image, nss.image, sizeof(struct sp) * maxROWS * maxCOLS);
+    memcpy( ea_buf, ea_buf_backup, sizeof(struct sp) * ((maxROWS * maxCOLS) + 1));
+    resync_display(nss_backup_image, 0, ROWS*COLS);
+    printf("recall image \n");
+
+}
+
 
 /*
  * Save 00 event translations.
@@ -710,6 +740,13 @@ screen_reinit(unsigned cmask)
 						maxROWS * maxCOLS));
 	Replace(temp_image, (struct sp *)XtCalloc(sizeof(struct sp),
 						 maxROWS*maxCOLS));
+
+    //backup memory
+    Replace(nss_backup_image, (struct sp *)XtCalloc(sizeof(struct sp),
+                         maxROWS*maxCOLS));
+
+    ea_buf_backup = (struct ea *)Calloc(sizeof(struct ea),
+        (maxROWS * maxCOLS) + 1);
 
 	/* render_text buffers */
 	Replace(rt_buf,
@@ -2477,28 +2514,14 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		    rt_buf[j].byte2 = u & 0xff;
 		} else {
 		    /* Only draw if there is an EBCDIC mapping. */
-		    bool ge;
-		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge, true);
+		    ebc_t e = unicode_to_ebcdic(buffer[i].ucs4);
 
-		    if (ge) {
-			if (ss->extended_3270font) {
-			    rt_buf[j].byte1 = 1;
-			    rt_buf[j].byte2 = ebc2cg0[e];
-			} else {
-			    if (ss->font_16bit) {
-				rt_buf[j] = apl_to_udisplay(d8_ix, e);
-			    } else {
-				rt_buf[j] = apl_to_ldisplay(e);
-			    }
-			}
+		    rt_buf[j].byte1 = 0;
+		    if (e != 0) {
+			rt_buf[j].byte2 = font_index(e, d8_ix,
+				toggled(MONOCASE));
 		    } else {
-			rt_buf[j].byte1 = 0;
-			if (e != 0) {
-			    rt_buf[j].byte2 = font_index(e, d8_ix,
-				    !ge && toggled(MONOCASE));
-			} else {
-			    rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
-			}
+			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
 		    }
 		}
 	    } else {
@@ -2779,7 +2802,7 @@ static void
 toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     if (!toggled(SHOW_TIMING)) {
-	vstatus_untiming();
+	status_untiming();
     }
 }
 

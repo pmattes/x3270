@@ -161,6 +161,22 @@ keymap_init(const char *km, bool interactive)
     }
 }
 
+
+
+void
+save_screen()
+{
+	save_image();
+    printf("exporting \n");
+}
+
+void
+recall_screen()
+{
+	recall_image();
+    printf("importing \n");
+}
+
 /*
  * 3270/NVT mode change.
  */

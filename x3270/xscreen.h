@@ -161,6 +161,8 @@ void set_aicon_label(char *l);
 void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 void screen_register(void);
+void save_image(void);
+void recall_image(void);
 XChar2b screen_vcrosshair(void);
 Dimension rescale(Dimension d);
 

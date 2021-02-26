@@ -52,6 +52,9 @@ extern struct trans_list *temp_keymaps;
 
 void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
 void keymap_init(const char *km, bool interactive);
+void save_screen();
+void recall_screen();
+
 XtTranslations lookup_tt(const char *name, char *table);
 void PA_End_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
