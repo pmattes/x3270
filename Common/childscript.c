@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -910,43 +910,6 @@ child_exited(ioid_t id, int status)
 }
 #endif /*]*/
 
-/* Let the system pick a TCP port to bind to. */
-static unsigned short
-pick_port(socket_t *sp)
-{
-    socket_t s;
-    struct sockaddr_in sin;
-    socklen_t len;
-    int on = 1;
-
-    s = socket(PF_INET, SOCK_STREAM, 0);
-    if (s == INVALID_SOCKET) {
-	popup_a_sockerr("socket");
-	return 0;
-    }
-    memset(&sin, '\0', sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-	popup_a_sockerr("bind");
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-	popup_a_sockerr("setsockopt");
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    len = sizeof(sin);
-    if (getsockname(s, (struct sockaddr *)&sin, &len) < 0) {
-	popup_a_sockerr("getsockaddr");
-	SOCK_CLOSE(s);
-	return 0;
-    }
-    *sp = s;
-    return ntohs(sin.sin_port);
-}
-
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (a process exit). */
 static void
@@ -1104,7 +1067,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     listeners_t listeners;
     varbuf_t r;
     unsigned i;
-    socket_t s;
     unsigned short httpd_port;
     unsigned short script_port;
     struct sockaddr_in *sin;
@@ -1160,35 +1122,30 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     listeners.httpd = NULL;
 
     /* Set up X3270PORT or X3270URL for the child process. */
-    httpd_port = pick_port(&s);
-    if (httpd_port == 0) {
-	return false;
-    }
     sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
     sin->sin_family = AF_INET;
     sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin->sin_port = htons(httpd_port);
+    sin->sin_port = 0;
     listeners.httpd = hio_init_x((struct sockaddr *)sin, sizeof(*sin));
-    SOCK_CLOSE(s);
     if (listeners.httpd == NULL) {
+	Free(sin);
 	return false;
     }
+    httpd_port = ntohs(sin->sin_port);
+    Free(sin);
 
-    script_port = pick_port(&s);
-    if (script_port == 0) {
-	hio_stop_x(listeners.httpd);
-	return false;
-    }
     sin = (struct sockaddr_in *)Calloc(1, sizeof(struct sockaddr_in));
     sin->sin_family = AF_INET;
     sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin->sin_port = htons(script_port);
+    sin->sin_port = 0;
     listeners.peer = peer_init((struct sockaddr *)sin, sizeof(*sin), mode);
-    SOCK_CLOSE(s);
     if (listeners.peer == NULL) {
 	hio_stop_x(listeners.httpd);
+	Free(sin);
 	return false;
     }
+    script_port = ntohs(sin->sin_port);
+    Free(sin);
 
     putenv(lazyaf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
     putenv(lazyaf(PORT_ENV "=%d", script_port));

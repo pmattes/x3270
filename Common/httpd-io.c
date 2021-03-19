@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -386,6 +386,12 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 	l->listen_s = INVALID_SOCKET;
 	goto fail;
     }
+    if (getsockname(l->listen_s, sa, &sa_len) < 0) {
+	popup_an_error("httpd getsockname: %s", socket_errtext());
+	SOCK_CLOSE(l->listen_s);
+	l->listen_s = INVALID_SOCKET;
+	goto fail;
+    }
     if (listen(l->listen_s, 10) < 0) {
 	popup_an_error("httpd listen: %s", socket_errtext());
 	SOCK_CLOSE(l->listen_s);
@@ -444,7 +450,6 @@ fail:
     l = NULL;
 
 done:
-    Free(sa);
     return l;
 }
 
@@ -459,6 +464,7 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
     if (global_listener == NULL) {
 	global_listener = hio_init_x(sa, sa_len);
+	Free(sa);
     }
 }
 
