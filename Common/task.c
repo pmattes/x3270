@@ -452,6 +452,7 @@ scriptport_toggle_upcall(const char *name, const char *value)
     }
     Replace(appres.script_port, canonical_bind_opt(sa));
     global_peer_listen = peer_init(sa, sa_len, PLM_MULTI);
+    Free(sa);
     return true;
 }
 
@@ -752,6 +753,7 @@ peer_script_init(void)
 	/* Do the actual initialization. */
 	global_peer_listen = peer_init(sa, sa_len,
 		appres.script_port_once? PLM_ONCE: PLM_MULTI);
+	Free(sa);
 
 	return;
     }
@@ -771,6 +773,7 @@ peer_script_init(void)
 		"/tmp/x3sck.%u", (unsigned)getpid());
 	unlink(ssun->sun_path);
 	peer_init((struct sockaddr *)ssun, sizeof(*ssun), PLM_MULTI);
+	Free(ssun);
 	register_schange(ST_EXITING, cleanup_socket);
 	return;
     }

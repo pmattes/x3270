@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -678,6 +678,16 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	goto fail;
     }
 
+    if (getsockname(listener->socket, sa, &sa_len) < 0) {
+#if !defined(_WIN32) /*[*/
+	popup_an_errno(errno, "script socket getsockname");
+#else /*][*/
+	popup_an_error("script socket getsockname: %s",
+		win32_strerror(GetLastError()));
+#endif /*]*/
+	goto fail;
+    }
+
     if (listen(listener->socket, 1) < 0) {
 #if !defined(_WIN32) /*[*/
 	popup_an_errno(errno, "script socket listen");
@@ -687,6 +697,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 #endif /*]*/
 	goto fail;
     }
+
 #if !defined(_WIN32) /*[*/
     fcntl(listener->socket, F_SETFD, 1);
 #endif /*]*/
@@ -758,7 +769,6 @@ fail:
     listener = NULL;
 
 done:
-    Free(sa);
     return listener;
 }
 
