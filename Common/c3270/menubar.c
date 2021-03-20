@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 Paul Mattes.
+ * Copyright (c) 2010-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -892,6 +892,7 @@ typedef enum {
     OM_CROSSHAIR,
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
+    OM_CURSOR_BLINK,
     OM_MARGINED_PASTE,
     OM_OVERLAY_PASTE,
 #endif /*]*/
@@ -908,6 +909,7 @@ toggle_index_t option_index[OM_COUNT] = {
     CROSSHAIR,
     UNDERSCORE,
 #if defined(WC3270) /*[*/
+    CURSOR_BLINK,
     MARGINED_PASTE,
     OVERLAY_PASTE,
 #endif /*]*/
@@ -922,6 +924,7 @@ char *option_names[OM_COUNT] = {
     "Crosshair Cursor",
     "Underscore Mode",
 #if defined(WC3270) /*[*/
+    "Cursor Blink",
     "Margined Paste",
     "Overlay Paste",
 #endif /*]*/

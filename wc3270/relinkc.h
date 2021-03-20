@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, 2014, 2016, 2019-2020 Paul Mattes.
+ * Copyright (c) 2006-2012, 2014, 2016, 2019-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,7 @@ typedef struct {
 #define WF2_NEW_VHC_DEFAULT	0x01	/* has new verify-host-cert default */
 #define WF2_NO_VERIFY_HOST_CERT	0x02	/* do not verify host certificate */
 #define WF2_ALWAYS_INSERT	0x04	/* always use insert mode */
+#define WF2_CURSOR_BLINK	0x08	/* cursor blink */
 
 typedef struct {
 	char *name;

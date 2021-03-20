@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2020 Paul Mattes.
+ * Copyright (c) 2000-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -93,6 +93,9 @@
 #define LINEDRAW_HORIZ	0x2500
 
 #define MAX_COLORS	16
+
+#define CURSOR_BLINK_MS	500
+
 /*
  * N.B.: F0 "neutral black" means black on a screen (white-on-black device) and
  *         white on a printer (black-on-white device).
@@ -233,13 +236,22 @@ static int console_rows;
 static int console_cols;
 static COORD console_max;
 
-static int screen_swapped = FALSE;
+static bool screen_swapped = false;
 
+/* State for blinking text. */
 static bool blink_on = true;		/* are we displaying them or not? */
 static bool blink_ticking = false;	/* is the timeout pending? */
 static ioid_t blink_id = NULL_IOID;	/* timeout ID */
-static bool blink_wasticking = false;
-static void blink_em(ioid_t id);
+static bool blink_wasticking = false;	/* endwin called while blinking */
+static void blink_em(ioid_t id);	/* blink timeout */
+
+/* State for blinking cursor. */
+static struct {
+    ioid_t id;		/* timeout ID */
+    bool visible;	/* true if visible */
+} cblink = { NULL_IOID, true };
+static void cblink_timeout(ioid_t id);
+static void set_cblink(bool mode);
 
 static bool in_focus = true;
 
@@ -247,7 +259,7 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 
 static char *window_title;
 static bool selecting;
-static BOOL cursor_visible = TRUE;
+static bool cursor_enabled = true;
 
 static HANDLE cc_event;
 static ioid_t cc_id;
@@ -1077,7 +1089,7 @@ set_cursor_size(HANDLE handle)
     CONSOLE_CURSOR_INFO cci;
 	
     memset(&cci, 0, sizeof(cci));
-    cci.bVisible = cursor_visible;
+    cci.bVisible = (cursor_enabled && cblink.visible)? TRUE: FALSE;
     if (toggled(ALT_CURSOR)) {
 	cci.dwSize = 25;
     } else {
@@ -1094,6 +1106,7 @@ refresh(void)
 {
     CONSOLE_SCREEN_BUFFER_INFO info;
     COORD coord;
+    bool wasendwin = isendwin;
 
     isendwin = false;
 
@@ -1118,11 +1131,11 @@ refresh(void)
     }
 
     /* Swap in this buffer. */
-    if (screen_swapped == FALSE) {
+    if (!screen_swapped) {
 	if (SetConsoleActiveScreenBuffer(sbuf) == 0) {
 	    win32_perror_fatal("\nSetConsoleActiveScreenBuffer failed");
 	}
-	screen_swapped = TRUE;
+	screen_swapped = true;
     }
 
     /* Set the cursor size. */
@@ -1132,6 +1145,11 @@ refresh(void)
     if (blink_wasticking) {
 	blink_wasticking = false;
 	blink_id = AddTimeOut(750, blink_em);
+    }
+
+    /* Restart cursor blinking. */
+    if (wasendwin) {
+	set_cblink(toggled(CURSOR_BLINK));
     }
 }
 
@@ -1189,6 +1207,9 @@ endwin(void)
 	blink_wasticking = true;
     }
 
+    /* Turn off the blinking cursor. */
+    set_cblink(false);
+
     set_console_cooked();
 
     /* Swap in the original buffer. */
@@ -1196,7 +1217,7 @@ endwin(void)
 	win32_perror_fatal("\nSetConsoleActiveScreenBuffer failed");
     }
 
-    screen_swapped = FALSE;
+    screen_swapped = false;
 
     system("cls");
     printf("[wc3270]\n\n");
@@ -1734,6 +1755,18 @@ blink_em(ioid_t id _is_unused)
     blink_on = !blink_on;
     screen_changed = true;
     screen_disp(false);
+}
+
+/*
+ * Cursor blink handler.
+ */
+static void
+cblink_timeout(ioid_t id _is_unused)
+{
+    vtrace("cursor blink timeout\n");
+    cblink.id = AddTimeOut(CURSOR_BLINK_MS, cblink_timeout);
+    cblink.visible = !cblink.visible;
+    set_cursor_size(sbuf);
 }
 
 /*
@@ -2736,6 +2769,40 @@ toggle_altCursor(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     }
 }
 
+/*
+ * The internals of enabling or disabling cursor blink.
+ */
+static void
+set_cblink(bool mode)
+{
+    vtrace("set_cblink(%s)\n", mode? "true": "false");
+    if (mode) {
+	/* Turn it on. */
+	if (cblink.id == NULL_IOID) {
+	    cblink.id = AddTimeOut(CURSOR_BLINK_MS, cblink_timeout);
+	}
+    } else {
+	/* Turn it off. */
+	if (cblink.id != NULL_IOID) {
+	    RemoveTimeOut(cblink.id);
+	    cblink.id = NULL_IOID;
+	}
+	if (!cblink.visible) {
+	    cblink.visible = true;
+	    set_cursor_size(sbuf);
+	}
+    }
+}
+
+static void
+toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    if (isendwin) {
+	return;
+    }
+    set_cblink(toggled(CURSOR_BLINK));
+}
+
 static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
@@ -3580,14 +3647,14 @@ screen_set_thumb(float top _is_unused, float shown _is_unused,
 }
 
 /**
- * Enable or disable the cursor when scrolling.
+ * Enable or disable the cursor.
  *
  * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
 enable_cursor(bool on)
 {
-    cursor_visible = on? TRUE: FALSE;
+    cursor_enabled = on;
     set_cursor_size(sbuf);
 }
 
@@ -3629,6 +3696,7 @@ screen_register(void)
 {
     static toggle_register_t toggles[] = {
 	{ ALT_CURSOR,		toggle_altCursor,	0 },
+	{ CURSOR_BLINK,		toggle_cursorBlink,	0 },
 	{ MONOCASE,		toggle_monocase,	0 },
 	{ SHOW_TIMING,		toggle_showTiming,	0 },
 	{ UNDERSCORE,		toggle_underscore,	0 },

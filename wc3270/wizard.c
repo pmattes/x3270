@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2020 Paul Mattes.
+ * Copyright (c) 2006-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -91,6 +91,7 @@ enum {
     MN_CODEPAGE,	/* code page */
     MN_CROSSHAIR,	/* crosshair cursor */
     MN_CURSORTYPE,	/* cursor type */
+    MN_CURSORBLINK,	/* cursor blink */
     MN_TLS,		/* TLS tunnel */
     MN_VERIFY,		/* verify host certificate */
     MN_ACCEPT,		/* accept hostname */
@@ -444,10 +445,10 @@ getyn(int defval)
 	return YN_ERR;
     }
     if (!strncasecmp(yn, "yes", strlen(yn))) {
-	    return TRUE;
+	return TRUE;
     }
     if (!strncasecmp(yn, "no", strlen(yn))) {
-	    return FALSE;
+	return FALSE;
     }
 
     errout("\nPlease answer (y)es or (n)o.");
@@ -1887,6 +1888,41 @@ This option controls whether the wc3270 cursor is a block or an underscore.");
 }
 
 /**
+ * Prompt for cursor blink.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_cursor_blink(session_t *s)
+{
+    int rc;
+
+    new_screen(s, NULL, "\
+Cursor Blink\n\
+\n\
+This option controls whether the wc3270 cursor blinks.");
+
+    do {
+	printf("\nCursor blink? (y/n) [%s] ",
+		(s->flags2 & WF2_CURSOR_BLINK)? "y": "n");
+	fflush(stdout);
+	switch ((rc = getyn((s->flags2 & WF2_CURSOR_BLINK)? TRUE: FALSE))) {
+	case YN_ERR:
+	    return -1;
+	case TRUE:
+	    s->flags2 |= WF2_CURSOR_BLINK;
+	    return 0;
+	case FALSE:
+	    s->flags2 &= ~WF2_CURSOR_BLINK;
+	    return 0;
+	}
+    } while (rc < 0);
+    return 0;
+}
+
+/**
  * Prompt for TLS tunnel mode.
  *
  * @param[in,out] s	Session
@@ -3224,6 +3260,9 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	printf("%3d. Cursor Type ............ : %s\n",
 		MN_CURSORTYPE, (s->flags & WF_ALTCURSOR)?
 		    "Underscore": "Block");
+	printf("%3d. Cursor Blink ........... : %s\n",
+		MN_CURSORBLINK, (s->flags2 & WF2_CURSOR_BLINK)?
+		    "Yes": "No");
 	printf("%3d. TLS (SSL) Tunnel ....... : %s\n", MN_TLS,
 		s->tls? "Yes": "No");
 	printf("%3d. Verify host certificates : %s", MN_VERIFY,
@@ -3366,6 +3405,12 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		break;
 	    case MN_CURSORTYPE:
 		if (get_cursor_type(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
+	    case MN_CURSORBLINK:
+		if (get_cursor_blink(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -4895,6 +4940,9 @@ write_session_file(const session_t *session, char *us, const char *path)
     }
     if (session->flags & WF_ALTCURSOR) {
 	fprintf(f, "wc3270.%s: %s\n", ResAltCursor, ResTrue);
+    }
+    if (session->flags2 & WF2_CURSOR_BLINK) {
+	fprintf(f, "wc3270.%s: %s\n", ResCursorBlink, ResTrue);
     }
     if (session->is_dbcs) {
 	fprintf(f, "wc3270.%s: %s\n", ResAsciiBoxDraw, ResTrue);
