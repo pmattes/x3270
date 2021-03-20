@@ -31,7 +31,7 @@
 x3270.message.ftComplete:		Transfer complete, %i bytes transferred\n\
 %sbytes/sec in %s mode
 x3270.message.ftUnable:			Cannot begin transfer
-x3270.message.ftStartTimeout:		Transfer did not start within 10s
+x3270.message.ftStartTimeout:		Transfer did not start within 30s
 x3270.message.ftUserCancel:		Transfer cancelled by user
 x3270.message.ftHostCancel:		Transfer cancelled by host
 x3270.message.ftCutUnknownFrame:	Unknown frame type from host
