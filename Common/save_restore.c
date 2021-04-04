@@ -40,6 +40,7 @@
 #include "names.h"
 #include "popups.h"
 #include "toggles.h"
+#include "trace.h"
 #if defined(_WIN32) /*[*/
 # include "winprint.h"
 #endif /*]*/
@@ -107,6 +108,7 @@ SaveInput_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!IN_3270) {
+	vtrace(AnSaveInput " not in 3270 mode, no-op\n");
 	return true;
     }
 
@@ -197,6 +199,7 @@ RestoreInput_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!IN_3270 || kybdlock) {
+	vtrace(AnRestoreInput " not in 3270 mode or keyboard locked, no-op\n");
 	return true;
     }
 
