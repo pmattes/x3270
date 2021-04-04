@@ -52,5 +52,6 @@
     <ClCompile Include="..\..\Common\source.c" />
     <ClCompile Include="..\..\Common\peerscript.c" />
     <ClCompile Include="..\..\Common\stdinscript.c" />
+    <ClCompile Include="..\..\Common\save_restore.c" />
   </ItemGroup>
 </Project>

@@ -86,6 +86,7 @@
 #include "proxy_toggle.h"
 #include "query.h"
 #include "s3270_proto.h"
+#include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio_glue.h"
@@ -606,6 +607,7 @@ main(int argc, char *argv[])
     nvt_register();
     pr3287_session_register();
     print_screen_register();
+    save_restore_register();
 #if defined(_WIN32) /*[*/
     select_register();
 #endif /*]*/

@@ -586,7 +586,9 @@ fprint_screen_body(fps_t ofps)
 	    fa_underline = false;
 	    fa_reverse = false;
 	}
-	if (FA_IS_ZERO(fa)) {
+	if (FA_IS_ZERO(fa) &&
+		(FA_IS_PROTECTED(fa) ||
+		 !(fps->opts & FPS_INCLUDE_ZERO_INPUT))) {
 	    if (ctlr_dbcs_state(i) == DBCS_LEFT) {
 		uc = 0x3000;
 	    } else {

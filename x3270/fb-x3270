@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2019, 2020 Paul Mattes.
+! Copyright (c) 1995-2021 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -876,6 +876,8 @@ x3270*exitOption.label:				Exit x3270
 x3270*exitReallyOption.label:			Disconnect and Exit
 x3270*printWindowOption.label:			Print Window Bitmap
 x3270*promptOption.label:			x3270> Prompt
+x3270*saveInputOption.label:			Save Input Fields
+x3270*restoreInputOption.label:			Restore Input Fields
 x3270*reenableKeyboardOption.label:		Re-enable Keyboard
 x3270*fileMenuButton.label:			File
 x3270*fileMenu.label:				File

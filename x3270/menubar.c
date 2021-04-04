@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -207,6 +207,8 @@ static Widget	script_abort_button;
 static Widget	idle_button;
 static Widget	snap_button;
 static Widget	reenable_button;
+static Widget	save_input_button;
+static Widget	restore_input_button;
 
 static int scaled_locked_width;
 static int scaled_locked_height;
@@ -815,6 +817,12 @@ menubar_in3270(bool in3270)
     if (idle_button != NULL) {
 	XtVaSetValues(idle_button, XtNsensitive, in3270, NULL);
     }
+    if (save_input_button != NULL) {
+	XtVaSetValues(save_input_button, XtNsensitive, in3270, NULL);
+    }
+    if (restore_input_button != NULL) {
+	XtVaSetValues(restore_input_button, XtNsensitive, in3270, NULL);
+    }
 }
 
 /* Called when we switch between NVT line and character modes. */
@@ -940,6 +948,22 @@ do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
 	    XtNvalue, profile_name,
 	    NULL);
     popup_popup(save_shell, XtGrabExclusive);
+}
+
+/* Called from the "Save Input" button on the "File..." menu */
+static void
+do_save_input(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+    run_action(AnSaveInput, IA_UI, NULL, NULL);
+}
+
+/* Called from the "Restore Input" button on the "File..." menu */
+static void
+do_restore_input(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+    run_action(AnRestoreInput, IA_UI, NULL, NULL);
 }
 
 /* Callback for printer session options. */
@@ -1178,6 +1202,19 @@ file_menu_init(bool regen, Dimension x, Dimension y)
 		NULL);
 	any |= (w != NULL);
     }
+
+    /* Save/restore input. */
+    spaced = false;
+    save_input_button = add_menu_itemv("saveInputOption", file_menu,
+	    do_save_input, NULL, &spaced,
+	    XtNsensitive, IN_3270,
+	    NULL);
+    any |= (save_input_button != NULL);
+    restore_input_button = add_menu_itemv("restoreInputOption", file_menu,
+	    do_restore_input, NULL, &spaced,
+	    XtNsensitive, IN_3270,
+	    NULL);
+    any |= (restore_input_button != NULL);
 
     /* Re-enable keyboard. */
     spaced = false;

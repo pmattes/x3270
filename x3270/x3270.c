@@ -74,6 +74,7 @@
 #include "proxy_toggle.h"
 #include "query.h"
 #include "resourcesc.h"
+#include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
@@ -496,6 +497,7 @@ main(int argc, char *argv[])
     pr3287_session_register();
     print_screen_register();
     print_window_register();
+    save_restore_register();
     screen_register();
     scroll_register();
     select_register();

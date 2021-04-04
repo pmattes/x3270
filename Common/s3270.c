@@ -70,6 +70,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio_glue.h"
@@ -188,6 +189,7 @@ main(int argc, char *argv[])
     query_register();
     nvt_register();
     print_screen_register();
+    save_restore_register();
     s3270_register();
     toggles_register();
     trace_register();

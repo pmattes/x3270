@@ -770,6 +770,18 @@ fm_screentrace_printer(void *ignored _is_unused)
 }
 
 static void
+fm_save_input(void *ignored _is_unused)
+{
+    push_macro(AnSaveInput "()");
+}
+
+static void
+fm_restore_input(void *ignored _is_unused)
+{
+    push_macro(AnRestoreInput "()");
+}
+
+static void
 fm_keymap(void *ignored _is_unused)
 {
     push_macro(AnEscape "(\"" AnShow "(" KwKeymap ")\")");
@@ -820,6 +832,8 @@ typedef enum {
     FM_TRACE,
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
+    FM_SAVE_INPUT,
+    FM_RESTORE_INPUT,
     FM_KEYMAP,
 #if defined(HAVE_START) /*[*/
     FM_HELP,
@@ -849,6 +863,8 @@ char *file_menu_names[FM_COUNT] = {
     "Enable Tracing",
     "Save Screen Images in File",
     "Save Screen Images to Printer",
+    "Save Input Fields",
+    "Restore Input Fields",
     "Display Keymap",
 #if defined(HAVE_START) /*[*/
     "Help",
@@ -871,6 +887,8 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_trace,
     fm_screentrace,
     fm_screentrace_printer,
+    fm_save_input,
+    fm_restore_input,
     fm_keymap,
 #if defined(HAVE_START) /*[*/
     fm_help,
