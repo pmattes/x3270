@@ -196,7 +196,7 @@ RestoreInput_action(ia_t ia, unsigned argc, const char **argv)
         return false;
     }
 
-    if (!IN_3270) {
+    if (!IN_3270 || kybdlock) {
 	return true;
     }
 
