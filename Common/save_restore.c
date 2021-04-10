@@ -39,6 +39,7 @@
 #include "kybd.h"
 #include "names.h"
 #include "popups.h"
+#include "screen.h"
 #include "toggles.h"
 #include "trace.h"
 #if defined(_WIN32) /*[*/
@@ -226,7 +227,7 @@ RestoreInput_action(ia_t ia, unsigned argc, const char **argv)
     if (!is_toggled) {
 	toggle_toggle(OVERLAY_PASTE);
     }
-    cursor_addr = old_cursor;
+    cursor_move(old_cursor);
     return true;
 }
 
