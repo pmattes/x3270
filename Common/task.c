@@ -4363,16 +4363,19 @@ task_resume_xwait(void *context, bool cancel, const char *why)
 			    cancel? " - cancel": "", why));
 		s->wait_context = NULL;
 		(*s->xcontinue_fn)(context, cancel);
-		if (cancel) {
-		    s->success = false;
-		}
+
+		/*
+		 * This code used to set s->success to false if this was a
+		 * cancel, but there is no value in it, and also nothing
+		 * no error is popped up.
+		 */
 		return;
 	    }
 	}
     } FOREACH_LLIST_END(&taskq, q, taskq_t *);
 }
 
-/* Block a task until task_continue_wait() is called. */
+/* Block a task until task_resume_xwait() is called. */
 void
 task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
 {
