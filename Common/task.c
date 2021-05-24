@@ -1644,12 +1644,14 @@ task_disconnect_abort(task_t *s)
 {
     vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 
-    assert(s->type == ST_MACRO);
-    assert(s->next != NULL);
-    assert(s->next->type == ST_CB);
-    task_result(s->next, "Host disconnected", false);
-    s->success = false;
-    task_pop();
+    while (s != NULL && s->type != ST_CB) {
+	s = s->next;
+    }
+    if (s != NULL) {
+	task_result(s, "Host disconnected", false);
+	s->success = false;
+	current_task->success = false;
+    }
 }
 
 /**
