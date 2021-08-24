@@ -315,11 +315,17 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
     peer_t *p = (peer_t *)handle;
     char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
     ssize_t ns;
+    static bool recursing = false;
 
+    if (recursing) {
+	return;
+    }
+    recursing = true;
     ns = send(p->socket, s, strlen(s), 0);
     if (ns < 0) {
 	popup_a_sockerr("s3sock send");
     }
+    recursing = false;
 }
 
 /**
@@ -337,11 +343,17 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
 	    buf);
     ssize_t ns;
+    static bool recursing = false;
 
+    if (recursing) {
+	return;
+    }
+    recursing = true;
     ns = send(p->socket, s, strlen(s), 0);
     if (ns < 0) {
 	popup_a_sockerr("s3sock send");
     }
+    recursing = false;
 }
 
 /**
