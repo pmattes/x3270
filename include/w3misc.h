@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
  */
 
 #if defined(_WIN32) /*[*/
+void set_local_cp(int cp);
 int sockstart(void);
 const char *win32_strerror(int e);
 void win32_perror(const char *fmt, ...);

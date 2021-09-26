@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2020 Paul Mattes.
+ * Copyright (c) 2008-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,10 @@
 #include "unicode_dbcs.h"
 #include "utf8.h"
 #include "utils.h"
+
+#if defined(_WIN32) /*[*/
+# include "w3misc.h"
+#endif /*]*/
 
 /*
  * Locale-related definitions.
@@ -540,6 +544,7 @@ set_uni(const char *cpname, int local_cp _is_unused,
 
 #if defined(_WIN32) /*[*/
     u_local_cp = local_cp;
+    set_local_cp(local_cp);
 #endif /*]*/
 
     if (is_dbcs != NULL) {

@@ -42,6 +42,11 @@
 #include "asprintf.h"
 #include "w3misc.h"
 
+#include "trace.h"
+
+/* Local multi-byte code page for displaying Windows error messages. */
+static int local_cp = CP_ACP;
+
 /* Initialize Winsock. */
 int
 sockstart(void)
@@ -116,28 +121,70 @@ inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
     return dst;
 }
 
+/*
+ * Set the local Windows codepage.
+ * When running on a full emulator, this is called when the configured output
+ * code page is set. For standalone code like x3270if, the codepage remains at
+ * the default of CP_ACP.
+ */
+void
+set_local_cp(int cp)
+{
+    local_cp = cp;
+}
+
+/*
+ * Converts a Windows WCHAR string to local multi-byte.
+ * Returns length (not including trailing NUL) or -1 for failure.
+ */
+static int
+wchar_to_multibyte_string(WCHAR *string, char *mb, size_t mb_len)
+{
+    int nc;
+    BOOL udc;
+
+    nc = WideCharToMultiByte(local_cp, 0, string, -1, mb, mb_len,
+	    (local_cp == CP_UTF8)? NULL: "?",
+	    (local_cp == CP_UTF8)? NULL: &udc);
+    if (nc > 0 && mb[nc - 1] == '\0') {
+	--nc;
+    }
+
+    return nc;
+}
+
 /* Decode a Win32 error number. */
 const char *
 win32_strerror(int e)
 {
-    static char buffer[4096];
+#   define SBUF_SIZE 4096
+    WCHAR wbuffer[SBUF_SIZE];
+    static char buffer[SBUF_SIZE];
+    bool success = false;
 
-    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+    if (FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    e,
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	    buffer,
-	    sizeof(buffer),
+	    wbuffer,
+	    SBUF_SIZE,
 	    NULL)) {
-	size_t sl;
-	char c;
+	int nc;
 
-	/* Get rid of trailing CRLF. */
-	while ((sl = strlen(buffer)) > 0 &&
-		((c = buffer[sl - 1]) == '\r' || c == '\n')) {
-	    buffer[sl - 1] = '\0';
+	/* Convert from Windows Unicode to the right output format. */
+	nc = wchar_to_multibyte_string(wbuffer, buffer, SBUF_SIZE);
+	if (nc > 0) {
+	    char c;
+
+	    /* Get rid of trailing CRLF. */
+	    while (nc > 0 && ((c = buffer[--nc]) == '\r' || c == '\n')) {
+		buffer[nc] = '\0';
+	    }
+	    success = true;
 	}
-    } else {
+    }
+
+    if (!success) {
 	sprintf(buffer, "Windows error %d", e);
     }
 
