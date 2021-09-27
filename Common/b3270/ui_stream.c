@@ -168,7 +168,12 @@ uprintf(const char *fmt, ...)
     }
     Free(s);
     if (nw < 0) {
-	vtrace("UI write failure\n");
+	    vtrace("UI write failure: %s\n",
+#if defined(_WIN32) /*[*/
+		    (ui_socket != INVALID_SOCKET)?
+			win32_strerror(GetLastError()):
+#endif /*]*/
+		    strerror(errno));
 	x3270_exit(1);
     }
 }
