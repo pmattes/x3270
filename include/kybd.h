@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2019 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2019, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,9 @@ void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
 void kybd_inhibit(bool inhibit);
 void kybd_register(void);
+#define KYP_LOCKED	(-1)
+#define KYP_NOT_3270	(-2)
+#define KYP_NO_FIELD	(-3)
 int kybd_prime(void);
 void kybd_scroll_lock(bool lock);
 bool run_ta(void);

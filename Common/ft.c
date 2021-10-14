@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2021 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -733,7 +733,9 @@ ft_go(ft_conf_t *p, enum iaction cause)
 
     /* Erase the line and enter the command. */
     flen = kybd_prime();
-    if (!flen || flen < vb_len(&r) - 1) {
+    if (flen <= 0 || flen < vb_len(&r) - 1) {
+	const char *why;
+
 	vb_free(&r);
 	if (f != NULL) {
 	    fclose(f);
@@ -741,7 +743,21 @@ ft_go(ft_conf_t *p, enum iaction cause)
 		unlink(fts.resolved_local_filename);
 	    }
 	}
-	popup_an_error("%s", get_message("ftUnable"));
+	switch (flen) {
+	case KYP_LOCKED:
+	    why = "keyboard locked";
+	    break;
+	case KYP_NOT_3270:
+	    why = "not in 3270 mode";
+	    break;
+	case KYP_NO_FIELD:
+	    why = "no input field";
+	    break;
+	default:
+	    why = "input field too small";
+	    break;
+	}
+	popup_an_error("%s: %s", get_message("ftUnable"), why);
 	return NULL;
     }
     emulate_input(vb_buf(&r), vb_len(&r), false, false);
@@ -1079,7 +1095,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Make sure we're connected. */
     if (!IN_3270) {
-	popup_an_error(AnTransfer "(): Not connected");
+	popup_an_error(AnTransfer "(): Not connected in 3270 mode");
 	return false;
     }
 

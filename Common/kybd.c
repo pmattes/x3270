@@ -4135,7 +4135,7 @@ hex_input(const char *s)
 
 /*
 * Set up the cursor and input field for command input.
-* Returns the length of the input field, or 0 if there is no field
+* Returns the length of the input field, or <0 if there is no field
 * to set up.
 */
 int
@@ -4149,8 +4149,11 @@ kybd_prime(void)
      * No point in trying if the the keyboard is locked or we aren't in
      * 3270 mode.
      */
-    if (kybdlock || !IN_3270) {
-	return 0;
+    if (kybdlock) {
+	return KYP_LOCKED;
+    }
+    if (!IN_3270) {
+	return KYP_NOT_3270;
     }
 
     /*
@@ -4185,7 +4188,7 @@ kybd_prime(void)
 
 	/* If there isn't any, give up. */
 	if (!baddr) {
-	    return 0;
+	    return KYP_NO_FIELD;
 	}
     } else {
 	/* Already in an unprotected field.  Find its start. */
