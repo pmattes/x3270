@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -308,11 +308,6 @@ push_string(char *st, bool is_hex, bool is_paste, bool force_utf8)
     string_t *s;
     ucs4_t *pdata = NULL;
     size_t pdata_len = 0;
-
-    if (!task_ifield_can_proceed()) {
-	popup_an_error("No input field");
-	return;
-    }
 
     if (is_paste) {
 	if ((pdata = hex_to_unicode(st, &pdata_len, force_utf8)) == NULL) {
