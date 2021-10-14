@@ -90,6 +90,19 @@ source_data(task_cbh handle _is_unused, const char *buf _is_unused,
 }
 
 /**
+ * Free a source conext.
+ *
+ * @param[in] s		Context.
+ */
+static void
+free_source(source_t *s)
+{
+    Replace(s->name, NULL);
+    Free(s);
+    disable_keyboard(ENABLE, IMPLICIT, AnSource "() completion");
+}
+
+/**
  * Callback for completion of one command executed by the Source action.
  *
  * @param[in] handle		Callback handle
@@ -104,26 +117,14 @@ source_done(task_cbh handle, bool success, bool abort)
     source_t *s = (source_t *)handle;
 
     if (!success) {
-	vtrace("%s %s  terminated due to error\n", s->name, s->path);
+	vtrace("%s %s terminated due to error\n", s->name, s->path);
 	close(s->fd);
 	s->fd = -1;
+	free_source(s);
 	return true;
     }
 
     return false;
-}
-
-/**
- * Free a source conext.
- *
- * @param[in] s		Context.
- */
-static void
-free_source(source_t *s)
-{
-    Replace(s->name, NULL);
-    Free(s);
-    disable_keyboard(ENABLE, IMPLICIT, AnSource "() completion");
 }
 
 /**
