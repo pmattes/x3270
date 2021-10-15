@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2015, Paul Mattes.
+! Copyright (c) 1995-2015, 2021 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -42,3 +42,8 @@ x3270.message.ftCutOversize:		Illegal frame length
 x3270.message.ftDisconnected:		Host disconnected, transfer cancelled
 x3270.message.ftNot3270:		Not in 3270 mode, transfer cancelled
 x3270.message.ftDftUnknownOpen:		Unknown DFT Open type from host
+!  Reasons that File transfer cannot start
+x3270.message.ftUnableLocked:		keyboard locked
+x3270.message.ftUnableNot3270:		not in 3270 mode
+x3270.message.ftUnableNoField:		no input field
+x3270.message.ftUnableTooSmall:		input field too small

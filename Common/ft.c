@@ -745,16 +745,16 @@ ft_go(ft_conf_t *p, enum iaction cause)
 	}
 	switch (flen) {
 	case KYP_LOCKED:
-	    why = "keyboard locked";
+	    why = get_message("ftUnableLocked");
 	    break;
 	case KYP_NOT_3270:
-	    why = "not in 3270 mode";
+	    why = get_message("ftUnableNot3270");
 	    break;
 	case KYP_NO_FIELD:
-	    why = "no input field";
+	    why = get_message("ftUnableNoField");
 	    break;
 	default:
-	    why = "input field too small";
+	    why = get_message("ftUnableTooSmall");
 	    break;
 	}
 	popup_an_error("%s: %s", get_message("ftUnable"), why);
