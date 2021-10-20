@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015, 2019 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015, 2019, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -189,6 +189,61 @@ win32_strerror(int e)
     }
 
     return buffer;
+}
+
+/* Translate a CP_ACP multi-byte string to the selected local codepage. */
+const char *
+to_localcp(const char *s)
+{
+    int wnc;
+    int nc;
+    static WCHAR *w = NULL;
+    static int wlen = 0;
+    static char *mb = NULL;
+    static int mblen = 0;
+    BOOL udc;
+
+    if (GetACP() == local_cp) {
+	return s;
+    }
+
+    /* Allocate the wide character buffer. */
+    wnc = MultiByteToWideChar(CP_ACP, 0, s, -1, NULL, 0);
+    if (wnc == 0) {
+	return s;
+    }
+    if (wnc > wlen) {
+	Replace(w, (WCHAR *)Malloc(wlen * sizeof(WCHAR)));
+	wlen = wnc;
+    }
+
+    /* Convert the error string to wide characters. */
+    wnc = MultiByteToWideChar(CP_ACP, 0, s, -1, w, wnc);
+    if (wnc == 0) {
+	return s;
+    }
+
+    /* Allocate the multi-byte buffer. */
+    nc = WideCharToMultiByte(local_cp, 0, w, -1, NULL, 0,
+	    (local_cp == CP_UTF8)? NULL: "?",
+            (local_cp == CP_UTF8)? NULL: &udc);
+    if (nc == 0) {
+	return s;
+    }
+
+    /* Convert the wide character string to multi-byte. */
+    if (mblen < nc) {
+	Replace(mb, (char *)Malloc(nc));
+	mblen = nc;
+    }
+    nc = WideCharToMultiByte(local_cp, 0, w, -1, mb, nc,
+            (local_cp == CP_UTF8)? NULL: "?",
+            (local_cp == CP_UTF8)? NULL: &udc);
+    if (nc == 0) {
+	return s;
+    }
+
+    return mb;
 }
 
 /*

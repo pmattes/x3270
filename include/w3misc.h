@@ -41,4 +41,5 @@ void set_local_cp(int cp);
 int sockstart(void);
 const char *win32_strerror(int e);
 void win32_perror(const char *fmt, ...);
+const char *to_localcp(const char *s);
 #endif /*]*/

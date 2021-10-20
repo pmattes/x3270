@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2016, 2019, 2020 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2016, 2019-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include <errno.h>
 #include <assert.h>
 #if !defined(_WIN32) /*[*/
 # include <netinet/in.h>
@@ -74,6 +75,17 @@ static struct gai {
 #endif /*]*/
 
 #if defined(X3270_IPV6) /*[*/
+
+# if defined(_WIN32) /*[*/
+/* Wrap gai_strerror() in a function that translates the code page. */
+static const char *
+my_gai_strerror(int rc)
+{
+    return to_localcp(gai_strerror(rc));
+}
+# else /*][*/
+# define my_gai_strerror(x)	gai_strerror(x)
+# endif /*]*/
 /*
  * Resolve a hostname and port using getaddrinfo, allowing IPv4 or IPv6.
  * Synchronous version.
@@ -111,7 +123,7 @@ resolve_host_and_port_v46(const char *host, char *portname,
     if (rc != 0) {
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
-		    gai_strerror(rc));
+		    my_gai_strerror(rc));
 	}
 	return RHP_CANNOT_RESOLVE;
     }
@@ -284,7 +296,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     if (rc != 0) {
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
-		    gai_strerror(rc));
+		    my_gai_strerror(rc));
 	}
 	return RHP_CANNOT_RESOLVE;
     }
@@ -365,7 +377,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	} else {
 	    if (errmsg) {
 		*errmsg = lazyaf("%s/%s:\n%s", gaip->host,
-			gaip->port? gaip->port: "*(none)",
+			gaip->port? gaip->port: "(none)",
 			"no suitable resolution");
 	    }
 	    return RHP_CANNOT_RESOLVE;
@@ -377,8 +389,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     default:			/* failure */
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
-		    gaip->port? gaip->port: "*(none)",
-		    gai_strerror(rc));
+		    gaip->port? gaip->port: "(none)",
+		    my_gai_strerror(rc));
 	}
 	return RHP_CANNOT_RESOLVE;
     }
@@ -388,8 +400,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     if (gaip->rc != 0) {
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
-		    gaip->port? gaip->port: "*(none)",
-		    gai_strerror(gaip->rc));
+		    gaip->port? gaip->port: "(none)",
+		    my_gai_strerror(gaip->rc));
 	}
 	return RHP_CANNOT_RESOLVE;
     }
@@ -620,7 +632,7 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
 
 /*
  * Resolve a sockaddr into a numeric hostname and port.
- * Returns Trur for success, false for failure.
+ * Returns True for success, false for failure.
  */
 bool
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
@@ -634,7 +646,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	    NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s", gai_strerror(rc));
+	    *errmsg = lazyaf("%s", my_gai_strerror(rc));
 	}
 	return false;
     }

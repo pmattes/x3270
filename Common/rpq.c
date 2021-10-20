@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2016, 2019, 2021 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -52,6 +52,10 @@
 #include "telnet_core.h"
 #include "trace.h"
 #include "unicodec.h"
+
+#if defined(_WIN32) /*[*/
+# include "w3misc.h"
+#endif /*]*/
 
 /* Statics */
 static bool select_rpq_terms(void);
@@ -660,7 +664,12 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	    freeaddrinfo(res);
 	} else {
 	    rpq_warning("RPQ: can't resolve '%s': %s", rpqtext,
-		    gai_strerror(ga_err));
+# if defined(_WIN32) /*[*/
+		    to_localcp(gai_strerror(ga_err))
+# else /*][*/
+		    gai_strerror(ga_err)
+# endif /*]*/
+		    );
 	}
 # else /*][*/
 	/*
