@@ -195,12 +195,11 @@ win32_strerror(int e)
 const char *
 to_localcp(const char *s)
 {
-    int wnc;
+    static WCHAR *w_buf = NULL;
+    static int w_len = 0;
+    static char *mb_buf = NULL;
+    static int mb_len = 0;
     int nc;
-    static WCHAR *w = NULL;
-    static int wlen = 0;
-    static char *mb = NULL;
-    static int mblen = 0;
     BOOL udc;
 
     if (GetACP() == local_cp) {
@@ -208,23 +207,23 @@ to_localcp(const char *s)
     }
 
     /* Allocate the wide character buffer. */
-    wnc = MultiByteToWideChar(CP_ACP, 0, s, -1, NULL, 0);
-    if (wnc == 0) {
+    nc = MultiByteToWideChar(CP_ACP, 0, s, -1, NULL, 0);
+    if (nc == 0) {
 	return s;
     }
-    if (wnc > wlen) {
-	Replace(w, (WCHAR *)Malloc(wlen * sizeof(WCHAR)));
-	wlen = wnc;
+    if (nc > w_len) {
+	w_len = nc;
+	Replace(w_buf, (WCHAR *)Malloc(w_len * sizeof(WCHAR)));
     }
 
     /* Convert the error string to wide characters. */
-    wnc = MultiByteToWideChar(CP_ACP, 0, s, -1, w, wnc);
-    if (wnc == 0) {
+    nc = MultiByteToWideChar(CP_ACP, 0, s, -1, w_buf, w_len);
+    if (nc == 0) {
 	return s;
     }
 
     /* Allocate the multi-byte buffer. */
-    nc = WideCharToMultiByte(local_cp, 0, w, -1, NULL, 0,
+    nc = WideCharToMultiByte(local_cp, 0, w_buf, -1, NULL, 0,
 	    (local_cp == CP_UTF8)? NULL: "?",
             (local_cp == CP_UTF8)? NULL: &udc);
     if (nc == 0) {
@@ -232,18 +231,18 @@ to_localcp(const char *s)
     }
 
     /* Convert the wide character string to multi-byte. */
-    if (mblen < nc) {
-	Replace(mb, (char *)Malloc(nc));
-	mblen = nc;
+    if (nc > mb_len) {
+	mb_len = nc;
+	Replace(mb_buf, (char *)Malloc(mb_len));
     }
-    nc = WideCharToMultiByte(local_cp, 0, w, -1, mb, nc,
+    nc = WideCharToMultiByte(local_cp, 0, w_buf, -1, mb_buf, mb_len,
             (local_cp == CP_UTF8)? NULL: "?",
             (local_cp == CP_UTF8)? NULL: &udc);
     if (nc == 0) {
 	return s;
     }
 
-    return mb;
+    return mb_buf;
 }
 
 /*
