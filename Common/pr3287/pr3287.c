@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2020 Paul Mattes.
+ * Copyright (c) 2000-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -174,6 +174,7 @@ socket_t syncsock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
 char *instdir;
 #endif /* ]*/
+const char *popup_separator = " ";
 
 /* Locals. */
 static char *programname = NULL;
@@ -1219,31 +1220,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 /* Error pop-ups. */
 void
-popup_an_error(const char *fmt, ...)
+popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
-    va_list args;
-
-    va_start(args, fmt);
     verrmsg(fmt, args);
-    va_end(args);
-}
-
-void
-popup_an_errno(int err, const char *fmt, ...)
-{
-    va_list args;
-
-    va_start(args, fmt);
-    if (err > 0) {
-	char msgbuf[4096];
-
-	vsprintf(msgbuf, fmt, args);
-	errmsg("%s: %s", msgbuf, strerror(err));
-
-    } else {
-	verrmsg(fmt, args);
-    }
-    va_end(args);
 }
 
 #if defined(_MSC_VER) /*[*/

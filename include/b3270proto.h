@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Paul Mattes.
+ * Copyright (c) 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -193,6 +193,14 @@
 #define OiaOerrNumeric	"numeric"
 #define OiaOerrOverflow	"overflow"
 #define OiaOerrDbcs	"dbcs"
+
+/* Pop-up types. */
+#define PtChild		"child"
+#define PtConnectionError "connection-error"
+#define PtError		"error"
+#define PtInfo		"info"
+#define PtPrinter	"printer"
+#define PtResult	"result"
 
 /* Values. */
 #define ValTrue		ResTrue

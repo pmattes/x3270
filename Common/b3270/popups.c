@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2019-2020 Paul Mattes.
+ * Copyright (c) 2016, 2019-2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,8 @@
 
 bool error_popup_visible = false;
 
+const char *popup_separator = " ";
+
 typedef struct stored_popup {
     struct stored_popup *next;
     bool is_error;
@@ -76,9 +78,13 @@ popup_store(bool is_error, char *text)
 
 /* Pop up an error message, given a va_list. */
 void
-popup_a_verror(const char *fmt, va_list ap)
+popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 {
     char *s;
+    static const char *error_types[] = {
+	PtConnectionError,
+	PtError
+    };
 
     s = vlazyaf(fmt, ap);
     vtrace("Error: %s\n", s);
@@ -88,34 +94,10 @@ popup_a_verror(const char *fmt, va_list ap)
 	popup_store(true, s);
     } else {
 	ui_vleaf(IndPopup,
-		AttrType, "error",
+		AttrType, error_types[type],
 		AttrText, s,
 		NULL);
     }
-}
-
-/* Pop up an error message. */
-void
-popup_an_error(const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    popup_a_verror(fmt, ap);
-    va_end(ap);
-}
-
-/* Pop up an error message, with error decoding. */
-void
-popup_an_errno(int err, const char *fmt, ...)
-{
-    va_list ap;
-    char *s;
-
-    va_start(ap, fmt);
-    s = vlazyaf(fmt, ap);
-    va_end(ap);
-    popup_an_error("%s: %s", s, strerror(err));
 }
 
 /* Pop up an info message. */
@@ -132,7 +114,7 @@ popup_an_info(const char *fmt, ...)
 	popup_store(true, s);
     } else {
 	ui_vleaf(IndPopup,
-		AttrType, "info",
+		AttrType, PtInfo,
 		AttrText, s,
 		NULL);
     }
@@ -152,7 +134,7 @@ action_output(const char *fmt, ...)
 	task_info("%s", s);
     } else {
 	ui_vleaf(IndPopup,
-		AttrType, "result",
+		AttrType, PtResult,
 		AttrText, s,
 		NULL);
     }
@@ -170,7 +152,7 @@ popup_printer_output(bool is_err, abort_callback_t *a _is_unused,
     s = vlazyaf(fmt, ap);
     va_end(ap);
     ui_vleaf(IndPopup,
-	    AttrType, "printer",
+	    AttrType, PtPrinter,
 	    AttrError, ValTrueFalse(is_err),
 	    AttrText, s,
 	    NULL);
@@ -188,7 +170,7 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
     s = vlazyaf(fmt, ap);
     va_end(ap);
     ui_vleaf(IndPopup,
-	    AttrType, "child",
+	    AttrType, PtChild,
 	    AttrError, ValTrueFalse(is_err),
 	    AttrText, s,
 	    NULL);
@@ -207,7 +189,7 @@ popups_dump(void)
 
     while ((sp = sp_first) != NULL) {
 	ui_vleaf(IndPopup,
-		AttrType, sp->is_error? "error": "info",
+		AttrType, sp->is_error? PtError: PtInfo,
 		AttrText, sp->text,
 		NULL);
 	sp_first = sp->next;

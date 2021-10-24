@@ -67,6 +67,8 @@ typedef enum {
     WMT_UNKNOWN	/* Three or more window added -- mystery */
 } wm_type_t;
 
+const char *popup_separator = "\n";
+
 static enum form_type forms[] = { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
 static Dimension wm_width, wm_height;
@@ -1062,14 +1064,19 @@ error_exit(void)
 
 /* Pop up an error dialog. */
 void
-popup_an_error(const char *fmt, ...)
+popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
-    va_list args;
+    char *s = NULL;
 
-    va_start(args, fmt);
+    if (type == ET_CONNECT) {
+	s = xs_buffer("Connection failed:\n%s", fmt);
+    }
+
     popup_rop(&error_popup, appres.interactive.reconnect? error_exit: NULL,
-	    fmt, args);
-    va_end(args);
+	    (s != NULL)? s: fmt, args);
+    if (s != NULL) {
+	Free(s);
+    }
 }
 
 /* Pop down an error dialog. */
@@ -1079,25 +1086,6 @@ popdown_an_error(void)
     if (error_popup.visible) {
 	XtPopdown(error_popup.shell);
     }
-}
-
-/* Pop up an error dialog, based on an error number. */
-void
-popup_an_errno(int errn, const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-
-    if (errn > 0) {
-	popup_an_error("%s:\n%s", s, strerror(errn));
-    } else {
-	popup_an_error("%s", s);
-    }
-    Free(s);
 }
 
 /* Pop up an info dialog. */

@@ -1219,14 +1219,11 @@ net_disconnect(bool including_tls)
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
 	if (!appres.tls.starttls) {
-	    connect_error("Connection failed:\n"
-		    "Host requested STARTTLS but STARTTLS disabled");
+	    connect_error("Host requested STARTTLS but STARTTLS disabled");
 	} else if (nested_tls) {
-	    connect_error("Connection failed:\n"
-		    "Host requested nested STARTTLS");
+	    connect_error("Host requested nested STARTTLS");
 	} else {
-	    connect_error("Connection failed:\n"
-		    "Host requested STARTTLS but TLS not supported");
+	    connect_error("Host requested STARTTLS but TLS not supported");
 	}
     }
     refused_tls = false;
@@ -1284,8 +1281,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (cstate == TCP_PENDING) {
 	if (events.lNetworkEvents & FD_CONNECT) {
 	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
-		connect_error("Connection%s failed: %s",
-			proxy_pending? " to proxy server": "",
+		connect_error("%s%s",
+			proxy_pending? "(to proxy server) ": "",
 			win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
 		host_disconnect(true);
 		return;

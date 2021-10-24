@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015, 2021 Paul Mattes.
+ * Copyright (c) 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,68 @@
  */
 
 /*
- *	popups.h
- *		Common declarations for popups.c
+ *      popup_an_error.c
+ *              Common support for error popups.
  */
 
-/* Error type for popup_an_xerror(). */
-typedef enum {
-    ET_CONNECT,
-    ET_OTHER
-} pae_t;
+#include "globals.h"
 
-extern const char *popup_separator;
+#include "lazya.h"
+#include "popups.h"
+#include "utils.h"
 
-void action_output(const char *fmt, ...) printflike(1, 2);
-void popup_a_vxerror(pae_t type, const char *fmt, va_list ap);
-void popup_an_info(const char *fmt, ...) printflike(1, 2);
-void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
-void popup_an_error(const char *fmt, ...) printflike(1, 2);
-void popup_an_xerror(pae_t type, const char *fmt, ...) printflike(2, 3);
-typedef void abort_callback_t(void);
-void popup_printer_output(bool is_err, abort_callback_t *a,
-	const char *fmt, ...) printflike(3, 4);
+/**
+ * Pop up an error message with a strerror appended.
+ *
+ * @param[in] errn	Error number
+ * @param[in] fmt	Format
+ */
+void
+popup_an_errno(int errn, const char *fmt, ...)
+{
+    va_list ap;
+    char *s;
+
+    va_start(ap, fmt);
+    s = xs_vbuffer(fmt, ap);
+    va_end(ap);
+    if (errn > 0) {
+	popup_an_xerror(ET_OTHER, "%s:%s%s", s, popup_separator,
+		strerror(errn));
+    } else {
+	popup_an_xerror(ET_OTHER, "%s", s);
+    }
+    Free(s);
+}
+
+/**
+ * Pop up a particular flavor of error message.
+ *
+ * @param[in] type	Error type
+ * @param[in] errn	Error number
+ * @param[in] fmt	Format
+ */
+void
+popup_an_xerror(pae_t type, const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    popup_a_vxerror(type, fmt, ap);
+    va_end(ap);
+}
+
+/**
+ * Pop up an error message.
+ *
+ * @param[in] fmt	Format
+ */
+void
+popup_an_error(const char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    popup_a_vxerror(ET_OTHER, fmt, ap);
+    va_end(ap);
+}

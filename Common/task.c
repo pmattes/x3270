@@ -1549,21 +1549,14 @@ task_result(task_t *s, const char *msg, bool success)
 {
     size_t sl = strlen(msg);
     char *text = NewString(msg);
-    char *newline;
 
     if (s->type != ST_CB) {
 	Free(text);
 	return;
     }
 
-    /* Translate newlines to spaces. */
-    newline = text;
-    while ((newline = strchr(newline, '\n')) != NULL) {
-	*newline++ = ' ';
-    }
-
-    /* Remove trailing spaces. */
-    while (sl && text[sl - 1] == ' ') {
+    /* Remove trailing spaces and newlines. */
+    while (sl && (text[sl - 1] == ' ' || text[sl - 1] == '\n')) {
 	sl--;
     }
     trace_task_output(s, "%.*s\n", (int)sl, text);
@@ -1658,17 +1651,15 @@ task_disconnect_abort(task_t *s)
  * Pop up an error, redirected towards a particular task.
  */
 static void
-popup_an_error_to(task_t *t, const char *fmt, ...)
+popup_an_error_to(task_t *t, pae_t type, const char *fmt, ...)
 {
     va_list ap;
-    char *msg;
 
     assert(current_task == NULL);
     current_task = t;
     va_start(ap, fmt);
-    msg = xs_vbuffer(fmt, ap);
+    popup_a_vxerror(type, fmt, ap);
     va_end(ap);
-    popup_an_error("%s", msg);
     current_task = NULL;
 }
 
@@ -1707,7 +1698,7 @@ connect_error(const char *fmt, ...)
 	if (found) {
 
 	    /* Send it the error message. */
-	    popup_an_error_to(s, "%s", msg);
+	    popup_an_error_to(s, ET_CONNECT, "%s", msg);
 
 	    /* Let it complete with the error. */
 	    s->wait_id = NULL_IOID;
@@ -1722,7 +1713,7 @@ connect_error(const char *fmt, ...)
     }
 
     /* Let the GUI handle it. */
-    popup_an_error("%s", msg);
+    popup_an_xerror(ET_CONNECT, "%s", msg);
     Free(msg);
 
     /* Propagate elsewhere. */
@@ -3473,7 +3464,7 @@ wait_timed_out(ioid_t id)
     }
 
     /* Pop up the error message. */
-    popup_an_error_to(s, AnWait "(): Timed out");
+    popup_an_error_to(s, ET_OTHER, AnWait "(): Timed out");
 
     /* Forget the ID. */
     s->success = false;
