@@ -188,6 +188,7 @@
     <ClCompile Include="..\..\Common\peerscript.c" />
     <ClCompile Include="..\..\Common\stdinscript.c" />
     <ClCompile Include="..\..\Common\save_restore.c" />
+    <ClCompile Include="..\..\Common\vstatus.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
