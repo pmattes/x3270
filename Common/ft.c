@@ -185,7 +185,7 @@ toggle_ft_buffer_size(const char *name _is_unused, const char *value)
     l = strtoul(value, &end, 10);
     bs = (int)l;
     if (*end != '\0' || (unsigned long)bs != l) {
-	popup_an_error("Invalid %s value", ResUnlockDelay);
+	popup_an_error("Invalid %s value", ResFtBufferSize);
 	return false;
     }
     if (bs < DFT_MIN_BUF || bs > DFT_MAX_BUF) {
