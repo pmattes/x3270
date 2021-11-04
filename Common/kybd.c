@@ -3317,25 +3317,40 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 String_action(ia_t ia, unsigned argc, const char **argv)
 {
+    bool subst = false;
     unsigned i;
     size_t len = 0;
-    char *s;
+    char *s = NULL;
 
     action_debug(AnString, ia, argc, argv);
 
-    /* Determine the total length of the strings. */
-    for (i = 0; i < argc; i++) {
-	len += strlen(argv[i]);
-    }
-    if (!len) {
-	return true;
+    /* Pick off the '-subst' option. */
+    if (argc > 0 && !strcasecmp(argv[0], KwSubst)) {
+	subst = true;
     }
 
-    /* Allocate a block of memory and copy them in. */
-    s = Malloc(len + 1);
-    s[0] = '\0';
-    for (i = 0; i < argc; i++) {
-	strcat(s, argv[i]);
+    /* Concatenate and optionally substitute. */
+    for (i = !!subst; i < argc; i++) {
+	char *sb = subst? do_subst(argv[i], DS_VARS): NULL;
+	const char *t = (sb != NULL)? sb: argv[i];
+
+	if (strlen(t) > 0) {
+	    if (s == NULL) {
+		s = NewString(t);
+		len = strlen(t) + 1;
+	    } else {
+		len += strlen(t);
+		s = Realloc(s, len);
+		strcat(s, t);
+	    }
+	}
+	if (sb != NULL) {
+	    Free(sb);
+	}
+    }
+
+    if (!len) {
+	return true;
     }
 
     /* Set a pending string. */

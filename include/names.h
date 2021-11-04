@@ -257,6 +257,8 @@
 #define KwSnapStatus	"status"
 #define KwRows		"rows"
 #define KwCols		"cols"
+/*  Parameters to String(). */
+#define KwSubst		"-subst"
 /*  Parameters to Transfer(). */
 #define KwCancel	"cancel"
 /*  Parameters to Wait(). */
