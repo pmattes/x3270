@@ -233,7 +233,7 @@ usage(const char *msg)
     }
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  tcl3270 [single-option]\n");
-    fprintf(stderr, "  tcl3270 [script [script-args]] [-- [tcl3270-options] [s3270-options] [host|session-file.tcl3270]]\n");
+    fprintf(stderr, "  tcl3270 [script [script-args]] [-- [tcl3270-options] [s3270-options] [<host>|<session-file>.tcl3270]]\n");
     fprintf(stderr, "single-options:\n");
     fprintf(stderr, "  --help      display usage\n");
     fprintf(stderr, "  -v          display version\n");
