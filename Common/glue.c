@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -99,6 +99,7 @@ unsigned sorted_help_count = 0;
 
 /* Globals */
 const char     *programname;
+bool		supports_cmdline_host = true;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 AppRes          appres;
@@ -238,10 +239,13 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	*cl_hostname = argv[1];
 	break;
     case 3:
-	no_minus(argv[1]);
-	no_minus(argv[2]);
-	*cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
-	break;
+	if (supports_cmdline_host) {
+	    no_minus(argv[1]);
+	    no_minus(argv[2]);
+	    *cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
+	    break;
+	}
+	/* else fall through... */
     default:
 	usage("Too many command-line arguments");
 	break;
@@ -289,9 +293,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	Replace(profile_path, NewString(*cl_hostname));
 	profile_name[strlen(profile_name) - session_suffix_len[suffix_match]]
 	    = '\0';
-	*cl_hostname = appres.hostname; /* might be NULL */
+	*cl_hostname = supports_cmdline_host? appres.hostname: NULL;
     } else {
 	/* There is no session file. */
+	if (*cl_hostname && !supports_cmdline_host) {
+	    usage("Unknown command-line argument");
+	}
 
 	/* For c3270 only, read in the c3270 profile (~/.c3270pro). */
 	if (merge_profilep != NULL) {
@@ -794,10 +801,14 @@ cmdline_help(bool as_action)
     unsigned i;
 
     if (!as_action) {
-	 fprintf(stderr, "Usage: "
-		 "%s [options] [[prefix:][LUname@]hostname[:port]]\n",
-		 programname);
-	 fprintf(stderr, "Options:\n");
+	if (supports_cmdline_host) {
+	    fprintf(stderr, "Usage: %s [options] "
+		    "[[prefix:][LUname@]hostname[:port]]\n", programname);
+	}
+	fprintf(stderr, "%s %s [options] [<session-file>].%s\n",
+		supports_cmdline_host? "      ": "Usage:",
+		programname, app);
+	fprintf(stderr, "Options:\n");
     }
     sort_help();
     for (i = 0; i < sorted_help_count; i++) {

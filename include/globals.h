@@ -214,6 +214,7 @@ extern int		screen_depth;
 extern bool		scroll_initted;
 extern bool		shifted;
 extern bool		*standard_font;
+extern bool		supports_cmdline_host;
 extern char		*termtype;
 extern bool		visible_control;
 extern int		*xtra_width;

@@ -150,7 +150,8 @@ usage(const char *msg)
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
     }
-    fprintf(stderr, "Usage: %s [options] [profile-file.b3270]\n", programname);
+    fprintf(stderr, "Usage: %s [options] [<session-file>.b3270]\n",
+	    programname);
     fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     exit(1);
 }
@@ -451,6 +452,7 @@ main(int argc, char *argv[])
     login_macro_register();
     vstatus_register();
 
+    supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
     if (cl_hostname != NULL) {
 	usage("Unrecognized option(s)");

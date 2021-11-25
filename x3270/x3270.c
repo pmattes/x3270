@@ -354,6 +354,8 @@ usage(const char *msg)
 
     fprintf(stderr, "Usage: %s [options] [[prefix:][LUname@]hostname[:port]]\n",
 	    programname);
+    fprintf(stderr, "       %s [options] [<session-file>.x3270]\n",
+	    programname);
     fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     exit(1);
 }
@@ -365,6 +367,8 @@ cmdline_help(void)
     unsigned tls_options = sio_all_options_supported();
 
     fprintf(stderr, "Usage: %s [options] [[prefix:][LUname@]hostname[:port]]\n",
+	    programname);
+    fprintf(stderr, "       %s [options] [<session-file>.x3270]\n",
 	    programname);
     fprintf(stderr, "Options:\n");
     for (i = 0; i < XtNumber(option_help); i++) {
@@ -609,7 +613,7 @@ main(int argc, char *argv[])
 	cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
 	break;
     default:
-	usage(NULL);
+	usage("Too many command-line options");
 	break;
     }
 
