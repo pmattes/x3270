@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# Copyright (c) 1995-2009, 2014-2015, 2018, 2020 Paul Mattes.
+# Copyright (c) 1995-2009, 2014-2015, 2018, 2020-2021 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 # 
@@ -39,9 +39,16 @@ export LANG LC_ALL
 
 set -e
 
+if date --help >/dev/null 2>&1
+then	# GNU date
+    	ddopt="-d@"
+else	# BSD date
+	ddopt="-r"
+fi
+
 . ${2-./version.txt}
 date="date -u"
-[ -n "$SOURCE_DATE_EPOCH" ] && date="$date -d@$SOURCE_DATE_EPOCH"
+[ -n "$SOURCE_DATE_EPOCH" ] && date="$date $ddopt$SOURCE_DATE_EPOCH"
 builddate=`$date`
 sccsdate=`$date +%Y/%m/%d`
 user=${LOGNAME-$USER}
