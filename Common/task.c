@@ -1202,6 +1202,11 @@ execute_command(enum iaction cause, const char *s, const char **np, char *last,
 	return stat;
     }
 
+    if (entry == NULL) {
+	/* A comment. */
+	return true;
+    }
+
     /* Check for restrictions. */
     if (entry->t.ia_restrict != IA_NONE && cause != entry->t.ia_restrict) {
 	popup_an_error("Action %s is invalid in this context",
