@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2020 Paul Mattes.
+ * Copyright (c) 2015-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -435,7 +435,7 @@ render_screen(struct ea *ea, screen_t *s)
 		    dbcs = true;
 		    /* fall through */
 		default:
-		    if (uc >= UPRIV2_Aunderline && uc <= UPRIV2_Zunderline) {
+		    if (uc >= UPRIV2_Aunderbar && uc <= UPRIV2_Zunderbar) {
 			uc -= UPRIV2;
 			pua = true;
 			extra_underline = true;
