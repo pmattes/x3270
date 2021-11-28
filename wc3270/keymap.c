@@ -684,7 +684,7 @@ ambiguous(struct keymap *k, int nc)
 }
 
 /*
- * Check for compatability between a keymap and a key's modifier state.
+ * Check for compatibility between a keymap and a key's modifier state.
  * Returns 1 for success, 0 for failure.
  */
 static int
