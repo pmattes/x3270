@@ -152,7 +152,7 @@ dft_open_request(unsigned short len, unsigned char *cp)
 	GET16(recsz, recszp);
 	name = (char *)cp + 31;
     } else {
-	dft_abort(get_message("ftDftUknownOpen"), TR_OPEN_REQ);
+	dft_abort(get_message("ftDftUnknownOpen"), TR_OPEN_REQ);
 	return;
     }
 
