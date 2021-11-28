@@ -137,6 +137,7 @@ install::
 	if [ -d $(DESTDIR)$(ICONDIR) ]; \
 	then	for icon in $(ICONS); \
 		do	res=`echo $$icon | sed -e s/x3270-// -e s/.png//`; \
+			mkdir -p $(DESTDIR)$(ICONDIR)/$$res/apps/; \
 			$(INSTALL_DATA) $$icon $(DESTDIR)$(ICONDIR)/$$res/apps/x3270.png; \
 		done; \
 	fi
