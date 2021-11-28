@@ -511,7 +511,7 @@ unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl)
     }
 
     /* Handle APL underlined alphabetics. */
-    if (u >= UPRIV2_Aunderline && u <= UPRIV2_Zunderline) {
+    if (u >= UPRIV2_Aunderbar && u <= UPRIV2_Zunderbar) {
 	*ge = true;
 	return unicode_to_ebcdic(u - UPRIV2) - 0x80;
     }
