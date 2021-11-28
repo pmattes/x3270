@@ -435,6 +435,11 @@ render_screen(struct ea *ea, screen_t *s)
 		    dbcs = true;
 		    /* fall through */
 		default:
+		    if (uc >= UPRIV2_Aunderline && uc <= UPRIV2_Zunderline) {
+			uc -= UPRIV2;
+			pua = true;
+			extra_underline = true;
+		    }
 		    break;
 		}
 	    } else {
