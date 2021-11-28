@@ -2043,6 +2043,9 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    } else {
 		if (is_nvt(&buf[first + i], false, &uc)) {
 		    /* NVT-mode text. */
+		    if (uc >= UPRIV2_Aunderbar && uc <= UPRIV2_Zunderbar) {
+			uc -= UPRIV2;
+		    }
 		    if (toggled(MONOCASE)) {
 			uc = u_toupper(uc);
 		    }
