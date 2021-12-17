@@ -85,7 +85,9 @@ static ui_container_t *ui_container;
 static int ui_depth;
 
 static XML_Parser parser;
-int input_nest = 0;
+int input_nest;
+bool master_doc;
+bool need_reset;
 
 /* Action state. */
 typedef struct {
@@ -139,6 +141,11 @@ static tcb_t cb_ui = {
 };
 
 static socket_t ui_socket = INVALID_SOCKET;
+
+static void xml_start(void *userData, const XML_Char *name,
+	const XML_Char **atts);
+static void xml_end(void *userData, const XML_Char *name);
+static void xml_data(void *userData, const XML_Char *s, int len);
 
 /* Write to the UI socket. */
 static void
@@ -602,6 +609,13 @@ do_passthru_complete(bool success, const char *cmd, const char **attrs)
 static void
 process_input(const char *buf, ssize_t nr)
 {
+    if (need_reset) {
+	need_reset = false;
+	XML_ParserReset(parser, "UTF-8");
+	XML_SetElementHandler(parser, xml_start, xml_end);
+	XML_SetCharacterDataHandler(parser, xml_data);
+    }
+
     if (XML_Parse(parser, buf, nr, 0) == 0) {
 	ui_vleaf(IndUiError,
 		AttrFatal, ValTrue,
@@ -780,8 +794,10 @@ static void
 xml_start(void *userData _is_unused, const XML_Char *name,
 	const XML_Char **atts)
 {
+    int i;
+
     input_nest++;
-    if (input_nest > 2) {
+    if (input_nest - master_doc > 1) {
 	ui_vleaf(IndUiError,
 		AttrFatal, ValFalse,
 		AttrText, "invalid nested element",
@@ -792,28 +808,12 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 	return;
     }
 
-    if (input_nest == 1) {
-	int i;
-
-	if (strcasecmp(name, DocIn)) {
-	    ui_vleaf(IndUiError,
-		    AttrFatal, ValTrue,
-		    AttrText, "unexpected document element (want " DocIn ")",
-		    AttrElement, name,
-		    AttrLine, lazyaf("%d", XML_GetCurrentLineNumber(parser)),
-		    AttrColumn,
-			lazyaf("%d", XML_GetCurrentColumnNumber(parser)),
-		    NULL);
-	    fprintf(stderr, "UI document element error\n");
-	    x3270_exit(1);
-	}
+    if (!strcasecmp(name, DocIn)) {
 	for (i = 0; atts[i] != NULL; i += 2) {
 	    ui_unknown_attribute(DocIn, atts[i]);
 	}
-	return;
-    }
-
-    if (!strcasecmp(name, OperRun)) {
+	master_doc = true;
+    } else if (!strcasecmp(name, OperRun)) {
 	do_run(name, atts);
     } else if (!strcasecmp(name, OperRegister)) {
 	do_register(name, atts);
@@ -839,7 +839,10 @@ static void
 xml_end(void *userData _is_unused, const XML_Char *name)
 {
     if (!--input_nest) {
-	x3270_exit(0);
+	if (master_doc) {
+	    x3270_exit(0);
+	}
+	need_reset = true;
     }
 }
 
