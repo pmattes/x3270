@@ -39,15 +39,15 @@ XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/in
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage -ggdb3 -Werror -Wno-format-zero-length -fno-common
 
 test: base64_test xpopen_test
+	$(RM) base64_test.gcda
 	./base64_test
+	$(RM) xpopen_test.gcda
 	./xpopen_test
 
 base64_test: $(BASE64_OBJS)
-	$(RM) base64_test.gcda
 	$(CC) $(CFLAGS) -o $@ $(BASE64_OBJS)
 
 xpopen_test: $(XPOPEN_OBJS)
-	$(RM) xpopen_test.gcda
 	$(CC) $(CFLAGS) -o $@ $(XPOPEN_OBJS)
 
 coverage: base64_coverage xpopen_coverage

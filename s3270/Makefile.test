@@ -24,36 +24,10 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Makefile for 3270 emulation library testing
+# Makefile for s3270 testing
 
-RM = rm -f
-CC = gcc
+test: s3270
+	PATH="$$PWD/obj/x86_64-unknown-linux-gnu/s3270:$$PATH" python3 s3270/Test/Smoke.py
 
-all: test
-
-JSON_OBJS = json_test.o json.o utf8.o varbuf.o
-
-CCOPTIONS =  -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -MMD -MP
-XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include  -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage -ggdb3 -Werror -Wno-format-zero-length -fno-common
-
-test: json_test
-	$(RM) json_test.gcda
-	./json_test
-
-json_test: $(JSON_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(JSON_OBJS)
-
-coverage: json_coverage
-
-json_coverage: json_test
-	./json_test
-	gcov -k json.c
-
-clean:
-	$(RM) *.o *.gcda *.gcno *.gcov
-
-clobber: clean
-	$(RM) json_test
-
--include $(OBJS:.o=.d)
+s3270:
+	$(MAKE) s3270

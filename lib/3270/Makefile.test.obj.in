@@ -38,10 +38,10 @@ XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/in
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
 test: json_test
+	$(RM) json_test.gcda
 	./json_test
 
 json_test: $(JSON_OBJS)
-	$(RM) json_test.gcda
 	$(CC) $(CFLAGS) -o $@ $(JSON_OBJS)
 
 coverage: json_coverage

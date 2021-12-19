@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2014-2018, 2020 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2014-2018, 2020-2021 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -107,5 +107,5 @@ dnl Generate conf.h.
 AC_CONFIG_HEADER(conf.h)
 
 dnl Generate the Makefiles.
-AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj Makefile.test)
 AC_OUTPUT
