@@ -54,7 +54,9 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
     char *s = xs_vbuffer(fmt, args);
 
     if (type == ET_CONNECT) {
-	Replace(s, xs_buffer("Connection failed:\n%s", s));
+	char *t = xs_buffer("Connection failed:\n%s", s);
+
+	Replace(s, t);
     }
 
     /* Log to the trace file. */
