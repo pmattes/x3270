@@ -43,6 +43,8 @@
 #include <assert.h>
 
 #include "fprint_screen.h"
+#include "json.h"
+#include "lazya.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"
@@ -179,12 +181,13 @@ Action and parameters:<br>\n\
  * @param[in] cbs	completion status
  * @param[in] buf	data buffer
  * @param[in] len	length of data buffer
+ * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
  */
 static void
 dyn_form_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
-	size_t len, const char *sl_buf, size_t sl_len)
+	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     varbuf_t r;
     httpd_status_t rv = HS_CONTINUE;
@@ -251,18 +254,21 @@ hn_interact(const char *uri, void *dhandle)
     const char *action;
     httpd_status_t rv;
     varbuf_t r;
+    char *errmsg;
 
     /* If the specified an action, execute it. */
     action = httpd_fetch_query(dhandle, "action");
     if (action && *action) {
-	switch (hio_to3270(action, dyn_form_complete, dhandle, CT_TEXT)) {
+	switch (hio_to3270(action, dyn_form_complete, dhandle, CT_TEXT,
+		    CT_TEXT, &errmsg)) {
 	case SENDTO_COMPLETE:
 	    return HS_SUCCESS_OPEN; /* not strictly accurate */
 	case SENDTO_PENDING:
 	    return HS_PENDING;
 	case SENDTO_INVALID:
+	    lazya(errmsg);
 	    return httpd_dyn_error(dhandle, CT_HTML, 400,
-		    "Invalid 3270 action.\n");
+		    lazyaf("%s\n", errmsg));
 	default:
 	case SENDTO_FAILURE:
 	    return httpd_dyn_error(dhandle, CT_HTML, 500,
@@ -297,12 +303,13 @@ CMD_FORM
  * @param[in] cbs	Request status
  * @param[in] buf	Result / explanatory text buffer
  * @param[in] len	Result / explanatory text buffer length
+ * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	Status line buffer (ignored)
  * @param[in] sl_len	Status line length (ignored)
  */
 static void
 rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
-	size_t len, const char *sl_buf, size_t sl_len)
+	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     httpd_status_t rv = HS_CONTINUE;
 
@@ -332,17 +339,21 @@ rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 static httpd_status_t
 rest_text_dyn(const char *url, void *dhandle)
 {
+    char *errmsg;
+
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Missing 3270 action.\n");
     }
 
-    switch (hio_to3270(url, rest_dyn_text_complete, dhandle, CT_TEXT)) {
+    switch (hio_to3270(url, rest_dyn_text_complete, dhandle, CT_TEXT,
+		CT_TEXT, &errmsg)) {
     case SENDTO_COMPLETE:
 	return HS_SUCCESS_OPEN; /* not strictly accurate */
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Invalid 3270 action.\n");
+	lazya(errmsg);
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, "Processing error.\n");
@@ -356,12 +367,13 @@ rest_text_dyn(const char *url, void *dhandle)
  * @param[in] cbs	completion status
  * @param[in] buf	data buffer
  * @param[in] len	length of data buffer
+ * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
  */
 static void
 rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
-	size_t len, const char *sl_buf, size_t sl_len)
+	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     httpd_status_t rv = HS_CONTINUE;
 
@@ -393,17 +405,21 @@ rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 static httpd_status_t
 rest_status_text_dyn(const char *url, void *dhandle)
 {
+    char *errmsg;
+
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Missing 3270 action.\n");
     }
 
-    switch (hio_to3270(url, rest_dyn_status_text_complete, dhandle, CT_TEXT)) {
+    switch (hio_to3270(url, rest_dyn_status_text_complete, dhandle, CT_TEXT,
+		CT_TEXT, &errmsg)) {
     case SENDTO_COMPLETE:
 	return HS_SUCCESS_OPEN; /* not strictly accurate */
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Invalid 3270 action.\n");
+	lazya(errmsg);
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, "Processing error.\n");
@@ -417,12 +433,13 @@ rest_status_text_dyn(const char *url, void *dhandle)
  * @param[in] cbs	completion status
  * @param[in] buf	data buffer
  * @param[in] len	length of data buffer
+ * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
  */
 static void
 rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
-	size_t len, const char *sl_buf, size_t sl_len)
+	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     httpd_status_t rv = HS_CONTINUE;
 
@@ -466,43 +483,34 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 }
 
 /**
- * Completion callback for the 3270 json command node (/3270/rest/json).
+ * Completion callback for the 3270 JSON command node (/3270/rest/json).
  *
  * @param[in] dhandle	daemon handle
  * @param[in] cbs	completion status
  * @param[in] buf	data buffer
  * @param[in] len	length of data buffer
+ * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
  */
 static void
 rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
-	size_t len, const char *sl_buf, size_t sl_len)
+	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     httpd_status_t rv = HS_CONTINUE;
 
     switch (cbs) {
     case SC_SUCCESS:
-	if (len) {
-	    if (len > 2 && !strcmp(buf + len - 2, ",\n")) {
-		len -= 2;
-	    }
-	    rv = httpd_dyn_complete(dhandle,
-"{\n\
- \"status\": \"%.*s\",\n\
- \"result\": [\n\
-%.*s\n\
- ]\n\
-}\n",
-		sl_len, sl_buf,
-		len, buf);
+	if (jresult != NULL) {
+	    json_struct_set(jresult, "status", NT, json_string(sl_buf, sl_len));
+	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(jresult));
 	} else {
-	    rv = httpd_dyn_complete(dhandle,
-"{\n\
- \"status\": \"%.*s\",\n\
- \"result\": null\n\
-}\n",
-		sl_len, sl_buf);
+	    json_t *j = json_struct();
+
+	    json_struct_set(j, "result", NT, NULL);
+	    json_struct_set(j, "status", NT, json_string(sl_buf, sl_len));
+	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(j));
+	    json_free(j);
 	}
 	break;
     case SC_USER_ERROR:
@@ -526,17 +534,21 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 static httpd_status_t
 rest_html_dyn(const char *url, void *dhandle)
 {
+    char *errmsg;
+
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_HTML, 400, "Missing 3270 action.\n");
     }
 
-    switch (hio_to3270(url, rest_dyn_html_complete, dhandle, CT_HTML)) {
+    switch (hio_to3270(url, rest_dyn_html_complete, dhandle, CT_TEXT,
+		CT_HTML, &errmsg)) {
     case SENDTO_COMPLETE:
 	return HS_SUCCESS_OPEN; /* not strictly accurate */
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	return httpd_dyn_error(dhandle, CT_HTML, 400, "Invalid 3270 action.\n");
+	lazya(errmsg);
+	return httpd_dyn_error(dhandle, CT_HTML, 400, lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_HTML, 500, "Processing error.\n");
@@ -554,20 +566,79 @@ rest_html_dyn(const char *url, void *dhandle)
 static httpd_status_t
 rest_json_dyn(const char *url, void *dhandle)
 {
+    char *errmsg;
+
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_JSON, 400, "Missing 3270 action.\n");
     }
 
-    switch (hio_to3270(url, rest_dyn_json_complete, dhandle, CT_JSON)) {
+    switch (hio_to3270(url, rest_dyn_json_complete, dhandle, CT_TEXT,
+		CT_JSON, &errmsg)) {
     case SENDTO_COMPLETE:
 	return HS_SUCCESS_OPEN; /* not strictly accurate */
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	return httpd_dyn_error(dhandle, CT_JSON, 400, "Invalid 3270 action.\n");
+	lazya(errmsg);
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%a\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_JSON, 500, "Processing error.\n");
+    }
+}
+
+/**
+ * Callback for the REST API POST nonterminal dynamic node (/3270/rest/post).
+ *
+ * @param[in] url	URL fragment
+ * @param[in] dhandle	daemon handle
+ *
+ * @return httpd_status_t
+ */
+static httpd_status_t
+rest_post_dyn(const char *url, void *dhandle)
+{
+    content_t request_content_type;
+    sendto_callback_t *callback;
+    char *content = hio_content(dhandle);
+    char *errmsg;
+
+    if (content == NULL || !*content) {
+	/* Do nothing, successfully. */
+	return HS_SUCCESS_OPEN;
+    }
+
+    switch ((request_content_type = hio_content_type(dhandle))) {
+    case CT_TEXT:	/* plain text */
+	callback = rest_dyn_status_text_complete;
+	break;
+    case CT_JSON:	/* JSON-encoded text */
+	callback = rest_dyn_json_complete;
+	break;
+#if 0
+    case CT_XML:	/* XML-encoded text */
+	callback = rest_dyn_xml_complete;
+	break;
+#endif
+    default:
+	return httpd_dyn_error(dhandle, CT_TEXT, 415,
+		"Unsupported media type.\n");
+    }
+
+    switch (hio_to3270(content, callback, dhandle, request_content_type,
+		request_content_type, &errmsg)) {
+    case SENDTO_COMPLETE:
+	return HS_SUCCESS_OPEN; /* not strictly accurate */
+    case SENDTO_PENDING:
+	return HS_PENDING;
+    case SENDTO_INVALID:
+	lazya(errmsg);
+	return httpd_dyn_error(dhandle, request_content_type, 400,
+		lazyaf("%s\n", errmsg));
+    default:
+    case SENDTO_FAILURE:
+	return httpd_dyn_error(dhandle, request_content_type, 500,
+		"Processing error.\n");
     }
 }
 
@@ -587,28 +658,32 @@ httpd_objects_init(void)
 
     httpd_register_dir("/3270", "Emulator state");
     httpd_register_dyn_term("/3270/screen.html", "Screen image",
-	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_screen_image);
+	    CT_HTML, "text/html", VERB_GET | VERB_HEAD, HF_TRAILER,
+	    hn_screen_image);
     httpd_register_dyn_term("/3270/interact.html", "Interactive form",
-	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_interact);
+	    CT_HTML, "text/html", VERB_GET | VERB_HEAD, HF_TRAILER,
+	    hn_interact);
     httpd_register_dir("/3270/rest", "REST interface");
     httpd_register_fixed_binary("/favicon.ico", "Browser icon",
 	    CT_BINARY, "image/vnd.microsoft.icon", HF_HIDDEN, favicon,
 	    favicon_size);
     nhandle = httpd_register_dyn_nonterm("/3270/rest/text",
-	    "REST plain text interface", CT_TEXT, "text/plain; charset=utf-8",
-	    HF_NONE, rest_text_dyn);
+	    "REST plain text interface", CT_TEXT, "text/plain",
+	    VERB_GET | VERB_HEAD, HF_NONE, rest_text_dyn);
     httpd_set_alias(nhandle, "text/Query()");
     nhandle = httpd_register_dyn_nonterm("/3270/rest/stext",
 	    "REST plain text interface with status line", CT_TEXT,
-	    "text/plain; charset=utf-8",
-	    HF_NONE, rest_status_text_dyn);
+	    "text/plain",
+	    VERB_GET | VERB_HEAD, HF_NONE, rest_status_text_dyn);
     httpd_set_alias(nhandle, "stext/Query()");
     nhandle = httpd_register_dyn_nonterm("/3270/rest/html",
-	    "REST HTML interface", CT_HTML, "text/html; charset=utf-8",
-	    HF_TRAILER, rest_html_dyn);
+	    "REST HTML interface", CT_HTML, "text/html",
+	    VERB_GET | VERB_HEAD, HF_TRAILER, rest_html_dyn);
     httpd_set_alias(nhandle, "html/Query()");
     nhandle = httpd_register_dyn_nonterm("/3270/rest/json",
-	    "REST JSON interface", CT_JSON, "application/json; charset=utf-8",
-	    HF_NONE, rest_json_dyn);
+	    "REST JSON interface", CT_JSON, "application/json",
+	    VERB_GET | VERB_HEAD, HF_NONE, rest_json_dyn);
     httpd_set_alias(nhandle, "json/Query()");
+    httpd_register_dyn_term("/3270/rest/post", "REST POST interface",
+	    CT_UNSPECIFIED, "text/plain", VERB_POST, HF_NONE, rest_post_dyn);
 }

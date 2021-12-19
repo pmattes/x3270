@@ -103,6 +103,7 @@
 struct macro_def *macro_defs = NULL;
 
 /* Statics */
+
 typedef struct task {
     /* Common fields. */
     struct task *next;	/* next task on the stack */
@@ -155,8 +156,10 @@ typedef struct task {
 
     /* Macro fields. */
     struct {
-	char   *msc;	/* input buffer */
-	const char *dptr; /* data pointer */
+	char   *msc;	/* if string based, input buffer */
+	const char *dptr; /*                data pointer */
+	cmd_t **cmds;	/* if split, commands to run, null terminated */
+	cmd_t **cmd_next; /*          next command to run */
 #	define LAST_BUF 64
 	char	last[LAST_BUF]; /* last command */
     } macro;
@@ -649,6 +652,20 @@ free_task(task_t *t)
     /* Free auxiliary buffers. */
     Replace(t->macro.msc, NULL);
     Replace(t->expect.text, NULL);
+    if (t->macro.cmds != NULL) {
+	int i, j;
+	cmd_t *c;
+
+	for (i = 0; (c = t->macro.cmds[i]) != NULL; i++) {
+	    Free((char *)c->action);
+	    c->action = NULL;
+	    for (j = 0; c->args[j] != NULL; j++) {
+		Free((char *)c->args[j]);
+	    }
+	}
+	Replace(t->macro.cmds, NULL);
+	t->macro.cmd_next = NULL;
+    }
     
     /* Free the structure. */
     Free(t);
@@ -1176,43 +1193,26 @@ silent_failure:
  * Interpret and execute a script or macro command.
  *
  * @param[in] cause	Origin of action
- * @param[in] s		Buffer containing action and paramters
- * @param[out] np	Returned pointer to next action
+ * @param[in] entry	Action to execute
+ * @param[in] args	Arguments
  * @param[out] last	Returned action and paramters, canonicalized
  * @param[in] last_len	Length of the last
  *
  * @return success or failure
  */
 static bool
-execute_command(enum iaction cause, const char *s, const char **np, char *last,
-	size_t last_len)
+execute_command_backend(enum iaction cause, action_elt_t *entry,
+	const char **args, char *last, size_t last_len)
 {
-    bool stat;
-    action_elt_t *entry;
-    char **args;
-    char *error;
+    bool stat = true;
     int i;
     varbuf_t r;
-
-    /* Parse the command. */
-    stat = parse_command(s, 0, np, &entry, &args, &error);
-    if (!stat) {
-	popup_an_error("%s", error);
-	Free(error);
-	return stat;
-    }
-
-    if (entry == NULL) {
-	/* A comment. */
-	return true;
-    }
 
     /* Check for restrictions. */
     if (entry->t.ia_restrict != IA_NONE && cause != entry->t.ia_restrict) {
 	popup_an_error("Action %s is invalid in this context",
 		entry->t.name);
-	stat = false;
-	goto done;
+	return false;
     }
 
     /* Record the action. */
@@ -1241,7 +1241,73 @@ execute_command(enum iaction cause, const char *s, const char **np, char *last,
     /* Check for trace file rollover. */
     trace_rollover_check();
 
-done:
+    return stat;
+}
+
+/**
+ * Interpret and execute a script or macro command.
+ *
+ * @param[in] cause	Origin of action
+ * @param[in] cmd	Action and arguments
+ * @param[out] last	Returned action and paramters, canonicalized
+ * @param[in] last_len	Length of the last
+ *
+ * @return success or failure
+ */
+static bool
+execute_command_split(enum iaction cause, cmd_t *cmd, char *last,
+	size_t last_len)
+{
+    action_elt_t *entry;
+    char *error;
+
+    entry = lookup_action(cmd->action, &error);
+    if (entry == NULL) {
+	popup_an_error("%s", error);
+	Free(error);
+	return false;
+    }
+    return execute_command_backend(cause, entry, cmd->args, last, last_len);
+}
+
+/**
+ * Interpret and execute a script or macro command.
+ *
+ * @param[in] cause	Origin of action
+ * @param[in] s		Buffer containing action and paramters
+ * @param[out] np	Returned pointer to next action
+ * @param[out] last	Returned action and paramters, canonicalized
+ * @param[in] last_len	Length of the last
+ *
+ * @return success or failure
+ */
+static bool
+execute_command(enum iaction cause, const char *s, const char **np, char *last,
+	size_t last_len)
+{
+    bool stat;
+    action_elt_t *entry;
+    char **args;
+    char *error;
+    int i;
+
+    /* Parse the command. */
+    stat = parse_command(s, 0, np, &entry, &args, &error);
+    if (!stat) {
+	popup_an_error("%s", error);
+	Free(error);
+	return stat;
+    }
+
+    if (entry == NULL) {
+	/* A comment. */
+	return true;
+    }
+
+    /* Run it. */
+    stat = execute_command_backend(cause, entry, (const char **)args, last,
+	    last_len);
+
     /* Free the arguments. */
     for (i = 0; args[i] != NULL; i++) {
 	Free(args[i]);
@@ -1293,7 +1359,9 @@ run_macro(void)
      * Keep executing commands off the line until one pauses or
      * we run out of commands.
      */
-    while (*a && !fatal) {
+    while (((a != NULL && *a) ||
+	    (s->macro.cmd_next != NULL && *s->macro.cmd_next != NULL)) &&
+	   !fatal) {
 	enum iaction ia;
 	bool was_ckbwait = CKBWAIT;
 	bool was_ft = (ft_state != FT_NONE);
@@ -1312,7 +1380,8 @@ run_macro(void)
 	}
 
 	task_set_state(s, TS_RUNNING, "executing");
-	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME, scatv(a));
+	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME,
+		scatv((a != NULL)? a: (*s->macro.cmd_next)->action));
 	s->success = true;
 
 	if (s->type == ST_MACRO &&
@@ -1323,8 +1392,14 @@ run_macro(void)
 	    ia = IA_MACRO;
 	}
 
-	es = execute_command(ia, a, &nextm, s->macro.last, LAST_BUF);
-	s->macro.dptr = nextm;
+	if (s->macro.cmd_next != NULL) {
+	    es = execute_command_split(ia, *s->macro.cmd_next, s->macro.last,
+		    LAST_BUF);
+	    s->macro.cmd_next++;
+	} else {
+	    es = execute_command(ia, a, &nextm, s->macro.last, LAST_BUF);
+	    s->macro.dptr = nextm;
+	}
 
 	/*
 	 * If a new task was started, we will be resumed
@@ -1396,6 +1471,21 @@ push_xmacro_onto(taskq_t *q, enum task_type type, const char *st, size_t len,
 }
 
 /* Push a macro (macro, command or keymap action) on the stack. */
+static task_t *
+push_xmacro_onto_split(taskq_t *q, enum task_type type, cmd_t **cmds,
+	bool is_ui)
+{
+    task_t *s;
+
+    s = task_push_onto(q, type, is_ui);
+    s->macro.cmds = cmds;
+    s->macro.cmd_next = cmds;
+    s->fatal = false;
+    task_set_state(s, TS_RUNNING, "fresh push");
+    return s;
+}
+
+/* Push a macro (macro, command or keymap action) on the stack. */
 static void
 push_xmacro(enum task_type type, const char *st, size_t len, bool is_ui)
 {
@@ -1433,14 +1523,18 @@ find_owait(const tcb_t *cb)
 /**
  * Push a callback on the stack.
  * @param[in] buf	Macro to push, or NULL
+ * @param[in] len	Length of macro
+ * @param[in] cmds	Split-out commands, or NULL
+ * @param[in] args	Arguments, or NULL
  * @param[in] len	Length of buf
  * @param[in] cb	Callback block
  * @param[in] handle	Callback handle
  *
  * @return Name of the new cb.
  */
-char *
-push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
+static char *
+push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
+	task_cbh handle)
 {
     task_t *s;
     taskq_t *q = NULL;
@@ -1480,6 +1574,9 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
     if (buf) {
 	task_set_state(s, TS_RUNNING, "child task to be pushed next");
 	push_xmacro_onto(q, ST_MACRO, buf, len, is_ui);
+    } else if (cmds != NULL) {
+	task_set_state(s, TS_RUNNING, "child task to be pushed next");
+	push_xmacro_onto_split(q, ST_MACRO, cmds, is_ui);
     } else if (cb->flags & CB_NEEDS_RUN) {
 	/* Must call the run callback to get a child. */
 	task_set_state(s, TS_NEED_RUN, "need to call run callback");
@@ -1495,6 +1592,35 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
 
     /* Return the name. */
     return name;
+}
+
+/**
+ * Push a callback on the stack.
+ * @param[in] buf	Macro to push, or NULL
+ * @param[in] len	Length of buf
+ * @param[in] cb	Callback block
+ * @param[in] handle	Callback handle
+ *
+ * @return Name of the new cb.
+ */
+char *
+push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
+{
+    return push_cb_backend(buf, len, NULL, cb, handle);
+}
+
+/**
+ * Push a callback on the stack.
+ * @param[in] cmds	Actions to execute
+ * @param[in] cb	Callback block
+ * @param[in] handle	Callback handle
+ *
+ * @return Name of the new cb.
+ */
+char *
+push_cb_split(cmd_t **cmds, const tcb_t *cb, task_cbh handle)
+{
+    return push_cb_backend(NULL, 0, cmds, cb, handle);
 }
 
 /**

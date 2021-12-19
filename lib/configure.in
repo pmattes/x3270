@@ -251,5 +251,5 @@ AC_SUBST(TLS_LIBS)
 
 dnl Generate the files.
 AC_CONFIG_HEADERS(include/unix/conf.h)
-AC_CONFIG_FILES(3270/Makefile 3270/Makefile.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk)
+AC_CONFIG_FILES(3270/Makefile 3270/Makefile.obj 3270/Makefile.test 3270/Makefile.test.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 32xx/Makefile.test 32xx/Makefile.test.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk)
 AC_OUTPUT

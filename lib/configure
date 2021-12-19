@@ -4645,7 +4645,7 @@ fi
 
 ac_config_headers="$ac_config_headers include/unix/conf.h"
 
-ac_config_files="$ac_config_files 3270/Makefile 3270/Makefile.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk"
+ac_config_files="$ac_config_files 3270/Makefile 3270/Makefile.obj 3270/Makefile.test 3270/Makefile.test.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 32xx/Makefile.test 32xx/Makefile.test.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5340,10 +5340,14 @@ do
     "include/unix/conf.h") CONFIG_HEADERS="$CONFIG_HEADERS include/unix/conf.h" ;;
     "3270/Makefile") CONFIG_FILES="$CONFIG_FILES 3270/Makefile" ;;
     "3270/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 3270/Makefile.obj" ;;
+    "3270/Makefile.test") CONFIG_FILES="$CONFIG_FILES 3270/Makefile.test" ;;
+    "3270/Makefile.test.obj") CONFIG_FILES="$CONFIG_FILES 3270/Makefile.test.obj" ;;
     "3270i/Makefile") CONFIG_FILES="$CONFIG_FILES 3270i/Makefile" ;;
     "3270i/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 3270i/Makefile.obj" ;;
     "32xx/Makefile") CONFIG_FILES="$CONFIG_FILES 32xx/Makefile" ;;
     "32xx/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 32xx/Makefile.obj" ;;
+    "32xx/Makefile.test") CONFIG_FILES="$CONFIG_FILES 32xx/Makefile.test" ;;
+    "32xx/Makefile.test.obj") CONFIG_FILES="$CONFIG_FILES 32xx/Makefile.test.obj" ;;
     "3270stubs/Makefile") CONFIG_FILES="$CONFIG_FILES 3270stubs/Makefile" ;;
     "3270stubs/Makefile.obj") CONFIG_FILES="$CONFIG_FILES 3270stubs/Makefile.obj" ;;
     "32xx/32xx-deplibs.mk") CONFIG_FILES="$CONFIG_FILES 32xx/32xx-deplibs.mk" ;;

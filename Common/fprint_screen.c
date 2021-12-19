@@ -310,7 +310,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		fprintf(f, "<html>\n"
 		   "<head>\n"
 		   " <meta http-equiv=\"Content-Type\" "
-		     "content=\"text/html; charset=UTF-8\">\n"
+		     "content=\"text/html; charset=utf-8\">\n"
 		   "</head>\n"
 		   " <body>\n") < 0) {
 	    rv = FPS_STATUS_ERROR;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 2014-2015, 2019-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 #include "appres.h"
 #include "asprintf.h"
+#include "json.h"
 #include "lazya.h"
 #include "trace.h"
 #include "utils.h"
@@ -63,12 +64,6 @@ typedef enum {		/* Error type: */
 			     persistent connection, keep it open. */
 } errmode_t;
 
-typedef enum {		/* Supported verbs: */
-    VERB_GET,		/*  GET */
-    VERB_HEAD,		/*  HEAD */
-    VERB_OTHER		/*  anything else */
-} verb_t;
-
 /* fields */
 typedef struct _field {	/* HTTP request fields (name: value) */
     struct _field *next; /* linkage */
@@ -86,7 +81,7 @@ typedef struct {
     int rll;		/* length of each request line parsed */
     verb_t verb;	/* parsed verb */
     bool http_1_0;	/* is the client speaking HTTP 1.0? */
-    bool persistent; /* is the client expecting a persistent connection? */
+    bool persistent;    /* is the client expecting a persistent connection? */
     char *uri;		/* start of URI */
     char *query;	/* query */
     field_t *queries;	/* list of query values */
@@ -97,13 +92,16 @@ typedef struct {
     struct _httpd_reg *async_node; /* asynchronous event node */
     size_t it_offset;	/* input trace offset */
     size_t ot_offset;	/* output trace offset */
+    content_t content_type; /* content type */
+    int content_length;	/* content length */
+    int content_length_left; /* remaining content to be read */
+    char *content;	/* content */
 } request_t;
 
 /* connection state */
 typedef struct {
     /* Global state */
     void *mhandle;	/* the handle from the main procedure */
-    bool cr;		/* last character seen was a CR */
     unsigned long seq;	/* connection sequence number, for tracing */
 
     /* Per-request state */
@@ -125,6 +123,7 @@ typedef struct _httpd_reg {
     const char *alias;		/* alias, for directory display */
     content_t content_type;
     const char *content_str;
+    verb_t verbs;	/* VERB_XXX OR'd together */
     unsigned flags;	/* HF_xxx */
     or_t type;
     union {
@@ -142,6 +141,14 @@ typedef struct _httpd_reg {
 /* Statics */
 static httpd_reg_t *httpd_reg;
 static unsigned long httpd_seq = 0;
+
+static const char *type_map[] = {
+    "text/html",
+    "text/plain",
+    "application/json",
+    /* "application/xml", */
+    "text/plain"
+};
 
 /* Code */
 
@@ -421,6 +428,10 @@ httpd_reinit_request(request_t *r)
     r->verb = VERB_OTHER;
     r->it_offset = 0;
     r->ot_offset = 0;
+    r->content_type = CT_UNSPECIFIED;
+    r->content_length = 0;
+    r->content_length_left = 0;
+    r->content = NULL;
 }
 
 /**
@@ -464,7 +475,6 @@ httpd_init_state(httpd_t *h, void *mhandle)
 {
     httpd_init_request(&h->request);
 
-    h->cr = false;
     h->mhandle = mhandle;
     h->seq = httpd_seq++;
 }
@@ -475,11 +485,12 @@ httpd_init_state(httpd_t *h, void *mhandle)
  * @param[in] h			State
  * @param[in] status_code	HTTP status code
  * @param[in] do_close		true if we should send 'Connection: close'
- * @param[in] content_type	Value for Content-Type field
+ * @param[in] content_type	Content type CT_xxx
+ * @param[in] content_type_str	Value for Content-Type field
  */
 static void
 httpd_http_header(httpd_t *h, int status_code, bool do_close,
-	const char *content_type)
+	content_t content_type, const char *content_type_str)
 {
     request_t *r = &h->request;
     time_t t;
@@ -500,7 +511,12 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
     if (status_code == 301 && r->location != NULL) {
 	httpd_print(h, HP_BUFFER, "Location: %s\n", r->location);
     }
-    httpd_print(h, HP_BUFFER, "Content-Type: %s\n", content_type);
+    if (content_type == CT_UNSPECIFIED || content_type == CT_BINARY) {
+	httpd_print(h, HP_BUFFER, "Content-Type: %s\n", content_type_str);
+    } else {
+	httpd_print(h, HP_BUFFER, "Content-Type: %s; charset=utf-8\n",
+		type_map[content_type], content_type_str);
+    }
 
     /* Now write it. */
     httpd_print_dump(h, DUMP_WITHOUT_LENGTH);
@@ -542,18 +558,12 @@ static httpd_status_t
 httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	int status_code, verb_t verb, const char *format, va_list ap)
 {
-    static const char *type_map[] = {
-	"text/html",
-	"text/plain",
-	"application/json",
-	"text/plain"
-    };
     request_t *r = &h->request;
 
     /* If the request wasn't complete junk, wrap the error response in HTTP. */
     if (mode != ERRMODE_NON_HTTP) {
-	httpd_http_header(h, status_code, mode <= ERRMODE_FATAL,
-		lazyaf("%s; charset=iso8859-1", type_map[content_type]));
+	httpd_http_header(h, status_code, mode <= ERRMODE_FATAL, content_type,
+		"");
     } else {
 	vtrace("h> [%lu] Response: %d %s\n", h->seq, status_code,
 		status_text(status_code));
@@ -595,21 +605,21 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	    {
 		char *buf = xs_vbuffer(format, ap);
 		size_t sl = strlen(buf);
+		json_t *j, *k;
 
-		if (sl > 2 && !strcmp(buf + sl - 2, ",\n")) {
-		    sl -= 2;
+		if (sl && buf[sl - 1] == '\n') {
+		    sl--;
 		}
-		if (sl) {
-		    httpd_print(h, HP_BUFFER,
-"{\n\
- \"result\": [\n\
- %.*s\n\
-  ]\n\
-}\n",
-			    (int)sl, buf);
-		}
+		k = json_array();
+		json_array_set(k, 0, json_string(buf, sl));
+		Free(buf);
+		j = json_struct();
+		json_struct_set(j, "result", NT, k);
+		httpd_print(h, HP_BUFFER, "%s\n", json_write(j));
+		json_free(j);
 	    }
 	    break;
+	case CT_UNSPECIFIED:
 	case CT_BINARY:
 	    break;
 	}
@@ -716,7 +726,7 @@ httpd_digest_request_line(httpd_t *h)
     };
     static const char *supported_verbs[] = {
 	/* Must use same order as the http_verb enumeration. */
-	"GET", "HEAD", NULL
+	"GET", "HEAD", "POST", NULL
     };
     static char http_token[] = "HTTP/";
 #   define HTTP_TOKEN_SIZE (sizeof(http_token) - 1)
@@ -767,8 +777,8 @@ httpd_digest_request_line(httpd_t *h)
 	    if (!strcmp(verb, "HEAD")) {
 		r->verb = VERB_HEAD;
 	    }
-	    return httpd_error(h, errmode, CT_HTML, 400, "Invalid protocol '%s'.",
-		    protocol);
+	    return httpd_error(h, errmode, CT_HTML, 400,
+		    "Invalid protocol '%s'.", protocol);
 	}
 	r->http_1_0 = (major == 1 && minor == 0);
 	r->persistent = !r->http_1_0;
@@ -786,16 +796,18 @@ httpd_digest_request_line(httpd_t *h)
 	}
     }
     if (known_verbs[i] == NULL) {
-	return httpd_error(h, errmode, CT_HTML, 400, "Unknown verb '%s'.", verb);
+	return httpd_error(h, errmode, CT_HTML, 400, "Unknown verb '%s'.",
+		verb);
     }
     for (i = 0; supported_verbs[i] != NULL; i++) {
 	if (!strcmp(verb, supported_verbs[i])) {
-	    r->verb = i;
+	    r->verb = 1 << i;
 	    break;
 	}
     }
     if (supported_verbs[i] == NULL) {
-	return httpd_error(h, errmode, CT_HTML, 501, "Unsupported verb '%s'.", verb);
+	return httpd_error(h, errmode, CT_HTML, 501, "Unsupported verb '%s'.",
+		verb);
     }
 
     return HS_CONTINUE;
@@ -965,6 +977,7 @@ httpd_valid_path(const char *path)
  * @param[in] desc	Description
  * @param[in] content_type Content type CT_xxx
  * @param[in] content_str Content-Type value
+ * @param[in] verbs	Allowed verbs
  * @param[in] flags	Flags
  * @param[in] dyn	Callback to produce output
  * @param[in] type	Object type (terminal or nonterminal)
@@ -973,7 +986,8 @@ httpd_valid_path(const char *path)
  */
 static void *
 httpd_register_dyn(const char *path, const char *desc, content_t content_type,
-	const char *content_str, unsigned flags, reg_dyn_t *dyn, or_t type)
+	const char *content_str, verb_t verbs, unsigned flags, reg_dyn_t *dyn,
+	or_t type)
 {
     httpd_reg_t *reg;
 
@@ -988,6 +1002,7 @@ httpd_register_dyn(const char *path, const char *desc, content_t content_type,
     reg->type = type;
     reg->content_type = content_type;
     reg->content_str = content_str;
+    reg->verbs = verbs;
     reg->flags = flags;
     reg->u.dyn = dyn;
 
@@ -1032,11 +1047,13 @@ httpd_reply(httpd_t *h, httpd_reg_t *reg, const char *uri)
 	break;
     }
 
-    httpd_http_header(h, 200, !r->persistent, reg->content_str);
+    httpd_http_header(h, 200, !r->persistent, r->content_type,
+	    reg->content_str);
     httpd_print(h, HP_SEND, "Cache-Control: max-age=43200\n");
 
     switch (r->verb) {
     case VERB_GET:
+    case VERB_POST:
     case VERB_OTHER:
 	/* Generate the body. */
 	if (reg->content_type == CT_HTML) {
@@ -1102,10 +1119,12 @@ httpd_dirlist(httpd_t *h, const char *uri)
     char *q_uri;
     httpd_reg_t *reg;
 
-    httpd_http_header(h, 200, !r->persistent, "text/html; charset=iso8859-1");
+    httpd_http_header(h, 200, !r->persistent, CT_HTML,
+	    "text/html; charset=utf-8");
 
     switch (r->verb) {
     case VERB_GET:
+    case VERB_POST:
     case VERB_OTHER:
 	/* Generate the body. */
 	q_uri = html_quote(uri);
@@ -1370,6 +1389,16 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
     httpd_reg_t *reg;
     char *canon;
 
+#   define VERB_CHECK(r, f) do { \
+    if (!(r->verbs & h->request.verb)) { \
+	if (f != NULL) { \
+	    Free(f); \
+	} \
+	return httpd_error(h, ERRMODE_FATAL, CT_HTML, 501, \
+		"Unsupported verb"); \
+    } \
+} while (false);
+
     if (!uricmp(uri, "/")) {
 	return httpd_dirlist(h, "/");
     }
@@ -1380,6 +1409,7 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
 	case OR_DIR:
 	    if (!uricmp(uri, reg->path)) {
 		/* Directory without trailing slash. */
+		VERB_CHECK(reg, NULL);
 		return httpd_redirect(h, uri);
 	    }
 
@@ -1393,6 +1423,7 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
 		}
 		if (!uricmp(copy, reg->path)) {
 		    Free(copy);
+		    VERB_CHECK(reg, NULL);
 		    return httpd_dirlist(h, uri);
 		}
 	    }
@@ -1402,14 +1433,17 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
 	case OR_DYN_TERM:
 	    /* Terminal object. */
 	    if (!uricmp(uri, reg->path)) {
+		VERB_CHECK(reg, NULL);
 		return httpd_reply(h, reg, uri);
 	    }
 	    break;
 	case OR_DYN_NONTERM:
 	    /* Nonterminal object. */
 	    if (!uricmpp(uri, reg->path, &canon)) {
-		httpd_status_t s = httpd_reply(h, reg, canon);
+		httpd_status_t s;
 
+		VERB_CHECK(reg, canon);
+		s = httpd_reply(h, reg, canon);
 		Free(canon);
 		return s;
 	    }
@@ -1419,6 +1453,8 @@ httpd_lookup_uri(httpd_t *h, const char *uri)
 
     /* Not found. */
     return httpd_notfound(h, uri);
+
+#undef VERB_CHECK
 }
 
 /**
@@ -1474,7 +1510,40 @@ parse_queries(httpd_t *h, const char *query)
 }
 
 /**
- * Digest the entire request.
+ * Decode a content type.
+ *
+ * @param[in] content_type	Content type
+ *
+ * @return Content type
+ */
+content_t
+decode_content_type(const char *content_type)
+{
+    struct {
+	const char *name;
+	content_t type;
+    } known_types[] = {
+	{ "application/json", CT_JSON },
+	{ "text/html", CT_HTML },
+	{ "text/plain", CT_TEXT },
+#if 0
+	{ "text/xml", CT_XML },
+	{ "application/xml", CT_XML },
+#endif
+	{ NULL, CT_UNSPECIFIED }
+    };
+    int i;
+
+    for (i = 0; known_types[i].name; i++) {
+	if (!strcasecmp(content_type, known_types[i].name)) {
+	    return known_types[i].type;
+	}
+    }
+    return CT_UNSPECIFIED;
+}
+
+/**
+ * Digest the fields.
  *
  * The entire text is in r->request_buf, NULL terminated, including newline
  * characters. The length of the request, not including the NULL, is in
@@ -1485,16 +1554,13 @@ parse_queries(httpd_t *h, const char *query)
  * @return httpd_status_t
  */
 static httpd_status_t
-httpd_digest_request(httpd_t *h)
+httpd_digest_fields(httpd_t *h)
 {
     request_t *r = &h->request;
     char *s = r->fields_start;
-    char *cand_uri;
-    char *uri;
     const char *connection;
-    httpd_status_t rv;
-    char *query;
-    char *fragment;
+    const char *content_type;
+    const char *content_length;
 
     /*
      * Parse the fields.
@@ -1596,6 +1662,42 @@ httpd_digest_request(httpd_t *h)
 	r->persistent = false;
     }
 
+    /* Decode the content type. */
+    if ((content_type = lookup_field("Content-Type", r->fields)) != NULL) {
+	r->content_type = decode_content_type(content_type);
+    } else {
+	r->content_type = CT_UNSPECIFIED;
+    }
+
+    if ((content_length = lookup_field("Content-Length", r->fields)) != NULL) {
+	r->content_length_left = r->content_length = atoi(content_length);
+	r->content = &r->request_buf[r->nr];
+    }
+
+    return HS_CONTINUE;
+}
+
+/**
+ * Digest the entire request.
+ *
+ * The entire text is in r->request_buf, NULL terminated, including newline
+ * characters. The length of the request, not including the NULL, is in
+ * r->nr. The fields in the request are pointed to by f->fields_start.
+ *
+ * @param[in,out] h	State
+ *
+ * @return httpd_status_t
+ */
+static httpd_status_t
+httpd_digest_request(httpd_t *h)
+{
+    request_t *r = &h->request;
+    char *cand_uri;
+    char *uri;
+    httpd_status_t rv;
+    char *query;
+    char *fragment;
+
     /*
      * Split the URI at '?' or '#' before doing percent decodes.
      * This allows '?' and '#' to be percent-encoded in any of the elements.
@@ -1675,25 +1777,6 @@ httpd_input_char(httpd_t *h, char c)
 {
     request_t *r = &h->request;
 
-    /*
-     * CRLF processing. We translate CRs into Newlines, and ignore LFs
-     * after CRs.
-     */
-    if (h->cr) {
-	h->cr = false;
-
-	/* CR followed by LF. Ignore the LF. */
-	if (c == '\n') {
-	    return HS_CONTINUE;
-	}
-    }
-    if (c == '\r') {
-	h->cr = true;
-
-	/* Treat CRs as Newline characters. */
-	c = '\n';
-    }
-
     /* If there's no room to store the character, we're done. */
     if (r->nr >= MAX_HTTPD_REQUEST) {
 	return httpd_error(h,
@@ -1701,19 +1784,42 @@ httpd_input_char(httpd_t *h, char c)
 		CT_HTML, 400, "The request is too big.");
     }
 
+    if (!r->content_length_left && c == '\r') {
+	return HS_CONTINUE;
+    }
+
     /* Store the character. */
     r->request_buf[r->nr++] = c;
+
+    /* Check for content. */
+    if (r->content_length_left) {
+	if (!--r->content_length_left) {
+	    r->request_buf[r->nr] = '\0';
+	    return httpd_digest_request(h);
+	}
+	return HS_CONTINUE;
+    }
 
     /* Check for a newline. */
     if (c == '\n') {
 	if (r->rll == 0) {
-	    /* Empty line: digest the entire request. */
+	    httpd_status_t rv;
+
+	    /* Empty line: digest the fields. */
 	    if (!r->saw_first) {
 		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400,
 			"Missing request.");
 	    }
 	    r->request_buf[r->nr] = '\0';
-	    return httpd_digest_request(h);
+	    rv = httpd_digest_fields(h);
+	    if (rv != HS_CONTINUE) {
+		return rv;
+	    }
+	    if (!r->content_length) {
+		/* No content, process the entire request. */
+		return httpd_digest_request(h);
+	    }
+	    return rv;
 	} else {
 	    /* Beginning of new line; set the length to 0. */
 	    r->rll = 0;
@@ -1761,6 +1867,7 @@ httpd_register_dir(const char *path, const char *desc)
     reg->path = path;
     reg->desc = desc;
     reg->type = OR_DIR;
+    reg->verbs = VERB_GET | VERB_HEAD;
 
     reg->next = httpd_reg;
     httpd_reg = reg;
@@ -1798,6 +1905,7 @@ httpd_register_fixed(const char *path, const char *desc,
     reg->type = OR_FIXED;
     reg->content_type = content_type;
     reg->content_str = content_str;
+    reg->verbs = VERB_GET | VERB_HEAD;
     reg->flags = flags;
     reg->u.fixed = fixed;
 
@@ -1838,6 +1946,7 @@ httpd_register_fixed_binary(const char *path, const char *desc,
     reg->type = OR_FIXED_BINARY;
     reg->content_type = content_type;
     reg->content_str = content_str;
+    reg->verbs = VERB_GET | VERB_HEAD;
     reg->flags = flags;
     reg->u.fixed_binary.fixed = fixed;
     reg->u.fixed_binary.length = length;
@@ -1855,6 +1964,7 @@ httpd_register_fixed_binary(const char *path, const char *desc,
  * @param[in] desc	Description
  * @param[in] content_type Content type CT_xxx
  * @param[in] content_str Content-Type value
+ * @param[in] verbs	Allowed verbs
  * @param[in] flags	Flags
  * @param[in] dyn	Callback to produce output
  *
@@ -1862,11 +1972,11 @@ httpd_register_fixed_binary(const char *path, const char *desc,
  */
 void *
 httpd_register_dyn_term(const char *path, const char *desc,
-	content_t content_type, const char *content_str, unsigned flags,
-	reg_dyn_t *dyn)
+	content_t content_type, const char *content_str, verb_t verbs,
+	unsigned flags, reg_dyn_t *dyn)
 {
-    return httpd_register_dyn(path, desc, content_type, content_str, flags,
-	    dyn, OR_DYN_TERM);
+    return httpd_register_dyn(path, desc, content_type, content_str, verbs,
+	    flags, dyn, OR_DYN_TERM);
 }
 
 /**
@@ -1876,6 +1986,7 @@ httpd_register_dyn_term(const char *path, const char *desc,
  * @param[in] desc	Description
  * @param[in] content_type Content type CT_xxx
  * @param[in] content_str Content-Type value
+ * @param[in] verbs	Allowed verbs
  * @param[in] flags	Flags
  * @param[in] dyn	Callback to produce output
  *
@@ -1883,11 +1994,11 @@ httpd_register_dyn_term(const char *path, const char *desc,
  */
 void *
 httpd_register_dyn_nonterm(const char *path, const char *desc,
-	content_t content_type, const char *content_str, unsigned flags,
-	reg_dyn_t *dyn)
+	content_t content_type, const char *content_str, verb_t verbs,
+	unsigned flags, reg_dyn_t *dyn)
 {
-    return httpd_register_dyn(path, desc, content_type, content_str, flags,
-	    dyn, OR_DYN_NONTERM);
+    return httpd_register_dyn(path, desc, content_type, content_str, verbs,
+	    flags, dyn, OR_DYN_NONTERM);
 }
 
 /**
@@ -2045,11 +2156,13 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
     r->async_node = NULL;
 
     /* Generate the output. */
-    httpd_http_header(h, 200, !r->persistent, reg->content_str);
+    httpd_http_header(h, 200, !r->persistent, r->content_type,
+	    reg->content_str);
     httpd_print(h, HP_SEND, "Cache-Control: no-store\n");
 
     switch (r->verb) {
     case VERB_GET:
+    case VERB_POST:
     case VERB_OTHER:
 	/* Generate the body. */
 	if (reg->content_type == CT_HTML) {
@@ -2201,5 +2314,52 @@ httpd_fetch_query(void *dhandle, const char *name)
 	}
     }
     return NULL;
+}
 
+/**
+ * Get the content type from the current request.
+ *
+ * @param[in] dhandle	Connection handle
+ *
+ * @return Content type
+ */
+content_t
+httpd_content_type(void *dhandle)
+{
+    httpd_t *h = dhandle;
+    request_t *r = &h->request;
+
+    return r->content_type;
+}
+
+/**
+ * Get the content from the current request.
+ *
+ * @param[in] dhandle	Connection handle
+ *
+ * @return Content, or NULL
+ */
+char *
+httpd_content(void *dhandle)
+{
+    httpd_t *h = dhandle;
+    request_t *r = &h->request;
+
+    return r->content;
+}
+
+/**
+ * Get the verb from the current request.
+ *
+ * @param[in] dhandle	Connection handle
+ *
+ * @return Verb
+ */
+verb_t
+httpd_verb(void *dhandle)
+{
+    httpd_t *h = dhandle;
+    request_t *r = &h->request;
+
+    return r->verb;
 }

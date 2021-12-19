@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 2014-2015, 2019-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,11 @@ typedef enum {
     CT_HTML,
     CT_TEXT,
     CT_JSON,
-    CT_BINARY
+    CT_BINARY,
+#if 0
+    CT_XML,
+#endif
+    CT_UNSPECIFIED
 } content_t;
 
 /* Flags. */
@@ -51,6 +55,13 @@ typedef enum {
     HS_SUCCESS_CLOSE = -2	/* request succeeded, close socket */
 } httpd_status_t;
 
+typedef enum {			/* Supported verbs: */
+    VERB_GET = 1,		/*  GET */
+    VERB_HEAD = 2,		/*  HEAD */
+    VERB_POST = 4,		/*  POST */
+    VERB_OTHER = 8		/*  anything else */
+} verb_t;
+
 /* Registration functions. */
 typedef httpd_status_t reg_dyn_t(const char *uri, void *dhandle);
 void *httpd_register_dir(const char *path, const char *desc);
@@ -61,11 +72,11 @@ void *httpd_register_fixed_binary(const char *path, const char *desc,
 	content_t content_type, const char *content_str, unsigned flags,
 	const unsigned char *fixed, unsigned lenrth);
 void *httpd_register_dyn_term(const char *path, const char *desc,
-	content_t content_type, const char *content_str, unsigned flags,
-	reg_dyn_t *dyn);
+	content_t content_type, const char *content_str, verb_t verbs,
+	unsigned flags, reg_dyn_t *dyn);
 void *httpd_register_dyn_nonterm(const char *path, const char *desc,
-	content_t content_type, const char *content_str, unsigned flags,
-	reg_dyn_t *dyn);
+	content_t content_type, const char *content_str, verb_t verbs,
+	unsigned flags, reg_dyn_t *dyn);
 void httpd_set_alias(void *nhandle, const char *text);
 
 /* Called from the main logic. */
@@ -82,3 +93,7 @@ httpd_status_t httpd_dyn_error(void *dhandle, content_t content_type,
 char *html_quote(const char *text);
 char *uri_quote(const char *text);
 const char *httpd_fetch_query(void *dhandle, const char *name);
+
+content_t httpd_content_type(void *dhandle);
+char *httpd_content(void *dhandle);
+verb_t httpd_verb(void *dhandle);

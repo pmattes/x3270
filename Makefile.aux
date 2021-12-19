@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2017 Paul Mattes.
+# Copyright (c) 2015-2017, 2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -130,3 +130,16 @@ wmitm-src.tgz:
 windows-release: man
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@
+
+test:
+	cd lib/3270 && $(MAKE) -f Makefile.test $@
+	cd lib/32xx && $(MAKE) -f Makefile.test $@
+coverage:
+	cd lib/3270 && $(MAKE) -f Makefile.test $@
+	cd lib/32xx && $(MAKE) -f Makefile.test $@
+test-clean:
+	cd lib/3270 && $(MAKE) -f Makefile.test clean
+	cd lib/32xx && $(MAKE) -f Makefile.test clean
+test-clobber:
+	cd lib/3270 && $(MAKE) -f Makefile.test clobber
+	cd lib/32xx && $(MAKE) -f Makefile.test clobber

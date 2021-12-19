@@ -45,6 +45,7 @@
 
 #include "appres.h"
 #include "bind-opt.h"
+#include "json.h"
 #include "lazya.h"
 #include "popups.h"
 #include "resources.h"
@@ -56,6 +57,7 @@
 
 #include "httpd-core.h"
 #include "httpd-io.h"
+#include "httpd-json.h"
 #include "httpd-nodes.h"
 
 #if defined(_WIN32) /*[*/
@@ -93,8 +95,9 @@ typedef struct {
 
     struct {		/* pending command state: */
 	sendto_callback_t *callback; /* callback function */
-	content_t content_type; /* content type */
-	varbuf_t result; /* accumulated result data */
+	content_t return_content_type; /* return content type */
+	varbuf_t result; /* accumulated result data (except for JSON) */
+	json_t *jresult; /* accumulated result data (JSON) */
 	bool done;	/* is the command done? */
     } pending;
     hio_listener_t *listener;
@@ -136,6 +139,7 @@ hio_socket_close(session_t *session)
     CloseHandle(session->event);
 #endif /*]*/
     vb_free(&session->pending.result);
+    json_free(session->pending.jresult);
     llist_unlink(&session->link);
     Free(session);
     if (session->listener != NULL) {
@@ -297,6 +301,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     memset(session, 0, sizeof(session_t));
     session->listener = l;
     vb_init(&session->pending.result);
+    session->pending.jresult = NULL;
     session->s = t;
 #if defined(_WIN32) /*[*/
     session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -549,7 +554,7 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     session_t *s = handle;
 
-    if (s->pending.content_type == CT_HTML) {
+    if (s->pending.return_content_type == CT_HTML) {
 	size_t i;
 	char c;
 
@@ -574,39 +579,20 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 		break;
 	    }
 	}
-    } else if (s->pending.content_type == CT_JSON) {
-	size_t i;
-	char c;
+    } else if (s->pending.return_content_type == CT_JSON) {
+	json_t *result_array;
 
-	/* Quote JSON in the response. */
-	vb_appends(&s->pending.result, "  \"");
-	for (i = 0; i < len; i++) {
-	    c = buf[i];
-	    switch (c) {
-	    case '"':
-		vb_appends(&s->pending.result, "\\\"");
-		break;
-	    case '\\':
-		vb_appends(&s->pending.result, "\\\\");
-		break;
-	    case '\r':
-		vb_appends(&s->pending.result, "\\r");
-		break;
-	    case '\n':
-		vb_appends(&s->pending.result, "\\n");
-		break;
-	    case '\t':
-		vb_appends(&s->pending.result, "\\t");
-		break;
-	    case '\f':
-		vb_appends(&s->pending.result, "\\f");
-		break;
-	    default:
-		vb_append(&s->pending.result, &c, 1);
-		break;
-	    }
+	if (s->pending.jresult == NULL) {
+	    s->pending.jresult = json_struct();
+	    result_array = json_array();
+	    json_struct_set(s->pending.jresult, "result", NT, result_array);
+	} else {
+	    assert(json_struct_member(s->pending.jresult, "result", NT,
+			&result_array));
 	}
-	vb_appends(&s->pending.result, "\",");
+
+	json_array_set(result_array, json_array_length(result_array),
+		json_string(buf, len));
     } else {
 	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);
@@ -634,14 +620,60 @@ hio_complete(task_cbh handle, bool success, bool abort)
 
     /* Pass the result up to the node. */
     s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
-	    vb_buf(&s->pending.result), vb_len(&s->pending.result), prompt,
-	    strlen(prompt));
+	    vb_buf(&s->pending.result), vb_len(&s->pending.result),
+	    s->pending.jresult, prompt, strlen(prompt));
 
     /* Get ready for the next command. */
     vb_reset(&s->pending.result);
+    json_free(s->pending.jresult);
 
     /* This is always the end of the command. */
     return true;
+}
+
+/**
+ * Get the content type for a request.
+ *
+ * @param[in] dhandle	state
+ *
+ * @return content_t
+ */
+content_t
+hio_content_type(void *dhandle)
+{
+    session_t *s = httpd_mhandle(dhandle);
+
+    return httpd_content_type(s->dhandle);
+}
+
+/**
+ * Get the content for a request.
+ *
+ * @param[in] dhandle	state
+ *
+ * @return char *
+ */
+char *
+hio_content(void *dhandle)
+{
+    session_t *s = httpd_mhandle(dhandle);
+
+    return httpd_content(s->dhandle);
+}
+
+/**
+ * Get the verb for a request.
+ *
+ * @param[in] dhandle	state
+ *
+ * @return Verb
+ */
+verb_t
+hio_verb(void *dhandle)
+{
+    session_t *s = httpd_mhandle(dhandle);
+
+    return httpd_verb(s->dhandle);
 }
 
 /**
@@ -650,13 +682,16 @@ hio_complete(task_cbh handle, bool success, bool abort)
  * @param[in] cmd       command to send, not including the newline and
  * @param[in] callback  callback function for completion
  * @param[in] handle    handle to pass to completion callback function
- * @param[in] content_type How to handle content
+ * @param[in] request_content_type How to process input
+ * @param[in] return_content_type How to return content
+ * @param[out] errmsg	error message, if SENDTO_INVALID returned
  *
  * @return sendto_t
  */
 sendto_t
 hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
-	content_t content_type)
+	content_t request_content_type, content_t return_content_type,
+	char **errmsg)
 {
     static tcb_t httpd_cb = {
 	"httpd",
@@ -668,30 +703,41 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
     };
     size_t sl;
     session_t *s = httpd_mhandle(dhandle);
+    cmd_t **cmds = NULL;
 
+    *errmsg = NULL;
+
+    /* Remove any trailing white space. */
     sl = strlen(cmd);
-    if (sl == 0) {
-	/* No empty commands, please. */
-	return SENDTO_INVALID;
+    while (sl && isspace((int)cmd[sl - 1])) {
+	sl--;
     }
 
-    /* Remove any trailing NL or CR/LF. */
-    if (cmd[sl - 1] == '\n') {
-	sl--;
-    }
-    if (sl && cmd[sl - 1] == '\r') {
-	sl--;
-    }
-    if (!sl || strchr(cmd, '\r') != NULL || strchr(cmd, '\n') != NULL) {
-	/* No empty commands, and no embedded CRs or LFs. */
+    switch (request_content_type) {
+    case CT_HTML:
+    case CT_TEXT:
+	/* Plain text. */
+	break;
+    case CT_JSON:
+	/* JSON-encoded text. */
+	if (!hjson_parse(cmd, sl, &cmds, errmsg)) {
+	    return SENDTO_INVALID;
+	}
+	break;
+    default:
+	*errmsg = NewString("Invalid content type");
 	return SENDTO_INVALID;
     }
 
     /* Enqueue the command. */
     s->pending.callback = callback;
-    s->pending.content_type = content_type;
+    s->pending.return_content_type = return_content_type;
     s->pending.done = false;
-    push_cb(cmd, sl, &httpd_cb, s);
+    if (cmds != NULL) {
+	push_cb_split(cmds, &httpd_cb, s);
+    } else {
+	push_cb(cmd, sl, &httpd_cb, s);
+    }
 
     /*
      * It's possible for the command to have completed already.

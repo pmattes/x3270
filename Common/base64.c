@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Paul Mattes.
+ * Copyright (c) 2018, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -163,47 +163,3 @@ base64_decode(const char *s)
     *op = '\0';
     return ret;
 }
-
-#if defined UNIT_TEST /*[*/
-#include <assert.h>
-void *
-Malloc(size_t n)
-{
-    return malloc(n);
-}
-
-void
-Free(void *buf)
-{
-    free(buf);
-}
-
-int
-main(int argc, char *argv[])
-{
-    char *s[] = {
-	"foobar",
-	"x",
-	"xy",
-	"xyz",
-	"abcãd",
-	"username:password",
-	"Bzz Bzz Bzz",
-	NULL };
-    int i;
-
-    for (i = 0; s[i] != NULL; i++) {
-	char *b = base64_encode(s[i]);
-	char *e = base64_decode(b);
-
-	printf("'%s' -> '%s' -> '%s'\n", s[i], b, e);
-	assert (!strcmp(s[i], e));
-    }
-
-    assert(base64_decode("a=b") == NULL);
-    assert(base64_decode("a===") == NULL);
-    assert(base64_decode("[") == NULL);
-
-    return 0;
-}
-#endif /*]*/
