@@ -32,39 +32,13 @@
 
 #include "globals.h"
 
-#if !defined(_WIN32) /*[*/
-# include <unistd.h>
-# include <netinet/in.h>
-# include <sys/select.h>
-# include <arpa/inet.h>
-#endif /*]*/
-#include <signal.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <assert.h>
 #include <inttypes.h>
 
-#include "appres.h"
-#include "bind-opt.h"
 #include "json.h"
-#include "lazya.h"
-#include "popups.h"
-#include "resources.h"
 #include "task.h"
-#include "toggles.h"
-#include "trace.h"
 #include "utils.h"
-#include "varbuf.h"
 
-#include "httpd-core.h"
-#include "httpd-io.h"
 #include "httpd-json.h"
-#include "httpd-nodes.h"
-
-#if defined(_WIN32) /*[*/
-# include "w3misc.h"
-# include "winprint.h"
-#endif /*]*/
 
 /**
  * Compare two fixed-size strings
