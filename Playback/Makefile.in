@@ -26,7 +26,7 @@
 
 # VPATH-based Makefile for playback
 top = ../../..
-objdir = ../obj/x86_64-unknown-linux-gnu/playback
+objdir = ../obj/@host@/playback
 this = $(top)/Playback
 
 export VPATH = $(this)

@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2016, 2018, 2020 Paul Mattes.
+# Copyright (c) 2015-2016, 2018, 2020-2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -146,6 +146,8 @@ pr3287: lib32xx
 	cd pr3287 && $(MAKE)
 x3270if:
 	cd x3270if && $(MAKE)
+playback:
+	cd Playback && $(MAKE)
 wc3270: wc3270-32 wc3270-64
 wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
 	cd wc3270 && $(MAKE)
@@ -265,6 +267,8 @@ pr3287-clean:
 	cd pr3287 && $(MAKE) clean
 x3270if-clean:
 	cd x3270if && $(MAKE) clean
+playback-clean:
+	cd Playback && $(MAKE) clean
 wc3270-clean: wc3270-clean-32 wc3270-clean-64
 wc3270-clean-32:
 	cd wc3270 && $(MAKE) clean
@@ -339,6 +343,8 @@ pr3287-clobber:
 	cd pr3287 && $(MAKE) clobber
 x3270if-clobber:
 	cd x3270if && $(MAKE) clobber
+playback-clobber:
+	cd Playback && $(MAKE) clobber
 wc3270-clobber: wc3270-clobber-32 wc3270-clobber-64
 wc3270-clobber-32:
 	cd wc3270 && $(MAKE) clobber

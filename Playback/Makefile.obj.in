@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2021 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018, 2020-2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,23 +24,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# VPATH-based Makefile for playback
-top = ../../..
-objdir = ../obj/x86_64-unknown-linux-gnu/playback
-this = $(top)/Playback
+# Makefile for playback utility
 
-export VPATH = $(this)
-export TOP = $(top)
-export THIS = $(this)
+RM = rm -f
+CC = @CC@
 
-MAKEINC = -I$(this)
+all: playback
 
-all: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clean: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clobber: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+HOST = @host@
 
-$(objdir):
-	mkdir -p $(objdir)
+CCOPTIONS = @CCOPTIONS@
+XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
+CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+
+playback: playback.o
+	$(CC) -o $@ playback.o $(LDFLAGS)
+
+
+clean:
+	$(RM) *.o
+clobber: clean
+	$(RM) playback *.d
+
+# Include auto-generated dependencies.
+-include $(OBJS:.o=.d) mkfb.d
