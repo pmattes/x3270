@@ -380,6 +380,7 @@ process(FILE *f, int s)
 		printf("Emulator disconnected.\n");
 		break;
 	    }
+	    printf("\n");
 	    trace_netdata("emul", (unsigned char *)buf, nr);
 	    fdisp = false;
 	}
