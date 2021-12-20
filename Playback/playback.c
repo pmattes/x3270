@@ -360,7 +360,7 @@ process(FILE *f, int s)
 	FD_ZERO(&rfds);
 	FD_SET(s, &rfds);
 	FD_SET(0, &rfds);
-	ns = select(s+1, &rfds, NULL, NULL, NULL);
+	ns = select(s + 1, &rfds, NULL, NULL, NULL);
 	if (ns < 0) {
 	    perror("select");
 	    exit(2);
@@ -377,7 +377,7 @@ process(FILE *f, int s)
 		break;
 	    }
 	    if (nr == 0) {
-		printf("Emulator disconnected.\n");
+		printf("\nEmulator disconnected.\n");
 		break;
 	    }
 	    printf("\n");
