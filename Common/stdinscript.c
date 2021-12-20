@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -175,8 +175,13 @@ static void
 stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	bool success)
 {
-    printf(DATA_PREFIX "%.*s\n", (int)len, buf);
-    fflush(stdout);
+    if (!pushed_wait) {
+	printf(DATA_PREFIX "%.*s\n", (int)len, buf);
+	fflush(stdout);
+    } else {
+	fprintf(stderr, AnWait "(): %.*s\n", (int)len, buf);
+	fflush(stderr);
+    }
 }
 
 /**
