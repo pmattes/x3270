@@ -26,8 +26,10 @@
 
 # Makefile for s3270 testing
 
-test: s3270
-	PATH="$$PWD/obj/@host@/s3270:$$PATH" python3 s3270/Test/Smoke.py
+test: s3270 playback
+	PATH="$$PWD/obj/@host@/s3270:$$PWD/obj/@host@/playback:$$PATH" python3 s3270/Test/Smoke.py
 
 s3270:
-	$(MAKE) s3270
+	$(MAKE) $@
+playback:
+	$(MAKE) $@

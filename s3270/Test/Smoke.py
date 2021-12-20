@@ -33,6 +33,27 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.close()
         s3270.wait(timeout=2)
 
+    # s3270 3270 smoke test
+    def test_s3270_3270_smoke(self):
+
+        # Start 'playback' to read s3270's output.
+        playback = Popen(["playback", "-b", "-p", "9997",
+            "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
+
+        # Start s3270.
+        s3270 = Popen(["s3270", "127.0.0.1:9997"], stdin=PIPE, stdout=DEVNULL)
+
+        # Feed s3270 some actions.
+        s3270.stdin.write(b"PF(3)\n")
+        s3270.stdin.write(b"Quit()\n")
+        s3270.stdin.flush()
+
+        # Wait for the processes to exit.
+        rc = playback.wait(timeout=2)
+        self.assertEqual(rc, 0)
+        s3270.stdin.close()
+        s3270.wait(timeout=2)
+
     # s3270 TLS smoke test
     def test_s3270_tls_smoke(self):
 
@@ -62,5 +83,6 @@ class TestS3270Smoke(unittest.TestCase):
         server.wait(timeout=2)
         s3270.stdin.close()
         s3270.wait(timeout=2)
+
 if __name__ == '__main__':
     unittest.main()
