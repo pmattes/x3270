@@ -2,6 +2,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import requests
 
 # s3270 smoke tests
 class TestS3270Smoke(unittest.TestCase):
@@ -37,11 +38,11 @@ class TestS3270Smoke(unittest.TestCase):
     def test_s3270_3270_smoke(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9997",
+        playback = Popen(["playback", "-b", "-p", "9998",
             "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
 
         # Start s3270.
-        s3270 = Popen(["s3270", "127.0.0.1:9997"], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(["s3270", "127.0.0.1:9998"], stdin=PIPE, stdout=DEVNULL)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"PF(3)\n")
@@ -60,11 +61,11 @@ class TestS3270Smoke(unittest.TestCase):
         # Start 'openssl s_server' to read s3270's output.
         server = Popen(["openssl", "s_server", "-cert",
             "s3270/Test/tls/TEST.crt", "-key", "s3270/Test/tls/TEST.key",
-            "-port", "9998", "-quiet"], stdout=PIPE)
+            "-port", "9997", "-quiet"], stdout=PIPE)
 
         # Start s3270.
         s3270 = Popen(["s3270", "-cafile", "s3270/Test/tls/myCA.pem",
-            "l:a:c:t:127.0.0.1:9998=TEST" ], stdin=PIPE, stdout=DEVNULL)
+            "l:a:c:t:127.0.0.1:9997=TEST" ], stdin=PIPE, stdout=DEVNULL)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"String(abc)\n")
@@ -83,6 +84,29 @@ class TestS3270Smoke(unittest.TestCase):
         server.wait(timeout=2)
         s3270.stdin.close()
         s3270.wait(timeout=2)
+
+    # s3270 httpd smoke test
+    def test_s3270_httpd_smoke(self):
+
+        # Start s3270.
+        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:9996"])
+
+        # Send it a JSON GET.
+        r = requests.get('http://127.0.0.1:9996/3270/rest/json/Set(monoCase)')
+        s = r.json()
+        self.assertEqual(s['result'], ['false'])
+        self.assertEqual(s['status'], 'L U U N N 4 24 80 0 0 0x0 0.000')
+
+        # Send it a JSON POST.
+        r = requests.post('http://127.0.0.1:9996/3270/rest/post',
+                json={'action': 'set', 'args': ['monoCase']})
+        s = r.json()
+        self.assertEqual(s['result'], ['false'])
+        self.assertEqual(s['status'], 'L U U N N 4 24 80 0 0 0x0 0.000')
+
+        # Wait for the process to exit.
+        s3270.kill()
+        s3270.wait();
 
 if __name__ == '__main__':
     unittest.main()
