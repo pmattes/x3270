@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2014, 2019 Paul Mattes.
+ * Copyright (c) 1994-2009, 2014, 2019, 2021 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -60,21 +61,22 @@ static enum {
 static enum {
 	T_NONE, T_IAC
 } tstate = T_NONE;
-int fdisp = 0;
+bool fdisp = false;
 
 static void process(FILE *f, int s);
 typedef enum {
     STEP_LINE,	/* step one line in the file */
     STEP_EOR,	/* step until IAC EOR */
-    STEP_MARK	/* step until a mark (line starting with '+') */
+    STEP_MARK,	/* step until a mark (line starting with '+') */
+    STEP_IMARK,	/* match the next input block, until a mark */
 } step_t;
-static int step(FILE *f, int s, step_t type);
+static bool step(FILE *f, int s, step_t type);
 static int process_command(FILE *f, int s);
 
 void
 usage(void)
 {
-    fprintf(stderr, "usage: %s [-p port] file\n", me);
+    fprintf(stderr, "usage: %s [-b] [-p port] file\n", me);
     exit(1);
 }
 
@@ -101,6 +103,7 @@ main(int argc, char *argv[])
     int one = 1;
     socklen_t len;
     int flags;
+    bool bidir = false;
 
     /* Parse command-line arguments */
     if ((me = strrchr(argv[0], '/')) != NULL) {
@@ -109,8 +112,11 @@ main(int argc, char *argv[])
 	    me = argv[0];
     }
 
-    while ((c = getopt(argc, argv, "p:")) != -1) {
+    while ((c = getopt(argc, argv, "bp:")) != -1) {
 	switch (c) {
+	case 'b':
+	    bidir = true;
+	    break;
 	case 'p':
 	    port = atoi(optarg);
 	    break;
@@ -187,12 +193,14 @@ main(int argc, char *argv[])
 	    FD_SET(0, &rfds);
 	    FD_SET(s, &rfds);
 
-	    printf("playback> ");
-	    fflush(stdout);
+	    if (!bidir) {
+		printf("playback> ");
+		fflush(stdout);
+	    }
 	    ns = select(s + 1, &rfds, NULL, NULL, NULL);
 	    if (ns < 0) {
 		perror("select");
-		exit(1);
+		exit(2);
 	    }
 	    if (FD_ISSET(0, &rfds)) {
 		process_command(NULL, -1);
@@ -219,8 +227,14 @@ main(int argc, char *argv[])
 	);
 	rewind(f);
 	pstate = BASE;
-	fdisp = 0;
-	process(f, s2);
+	fdisp = false;
+	if (bidir) {
+	    while (step(f, s2, STEP_MARK) && step(f, s2, STEP_IMARK)) {
+	    }
+	    exit(0); /* needs to be smarter */
+	} else {
+	    process(f, s2);
+	}
     }
 }
 
@@ -317,7 +331,6 @@ trace_netdata(char *direction, unsigned char *buf, int len)
 {
     int offset;
 
-    printf("\n");
     for (offset = 0; offset < len; offset++) {
 	if (!(offset % LINEDUMP_MAX)) {
 	    printf("%s%s 0x%-3x ", (offset ? "\n" : ""), direction, offset);
@@ -350,7 +363,7 @@ process(FILE *f, int s)
 	ns = select(s+1, &rfds, NULL, NULL, NULL);
 	if (ns < 0) {
 	    perror("select");
-	    exit(1);
+	    exit(2);
 	}
 	if (ns == 0) {
 	    continue;
@@ -368,6 +381,7 @@ process(FILE *f, int s)
 		break;
 	    }
 	    trace_netdata("emul", (unsigned char *)buf, nr);
+	    fdisp = false;
 	}
 	if (FD_ISSET(0, &rfds)) {
 	    if (process_command(f, s) < 0) {
@@ -379,28 +393,28 @@ process(FILE *f, int s)
     close(s);
     pstate = NONE;
     tstate = T_NONE;
-    fdisp = 0;
+    fdisp = false;
     return;
 }
 
 /*
  * Step through the file.
  *
- * Returns 0 for EOF, nonzeo otherwise.
+ * Returns false for EOF or error, true otherwise.
  */
-static int
+static bool
 step(FILE *f, int s, step_t type)
 {
     int c = 0;
     static int d1;
     static char hexes[] = "0123456789abcdef";
 #   define isxd(c) strchr(hexes, c)
-    static int again = 0;
+    static bool again = false;
     char obuf[BSIZE];
     char *cp = obuf;
-    int at_mark = 0;
-    int stop_eor = 0;
-#   define NO_FDISP { if (fdisp) { printf("\n"); fdisp = 0; } }
+    bool at_mark = false;
+    bool stop_eor = false;
+#   define NO_FDISP { if (fdisp) { printf("\n"); fdisp = false; } }
 
 top:
     while (again || ((c = fgetc(f)) != EOF)) {
@@ -410,13 +424,13 @@ top:
 	if (!again) {
 	    if (!fdisp || c == '\n') {
 		printf("\nfile ");
-		fdisp = 1;
+		fdisp = true;
 	    }
 	    if (c != '\n') {
 		putchar(c);
 	    }
 	}
-	again = 0;
+	again = false;
 	switch (pstate) {
 	case NONE:
 	    assert(pstate != NONE);
@@ -427,16 +441,17 @@ top:
 	    }
 	    break;
 	case BASE:
-	    if (c == '+' && (type == STEP_MARK)) {
+	    if (c == '+' && (type == STEP_MARK || type == STEP_IMARK)) {
 		/* Hit the mark. */
-		at_mark = 1;
+		at_mark = true;
 		goto run_it;
 	    }
-	    if (c == '<') {
+	    if ((type != STEP_IMARK && c == '<') ||
+		(type == STEP_IMARK && c == '>')) {
 		pstate = LESS;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case LESS:
@@ -444,7 +459,7 @@ top:
 		pstate = SPACE;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case SPACE:
@@ -452,7 +467,7 @@ top:
 		pstate = ZERO;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case ZERO:
@@ -460,7 +475,7 @@ top:
 		pstate = X;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case X:
@@ -468,7 +483,7 @@ top:
 		pstate = N;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case N:
@@ -478,7 +493,7 @@ top:
 		pstate = SPACE2;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case SPACE2:
@@ -490,12 +505,12 @@ top:
 		pstate = SPACE2;
 	    } else {
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case D1:
 	    if (isxd(c)) {
-		int at_eor = 0;
+		bool at_eor = false;
 
 		*cp = ((d1*16)+(strchr(hexes,c)-hexes));
 		pstate = D2;
@@ -507,14 +522,14 @@ top:
 		    break;
 		case T_IAC:
 		    if (*(unsigned char *)cp == EOR && type == STEP_EOR) {
-			at_eor = 1;
+			at_eor = true;
 		    }
 		    tstate = T_NONE;
 		    break;
 		}
 		cp++;
 		if (at_eor && type == STEP_EOR) {
-		    stop_eor = 1;
+		    stop_eor = true;
 		}
 		if (at_eor || (cp - obuf >= BUFSIZ)) {
 		    goto run_it;
@@ -524,7 +539,7 @@ top:
 		printf("Non-hex char '%c' in playback file, skipping to "
 			"newline.", c);
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	case D2:
@@ -539,7 +554,7 @@ top:
 		printf("Non-hex char '%c' in playback file, skipping to "
 			"newline.", c);
 		pstate = WRONG;
-		again = 1;
+		again = true;
 	    }
 	    break;
 	}
@@ -548,21 +563,59 @@ top:
 
 run_it:
     NO_FDISP;
-    trace_netdata("host", (unsigned char *)obuf, cp - obuf);
-    if (write(s, obuf, cp - obuf) < 0) {
-	perror("socket write");
-	return 0;
+    if (type != STEP_IMARK) {
+	trace_netdata("host", (unsigned char *)obuf, cp - obuf);
+	if (write(s, obuf, cp - obuf) < 0) {
+	    perror("socket write");
+	    return false;
+	}
+
+	if (type == STEP_EOR && !stop_eor) {
+	    cp = obuf;
+	    goto top;
+	}
     }
 
-    if (type == STEP_EOR && !stop_eor) {
+    while (type == STEP_IMARK && (cp != obuf)) {
+	char ibuf[BSIZE];
+	ssize_t nr;
+
+	/* Match input from the emulator. */
+	/* XXX: Probably need a timeout here. */
+	printf("Waiting for %u bytes from emulator\n", (unsigned)(cp - obuf));
+	fflush(stdout);
+	nr = read(s, ibuf, cp - obuf);
+	if (nr < 0) {
+	    perror("socket read");
+	    return false;
+	}
+	if (nr == 0) {
+	    fprintf(stderr, "Socket EOF\n");
+	    return false;
+	}
+	trace_netdata("emul", (unsigned char *)obuf, cp - obuf);
+	if (memcmp(ibuf, obuf, cp - obuf)) {
+	    fprintf(stderr, "Emulator data mismatch\n");
+	    exit(2);
+	}
+	printf("Matched %u bytes from emulator\n", (unsigned)(cp - obuf));
+	fflush(stdout);
+	if (nr == cp - obuf) {
+	    /* Match complete. */
+	    break;
+	}
+
+	/* Get more from the emulator. */
+	memmove(obuf, obuf + nr, (cp - obuf - nr));
+	cp = obuf + (cp - obuf - nr);
+    }
+
+    if ((type == STEP_MARK || type == STEP_IMARK) && !at_mark) {
 	cp = obuf;
 	goto top;
     }
-    if (type == STEP_MARK && !at_mark) {
-	cp = obuf;
-	goto top;
-    }
-    return 1;
+
+    return true;
 
 done:
     if (c == EOF) {
@@ -570,5 +623,5 @@ done:
 	printf("Playback file EOF.\n");
     }
 
-    return 0;
+    return false;
 }
