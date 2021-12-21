@@ -129,7 +129,6 @@
 < 0xd60 00002902c06042f1d9e4d5d5c9d5c7404040d3c3d4d3f4f3f8f1402901c06011
 < 0xd80 f35013ffef
 # Dummy emulator response(s) for TELNET negotiations
-+
 > 0x0   fffb18fffa180049424d2d333237392d342d45fff0fffd00fffb00fffd19fffb
 > 0x20  19
  Data stream:
@@ -184,7 +183,6 @@
 20211220.165402.114 lazya_flush: 82 slots, 1968 bytes
 20211220.165402.173 Reading host socket
 20211220.165402.173 Host socket read complete nr=10
-+
 < 0x0   f1c211f350133cf55b00
 20211220.165402.367 Reading host socket
 20211220.165402.367 Host socket read complete nr=225
@@ -232,14 +230,12 @@
 20211220.165402.368 file-transfer -> Enter()
 20211220.165402.368 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
 > Enter(24,76) SetBufferAddress(24,76)
-+
 > 0x0   7d5d7b115d7bffef
 20211220.165402.368 SENT EOR
 20211220.165402.368 Macro[#4.2] RUNNING -> KBWAIT (keyboard locked)
 20211220.165402.368 lazya_flush: 109 slots, 2664 bytes
 20211220.165402.437 Reading host socket
 20211220.165402.437 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18213818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ab' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -293,7 +289,6 @@
 ... op pager*NK=20191212.215716.977 CB(command);N'3=1.1;V= complete, succes ...
 ... s*NK=20191212.215716.978 CB(command);N'3=1;V= complete*NK=20191212.2157 ...
 ... 16.981 Waiting for 3 events or 0'
-+
 > 0x0   7d40c41140c2c182d76be87ef2f0f1f9f1f2f1f24bf2f1f5f7f1f64bf9f5f740
 > 0x20  e39981838540a2a38199a385845cd5d27e40e58599a28996957a4083f3f2f7f0
 > 0x40  40a5f44bf08193978881f140e3a48540c4858340f1f040f0f37af1f57af5f640
@@ -360,7 +355,6 @@
 20211220.165402.449 lazya_flush: 1961 slots, 47128 bytes
 20211220.165402.517 Reading host socket
 20211220.165402.517 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18313818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ac' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -386,7 +380,6 @@
 20211220.165402.518 Macro[#6.2] 'Enter()'
 20211220.165402.518 file-transfer -> Enter()
 20211220.165402.518 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
-+
 > Enter(1,5) SetBufferAddress(1,3) 'Ac.,Y.993s*NK=20191212.215716.981 Got 1 ...
 ...  event*NK=20191212.215716.981 Resolution complete*NK=20191212.215716.98 ...
 ... 8 TLS: will not verify host certificate*NK=20191212.215716.989 Making h ...
@@ -481,7 +474,6 @@
 20211220.165402.526 lazya_flush: 1961 slots, 47128 bytes
 20211220.165402.594 Reading host socket
 20211220.165402.594 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18413818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ad' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -535,7 +527,6 @@
 ... ection is now secure.*NK=20191212.215717.305 Provider: OpenSSL 1.0.1 14 ...
 ...  Mar 2012*NK=20191212.215717.305 Session:*NK=20191212.215717.305  Versi ...
 ... on: TLSv1.2*NK=20191212.215717.3'
-+
 > 0x0   7d40c41140c2c184d66be8f2f1f24bf2f1f5f7f1f74bf1f1f340e68189a38995
 > 0x20  874086969940f54085a58595a3a240969940f04bf9f3f6a25cd5d27ef2f0f1f9
 > 0x40  f1f2f1f24bf2f1f5f7f1f74bf1f1f440c796a340f14085a58595a35cd5d27ef2
@@ -602,7 +593,6 @@
 20211220.165402.604 lazya_flush: 1961 slots, 47112 bytes
 20211220.165402.672 Reading host socket
 20211220.165402.673 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18513818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ae' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -656,7 +646,6 @@
 ... 717.310 st'9=changed(3270-mode,false)*NK=20191212.215717.310 Keyboard l ...
 ... ock(kybd'9=in3270) +AWAITING'9=FIRST*NK=20191212.215717.310 lazya'9=flu ...
 ... sh: 12 slots, 288 bytes*NK=20191'
-+
 > 0x0   7d40c41140c2c185946be8f0f54040c389978885997a40c1c5e2f2f5f660e2c8
 > 0x20  c15cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7f1f74bf3f0f540e28599a5859940
 > 0x40  838599a38986898381a3857a5cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7f1f74b
@@ -723,7 +712,6 @@
 20211220.165402.682 lazya_flush: 1961 slots, 47112 bytes
 20211220.165402.750 Reading host socket
 20211220.165402.750 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18613818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Af' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -777,7 +765,6 @@
 ... 20191212.215717.488 Now operating in connected-tn3270e mode.*NK=2019121 ...
 ... 2.215717.488 cstate ;N=connected-unbound;V= -*2= ;N=connected-tn3270e;V ...
 ... = (host'9=in3270)*NK=20191212.21'
-+
 > 0x0   7d40c41140c2c186956be8f2f1f24bf2f1f5f7f1f74bf3f1f340e68189a38995
 > 0x20  874086969940f54085a58595a3a25cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7f1
 > 0x40  f74bf3f6f940c796a340f14085a58595a35cd5d27ef2f0f1f9f1f2f1f24bf2f1
@@ -844,7 +831,6 @@
 20211220.165402.761 lazya_flush: 1961 slots, 47112 bytes
 20211220.165402.830 Reading host socket
 20211220.165402.831 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18713818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ag' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -898,7 +884,6 @@
 ... 001f5c611d94c131140401d60e2e5d4f0f2f0f1d711c1501d60e2e8e2*NK0= 0x20  e3 ...
 ... c5d47a1d60c9c2d4f0e2d4f0f31df011c24f1d60c4c1e3c57a1d60f1f961f1*NK0= 0x4 ...
 ... 0  f261f1f21df011c2601df0e3c5d9d'
-+
 > 0x0   7d40c41140c2c187a96be8f5f7f1f74bf4f8f840a2a37df97e83888195878584
 > 0x20  4df3f2f7f060949684856ba399a4855d5cd5d27ef2f0f1f9f1f2f1f24bf2f1f5
 > 0x40  f7f1f74bf4f9f240d9c3e5c440c5d6d95cd5d27ef2f0f1f9f1f2f1f24bf2f1f5
@@ -965,7 +950,6 @@
 20211220.165402.840 lazya_flush: 1961 slots, 47096 bytes
 20211220.165402.911 Reading host socket
 20211220.165402.911 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18813818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ah' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1019,7 +1003,6 @@
 ... 0d4969589a3969989958740c183a389a5854b1d606060*NK0= 0x340 60606060606060 ...
 ... 60606060606060606060606060606060606060606060606060*NK0= 0x360 606060606 ...
 ... 06060606060606060606060606060606'
-+
 > 0x0   7d40c41140c2c188886be8f483f983f4f781f184f6f083f983f284f486f085f3
 > 0x20  83f584f884f6f18486f0f1f183f35cd5d2f07e40f0a7f6f04040f586f184f6f0
 > 0x40  85f383f984f483f5f781f184f6f086f286f2f78186f586f7f78186f186f7f184
@@ -1086,7 +1069,6 @@
 20211220.165402.922 lazya_flush: 1961 slots, 47096 bytes
 20211220.165402.990 Reading host socket
 20211220.165402.991 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c18913818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ai' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1140,7 +1122,6 @@
 ... ) _W E L C O M E   T O_ SetBufferAddress(9,19) St ...*NK=... artField(p ...
 ... rotected,intensified) _*111=     *111111111111111=         *111111= ... ...
 ... *NK=... *111111111=_ SetBufferAd'
-+
 > 0x0   7d40c41140c2c189c56be8f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0
 > 0x20  f6f05cd5d2f07e40f0a7f3f8f040f6f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0f6f0
 > 0x40  f6f0f6f0f6f0f6f0f18485f883f183f383f384f685f484f585f3f482f482f482
@@ -1207,7 +1188,6 @@
 20211220.165403.001 lazya_flush: 1961 slots, 47096 bytes
 20211220.165403.070 Reading host socket
 20211220.165403.071 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c19113818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Aj' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1261,7 +1241,6 @@
 ... ip) SetBufferAddress(22,1) StartField(protected,skip) _ ...*NK=... Ente ...
 ... r desired product or service, or press the HELP key (PF1) for assis ... ...
 ... *NK=... tance._ SetBufferAddress'
-+
 > 0x0   7d40c41140c2c191e36be8849985a2a24df1f06bf1f75d40e2a38199a3c68985
 > 0x20  93844d979996a38583a385846b8995a38595a289868985845d406d5cf17e404b
 > 0x40  4b4b5cd5d27e4b4b4b405cf1f1f1f1f1f17e4040405cf1f1f1f1f1f1f1f1f1f1
@@ -1328,7 +1307,6 @@
 20211220.165403.080 lazya_flush: 1961 slots, 47096 bytes
 20211220.165403.146 Reading host socket
 20211220.165403.147 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c19213818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Ak' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1382,7 +1360,6 @@
 ... 00000f3d94c11d94c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115c*NK2= 0x20   ...
 ... f6115df6ffef*NK=+*NK=20191212.215719.390 SENT EOR*NK=20191212.215719.39 ...
 ... 3 Macro;N'3=2.2;V= RUNNING -*2= '
-+
 > 0x0   7d40c41140c2c192e46be84df2f36bf15d40e2a38199a3c6898593844d979996
 > 0x20  a38583a385846ba29289976b8995a38595a289868985845d40e2404b4b4b5cd5
 > 0x40  d27e4b4b4b4085a3c2a486868599c184849985a2a24df2f46bf15d40e2a38199
@@ -1449,7 +1426,6 @@
 20211220.165403.156 lazya_flush: 1961 slots, 47096 bytes
 20211220.165403.230 Reading host socket
 20211220.165403.231 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c19313818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Al' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1503,7 +1479,6 @@
 ... t-connected;V= (net'9=disconnect)*NK=20191212.215719.463 st'9=changed(c ...
 ... onnect,false)*NK=20191212.215719.463 Keyboard unlock(kybd'9=connect) -A ...
 ... WAITING'9=FIRST -DEFERRED'9=UNLO'
-+
 > 0x0   7d40c41140c2c193e96be8d2c2e6c1c9e3404d9285a882968199844093968392
 > 0x20  85845d5cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7f1f94bf3f9f640e68189a389
 > 0x40  95874086969940f54085a58595a3a25cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7
@@ -1570,7 +1545,6 @@
 20211220.165403.238 lazya_flush: 1961 slots, 47112 bytes
 20211220.165403.309 Reading host socket
 20211220.165403.309 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c19413818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'Am' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1600,7 +1574,6 @@
 ...  lock(kybd'9=connect) +NOT'9=CONNECTED*NK=20191212.215719.464 st'9=chan ...
 ... ged(exiting,true)*NK=20191212.215719.464 stop pager*NK=20191212.215719. ...
 ... 464 Trace stopped*NK'
-+
 > 0x0   7d40c41140c2c194508485c3d25cd5d27ef2f0f1f9f1f2f1f24bf2f1f5f7f1f9
 > 0x20  4bf4f6f340d285a8829681998440939683924d92a882847df97e839695958583
 > 0x40  a35d404ed5d6e37df97ec3d6d5d5c5c3e3c5c45cd5d27ef2f0f1f9f1f2f1f24b
@@ -1613,7 +1586,6 @@
 20211220.165403.310 lazya_flush: 245 slots, 5928 bytes
 20211220.165403.373 Reading host socket
 20211220.165403.373 Host socket read complete nr=24
-+
 < 0x0   f5c2115d7f114040c21dc1c19513818181115d7f1d7cffef
 < EraseWrite(reset,restore) SetBufferAddress(24,80) SetBufferAddress(1,1) ' ...
 ... B' StartField(1,2)(modified) 'An' InsertCursor(1,5) 'aaa' SetBufferAddr ...
@@ -1640,14 +1612,12 @@
 20211220.165403.373 file-transfer -> Enter()
 20211220.165403.373 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
 > Enter(1,5) SetBufferAddress(1,3) 'AnVac*z'
-+
 > 0x0   7d40c41140c2c195e581835ca9ffef
 20211220.165403.373 SENT EOR
 20211220.165403.373 Macro[#17.2] RUNNING -> KBWAIT (keyboard locked)
 20211220.165403.373 lazya_flush: 51 slots, 1304 bytes
 20211220.165403.434 Reading host socket
 20211220.165403.435 Host socket read complete nr=122
-+
 < 0x0   f5c2115d7f114040c3968189e3d9c1d5e2f0f4406040c689938540a3998195a2
 < 0x20  86859940839694979385a38540a689a38840998583969984a240a28587948595
 < 0x40  a385840000000000000000000000000000000000000000000000000000000000
@@ -1681,14 +1651,12 @@
 20211220.165403.442 file-transfer -> Enter()
 20211220.165403.442 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
 > Enter(24,76) SetBufferAddress(24,76)
-+
 > 0x0   7d5d7b115d7bffef
 20211220.165403.442 SENT EOR
 20211220.165403.442 Macro[#18.2] RUNNING -> KBWAIT (keyboard locked)
 20211220.165403.442 lazya_flush: 99 slots, 2392 bytes
 20211220.165403.501 Reading host socket
 20211220.165403.501 Host socket read complete nr=46
-+
 < 0x0   7ec211f55b2903410042f1c060d9e4d5d5c9d5c7404040d3c3d4d3f4f3f8f140
 < 0x20  1d6011f34f2903410042f7c0c113
 20211220.165403.693 Reading host socket
@@ -1741,14 +1709,12 @@
 20211220.165414.868 keymap -> Enter()
 20211220.165414.868 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
 > Enter(42,7) SetBufferAddress(42,1) 'logoff'
-+
 > 0x0   7df3d611f350939687968686ffef
 20211220.165414.868 SENT EOR
 20211220.165414.868 Macro[#19.2] RUNNING -> KBWAIT (keyboard locked)
 20211220.165414.868 lazya_flush: 22 slots, 528 bytes
 20211220.165414.932 Reading host socket
 20211220.165414.932 Host socket read complete nr=10
-+
 < 0x0   f1c211f350133cf55b00
 20211220.165415.128 Reading host socket
 20211220.165415.128 Host socket read complete nr=211

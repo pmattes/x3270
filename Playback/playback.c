@@ -68,7 +68,7 @@ typedef enum {
     STEP_LINE,	/* step one line in the file */
     STEP_EOR,	/* step until IAC EOR */
     STEP_MARK,	/* step until a mark (line starting with '+') */
-    STEP_IMARK,	/* match the next input block, until a mark */
+    STEP_BIDIR,	/* step bidirectionally */
 } step_t;
 static bool step(FILE *f, int s, step_t type);
 static int process_command(FILE *f, int s);
@@ -229,7 +229,7 @@ main(int argc, char *argv[])
 	pstate = BASE;
 	fdisp = false;
 	if (bidir) {
-	    while (step(f, s2, STEP_MARK) && step(f, s2, STEP_IMARK)) {
+	    while (step(f, s2, STEP_BIDIR)) {
 	    }
 	    exit(0); /* needs to be smarter */
 	} else {
@@ -415,6 +415,10 @@ step(FILE *f, int s, step_t type)
     char *cp = obuf;
     bool at_mark = false;
     bool stop_eor = false;
+    enum { FROM_HOST = 0, FROM_EMUL = 1 } direction = FROM_HOST;
+    static char dchars[] = { '<', '>' };
+    char dchar = dchars[direction];
+    char other_dchar = dchars[!direction];
 #   define NO_FDISP { if (fdisp) { printf("\n"); fdisp = false; } }
 
 top:
@@ -442,14 +446,20 @@ top:
 	    }
 	    break;
 	case BASE:
-	    if (c == '+' && (type == STEP_MARK || type == STEP_IMARK)) {
+	    if (c == '+' && type == STEP_MARK) {
 		/* Hit the mark. */
 		at_mark = true;
 		goto run_it;
 	    }
-	    if ((type != STEP_IMARK && c == '<') ||
-		(type == STEP_IMARK && c == '>')) {
+	    if (c == dchar) {
 		pstate = LESS;
+	    } else if (type == STEP_BIDIR && c == other_dchar) {
+		NO_FDISP;
+		printf("Switching direction\n");
+		pstate = LESS;
+		direction = !direction;
+		dchar = dchars[direction];
+		other_dchar = dchars[!direction];
 	    } else {
 		pstate = WRONG;
 		again = true;
@@ -564,7 +574,7 @@ top:
 
 run_it:
     NO_FDISP;
-    if (type != STEP_IMARK) {
+    if (type != STEP_BIDIR || direction == FROM_HOST) {
 	trace_netdata("host", (unsigned char *)obuf, cp - obuf);
 	if (write(s, obuf, cp - obuf) < 0) {
 	    perror("socket write");
@@ -577,7 +587,7 @@ run_it:
 	}
     }
 
-    while (type == STEP_IMARK && (cp != obuf)) {
+    while (type == STEP_BIDIR && direction == FROM_EMUL && (cp != obuf)) {
 	char ibuf[BSIZE];
 	ssize_t nr;
 	bool read_done = false;
@@ -622,7 +632,7 @@ run_it:
 	cp = obuf + (cp - obuf - nr);
     }
 
-    if ((type == STEP_MARK || type == STEP_IMARK) && !at_mark) {
+    if ((type == STEP_MARK && !at_mark) || type == STEP_BIDIR) {
 	cp = obuf;
 	goto top;
     }
