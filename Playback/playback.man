@@ -1,5 +1,5 @@
 '\" t
-.TH PLAYBACK 1 "25 October 1994"
+.TH PLAYBACK 1 "21 December 2021"
 .SH NAME
 playback \-
 .SM IBM
@@ -7,6 +7,8 @@ x3270 trace file playback tool
 .SH SYNOPSIS
 .B playback
 [
+.B \-b
+] [
 .B \-p
 .I port
 ]
@@ -20,7 +22,16 @@ facility) and plays the host data it contains back over a socket to processes
 that connect to it.
 It also displays the data produced by the process in response.
 .LP
-Once connected to a process,
+It runs in one of two modes, bidirectional and interactive.
+In bidirectional mode, selected by the
+.B \-b
+option,
+.B playback
+verfies that the emulator connected to it sends the correct stream of bytes
+in response to the host stream.
+This is useful for automated testing.
+.LP
+Otherwise,
 .B playback
 is used interactively.
 Keyboard commands control the flow of data from the file to the socket.
@@ -38,18 +49,28 @@ Exit
 .TP
 .B d
 Disconnect the current socket and wait for another connection.
-.SH EXAMPLE
-Suppose you wanted to play back a trace file called
-.B /usr/tmp/x3trc.12345.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Set-up failure.
+.TP
+.B 2
+Run-time failure, such as mismatched data.
+.SH EXAMPLES
+Suppose you wanted to interactively play back a trace file called
+.B /tmp/x3trc.12345.
 In one window, run:
 .sp
-	playback /usr/tmp/x3trc.12345
+	playback /tmp/x3trc.12345
 .LP
 In another window, start
 .B x3270
 with the command:
 .sp
-	x3270 localhost 4001
+	x3270 localhost:4001
 .LP
 .B playback
 will announce the connection.
@@ -60,5 +81,18 @@ and
 .B r
 commands will send data from the file to
 .B x3270.
+.LP
+To automate a unit test to verify that
+.B x3270
+produces a known data stream, run:
+.sp
+	playback -b /tmp/x3trc.12345
+.LP
+In another window, start
+.B x3270
+as above.
+.B playback
+will exit with status 0 if the byte stream matches, and status 2
+if it does not.
 .SH "SEE ALSO"
 .IR x3270 (1)
