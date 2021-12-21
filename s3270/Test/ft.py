@@ -7,12 +7,12 @@ import requests
 # s3270 file transfer tests
 class TestS3270ft(unittest.TestCase):
 
-    # s3270 file transfer test
-    def test_s3270_ft(self):
+    # s3270 CUT-mode file transfer test
+    def test_s3270_ft_cut(self):
 
         # Start 'playback' to read s3270's output.
         playback = Popen(["playback", "-b", "-p", "9990",
-            "s3270/Test/ft.trc"], stdout=DEVNULL)
+            "s3270/Test/ft_cut.trc"], stdout=DEVNULL)
 
         # Start s3270.
         s3270 = Popen(["s3270", "-trace", "127.0.0.1:9990"], stdin=PIPE, stdout=DEVNULL)
