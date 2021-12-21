@@ -486,6 +486,7 @@ ft_complete(const char *errmsg)
 
     /* Clean up the state. */
     ft_state = FT_NONE;
+    kybd_ft(false);
     if (ft_start_id != NULL_IOID) {
 	RemoveTimeOut(ft_start_id);
 	ft_start_id = NULL_IOID;
@@ -773,6 +774,7 @@ ft_go(ft_conf_t *p, enum iaction cause)
     fts.dbcs_state = FT_DBCS_NONE;
 
     ft_state = FT_AWAIT_ACK;
+    kybd_ft(true);
     ft_cause = cause;
     idle_ft_start();
 

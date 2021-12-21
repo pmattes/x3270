@@ -240,7 +240,7 @@ static task_t *task_redirect_to(void);
 static bool expect_matches(task_t *task);
 
 /* Macro that defines that the keyboard is locked due to user input. */
-#define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST)
+#define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST|KL_FT)
 #define KBWAIT	(kybdlock & KBWAIT_MASK)
 #define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
 

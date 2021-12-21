@@ -450,6 +450,10 @@ kybdlock_decode(char *how, unsigned int bits)
 	vb_appendf(&r, "%s%sOIA_MINUS", space, how);
 	space = " ";
     }
+    if (bits & KL_FT) {
+	vb_appendf(&r, "%s%sFT", space, how);
+	space = " ";
+    }
 
     Replace(rs, vb_consume(&r));
     return rs;
@@ -516,6 +520,21 @@ kybd_inhibit(bool inhibit)
 	if (!kybdlock) {
 	    vstatus_reset();
 	}
+    }
+}
+
+/*
+ * Set or clear file transfer mode.
+ */
+void
+kybd_ft(bool ft)
+{
+    if (ft) {
+	kybdlock_set(KL_FT, "kybd_ft");
+	/* XXX: Handle status line. */
+    } else {
+	kybdlock_clr(KL_FT, "kybd_ft");
+	/* XXX: Handle status line. */
     }
 }
 
@@ -1932,7 +1951,7 @@ do_reset(bool explicit)
 	|| !appres.unlock_delay
 	|| (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
 	|| !appres.unlock_delay_ms) {
-	kybdlock_clr(-1, "do_reset");
+	kybdlock_clr(explicit? -1: ~KL_FT, "do_reset");
     } else if (kybdlock &
 (KL_DEFERRED_UNLOCK | KL_OIA_TWAIT | KL_OIA_LOCKED | KL_AWAITING_FIRST)) {
 	kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
