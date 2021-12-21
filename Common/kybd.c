@@ -153,6 +153,11 @@ static char dxl[] = "0123456789abcdef";
     } \
 } while(false)
 
+/* Keyboard lock test for AIDs used by CUT-mode file transfers. */
+#define IS_LOCKED(ia) \
+    ((kybdlock & ~KL_FT) || \
+     ((kybdlock & KL_FT) && (ia != IA_FT)))
+
 static action_t Attn_action;
 static action_t BackSpace_action;
 static action_t BackTab_action;
@@ -871,7 +876,7 @@ PF_action(ia_t ia, unsigned argc, const char **argv)
     if (kybdlock & KL_OIA_MINUS) {
 	return true;
     }
-    if (kybdlock) {
+    if (IS_LOCKED(ia)) {
 	enq_ta(AnPF, argv[0], NULL);
     } else {
 	key_AID(pf_xlate[k-1]);
@@ -2722,7 +2727,7 @@ Enter_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (kybdlock & KL_OIA_MINUS) {
 	return false;
-    } else if (kybdlock) {
+    } else if (IS_LOCKED(ia)) {
 	enq_ta(AnEnter, NULL, NULL);
     } else {
 	key_AID(AID_ENTER);

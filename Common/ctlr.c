@@ -2445,7 +2445,7 @@ ps_process(void)
     if (ft_state != FT_NONE &&      /* transfer in progress */
 	    formatted &&                /* screen is formatted */
 	    !screen_alt &&              /* 24x80 screen */
-	    !kybdlock &&                /* keyboard not locked */
+	    !(kybdlock & ~KL_FT) &&     /* keyboard not locked */
 	    /* magic field */
 	    ea_buf[1919].fa && FA_IS_SKIP(ea_buf[1919].fa)) {
 	ft_cut_data();
