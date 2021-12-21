@@ -580,21 +580,32 @@ run_it:
     while (type == STEP_IMARK && (cp != obuf)) {
 	char ibuf[BSIZE];
 	ssize_t nr;
+	bool read_done = false;
+	ssize_t n2r = cp - obuf;
+	size_t offset = 0;
 
 	/* Match input from the emulator. */
 	/* XXX: Probably need a timeout here. */
-	printf("Waiting for %u bytes from emulator\n", (unsigned)(cp - obuf));
-	fflush(stdout);
-	nr = read(s, ibuf, cp - obuf);
-	if (nr < 0) {
-	    perror("socket read");
-	    return false;
+	while (!read_done) {
+	    printf("Waiting for %u bytes from emulator\n", (unsigned)n2r);
+	    fflush(stdout);
+	    nr = read(s, ibuf + offset, n2r);
+	    if (nr < 0) {
+		perror("socket read");
+		return false;
+	    }
+	    if (nr == 0) {
+		fprintf(stderr, "Socket EOF\n");
+		return false;
+	    }
+	    printf("Got %u bytes from emulator\n", (unsigned)nr);
+	    trace_netdata("emul", (unsigned char *)ibuf, cp - obuf);
+	    n2r -= nr;
+	    offset += nr;
+	    if (n2r <= 0) {
+		break;
+	    }
 	}
-	if (nr == 0) {
-	    fprintf(stderr, "Socket EOF\n");
-	    return false;
-	}
-	trace_netdata("emul", (unsigned char *)obuf, cp - obuf);
 	if (memcmp(ibuf, obuf, cp - obuf)) {
 	    fprintf(stderr, "Emulator data mismatch\n");
 	    exit(2);

@@ -28,6 +28,7 @@
 
 test: s3270 playback
 	PATH="$$PWD/obj/@host@/s3270:$$PWD/obj/@host@/playback:$$PATH" python3 s3270/Test/Smoke.py
+	PATH="$$PWD/obj/@host@/s3270:$$PWD/obj/@host@/playback:$$PATH" python3 s3270/Test/ft.py
 
 s3270:
 	$(MAKE) $@
