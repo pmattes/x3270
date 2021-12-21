@@ -587,16 +587,15 @@ run_it:
 	}
     }
 
-    while (type == STEP_BIDIR && direction == FROM_EMUL && (cp != obuf)) {
+    if (type == STEP_BIDIR && direction == FROM_EMUL && (cp != obuf)) {
 	char ibuf[BSIZE];
 	ssize_t nr;
-	bool read_done = false;
 	ssize_t n2r = cp - obuf;
 	size_t offset = 0;
 
 	/* Match input from the emulator. */
 	/* XXX: Probably need a timeout here. */
-	while (!read_done) {
+	while (n2r > 0) {
 	    printf("Waiting for %u bytes from emulator\n", (unsigned)n2r);
 	    fflush(stdout);
 	    nr = read(s, ibuf + offset, n2r);
@@ -609,12 +608,9 @@ run_it:
 		return false;
 	    }
 	    printf("Got %u bytes from emulator\n", (unsigned)nr);
-	    trace_netdata("emul", (unsigned char *)ibuf, cp - obuf);
-	    n2r -= nr;
+	    trace_netdata("emul", (unsigned char *)ibuf, nr);
 	    offset += nr;
-	    if (n2r <= 0) {
-		break;
-	    }
+	    n2r -= nr;
 	}
 	if (memcmp(ibuf, obuf, cp - obuf)) {
 	    fprintf(stderr, "Emulator data mismatch\n");
@@ -622,14 +618,6 @@ run_it:
 	}
 	printf("Matched %u bytes from emulator\n", (unsigned)(cp - obuf));
 	fflush(stdout);
-	if (nr == cp - obuf) {
-	    /* Match complete. */
-	    break;
-	}
-
-	/* Get more from the emulator. */
-	memmove(obuf, obuf + nr, (cp - obuf - nr));
-	cp = obuf + (cp - obuf - nr);
     }
 
     if ((type == STEP_MARK && !at_mark) || type == STEP_BIDIR) {
