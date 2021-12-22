@@ -121,7 +121,6 @@ typedef struct task {
 #define MIN_WAITING_STATE TS_KBWAIT
 	TS_KBWAIT,	/* command awaiting keyboard unlock */
 	TS_CONNECT_WAIT,/* command awaiting connection to complete */
-	TS_FT_WAIT,	/* command awaiting file transfer to complete */
 	TS_TIME_WAIT,   /* command awaiting simple timeout */
 	TS_WAIT_NVT,	/* awaiting completion of Wait(NVTMode) */
 	TS_WAIT_3270,	/* awaiting completion of Wait(3270Mode) */
@@ -202,7 +201,6 @@ static const char *task_state_name[] = {
     "NEED_RUN",
     "KBWAIT",
     "CONNECT_WAIT",
-    "FT_WAIT",
     "TIME_WAIT",
     "WAIT_NVT",
     "WAIT_3270",
@@ -1364,7 +1362,6 @@ run_macro(void)
 	   !fatal) {
 	enum iaction ia;
 	bool was_ckbwait = CKBWAIT;
-	bool was_ft = (ft_state != FT_NONE);
 
 	/*
 	 * Check for command failure.
@@ -1422,14 +1419,9 @@ run_macro(void)
 	    break;
 	}
 
-	/* Check for keyboard lock and file transfer start. */
-	if (s->state == TS_RUNNING) {
-	    if (!was_ckbwait && CKBWAIT) {
-		task_set_state(s, TS_KBWAIT, "keyboard locked");
-	    } else if (!was_ft && (ft_state != FT_NONE)) {
-		task_set_state(current_task, TS_FT_WAIT,
-			"file transfer in progress");
-	    }
+	/* Check for keyboard lock. */
+	if (s->state == TS_RUNNING && !was_ckbwait && CKBWAIT) {
+	    task_set_state(s, TS_KBWAIT, "keyboard locked");
 	}
 
 	/* Macro paused, implicitly or explicitly.  Suspend it. */
@@ -1955,18 +1947,6 @@ run_taskq(void)
 		return any;
 	    }
 	    break;
-
-	case TS_FT_WAIT:
-	    if (!PCONNECTED) {
-		task_disconnect_abort(current_task);
-		any = true;
-		break;
-	    }
-	    if (ft_state == FT_NONE) {
-		break;
-	    } else {
-		return any;
-	    }
 
 	case TS_TIME_WAIT:
 	    return any;
