@@ -282,6 +282,13 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
 	return;
     }
 
+    /* If file transfer in progress, complain and drop it. */
+    if (kybdlock & KL_FT) {
+	ring_bell();
+	vtrace("  dropped (file transfer in progress)\n");
+	return;
+    }
+
     /* If typeahead disabled, complain and drop it. */
     if (!toggled(TYPEAHEAD)) {
 	vtrace("  dropped (no typeahead)\n");
