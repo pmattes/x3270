@@ -774,7 +774,9 @@ ft_go(ft_conf_t *p, enum iaction cause)
     fts.dbcs_state = FT_DBCS_NONE;
 
     ft_state = FT_AWAIT_ACK;
-    kybd_ft(true);
+    if (!task_is_interactive()) {
+	kybd_ft(true);
+    }
     ft_cause = cause;
     idle_ft_start();
 
