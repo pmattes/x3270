@@ -188,6 +188,7 @@ static void do_dbcs(void);
 static void do_scrolled(void);
 static void do_minus(void);
 static void do_disabled(void);
+static void do_file_transfer(void);
 
 static bool oia_undera = true;
 static bool oia_boxsolid = false;
@@ -219,6 +220,7 @@ static enum msg {
     SCROLLED,		/* X Scrolled */
     MINUS,		/* X -f */
     KBD_DISABLED,	/* X Disabled */
+    FILE_TRANSFER,	/* X File Transfer */
     N_MSGS
 } oia_msg = DISCONNECTED, scroll_saved_msg, disabled_saved_msg = BLANK;
 static char oia_lu[LUCNT+1];
@@ -245,7 +247,8 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_dbcs,
     do_scrolled,
     do_minus,
-    do_disabled
+    do_disabled,
+    do_file_transfer,
 };
 static int msg_color[N_MSGS] = {
     FA_INT_NORM_NSEL,	/* disconnected */
@@ -269,6 +272,7 @@ static int msg_color[N_MSGS] = {
     FA_INT_NORM_NSEL,	/* scrolled */
     FA_INT_HIGH_SEL,	/* minus */
     FA_INT_HIGH_SEL,	/* disabled */
+    FA_INT_NORM_NSEL,	/* file transfer */
 };
 static int msg_color3279[N_MSGS] = {
     HOST_COLOR_WHITE,	/* disconnected */
@@ -292,6 +296,7 @@ static int msg_color3279[N_MSGS] = {
     HOST_COLOR_WHITE,	/* scrolled */
     HOST_COLOR_RED,	/* minus */
     HOST_COLOR_RED,	/* disabled */
+    HOST_COLOR_WHITE,	/* file transfer */
 };
 static bool oia_insert = false;
 static bool oia_reverse = false;
@@ -377,6 +382,7 @@ static unsigned char *a_dbcs;
 static unsigned char *a_scrolled;
 static unsigned char *a_minus;
 static unsigned char *a_disabled;
+static unsigned char *a_file_transfer;
 
 static ioid_t revert_timer_id = NULL_IOID;
 
@@ -439,6 +445,7 @@ status_init(void)
     a_scrolled = make_amsg("statusScrolled");
     a_minus = make_amsg("statusMinus");
     a_disabled = make_amsg("statusDisabled");
+    a_file_transfer = make_amsg("statusFileTransfer");
 
     oia_shift = toggled(APL_MODE)? AplMode: 0;
 }
@@ -832,6 +839,8 @@ status_reset(void)
 	do_msg(INHIBIT);
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	do_msg(UNLOCK_DELAY);
+    } else if (kybdlock & KL_FT) {
+	do_msg(FILE_TRANSFER);
     } else {
 	status_connect(PCONNECTED);
     }
@@ -1502,6 +1511,21 @@ do_disabled(void)
 	status_msg_set(a_minus, strlen((char *)a_minus));
     } else {
 	status_msg_set(disabled, sizeof(disabled));
+    }
+}
+
+static void
+do_file_transfer(void)
+{
+    static unsigned char file_transfer[] = {
+	CG_lock, CG_space, CG_F, CG_i, CG_l, CG_e, CG_space,
+	CG_T, CG_r, CG_a, CG_n, CG_s, CG_f, CG_e, CG_r
+    };
+
+    if (*standard_font) {
+	status_msg_set(a_file_transfer, strlen((char *)a_file_transfer));
+    } else {
+	status_msg_set(file_transfer, sizeof(file_transfer));
     }
 }
 

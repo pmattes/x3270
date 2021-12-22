@@ -536,10 +536,14 @@ kybd_ft(bool ft)
 {
     if (ft) {
 	kybdlock_set(KL_FT, "kybd_ft");
-	/* XXX: Handle status line. */
+	if (kybdlock == KL_FT) {
+	    vstatus_reset();
+	}
     } else {
 	kybdlock_clr(KL_FT, "kybd_ft");
-	/* XXX: Handle status line. */
+	if (!kybdlock) {
+	    vstatus_reset();
+	}
     }
 }
 

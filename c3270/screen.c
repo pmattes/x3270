@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2020 Paul Mattes.
+ * Copyright (c) 2000-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2244,6 +2244,8 @@ status_reset(void)
 	other_msg = "X Inhibit";
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	other_msg = "X";
+    } else if (kybdlock & KL_FT) {
+	other_msg = "X File Transfer";
     } else {
 	status_connect(PCONNECTED);
     }

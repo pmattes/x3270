@@ -149,6 +149,8 @@ vstatus_reset(void)
         voia_msg = "X Inhibit";
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
         voia_msg = "X";
+    } else if (kybdlock & KL_FT) {
+	voia_msg = "X Transfer";
     } else {
         vstatus_connect(PCONNECTED);
     }
