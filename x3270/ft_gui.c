@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1996-2015, 2018-2019, 2021 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -1080,6 +1080,12 @@ ft_start(void)
 {
     int size;
     char *path;
+
+    /* Check for transfer already in progress. */
+    if (ft_state != FT_NONE) {
+	popup_an_error("File transfer already in progress");
+	return false;
+    }
 
     /*
      * Get the DFT buffer size, and update the widget with the default if they

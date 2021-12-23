@@ -1115,6 +1115,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
+    /* Check for double transfer. */
+    if (ft_state != FT_NONE) {
+	popup_an_error(AnTransfer "(): File transfer already in progress");
+	return false;
+    }
+
     /* Check for interactive mode. */
     if (argc == 0) {
 	if (!gui_conf_initted) {
