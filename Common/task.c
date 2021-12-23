@@ -239,8 +239,10 @@ static bool expect_matches(task_t *task);
 
 /* Macro that defines that the keyboard is locked due to user input. */
 #define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST|KL_FT)
-#define KBWAIT	(kybdlock & KBWAIT_MASK)
-#define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
+#define _KBWAIT(k)	((k) & KBWAIT_MASK)
+#define KBWAIT	_KBWAIT(kybdlock)
+#define _CKBWAIT(k)	(toggled(AID_WAIT) && _KBWAIT(k))
+#define CKBWAIT	_CKBWAIT(kybdlock)
 
 /* Macro that defines when it's safe to continue a Wait()ing task. */
 #define CAN_PROCEED \
@@ -1341,6 +1343,21 @@ validate_command(const char *command, int offset, char **error)
     return true;
 }
 
+/**
+ * Tests a current task for interactivity.
+ *
+ * @param[in] t		Task to inspect
+ * @returns true if interactive.
+ */
+static bool
+is_interactive(task_t *t)
+{
+    return t != NULL &&
+	   t->cbx.cb != NULL &&
+	   t->cbx.cb->getflags != NULL &&
+	   ((*t->cbx.cb->getflags)(t->cbx.handle) & CBF_INTERACTIVE) != 0;
+}
+
 /* Run the macro at the top of the stack. */
 static void
 run_macro(void)
@@ -1362,6 +1379,8 @@ run_macro(void)
 	   !fatal) {
 	enum iaction ia;
 	bool was_ckbwait = CKBWAIT;
+	unsigned int old_kybdlock = kybdlock;
+	task_t *parent;
 
 	/*
 	 * Check for command failure.
@@ -1419,8 +1438,18 @@ run_macro(void)
 	    break;
 	}
 
-	/* Check for keyboard lock. */
-	if (s->state == TS_RUNNING && !was_ckbwait && CKBWAIT) {
+	/*
+	 * Check for keyboard lock.
+	 * Minor hack: If interactive (x3270> prompt), don't change the task
+	 * state for file transfers. This allows the Transfer() action to
+	 * return immediately instead of waiting for the transfer to complete.
+	 */
+	parent = s->next;
+	if (parent != NULL &&
+	    parent->state == TS_RUNNING &&
+	    !was_ckbwait &&
+	    CKBWAIT &&
+	    (!((old_kybdlock ^ kybdlock) & KL_FT) || !is_interactive(parent))) {
 	    task_set_state(s, TS_KBWAIT, "keyboard locked");
 	}
 
@@ -4044,12 +4073,7 @@ ResumeInput_action(ia_t ia, unsigned argc, const char **argv)
 bool
 task_is_interactive(void)
 {
-    task_t *redirect = task_redirect_to();
-
-    return redirect != NULL &&
-	   redirect->cbx.cb->getflags != NULL &&
-	   ((*redirect->cbx.cb->getflags)(redirect->cbx.handle) &
-		CBF_INTERACTIVE) != 0;
+    return is_interactive(task_redirect_to());
 }
 
 /**
