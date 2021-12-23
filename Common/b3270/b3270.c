@@ -62,6 +62,7 @@
 #include "glue.h"
 #include "ui_stream.h"
 #include "host.h"
+#include "json.h"	/* needs to come before httpd headers */
 #include "httpd-core.h"
 #include "httpd-nodes.h"
 #include "httpd-io.h"
