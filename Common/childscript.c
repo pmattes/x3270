@@ -52,8 +52,8 @@
 #include "child_popups.h"
 #include "childscript.h"
 #include "find_console.h"
-#include "httpd-core.h"
 #include "json.h" /* must precede HTTP */
+#include "httpd-core.h"
 #include "httpd-io.h"
 #include "lazya.h"
 #include "names.h"

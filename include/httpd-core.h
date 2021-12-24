@@ -89,7 +89,7 @@ void httpd_close(void *dhandle, const char *why);
 httpd_status_t httpd_dyn_complete(void *dhandle,
 	const char *format, ...);
 httpd_status_t httpd_dyn_error(void *dhandle, content_t content_type,
-	int status_code, const char *format, ...);
+	int status_code, json_t *jresult, const char *format, ...);
 char *html_quote(const char *text);
 char *uri_quote(const char *text);
 const char *httpd_fetch_query(void *dhandle, const char *name);

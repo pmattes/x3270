@@ -549,6 +549,7 @@ httpd_html_trailer(httpd_t *h, httpd_print_t type)
  * @param[in] content_type	Content type CT_xxx
  * @param[in] status_code	HTTP status code
  * @param[in] verb		Request verb
+ * @param[in] jresult	`	JSON result
  * @param[in] format		printf format for extended error message
  * @param[in] ap		printf args
  *
@@ -556,7 +557,8 @@ httpd_html_trailer(httpd_t *h, httpd_print_t type)
  */
 static httpd_status_t
 httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
-	int status_code, verb_t verb, const char *format, va_list ap)
+	int status_code, verb_t verb, json_t *jresult, const char *format,
+	va_list ap)
 {
     request_t *r = &h->request;
 
@@ -605,18 +607,23 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	    {
 		char *buf = xs_vbuffer(format, ap);
 		size_t sl = strlen(buf);
-		json_t *j, *k;
 
 		if (sl && buf[sl - 1] == '\n') {
 		    sl--;
 		}
-		k = json_array();
-		json_array_set(k, 0, json_string(buf, sl));
+		if (jresult != NULL) {
+		    httpd_print(h, HP_BUFFER, "%s\n", json_write(jresult));
+		} else {
+		    json_t *j, *k;
+
+		    k = json_array();
+		    json_array_set(k, 0, json_string(buf, sl));
+		    j = json_struct();
+		    json_struct_set(j, "result", NT, k);
+		    httpd_print(h, HP_BUFFER, "%s\n", json_write(j));
+		    json_free(j);
+		}
 		Free(buf);
-		j = json_struct();
-		json_struct_set(j, "result", NT, k);
-		httpd_print(h, HP_BUFFER, "%s\n", json_write(j));
-		json_free(j);
 	    }
 	    break;
 	case CT_UNSPECIFIED:
@@ -664,7 +671,8 @@ httpd_error(httpd_t *h, errmode_t mode, content_t content_type,
     httpd_status_t rv;
 
     va_start(ap, format);
-    rv = httpd_verror(h, mode, content_type, status_code, r->verb, format, ap);
+    rv = httpd_verror(h, mode, content_type, status_code, r->verb, NULL,
+	    format, ap);
     va_end(ap);
 
     return rv;
@@ -2206,6 +2214,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
  * @param[in] dhandle	Connection handle
  * @param[in] content_type Content type
  * @param[in] status_code HTTP error code
+ * @param[in] jresult	JSON error text
  * @param[in] format	text to display
  *
  * @return httpd_status_t, suitable for return from completion function
@@ -2213,7 +2222,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
  */
 httpd_status_t
 httpd_dyn_error(void *dhandle, content_t content_type, int status_code,
-	const char *format, ...)
+	json_t *jresult, const char *format, ...)
 {
     httpd_t *h = dhandle;
     request_t *r = &h->request;
@@ -2225,7 +2234,7 @@ httpd_dyn_error(void *dhandle, content_t content_type, int status_code,
 
     va_start(ap, format);
     rv = httpd_verror(h, ERRMODE_NONFATAL, content_type, status_code, r->verb,
-	    format, ap);
+	    jresult, format, ap);
     va_end(ap);
 
     return rv;

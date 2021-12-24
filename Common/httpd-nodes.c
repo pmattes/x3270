@@ -84,7 +84,8 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     fd = mkstemp(temp_name);
 #endif /*]*/
     if (fd < 0) {
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, "Internal error (open)");
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
+		"Internal error (open)");
 	unlink(temp_name);
 	Free(temp_name);
 	*status = rv;
@@ -92,7 +93,8 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     }
     f = fdopen(fd, "w+");
     if (f == NULL) {
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, "Internal error (fdopen)");
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
+		"Internal error (fdopen)");
 	close(fd);
 	unlink(temp_name);
 	Free(temp_name);
@@ -108,7 +110,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	break;
     case FPS_STATUS_ERROR:
     case FPS_STATUS_CANCEL:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400,
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
 		"Internal error (fprint_screen)");
 	fclose(f);
 	unlink(temp_name);
@@ -231,10 +233,10 @@ CMD_FORM
 	}
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 500, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL, "%.*s", len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -267,11 +269,11 @@ hn_interact(const char *uri, void *dhandle)
 	    return HS_PENDING;
 	case SENDTO_INVALID:
 	    lazya(errmsg);
-	    return httpd_dyn_error(dhandle, CT_HTML, 400,
+	    return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
 		    lazyaf("%s\n", errmsg));
 	default:
 	case SENDTO_FAILURE:
-	    return httpd_dyn_error(dhandle, CT_HTML, 500,
+	    return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
 		    "Processing error.\n");
 	}
     }
@@ -318,10 +320,10 @@ rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	rv = httpd_dyn_complete(dhandle, "%.*s", len, buf);
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -342,7 +344,8 @@ rest_text_dyn(const char *url, void *dhandle)
     char *errmsg;
 
     if (!*url) {
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Missing 3270 action.\n");
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+		"Missing 3270 action.\n");
     }
 
     switch (hio_to3270(url, rest_dyn_text_complete, dhandle, CT_TEXT,
@@ -353,10 +356,12 @@ rest_text_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%s\n", errmsg));
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+		lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
-	return httpd_dyn_error(dhandle, CT_TEXT, 500, "Processing error.\n");
+	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
+		"Processing error.\n");
     }
 }
 
@@ -384,10 +389,10 @@ rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		len, buf);
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 500, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 500, NULL, "%.*s", len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -408,7 +413,8 @@ rest_status_text_dyn(const char *url, void *dhandle)
     char *errmsg;
 
     if (!*url) {
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, "Missing 3270 action.\n");
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+		"Missing 3270 action.\n");
     }
 
     switch (hio_to3270(url, rest_dyn_status_text_complete, dhandle, CT_TEXT,
@@ -419,10 +425,12 @@ rest_status_text_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%s\n", errmsg));
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+		lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
-	return httpd_dyn_error(dhandle, CT_TEXT, 500, "Processing error.\n");
+	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
+		"Processing error.\n");
     }
 }
 
@@ -473,10 +481,10 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	}
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 500, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL, "%.*s", len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -514,10 +522,10 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	}
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_JSON, 400, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_JSON, 400, jresult, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_JSON, 500, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_JSON, 500, jresult, "%.*s", len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -537,7 +545,8 @@ rest_html_dyn(const char *url, void *dhandle)
     char *errmsg;
 
     if (!*url) {
-	return httpd_dyn_error(dhandle, CT_HTML, 400, "Missing 3270 action.\n");
+	return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
+		"Missing 3270 action.\n");
     }
 
     switch (hio_to3270(url, rest_dyn_html_complete, dhandle, CT_TEXT,
@@ -548,10 +557,12 @@ rest_html_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, CT_HTML, 400, lazyaf("%s\n", errmsg));
+	return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
+		lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
-	return httpd_dyn_error(dhandle, CT_HTML, 500, "Processing error.\n");
+	return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
+		"Processing error.\n");
     }
 }
 
@@ -569,7 +580,7 @@ rest_json_dyn(const char *url, void *dhandle)
     char *errmsg;
 
     if (!*url) {
-	return httpd_dyn_error(dhandle, CT_JSON, 400, "Missing 3270 action.\n");
+	return httpd_dyn_error(dhandle, CT_JSON, 400, NULL, "Missing 3270 action.\n");
     }
 
     switch (hio_to3270(url, rest_dyn_json_complete, dhandle, CT_TEXT,
@@ -580,10 +591,12 @@ rest_json_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, lazyaf("%a\n", errmsg));
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+		lazyaf("%a\n", errmsg));
     default:
     case SENDTO_FAILURE:
-	return httpd_dyn_error(dhandle, CT_JSON, 500, "Processing error.\n");
+	return httpd_dyn_error(dhandle, CT_JSON, 500, NULL,
+		"Processing error.\n");
     }
 }
 
@@ -621,7 +634,7 @@ rest_post_dyn(const char *url, void *dhandle)
 	break;
 #endif
     default:
-	return httpd_dyn_error(dhandle, CT_TEXT, 415,
+	return httpd_dyn_error(dhandle, CT_TEXT, 415, NULL,
 		"Unsupported media type.\n");
     }
 
@@ -633,11 +646,11 @@ rest_post_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, request_content_type, 400,
+	return httpd_dyn_error(dhandle, request_content_type, 400, NULL,
 		lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
-	return httpd_dyn_error(dhandle, request_content_type, 500,
+	return httpd_dyn_error(dhandle, request_content_type, 500, NULL,
 		"Processing error.\n");
     }
 }
