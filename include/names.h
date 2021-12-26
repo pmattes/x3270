@@ -210,6 +210,7 @@
 #define KwTelnetMyOptions "TelnetMyOptions"
 #define KwTelnetHostOptions "TelnetHostOptions"
 #define KwTerminalName	"TerminalName"
+#define KwTimingMarks	"TimingMarks"
 #define KwTn3270eOptions "Tn3270eOptions"
 #define KwTraceFile	"TraceFile"
 #define KwTls		"Tls"
@@ -271,6 +272,9 @@
 #define KwOutput	"output"
 #define KwUnlock	"unlock"
 #define KwSeconds	"seconds"
+#define KwCursorAt	"cursorat"
+#define KwStringAt	"stringat"
+#define KwInputFieldAt	"inputfieldat"
 /*  Parameters to WindowState(). */
 #define KwIconic	"iconic"
 #define KwNormal	"normal"

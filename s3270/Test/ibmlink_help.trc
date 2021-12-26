@@ -1,0 +1,708 @@
+20211224.142017.473 Trace started
+ Version: s3270 v4.2pre1 Fri Dec 24 05:28:08 UTC 2021 pdm
+ Build options: --enable-local-process
+ Command: s3270 obj/x86_64-unknown-linux-gnu/s3270/s3270 -trace -xrm s3270.contentionResolution: false -trace l:y:204.146.168.209
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true alwaysInsert=false blankFill=true
+  caDir= caFile= certFile= certFileType= chainFile= codePage=bracket
+  ftBufferSize=16384 httpd= insertMode=false keyFile= keyFileType= keyPasswd=
+  lineMode=true lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true oversize= proxy=
+  reconnect=false reverseInputMode=false rightToLeftMode=false
+  screenTrace=false scriptPort= showTiming=false startTls=true termName=
+  trace=true unlockDelay=false unlockDelayMs=350 verifyHostCert=true
+ Connection state: not-connected
+ Data stream:
+20211224.142017.474 st_changed(secure,false)
+20211224.142017.474 st_changed(terminal-name,true)
+20211224.142017.474 Resolver slot is 0
+20211224.142017.474 cstate [not-connected] -> [resolving] (host_connect)
+20211224.142017.474 st_changed(connect,true)
+20211224.142017.474 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20211224.142017.474 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20211224.142017.474 ctlr_enable_cursor(false, connect)
+20211224.142017.474 st_changed(negotiating,true)
+20211224.142017.474 Waiting for 1 event or 1.000s
+20211224.142017.474 Got 1 event
+20211224.142017.474 Resolution complete, 1 address
+20211224.142017.475 TLS: will not verify host certificate
+20211224.142017.475 Making host socket non-blocking
+20211224.142017.475 Trying 204.146.168.209, port 23...
+20211224.142017.475 TCP connection pending.
+20211224.142017.475 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20211224.142017.475 st_changed(negotiating,true)
+20211224.142017.475 lazya_flush: 27 slots, 1256 bytes
+20211224.142017.475 Waiting for 4 events or 0.000s
+20211224.142017.475 Got 0 events
+20211224.142017.475 Waiting for 4 events or 1.000s
+20211224.142017.530 Got 1 event
+20211224.142017.530 Output possible
+20211224.142017.530 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20211224.142017.530 st_changed(connect,true)
+20211224.142017.530 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20211224.142017.530 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20211224.142017.530 Host negotiation step took 0.055353s to complete
+20211224.142017.530 ctlr_enable_cursor(true, connect)
+20211224.142017.530 ctlr_enable_cursor(true, nvt)
+20211224.142017.530 st_changed(negotiating,true)
+20211224.142017.530 Connected to 204.146.168.209, port 23.
+20211224.142017.530 cstate [telnet-pending] -> [tls-pending] (net_connected)
+20211224.142017.530 st_changed(negotiating,true)
+20211224.142017.530 Starting OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.530 SSL_connect trace: PINIT  before SSL initialization
+20211224.142017.530 SSL_connect trace: TWCH SSLv3/TLS write client hello
+20211224.142017.530 Need more TLS data
+20211224.142017.530 lazya_flush: 18 slots, 448 bytes
+20211224.142017.530 Waiting for 3 events or 0.000s
+20211224.142017.530 Got 0 events
+20211224.142017.530 Waiting for 3 events or 1.000s
+20211224.142017.592 Got 1 event
+20211224.142017.592 Continuing OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.592 Need more TLS data
+20211224.142017.592 Waiting for 3 events or 0.938s
+20211224.142017.593 Got 1 event
+20211224.142017.593 Continuing OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.593 Need more TLS data
+20211224.142017.593 Waiting for 3 events or 0.937s
+20211224.142017.648 Got 1 event
+20211224.142017.648 Continuing OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.648 SSL_connect trace: TWCH SSLv3/TLS write client hello
+20211224.142017.648 SSL_connect trace: TRSH SSLv3/TLS read server hello
+20211224.142017.649 SSL_connect trace: TRSC SSLv3/TLS read server certificate
+20211224.142017.649 SSL_connect trace: TRSD SSLv3/TLS read server done
+20211224.142017.649 SSL_connect trace: TWCKE SSLv3/TLS write client key exchange
+20211224.142017.649 SSL_connect trace: TWCCS SSLv3/TLS write change cipher spec
+20211224.142017.649 SSL_connect trace: TWFIN SSLv3/TLS write finished
+20211224.142017.649 Need more TLS data
+20211224.142017.649 lazya_flush: 11 slots, 264 bytes
+20211224.142017.649 Waiting for 3 events or 0.881s
+20211224.142017.787 Got 1 event
+20211224.142017.787 Continuing OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.787 SSL_connect trace: TWFIN SSLv3/TLS write finished
+20211224.142017.787 Need more TLS data
+20211224.142017.787 Waiting for 3 events or 0.743s
+20211224.142017.788 Got 1 event
+20211224.142017.788 Continuing OpenSSL negotiation, host '204.146.168.209'.
+20211224.142017.788 SSL_connect trace: TRCCS SSLv3/TLS read change cipher spec
+20211224.142017.788 SSL_connect trace: TRFIN SSLv3/TLS read finished
+20211224.142017.788 Connection is now secure.
+20211224.142017.788 Provider: OpenSSL 1.1.1f  31 Mar 2020
+20211224.142017.788 Session:
+20211224.142017.788  Version: TLSv1.2
+20211224.142017.788  Cipher: AES256-SHA
+20211224.142017.788 Server certificate:
+20211224.142017.788  Public key: 2048 bit RSA
+20211224.142017.788  Subject: C = US, ST = Michigan, L = Southfield, O = "AT and T Services, Inc.", OU = san, OU = Network Support, OU = MVSAP6, CN = mvsap6-tcpip.ims.att.com
+20211224.142017.788  Issuer: C = US, O = DigiCert Inc, CN = DigiCert Global CA G2
+20211224.142017.788  Alternate DNS names: mvsap6-tcpip.ims.att.com mvsap6-tcpipin.ims.att.com mvsap6-tcpip3.ims.att.com
+20211224.142017.788  CA 1 Public key: 2048 bit RSA
+20211224.142017.788  CA 1 Subject: C = US, O = DigiCert Inc, CN = DigiCert Global CA G2
+20211224.142017.788  CA 1 Issuer: C = US, O = DigiCert Inc, OU = www.digicert.com, CN = DigiCert Global Root G2
+20211224.142017.788 st_changed(secure,true)
+20211224.142017.788 cstate [tls-pending] -> [telnet-pending] (host_connected)
+20211224.142017.788 st_changed(negotiating,true)
+20211224.142017.788 st_changed(secure,false)
+20211224.142017.788 st_changed(line-mode,true)
+20211224.142017.788 lazya_flush: 11 slots, 264 bytes
+20211224.142017.788 Waiting for 3 events or 1.000s
+20211224.142017.788 Got 1 event
+20211224.142017.788 Reading host socket via TLS
+20211224.142017.788 Host socket read complete nr=3
+< 0x0   fffd28
+20211224.142017.789 RCVD DO TN3270E
+> 0x0   fffb28
+20211224.142017.789 SENT WILL TN3270E
+20211224.142017.789 Now operating in connected-unbound mode.
+20211224.142017.789 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20211224.142017.789 st_changed(negotiating,true)
+20211224.142017.789 st_changed(3270-mode,false)
+20211224.142017.789 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20211224.142017.789 Host negotiation step took 0.000050s to complete
+20211224.142017.789 ctlr_enable_cursor(true, connect)
+20211224.142017.789 lazya_flush: 14 slots, 352 bytes
+20211224.142017.789 Waiting for 3 events
+20211224.142017.849 Got 1 event
+20211224.142017.849 Reading host socket via TLS
+20211224.142017.849 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20211224.142017.849 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20211224.142017.849 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20211224.142017.849 Waiting for 3 events
+20211224.142017.905 Got 1 event
+20211224.142017.905 Reading host socket via TLS
+20211224.142017.905 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054455348fff0
+20211224.142017.905 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TESH SE
+> 0x0   fffa280307000204fff0
+20211224.142017.905 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ SE
+20211224.142017.905 Waiting for 3 events
+20211224.142017.957 Got 1 event
+20211224.142017.957 Reading host socket via TLS
+20211224.142017.957 Host socket read complete nr=10
+< 0x0   fffa280304000204fff0
+20211224.142017.957 RCVD SB TN3270E FUNCTIONS IS BIND-IMAGE RESPONSES SYSREQ SE
+20211224.142017.957 TN3270E option negotiation complete.
+20211224.142017.957 Waiting for 3 events
+20211224.142017.962 Got 1 event
+20211224.142017.962 Reading host socket via TLS
+20211224.142017.962 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0d4d6d5f20005007ee5491008c9c2d4f0e3c5e2c8ffef
+20211224.142017.962 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0MON2' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20211224.142017.962 Now operating in connected-tn3270e mode.
+20211224.142017.962 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20211224.142017.962 st_changed(3270-mode,true)
+20211224.142017.962 ctlr_enable_cursor(true, connect)
+20211224.142017.962 RCVD EOR
+20211224.142017.962 CB(s3stdin)[#1] started
+20211224.142017.962 CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142017.962 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20211224.142017.962 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20211224.142017.962 Macro[#1.2] running
+20211224.142017.962 Macro[#1.2] IDLE -> RUNNING (executing)
+20211224.142017.962 Macro[#1.2] 'Wait(inputfield)'
+20211224.142017.962 script -> Wait("inputfield")
+20211224.142017.962 Macro[#1.2] RUNNING -> WAIT_IFIELD (Wait())
+20211224.142017.962 Waiting for 3 events
+20211224.142017.980 Got 1 event
+20211224.142017.980 Reading host socket via TLS
+20211224.142017.980 Host socket read complete nr=8
+< 0x0   040000000001ffef
+20211224.142017.980 RCVD TN3270E(UNBIND NO-RESPONSE 0)
+< UNBIND normal
+20211224.142017.980 Now operating in connected-unbound mode.
+20211224.142017.980 cstate [connected-tn3270e] -> [connected-unbound] (host_in3270)
+20211224.142017.980 st_changed(negotiating,true)
+20211224.142017.980 st_changed(3270-mode,false)
+20211224.142017.980 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20211224.142017.980 Host negotiation step took 0.000015s to complete
+20211224.142017.980 ctlr_enable_cursor(true, connect)
+20211224.142017.980 ctlr_enable_cursor(true, nvt)
+20211224.142017.980 RCVD EOR
+20211224.142017.980 lazya_flush: 28 slots, 704 bytes
+20211224.142017.980 Waiting for 3 events
+20211224.142017.980 Got 1 event
+20211224.142017.980 Reading host socket via TLS
+20211224.142017.980 Host socket read complete nr=54
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4f2f3000008c9c2d4f0e3c5e2c8ffef
+20211224.142017.980 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SM23' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20211224.142017.980 Now operating in connected-tn3270e mode.
+20211224.142017.980 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20211224.142017.980 st_changed(3270-mode,true)
+20211224.142017.980 ctlr_enable_cursor(true, connect)
+20211224.142017.980 RCVD EOR
+20211224.142017.980 lazya_flush: 11 slots, 264 bytes
+20211224.142017.980 Waiting for 3 events
+20211224.142017.980 Got 1 event
+20211224.142017.980 Reading host socket via TLS
+20211224.142017.980 Host socket read complete nr=1174
+< 0x0   0000010001f5c611d94c131140401df0e2e5d4f0f2f0f1d711c1501df0e2e8e2
+< 0x20  e3c5d47a1df0c9c2d4f0e2d4f2f311c24f1df0c4c1e3c57a1df0f2f161f1f261
+< 0x40  f2f411c2601df0e3c5d9d4c9c47a1df0c9c2d4f0e3c5e2c811c35f1df0e3c9d4
+< 0x60  c57a1df0f1f57af2f07af1f711c3f01df0c3e4e2e3d6d4c5d940c1e2e2c9e2e3
+< 0x80  c1d5c3c57a40d7d3c5c1e2c540c3c1d3d31df0f160f8f0f060f7f2f760f2f2f2
+< 0xa0  f24040404040404040404040404040404011c5401df060606060606060606060
+< 0xc0  6060606060606060606060606060606060606060606060606060606060606060
+< 0xe0  6060606060606060606060606060606060606060606060606060606060606060
+< 0x100 606060606011c7601df8e685938396948540a396114ac51df87e7e7e7e7e7e7e
+< 0x120 40407e7e7e7e7e7e7e7e7e4040407e7e7e7e40404040407e7e7e7e404dd95d11
+< 0x140 4bd51df87e7e7e7e7e7e7e40407e7e7e7e7e7e7e7e7e7e40407e7e7e7e7e4040
+< 0x160 407e7e7e7e7e40405c5c40404040404040404040404040404040404040405c5c
+< 0x180 114ce71df87e7e7e40404040407e7e7e4040407e7e7e4040407e7e7e7e7e7e7e
+< 0x1a0 7e7e7e7e4040405c5c404040404040405c5c40404040404040404040405c5c40
+< 0x1c0 405c5c114df71df87e7e7e40404040407e7e7e7e7e7e7e7e7e4040407e7e7e7e
+< 0x1e0 7e7e7e7e7e7e7e4040405c5c4040404040404040404040404040404040404040
+< 0x200 5c5c405c5c114fc71df87e7e7e40404040407e7e7e7e7e7e7e7e7e4040407e7e
+< 0x220 7e407e7e7e407e7e7e4040405c5c404040404040405c5c40405c5c405c5c5c40
+< 0x240 40405c5c5c5c1150d71df87e7e7e40404040407e7e7e4040407e7e7e4040407e
+< 0x260 7e7e40407e40407e7e7e4040405c5c404040404040405c5c40405c5c5c5c5c5c
+< 0x280 5c40405c5c405c5c11d1e51df87e7e7e7e7e7e7e40407e7e7e7e7e7e7e7e7e7e
+< 0x2a0 40407e7e7e7e40404040407e7e7e7e40405c5c5c5c5c5c5c40405c5c40405c5c
+< 0x2c0 4040405c5c40405c5c40405c5c11d2f51df87e7e7e7e7e7e7e40407e7e7e7e7e
+< 0x2e0 7e7e7e7e4040407e7e7e7e40404040407e7e7e7e40405c5c5c5c5c5c5c40405c
+< 0x300 5c40405c5c4040405c5c40405c5c4040405c5c11d5d41df04dd95d40d9858789
+< 0x320 a2a38599858440a3998184859481999240968640a3888540c9c2d440c3969997
+< 0x340 969981a389969511d6e41df04dc35d40c39697a899898788a340c995a3859995
+< 0x360 81a3899695819340c2a4a2899585a2a240d4818388899585a240c39699979699
+< 0x380 81a389969540f1f9f8f56b40f1f9f9f311d7f01df06060606060606060606060
+< 0x3a0 6060606060606060606060606060606060606060606060606060606060606060
+< 0x3c0 6060606060606060606060606060606060606060606060606060606060606060
+< 0x3e0 606060601df8c1c3c3d6e4d5e34b4b4b1dc16d6d6d6d6d6d6d6d1df8e4e2c5d9
+< 0x400 c9c44b4b4b1dc16d6d6d6d6d6d6d6d1df8d7c1e2e2e6d6d9c44b4b4b1d4c11d9
+< 0x420 7c1df0115a501df0c595a38599408485a2899985844097999684a483a3409699
+< 0x440 40a28599a58983856b40969940979985a2a240a3888540c8c5d3d7409285a840
+< 0x460 4dd7c6f15d408696994081a2a289a2a3819583854b115b601df8115cf01df87e
+< 0x480 7e7e6e1dc9115df21df0115df51dc1115d7e1df0ffef
+20211224.142017.983 RCVD TN3270E(3270-DATA ERROR-RESPONSE 1)
+< EraseWrite(reset,alarm,restore) SetBufferAddress(21,13) InsertCursor SetB ...
+... ufferAddress(1,1) StartField(protected,skip) 'SVM0201P' SetBufferAddres ...
+... s(2,1) StartField(protected,skip) 'SYSTEM:' StartField(2,9)(protected,s ...
+... kip) 'IBM0SM23' SetBufferAddress(2,64) StartField(protected,skip) 'DATE ...
+... :' StartField(2,70)(protected,skip) '21/12/24' SetBufferAddress(3,1) St ...
+... artField(protected,skip) 'TERMID:' StartField(3,9)(protected,skip) 'IBM ...
+... 0TESH' SetBufferAddress(3,64) StartField(protected,skip) 'TIME:' StartF ...
+... ield(3,70)(protected,skip) '15:20:17' SetBufferAddress(4,1) StartField( ...
+... protected,skip) 'CUSTOMER ASSISTANCE: PLEASE CALL' StartField(4,34)(pro ...
+... tected,skip) '1-800-727-2222                ' SetBufferAddress(5,1) Sta ...
+... rtField(protected,skip) '---------------------------------------------- ...
+... ---------------------------------' SetBufferAddress(7,1) StartField(pro ...
+... tected,skip,intensified) 'Welcome to' SetBufferAddress(9,6) StartField( ...
+... protected,skip,intensified) '=======  =========   ====     ==== (R)' Se ...
+... tBufferAddress(10,6) StartField(protected,skip,intensified) '=======  = ...
+... =========  =====   =====  **                    **' SetBufferAddress(11 ...
+... ,8) StartField(protected,skip,intensified) '===     ===   ===   ======= ...
+... ====   **       **           **  **' SetBufferAddress(12,8) StartField( ...
+... protected,skip,intensified) '===     =========   ===========   **       ...
+...               ** **' SetBufferAddress(13,8) StartField(protected,skip,i ...
+... ntensified) '===     =========   === === ===   **       **  ** ***   ** ...
+... **' SetBufferAddress(14,8) StartField(protected,skip,intensified) '===  ...
+...     ===   ===   ===  =  ===   **       **  *******  ** **' SetBufferAdd ...
+... ress(15,6) StartField(protected,skip,intensified) '=======  ==========  ...
+...  ====     ====  *******  **  **   **  **  **' SetBufferAddress(16,6) St ...
+... artField(protected,skip,intensified) '=======  =========   ====     === ...
+... =  *******  **  **   **  **   **' SetBufferAddress(18,5) StartField(pro ...
+... tected,skip) '(R) Registered trademark of the IBM Corporation' SetBuffe ...
+... rAddress(19,5) StartField(protected,skip) '(C) Copyright International  ...
+... Business Machines Corporation 1985, 1993' SetBufferAddress(20,1) StartF ...
+... ield(protected,skip) '------------------------------------------------- ...
+... ------------------------------' StartField(21,1)(protected,skip,intensi ...
+... fied) 'ACCOUNT...' StartField(21,12)(modified) '________' StartField(21 ...
+... ,21)(protected,skip,intensified) 'USERID...' StartField(21,31)(modified ...
+... ) '________' StartField(21,40)(protected,skip,intensified) 'PASSWORD... ...
+... ' StartField(21,52)(nondisplay) SetBufferAddress(21,61) StartField(prot ...
+... ected,skip) SetBufferAddress(22,1) StartField(protected,skip) 'Enter de ...
+... sired product or service, or press the HELP key (PF1) for assistance.'  ...
+... SetBufferAddress(23,1) StartField(protected,skip,intensified) SetBuffer ...
+... Address(24,1) StartField(protected,skip,intensified) '===>' StartField( ...
+... 24,6)(intensified,modified) SetBufferAddress(24,67) StartField(protecte ...
+... d,skip) SetBufferAddress(24,70) StartField(modified) SetBufferAddress(2 ...
+... 4,79) StartField(protected,skip)
+20211224.142017.987 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20211224.142017.987 RCVD EOR
+20211224.142017.987 lazya_flush: 1092 slots, 26752 bytes
+20211224.142017.987 Macro[#1.2] WAIT_IFIELD -> IDLE (about to resume)
+20211224.142017.987 Macro[#1.2] running
+20211224.142017.987 Macro[#1.2] complete, success
+20211224.142017.987 CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20211224.142017.987 CB(s3stdin)[#1.1] child task done, success
+20211224.142017.987 CB(s3stdin)[#1.1] complete, success
+20211224.142017.987 CB(s3stdin)[#1] complete
+20211224.142017.987 Waiting for 4 events
+20211224.142032.601 Got 1 event
+20211224.142032.602 s3stdin read 'enter'
+20211224.142032.602 CB(s3stdin)[#2] started
+20211224.142032.602 CB(s3stdin)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142032.602 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20211224.142032.602 lazya_flush: 18 slots, 448 bytes
+20211224.142032.602 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20211224.142032.602 Macro[#2.2] running
+20211224.142032.602 Macro[#2.2] IDLE -> RUNNING (executing)
+20211224.142032.602 Macro[#2.2] 'enter'
+20211224.142032.602 script -> Enter()
+20211224.142032.602 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(21,13) SetBufferAddress(21,13) '________' SetBufferAddress(21,32) ' ...
+... ________' SetBufferAddress(24,7) SetBufferAddress(24,71)
+20211224.142032.602 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000007dd94c11d94c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115c
+> 0x20  f6115df6ffef
+20211224.142032.602 SENT EOR
+20211224.142032.602 Macro[#2.2] RUNNING -> KBWAIT (keyboard locked)
+20211224.142032.602 Waiting for 3 events or 1.000s
+20211224.142032.657 Got 1 event
+20211224.142032.657 Reading host socket via TLS
+20211224.142032.657 Host socket read complete nr=200
+< 0x0   0000010002f1c611404012404011d94c1311c1d9c9c2d4f0e2d4f2f311c2d6f2
+< 0x20  f161f1f261f2f411c2e9c9c2d4f0e3c5e2c811c3e6f1f57af2f07af3f211c4d2
+< 0x40  f160f8f0f060f7f2f760f2f2f2f24040404040404040404040404040404011d9
+< 0x60  4c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115b61d7938581a285408595
+< 0x80  a3859940a896a4994081838396a495a36b40a4a2859989846b40819584409781
+< 0xa0  a2a2a696998440869699409585a3a69699924081838385a2a24b404040404040
+< 0xc0  404040404040ffef
+20211224.142032.657 RCVD TN3270E(3270-DATA ERROR-RESPONSE 2)
+< Write(reset,alarm,restore) SetBufferAddress(1,1) EraseUnprotectedAll SetB ...
+... ufferAddress(21,13) InsertCursor SetBufferAddress(2,10) 'IBM0SM23' SetB ...
+... ufferAddress(2,71) '21/12/24' SetBufferAddress(3,10) 'IBM0TESH' SetBuff ...
+... erAddress(3,71) '15:20:32' SetBufferAddress(4,35) '1-800-727-2222       ...
+...           ' SetBufferAddress(21,13) '________' SetBufferAddress(21,32)  ...
+... '________' SetBufferAddress(23,2) 'Please enter your account, userid, a ...
+... nd password for network access.            '
+20211224.142032.658 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20211224.142032.658 Host operation took 0.055063s to complete
+20211224.142032.658 RCVD EOR
+20211224.142032.658 lazya_flush: 207 slots, 4984 bytes
+20211224.142032.658 Macro[#2.2] KBWAIT -> IDLE (about to resume)
+20211224.142032.658 Macro[#2.2] running
+20211224.142032.658 Macro[#2.2] complete, success
+20211224.142032.658 CB(s3stdin)[#2.1] RUNNING -> IDLE (about to resume)
+20211224.142032.658 CB(s3stdin)[#2.1] child task done, success
+20211224.142032.658 Output for s3stdin: U F U C(204.146.168.209) I 4 24 80 20 12 0x0 0.056/ok
+20211224.142032.658 CB(s3stdin)[#2.1] complete, success
+20211224.142032.658 CB(s3stdin)[#2] complete
+20211224.142032.658 Waiting for 4 events
+20211224.142037.329 Got 1 event
+20211224.142037.329 s3stdin read 'pf(1)'
+20211224.142037.329 CB(s3stdin)[#3] started
+20211224.142037.329 CB(s3stdin)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142037.329 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20211224.142037.329 lazya_flush: 20 slots, 528 bytes
+20211224.142037.329 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20211224.142037.329 Macro[#3.2] running
+20211224.142037.329 Macro[#3.2] IDLE -> RUNNING (executing)
+20211224.142037.329 Macro[#3.2] 'pf(1)'
+20211224.142037.329 script -> PF("1")
+20211224.142037.329 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> PF1(21,13) SetBufferAddress(21,13) '________' SetBufferAddress(21,32) '__ ...
+... ______' SetBufferAddress(24,7) SetBufferAddress(24,71)
+20211224.142037.329 SENT TN3270E(3270-DATA NO-RESPONSE 1)
+> 0x0   0000000001f1d94c11d94c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115c
+> 0x20  f6115df6ffef
+20211224.142037.329 SENT EOR
+20211224.142037.329 Macro[#3.2] RUNNING -> KBWAIT (keyboard locked)
+20211224.142037.329 Waiting for 3 events or 1.000s
+20211224.142037.388 Got 1 event
+20211224.142037.388 Reading host socket via TLS
+20211224.142037.388 Host socket read complete nr=1301
+< 0x0   0000010003f5c3115cf6131140401df0e2c8d3c7f9e4e2c41140d11df0404040
+< 0x20  404040d585a3a696999240c1838385a2a240d39687969540c885939740404040
+< 0x40  404040404040404040404040401df040404040d78187851df0404040f111c3f6
+< 0x60  1df0e3964081838385a2a240a38885409585a3a696999240a4a2899587408195
+< 0x80  408193a385999581a3854081a4a3888595a3898381a3899695409485a3889684
+< 0xa0  6b4011c5c61df0979985a2a240c6f96b40969940a3a8978540c1d3e3d3968796
+< 0xc0  40969540a38885408396949481958440938995854081958440979985a2a240c5
+< 0xe0  95a385994b404011c6d61df0e3888540a2a8a2a38594408489a2979381a8a240
+< 0x100 a3888540c193a385999581a38540d3968796954097819585934b4040c98640a8
+< 0x120 96a4408881a585408193604011c7e61df099858184a840a3a897858440a896a4
+< 0x140 994081838396a495a34081958461969940a4a2859940c9c46b40a896a4408496
+< 0x160 409596a3409585858440a39640a3a8978511c8f61df0a3888594408187818995
+< 0x180 40969540a3888540c193a385999581a38540d3968796954097819585934b4040
+< 0x1a0 c896a685a585996b40a896a499409781a2a2a6969984114ac61df0a689939340
+< 0x1c0 9596a3408285409985a381899585844b40404040404040404040404040404040
+< 0x1e0 404040404040404040404040404040404040404040404040404040114bd61df0
+< 0x200 4040404040404040404040404040404040404040404040404040404040404040
+< 0x220 4040404040404040404040404040404040404040404040404040404040404040
+< 0x240 114ce61df0c98640a896a4994081a4a3888595a3898381a3899695409485a388
+< 0x260 96844089a2407fc97f4081958440a896a499409781a2a2a69699844093859587
+< 0x280 a388404040114df61df085a783858584a240f840838881998183a38599a26b40
+< 0x2a0 91a4a2a340a3a8978540a896a4994081838396a495a340c9c44081958440a4a2
+< 0x2c0 859940c9c440a3888595114fc61df0979985a2a240c595a385994b40e3888540
+< 0x2e0 a2a8a2a3859440a6899393408489a2979381a840a3888540c193a385999581a3
+< 0x300 8540d39687969540978195859340401150d61df086969940a896a440a3964085
+< 0x320 95a3859940a896a499409781a2a2a69699844b40404040404040404040404040
+< 0x340 404040404040404040404040404040404040404011d1e61df040404040404040
+< 0x360 4040404040404040404040404040404040404040404040404040404040404040
+< 0x380 4040404040404040404040404040404040404040404040404011d2f61df0c986
+< 0x3a0 40a896a4994081a4a3888595a3898381a3899695409485a38896844089a2407f
+< 0x3c0 e27f6b40a896a440838195408489998583a393a84093968796954040404011d4
+< 0x3e0 c61df08699969440a3888540a2a381958481998440939687964b40e896a440a3
+< 0x400 a8978540a896a4994081838396a495a340c9c44081958440a4a2859940c9c440
+< 0x420 40404011d5d61df0a3888595408595a3859940a896a49940e28583a499c9c440
+< 0x440 d78599a29695819340c9848595a38986898381a389969540d5a494828599404d
+< 0x460 d7c9d55d4040404011d6e61df08696939396a685844082a840a896a499408381
+< 0x480 99848396848540a39640a38885409781a2a2a696998440868985938440819584
+< 0x4a0 40a39640a3888540404040404011d9401df0c6f37ec5d5c440c6f87ec6d6d9e6
+< 0x4c0 c1d9c44040404040404040404040404040404040404040404040404040404040
+< 0x4e0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x500 401de8115cf01df87e7e7e6e1dc8115dc51df0ffef
+20211224.142037.390 RCVD TN3270E(3270-DATA ERROR-RESPONSE 3)
+< EraseWrite(reset,restore,resetMDT) SetBufferAddress(24,7) InsertCursor Se ...
+... tBufferAddress(1,1) StartField(protected,skip) 'SHLG9USD' SetBufferAddr ...
+... ess(1,18) StartField(protected,skip) '      Network Access Logon Help   ...
+...                ' StartField(1,67)(protected,skip) '    Page' StartField ...
+... (1,76)(protected,skip) '   1' SetBufferAddress(4,7) StartField(protecte ...
+... d,skip) 'To access the network using an alternate authentication method ...
+... , ' SetBufferAddress(5,7) StartField(protected,skip) 'press F9, or type ...
+...  ALTLogo on the command line and press Enter.  ' SetBufferAddress(6,7)  ...
+... StartField(protected,skip) 'The system displays the Alternate Logon pan ...
+... el.  If you have al- ' SetBufferAddress(7,7) StartField(protected,skip) ...
+...  'ready typed your account and/or user ID, you do not need to type' Set ...
+... BufferAddress(8,7) StartField(protected,skip) 'them again on the Altern ...
+... ate Logon panel.  However, your password' SetBufferAddress(9,7) StartFi ...
+... eld(protected,skip) 'will not be retained.                              ...
+...               ' SetBufferAddress(10,7) StartField(protected,skip) '     ...
+...                                                             ' SetBuffer ...
+... Address(11,7) StartField(protected,skip) 'If your authentication method ...
+...  is "I" and your password length   ' SetBufferAddress(12,7) StartField( ...
+... protected,skip) 'exceeds 8 characters, just type your account ID and us ...
+... er ID then' SetBufferAddress(13,7) StartField(protected,skip) 'press En ...
+... ter. The system will display the Alternate Logon panel  ' SetBufferAddr ...
+... ess(14,7) StartField(protected,skip) 'for you to enter your password.   ...
+...                                ' SetBufferAddress(15,7) StartField(prot ...
+... ected,skip) '                                                           ...
+...       ' SetBufferAddress(16,7) StartField(protected,skip) 'If your auth ...
+... entication method is "S", you can directly logon    ' SetBufferAddress( ...
+... 17,7) StartField(protected,skip) 'from the standard logo. You type your ...
+...  account ID and user ID    ' SetBufferAddress(18,7) StartField(protecte ...
+... d,skip) 'then enter your SecurID Personal Identification Number (PIN)   ...
+...   ' SetBufferAddress(19,7) StartField(protected,skip) 'followed by your ...
+...  cardcode to the password field and to the      ' SetBufferAddress(21,1 ...
+... ) StartField(protected,skip) 'F3=END F8=FORWARD                         ...
+...                                       ' StartField(22,1)(protected,inte ...
+... nsified) SetBufferAddress(24,1) StartField(protected,skip,intensified)  ...
+... '===>' StartField(24,6)(intensified) SetBufferAddress(24,22) StartField ...
+... (protected,skip)
+20211224.142037.392 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20211224.142037.392 Host operation took 0.058878s to complete
+20211224.142037.392 RCVD EOR
+20211224.142037.392 lazya_flush: 1268 slots, 30816 bytes
+20211224.142037.392 Macro[#3.2] KBWAIT -> IDLE (about to resume)
+20211224.142037.392 Macro[#3.2] running
+20211224.142037.392 Macro[#3.2] complete, success
+20211224.142037.392 CB(s3stdin)[#3.1] RUNNING -> IDLE (about to resume)
+20211224.142037.392 CB(s3stdin)[#3.1] child task done, success
+20211224.142037.392 Output for s3stdin: U F U C(204.146.168.209) I 4 24 80 23 6 0x0 0.063/ok
+20211224.142037.393 CB(s3stdin)[#3.1] complete, success
+20211224.142037.393 CB(s3stdin)[#3] complete
+20211224.142037.393 Waiting for 4 events
+20211224.142041.432 Got 1 event
+20211224.142041.432 s3stdin read 'pf(3)'
+20211224.142041.432 CB(s3stdin)[#4] started
+20211224.142041.432 CB(s3stdin)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142041.433 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20211224.142041.433 lazya_flush: 20 slots, 544 bytes
+20211224.142041.433 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20211224.142041.433 Macro[#4.2] running
+20211224.142041.433 Macro[#4.2] IDLE -> RUNNING (executing)
+20211224.142041.433 Macro[#4.2] 'pf(3)'
+20211224.142041.433 script -> PF("3")
+20211224.142041.433 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> PF3(24,7)
+20211224.142041.433 SENT TN3270E(3270-DATA NO-RESPONSE 2)
+> 0x0   0000000002f35cf6ffef
+20211224.142041.433 SENT EOR
+20211224.142041.433 Macro[#4.2] RUNNING -> KBWAIT (keyboard locked)
+20211224.142041.433 Waiting for 3 events or 1.000s
+20211224.142041.488 Got 1 event
+20211224.142041.488 Reading host socket via TLS
+20211224.142041.488 Host socket read complete nr=1231
+< 0x0   0000010004f5c211d94c131140401df0e2e5d4f0f2f0f1d711c1501df0e2e8e2
+< 0x20  e3c5d47a1df0c9c2d4f0e2d4f2f311c24f1df0c4c1e3c57a1df0f2f161f1f261
+< 0x40  f2f411c2601df0e3c5d9d4c9c47a1df0c9c2d4f0e3c5e2c811c35f1df0e3c9d4
+< 0x60  c57a1df0f1f57af2f07af4f111c3f01df0c3e4e2e3d6d4c5d940c1e2e2c9e2e3
+< 0x80  c1d5c3c57a40d7d3c5c1e2c540c3c1d3d31df0f160f8f0f060f7f2f760f2f2f2
+< 0xa0  f24040404040404040404040404040404011c5401df060606060606060606060
+< 0xc0  6060606060606060606060606060606060606060606060606060606060606060
+< 0xe0  6060606060606060606060606060606060606060606060606060606060606060
+< 0x100 606060606011c7601df8e685938396948540a396114ac51df87e7e7e7e7e7e7e
+< 0x120 40407e7e7e7e7e7e7e7e7e4040407e7e7e7e40404040407e7e7e7e404dd95d11
+< 0x140 4bd51df87e7e7e7e7e7e7e40407e7e7e7e7e7e7e7e7e7e40407e7e7e7e7e4040
+< 0x160 407e7e7e7e7e40405c5c40404040404040404040404040404040404040405c5c
+< 0x180 114ce71df87e7e7e40404040407e7e7e4040407e7e7e4040407e7e7e7e7e7e7e
+< 0x1a0 7e7e7e7e4040405c5c404040404040405c5c40404040404040404040405c5c40
+< 0x1c0 405c5c114df71df87e7e7e40404040407e7e7e7e7e7e7e7e7e4040407e7e7e7e
+< 0x1e0 7e7e7e7e7e7e7e4040405c5c4040404040404040404040404040404040404040
+< 0x200 5c5c405c5c114fc71df87e7e7e40404040407e7e7e7e7e7e7e7e7e4040407e7e
+< 0x220 7e407e7e7e407e7e7e4040405c5c404040404040405c5c40405c5c405c5c5c40
+< 0x240 40405c5c5c5c1150d71df87e7e7e40404040407e7e7e4040407e7e7e4040407e
+< 0x260 7e7e40407e40407e7e7e4040405c5c404040404040405c5c40405c5c5c5c5c5c
+< 0x280 5c40405c5c405c5c11d1e51df87e7e7e7e7e7e7e40407e7e7e7e7e7e7e7e7e7e
+< 0x2a0 40407e7e7e7e40404040407e7e7e7e40405c5c5c5c5c5c5c40405c5c40405c5c
+< 0x2c0 4040405c5c40405c5c40405c5c11d2f51df87e7e7e7e7e7e7e40407e7e7e7e7e
+< 0x2e0 7e7e7e7e4040407e7e7e7e40404040407e7e7e7e40405c5c5c5c5c5c5c40405c
+< 0x300 5c40405c5c4040405c5c40405c5c4040405c5c11d5d41df04dd95d40d9858789
+< 0x320 a2a38599858440a3998184859481999240968640a3888540c9c2d440c3969997
+< 0x340 969981a389969511d6e41df04dc35d40c39697a899898788a340c995a3859995
+< 0x360 81a3899695819340c2a4a2899585a2a240d4818388899585a240c39699979699
+< 0x380 81a389969540f1f9f8f56b40f1f9f9f311d7f01df06060606060606060606060
+< 0x3a0 6060606060606060606060606060606060606060606060606060606060606060
+< 0x3c0 6060606060606060606060606060606060606060606060606060606060606060
+< 0x3e0 606060601df8c1c3c3d6e4d5e34b4b4b1dc16d6d6d6d6d6d6d6d1df8e4e2c5d9
+< 0x400 c9c44b4b4b1dc16d6d6d6d6d6d6d6d1df8d7c1e2e2e6d6d9c44b4b4b1d4c11d9
+< 0x420 7c1df0115a501df0c595a38599408485a2899985844097999684a483a3409699
+< 0x440 40a28599a58983856b40969940979985a2a240a3888540c8c5d3d7409285a840
+< 0x460 4dd7c6f15d408696994081a2a289a2a3819583854b115b601df8115cf01df87e
+< 0x480 7e7e6e1dc9404040404040404040404040404040404040404040404040404040
+< 0x4a0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x4c0 401df0115df51dc1115d7e1df0ffef
+20211224.142041.490 RCVD TN3270E(3270-DATA ERROR-RESPONSE 4)
+< EraseWrite(reset,restore) SetBufferAddress(21,13) InsertCursor SetBufferA ...
+... ddress(1,1) StartField(protected,skip) 'SVM0201P' SetBufferAddress(2,1) ...
+...  StartField(protected,skip) 'SYSTEM:' StartField(2,9)(protected,skip) ' ...
+... IBM0SM23' SetBufferAddress(2,64) StartField(protected,skip) 'DATE:' Sta ...
+... rtField(2,70)(protected,skip) '21/12/24' SetBufferAddress(3,1) StartFie ...
+... ld(protected,skip) 'TERMID:' StartField(3,9)(protected,skip) 'IBM0TESH' ...
+...  SetBufferAddress(3,64) StartField(protected,skip) 'TIME:' StartField(3 ...
+... ,70)(protected,skip) '15:20:41' SetBufferAddress(4,1) StartField(protec ...
+... ted,skip) 'CUSTOMER ASSISTANCE: PLEASE CALL' StartField(4,34)(protected ...
+... ,skip) '1-800-727-2222                ' SetBufferAddress(5,1) StartFiel ...
+... d(protected,skip) '---------------------------------------------------- ...
+... ---------------------------' SetBufferAddress(7,1) StartField(protected ...
+... ,skip,intensified) 'Welcome to' SetBufferAddress(9,6) StartField(protec ...
+... ted,skip,intensified) '=======  =========   ====     ==== (R)' SetBuffe ...
+... rAddress(10,6) StartField(protected,skip,intensified) '=======  ======= ...
+... ===  =====   =====  **                    **' SetBufferAddress(11,8) St ...
+... artField(protected,skip,intensified) '===     ===   ===   ===========   ...
+...  **       **           **  **' SetBufferAddress(12,8) StartField(protec ...
+... ted,skip,intensified) '===     =========   ===========   **             ...
+...         ** **' SetBufferAddress(13,8) StartField(protected,skip,intensi ...
+... fied) '===     =========   === === ===   **       **  ** ***   ****' Se ...
+... tBufferAddress(14,8) StartField(protected,skip,intensified) '===     == ...
+... =   ===   ===  =  ===   **       **  *******  ** **' SetBufferAddress(1 ...
+... 5,6) StartField(protected,skip,intensified) '=======  ==========  ====  ...
+...     ====  *******  **  **   **  **  **' SetBufferAddress(16,6) StartFie ...
+... ld(protected,skip,intensified) '=======  =========   ====     ====  *** ...
+... ****  **  **   **  **   **' SetBufferAddress(18,5) StartField(protected ...
+... ,skip) '(R) Registered trademark of the IBM Corporation' SetBufferAddre ...
+... ss(19,5) StartField(protected,skip) '(C) Copyright International Busine ...
+... ss Machines Corporation 1985, 1993' SetBufferAddress(20,1) StartField(p ...
+... rotected,skip) '------------------------------------------------------- ...
+... ------------------------' StartField(21,1)(protected,skip,intensified)  ...
+... 'ACCOUNT...' StartField(21,12)(modified) '________' StartField(21,21)(p ...
+... rotected,skip,intensified) 'USERID...' StartField(21,31)(modified) '___ ...
+... _____' StartField(21,40)(protected,skip,intensified) 'PASSWORD...' Star ...
+... tField(21,52)(nondisplay) SetBufferAddress(21,61) StartField(protected, ...
+... skip) SetBufferAddress(22,1) StartField(protected,skip) 'Enter desired  ...
+... product or service, or press the HELP key (PF1) for assistance.' SetBuf ...
+... ferAddress(23,1) StartField(protected,skip,intensified) SetBufferAddres ...
+... s(24,1) StartField(protected,skip,intensified) '===>' StartField(24,6)( ...
+... intensified,modified) '                                                 ...
+...             ' StartField(24,67)(protected,skip) SetBufferAddress(24,70) ...
+...  StartField(modified) SetBufferAddress(24,79) StartField(protected,skip ...
+... )
+20211224.142041.492 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20211224.142041.492 Host operation took 0.055172s to complete
+20211224.142041.492 RCVD EOR
+20211224.142041.492 lazya_flush: 1166 slots, 28528 bytes
+20211224.142041.492 Macro[#4.2] KBWAIT -> IDLE (about to resume)
+20211224.142041.492 Macro[#4.2] running
+20211224.142041.492 Macro[#4.2] complete, success
+20211224.142041.492 CB(s3stdin)[#4.1] RUNNING -> IDLE (about to resume)
+20211224.142041.492 CB(s3stdin)[#4.1] child task done, success
+20211224.142041.492 Output for s3stdin: U F U C(204.146.168.209) I 4 24 80 20 12 0x0 0.060/ok
+20211224.142041.492 CB(s3stdin)[#4.1] complete, success
+20211224.142041.492 CB(s3stdin)[#4] complete
+20211224.142041.492 Waiting for 4 events
+20211224.142042.280 Got 1 event
+20211224.142042.280 s3stdin read ''
+20211224.142042.280 CB(s3stdin)[#5] started
+20211224.142042.281 CB(s3stdin)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142042.281 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20211224.142042.281 lazya_flush: 20 slots, 512 bytes
+20211224.142042.281 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20211224.142042.281 Macro[#5.2] running
+20211224.142042.281 Macro[#5.2] complete, success
+20211224.142042.281 CB(s3stdin)[#5.1] RUNNING -> IDLE (about to resume)
+20211224.142042.281 CB(s3stdin)[#5.1] child task done, success
+20211224.142042.281 Output for s3stdin: U F U C(204.146.168.209) I 4 24 80 20 12 0x0 0.000/ok
+20211224.142042.281 CB(s3stdin)[#5.1] complete, success
+20211224.142042.281 CB(s3stdin)[#5] complete
+20211224.142042.281 Waiting for 4 events
+20211224.142045.441 Got 1 event
+20211224.142045.441 s3stdin read 'pf(3)'
+20211224.142045.441 CB(s3stdin)[#6] started
+20211224.142045.441 CB(s3stdin)[#6.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142045.441 Macro[#6.2] IDLE -> RUNNING (fresh push)
+20211224.142045.441 lazya_flush: 20 slots, 528 bytes
+20211224.142045.441 Macro[#6.2] RUNNING -> IDLE (about to resume)
+20211224.142045.441 Macro[#6.2] running
+20211224.142045.441 Macro[#6.2] IDLE -> RUNNING (executing)
+20211224.142045.441 Macro[#6.2] 'pf(3)'
+20211224.142045.441 script -> PF("3")
+20211224.142045.441 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> PF3(21,13) SetBufferAddress(21,13) '________' SetBufferAddress(21,32) '__ ...
+... ______' SetBufferAddress(24,7) '                                        ...
+...                      ' SetBufferAddress(24,71)
+20211224.142045.441 SENT TN3270E(3270-DATA NO-RESPONSE 3)
+> 0x0   0000000003f3d94c11d94c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115c
+> 0x20  f640404040404040404040404040404040404040404040404040404040404040
+> 0x40  4040404040404040404040404040404040404040404040404040404040115df6
+> 0x60  ffef
+20211224.142045.441 SENT EOR
+20211224.142045.441 Macro[#6.2] RUNNING -> KBWAIT (keyboard locked)
+20211224.142045.441 Waiting for 3 events or 1.000s
+20211224.142045.498 Got 1 event
+20211224.142045.498 Reading host socket via TLS
+20211224.142045.498 Host socket read complete nr=9
+< 0x0   0000010005f1c2ffef
+20211224.142045.499 RCVD TN3270E(3270-DATA ERROR-RESPONSE 5)
+< Write(reset,restore)
+20211224.142045.499 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20211224.142045.499 Host operation took 0.057009s to complete
+20211224.142045.499 RCVD EOR
+20211224.142045.499 lazya_flush: 102 slots, 2448 bytes
+20211224.142045.499 Macro[#6.2] KBWAIT -> IDLE (about to resume)
+20211224.142045.499 Macro[#6.2] running
+20211224.142045.499 Macro[#6.2] complete, success
+20211224.142045.499 CB(s3stdin)[#6.1] RUNNING -> IDLE (about to resume)
+20211224.142045.499 CB(s3stdin)[#6.1] child task done, success
+20211224.142045.499 Output for s3stdin: U F U C(204.146.168.209) I 4 24 80 20 12 0x0 0.058/ok
+20211224.142045.499 CB(s3stdin)[#6.1] complete, success
+20211224.142045.499 CB(s3stdin)[#6] complete
+20211224.142045.499 Waiting for 4 events
+20211224.142045.501 Got 1 event
+20211224.142045.501 Reading host socket via TLS
+20211224.142045.501 Host socket read complete nr=8
+< 0x0   040000000001ffef
+20211224.142045.501 RCVD TN3270E(UNBIND NO-RESPONSE 0)
+< UNBIND normal
+20211224.142045.501 Now operating in connected-unbound mode.
+20211224.142045.501 cstate [connected-tn3270e] -> [connected-unbound] (host_in3270)
+20211224.142045.501 st_changed(negotiating,true)
+20211224.142045.501 st_changed(3270-mode,false)
+20211224.142045.501 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20211224.142045.501 Host negotiation step took 0.000009s to complete
+20211224.142045.501 ctlr_enable_cursor(true, connect)
+20211224.142045.501 ctlr_enable_cursor(true, nvt)
+20211224.142045.502 RCVD EOR
+20211224.142045.502 lazya_flush: 27 slots, 712 bytes
+20211224.142045.502 Waiting for 4 events
+20211224.142045.502 Got 1 event
+20211224.142045.502 Reading host socket via TLS
+20211224.142045.502 Host socket read complete nr=0
+20211224.142045.502 RCVD disconnect
+20211224.142045.502 st_changed(secure,false)
+20211224.142045.502 SENT disconnect
+20211224.142045.502 cstate [connected-unbound] -> [not-connected] (net_disconnect)
+20211224.142045.502 st_changed(connect,false)
+20211224.142045.502 Keyboard unlock(kybd_connect) -AWAITING_FIRST
+20211224.142045.502 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20211224.142045.502 ctlr_enable_cursor(false, connect)
+20211224.142045.502 ctlr_enable_cursor(false, nvt)
+20211224.142045.502 st_changed(terminal-name,true)
+20211224.142045.502 lazya_flush: 15 slots, 360 bytes
+20211224.142045.502 Waiting for 2 events or 0.000s
+20211224.142045.502 Got 0 events
+20211224.142045.502 Waiting for 2 events
+20211224.142045.880 Got 1 event
+20211224.142045.880 s3stdin read ''
+20211224.142045.880 CB(s3stdin)[#7] started
+20211224.142045.880 CB(s3stdin)[#7.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142045.880 Macro[#7.2] IDLE -> RUNNING (fresh push)
+20211224.142045.880 Macro[#7.2] RUNNING -> IDLE (about to resume)
+20211224.142045.880 Macro[#7.2] running
+20211224.142045.880 Macro[#7.2] complete, success
+20211224.142045.880 CB(s3stdin)[#7.1] RUNNING -> IDLE (about to resume)
+20211224.142045.880 CB(s3stdin)[#7.1] child task done, success
+20211224.142045.880 Output for s3stdin: L U U N N 4 43 80 0 0 0x0 0.000/ok
+20211224.142045.880 CB(s3stdin)[#7.1] complete, success
+20211224.142045.880 CB(s3stdin)[#7] complete
+20211224.142045.880 Waiting for 2 events
+20211224.142047.697 Got 1 event
+20211224.142047.697 s3stdin read 'quit'
+20211224.142047.697 CB(s3stdin)[#8] started
+20211224.142047.697 CB(s3stdin)[#8.1] IDLE -> RUNNING (child task to be pushed next)
+20211224.142047.697 Macro[#8.2] IDLE -> RUNNING (fresh push)
+20211224.142047.697 lazya_flush: 19 slots, 488 bytes
+20211224.142047.697 Macro[#8.2] RUNNING -> IDLE (about to resume)
+20211224.142047.697 Macro[#8.2] running
+20211224.142047.697 Macro[#8.2] IDLE -> RUNNING (executing)
+20211224.142047.697 Macro[#8.2] 'quit'
+20211224.142047.697 script -> Quit()
+20211224.142047.697 Macro[#8.2] complete, success
+20211224.142047.697 CB(s3stdin)[#8.1] RUNNING -> IDLE (about to resume)
+20211224.142047.697 CB(s3stdin)[#8.1] child task done, success
+20211224.142047.697 Output for s3stdin: L U U N N 4 43 80 0 0 0x0 0.000/ok
+20211224.142047.697 CB(s3stdin)[#8.1] complete, success
+20211224.142047.697 CB(s3stdin)[#8] complete
+20211224.142047.697 Waiting for 2 events or 0.000s
+20211224.142047.697 Got 0 events
+20211224.142047.697 Exiting with status 0
+20211224.142047.697 st_changed(exiting,true)
+20211224.142047.697 Trace stopped

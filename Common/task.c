@@ -131,7 +131,10 @@ typedef struct task {
 	TS_WAIT_UNLOCK,	/* awaiting completion of Wait(Unlock) */
 	TS_EXPECTING,	/* awaiting completion of Expect() */
 	TS_PASSTHRU,	/* awaiting completion of a pass-through action */
-	TS_XWAIT	/* extended wait */
+	TS_XWAIT,	/* extended wait */
+	TS_WAIT_CURSOR_AT, /* awaiting cursor at a specific location */
+	TS_WAIT_STRING_AT, /* awaiting string string a specific location */
+	TS_WAIT_IFIELD_AT, /* awaiting an input field at a specific location */
     } state;
     bool success;
     bool accumulated;	/* accumulated time flag */
@@ -146,6 +149,12 @@ typedef struct task {
 
     void *wait_context;	/* opaque context for waiting */
     xcontinue_fn *xcontinue_fn; /* continue function */
+
+    struct {
+	int baddr;	/* location for wait operations */
+	char *string;	/* string to wait for */
+	bool force_utf8;/* true if string is UTF-8 */
+    } match;
 
     /* Expect() fields. */
     struct {
@@ -211,7 +220,10 @@ static const char *task_state_name[] = {
     "WAIT_UNLOCK",
     "EXPECTING",
     "PASSTHRU",
-    "XWAIT"
+    "XWAIT",
+    "WAIT_CURSOR_AT",
+    "WAIT_STRING_AT",
+    "WAIT_IFIELD_AT",
 };
 
 static struct macro_def *macro_last = (struct macro_def *) NULL;
@@ -561,6 +573,24 @@ task_set_state(task_t *s, enum task_state state, const char *why)
     }
 }
 
+/**
+ * Set match parameters.
+ *
+ * @param[in] s		task to modify
+ * @param[in] baddr	buffer address, or -1
+ * @param[in] string	string to match, or NULL
+ * @param[in] force_utf8 true if string is encoded in UTF-8
+ */
+static void
+task_set_match(task_t *s, int baddr, const char *string, bool force_utf8)
+{
+    vtrace(TASK_NAME_FMT " wait @%d%s\n", TASK_sNAME(s),
+	    baddr, (string != NULL)? lazyaf(" '%s'", string): "");
+    s->match.baddr = baddr;
+    s->match.string = NewString(string);
+    s->match.force_utf8 = force_utf8;
+}
+
 /* Allocate a new task. */
 static task_t *
 new_task(enum task_type type, taskq_t *q)
@@ -580,6 +610,9 @@ new_task(enum task_type type, taskq_t *q)
     gettimeofday(&s->t0, NULL);
     s->child_msec = 0L;
     s->fatal = false;
+    s->match.baddr = -1;
+    s->match.string = NULL;
+    s->match.force_utf8 = false;
 
     return s;
 }
@@ -666,6 +699,7 @@ free_task(task_t *t)
 	Replace(t->macro.cmds, NULL);
 	t->macro.cmd_next = NULL;
     }
+    Replace(t->match.string, NULL);
     
     /* Free the structure. */
     Free(t);
@@ -1890,6 +1924,90 @@ connect_errno(int e, const char *fmt, ...)
 }
 
 /**
+ * Grabs a string from an offset on the screen.
+ * Returns the string.
+ *
+ * N.B.: The length parameter is not the number of buffer positions to scan,
+ * it is the size of the string to return. This is because the string to wait
+ * for is multibyte, and we don't know how many buffer positions that might
+ * represent.
+ *
+ * @param[in] baddr	buffer address
+ * @param[in] len	length of match string
+ * @param[in] buf	display buffer
+ * @param[in] force_utf8 true to force string to UTF-8 encoding
+ */
+static char *
+grab_string(int baddr, size_t len, struct ea *buf, bool force_utf8)
+{
+    int i;
+    bool is_zero = false;
+    varbuf_t r;
+    char *ret;
+
+    vb_init(&r);
+
+    is_zero = FA_IS_ZERO(get_field_attribute(baddr));
+
+    for (i = 0; vb_len(&r) < len; i++) {
+	char mb[16];
+	ucs4_t uc;
+	size_t j;
+	size_t xlen;
+	struct ea *ea = &buf[(baddr + i) % (ROWS * COLS)];
+
+	if (ea->fa) {
+	    is_zero = FA_IS_ZERO(ea->fa);
+	    vb_appends(&r, " ");
+	} else if (is_zero) {
+	    vb_appends(&r, " ");
+	} else if (IS_RIGHT(ctlr_dbcs_state(baddr + i))) {
+	    continue;
+	} else {
+	    if (is_nvt(ea, false, &uc)) {
+		/* NVT-mode text. */
+		if (uc >= UPRIV2_Aunderbar && uc <= UPRIV2_Zunderbar) {
+		    uc -= UPRIV2;
+		}
+		if (toggled(MONOCASE)) {
+		    uc = u_toupper(uc);
+		}
+		xlen = unicode_to_multibyte_f(uc, mb, sizeof(mb), force_utf8);
+		for (j = 0; j < xlen - 1; j++) {
+		    vb_appendf(&r, "%c", mb[j]);
+		}
+	    } else {
+		/* 3270-mode text. */
+		if (IS_LEFT(ctlr_dbcs_state(baddr + i))) {
+		    xlen = ebcdic_to_multibyte_f((ea->ec << 8) |
+			    buf[(baddr + i + 1) % (ROWS * COLS)].ec,
+			    mb, sizeof(mb), force_utf8);
+		    for (j = 0; j < xlen - 1; j++) {
+			vb_appendf(&r, "%c", mb[j]);
+		    }
+		} else {
+		    xlen = ebcdic_to_multibyte_fx(ea->ec, ea->cs, mb,
+			    sizeof(mb),
+			    EUO_BLANK_UNDEF |
+			     (toggled(MONOCASE)? EUO_TOUPPER: 0),
+			    &uc, force_utf8);
+		    for (j = 0; j < xlen - 1; j++) {
+			vb_appendf(&r, "%c", mb[j]);
+		    }
+		}
+	    }
+	}
+    }
+
+    ret = NewString(vb_buf(&r));
+    if (ret == NULL) {
+	ret = NewString("");
+    }
+    vb_free(&r);
+    return ret;
+}
+
+/**
  * Run one task queue.
  *
  * @return True if one or more tasks were processed.
@@ -2012,6 +2130,52 @@ run_taskq(void)
 	    return any;
 
 	case TS_XWAIT:
+	    return any;
+
+	case TS_WAIT_CURSOR_AT:
+	    if (!PCONNECTED) {
+		task_disconnect_abort(current_task);
+		any = true;
+		break;
+	    }
+	    if (cursor_addr == current_task->match.baddr) {
+		any = true;
+		break;
+	    }
+	    return any;
+	case TS_WAIT_STRING_AT:
+	    if (!PCONNECTED) {
+		task_disconnect_abort(current_task);
+		any = true;
+		break;
+	    }
+	    if (current_task->match.baddr < ROWS * COLS) {
+		char *current_string = grab_string(current_task->match.baddr,
+			strlen(current_task->match.string), ea_buf,
+			current_task->match.force_utf8);
+
+		if (!strcmp(current_string, current_task->match.string)) {
+		    Free(current_string);
+		    any = true;
+		    break;
+		}
+		Free(current_string);
+	    }
+	    return any;
+	case TS_WAIT_IFIELD_AT:
+	    if (!PCONNECTED) {
+		task_disconnect_abort(current_task);
+		any = true;
+		break;
+	    }
+	    if (current_task->match.baddr < ROWS * COLS) {
+		int fa_addr = find_field_attribute(current_task->match.baddr);
+
+		if (fa_addr >= 0 && !FA_IS_PROTECTED(ea_buf[fa_addr].fa)) {
+		    any = true;
+		    break;
+		}
+	    }
 	    return any;
 	}
 
@@ -3078,6 +3242,43 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     return true;
 }
 
+/* Parse row and column or offset arguments. */
+static bool
+parse_rco(const char *action, const char *keyword, unsigned argc,
+	const char **argv, int *baddr)
+{
+    char *next;
+    unsigned long offset, row, column;
+
+    if (argc == 1) {
+	/* Offset. */
+	offset = strtoul(argv[0], &next, 10);
+	if (!argv[0][0] || *next != '\0' ||
+		offset >= (unsigned long)(maxROWS * maxCOLS)) {
+	    popup_an_error("%s(%s): Invalid offset '%s'", action, keyword,
+		    argv[0]);
+	    return false;
+	}
+	*baddr = (int)offset;
+	return true;
+    }
+
+    /* Row and column. */
+    row = strtoul(argv[0], &next, 10);
+    if (!argv[0][0] || *next != '\0' || row >= (unsigned long)maxROWS) {
+	popup_an_error("%s(%s): Invalid row '%s'", action, keyword, argv[0]);
+	return false;
+    }
+    column = strtoul(argv[1], &next, 10);
+    if (!argv[1][0] || *next != '\0' || column >= (unsigned long)maxCOLS) {
+	popup_an_error("%s(%s): Invalid column '%s'", action, keyword,
+		argv[1]);
+	return false;
+    }
+    *baddr = (int)(((row - 1) * COLS) + (column - 1));
+    return true;
+}
+
 /*
  * Wait for various conditions.
  */
@@ -3089,8 +3290,42 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     char *ptr;
     unsigned np;
     const char **pr;
+    static struct {
+	const char *keyword;
+	int min_args;
+	int max_args;
+	enum task_state next_state;
+    } keywords[] = {
+	{ Kw3270,          0, 0, TS_WAIT_3270 },
+	{ Kw3270Mode,      0, 0, TS_WAIT_3270 },
+	{ KwAnsi,          0, 0, TS_WAIT_NVT },
+	{ KwNvtMode,       0, 0, TS_WAIT_NVT },
+	{ KwDisconnect,    0, 0, TS_WAIT_DISC },
+	{ KwInputField,    0, 0, TS_WAIT_IFIELD },
+	{ KwOutput,        0, 0, TS_WAIT_OUTPUT },
+	{ KwUnlock,        0, 0, TS_WAIT_UNLOCK },
+	{ KwSeconds,       0, 0, TS_TIME_WAIT },
+	{ KwCursorAt,      1, 2, TS_WAIT_CURSOR_AT },
+	{ KwStringAt,      2, 3, TS_WAIT_STRING_AT },
+	{ KwInputFieldAt,  1, 2, TS_WAIT_IFIELD_AT },
+	{ NULL, 0, 0 }
+    };
+    int i;
+    int match_baddr = -1;
+    const char *match_string = NULL;
+#define CONNECTED_CHECK do { \
+    if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) { \
+	popup_an_error(AnWait "(): Not connected"); \
+	return false; \
+    } \
+} while(false)
 
     action_debug(AnWait, ia, argc, argv);
+
+    if (current_task == NULL || current_task->state != TS_RUNNING) {
+	popup_an_error(AnWait "() can only be called from scripts or macros");
+	return false;
+    }
 
     /* Pick off the timeout parameter first. */
     if (argc > 0 &&
@@ -3105,62 +3340,115 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	pr = argv;
     }
 
-    if (np > 1) {
-	popup_an_error("Too many arguments to " AnWait " ()"
-		"or invalid timeout value");
-	return false;
-    }
-    if (current_task == NULL || current_task->state != TS_RUNNING) {
-	popup_an_error(AnWait "() can only be called from scripts or macros");
-	return false;
-    }
-    if (np == 1) {
-	if (!strcasecmp(pr[0], KwNvtMode) || !strcasecmp(pr[0], KwAnsi)) {
-	    if (!IN_NVT) {
-		next_state = TS_WAIT_NVT;
+    /* Do the initial keyword match and argument count check. */
+    if (np > 0) {
+	for (i = 0; keywords[i].keyword != NULL; i++) {
+	    if (!strcasecmp(pr[0], keywords[i].keyword)) {
+		if (check_argc(lazyaf(AnWait "(%s)", keywords[i].keyword),
+			    np - 1, keywords[i].min_args,
+			    keywords[i].max_args) < 0) {
+		    return false;
+		}
+		next_state = keywords[i].next_state;
+		break;
 	    }
-	} else if (!strcasecmp(pr[0], Kw3270Mode) ||
-		   !strcasecmp(pr[0], Kw3270)) {
-	    if (!IN_3270) {
-		next_state = TS_WAIT_3270;
-	    }
-	} else if (!strcasecmp(pr[0], KwOutput)) {
-	    if (current_task->taskq->output_wait_needed) {
-		next_state = TS_WAIT_OUTPUT;
-	    } else {
-		return true;
-	    }
-	} else if (!strcasecmp(pr[0], KwDisconnect)) {
-	    if (CONNECTED) {
-		next_state = TS_WAIT_DISC;
-	    } else {
-		return true;
-	    }
-	} else if (!strcasecmp(pr[0], KwUnlock)) {
-	    if (KBWAIT) {
-		next_state = TS_WAIT_UNLOCK;
-	    } else {
-		return true;
-	    }
-	} else if (tmo > 0.0 && !strcasecmp(pr[0], KwSeconds)) {
-	    next_state = TS_TIME_WAIT;
-	} else if (strcasecmp(pr[0], KwInputField)) {
+	}
+	if (keywords[i].keyword == NULL) {
 	    return action_args_are(AnWait, KwInputField, KwNvtMode, Kw3270Mode,
-		    KwOutput, KwSeconds, KwDisconnect, KwUnlock, NULL);
+		    KwOutput, KwSeconds, KwDisconnect, KwUnlock, KwCursorAt,
+		    KwStringAt, KwInputFieldAt, NULL);
 	}
     }
-    if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) {
-	popup_an_error(AnWait "(): Not connected");
-	return false;
+
+    /* Do keyword-specific actions. */
+    switch (next_state) {
+    case TS_WAIT_3270:
+	CONNECTED_CHECK;
+	if (IN_3270) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_NVT:
+	CONNECTED_CHECK;
+	if (IN_NVT) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_DISC:
+	if (!CONNECTED) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_IFIELD:
+	CONNECTED_CHECK;
+	if (CAN_PROCEED) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_OUTPUT:
+	CONNECTED_CHECK;
+	if (!current_task->taskq->output_wait_needed) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_UNLOCK:
+	CONNECTED_CHECK;
+	if (!KBWAIT) {
+	    return true;
+	}
+	break;
+    case TS_TIME_WAIT:
+	break;
+    case TS_WAIT_CURSOR_AT:
+	if (!parse_rco(AnWait, KwCursorAt, np - 1, pr + 1, &match_baddr)) {
+	    return false;
+	}
+	CONNECTED_CHECK;
+	if (cursor_addr == match_baddr) {
+	    return true;
+	}
+	break;
+    case TS_WAIT_STRING_AT:
+	CONNECTED_CHECK;
+	if (!parse_rco(AnWait, KwStringAt, np - 2, pr + 1, &match_baddr)) {
+	    return false;
+	}
+	CONNECTED_CHECK;
+	match_string = pr[np - 1];
+	if (match_baddr < ROWS * COLS) {
+	    char *current_string = grab_string(match_baddr,
+		    strlen(match_string), ea_buf, ia == IA_HTTPD);
+
+	    if (!strcmp(current_string, match_string)) {
+		Free(current_string);
+		return true;
+	    }
+	    Free(current_string);
+	}
+	break;
+    case TS_WAIT_IFIELD_AT:
+	if (!parse_rco(AnWait, KwInputFieldAt, np - 1, pr + 1, &match_baddr)) {
+	    return false;
+	}
+	CONNECTED_CHECK;
+	if (match_baddr < ROWS * COLS) {
+	    int fa_addr = find_field_attribute(match_baddr);
+
+	    if (fa_addr >= 0 && !FA_IS_PROTECTED(ea_buf[fa_addr].fa)) {
+		return true;
+	    }
+	}
+	break;
+    default:
+	break;
     }
 
-    /* Is it already okay? */
-    if (next_state == TS_WAIT_IFIELD && CAN_PROCEED) {
-	return true;
-    }
-
-    /* No, wait for it to happen. */
+    /* Wait for whatever it is to happen. */
     task_set_state(current_task, next_state, AnWait "()");
+    if (match_baddr >= 0) {
+	task_set_match(current_task, match_baddr, match_string,
+		ia == IA_HTTPD);
+    }
 
     /* Set up a timeout, if they want one. */
     if (tmo >= 0.0) {
@@ -3171,6 +3459,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 	current_task->wait_id = AddTimeOut(tmo_msec, wait_timed_out);
     }
+
     return true;
 }
 

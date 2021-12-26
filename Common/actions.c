@@ -149,18 +149,23 @@ int
 check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max)
 {
+    bool has_paren = strchr(aname, '(') != NULL;
+
     if (nargs >= nargs_min && nargs <= nargs_max) {
 	return 0;
     }
     if (nargs_min == nargs_max) {
-	popup_an_error("%s() requires %d argument%s",
-		aname, nargs_min, nargs_min == 1 ? "" : "s");
+	popup_an_error("%s%s requires %d argument%s",
+		aname, has_paren? "": ")",
+		nargs_min, nargs_min == 1 ? "" : "s");
     } else if (nargs_max == nargs_min + 1) {
-	popup_an_error("%s() requires %d or %d arguments",
-		aname, nargs_min, nargs_max);
+	popup_an_error("%s%s requires %d or %d arguments",
+		aname, has_paren? "": ")",
+		nargs_min, nargs_max);
     } else {
-	popup_an_error("%s() requires %d to %d arguments",
-		aname, nargs_min, nargs_max);
+	popup_an_error("%s%s requires %d to %d arguments",
+		aname, has_paren? "": ")",
+		nargs_min, nargs_max);
     }
     return -1;
 }

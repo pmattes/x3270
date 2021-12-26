@@ -74,6 +74,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "proxy.h"
+#include "query.h"
 #include "resolver.h"
 #include "resources.h"
 #include "sio.h"
@@ -142,6 +143,7 @@ static HANDLE	sock_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
+static int	tm_count; /* timing mark count */
 static bool did_ne_send;
 static bool deferred_will_ttype;
 static unsigned char *ibuf = (unsigned char *) NULL;
@@ -931,6 +933,7 @@ net_connected_complete(void)
     /* set up telnet options */
     memset((char *)myopts, 0, sizeof(myopts));
     memset((char *)hisopts, 0, sizeof(hisopts));
+    tm_count = 0;
     did_ne_send = false;
     deferred_will_ttype = false;
     b8_zero(&e_funcs);
@@ -1781,6 +1784,9 @@ telnet_fsm(unsigned char c)
 		    nested_tls = true;
 		}
 		goto wont;
+	    }
+	    if (c == TELOPT_TM) {
+		tm_count++;
 	    }
 	case TELOPT_NEW_ENVIRON:
 	    if (c == TELOPT_TN3270E && HOST_FLAG(NON_TN3270E_HOST)) {
@@ -4009,10 +4015,21 @@ toggle_ntim(const char *name, const char *value)
     return true;
 }
 
+/* Timing mark count query. */
+static const char *
+tm_dump(void)
+{
+    return lazyaf("%d", tm_count);
+}
+
 /* Module registration. */
 void
 net_register(void)
 {
+    static query_t queries[] = {
+	{ KwTimingMarks, tm_dump, NULL, false, false }
+    };
+
     /* Register for state changes. */
     register_schange(ST_REMODEL, net_remodel);
 
@@ -4022,4 +4039,7 @@ net_register(void)
     register_extended_toggle(ResNoTelnetInputMode, toggle_ntim, NULL,
 	    canonicalize_ntim,
 	    (void **)&appres.interactive.no_telnet_input_mode, XRM_STRING);
+
+    /* Register our queries. */
+    register_queries(queries, array_count(queries));
 }

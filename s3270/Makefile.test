@@ -27,8 +27,9 @@
 # Makefile for s3270 testing
 
 test: s3270 playback
-	PATH="$$PWD/obj/x86_64-unknown-linux-gnu/s3270:$$PWD/obj/x86_64-unknown-linux-gnu/playback:$$PATH" python3 s3270/Test/Smoke.py
-	PATH="$$PWD/obj/x86_64-unknown-linux-gnu/s3270:$$PWD/obj/x86_64-unknown-linux-gnu/playback:$$PATH" python3 s3270/Test/ft.py
+	PATH="$$PWD/obj/x86_64-unknown-linux-gnu/s3270:$$PWD/obj/x86_64-unknown-linux-gnu/playback:$$PATH" \
+	     PYTHONPATH="$$PWD/s3270/Test" \
+	     python3 -m unittest s3270/Test/*.py
 
 s3270:
 	$(MAKE) $@
