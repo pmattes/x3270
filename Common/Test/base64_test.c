@@ -61,12 +61,19 @@ main(int argc, char *argv[])
 	"Bzz Bzz Bzz",
 	NULL };
     int i;
+    bool verbose = 0;
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) {
+	verbose = true;
+    }
 
     for (i = 0; s[i] != NULL; i++) {
 	char *b = base64_encode(s[i]);
 	char *e = base64_decode(b);
 
-	printf("'%s' -> '%s' -> '%s'\n", s[i], b, e);
+	if (verbose) {
+	    printf("'%s' -> '%s' -> '%s'\n", s[i], b, e);
+	}
 	assert (!strcmp(s[i], e));
     }
 

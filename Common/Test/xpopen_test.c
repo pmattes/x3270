@@ -54,6 +54,11 @@ main(int argc, char *argv[])
     FILE *f;
     char *s;
     int rv, status;
+    bool verbose = false;
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) {
+	verbose = true;
+    }
 
     signal(SIGPIPE, SIG_IGN);
     signal(SIGCHLD, nothing);
@@ -65,7 +70,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
     while ((s = fgets(buf, sizeof(buf), f)) != NULL) {
-	fputs(s, stdout);
+	if (verbose) {
+	    fputs(s, stdout);
+	}
     }
     rv = xpclose(f, 0);
     if (rv != 0) {
@@ -73,7 +80,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    printf("\n========\n\n");
+    if (verbose) {
+	printf("\n========\n\n");
+    }
 
     /* Try an input stream with explicit wait. */
     f = xpopen("cat /etc/hosts", "r", &pid);
@@ -82,7 +91,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
     while ((s = fgets(buf, sizeof(buf), f)) != NULL) {
-	fputs(s, stdout);
+	if (verbose) {
+	    fputs(s, stdout);
+	}
     }
     xpclose(f, XPC_NOWAIT);
     rv = waitpid(pid, &status, 0);
@@ -94,7 +105,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    printf("\n========\n\n");
+    if (verbose) {
+	printf("\n========\n\n");
+    }
 
     /* Try an output stream. */
     sprintf(outfile, "/tmp/xpopen.%d", getpid());
@@ -116,7 +129,9 @@ main(int argc, char *argv[])
 	exit(1);
     }
     while ((s = fgets(buf, sizeof(buf), f)) != NULL) {
-	fputs(s, stdout);
+	if (verbose) {
+	    fputs(s, stdout);
+	}
     }
     fclose(f);
     unlink(outfile);

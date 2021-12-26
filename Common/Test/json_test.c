@@ -106,6 +106,11 @@ int
 main(int argc, char *argv[])
 {
     int i;
+    bool verbose = false;
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) {
+	verbose = true;
+    }
 
     /* Get ready for stderr redirection when we expect an assertion to fail. */
 #if !defined(_WIN32) /*[*/
@@ -119,11 +124,16 @@ main(int argc, char *argv[])
     /* Loop through the tests. */
     for (i = 0; test[i].name != NULL; i++) {
 	(*test[i].function)();
-	printf("%s test - PASS\n", test[i].name);
+	if (verbose) {
+	    printf("%s test - PASS\n", test[i].name);
+	} else {
+	    printf(".");
+	    fflush(stdout);
+	}
     }
 
     /* Success. */
-    printf("\nOverall - PASS\n");
+    printf("\nPASS\n");
     return 0;
 }
 
