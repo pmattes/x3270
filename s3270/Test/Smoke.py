@@ -111,7 +111,7 @@ class TestS3270Smoke(unittest.TestCase):
 
         # Wait for the process to exit.
         s3270.kill()
-        s3270.wait();
+        s3270.wait()
 
 if __name__ == '__main__':
     unittest.main()
