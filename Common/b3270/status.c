@@ -220,6 +220,12 @@ status_reset(void)
 	}
 	oia_kybdlock = K_FIELD;
 	status_lock(NewString(OiaLockField));
+    } else if (kybdlock & KL_BID) {
+	if (oia_kybdlock == K_TWAIT) {
+	    return;
+	}
+	oia_kybdlock = K_TWAIT;
+	status_lock(NewString(OiaLockTwait));
     } else {
 	status_untiming();
 	if (oia_kybdlock == K_NONE) {

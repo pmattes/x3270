@@ -526,76 +526,87 @@ ctlr_erase(bool alt)
     screen_alt = alt;
 }
 
+/* Restore the keyboard. */
+static void
+restore_keyboard()
+{
+    aid = AID_NO;
+    do_reset(false);
+    ticking_stop(&net_last_recv_ts);
+}
+
 /*
  * Interpret an incoming 3270 command.
  */
 enum pds
-process_ds(unsigned char *buf, size_t buflen)
+process_ds(unsigned char *buf, size_t buflen, bool kybd_restore)
 {
-    enum pds rv;
+    enum pds rv = PDS_OKAY_NO_OUTPUT;
 
-    if (!buflen) {
-	return PDS_OKAY_NO_OUTPUT;
+    if (buflen) {
+	scroll_to_bottom();
+
+	switch (buf[0]) {	/* 3270 command */
+	case CMD_EAU:	/* erase all unprotected */
+	case SNA_CMD_EAU:
+	    ctlr_erase_all_unprotected();
+	    trace_ds("< EraseAllUnprotected\n");
+	    break;
+	case CMD_EWA:	/* erase/write alternate */
+	case SNA_CMD_EWA:
+	    ctlr_erase(true);
+	    trace_ds("< EraseWriteAlternate");
+	    rv = ctlr_write(buf, buflen, true);
+	    break;
+	case CMD_EW:	/* erase/write */
+	case SNA_CMD_EW:
+	    ctlr_erase(false);
+	    trace_ds("< EraseWrite");
+	    rv = ctlr_write(buf, buflen, true);
+	    break;
+	case CMD_W:	/* write */
+	case SNA_CMD_W:
+	    trace_ds("< Write");
+	    rv = ctlr_write(buf, buflen, false);
+	    break;
+	case CMD_RB:	/* read buffer */
+	case SNA_CMD_RB:
+	    trace_ds("< ReadBuffer\n");
+	    ctlr_read_buffer(aid);
+	    rv = PDS_OKAY_OUTPUT;
+	    break;
+	case CMD_RM:	/* read modifed */
+	case SNA_CMD_RM:
+	    trace_ds("< ReadModified\n");
+	    ctlr_read_modified(aid, false);
+	    rv = PDS_OKAY_OUTPUT;
+	    break;
+	case CMD_RMA:	/* read modifed all */
+	case SNA_CMD_RMA:
+	    trace_ds("< ReadModifiedAll\n");
+	    ctlr_read_modified(aid, true);
+	    rv = PDS_OKAY_OUTPUT;
+	    break;
+	case CMD_WSF:	/* write structured field */
+	case SNA_CMD_WSF:
+	    trace_ds("< WriteStructuredField");
+	    rv = write_structured_field(buf, buflen);
+	    break;
+	case CMD_NOP:	/* no-op */
+	    trace_ds("< NoOp\n");
+	    break;
+	default:
+	    /* unknown 3270 command */
+	    popup_an_error("Unknown 3270 Data Stream command: 0x%X\n", buf[0]);
+	    rv = PDS_BAD_CMD;
+	    break;
+	}
     }
 
-    scroll_to_bottom();
-
-    switch (buf[0]) {	/* 3270 command */
-    case CMD_EAU:	/* erase all unprotected */
-    case SNA_CMD_EAU:
-	ctlr_erase_all_unprotected();
-	trace_ds("< EraseAllUnprotected\n");
-	return PDS_OKAY_NO_OUTPUT;
-    case CMD_EWA:	/* erase/write alternate */
-    case SNA_CMD_EWA:
-	ctlr_erase(true);
-	trace_ds("< EraseWriteAlternate");
-	if ((rv = ctlr_write(buf, buflen, true)) < 0) {
-	    return rv;
-	}
-	return PDS_OKAY_NO_OUTPUT;
-    case CMD_EW:	/* erase/write */
-    case SNA_CMD_EW:
-	ctlr_erase(false);
-	trace_ds("< EraseWrite");
-	if ((rv = ctlr_write(buf, buflen, true)) < 0) {
-	    return rv;
-	}
-	return PDS_OKAY_NO_OUTPUT;
-    case CMD_W:	/* write */
-    case SNA_CMD_W:
-	trace_ds("< Write");
-	if ((rv = ctlr_write(buf, buflen, false)) < 0) {
-	    return rv;
-	}
-	return PDS_OKAY_NO_OUTPUT;
-    case CMD_RB:	/* read buffer */
-    case SNA_CMD_RB:
-	trace_ds("< ReadBuffer\n");
-	ctlr_read_buffer(aid);
-	return PDS_OKAY_OUTPUT;
-    case CMD_RM:	/* read modifed */
-    case SNA_CMD_RM:
-	trace_ds("< ReadModified\n");
-	ctlr_read_modified(aid, false);
-	return PDS_OKAY_OUTPUT;
-    case CMD_RMA:	/* read modifed all */
-    case SNA_CMD_RMA:
-	trace_ds("< ReadModifiedAll\n");
-	ctlr_read_modified(aid, true);
-	return PDS_OKAY_OUTPUT;
-    case CMD_WSF:	/* write structured field */
-    case SNA_CMD_WSF:
-	trace_ds("< WriteStructuredField");
-	return write_structured_field(buf, buflen);
-    case CMD_NOP:	/* no-op */
-	trace_ds("< NoOp\n");
-	return PDS_OKAY_NO_OUTPUT;
-    default:
-	/* unknown 3270 command */
-	popup_an_error("Unknown 3270 Data Stream command: 0x%X\n", buf[0]);
-	return PDS_BAD_CMD;
+    if (kybd_restore) {
+	restore_keyboard();
     }
+    return rv;
 }
 
 /*

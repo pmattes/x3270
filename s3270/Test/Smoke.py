@@ -3,6 +3,7 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import TestCommon
 
 # s3270 smoke tests
 class TestS3270Smoke(unittest.TestCase):
@@ -12,6 +13,7 @@ class TestS3270Smoke(unittest.TestCase):
 
         # Start 'nc' to read s3270's output.
         nc = Popen(["nc", "-l", "127.0.0.1", "9999"], stdout=PIPE)
+        TestCommon.check_listen(9999)
 
         # Start s3270.
         s3270 = Popen(["s3270", "a:c:t:127.0.0.1:9999"], stdin=PIPE,
@@ -40,9 +42,11 @@ class TestS3270Smoke(unittest.TestCase):
         # Start 'playback' to read s3270's output.
         playback = Popen(["playback", "-b", "-p", "9998",
             "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
+        TestCommon.check_listen(9998)
 
         # Start s3270.
-        s3270 = Popen(["s3270", "127.0.0.1:9998"], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
+            "127.0.0.1:9998"], stdin=PIPE, stdout=DEVNULL)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"PF(3)\n")
@@ -62,6 +66,7 @@ class TestS3270Smoke(unittest.TestCase):
         server = Popen(["openssl", "s_server", "-cert",
             "s3270/Test/tls/TEST.crt", "-key", "s3270/Test/tls/TEST.key",
             "-port", "9997", "-quiet"], stdout=PIPE)
+        TestCommon.check_listen(9997)
 
         # Start s3270.
         s3270 = Popen(["s3270", "-cafile", "s3270/Test/tls/myCA.pem",

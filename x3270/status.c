@@ -344,15 +344,13 @@ static unsigned char proxy_msg[] = {
 static int proxy_len = sizeof(proxy_msg);
 
 static unsigned char telnet_msg[] = {
-    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
-    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_E, CG_L, CG_N, CG_E, CG_T,
+    CG_lock, CG_space, CG_bracketleft, CG_T, CG_E, CG_L, CG_N, CG_E, CG_T,
     CG_bracketright
 };
 static int telnet_len = sizeof(telnet_msg);
 
 static unsigned char tn3270e_msg[] = {
-    CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
-    CG_commlo, CG_space, CG_bracketleft, CG_T, CG_N, CG_3, CG_2, CG_7, CG_0,
+    CG_lock, CG_space, CG_bracketleft, CG_T, CG_N, CG_3, CG_2, CG_7, CG_0,
     CG_E, CG_bracketright
 };
 static int tn3270e_len = sizeof(tn3270e_msg);
@@ -649,6 +647,18 @@ status_connect(bool connected)
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
 	    do_msg(AWAITING_FIRST);
+	} else if (kybdlock & KL_ENTER_INHIBIT) {
+	    cancel_disabled_revert();
+	    do_msg(INHIBIT);
+        } else if (kybdlock & KL_BID) {
+	    cancel_disabled_revert();
+	    do_msg(TWAIT);
+        } else if (kybdlock & KL_FT) {
+	    cancel_disabled_revert();
+	    do_msg(FILE_TRANSFER);
+        } else if (kybdlock & KL_DEFERRED_UNLOCK) {
+	    cancel_disabled_revert();
+	    do_msg(UNLOCK_DELAY);
 	} else {
 	    cancel_disabled_revert();
 	    do_msg(BLANK);
@@ -835,15 +845,7 @@ void
 status_reset(void)
 {
     cancel_disabled_revert();
-    if (kybdlock & KL_ENTER_INHIBIT) {
-	do_msg(INHIBIT);
-    } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-	do_msg(UNLOCK_DELAY);
-    } else if (kybdlock & KL_FT) {
-	do_msg(FILE_TRANSFER);
-    } else {
-	status_connect(PCONNECTED);
-    }
+    status_connect(PCONNECTED);
 }
 
 /* Toggle insert mode */

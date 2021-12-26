@@ -1317,6 +1317,7 @@ copy_xres_to_res_bool(void)
     copy_bool(unlock_delay);
     copy_bool(bind_limit);
     copy_bool(bind_unlock);
+    copy_bool(contention_resolution);
     copy_bool(new_environ);
     copy_bool(socket);
     copy_bool(numeric_lock);

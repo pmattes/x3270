@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014 Paul Mattes.
+ * Copyright (c) 1996-2009, 2014, 2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,8 @@
 #define TN3270E_FUNC_RESPONSES		2
 #define TN3270E_FUNC_SCS_CTL_CODES	3
 #define TN3270E_FUNC_SYSREQ		4
+#define TN3270E_FUNC_CONTENTION_RESOLUTION 5
+#define TN3270E_FUNC_SNA_SENSE		6
 
 /* Header data type names. */
 #define TN3270E_DT_3270_DATA		0x00
@@ -69,9 +71,13 @@
 #define TN3270E_DT_REQUEST		0x06
 #define TN3270E_DT_SSCP_LU_DATA		0x07
 #define TN3270E_DT_PRINT_EOJ		0x08
+#define TN3270E_DT_BID			0x09
 
 /* Header request flags. */
 #define TN3270E_RQF_ERR_COND_CLEARED	0x00
+#define TN3270E_RQF_SEND_DATA		0x01
+#define TN3270E_RQF_KEYBOARD_RESTORE	0x02
+#define TN3270E_RQF_SIGNAL		0x04
 
 /* Header response flags. */
 #define TN3270E_RSF_NO_RESPONSE		0x00
@@ -79,6 +85,7 @@
 #define TN3270E_RSF_ALWAYS_RESPONSE	0x02
 #define TN3270E_RSF_POSITIVE_RESPONSE	0x00
 #define TN3270E_RSF_NEGATIVE_RESPONSE	0x01
+#define TN3270E_RSF_SNA_SENSE		0x02
 
 /* Header response data. */
 #define TN3270E_POS_DEVICE_END		0x00

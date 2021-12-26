@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015, 2018, 2020-2021 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,7 +89,7 @@ bool get_bounded_field_attribute(register int baddr, register int bound,
 void mdt_clear(int baddr);
 void mdt_set(int baddr);
 int next_unprotected(int baddr0);
-enum pds process_ds(unsigned char *buf, size_t buflen);
+enum pds process_ds(unsigned char *buf, size_t buflen, bool kybd_restore);
 void ps_process(void);
 void set_rows_cols(int mn, int ovc, int ovr);
 void ticking_start(bool anyway);

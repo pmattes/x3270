@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2020, Paul Mattes.
+ * Copyright (c) 1995-2021, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,7 @@
 #define ResConnectTimeout	"connectTimeout"
 #define ResConsole		"console"
 #define ResConsoleColorForHostColor "consoleColorForHostColor"
+#define ResContentionResolution	"contentionResolution"
 #define ResCrosshair		"crosshair"
 #define ResCrosshairColor	"crosshairColor"
 #define ResCursesColorFor	"cursesColorFor"
@@ -331,6 +332,7 @@
 #define ClsConnectFileName	"ConnectFileName"
 #define ClsConnectTimeout	"ConnectTimeout"
 #define ClsConsole		"Console"
+#define ClsContentionResolution	"ContentionResolution"
 #define ClsCrosshair		"Crosshair"
 #define ClsCrosshairColor	"CrosshairColor"
 #define ClsCursorBlink		"CursorBlink"

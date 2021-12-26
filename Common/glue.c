@@ -479,6 +479,7 @@ set_appres_defaults(void)
 #endif /*]*/
     appres.oversize = NULL;
     appres.bind_limit = true;
+    appres.contention_resolution = true;
     appres.new_environ = true;
     appres.max_recent = 5;
 
@@ -1054,6 +1055,7 @@ static res_t base_resources[] = {
     { ResCodePage,	aoffset(codepage),	XRM_STRING },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
+    { ResContentionResolution, aoffset(contention_resolution), XRM_BOOLEAN },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
     { ResConsole,aoffset(interactive.console),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },

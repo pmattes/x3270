@@ -466,6 +466,10 @@ kybdlock_decode(char *how, unsigned int bits)
 	vb_appendf(&r, "%s%sFT", space, how);
 	space = " ";
     }
+    if (bits & KL_BID) {
+	vb_appendf(&r, "%s%sBID", space, how);
+	space = " ";
+    }
 
     Replace(rs, vb_consume(&r));
     return rs;
@@ -494,7 +498,7 @@ kybdlock_set(unsigned int bits, const char *cause _is_unused)
 
 /* Clear bits in the keyboard lock. */
 void
-kybdlock_clr(unsigned int bits, const char *cause _is_unused)
+kybdlock_clr(unsigned int bits, const char *cause)
 {
     unsigned int n;
 
@@ -1967,7 +1971,7 @@ do_reset(bool explicit)
 	|| !appres.unlock_delay
 	|| (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
 	|| !appres.unlock_delay_ms) {
-	kybdlock_clr(explicit? -1: ~KL_FT, "do_reset");
+	kybdlock_clr(explicit? ~KL_BID: ~(KL_FT | KL_BID), "do_reset");
     } else if (kybdlock &
 (KL_DEFERRED_UNLOCK | KL_OIA_TWAIT | KL_OIA_LOCKED | KL_AWAITING_FIRST)) {
 	kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
@@ -4261,6 +4265,26 @@ kybd_prime(void)
 
     /* Return the field length. */
     return len;
+}
+
+/*
+ * Process a TN3270E BID request.
+ * Returns true for success.
+ */
+bool
+kybd_bid(bool signal _is_unused)
+{
+    kybdlock_set(KL_BID, "kybd_bid");
+    vstatus_reset();
+    return true;
+}
+
+/* Process a TN3270E SEND-DATA indication. */
+void
+kybd_send_data()
+{
+    kybdlock_clr(KL_BID, "kybd_send_data");
+    vstatus_reset();
 }
 
 /*

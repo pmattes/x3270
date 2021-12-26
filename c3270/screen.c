@@ -2240,16 +2240,7 @@ status_oerr(int error_type)
 void
 status_reset(void)
 {
-    if (kybdlock & KL_ENTER_INHIBIT) {
-	other_msg = "X Inhibit";
-    } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-	other_msg = "X";
-    } else if (kybdlock & KL_FT) {
-	other_msg = "X File Transfer";
-    } else {
-	status_connect(PCONNECTED);
-    }
-    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+    status_connect(PCONNECTED);
 }
 
 void
@@ -2327,6 +2318,14 @@ status_connect(bool connected)
 	    other_msg = "X [TN3270E]";
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    other_msg = "X [Field]";
+	} else if (kybdlock & KL_ENTER_INHIBIT) {
+	    other_msg = "X Inhibit";
+	} else if (kybdlock & KL_BID) {
+	    other_msg = "X Wait";
+	} else if (kybdlock & KL_FT) {
+	    other_msg = "X File Transfer";
+	} else if (kybdlock & KL_DEFERRED_UNLOCK) {
+	    other_msg = "X";
 	} else {
 	    other_msg = NULL;
 	}

@@ -145,16 +145,7 @@ vstatus_oerr(int error_type)
 void
 vstatus_reset(void)
 {
-    if (kybdlock & KL_ENTER_INHIBIT) {
-        voia_msg = "X Inhibit";
-    } else if (kybdlock & KL_DEFERRED_UNLOCK) {
-        voia_msg = "X";
-    } else if (kybdlock & KL_FT) {
-	voia_msg = "X Transfer";
-    } else {
-        vstatus_connect(PCONNECTED);
-    }
-    voia_msg_color = HOST_COLOR_WHITE;
+    vstatus_connect(PCONNECTED);
     status_reset();
 }
 
@@ -281,7 +272,15 @@ vstatus_connect(bool connected)
             voia_msg = "X [TN3270E]";
         } else if (kybdlock & KL_AWAITING_FIRST) {
             voia_msg = "X [Field]";
-        } else {
+	} else if (kybdlock & KL_ENTER_INHIBIT) {
+	    voia_msg = "X Inhibit";
+	} else if (kybdlock & KL_BID) {
+	    voia_msg = "X Wait";
+	} else if (kybdlock & KL_FT) {
+	    voia_msg = "X File Transfer";
+	} else if (kybdlock & KL_DEFERRED_UNLOCK) {
+	    voia_msg = "X";
+	} else {
             voia_msg = NULL;
         }
         if (net_secure_connection()) {
@@ -309,7 +308,7 @@ vstatus_3270_mode(bool on)
     if (voia_boxsolid) {
         voia_undera = true;
     }
-    vstatus_connect(CONNECTED);
+    vstatus_connect(PCONNECTED);
 }
 
 static void

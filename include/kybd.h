@@ -46,6 +46,7 @@ extern unsigned int kybdlock;
 #define KL_SCROLLED		0x0400
 #define KL_OIA_MINUS		0x0800
 #define KL_FT			0x1000
+#define KL_BID			0x2000
 
 extern unsigned char aid;
 
@@ -54,9 +55,11 @@ size_t emulate_input(const char *s, size_t len, bool pasting, bool force_utf8);
 size_t emulate_uinput(const ucs4_t *s, size_t len, bool pasting);
 void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
+bool kybd_bid(bool signal);
 void kybd_ft(bool ft);
 void kybd_inhibit(bool inhibit);
 void kybd_register(void);
+void kybd_send_data(void);
 #define KYP_LOCKED	(-1)
 #define KYP_NOT_3270	(-2)
 #define KYP_NO_FIELD	(-3)

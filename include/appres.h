@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2020 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -61,6 +61,7 @@ typedef struct {
     bool	 trace_monitor;
     bool	 script_port_once;
     bool	 bind_unlock;
+    bool	 contention_resolution;
     char	*script_port;
     char	*httpd_port;
     char	*dbcs_cgcsgid;

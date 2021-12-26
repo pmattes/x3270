@@ -264,25 +264,23 @@ static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
 #  define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ)? \
 			reason_code[(n)]: "??")
-static const char *function_name[5] = { "BIND-IMAGE", "DATA-STREAM-CTL",
-	"RESPONSES", "SCS-CTL-CODES", "SYSREQ" };
-# define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ)? \
+static const char *function_name[7] = { "BIND-IMAGE", "DATA-STREAM-CTL",
+	"RESPONSES", "SCS-CTL-CODES", "SYSREQ", "CONTENTION-RESOLUTION",
+	"SNA-SENSE" };
+# define fnn(n)	(((n) <= TN3270E_FUNC_SNA_SENSE)? \
 			function_name[(n)]: "??")
-static const char *data_type[9] = { "3270-DATA", "SCS-DATA", "RESPONSE",
+static const char *data_type[10] = { "3270-DATA", "SCS-DATA", "RESPONSE",
 	"BIND-IMAGE", "UNBIND", "NVT-DATA", "REQUEST", "SSCP-LU-DATA",
-	"PRINT-EOJ" };
-# define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ)? \
+	"PRINT-EOJ", "BID" };
+# define e_dt(n)	(((n) <= TN3270E_DT_BID)? \
 			data_type[(n)]: "??")
-static const char *req_flag[1] = { " ERR-COND-CLEARED" };
-# define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST)? \
-			(((n) <= TN3270E_RQF_ERR_COND_CLEARED)? \
-			req_flag[(n)]: " ??"): "")
 static const char *hrsp_flag[3] = { "NO-RESPONSE", "ERROR-RESPONSE",
 	"ALWAYS-RESPONSE" };
 # define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE)? \
 			hrsp_flag[(n)]: "??")
-static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
-# define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE)? \
+static const char *trsp_flag[3] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE",
+	"SNA-SENSE" };
+# define e_trsp(n) (((n) <= TN3270E_RSF_SNA_SENSE)? \
 			trsp_flag[(n)]: "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
 const char *state_name[NUM_CSTATE] = {
@@ -940,6 +938,9 @@ net_connected_complete(void)
     b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
     b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
     b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
+    if (appres.contention_resolution) {
+	b8_set_bit(&e_funcs, TN3270E_FUNC_CONTENTION_RESOLUTION);
+    }
     e_xmit_seq = 0;
     response_required = TN3270E_RSF_NO_RESPONSE;
     need_tls_follows = false;
@@ -2483,6 +2484,42 @@ unbind_reason (unsigned char r)
     }
 }
 
+/* Returns the string representation of a request flag, given the data type. */
+static char *
+e_rq(unsigned char data_type, unsigned char request_flag)
+{
+    static struct {
+	unsigned char flag;
+	const char *name;
+    } req_flag[] = {
+	{ TN3270E_RQF_SEND_DATA, "SEND-DATA" },
+	{ TN3270E_RQF_KEYBOARD_RESTORE, "KEYBOARD-RESTORE" },
+	{ TN3270E_RQF_SIGNAL, "SIGNAL" },
+	{ 0, NULL }
+    };
+    varbuf_t r;
+    int i;
+    char *sep = " ";
+
+    if (data_type == TN3270E_DT_REQUEST) {
+	return (request_flag == TN3270E_RQF_ERR_COND_CLEARED)?
+	    " ERR-COND-CLEARED": lazyaf("%02x", request_flag);
+    }
+
+    vb_init(&r);
+    for (i = 0; req_flag[i].name != NULL; i++) {
+	if (request_flag & req_flag[i].flag) {
+	    vb_appendf(&r, "%s%s", sep, req_flag[i].name);
+	    request_flag &= ~req_flag[i].flag;
+	    sep = "|";
+	}
+    }
+    if (request_flag != 0) {
+	vb_appendf(&r, "%s%02x", sep, request_flag);
+    }
+    return lazya(vb_consume(&r));
+}
+
 static int
 process_eor(void)
 {
@@ -2494,6 +2531,7 @@ process_eor(void)
 	tn3270e_header *h = (tn3270e_header *)ibuf;
 	unsigned char *s;
 	enum pds rv;
+	bool bid_success;
 
 	vtrace("RCVD TN3270E(%s%s %s %u)\n",
 		e_dt(h->data_type),
@@ -2510,7 +2548,8 @@ process_eor(void)
 	    tn3270e_submode = E_3270;
 	    check_in3270();
 	    response_required = h->response_flag;
-	    rv = process_ds(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    rv = process_ds(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE,
+		    (h->request_flag & TN3270E_RQF_KEYBOARD_RESTORE) != 0);
 	    if (rv < 0 && response_required != TN3270E_RSF_NO_RESPONSE) {
 		tn3270e_nak(rv);
 	    }
@@ -2519,6 +2558,9 @@ process_eor(void)
 		tn3270e_ack();
 	    }
 	    response_required = TN3270E_RSF_NO_RESPONSE;
+	    if (h->request_flag & TN3270E_RQF_SEND_DATA) {
+		kybd_send_data();
+	    }
 	    return 0;
 	case TN3270E_DT_BIND_IMAGE:
 	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
@@ -2594,12 +2636,25 @@ process_eor(void)
 	    check_in3270();
 	    ctlr_write_sscp_lu(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
 	    return 0;
+	case TN3270E_DT_BID:
+	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_CONTENTION_RESOLUTION)) {
+		return 0;
+	    }
+	    bid_success = kybd_bid((h->request_flag & TN3270E_RQF_SIGNAL) != 0);
+	    if (h->response_flag != TN3270E_RSF_NO_RESPONSE) {
+		if (bid_success) {
+		    tn3270e_ack();
+		} else {
+		    tn3270e_nak(PDS_BAD_CMD);
+		}
+	    }
+	    return 0;
 	default:
 	    /* Should do something more extraordinary here. */
 	    return 0;
 	}
     } else {
-	process_ds(ibuf, ibptr - ibuf);
+	process_ds(ibuf, ibptr - ibuf, false);
     }
     return 0;
 }

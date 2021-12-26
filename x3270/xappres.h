@@ -92,6 +92,7 @@ typedef struct {
 	Boolean unlock_delay;
 	Boolean bind_limit;
 	Boolean bind_unlock;
+	Boolean contention_resolution;
 	Boolean new_environ;
 	Boolean socket;
 	Boolean numeric_lock;
