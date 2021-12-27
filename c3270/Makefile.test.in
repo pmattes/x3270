@@ -28,7 +28,7 @@
 
 test: c3270 playback
 	PATH="$$PWD/obj/@host@/c3270:$$PWD/obj/@host@/playback:$$PATH" \
-	     PYTHONPATH="$$PWD/s3270/Test" \
+	     PYTHONPATH="$$PWD/Common/Test" \
 	     python3 -m unittest c3270/Test/*.py
 
 c3270:

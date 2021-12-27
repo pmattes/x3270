@@ -28,7 +28,7 @@
 
 test: s3270 playback
 	PATH="$$PWD/obj/@host@/s3270:$$PWD/obj/@host@/playback:$$PATH" \
-	     PYTHONPATH="$$PWD/s3270/Test" \
+	     PYTHONPATH="$$PWD/Common/Test" \
 	     python3 -m unittest s3270/Test/*.py
 
 s3270:

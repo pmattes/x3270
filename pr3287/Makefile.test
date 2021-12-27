@@ -28,7 +28,7 @@
 
 test: pr3287 playback
 	PATH="$$PWD/obj/x86_64-unknown-linux-gnu/pr3287:$$PWD/obj/x86_64-unknown-linux-gnu/playback:$$PATH" \
-	     PYTHONPATH="$$PWD/s3270/Test" \
+	     PYTHONPATH="$$PWD/Common/Test" \
 	     python3 -m unittest pr3287/Test/*.py
 
 pr3287:
