@@ -4,9 +4,6 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import os
-import pathlib
-import time
-import sys
 import TestCommon
 
 # pr3287 smoke tests
@@ -31,15 +28,7 @@ class TestPr3287Smoke(unittest.TestCase):
         playback.stdin.flush()
 
         # Wait for the sync file to appear.
-        start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-        while True:
-            now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-            if now - start > 2e9:
-                print("***** pr3287 did not produce output", file=sys.stderr, flush=True)
-                self.assertTrue(False)
-            if os.lseek(sy_handle, 0, os.SEEK_END) > 0:
-                break
-            time.sleep(0.1)
+        TestCommon.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, "pr3287 did not produce output")
         os.close(sy_handle)
         os.unlink(sy_name)
 

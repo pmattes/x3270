@@ -6,34 +6,35 @@ import time
 import re
 import sys
 
-# Check for a particular port being listened on.
-def check_listen(port):
-    r = re.compile(rf':{port} .* LISTEN ')
+# Try f periodically until seconds elapse.
+def try_until(f, seconds, errmsg):
     start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
     while True:
         now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-        if (now - start > 2e9):
-            print(f"***** Port {port} is not bound", file=sys.stderr, flush=True)
+        if now - start > seconds * 1e9:
+            print(f"***** {errmsg}", file=sys.stderr, flush=True)
             assert False
+        if f():
+            return
+        time.sleep(0.1)
+
+# Check for a particular port being listened on.
+def check_listen(port):
+    r = re.compile(rf':{port} .* LISTEN ')
+    def test():
         netstat = Popen('netstat -ant', shell=True, stdout=PIPE)
         stdout = netstat.communicate()[0].decode('utf8').split('\n')
-        if any(r.search(line) for line in stdout):
-            break
-        time.sleep(0.1)
+        return any(r.search(line) for line in stdout)
+    try_until(test, 2, f"Port {port} is not bound")
 
 # Write a string to playback after verifying s3270 is blocked.
 def to_playback(p, port, s):
     # Wait for the CursorAt command to block.
-    start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-    while True:
-        now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-        if (now - start > 2e9):
-            print("***** s3270 did not block", file=sys.stderr, flush=True)
-            assert False
+    def test():
         j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
-        if any('Wait(' in line for line in j['result']):
-            break
-        time.sleep(0.1)
+        return any('Wait(' in line for line in j['result'])
+    try_until(test, 2, "emulator did not block")
+    
     # Trigger the host output.
     p.stdin.write(s)
     p.stdin.flush()
@@ -43,13 +44,7 @@ def check_push(p, port, count):
     # Send a timing mark.
     p.stdin.write(b"t\n")
     p.stdin.flush()
-    start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-    while True:
-        now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-        if now - start > 2e9:
-            print("***** s3270 did not accept the data", file=sys.stderr, flush=True)
-            assert False
+    def test():
         j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TimingMarks)').json()
-        if j['result'][0] == str(count):
-            break
-        time.sleep(0.1)
+        return j['result'][0] == str(count)
+    try_until(test, 2, "emulator did not accept the data")
