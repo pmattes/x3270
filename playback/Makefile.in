@@ -27,9 +27,9 @@
 # VPATH-based Makefile for playback
 top = ../../..
 objdir = ../obj/@host@/playback
-this = $(top)/Playback
+this = $(top)/playback
 
-export VPATH = $(this)
+export VPATH = $(this):$(top)/Common
 export TOP = $(top)
 export THIS = $(this)
 

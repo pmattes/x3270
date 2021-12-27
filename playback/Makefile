@@ -29,7 +29,7 @@ top = ../../..
 objdir = ../obj/x86_64-unknown-linux-gnu/playback
 this = $(top)/Playback
 
-export VPATH = $(this)
+export VPATH = $(this):$(top)/Common
 export TOP = $(top)
 export THIS = $(this)
 
