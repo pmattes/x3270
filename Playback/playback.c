@@ -195,7 +195,7 @@ main(int argc, char *argv[])
 	    int ns;
 
 	    FD_ZERO(&rfds);
-	    if (!wait) {
+	    if (!wait && !bidir) {
 		FD_SET(0, &rfds);
 	    }
 	    FD_SET(s, &rfds);

@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2017, 2020 Paul Mattes.
+dnl Copyright (c) 2000-2017, 2020-2021 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -154,5 +154,5 @@ case "$enable_ipv6" in
 esac
 
 dnl Generate the Makefile.
-AC_CONFIG_FILES(Makefile Makefile.obj)
+AC_CONFIG_FILES(Makefile Makefile.obj Makefile.test)
 AC_OUTPUT
