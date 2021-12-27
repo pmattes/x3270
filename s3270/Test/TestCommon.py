@@ -46,7 +46,7 @@ def check_push(p, port, count):
     start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
     while True:
         now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
-        if (now - start > 2e9):
+        if now - start > 2e9:
             print("***** s3270 did not accept the data", file=sys.stderr, flush=True)
             assert False
         j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TimingMarks)').json()
