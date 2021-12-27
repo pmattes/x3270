@@ -31,6 +31,11 @@ test: pr3287 playback
 	     PYTHONPATH="$$PWD/Common/Test" \
 	     python3 -m unittest pr3287/Test/*.py
 
+smoketest: pr3287 playback
+	PATH="$$PWD/obj/@host@/pr3287:$$PWD/obj/@host@/playback:$$PATH" \
+	     PYTHONPATH="$$PWD/Common/Test" \
+	     python3 -m unittest pr3287/Test/Smoke.py
+
 pr3287:
 	$(MAKE) $@
 playback:

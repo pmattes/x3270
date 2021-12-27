@@ -29,5 +29,8 @@
 test: b3270
 	PATH="$$PWD/obj/@host@/b3270:$$PATH" python3 b3270/Test/Smoke.py
 
+smoketest: b3270
+	PATH="$$PWD/obj/@host@/b3270:$$PATH" python3 b3270/Test/Smoke.py
+
 b3270:
 	$(MAKE) b3270
