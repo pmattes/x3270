@@ -1,7 +1,7 @@
 20211226.180342.725 Trace started
  Version: s3270 v4.2pre1 Sun Dec 26 22:40:22 UTC 2021 pdm
  Build options: --enable-local-process
- Command: s3270 obj/x86_64-unknown-linux-gnu/s3270/s3270 -model 2 -trace l:y:204.146.168.209
+ Command: s3270 obj/x86_64-unknown-linux-gnu/s3270/s3270 -model 2 -trace l:y:10.0.0.190:3270
  Model 3279-2-E, 24 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
  Locale codeset: UTF-8
  Host codepage: 37

@@ -3,7 +3,7 @@ Trace started Thu May 27 08:30:36 2010
  Options: --enable-dbcs --with-ssl --without-iconv
  ANSI codepage: 1252, printer codepage: 1252
  Host codepage: 37
- Command: C:\Program Files\wc3270\wpr3287.exe -trace -assoc TDC01702 -charset bracket 10.11.1.13:5001
+ Command: C:\Program Files\wc3270\wpr3287.exe -trace -assoc TDC01702 -charset bracket 10.0.0.190:3270
 < 0x0   fffd28
 RCVD DO TN3270E
 > 0x0   fffb28

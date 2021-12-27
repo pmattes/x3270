@@ -1,7 +1,7 @@
 20191212.215716.957 Trace started
  Version: c3270 v4.0alpha1 Tue Dec 10 03:15:56 UTC 2019 pdm
  Build options: --enable-local-process --with-readline --with-curses-wide
- Command: c3270 obj/x86_64-unknown-linux-gnu/c3270/c3270 -trace l:y:204.146.168.209
+ Command: c3270 obj/x86_64-unknown-linux-gnu/c3270/c3270 -trace l:y:10.0.0.190:3270
  Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
  Locale codeset: UTF-8
  Host codepage: 37
