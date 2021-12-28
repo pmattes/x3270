@@ -95,6 +95,8 @@ tcl3270: s3270
 
 .PHONY: s3270
 
+.PHONY: playback
+
 # Individual targets.
 unix-lib: lib3270 lib3270i lib32xx lib3270stubs
 windows-lib: libw3270 libw3270i libw32xx libw3270stubs libexpat
