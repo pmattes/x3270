@@ -259,7 +259,7 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
     /* Set up the thread that reads from stdin. */
-    stdin_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    stdin_enable_event = CreateEvent(NULL, FALSE, TRUE, NULL);
     stdin_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
     socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -308,17 +308,18 @@ main(int argc, char *argv[])
 	    HANDLE ha[2];
 	    DWORD ret;
 	    bool done = false;
+	    int ne = 1;
 
-	    if (!bidir) {
+	    if (!wait && !bidir) {
 		printf("playback> ");
 		fflush(stdout);
 	    }
-	    if (!wait && !bidir) {
-		SetEvent(stdin_enable_event);
-	    }
 	    ha[0] = socket_event;
-	    ha[1] = stdin_done_event;
-	    ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
+	    if (!wait && !bidir) {
+		ha[1] = stdin_done_event;
+		ne = 2;
+	    }
+	    ret = WaitForMultipleObjects(ne, ha, FALSE, INFINITE);
 	    switch (ret) {
 	    case WAIT_OBJECT_0: /* socket input */
 		done = true;
@@ -388,6 +389,7 @@ process_command(FILE *f, int s)
     char buf[BUFSIZ];
 #endif /*]*/
     char *t;
+    int rv = 0;
 
 #if !defined(_WIN32) /*[*/
     /* Get the input line, a character at a time. */
@@ -428,41 +430,44 @@ process_command(FILE *f, int s)
 	t++;
     }
     if (!*t) {
-	return 0;
+	goto done;
     }
 
     if (!strncmp(t, "s", 1)) {		/* step line */
 	if (f == NULL) {
 	    printf("Not connected.\n");
-	    return 0;
+	    goto done;
 	}
 	printf("Stepping one line\n");
 	fflush(stdout);
 	if (!step(f, s, STEP_LINE)) {
-	    return -1;
+	    rv = -1;
+	    goto done;
 	}
     } else if (!strncmp(t, "r", 1)) {	/* step record */
 	if (f == NULL) {
 	    printf("Not connected.\n");
-	    return 0;
+	    goto done;
 	}
 	printf("Stepping to EOR\n");
 	fflush(stdout);
 	if (!step(f, s, STEP_EOR)) {
-	    return -1;
+	    rv = -1;
+	    goto done;
 	}
     } else if (!strncmp(t, "m", 1)) {	/* to mark */
 	if (f == NULL) {
 	    printf("Not connected.\n");
-	    return 0;
+	    goto done;
 	}
 	if (!step(f, s, STEP_MARK)) {
-	    return -1;
+	    rv = -1;
+	    goto done;
 	}
     } else if (!strncmp(t, "e", 1)) {	/* to EOF */
 	if (f == NULL) {
 	    printf("Not connected.\n");
-	    return 0;
+	    goto done;
 	}
 	printf("Stepping to EOF\n");
 	fflush(stdout);
@@ -471,7 +476,8 @@ process_command(FILE *f, int s)
 	    usleep(1000000 / 4);
 #endif /*]*/ /* XXX */
 	}
-	return -1;
+	rv = -1;
+	goto done;
     } else if (!strncmp(t, "c", 1)) {	/* comment */
 	printf("Comment: %s\n", t);
 	fflush(stdout);
@@ -495,9 +501,10 @@ process_command(FILE *f, int s)
     } else if (!strncmp(t, "d", 1)) {	/* disconnect */
 	if (f == NULL) {
 	    printf("Not connected.\n");
-	    return 0;
+	    goto done;
 	}
-	return -1;
+	rv = -1;
+	goto done;
     } else if (t[0] == '?' || t[0] == 'h') {
 	printf("\
 s: step line\n\
@@ -513,7 +520,13 @@ d: disconnect\n\
 	printf("%c? Use '?' for help.\n", *t);
     }
 
-    return 0;
+
+done:
+#if defined(_WIN32) /*[*/
+    /* Prime for more input. */
+    SetEvent(stdin_enable_event);
+#endif /*]*/
+    return rv;
 }
 
 /* Trace data from the host or emulator. */
@@ -589,7 +602,6 @@ process(FILE *f, int s)
 	bool done = false;
 	int nr;
 
-	SetEvent(stdin_enable_event);
 	ha[0] = socket2_event;
 	ha[1] = stdin_done_event;
 	ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
