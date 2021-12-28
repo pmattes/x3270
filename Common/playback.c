@@ -31,26 +31,41 @@
  * Playback file facility for x3270
  */
 
+#if !defined(_WIN32) /*[*/
+# include <string.h>
+# include <memory.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <fcntl.h>
+# include <sys/types.h>
+# include <sys/time.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <arpa/telnet.h>
+# include <sys/select.h>
+#else /*][*/
+# include "wincmn.h"
+# include "w3misc.h"
+# include "arpa_telnet.h"
+# include <getopt.h>
+# include <errno.h>
+#endif /*]*/
+
 #include <stdio.h>
-#include <string.h>
 #include <signal.h>
-#include <memory.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
-#include <fcntl.h>
 #include <stdbool.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <arpa/telnet.h>
-#include <sys/select.h>
+#include <assert.h>
 
 #define PORT		4001
 #define BSIZE		16384
 #define LINEDUMP_MAX	32
+
+#if !defined(_WIN32) /*[*/
+# define sockerr(s)     perror(s)
+#else /*][*/
+# define sockerr(s)     win32_perror(s)
+#endif /*]*/
 
 int port = PORT;
 char *me;
@@ -74,12 +89,52 @@ static bool step(FILE *f, int s, step_t type);
 static int process_command(FILE *f, int s);
 void trace_netdata(char *direction, unsigned char *buf, int len);
 
+#if defined(_WIN32) /*[*/
+static HANDLE stdin_thread = INVALID_HANDLE_VALUE;
+static HANDLE stdin_enable_event = INVALID_HANDLE_VALUE,
+	      stdin_done_event = INVALID_HANDLE_VALUE;
+static HANDLE socket2_event = INVALID_HANDLE_VALUE;
+static char stdin_buf[256];
+static int stdin_nr;
+static int stdin_errno;
+#endif /*]*/
+
 void
 usage(void)
 {
     fprintf(stderr, "usage: %s [-b] [-w] [-p port] file\n", me);
     exit(1);
 }
+
+#if defined(_WIN32) /*[*/
+/* stdin input thread */
+static DWORD WINAPI
+stdin_read(LPVOID lpParameter)
+{
+    for (;;) {
+        DWORD rv;
+
+        rv = WaitForSingleObject(stdin_enable_event, INFINITE);
+        switch (rv) {
+        case WAIT_ABANDONED:
+        case WAIT_TIMEOUT:
+        case WAIT_FAILED:
+            stdin_nr = -1;
+            stdin_errno = EINVAL;
+            SetEvent(stdin_done_event);
+            break;
+        case WAIT_OBJECT_0:
+            stdin_nr = read(0, stdin_buf, sizeof(stdin_buf));
+            if (stdin_nr < 0) {
+                stdin_errno = errno;
+            }
+            SetEvent(stdin_done_event);
+            break;
+        }
+    }
+    return 0;
+}
+#endif /*]*/
 
 int
 main(int argc, char *argv[])
@@ -89,13 +144,13 @@ main(int argc, char *argv[])
     int s;
     union {
 	struct sockaddr sa;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && !defined(_WIN32) /*[*/
 	struct sockaddr_in6 sin6;
 #else /*][*/
 	struct sockaddr_in sin;
 #endif /*]*/
     } addr;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && !defined(_WIN32) /*[*/
     int proto = AF_INET6;
 #else /*][*/
     int proto = AF_INET;
@@ -103,9 +158,14 @@ main(int argc, char *argv[])
     int addrlen = sizeof(addr);
     int one = 1;
     socklen_t len;
+#if !defined(_WIN32) /*[*/
     int flags;
+#endif /*]*/
     bool bidir = false;
     bool wait = false;
+#if defined(_WIN32) /*[*/
+    HANDLE socket_event;
+#endif /*]*/
 
     /* Parse command-line arguments */
     if ((me = strrchr(argv[0], '/')) != NULL) {
@@ -134,6 +194,12 @@ main(int argc, char *argv[])
 	usage();
     }
 
+#if defined(_WIN32) /*[*/
+    if (sockstart() < 0) {
+	exit(1);
+    }
+#endif /*]*/
+
     /* Open the file. */
     f = fopen(argv[optind], "r");
     if (f == NULL) {
@@ -144,29 +210,30 @@ main(int argc, char *argv[])
     /* Listen on a socket. */
     s = socket(proto, SOCK_STREAM, 0);
     if (s < 0) {
-	perror("socket");
+	sockerr("socket");
 	exit(1);
     }
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
 		sizeof(one)) < 0) {
-	perror("setsockopt");
+	sockerr("setsockopt");
 	exit(1);
     }
     memset(&addr, '\0', sizeof(addr));
     addr.sa.sa_family = proto;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && !defined(_WIN32) /*[*/
     addr.sin6.sin6_port = htons(port);
 #else /*][*/
     addr.sin.sin_port = htons(port);
 #endif /*]*/
     if (bind(s, &addr.sa, addrlen) < 0) {
-	perror("bind");
+	sockerr("bind");
 	exit(1);
     }
     if (listen(s, 1) < 0) {
-	perror("listen");
+	sockerr("listen");
 	exit(1);
     }
+#if !defined(_WIN32) /*[*/
     if ((flags = fcntl(s, F_GETFL)) < 0) {
 	perror("fcntl(F_GETFD)");
 	exit(1);
@@ -176,12 +243,33 @@ main(int argc, char *argv[])
 	perror("fcntl(F_SETFD)");
 	exit(1);
     }
+#else /*][*/
+    {
+	u_long on = 1;
+
+	if (ioctlsocket(s, FIONBIO, &on) < 0) {
+	    sockerr("ioctl(FIONBIO)"); /* XXX */
+	    exit(1);
+	}
+    }
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
     signal(SIGPIPE, SIG_IGN);
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+    /* Set up the thread that reads from stdin. */
+    stdin_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    stdin_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
+    socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    WSAEventSelect(s, socket_event, FD_ACCEPT);
+#endif /*]*/
 
     /* Accept connections and process them. */
     for (;;) {
 	int s2;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && !defined(_WIN32) /*[*/
 	char buf[INET6_ADDRSTRLEN];
 #endif /*]*/
 
@@ -191,6 +279,7 @@ main(int argc, char *argv[])
 	len = addrlen;
 	printf("Waiting for connection on port %u.\n", port);
 	for (;;) {
+#if !defined(_WIN32) /*[*/
 	    fd_set rfds;
 	    int ns;
 
@@ -206,7 +295,7 @@ main(int argc, char *argv[])
 	    }
 	    ns = select(s + 1, &rfds, NULL, NULL, NULL);
 	    if (ns < 0) {
-		perror("select");
+		sockerr("select");
 		exit(2);
 	    }
 	    if (FD_ISSET(0, &rfds)) {
@@ -215,14 +304,48 @@ main(int argc, char *argv[])
 	    if (FD_ISSET(s, &rfds)) {
 		break;
 	    }
+#else /*][*/
+	    HANDLE ha[2];
+	    DWORD ret;
+	    bool done = false;
+
+	    if (!bidir) {
+		printf("playback> ");
+		fflush(stdout);
+	    }
+	    if (!wait && !bidir) {
+		SetEvent(stdin_enable_event);
+	    }
+	    ha[0] = socket_event;
+	    ha[1] = stdin_done_event;
+	    ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
+	    switch (ret) {
+	    case WAIT_OBJECT_0: /* socket input */
+		done = true;
+		break;
+	    case WAIT_OBJECT_0 + 1: /* stdin input */
+		process_command(NULL, -1);
+		break;
+	    case WAIT_FAILED:
+		win32_perror("WaitForMultipleObjects");
+		exit(2);
+	    default:
+		fprintf(stderr, "Unexpected return %d from "
+			"WaitForMultipleObjects", (int)ret);
+		exit(2);
+	    }
+	    if (done) {
+		break;
+	    }
+#endif /*]*/
 	}
 	s2 = accept(s, &addr.sa, &len);
 	if (s2 < 0) {
-	    perror("accept");
+	    sockerr("accept");
 	    continue;
 	}
 	printf("\nConnection from %s, port %u.\n",
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && !defined(_WIN32) /*[*/
 		inet_ntop(proto, &addr.sin6.sin6_addr, buf,
 		    INET6_ADDRSTRLEN) +
 		     (IN6_IS_ADDR_V4MAPPED(&addr.sin6.sin6_addr)? 7: 0),
@@ -232,6 +355,10 @@ main(int argc, char *argv[])
 		ntohs(addr.sin.sin_port)
 #endif /*]*/
 	);
+#if defined(_WIN32) /*[*/
+	socket2_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	WSAEventSelect(s2, socket2_event, FD_READ | FD_CLOSE);
+#endif /*]*/
 	wait = false;
 	rewind(f);
 	pstate = BASE;
@@ -256,10 +383,13 @@ main(int argc, char *argv[])
 static int
 process_command(FILE *f, int s)
 {
+#if !defined(_WIN32) /*[*/
     int rx = 0;
     char buf[BUFSIZ];
+#endif /*]*/
     char *t;
 
+#if !defined(_WIN32) /*[*/
     /* Get the input line, a character at a time. */
     while (true) {
 	ssize_t nr;
@@ -283,6 +413,17 @@ process_command(FILE *f, int s)
     }
 
     t = buf;
+#else /*][*/
+    if (stdin_errno != 0) {
+	perror("stdin");
+	exit(2);
+    }
+    if (stdin_nr == 0) {
+	printf("\n");
+	exit(0);
+    }
+    t = stdin_buf;
+#endif /*]*/
     while (*t == ' ') {
 	t++;
     }
@@ -326,7 +467,9 @@ process_command(FILE *f, int s)
 	printf("Stepping to EOF\n");
 	fflush(stdout);
 	while (step(f, s, STEP_EOR)) {
+#if !defined(_WIN32) /*[*/
 	    usleep(1000000 / 4);
+#endif /*]*/ /* XXX */
 	}
 	return -1;
     } else if (!strncmp(t, "c", 1)) {	/* comment */
@@ -338,8 +481,8 @@ process_command(FILE *f, int s)
 
 	    printf("Timing mark\n");
 	    fflush(stdout);
-	    if (send(s, tm, sizeof(tm), 0) < 0) {
-		perror("send");
+	    if (send(s, (char *)tm, sizeof(tm), 0) < 0) {
+		sockerr("send");
 		exit(1);
 	    }
 	    trace_netdata("host", tm, sizeof(tm));
@@ -359,7 +502,7 @@ process_command(FILE *f, int s)
 	printf("\
 s: step line\n\
 r: step record\n\
-m: to mark\n\
+m: play to mark\n\
 e: play to EOF\n\
 c: comment\n\
 t: send TM to emulator\n\
@@ -399,18 +542,21 @@ process(FILE *f, int s)
 
     /* Loop, looking for keyboard input or emulator response. */
     for (;;) {
+#if !defined(_WIN32) /*[*/
 	fd_set rfds;
 	int ns;
+#endif /*]*/
 
 	printf("playback> ");
 	fflush(stdout);
 
+#if !defined(_WIN32) /*[*/
 	FD_ZERO(&rfds);
 	FD_SET(s, &rfds);
 	FD_SET(0, &rfds);
 	ns = select(s + 1, &rfds, NULL, NULL, NULL);
 	if (ns < 0) {
-	    perror("select");
+	    sockerr("select");
 	    exit(2);
 	}
 	if (ns == 0) {
@@ -419,9 +565,9 @@ process(FILE *f, int s)
 	if (FD_ISSET(s, &rfds)) {
 	    int nr;
 
-	    nr = read(s, buf, BSIZE);
+	    nr = recv(s, buf, BSIZE, 0);
 	    if (nr < 0) {
-		perror("read");
+		sockerr("recv");
 		break;
 	    }
 	    if (nr == 0) {
@@ -437,9 +583,60 @@ process(FILE *f, int s)
 		break;
 	    }
 	}
+#else /*][*/
+	HANDLE ha[2];
+	DWORD ret;
+	bool done = false;
+	int nr;
+
+	SetEvent(stdin_enable_event);
+	ha[0] = socket2_event;
+	ha[1] = stdin_done_event;
+	ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
+	switch (ret) {
+	case WAIT_OBJECT_0: /* socket input */
+	    nr = recv(s, buf, BSIZE, 0);
+	    if (nr < 0) {
+		sockerr("recv");
+		done = true;
+		break;
+	    }
+	    if (nr == 0) {
+		printf("\nEmulator disconnected.\n");
+		done = true;
+		break;
+	    }
+	    printf("\n");
+	    trace_netdata("emul", (unsigned char *)buf, nr);
+	    fdisp = false;
+	    break;
+	case WAIT_OBJECT_0 + 1: /* stdin input */
+	    if (process_command(f, s) < 0) {
+		done = true;
+		break;
+	    }
+	    break;
+	case WAIT_FAILED:
+	    win32_perror("WaitForMultipleObjects");
+	    exit(2);
+	default:
+	    fprintf(stderr, "Unexpected return %d from "
+		    "WaitForMultipleObjects", (int)ret);
+	    exit(2);
+	}
+	if (done) {
+	    break;
+	}
+#endif /*]*/
     }
 
+#if !defined(_WIN32) /*[*/
     close(s);
+#else /*][*/
+    closesocket(s);
+    CloseHandle(socket2_event);
+    socket2_event = INVALID_HANDLE_VALUE;
+#endif /*]*/
     pstate = NONE;
     tstate = T_NONE;
     fdisp = false;
@@ -624,8 +821,8 @@ run_it:
     NO_FDISP;
     if (type != STEP_BIDIR || direction == FROM_HOST) {
 	trace_netdata("host", (unsigned char *)obuf, cp - obuf);
-	if (write(s, obuf, cp - obuf) < 0) {
-	    perror("socket write");
+	if (send(s, obuf, cp - obuf, 0) < 0) {
+	    sockerr("send");
 	    return false;
 	}
 
@@ -646,9 +843,9 @@ run_it:
 	while (n2r > 0) {
 	    printf("Waiting for %u bytes from emulator\n", (unsigned)n2r);
 	    fflush(stdout);
-	    nr = read(s, ibuf + offset, n2r);
+	    nr = recv(s, ibuf + offset, n2r, 0);
 	    if (nr < 0) {
-		perror("socket read");
+		sockerr("recv");
 		return false;
 	    }
 	    if (nr == 0) {
@@ -683,3 +880,23 @@ done:
 
     return false;
 }
+
+#if defined(_WIN32) /*[*/
+/* Malloc and Free, used by library functions. */
+
+void *
+Malloc(size_t len)
+{
+    void *ret = malloc(len);
+
+    assert(ret != NULL);
+    return ret;
+}
+
+void
+Free(void *buf)
+{
+    free(buf);
+}
+
+#endif /*]*/
