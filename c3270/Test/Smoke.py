@@ -88,10 +88,8 @@ class TestC3270Smoke(unittest.TestCase):
             file.close()
         else:
             # Compare what we just got to the reference file.
-            # Note that it is necessary to open the file in binary mode and then
-            # decode it as UTF-8 in order to preserve carriage returns in the data.
-            file = open("c3270/Test/smoke.txt", "rb")
-            ctext = file.read().decode('utf8')
+            file = open("c3270/Test/smoke.txt", "r", newline='')
+            ctext = file.read()
             file.close()
             self.assertEqual(rtext, ctext)
 
