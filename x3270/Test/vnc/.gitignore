@@ -1,0 +1,6 @@
+.cache
+.gnupg
+.local
+.vbox*
+.x3270connect
+.xsession-errors
