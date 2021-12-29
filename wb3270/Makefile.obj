@@ -70,7 +70,11 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 $(MKFB): mkfb.c
 	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
 
-wb3270res.o: wb3270.rc wb3270.ico Makefile
+wb3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) b3270 "b3270 terminal emulator back-end" $(WIN64) >$@.tmp
+	mv -f $@.tmp $@
+
+wb3270res.o: wb3270.rc wb3270.ico Makefile wb3270.exe.manifest
 	$(WINDRES) -i $< -o $@
 
 b3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
