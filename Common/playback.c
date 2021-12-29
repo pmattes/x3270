@@ -31,15 +31,11 @@
  * Playback file facility for x3270
  */
 
+#include "globals.h"
+
 #if !defined(_WIN32) /*[*/
-# include <string.h>
 # include <memory.h>
-# include <stdlib.h>
-# include <unistd.h>
 # include <fcntl.h>
-# include <sys/types.h>
-# include <sys/time.h>
-# include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <arpa/telnet.h>
@@ -48,10 +44,12 @@
 # include "wincmn.h"
 # include "w3misc.h"
 # include "arpa_telnet.h"
-# include <getopt.h>
 # include <errno.h>
 #endif /*]*/
 
+#if !defined(_MSC_VER) /*[*/
+# include <unistd.h>
+#endif /*]*/
 #include <stdio.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -100,8 +98,11 @@ static int stdin_errno;
 #endif /*]*/
 
 void
-usage(void)
+usage(const char *s)
 {
+    if (s != NULL) {
+	fprintf(stderr, "%s\n", s);
+    }
     fprintf(stderr, "usage: %s [-b] [-w] [-p port] file\n", me);
     exit(1);
 }
@@ -186,12 +187,12 @@ main(int argc, char *argv[])
 	    port = atoi(optarg);
 	    break;
 	default:
-	    usage();
+	    usage(NULL);
 	}
     }
 
     if (argc - optind != 1) {
-	usage();
+	usage(NULL);
     }
 
 #if defined(_WIN32) /*[*/
