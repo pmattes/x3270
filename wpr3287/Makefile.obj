@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2017, 2020 Paul Mattes.
+# Copyright (c) 2007-2017, 2020-2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for wpr3287
+# Makefile for Windows pr3287
 
 # Set GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
@@ -48,7 +48,7 @@ endif
 W = w
 include libs.mk
 
-all: wpr3287.exe pr3287.exe
+all: pr3287.exe wpr3287.exe
 
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
@@ -58,17 +58,17 @@ version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
 
 wpr3287.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
-	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wpr3287 "wpr3287 printer emulator" $(WIN64) >$@.tmp
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) pr3287 "pr3287 printer emulator" $(WIN64) >$@.tmp
 	mv -f $@.tmp $@
 
 wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-wpr3287.exe: $(OBJECTS) $(DEP32XX) $(DEP3270STUBS)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LD3270STUBS) $(LIBS)
+pr3287.exe: $(OBJECTS) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-pr3287.exe: wpr3287.exe
-	cp -p wpr3287.exe pr3287.exe
+wpr3287.exe: pr3287.exe
+	cp -p pr3287.exe $@
 
 clean:
 	rm -f *.o wpr3287.exe.manifest

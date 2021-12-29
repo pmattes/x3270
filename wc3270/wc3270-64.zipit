@@ -2,9 +2,9 @@ wc3270/README-zip.txt
 wc3270/NO-INSTALL.txt
 obj/win64/wc3270/wc3270.exe
 obj/win64/wc3270/wc3270wiz.exe
-obj/win64/wpr3287/pr3287.exe
-obj/win64/wpr3287/wpr3287.exe
-obj/win64/ws3270/s3270.exe
-obj/win64/ws3270/ws3270.exe
+obj/win64/pr3287/pr3287.exe
+obj/win64/pr3287/wpr3287.exe
+obj/win64/s3270/s3270.exe
+obj/win64/s3270/ws3270.exe
 obj/win64/x3270if/x3270if.exe
 obj/win64/wc3270/catf.exe

@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Paul Mattes.
+# Copyright (c) 2016, 2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,11 +24,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# VPATH-based Makefile for wpr3287 can build either 32- or 64-bit
+# VPATH-based Makefile for Windows pr3287, can build either 32- or 64-bit
 ifdef WIN64
-objdir = ../obj/win64/wpr3287
+objdir = ../obj/win64/pr3287
 else
-objdir = ../obj/win32/wpr3287
+objdir = ../obj/win32/pr3287
 endif
 top = ../../..
 this = $(top)/wpr3287

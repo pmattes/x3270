@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2020 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ LIBDEPS = $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = ws3270.exe s3270.exe x3270if.exe
+PROGS = s3270.exe ws3270.exe x3270if.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
@@ -69,23 +69,23 @@ $(MKFB): mkfb.c
 	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
 
 ws3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
-	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) ws3270 "ws3270 scripting terminal emulator" $(WIN64) >$@.tmp
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) s3270 "s3270 scripting terminal emulator" $(WIN64) >$@.tmp
 	mv -f $@.tmp $@
 
 ws3270res.o: ws3270.rc ws3270.ico Makefile ws3270.exe.manifest
 	$(WINDRES) -i $< -o $@
 
-ws3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
-	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
+s3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-s3270.exe: ws3270.exe
-	cp -p ws3270.exe $@
+ws3270.exe: s3270.exe
+	cp -p s3270.exe $@
 
 x3270if.exe: ../x3270if/x3270if.exe
 	cp -p ../x3270if/x3270if.exe $@
 
 wversion.o: mkwversion.sh version.txt
-	sh $< ws3270 $(CC) $(filter %.txt,$^)
+	sh $< s3270 $(CC) $(filter %.txt,$^)
 
 clean:
 	rm -f *.o mkfb mkfb.exe fallbacks.c ws3270.exe.manifest

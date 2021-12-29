@@ -1,4 +1,4 @@
-obj/win32/wb3270/b3270.exe
-obj/win32/wpr3287/pr3287.exe
-obj/win32/ws3270/s3270.exe
+obj/win32/b3270/b3270.exe
+obj/win32/pr3287/pr3287.exe
+obj/win32/s3270/s3270.exe
 obj/win32/x3270if/x3270if.exe

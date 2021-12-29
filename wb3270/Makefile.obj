@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2018, 2020 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2018, 2020-2021 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for wb3270
+# Makefile for Windows b3270
 
 # Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
 #  WIN32_FLAGS.
@@ -52,7 +52,7 @@ LIBDEPS = $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEPLIBEXPAT)
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wb3270.exe b3270.exe x3270if.exe
+PROGS = b3270.exe wb3270.exe x3270if.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
@@ -73,17 +73,17 @@ $(MKFB): mkfb.c
 wb3270res.o: wb3270.rc wb3270.ico Makefile
 	$(WINDRES) -i $< -o $@
 
-wb3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
-	$(CC) -o wb3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
+b3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
 
-b3270.exe: wb3270.exe
-	cp -p wb3270.exe $@
+wb3270.exe: b3270.exe
+	cp -p b3270.exe $@
 
 x3270if.exe: ../x3270if/x3270if.exe
 	cp -p ../x3270if/x3270if.exe $@
 
 wversion.o: mkwversion.sh version.txt
-	sh $< wb3270 $(CC) $(filter %.txt,$^)
+	sh $< b3270 $(CC) $(filter %.txt,$^)
 
 clean:
 	rm -f *.o mkfb mkfb.exe fallbacks.c

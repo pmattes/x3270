@@ -64,14 +64,14 @@ Source: "obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; C
 Source: "obj\win32\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "obj\win64\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "obj\win64\wc3270\c3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
-Source: "obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
-Source: "obj\win32\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
-Source: "obj\win64\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
-Source: "obj\win64\ws3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
-Source: "obj\win32\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
-Source: "obj\win32\wpr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
-Source: "obj\win64\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
-Source: "obj\win64\wpr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "obj\win32\s3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
+Source: "obj\win32\s3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode; Components: s3270
+Source: "obj\win64\s3270\s3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
+Source: "obj\win64\s3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode; Components: s3270
+Source: "obj\win32\pr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "obj\win32\pr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "obj\win64\pr3287\pr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "obj\win64\pr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "obj\win64\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: not Is64BitInstallMode
