@@ -35,9 +35,9 @@ import sys
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
-    start = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+    start = time.monotonic_ns()
     while True:
-        now = time.clock_gettime_ns(time.CLOCK_MONOTONIC)
+        now = time.monotonic_ns()
         if now - start > seconds * 1e9:
             print(f"***** {errmsg}", file=sys.stderr, flush=True)
             assert False
