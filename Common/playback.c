@@ -112,6 +112,10 @@ usage(const char *s)
 static DWORD WINAPI
 stdin_read(LPVOID lpParameter)
 {
+    static char aux_buf[256];
+    static int aux_count = 0;
+    static int aux_offset = 0;
+
     for (;;) {
         DWORD rv;
 
@@ -124,11 +128,35 @@ stdin_read(LPVOID lpParameter)
             stdin_errno = EINVAL;
             SetEvent(stdin_done_event);
             break;
-        case WAIT_OBJECT_0:
-            stdin_nr = read(0, stdin_buf, sizeof(stdin_buf));
-            if (stdin_nr < 0) {
+        case WAIT_OBJECT_0:	/* read something */
+again:
+	    stdin_nr = 0;
+	    if (aux_count > 0) {
+		stdin_nr = 0;
+		while (aux_count--) {
+		    char c = aux_buf[aux_offset++];
+
+		    if (c == '\r') {
+			continue;
+		    }
+		    stdin_buf[stdin_nr++] = c;
+		    if (c == '\n') {
+			break;
+		    }
+		}
+	    }
+	    if (stdin_nr > 0) {
+		SetEvent(stdin_done_event);
+		break;
+	    }
+
+	    aux_offset = 0;
+            aux_count = read(0, aux_buf, sizeof(aux_buf));
+            if (aux_count < 0) {
                 stdin_errno = errno;
-            }
+            } else {
+		goto again;
+	    }
             SetEvent(stdin_done_event);
             break;
         }
