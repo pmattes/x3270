@@ -47,7 +47,7 @@ def try_until(f, seconds, errmsg):
 
 # Check for a particular port being listened on.
 def check_listen(port):
-    r = re.compile(rf':{port} .* LISTEN ')
+    r = re.compile(rf':{port} .* LISTEN')
     def test():
         netstat = Popen('netstat -ant', shell=True, stdout=PIPE)
         stdout = netstat.communicate()[0].decode('utf8').split('\n')
