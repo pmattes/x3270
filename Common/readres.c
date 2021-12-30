@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2016, 2018 Paul Mattes.
+ * Copyright (c) 2009, 2013-2016, 2018, 2021 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +38,7 @@
 #include "glue.h"
 #include "readres.h"
 #include "utils.h"
+#include "varbuf.h"
 
 /*
  * Make sure a resource definition begins with the application name, then
@@ -56,19 +57,45 @@ validate_and_split_resource(const char *where, const char *arg,
     static char *alias_dot = NULL;
     static char *alias_star = NULL;
     static size_t alias_len = 0;
-    static char *or_alias = "";
+#if defined(_WIN32) /*[*/
+    static char *wme_dot = NULL;
+    static char *wme_star = NULL;
+    static size_t wme_len = 0;
+    static char *walias_dot = NULL;
+    static char *walias_star = NULL;
+    static size_t walias_len = 0;
+#endif /*]*/
 
     if (me_dot == NULL) {
 	me_dot = xs_buffer("%s.", app);
 	me_star = xs_buffer("%s*", app);
 	me_len = strlen(me_dot);
+#if defined(_WIN32) /*[*/
+	if (app[0] == 'w') {
+	    wme_dot = xs_buffer("%s.", app + 1);
+	    wme_star = xs_buffer("%s.", app + 1);
+	    wme_len = strlen(wme_dot);
+	} else {
+	    wme_dot = xs_buffer("w%s.", app);
+	    wme_star = xs_buffer("w%s.", app);
+	    wme_len = strlen(wme_dot);
+	}
+#endif /*]*/
 	if (appres.alias != NULL) {
 	    alias_dot = xs_buffer("%s.", appres.alias);
 	    alias_star = xs_buffer("%s*", appres.alias);
 	    alias_len = strlen(alias_dot);
-	    if (strcmp(app, appres.alias)) {
-		or_alias = xs_buffer(" or '%s'", alias_dot);
+#if defined(_WIN32) /*[*/
+	    if (appres.alias[0] == 'w') {
+		walias_dot = xs_buffer("%s.", appres.alias + 1);
+		walias_star = xs_buffer("%s.", appres.alias + 1);
+		walias_len = strlen(walias_dot);
+	    } else {
+		walias_dot = xs_buffer("w%s.", appres.alias);
+		walias_star = xs_buffer("w%s.", appres.alias);
+		walias_len = strlen(walias_dot);
 	    }
+#endif /*]*/
 	}
     }
 
@@ -81,11 +108,40 @@ validate_and_split_resource(const char *where, const char *arg,
 	match_len = alias_len;
     } else if (alias_len != 0 && !strncmp(arg, alias_star, alias_len)) {
 	match_len = alias_len;
+#if defined(_WIN32) /*[*/
+    } else if (!strncmp(s, wme_dot, wme_len)) {
+	match_len = wme_len;
+    } else if (!strncmp(arg, wme_star, wme_len)) {
+	match_len = wme_len;
+    } else if (walias_len != 0 && !strncmp(s, walias_dot, walias_len)) {
+	match_len = walias_len;
+    } else if (walias_len != 0 && !strncmp(arg, walias_star, walias_len)) {
+	match_len = walias_len;
+#endif /*]*/
     } else if (arg[0] == '*') {
 	match_len = 1;
     } else {
+	varbuf_t r;
+
+	vb_init(&r);
+	vb_appendf(&r, "'%s'", me_dot);
+	vb_appendf(&r, ", '%s'", me_star);
+#if defined(_WIN32) /*[*/
+	vb_appendf(&r, ", '%s'", wme_dot);
+	vb_appendf(&r, ", '%s'", wme_star);
+#endif /*]*/
+	if (alias_len) {
+	    vb_appendf(&r, ", '%s'", alias_dot);
+	    vb_appendf(&r, ", '%s'", alias_star);
+#if defined(_WIN32) /*[*/
+	    vb_appendf(&r, ", '%s'", walias_dot);
+	    vb_appendf(&r, ", '%s'", walias_star);
+#endif /*]*/
+	}
+	vb_appendf(&r, ", or '*'");
 	xs_warning("%s: Invalid resource syntax '%.*s', name must begin with "
-		"'%s', '*'%s", where, (int)me_len, arg, me_dot, or_alias);
+		"%s", where, (int)me_len, arg, vb_buf(&r));
+	vb_free(&r);
 	return -1;
     }
 
