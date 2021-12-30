@@ -30,11 +30,13 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import sys
 import TestCommon
 
 class TestS3270Smoke(unittest.TestCase):
 
     # s3270 NVT smoke test
+    @unittest.skipIf(sys.platform.startswith("win"), "Windows does not have nc")
     def test_s3270_nvt_smoke(self):
 
         # Start 'nc' to read s3270's output.
@@ -86,6 +88,7 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.wait(timeout=2)
 
     # s3270 TLS smoke test
+    @unittest.skipIf(sys.platform.startswith("win"), "Windows does not have openssl")
     def test_s3270_tls_smoke(self):
 
         # Start 'openssl s_server' to read s3270's output.
