@@ -1,4 +1,5 @@
 obj/win64/b3270/b3270.exe
 obj/win64/pr3287/pr3287.exe
+obj/win64/playback/playback.exe
 obj/win64/s3270/s3270.exe
 obj/win64/x3270if/x3270if.exe
