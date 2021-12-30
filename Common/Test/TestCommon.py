@@ -48,13 +48,17 @@ def try_until(f, seconds, errmsg):
 # Check for a particular port being listened on.
 def check_listen(port):
     r = re.compile(rf':{port} .* LISTEN')
+    if sys.platform.startswith("win"):
+        cmd = 'netstat -an -p TCP'
+    else:
+        cmd = 'netstat -ant'
     def test():
-        netstat = Popen('netstat -ant', shell=True, stdout=PIPE)
+        netstat = Popen(cmd, shell=True, stdout=PIPE)
         stdout = netstat.communicate()[0].decode('utf8').split('\n')
         return any(r.search(line) for line in stdout)
     try_until(test, 2, f"Port {port} is not bound")
 
-# Write a string to playback after verifying s3270 is blocked.
+# Write a string to playback after verifying the emulator is blocked.
 def to_playback(p, port, s):
     # Wait for the CursorAt command to block.
     def test():
