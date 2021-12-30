@@ -141,10 +141,10 @@ hio_socket_close(session_t *session)
     vb_free(&session->pending.result);
     json_free(session->pending.jresult);
     llist_unlink(&session->link);
-    Free(session);
     if (session->listener != NULL) {
 	session->listener->n_sessions--;
     }
+    Free(session);
 }
 
 /**
