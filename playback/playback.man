@@ -1,5 +1,5 @@
 '\" t
-.TH PLAYBACK 1 "21 December 2021"
+.TH PLAYBACK 1 "30 December 2021"
 .SH NAME
 playback \-
 .SM IBM
@@ -8,6 +8,8 @@ x3270 trace file playback tool
 .B playback
 [
 .B \-b
+] [
+.B \-w
 ] [
 .B \-p
 .I port
@@ -34,6 +36,10 @@ This is useful for automated testing.
 Otherwise,
 .B playback
 is used interactively.
+The
+.B \-w
+command-line option prevents processing interactive commands until a process
+connects; otherwise commands are processed immediately.
 Keyboard commands control the flow of data from the file to the socket.
 These commands are:
 .TP
@@ -43,12 +49,24 @@ Send one line of data.
 .B r
 Send one record of data (send data until the TELNET EOR sequence is reached).
 .TP
-.B q
-Exit
-.B playback.
+.B m
+Send data util a mark (a line beginning with $) is encountered in the file.
+.TP
+.B e
+Send the rest of the data in the file.
+.TP
+.B t
+Send a TELNET DO TIMING MARK sequence.
+.TP
+.B c
+Echo the command to stdout as a comment.
 .TP
 .B d
 Disconnect the current socket and wait for another connection.
+.TP
+.B q
+Exit
+.B playback.
 .SH EXIT STATUS
 .TP
 .B 0
