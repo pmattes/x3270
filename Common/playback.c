@@ -630,12 +630,19 @@ process(FILE *f, int s)
 	DWORD ret;
 	bool done = false;
 	int nr;
+	WSANETWORKEVENTS events;
 
 	ha[0] = socket2_event;
 	ha[1] = stdin_done_event;
 	ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
 	switch (ret) {
 	case WAIT_OBJECT_0: /* socket input */
+	    WSAEnumNetworkEvents(s, socket2_event, &events);
+	    if (events.lNetworkEvents & FD_CLOSE) {
+		printf("\nEmulator disconnected.\n");
+		done = true;
+		break;
+	    }
 	    nr = recv(s, buf, BSIZE, 0);
 	    if (nr < 0) {
 		sockerr("recv");
@@ -886,7 +893,12 @@ run_it:
 	    fflush(stdout);
 	    nr = recv(s, ibuf + offset, n2r, 0);
 	    if (nr < 0) {
-		sockerr("recv");
+#if defined(_WIN32) /*[*/
+		if (GetLastError() != WSAEWOULDBLOCK)
+#endif /*]*/
+		{
+		    sockerr("recv");
+		}
 		return false;
 	    }
 	    if (nr == 0) {
