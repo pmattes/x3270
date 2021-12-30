@@ -137,10 +137,10 @@ hio_socket_close(session_t *session)
 #endif /*]*/
     vb_free(&session->pending.result);
     llist_unlink(&session->link);
-    Free(session);
     if (session->listener != NULL) {
 	session->listener->n_sessions--;
     }
+    Free(session);
 }
 
 /**
