@@ -25,57 +25,22 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# tcl3270 smoke tests
+# tcl3270 Quit test
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import tempfile
-import os
-import filecmp
-import TestCommon
 
-class TestTcl3270Smoke(unittest.TestCase):
+class TestTcl3270Quit(unittest.TestCase):
 
     # tcl3270 3270 smoke test
-    def test_tcl3270_smoke(self):
-
-        # Start 'playback' to feed data to tcl3270.
-        playback = Popen(["playback", "-w", "-p", "9998",
-            "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9998)
-
-        # Create a temporary file.
-        (handle, name) = tempfile.mkstemp()
+    def test_tcl3270_quit(self):
 
         # Start tcl3270.
-        tcl3270 = Popen(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
-            "-xrm", "tcl3270.contentionResolution: false",
-            "-httpd", "127.0.0.1:9997",
-            "127.0.0.1:9998"],
-            stdin=DEVNULL, stdout=DEVNULL)
-        TestCommon.check_listen(9997)
+        tcl3270 = Popen(["tcl3270", "tcl3270/Test/quit.tcl"],
+            stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
 
-        # Send a screenful to tcl3270.
-        playback.stdin.write(b'r\nr\nr\nr\n')
-        playback.stdin.flush()
-        TestCommon.check_push(playback, 9997, 1)
-
-        # Wait for the file to show up.
-        def Test():
-            return os.lseek(handle, 0, os.SEEK_END) > 0
-        TestCommon.try_until(Test, 2, "Script did not produce a file")
-        os.close(handle)
-
-        # Wait for the processes to exit.
-        playback.stdin.close()
-        playback.kill()
-        playback.wait(timeout=2)
-        tcl3270.kill()
+        # Wait for the process to exit.
         tcl3270.wait(timeout=2)
-
-        # Compare the files
-        self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))
-        os.unlink(name)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2013-2017, 2020 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2013-2017, 2020-2021 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		;;
-linux*)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE"
+linux*)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_GNU_SOURCE"
 		;;
 esac
 if test "$GCC" = yes

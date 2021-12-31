@@ -56,6 +56,8 @@
 
 #include "globals.h"
 
+#include <errno.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -71,6 +73,8 @@
 #endif /*]*/
 
 #define IBS	4096
+#define INTERNAL_ERROR "Internal error"
+
 /*
  * The following variable is a special hack that is needed in order for
  * Sun shared libraries to be used for Tcl.
@@ -81,8 +85,8 @@ extern int matherr();
 int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
-static int s3270_socket;
-static int s3270_socket2;
+static int s3270_socket = -1;
+static int s3270_socket2 = -1;
 static bool verbose = false;
 static bool interactive = false;
 static pid_t s3270_pid;
@@ -247,7 +251,7 @@ usage(const char *msg)
     fprintf(stderr, "  -d          debug s3270 I/O\n");
     fprintf(stderr, "s3270-options:\n");
     system("s3270 --help 2>&1 | tail -n +3 - >&2");
-    exit(1);
+    exit(999);
 }
 
 /* Do a single command, and interpret the results. */
@@ -279,26 +283,21 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     /* Check s3270. */
     if (s3270_exited) {
 	*ret = NewString(s3270_errmsg);
-	rv = 0;
 	goto done;
     }
     if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
 	s3270_exited = true;
 	if (WIFEXITED(st)) {
-	    if (WEXITSTATUS(st) == 0) {
-		exit(0);
-	    }
 	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "s3270 exited with status %d", WEXITSTATUS(st));
+		    "s3270 back end exited with status %d", WEXITSTATUS(st));
 	} else if (WIFSIGNALED(st)) {
 	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "s3270 killed by signal %d", WTERMSIG(st));
+		    "s3270 back end killed by signal %d", WTERMSIG(st));
 	} else {
 	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "Unknown s3270 exit status %d", st);
+		    "Unknown s3270 back end exit status %d", st);
 	}
 	*ret = NewString(s3270_errmsg);
-	rv = 0;
 	goto done;
     }
 
@@ -312,7 +311,9 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
 
     nw = write(s3270_socket, cmd_nl, strlen(cmd_nl));
     if (nw < 0) {
-	perror("s3270 (back end): write");
+	int as = asprintf(ret, "s3270 back end write: %s", strerror(errno));
+
+	assert(as >= 0);
 	Free(cmd_nl);
 	goto done;
     }
@@ -372,22 +373,24 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
 	    continue;
 	}
     }
-    if (nr < 0) {
-	perror("s3270 (back end) read");
-	if (status != NULL && *status != NULL) {
-	    Free(*status);
-	    *status = NULL;
-	}
+    if (nr <= 0) {
+	int as;
+
 	if (*ret != NULL) {
 	    Free(*ret);
 	    *ret = NULL;
 	}
-	goto done;
-    } else if (nr == 0) {
-	if (verbose) {
-	    fprintf(stderr, "s3270 EOF\n");
+	if (nr < 0) {
+	    as = asprintf(ret, "s3270 back end read: %s", strerror(errno));
+	    assert(as >= 0);
+	} else {
+	    *ret = NewString("s3270 back end exited");
 	}
-	exit(0);
+	if (status != NULL && *status != NULL) {
+	    Free(*status);
+	    *status = NULL;
+	}
+	goto done;
     }
 
     /* Make sure we return someting. */
@@ -406,6 +409,78 @@ done:
     pthread_mutex_unlock(&cmd_mutex);
 #endif /*]*/
     return rv;
+}
+
+/* Wait for callbacks from s3270. */
+static void
+wait_for_callbacks(int listen_s)
+{
+    time_t start;
+    int sockets[2];
+    int n_sockets = 0;
+
+    /* For five seconds, wait for s3270 to connect back to us twice or exit. */
+    start = time(NULL);
+    while (time(NULL) - start < 5 && n_sockets < 2) {
+	fd_set rfds;
+	struct timeval tv;
+	int ns;
+	int st;
+
+	FD_ZERO(&rfds);
+	FD_SET(listen_s, &rfds);
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000; /* 0.1 seconds */
+
+	ns = select(listen_s + 1, &rfds, NULL, NULL, &tv);
+	if (ns < 0) {
+	    perror("select");
+	    exit(999);
+	}
+
+	/* Check s3270. */
+	if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
+	    if (WIFEXITED(st)) {
+		fprintf(stderr, "s3270 back end exited with status %d\n",
+			WEXITSTATUS(st));
+	    } else if (WIFSIGNALED(st)) {
+		fprintf(stderr, "s3270 back end killed by signal %d\n",
+			WTERMSIG(st));
+	    } else {
+		fprintf(stderr, "Unknown s3270 back end exit status %d\n", st);
+	    }
+	    exit(999);
+	}
+
+	if (ns > 0 && FD_ISSET(listen_s, &rfds)) {
+	    int s;
+	    struct sockaddr_in sin;
+	    socklen_t len;
+
+	    memset(&sin, 0, sizeof(sin));
+	    sin.sin_family = AF_INET;
+	    len = sizeof(sin);
+	    s = accept(listen_s, (struct sockaddr *)&sin, &len);
+	    if (s < 0) {
+		perror("accept");
+		exit(999);
+	    }
+	    if (verbose) {
+		fprintf(stderr, "Got connection %d from s3270\n",
+			n_sockets + 1);
+	    }
+	    sockets[n_sockets++] = s;
+	}
+    }
+
+    if (n_sockets < 2) {
+	fprintf(stderr, "s3270 back end did not start\n");
+	kill(s3270_pid, SIGKILL);
+	exit(999);
+    }
+
+    s3270_socket = sockets[0];
+    s3270_socket2 = sockets[1];
 }
 
 /* Initialization procedure for tcl3270. */
@@ -470,33 +545,32 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     listen_s = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_s < 0) {
 	perror("socket");
-	exit(1);
+	exit(999);
     }
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     if (bind(listen_s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 	perror("bind");
-	exit(1);
+	exit(999);
     }
     len = sizeof(sin);
     if (getsockname(listen_s, (struct sockaddr *)&sin, &len) < 0) {
 	perror("getsockname");
-	exit(1);
+	exit(999);
     }
     port = htons(sin.sin_port);
     snprintf(cbuf, sizeof(cbuf), "2x127.0.0.1:%u", port);
     if (listen(listen_s, 1) < 0) {
 	perror("listen");
-	exit(1);
+	exit(999);
     }
-    fcntl(listen_s, FD_CLOEXEC | fcntl(listen_s, F_GETFD, 0));
 
     /* Set up s3270's command-line arguments. */
     nargv[i_out++] = "s3270";
     nargv[i_out++] = "-utf8";
     nargv[i_out++] = "-minversion";
-    nargv[i_out++] = "4.0";
+    nargv[i_out++] = "4.1";
     nargv[i_out++] = "-alias";
     nargv[i_out++] = "tcl3270";
     nargv[i_out++] = "-callback";
@@ -517,25 +591,26 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	/* Child. */
 
 	/* Redirect I/O. */
+	close(listen_s);
 	devnull = open("/dev/null", O_RDWR);
 	if (devnull < 0) {
 	    perror("/dev/null");
-	    exit(1);
+	    exit(999);
 	}
 	if (dup2(devnull, 0) < 0) {
 	    perror("dup2");
-	    exit(1);
+	    exit(999);
 	}
 	if (dup2(devnull, 1) < 0) {
 	    perror("dup2");
-	    exit(1);
+	    exit(999);
 	}
 	close(devnull);
 
 	/* Run s3270. */
 	if (execvp("s3270", nargv) < 0) {
-	    perror("s3270 (back end)");
-	    exit(1);
+	    perror("s3270 back end");
+	    exit(999);
 	}
 	break;
     default:
@@ -545,31 +620,11 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 
     /* Wait for the connections back from s3270. */
     if (verbose) {
-	fprintf(stderr, "Listening for connection from s3270 on %s\n",
+	fprintf(stderr, "Listening for connections from s3270 on %s\n",
 		cbuf + 2);
     }
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    len = sizeof(sin);
-    s3270_socket = accept(listen_s, (struct sockaddr *)&sin, &len);
-    if (s3270_socket < 0) {
-	perror("accept");
-	exit(1);
-    }
-    if (verbose) {
-	fprintf(stderr, "Got connection 1 from s3270\n");
-    }
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    len = sizeof(sin);
-    s3270_socket2 = accept(listen_s, (struct sockaddr *)&sin, &len);
-    if (s3270_socket2 < 0) {
-	perror("accept");
-	exit(1);
-    }
-    if (verbose) {
-	fprintf(stderr, "Got connection 2 from s3270\n");
-    }
+
+    wait_for_callbacks(listen_s);
     close(listen_s);
 
 #if defined(NEED_PTHREADS) /*[*/
@@ -742,7 +797,16 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     rv = run_s3270(cmd, &success, NULL, &ret);
     if (rv < 0) {
 	Free(cmd);
-	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	if (ret == NULL) {
+	    Tcl_SetResult(interp, INTERNAL_ERROR, TCL_STATIC);
+	} else {
+	    char *result;
+	    int as = asprintf(&result, INTERNAL_ERROR ": %s", ret);
+
+	    assert(as >= 0);
+	    Free(ret);
+	    Tcl_SetResult(interp, result, TCL_VOLATILE);
+	}
 	return TCL_ERROR;
     }
 
@@ -784,7 +848,16 @@ Status_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     char *ret;
 
     if (run_s3270("", &success, &status, &ret) < 0) {
-	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	if (ret == NULL) {
+	    Tcl_SetResult(interp, INTERNAL_ERROR, TCL_STATIC);
+	} else {
+	    char *result;
+	    int na = asprintf(&result, INTERNAL_ERROR ": %s", ret);
+
+	    assert(na >= 0);
+	    Free(ret);
+	    Tcl_SetResult(interp, result, TCL_VOLATILE);
+	}
 	return TCL_ERROR;
     }
     Tcl_SetResult(interp, status, TCL_VOLATILE);
@@ -834,7 +907,16 @@ Rows_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     char *f;
 
     if (run_s3270("", &success, &status, &ret) < 0) {
-	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	if (ret == NULL) {
+	    Tcl_SetResult(interp, INTERNAL_ERROR, TCL_STATIC);
+	} else {
+	    char *result;
+	    int na = asprintf(&result, INTERNAL_ERROR ": %s", ret);
+
+	    assert(na >= 0);
+	    Free(ret);
+	    Tcl_SetResult(interp, result, TCL_VOLATILE);
+	}
 	return TCL_ERROR;
     }
     Free(ret);
@@ -856,7 +938,16 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     char *f;
 
     if (run_s3270("", &success, &status, &ret) < 0) {
-	Tcl_SetResult(interp, "Internal error", TCL_STATIC);
+	if (ret == NULL) {
+	    Tcl_SetResult(interp, INTERNAL_ERROR, TCL_STATIC);
+	} else {
+	    char *result;
+	    int na = asprintf(&result, INTERNAL_ERROR ": %s", ret);
+
+	    assert(na >= 0);
+	    Free(ret);
+	    Tcl_SetResult(interp, result, TCL_VOLATILE);
+	}
 	return TCL_ERROR;
     }
     Free(ret);
@@ -872,5 +963,5 @@ void
 Error(const char *msg)
 {
     fprintf(stderr, "%s\n", msg);
-    exit(1);
+    exit(999);
 }
