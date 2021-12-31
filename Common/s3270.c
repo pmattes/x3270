@@ -129,35 +129,47 @@ callback_init(void)
     struct sockaddr *sa;
     socklen_t sa_len;
     socket_t s;
+    int nc = 1;
+    char *cbstring = appres.scripting.callback;
+    int i;
 
     if (appres.scripting.callback == NULL) {
 	return;
     }
 
-    if (!parse_bind_opt(appres.scripting.callback, &sa, &sa_len)) {
-	Error("Cannot parse " ResCallback);
-    }
-    if ((s = socket(sa->sa_family, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-#if !defined(_WIN32) /*[*/
-	perror("socket");
-#else /*][*/
-	fprintf(stderr, "socket: %s\n", win32_strerror(WSAGetLastError()));
-	fflush(stdout);
-#endif /*]*/
-	exit(1);
-    }
-    if (connect(s, sa, sa_len) < 0) {
-#if !defined(_WIN32) /*[*/
-	perror(ResCallback " connect");
-#else /*][*/
-	fprintf(stderr, "connect: %s\n", win32_strerror(WSAGetLastError()));
-	fflush(stdout);
-#endif /*]*/
-	exit(1);
+    if (!strncasecmp("2x", cbstring, 2)) {
+	nc = 2;
+	cbstring += 2;
     }
 
-    /* Get ready for I/O. */
-    peer_accepted(s, NULL);
+    for (i = 0; i < nc; i++) {
+
+	if (!parse_bind_opt(cbstring, &sa, &sa_len)) {
+	    Error("Cannot parse " ResCallback);
+	}
+	if ((s = socket(sa->sa_family, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+#if !defined(_WIN32) /*[*/
+	    perror("socket");
+#else /*][*/
+	    fprintf(stderr, "socket: %s\n", win32_strerror(WSAGetLastError()));
+	    fflush(stdout);
+#endif /*]*/
+	    exit(1);
+	}
+	if (connect(s, sa, sa_len) < 0) {
+#if !defined(_WIN32) /*[*/
+	    perror(ResCallback " connect");
+#else /*][*/
+	    fprintf(stderr, "connect: %s\n",
+		    win32_strerror(WSAGetLastError()));
+	    fflush(stdout);
+#endif /*]*/
+	    exit(1);
+	}
+
+	/* Get ready for I/O. */
+	peer_accepted(s, NULL);
+    }
 }
 
 int

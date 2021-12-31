@@ -140,12 +140,14 @@ test:
 	$(MAKE) -f b3270/Makefile.test $@
 	$(MAKE) -f c3270/Makefile.test $@
 	$(MAKE) -f pr3287/Makefile.test $@
+	$(MAKE) -f tcl3270/Makefile.test $@
 smoketest:
 	$(MAKE) -f x3270/Makefile.test $@
 	$(MAKE) -f s3270/Makefile.test $@
 	$(MAKE) -f b3270/Makefile.test $@
 	$(MAKE) -f c3270/Makefile.test $@
 	$(MAKE) -f pr3287/Makefile.test $@
+	$(MAKE) -f tcl3270/Makefile.test $@
 coverage:
 	cd lib/3270 && $(MAKE) -f Makefile.test $@
 	cd lib/32xx && $(MAKE) -f Makefile.test $@

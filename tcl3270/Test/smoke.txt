@@ -1,0 +1,24 @@
+ SVM0201P                                                                       
+ SYSTEM: IBM0SM03                                               DATE: 19/12/12  
+ TERMID: IBM0TEQO                                               TIME: 22:57:17  
+ CUSTOMER ASSISTANCE: CALL 800-727-2222                                         
+ -------------------------------------------------------------------------------
+                                                                                
+                               W E L C O M E   T O                              
+                                                                                
+                   ===     ===============         ===============              
+                 =======   ===============    ==   ===============              
+                ===   ===        ===        ==  ==       ===                    
+               ===========       ===       ===   =       ===                    
+              =============      ===        ====         ===                    
+              ===       ===      ===       == === =      ===                    
+              ===       ===      ===       ==   ==       ===                    
+              ===       ===      ===        ==== ==      ===                    
+                                                                                
+                    Provided by AT&T Global Network Services                    
+ WARNING: Restricted System. Authorized Access Only. Security Monitoring Active.
+ -------------------------------------------------------------------------------
+ ACCOUNT... ________ USERID... ________ PASSWORD...                             
+ Enter desired product or service, or press the HELP key (PF1) for assistance.  
+                                                                                
+ ===>                                                                           

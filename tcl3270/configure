@@ -4000,7 +4000,7 @@ case "$enable_ipv6" in
 	;;
 esac
 
-ac_config_files="$ac_config_files Makefile Makefile.obj"
+ac_config_files="$ac_config_files Makefile Makefile.obj Makefile.test"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4695,6 +4695,7 @@ do
     "conf.h") CONFIG_HEADERS="$CONFIG_HEADERS conf.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "Makefile.obj") CONFIG_FILES="$CONFIG_FILES Makefile.obj" ;;
+    "Makefile.test") CONFIG_FILES="$CONFIG_FILES Makefile.test" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

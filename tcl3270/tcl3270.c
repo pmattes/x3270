@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -56,8 +56,11 @@
 
 #include "globals.h"
 
+#include <fcntl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/wait.h>
+#include <netinet/in.h>
 
 #include "names.h"
 #include "s3270_proto.h"
@@ -78,7 +81,8 @@ extern int matherr();
 int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
-static int s3270pipe[2];
+static int s3270_socket;
+static int s3270_socket2;
 static bool verbose = false;
 static bool interactive = false;
 static pid_t s3270_pid;
@@ -306,7 +310,7 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     cmd_nl = Malloc(strlen(cmd) + 2);
     sprintf(cmd_nl, "%s\n", cmd);
 
-    nw = write(s3270pipe[1], cmd_nl, strlen(cmd_nl));
+    nw = write(s3270_socket, cmd_nl, strlen(cmd_nl));
     if (nw < 0) {
 	perror("s3270 (back end): write");
 	Free(cmd_nl);
@@ -315,7 +319,7 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     Free(cmd_nl);
 
     /* Get the answer. */
-    while (!complete && (nr = read(s3270pipe[0], rbuf, IBS)) > 0) {
+    while (!complete && (nr = read(s3270_socket, rbuf, IBS)) > 0) {
 	ssize_t i;
 	bool get_more = false;
 
@@ -408,15 +412,19 @@ done:
 static int
 tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 {
-    char **nargv = Calloc(argc + 7, sizeof(char *));
+    char **nargv = Calloc(argc + 9, sizeof(char *));
     int i_in, i_out = 0;
-    int to_s3270_pipe[2];
-    int from_s3270_pipe[2];
+    int listen_s;
+    struct sockaddr_in sin;
+    socklen_t len;
+    u_short port;
+    int devnull;
     bool success;
     char *ret;
     char *action;
     char *paren;
     int skip_ix = -1;
+    char cbuf[32];
 
     /*
      * Handle special first arguments first, which completely violate the
@@ -458,6 +466,32 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	verbose = true;
     }
 
+    /* Set up a listening socket. */
+    listen_s = socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_s < 0) {
+	perror("socket");
+	exit(1);
+    }
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (bind(listen_s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+	perror("bind");
+	exit(1);
+    }
+    len = sizeof(sin);
+    if (getsockname(listen_s, (struct sockaddr *)&sin, &len) < 0) {
+	perror("getsockname");
+	exit(1);
+    }
+    port = htons(sin.sin_port);
+    snprintf(cbuf, sizeof(cbuf), "2x127.0.0.1:%u", port);
+    if (listen(listen_s, 1) < 0) {
+	perror("listen");
+	exit(1);
+    }
+    fcntl(listen_s, FD_CLOEXEC | fcntl(listen_s, F_GETFD, 0));
+
     /* Set up s3270's command-line arguments. */
     nargv[i_out++] = "s3270";
     nargv[i_out++] = "-utf8";
@@ -465,18 +499,14 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     nargv[i_out++] = "4.0";
     nargv[i_out++] = "-alias";
     nargv[i_out++] = "tcl3270";
+    nargv[i_out++] = "-callback";
+    nargv[i_out++] = cbuf;
     if (skip_ix >= 0) {
 	for (i_in = skip_ix + 1; i_in < argc; i_in++) {
 	    nargv[i_out++] = (char *)argv[i_in];
 	}
     }
     nargv[i_out++] = NULL;
-
-    /* Set up pipes. */
-    if (pipe(to_s3270_pipe) < 0 || pipe(from_s3270_pipe) < 0) {
-	perror("pipe");
-	return TCL_ERROR;
-    }
 
     /* Start s3270. */
     switch (s3270_pid = fork()) {
@@ -487,17 +517,20 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	/* Child. */
 
 	/* Redirect I/O. */
-	close(to_s3270_pipe[1]);
-	if (dup2(to_s3270_pipe[0], 0) < 0) {
+	devnull = open("/dev/null", O_RDWR);
+	if (devnull < 0) {
+	    perror("/dev/null");
+	    exit(1);
+	}
+	if (dup2(devnull, 0) < 0) {
 	    perror("dup2");
 	    exit(1);
 	}
-	close(to_s3270_pipe[0]);
-	if (dup2(from_s3270_pipe[1], 1) < 0) {
+	if (dup2(devnull, 1) < 0) {
 	    perror("dup2");
 	    exit(1);
 	}
-	close(from_s3270_pipe[1]);
+	close(devnull);
 
 	/* Run s3270. */
 	if (execvp("s3270", nargv) < 0) {
@@ -510,11 +543,34 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	break;
     }
 
-    /* Redirect I/O. */
-    close(to_s3270_pipe[0]);
-    close(from_s3270_pipe[1]);
-    s3270pipe[0] = from_s3270_pipe[0];
-    s3270pipe[1] = to_s3270_pipe[1];
+    /* Wait for the connections back from s3270. */
+    if (verbose) {
+	fprintf(stderr, "Listening for connection from s3270 on %s\n",
+		cbuf + 2);
+    }
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    len = sizeof(sin);
+    s3270_socket = accept(listen_s, (struct sockaddr *)&sin, &len);
+    if (s3270_socket < 0) {
+	perror("accept");
+	exit(1);
+    }
+    if (verbose) {
+	fprintf(stderr, "Got connection 1 from s3270\n");
+    }
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    len = sizeof(sin);
+    s3270_socket2 = accept(listen_s, (struct sockaddr *)&sin, &len);
+    if (s3270_socket2 < 0) {
+	perror("accept");
+	exit(1);
+    }
+    if (verbose) {
+	fprintf(stderr, "Got connection 2 from s3270\n");
+    }
+    close(listen_s);
 
 #if defined(NEED_PTHREADS) /*[*/
     /* Set up the mutex. */
