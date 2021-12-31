@@ -85,19 +85,16 @@ extern int matherr();
 int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
-static int s3270_socket = -1;
-static int s3270_socket2 = -1;
+static int s3270_socket[2] = { -1, -1 };
 static bool verbose = false;
 static bool interactive = false;
 static pid_t s3270_pid;
-static bool s3270_exited = false;
-static char s3270_errmsg[1024];
 #if defined(NEED_PTHREADS) /*[*/
 static pthread_mutex_t cmd_mutex;
 #endif /*]*/
 
 static Tcl_ObjCmdProc x3270_cmd;
-static Tcl_ObjCmdProc Rows_cmd, Cols_cmd, Status_cmd;
+static Tcl_ObjCmdProc Rows_cmd, Cols_cmd, Status_cmd, Quit_cmd;
 static int tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[]);
 
 /*
@@ -124,12 +121,13 @@ main(int argc, char **argv)
     if (programname) {
 	char *path = getenv("PATH");
 	size_t path_len = programname - argv[0];
-	size_t buf_len = 5 + path_len + (path? strlen(path + 1): 0) + 1;
-	char *buf = Malloc(buf_len);
+	int ns;
+	char *buf;
 
 	/* Add our path to $PATH so we can find s3270 and x3270if. */
-	snprintf(buf, buf_len, "PATH=%.*s%s%s", (int)path_len, argv[0],
+	ns = asprintf(&buf, "PATH=%.*s%s%s", (int)path_len, argv[0],
 		path? ":": "", path? path: "");
+	assert(ns >= 0);
 	putenv(buf);
     }
 
@@ -254,11 +252,46 @@ usage(const char *msg)
     exit(999);
 }
 
+/*
+ * Poll s3270 for exit status. Returns a non-NULL error message if s3270
+ * exited, NULL otherwise.
+ * Does not block.
+ */
+static const char *
+poll_s3270_exit(void)
+{
+    static bool s3270_exited = false;
+    static char *s3270_exit_msg = NULL;
+    int st;
+
+    if (s3270_exited) {
+	return s3270_exit_msg;
+    }
+    if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
+	int ns = -1;
+
+	s3270_exited = true;
+	if (WIFEXITED(st)) {
+	    ns = asprintf(&s3270_exit_msg,
+		    "s3270 backend exited with status %d", WEXITSTATUS(st));
+	} else if (WIFSIGNALED(st)) {
+	    ns = asprintf(&s3270_exit_msg,
+		    "s3270 backend killed by signal %d", WTERMSIG(st));
+	} else {
+	    ns = asprintf(&s3270_exit_msg,
+		    "Unknown s3270 backend exit status %d", st);
+	}
+	assert(ns >= 0);
+	return s3270_exit_msg;
+    }
+    return NULL;
+}
+
 /* Do a single command, and interpret the results. */
 static int
 run_s3270(const char *cmd, bool *success, char **status, char **ret)
 {
-    int st;
+    const char *exit_msg;
     int nw = 0;
     char buf[IBS];
     char rbuf[IBS];
@@ -281,23 +314,8 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
 #endif /*]*/
 
     /* Check s3270. */
-    if (s3270_exited) {
-	*ret = NewString(s3270_errmsg);
-	goto done;
-    }
-    if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
-	s3270_exited = true;
-	if (WIFEXITED(st)) {
-	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "s3270 back end exited with status %d", WEXITSTATUS(st));
-	} else if (WIFSIGNALED(st)) {
-	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "s3270 back end killed by signal %d", WTERMSIG(st));
-	} else {
-	    snprintf(s3270_errmsg, sizeof(s3270_errmsg),
-		    "Unknown s3270 back end exit status %d", st);
-	}
-	*ret = NewString(s3270_errmsg);
+    if ((exit_msg = poll_s3270_exit()) != NULL) {
+	*ret = NewString(exit_msg);
 	goto done;
     }
 
@@ -309,9 +327,9 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     cmd_nl = Malloc(strlen(cmd) + 2);
     sprintf(cmd_nl, "%s\n", cmd);
 
-    nw = write(s3270_socket, cmd_nl, strlen(cmd_nl));
+    nw = write(s3270_socket[0], cmd_nl, strlen(cmd_nl));
     if (nw < 0) {
-	int as = asprintf(ret, "s3270 back end write: %s", strerror(errno));
+	int as = asprintf(ret, "s3270 backend write: %s", strerror(errno));
 
 	assert(as >= 0);
 	Free(cmd_nl);
@@ -320,7 +338,7 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
     Free(cmd_nl);
 
     /* Get the answer. */
-    while (!complete && (nr = read(s3270_socket, rbuf, IBS)) > 0) {
+    while (!complete && (nr = read(s3270_socket[0], rbuf, IBS)) > 0) {
 	ssize_t i;
 	bool get_more = false;
 
@@ -381,10 +399,10 @@ run_s3270(const char *cmd, bool *success, char **status, char **ret)
 	    *ret = NULL;
 	}
 	if (nr < 0) {
-	    as = asprintf(ret, "s3270 back end read: %s", strerror(errno));
+	    as = asprintf(ret, "s3270 backend read: %s", strerror(errno));
 	    assert(as >= 0);
 	} else {
-	    *ret = NewString("s3270 back end exited");
+	    *ret = NewString("s3270 backend exited");
 	}
 	if (status != NULL && *status != NULL) {
 	    Free(*status);
@@ -413,19 +431,18 @@ done:
 
 /* Wait for callbacks from s3270. */
 static void
-wait_for_callbacks(int listen_s)
+wait_for_callbacks(int listen_s, int sockets[], int n)
 {
     time_t start;
-    int sockets[2];
     int n_sockets = 0;
 
     /* For five seconds, wait for s3270 to connect back to us twice or exit. */
     start = time(NULL);
-    while (time(NULL) - start < 5 && n_sockets < 2) {
+    while (time(NULL) - start < 5 && n_sockets < n) {
 	fd_set rfds;
 	struct timeval tv;
 	int ns;
-	int st;
+	const char *exit_msg;
 
 	FD_ZERO(&rfds);
 	FD_SET(listen_s, &rfds);
@@ -439,16 +456,8 @@ wait_for_callbacks(int listen_s)
 	}
 
 	/* Check s3270. */
-	if (waitpid(s3270_pid, &st, WNOHANG) > 0) {
-	    if (WIFEXITED(st)) {
-		fprintf(stderr, "s3270 back end exited with status %d\n",
-			WEXITSTATUS(st));
-	    } else if (WIFSIGNALED(st)) {
-		fprintf(stderr, "s3270 back end killed by signal %d\n",
-			WTERMSIG(st));
-	    } else {
-		fprintf(stderr, "Unknown s3270 back end exit status %d\n", st);
-	    }
+	if ((exit_msg = poll_s3270_exit()) != NULL) {
+	    fprintf(stderr, "%s\n", exit_msg);
 	    exit(999);
 	}
 
@@ -474,13 +483,47 @@ wait_for_callbacks(int listen_s)
     }
 
     if (n_sockets < 2) {
-	fprintf(stderr, "s3270 back end did not start\n");
+	fprintf(stderr, "s3270 backend did not start\n");
 	kill(s3270_pid, SIGKILL);
 	exit(999);
     }
+}
 
-    s3270_socket = sockets[0];
-    s3270_socket2 = sockets[1];
+/* Watch for s3270 exit. */
+static void *
+watch_s3270(void *arg)
+{
+    sigset_t set;
+    char buf;
+    int s = *(int *)arg;
+
+    /* No signals, please. */
+    sigfillset(&set);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+    /* Wait until s3270 closes the second callback socket. */
+    read(s, &buf, 1);
+
+    if (verbose) {
+	/*
+	 * Poll for up to 2 seconds for s3270 to finish exiting, so we can
+	 * display its exit status.
+	 */
+	time_t start = time(NULL);
+	const char *exit_msg = "s3270 backend exited";
+
+	while (time(NULL) - start < 2 &&
+		(exit_msg = poll_s3270_exit()) == NULL) {
+	    struct timespec ts;
+
+	    ts.tv_sec = 0;
+	    ts.tv_nsec = 100000000; /* 10ms */
+	    nanosleep(&ts, NULL);
+	}
+	fprintf(stderr, "%s\n", exit_msg);
+    }
+    exit(998);
+    return NULL;
 }
 
 /* Initialization procedure for tcl3270. */
@@ -500,6 +543,9 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     char *paren;
     int skip_ix = -1;
     char cbuf[32];
+#if defined(NEED_PTHREADS) /*[*/
+    pthread_t s3270_watcher;
+#endif /*]*/
 
     /*
      * Handle special first arguments first, which completely violate the
@@ -609,7 +655,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 
 	/* Run s3270. */
 	if (execvp("s3270", nargv) < 0) {
-	    perror("s3270 back end");
+	    perror("s3270 backend");
 	    exit(999);
 	}
 	break;
@@ -624,12 +670,19 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 		cbuf + 2);
     }
 
-    wait_for_callbacks(listen_s);
+    wait_for_callbacks(listen_s, s3270_socket, 2);
     close(listen_s);
 
 #if defined(NEED_PTHREADS) /*[*/
     /* Set up the mutex. */
     pthread_mutex_init(&cmd_mutex, NULL);
+
+    /* Set up the watcher thread. */
+    if (pthread_create(&s3270_watcher, NULL, watch_s3270,
+		&s3270_socket[1]) < 0) {
+	perror("pthread_create");
+	exit(999);
+    }
 #endif /*]*/
 
     /* Run 'Query(Actions)' to learn what Tcl commands we need to add. */
@@ -645,11 +698,13 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     action = ret;
     while ((paren = strchr(action, '(')) != NULL) {
 
-	/* Create the command. */
+	/* Create the command, except for Quit(), which we override. */
 	*paren = '\0';
-	if (Tcl_CreateObjCommand(interp, action, x3270_cmd, NULL, NULL)
-		== NULL) {
-	    return TCL_ERROR;
+	if (strcasecmp(action, "Quit")) {
+	    if (Tcl_CreateObjCommand(interp, action, x3270_cmd, NULL, NULL)
+		    == NULL) {
+		return TCL_ERROR;
+	    }
 	}
 
 	/* Skip to the next action. */
@@ -674,6 +729,9 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     }
     if (Tcl_CreateObjCommand(interp, "Status", Status_cmd, NULL, NULL)
 	    == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_CreateObjCommand(interp, "Quit", Quit_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -863,6 +921,23 @@ Status_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     Tcl_SetResult(interp, status, TCL_VOLATILE);
     Free(status);
     Free(ret);
+    return TCL_OK;
+}
+
+/*
+ * Exit the emulator.
+ * This overrides the x3270 Quit() action, which will make s3270 exit
+ * asynchronously.
+ */
+static int
+Quit_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	Tcl_Obj *CONST objv[])
+{
+    if (objc > 1) {
+	Tcl_SetResult(interp, "Quit() takes 0 arguments", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    Tcl_Exit(0);
     return TCL_OK;
 }
 
