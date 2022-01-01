@@ -37,6 +37,7 @@ class TestS3270BasicCmdline(unittest.TestCase):
         TestCommon.check_dash_v('s3270')
         TestCommon.check_help('s3270')
         TestCommon.check_bad('s3270')
+        TestCommon.check_incomplete('s3270')
 
 if __name__ == '__main__':
     unittest.main()

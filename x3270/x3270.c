@@ -390,7 +390,7 @@ static void
 no_minus(char *arg)
 {
     if (arg[0] == '-') {
-	usage(xs_buffer("Unknown or incomplete option: %s", arg));
+	usage(xs_buffer("Unknown or incomplete option: '%s'", arg));
     }
 }
 

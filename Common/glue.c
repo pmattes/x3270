@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -417,7 +417,7 @@ static void
 no_minus(const char *arg)
 {
     if (arg[0] == '-') {
-	usage(xs_buffer("Unknown or incomplete option: %s", arg));
+	usage(xs_buffer("Unknown or incomplete option: '%s'", arg));
     }
 }
 
@@ -672,7 +672,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_STRING:
 	    if (i == *argcp - 1) {	/* missing arg */
-		popup_an_error("Missing value for '%s'", argv[i]);
+		usage(xs_buffer("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    *(const char **)opts[j].aoff = NewString(argv[++i]);
@@ -682,7 +682,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_XRM:
 	    if (i == *argcp - 1) {	/* missing arg */
-		popup_an_error("Missing value for '%s'", argv[i]);
+		usage(xs_buffer("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    xparse_xrm(argv[++i], "-xrm", warn);
@@ -697,7 +697,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_INT:
 	    if (i == *argcp - 1) {	/* missing arg */
-		popup_an_error("Missing value for '%s'", argv[i]);
+		usage(xs_buffer("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    *(int *)opts[j].aoff = atoi(argv[++i]);

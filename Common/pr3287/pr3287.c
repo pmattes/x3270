@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2021 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -189,13 +189,22 @@ const char *build_options(void);
 
 /* Print a usage message and exit. */
 static void
-usage(void)
+usage(const char *errmsg)
 {
+    if (errmsg != NULL) {
+	fprintf(stderr, "%s\n", errmsg);
+    }
     fprintf(stderr,
 	    "Usage: %s [options] [lu[,lu...]@]host[:port]\n",
 	    programname);
     fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     pr3287_exit(1);
+}
+
+static void
+missing_value(const char *option)
+{
+    usage(xs_buffer("Missing value for '%s'\n", option));
 }
 
 /* Print command-line help. */
@@ -608,23 +617,20 @@ main(int argc, char *argv[])
 	if ((tls_options & TLS_OPT_ACCEPT_HOSTNAME) &&
 		!strcmp(argv[i], OptAcceptHostname)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptAcceptHostname "\n");
-		usage();
+		missing_value(OptAcceptHostname);
 	    }
 	    options.tls.accept_hostname = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-assoc")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -assoc\n");
-		usage();
+		missing_value("-assoc");
 	    }
 	    options.assoc = argv[i + 1];
 	    i++;
 #if !defined(_WIN32) /*[*/
 	} else if (!strcmp(argv[i], "-command")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -command\n");
-		usage();
+		missing_value("-command");
 	    }
 	    options.command = argv[i + 1];
 	    i++;
@@ -632,80 +638,70 @@ main(int argc, char *argv[])
 	} else if ((tls_options & TLS_OPT_CA_DIR) &&
 		!strcmp(argv[i], OptCaDir)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptCaDir "\n");
-		usage();
+		missing_value(OptCaDir);
 	    }
 	    options.tls.ca_dir = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_CA_FILE) &&
 		!strcmp(argv[i], OptCaFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptCaFile "\n");
-		usage();
+		missing_value(OptCaFile);
 	    }
 	    options.tls.ca_file = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_CERT_FILE) &&
 		!strcmp(argv[i], OptCertFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptCertFile "\n");
-		usage();
+		missing_value(OptCertFile);
 	    }
 	    options.tls.cert_file = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_CERT_FILE_TYPE) &&
 		!strcmp(argv[i], OptCertFileType)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptCertFileType "\n");
-		usage();
+		missing_value(OptCertFileType);
 	    }
 	    options.tls.cert_file_type = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_CHAIN_FILE) &&
 		!strcmp(argv[i], OptChainFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptChainFile "\n");
-		usage();
+		missing_value(OptChainFile);
 	    }
 	    options.tls.chain_file = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_KEY_FILE) &&
 		!strcmp(argv[i], OptKeyFile)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptKeyFile "\n");
-		usage();
+		missing_value(OptKeyFile);
 	    }
 	    options.tls.key_file = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_KEY_FILE_TYPE) &&
 		!strcmp(argv[i], OptKeyFileType)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptKeyFileType "\n");
-		usage();
+		missing_value(OptKeyFileType);
 	    }
 	    options.tls.key_file_type = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_KEY_PASSWD) &&
 		!strcmp(argv[i], OptKeyPasswd)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptKeyPasswd "\n");
-		usage();
+		missing_value(OptKeyPasswd);
 	    }
 	    options.tls.key_passwd = argv[i + 1];
 	    i++;
 	} else if ((tls_options & TLS_OPT_CLIENT_CERT) &&
 		!strcmp(argv[i], OptClientCert)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptClientCert "\n");
-		usage();
+		missing_value(OptClientCert);
 	    }
 	    options.tls.client_cert = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], OptCharset) ||
 		   !strcmp(argv[i], OptCodePage)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for %s\n", argv[i]);
-		usage();
+		missing_value(argv[i]);
 	    }
 	    options.codepage = argv[i + 1];
 	    i++;
@@ -726,8 +722,7 @@ main(int argc, char *argv[])
 	    options.crthru = 1;
 	} else if (!strcmp(argv[i], "-eojtimeout")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -eojtimeout\n");
-		usage();
+		missing_value("-eojtimeout");
 	    }
 	    options.eoj_timeout = strtoul(argv[i + 1], NULL, 0);
 	    i++;
@@ -742,28 +737,24 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
 	} else if (!strcmp(argv[i], "-printer")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -printer\n");
-		usage();
+		missing_value("-printer");
 	    }
 	    options.printer = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-printercp")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -printercp\n");
-		usage();
+		missing_value("-printercp");
 	    }
 	    options.printercp = (int)strtoul(argv[i + 1], NULL, 0);
 	    i++;
 #endif /*]*/
 	} else if (!strcmp(argv[i], "-mpp")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -mpp\n");
-		usage();
+		missing_value("-mpp");
 	    }
 	    options.mpp = (int)strtoul(argv[i + 1], NULL, 0);
 	    if (options.mpp < MIN_UNF_MPP || options.mpp > MAX_UNF_MPP) {
-		fprintf(stderr, "Invalid for -mpp\n");
-		usage();
+		usage("Invalid value for '-mpp'");
 	    }
 	    i++;
 	} else if ((tls_options & TLS_OPT_VERIFY_HOST_CERT) &&
@@ -787,8 +778,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    options.verbose = 1;
 	} else if (!strcmp(argv[i], "-syncport")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -syncport\n");
-		usage();
+		missing_value("-syncport");
 	    }
 	    options.syncport = (int)strtoul(argv[i + 1], NULL, 0);
 	    i++;
@@ -796,36 +786,31 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    options.tracing = 1;
 	} else if (!strcmp(argv[i], "-tracedir")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -tracedir\n");
-		usage();
+		missing_value("-tracedir");
 	    }
 	    options.tracedir = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-trnpre")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -trnpre\n");
-		usage();
+		missing_value("-trnpre");
 	    }
 	    options.trnpre = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-trnpost")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -trnpost\n");
-		usage();
+		missing_value("-trnpost");
 	    }
 	    options.trnpost = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], OptProxy)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for " OptProxy "\n");
-		usage();
+		missing_value(OptProxy);
 	    }
 	    options.proxy_spec = argv[i + 1];
 	    i++;
 	} else if (!strcmp(argv[i], "-xtable")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
-		fprintf(stderr, "Missing value for -xtable\n");
-		usage();
+		missing_value("-xtable");
 	    }
 	    xtable = argv[i + 1];
 	    i++;
@@ -840,12 +825,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    cmdline_help();
 	    exit(0);
 	} else {
-	    fprintf(stderr, "Unknown or incomplete option: %s\n", argv[i]);
-	    usage();
+	    fprintf(stderr, "Unknown or incomplete option: '%s'\n", argv[i]);
+	    usage(NULL);
 	}
     }
     if (argc != i + 1) {
-	usage();
+	usage(NULL);
     }
 
     /*
@@ -876,7 +861,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    HOST_nFLAG(prefixes, PASSTHRU_HOST) ||
 	    HOST_nFLAG(prefixes, STD_DS_HOST) ||
 	    HOST_nFLAG(prefixes, BIND_LOCK_HOST)) {
-	usage();
+	usage(NULL);
     }
 
     if (options.tls_host && !sio_supported()) {

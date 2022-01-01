@@ -105,7 +105,21 @@ def check_bad(prog, extra=None):
     stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
     rc = p.wait(timeout=2)
     assert rc != 0
-    assert stderr[0].startswith('Unknown or incomplete option: -foo')
+    assert stderr[0].startswith("Unknown or incomplete option: '-foo'")
+    assert any(line.startswith('Usage: ') for line in stderr)
+    assert any('Use --help' in line for line in stderr)
+
+# Make sure an incomplete option fails.
+def check_incomplete(prog, extra=None):
+    args = [prog]
+    if extra != None:
+        args.append(extra)
+    args.append('-codepage')
+    p = Popen(args, stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    rc = p.wait(timeout=2)
+    assert rc != 0
+    assert stderr[0].startswith("Unknown or incomplete option: '-codepage'") or stderr[0].startswith("Missing value for '-codepage'")
     assert any(line.startswith('Usage: ') for line in stderr)
     assert any('Use --help' in line for line in stderr)
 
