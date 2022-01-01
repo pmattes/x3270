@@ -59,6 +59,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -489,6 +490,7 @@ wait_for_callbacks(int listen_s, int sockets[], int n)
     }
 }
 
+#if defined(NEED_PTHREADS) /*[*/
 /* Watch for s3270 exit. */
 static void *
 watch_s3270(void *arg)
@@ -525,6 +527,7 @@ watch_s3270(void *arg)
     exit(98);
     return NULL;
 }
+#endif /*]*/
 
 /* Initialization procedure for tcl3270. */
 static int
