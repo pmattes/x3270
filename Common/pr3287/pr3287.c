@@ -772,9 +772,9 @@ main(int argc, char *argv[])
 	} else if (!strcmp(argv[i], OptReconnect)) {
 	    options.reconnect = 1;
 	} else if (!strcmp(argv[i], OptV) || !strcmp(argv[i], OptVersion)) {
-	    printf("%s\n%s\n", build, build_options());
+	    fprintf(stderr, "%s\n%s\n", build, build_options());
 	    codepage_list();
-	    printf("\n\
+	    fprintf(stderr, "\n\
 Copyright 1989-%s, Paul Mattes, GTRC and others.\n\
 See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
