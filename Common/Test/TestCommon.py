@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -79,3 +79,19 @@ def check_push(p, port, count):
         j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TimingMarks)').json()
         return j['result'][0] == str(count)
     try_until(test, 2, "emulator did not accept the data")
+
+# Make sure the "-v" option works.
+def check_dash_v(prog):
+    p = Popen([prog, '-v'], stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    p.wait(timeout=2)
+    assert stderr[0].startswith(prog + ' ')
+    assert any('Copyright' in line for line in stderr)
+
+# Make sure the "--help" option works.
+def check_help(prog):
+    p = Popen([prog, '--help'], stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    p.wait(timeout=2)
+    assert stderr[0].startswith('Usage: ' + prog + ' ')
+
