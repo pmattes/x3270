@@ -1,5 +1,5 @@
 '\" t
-.TH mitm 1 "03 November 2021"
+.TH mitm 1 "01 January 2022"
 .SH "NAME"
 mitm \- network stream trace facility
 .SH "SYNOPSIS"
@@ -35,7 +35,7 @@ is:
 s3270(1), 
 x3270(1), c3270(1)
 .SH "COPYRIGHTS"
-Copyright 2018-2021, Paul Mattes.
+Copyright 2018-2022, Paul Mattes.
 .br
 All rights reserved.
 .LP

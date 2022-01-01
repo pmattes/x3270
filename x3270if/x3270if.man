@@ -1,5 +1,5 @@
 '\" t
-.TH X3270IF 1 "03 November 2021"
+.TH X3270IF 1 "01 January 2022"
 .SH "NAME"
 x3270if \- script interface to 3270 emulators
 .SH "SYNOPSIS"
