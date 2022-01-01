@@ -25,18 +25,18 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# c3270 basic command-line tests
+# tcl3270 basic command-line tests
 
 import unittest
 import TestCommon
 
-class TestC3270BasicCmdline(unittest.TestCase):
+class TestTcl3270BasicCmdline(unittest.TestCase):
 
-    # c3270 -v and -help test
-    def test_c3270_v_help(self):
-        TestCommon.check_dash_v('c3270')
-        TestCommon.check_help('c3270')
-        TestCommon.check_bad('s3270')
+    # tcl3270 -v and -help test
+    def test_tcl3270_v_help(self):
+        TestCommon.check_dash_v('tcl3270')
+        TestCommon.check_help('tcl3270')
+        TestCommon.check_bad('tcl3270', extra = '--')
 
 if __name__ == '__main__':
     unittest.main()

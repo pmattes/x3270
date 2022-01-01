@@ -95,3 +95,16 @@ def check_help(prog):
     p.wait(timeout=2)
     assert stderr[0].startswith('Usage: ' + prog + ' ')
 
+# Make sure a bad option fails.
+def check_bad(prog, extra=None):
+    args = [prog]
+    if extra != None:
+        args.append(extra)
+    args.append('-foo')
+    p = Popen(args, stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    rc = p.wait(timeout=2)
+    assert rc != 0
+    assert stderr[0].startswith('Unknown or incomplete option: -foo')
+    assert any('Use --help' in line for line in stderr)
+

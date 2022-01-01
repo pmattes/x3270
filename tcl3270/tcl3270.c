@@ -66,6 +66,7 @@
 
 #include "names.h"
 #include "s3270_proto.h"
+#include "utils.h"
 
 #if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION >= 6 /*[*/
 # define NEED_PTHREADS 1
@@ -237,9 +238,8 @@ usage(const char *msg)
     if (msg != NULL) {
 	fprintf(stderr, "%s\n", msg);
     }
-    fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  tcl3270 [single-option]\n");
-    fprintf(stderr, "  tcl3270 [script [script-args]] [-- [tcl3270-options] [s3270-options] [<host>|<session-file>.tcl3270]]\n");
+    fprintf(stderr, "Usage: tcl3270 [single-option]\n");
+    fprintf(stderr, "       tcl3270 [script [script-args]] [-- [tcl3270-options] [s3270-options] [<host>|<session-file>.tcl3270]]\n");
     fprintf(stderr, "single-options:\n");
     fprintf(stderr, "  --help      display usage\n");
     fprintf(stderr, "  -v          display version\n");
@@ -248,7 +248,7 @@ usage(const char *msg)
     fprintf(stderr, "tcl3270-options:\n");
     fprintf(stderr, "  -d          debug s3270 I/O\n");
     fprintf(stderr, "s3270-options:\n");
-    system("s3270 --help 2>&1 | tail -n +3 - >&2");
+    system("s3270 --help 2>&1 | tail -n +4 - >&2");
     exit(99);
 }
 
@@ -555,6 +555,11 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     if (argc > 1) {
 	if (!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version")) {
 	    fprintf(stderr, "%s\n", build);
+	    fprintf(stderr,
+"Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
+"See the source code or documentation for licensing details.\n"
+"Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    exit(0);
 	}
 	if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-?")) {
