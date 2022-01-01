@@ -6,4 +6,4 @@ xsetroot -solid grey
 #x-window-manager &
 # Fix to make GNOME work
 export XKL_XMODMAP_DISABLE=1
-/etc/X11/Xsession
+/etc/X11/Xsession &

@@ -36,7 +36,7 @@ class TestB3270Smoke(unittest.TestCase):
     def test_b3270_nvt_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = Popen(["nc", "-v", "-l", "127.0.0.1", "9999"], stdout=PIPE)
+        nc = Popen(["nc", "-l", "127.0.0.1", "9999"], stdout=PIPE)
 
         # Start b3270.
         b3270 = Popen(["b3270"], stdin=PIPE, stdout=DEVNULL)
