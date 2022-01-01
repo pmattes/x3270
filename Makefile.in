@@ -387,8 +387,3 @@ test: @T_ALLTESTS@
 	PATH="$(TESTPATH)$$PATH" PYTHONPATH="$$PWD/Common/Test" OBJ="$$PWD/obj/@host@" python3 -m unittest $(PYTESTS)
 smoketest: @T_TEST@
 	PATH="$(TESTPATH)$$PATH" PYTHONPATH="$$PWD/Common/Test" OBJ="$$PWD/obj/@host@" python3 -m unittest $(PYSMOKETESTS)
-
-#test-clean: @T_TEST_CLEAN@
-#test-clobber: @T_TEST_CLOBBER@
-
-
