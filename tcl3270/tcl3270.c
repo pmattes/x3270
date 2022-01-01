@@ -249,7 +249,7 @@ usage(const char *msg)
     fprintf(stderr, "  -d          debug s3270 I/O\n");
     fprintf(stderr, "s3270-options:\n");
     system("s3270 --help 2>&1 | tail -n +3 - >&2");
-    exit(999);
+    exit(99);
 }
 
 /*
@@ -452,13 +452,13 @@ wait_for_callbacks(int listen_s, int sockets[], int n)
 	ns = select(listen_s + 1, &rfds, NULL, NULL, &tv);
 	if (ns < 0) {
 	    perror("select");
-	    exit(999);
+	    exit(99);
 	}
 
 	/* Check s3270. */
 	if ((exit_msg = poll_s3270_exit()) != NULL) {
 	    fprintf(stderr, "%s\n", exit_msg);
-	    exit(999);
+	    exit(99);
 	}
 
 	if (ns > 0 && FD_ISSET(listen_s, &rfds)) {
@@ -472,7 +472,7 @@ wait_for_callbacks(int listen_s, int sockets[], int n)
 	    s = accept(listen_s, (struct sockaddr *)&sin, &len);
 	    if (s < 0) {
 		perror("accept");
-		exit(999);
+		exit(99);
 	    }
 	    if (verbose) {
 		fprintf(stderr, "Got connection %d from s3270\n",
@@ -485,7 +485,7 @@ wait_for_callbacks(int listen_s, int sockets[], int n)
     if (n_sockets < 2) {
 	fprintf(stderr, "s3270 backend did not start\n");
 	kill(s3270_pid, SIGKILL);
-	exit(999);
+	exit(99);
     }
 }
 
@@ -522,7 +522,7 @@ watch_s3270(void *arg)
 	}
 	fprintf(stderr, "%s\n", exit_msg);
     }
-    exit(998);
+    exit(98);
     return NULL;
 }
 
@@ -591,25 +591,25 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     listen_s = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_s < 0) {
 	perror("socket");
-	exit(999);
+	exit(99);
     }
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     if (bind(listen_s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 	perror("bind");
-	exit(999);
+	exit(99);
     }
     len = sizeof(sin);
     if (getsockname(listen_s, (struct sockaddr *)&sin, &len) < 0) {
 	perror("getsockname");
-	exit(999);
+	exit(99);
     }
     port = htons(sin.sin_port);
     snprintf(cbuf, sizeof(cbuf), "2x127.0.0.1:%u", port);
     if (listen(listen_s, 1) < 0) {
 	perror("listen");
-	exit(999);
+	exit(99);
     }
 
     /* Set up s3270's command-line arguments. */
@@ -641,22 +641,22 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	devnull = open("/dev/null", O_RDWR);
 	if (devnull < 0) {
 	    perror("/dev/null");
-	    exit(999);
+	    exit(99);
 	}
 	if (dup2(devnull, 0) < 0) {
 	    perror("dup2");
-	    exit(999);
+	    exit(99);
 	}
 	if (dup2(devnull, 1) < 0) {
 	    perror("dup2");
-	    exit(999);
+	    exit(99);
 	}
 	close(devnull);
 
 	/* Run s3270. */
 	if (execvp("s3270", nargv) < 0) {
 	    perror("s3270 backend");
-	    exit(999);
+	    exit(99);
 	}
 	break;
     default:
@@ -681,7 +681,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     if (pthread_create(&s3270_watcher, NULL, watch_s3270,
 		&s3270_socket[1]) < 0) {
 	perror("pthread_create");
-	exit(999);
+	exit(99);
     }
 #endif /*]*/
 
@@ -1038,5 +1038,5 @@ void
 Error(const char *msg)
 {
     fprintf(stderr, "%s\n", msg);
-    exit(999);
+    exit(99);
 }
