@@ -192,7 +192,7 @@ static void
 usage(void)
 {
     fprintf(stderr,
-	    "usage: %s [options] [lu[,lu...]@]host[:port]\n",
+	    "Usage: %s [options] [lu[,lu...]@]host[:port]\n",
 	    programname);
     fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     pr3287_exit(1);
@@ -840,7 +840,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    cmdline_help();
 	    exit(0);
 	} else {
-	    fprintf(stderr, "Unknown option '%s'\n", argv[i]);
+	    fprintf(stderr, "Unknown or incomplete option: %s\n", argv[i]);
 	    usage();
 	}
     }

@@ -36,7 +36,7 @@ class TestPr3287BasicCmdline(unittest.TestCase):
     def test_pr3287_v_help(self):
         TestCommon.check_dash_v('pr3287')
         TestCommon.check_help('pr3287')
-        TestCommon.check_bad('s3270')
+        TestCommon.check_bad('pr3287')
 
 if __name__ == '__main__':
     unittest.main()

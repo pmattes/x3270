@@ -106,5 +106,6 @@ def check_bad(prog, extra=None):
     rc = p.wait(timeout=2)
     assert rc != 0
     assert stderr[0].startswith('Unknown or incomplete option: -foo')
+    assert any(line.startswith('Usage: ') for line in stderr)
     assert any('Use --help' in line for line in stderr)
 
