@@ -130,30 +130,3 @@ wmitm-src.tgz:
 windows-release: man
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@
-
-# Test targets.
-test:
-	cd lib/3270 && $(MAKE) -f Makefile.test $@
-	cd lib/32xx && $(MAKE) -f Makefile.test $@
-	$(MAKE) -f x3270/Makefile.test $@
-	$(MAKE) -f s3270/Makefile.test $@
-	$(MAKE) -f b3270/Makefile.test $@
-	$(MAKE) -f c3270/Makefile.test $@
-	$(MAKE) -f pr3287/Makefile.test $@
-	$(MAKE) -f tcl3270/Makefile.test $@
-smoketest:
-	$(MAKE) -f x3270/Makefile.test $@
-	$(MAKE) -f s3270/Makefile.test $@
-	$(MAKE) -f b3270/Makefile.test $@
-	$(MAKE) -f c3270/Makefile.test $@
-	$(MAKE) -f pr3287/Makefile.test $@
-	$(MAKE) -f tcl3270/Makefile.test $@
-coverage:
-	cd lib/3270 && $(MAKE) -f Makefile.test $@
-	cd lib/32xx && $(MAKE) -f Makefile.test $@
-test-clean:
-	cd lib/3270 && $(MAKE) -f Makefile.test clean
-	cd lib/32xx && $(MAKE) -f Makefile.test clean
-test-clobber:
-	cd lib/3270 && $(MAKE) -f Makefile.test clobber
-	cd lib/32xx && $(MAKE) -f Makefile.test clobber
