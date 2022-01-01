@@ -31,6 +31,7 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import subprocess
 import os
+import stat
 import tempfile
 import filecmp
 import TestCommon
@@ -40,7 +41,9 @@ class TestX3270Smoke(unittest.TestCase):
     # x3270 smoke test
     def test_x3270_smoke(self):
 
-        # Start a tightvnc server
+        # Start a tightvnc server.
+        # The password file needs to be 0600 or Vnc will prompt for it again.
+        os.chmod('x3270/Test/vnc/.vnc/passwd', stat.S_IREAD | stat.S_IWRITE)
         cwd=os.getcwd()
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
