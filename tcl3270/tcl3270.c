@@ -700,7 +700,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 
 	/* Create the command, except for Quit(), which we override. */
 	*paren = '\0';
-	if (strcasecmp(action, "Quit")) {
+	if (strcasecmp(action, "Quit") && strcasecmp(action, "Exit")) {
 	    if (Tcl_CreateObjCommand(interp, action, x3270_cmd, NULL, NULL)
 		    == NULL) {
 		return TCL_ERROR;
@@ -732,6 +732,9 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	return TCL_ERROR;
     }
     if (Tcl_CreateObjCommand(interp, "Quit", Quit_cmd, NULL, NULL) == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_CreateObjCommand(interp, "Exit", Quit_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
     }
 
