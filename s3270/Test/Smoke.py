@@ -36,11 +36,11 @@ import TestCommon
 class TestS3270Smoke(unittest.TestCase):
 
     # s3270 NVT smoke test
-    @unittest.skipIf(sys.platform.startswith("win"), "Windows does not have nc")
     def test_s3270_nvt_smoke(self):
 
         # Start 'nc' to read s3270's output.
-        nc = Popen(["nc", "-l", "127.0.0.1", "9999"], stdout=PIPE)
+        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", "9999"],
+                stdout=PIPE)
         TestCommon.check_listen(9999)
 
         # Start s3270.
