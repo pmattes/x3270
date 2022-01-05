@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2010, 2013-2017, 2020 Paul Mattes.
+# Copyright (c) 1999-2010, 2013-2017, 2020, 2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -80,4 +80,4 @@ clobber: clean
 	$(RM) pr3287 *.d *.man
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d)
+-include $(PR3287_OBJECTS:.o=.d)

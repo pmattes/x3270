@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018, 2020 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018, 2020, 2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -96,4 +96,4 @@ clobber: clean
 	$(RM) s3270 *.d *.man
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d) mkfb.d
+-include $(S3270_OBJECTS:.o=.d) mkfb.d

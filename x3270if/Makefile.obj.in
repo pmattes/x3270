@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018, 2020 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018, 2020, 2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -84,4 +84,4 @@ clobber: clean
 	$(RM) x3270if *.d *.man
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d)
+-include $(X3270IF_OBJECTS:.o=.d)
