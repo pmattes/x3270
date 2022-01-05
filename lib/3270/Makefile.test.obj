@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020-2021 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2017, 2020-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -56,4 +56,4 @@ clean:
 clobber: clean
 	$(RM) json_test
 
--include $(OBJS:.o=.d)
+-include $(JSON_OBJS:.o=.d)

@@ -84,4 +84,4 @@ clobber: clean
 	$(RM) mitm *.d *.man
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d)
+-include $(MITM_OBJECTS:.o=.d)

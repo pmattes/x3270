@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018, 2020-2021 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2018, 2020-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -33,14 +33,15 @@ all: playback
 
 HOST = @host@
 
+PLAYBACK_OBJECTS = playback.o
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
-playback: playback.o
-	$(CC) -o $@ playback.o $(LDFLAGS)
+playback: $(PLAYBACK_OBJECTS)
+	$(CC) -o $@ $(PLAYBACK_OBJECTS) $(LDFLAGS)
 
 
 clean:
@@ -49,4 +50,4 @@ clobber: clean
 	$(RM) playback *.d
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d) mkfb.d
+-include $(PLAYBACK_OBJECTS:.o=.d) mkfb.d
