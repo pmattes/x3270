@@ -2478,7 +2478,8 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		} else {
 		    /* Only draw if there is an EBCDIC mapping. */
 		    bool ge;
-		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge, true);
+		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge,
+			    toggled(APL_MODE));
 
 		    if (ge) {
 			if (ss->extended_3270font) {
