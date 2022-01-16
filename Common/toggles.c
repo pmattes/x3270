@@ -509,10 +509,7 @@ have_value:
 		for (notifies = extended_notifies;
 		     notifies != NULL;
 		     notifies = notifies->next) {
-		    char *v = u_value(u);
-
-		    (*notifies->notify)(u->name, v, ia);
-		    Free(v);
+		    (*notifies->notify)(u->name, u->type, u->address, ia);
 		}
 	    }
 	}
@@ -543,10 +540,8 @@ done:
 	for (notifies = extended_notifies;
 	     notifies != NULL;
 	     notifies = notifies->next) {
-	    char *v = u_value(done_u[du]);
-
-	    (*notifies->notify)(done_u[du]->name, v, ia);
-	    Free(v);
+	    (*notifies->notify)(done_u[du]->name, done_u[du]->type,
+		    done_u[du]->address, ia);
 	}
     }
 
@@ -730,7 +725,6 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
 {
     toggle_extended_upcalls_t *u;
     toggle_extended_notifies_t *notifies;
-    char *v;
 
     /* Register the toggle. */
     u = (toggle_extended_upcalls_t *)Malloc(sizeof(toggle_extended_upcalls_t)
@@ -748,14 +742,11 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
     extended_upcalls_last = &u->next;
 
     /* Notify with the current value. */
-    v = u_value(u);
     for (notifies = extended_notifies;
 	 notifies != NULL;
 	 notifies = notifies->next) {
-
-	(*notifies->notify)(name, v, IA_NONE);
+	(*notifies->notify)(name, u->type, u->address, IA_NONE);
     }
-    Free(v);
 }
 
 /**
@@ -781,9 +772,7 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
 
     /* Call it with everything registered so far. */
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	char *v = u_value(u);
-	(*notify)(u->name, v, IA_NONE);
-	Free(v);
+	(*notify)(u->name, u->type, u->address, IA_NONE);
     }
 }
 
@@ -795,7 +784,6 @@ force_toggle_notify(const char *name, ia_t ia)
 {
     toggle_extended_upcalls_t *u;
     toggle_extended_notifies_t *n;
-    char *v;
 
     for (u = extended_upcalls; u != NULL; u = u->next) {
 	if (!strcmp(name, u->name)) {
@@ -807,11 +795,9 @@ force_toggle_notify(const char *name, ia_t ia)
     }
 
     /* Notify with the current value. */
-    v = u_value(u);
     for (n = extended_notifies; n != NULL; n = n->next) {
-	(*n->notify)(name, v, ia);
+	(*n->notify)(name, u->type, u->address, ia);
     }
-    Free(v);
 }
 
 /* Return the list of extended toggle names. */

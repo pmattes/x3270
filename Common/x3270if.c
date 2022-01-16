@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -555,6 +555,14 @@ retry:
 
 	    if (verbose) {
 		fprintf(stderr, "i+ in %s\n", buf);
+	    }
+	    if (buf[0] == '{') {
+		/* JSON output. */
+		printf("%s\n", buf);
+		fflush(stdout);
+		xs = 0;
+		done = 1;
+		break;
 	    }
 	    if (!strcmp(buf, PROMPT_OK)) {
 		fflush(stdout);

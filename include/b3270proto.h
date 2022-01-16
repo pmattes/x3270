@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 Paul Mattes.
+ * Copyright (c) 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,7 @@
 #define AttrAction	"action"
 #define AttrActions	"actions"
 #define AttrArg		"arg"
+#define AttrArgs	"args"
 #define AttrAttribute	"attribute"
 #define AttrBack	"back"
 #define AttrBg		"bg"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2018-2019, 2021 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -76,8 +76,8 @@ void register_extended_toggle(const char *name,
 	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
 	toggle_extended_canonicalize_t canonicalize, void **appres_address,
 	enum resource_type resource_type);
-typedef void toggle_extended_notify_t(const char *name, const char *value,
-	ia_t ia);
+typedef void toggle_extended_notify_t(const char *name, enum resource_type type,
+	void **value, ia_t ia);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
 void force_toggle_notify(const char *name, ia_t ia);
 char **extended_toggle_names(int *countp, bool bool_only);

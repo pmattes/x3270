@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Paul Mattes.
+ * Copyright (c) 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -347,6 +347,21 @@ ucs4streq(ucs4_t *a, ucs4_t *b)
 }
 
 /**
+ * Format an error message that ends with a Unicode character.
+ * @param[in] text	Body of message
+ * @param[in] ucs4	Unicode character
+ *
+ * @returns Formatted message
+ */
+static char *
+format_uerror(const char *text, ucs4_t u)
+{
+    return (u < 0xff && isprint((int)u))?
+	xs_buffer("%s '%c'", text, u):
+	xs_buffer("%s U+%04x", text, u);
+}
+
+/**
  * Parse text into JSON.
  * @param[in,out] line	Line number
  * @param[in,out] column Column number
@@ -381,8 +396,9 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
     *error = (json_parse_error_t *)Malloc(sizeof(json_parse_error_t)); \
     (*error)->errcode = e; \
     (*error)->line = *line; \
-    (*error)->column = *column; \
+    (*error)->column = (*column)? *column: 1; \
     (*error)->errmsg = m; \
+    (*error)->offset = *offset; \
     json_free(*result); \
     return e; \
 } while (false)
@@ -510,9 +526,13 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 					    NewString("Incomplete struct"));
 				} else {
 				    FAIL(JE_SYNTAX,
-					    xs_buffer("Expected ':', got "
-						"U+%04x", internal_stop));
+					    format_uerror("Expected ':', got",
+						internal_stop));
 				}
+			    }
+			    if (element == NULL) {
+				FAIL(JE_SYNTAX,
+					NewString("Expected string, got ':'"));
 			    }
 			    if (element->type != JT_STRING) {
 				json_free(element);
@@ -543,9 +563,9 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 				    FAIL(JE_INCOMPLETE,
 					    NewString("Incomplete struct"));
 				} else {
-				    FAIL(JE_SYNTAX, xs_buffer("Expected ',' "
-						"or '}' , got U+%04x",
-						internal_stop));
+				    FAIL(JE_SYNTAX,
+					    format_uerror("Expected ',' or '}'"
+						", got", internal_stop));
 				}
 			    }
 
@@ -592,8 +612,8 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 			    FAIL(JE_INCOMPLETE, NewString("Incomplete array"));
 			} else if (internal_stop != ']') {
 			    FAIL(JE_SYNTAX,
-				    xs_buffer("Improperly terminated array "
-					"U+%04x", ucs4));
+				    format_uerror("Improperly terminated "
+					"array at", ucs4));
 			}
 			token_state = JK_TERMINAL;
 			break;
@@ -698,7 +718,7 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 	return JE_OK;
     case JK_STRING:
     case JK_STRING_BS:
-	FAIL(JE_SYNTAX, NewString("Unterminated string"));
+	FAIL(JE_INCOMPLETE, NewString("Unterminated string"));
 	break;
     default:
     case JK_TERMINAL:
@@ -737,16 +757,16 @@ json_parse(const char *text, ssize_t len, json_t **result,
 
     e = json_parse_internal(&line, &column, text, &offset, len, result, error,
 	    &stop_token, &r_any);
-    if (e == JE_OK) {
-	if (stop_token != 0) {
-	    *error = (json_parse_error_t *)Malloc(sizeof(json_parse_error_t));
-	    (*error)->errcode = JE_SYNTAX;
-	    (*error)->line = line;
-	    (*error)->column = column;
-	    (*error)->errmsg = xs_buffer("Extra text U+%04x", stop_token);
-	    json_free(*result);
-	    return JE_SYNTAX;
-	}
+    if (e == JE_OK && stop_token != 0) {
+	const char *adj = r_any? "Extra text": "Unexpected text";
+
+	e = r_any? JE_EXTRA: JE_SYNTAX;
+	*error = (json_parse_error_t *)Malloc(sizeof(json_parse_error_t));
+	(*error)->errcode = e;
+	(*error)->line = line;
+	(*error)->column = column;
+	(*error)->errmsg = format_uerror(adj, stop_token);
+	(*error)->offset = offset - 1;
     }
     return e;
 }
@@ -883,6 +903,11 @@ json_write_indent(const json_t *json, unsigned options, int indent)
     char *s;
     char *t;
     const char *v;
+    int indent1 = (options & JW_ONE_LINE)? 0: indent + 1;
+
+    if (options & JW_ONE_LINE) {
+	indent = 0;
+    }
 
     switch (json_type(json)) {
     case JT_NULL:
@@ -902,33 +927,36 @@ json_write_indent(const json_t *json, unsigned options, int indent)
 	return t;
     case JT_STRUCT:
 	vb_init(&r);
-	vb_appends(&r, "{\n");
+	vb_appendf(&r, "{%s", (options & JW_ONE_LINE)? "": "\n");
 	for (i = 0; i < json->value.v_struct.length; i++) {
 	    key_value_t *kv = &json->value.v_struct.key_values[i];
 	    char *s;
 	    bool last = i >= json->value.v_struct.length - 1;
 
 	    s = json_expand_string(kv->key, kv->key_length, options);
-	    vb_appendf(&r, "%*s\"%s\": ", (indent + 1) * 2, "", s);
+	    vb_appendf(&r, "%*s\"%s\":%s", indent1 * 2, "", s,
+		    (options & JW_ONE_LINE)? "": " ");
 	    Free(s);
-	    s = json_write_indent(kv->value, options, indent + 1);
-	    vb_appendf(&r, "%s%s\n", s, last? "": ",");
+	    s = json_write_indent(kv->value, options, indent1);
+	    vb_appendf(&r, "%s%s%s", s, last? "": ",",
+		    (options & JW_ONE_LINE)? "": "\n");
 	    Free(s);
 	}
 	vb_appendf(&r, "%*s}", indent * 2, "");
 	return vb_consume(&r);
     case JT_ARRAY:
 	vb_init(&r);
-	vb_appends(&r, "[\n");
+	vb_appendf(&r, "[%s", (options & JW_ONE_LINE)? "": "\n");
 	for (i = 0; i < json->value.v_array.length; i++) {
 	    char *s = json_write_indent(json->value.v_array.array[i],
-		    options, indent + 1);
+		    options, indent1);
 	    bool last = i >= json->value.v_array.length - 1;
 
-	    vb_appendf(&r, "%*s%s%s\n",
-		    (indent + 1) * 2, "",
+	    vb_appendf(&r, "%*s%s%s%s",
+		    indent1 * 2, "",
 		    s,
-		    last? "": ",");
+		    last? "": ",",
+		    (options & JW_ONE_LINE)? "": "\n");
 	    Free(s);
 	}
 	vb_appendf(&r, "%*s]", indent * 2, "");
@@ -1297,6 +1325,18 @@ json_array_set(json_t *json, unsigned index, json_t *value)
     }
     _json_free(json->value.v_array.array[index]);
     json->value.v_array.array[index] = value;
+}
+
+/**
+ * Appends to an array.
+ * The value is copied by reference, not cloned.
+ * @param[in,out] json	Object to modify
+ * @param[in] value	Value to set
+ */
+void
+json_array_append(json_t *json, json_t *value)
+{
+    json_array_set(json, json_array_length(json), value);
 }
 
 /**

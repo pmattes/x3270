@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
  *
  * @return True if they match
  */
-static bool
+bool
 json_key_matches(const char *key, size_t key_length, const char *match_key)
 {
     size_t sl = strlen(match_key);
@@ -64,7 +64,7 @@ json_key_matches(const char *key, size_t key_length, const char *match_key)
  *
  * @return NULL
  */
-static cmd_t **
+cmd_t **
 free_cmds(cmd_t **cmds)
 {
 
@@ -96,7 +96,7 @@ free_cmds(cmd_t **cmds)
  * @return True for success
  */
 static bool
-hjson_parse_one(json_t *json, cmd_t **cmd, char **errmsg)
+hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 {
     char *action = NULL;
     json_t *jaction = NULL;
@@ -219,36 +219,31 @@ fail:
 /**
  * Parse a JSON-formatted command or a set of commands.
  *
- * @param[in] cmd	Command to parse, in JSON format
+ * @param[in] json	JSON object to split
  * @param[in] cmd_len	Length of command
  * @param[out] cmds	Parsed actions and arguments
+ * @param[out] single	Parsed single action
  * @param[out] errmsg	Error message if parsing fails
  *
  * @return True for success
  */
 bool
-hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds, char **errmsg)
+hjson_split(const json_t *json, cmd_t ***cmds, char **single, char **errmsg)
 {
-    json_t *json;
-    json_errcode_t errcode;
-    json_parse_error_t *error;
     unsigned array_length;
     unsigned i;
     cmd_t **c = NULL;
+    size_t len;
 
     *cmds = NULL;
+    *single = NULL;
     *errmsg = NULL;
-
-    /* Parse the JSON. */
-    errcode = json_parse(cmd, cmd_len, &json, &error);
-    if (errcode != JE_OK) {
-	*errmsg = xs_buffer("JSON parse error: line %d, column %d: %s",
-		error->line, error->column, error->errmsg);
-	goto fail;
-    }
 
     /* The object can either be a struct or an array of structs. */
     switch (json_type(json)) {
+    case JT_STRING:
+	*single = NewString(json_string_value(json, &len));
+	return true;
     case JT_ARRAY:
 	array_length = json_array_length(json);
 	break;
@@ -286,12 +281,50 @@ hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds, char **errmsg)
     }
 
     /* Success. */
-    json_free_both(json, error);
     *cmds = c;
     return true;
 
 fail:
-    json_free_both(json, error);
     c = free_cmds(c);
     return false;
+}
+
+/**
+ * Parse a JSON-formatted command or a set of commands.
+ *
+ * @param[in] cmd	Command to parse, in JSON format
+ * @param[in] cmd_len	Length of command
+ * @param[out] cmds	Parsed actions and arguments
+ * @param[out] single	Parsed single action
+ * @param[out] errmsg	Error message if parsing fails
+ *
+ * @return hjparse_ret_t
+ */
+hjparse_ret_t
+hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds, char **single,
+	char **errmsg)
+{
+    json_t *json;
+    json_errcode_t errcode;
+    json_parse_error_t *error;
+
+    *cmds = NULL;
+    *errmsg = NULL;
+
+    /* Parse the JSON. */
+    errcode = json_parse(cmd, cmd_len, &json, &error);
+    if (errcode != JE_OK) {
+	*errmsg = xs_buffer("JSON parse error: line %d, column %d: %s",
+		error->line, error->column, error->errmsg);
+	json_free_both(json, error);
+	return (errcode == JE_INCOMPLETE)? HJ_INCOMPLETE: HJ_BAD_SYNTAX;
+    }
+
+    if (!hjson_split(json, cmds, single, errmsg)) {
+	json_free(json);
+	return HJ_BAD_CONTENT;
+    }
+
+    json_free(json);
+    return HJ_OK;
 }

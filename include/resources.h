@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2021, Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,6 +138,8 @@
 #define ResInsertMode		"insertMode"
 #define ResIntr			"intr"
 #define ResInvertKeypadShift	"invertKeypadShift"
+#define ResJson			"json"
+#define ResJsonIndent		"jsonIndent"
 #define ResKeyFile		"keyFile"
 #define ResKeyFileType		"keyFileType"
 #define ResKeymap		"keymap"
@@ -502,6 +504,7 @@
 #define OptIconX		"-iconx"
 #define OptIconY		"-icony"
 #define OptInputMethod		"-im"
+#define OptJson			"-json"
 #define OptKeyFile		"-keyfile"
 #define OptKeyFileType		"-keyfiletype"
 #define OptKeymap		"-keymap"

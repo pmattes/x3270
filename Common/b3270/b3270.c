@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -62,11 +62,11 @@
 #include "glue.h"
 #include "ui_stream.h"
 #include "host.h"
-#include "json.h"	/* needs to come before httpd headers */
 #include "httpd-core.h"
 #include "httpd-nodes.h"
 #include "httpd-io.h"
 #include "idle.h"
+#include "json.h"
 #include "kybd.h"
 #include "lazya.h"
 #include "login_macro.h"
@@ -143,7 +143,8 @@ static toggle_register_t toggles[] = {
 };
 
 static void b3270_register(void);
-static void b3270_toggle_notify(const char *name, const char *value, ia_t ia);
+static void b3270_toggle_notify(const char *name, enum resource_type type,
+	void **address, ia_t ia);
 
 void
 usage(const char *msg)
@@ -161,11 +162,11 @@ usage(const char *msg)
 static void
 dump_stats(void)
 {
-    ui_vleaf(IndStats,
-	    AttrBytesReceived, lazyaf("%d", brcvd),
-	    AttrRecordsReceived, lazyaf("%d", rrcvd),
-	    AttrBytesSent, lazyaf("%d", bsent),
-	    AttrRecordsSent, lazyaf("%d", rsent),
+    ui_leaf(IndStats,
+	    AttrBytesReceived, AT_INT, brcvd,
+	    AttrRecordsReceived, AT_INT, rrcvd,
+	    AttrBytesSent, AT_INT, bsent,
+	    AttrRecordsSent, AT_INT, rsent,
 	    NULL);
 }
 
@@ -226,8 +227,8 @@ b3270_connect(bool ignored)
 
     /* Tell the GUI about the new state. */
     if (cstate == NOT_CONNECTED) {
-	ui_vleaf(IndConnection,
-		AttrState, state_name[(int)cstate],
+	ui_leaf(IndConnection,
+		AttrState, AT_STRING, state_name[(int)cstate],
 		NULL);
     } else {
 	char *cause = NewString(ia_name[connect_ia]);
@@ -244,10 +245,10 @@ b3270_connect(bool ignored)
 	    }
 	    *s++ = c;
 	}
-	ui_vleaf(IndConnection,
-		AttrState, state_name[(int)cstate],
-		AttrHost, current_host,
-		AttrCause, cause,
+	ui_leaf(IndConnection,
+		AttrState, AT_STRING, state_name[(int)cstate],
+		AttrHost, AT_STRING, current_host,
+		AttrCause, AT_STRING, cause,
 		NULL);
 	Free(cause);
 
@@ -283,13 +284,14 @@ b3270_secure(bool ignored)
     }
     is_secure = net_secure_connection();
 
-     ui_vleaf(IndTls,
-	     AttrSecure, ValTrueFalse(net_secure_connection()),
+     ui_leaf(IndTls,
+	     AttrSecure, AT_BOOLEAN, net_secure_connection(),
 	     AttrVerified,
+		 net_secure_connection()? AT_BOOLEAN: AT_SKIP_BOOLEAN,
 		 net_secure_connection()?
-		     ValTrueFalse(net_secure_unverified()): NULL,
-	     AttrSession, net_session_info(),
-	     AttrHostCert, net_server_cert_info(),
+		     net_secure_unverified(): false,
+	     AttrSession, AT_STRING, net_session_info(),
+	     AttrHostCert, AT_STRING, net_server_cert_info(),
 	     NULL);
 }
 
@@ -304,9 +306,9 @@ report_terminal_name(void)
 	    || last_override != (appres.termname != NULL)) {
 	Replace(last_term_name, NewString(termtype));
 	last_override = appres.termname != NULL;
-	ui_vleaf(IndTerminalName,
-		AttrText, last_term_name,
-		AttrOverride, ValTrueFalse(last_override),
+	ui_leaf(IndTerminalName,
+		AttrText, AT_STRING, last_term_name,
+		AttrOverride, AT_BOOLEAN, last_override,
 		NULL);
     }
 }
@@ -327,28 +329,63 @@ static void
 dump_codepages(void)
 {
     cpname_t *cpnames = get_cpnames();
+    int i;
 
-    if (cpnames != NULL) {
-	int i;
+    if (cpnames == NULL) {
+	return;
+    }
 
-	ui_vpush(IndCodePages, NULL);
-	for (i = 0; cpnames[i].name != NULL; i++) {
-	    const char **params = Calloc(2 + (2 * cpnames[i].num_aliases) + 1,
-		    sizeof(char *));
+    if (JSON_MODE) {
+	uij_open_struct(NULL);
+	uij_open_array(IndCodePages);
+    } else {
+	uix_push(IndCodePages, NULL);
+    }
+    for (i = 0; cpnames[i].name != NULL; i++) {
+	if (XML_MODE) {
+	    /*
+	     * In XML mode, it looks like:
+	     *  name="foo", alias1="bar", alias3="baz", ...
+	     */
 	    int j;
 
-	    params[0] = "name";
-	    params[1] = cpnames[i].name;
+	    uix_open_leaf(IndCodePage);
+	    ui_add_element("name", AT_STRING, cpnames[i].name);
 	    for (j = 0; j < cpnames[i].num_aliases; j++) {
-		params[2 + (j * 2)] = lazyaf("alias%d", j + 1);
-		params[2 + (j * 2) + 1] = cpnames[i].aliases[j];
+		ui_add_element(lazyaf("alias%d", j + 1), AT_STRING,
+			cpnames[i].aliases[j]);
 	    }
-	    ui_leaf(IndCodePage, params);
-	    Free((void *)params);
+	    uix_close_leaf();
+	} else {
+	    /*
+	     * In JSON mode, it looks like:
+	     *  {
+	     *    "name": "foo",
+	     *    "aliases": [ "bar", "baz", ... ]
+	     *  }
+	     */
+	    uij_open_struct(NULL);
+	    ui_add_element("name", AT_STRING, cpnames[i].name);
+	    if (cpnames[i].num_aliases) {
+		int j;
+
+		uij_open_array("aliases");
+		for (j = 0; j < cpnames[i].num_aliases; j++) {
+		    ui_add_element(NULL, AT_STRING,
+			    cpnames[i].aliases[j]);
+		}
+		uij_close_array();
+	    }
+	    uij_close_struct();
 	}
-	ui_pop();
-	free_cpnames(cpnames);
     }
+    if (JSON_MODE) {
+	uij_close_array();
+	uij_close_struct();
+    } else {
+	uix_pop();
+    }
+    free_cpnames(cpnames);
 }
 
 /* Dump the model list. Called at initialization time. */
@@ -368,15 +405,33 @@ dump_models(void)
     };
     int i;
 
-    ui_vpush(IndModels, NULL);
-    for (i = 0; models[i].model != 0; i++) {
-	ui_vleaf(IndModel,
-		AttrModel, lazyaf("%d", models[i].model),
-		AttrRows, lazyaf("%d", models[i].rows),
-		AttrColumns, lazyaf("%d", models[i].columns),
-		NULL);
+    if (XML_MODE) {
+	uix_push(IndModels, NULL);
+    } else {
+	uij_open_struct(NULL);
+	uij_open_array(IndModels);
     }
-    ui_pop();
+    for (i = 0; models[i].model != 0; i++) {
+	if (XML_MODE) {
+	    ui_leaf(IndModel,
+		    AttrModel, AT_INT, models[i].model,
+		    AttrRows, AT_INT, models[i].rows,
+		    AttrColumns, AT_INT, models[i].columns,
+		    NULL);
+	} else {
+	    uij_open_struct(NULL);
+	    ui_add_element(AttrModel, AT_INT, models[i].model);
+	    ui_add_element(AttrRows, AT_INT, models[i].rows);
+	    ui_add_element(AttrColumns, AT_INT, models[i].columns);
+	    uij_close_struct();
+	}
+    }
+    if (XML_MODE) {
+	uix_pop();
+    } else {
+	uij_close_array();
+	uij_close_struct();
+    }
 }
 
 /* Dump the proxy list. */
@@ -385,24 +440,49 @@ dump_proxies(void)
 {
     proxytype_t type;
 
-    ui_vpush(IndProxies, NULL);
+    if (XML_MODE) {
+	uix_push(IndProxies, NULL);
+    } else {
+	uij_open_struct(NULL);
+	uij_open_array(IndProxies);
+    }
+
     for (type = PT_FIRST; type < PT_MAX; type++) {
 	int default_port = proxy_default_port(type);
-	ui_vleaf(IndProxy,
-		AttrName, proxy_type_name(type),
-		AttrUsername, ValTrueFalse(proxy_takes_username(type)),
-		AttrPort, default_port? lazyaf("%d", default_port): NULL,
-		NULL);
+
+	if (XML_MODE) {
+	    ui_leaf(IndProxy,
+		    AttrName, AT_STRING, proxy_type_name(type),
+		    AttrUsername, AT_BOOLEAN, proxy_takes_username(type),
+		    AttrPort,
+			default_port? AT_INT: AT_SKIP_INT,
+			default_port,
+		    NULL);
+	} else {
+	    uij_open_struct(NULL);
+	    ui_add_element(AttrName, AT_STRING, proxy_type_name(type));
+	    ui_add_element(AttrUsername, AT_BOOLEAN,
+		    proxy_takes_username(type));
+	    if (default_port) {
+		ui_add_element(AttrPort, AT_INT, default_port);
+	    }
+	    uij_close_struct();
+	}
     }
-    ui_pop();
+    if (XML_MODE) {
+	uix_pop();
+    } else {
+	uij_close_array();
+	uij_close_struct();
+    }
 }
 
 /* Dump the supported host prefix list. */
 static void
 dump_prefixes(void)
 {
-    ui_vleaf(IndPrefixes,
-	    AttrValue, host_prefixes(),
+    ui_leaf(IndPrefixes,
+	    AttrValue, AT_STRING, host_prefixes(),
 	    NULL);
 }
 
@@ -462,11 +542,16 @@ main(int argc, char *argv[])
     check_min_version(appres.min_version);
 
     ui_io_init();
-    ui_vpush(IndInitialize, NULL);
-    ui_vleaf(IndHello,
-	    AttrVersion, lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
-	    AttrBuild, build,
-	    AttrCopyright,
+    if (XML_MODE) {
+	uix_push(IndInitialize, NULL);
+    } else {
+	uij_open_struct(NULL);
+	uij_open_array(IndInitialize);
+    }
+    ui_leaf(IndHello,
+	    AttrVersion, AT_STRING, lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
+	    AttrBuild, AT_STRING, build,
+	    AttrCopyright, AT_STRING,
 lazyaf("\
 Copyright © 1993-%s, Paul Mattes.\n\
 Copyright © 1990, Jeff Sparkes.\n\
@@ -548,15 +633,39 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 
-    /* Handle initial toggle settings. */
-    initialize_toggles();
-
     /* Send TLS set-up. */
-    ui_vleaf(IndTlsHello,
-	    AttrSupported, ValTrueFalse(sio_supported()),
-	    AttrProvider, sio_provider(),
-	    AttrOptions, sio_option_names(),
-	    NULL);
+    if (sio_supported()) {
+	if (XML_MODE) {
+	    ui_leaf(IndTlsHello,
+		    AttrSupported, AT_BOOLEAN, sio_supported(),
+		    AttrProvider, AT_STRING, sio_provider(),
+		    AttrOptions, AT_STRING, sio_option_names(),
+		    NULL);
+	} else {
+	    char *option_names = NewString(sio_option_names());
+	    char *str = option_names;
+	    char *token;
+	    char *saveptr = NULL;
+
+	    uij_open_struct(NULL);
+	    uij_open_struct(IndTlsHello);
+	    ui_add_element(AttrSupported, AT_BOOLEAN, sio_supported());
+	    ui_add_element(AttrProvider, AT_STRING, sio_provider());
+	    uij_open_array(AttrOptions);
+	    while ((token = strtok_r(str, " ", &saveptr)) != NULL) {
+		str = NULL;
+		ui_add_element(NULL, AT_STRING, token);
+	    }
+	    uij_close_array();
+	    Free(option_names);
+	    uij_close_struct();
+	    uij_close_struct();
+	}
+    } else {
+	ui_leaf(IndTlsHello,
+		AttrSupported, AT_BOOLEAN, false,
+		NULL);
+    }
 
     /*
      * Register for extended toggle notifies, which will cause a dump of the
@@ -564,6 +673,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
      *
      * Then dump the traditional toggles.
      */
+    initialize_toggles();
     register_extended_toggle_notify(b3270_toggle_notify);
     for (ix = MONOCASE; ix < N_TOGGLES; ix++) {
 	if (toggle_supported(ix)) {
@@ -575,7 +685,12 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     peer_script_init();
 
     /* Done with initialization.*/
-    ui_pop();
+    if (XML_MODE) {
+	uix_pop();
+    } else {
+	uij_close_array();
+	uij_close_struct();
+    }
     popups_dump();
 
     /* Process events forever. */
@@ -740,9 +855,10 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 		    reasons[reason], argv[1]);
 	    return false;
 	}
-	ui_vleaf(IndOia,
-		AttrField, OiaLock,
-		AttrValue, lazyaf("%s %s", reasons[reason], oerrs[oerr]),
+	ui_leaf(IndOia,
+		AttrField, AT_STRING, OiaLock,
+		AttrValue, AT_STRING,
+		    lazyaf("%s %s", reasons[reason], oerrs[oerr]),
 		NULL);
     } else if (!strcmp(argv[0], OiaLockScrolled)) {
 	int n;
@@ -758,9 +874,9 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	    return false;
 	}
 	
-	ui_vleaf(IndOia,
-		AttrField, OiaLock,
-		AttrValue, lazyaf("%s %d", reasons[reason], n),
+	ui_leaf(IndOia,
+		AttrField, AT_STRING, OiaLock,
+		AttrValue, AT_STRING, lazyaf("%s %d", reasons[reason], n),
 		NULL);
     } else if (argc > 1) {
 	popup_an_error("ForceStatus: Reason '%s' does not take an argument",
@@ -768,25 +884,25 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     } else {
 	if (!strcmp(reasons[reason], STATUS_RECONNECTING)) {
-	    ui_vleaf(IndOia,
-		    AttrField, OiaLock,
-		    AttrValue, OiaLockNotConnected,
+	    ui_leaf(IndOia,
+		    AttrField, AT_STRING, OiaLock,
+		    AttrValue, AT_STRING, OiaLockNotConnected,
 		    NULL);
-	    ui_vleaf(IndConnection,
-		    AttrState, state_name[(int)RECONNECTING],
+	    ui_leaf(IndConnection,
+		    AttrState, AT_STRING, state_name[(int)RECONNECTING],
 		    NULL);
 	} else if (!strcmp(reasons[reason], STATUS_RESOLVING)) {
-	    ui_vleaf(IndOia,
-		    AttrField, OiaLock,
-		    AttrValue, OiaLockNotConnected,
+	    ui_leaf(IndOia,
+		    AttrField, AT_STRING, OiaLock,
+		    AttrValue, AT_STRING, OiaLockNotConnected,
 		    NULL);
-	    ui_vleaf(IndConnection,
-		    AttrState, state_name[(int)RESOLVING],
+	    ui_leaf(IndConnection,
+		    AttrState, AT_STRING, state_name[(int)RESOLVING],
 		    NULL);
 	} else {
-	    ui_vleaf(IndOia,
-		    AttrField, OiaLock,
-		    AttrValue, reasons[reason],
+	    ui_leaf(IndOia,
+		    AttrField, AT_STRING, OiaLock,
+		    AttrValue, AT_STRING, reasons[reason],
 		    NULL);
 	}
     }
@@ -804,19 +920,19 @@ void
 xterm_text_gui(int code, const char *text)
 {
     if (code == 0 || code == 1) {
-	ui_vleaf(IndIconName,
-		AttrText, text,
+	ui_leaf(IndIconName,
+		AttrText, AT_STRING, text,
 		NULL);
     }
     if (code == 0 || code == 2) {
-	ui_vleaf(IndWindowTitle,
-		AttrText, text,
+	ui_leaf(IndWindowTitle,
+		AttrText, AT_STRING, text,
 		NULL);
     }
 
     if (code == 50) {
-	ui_vleaf(IndFont,
-		AttrText, text,
+	ui_leaf(IndFont,
+		AttrText, AT_STRING, text,
 		NULL);
     }
 }
@@ -858,14 +974,14 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 	return;
     }
 
-    ui_vleaf(IndSetting,
-	    AttrName, toggle_names[i].name,
-	    AttrValue, toggled(ix)? ValTrue: ValFalse,
+    ui_leaf(IndSetting,
+	    AttrName, AT_STRING, toggle_names[i].name,
+	    AttrValue, AT_BOOLEAN, toggled(ix),
 	    NULL);
 
     if (ix == TRACING) {
-	ui_vleaf(IndTraceFile,
-		AttrName, (toggled(ix) && tracefile_name != NULL)?
+	ui_leaf(IndTraceFile,
+		AttrName, AT_STRING, (toggled(ix) && tracefile_name != NULL)?
 		    tracefile_name: NULL,
 		NULL);
     }
@@ -889,13 +1005,36 @@ menubar_as_set(bool sensitive _is_unused)
  * Handle a generic toggle change.
  */
 static void
-b3270_toggle_notify(const char *name, const char *value, ia_t cause)
+b3270_toggle_notify(const char *name, enum resource_type type, void **address,
+	ia_t cause)
 {
-    ui_vleaf(IndSetting,
-	    AttrName, name,
-	    AttrValue, value,
-	    AttrCause, ia_name[cause],
-	    NULL);
+    if (address == NULL) {
+	return;
+    }
+
+    switch (type) {
+    case XRM_STRING:
+	ui_leaf(IndSetting,
+		AttrName, AT_STRING, name,
+		AttrValue, AT_STRING, *(char **)address,
+		AttrCause, AT_STRING, ia_name[cause],
+		NULL);
+	break;
+    case XRM_INT:
+	ui_leaf(IndSetting,
+		AttrName, AT_STRING, name,
+		AttrValue, AT_INT, *(int *)address,
+		AttrCause, AT_STRING, ia_name[cause],
+		NULL);
+	break;
+    case XRM_BOOLEAN:
+	ui_leaf(IndSetting,
+		AttrName, AT_STRING, name,
+		AttrValue, AT_BOOLEAN, *(bool *)address,
+		AttrCause, AT_STRING, ia_name[cause],
+		NULL);
+	break;
+    }
 }
 
 /**
@@ -921,10 +1060,10 @@ tls_passwd_gui_callback(char *buf, int size, bool again)
 static void
 b3270_printer(bool on)
 {
-    ui_vleaf(IndOia,
-	    AttrField, "printer-session",
-	    AttrValue, ValTrueFalse(on),
-	    AttrLu, on? pr3287_session_lu(): NULL,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, "printer-session",
+	    AttrValue, AT_BOOLEAN, on,
+	    AttrLu, AT_STRING, on? pr3287_session_lu(): NULL,
 	    NULL);
 }
 
@@ -956,6 +1095,8 @@ b3270_register(void)
     static opt_t b3270_opts[] = {
 	{ OptCallback, OPT_STRING,  false, ResCallback,
 	    aoffset(scripting.callback), NULL, "Callback address and port" },
+	{ OptJson,     OPT_BOOLEAN, true,  ResJson,      aoffset(b3270.json),
+	    NULL, "Use JSON format" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
 	    NULL, "Force local codeset to be UTF-8" },
     };
@@ -964,6 +1105,8 @@ b3270_register(void)
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
+	{ ResJson,		aoffset(b3270.json),XRM_BOOLEAN },
+	{ ResJsonIndent,	aoffset(b3270.json_indent),XRM_BOOLEAN },
 	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN },
     };
     static xres_t b3270_xresources[] = {

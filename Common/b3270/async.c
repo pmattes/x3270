@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, 2019 Paul Mattes.
+ * Copyright (c) 2015-2016, 2019, 2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ screen_selected(int baddr _is_unused)
 void
 ring_bell(void)
 {
-    ui_vleaf(IndBell, NULL);
+    ui_leaf(IndBell, NULL);
 }
 
 static int cw = 7;
@@ -145,8 +145,8 @@ screen_system_fixup(void)
 void
 telnet_gui_connecting(const char *hostip, const char *portname)
 {
-    ui_vleaf(IndConnectAttempt,
-	    AttrHostIp, hostip,
-	    AttrPort, portname,
+    ui_leaf(IndConnectAttempt,
+	    AttrHostIp, AT_STRING, hostip,
+	    AttrPort, AT_STRING, portname, /* XXX */
 	    NULL);
 }

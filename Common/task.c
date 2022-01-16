@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -489,6 +489,14 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+static bool
+Fail_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnFail, ia, argc, argv);
+    popup_an_error("%s", (argc > 0)? argv[0]: "Failed");
+    return false;
+}
+
 /**
  * Task module registration.
  */
@@ -509,6 +517,7 @@ task_register(void)
 	{ AnEbcdicField,	EbcdicField_action, 0 },
 	{ AnExecute,		Execute_action, ACTION_KE },
 	{ AnExpect,		Expect_action, 0 },
+	{ AnFail,		Fail_action, 0 },
 	{ Anignore,		ignore_action, ACTION_KE },
 	{ AnInfo,		Info_action, 0 },
 	{ AnKeyboardDisable,	KeyboardDisable_action, 0 },

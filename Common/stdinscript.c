@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,11 @@
 #include "wincmn.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "actions.h"
+#include "httpd-json.h"
+#include "json.h"
 #include "kybd.h"
 #include "names.h"
 #include "popups.h"
@@ -49,6 +52,7 @@
 #include "w3misc.h"
 #include "xio.h"
 
+static void stdin_input(iosrc_t fd, ioid_t id);
 static void stdin_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool stdin_done(task_cbh handle, bool success, bool abort);
@@ -76,6 +80,101 @@ int stdin_errno;
 
 static bool pushed_wait = false;
 static bool enabled = true;
+static struct {		/* pending JSON input state */
+    char *buf;
+    size_t buflen;
+} pj_in;
+struct {		/* pending JSON output state */
+    bool pending;
+    json_t *json;
+} pj_out;
+
+/**
+ * Check a string for (possibly incremental) JSON.
+ * If the JSON object is complete, executes it.
+ *
+ * @param[in] buf	NUL-terminated buffer with text.
+ *
+ * @return true if in JSON format.
+ */
+static bool
+json_input(char *buf)
+{
+    size_t len = strlen(buf);
+
+    if (pj_in.buf != NULL) {
+	/* Concatenate the input. */
+	pj_in.buf = Realloc(pj_in.buf, pj_in.buflen + 1 + len + 1);
+	sprintf(pj_in.buf + pj_in.buflen, "\n%s", buf);
+	pj_in.buflen += 1 + len;
+    } else {
+	char *s = buf;
+
+	/* Check for JSON. */
+	while (len && isspace((int)*s)) {
+	    len--;
+	    s++;
+	}
+	if (len && (*s == '{' || *s == '[' || *s == '"')) {
+	    pj_in.buf = NewString(buf);
+	    pj_in.buflen = strlen(buf);
+	}
+    }
+
+    if (pj_in.buf != NULL) {
+	cmd_t **cmds;
+	char *single;
+	char *errmsg;
+	hjparse_ret_t ret;
+
+	/* Try JSON parsing. */
+	ret = hjson_parse(pj_in.buf, pj_in.buflen, &cmds, &single, &errmsg);
+	if (ret != HJ_OK) {
+	    /* Unsuccessful JSON. */
+	    if (ret == HJ_BAD_SYNTAX || ret == HJ_BAD_CONTENT) {
+		char *fail = xs_buffer(AnFail "(\"%s\")", errmsg);
+
+		/* Defective JSON. */
+		Free(errmsg);
+		push_cb(fail, strlen(fail), &stdin_cb, NULL);
+		Free(fail);
+		Replace(pj_in.buf, NULL);
+		pj_in.buflen = 0;
+		pj_out.pending = (ret == HJ_BAD_CONTENT);
+		return true;
+	    }
+	    /* Incomplete JSON. */
+	    /* Enable more input. */
+	    assert(ret == HJ_INCOMPLETE);
+	    Free(errmsg);
+#if !defined(_WIN32) /*[*/
+	    stdin_id = AddInput(fileno(stdin), stdin_input);
+#else /*][*/
+	    stdin_nr = 0;
+	    SetEvent(stdin_enable_event);
+	    if (stdin_id == NULL_IOID) {
+		stdin_id = AddInput(stdin_done_event, stdin_input);
+	    }
+#endif /*]*/
+	    return true;
+	}
+
+	/* Successful JSON. */
+	pj_out.pending = true;
+	if (cmds != NULL) {
+	    push_cb_split(cmds, &stdin_cb, NULL);
+	} else {
+	    push_cb(single, strlen(single), &stdin_cb, NULL);
+	    Free(single);
+	}
+	Replace(pj_in.buf, NULL);
+	pj_in.buflen = 0;
+	return true;
+    }
+
+    /* Not JSON. */
+    return false;
+}
 
 #if !defined(_WIN32) /*[*/
 /**
@@ -128,7 +227,10 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Run the command as a macro. */
     buf = vb_consume(&r);
     vtrace("s3stdin read '%s'\n", buf);
-    push_cb(buf, len, &stdin_cb, NULL);
+    if (!json_input(buf)) {
+	pj_out.pending = false;
+	push_cb(buf, len, &stdin_cb, NULL);
+    }
     Free(buf);
 }
 
@@ -158,7 +260,9 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	stdin_nr--;
     }
     vtrace("s3stdin read '%.*s'\n", stdin_nr, stdin_buf);
-    push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
+    if (!json_input(stdin_buf)) {
+	push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
+    }
 }
 
 #endif /*]*/
@@ -175,6 +279,22 @@ static void
 stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	bool success)
 {
+    if (pj_out.pending) {
+	json_t *result_array;
+
+	if (pj_out.json == NULL) {
+            pj_out.json = json_struct();
+            result_array = json_array();
+            json_struct_set(pj_out.json, "result", NT, result_array);
+        } else {
+            assert(json_struct_member(pj_out.json, "result", NT,
+                        &result_array));
+        }
+
+        json_array_append(result_array, json_string(buf, len));
+	return;
+    }
+
     if (!pushed_wait) {
 	printf(DATA_PREFIX "%.*s\n", (int)len, buf);
 	fflush(stdout);
@@ -197,13 +317,29 @@ static bool
 stdin_done(task_cbh handle, bool success, bool abort)
 {
     /* Print the prompt. */
-    if (!pushed_wait) {
+    if (pj_out.pending) {
+	char *w;
 	char *prompt = task_cb_prompt(handle);
 
-	vtrace("Output for s3stdin: %s/%s\n", prompt,
-		success? PROMPT_OK: PROMPT_ERROR);
-	printf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
-	fflush(stdout);
+	if (pj_out.json == NULL) {
+	    pj_out.json = json_struct();
+	    json_struct_set(pj_out.json, "result", NT, json_array());
+	}
+	json_struct_set(pj_out.json, "success", NT, json_boolean(success));
+	json_struct_set(pj_out.json, "status", NT, json_string(prompt, NT));
+	printf("%s\n", w = json_write_o(pj_out.json, JW_ONE_LINE));
+	Free(w);
+	json_free(pj_out.json);
+	pj_out.pending = false;
+    } else {
+	if (!pushed_wait) {
+	    char *prompt = task_cb_prompt(handle);
+
+	    vtrace("Output for s3stdin: %s/%s\n", prompt,
+		    success? PROMPT_OK: PROMPT_ERROR);
+	    printf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
+	    fflush(stdout);
+	}
     }
     pushed_wait = false;
 

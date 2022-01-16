@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -591,8 +591,7 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 			&result_array));
 	}
 
-	json_array_set(result_array, json_array_length(result_array),
-		json_string(buf, len));
+	json_array_append(result_array, json_string(buf, len));
     } else {
 	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);
@@ -704,6 +703,7 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
     size_t sl;
     session_t *s = httpd_mhandle(dhandle);
     cmd_t **cmds = NULL;
+    char *single = NULL;
 
     *errmsg = NULL;
 
@@ -720,7 +720,7 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 	break;
     case CT_JSON:
 	/* JSON-encoded text. */
-	if (!hjson_parse(cmd, sl, &cmds, errmsg)) {
+	if (hjson_parse(cmd, sl, &cmds, &single, errmsg) != HJ_OK) {
 	    return SENDTO_INVALID;
 	}
 	break;
@@ -736,7 +736,8 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
     if (cmds != NULL) {
 	push_cb_split(cmds, &httpd_cb, s);
     } else {
-	push_cb(cmd, sl, &httpd_cb, s);
+	push_cb(single? single: cmd, sl, &httpd_cb, s);
+	Free(single);
     }
 
     /*

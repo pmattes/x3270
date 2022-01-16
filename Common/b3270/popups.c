@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2019-2021 Paul Mattes.
+ * Copyright (c) 2016, 2019-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -93,9 +93,9 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
     } else if (!popups_ready) {
 	popup_store(true, s);
     } else {
-	ui_vleaf(IndPopup,
-		AttrType, error_types[type],
-		AttrText, s,
+	ui_leaf(IndPopup,
+		AttrType, AT_STRING, error_types[type],
+		AttrText, AT_STRING, s,
 		NULL);
     }
 }
@@ -113,9 +113,9 @@ popup_an_info(const char *fmt, ...)
     if (!popups_ready) {
 	popup_store(true, s);
     } else {
-	ui_vleaf(IndPopup,
-		AttrType, PtInfo,
-		AttrText, s,
+	ui_leaf(IndPopup,
+		AttrType, AT_STRING, PtInfo,
+		AttrText, AT_STRING, s,
 		NULL);
     }
 }
@@ -133,9 +133,9 @@ action_output(const char *fmt, ...)
     if (task_redirect()) {
 	task_info("%s", s);
     } else {
-	ui_vleaf(IndPopup,
-		AttrType, PtResult,
-		AttrText, s,
+	ui_leaf(IndPopup,
+		AttrType, AT_STRING, PtResult,
+		AttrText, AT_STRING, s,
 		NULL);
     }
 }
@@ -151,10 +151,10 @@ popup_printer_output(bool is_err, abort_callback_t *a _is_unused,
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    ui_vleaf(IndPopup,
-	    AttrType, PtPrinter,
-	    AttrError, ValTrueFalse(is_err),
-	    AttrText, s,
+    ui_leaf(IndPopup,
+	    AttrType, AT_STRING, PtPrinter,
+	    AttrError, AT_BOOLEAN, is_err,
+	    AttrText, AT_STRING, s,
 	    NULL);
 }
 
@@ -169,10 +169,10 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
     va_start(ap, fmt);
     s = vlazyaf(fmt, ap);
     va_end(ap);
-    ui_vleaf(IndPopup,
-	    AttrType, PtChild,
-	    AttrError, ValTrueFalse(is_err),
-	    AttrText, s,
+    ui_leaf(IndPopup,
+	    AttrType, AT_STRING, PtChild,
+	    AttrError, AT_BOOLEAN, is_err,
+	    AttrText, AT_STRING, s,
 	    NULL);
 }
 
@@ -188,9 +188,9 @@ popups_dump(void)
     stored_popup_t *sp;
 
     while ((sp = sp_first) != NULL) {
-	ui_vleaf(IndPopup,
-		AttrType, sp->is_error? PtError: PtInfo,
-		AttrText, sp->text,
+	ui_leaf(IndPopup,
+		AttrType, AT_STRING, sp->is_error? PtError: PtInfo,
+		AttrText, AT_STRING, sp->text,
 		NULL);
 	sp_first = sp->next;
 	Free(sp);

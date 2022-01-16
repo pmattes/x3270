@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Paul Mattes.
+ * Copyright (c) 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -390,6 +390,28 @@ negative_parse_tests(void)
     /* Test junk at the end of the string. */
 #   define TEST_JUNK "true?"
     errcode = json_parse_s(TEST_JUNK, &j, &e);
+    assert(errcode == JE_EXTRA);
+    assert(e->offset == 4);
+    assert(json_is_boolean(j));
+    CLEAN_UP_BOTH;
+
+#   define TEST_JUNK2 "{\"a\":3}[1]"
+    errcode = json_parse_s(TEST_JUNK2, &j, &e);
+    assert(errcode == JE_EXTRA);
+    assert(e->offset == 7);
+    assert(json_is_struct(j));
+    CLEAN_UP_BOTH;
+
+#   define TEST_JUNK3 "22 44 54"
+    errcode = json_parse_s(TEST_JUNK3, &j, &e);
+    assert(errcode == JE_EXTRA);
+    assert(e->offset == 3);
+    assert(json_is_integer(j));
+    CLEAN_UP_BOTH;
+
+    /* Test a missing tag. */
+#   define TEST_MISSING_TAG "{:"
+    errcode = json_parse_s(TEST_MISSING_TAG, &j, &e);
     assert(errcode == JE_SYNTAX);
     CLEAN_UP_BOTH;
 
@@ -510,20 +532,20 @@ negative_parse_tests(void)
     CLEAN_UP_BOTH;
 
     /* Test bad escapes. */
-#   define TEST_BAD_ESC1 "\"abc\\z\\"
+#   define TEST_BAD_ESC1 "\"abc\\z\""
     errcode = json_parse_s(TEST_BAD_ESC1, &j, &e);
     assert(errcode == JE_SYNTAX);
     CLEAN_UP_BOTH;
 
-#   define TEST_BAD_ESC2 "\"abc\\\""
-    errcode = json_parse_s(TEST_BAD_ESC2, &j, &e);
-    assert(errcode == JE_SYNTAX);
+#   define TEST_INCOMPLETE_STRING1 "\"abc\\\""
+    errcode = json_parse_s(TEST_INCOMPLETE_STRING1, &j, &e);
+    assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
     /* Incomplete string. */
-#   define TEST_INCOMPLETE_STRING "\"abc"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRING, &j, &e);
-    assert(errcode == JE_SYNTAX);
+#   define TEST_INCOMPLETE_STRING2 "\"abc"
+    errcode = json_parse_s(TEST_INCOMPLETE_STRING2, &j, &e);
+    assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 }
 
@@ -723,11 +745,26 @@ write_tests(void)
     Free(s);
     CLEAN_UP_BOTH;
 
+    /* Test writing a nested array with no whitespace. */
+    json_parse_s(TEST_WARRAY_NEST, &j, &e);
+    s = json_write_o(j, JW_ONE_LINE);
+    assert(!strcmp(s, "[1,\"a\",[3,[]]]"));
+    Free(s);
+    CLEAN_UP_BOTH;
+
     /* Test writing a nested struct. */
 #   define TEST_WSTRUCT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
     json_parse_s(TEST_WSTRUCT_NEST, &j, &e);
     s = json_write(j);
     assert(!strcmp(s, "{\n  \"a\": false,\n  \"b\": {\n  },\n  \"c\": {\n    \"d\": 3\n  }\n}"));
+    Free(s);
+    CLEAN_UP_BOTH;
+
+    /* Test writing a nested struct with no whitespace. */
+#   define TEST_WSTRUCT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
+    json_parse_s(TEST_WSTRUCT_NEST, &j, &e);
+    s = json_write_o(j, JW_ONE_LINE);
+    assert(!strcmp(s, "{\"a\":false,\"b\":{},\"c\":{\"d\":3}}"));
     Free(s);
     CLEAN_UP_BOTH;
 
@@ -850,6 +887,17 @@ set_tests(void)
     k = json_array_element(j, 1);
     assert(json_is_null(k));
     k = json_array_element(j, 2);
+    assert(json_is_double(k));
+    CLEAN_UP;
+
+    /* Construct an array by appending. */
+    j = json_array();
+    assert(json_is_array(j));
+    json_array_append(j, json_integer(3));
+    k = json_array_element(j, 0);
+    assert(json_is_integer(k));
+    json_array_append(j, json_double(3.0));
+    k = json_array_element(j, 1);
     assert(json_is_double(k));
     CLEAN_UP;
 

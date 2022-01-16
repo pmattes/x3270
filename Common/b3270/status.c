@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 Paul Mattes.
+ * Copyright (c) 2015-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,11 +80,11 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     }
     is_on = on;
 
-    ui_vleaf(IndOia,
+    ui_leaf(IndOia,
 	    AttrField, OiaCompose,
-	    AttrValue, ValTrueFalse(on),
-	    AttrChar, on? lazyaf("U+%04%x", ucs4): NULL,
-	    AttrType, on? ((keytype == KT_STD)? "std": "ge"): NULL,
+	    AttrValue, AT_BOOLEAN, on,
+	    AttrChar, AT_STRING, on? lazyaf("U+%04%x", ucs4): NULL,
+	    AttrType, AT_STRING, on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }
 
@@ -98,9 +98,9 @@ status_ctlr_done(void)
     }
     oia_undera = true;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaNotUndera,
-	    AttrValue, ValFalse,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaNotUndera,
+	    AttrValue, AT_BOOLEAN, false,
 	    NULL);
 }
 
@@ -114,9 +114,9 @@ status_insert_mode(bool on)
     }
     is_on = on;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaInsert,
-	    AttrValue, ValTrueFalse(on),
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaInsert,
+	    AttrValue, AT_BOOLEAN, on,
 	    NULL);
 }
 
@@ -137,9 +137,9 @@ status_lu(const char *s)
 	Replace(saved_lu, NewString(s));
     }
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaLu,
-	    AttrValue, s,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaLu,
+	    AttrValue, AT_STRING, s,
 	    NULL);
 }
 
@@ -149,9 +149,9 @@ status_lock(char *msg)
 {
     Replace(saved_lock, msg);
     if (!scrolled && !flashing) {
-	ui_vleaf(IndOia,
-		AttrField, OiaLock,
-		AttrValue, saved_lock,
+	ui_leaf(IndOia,
+		AttrField, AT_STRING, OiaLock,
+		AttrValue, AT_STRING, saved_lock,
 		NULL);
     }
 }
@@ -246,18 +246,18 @@ status_reverse_mode(bool on)
     }
     is_on = on;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaReverseInput,
-	    AttrValue, ValTrueFalse(on),
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaReverseInput,
+	    AttrValue, AT_BOOLEAN, on,
 	    NULL);
 }
 
 void
 status_screentrace(int n)
 {
-    ui_vleaf(IndOia,
-	    AttrField, OiaScreentrace,
-	    AttrValue, (n >= 0)? lazyaf("%d", n): NULL,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaScreentrace,
+	    AttrValue, (n >= 0)? AT_INT: AT_SKIP_INT, n,
 	    NULL);
 }
 
@@ -271,9 +271,9 @@ status_script(bool on)
     }
     is_on = on;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaScript,
-	    AttrValue, ValTrueFalse(on),
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaScript,
+	    AttrValue, AT_BOOLEAN, on,
 	    NULL);
 }
 
@@ -287,9 +287,9 @@ status_scrolled(int n)
 	scrolled = true;
 	scroll_n = n;
 	if (!flashing) {
-	    ui_vleaf(IndOia,
-		    AttrField, OiaLock,
-		    AttrValue, lazyaf(OiaLockScrolled " %d", n),
+	    ui_leaf(IndOia,
+		    AttrField, AT_STRING, OiaLock,
+		    AttrValue, AT_STRING, lazyaf(OiaLockScrolled " %d", n),
 		    NULL);
 	}
     } else {
@@ -299,9 +299,9 @@ status_scrolled(int n)
 	scrolled = false;
 	scroll_n = -1;
 	if (!flashing) {
-	    ui_vleaf(IndOia,
-		    AttrField, OiaLock,
-		    AttrValue, saved_lock,
+	    ui_leaf(IndOia,
+		    AttrField, AT_STRING, OiaLock,
+		    AttrValue, AT_STRING, saved_lock,
 		    NULL);
 	}
     }
@@ -321,9 +321,9 @@ flash_done(ioid_t id _is_unused)
 	status_scrolled(n);
     } else {
 	/* Restore the lock message. */
-	ui_vleaf(IndOia,
-		AttrField, OiaLock,
-		AttrValue, saved_lock,
+	ui_leaf(IndOia,
+		AttrField, AT_STRING, OiaLock,
+		AttrValue, AT_STRING, saved_lock,
 		NULL);
     }
 }
@@ -332,9 +332,9 @@ void
 status_keyboard_disable_flash(void)
 {
     if (!flashing) {
-	ui_vleaf(IndOia,
-		AttrField, OiaLock,
-		AttrValue, OiaLockDisabled,
+	ui_leaf(IndOia,
+		AttrField, AT_STRING, OiaLock,
+		AttrValue, AT_STRING, OiaLockDisabled,
 		NULL);
     }
     flashing = true;
@@ -364,9 +364,9 @@ status_timing(struct timeval *t0, struct timeval *t1)
     is_timed = true;
     cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	 (t1->tv_usec - t0->tv_usec + 50000) / 100000;
-    ui_vleaf(IndOia,
-	    AttrField, OiaTiming,
-	    AttrValue, lazyaf("%lu.%lu", cs / 10, cs % 10),
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaTiming,
+	    AttrValue, AT_STRING, lazyaf("%lu.%lu", cs / 10, cs % 10),
 	    NULL);
 }
 
@@ -378,8 +378,8 @@ status_untiming(void)
     }
     is_timed = false;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaTiming,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaTiming,
 	    NULL);
 }
 
@@ -393,9 +393,9 @@ status_twait(void)
 
     oia_undera = false;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaNotUndera,
-	    AttrValue, ValTrue,
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaNotUndera,
+	    AttrValue, AT_BOOLEAN, true,
 	    NULL);
 
     status_lock(NewString(OiaLockTwait));
@@ -411,8 +411,8 @@ status_typeahead(bool on _is_unused)
     }
     is_on = on;
 
-    ui_vleaf(IndOia,
-	    AttrField, OiaTypeahead,
-	    AttrValue, ValTrueFalse(on),
+    ui_leaf(IndOia,
+	    AttrField, AT_STRING, OiaTypeahead,
+	    AttrValue, AT_BOOLEAN, on,
 	    NULL);
 }

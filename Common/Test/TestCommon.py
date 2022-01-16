@@ -32,6 +32,9 @@ import requests
 import time
 import re
 import sys
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
@@ -123,3 +126,8 @@ def check_incomplete(prog, extra=None):
     assert any(line.startswith('Usage: ') for line in stderr)
     assert any('Use --help' in line for line in stderr)
 
+# Pretty-print an XML document.
+def xml_prettify(elem):
+    rough_string = ET.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="  ").encode('UTF8')

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 Paul Mattes.
+ * Copyright (c) 2015-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -213,11 +213,11 @@ emit_erase(int rows, int cols)
 {
     bool switched = rows > 0 && cols > 0;
 
-    ui_vleaf(IndErase,
-	    AttrLogicalRows, switched? lazyaf("%d", rows) : NULL,
-	    AttrLogicalColumns, switched? lazyaf("%d", cols) : NULL,
-	    AttrFg, mode.m3279? "blue": NULL,
-	    AttrBg, mode.m3279? "neutralBlack": NULL,
+    ui_leaf(IndErase,
+	    AttrLogicalRows, switched? AT_INT: AT_SKIP_INT, (int64_t)rows,
+	    AttrLogicalColumns, switched? AT_INT: AT_SKIP_INT, (int64_t)cols,
+	    AttrFg, AT_STRING, mode.m3279? "blue": NULL,
+	    AttrBg, AT_STRING, mode.m3279? "neutralBlack": NULL,
 	    NULL);
 }
 
@@ -234,13 +234,13 @@ toggle_visibleControl(toggle_index_t ix _is_unused,
 static void
 internal_screen_init(void)
 {
-    ui_vleaf(IndScreenMode,
-	    AttrModel, lazyaf("%d", model_num),
-	    AttrRows, lazyaf("%d", maxROWS),
-	    AttrColumns, lazyaf("%d", maxCOLS),
-	    AttrColor, mode.m3279? ValTrue: ValFalse,
-	    AttrOversize, ov_rows || ov_cols? ValTrue: ValFalse,
-	    AttrExtended, mode.extended? ValTrue: ValFalse,
+    ui_leaf(IndScreenMode,
+	    AttrModel, AT_INT, (int64_t)model_num,
+	    AttrRows, AT_INT, (int64_t)maxROWS,
+	    AttrColumns, AT_INT, (int64_t)maxCOLS,
+	    AttrColor, AT_BOOLEAN, mode.m3279,
+	    AttrOversize, AT_BOOLEAN, ov_rows || ov_cols,
+	    AttrExtended, AT_BOOLEAN, mode.extended,
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);
@@ -767,24 +767,24 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
     rowdiff_t *d;
 
     for (d = diffs; d != NULL; d = d->next) {
-	const char *args[13]; /* col, fg, bg, gr, text, count, NULL */
-	int aix = 0;
-	char *col_value;
-
-	args[aix++] = AttrColumn;
-	col_value = xs_buffer("%d", d->start_col + 1);
-	args[aix++] = col_value; /* will explicitly lazya below */
+	if (XML_MODE) {
+	    uix_open_leaf((d->reason == RD_TEXT)? IndChar: IndAttr);
+	} else {
+	    uij_open_struct(NULL);
+	    ui_add_element("type", AT_STRING,
+		    (d->reason == RD_TEXT)? IndChar: IndAttr);
+	}
+	ui_add_element(AttrColumn, AT_INT, (int64_t)(d->start_col + 1));
 	if (oldr[d->start_col].fg != newr[d->start_col].fg) {
-	    args[aix++] = AttrFg;
-	    args[aix++] = see_color(0xf0 | newr[d->start_col].fg);
+	    ui_add_element(AttrFg, AT_STRING,
+		    see_color(0xf0 | newr[d->start_col].fg));
 	}
 	if (oldr[d->start_col].bg != newr[d->start_col].bg) {
-	    args[aix++] = AttrBg;
-	    args[aix++] = see_color(0xf0 | newr[d->start_col].bg);
+	    ui_add_element(AttrBg, AT_STRING,
+		    see_color(0xf0 | newr[d->start_col].bg));
 	}
 	if (oldr[d->start_col].gr != newr[d->start_col].gr) {
-	    args[aix++] = "gr";
-	    args[aix++] = see_gr(newr[d->start_col].gr);
+	    ui_add_element("gr", AT_STRING, see_gr(newr[d->start_col].gr));
 	}
 
 	if (d->reason == RD_TEXT) {
@@ -804,18 +804,18 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 			utf8_buf);
 		vb_appendf(&r, "%.*s", utf8_len, utf8_buf);
 	    }
-	    args[aix++] = AttrText;
 	    ccode_value = vb_consume(&r);
-	    args[aix++] = ccode_value;
 	    lazya(ccode_value);
+	    ui_add_element(AttrText, AT_STRING, ccode_value);
 	} else {
-	    args[aix++] = "count";
-	    args[aix++] = lazyaf("%d", d->width);
+	    ui_add_element(AttrCount, AT_INT, (int64_t)d->width);
 	}
 
-	args[aix++] = NULL;
-	ui_leaf((d->reason == RD_TEXT)? IndChar: IndAttr, args);
-	lazya(col_value);
+	if (XML_MODE) {
+	    uix_close_leaf();
+	} else {
+	    uij_close_struct();
+	}
     }
 }
 
@@ -860,16 +860,26 @@ emit_cursor_cond(bool with_screen)
     /* Check for a cursor move. */
     if (cursor_enabled && sent_baddr != saved_baddr) {
 	if (with_screen) {
-	    ui_vpush(IndScreen, NULL);
+	    if (XML_MODE) {
+		uix_push(IndScreen, NULL);
+	    } else {
+		uij_open_struct(NULL);
+		uij_open_struct(IndScreen);
+	    }
 	}
-	ui_vleaf(IndCursor,
-	    AttrEnabled, ValTrue,
-	    AttrRow, lazyaf("%d", (saved_baddr / COLS) + 1),
-	    AttrColumn, lazyaf("%d", (saved_baddr % COLS) + 1),
+	ui_leaf(IndCursor,
+	    AttrEnabled, AT_BOOLEAN, true,
+	    AttrRow, AT_INT, (int64_t)((saved_baddr / COLS) + 1),
+	    AttrColumn, AT_INT, (int64_t)((saved_baddr % COLS) + 1),
 	    NULL);
 	sent_baddr = saved_baddr;
 	if (with_screen) {
-	    ui_pop();
+	    if (XML_MODE) {
+		uix_pop();
+	    } else {
+		uij_close_struct();
+		uij_close_struct();
+	    }
 	}
     }
 }
@@ -882,22 +892,47 @@ emit_diff(screen_t *old, screen_t *new)
 {
     int row;
 
-    ui_vpush(IndScreen, NULL);
+    if (XML_MODE) {
+	uix_push(IndScreen, NULL);
+    } else {
+	uij_open_struct(NULL);
+	uij_open_struct(IndScreen);
+    }
     emit_cursor_cond(false);
+    if (JSON_MODE) {
+	uij_open_array("updates");
+    }
 
     for (row = 0; row < maxROWS; row++) {
 
 	if (memcmp(old + (row * maxCOLS), new + (row * maxCOLS),
 		sizeof(screen_t) * maxCOLS)) {
-	    ui_vpush("row",
-		    AttrRow, lazyaf("%d", row + 1),
+	    if (XML_MODE) {
+		uix_push(IndRow,
+		    AttrRow, AT_INT, (int64_t)(row + 1),
 		    NULL);
+	    } else {
+		uij_open_struct(NULL);
+		ui_add_element(AttrRow, AT_INT, (int64_t)(row + 1));
+		uij_open_array("changes");
+	    }
 	    emit_row(&old[row * maxCOLS], &new[row * maxCOLS]);
-	    ui_pop();
+	    if (XML_MODE) {
+		uix_pop();
+	    } else {
+		uij_close_array();
+		uij_close_struct();
+	    }
 	}
     }
 
-    ui_pop();
+    if (XML_MODE) {
+	uix_pop();
+    } else {
+	uij_close_array();
+	uij_close_struct();
+	uij_close_struct();
+    }
 }
 
 /*
@@ -966,8 +1001,8 @@ screen_disp_cond(bool always)
     }
 
     if (formatted != xformatted) {
-	ui_vleaf(IndFormatted,
-		AttrState, formatted? ValTrue: ValFalse,
+	ui_leaf(IndFormatted,
+		AttrState, AT_BOOLEAN, formatted,
 		NULL);
 	xformatted = formatted;
     }
@@ -1036,9 +1071,9 @@ screen_scroll(unsigned char fg, unsigned char bg)
     }
 
     /* Tell the UI. */
-    ui_vleaf(IndScroll,
-	    AttrFg, see_color(0xf0 | fg),
-	    AttrBg, see_color(0xf0 | bg),
+    ui_leaf(IndScroll,
+	    AttrFg, AT_STRING, see_color(0xf0 | fg),
+	    AttrBg, AT_STRING, see_color(0xf0 | bg),
 	    NULL);
 }
 
@@ -1047,8 +1082,8 @@ void
 screen_flip(void)
 {
     flipped = !flipped;
-    ui_vleaf(IndFlipped,
-	    AttrValue, flipped? ValTrue: ValFalse,
+    ui_leaf(IndFlipped,
+	    AttrValue, AT_BOOLEAN, flipped,
 	    NULL);
 }
 
@@ -1068,11 +1103,21 @@ enable_cursor(bool on)
 {
     if (on != cursor_enabled) {
 	if (!(cursor_enabled = on)) {
-	    ui_vpush(IndScreen, NULL);
-	    ui_vleaf(IndCursor,
-		AttrEnabled, ValFalse,
+	    if (XML_MODE) {
+		uix_push(IndScreen, NULL);
+	    } else {
+		uij_open_struct(NULL);
+		uij_open_struct(IndScreen);
+	    }
+	    ui_leaf(IndCursor,
+		AttrEnabled, AT_BOOLEAN, false,
 		NULL);
-	    ui_pop();
+	    if (XML_MODE) {
+		uix_pop();
+	    } else {
+		uij_close_struct();
+		uij_close_struct();
+	    }
 	    sent_baddr = -1;
 	}
     }
@@ -1107,11 +1152,11 @@ screen_set_thumb(float top, float shown, int saved, int screen, int back)
     last_shown = shown;
     last_saved = saved;
     last_back = back;
-    ui_vleaf(IndThumb,
-	    AttrTop, lazyaf("%.5f", top),
-	    AttrShown, lazyaf("%.5f", shown),
-	    AttrSaved, lazyaf("%d", saved),
-	    AttrScreen, lazyaf("%d", screen),
-	    AttrBack, lazyaf("%d", back),
+    ui_leaf(IndThumb,
+	    AttrTop, AT_DOUBLE, (double)top,
+	    AttrShown, AT_DOUBLE, (double)shown,
+	    AttrSaved, AT_INT, (int64_t)saved,
+	    AttrScreen, AT_INT, (int64_t)screen,
+	    AttrBack, AT_INT, (int64_t)back,
 	    NULL);
 }

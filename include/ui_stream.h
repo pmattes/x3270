@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Paul Mattes.
+ * Copyright (c) 2016, 2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,9 +32,33 @@
  *		UI data stream I/O.
  */
 
+#define JSON_MODE	(appres.b3270.json)
+#define XML_MODE	(!appres.b3270.json)
+
+/* Attribute types. */
+typedef enum {
+    AT_STRING,
+    AT_INT,
+    AT_SKIP_INT,	/* ignore an integer value */
+    AT_DOUBLE,
+    AT_BOOLEAN,
+    AT_SKIP_BOOLEAN,	/* ignore a Boolean value */
+    AT_NODE		/* JSON node */
+} ui_attr_t;
+
+/* Common functions. */
 void ui_io_init(void);
-void ui_leaf(const char *name, const char *args[]);
-void ui_pop(void);
-void ui_push(const char *name, const char *args[]);
-void ui_vleaf(const char *name, ...);
-void ui_vpush(const char *name, ...);
+void ui_leaf(const char *name, ...);
+void ui_add_element(const char *name, ui_attr_t attr, ...);
+
+/* XML-specific functions. */
+void uix_pop(void);
+void uix_push(const char *name, ...);
+void uix_open_leaf(const char *name);
+void uix_close_leaf(void);
+
+/* JSON-specific functions. */
+void uij_open_struct(const char *name);
+void uij_open_array(const char *name);
+void uij_close_struct(void);
+void uij_close_array(void);

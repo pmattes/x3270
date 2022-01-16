@@ -142,5 +142,28 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.kill()
         s3270.wait()
 
+    # s3270 stdin smoke test
+    def test_s3270_stdin(self):
+
+        # Start s3270.
+        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+
+        # Push a trivial command at it.
+        s3270.stdin.write(b'Set(startTls)\n')
+
+        # Decode the result.
+        stdout = s3270.communicate()[0].decode('utf8').split('\n')
+
+        # Wait for the process to exit successfully.
+        rc = s3270.wait()
+        self.assertEqual(0, rc)
+
+        # Test the output.
+        self.assertEqual(4, len(stdout))
+        self.assertEqual('data: true', stdout[0])
+        self.assertTrue(stdout[1].startswith('L U U N N 4 24 80 0 0 0x0 '))
+        self.assertEqual('ok', stdout[2])
+        self.assertEqual('', stdout[3])
+
 if __name__ == '__main__':
     unittest.main()

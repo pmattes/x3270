@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020, Paul Mattes.
+ * Copyright (c) 1996-2020, 2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,48 +59,48 @@ void ft_gui_clear_progress(void)
 void
 ft_gui_complete_popup(const char *msg, bool is_error)
 {
-    ui_vleaf(IndFt,
-	    AttrState, "complete",
-	    AttrSuccess, ValTrueFalse(!is_error),
-	    AttrText, msg,
-	    AttrCause, ia_name[ft_cause],
+    ui_leaf(IndFt,
+	    AttrState, AT_STRING, "complete",
+	    AttrSuccess, AT_BOOLEAN, !is_error,
+	    AttrText, AT_STRING, msg,
+	    AttrCause, AT_STRING, ia_name[ft_cause],
 	    NULL);
 }
 
 void
 ft_gui_update_length(size_t length)
 {
-    ui_vleaf(IndFt,
-	    AttrState, "running",
-	    AttrBytes, lazyaf("%lu", (unsigned long)length),
-	    AttrCause, ia_name[ft_cause],
+    ui_leaf(IndFt,
+	    AttrState, AT_STRING, "running",
+	    AttrBytes, AT_INT, (int64_t)length,
+	    AttrCause, AT_STRING, ia_name[ft_cause],
 	    NULL);
 }
 
 void
 ft_gui_running(size_t length)
 {
-    ui_vleaf(IndFt,
-	    AttrState, "running",
-	    AttrBytes, lazyaf("%lu", (unsigned long)length),
-	    AttrCause, ia_name[ft_cause],
+    ui_leaf(IndFt,
+	    AttrState, AT_STRING, "running",
+	    AttrBytes, AT_INT, (int64_t)length,
+	    AttrCause, AT_STRING, ia_name[ft_cause],
 	    NULL);
 }
 
 void
 ft_gui_aborting(void)
 {
-    ui_vleaf(IndFt,
-	    AttrState, "aborting",
-	    AttrCause, ia_name[ft_cause],
+    ui_leaf(IndFt,
+	    AttrState, AT_STRING, "aborting",
+	    AttrCause, AT_STRING, ia_name[ft_cause],
 	    NULL);
 }
 
 void
 ft_gui_awaiting(void)
 {
-    ui_vleaf(IndFt,
-	    AttrState, "awaiting",
-	    AttrCause, ia_name[ft_cause],
+    ui_leaf(IndFt,
+	    AttrState, AT_STRING, "awaiting",
+	    AttrCause, AT_STRING, ia_name[ft_cause],
 	    NULL);
 }

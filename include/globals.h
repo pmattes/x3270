@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -104,6 +104,12 @@ typedef char bool;			/* roll our own for MSC */
 # include "wincmn.h"			/* Common Windows definitions */
 #endif /*]*/
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
+
+/*
+ * Common struct typedefs.
+ */
+typedef struct json json_t;
+typedef struct cmd cmd_t;
 
 /*
  * Helpful macros.

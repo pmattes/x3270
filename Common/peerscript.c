@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,8 +47,11 @@
 #include <fcntl.h>
 
 #include "actions.h"
+#include "httpd-json.h"
+#include "json.h"
 #include "kybd.h"
 #include "lazya.h"
+#include "names.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "s3270_proto.h"
@@ -131,6 +134,8 @@ typedef struct {
     unsigned capabilities; /* self-reported capabilities */
     void *irhandle;	/* input request handle */
     task_cb_ir_state_t ir_state; /* named input request state */
+    bool json_mode;	/* true if in JSON mode */
+    json_t *json_result; /* pending JSON result */
 } peer_t;
 static llist_t peer_scripts = LLIST_INIT(peer_scripts);
 
@@ -179,7 +184,64 @@ close_peer(peer_t *p)
     }
     task_cb_abort_ir_state(&p->ir_state);
 
+    json_free(p->json_result);
+
     Free(p);
+}
+
+/**
+ * Pushes a command, with possible JSON parsing.
+ *
+ * @param[in] p		Peer state
+ * @param[in] buf	Command buffer
+ * @param[in] len	Buffer length
+ */
+static void
+do_push(peer_t *p, const char *buf, size_t len)
+{
+    const char *s = buf;
+    char *name;
+    tcb_t *tcb = (p->capabilities & CBF_INTERACTIVE)?
+	&interactive_cb : &peer_cb;
+
+    while (len && isspace((int)*s)) {
+	s++;
+	len--;
+    }
+
+    /* Try JSON parsing. */
+    if (!(p->capabilities & CBF_INTERACTIVE) &&
+	    (*s == '{' || *s == '[' || *s == '"')) {
+	cmd_t **cmds;
+	char *single;
+	char *errmsg;
+	hjparse_ret_t ret;
+
+	ret = hjson_parse(s, len, &cmds, &single, &errmsg);
+	if (ret == HJ_OK) {
+	    /* Good JSON. */
+	    p->json_mode = true;
+	    if (cmds != NULL) {
+		name = push_cb_split(cmds, tcb, (task_cbh)p);
+	    } else {
+		name = push_cb(single, strlen(single), tcb, (task_cbh)p);
+		Free(single);
+	    }
+	} else {
+	    /* Bad JSON. */
+	    char *fail = xs_buffer(AnFail "(\"%s\")", errmsg);
+
+	    /* Answer in JSON only if successfully parsed. */
+	    p->json_mode = ret == HJ_BAD_CONTENT;
+	    Free(errmsg);
+	    name = push_cb(fail, strlen(fail), tcb, (task_cbh)p);
+	    Free(fail);
+	}
+    } else {
+	p->json_mode = false;
+	name = push_cb(s, len, tcb, (task_cbh)p);
+    }
+    Replace(p->name, NewString(name));
 }
 
 /**
@@ -193,7 +255,6 @@ static bool
 run_next(peer_t *p)
 {
     size_t cmdlen;
-    char *name;
 
     /* Find a newline in the buffer. */
     for (cmdlen = 0; cmdlen < p->buf_len; cmdlen++) {
@@ -210,10 +271,7 @@ run_next(peer_t *p)
      * cmdlen is the number of characters in the command, not including the
      * newline.
      */
-    name = push_cb(p->buf, cmdlen,
-	    (p->capabilities & CBF_INTERACTIVE)? &interactive_cb : &peer_cb,
-	    (task_cbh)p);
-    Replace(p->name, NewString(name));
+    do_push(p, p->buf, cmdlen);
 
     /* If there is more, shift it over. */
     cmdlen++; /* count the newline */
@@ -313,7 +371,7 @@ static void
 peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
-    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+    char *s;
     ssize_t ns;
     static bool recursing = false;
 
@@ -321,10 +379,27 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
     recursing = true;
-    ns = send(p->socket, s, strlen(s), 0);
-    if (ns < 0) {
-	popup_a_sockerr("s3sock send");
+
+    if (p->json_mode) {
+	json_t *result_array;
+
+	if (p->json_result == NULL) {
+            p->json_result = json_struct();
+            result_array = json_array();
+            json_struct_set(p->json_result, "result", NT, result_array);
+        } else {
+            assert(json_struct_member(p->json_result, "result", NT,
+                        &result_array));
+        }
+	json_array_append(result_array, json_string(buf, len));
+    } else {
+	s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+	ns = send(p->socket, s, strlen(s), 0);
+	if (ns < 0) {
+	    popup_a_sockerr("s3sock send");
+	}
     }
+
     recursing = false;
 }
 
@@ -370,13 +445,32 @@ peer_done(task_cbh handle, bool success, bool abort)
 {
     peer_t *p = (peer_t *)handle;
     char *prompt = task_cb_prompt(handle);
-    char *s = lazyaf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
+    char *s;
     bool new_child = false;
 
-    /* Print the prompt. */
-    vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
-	    success? PROMPT_OK: PROMPT_ERROR);
-    send(p->socket, s, strlen(s), 0);
+    if (p->json_mode) {
+	char *w;
+	/* Print the result. */
+
+        if (p->json_result == NULL) {
+            p->json_result = json_struct();
+            json_struct_set(p->json_result, "result", NT, json_array());
+        }
+        json_struct_set(p->json_result, "success", NT, json_boolean(success));
+        json_struct_set(p->json_result, "status", NT, json_string(prompt, NT));
+        s = lazyaf("%s\n", w = json_write_o(p->json_result, JW_ONE_LINE));
+        Free(w);
+        json_free(p->json_result);
+	vtrace("JSON output for %s: '%s/%s'\n", p->name, prompt,
+		success? PROMPT_OK: PROMPT_ERROR);
+	send(p->socket, s, strlen(s), 0);
+    } else {
+	/* Print the prompt. */
+	vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
+		success? PROMPT_OK: PROMPT_ERROR);
+	s = lazyaf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
+	send(p->socket, s, strlen(s), 0);
+    }
 
     if (abort || !p->enabled) {
 	close_peer(p);

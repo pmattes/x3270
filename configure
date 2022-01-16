@@ -2201,7 +2201,7 @@ T_ALLTESTS=""
 T_TEST_CLEAN=""
 T_TEST_CLOBBER=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 playback wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"

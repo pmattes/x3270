@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -66,7 +66,6 @@
 #include "glue_gui.h"
 #include "help.h"
 #include "host.h"
-#include "json.h"	/* must appear before httpd headers */
 #include "httpd-core.h"
 #include "httpd-nodes.h"
 #include "httpd-io.h"

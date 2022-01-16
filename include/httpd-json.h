@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 2014-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,5 +30,17 @@
  *              x3270 webserver, JSON module
  */
 
-bool hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds,
+typedef enum {
+    HJ_OK,		/* parsed okay */
+    HJ_BAD_SYNTAX,	/* JSON syntax error */
+    HJ_INCOMPLETE,	/* JSON incomplete error */
+    HJ_BAD_CONTENT	/* JSON content error */
+} hjparse_ret_t;
+
+cmd_t **free_cmds(cmd_t **cmds);
+hjparse_ret_t hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds,
+	char **split, char **errmsg);
+bool hjson_split(const json_t *json, cmd_t ***cmds, char **single,
 	char **errmsg);
+bool json_key_matches(const char *key, size_t key_length,
+	const char *match_key);

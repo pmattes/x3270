@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2021 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -120,10 +120,10 @@ typedef struct {
 #define CBF_PWINPUT	0x4	/* can do password (no echo) input */
 char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
-typedef struct {
+struct cmd {
     const char *action;	/* action to execute */
     const char **args;	/* arguments */
-} cmd_t;
+};
 char *push_cb_split(cmd_t **cmds, const tcb_t *cb, task_cbh handle);
 void task_activate(task_cbh handle);
 void task_register(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,6 @@
 #include "child_popups.h"
 #include "childscript.h"
 #include "find_console.h"
-#include "json.h" /* must precede HTTP */
 #include "httpd-core.h"
 #include "httpd-io.h"
 #include "lazya.h"

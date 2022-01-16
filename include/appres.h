@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2021 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -202,6 +202,12 @@ typedef struct {
     struct {
 	char	*callback;
     } scripting;
+
+    /* b3270-specific fields. */
+    struct {
+	bool	json;
+	bool	json_indent;
+    } b3270;
 
 } AppRes, *AppResptr;
 

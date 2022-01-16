@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Paul Mattes.
+ * Copyright (c) 2020-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,7 @@
 #define AnExecute	"Execute"
 #define AnExit		"Exit"
 #define AnExpect	"Expect"
+#define AnFail		"Fail"
 #define AnFieldEnd	"FieldEnd"
 #define AnFieldMark	"FieldMark"
 #define AnFlip		"Flip"

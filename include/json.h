@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Paul Mattes.
+ * Copyright (c) 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,6 @@
 /* Integer data type. */
 #define JSON_INT_PRINT	PRId64
 
-/* A JSON node. */
-typedef struct json json_t;
-
 /*
  * Data types.
  * A 'null' token is a NULL pointer, not a json_t with type NULL.
@@ -60,6 +57,7 @@ typedef enum {
     JE_SYNTAX,			/* parse: syntax error */
     JE_INCOMPLETE,		/* parse: incomplete object */
     JE_OVERFLOW,		/* parse: numeric overflow */
+    JE_EXTRA,			/* parse: extra junk after object */
 } json_errcode_t;
 
 /* Parse error structure. */
@@ -68,6 +66,7 @@ typedef struct {
     int line;			/* line number */
     int column;			/* column number */
     const char *errmsg;		/* error message */
+    size_t offset;		/* byte offset */
 } json_parse_error_t;
 
 /* Parse text into JSON. */
@@ -92,6 +91,7 @@ json_parse_error_t *_json_free_error(json_parse_error_t *error);
 /* Converts a JSON structure to a JSON string. */
 #define JW_NONE			0x0
 #define JW_EXPAND_SURROGATES	0x1
+#define JW_ONE_LINE		0x2
 char *json_write_o(const json_t *json, unsigned options);
 #define json_write(j)	json_write_o(j, JW_NONE)
 
@@ -145,6 +145,7 @@ json_t *json_array(void);
 void json_struct_set(json_t *json, const char *key, ssize_t key_length,
 	json_t *value);
 void json_array_set(json_t *json, unsigned index, json_t *value);
+void json_array_append(json_t *json, json_t *value);
 
 /* Iterators. */
 #define BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) do { \
