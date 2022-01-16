@@ -1,0 +1,550 @@
+20220116.150716.065 Trace started
+ Version: c3270 v4.2pre1 Sun Jan 16 20:23:11 UTC 2022 pdm
+ Build options: --enable-local-process --with-readline --with-curses-wide
+ Command: c3270 obj/x86_64-unknown-linux-gnu/c3270/c3270 -trace localhost:22
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true alwaysInsert=false blankFill=true
+  caDir= caFile= certFile= certFileType= chainFile= codePage=bracket
+  crosshair=false ftBufferSize=16384 httpd= insertMode=false keyFile=
+  keyFileType= keyPasswd= lineMode=true lineWrap=false loginMacro=
+  model=3279-4-E monoCase=false noTelnetInputMode=line nopSeconds=0
+  oerrLock=true oversize= printer.options= printerLu= proxy= reconnect=false
+  reverseInputMode=false rightToLeftMode=false saveLines=4096 screenTrace=false
+  scriptPort= showTiming=false startTls=true termName= trace=true
+  typeahead=true underscore=false unlockDelay=false unlockDelayMs=350
+  verifyHostCert=true visibleControl=false
+ Connection state: not-connected
+ Data stream:
+20220116.150716.065 CB(command)[#1] started
+20220116.150716.065 CB(command)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150716.065 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20220116.150716.066 ctlr_enable_cursor(true, scroll)
+20220116.150716.067 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20220116.150716.067 Macro[#1.2] running
+20220116.150716.067 Macro[#1.2] IDLE -> RUNNING (executing)
+20220116.150716.067 Macro[#1.2] 'Connect("localhost:22")'
+20220116.150716.067 command -> Connect("localhost:22")
+20220116.150716.067 st_changed(secure,false)
+20220116.150716.067 st_changed(terminal-name,true)
+20220116.150716.067 Resolver slot is 0
+20220116.150716.067 cstate [not-connected] -> [resolving] (host_connect)
+20220116.150716.067 st_changed(connect,true)
+20220116.150716.067 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220116.150716.067 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220116.150716.067 ctlr_enable_cursor(false, connect)
+20220116.150716.067 st_changed(negotiating,true)
+20220116.150716.068 Macro[#1.2] complete, success
+20220116.150716.068 CB(command)[#1.1] RUNNING -> IDLE (about to resume)
+20220116.150716.068 CB(command)[#1.1] child task done, success
+20220116.150716.068 command complete
+20220116.150716.068 stop pager
+20220116.150716.068 CB(command)[#1.1] complete, success
+20220116.150716.068 CB(command)[#1] complete
+20220116.150716.068 Waiting for 3 events or 0.999s
+20220116.150716.068 Got 1 event
+20220116.150716.068 Resolution complete, 1 address
+20220116.150716.069 TLS: will verify host certificate
+20220116.150716.069 Making host socket non-blocking
+20220116.150716.069 Trying 127.0.0.1, port 22...
+20220116.150716.069 TCP connection pending.
+20220116.150716.069 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20220116.150716.069 st_changed(negotiating,true)
+20220116.150716.069 lazya_flush: 51 slots, 2088 bytes
+20220116.150716.069 Waiting for 6 events or 0.000s
+20220116.150716.069 Got 1 event
+20220116.150716.069 Output possible
+20220116.150716.069 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20220116.150716.069 st_changed(connect,true)
+20220116.150716.069 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220116.150716.069 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20220116.150716.069 Host negotiation step took 0.000531s to complete
+20220116.150716.069 ctlr_enable_cursor(true, connect)
+20220116.150716.069 ctlr_enable_cursor(true, nvt)
+20220116.150716.069 st_changed(negotiating,true)
+20220116.150716.069 Connected to localhost, port 22.
+20220116.150716.070 st_changed(secure,false)
+20220116.150716.070 st_changed(line-mode,true)
+20220116.150716.070 lazya_flush: 15 slots, 360 bytes
+20220116.150716.070 Waiting for 5 events or 0.000s
+20220116.150716.070 Got 0 events
+20220116.150716.070 Waiting for 5 events or 0.999s
+20220116.150716.074 Got 1 event
+20220116.150716.074 Reading host socket
+20220116.150716.074 Host socket read complete nr=41
+< 0x0   5353482d322e302d4f70656e5353485f382e327031205562756e74752d347562
+< 0x20  756e7475302e340d0a
+20220116.150716.075 cstate [telnet-pending] -> [connected-nvt] (host_in3270)
+20220116.150716.075 st_changed(line-mode,true)
+20220116.150716.075 st_changed(3270-mode,false)
+20220116.150716.075 Keyboard unlock(kybd_in3270) -AWAITING_FIRST
+20220116.150716.075 Host negotiation step took 0.005095s to complete
+20220116.150716.075 ctlr_enable_cursor(true, connect)
+20220116.150716.075 <.. SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.4^M^J
+20220116.150716.075 lazya_flush: 11 slots, 264 bytes
+20220116.150716.075 Waiting for 5 events
+20220116.150722.855 Got 1 event
+20220116.150722.855 kbd_input: k=0 wch=84 
+20220116.150722.855 Key '<Key>T' (curses key 0x0, char code 0x54)
+20220116.150722.855 CB(default)[#2] started
+20220116.150722.855 CB(default)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150722.855 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20220116.150722.855 kbd_input: k=-1 wch=0 
+20220116.150722.855 kbd_input: k == ERR, return
+20220116.150722.855 lazya_flush: 12 slots, 288 bytes
+20220116.150722.856 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20220116.150722.856 Macro[#2.2] running
+20220116.150722.856 Macro[#2.2] IDLE -> RUNNING (executing)
+20220116.150722.856 Macro[#2.2] 'Key(U+0054)'
+20220116.150722.856 default -> Key("U+0054")
+20220116.150722.856  default -> Key(U+0054)
+20220116.150722.856 Macro[#2.2] complete, success
+20220116.150722.856 CB(default)[#2.1] RUNNING -> IDLE (about to resume)
+20220116.150722.856 CB(default)[#2.1] child task done, success
+20220116.150722.856 CB(default)[#2.1] complete, success
+20220116.150722.856 CB(default)[#2] complete
+20220116.150722.857 Waiting for 5 events
+20220116.150723.007 Got 1 event
+20220116.150723.007 kbd_input: k=0 wch=104 
+20220116.150723.007 Key '<Key>h' (curses key 0x0, char code 0x68)
+20220116.150723.007 CB(default)[#3] started
+20220116.150723.007 CB(default)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150723.007 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20220116.150723.007 kbd_input: k=-1 wch=0 
+20220116.150723.007 kbd_input: k == ERR, return
+20220116.150723.007 lazya_flush: 29 slots, 696 bytes
+20220116.150723.007 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20220116.150723.007 Macro[#3.2] running
+20220116.150723.007 Macro[#3.2] IDLE -> RUNNING (executing)
+20220116.150723.007 Macro[#3.2] 'Key(U+0068)'
+20220116.150723.007 default -> Key("U+0068")
+20220116.150723.007  default -> Key(U+0068)
+20220116.150723.008 Macro[#3.2] complete, success
+20220116.150723.008 CB(default)[#3.1] RUNNING -> IDLE (about to resume)
+20220116.150723.008 CB(default)[#3.1] child task done, success
+20220116.150723.008 CB(default)[#3.1] complete, success
+20220116.150723.008 CB(default)[#3] complete
+20220116.150723.008 Waiting for 5 events
+20220116.150723.175 Got 1 event
+20220116.150723.175 kbd_input: k=0 wch=105 
+20220116.150723.175 Key '<Key>i' (curses key 0x0, char code 0x69)
+20220116.150723.175 CB(default)[#4] started
+20220116.150723.175 CB(default)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150723.175 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20220116.150723.175 kbd_input: k=-1 wch=0 
+20220116.150723.175 kbd_input: k == ERR, return
+20220116.150723.175 lazya_flush: 29 slots, 696 bytes
+20220116.150723.175 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20220116.150723.175 Macro[#4.2] running
+20220116.150723.175 Macro[#4.2] IDLE -> RUNNING (executing)
+20220116.150723.176 Macro[#4.2] 'Key(U+0069)'
+20220116.150723.176 default -> Key("U+0069")
+20220116.150723.176  default -> Key(U+0069)
+20220116.150723.176 Macro[#4.2] complete, success
+20220116.150723.176 CB(default)[#4.1] RUNNING -> IDLE (about to resume)
+20220116.150723.176 CB(default)[#4.1] child task done, success
+20220116.150723.176 CB(default)[#4.1] complete, success
+20220116.150723.176 CB(default)[#4] complete
+20220116.150723.177 Waiting for 5 events
+20220116.150723.258 Got 1 event
+20220116.150723.258 kbd_input: k=0 wch=115 
+20220116.150723.258 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220116.150723.258 CB(default)[#5] started
+20220116.150723.258 CB(default)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150723.258 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20220116.150723.258 kbd_input: k=-1 wch=0 
+20220116.150723.258 kbd_input: k == ERR, return
+20220116.150723.258 lazya_flush: 29 slots, 712 bytes
+20220116.150723.258 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20220116.150723.258 Macro[#5.2] running
+20220116.150723.258 Macro[#5.2] IDLE -> RUNNING (executing)
+20220116.150723.258 Macro[#5.2] 'Key(U+0073)'
+20220116.150723.258 default -> Key("U+0073")
+20220116.150723.258  default -> Key(U+0073)
+20220116.150723.259 Macro[#5.2] complete, success
+20220116.150723.259 CB(default)[#5.1] RUNNING -> IDLE (about to resume)
+20220116.150723.259 CB(default)[#5.1] child task done, success
+20220116.150723.259 CB(default)[#5.1] complete, success
+20220116.150723.259 CB(default)[#5] complete
+20220116.150723.259 Waiting for 5 events
+20220116.150724.391 Got 1 event
+20220116.150724.391 kbd_input: k=0 wch=32 
+20220116.150724.391 Key 'space' (curses key 0x0, char code 0x20)
+20220116.150724.391 CB(default)[#6] started
+20220116.150724.391 CB(default)[#6.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.391 Macro[#6.2] IDLE -> RUNNING (fresh push)
+20220116.150724.391 kbd_input: k=-1 wch=0 
+20220116.150724.391 kbd_input: k == ERR, return
+20220116.150724.391 lazya_flush: 29 slots, 712 bytes
+20220116.150724.392 Macro[#6.2] RUNNING -> IDLE (about to resume)
+20220116.150724.392 Macro[#6.2] running
+20220116.150724.392 Macro[#6.2] IDLE -> RUNNING (executing)
+20220116.150724.392 Macro[#6.2] 'Key(U+0020)'
+20220116.150724.392 default -> Key("U+0020")
+20220116.150724.392  default -> Key(U+0020)
+20220116.150724.392 Macro[#6.2] complete, success
+20220116.150724.392 CB(default)[#6.1] RUNNING -> IDLE (about to resume)
+20220116.150724.392 CB(default)[#6.1] child task done, success
+20220116.150724.392 CB(default)[#6.1] complete, success
+20220116.150724.392 CB(default)[#6] complete
+20220116.150724.393 Waiting for 5 events
+20220116.150724.567 Got 1 event
+20220116.150724.567 kbd_input: k=0 wch=105 
+20220116.150724.567 Key '<Key>i' (curses key 0x0, char code 0x69)
+20220116.150724.567 CB(default)[#7] started
+20220116.150724.567 CB(default)[#7.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.567 Macro[#7.2] IDLE -> RUNNING (fresh push)
+20220116.150724.567 kbd_input: k=-1 wch=0 
+20220116.150724.567 kbd_input: k == ERR, return
+20220116.150724.567 lazya_flush: 29 slots, 728 bytes
+20220116.150724.567 Macro[#7.2] RUNNING -> IDLE (about to resume)
+20220116.150724.567 Macro[#7.2] running
+20220116.150724.567 Macro[#7.2] IDLE -> RUNNING (executing)
+20220116.150724.567 Macro[#7.2] 'Key(U+0069)'
+20220116.150724.567 default -> Key("U+0069")
+20220116.150724.567  default -> Key(U+0069)
+20220116.150724.568 Macro[#7.2] complete, success
+20220116.150724.568 CB(default)[#7.1] RUNNING -> IDLE (about to resume)
+20220116.150724.568 CB(default)[#7.1] child task done, success
+20220116.150724.568 CB(default)[#7.1] complete, success
+20220116.150724.568 CB(default)[#7] complete
+20220116.150724.569 Waiting for 5 events
+20220116.150724.655 Got 1 event
+20220116.150724.655 kbd_input: k=0 wch=115 
+20220116.150724.655 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220116.150724.655 CB(default)[#8] started
+20220116.150724.655 CB(default)[#8.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.655 Macro[#8.2] IDLE -> RUNNING (fresh push)
+20220116.150724.655 kbd_input: k=-1 wch=0 
+20220116.150724.655 kbd_input: k == ERR, return
+20220116.150724.655 lazya_flush: 29 slots, 728 bytes
+20220116.150724.655 Macro[#8.2] RUNNING -> IDLE (about to resume)
+20220116.150724.655 Macro[#8.2] running
+20220116.150724.655 Macro[#8.2] IDLE -> RUNNING (executing)
+20220116.150724.655 Macro[#8.2] 'Key(U+0073)'
+20220116.150724.655 default -> Key("U+0073")
+20220116.150724.655  default -> Key(U+0073)
+20220116.150724.656 Macro[#8.2] complete, success
+20220116.150724.656 CB(default)[#8.1] RUNNING -> IDLE (about to resume)
+20220116.150724.656 CB(default)[#8.1] child task done, success
+20220116.150724.656 CB(default)[#8.1] complete, success
+20220116.150724.656 CB(default)[#8] complete
+20220116.150724.656 Waiting for 5 events
+20220116.150724.714 Got 1 event
+20220116.150724.714 kbd_input: k=0 wch=32 
+20220116.150724.714 Key 'space' (curses key 0x0, char code 0x20)
+20220116.150724.714 CB(default)[#9] started
+20220116.150724.714 CB(default)[#9.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.714 Macro[#9.2] IDLE -> RUNNING (fresh push)
+20220116.150724.714 kbd_input: k=-1 wch=0 
+20220116.150724.714 kbd_input: k == ERR, return
+20220116.150724.714 lazya_flush: 29 slots, 728 bytes
+20220116.150724.715 Macro[#9.2] RUNNING -> IDLE (about to resume)
+20220116.150724.715 Macro[#9.2] running
+20220116.150724.715 Macro[#9.2] IDLE -> RUNNING (executing)
+20220116.150724.715 Macro[#9.2] 'Key(U+0020)'
+20220116.150724.715 default -> Key("U+0020")
+20220116.150724.715  default -> Key(U+0020)
+20220116.150724.715 Macro[#9.2] complete, success
+20220116.150724.715 CB(default)[#9.1] RUNNING -> IDLE (about to resume)
+20220116.150724.715 CB(default)[#9.1] child task done, success
+20220116.150724.715 CB(default)[#9.1] complete, success
+20220116.150724.715 CB(default)[#9] complete
+20220116.150724.716 Waiting for 5 events
+20220116.150724.895 Got 1 event
+20220116.150724.895 kbd_input: k=0 wch=97 
+20220116.150724.895 Key '<Key>a' (curses key 0x0, char code 0x61)
+20220116.150724.895 CB(default)[#10] started
+20220116.150724.895 CB(default)[#10.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.895 Macro[#10.2] IDLE -> RUNNING (fresh push)
+20220116.150724.895 kbd_input: k=-1 wch=0 
+20220116.150724.895 kbd_input: k == ERR, return
+20220116.150724.895 lazya_flush: 29 slots, 696 bytes
+20220116.150724.896 Macro[#10.2] RUNNING -> IDLE (about to resume)
+20220116.150724.896 Macro[#10.2] running
+20220116.150724.896 Macro[#10.2] IDLE -> RUNNING (executing)
+20220116.150724.896 Macro[#10.2] 'Key(U+0061)'
+20220116.150724.896 default -> Key("U+0061")
+20220116.150724.896  default -> Key(U+0061)
+20220116.150724.896 Macro[#10.2] complete, success
+20220116.150724.896 CB(default)[#10.1] RUNNING -> IDLE (about to resume)
+20220116.150724.896 CB(default)[#10.1] child task done, success
+20220116.150724.896 CB(default)[#10.1] complete, success
+20220116.150724.896 CB(default)[#10] complete
+20220116.150724.897 Waiting for 5 events
+20220116.150724.911 Got 1 event
+20220116.150724.911 kbd_input: k=0 wch=32 
+20220116.150724.911 Key 'space' (curses key 0x0, char code 0x20)
+20220116.150724.911 CB(default)[#11] started
+20220116.150724.911 CB(default)[#11.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150724.911 Macro[#11.2] IDLE -> RUNNING (fresh push)
+20220116.150724.911 kbd_input: k=-1 wch=0 
+20220116.150724.911 kbd_input: k == ERR, return
+20220116.150724.911 lazya_flush: 29 slots, 760 bytes
+20220116.150724.911 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20220116.150724.911 Macro[#11.2] running
+20220116.150724.911 Macro[#11.2] IDLE -> RUNNING (executing)
+20220116.150724.911 Macro[#11.2] 'Key(U+0020)'
+20220116.150724.911 default -> Key("U+0020")
+20220116.150724.911  default -> Key(U+0020)
+20220116.150724.912 Macro[#11.2] complete, success
+20220116.150724.912 CB(default)[#11.1] RUNNING -> IDLE (about to resume)
+20220116.150724.912 CB(default)[#11.1] child task done, success
+20220116.150724.912 CB(default)[#11.1] complete, success
+20220116.150724.912 CB(default)[#11] complete
+20220116.150724.912 Waiting for 5 events
+20220116.150725.311 Got 1 event
+20220116.150725.311 kbd_input: k=0 wch=116 
+20220116.150725.311 Key '<Key>t' (curses key 0x0, char code 0x74)
+20220116.150725.311 CB(default)[#12] started
+20220116.150725.311 CB(default)[#12.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150725.311 Macro[#12.2] IDLE -> RUNNING (fresh push)
+20220116.150725.311 kbd_input: k=-1 wch=0 
+20220116.150725.311 kbd_input: k == ERR, return
+20220116.150725.311 lazya_flush: 29 slots, 744 bytes
+20220116.150725.311 Macro[#12.2] RUNNING -> IDLE (about to resume)
+20220116.150725.311 Macro[#12.2] running
+20220116.150725.311 Macro[#12.2] IDLE -> RUNNING (executing)
+20220116.150725.311 Macro[#12.2] 'Key(U+0074)'
+20220116.150725.311 default -> Key("U+0074")
+20220116.150725.311  default -> Key(U+0074)
+20220116.150725.312 Macro[#12.2] complete, success
+20220116.150725.312 CB(default)[#12.1] RUNNING -> IDLE (about to resume)
+20220116.150725.312 CB(default)[#12.1] child task done, success
+20220116.150725.312 CB(default)[#12.1] complete, success
+20220116.150725.312 CB(default)[#12] complete
+20220116.150725.312 Waiting for 5 events
+20220116.150725.455 Got 1 event
+20220116.150725.455 kbd_input: k=0 wch=101 
+20220116.150725.455 Key '<Key>e' (curses key 0x0, char code 0x65)
+20220116.150725.455 CB(default)[#13] started
+20220116.150725.455 CB(default)[#13.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150725.455 Macro[#13.2] IDLE -> RUNNING (fresh push)
+20220116.150725.455 kbd_input: k=-1 wch=0 
+20220116.150725.455 kbd_input: k == ERR, return
+20220116.150725.455 lazya_flush: 29 slots, 728 bytes
+20220116.150725.455 Macro[#13.2] RUNNING -> IDLE (about to resume)
+20220116.150725.455 Macro[#13.2] running
+20220116.150725.455 Macro[#13.2] IDLE -> RUNNING (executing)
+20220116.150725.455 Macro[#13.2] 'Key(U+0065)'
+20220116.150725.455 default -> Key("U+0065")
+20220116.150725.456  default -> Key(U+0065)
+20220116.150725.456 Macro[#13.2] complete, success
+20220116.150725.456 CB(default)[#13.1] RUNNING -> IDLE (about to resume)
+20220116.150725.456 CB(default)[#13.1] child task done, success
+20220116.150725.456 CB(default)[#13.1] complete, success
+20220116.150725.456 CB(default)[#13] complete
+20220116.150725.457 Waiting for 5 events
+20220116.150725.647 Got 1 event
+20220116.150725.647 kbd_input: k=0 wch=115 
+20220116.150725.647 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220116.150725.647 CB(default)[#14] started
+20220116.150725.647 CB(default)[#14.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150725.647 Macro[#14.2] IDLE -> RUNNING (fresh push)
+20220116.150725.647 kbd_input: k=-1 wch=0 
+20220116.150725.647 kbd_input: k == ERR, return
+20220116.150725.647 lazya_flush: 29 slots, 712 bytes
+20220116.150725.647 Macro[#14.2] RUNNING -> IDLE (about to resume)
+20220116.150725.647 Macro[#14.2] running
+20220116.150725.647 Macro[#14.2] IDLE -> RUNNING (executing)
+20220116.150725.647 Macro[#14.2] 'Key(U+0073)'
+20220116.150725.647 default -> Key("U+0073")
+20220116.150725.647  default -> Key(U+0073)
+20220116.150725.648 Macro[#14.2] complete, success
+20220116.150725.648 CB(default)[#14.1] RUNNING -> IDLE (about to resume)
+20220116.150725.648 CB(default)[#14.1] child task done, success
+20220116.150725.648 CB(default)[#14.1] complete, success
+20220116.150725.648 CB(default)[#14] complete
+20220116.150725.648 Waiting for 5 events
+20220116.150725.815 Got 1 event
+20220116.150725.815 kbd_input: k=0 wch=116 
+20220116.150725.815 Key '<Key>t' (curses key 0x0, char code 0x74)
+20220116.150725.815 CB(default)[#15] started
+20220116.150725.815 CB(default)[#15.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150725.815 Macro[#15.2] IDLE -> RUNNING (fresh push)
+20220116.150725.815 kbd_input: k=-1 wch=0 
+20220116.150725.815 kbd_input: k == ERR, return
+20220116.150725.815 lazya_flush: 29 slots, 728 bytes
+20220116.150725.815 Macro[#15.2] RUNNING -> IDLE (about to resume)
+20220116.150725.815 Macro[#15.2] running
+20220116.150725.815 Macro[#15.2] IDLE -> RUNNING (executing)
+20220116.150725.815 Macro[#15.2] 'Key(U+0074)'
+20220116.150725.815 default -> Key("U+0074")
+20220116.150725.815  default -> Key(U+0074)
+20220116.150725.816 Macro[#15.2] complete, success
+20220116.150725.816 CB(default)[#15.1] RUNNING -> IDLE (about to resume)
+20220116.150725.816 CB(default)[#15.1] child task done, success
+20220116.150725.816 CB(default)[#15.1] complete, success
+20220116.150725.816 CB(default)[#15] complete
+20220116.150725.816 Waiting for 5 events
+20220116.150726.095 Got 1 event
+20220116.150726.095 kbd_input: k=0 wch=46 
+20220116.150726.095 Key '<Key>.' (curses key 0x0, char code 0x2e)
+20220116.150726.095 CB(default)[#16] started
+20220116.150726.095 CB(default)[#16.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150726.095 Macro[#16.2] IDLE -> RUNNING (fresh push)
+20220116.150726.095 kbd_input: k=-1 wch=0 
+20220116.150726.095 kbd_input: k == ERR, return
+20220116.150726.095 lazya_flush: 29 slots, 744 bytes
+20220116.150726.095 Macro[#16.2] RUNNING -> IDLE (about to resume)
+20220116.150726.095 Macro[#16.2] running
+20220116.150726.095 Macro[#16.2] IDLE -> RUNNING (executing)
+20220116.150726.095 Macro[#16.2] 'Key(U+002e)'
+20220116.150726.095 default -> Key("U+002e")
+20220116.150726.095  default -> Key(U+002e)
+20220116.150726.096 Macro[#16.2] complete, success
+20220116.150726.096 CB(default)[#16.1] RUNNING -> IDLE (about to resume)
+20220116.150726.096 CB(default)[#16.1] child task done, success
+20220116.150726.096 CB(default)[#16.1] complete, success
+20220116.150726.096 CB(default)[#16] complete
+20220116.150726.097 Waiting for 5 events
+20220116.150726.239 Got 1 event
+20220116.150726.239 kbd_input: k=0 wch=32 
+20220116.150726.239 Key 'space' (curses key 0x0, char code 0x20)
+20220116.150726.239 CB(default)[#17] started
+20220116.150726.239 CB(default)[#17.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150726.239 Macro[#17.2] IDLE -> RUNNING (fresh push)
+20220116.150726.239 kbd_input: k=-1 wch=0 
+20220116.150726.239 kbd_input: k == ERR, return
+20220116.150726.239 lazya_flush: 29 slots, 744 bytes
+20220116.150726.239 Macro[#17.2] RUNNING -> IDLE (about to resume)
+20220116.150726.239 Macro[#17.2] running
+20220116.150726.239 Macro[#17.2] IDLE -> RUNNING (executing)
+20220116.150726.239 Macro[#17.2] 'Key(U+0020)'
+20220116.150726.239 default -> Key("U+0020")
+20220116.150726.239  default -> Key(U+0020)
+20220116.150726.240 Macro[#17.2] complete, success
+20220116.150726.240 CB(default)[#17.1] RUNNING -> IDLE (about to resume)
+20220116.150726.240 CB(default)[#17.1] child task done, success
+20220116.150726.240 CB(default)[#17.1] complete, success
+20220116.150726.240 CB(default)[#17] complete
+20220116.150726.241 Waiting for 5 events
+20220116.150727.823 Got 1 event
+20220116.150727.823 kbd_input: k=0 wch=33 
+20220116.150727.823 Key '<Key>!' (curses key 0x0, char code 0x21)
+20220116.150727.823 CB(default)[#18] started
+20220116.150727.823 CB(default)[#18.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150727.823 Macro[#18.2] IDLE -> RUNNING (fresh push)
+20220116.150727.823 kbd_input: k=-1 wch=0 
+20220116.150727.823 kbd_input: k == ERR, return
+20220116.150727.823 lazya_flush: 29 slots, 728 bytes
+20220116.150727.823 Macro[#18.2] RUNNING -> IDLE (about to resume)
+20220116.150727.823 Macro[#18.2] running
+20220116.150727.823 Macro[#18.2] IDLE -> RUNNING (executing)
+20220116.150727.823 Macro[#18.2] 'Key(U+0021)'
+20220116.150727.823 default -> Key("U+0021")
+20220116.150727.823  default -> Key(U+0021)
+20220116.150727.824 Macro[#18.2] complete, success
+20220116.150727.824 CB(default)[#18.1] RUNNING -> IDLE (about to resume)
+20220116.150727.824 CB(default)[#18.1] child task done, success
+20220116.150727.824 CB(default)[#18.1] complete, success
+20220116.150727.824 CB(default)[#18] complete
+20220116.150727.824 Waiting for 5 events
+20220116.150729.863 Got 1 event
+20220116.150729.863 kbd_input: k=0 wch=45 
+20220116.150729.863 Key '<Key>-' (curses key 0x0, char code 0x2d)
+20220116.150729.863 CB(default)[#19] started
+20220116.150729.863 CB(default)[#19.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150729.863 Macro[#19.2] IDLE -> RUNNING (fresh push)
+20220116.150729.863 kbd_input: k=-1 wch=0 
+20220116.150729.863 kbd_input: k == ERR, return
+20220116.150729.863 lazya_flush: 29 slots, 712 bytes
+20220116.150729.864 Macro[#19.2] RUNNING -> IDLE (about to resume)
+20220116.150729.864 Macro[#19.2] running
+20220116.150729.864 Macro[#19.2] IDLE -> RUNNING (executing)
+20220116.150729.864 Macro[#19.2] 'Key(U+002d)'
+20220116.150729.864 default -> Key("U+002d")
+20220116.150729.864  default -> Key(U+002d)
+20220116.150729.864 Macro[#19.2] complete, success
+20220116.150729.864 CB(default)[#19.1] RUNNING -> IDLE (about to resume)
+20220116.150729.864 CB(default)[#19.1] child task done, success
+20220116.150729.864 CB(default)[#19.1] complete, success
+20220116.150729.864 CB(default)[#19] complete
+20220116.150729.865 Waiting for 5 events
+20220116.150732.040 Got 1 event
+20220116.150732.040 kbd_input: k=0 wch=91 
+20220116.150732.040 Key '<Key>[' (curses key 0x0, char code 0x5b)
+20220116.150732.040 CB(default)[#20] started
+20220116.150732.040 CB(default)[#20.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150732.040 Macro[#20.2] IDLE -> RUNNING (fresh push)
+20220116.150732.040 kbd_input: k=-1 wch=0 
+20220116.150732.040 kbd_input: k == ERR, return
+20220116.150732.040 lazya_flush: 29 slots, 744 bytes
+20220116.150732.041 Macro[#20.2] RUNNING -> IDLE (about to resume)
+20220116.150732.041 Macro[#20.2] running
+20220116.150732.041 Macro[#20.2] IDLE -> RUNNING (executing)
+20220116.150732.041 Macro[#20.2] 'Key(U+005b)'
+20220116.150732.041 default -> Key("U+005b")
+20220116.150732.041  default -> Key(U+005b)
+20220116.150732.041 Macro[#20.2] complete, success
+20220116.150732.042 CB(default)[#20.1] RUNNING -> IDLE (about to resume)
+20220116.150732.042 CB(default)[#20.1] child task done, success
+20220116.150732.042 CB(default)[#20.1] complete, success
+20220116.150732.042 CB(default)[#20] complete
+20220116.150732.042 Waiting for 5 events
+20220116.150732.200 Got 1 event
+20220116.150732.200 kbd_input: k=0 wch=93 
+20220116.150732.200 Key '<Key>]' (curses key 0x0, char code 0x5d)
+20220116.150732.200 CB(default)[#21] started
+20220116.150732.200 CB(default)[#21.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150732.200 Macro[#21.2] IDLE -> RUNNING (fresh push)
+20220116.150732.200 kbd_input: k=-1 wch=0 
+20220116.150732.200 kbd_input: k == ERR, return
+20220116.150732.200 lazya_flush: 29 slots, 744 bytes
+20220116.150732.201 Macro[#21.2] RUNNING -> IDLE (about to resume)
+20220116.150732.201 Macro[#21.2] running
+20220116.150732.201 Macro[#21.2] IDLE -> RUNNING (executing)
+20220116.150732.201 Macro[#21.2] 'Key(U+005d)'
+20220116.150732.201 default -> Key("U+005d")
+20220116.150732.201  default -> Key(U+005d)
+20220116.150732.202 Macro[#21.2] complete, success
+20220116.150732.202 CB(default)[#21.1] RUNNING -> IDLE (about to resume)
+20220116.150732.202 CB(default)[#21.1] child task done, success
+20220116.150732.202 CB(default)[#21.1] complete, success
+20220116.150732.202 CB(default)[#21] complete
+20220116.150732.202 Waiting for 5 events
+20220116.150734.127 Got 1 event
+20220116.150734.127 kbd_input: k=0 wch=13 
+20220116.150734.127 Key 'Return' (curses key 0x0, char code 0xd)
+20220116.150734.127 CB(default)[#22] started
+20220116.150734.127 CB(default)[#22.1] IDLE -> RUNNING (child task to be pushed next)
+20220116.150734.127 Macro[#22.2] IDLE -> RUNNING (fresh push)
+20220116.150734.127 kbd_input: k=-1 wch=0 
+20220116.150734.127 kbd_input: k == ERR, return
+20220116.150734.127 lazya_flush: 29 slots, 728 bytes
+20220116.150734.128 Macro[#22.2] RUNNING -> IDLE (about to resume)
+20220116.150734.128 Macro[#22.2] running
+20220116.150734.128 Macro[#22.2] IDLE -> RUNNING (executing)
+20220116.150734.128 Macro[#22.2] 'Key(U+000d)'
+20220116.150734.128 default -> Key("U+000d")
+20220116.150734.128  default -> Key(U+000d)
+20220116.150734.128 > T h i s   i s   a   t e s t .   ! - [ ] ^M ^J
+> 0x0   54686973206973206120746573742e20212d5b5d0d0a
+20220116.150734.128 Macro[#22.2] complete, success
+20220116.150734.128 CB(default)[#22.1] RUNNING -> IDLE (about to resume)
+20220116.150734.128 CB(default)[#22.1] child task done, success
+20220116.150734.128 CB(default)[#22.1] complete, success
+20220116.150734.128 CB(default)[#22] complete
+20220116.150734.129 Waiting for 5 events
+20220116.150734.129 Got 1 event
+20220116.150734.129 Reading host socket
+20220116.150734.129 Host socket read complete nr=36
+< 0x0   496e76616c696420535348206964656e74696669636174696f6e20737472696e
+< 0x20  672e0d0a
+20220116.150734.129 <.. Invalid SSH identification string.^M^J
+20220116.150734.129 lazya_flush: 24 slots, 576 bytes
+20220116.150734.129 Waiting for 5 events
+20220116.150734.129 Got 1 event
+20220116.150734.129 Reading host socket
+20220116.150734.129 Host socket read complete nr=0
+20220116.150734.129 RCVD disconnect
+20220116.150734.129 st_changed(secure,false)
+20220116.150734.130 SENT disconnect
+20220116.150734.130 cstate [connected-nvt] -> [not-connected] (net_disconnect)
+20220116.150734.130 st_changed(connect,false)
+20220116.150734.130 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220116.150734.130 Exiting with status 0
+20220116.150734.130 st_changed(exiting,true)
+20220116.150734.130 stop pager
+20220116.150734.130 Trace stopped
