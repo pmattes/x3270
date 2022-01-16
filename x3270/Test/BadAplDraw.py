@@ -57,8 +57,11 @@ class TestX3270BadAplDraw(unittest.TestCase):
             "x3270/Test/badapl.trc"], stdin=PIPE, stdout=DEVNULL)
         TestCommon.check_listen(9961)
 
-
         # Start x3270.
+        if 'DISPLAY' in os.environ:
+            d = os.environ['DISPLAY']
+        else:
+            d = None
         os.environ['DISPLAY'] = ':2'
         x3270 = Popen(['x3270', '-efont', 'fixed',
             '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
@@ -97,6 +100,10 @@ class TestX3270BadAplDraw(unittest.TestCase):
         # Make sure the image is correct.
         self.assertTrue(filecmp.cmp(name, 'x3270/Test/badapl.xwd'))
         os.unlink(name)
+
+        # Restore DISPLAY.
+        if d != None:
+            os.environ['DISPLAY'] = d
 
 if __name__ == '__main__':
     unittest.main()

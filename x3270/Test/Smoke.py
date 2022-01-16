@@ -56,6 +56,10 @@ class TestX3270Smoke(unittest.TestCase):
         TestCommon.check_listen(9998)
 
         # Set up the fonts.
+        if 'DISPLAY' in os.environ:
+            d = os.environ['DISPLAY']
+        else:
+            d = None
         os.environ['DISPLAY'] = ':2'
         self.assertEqual(0, os.system(f'mkfontdir {os.environ["OBJ"]}/x3270'))
         self.assertEqual(0, os.system(f'xset fp+ {os.environ["OBJ"]}/x3270/'))
@@ -97,6 +101,10 @@ class TestX3270Smoke(unittest.TestCase):
         # Make sure the image is correct.
         self.assertTrue(filecmp.cmp(name, 'x3270/Test/ibmlink.xwd'))
         os.unlink(name)
+
+        # Restore DISPLAY.
+        if d != None:
+            os.environ['DISPLAY'] = d
 
 if __name__ == '__main__':
     unittest.main()
