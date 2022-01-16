@@ -35,7 +35,6 @@ import sys
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
     start = time.monotonic_ns()

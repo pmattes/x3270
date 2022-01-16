@@ -34,6 +34,7 @@ import os
 import stat
 import tempfile
 import filecmp
+import requests
 import TestCommon
 
 class TestX3270BadAplDraw(unittest.TestCase):
@@ -70,10 +71,15 @@ class TestX3270BadAplDraw(unittest.TestCase):
         TestCommon.check_listen(9960)
 
         # Feed x3270 some data.
-        playback.stdin.write(b's\ns\ns\ns\ns\n')
+        playback.stdin.write(b's\ns\ns\ns\n')
         playback.stdin.flush()
-        # This needs to happen differently.
-        # TestCommon.check_push(playback, 9960, 1)
+
+        def is_ready():
+            r = requests.get('http://127.0.0.1:9960/3270/rest/json/Query(statsRx)')
+            return r.json()['result'][0] == 'bytes 77'
+
+        # Wait for the data to be processed.
+        TestCommon.try_until(is_ready, 2, "NVT data was not processed")
 
         # Find x3270's window ID.
         widcmd = subprocess.run('xlsclients -l', shell=True,
