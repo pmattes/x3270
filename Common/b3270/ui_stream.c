@@ -317,6 +317,7 @@ uix_vobject3(bool leaf, const char *name, va_list ap)
 	    uprintf(" %s=\"%"PRId64"\"", tag, va_arg(ap, int64_t));
 	    break;
 	case AT_SKIP_INT:
+	    (void) va_arg(ap, int64_t);
 	    break;
 	case AT_DOUBLE:
 	    uprintf(" %s=\"%g\"", tag, va_arg(ap, double));
@@ -325,6 +326,7 @@ uix_vobject3(bool leaf, const char *name, va_list ap)
 	    uprintf(" %s=\"%s\"", tag, ValTrueFalse(va_arg(ap, int)));
 	    break;
 	case AT_SKIP_BOOLEAN:
+	    (void) va_arg(ap, int);
 	    break;
 	case AT_NODE:
 	    assert(false);
@@ -364,15 +366,19 @@ ui_leaf(const char *name, ...)
 		ui_add_element(tag, type, va_arg(ap, const char *));
 		break;
 	    case AT_INT:
-	    case AT_SKIP_INT:
 		ui_add_element(tag, type, va_arg(ap, int64_t));
+		break;
+	    case AT_SKIP_INT:
+		(void) va_arg(ap, int64_t);
 		break;
 	    case AT_DOUBLE:
 		ui_add_element(tag, type, va_arg(ap, double));
 		break;
 	    case AT_BOOLEAN:
-	    case AT_SKIP_BOOLEAN:
 		ui_add_element(tag, type, va_arg(ap, int));
+		break;
+	    case AT_SKIP_BOOLEAN:
+		(void) va_arg(ap, int);
 		break;
 	    case AT_NODE:
 		ui_add_element(tag, type, va_arg(ap, json_t *));
@@ -476,6 +482,7 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	    uprintf(" %s=\"%"PRId64"\"", tag, va_arg(ap, int64_t));
 	    break;
 	case AT_SKIP_INT:
+	    (void) va_arg(ap, int64_t);
 	    break;
 	case AT_DOUBLE:
 	    uprintf(" %s=\"%g\"", tag, va_arg(ap, double));
@@ -484,6 +491,7 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	    uprintf(" %s=\"%s\"", tag, ValTrueFalse(va_arg(ap, int)));
 	    break;
 	case AT_SKIP_BOOLEAN:
+	    (void) va_arg(ap, int);
 	    break;
 	case AT_NODE:
 	    assert(false);
@@ -493,6 +501,7 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
     } else {
 	json_t *j;
 	assert(uij.container != NULL);
+	bool add = true;
 
 	va_start(ap, attr);
 	switch (attr) {
@@ -508,8 +517,9 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	    j = json_integer(va_arg(ap, int64_t));
 	    break;
 	case AT_SKIP_INT:
-	    va_end(ap);
-	    return;
+	    (void) va_arg(ap, int64_t);
+	    add = false;
+	    break;
 	case AT_DOUBLE:
 	    j = json_double(va_arg(ap, double));
 	    break;
@@ -517,8 +527,9 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	    j = json_boolean(va_arg(ap, int));
 	    break;
 	case AT_SKIP_BOOLEAN:
-	    va_end(ap);
-	    return;
+	    (void) va_arg(ap, int);
+	    add = false;
+	    break;
 	case AT_NODE:
 	    j = va_arg(ap, json_t *);
 	    if (j == NULL) {
@@ -528,7 +539,9 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	}
 
 	va_end(ap);
-	uij_add_to_parent(tag, j);
+	if (add) {
+	    uij_add_to_parent(tag, j);
+	}
     }
 }
 
@@ -687,8 +700,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 		XML_MODE? AT_STRING: AT_NODE,
 		XML_MODE? uia->xresult: (char *)uia->jresult,
 	    AttrAbort, abort? AT_BOOLEAN: AT_SKIP_BOOLEAN, abort,
-	    AttrTime, AT_STRING,
-		lazyaf("%ld.%03ld", msec / 1000L, msec % 1000L),
+	    AttrTime, AT_DOUBLE, (double)msec / 1000.0,
 	    NULL);
     if (XML_MODE) {
 	Replace(uia->xresult, NULL);
