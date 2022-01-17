@@ -88,15 +88,14 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         playback.stdin.flush()
 
         # Get the result.
+        s3270.stdin.write(b'Quit()\n')
         out = s3270.communicate(timeout=2)
 
         # Wait for the processes to exit.
         playback.stdin.close()
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
-        s3270.stdin.close()
-        rc = s3270.wait(timeout=2)
-        self.assertEqual(rc, 0)
+        s3270.wait(timeout=2)
 
         # Check.
         # There should be nothing on stdout, but something on stderr.
