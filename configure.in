@@ -262,7 +262,7 @@ if test "x$enable_unix_lib" = xyes; then
     T_LIB_CLOBBER="$T_LIB_CLOBBER unix-lib-clobber"
     T_UNIX_CLEAN="$T_UNIX_CLEAN unix-lib-clean"
     T_UNIX_CLOBBER="$T_UNIX_CLOBBER unix-lib-clobber"
-    T_ALLTESTS="$T_ALLTESTS unix-lib-tests"
+    T_ALLTESTS="$T_ALLTESTS unix-lib-test"
 fi
 
 if test "x$enable_windows_lib" = xyes; then

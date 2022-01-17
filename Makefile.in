@@ -29,9 +29,11 @@
 all: @T_ALL@
 
 # Cleverness for 'make targets':
+#  UNIX is true if there is at least one Unix target
 #  MIXED is true if there is at least one Unix target and at least one Windows
 #   target
 #  M1 is true if there is more than one target
+UNIX := $(shell (echo @T_ALL@ | grep -q '\<[^w]') && echo true)
 MIXED := $(shell (echo @T_ALL@ | grep -q '\<[^w]') && (echo @T_ALL@ | grep -q '\<[w]') && echo true)
 M1 := $(shell test `echo @T_ALL@ | wc -w` -gt 1 && echo true)
 
@@ -79,8 +81,14 @@ endif
 ifdef M1
 	@echo "  <program>-clobber   remove <program> derived files"
 endif
+ifdef UNIX
 	@echo " test                 run unit and integration tests"
-	@echo " smoketest            run smoke tests"
+	@echo "  smoketest           run smoke tests"
+	@echo "  unix-lib-test       run Unix library tests"
+ifdef M1
+	@echo "  <program>-test      run <program> tests"
+endif
+endif
 
 # Library ependencies.
 c3270 s3270 b3270 tcl3270 x3270 pr3287: unix-lib
@@ -375,10 +383,9 @@ wx3270if-clobber-32:
 wx3270if-clobber-64:
 	cd wx3270if && $(MAKE) clobber WIN64=1
 
-unix-lib-tests: lib3270 lib32xx
+unix-lib-test: lib3270 lib32xx
 	cd lib/3270 && $(MAKE) -f Makefile.test
 	cd lib/32xx && $(MAKE) -f Makefile.test
-
 
 PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && echo -n " $$i/Test/*.py"; done)
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && echo -n " $$i/Test/Smoke.py "; done)
