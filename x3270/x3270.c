@@ -1312,6 +1312,7 @@ copy_xres_to_res_bool(void)
 
     copy_bool(once);
     copy_bool(scripted);
+    copy_bool(scripted_always);
     copy_bool(modified_sel);
     copy_bool(unlock_delay);
     copy_bool(bind_limit);

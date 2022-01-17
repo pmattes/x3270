@@ -843,7 +843,8 @@ peer_script_init(void)
 	appres.scripted = false;
     }
 
-    if (!appres.scripted || appres.scripting.callback != NULL) {
+    if ((!appres.scripted || appres.scripting.callback != NULL)
+	    && !appres.scripted_always) {
 	return;
     }
 

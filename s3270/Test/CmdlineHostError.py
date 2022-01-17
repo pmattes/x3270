@@ -70,21 +70,30 @@ class TestS3270CmdLineHostError(unittest.TestCase):
     def test_s3270_cmdline_host_negotiation_error(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = TestCommon.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(port),
+        playback_port, ts = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(playback_port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
-        socket.close()
+        TestCommon.check_listen(playback_port)
+        ts.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            f"127.0.0.1:{port}"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        s3270_port, ts = TestCommon.unused_port()
+        s3270 = Popen(['s3270', '-trace',
+            '-xrm', 's3270.contentionResolution: false',
+            '-xrm', 's3270.scriptedAlways: true',
+            '-httpd', f'127.0.0.1:{s3270_port}',
+            f'127.0.0.1:{playback_port}'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.children.append(s3270)
+        TestCommon.check_listen(s3270_port)
+        ts.close()
 
         # Start negotation, but break the connection before drawing the
         # screen.
-        playback.stdin.write(b'r\nd\n')
+        playback.stdin.write(b'r\n')
+        playback.stdin.flush()
+        TestCommon.check_push(playback, s3270_port, 1)
+        playback.stdin.write(b'd\n')
         playback.stdin.flush()
 
         # Get the result.
@@ -94,12 +103,13 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         # Wait for the processes to exit.
         playback.stdin.close()
         rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
-        s3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+        rc = s3270.wait(timeout=2)
+        self.assertEqual(0, rc)
 
         # Check.
         # There should be nothing on stdout, but something on stderr.
-        self.assertEqual(b'', out[0])
+        self.assertTrue(out[0].startswith(b'L U U N N 4 43 80 0 0 0x0 '))
         self.assertEqual(b'Wait(): Host disconnected\n', out[1])
 
 if __name__ == '__main__':

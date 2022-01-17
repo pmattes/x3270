@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015-2016, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015-2016, 2018, 2020, 2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -107,6 +107,7 @@ typedef struct {
 	Boolean nvt_mode;
 	Boolean script_port_once;
 	Boolean utf8;
+	Boolean scripted_always;
 	struct {
 	    Boolean mono;
 	    Boolean menubar;

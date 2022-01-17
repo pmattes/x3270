@@ -62,6 +62,7 @@ typedef struct {
     bool	 script_port_once;
     bool	 bind_unlock;
     bool	 contention_resolution;
+    bool	 scripted_always;
     char	*script_port;
     char	*httpd_port;
     char	*dbcs_cgcsgid;

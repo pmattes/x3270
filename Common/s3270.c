@@ -325,7 +325,8 @@ s3270_register(void)
 	{ ResCallback, aoffset(scripting.callback), XRM_STRING },
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
-	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING }
+	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
+	{ ResScriptedAlways,aoffset(scripted_always),XRM_BOOLEAN },
     };
     static xres_t s3270_xresources[] = {
 	{ ResPrintTextScreensPerPage,	V_FLAT },
