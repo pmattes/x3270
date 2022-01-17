@@ -34,20 +34,35 @@ import TestCommon
 
 class TestB3270Json(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # b3270 NVT XML smoke test
     def test_b3270_nvt_xml_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", "9991"],
+        port, ts = TestCommon.unused_port()
+        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", str(port)],
                 stdout=PIPE)
-        TestCommon.check_listen(9991)
+        self.children.append(nc)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start b3270.
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(b3270)
 
         # Feed b3270 some actions.
         top = ET.Element('b3270-in')
-        ET.SubElement(top, 'run', { 'actions': 'Open(a:c:t:127.0.0.1:9991) String(abc) Enter() Disconnect()' })
+        ET.SubElement(top, 'run', { 'actions': f'Open(a:c:t:127.0.0.1:{port}) String(abc) Enter() Disconnect()' })
         *first, _, _ = TestCommon.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
@@ -66,6 +81,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_xml_single(self):
 
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
@@ -91,6 +107,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_xml_multiple(self):
 
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
 
         # Feed b3270 two actions, which it will run concurrently and complete
         # in reverse order.
@@ -125,6 +142,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_xml_semantic_error(self):
 
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
@@ -153,6 +171,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_xml_syntax_error(self):
 
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
 
         # Feed b3270 junk.
         top = ET.Element('b3270-in')

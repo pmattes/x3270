@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,19 +35,34 @@ import TestCommon
 
 class TestPr3287Smoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # pr3287 smoke test
     def test_pr3287_smoke(self):
 
         # Start 'playback' to feed data to pr3287.
-        playback = Popen(["playback", "-w", "-p", "9998",
+        port, ts = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(port),
             "pr3287/Test/smoke.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9998)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start pr3287.
         (po_handle, po_name) = tempfile.mkstemp()
         (sy_handle, sy_name) = tempfile.mkstemp()
         pr3287 = Popen(["pr3287", "-command",
-            f"cat >'{po_name}'; date >'{sy_name}'", "127.0.0.1:9998"])
+            f"cat >'{po_name}'; date >'{sy_name}'", f"127.0.0.1:{port}"])
+        self.children.append(pr3287)
 
         # Play the trace to pr3287.
         playback.stdin.write(b'm\n')

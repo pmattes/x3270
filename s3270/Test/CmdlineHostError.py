@@ -35,12 +35,24 @@ import TestCommon
 
 class TestS3270CmdLineHostError(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # s3270 command-line host connect failure test.
     def test_s3270_cmdline_host_connect_error(self):
 
         # Start s3270.
         s3270 = Popen(['s3270', '127.0.0.0:22'], stdin=DEVNULL, stdout=PIPE,
                 stderr=PIPE)
+        self.children.append(s3270)
 
         # Get the result.
         out = s3270.communicate(timeout=2)
@@ -58,13 +70,17 @@ class TestS3270CmdLineHostError(unittest.TestCase):
     def test_s3270_cmdline_host_negotiation_error(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-w", "-p", "9970",
+        port, socket = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9970)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        socket.close()
 
         # Start s3270.
         s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            "127.0.0.1:9970"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            f"127.0.0.1:{port}"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.children.append(s3270)
 
         # Start negotation, but break the connection before drawing the
         # screen.

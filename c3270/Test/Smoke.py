@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,31 +38,49 @@ import TestCommon
 
 class TestC3270Smoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # c3270 3270 smoke test
     def test_c3270_3270_smoke(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-w", "-p", "9998",
+        playback_port, ts = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(playback_port),
             "c3270/Test/ibmlink2.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9998)
+        self.children.append(playback)
+        TestCommon.check_listen(playback_port)
+        ts.close()
 
         # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = TestCommon.unused_port()
         os.environ['TERM'] = 'xterm-256color'
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
+            ts.close()
             os.execlp("c3270", "c3270", "-model", "2", "-utf8",
-                "-httpd", "127.0.0.1:9999", "127.0.0.1:9998")
+                "-httpd", f"127.0.0.1:{c3270_port}",
+                f"127.0.0.1:{playback_port}")
 
         # Parent process.
         
         # Make sure c3270 started.
-        TestCommon.check_listen(9999)
+        TestCommon.check_listen(c3270_port)
+        ts.close()
 
         # Write the stream to c3270.
         playback.stdin.write(b'r\nr\nr\nr\nr\n')
         playback.stdin.flush()
-        TestCommon.check_push(playback, 9999, 1)
+        TestCommon.check_push(playback, c3270_port, 1)
         playback.stdin.write(b'e\n')
         playback.stdin.flush()
 

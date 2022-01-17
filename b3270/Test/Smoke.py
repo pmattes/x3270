@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,20 +33,35 @@ import TestCommon
 
 class TestB3270Smoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # b3270 NVT smoke test
     def test_b3270_nvt_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", "9999"],
+        port, ts = TestCommon.unused_port()
+        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", str(port)],
                 stdout=PIPE)
-        TestCommon.check_listen(9999)
+        self.children.append(nc)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start b3270.
         b3270 = Popen(["b3270"], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(b3270)
 
         # Feed b3270 some actions.
         b3270.stdin.write(b"<b3270-in>\n")
-        b3270.stdin.write(b'<run actions="Open(a:c:t:127.0.0.1:9999) String(abc) Enter() Disconnect()"/>\n')
+        b3270.stdin.write(b'<run actions="Open(a:c:t:127.0.0.1:' + str(port).encode('utf8') + b') String(abc) Enter() Disconnect()"/>\n')
         b3270.stdin.flush()
 
         # Make sure they are passed through.

@@ -33,16 +33,32 @@ import TestCommon
 
 class TestX3270ifSmoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # x3270if smoke test
     def test_x3270if_smoke(self):
 
         # Start a copy of s3270 to talk to.
-        s3270 = Popen(["s3270", "-scriptport", "127.0.0.1:8888"],
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
                 stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Run x3270if with a trivial query.
-        x3270if = Popen(["x3270if", "-t", "8888", "Set(startTls)"],
+        x3270if = Popen(["x3270if", "-t", str(port), "Set(startTls)"],
                 stdout=PIPE)
+        self.children.append(x3270if)
 
         # Decode the result.
         stdout = x3270if.communicate()[0].decode('utf8')

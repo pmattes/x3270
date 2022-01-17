@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,32 @@ import TestCommon
 
 class TestS3270Bid(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # s3270 BID test
     def test_s3270_bid(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9998",
+        port, socket = TestCommon.unused_port()
+        playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/bid.trc"], stdout=DEVNULL)
-        TestCommon.check_listen(9998)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "127.0.0.1:9998"], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(["s3270", f"127.0.0.1:{port}"], stdin=PIPE,
+                stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"PF(3)\n")
@@ -60,13 +76,17 @@ class TestS3270Bid(unittest.TestCase):
     def test_s3270_no_bid(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9997",
+        port, socket = TestCommon.unused_port()
+        playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/no_bid.trc"], stdout=DEVNULL)
-        TestCommon.check_listen(9997)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        socket.close()
 
         # Start s3270.
         s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            "127.0.0.1:9997"], stdin=PIPE, stdout=DEVNULL)
+            f"127.0.0.1:{port}"], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"PF(3)\n")

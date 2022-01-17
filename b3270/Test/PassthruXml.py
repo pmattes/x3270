@@ -35,11 +35,22 @@ import TestCommon
 
 class TestB3270PassthruXml(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # b3270 passthru XML test
-    #@unittest.skip('always')
     def test_b3270_passthru_xml(self):
 
         b3270 = Popen(['b3270', '-trace'], stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
 
         # Get the initial dump.
         while True:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,18 +38,33 @@ import TestCommon
 
 class TestNewWait(unittest.TestCase):
 
-    def new_wait(self, port, initial_eors, second_actions, wait_params):
-        popen_port = port
-        s3270_port = port + 1
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
+    def new_wait(self, initial_eors, second_actions, wait_params):
 
         # Start 'playback' to drive s3270.
+        popen_port, popen_ts = TestCommon.unused_port()
         playback = Popen(["playback", "-w", "-p", str(popen_port),
             "s3270/Test/ibmlink_help.trc"], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(playback)
         TestCommon.check_listen(popen_port)
+        popen_ts.close()
 
         # Start s3270 with a webserver.
+        s3270_port, s3270_ts = TestCommon.unused_port()
         s3270 = Popen(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{popen_port}"])
+        self.children.append(s3270)
         TestCommon.check_listen(s3270_port)
+        s3270_ts.close()
 
         # Step until the login screen is visible.
         for i in range(initial_eors):
@@ -86,78 +101,91 @@ class TestNewWait(unittest.TestCase):
 
     # Generic flavor of CursorAt test.
     def test_cursor_at(self):
-        self.new_wait(10003, 4, ['Up()'], 'CursorAt,21,13')
+        self.new_wait(4, ['Up()'], 'CursorAt,21,13')
     def test_cursor_at_offset(self):
-        self.new_wait(10001, 4, ['Up()'], 'CursorAt,1612')
+        self.new_wait(4, ['Up()'], 'CursorAt,1612')
 
     # Generic flavor of StringAt test.
     def test_string_at(self):
-        self.new_wait(9999, 4, ['String("xxx")'], 'StringAt,21,13,"__"')
+        self.new_wait(4, ['String("xxx")'], 'StringAt,21,13,"__"')
     def test_string_at_offset(self):
-        self.new_wait(9997, 4, ['String("xxx")'], 'StringAt,1612,"__"')
+        self.new_wait(4, ['String("xxx")'], 'StringAt,1612,"__"')
 
     # Generic flavor of InputFieldAt test.
     def test_input_field_at(self):
-        self.new_wait(9995, 6, [], 'InputFieldAt,21,13')
+        self.new_wait(6, [], 'InputFieldAt,21,13')
     def test_input_field_at_offset(self):
-        self.new_wait(9993, 6, [], 'InputFieldAt,1612')
+        self.new_wait(6, [], 'InputFieldAt,1612')
 
     # Simple negative test framework.
-    def simple_negative_test(self, action, message):
+    def simple_negative_test(self, port, action, message):
         # Send the action to s3270.
-        r = requests.get(f"http://127.0.0.1:9992/3270/rest/json/{action}")
+        r = requests.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}")
         self.assertEqual(r.status_code, requests.codes.bad)
         self.assertTrue(message in r.json()['result'][0])
 
     # Some basic negative tests.
     def test_simple_negatives(self):
-        # Syntax tests.
-        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:9992"])
-        TestCommon.check_listen(9992)
+
+        # Start s3270.
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:" + str(port)])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Syntax tests.
-        self.simple_negative_test('Wait(CursorAt)', 'requires')
-        self.simple_negative_test('Wait(CursorAt,1,2,3)', 'requires')
-        self.simple_negative_test('Wait(CursorAt,fred,joe)', 'Invalid')
-        self.simple_negative_test('Wait(CursorAt,9999999)', 'Invalid')
-        self.simple_negative_test('Wait(CursorAt,300,300)', 'Invalid')
-        self.simple_negative_test('Wait(StringAt)', 'requires')
-        self.simple_negative_test('Wait(StringAt,1,2,3,4)', 'requires')
-        self.simple_negative_test('Wait(InputFieldAt)', 'requires')
-        self.simple_negative_test('Wait(InputFieldAt,1,2,3)', 'requires')
+        self.simple_negative_test(port, 'Wait(CursorAt)', 'requires')
+        self.simple_negative_test(port, 'Wait(CursorAt,1,2,3)', 'requires')
+        self.simple_negative_test(port, 'Wait(CursorAt,fred,joe)', 'Invalid')
+        self.simple_negative_test(port, 'Wait(CursorAt,9999999)', 'Invalid')
+        self.simple_negative_test(port, 'Wait(CursorAt,300,300)', 'Invalid')
+        self.simple_negative_test(port, 'Wait(StringAt)', 'requires')
+        self.simple_negative_test(port, 'Wait(StringAt,1,2,3,4)', 'requires')
+        self.simple_negative_test(port, 'Wait(InputFieldAt)', 'requires')
+        self.simple_negative_test(port, 'Wait(InputFieldAt,1,2,3)', 'requires')
 
         # Not-connected tests.
-        self.simple_negative_test('Wait(CursorAt,0,0)', 'connected')
-        self.simple_negative_test('Wait(StringAt,0,0,"Hello")', 'connected')
-        self.simple_negative_test('Wait(InputFieldAt,0,0)', 'connected')
+        self.simple_negative_test(port, 'Wait(CursorAt,0,0)', 'connected')
+        self.simple_negative_test(port, 'Wait(StringAt,0,0,"Hello")', 'connected')
+        self.simple_negative_test(port, 'Wait(InputFieldAt,0,0)', 'connected')
 
         # Clean up.
         s3270.kill()
         s3270.wait(timeout=2)
 
     # Run an action that succeeds immediately.
-    def nop(self, p, action):
-        r = requests.get(f"http://127.0.0.1:9990/3270/rest/json/{action}", timeout=2)
+    def nop(self, port, action):
+        r = requests.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}",
+                timeout=2)
         self.assertEqual(r.status_code, requests.codes.ok)
 
     # No-op tests (things that don't block).
     def test_nops(self):
+
         # Start 'playback' to drive s3270.
-        playback = Popen(["playback", "-w", "-p", "9991",
+        pport, pts = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(pport),
             "s3270/Test/ibmlink_help.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9991)
+        self.children.append(playback)
+        TestCommon.check_listen(pport)
+        pts.close()
 
         # Start s3270 with a webserver.
-        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:9990", "127.0.0.1:9991"])
-        TestCommon.check_listen(9990)
+        sport, sts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:" + str(sport),
+            "127.0.0.1:" + str(pport)])
+        self.children.append(s3270)
+        TestCommon.check_listen(sport)
+        sts.close()
 
         # Get to the login screen.
         playback.stdin.write(b'r\nr\nr\nr\n')
         playback.stdin.flush()
 
-        self.nop(playback, 'Wait(CursorAt,21,13)')
-        self.nop(playback, 'Wait(InputFieldAt,21,13)')
-        self.nop(playback, 'Wait(StringAt,21,13,"___")')
+        self.nop(sport, 'Wait(CursorAt,21,13)')
+        self.nop(sport, 'Wait(InputFieldAt,21,13)')
+        self.nop(sport, 'Wait(StringAt,21,13,"___")')
 
         playback.stdin.close()
         playback.kill()

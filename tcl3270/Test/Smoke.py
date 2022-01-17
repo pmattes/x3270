@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,29 +36,46 @@ import TestCommon
 
 class TestTcl3270Smoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # tcl3270 3270 smoke test
     def test_tcl3270_smoke(self):
 
         # Start 'playback' to feed data to tcl3270.
-        playback = Popen(["playback", "-w", "-p", "9998",
+        playback_port, ts = TestCommon.unused_port()
+        playback = Popen(["playback", "-w", "-p", str(playback_port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        TestCommon.check_listen(9998)
+        self.children.append(playback)
+        TestCommon.check_listen(playback_port)
+        ts.close()
 
         # Create a temporary file.
         (handle, name) = tempfile.mkstemp()
 
         # Start tcl3270.
+        tcl_port, ts = TestCommon.unused_port()
         tcl3270 = Popen(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
             "-xrm", "tcl3270.contentionResolution: false",
-            "-httpd", "127.0.0.1:9997",
-            "127.0.0.1:9998"],
+            "-httpd", f"127.0.0.1:{tcl_port}",
+            f"127.0.0.1:{playback_port}"],
             stdin=DEVNULL, stdout=DEVNULL)
-        TestCommon.check_listen(9997)
+        self.children.append(playback)
+        TestCommon.check_listen(tcl_port)
+        ts.close()
 
         # Send a screenful to tcl3270.
         playback.stdin.write(b'r\nr\nr\nr\n')
         playback.stdin.flush()
-        TestCommon.check_push(playback, 9997, 1)
+        TestCommon.check_push(playback, tcl_port, 1)
 
         # Wait for the file to show up.
         def Test():

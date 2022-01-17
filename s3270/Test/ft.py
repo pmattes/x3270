@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,18 +30,36 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import TestCommon
 
 class TestS3270ft(unittest.TestCase):
+
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
 
     # s3270 DFT-mode file transfer test
     def test_s3270_ft_dft(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9991",
+        port, socket = TestCommon.unused_port()
+        playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/ft_dft.trc"], stdout=DEVNULL)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "127.0.0.1:9991"], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(["s3270", f"127.0.0.1:{port}"], stdin=PIPE,
+                stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b'transfer direction=send host=tso localfile=s3270/Test/fttext hostfile=fttext\n')
@@ -58,12 +76,17 @@ class TestS3270ft(unittest.TestCase):
     def test_s3270_ft_cut(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9990",
+        port, socket = TestCommon.unused_port()
+        playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/ft_cut.trc"], stdout=DEVNULL)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "-model", "2", "127.0.0.1:9990"], stdin=PIPE,
-                stdout=DEVNULL)
+        s3270 = Popen(["s3270", "-model", "2", f"127.0.0.1:{port}"],
+                stdin=PIPE, stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b'transfer direction=send host=vm "localfile=s3270/Test/fttext" "hostfile=ft text a"\n')

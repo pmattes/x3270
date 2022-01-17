@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021 Paul Mattes.
+# Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,17 +35,32 @@ import TestCommon
 
 class TestS3270Smoke(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # s3270 NVT smoke test
     def test_s3270_nvt_smoke(self):
 
         # Start 'nc' to read s3270's output.
-        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", "9999"],
+        port, ts = TestCommon.unused_port()
+        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", str(port)],
                 stdout=PIPE)
-        TestCommon.check_listen(9999)
+        self.children.append(nc)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "a:c:t:127.0.0.1:9999"], stdin=PIPE,
+        s3270 = Popen(["s3270", f"a:c:t:127.0.0.1:{port}"], stdin=PIPE,
                 stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"String(abc)\n")
@@ -68,13 +83,17 @@ class TestS3270Smoke(unittest.TestCase):
     def test_s3270_3270_smoke(self):
 
         # Start 'playback' to read s3270's output.
-        playback = Popen(["playback", "-b", "-p", "9998",
+        port, ts = TestCommon.unused_port()
+        playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
-        TestCommon.check_listen(9998)
+        self.children.append(playback)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start s3270.
         s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            "127.0.0.1:9998"], stdin=PIPE, stdout=DEVNULL)
+            f"127.0.0.1:{port}"], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"PF(3)\n")
@@ -92,14 +111,18 @@ class TestS3270Smoke(unittest.TestCase):
     def test_s3270_tls_smoke(self):
 
         # Start 'openssl s_server' to read s3270's output.
+        port, ts = TestCommon.unused_port()
         server = Popen(["openssl", "s_server", "-cert",
             "s3270/Test/tls/TEST.crt", "-key", "s3270/Test/tls/TEST.key",
-            "-port", "9997", "-quiet"], stdout=PIPE)
-        TestCommon.check_listen(9997)
+            "-port", str(port), "-quiet"], stdout=PIPE)
+        self.children.append(server)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Start s3270.
         s3270 = Popen(["s3270", "-cafile", "s3270/Test/tls/myCA.pem",
-            "l:a:c:t:127.0.0.1:9997=TEST" ], stdin=PIPE, stdout=DEVNULL)
+            f"l:a:c:t:127.0.0.1:{port}=TEST" ], stdin=PIPE, stdout=DEVNULL)
+        self.children.append(s3270)
 
         # Feed s3270 some actions.
         s3270.stdin.write(b"String(abc)\n")
@@ -123,16 +146,20 @@ class TestS3270Smoke(unittest.TestCase):
     def test_s3270_httpd_smoke(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270", "-httpd", "127.0.0.1:9996"])
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", "-httpd", f"127.0.0.1:{port}"])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Send it a JSON GET.
-        r = requests.get('http://127.0.0.1:9996/3270/rest/json/Set(monoCase)')
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
         s = r.json()
         self.assertEqual(s['result'], ['false'])
         self.assertEqual(s['status'], 'L U U N N 4 24 80 0 0 0x0 0.000')
 
         # Send it a JSON POST.
-        r = requests.post('http://127.0.0.1:9996/3270/rest/post',
+        r = requests.post(f'http://127.0.0.1:{port}/3270/rest/post',
                 json={'action': 'set', 'args': ['monoCase']})
         s = r.json()
         self.assertEqual(s['result'], ['false'])
@@ -147,6 +174,7 @@ class TestS3270Smoke(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a trivial command at it.
         s3270.stdin.write(b'Set(startTls)\n')

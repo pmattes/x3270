@@ -34,6 +34,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import socket
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
@@ -130,3 +131,11 @@ def xml_prettify(elem):
     rough_string = ET.tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ").encode('UTF8')
+
+# Generate an unused port to listen on.
+# When the listen is done, close the socket.
+def unused_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(('0.0.0.0', 0))
+    return (s.getsockname()[1], s)

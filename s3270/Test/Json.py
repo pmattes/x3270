@@ -35,6 +35,17 @@ import TestCommon
 
 class TestS3270Json(unittest.TestCase):
 
+    # Set up procedure.
+    def setUp(self):
+        self.children = []
+
+    # Tear-down procedure.
+    def tearDown(self):
+        # Tidy up the children.
+        for child in self.children:
+            child.kill()
+            child.wait()
+
     # Check a JSON-formatted result.
     def check_result_json(self, out):
         j = json.loads(out)
@@ -63,6 +74,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
         command = json.dumps({'action':'Set','args':['startTls']}).encode('utf8') + b'\n'
@@ -82,12 +94,15 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', '9981', '-scriptportonce'])
-        TestCommon.check_listen(9981)
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Push a JSON-formatted command at it.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9981))
+        s.connect(('127.0.0.1', port))
         command = json.dumps({'action':'Set','args':['startTls']}).encode('utf8') + b'\n'
         s.sendall(command)
         s.shutdown(socket.SHUT_WR)
@@ -108,6 +123,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
         command = json.dumps({'action':'Set','args':['startTls']}).replace(' ', '\n').encode('utf8') + b'\n'
@@ -128,6 +144,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
         command = json.dumps('Set(startTls)').encode('utf8') + b'\n'
@@ -147,12 +164,15 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json_string(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', '9981', '-scriptportonce'])
-        TestCommon.check_listen(9981)
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Push a JSON-formatted command at it.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9981))
+        s.connect(('127.0.0.1', port))
         command = json.dumps('Set(startTls)').encode('utf8') + b'\n'
         s.sendall(command)
         s.shutdown(socket.SHUT_WR)
@@ -173,6 +193,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a bad JSON-formatted command at it.
         command = json.dumps({'foo':'bar'}).encode('utf8') + b'\n'
@@ -194,13 +215,17 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON semantic error test
     def test_s3270_socket_json_semantic_error(self):
 
+        port, ts = TestCommon.unused_port()
+
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', '9981', '-scriptportonce'])
-        TestCommon.check_listen(9981)
+        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Push a JSON-formatted command at it.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9981))
+        s.connect(('127.0.0.1', port))
         command = json.dumps({'foo':'bar'}).encode('utf8') + b'\n'
         s.sendall(command)
         s.shutdown(socket.SHUT_WR)
@@ -224,6 +249,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push a bad syntax JSON-formatted command at it.
         s3270.stdin.write(b'{"foo"}\n')
@@ -247,13 +273,17 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON syntax error test
     def test_s3270_socket_json_syntax_error(self):
 
+        port, ts = TestCommon.unused_port()
+
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', '9981', '-scriptportonce'])
-        TestCommon.check_listen(9981)
+        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Push a JSON-formatted command at it.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9981))
+        s.connect(('127.0.0.1', port))
         s.sendall(b'{"foo"}\n')
         s.shutdown(socket.SHUT_WR)
 
@@ -279,6 +309,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
 
         # Push s3270, then JSON, then s3270, then JSON at it.
         s3270.stdin.write(b'Set(startTls)\n')
@@ -305,13 +336,17 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON mode-switch test
     def test_s3270_socket_json_mode_switch(self):
 
+        port, ts = TestCommon.unused_port()
+
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', '9981', '-scriptportonce'])
-        TestCommon.check_listen(9981)
+        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
 
         # Push s3270, then JSON, then s3270, then JSON at it.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 9981))
+        s.connect(('127.0.0.1', port))
         s.sendall(b'Set(startTls)\n')
         command = json.dumps({'action':'Set','args':['startTls']}).encode('utf8') + b'\n'
         s.sendall(command)
