@@ -1,2 +1,4 @@
 playback
 *.o
+Makefile
+Makefile.obj
