@@ -4407,7 +4407,7 @@ task_can_request_input(const char *action, bool no_echo)
 
     if (redirect == NULL ||
 	    redirect->cbx.cb->getflags == NULL ||
-	    (!(flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
+	    !((flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
 	     CBF_INTERACTIVE)) {
 	popup_an_error("%s: not an interactive session", action);
 	return false;
@@ -4444,7 +4444,7 @@ task_request_input(const char *action, const char *prompt,
 
     if (redirect == NULL ||
 	    redirect->cbx.cb->getflags == NULL ||
-	    (!(flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
+	    !((flags = (*redirect->cbx.cb->getflags)(redirect->cbx.handle)) &
 	     CBF_INTERACTIVE)) {
 	popup_an_error("%s: not an interactive session", action);
 	return false;
