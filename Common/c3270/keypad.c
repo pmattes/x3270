@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 2009, 2013-2015, 2019-2020, 2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -437,7 +437,7 @@ keypad_key(int k, ucs4_t u)
 
 		if (getmouse(&m) != OK)
 			return;
-		if (!(m.bstate & (BUTTON1_PRESSED || BUTTON1_RELEASED)))
+		if (!(m.bstate & (BUTTON1_PRESSED | BUTTON1_RELEASED)))
 			return;
 		/* Find it. */
 		for (i = 0; i < NUM_SENSE; i++) {
