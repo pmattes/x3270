@@ -931,8 +931,6 @@ iterator_tests(void)
     BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
 	count++;
 	key_lengths += key_length;
-	key = key;
-	element = element;
     } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
     assert(count == 3);
     assert(key_lengths == 6);
