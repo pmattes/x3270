@@ -50,8 +50,11 @@ def try_until(f, seconds, errmsg):
 
 # Check for a particular port being listened on.
 def check_listen(port):
-    r = re.compile(rf':{port} .* LISTEN')
-    if sys.platform.startswith("win"):
+    if sys.platform == 'darwin':
+        r = re.compile(rf'\.{port} .* LISTEN')
+    else:
+        r = re.compile(rf':{port} .* LISTEN')
+    if sys.platform.startswith("win") or sys.platform == 'darwin':
         cmd = 'netstat -an -p TCP'
     else:
         cmd = 'netstat -ant'

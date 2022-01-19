@@ -50,7 +50,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
     def test_s3270_cmdline_host_connect_error(self):
 
         # Start s3270.
-        s3270 = Popen(['s3270', '127.0.0.0:22'], stdin=DEVNULL, stdout=PIPE,
+        s3270 = Popen(['s3270', '255.255.255.255:22'], stdin=DEVNULL, stdout=PIPE,
                 stderr=PIPE)
         self.children.append(s3270)
 
@@ -64,7 +64,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         # Check.
         # There should be nothing on stdout, but something on stderr.
         self.assertEqual(b'', out[0])
-        self.assertEqual(b'Connection failed:\nConnect() to 127.0.0.0, port 22: Network is unreachable\n', out[1])
+        self.assertTrue(out[1].startswith(b'Connection failed:'))
 
     # s3270 command-line host negotiation error test
     def test_s3270_cmdline_host_negotiation_error(self):
