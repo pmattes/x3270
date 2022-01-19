@@ -311,7 +311,7 @@ if test "x$enable_x3270if" = xyes; then
     T_UNIX_CLOBBER="$T_UNIX_CLOBBER x3270if-clobber"
 fi
 if test "x$enable_playback" = xyes; then
-    AC_CONFIG_SUBDIRS(Playback)
+    AC_CONFIG_SUBDIRS(playback)
     T_UNIX_CLEAN="$T_UNIX_CLEAN playback-clean"
     T_UNIX_CLOBBER="$T_UNIX_CLOBBER playback-clobber"
 fi

@@ -1204,6 +1204,7 @@ done:
 #if defined(HAVE_LIBREADLINE) /*[*/
     Free(command);
 #endif /*]*/
+    return;
 }
 
 #if defined(_WIN32) /*[*/
