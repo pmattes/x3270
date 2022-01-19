@@ -3130,7 +3130,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 case "$host_os" in
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
-darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations -Wno-extended-offsetof"
+darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
