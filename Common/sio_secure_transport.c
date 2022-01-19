@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 2017, 2019-2020, 2022 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -425,7 +425,7 @@ cert_details(const char *prefix, SecCertificateRef certificateRef)
 	kSecOIDX509V1IssuerName,
 	kSecOIDSubjectAltName
     };
-    static const void *labels[] = {
+    static const char *labels[] = {
 	"Subject", "Issuer", "Subject alternate names"
     };
     static char *(*decoders[])(CFArrayRef) = {
