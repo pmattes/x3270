@@ -1204,7 +1204,6 @@ done:
 #if defined(HAVE_LIBREADLINE) /*[*/
     Free(command);
 #endif /*]*/
-    s = s; /* to make the compiler happy */
 }
 
 #if defined(_WIN32) /*[*/
