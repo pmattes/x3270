@@ -107,60 +107,6 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.close()
         s3270.wait(timeout=2)
 
-    # s3270 TLS smoke test
-    @unittest.skipIf(sys.platform.startswith("win"), "Windows does not have openssl")
-    def test_s3270_tls_smoke(self):
-
-        # Start 'openssl s_server' to read s3270's output.
-        if sys.platform == 'darwin':
-            # MacOS openssl does not allow port re-use.
-            port = 9999
-        else:
-            port, ts = TestCommon.unused_port()
-        server = Popen(["openssl", "s_server", "-cert",
-            "s3270/Test/tls/TEST.crt", "-key", "s3270/Test/tls/TEST.key",
-            "-port", str(port), "-quiet"], stdout=PIPE)
-        self.children.append(server)
-        TestCommon.check_listen(port)
-        if sys.platform != 'darwin':
-            ts.close()
-
-        if sys.platform == 'darwin':
-            # Add the fake root cert.
-            sec = Popen(["security", "dump-trust", "-d"], stdout=PIPE, stderr=DEVNULL)
-            sec_out = sec.communicate()[0].decode('utf8').split('\n')
-            if not any('fakeca' in line for line in sec_out):
-                # Add the fake CA root cert
-                os.system('sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain s3270/Test/tls/myCA.pem')
-            # To remove the cert:
-            #  security remove-trusted-cert -d s3270/Test/tls/myCA.pem
-
-        # Start s3270.
-        args = ["s3270"]
-        if sys.platform != 'darwin':
-            args += [ "-cafile", "s3270/Test/tls/myCA.pem" ]
-        args.append(f"l:a:c:t:127.0.0.1:{port}=TEST")
-        s3270 = Popen(args, stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
-
-        # Feed s3270 some actions.
-        s3270.stdin.write(b"String(abc)\n")
-        s3270.stdin.write(b"Enter()\n")
-        s3270.stdin.write(b"Disconnect()\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
-
-        # Make sure they are passed through.
-        out = server.stdout.read(5)
-        self.assertEqual(b"abc\r\n", out)
-
-        # Wait for the processes to exit.
-        server.stdout.close()
-        server.kill()
-        server.wait(timeout=2)
-        s3270.stdin.close()
-        s3270.wait(timeout=2)
-
     # s3270 httpd smoke test
     def test_s3270_httpd_smoke(self):
 
