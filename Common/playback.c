@@ -33,6 +33,7 @@
 
 #include "globals.h"
 
+#include <errno.h>
 #if !defined(_WIN32) /*[*/
 # include <memory.h>
 # include <fcntl.h>
@@ -44,7 +45,6 @@
 # include "wincmn.h"
 # include "w3misc.h"
 # include "arpa_telnet.h"
-# include <errno.h>
 #endif /*]*/
 
 #if !defined(_MSC_VER) /*[*/
@@ -262,6 +262,7 @@ main(int argc, char *argv[])
 	sockerr("listen");
 	exit(1);
     }
+    if (!bidir) {
 #if !defined(_WIN32) /*[*/
     if ((flags = fcntl(s, F_GETFL)) < 0) {
 	perror("fcntl(F_GETFD)");
@@ -282,6 +283,7 @@ main(int argc, char *argv[])
 	}
     }
 #endif /*]*/
+    }
 #if !defined(_WIN32) /*[*/
     signal(SIGPIPE, SIG_IGN);
 #endif /*]*/
@@ -609,7 +611,7 @@ process(FILE *f, int s)
 
 	    nr = recv(s, buf, BSIZE, 0);
 	    if (nr < 0) {
-		sockerr("recv");
+		sockerr("playback: emulator recv");
 		break;
 	    }
 	    if (nr == 0) {
@@ -645,7 +647,7 @@ process(FILE *f, int s)
 	    }
 	    nr = recv(s, buf, BSIZE, 0);
 	    if (nr < 0) {
-		sockerr("recv");
+		sockerr("playback: emulator recv");
 		done = true;
 		break;
 	    }
@@ -897,7 +899,7 @@ run_it:
 		if (GetLastError() != WSAEWOULDBLOCK)
 #endif /*]*/
 		{
-		    sockerr("recv");
+		    sockerr("playback: emulator recv");
 		}
 		return false;
 	    }
