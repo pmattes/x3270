@@ -115,6 +115,38 @@ def check_bad(prog, extra=None):
     assert any(line.startswith('Usage: ') for line in stderr)
     assert any('Use --help' in line for line in stderr)
 
+# Make sure many bad options fail.
+def check_bad2(prog, extra=None):
+    args = [prog]
+    if extra != None:
+        args.append(extra)
+    args.append('-foo')
+    args.append('-bar')
+    args.append('-baz')
+    p = Popen(args, stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    rc = p.wait(timeout=2)
+    assert rc != 0
+    assert stderr[0].startswith("Unknown or incomplete option: '-foo'")
+    assert any(line.startswith('Usage: ') for line in stderr)
+    assert any('Use --help' in line for line in stderr)
+
+# Make sure too many command-line options fail.
+def check_toomany(prog, extra=None):
+    args = [prog]
+    if extra != None:
+        args.append(extra)
+    args.append('able')
+    args.append('baker')
+    args.append('charlie')
+    p = Popen(args, stderr=PIPE)
+    stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+    rc = p.wait(timeout=2)
+    assert rc != 0
+    assert stderr[0].startswith("Too many command-line options")
+    assert any(line.startswith('Usage: ') for line in stderr)
+    assert any('Use --help' in line for line in stderr)
+
 # Make sure an incomplete option fails.
 def check_incomplete(prog, extra=None):
     args = [prog]

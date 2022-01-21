@@ -37,6 +37,8 @@ class TestTcl3270BasicCmdline(unittest.TestCase):
         TestCommon.check_dash_v('tcl3270')
         TestCommon.check_help('tcl3270')
         TestCommon.check_bad('tcl3270', extra = '--')
+        TestCommon.check_bad2('tcl3270', extra = '--')
+        TestCommon.check_toomany('tcl3270', extra = '--')
         TestCommon.check_incomplete('tcl3270', extra = '--')
 
 if __name__ == '__main__':

@@ -247,7 +247,10 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	}
 	/* else fall through... */
     default:
-	usage("Too many command-line arguments");
+	for (i = 0; i < hn_argc; i++) {
+	    no_minus(argv[i]);
+	}
+	usage("Too many command-line options");
 	break;
     }
 

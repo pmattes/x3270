@@ -830,7 +830,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	}
     }
     if (argc != i + 1) {
-	usage(NULL);
+	usage("Too many command-line options");
     }
 
     /*

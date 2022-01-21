@@ -37,6 +37,8 @@ class TestPr3287BasicCmdline(unittest.TestCase):
         TestCommon.check_dash_v('pr3287')
         TestCommon.check_help('pr3287')
         TestCommon.check_bad('pr3287')
+        TestCommon.check_bad2('pr3287')
+        TestCommon.check_toomany('pr3287')
         TestCommon.check_incomplete('pr3287')
 
 if __name__ == '__main__':

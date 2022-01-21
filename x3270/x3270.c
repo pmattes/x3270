@@ -613,6 +613,9 @@ main(int argc, char *argv[])
 	cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
 	break;
     default:
+	for (i = 0; i < argc; i++) {
+	    no_minus(argv[i]);
+	}
 	usage("Too many command-line options");
 	break;
     }
