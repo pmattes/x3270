@@ -48,10 +48,7 @@ class TestB3270Smoke(unittest.TestCase):
     def test_b3270_nvt_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        port, ts = TestCommon.unused_port()
-        nc = TestCommon.copyserver(port)
-        TestCommon.check_listen(port)
-        ts.close()
+        nc = TestCommon.copyserver()
 
         # Start b3270.
         b3270 = Popen(["b3270"], stdin=PIPE, stdout=DEVNULL)
@@ -59,7 +56,7 @@ class TestB3270Smoke(unittest.TestCase):
 
         # Feed b3270 some actions.
         b3270.stdin.write(b"<b3270-in>\n")
-        b3270.stdin.write(b'<run actions="Open(a:c:t:127.0.0.1:' + str(port).encode('utf8') + b') String(abc) Enter() Disconnect()"/>\n')
+        b3270.stdin.write(f'<run actions="Open(a:c:t:127.0.0.1:{nc.port}) String(abc) Enter() Disconnect()"/>\n'.encode('utf8'))
         b3270.stdin.flush()
 
         # Make sure they are passed through.

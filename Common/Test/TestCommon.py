@@ -179,11 +179,17 @@ def unused_port():
 # Simple socket copy server.
 class copyserver():
 
+    port = 0
+
     # Initialization.
-    def __init__(self, port):
+    def __init__(self, port=0):
         self.listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         self.listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.listensocket.bind(('127.0.0.1', port))
+        if port == 0:
+            self.port = self.listensocket.getsockname()[1]
+        else:
+            self.port = port
         self.listensocket.listen()
         self.result = b''
         self.thread = threading.Thread(target=self.process)

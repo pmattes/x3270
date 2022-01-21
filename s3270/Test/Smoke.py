@@ -51,13 +51,10 @@ class TestS3270Smoke(unittest.TestCase):
     def test_s3270_nvt_smoke(self):
 
         # Start a thread to read s3270's output.
-        port, ts = TestCommon.unused_port()
-        nc = TestCommon.copyserver(port)
-        TestCommon.check_listen(port)
-        ts.close()
+        nc = TestCommon.copyserver()
 
         # Start s3270.
-        s3270 = Popen(["s3270", f"a:c:t:127.0.0.1:{port}"], stdin=PIPE,
+        s3270 = Popen(["s3270", f"a:c:t:127.0.0.1:{nc.port}"], stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 

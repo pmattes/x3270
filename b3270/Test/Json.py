@@ -49,17 +49,14 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_nvt_json_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        port, ts = TestCommon.unused_port()
-        nc = TestCommon.copyserver(port)
-        TestCommon.check_listen(port)
-        ts.close()
+        nc = TestCommon.copyserver()
 
         # Start b3270.
         b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 some actions.
-        j = { "run": { "actions": [ { "action": "Open", "args": [f"a:c:t:127.0.0.1:{port}"]}, { "action": "String", "args": ["abc"] }, { "action": "Enter" }, { "action": "Disconnect" } ] } }
+        j = { "run": { "actions": [ { "action": "Open", "args": [f"a:c:t:127.0.0.1:{nc.port}"]}, { "action": "String", "args": ["abc"] }, { "action": "Enter" }, { "action": "Disconnect" } ] } }
         b3270.stdin.write(json.dumps(j).encode('utf8') + b'\n')
         b3270.stdin.flush()
 

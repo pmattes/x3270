@@ -49,10 +49,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_nvt_xml_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        port, ts = TestCommon.unused_port()
-        nc = TestCommon.copyserver(port)
-        TestCommon.check_listen(port)
-        ts.close()
+        nc = TestCommon.copyserver()
 
         # Start b3270.
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=DEVNULL)
@@ -60,7 +57,7 @@ class TestB3270Json(unittest.TestCase):
 
         # Feed b3270 some actions.
         top = ET.Element('b3270-in')
-        ET.SubElement(top, 'run', { 'actions': f'Open(a:c:t:127.0.0.1:{port}) String(abc) Enter() Disconnect()' })
+        ET.SubElement(top, 'run', { 'actions': f'Open(a:c:t:127.0.0.1:{nc.port}) String(abc) Enter() Disconnect()' })
         *first, _, _ = TestCommon.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
