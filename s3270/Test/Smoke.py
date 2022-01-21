@@ -50,11 +50,9 @@ class TestS3270Smoke(unittest.TestCase):
     # s3270 NVT smoke test
     def test_s3270_nvt_smoke(self):
 
-        # Start 'nc' to read s3270's output.
+        # Start a thread to read s3270's output.
         port, ts = TestCommon.unused_port()
-        nc = Popen(["python3", "Common/Test/nc1.py", "127.0.0.1", str(port)],
-                stdout=PIPE)
-        self.children.append(nc)
+        nc = TestCommon.copyserver(port)
         TestCommon.check_listen(port)
         ts.close()
 
@@ -71,12 +69,10 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.flush()
 
         # Make sure they are passed through.
-        out = nc.stdout.read()
+        out = nc.data()
         self.assertEqual(b"abc\r\n", out)
 
         # Wait for the processes to exit.
-        nc.stdout.close()
-        nc.wait(timeout=2)
         s3270.stdin.close()
         s3270.wait(timeout=2)
 

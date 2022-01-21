@@ -35,6 +35,7 @@ import sys
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import socket
+import threading
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
@@ -174,3 +175,33 @@ def unused_port():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('0.0.0.0', 0))
     return (s.getsockname()[1], s)
+
+# Simple socket copy server.
+class copyserver():
+
+    # Initialization.
+    def __init__(self, port):
+        self.listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listensocket.bind(('127.0.0.1', port))
+        self.listensocket.listen()
+        self.result = b''
+        self.thread = threading.Thread(target=self.process)
+        self.thread.start()
+
+    # Accept a connection and read to EOF.
+    def process(self):
+        (conn, _) = self.listensocket.accept()
+        self.listensocket.close()
+        while True:
+            rdata = conn.recv(1024)
+            if (len(rdata) == 0):
+                break
+            self.result += rdata
+        conn.close()
+
+    # Return what we got.
+    def data(self):
+        self.thread.join(timeout=2)
+        return self.result
+
