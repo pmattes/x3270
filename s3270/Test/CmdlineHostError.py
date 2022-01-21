@@ -79,7 +79,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
 
         # Start s3270.
         s3270_port, ts = TestCommon.unused_port()
-        s3270 = Popen(['s3270', '-trace',
+        s3270 = Popen(['s3270',
             '-xrm', 's3270.contentionResolution: false',
             '-xrm', 's3270.scriptedAlways: true',
             '-httpd', f'127.0.0.1:{s3270_port}',

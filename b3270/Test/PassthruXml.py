@@ -49,7 +49,7 @@ class TestB3270PassthruXml(unittest.TestCase):
     # b3270 passthru XML test
     def test_b3270_passthru_xml(self):
 
-        b3270 = Popen(['b3270', '-trace'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Get the initial dump.
