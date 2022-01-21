@@ -26,8 +26,8 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(tcl3270,4.0)
-AC_PREREQ(2.50)
+AC_INIT([tcl3270],[4.0])
+AC_PREREQ([2.69])
 
 dnl Checks for programs.
 AC_PROG_INSTALL
@@ -57,12 +57,12 @@ AC_SUBST(CCOPTIONS)
 dnl Figure out what version of Tcl they've got
 AC_CHECK_PROG(tclsh,tclsh,yes,no)
 if test "$tclsh" = no
-then	AC_ERROR(Can't find tclsh)
+then	AC_MSG_ERROR(Can't find tclsh)
 fi
 AC_MSG_CHECKING(Tcl version)
 tclver=`echo "puts [[set tcl_version]]" | tclsh`
 if test -z "$tclver"
-then	AC_ERROR(Can't figure out Tcl version)
+then	AC_MSG_ERROR(Can't figure out Tcl version)
 fi
 AC_MSG_RESULT($tclver)
 
@@ -73,7 +73,7 @@ dnl Set up tclvr (tclver without the period, for BSD)
 tclvr=`echo $tclver | tr -d .`
 
 dnl Checks for header files.
-AC_CONFIG_HEADER(conf.h)
+AC_CONFIG_HEADERS([conf.h])
 AC_CHECK_HEADERS(util.h)
 
 dnl Check for pthreads.
@@ -87,7 +87,7 @@ do	if test -d $dir
     	then	CPPFLAGS="$CPPFLAGS -I$dir"
 	fi
 done
-AC_CHECK_HEADERS(tcl.h, ,[AC_ERROR(Cannot find tcl header file)])
+AC_CHECK_HEADERS(tcl.h, ,[AC_MSG_ERROR(Cannot find tcl header file)])
 
 dnl Checks for orindary library functions.
 AC_CHECK_FUNCS(vasprintf)
@@ -106,7 +106,7 @@ fi
 tcl_failed=0
 AC_CHECK_LIB(tcl$tclver, Tcl_Init, , [tcl_failed=1])
 if test $tcl_failed = 1
-then	AC_CHECK_LIB(tcl$tclvr, Tcl_Init, , [AC_ERROR(Cannot find TCL library)])
+then	AC_CHECK_LIB(tcl$tclvr, Tcl_Init, , [AC_MSG_ERROR(Cannot find TCL library)])
 fi
 
 dnl Set up the configuration directory.

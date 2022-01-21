@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2014-2018, 2020-2021 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2014-2018, 2020-2022 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(s3270,4.0)
-AC_PREREQ(2.50)
+AC_INIT([s3270],[4.0])
+AC_PREREQ([2.69])
 
 dnl Checks for programs.
 AC_PROG_INSTALL
@@ -104,7 +104,7 @@ case "$enable_ipv6" in
 esac
 
 dnl Generate conf.h.
-AC_CONFIG_HEADER(conf.h)
+AC_CONFIG_HEADERS([conf.h])
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile Makefile.obj)
