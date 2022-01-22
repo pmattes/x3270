@@ -257,7 +257,7 @@ status_screentrace(int n)
 {
     ui_leaf(IndOia,
 	    AttrField, AT_STRING, OiaScreentrace,
-	    AttrValue, (n >= 0)? AT_INT: AT_SKIP_INT, n,
+	    AttrValue, (n >= 0)? AT_INT: AT_SKIP_INT, (int64_t)n,
 	    NULL);
 }
 

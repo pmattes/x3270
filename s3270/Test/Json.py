@@ -31,6 +31,8 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import json
 import socket
+import select
+import os
 import TestCommon
 
 class TestS3270Json(unittest.TestCase):
@@ -60,9 +62,12 @@ class TestS3270Json(unittest.TestCase):
         self.assertEqual('ok', out[2])
 
     # Read from a socket until EOF.
-    def recv_to_eof(self, s):
+    def recv_to_eof(self, s, timeout=0):
         result = b''
         while True:
+            if timeout != 0:
+                rfds, _, _ = select.select([ s ], [], [], timeout)
+            assert([] != rfds)
             r = s.recv(1024)
             if len(r) == 0:
                 break
@@ -108,7 +113,7 @@ class TestS3270Json(unittest.TestCase):
         s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
-        result = self.recv_to_eof(s)
+        result = self.recv_to_eof(s, 2)
         s.close()
 
         # Wait for the process to exit successfully.
@@ -178,7 +183,7 @@ class TestS3270Json(unittest.TestCase):
         s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
-        result = self.recv_to_eof(s)
+        result = self.recv_to_eof(s, 2)
         s.close()
 
         # Wait for the process to exit successfully.
@@ -231,7 +236,7 @@ class TestS3270Json(unittest.TestCase):
         s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
-        result = self.recv_to_eof(s)
+        result = self.recv_to_eof(s, 2)
         s.close()
 
         # Wait for the process to exit successfully.
@@ -255,7 +260,7 @@ class TestS3270Json(unittest.TestCase):
         s3270.stdin.write(b'{"foo"}\n')
 
         # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split('\n')
+        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
 
         # Wait for the process to exit successfully.
         rc = s3270.wait()
@@ -288,7 +293,7 @@ class TestS3270Json(unittest.TestCase):
         s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
-        result = self.recv_to_eof(s).split('\n')
+        result = self.recv_to_eof(s, 2).split('\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -312,14 +317,14 @@ class TestS3270Json(unittest.TestCase):
         self.children.append(s3270)
 
         # Push s3270, then JSON, then s3270, then JSON at it.
-        s3270.stdin.write(b'Set(startTls)\n')
-        command = json.dumps({'action':'Set','args':['startTls']}).replace(' ', '\n').encode('utf8') + b'\n'
+        s3270.stdin.write(('Set(startTls)' + os.linesep).encode('utf8'))
+        command = (json.dumps({'action':'Set','args':['startTls']}).replace(' ', os.linesep) + os.linesep).encode('utf8')
         s3270.stdin.write(command)
-        s3270.stdin.write(b'Set(startTls)\n')
+        s3270.stdin.write(('Set(startTls)' + os.linesep).encode('utf8'))
         s3270.stdin.write(command)
 
         # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split('\n')
+        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
 
         # Wait for the process to exit successfully.
         rc = s3270.wait()
@@ -336,9 +341,8 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON mode-switch test
     def test_s3270_socket_json_mode_switch(self):
 
-        port, ts = TestCommon.unused_port()
-
         # Start s3270.
+        port, ts = TestCommon.unused_port()
         s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
@@ -355,7 +359,7 @@ class TestS3270Json(unittest.TestCase):
         s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
-        result = self.recv_to_eof(s).split('\n')
+        result = self.recv_to_eof(s, 2).split('\n')
         s.close()
 
         # Wait for the process to exit successfully.

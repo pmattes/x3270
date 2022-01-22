@@ -112,10 +112,6 @@ usage(const char *s)
 static DWORD WINAPI
 stdin_read(LPVOID lpParameter)
 {
-    static char aux_buf[256];
-    static int aux_count = 0;
-    static int aux_offset = 0;
-
     for (;;) {
         DWORD rv;
 
@@ -129,33 +125,17 @@ stdin_read(LPVOID lpParameter)
             SetEvent(stdin_done_event);
             break;
         case WAIT_OBJECT_0:	/* read something */
-again:
-	    stdin_nr = 0;
-	    if (aux_count > 0) {
-		stdin_nr = 0;
-		while (aux_count--) {
-		    char c = aux_buf[aux_offset++];
-
-		    if (c == '\r') {
-			continue;
-		    }
-		    stdin_buf[stdin_nr++] = c;
-		    if (c == '\n') {
-			break;
-		    }
+	    if (fgets(stdin_buf, sizeof(stdin_buf), stdin) == NULL) {
+		if (feof(stdin)) {
+		    stdin_nr = 0;
+		}
+		else {
+		    stdin_nr = -1;
+		    stdin_errno = errno;
 		}
 	    }
-	    if (stdin_nr > 0) {
-		SetEvent(stdin_done_event);
-		break;
-	    }
-
-	    aux_offset = 0;
-            aux_count = read(0, aux_buf, sizeof(aux_buf));
-            if (aux_count < 0) {
-                stdin_errno = errno;
-            } else {
-		goto again;
+	    else {
+		stdin_nr = strlen(stdin_buf);
 	    }
             SetEvent(stdin_done_event);
             break;
@@ -884,23 +864,34 @@ run_it:
 
     if (type == STEP_BIDIR && direction == FROM_EMUL && (cp != obuf)) {
 	char ibuf[BSIZE];
-	ssize_t nr;
 	ssize_t n2r = cp - obuf;
 	size_t offset = 0;
 
 	/* Match input from the emulator. */
-	/* XXX: Probably need a timeout here. */
+	/* XXX: Need a non-Windows timeout here. */
 	while (n2r > 0) {
+#if defined(_WIN32) /*[*/
+	    HANDLE ha[1];
+	    DWORD ret;
+	    int nr;
+#endif /*]*/
+
 	    printf("Waiting for %u bytes from emulator\n", (unsigned)n2r);
 	    fflush(stdout);
+#if defined(_WIN32) /*[*/
+	    ha[0] = socket2_event;
+	    ret = WaitForMultipleObjects(1, ha, FALSE, 1000);
+	    switch (ret) {
+	    case WAIT_OBJECT_0: /* socket input */
+		break;
+	    case WAIT_FAILED:
+		win32_perror("WaitForMultipleObjects");
+		exit(2);
+	    }
+#endif /*]*/
 	    nr = recv(s, ibuf + offset, n2r, 0);
 	    if (nr < 0) {
-#if defined(_WIN32) /*[*/
-		if (GetLastError() != WSAEWOULDBLOCK)
-#endif /*]*/
-		{
-		    sockerr("playback: emulator recv");
-		}
+		sockerr("playback: emulator recv");
 		return false;
 	    }
 	    if (nr == 0) {

@@ -378,9 +378,16 @@ stdin_read(LPVOID lpParameter _is_unused)
 	    SetEvent(stdin_done_event);
 	    break;
 	case WAIT_OBJECT_0:
-	    stdin_nr = read(0, stdin_buf, sizeof(stdin_buf));
-	    if (stdin_nr < 0) {
-		stdin_errno = errno;
+	    if (fgets(stdin_buf, sizeof(stdin_buf), stdin) == NULL) {
+		if (feof(stdin)) {
+		    stdin_nr = 0;
+		}
+		else {
+		    stdin_nr = -1;
+		    stdin_errno = errno;
+		}
+	    } else {
+		stdin_nr = strlen(stdin_buf);
 	    }
 	    SetEvent(stdin_done_event);
 	    break;

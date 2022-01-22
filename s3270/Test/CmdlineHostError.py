@@ -72,7 +72,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         # Start 'playback' to read s3270's output.
         playback_port, ts = TestCommon.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
-            "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
+             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
         TestCommon.check_listen(playback_port)
         ts.close()
@@ -110,7 +110,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         # Check.
         # There should be nothing on stdout, but something on stderr.
         self.assertTrue(out[0].startswith(b'L U U N N 4 43 80 0 0 0x0 '))
-        self.assertEqual(b'Wait(): Host disconnected\n', out[1])
+        self.assertTrue(out[1].startswith(b'Wait(): Host disconnected'))
 
 if __name__ == '__main__':
     unittest.main()

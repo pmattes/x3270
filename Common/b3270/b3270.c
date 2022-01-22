@@ -166,10 +166,10 @@ static void
 dump_stats(void)
 {
     ui_leaf(IndStats,
-	    AttrBytesReceived, AT_INT, brcvd,
-	    AttrRecordsReceived, AT_INT, rrcvd,
-	    AttrBytesSent, AT_INT, bsent,
-	    AttrRecordsSent, AT_INT, rsent,
+	    AttrBytesReceived, AT_INT, (int64_t)brcvd,
+	    AttrRecordsReceived, AT_INT, (int64_t)rrcvd,
+	    AttrBytesSent, AT_INT, (int64_t)bsent,
+	    AttrRecordsSent, AT_INT, (int64_t)rsent,
 	    NULL);
 }
 
@@ -416,16 +416,17 @@ dump_models(void)
     }
     for (i = 0; models[i].model != 0; i++) {
 	if (XML_MODE) {
+
 	    ui_leaf(IndModel,
-		    AttrModel, AT_INT, models[i].model,
-		    AttrRows, AT_INT, models[i].rows,
-		    AttrColumns, AT_INT, models[i].columns,
+		    AttrModel, AT_INT, (int64_t)models[i].model,
+		    AttrRows, AT_INT, (int64_t)models[i].rows,
+		    AttrColumns, AT_INT, (int64_t)models[i].columns,
 		    NULL);
 	} else {
 	    uij_open_struct(NULL);
-	    ui_add_element(AttrModel, AT_INT, models[i].model);
-	    ui_add_element(AttrRows, AT_INT, models[i].rows);
-	    ui_add_element(AttrColumns, AT_INT, models[i].columns);
+	    ui_add_element(AttrModel, AT_INT, (int64_t)models[i].model);
+	    ui_add_element(AttrRows, AT_INT, (int64_t)models[i].rows);
+	    ui_add_element(AttrColumns, AT_INT, (int64_t)models[i].columns);
 	    uij_close_struct();
 	}
     }
@@ -459,7 +460,7 @@ dump_proxies(void)
 		    AttrUsername, AT_BOOLEAN, proxy_takes_username(type),
 		    AttrPort,
 			default_port? AT_INT: AT_SKIP_INT,
-			default_port,
+			(int64_t)default_port,
 		    NULL);
 	} else {
 	    uij_open_struct(NULL);
@@ -467,7 +468,7 @@ dump_proxies(void)
 	    ui_add_element(AttrUsername, AT_BOOLEAN,
 		    proxy_takes_username(type));
 	    if (default_port) {
-		ui_add_element(AttrPort, AT_INT, default_port);
+		ui_add_element(AttrPort, AT_INT, (int64_t)default_port);
 	    }
 	    uij_close_struct();
 	}
@@ -1030,7 +1031,7 @@ b3270_toggle_notify(const char *name, enum resource_type type, void **address,
     case XRM_INT:
 	ui_leaf(IndSetting,
 		AttrName, AT_STRING, name,
-		AttrValue, AT_INT, *(int *)address,
+		AttrValue, AT_INT, (int64_t)*(int *)address,
 		AttrCause, AT_STRING, ia_name[cause],
 		NULL);
 	break;

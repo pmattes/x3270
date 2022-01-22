@@ -30,7 +30,6 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import sys
 import os
 import TestCommon
 
@@ -138,7 +137,7 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.write(b'Set(startTls)\n')
 
         # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split('\n')
+        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
 
         # Wait for the process to exit successfully.
         rc = s3270.wait()
