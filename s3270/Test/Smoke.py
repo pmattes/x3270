@@ -113,14 +113,14 @@ class TestS3270Smoke(unittest.TestCase):
         r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
         s = r.json()
         self.assertEqual(s['result'], ['false'])
-        self.assertEqual(s['status'], 'L U U N N 4 24 80 0 0 0x0 0.000')
+        self.assertTrue(s['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
         # Send it a JSON POST.
         r = requests.post(f'http://127.0.0.1:{port}/3270/rest/post',
                 json={'action': 'set', 'args': ['monoCase']})
         s = r.json()
         self.assertEqual(s['result'], ['false'])
-        self.assertEqual(s['status'], 'L U U N N 4 24 80 0 0 0x0 0.000')
+        self.assertTrue(s['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
         # Wait for the process to exit.
         s3270.kill()

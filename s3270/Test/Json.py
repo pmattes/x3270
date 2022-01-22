@@ -33,6 +33,8 @@ import json
 import socket
 import select
 import os
+import sys
+import time
 import TestCommon
 
 class TestS3270Json(unittest.TestCase):
@@ -63,6 +65,12 @@ class TestS3270Json(unittest.TestCase):
 
     # Read from a socket until EOF.
     def recv_to_eof(self, s, timeout=0):
+        if sys.platform.startswith('win'):
+            # There appears to be a Windows bug that causes a 'shutdown' to be lost
+            # on a loopback connection if the other side does not nave a recv or select
+            # posted. Waiting 0.1s gives s3270 time to do that.
+            time.sleep(0.1)
+        s.shutdown(socket.SHUT_WR)
         result = b''
         while True:
             if timeout != 0:
@@ -110,7 +118,6 @@ class TestS3270Json(unittest.TestCase):
         s.connect(('127.0.0.1', port))
         command = json.dumps({'action':'Set','args':['startTls']}).encode('utf8') + b'\n'
         s.sendall(command)
-        s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
@@ -180,7 +187,6 @@ class TestS3270Json(unittest.TestCase):
         s.connect(('127.0.0.1', port))
         command = json.dumps('Set(startTls)').encode('utf8') + b'\n'
         s.sendall(command)
-        s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
@@ -233,7 +239,6 @@ class TestS3270Json(unittest.TestCase):
         s.connect(('127.0.0.1', port))
         command = json.dumps({'foo':'bar'}).encode('utf8') + b'\n'
         s.sendall(command)
-        s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
@@ -290,7 +295,6 @@ class TestS3270Json(unittest.TestCase):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', port))
         s.sendall(b'{"foo"}\n')
-        s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
         result = self.recv_to_eof(s, 2).split('\n')
@@ -356,7 +360,6 @@ class TestS3270Json(unittest.TestCase):
         s.sendall(command)
         s.sendall(b'Set(startTls)\n')
         s.sendall(command)
-        s.shutdown(socket.SHUT_WR)
 
         # Decode the result.
         result = self.recv_to_eof(s, 2).split('\n')
