@@ -73,7 +73,11 @@
 
 #define INBUF_SIZE	8192
 
-#define JW_OPTS		(appres.b3270.json_indent? 0: JW_ONE_LINE)
+#define JW_OPTS		(appres.b3270.indent? 0: JW_ONE_LINE)
+#define XINDENT		(appres.b3270.indent? uix.depth: 0)
+#define MIN_D		(appres.b3270.wrapper_doc? 2: 1)
+#define XNL		((appres.b3270.indent || uix.depth < MIN_D)? "\n": "")
+#define XNLL(leaf)	((appres.b3270.indent || (uix.depth < MIN_D && leaf))? "\n": "")
 
 #if defined(_WIN32) /*[*/
 static HANDLE peer_thread;
@@ -180,7 +184,7 @@ uprintf(const char *fmt, ...)
 {
     va_list ap;
     char *s;
-    static bool eol = true;
+    static char *pending_trace = NULL;
     ssize_t nw;
 
     va_start(ap, fmt);
@@ -192,15 +196,27 @@ uprintf(const char *fmt, ...)
 	nw = write(fileno(stdout), s, strlen(s));
     }
 
-    if (eol) {
-	vtrace("ui> ");
-	eol = false;
+    if (pending_trace != NULL) {
+	char *pt = xs_buffer("%s%s", pending_trace, s);
+
+	Replace(pending_trace, pt);
+	Free(s);
+    } else {
+	pending_trace = s;
     }
-    vtrace("%s", s);
-    if (strlen(s) > 0 && s[strlen(s) - 1] == '\n') {
-	eol = true;
+    if (strlen(pending_trace) > 0 &&
+	    pending_trace[strlen(pending_trace) - 1] == '\n') {
+	char *t = pending_trace;
+
+	while (*t) {
+	    char *newline = strchr(t, '\n');
+
+	    vtrace("ui> %.*s", (int)(newline - t) + 1, t);
+	    t = newline + 1;
+	}
+	Replace(pending_trace, NULL);
     }
-    Free(s);
+
     if (nw < 0) {
 	    vtrace("UI write failure: %s\n",
 #if defined(_WIN32) /*[*/
@@ -275,7 +291,7 @@ uix_object(bool leaf, const char *name, const char *args[])
     const char *tag;
     int i = 0;
 
-    uprintf("%*s<%s", uix.depth, "", name);
+    uprintf("%*s<%s", XINDENT, "", name);
 
     while ((tag = args[i++]) != NULL) {
 	const char *value = args[i++];
@@ -285,7 +301,7 @@ uix_object(bool leaf, const char *name, const char *args[])
 	uprintf("\"");
     }
 
-    uprintf("%s>\n", leaf? "/": "");
+    uprintf("%s>%s", leaf? "/": "", XNLL(leaf));
 }
 
 /*
@@ -297,7 +313,7 @@ uix_vobject3(bool leaf, const char *name, va_list ap)
 {
     const char *tag;
 
-    uprintf("%*s<%s", uix.depth, "", name);
+    uprintf("%*s<%s", XINDENT, "", name);
 
     while ((tag = va_arg(ap, const char *)) != NULL) {
 	ui_attr_t type = va_arg(ap, ui_attr_t);
@@ -334,7 +350,7 @@ uix_vobject3(bool leaf, const char *name, va_list ap)
 	}
     }
 
-    uprintf("%s>\n", leaf? "/": "");
+    uprintf("%s>%s", leaf? "/": "", XNLL(leaf));
 }
 
 /*
@@ -434,7 +450,7 @@ uix_pop(void)
     uix_container_t *g = uix.container;
 
     uix.depth--;
-    uprintf("%*s</%s>\n", uix.depth, "", g->name);
+    uprintf("%*s</%s>%s", XINDENT, "", g->name, XNL);
     uix.container = g->next;
     Free(g);
 }
@@ -444,7 +460,7 @@ void
 uix_open_leaf(const char *name)
 {
     assert(!uix.isopen);
-    uprintf("%*s<%s", uix.depth, "", name);
+    uprintf("%*s<%s", XINDENT, "", name);
     uix.isopen = true;
 }
 
@@ -453,7 +469,7 @@ void
 uix_close_leaf(void)
 {
     assert(uix.isopen);
-    uprintf("/>\n");
+    uprintf("/>%s", XNL);
     uix.isopen = false;
 }
 
@@ -1314,27 +1330,47 @@ static void
 process_input(const char *buf, ssize_t nr)
 {
     if (XML_MODE) {
-	if (uix.need_reset) {
-	    uix.need_reset = false;
-	    XML_ParserReset(uix.parser, "UTF-8");
-	    XML_SetElementHandler(uix.parser, xml_start, xml_end);
-	    XML_SetCharacterDataHandler(uix.parser, xml_data);
+
+	/* Process the input in newline-delimited chunks. */
+	while (true) {
+	    ssize_t i = 0;
+
+	    while (i < nr) {
+		if (buf[i++] == '\n') {
+		    break;
+		}
+	    }
+
+	    if (uix.need_reset) {
+		uix.need_reset = false;
+		XML_ParserReset(uix.parser, "UTF-8");
+		XML_SetElementHandler(uix.parser, xml_start, xml_end);
+		XML_SetCharacterDataHandler(uix.parser, xml_data);
+	    }
+
+	    if (XML_Parse(uix.parser, buf, i, 0) == 0) {
+		ui_leaf(IndUiError,
+			AttrFatal, AT_BOOLEAN, true,
+			AttrText, AT_STRING, xs_buffer("XML parsing error: %s",
+			    XML_ErrorString(XML_GetErrorCode(uix.parser))),
+			AttrLine, AT_INT,
+			    (int64_t)XML_GetCurrentLineNumber(uix.parser),
+			AttrColumn, AT_INT,
+			    (int64_t)XML_GetCurrentColumnNumber(uix.parser),
+			NULL);
+		fprintf(stderr, "Fatal XML parsing error: %s\n",
+			XML_ErrorString(XML_GetErrorCode(uix.parser)));
+		x3270_exit(1);
+	    }
+
+	    if (i >= nr) {
+		break;
+	    }
+
+	    buf += i;
+	    nr -= i;
 	}
 
-	if (XML_Parse(uix.parser, buf, nr, 0) == 0) {
-	    ui_leaf(IndUiError,
-		    AttrFatal, AT_BOOLEAN, true,
-		    AttrText, AT_STRING, xs_buffer("XML parsing error: %s",
-			XML_ErrorString(XML_GetErrorCode(uix.parser))),
-		    AttrLine, AT_INT,
-			(int64_t)XML_GetCurrentLineNumber(uix.parser),
-		    AttrColumn, AT_INT,
-			(int64_t)XML_GetCurrentColumnNumber(uix.parser),
-		    NULL);
-	    fprintf(stderr, "Fatal XML parsing error: %s\n",
-		    XML_ErrorString(XML_GetErrorCode(uix.parser)));
-	    x3270_exit(1);
-	}
     } else {
 	char *rs;	/* run start */
 	char *ss;	/* scan start, may skip newlines */
@@ -1722,11 +1758,14 @@ ui_io_init()
     }
 #endif /*]*/
 
-    if (XML_MODE) {
+    if (XML_MODE && appres.b3270.wrapper_doc) {
 	/* Start the XML stream. */
 	uprintf("%c%c%c<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
 		0xef, 0xbb, 0xbf);
 	uix_push(DocOut, NULL);
+	if (!appres.b3270.indent) {
+	    uprintf("\n");
+	}
     }
 
     /* Set up a handler for exit. */

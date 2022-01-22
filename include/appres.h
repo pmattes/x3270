@@ -207,7 +207,8 @@ typedef struct {
     /* b3270-specific fields. */
     struct {
 	bool	json;
-	bool	json_indent;
+	bool	indent;
+	bool	wrapper_doc;
     } b3270;
 
 } AppRes, *AppResptr;

@@ -132,6 +132,7 @@
 #define ResIdleCommand		"idleCommand"
 #define ResIdleCommandEnabled	"idleCommandEnabled"
 #define ResIdleTimeout		"idleTimeout"
+#define ResIndent		"indent"
 #define ResInlcr		"inlcr"
 #define ResInputColor		"inputColor"
 #define ResInputMethod		"inputMethod"
@@ -139,7 +140,6 @@
 #define ResIntr			"intr"
 #define ResInvertKeypadShift	"invertKeypadShift"
 #define ResJson			"json"
-#define ResJsonIndent		"jsonIndent"
 #define ResKeyFile		"keyFile"
 #define ResKeyFileType		"keyFileType"
 #define ResKeymap		"keymap"
@@ -242,6 +242,7 @@
 #define ResVisualSelectColor	"visualSelectColor"
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
+#define ResWrapperDoc		"wrapperDoc"
 #define ResXQuartzHack		"xQuartzHack"
 
 /* Dotted resource names. */
@@ -505,6 +506,7 @@
 #define OptIconName		"-iconname"
 #define OptIconX		"-iconx"
 #define OptIconY		"-icony"
+#define OptIndent		"-indent"
 #define OptInputMethod		"-im"
 #define OptJson			"-json"
 #define OptKeyFile		"-keyfile"
@@ -520,6 +522,7 @@
 #define OptMono			"-mono"
 #define OptNoPrompt		"-noprompt"
 #define OptNoScrollBar		"+sb"
+#define OptNoWrapperDoc		"-nowrapperdoc"
 #define OptNvtMode		"-nvt"
 #define OptOnce			"-once"
 #define OptOversize		"-oversize"
@@ -550,6 +553,7 @@
 #define OptV			"-v"
 #define OptVerifyHostCert	"-verifycert"
 #define OptVersion		"--version"
+#define OptXml			"-xml"
 
 /* Miscellaneous values. */
 #define ResTrue			"true"

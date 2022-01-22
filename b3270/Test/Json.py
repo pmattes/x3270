@@ -193,5 +193,72 @@ class TestB3270Json(unittest.TestCase):
         self.assertTrue('fatal' in ui_error)
         self.assertTrue(ui_error['fatal'])
 
+    # b3270 JSON not-indented test
+    def test_b3270_json_default(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual(2, len(out))
+        self.assertTrue(out[0].startswith('{"initialize":['))
+        self.assertTrue(out[0].endswith(']}'))
+        self.assertEqual('', out[1])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 JSON indented test
+    def test_b3270_json_indented(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-json', '-indent'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual('{', out[0])
+        self.assertEqual('  "initialize": [', out[1])
+        self.assertEqual('    {', out[2])
+        self.assertEqual('      "hello": {', out[3])
+        self.assertEqual('  ]', out[-3])
+        self.assertEqual('}', out[-2])
+        self.assertEqual('', out[-1])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 JSON socket test
+    def test_b3270_json_socket(self):
+
+        # Listen for a connection from b3270.
+        l = TestCommon.listenserver()
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-json', '-callback', str(l.port)],
+            stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Wait for it to call back.
+        l.accept(timeout=2)
+
+        # Feed it multiple commands.
+        l.send(b'{"run":{"actions":"set monoCase"}}\n')
+        l.send(b'{"run":{"actions":"set monoCase"}}\n')
+        l.send(b'{"run":{"actions":"set monoCase"}}\n')
+
+        # Grab its output.
+        out = l.data(timeout=2).decode('utf8').split('\n')
+        self.assertEqual(5, len(out))
+        self.assertTrue(out[1].startswith('{"run-result":{'))
+        self.assertTrue(out[2].startswith('{"run-result":{'))
+        self.assertTrue(out[3].startswith('{"run-result":{'))
+        self.assertEqual('', out[4])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
 if __name__ == '__main__':
     unittest.main()

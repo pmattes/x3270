@@ -36,6 +36,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import socket
 import threading
+import select
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
@@ -210,4 +211,44 @@ class copyserver():
     def data(self):
         self.thread.join(timeout=2)
         return self.result
+
+# Simple socket listen / accept / receive all.
+class listenserver():
+
+    port = 0
+
+    # Initialization.
+    def __init__(self):
+        self.listensock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.listensock.bind(("127.0.0.1", 0))
+        self.port = self.listensock.getsockname()[1]
+        self.listensock.listen()
+
+    # Accept a connection.
+    def accept(self, timeout=0):
+        if timeout != 0:
+            r, _, _ = select.select([ self.listensock ], [], [], timeout)
+            assert([] != r)
+
+        (self.iosock, _) = self.listensock.accept()
+        self.listensock.close()
+
+    # Send data.
+    def send(self, bytes):
+        self.iosock.send(bytes)
+    
+    # Get data.
+    def data(self, timeout=0):
+        self.iosock.shutdown(socket.SHUT_WR)
+        out = b''
+        while True:
+            if timeout != 0:
+                r, _, _ = select.select([ self.iosock ], [], [], timeout)
+                assert([] != r)
+            chunk = self.iosock.recv(65536)
+            if chunk == b'':
+                break
+            out += chunk
+        self.iosock.close()
+        return out
 

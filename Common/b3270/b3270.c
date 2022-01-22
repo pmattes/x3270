@@ -126,6 +126,8 @@ static int bsent = 0;
 static int rsent = 0;
 static ioid_t stats_ioid = NULL_IOID;
 
+static bool b3270_toggle_yet = false;
+
 static void b3270_toggle(toggle_index_t ix, enum toggle_type tt);
 static toggle_register_t toggles[] = {
     { MONOCASE,		b3270_toggle,	TOGGLE_NEED_INIT },
@@ -541,6 +543,9 @@ main(int argc, char *argv[])
 
     check_min_version(appres.min_version);
 
+    /* Initialize the toggles, so we get tracing going. */
+    initialize_toggles();
+
     ui_io_init();
     if (XML_MODE) {
 	uix_push(IndInitialize, NULL);
@@ -673,8 +678,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
      *
      * Then dump the traditional toggles.
      */
-    initialize_toggles();
     register_extended_toggle_notify(b3270_toggle_notify);
+    b3270_toggle_yet = true;
     for (ix = MONOCASE; ix < N_TOGGLES; ix++) {
 	if (toggle_supported(ix)) {
 	    b3270_toggle(ix, TT_INITIAL);
@@ -949,6 +954,9 @@ product_set_appres_defaults(void)
      */
     appres.oerr_lock = true;
     appres.interactive.save_lines = 4096;
+
+    /* XML is wrapped by default. */
+    appres.b3270.wrapper_doc = true;
 }
 
 /**
@@ -961,7 +969,7 @@ b3270_toggle(toggle_index_t ix, enum toggle_type tt)
 {
     int i;
 
-    if (tt != TT_INITIAL) {
+    if (!b3270_toggle_yet || tt != TT_INITIAL) {
 	return;
     }
 
@@ -1095,19 +1103,26 @@ b3270_register(void)
     static opt_t b3270_opts[] = {
 	{ OptCallback, OPT_STRING,  false, ResCallback,
 	    aoffset(scripting.callback), NULL, "Callback address and port" },
+	{ OptIndent,   OPT_BOOLEAN, true,  ResIndent,    aoffset(b3270.indent),
+	    NULL, "Indent ouput" },
 	{ OptJson,     OPT_BOOLEAN, true,  ResJson,      aoffset(b3270.json),
 	    NULL, "Use JSON format" },
+	{ OptNoWrapperDoc,OPT_BOOLEAN,false,ResWrapperDoc,aoffset(b3270.wrapper_doc),
+	    NULL, "Do not use an XML wrapper document" },
 	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
 	    NULL, "Force local codeset to be UTF-8" },
+	{ OptXml,      OPT_BOOLEAN, false, ResJson,      aoffset(b3270.json),
+	    NULL, "Use XML format" },
     };
     static res_t b3270_resources[] = {
 	{ ResCallback,		aoffset(scripting.callback), XRM_STRING },
 	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
+	{ ResIndent,		aoffset(b3270.indent),XRM_BOOLEAN },
 	{ ResJson,		aoffset(b3270.json),XRM_BOOLEAN },
-	{ ResJsonIndent,	aoffset(b3270.json_indent),XRM_BOOLEAN },
 	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN },
+	{ ResWrapperDoc,	aoffset(b3270.wrapper_doc), XRM_BOOLEAN },
     };
     static xres_t b3270_xresources[] = {
 	{ ResPrintTextScreensPerPage,	V_FLAT },

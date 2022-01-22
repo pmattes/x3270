@@ -32,7 +32,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
 import TestCommon
 
-class TestB3270Json(unittest.TestCase):
+class TestB3270Xml(unittest.TestCase):
 
     # Set up procedure.
     def setUp(self):
@@ -160,7 +160,6 @@ class TestB3270Json(unittest.TestCase):
         self.assertEqual('actions', attr['attribute'])
 
     # b3270 XML syntax error test
-    #@unittest.skip('always')
     def test_b3270_xml_syntax_error(self):
 
         b3270 = Popen(['b3270'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
@@ -187,6 +186,137 @@ class TestB3270Json(unittest.TestCase):
         attr = et_err.attrib
         self.assertEqual('true', attr['fatal'])
         self.assertTrue(attr['text'].startswith('XML parsing error'))
+
+    # b3270 XML not-indented test
+    def test_b3270_xml_default(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual(5, len(out))
+        self.assertTrue('<?xml version="1.0" encoding="UTF-8"?>' in out[0])
+        self.assertEqual('<b3270-out>', out[1])
+        self.assertTrue(out[2].startswith('<initialize>'))
+        self.assertTrue(out[2].endswith('</initialize>'))
+        self.assertEqual('</b3270-out>', out[3])
+        self.assertEqual('', out[4])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 XML not-indented, no wrapper test
+    def test_b3270_xml_default(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml', '-nowrapperdoc'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual(2, len(out))
+        self.assertTrue(out[0].startswith('<initialize>'))
+        self.assertTrue(out[0].endswith('</initialize>'))
+        self.assertEqual('', out[1])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 XML indented test
+    def test_b3270_xml_indented(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml', '-indent'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertTrue('<?xml version="1.0" encoding="UTF-8"?>' in out[0])
+        self.assertEqual('<b3270-out>', out[1])
+        self.assertEqual(' <initialize>', out[2])
+        self.assertEqual(' </initialize>', out[-3])
+        self.assertEqual('</b3270-out>', out[-2])
+        self.assertEqual('', out[-1])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 XML indented, no wrapper test
+    def test_b3270_xml_indented_no_wrapper(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml', '-indent', '-nowrapperdoc'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Grab its output.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual('<initialize>', out[0])
+        self.assertTrue(out[1].startswith(' '))
+        self.assertEqual('</initialize>', out[-2])
+        self.assertEqual('', out[-1])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 XML no input wrapper test
+    def test_b3270_xml_no_input_wrapper(self):
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml', '-nowrapperdoc'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Feed it multiple commands.
+        b3270.stdin.write(b'<run actions="set monoCase"/>\n')
+        b3270.stdin.write(b'<run actions="set monoCase"/>\n')
+        b3270.stdin.write(b'<run actions="set monoCase"/>\n')
+        b3270.stdin.flush()
+
+        # Grab its output.
+        # The primary concern here is that b3270 isn't confused by the missing wrapper
+        # document and embedded newlines in its input.
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        self.assertEqual(5, len(out))
+        self.assertTrue(out[1].startswith('<run-result '))
+        self.assertTrue(out[2].startswith('<run-result '))
+        self.assertTrue(out[3].startswith('<run-result '))
+        self.assertEqual('', out[4])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
+
+    # b3270 XML no input wrapper socket test
+    def test_b3270_xml_no_input_wrapper_socket(self):
+
+        # Listen for a connection from b3270.
+        l = TestCommon.listenserver()
+
+        # Start b3270.
+        b3270 = Popen(['b3270', '-xml', '-nowrapperdoc', '-callback', str(l.port)],
+            stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+        self.children.append(b3270)
+
+        # Wait for it to call back.
+        l.accept(timeout=2)
+
+        # Feed it multiple commands.
+        l.send(b'<run actions="set monoCase"/>\n')
+        l.send(b'<run actions="set monoCase"/>\n')
+        l.send(b'<run actions="set monoCase"/>\n')
+
+        # Grab its output.
+        # The primary concern here is that b3270 isn't confused by the missing wrapper
+        # document and embedded newlines in its input.
+        out = l.data(timeout=2).decode('utf8').split('\n')
+        self.assertEqual(5, len(out))
+        self.assertTrue(out[1].startswith('<run-result '))
+        self.assertTrue(out[2].startswith('<run-result '))
+        self.assertTrue(out[3].startswith('<run-result '))
+        self.assertEqual('', out[4])
+
+        rc = b3270.wait(timeout=2)
+        self.assertEqual(0, rc)
 
 if __name__ == '__main__':
     unittest.main()
