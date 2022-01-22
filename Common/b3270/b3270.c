@@ -127,6 +127,7 @@ static int rsent = 0;
 static ioid_t stats_ioid = NULL_IOID;
 
 static bool b3270_toggle_yet = false;
+static char* crashptr;
 
 static void b3270_toggle(toggle_index_t ix, enum toggle_type tt);
 static toggle_register_t toggles[] = {
@@ -796,10 +797,8 @@ Crash_action(ia_t ia, unsigned argc, const char **argv)
 	exit(999);
 	popup_an_error(AnCrash "(): Exit did not work");
     } else if (!strcasecmp(argv[0], KwNull)) {
-	char *s = NULL;
 	char c;
-
-	printf("%c\n", c = *s);
+	printf("%c\n", c = *crashptr);
 	popup_an_error(AnCrash "(): Null did not work");
     } else {
 	popup_an_error(AnCrash "(): Must specify " KwAssert ", " KwExit " or "

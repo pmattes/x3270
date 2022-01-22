@@ -118,6 +118,7 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 /* Non-standard string function names. */
 #  define strcasecmp    _stricmp
 #  define strncasecmp   _strnicmp
+#  define strtok_r      strtok_s
 
 /* MSVC has no POSIX ssize_t. */
 typedef SSIZE_T ssize_t;
