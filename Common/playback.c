@@ -873,8 +873,8 @@ run_it:
 #if defined(_WIN32) /*[*/
 	    HANDLE ha[1];
 	    DWORD ret;
-	    int nr;
 #endif /*]*/
+	    int nr;
 
 	    printf("Waiting for %u bytes from emulator\n", (unsigned)n2r);
 	    fflush(stdout);
