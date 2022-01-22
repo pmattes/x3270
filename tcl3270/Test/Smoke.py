@@ -32,8 +32,10 @@ from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import os
 import filecmp
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 class TestTcl3270Smoke(unittest.TestCase):
 
     # Set up procedure.

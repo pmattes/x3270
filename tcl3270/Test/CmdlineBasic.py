@@ -28,8 +28,11 @@
 # tcl3270 basic command-line tests
 
 import unittest
+import os
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 class TestTcl3270BasicCmdline(unittest.TestCase):
 
     # tcl3270 -v and -help test

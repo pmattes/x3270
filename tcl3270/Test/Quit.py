@@ -29,7 +29,9 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import sys
 
+@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 class TestTcl3270Quit(unittest.TestCase):
 
     # Set up procedure.

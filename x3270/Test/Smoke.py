@@ -33,8 +33,10 @@ import subprocess
 import os
 import stat
 import tempfile
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
 class TestX3270Smoke(unittest.TestCase):
 
     # Set up procedure.

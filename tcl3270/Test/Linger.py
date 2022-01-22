@@ -33,8 +33,10 @@ import psutil
 import requests
 import os
 import signal
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 class TestTcl3270Linger(unittest.TestCase):
 
     # Set up procedure.
