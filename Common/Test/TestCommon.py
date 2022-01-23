@@ -239,6 +239,11 @@ class listenserver():
     
     # Get data.
     def data(self, timeout=0):
+        # Handle an apparent bug in Windows when a loopback connection is shut for writing
+        # when the receive side does not have a select() or recv() up. The FD_CLOSE indication
+        # is lost. If we pause here, it gives the reader time to re-post their select/recv.
+        if sys.platform.startswith('win'):
+            time.sleep(0.1)
         self.iosock.shutdown(socket.SHUT_WR)
         out = b''
         while True:

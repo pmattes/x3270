@@ -315,8 +315,6 @@ class TestB3270Xml(unittest.TestCase):
         # Grab its output.
         # The primary concern here is that b3270 isn't confused by the missing wrapper
         # document and embedded newlines in its input.
-        if sys.platform.startswith('win'):
-            time.sleep(0.1)
         out = l.data(timeout=2).decode('utf8').split('\n')
         self.assertEqual(5, len(out))
         self.assertTrue(out[1].startswith('<run-result '))

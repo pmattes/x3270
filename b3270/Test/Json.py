@@ -259,8 +259,6 @@ class TestB3270Json(unittest.TestCase):
         l.send(b'{"run":{"actions":"set monoCase"}}\n')
 
         # Grab its output.
-        if sys.platform.startswith('win'):
-            time.sleep(0.1)
         out = l.data(timeout=2).decode('utf8').split('\n')
         self.assertEqual(5, len(out))
         self.assertTrue(out[1].startswith('{"run-result":{'))
