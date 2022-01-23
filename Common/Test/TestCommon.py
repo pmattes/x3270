@@ -245,10 +245,18 @@ class listenserver():
             if timeout != 0:
                 r, _, _ = select.select([ self.iosock ], [], [], timeout)
                 assert([] != r)
-            chunk = self.iosock.recv(65536)
+            try:
+                chunk = self.iosock.recv(65536)
+            except ConnectionResetError:
+                # As Windows is wont to do.
+                break
             if chunk == b'':
                 break
             out += chunk
         self.iosock.close()
         return out
 
+# Do a readline from a pipe with a timeout.
+def timed_readline(p, timeout, errmsg):
+    try_until(lambda: (p.readable()), timeout, errmsg)
+    return p.readline()

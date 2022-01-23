@@ -29,7 +29,6 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import select
 import xml.etree.ElementTree as ET
 import TestCommon
 
@@ -67,9 +66,7 @@ class TestB3270PassthruXml(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result.
-        r, _, _ = select.select([ b3270.stdout.fileno() ], [], [], 2)
-        self.assertNotEqual([], r)
-        s = b3270.stdout.readline().decode('utf8')
+        s = TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('passthru', out.tag)
         attr = out.attrib
@@ -85,9 +82,7 @@ class TestB3270PassthruXml(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result of that.
-        r, _, _ = select.select([ b3270.stdout.fileno() ], [], [], 2)
-        self.assertNotEqual([], r)
-        s = b3270.stdout.readline().decode('utf8')
+        s = TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('run-result', out.tag)
         attr = out.attrib

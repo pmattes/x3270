@@ -30,6 +30,9 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import json
+import os
+import sys
+import time
 import TestCommon
 
 class TestB3270Json(unittest.TestCase):
@@ -98,16 +101,22 @@ class TestB3270Json(unittest.TestCase):
         b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
-        # Feed b3270 two actions, which it will run concurrently and complete
+        # Feed b3270 two sets of actions, which it will run concurrently and complete
         # in reverse order.
         b3270.stdin.write(b'"Wait(0.1,seconds) Set(startTls) Quit()" "Set(insertMode)"\n')
         b3270.stdin.flush()
-        b3270.wait(timeout=2)
 
-        # Get the result.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
-        insert_mode = json.loads(out[-3]) # false
-        start_tls = json.loads(out[-2])   # true
+        # Get the output before waiting for b3270 to exit. Otherwise it
+        # hangs trying to write to its stdout (on Windows).
+        # Individual timed reads are used here because communicate() closes stdin and that will
+        # cause b3270 to exit prematurely.
+        errmsg = 'b3270 did not produce expected output'
+        _ = TestCommon.timed_readline(b3270.stdout, 2, errmsg)
+        insert_mode = json.loads(TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
+        start_tls = json.loads(TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
+        b3270.stdin.close()
+        b3270.stdout.close()
+        b3270.wait(timeout=2)
 
         # Check.
         self.assertTrue('run-result' in insert_mode)
@@ -201,7 +210,7 @@ class TestB3270Json(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertEqual(2, len(out))
         self.assertTrue(out[0].startswith('{"initialize":['))
         self.assertTrue(out[0].endswith(']}'))
@@ -218,7 +227,7 @@ class TestB3270Json(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertEqual('{', out[0])
         self.assertEqual('  "initialize": [', out[1])
         self.assertEqual('    {', out[2])
@@ -250,6 +259,8 @@ class TestB3270Json(unittest.TestCase):
         l.send(b'{"run":{"actions":"set monoCase"}}\n')
 
         # Grab its output.
+        if sys.platform.startswith('win'):
+            time.sleep(0.1)
         out = l.data(timeout=2).decode('utf8').split('\n')
         self.assertEqual(5, len(out))
         self.assertTrue(out[1].startswith('{"run-result":{'))

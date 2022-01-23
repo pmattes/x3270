@@ -30,6 +30,9 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
+import os
+import sys
+import time
 import TestCommon
 
 class TestB3270Xml(unittest.TestCase):
@@ -110,13 +113,19 @@ class TestB3270Xml(unittest.TestCase):
         *first, _, _ = TestCommon.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
-        b3270.wait(timeout=2)
 
         # Get the result.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
-        *_, out_ins, out_tls, _, _ = out
-        et_ins = ET.fromstring(out_ins)
-        et_tls = ET.fromstring(out_tls)
+        errmsg = 'b3270 did not produce the expected output'
+        _ = TestCommon.timed_readline(b3270.stdout, 2, errmsg)
+        _ = TestCommon.timed_readline(b3270.stdout, 2, errmsg)
+        _ = TestCommon.timed_readline(b3270.stdout, 2, errmsg)
+        out = TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        et_ins = ET.fromstring(out)
+        out = TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        et_tls = ET.fromstring(out)
+        b3270.wait(timeout=2)
+        b3270.stdin.close()
+        b3270.stdout.close()
 
         # Check.
         self.assertEqual('run-result', et_ins.tag)
@@ -143,11 +152,10 @@ class TestB3270Xml(unittest.TestCase):
         ET.SubElement(top, 'run', { 'actions': 'Wait(0.1,seconds) Quit()' })
         *first, _, _ = TestCommon.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
-        b3270.stdin.flush()
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         b3270.wait(timeout=2)
 
         # Get the result.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
         out_err = out[-4]
         et_err = ET.fromstring(out_err)
 
@@ -169,12 +177,11 @@ class TestB3270Xml(unittest.TestCase):
         top = ET.Element('b3270-in')
         *first, _, _ = TestCommon.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'<<>' b'\n')
-        b3270.stdin.flush()
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         rc = b3270.wait(timeout=2)
         self.assertTrue(rc != 0)
 
         # Get the result.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
         out_err = out[-3]
         et_err = ET.fromstring(out_err)
 
@@ -195,7 +202,7 @@ class TestB3270Xml(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertEqual(5, len(out))
         self.assertTrue('<?xml version="1.0" encoding="UTF-8"?>' in out[0])
         self.assertEqual('<b3270-out>', out[1])
@@ -215,7 +222,7 @@ class TestB3270Xml(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertEqual(2, len(out))
         self.assertTrue(out[0].startswith('<initialize>'))
         self.assertTrue(out[0].endswith('</initialize>'))
@@ -232,7 +239,7 @@ class TestB3270Xml(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertTrue('<?xml version="1.0" encoding="UTF-8"?>' in out[0])
         self.assertEqual('<b3270-out>', out[1])
         self.assertEqual(' <initialize>', out[2])
@@ -251,7 +258,7 @@ class TestB3270Xml(unittest.TestCase):
         self.children.append(b3270)
 
         # Grab its output.
-        out = b3270.communicate(timeout=2)[0].decode('utf8').split('\n')
+        out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
         self.assertEqual('<initialize>', out[0])
         self.assertTrue(out[1].startswith(' '))
         self.assertEqual('</initialize>', out[-2])
@@ -308,6 +315,8 @@ class TestB3270Xml(unittest.TestCase):
         # Grab its output.
         # The primary concern here is that b3270 isn't confused by the missing wrapper
         # document and embedded newlines in its input.
+        if sys.platform.startswith('win'):
+            time.sleep(0.1)
         out = l.data(timeout=2).decode('utf8').split('\n')
         self.assertEqual(5, len(out))
         self.assertTrue(out[1].startswith('<run-result '))

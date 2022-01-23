@@ -1722,6 +1722,8 @@ ui_io_init()
 #endif /*]*/
 	    exit(1);
 	}
+
+	vtrace("Callback: connected to %s\n", appres.scripting.callback);
     }
 
     if (XML_MODE) {
@@ -1739,7 +1741,10 @@ ui_io_init()
 #else /*][*/
     /* Set up the peer thread. */
     if (ui_socket != INVALID_SOCKET) {
-	AddInput(CreateEvent(NULL, FALSE, FALSE, NULL), ui_input);
+	HANDLE ui_socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	WSAEventSelect(ui_socket, ui_socket_event, FD_READ | FD_CLOSE);
+	AddInput(ui_socket_event, ui_input);
     } else {
 	peer_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	peer_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);

@@ -30,8 +30,8 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
-import select
 import json
+import sys
 import TestCommon
 
 class TestB3270Seconds(unittest.TestCase):
@@ -63,9 +63,7 @@ class TestB3270Seconds(unittest.TestCase):
         # Get the result.
         output = b''
         while True:
-            r, _, _, = select.select([ b3270.stdout.fileno() ], [], [], 2)
-            self.assertNotEqual([], r)
-            line = b3270.stdout.readline()
+            line = TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
             output += line
             if b'run-result' in line:
                 break
@@ -97,9 +95,7 @@ class TestB3270Seconds(unittest.TestCase):
 
         # Get the result.
         while True:
-            r, _, _, = select.select([ b3270.stdout.fileno() ], [], [], 2)
-            self.assertNotEqual([], r)
-            line = b3270.stdout.readline()
+            line = TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
             if b'run-result' in line:
                 break
         out = json.loads(line.decode('utf8'))

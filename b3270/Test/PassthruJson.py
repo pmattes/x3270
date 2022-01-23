@@ -31,6 +31,7 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import json
 import select
+import sys
 import TestCommon
 
 class TestB3270PassthruJson(unittest.TestCase):
@@ -62,9 +63,7 @@ class TestB3270PassthruJson(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result.
-        r, _, _ = select.select([ b3270.stdout.fileno() ], [], [], 2)
-        self.assertNotEqual([], r)
-        out = json.loads(b3270.stdout.readline().decode('utf8'))
+        out = json.loads(TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('passthru' in out)
         passthru = out['passthru']
         self.assertTrue('action' in passthru)
@@ -83,9 +82,7 @@ class TestB3270PassthruJson(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result of that.
-        r, _, _ = select.select([ b3270.stdout.fileno() ], [], [], 2)
-        self.assertNotEqual([], r)
-        out = json.loads(b3270.stdout.readline().decode('utf8'))
+        out = json.loads(TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('run-result' in out)
         run_result = out['run-result']
         self.assertTrue('r-tag' in run_result)
