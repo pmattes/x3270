@@ -1493,7 +1493,7 @@ attempted_completion(const char *text, int start, int end)
 
     /* If this is not the first word, fail. */
     s = rl_line_buffer;
-    while (*s && isspace(*s)) {
+    while (*s && isspace((int)*s)) {
 	s++;
     }
     if (s - rl_line_buffer < start) {
@@ -1507,10 +1507,10 @@ attempted_completion(const char *text, int start, int end)
 	 */
 
 	/* See if we're in the second word. */
-	while (*t && !isspace(*t)) {
+	while (*t && !isspace((int)*t)) {
 	    t++;
 	}
-	while (*t && isspace(*t)) {
+	while (*t && isspace((int)*t)) {
 	    t++;
 	}
 	if (t - rl_line_buffer < start) {
@@ -1522,8 +1522,8 @@ attempted_completion(const char *text, int start, int end)
 	 * we might do other expansions, and this code would need to
 	 * be generalized.
 	 */
-	if (!((!strncasecmp(s, AnOpen, 4) && isspace(*(s + 4))) ||
-	      (!strncasecmp(s, AnConnect, 7) && isspace(*(s + 7))))) {
+	if (!((!strncasecmp(s, AnOpen, 4) && isspace((int)*(s + 4))) ||
+	      (!strncasecmp(s, AnConnect, 7) && isspace((int)*(s + 7))))) {
 	    return NULL;
 	}
 

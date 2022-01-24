@@ -37,6 +37,8 @@ AC_PROG_CC
 dnl Compute host-specific flags.
 AC_CANONICAL_HOST
 case "$host_os" in
+*cygwin*)	CPPFLAGS="$CPPFLAGS -Wno-format-truncation -Wno-stringop-truncation"
+		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"

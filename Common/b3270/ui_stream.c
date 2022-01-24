@@ -515,7 +515,7 @@ ui_add_element(const char *tag, ui_attr_t attr, ...)
 	}
 	va_end(ap);
     } else {
-	json_t *j;
+	json_t *j = NULL;
 	assert(uij.container != NULL);
 	bool add = true;
 
