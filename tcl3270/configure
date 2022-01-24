@@ -3103,7 +3103,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 ansi="-std=c99 -pedantic"
 case "$host_os" in
-cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
+cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		ansi=""
 		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
