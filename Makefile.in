@@ -387,9 +387,9 @@ unix-lib-test: lib3270 lib32xx
 	cd lib/3270 && $(MAKE) -f Makefile.test
 	cd lib/32xx && $(MAKE) -f Makefile.test
 
-PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && echo " $$i/Test/*.py\c"; done)
-PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && echo " $$i/Test/Smoke.py \c"; done)
-TESTPATH := $(shell for i in @T_TEST@; do echo "$$PWD/obj/@host@/$$i/:\c"; done)
+PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && printf " %s" "$$i/Test/*.py"; done)
+PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/Smoke.py ] && printf " %s" "$$i/Test/Smoke.py"; done)
+TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "$$PWD/obj/@host@/$$i/:"; done)
 
 b3270-test: b3270 playback
 	PATH="$(TESTPATH)$$PATH" PYTHONPATH="$$PWD/Common/Test" OBJ="$$PWD/obj/@host@" python3 -m unittest b3270/Test/*.py
