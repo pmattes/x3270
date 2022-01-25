@@ -31,8 +31,10 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import os
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
 class TestPr3287Smoke(unittest.TestCase):
 
     # Set up procedure.
