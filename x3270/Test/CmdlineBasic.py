@@ -28,8 +28,10 @@
 # x3270 basic command-line tests
 
 import unittest
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform == 'cygwin', 'need to run under an X11 server')
 class TestX3270BasicCmdline(unittest.TestCase):
 
     # x3270 -v and -help test

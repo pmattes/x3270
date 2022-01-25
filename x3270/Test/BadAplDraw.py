@@ -38,6 +38,7 @@ import sys
 import TestCommon
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
+@unittest.skipIf(sys.platform == "cygwin", "Not ready for x3270 graphic tests")
 class TestX3270BadAplDraw(unittest.TestCase):
 
     # Set up procedure.

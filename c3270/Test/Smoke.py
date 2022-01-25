@@ -35,6 +35,7 @@ import os
 import time
 import re
 import sys
+import os.path
 import TestCommon
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
@@ -100,6 +101,8 @@ class TestC3270Smoke(unittest.TestCase):
         result = result.replace('\x1b', '<ESC>').split('\n')
         result[0] = re.sub(' v.*\r', '<version>\r', result[0], count=1)
         result[1] = re.sub(' 1989-.* by', ' <years> by', result[1], count=1)
+        for i in range(len(result)):
+            result[i] = re.sub(' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
         rtext = '\n'.join(result)
         if 'GENERATE' in os.environ:
             # Use this to regenerate the template file.
@@ -108,7 +111,12 @@ class TestC3270Smoke(unittest.TestCase):
             file.close()
         else:
             # Compare what we just got to the reference file.
-            file = open("c3270/Test/smoke.txt", "r", newline='')
+            localtext = f'c3270/Test/smoke_{sys.platform}.txt'
+            if os.path.exists(localtext):
+                text = localtext
+            else:
+                text = 'c3270/Test/smoke.txt'
+            file = open(text, "r", newline='')
             ctext = file.read()
             file.close()
             self.assertEqual(rtext, ctext)

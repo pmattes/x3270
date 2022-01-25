@@ -55,6 +55,7 @@
 # include <netdb.h>
 #endif /*]*/
 #include <stdint.h>
+#include <assert.h>
 #include "tn3270e.h"
 #include "3270ds.h"
 
@@ -1144,20 +1145,15 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
      */
     if (getpeername(sock, &sa.sa, &len) < 0) {
 	/* Not connected. Find out why. */
-	char c;
-	ssize_t nr;
+	int e;
+	socklen_t len = sizeof(e);
 
-	nr = recv(sock, &c, 1, 0);
-	if (nr >= 0) {
-	    /* Failed, don't know why. */
-	    vtrace("output_possible: getpeername failed, recv succeeded "
-		    "(most confusing)\n");
+	if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &e, &len) >= 0) {
+	    vtrace("RCVD socket error %d (%s)\n", e, strerror(e));
+	    connect_error("%s%s", proxy_pending? "(to proxy server) ": "",
+		    strerror(e));
 	} else {
-	    /* Failed, do know why. */
-	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
-		    strerror(errno));
-	    popup_a_sockerr("Connection%s failed",
-		    proxy_pending? " to proxy server": "");
+	    assert(0);
 	}
 	host_disconnect(true);
 	return;
