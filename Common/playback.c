@@ -151,20 +151,8 @@ main(int argc, char *argv[])
     int c;
     FILE *f;
     int s;
-    union {
-	struct sockaddr sa;
-#if defined(AF_INET6) && !defined(_WIN32) /*[*/
-	struct sockaddr_in6 sin6;
-#else /*][*/
-	struct sockaddr_in sin;
-#endif /*]*/
-    } addr;
-#if defined(AF_INET6) && !defined(_WIN32) /*[*/
-    int proto = AF_INET6;
-#else /*][*/
-    int proto = AF_INET;
-#endif /*]*/
-    int addrlen = sizeof(addr);
+    struct sockaddr_in sin;
+    int addrlen = sizeof(sin);
     int one = 1;
     socklen_t len;
 #if !defined(_WIN32) /*[*/
@@ -217,7 +205,7 @@ main(int argc, char *argv[])
     }
 
     /* Listen on a socket. */
-    s = socket(proto, SOCK_STREAM, 0);
+    s = socket(PF_INET, SOCK_STREAM, 0);
     if (s < 0) {
 	sockerr("socket");
 	exit(1);
@@ -227,15 +215,12 @@ main(int argc, char *argv[])
 	sockerr("setsockopt");
 	exit(1);
     }
-    memset(&addr, '\0', sizeof(addr));
-    addr.sa.sa_family = proto;
-#if defined(AF_INET6) && !defined(_WIN32) /*[*/
-    addr.sin6.sin6_port = htons(port);
-#else /*][*/
-    addr.sin.sin_port = htons(port);
-#endif /*]*/
-    if (bind(s, &addr.sa, addrlen) < 0) {
-	sockerr("bind");
+    memset(&sin, '\0', sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin.sin_port = htons(port);
+    if (bind(s, (struct sockaddr *)&sin, addrlen) < 0) {
+	sockerr("playback: bind");
 	exit(1);
     }
     if (listen(s, 1) < 0) {
@@ -280,13 +265,10 @@ main(int argc, char *argv[])
     /* Accept connections and process them. */
     for (;;) {
 	int s2;
-#if defined(AF_INET6) && !defined(_WIN32) /*[*/
-	char buf[INET6_ADDRSTRLEN];
-#endif /*]*/
 
-	memset((char *)&addr, '\0', sizeof(addr));
+	memset((char *)&sin, '\0', sizeof(sin));
 
-	addr.sa.sa_family = proto;
+	sin.sin_family = AF_INET;
 	len = addrlen;
 	printf("Waiting for connection on port %u.\n", port);
 	for (;;) {
@@ -351,21 +333,14 @@ main(int argc, char *argv[])
 	    }
 #endif /*]*/
 	}
-	s2 = accept(s, &addr.sa, &len);
+	s2 = accept(s, (struct sockaddr *)&sin, &len);
 	if (s2 < 0) {
 	    sockerr("accept");
 	    continue;
 	}
 	printf("\nConnection from %s, port %u.\n",
-#if defined(AF_INET6) && !defined(_WIN32) /*[*/
-		inet_ntop(proto, &addr.sin6.sin6_addr, buf,
-		    INET6_ADDRSTRLEN) +
-		     (IN6_IS_ADDR_V4MAPPED(&addr.sin6.sin6_addr)? 7: 0),
-		ntohs(addr.sin6.sin6_port)
-#else /*][*/
-		inet_ntoa(addr.sin.sin_addr),
-		ntohs(addr.sin.sin_port)
-#endif /*]*/
+		inet_ntoa(sin.sin_addr),
+		ntohs(sin.sin_port)
 	);
 #if defined(_WIN32) /*[*/
 	socket2_event = CreateEvent(NULL, FALSE, FALSE, NULL);
