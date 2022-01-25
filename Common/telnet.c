@@ -1133,34 +1133,34 @@ connection_complete(void)
 static void
 output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-#if defined(CONNECT_GETPEERNAME) /*[*/
     sockaddr_46_t sa;
     socklen_t len = sizeof(sa);
-# define COMPLETE_CONNECT(s)	getpeername(s, &sa.sa, &len)
-# else /*][*/
-# define COMPLETE_CONNECT(s)	connect(s, &haddr[ha_ix].sa, sizeof(haddr[0]))
-#endif /*]*/
 
     vtrace("Output possible\n");
 
     /*
-     * Try a connect() again to see if the connection completed sucessfully.
-     * On some systems, such as Linux, this is harmless and succeeds.
-     * On others, such as MacOS, this is mostly harmless and fails
-     * with EISCONN.
-     *
-     * On Solaris, we do a getpeername() instead of a connect(). The second
-     * connect() would fail with EINVAL there.
+     * Do a getpeername() to see if we are connected. If not, try a recv(),
+     * which should fail with the connection error. I hope.
      */
-    if (COMPLETE_CONNECT(sock) < 0) {
-	if (errno != EISCONN) {
+    if (getpeername(sock, &sa.sa, &len) < 0) {
+	/* Not connected. Find out why. */
+	char c;
+	ssize_t nr;
+
+	nr = recv(sock, &c, 1, 0);
+	if (nr >= 0) {
+	    /* Failed, don't know why. */
+	    vtrace("output_possible: getpeername failed, recv succeeded "
+		    "(most confusing)\n");
+	} else {
+	    /* Failed, do know why. */
 	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 		    strerror(errno));
 	    popup_a_sockerr("Connection%s failed",
 		    proxy_pending? " to proxy server": "");
-	    host_disconnect(true);
-	    return;
 	}
+	host_disconnect(true);
+	return;
     }
 
     if (cstate == TCP_PENDING) {
