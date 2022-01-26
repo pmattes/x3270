@@ -210,6 +210,7 @@ class copyserver():
     # Return what we got.
     def data(self):
         self.thread.join(timeout=2)
+        assert(not self.thread.is_alive())
         return self.result
 
 # Simple socket listen / accept / receive all.
