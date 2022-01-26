@@ -47,7 +47,7 @@ def run_pipe(command):
     assert(res.endswith(b'ok\n'))
 
 # The actions are String(args) + Disconnect()
-action = 'String("' + ' '.join(sys.argv[2:]) + '") Disconnect()'
+action = 'String("' + ' '.join(sys.argv[2:]) + '") Disconnect() Quit()'
 
 # Run them.
 if sys.argv[1] == '-http':
