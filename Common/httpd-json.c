@@ -34,6 +34,7 @@
 
 #include <inttypes.h>
 
+#include "b3270proto.h"
 #include "json.h"
 #include "task.h"
 #include "utils.h"
@@ -120,26 +121,26 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
     }
 
     /* Find the action. */
-    if (!json_struct_member(json, "action", NT, &jaction)) {
+    if (!json_struct_member(json, AttrAction, NT, &jaction)) {
 	*errmsg = NewString("Missing struct element 'action'");
 	goto fail;
     }
     if (json_type(jaction) != JT_STRING) {
-	*errmsg = NewString("Invalid 'action' type");
+	*errmsg = NewString("Invalid '" AttrAction "' type");
 	goto fail;
     }
     value = json_string_value(jaction, &len);
     action = xs_buffer("%.*s", (int)len, value);
 
     BEGIN_JSON_STRUCT_FOREACH(json, key, key_length, element) {
-	if (json_key_matches(key, key_length, "action")) {
+	if (json_key_matches(key, key_length, AttrAction)) {
 	    continue;
 	}
-	if (json_key_matches(key, key_length, "args")) {
+	if (json_key_matches(key, key_length, AttrArgs)) {
 	    unsigned array_length;
 
 	    if (json_type(element) != JT_ARRAY) {
-		*errmsg = NewString("Invalid 'args' type");
+		*errmsg = NewString("Invalid '" AttrArgs "' type");
 		goto fail;
 	    }
 	    array_length = json_array_length(element);
@@ -154,7 +155,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 		case JT_STRING:
 		    break;
 		default:
-		    *errmsg = NewString("Invalid arg type");
+		    *errmsg = NewString("Invalid '" AttrArgs "' element type");
 		    goto fail;
 		}
 	    }
