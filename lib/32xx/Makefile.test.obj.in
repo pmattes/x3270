@@ -41,9 +41,9 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage
 
 test: base64_test xpopen_test
 	$(RM) base64_test.gcda
-	./base64_test
+	./base64_test $(TESTOPTIONS)
 	$(RM) xpopen_test.gcda
-	./xpopen_test
+	./xpopen_test $(TESTOPTIONS)
 
 base64_test: $(BASE64_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(BASE64_OBJS)

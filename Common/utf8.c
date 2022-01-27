@@ -179,9 +179,6 @@ utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4)
 	}
 	*ucs4 = ((utf8[0] << 6) & 0x7c0) |
 	    	 (utf8[1] &       0x03f);
-	if (*ucs4 < 0x00000080) {
-	    return -1;
-	}
 	return 2;
     }
 
