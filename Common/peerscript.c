@@ -129,6 +129,7 @@ typedef struct {
     ioid_t id;		/* I/O identifier */
     char *buf;		/* pending command */
     size_t buf_len;	/* length of pending command */
+    size_t pj_offset;	/* partial JSON offset */
     bool enabled;	/* is this peer enabled? */
     char *name;		/* task name */
     unsigned capabilities; /* self-reported capabilities */
@@ -195,8 +196,10 @@ close_peer(peer_t *p)
  * @param[in] p		Peer state
  * @param[in] buf	Command buffer
  * @param[in] len	Buffer length
+ *
+ * @return true if command complete, false if partial JSON found
  */
-static void
+static bool
 do_push(peer_t *p, const char *buf, size_t len)
 {
     const char *s = buf;
@@ -227,12 +230,15 @@ do_push(peer_t *p, const char *buf, size_t len)
 		name = push_cb(single, strlen(single), tcb, (task_cbh)p);
 		Free(single);
 	    }
+	} else if (ret == HJ_INCOMPLETE) {
+	    Free(errmsg);
+	    return false;
 	} else {
 	    /* Bad JSON. */
 	    char *fail = xs_buffer(AnFail "(\"%s\")", errmsg);
 
 	    /* Answer in JSON only if successfully parsed. */
-	    p->json_mode = ret == HJ_BAD_CONTENT;
+	    p->json_mode = (ret != HJ_BAD_SYNTAX);
 	    Free(errmsg);
 	    name = push_cb(fail, strlen(fail), tcb, (task_cbh)p);
 	    Free(fail);
@@ -242,6 +248,7 @@ do_push(peer_t *p, const char *buf, size_t len)
 	name = push_cb(s, len, tcb, (task_cbh)p);
     }
     Replace(p->name, NewString(name));
+    return true;
 }
 
 /**
@@ -249,29 +256,38 @@ do_push(peer_t *p, const char *buf, size_t len)
  *
  * @param[in,out] p	Peer
  *
- * @return true if command was run. Command is deleted from the buffer.
+ * @return true if command was run and command deleted from the buffer.
  */
 static bool
 run_next(peer_t *p)
 {
     size_t cmdlen;
 
-    /* Find a newline in the buffer. */
-    for (cmdlen = 0; cmdlen < p->buf_len; cmdlen++) {
-	if (p->buf[cmdlen] == '\n') {
+    while (true) {
+	/* Find the first newline in the buffer. */
+	for (cmdlen = p->pj_offset; cmdlen < p->buf_len; cmdlen++) {
+	    if (p->buf[cmdlen] == '\n') {
+		break;
+	    }
+	}
+	if (cmdlen >= p->buf_len) {
+	    /* No newline. */
+	    return false;
+	}
+
+	/*
+	 * Run the first command.
+	 * cmdlen is the number of characters in the command, not including the
+	 * newline.
+	 */
+	if (do_push(p, p->buf, cmdlen)) {
 	    break;
 	}
-    }
-    if (cmdlen >= p->buf_len) {
-	return false;
-    }
 
-    /*
-     * Run the first command.
-     * cmdlen is the number of characters in the command, not including the
-     * newline.
-     */
-    do_push(p, p->buf, cmdlen);
+	/* Partial JSON. */
+	p->pj_offset = cmdlen + 1;
+    }
+    p->pj_offset = 0;
 
     /* If there is more, shift it over. */
     cmdlen++; /* count the newline */

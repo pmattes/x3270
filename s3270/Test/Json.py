@@ -86,7 +86,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -108,7 +108,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         port, ts = TestCommon.unused_port()
-        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
@@ -130,11 +130,40 @@ class TestS3270Json(unittest.TestCase):
         # Test the output.
         self.check_result_json(result)
 
+    # s3270 multi-line socket JSON test
+    def test_s3270_socket_json_multi(self):
+
+        # Start s3270.
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(['s3270', '-trace', '-scriptport', str(port), '-scriptportonce'])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
+
+        # Push a JSON-formatted command at it, in two pieces.
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        command = json.dumps({'action':'Set','args':['startTls']}).replace(' ', '\n').encode('utf8') + b'\n'
+        s.sendall(command[0:15])
+        time.sleep(0.2)
+        s.sendall(command[15:])
+
+        # Decode the result.
+        result = self.recv_to_eof(s, 2)
+        s.close()
+
+        # Wait for the process to exit successfully.
+        rc = s3270.wait()
+        self.assertEqual(0, rc)
+
+        # Test the output.
+        self.check_result_json(result)
+
     # s3270 multi-line stdin JSON test
     def test_s3270_stdin_multiline_json(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -155,7 +184,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_string(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -177,7 +206,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         port, ts = TestCommon.unused_port()
-        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
@@ -203,7 +232,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_bad_semantics(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a bad JSON-formatted command at it.
@@ -229,7 +258,7 @@ class TestS3270Json(unittest.TestCase):
         port, ts = TestCommon.unused_port()
 
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
@@ -258,7 +287,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_syntax(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a bad syntax JSON-formatted command at it.
@@ -286,7 +315,7 @@ class TestS3270Json(unittest.TestCase):
         port, ts = TestCommon.unused_port()
 
         # Start s3270.
-        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
@@ -317,7 +346,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_mode_switch(self):
 
         # Start s3270.
-        s3270 = Popen(["s3270"], stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(['s3270'], stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push s3270, then JSON, then s3270, then JSON at it.
@@ -347,7 +376,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         port, ts = TestCommon.unused_port()
-        s3270 = Popen(["s3270", '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
