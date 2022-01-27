@@ -957,6 +957,9 @@ product_set_appres_defaults(void)
 
     /* XML is wrapped by default. */
     appres.b3270.wrapper_doc = true;
+
+    /* UTF-8 by default. */
+    appres.utf8 = true;
 }
 
 /**
