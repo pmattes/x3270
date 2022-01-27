@@ -240,13 +240,13 @@ class TestB3270Json(unittest.TestCase):
         self.assertEqual(0, rc)
 
     # b3270 JSON socket test
-    def test_b3270_json_socket(self):
+    def b3270_json_socket(self, ipv6=False):
 
         # Listen for a connection from b3270.
-        l = TestCommon.listenserver()
+        l = TestCommon.listenserver(ipv6=ipv6)
 
         # Start b3270.
-        b3270 = Popen(['b3270', '-json', '-callback', str(l.port)],
+        b3270 = Popen(['b3270', '-json', '-callback', f'{l.qloopback}:{l.port}'],
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -268,6 +268,12 @@ class TestB3270Json(unittest.TestCase):
 
         rc = b3270.wait(timeout=2)
         self.assertEqual(0, rc)
+
+    # b3270 JSON socket test
+    def test_b3270_json_socket(self):
+        self.b3270_json_socket()
+    def test_b3270_json_socket_ipv6(self):
+        self.b3270_json_socket(ipv6=True)
 
 if __name__ == '__main__':
     unittest.main()

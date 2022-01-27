@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2021 Paul Mattes.
+ * Copyright (c) 2018, 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <signal.h>
+#include "sa_malloc.h"
 #include "utils.h"
 #include "xpopen.h"
 
@@ -136,32 +137,7 @@ main(int argc, char *argv[])
     fclose(f);
     unlink(outfile);
 
+    sa_malloc_leak_check();
+
     printf("PASS\n");
-}
-
-void *
-Malloc(size_t len)
-{
-    void *ret = malloc(len);
-
-    if (ret == NULL) {
-	fprintf(stderr, "Out of memory\n");
-	exit(1);
-    }
-    return ret;
-}
-
-void *
-Calloc(size_t num_elem, size_t elem_size)
-{
-    void *ret = Malloc(num_elem * elem_size);
-
-    memset(ret, '\0', num_elem * elem_size);
-    return ret;
-}
-
-void
-Free(void *buf)
-{
-    free(buf);
 }

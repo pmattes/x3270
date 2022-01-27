@@ -47,13 +47,13 @@ class TestS3270Smoke(unittest.TestCase):
             child.wait()
 
     # s3270 NVT smoke test
-    def test_s3270_nvt_smoke(self):
+    def s3270_nvt_smoke(self, ipv6=False):
 
         # Start a thread to read s3270's output.
-        nc = TestCommon.copyserver()
+        nc = TestCommon.copyserver(ipv6=ipv6)
 
         # Start s3270.
-        s3270 = Popen(["s3270", f"a:c:t:127.0.0.1:{nc.port}"], stdin=PIPE,
+        s3270 = Popen(["s3270", f"a:c:t:{nc.qloopback}:{nc.port}"], stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -72,12 +72,19 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.close()
         s3270.wait(timeout=2)
 
+    # s3270 NVT smoke test
+    def test_s3270_nvt_smoke(self):
+        self.s3270_nvt_smoke()
+    def test_s3270_nvt_smoke_ipv6(self):
+        self.s3270_nvt_smoke(ipv6=True)
+
     # s3270 3270 smoke test
-    def test_s3270_3270_smoke(self):
+    def s3270_3270_smoke(self, ipv6=False):
 
         # Start 'playback' to read s3270's output.
-        port, ts = TestCommon.unused_port()
-        playback = Popen(["playback", "-b", "-p", str(port),
+        port, ts = TestCommon.unused_port(ipv6=ipv6)
+        loopback = '[::1]' if ipv6 else '127.0.0.1'
+        playback = Popen(["playback", "-b", "-p", f'{loopback}:{port}',
             "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
         self.children.append(playback)
         TestCommon.check_listen(port)
@@ -85,7 +92,7 @@ class TestS3270Smoke(unittest.TestCase):
 
         # Start s3270.
         s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            f"127.0.0.1:{port}"], stdin=PIPE, stdout=DEVNULL)
+            f'{loopback}:{port}'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Feed s3270 some actions.
@@ -99,24 +106,31 @@ class TestS3270Smoke(unittest.TestCase):
         s3270.stdin.close()
         s3270.wait(timeout=2)
 
+    # s3270 3270 smoke test
+    def test_s3270_3270_smoke(self):
+        self.s3270_3270_smoke()
+    def test_s3270_3270_smoke_ipv6(self):
+        self.s3270_3270_smoke(ipv6=True)
+
     # s3270 httpd smoke test
-    def test_s3270_httpd_smoke(self):
+    def s3270_httpd_smoke(self, ipv6=False):
 
         # Start s3270.
-        port, ts = TestCommon.unused_port()
-        s3270 = Popen(["s3270", "-httpd", f"127.0.0.1:{port}"])
+        port, ts = TestCommon.unused_port(ipv6=ipv6)
+        loopback = '[::1]' if ipv6 else '127.0.0.1'
+        s3270 = Popen(["s3270", "-httpd", f'{loopback}:{port}'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()
 
         # Send it a JSON GET.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
+        r = requests.get(f'http://{loopback}:{port}/3270/rest/json/Set(monoCase)')
         s = r.json()
         self.assertEqual(s['result'], ['false'])
         self.assertTrue(s['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
         # Send it a JSON POST.
-        r = requests.post(f'http://127.0.0.1:{port}/3270/rest/post',
+        r = requests.post(f'http://{loopback}:{port}/3270/rest/post',
                 json={'action': 'set', 'args': ['monoCase']})
         s = r.json()
         self.assertEqual(s['result'], ['false'])
@@ -125,6 +139,12 @@ class TestS3270Smoke(unittest.TestCase):
         # Wait for the process to exit.
         s3270.kill()
         s3270.wait()
+
+    # s3270 httpd smoke test
+    def test_s3270_httpd_smoke(self):
+        self.s3270_httpd_smoke()
+    def test_s3270_https_smoke_ipv6(self):
+        self.s3270_httpd_smoke(ipv6=True)
 
     # s3270 stdin smoke test
     def test_s3270_stdin(self):

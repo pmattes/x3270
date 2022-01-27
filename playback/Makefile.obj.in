@@ -32,17 +32,17 @@ CC = @CC@
 all: playback
 
 HOST = @host@
+include libs.mk
 
-PLAYBACK_OBJECTS = playback.o
+PLAYBACK_OBJECTS = playback.o sa_malloc.o
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
-playback: $(PLAYBACK_OBJECTS)
-	$(CC) -o $@ $(PLAYBACK_OBJECTS) $(LDFLAGS)
-
+playback: $(PLAYBACK_OBJECTS) $(DEP3270) $(DEP32XX)
+	$(CC) -o $@ $(LDFLAGS) $(PLAYBACK_OBJECTS) $(LD3270) $(LD32XX) $(LIBS)
 
 clean:
 	$(RM) *.o

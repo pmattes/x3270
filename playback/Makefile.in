@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2021 Paul Mattes.
+# Copyright (c) 2016-2017, 2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@ export VPATH = $(this):$(top)/Common
 export TOP = $(top)
 export THIS = $(this)
 
-MAKEINC = -I$(this)
+MAKEINC = -I$(this) -I$(top)/Common
 
 all: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@

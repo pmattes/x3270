@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2021-2022 Paul Mattes.
+ * Copyright (c) 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,9 @@
  */
 
 /*
- *	base64_test.c
- *		Base64 encoding tests.
+ *      sa_malloc.h
+ *              Headers for standalone instrumented malloc.
  */
 
-#include "globals.h"
-
-#include <assert.h>
-
-#include "base64.h"
-#include "sa_malloc.h"
-
-int
-main(int argc, char *argv[])
-{
-    char *s[] = {
-	"foobar",
-	"x",
-	"xy",
-	"xyz",
-	"abcãd",
-	"username:password",
-	"Bzz Bzz Bzz",
-	NULL };
-    int i;
-    bool verbose = 0;
-
-    if (argc > 1 && !strcmp(argv[1], "-v")) {
-	verbose = true;
-    }
-
-    for (i = 0; s[i] != NULL; i++) {
-	char *b = base64_encode(s[i]);
-	char *e = base64_decode(b);
-
-	if (verbose) {
-	    printf("'%s' -> '%s' -> '%s'\n", s[i], b, e);
-	}
-	assert (!strcmp(s[i], e));
-	Free(b);
-	Free(e);
-    }
-
-    assert(base64_decode("a=b") == NULL);
-    assert(base64_decode("a===") == NULL);
-    assert(base64_decode("[") == NULL);
-
-    sa_malloc_leak_check();
-
-    printf("PASS\n");
-    return 0;
-}
+void lazya_free(void);
+void sa_malloc_leak_check(void);

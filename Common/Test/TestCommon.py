@@ -171,22 +171,26 @@ def xml_prettify(elem):
 
 # Generate an unused port to listen on.
 # When the listen is done, close the socket.
-def unused_port():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def unused_port(ipv6=False):
+    s = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('0.0.0.0', 0))
+    s.bind(('::' if ipv6 else '0.0.0.0', 0))
     return (s.getsockname()[1], s)
 
 # Simple socket copy server.
 class copyserver():
 
     port = 0
+    loopback = '127.0.0.1'
+    qloopback = '127.0.0.1'
 
     # Initialization.
-    def __init__(self, port=0):
-        self.listensocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+    def __init__(self, port=0, ipv6=False):
+        self.listensocket = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM, 0)
         self.listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.listensocket.bind(('127.0.0.1', port))
+        self.loopback = '::1' if ipv6 else '127.0.0.1'
+        self.qloopback = '[::1]' if ipv6 else '127.0.0.1'
+        self.listensocket.bind((self.loopback, port))
         if port == 0:
             self.port = self.listensocket.getsockname()[1]
         else:
@@ -217,11 +221,15 @@ class copyserver():
 class listenserver():
 
     port = 0
+    loopback = '127.0.0.1'
+    qloopback = '127.0.0.1'
 
     # Initialization.
-    def __init__(self):
-        self.listensock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        self.listensock.bind(("127.0.0.1", 0))
+    def __init__(self, ipv6=False):
+        self.listensock = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.loopback = '::1' if ipv6 else '127.0.0.1'
+        self.qloopback = '[::1]' if ipv6 else '127.0.0.1'
+        self.listensock.bind((self.loopback, 0))
         self.port = self.listensock.getsockname()[1]
         self.listensock.listen()
 

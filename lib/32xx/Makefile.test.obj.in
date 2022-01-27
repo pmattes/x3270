@@ -31,8 +31,8 @@ CC = @CC@
 
 all: test
 
-BASE64_OBJS = base64_test.o base64.o
-XPOPEN_OBJS = xpopen_test.o xpopen.o llist.o
+BASE64_OBJS = base64_test.o base64.o sa_malloc.o
+XPOPEN_OBJS = xpopen_test.o xpopen.o llist.o sa_malloc.o
 OBJS = $(BASE64_OBJS) $(XPOPEN_OBJS)
 
 CCOPTIONS = @CCOPTIONS@

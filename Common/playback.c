@@ -55,7 +55,10 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define PORT		4001
+#include "bind-opt.h"
+#include "resolver.h"
+#include "sa_malloc.h"
+
 #define BSIZE		16384
 #define LINEDUMP_MAX	32
 
@@ -65,7 +68,6 @@
 # define sockerr(s)     win32_perror(s)
 #endif /*]*/
 
-int port = PORT;
 char *me;
 static enum {
     NONE, WRONG, BASE,
@@ -151,15 +153,17 @@ main(int argc, char *argv[])
     int c;
     FILE *f;
     int s;
-    struct sockaddr_in sin;
-    int addrlen = sizeof(sin);
+    struct sockaddr *sa;
+    socklen_t addrlen;
+    char ahost[256];
+    char aport[256];
     int one = 1;
-    socklen_t len;
 #if !defined(_WIN32) /*[*/
     int flags;
 #endif /*]*/
     bool bidir = false;
     bool wait = false;
+    const char *portstring = "4001";
 #if defined(_WIN32) /*[*/
     HANDLE socket_event;
 #endif /*]*/
@@ -180,7 +184,7 @@ main(int argc, char *argv[])
 	    wait = true;
 	    break;
 	case 'p':
-	    port = atoi(optarg);
+	    portstring = optarg;
 	    break;
 	default:
 	    usage(NULL);
@@ -205,7 +209,11 @@ main(int argc, char *argv[])
     }
 
     /* Listen on a socket. */
-    s = socket(PF_INET, SOCK_STREAM, 0);
+    if (!parse_bind_opt(portstring, &sa, &addrlen)) {
+	fprintf(stderr, "Cannot resolve port '%s'\n", portstring);
+	exit(1);
+    }
+    s = socket(sa->sa_family, SOCK_STREAM, 0);
     if (s < 0) {
 	sockerr("socket");
 	exit(1);
@@ -215,12 +223,8 @@ main(int argc, char *argv[])
 	sockerr("setsockopt");
 	exit(1);
     }
-    memset(&sin, '\0', sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port = htons(port);
-    if (bind(s, (struct sockaddr *)&sin, addrlen) < 0) {
-	sockerr("playback: bind");
+    if (bind(s, sa, addrlen) < 0) {
+	sockerr("bind");
 	exit(1);
     }
     if (listen(s, 1) < 0) {
@@ -265,12 +269,18 @@ main(int argc, char *argv[])
     /* Accept connections and process them. */
     for (;;) {
 	int s2;
+	union {
+	    struct sockaddr sa;
+	    struct sockaddr_in sin;
+	    struct sockaddr_in6 sin6;
+	} asa;
 
-	memset((char *)&sin, '\0', sizeof(sin));
-
-	sin.sin_family = AF_INET;
-	len = addrlen;
-	printf("Waiting for connection on port %u.\n", port);
+	if (numeric_host_and_port(sa, addrlen, ahost, sizeof(ahost),
+		    aport, sizeof(aport), NULL)) {
+	    printf("Waiting for connection on %s, port %s.\n", ahost, aport);
+	} else {
+	    printf("Waiting for connection.\n");
+	}
 	for (;;) {
 #if !defined(_WIN32) /*[*/
 	    fd_set rfds;
@@ -333,15 +343,19 @@ main(int argc, char *argv[])
 	    }
 #endif /*]*/
 	}
-	s2 = accept(s, (struct sockaddr *)&sin, &len);
+	addrlen = sizeof(asa);
+	memset(&asa, 0, sizeof(asa));
+	s2 = accept(s, &asa.sa, &addrlen);
 	if (s2 < 0) {
 	    sockerr("accept");
 	    continue;
 	}
-	printf("\nConnection from %s, port %u.\n",
-		inet_ntoa(sin.sin_addr),
-		ntohs(sin.sin_port)
-	);
+	if (numeric_host_and_port(&asa.sa, addrlen, ahost, sizeof(ahost),
+		    aport, sizeof(aport), NULL)) {
+	    printf("\nConnection from %s, port %s.\n", ahost, aport);
+	} else {
+	    printf("\nConnection from ???.\n");
+	}
 #if defined(_WIN32) /*[*/
 	socket2_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	WSAEventSelect(s2, socket2_event, FD_READ | FD_CLOSE);
@@ -901,23 +915,3 @@ done:
 
     return false;
 }
-
-#if defined(_WIN32) /*[*/
-/* Malloc and Free, used by library functions. */
-
-void *
-Malloc(size_t len)
-{
-    void *ret = malloc(len);
-
-    assert(ret != NULL);
-    return ret;
-}
-
-void
-Free(void *buf)
-{
-    free(buf);
-}
-
-#endif /*]*/

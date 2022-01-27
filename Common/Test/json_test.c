@@ -38,8 +38,7 @@
 #include <fcntl.h>
 
 #include "json.h"
-
-static size_t allocated;
+#include "sa_malloc.h"
 
 static jmp_buf jbuf;
 static bool got_sigabrt;
@@ -49,7 +48,7 @@ static int old_stderr;
 /* Macro to free a JSON object and make sure there are no memory leaks. */
 #define CLEAN_UP do { \
     json_free(j); \
-    assert(allocated == 0); \
+    sa_malloc_leak_check(); \
 } while (false)
 
 /*
@@ -58,7 +57,7 @@ static int old_stderr;
  */
 #define CLEAN_UP_BOTH do { \
     json_free_both(j, e); \
-    assert(allocated == 0); \
+    sa_malloc_leak_check(); \
 } while (false)
 
 /* Macros to wrap code that is expected to fail an assertion. */
@@ -1039,120 +1038,3 @@ clone_tests(void)
     json_free(k);
     CLEAN_UP;
 }
-
-/* Glue memory allocation functions, with verification and tracking. */
-
-/* Preamble saved before each malloc'd block. */
-typedef struct {
-    size_t signature;	/* signature for verification */
-    size_t len;		/* size for Realloc */
-} pre_t;
-#define SS		sizeof(pre_t)
-#define SIGNATURE	0x4a534f4e
-
-static void
-inc_allocated(const char *why, size_t len)
-{
-    allocated += len;
-}
-
-static void
-dec_allocated(const char *why, size_t len)
-{
-    allocated -= len;
-}
-
-void *
-Malloc(size_t len)
-{
-    void *ret;
-    pre_t *p;
-
-    inc_allocated("Malloc", len);
-    ret = malloc(SS + len);
-    p = (pre_t *)ret;
-    p->signature = SIGNATURE;
-    p->len = len;
-    return (void *)(p + 1);
-}
-
-void *
-Realloc(void *buf, size_t len)
-{
-    pre_t *p;
-
-    if (buf == NULL) {
-	return Malloc(len);
-    }
-
-    p = (pre_t *)buf - 1;
-    assert(p->signature == SIGNATURE);
-    dec_allocated("Realloc", p->len);
-    inc_allocated("Realloc", len);
-    p = realloc(p, SS + len);
-    assert(p->signature == SIGNATURE);
-    p->len = len;
-    return (void *)(p + 1);
-}
-
-void *
-Calloc(size_t nmemb, size_t size)
-{
-    size_t total = nmemb * size;
-    void *ret;
-
-    ret = Malloc(total);
-    memset(ret, 0, total);
-    return ret;
-}
-
-void
-Free(void *buf)
-{
-    if (buf != NULL) {
-	pre_t *p = (pre_t *)buf - 1;
-
-	assert(p->signature == SIGNATURE);
-	dec_allocated("Free", p->len);
-	free(p);
-    }
-}
-
-char *
-NewString(const char *s)
-{
-    char *buf = Malloc(strlen(s) + 1);
-
-    return strcpy(buf, s);
-}
-
-/* More glue. */
-
-#if defined(_WIN32) /*[*/
-void vasprintf(char **, const char *, va_list);
-#endif /*]*/
-
-char *
-xs_buffer(const char *fmt, ...)
-{
-    va_list ap;
-    char *ret;
-    char *copy;
-
-    va_start(ap, fmt);
-    vasprintf(&ret, fmt, ap);
-    va_end(ap);
-
-    copy = Malloc(strlen(ret) + 1);
-    strcpy(copy, ret);
-    free(ret);
-    return copy;
-}
-
-#if !defined(_WIN32) /*[*/
-int
-vscprintf(const char *fmt, va_list ap)
-{
-    return vsnprintf(NULL, 0, fmt, ap);
-}
-#endif /*]*/

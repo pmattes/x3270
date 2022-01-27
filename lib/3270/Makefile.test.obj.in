@@ -31,29 +31,39 @@ CC = @CC@
 
 all: test
 
-JSON_OBJS = json_test.o json.o utf8.o varbuf.o
+JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o
+BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o sa_malloc.o
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
-test: json_test
-	$(RM) json_test.gcda
+test: json_test bind_opts_test
+	$(RM) json_test.gcda bind_opts_test.gcda
 	./json_test
+	./bind_opts_test
 
 json_test: $(JSON_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(JSON_OBJS)
 
-coverage: json_coverage
+bind_opts_test: $(BIND_OPTS_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(BIND_OPTS_OBJS)
+
+coverage: json_coverage bind_opts_coverage
 
 json_coverage: json_test
 	./json_test
 	gcov -k json.c
 
+bind_opts_coverage: bind_opts_test
+	./bind_opts_test
+	gcov -k bind-opts.c
+
 clean:
 	$(RM) *.o *.gcda *.gcno *.gcov
 
 clobber: clean
-	$(RM) json_test
+	$(RM) json_test bind_opts_test
 
 -include $(JSON_OBJS:.o=.d)
+-include $(BIND_OPTS_OBJS:.o=.d)
