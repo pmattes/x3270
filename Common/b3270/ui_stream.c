@@ -726,15 +726,16 @@ ui_action_done(task_cbh handle, bool success, bool abort)
     return true;
 }
 
-/* Emit a warning about an unknown attribute. */
+/* Emit a warning about an unknown attribute/member. */
 static void
 ui_unknown_attribute(const char *element, const char *attribute)
 {
     ui_leaf(IndUiError,
 	    AttrFatal, AT_BOOLEAN, false,
-	    AttrText, AT_STRING, "unknown attribute",
-	    AttrElement, AT_STRING, element,
-	    AttrAttribute, AT_STRING, attribute,
+	    AttrText, AT_STRING, XML_MODE? "unknown attribute":
+		"unknown member",
+	    XML_MODE? AttrElement: AttrOperation, AT_STRING, element,
+	    XML_MODE? AttrAttribute: AttrMember, AT_STRING, attribute,
 	    AttrLine,
 		XML_MODE? AT_INT: AT_SKIP_INT,
 		XML_MODE? (int64_t)XML_GetCurrentLineNumber(uix.parser): 0,
@@ -744,15 +745,16 @@ ui_unknown_attribute(const char *element, const char *attribute)
 	    NULL);
 }
 
-/* Emit a warning about a missing attribute. */
+/* Emit a warning about a missing attribute/member. */
 static void
 ui_missing_attribute(const char *element, const char *attribute)
 {
     ui_leaf(IndUiError,
 	    AttrFatal, AT_BOOLEAN, false,
-	    AttrText, AT_STRING, "missing attribute",
-	    AttrElement, AT_STRING, element,
-	    AttrAttribute, AT_STRING, attribute,
+	    AttrText, AT_STRING, XML_MODE? "missing attribute":
+		"missing member",
+	    XML_MODE? AttrElement: AttrOperation, AT_STRING, element,
+	    XML_MODE? AttrAttribute: AttrMember, AT_STRING, attribute,
 	    AttrLine,
 		XML_MODE? AT_INT: AT_SKIP_INT,
 		XML_MODE? (int64_t)XML_GetCurrentLineNumber(uix.parser): 0,
@@ -768,9 +770,9 @@ uij_non_string_attribute(const char *element, const char *attribute)
 {
     ui_leaf(IndUiError,
 	    AttrFatal, AT_BOOLEAN, false,
-	    AttrText, AT_STRING, "attribute must be a string",
-	    AttrElement, AT_STRING, element,
-	    AttrAttribute, AT_STRING, attribute,
+	    AttrText, AT_STRING, "member must be a string",
+	    AttrOperation, AT_STRING, element,
+	    AttrMember, AT_STRING, attribute,
 	    NULL);
 }
 
@@ -894,8 +896,8 @@ do_jrun(json_t *j)
 		ui_leaf(IndUiError,
 			AttrFatal, AT_BOOLEAN, false,
 			AttrText, AT_STRING, errmsg,
-			AttrElement, AT_STRING, OperRun,
-			AttrAttribute, AT_STRING, AttrActions,
+			AttrOperation, AT_STRING, OperRun,
+			AttrMember, AT_STRING, AttrActions,
 			NULL);
 		Free(errmsg);
 		return;
@@ -993,7 +995,8 @@ complete_register(const char *name, const char *help_text,
 	    ui_leaf(IndUiError,
 		    AttrFatal, AT_BOOLEAN, false,
 		    AttrText, AT_STRING, "invalid name",
-		    AttrElement, AT_STRING, OperRegister,
+		    XML_MODE? AttrElement: AttrOperation, AT_STRING,
+			OperRegister,
 		    AttrLine,
 			XML_MODE? AT_INT: AT_SKIP_INT,
 			XML_MODE?
@@ -1163,9 +1166,9 @@ fail:
     ui_leaf(IndUiError,
 	    AttrFatal, AT_BOOLEAN, false,
 	    AttrText, AT_STRING,
-		"attribute must be a string or array of strings",
-	    AttrElement, AT_STRING, element,
-	    AttrAttribute, AT_STRING, attribute,
+		"member must be a string or array of strings",
+	    AttrOperation, AT_STRING, element,
+	    AttrMember, AT_STRING, attribute,
 	    NULL);
     return NULL;
 }
