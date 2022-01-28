@@ -37,6 +37,7 @@
 /* Indications. */
 #define IndAttr		"attr"
 #define IndBell		"bell"
+#define IndChanges	"changes"
 #define IndChar		"char"
 #define IndCodePage	"code-page"
 #define IndCodePages	"code-pages"
@@ -60,6 +61,7 @@
 #define IndProxy	"proxy"
 #define IndPopup	"popup"
 #define IndRow		"row"
+#define IndRows		"rows"
 #define IndRunResult	"run-result"
 #define IndScreen	"screen"
 #define IndScreenMode	"screen-mode"

@@ -771,8 +771,6 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	    uix_open_leaf((d->reason == RD_TEXT)? IndChar: IndAttr);
 	} else {
 	    uij_open_struct(NULL);
-	    ui_add_element("type", AT_STRING,
-		    (d->reason == RD_TEXT)? IndChar: IndAttr);
 	}
 	ui_add_element(AttrColumn, AT_INT, (int64_t)(d->start_col + 1));
 	if (oldr[d->start_col].fg != newr[d->start_col].fg) {
@@ -900,7 +898,7 @@ emit_diff(screen_t *old, screen_t *new)
     }
     emit_cursor_cond(false);
     if (JSON_MODE) {
-	uij_open_array("updates");
+	uij_open_array(IndRows);
     }
 
     for (row = 0; row < maxROWS; row++) {
@@ -914,7 +912,7 @@ emit_diff(screen_t *old, screen_t *new)
 	    } else {
 		uij_open_struct(NULL);
 		ui_add_element(AttrRow, AT_INT, (int64_t)(row + 1));
-		uij_open_array("changes");
+		uij_open_array(IndChanges);
 	    }
 	    emit_row(&old[row * maxCOLS], &new[row * maxCOLS]);
 	    if (XML_MODE) {
