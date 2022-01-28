@@ -248,7 +248,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Test the output, which is in JSON format.
         j = json.loads(stdout)
-        self.assertEqual("Missing struct element 'action'", j['result'][0])
+        self.assertEqual("Missing object member 'action'", j['result'][0])
         self.assertFalse(j['success'])
         self.assertTrue(j['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
@@ -279,7 +279,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Test the output.
         j = json.loads(result)
-        self.assertEqual("Missing struct element 'action'", j['result'][0])
+        self.assertEqual("Missing object member 'action'", j['result'][0])
         self.assertFalse(j['success'])
         self.assertTrue(j['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 

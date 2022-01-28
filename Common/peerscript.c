@@ -400,11 +400,11 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 	json_t *result_array;
 
 	if (p->json_result == NULL) {
-            p->json_result = json_struct();
+            p->json_result = json_object();
             result_array = json_array();
-            json_struct_set(p->json_result, "result", NT, result_array);
+            json_object_set(p->json_result, "result", NT, result_array);
         } else {
-            assert(json_struct_member(p->json_result, "result", NT,
+            assert(json_object_member(p->json_result, "result", NT,
                         &result_array));
         }
 	json_array_append(result_array, json_string(buf, len));
@@ -469,11 +469,11 @@ peer_done(task_cbh handle, bool success, bool abort)
 	/* Print the result. */
 
         if (p->json_result == NULL) {
-            p->json_result = json_struct();
-            json_struct_set(p->json_result, "result", NT, json_array());
+            p->json_result = json_object();
+            json_object_set(p->json_result, "result", NT, json_array());
         }
-        json_struct_set(p->json_result, "success", NT, json_boolean(success));
-        json_struct_set(p->json_result, "status", NT, json_string(prompt, NT));
+        json_object_set(p->json_result, "success", NT, json_boolean(success));
+        json_object_set(p->json_result, "status", NT, json_string(prompt, NT));
         s = lazyaf("%s\n", w = json_write_o(p->json_result, JW_ONE_LINE));
         Free(w);
         json_free(p->json_result);

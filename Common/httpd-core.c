@@ -618,8 +618,8 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 
 		    k = json_array();
 		    json_array_set(k, 0, json_string(buf, sl));
-		    j = json_struct();
-		    json_struct_set(j, "result", NT, k);
+		    j = json_object();
+		    json_object_set(j, "result", NT, k);
 		    httpd_print(h, HP_BUFFER, "%s\n", json_write(j));
 		    json_free(j);
 		}

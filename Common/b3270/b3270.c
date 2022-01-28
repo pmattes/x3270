@@ -339,7 +339,7 @@ dump_codepages(void)
     }
 
     if (JSON_MODE) {
-	uij_open_struct(NULL);
+	uij_open_object(NULL);
 	uij_open_array(IndCodePages);
     } else {
 	uix_push(IndCodePages, NULL);
@@ -367,7 +367,7 @@ dump_codepages(void)
 	     *    "aliases": [ "bar", "baz", ... ]
 	     *  }
 	     */
-	    uij_open_struct(NULL);
+	    uij_open_object(NULL);
 	    ui_add_element("name", AT_STRING, cpnames[i].name);
 	    if (cpnames[i].num_aliases) {
 		int j;
@@ -379,12 +379,12 @@ dump_codepages(void)
 		}
 		uij_close_array();
 	    }
-	    uij_close_struct();
+	    uij_close_object();
 	}
     }
     if (JSON_MODE) {
 	uij_close_array();
-	uij_close_struct();
+	uij_close_object();
     } else {
 	uix_pop();
     }
@@ -411,7 +411,7 @@ dump_models(void)
     if (XML_MODE) {
 	uix_push(IndModels, NULL);
     } else {
-	uij_open_struct(NULL);
+	uij_open_object(NULL);
 	uij_open_array(IndModels);
     }
     for (i = 0; models[i].model != 0; i++) {
@@ -423,18 +423,18 @@ dump_models(void)
 		    AttrColumns, AT_INT, (int64_t)models[i].columns,
 		    NULL);
 	} else {
-	    uij_open_struct(NULL);
+	    uij_open_object(NULL);
 	    ui_add_element(AttrModel, AT_INT, (int64_t)models[i].model);
 	    ui_add_element(AttrRows, AT_INT, (int64_t)models[i].rows);
 	    ui_add_element(AttrColumns, AT_INT, (int64_t)models[i].columns);
-	    uij_close_struct();
+	    uij_close_object();
 	}
     }
     if (XML_MODE) {
 	uix_pop();
     } else {
 	uij_close_array();
-	uij_close_struct();
+	uij_close_object();
     }
 }
 
@@ -447,7 +447,7 @@ dump_proxies(void)
     if (XML_MODE) {
 	uix_push(IndProxies, NULL);
     } else {
-	uij_open_struct(NULL);
+	uij_open_object(NULL);
 	uij_open_array(IndProxies);
     }
 
@@ -463,21 +463,21 @@ dump_proxies(void)
 			(int64_t)default_port,
 		    NULL);
 	} else {
-	    uij_open_struct(NULL);
+	    uij_open_object(NULL);
 	    ui_add_element(AttrName, AT_STRING, proxy_type_name(type));
 	    ui_add_element(AttrUsername, AT_BOOLEAN,
 		    proxy_takes_username(type));
 	    if (default_port) {
 		ui_add_element(AttrPort, AT_INT, (int64_t)default_port);
 	    }
-	    uij_close_struct();
+	    uij_close_object();
 	}
     }
     if (XML_MODE) {
 	uix_pop();
     } else {
 	uij_close_array();
-	uij_close_struct();
+	uij_close_object();
     }
 }
 
@@ -552,7 +552,7 @@ main(int argc, char *argv[])
     if (XML_MODE) {
 	uix_push(IndInitialize, NULL);
     } else {
-	uij_open_struct(NULL);
+	uij_open_object(NULL);
 	uij_open_array(IndInitialize);
     }
     ui_leaf(IndHello,
@@ -654,8 +654,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    char *token;
 	    char *saveptr = NULL;
 
-	    uij_open_struct(NULL);
-	    uij_open_struct(IndTlsHello);
+	    uij_open_object(NULL);
+	    uij_open_object(IndTlsHello);
 	    ui_add_element(AttrSupported, AT_BOOLEAN, sio_supported());
 	    ui_add_element(AttrProvider, AT_STRING, sio_provider());
 	    uij_open_array(AttrOptions);
@@ -665,8 +665,8 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    }
 	    uij_close_array();
 	    Free(option_names);
-	    uij_close_struct();
-	    uij_close_struct();
+	    uij_close_object();
+	    uij_close_object();
 	}
     } else {
 	ui_leaf(IndTlsHello,
@@ -696,7 +696,7 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
 	uix_pop();
     } else {
 	uij_close_array();
-	uij_close_struct();
+	uij_close_object();
     }
     popups_dump();
 

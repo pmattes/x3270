@@ -283,11 +283,11 @@ stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	json_t *result_array;
 
 	if (pj_out.json == NULL) {
-            pj_out.json = json_struct();
+            pj_out.json = json_object();
             result_array = json_array();
-            json_struct_set(pj_out.json, "result", NT, result_array);
+            json_object_set(pj_out.json, "result", NT, result_array);
         } else {
-            assert(json_struct_member(pj_out.json, "result", NT,
+            assert(json_object_member(pj_out.json, "result", NT,
                         &result_array));
         }
 
@@ -322,11 +322,11 @@ stdin_done(task_cbh handle, bool success, bool abort)
 	char *prompt = task_cb_prompt(handle);
 
 	if (pj_out.json == NULL) {
-	    pj_out.json = json_struct();
-	    json_struct_set(pj_out.json, "result", NT, json_array());
+	    pj_out.json = json_object();
+	    json_object_set(pj_out.json, "result", NT, json_array());
 	}
-	json_struct_set(pj_out.json, "success", NT, json_boolean(success));
-	json_struct_set(pj_out.json, "status", NT, json_string(prompt, NT));
+	json_object_set(pj_out.json, "success", NT, json_boolean(success));
+	json_object_set(pj_out.json, "status", NT, json_string(prompt, NT));
 	printf("%s\n", w = json_write_o(pj_out.json, JW_ONE_LINE));
 	Free(w);
 	json_free(pj_out.json);

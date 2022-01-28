@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Paul Mattes.
+ * Copyright (c) 2021-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,11 +30,11 @@
  *              JSON library private definitions.
  */
 
-/* A key-value pair for a struct. */
+/* A key-value pair for an object. */
 typedef struct {
     size_t key_length;		/* key length */
     const char *key;		/* key */
-    struct json *value;		/* generic value */
+    struct json *value;		/* member value */
 } key_value_t;
 
 /* A generic node. */
@@ -48,10 +48,10 @@ struct json {
 	    size_t length;
 	    const char *text;
 	} v_string;
-	struct {		/* value if struct */
+	struct {		/* value if object */
 	    unsigned length;
 	    key_value_t *key_values;
-	} v_struct;
+	} v_object;
 	struct {		/* value if array */
 	    unsigned length;
 	    struct json **array;

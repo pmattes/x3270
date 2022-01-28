@@ -583,11 +583,11 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 	json_t *result_array;
 
 	if (s->pending.jresult == NULL) {
-	    s->pending.jresult = json_struct();
+	    s->pending.jresult = json_object();
 	    result_array = json_array();
-	    json_struct_set(s->pending.jresult, "result", NT, result_array);
+	    json_object_set(s->pending.jresult, "result", NT, result_array);
 	} else {
-	    assert(json_struct_member(s->pending.jresult, "result", NT,
+	    assert(json_object_member(s->pending.jresult, "result", NT,
 			&result_array));
 	}
 

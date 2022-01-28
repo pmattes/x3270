@@ -510,13 +510,13 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
     switch (cbs) {
     case SC_SUCCESS:
 	if (jresult != NULL) {
-	    json_struct_set(jresult, "status", NT, json_string(sl_buf, sl_len));
+	    json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
 	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(jresult));
 	} else {
-	    json_t *j = json_struct();
+	    json_t *j = json_object();
 
-	    json_struct_set(j, "result", NT, NULL);
-	    json_struct_set(j, "status", NT, json_string(sl_buf, sl_len));
+	    json_object_set(j, "result", NT, NULL);
+	    json_object_set(j, "status", NT, json_string(sl_buf, sl_len));
 	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(j));
 	    json_free(j);
 	}

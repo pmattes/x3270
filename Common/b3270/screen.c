@@ -770,7 +770,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	if (XML_MODE) {
 	    uix_open_leaf((d->reason == RD_TEXT)? IndChar: IndAttr);
 	} else {
-	    uij_open_struct(NULL);
+	    uij_open_object(NULL);
 	}
 	ui_add_element(AttrColumn, AT_INT, (int64_t)(d->start_col + 1));
 	if (oldr[d->start_col].fg != newr[d->start_col].fg) {
@@ -812,7 +812,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 	if (XML_MODE) {
 	    uix_close_leaf();
 	} else {
-	    uij_close_struct();
+	    uij_close_object();
 	}
     }
 }
@@ -861,8 +861,8 @@ emit_cursor_cond(bool with_screen)
 	    if (XML_MODE) {
 		uix_push(IndScreen, NULL);
 	    } else {
-		uij_open_struct(NULL);
-		uij_open_struct(IndScreen);
+		uij_open_object(NULL);
+		uij_open_object(IndScreen);
 	    }
 	}
 	ui_leaf(IndCursor,
@@ -875,8 +875,8 @@ emit_cursor_cond(bool with_screen)
 	    if (XML_MODE) {
 		uix_pop();
 	    } else {
-		uij_close_struct();
-		uij_close_struct();
+		uij_close_object();
+		uij_close_object();
 	    }
 	}
     }
@@ -893,8 +893,8 @@ emit_diff(screen_t *old, screen_t *new)
     if (XML_MODE) {
 	uix_push(IndScreen, NULL);
     } else {
-	uij_open_struct(NULL);
-	uij_open_struct(IndScreen);
+	uij_open_object(NULL);
+	uij_open_object(IndScreen);
     }
     emit_cursor_cond(false);
     if (JSON_MODE) {
@@ -910,7 +910,7 @@ emit_diff(screen_t *old, screen_t *new)
 		    AttrRow, AT_INT, (int64_t)(row + 1),
 		    NULL);
 	    } else {
-		uij_open_struct(NULL);
+		uij_open_object(NULL);
 		ui_add_element(AttrRow, AT_INT, (int64_t)(row + 1));
 		uij_open_array(IndChanges);
 	    }
@@ -919,7 +919,7 @@ emit_diff(screen_t *old, screen_t *new)
 		uix_pop();
 	    } else {
 		uij_close_array();
-		uij_close_struct();
+		uij_close_object();
 	    }
 	}
     }
@@ -928,8 +928,8 @@ emit_diff(screen_t *old, screen_t *new)
 	uix_pop();
     } else {
 	uij_close_array();
-	uij_close_struct();
-	uij_close_struct();
+	uij_close_object();
+	uij_close_object();
     }
 }
 
@@ -1104,8 +1104,8 @@ enable_cursor(bool on)
 	    if (XML_MODE) {
 		uix_push(IndScreen, NULL);
 	    } else {
-		uij_open_struct(NULL);
-		uij_open_struct(IndScreen);
+		uij_open_object(NULL);
+		uij_open_object(IndScreen);
 	    }
 	    ui_leaf(IndCursor,
 		AttrEnabled, AT_BOOLEAN, false,
@@ -1113,8 +1113,8 @@ enable_cursor(bool on)
 	    if (XML_MODE) {
 		uix_pop();
 	    } else {
-		uij_close_struct();
-		uij_close_struct();
+		uij_close_object();
+		uij_close_object();
 	    }
 	    sent_baddr = -1;
 	}

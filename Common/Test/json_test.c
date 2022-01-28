@@ -257,44 +257,44 @@ positive_parse_tests(void)
     assert(json_array_length(j) == 0);
     CLEAN_UP_BOTH;
 
-    /* Test a simple struct of integers. */
-#   define TEST_STRUCT_INT "{ \"a\": 1, \"b\": 2, \"c\": 3 }"
-    errcode = json_parse_s(TEST_STRUCT_INT, &j, &e);
+    /* Test a simple object of integers. */
+#   define TEST_OBJECT_INT "{ \"a\": 1, \"b\": 2, \"c\": 3 }"
+    errcode = json_parse_s(TEST_OBJECT_INT, &j, &e);
     assert(errcode == JE_OK);
-    assert(json_is_struct(j));
-    assert(json_struct_length(j) == 3);
-    assert(json_struct_member(j, "a", NT, &k));
+    assert(json_is_object(j));
+    assert(json_object_length(j) == 3);
+    assert(json_object_member(j, "a", NT, &k));
     assert(json_integer_value(k) == 1);
-    assert(json_struct_member(j, "b", NT, &k));
+    assert(json_object_member(j, "b", NT, &k));
     assert(json_integer_value(k) == 2);
-    assert(json_struct_member(j, "c", NT, &k));
+    assert(json_object_member(j, "c", NT, &k));
     assert(json_integer_value(k) == 3);
     CLEAN_UP_BOTH;
 
-    /* Test an array embedded in a struct. */
+    /* Test an array embedded in an object. */
 #   define TEST_NEST1 "{ \"a\": [ 1, 2, 3 ], \"b\": 4 }"
     errcode = json_parse_s(TEST_NEST1, &j, &e);
     assert(errcode == JE_OK);
-    assert(json_is_struct(j));
-    assert(json_struct_length(j) == 2);
-    assert(json_struct_member(j, "a", NT, &k));
+    assert(json_is_object(j));
+    assert(json_object_length(j) == 2);
+    assert(json_object_member(j, "a", NT, &k));
     assert(json_is_array(k));
     assert(json_array_length(k) == 3);
-    assert(json_struct_member(j, "b", NT, &k));
+    assert(json_object_member(j, "b", NT, &k));
     assert(json_is_integer(k));
     assert(json_integer_value(k) == 4);
     CLEAN_UP_BOTH;
 
-    /* Test a struct embedded in an array. */
+    /* Test an object embedded in an array. */
 #   define TEST_NEST2 "[ \"a\", { \"b\": [ 1, 2, 3 ], \"c\": 4 }, true ]"
     errcode = json_parse_s(TEST_NEST2, &j, &e);
     assert(errcode == JE_OK);
     assert(json_is_array(j));
     assert(json_array_length(j) == 3);
     k = json_array_element(j, 1);
-    assert(json_is_struct(k));
-    assert(json_struct_length(k) == 2);
-    assert(json_struct_member(k, "b", NT, &l));
+    assert(json_is_object(k));
+    assert(json_object_length(k) == 2);
+    assert(json_object_member(k, "b", NT, &l));
     assert(json_is_boolean(json_array_element(j, 2)));
     CLEAN_UP_BOTH;
 
@@ -398,7 +398,7 @@ negative_parse_tests(void)
     errcode = json_parse_s(TEST_JUNK2, &j, &e);
     assert(errcode == JE_EXTRA);
     assert(e->offset == 7);
-    assert(json_is_struct(j));
+    assert(json_is_object(j));
     CLEAN_UP_BOTH;
 
 #   define TEST_JUNK3 "22 44 54"
@@ -465,39 +465,39 @@ negative_parse_tests(void)
     assert(errcode == JE_SYNTAX);
     CLEAN_UP_BOTH;
 
-    /* Test incomplete structs. */
-#   define TEST_INCOMPLETE_STRUCT1 "{ "
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT1, &j, &e);
+    /* Test incomplete objects. */
+#   define TEST_INCOMPLETE_OBJECT1 "{ "
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT1, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT2 "{ \"a\""
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT2, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT2 "{ \"a\""
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT2, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT3 "{ \"a\":"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT3, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT3 "{ \"a\":"
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT3, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT4 "{ \"a\": 3"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT4, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT4 "{ \"a\": 3"
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT4, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT5 "{ \"a\": 3,"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT5, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT5 "{ \"a\": 3,"
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT5, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT6 "{ \"a\": {"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT6, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT6 "{ \"a\": {"
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT6, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
-#   define TEST_INCOMPLETE_STRUCT7 "{ \"a\"&"
-    errcode = json_parse_s(TEST_INCOMPLETE_STRUCT7, &j, &e);
+#   define TEST_INCOMPLETE_OBJECT7 "{ \"a\"&"
+    errcode = json_parse_s(TEST_INCOMPLETE_OBJECT7, &j, &e);
     assert(errcode == JE_SYNTAX);
     CLEAN_UP_BOTH;
 
@@ -513,9 +513,9 @@ negative_parse_tests(void)
     assert(errcode == JE_SYNTAX);
     CLEAN_UP_BOTH;
 
-    /* Test a nested incomplete struct. */
-#   define TEST_INCOMPLETE_NESTED_STRUCT "{ \"a\": { \"a\": { \"a\":"
-    errcode = json_parse_s(TEST_INCOMPLETE_NESTED_STRUCT, &j, &e);
+    /* Test a nested incomplete object. */
+#   define TEST_INCOMPLETE_NESTED_OBJECT "{ \"a\": { \"a\": { \"a\":"
+    errcode = json_parse_s(TEST_INCOMPLETE_NESTED_OBJECT, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
 
@@ -596,47 +596,47 @@ get_tests(void)
 	length = json_array_length(NULL);
     } SIGABRT_END;
 
-    /* Test json_struct_member and json_struct_length. */
-#   define TEST_STRUCT "{ \"a\": 1, \"b\": \"xyz\", \"c\": null }"
-    json_parse_s(TEST_STRUCT, &j, &e);
-    assert(json_struct_length(j) == 3);
-    found = json_struct_member(j, "a", -1, &r);
+    /* Test json_object_member and json_object_length. */
+#   define TEST_OBJECT "{ \"a\": 1, \"b\": \"xyz\", \"c\": null }"
+    json_parse_s(TEST_OBJECT, &j, &e);
+    assert(json_object_length(j) == 3);
+    found = json_object_member(j, "a", -1, &r);
     assert(found);
     assert(json_is_integer(r));
-    found = json_struct_member(j, "b", -1, &r);
+    found = json_object_member(j, "b", -1, &r);
     assert(found);
     assert(json_is_string(r));
-    found = json_struct_member(j, "c", -1, &r);
+    found = json_object_member(j, "c", -1, &r);
     assert(found);
     assert(r == NULL);
-    found = json_struct_member(j, "d", -1, &r);
+    found = json_object_member(j, "d", -1, &r);
     assert(!found);
     assert(r == NULL);
-    found = json_struct_member(j, "a", 1, &r);
+    found = json_object_member(j, "a", 1, &r);
     assert(found);
     assert(r != NULL);
     assert(json_is_integer(r));
     CLEAN_UP_BOTH;
 
-    /* Test json_struct_member on non-struct. */
+    /* Test json_object_member on non-object. */
     json_parse_s(TEST_ARRAY, &j, &e);
     SIGABRT_START {
-	found = json_struct_member(j, "a", -1, &r);
+	found = json_object_member(j, "a", -1, &r);
     } SIGABRT_END;
     CLEAN_UP_BOTH;
 
     SIGABRT_START {
-	found = json_struct_member(NULL, "a", -1, &r);
+	found = json_object_member(NULL, "a", -1, &r);
     } SIGABRT_END;
     CLEAN_UP;
 
-    /* More json_struct_length tests. */
+    /* More json_object_length tests. */
     SIGABRT_START {
-	length = json_struct_length(NULL);
+	length = json_object_length(NULL);
     } SIGABRT_END;
     j = json_integer(3);
     SIGABRT_START {
-	length = json_struct_length(j);
+	length = json_object_length(j);
     } SIGABRT_END;
     CLEAN_UP;
 
@@ -728,9 +728,9 @@ write_tests(void)
     Free(s);
     CLEAN_UP_BOTH;
 
-    /* Test writing a simple struct. */
-#   define TEST_WSTRUCT "{ \"a\": 1, \"b\": \"a\", \"c\": true }"
-    json_parse_s(TEST_WSTRUCT, &j, &e);
+    /* Test writing a simple object. */
+#   define TEST_WOBJECT "{ \"a\": 1, \"b\": \"a\", \"c\": true }"
+    json_parse_s(TEST_WOBJECT, &j, &e);
     s = json_write(j);
     assert(!strcmp(s, "{\n  \"a\": 1,\n  \"b\": \"a\",\n  \"c\": true\n}"));
     Free(s);
@@ -751,17 +751,17 @@ write_tests(void)
     Free(s);
     CLEAN_UP_BOTH;
 
-    /* Test writing a nested struct. */
-#   define TEST_WSTRUCT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
-    json_parse_s(TEST_WSTRUCT_NEST, &j, &e);
+    /* Test writing a nested object. */
+#   define TEST_WOBJECT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
+    json_parse_s(TEST_WOBJECT_NEST, &j, &e);
     s = json_write(j);
     assert(!strcmp(s, "{\n  \"a\": false,\n  \"b\": {\n  },\n  \"c\": {\n    \"d\": 3\n  }\n}"));
     Free(s);
     CLEAN_UP_BOTH;
 
-    /* Test writing a nested struct with no whitespace. */
-#   define TEST_WSTRUCT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
-    json_parse_s(TEST_WSTRUCT_NEST, &j, &e);
+    /* Test writing a nested object with no whitespace. */
+#   define TEST_WOBJECT_NEST "{ \"a\": false, \"b\":{}, \"c\": { \"d\": 3 }}"
+    json_parse_s(TEST_WOBJECT_NEST, &j, &e);
     s = json_write_o(j, JW_ONE_LINE);
     assert(!strcmp(s, "{\"a\":false,\"b\":{},\"c\":{\"d\":3}}"));
     Free(s);
@@ -851,28 +851,28 @@ set_tests(void)
     assert(json_double_value(j) == 1.2345);
     json_free(j);
 
-    /* Construct a struct. */
-    j = json_struct();
-    assert(json_is_struct(j));
-    json_struct_set(j, "a", NT, json_integer(3));
-    assert(json_struct_member(j, "a", NT, &k));
+    /* Construct an object. */
+    j = json_object();
+    assert(json_is_object(j));
+    json_object_set(j, "a", NT, json_integer(3));
+    assert(json_object_member(j, "a", NT, &k));
     assert(json_is_integer(k));
-    json_struct_set(j, "a", NT, json_double(3.0));
-    assert(json_struct_member(j, "a", NT, &k));
+    json_object_set(j, "a", NT, json_double(3.0));
+    assert(json_object_member(j, "a", NT, &k));
     assert(json_is_double(k));
-    json_struct_set(j, "b", NT, NULL);
-    assert(json_struct_member(j, "b", NT, &k));
+    json_object_set(j, "b", NT, NULL);
+    assert(json_object_member(j, "b", NT, &k));
     assert(json_is_null(k));
 
     CLEAN_UP;
 
     SIGABRT_START {
-	json_struct_set(NULL, "a", NT, NULL);
+	json_object_set(NULL, "a", NT, NULL);
     } SIGABRT_END;
 
     j = json_integer(3);
     SIGABRT_START {
-	json_struct_set(j, "a", NT, NULL);
+	json_object_set(j, "a", NT, NULL);
     } SIGABRT_END;
     CLEAN_UP;
 
@@ -922,39 +922,39 @@ iterator_tests(void)
     int count = 0;
     size_t key_lengths = 0;
 
-    j = json_struct();
-    json_struct_set(j, "a", NT, json_integer(1));
-    json_struct_set(j, "bc", NT, json_string("hello", NT));
-    json_struct_set(j, "def", NT, json_double(1.2));
+    j = json_object();
+    json_object_set(j, "a", NT, json_integer(1));
+    json_object_set(j, "bc", NT, json_string("hello", NT));
+    json_object_set(j, "def", NT, json_double(1.2));
 
-    BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, element) {
 	count++;
 	key_lengths += key_length;
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, element);
     assert(count == 3);
     assert(key_lengths == 6);
     CLEAN_UP;
 
     j = json_integer(3);
     SIGABRT_START {
-	BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+	BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, element) {
 	    count++;
-	} END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+	} END_JSON_OBJECT_FOREACH(j, key, key_length, element);
     } SIGABRT_END;
     CLEAN_UP;
 
     SIGABRT_START {
-	BEGIN_JSON_STRUCT_FOREACH(NULL, key, key_length, element) {
+	BEGIN_JSON_OBJECT_FOREACH(NULL, key, key_length, element) {
 	    count++;
-	} END_JSON_STRUCT_FOREACH(NULL, key, key_length, element);
+	} END_JSON_OBJECT_FOREACH(NULL, key, key_length, element);
     } SIGABRT_END;
     CLEAN_UP;
 
-    j = json_struct();
+    j = json_object();
     count = 0;
-    BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, element) {
 	count++;
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, element);
     assert(count == 0);
     CLEAN_UP;
 }
@@ -1000,13 +1000,13 @@ clone_tests(void)
     json_free(k);
     CLEAN_UP;
 
-    j = json_struct();
-    json_struct_set(j, "a", NT, json_integer(22));
-    json_struct_set(j, "b", NT, json_double(1.414));
+    j = json_object();
+    json_object_set(j, "a", NT, json_integer(22));
+    json_object_set(j, "b", NT, json_double(1.414));
     k = json_clone(j);
-    assert(json_is_struct(k));
-    assert(json_struct_length(k) == 2);
-    assert(json_struct_member(k, "a", NT, &l));
+    assert(json_is_object(k));
+    assert(json_object_length(k) == 2);
+    assert(json_object_member(k, "a", NT, &l));
     assert(json_is_integer(l));
     assert(json_integer_value(l) == 22);
     json_free(k);

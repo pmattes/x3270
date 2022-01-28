@@ -58,7 +58,7 @@ void uix_open_leaf(const char *name);
 void uix_close_leaf(void);
 
 /* JSON-specific functions. */
-void uij_open_struct(const char *name);
+void uij_open_object(const char *name);
 void uij_open_array(const char *name);
-void uij_close_struct(void);
+void uij_close_object(void);
 void uij_close_array(void);

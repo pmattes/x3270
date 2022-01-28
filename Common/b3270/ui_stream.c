@@ -107,7 +107,7 @@ static struct {
 /* JSON container stack. */
 typedef struct _uij_container {
     struct _uij_container *next;
-    json_t *j;	/* struct or array */
+    json_t *j;	/* object or array */
 } uij_container_t;
 
 /* JSON state. */
@@ -370,10 +370,10 @@ ui_leaf(const char *name, ...)
 	bool toplevel = false;
 
 	if (uij.container == NULL || json_is_array(uij.container->j)) {
-	    uij_open_struct(NULL);
+	    uij_open_object(NULL);
 	    toplevel = true;
 	}
-	uij_open_struct(name);
+	uij_open_object(name);
 	while ((tag = va_arg(ap, const char *)) != NULL) {
 	    ui_attr_t type = va_arg(ap, ui_attr_t);
 
@@ -401,9 +401,9 @@ ui_leaf(const char *name, ...)
 		break;
 	    }
 	}
-	uij_close_struct();
+	uij_close_object();
 	if (toplevel) {
-	    uij_close_struct();
+	    uij_close_object();
 	}
     }
     va_end(ap);
@@ -570,9 +570,9 @@ uij_add_to_parent(const char *name, json_t *j)
     json_t *parent = uij.container->j;
 
     /* Add to the parent container. */
-    if (json_is_struct(parent)) {
+    if (json_is_object(parent)) {
 	assert(name != NULL);
-	json_struct_set(parent, name, NT, j);
+	json_object_set(parent, name, NT, j);
     } else {
 	assert(name == NULL);
 	json_array_append(parent, j);
@@ -599,12 +599,12 @@ uij_open(const char *name, json_t *j)
 }
 
 /*
- * Add an empty structure, and leave it open.
+ * Add an empty object, and leave it open.
  */
 void
-uij_open_struct(const char *name)
+uij_open_object(const char *name)
 {
-    uij_open(name, json_struct());
+    uij_open(name, json_object());
 }
 
 /*
@@ -633,12 +633,12 @@ uij_close(void)
     Free(jc);
 }
 
-/* Close an open struct. */
+/* Close an open object. */
 void
-uij_close_struct(void)
+uij_close_object(void)
 {
     assert(uij.container != NULL);
-    assert(json_is_struct(uij.container->j));
+    assert(json_is_object(uij.container->j));
     uij_close();
 }
 
@@ -861,36 +861,36 @@ do_jrun(json_t *j)
     char *actions = NULL;
     const char *key;
     size_t key_length;
-    const json_t *element;
+    const json_t *member;
     const char *svalue;
     size_t slen;
     cmd_t **cmds = NULL;
 
-    if (!json_is_struct(j)) {
+    if (!json_is_object(j)) {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
-		AttrText, AT_STRING, OperRun " parameter must be a struct",
+		AttrText, AT_STRING, OperRun " parameter must be an object",
 		NULL);
 	return;
     }
 
-    BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, member) {
 	if (json_key_matches(key, key_length, AttrType)) {
-	    if ((type = get_jstring(element, OperRun, AttrType)) == NULL) {
+	    if ((type = get_jstring(member, OperRun, AttrType)) == NULL) {
 		free_cmds(cmds);
 		return;
 	    }
 	} else if (json_key_matches(key, key_length, AttrRTag)) {
-	    if ((tag = get_jstring(element, OperRun, AttrRTag)) == NULL) {
+	    if ((tag = get_jstring(member, OperRun, AttrRTag)) == NULL) {
 		free_cmds(cmds);
 		return;
 	    }
-	    svalue = json_string_value(element, &slen);
+	    svalue = json_string_value(member, &slen);
 	    tag = lazyaf("%.*s", (int)slen, svalue);
 	} else if (json_key_matches(key, key_length, AttrActions)) {
 	    char *errmsg;
 
-	    if (!hjson_split(element, &cmds, &actions, &errmsg)) {
+	    if (!hjson_split(member, &cmds, &actions, &errmsg)) {
 		ui_leaf(IndUiError,
 			AttrFatal, AT_BOOLEAN, false,
 			AttrText, AT_STRING, errmsg,
@@ -904,7 +904,7 @@ do_jrun(json_t *j)
 	    ui_unknown_attribute(OperRun,
 		    lazyaf("%.*s", (int)key_length, key));
 	}
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
 
     if (actions == NULL && cmds == NULL) {
 	ui_missing_attribute(OperRun, AttrActions);
@@ -951,8 +951,8 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 	args[out_ix] = NULL;
 	uix_object(true, IndPassthru, args);
     } else {
-	uij_open_struct(NULL);
-	uij_open_struct(IndPassthru);
+	uij_open_object(NULL);
+	uij_open_object(IndPassthru);
 	ui_add_element(AttrAction, AT_STRING, current_action_name);
 	ui_add_element(AttrPTag, AT_STRING, passthru_tag);
 	if (ret_cbh != NULL) {
@@ -969,8 +969,8 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	    uij_close_array();
 	}
-	uij_close_struct();
-	uij_close_struct();
+	uij_close_object();
+	uij_close_object();
     }
 
     return true;
@@ -1053,29 +1053,29 @@ do_jregister(json_t *j)
     const char *help_parms = NULL;
     const char *key;
     size_t key_length;
-    const json_t *element;
+    const json_t *member;
 
-    if (!json_is_struct(j)) {
+    if (!json_is_object(j)) {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
 		AttrText, AT_STRING, OperRegister
-		    " parameter must be a struct",
+		    " parameter must be an object",
 		NULL);
 	return;
     }
 
-    BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, member) {
 	if (json_key_matches(key, key_length, AttrName)) {
-	    if ((name = get_jstring(element, OperRegister, AttrName)) == NULL) {
+	    if ((name = get_jstring(member, OperRegister, AttrName)) == NULL) {
 		return;
 	    }
 	} else if (json_key_matches(key, key_length, AttrHelpText)) {
-	    if ((help_text = get_jstring(element, OperRegister, AttrHelpText))
+	    if ((help_text = get_jstring(member, OperRegister, AttrHelpText))
 		    == NULL) {
 		return;
 	    }
 	} else if (json_key_matches(key, key_length, AttrHelpParms)) {
-	    if ((help_parms = get_jstring(element, OperRegister,
+	    if ((help_parms = get_jstring(member, OperRegister,
 			    AttrHelpParms)) == NULL) {
 		return;
 	    }
@@ -1083,7 +1083,7 @@ do_jregister(json_t *j)
 	    ui_unknown_attribute(OperRegister,
 		    lazyaf("%.*s", (int)key_length, key));
 	}
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
 
     complete_register(name, help_text, help_parms);
 }
@@ -1181,16 +1181,16 @@ do_jpassthru_complete(const json_t *j, bool success)
     const json_t *element;
     const char *cmd = success? OperSucceed: OperFail;
 
-    if (!json_is_struct(j)) {
+    if (!json_is_object(j)) {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
 		AttrText, AT_STRING,
-		    lazyaf("%s parameter must be a struct", cmd),
+		    lazyaf("%s parameter must be an object", cmd),
 		NULL);
 	return;
     }
 
-    BEGIN_JSON_STRUCT_FOREACH(j, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(j, key, key_length, element) {
 	if (json_key_matches(key, key_length, AttrPTag)) {
 	    if ((tag = get_jstring(element, cmd, AttrPTag)) == NULL) {
 		Free(text);
@@ -1203,7 +1203,7 @@ do_jpassthru_complete(const json_t *j, bool success)
 	} else {
 	    ui_unknown_attribute(cmd, lazyaf("%.*s", (int)key_length, key));
 	}
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, element);
 
     if (tag == NULL) {
 	ui_missing_attribute(cmd, AttrPTag);
@@ -1272,22 +1272,22 @@ handle_json_input(char *buf, size_t nr, size_t *offset)
 	return errcode;
     }
 
-    if (!json_is_struct(result) || json_struct_length(result) != 1) {
+    if (!json_is_object(result) || json_object_length(result) != 1) {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
 		AttrText, AT_STRING,
-		    "Operation must be a struct with one element",
+		    "Operation must be an object with one member",
 		NULL);
 	json_free(result);
 	return errcode;
     }
-    if (json_struct_member(result, OperRun, NT, &element)) {
+    if (json_object_member(result, OperRun, NT, &element)) {
 	do_jrun(element);
-    } else if (json_struct_member(result, OperRegister, NT, &element)) {
+    } else if (json_object_member(result, OperRegister, NT, &element)) {
 	do_jregister(element);
-    } else if (json_struct_member(result, OperSucceed, NT, &element)) {
+    } else if (json_object_member(result, OperSucceed, NT, &element)) {
 	do_jpassthru_complete(element, true);
-    } else if (json_struct_member(result, OperFail, NT, &element)) {
+    } else if (json_object_member(result, OperFail, NT, &element)) {
 	do_jpassthru_complete(element, false);
     } else {
 	ui_leaf(IndUiError,

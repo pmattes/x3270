@@ -101,7 +101,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 {
     char *action = NULL;
     json_t *jaction = NULL;
-    const json_t *element;
+    const json_t *member;
     const char *key;
     size_t key_length;
     unsigned i;
@@ -112,17 +112,17 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
     *errmsg = NULL;
 
     /*
-     * It needs to be a structure with one or two fields: action (a string) and
+     * It needs to be an object with one or two fields: action (a string) and
      * optional args (an array of scalar types).
      */
-    if (json_type(json) != JT_STRUCT) {
-	*errmsg = NewString("Not a struct");
+    if (json_type(json) != JT_OBJECT) {
+	*errmsg = NewString("Not an object");
 	goto fail;
     }
 
     /* Find the action. */
-    if (!json_struct_member(json, AttrAction, NT, &jaction)) {
-	*errmsg = NewString("Missing struct element 'action'");
+    if (!json_object_member(json, AttrAction, NT, &jaction)) {
+	*errmsg = NewString("Missing object member 'action'");
 	goto fail;
     }
     if (json_type(jaction) != JT_STRING) {
@@ -132,20 +132,20 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
     value = json_string_value(jaction, &len);
     action = xs_buffer("%.*s", (int)len, value);
 
-    BEGIN_JSON_STRUCT_FOREACH(json, key, key_length, element) {
+    BEGIN_JSON_OBJECT_FOREACH(json, key, key_length, member) {
 	if (json_key_matches(key, key_length, AttrAction)) {
 	    continue;
 	}
 	if (json_key_matches(key, key_length, AttrArgs)) {
 	    unsigned array_length;
 
-	    if (json_type(element) != JT_ARRAY) {
+	    if (json_type(member) != JT_ARRAY) {
 		*errmsg = NewString("Invalid '" AttrArgs "' type");
 		goto fail;
 	    }
-	    array_length = json_array_length(element);
+	    array_length = json_array_length(member);
 	    for (i = 0; i < array_length; i++) {
-		const json_t *arg = json_array_element(element, i);
+		const json_t *arg = json_array_element(member, i);
 
 		switch (json_type(arg)) {
 		case JT_NULL:
@@ -161,7 +161,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 	    }
 	    args = (char **)Calloc(array_length + 1, sizeof(char *));
 	    for (i = 0; i < array_length; i++) {
-		const json_t *arg = json_array_element(element, i);
+		const json_t *arg = json_array_element(member, i);
 
 		switch (json_type(arg)) {
 		case JT_NULL:
@@ -187,10 +187,10 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 	    }
 	    continue;
 	}
-	*errmsg = xs_buffer("Unknown struct element '%.*s'", (int)key_length,
+	*errmsg = xs_buffer("Unknown object member '%.*s'", (int)key_length,
 		key);
 	goto fail;
-    } END_JSON_STRUCT_FOREACH(j, key, key_length, element);
+    } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
 
     /* Default the arguments if necessary. */
     if (args == NULL) {
@@ -240,7 +240,7 @@ hjson_split(const json_t *json, cmd_t ***cmds, char **single, char **errmsg)
     *single = NULL;
     *errmsg = NULL;
 
-    /* The object can either be a struct or an array of structs. */
+    /* The object can be a string, an object or an array of objects. */
     switch (json_type(json)) {
     case JT_STRING:
 	*single = NewString(json_string_value(json, &len));
@@ -248,11 +248,11 @@ hjson_split(const json_t *json, cmd_t ***cmds, char **single, char **errmsg)
     case JT_ARRAY:
 	array_length = json_array_length(json);
 	break;
-    case JT_STRUCT:
+    case JT_OBJECT:
 	array_length = 1;
 	break;
     default:
-	*errmsg = NewString("Not a struct or array");
+	*errmsg = NewString("Not a string, object or array");
 	goto fail;
     }
 
@@ -272,7 +272,7 @@ hjson_split(const json_t *json, cmd_t ***cmds, char **single, char **errmsg)
 	    }
 	}
 	break;
-    case JT_STRUCT:
+    case JT_OBJECT:
 	if (!hjson_parse_one(json, &c[0], errmsg)) {
 	    goto fail;
 	}

@@ -500,7 +500,7 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 			/* A struct. */
 			*any = true;
 			*result = (json_t *)Calloc(1, sizeof(json_t));
-			(*result)->type = JT_STRUCT;
+			(*result)->type = JT_OBJECT;
 			do {
 			    json_t *element = NULL;
 			    bool r_any = false;
@@ -573,12 +573,12 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 			    kv.key_length = key_length;
 			    kv.key = key;
 			    kv.value = element;
-			    length = ++((*result)->value.v_struct.length);
-			    (*result)->value.v_struct.key_values =
+			    length = ++((*result)->value.v_object.length);
+			    (*result)->value.v_object.key_values =
 				Realloc((key_value_t *)(*result)->
-					    value.v_struct.key_values,
+					    value.v_object.key_values,
 					length * sizeof(key_value_t));
-			    (*result)->value.v_struct.key_values[length - 1] =
+			    (*result)->value.v_object.key_values[length - 1] =
 				kv; /* struct copy */
 			} while (internal_stop == ',');
 			token_state = JK_TERMINAL;
@@ -794,15 +794,15 @@ _json_free(json_t *json)
 		}
 		Replace(json->value.v_array.array, NULL);
 		break;
-	    case JT_STRUCT:
-		for (i = 0; i < json->value.v_struct.length; i++) {
-		    json->value.v_struct.key_values[i].key_length = 0;
-		    Free((char *)json->value.v_struct.key_values[i].key);
-		    json->value.v_struct.key_values[i].key = NULL;
-		    json_free(json->value.v_struct.key_values[i].value);
-		    json->value.v_struct.key_values[i].value = NULL;
+	    case JT_OBJECT:
+		for (i = 0; i < json->value.v_object.length; i++) {
+		    json->value.v_object.key_values[i].key_length = 0;
+		    Free((char *)json->value.v_object.key_values[i].key);
+		    json->value.v_object.key_values[i].key = NULL;
+		    json_free(json->value.v_object.key_values[i].value);
+		    json->value.v_object.key_values[i].value = NULL;
 		}
-		Replace(json->value.v_struct.key_values, NULL);
+		Replace(json->value.v_object.key_values, NULL);
 		break;
 	    default:
 		break;
@@ -925,13 +925,13 @@ json_write_indent(const json_t *json, unsigned options, int indent)
 	t = xs_buffer("\"%s\"", s);
 	Free(s);
 	return t;
-    case JT_STRUCT:
+    case JT_OBJECT:
 	vb_init(&r);
 	vb_appendf(&r, "{%s", (options & JW_ONE_LINE)? "": "\n");
-	for (i = 0; i < json->value.v_struct.length; i++) {
-	    key_value_t *kv = &json->value.v_struct.key_values[i];
+	for (i = 0; i < json->value.v_object.length; i++) {
+	    key_value_t *kv = &json->value.v_object.key_values[i];
 	    char *s;
-	    bool last = i >= json->value.v_struct.length - 1;
+	    bool last = i >= json->value.v_object.length - 1;
 
 	    s = json_expand_string(kv->key, kv->key_length, options);
 	    vb_appendf(&r, "%*s\"%s\":%s", indent1 * 2, "", s,
@@ -983,16 +983,16 @@ json_type(const json_t *json)
 }
 
 /**
- * Returns the length of a struct.
+ * Returns the length of an object.
  * @param[in] json	Node to evaluate.
  * @returns length
  */
 unsigned
-json_struct_length(const json_t *json)
+json_object_length(const json_t *json)
 {
     assert(json != NULL);
-    assert(json->type == JT_STRUCT);
-    return json->value.v_struct.length;
+    assert(json->type == JT_OBJECT);
+    return json->value.v_object.length;
 }
 
 /**
@@ -1024,7 +1024,7 @@ json_array_element(const json_t *json, unsigned index)
 }
 
 /**
- * Return the structure member with the given key.
+ * Return the object member with the given key.
  * @param[in] json	Node to search
  * @param[in] key	Key
  * @param[in] key_length Key length
@@ -1033,22 +1033,22 @@ json_array_element(const json_t *json, unsigned index)
  * @returns true if member found
  */
 bool
-json_struct_member(const json_t *json, const char *key, ssize_t key_length,
+json_object_member(const json_t *json, const char *key, ssize_t key_length,
 	json_t **ret)
 {
     unsigned i;
 
     assert(json != NULL);
-    assert(json->type == JT_STRUCT);
+    assert(json->type == JT_OBJECT);
     if (key_length < 0)  {
 	key_length = strlen(key);
     }
-    for (i = 0; i < json->value.v_struct.length; i++) {
-	if (json->value.v_struct.key_values[i].key_length ==
+    for (i = 0; i < json->value.v_object.length; i++) {
+	if (json->value.v_object.key_values[i].key_length ==
 		(size_t)key_length &&
-		!memcmp(key, json->value.v_struct.key_values[i].key,
+		!memcmp(key, json->value.v_object.key_values[i].key,
 		    key_length)) {
-	    *ret = json->value.v_struct.key_values[i].value;
+	    *ret = json->value.v_object.key_values[i].value;
 	    return true;
 	}
     }
@@ -1057,7 +1057,7 @@ json_struct_member(const json_t *json, const char *key, ssize_t key_length,
 }
 
 /**
- * Iterator for structs.
+ * Iterator for objects.
  * @param[in,out] context	Opaque context.
  * @param[in] json		Object to walk.
  * @param[out] key		Returned member key.
@@ -1066,30 +1066,30 @@ json_struct_member(const json_t *json, const char *key, ssize_t key_length,
  * @returns true if member returned
  */
 bool
-_json_struct_member_next(void **context, const json_t *json, const char **key,
+_json_object_member_next(void **context, const json_t *json, const char **key,
 	size_t *key_length, const json_t **value)
 {
     key_value_t *kv;
 
     assert(json != NULL);
-    assert(json->type == JT_STRUCT);
+    assert(json->type == JT_OBJECT);
 
     *key = NULL;
     *key_length = 0;
     *value = NULL;
 
-    if (json->value.v_struct.length == 0) {
+    if (json->value.v_object.length == 0) {
 	return false;
     }
 
     if (*context == NULL) {
-	*context = json->value.v_struct.key_values - 1;
+	*context = json->value.v_object.key_values - 1;
     }
 
     kv = (key_value_t *)*context;
     kv = kv + 1;
 
-    if (kv >= json->value.v_struct.key_values + json->value.v_struct.length) {
+    if (kv >= json->value.v_object.key_values + json->value.v_object.length) {
 	return false;
     }
 
@@ -1228,15 +1228,15 @@ json_string(const char *text, ssize_t length)
 }
 
 /**
- * Allocates an empty struct.
- * @returns struct
+ * Allocates an empty object.
+ * @returns object
  */
 json_t *
-json_struct(void)
+json_object(void)
 {
     json_t *j = Calloc(1, sizeof(json_t));
 
-    j->type = JT_STRUCT;
+    j->type = JT_OBJECT;
     return j;
 }
 
@@ -1254,7 +1254,7 @@ json_array()
 }
 
 /**
- * Sets a struct field.
+ * Sets an object member.
  * The value is copied by reference, not cloned.
  * @param[in,out] json	Object to modify
  * @param[in] key	Field key
@@ -1263,7 +1263,7 @@ json_array()
  * @returns error code
  */
 void
-json_struct_set(json_t *json, const char *key, ssize_t key_length,
+json_object_set(json_t *json, const char *key, ssize_t key_length,
         json_t *value)
 {
     unsigned i;
@@ -1271,13 +1271,13 @@ json_struct_set(json_t *json, const char *key, ssize_t key_length,
     char *s;
 
     assert(json != NULL);
-    assert(json->type == JT_STRUCT);
+    assert(json->type == JT_OBJECT);
     if (key_length < 0) {
 	key_length = strlen(key);
     }
-    for (i = 0; i < json->value.v_struct.length; i++) {
+    for (i = 0; i < json->value.v_object.length; i++) {
 	/* Replace. */
-	kv = &json->value.v_struct.key_values[i];
+	kv = &json->value.v_object.key_values[i];
 	if (kv->key_length == (size_t)key_length &&
 		!memcmp(kv->key, key, key_length)) {
 	    _json_free(kv->value);
@@ -1287,10 +1287,10 @@ json_struct_set(json_t *json, const char *key, ssize_t key_length,
     }
 
     /* Extend. */
-    json->value.v_struct.key_values =
-	(key_value_t *)Realloc(json->value.v_struct.key_values,
-		(json->value.v_struct.length + 1) * sizeof(key_value_t));
-    kv = &json->value.v_struct.key_values[json->value.v_struct.length++];
+    json->value.v_object.key_values =
+	(key_value_t *)Realloc(json->value.v_object.key_values,
+		(json->value.v_object.length + 1) * sizeof(key_value_t));
+    kv = &json->value.v_object.key_values[json->value.v_object.length++];
     kv->key_length = key_length;
     s = Malloc(key_length + 1);
     memcpy(s, key, key_length);
@@ -1352,7 +1352,7 @@ json_clone(const json_t *json)
     json_t *j;
     const char *key;
     size_t key_length;
-    const json_t *element;
+    const json_t *member;
     unsigned i;
 
     switch (json_type(json)) {
@@ -1368,11 +1368,11 @@ json_clone(const json_t *json)
     case JT_STRING:
 	s = json_string_value(json, &len);
 	return json_string(s, len);
-    case JT_STRUCT:
-	j = json_struct();
-	BEGIN_JSON_STRUCT_FOREACH(json, key, key_length, element) {
-	    json_struct_set(j, key, key_length, json_clone(element));
-	} END_JSON_STRUCT_FOREACH(json, key, key_length, element);
+    case JT_OBJECT:
+	j = json_object();
+	BEGIN_JSON_OBJECT_FOREACH(json, key, key_length, member) {
+	    json_object_set(j, key, key_length, json_clone(member));
+	} END_JSON_OBJECT_FOREACH(json, key, key_length, member);
 	return j;
     case JT_ARRAY:
 	j = json_array();
