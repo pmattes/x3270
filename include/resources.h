@@ -554,6 +554,7 @@
 #define OptVerifyHostCert	"-verifycert"
 #define OptVersion		"--version"
 #define OptXml			"-xml"
+#define OptXrm			"-xrm"
 
 /* Miscellaneous values. */
 #define ResTrue			"true"

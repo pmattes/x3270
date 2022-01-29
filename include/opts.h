@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 2015, 2018, 2020, 2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,8 @@ typedef struct {
 	OPT_SKIP2,	/* skip the next token */
 	OPT_NOP,	/* do nothing */
 	OPT_INT,	/* set an integer */
+	OPT_SET,	/* special for -set */
+	OPT_CLEAR,	/* special for -clear */
 	OPT_V,		/* special for "-v" */
 	OPT_HELP,	/* special for "--help */
 	OPT_DONE	/* option-list terminator */

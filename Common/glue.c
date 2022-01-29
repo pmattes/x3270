@@ -87,9 +87,10 @@ static void parse_local_process(int *argcp, const char **argv,
 #endif /*]*/
 static void set_appres_defaults(void);
 static void parse_options(int *argcp, const char **argv, bool warn);
-static void parse_set_clear(int *argcp, const char **argv, bool warn);
 static int parse_model_number(char *m);
 static void xparse_xrm(const char *arg, const char *where, bool warn);
+static void parse_set(const char *arg, const char *where, bool warn);
+static void parse_clear(const char *arg, const char *where, bool warn);
 static merge_profile_t *merge_profilep = NULL;
 static char *session_suffix[4];
 static size_t session_suffix_len[4];
@@ -220,9 +221,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     /* Parse command-line options. */
     parse_options(&argc, argv, true);
 
-    /* Pick out the remaining -set and -clear toggle options. */
-    parse_set_clear(&argc, argv, true);
-
     /* Now figure out if there's a hostname. */
     for (hn_argc = 1; hn_argc < argc; hn_argc++) {
 	if (!strcmp(argv[hn_argc], LAST_ARG)) {
@@ -324,7 +322,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      */
     if (read_session_or_profile) {
 	parse_options(&xargc, xargv, false);
-	parse_set_clear(&xargc, xargv, false);
     }
     /* Can't free xcmd, parts of it are still in use. */
     Free((char *)xargv);
@@ -527,11 +524,11 @@ set_appres_defaults(void)
 
 static opt_t base_opts[] = {
 { OptAlias,    OPT_STRING,  false, ResAlias,   aoffset(alias),
-    "<name>", "Define application alias for -xrm and session file suffix" },
+    "<name>", "Define application alias for " OptXrm " and session file suffix" },
 { OptCharset,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
     NULL, NULL },
-{ OptClear,    OPT_SKIP2,   false, NULL,         NULL,
-    "<toggle>", "Turn on <toggle>" },
+{ OptClear,    OPT_CLEAR,   false, NULL,         NULL,
+    "<resource>", "Set <resource> to " ResFalse },
 { OptCodePage,  OPT_STRING,  false, ResCodePage, aoffset(codepage),
     "<name>", "Use host ECBDIC code page <name>"},
 { OptConnectTimeout, OPT_INT,false,ResConnectTimeout,aoffset(connect_timeout),
@@ -571,8 +568,8 @@ static opt_t base_opts[] = {
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
 { OptScriptPortOnce,OPT_BOOLEAN,true,ResScriptPortOnce,aoffset(script_port_once),
     NULL, "Accept one script connection, then exit" },
-{ OptSet,      OPT_SKIP2,   false, NULL,         NULL,
-    "<toggle>", "Turn on <toggle>" },
+{ OptSet,      OPT_SET,     false, NULL,         NULL,
+    "<resource>[=<value>]", "Set <resource> to " ResTrue " or <value>" },
 { OptSocket,   OPT_BOOLEAN, true,  ResSocket,    aoffset(socket),
     NULL, "Create socket for script control" },
 { OptTermName, OPT_STRING,  false, ResTermName,  aoffset(termname),
@@ -585,21 +582,20 @@ static opt_t base_opts[] = {
     "<n>[KM]", "Limit trace file to <n> bytes" },
 { OptUser,     OPT_STRING,  false, ResUser,      aoffset(user),
     "<name>", "User name for RFC 4777" },
-{ OptV,        OPT_V,	false, NULL,	     NULL,
+{ OptV,        OPT_V,       false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-{ OptVersion,  OPT_V,	false, NULL,	     NULL,
+{ OptVersion,  OPT_V,       false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-{ OptHelp1,     OPT_HELP, false, NULL,            NULL,
+{ OptHelp1,    OPT_HELP,    false, NULL,            NULL,
     NULL, "Display command-line help" },
-{ OptHelp2,     OPT_HELP, false, NULL,            NULL,
+{ OptHelp2,    OPT_HELP,    false, NULL,            NULL,
     NULL, "Display command-line help" },
 #if defined(_WIN32) /*[*/
-{ OptHelp3,     OPT_HELP, false, NULL,            NULL,
+{ OptHelp3,    OPT_HELP,    false, NULL,            NULL,
     NULL, "Display command-line help" },
 #endif /*]*/
-{ "-xrm",      OPT_XRM,     false, NULL,         NULL,
-    "'*.<resource>: <value>'", "Set <resource> to <value>"
-},
+{ OptXrm,      OPT_XRM,     false, NULL,         NULL,
+    "'*.<resource>: <value>'", "Set <resource> to <value>" },
 { LAST_ARG,    OPT_DONE,    false, NULL,         NULL,
     NULL, "Terminate argument list" }
 };
@@ -688,7 +684,21 @@ parse_options(int *argcp, const char **argv, bool warn)
 		usage(xs_buffer("Missing value for '%s'", argv[i]));
 		continue;
 	    }
-	    xparse_xrm(argv[++i], "-xrm", warn);
+	    xparse_xrm(argv[++i], OptXrm, warn);
+	    break;
+	case OPT_SET:
+	    if (i == *argcp - 1) {	/* missing arg */
+		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		continue;
+	    }
+	    parse_set(argv[++i], OptSet, warn);
+	    break;
+	case OPT_CLEAR:
+	    if (i == *argcp - 1) {	/* missing arg */
+		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		continue;
+	    }
+	    parse_clear(argv[++i], OptClear, warn);
 	    break;
 	case OPT_SKIP2:
 	    argv_out[argc_out++] = argv[i++];
@@ -846,132 +856,6 @@ cmdline_help(bool as_action)
 	    Free(hx);
 	}
     }
-}
-
-/* Comparison function for toggle name qsort. */
-static int
-name_cmp(const void *p1, const void *p2)
-{
-    const char *s1 = *(char *const *)p1;
-    const char *s2 = *(char *const *)p2;
-
-    return strcmp(s1, s2);
-}
-
-/*
- * Pick out -set and -clear toggle options.
- */
-static void
-parse_set_clear(int *argcp, const char **argv, bool warn)
-{
-    int i, j;
-    int argc_out = 0;
-    const char **argv_out =
-	(const char **) Malloc((*argcp + 1) * sizeof(char *));
-
-    argv_out[argc_out++] = argv[0];
-
-    for (i = 1; i < *argcp; i++) {
-	bool is_set = false;
-	const char *eq = NULL;
-	size_t nlen;
-
-	if (!strcmp(argv[i], OptSet)) {
-	    is_set = true;
-	} else if (strcmp(argv[i], OptClear)) {
-	    argv_out[argc_out++] = argv[i];
-	    continue;
-	}
-
-	if (i == *argcp - 1) {	/* missing arg */
-	    continue;
-	}
-
-	/* Delete the argument. */
-	i++;
-
-	if (argv[i][0] != '=' &&
-		(eq = strchr(argv[i], '=')) != NULL) {
-	    /* -set foo=bar */
-	    if (!is_set) {
-		fprintf(stderr, "Error: " OptClear
-			" parameter cannot include a value\n");
-		exit(1);
-	    }
-	    nlen = eq - argv[i];
-	} else {
-	    nlen = strlen(argv[i]);
-	}
-
-	for (j = 0; toggle_names[j].name != NULL; j++) {
-	    if (!toggle_supported(toggle_names[j].index)) {
-		continue;
-	    }
-	    if (!strcasecmp(argv[i], toggle_names[j].name) &&
-		    toggle_names[j].name[nlen] == '\0') {
-		bool value;
-
-		if (eq == NULL) {
-		    value = is_set;
-		} else {
-		    const char *err = boolstr(eq + 1, &value);
-
-		    if (err != NULL) {
-			fprintf(stderr, "Error: " OptSet " %s: %s\n", argv[i],
-				err);
-			exit(1);
-		    }
-		}
-		appres.toggle[toggle_names[j].index] = value;
-		break;
-	    }
-	}
-	if (toggle_names[j].name == NULL) {
-	    bool bool_only = !is_set || !eq;
-	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
-		    eq? eq + 1: (is_set? ResTrue: ResFalse), NULL);
-
-	    if (xt < 0) {
-		fprintf(stderr, "Error: " OptSet " %s: invalid value\n",
-			argv[i]);
-		exit(1);
-	    }
-
-	    if (xt == 0) {
-		ccp_t *tn;
-		int ntn = 0;
-		int nx;
-		char **nxnames;
-
-		nxnames = extended_toggle_names(&nx, bool_only);
-		tn = (ccp_t *)Calloc(N_TOGGLES + nx, sizeof(ccp_t));
-		for (j = 0; toggle_names[j].name != NULL; j++) {
-		    if (!toggle_supported(toggle_names[j].index)) {
-			continue;
-		    }
-		    if (!toggle_names[j].is_alias) {
-			tn[ntn++] = toggle_names[j].name;
-		    }
-		}
-		memcpy((void *)(tn + ntn), nxnames, nx * sizeof(ccp_t));
-		ntn += nx;
-		qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
-		fprintf(stderr, "Unknown %stoggle '%.*s'. Toggle names are:\n",
-			bool_only? "Boolean ": "", (int)nlen, argv[i]);
-		for (j = 0; j < ntn; j++) {
-		    fprintf(stderr, " %s", tn[j]);
-		}
-		fprintf(stderr, "\n");
-		Free((void *)tn);
-		exit(1);
-	    }
-	}
-
-    }
-    *argcp = argc_out;
-    argv_out[argc_out] = NULL;
-    memcpy((char *)argv, (char *)argv_out, (argc_out + 1) * sizeof(char *));
-    Free((char *)argv_out);
 }
 
 /*
@@ -1328,7 +1212,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	    if (!toggle_supported(toggle_names[i].index)) {
 		continue;
 	    }
-	    if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
+	    if (!strncasecmp(toggle_names[i].name, name, rnlen)) {
 		address = &appres.toggle[toggle_names[i].index];
 		type = XRM_BOOLEAN;
 		break;
@@ -1441,10 +1325,34 @@ xparse_xrm(const char *arg, const char *where, bool warn)
     }
 }
 
+
 void
 parse_xrm(const char *arg, const char *where)
 {
     xparse_xrm(arg, where, true);
+}
+
+/* Parse a '-set' option. */
+static void
+parse_set(const char *arg, const char *where, bool warn)
+{
+    const char *eq = strchr(arg, '=');
+    char *xrm_arg;
+
+    if (eq != NULL) {
+	xrm_arg = xs_buffer("%s.%.*s: %s", programname, (int)(eq - arg), arg,
+		eq + 1);
+    } else {
+	xrm_arg = xs_buffer("%s.%s: %s", programname, arg, ResTrue);
+    }
+    xparse_xrm(xrm_arg, where, warn);
+}
+
+/* Parse a '-clear' option. */
+static void
+parse_clear(const char *arg, const char *where, bool warn)
+{
+    xparse_xrm(xs_buffer("%s.%s: %s", programname, arg, ResFalse), where, warn);
 }
 
 /*

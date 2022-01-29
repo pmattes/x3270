@@ -195,7 +195,7 @@ XrmOptionDescRec base_options[]= {
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
     { OptUtf8,		DotUtf8,	XrmoptionNoArg,		ResTrue },
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
-    { "-xrm",		NULL,		XrmoptionResArg,	NULL }
+    { OptXrm,		NULL,		XrmoptionResArg,	NULL }
 };
 int num_base_options = XtNumber(base_options);
 
@@ -280,7 +280,7 @@ static struct option_help {
     { OptVerifyHostCert, NULL, "Verify TLS host certificate (enabled by default)",
 	TLS_OPT_VERIFY_HOST_CERT },
     { OptVersion, NULL, "Display build options and character sets" },
-    { "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
+    { OptXrm, "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };
 
 /* Fallback resources. */
@@ -1126,16 +1126,6 @@ dump_argv(const char *when, int argc, char **argv)
 }
 #endif /*]*/
 
-/* Comparison function for toggle name qsort. */
-static int
-name_cmp(const void *p1, const void *p2)
-{
-    const char *s1 = *(char *const *)p1;
-    const char *s2 = *(char *const *)p2;
-
-    return strcmp(s1, s2);
-}
-
 /* Double backslashes in a value so it gets past -xrm. */
 static char *
 requote(const char *s)
@@ -1216,7 +1206,7 @@ parse_set_clear(int *argcp, char **argv)
 			exit(1);
 		    }
 		}
-		argv_out[argc_out++] = "-xrm";
+		argv_out[argc_out++] = OptXrm;
 		argv_out[argc_out++] = xs_buffer("x3270.%s: %s",
 			toggle_names[j].name, value? ResTrue: ResFalse);
 		found = true;
@@ -1228,43 +1218,18 @@ parse_set_clear(int *argcp, char **argv)
 	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
 		    eq? eq + 1: (is_set? ResTrue: ResFalse), &proper_name);
 
-	    if (xt < 0) {
-		fprintf(stderr, "Error: " OptSet " %s: invalid value\n",
-			 argv[i]);
-		exit(1);
-	    }
-	    if (xt == 1) {
-		argv_out[argc_out++] = "-xrm";
-		argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
-			eq? requote(eq + 1): (is_set? ResTrue: ResFalse));
-		found = true;
-	    }
-	}
-	if (!found) {
-	    const char **tn;
-	    int ntn = 0;
-	    int nx;
-	    char **nxnames;
-
-	    nxnames = extended_toggle_names(&nx, bool_only);
-	    tn = (const char **)Calloc(N_TOGGLES + nx, sizeof(char **));
-	    for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (toggle_supported(toggle_names[j].index) &&
-			!toggle_names[j].is_alias) {
-		    tn[ntn++] = toggle_names[j].name;
+	    if (xt > 0) {
+		if (eq) {
+		    proper_name =
+			xs_buffer("%.*s", (int)(eq - argv[i]), argv[i]);
+		} else {
+		    proper_name = argv[i];
 		}
 	    }
-	    memcpy(tn + ntn, nxnames, nx * sizeof(char **));
-	    ntn += nx;
-	    qsort(tn, ntn, sizeof(const char *), name_cmp);
-	    fprintf(stderr, "Unknown %stoggle name '%.*s'. Toggle names are:\n",
-		    bool_only? "Boolean ": "", (int)nlen, argv[i]);
-	    for (j = 0; j < ntn; j++) {
-		fprintf(stderr, " %s", tn[j]);
-	    }
-	    fprintf(stderr, "\n");
-	    Free(tn);
-	    exit(1);
+	    argv_out[argc_out++] = OptXrm;
+	    argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
+			(eq != NULL)? requote(eq + 1):
+			    (is_set? ResTrue: ResFalse));
 	}
     }
 
