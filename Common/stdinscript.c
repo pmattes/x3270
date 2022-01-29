@@ -38,8 +38,8 @@
 #include <assert.h>
 
 #include "actions.h"
-#include "httpd-json.h"
 #include "json.h"
+#include "json_run.h"
 #include "kybd.h"
 #include "names.h"
 #include "popups.h"

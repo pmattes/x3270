@@ -46,6 +46,7 @@
 #include "appres.h"
 #include "bind-opt.h"
 #include "json.h"
+#include "json_run.h"
 #include "lazya.h"
 #include "popups.h"
 #include "resources.h"
@@ -57,7 +58,6 @@
 
 #include "httpd-core.h"
 #include "httpd-io.h"
-#include "httpd-json.h"
 #include "httpd-nodes.h"
 
 #if defined(_WIN32) /*[*/

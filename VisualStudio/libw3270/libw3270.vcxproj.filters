@@ -18,11 +18,11 @@
     <ClCompile Include="..\..\Common\host.c" />
     <ClCompile Include="..\..\Common\httpd-core.c" />
     <ClCompile Include="..\..\Common\httpd-io.c" />
-    <ClCompile Include="..\..\Common\httpd-json.c" />
     <ClCompile Include="..\..\Common\httpd-nodes.c" />
     <ClCompile Include="..\..\Common\icmd.c" />
     <ClCompile Include="..\..\Common\idle.c" />
     <ClCompile Include="..\..\Common\json.c" />
+    <ClCompile Include="..\..\Common\json-run.c" />
     <ClCompile Include="..\..\Common\kybd.c" />
     <ClCompile Include="..\..\Common\linemode.c" />
     <ClCompile Include="..\..\Common\llist.c" />

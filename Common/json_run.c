@@ -26,8 +26,8 @@
  */
 
 /*
- *      httpd-json.c
- *              x3270 webserver, JSON module
+ *      json_run.c
+ *              JSON run command parsing
  */
 
 #include "globals.h"
@@ -39,7 +39,7 @@
 #include "task.h"
 #include "utils.h"
 
-#include "httpd-json.h"
+#include "json_run.h"
 
 /**
  * Compare two fixed-size strings
