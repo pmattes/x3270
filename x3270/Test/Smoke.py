@@ -91,6 +91,7 @@ class TestX3270Smoke(unittest.TestCase):
         x3270_port, ts = TestCommon.unused_port()
         x3270 = Popen(["x3270",
             "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
+            "-xrm", "x3270.colorScheme: old-default",
             "-httpd", f"127.0.0.1:{x3270_port}",
             f"127.0.0.1:{playback_port}"], stdout=DEVNULL)
         self.children.append(x3270)
