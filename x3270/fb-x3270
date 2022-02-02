@@ -47,6 +47,13 @@
 !=============================================================================
 !   Color schemes
 x3270.colorScheme.default: \
+	black royalblue3 red magenta \
+	green4 cyan yellow white \
+	darkSlateGrey blue3 orange purple \
+	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
+	white black dimGrey \
+	4 2 1 15
+x3270.colorScheme.old-default: \
 	black deepSkyBlue red pink \
 	green turquoise yellow white \
 	black blue3 orange purple \
@@ -54,6 +61,13 @@ x3270.colorScheme.default: \
 	white black dimGrey \
 	4 2 1 15
 x3270.colorScheme.reverse: \
+	white blue firebrick pink \
+	green4 turquoise2 yellow2 black \
+	black blue3 orange purple \
+	paleGreen paleTurquoise3 grey whiteSmoke \
+	black white dimGrey \
+	4 2 1 0
+x3270.colorScheme.old-reverse: \
 	black blue firebrick pink \
 	green4 cadetBlue goldenrod black \
 	black blue3 orange purple \
@@ -61,6 +75,13 @@ x3270.colorScheme.reverse: \
 	black white dimGrey \
 	4 2 1 0
 x3270.colorScheme.bright: \
+	black royalblue3 red magenta \
+	green4 cyan yellow white \
+	darkSlateGrey blue3 orange purple \
+	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
+	white black dimGrey \
+	4 2 1 15
+x3270.colorScheme.old-bright: \
 	black blue red magenta \
 	green turquoise yellow white \
 	black blue3 orange purple \
