@@ -1,1 +1,2 @@
-../mitm/mitm_files.mk
+# mitm-specific object files
+MITM_OBJECTS = mitm.o
