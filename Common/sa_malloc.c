@@ -35,6 +35,7 @@
 
 #include <assert.h>
 
+#include "asprintf.h"
 #include "lazya.h"
 #include "sa_malloc.h"
 
@@ -133,10 +134,6 @@ NewString(const char *s)
 
     return strcpy(buf, s);
 }
-
-#if defined(_WIN32) /*[*/
-void vasprintf(char **, const char *, va_list);
-#endif /*]*/
 
 char *
 xs_buffer(const char *fmt, ...)
