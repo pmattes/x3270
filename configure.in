@@ -51,6 +51,12 @@ AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib    build Windows libraries])
 
 AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
 AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
+AC_CHECK_PROG(windres_found,windres,yes,no)
+
+dnl You can use Msys to build Windows binaries, but not Unix-like ones.
+case "$host_os" in
+*msys)	enable_unix=no
+esac
 
 dnl Handle expansion of enable-unix.
 if test "x$enable_unix" = xyes; then
@@ -75,9 +81,20 @@ if test "x$enable_unix" = xno; then
 fi
 
 dnl Handle missing Windows tools.
-if test "$mingw64_found" = "no" -o "$mingw32_found" = "no"
+WIN32_SUFFIX=-32
+WIN64_SUFFIX=-64
+if test "$mingw64_found" = "no" -a "$mingw32_found" = "no"
 then	AC_MSG_WARN(Disabling Windows cross-compile)
 	enable_windows=no
+else	if test "$mingw64_found" = "no"
+    	then	WIN64_SUFFIX=-32
+	fi
+	if test "$mingw32_found" = "no"
+	then	WIN32_SUFFIX=-64
+	fi
+	if test "$windres_found" = "yes"
+	then	WINDRES_SET="WINDRES=windres"
+	fi
 fi
 
 dnl Handle expansion of enable-windows.
@@ -354,6 +371,9 @@ AC_SUBST(T_TEST)
 AC_SUBST(T_ALLTESTS)
 AC_SUBST(T_TEST_CLEAN)
 AC_SUBST(T_TEST_CLOBBER)
+AC_SUBST(WIN32_SUFFIX)
+AC_SUBST(WIN64_SUFFIX)
+AC_SUBST(WINDRES_SET)
 
 dnl Generate to top-level Makefile.
 AC_CONFIG_FILES([Makefile])

@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2021 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 	./$(MKFB) -c -o $@ $(filter-out $(MKFB),$^)
 
 $(MKFB): mkfb.c
-	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
+	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -I$(TOP)/include -MMD -MP -o $@ $^
 
 ws3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) s3270 "s3270 scripting terminal emulator" $(WIN64) >$@.tmp

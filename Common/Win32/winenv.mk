@@ -12,14 +12,18 @@ endif
 
 NATIVECC = gcc
 CC = $(GT_PFX)gcc
-AR = $(GT_PFX)ar
+AR = $(GT_PFX)gcc-ar
+ifndef WINDRES
 WINDRES = $(GT_PFX)windres
+endif
 
 # Set the local executable suffix, depending on whether we are compiling on
 # Cygwin or Linux.
+NATIVE_SFX =
 OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
 NATIVE_SFX = .exe
-else
-NATIVE_SFX =
+endif
+ifeq ($(OS),Msys)
+NATIVE_SFX = .exe
 endif

@@ -119,27 +119,27 @@ lib32xx:
 	cd lib/32xx && $(MAKE)
 lib3270stubs:
 	cd lib/3270stubs && $(MAKE)
-libw3270: libw3270-32 libw3270-64
+libw3270: libw3270@WIN32_SUFFIX@ libw3270@WIN64_SUFFIX@
 libw3270-32:
 	cd lib/w3270 && $(MAKE)
 libw3270-64:
 	cd lib/w3270 && $(MAKE) WIN64=1
-libw3270i: libw3270i-32 libw3270i-64
+libw3270i: libw3270i@WIN32_SUFFIX@ libw3270i@WIN64_SUFFIX@
 libw3270i-32:
 	cd lib/w3270i && $(MAKE)
 libw3270i-64:
 	cd lib/w3270i && $(MAKE) WIN64=1
-libw32xx: libw32xx-32 libw32xx-64
+libw32xx: libw32xx@WIN32_SUFFIX@ libw32xx@WIN64_SUFFIX@
 libw32xx-32:
 	cd lib/w32xx && $(MAKE)
 libw32xx-64:
 	cd lib/w32xx && $(MAKE) WIN64=1
-libw3270stubs: libw3270stubs-32 libw3270stubs-64
+libw3270stubs: libw3270stubs@WIN32_SUFFIX@ libw3270stubs@WIN64_SUFFIX@
 libw3270stubs-32:
 	cd lib/w3270stubs && $(MAKE)
 libw3270stubs-64:
 	cd lib/w3270stubs && $(MAKE) WIN64=1
-libexpat: libexpat-32 libexpat-64
+libexpat: libexpat@WIN32_SUFFIX@ libexpat@WIN64_SUFFIX@
 libexpat-32:
 	cd lib/libexpat && $(MAKE)
 libexpat-64:
@@ -160,31 +160,31 @@ x3270if:
 	cd x3270if && $(MAKE)
 playback:
 	cd playback && $(MAKE)
-wc3270: wc3270-32 wc3270-64
+wc3270: wc3270@WIN32_SUFFIX@ wc3270@WIN64_SUFFIX@
 wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
-	cd wc3270 && $(MAKE)
+	cd wc3270 && $(MAKE) @WINDRES_SET@
 wc3270-64: libw3270-64 libw3270i-64 libw32xx-64
-	cd wc3270 && $(MAKE) WIN64=1
-ws3270: ws3270-32 ws3270-64
+	cd wc3270 && $(MAKE) WIN64=1 @WINDRES_SET@
+ws3270: ws3270@WIN32_SUFFIX@ ws3270@WIN64_SUFFIX@
 ws3270-32: libw3270-32 libw32xx-32
-	cd ws3270 && $(MAKE)
+	cd ws3270 && $(MAKE) @WINDRES_SET@
 ws3270-64: libw3270-64 libw32xx-64
-	cd ws3270 && $(MAKE) WIN64=1
-wb3270: wb3270-32 wb3270-64
+	cd ws3270 && $(MAKE) WIN64=1 @WINDRES_SET@
+wb3270: wb3270@WIN32_SUFFIX@ wb3270@WIN64_SUFFIX@
 wb3270-32: libw3270-32 libw32xx-32
-	cd wb3270 && $(MAKE)
+	cd wb3270 && $(MAKE) @WINDRES_SET@
 wb3270-64: libw3270-64 libw32xx-64
-	cd wb3270 && $(MAKE) WIN64=1
-wpr3287: wpr3287-32 wpr3287-64
+	cd wb3270 && $(MAKE) WIN64=1 @WINDRES_SET@
+wpr3287: wpr3287@WIN32_SUFFIX@ wpr3287@WIN64_SUFFIX@
 wpr3287-32: libw32xx-32
-	cd wpr3287 && $(MAKE)
+	cd wpr3287 && $(MAKE) @WINDRES_SET@
 wpr3287-64: libw32xx-64
-	cd wpr3287 && $(MAKE) WIN64=1
-wx3270if: wx3270if-32 wx3270if-64
+	cd wpr3287 && $(MAKE) WIN64=1 @WINDRES_SET@
+wx3270if: wx3270if@WIN32_SUFFIX@ wx3270if@WIN64_SUFFIX@
 wx3270if-32:
-	cd wx3270if && $(MAKE)
+	cd wx3270if && $(MAKE) @WINDRES_SET@
 wx3270if-64:
-	cd wx3270if && $(MAKE) WIN64=1
+	cd wx3270if && $(MAKE) WIN64=1 @WINDRES_SET@
 
 FORCE:
 
@@ -240,27 +240,27 @@ lib32xx-clean:
 	cd lib/32xx && $(MAKE) clean && $(MAKE) -f Makefile.test clean
 lib3270stubs-clean:
 	cd lib/3270stubs && $(MAKE) clean
-libw3270-clean: libw3270-clean-32 libw3270-clean-64
+libw3270-clean: libw3270-clean@WIN32_SUFFIX@ libw3270-clean@WIN64_SUFFIX@
 libw3270-clean-32:
 	cd lib/w3270 && $(MAKE) clean
 libw3270-clean-64:
 	cd lib/w3270 && $(MAKE) clean WIN64=1
-libw3270i-clean: libw3270i-clean-32 libw3270i-clean-64
+libw3270i-clean: libw3270i-clean@WIN32_SUFFIX@ libw3270i-clean@WIN64_SUFFIX@
 libw3270i-clean-32:
 	cd lib/w3270i && $(MAKE) clean
 libw3270i-clean-64:
 	cd lib/w3270i && $(MAKE) clean WIN64=1
-libw32xx-clean: libw32xx-clean-32 libw32xx-clean-64
+libw32xx-clean: libw32xx-clean@WIN32_SUFFIX@ libw32xx-clean@WIN64_SUFFIX@
 libw32xx-clean-32:
 	cd lib/w32xx && $(MAKE) clean
 libw32xx-clean-64:
 	cd lib/w32xx && $(MAKE) clean WIN64=1
-libw3270stubs-clean: libw3270stubs-clean-32 libw3270stubs-clean-64
+libw3270stubs-clean: libw3270stubs-clean@WIN32_SUFFIX@ libw3270stubs-clean@WIN64_SUFFIX@
 libw3270stubs-clean-32:
 	cd lib/w3270stubs && $(MAKE) clean
 libw3270stubs-clean-64:
 	cd lib/w3270stubs && $(MAKE) clean WIN64=1
-libexpat-clean: libexpat-clean-32 libexpat-clean-64
+libexpat-clean: libexpat-clean@WIN32_SUFFIX@ libexpat-clean@WIN64_SUFFIX@
 libexpat-clean-32:
 	cd lib/libexpat && $(MAKE) clean
 libexpat-clean-64:
@@ -281,22 +281,22 @@ x3270if-clean:
 	cd x3270if && $(MAKE) clean
 playback-clean:
 	cd playback && $(MAKE) clean
-wc3270-clean: wc3270-clean-32 wc3270-clean-64
+wc3270-clean: wc3270-clean@WIN32_SUFFIX@ wc3270-clean@WIN64_SUFFIX@
 wc3270-clean-32:
 	cd wc3270 && $(MAKE) clean
 wc3270-clean-64:
 	cd wc3270 && $(MAKE) clean WIN64=1
-ws3270-clean: ws3270-clean-32 ws3270-clean-64
+ws3270-clean: ws3270-clean@WIN32_SUFFIX@ ws3270-clean@WIN64_SUFFIX@
 ws3270-clean-32:
 	cd ws3270 && $(MAKE) clean
 ws3270-clean-64:
 	cd ws3270 && $(MAKE) clean WIN64=1
-wb3270-clean: wb3270-clean-32 wb3270-clean-64
+wb3270-clean: wb3270-clean@WIN32_SUFFIX@ wb3270-clean@WIN64_SUFFIX@
 wb3270-clean-32:
 	cd wb3270 && $(MAKE) clean
 wb3270-clean-64:
 	cd wb3270 && $(MAKE) clean WIN64=1
-wx3270if-clean: wx3270if-clean-32 wx3270if-clean-64
+wx3270if-clean: wx3270if-clean@WIN32_SUFFIX@ wx3270if-clean@WIN64_SUFFIX@
 wx3270if-clean-32:
 	cd wx3270if && $(MAKE) clean
 wx3270if-clean-64:
@@ -316,27 +316,27 @@ lib32xx-clobber:
 	cd lib/32xx && $(MAKE) clobber && $(MAKE) -f Makefile.test clobber
 lib3270stubs-clobber:
 	cd lib/3270stubs && $(MAKE) clobber
-libw3270-clobber: libw3270-clobber-32 libw3270-clobber-64
+libw3270-clobber: libw3270-clobber@WIN32_SUFFIX@ libw3270-clobber@WIN64_SUFFIX@
 libw3270-clobber-32:
 	cd lib/w3270 && $(MAKE) clobber
 libw3270-clobber-64:
 	cd lib/w3270 && $(MAKE) clobber WIN64=1
-libw3270i-clobber: libw3270i-clobber-32 libw3270i-clobber-64
+libw3270i-clobber: libw3270i-clobber@WIN32_SUFFIX@ libw3270i-clobber@WIN64_SUFFIX@
 libw3270i-clobber-32:
 	cd lib/w3270i && $(MAKE) clobber
 libw3270i-clobber-64:
 	cd lib/w3270i && $(MAKE) clobber WIN64=1
-libw32xx-clobber: libw32xx-clobber-32 libw32xx-clobber-64
+libw32xx-clobber: libw32xx-clobber@WIN32_SUFFIX@ libw32xx-clobber@WIN64_SUFFIX@
 libw32xx-clobber-32:
 	cd lib/w32xx && $(MAKE) clobber
 libw32xx-clobber-64:
 	cd lib/w32xx && $(MAKE) clobber WIN64=1
-libw3270stubs-clobber: libw3270stubs-clobber-32 libw3270stubs-clobber-64
+libw3270stubs-clobber: libw3270stubs-clobber@WIN32_SUFFIX@ libw3270stubs-clobber@WIN64_SUFFIX@
 libw3270stubs-clobber-32:
 	cd lib/w3270stubs && $(MAKE) clobber
 libw3270stubs-clobber-64:
 	cd lib/w3270stubs && $(MAKE) clobber WIN64=1
-libexpat-clobber: libexpat-clobber-32 libexpat-clobber-64
+libexpat-clobber: libexpat-clobber@WIN32_SUFFIX@ libexpat-clobber@WIN64_SUFFIX@
 libexpat-clobber-32:
 	cd lib/libexpat && $(MAKE) clobber
 libexpat-clobber-64:
@@ -357,27 +357,27 @@ x3270if-clobber:
 	cd x3270if && $(MAKE) clobber
 playback-clobber:
 	cd playback && $(MAKE) clobber
-wc3270-clobber: wc3270-clobber-32 wc3270-clobber-64
+wc3270-clobber: wc3270-clobber@WIN32_SUFFIX@ wc3270-clobber@WIN64_SUFFIX@
 wc3270-clobber-32:
 	cd wc3270 && $(MAKE) clobber
 wc3270-clobber-64:
 	cd wc3270 && $(MAKE) clobber WIN64=1
-ws3270-clobber: ws3270-clobber-32 ws3270-clobber-64
+ws3270-clobber: ws3270-clobber@WIN32_SUFFIX@ ws3270-clobber@WIN64_SUFFIX@
 ws3270-clobber-32:
 	cd ws3270 && $(MAKE) clobber
 ws3270-clobber-64:
 	cd ws3270 && $(MAKE) clobber WIN64=1
-wb3270-clobber: wb3270-clobber-32 wb3270-clobber-64
+wb3270-clobber: wb3270-clobber@WIN32_SUFFIX@ wb3270-clobber@WIN64_SUFFIX@
 wb3270-clobber-32:
 	cd wb3270 && $(MAKE) clobber
 wb3270-clobber-64:
 	cd wb3270 && $(MAKE) clobber WIN64=1
-wpr3287-clobber: wpr3287-clobber-32 wpr3287-clobber-64
+wpr3287-clobber: wpr3287-clobber@WIN32_SUFFIX@ wpr3287-clobber@WIN64_SUFFIX@
 wpr3287-clobber-32:
 	cd wpr3287 && $(MAKE) clobber
 wpr3287-clobber-64:
 	cd wpr3287 && $(MAKE) clobber WIN64=1
-wx3270if-clobber: wx3270if-clobber-32 wx3270if-clobber-64
+wx3270if-clobber: wx3270if-clobber@WIN32_SUFFIX@ wx3270if-clobber@WIN64_SUFFIX@
 wx3270if-clobber-32:
 	cd wx3270if && $(MAKE) clobber
 wx3270if-clobber-64:
