@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1545,7 +1545,10 @@ dec_set(int ig1 _is_unused, int ig2 _is_unused)
 	    break;
 	case 47:	/* alt buffer */
 	case 1049:
+	    dec_save_cursor(0, 0);
 	    ctlr_altbuffer(true);
+	    is_altbuffer = true;
+	    ctlr_aclear(0, ROWS * COLS, 1);
 	    break;
 	}
     return DATA;
@@ -1583,6 +1586,8 @@ dec_reset(int ig1 _is_unused, int ig2 _is_unused)
 	case 47:	/* alt buffer */
 	case 1049:
 	    ctlr_altbuffer(false);
+	    is_altbuffer = false;
+	    dec_restore_cursor(0, 0);
 	    break;
 	}
     }
@@ -1614,6 +1619,7 @@ dec_save(int ig1 _is_unused, int ig2 _is_unused)
 	case 47:	/* alt buffer */
 	case 1049:
 	    saved_altbuffer = is_altbuffer;
+	    dec_save_cursor(0, 0);
 	    break;
 	}
     }
@@ -1652,6 +1658,8 @@ dec_restore(int ig1 _is_unused, int ig2 _is_unused)
 	case 47:	/* alt buffer */
 	case 1049:	/* alt buffer */
 	    ctlr_altbuffer(saved_altbuffer);
+	    is_altbuffer = saved_altbuffer;
+	    dec_restore_cursor(0, 0);
 	    break;
 	}
     }
@@ -1786,6 +1794,7 @@ nvt_in3270(bool in3270)
 	    ctlr_enable_cursor(true, EC_NVT);
 	}
 	ctlr_altbuffer(false);
+	is_altbuffer = false;
     } else {
 	ansi_reset(0, 0);
     }
