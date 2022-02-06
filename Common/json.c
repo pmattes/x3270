@@ -568,6 +568,12 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 						", got", internal_stop));
 				}
 			    }
+			    if (!r_any) {
+				assert(element == NULL);
+				Replace(key, NULL);
+				FAIL(JE_SYNTAX,
+					NewString("Missing element value"));
+			    }
 
 			    /* Save the key-value pair. */
 			    kv.key_length = key_length;
