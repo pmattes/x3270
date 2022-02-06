@@ -22,7 +22,7 @@
     <ClCompile Include="..\..\Common\icmd.c" />
     <ClCompile Include="..\..\Common\idle.c" />
     <ClCompile Include="..\..\Common\json.c" />
-    <ClCompile Include="..\..\Common\json-run.c" />
+    <ClCompile Include="..\..\Common\json_run.c" />
     <ClCompile Include="..\..\Common\kybd.c" />
     <ClCompile Include="..\..\Common\linemode.c" />
     <ClCompile Include="..\..\Common\llist.c" />
