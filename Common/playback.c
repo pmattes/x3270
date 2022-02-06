@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2014, 2019, 2021 Paul Mattes.
+ * Copyright (c) 1994-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,10 +64,8 @@
 
 #if !defined(_WIN32) /*[*/
 # define sockerr(s)     perror(s)
-typedef int socket_t;
 #else /*][*/
 # define sockerr(s)     win32_perror(s)
-typedef SOCKET socket_t;
 #endif /*]*/
 
 char *me;

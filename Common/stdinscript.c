@@ -259,7 +259,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\r') {
 	stdin_nr--;
     }
-    vtrace("s3stdin read '%.*s'\n", stdin_nr, stdin_buf);
+    vtrace("s3stdin read '%.*s'\n", (int)stdin_nr, stdin_buf);
     if (!json_input(stdin_buf)) {
 	push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
     }
