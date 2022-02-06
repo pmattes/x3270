@@ -73,16 +73,15 @@ static ioid_t stdin_id = NULL_IOID;
 #if defined(_WIN32) /*[*/
 static HANDLE stdin_thread;
 static HANDLE stdin_enable_event, stdin_done_event;
-static char stdin_buf[256];
-ssize_t stdin_nr;
-int stdin_errno;
+static char stdin_buf[8192];
+static ssize_t stdin_nr;
+static int stdin_errno;
 #endif /*]*/
 
 static bool pushed_wait = false;
 static bool enabled = true;
 static struct {		/* pending JSON input state */
     char *buf;
-    size_t buflen;
 } pj_in;
 struct {		/* pending JSON output state */
     bool pending;
@@ -104,9 +103,10 @@ json_input(char *buf)
 
     if (pj_in.buf != NULL) {
 	/* Concatenate the input. */
-	pj_in.buf = Realloc(pj_in.buf, pj_in.buflen + 1 + len + 1);
-	sprintf(pj_in.buf + pj_in.buflen, "\n%s", buf);
-	pj_in.buflen += 1 + len;
+	char *s = pj_in.buf;
+
+	pj_in.buf = xs_buffer("%s%s", pj_in.buf, buf);
+	Free(s);
     } else {
 	char *s = buf;
 
@@ -117,7 +117,6 @@ json_input(char *buf)
 	}
 	if (len && (*s == '{' || *s == '[' || *s == '"')) {
 	    pj_in.buf = NewString(buf);
-	    pj_in.buflen = strlen(buf);
 	}
     }
 
@@ -128,7 +127,8 @@ json_input(char *buf)
 	hjparse_ret_t ret;
 
 	/* Try JSON parsing. */
-	ret = hjson_parse(pj_in.buf, pj_in.buflen, &cmds, &single, &errmsg);
+	ret = hjson_parse(pj_in.buf, strlen(pj_in.buf), &cmds, &single,
+		&errmsg);
 	if (ret != HJ_OK) {
 	    /* Unsuccessful JSON. */
 	    if (ret == HJ_BAD_SYNTAX || ret == HJ_BAD_CONTENT) {
@@ -139,7 +139,6 @@ json_input(char *buf)
 		push_cb(fail, strlen(fail), &stdin_cb, NULL);
 		Free(fail);
 		Replace(pj_in.buf, NULL);
-		pj_in.buflen = 0;
 		pj_out.pending = (ret == HJ_BAD_CONTENT);
 		return true;
 	    }
@@ -168,7 +167,6 @@ json_input(char *buf)
 	    Free(single);
 	}
 	Replace(pj_in.buf, NULL);
-	pj_in.buflen = 0;
 	return true;
     }
 
@@ -253,14 +251,14 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	x3270_exit(0);
     }
 
-    if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\n') {
-	stdin_nr--;
-    }
-    if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\r') {
-	stdin_nr--;
-    }
     vtrace("s3stdin read '%.*s'\n", (int)stdin_nr, stdin_buf);
     if (!json_input(stdin_buf)) {
+	if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\n') {
+	    stdin_nr--;
+	}
+	if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\r') {
+	    stdin_nr--;
+	}
 	push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
     }
 }
