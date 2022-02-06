@@ -328,6 +328,7 @@ stdin_done(task_cbh handle, bool success, bool abort)
 	json_object_set(pj_out.json, "success", NT, json_boolean(success));
 	json_object_set(pj_out.json, "status", NT, json_string(prompt, NT));
 	printf("%s\n", w = json_write_o(pj_out.json, JW_ONE_LINE));
+	fflush(stdout);
 	Free(w);
 	json_free(pj_out.json);
 	pj_out.pending = false;
