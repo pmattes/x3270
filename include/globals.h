@@ -283,7 +283,7 @@ extern enum cstate cstate;
 #define cIN_SSCP(c)	(c == CONNECTED_SSCP)
 #define cIN_TN3270E(c)	(c == CONNECTED_TN3270E)
 #define cIN_E(c)	(c >= CONNECTED_UNBOUND)
-#define cFULL_SESSION(c) (cIN_NVT(c) || cIN_3270(c) || cIN_SSCP(c))
+#define cFULL_SESSION(c) (cIN_NVT(c) || cIN_3270(c))
 
 #define PCONNECTED	cPCONNECTED(cstate)
 #define HALF_CONNECTED	cHALF_CONNECTED(cstate)

@@ -410,7 +410,7 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 	json_array_append(result_array, json_string(buf, len));
     } else {
 	s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
-	ns = send(p->socket, s, strlen(s), 0);
+	ns = send(p->socket, s, (int)strlen(s), 0);
 	if (ns < 0) {
 	    popup_a_sockerr("s3sock send");
 	}
@@ -440,7 +440,7 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 	return;
     }
     recursing = true;
-    ns = send(p->socket, s, strlen(s), 0);
+    ns = send(p->socket, s, (int)strlen(s), 0);
     if (ns < 0) {
 	popup_a_sockerr("s3sock send");
     }
@@ -479,13 +479,13 @@ peer_done(task_cbh handle, bool success, bool abort)
         json_free(p->json_result);
 	vtrace("JSON output for %s: '%s/%s'\n", p->name, prompt,
 		success? PROMPT_OK: PROMPT_ERROR);
-	send(p->socket, s, strlen(s), 0);
+	send(p->socket, s, (int)strlen(s), 0);
     } else {
 	/* Print the prompt. */
 	vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
 		success? PROMPT_OK: PROMPT_ERROR);
 	s = lazyaf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
-	send(p->socket, s, strlen(s), 0);
+	send(p->socket, s, (int)strlen(s), 0);
     }
 
     if (abort || !p->enabled) {

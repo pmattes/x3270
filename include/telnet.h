@@ -51,7 +51,7 @@ void net_charmode(void);
 net_connect_t net_connect(const char *, char *, char *, bool, iosrc_t *);
 void net_exception(iosrc_t fd, ioid_t id);
 int net_getsockname(void *buf, int *len);
-void net_hexnvt_out(unsigned char *buf, int len);
+void net_hexnvt_out(unsigned char *buf, size_t len);
 void net_input(iosrc_t fd, ioid_t id);
 void net_interrupt(char c);
 void net_linemode(void);

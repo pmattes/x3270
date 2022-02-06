@@ -143,7 +143,7 @@ base64_decode(const char *s)
 		Free(ret);
 		return NULL;
 	    }
-	    accum = (accum << BITS_PER_BASE64) | (ix - alphabet64);
+	    accum = (accum << BITS_PER_BASE64) | (int)(ix - alphabet64);
 	    accum_bits += BITS_PER_BASE64;
 	}
 

@@ -3416,7 +3416,7 @@ nybble(unsigned char c)
 static bool
 HexString_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool is_ascii;
+    bool is_ascii = false;
     unsigned i, j;
     size_t len = 0;
     char *s;
@@ -4119,7 +4119,7 @@ hex_input(const char *s)
     bool escaped;
     unsigned char *xbuf = NULL;
     unsigned char *tbuf = NULL;
-    int nbytes = 0;
+    size_t nbytes = 0;
 
     /* Validate the string. */
     if (strlen(s) % 2) {

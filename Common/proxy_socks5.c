@@ -238,7 +238,7 @@ proxy_socks5_process_auth_reply(void)
 		(int)strlen(colon + 1),
 		colon + 1);
 	trace_netdata('>', upbuf, strlen((char *)upbuf));
-	if (send(ps.fd, (char *)upbuf, strlen((char *)upbuf), 0) < 0) {
+	if (send(ps.fd, (char *)upbuf, (int)strlen((char *)upbuf), 0) < 0) {
 	    popup_a_sockerr("SOCKS5 Proxy: send error");
 	    return PX_FAILURE;
 	}

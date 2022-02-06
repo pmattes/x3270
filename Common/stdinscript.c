@@ -74,7 +74,7 @@ static ioid_t stdin_id = NULL_IOID;
 static HANDLE stdin_thread;
 static HANDLE stdin_enable_event, stdin_done_event;
 static char stdin_buf[256];
-int stdin_nr;
+ssize_t stdin_nr;
 int stdin_errno;
 #endif /*]*/
 

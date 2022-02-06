@@ -143,7 +143,7 @@ wchar_to_multibyte_string(WCHAR *string, char *mb, size_t mb_len)
     int nc;
     BOOL udc;
 
-    nc = WideCharToMultiByte(local_cp, 0, string, -1, mb, mb_len,
+    nc = WideCharToMultiByte(local_cp, 0, string, -1, mb, (int)mb_len,
 	    (local_cp == CP_UTF8)? NULL: "?",
 	    (local_cp == CP_UTF8)? NULL: &udc);
     if (nc > 0 && mb[nc - 1] == '\0') {

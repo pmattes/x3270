@@ -191,9 +191,9 @@ uprintf(const char *fmt, ...)
     s = xs_vbuffer(fmt, ap);
     va_end(ap);
     if (ui_socket != INVALID_SOCKET) {
-	nw = send(ui_socket, s, strlen(s), 0);
+	nw = send(ui_socket, s, (int)strlen(s), 0);
     } else {
-	nw = write(fileno(stdout), s, strlen(s));
+	nw = write(fileno(stdout), s, (int)strlen(s));
     }
 
     if (pending_trace != NULL) {
@@ -1351,7 +1351,7 @@ process_input(const char *buf, ssize_t nr)
 		XML_SetCharacterDataHandler(uix.parser, xml_data);
 	    }
 
-	    if (XML_Parse(uix.parser, buf, i, 0) == 0) {
+	    if (XML_Parse(uix.parser, buf, (int)i, 0) == 0) {
 		ui_leaf(IndUiError,
 			AttrFatal, AT_BOOLEAN, true,
 			AttrText, AT_STRING, xs_buffer("XML parsing error: %s",

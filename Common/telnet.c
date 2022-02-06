@@ -236,7 +236,7 @@ static void net_starttls_continue(void);
 
 static const char *nnn(int c);
 
-static void net_hexnvt_out_framed(unsigned char *buf, int len, bool framed);
+static void net_hexnvt_out_framed(unsigned char *buf, size_t len, bool framed);
 
 /* telnet states */
 #define TNS_DATA	0	/* receiving data */
@@ -2804,7 +2804,7 @@ net_rawout(unsigned const char *buf, size_t len)
  *	and CR quoting as necessary.
  */
 static void
-net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
+net_hexnvt_out_framed(unsigned char *buf, size_t len, bool framed)
 {
     unsigned char *tbuf;
     unsigned char *xbuf;
@@ -2850,7 +2850,7 @@ net_hexnvt_out_framed(unsigned char *buf, int len, bool framed)
  *	and CR quoting as necessary.
  */
 void
-net_hexnvt_out(unsigned char *buf, int len)
+net_hexnvt_out(unsigned char *buf, size_t len)
 {
     net_hexnvt_out_framed(buf, len, false);
 }

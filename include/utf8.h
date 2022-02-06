@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,5 +35,5 @@ extern bool is_utf8;
 
 void set_codeset(char *codeset_name, bool force_utf8);
 int unicode_to_utf8(ucs4_t ucs4, char *utf8);
-int utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4);
+int utf8_to_unicode(const char *utf8, size_t len, ucs4_t *ucs4);
 const char *get_codeset(void);

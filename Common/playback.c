@@ -64,8 +64,10 @@
 
 #if !defined(_WIN32) /*[*/
 # define sockerr(s)     perror(s)
+typedef int socket_t;
 #else /*][*/
 # define sockerr(s)     win32_perror(s)
+typedef SOCKET socket_t;
 #endif /*]*/
 
 char *me;
@@ -78,16 +80,16 @@ static enum {
 } tstate = T_NONE;
 bool fdisp = false;
 
-static void process(FILE *f, int s);
+static void process(FILE *f, socket_t s);
 typedef enum {
     STEP_LINE,	/* step one line in the file */
     STEP_EOR,	/* step until IAC EOR */
     STEP_MARK,	/* step until a mark (line starting with '+') */
     STEP_BIDIR,	/* step bidirectionally */
 } step_t;
-static bool step(FILE *f, int s, step_t type);
-static int process_command(FILE *f, int s);
-void trace_netdata(char *direction, unsigned char *buf, int len);
+static bool step(FILE *f, socket_t s, step_t type);
+static int process_command(FILE *f, socket_t s);
+void trace_netdata(char *direction, unsigned char *buf, size_t len);
 
 #if defined(_WIN32) /*[*/
 static HANDLE stdin_thread = INVALID_HANDLE_VALUE;
@@ -95,7 +97,7 @@ static HANDLE stdin_enable_event = INVALID_HANDLE_VALUE,
 	      stdin_done_event = INVALID_HANDLE_VALUE;
 static HANDLE socket2_event = INVALID_HANDLE_VALUE;
 static char stdin_buf[256];
-static int stdin_nr;
+static ssize_t stdin_nr;
 static int stdin_errno;
 #endif /*]*/
 
@@ -152,7 +154,7 @@ main(int argc, char *argv[])
 {
     int c;
     FILE *f;
-    int s;
+    socket_t s;
     struct sockaddr *sa;
     socklen_t addrlen;
     char ahost[256];
@@ -268,7 +270,7 @@ main(int argc, char *argv[])
 
     /* Accept connections and process them. */
     for (;;) {
-	int s2;
+	socket_t s2;
 	union {
 	    struct sockaddr sa;
 	    struct sockaddr_in sin;
@@ -382,7 +384,7 @@ main(int argc, char *argv[])
  * Returns 0 for no change, -1 to stop processing the file.
  */
 static int
-process_command(FILE *f, int s)
+process_command(FILE *f, socket_t s)
 {
 #if !defined(_WIN32) /*[*/
     int rx = 0;
@@ -531,13 +533,13 @@ done:
 
 /* Trace data from the host or emulator. */
 void
-trace_netdata(char *direction, unsigned char *buf, int len)
+trace_netdata(char *direction, unsigned char *buf, size_t len)
 {
-    int offset;
+    size_t offset;
 
     for (offset = 0; offset < len; offset++) {
 	if (!(offset % LINEDUMP_MAX)) {
-	    printf("%s%s 0x%-3x ", (offset ? "\n" : ""), direction, offset);
+	    printf("%s%s 0x%-3x ", (offset ? "\n" : ""), direction, (int)offset);
 	}
 	printf("%02x", buf[offset]);
     }
@@ -549,7 +551,7 @@ trace_netdata(char *direction, unsigned char *buf, int len)
  * EOF.
  */
 static void
-process(FILE *f, int s)
+process(FILE *f, socket_t s)
 {
     char buf[BSIZE];
 
@@ -668,10 +670,10 @@ process(FILE *f, int s)
  * Returns false for EOF or error, true otherwise.
  */
 static bool
-step(FILE *f, int s, step_t type)
+step(FILE *f, socket_t s, step_t type)
 {
     int c = 0;
-    static int d1;
+    static ssize_t d1;
     static char hexes[] = "0123456789abcdef";
 #   define isxd(c) strchr(hexes, c)
     static bool again = false;
@@ -787,7 +789,7 @@ top:
 	    if (isxd(c)) {
 		bool at_eor = false;
 
-		*cp = ((d1*16)+(strchr(hexes,c)-hexes));
+		*cp = (char)((d1*16)+(strchr(hexes,c)-hexes));
 		pstate = D2;
 		switch (tstate) {
 		case T_NONE:
@@ -840,7 +842,7 @@ run_it:
     NO_FDISP;
     if (type != STEP_BIDIR || direction == FROM_HOST) {
 	trace_netdata("host", (unsigned char *)obuf, cp - obuf);
-	if (send(s, obuf, cp - obuf, 0) < 0) {
+	if (send(s, obuf, (int)(cp - obuf), 0) < 0) {
 	    sockerr("send");
 	    return false;
 	}
@@ -878,7 +880,7 @@ run_it:
 		exit(2);
 	    }
 #endif /*]*/
-	    nr = recv(s, ibuf + offset, n2r, 0);
+	    nr = recv(s, ibuf + offset, (int)n2r, 0);
 	    if (nr < 0) {
 		sockerr("playback: emulator recv");
 		return false;
