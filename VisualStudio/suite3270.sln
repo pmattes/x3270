@@ -80,6 +80,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libexpat", "libexpat\libexp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playback", "playback\playback.vcxproj", "{74911F0D-82AF-4FFC-8A43-C411597A64C2}"
 	ProjectSection(ProjectDependencies) = postProject
+		{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00} = {7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}
 		{9403B3C3-2EA9-44F8-99D4-45DE7692BB1A} = {9403B3C3-2EA9-44F8-99D4-45DE7692BB1A}
 	EndProjectSection
 EndProject
