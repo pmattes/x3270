@@ -59,8 +59,11 @@ dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
 AC_SEARCH_LIBS(socket, socket)
 
+dnl Check for functions.
+AC_CHECK_FUNCS(vasprintf)
+
 dnl Generate conf.h.
-dnl AC_CONFIG_HEADERS([conf.h])
+AC_CONFIG_HEADERS([conf.h])
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile Makefile.obj)

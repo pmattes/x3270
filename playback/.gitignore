@@ -1,4 +1,2 @@
-playback
-*.o
-Makefile
+conf.h
 Makefile.obj
