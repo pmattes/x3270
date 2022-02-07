@@ -35,6 +35,8 @@ import select
 import os
 import sys
 import time
+from urllib import request
+import requests
 import TestCommon
 
 class TestS3270Json(unittest.TestCase):
@@ -405,6 +407,50 @@ class TestS3270Json(unittest.TestCase):
         self.check_result_json(result[3])
         self.check_result_s3270(result[4:7])
         self.check_result_json(result[7])
+
+    # Verify that HTTPD JSON output is all on one line (GET).
+    def test_s3270_http_json_one_line_get(self):
+
+        # Start s3270.
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(['s3270', '-httpd', str(port)])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
+
+        # Send a request.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query()')
+        self.assertEqual(requests.codes.ok, r.status_code)
+        out = r.text
+        while out.endswith('\r') or out.endswith('\n'):
+            out = out[0:-1]
+        self.assertFalse('\n' in out)
+
+        # Clean up.
+        s3270.kill()
+        s3270.wait(timeout=2)
+
+    # Verify that HTTPD JSON output is all on one line (POST).
+    def test_s3270_http_json_one_line_post(self):
+
+        # Start s3270.
+        port, ts = TestCommon.unused_port()
+        s3270 = Popen(['s3270', '-httpd', str(port)])
+        self.children.append(s3270)
+        TestCommon.check_listen(port)
+        ts.close()
+
+        # Send a request.
+        r = requests.post(f'http://127.0.0.1:{port}/3270/rest/post', json="Query")
+        self.assertEqual(requests.codes.ok, r.status_code)
+        out = r.text
+        while out.endswith('\r') or out.endswith('\n'):
+            out = out[0:-1]
+        self.assertFalse('\n' in out)
+
+        # Clean up.
+        s3270.kill()
+        s3270.wait(timeout=2)
 
 if __name__ == '__main__':
     unittest.main()

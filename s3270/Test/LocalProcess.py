@@ -48,13 +48,19 @@ class TestS3270LocalProcess(unittest.TestCase):
             child.wait()
 
     # s3270 TERM variable test
-    def s3270_lp_term(self, model, term):
+    def s3270_lp_term(self, model, term, override=None):
 
         # Start s3270.
         port, ts = TestCommon.unused_port()
-        s3270 = Popen(['s3270', '-model', model, '-httpd', str(port),
-            '-e', '/bin/bash', '-c', 's3270/Test/echo_term.bash'], stdin=DEVNULL,
-            stdout=DEVNULL)
+        args = [ 's3270', '-model', model, '-httpd', str(port) ]
+        if override != None:
+            args.append('-tn')
+            args.append(override)
+        args.append('-e')
+        args.append('/bin/bash')
+        args.append('-c')
+        args.append('s3270/Test/echo_term.bash')
+        s3270 = Popen(args, stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
 
@@ -74,6 +80,8 @@ class TestS3270LocalProcess(unittest.TestCase):
         self.s3270_lp_term('3279-2-E', 'xterm-color')
     def test_s3270_lp_mono(self):
         self.s3270_lp_term('3278-2-E', 'xterm')
+    def test_s3270_lp_override(self):
+        self.s3270_lp_term('3279-2-E', 'foo', override='foo')
 
 if __name__ == '__main__':
     unittest.main()
