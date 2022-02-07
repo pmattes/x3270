@@ -3,6 +3,8 @@ autom4te.cache
 config.cache
 config.log
 config.status
+configure.in~
+configure~
 cscope.*
 Debug/
 *.exe
@@ -14,8 +16,10 @@ instlist.man
 mkfb
 mkicon
 obj/
+Release/
 ReleaseNotes.html
 Resources.html
+x64/
 *.*sdf
 *-src.tgz
 SSL.html
@@ -28,5 +32,4 @@ wversion.c
 .*.swp
 *.pyc
 __pycache__
-configure.in~
-configure~
+
