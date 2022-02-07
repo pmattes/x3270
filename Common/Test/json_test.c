@@ -546,6 +546,12 @@ negative_parse_tests(void)
     errcode = json_parse_s(TEST_INCOMPLETE_STRING2, &j, &e);
     assert(errcode == JE_INCOMPLETE);
     CLEAN_UP_BOTH;
+
+    /* Missing value. */
+#   define TEST_MISSING_VALUE "{ \"a\": }"
+    errcode = json_parse_s(TEST_MISSING_VALUE, &j, &e);
+    assert(errcode == JE_SYNTAX);
+    CLEAN_UP_BOTH;
 }
 
 /* Getter tests. */

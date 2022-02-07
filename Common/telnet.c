@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -805,7 +805,10 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    connect_errno(errno, "forkpty");
 	    close_fail;
 	case 0:	/* child */
-	    putenv("TERM=xterm");
+	    putenv(xs_buffer("TERM=%s",
+		appres.termname?
+		    appres.termname:
+		    (mode.m3279? "xterm-color": "xterm")));
 	    if (strchr(host, ' ') != NULL) {
 		execlp("/bin/sh", "sh", "-c", host, NULL);
 	    } else {
@@ -3884,7 +3887,7 @@ net_set_default_termtype(void)
     if (appres.termname) {
 	termtype = appres.termname;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	termtype = "xterm";
+	termtype = mode.m3279? "xterm-color": "xterm";
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
     } else if (HOST_FLAG(STD_DS_HOST)) {
