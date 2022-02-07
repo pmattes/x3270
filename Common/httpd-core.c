@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2019-2021 Paul Mattes.
+ * Copyright (c) 2014-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -612,7 +612,8 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 		    sl--;
 		}
 		if (jresult != NULL) {
-		    httpd_print(h, HP_BUFFER, "%s\n", json_write(jresult));
+		    httpd_print(h, HP_BUFFER, "%s\n",
+			    json_write_o(jresult, JW_ONE_LINE));
 		} else {
 		    json_t *j, *k;
 
@@ -620,7 +621,8 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 		    json_array_set(k, 0, json_string(buf, sl));
 		    j = json_object();
 		    json_object_set(j, "result", NT, k);
-		    httpd_print(h, HP_BUFFER, "%s\n", json_write(j));
+		    httpd_print(h, HP_BUFFER, "%s\n",
+			    json_write_o(j, JW_ONE_LINE));
 		    json_free(j);
 		}
 		Free(buf);

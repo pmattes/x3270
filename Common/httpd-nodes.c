@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2019, 2021 Paul Mattes.
+ * Copyright (c) 2014-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -511,13 +511,15 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
     case SC_SUCCESS:
 	if (jresult != NULL) {
 	    json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
-	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(jresult));
+	    rv = httpd_dyn_complete(dhandle, "%s\n",
+		    json_write_o(jresult, JW_ONE_LINE));
 	} else {
 	    json_t *j = json_object();
 
 	    json_object_set(j, "result", NT, NULL);
 	    json_object_set(j, "status", NT, json_string(sl_buf, sl_len));
-	    rv = httpd_dyn_complete(dhandle, "%s\n", json_write(j));
+	    rv = httpd_dyn_complete(dhandle, "%s\n",
+		    json_write_o(j, JW_ONE_LINE));
 	    json_free(j);
 	}
 	break;
