@@ -38,7 +38,10 @@
  */
 
 #include "globals.h"
+
 #include <errno.h>
+#include <assert.h>
+
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
@@ -86,6 +89,9 @@ struct ea *ea_buf;		/* 3270 device buffer */
 				/* ea_buf[-1] is the dummy default field
 				   attribute */
 struct ea *aea_buf;	/* alternate 3270 extended attribute buffer */
+#if defined(CHECK_AEA_BUF) /*[*/
+unsigned long ea_sum, aea_sum;
+#endif /*]*/
 bool formatted = false;	/* set in screen_disp */
 bool screen_changed = false;
 int first_changed = -1;
@@ -110,6 +116,7 @@ static void ctlr_negotiating(bool ignored);
 static void ctlr_connect(bool ignored);
 static int sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
+static bool ctlr_initted = false;
 
 static void ticking_stop(struct timeval *tp);
 
@@ -185,6 +192,7 @@ ctlr_reinit(unsigned cmask)
     static struct ea *real_ea_buf = NULL;
     static struct ea *real_aea_buf = NULL;
 
+    ctlr_initted = true;
     if (cmask & MODEL_CHANGE) {
 	/* Allocate buffers */
 	if (real_ea_buf) {
@@ -199,6 +207,10 @@ ctlr_reinit(unsigned cmask)
 	real_aea_buf = (struct ea *)Calloc(sizeof(struct ea),
 		(maxROWS * maxCOLS) + 1);
 	aea_buf = real_aea_buf + 1;
+#if defined(CHECK_AEA_BUF) /*[*/
+	ea_sum = 0;
+	aea_sum = 0;
+#endif /*]*/
 	Replace(zero_buf, (unsigned char *)Calloc(sizeof(struct ea),
 		    maxROWS * maxCOLS));
 	cursor_addr = 0;
@@ -290,6 +302,9 @@ set_rows_cols(int mn, int ovc, int ovr)
 
     /* The model changed. */
     st_changed(ST_REMODEL, true);
+    if (ctlr_initted) {
+	ctlr_reinit(MODEL_CHANGE);
+    }
 }
 
 /*
@@ -2831,19 +2846,51 @@ ctlr_changed(int bstart, int bend)
     REGION_CHANGED(bstart, bend);
 }
 
+
+#if defined(CHECK_AEA_BUF) /*[*/
+/*
+ * Compute a simple checksum.
+ */
+static unsigned long
+csum(struct ea *ea)
+{
+    size_t i;
+    unsigned long sum = 0;
+    unsigned char *c = (unsigned char *)(void *)ea;
+
+    for (i = 0; i < (ROWS * COLS) * sizeof(struct ea); i++) {
+	sum += c[i];
+    }
+    return sum;
+}
+#endif /*]*/
+
 /*
  * Swap the regular and alternate screen buffers
  */
 void
 ctlr_altbuffer(bool alt)
 {
-    struct ea *etmp;
-
     if (alt != is_altbuffer) {
+	struct ea *etmp;
+#if defined(CHECK_AEA_BUF) /*[*/
+	unsigned long stmp;
+#endif /*]*/
 
 	etmp = ea_buf;
 	ea_buf = aea_buf;
 	aea_buf = etmp;
+
+#if defined(CHECK_AEA_BUF) /*[*/
+	stmp = ea_sum;
+	ea_sum = aea_sum;
+	aea_sum = stmp;
+
+	if (ea_sum != 0) {
+	    assert(csum(ea_buf) == ea_sum);
+	}
+	aea_sum = csum(aea_buf);
+#endif /*]*/
 
 	is_altbuffer = alt;
 	ALL_CHANGED;
