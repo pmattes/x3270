@@ -137,7 +137,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Start s3270.
         port, ts = TestCommon.unused_port()
-        s3270 = Popen(['s3270', '-trace', '-scriptport', str(port), '-scriptportonce'])
+        s3270 = Popen(['s3270', '-scriptport', str(port), '-scriptportonce'])
         self.children.append(s3270)
         TestCommon.check_listen(port)
         ts.close()

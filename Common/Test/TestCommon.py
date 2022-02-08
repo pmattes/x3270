@@ -270,6 +270,42 @@ class listenserver():
         self.iosock.close()
         return out
 
+# Simple socket send server.
+class sendserver():
+
+    port = 0
+    loopback = '127.0.0.1'
+    qloopback = '127.0.0.1'
+    conn = None
+
+    # Initialization.
+    def __init__(self, port=0, ipv6=False):
+        self.listensocket = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM, 0)
+        self.listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.loopback = '::1' if ipv6 else '127.0.0.1'
+        self.qloopback = '[::1]' if ipv6 else '127.0.0.1'
+        self.listensocket.bind((self.loopback, port))
+        if port == 0:
+            self.port = self.listensocket.getsockname()[1]
+        else:
+            self.port = port
+        self.listensocket.listen()
+        self.result = b''
+        self.thread = threading.Thread(target=self.process)
+        self.thread.start()
+
+    # Accept a connection asynchronously.
+    def process(self):
+        (self.conn, _) = self.listensocket.accept()
+        self.listensocket.close()
+
+    def send(self, data):
+        self.conn.send(data)
+
+    def close(self):
+        self.conn.close()
+        self.thread.join(timeout=2)
+
 # Do a readline from a pipe with a timeout.
 def timed_readline(p, timeout, errmsg):
     try_until(lambda: (p.readable()), timeout, errmsg)
