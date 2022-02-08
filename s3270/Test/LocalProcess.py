@@ -32,8 +32,10 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
 import os
+import sys
 import TestCommon
 
+@unittest.skipIf(sys.platform.startswith("win"), "No local process on Windows")
 class TestS3270LocalProcess(unittest.TestCase):
 
     # Set up procedure.
