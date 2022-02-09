@@ -51,12 +51,14 @@ def try_until(f, seconds, errmsg):
         time.sleep(0.1)
 
 # Check for a particular port being listened on.
-def check_listen(port):
+def check_listen(port, ipv6=False):
     if sys.platform == 'darwin':
         r = re.compile(rf'\.{port} .* LISTEN')
     else:
         r = re.compile(rf':{port} .* LISTEN')
-    if sys.platform.startswith("win") or sys.platform == 'darwin':
+    if sys.platform.startswith("win") and ipv6:
+        cmd = 'netstat -an -p TCPv6'
+    elif sys.platform.startswith("win") or sys.platform == 'darwin':
         cmd = 'netstat -an -p TCP'
     else:
         cmd = 'netstat -ant'

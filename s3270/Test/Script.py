@@ -31,6 +31,7 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
 import os
+import sys
 import TestCommon
 
 class TestS3270Script(unittest.TestCase):
@@ -58,7 +59,7 @@ class TestS3270Script(unittest.TestCase):
         self.children.append(s3270)
 
         # Feed s3270 the action.
-        text = f'Script(s3270/Test/script/simple.py,-{mode},hello,there)\n'
+        text = f'Script(python3,s3270/Test/script/simple.py,-{mode},hello,there)\n'
         s3270.stdin.write(text.encode('utf8'))
         s3270.stdin.flush()
 
@@ -79,6 +80,7 @@ class TestS3270Script(unittest.TestCase):
         self.run_script_test('socket')
 
     # s3270 pipe script test
+    @unittest.skipIf(sys.platform.startswith("win"), "No s3270 pipes in Windows")
     def test_s3270_script_pipe(self):
         self.run_script_test('pipe')
 

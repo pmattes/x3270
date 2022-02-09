@@ -87,7 +87,7 @@ class TestS3270Smoke(unittest.TestCase):
         playback = Popen(["playback", "-b", "-p", f'{loopback}:{port}',
             "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
+        TestCommon.check_listen(port, ipv6=ipv6)
         ts.close()
 
         # Start s3270.
@@ -120,7 +120,7 @@ class TestS3270Smoke(unittest.TestCase):
         loopback = '[::1]' if ipv6 else '127.0.0.1'
         s3270 = Popen(["s3270", "-httpd", f'{loopback}:{port}'])
         self.children.append(s3270)
-        TestCommon.check_listen(port)
+        TestCommon.check_listen(port, ipv6=ipv6)
         ts.close()
 
         # Send it a JSON GET.
