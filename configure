@@ -673,6 +673,7 @@ enable_ws3270
 enable_wb3270
 enable_wpr3287
 enable_wx3270if
+enable_wplayback
 enable_windows_lib
 '
       ac_precious_vars='build_alias
@@ -1327,6 +1328,7 @@ Optional Features:
   --enable-wb3270         build Windows b3270
   --enable-wpr3287        build Windows pr3287
   --enable-wx3270if       build Windows x3270if
+  --enable-wplayback      build Windows playback
   --enable-windows-lib    build Windows libraries
 
 Report bugs to the package provider.
@@ -1942,6 +1944,11 @@ if test "${enable_wx3270if+set}" = set; then :
   enableval=$enable_wx3270if;
 fi
 
+# Check whether --enable-wplayback was given.
+if test "${enable_wplayback+set}" = set; then :
+  enableval=$enable_wplayback;
+fi
+
 # Check whether --enable-windows-lib was given.
 if test "${enable_windows_lib+set}" = set; then :
   enableval=$enable_windows_lib;
@@ -2111,6 +2118,7 @@ if test "x$enable_windows" = xyes; then
     if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
     if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
     if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
+    if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
 fi
 if test "x$enable_windows" = xno; then
     enable_wc3270=no
@@ -2118,6 +2126,7 @@ if test "x$enable_windows" = xno; then
     enable_wb3270=no
     enable_wpr3287=no
     enable_wx3270if=no
+    enable_wplayback=no
     enable_windows_lib=no
 fi
 
@@ -2135,6 +2144,7 @@ if test "x$enable_x3270" = x -a \
         "x$enable_wb3270" = x -a \
         "x$enable_wpr3287" = x -a \
         "x$enable_wx3270if" = x -a \
+        "x$enable_wplayback" = x -a \
 	"x$enable_windows_lib" = x; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: configuring all emulators... use --enable or --disable options to pick a subset" >&5
 $as_echo "$as_me: configuring all emulators... use --enable or --disable options to pick a subset" >&6;}
@@ -2151,6 +2161,7 @@ $as_echo "$as_me: configuring all emulators... use --enable or --disable options
     enable_wb3270=yes
     enable_wpr3287=yes
     enable_wx3270if=yes
+    enable_wplayback=yes
 fi
 
 lparen="("
@@ -2169,6 +2180,7 @@ if test "x$enable_x3270" != xyes -a \
 	"x$enable_wb3270" != xyes -a \
 	"x$enable_wpr3287" != xyes -a \
 	"x$enable_wx3270if" != xyes -a \
+	"x$enable_wplayback" != xyes -a \
 	"x$enable_windows_lib" != xyes -a \
 	$lparen "x$enable_x3270" = xno -o \
 	 "x$enable_c3270" = xno -o \
@@ -2184,6 +2196,7 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_wb3270" = xno -o \
 	 "x$enable_wpr3287" = xno -o \
 	 "x$enable_wx3270if" = xno -o \
+	 "x$enable_wplayback" = xno -o \
 	 "x$enable_windows_lib" = xno $rparen; then
         if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
@@ -2198,6 +2211,7 @@ if test "x$enable_x3270" != xyes -a \
     if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
     if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
     if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
+    if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
 fi
 
 if test "x$enable_tcl3270" = xyes; then
@@ -2258,7 +2272,7 @@ T_ALLTESTS=""
 T_TEST_CLEAN=""
 T_TEST_CLOBBER=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if wplayback; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
@@ -2268,7 +2282,7 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 w
 	playback)
 		T_TEST="$T_TEST $i"
 		;;
-	w*|playback)
+	w*)
 		;;
 	*)	T_INSTALL="$T_INSTALL $i-install"
 		T_INSTALL_MAN="$T_INSTALL_MAN $i-install.man"
@@ -2365,8 +2379,12 @@ if test "x$enable_wpr3287" = xyes; then
     T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wpr3287-clobber"
 fi
 if test "x$enable_wx3270if" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wwx3270if-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wwx3270if-clobber"
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wx3270if-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wx3270if-clobber"
+fi
+if test "x$enable_wplayback" = xyes; then
+    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wplayback-clean"
+    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wplayback-clobber"
 fi
 
 

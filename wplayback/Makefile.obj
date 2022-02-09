@@ -40,28 +40,15 @@ endif
 W = w
 include playback_files.mk libs.mk
 
-VOBJS = $(PLAYBACK_OBJECTS)
-
-OBJECTS = $(VOBJS) version.o
 LIBS = -lws2_32
-LIBDEPS = $(DEP32XX)
+LIBDEPS = $(DEP3270) $(DEP32XX)
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = playback.exe
 all: $(PROGS)
 
-XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
-	$(RM) $(XVERSION)
-	sh $< playback $(filter %.txt,$^) >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
-	$(RM) $(XVERSION)
-
-playback.exe: $(OBJECTS) playback.o $(LIBDEPS)
-	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
-
-wversion.o: mkwversion.sh version.txt
-	sh $< playback $(CC) $(filter %.txt,$^)
+playback.exe: $(PLAYBACK_OBJECTS) $(LIBDEPS)
+	$(CC) -o $@ $(CFLAGS) $(PLAYBACK_OBJECTS) $(LD3270) $(LD32XX) $(LIBS)
 
 clean:
 	rm -f *.o

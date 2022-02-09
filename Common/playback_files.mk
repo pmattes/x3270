@@ -1,2 +1,2 @@
 # playback-specific object files
-PLAYBACK_OBJECTS = playback.o
+PLAYBACK_OBJECTS = playback.o sa_malloc.o

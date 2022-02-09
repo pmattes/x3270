@@ -32,9 +32,8 @@ CC = @CC@
 all: playback
 
 HOST = @host@
-include libs.mk
+include playback_files.mk libs.mk
 
-PLAYBACK_OBJECTS = playback.o sa_malloc.o
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@

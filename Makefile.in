@@ -158,7 +158,7 @@ pr3287: lib32xx
 	cd pr3287 && $(MAKE)
 x3270if:
 	cd x3270if && $(MAKE)
-playback:
+playback: lib3270 lib32xx
 	cd playback && $(MAKE)
 wc3270: wc3270@WIN32_SUFFIX@ wc3270@WIN64_SUFFIX@
 wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
@@ -185,11 +185,16 @@ wx3270if-32:
 	cd wx3270if && $(MAKE) @WINDRES_SET@
 wx3270if-64:
 	cd wx3270if && $(MAKE) WIN64=1 @WINDRES_SET@
+wplayback: wplayback@WIN32_SUFFIX@ wplayback@WIN64_SUFFIX@
+wplayback-32: libw3270-32 libw32xx-32
+	cd wplayback && $(MAKE) @WINDRES_SET@
+wplayback-64: libw3270-64 libw32xx-64
+	cd wplayback && $(MAKE) WIN64=1 @WINDRES_SET@
 
 FORCE:
 
-unix: c3270 s3270 b3270 tcl3270 x3270 pr3287 x3270if
-windows: wc3270 ws3270 wb3270 wpr3287 wx3270if
+unix: c3270 s3270 b3270 tcl3270 x3270 pr3287 x3270if playback
+windows: wc3270 ws3270 wb3270 wpr3287 wx3270if wplayback
 
 # Installation
 install unix-install: @T_INSTALL@
@@ -301,6 +306,11 @@ wx3270if-clean-32:
 	cd wx3270if && $(MAKE) clean
 wx3270if-clean-64:
 	cd wx3270if && $(MAKE) clean WIN64=1
+wplayback-clean: wplayback-clean@WIN32_SUFFIX@ wplayback-clean@WIN64_SUFFIX@
+wplayback-clean-32:
+	cd wplayback && $(MAKE) clean
+wplayback-clean-64:
+	cd wplayback && $(MAKE) clean WIN64=1
 
 clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
@@ -382,6 +392,11 @@ wx3270if-clobber-32:
 	cd wx3270if && $(MAKE) clobber
 wx3270if-clobber-64:
 	cd wx3270if && $(MAKE) clobber WIN64=1
+wplayback-clobber: wplayback-clobber@WIN32_SUFFIX@ wplayback-clobber@WIN64_SUFFIX@
+wplayback-clobber-32:
+	cd wplayback && $(MAKE) clobber
+wplayback-clobber-64:
+	cd wplayback && $(MAKE) clobber WIN64=1
 
 unix-lib-test: lib3270 lib32xx
 	cd lib/3270 && $(MAKE) -f Makefile.test
@@ -414,7 +429,7 @@ x3270-test: x3270 playback
 x3270if-test: x3270if playback
 	$(RUNTESTS) x3270if/Test/*.py
 
-test: @T_ALLTESTS@
+test: @T_ALLTESTS@ playback
 	$(RUNTESTS) $(PYTESTS)
-smoketest: @T_TEST@
+smoketest: @T_TEST@ playback
 	$(RUNTESTS) $(PYSMOKETESTS)
