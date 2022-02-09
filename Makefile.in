@@ -398,6 +398,7 @@ wplayback-clobber-32:
 wplayback-clobber-64:
 	cd wplayback && $(MAKE) clobber WIN64=1
 
+ifdef UNIX
 unix-lib-test: lib3270 lib32xx
 	cd lib/3270 && $(MAKE) -f Makefile.test
 	cd lib/32xx && $(MAKE) -f Makefile.test
@@ -433,3 +434,4 @@ test: @T_ALLTESTS@ playback
 	$(RUNTESTS) $(PYTESTS)
 smoketest: @T_TEST@ playback
 	$(RUNTESTS) $(PYSMOKETESTS)
+endif
