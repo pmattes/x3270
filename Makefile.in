@@ -193,8 +193,8 @@ wplayback-64: libw3270-64 libw32xx-64
 
 FORCE:
 
-unix: c3270 s3270 b3270 tcl3270 x3270 pr3287 x3270if playback
-windows: wc3270 ws3270 wb3270 wpr3287 wx3270if wplayback
+unix: @T_UNIX_ALL@
+windows: @T_WINDOWS_ALL@
 
 # Installation
 install unix-install: @T_INSTALL@

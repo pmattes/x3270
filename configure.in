@@ -250,8 +250,10 @@ T_INSTALL_MAN=""
 T_LIB=""
 T_LIB_CLEAN=""
 T_LIB_CLOBBER=""
+T_UNIX_ALL=""
 T_UNIX_CLEAN=""
 T_UNIX_CLOBBER=""
+T_WINDOWS_ALL=""
 T_WINDOWS_CLEAN=""
 T_WINDOWS_CLOBBER=""
 T_TEST=""
@@ -267,13 +269,19 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 w
 	T_CLOBBER="$T_CLOBBER $i-clobber"
 	case "$i" in
 	playback)
+		T_UNIX_ALL="$T_UNIX_ALL $i"
 		T_TEST="$T_TEST $i"
 		;;
-	w*)
+	w*)	T_WINDOWS_ALL="$T_WINDOWS_ALL $i"
+		T_WINDOWS_CLEAN="$T_WINDOWS $i-clean"
+		T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER $i-clobber"
 		;;
-	*)	T_INSTALL="$T_INSTALL $i-install"
+	*)	T_UNIX_ALL="$T_UNIX_ALL $i"
+		T_INSTALL="$T_INSTALL $i-install"
 		T_INSTALL_MAN="$T_INSTALL_MAN $i-install.man"
 		T_TEST="$T_TEST $i"
+		T_UNIX_CLEAN="$T_UNIX_CLEAN $i-clean"
+		T_UNIX_CLOBBER="$T_UNIX_CLOBBER $i-clobber"
 	esac
     fi
 done
@@ -300,70 +308,21 @@ if test "x$enable_windows_lib" = xyes; then
     T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER windows-lib-clobber"
 fi
 
-if test "x$enable_x3270" = xyes; then
-    AC_CONFIG_SUBDIRS(x3270)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN x3270-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER x3270-clobber"
+if test "x$enable_x3270" = xyes; then AC_CONFIG_SUBDIRS(x3270)
 fi
-if test "x$enable_c3270" = xyes; then
-    AC_CONFIG_SUBDIRS(c3270)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN c3270-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER c3270-clobber"
+if test "x$enable_c3270" = xyes; then AC_CONFIG_SUBDIRS(c3270)
 fi
-if test "x$enable_s3270" = xyes; then
-    AC_CONFIG_SUBDIRS(s3270)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN s3270-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER s3270-clobber"
+if test "x$enable_s3270" = xyes; then AC_CONFIG_SUBDIRS(s3270)
 fi
-if test "x$enable_b3270" = xyes; then
-    AC_CONFIG_SUBDIRS(b3270)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN b3270-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER b3270-clobber"
+if test "x$enable_b3270" = xyes; then AC_CONFIG_SUBDIRS(b3270)
 fi
-if test "x$enable_tcl3270" = xyes; then
-    AC_CONFIG_SUBDIRS(tcl3270)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN tcl3270-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER tcl3270-clobber"
+if test "x$enable_tcl3270" = xyes; then AC_CONFIG_SUBDIRS(tcl3270)
 fi
-if test "x$enable_pr3287" = xyes; then
-    AC_CONFIG_SUBDIRS(pr3287)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN pr3287-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER pr3287-clobber"
+if test "x$enable_pr3287" = xyes; then AC_CONFIG_SUBDIRS(pr3287)
 fi
-if test "x$enable_x3270if" = xyes; then
-    AC_CONFIG_SUBDIRS(x3270if)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN x3270if-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER x3270if-clobber"
+if test "x$enable_x3270if" = xyes; then AC_CONFIG_SUBDIRS(x3270if)
 fi
-if test "x$enable_playback" = xyes; then
-    AC_CONFIG_SUBDIRS(playback)
-    T_UNIX_CLEAN="$T_UNIX_CLEAN playback-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER playback-clobber"
-fi
-
-if test "x$enable_wc3270" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wc3270-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wc3270-clobber"
-fi
-if test "x$enable_ws3270" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN ws3270-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER ws3270-clobber"
-fi
-if test "x$enable_wb3270" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wb3270-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wb3270-clobber"
-fi
-if test "x$enable_wpr3287" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wpr3287-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wpr3287-clobber"
-fi
-if test "x$enable_wx3270if" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wx3270if-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wx3270if-clobber"
-fi
-if test "x$enable_wplayback" = xyes; then
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN wplayback-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER wplayback-clobber"
+if test "x$enable_playback" = xyes; then AC_CONFIG_SUBDIRS(playback)
 fi
 
 AC_SUBST(host)
@@ -375,8 +334,10 @@ AC_SUBST(T_INSTALL_MAN)
 AC_SUBST(T_LIB)
 AC_SUBST(T_LIB_CLEAN)
 AC_SUBST(T_LIB_CLOBBER)
+AC_SUBST(T_UNIX_ALL)
 AC_SUBST(T_UNIX_CLEAN)
 AC_SUBST(T_UNIX_CLOBBER)
+AC_SUBST(T_WINDOWS_ALL)
 AC_SUBST(T_WINDOWS_CLEAN)
 AC_SUBST(T_WINDOWS_CLOBBER)
 AC_SUBST(T_TEST)
