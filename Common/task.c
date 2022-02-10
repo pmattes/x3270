@@ -704,6 +704,8 @@ free_task(task_t *t)
 	    for (j = 0; c->args[j] != NULL; j++) {
 		Free((char *)c->args[j]);
 	    }
+	    Free(c->args);
+	    Free(c);
 	}
 	Replace(t->macro.cmds, NULL);
 	t->macro.cmd_next = NULL;
@@ -1251,6 +1253,7 @@ execute_command_backend(enum iaction cause, action_elt_t *entry,
     bool stat = true;
     int i;
     varbuf_t r;
+    char *s;
 
     /* Check for restrictions. */
     if (entry->t.ia_restrict != IA_NONE && cause != entry->t.ia_restrict) {
@@ -1266,8 +1269,9 @@ execute_command_backend(enum iaction cause, action_elt_t *entry,
 	vb_appendf(&r, "%s%s", i? ",": "", qscatv(args[i]));
     }
     vb_appends(&r, ")");
-    strncpy(last, vb_consume(&r), last_len - 1);
+    strncpy(last, (s = vb_consume(&r)), last_len - 1);
     last[last_len - 1] = '\0';
+    Free(s);
 
     /* Run the action. */
     for (i = 0; args[i] != NULL; i++) {

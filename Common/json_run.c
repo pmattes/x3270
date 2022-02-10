@@ -37,6 +37,7 @@
 #include "b3270proto.h"
 #include "json.h"
 #include "task.h"
+#include "trace.h"
 #include "utils.h"
 
 #include "json_run.h"
@@ -81,6 +82,8 @@ free_cmds(cmd_t **cmds)
 	    for (arg_ix = 0; c->args[arg_ix] != NULL; arg_ix++) {
 		Free((char *)c->args[arg_ix]);
 	    }
+	    Free(c->args);
+	    Free(c);
 	}
 	Free(cmds);
     }
@@ -199,7 +202,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
     }
 
     /* Return the command. */
-    *cmd = (cmd_t *)Calloc(1, sizeof(cmd_t *));
+    *cmd = (cmd_t *)Calloc(1, sizeof(cmd_t));
     (*cmd)->action = action;
     (*cmd)->args = (const char **)args;
     return true;
@@ -224,7 +227,7 @@ fail:
  * @param[in] cmd_len	Length of command
  * @param[out] cmds	Parsed actions and arguments
  * @param[out] single	Parsed single action
- * @param[out] errmsg	Error message if parsing fails
+ *l @param[out] errmsg	Error message if parsing fails
  *
  * @return True for success
  */
