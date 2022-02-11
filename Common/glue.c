@@ -323,7 +323,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     if (read_session_or_profile) {
 	parse_options(&xargc, xargv, false);
     }
-    /* Can't free xcmd, parts of it are still in use. */
+    Free(xcmd);
     Free((char *)xargv);
 
     /*
