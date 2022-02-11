@@ -1089,9 +1089,6 @@ sio_close(sio_t sio)
 	return;
     }
     s = (ssl_sio_t *)sio;
-    if (s->con == NULL || s->sock == INVALID_SOCKET) {
-	return;
-    }
 
     if (s->ctx != NULL) {
 	SSL_CTX_free(s->ctx);
@@ -1114,9 +1111,11 @@ sio_close(sio_t sio)
 	s->server_subjects = NULL;
     }
 
-    SSL_shutdown(s->con);
-    SSL_free(s->con);
-    s->con = NULL;
+    if (s->con != NULL) {
+	SSL_shutdown(s->con);
+	SSL_free(s->con);
+	s->con = NULL;
+    }
 
     s->sock = INVALID_SOCKET;
 
