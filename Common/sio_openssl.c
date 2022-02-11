@@ -753,6 +753,7 @@ display_cert(varbuf_t *v, X509 *cert, int level, const char *who)
 	    if (header) {
 		vb_appendf(v, "\n");
 	    }
+	    sk_GENERAL_NAME_pop_free(values, GENERAL_NAME_free);
 	}
     }
 }
@@ -854,6 +855,7 @@ display_server_subjects(varbuf_t *v, SSL *con)
 		OPENSSL_free(dns);
 	    }
 	}
+	sk_GENERAL_NAME_pop_free(values, GENERAL_NAME_free);
     }
     sioc_subject_print(v, &subjects);
 }

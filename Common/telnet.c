@@ -3855,7 +3855,7 @@ net_opts(unsigned char opts[])
 	    sl += strlen(o);
 	}
     }
-    return ret;
+    return lazya(ret);
 }
 
 /* Return my TELNET options. */
