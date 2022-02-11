@@ -506,20 +506,23 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
     httpd_status_t rv = HS_CONTINUE;
+    char *w;
 
     switch (cbs) {
     case SC_SUCCESS:
 	if (jresult != NULL) {
 	    json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
-	    rv = httpd_dyn_complete(dhandle, "%s\n",
-		    json_write_o(jresult, JW_ONE_LINE));
+	    w = json_write_o(jresult, JW_ONE_LINE);
+	    rv = httpd_dyn_complete(dhandle, "%s\n", w);
+	    Free(w);
 	} else {
 	    json_t *j = json_object();
 
 	    json_object_set(j, "result", NT, NULL);
 	    json_object_set(j, "status", NT, json_string(sl_buf, sl_len));
-	    rv = httpd_dyn_complete(dhandle, "%s\n",
-		    json_write_o(j, JW_ONE_LINE));
+	    w = json_write_o(j, JW_ONE_LINE);
+	    rv = httpd_dyn_complete(dhandle, "%s\n", w);
+	    Free(w);
 	    json_free(j);
 	}
 	break;
