@@ -676,7 +676,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    }
 	    *(const char **)opts[j].aoff = NewString(argv[++i]);
 	    if (opts[j].res_name != NULL) {
-		add_resource(NewString(opts[j].res_name), NewString(argv[i]));
+		add_resource(NewString(opts[j].res_name), argv[i]);
 	    }
 	    break;
 	case OPT_XRM:
