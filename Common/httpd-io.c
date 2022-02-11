@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2022 Paul Mattes.
+ * Copyright (c) 2014-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -807,7 +807,7 @@ hio_toggle_upcall(const char *name, const char *value)
 	popup_an_error("Invalid %s: %s", name, value);
 	return false;
     }
-    Replace(appres.httpd_port, canonical_bind_opt(sa));
+    Replace(appres.httpd_port, NewString(canonical_bind_opt(sa)));
     hio_init(sa, sa_len);
     return true;
 }

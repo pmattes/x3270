@@ -465,7 +465,7 @@ scriptport_toggle_upcall(const char *name, const char *value)
 	popup_an_error("Invalid %s: %s", name, value);
 	return false;
     }
-    Replace(appres.script_port, canonical_bind_opt(sa));
+    Replace(appres.script_port, NewString(canonical_bind_opt(sa)));
     global_peer_listen = peer_init(sa, sa_len, PLM_MULTI);
     Free(sa);
     return true;
@@ -1217,6 +1217,7 @@ success:
 	(*argsp)[i] = vb_consume(&r[i]);
     }
     (*argsp)[i] = NULL;
+    Free(r);
 
     return true;
 

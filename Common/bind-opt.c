@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2014-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #endif /*]*/
 
 #include "wincmn.h"
+#include "lazya.h"
 #include "resolver.h"
 #include "utils.h"
 
@@ -179,7 +180,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
  *
  * @returns encoded address and port
  */
-char *
+const char *
 canonical_bind_opt(struct sockaddr *sa)
 {
 #   define RET_LEN 128
@@ -190,16 +191,16 @@ canonical_bind_opt(struct sockaddr *sa)
     switch (sa->sa_family) {
     case AF_INET:
 	sin = (struct sockaddr_in *)sa;
-	return xs_buffer("[%s]:%u",
+	return lazyaf("[%s]:%u",
 	    inet_ntop(sa->sa_family, &sin->sin_addr, addrbuf, RET_LEN),
 	    ntohs(sin->sin_port));
     case AF_INET6:
 	sin6 = (struct sockaddr_in6 *)sa;
-	return xs_buffer("[%s]:%u",
+	return lazyaf("[%s]:%u",
 	    inet_ntop(sa->sa_family, &sin6->sin6_addr, addrbuf, RET_LEN),
 	    ntohs(sin6->sin6_port));
     default:
-	return NewString("unknown");
+	return "unknown";
     }
 }
 
@@ -210,12 +211,12 @@ canonical_bind_opt(struct sockaddr *sa)
  *
  * @returns Canonical representation
  */
-char *
+const char *
 canonical_bind_opt_res(const char *res)
 {
     struct sockaddr *sa;
     socklen_t len;
-    char *ret;
+    const char *ret;
 
     if (res == NULL || !parse_bind_opt(res, &sa, &len)) {
 	return NULL;

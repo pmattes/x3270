@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2019, 2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -71,7 +71,7 @@ void register_toggles(toggle_register_t toggles[], unsigned count);
 
 typedef bool toggle_extended_upcall_t(const char *name, const char *value);
 typedef bool toggle_extended_done_t(bool success);
-typedef char *toggle_extended_canonicalize_t(const char *value);
+typedef const char *toggle_extended_canonicalize_t(const char *value);
 void register_extended_toggle(const char *name,
 	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
 	toggle_extended_canonicalize_t canonicalize, void **appres_address,

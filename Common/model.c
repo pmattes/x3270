@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 Paul Mattes.
+ * Copyright (c) 2016-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 #include "resources.h"
 
 #include "ctlrc.h"
+#include "lazya.h"
 #include "popups.h"
 #include "screen.h"
 #include "telnet.h"
@@ -51,7 +52,7 @@ static char *pending_oversize;
  * Canonical representation of the model, returning color and extended
  * state.
  */
-static char *
+static const char *
 canonical_model_x(const char *res, int *model, bool *is_color,
 	bool *is_extended)
 {
@@ -82,13 +83,13 @@ canonical_model_x(const char *res, int *model, bool *is_color,
     *model = *digitp - '0';
     *is_color = (*colorp == '9');
     *is_extended = extended;
-    return xs_buffer("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
+    return lazyaf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
 }
 
 /*
  * Canonical representation of the model.
  */
-static char *
+static const char *
 canonical_model(const char *res)
 {
     int model;
@@ -176,7 +177,7 @@ toggle_model_done(bool success)
 
     /* Reconcile simultaneous changes. */
     if (pending_model != NULL) {
-	char *canon = canonical_model_x(pending_model, &model_number,
+	const char *canon = canonical_model_x(pending_model, &model_number,
 		&is_color, &is_extended);
 
 	if (canon == NULL) {
@@ -185,7 +186,7 @@ toggle_model_done(bool success)
 	    goto fail;
 	}
 
-	Replace(pending_model, canon);
+	Replace(pending_model, NewString(canon));
     }
 
     if (!is_extended) {

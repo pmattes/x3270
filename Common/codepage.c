@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -248,7 +248,7 @@ set_codepage_number(char *codepage)
  *
  * @returns Canonical representation.
  */
-static char *
+static const char *
 canonical_cs(const char *res)
 {
     const char *canon;
@@ -260,14 +260,14 @@ canonical_cs(const char *res)
     if (canon == NULL) {
 	return NULL;
     }
-    return NewString(canon);
+    return canon;
 }
 
 /* Set the code page name. */
 static void
 set_codepage_name(const char *cpname)
 {
-    char *canon;
+    const char *canon;
 
     if (cpname == NULL) {
 	Replace(codepage_name, NewString("bracket"));
@@ -277,15 +277,13 @@ set_codepage_name(const char *cpname)
 
     canon = canonical_cs(cpname);
     if (canon == NULL) {
-	canon = NewString(cpname);
+	canon = cpname;
     }
 
     if ((codepage_name != NULL && strcmp(codepage_name, canon)) ||
 	    (appres.codepage != NULL && strcmp(appres.codepage, canon))) {
-	Replace(codepage_name, canon);
+	Replace(codepage_name, NewString(canon));
 	codepage_changed = true;
-    } else {
-	Free(canon);
     }
 }
 
@@ -365,7 +363,7 @@ toggle_codepage(const char *name _is_unused, const char *value)
     case CS_OKAY:
 	st_changed(ST_CODEPAGE, true);
 	codepage_changed = true;
-	Replace(appres.codepage, canonical_cs(value));
+	Replace(appres.codepage, NewString(canonical_cs(value)));
 	return true;
     case CS_NOTFOUND:
 	popup_an_error("Cannot find definition of host code page \"%s\"",

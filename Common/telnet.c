@@ -4016,7 +4016,7 @@ toggle_linemode(const char *name, const char *value)
 }
 
 /* Canonicalization for no-TELNET input mode. */
-static char *
+static const char *
 canonicalize_ntim(const char *value)
 {
     int i;
@@ -4026,10 +4026,10 @@ canonicalize_ntim(const char *value)
     }
     for (i = 0; ntim_name[i] != NULL; i++) {
 	if (!strcasecmp(value, ntim_name[i])) {
-	    return NewString(ntim_name[i]);
+	    return ntim_name[i];
 	}
     }
-    return NewString("?");
+    return "?";
 }
 
 /* Parse a no-TELNET input mode value. */

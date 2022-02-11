@@ -229,10 +229,10 @@ toggle_exiting(bool mode _is_unused)
  *
  * @returns Current value
  */
-static char *
+static const char *
 u_value(toggle_extended_upcalls_t *u)
 {
-    char *value = NULL;
+    const char *value = NULL;
 
     if (u->address != NULL) {
 	switch (u->type) {
@@ -458,13 +458,13 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	    } else {
 		/* Set(x): Display one value. */
 		if (u != NULL) {
-		    char *v = u_value(u);
+		    const char *v = u_value(u);
 
 		    action_output("%s", v? v: "\n");
 		} else {
 		    action_output("%s", toggled(ix)? ResTrue: ResFalse);
 		}
-		return true;
+		goto done_simple;
 	    }
 	}
 
@@ -545,6 +545,7 @@ done:
 	}
     }
 
+done_simple:
     Free(dones);
     Free(done_u);
     return success;
@@ -701,10 +702,10 @@ register_toggles(toggle_register_t toggles[], unsigned count)
  *
  * @returns Canonicalized value
  */
-static char *
+static const char *
 default_canonicalize(const char *value)
 {
-    return value? NewString(value): NULL;
+    return value;
 }
 
 /**
