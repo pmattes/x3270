@@ -32,7 +32,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import requests
 import os
 import sys
-import TestCommon
+import Common.Test.ct as ct
 
 class TestS3270Script(unittest.TestCase):
 
@@ -51,11 +51,11 @@ class TestS3270Script(unittest.TestCase):
     def run_script_test(self, mode):
 
         # Start a thread to read s3270's output.
-        nc = TestCommon.copyserver()
+        nc = ct.copyserver()
 
         # Start s3270.
-        s3270 = Popen(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
-                f'a:c:t:127.0.0.1:{nc.port}'], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(ct.vgwrap(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
+                f'a:c:t:127.0.0.1:{nc.port}']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Feed s3270 the action.
@@ -69,7 +69,7 @@ class TestS3270Script(unittest.TestCase):
 
         # Wait for the processes to exit.
         s3270.stdin.close()
-        s3270.wait(timeout=2)
+        ct.vgwait(s3270)
 
     # s3270 HTTP script test
     def test_s3270_script_http(self):

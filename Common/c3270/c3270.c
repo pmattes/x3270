@@ -551,6 +551,17 @@ exit_pause(bool mode _is_unused)
 }
 #endif /*]*/
 
+/* Initialize the prompt. */
+static void
+prompt_init(void)
+{
+    prompt.default_string = appres.secure? "[Press <Enter>] ":
+	(color_prompt?
+	 xs_buffer("%s%s> %s", PROMPT_PRE, app, PROMPT_POST):
+	 xs_buffer("%s> ", app));
+    prompt.string = prompt.default_string;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -702,15 +713,7 @@ Type 'help' for help information.\n\n",
     color_prompt = screen_has_ansi_color();
 #endif /*]*/
 
-    if (appres.secure) {
-	/* We don't allow a command line in secure mode. */
-	prompt.default_string = prompt.string = "[Press <Enter>] ";
-    } else {
-	prompt.default_string = prompt.string =
-	    color_prompt?
-		xs_buffer("%s%s> %s", PROMPT_PRE, app, PROMPT_POST):
-		xs_buffer("%s> ", app);
-    }
+    prompt_init();
 
 #if defined(_WIN32) /*[*/
     /* Create a thread to read data from stdin. */
@@ -829,6 +832,16 @@ echo_mode(bool echo)
 #endif /*]*/
 }
 
+/* Reset the prompt. */
+static void
+reset_prompt(void)
+{
+    if (prompt.string != prompt.default_string) {
+	Free(prompt.string);
+    }
+    prompt.string = prompt.default_string;
+}
+
 #if !defined(_WIN32) /*[*/
 /* Synchronous signal handler. */
 static void
@@ -881,7 +894,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
 	    aux_pwinput = false;
 	    echo_mode(true);
 	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
-	    Replace(prompt.string, prompt.default_string);
+	    reset_prompt();
 	    RemoveInput(c3270_input_id);
 	    c3270_input_id = NULL_IOID;
 	    prompt.displayed = false;
@@ -1135,7 +1148,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 	    aux_pwinput = false;
 	    echo_mode(true);
 	    c3270_push_command(RESUME_INPUT "(" RESUME_INPUT_ABORT ")");
-	    Replace(prompt.string, prompt.default_string);
+	    reset_prompt();
 	} else {
 	    /* Get more input. */
 	    printf("\n");
@@ -1195,7 +1208,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 	echo_mode(true);
 	c3270_push_command(lazyaf(RESUME_INPUT "(%s)",
 		    *s? lazya(base64_encode(s)): "\"\""));
-	Replace(prompt.string, prompt.default_string);
+	reset_prompt();
     } else {
 	c3270_push_command(s);
     }
@@ -1730,6 +1743,9 @@ command_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 
     p = lazya(base64_decode(buf));
 
+    if (prompt.string != prompt.default_string) {
+	Free(prompt.string);
+    }
     prompt.string =
 	color_prompt?
 	    xs_buffer("%s%s%s", PROMPT_PRE, p, PROMPT_POST):

@@ -154,6 +154,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     const char **xargv;
     bool read_session_or_profile = false;
     int suffix_match = -1;
+    char *s;
 
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -349,13 +350,14 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      * It's an alias for 'codePage', but it doesn't override it.
      */
     if (appres.codepage == NULL) {
-	appres.codepage = appres.charset;
+	appres.codepage = NewString(appres.charset);
     }
     if (appres.codepage == NULL) {
 	appres.codepage = NewString("bracket");
     }
 
-    appres.termname = clean_termname(appres.termname);
+    s = clean_termname(appres.termname);
+    Replace(appres.termname, s);
 
     return argc;
 }
@@ -674,6 +676,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 		usage(xs_buffer("Missing value for '%s'", argv[i]));
 		continue;
 	    }
+	    Free(*(char **)opts[j].aoff);
 	    *(const char **)opts[j].aoff = NewString(argv[++i]);
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].res_name), argv[i]);
@@ -1243,6 +1246,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	break;
     case XRM_STRING:
 	t = Malloc(strlen(s) + 1);
+	Free(*(char **)address);
 	*(char **)address = t;
 	quoted = false;
 #if defined(_WIN32) /*[*/

@@ -224,6 +224,26 @@ async_resolve(LPVOID parameter)
 # endif /*]*/
 
 /*
+ * Clean up a partially-complete slot.
+ */
+static void
+cleanup_partial_slot(int slot)
+{
+    struct gai *gaip = &gai[slot];
+
+    assert(gaip->busy == true);
+    assert(gaip->done == false);
+
+    gaip->busy = false;
+    gaip->pipe = -1;
+    Replace(gaip->host, NULL);
+    Replace(gaip->port, NULL);
+# if defined(_WIN32) /*[*/
+    gaip->event = INVALID_HANDLE_VALUE;
+# endif /*]*/
+}
+
+/*
  * Resolve a hostname and port using getaddrinfo_a, allowing IPv4 or IPv6.
  * Asynchronous version.
  */
@@ -233,11 +253,23 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 	socklen_t *sa_rlen, char **errmsg, int max, int *nr, int *slot,
 	int pipe, iosrc_t event)
 {
+    static bool initted = false;
 # if !defined(_WIN32) /*[*/
     int rc;
 # else /*][*/
     HANDLE thread;
 # endif /*]*/
+
+    if (!initted) {
+	int i;
+	for (i = 0; i < GAI_SLOTS; i++) {
+	    gai[i].pipe = -1;
+# if defined(_WIN32) /*[*/
+	    gai[i].event = INVALID_HANDLE_VALUE;
+# endif /*]*/
+	}
+	initted = true;
+    }
 
     *nr = 0;
 
@@ -298,6 +330,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
 		    my_gai_strerror(rc));
 	}
+	cleanup_partial_slot(*slot);
 	return RHP_CANNOT_RESOLVE;
     }
 # else /*][*/
@@ -307,6 +340,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
 		    win32_strerror(GetLastError()));
 	}
+	cleanup_partial_slot(*slot);
 	return RHP_CANNOT_RESOLVE;
     }
     CloseHandle(thread);
@@ -365,6 +399,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 			*errmsg = lazyaf("unknown family %d", res->ai_family);
 		    }
 		    freeaddrinfo(gaip->gaicb.ar_result);
+		    Replace(gai->host, NULL);
+		    Replace(gai->port, NULL);
 		    return RHP_FATAL;
 		}
 	    }
@@ -373,6 +409,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	}
 	freeaddrinfo(gaip->gaicb.ar_result);
 	if (*nr) {
+	    Replace(gai->host, NULL);
+	    Replace(gai->port, NULL);
 	    return RHP_SUCCESS;
 	} else {
 	    if (errmsg) {
@@ -380,11 +418,15 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 			gaip->port? gaip->port: "(none)",
 			"no suitable resolution");
 	    }
+	    Replace(gai->host, NULL);
+	    Replace(gai->port, NULL);
 	    return RHP_CANNOT_RESOLVE;
 	}
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
 	assert(rc != EAI_INPROGRESS && rc != EAI_CANCELED);
+	Replace(gai->host, NULL);
+	Replace(gai->port, NULL);
 	return RHP_FATAL;
     default:			/* failure */
 	if (errmsg) {
@@ -392,6 +434,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 		    gaip->port? gaip->port: "(none)",
 		    my_gai_strerror(rc));
 	}
+	Replace(gai->host, NULL);
+	Replace(gai->port, NULL);
 	return RHP_CANNOT_RESOLVE;
     }
 
@@ -403,6 +447,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 		    gaip->port? gaip->port: "(none)",
 		    my_gai_strerror(gaip->rc));
 	}
+	Replace(gai->host, NULL);
+	Replace(gai->port, NULL);
 	return RHP_CANNOT_RESOLVE;
     }
 
@@ -428,6 +474,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 			    res->ai_family);
 		}
 		freeaddrinfo(gaip->result);
+		Replace(gai->host, NULL);
+		Replace(gai->port, NULL);
 		return RHP_FATAL;
 	    }
 	}
@@ -437,6 +485,8 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     }
 
     freeaddrinfo(gaip->result);
+    Replace(gai->host, NULL);
+    Replace(gai->port, NULL);
     return RHP_SUCCESS;
 # endif /*]*/
 #else /*][*/
@@ -478,6 +528,7 @@ cleanup_host_and_port(int slot)
 # else /*][*/
     if (gaip->rc == 0) {
 	freeaddrinfo(gaip->result);
+	gaip->result = NULL;
     }
 # endif /*]*/
 

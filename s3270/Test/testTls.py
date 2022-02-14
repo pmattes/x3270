@@ -32,7 +32,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import requests
 import sys
 import os
-import TestCommon
+import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform.startswith("win"),
         "Windows does not have openssl")
@@ -67,7 +67,7 @@ class TestS3270Tls(unittest.TestCase):
     def test_s3270_tls_smoke(self):
 
         # Start 'openssl s_server' to read s3270's output.
-        port, ts = TestCommon.unused_port()
+        port, ts = ct.unused_port()
         if sys.platform == 'darwin':
             # MacOS openssl does not allow port re-use.
             ts.close()
@@ -75,7 +75,7 @@ class TestS3270Tls(unittest.TestCase):
             "s3270/Test/tls/TEST.crt", "-key", "s3270/Test/tls/TEST.key",
             "-port", str(port), "-quiet"], stdout=PIPE)
         self.children.append(server)
-        TestCommon.check_listen(port)
+        ct.check_listen(port)
         if sys.platform != 'darwin':
             ts.close()
 
@@ -84,7 +84,7 @@ class TestS3270Tls(unittest.TestCase):
         if sys.platform != 'darwin':
             args += [ "-cafile", "s3270/Test/tls/myCA.pem" ]
         args.append(f"l:a:c:t:127.0.0.1:{port}=TEST")
-        s3270 = Popen(args, stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(ct.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Feed s3270 some actions.
@@ -103,7 +103,7 @@ class TestS3270Tls(unittest.TestCase):
         server.kill()
         server.wait(timeout=2)
         s3270.stdin.close()
-        s3270.wait(timeout=2)
+        ct.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

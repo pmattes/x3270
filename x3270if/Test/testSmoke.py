@@ -29,7 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import TestCommon
+import Common.Test.ct as ct
 
 class TestX3270ifSmoke(unittest.TestCase):
 
@@ -48,15 +48,15 @@ class TestX3270ifSmoke(unittest.TestCase):
     def test_x3270if_smoke(self):
 
         # Start a copy of s3270 to talk to.
-        port, ts = TestCommon.unused_port()
+        port, ts = ct.unused_port()
         s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
                 stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
-        TestCommon.check_listen(port)
+        ct.check_listen(port)
         ts.close()
 
         # Run x3270if with a trivial query.
-        x3270if = Popen(["x3270if", "-t", str(port), "Set(startTls)"],
+        x3270if = Popen(ct.vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]),
                 stdout=PIPE)
         self.children.append(x3270if)
 
@@ -66,6 +66,7 @@ class TestX3270ifSmoke(unittest.TestCase):
         # Wait for the processes to exit.
         s3270.kill()
         s3270.wait()
+        ct.vgwait(x3270if)
 
         # Test the output.
         self.assertEqual('true\n', stdout)

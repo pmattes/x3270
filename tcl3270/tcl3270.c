@@ -208,6 +208,7 @@ Tcl_AppInit(Tcl_Interp *interp)
     Tcl_SetVar2Ex(interp, "argv", NULL, argv_obj, 0);
     sprintf(nbuf, "%d", i? i - 1 : 0);
     Tcl_SetVar(interp, "argc", nbuf, 0);
+    Replace(argv, NULL);
 
     /*
      * Call the init procedures for included packages.  Each call should
@@ -669,6 +670,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	break;
     default:
 	/* Parent. */
+	Free(nargv);
 	break;
     }
 

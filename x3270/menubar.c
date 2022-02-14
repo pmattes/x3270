@@ -87,10 +87,10 @@
 toggle_widget_t toggle_widget[N_TOGGLES];
 
 static struct scheme {
-	char *label;
-	char **parents;
-	char *scheme;
-	struct scheme *next;
+    char *label;
+    char **parents;
+    char *scheme;
+    struct scheme *next;
 } *schemes, *last_scheme;
 static int scheme_count;
 static Widget  *scheme_widgets;
@@ -104,7 +104,6 @@ static Dimension fm_leftMargin;
 static Dimension fm_rightMargin;
 static bool snap_enabled = true;
 static bool keypad_sensitive = true;
-
 static struct codepage {
     char **parents;
     char *label;
@@ -113,6 +112,10 @@ static struct codepage {
 } *codepages, *last_codepage;
 static int codepage_count;
 static Widget  *codepage_widgets;
+static struct host_list {
+    char *name;
+    struct host_list *next;
+} *host_list;
 
 static void scheme_init(void);
 static void codepages_init(void);
@@ -1330,6 +1333,7 @@ connect_menu_init(bool regen, Position x, Position y)
     int n_hosts = 0;
     bool any_hosts = false;
     struct host *h;
+    struct host_list *hl;
     bool need_line = false;
     int n_primary = 0;
     int n_recent = 0;
@@ -1362,6 +1366,12 @@ connect_menu_init(bool regen, Position x, Position y)
 
     /* Walk the host list from the file to produce the host menu */
 
+    while (host_list != NULL) {
+	hl = host_list->next;
+	free(host_list->name);
+	free(host_list);
+	host_list = hl;
+    }
     for (h = hosts; h; h = h->next) {
 	switch (h->entry_type) {
 	case ALIAS:
@@ -1390,8 +1400,11 @@ connect_menu_init(bool regen, Position x, Position y)
 		    add_menu_hier(root, h->parents, NULL, 0):
 		recent_menu,
 		NULL);
-	XtAddCallback(w, XtNcallback, host_connect_callback,
-		XtNewString(h->name));
+	hl = (struct host_list *)XtCalloc(1, sizeof(struct host_list));
+	hl->name = XtNewString(h->name);
+	hl->next = host_list;
+	host_list = hl;
+	XtAddCallback(w, XtNcallback, host_connect_callback, hl->name);
 	n_hosts++;
     }
     if (recent_menu) {
@@ -1791,21 +1804,21 @@ scheme_init(void)
     char *label;
     char *scheme;
     struct scheme *s;
+    size_t offset = 0;
 
     cm = get_resource(ResSchemeList);
     if (cm == NULL) {
 	return;
     }
-    cm = XtNewString(cm);
 
     scheme_count = 0;
-    while (split_dresource(&cm, &label, &scheme) == 1) {
+    while (s_split_dresource(cm, &offset, &label, &scheme) == 1) {
 	s = (struct scheme *)XtMalloc(sizeof(struct scheme));
 	if (!split_hier(label, &s->label, &s->parents)) {
 	    XtFree((XtPointer)s);
 	    continue;
 	}
-	s->label = label;
+	XtFree(label);
 	s->scheme = scheme;
 	s->next = NULL;
 	if (last_scheme != NULL) {
@@ -1829,7 +1842,7 @@ do_newscheme(Widget w _is_unused, XtPointer userdata,
 static void
 codepages_init(void)
 {
-    char *cm;
+    char *cm, *cm0;
     char *label;
     char *codepage;
     struct codepage *s;
@@ -1838,7 +1851,7 @@ codepages_init(void)
     if (cm == NULL) {
 	return;
     }
-    cm = XtNewString(cm);
+    cm = cm0 = XtNewString(cm);
 
     codepage_count = 0;
     while (split_dresource(&cm, &label, &codepage) == 1) {
@@ -1847,7 +1860,7 @@ codepages_init(void)
 	    XtFree((XtPointer)s);
 	    continue;
 	}
-	s->codepage = codepage;
+	s->codepage = XtNewString(codepage);
 	s->next = NULL;
 	if (last_codepage != NULL) {
 	    last_codepage->next = s;
@@ -1857,6 +1870,7 @@ codepages_init(void)
 	last_codepage = s;
 	codepage_count++;
     }
+    XtFree(cm0);
 }
 
 static void

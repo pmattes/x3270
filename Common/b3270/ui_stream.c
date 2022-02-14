@@ -922,10 +922,7 @@ do_jrun(json_t *j)
 static bool
 Passthru_action(ia_t ia, unsigned argc, const char **argv)
 {
-    const char **args =
-	(const char **)Malloc((5 + (argc * 2) + 1) * sizeof(char *));
     unsigned in_ix = 0;
-    int out_ix = 0;
     const char *passthru_tag;
     task_cbh *ret_cbh = NULL;
 
@@ -934,6 +931,10 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Tell the UI we are waiting. */
     if (XML_MODE) {
+	const char **args =
+	    (const char **)Malloc((4 + 2 + (argc * 2) + 1) * sizeof(char *));
+	int out_ix = 0;
+
 	args[out_ix++] = AttrAction;
 	args[out_ix++] = current_action_name;
 	args[out_ix++] = AttrPTag;
@@ -952,6 +953,7 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	args[out_ix] = NULL;
 	uix_object(true, IndPassthru, args);
+	Free(args);
     } else {
 	uij_open_object(NULL);
 	uij_open_object(IndPassthru);
@@ -1021,6 +1023,7 @@ complete_register(const char *name, const char *help_text,
     a[0].ia_restrict = password_ia_restrict(name);
 
     register_actions(a, 1);
+    Free(a);
 }
 
 /* Register a command, XML version. */
@@ -1221,6 +1224,7 @@ do_jpassthru_complete(const json_t *j, bool success)
 
     /* Succeed. */
     task_passthru_done(tag, success, text);
+    Free(text);
 }
 
 /*
@@ -1354,7 +1358,7 @@ process_input(const char *buf, ssize_t nr)
 	    if (XML_Parse(uix.parser, buf, (int)i, 0) == 0) {
 		ui_leaf(IndUiError,
 			AttrFatal, AT_BOOLEAN, true,
-			AttrText, AT_STRING, xs_buffer("XML parsing error: %s",
+			AttrText, AT_STRING, lazyaf("XML parsing error: %s",
 			    XML_ErrorString(XML_GetErrorCode(uix.parser))),
 			AttrLine, AT_INT,
 			    (int64_t)XML_GetCurrentLineNumber(uix.parser),
@@ -1426,7 +1430,7 @@ process_input(const char *buf, ssize_t nr)
 		/* Successfully parsed, with extra data. */
 		uij.line += count_newlines(rs, offset, &uij.column);
 		memmove(uij.pending_input, uij.pending_input + offset,
-			strlen(uij.pending_input) + 1);
+			strlen(uij.pending_input + offset) + 1);
 		rs = ss = uij.pending_input;
 	    } else {
 		/* Incomplete. */
@@ -1725,6 +1729,7 @@ ui_io_init()
 #endif /*]*/
 	    exit(1);
 	}
+	Free(sa);
 
 	vtrace("Callback: connected to %s\n", appres.scripting.callback);
     }

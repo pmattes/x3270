@@ -32,7 +32,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import json
 import select
 import sys
-import TestCommon
+import Common.Test.ct as ct
 
 class TestB3270PassthruJson(unittest.TestCase):
 
@@ -50,7 +50,7 @@ class TestB3270PassthruJson(unittest.TestCase):
     # b3270 passthru Json test
     def test_b3270_passthru_json(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Get the initial dump.
@@ -63,7 +63,7 @@ class TestB3270PassthruJson(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result.
-        out = json.loads(TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
+        out = json.loads(ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('passthru' in out)
         passthru = out['passthru']
         self.assertTrue('action' in passthru)
@@ -82,7 +82,7 @@ class TestB3270PassthruJson(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result of that.
-        out = json.loads(TestCommon.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
+        out = json.loads(ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('run-result' in out)
         run_result = out['run-result']
         self.assertTrue('r-tag' in run_result)
@@ -95,7 +95,7 @@ class TestB3270PassthruJson(unittest.TestCase):
         # Wait for the process to exit.
         b3270.stdin.close()
         b3270.stdout.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
 if __name__ == '__main__':
     unittest.main()

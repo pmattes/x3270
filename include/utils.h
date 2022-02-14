@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,8 @@ char *qscatv(const char *s);
 char *scatv(const char *s);
 int split_dbcs_resource(const char *value, char sep, char **part1,
 	char **part2);
+int s_split_dresource(const char *st, size_t *offset, char **left,
+	char **right);
 int split_dresource(char **st, char **left, char **right);
 int split_lresource(char **st, char **value);
 char *strip_whitespace(const char *s);
@@ -71,7 +73,7 @@ void RemoveTimeOut(ioid_t id);
 ks_t string_to_key(char *s);
 char *key_to_string(ks_t k);
 bool read_resource_file(const char *filename, bool fatal);
-bool split_hier(char *label, char **base, char ***parents);
+bool split_hier(const char *label, char **base, char ***parents);
 
 const char *build_options(void);
 void dump_version(void);

@@ -37,7 +37,7 @@ import sys
 import time
 from urllib import request
 import requests
-import TestCommon
+import Common.Test.ct as ct
 
 class TestS3270Nvt(unittest.TestCase):
 
@@ -56,13 +56,13 @@ class TestS3270Nvt(unittest.TestCase):
     def nvt_1049(self, mode_alt, mode_normal):
 
         # Start a server to throw NVT escape sequences at s3270.
-        s = TestCommon.sendserver()
+        s = ct.sendserver()
 
         # Start s3270.
-        hport, ts = TestCommon.unused_port()
-        s3270 = Popen(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}'])
+        hport, ts = ct.unused_port()
+        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
         self.children.append(s3270)
-        TestCommon.check_listen(hport)
+        ct.check_listen(hport)
         ts.close()
 
         # Send some text and read it back.
@@ -99,14 +99,14 @@ class TestS3270Nvt(unittest.TestCase):
 
         # Clean up.
         s.close()
-        s3270.kill()
-        s3270.wait(timeout=2)
+        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        ct.vgwait(s3270)
     
     # Test with set/reset.
     def test_nvt_1049_set(self):
         self.nvt_1049(b'h', b'l')
     # Test with save/restore
-    def test_nvt_1049_set(self):
+    def test_nvt_1049_save(self):
         self.nvt_1049(b'h', b'r')
 
 if __name__ == '__main__':

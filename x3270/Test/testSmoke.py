@@ -34,7 +34,8 @@ import os
 import stat
 import tempfile
 import sys
-import TestCommon
+import requests
+import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
 @unittest.skipIf(sys.platform == "cygwin", "Not ready for x3270 graphic tests")
@@ -71,14 +72,14 @@ class TestX3270Smoke(unittest.TestCase):
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
-        TestCommon.check_listen(5902)
+        ct.check_listen(5902)
 
         # Start 'playback' to read x3270's output.
-        playback_port, ts = TestCommon.unused_port()
+        playback_port, ts = ct.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(playback_port)
+        ct.check_listen(playback_port)
         ts.close()
 
         # Set up the fonts.
@@ -88,20 +89,20 @@ class TestX3270Smoke(unittest.TestCase):
         self.assertEqual(0, os.system('xset fp rehash'))
 
         # Start x3270.
-        x3270_port, ts = TestCommon.unused_port()
-        x3270 = Popen(["x3270",
+        x3270_port, ts = ct.unused_port()
+        x3270 = Popen(ct.vgwrap(["x3270",
             "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
             "-xrm", "x3270.colorScheme: old-default",
             "-httpd", f"127.0.0.1:{x3270_port}",
-            f"127.0.0.1:{playback_port}"], stdout=DEVNULL)
+            f"127.0.0.1:{playback_port}"]), stdout=DEVNULL)
         self.children.append(x3270)
-        TestCommon.check_listen(x3270_port)
+        ct.check_listen(x3270_port)
         ts.close()
 
         # Feed x3270 some data.
         playback.stdin.write(b"r\nr\nr\nr\n")
         playback.stdin.flush()
-        TestCommon.check_push(playback, x3270_port, 1)
+        ct.check_push(playback, x3270_port, 1)
 
         # Find x3270's window ID.
         widcmd = subprocess.run("xlsclients -l", shell=True, capture_output=True, check=True)
@@ -120,8 +121,8 @@ class TestX3270Smoke(unittest.TestCase):
         playback.stdin.close()
         playback.kill()
         playback.wait(timeout=2)
-        x3270.kill()
-        x3270.wait(timeout=2)
+        requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+        ct.vgwait(x3270)
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.

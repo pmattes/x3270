@@ -139,6 +139,8 @@ typedef struct _httpd_reg {
 /* Globals */
 
 /* Statics */
+static void httpd_print(httpd_t *h, httpd_print_t type, const char *format,
+	...) printflike(3, 4);
 static httpd_reg_t *httpd_reg;
 static unsigned long httpd_seq = 0;
 
@@ -480,6 +482,20 @@ httpd_init_state(httpd_t *h, void *mhandle)
 }
 
 /**
+ * Get the time in UTC.
+ *
+ * @return Time in string form.
+ */
+const char *
+get_utc_time(void)
+{
+    time_t t;
+
+    t = time(NULL);
+    return asctime(gmtime(&t));
+}
+
+/**
  * Write the HTTP header.
  *
  * @param[in] h			State
@@ -493,17 +509,15 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
 	content_t content_type, const char *content_type_str)
 {
     request_t *r = &h->request;
-    time_t t;
-    char *a;
+    const char *a;
 
     vtrace("h> [%lu] Response: %d %s\n", h->seq, status_code,
 	    status_text(status_code));
 
     httpd_print(h, HP_BUFFER, "HTTP/1.1 %d %s\n", status_code,
 	    status_text(status_code));
-    t = time(NULL);
-    a = asctime(gmtime(&t));
-    httpd_print(h, HP_BUFFER, "Date: %.*s UTC\n", strlen(a) - 1, a);
+    a = get_utc_time();
+    httpd_print(h, HP_BUFFER, "Date: %.*s UTC\n", (int)(strlen(a) - 1), a);
     httpd_print(h, HP_BUFFER, "Server: %s\n", build);
     if (do_close) {
 	httpd_print(h, HP_BUFFER, "Connection: close\n");
@@ -515,7 +529,7 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
 	httpd_print(h, HP_BUFFER, "Content-Type: %s\n", content_type_str);
     } else {
 	httpd_print(h, HP_BUFFER, "Content-Type: %s; charset=utf-8\n",
-		type_map[content_type], content_type_str);
+		type_map[content_type]);
     }
 
     /* Now write it. */
@@ -607,13 +621,14 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	    {
 		char *buf = xs_vbuffer(format, ap);
 		size_t sl = strlen(buf);
+		char *w = NULL;
 
 		if (sl && buf[sl - 1] == '\n') {
 		    sl--;
 		}
 		if (jresult != NULL) {
 		    httpd_print(h, HP_BUFFER, "%s\n",
-			    json_write_o(jresult, JW_ONE_LINE));
+			    (w = json_write_o(jresult, JW_ONE_LINE)));
 		} else {
 		    json_t *j, *k;
 
@@ -622,9 +637,10 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 		    j = json_object();
 		    json_object_set(j, "result", NT, k);
 		    httpd_print(h, HP_BUFFER, "%s\n",
-			    json_write_o(j, JW_ONE_LINE));
+			    (w = json_write_o(j, JW_ONE_LINE)));
 		    json_free(j);
 		}
+		Free(w);
 		Free(buf);
 	    }
 	    break;

@@ -33,7 +33,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import requests
 import os
 import sys
-import TestCommon
+import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform.startswith("win"), "No local process on Windows")
 class TestS3270LocalProcess(unittest.TestCase):
@@ -53,16 +53,13 @@ class TestS3270LocalProcess(unittest.TestCase):
     def s3270_lp_term(self, model, term, override=None):
 
         # Start s3270.
-        port, ts = TestCommon.unused_port()
+        port, ts = ct.unused_port()
         args = [ 's3270', '-model', model, '-httpd', str(port) ]
         if override != None:
-            args.append('-tn')
-            args.append(override)
-        args.append('-e')
-        args.append('/bin/bash')
-        args.append('-c')
-        args.append('s3270/Test/echo_term.bash')
-        s3270 = Popen(args, stdin=DEVNULL, stdout=DEVNULL)
+            args += ['-tn', override]
+        args += ['-e', '/bin/bash', '-c', 's3270/Test/echo_term.bash']
+        s3270 = Popen(ct.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL)
+        ct.check_listen(port)
         self.children.append(s3270)
         ts.close()
 
@@ -74,8 +71,8 @@ class TestS3270LocalProcess(unittest.TestCase):
         j = r.json()
         self.assertEqual(term, j['result'][0].strip())
 
-        s3270.kill()
-        s3270.wait(timeout=2)
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        ct.vgwait(s3270)
 
     # s3270 TERM tests
     def test_s3270_lp_color(self):

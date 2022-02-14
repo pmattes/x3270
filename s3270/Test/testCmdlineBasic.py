@@ -28,18 +28,18 @@
 # s3270 basic command-line tests
 
 import unittest
-import TestCommon
+import Common.Test.ct as ct
 
 class TestS3270BasicCmdline(unittest.TestCase):
 
     # s3270 -v and -help test
     def test_s3270_v_help(self):
-        TestCommon.check_dash_v('s3270')
-        TestCommon.check_help('s3270')
-        TestCommon.check_bad('s3270')
-        TestCommon.check_bad2('s3270')
-        TestCommon.check_toomany('s3270')
-        TestCommon.check_incomplete('s3270')
+        ct.check_dash_v('s3270')
+        ct.check_help('s3270')
+        ct.check_bad('s3270')
+        ct.check_bad2('s3270')
+        ct.check_toomany('s3270')
+        ct.check_incomplete('s3270')
 
 if __name__ == '__main__':
     unittest.main()

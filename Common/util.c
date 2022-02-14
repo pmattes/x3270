@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -175,6 +175,35 @@ char *
 qscatv(const char *s)
 {
     return catv_common(s, true);
+}
+
+/**
+ * Definition resource splitter, for resources of the repeating form:
+ *	left: right\n
+ * Can be called iteratively to parse a list. Set offset to 0 to begin.
+ *
+ * @param[in] st		String to parse
+ * @param[in,out] offset	Offset within string
+ * @param[out] left		Returned left side
+ * @param[out] right		Returned right side
+ *
+ * @returns 1 for success, 0 for EOF, -1 for error.
+ */
+int
+s_split_dresource(const char *st, size_t *offset, char **left, char **right)
+{
+    char *st_copy = NewString(st + *offset);
+    char *st_copy0 = st_copy;
+    char *l, *r;
+    int ret = split_dresource(&st_copy, &l, &r);
+
+    if (ret > 0) {
+	*left = NewString(l);
+	*right = NewString(r);
+	*offset += st_copy - st_copy0;
+    }
+    Free(st_copy0);
+    return ret;
 }
 
 /*
@@ -441,7 +470,7 @@ ex_getenv(const char *name, unsigned long flags, int *up)
 	    return xs_buffer("%u-%u", (unsigned)getpid(), *up);
 	}
     } else {
-	return getenv(name);
+	return NewString(getenv(name));
     }
 }
 
@@ -549,6 +578,7 @@ var_subst(const char *s, unsigned long flags)
 			o = strchr(ob, '\0');
 			strcpy(o, vv);
 			o += strlen(vv);
+			Free(vv);
 		    }
 		    Free(vn);
 		    if (state == VS_VNB) {
@@ -868,13 +898,12 @@ strip_whitespace(const char *s)
  * Hierarchy (a>b>c) splitter.
  */
 bool
-split_hier(char *label, char **base, char ***parents)
+split_hier(const char *label, char **base, char ***parents)
 {
     int n_parents = 0;
     char *gt;
-    char *lp;
+    const char *lp;
 
-    label = NewString(label);
     for (lp = label; (gt = strchr(lp, '>')) != NULL; lp = gt + 1) {
 	if (gt == lp) {
 	    return false;
@@ -890,13 +919,12 @@ split_hier(char *label, char **base, char ***parents)
 	for (n_parents = 0, lp = label;
 	     (gt = strchr(lp, '>')) != NULL;
 	     lp = gt + 1) {
-	    (*parents)[n_parents++] = lp;
-	    *gt = '\0';
+	    (*parents)[n_parents++] = xs_buffer("%.*s", (int)(gt - lp), lp);
 	}
-	*base = lp;
+	*base = NewString(lp);
     } else {
 	(*parents) = NULL;
-	(*base) = label;
+	(*base) = NewString(label);
     }
     return true;
 }
@@ -981,7 +1009,7 @@ clean_termname(const char *tn)
     char *ret;
 
     if (tn == NULL) {
-	return (char *)tn;
+	return NULL;
     }
 
     while (*s && isspace((unsigned char)*s)) {

@@ -29,9 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
-import sys
-import TestCommon
+import Common.Test.ct as ct
 
 class TestS3270CmdLineHostError(unittest.TestCase):
 
@@ -50,7 +48,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
     def test_s3270_cmdline_host_connect_error(self):
 
         # Start s3270.
-        s3270 = Popen(['s3270', '255.255.255.255:22'], stdin=DEVNULL, stdout=PIPE,
+        s3270 = Popen(ct.vgwrap(['s3270', '255.255.255.255:22']), stdin=DEVNULL, stdout=PIPE,
                 stderr=PIPE)
         self.children.append(s3270)
 
@@ -58,8 +56,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         out = s3270.communicate(timeout=2)
 
         # Wait for the process to exit.
-        rc = s3270.wait(timeout=2)
-        self.assertNotEqual(rc, 0)
+        ct.vgwait(s3270, assertOnFailure=False)
 
         # Check.
         # There should be nothing on stdout, but something on stderr.
@@ -70,29 +67,29 @@ class TestS3270CmdLineHostError(unittest.TestCase):
     def test_s3270_cmdline_host_negotiation_error(self):
 
         # Start 'playback' to read s3270's output.
-        playback_port, ts = TestCommon.unused_port()
+        playback_port, ts = ct.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
              "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(playback_port)
+        ct.check_listen(playback_port)
         ts.close()
 
         # Start s3270.
-        s3270_port, ts = TestCommon.unused_port()
-        s3270 = Popen(['s3270',
+        s3270_port, ts = ct.unused_port()
+        s3270 = Popen(ct.vgwrap(['s3270',
             '-xrm', 's3270.contentionResolution: false',
             '-xrm', 's3270.scriptedAlways: true',
             '-httpd', f'127.0.0.1:{s3270_port}',
-            f'127.0.0.1:{playback_port}'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            f'127.0.0.1:{playback_port}']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.children.append(s3270)
-        TestCommon.check_listen(s3270_port)
+        ct.check_listen(s3270_port)
         ts.close()
 
         # Start negotation, but break the connection before drawing the
         # screen.
         playback.stdin.write(b'r\n')
         playback.stdin.flush()
-        TestCommon.check_push(playback, s3270_port, 1)
+        ct.check_push(playback, s3270_port, 1)
         playback.stdin.write(b'd\n')
         playback.stdin.flush()
 
@@ -104,8 +101,7 @@ class TestS3270CmdLineHostError(unittest.TestCase):
         playback.stdin.close()
         rc = playback.wait(timeout=2)
         self.assertEqual(0, rc)
-        rc = s3270.wait(timeout=2)
-        self.assertEqual(0, rc)
+        ct.vgwait(s3270)
 
         # Check.
         # There should be nothing on stdout, but something on stderr.

@@ -407,28 +407,28 @@ PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf 
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
 TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "$$PWD/obj/@host@/$$i/:"; done)
 
-RUNTESTS=PATH="$(TESTPATH)$$PATH" PYTHONPATH="$$PWD/Common/Test" OBJ="$$PWD/obj/@host@" python3 -m unittest $(TESTOPTIONS)
+RUNTESTS=PATH="$(TESTPATH)$$PATH" OBJ="$$PWD/obj/@host@" python3 -m unittest $(TESTOPTIONS)
 
 b3270-test: b3270 playback
-	$(RUNTESTS) b3270/Test/*.py
+	$(RUNTESTS) b3270/Test/test*.py
 
 c3270-test: c3270 playback
-	$(RUNTESTS) c3270/Test/*.py
+	$(RUNTESTS) c3270/Test/test*.py
 
 pr3287-test: pr3287 playback
-	$(RUNTESTS) pr3287/Test/*.py
+	$(RUNTESTS) pr3287/Test/test*.py
 
 s3270-test: s3270 playback
-	$(RUNTESTS) s3270/Test/*.py
+	$(RUNTESTS) s3270/Test/test*.py
 
 tcl3270-test: tcl3270 s3270 playback
-	$(RUNTESTS) cl3270/Test/*.py
+	$(RUNTESTS) tcl3270/Test/test*.py
 
 x3270-test: x3270 playback
-	$(RUNTESTS) x3270/Test/*.py
+	$(RUNTESTS) x3270/Test/test*.py
 
 x3270if-test: x3270if playback
-	$(RUNTESTS) x3270if/Test/*.py
+	$(RUNTESTS) x3270if/Test/test*.py
 
 test: @T_ALLTESTS@ playback
 	$(RUNTESTS) $(PYTESTS)

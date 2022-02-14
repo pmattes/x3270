@@ -29,19 +29,19 @@
 
 import unittest
 import sys
-import TestCommon
+import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform == 'cygwin', 'need to run under an X11 server')
 class TestX3270BasicCmdline(unittest.TestCase):
 
     # x3270 -v and -help test
     def test_x3270_v_help(self):
-        TestCommon.check_dash_v('x3270')
-        TestCommon.check_help('x3270')
-        TestCommon.check_bad('x3270')
-        TestCommon.check_bad2('x3270')
-        TestCommon.check_toomany('x3270')
-        TestCommon.check_incomplete('x3270')
+        ct.check_dash_v('x3270')
+        ct.check_help('x3270')
+        ct.check_bad('x3270')
+        ct.check_bad2('x3270')
+        ct.check_toomany('x3270')
+        ct.check_incomplete('x3270')
 
 if __name__ == '__main__':
     unittest.main()

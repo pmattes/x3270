@@ -29,7 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import TestCommon
+import Common.Test.ct as ct
 
 class TestS3270Bid(unittest.TestCase):
 
@@ -48,15 +48,15 @@ class TestS3270Bid(unittest.TestCase):
     def test_s3270_bid(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = TestCommon.unused_port()
+        port, socket = ct.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/bid.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
+        ct.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", f"127.0.0.1:{port}"], stdin=PIPE,
+        s3270 = Popen(ct.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -69,23 +69,22 @@ class TestS3270Bid(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        exit_code = s3270.wait(timeout=2)
-        self.assertEqual(0, exit_code)
+        ct.vgwait(s3270)
 
     # s3270 no-BID test
     def test_s3270_no_bid(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = TestCommon.unused_port()
+        port, socket = ct.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/no_bid.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
+        ct.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "-xrm", "s3270.contentionResolution: false",
-            f"127.0.0.1:{port}"], stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(ct.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
+            f"127.0.0.1:{port}"]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Feed s3270 some actions.
@@ -97,8 +96,7 @@ class TestS3270Bid(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        exit_code = s3270.wait(timeout=2)
-        self.assertEqual(0, exit_code)
+        ct.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

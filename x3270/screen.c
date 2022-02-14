@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -3154,8 +3154,7 @@ resync_display(struct sp *buffer, int first, int last)
 	int s0 = -1;
 
 	/* Has the line changed? */
-	if (!memcmp((char *) &ss->image[b], (char *) &buffer[b],
-	    COLS*sizeof(struct sp))) {
+	if (!memcmp(&ss->image[b], &buffer[b], COLS * sizeof(struct sp))) {
 	    if (i0 >= 0) {
 		render_blanks(i0 * COLS, i - i0, buffer);
 		i0 = -1;
@@ -4764,6 +4763,7 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	}
 	if (XGetFontProperty(f, a_spacing, &svalue)) {
 	    spacing = XGetAtomName(display, svalue);
+	    lazya(spacing);
 	} else {
 	    XFreeFontInfo(names, f, count);
 	    return xs_buffer("Font %s\nhas no spacing property", name);
@@ -6387,6 +6387,8 @@ dfc_init(void)
 	dfc = m_first;
 	dfc_last = m_last;
     }
+
+    XFreeFontNames(namelist);
 }
 
 /* Search iteratively for fonts whose names specify a given character set. */

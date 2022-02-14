@@ -33,7 +33,7 @@ import json
 import os
 import sys
 import time
-import TestCommon
+import Common.Test.ct as ct
 
 class TestB3270Json(unittest.TestCase):
 
@@ -52,10 +52,10 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_nvt_json_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = TestCommon.copyserver()
+        nc = ct.copyserver()
 
         # Start b3270.
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=DEVNULL)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 some actions.
@@ -69,12 +69,12 @@ class TestB3270Json(unittest.TestCase):
 
         # Wait for the processes to exit.
         b3270.stdin.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
     # b3270 JSON single test
     def test_b3270_json_single(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -85,7 +85,7 @@ class TestB3270Json(unittest.TestCase):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
         # Check.
         self.assertTrue('run-result' in out)
@@ -98,7 +98,7 @@ class TestB3270Json(unittest.TestCase):
     # b3270 JSON multiple test
     def test_b3270_json_multiple(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 two sets of actions, which it will run concurrently and complete
@@ -111,12 +111,12 @@ class TestB3270Json(unittest.TestCase):
         # Individual timed reads are used here because communicate() closes stdin and that will
         # cause b3270 to exit prematurely.
         errmsg = 'b3270 did not produce expected output'
-        _ = TestCommon.timed_readline(b3270.stdout, 2, errmsg)
-        insert_mode = json.loads(TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
-        start_tls = json.loads(TestCommon.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
+        _ = ct.timed_readline(b3270.stdout, 2, errmsg)
+        insert_mode = json.loads(ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
+        start_tls = json.loads(ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
         b3270.stdin.close()
         b3270.stdout.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
         # Check.
         self.assertTrue('run-result' in insert_mode)
@@ -136,7 +136,7 @@ class TestB3270Json(unittest.TestCase):
     # b3270 JSON split-line test
     def test_b3270_json_split(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -147,7 +147,7 @@ class TestB3270Json(unittest.TestCase):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
         # Check.
         self.assertTrue('run-result' in out)
@@ -160,7 +160,7 @@ class TestB3270Json(unittest.TestCase):
     # b3270 JSON semantic error test
     def test_b3270_json_semantic_error(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -171,7 +171,7 @@ class TestB3270Json(unittest.TestCase):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270)
 
         # Check.
         self.assertTrue('ui-error' in out)
@@ -182,7 +182,7 @@ class TestB3270Json(unittest.TestCase):
     # b3270 JSON syntax error test
     def test_b3270_json_syntax_error(self):
 
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE,
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE,
                 stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -194,7 +194,7 @@ class TestB3270Json(unittest.TestCase):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        b3270.wait(timeout=2)
+        ct.vgwait(b3270, assertOnFailure=False)
 
         # Check.
         self.assertTrue('ui-error' in out)
@@ -206,7 +206,7 @@ class TestB3270Json(unittest.TestCase):
     def test_b3270_json_default(self):
 
         # Start b3270.
-        b3270 = Popen(['b3270', '-json'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -216,14 +216,13 @@ class TestB3270Json(unittest.TestCase):
         self.assertTrue(out[0].endswith(']}'))
         self.assertEqual('', out[1])
 
-        rc = b3270.wait(timeout=2)
-        self.assertEqual(0, rc)
+        ct.vgwait(b3270)
 
     # b3270 JSON indented test
     def test_b3270_json_indented(self):
 
         # Start b3270.
-        b3270 = Popen(['b3270', '-json', '-indent'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(ct.vgwrap(['b3270', '-json', '-indent']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -236,17 +235,16 @@ class TestB3270Json(unittest.TestCase):
         self.assertEqual('}', out[-2])
         self.assertEqual('', out[-1])
 
-        rc = b3270.wait(timeout=2)
-        self.assertEqual(0, rc)
+        ct.vgwait(b3270)
 
     # b3270 JSON socket test
     def b3270_json_socket(self, ipv6=False):
 
         # Listen for a connection from b3270.
-        l = TestCommon.listenserver(ipv6=ipv6)
+        l = ct.listenserver(ipv6=ipv6)
 
         # Start b3270.
-        b3270 = Popen(['b3270', '-json', '-callback', f'{l.qloopback}:{l.port}'],
+        b3270 = Popen(ct.vgwrap(['b3270', '-json', '-callback', f'{l.qloopback}:{l.port}']),
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -266,8 +264,7 @@ class TestB3270Json(unittest.TestCase):
         self.assertTrue(out[3].startswith('{"run-result":{'))
         self.assertEqual('', out[4])
 
-        rc = b3270.wait(timeout=2)
-        self.assertEqual(0, rc)
+        ct.vgwait(b3270)
 
     # b3270 JSON socket test
     def test_b3270_json_socket(self):

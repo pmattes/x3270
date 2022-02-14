@@ -30,6 +30,7 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import sys
+import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 class TestTcl3270Quit(unittest.TestCase):
@@ -49,12 +50,12 @@ class TestTcl3270Quit(unittest.TestCase):
     def test_tcl3270_quit(self):
 
         # Start tcl3270.
-        tcl3270 = Popen(["tcl3270", "tcl3270/Test/quit.tcl"],
+        tcl3270 = Popen(ct.vgwrap(["tcl3270", "tcl3270/Test/quit.tcl"]),
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(tcl3270)
 
         # Wait for the process to exit.
-        tcl3270.wait(timeout=2)
+        ct.vgwait(tcl3270)
 
 if __name__ == '__main__':
     unittest.main()

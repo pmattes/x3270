@@ -1380,12 +1380,16 @@ validate_command(const char *command, int offset, char **error)
     action_elt_t *entry;
     const char *np;
     char **args = NULL;
+    int i;
 
     np = command;
     while (*np) {
 	if (!parse_command(np, (int)(np - command) + offset, &np, &entry,
 		    &args, error)) {
 	    return false;
+	}
+	for (i = 0; args[i] != NULL; i++) {
+	    Free(args[i]);
 	}
 	Free(args);
     }

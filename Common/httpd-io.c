@@ -736,7 +736,9 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
     if (cmds != NULL) {
 	push_cb_split(cmds, &httpd_cb, s);
     } else {
-	push_cb(single? single: cmd, sl, &httpd_cb, s);
+	push_cb(single? single: cmd,
+		single? strlen(single): sl,
+		&httpd_cb, s);
 	Free(single);
     }
 

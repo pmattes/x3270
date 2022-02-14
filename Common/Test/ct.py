@@ -37,6 +37,8 @@ from xml.dom import minidom
 import socket
 import threading
 import select
+import os
+import Common.Test.valpass as valpass
 
 # Try f periodically until seconds elapse.
 def try_until(f, seconds, errmsg):
@@ -302,13 +304,62 @@ class sendserver():
         self.listensocket.close()
 
     def send(self, data):
+        try_until(lambda: (self.conn != None), 2, 'emulator did not connect')
         self.conn.send(data)
 
     def close(self):
         self.conn.close()
+        self.conn = None
         self.thread.join(timeout=2)
 
 # Do a readline from a pipe with a timeout.
 def timed_readline(p, timeout, errmsg):
     try_until(lambda: (p.readable()), timeout, errmsg)
     return p.readline()
+
+def vgwrap(command):
+    '''Wrap a command in valgrind'''
+    if 'VALGRIND' in os.environ:
+        return ['valgrind', '--leak-check=full', '--error-exitcode=126', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + command
+    else:
+        return command
+
+def vgwrap_ecmd(command):
+    '''Wrap an execvp command in valgrind'''
+    return 'valgrind' if 'VALGRIND' in os.environ else command
+
+def vgwrap_eargs(args):
+    '''Wrap execvp arguments in valgrind'''
+    if 'VALGRIND' in os.environ:
+        return ['valrgind', '--leak-check=full', '--error-exitcode=126',
+            '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + args
+    else:
+        return args
+
+def vgcheck(pid, rc, assertOnFailure):
+    '''Check a valgrind log file'''
+    isVal = 'VALGRIND' in os.environ
+    valLog = f'/tmp/valgrind.{pid}'
+    if isVal and rc == 126:
+        if valpass.valpass().check(valLog):
+            rc = 0
+        else:
+            raise(RuntimeError(f'Valgrind error(s) found, see {valLog}'))
+    if (assertOnFailure):
+        assert(rc == 0)
+    if isVal:
+        os.unlink(valLog)
+
+def vgwait(p, timeout=2, assertOnFailure=True):
+    '''Wait for a process with a timeout, optionally assert on failure, and clean up the valgrind log file'''
+    pid = p.pid
+    rc = p.wait(timeout=timeout)
+    vgcheck(pid, rc, assertOnFailure)
+
+def vgwait_pid(pid, timeout=2, assertOnFailure=True):
+    '''Wait for a process with a timeout, optionally assert on failure, and clean up the valgrind log file'''
+    (_, status) = os.waitpid(pid, 0) # xxx: should be timed
+    if os.WIFSIGNALED(status):
+        raise(RuntimeError(f'Process killed by signal {os.WTERMSIG(status)}'))
+    rc = os.WEXITSTATUS(status)
+    vgcheck(pid, rc, assertOnFailure)
