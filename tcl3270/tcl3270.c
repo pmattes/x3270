@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -710,7 +710,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 
 	/* Create the command, except for Quit(), which we override. */
 	*paren = '\0';
-	if (strcasecmp(action, "Quit") && strcasecmp(action, "Exit")) {
+	if (strcasecmp(action, AnQuit) && strcasecmp(action, AnExit)) {
 	    if (Tcl_CreateObjCommand(interp, action, x3270_cmd, NULL, NULL)
 		    == NULL) {
 		return TCL_ERROR;
@@ -741,10 +741,10 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
 	    == NULL) {
 	return TCL_ERROR;
     }
-    if (Tcl_CreateObjCommand(interp, "Quit", Quit_cmd, NULL, NULL) == NULL) {
+    if (Tcl_CreateObjCommand(interp, AnQuit, Quit_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
     }
-    if (Tcl_CreateObjCommand(interp, "Exit", Quit_cmd, NULL, NULL) == NULL) {
+    if (Tcl_CreateObjCommand(interp, AnExit, Quit_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -947,7 +947,7 @@ Quit_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	Tcl_Obj *CONST objv[])
 {
     if (objc > 1) {
-	Tcl_SetResult(interp, "Quit() takes 0 arguments", TCL_STATIC);
+	Tcl_SetResult(interp, AnQuit "() takes 0 arguments", TCL_STATIC);
 	return TCL_ERROR;
     }
     Tcl_Exit(0);
