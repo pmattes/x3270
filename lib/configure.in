@@ -37,12 +37,14 @@ dnl Figure out what sort of host this is.
 AC_CANONICAL_HOST
 ansi="-std=c99 -pedantic"
 case "$host_os" in
-*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE -Wno-format-truncation -Wno-stringop-truncation"
+*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+    		CCOPTIONS="-Wno-format-truncation -Wno-stringop-truncation"
     		ansi=""
 		;;
 hpux|*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
+    		CCOPTIONS="-Wno-format-truncation"
 		AC_DEFINE(CONNECT_GETPEERNAME,1)
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
