@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([mitm],[4.0])
+AC_INIT([mitm],[4.2])
 AC_PREREQ([2.69])
 
 dnl Checks for programs.
