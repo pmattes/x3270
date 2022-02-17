@@ -1187,7 +1187,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
     bool quoted;
     char c;
     reslist_t *r;
-    char *hide;
+    char *hide = NULL;
     bool arbitrary = false;
     const char *errmsg;
 
