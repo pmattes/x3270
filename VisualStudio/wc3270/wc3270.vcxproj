@@ -200,6 +200,7 @@
     <ClCompile Include="..\..\wc3270\shortcut.c" />
     <ClCompile Include="..\..\Common\c3270\status_dump.c" />
     <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c" />
+    <ClCompile Include="..\..\wc3270\snap.c" />
     <ClCompile Include="..\..\wc3270\version.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

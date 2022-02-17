@@ -65,5 +65,8 @@
     <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\wc3270\snap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

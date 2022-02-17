@@ -4,4 +4,8 @@
     <LocalDebuggerCommandArguments>-verifycert -trace</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>-keymap foo -xrm "c3270.keymap.foo: &lt;Key&gt;a: SnapScreen(foo.bmp)"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

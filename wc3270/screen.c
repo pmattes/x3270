@@ -57,6 +57,7 @@
 #include "screen.h"
 #include "see.h"
 #include "selectc.h"
+#include "snap.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -3710,6 +3711,7 @@ screen_register(void)
     static action_table_t screen_actions[] = {
 	{ AnPaste,	Paste_action,	ACTION_KE },
 	{ AnRedraw,	Redraw_action,	ACTION_KE },
+	{ "SnapScreen", SnapScreen_action, ACTION_KE },
 	{ AnTitle,	Title_action,	ACTION_KE }
     };
 
