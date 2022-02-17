@@ -953,7 +953,7 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	args[out_ix] = NULL;
 	uix_object(true, IndPassthru, args);
-	Free(args);
+	Free((void *)args);
     } else {
 	uij_open_object(NULL);
 	uij_open_object(IndPassthru);
@@ -1250,11 +1250,13 @@ handle_json_input(char *buf, size_t nr, size_t *offset)
 	    return errcode;
 	}
 	if (errcode != JE_EXTRA) {
+	    int line = uij.line + error->line;
+	    int column = uij.column + error->column;
 	    ui_leaf(IndUiError,
 		    AttrFatal, AT_BOOLEAN, true,
 		    AttrText, AT_STRING, error->errmsg,
-		    AttrLine, AT_INT, (int64_t)(uij.line + error->line),
-		    AttrColumn, AT_INT, (int64_t)(uij.column + error->column),
+		    AttrLine, AT_INT, (int64_t)line,
+		    AttrColumn, AT_INT, (uint64_t)column,
 		    NULL);
 	    fprintf(stderr, "Fatal JSON parsing error at input:%d:%d: %s\n",
 		    uij.line + error->line,
@@ -1754,8 +1756,10 @@ ui_io_init()
 	WSAEventSelect(ui_socket, ui_socket_event, FD_READ | FD_CLOSE);
 	AddInput(ui_socket_event, ui_input);
     } else {
-	peer_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	peer_enable_event = CreateEvent(NULL, FALSE, TRUE, NULL);
+	assert(peer_enable_event != INVALID_HANDLE_VALUE);
 	peer_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(peer_done_event != INVALID_HANDLE_VALUE);
 	peer_thread = CreateThread(NULL,
 		0,
 		peer_read,
@@ -1766,7 +1770,6 @@ ui_io_init()
 	    popup_an_error("Cannot create peer script thread: %s\n",
 		    win32_strerror(GetLastError()));
 	}
-	SetEvent(peer_enable_event);
 	AddInput(peer_done_event, ui_input);
     }
 #endif /*]*/

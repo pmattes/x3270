@@ -82,7 +82,7 @@ free_cmds(cmd_t **cmds)
 	    for (arg_ix = 0; c->args[arg_ix] != NULL; arg_ix++) {
 		Free((char *)c->args[arg_ix]);
 	    }
-	    Free(c->args);
+	    Free((void *)c->args);
 	    Free(c);
 	}
 	Free(cmds);

@@ -704,7 +704,7 @@ free_task(task_t *t)
 	    for (j = 0; c->args[j] != NULL; j++) {
 		Free((char *)c->args[j]);
 	    }
-	    Free(c->args);
+	    Free((void *)c->args);
 	    Free(c);
 	}
 	Replace(t->macro.cmds, NULL);
