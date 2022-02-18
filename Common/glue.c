@@ -267,7 +267,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     if (n_session_suffixes == 0) {
 	add_session_suffix(xs_buffer(".%s", app));
 #if defined(_WIN32) /*[*/
-	add_session_suffix(xs_buffer(".%s", app + 1));
+	if (app[0] == 'w') {
+	    add_session_suffix(xs_buffer(".%s", app + 1));
+	}
 	add_session_suffix(xs_buffer(".%.3s", app));
 #endif /*]*/
 	if (appres.alias != NULL) {

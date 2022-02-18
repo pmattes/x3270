@@ -128,6 +128,7 @@
 #define AnSetFont	"SetFont"
 #define AnShow		"Show"
 #define AnSnap		"Snap"
+#define AnSnapScreen	"SnapScreen"
 #define AnSource	"Source"
 #define AnString	"String"
 #define AnSubjectNames	"SubjectNames"

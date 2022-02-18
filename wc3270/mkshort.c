@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2010, 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2006-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,8 +53,8 @@ main(int argc, char *argv[])
     get_version_info();
 
     /* Pull in the parameter. */
-    if (argc != 4) {
-	fprintf(stderr, "usage: %s install-dir exe-name link-path\n", argv[0]);
+    if (argc < 4 || argc > 5) {
+	fprintf(stderr, "usage: %s install-dir exe-name link-path [args]\n", argv[0]);
 	return 1;
     }
     install_dir = argv[1];
@@ -67,7 +67,7 @@ main(int argc, char *argv[])
 	    exe_path,
 	    link_path,
 	    NULL,
-	    NULL,
+	    (argc > 4)? argv[4]: NULL,
 	    install_dir,
 	    46,
 	    80,

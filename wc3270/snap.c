@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -37,8 +37,10 @@
 
 #include "actions.h"
 #include "cscreen.h"
+#include "names.h"
 #include "popups.h"
 #include "snap.h"
+#include "w3misc.h"
 
 /*
  * Create a bitmap info struct.
@@ -54,7 +56,7 @@ create_bmp_info_struct(HBITMAP b)
 
     /* Retrieve the bitmap color format, width, and height. */
     if (!GetObject(b, sizeof(BITMAP), (LPSTR)&bmp)) {
-	popup_an_error("GetObject failed");
+	popup_an_error("GetObject failed: %s", win32_strerror(GetLastError()));
 	return NULL;
     }
 
@@ -83,7 +85,8 @@ create_bmp_info_struct(HBITMAP b)
 	pbmi = (PBITMAPINFO)LocalAlloc(LPTR, sizeof(BITMAPINFOHEADER));
     }
     if (pbmi == NULL) {
-	popup_an_error("LocalAlloc failed");
+	popup_an_error("LocalAlloc failed: %s",
+		win32_strerror(GetLastError()));
 	return NULL;
     }
 
@@ -94,27 +97,31 @@ create_bmp_info_struct(HBITMAP b)
     pbmi->bmiHeader.biPlanes = bmp.bmPlanes;
     pbmi->bmiHeader.biBitCount = bmp.bmBitsPixel;
     if (color_bits < 24) {
-	pbmi->bmiHeader.biClrUsed = (1 << color_bits);
+	pbmi->bmiHeader.biClrUsed = 1 << color_bits;
     }
     pbmi->bmiHeader.biCompression = BI_RGB;
 
     /*
-     * Compute the number of bytes in the array of color  
-     * indices and store the result in biSizeImage.  
-     * The width must be DWORD aligned unless the bitmap is RLE 
-     * compressed. 
+     * Compute the number of bytes in the array of color
+     * indices and store the result in biSizeImage.
+     * The width must be DWORD aligned unless the bitmap is RLE
+     * compressed.
      */
-    pbmi->bmiHeader.biSizeImage = ((pbmi->bmiHeader.biWidth * color_bits + 31) & ~31) / 8
-	    * pbmi->bmiHeader.biHeight;
-    /* Set biClrImportant to 0, indicating that all of the device colors are important. */
+    pbmi->bmiHeader.biSizeImage =
+	((pbmi->bmiHeader.biWidth * color_bits + 31) & ~31) / 8 *
+	pbmi->bmiHeader.biHeight;
+    /*
+     * Set biClrImportant to 0, indicating that all of the device colors are
+     * important.
+     */
     pbmi->bmiHeader.biClrImportant = 0;
     return pbmi;
 }
 
 /* Save a bitmap into a file. */
 static bool
-create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi,
-	HBITMAP b, HDC dc)
+create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi, HBITMAP b,
+	HDC dc)
 {
     HANDLE f = INVALID_HANDLE_VALUE; /* file handle */
     BITMAPFILEHEADER hdr;     /* bitmap file header */
@@ -129,7 +136,8 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi,
     pbih = (PBITMAPINFOHEADER)pbi;
     bits = (LPBYTE)GlobalAlloc(GMEM_FIXED, pbih->biSizeImage);
     if (bits == NULL) {
-	popup_an_error("GlobalAlloc failed");
+	popup_an_error("GlobalAlloc failed: %s",
+		win32_strerror(GetLastError()));
 	goto done;
     }
 
@@ -138,21 +146,19 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi,
      * (array of palette indices) from the DIB.
      */
     if (!GetDIBits(dc, b, 0, (WORD)pbih->biHeight, bits, pbi,
-	    DIB_RGB_COLORS))
-    {
-	popup_an_error("GetDIBits failed");
+		DIB_RGB_COLORS)) {
+	popup_an_error("GetDIBits failed: %s", win32_strerror(GetLastError()));
 	goto done;
     }
 
     /* Set up the header. */
     quad_size = pbih->biClrUsed * sizeof(RGBQUAD);
     hdr.bfType = 0x4d42; /* 0x42 = "B" 0x4d = "M" */
-    hdr.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) +
-	    pbih->biSize + quad_size + pbih->biSizeImage);
+    hdr.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + pbih->biSize + quad_size +
+	    pbih->biSizeImage);
     hdr.bfReserved1 = 0;
     hdr.bfReserved2 = 0;
-    hdr.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) +
-	    pbih->biSize + quad_size;
+    hdr.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + pbih->biSize + quad_size;
 
     /* Create the file. */
     f = CreateFile(file_name,
@@ -163,7 +169,8 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi,
 	    FILE_ATTRIBUTE_NORMAL,
 	    (HANDLE)NULL);
     if (f == INVALID_HANDLE_VALUE) {
-	popup_an_error("CreateFile failed");
+	popup_an_error("CreateFile failed: %s",
+		win32_strerror(GetLastError()));
 	goto done;
     }
 
@@ -176,13 +183,14 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi,
 		(LPDWORD)&written, NULL) ||
 	!WriteFile(f, (LPSTR)hp, (int)cb,
 		(LPDWORD)&written, NULL)) {
-	popup_an_error("WriteFile failed");
+	popup_an_error("WriteFile failed: %s", win32_strerror(GetLastError()));
 	goto done;
     }
 
     /* Close it. */
     if (!CloseHandle(f)) {
-	popup_an_error("CloseHandle failed");
+	popup_an_error("CloseHandle failed: %s",
+		win32_strerror(GetLastError()));
 	f = INVALID_HANDLE_VALUE;
 	goto done;
     }
@@ -208,69 +216,81 @@ SnapScreen_action(ia_t ia, unsigned argc, const char** argv)
 {
     size_t sl;
     bool ret = false;
-    HDC dc;
-    HDC target_dc;
+    HDC dc = NULL;
+    HDC target_dc = NULL;
     RECT rect = { 0 };
-    HBITMAP bitmap;
-    PBITMAPINFO p;
+    HBITMAP bitmap = NULL;
+    PBITMAPINFO pbmi = NULL;
 
     /* Check arguments. */
-    action_debug("SnapScreen", ia, argc, argv);
-    if (check_argc("SnapScreen", argc, 1, 1) < 0) {
+    action_debug(AnSnapScreen, ia, argc, argv);
+    if (check_argc(AnSnapScreen, argc, 1, 1) < 0) {
 	return false;
     }
     sl = strlen(argv[0]);
     if (sl < 5 || strcasecmp(argv[0] + sl - 4, ".bmp")) {
-	popup_an_error("SnapScreen(): argument must end with .bmp");
+	popup_an_error(AnSnapScreen "(): argument must end with .bmp");
+	return false;
     }
 
     /* Grab a bitmap from the window. */
     dc = GetDC(console_window);
     if (dc == NULL) {
-	popup_an_error("SnapScreen(): GetDC failed");
-	return false;
+	popup_an_error(AnSnapScreen "(): GetDC failed: %s",
+		win32_strerror(GetLastError()));
+	goto done;
     }
     target_dc = CreateCompatibleDC(dc);
     if (target_dc == NULL) {
-	popup_an_error("SnapScreen(): CreateCompatibleDC failed");
-	ReleaseDC(console_window, dc);
-	return false;
+	popup_an_error(AnSnapScreen "(): CreateCompatibleDC failed: %s",
+		win32_strerror(GetLastError()));
+	goto done;
     }
     if (!GetWindowRect(console_window, &rect)) {
-	popup_an_error("SnapScreen(): GetWindowRect failed");
-	DeleteDC(target_dc);
-	ReleaseDC(console_window, dc);
-	return false;
+	popup_an_error(AnSnapScreen "(): GetWindowRect failed: %s",
+		win32_strerror(GetLastError()));
+	goto done;
     }
     bitmap = CreateCompatibleBitmap(dc, rect.right - rect.left,
 	rect.bottom - rect.top);
     if (bitmap == NULL) {
-	popup_an_error("SnapScreen(): CreateCompatibleBitmap failed");
-	DeleteDC(target_dc);
-	ReleaseDC(console_window, dc);
-	return false;
+	popup_an_error(AnSnapScreen "(): CreateCompatibleBitmap failed: %s",
+		win32_strerror(GetLastError()));
+	goto done;
     }
     SelectObject(target_dc, bitmap);
     if (!PrintWindow(console_window, target_dc, 0 /*PW_CLIENTONLY*/))
     {
-	popup_an_error("SnapScreen(): PrintWindow failed");
+	popup_an_error(AnSnapScreen "(): PrintWindow failed: %s",
+		win32_strerror(GetLastError()));
 	goto done;
     }
 
     /* Save it to a file. */
-    p = create_bmp_info_struct(bitmap);
-    if (p == NULL) {
+    pbmi = create_bmp_info_struct(bitmap);
+    if (pbmi == NULL) {
 	goto done;
     }
-    if (!create_bmp_file(console_window, (char *)argv[0], p, bitmap, target_dc)) {
+    if (!create_bmp_file(console_window, (char *)argv[0], pbmi, bitmap,
+		target_dc)) {
 	goto done;
     }
 
+    /* Success. */
     ret = true;
 
 done:
-    DeleteObject(bitmap);
-    ReleaseDC(console_window, dc);
-    DeleteDC(target_dc);
+    if (bitmap != NULL) {
+	DeleteObject(bitmap);
+    }
+    if (dc != NULL) {
+	ReleaseDC(console_window, dc);
+    }
+    if (target_dc != NULL) {
+	DeleteDC(target_dc);
+    }
+    if (pbmi != NULL) {
+	LocalFree(pbmi);
+    }
     return ret;
 }

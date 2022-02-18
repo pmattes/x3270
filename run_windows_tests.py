@@ -27,9 +27,9 @@ elif os.path.exists('obj\\win32'):
 else:
     print("Missing object directory.", file=sys.stderr)
     exit(1)
-os.environ['PATH'] = obj + '\\s3270' + ';' + obj + '\\b3270' + ';' + obj + '\\playback' + ';' + os.environ['PATH']
+os.environ['PATH'] = obj + '\\s3270;' + obj + '\\b3270;' + obj + '\\wc3270;' + obj + '\\playback' + ';' + os.environ['PATH']
 
 verbose = '-v ' if len(sys.argv) > 1 and sys.argv[1] == '-v' else ''
 
 # Run the tests.
-os.system(sys.executable + ' -m unittest ' + verbose + ' '.join(glob.glob('s3270\\Test\\test*.py') + glob.glob('b3270\\Test\\test*.py')))
+os.system(sys.executable + ' -m unittest ' + verbose + ' '.join(glob.glob('s3270\\Test\\test*.py') + glob.glob('b3270\\Test\\test*.py') + glob.glob('wc3270\\Test\\test*.py')))
