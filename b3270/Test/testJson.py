@@ -111,7 +111,7 @@ class TestB3270Json(unittest.TestCase):
         # Individual timed reads are used here because communicate() closes stdin and that will
         # cause b3270 to exit prematurely.
         errmsg = 'b3270 did not produce expected output'
-        _ = ct.timed_readline(b3270.stdout, 2, errmsg)
+        ct.timed_readline(b3270.stdout, 2, errmsg)
         insert_mode = json.loads(ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
         start_tls = json.loads(ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
         b3270.stdin.close()

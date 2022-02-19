@@ -116,9 +116,9 @@ class TestB3270Xml(unittest.TestCase):
 
         # Get the result.
         errmsg = 'b3270 did not produce the expected output'
-        _ = ct.timed_readline(b3270.stdout, 2, errmsg)
-        _ = ct.timed_readline(b3270.stdout, 2, errmsg)
-        _ = ct.timed_readline(b3270.stdout, 2, errmsg)
+        ct.timed_readline(b3270.stdout, 2, errmsg)
+        ct.timed_readline(b3270.stdout, 2, errmsg)
+        ct.timed_readline(b3270.stdout, 2, errmsg)
         out = ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
         et_ins = ET.fromstring(out)
         out = ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')

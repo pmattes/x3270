@@ -64,6 +64,7 @@ class TestB3270Seconds(unittest.TestCase):
         output = b''
         while True:
             line = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            self.assertNotEqual(b'', line)
             output += line
             if b'run-result' in line:
                 break
@@ -97,6 +98,7 @@ class TestB3270Seconds(unittest.TestCase):
         # Get the result.
         while True:
             line = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            self.assertNotEqual(b'', line)
             if b'run-result' in line:
                 break
         out = json.loads(line.decode('utf8'))

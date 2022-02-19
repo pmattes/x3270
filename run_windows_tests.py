@@ -19,7 +19,7 @@ if not sys.platform.startswith('win'):
 if os.system('make windows') != 0:
     exit(1)
 
-# Set paths.
+# Set the path.
 if os.path.exists('obj\\win64'):
     obj = os.getcwd() + '\\obj\\win64'
 elif os.path.exists('obj\\win32'):
@@ -27,9 +27,10 @@ elif os.path.exists('obj\\win32'):
 else:
     print("Missing object directory.", file=sys.stderr)
     exit(1)
-os.environ['PATH'] = obj + '\\s3270;' + obj + '\\b3270;' + obj + '\\wc3270;' + obj + '\\playback' + ';' + os.environ['PATH']
+dirs = ['s3270', 'b3270', 'wc3270']
+os.environ['PATH'] = ';'.join([obj + '\\' + dir for dir in dirs + ['playback']] + [os.environ['PATH']])
 
 verbose = '-v ' if len(sys.argv) > 1 and sys.argv[1] == '-v' else ''
 
 # Run the tests.
-os.system(sys.executable + ' -m unittest ' + verbose + ' '.join(glob.glob('s3270\\Test\\test*.py') + glob.glob('b3270\\Test\\test*.py') + glob.glob('wc3270\\Test\\test*.py')))
+os.system(sys.executable + ' -m unittest ' + verbose + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs]))
