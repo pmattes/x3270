@@ -30,15 +30,17 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import pty
+import sys
+if not sys.platform.startswith('win'):
+    import pty
 import os
 import time
 import re
-import sys
 import os.path
 import Common.Test.ct as ct
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
+@unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
 class TestC3270Smoke(unittest.TestCase):
 
     # Set up procedure.

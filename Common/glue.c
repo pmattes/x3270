@@ -170,7 +170,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	char *path = getenv("PATH");
 
 	/* Add our path to $PATH so we can find x3270if. */
-	putenv(xs_buffer("PATH=%.*s%s%s",
+	(void) putenv(xs_buffer("PATH=%.*s%s%s",
 		    (int)(programname - argv[0]), argv[0],
 		    path? ":": "",
 		    path? path: ""));

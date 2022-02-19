@@ -93,11 +93,12 @@ def check_push(p, port, count):
     try_until(test, 2, "emulator did not accept the data")
 
 # Make sure the "-v" option works.
-def check_dash_v(prog):
+def check_dash_v(prog, with_w=False):
     p = Popen([prog, '-v'], stderr=PIPE)
     stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
     p.wait(timeout=2)
-    assert stderr[0].startswith(prog + ' ')
+    vprog = 'w' + prog if with_w else prog
+    assert stderr[0].startswith(vprog + ' ')
     assert any('Copyright' in line for line in stderr)
 
 # Make sure the "--help" option works.

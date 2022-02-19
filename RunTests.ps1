@@ -1,10 +1,17 @@
 ﻿# Run integration tests on Visual Studio binaries.
 param (
-    [switch] $v
+    [switch] $v,
+    [switch] $nobuild
 )
-$env:PATH="$pwd\VisualStudio\Debug;${env:PATH}"
+$env:PATH="$pwd\VisualStudio\x64\Debug;${env:PATH}"
+
+if (! $nobuild) {
+    cd VisualStudio
+    msbuild /p:Configuration=Debug /p:Platform=x64
+    cd ..
+}
 
 # If there are other directories with Windows tests in them, add them to -Path with commas.
-$files = Get-ChildItem -File -Filter 'test*.py' -Path s3270/Test,b3270/Test,wc3270/Test | ForEach-Object { $_.FullName }
-if ($v) { $vflag = "-v"}
+$files = Get-ChildItem -File -Filter 'test*.py' -Path s3270/Test,b3270/Test,c3270/Test,wc3270/Test | ForEach-Object { $_.FullName }
+if ($v) { $vflag = "-v" }
 python3 -m unittest $vflag $files

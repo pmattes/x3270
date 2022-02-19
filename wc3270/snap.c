@@ -80,7 +80,7 @@ create_bmp_info_struct(HBITMAP b)
     if (color_bits < 24) {
 	pbmi = (PBITMAPINFO)LocalAlloc(LPTR,
 		sizeof(BITMAPINFOHEADER) +
-		sizeof(RGBQUAD) * (1 << color_bits));
+		sizeof(RGBQUAD) * ((size_t)1 << color_bits));
     } else {
 	pbmi = (PBITMAPINFO)LocalAlloc(LPTR, sizeof(BITMAPINFOHEADER));
     }
@@ -130,7 +130,7 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi, HBITMAP b,
     DWORD cb;                 /* incremental count of bytes */
     BYTE *hp;                 /* byte pointer */
     DWORD written;            /* bytes written */
-    size_t quad_size;         /* size of RGBQUAD array */
+    int quad_size;	      /* size of RGBQUAD array */
     bool rv = false;          /* return value */
 
     pbih = (PBITMAPINFOHEADER)pbi;
@@ -152,13 +152,13 @@ create_bmp_file(HWND hwnd, LPTSTR file_name, PBITMAPINFO pbi, HBITMAP b,
     }
 
     /* Set up the header. */
-    quad_size = pbih->biClrUsed * sizeof(RGBQUAD);
+    quad_size = (int)(pbih->biClrUsed * sizeof(RGBQUAD));
     hdr.bfType = 0x4d42; /* 0x42 = "B" 0x4d = "M" */
     hdr.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + pbih->biSize + quad_size +
 	    pbih->biSizeImage);
     hdr.bfReserved1 = 0;
     hdr.bfReserved2 = 0;
-    hdr.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + pbih->biSize + quad_size;
+    hdr.bfOffBits = (DWORD)(sizeof(BITMAPFILEHEADER) + pbih->biSize + quad_size);
 
     /* Create the file. */
     f = CreateFile(file_name,

@@ -28,13 +28,14 @@
 # c3270 basic command-line tests
 
 import unittest
+import sys
 import Common.Test.ct as ct
 
 class TestC3270BasicCmdline(unittest.TestCase):
 
     # c3270 -v and -help test
     def test_c3270_v_help(self):
-        ct.check_dash_v('c3270')
+        ct.check_dash_v('c3270', sys.platform.startswith('win'))
         ct.check_help('c3270')
         ct.check_bad('c3270')
         ct.check_bad2('c3270')

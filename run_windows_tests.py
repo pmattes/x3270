@@ -27,7 +27,7 @@ elif os.path.exists('obj\\win32'):
 else:
     print("Missing object directory.", file=sys.stderr)
     exit(1)
-dirs = ['s3270', 'b3270', 'wc3270']
+dirs = ['s3270', 'b3270', 'c3270', 'wc3270']
 os.environ['PATH'] = ';'.join([obj + '\\' + dir for dir in dirs + ['playback']] + [os.environ['PATH']])
 
 verbose = '-v ' if len(sys.argv) > 1 and sys.argv[1] == '-v' else ''
