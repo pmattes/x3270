@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2021 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -270,6 +270,8 @@ CONSOLE_SCREEN_BUFFER_INFO base_info;
 static action_t Paste_action;
 static action_t Redraw_action;
 static action_t Title_action;
+
+static bool size_complain = false;
 
 static void
 win32_perror_fatal(const char *fmt, ...)
@@ -2437,6 +2439,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     INPUT_RECORD ir;
     DWORD nr;
     const char *s;
+    SHORT x, y;
 
     /* Get the next input event. */
     rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
@@ -2499,7 +2502,25 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	handle_mouse_event(&ir.Event.MouseEvent);
 	break;
     case WINDOW_BUFFER_SIZE_EVENT:
-	vtrace("WindowBufferSize\n");
+	x = ir.Event.WindowBufferSizeEvent.dwSize.X;
+	y = ir.Event.WindowBufferSizeEvent.dwSize.Y;
+	vtrace("WindowBufferSize X %d Y %d\n", x, y);
+	if (x != console_cols || y != console_rows) {
+	    /*
+	     * If we try to put the window size back automatically, we can
+	     * get into an argument with Windows and possibly leave the
+	     * program unable to restart. So the best we can do is to tell
+	     * the user we know, so we don't look like complete idiots.
+	     */
+	    if (!size_complain) {
+		popup_an_error("Window size has changed. Please restore it "
+			"to %d rows and %d columns and run the Redraw() action.",
+			console_rows, console_cols);
+		size_complain = true;
+	    }
+	} else {
+	    size_complain = false;
+	}
 	break;
     default:
 	vtrace("Unknown input event %d\n", ir.EventType);
