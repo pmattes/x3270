@@ -19,6 +19,10 @@ if not sys.platform.startswith('win'):
 if os.system('make windows') != 0:
     exit(1)
 
+# Run the library tests.
+if os.system('make windows-lib-test') != 0:
+    exit(1)
+
 # Set the path.
 if os.path.exists('obj\\win64'):
     obj = os.getcwd() + '\\obj\\win64'

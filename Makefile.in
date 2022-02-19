@@ -247,9 +247,9 @@ lib3270stubs-clean:
 	cd lib/3270stubs && $(MAKE) clean
 libw3270-clean: libw3270-clean@WIN32_SUFFIX@ libw3270-clean@WIN64_SUFFIX@
 libw3270-clean-32:
-	cd lib/w3270 && $(MAKE) clean
+	cd lib/w3270 && $(MAKE) clean && $(MAKE) -f Makefile.test clean
 libw3270-clean-64:
-	cd lib/w3270 && $(MAKE) clean WIN64=1
+	cd lib/w3270 && $(MAKE) clean WIN64=1 && $(MAKE) -f Makefile.test clean WIN64=1
 libw3270i-clean: libw3270i-clean@WIN32_SUFFIX@ libw3270i-clean@WIN64_SUFFIX@
 libw3270i-clean-32:
 	cd lib/w3270i && $(MAKE) clean
@@ -257,9 +257,9 @@ libw3270i-clean-64:
 	cd lib/w3270i && $(MAKE) clean WIN64=1
 libw32xx-clean: libw32xx-clean@WIN32_SUFFIX@ libw32xx-clean@WIN64_SUFFIX@
 libw32xx-clean-32:
-	cd lib/w32xx && $(MAKE) clean
+	cd lib/w32xx && $(MAKE) clean && $(MAKE) -f Makefile.test clean
 libw32xx-clean-64:
-	cd lib/w32xx && $(MAKE) clean WIN64=1
+	cd lib/w32xx && $(MAKE) clean WIN64=1 && $(MAKE) -f Makefile.test clean WIN64=1
 libw3270stubs-clean: libw3270stubs-clean@WIN32_SUFFIX@ libw3270stubs-clean@WIN64_SUFFIX@
 libw3270stubs-clean-32:
 	cd lib/w3270stubs && $(MAKE) clean
@@ -397,6 +397,18 @@ wplayback-clobber-32:
 	cd wplayback && $(MAKE) clobber
 wplayback-clobber-64:
 	cd wplayback && $(MAKE) clobber WIN64=1
+
+windows-lib-test: libw3270-test libw32xx-test
+libw3270-test: libw3270-test@WIN32_SUFFIX@ libw3270-test@WIN64_SUFFIX@
+libw3270-test-32: libw3270-32
+	cd lib/w3270 && $(MAKE) -f Makefile.test
+libw3270-test-64: libw3270-64
+	cd lib/w3270 && $(MAKE) -f Makefile.test WIN64=1
+libw32xx-test: libw32xx-test@WIN32_SUFFIX@ libw32xx-test@WIN64_SUFFIX@
+libw32xx-test-32: libw32xx-32
+	cd lib/w32xx && $(MAKE) -f Makefile.test
+libw32xx-test-64: libw32xx-64
+	cd lib/w32xx && $(MAKE) -f Makefile.test WIN64=1
 
 ifdef UNIX
 unix-lib-test: lib3270 lib32xx

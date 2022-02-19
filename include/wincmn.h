@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2015 Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -104,6 +104,7 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 #  define access	_access
 #  define close		_close
 #  define dup		_dup
+#  define dup2		_dup2
 #  define fdopen	_fdopen
 #  define fileno	_fileno
 #  define getcwd	_getcwd

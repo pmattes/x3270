@@ -63,12 +63,12 @@ static int old_stderr;
 /* Macros to wrap code that is expected to fail an assertion. */
 #define SIGABRT_START \
     signal(SIGABRT, sigabrt); \
-    dup2(dev_null, 2); \
+    (void)dup2(dev_null, 2); \
     if (!setjmp(jbuf)) {
 #define SIGABRT_END \
     } \
     signal(SIGABRT, SIG_DFL); \
-    dup2(old_stderr, 2); \
+    (void)dup2(old_stderr, 2); \
     assert(got_sigabrt);
 
 static void positive_parse_tests(void);
@@ -110,6 +110,9 @@ main(int argc, char *argv[])
     if (argc > 1 && !strcmp(argv[1], "-v")) {
 	verbose = true;
     }
+#if defined(_MSC_VER) /*]*/
+    _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+#endif /*]*/
 
     /* Get ready for stderr redirection when we expect an assertion to fail. */
 #if !defined(_WIN32) /*[*/

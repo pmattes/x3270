@@ -33,14 +33,19 @@
 #include "globals.h"
 
 #include <assert.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#if !defined(_WIN32) /*[*/
+# include <sys/types.h>
+# include <netdb.h>
+#endif /*]*/
 
 #include "bind-opt.h"
 #include "resolver.h"
 #include "sa_malloc.h"
 #include "utils.h"
+
+#if defined(_WIN32) /*[*/
+# include "w3misc.h"
+#endif /*]*/
 
 /* Macro to make sure there are no memory leaks. */
 #define CLEAN_UP do { \
@@ -68,6 +73,10 @@ main(int argc, char *argv[])
     if (argc > 1 && !strcmp(argv[1], "-v")) {
 	verbose = true;
     }
+
+#if defined(_WIN32) /*[*/
+    sockstart();
+#endif /*]*/
 
     /* Loop through the tests. */
     for (i = 0; test[i].name != NULL; i++) {
