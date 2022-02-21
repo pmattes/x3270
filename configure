@@ -690,7 +690,8 @@ b3270
 tcl3270
 pr3287
 x3270if
-playback'
+playback
+mitm'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -2347,6 +2348,8 @@ fi
 if test "x$enable_playback" = xyes; then subdirs="$subdirs playback"
 
 fi
+subdirs="$subdirs mitm"
+
 
 
 

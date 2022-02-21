@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Paul Mattes.
+# Copyright (c) 2016-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# VPATH-based Makefile for libw3270stubs, can build either 32- or 64-bit
+# Makefile for libw3270stubs
 ifdef WIN64
 objdir = ../../obj/win64/lib3270stubs
 else
@@ -44,8 +44,6 @@ all: $(objdir)
 clean: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clobber: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-depend: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 
 $(objdir):

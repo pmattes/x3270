@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020, 2022 Paul Mattes.
+# Copyright (c) 1999-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Makefile for c3270 (console-based 3270 emulator)
+# Makefile for c3270
 
 RM = rm -f
 CC = @CC@

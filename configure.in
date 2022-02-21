@@ -324,6 +324,7 @@ if test "x$enable_x3270if" = xyes; then AC_CONFIG_SUBDIRS(x3270if)
 fi
 if test "x$enable_playback" = xyes; then AC_CONFIG_SUBDIRS(playback)
 fi
+AC_CONFIG_SUBDIRS(mitm)
 
 AC_SUBST(host)
 AC_SUBST(T_ALL)

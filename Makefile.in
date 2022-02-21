@@ -411,7 +411,7 @@ libw32xx-test-64: libw32xx-64
 	cd lib/w32xx && $(MAKE) -f Makefile.test WIN64=1
 
 ifdef UNIX
-unix-lib-test: lib3270 lib32xx
+unix-lib-test:
 	cd lib/3270 && $(MAKE) -f Makefile.test
 	cd lib/32xx && $(MAKE) -f Makefile.test
 
