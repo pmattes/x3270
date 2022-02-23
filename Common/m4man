@@ -2,11 +2,12 @@
 # generate a man page or html man page from m4 source
 function usage()
 {
-    echo >&2 "usage: $0 -t html|man -p product -n name [-o outfile] [-w] source"
+    echo >&2 "usage: $0 -t html|man -p product -n name [-o outfile] [-v version.txt] [-w] source"
     exit 1
 }
 
 unset windows
+version_txt=./version.txt
 
 while [ $# -gt 0 ]
 do	case $1 in
@@ -36,6 +37,11 @@ do	case $1 in
 		outfile=$1
 		shift
 		;;
+	    -v)
+		shift
+		version_txt=$1
+		shift
+		;;
 	    -w)
 		shift
 		platform=windows
@@ -55,7 +61,7 @@ if [ -z "$type" -o -z "$product" -o -z "$name" -o -z "$source" ]
 then	usage
 fi
 
-. ./version.txt
+. $version_txt
 date=`date "+%d %B %Y"`
 # platform
 if [ x"$platform" != xwindows ]

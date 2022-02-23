@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013-2015, 2017-2018, 2020 Paul Mattes.
+# Copyright (c) 1995-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -42,9 +42,9 @@ prepare: configure
 configure: configure.in
 	autoconf
 
-MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
-MKMAN = ./m4man -t man -p $(PRODUCT)
-MKHTML = ./m4man -t html -p $(PRODUCT)
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt find-version
+MKMAN = ./m4man -t man -p $(PRODUCT) -v $(VERSION_TXT)
+MKHTML = ./m4man -t html -p $(PRODUCT) -v $(VERSION_TXT)
 
 # Rule for building the documentation.
 man: $(PRODUCT).man html/$(PRODUCT)-man.html
@@ -54,3 +54,8 @@ $(PRODUCT).man: tcl3270.man.m4 $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ tcl3270.man.m4
 html/$(PRODUCT)-man.html: tcl3270.man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ tcl3270.man.m4
+
+# Rule to set VERSION_TXT to the path of version.txt.
+.PHONY: find-version
+find-version: version.txt
+	$(eval VERSION_TXT=$^)

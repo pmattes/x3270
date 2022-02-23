@@ -43,9 +43,9 @@ prepare: configure $(PRODUCT).man
 configure: configure.in
 	autoconf
 
-MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
-MKMAN = ./m4man -t man -p $(PRODUCT)
-MKHTML = ./m4man -t html -p $(PRODUCT)
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt find-version
+MKMAN = ./m4man -t man -p $(PRODUCT) -v $(VERSION_TXT)
+MKHTML = ./m4man -t html -p $(PRODUCT) -v $(VERSION_TXT)
 
 MANSRC = x3270.man.m4
 
@@ -61,3 +61,8 @@ ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
 html/ibm_hosts.html: ibm_hosts.man.m4 $(MANDEP)
 	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
+
+# Rule to set VERSION_TXT to the path of version.txt.
+.PHONY: find-version
+find-version: version.txt
+	$(eval VERSION_TXT=$^)

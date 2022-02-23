@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2015, 2017, 2020 Paul Mattes.
+# Copyright (c) 1995-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@ DOCS = html/$(PRODUCT)-man.html
 
 src.tgz: $(DOCS) wc3270.iss package.ps1 Makefile.aux
 
-MANDEP = html.m4 m4man Makefile.aux version.txt
-MKHTML = ./m4man -t html -p $(PRODUCT)
+MANDEP = html.m4 m4man Makefile.aux version.txt find-version
+MKHTML = ./m4man -t html -p $(PRODUCT) -v $(VERSION_TXT)
 
 # Rule for building the documentation.
 man: $(DOCS)
@@ -61,3 +61,8 @@ package.zip: wc3270.iss package.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.z
 	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/CopyToWx3270.ps1 wc3270/wc3270.iss)
 
 windows-release: package.zip
+
+# Rule to set VERSION_TXT to the path of version.txt.
+.PHONY: find-version
+find-version: version.txt
+	$(eval VERSION_TXT=$^)
