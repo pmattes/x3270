@@ -30,6 +30,8 @@ PRODUCT = pr3287
 all:
 	@echo "Must pick a specific make target."
 
+include version.mk
+
 DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html
 
 # Rule for building the source tarball: run autoconf and build the
@@ -53,8 +55,3 @@ $(PRODUCT).man: $(PRODUCT).man.m4 $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
 html/$(PRODUCT)-man.html: $(PRODUCT).man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
-
-# Rule to set VERSION_TXT to the path of version.txt.
-.PHONY: find-version
-find-version: version.txt
-	$(eval VERSION_TXT=$^)

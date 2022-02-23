@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2015, 2017, 2020 Paul Mattes.
+# Copyright (c) 1995-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,9 @@ PRODUCT = x3270
 all:
 	@echo "Must pick a specific make target."
 
+# Get the rule for setting VERSION_TXT to the path of version.txt.
+include version.mk
+
 DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html \
 	html/ibm_hosts.html ibm_hosts.man
 
@@ -61,8 +64,3 @@ ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
 html/ibm_hosts.html: ibm_hosts.man.m4 $(MANDEP)
 	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
-
-# Rule to set VERSION_TXT to the path of version.txt.
-.PHONY: find-version
-find-version: version.txt
-	$(eval VERSION_TXT=$^)

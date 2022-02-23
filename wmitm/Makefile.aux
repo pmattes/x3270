@@ -31,6 +31,8 @@ PRODUCT=mitm
 all:
 	@echo "Must pick a specific make target."
 
+include version.mk
+
 # Development tools.
 
 include mitm_files.mk
@@ -51,8 +53,3 @@ man: html/Windows-$(PRODUCT).html
 
 html/Windows-$(PRODUCT).html: mitm.man.m4 $(MANDEP)
 	$(MKHTML) -n mitm -o $@ -w mitm.man.m4
-
-# Rule to set VERSION_TXT to the path of version.txt.
-.PHONY: find-version
-find-version: version.txt
-	$(eval VERSION_TXT=$^)

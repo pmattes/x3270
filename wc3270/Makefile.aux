@@ -31,6 +31,8 @@ PRODUCT = wc3270
 all:
 	@echo "Must pick a specific make target."
 
+include version.mk
+
 DOCS = html/$(PRODUCT)-man.html
 
 src.tgz: $(DOCS) wc3270.iss package.ps1 Makefile.aux
@@ -61,8 +63,3 @@ package.zip: wc3270.iss package.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.z
 	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/CopyToWx3270.ps1 wc3270/wc3270.iss)
 
 windows-release: package.zip
-
-# Rule to set VERSION_TXT to the path of version.txt.
-.PHONY: find-version
-find-version: version.txt
-	$(eval VERSION_TXT=$^)
