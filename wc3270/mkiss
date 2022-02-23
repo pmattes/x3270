@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
-. ./version.txt
+version_txt=./version.txt
+if [ "x$1" = "x-v" ]
+then	shift
+    	version_txt=$1
+	shift
+fi
+. $version_txt
 
 sed -e "s/%VERSION%/$version/g" -e "s/%CYEAR%/$cyear/g"
