@@ -102,5 +102,33 @@ class TestS3270Tls(unittest.TestCase):
         s3270.stdin.close()
         ct.vgwait(s3270)
 
+    # s3270 STARTTLS test
+    def test_s3270_starttls(self):
+
+        # Start a server to read s3270's output.
+        port, ts = ct.unused_port()
+        server = tls_server.tls_server('127.0.0.1', port, 's3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key')
+        ct.check_listen(port)
+        ts.close()
+
+        # Start s3270.
+        args = ['s3270', '-xrm', 's3270.contentionResolution: false']
+        if sys.platform != 'darwin' and not sys.platform.startswith('win'):
+            args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
+        args.append(f'127.0.0.1:{port}=TEST')
+        s3270 = Popen(ct.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+        self.children.append(s3270)
+
+        # Make sure it all works.
+        server.starttls()
+        s3270.stdin.write(b"PF(3)\n")
+        s3270.stdin.write(b"Quit()\n")
+        s3270.stdin.flush()
+        server.check_trace('s3270/Test/ibmlink.trc')
+
+        # Wait for the process to exit.
+        s3270.stdin.close()
+        ct.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
