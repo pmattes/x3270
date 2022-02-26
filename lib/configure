@@ -3381,6 +3381,7 @@ darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
+    		CCOPTIONS=-Wno-format-truncation
 		;;
 esac
 if test "$GCC" = yes
@@ -4330,7 +4331,7 @@ if test "$ac_res" != no; then :
 fi
 
 
-if echo "$LIBS" | grep -e '-liconv\>' >/dev/null
+if echo "$LIBS" | $EGREP -e '-liconv\>' >/dev/null
 then	ICONV_LIBS="-liconv"
 fi
 
@@ -4568,7 +4569,7 @@ fi
 
 
 
-if echo "$LIBS" | grep -e '-lanl\>' >/dev/null
+if echo "$LIBS" | $EGREP -e '-lanl\>' >/dev/null
 then	GAI_LIBS="-lanl"
 fi
 

@@ -685,7 +685,6 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-with_readline
 enable_dbcs
 enable_local_process
 enable_ipv6
@@ -1326,11 +1325,6 @@ Optional Features:
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
   --disable-ipv6          leave out IPv6 support
-
-Optional Packages:
-  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
-  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --without-readline      Don't use the readline library
 
 Some influential environment variables:
   CC          C compiler command
@@ -3762,27 +3756,6 @@ fi
 
 done
 
-if test "$with_readline" != no; then
-for ac_header in readline/history.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "readline/history.h" "ac_cv_header_readline_history_h" "$ac_includes_default"
-if test "x$ac_cv_header_readline_history_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_READLINE_HISTORY_H 1
-_ACEOF
-
-fi
-
-done
-
-fi
-
-
-# Check whether --with-readline was given.
-if test "${with_readline+set}" = set; then :
-  withval=$with_readline;
-fi
-
 
 for ac_func in vasprintf
 do :
@@ -3863,53 +3836,6 @@ $as_echo "#define HAVE_FSEEKO 1" >>confdefs.h
 
 fi
 
-if test "$with_readline" != no; then
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for rl_initialize in -lreadline" >&5
-$as_echo_n "checking for rl_initialize in -lreadline... " >&6; }
-if ${ac_cv_lib_readline_rl_initialize+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lreadline  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char rl_initialize ();
-int
-main ()
-{
-return rl_initialize ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_readline_rl_initialize=yes
-else
-  ac_cv_lib_readline_rl_initialize=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_readline_rl_initialize" >&5
-$as_echo "$ac_cv_lib_readline_rl_initialize" >&6; }
-if test "x$ac_cv_lib_readline_rl_initialize" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBREADLINE 1
-_ACEOF
-
-  LIBS="-lreadline $LIBS"
-
-fi
-
-fi
 
 LIBX3270DIR='${sysconfdir}/x3270'
 

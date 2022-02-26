@@ -67,19 +67,10 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
-if test "$with_readline" != no; then
-AC_CHECK_HEADERS(readline/history.h)
-fi
-
-dnl Check for --without-readline
-AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library]) 
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
-if test "$with_readline" != no; then
-AC_CHECK_LIB(readline, rl_initialize)
-fi
 
 dnl Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
