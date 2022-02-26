@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2017, 2019-2021 Paul Mattes.
+dnl Copyright (c) 2000-2017, 2019-2022 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@ darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
+    		CCOPTIONS=-Wno-format-truncation
 		;;
 esac
 if test "$GCC" = yes
@@ -137,7 +138,7 @@ AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"
 AC_SEARCH_LIBS(getaddrinfo_a, anl, AC_DEFINE(HAVE_GETADDRINFO_A,1))
 
 dnl Handle iconv library dependency.
-if echo "$LIBS" | grep -e '-liconv\>' >/dev/null
+if echo "$LIBS" | $EGREP -e '-liconv\>' >/dev/null
 then	ICONV_LIBS="-liconv"
 fi
 AC_SUBST(ICONV_LIBS)
@@ -197,7 +198,7 @@ AC_SUBST(TLS_LDFLAGS)
 AC_SUBST(TLS_LIBS)
 
 dnl Set up getaddrinfo_a dependencies.
-if echo "$LIBS" | grep -e '-lanl\>' >/dev/null
+if echo "$LIBS" | $EGREP -e '-lanl\>' >/dev/null
 then	GAI_LIBS="-lanl"
 fi
 AC_SUBST(GAI_LIBS)
