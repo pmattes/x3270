@@ -1,0 +1,88 @@
+// rows 43
+// columns 80
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  raw 0802 # send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  raw 0204 # device-type is
+//  atext IBM-3278-4-E
+//  raw 01 # connect
+//  atext TEST
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d342d450154455354fff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  raw 0304 # functions is
+//  raw 0204 #  RESPONSES SYSREQ
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Draw the screen.
+// tn3270e 3270-data none error-response 1
+//  cmd.ewa reset,alarm,restore
+//   ord.sba 1 1
+//   ord.sfe 3270 protect fg default
+//   text "APL characters"
+//   ord.sba 2 1
+//   ord.sf protect,high
+//   raw 0840084108420843084408450846084708480849084a084b084c084d084e084f
+//   ord.sba 3 1
+//   ord.sf protect,high
+//   raw 0850085108520853085408550856085708580859085a085b085c085d085e085f
+//   ord.sba 4 1
+//   ord.sf protect,high
+//   raw 0860086108620863086408650866086708680869086a086b086c086d086e086f
+//   ord.sba 5 1
+//   ord.sf protect,high
+//   raw 0870087108720873087408750876087708780879087a087b087c087d087e087f
+//   ord.sba 6 1
+//   ord.sf protect,high
+//   raw 0880088108820883088408850886088708880889088a088b088c088d088e088f
+//   ord.sba 7 1
+//   ord.sf protect,high
+//   raw 0890089108920893089408950896089708980899089a089b089c089d089e089f
+//   ord.sba 8 1
+//   ord.sf protect,high
+//   raw 08a008a108a208a308a408a508a608a708a808a908aa08ab08ac08ad08ae08af
+//   ord.sba 9 1
+//   ord.sf protect,high
+//   raw 08b008b108b208b308b408b508b608b708b808b908ba08bb08bc08bd08be08bf
+//   ord.sba 10 1
+//   ord.sf protect,high
+//   raw 08c008c108c208c308c408c508c608c708c808c908ca08cb08cc08cd08ce08cf
+//   ord.sba 11 1
+//   ord.sf protect,high
+//   raw 08d008d108d208d308d408d508d608d708d808d908da08db08dc08dd08de08df
+//   ord.sba 12 1
+//   ord.sf protect,high
+//   raw 08e008e108e208e308e408e508e608e708e808e908ea08eb08ec08ed08ee08ef
+//   ord.sba 13 1
+//   ord.sf protect,high
+//   raw 08f008f108f208f308f408f508f608f708f808f908fa08fb08fc08fd08fe08ffff
+//   ord.sba 14 1
+//   ord.sf modify
+//   ord.ic
+//   ord.sba 15 1
+//   ord.sf protect
+//  telnet.eor
+< 0x0   00000100017ec61140402902c0604200c1d7d340838881998183a38599a211c1
+< 0x20  501de80840084108420843084408450846084708480849084a084b084c084d08
+< 0x40  4e084f11c2601de80850085108520853085408550856085708580859085a085b
+< 0x60  085c085d085e085f11c3f01de808600861086208630864086508660867086808
+< 0x80  69086a086b086c086d086e086f11c5401de80870087108720873087408750876
+< 0xa0  087708780879087a087b087c087d087e087f11c6501de8088008810882088308
+< 0xc0  8408850886088708880889088a088b088c088d088e088f11c7601de808900891
+< 0xe0  08920893089408950896089708980899089a089b089c089d089e089f11c8f01d
+< 0x100 e808a008a108a208a308a408a508a608a708a808a908aa08ab08ac08ad08ae08
+< 0x120 af114a401de808b008b108b208b308b408b508b608b708b808b908ba08bb08bc
+< 0x140 08bd08be08bf114b501de808c008c108c208c308c408c508c608c708c808c908
+< 0x160 ca08cb08cc08cd08ce08cf114c601de808d008d108d208d308d408d508d608d7
+< 0x180 08d808d908da08db08dc08dd08de08df114df01de808e008e108e208e308e408
+< 0x1a0 e508e608e708e808e908ea08eb08ec08ed08ee08ef114f401de808f008f108f2
+< 0x1c0 08f308f408f508f608f708f808f908fa08fb08fc08fd08fe08ffff1150501dc1
+< 0x1e0 1311d1601d60ffef

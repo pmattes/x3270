@@ -1,0 +1,124 @@
+rows 43
+columns 80
+
+# Ask for TN3270E.
+telnet.do tn3270e
+flush
+
+# Ask for the device type.
+telnet.sb tn3270e
+ raw 0802 # send device-type
+ telnet.se
+flush
+
+# Tell them what the device type is.
+telnet.sb tn3270e
+ raw 0204 # device-type is
+ atext IBM-3278-4-E
+ raw 01 # connect
+ atext IBM0TEQO
+ telnet.se
+flush
+
+# Tell them what TN3270E we will support (no BIND-IMAGE)
+telnet.sb tn3270e
+ raw 0304 # functions is
+ raw 0204 #  RESPONSES SYSREQ
+ telnet.se
+flush
+
+# Draw the screen.
+tn3270e 3270-data none error-response 1
+ cmd.ewa reset,alarm,restore
+  ord.sba 1 1
+  ord.ic
+  ord.sfe 3270 protect fg default
+  text "Default"
+  ord.sba 2 1
+  ord.sfe 3270 protect fg neutralBlack
+  text "Neutral/Black (same as background)"
+  ord.sba 3 1
+  ord.sfe 3270 protect fg blue
+  text Blue
+  ord.sba 4 1
+  ord.sfe 3270 protect fg red
+  text Red
+  ord.sba 5 1
+  ord.sfe 3270 protect fg pink
+  text Pink
+  ord.sba 6 1
+  ord.sfe 3270 protect fg green
+  text Green
+  ord.sba 7 1
+  ord.sfe 3270 protect fg turquoise
+  text Turquoise
+  ord.sba 8 1
+  ord.sfe 3270 protect fg yellow
+  text Yellow
+  ord.sba 9 1
+  ord.sfe 3270 protect fg neutralWhite
+  text "Neutral/White (same as foreground)"
+  ord.sba 10 1
+  ord.sfe 3270 protect fg black
+  text Black
+  ord.sba 11 1
+  ord.sfe 3270 protect fg deepBlue
+  text "Deep Blue"
+  ord.sba 12 1
+  ord.sfe 3270 protect fg orange
+  text Orange
+  ord.sba 13 1
+  ord.sfe 3270 protect fg purple
+  text Purple
+  ord.sba 14 1
+  ord.sfe 3270 protect fg paleGreen
+  text "Pale Green"
+  ord.sba 15 1
+  ord.sfe 3270 protect fg paleTurquoise
+  text "Pale Turquoise"
+  ord.sba 16 1
+  ord.sfe 3270 protect fg grey
+  text Grey
+  ord.sba 17 1
+  ord.sfe 3270 protect fg white
+  text White
+  ord.sba 18 1
+  ord.sf protect
+  ord.sa fg default
+  text X
+  ord.sa fg neutralBlack
+  text X
+  ord.sa fg blue
+  text X
+  ord.sa fg red
+  text X
+  ord.sa fg pink
+  text X
+  ord.sa fg green
+  text X
+  ord.sa fg turquoise
+  text X
+  ord.sa fg yellow
+  text X
+  ord.sa fg neutralWhite
+  text X
+  ord.sa fg black
+  text X
+  ord.sa fg deepBlue
+  text X
+  ord.sa fg orange
+  text X
+  ord.sa fg purple
+  text X
+  ord.sa fg paleGreen
+  text X
+  ord.sa fg paleTurquoise
+  text X
+  ord.sa fg grey
+  text X
+  ord.sa fg white
+  text X
+  ord.sa all 00
+  ord.sf protect
+ telnet.eor
+flush

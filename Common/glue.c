@@ -672,8 +672,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	case OPT_BOOLEAN:
 	    *(bool *)opts[j].aoff = opts[j].flag;
 	    if (opts[j].res_name != NULL) {
-		add_resource(NewString(opts[j].name),
-			opts[j].flag? "true": "false");
+		add_resource(opts[j].name, opts[j].flag? "true": "false");
 	    }
 	    break;
 	case OPT_STRING:
@@ -684,7 +683,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    Free(*(char **)opts[j].aoff);
 	    *(const char **)opts[j].aoff = NewString(argv[++i]);
 	    if (opts[j].res_name != NULL) {
-		add_resource(NewString(opts[j].res_name), argv[i]);
+		add_resource(opts[j].res_name, argv[i]);
 	    }
 	    break;
 	case OPT_XRM:
@@ -723,7 +722,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    }
 	    *(int *)opts[j].aoff = atoi(argv[++i]);
 	    if (opts[j].res_name != NULL) {
-		add_resource(NewString(opts[j].name), NewString(argv[i]));
+		add_resource(opts[j].name, argv[i]);
 	    }
 	    break;
 	case OPT_V:
@@ -1331,6 +1330,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	strncpy(rsname, name, rnlen);
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
+	Free(rsname);
     }
 }
 

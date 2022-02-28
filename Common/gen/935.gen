@@ -1,0 +1,45 @@
+rows 43
+columns 80
+
+# Ask for TN3270E.
+telnet.do tn3270e
+flush
+
+# Ask for the device type.
+telnet.sb tn3270e
+ raw 0802 # send device-type
+ telnet.se
+flush
+
+# Tell them what the device type is.
+telnet.sb tn3270e
+ raw 0204 # device-type is
+ atext IBM-3278-4-E
+ raw 01 # connect
+ atext TEST
+ telnet.se
+flush
+
+# Tell them what TN3270E we will support (no BIND-IMAGE)
+telnet.sb tn3270e
+ raw 0304 # functions is
+ raw 0204 #  RESPONSES SYSREQ
+ telnet.se
+flush
+
+# Draw the screen.
+tn3270e 3270-data none error-response 1
+ cmd.ewa reset,alarm,restore
+  ord.sba 1 1
+  ord.sfe 3270 protect fg default
+  text "Chinese test for code page 935"
+  ord.sba 2 1
+  ord.sf protect,high
+  raw 400e4d9b57f05ab95c7c50ec50ed506b545f0ff20e5ac10ff1f40e54d45bf64a765b79504a4d9b57f05ab94a4357f04e8259e8426b56fc54a00ff2f0f2f10e52e954aa4d9b515d4e824f4859e856e048b748eb50ec548a50974e844948426b59a954944e844fda5bd95bc65c974dc24f9252e95b9f4cad4d445c98425e54b64ba74ad84f994d4459b44fac4ec253bc57c75af54a444dcc4c9f57f059b456d755e150a652d058cf59b4644350a64c425b594b644aea55a843410f
+  ord.sba 5 1
+  ord.sf modify
+  ord.ic
+  ord.sba 6 1
+  ord.sf protect
+ telnet.eor
+flush

@@ -44,7 +44,7 @@ def suffix_test(program, suffix, children):
     os.write(handle, pfx2 + b'.model: 3279-3-E\n')
     os.close(handle)
 
-    # Start b3270.
+    # Start the emulator.
     port, ts = ct.unused_port()
     emu = Popen(ct.vgwrap([program, '-httpd', str(port), file]), stdout=DEVNULL)
     children.append(emu)
@@ -55,10 +55,11 @@ def suffix_test(program, suffix, children):
     r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TerminalName)')
     j = r.json()
     assert 'foo' == j['result'][0]
-    r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model))')
+    r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
     j = r.json()
     assert '3279-3-E' == j['result'][0]
 
     # Wait for the process to exit.
-    requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit())')
+    requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
     ct.vgwait(emu)
+    os.unlink(file)

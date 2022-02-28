@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2020 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1375,7 +1375,7 @@ pr3287_toggle_name(const char *name, const char *value)
     }
 
     /* Save the new value. */
-    add_resource(ResPrinterName, NewString(value));
+    add_resource(ResPrinterName, value);
 
     /* Stop the current session. */
     pr3287_disconnected();
@@ -1406,7 +1406,7 @@ pr3287_toggle_codepage(const char *name, const char *value)
     }
 
     /* Save the new value. */
-    add_resource(ResPrinterCodepage, NewString(value));
+    add_resource(ResPrinterCodepage, value);
 
     /* Stop the current session. */
     pr3287_disconnected();

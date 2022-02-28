@@ -784,7 +784,7 @@ add_resource(const char *name, const char *value)
     }
     d = Malloc(sizeof(struct dresource));
     d->next = NULL;
-    d->name = name;
+    d->name = NewString(name);
     d->value = NewString(value);
     *drdb_next = d;
     drdb_next = &d->next;

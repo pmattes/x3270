@@ -1,0 +1,78 @@
+rows 43
+columns 80
+
+# Ask for TN3270E.
+telnet.do tn3270e
+flush
+
+# Ask for the device type.
+telnet.sb tn3270e
+ raw 0802 # send device-type
+ telnet.se
+flush
+
+# Tell them what the device type is.
+telnet.sb tn3270e
+ raw 0204 # device-type is
+ atext IBM-3278-4-E
+ raw 01 # connect
+ atext TEST
+ telnet.se
+flush
+
+# Tell them what TN3270E we will support (no BIND-IMAGE)
+telnet.sb tn3270e
+ raw 0304 # functions is
+ raw 0204 #  RESPONSES SYSREQ
+ telnet.se
+flush
+
+# Draw the screen.
+tn3270e 3270-data none error-response 1
+ cmd.ewa reset,alarm,restore
+  ord.sba 1 1
+  ord.sfe 3270 protect fg default
+  text "All printable characters"
+  ord.sba 2 1
+  ord.sf protect,high
+  raw 404142434445464748494a4b4c4d4e4f
+  ord.sba 3 1
+  ord.sf protect,high
+  raw 505152535455565758595a5b5c5d5e5f
+  ord.sba 4 1
+  ord.sf protect,high
+  raw 606162636465666768696a6b6c6d6e6f
+  ord.sba 5 1
+  ord.sf protect,high
+  raw 707172737475767778797a7b7c7d7e7f
+  ord.sba 6 1
+  ord.sf protect,high
+  raw 808182838485868788898a8b8c8d8e8f
+  ord.sba 7 1
+  ord.sf protect,high
+  raw 909192939495969798999a9b9c9d9e9f
+  ord.sba 8 1
+  ord.sf protect,high
+  raw a0a1a2a3a4a5a6a7a8a9aaabacadaeaf
+  ord.sba 9 1
+  ord.sf protect,high
+  raw b0b1b2b3b4b5b6b7b8b9babbbcbdbebf
+  ord.sba 10 1
+  ord.sf protect,high
+  raw c0c1c2c3c4c5c6c7c8c9cacbcccdcecf
+  ord.sba 11 1
+  ord.sf protect,high
+  raw d0d1d2d3d4d5d6d7d8d9dadbdcdddedf
+  ord.sba 12 1
+  ord.sf protect,high
+  raw e0e1e2e3e4e5e6e7e8e9eaebecedeeef
+  ord.sba 13 1
+  ord.sf protect,high
+  raw f0f1f2f3f4f5f6f7f8f9fafbfcfdfeffff
+  ord.sba 14 1
+  ord.sf modify
+  ord.ic
+  ord.sba 15 1
+  ord.sf protect
+ telnet.eor
+flush

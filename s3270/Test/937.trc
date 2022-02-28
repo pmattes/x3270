@@ -1,0 +1,45 @@
+// rows 43
+// columns 80
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  raw 0802 # send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  raw 0204 # device-type is
+//  atext IBM-3278-4-E
+//  raw 01 # connect
+//  atext TEST
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d342d450154455354fff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  raw 0304 # functions is
+//  raw 0204 #  RESPONSES SYSREQ
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Draw the screen.
+// tn3270e 3270-data none error-response 1
+//  cmd.ewa reset,alarm,restore
+//   ord.sba 1 1
+//   ord.sfe 3270 protect fg default
+//   text "Chinese test for code page 937"
+//   ord.sba 2 1
+//   ord.sf protect,high
+//   raw 400e637658414c844cce5088565a65ca57484ced6685426b5b9d59c74ff154704ced668557485d60426b4d9463765d9254e84df04e545ee95cf750cf4c8350fb426b5ced4d7b4c9d4d53649b667e5d704d7f5d9254e8426b619956794dd859c74ff15d704d7f425e4c8366ca59c74ff151ae4c834c89505f584143410f
+//   ord.sba 5 1
+//   ord.sf modify
+//   ord.ic
+//   ord.sba 6 1
+//   ord.sf protect
+//  telnet.eor
+< 0x0   00000100017ec61140402902c0604200c388899585a28540a385a2a340869699
+< 0x20  4083968485409781878540f9f3f711c1501de8400e637658414c844cce508856
+< 0x40  5a65ca57484ced6685426b5b9d59c74ff154704ced668557485d60426b4d9463
+< 0x60  765d9254e84df04e545ee95cf750cf4c8350fb426b5ced4d7b4c9d4d53649b66
+< 0x80  7e5d704d7f5d9254e8426b619956794dd859c74ff15d704d7f425e4c8366ca59
+< 0xa0  c74ff151ae4c834c89505f584143410f11c5401dc11311c6501d60ffef

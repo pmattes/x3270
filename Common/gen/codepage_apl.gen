@@ -1,0 +1,78 @@
+rows 43
+columns 80
+
+# Ask for TN3270E.
+telnet.do tn3270e
+flush
+
+# Ask for the device type.
+telnet.sb tn3270e
+ raw 0802 # send device-type
+ telnet.se
+flush
+
+# Tell them what the device type is.
+telnet.sb tn3270e
+ raw 0204 # device-type is
+ atext IBM-3278-4-E
+ raw 01 # connect
+ atext TEST
+ telnet.se
+flush
+
+# Tell them what TN3270E we will support (no BIND-IMAGE)
+telnet.sb tn3270e
+ raw 0304 # functions is
+ raw 0204 #  RESPONSES SYSREQ
+ telnet.se
+flush
+
+# Draw the screen.
+tn3270e 3270-data none error-response 1
+ cmd.ewa reset,alarm,restore
+  ord.sba 1 1
+  ord.sfe 3270 protect fg default
+  text "APL characters"
+  ord.sba 2 1
+  ord.sf protect,high
+  raw 0840084108420843084408450846084708480849084a084b084c084d084e084f
+  ord.sba 3 1
+  ord.sf protect,high
+  raw 0850085108520853085408550856085708580859085a085b085c085d085e085f
+  ord.sba 4 1
+  ord.sf protect,high
+  raw 0860086108620863086408650866086708680869086a086b086c086d086e086f
+  ord.sba 5 1
+  ord.sf protect,high
+  raw 0870087108720873087408750876087708780879087a087b087c087d087e087f
+  ord.sba 6 1
+  ord.sf protect,high
+  raw 0880088108820883088408850886088708880889088a088b088c088d088e088f
+  ord.sba 7 1
+  ord.sf protect,high
+  raw 0890089108920893089408950896089708980899089a089b089c089d089e089f
+  ord.sba 8 1
+  ord.sf protect,high
+  raw 08a008a108a208a308a408a508a608a708a808a908aa08ab08ac08ad08ae08af
+  ord.sba 9 1
+  ord.sf protect,high
+  raw 08b008b108b208b308b408b508b608b708b808b908ba08bb08bc08bd08be08bf
+  ord.sba 10 1
+  ord.sf protect,high
+  raw 08c008c108c208c308c408c508c608c708c808c908ca08cb08cc08cd08ce08cf
+  ord.sba 11 1
+  ord.sf protect,high
+  raw 08d008d108d208d308d408d508d608d708d808d908da08db08dc08dd08de08df
+  ord.sba 12 1
+  ord.sf protect,high
+  raw 08e008e108e208e308e408e508e608e708e808e908ea08eb08ec08ed08ee08ef
+  ord.sba 13 1
+  ord.sf protect,high
+  raw 08f008f108f208f308f408f508f608f708f808f908fa08fb08fc08fd08fe08ffff
+  ord.sba 14 1
+  ord.sf modify
+  ord.ic
+  ord.sba 15 1
+  ord.sf protect
+ telnet.eor
+flush
