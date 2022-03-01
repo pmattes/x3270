@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -4002,7 +4002,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 
     switch (state) {
     case BASE:
-	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    remargin(orig_col);
 	}
 	break;
@@ -4010,7 +4010,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
     case HEX:
 	key_UCharacter((unsigned char) literal, KT_STD, ia, true);
 	state = BASE;
-	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    remargin(orig_col);
 	}
 	break;
@@ -4018,7 +4018,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
 	key_Character((unsigned char) literal, false, true, true, NULL);
 	state = BASE;
-	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    remargin(orig_col);
 	}
 	break;
