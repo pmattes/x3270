@@ -29,18 +29,18 @@
 
 import unittest
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestC3270BasicCmdline(unittest.TestCase):
+class TestC3270BasicCmdline(cti.cti):
 
     # c3270 -v and -help test
     def test_c3270_v_help(self):
-        ct.check_dash_v('c3270', sys.platform.startswith('win'))
-        ct.check_help('c3270')
-        ct.check_bad('c3270')
-        ct.check_bad2('c3270')
-        ct.check_toomany('c3270')
-        ct.check_incomplete('c3270')
+        self.check_dash_v('c3270', sys.platform.startswith('win'))
+        self.check_help('c3270')
+        self.check_bad('c3270')
+        self.check_bad2('c3270')
+        self.check_toomany('c3270')
+        self.check_incomplete('c3270')
 
 if __name__ == '__main__':
     unittest.main()

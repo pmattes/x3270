@@ -1,0 +1,250 @@
+20220301.183841.835 Trace started
+ Version: s3270 v4.1ga12 Mon Feb 21 17:35:40 UTC 2022 pdm
+ Build options: --disable-local-process
+ Command: ws3270.exe ws3270.exe -tracefile C:\temp\cursor.trace
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ ANSI codepage: 1252
+ Local codepage: 1252
+ Host codepage: 37
+ Docs: (null)
+ Install dir: c:\Program Files\...
+ Desktop: (null)
+ Settings: acceptHostname= aidWait=true alwaysInsert=false blankFill=true
+  clientCert= codePage=bracket ftBufferSize=16384 httpd= insertMode=false
+  lineMode=true lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true oversize= proxy=
+  reconnect=false reverseInputMode=false rightToLeftMode=false
+  screenTrace=false scriptPort= showTiming=false startTls=true termName=
+  trace=true unlockDelay=false unlockDelayMs=350 verifyHostCert=true
+ Connection state: connected-tn3270e
+ TELNET state:
+< 0x0   fffd28fffa28020449424d2d333237382d342d45014149503339334235fff0ff
+< 0x20  fa280304000204fff0030000000031010303b1903080008787c7870002800000
+< 0x40  000018502b507f000007e3e4c2d7d9f0f2000008c1c9d7f3f9f3c2f5ffef
+ Screen contents (TN3270E-3270) formatted:
+< 0x0   000000000005c22901c0f0c3c5e3d90000000000000000000000000000002901
+< 0x20  c0f8c3c9c3e240e39981838540c39695a399969340c68183899389a3a8000000
+< 0x40  0000000000000000000000000000002901c0f0d9e3e3f22901c0f0c3c9c3e2e3
+< 0x60  f7e3f20000000000000000000000000000000000000000000000000000000000
+< 0x80  0000000000000000000000000000000000000000000000000000000000000000
+< 0xa0  000000000000000000000000000000000000002901c0f0e3a8978540899540a8
+< 0xc0  96a49940838896898385a24b0000000000000000000000000000000000000000
+< 0xe0  0000000000000000000000000000000000000000000000000000000000000000
+< 0x100 0000000000000000000000000000000000000000000000000000000000000000
+< 0x120 0000000000000000000000000000000000000000000000000000000000000000
+< 0x140 000000000000000000000000000000000000000000002901c0f8c9a385940000
+< 0x160 0000000000000000000000000000000000000000000000000000002901c0f8c3
+< 0x180 88968983850000000000002901c0f8d796a2a28982938540838896898385a200
+< 0x1a0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x1c0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x1e0 0000000000000000000000000000000000000000000000000000000000000029
+< 0x200 01c0f0c995a3859995819340e39981838540e2a381a3a4a2404040404040407e
+< 0x220 7e7e6e002901c040e2e3c1d9e3c5c42901c0f0400000002901c0f0e2e3c199a3
+< 0x240 85846b40e2e3d697978584000000000000000000000000000000002901c0f0c9
+< 0x260 95a3859995819340e39981838540e38182938540e289a9854040407e7e7e6e00
+< 0x280 2901c040f4f0f9f64040402901c0f0d20000002901c0f0f1f6d2406040f1f0f4
+< 0x2a0 f8f5f7f6d2000000000000000000000000000000000000000000000000000000
+< 0x2c0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x2e0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x300 000000000000002901c0f0c1a4a78993898199a840e39981838540e2a381a3a4
+< 0x320 a24040404040407e7e7e6e002901c040e2e3d6d7d7c5c42901c0f04000000029
+< 0x340 01c0f0e2e3c199a385846b40e2e3d6979785846b40d781a4a285840000000000
+< 0x360 0000002901c0f0c1a4a78993898199a840e39981838540c481a381a285a34040
+< 0x380 4040407e7e7e6e002901c040c12901c0f0400000000000000000002901c0f0c1
+< 0x3a0 6b40c20000000000000000000000000000000000000000000000000000000029
+< 0x3c0 01c0f0c1a4a78993898199a840e2a689a3838840e2a381a3a4a240404040407e
+< 0x3e0 7e7e6e002901c040d5c5e7e32901c0f0400000000000002901c0f0d5d66b40d5
+< 0x400 c5a7a36b40c19393000000000000000000000000000000000000000000000000
+< 0x420 0000000000000000000000000000000000000000000000000000000000000000
+< 0x440 0000000000000000000000000000000000000000000000000000000000000000
+< 0x460 00000000000000000000002901c0f0c7e3c640e39981838540e2a381a3a4a240
+< 0x480 40404040404040404040407e7e7e6e002901c040e2e3d6d7d7c5c42901c0f040
+< 0x4a0 0000002901c0f0e2e3c199a385846b40e2e3d697978584000000000000000000
+< 0x4c0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x4e0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x500 00000000000000000000000000000000000000000000002901c0f0d481899540
+< 0x520 e2a8a2a3859440e39981838540c69381874040404040407e7e7e6e002901c040
+< 0x540 d6d5402901c0f040000000000000002901c0f0d6d56b40d6c686000000000000
+< 0x560 000000000000000000000000000000000000002901c0f0d481899540e4a28599
+< 0x580 40e39981838540c693818740404040404040407e7e7e6e002901c040d6d54029
+< 0x5a0 01c0f040000000000000002901c0f0d6d56b40d6c68600000000000000000000
+< 0x5c0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x5e0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x600 0000000000000000000000000000000000000000000000000000000000000029
+< 0x620 01c0f0e68885954086899589a28885846b40979985a2a240c5d5e3c5d94b0000
+< 0x640 0000000000000000000000000000000000000000000000000000000000000000
+< 0x660 0000000000000000000000000000000000000000000000000000000000000000
+< 0x680 0000000000000000000000000000000000000000000000000000000000000000
+< 0x6a0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x6c0 00002901c0c94040404040404040404040404040404040404040404040404040
+< 0x6e0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x700 4040404040404040404040402901c0f040000000000000000000000000000000
+< 0x720 0000000000000000000000000000000000000000000000000000000000000000
+< 0x740 0000000000000000000000000000000000000000000000000000000000000000
+< 0x760 0000000000000000000000000000000000000000000000000000000000000000
+< 0x780 0000000000000000000000000000000000000000000000000000000000000000
+< 0x7a0 0000000000000000000000000000000000000000000000002901c0f0d7c6f17e
+< 0x7c0 c88593974040f37ed8a489a34040f47ec396949796958595a3a2002901c0f0f5
+< 0x7e0 7ee3859961e399954040f97ec59999969940d389a2a300000000000000000000
+< 0x800 000000000000000000000000000011c8c313ffef
+ Data stream:
+20220301.183841.835 Macro[#24.2] complete, success
+20220301.183841.835 CB(s3stdin)[#24.1] RUNNING -> IDLE (about to resume)
+20220301.183841.835 CB(s3stdin)[#24.1] child task done, success
+20220301.183841.835 Output for s3stdin: U F U C(MY_HOST) I 4 24 80 6 35 0x0 0.000/ok
+20220301.183841.835 CB(s3stdin)[#24.1] complete, success
+20220301.183841.835 CB(s3stdin)[#24] complete
+20220301.183841.835 Waiting for 3 events
+20220301.183848.052 Got event 0x2
+20220301.183848.052 s3stdin read 'string ffffff'
+20220301.183848.052 CB(s3stdin)[#25] started (owait)
+20220301.183848.052 CB(s3stdin)[#25.1] IDLE -> RUNNING (child task to be pushed next)
+20220301.183848.052 Macro[#25.2] IDLE -> RUNNING (fresh push)
+20220301.183848.052 lazya_flush: 26 slots
+20220301.183848.052 Macro[#25.2] RUNNING -> IDLE (about to resume)
+20220301.183848.052 Macro[#25.2] running
+20220301.183848.052 Macro[#25.2] IDLE -> RUNNING (executing)
+20220301.183848.052 Macro[#25.2] 'string ffffff'
+20220301.183848.052 script -> String("ffffff")
+20220301.183848.052 CB(String)[#25.3] IDLE -> NEED_RUN (need to call run callback)
+20220301.183848.052 CB(String)[#25.3] NEED_RUN -> IDLE (about to resume)
+20220301.183848.052 Running CB(String)[#25.3]
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052  string -> Key(U+0066)
+20220301.183848.052 CB(String)[#25.3] is complete, success
+20220301.183848.052 CB(String)[#25.3] complete, success
+20220301.183848.052 Macro[#25.2] RUNNING -> IDLE (about to resume)
+20220301.183848.052 Macro[#25.2] running
+20220301.183848.052 Macro[#25.2] complete, success
+20220301.183848.052 CB(s3stdin)[#25.1] RUNNING -> IDLE (about to resume)
+20220301.183848.052 CB(s3stdin)[#25.1] child task done, success
+20220301.183848.052 Output for s3stdin: U F U C(MY_HOST) I 4 24 80 6 41 0x0 0.000/ok
+20220301.183848.052 CB(s3stdin)[#25.1] complete, success
+20220301.183848.052 CB(s3stdin)[#25] complete
+20220301.183848.052 Waiting for 3 events
+20220301.183850.318 Got event 0x2
+20220301.183850.318 s3stdin read 'ascii'
+20220301.183850.318 CB(s3stdin)[#26] started (owait)
+20220301.183850.318 CB(s3stdin)[#26.1] IDLE -> RUNNING (child task to be pushed next)
+20220301.183850.318 Macro[#26.2] IDLE -> RUNNING (fresh push)
+20220301.183850.318 lazya_flush: 46 slots
+20220301.183850.318 Macro[#26.2] RUNNING -> IDLE (about to resume)
+20220301.183850.318 Macro[#26.2] running
+20220301.183850.318 Macro[#26.2] IDLE -> RUNNING (executing)
+20220301.183850.318 Macro[#26.2] 'ascii'
+20220301.183850.318 script -> Ascii()
+20220301.183850.318 Output for Macro[#26.2]: ' CETR                CICS Trace Control Facility                   RTT2 CICST7T2'
+20220301.183850.318 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.318 Output for Macro[#26.2]: ' Type in your choices.                                                          '
+20220301.183850.318 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.318 Output for Macro[#26.2]: ' Item                              Choice       Possible choices                '
+20220301.183850.318 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.318 Output for Macro[#26.2]: ' Internal Trace Status       ===>  ffffffD      STArted, STOpped                '
+20220301.183850.318 Output for Macro[#26.2]: ' Internal Trace Table Size   ===>  4096    K    16K - 1048576K                  '
+20220301.183850.318 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.334 Output for Macro[#26.2]: ' Auxiliary Trace Status      ===>  STOPPED      STArted, STOpped, Paused        '
+20220301.183850.335 Output for Macro[#26.2]: ' Auxiliary Trace Dataset     ===>  A            A, B                            '
+20220301.183850.335 Output for Macro[#26.2]: ' Auxiliary Switch Status     ===>  NEXT         NO, NExt, All                   '
+20220301.183850.335 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.335 Output for Macro[#26.2]: ' GTF Trace Status            ===>  STOPPED      STArted, STOpped                '
+20220301.183850.335 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.335 Output for Macro[#26.2]: ' Main System Trace Flag      ===>  ON           ON, OFf                         '
+20220301.183850.335 Output for Macro[#26.2]: ' Main User Trace Flag        ===>  ON           ON, OFf                         '
+20220301.183850.335 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.335 Output for Macro[#26.2]: ' When finished, press ENTER.                                                    '
+20220301.183850.335 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.352 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.352 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.352 Output for Macro[#26.2]: '                                                                                '
+20220301.183850.352 Output for Macro[#26.2]: ' PF1=Help  3=Quit  4=Components  5=Ter/Trn  9=Error List                        '
+20220301.183850.352 Macro[#26.2] complete, success
+20220301.183850.352 CB(s3stdin)[#26.1] RUNNING -> IDLE (about to resume)
+20220301.183850.352 CB(s3stdin)[#26.1] child task done, success
+20220301.183850.352 Output for s3stdin: U F U C(MY_HOST) I 4 24 80 6 41 0x0 0.033/ok
+20220301.183850.352 CB(s3stdin)[#26.1] complete, success
+20220301.183850.352 CB(s3stdin)[#26] complete
+20220301.183850.352 Waiting for 3 events
+20220301.183856.352 Got event 0x2
+20220301.183856.352 s3stdin read 'string f'
+20220301.183856.352 CB(s3stdin)[#27] started (owait)
+20220301.183856.352 CB(s3stdin)[#27.1] IDLE -> RUNNING (child task to be pushed next)
+20220301.183856.352 Macro[#27.2] IDLE -> RUNNING (fresh push)
+20220301.183856.352 lazya_flush: 48 slots
+20220301.183856.352 Macro[#27.2] RUNNING -> IDLE (about to resume)
+20220301.183856.352 Macro[#27.2] running
+20220301.183856.352 Macro[#27.2] IDLE -> RUNNING (executing)
+20220301.183856.352 Macro[#27.2] 'string f'
+20220301.183856.352 script -> String("f")
+20220301.183856.352 CB(String)[#27.3] IDLE -> NEED_RUN (need to call run callback)
+20220301.183856.352 CB(String)[#27.3] NEED_RUN -> IDLE (about to resume)
+20220301.183856.352 Running CB(String)[#27.3]
+20220301.183856.352  string -> Key(U+0066)
+20220301.183856.352 CB(String)[#27.3] is complete, success
+20220301.183856.352 CB(String)[#27.3] complete, success
+20220301.183856.352 Macro[#27.2] RUNNING -> IDLE (about to resume)
+20220301.183856.352 Macro[#27.2] running
+20220301.183856.352 Macro[#27.2] complete, success
+20220301.183856.352 CB(s3stdin)[#27.1] RUNNING -> IDLE (about to resume)
+20220301.183856.352 CB(s3stdin)[#27.1] child task done, success
+20220301.183856.352 Output for s3stdin: U F U C(MY_HOST) I 4 24 80 7 41 0x0 0.000/ok
+20220301.183856.352 CB(s3stdin)[#27.1] complete, success
+20220301.183856.352 CB(s3stdin)[#27] complete
+20220301.183856.352 Waiting for 3 events
+20220301.183859.251 Got event 0x2
+20220301.183859.251 s3stdin read 'ascii'
+20220301.183859.251 CB(s3stdin)[#28] started (owait)
+20220301.183859.251 CB(s3stdin)[#28.1] IDLE -> RUNNING (child task to be pushed next)
+20220301.183859.251 Macro[#28.2] IDLE -> RUNNING (fresh push)
+20220301.183859.251 lazya_flush: 41 slots
+20220301.183859.251 Macro[#28.2] RUNNING -> IDLE (about to resume)
+20220301.183859.251 Macro[#28.2] running
+20220301.183859.251 Macro[#28.2] IDLE -> RUNNING (executing)
+20220301.183859.251 Macro[#28.2] 'ascii'
+20220301.183859.251 script -> Ascii()
+20220301.183859.251 Output for Macro[#28.2]: ' CETR                CICS Trace Control Facility                   RTT2 CICST7T2'
+20220301.183859.254 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.254 Output for Macro[#28.2]: ' Type in your choices.                                                          '
+20220301.183859.254 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.254 Output for Macro[#28.2]: ' Item                              Choice       Possible choices                '
+20220301.183859.254 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.254 Output for Macro[#28.2]: ' Internal Trace Status       ===>  fffffff      STArted, STOpped                '
+20220301.183859.254 Output for Macro[#28.2]: ' Internal Trace Table Size   ===>  4096    K    16K - 1048576K                  '
+20220301.183859.254 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.254 Output for Macro[#28.2]: ' Auxiliary Trace Status      ===>  STOPPED      STArted, STOpped, Paused        '
+20220301.183859.254 Output for Macro[#28.2]: ' Auxiliary Trace Dataset     ===>  A            A, B                            '
+20220301.183859.254 Output for Macro[#28.2]: ' Auxiliary Switch Status     ===>  NEXT         NO, NExt, All                   '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: ' GTF Trace Status            ===>  STOPPED      STArted, STOpped                '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: ' Main System Trace Flag      ===>  ON           ON, OFf                         '
+20220301.183859.269 Output for Macro[#28.2]: ' Main User Trace Flag        ===>  ON           ON, OFf                         '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: ' When finished, press ENTER.                                                    '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.269 Output for Macro[#28.2]: '                                                                                '
+20220301.183859.284 Output for Macro[#28.2]: ' PF1=Help  3=Quit  4=Components  5=Ter/Trn  9=Error List                        '
+20220301.183859.284 Macro[#28.2] complete, success
+20220301.183859.284 CB(s3stdin)[#28.1] RUNNING -> IDLE (about to resume)
+20220301.183859.284 CB(s3stdin)[#28.1] child task done, success
+20220301.183859.284 Output for s3stdin: U F U C(MY_HOST) I 4 24 80 7 41 0x0 0.034/ok
+20220301.183859.284 CB(s3stdin)[#28.1] complete, success
+20220301.183859.284 CB(s3stdin)[#28] complete
+20220301.183859.284 Waiting for 3 events
+20220301.183907.451 Got event 0x2
+20220301.183907.451 s3stdin read 'toggle(trace)'
+20220301.183907.451 CB(s3stdin)[#29] started (owait)
+20220301.183907.451 CB(s3stdin)[#29.1] IDLE -> RUNNING (child task to be pushed next)
+20220301.183907.451 Macro[#29.2] IDLE -> RUNNING (fresh push)
+20220301.183907.451 lazya_flush: 48 slots
+20220301.183907.451 Macro[#29.2] RUNNING -> IDLE (about to resume)
+20220301.183907.451 Macro[#29.2] running
+20220301.183907.451 Macro[#29.2] IDLE -> RUNNING (executing)
+20220301.183907.451 Macro[#29.2] 'toggle(trace)'
+20220301.183907.451 script -> Toggle("trace")
+20220301.183907.451 Trace stopped

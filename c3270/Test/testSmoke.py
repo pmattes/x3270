@@ -29,64 +29,51 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
 import sys
 if not sys.platform.startswith('win'):
     import pty
 import os
-import time
 import re
 import os.path
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270Smoke(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestC3270Smoke(cti.cti):
 
     # c3270 3270 smoke test
     def test_c3270_3270_smoke(self):
 
         # Start 'playback' to read s3270's output.
-        playback_port, ts = ct.unused_port()
+        playback_port, ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
             "c3270/Test/ibmlink2.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(playback_port)
+        self.check_listen(playback_port)
         ts.close()
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, ts = ct.unused_port()
+        c3270_port, ts = cti.unused_port()
         os.environ['TERM'] = 'xterm-256color'
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             ts.close()
-            os.execvp(ct.vgwrap_ecmd('c3270'),
-                ct.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
+            os.execvp(cti.vgwrap_ecmd('c3270'),
+                cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
                     "-httpd", f"127.0.0.1:{c3270_port}",
                     f"127.0.0.1:{playback_port}"]))
 
         # Parent process.
         
         # Make sure c3270 started.
-        ct.check_listen(c3270_port)
+        self.check_listen(c3270_port)
         ts.close()
 
         # Write the stream to c3270.
         playback.stdin.write(b'r\nr\nr\nr\nr\n')
         playback.stdin.flush()
-        ct.check_push(playback, c3270_port, 1)
+        self.check_push(playback, c3270_port, 1)
         playback.stdin.write(b'e\n')
         playback.stdin.flush()
 
@@ -127,7 +114,7 @@ class TestC3270Smoke(unittest.TestCase):
         playback.stdin.close()
         playback.kill()
         playback.wait(timeout=2)
-        ct.vgwait_pid(pid)
+        self.vgwait_pid(pid)
 
 if __name__ == '__main__':
     unittest.main()

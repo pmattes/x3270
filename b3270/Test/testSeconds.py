@@ -31,39 +31,27 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
 import json
-import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestB3270Seconds(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestB3270Seconds(cti.cti):
 
     # b3270 XML seconds test
     def test_b3270_xml_seconds(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'run', { 'actions': "Wait(0.1,Seconds)" })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
 
         # Get the result.
         output = b''
         while True:
-            line = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            line = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
             self.assertNotEqual(b'', line)
             output += line
             if b'run-result' in line:
@@ -75,7 +63,7 @@ class TestB3270Seconds(unittest.TestCase):
         b3270.stdin.write(b'</b3270-in>\n')
         b3270.stdin.close()
         b3270.stdout.close()
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
         # Check.
         a = out.find('./run-result')
@@ -87,7 +75,7 @@ class TestB3270Seconds(unittest.TestCase):
     # b3270 JSON seconds test
     def test_b3270_json_seconds(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -97,7 +85,7 @@ class TestB3270Seconds(unittest.TestCase):
 
         # Get the result.
         while True:
-            line = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            line = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
             self.assertNotEqual(b'', line)
             if b'run-result' in line:
                 break
@@ -106,7 +94,7 @@ class TestB3270Seconds(unittest.TestCase):
         # Wait for the processes to exit.
         b3270.stdin.close()
         b3270.stdout.close()
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
         # Check.
         run_result = out['run-result']

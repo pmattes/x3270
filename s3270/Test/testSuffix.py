@@ -29,32 +29,21 @@
 
 import unittest
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 import Common.Test.suffix as suffix
 
-class TestS3270Suffix(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Suffix(cti.cti):
 
     def test_s3270_s3270(self):
-        suffix.suffix_test('s3270', '.s3270', self.children)
+        suffix.suffix_test(self, 's3270', '.s3270', self.children)
 
     @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-specific test')
     def test_s3270_ws3270(self):
-        suffix.suffix_test('s3270', '.ws3270', self.children)
+        suffix.suffix_test(self, 's3270', '.ws3270', self.children)
 
     @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-specific test')
     def test_s3270_ws3(self):
-        suffix.suffix_test('s3270', '.ws3', self.children)
+        suffix.suffix_test(self, 's3270', '.ws3', self.children)
 
 if __name__ == '__main__':
     unittest.main()

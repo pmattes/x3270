@@ -29,28 +29,15 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import subprocess
 import os
-import stat
 import tempfile
 import sys
 import requests
 import filecmp
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipUnless(sys.platform.startswith("win"), "Only works on native Windows")
-class TestWc3270Smoke(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestWc3270Smoke(cti.cti):
 
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
@@ -58,21 +45,21 @@ class TestWc3270Smoke(unittest.TestCase):
             cand = dir + '\\' + exe
             if os.path.exists(cand):
                 return (dir, cand)
-        assert False
+        self.assertTrue(false, f'Could not find {exe} in PATH')
 
     # wc3270 smoke test
     def test_wc3270_smoke(self):
 
         # Start 'playback' to read wc3270's output.
-        playback_port, ts = ct.unused_port()
+        playback_port, ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(playback_port)
+        self.check_listen(playback_port)
         ts.close()
 
         # Create a session file.
-        wc3270_port, ts = ct.unused_port()
+        wc3270_port, ts = cti.unused_port()
         (handle, sname) = tempfile.mkstemp(suffix='.wc3270')
         os.write(handle, f'wc3270.title: wc3270\n'.encode('utf8'))
         os.write(handle, f'wc3270.httpd: 127.0.0.1:{wc3270_port}\n'.encode('utf8'))
@@ -80,7 +67,7 @@ class TestWc3270Smoke(unittest.TestCase):
         os.close(handle)
 
         # Create a shortcut.
-        (handle, lname) = tempfile.mkstemp(suffix='.lnk');
+        (handle, lname) = tempfile.mkstemp(suffix='.lnk')
         os.close(handle)
         wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
         cmd = f'mkshort {wc3270_dir} wc3270.exe {lname} {sname}'
@@ -88,7 +75,7 @@ class TestWc3270Smoke(unittest.TestCase):
 
         # Start wc3270 in its own window by starting the link.
         self.assertEqual(0, os.system(f'start {lname}'))
-        ct.check_listen(wc3270_port)
+        self.check_listen(wc3270_port)
         ts.close()
         os.unlink(sname)
         os.unlink(lname)
@@ -96,7 +83,7 @@ class TestWc3270Smoke(unittest.TestCase):
         # Feed wc3270 some data.
         playback.stdin.write(b'r\nr\nr\nr\n')
         playback.stdin.flush()
-        ct.check_push(playback, wc3270_port, 1)
+        self.check_push(playback, wc3270_port, 1)
 
         # Dump the window contents.
         (handle, name) = tempfile.mkstemp(suffix='.bmp')

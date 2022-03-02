@@ -32,37 +32,26 @@ from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import os
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
-class TestPr3287Smoke(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestPr3287Smoke(cti.cti):
 
     # pr3287 smoke test
     def test_pr3287_smoke(self):
 
         # Start 'playback' to feed data to pr3287.
-        port, ts = ct.unused_port()
+        port, ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(port),
             "pr3287/Test/smoke.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Start pr3287.
         (po_handle, po_name) = tempfile.mkstemp()
         (sy_handle, sy_name) = tempfile.mkstemp()
-        pr3287 = Popen(ct.vgwrap(["pr3287", "-command",
+        pr3287 = Popen(cti.vgwrap(["pr3287", "-command",
             f"cat >'{po_name}'; date >'{sy_name}'", f"127.0.0.1:{port}"]))
         self.children.append(pr3287)
 
@@ -71,13 +60,13 @@ class TestPr3287Smoke(unittest.TestCase):
         playback.stdin.flush()
 
         # Wait for the sync file to appear.
-        ct.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, "pr3287 did not produce output")
+        self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, "pr3287 did not produce output")
         os.close(sy_handle)
         os.unlink(sy_name)
 
         # Wait for the processes to exit.
         pr3287.kill()
-        ct.vgwait(pr3287, assertOnFailure=False)
+        self.vgwait(pr3287, assertOnFailure=False)
         playback.stdin.close()
         playback.wait(timeout=2)
 

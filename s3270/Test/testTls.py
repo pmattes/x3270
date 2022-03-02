@@ -29,18 +29,15 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
 import sys
 import os
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 import Common.Test.tls_server as tls_server
 
-class TestS3270Tls(unittest.TestCase):
+class TestS3270Tls(cti.cti):
 
     # Set up procedure.
     def setUp(self):
-        self.children = []
-
         if sys.platform == 'darwin':
             # Add the fake root cert.
             sec = Popen(["security", "dump-trust", "-d"], stdout=PIPE,
@@ -62,21 +59,15 @@ class TestS3270Tls(unittest.TestCase):
                 os.system('powershell s3270\\Test\\tls\\addrootca.ps1')
                 print("***** To remove the cert (elevated):")
                 print("*****  certutil -delstore root fakeca.com")
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+        cti.cti.setUp(self)
 
     # s3270 TLS smoke test
     def test_s3270_tls_smoke(self):
 
         # Start a server to read s3270's output.
-        port, ts = ct.unused_port()
+        port, ts = cti.unused_port()
         server = tls_server.tls_server('127.0.0.1', port, 's3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key')
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Start s3270.
@@ -84,7 +75,7 @@ class TestS3270Tls(unittest.TestCase):
         if sys.platform != 'darwin' and not sys.platform.startswith('win'):
             args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
         args.append(f'l:a:c:t:127.0.0.1:{port}=TEST')
-        s3270 = Popen(ct.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Feed s3270 some actions.
@@ -100,15 +91,15 @@ class TestS3270Tls(unittest.TestCase):
 
         # Wait for the process to exit.
         s3270.stdin.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # s3270 STARTTLS test
     def test_s3270_starttls(self):
 
         # Start a server to read s3270's output.
-        port, ts = ct.unused_port()
+        port, ts = cti.unused_port()
         server = tls_server.tls_server('127.0.0.1', port, 's3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key')
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Start s3270.
@@ -116,7 +107,7 @@ class TestS3270Tls(unittest.TestCase):
         if sys.platform != 'darwin' and not sys.platform.startswith('win'):
             args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
         args.append(f'127.0.0.1:{port}=TEST')
-        s3270 = Popen(ct.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
         # Make sure it all works.
@@ -128,7 +119,7 @@ class TestS3270Tls(unittest.TestCase):
 
         # Wait for the process to exit.
         s3270.stdin.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

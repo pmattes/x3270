@@ -28,18 +28,18 @@
 # pr3287 basic command-line tests
 
 import unittest
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestPr3287BasicCmdline(unittest.TestCase):
+class TestPr3287BasicCmdline(cti.cti):
 
     # pr3287 -v and -help test
     def test_pr3287_v_help(self):
-        ct.check_dash_v('pr3287')
-        ct.check_help('pr3287')
-        ct.check_bad('pr3287')
-        ct.check_bad2('pr3287')
-        ct.check_toomany('pr3287')
-        ct.check_incomplete('pr3287')
+        self.check_dash_v('pr3287')
+        self.check_help('pr3287')
+        self.check_bad('pr3287')
+        self.check_bad2('pr3287')
+        self.check_toomany('pr3287')
+        self.check_incomplete('pr3287')
 
 if __name__ == '__main__':
     unittest.main()

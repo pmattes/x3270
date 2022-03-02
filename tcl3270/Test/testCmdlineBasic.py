@@ -28,21 +28,20 @@
 # tcl3270 basic command-line tests
 
 import unittest
-import os
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
-class TestTcl3270BasicCmdline(unittest.TestCase):
+class TestTcl3270BasicCmdline(cti.cti):
 
     # tcl3270 -v and -help test
     def test_tcl3270_v_help(self):
-        ct.check_dash_v('tcl3270')
-        ct.check_help('tcl3270')
-        ct.check_bad('tcl3270', extra = '--')
-        ct.check_bad2('tcl3270', extra = '--')
-        ct.check_toomany('tcl3270', extra = '--')
-        ct.check_incomplete('tcl3270', extra = '--')
+        self.check_dash_v('tcl3270')
+        self.check_help('tcl3270')
+        self.check_bad('tcl3270', extra = '--')
+        self.check_bad2('tcl3270', extra = '--')
+        self.check_toomany('tcl3270', extra = '--')
+        self.check_incomplete('tcl3270', extra = '--')
 
 if __name__ == '__main__':
     unittest.main()

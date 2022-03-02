@@ -25,37 +25,51 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# b3270 smoke tests
+# s3270 String() tests
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import requests
 import Common.Test.cti as cti
+import Common.Test.playback as playback
 
-class TestB3270Smoke(cti.cti):
+class TestS3270String(cti.cti):
 
-    # b3270 NVT smoke test
-    def test_b3270_nvt_smoke(self):
+    # s3270 field overflow (no) margin test.
+    # Verifying a bug fix for String() accidentally applying margined paste mode.
+    def test_s3270_string_no_margin(self):
 
-        # Start 'nc' to read b3270's output.
-        nc = cti.copyserver()
+        pport, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/wrap.trc', pport) as p:
+            self.check_listen(pport)
+            socket.close()
 
-        # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(b3270)
+            # Start s3270.
+            sport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport),
+                    f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            self.check_listen(sport)
+            socket.close()
 
-        # Feed b3270 some actions.
-        b3270.stdin.write(b'<b3270-in>\n')
-        b3270.stdin.write(f'<run actions="Open(a:c:t:127.0.0.1:{nc.port}) String(abc) Enter() Disconnect()"/>\n'.encode('utf8'))
-        b3270.stdin.flush()
+            # Fill in the screen.
+            p.send_records(2)
 
-        # Make sure they are passed through.
-        out = nc.data()
-        self.assertEqual(b'abc\r\n', out)
+            # Fill the first field, almost. Then fill it with one more byte.
+            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(ffffff)')
+            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(f)')
+
+            # Make sure the cursor lands in the right spot.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(cursor1)')
+            self.assertEqual(requests.codes.ok, r.status_code)
+            result = r.json()['result'][0]
+            _, row, _, column, *_ = result.split()
+            self.assertEqual(8, int(row), 'Cursor is on the wrong row')
+            self.assertEqual(36, int(column), 'Cursor is on the wrong coluumn')
 
         # Wait for the processes to exit.
-        b3270.stdin.write(b'</b3270-in>\n')
-        b3270.stdin.close()
-        self.vgwait(b3270)
+        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

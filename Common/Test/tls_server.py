@@ -32,7 +32,7 @@ import select
 import ssl
 import threading
 import re
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 import Common.Test.telnet as telnet
 
 # TLS server.
@@ -67,7 +67,7 @@ class tls_server():
 
     def recv_to_end(self, timeout=2):
         '''Return everything sent on the socket'''
-        ct.try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
+        cti.sa_try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
         self.thread.join()
         self.tls_conn = self.context.wrap_socket(self.clear_conn, server_side=True)
         ret = b''
@@ -99,7 +99,7 @@ class tls_server():
 
     def starttls(self, timeout=2):
         '''Do STARTTLS negotiation'''
-        ct.try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
+        cti.sa_try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
         self.thread.join()
         # Send IAC DO STARTTLS.
         self.clear_conn.send(telnet.iac + telnet.do + telnet.startTls)

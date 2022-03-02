@@ -35,11 +35,11 @@ import stat
 import tempfile
 import requests
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
 @unittest.skipIf(sys.platform == "cygwin", "Not ready for x3270 graphic tests")
-class TestX3270BadAplDraw(unittest.TestCase):
+class TestX3270BadAplDraw(cti.cti):
 
     # Set up procedure.
     def setUp(self):
@@ -47,7 +47,7 @@ class TestX3270BadAplDraw(unittest.TestCase):
             self.display = os.environ['DISPLAY']
         else:
             self.display = None
-        self.children = []
+        cti.cti.setUp(self)
 
     # Tear-down procedure.
     def tearDown(self):
@@ -57,10 +57,7 @@ class TestX3270BadAplDraw(unittest.TestCase):
         # Tear down the VNC server, in case a test failed and did not
         # clean up.
         os.system('tightvncserver -kill :2 2>/dev/null')
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+        cti.cti.tearDown(self)
 
     # x3270 bad APL draw test.
     # There was a bug that caused '-' characters in NVT mode to be drawn
@@ -74,26 +71,26 @@ class TestX3270BadAplDraw(unittest.TestCase):
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
-        ct.check_listen(5902)
+        self.check_listen(5902)
 
         # Start 'playback' to read x3270's output.
-        playback_port, ts = ct.unused_port()
+        playback_port, ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
             "x3270/Test/badapl.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(playback_port)
+        self.check_listen(playback_port)
         ts.close()
 
         # Start x3270.
         os.environ['DISPLAY'] = ':2'
-        x3270_port, ts = ct.unused_port()
-        x3270 = Popen(ct.vgwrap(['x3270', '-efont', 'fixed',
+        x3270_port, ts = cti.unused_port()
+        x3270 = Popen(cti.vgwrap(['x3270', '-efont', 'fixed',
             '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
             '-xrm', 'x3270.colorScheme: old-default',
             '-httpd', f'127.0.0.1:{x3270_port}',
             f'127.0.0.1:{playback_port}']), stdout=DEVNULL)
         self.children.append(x3270)
-        ct.check_listen(x3270_port)
+        self.check_listen(x3270_port)
         ts.close()
 
         # Feed x3270 some data.
@@ -105,7 +102,7 @@ class TestX3270BadAplDraw(unittest.TestCase):
             return r.json()['result'][0] == 'bytes 77'
 
         # Wait for the data to be processed.
-        ct.try_until(is_ready, 2, "NVT data was not processed")
+        self.try_until(is_ready, 2, "NVT data was not processed")
 
         # Find x3270's window ID.
         widcmd = subprocess.run('xlsclients -l', shell=True,
@@ -126,7 +123,7 @@ class TestX3270BadAplDraw(unittest.TestCase):
         playback.kill()
         playback.wait(timeout=2)
         requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
-        ct.vgwait(x3270)
+        self.vgwait(x3270)
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.

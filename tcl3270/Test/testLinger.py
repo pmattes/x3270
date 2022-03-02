@@ -35,39 +35,28 @@ if sys.platform != 'cygwin':
 import requests
 import os
 import signal
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
 @unittest.skipIf(sys.platform == 'cygwin', "Cygwin does not have psutil")
-class TestTcl3270Linger(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestTcl3270Linger(cti.cti):
 
     # tcl3270 linger test, making sure s3270 exits when tcl3270 does.
     def test_tcl3270_linger1(self):
 
         # Start tcl3270.
-        port, ts = ct.unused_port()
-        tcl3270 = Popen(ct.vgwrap(["tcl3270", "tcl3270/Test/linger.tcl", "--",
+        port, ts = cti.unused_port()
+        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/linger.tcl", "--",
             "-httpd", f"127.0.0.1:{port}"]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(tcl3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Make sure it is blocked.
         def test():
             j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
             return any('Wait(' in line for line in j['result'])
-        ct.try_until(test, 2, "emulator did not block")
+        self.try_until(test, 2, "emulator did not block")
 
         # Find the copy of s3270 it is running.
         tchildren = psutil.Process(tcl3270.pid).children()
@@ -77,23 +66,23 @@ class TestTcl3270Linger(unittest.TestCase):
 
         # Kill tcl3270.
         tcl3270.kill()
-        ct.vgwait(tcl3270, assertOnFailure=False)
+        self.vgwait(tcl3270, assertOnFailure=False)
 
         # Make sure s3270 is gone, too.
         def test2():
             return 'terminated' in str(s3270)
-        ct.try_until(test2, 2, "s3270 did not exit")
+        self.try_until(test2, 2, "s3270 did not exit")
 
     # tcl3270 linger test, making sure tcl3270 exits when s3270 does.
     def test_tcl3270_linger2(self):
 
         # Start tcl3270.
-        port, ts = ct.unused_port()
-        tcl3270 = Popen(ct.vgwrap(["tcl3270", "tcl3270/Test/linger2.tcl", "--",
+        port, ts = cti.unused_port()
+        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/linger2.tcl", "--",
             "-httpd", f"127.0.0.1:{port}"]),
             stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(tcl3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Find the copy of s3270 it is running.
@@ -106,10 +95,9 @@ class TestTcl3270Linger(unittest.TestCase):
         os.kill(s3270.pid, signal.SIGTERM)
 
         # Make sure tcl3270 is gone, too.
-        ct.vgwait(tcl3270, assertOnFailure=False)
-        if not 'VALGRIND' in os.environ:
-            exit_code = tcl3270.wait()
-            self.assertEqual(98, exit_code)
+        self.vgwait(tcl3270, assertOnFailure=False)
+        exit_code = tcl3270.wait()
+        self.assertEqual(98, exit_code)
 
 if __name__ == '__main__':
     unittest.main()

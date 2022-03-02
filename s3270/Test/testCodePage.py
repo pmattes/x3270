@@ -30,37 +30,25 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import re
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270CodePage(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270CodePage(cti.cti):
 
     # s3270 SBCS code page test.
     def test_s3270_sbcs_code_page(self):
 
         # Start playback.
-        pport, ts = ct.unused_port()
+        pport, ts = cti.unused_port()
         playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/all_chars.trc'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         ts.close()
 
         # Start s3270.
-        sport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+        sport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         ts.close()
 
         cp_all_map = {
@@ -183,7 +171,7 @@ class TestS3270CodePage(unittest.TestCase):
         # Fill up the screen.
         playback.stdin.write(b'r\n')
         playback.stdin.flush()
-        ct.check_push(playback, sport, 1)
+        self.check_push(playback, sport, 1)
 
         # Check the SBCS code pages.
         for cp in cp_all_map.keys():
@@ -193,7 +181,7 @@ class TestS3270CodePage(unittest.TestCase):
 
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
         playback.stdin.close()
         playback.wait(timeout=2)
 
@@ -216,23 +204,23 @@ class TestS3270CodePage(unittest.TestCase):
         ]
 
         # Start playback.
-        pport, ts = ct.unused_port()
+        pport, ts = cti.unused_port()
         playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/apl.trc'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         ts.close()
 
         # Start s3270.
-        sport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+        sport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         ts.close()
 
         # Fill up the screen.
         playback.stdin.write(b'r\n')
         playback.stdin.fileno()
-        ct.check_push(playback, sport, 1)
+        self.check_push(playback, sport, 1)
 
         # Check the SBCS code pages.
         r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
@@ -240,7 +228,7 @@ class TestS3270CodePage(unittest.TestCase):
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
         playback.stdin.close()
         playback.wait(timeout=2)
 
@@ -254,23 +242,23 @@ class TestS3270CodePage(unittest.TestCase):
         ]
 
         # Start playback.
-        pport, ts = ct.unused_port()
+        pport, ts = cti.unused_port()
         playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/935.trc'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         ts.close()
 
         # Start s3270.
-        sport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+        sport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         ts.close()
 
         # Fill up the screen.
         playback.stdin.write(b'r\n')
         playback.stdin.fileno()
-        ct.check_push(playback, sport, 1)
+        self.check_push(playback, sport, 1)
 
         # Check the DBCS output.
         r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
@@ -278,7 +266,7 @@ class TestS3270CodePage(unittest.TestCase):
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
         playback.stdin.close()
         playback.wait(timeout=2)
 
@@ -297,23 +285,23 @@ class TestS3270CodePage(unittest.TestCase):
         ]
 
         # Start playback.
-        pport, ts = ct.unused_port()
+        pport, ts = cti.unused_port()
         playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/937.trc'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         ts.close()
 
         # Start s3270.
-        sport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
+        sport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         ts.close()
 
         # Fill up the screen.
         playback.stdin.write(b'r\n')
         playback.stdin.fileno()
-        ct.check_push(playback, sport, 1)
+        self.check_push(playback, sport, 1)
 
         # Check the DBCS output.
         r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
@@ -321,7 +309,7 @@ class TestS3270CodePage(unittest.TestCase):
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
         playback.stdin.close()
         playback.wait(timeout=2)
 
@@ -340,23 +328,23 @@ class TestS3270CodePage(unittest.TestCase):
         }
 
         # Start playback.
-        pport, ts = ct.unused_port()
+        pport, ts = cti.unused_port()
         playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/930.trc'], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         ts.close()
 
         # Start s3270.
-        sport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+        sport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         ts.close()
 
         # Fill up the screen.
         playback.stdin.write(b'r\n')
         playback.stdin.fileno()
-        ct.check_push(playback, sport, 1)
+        self.check_push(playback, sport, 1)
 
         # Check the DBCS output.
         r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
@@ -364,7 +352,7 @@ class TestS3270CodePage(unittest.TestCase):
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
         playback.stdin.close()
         playback.wait(timeout=2)
 

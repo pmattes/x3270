@@ -30,34 +30,23 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import TestCommon
+import Common.Test.cti as cti
 
-class TestS3270ft(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270ft(cti.cti):
 
     # s3270 DFT-mode file transfer test
     def test_s3270_ft_dft(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = TestCommon.unused_port()
+        port, socket = cti.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/ft_dft.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
+        self.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", f"127.0.0.1:{port}"], stdin=PIPE,
+        s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -70,21 +59,21 @@ class TestS3270ft(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        s3270.wait(timeout=2)
+        self.vgwait(s3270)
 
     # s3270 CUT-mode file transfer test
     def test_s3270_ft_cut(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = TestCommon.unused_port()
+        port, socket = cti.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/ft_cut.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        TestCommon.check_listen(port)
+        self.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(["s3270", "-model", "2", f"127.0.0.1:{port}"],
+        s3270 = Popen(cti.vgwrap(["s3270", "-model", "2", f"127.0.0.1:{port}"]),
                 stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -98,7 +87,7 @@ class TestS3270ft(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        s3270.wait(timeout=2)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

@@ -29,34 +29,23 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestX3270ifSmoke(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestX3270ifSmoke(cti.cti):
 
     # x3270if smoke test
     def test_x3270if_smoke(self):
 
         # Start a copy of s3270 to talk to.
-        port, ts = ct.unused_port()
+        port, ts = cti.unused_port()
         s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
                 stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Run x3270if with a trivial query.
-        x3270if = Popen(ct.vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]),
+        x3270if = Popen(cti.vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]),
                 stdout=PIPE)
         self.children.append(x3270if)
 
@@ -66,7 +55,7 @@ class TestX3270ifSmoke(unittest.TestCase):
         # Wait for the processes to exit.
         s3270.kill()
         s3270.wait()
-        ct.vgwait(x3270if)
+        self.vgwait(x3270if)
 
         # Test the output.
         self.assertEqual('true\n', stdout)

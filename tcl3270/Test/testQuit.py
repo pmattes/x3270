@@ -30,32 +30,21 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
-class TestTcl3270Quit(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestTcl3270Quit(cti.cti):
 
     # tcl3270 3270 quit test
     def test_tcl3270_quit(self):
 
         # Start tcl3270.
-        tcl3270 = Popen(ct.vgwrap(["tcl3270", "tcl3270/Test/quit.tcl"]),
+        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/quit.tcl"]),
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(tcl3270)
 
         # Wait for the process to exit.
-        ct.vgwait(tcl3270)
+        self.vgwait(tcl3270)
 
 if __name__ == '__main__':
     unittest.main()

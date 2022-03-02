@@ -31,37 +31,24 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
 import os
-import sys
-import time
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestB3270Xml(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestB3270Xml(cti.cti):
 
     # b3270 NVT XML smoke test
     def test_b3270_nvt_xml_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = ct.copyserver()
+        nc = cti.copyserver()
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 some actions.
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'run', { 'actions': f'Open(a:c:t:127.0.0.1:{nc.port}) String(abc) Enter() Disconnect()' })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
 
@@ -71,18 +58,18 @@ class TestB3270Xml(unittest.TestCase):
 
         # Wait for the processes to exit.
         b3270.stdin.close()
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML single test
     def test_b3270_xml_single(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'run', { 'actions': 'Set(startTls)' })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
 
         # Get the result.
@@ -90,7 +77,7 @@ class TestB3270Xml(unittest.TestCase):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
         # Check.
         a = out.find('./run-result')
@@ -102,7 +89,7 @@ class TestB3270Xml(unittest.TestCase):
     # b3270 XML multiple test
     def test_b3270_xml_multiple(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 two actions, which it will run concurrently and complete
@@ -110,20 +97,20 @@ class TestB3270Xml(unittest.TestCase):
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'run', { 'actions': 'Wait(0.1,seconds) Set(startTls) Quit()', 'r-tag': 'tls' })
         ET.SubElement(top, 'run', { 'actions': 'Set(insertMode)', 'r-tag': 'ins' })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
 
         # Get the result.
         errmsg = 'b3270 did not produce the expected output'
-        ct.timed_readline(b3270.stdout, 2, errmsg)
-        ct.timed_readline(b3270.stdout, 2, errmsg)
-        ct.timed_readline(b3270.stdout, 2, errmsg)
-        out = ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        self.timed_readline(b3270.stdout, 2, errmsg)
+        self.timed_readline(b3270.stdout, 2, errmsg)
+        self.timed_readline(b3270.stdout, 2, errmsg)
+        out = self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
         et_ins = ET.fromstring(out)
-        out = ct.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        out = self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
         et_tls = ET.fromstring(out)
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
         b3270.stdin.close()
         b3270.stdout.close()
 
@@ -143,17 +130,17 @@ class TestB3270Xml(unittest.TestCase):
     # b3270 XML semantic error test
     def test_b3270_xml_semantic_error(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'run', { 'foo': 'bar' })
         ET.SubElement(top, 'run', { 'actions': 'Wait(0.1,seconds) Quit()' })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
         # Get the result.
         out_err = out[-4]
@@ -170,15 +157,15 @@ class TestB3270Xml(unittest.TestCase):
     # b3270 XML syntax error test
     def test_b3270_xml_syntax_error(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 junk.
         top = ET.Element('b3270-in')
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'<<>' b'\n')
         out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
-        ct.vgwait(b3270, assertOnFailure=False)
+        self.vgwait(b3270, assertOnFailure=False)
         self.assertTrue(b3270.wait() != 0)
 
         # Get the result.
@@ -198,7 +185,7 @@ class TestB3270Xml(unittest.TestCase):
     def test_b3270_xml_default(self):
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -211,13 +198,13 @@ class TestB3270Xml(unittest.TestCase):
         self.assertEqual('</b3270-out>', out[3])
         self.assertEqual('', out[4])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML not-indented, no wrapper test
     def test_b3270_xml_default(self):
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -227,13 +214,13 @@ class TestB3270Xml(unittest.TestCase):
         self.assertTrue(out[0].endswith('</initialize>'))
         self.assertEqual('', out[1])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML indented test
     def test_b3270_xml_indented(self):
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml', '-indent']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-indent']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -245,13 +232,13 @@ class TestB3270Xml(unittest.TestCase):
         self.assertEqual('</b3270-out>', out[-2])
         self.assertEqual('', out[-1])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML indented, no wrapper test
     def test_b3270_xml_indented_no_wrapper(self):
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml', '-indent', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-indent', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -261,13 +248,13 @@ class TestB3270Xml(unittest.TestCase):
         self.assertEqual('</initialize>', out[-2])
         self.assertEqual('', out[-1])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML no input wrapper test
     def test_b3270_xml_no_input_wrapper(self):
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Feed it multiple commands.
@@ -286,16 +273,16 @@ class TestB3270Xml(unittest.TestCase):
         self.assertTrue(out[3].startswith('<run-result '))
         self.assertEqual('', out[4])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
     # b3270 XML no input wrapper socket test
     def test_b3270_xml_no_input_wrapper_socket(self):
 
         # Listen for a connection from b3270.
-        l = ct.listenserver()
+        l = cti.listenserver(self)
 
         # Start b3270.
-        b3270 = Popen(ct.vgwrap(['b3270', '-xml', '-nowrapperdoc', '-callback', str(l.port)]),
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-nowrapperdoc', '-callback', str(l.port)]),
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -317,7 +304,7 @@ class TestB3270Xml(unittest.TestCase):
         self.assertTrue(out[3].startswith('<run-result '))
         self.assertEqual('', out[4])
 
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
 if __name__ == '__main__':
     unittest.main()

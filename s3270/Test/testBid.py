@@ -29,34 +29,23 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270Bid(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Bid(cti.cti):
 
     # s3270 BID test
     def test_s3270_bid(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = ct.unused_port()
+        port, socket = cti.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/bid.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(port)
+        self.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
+        s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -69,21 +58,21 @@ class TestS3270Bid(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # s3270 no-BID test
     def test_s3270_no_bid(self):
 
         # Start 'playback' to read s3270's output.
-        port, socket = ct.unused_port()
+        port, socket = cti.unused_port()
         playback = Popen(["playback", "-b", "-p", str(port),
             "s3270/Test/no_bid.trc"], stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(port)
+        self.check_listen(port)
         socket.close()
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
+        s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
             f"127.0.0.1:{port}"]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -96,7 +85,7 @@ class TestS3270Bid(unittest.TestCase):
         rc = playback.wait(timeout=2)
         self.assertEqual(rc, 0)
         s3270.stdin.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

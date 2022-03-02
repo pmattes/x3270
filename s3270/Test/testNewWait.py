@@ -31,39 +31,25 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
 import threading
-import time
-import re
-import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestNewWait(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestNewWait(cti.cti):
 
     def new_wait(self, initial_eors, second_actions, wait_params):
 
         # Start 'playback' to drive s3270.
-        popen_port, popen_ts = ct.unused_port()
+        popen_port, popen_ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(popen_port),
             "s3270/Test/ibmlink_help.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(popen_port)
+        self.check_listen(popen_port)
         popen_ts.close()
 
         # Start s3270 with a webserver.
-        s3270_port, s3270_ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{popen_port}"]))
+        s3270_port, s3270_ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{popen_port}"]))
         self.children.append(s3270)
-        ct.check_listen(s3270_port)
+        self.check_listen(s3270_port)
         s3270_ts.close()
 
         # Step until the login screen is visible.
@@ -71,7 +57,7 @@ class TestNewWait(unittest.TestCase):
             playback.stdin.write(b'r\n')
         playback.stdin.write(b"c done with initialization\n")
         playback.stdin.flush()
-        ct.check_push(playback, s3270_port, 1)
+        self.check_push(playback, s3270_port, 1)
 
         # Wait for the initial screen.
         requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Wait(InputField)', timeout=2)
@@ -82,7 +68,7 @@ class TestNewWait(unittest.TestCase):
 
         # In the background, wait for the Wait() action to block, then
         # push out another record.
-        x = threading.Thread(target=ct.to_playback, args=(playback, s3270_port, b"r\n"))
+        x = threading.Thread(target=cti.cti.to_playback, args=(self, playback, s3270_port, b"r\n"))
         x.start()
 
         # Wait for the change.
@@ -97,7 +83,7 @@ class TestNewWait(unittest.TestCase):
         playback.kill()
         playback.wait(timeout=2)
         requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # Generic flavor of CursorAt test.
     def test_cursor_at(self):
@@ -128,10 +114,10 @@ class TestNewWait(unittest.TestCase):
     def test_simple_negatives(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(["s3270", "-httpd", f"127.0.0.1:{port}"]))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{port}"]))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Syntax tests.
@@ -152,7 +138,7 @@ class TestNewWait(unittest.TestCase):
 
         # Clean up.
         requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # Run an action that succeeds immediately.
     def nop(self, port, action):
@@ -164,19 +150,19 @@ class TestNewWait(unittest.TestCase):
     def test_nops(self):
 
         # Start 'playback' to drive s3270.
-        pport, pts = ct.unused_port()
+        pport, pts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(pport),
             "s3270/Test/ibmlink_help.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(pport)
+        self.check_listen(pport)
         pts.close()
 
         # Start s3270 with a webserver.
-        sport, sts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(["s3270", "-httpd", f"127.0.0.1:{sport}",
+        sport, sts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{sport}",
             f"127.0.0.1:{pport}"]))
         self.children.append(s3270)
-        ct.check_listen(sport)
+        self.check_listen(sport)
         sts.close()
 
         # Get to the login screen.
@@ -191,7 +177,7 @@ class TestNewWait(unittest.TestCase):
         playback.kill()
         playback.wait(timeout=2)
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

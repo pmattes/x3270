@@ -29,32 +29,19 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
-import os
 import sys
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270Script(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Script(cti.cti):
 
     # Run the test in one of three modes.
     def run_script_test(self, mode):
 
         # Start a thread to read s3270's output.
-        nc = ct.copyserver()
+        nc = cti.copyserver()
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
+        s3270 = Popen(cti.vgwrap(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
                 f'a:c:t:127.0.0.1:{nc.port}']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -69,7 +56,7 @@ class TestS3270Script(unittest.TestCase):
 
         # Wait for the processes to exit.
         s3270.stdin.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # s3270 HTTP script test
     def test_s3270_script_http(self):

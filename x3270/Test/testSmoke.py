@@ -35,11 +35,11 @@ import stat
 import tempfile
 import sys
 import requests
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
 @unittest.skipIf(sys.platform == "cygwin", "Not ready for x3270 graphic tests")
-class TestX3270Smoke(unittest.TestCase):
+class TestX3270Smoke(cti.cti):
 
     # Set up procedure.
     def setUp(self):
@@ -47,7 +47,7 @@ class TestX3270Smoke(unittest.TestCase):
             self.display = os.environ['DISPLAY']
         else:
             self.display = None
-        self.children = []
+        cti.cti.setUp(self)
 
     # Tear-down procedure.
     def tearDown(self):
@@ -57,10 +57,7 @@ class TestX3270Smoke(unittest.TestCase):
         # Tear down the VNC server, in case a test failed and did not
         # clean up.
         os.system('tightvncserver -kill :2 2>/dev/null')
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+        cti.cti.tearDown(self)
 
     # x3270 smoke test
     def test_x3270_smoke(self):
@@ -72,14 +69,14 @@ class TestX3270Smoke(unittest.TestCase):
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
-        ct.check_listen(5902)
+        self.check_listen(5902)
 
         # Start 'playback' to read x3270's output.
-        playback_port, ts = ct.unused_port()
+        playback_port, ts = cti.unused_port()
         playback = Popen(["playback", "-w", "-p", str(playback_port),
             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
         self.children.append(playback)
-        ct.check_listen(playback_port)
+        self.check_listen(playback_port)
         ts.close()
 
         # Set up the fonts.
@@ -89,20 +86,20 @@ class TestX3270Smoke(unittest.TestCase):
         self.assertEqual(0, os.system('xset fp rehash'))
 
         # Start x3270.
-        x3270_port, ts = ct.unused_port()
-        x3270 = Popen(ct.vgwrap(["x3270",
+        x3270_port, ts = cti.unused_port()
+        x3270 = Popen(cti.vgwrap(["x3270",
             "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
             "-xrm", "x3270.colorScheme: old-default",
             "-httpd", f"127.0.0.1:{x3270_port}",
             f"127.0.0.1:{playback_port}"]), stdout=DEVNULL)
         self.children.append(x3270)
-        ct.check_listen(x3270_port)
+        self.check_listen(x3270_port)
         ts.close()
 
         # Feed x3270 some data.
         playback.stdin.write(b"r\nr\nr\nr\n")
         playback.stdin.flush()
-        ct.check_push(playback, x3270_port, 1)
+        self.check_push(playback, x3270_port, 1)
 
         # Find x3270's window ID.
         widcmd = subprocess.run("xlsclients -l", shell=True, capture_output=True, check=True)
@@ -122,7 +119,7 @@ class TestX3270Smoke(unittest.TestCase):
         playback.kill()
         playback.wait(timeout=2)
         requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
-        ct.vgwait(x3270)
+        self.vgwait(x3270)
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.

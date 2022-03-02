@@ -30,29 +30,18 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270Httpd(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Httpd(cti.cti):
 
     # s3270 HTTPD persist test.
     def test_s3270_httpd_persist(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Start a requests session and do a get.
@@ -73,7 +62,7 @@ class TestS3270Httpd(unittest.TestCase):
         # Wait for the process to exit successfully.
         s.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         s.close()
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

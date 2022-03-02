@@ -32,10 +32,10 @@ import tempfile
 import os
 import sys
 import requests
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
 # session file suffix test
-def suffix_test(program, suffix, children):
+def suffix_test(ti, program, suffix, children):
     # Create a session file.
     (handle, file) = tempfile.mkstemp(suffix=suffix)
     bprogram = program.encode('utf8')
@@ -45,21 +45,21 @@ def suffix_test(program, suffix, children):
     os.close(handle)
 
     # Start the emulator.
-    port, ts = ct.unused_port()
-    emu = Popen(ct.vgwrap([program, '-httpd', str(port), file]), stdout=DEVNULL)
+    port, ts = cti.unused_port()
+    emu = Popen(cti.vgwrap([program, '-httpd', str(port), file]), stdout=DEVNULL)
     children.append(emu)
-    ct.check_listen(port)
+    cti.cti.check_listen(ti, port)
     ts.close()
 
     # Check the output.
     r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TerminalName)')
     j = r.json()
-    assert 'foo' == j['result'][0]
+    ti.assertEqual('foo', j['result'][0], 'Expecting "foo" as the terminal name')
     r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
     j = r.json()
-    assert '3279-3-E' == j['result'][0]
+    ti.assertEqual('3279-3-E', j['result'][0], 'Expecting 3279-3-E as the model')
 
     # Wait for the process to exit.
     requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
-    ct.vgwait(emu)
+    cti.cti.vgwait(ti, emu)
     os.unlink(file)

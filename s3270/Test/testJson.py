@@ -35,22 +35,10 @@ import select
 import os
 import sys
 import time
-from urllib import request
 import requests
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270Json(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Json(cti.cti):
 
     # Check a JSON-formatted result.
     def check_result_json(self, out):
@@ -77,7 +65,7 @@ class TestS3270Json(unittest.TestCase):
         while True:
             if timeout != 0:
                 rfds, _, _ = select.select([ s ], [], [], timeout)
-            assert([] != rfds)
+            self.assertNotEqual([], rfds, 'Socket read timed out')
             r = s.recv(1024)
             if len(r) == 0:
                 break
@@ -88,7 +76,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -99,7 +87,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8')
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(stdout)
@@ -108,10 +96,10 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push a JSON-formatted command at it.
@@ -125,7 +113,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(result)
@@ -134,10 +122,10 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json_multi(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push a JSON-formatted command at it, in two pieces.
@@ -153,7 +141,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(result)
@@ -162,7 +150,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_multiline_json(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -173,7 +161,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8')
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(stdout)
@@ -182,7 +170,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_string(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a JSON-formatted command at it.
@@ -193,7 +181,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8')
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(stdout)
@@ -202,10 +190,10 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json_string(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push a JSON-formatted command at it.
@@ -219,7 +207,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         self.check_result_json(result)
@@ -228,7 +216,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_bad_semantics(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a bad JSON-formatted command at it.
@@ -239,7 +227,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8')
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output, which is in JSON format.
         j = json.loads(stdout)
@@ -250,12 +238,11 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON semantic error test
     def test_s3270_socket_json_semantic_error(self):
 
-        port, ts = ct.unused_port()
-
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push a JSON-formatted command at it.
@@ -269,7 +256,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         j = json.loads(result)
@@ -281,7 +268,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_json_syntax(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a bad syntax JSON-formatted command at it.
@@ -291,7 +278,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output, which is in s3270 format.
         # This is because JSON parsing is inferred from the first
@@ -305,12 +292,11 @@ class TestS3270Json(unittest.TestCase):
     # s3270 socket JSON syntax error test
     def test_s3270_socket_json_syntax_error(self):
 
-        port, ts = ct.unused_port()
-
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push a JSON-formatted command at it.
@@ -323,7 +309,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output, which is in s3270 format.
         # This is because JSON parsing is inferred from the first
@@ -338,7 +324,7 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_stdin_mode_switch(self):
 
         # Start s3270.
-        s3270 = Popen(ct.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push s3270, then JSON, then s3270, then JSON at it.
@@ -352,7 +338,7 @@ class TestS3270Json(unittest.TestCase):
         stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         # First three lines are s3270, next line is JSON, next three are s3270,
@@ -366,10 +352,10 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_socket_json_mode_switch(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Push s3270, then JSON, then s3270, then JSON at it.
@@ -386,7 +372,7 @@ class TestS3270Json(unittest.TestCase):
         s.close()
 
         # Wait for the process to exit successfully.
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
         # Test the output.
         # First three lines are s3270, next line is JSON, next three are s3270,
@@ -400,10 +386,10 @@ class TestS3270Json(unittest.TestCase):
     def test_s3270_http_json_one_line_get(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Send a request.
@@ -416,16 +402,16 @@ class TestS3270Json(unittest.TestCase):
 
         # Clean up.
         requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
     # Verify that HTTPD JSON output is all on one line (POST).
     def test_s3270_http_json_one_line_post(self):
 
         # Start s3270.
-        port, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
-        ct.check_listen(port)
+        self.check_listen(port)
         ts.close()
 
         # Send a request.
@@ -438,7 +424,7 @@ class TestS3270Json(unittest.TestCase):
 
         # Clean up.
         requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

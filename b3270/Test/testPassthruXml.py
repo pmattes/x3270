@@ -30,25 +30,14 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import xml.etree.ElementTree as ET
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestB3270PassthruXml(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestB3270PassthruXml(cti.cti):
 
     # b3270 passthru XML test
     def test_b3270_passthru_xml(self):
 
-        b3270 = Popen(ct.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Get the initial dump.
@@ -61,12 +50,12 @@ class TestB3270PassthruXml(unittest.TestCase):
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'register', { 'name': 'Foo' })
         ET.SubElement(top, 'run', { 'r-tag': 'abc', 'actions': "Foo(a,b)" })
-        *first, _, _ = ct.xml_prettify(top).split(b'\n')
+        *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
 
         # Get the result.
-        s = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
+        s = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('passthru', out.tag)
         attr = out.attrib
@@ -82,7 +71,7 @@ class TestB3270PassthruXml(unittest.TestCase):
         b3270.stdin.flush()
 
         # Get the result of that.
-        s = ct.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
+        s = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('run-result', out.tag)
         attr = out.attrib
@@ -94,7 +83,7 @@ class TestB3270PassthruXml(unittest.TestCase):
         b3270.stdin.write(b'</b3270-in>\n')
         b3270.stdin.close()
         b3270.stdout.close()
-        ct.vgwait(b3270)
+        self.vgwait(b3270)
 
 if __name__ == '__main__':
     unittest.main()

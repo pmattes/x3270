@@ -29,40 +29,22 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import json
-import socket
-import select
-import os
-import sys
-import time
-from urllib import request
 import requests
-import Common.Test.ct as ct
+import Common.Test.cti as cti
 
-class TestS3270Nvt(unittest.TestCase):
-
-    # Set up procedure.
-    def setUp(self):
-        self.children = []
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tidy up the children.
-        for child in self.children:
-            child.kill()
-            child.wait()
+class TestS3270Nvt(cti.cti):
 
     # NVT 1049 mode test
     def nvt_1049(self, mode_alt, mode_normal):
 
         # Start a server to throw NVT escape sequences at s3270.
-        s = ct.sendserver()
+        s = cti.sendserver(self)
 
         # Start s3270.
-        hport, ts = ct.unused_port()
-        s3270 = Popen(ct.vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        hport, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
         self.children.append(s3270)
-        ct.check_listen(hport)
+        self.check_listen(hport)
         ts.close()
 
         # Send some text and read it back.
@@ -100,7 +82,7 @@ class TestS3270Nvt(unittest.TestCase):
         # Clean up.
         s.close()
         requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
-        ct.vgwait(s3270)
+        self.vgwait(s3270)
     
     # Test with set/reset.
     def test_nvt_1049_set(self):
