@@ -492,8 +492,8 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 	} else {
 	    if (noisy) {
-		popup_a_sockerr(AnConnect "() to %s%s, port %d",
-			(proxy_type != PT_NONE)? "proxy ": "",
+		popup_a_sockerr("%s%s, port %d",
+			(proxy_type != PT_NONE)? "Proxy ": "",
 			(proxy_type != PT_NONE)? proxy_host : hostname,
 			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    }
@@ -1120,6 +1120,30 @@ connection_complete(void)
     remove_output();
 }
 
+/*
+ * Clean up the pre-TCP-connected network state.
+ */
+static void
+net_pre_close(void)
+{
+    SOCK_CLOSE(sock);
+    sock = INVALID_SOCKET;
+#if defined(_WIN32) /*[*/
+    CloseHandle(sock_handle);
+    sock_handle = INVALID_HANDLE_VALUE;
+#endif /*]*/
+    vtrace("SENT disconnect\n");
+
+    /* Cancel the timeout. */
+    if (connect_timeout_id != NULL_IOID) {
+	RemoveTimeOut(connect_timeout_id);
+	connect_timeout_id = NULL_IOID;
+    }
+
+    /* We have no more interest in output buffer space. */
+    remove_output();
+}
+
 #if !defined(_WIN32) /*[*/
 /*
  * output_possible
@@ -1150,11 +1174,21 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
      */
     if (COMPLETE_CONNECT(sock) < 0) {
 	if (errno != EISCONN) {
-	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
-		    strerror(errno));
-	    popup_a_sockerr("Connection%s failed",
-		    proxy_pending? " to proxy server": "");
-	    host_disconnect(true);
+	    net_pre_close();
+	    while (++ha_ix < num_ha) {
+		bool pending;
+		iosrc_t s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
+
+		if (s != INVALID_IOSRC) {
+		    host_newfd(s);
+		    host_new_connection(pending);
+		    return;
+		}
+	    }
+	    connect_errno(errno, "%s%s, port %d",
+			(proxy_type != PT_NONE)? "Proxy ": "",
+			(proxy_type != PT_NONE)? proxy_host : hostname,
+			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    return;
 	}
     }
@@ -1183,25 +1217,16 @@ net_disconnect(bool including_tls)
     if (CONNECTED) {
 	shutdown(sock, 2);
     }
-    SOCK_CLOSE(sock);
-    sock = INVALID_SOCKET;
-#if defined(_WIN32) /*[*/
-    CloseHandle(sock_handle);
-    sock_handle = INVALID_HANDLE_VALUE;
-#endif /*]*/
-    vtrace("SENT disconnect\n");
+
+    net_pre_close();
+
+    net_connect_pending = false;
 
     /* Cancel proxy. */
     if (proxy_type != PT_NONE) {
 	proxy_close();
 	proxy_type = PT_NONE;
 	proxy_pending = false;
-    }
-
-    /* Cancel the timeout. */
-    if (connect_timeout_id != NULL_IOID) {
-	RemoveTimeOut(connect_timeout_id);
-	connect_timeout_id = NULL_IOID;
     }
 
     /* Cancel NOPs. */
@@ -1212,9 +1237,6 @@ net_disconnect(bool including_tls)
 
     /* We're not connected to an LU any more. */
     vstatus_lu(NULL);
-
-    /* We have no more interest in output buffer space. */
-    remove_output();
 
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
@@ -1230,8 +1252,6 @@ net_disconnect(bool including_tls)
     nested_tls = false;
     any_host_data = false;
     starttls_pending = NOT_CONNECTED;
-
-    net_connect_pending = false;
 
     change_cstate(NOT_CONNECTED, "net_disconnect");
 }
@@ -1394,7 +1414,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		bool pending;
 		iosrc_t s;
 
-		net_disconnect(false);
+		net_pre_close();
 		while (++ha_ix < num_ha) {
 		    s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
 		    if (s != INVALID_IOSRC) {
