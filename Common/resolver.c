@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2016, 2019-2021 Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -310,8 +310,8 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     gai[*slot].port = portname? NewString(portname) : NULL;
 
 # if !defined(_WIN32) /*[*/
-    gai[*slot].result.ai_flags = 0;
-    gai[*slot].result.ai_family = PF_UNSPEC;
+    gai[*slot].result.ai_flags = AI_ADDRCONFIG;
+    gai[*slot].result.ai_family = AF_UNSPEC;
     gai[*slot].result.ai_socktype = SOCK_STREAM;
     gai[*slot].result.ai_protocol = IPPROTO_TCP;
 
@@ -377,8 +377,9 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     case 0:			/* success */
 	/* Return the addresses. */
 	res = gaip->gaicb.ar_result;
-	for (i = 0; i < max && res != NULL; i++, res = res->ai_next) {
-	    if (res->ai_socktype != SOCK_STREAM) {
+	for (i = 0; *nr < max && res != NULL; i++, res = res->ai_next) {
+	    if (res->ai_socktype != SOCK_STREAM ||
+		(res->ai_family != AF_INET && res->ai_family != AF_INET6)) {
 		continue;
 	    }
 	    memcpy(rsa, res->ai_addr, res->ai_addrlen);
@@ -394,14 +395,6 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 		    *pport =
 			ntohs(((struct sockaddr_in6 *)res->ai_addr)->sin6_port);
 		    break;
-		default:
-		    if (errmsg) {
-			*errmsg = lazyaf("unknown family %d", res->ai_family);
-		    }
-		    freeaddrinfo(gaip->gaicb.ar_result);
-		    Replace(gai->host, NULL);
-		    Replace(gai->port, NULL);
-		    return RHP_FATAL;
 		}
 	    }
 	    rsa = (char *)rsa + sa_len;
@@ -425,10 +418,12 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
 	assert(rc != EAI_INPROGRESS && rc != EAI_CANCELED);
+	freeaddrinfo(gaip->gaicb.ar_result);
 	Replace(gai->host, NULL);
 	Replace(gai->port, NULL);
 	return RHP_FATAL;
     default:			/* failure */
+	freeaddrinfo(gaip->gaicb.ar_result);
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
 		    gaip->port? gaip->port: "(none)",
