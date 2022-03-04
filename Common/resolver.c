@@ -418,12 +418,18 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
 	assert(rc != EAI_INPROGRESS && rc != EAI_CANCELED);
-	freeaddrinfo(gaip->gaicb.ar_result);
+	if (gaip->gaicb.ar_result->ai_addr != NULL) {
+	    freeaddrinfo(gaip->gaicb.ar_result);
+	    memset(gaip->gaicb.ar_result, 0, sizeof(struct addrinfo));
+	}
 	Replace(gai->host, NULL);
 	Replace(gai->port, NULL);
 	return RHP_FATAL;
     default:			/* failure */
-	freeaddrinfo(gaip->gaicb.ar_result);
+	if (gaip->gaicb.ar_result->ai_addr != NULL) {
+	    freeaddrinfo(gaip->gaicb.ar_result);
+	    memset(gaip->gaicb.ar_result, 0, sizeof(struct addrinfo));
+	}
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
 		    gaip->port? gaip->port: "(none)",
