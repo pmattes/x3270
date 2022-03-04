@@ -1331,7 +1331,16 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    host_disconnect(true);
 	    return;
 	}
-	net_connected_complete();
+
+	if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
+	    /* Set up TLS tunnel after proxy connection. */
+	    net_connected();
+	    if (cstate == NOT_CONNECTED) {
+		return;
+	    }
+	} else {
+	    net_connected_complete();
+	}
     }
 
     if (cstate == TLS_PENDING) {
@@ -1342,14 +1351,6 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    net_connected();
 	}
 	return;
-    }
-
-    if (HOST_FLAG(TLS_HOST) && sio != NULL && !secure_connection) {
-	/* Set up TLS tunnel after proxy connection. */
-	net_connected();
-	if (cstate == NOT_CONNECTED) {
-	    return;
-	}
     }
 
     nvt_data = 0;
@@ -1406,8 +1407,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		socket_strerror(socket_errno()));
 	if (cstate == TCP_PENDING) {
 	    if (ha_ix == num_ha - 1) {
-		popup_a_sockerr(AnConnect "() to %s%s, port %d",
-			(proxy_type != PT_NONE)? "proxy ": "",
+		popup_a_sockerr("%s%s, port %d",
+			(proxy_type != PT_NONE)? "Proxy ": "",
 			(proxy_type != PT_NONE)? proxy_host : hostname,
 			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    } else {
