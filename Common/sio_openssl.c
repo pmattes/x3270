@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -208,9 +208,8 @@ parse_file_type(const char *s)
 static char *
 get_ssl_error(char *buf)
 {
-    unsigned long e;
+    unsigned long e = ERR_get_error();
 
-    e = ERR_get_error();
     if (getenv("SSL_VERBOSE_ERRORS")) {
 	ERR_error_string(e, buf);
     } else {
@@ -950,10 +949,19 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     }
 
     if (rv != 1) {
+	unsigned long e = SSL_get_error(s->con, rv);
 	char err_buf[120];
 
-	sioc_set_error("SSL_connect failed %d:\n%s", rv,
-		get_ssl_error(err_buf));
+	if (e == SSL_ERROR_SYSCALL) {
+	    if (errno == 0) {
+		sioc_set_error("SSL_connect failed:\nUnexpected EOF");
+	    } else {
+		sioc_set_error("SSL_connect failed:\n%s", strerror(errno));
+	    }
+	} else {
+	    sioc_set_error("SSL_connect failed %d/%ld:\n%s", rv, e,
+		    get_ssl_error(err_buf));
+	}
 	return SIG_FAILURE;
     }
 
