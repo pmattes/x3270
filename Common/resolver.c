@@ -65,7 +65,7 @@ static struct gai {
     struct gaicb gaicb;		/* control block */
     struct gaicb *gaicbs;	/* control blocks (just one) */
     struct sigevent sigevent;	/* sigevent block */
-    struct addrinfo result;	/* result */
+    struct addrinfo hints;	/* hints */
 # else /*][*/
     int rc;			/* return code */
     struct addrinfo *result;	/* result */
@@ -310,15 +310,16 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     gai[*slot].port = portname? NewString(portname) : NULL;
 
 # if !defined(_WIN32) /*[*/
-    gai[*slot].result.ai_flags = AI_ADDRCONFIG;
-    gai[*slot].result.ai_family = AF_UNSPEC;
-    gai[*slot].result.ai_socktype = SOCK_STREAM;
-    gai[*slot].result.ai_protocol = IPPROTO_TCP;
+    gai[*slot].hints.ai_flags = AI_ADDRCONFIG;
+    gai[*slot].hints.ai_family = AF_UNSPEC;
+    gai[*slot].hints.ai_socktype = SOCK_STREAM;
+    gai[*slot].hints.ai_protocol = IPPROTO_TCP;
 
     gai[*slot].gaicbs = &gai[*slot].gaicb;
     gai[*slot].gaicb.ar_name = host;
     gai[*slot].gaicb.ar_service = portname;
-    gai[*slot].gaicb.ar_result = &gai[*slot].result;
+    gai[*slot].gaicb.ar_request = &gai[*slot].hints;
+    gai[*slot].gaicb.ar_result = NULL;
 
     gai[*slot].sigevent.sigev_notify = SIGEV_THREAD;
     gai[*slot].sigevent.sigev_value.sival_int = *slot;
@@ -378,10 +379,6 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	/* Return the addresses. */
 	res = gaip->gaicb.ar_result;
 	for (i = 0; *nr < max && res != NULL; i++, res = res->ai_next) {
-	    if (res->ai_socktype != SOCK_STREAM ||
-		(res->ai_family != AF_INET && res->ai_family != AF_INET6)) {
-		continue;
-	    }
 	    memcpy(rsa, res->ai_addr, res->ai_addrlen);
 	    sa_rlen[*nr] = (socklen_t)res->ai_addrlen;
 	    if (i == 0) {
@@ -400,7 +397,10 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    rsa = (char *)rsa + sa_len;
 	    (*nr)++;
 	}
-	freeaddrinfo(gaip->gaicb.ar_result);
+	if (gaip->gaicb.ar_result != NULL) {
+	    freeaddrinfo(gaip->gaicb.ar_result);
+	    gaip->gaicb.ar_result = NULL;
+	}
 	if (*nr) {
 	    Replace(gai->host, NULL);
 	    Replace(gai->port, NULL);
@@ -418,17 +418,17 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
 	assert(rc != EAI_INPROGRESS && rc != EAI_CANCELED);
-	if (gaip->gaicb.ar_result->ai_addr != NULL) {
+	if (gaip->gaicb.ar_result != NULL) {
 	    freeaddrinfo(gaip->gaicb.ar_result);
-	    memset(gaip->gaicb.ar_result, 0, sizeof(struct addrinfo));
+	    gaip->gaicb.ar_result = NULL;
 	}
 	Replace(gai->host, NULL);
 	Replace(gai->port, NULL);
 	return RHP_FATAL;
     default:			/* failure */
-	if (gaip->gaicb.ar_result->ai_addr != NULL) {
+	if (gaip->gaicb.ar_result != NULL) {
 	    freeaddrinfo(gaip->gaicb.ar_result);
-	    memset(gaip->gaicb.ar_result, 0, sizeof(struct addrinfo));
+	    gaip->gaicb.ar_result = NULL;
 	}
 	if (errmsg) {
 	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
@@ -518,6 +518,7 @@ cleanup_host_and_port(int slot)
     switch ((rc = gai_error(&gaip->gaicb))) {
     case 0:			/* success */
 	freeaddrinfo(gaip->gaicb.ar_result);
+	gaip->gaicb.ar_result = NULL;
 	break;
     case EAI_INPROGRESS:	/* still pending, should not happen */
     case EAI_CANCELED:		/* canceled, should not happen */
