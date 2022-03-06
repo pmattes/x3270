@@ -35,6 +35,7 @@ if not sys.platform.startswith('win'):
 import os
 import re
 import os.path
+import requests
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -61,6 +62,7 @@ class TestC3270Smoke(cti.cti):
                     cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
                         "-httpd", f"127.0.0.1:{c3270_port}",
                         f"127.0.0.1:{playback_port}"]))
+                self.assertTrue(False, 'c3270 did not start')
 
             # Parent process.
 
@@ -70,6 +72,8 @@ class TestC3270Smoke(cti.cti):
 
             # Write the stream to c3270.
             p.send_records(5)
+            requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
+            requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
             p.send_records(2)
             p.close()
 
@@ -83,10 +87,8 @@ class TestC3270Smoke(cti.cti):
                 result += rbuf.decode('utf8')
             
             # Make the output a bit more readable and split it into lines.
-            # Then replace the text that varies with the build with tokens.
+            result = re.sub('(?s).*\x07', '', result)
             result = result.replace('\x1b', '<ESC>').split('\n')
-            result[0] = re.sub(' v.*\r', '<version>\r', result[0], count=1)
-            result[1] = re.sub(' 1989-.* by', ' <years> by', result[1], count=1)
             for i in range(len(result)):
                 result[i] = re.sub(' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
             rtext = '\n'.join(result)
