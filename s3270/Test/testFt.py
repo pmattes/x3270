@@ -29,7 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270ft(cti.cti):
@@ -39,25 +39,23 @@ class TestS3270ft(cti.cti):
 
         # Start 'playback' to read s3270's output.
         port, socket = cti.unused_port()
-        playback = Popen(["playback", "-b", "-p", str(port),
-            "s3270/Test/ft_dft.trc"], stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port)
-        socket.close()
+        with playback.playback(self, 's3270/Test/ft_dft.trc', port=port) as p:
+            socket.close()
 
-        # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
-                stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
+                    stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b'transfer direction=send host=tso localfile=s3270/Test/fttext hostfile=fttext\n')
-        s3270.stdin.write(b"PF(3)\n")
-        s3270.stdin.flush()
+            # Feed s3270 some actions.
+            s3270.stdin.write(b'transfer direction=send host=tso localfile=s3270/Test/fttext hostfile=fttext\n')
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.flush()
 
-        # Wait for the processes to exit.
-        rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
+            # Verify what s3270 does.
+            p.match()
+
+        # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
 
@@ -66,26 +64,24 @@ class TestS3270ft(cti.cti):
 
         # Start 'playback' to read s3270's output.
         port, socket = cti.unused_port()
-        playback = Popen(["playback", "-b", "-p", str(port),
-            "s3270/Test/ft_cut.trc"], stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port)
-        socket.close()
+        with playback.playback(self, 's3270/Test/ft_cut.trc', port=port) as p:
+            socket.close()
 
-        # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", "-model", "2", f"127.0.0.1:{port}"]),
-                stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(["s3270", "-model", "2", f"127.0.0.1:{port}"]),
+                    stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b'transfer direction=send host=vm "localfile=s3270/Test/fttext" "hostfile=ft text a"\n')
-        s3270.stdin.write(b"String(logoff)\n")
-        s3270.stdin.write(b"Enter()\n")
-        s3270.stdin.flush()
+            # Feed s3270 some actions.
+            s3270.stdin.write(b'transfer direction=send host=vm "localfile=s3270/Test/fttext" "hostfile=ft text a"\n')
+            s3270.stdin.write(b"String(logoff)\n")
+            s3270.stdin.write(b"Enter()\n")
+            s3270.stdin.flush()
 
-        # Wait for the processes to exit.
-        rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
+            # Verify what s3270 does.
+            p.match()
+
+        # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
 

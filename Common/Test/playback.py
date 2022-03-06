@@ -83,7 +83,20 @@ class playback():
         '''Wait for a connection'''
         cti.cti.try_until(self.ct, lambda: self.conn != None, timeout, 'Emulator did not connect')
 
-    def send_records(self, n=1):
+    def send_tm(self):
+        '''Send a timing mark'''
+        self.conn.send(b'\xff\xfd\x06')
+        # Wait for it to come back. This code assumes that the emulator will do
+        # a TCP PUSH after the IAC WONT TM.
+        accum = ''
+        while True:
+            r, _, _ = select.select([self.conn], [], [], 2)
+            self.ct.assertNotEqual([], r, 'Emulator did not send TM response')
+            accum += bytes.hex(self.conn.recv(1024))
+            if accum.endswith('fffc06'):
+                break
+
+    def send_records(self, n=1, send_tm=True):
         '''Copy n records to the emulator'''
         self.wait_accept()
         # Copy until we hit the n'th EOR.
@@ -97,14 +110,88 @@ class playback():
                 if data.endswith('ffef'):
                     n -= 1
         self.ct.assertEqual(0, n, 'Trace file EOF before records read')
-        # Send a timing mark.
-        self.conn.send(b'\xff\xfd\x06')
-        # Wait for it to come back. This code assumes that the emulator will do
-        # a TCP PUSH after the IAC WONT TM.
-        accum = ''
-        while True:
-            r, _, _ = select.select([self.conn], [], [], 2)
-            self.ct.assertNotEqual([], r, 'Emulator did not send TM response')
-            accum += bytes.hex(self.conn.recv(1024))
-            if accum.endswith('fffc06'):
+        if send_tm:
+            # Send a timing mark.
+            self.send_tm()
+
+    def send_lines(self, n=1, send_tm=True):
+        '''Copy n lines to the emulator'''
+        self.wait_accept()
+        # Copy until we hit the n'th line.
+        while n > 0:
+            line = self.file.readline()
+            if line == '':
                 break
+            if re.match('^< 0x[0-9a-f]+ +', line):
+                data = line.split()[2]
+                self.conn.send(bytes.fromhex(data))
+                n -= 1
+        self.ct.assertEqual(0, n, 'Trace file EOF before lines read')
+        if send_tm:
+            # Send a timing mark.
+            self.send_tm()
+
+    def send_to_mark(self, n=1, send_tm=True):
+        '''Send data to emulator until a mark is hit'''
+        self.wait_accept()
+        while n > 0:
+            line = self.file.readline()
+            if line == '':
+                break
+            if re.match('^< 0x[0-9a-f]+ +', line):
+                data = line.split()[2]
+                self.conn.send(bytes.fromhex(data))
+            elif line.startswith('+'):
+                n -= 1
+        self.ct.assertEqual(0, n, 'Trace file EOF before mark(s) read')
+        if send_tm:
+            # Send a timing mark.
+            self.send_tm()
+
+    def nread(self, n: int, timeout=2):
+        '''Read n bytes from the connection with a timeout'''
+        nleft = n
+        ret = b''
+        while nleft > 0:
+            r, _, _ = select.select([self.conn], [], [], timeout)
+            self.ct.assertNotEqual([], r, 'Emulator read timed out')
+            chunk = self.conn.recv(nleft)
+            self.ct.assertNotEqual(chunk, b'', 'Unexpected emulator EOF')
+            ret += chunk
+            nleft -= len(chunk)
+        return ret
+
+    def match(self):
+        '''Compare emulator I/O to trace file'''
+        self.wait_accept()
+        direction = ''
+        accum = ''
+        lno = 0
+        while True:
+            lno += 1
+            line = self.file.readline()
+            if line == '':
+                break
+            isIo = re.match('^[<>] 0x[0-9a-f]+ +', line)
+            if not isIo or line[0] != direction:
+                # Possibly dump output or wait for input.
+                if direction == '<':
+                    # Send to emulator.
+                    self.conn.send(bytes.fromhex(accum))
+                elif direction == '>':
+                    # Receive from emulator.
+                    want = bytes.fromhex(accum)
+                    r = self.nread(len(want))
+                    self.ct.assertEqual(r, want)
+                direction = ''
+                accum = ''
+            if isIo:
+                # Start accumulating.
+                direction = line[0]
+                accum += line.split()[2]
+        self.disconnect()
+
+    def disconnect(self):
+        '''Disconnect'''
+        self.conn.close()
+        self.conn = None

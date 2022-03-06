@@ -29,6 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270CmdLineHostError(cti.cti):
@@ -57,39 +58,30 @@ class TestS3270CmdLineHostError(cti.cti):
 
         # Start 'playback' to read s3270's output.
         playback_port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(playback_port),
-             "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(playback_port)
-        ts.close()
+        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+            ts.close()
 
-        # Start s3270.
-        s3270_port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270',
-            '-xrm', 's3270.contentionResolution: false',
-            '-xrm', 's3270.scriptedAlways: true',
-            '-httpd', f'127.0.0.1:{s3270_port}',
-            f'127.0.0.1:{playback_port}']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        self.children.append(s3270)
-        self.check_listen(s3270_port)
-        ts.close()
+            # Start s3270.
+            s3270_port, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270',
+                '-xrm', 's3270.contentionResolution: false',
+                '-xrm', 's3270.scriptedAlways: true',
+                '-httpd', f'127.0.0.1:{s3270_port}',
+                f'127.0.0.1:{playback_port}']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            self.children.append(s3270)
+            self.check_listen(s3270_port)
+            ts.close()
 
-        # Start negotation, but break the connection before drawing the
-        # screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.flush()
-        self.check_push(playback, s3270_port, 1)
-        playback.stdin.write(b'd\n')
-        playback.stdin.flush()
+            # Start negotation, but break the connection before drawing the
+            # screen.
+            p.send_records(1)
+            p.disconnect()
 
-        # Get the result.
-        s3270.stdin.write(b'Quit()\n')
-        out = s3270.communicate(timeout=2)
+            # Get the result.
+            s3270.stdin.write(b'Quit()\n')
+            out = s3270.communicate(timeout=2)
 
         # Wait for the processes to exit.
-        playback.stdin.close()
-        rc = playback.wait(timeout=2)
-        self.assertEqual(0, rc)
         self.vgwait(s3270)
 
         # Check.

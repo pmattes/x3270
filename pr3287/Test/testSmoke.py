@@ -32,8 +32,10 @@ from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import os
 import sys
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
+@unittest.skipIf(sys.platform.startswith('win'), 'Does not run on Windows')
 @unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
 class TestPr3287Smoke(cti.cti):
 
@@ -42,33 +44,27 @@ class TestPr3287Smoke(cti.cti):
 
         # Start 'playback' to feed data to pr3287.
         port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(port),
-            "pr3287/Test/smoke.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port)
-        ts.close()
+        with playback.playback(self, 'pr3287/Test/smoke.trc', port=port) as p:
+            ts.close()
 
-        # Start pr3287.
-        (po_handle, po_name) = tempfile.mkstemp()
-        (sy_handle, sy_name) = tempfile.mkstemp()
-        pr3287 = Popen(cti.vgwrap(["pr3287", "-command",
-            f"cat >'{po_name}'; date >'{sy_name}'", f"127.0.0.1:{port}"]))
-        self.children.append(pr3287)
+            # Start pr3287.
+            (po_handle, po_name) = tempfile.mkstemp()
+            (sy_handle, sy_name) = tempfile.mkstemp()
+            pr3287 = Popen(cti.vgwrap(["pr3287", "-command",
+                f"cat >'{po_name}'; date >'{sy_name}'", f"127.0.0.1:{port}"]))
+            self.children.append(pr3287)
 
-        # Play the trace to pr3287.
-        playback.stdin.write(b'm\n')
-        playback.stdin.flush()
+            # Play the trace to pr3287.
+            p.send_to_mark(1, send_tm=False)
 
-        # Wait for the sync file to appear.
-        self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, "pr3287 did not produce output")
-        os.close(sy_handle)
-        os.unlink(sy_name)
+            # Wait for the sync file to appear.
+            self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, "pr3287 did not produce output")
+            os.close(sy_handle)
+            os.unlink(sy_name)
 
         # Wait for the processes to exit.
         pr3287.kill()
         self.vgwait(pr3287, assertOnFailure=False)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
         # Read back the file.
         os.lseek(po_handle, 0, os.SEEK_SET)

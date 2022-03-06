@@ -29,6 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270Bid(cti.cti):
@@ -38,25 +39,23 @@ class TestS3270Bid(cti.cti):
 
         # Start 'playback' to read s3270's output.
         port, socket = cti.unused_port()
-        playback = Popen(["playback", "-b", "-p", str(port),
-            "s3270/Test/bid.trc"], stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port)
-        socket.close()
+        with playback.playback(self, 's3270/Test/bid.trc', port=port) as p:
+            socket.close()
 
-        # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
-                stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
+                    stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b"PF(3)\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
+            # Feed s3270 some actions.
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Verify what s3270 does.
+            p.match()
 
         # Wait for the processes to exit.
-        rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
         s3270.stdin.close()
         self.vgwait(s3270)
 
@@ -65,25 +64,23 @@ class TestS3270Bid(cti.cti):
 
         # Start 'playback' to read s3270's output.
         port, socket = cti.unused_port()
-        playback = Popen(["playback", "-b", "-p", str(port),
-            "s3270/Test/no_bid.trc"], stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port)
-        socket.close()
+        with playback.playback(self, 's3270/Test/no_bid.trc', port=port) as p:
+            socket.close()
 
-        # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
-            f"127.0.0.1:{port}"]), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
+                f"127.0.0.1:{port}"]), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b"PF(3)\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
+            # Feed s3270 some actions.
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Verify what s3270 does.
+            p.match()
 
         # Wait for the processes to exit.
-        rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
         s3270.stdin.close()
         self.vgwait(s3270)
 

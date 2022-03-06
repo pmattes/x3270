@@ -29,16 +29,16 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import subprocess
 import os
 import stat
 import tempfile
 import sys
 import requests
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform == "darwin", "Not ready for x3270 graphic tests")
-@unittest.skipIf(sys.platform == "cygwin", "Not ready for x3270 graphic tests")
+@unittest.skipIf(os.system('xset q >/dev/null') != 0, "X11 server needed for tests")
+@unittest.skipIf(os.system('tightvncserver --help 2>/dev/null') != 65280, "tightvncserver needed for tests")
 class TestX3270Smoke(cti.cti):
 
     # Set up procedure.
@@ -71,53 +71,42 @@ class TestX3270Smoke(cti.cti):
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
 
-        # Start 'playback' to read x3270's output.
+        # Start 'playback' to feed x3270.
         playback_port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(playback_port),
-            "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(playback_port)
-        ts.close()
+        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+            self.check_listen(playback_port)
+            ts.close()
 
-        # Set up the fonts.
-        os.environ['DISPLAY'] = ':2'
-        self.assertEqual(0, os.system(f'mkfontdir {os.environ["OBJ"]}/x3270'))
-        self.assertEqual(0, os.system(f'xset fp+ {os.environ["OBJ"]}/x3270/'))
-        self.assertEqual(0, os.system('xset fp rehash'))
+            # Set up the fonts.
+            os.environ['DISPLAY'] = ':2'
+            self.assertEqual(0, os.system(f'mkfontdir {os.environ["OBJ"]}/x3270'))
+            self.assertEqual(0, os.system(f'xset +fp {os.environ["OBJ"]}/x3270/'))
+            self.assertEqual(0, os.system('xset fp rehash'))
 
-        # Start x3270.
-        x3270_port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(["x3270",
-            "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
-            "-xrm", "x3270.colorScheme: old-default",
-            "-httpd", f"127.0.0.1:{x3270_port}",
-            f"127.0.0.1:{playback_port}"]), stdout=DEVNULL)
-        self.children.append(x3270)
-        self.check_listen(x3270_port)
-        ts.close()
+            # Start x3270.
+            x3270_port, ts = cti.unused_port()
+            x3270 = Popen(cti.vgwrap(["x3270",
+                "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
+                "-xrm", "x3270.colorScheme: old-default",
+                "-httpd", f"127.0.0.1:{x3270_port}",
+                f"127.0.0.1:{playback_port}"]), stdout=DEVNULL)
+            self.children.append(x3270)
+            self.check_listen(x3270_port)
+            ts.close()
 
-        # Feed x3270 some data.
-        playback.stdin.write(b"r\nr\nr\nr\n")
-        playback.stdin.flush()
-        self.check_push(playback, x3270_port, 1)
+            # Feed x3270 some data.
+            p.send_records(4)
 
-        # Find x3270's window ID.
-        widcmd = subprocess.run("xlsclients -l", shell=True, capture_output=True, check=True)
-        for i in widcmd.stdout.decode('utf8').replace(' ', '').split('\n'):
-            if i.startswith('Window'):
-                wid=i.replace('Window','').replace(':', '')
-            elif i.startswith('Command') and 'x3270' in i:
-                break
+            # Find x3270's window ID.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
+            wid = r.json()['status'].split()[-2]
 
-        # Dump the window contents.
-        (handle, name) = tempfile.mkstemp()
-        os.close(handle)
-        self.assertEqual(0, os.system(f'xwd -id {wid} -silent -nobdrs -out "{name}"'))
+            # Dump the window contents.
+            (handle, name) = tempfile.mkstemp()
+            os.close(handle)
+            self.assertEqual(0, os.system(f'xwd -id {wid} -silent -nobdrs -out "{name}"'))
 
-        # Wait for the processes to exit.
-        playback.stdin.close()
-        playback.kill()
-        playback.wait(timeout=2)
+        # Wait for the process to exit.
         requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
         self.vgwait(x3270)
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))

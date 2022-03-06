@@ -212,7 +212,6 @@
 #define KwTelnetMyOptions "TelnetMyOptions"
 #define KwTelnetHostOptions "TelnetHostOptions"
 #define KwTerminalName	"TerminalName"
-#define KwTimingMarks	"TimingMarks"
 #define KwTn3270eOptions "Tn3270eOptions"
 #define KwTraceFile	"TraceFile"
 #define KwTls		"Tls"

@@ -31,6 +31,7 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
 import os
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270Smoke(cti.cti):
@@ -72,26 +73,24 @@ class TestS3270Smoke(cti.cti):
 
         # Start 'playback' to read s3270's output.
         port, ts = cti.unused_port(ipv6=ipv6)
-        loopback = '[::1]' if ipv6 else '127.0.0.1'
-        playback = Popen(["playback", "-b", "-p", f'{loopback}:{port}',
-            "s3270/Test/ibmlink.trc"], stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(port, ipv6=ipv6)
-        ts.close()
+        with playback.playback(self, 's3270/Test/ibmlink.trc', port=port, ipv6=ipv6) as p:
+            ts.close()
 
-        # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
-            f'{loopback}:{port}']), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            loopback = '[::1]' if ipv6 else '127.0.0.1'
+            s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
+                f'{loopback}:{port}']), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b"PF(3)\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
+            # Feed s3270 some actions.
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Make sure the emulator does what we expect.
+            p.match()
 
         # Wait for the processes to exit.
-        rc = playback.wait(timeout=2)
-        self.assertEqual(rc, 0)
         s3270.stdin.close()
         self.vgwait(s3270)
 
@@ -132,7 +131,7 @@ class TestS3270Smoke(cti.cti):
     # s3270 httpd smoke test
     def test_s3270_httpd_smoke(self):
         self.s3270_httpd_smoke()
-    def test_s3270_https_smoke_ipv6(self):
+    def test_s3270_httpd_smoke_ipv6(self):
         self.s3270_httpd_smoke(ipv6=True)
 
     # s3270 stdin smoke test

@@ -261,28 +261,6 @@ class cti(unittest.TestCase):
             return any(r.search(line) for line in stdout)
         self.try_until(test, 2, f"Port {port} is not bound")
 
-    def to_playback(self, playback, port, s):
-        '''Write a string to playback after verifying the emulator is blocked'''
-        # Wait for the action to block.
-        def test():
-            j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
-            return any('Wait(' in line for line in j['result'])
-        self.try_until(test, 2, "emulator did not block")
-        
-        # Trigger the host output.
-        playback.stdin.write(s)
-        playback.stdin.flush()
-
-    def check_push(self, p, port, count):
-        '''Check for pushed data'''
-        # Send a timing mark.
-        p.stdin.write(b"t\n")
-        p.stdin.flush()
-        def test():
-            j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(TimingMarks)').json()
-            return j['result'][0] == str(count)
-        self.try_until(test, 2, "emulator did not accept the data")
-
     def check_dash_v(self, prog, with_w=False):
         '''Make sure the "-v" option works'''
         p = Popen([prog, '-v'], stderr=PIPE)

@@ -33,6 +33,7 @@ import tempfile
 import os
 import filecmp
 import sys
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
@@ -43,41 +44,33 @@ class TestTcl3270Smoke(cti.cti):
 
         # Start 'playback' to feed data to tcl3270.
         playback_port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(playback_port),
-            "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(playback_port)
-        ts.close()
+        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+            ts.close()
 
-        # Create a temporary file.
-        (handle, name) = tempfile.mkstemp()
+            # Create a temporary file.
+            (handle, name) = tempfile.mkstemp()
 
-        # Start tcl3270.
-        tcl_port, ts = cti.unused_port()
-        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
-            "-xrm", "tcl3270.contentionResolution: false",
-            "-httpd", f"127.0.0.1:{tcl_port}",
-            f"127.0.0.1:{playback_port}"]),
-            stdin=DEVNULL, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(tcl_port)
-        ts.close()
+            # Start tcl3270.
+            tcl_port, ts = cti.unused_port()
+            tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
+                "-xrm", "tcl3270.contentionResolution: false",
+                "-httpd", f"127.0.0.1:{tcl_port}",
+                f"127.0.0.1:{playback_port}"]),
+                stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(tcl3270)
+            self.check_listen(tcl_port)
+            ts.close()
 
-        # Send a screenful to tcl3270.
-        playback.stdin.write(b'r\nr\nr\nr\n')
-        playback.stdin.flush()
-        self.check_push(playback, tcl_port, 1)
+            # Send a screenful to tcl3270.
+            p.send_records(4)
 
-        # Wait for the file to show up.
-        def Test():
-            return os.lseek(handle, 0, os.SEEK_END) > 0
-        self.try_until(Test, 2, "Script did not produce a file")
-        os.close(handle)
+            # Wait for the file to show up.
+            def Test():
+                return os.lseek(handle, 0, os.SEEK_END) > 0
+            self.try_until(Test, 2, "Script did not produce a file")
+            os.close(handle)
 
         # Wait for the processes to exit.
-        playback.stdin.close()
-        playback.kill()
-        playback.wait(timeout=2)
         tcl3270.kill()
         self.vgwait(tcl3270, assertOnFailure=False)
 

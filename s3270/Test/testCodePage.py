@@ -30,6 +30,7 @@
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270CodePage(cti.cti):
@@ -39,151 +40,145 @@ class TestS3270CodePage(cti.cti):
 
         # Start playback.
         pport, ts = cti.unused_port()
-        playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/all_chars.trc'], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(pport)
-        ts.close()
+        with playback.playback(self, 's3270/Test/all_chars.trc', port=pport) as p:
+            ts.close()
 
-        # Start s3270.
-        sport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
-        self.children.append(s3270)
-        self.check_listen(sport)
-        ts.close()
+            # Start s3270.
+            sport, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
 
-        cp_all_map = {
-            'cp037': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                      'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                      'µ~stuvwxyz¡¿ÐÝÞ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xadôöòóõ',
-                      '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp273': [' \xa0â{àáãåçñÄ.<(+!', '&éêëèíîïì~Ü$*);^', '-/Â[ÀÁÃÅÇÑö,%_>?',
-                      'øÉÊËÈÍÎÏÌ`:#§\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                      'µßstuvwxyz¡¿ÐÝÞ®', '¢£¥·©@¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
-                      'üJKLMNOPQR¹û}ùúÿ', 'Ö÷STUVWXYZ²Ô\\ÒÓÕ', '0123456789³Û]ÙÚ●'],
-            'cp275': [' \xa0        É.<(+!', '&         $Ç*);^', '-/        ç,%_>?',
-                      '         ã:ÕÃ\'="', ' abcdefghi      ', ' jklmnopqr      ',
-                      ' ~stuvwxyz      ', '                ', 'õABCDEFGHI      ',
-                      'éJKLMNOPQR      ', '\\ STUVWXYZ      ', '0123456789     ●'],
-            'cp277': [' \xa0âäàáã}çñ#.<(+!', '&éêëèíîïìß¤Å*);^', '-/ÂÄÀÁÃ$ÇÑø,%_>?',
-                      '¦ÉÊËÈÍÎÏÌ`:ÆØ\'="', '@abcdefghi«»ðýþ±', '°jklmnopqrªº{¸[]',
-                      'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', 'æABCDEFGHI\xadôöòóõ',
-                      'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp278': [' \xa0â{àáã}çñ§.<(+!', '&`êëèíîïìß¤Å*);^', '-/Â#ÀÁÃ$ÇÑö,%_>?',
-                      'øÉÊËÈÍÎÏÌé:ÄÖ\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ]',
-                      'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©[¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
-                      'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²Ô@ÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp280': [' \xa0âä{áãå\\ñ°.<(+!', '&]êë}íîï~ßé$*);^', '-/ÂÄÀÁÃÅÇÑò,%_>?',
-                      'øÉÊËÈÍÎÏÌù:£§\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ¤',
-                      'µìstuvwxyz¡¿ÐÝÞ®', '¢#¥·©@¶¼½¾¬|¯¨´×', 'àABCDEFGHI\xadôö¦óõ',
-                      'èJKLMNOPQR¹ûü`úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp284': [' \xa0âäàáãåç¦[.<(+|', '&éêëèíîïìß]$*);¬', '-/ÂÄÀÁÃÅÇ#ñ,%_>?',
-                      'øÉÊËÈÍÎÏÌ`:Ñ@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                      'µ¨stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾^!¯~´×', '{ABCDEFGHI\xadôöòóõ',
-                      '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp285': [' \xa0âäàáãåçñ$.<(+|', '&éêëèíîïìß!£*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                      'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                      'µ¯stuvwxyz¡¿ÐÝÞ®', '¢[¥·©§¶¼½¾^]~¨´×', '{ABCDEFGHI\xadôöòóõ',
-                      '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp297': [' \xa0âä@áãå\\ñ°.<(+!', '&{êë}íîïìß§$*);^', '-/ÂÄÀÁÃÅÇÑù,%_>?',
-                      'øÉÊËÈÍÎÏÌµ:£à\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ¤',
-                      '`¨stuvwxyz¡¿ÐÝÞ®', '¢#¥·©]¶¼½¾¬|¯~´×', 'éABCDEFGHI\xadôöòóõ',
-                      'èJKLMNOPQR¹ûü¦úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp424': [' אבגדהוזחט¢.<(+|', '&יךכלםמןנס!$*);¬', '-/עףפץצקרש¦,%_>?', ' ת  \xa0   ⇔`:#@\'="', ' abcdefghi«»    ', '°jklmnopqr   ¸ ¤', 'µ~stuvwxyz     ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xad     ', '}JKLMNOPQR¹     ', '\\÷STUVWXYZ²     ', '0123456789³    ●'],
-            'cp500': [' \xa0âäàáãåçñ[.<(+!', '&éêëèíîïìß]$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                      'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                      'µ~stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', '{ABCDEFGHI\xadôöòóõ',
-                      '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp803': ['          $.<(+|', 'א         !¢*);¬', '-/         ,%_>?', '          :#@\'="', ' בגדהוזחטי      ', ' ךכלםמןנסע      ', '  ףפץצקרשת      ', '                ', ' ABCDEFGHI      ', ' JKLMNOPQR      ', '  STUVWXYZ      ', '0123456789     ●'],
-            'cp870': [' \xa0âäţáăčçć[.<(+!', '&éęëůíîľĺß]$*);^', '-/ÂÄ˝ÁĂČÇĆ|,%_>?',
-                      'ˇÉĘËŮÍÎĽĹ`:#@\'="', '˘abcdefghiśňđýřş', '°jklmnopqrłńš¸˛¤',
-                      'ą~stuvwxyzŚŇĐÝŘŞ', '·ĄżŢŻ§žźŽŹŁŃŠ¨´×', '{ABCDEFGHI\xadôöŕóő',
-                      '}JKLMNOPQRĚűüťúě', '\\÷STUVWXYZďÔÖŔÓŐ', '0123456789ĎŰÜŤÚ●'],
-            'cp871': [' \xa0âäàáãåçñþ.<(+!', '&éêëèíîïìßÆ$*);Ö', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                      'øÉÊËÈÍÎÏÌð:#Ð\'="', 'Øabcdefghi«»`ý{±', '°jklmnopqrªº}¸]¤',
-                      'µöstuvwxyz¡¿@Ý[®', '¢£¥·©§¶¼½¾¬|¯¨\\×', 'ÞABCDEFGHI\xadô~òóõ',
-                      'æJKLMNOPQR¹ûüùúÿ', '´÷STUVWXYZ²Ô^ÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp875': [' ΑΒΓΔΕΖΗΘΙ[.<(+!', '&ΚΛΜΝΞΟΠΡΣ]$*);^', '-/ΤΥΦΧΨΩΪΫ ,%_>?',
-                      '¨ΆΈΉ∇ΊΌΎΏ`:#@\'="', '΅abcdefghiαβγδεζ', '°jklmnopqrηθικλμ',
-                      '´~stuvwxyzνξοπρσ', '£άέήΐίόύΰώςτυφχψ', '{ABCDEFGHI\xadωϊϋ‘―',
-                      '}JKLMNOPQR±½ ·’¦', '\\ STUVWXYZ²§  «¬', '0123456789³©  »●'],
-            'cp880': [' \xa0ђѓё ѕіїј[.<(+!', '&љњћќ џЪ№Ђ]$*);^', '-/ЃЁ ЅІЇЈЉ¦,%_>?',
-                      'ЊЋЌ  Џюаб :#@\'="', 'цabcdefghiдефгхи', 'йjklmnopqrклмноп',
-                      'я stuvwxyzрстужв', 'ьызшэщчъЮАБЦДЕФГ', ' ABCDEFGHIХИЙКЛМ',
-                      ' JKLMNOPQRНОПЯРС', '\\¤STUVWXYZТУЖВЬЫ', '0123456789ЗШЭЩЧ●'],
-            'cp1026': [' \xa0âäàáãå{ñÇ.<(+!', '&éêëèíîïìßĞİ*);^', '-/ÂÄÀÁÃÅ[Ñş,%_>?',
-                       "øÉÊËÈÍÎÏÌı:ÖŞ'=Ü", 'Øabcdefghi«»}`¦±', '°jklmnopqrªºæ˛Æ¤',
-                       'µöstuvwxyz¡¿]$@®', '¢£¥·©§¶¼½¾¬|—¨´×', 'çABCDEFGHI\xadô~òóõ',
-                       'ğJKLMNOPQR¹û\\ùúÿ', 'ü÷STUVWXYZ²Ô#ÒÓÕ', '0123456789³Û"ÙÚ●'],
-            'cp1047': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                       'µ~stuvwxyz¡¿Ð[Þ®', '¬£¥·©§¶¼½¾Ý¨¯]´×', '{ABCDEFGHI\xadôöòóõ',
-                       '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1140': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
-                       'µ~stuvwxyz¡¿ÐÝÞ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xadôöòóõ',
-                       '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1141': [' \xa0â{àáãåçñÄ.<(+!', '&éêëèíîïì~Ü$*);^', '-/Â[ÀÁÃÅÇÑö,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:#§\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
-                       'µßstuvwxyz¡¿ÐÝÞ®', '¢£¥·©@¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
-                       'üJKLMNOPQR¹û}ùúÿ', 'Ö÷STUVWXYZ²Ô\\ÒÓÕ', '0123456789³Û]ÙÚ●'],
-            'cp1142': [' \xa0âäàáã}çñ#.<(+!', '&éêëèíîïìß€Å*);^', '-/ÂÄÀÁÃ$ÇÑø,%_>?',
-                       '¦ÉÊËÈÍÎÏÌ`:ÆØ\'="', '@abcdefghi«»ðýþ±', '°jklmnopqrªº{¸[]',
-                       'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', 'æABCDEFGHI\xadôöòóõ',
-                       'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1143': [' \xa0â{àáã}çñ§.<(+!', '&`êëèíîïìß€Å*);^', '-/Â#ÀÁÃ$ÇÑö,%_>?',
-                       'ø\\ÊËÈÍÎÏÌé:ÄÖ\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ]',
-                       'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©[¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
-                       'åJKLMNOPQR¹û~ùúÿ', 'É÷STUVWXYZ²Ô@ÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1144': [' \xa0âä{áãå\\ñ°.<(+!', '&]êë}íîï~ßé$*);^', '-/ÂÄÀÁÃÅÇÑò,%_>?',
-                       'øÉÊËÈÍÎÏÌù:£§\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ€',
-                       'µìstuvwxyz¡¿ÐÝÞ®', '¢#¥·©@¶¼½¾¬|¯¨´×', 'àABCDEFGHI\xadôö¦óõ',
-                       'èJKLMNOPQR¹ûü`úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1145': [' \xa0âäàáãåç¦[.<(+|', '&éêëèíîïìß]$*);¬', '-/ÂÄÀÁÃÅÇ#ñ,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:Ñ@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
-                       'µ¨stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾^!¯~´×', '{ABCDEFGHI\xadôöòóõ',
-                       '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1146': [' \xa0âäàáãåçñ$.<(+|', '&éêëèíîïìß!£*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
-                       'µ¯stuvwxyz¡¿ÐÝÞ®', '¢[¥·©§¶¼½¾^]~¨´×', '{ABCDEFGHI\xadôöòóõ',
-                       '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1147': [' \xa0âä@áãå\\ñ°.<(+!', '&{êë}íîïìß§$*);^', '-/ÂÄÀÁÃÅÇÑù,%_>?',
-                       'øÉÊËÈÍÎÏÌµ:£à\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ€',
-                       '`¨stuvwxyz¡¿ÐÝÞ®', '¢#¥·©]¶¼½¾¬|¯~´×', 'éABCDEFGHI\xadôöòóõ',
-                       'èJKLMNOPQR¹ûü¦úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1148': [' \xa0âäàáãåçñ[.<(+!', '&éêëèíîïìß]$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                       'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
-                       'µ~stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', '{ABCDEFGHI\xadôöòóõ',
-                       '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1149': [' \xa0âäàáãåçñÞ.<(+!', '&éêëèíîïìßÆ$*);Ö', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
-                       'øÉÊËÈÍÎÏÌð:#Ð\'="', 'Øabcdefghi«»`ý{±', '°jklmnopqrªº}¸]€',
-                       'µöstuvwxyz¡¿@Ý[®', '¢£¥·©§¶¼½¾¬|¯¨\\×', 'þABCDEFGHI\xadô~òóõ',
-                       'æJKLMNOPQR¹ûüùúÿ', '´÷STUVWXYZ²Ô^ÒÓÕ', '0123456789³ÛÜÙÚ●'],
-            'cp1160': [' \xa0กขฃคฅฆง[¢.<(+|', '&่จฉชซฌญฎ]!$*);¬', '-/ฏฐฑฒณดต^¦,%_>?',
-                       '฿๎ถทธนบปผ`:#@\'="', '๏abcdefghiฝพฟภมย', '๚jklmnopqrรฤลฦวศ',
-                       '๛~stuvwxyzษสหฬอฮ', '๐๑๒๓๔๕๖๗๘๙ฯะัาำิ', '{ABCDEFGHI้ีึืุู',
-                       '}JKLMNOPQRฺเแโใไ', '\\๊STUVWXYZๅๆ็่้๊', '0123456789๋์ํ๋€●'],
-            'bracket': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+            cp_all_map = {
+                'cp037': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
                         'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
-                        'µ~stuvwxyz¡¿Ð[Þ®', '^£¥·©§¶¼½¾Ý¨¯]´×', '{ABCDEFGHI\xadôöòóõ',
-                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●']
-        }
+                        'µ~stuvwxyz¡¿ÐÝÞ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp273': [' \xa0â{àáãåçñÄ.<(+!', '&éêëèíîïì~Ü$*);^', '-/Â[ÀÁÃÅÇÑö,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#§\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                        'µßstuvwxyz¡¿ÐÝÞ®', '¢£¥·©@¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
+                        'üJKLMNOPQR¹û}ùúÿ', 'Ö÷STUVWXYZ²Ô\\ÒÓÕ', '0123456789³Û]ÙÚ●'],
+                'cp275': [' \xa0        É.<(+!', '&         $Ç*);^', '-/        ç,%_>?',
+                        '         ã:ÕÃ\'="', ' abcdefghi      ', ' jklmnopqr      ',
+                        ' ~stuvwxyz      ', '                ', 'õABCDEFGHI      ',
+                        'éJKLMNOPQR      ', '\\ STUVWXYZ      ', '0123456789     ●'],
+                'cp277': [' \xa0âäàáã}çñ#.<(+!', '&éêëèíîïìß¤Å*);^', '-/ÂÄÀÁÃ$ÇÑø,%_>?',
+                        '¦ÉÊËÈÍÎÏÌ`:ÆØ\'="', '@abcdefghi«»ðýþ±', '°jklmnopqrªº{¸[]',
+                        'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', 'æABCDEFGHI\xadôöòóõ',
+                        'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp278': [' \xa0â{àáã}çñ§.<(+!', '&`êëèíîïìß¤Å*);^', '-/Â#ÀÁÃ$ÇÑö,%_>?',
+                        'øÉÊËÈÍÎÏÌé:ÄÖ\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ]',
+                        'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©[¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
+                        'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²Ô@ÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp280': [' \xa0âä{áãå\\ñ°.<(+!', '&]êë}íîï~ßé$*);^', '-/ÂÄÀÁÃÅÇÑò,%_>?',
+                        'øÉÊËÈÍÎÏÌù:£§\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ¤',
+                        'µìstuvwxyz¡¿ÐÝÞ®', '¢#¥·©@¶¼½¾¬|¯¨´×', 'àABCDEFGHI\xadôö¦óõ',
+                        'èJKLMNOPQR¹ûü`úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp284': [' \xa0âäàáãåç¦[.<(+|', '&éêëèíîïìß]$*);¬', '-/ÂÄÀÁÃÅÇ#ñ,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:Ñ@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                        'µ¨stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾^!¯~´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp285': [' \xa0âäàáãåçñ$.<(+|', '&éêëèíîïìß!£*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                        'µ¯stuvwxyz¡¿ÐÝÞ®', '¢[¥·©§¶¼½¾^]~¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp297': [' \xa0âä@áãå\\ñ°.<(+!', '&{êë}íîïìß§$*);^', '-/ÂÄÀÁÃÅÇÑù,%_>?',
+                        'øÉÊËÈÍÎÏÌµ:£à\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ¤',
+                        '`¨stuvwxyz¡¿ÐÝÞ®', '¢#¥·©]¶¼½¾¬|¯~´×', 'éABCDEFGHI\xadôöòóõ',
+                        'èJKLMNOPQR¹ûü¦úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp424': [' אבגדהוזחט¢.<(+|', '&יךכלםמןנס!$*);¬', '-/עףפץצקרש¦,%_>?', ' ת  \xa0   ⇔`:#@\'="', ' abcdefghi«»    ', '°jklmnopqr   ¸ ¤', 'µ~stuvwxyz     ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xad     ', '}JKLMNOPQR¹     ', '\\÷STUVWXYZ²     ', '0123456789³    ●'],
+                'cp500': [' \xa0âäàáãåçñ[.<(+!', '&éêëèíîïìß]$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                        'µ~stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp803': ['          $.<(+|', 'א         !¢*);¬', '-/         ,%_>?', '          :#@\'="', ' בגדהוזחטי      ', ' ךכלםמןנסע      ', '  ףפץצקרשת      ', '                ', ' ABCDEFGHI      ', ' JKLMNOPQR      ', '  STUVWXYZ      ', '0123456789     ●'],
+                'cp870': [' \xa0âäţáăčçć[.<(+!', '&éęëůíîľĺß]$*);^', '-/ÂÄ˝ÁĂČÇĆ|,%_>?',
+                        'ˇÉĘËŮÍÎĽĹ`:#@\'="', '˘abcdefghiśňđýřş', '°jklmnopqrłńš¸˛¤',
+                        'ą~stuvwxyzŚŇĐÝŘŞ', '·ĄżŢŻ§žźŽŹŁŃŠ¨´×', '{ABCDEFGHI\xadôöŕóő',
+                        '}JKLMNOPQRĚűüťúě', '\\÷STUVWXYZďÔÖŔÓŐ', '0123456789ĎŰÜŤÚ●'],
+                'cp871': [' \xa0âäàáãåçñþ.<(+!', '&éêëèíîïìßÆ$*);Ö', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌð:#Ð\'="', 'Øabcdefghi«»`ý{±', '°jklmnopqrªº}¸]¤',
+                        'µöstuvwxyz¡¿@Ý[®', '¢£¥·©§¶¼½¾¬|¯¨\\×', 'ÞABCDEFGHI\xadô~òóõ',
+                        'æJKLMNOPQR¹ûüùúÿ', '´÷STUVWXYZ²Ô^ÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp875': [' ΑΒΓΔΕΖΗΘΙ[.<(+!', '&ΚΛΜΝΞΟΠΡΣ]$*);^', '-/ΤΥΦΧΨΩΪΫ ,%_>?',
+                        '¨ΆΈΉ∇ΊΌΎΏ`:#@\'="', '΅abcdefghiαβγδεζ', '°jklmnopqrηθικλμ',
+                        '´~stuvwxyzνξοπρσ', '£άέήΐίόύΰώςτυφχψ', '{ABCDEFGHI\xadωϊϋ‘―',
+                        '}JKLMNOPQR±½ ·’¦', '\\ STUVWXYZ²§  «¬', '0123456789³©  »●'],
+                'cp880': [' \xa0ђѓё ѕіїј[.<(+!', '&љњћќ џЪ№Ђ]$*);^', '-/ЃЁ ЅІЇЈЉ¦,%_>?',
+                        'ЊЋЌ  Џюаб :#@\'="', 'цabcdefghiдефгхи', 'йjklmnopqrклмноп',
+                        'я stuvwxyzрстужв', 'ьызшэщчъЮАБЦДЕФГ', ' ABCDEFGHIХИЙКЛМ',
+                        ' JKLMNOPQRНОПЯРС', '\\¤STUVWXYZТУЖВЬЫ', '0123456789ЗШЭЩЧ●'],
+                'cp1026': [' \xa0âäàáãå{ñÇ.<(+!', '&éêëèíîïìßĞİ*);^', '-/ÂÄÀÁÃÅ[Ñş,%_>?',
+                        "øÉÊËÈÍÎÏÌı:ÖŞ'=Ü", 'Øabcdefghi«»}`¦±', '°jklmnopqrªºæ˛Æ¤',
+                        'µöstuvwxyz¡¿]$@®', '¢£¥·©§¶¼½¾¬|—¨´×', 'çABCDEFGHI\xadô~òóõ',
+                        'ğJKLMNOPQR¹û\\ùúÿ', 'ü÷STUVWXYZ²Ô#ÒÓÕ', '0123456789³Û"ÙÚ●'],
+                'cp1047': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                        'µ~stuvwxyz¡¿Ð[Þ®', '¬£¥·©§¶¼½¾Ý¨¯]´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1140': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
+                        'µ~stuvwxyz¡¿ÐÝÞ®', '^£¥·©§¶¼½¾[]¯¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1141': [' \xa0â{àáãåçñÄ.<(+!', '&éêëèíîïì~Ü$*);^', '-/Â[ÀÁÃÅÇÑö,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#§\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
+                        'µßstuvwxyz¡¿ÐÝÞ®', '¢£¥·©@¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
+                        'üJKLMNOPQR¹û}ùúÿ', 'Ö÷STUVWXYZ²Ô\\ÒÓÕ', '0123456789³Û]ÙÚ●'],
+                'cp1142': [' \xa0âäàáã}çñ#.<(+!', '&éêëèíîïìß€Å*);^', '-/ÂÄÀÁÃ$ÇÑø,%_>?',
+                        '¦ÉÊËÈÍÎÏÌ`:ÆØ\'="', '@abcdefghi«»ðýþ±', '°jklmnopqrªº{¸[]',
+                        'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', 'æABCDEFGHI\xadôöòóõ',
+                        'åJKLMNOPQR¹û~ùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1143': [' \xa0â{àáã}çñ§.<(+!', '&`êëèíîïìß€Å*);^', '-/Â#ÀÁÃ$ÇÑö,%_>?',
+                        'ø\\ÊËÈÍÎÏÌé:ÄÖ\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ]',
+                        'µüstuvwxyz¡¿ÐÝÞ®', '¢£¥·©[¶¼½¾¬|¯¨´×', 'äABCDEFGHI\xadô¦òóõ',
+                        'åJKLMNOPQR¹û~ùúÿ', 'É÷STUVWXYZ²Ô@ÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1144': [' \xa0âä{áãå\\ñ°.<(+!', '&]êë}íîï~ßé$*);^', '-/ÂÄÀÁÃÅÇÑò,%_>?',
+                        'øÉÊËÈÍÎÏÌù:£§\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ€',
+                        'µìstuvwxyz¡¿ÐÝÞ®', '¢#¥·©@¶¼½¾¬|¯¨´×', 'àABCDEFGHI\xadôö¦óõ',
+                        'èJKLMNOPQR¹ûü`úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1145': [' \xa0âäàáãåç¦[.<(+|', '&éêëèíîïìß]$*);¬', '-/ÂÄÀÁÃÅÇ#ñ,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:Ñ@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
+                        'µ¨stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾^!¯~´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1146': [' \xa0âäàáãåçñ$.<(+|', '&éêëèíîïìß!£*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
+                        'µ¯stuvwxyz¡¿ÐÝÞ®', '¢[¥·©§¶¼½¾^]~¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1147': [' \xa0âä@áãå\\ñ°.<(+!', '&{êë}íîïìß§$*);^', '-/ÂÄÀÁÃÅÇÑù,%_>?',
+                        'øÉÊËÈÍÎÏÌµ:£à\'="', 'Øabcdefghi«»ðýþ±', '[jklmnopqrªºæ¸Æ€',
+                        '`¨stuvwxyz¡¿ÐÝÞ®', '¢#¥·©]¶¼½¾¬|¯~´×', 'éABCDEFGHI\xadôöòóõ',
+                        'èJKLMNOPQR¹ûü¦úÿ', 'ç÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1148': [' \xa0âäàáãåçñ[.<(+!', '&éêëèíîïìß]$*);^', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ€',
+                        'µ~stuvwxyz¡¿ÐÝÞ®', '¢£¥·©§¶¼½¾¬|¯¨´×', '{ABCDEFGHI\xadôöòóõ',
+                        '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1149': [' \xa0âäàáãåçñÞ.<(+!', '&éêëèíîïìßÆ$*);Ö', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                        'øÉÊËÈÍÎÏÌð:#Ð\'="', 'Øabcdefghi«»`ý{±', '°jklmnopqrªº}¸]€',
+                        'µöstuvwxyz¡¿@Ý[®', '¢£¥·©§¶¼½¾¬|¯¨\\×', 'þABCDEFGHI\xadô~òóõ',
+                        'æJKLMNOPQR¹ûüùúÿ', '´÷STUVWXYZ²Ô^ÒÓÕ', '0123456789³ÛÜÙÚ●'],
+                'cp1160': [' \xa0กขฃคฅฆง[¢.<(+|', '&่จฉชซฌญฎ]!$*);¬', '-/ฏฐฑฒณดต^¦,%_>?',
+                        '฿๎ถทธนบปผ`:#@\'="', '๏abcdefghiฝพฟภมย', '๚jklmnopqrรฤลฦวศ',
+                        '๛~stuvwxyzษสหฬอฮ', '๐๑๒๓๔๕๖๗๘๙ฯะัาำิ', '{ABCDEFGHI้ีึืุู',
+                        '}JKLMNOPQRฺเแโใไ', '\\๊STUVWXYZๅๆ็่้๊', '0123456789๋์ํ๋€●'],
+                'bracket': [' \xa0âäàáãåçñ¢.<(+|', '&éêëèíîïìß!$*);¬', '-/ÂÄÀÁÃÅÇÑ¦,%_>?',
+                            'øÉÊËÈÍÎÏÌ`:#@\'="', 'Øabcdefghi«»ðýþ±', '°jklmnopqrªºæ¸Æ¤',
+                            'µ~stuvwxyz¡¿Ð[Þ®', '^£¥·©§¶¼½¾Ý¨¯]´×', '{ABCDEFGHI\xadôöòóõ',
+                            '}JKLMNOPQR¹ûüùúÿ', '\\÷STUVWXYZ²ÔÖÒÓÕ', '0123456789³ÛÜÙÚ●']
+            }
 
-        # Fill up the screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.flush()
-        self.check_push(playback, sport, 1)
+            # Fill up the screen.
+            p.send_records(1)
 
-        # Check the SBCS code pages.
-        for cp in cp_all_map.keys():
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(codePage,{cp})')
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
-            self.assertEqual(cp_all_map[cp], r.json()['result'])
+            # Check the SBCS code pages.
+            for cp in cp_all_map.keys():
+                requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(codePage,{cp})')
+                r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
+                self.assertEqual(cp_all_map[cp], r.json()['result'])
 
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
     # s3270 APL code page test.
     def test_s3270_apl_code_page(self):
@@ -205,22 +200,18 @@ class TestS3270CodePage(cti.cti):
 
         # Start playback.
         pport, ts = cti.unused_port()
-        playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/apl.trc'], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(pport)
-        ts.close()
+        with playback.playback(self, 's3270/Test/apl.trc', port=pport) as p:
+            ts.close()
 
-        # Start s3270.
-        sport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
-        self.children.append(s3270)
-        self.check_listen(sport)
-        ts.close()
+            # Start s3270.
+            sport, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
 
-        # Fill up the screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.fileno()
-        self.check_push(playback, sport, 1)
+            # Fill up the screen.
+            p.send_records(1)
 
         # Check the SBCS code pages.
         r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
@@ -229,8 +220,6 @@ class TestS3270CodePage(cti.cti):
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
     # s3270 simplified Chinese test.
     def s3270_simplified_chinese(self, codePage):
@@ -243,32 +232,26 @@ class TestS3270CodePage(cti.cti):
 
         # Start playback.
         pport, ts = cti.unused_port()
-        playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/935.trc'], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(pport)
-        ts.close()
+        with playback.playback(self, 's3270/Test/935.trc', port=pport) as p:
+            ts.close()
 
-        # Start s3270.
-        sport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
-        self.children.append(s3270)
-        self.check_listen(sport)
-        ts.close()
+            # Start s3270.
+            sport, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
 
-        # Fill up the screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.fileno()
-        self.check_push(playback, sport, 1)
+            # Fill up the screen.
+            p.send_records(1)
 
-        # Check the DBCS output.
-        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
-        self.assertEqual(expect_chinese, r.json()['result'])
+            # Check the DBCS output.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
+            self.assertEqual(expect_chinese, r.json()['result'])
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
     # Simplified Chinese tests.
     def test_s3270_cp935(self):
@@ -286,32 +269,26 @@ class TestS3270CodePage(cti.cti):
 
         # Start playback.
         pport, ts = cti.unused_port()
-        playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/937.trc'], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(pport)
-        ts.close()
+        with playback.playback(self, 's3270/Test/937.trc', port=pport) as p:
+            ts.close()
 
-        # Start s3270.
-        sport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
-        self.children.append(s3270)
-        self.check_listen(sport)
-        ts.close()
+            # Start s3270.
+            sport, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
 
-        # Fill up the screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.fileno()
-        self.check_push(playback, sport, 1)
+            # Fill up the screen.
+            p.send_records(1)
 
-        # Check the DBCS output.
-        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
-        self.assertEqual(expect_chinese, r.json()['result'])
+            # Check the DBCS output.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
+            self.assertEqual(expect_chinese, r.json()['result'])
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
     # s3270 Japanese DBCS test.
     def s3270_japanese(self, codePage):
@@ -329,32 +306,26 @@ class TestS3270CodePage(cti.cti):
 
         # Start playback.
         pport, ts = cti.unused_port()
-        playback = Popen(['playback', '-w', '-p', str(pport), 's3270/Test/930.trc'], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(pport)
-        ts.close()
+        with playback.playback(self, 's3270/Test/930.trc', port=pport) as p:
+            ts.close()
 
-        # Start s3270.
-        sport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
-        self.children.append(s3270)
-        self.check_listen(sport)
-        ts.close()
+            # Start s3270.
+            sport, ts = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
 
-        # Fill up the screen.
-        playback.stdin.write(b'r\n')
-        playback.stdin.fileno()
-        self.check_push(playback, sport, 1)
+            # Fill up the screen.
+            p.send_records(1)
 
-        # Check the DBCS output.
-        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
-        self.assertEqual(expect_japanese[codePage], r.json()['result'])
+            # Check the DBCS output.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
+            self.assertEqual(expect_japanese[codePage], r.json()['result'])
         
         # Wait for the process to exit successfully.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-        playback.stdin.close()
-        playback.wait(timeout=2)
 
     def test_s3270_japanese_930(self):
         self.s3270_japanese('cp930')

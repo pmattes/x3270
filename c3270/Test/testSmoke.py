@@ -35,6 +35,7 @@ if not sys.platform.startswith('win'):
 import os
 import re
 import os.path
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
@@ -46,74 +47,66 @@ class TestC3270Smoke(cti.cti):
 
         # Start 'playback' to read s3270's output.
         playback_port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(playback_port),
-            "c3270/Test/ibmlink2.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(playback_port)
-        ts.close()
-
-        # Fork a child process with a PTY between this process and it.
-        c3270_port, ts = cti.unused_port()
-        os.environ['TERM'] = 'xterm-256color'
-        (pid, fd) = pty.fork()
-        if pid == 0:
-            # Child process
+        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             ts.close()
-            os.execvp(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
-                    "-httpd", f"127.0.0.1:{c3270_port}",
-                    f"127.0.0.1:{playback_port}"]))
 
-        # Parent process.
-        
-        # Make sure c3270 started.
-        self.check_listen(c3270_port)
-        ts.close()
+            # Fork a child process with a PTY between this process and it.
+            c3270_port, ts = cti.unused_port()
+            os.environ['TERM'] = 'xterm-256color'
+            (pid, fd) = pty.fork()
+            if pid == 0:
+                # Child process
+                ts.close()
+                os.execvp(cti.vgwrap_ecmd('c3270'),
+                    cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
+                        "-httpd", f"127.0.0.1:{c3270_port}",
+                        f"127.0.0.1:{playback_port}"]))
 
-        # Write the stream to c3270.
-        playback.stdin.write(b'r\nr\nr\nr\nr\n')
-        playback.stdin.flush()
-        self.check_push(playback, c3270_port, 1)
-        playback.stdin.write(b'e\n')
-        playback.stdin.flush()
+            # Parent process.
 
-        # Collect the output.
-        result = ''
-        while True:
-            try:
-                rbuf = os.read(fd, 1024)
-            except OSError:
-                break
-            result += rbuf.decode('utf8')
-        
-        # Make the output a bit more readable and split it into lines.
-        # Then replace the text that varies with the build with tokens.
-        result = result.replace('\x1b', '<ESC>').split('\n')
-        result[0] = re.sub(' v.*\r', '<version>\r', result[0], count=1)
-        result[1] = re.sub(' 1989-.* by', ' <years> by', result[1], count=1)
-        for i in range(len(result)):
-            result[i] = re.sub(' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
-        rtext = '\n'.join(result)
-        if 'GENERATE' in os.environ:
-            # Use this to regenerate the template file.
-            file = open(os.environ['GENERATE'], "w")
-            file.write(rtext)
-            file.close()
-        else:
-            # Compare what we just got to the reference file.
-            localtext = f'c3270/Test/smoke_{sys.platform}.txt'
-            if os.path.exists(localtext):
-                text = localtext
+            # Make sure c3270 started.
+            self.check_listen(c3270_port)
+            ts.close()
+
+            # Write the stream to c3270.
+            p.send_records(5)
+            p.send_records(2)
+            p.close()
+
+            # Collect the output.
+            result = ''
+            while True:
+                try:
+                    rbuf = os.read(fd, 1024)
+                except OSError:
+                    break
+                result += rbuf.decode('utf8')
+            
+            # Make the output a bit more readable and split it into lines.
+            # Then replace the text that varies with the build with tokens.
+            result = result.replace('\x1b', '<ESC>').split('\n')
+            result[0] = re.sub(' v.*\r', '<version>\r', result[0], count=1)
+            result[1] = re.sub(' 1989-.* by', ' <years> by', result[1], count=1)
+            for i in range(len(result)):
+                result[i] = re.sub(' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
+            rtext = '\n'.join(result)
+            if 'GENERATE' in os.environ:
+                # Use this to regenerate the template file.
+                file = open(os.environ['GENERATE'], "w")
+                file.write(rtext)
+                file.close()
             else:
-                text = 'c3270/Test/smoke.txt'
-            file = open(text, "r", newline='')
-            ctext = file.read()
-            file.close()
-            self.assertEqual(rtext, ctext)
+                # Compare what we just got to the reference file.
+                localtext = f'c3270/Test/smoke_{sys.platform}.txt'
+                if os.path.exists(localtext):
+                    text = localtext
+                else:
+                    text = 'c3270/Test/smoke.txt'
+                file = open(text, "r", newline='')
+                ctext = file.read()
+                file.close()
+                self.assertEqual(rtext, ctext)
 
-        playback.stdin.close()
-        playback.kill()
-        playback.wait(timeout=2)
         self.vgwait_pid(pid)
 
 if __name__ == '__main__':

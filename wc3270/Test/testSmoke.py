@@ -34,6 +34,7 @@ import tempfile
 import sys
 import requests
 import filecmp
+import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipUnless(sys.platform.startswith("win"), "Only works on native Windows")
@@ -45,58 +46,50 @@ class TestWc3270Smoke(cti.cti):
             cand = dir + '\\' + exe
             if os.path.exists(cand):
                 return (dir, cand)
-        self.assertTrue(false, f'Could not find {exe} in PATH')
+        self.assertTrue(False, f'Could not find {exe} in PATH')
 
     # wc3270 smoke test
     def test_wc3270_smoke(self):
 
-        # Start 'playback' to read wc3270's output.
+        # Start 'playback' to feed wc3270.
         playback_port, ts = cti.unused_port()
-        playback = Popen(["playback", "-w", "-p", str(playback_port),
-            "s3270/Test/ibmlink.trc"], stdin=PIPE, stdout=DEVNULL)
-        self.children.append(playback)
-        self.check_listen(playback_port)
-        ts.close()
+        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+            ts.close()
 
-        # Create a session file.
-        wc3270_port, ts = cti.unused_port()
-        (handle, sname) = tempfile.mkstemp(suffix='.wc3270')
-        os.write(handle, f'wc3270.title: wc3270\n'.encode('utf8'))
-        os.write(handle, f'wc3270.httpd: 127.0.0.1:{wc3270_port}\n'.encode('utf8'))
-        os.write(handle, f'wc3270.hostname: 127.0.0.1:{playback_port}\n'.encode('utf8'))
-        os.close(handle)
+            # Create a session file.
+            wc3270_port, ts = cti.unused_port()
+            (handle, sname) = tempfile.mkstemp(suffix='.wc3270')
+            os.write(handle, f'wc3270.title: wc3270\n'.encode('utf8'))
+            os.write(handle, f'wc3270.httpd: 127.0.0.1:{wc3270_port}\n'.encode('utf8'))
+            os.write(handle, f'wc3270.hostname: 127.0.0.1:{playback_port}\n'.encode('utf8'))
+            os.write(handle, f'wc3270.trace: true\n'.encode('utf8'))
+            os.close(handle)
 
-        # Create a shortcut.
-        (handle, lname) = tempfile.mkstemp(suffix='.lnk')
-        os.close(handle)
-        wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
-        cmd = f'mkshort {wc3270_dir} wc3270.exe {lname} {sname}'
-        self.assertEqual(0, os.system(cmd))
+            # Create a shortcut.
+            (handle, lname) = tempfile.mkstemp(suffix='.lnk')
+            os.close(handle)
+            wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
+            cmd = f'mkshort {wc3270_dir} wc3270.exe {lname} {sname}'
+            self.assertEqual(0, os.system(cmd))
 
-        # Start wc3270 in its own window by starting the link.
-        self.assertEqual(0, os.system(f'start {lname}'))
-        self.check_listen(wc3270_port)
-        ts.close()
-        os.unlink(sname)
-        os.unlink(lname)
+            # Start wc3270 in its own window by starting the link.
+            self.assertEqual(0, os.system(f'start {lname}'))
+            self.check_listen(wc3270_port)
+            ts.close()
+            os.unlink(sname)
+            os.unlink(lname)
 
-        # Feed wc3270 some data.
-        playback.stdin.write(b'r\nr\nr\nr\n')
-        playback.stdin.flush()
-        self.check_push(playback, wc3270_port, 1)
+            # Feed wc3270 some data.
+            p.send_records(4)
 
-        # Dump the window contents.
-        (handle, name) = tempfile.mkstemp(suffix='.bmp')
-        os.close(handle)
-        requests.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/SnapScreen({name})')
-
-        # Wait for the processes to exit.
-        playback.stdin.close()
-        playback.kill()
-        playback.wait(timeout=2)
+            # Dump the window contents.
+            (handle, name) = tempfile.mkstemp(suffix='.bmp')
+            os.close(handle)
+            requests.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/SnapScreen({name})')
 
         # Make sure the image is correct.
-        self.assertTrue(filecmp.cmp(name, 'wc3270/Test/ibmlink.bmp'))
+        self.assertTrue(filecmp.cmp(name, 'wc3270/Test/ibmlink.bmp') or filecmp.cmp(name, 'wc3270/Test/ibmlink-notfront.bmp'),
+            f'{name} does not match wc3270/Test/ibmlink.bmp or wc3270/Test/ibmlink-notfront.tmp')
         os.unlink(name)
 
 if __name__ == '__main__':

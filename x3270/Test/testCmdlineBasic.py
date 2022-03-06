@@ -29,9 +29,10 @@
 
 import unittest
 import sys
+import os
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform == 'cygwin', 'need to run under an X11 server')
+@unittest.skipIf(os.system('xset q >/dev/null') != 0, "X11 server needed for tests")
 class TestX3270BasicCmdline(cti.cti):
 
     # x3270 -v and -help test
