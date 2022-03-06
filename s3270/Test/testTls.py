@@ -66,28 +66,30 @@ class TestS3270Tls(cti.cti):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
-        server = tls_server.tls_server('127.0.0.1', port, 's3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key')
-        self.check_listen(port)
-        ts.close()
+        with tls_server.tls_server('s3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key', self, '/dev/null', port) as server:
+            ts.close()
 
-        # Start s3270.
-        args = ['s3270']
-        if sys.platform != 'darwin' and not sys.platform.startswith('win'):
-            args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
-        args.append(f'l:a:c:t:127.0.0.1:{port}=TEST')
-        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            args = ['s3270']
+            if sys.platform != 'darwin' and not sys.platform.startswith('win'):
+                args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
+            args.append(f'l:a:c:t:127.0.0.1:{port}=TEST')
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Feed s3270 some actions.
-        s3270.stdin.write(b"String(abc)\n")
-        s3270.stdin.write(b"Enter()\n")
-        s3270.stdin.write(b"Disconnect()\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
+            # Do the TLS thing.
+            server.wrap()
 
-        # Make sure they are passed through.
-        out = server.recv_to_end()
-        self.assertEqual(b"abc\r\n", out)
+            # Feed s3270 some actions.
+            s3270.stdin.write(b"String(abc)\n")
+            s3270.stdin.write(b"Enter()\n")
+            s3270.stdin.write(b"Disconnect()\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Make sure they are passed through.
+            out = server.recv_to_end()
+            self.assertEqual(b"abc\r\n", out)
 
         # Wait for the process to exit.
         s3270.stdin.close()
@@ -98,24 +100,23 @@ class TestS3270Tls(cti.cti):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
-        server = tls_server.tls_server('127.0.0.1', port, 's3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key')
-        self.check_listen(port)
-        ts.close()
+        with tls_server.tls_server('s3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
+            ts.close()
 
-        # Start s3270.
-        args = ['s3270', '-xrm', 's3270.contentionResolution: false']
-        if sys.platform != 'darwin' and not sys.platform.startswith('win'):
-            args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
-        args.append(f'127.0.0.1:{port}=TEST')
-        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(s3270)
+            # Start s3270.
+            args = ['s3270', '-xrm', 's3270.contentionResolution: false']
+            if sys.platform != 'darwin' and not sys.platform.startswith('win'):
+                args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
+            args.append(f'127.0.0.1:{port}=TEST')
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
 
-        # Make sure it all works.
-        server.starttls()
-        s3270.stdin.write(b"PF(3)\n")
-        s3270.stdin.write(b"Quit()\n")
-        s3270.stdin.flush()
-        server.check_trace('s3270/Test/ibmlink.trc')
+            # Make sure it all works.
+            server.starttls()
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+            server.match()
 
         # Wait for the process to exit.
         s3270.stdin.close()

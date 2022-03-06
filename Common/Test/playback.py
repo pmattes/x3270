@@ -69,6 +69,9 @@ class playback():
         if self.thread != None:
             self.thread.join()
             self.thread = None
+        if self.file != None:
+            self.file.close()
+            self.file = None
 
     def close(self):
         '''Close the object'''
@@ -81,7 +84,10 @@ class playback():
     
     def wait_accept(self, timeout=2):
         '''Wait for a connection'''
-        cti.cti.try_until(self.ct, lambda: self.conn != None, timeout, 'Emulator did not connect')
+        if self.thread != None:
+            self.ct.try_until(lambda: self.conn != None, timeout, 'Emulator did not connect')
+            self.thread.join()
+            self.thread = None
 
     def send_tm(self):
         '''Send a timing mark'''
@@ -95,6 +101,19 @@ class playback():
             accum += bytes.hex(self.conn.recv(1024))
             if accum.endswith('fffc06'):
                 break
+
+    def recv_to_end(self, timeout=2):
+        '''Return everything sent on the socket'''
+        self.wait_accept()
+        ret = b''
+        while True:
+            r, _, _ = select.select([self.conn], [], [], timeout)
+            self.ct.assertNotEqual([], r, 'Receive timed out')
+            data = self.conn.recv(1024)
+            if data == b'':
+                break
+            ret += data
+        return ret
 
     def send_records(self, n=1, send_tm=True):
         '''Copy n records to the emulator'''

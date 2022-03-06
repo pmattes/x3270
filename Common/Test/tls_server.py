@@ -25,121 +25,49 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# TLS test server
+# TLS playback server
 
-import socket
-import select
 import ssl
-import threading
-import re
 import Common.Test.cti as cti
 import Common.Test.telnet as telnet
+import Common.Test.playback as playback
 
-# TLS server.
-class tls_server():
+# TLS playback server.
+class tls_server(playback.playback):
     '''TLS server'''
-    context = None
-    listen_socket = None
-    accept_socket = None
-    thread = None
-    tls_conn = None
     clear_conn = None
-    def __init__(self, address, port, cert, key, ipv6=False):
+    def __init__(self, cert: str, key: str, cti: cti.cti, trace_file: str, port: int, ipv6=False):
         # Set up the TLS context.
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.context.load_cert_chain(cert, key)
 
-        # Create the listening socket and wrap it.
-        self.listen_socket = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM, 0)
-        self.listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.listen_socket.bind((address, port))
-        self.listen_socket.listen(1)
+        # Do common initialization.
+        playback.playback.__init__(self, cti, trace_file, port, ipv6)
 
-        # Asynchronously accept one connection.
-        self.thread = threading.Thread(target=self.process)
-        self.thread.start()
+    # Cleanup.
+    def __del__(self):
+        if self.clear_conn != None:
+            self.clear_conn.close()
+            self.clear_conn = None
+        playback.playback.__del__(self)
 
-    # Accept a connection.
-    def process(self):
-        (self.clear_conn, _) = self.listen_socket.accept()
-        self.listen_socket.close()
-        self.listen_socket = None
-
-    def recv_to_end(self, timeout=2):
-        '''Return everything sent on the socket'''
-        cti.sa_try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
-        self.thread.join()
-        self.tls_conn = self.context.wrap_socket(self.clear_conn, server_side=True)
-        ret = b''
-        while True:
-            r, _, _ = select.select([self.tls_conn], [], [], timeout)
-            assert([] != r)
-            data = self.tls_conn.recv(1024)
-            if data == b'':
-                break
-            ret += data
-        self.tls_conn.close()
-        self.tls_conn = None
-        self.clear_conn.close()
-        self.clear_conn = None
-        return ret
-
-    def nread(self, c, n, timeout=2):
-        '''Read n bytes from a socket with a timeout'''
-        nleft = n
-        ret = b''
-        while nleft > 0:
-            r, _, _ = select.select([c], [], [], timeout)
-            assert [] != r
-            chunk = c.recv(nleft)
-            assert chunk != b''
-            ret += chunk
-            nleft -= len(chunk)
-        return ret
+    def wrap(self):
+        '''Wrap an accepted connection'''
+        self.wait_accept()
+        self.clear_conn = self.conn
+        self.conn = self.context.wrap_socket(self.clear_conn, server_side=True)
 
     def starttls(self, timeout=2):
         '''Do STARTTLS negotiation'''
-        cti.sa_try_until(lambda: self.clear_conn != None, 2, "Client did not connect")
-        self.thread.join()
+        self.wait_accept()
         # Send IAC DO STARTTLS.
-        self.clear_conn.send(telnet.iac + telnet.do + telnet.startTls)
+        self.conn.send(telnet.iac + telnet.do + telnet.startTls)
         # Make sure they respond with IAC WILL STARTTLS and the right SB.
         startTlsSb = telnet.iac + telnet.sb + telnet.startTls + telnet.follows + telnet.iac + telnet.se
         expectStartTls = telnet.iac + telnet.will + telnet.startTls + startTlsSb
-        data = self.nread(self.clear_conn, len(expectStartTls), timeout)
+        data = self.nread(len(expectStartTls), timeout)
         assert data == expectStartTls
         # Send the SB.
-        self.clear_conn.send(startTlsSb)
+        self.conn.send(startTlsSb)
         # Wrap the clear socket with TLS.
-        self.tls_conn = self.context.wrap_socket(self.clear_conn, server_side=True)
-
-    def check_trace(self, traceFile, timeout=2):
-        '''Check emulator against a trace file'''
-        direction = ''
-        accum = ''
-        lno = 0
-        with open(traceFile, 'r') as file:
-            while True:
-                lno += 1
-                line = file.readline()
-                if line == '':
-                    break
-                isIo = re.match('^[<>] 0x[0-9a-f]+ +', line)
-                if not isIo or line[0] != direction:
-                    # Possibly dump output or wait for input.
-                    if direction == '<':
-                        # Send to emulator.
-                        self.tls_conn.send(bytes.fromhex(accum))
-                    elif direction == '>':
-                        # Receive from emulator.
-                        want = bytes.fromhex(accum)
-                        r = self.nread(self.tls_conn, len(want))
-                        assert(r == want)
-                    direction = ''
-                    accum = ''
-                if isIo:
-                    # Start accumulating.
-                    direction = line[0]
-                    accum += line.split()[2]
-        self.tls_conn.close()
-        self.clear_conn.close()
+        self.wrap()
