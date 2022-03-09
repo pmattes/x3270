@@ -1301,9 +1301,26 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (cstate == TCP_PENDING) {
 	if (events.lNetworkEvents & FD_CONNECT) {
 	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
-		connect_error("%s%s",
-			proxy_pending? "(to proxy server) ": "",
-			win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
+		if (ha_ix == num_ha - 1) {
+		    connect_error("%s%s, port %d: %s",
+			    (proxy_type != PT_NONE)? "Proxy ": "",
+			    (proxy_type != PT_NONE)? proxy_host : hostname,
+			    (proxy_type != PT_NONE)? proxy_port : current_port,
+			    win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
+		} else {
+		    bool pending;
+		    iosrc_t s;
+
+		    net_pre_close();
+		    while (++ha_ix < num_ha) {
+			s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
+			if (s != INVALID_IOSRC) {
+			    host_newfd(s);
+			    host_new_connection(pending);
+			    return;
+			}
+		    }
+		}
 		host_disconnect(true);
 		return;
 	    } else {
