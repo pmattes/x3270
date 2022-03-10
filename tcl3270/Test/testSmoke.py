@@ -36,7 +36,7 @@ import sys
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
+@unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
 class TestTcl3270Smoke(cti.cti):
 
     # tcl3270 3270 smoke test

@@ -63,6 +63,8 @@ typedef struct {
     bool	 bind_unlock;
     bool	 contention_resolution;
     bool	 scripted_always;
+    bool	 prefer_ipv4;
+    bool	 prefer_ipv6;
     char	*script_port;
     char	*httpd_port;
     char	*dbcs_cgcsgid;

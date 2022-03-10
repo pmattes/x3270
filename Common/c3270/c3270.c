@@ -126,8 +126,6 @@
 # define DELENV		"WC3DEL"
 #endif /*]*/
 
-#define PR3287_NAME	"pr3287"
-
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_LIBREADLINE) /*[*/
 #  define PROMPT_PRE	xs_buffer("%c%s%c", '\001', \
@@ -2250,10 +2248,6 @@ c3270_register(void)
 	{ OptNoPrompt, OPT_BOOLEAN, true,  ResNoPrompt,
 	    aoffset(secure),
 	    NULL, "Alias for -secure" },
-	{ OptPrinterLu,OPT_STRING,  false, ResPrinterLu,
-	    aoffset(interactive.printer_lu),
-	    "<luname>",
-	    "Automatically start a "PR3287_NAME" printer session to <luname>" },
 	{ OptReconnect,OPT_BOOLEAN, true,  ResReconnect,
 	    aoffset(interactive.reconnect),
 	    NULL, "Reconnect to host as soon as it disconnects" },
@@ -2316,8 +2310,6 @@ c3270_register(void)
 	{ ResKeymap,	aoffset(interactive.key_map),	XRM_STRING },
 	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
-	{ ResPrinterLu,	aoffset(interactive.printer_lu),XRM_STRING },
-	{ ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
 	{ ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
 #if !defined(_WIN32) /*[*/
@@ -2348,14 +2340,9 @@ c3270_register(void)
     };
     static xres_t c3270_xresources[] = {
 	{ ResKeymap,			V_WILD },
-	{ ResAssocCommand,		V_FLAT },
-	{ ResLuCommandLine,		V_FLAT },
 	{ ResPrintTextScreensPerPage,	V_FLAT },
 	{ ResMessage,			V_WILD },
 #if defined(_WIN32) /*[*/
-	{ ResPrinterCodepage,		V_FLAT },
-	{ ResPrinterCommand,		V_FLAT },
-	{ ResPrinterName, 		V_FLAT },
 	{ ResPrintTextFont, 		V_FLAT },
 	{ ResPrintTextHorizontalMargin,	V_FLAT },
 	{ ResPrintTextOrientation,	V_FLAT },
@@ -2367,7 +2354,6 @@ c3270_register(void)
 	{ ResHostColorForProtectedIntensified,V_FLAT },
 	{ ResConsoleColorForHostColor,	V_COLOR },
 #else /*][*/
-	{ ResPrinterCommand,		V_FLAT },
 	{ ResPrintTextCommand,		V_FLAT },
 	{ ResCursesColorForDefault,	V_FLAT },
 	{ ResCursesColorForIntensified,	V_FLAT },

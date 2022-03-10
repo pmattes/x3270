@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2022 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -66,6 +66,7 @@
 #include "opts.h"
 #include "peerscript.h"
 #include "popups.h"
+#include "pr3287_session.h"
 #include "print_screen.h"
 #include "product.h"
 #include "proxy_toggle.h"
@@ -200,6 +201,7 @@ main(int argc, char *argv[])
     task_register();
     query_register();
     nvt_register();
+    pr3287_session_register();
     print_screen_register();
     save_restore_register();
     s3270_register();

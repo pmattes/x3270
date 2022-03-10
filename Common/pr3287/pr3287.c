@@ -30,6 +30,10 @@
  *
  *	pr3287 [options] [lu[,lu...]@]host[:port]
  *	Options are:
+ *	    -4:
+ *	        prefer IPv4 host addresses
+ *	    -6:
+ *	        prefer IPv6 host addresses
  *	    -accepthostname any|[DNS:]name|address
  *	        accept any certificate hostname, or a specific name, or an
  *	        IP address
@@ -217,6 +221,9 @@ cmdline_help(void)
 	    "Usage: %s [options] [lu[,lu...]@]host[:port]\n",
 	    programname);
     fprintf(stderr, "Options:\n");
+    fprintf(stderr,
+"  " OptPreferIpv4 "               prefer IPv4 host addresses\n"
+"  " OptPreferIpv6 "               prefer IPv6 host addresses\n");
     if (tls_options & TLS_OPT_ACCEPT_HOSTNAME) {
 	fprintf(stderr,
 "  " OptAcceptHostname " <name>\n"
@@ -614,7 +621,11 @@ main(int argc, char *argv[])
 	    options.bdaemon = WILL_DAEMON;
 	} else
 #endif /*]*/
-	if ((tls_options & TLS_OPT_ACCEPT_HOSTNAME) &&
+	if (!strcmp(argv[i], OptPreferIpv4)) {
+	    options.prefer_ipv4 = true;
+	} else if (!strcmp(argv[i], OptPreferIpv6)) {
+	    options.prefer_ipv6 = true;
+	} else if ((tls_options & TLS_OPT_ACCEPT_HOSTNAME) &&
 		!strcmp(argv[i], OptAcceptHostname)) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		missing_value(OptAcceptHostname);
@@ -1048,6 +1059,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	}
 	vtrace("Connected to sync port %d.\n", options.syncport);
     }
+
+    /* Set up -4/-6 host lookup preference. */
+    set_46(options.prefer_ipv4, options.prefer_ipv6);
 
     /*
      * One-time initialization is now complete.

@@ -32,7 +32,7 @@ from subprocess import Popen, PIPE, DEVNULL
 import sys
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
+@unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
 class TestTcl3270Quit(cti.cti):
 
     # tcl3270 3270 quit test

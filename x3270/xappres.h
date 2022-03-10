@@ -108,6 +108,8 @@ typedef struct {
 	Boolean script_port_once;
 	Boolean utf8;
 	Boolean scripted_always;
+	Boolean prefer_ipv4;
+	Boolean prefer_ipv6;
 	struct {
 	    Boolean mono;
 	    Boolean menubar;

@@ -31,48 +31,25 @@ import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import sys
 import os
+import Common.Test.setupCert as setupCert
 import Common.Test.cti as cti
 import Common.Test.tls_server as tls_server
 
+@unittest.skipUnless(setupCert.present(), setupCert.warning)
 class TestS3270Tls(cti.cti):
-
-    # Set up procedure.
-    def setUp(self):
-        if sys.platform == 'darwin':
-            # Add the fake root cert.
-            sec = Popen(["security", "dump-trust", "-d"], stdout=PIPE,
-                    stderr=DEVNULL)
-            sec_out = sec.communicate()[0].decode('utf8').split('\n')
-            if not any('fakeca' in line for line in sec_out):
-                # Add the fake CA root cert
-                print()
-                print("***** Adding fake CA to trusted root certs for TLS tests")
-                os.system('sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain s3270/Test/tls/myCA.pem')
-                print("***** To remove the cert (as root):")
-                print("*****  security remove-trusted-cert -d s3270/Test/tls/myCA.pem")
-        if sys.platform.startswith('win'):
-            # Add the fake root cert.
-            cu = Popen(['certutil', '-store', 'root', 'fakeca.com'], stdout=DEVNULL, stderr=DEVNULL)
-            rc = cu.wait()
-            if rc != 0:
-                print("***** Adding fake CA to trusted root certs for TLS tests")
-                os.system('powershell s3270\\Test\\tls\\addrootca.ps1')
-                print("***** To remove the cert (elevated):")
-                print("*****  certutil -delstore root fakeca.com")
-        cti.cti.setUp(self)
 
     # s3270 TLS smoke test
     def test_s3270_tls_smoke(self):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
-        with tls_server.tls_server('s3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key', self, '/dev/null', port) as server:
+        with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, port) as server:
             ts.close()
 
             # Start s3270.
             args = ['s3270']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
-                args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
+                args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'l:a:c:t:127.0.0.1:{port}=TEST')
             s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
@@ -100,13 +77,13 @@ class TestS3270Tls(cti.cti):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
-        with tls_server.tls_server('s3270/Test/tls/TEST.crt', 's3270/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
+        with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
             ts.close()
 
             # Start s3270.
             args = ['s3270', '-xrm', 's3270.contentionResolution: false']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
-                args += [ '-cafile', 's3270/Test/tls/myCA.pem' ]
+                args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'127.0.0.1:{port}=TEST')
             s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)

@@ -59,6 +59,7 @@
 #include "opts.h"
 #include "product.h"
 #include "readres.h"
+#include "resolver.h"
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
@@ -364,6 +365,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     s = clean_termname(appres.termname);
     Replace(appres.termname, s);
 
+    /* Set up the resolver. */
+    set_46(appres.prefer_ipv4, appres.prefer_ipv6);
+
     return argc;
 }
 
@@ -569,6 +573,10 @@ static opt_t base_opts[] = {
     "<cols>x<rows>", "Larger screen dimensions" },
 { OptPort,     OPT_STRING,  false, ResPort,      aoffset(port),
     "<port>", "Default TELNET port" },
+{ OptPreferIpv4, OPT_BOOLEAN, true, ResPreferIpv4, aoffset(prefer_ipv4),
+    NULL,	"Prefer IPv4 host addresses" },
+{ OptPreferIpv6, OPT_BOOLEAN, true, ResPreferIpv6, aoffset(prefer_ipv6),
+    NULL,	"Prefer IPv6 host addresses" },
 { OptProxy,    OPT_STRING,  false, ResProxy,     aoffset(proxy),
     "<type>:<host>[:<port>]", "Proxy type and server" },
 { OptScriptPort,OPT_STRING, false, ResScriptPort, aoffset(script_port),

@@ -47,10 +47,12 @@
 #include "codepage.h"
 #include "host.h"
 #include "lazya.h"
+#include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "telnet_core.h"
 #include "sio.h"
+#include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utils.h"
@@ -109,6 +111,7 @@ static struct pr3o {
   pr3287_stderr = { -1, 0L, 0L, 0 };
 static bool	pr3287_associated = false;
 static char	*pr3287_running_lu;
+static int	printer_delay_ms;
 
 #if !defined(_WIN32) /*[*/
 static void	pr3287_output(iosrc_t fd, ioid_t id);
@@ -139,6 +142,28 @@ static bool	pr3287_toggle_opts(const char *name, const char *value);
 void
 pr3287_session_register(void)
 {
+    static opt_t pr3287_session_opts[] = {
+	{ OptPrinterLu,OPT_STRING,  false, ResPrinterLu,
+	    aoffset(interactive.printer_lu),
+	    "<luname>",
+	    "Automatically start a pr3287 printer session to <luname>" },
+    };
+    static res_t pr3287_session_resources[] = {
+	{ ResPrinterLu, aoffset(interactive.printer_lu),XRM_STRING },
+        { ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
+    };
+    static xres_t pr3287_session_xresources[] = {
+	{ ResAssocCommand,	V_FLAT },
+	{ ResLuCommandLine,	V_FLAT },
+#if defined(_WIN32) /*[*/
+	{ ResPrinterCodepage,	V_FLAT },
+#endif /*]*/
+	{ ResPrinterCommand,	V_FLAT },
+#if defined(_WIN32) /*[*/
+	{ ResPrinterName,	V_FLAT },
+#endif /*]*/
+    };
+
     /* Register interest in host connects and mode changes. */
     register_schange(ST_CONNECT, pr3287_host_connect);
     register_schange(ST_3270_MODE, pr3287_host_connect);
@@ -155,6 +180,15 @@ pr3287_session_register(void)
 #endif /*]*/
     register_extended_toggle(ResPrinterOptions, pr3287_toggle_opts, NULL, NULL,
 	    NULL, XRM_STRING);
+
+    /* Register options. */
+    register_opts(pr3287_session_opts, array_count(pr3287_session_opts));
+
+    /* Register resources. */
+    register_resources(pr3287_session_resources,
+	    array_count(pr3287_session_resources));
+    register_xresources(pr3287_session_xresources,
+	    array_count(pr3287_session_xresources));
 }
 
 #if defined(_WIN32) /*[*/
@@ -277,6 +311,22 @@ delayed_start(ioid_t id _is_unused)
     pr3287_delay_lu = NULL;
 }
 
+static int
+get_printer_delay_ms(void)
+{
+    if (printer_delay_ms == 0) {
+	char *s = getenv("PRINTER_DELAY_MS");
+
+	if (s != NULL) {
+	    printer_delay_ms = atoi(s);
+	}
+	if (printer_delay_ms <= 0) {
+	    printer_delay_ms = PRINTER_DELAY_MS;
+	}
+    }
+    return printer_delay_ms;
+}
+
 /*
  * Printer session start-up function.
  *
@@ -323,11 +373,12 @@ pr3287_session_start(const char *lu)
 	 * Remember what was requested, and set a timeout to start the
 	 * new session.
 	 */
-	vtrace("Delaying printer session start %dms.\n", PRINTER_DELAY_MS);
+	vtrace("Delaying printer session start %dms.\n",
+		get_printer_delay_ms());
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
 	pr3287_state = PRS_DELAY;
-	pr3287_delay_id = AddTimeOut(PRINTER_DELAY_MS, delayed_start);
+	pr3287_delay_id = AddTimeOut(get_printer_delay_ms(), delayed_start);
 	break;
     case PRS_DELAY:
     case PRS_RUNNING:
@@ -344,7 +395,7 @@ pr3287_session_start(const char *lu)
 	 * distinguish a manual from an automatic start.
 	 */
 	vtrace("Delaying printer session start %dms after exit.\n",
-		PRINTER_DELAY_MS);
+		get_printer_delay_ms());
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
 	return;
@@ -550,7 +601,15 @@ pr3287_start_now(const char *lu, bool associated)
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "H%", 2)) {
-		vb_appends(&r, qualified_host);
+		bool has_colons = strchr(numeric_host, ':') != NULL;
+
+		vb_appendf(&r, "%s%s%s%s:%s%s",
+			host_prefix,
+			has_colons? "[": "",
+			numeric_host,
+			has_colons? "]": "",
+			numeric_port,
+			host_suffix);
 		s += 2;
 		continue;
 #if !defined(_WIN32) /*[*/
@@ -1182,7 +1241,7 @@ pr3287_session_check(
      */
     if (pr3287_delay_lu != NULL) {
 	pr3287_state = PRS_DELAY;
-	pr3287_delay_id = AddTimeOut(PRINTER_DELAY_MS, delayed_start);
+	pr3287_delay_id = AddTimeOut(get_printer_delay_ms(), delayed_start);
     }
 }
 

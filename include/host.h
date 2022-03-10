@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015, 2017-2018 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,8 @@ struct host {
 };
 extern struct host *hosts;
 extern enum iaction connect_ia;
+extern char *host_prefix;
+extern char *host_suffix;
 
 /* Host connect/disconnect and state change. */
 void hostfile_init(void);

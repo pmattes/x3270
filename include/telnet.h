@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -44,6 +44,8 @@ extern int ns_rsent;
 extern time_t ns_time;
 extern const char *state_name[];
 extern struct timeval net_last_recv_ts;
+extern char *numeric_host;
+extern char *numeric_port;
 
 void net_abort(void);
 void net_break(char c);

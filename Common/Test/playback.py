@@ -48,7 +48,8 @@ class playback():
         loopback = '::1' if ipv6 else '127.0.0.1'
         self.listensocket.bind((loopback, port))
         self.listensocket.listen()
-        self.file = open(trace_file, 'r')
+        if trace_file != None:
+            self.file = open(trace_file, 'r')
         self.thread = threading.Thread(target=self.process)
         self.thread.start()
 

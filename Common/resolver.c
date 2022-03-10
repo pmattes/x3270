@@ -74,6 +74,35 @@ static struct gai {
 } gai[GAI_SLOTS];
 #endif /*]*/
 
+bool prefer_ipv4;
+bool prefer_ipv6;
+
+/* Set the IPv4/IPv6 lookup preferences. */
+void
+set_46(bool prefer4, bool prefer6)
+{
+#if defined(X3270_IPV6) /*[*/
+    prefer_ipv4 = prefer4;
+    prefer_ipv6 = prefer6;
+#else /*][*/
+    prefer_ipv4 = true;
+    prefer_ipv6 = false;
+#endif /*]*/
+}
+
+/* Map the -4 and -6 options onto the right getaddrinfo setting. */
+static int
+want_pf(void)
+{
+    if (prefer_ipv4 && !prefer_ipv6) {
+	return PF_INET;
+    } else if (!prefer_ipv4 && prefer_ipv6) {
+	return PF_INET6;
+    } else {
+	return PF_UNSPEC;
+    }
+}
+
 #if defined(X3270_IPV6) /*[*/
 
 # if defined(_WIN32) /*[*/
@@ -92,7 +121,7 @@ my_gai_strerror(int rc)
  */
 static rhp_t
 resolve_host_and_port_v46(const char *host, char *portname,
-	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
+	bool abs, unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
 {
     struct addrinfo hints, *res0, *res;
@@ -116,7 +145,7 @@ resolve_host_and_port_v46(const char *host, char *portname,
 
     memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_flags = 0;
-    hints.ai_family = PF_UNSPEC;
+    hints.ai_family = abs? PF_UNSPEC: want_pf();
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     rc = getaddrinfo(host, portname, &hints, &res0);
@@ -202,7 +231,7 @@ async_resolve(LPVOID parameter)
     gaip->done = true;
     memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_flags = 0;
-    hints.ai_family = PF_UNSPEC;
+    hints.ai_family = want_pf();
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     gaip->rc = getaddrinfo(gaip->host, gaip->port, &hints, &gaip->result);
@@ -311,7 +340,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 
 # if !defined(_WIN32) /*[*/
     gai[*slot].hints.ai_flags = AI_ADDRCONFIG;
-    gai[*slot].hints.ai_family = AF_UNSPEC;
+    gai[*slot].hints.ai_family = want_pf();
     gai[*slot].hints.ai_socktype = SOCK_STREAM;
     gai[*slot].hints.ai_protocol = IPPROTO_TCP;
 
@@ -633,7 +662,37 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	int max, int *nr)
 {
 #if defined(X3270_IPV6) /*[*/
-    return resolve_host_and_port_v46(host, portname, pport, sa, sa_len,
+    return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
+	    sa_rlen, errmsg, max, nr);
+#else /*][*/
+    return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,
+	    sa_rlen, errmsg, max, nr);
+#endif
+}
+
+/**
+ * Resolve a hostname and port.
+ * Synchronous version, without -4/-6 preferences.
+ *
+ * @param[in] host	Host name
+ * @param[in] portname	Port name
+ * @param[out] pport	Returned numeric port
+ * @param[out] sa	Returned array of addresses
+ * @param[in] sa_len	Number of elements in sa
+ * @param[out] sa_rlen	Returned size of elements in sa
+ * @param[out] errmsg	Returned error message
+ * @param[in] max	Maximum number of elements to return
+ * @param[out] nr	Number of elements returned
+ *
+ * @returns RHP_XXX status
+ */
+rhp_t
+resolve_host_and_port_abs(const char *host, char *portname,
+	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
+	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+{
+#if defined(X3270_IPV6) /*[*/
+    return resolve_host_and_port_v46(host, portname, true, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
 #else /*][*/
     return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,
@@ -668,7 +727,7 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
 #else /*][*/
     *slot = -1;
 # if defined(X3270_IPV6)  /*][*/
-    return resolve_host_and_port_v46(host, portname, pport, sa, sa_len,
+    return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
 # else /*][*/
     return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,

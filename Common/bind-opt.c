@@ -160,8 +160,8 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 
     /* Use the resolver to resolve the components we've split apart. */
     *addr = Malloc(sizeof(sau_t));
-    rv = resolve_host_and_port(host_str, port_str, &port, *addr, sizeof(sau_t),
-	    addrlen, NULL, 1, &nr);
+    rv = resolve_host_and_port_abs(host_str, port_str, &port, *addr,
+	    sizeof(sau_t), addrlen, NULL, 1, &nr);
     Free(host_str);
     Free(port_str);
     if (RHP_IS_ERROR(rv)) {

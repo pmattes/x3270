@@ -184,6 +184,8 @@
 #define ResOversize		"oversize"
 #define ResPort			"port"
 #define ResPreeditType		"preeditType"
+#define ResPreferIpv4		"preferIpv4"
+#define ResPreferIpv6		"preferIpv6"
 #define ResPrinterCodepage	"printer.codepage"
 #define ResPrinterCommand	"printer.command"
 #define ResPrinterLu		"printerLu"
@@ -281,6 +283,8 @@
 #define DotOversize		"." ResOversize
 #define DotPort			"." ResPort
 #define DotPreeditType		"." ResPreeditType
+#define DotPreferIpv4		"." ResPreferIpv4
+#define DotPreferIpv6		"." ResPreferIpv6
 #define DotPrinterLu		"." ResPrinterLu
 #define DotProxy		"." ResProxy
 #define DotReconnect		"." ResReconnect
@@ -423,6 +427,8 @@
 #define ClsOversize		"Oversize"
 #define ClsPort			"Port"
 #define ClsPreeditType		"PreeditType"
+#define ClsPreferIpv4		"PreferIpv4"
+#define ClsPreferIpv6		"PreferIpv6"
 #define ClsPrinterLu		"PrinterLu"
 #define ClsProxy		"Proxy"
 #define ClsQuit			"Quit"
@@ -527,6 +533,8 @@
 #define OptOversize		"-oversize"
 #define OptPort			"-port"
 #define OptPreeditType		"-pt"
+#define OptPreferIpv4		"-4"
+#define OptPreferIpv6		"-6"
 #define OptPrinterLu		"-printerlu"
 #define OptProxy		"-proxy"
 #define OptReconnect		"-reconnect"

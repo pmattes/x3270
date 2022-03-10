@@ -63,7 +63,7 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-FALLBACKS = fb-common
+FALLBACKS = fb-common fb-printSession
 fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(filter-out mkfb,$^)

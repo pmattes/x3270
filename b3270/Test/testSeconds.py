@@ -43,7 +43,7 @@ class TestB3270Seconds(cti.cti):
 
         # Feed b3270 an action.
         top = ET.Element('b3270-in')
-        ET.SubElement(top, 'run', { 'actions': "Wait(0.1,Seconds)" })
+        ET.SubElement(top, 'run', { 'actions': "Wait(0.2,Seconds)" })
         *first, _, _ = cti.xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()

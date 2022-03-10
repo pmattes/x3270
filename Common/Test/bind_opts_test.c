@@ -213,7 +213,7 @@ negative_parse_tests(void)
 
 /* Host and port resolver. */
 rhp_t
-resolve_host_and_port(const char *host, char *portname,
+resolve_host_and_port_abs(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
 {

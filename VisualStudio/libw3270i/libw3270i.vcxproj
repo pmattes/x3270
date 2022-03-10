@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\pr3287_session.c" />
     <ClCompile Include="..\..\Common\scroll.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

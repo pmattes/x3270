@@ -37,7 +37,7 @@ import os
 import signal
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform == "darwin", "MacOS does not like tcl")
+@unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
 @unittest.skipIf(sys.platform == 'cygwin', "Cygwin does not have psutil")
 class TestTcl3270Linger(cti.cti):
 

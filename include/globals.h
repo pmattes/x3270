@@ -214,7 +214,6 @@ extern int		ov_cols, ov_rows;
 extern bool		ov_auto;
 extern char		*profile_name;
 extern const char	*programname;
-extern char		*qualified_host;
 extern char		*reconnect_host;
 extern int		screen_depth;
 extern bool		scroll_initted;

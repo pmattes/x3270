@@ -34,6 +34,7 @@ import tempfile
 import sys
 import requests
 import filecmp
+import time
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -83,6 +84,7 @@ class TestWc3270Smoke(cti.cti):
             p.send_records(4)
 
             # Dump the window contents.
+            time.sleep(0.5)
             (handle, name) = tempfile.mkstemp(suffix='.bmp')
             os.close(handle)
             requests.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/SnapScreen({name})')

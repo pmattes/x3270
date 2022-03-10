@@ -73,6 +73,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "resolver.h"
 #include "resourcesc.h"
 #include "save_restore.h"
 #include "screen.h"
@@ -176,6 +177,8 @@ XrmOptionDescRec base_options[]= {
     { OptOnce,		DotOnce,	XrmoptionNoArg,		ResTrue },
     { OptOversize,	DotOversize,	XrmoptionSepArg,	NULL },
     { OptPort,		DotPort,	XrmoptionSepArg,	NULL },
+    { OptPreferIpv4,	DotPreferIpv4,	XrmoptionNoArg,		ResTrue },
+    { OptPreferIpv6,	DotPreferIpv6,	XrmoptionNoArg,		ResTrue },
     { OptPrinterLu,	DotPrinterLu,	XrmoptionSepArg,	NULL },
     { OptProxy,		DotProxy,	XrmoptionSepArg,	NULL },
     { OptReconnect,	DotReconnect,	XrmoptionNoArg,		ResTrue },
@@ -255,6 +258,8 @@ static struct option_help {
     { OptOnce, NULL, "Exit as soon as the host disconnects" },
     { OptOversize,  "<cols>x<rows>", "Larger screen dimensions" },
     { OptPort, "<port>", "Default TELNET port" },
+    { OptPreferIpv4, NULL, "Prefer IPv4 host addresses" },
+    { OptPreferIpv6, NULL, "Prefer IPv6 host addresses" },
     { OptPrinterLu,  "<luname>",
 	"Automatically start a pr3287 printer session to <luname>" },
     { OptProxy, "<type>:<host>[:<port>]", "Secify proxy type and server" },
@@ -724,6 +729,9 @@ main(int argc, char *argv[])
     if (appres.secure) {
 	appres.disconnect_clear = true;
     }
+
+    /* Set up the resolver. */
+    set_46(appres.prefer_ipv4, appres.prefer_ipv6);
 
     a_delete_me = XInternAtom(display, "WM_DELETE_WINDOW", False);
     a_save_yourself = XInternAtom(display, "WM_SAVE_YOURSELF", False);
@@ -1281,6 +1289,8 @@ copy_xres_to_res_bool(void)
     copy_bool(once);
     copy_bool(scripted);
     copy_bool(scripted_always);
+    copy_bool(prefer_ipv4);
+    copy_bool(prefer_ipv6);
     copy_bool(modified_sel);
     copy_bool(unlock_delay);
     copy_bool(bind_limit);
@@ -1369,7 +1379,17 @@ poll_children(void)
     }
 }
 
-/* Horrific glue for task.c. */
+/* Glue for redundant functions normally supplied by glue.c. */
+void
+register_opts(opt_t *opts, unsigned num_opts)
+{
+}
+
+void
+register_resources(res_t *res, unsigned num_res)
+{
+}
+
 void
 register_xresources(xres_t *res, unsigned num_xres)
 {
