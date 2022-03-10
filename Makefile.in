@@ -417,33 +417,33 @@ unix-lib-test:
 
 PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/test*.py"; done)
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
-TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "$$PWD/obj/@host@/$$i/:"; done)
+TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
 
 RUNTESTS=PATH="$(TESTPATH)$$PATH" OBJ="$$PWD/obj/@host@" python3 -m unittest $(TESTOPTIONS)
 
-b3270-test: b3270 playback
+b3270-test: b3270
 	$(RUNTESTS) b3270/Test/test*.py
 
-c3270-test: c3270 playback
+c3270-test: c3270
 	$(RUNTESTS) c3270/Test/test*.py
 
-pr3287-test: pr3287 playback
+pr3287-test: pr3287
 	$(RUNTESTS) pr3287/Test/test*.py
 
-s3270-test: s3270 playback
+s3270-test: s3270
 	$(RUNTESTS) s3270/Test/test*.py
 
-tcl3270-test: tcl3270 s3270 playback
+tcl3270-test: tcl3270 s3270
 	$(RUNTESTS) tcl3270/Test/test*.py
 
-x3270-test: x3270 playback
+x3270-test: x3270
 	$(RUNTESTS) x3270/Test/test*.py
 
-x3270if-test: x3270if playback
+x3270if-test: x3270if
 	$(RUNTESTS) x3270if/Test/test*.py
 
-test: @T_ALLTESTS@ playback
+test: @T_ALLTESTS@
 	$(RUNTESTS) $(PYTESTS)
-smoketest: @T_TEST@ playback
+smoketest: @T_TEST@
 	$(RUNTESTS) $(PYSMOKETESTS)
 endif

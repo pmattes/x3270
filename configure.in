@@ -270,7 +270,6 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 w
 	case "$i" in
 	playback)
 		T_UNIX_ALL="$T_UNIX_ALL $i"
-		T_TEST="$T_TEST $i"
 		;;
 	w*)	T_WINDOWS_ALL="$T_WINDOWS_ALL $i"
 		T_WINDOWS_CLEAN="$T_WINDOWS $i-clean"
