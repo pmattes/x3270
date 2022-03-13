@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017 Paul Mattes.
+# Copyright (c) 1999-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,11 @@ CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 all:: $(LIB3270)
 
-include lib3270stubs_files.mk
-include libw3270stubs_files.mk
+INCS = lib3270stubs_files.mk libw3270stubs_files.mk
+include $(INCS)
 OBJS = $(LIB3270STUBS_OBJECTS) $(LIBW3270STUBS_OBJECTS)
 
-$(LIB3270): $(OBJS)
+$(LIB3270): $(OBJS) $(INCS)
 	$(RM) $@
 	$(AR) crs $@ $(OBJS)
 

@@ -98,6 +98,8 @@
  *		trace data stream to a file
  *          -tracedir dir
  *              directory to write trace file in (POSIX only)
+ *          -tracefile file
+ *              file to write trace file in (POSIX only)
  *          -trnpre file
  *          	file of transparent data to send before jobs
  *          -trnpost file
@@ -312,8 +314,7 @@ cmdline_help(void)
 "  -printercp <codepage>\n"
 "                   code page for output (default is system ANSI code page)\n"
 #endif /*]*/
-"  -proxy \"<spec>\"\n"
-"                   connect to host via specified proxy\n"
+"  -proxy <spec>    connect to host via specified proxy\n"
 "  " OptReconnect "       keep trying to reconnect\n");
     fprintf(stderr,
 "  -skipcc          skip ASA carriage control characters in unformatted host\n"
@@ -322,9 +323,11 @@ cmdline_help(void)
 #if defined(_WIN32) /*[*/
 "  " OptTrace "           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n"
 #else /*][*/
-"  " OptTrace "           trace data stream to /tmp/x3trc.<pid>\n"
+"  " OptTrace "           trace data stream to file (default /tmp/x3trc.<pid>)\n"
 #endif /*]*/
 "  -tracedir <dir>  directory to keep trace information in\n"
+"  " OptTraceFile " <file>\n"
+"                   specific file to write trace information to\n"
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n");
@@ -548,6 +551,7 @@ init_options(void)
 #else /*][*/
     options.tracedir		= NULL;
 #endif /*]*/
+    options.tracefile		= NULL;
     options.tracing		= 0;
     options.trnpre		= NULL;
     options.trnpost		= NULL;
@@ -566,18 +570,12 @@ main(int argc, char *argv[])
     char *error;
     char *xtable = NULL;
     unsigned short p;
-    union {
-	struct sockaddr sa;
-	struct sockaddr_in sin;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
-	struct sockaddr_in6 sin6;
-#endif /*]*/
-    } ha;
-    socklen_t ha_len = sizeof(ha);
     socket_t s = INVALID_SOCKET;
     int rc = 0;
     int report_success = 0;
     unsigned tls_options = sio_all_options_supported();
+    char hn[256];
+    char pn[256];
 
     /* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -801,6 +799,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    }
 	    options.tracedir = argv[i + 1];
 	    i++;
+	} else if (!strcmp(argv[i], OptTraceFile)) {
+	    if (argc <= i + 1 || !argv[i + 1][0]) {
+		missing_value(OptTraceFile);
+	    }
+	    options.tracefile = argv[i + 1];
+	    i++;
 	} else if (!strcmp(argv[i], "-trnpre")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		missing_value("-trnpre");
@@ -902,51 +906,56 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	char tracefile[4096];
 	time_t clk;
 	int i;
-	int u = 0;
-	int fd;
+
+	if (options.tracefile != NULL) {
+	    tracef = fopen(options.tracefile, "a");
+	} else {
+	    int u = 0;
+	    int fd;
 #if defined(_WIN32) /*[*/
-	size_t sl;
+	    size_t sl;
 #endif /*]*/
 
-	do {
-	    char dashu[32];
+	    do {
+		char dashu[32];
 
-	    if (u) {
-		snprintf(dashu, sizeof(dashu), "-%d", u);
-	    } else {
-		dashu[0] = '\0';
-	    }
-
-#if defined(_WIN32) /*[*/
-	    if (options.tracedir == NULL) {
-		options.tracedir = "";
-	    }
-	    sl = strlen(options.tracedir);
-	    snprintf(tracefile, sizeof(tracefile),
-		    "%s%sx3trc.%d%s.txt",
-		    options.tracedir,
-		    sl? ((options.tracedir[sl - 1] == '\\')?
-			"": "\\"): "",
-		    getpid(), dashu);
-#else /*][*/
-	    snprintf(tracefile, sizeof(tracefile),
-		    "%s/x3trc.%u%s",
-		    options.tracedir, (unsigned)getpid(), dashu);
-#endif /*]*/
-	    fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
-	    if (fd < 0) {
-		if (errno != EEXIST) {
-		    perror(tracefile);
-		    pr3287_exit(1);
+		if (u) {
+		    snprintf(dashu, sizeof(dashu), "-%d", u);
+		} else {
+		    dashu[0] = '\0';
 		}
-		u++;
-	    }
-	} while (fd < 0);
+
+#if defined(_WIN32) /*[*/
+		if (options.tracedir == NULL) {
+		    options.tracedir = "";
+		}
+		sl = strlen(options.tracedir);
+		snprintf(tracefile, sizeof(tracefile),
+			"%s%sx3trc.%d%s.txt",
+			options.tracedir,
+			sl? ((options.tracedir[sl - 1] == '\\')?
+			    "": "\\"): "",
+			getpid(), dashu);
+#else /*][*/
+		snprintf(tracefile, sizeof(tracefile),
+			"%s/x3trc.%u%s",
+			options.tracedir, (unsigned)getpid(), dashu);
+#endif /*]*/
+		fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		if (fd < 0) {
+		    if (errno != EEXIST) {
+			perror(tracefile);
+			pr3287_exit(1);
+		    }
+		    u++;
+		}
+	    } while (fd < 0);
     
 #if !defined(_WIN32) /*[*/
-	fcntl(fd, F_SETFD, 1);
+	    fcntl(fd, F_SETFD, 1);
 #endif /*]*/
-	tracef = fdopen(fd, "w");
+	    tracef = fdopen(fd, "w");
+	}
 	if (tracef == NULL) {
 	    perror(tracefile);
 	    pr3287_exit(1);
@@ -1069,17 +1078,29 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
      * option is in effect.
      */
     for (;;) {
+	typedef union {
+	    struct sockaddr sa;
+	    struct sockaddr_in sin;
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+	    struct sockaddr_in6 sin6;
+#endif /*]*/
+	} sockaddr_46_t;
+#       define NUM_HA 4
+	sockaddr_46_t ha[NUM_HA];
+	socklen_t ha_len[NUM_HA];
+	int ha_ix;
 	char *errtxt;
+	int n_ha;
 
 	/* Resolve the host name. */
 	if (proxy_type > 0) {
 	    unsigned long lport;
 	    char *ptr;
 	    struct servent *sp;
-	    int nr;
 
 	    if (resolve_host_and_port(proxy_host, proxy_portname, &proxy_port,
-			&ha.sa, sizeof(ha), &ha_len, &errtxt, 1, &nr) < 0) {
+			&ha[0].sa, sizeof(sockaddr_46_t), ha_len, &errtxt,
+			NUM_HA, &n_ha) < 0) {
 		popup_an_error("%s", errtxt);
 		rc = 1;
 		goto retry;
@@ -1094,30 +1115,41 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		}
 		p = ntohs(sp->s_port);
 	    } else {
-		    p = (unsigned short)lport;
+		p = (unsigned short)lport;
 	    }
 	} else {
-	    int nr;
-
-	    if (resolve_host_and_port(host, port, &p, &ha.sa, sizeof(ha),
-			&ha_len, &errtxt, 1, &nr) < 0) {
+	    if (resolve_host_and_port(host, port, &p, &ha[0].sa,
+			sizeof(sockaddr_46_t), ha_len, &errtxt, NUM_HA,
+			&n_ha) < 0) {
 		popup_an_error("%s", errtxt);
 		rc = 1;
 		goto retry;
 	    }
 	}
 
-	/* Connect to the host. */
-	s = socket(ha.sa.sa_family, SOCK_STREAM, 0);
-	if (s == INVALID_SOCKET) {
-	    popup_a_sockerr("socket");
-	    pr3287_exit(1);
-	}
+	for (ha_ix = 0; ha_ix < n_ha; ha_ix++) {
 
-	if (connect(s, &ha.sa, ha_len) < 0) {
-	    popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: host);
-	    rc = 1;
-	    goto retry;
+	    /* Connect to the host. */
+	    s = socket(ha[ha_ix].sa.sa_family, SOCK_STREAM, 0);
+	    if (s == INVALID_SOCKET) {
+		popup_a_sockerr("socket");
+		pr3287_exit(1);
+	    }
+
+	    if (numeric_host_and_port(&ha[ha_ix].sa, ha_len[ha_ix], hn,
+			sizeof(hn), pn, sizeof(pn), &errtxt)) {
+		vtrace("Trying %s, port %s...\n", hn, pn);
+	    }
+	    if (connect(s, &ha[ha_ix].sa, ha_len[ha_ix]) < 0) {
+		popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: host);
+		SOCK_CLOSE(s);
+		s = INVALID_SOCKET;
+		if (ha_ix < n_ha - 1) {
+		    continue;
+		}
+		rc = 1;
+		goto retry;
+	    }
 	}
 
 	if (proxy_type > 0) {
@@ -1162,7 +1194,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 
 	/* Negotiate. */
-	if (!pr_net_negotiate(host, &ha.sa, ha_len, s, lu, options.assoc)) {
+	if (!pr_net_negotiate(host, &ha[ha_ix].sa, ha_len[ha_ix], s, lu,
+		    options.assoc)) {
 	    rc = 1;
 	    goto retry;
 	}

@@ -65,6 +65,7 @@ typedef struct {
 	tls_config_t tls;	/* TLS options */
 	int syncport;		/* -syncport */
 	const char *tracedir;	/* where we are tracing (-tracedir) */
+	const char *tracefile;	/* where we are tracing (-tracefile) */
 	int tracing;		/* are we tracing? (-trace) */
 	const char *trnpre;	/* -trnpre */
 	const char *trnpost;	/* -trnpost */

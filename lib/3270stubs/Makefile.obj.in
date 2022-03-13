@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020-2021 Paul Mattes.
+# Copyright (c) 1999-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@ RANLIB = @RANLIB@
 
 all: $(LIBSTUBS)
 
-include lib3270stubs_files.mk
-include lib3270stubsu_files.mk
+INCS = lib3270stubs_files.mk lib3270stubsu_files.mk
+include $(INCS)
 OBJS = $(LIB3270STUBS_OBJECTS) $(LIB3270STUBSU_OBJECTS)
 
 LIBDIR = @libdir@
@@ -50,7 +50,7 @@ CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 
-$(LIBSTUBS): $(OBJS)
+$(LIBSTUBS): $(OBJS) $(INCS)
 	$(AR) cr $@ $(OBJS)
 	$(RANLIB) $@
 

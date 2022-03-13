@@ -35,8 +35,8 @@ RANLIB = @RANLIB@
 
 all: $(LIB3270)
 
-include lib3270_files.mk
-include lib3270u_files.mk
+INCS = lib3270_files.mk lib3270u_files.mk
+include $(INCS)
 OBJS = $(LIB3270_OBJECTS) $(LIB3270U_OBJECTS)
 
 LIBDIR = @libdir@
@@ -50,7 +50,7 @@ CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 
-$(LIB3270): $(OBJS)
+$(LIB3270): $(OBJS) $(INCS)
 	$(AR) cr $@ $(OBJS)
 	$(RANLIB) $@
 

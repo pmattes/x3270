@@ -32,7 +32,7 @@ import sys
 import os
 import Common.Test.cti as cti
 
-@unittest.skipIf(os.system('xset q >/dev/null') != 0, "X11 server needed for tests")
+@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 class TestX3270BasicCmdline(cti.cti):
 
     # x3270 -v and -help test

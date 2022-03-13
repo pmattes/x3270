@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 # include <string.h>
 # include <ctype.h>
 # include <stdlib.h>
+# include <stdbool.h>
 # include <errno.h>
 #endif /*]*/
 
@@ -146,13 +147,13 @@ main(int argc, char *argv[])
     int lno = 0;
     int cc = 0;
     unsigned i;
-    int continued = 0;
+    bool continued = false;
     const char *filename = "standard input";
     FILE *u, *t, *tc = NULL, *tm = NULL;
     int cmode = 0;
     unsigned long ifdefs;
     unsigned long ifndefs;
-    int last_continue = 0;
+    bool last_continue = false;
     int infiles = 0;
 
     /* Parse arguments. */
@@ -382,8 +383,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Buffer overflow\n");
 		exit(1);
 	    }
-	    aix[n_fallbacks] = cc;
-	    xlno[n_fallbacks++] = lno;
+	    if (!continued) {
+		aix[n_fallbacks] = cc;
+		xlno[n_fallbacks++] = lno;
+	    }
 	} else {
 	    /* Use color to decide which file to write into. */
 	    if (!(ifdefs & MODE_COLOR) && !(ifndefs & MODE_COLOR)) {
@@ -401,7 +404,7 @@ main(int argc, char *argv[])
 	    }
 	}
 
-	continued = 0;
+	continued = false;
 	white = 0;
 	while ((c = *s++) != '\0') {
 	    if (c == ' ' || c == '\t') {
@@ -427,7 +430,7 @@ main(int argc, char *argv[])
 		break;
 	    case '\\':
 		if (*s == '\0') {
-		    continued = 1;
+		    continued = true;
 		    break;
 		} else if (cmode) {
 		    switch ((c = *s++)) {
@@ -500,21 +503,31 @@ main(int argc, char *argv[])
 		    xlno[i]);
 	}
 	printf("\tNULL\n};\n\n");
+    }
 
-	/* Emit some test code. */
-	printf("%s", "#if defined(DEBUG) /*[*/\n\
+    /* Emit some test code. */
+    printf("%s", "#if defined(DEBUG) /*[*/\n\
 #include <stdio.h>\n\
 int\n\
 main(int argc, char *argv[])\n\
 {\n\
-	int i;\n\
-\n\
-	for (i = 0; fallbacks[i] != NULL; i++)\n\
-		printf(\"%d: %s\\n\", i, fallbacks[i]);\n\
-	return 0;\n\
-}\n");
-	printf("#endif /*]*/\n\n");
+    int i;\n\
+\n");
+    if (cmode) {
+	printf("%s",
+"    for (i = 0; fallbacks[i] != NULL; i++) {\n\
+	printf(\"%d: %s\\n\", i, fallbacks[i]);\n\
+    }\n");
+    } else {
+	printf("%s",
+"    printf(\"Common:\\n%s\\n\", common_fallbacks);\n\
+    printf(\"Color:\\n%s\\n\", color_fallbacks);\n\
+    printf(\"Mono:\\n%s\\n\", mono_fallbacks);\n");
     }
+    printf("%s",
+"    return 0;\n\
+}\n");
+    printf("#endif /*]*/\n");
 
     fflush(stdout);
     fclose(stdout);

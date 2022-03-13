@@ -25,53 +25,58 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# b3270 multi-host tests
+# c3270 multi-host tests
 
-import json
+import os
+import re
 import requests
 from subprocess import Popen, PIPE, DEVNULL
+import tempfile
 import unittest
 import Common.Test.cti as cti
-import Common.Test.playback as playback
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
-class TestB3270MultiHost(cti.cti):
+@unittest.skipUnless(hostsSetup, setupHosts.warning)
+class TestC3270MultiHost(cti.cti):
 
-    # b3270 multi-host test
-    @unittest.skipUnless(hostsSetup, setupHosts.warning)
-    def b3270_multi_host(self, ipv4=True, ipv6=True):
+    # c3270 multi-host test
+    def c3270_multi_host(self, ipv4=True, ipv6=True):
 
-        # Start b3270.
+        # Start c3270.
+        handle, tracefile = tempfile.mkstemp()
+        os.close(handle)
         args46 = []
         if not ipv4:
             args46 += ['-6']
         if not ipv6:
             args46 += ['-4']
         hport, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)] + args46), stdin=PIPE, stdout=PIPE)
-        self.children.append(b3270)
+        c3270 = Popen(cti.vgwrap(['c3270', '-httpd', str(hport), '-trace', '-tracefile', tracefile,
+            '-xrm', 'c3270.traceMonitor: false'] + args46), stdout=DEVNULL)
+        self.children.append(c3270)
+        self.check_listen(hport)
         ts.close()
 
-        # Drain the first line of output. On Windows, unless this is done b3270
-        # to block on the pipe.
-        b3270.stdout.readline()
-
-        # Feed b3270 some actions.
+        # Feed c3270 some actions.
         uport, ts = cti.unused_port()
         ts.close()
         requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.assertTrue(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
+
+        # Wait for the process to exit.
+        self.vgwait(c3270)
 
         # Make sure both are processed.
-        output = b3270.communicate()[0].decode('utf8').split('\n')
+        with open(tracefile, 'r') as file:
+            output = file.readlines()
         tried = []
         for line in output:
-            if line != '':
-                j = json.loads(line)
-                if 'connect-attempt' in j:
-                    tried += [j['connect-attempt']['host-ip']]
+            m = re.search(r'Trying (.*), port', line)
+            if m != None:
+                tried += [m.group(1)]
+        os.unlink(tracefile)
         if ipv4:
             self.assertIn('127.0.0.1', tried, 'Did not try IPv4')
         else:
@@ -81,15 +86,12 @@ class TestB3270MultiHost(cti.cti):
         else:
             self.assertNotIn('::1', tried, 'Should not try IPv6')
 
-        # Wait for the process to exit.
-        self.vgwait(b3270)
-
-    def test_b3270_multi_host(self):
-        self.b3270_multi_host()
-    def test_b3270_multi_host4(self):
-        self.b3270_multi_host(ipv6=False)
-    def test_b3270_multi_host6(self):
-        self.b3270_multi_host(ipv4=False)
+    def test_c3270_multi_host(self):
+        self.c3270_multi_host()
+    def test_c3270_multi_host4(self):
+        self.c3270_multi_host(ipv6=False)
+    def test_c3270_multi_host6(self):
+        self.c3270_multi_host(ipv4=False)
 
 if __name__ == '__main__':
     unittest.main()

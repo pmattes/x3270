@@ -36,7 +36,7 @@ import requests
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipIf(os.system('xset q >/dev/null') != 0, "X11 server needed for tests")
+@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(os.system('tightvncserver --help 2>/dev/null') != 65280, "tightvncserver needed for tests")
 class TestX3270BadAplDraw(cti.cti):
 

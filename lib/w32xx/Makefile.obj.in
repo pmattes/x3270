@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020 Paul Mattes.
+# Copyright (c) 1999-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,11 @@ CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 all:: $(LIB32XX)
 
-include lib32xx_files.mk
-include libw32xx_files.mk
+INCS = lib32xx_files.mk libw32xx_files.mk
+include $(INCS)
 OBJS = $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS) @WIN_TLS_MODULES@
 
-$(LIB32XX): $(OBJS)
+$(LIB32XX): $(OBJS) $(INCS)
 	$(AR) crs $@ $(OBJS)
 
 clean:
