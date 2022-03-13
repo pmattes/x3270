@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2021 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,7 +127,6 @@
 #else /*][*/
 # include <winsock2.h>
 # include <ws2tcpip.h>
-# undef AF_INET6
 #endif /*]*/
 #include <time.h>
 #include <signal.h>
@@ -553,9 +552,7 @@ main(int argc, char *argv[])
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
-#endif /*]*/
     } ha;
     socklen_t ha_len = sizeof(ha);
     socket_t s = INVALID_SOCKET;
