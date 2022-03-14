@@ -34,7 +34,7 @@
  */
 
 #include <stdio.h>
-
+#include <stdbool.h>
 #include "conf.h"
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"
@@ -42,7 +42,6 @@
 # include <string.h>
 # include <ctype.h>
 # include <stdlib.h>
-# include <stdbool.h>
 # include <errno.h>
 #endif /*]*/
 

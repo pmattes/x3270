@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1996-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,9 +30,9 @@
  *		File transfer, data movement logic, CUT version
  */
 
-#include <errno.h>
-
 #include "globals.h"
+
+#include <errno.h>
 
 #include "ctlr.h"
 #include "3270ds.h"

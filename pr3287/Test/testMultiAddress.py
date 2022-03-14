@@ -37,10 +37,10 @@ import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
-@unittest.skipUnless(hostsSetup, setupHosts.warning)
 class TestPr3287MultiHost(cti.cti):
 
     # pr3287 multi-host test
+    @unittest.skipUnless(hostsSetup, setupHosts.warning)
     def pr3287_multi_host(self, ipv4=True, ipv6=True):
 
         # Start pr3287.
@@ -84,6 +84,41 @@ class TestPr3287MultiHost(cti.cti):
         self.pr3287_multi_host(ipv6=False)
     def test_pr3287_multi_host6(self):
         self.pr3287_multi_host(ipv4=False)
+
+    # pr3287 host sequence test
+    def test_pr3287_multi_host_sequence(self):
+
+        # Start a copy server.
+        c = cti.copyserver(justAccept=True)
+
+        # Start pr3287.
+        handle, tracefile = tempfile.mkstemp()
+        os.close(handle)
+        uport, ts = cti.unused_port()
+        ts.close()
+        vport, ts = cti.unused_port()
+        ts.close()
+        # Set up a mock resolver result with the unused port, the real port and the other unused port.
+        os.environ['MOCK_SYNC_RESOLVER'] = f'127.0.0.1/{uport};127.0.0.1/{c.port};127.0.0.1/{vport}'
+        pr3287 = Popen(cti.vgwrap(['pr3287', '-trace', '-tracefile', tracefile,
+            f'foo:9999']), stdout=DEVNULL, stderr=DEVNULL)
+        os.environ['MOCK_SYNC_RESOLVER'] = ''
+        self.children.append(pr3287)
+
+        # Wait for the process to exit.
+        c.close()
+        self.vgwait(pr3287, assertOnFailure=False)
+
+        # Make sure only two addresses are processed.
+        with open(tracefile, 'r') as file:
+            output = file.readlines()
+        tried = []
+        for line in output:
+            m = re.search(r'Trying (.*), port ([0-9]+)', line)
+            if m != None:
+                tried += [m.group(1) + ' ' + m.group(2)]
+        os.unlink(tracefile)
+        self.assertEqual(tried, [f'127.0.0.1 {uport}', f'127.0.0.1 {c.port}'])
 
 if __name__ == '__main__':
     unittest.main()

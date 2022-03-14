@@ -133,7 +133,6 @@
 #else /*][*/
 # include <winsock2.h>
 # include <ws2tcpip.h>
-# undef AF_INET6
 #endif /*]*/
 #include <time.h>
 #include <signal.h>
@@ -1081,9 +1080,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	typedef union {
 	    struct sockaddr sa;
 	    struct sockaddr_in sin;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	    struct sockaddr_in6 sin6;
-#endif /*]*/
 	} sockaddr_46_t;
 #       define NUM_HA 4
 	sockaddr_46_t ha[NUM_HA];
@@ -1140,16 +1137,23 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 			sizeof(hn), pn, sizeof(pn), &errtxt)) {
 		vtrace("Trying %s, port %s...\n", hn, pn);
 	    }
-	    if (connect(s, &ha[ha_ix].sa, ha_len[ha_ix]) < 0) {
-		popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: host);
-		SOCK_CLOSE(s);
-		s = INVALID_SOCKET;
-		if (ha_ix < n_ha - 1) {
-		    continue;
+	    if (connect(s, &ha[ha_ix].sa, ha_len[ha_ix]) == 0) {
+		/* Success! */
+		if (ha[ha_ix].sa.sa_family == AF_INET) {
+		    p = htons(ha[ha_ix].sin.sin_port);
+		} else {
+		    p = htons(ha[ha_ix].sin6.sin6_port);
 		}
-		rc = 1;
-		goto retry;
+		break;
 	    }
+
+	    popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: host);
+	    SOCK_CLOSE(s);
+	    s = INVALID_SOCKET;
+	}
+	if (s == INVALID_SOCKET) {
+	    rc = 1;
+	    goto retry;
 	}
 
 	if (proxy_type > 0) {

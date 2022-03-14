@@ -641,6 +641,73 @@ resolve_host_and_port_v4(const char *host, char *portname,
 #endif /*]*/
 
 /**
+ * Mock the behavior of the synchronous resolver.
+ *
+ * @praram[in] m	Mock definition
+ * @param[in] host	Host name
+ * @param[in] portname	Port name
+ * @param[out] pport	Returned numeric port
+ * @param[out] sa	Returned array of addresses
+ * @param[in] sa_len	Number of elements in sa
+ * @param[out] sa_rlen	Returned size of elements in sa
+ * @param[out] errmsg	Returned error message
+ * @param[in] max	Maximum number of elements to return
+ * @param[out] nr	Number of elements returned
+ *
+ * @returns RHP_XXX status
+ */
+static rhp_t
+mock_sync_resolver(const char *m, const char *host, char *portname,
+	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
+	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+{
+    /*
+     * m is a string that looks like:
+     *  address/port[;address/port...]
+     * address is a numeric IPv4 or IPv6 address
+     * port is a port name or number
+     */
+    char *mdup = NewString(m);
+    char *outer_saveptr = NULL, *inner_saveptr = NULL;
+    char *outer_chunk, *inner_chunk;
+    char *outer_str, *inner_str;
+    struct addrinfo hints;
+
+    *nr = 0;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV;
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    outer_str = mdup;
+    while (*nr < max &&
+	    (outer_chunk = strtok_r(outer_str, ";", &outer_saveptr)) != NULL) {
+	int np = 0;
+	char *inner[2];
+	struct addrinfo *res;
+
+	outer_str = NULL;
+	inner_str = outer_chunk;
+	while ((inner_chunk = strtok_r(inner_str, "/", &inner_saveptr))
+		!= NULL) {
+	    inner_str = NULL;
+	    assert(np < 2);
+	    inner[np++] = inner_chunk;
+	}
+	assert(np == 2);
+
+	assert(getaddrinfo(inner[0], inner[1], &hints, &res) == 0);
+	memcpy(sa, res->ai_addr, res->ai_addrlen);
+	sa_rlen[*nr] = (socklen_t)res->ai_addrlen;
+	sa = (struct sockaddr *)((char *)sa + sa_len);
+	++(*nr);
+    }
+
+    Free(mdup);
+    return RHP_SUCCESS;
+}
+
+/**
  * Resolve a hostname and port.
  * Synchronous version.
  *
@@ -661,6 +728,12 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, char **errmsg,
 	int max, int *nr)
 {
+    const char *m = getenv("MOCK_SYNC_RESOLVER");
+
+    if (m != NULL && *m != '\0') {
+	return mock_sync_resolver(m, host, portname, pport, sa, sa_len,
+		sa_rlen, errmsg, max, nr);
+    }
 #if defined(X3270_IPV6) /*[*/
     return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);

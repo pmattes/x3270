@@ -76,6 +76,11 @@
 /*
  * Prerequisite #includes.
  */
+#if defined(_WIN32) /*[*/
+# define _WIN32_WINNT	0x0600		/* Needs to happen before any system
+					   includes, so mingw doesn't default
+					   it */
+#endif /*]*/
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
 #if !defined(_MSC_VER) /*[*/

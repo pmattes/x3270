@@ -61,9 +61,10 @@ class copyserver():
     port = 0
     loopback = '127.0.0.1'
     qloopback = '127.0.0.1'
+    conn = None
 
     # Initialization.
-    def __init__(self, port=0, ipv6=False):
+    def __init__(self, port=0, ipv6=False, justAccept=False):
         self.listensocket = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM, 0)
         self.listensocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.loopback = '::1' if ipv6 else '127.0.0.1'
@@ -75,24 +76,39 @@ class copyserver():
             self.port = port
         self.listensocket.listen()
         self.result = b''
-        self.thread = threading.Thread(target=self.process)
+        if justAccept:
+            self.thread = threading.Thread(target=self.just_accept)
+        else:
+            self.thread = threading.Thread(target=self.process)
         self.thread.start()
 
-    # Accept a connection and read to EOF.
     def process(self):
-        (conn, _) = self.listensocket.accept()
+        '''Accept a connection and read to EOF'''
+        (self.conn, _) = self.listensocket.accept()
         self.listensocket.close()
         while True:
-            rdata = conn.recv(1024)
-            if (len(rdata) == 0):
+            rdata = self.conn.recv(1024)
+            if len(rdata) == 0:
                 break
             self.result += rdata
-        conn.close()
+        self.conn.close()
+        self.conn = None
 
-    # Return what we got.
+    def just_accept(self):
+        '''Accept a connection'''
+        (self.conn, _) = self.listensocket.accept()
+        self.listensocket.close()
+
+    def close(self):
+        '''Close the connection without reading'''
+        sa_try_until(lambda: (self.conn != None), 2, 'Emulator did not connect')
+        self.conn.close()
+        self.conn = None
+
     def data(self):
+        '''Return what we got'''
         self.thread.join(timeout=2)
-        assert(not self.thread.is_alive())
+        assert not self.thread.is_alive()
         return self.result
 
 # Simple socket listen / accept / receive all.
