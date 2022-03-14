@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -623,9 +623,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
-#endif /*]*/
     } sa;
     socklen_t len = sizeof(sa);
     char hostbuf[128];
@@ -646,14 +644,11 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	    vtrace("New script socket connection from %s:%u\n",
 		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
 			sizeof(hostbuf)), ntohs(sa.sin.sin_port));
-	}
-#if defined(X3270_IPV6) /*[*/
-	else if (sa.sa.sa_family == AF_INET6) {
+	} else if (sa.sa.sa_family == AF_INET6) {
 	    vtrace("New script socket connection from %s:%u\n",
 		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
 			sizeof(hostbuf)), ntohs(sa.sin6.sin6_port));
 	}
-#endif /*]*/
 #if !defined(_WIN32) /*[*/
 	else if (sa.sa.sa_family == AF_UNIX) {
 	    vtrace("New Unix-domain script socket connection");
@@ -848,9 +843,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
 	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
-    }
-#if defined(X3270_IPV6) /*[*/
-    else if (sa->sa_family == AF_INET6) {
+    } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
 	listener->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
@@ -858,7 +851,6 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 		ntohs(sin6->sin6_port));
 	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
     }
-#endif /*]*/
 #if !defined(_WIN32) /*[*/
     else if (sa->sa_family == AF_UNIX) {
 	struct sockaddr_un *ssun = (struct sockaddr_un *)sa;

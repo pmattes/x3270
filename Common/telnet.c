@@ -360,9 +360,7 @@ static void output_possible(iosrc_t fd, ioid_t id);
 typedef union {
     struct sockaddr sa;
     struct sockaddr_in sin;
-#if defined(X3270_IPV6) /*[*/
     struct sockaddr_in6 sin6;
-#endif /*]*/
 } sockaddr_46_t;
 
 #define NUM_HA	4

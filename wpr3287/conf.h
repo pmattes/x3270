@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2014-2015, 2019 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,4 +43,3 @@
 /* #undef USE_ICONV */
 
 /* Optional parts. */
-#define X3270_IPV6 1

@@ -49,7 +49,7 @@
 # include "winvers.h"
 #endif /*]*/
 
-#if defined(X3270_IPV6) && (defined(_WIN32) || defined(HAVE_GETADDRINFO_A)) /*[*/
+#if defined(_WIN32) || defined(HAVE_GETADDRINFO_A) /*[*/
 # define ASYNC_RESOLVER 1
 #endif /*]*/
 
@@ -81,13 +81,8 @@ bool prefer_ipv6;
 void
 set_46(bool prefer4, bool prefer6)
 {
-#if defined(X3270_IPV6) /*[*/
     prefer_ipv4 = prefer4;
     prefer_ipv6 = prefer6;
-#else /*][*/
-    prefer_ipv4 = true;
-    prefer_ipv6 = false;
-#endif /*]*/
 }
 
 /* Map the -4 and -6 options onto the right getaddrinfo setting. */
@@ -102,8 +97,6 @@ want_pf(void)
 	return PF_UNSPEC;
     }
 }
-
-#if defined(X3270_IPV6) /*[*/
 
 # if defined(_WIN32) /*[*/
 /* Wrap gai_strerror() in a function that translates the code page. */
@@ -190,7 +183,6 @@ resolve_host_and_port_v46(const char *host, char *portname,
     freeaddrinfo(res0);
     return RHP_SUCCESS;
 }
-#endif /*]*/
 
 #if defined(ASYNC_RESOLVER) /*[*/
 
@@ -568,78 +560,6 @@ cleanup_host_and_port(int slot)
 #endif /*]*/
 }
 
-#if !defined(X3270_IPV6) /*[*/
-/*
- * Resolve a hostname and port using gethostbyname and getservbyname, and
- * allowing only IPv4.
- * Synchronous only.
- */
-static rhp_t
-resolve_host_and_port_v4(const char *host, char *portname,
-	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
-{
-    struct hostent *hp;
-    struct servent *sp;
-    unsigned short port;
-    unsigned long lport;
-    char *ptr;
-    struct sockaddr_in *sin = (struct sockaddr_in *)sa;
-    int i;
-    void *rsa = sa;
-
-    *nr = 0;
-
-    /* Get the port number. */
-    lport = strtoul(portname, &ptr, 0);
-    if (ptr == portname || *ptr != '\0' || lport == 0L || lport & ~0xffff) {
-	if (!(sp = getservbyname(portname, "tcp"))) {
-	    if (errmsg) {
-		*errmsg = lazyaf("Unknown port number or service: %s",
-			portname);
-	    }
-	    return RHP_FATAL;
-	}
-	port = sp->s_port;
-    } else {
-	port = htons((unsigned short)lport);
-    }
-    *pport = ntohs(port);
-
-    /* Use gethostbyname() to resolve the hostname. */
-    hp = gethostbyname(host);
-    if (hp == (struct hostent *)0) {
-	/* Try inet_addr(). */
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = inet_addr(host);
-	if (sin->sin_addr.s_addr == INADDR_NONE) {
-	    if (errmsg) {
-		*errmsg = lazyaf("Unknown host:\n%s", host);
-	    }
-	    return RHP_CANNOT_RESOLVE;
-	}
-	*sa_rlen = sizeof(struct sockaddr_in);
-	*nr = 1;
-	return RHP_SUCCESS;
-    }
-
-    /* Return the addresses. */
-    for (i = 0; i < max && hp->h_addr_list[i] != NULL; i++) {
-	struct sockaddr_in *rsin = rsa;
-
-	rsin->sin_family = hp->h_addrtype;
-	memcpy(&rsin->sin_addr, hp->h_addr_list[i], hp->h_length);
-	rsin->sin_port = port;
-	sa_rlen[*nr] = sizeof(struct sockaddr_in);
-
-	rsa = (char *)rsa + sa_len;
-	(*nr)++;
-    }
-
-    return RHP_SUCCESS;
-}
-#endif /*]*/
-
 /**
  * Mock the behavior of the synchronous resolver.
  *
@@ -734,13 +654,8 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	return mock_sync_resolver(m, host, portname, pport, sa, sa_len,
 		sa_rlen, errmsg, max, nr);
     }
-#if defined(X3270_IPV6) /*[*/
     return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
-#else /*][*/
-    return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,
-	    sa_rlen, errmsg, max, nr);
-#endif
 }
 
 /**
@@ -764,13 +679,8 @@ resolve_host_and_port_abs(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
 {
-#if defined(X3270_IPV6) /*[*/
     return resolve_host_and_port_v46(host, portname, true, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
-#else /*][*/
-    return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,
-	    sa_rlen, errmsg, max, nr);
-#endif
 }
 
 /*
@@ -799,13 +709,8 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
 	    sa_rlen, errmsg, max, nr, slot, pipe, event);
 #else /*][*/
     *slot = -1;
-# if defined(X3270_IPV6)  /*][*/
     return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
-# else /*][*/
-    return resolve_host_and_port_v4(host, portname, pport, sa, sa_len,
-	    sa_rlen, errmsg, max, nr);
-# endif /*]*/
 #endif /*]*/
 }
 
@@ -823,7 +728,6 @@ bool
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
-#if defined(X3270_IPV6) /*[*/
     int rc;
 
     /* Use getnameinfo(). */
@@ -836,12 +740,4 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	return false;
     }
     return true;
-#else /*][*/
-    struct sockaddr_in *sin = (struct sockaddr_in *)sa;
-
-    /* Use inet_ntoa() and snprintf(). */
-    snprintf(host, hostlen, "%s", inet_ntoa(sin->sin_addr));
-    snprintf(serv, servlen, "%u", ntohs(sin->sin_port));
-    return true;
-#endif /*]*/
 }

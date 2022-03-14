@@ -701,7 +701,6 @@ with_iconv
 enable_dbcs
 enable_local_process
 enable_tls
-enable_ipv6
 enable_stransport
 enable_mock_tls
 '
@@ -1341,7 +1340,6 @@ Optional Features:
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
   --disable-tls           leave out TLS support
-  --disable-ipv6          leave out IPv6 support
   --disable-stransport    use OpenSSL instead of Secure Transport (MacOS)
   --enable-mock-tls       use TLS mock for testing
 
@@ -4604,16 +4602,6 @@ if test "${enable_tls+set}" = set; then :
   enableval=$enable_tls;
 fi
 
-# Check whether --enable-ipv6 was given.
-if test "${enable_ipv6+set}" = set; then :
-  enableval=$enable_ipv6;
-fi
-
-case "$enable_ipv6" in
-""|yes) $as_echo "#define X3270_IPV6 1" >>confdefs.h
-
-	;;
-esac
 # Check whether --enable-stransport was given.
 if test "${enable_stransport+set}" = set; then :
   enableval=$enable_stransport;

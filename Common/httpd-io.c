@@ -259,9 +259,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
-#endif /*]*/
     } sa;
     socklen_t len;
     char hostbuf[128];
@@ -325,16 +323,13 @@ hio_connection(iosrc_t fd, ioid_t id)
 		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
 			sizeof(hostbuf)),
 		    ntohs(sa.sin.sin_port)));
-    }
-#if defined(X3270_IPV6) /*[*/
-    else if (sa.sa.sa_family == AF_INET6) {
+    } else if (sa.sa.sa_family == AF_INET6) {
 	session->dhandle = httpd_new(session,
 		lazyaf("%s:%u",
 		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
 			sizeof(hostbuf)),
 		    ntohs(sa.sin6.sin6_port)));
     }
-#endif /*]*/
     else {
 	session->dhandle = httpd_new(session, "???");
     }
@@ -436,9 +431,7 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
 	vtrace("Listening for HTTP on %s\n", l->desc);
-    }
-#if defined(X3270_IPV6) /*[*/
-    else if (sa->sa_family == AF_INET6) {
+    } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
 	l->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
@@ -446,7 +439,6 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 	    ntohs(sin6->sin6_port));
 	vtrace("Listening for HTTP on %s\n", l->desc);
     }
-#endif /*]*/
 
     goto done;
 

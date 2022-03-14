@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2016, 2019, 2021 Paul Mattes.
+ * Copyright (c) 2005-2022 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -609,12 +609,8 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
     /* Is there a user override? */
     if ((kw->allow_oride) && (kw->oride > 0)) {
 	char *p1, *p2, *rpqtext;
-# if defined(X3270_IPV6) /*[*/
 	struct addrinfo *res;
 	int ga_err;
-# else /*][*/
-	in_addr_t ia;
-# endif /*]*/
 
 	p1 = x3270rpq + kw->oride;
 	rpqtext = (char *) malloc(strlen(p1) + 1);
@@ -630,7 +626,6 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	}
 	*p2 = '\0';
 
-# if defined(X3270_IPV6) /*[*/
 	ga_err = getaddrinfo(rpqtext, NULL, NULL, &res);
 	if (ga_err == 0) {
 	    void *src = NULL;
@@ -671,40 +666,13 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 # endif /*]*/
 		    );
 	}
-# else /*][*/
-	/*
-	 * No IPv6 support.
-	 * Use plain old inet_addr() and gethostbyname().
-	 */
-	ia = inet_addr(rpqtext);
-	if (ia == htonl(INADDR_NONE)) {
-	    struct hostent *h;
-
-	    h = gethostbyname(rpqtext);
-	    if (h == NULL || h->h_addrtype != AF_INET) {
-		rpq_warning("RPQ: gethostbyname error");
-		return 0;
-	    }
-	    memcpy(&ia, h->h_addr_list[0], h->h_length);
-	}
-	SET16(buf, AF_INET);
-	x += 2;
-	if (x + (int)sizeof(in_addr_t) <= maxlen) {
-	    memcpy(buf, &ia, sizeof(in_addr_t));
-	    x += sizeof(in_addr_t);
-	} else {
-	    rpq_warning("RPQ ADDRESS term incomplete due to space limit");
-	}
-# endif /*]*/
 	free(rpqtext);
     } else {
 	/* No override... get our address from the actual socket */
 	union {
 	    struct sockaddr sa;
 	    struct sockaddr_in sa4;
-# if defined(X3270_IPV6) /*[*/
 	    struct sockaddr_in6 sa6;
-# endif /*]*/
 	} u;
 	int addrlen = sizeof(u);
 	void *src = NULL;
@@ -720,12 +688,10 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	    src = &u.sa4.sin_addr;
 	    len = sizeof(struct in_addr);
 	    break;
-# if defined(X3270_IPV6) /*[*/
 	case AF_INET6:
 	    src = &u.sa6.sin6_addr;
 	    len = sizeof(struct in6_addr);
 	    break;
-# endif /*]*/
 	default:
 	    rpq_warning("RPQ ADDRESS term has unrecognized family %u",
 		    u.sa.sa_family);

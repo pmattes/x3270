@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,9 +73,7 @@ struct {
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
-#endif /*]*/
     } ha;
 } ps = { INVALID_SOCKET };
 
@@ -324,13 +322,11 @@ proxy_socks5_send_connect(void)
 	memcpy(s, &ps.ha.sin.sin_addr, 4);
 	s += 4;
 	strcpy(nbuf, inet_ntoa(ps.ha.sin.sin_addr));
-#if defined(X3270_IPV6) /*[*/
     } else {
 	*s++ = 0x04;	/* IPv6 */
 	memcpy(s, &ps.ha.sin6.sin6_addr, sizeof(struct in6_addr));
 	s += sizeof(struct in6_addr);
 	inet_ntop(AF_INET6, &ps.ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
-#endif /*]*/
     }
     SET16(s, ps.port);
 
@@ -459,11 +455,9 @@ proxy_socks5_process_connect_reply(void)
 	    case 0x03:
 		ps.n2read = -1;
 		break;
-#if defined(X3270_IPV6) /*[*/
 	    case 0x04:
 		ps.n2read = sizeof(struct in6_addr) + 2;
 		break;
-#endif /*]*/
 	    default:
 		popup_an_error("SOCKS5 Proxy: unknown server address type "
 			"0x%02x", r);
@@ -495,14 +489,12 @@ proxy_socks5_process_connect_reply(void)
 	nbuf[ps.vrbuf[4]] = '\0';
 	portp = &ps.vrbuf[5 + ps.vrbuf[4]];
 	break;
-#if defined(X3270_IPV6) /*[*/
     case 0x04: /* IPv6 */
 	memcpy(&ps.ha.sin6.sin6_addr, &ps.vrbuf[4],
 		sizeof(struct in6_addr));
 	inet_ntop(AF_INET6, &ps.ha.sin6.sin6_addr, nbuf, sizeof(nbuf));
 	portp = &ps.vrbuf[4 + sizeof(struct in6_addr)];
 	break;
-#endif /*]*/
     default:
 	/* can't happen */
 	nbuf[0] = '\0';

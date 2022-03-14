@@ -688,7 +688,6 @@ ac_user_opts='
 enable_option_checking
 enable_dbcs
 enable_local_process
-enable_ipv6
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1325,7 +1324,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
-  --disable-ipv6          leave out IPv6 support
 
 Some influential environment variables:
   CC          C compiler command
@@ -3932,16 +3930,6 @@ fi
 
 case "$enable_local_process" in
 ""|yes)	$as_echo "#define X3270_LOCAL_PROCESS 1" >>confdefs.h
-
-	;;
-esac
-# Check whether --enable-ipv6 was given.
-if test "${enable_ipv6+set}" = set; then :
-  enableval=$enable_ipv6;
-fi
-
-case "$enable_ipv6" in
-""|yes)	$as_echo "#define X3270_IPV6 1" >>confdefs.h
 
 	;;
 esac

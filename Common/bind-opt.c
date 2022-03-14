@@ -48,9 +48,7 @@
 
 typedef union {
     struct sockaddr_in v4;
-#if defined(X3270_IPV6) /*[*/
     struct sockaddr_in6 v6;
-#endif /*]*/
 } sau_t;
 
 /**

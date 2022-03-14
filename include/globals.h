@@ -129,13 +129,6 @@ typedef struct cmd cmd_t;
 typedef unsigned int ucs4_t;
 typedef unsigned short ebc_t;
 
-/*
- * Cancel out contradictory parts.
- */
-#if defined(X3270_IPV6) && !defined(AF_INET6) /*[*/
-# undef X3270_IPV6
-#endif /*]*/
-
 /* Local process (-e) header files. */
 #if defined(X3270_LOCAL_PROCESS) && defined(HAVE_FORKPTY) /*[*/
 # define LOCAL_PROCESS	1

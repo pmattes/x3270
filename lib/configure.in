@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2017, 2019-2022 Paul Mattes.
+dnl Copyright (c) 2000-2022 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -222,11 +222,6 @@ case "$enable_local_process" in
 	;;
 esac
 AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
-AC_ARG_ENABLE(ipv6,[  --disable-ipv6          leave out IPv6 support])
-case "$enable_ipv6" in                  
-""|yes) AC_DEFINE(X3270_IPV6,1)                 
-	;;                              
-esac
 AC_ARG_ENABLE(stransport,[  --disable-stransport    use OpenSSL instead of Secure Transport (MacOS)])
 if test ! -z "$mac_os" -a "$enable_stransport" = no -a "use_openssl" = no
 then	enable_tls=no
