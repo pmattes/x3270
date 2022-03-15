@@ -31,6 +31,9 @@ import os
 import re
 import requests
 from subprocess import Popen, PIPE, DEVNULL
+import sys
+if not sys.platform.startswith('win'):
+    import pty
 import tempfile
 import unittest
 import Common.Test.cti as cti
@@ -38,6 +41,7 @@ import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
+@unittest.skipIf(sys.platform.startswith('win'), 'No PTY on Windows')
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
 class TestC3270MultiHost(cti.cti):
 
@@ -53,9 +57,18 @@ class TestC3270MultiHost(cti.cti):
         if not ipv6:
             args46 += ['-4']
         hport, ts = cti.unused_port()
-        c3270 = Popen(cti.vgwrap(['c3270', '-httpd', str(hport), '-trace', '-tracefile', tracefile,
-            '-xrm', 'c3270.traceMonitor: false'] + args46), stdout=DEVNULL)
-        self.children.append(c3270)
+
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            os.environ['TERM'] = 'xterm-256color'
+            os.execvp(cti.vgwrap_ecmd('c3270'),
+                cti.vgwrap_eargs(['c3270', '-model', '2', '-httpd', str(hport),
+                '-trace', '-tracefile', tracefile, '-secure'] + args46))
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent.
         self.check_listen(hport)
         ts.close()
 
@@ -66,7 +79,7 @@ class TestC3270MultiHost(cti.cti):
         self.assertTrue(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
 
         # Wait for the process to exit.
-        self.vgwait(c3270)
+        self.vgwait_pid(pid)
 
         # Make sure both are processed.
         with open(tracefile, 'r') as file:
