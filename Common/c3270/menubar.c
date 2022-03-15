@@ -1145,7 +1145,7 @@ menubar_retoggle(toggle_index_t ix)
 	Free(s);
 	return;
     }
-    if (ix == TRACING) {
+    if (ix == TRACING && !appres.secure) {
 	s = xs_buffer("%sable Tracing", (toggled(TRACING))? "Dis": "En");
 	rename_item(file_menu_items[FM_TRACE], s);
 	Free(s);
