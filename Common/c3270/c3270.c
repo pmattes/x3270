@@ -2230,6 +2230,21 @@ glue_gui_error(const char *s)
 }
 
 /**
+ * Determine if it is safe to process an Open()/Connect().
+ *
+ * @returns true if safe.
+ */
+bool
+glue_gui_open_safe(void)
+{
+    /*
+     * It is safe if we are not at the c3270> prompt, or if the currently
+     * executing action is derived from something entered at the prompt.
+     */
+    return !escaped || task_running_cb_contains(&command_cb);
+}
+
+/**
  * c3270 main module registration.
  */
 static void
