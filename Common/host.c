@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include <assert.h>
 #include "actions.h"
 #include "boolstr.h"
+#include "glue_gui.h"
 #include "host.h"
 #include "host_gui.h"
 #include "login_macro.h"
@@ -422,6 +423,11 @@ host_connect(const char *n, enum iaction ia)
     const char *localprocess_cmd = NULL;
     bool has_colons = false;
     net_connect_t nc;
+
+    if (!glue_gui_open_safe()) {
+	popup_an_error("User interface in the wrong state");
+	return false;
+    }
 
     if (cstate == RECONNECTING) {
 	popup_an_error("Reconnect in progress");

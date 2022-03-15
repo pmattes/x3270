@@ -3963,6 +3963,26 @@ task_nonblocking_connect(void)
 }
 
 /**
+ * Check if the current running task contains the specified CB.
+ *
+ * @param[in] cb	CB
+ *
+ * @returns true if CB is active
+ */
+bool
+task_running_cb_contains(tcb_t *cb)
+{
+    task_t *t;
+
+    for (t = current_task; t != NULL; t = t->next) {
+	if (t->type == ST_CB && t->cbx.cb == cb) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+/**
  * Request input.
  *
  * @param[in] action		Action name

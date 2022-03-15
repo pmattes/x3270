@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 Paul Mattes.
+ * Copyright (c) 2015-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,5 +31,6 @@
  *		logic.
  */
 
-bool glue_gui_output(const char *s);		/* default False */
-bool glue_gui_error(const char *s);		/* default False */
+bool glue_gui_output(const char *s);		/* default false */
+bool glue_gui_error(const char *s);		/* default false */
+bool glue_gui_open_safe(void);			/* defaule true */
