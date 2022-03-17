@@ -249,6 +249,7 @@
 #define KwDashSingle	"-single"
 #define KwDashNoStdoutRedirect "-nostdoutredirect"
 #define KwDashShareConsole "-shareconsole"
+#define KwDashInteractive "-interactive"
 /*  Parameters to Scroll(). */
 #define KwForward	"forward"
 #define KwBackward	"backward"
@@ -279,3 +280,5 @@
 /*  Parameters to WindowState(). */
 #define KwIconic	"iconic"
 #define KwNormal	"normal"
+/*  Parameters to Escape(). */
+#define KwDashNoPrompt	"-noprompt"

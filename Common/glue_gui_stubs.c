@@ -51,3 +51,9 @@ glue_gui_open_safe(void)
 {
     return true;
 }
+
+bool
+glue_gui_script_interactive(void)
+{
+    return false;
+}

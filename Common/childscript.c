@@ -52,6 +52,7 @@
 #include "child_popups.h"
 #include "childscript.h"
 #include "find_console.h"
+#include "glue_gui.h"
 #include "httpd-core.h"
 #include "httpd-io.h"
 #include "lazya.h"
@@ -1071,6 +1072,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     unsigned short script_port;
     struct sockaddr_in *sin;
 #if !defined(_WIN32) /*[*/
+    bool interactive = false;
     pid_t pid;
     int inpipe[2] = { -1, -1 };
     int outpipe[2] = { -1, -1 };
@@ -1107,12 +1109,25 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    stdout_redirect = false;
 	    argc--;
 	    argv++;
+	} else if (glue_gui_script_interactive() &&
+		!strcasecmp(argv[0], KwDashInteractive)) {
+#if !defined(_WIN32) /*[*/
+	    interactive = true;
+#else /*][*/
+	    share_console = true;
+#endif /*]*/
+	    stdout_redirect = false;
+	    argc--;
+	    argv++;
 #if defined(_WIN32) /*[*/
 	} else if (!strcasecmp(argv[0], KwDashShareConsole)) {
 	    share_console = true;
 	    argc--;
 	    argv++;
 #endif /*]*/
+	} else if (argv[0][0] == '-') {
+	    popup_an_error(AnScript "() unknown option %s", argv[0]);
+	    return false;
 	} else {
 	    break;
 	}
@@ -1170,13 +1185,15 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Create a pipe to capture child stdout. */
-    if (pipe(stdoutpipe) < 0) {
-	popup_an_error("pipe() failed");
-	close(outpipe[0]);
-	close(outpipe[1]);
-	close(inpipe[0]);
-	close(inpipe[1]);
-	close_listeners(&listeners);
+    if (!interactive) {
+	if (pipe(stdoutpipe) < 0) {
+	    popup_an_error("pipe() failed");
+	    close(outpipe[0]);
+	    close(outpipe[1]);
+	    close(inpipe[0]);
+	    close(inpipe[1]);
+	    close_listeners(&listeners);
+	}
     }
 
     /* Fork and exec the script process. */
@@ -1186,8 +1203,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	close(inpipe[1]);
 	close(outpipe[0]);
 	close(outpipe[1]);
-	close(stdoutpipe[0]);
-	close(stdoutpipe[1]);
+	if (!interactive) {
+	    close(stdoutpipe[0]);
+	    close(stdoutpipe[1]);
+	}
 	close_listeners(&listeners);
 	return false;
     }
@@ -1203,15 +1222,19 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	/* Clean up the pipes. */
 	close(outpipe[1]);
 	close(inpipe[0]);
-	close(stdoutpipe[0]);
+	if (!interactive) {
+	    close(stdoutpipe[0]);
+	}
 
 	/* Redirect output. */
-	if (stdout_redirect) {
-	    dup2(stdoutpipe[1], 1);
-	} else {
-	    dup2(open("/dev/null", O_WRONLY), 1);
+	if (!interactive) {
+	    if (stdout_redirect) {
+		dup2(stdoutpipe[1], 1);
+	    } else {
+		dup2(open("/dev/null", O_WRONLY), 1);
+	    }
+	    dup2(stdoutpipe[1], 2);
 	}
-	dup2(stdoutpipe[1], 2);
 
 	/* Export the names of the pipes into the environment. */
 	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
@@ -1240,7 +1263,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->pid = pid;
     c->exit_id = AddChild(pid, child_exited);
     c->enabled = true;
-    c->stdoutpipe = stdoutpipe[0];
+    c->stdoutpipe = interactive? -1: stdoutpipe[0];
     task_cb_init_ir_state(&c->ir_state);
 
     /* Clean up our ends of the pipes. */
@@ -1248,7 +1271,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     close(inpipe[1]);
     c->outfd = outpipe[1];
     close(outpipe[0]);
-    close(stdoutpipe[1]);
+    if (!interactive) {
+	close(stdoutpipe[1]);
+    }
 
     /* Link the listeners. */
     c->listeners = listeners; /* struct copy */
@@ -1257,15 +1282,18 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->id = AddInput(c->infd, child_input);
 
     /* Capture child output. */
-    c->stdout_id = AddInput(c->stdoutpipe, child_stdout);
+    c->stdout_id = interactive? NULL_IOID:
+	AddInput(c->stdoutpipe, child_stdout);
 
 #else /*]*/
 
     /* Set up the stdout/stderr output pipes. */
     c = (child_t *)Calloc(1, sizeof(child_t));
-    if (!setup_cr(c)) {
+    if (stdout_redirect && !setup_cr(c)) {
 	Free(c);
 	return false;
+    } else if (!stdout_redirect) {
+	c->cr.collected_eof = true;
     }
     task_cb_init_ir_state(&c->ir_state);
     cr = &c->cr;
@@ -1275,9 +1303,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     startupinfo.cb = sizeof(STARTUPINFO);
     if (stdout_redirect) {
 	startupinfo.hStdOutput = cr->pipe_wr_handle;
+	startupinfo.hStdError = cr->pipe_wr_handle;
+	startupinfo.dwFlags |= STARTF_USESTDHANDLES;
     }
-    startupinfo.hStdError = cr->pipe_wr_handle;
-    startupinfo.dwFlags |= STARTF_USESTDHANDLES;
     memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
     args = NewString(argv[0]);
     for (i = 1; i < argc; i++) {
@@ -1301,22 +1329,25 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	close_listeners(&listeners);
 
 	/* Let the read thread complete. */
-	CloseHandle(cr->pipe_wr_handle);
-	cr->pipe_wr_handle = INVALID_HANDLE_VALUE;
-	SetEvent(cr->enable_event);
-	WaitForSingleObject(cr->done_event, INFINITE);
-
-	cr_teardown(cr);
+	if (stdout_redirect) {
+	    CloseHandle(cr->pipe_wr_handle);
+	    cr->pipe_wr_handle = INVALID_HANDLE_VALUE;
+	    SetEvent(cr->enable_event);
+	    WaitForSingleObject(cr->done_event, INFINITE);
+	    cr_teardown(cr);
+	}
 	Free(c);
 	Free(args);
 	return false;
     }
 
     Free(args);
-    CloseHandle(process_information.hThread);
-    CloseHandle(cr->pipe_wr_handle);
-    cr->pipe_wr_handle = INVALID_HANDLE_VALUE;
-    SetEvent(cr->enable_event);
+    if (stdout_redirect) {
+	CloseHandle(process_information.hThread);
+	CloseHandle(cr->pipe_wr_handle);
+	cr->pipe_wr_handle = INVALID_HANDLE_VALUE;
+	SetEvent(cr->enable_event);
+    }
 
     /* Create a new script description. */
     llist_init(&c->llist);

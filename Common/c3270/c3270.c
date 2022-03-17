@@ -211,6 +211,8 @@ static bool exit_pending = false;
 static bool aux_input = false;
 static bool aux_pwinput = false;
 
+static bool escape_single = false;
+
 static void c3270_input(iosrc_t fd, ioid_t id);
 static ioid_t c3270_input_id = NULL_IOID;
 static task_cb_ir_state_t command_ir_state;
@@ -807,7 +809,12 @@ Type 'help' for help information.\n\n",
 		!prompt.displayed &&
 		!command_running &&
 		!PAGER_RUNNING) {
-	    interact();
+	    if (escape_single && !aux_input) {
+		escape_single = false;
+		screen_resume();
+	    } else {
+		interact();
+	    }
 	}
     }
 }
@@ -1649,8 +1656,26 @@ completion_entry(const char *text, int state)
 static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
+    bool no_prompt = false;
+
     action_debug(AnEscape, ia, argc, argv);
-    if (check_argc(AnEscape, argc, 0, 1) < 0) {
+    if (check_argc(AnEscape, argc, 0, 2) < 0) {
+	return false;
+    }
+
+    if (argc > 0 && !strcasecmp(argv[0], KwDashNoPrompt)) {
+	no_prompt = true;
+	argc--;
+	argv++;
+	if (argc == 0) {
+	    popup_an_error(AnEscape "(): Must specify an action with "
+		    KwDashNoPrompt);
+	    return false;
+	}
+    }
+    if (argc > 1) {
+	popup_an_error(AnEscape "(): Too many arguments, or unrecognized "
+		"option");
 	return false;
     }
 
@@ -1666,6 +1691,7 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	c3270_screen_suspend();
 	if (argc > 0) {
+	    escape_single = no_prompt;
 	    c3270_push_command(argv[0]);
 	}
     }
@@ -2242,6 +2268,17 @@ glue_gui_open_safe(void)
      * executing action is derived from something entered at the prompt.
      */
     return !escaped || task_running_cb_contains(&command_cb);
+}
+
+/**
+ * Determine if it is valid to run an interactive Script() action.
+ *
+ * @returns true.
+ */
+bool
+glue_gui_script_interactive(void)
+{
+    return true;
 }
 
 /**
