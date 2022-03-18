@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2020 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,7 @@
 #include "utf8.h"
 #include "utils.h"
 #include "xactions.h"
+#include "xselect.h"
 #include "xscreen.h"
 
 #define Max(x, y)	(((x) > (y))? (x): (y))
@@ -109,14 +110,22 @@ static int      num_clicks = 0;
 static bool grab_sel(int start, int end, bool really, Time t, bool as_url);
 #define NS		5
 static Atom     want_sel[NS];
-static struct {			/* owned selections */
-    Atom atom;	/* atom */
+static struct {		/* owned selections */
+    Atom atom;		/* atom */
     char *buffer;	/* buffer contents (UTF-8) */
-}               own_sel[NS];
+    bool initial;	/* true if from initial operation */
+    Time time;		/* timestamp */
+} own_sel[NS] = {
+    { None, NULL, false },
+    { None, NULL, false },
+    { None, NULL, false },
+    { None, NULL, false },
+    { None, NULL, false }
+};
 static bool  cursor_moved = false;
 static int      saved_cursor_addr;
-static void own_sels(Time t);
-static int	n_owned = -1;
+static void own_sels(Time t, bool initial);
+static int	n_owned_initial;
 static bool	any_selected = false;
 
 #define CLICK_INTERVAL	300
@@ -575,8 +584,8 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
 
     /* Ignore initial drag events if are too near. */
     if (down1_time != 0L &&
-	abs((int) event_x(event) - (int) down1_x) < *char_width &&
-	abs((int) event_y(event) - (int) down1_y) < *char_height) {
+	abs((int)event_x(event) - (int)down1_x) < *char_width &&
+	abs((int)event_y(event) - (int)down1_y) < *char_height) {
 	return;
     } else {
 	down1_time = 0L;
@@ -623,6 +632,41 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
 }
 
 /*
+ * Convert a sequence of strings to a list of selection atoms.
+ */
+static void
+set_want_sel(String *params, Cardinal *num_params, Cardinal offset)
+{
+    Cardinal i;
+    int num_ret = 0;
+
+    for (i = offset; i < *num_params; i++) {
+	Atom sel = XInternAtom(display, params[i], false);
+
+	if (sel != None) {
+	    int j;
+	    bool dup = false;
+
+	    for (j = 0; j < num_ret; j++) {
+		if (want_sel[j] == sel) {
+		    dup = true;
+		    break;
+		}
+	    }
+	    if (!dup && num_ret < NS) {
+		want_sel[num_ret++] = sel;
+	    }
+	}
+    }
+    if (num_ret == 0) {
+	want_sel[0] = XA_PRIMARY;
+    }
+    for (i = num_ret; i < NS; i++) {
+	want_sel[i] = None;
+    }
+}
+
+/*
  * End the selection.
  * Usually bound to <BtnUp>.
  */
@@ -630,7 +674,6 @@ void
 select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    Cardinal i;
     int x, y;
 
     xaction_debug(select_end_xaction, event, params, num_params);
@@ -638,22 +681,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	return;
     }
 
-    if (n_owned == -1) {
-	for (i = 0; i < NS; i++) {
-	    own_sel[i].atom = None;
-	}
-	n_owned = 0;
-    }
-    for (i = 0; i < NS; i++) {
-	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], false);
-	} else {
-	    want_sel[i] = None;
-	}
-    }
-    if (*num_params == 0) {
-	want_sel[0] = XA_PRIMARY;
-    }
+    set_want_sel(params, num_params, 0);
 
     BOUNDED_XY(event, x, y);
     up_time = event_time(event);
@@ -752,8 +780,8 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     /* Ignore initial drag events if are too near. */
     if (down1_time != 0L &&
-	abs((int) event_x(event) - (int) down1_x) < *char_width &&
-	abs((int) event_y(event) - (int) down1_y) < *char_height) {
+	abs((int)event_x(event) - (int)down1_x) < *char_width &&
+	abs((int)event_y(event) - (int)down1_y) < *char_height) {
 	return;
     } else {
 	down1_time = 0L;
@@ -799,29 +827,13 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 {
     int x, y;
     int baddr;
-    Cardinal i;
 
     xaction_debug(SelectUp_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
 
-    if (n_owned == -1) {
-	for (i = 0; i < NS; i++) {
-	    own_sel[i].atom = None;
-	}
-	n_owned = 0;
-    }
-    for (i = 0; i < NS; i++) {
-	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], false);
-	} else {
-	    want_sel[i] = None;
-	}
-    }
-    if (*num_params == 0) {
-	want_sel[0] = XA_PRIMARY;
-    }
+    set_want_sel(params, num_params, 0);
 
     BOUNDED_XY(event, x, y);
     baddr = ROWCOL_TO_BA(y, x);
@@ -874,27 +886,11 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 static void
 set_select(XEvent *event, String *params, Cardinal *num_params)
 {
-    Cardinal i;
-
     if (!any_selected) {
 	return;
     }
-    if (n_owned == -1) {
-	for (i = 0; i < NS; i++) {
-	    own_sel[i].atom = None;
-	}
-	n_owned = 0;
-    }
-    for (i = 0; i < NS; i++)
-	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], false);
-	} else {
-	    want_sel[i] = None;
-	}
-    if (*num_params == 0) {
-	want_sel[0] = XA_PRIMARY;
-    }
-    own_sels(event_time(event));
+    set_want_sel(params, num_params, 0);
+    own_sels(event_time(event), false);
 }
 
 /*
@@ -1000,7 +996,6 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
 {
     enum { UP, DOWN, LEFT, RIGHT } direction;
     int x_start, x_end;
-    Cardinal i;
 
     xaction_debug(KybdSelect_xaction, event, params, num_params);
     if (w != *screen) {
@@ -1008,7 +1003,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
 
     if (*num_params < 1) {
-	popup_an_error("%s(): Requires one argument",
+	popup_an_error("%s(): Requires at least one argument",
 		action_name(KybdSelect_xaction));
 	return;
     }
@@ -1066,22 +1061,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
 
     /* Figure out the atoms they want. */
-    if (n_owned == -1) {
-	for (i = 0; i < NS; i++) {
-	    own_sel[i].atom = None;
-	}
-	n_owned = 0;
-    }
-    for (i = 1; i < NS; i++) {
-	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], false);
-	} else {
-	    want_sel[i] = None;
-	}
-    }
-    if (*num_params == 1) {
-	want_sel[0] = XA_PRIMARY;
-    }
+    set_want_sel(params, num_params, 1);
 
     /* Grab the selection. */
     f_start = v_start = x_start;
@@ -1106,30 +1086,12 @@ void
 SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    Cardinal i;
-
     xaction_debug(SelectUp_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
 
-    if (n_owned == -1) {
-	for (i = 0; i < NS; i++) {
-	    own_sel[i].atom = None;
-	}
-	n_owned = 0;
-    }
-    for (i = 0; i < NS; i++) {
-	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], false);
-	} else {
-	    want_sel[i] = None;
-	}
-    }
-    if (*num_params == 0) {
-	want_sel[0] = XA_PRIMARY;
-    }
-
+    set_want_sel(params, num_params, 0);
     grab_sel(0, (ROWS * COLS) - 1, true, event_time(event), false);
 }
 
@@ -1141,8 +1103,6 @@ static char    *select_buf = NULL;
 static char    *sb_ptr = NULL;
 static int      sb_size = 0;
 #define SB_CHUNK	1024
-
-static Time     sel_time;
 
 static void
 init_select_buf(void)
@@ -1208,28 +1168,17 @@ store_icccm_string(XtPointer value, const char *buf)
     return len;
 }
 
-static Boolean
-convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
-	XtPointer *value, unsigned long *length, int *format)
+Boolean
+common_convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
+	XtPointer *value, unsigned long *length, int *format, char *buffer,
+	Time time)
 {
-    int i;
-
-    /* Find the right selection. */
-    for (i = 0; i < NS; i++) {
-	if (own_sel[i].atom == *selection) {
-	    break;
-	}
-    }
-    if (i >= NS) {	/* not my selection */
-	return False;
-    }
-
     if (*target == XA_TARGETS(display)) {
 	Atom* targetP;
 	Atom* std_targets;
 	unsigned long std_length;
 
-	XmuConvertStandardSelection(w, sel_time, selection,
+	XmuConvertStandardSelection(w, time, selection,
 		target, type, (caddr_t*) &std_targets, &std_length, format);
 #if defined(XA_UTF8_STRING) /*[*/
 	*length = std_length + 6;
@@ -1248,7 +1197,7 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 	*targetP++ = XA_LIST_LENGTH(display);
 	memmove(targetP,  std_targets,
 		(int) (sizeof(Atom) * std_length));
-	XtFree((char *) std_targets);
+	XtFree((char *)std_targets);
 	*type = XA_ATOM;
 	*format = 32;
 	return True;
@@ -1270,18 +1219,18 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 	} else {
 		*type = XA_STRING;
 	}
-	*length = strlen(own_sel[i].buffer);
+	*length = strlen(buffer);
 	*value = XtMalloc(*length);
 #if defined(XA_UTF8_STRING) /*[*/
 	if (*target == XA_UTF8_STRING(display)) {
-	    memmove(*value, own_sel[i].buffer, (int) *length);
+	    memmove(*value, buffer, (int) *length);
 	} else {
 #endif /*]*/
 	    /*
 	     * N.B.: We return a STRING for COMPOUND_TEXT.
 	     * Someday we may do real ISO 2022, but not today.
 	     */
-	    *length = store_icccm_string(*value, own_sel[i].buffer);
+	    *length = store_icccm_string(*value, buffer);
 #if defined(XA_UTF8_STRING) /*[*/
 	}
 #endif /*]*/
@@ -1304,9 +1253,9 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
     if (*target == XA_LENGTH(display)) {
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4) {
-	    *(long*)*value = strlen(own_sel[i].buffer);
+	    *(long*)*value = strlen(buffer);
 	} else {
-	    long temp = strlen(own_sel[i].buffer);
+	    long temp = strlen(buffer);
 	    memmove(*value, ((char *) &temp) + sizeof(long) - 4, 4);
 	}
 	*type = XA_INTEGER;
@@ -1315,7 +1264,7 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 	return True;
     }
 
-    if (XmuConvertStandardSelection(w, sel_time, selection,
+    if (XmuConvertStandardSelection(w, time, selection,
 	    target, type, (caddr_t *)value, length, format)) {
 	return True;
     }
@@ -1323,21 +1272,50 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
     return False;
 }
 
-static void
-lose_sel(Widget w _is_unused, Atom *selection)
+static Boolean
+convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
+	XtPointer *value, unsigned long *length, int *format)
 {
     int i;
 
+    /* Find the right selection. */
+    for (i = 0; i < NS; i++) {
+	if (own_sel[i].atom == *selection) {
+	    break;
+	}
+    }
+    if (i >= NS) {	/* not my selection */
+	return False;
+    }
+
+    return common_convert_sel(w, selection, target, type, value, length,
+	    format, own_sel[i].buffer, own_sel[i].time);
+}
+
+static void
+lose_sel(Widget w _is_unused, Atom *selection)
+{
+    char *a;
+    int i;
+    int initial_before = n_owned_initial;
+
+    a = XGetAtomName(display, *selection);
+    vtrace("main lose_sel %s\n", a);
+    XFree(a);
     for (i = 0; i < NS; i++) {
 	if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
 	    own_sel[i].atom = None;
 	    XtFree(own_sel[i].buffer);
 	    own_sel[i].buffer = NULL;
-	    n_owned--;
+	    if (own_sel[i].initial) {
+		own_sel[i].initial = false;
+		n_owned_initial--;
+	    }
 	    break;
 	}
     }
-    if (!n_owned) {
+    if (initial_before && !n_owned_initial) {
+	vtrace("main: lost all initial selections\n");
 	unselect(0, ROWS*COLS);
     }
 }
@@ -1488,9 +1466,10 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
  * Attempt to own the selections in want_sel[].
  */
 static void
-own_sels(Time t)
+own_sels(Time t, bool initial)
 {
     int i, j;
+    char *a;
 
     /*
      * Try to grab any new selections we may want.
@@ -1522,28 +1501,42 @@ own_sels(Time t)
 	    }
 	}
 
+	/*
+	 * We call XtOwnSelection again, even if we already own the selection,
+	 * to update the timestamp.
+	 */
 	if (XtOwnSelection(*screen, want_sel[i], t, convert_sel, lose_sel,
 		    NULL)) {
 	    if (!already_own) {
-		n_owned++;
+		if (initial) {
+		    n_owned_initial++;
+		}
 		own_sel[j].atom = want_sel[i];
+		own_sel[j].initial = initial;
 	    }
 	    Replace(own_sel[j].buffer, XtMalloc(strlen(select_buf) + 1));
 	    memmove(own_sel[j].buffer, select_buf, strlen(select_buf) + 1);
+	    own_sel[j].time = t;
+	    a = XGetAtomName(display, want_sel[i]);
+	    vtrace("main own_sel %s %s %lu\n", a,
+		    initial? "initial": "subsequent",
+		    (unsigned long)t);
+	    XFree(a);
 	} else {
-	    XtWarning("Could not get selection");
-	    if (own_sel[j].atom != None) {
+	    a = XGetAtomName(display, want_sel[i]);
+	    vtrace("Could not get selection %s\n", a);
+	    XFree(a);
+	    if (already_own) {
 		XtFree(own_sel[j].buffer);
 		own_sel[j].buffer = NULL;
 		own_sel[j].atom = None;
-		n_owned--;
+		if (own_sel[j].initial && !--n_owned_initial) {
+		    vtrace("main: lost all initial selections\n");
+		    unselect(0, ROWS*COLS);
+		}
 	    }
 	}
     }
-    if (!n_owned) {
-	unselect(0, ROWS*COLS);
-    }
-    sel_time = t;
 }
 
 /*
@@ -1713,7 +1706,7 @@ grab_sel(int start, int end, bool really, Time t, bool as_url)
     ctlr_changed(0, ROWS*COLS);
 
     if (really) {
-	own_sels(t);
+	own_sels(t, true);
     }
 
 #if defined(HAVE_START) /*[*/

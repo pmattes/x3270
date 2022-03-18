@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1996-2022 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -68,6 +68,8 @@ void dialog_text_callback(Widget w, XtPointer client_data,
 void dialog_match_dimension(Widget w1, Widget w2, const char *n);
 void dialog_mark_toggle(Widget w, Pixmap p);
 
+void PA_dialog_copy_xaction(Widget w, XEvent *event, String *parms,
+	Cardinal *num_parms);
 void PA_dialog_focus_xaction(Widget w, XEvent *event, String *parms,
 	Cardinal *num_parms);
 void PA_dialog_next_xaction(Widget w, XEvent *event, String *parms,

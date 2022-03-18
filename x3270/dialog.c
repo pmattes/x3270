@@ -40,6 +40,7 @@
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/Form.h>
 #include <X11/Shell.h>
+#include <X11/Xatom.h>
 #include <X11/Xaw/AsciiText.h>
 #include <X11/Xaw/TextSrc.h>
 #include <X11/Xaw/TextSink.h>
@@ -58,8 +59,12 @@
 #include "popups.h"
 #include "telnet.h"
 #include "task.h"
+#include "trace.h"
 #include "utils.h"
+#include "xglobals.h"
 #include "xmenubar.h"
+#include "xscreen.h"
+#include "xselect.h"
 
 /* Globals. */
 text_t t_numeric = T_NUMERIC;
@@ -75,6 +80,13 @@ static sr_t **srp = NULL;
 static sr_t *sr_last = NULL;
 static Widget focus_widget = NULL;
 static void focus_next(sr_t *s);
+
+#define NS 5
+static struct {
+    Atom atom;
+    char *buffer;
+    Time time;
+} own_sel[NS];
 
 /* Support functions for dialogs. */
 
@@ -335,6 +347,131 @@ dialog_mark_toggle(Widget w, Pixmap p)
 }
 
 /* Dialog action procedures. */
+
+/* Selection loss callback. */
+static void
+dialog_lose_sel(Widget w, Atom *selection)
+{
+    char *a;
+    int i;
+
+    a = XGetAtomName(display, *selection);
+    vtrace("dialog lose_sel %s\n", a);
+    XFree(a);
+    for (i = 0; i < NS; i++) {
+	if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
+	    own_sel[i].atom = None;
+	    XtFree(own_sel[i].buffer);
+	    own_sel[i].buffer = NULL;
+	    break;
+	}
+    }
+}
+
+/* Selection conversion callback. */
+static Boolean
+dialog_convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
+	XtPointer *value, unsigned long *length, int *format)
+{
+    int i;
+
+    /* Find the right selection. */
+    for (i = 0; i < NS; i++) {
+	if (own_sel[i].atom == *selection) {
+	    break;
+	}
+    }
+    if (i >= NS) {      /* not my selection */
+	return False;
+    }
+
+    return common_convert_sel(w, selection, target, type, value, length,
+	    format, own_sel[i].buffer, own_sel[i].time);
+}
+
+static void
+dialog_own_sels(Widget w, Time t, String *parms, Cardinal *num_parms,
+	XawTextBlock *block)
+{
+    Cardinal i;
+    int j;
+    char *a;
+
+    for (i = 0; i < *num_parms; i++) {
+	Atom sel;
+	bool already_own = false;
+
+	if ((sel = XInternAtom(display, parms[i], false)) == None) {
+	    continue;
+	}
+
+	/* Check if we already own it. */
+	for (j = 0; j < NS; j++) {
+	    if (own_sel[j].atom == sel) {
+		already_own = true;
+		break;
+	    }
+	}
+
+	/* Find a slot for it. */
+	if (!already_own) {
+	    for (j = 0; j < NS; j++) {
+		if (own_sel[j].atom == None) {
+		    break;
+		}
+	    }
+	    if (j >= NS) {
+		continue;
+	    }
+	}
+
+	if (XtOwnSelection(w, sel, t, dialog_convert_sel, dialog_lose_sel,
+		    NULL)) {
+	    if (!already_own) {
+		own_sel[j].atom = sel;
+	    }
+	    Replace(own_sel[j].buffer, XtMalloc(block->length + 1));
+	    memcpy(own_sel[j].buffer, block->ptr, block->length);
+	    own_sel[j].buffer[block->length] = '\0';
+	    own_sel[j].time = t;
+	    a = XGetAtomName(display, sel);
+	    vtrace("dialog own_sel %s %lu\n", a, (unsigned long)t);
+	    XFree(a);
+	} else {
+	    a = XGetAtomName(display, sel);
+	    vtrace("Could not get selection %s\n", a);
+	    XFree(a);
+	    if (already_own) {
+		XtFree(own_sel[j].buffer);
+		own_sel[j].buffer = NULL;
+		own_sel[j].atom = None;
+	    }
+	}
+    }
+}
+
+/* Copy the selected text to the specified selections. */
+void
+PA_dialog_copy_xaction(Widget w, XEvent *event, String *parms,
+	Cardinal *num_parms)
+{
+    XawTextPosition begin = -1, end = -1;
+    Widget textSource;
+    XawTextBlock block;
+
+    if (*num_parms == 0) {
+	/* No selections specified. */
+	return;
+    }
+
+    XawTextGetSelectionPos(w, &begin, &end);
+    if (begin == end) {
+	return;
+    }
+    textSource = XawTextGetSource(w);
+    XawTextSourceRead(textSource, begin, &block, (int)(end - begin));
+    dialog_own_sels(w, event->xbutton.time, parms, num_parms, &block);
+}
 
 /* Proceed to the next input field. */
 void

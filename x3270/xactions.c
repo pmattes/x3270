@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -147,6 +147,7 @@ static XtActionsRec xactions[] = {
     { PA_KEYMAP_TRACE,	PA_KeymapTrace_xaction },
     { PA_PFX "ConfigureNotify", PA_ConfigureNotify_xaction },
     { PA_PFX "confirm",	PA_confirm_xaction },
+    { PA_PFX "dialog-copy", PA_dialog_copy_xaction },
     { PA_PFX "dialog-focus", PA_dialog_focus_xaction },
     { PA_PFX "dialog-next",	PA_dialog_next_xaction },
     { PA_PFX "EnterLeave",	PA_EnterLeave_xaction },

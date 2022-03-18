@@ -1411,7 +1411,10 @@ x3270.ftPopup*value.translations:	#override \n\
 	<Key>Return:			PA-dialog-next()\n\
 	<Key>Tab:			PA-dialog-next()\n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
-	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()\n\
+	Ctrl<Key>C:			PA-dialog-copy(CLIPBOARD)\n\
+	Ctrl<Key>V:			insert-selection(CLIPBOARD)\n\
+	<Key>Delete:			delete-next-character()
 x3270.idlePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.idlePopup*value.translations:	#override \n\
@@ -1421,10 +1424,16 @@ x3270.idlePopup*value.translations:	#override \n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
 x3270.screenTracePopup*value.translations:	#override \n\
 	<Key>Return:			PA-confirm()\n\
-	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()\n\
+	Ctrl<Key>C:			PA-dialog-copy(CLIPBOARD)\n\
+	Ctrl<Key>V:			insert-selection(CLIPBOARD)\n\
+	<Key>Delete:			delete-next-character()
 x3270*value.translations:		#override \n\
 	<Key>Return:			PA-confirm()\n\
-	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()\n\
+	Ctrl<Key>C:			PA-dialog-copy(CLIPBOARD)\n\
+	Ctrl<Key>V:			insert-selection(CLIPBOARD)\n\
+	<Key>Delete:			delete-next-character()
 x3270*value.width:			300
 ! Workaround for Xaw MenuButton bug that keeps menu items from highlighting
 ! when CapsLock or NumLock are down.  Technically, this would require
