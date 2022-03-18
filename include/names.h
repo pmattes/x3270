@@ -281,4 +281,4 @@
 #define KwIconic	"iconic"
 #define KwNormal	"normal"
 /*  Parameters to Escape(). */
-#define KwDashNoPrompt	"-noprompt"
+#define KwDashNoPromptAfter "-nopromptafter"

@@ -1656,20 +1656,20 @@ completion_entry(const char *text, int state)
 static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
-    bool no_prompt = false;
+    bool no_prompt_after = false;
 
     action_debug(AnEscape, ia, argc, argv);
     if (check_argc(AnEscape, argc, 0, 2) < 0) {
 	return false;
     }
 
-    if (argc > 0 && !strcasecmp(argv[0], KwDashNoPrompt)) {
-	no_prompt = true;
+    if (argc > 0 && !strcasecmp(argv[0], KwDashNoPromptAfter)) {
+	no_prompt_after = true;
 	argc--;
 	argv++;
 	if (argc == 0) {
 	    popup_an_error(AnEscape "(): Must specify an action with "
-		    KwDashNoPrompt);
+		    KwDashNoPromptAfter);
 	    return false;
 	}
     }
@@ -1691,7 +1691,7 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	c3270_screen_suspend();
 	if (argc > 0) {
-	    escape_single = no_prompt;
+	    escape_single = no_prompt_after;
 	    c3270_push_command(argv[0]);
 	}
     }
