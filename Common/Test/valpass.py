@@ -53,6 +53,9 @@ class valpass():
         'malloc:XtMalloc:_XawImInitialize',
         # So far unexplained unininitalized memory error.
         'bcmp:resync_display:screen_disp',
+        # Apparent bug in getenv().
+        'getenv:__gconv_load_cache',
+        'getenv:_rl_init_locale',
     ]
 
     def walkbacks(self, fileName):
