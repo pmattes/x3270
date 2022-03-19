@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2020 Paul Mattes.
+ * Copyright (c) 2015-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     ui_vleaf(IndOia,
 	    AttrField, OiaCompose,
 	    AttrValue, ValTrueFalse(on),
-	    AttrChar, on? lazyaf("U+%04%x", ucs4): NULL,
+	    AttrChar, on? lazyaf("U+%04x", ucs4): NULL,
 	    AttrType, on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }

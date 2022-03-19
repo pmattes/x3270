@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -916,7 +916,7 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s",
+    return lazyaf("%s%s%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 	    "--enable-local-process"
 #else /*][*/
