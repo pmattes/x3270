@@ -2963,6 +2963,13 @@ status_string(void)
     return r;
 }
 
+/* Return a status string for error reporting purposes. */
+char *
+task_status_string(void)
+{
+    return lazyaf("%s 0.000", lazya(status_string()));
+}
+
 /* Call a run callback. */
 static void
 call_run(task_t *s)

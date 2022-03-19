@@ -39,6 +39,7 @@
 #include "asprintf.h"
 #include "json.h"
 #include "lazya.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -636,6 +637,8 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 		    json_array_set(k, 0, json_string(buf, sl));
 		    j = json_object();
 		    json_object_set(j, "result", NT, k);
+		    json_object_set(j, "status", NT,
+			    json_string(task_status_string(), NT));
 		    httpd_print(h, HP_BUFFER, "%s\n",
 			    (w = json_write_o(j, JW_ONE_LINE)));
 		    json_free(j);

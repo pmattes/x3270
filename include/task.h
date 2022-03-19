@@ -155,3 +155,4 @@ char *task_get_tasks(void);
 bool validate_command(const char *command, int offset, char **error);
 
 bool task_running_cb_contains(tcb_t *cb);
+char *task_status_string(void);

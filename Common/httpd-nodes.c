@@ -50,6 +50,7 @@
 #include "httpd-core.h"
 #include "httpd-io.h"
 #include "httpd-nodes.h"
+#include "task.h"
 
 #if defined(_WIN32) /*[*/
 # include "winprint.h"
@@ -389,10 +390,12 @@ rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		len, buf);
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s\n%.*s",
+		(int)sl_len, sl_buf, (int)len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 500, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 500, NULL, "%.*s\n%.*s",
+		(int)sl_len, sl_buf, (int)len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -414,7 +417,7 @@ rest_status_text_dyn(const char *url, void *dhandle)
 
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		"Missing 3270 action.\n");
+		"%s\nMissing 3270 action.\n", task_status_string());
     }
 
     switch (hio_to3270(url, rest_dyn_status_text_complete, dhandle, CT_TEXT,
@@ -426,11 +429,11 @@ rest_status_text_dyn(const char *url, void *dhandle)
     case SENDTO_INVALID:
 	lazya(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		lazyaf("%s\n", errmsg));
+		lazyaf("%s\n%s\n", task_status_string(), errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
-		"Processing error.\n");
+		"%s\nProcessing error.\n", task_status_string());
     }
 }
 
@@ -481,10 +484,14 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	}
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
+		"<h2>Status</h2>\n<pre>%.*s</pre>\n"
+		"<h2>Result</h2><pre>%.*s</pre>", sl_len, sl_buf, len, buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
+		"<h2>Status</h2>\n<pre>%.*s</pre>\n"
+		"<h2>Result</h2><pre>%.*s</pre>", sl_len, sl_buf, len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -527,9 +534,11 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	}
 	break;
     case SC_USER_ERROR:
+	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
 	rv = httpd_dyn_error(dhandle, CT_JSON, 400, jresult, "%.*s", len, buf);
 	break;
     case SC_SYSTEM_ERROR:
+	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
 	rv = httpd_dyn_error(dhandle, CT_JSON, 500, jresult, "%.*s", len, buf);
 	break;
     }
@@ -551,7 +560,9 @@ rest_html_dyn(const char *url, void *dhandle)
 
     if (!*url) {
 	return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
-		"Missing 3270 action.\n");
+		"<h2>Status</h2>\n<pre>%s</pre>\n"
+		"<h2>Result</h2><pre>Missing 3270 action.</pre>",
+		task_status_string());
     }
 
     switch (hio_to3270(url, rest_dyn_html_complete, dhandle, CT_TEXT,

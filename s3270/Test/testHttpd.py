@@ -64,5 +64,97 @@ class TestS3270Httpd(cti.cti):
         s.close()
         self.vgwait(s3270)
 
+    # s3270 HTTPD stext error test.
+    def s3270_httpd_stext_error_test(self, actions:str, content:str):
+
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Make a bad request in stext mode.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/stext{actions}')
+        self.assertFalse(r.ok)
+        response = r.text.split('\n')
+        self.assertEqual(3, len(response), 'Expected two lines of response')
+        self.assertIn(' U ', response[0], 'Expected prompt in first line of output')
+        self.assertIn(content, response[1], 'Expected error message in second line of response')
+
+        # Wait for the process to exit successfully.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def test_s3270_httpd_stext_error(self):
+        self.s3270_httpd_stext_error_test('/Sebfp(monoCase)', 'Sebfp')
+    def test_s3270_httpd_stext_missing(self):
+        self.s3270_httpd_stext_error_test('', 'Missing')
+    def test_s3270_httpd_stext_missing2(self):
+        self.s3270_httpd_stext_error_test('/', 'Missing')
+    def test_s3270_httpd_stext_syntax(self):
+        self.s3270_httpd_stext_error_test('/Foo(', 'Syntax')
+
+    # s3270 HTTPD JSON error test.
+    def s3270_httpd_json_error_test(self, actions:str, content: str):
+
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Make a bad request in JSON mode.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json{actions}')
+        self.assertFalse(r.ok)
+        response = r.json()
+        self.assertIn('result', response)
+        self.assertIn('status', response)
+        self.assertIn(content, response['result'][0])
+
+        # Wait for the process to exit successfully.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def test_s3270_httpd_json_error(self):
+        self.s3270_httpd_json_error_test('/Sebfp(monoCase)', 'Sebfp')
+    def test_s3270_httpd_json_missing(self):
+        self.s3270_httpd_json_error_test('', 'Missing')
+    def test_s3270_httpd_json_missing2(self):
+        self.s3270_httpd_json_error_test('/', 'Missing')
+    def test_s3270_httpd_json_syntax(self):
+        self.s3270_httpd_json_error_test('/Foo(', 'Syntax')
+
+    # s3270 HTTPD HTML error test.
+    def s3270_httpd_html_error_test(self, actions:str, content: str):
+
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Make a bad request in HTML mode.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/html{actions}')
+        self.assertFalse(r.ok)
+        response = r.text
+        self.assertIn('Status', response)
+        self.assertIn(content, response)
+
+        # Wait for the process to exit successfully.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def test_s3270_httpd_html_error(self):
+        self.s3270_httpd_html_error_test('/Sebfp(monoCase)', 'Sebfp')
+    def test_s3270_httpd_html_missing(self):
+        self.s3270_httpd_html_error_test('', 'Missing')
+    def test_s3270_httpd_html_missing2(self):
+        self.s3270_httpd_html_error_test('/', 'Missing')
+    def test_s3270_httpd_html_syntax(self):
+        self.s3270_httpd_html_error_test('/Foo(', 'Syntax')
+
 if __name__ == '__main__':
     unittest.main()
