@@ -212,8 +212,8 @@ CMD_FORM
 <h2>Result</h2>\n\
 <pre>%.*s</pre>",
 		    vb_buf(&r),
-		    sl_len, sl_buf,
-		    len, buf);
+		    (int)sl_len, sl_buf,
+		    (int)len, buf);
 	    } else {
 		rv = httpd_dyn_complete(dhandle,
 "<head>\n\
@@ -228,16 +228,18 @@ CMD_FORM
 <h2>Result</h2>\n\
 <i>(none)</i>",
 		    vb_buf(&r),
-		    sl_len, sl_buf);
+		    (int)sl_len, sl_buf);
 	    }
 	    vb_free(&r);
 	}
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL, "%.*s", (int)len,
+		buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL, "%.*s", (int)len,
+		buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -271,7 +273,7 @@ hn_interact(const char *uri, void *dhandle)
 	case SENDTO_INVALID:
 	    lazya(errmsg);
 	    return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
-		    lazyaf("%s\n", errmsg));
+		    "%s", lazyaf("%s\n", errmsg));
 	default:
 	case SENDTO_FAILURE:
 	    return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
@@ -318,13 +320,15 @@ rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 
     switch (cbs) {
     case SC_SUCCESS:
-	rv = httpd_dyn_complete(dhandle, "%.*s", len, buf);
+	rv = httpd_dyn_complete(dhandle, "%.*s", (int)len, buf);
 	break;
     case SC_USER_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", (int)len,
+		buf);
 	break;
     case SC_SYSTEM_ERROR:
-	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s", (int)len,
+		buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -357,7 +361,7 @@ rest_text_dyn(const char *url, void *dhandle)
 	return HS_PENDING;
     case SENDTO_INVALID:
 	lazya(errmsg);
-	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
+	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%s",
 		lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
@@ -386,8 +390,8 @@ rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
     switch (cbs) {
     case SC_SUCCESS:
 	rv = httpd_dyn_complete(dhandle, "%.*s\n%.*s",
-		sl_len, sl_buf,
-		len, buf);
+		(int)sl_len, sl_buf,
+		(int)len, buf);
 	break;
     case SC_USER_ERROR:
 	rv = httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%.*s\n%.*s",
@@ -429,7 +433,7 @@ rest_status_text_dyn(const char *url, void *dhandle)
     case SENDTO_INVALID:
 	lazya(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		lazyaf("%s\n%s\n", task_status_string(), errmsg));
+		"%s", lazyaf("%s\n%s\n", task_status_string(), errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
@@ -467,8 +471,8 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 <pre>%.*s</pre>\n\
 <h2>Result</h2>\n\
 <pre>%.*s</pre>",
-		sl_len, sl_buf,
-		len, buf);
+		(int)sl_len, sl_buf,
+		(int)len, buf);
 	} else {
 	    rv = httpd_dyn_complete(dhandle,
 "<head>\n\
@@ -480,18 +484,20 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 <pre>%.*s</pre>\n\
 <h2>Result</h2>\n\
 <i>(none)</i>",
-		sl_len, sl_buf);
+		(int)sl_len, sl_buf);
 	}
 	break;
     case SC_USER_ERROR:
 	rv = httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
 		"<h2>Status</h2>\n<pre>%.*s</pre>\n"
-		"<h2>Result</h2><pre>%.*s</pre>", sl_len, sl_buf, len, buf);
+		"<h2>Result</h2><pre>%.*s</pre>", (int)sl_len, sl_buf,
+		(int)len, buf);
 	break;
     case SC_SYSTEM_ERROR:
 	rv = httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
 		"<h2>Status</h2>\n<pre>%.*s</pre>\n"
-		"<h2>Result</h2><pre>%.*s</pre>", sl_len, sl_buf, len, buf);
+		"<h2>Result</h2><pre>%.*s</pre>", (int)sl_len, sl_buf,
+		(int)len, buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -535,11 +541,13 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	break;
     case SC_USER_ERROR:
 	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
-	rv = httpd_dyn_error(dhandle, CT_JSON, 400, jresult, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_JSON, 400, jresult, "%.*s", (int)len,
+		buf);
 	break;
     case SC_SYSTEM_ERROR:
 	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
-	rv = httpd_dyn_error(dhandle, CT_JSON, 500, jresult, "%.*s", len, buf);
+	rv = httpd_dyn_error(dhandle, CT_JSON, 500, jresult, "%.*s", (int)len,
+		buf);
 	break;
     }
     hio_async_done(dhandle, rv);
@@ -574,7 +582,7 @@ rest_html_dyn(const char *url, void *dhandle)
     case SENDTO_INVALID:
 	lazya(errmsg);
 	return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
-		lazyaf("%s\n", errmsg));
+		"%s", lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
@@ -608,7 +616,7 @@ rest_json_dyn(const char *url, void *dhandle)
     case SENDTO_INVALID:
 	lazya(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		lazyaf("%a\n", errmsg));
+		"%s", lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_JSON, 500, NULL,
@@ -663,7 +671,7 @@ rest_post_dyn(const char *url, void *dhandle)
     case SENDTO_INVALID:
 	lazya(errmsg);
 	return httpd_dyn_error(dhandle, request_content_type, 400, NULL,
-		lazyaf("%s\n", errmsg));
+		"%s", lazyaf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, request_content_type, 500, NULL,

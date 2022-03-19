@@ -83,7 +83,7 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     ui_leaf(IndOia,
 	    AttrField, OiaCompose,
 	    AttrValue, AT_BOOLEAN, on,
-	    AttrChar, AT_STRING, on? lazyaf("U+%04%x", ucs4): NULL,
+	    AttrChar, AT_STRING, on? lazyaf("U+%04x", ucs4): NULL,
 	    AttrType, AT_STRING, on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }

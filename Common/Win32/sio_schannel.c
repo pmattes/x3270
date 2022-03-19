@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 2017-2022 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -440,7 +440,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    &ts_expiry);		/* (out) Lifetime (optional) */
 
     if (status != SEC_E_OK) {
-	sioc_set_error("AcquireCredentialsHandle: error 0x%x (%s)\n", status,
+	sioc_set_error("AcquireCredentialsHandle: error 0x%lx (%s)\n", status,
 		win32_strerror(status));
     }
 
@@ -783,8 +783,8 @@ client_handshake_loop(
 
 	/* Check for fatal error. */
 	if (FAILED(ret)) {
-	    sioc_set_error("InitializeSecurityContext: error 0x%x (%s)%s\n", ret,
-		    win32_strerror(ret), explain_error(ret));
+	    sioc_set_error("InitializeSecurityContext: error 0x%lx (%s)%s\n",
+		    ret, win32_strerror(ret), explain_error(ret));
 	    break;
 	}
 
@@ -883,7 +883,7 @@ perform_client_handshake(
 	    &expiry);
 
     if (scRet != SEC_I_CONTINUE_NEEDED) {
-	sioc_set_error("InitializeSecurityContext: error %d (%s)%s\n", scRet,
+	sioc_set_error("InitializeSecurityContext: error %lx (%s)%s\n", scRet,
 		win32_strerror(scRet), explain_error(scRet));
 	return scRet;
     }
@@ -951,7 +951,7 @@ verify_server_certificate(
 		NULL,
 		&chain_context)) {
 	status = GetLastError();
-	sioc_set_error("CertGetCertificateChain: error 0x%x (%s)\n", status,
+	sioc_set_error("CertGetCertificateChain: error 0x%lx (%s)\n", status,
 		win32_strerror(status));
 	goto done;
     }
@@ -973,7 +973,7 @@ verify_server_certificate(
     if (!CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL, chain_context,
 		&policy_params, &policy_status)) {
 	status = GetLastError();
-	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)%s\n",
+	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%lx (%s)%s\n",
 		status, win32_strerror(status),
 		explain_error(status));
 	goto done;
@@ -981,7 +981,7 @@ verify_server_certificate(
 
     if (policy_status.dwError) {
 	status = policy_status.dwError;
-	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%x (%s)%s\n",
+	sioc_set_error("CertVerifyCertificateChainPolicy: error 0x%lx (%s)%s\n",
 		status, win32_strerror(status),
 		explain_error(status));
 	goto done;

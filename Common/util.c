@@ -944,7 +944,7 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s",
+    return lazyaf("%s%s%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 	    "--enable-local-process"
 #else /*][*/

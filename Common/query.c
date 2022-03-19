@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,8 +92,9 @@ get_connect_time(void)
     sc = td % 60;
 
     return (dy > 0)?
-	lazyaf("%ud%02u:%02u:%02u", dy, hr, mn, sc):
-	lazyaf("%02u:%02u:%02u", hr, mn, sc);
+	lazyaf("%ud%02u:%02u:%02u", (u_int)dy, (u_int)hr, (u_int)mn,
+		(u_int)sc):
+	lazyaf("%02u:%02u:%02u", (u_int)hr, (u_int)mn, (u_int)sc);
 }
 
 static const char *

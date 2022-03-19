@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2020 Paul Mattes.
+ * Copyright (c) 2017, 2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  *		Common back-end logic for secure I/O.
  */
 
-void sioc_set_error(const char *fmt, ...);
+void sioc_set_error(const char *fmt, ...) printflike(1, 2);
 void sioc_error_reset(void);
 char *sioc_string_from_file(const char *path, size_t *len_ret);
 char *sioc_parse_password_spec(const char *spec);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2022 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,8 @@ void abort_script_by_cb(const char *cb_name);
 void abort_queue(const char *unique_name);
 void macro_command(struct macro_def *m);
 void peer_script_init(void);
-void connect_error(const char *fmt, ...);
-void connect_errno(int e, const char *fmt, ...);
+void connect_error(const char *fmt, ...) printflike(1, 2);
+void connect_errno(int e, const char *fmt, ...) printflike(2, 3);
 void macros_init(void);
 void ps_set(char *s, bool is_hex, bool force_utf8);
 void push_keymap_action(char *);
