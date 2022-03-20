@@ -1071,8 +1071,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     unsigned short httpd_port;
     unsigned short script_port;
     struct sockaddr_in *sin;
-#if !defined(_WIN32) /*[*/
     bool interactive = false;
+#if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2] = { -1, -1 };
     int outpipe[2] = { -1, -1 };
@@ -1111,12 +1111,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    argv++;
 	} else if (glue_gui_script_interactive() &&
 		!strcasecmp(argv[0], KwDashInteractive)) {
-#if !defined(_WIN32) /*[*/
 	    interactive = true;
-#else /*][*/
+	    stdout_redirect = false;
+#if defined(_WIN32) /*[*/
 	    share_console = true;
 #endif /*]*/
-	    stdout_redirect = false;
 	    argc--;
 	    argv++;
 #if defined(_WIN32) /*[*/
@@ -1131,6 +1130,12 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    break;
 	}
+    }
+
+    if (async && interactive) {
+	popup_an_error(AnScript "(): cannot specify both " KwDashAsync " and "
+		KwDashInteractive);
+	return false;
     }
 
     listeners.peer = NULL;

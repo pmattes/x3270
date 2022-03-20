@@ -115,5 +115,38 @@ class TestC3270IntScript(cti.cti):
     def test_c3270_interactive_script_prompt(self):
         self.c3270_interactive_script_test(prompt=True)
 
+    
+        
+    # c3270 bad interactive script test
+    def test_c3270_interactive_script_wrong(self):
+
+        # Fork c3270 with a PTY between this process and it.
+        c3270_port, ts = cti.unused_port()
+        os.environ['TERM'] = 'xterm-256color'
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            os.execvp(cti.vgwrap_ecmd('c3270'),
+                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-secure',
+                    '-httpd', f'127.0.0.1:{c3270_port}']))
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Tell c3270 to run an interactive script with invalid arguments.
+        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Script(-interactive,-async,"Foo,bar"))')
+        self.assertFalse(r.ok, 'Expected a syntax error')
+
+        # Tell c3270 to exit.
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')
+
+        self.vgwait_pid(pid)
+        os.close(fd)
+
 if __name__ == '__main__':
     unittest.main()
