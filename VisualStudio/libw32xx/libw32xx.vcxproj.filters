@@ -45,6 +45,9 @@
     <ClCompile Include="..\..\Common\pr3287_session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\prefer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\proxy_http.c">
       <Filter>Source Files</Filter>
     </ClCompile>

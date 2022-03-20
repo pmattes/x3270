@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\Common\min_version.c" />
     <ClCompile Include="..\..\Common\popup_an_error.c" />
     <ClCompile Include="..\..\Common\pr3287_session.c" />
+    <ClCompile Include="..\..\Common\prefer.c" />
     <ClCompile Include="..\..\Common\proxy.c" />
     <ClCompile Include="..\..\Common\proxy_http.c" />
     <ClCompile Include="..\..\Common\proxy_passthru.c" />

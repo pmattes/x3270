@@ -68,6 +68,7 @@
 #include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
+#include "prefer.h"
 #include "print_screen.h"
 #include "print_window.h"
 #include "product.h"
@@ -523,6 +524,7 @@ main(int argc, char *argv[])
     xkybd_register();
     login_macro_register();
     vstatus_register();
+    prefer_register();
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/

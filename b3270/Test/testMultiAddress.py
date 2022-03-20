@@ -25,45 +25,21 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# b3270 multi-host tests
+# b3270 multi-address tests
 
 import json
 import requests
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 import Common.Test.cti as cti
-import Common.Test.playback as playback
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
-class TestB3270MultiHost(cti.cti):
+@unittest.skipUnless(hostsSetup, setupHosts.warning)
+class TestB3270MultiAddress(cti.cti):
 
-    # b3270 multi-host test
-    @unittest.skipUnless(hostsSetup, setupHosts.warning)
-    def b3270_multi_host(self, ipv4=True, ipv6=True):
-
-        # Start b3270.
-        args46 = []
-        if not ipv4:
-            args46 += ['-6']
-        if not ipv6:
-            args46 += ['-4']
-        hport, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)] + args46), stdin=PIPE, stdout=PIPE)
-        self.children.append(b3270)
-        ts.close()
-
-        # Drain the first line of output. On Windows, unless this is done b3270
-        # to block on the pipe.
-        b3270.stdout.readline()
-
-        # Feed b3270 some actions.
-        uport, ts = cti.unused_port()
-        ts.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
-
+    def check_result(self, b3270: Popen, ipv4: bool, ipv6: bool):
         # Make sure both are processed.
         output = b3270.communicate()[0].decode('utf8').split('\n')
         tried = []
@@ -81,15 +57,75 @@ class TestB3270MultiHost(cti.cti):
         else:
             self.assertNotIn('::1', tried, 'Should not try IPv6')
 
+    # b3270 multi-address test
+    def b3270_multi_address(self, ipv4=True, ipv6=True):
+
+        # Start b3270.
+        args46 = []
+        if not ipv4:
+            args46 += ['-6']
+        if not ipv6:
+            args46 += ['-4']
+        hport, ts = cti.unused_port()
+        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)] + args46), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+        ts.close()
+        self.check_listen(hport)
+
+        # Drain the first line of output. On Windows, unless this is done, b3270
+        # will block on the pipe.
+        b3270.stdout.readline()
+
+        # Feed b3270 some actions.
+        uport, ts = cti.unused_port()
+        ts.close()
+        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+
+        self.check_result(b3270, ipv4, ipv6)
+
         # Wait for the process to exit.
         self.vgwait(b3270)
 
-    def test_b3270_multi_host(self):
-        self.b3270_multi_host()
-    def test_b3270_multi_host4(self):
-        self.b3270_multi_host(ipv6=False)
-    def test_b3270_multi_host6(self):
-        self.b3270_multi_host(ipv4=False)
+    def test_b3270_multi_address(self):
+        self.b3270_multi_address()
+    def test_b3270_multi_address4(self):
+        self.b3270_multi_address(ipv6=False)
+    def test_b3270_multi_address6(self):
+        self.b3270_multi_address(ipv4=False)
+
+    def b3270_ma_switch_test(self, ipv4=True, ipv6=True):
+        hport, ts = cti.unused_port()
+        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+        ts.close()
+        self.check_listen(hport)
+
+        # Drain the first line of output. On Windows, unless this is done, b3270
+        # will block on the pipe.
+        b3270.stdout.readline()
+
+        # Feed b3270 some actions.
+        uport, ts = cti.unused_port()
+        ts.close()
+        if ipv4:
+            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,true)')
+        if ipv6:
+            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,true)')
+        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+
+        self.check_result(b3270, ipv4, ipv6)
+
+        # Wait for the process to exit.
+        self.vgwait(b3270)
+
+    def test_b3270_ma_switch(self):
+        self.b3270_ma_switch_test()
+    def test_b3270_ma_switch4(self):
+        self.b3270_ma_switch_test(ipv6=False)
+    def test_b3270_ma_switch6(self):
+        self.b3270_ma_switch_test(ipv4=False)
 
 if __name__ == '__main__':
     unittest.main()

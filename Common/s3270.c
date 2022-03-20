@@ -67,6 +67,7 @@
 #include "peerscript.h"
 #include "popups.h"
 #include "pr3287_session.h"
+#include "prefer.h"
 #include "print_screen.h"
 #include "product.h"
 #include "proxy_toggle.h"
@@ -216,6 +217,7 @@ main(int argc, char *argv[])
     net_register();
     login_macro_register();
     vstatus_register();
+    prefer_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

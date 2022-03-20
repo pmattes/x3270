@@ -78,6 +78,7 @@
 #include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
+#include "prefer.h"
 #include "print_screen.h"
 #include "product.h"
 #include "proxy.h"
@@ -536,6 +537,7 @@ main(int argc, char *argv[])
     net_register();
     login_macro_register();
     vstatus_register();
+    prefer_register();
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
