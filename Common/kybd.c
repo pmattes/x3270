@@ -985,7 +985,8 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 #endif /*]*/
     if (need - ntb > 0) {
 	if (!toggled(REVERSE_INPUT)) {
-	    return operator_error(KL_OERR_OVERFLOW, oerr_fail);
+	    (void) operator_error(KL_OERR_OVERFLOW, oerr_fail);
+	    return false;
 	} else {
 	    *no_room = true;
 	    return true;
@@ -1162,7 +1163,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 
 	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
-		return false;
+		return oerr_fail;
 	    }
 	} else {
 	    bool was_si = false;
@@ -1195,7 +1196,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	if (why == DBCS_ATTRIBUTE) {
 	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
-		    return false;
+		    return oerr_fail;
 		}
 	    } else {
 		/* Replace single DBCS char with x/space. */
@@ -1220,11 +1221,11 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		if (ea_buf[xaddr].ec == EBC_so) {
 		    DEC_BA(baddr);
 		    if (!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
-			return false;
+			return oerr_fail;
 		    }
 		} else {
 		    if (!ins_prep(faddr, baddr, 3, &no_room, oerr_fail)) {
-			return false;
+			return oerr_fail;
 		    }
 		    xaddr = baddr;
 		    ctlr_add(xaddr, EBC_si, CS_BASE);
@@ -1263,7 +1264,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     case DBCS_NONE:
 	if ((toggled(REVERSE_INPUT) || toggled(INSERT_MODE)) &&
 		!ins_prep(faddr, baddr, 1, &no_room, oerr_fail)) {
-	    return false;
+	    return oerr_fail;
 	}
 	break;
     }
@@ -1438,7 +1439,7 @@ retry:
 	/* Overwrite the existing character. */
 	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
-		return false;
+		return oerr_fail;
 	    }
 	}
 	ctlr_add(baddr, ebc_pair[0], ea_buf[baddr].cs);
@@ -1455,7 +1456,7 @@ retry:
 	/* Extend the subfield to the right. */
 	if (toggled(INSERT_MODE)) {
 	    if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
-		return false;
+		return oerr_fail;
 	    }
 	} else {
 	    /* Don't overwrite a field attribute or an SO. */
@@ -1490,7 +1491,7 @@ retry:
 	    /* Is there room? */
 	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 4, &no_room, oerr_fail)) {
-		    return false;
+		    return oerr_fail;
 		}
 	    } else {
 		xaddr = baddr;	/* baddr, SO */
@@ -1596,7 +1597,7 @@ retry:
 	    /* Use the character attribute. */
 	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
-		    return false;
+		    return oerr_fail;
 		}
 	    } else {
 		xaddr = baddr;
