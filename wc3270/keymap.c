@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015, 2019-2021 Paul Mattes.
+ * Copyright (c) 2000-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -991,7 +991,7 @@ lookup_cname(unsigned long ccode)
     }
 
     if (ccode >= (1 << 16) && ccode <= (0xfe << 16)) {
-	return lazyaf("VKEY-0x%02x", ccode >> 16);
+	return lazyaf("VKEY-0x%02lx", ccode >> 16);
     }
 
     return NULL;
