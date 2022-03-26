@@ -63,7 +63,6 @@ class TestWc3270Smoke(cti.cti):
             os.write(handle, f'wc3270.title: wc3270\n'.encode('utf8'))
             os.write(handle, f'wc3270.httpd: 127.0.0.1:{wc3270_port}\n'.encode('utf8'))
             os.write(handle, f'wc3270.hostname: 127.0.0.1:{playback_port}\n'.encode('utf8'))
-            os.write(handle, f'wc3270.trace: true\n'.encode('utf8'))
             os.close(handle)
 
             # Create a shortcut.
