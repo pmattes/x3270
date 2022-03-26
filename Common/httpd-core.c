@@ -1399,7 +1399,10 @@ uricmpp(const char *candidate, const char *target, char **canonp)
 	    }
 	    *retp = '\0';
 	}
+    } else {
+	*retp = '\0';
     }
+
     *canonp = canon;
     return 0;
 }
