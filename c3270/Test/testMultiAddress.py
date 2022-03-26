@@ -42,6 +42,7 @@ import Common.Test.setupHosts as setupHosts
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(sys.platform.startswith('win'), 'No PTY on Windows')
+@unittest.skipIf(sys.platform == 'darwin', 'macOS not ready for c3270 graphic tests')
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
 class TestC3270MultiHost(cti.cti):
 
