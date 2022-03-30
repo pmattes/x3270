@@ -1,0 +1,1936 @@
+20220328.224518.748 Trace started
+ Version: c3270 v4.2pre3 Sat Mar 26 20:59:12 UTC 2022 pdm
+ Build options: --enable-local-process --with-readline --with-curses-wide via gcc 9.4.0 64-bit
+ Command: c3270 ./c3270 -trace 10.0.0.90:23
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true alwaysInsert=false blankFill=true
+  caDir= caFile= certFile= certFileType= chainFile= codePage=bracket
+  crosshair=false ftBufferSize=16384 httpd= insertMode=false keyFile=
+  keyFileType= keyPasswd= lineMode=true lineWrap=false loginMacro=
+  model=3279-4-E monoCase=false noTelnetInputMode=line nopSeconds=0
+  oerrLock=true oversize= preferIpv4=false preferIpv6=false printer.options=
+  printerLu= proxy= reconnect=false reverseInputMode=false
+  rightToLeftMode=false saveLines=4096 screenTrace=false scriptPort=
+  showTiming=false startTls=true termName= trace=true typeahead=true
+  underscore=false unlockDelay=false unlockDelayMs=350 verifyHostCert=true
+  visibleControl=false
+ Connection state: not-connected
+ Data stream:
+20220328.224518.748 CB(command)[#1] started
+20220328.224518.748 CB(command)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224518.748 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20220328.224518.748 st_changed(remodel,true)
+20220328.224518.748 st_changed(terminal-name,true)
+20220328.224518.748 st_changed(remodel,true)
+20220328.224518.748 st_changed(terminal-name,true)
+20220328.224518.749 ctlr_enable_cursor(true, scroll)
+20220328.224518.749 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20220328.224518.749 Macro[#1.2] running
+20220328.224518.749 Macro[#1.2] IDLE -> RUNNING (executing)
+20220328.224518.749 Macro[#1.2] 'Connect("10.0.0.90:23")'
+20220328.224518.749 command -> Connect("10.0.0.90:23")
+20220328.224518.749 st_changed(secure,false)
+20220328.224518.749 st_changed(terminal-name,true)
+20220328.224518.749 Resolver slot is 0
+20220328.224518.749 cstate [not-connected] -> [resolving] (host_connect)
+20220328.224518.749 st_changed(connect,true)
+20220328.224518.749 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220328.224518.749 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220328.224518.749 ctlr_enable_cursor(false, connect)
+20220328.224518.749 st_changed(negotiating,true)
+20220328.224518.749 Macro[#1.2] complete, success
+20220328.224518.749 CB(command)[#1.1] RUNNING -> IDLE (about to resume)
+20220328.224518.749 CB(command)[#1.1] child task done, success
+20220328.224518.749 command complete
+20220328.224518.749 stop pager
+20220328.224518.749 CB(command)[#1.1] complete, success
+20220328.224518.749 CB(command)[#1] complete
+20220328.224518.750 Waiting for 3 events or 1.000s
+20220328.224518.750 Got 1 event
+20220328.224518.750 Resolution complete, 1 address
+20220328.224518.750 TLS: will verify host certificate
+20220328.224518.750 Making host socket non-blocking
+20220328.224518.750 Trying 10.0.0.90, port 23...
+20220328.224518.751 TCP connection pending.
+20220328.224518.751 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20220328.224518.751 st_changed(negotiating,true)
+20220328.224518.751 lazya_flush: 56 slots, 2304 bytes
+20220328.224518.751 Waiting for 6 events or 0.000s
+20220328.224518.751 Got 0 events
+20220328.224518.751 Waiting for 6 events or 1.000s
+20220328.224518.752 Got 1 event
+20220328.224518.752 Output possible
+20220328.224518.752 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20220328.224518.752 st_changed(connect,true)
+20220328.224518.752 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220328.224518.752 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20220328.224518.752 Host negotiation step took 0.001376s to complete
+20220328.224518.752 ctlr_enable_cursor(true, connect)
+20220328.224518.752 ctlr_enable_cursor(true, nvt)
+20220328.224518.752 st_changed(negotiating,true)
+20220328.224518.752 Connected to 10.0.0.90, port 23.
+20220328.224518.752 st_changed(secure,false)
+20220328.224518.752 st_changed(line-mode,true)
+20220328.224518.752 lazya_flush: 14 slots, 336 bytes
+20220328.224518.752 Waiting for 5 events or 0.000s
+20220328.224518.752 Got 0 events
+20220328.224518.752 Waiting for 5 events or 1.000s
+20220328.224518.754 Got 1 event
+20220328.224518.754 Reading host socket
+20220328.224518.754 Host socket read complete nr=3
+< 0x0   fffd28
+20220328.224518.754 RCVD DO TN3270E
+> 0x0   fffb28
+20220328.224518.754 SENT WILL TN3270E
+20220328.224518.754 Now operating in connected-unbound mode.
+20220328.224518.754 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20220328.224518.754 st_changed(negotiating,true)
+20220328.224518.754 st_changed(3270-mode,false)
+20220328.224518.754 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20220328.224518.754 Host negotiation step took 0.000015s to complete
+20220328.224518.754 ctlr_enable_cursor(true, connect)
+20220328.224518.754 lazya_flush: 13 slots, 312 bytes
+20220328.224518.754 Waiting for 5 events
+20220328.224518.755 Got 1 event
+20220328.224518.755 Reading host socket
+20220328.224518.755 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20220328.224518.755 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d322d45fff0
+20220328.224518.755 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-2-E SE
+20220328.224518.755 Waiting for 5 events
+20220328.224518.756 Got 1 event
+20220328.224518.756 Reading host socket
+20220328.224518.756 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d322d45015343305443503033fff0
+20220328.224518.756 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-2-E CONNECT SC0TCP03 SE
+> 0x0   fffa28030700020405fff0
+20220328.224518.756 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20220328.224518.756 Waiting for 5 events
+20220328.224518.757 Got 1 event
+20220328.224518.757 Reading host socket
+20220328.224518.757 Host socket read complete nr=11
+< 0x0   fffa28030400020405fff0
+20220328.224518.757 RCVD SB TN3270E FUNCTIONS IS BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20220328.224518.757 TN3270E option negotiation complete.
+20220328.224518.757 Waiting for 5 events
+20220328.224518.758 Got 1 event
+20220328.224518.758 Reading host socket
+20220328.224518.758 Host socket read complete nr=42
+< 0x0   03000000003101020200003080008487f88000028000000000185000007e0000
+< 0x20  06e3c5d3d5c5e300ffef
+20220328.224518.758 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'TELNET' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default 24 ...
+... x80 Alternate 24x80
+20220328.224518.758 Now operating in connected-tn3270e mode.
+20220328.224518.758 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20220328.224518.758 st_changed(3270-mode,true)
+20220328.224518.758 ctlr_enable_cursor(true, connect)
+20220328.224518.758 RCVD EOR
+20220328.224518.758 lazya_flush: 11 slots, 264 bytes
+20220328.224518.759 Waiting for 5 events
+20220328.224518.772 Got 1 event
+20220328.224518.772 Reading host socket
+20220328.224518.772 Host socket read complete nr=1357
+< 0x0   000100000005c711077f1dc8110000a961d6e240e9f1f1f040d385a5859340f0
+< 0x20  f8f0f94040404040404040404040404040404040404040404040404040404040
+< 0x40  4040c9d740c184849985a2a2407e40f1f04bf04bf04bf9f14040404040401100
+< 0x60  5040404040404040404040404040404040404040404040404040404040404040
+< 0x80  4040404040404040404040404040404040404040e5e3c1d440e3859994899581
+< 0xa0  93407e40e2c3f0e3c3d7f0f3404040401100f040404040404040404040404040
+< 0xc0  40404040404040404040c1979793898381a389969540c485a585939697859940
+< 0xe0  e2a8a2a385944040404040404040404040404040404040404040404040404040
+< 0x100 4040110140404040404040404040404040404040404040404040404040404040
+< 0x120 4040404040404040404040404040404040404040404040404040404040404040
+< 0x140 4040404040404040404040404040404040404040110190404040404040404040
+< 0x160 404040404040404040404040404040404040404040404061614040d6d6d6d6d6
+< 0x180 d6d6404040e2e2e2e2e21101e040404040404040404040404040404040404040
+< 0x1a0 40404040404040404040404061614040d6d640404040d6d640e2e21102304040
+< 0x1c0 404040404040404040404040404040404040404040a9a9a9a9a9a94061614040
+< 0x1e0 d6d640404040d6d640e2e2110280404040404040404040404040404040404040
+< 0x200 40404040404040a9a9404061614040d6d640404040d6d640e2e2e2e21102d040
+< 0x220 40404040404040404040404040404040404040404040a9a940404061614040d6
+< 0x240 d640404040d6d6404040404040e2e21103204040404040404040404040404040
+< 0x260 40404040404040a9a94040404061614040d6d640404040d6d6404040404040e2
+< 0x280 e211037040404040404040404040404040404040404040a9a9a9a9a9a9406161
+< 0x2a0 404040d6d6d6d6d6d6d64040e2e2e2e211041040404040404040404040404040
+< 0x2c0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x2e0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x300 404011046040404040404040404040404040404040404040e2a8a2a3859440c3
+< 0x320 a4a2a3969489a981a3899695406040c1c4c3c44be9f1f1f04b5c404040404040
+< 0x340 40404040404040404040404040404040401104b0404040404040404040404040
+< 0x360 4040404040404040404040404040404040404040404040404040404040404040
+< 0x380 4040404040404040404040404040404040404040404040404040404040404040
+< 0x3a0 4040401105504040404040404040404040404040404040404040404040404040
+< 0x3c0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x3e0 4040404040404040404040404040404040404040401105a04040404040404040
+< 0x400 4040404040404040404040404040404040404040404040404040404040404040
+< 0x420 4040404040404040404040404040404040404040404040404040404040404040
+< 0x440 404040404040401105f0407e7e7e6e40c595a38599407fd3d6c7d6d57f408696
+< 0x460 939396a685844082a840a3888540e3e2d640a4a2859989844b40c5a781949793
+< 0x480 85407fd3d6c7d6d540c9c2d4e4e2c5d97f409699404040404040404040110640
+< 0x4a0 407e7e7e6e40c595a3859940d3408696939396a685844082a840a3888540c1d7
+< 0x4c0 d7d3c9c440404040404040404040404040404040404040404040404040404040
+< 0x4e0 40404040404040404040404040404040110690407e7e7e6e40c5a78194979385
+< 0x500 a27a407fd340e3e2d67f6b407fd340c3c9c3e27f6b407fd340c9d4e2f3f2f7f0
+< 0x520 4040404040404040404040404040404040404040404040404040404040404040
+< 0x540 40404011072f1d40130000ffef
+20220328.224518.774 RCVD TN3270E(3270-DATA SEND-DATA NO-RESPONSE 0)
+< EraseWrite(reset,alarm,restore,resetMDT) SetBufferAddress(24,80) StartFie ...
+... ld(intensified) SetBufferAddress(1,1) 'z/OS Z110 Level 0809             ...
+...                    IP Address = 10.0.0.91      ' SetBufferAddress(2,1)  ...
+... '                                                   VTAM Terminal = SC0 ...
+... TCP03    ' SetBufferAddress(4,1) '                       Application De ...
+... veloper System                            ' SetBufferAddress(5,1) '     ...
+...                                                                         ...
+...     ' SetBufferAddress(6,1) '                                //  OOOOOO ...
+... O   SSSSS' SetBufferAddress(7,1) '                               //  OO ...
+...     OO SS' SetBufferAddress(8,1) '                       zzzzzz //  OO  ...
+...    OO SS' SetBufferAddress(9,1) '                         zz  //  OO    ...
+...  OO SSSS' SetBufferAddress(10,1) '                       zz   //  OO    ...
+...  OO      SS' SetBufferAddress(11,1) '                     zz    //  OO  ...
+...    OO      SS' SetBufferAddress(12,1) '                   zzzzzz //   O ...
+... OOOOOO  SSSS' SetBufferAddress(14,1) '                                  ...
+...                                               ' SetBufferAddress(15,1)  ...
+... '                   System Customization - ADCD.Z110.*                  ...
+...       ' SetBufferAddress(16,1) '                                        ...
+...                                         ' SetBufferAddress(18,1) '      ...
+...                                                                         ...
+...    ' SetBufferAddress(19,1) '                                           ...
+...                                      ' SetBufferAddress(20,1) ' ===> En ...
+... ter "LOGON" followed by the TSO userid. Example "LOGON IBMUSER" or      ...
+...     ' SetBufferAddress(21,1) ' ===> Enter L followed by the APPLID      ...
+...                                        ' SetBufferAddress(22,1) ' ===>  ...
+... Examples: "L TSO", "L CICS", "L IMS3270                                 ...
+...    ' SetBufferAddress(23,80) StartField(default) InsertCursor(24,1) NUL ...
+... L NULL
+20220328.224518.777 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20220328.224518.777 RCVD EOR
+20220328.224518.777 lazya_flush: 1311 slots, 31464 bytes
+20220328.224518.778 Waiting for 5 events
+20220328.224520.114 Got 1 event
+20220328.224520.114 kbd_input: k=0 wch=108 
+20220328.224520.114 Key '<Key>l' (curses key 0x0, char code 0x6c)
+20220328.224520.114 CB(default)[#2] started
+20220328.224520.114 CB(default)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224520.114 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20220328.224520.114 kbd_input: k=-1 wch=0 
+20220328.224520.114 kbd_input: k == ERR, return
+20220328.224520.114 lazya_flush: 12 slots, 288 bytes
+20220328.224520.114 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20220328.224520.114 Macro[#2.2] running
+20220328.224520.114 Macro[#2.2] IDLE -> RUNNING (executing)
+20220328.224520.114 Macro[#2.2] 'Key(U+006c)'
+20220328.224520.114 default -> Key("U+006c")
+20220328.224520.114  default -> Key(U+006c)
+20220328.224520.114 Macro[#2.2] complete, success
+20220328.224520.114 CB(default)[#2.1] RUNNING -> IDLE (about to resume)
+20220328.224520.114 CB(default)[#2.1] child task done, success
+20220328.224520.114 CB(default)[#2.1] complete, success
+20220328.224520.114 CB(default)[#2] complete
+20220328.224520.115 Waiting for 5 events
+20220328.224520.305 Got 1 event
+20220328.224520.305 kbd_input: k=0 wch=32 
+20220328.224520.305 Key 'space' (curses key 0x0, char code 0x20)
+20220328.224520.305 CB(default)[#3] started
+20220328.224520.305 CB(default)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224520.306 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20220328.224520.306 kbd_input: k=-1 wch=0 
+20220328.224520.306 kbd_input: k == ERR, return
+20220328.224520.306 lazya_flush: 29 slots, 696 bytes
+20220328.224520.306 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20220328.224520.306 Macro[#3.2] running
+20220328.224520.306 Macro[#3.2] IDLE -> RUNNING (executing)
+20220328.224520.306 Macro[#3.2] 'Key(U+0020)'
+20220328.224520.306 default -> Key("U+0020")
+20220328.224520.306  default -> Key(U+0020)
+20220328.224520.306 Macro[#3.2] complete, success
+20220328.224520.306 CB(default)[#3.1] RUNNING -> IDLE (about to resume)
+20220328.224520.306 CB(default)[#3.1] child task done, success
+20220328.224520.306 CB(default)[#3.1] complete, success
+20220328.224520.306 CB(default)[#3] complete
+20220328.224520.306 Waiting for 5 events
+20220328.224520.561 Got 1 event
+20220328.224520.561 kbd_input: k=0 wch=116 
+20220328.224520.561 Key '<Key>t' (curses key 0x0, char code 0x74)
+20220328.224520.561 CB(default)[#4] started
+20220328.224520.561 CB(default)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224520.561 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20220328.224520.561 kbd_input: k=-1 wch=0 
+20220328.224520.561 kbd_input: k == ERR, return
+20220328.224520.561 lazya_flush: 29 slots, 696 bytes
+20220328.224520.562 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20220328.224520.562 Macro[#4.2] running
+20220328.224520.562 Macro[#4.2] IDLE -> RUNNING (executing)
+20220328.224520.562 Macro[#4.2] 'Key(U+0074)'
+20220328.224520.562 default -> Key("U+0074")
+20220328.224520.562  default -> Key(U+0074)
+20220328.224520.562 Macro[#4.2] complete, success
+20220328.224520.562 CB(default)[#4.1] RUNNING -> IDLE (about to resume)
+20220328.224520.562 CB(default)[#4.1] child task done, success
+20220328.224520.562 CB(default)[#4.1] complete, success
+20220328.224520.562 CB(default)[#4] complete
+20220328.224520.562 Waiting for 5 events
+20220328.224520.826 Got 1 event
+20220328.224520.826 kbd_input: k=0 wch=115 
+20220328.224520.826 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220328.224520.826 CB(default)[#5] started
+20220328.224520.826 CB(default)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224520.826 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20220328.224520.826 kbd_input: k=-1 wch=0 
+20220328.224520.826 kbd_input: k == ERR, return
+20220328.224520.826 lazya_flush: 29 slots, 696 bytes
+20220328.224520.827 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20220328.224520.827 Macro[#5.2] running
+20220328.224520.827 Macro[#5.2] IDLE -> RUNNING (executing)
+20220328.224520.827 Macro[#5.2] 'Key(U+0073)'
+20220328.224520.827 default -> Key("U+0073")
+20220328.224520.827  default -> Key(U+0073)
+20220328.224520.827 Macro[#5.2] complete, success
+20220328.224520.827 CB(default)[#5.1] RUNNING -> IDLE (about to resume)
+20220328.224520.827 CB(default)[#5.1] child task done, success
+20220328.224520.827 CB(default)[#5.1] complete, success
+20220328.224520.827 CB(default)[#5] complete
+20220328.224520.827 Waiting for 5 events
+20220328.224521.058 Got 1 event
+20220328.224521.058 kbd_input: k=0 wch=111 
+20220328.224521.058 Key '<Key>o' (curses key 0x0, char code 0x6f)
+20220328.224521.058 CB(default)[#6] started
+20220328.224521.058 CB(default)[#6.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224521.058 Macro[#6.2] IDLE -> RUNNING (fresh push)
+20220328.224521.058 kbd_input: k=-1 wch=0 
+20220328.224521.058 kbd_input: k == ERR, return
+20220328.224521.058 lazya_flush: 29 slots, 696 bytes
+20220328.224521.058 Macro[#6.2] RUNNING -> IDLE (about to resume)
+20220328.224521.058 Macro[#6.2] running
+20220328.224521.058 Macro[#6.2] IDLE -> RUNNING (executing)
+20220328.224521.058 Macro[#6.2] 'Key(U+006f)'
+20220328.224521.058 default -> Key("U+006f")
+20220328.224521.058  default -> Key(U+006f)
+20220328.224521.059 Macro[#6.2] complete, success
+20220328.224521.059 CB(default)[#6.1] RUNNING -> IDLE (about to resume)
+20220328.224521.059 CB(default)[#6.1] child task done, success
+20220328.224521.059 CB(default)[#6.1] complete, success
+20220328.224521.059 CB(default)[#6] complete
+20220328.224521.059 Waiting for 5 events
+20220328.224521.529 Got 1 event
+20220328.224521.529 kbd_input: k=0 wch=13 
+20220328.224521.529 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224521.529  base.3270:11 -> Enter()
+20220328.224521.529 CB(keymap)[#7] started
+20220328.224521.529 CB(keymap)[#7.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224521.529 Macro[#7.2] IDLE -> RUNNING (fresh push)
+20220328.224521.529 kbd_input: k=-1 wch=0 
+20220328.224521.529 kbd_input: k == ERR, return
+20220328.224521.529 lazya_flush: 29 slots, 696 bytes
+20220328.224521.530 Macro[#7.2] RUNNING -> IDLE (about to resume)
+20220328.224521.530 Macro[#7.2] running
+20220328.224521.530 Macro[#7.2] IDLE -> RUNNING (executing)
+20220328.224521.530 Macro[#7.2] 'Enter()'
+20220328.224521.530 keymap -> Enter()
+20220328.224521.530 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(24,6) SetBufferAddress(24,1) 'l tso'
+20220328.224521.530 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000007d5cf5115cf09340a3a296ffef
+20220328.224521.530 SENT EOR
+20220328.224521.530 Macro[#7.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224521.530 Waiting for 5 events or 1.000s
+20220328.224521.531 Got 1 event
+20220328.224521.531 Reading host socket
+20220328.224521.531 Host socket read complete nr=8
+< 0x0   040000000001ffef
+20220328.224521.531 RCVD TN3270E(UNBIND NO-RESPONSE 0)
+< UNBIND normal
+20220328.224521.531 Now operating in connected-unbound mode.
+20220328.224521.531 cstate [connected-tn3270e] -> [connected-unbound] (host_in3270)
+20220328.224521.531 st_changed(negotiating,true)
+20220328.224521.531 st_changed(3270-mode,false)
+20220328.224521.531 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20220328.224521.531 Host negotiation step took 0.000383s to complete
+20220328.224521.531 Keyboard unlock(ctlr_connect) -OIA_TWAIT
+20220328.224521.531 ctlr_enable_cursor(true, connect)
+20220328.224521.531 ctlr_enable_cursor(true, nvt)
+20220328.224521.531 RCVD EOR
+20220328.224521.531 lazya_flush: 34 slots, 832 bytes
+20220328.224521.532 Waiting for 5 events
+20220328.224521.555 Got 1 event
+20220328.224521.555 Reading host socket
+20220328.224521.555 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f88000028000000000185000007e0000
+< 0x20  08c1f0f6e3e2d6f0f10005006f1a711808e2c3f0e3c3d7f0f3ffef
+20220328.224521.556 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'A06TSO01' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 24x80
+20220328.224521.556 Now operating in connected-tn3270e mode.
+20220328.224521.556 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20220328.224521.556 st_changed(3270-mode,true)
+20220328.224521.556 ctlr_enable_cursor(true, connect)
+20220328.224521.556 RCVD EOR
+20220328.224521.556 lazya_flush: 12 slots, 288 bytes
+20220328.224521.556 Waiting for 5 events
+20220328.224521.563 Got 1 event
+20220328.224521.563 Reading host socket
+20220328.224521.563 Host socket read complete nr=7
+< 0x0   0900020001ffef
+20220328.224521.563 RCVD TN3270E(BID ALWAYS-RESPONSE 1)
+20220328.224521.563 Keyboard lock(kybd_bid) +BID
+20220328.224521.563 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 1) DEVICE-END
+> 0x0   020000000100ffef
+20220328.224521.563 RCVD EOR
+20220328.224521.564 Waiting for 5 events
+20220328.224521.564 Got 1 event
+20220328.224521.564 Reading host socket
+20220328.224521.564 Host socket read complete nr=49
+< 0x0   0000020002f5c1115d7f1d401140401dc8c9d2d1f5f6f7f0f0c140c5d5e3c5d9
+< 0x20  40e4e2c5d9c9c440601d4011c15013ffef
+20220328.224521.564 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 2)
+< EraseWrite(reset,resetMDT) SetBufferAddress(24,80) StartField(default) Se ...
+... tBufferAddress(1,1) StartField(intensified) 'IKJ56700A ENTER USERID -'  ...
+... StartField(1,26)(default) SetBufferAddress(2,1) InsertCursor
+20220328.224521.565 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20220328.224521.565 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 2) DEVICE-END
+> 0x0   020000000200ffef
+20220328.224521.565 Keyboard lock(kybd_bid) +BID
+20220328.224521.565 RCVD EOR
+20220328.224521.565 lazya_flush: 41 slots, 984 bytes
+20220328.224521.565 Waiting for 5 events
+20220328.224521.567 Got 1 event
+20220328.224521.567 Reading host socket
+20220328.224521.567 Host socket read complete nr=9
+< 0x0   0001020003f1c2ffef
+20220328.224521.567 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 3)
+< Write(reset,restore)
+20220328.224521.567 Keyboard unlock(do_reset) -OIA_LOCKED
+20220328.224521.567 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 3) DEVICE-END
+> 0x0   020000000300ffef
+20220328.224521.567 Keyboard unlock(kybd_send_data) -BID
+20220328.224521.567 RCVD EOR
+20220328.224521.567 lazya_flush: 11 slots, 264 bytes
+20220328.224521.567 Macro[#7.2] KBWAIT -> IDLE (about to resume)
+20220328.224521.567 Macro[#7.2] running
+20220328.224521.567 Macro[#7.2] complete, success
+20220328.224521.567 CB(keymap)[#7.1] RUNNING -> IDLE (about to resume)
+20220328.224521.567 CB(keymap)[#7.1] child task done, success
+20220328.224521.567 CB(keymap)[#7.1] complete, success
+20220328.224521.567 CB(keymap)[#7] complete
+20220328.224521.567 Waiting for 5 events
+20220328.224523.338 Got 1 event
+20220328.224523.338 kbd_input: k=0 wch=105 
+20220328.224523.338 Key '<Key>i' (curses key 0x0, char code 0x69)
+20220328.224523.338 CB(default)[#8] started
+20220328.224523.338 CB(default)[#8.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224523.338 Macro[#8.2] IDLE -> RUNNING (fresh push)
+20220328.224523.338 kbd_input: k=-1 wch=0 
+20220328.224523.338 kbd_input: k == ERR, return
+20220328.224523.338 lazya_flush: 22 slots, 528 bytes
+20220328.224523.338 Macro[#8.2] RUNNING -> IDLE (about to resume)
+20220328.224523.338 Macro[#8.2] running
+20220328.224523.338 Macro[#8.2] IDLE -> RUNNING (executing)
+20220328.224523.338 Macro[#8.2] 'Key(U+0069)'
+20220328.224523.338 default -> Key("U+0069")
+20220328.224523.338  default -> Key(U+0069)
+20220328.224523.338 Macro[#8.2] complete, success
+20220328.224523.338 CB(default)[#8.1] RUNNING -> IDLE (about to resume)
+20220328.224523.338 CB(default)[#8.1] child task done, success
+20220328.224523.338 CB(default)[#8.1] complete, success
+20220328.224523.338 CB(default)[#8] complete
+20220328.224523.338 Waiting for 5 events
+20220328.224523.593 Got 1 event
+20220328.224523.593 kbd_input: k=0 wch=98 
+20220328.224523.593 Key '<Key>b' (curses key 0x0, char code 0x62)
+20220328.224523.593 CB(default)[#9] started
+20220328.224523.593 CB(default)[#9.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224523.593 Macro[#9.2] IDLE -> RUNNING (fresh push)
+20220328.224523.593 kbd_input: k=-1 wch=0 
+20220328.224523.593 kbd_input: k == ERR, return
+20220328.224523.593 lazya_flush: 29 slots, 712 bytes
+20220328.224523.594 Macro[#9.2] RUNNING -> IDLE (about to resume)
+20220328.224523.594 Macro[#9.2] running
+20220328.224523.594 Macro[#9.2] IDLE -> RUNNING (executing)
+20220328.224523.594 Macro[#9.2] 'Key(U+0062)'
+20220328.224523.594 default -> Key("U+0062")
+20220328.224523.594  default -> Key(U+0062)
+20220328.224523.594 Macro[#9.2] complete, success
+20220328.224523.594 CB(default)[#9.1] RUNNING -> IDLE (about to resume)
+20220328.224523.594 CB(default)[#9.1] child task done, success
+20220328.224523.594 CB(default)[#9.1] complete, success
+20220328.224523.594 CB(default)[#9] complete
+20220328.224523.594 Waiting for 5 events
+20220328.224523.721 Got 1 event
+20220328.224523.721 kbd_input: k=0 wch=109 
+20220328.224523.721 Key '<Key>m' (curses key 0x0, char code 0x6d)
+20220328.224523.721 CB(default)[#10] started
+20220328.224523.721 CB(default)[#10.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224523.721 Macro[#10.2] IDLE -> RUNNING (fresh push)
+20220328.224523.721 kbd_input: k=-1 wch=0 
+20220328.224523.721 kbd_input: k == ERR, return
+20220328.224523.721 lazya_flush: 29 slots, 728 bytes
+20220328.224523.722 Macro[#10.2] RUNNING -> IDLE (about to resume)
+20220328.224523.722 Macro[#10.2] running
+20220328.224523.722 Macro[#10.2] IDLE -> RUNNING (executing)
+20220328.224523.722 Macro[#10.2] 'Key(U+006d)'
+20220328.224523.722 default -> Key("U+006d")
+20220328.224523.722  default -> Key(U+006d)
+20220328.224523.722 Macro[#10.2] complete, success
+20220328.224523.722 CB(default)[#10.1] RUNNING -> IDLE (about to resume)
+20220328.224523.722 CB(default)[#10.1] child task done, success
+20220328.224523.722 CB(default)[#10.1] complete, success
+20220328.224523.722 CB(default)[#10] complete
+20220328.224523.722 Waiting for 5 events
+20220328.224523.930 Got 1 event
+20220328.224523.930 kbd_input: k=0 wch=117 
+20220328.224523.930 Key '<Key>u' (curses key 0x0, char code 0x75)
+20220328.224523.930 CB(default)[#11] started
+20220328.224523.930 CB(default)[#11.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224523.930 Macro[#11.2] IDLE -> RUNNING (fresh push)
+20220328.224523.930 kbd_input: k=-1 wch=0 
+20220328.224523.930 kbd_input: k == ERR, return
+20220328.224523.930 lazya_flush: 29 slots, 712 bytes
+20220328.224523.930 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20220328.224523.930 Macro[#11.2] running
+20220328.224523.930 Macro[#11.2] IDLE -> RUNNING (executing)
+20220328.224523.930 Macro[#11.2] 'Key(U+0075)'
+20220328.224523.930 default -> Key("U+0075")
+20220328.224523.930  default -> Key(U+0075)
+20220328.224523.931 Macro[#11.2] complete, success
+20220328.224523.931 CB(default)[#11.1] RUNNING -> IDLE (about to resume)
+20220328.224523.931 CB(default)[#11.1] child task done, success
+20220328.224523.931 CB(default)[#11.1] complete, success
+20220328.224523.931 CB(default)[#11] complete
+20220328.224523.931 Waiting for 5 events
+20220328.224524.010 Got 1 event
+20220328.224524.010 kbd_input: k=0 wch=115 
+20220328.224524.010 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220328.224524.010 CB(default)[#12] started
+20220328.224524.010 CB(default)[#12.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224524.010 Macro[#12.2] IDLE -> RUNNING (fresh push)
+20220328.224524.010 kbd_input: k=-1 wch=0 
+20220328.224524.010 kbd_input: k == ERR, return
+20220328.224524.010 lazya_flush: 29 slots, 712 bytes
+20220328.224524.010 Macro[#12.2] RUNNING -> IDLE (about to resume)
+20220328.224524.010 Macro[#12.2] running
+20220328.224524.010 Macro[#12.2] IDLE -> RUNNING (executing)
+20220328.224524.010 Macro[#12.2] 'Key(U+0073)'
+20220328.224524.010 default -> Key("U+0073")
+20220328.224524.010  default -> Key(U+0073)
+20220328.224524.010 Macro[#12.2] complete, success
+20220328.224524.010 CB(default)[#12.1] RUNNING -> IDLE (about to resume)
+20220328.224524.010 CB(default)[#12.1] child task done, success
+20220328.224524.010 CB(default)[#12.1] complete, success
+20220328.224524.010 CB(default)[#12] complete
+20220328.224524.010 Waiting for 5 events
+20220328.224524.618 Got 1 event
+20220328.224524.618 kbd_input: k=0 wch=101 
+20220328.224524.618 Key '<Key>e' (curses key 0x0, char code 0x65)
+20220328.224524.618 CB(default)[#13] started
+20220328.224524.618 CB(default)[#13.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224524.618 Macro[#13.2] IDLE -> RUNNING (fresh push)
+20220328.224524.618 kbd_input: k=-1 wch=0 
+20220328.224524.618 kbd_input: k == ERR, return
+20220328.224524.618 lazya_flush: 29 slots, 712 bytes
+20220328.224524.618 Macro[#13.2] RUNNING -> IDLE (about to resume)
+20220328.224524.618 Macro[#13.2] running
+20220328.224524.618 Macro[#13.2] IDLE -> RUNNING (executing)
+20220328.224524.618 Macro[#13.2] 'Key(U+0065)'
+20220328.224524.618 default -> Key("U+0065")
+20220328.224524.618  default -> Key(U+0065)
+20220328.224524.619 Macro[#13.2] complete, success
+20220328.224524.619 CB(default)[#13.1] RUNNING -> IDLE (about to resume)
+20220328.224524.619 CB(default)[#13.1] child task done, success
+20220328.224524.619 CB(default)[#13.1] complete, success
+20220328.224524.619 CB(default)[#13] complete
+20220328.224524.619 Waiting for 5 events
+20220328.224524.850 Got 1 event
+20220328.224524.850 kbd_input: k=0 wch=114 
+20220328.224524.850 Key '<Key>r' (curses key 0x0, char code 0x72)
+20220328.224524.850 CB(default)[#14] started
+20220328.224524.850 CB(default)[#14.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224524.850 Macro[#14.2] IDLE -> RUNNING (fresh push)
+20220328.224524.850 kbd_input: k=-1 wch=0 
+20220328.224524.850 kbd_input: k == ERR, return
+20220328.224524.850 lazya_flush: 29 slots, 696 bytes
+20220328.224524.850 Macro[#14.2] RUNNING -> IDLE (about to resume)
+20220328.224524.850 Macro[#14.2] running
+20220328.224524.850 Macro[#14.2] IDLE -> RUNNING (executing)
+20220328.224524.850 Macro[#14.2] 'Key(U+0072)'
+20220328.224524.850 default -> Key("U+0072")
+20220328.224524.850  default -> Key(U+0072)
+20220328.224524.851 Macro[#14.2] complete, success
+20220328.224524.851 CB(default)[#14.1] RUNNING -> IDLE (about to resume)
+20220328.224524.851 CB(default)[#14.1] child task done, success
+20220328.224524.851 CB(default)[#14.1] complete, success
+20220328.224524.851 CB(default)[#14] complete
+20220328.224524.851 Waiting for 5 events
+20220328.224525.042 Got 1 event
+20220328.224525.042 kbd_input: k=0 wch=114 
+20220328.224525.042 Key '<Key>r' (curses key 0x0, char code 0x72)
+20220328.224525.042 CB(default)[#15] started
+20220328.224525.042 CB(default)[#15.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224525.042 Macro[#15.2] IDLE -> RUNNING (fresh push)
+20220328.224525.042 kbd_input: k=-1 wch=0 
+20220328.224525.042 kbd_input: k == ERR, return
+20220328.224525.042 lazya_flush: 29 slots, 712 bytes
+20220328.224525.042 Macro[#15.2] RUNNING -> IDLE (about to resume)
+20220328.224525.042 Macro[#15.2] running
+20220328.224525.042 Macro[#15.2] IDLE -> RUNNING (executing)
+20220328.224525.042 Macro[#15.2] 'Key(U+0072)'
+20220328.224525.042 default -> Key("U+0072")
+20220328.224525.042  default -> Key(U+0072)
+20220328.224525.042 Macro[#15.2] complete, success
+20220328.224525.042 CB(default)[#15.1] RUNNING -> IDLE (about to resume)
+20220328.224525.042 CB(default)[#15.1] child task done, success
+20220328.224525.042 CB(default)[#15.1] complete, success
+20220328.224525.042 CB(default)[#15] complete
+20220328.224525.043 Waiting for 5 events
+20220328.224525.529 Got 1 event
+20220328.224525.529 kbd_input: k=256 wch=263 
+20220328.224525.529 Key '<Key>BACKSPACE' (curses key 0x107, char code 0x0)
+20220328.224525.529  base.3270:16 -> Erase()
+20220328.224525.529 CB(keymap)[#16] started
+20220328.224525.529 CB(keymap)[#16.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224525.529 Macro[#16.2] IDLE -> RUNNING (fresh push)
+20220328.224525.529 kbd_input: k=-1 wch=0 
+20220328.224525.529 kbd_input: k == ERR, return
+20220328.224525.529 lazya_flush: 29 slots, 696 bytes
+20220328.224525.530 Macro[#16.2] RUNNING -> IDLE (about to resume)
+20220328.224525.530 Macro[#16.2] running
+20220328.224525.530 Macro[#16.2] IDLE -> RUNNING (executing)
+20220328.224525.530 Macro[#16.2] 'Erase()'
+20220328.224525.530 keymap -> Erase()
+20220328.224525.530 Macro[#16.2] complete, success
+20220328.224525.530 CB(keymap)[#16.1] RUNNING -> IDLE (about to resume)
+20220328.224525.530 CB(keymap)[#16.1] child task done, success
+20220328.224525.530 CB(keymap)[#16.1] complete, success
+20220328.224525.530 CB(keymap)[#16] complete
+20220328.224525.530 Waiting for 5 events
+20220328.224525.713 Got 1 event
+20220328.224525.713 kbd_input: k=0 wch=13 
+20220328.224525.713 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224525.713  base.3270:11 -> Enter()
+20220328.224525.713 CB(keymap)[#17] started
+20220328.224525.713 CB(keymap)[#17.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224525.713 Macro[#17.2] IDLE -> RUNNING (fresh push)
+20220328.224525.713 kbd_input: k=-1 wch=0 
+20220328.224525.713 kbd_input: k == ERR, return
+20220328.224525.713 lazya_flush: 26 slots, 640 bytes
+20220328.224525.714 Macro[#17.2] RUNNING -> IDLE (about to resume)
+20220328.224525.714 Macro[#17.2] running
+20220328.224525.714 Macro[#17.2] IDLE -> RUNNING (executing)
+20220328.224525.714 Macro[#17.2] 'Enter()'
+20220328.224525.714 keymap -> Enter()
+20220328.224525.714 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(2,8) SetBufferAddress(1,27) 'ibmuser'
+20220328.224525.714 SENT TN3270E(3270-DATA NO-RESPONSE 1)
+> 0x0   00000000017dc1d711405a898294a4a28599ffef
+20220328.224525.714 SENT EOR
+20220328.224525.714 Macro[#17.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224525.714 Waiting for 5 events or 1.000s
+20220328.224525.725 Got 1 event
+20220328.224525.725 Reading host socket
+20220328.224525.725 Host socket read complete nr=1111
+< 0x0   0001020004f5c31140403c4040401140401de860606060606060606060606060
+< 0x20  60606060606060606060606060606060606040e3e2d661c540d3d6c7d6d54060
+< 0x40  6060606060606060606060606060606060606060606060606060606060606060
+< 0x60  60606011c1501de8404040404040404040404040404040404040404040404040
+< 0x80  4040404040404040404040404040404040404040404040404040404040404040
+< 0xa0  40404040404040404040404040404040404040404040404011c2601de8404040
+< 0xc0  4040404040404040404040404040404040404040404040404040404040404040
+< 0xe0  4040404040404040404040404040404040404040404040404040404040404040
+< 0x100 40404040404040404040404040115b601de8d7c6f161d7c6f1f3407e7e6e40c8
+< 0x120 85939740404040d7c6f361d7c6f1f5407e7e6e40d3968796868640404040d7c1
+< 0x140 f1407e7e6e40c1a3a38595a389969540404040d7c1f2407e7e6e40d985a28896
+< 0x160 a6115cf01de8e896a4409481a840998598a485a2a340a2978583898689834088
+< 0x180 8593974089958696999481a38996954082a8408595a385998995874081407d6f
+< 0x1a0 7d408995408195a8408595a399a840868985938411c3f31de8c595a3859940d3
+< 0x1c0 d6c7d6d540978199819485a38599a24082859396a67a11c4e31de8d9c1c3c640
+< 0x1e0 d3d6c7d6d540978199819485a38599a27a11c6d21d6040e4a285998984404040
+< 0x200 407e7e7e6e11c6e21de8c9c2d4e4e2c5d91df011c8f21d6040d781a2a2a69699
+< 0x220 8440407e7e7e6e11c9c21d4c00000000000000001df0114df21d6040c18383a3
+< 0x240 40d5948299407e7e7e6e114ec21dc8c1c3c3e37b000000000000000000000000
+< 0x260 00000000000000000000000000000000000000000000001df0114bd21d6040d7
+< 0x280 9996838584a49985407e7e7e6e114be21dc8c9e2d7c6d7d9d6c31df01150d21d
+< 0x2a0 6040e289a9854040404040407e7e7e6e1150e21dc8f2f0f4f8f0f0f01df011d2
+< 0x2c0 f21d6040d78599869699944040407e7e7e6e11d3c21dc80000001df0114cc21d
+< 0x2e0 6040c79996a49740c9848595a340407e7e7e6e114cd51dc80000000000000000
+< 0x300 1df011c9e21d6040d585a640d781a2a2a6969984407e7e7e6e11c9f51d4c0000
+< 0x320 0000000000001df011d7f31de8c595a38599408195407de27d40828586969985
+< 0x340 4085818388409697a3899695408485a2899985844082859396a67a1d6011d9c7
+< 0x360 1de80011d9c91dc8401df060d596948189931d6011d9d71de80011d9d91dc840
+< 0x380 1df060d5969596a38983851d6011d9e81de80011d96a1dc8e21df060d9858396
+< 0x3a0 95958583a31d6011d97a1de80011d97c1dc8401df060d6c9c483819984401d60
+< 0x3c0 11d5d21d6040c39694948195844040407e7e7e6e11d5e21dc889a29786404040
+< 0x3e0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x400 4040404040404040404040404040404040404040404040404040404040404040
+< 0x420 4040404040404040401df011c7c21d7c40e28583938182859340404040407e7e
+< 0x440 7e6e11c7d51d7c40404040404040401df011c9c313ffef
+20220328.224525.726 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 4)
+< EraseWrite(reset,restore,resetMDT) SetBufferAddress(1,1) RepeatToAddress( ...
+... 1,1)' ' SetBufferAddress(1,1) StartField(protected,intensified) '------ ...
+... ------------------------- TSO/E LOGON --------------------------------- ...
+... ---' SetBufferAddress(2,1) StartField(protected,intensified) '          ...
+...                                                                         ...
+... ' SetBufferAddress(3,1) StartField(protected,intensified) '             ...
+...                                                                     ' S ...
+... etBufferAddress(23,1) StartField(protected,intensified) 'PF1/PF13 ==> H ...
+... elp    PF3/PF15 ==> Logoff    PA1 ==> Attention    PA2 ==> Reshow' SetB ...
+... ufferAddress(24,1) StartField(protected,intensified) 'You may request s ...
+... pecific help information by entering a '?' in any entry field' SetBuffe ...
+... rAddress(4,4) StartField(protected,intensified) 'Enter LOGON parameters ...
+...  below:' SetBufferAddress(4,52) StartField(protected,intensified) 'RACF ...
+...  LOGON parameters:' SetBufferAddress(6,3) StartField(protected) ' Useri ...
+... d    ===>' SetBufferAddress(6,19) StartField(protected,intensified) 'IB ...
+... MUSER' StartField(6,27)(protected,skip) SetBufferAddress(8,3) StartFiel ...
+... d(protected) ' Password  ===>' SetBufferAddress(8,19) StartField(nondis ...
+... play) NULL NULL NULL NULL NULL NULL NULL NULL StartField(8,28)(protecte ...
+... d,skip) SetBufferAddress(12,3) StartField(protected) ' Acct Nmbr ===>'  ...
+... SetBufferAddress(12,19) StartField(intensified) 'ACCT#' NULL NULL NULL  ...
+... NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL N ...
+... ULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NU ...
+... LL NULL NULL NULL StartField(12,60)(protected,skip) SetBufferAddress(10 ...
+... ,3) StartField(protected) ' Procedure ===>' SetBufferAddress(10,19) Sta ...
+... rtField(intensified) 'ISPFPROC' StartField(10,28)(protected,skip) SetBu ...
+... fferAddress(14,3) StartField(protected) ' Size      ===>' SetBufferAddr ...
+... ess(14,19) StartField(intensified) '2048000' StartField(14,27)(protecte ...
+... d,skip) SetBufferAddress(16,3) StartField(protected) ' Perform   ===>'  ...
+... SetBufferAddress(16,19) StartField(intensified) NULL NULL NULL StartFie ...
+... ld(16,23)(protected,skip) SetBufferAddress(10,51) StartField(protected) ...
+...  ' Group Ident  ===>' SetBufferAddress(10,70) StartField(intensified) N ...
+... ULL NULL NULL NULL NULL NULL NULL NULL StartField(10,79)(protected,skip ...
+... ) SetBufferAddress(8,51) StartField(protected) ' New Password ===>' Set ...
+... BufferAddress(8,70) StartField(nondisplay) NULL NULL NULL NULL NULL NUL ...
+... L NULL NULL StartField(8,79)(protected,skip) SetBufferAddress(20,4) Sta ...
+... rtField(protected,intensified) 'Enter an 'S' before each option desired ...
+...  below:' StartField(20,51)(protected) SetBufferAddress(21,8) StartField ...
+... (protected,intensified) NULL SetBufferAddress(21,10) StartField(intensi ...
+... fied) ' ' StartField(21,12)(protected,skip) '-Nomail' StartField(21,20) ...
+... (protected) SetBufferAddress(21,24) StartField(protected,intensified) N ...
+... ULL SetBufferAddress(21,26) StartField(intensified) ' ' StartField(21,2 ...
+... 8)(protected,skip) '-Nonotice' StartField(21,38)(protected) SetBufferAd ...
+... dress(21,41) StartField(protected,intensified) NULL SetBufferAddress(21 ...
+... ,43) StartField(intensified) 'S' StartField(21,45)(protected,skip) '-Re ...
+... connect' StartField(21,56)(protected) SetBufferAddress(21,59) StartFiel ...
+... d(protected,intensified) NULL SetBufferAddress(21,61) StartField(intens ...
+... ified) ' ' StartField(21,63)(protected,skip) '-OIDcard ' StartField(21, ...
+... 73)(protected) SetBufferAddress(18,3) StartField(protected) ' Command   ...
+...  ===>' SetBufferAddress(18,19) StartField(intensified) 'ispf            ...
+...                                                                  ' Star ...
+... tField(19,20)(protected,skip) SetBufferAddress(6,51) StartField(protect ...
+... ed,skip,nondisplay) ' Seclabel     ===>' SetBufferAddress(6,70) StartFi ...
+... eld(protected,skip,nondisplay) '        ' StartField(6,79)(protected,sk ...
+... ip) SetBufferAddress(8,20) InsertCursor
+20220328.224525.729 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20220328.224525.729 Host operation took 0.010882s to complete
+20220328.224525.729 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 4) DEVICE-END
+> 0x0   020000000400ffef
+20220328.224525.729 RCVD EOR
+20220328.224525.729 lazya_flush: 951 slots, 23288 bytes
+20220328.224525.729 Macro[#17.2] KBWAIT -> IDLE (about to resume)
+20220328.224525.729 Macro[#17.2] running
+20220328.224525.729 Macro[#17.2] complete, success
+20220328.224525.729 CB(keymap)[#17.1] RUNNING -> IDLE (about to resume)
+20220328.224525.729 CB(keymap)[#17.1] child task done, success
+20220328.224525.729 CB(keymap)[#17.1] complete, success
+20220328.224525.729 CB(keymap)[#17] complete
+20220328.224525.730 Waiting for 5 events
+20220328.224527.393 Got 1 event
+20220328.224527.393 kbd_input: k=0 wch=115 
+20220328.224527.393 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220328.224527.393 CB(default)[#18] started
+20220328.224527.393 CB(default)[#18.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224527.393 Macro[#18.2] IDLE -> RUNNING (fresh push)
+20220328.224527.393 kbd_input: k=-1 wch=0 
+20220328.224527.393 kbd_input: k == ERR, return
+20220328.224527.393 lazya_flush: 22 slots, 528 bytes
+20220328.224527.393 Macro[#18.2] RUNNING -> IDLE (about to resume)
+20220328.224527.393 Macro[#18.2] running
+20220328.224527.393 Macro[#18.2] IDLE -> RUNNING (executing)
+20220328.224527.393 Macro[#18.2] 'Key(U+0073)'
+20220328.224527.393 default -> Key("U+0073")
+20220328.224527.393  default -> Key(U+0073)
+20220328.224527.394 Macro[#18.2] complete, success
+20220328.224527.394 CB(default)[#18.1] RUNNING -> IDLE (about to resume)
+20220328.224527.394 CB(default)[#18.1] child task done, success
+20220328.224527.394 CB(default)[#18.1] complete, success
+20220328.224527.394 CB(default)[#18] complete
+20220328.224527.394 Waiting for 5 events
+20220328.224527.514 Got 1 event
+20220328.224527.514 kbd_input: k=0 wch=121 
+20220328.224527.514 Key '<Key>y' (curses key 0x0, char code 0x79)
+20220328.224527.514 CB(default)[#19] started
+20220328.224527.514 CB(default)[#19.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224527.514 Macro[#19.2] IDLE -> RUNNING (fresh push)
+20220328.224527.514 kbd_input: k=-1 wch=0 
+20220328.224527.514 kbd_input: k == ERR, return
+20220328.224527.514 lazya_flush: 29 slots, 744 bytes
+20220328.224527.514 Macro[#19.2] RUNNING -> IDLE (about to resume)
+20220328.224527.514 Macro[#19.2] running
+20220328.224527.514 Macro[#19.2] IDLE -> RUNNING (executing)
+20220328.224527.514 Macro[#19.2] 'Key(U+0079)'
+20220328.224527.514 default -> Key("U+0079")
+20220328.224527.514  default -> Key(U+0079)
+20220328.224527.515 Macro[#19.2] complete, success
+20220328.224527.515 CB(default)[#19.1] RUNNING -> IDLE (about to resume)
+20220328.224527.515 CB(default)[#19.1] child task done, success
+20220328.224527.515 CB(default)[#19.1] complete, success
+20220328.224527.515 CB(default)[#19] complete
+20220328.224527.515 Waiting for 5 events
+20220328.224527.601 Got 1 event
+20220328.224527.601 kbd_input: k=0 wch=115 
+20220328.224527.601 Key '<Key>s' (curses key 0x0, char code 0x73)
+20220328.224527.601 CB(default)[#20] started
+20220328.224527.601 CB(default)[#20.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224527.601 Macro[#20.2] IDLE -> RUNNING (fresh push)
+20220328.224527.601 kbd_input: k=-1 wch=0 
+20220328.224527.601 kbd_input: k == ERR, return
+20220328.224527.601 lazya_flush: 29 slots, 728 bytes
+20220328.224527.601 Macro[#20.2] RUNNING -> IDLE (about to resume)
+20220328.224527.601 Macro[#20.2] running
+20220328.224527.601 Macro[#20.2] IDLE -> RUNNING (executing)
+20220328.224527.601 Macro[#20.2] 'Key(U+0073)'
+20220328.224527.602 default -> Key("U+0073")
+20220328.224527.602  default -> Key(U+0073)
+20220328.224527.602 Macro[#20.2] complete, success
+20220328.224527.602 CB(default)[#20.1] RUNNING -> IDLE (about to resume)
+20220328.224527.602 CB(default)[#20.1] child task done, success
+20220328.224527.602 CB(default)[#20.1] complete, success
+20220328.224527.602 CB(default)[#20] complete
+20220328.224527.602 Waiting for 5 events
+20220328.224527.794 Got 1 event
+20220328.224527.794 kbd_input: k=0 wch=49 
+20220328.224527.794 Key '<Key>1' (curses key 0x0, char code 0x31)
+20220328.224527.794 CB(default)[#21] started
+20220328.224527.794 CB(default)[#21.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224527.794 Macro[#21.2] IDLE -> RUNNING (fresh push)
+20220328.224527.794 kbd_input: k=-1 wch=0 
+20220328.224527.794 kbd_input: k == ERR, return
+20220328.224527.794 lazya_flush: 29 slots, 696 bytes
+20220328.224527.794 Macro[#21.2] RUNNING -> IDLE (about to resume)
+20220328.224527.794 Macro[#21.2] running
+20220328.224527.794 Macro[#21.2] IDLE -> RUNNING (executing)
+20220328.224527.794 Macro[#21.2] 'Key(U+0031)'
+20220328.224527.794 default -> Key("U+0031")
+20220328.224527.794  default -> Key(U+0031)
+20220328.224527.795 Macro[#21.2] complete, success
+20220328.224527.795 CB(default)[#21.1] RUNNING -> IDLE (about to resume)
+20220328.224527.795 CB(default)[#21.1] child task done, success
+20220328.224527.795 CB(default)[#21.1] complete, success
+20220328.224527.795 CB(default)[#21] complete
+20220328.224527.795 Waiting for 5 events
+20220328.224527.890 Got 1 event
+20220328.224527.890 kbd_input: k=0 wch=13 
+20220328.224527.890 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224527.890  base.3270:11 -> Enter()
+20220328.224527.890 CB(keymap)[#22] started
+20220328.224527.890 CB(keymap)[#22.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224527.890 Macro[#22.2] IDLE -> RUNNING (fresh push)
+20220328.224527.890 kbd_input: k=-1 wch=0 
+20220328.224527.890 kbd_input: k == ERR, return
+20220328.224527.890 lazya_flush: 29 slots, 696 bytes
+20220328.224527.890 Macro[#22.2] RUNNING -> IDLE (about to resume)
+20220328.224527.890 Macro[#22.2] running
+20220328.224527.890 Macro[#22.2] IDLE -> RUNNING (executing)
+20220328.224527.890 Macro[#22.2] 'Enter()'
+20220328.224527.890 keymap -> Enter()
+20220328.224527.890 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(8,24) SetBufferAddress(8,20) 'sys1'
+20220328.224527.890 SENT TN3270E(3270-DATA NO-RESPONSE 2)
+> 0x0   00000000027dc9c711c9c3a2a8a2f1ffef
+20220328.224527.890 SENT EOR
+20220328.224527.890 Macro[#22.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224527.891 Waiting for 5 events or 1.000s
+20220328.224527.893 Got 1 event
+20220328.224527.893 Reading host socket
+20220328.224527.893 Host socket read complete nr=18
+< 0x0   0000020005f5c1115d7f1d4011404013ffef
+20220328.224527.893 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 5)
+< EraseWrite(reset,resetMDT) SetBufferAddress(24,80) StartField(default) Se ...
+... tBufferAddress(1,1) InsertCursor
+20220328.224527.893 Keyboard unlock(ctlr_write) -OIA_TWAIT
+20220328.224527.893 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 5) DEVICE-END
+> 0x0   020000000500ffef
+20220328.224527.893 Keyboard lock(kybd_bid) +BID
+20220328.224527.893 RCVD EOR
+20220328.224527.893 lazya_flush: 30 slots, 720 bytes
+20220328.224527.894 Waiting for 5 events or 0.996s
+20220328.224527.895 Got 1 event
+20220328.224527.895 Reading host socket
+20220328.224527.895 Host socket read complete nr=13
+< 0x0   0000020006f5c111404013ffef
+20220328.224527.895 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 6)
+< EraseWrite(reset,resetMDT) SetBufferAddress(1,1) InsertCursor
+20220328.224527.895 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 6) DEVICE-END
+> 0x0   020000000600ffef
+20220328.224527.895 Keyboard lock(kybd_bid) +BID
+20220328.224527.895 RCVD EOR
+20220328.224527.895 lazya_flush: 11 slots, 264 bytes
+20220328.224527.895 Waiting for 5 events or 0.995s
+20220328.224527.916 Got 1 event
+20220328.224527.916 Reading host socket
+20220328.224527.916 Host socket read complete nr=161
+< 0x0   0000020007f1401140401dc8c9c3c8f7f0f0f0f1c940c9c2d4e4e2c5d94040d3
+< 0x20  c1e2e340c1c3c3c5e2e240c1e340f1f17af4f17af2f840d6d540e3e4c5e2c4c1
+< 0x40  e86b40d4c1d9c3c840f2f96b40f2f0f2f21d4011c1501dc8c9d2d1f5f6f4f5f5
+< 0x60  c940c9c2d4e4e2c5d940d3d6c7d6d540c9d540d7d9d6c7d9c5e2e240c1e340f1
+< 0x80  f17af4f57af2f740d6d540d4c1d9c3c840f2f96b40f2f0f2f21d4011c26013ff
+< 0xa0  ef
+20220328.224527.917 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 7)
+< Write(reset) SetBufferAddress(1,1) StartField(intensified) 'ICH70001I IBM ...
+... USER  LAST ACCESS AT 11:41:28 ON TUESDAY, MARCH 29, 2022' StartField(1, ...
+... 71)(default) SetBufferAddress(2,1) StartField(intensified) 'IKJ56455I I ...
+... BMUSER LOGON IN PROGRESS AT 11:45:27 ON MARCH 29, 2022' StartField(2,67 ...
+... )(default) SetBufferAddress(3,1) InsertCursor
+20220328.224527.917 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 7) DEVICE-END
+> 0x0   020000000700ffef
+20220328.224527.917 Keyboard lock(kybd_bid) +BID
+20220328.224527.917 RCVD EOR
+20220328.224527.917 lazya_flush: 153 slots, 3672 bytes
+20220328.224527.917 Waiting for 5 events or 0.973s
+20220328.224528.737 Got 1 event
+20220328.224528.737 Reading host socket
+20220328.224528.737 Host socket read complete nr=123
+< 0x0   0000020008f14011c2601dc8c9d2d1f5f6f9f5f1c940d5d640c2d9d6c1c4c3c1
+< 0x20  e2e340d4c5e2e2c1c7c5e21d4011c3f01dc85c5c5c5c5c5c5c5c5c5c5c5c5c5c
+< 0x40  5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c
+< 0x60  5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c1d4011c54013ffef
+20220328.224528.738 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 8)
+< Write(reset) SetBufferAddress(3,1) StartField(intensified) 'IKJ56951I NO  ...
+... BROADCAST MESSAGES' StartField(3,33)(default) SetBufferAddress(4,1) Sta ...
+... rtField(intensified) '************************************************* ...
+... ****************' StartField(4,67)(default) SetBufferAddress(5,1) Inser ...
+... tCursor
+20220328.224528.738 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 8) DEVICE-END
+> 0x0   020000000800ffef
+20220328.224528.738 Keyboard lock(kybd_bid) +BID
+20220328.224528.738 RCVD EOR
+20220328.224528.738 lazya_flush: 115 slots, 2760 bytes
+20220328.224528.738 Waiting for 5 events or 0.152s
+20220328.224528.740 Got 1 event
+20220328.224528.740 Reading host socket
+20220328.224528.740 Host socket read complete nr=805
+< 0x0   0000020009f14011c5401dc85c40404040404040404040404040404040404040
+< 0x20  4040404040404040404040404040404040404040404040404040404040404040
+< 0x40  4040404040404040404040405c1d4011c6501dc85c40c1d7d7d3c9c3c1e3c9d6
+< 0x60  d540c4c5e5c5d3d6d7c5d97de240c3d6d5e3d9d6d3d3c5c440c4c9e2e3d9c9c2
+< 0x80  e4e3c9d6d5404dc1c4c3c45d40404040404040405c1d4011c7601dc85c404040
+< 0xa0  4040404040404040404040404040404040404040404040404040404040404040
+< 0xc0  404040404040404040404040404040404040404040404040404040405c1d4011
+< 0xe0  c8f01dc85c4040c1c4c3c44be9f1f1f04bc3d3c9e2e34dc9e2d7c6c3d35d40d7
+< 0x100 d9d6c4e4c3c5e240e3c8c9e240d4c5e2e2c1c7c5404040404040404040404040
+< 0x120 404040405c1d40114a401dc85c4040c1c4c3c44b5c40c4c1e3c1e2c5e3e240c3
+< 0x140 d6d5e3c1c9d540e2e8e2e3c5d440c3e4e2e3d6d4c9e9c1e3c9d6d54040404040
+< 0x160 4040404040404040404040405c1d40114b501dc85c4040e2d4d761c540c4c1e3
+< 0x180 c1e2c5e3e240c3c1d540c2c540d3d6c3c1e3c5c440c6d9d6d440f34bf440e6c9
+< 0x1a0 e3c840c4e2d5c1d4c5405c5c4bc3e2c9404040405c1d40114c601dc85c4040c8
+< 0x1c0 e3e3d77a6161c4e3e2c34bc4c6e64bc9c2d44bc3d6d461c1c4c3c44bc8e3d4d3
+< 0x1e0 40c3d6d5e3c1c9d5e240c4d6c3e4d4c5d5e3c1e3c9d6d540404040405c1d4011
+< 0x200 4df01dc85c404040404040404040404040404040404040404040404040404040
+< 0x220 4040404040404040404040404040404040404040404040404040404040404040
+< 0x240 404040405c1d40114f401dc85c4040e4e2c5d9c9c44040404040404040404040
+< 0x260 404040d7c1e2e2e6d6d9c44040404040404040c3d6d4d4c5d5e3404040404040
+< 0x280 4040404040404040404040405c1d401150501dc85c4040606060606060606060
+< 0x2a0 6060606060606040404040606060606060606060606060406060606060606060
+< 0x2c0 60606060606040404040404040404040404040405c1d4011d1601dc85c4040c9
+< 0x2e0 c2d4e4e2c5d9404040404040404040404040406040e2e8e2f161c9c2d4e4e2c5
+< 0x300 d940c6e4d3d340c1e4e3c8d6d9c9e3e84040404040404040404040405c1d4011
+< 0x320 d2f013ffef
+20220328.224528.741 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 9)
+< Write(reset) SetBufferAddress(5,1) StartField(intensified) '*             ...
+...                                                    *' StartField(5,67)( ...
+... default) SetBufferAddress(6,1) StartField(intensified) '* APPLICATION D ...
+... EVELOPER'S CONTROLLED DISTRIBUTION (ADCD)        *' StartField(6,67)(de ...
+... fault) SetBufferAddress(7,1) StartField(intensified) '*                 ...
+...                                                *' StartField(7,67)(defa ...
+... ult) SetBufferAddress(8,1) StartField(intensified) '*  ADCD.Z110.CLIST( ...
+... ISPFCL) PRODUCES THIS MESSAGE                *' StartField(8,67)(defaul ...
+... t) SetBufferAddress(9,1) StartField(intensified) '*  ADCD.* DATASETS CO ...
+... NTAIN SYSTEM CUSTOMIZATION                 *' StartField(9,67)(default) ...
+...  SetBufferAddress(10,1) StartField(intensified) '*  SMP/E DATASETS CAN  ...
+... BE LOCATED FROM 3.4 WITH DSNAME **.CSI    *' StartField(10,67)(default) ...
+...  SetBufferAddress(11,1) StartField(intensified) '*  HTTP://DTSC.DFW.IBM ...
+... .COM/ADCD.HTML CONTAINS DOCUMENTATION     *' StartField(11,67)(default) ...
+...  SetBufferAddress(12,1) StartField(intensified) '*                      ...
+...                                           *' StartField(12,67)(default) ...
+...  SetBufferAddress(13,1) StartField(intensified) '*  USERID              ...
+...  PASSWORD        COMMENT                  *' StartField(13,67)(default) ...
+...  SetBufferAddress(14,1) StartField(intensified) '*  ----------------    ...
+...  ------------ --------------              *' StartField(14,67)(default) ...
+...  SetBufferAddress(15,1) StartField(intensified) '*  IBMUSER             ...
+...  - SYS1/IBMUSER FULL AUTHORITY            *' StartField(15,67)(default) ...
+...  SetBufferAddress(16,1) InsertCursor
+20220328.224528.743 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 9) DEVICE-END
+> 0x0   020000000900ffef
+20220328.224528.743 Keyboard lock(kybd_bid) +BID
+20220328.224528.743 RCVD EOR
+20220328.224528.743 lazya_flush: 770 slots, 18480 bytes
+20220328.224528.743 Waiting for 5 events or 0.147s
+20220328.224528.745 Got 1 event
+20220328.224528.745 Reading host socket
+20220328.224528.745 Host socket read complete nr=373
+< 0x0   000002000af14011d2f01dc85c4040c1c4c3c4d4e2e340404040404040404040
+< 0x20  4040406040c1c4c3c4d4e2e3404040404040c6e4d3d340c1e4e3c8d6d9c9e3e8
+< 0x40  4040404040404040404040405c1d4011d4401dc85c4040c1c4c3c4c140e3c8d9
+< 0x60  e440c1c4c3c4e9404040406040e3c5e2e3404040404040404040d3c9d4c9e3c5
+< 0x80  c440c1e4e3c8d6d9c9e3e84dd5d640d6d4e5e25d5c1d4011d5501dc85c4040d6
+< 0xa0  d7c5d5f140e3c8d9e440d6d7c5d5f3404040406040e2e8e2f140404040404040
+< 0xc0  4040e4c9c44df05d404dd5d640e3e2d65d40404040404040404040405c1d4011
+< 0xe0  d6601dc85c404040404040404040404040404040404040404040404040404040
+< 0x100 4040404040404040404040404040404040404040404040404040404040404040
+< 0x120 404040405c1d4011d7f01dc85c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c
+< 0x140 5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c
+< 0x160 5c5c5c5c5c5c5c5c5c5c5c5c5c1d4011d94013ffef
+20220328.224528.746 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 10)
+< Write(reset) SetBufferAddress(16,1) StartField(intensified) '*  ADCDMST   ...
+...            - ADCDMST      FULL AUTHORITY            *' StartField(16,67 ...
+... )(default) SetBufferAddress(17,1) StartField(intensified) '*  ADCDA THR ...
+... U ADCDZ    - TEST         LIMITED AUTHORITY(NO OMVS)*' StartField(17,67 ...
+... )(default) SetBufferAddress(18,1) StartField(intensified) '*  OPEN1 THR ...
+... U OPEN3    - SYS1         UID(0) (NO TSO)           *' StartField(18,67 ...
+... )(default) SetBufferAddress(19,1) StartField(intensified) '*            ...
+...                                                     *' StartField(19,67 ...
+... )(default) SetBufferAddress(20,1) StartField(intensified) '************ ...
+... *****************************************************' StartField(20,67 ...
+... )(default) SetBufferAddress(21,1) InsertCursor
+20220328.224528.746 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 10) DEVICE-END
+> 0x0   020000000a00ffef
+20220328.224528.746 Keyboard lock(kybd_bid) +BID
+20220328.224528.746 RCVD EOR
+20220328.224528.746 lazya_flush: 356 slots, 8544 bytes
+20220328.224528.747 Waiting for 5 events or 0.143s
+20220328.224528.793 Got 1 event
+20220328.224528.794 Reading host socket
+20220328.224528.794 Host socket read complete nr=32
+< 0x0   000002000bf14011d9401dc8401d40115a501dc889a297861d40115b6013ffef
+20220328.224528.794 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 11)
+< Write(reset) SetBufferAddress(21,1) StartField(intensified) ' ' StartFiel ...
+... d(21,3)(default) SetBufferAddress(22,1) StartField(intensified) 'ispf'  ...
+... StartField(22,6)(default) SetBufferAddress(23,1) InsertCursor
+20220328.224528.794 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 11) DEVICE-END
+> 0x0   020000000b00ffef
+20220328.224528.794 Keyboard lock(kybd_bid) +BID
+20220328.224528.794 RCVD EOR
+20220328.224528.794 lazya_flush: 24 slots, 576 bytes
+20220328.224528.794 Waiting for 5 events or 0.096s
+20220328.224528.822 Got 1 event
+20220328.224528.822 Reading host socket
+20220328.224528.822 Host socket read complete nr=20
+< 0x0   000102000cf1c2115b601dc85c5c5c1d4013ffef
+20220328.224528.822 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 12)
+< Write(reset,restore) SetBufferAddress(23,1) StartField(intensified) '***' ...
+...  StartField(23,5)(default) InsertCursor(23,6)
+20220328.224528.822 Keyboard unlock(do_reset) -OIA_LOCKED
+20220328.224528.822 Host operation took 0.931898s to complete
+20220328.224528.822 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 12) DEVICE-END
+> 0x0   020000000c00ffef
+20220328.224528.822 Keyboard unlock(kybd_send_data) -BID
+20220328.224528.822 RCVD EOR
+20220328.224528.822 lazya_flush: 20 slots, 480 bytes
+20220328.224528.823 Macro[#22.2] KBWAIT -> IDLE (about to resume)
+20220328.224528.823 Macro[#22.2] running
+20220328.224528.823 Macro[#22.2] complete, success
+20220328.224528.823 CB(keymap)[#22.1] RUNNING -> IDLE (about to resume)
+20220328.224528.823 CB(keymap)[#22.1] child task done, success
+20220328.224528.823 CB(keymap)[#22.1] complete, success
+20220328.224528.823 CB(keymap)[#22] complete
+20220328.224528.823 Waiting for 5 events
+20220328.224529.890 Got 1 event
+20220328.224529.890 kbd_input: k=0 wch=13 
+20220328.224529.890 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224529.890  base.3270:11 -> Enter()
+20220328.224529.890 CB(keymap)[#23] started
+20220328.224529.890 CB(keymap)[#23.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224529.890 Macro[#23.2] IDLE -> RUNNING (fresh push)
+20220328.224529.890 kbd_input: k=-1 wch=0 
+20220328.224529.890 kbd_input: k == ERR, return
+20220328.224529.890 lazya_flush: 22 slots, 528 bytes
+20220328.224529.890 Macro[#23.2] RUNNING -> IDLE (about to resume)
+20220328.224529.890 Macro[#23.2] running
+20220328.224529.890 Macro[#23.2] IDLE -> RUNNING (executing)
+20220328.224529.890 Macro[#23.2] 'Enter()'
+20220328.224529.890 keymap -> Enter()
+20220328.224529.890 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(23,6)
+20220328.224529.891 SENT TN3270E(3270-DATA NO-RESPONSE 3)
+> 0x0   00000000037d5be5ffef
+20220328.224529.891 SENT EOR
+20220328.224529.891 Macro[#23.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224529.891 Waiting for 5 events or 1.000s
+20220328.224529.893 Got 1 event
+20220328.224529.893 Reading host socket
+20220328.224529.893 Host socket read complete nr=20
+< 0x0   000102000df300064000f1c3000501ffff02ffef
+20220328.224529.893 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 13)
+< WriteStructuredField OutboundDS(0x00) Write(reset,restore,resetMDT)
+20220328.224529.893 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20220328.224529.893 Host operation took 0.002757s to complete
+< WriteStructuredField ReadPartition(0xff) Query
+> StructuredField
+> QueryReply(Summary(Summary,UsableArea,AlphanumericPartitions,CharacterSet ...
+... s,Color,Highlighting,ReplyModes,DistributedDataManagement,RPQNames,Impl ...
+... icitPartition))
+> QueryReply(UsableArea)
+> QueryReply(AlphanumericPartitions)
+> QueryReply(CharacterSets)
+> QueryReply(Color)
+> QueryReply(Highlighting)
+> QueryReply(ReplyModes)
+> QueryReply(DistributedDataManagement INLIM/OUTLIM=16384)
+> QueryReply(RPQNames)
+> QueryReply(ImplicitPartition)
+20220328.224529.894 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 13) DEVICE-END
+> 0x0   020000000d00ffef
+20220328.224529.894 SENT TN3270E(3270-DATA NO-RESPONSE 4)
+> 0x0   000000000488000e81808081848586878895a1a6001781810100005000180100
+> 0x20  0a02e50002006f090c07800008818400078000001b81858200090c0000000007
+> 0x40  00100002b900250100f103c3013600268186001000f4f1f1f2f2f3f3f4f4f5f5
+> 0x60  f6f6f7f7f8f8f9f9fafafbfbfcfcfdfdfefeffffffff000f81870500f0f1f1f2
+> 0x80  f2f4f4f8f800078188000102000c81950000400040000101001281a100000000
+> 0xa0  0000000006a7f3f2f7f0001181a600000b01000050001800500018ffef
+20220328.224529.894 SENT EOR
+20220328.224529.894 Keyboard lock(kybd_inhibit) +ENTER_INHIBIT
+20220328.224529.894 RCVD EOR
+20220328.224529.894 lazya_flush: 25 slots, 600 bytes
+20220328.224529.894 Waiting for 5 events
+20220328.224530.135 Got 1 event
+20220328.224530.135 Reading host socket
+20220328.224530.135 Host socket read complete nr=2299
+< 0x0   000102000ef5c31100002902c06042f42902c0e842f7402841f4d42800008595
+< 0x20  a42902c0e842f7402841f4e4280000a3899389a38985a22902c0e842f7402841
+< 0x40  f4c328000096949789938599a22902c0e842f7402841f4d628000097a3899695
+< 0x60  a22902c0e842f7402841f4e2280000a381a3a4a22902c0e842f7402841f4c828
+< 0x80  00008593972902c06042f43c0050402902c06042f108a208a208a208a208a208
+< 0xa0  a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0xc0  a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0xe0  a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x100 a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x120 a208a208a208a208a208a208a208a208a2402902c06042f43c00bb402902c060
+< 0x140 42f1c9e2d7c640d79989948199a840d697a389969540d48595a42902c06042f4
+< 0x160 3c00ef402902c06042f42902c06042f4d697a3899695407e7e7e6e2903c04041
+< 0x180 f442f53c013f402902c06042f43c016b402902c0e842f73c0177402902c06042
+< 0x1a0 f42902c0e842f13c0190402902c06042f7f0402902c0e842f5e285a3a3899587
+< 0x1c0 a23c01a1002902c06042f4e3859994899581934081958440a4a2859940978199
+< 0x1e0 819485a38599a23c01c7402902c06042f42902c06042f42842f440e4a2859940
+< 0x200 c9c4404b407a2800002902c06042f5c9c2d4e4e2c5d9402902c06042f4402902
+< 0x220 c06042f7f1402902c0e842f5e58985a63c01f1002902c06042f4c489a2979381
+< 0x240 a840a296a4998385408481a381409699409389a2a3899587a23c0217402902c0
+< 0x260 6042f42902c06042f42842f440e38994854b404b404b407a2800002902c06042
+< 0x280 f5f1f17af4f54040402902c06042f4402902c06042f7f2402902c0e842f5c584
+< 0x2a0 89a33c0241002902c06042f4c3998581a3854096994083888195878540a296a4
+< 0x2c0 998385408481a3813c0267402902c06042f42902c06042f42842f440e3859994
+< 0x2e0 899581934b407a2800002902c06042f5f3f2f7f8404040402902c06042f44029
+< 0x300 02c06042f7f3402902c0e842f5e4a3899389a38985a2000000002902c06042f4
+< 0x320 d785998696999440a4a3899389a3a84086a49583a3899695a23c02b7402902c0
+< 0x340 6042f42902c06042f42842f440e283998585954b404b407a2800002902c06042
+< 0x360 f5f13c02ce402902c06042f4402902c06042f7f4402902c0e842f5c696998587
+< 0x380 9996a495840000002902c06042f4c995a385998183a389a5854093819587a481
+< 0x3a0 8785409799968385a2a28995873c0307402902c06042f42902c06042f42842f4
+< 0x3c0 40d3819587a48187854b407a2800002902c06042f5c5d5c7d3c9e2c8402902c0
+< 0x3e0 6042f4402902c06042f7f5402902c0e842f5c281a383883c0331002902c06042
+< 0x400 f4e2a4829489a340919682408696994093819587a4818785409799968385a2a2
+< 0x420 8995874040402902c06042f42902c06042f42842f440c197979340c9c4404b40
+< 0x440 7a2800002902c06042f5c9e2d93c036e402902c06042f4402902c06042f7f640
+< 0x460 2902c0e842f5c39694948195843c0381002902c06042f4c595a3859940e3e2d6
+< 0x480 40969940e6969992a2a381a38996954083969494819584a2404040402902c060
+< 0x4a0 42f42902c06042f42842f440e3e2d6409396879695407a2800002902c06042f5
+< 0x4c0 c9e2d7c6d7d9d6c32902c06042f4402902c06042f7f7402902c0e842f5c48981
+< 0x4e0 93968740e385a2a300002902c06042f4d78599869699944084898193968740a3
+< 0x500 85a2a38995873c03f7402902c06042f42902c06042f42842f440e3e2d6409799
+< 0x520 858689a77a2800002902c06042f53c040e402902c06042f4402902c06042f7f9
+< 0x540 402902c0e842f5c9c2d440d7999684a483a3a2002902c06042f4c9c2d4409799
+< 0x560 9687998194408485a585939697948595a34097999684a483a3a23c0447402902
+< 0x580 c06042f42902c06042f42902c0e842f5e2a8a2a3859440c9c4407a40c1c4c3c4
+< 0x5a0 404040402902c06042f4402902c06042f7f1f02902c0e842f5e2c3d3d43c0471
+< 0x5c0 002902c06042f4e2e640c39695868987a49981a389969540d38982998199a840
+< 0x5e0 d48195818785993c0497402902c06042f42902c06042f42902c0e842f5d4e5e2
+< 0x600 40818383a34b407a40c1c3c3e37b4040402902c06042f42902c0e842f708c508
+< 0x620 a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x640 a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x660 a208a208a208a208a208a208a208a208a208a208a208a208a208a208d52902c0
+< 0x680 6042f43c04e7402902c06042f42902c06042f42902c0e842f5d985938581a285
+< 0x6a0 404b407a40c9e2d7c640f64bf02902c06042f42902c0e842f708852902c0e842
+< 0x6c0 f7d389838595a2858440d481a38599898193a2406040d79996978599a3a84096
+< 0x6e0 8640c9c2d43c052e402902c0e842f708852902c0e842f53c0538002902c06042
+< 0x700 f42902c0f042f12902c0f042f1402902c06042f43c054f402902c0e842f70885
+< 0x720 2902c0e842f7f5f6f9f460c1f0f13c055f40c39697a899898788a340c9c2d440
+< 0x740 c39699974b40f1f9f8f06b40f2f0f0f84b2902c0e842f708852902c06042f43c
+< 0x760 059f402902c0e842f708852902c0e842f7c193934099898788a3a2409985a285
+< 0x780 99a585844b3c05ce402902c0e842f708852902c06042f43c05ef402902c0e842
+< 0x7a0 f708852902c0e842f7e4e240c796a5859995948595a340e4a28599a240d985a2
+< 0x7c0 a3998983a3858440d9898788a3a240603c061e402902c0e842f708852902c060
+< 0x7e0 42f4a22902c06042f43c063f402902c0e842f708852902c0e842f7e4a2856b40
+< 0x800 84a49793898381a3899695409699408489a2839396a2a49985409985a2a39989
+< 0x820 83a385844040402902c0e842f708852902c0e842f73c068f002902c0e842f708
+< 0x840 852902c0e842f782a840c7e2c140c1c4d740e283888584a4938540c39695a399
+< 0x860 8183a340a689a38840c9c2d440c39699974b402902c0e842f708852902c0e842
+< 0x880 f73c06df002902c0e842f708c408a208a208a208a208a208a208a208a208a208
+< 0x8a0 a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x8c0 a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208a208
+< 0x8e0 a208a208a208a208a208d42902c0e842f73c0000001100fd13ffef
+20220328.224530.139 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 14)
+20220328.224530.139 Keyboard unlock(kybd_inhibit) -ENTER_INHIBIT
+< EraseWrite(reset,restore,resetMDT) SetBufferAddress(1,1) StartFieldExtend ...
+... ed 3270(protected) foreground(green) StartFieldExtended(1,2) 3270(prote ...
+... cted,intensified) foreground(neutralWhite) ' ' SetAttribute highlightin ...
+... g(underscore) 'M' SetAttribute all(0) 'enu' StartFieldExtended(1,8) 327 ...
+... 0(protected,intensified) foreground(neutralWhite) ' ' SetAttribute high ...
+... lighting(underscore) 'U' SetAttribute all(0) 'tilities' StartFieldExten ...
+... ded(1,19) 3270(protected,intensified) foreground(neutralWhite) ' ' SetA ...
+... ttribute highlighting(underscore) 'C' SetAttribute all(0) 'ompilers' St ...
+... artFieldExtended(1,30) 3270(protected,intensified) foreground(neutralWh ...
+... ite) ' ' SetAttribute highlighting(underscore) 'O' SetAttribute all(0)  ...
+... 'ptions' StartFieldExtended(1,39) 3270(protected,intensified) foregroun ...
+... d(neutralWhite) ' ' SetAttribute highlighting(underscore) 'S' SetAttrib ...
+... ute all(0) 'tatus' StartFieldExtended(1,47) 3270(protected,intensified) ...
+...  foreground(neutralWhite) ' ' SetAttribute highlighting(underscore) 'H' ...
+...  SetAttribute all(0) 'elp' StartFieldExtended(1,53) 3270(protected) for ...
+... eground(green) RepeatToAddress(2,1)' ' StartFieldExtended(2,1) 3270(pro ...
+... tected) foreground(blue) GraphicEscape 's' GraphicEscape 's' GraphicEsc ...
+... ape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEs ...
+... cape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicE ...
+... scape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graphic ...
+... Escape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graphi ...
+... cEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graph ...
+... icEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Grap ...
+... hicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gra ...
+... phicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gr ...
+... aphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' G ...
+... raphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's'  ...
+... GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' ...
+...  GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's ...
+... ' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape ' ...
+... s' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape  ...
+... 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape ...
+...  's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscap ...
+... e 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEsca ...
+... pe 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEsc ...
+... ape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEs ...
+... cape 's' ' ' StartFieldExtended(3,1) 3270(protected) foreground(green)  ...
+... RepeatToAddress(3,28)' ' StartFieldExtended(3,28) 3270(protected) foreg ...
+... round(blue) 'ISPF Primary Option Menu' StartFieldExtended(3,53) 3270(pr ...
+... otected) foreground(green) RepeatToAddress(3,80)' ' StartFieldExtended( ...
+... 3,80) 3270(protected) foreground(green) StartFieldExtended(4,1) 3270(pr ...
+... otected) foreground(green) 'Option ===>' StartFieldExtended(4,13) 3270( ...
+... default) highlighting(underscore) foreground(turquoise) RepeatToAddress ...
+... (4,80)' ' StartFieldExtended(4,80) 3270(protected) foreground(green) Re ...
+... peatToAddress(5,44)' ' StartFieldExtended(5,44) 3270(protected,intensif ...
+... ied) foreground(neutralWhite) RepeatToAddress(5,56)' ' StartFieldExtend ...
+... ed(5,56) 3270(protected) foreground(green) StartFieldExtended(5,57) 327 ...
+... 0(protected,intensified) foreground(blue) RepeatToAddress(6,1)' ' Start ...
+... FieldExtended(6,1) 3270(protected) foreground(neutralWhite) '0 ' StartF ...
+... ieldExtended(6,4) 3270(protected,intensified) foreground(turquoise) 'Se ...
+... ttings' RepeatToAddress(6,18)NULL StartFieldExtended(6,18) 3270(protect ...
+... ed) foreground(green) 'Terminal and user parameters' RepeatToAddress(6, ...
+... 56)' ' StartFieldExtended(6,56) 3270(protected) foreground(green) Start ...
+... FieldExtended(6,57) 3270(protected) foreground(green) SetAttribute fore ...
+... ground(green) ' User ID . :' SetAttribute all(0) StartFieldExtended(6,7 ...
+... 0) 3270(protected) foreground(turquoise) 'IBMUSER ' StartFieldExtended( ...
+... 6,79) 3270(protected) foreground(green) ' ' StartFieldExtended(7,1) 327 ...
+... 0(protected) foreground(neutralWhite) '1 ' StartFieldExtended(7,4) 3270 ...
+... (protected,intensified) foreground(turquoise) 'View' RepeatToAddress(7, ...
+... 18)NULL StartFieldExtended(7,18) 3270(protected) foreground(green) 'Dis ...
+... play source data or listings' RepeatToAddress(7,56)' ' StartFieldExtend ...
+... ed(7,56) 3270(protected) foreground(green) StartFieldExtended(7,57) 327 ...
+... 0(protected) foreground(green) SetAttribute foreground(green) ' Time. . ...
+...  . :' SetAttribute all(0) StartFieldExtended(7,70) 3270(protected) fore ...
+... ground(turquoise) '11:45   ' StartFieldExtended(7,79) 3270(protected) f ...
+... oreground(green) ' ' StartFieldExtended(8,1) 3270(protected) foreground ...
+... (neutralWhite) '2 ' StartFieldExtended(8,4) 3270(protected,intensified) ...
+...  foreground(turquoise) 'Edit' RepeatToAddress(8,18)NULL StartFieldExten ...
+... ded(8,18) 3270(protected) foreground(green) 'Create or change source da ...
+... ta' RepeatToAddress(8,56)' ' StartFieldExtended(8,56) 3270(protected) f ...
+... oreground(green) StartFieldExtended(8,57) 3270(protected) foreground(gr ...
+... een) SetAttribute foreground(green) ' Terminal. :' SetAttribute all(0)  ...
+... StartFieldExtended(8,70) 3270(protected) foreground(turquoise) '3278    ...
+...  ' StartFieldExtended(8,79) 3270(protected) foreground(green) ' ' Start ...
+... FieldExtended(9,1) 3270(protected) foreground(neutralWhite) '3 ' StartF ...
+... ieldExtended(9,4) 3270(protected,intensified) foreground(turquoise) 'Ut ...
+... ilities' NULL NULL NULL NULL StartFieldExtended(9,18) 3270(protected) f ...
+... oreground(green) 'Perform utility functions' RepeatToAddress(9,56)' ' S ...
+... tartFieldExtended(9,56) 3270(protected) foreground(green) StartFieldExt ...
+... ended(9,57) 3270(protected) foreground(green) SetAttribute foreground(g ...
+... reen) ' Screen. . :' SetAttribute all(0) StartFieldExtended(9,70) 3270( ...
+... protected) foreground(turquoise) '1' RepeatToAddress(9,79)' ' StartFiel ...
+... dExtended(9,79) 3270(protected) foreground(green) ' ' StartFieldExtende ...
+... d(10,1) 3270(protected) foreground(neutralWhite) '4 ' StartFieldExtende ...
+... d(10,4) 3270(protected,intensified) foreground(turquoise) 'Foreground'  ...
+... NULL NULL NULL StartFieldExtended(10,18) 3270(protected) foreground(gre ...
+... en) 'Interactive language processing' RepeatToAddress(10,56)' ' StartFi ...
+... eldExtended(10,56) 3270(protected) foreground(green) StartFieldExtended ...
+... (10,57) 3270(protected) foreground(green) SetAttribute foreground(green ...
+... ) ' Language. :' SetAttribute all(0) StartFieldExtended(10,70) 3270(pro ...
+... tected) foreground(turquoise) 'ENGLISH ' StartFieldExtended(10,79) 3270 ...
+... (protected) foreground(green) ' ' StartFieldExtended(11,1) 3270(protect ...
+... ed) foreground(neutralWhite) '5 ' StartFieldExtended(11,4) 3270(protect ...
+... ed,intensified) foreground(turquoise) 'Batch' RepeatToAddress(11,18)NUL ...
+... L StartFieldExtended(11,18) 3270(protected) foreground(green) 'Submit j ...
+... ob for language processing   ' StartFieldExtended(11,56) 3270(protected ...
+... ) foreground(green) StartFieldExtended(11,57) 3270(protected) foregroun ...
+... d(green) SetAttribute foreground(green) ' Appl ID . :' SetAttribute all ...
+... (0) StartFieldExtended(11,70) 3270(protected) foreground(turquoise) 'IS ...
+... R' RepeatToAddress(11,79)' ' StartFieldExtended(11,79) 3270(protected)  ...
+... foreground(green) ' ' StartFieldExtended(12,1) 3270(protected) foregrou ...
+... nd(neutralWhite) '6 ' StartFieldExtended(12,4) 3270(protected,intensifi ...
+... ed) foreground(turquoise) 'Command' RepeatToAddress(12,18)NULL StartFie ...
+... ldExtended(12,18) 3270(protected) foreground(green) 'Enter TSO or Works ...
+... tation commands    ' StartFieldExtended(12,56) 3270(protected) foregrou ...
+... nd(green) StartFieldExtended(12,57) 3270(protected) foreground(green) S ...
+... etAttribute foreground(green) ' TSO logon :' SetAttribute all(0) StartF ...
+... ieldExtended(12,70) 3270(protected) foreground(turquoise) 'ISPFPROC' St ...
+... artFieldExtended(12,79) 3270(protected) foreground(green) ' ' StartFiel ...
+... dExtended(13,1) 3270(protected) foreground(neutralWhite) '7 ' StartFiel ...
+... dExtended(13,4) 3270(protected,intensified) foreground(turquoise) 'Dial ...
+... og Test' NULL NULL StartFieldExtended(13,18) 3270(protected) foreground ...
+... (green) 'Perform dialog testing' RepeatToAddress(13,56)' ' StartFieldEx ...
+... tended(13,56) 3270(protected) foreground(green) StartFieldExtended(13,5 ...
+... 7) 3270(protected) foreground(green) SetAttribute foreground(green) ' T ...
+... SO prefix:' SetAttribute all(0) StartFieldExtended(13,70) 3270(protecte ...
+... d) foreground(turquoise) RepeatToAddress(13,79)' ' StartFieldExtended(1 ...
+... 3,79) 3270(protected) foreground(green) ' ' StartFieldExtended(14,1) 32 ...
+... 70(protected) foreground(neutralWhite) '9 ' StartFieldExtended(14,4) 32 ...
+... 70(protected,intensified) foreground(turquoise) 'IBM Products' NULL Sta ...
+... rtFieldExtended(14,18) 3270(protected) foreground(green) 'IBM program d ...
+... evelopment products' RepeatToAddress(14,56)' ' StartFieldExtended(14,56 ...
+... ) 3270(protected) foreground(green) StartFieldExtended(14,57) 3270(prot ...
+... ected) foreground(green) StartFieldExtended(14,58) 3270(protected,inten ...
+... sified) foreground(turquoise) 'System ID : ADCD    ' StartFieldExtended ...
+... (14,79) 3270(protected) foreground(green) ' ' StartFieldExtended(15,1)  ...
+... 3270(protected) foreground(neutralWhite) '10' StartFieldExtended(15,4)  ...
+... 3270(protected,intensified) foreground(turquoise) 'SCLM' RepeatToAddres ...
+... s(15,18)NULL StartFieldExtended(15,18) 3270(protected) foreground(green ...
+... ) 'SW Configuration Library Manager' RepeatToAddress(15,56)' ' StartFie ...
+... ldExtended(15,56) 3270(protected) foreground(green) StartFieldExtended( ...
+... 15,57) 3270(protected) foreground(green) StartFieldExtended(15,58) 3270 ...
+... (protected,intensified) foreground(turquoise) 'MVS acct. : ACCT#   ' St ...
+... artFieldExtended(15,79) 3270(protected) foreground(green) StartFieldExt ...
+... ended(15,80) 3270(protected,intensified) foreground(neutralWhite) Graph ...
+... icEscape 'E' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Grap ...
+... hicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gra ...
+... phicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gr ...
+... aphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' G ...
+... raphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's'  ...
+... GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' ...
+...  GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's ...
+... ' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape ' ...
+... s' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape  ...
+... 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape ...
+...  's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscap ...
+... e 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEsca ...
+... pe 'N' StartFieldExtended(16,49) 3270(protected) foreground(green) Repe ...
+... atToAddress(16,56)' ' StartFieldExtended(16,56) 3270(protected) foregro ...
+... und(green) StartFieldExtended(16,57) 3270(protected) foreground(green)  ...
+... StartFieldExtended(16,58) 3270(protected,intensified) foreground(turquo ...
+... ise) 'Release . : ISPF 6.0' StartFieldExtended(16,79) 3270(protected) f ...
+... oreground(green) StartFieldExtended(16,80) 3270(protected,intensified)  ...
+... foreground(neutralWhite) GraphicEscape 'e' StartFieldExtended(17,2) 327 ...
+... 0(protected,intensified) foreground(neutralWhite) 'Licensed Materials - ...
+...  Property of IBM' RepeatToAddress(17,47)' ' StartFieldExtended(17,47) 3 ...
+... 270(protected,intensified) foreground(neutralWhite) GraphicEscape 'e' S ...
+... tartFieldExtended(17,49) 3270(protected,intensified) foreground(turquoi ...
+... se) RepeatToAddress(17,57)NULL StartFieldExtended(17,57) 3270(protected ...
+... ) foreground(green) StartFieldExtended(17,58) 3270(protected,skip) fore ...
+... ground(blue) StartFieldExtended(17,59) 3270(protected,skip) foreground( ...
+... blue) ' ' StartFieldExtended(17,61) 3270(protected) foreground(green) R ...
+... epeatToAddress(17,80)' ' StartFieldExtended(17,80) 3270(protected,inten ...
+... sified) foreground(neutralWhite) GraphicEscape 'e' StartFieldExtended(1 ...
+... 8,2) 3270(protected,intensified) foreground(neutralWhite) '5694-A01' Re ...
+... peatToAddress(18,16)' ' 'Copyright IBM Corp. 1980, 2008.' StartFieldExt ...
+... ended(18,47) 3270(protected,intensified) foreground(neutralWhite) Graph ...
+... icEscape 'e' StartFieldExtended(18,49) 3270(protected) foreground(green ...
+... ) RepeatToAddress(18,80)' ' StartFieldExtended(18,80) 3270(protected,in ...
+... tensified) foreground(neutralWhite) GraphicEscape 'e' StartFieldExtende ...
+... d(19,2) 3270(protected,intensified) foreground(neutralWhite) 'All right ...
+... s reserved.' RepeatToAddress(19,47)' ' StartFieldExtended(19,47) 3270(p ...
+... rotected,intensified) foreground(neutralWhite) GraphicEscape 'e' StartF ...
+... ieldExtended(19,49) 3270(protected) foreground(green) RepeatToAddress(1 ...
+... 9,80)' ' StartFieldExtended(19,80) 3270(protected,intensified) foregrou ...
+... nd(neutralWhite) GraphicEscape 'e' StartFieldExtended(20,2) 3270(protec ...
+... ted,intensified) foreground(neutralWhite) 'US Government Users Restrict ...
+... ed Rights -' RepeatToAddress(20,47)' ' StartFieldExtended(20,47) 3270(p ...
+... rotected,intensified) foreground(neutralWhite) GraphicEscape 'e' StartF ...
+... ieldExtended(20,49) 3270(protected) foreground(green) 's' StartFieldExt ...
+... ended(20,51) 3270(protected) foreground(green) RepeatToAddress(20,80)'  ...
+... ' StartFieldExtended(20,80) 3270(protected,intensified) foreground(neut ...
+... ralWhite) GraphicEscape 'e' StartFieldExtended(21,2) 3270(protected,int ...
+... ensified) foreground(neutralWhite) 'Use, duplication or disclosure rest ...
+... ricted   ' StartFieldExtended(21,47) 3270(protected,intensified) foregr ...
+... ound(neutralWhite) GraphicEscape 'e' StartFieldExtended(21,49) 3270(pro ...
+... tected,intensified) foreground(neutralWhite) RepeatToAddress(21,80)NULL ...
+...  StartFieldExtended(21,80) 3270(protected,intensified) foreground(neutr ...
+... alWhite) GraphicEscape 'e' StartFieldExtended(22,2) 3270(protected,inte ...
+... nsified) foreground(neutralWhite) 'by GSA ADP Schedule Contract with IB ...
+... M Corp. ' StartFieldExtended(22,47) 3270(protected,intensified) foregro ...
+... und(neutralWhite) GraphicEscape 'e' StartFieldExtended(22,49) 3270(prot ...
+... ected,intensified) foreground(neutralWhite) RepeatToAddress(22,80)NULL  ...
+... StartFieldExtended(22,80) 3270(protected,intensified) foreground(neutra ...
+... lWhite) GraphicEscape 'D' GraphicEscape 's' GraphicEscape 's' GraphicEs ...
+... cape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicE ...
+... scape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graphic ...
+... Escape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graphi ...
+... cEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Graph ...
+... icEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Grap ...
+... hicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gra ...
+... phicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' Gr ...
+... aphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' G ...
+... raphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's'  ...
+... GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' ...
+...  GraphicEscape 's' GraphicEscape 's' GraphicEscape 's' GraphicEscape 's ...
+... ' GraphicEscape 'M' StartFieldExtended(23,49) 3270(protected,intensifie ...
+... d) foreground(neutralWhite) RepeatToAddress(1,1)NULL SetBufferAddress(4 ...
+... ,14) InsertCursor
+20220328.224530.144 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 14) DEVICE-END
+> 0x0   020000000e00ffef
+20220328.224530.144 RCVD EOR
+20220328.224530.145 lazya_flush: 1579 slots, 39400 bytes
+20220328.224530.145 Macro[#23.2] KBWAIT -> IDLE (about to resume)
+20220328.224530.145 Macro[#23.2] running
+20220328.224530.145 Macro[#23.2] complete, success
+20220328.224530.145 CB(keymap)[#23.1] RUNNING -> IDLE (about to resume)
+20220328.224530.145 CB(keymap)[#23.1] child task done, success
+20220328.224530.145 CB(keymap)[#23.1] complete, success
+20220328.224530.145 CB(keymap)[#23] complete
+20220328.224530.145 Waiting for 5 events
+20220328.224531.497 Got 1 event
+20220328.224531.497 kbd_input: k=256 wch=267 
+20220328.224531.497 Key '<Key>F3' (curses key 0x10b, char code 0x0)
+20220328.224531.497  base:29 -> PF(3)
+20220328.224531.497 CB(keymap)[#24] started
+20220328.224531.497 CB(keymap)[#24.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224531.497 Macro[#24.2] IDLE -> RUNNING (fresh push)
+20220328.224531.497 kbd_input: k=-1 wch=0 
+20220328.224531.497 kbd_input: k == ERR, return
+20220328.224531.497 lazya_flush: 22 slots, 528 bytes
+20220328.224531.497 Macro[#24.2] RUNNING -> IDLE (about to resume)
+20220328.224531.497 Macro[#24.2] running
+20220328.224531.497 Macro[#24.2] IDLE -> RUNNING (executing)
+20220328.224531.497 Macro[#24.2] 'PF(3)'
+20220328.224531.497 keymap -> PF("3")
+20220328.224531.497 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> PF3(4,14)
+20220328.224531.497 SENT TN3270E(3270-DATA NO-RESPONSE 5)
+> 0x0   0000000005f3c37dffef
+20220328.224531.498 SENT EOR
+20220328.224531.498 Macro[#24.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224531.498 Waiting for 5 events or 1.000s
+20220328.224531.574 Got 1 event
+20220328.224531.574 Reading host socket
+20220328.224531.574 Host socket read complete nr=35
+< 0x0   000002000ff5c1115d7f1d401140401dc81140c1d9c5c1c4e8401d401311c150
+< 0x20  13ffef
+20220328.224531.574 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 15)
+< EraseWrite(reset,resetMDT) SetBufferAddress(24,80) StartField(default) Se ...
+... tBufferAddress(1,1) StartField(intensified) SetBufferAddress(1,2) 'READ ...
+... Y ' StartField(1,8)(default) InsertCursor(1,9) SetBufferAddress(2,1) In ...
+... sertCursor
+20220328.224531.574 Keyboard unlock(ctlr_write) -OIA_TWAIT
+20220328.224531.574 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 15) DEVICE-END
+> 0x0   020000000f00ffef
+20220328.224531.574 Keyboard lock(kybd_bid) +BID
+20220328.224531.574 RCVD EOR
+20220328.224531.574 lazya_flush: 39 slots, 936 bytes
+20220328.224531.575 Waiting for 5 events or 0.923s
+20220328.224531.576 Got 1 event
+20220328.224531.576 Reading host socket
+20220328.224531.576 Host socket read complete nr=9
+< 0x0   0001020010f1c2ffef
+20220328.224531.576 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 16)
+< Write(reset,restore)
+20220328.224531.576 Keyboard unlock(do_reset) -OIA_LOCKED
+20220328.224531.576 Host operation took 0.078637s to complete
+20220328.224531.576 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 16) DEVICE-END
+> 0x0   020000001000ffef
+20220328.224531.576 Keyboard unlock(kybd_send_data) -BID
+20220328.224531.576 RCVD EOR
+20220328.224531.576 lazya_flush: 12 slots, 288 bytes
+20220328.224531.576 Macro[#24.2] KBWAIT -> IDLE (about to resume)
+20220328.224531.576 Macro[#24.2] running
+20220328.224531.576 Macro[#24.2] complete, success
+20220328.224531.577 CB(keymap)[#24.1] RUNNING -> IDLE (about to resume)
+20220328.224531.577 CB(keymap)[#24.1] child task done, success
+20220328.224531.577 CB(keymap)[#24.1] complete, success
+20220328.224531.577 CB(keymap)[#24] complete
+20220328.224531.577 Waiting for 5 events
+20220328.224536.466 Got 1 event
+20220328.224536.728 kbd_input: k=256 wch=409 
+20220328.224536.728 Mouse BUTTON1_RELEASED (x=1,y=0)
+20220328.224536.729 lazya_flush: 15 slots, 360 bytes
+20220328.224536.729 Waiting for 5 events
+20220328.224541.969 Got 1 event
+20220328.224542.223 kbd_input: k=256 wch=409 
+20220328.224542.224 Waiting for 5 events
+20220328.224544.956 Got 1 event
+20220328.224545.193 kbd_input: k=256 wch=409 
+20220328.224545.193 CB(keypad)[#25] started
+20220328.224545.193 CB(keypad)[#25.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224545.193 Macro[#25.2] IDLE -> RUNNING (fresh push)
+20220328.224545.193 Macro[#25.2] RUNNING -> IDLE (about to resume)
+20220328.224545.193 Macro[#25.2] running
+20220328.224545.193 Macro[#25.2] IDLE -> RUNNING (executing)
+20220328.224545.193 Macro[#25.2] 'SysReq'
+20220328.224545.193 keypad -> SysReq()
+> 0x0   fff5
+20220328.224545.193 SENT AO
+20220328.224545.194 Macro[#25.2] complete, success
+20220328.224545.194 CB(keypad)[#25.1] RUNNING -> IDLE (about to resume)
+20220328.224545.194 CB(keypad)[#25.1] child task done, success
+20220328.224545.194 CB(keypad)[#25.1] complete, success
+20220328.224545.194 CB(keypad)[#25] complete
+20220328.224545.194 Waiting for 5 events
+20220328.224545.195 Got 1 event
+20220328.224545.195 Reading host socket
+20220328.224545.195 Host socket read complete nr=8
+< 0x0   070000000015ffef
+20220328.224545.195 RCVD TN3270E(SSCP-LU-DATA NO-RESPONSE 0)
+20220328.224545.195 Now operating in connected-sscp mode.
+20220328.224545.195 cstate [connected-tn3270e] -> [connected-sscp] (host_in3270)
+20220328.224545.195 st_changed(3270-mode,true)
+20220328.224545.196 ctlr_enable_cursor(true, connect)
+SSCP-LU data
+<  NL
+20220328.224545.196 RCVD EOR
+20220328.224545.196 lazya_flush: 26 slots, 656 bytes
+20220328.224545.196 Waiting for 5 events
+20220328.224548.474 Got 1 event
+20220328.224548.474 kbd_input: k=0 wch=102 
+20220328.224548.474 Key '<Key>f' (curses key 0x0, char code 0x66)
+20220328.224548.474 CB(default)[#26] started
+20220328.224548.474 CB(default)[#26.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224548.474 Macro[#26.2] IDLE -> RUNNING (fresh push)
+20220328.224548.474 kbd_input: k=-1 wch=0 
+20220328.224548.474 kbd_input: k == ERR, return
+20220328.224548.474 lazya_flush: 12 slots, 288 bytes
+20220328.224548.474 Macro[#26.2] RUNNING -> IDLE (about to resume)
+20220328.224548.474 Macro[#26.2] running
+20220328.224548.474 Macro[#26.2] IDLE -> RUNNING (executing)
+20220328.224548.474 Macro[#26.2] 'Key(U+0066)'
+20220328.224548.474 default -> Key("U+0066")
+20220328.224548.474  default -> Key(U+0066)
+20220328.224548.474 Macro[#26.2] complete, success
+20220328.224548.474 CB(default)[#26.1] RUNNING -> IDLE (about to resume)
+20220328.224548.474 CB(default)[#26.1] child task done, success
+20220328.224548.474 CB(default)[#26.1] complete, success
+20220328.224548.474 CB(default)[#26] complete
+20220328.224548.474 Waiting for 5 events
+20220328.224548.513 Got 1 event
+20220328.224548.513 kbd_input: k=0 wch=111 
+20220328.224548.513 Key '<Key>o' (curses key 0x0, char code 0x6f)
+20220328.224548.513 CB(default)[#27] started
+20220328.224548.513 CB(default)[#27.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224548.513 Macro[#27.2] IDLE -> RUNNING (fresh push)
+20220328.224548.513 kbd_input: k=-1 wch=0 
+20220328.224548.513 kbd_input: k == ERR, return
+20220328.224548.513 lazya_flush: 29 slots, 776 bytes
+20220328.224548.514 Macro[#27.2] RUNNING -> IDLE (about to resume)
+20220328.224548.514 Macro[#27.2] running
+20220328.224548.514 Macro[#27.2] IDLE -> RUNNING (executing)
+20220328.224548.514 Macro[#27.2] 'Key(U+006f)'
+20220328.224548.514 default -> Key("U+006f")
+20220328.224548.514  default -> Key(U+006f)
+20220328.224548.514 Macro[#27.2] complete, success
+20220328.224548.514 CB(default)[#27.1] RUNNING -> IDLE (about to resume)
+20220328.224548.514 CB(default)[#27.1] child task done, success
+20220328.224548.514 CB(default)[#27.1] complete, success
+20220328.224548.514 CB(default)[#27] complete
+20220328.224548.514 Waiting for 5 events
+20220328.224548.643 Got 1 event
+20220328.224548.643 kbd_input: k=0 wch=111 
+20220328.224548.643 Key '<Key>o' (curses key 0x0, char code 0x6f)
+20220328.224548.643 CB(default)[#28] started
+20220328.224548.643 CB(default)[#28.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224548.643 Macro[#28.2] IDLE -> RUNNING (fresh push)
+20220328.224548.643 kbd_input: k=-1 wch=0 
+20220328.224548.643 kbd_input: k == ERR, return
+20220328.224548.643 lazya_flush: 29 slots, 760 bytes
+20220328.224548.643 Macro[#28.2] RUNNING -> IDLE (about to resume)
+20220328.224548.643 Macro[#28.2] running
+20220328.224548.643 Macro[#28.2] IDLE -> RUNNING (executing)
+20220328.224548.643 Macro[#28.2] 'Key(U+006f)'
+20220328.224548.643 default -> Key("U+006f")
+20220328.224548.643  default -> Key(U+006f)
+20220328.224548.643 Macro[#28.2] complete, success
+20220328.224548.643 CB(default)[#28.1] RUNNING -> IDLE (about to resume)
+20220328.224548.643 CB(default)[#28.1] child task done, success
+20220328.224548.643 CB(default)[#28.1] complete, success
+20220328.224548.643 CB(default)[#28] complete
+20220328.224548.643 Waiting for 5 events
+20220328.224548.882 Got 1 event
+20220328.224548.882 kbd_input: k=0 wch=13 
+20220328.224548.882 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224548.882  base.3270:11 -> Enter()
+20220328.224548.882 CB(keymap)[#29] started
+20220328.224548.882 CB(keymap)[#29.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224548.882 Macro[#29.2] IDLE -> RUNNING (fresh push)
+20220328.224548.882 kbd_input: k=-1 wch=0 
+20220328.224548.882 kbd_input: k == ERR, return
+20220328.224548.882 lazya_flush: 29 slots, 744 bytes
+20220328.224548.883 Macro[#29.2] RUNNING -> IDLE (about to resume)
+20220328.224548.883 Macro[#29.2] running
+20220328.224548.883 Macro[#29.2] IDLE -> RUNNING (executing)
+20220328.224548.883 Macro[#29.2] 'Enter()'
+20220328.224548.883 keymap -> Enter()
+>  'foo'
+20220328.224548.883 SENT TN3270E(SSCP-LU-DATA NO-RESPONSE 6)
+> 0x0   0700000006869696ffef
+20220328.224548.883 SENT EOR
+20220328.224548.883 Macro[#29.2] complete, success
+20220328.224548.883 CB(keymap)[#29.1] RUNNING -> IDLE (about to resume)
+20220328.224548.883 CB(keymap)[#29.1] child task done, success
+20220328.224548.883 CB(keymap)[#29.1] complete, success
+20220328.224548.883 CB(keymap)[#29] complete
+20220328.224548.883 Waiting for 5 events
+20220328.224548.884 Got 1 event
+20220328.224548.884 Reading host socket
+20220328.224548.884 Host socket read complete nr=29
+< 0x0   070000000015c3d6d4d4c1d5c440e4d5d9c5c3d6c7d5c9e9c5c415ffef
+20220328.224548.884 RCVD TN3270E(SSCP-LU-DATA NO-RESPONSE 0)
+SSCP-LU data
+<  NL 'COMMAND UNRECOGNIZED' NL
+20220328.224548.884 RCVD EOR
+20220328.224548.884 lazya_flush: 47 slots, 1144 bytes
+20220328.224548.884 Waiting for 5 events
+20220328.224553.979 Got 1 event
+20220328.224554.233 kbd_input: k=256 wch=409 
+20220328.224554.234 Mouse BUTTON1_RELEASED (x=21,y=0)
+20220328.224554.234 Waiting for 5 events
+20220328.224555.213 Got 1 event
+20220328.224555.467 kbd_input: k=256 wch=409 
+20220328.224555.467 CB(keypad)[#30] started
+20220328.224555.467 CB(keypad)[#30.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224555.467 Macro[#30.2] IDLE -> RUNNING (fresh push)
+20220328.224555.468 Macro[#30.2] RUNNING -> IDLE (about to resume)
+20220328.224555.468 Macro[#30.2] running
+20220328.224555.468 Macro[#30.2] IDLE -> RUNNING (executing)
+20220328.224555.468 Macro[#30.2] 'SysReq'
+20220328.224555.468 keypad -> SysReq()
+> 0x0   fff5
+20220328.224555.468 SENT AO
+20220328.224555.468 Macro[#30.2] complete, success
+20220328.224555.468 CB(keypad)[#30.1] RUNNING -> IDLE (about to resume)
+20220328.224555.468 CB(keypad)[#30.1] child task done, success
+20220328.224555.468 CB(keypad)[#30.1] complete, success
+20220328.224555.468 CB(keypad)[#30] complete
+20220328.224555.468 Waiting for 5 events
+20220328.224555.470 Got 1 event
+20220328.224555.470 Reading host socket
+20220328.224555.470 Host socket read complete nr=84
+< 0x0   0001020011f5c71140401dc8c9d2e3f0f0f4f0f5c940e2c3d9c5c5d540c5d9c1
+< 0x20  e2e4d9c540c3c1e4e2c5c440c2e840c5d9d9d6d940d9c5c3d6e5c5d9e840d7d9
+< 0x40  d6c3c5c4e4d9c511c1501dc85c5c5c1d4013ffef
+20220328.224555.470 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 17)
+20220328.224555.470 Now operating in connected-tn3270e mode.
+20220328.224555.470 cstate [connected-sscp] -> [connected-tn3270e] (host_in3270)
+20220328.224555.470 st_changed(3270-mode,true)
+20220328.224555.470 ctlr_enable_cursor(true, connect)
+< EraseWrite(reset,alarm,restore,resetMDT) SetBufferAddress(1,1) StartField ...
+... (intensified) 'IKT00405I SCREEN ERASURE CAUSED BY ERROR RECOVERY PROCED ...
+... URE' SetBufferAddress(2,1) StartField(intensified) '***' StartField(2,5 ...
+... )(default) InsertCursor(2,6)
+20220328.224555.470 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 17) DEVICE-END
+> 0x0   020000001100ffef
+20220328.224555.471 RCVD EOR
+20220328.224555.471 lazya_flush: 96 slots, 2320 bytes
+20220328.224555.471 Waiting for 5 events
+20220328.224557.274 Got 1 event
+20220328.224557.274 kbd_input: k=0 wch=13 
+20220328.224557.274 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224557.274  base.3270:11 -> Enter()
+20220328.224557.274 CB(keymap)[#31] started
+20220328.224557.274 CB(keymap)[#31.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224557.274 Macro[#31.2] IDLE -> RUNNING (fresh push)
+20220328.224557.274 kbd_input: k=-1 wch=0 
+20220328.224557.274 kbd_input: k == ERR, return
+20220328.224557.274 lazya_flush: 12 slots, 288 bytes
+20220328.224557.274 Macro[#31.2] RUNNING -> IDLE (about to resume)
+20220328.224557.274 Macro[#31.2] running
+20220328.224557.274 Macro[#31.2] IDLE -> RUNNING (executing)
+20220328.224557.274 Macro[#31.2] 'Enter()'
+20220328.224557.274 keymap -> Enter()
+20220328.224557.274 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(2,6)
+20220328.224557.274 SENT TN3270E(3270-DATA NO-RESPONSE 7)
+> 0x0   00000000077dc1d5ffef
+20220328.224557.275 SENT EOR
+20220328.224557.275 Macro[#31.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224557.275 Waiting for 5 events or 1.000s
+20220328.224557.276 Got 1 event
+20220328.224557.276 Reading host socket
+20220328.224557.276 Host socket read complete nr=18
+< 0x0   0001020012f5c3115d7f1d4011404013ffef
+20220328.224557.276 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 18)
+< EraseWrite(reset,restore,resetMDT) SetBufferAddress(24,80) StartField(def ...
+... ault) SetBufferAddress(1,1) InsertCursor
+20220328.224557.276 Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+20220328.224557.276 Host operation took 0.001803s to complete
+20220328.224557.276 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 18) DEVICE-END
+> 0x0   020000001200ffef
+20220328.224557.277 RCVD EOR
+20220328.224557.277 lazya_flush: 25 slots, 600 bytes
+20220328.224557.277 Macro[#31.2] KBWAIT -> IDLE (about to resume)
+20220328.224557.277 Macro[#31.2] running
+20220328.224557.277 Macro[#31.2] complete, success
+20220328.224557.277 CB(keymap)[#31.1] RUNNING -> IDLE (about to resume)
+20220328.224557.277 CB(keymap)[#31.1] child task done, success
+20220328.224557.277 CB(keymap)[#31.1] complete, success
+20220328.224557.277 CB(keymap)[#31] complete
+20220328.224557.277 Waiting for 5 events
+20220328.224603.682 Got 1 event
+20220328.224603.682 kbd_input: k=0 wch=13 
+20220328.224603.682 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224603.682  base.3270:11 -> Enter()
+20220328.224603.682 CB(keymap)[#32] started
+20220328.224603.682 CB(keymap)[#32.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224603.682 Macro[#32.2] IDLE -> RUNNING (fresh push)
+20220328.224603.682 kbd_input: k=-1 wch=0 
+20220328.224603.682 kbd_input: k == ERR, return
+20220328.224603.682 lazya_flush: 22 slots, 528 bytes
+20220328.224603.682 Macro[#32.2] RUNNING -> IDLE (about to resume)
+20220328.224603.682 Macro[#32.2] running
+20220328.224603.682 Macro[#32.2] IDLE -> RUNNING (executing)
+20220328.224603.682 Macro[#32.2] 'Enter()'
+20220328.224603.682 keymap -> Enter()
+20220328.224603.682 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(1,1)
+20220328.224603.682 SENT TN3270E(3270-DATA NO-RESPONSE 8)
+> 0x0   00000000087d4040ffef
+20220328.224603.682 SENT EOR
+20220328.224603.683 Macro[#32.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224603.683 Waiting for 5 events or 1.000s
+20220328.224603.685 Got 1 event
+20220328.224603.685 Reading host socket
+20220328.224603.685 Host socket read complete nr=30
+< 0x0   0000020013f1c111c1501dc811c1d1d9c5c1c4e8401d401311c26013ffef
+20220328.224603.685 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 19)
+< Write(reset,resetMDT) SetBufferAddress(2,1) StartField(intensified) SetBu ...
+... fferAddress(2,2) 'READY ' StartField(2,8)(default) InsertCursor(2,9) Se ...
+... tBufferAddress(3,1) InsertCursor
+20220328.224603.685 Keyboard unlock(ctlr_write) -OIA_TWAIT
+20220328.224603.685 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 19) DEVICE-END
+> 0x0   020000001300ffef
+20220328.224603.685 Keyboard lock(kybd_bid) +BID
+20220328.224603.685 RCVD EOR
+20220328.224603.685 lazya_flush: 35 slots, 840 bytes
+20220328.224603.685 Waiting for 5 events or 0.997s
+20220328.224603.687 Got 1 event
+20220328.224603.687 Reading host socket
+20220328.224603.687 Host socket read complete nr=9
+< 0x0   0001020014f1c2ffef
+20220328.224603.687 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 20)
+< Write(reset,restore)
+20220328.224603.687 Keyboard unlock(do_reset) -OIA_LOCKED
+20220328.224603.687 Host operation took 0.004651s to complete
+20220328.224603.687 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 20) DEVICE-END
+> 0x0   020000001400ffef
+20220328.224603.687 Keyboard unlock(kybd_send_data) -BID
+20220328.224603.687 RCVD EOR
+20220328.224603.687 lazya_flush: 12 slots, 288 bytes
+20220328.224603.687 Macro[#32.2] KBWAIT -> IDLE (about to resume)
+20220328.224603.687 Macro[#32.2] running
+20220328.224603.687 Macro[#32.2] complete, success
+20220328.224603.687 CB(keymap)[#32.1] RUNNING -> IDLE (about to resume)
+20220328.224603.687 CB(keymap)[#32.1] child task done, success
+20220328.224603.687 CB(keymap)[#32.1] complete, success
+20220328.224603.687 CB(keymap)[#32] complete
+20220328.224603.688 Waiting for 5 events
+20220328.224604.474 Got 1 event
+20220328.224604.474 kbd_input: k=0 wch=108 
+20220328.224604.474 Key '<Key>l' (curses key 0x0, char code 0x6c)
+20220328.224604.474 CB(default)[#33] started
+20220328.224604.474 CB(default)[#33.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224604.474 Macro[#33.2] IDLE -> RUNNING (fresh push)
+20220328.224604.474 kbd_input: k=-1 wch=0 
+20220328.224604.474 kbd_input: k == ERR, return
+20220328.224604.474 lazya_flush: 22 slots, 528 bytes
+20220328.224604.474 Macro[#33.2] RUNNING -> IDLE (about to resume)
+20220328.224604.475 Macro[#33.2] running
+20220328.224604.475 Macro[#33.2] IDLE -> RUNNING (executing)
+20220328.224604.475 Macro[#33.2] 'Key(U+006c)'
+20220328.224604.475 default -> Key("U+006c")
+20220328.224604.475  default -> Key(U+006c)
+20220328.224604.475 Macro[#33.2] complete, success
+20220328.224604.475 CB(default)[#33.1] RUNNING -> IDLE (about to resume)
+20220328.224604.475 CB(default)[#33.1] child task done, success
+20220328.224604.475 CB(default)[#33.1] complete, success
+20220328.224604.475 CB(default)[#33] complete
+20220328.224604.475 Waiting for 5 events
+20220328.224604.683 Got 1 event
+20220328.224604.683 kbd_input: k=0 wch=111 
+20220328.224604.683 Key '<Key>o' (curses key 0x0, char code 0x6f)
+20220328.224604.683 CB(default)[#34] started
+20220328.224604.683 CB(default)[#34.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224604.683 Macro[#34.2] IDLE -> RUNNING (fresh push)
+20220328.224604.683 kbd_input: k=-1 wch=0 
+20220328.224604.683 kbd_input: k == ERR, return
+20220328.224604.683 lazya_flush: 29 slots, 776 bytes
+20220328.224604.683 Macro[#34.2] RUNNING -> IDLE (about to resume)
+20220328.224604.683 Macro[#34.2] running
+20220328.224604.683 Macro[#34.2] IDLE -> RUNNING (executing)
+20220328.224604.683 Macro[#34.2] 'Key(U+006f)'
+20220328.224604.683 default -> Key("U+006f")
+20220328.224604.683  default -> Key(U+006f)
+20220328.224604.683 Macro[#34.2] complete, success
+20220328.224604.683 CB(default)[#34.1] RUNNING -> IDLE (about to resume)
+20220328.224604.683 CB(default)[#34.1] child task done, success
+20220328.224604.683 CB(default)[#34.1] complete, success
+20220328.224604.683 CB(default)[#34] complete
+20220328.224604.684 Waiting for 5 events
+20220328.224604.819 Got 1 event
+20220328.224604.819 kbd_input: k=0 wch=103 
+20220328.224604.819 Key '<Key>g' (curses key 0x0, char code 0x67)
+20220328.224604.819 CB(default)[#35] started
+20220328.224604.819 CB(default)[#35.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224604.819 Macro[#35.2] IDLE -> RUNNING (fresh push)
+20220328.224604.819 kbd_input: k=-1 wch=0 
+20220328.224604.819 kbd_input: k == ERR, return
+20220328.224604.819 lazya_flush: 29 slots, 760 bytes
+20220328.224604.819 Macro[#35.2] RUNNING -> IDLE (about to resume)
+20220328.224604.819 Macro[#35.2] running
+20220328.224604.819 Macro[#35.2] IDLE -> RUNNING (executing)
+20220328.224604.819 Macro[#35.2] 'Key(U+0067)'
+20220328.224604.819 default -> Key("U+0067")
+20220328.224604.819  default -> Key(U+0067)
+20220328.224604.820 Macro[#35.2] complete, success
+20220328.224604.820 CB(default)[#35.1] RUNNING -> IDLE (about to resume)
+20220328.224604.820 CB(default)[#35.1] child task done, success
+20220328.224604.820 CB(default)[#35.1] complete, success
+20220328.224604.820 CB(default)[#35] complete
+20220328.224604.820 Waiting for 5 events
+20220328.224604.891 Got 1 event
+20220328.224604.891 kbd_input: k=0 wch=111 
+20220328.224604.891 Key '<Key>o' (curses key 0x0, char code 0x6f)
+20220328.224604.891 CB(default)[#36] started
+20220328.224604.891 CB(default)[#36.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224604.891 Macro[#36.2] IDLE -> RUNNING (fresh push)
+20220328.224604.891 kbd_input: k=-1 wch=0 
+20220328.224604.891 kbd_input: k == ERR, return
+20220328.224604.891 lazya_flush: 29 slots, 744 bytes
+20220328.224604.891 Macro[#36.2] RUNNING -> IDLE (about to resume)
+20220328.224604.891 Macro[#36.2] running
+20220328.224604.891 Macro[#36.2] IDLE -> RUNNING (executing)
+20220328.224604.891 Macro[#36.2] 'Key(U+006f)'
+20220328.224604.891 default -> Key("U+006f")
+20220328.224604.891  default -> Key(U+006f)
+20220328.224604.892 Macro[#36.2] complete, success
+20220328.224604.892 CB(default)[#36.1] RUNNING -> IDLE (about to resume)
+20220328.224604.892 CB(default)[#36.1] child task done, success
+20220328.224604.892 CB(default)[#36.1] complete, success
+20220328.224604.892 CB(default)[#36] complete
+20220328.224604.892 Waiting for 5 events
+20220328.224605.058 Got 1 event
+20220328.224605.058 kbd_input: k=0 wch=102 
+20220328.224605.058 Key '<Key>f' (curses key 0x0, char code 0x66)
+20220328.224605.058 CB(default)[#37] started
+20220328.224605.058 CB(default)[#37.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224605.058 Macro[#37.2] IDLE -> RUNNING (fresh push)
+20220328.224605.058 kbd_input: k=-1 wch=0 
+20220328.224605.058 kbd_input: k == ERR, return
+20220328.224605.058 lazya_flush: 29 slots, 744 bytes
+20220328.224605.059 Macro[#37.2] RUNNING -> IDLE (about to resume)
+20220328.224605.059 Macro[#37.2] running
+20220328.224605.059 Macro[#37.2] IDLE -> RUNNING (executing)
+20220328.224605.059 Macro[#37.2] 'Key(U+0066)'
+20220328.224605.059 default -> Key("U+0066")
+20220328.224605.059  default -> Key(U+0066)
+20220328.224605.059 Macro[#37.2] complete, success
+20220328.224605.059 CB(default)[#37.1] RUNNING -> IDLE (about to resume)
+20220328.224605.059 CB(default)[#37.1] child task done, success
+20220328.224605.059 CB(default)[#37.1] complete, success
+20220328.224605.059 CB(default)[#37] complete
+20220328.224605.059 Waiting for 5 events
+20220328.224605.178 Got 1 event
+20220328.224605.178 kbd_input: k=0 wch=102 
+20220328.224605.178 Key '<Key>f' (curses key 0x0, char code 0x66)
+20220328.224605.178 CB(default)[#38] started
+20220328.224605.178 CB(default)[#38.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224605.178 Macro[#38.2] IDLE -> RUNNING (fresh push)
+20220328.224605.178 kbd_input: k=-1 wch=0 
+20220328.224605.178 kbd_input: k == ERR, return
+20220328.224605.178 lazya_flush: 29 slots, 744 bytes
+20220328.224605.178 Macro[#38.2] RUNNING -> IDLE (about to resume)
+20220328.224605.178 Macro[#38.2] running
+20220328.224605.178 Macro[#38.2] IDLE -> RUNNING (executing)
+20220328.224605.178 Macro[#38.2] 'Key(U+0066)'
+20220328.224605.178 default -> Key("U+0066")
+20220328.224605.178  default -> Key(U+0066)
+20220328.224605.179 Macro[#38.2] complete, success
+20220328.224605.179 CB(default)[#38.1] RUNNING -> IDLE (about to resume)
+20220328.224605.179 CB(default)[#38.1] child task done, success
+20220328.224605.179 CB(default)[#38.1] complete, success
+20220328.224605.179 CB(default)[#38] complete
+20220328.224605.179 Waiting for 5 events
+20220328.224605.322 Got 1 event
+20220328.224605.323 kbd_input: k=0 wch=13 
+20220328.224605.323 Key 'Return' (curses key 0x0, char code 0xd)
+20220328.224605.323  base.3270:11 -> Enter()
+20220328.224605.323 CB(keymap)[#39] started
+20220328.224605.323 CB(keymap)[#39.1] IDLE -> RUNNING (child task to be pushed next)
+20220328.224605.323 Macro[#39.2] IDLE -> RUNNING (fresh push)
+20220328.224605.323 kbd_input: k=-1 wch=0 
+20220328.224605.323 kbd_input: k == ERR, return
+20220328.224605.323 lazya_flush: 29 slots, 744 bytes
+20220328.224605.323 Macro[#39.2] RUNNING -> IDLE (about to resume)
+20220328.224605.323 Macro[#39.2] running
+20220328.224605.323 Macro[#39.2] IDLE -> RUNNING (executing)
+20220328.224605.323 Macro[#39.2] 'Enter()'
+20220328.224605.323 keymap -> Enter()
+20220328.224605.323 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(3,7) SetBufferAddress(2,9) 'logoff'
+20220328.224605.323 SENT TN3270E(3270-DATA NO-RESPONSE 9)
+> 0x0   00000000097dc2e611c1d8939687968686ffef
+20220328.224605.323 SENT EOR
+20220328.224605.324 Macro[#39.2] RUNNING -> KBWAIT (keyboard locked)
+20220328.224605.324 Waiting for 5 events or 0.999s
+20220328.224606.011 Got 1 event
+20220328.224606.012 Reading host socket
+20220328.224606.012 Host socket read complete nr=95
+< 0x0   0000020015f1c111c3f01dc8c9d2d1f5f6f4f7f0c940c9c2d4e4e2c5d940d3d6
+< 0x20  c7c7c5c440d6c6c640e3e2d640c1e340f1f17af4f67af0f640d6d540d4c1d9c3
+< 0x40  c840f2f96b40f2f0f2f21d4011c5401dc85c5c5c5c5c5c1d4011c65013ffef
+20220328.224606.012 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 21)
+< Write(reset,resetMDT) SetBufferAddress(4,1) StartField(intensified) 'IKJ5 ...
+... 6470I IBMUSER LOGGED OFF TSO AT 11:46:06 ON MARCH 29, 2022' StartField( ...
+... 4,64)(default) SetBufferAddress(5,1) StartField(intensified) '******' S ...
+... tartField(5,8)(default) SetBufferAddress(6,1) InsertCursor
+20220328.224606.012 Keyboard unlock(ctlr_write) -OIA_TWAIT
+20220328.224606.012 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 21) DEVICE-END
+> 0x0   020000001500ffef
+20220328.224606.012 Keyboard lock(kybd_bid) +BID
+20220328.224606.012 RCVD EOR
+20220328.224606.012 lazya_flush: 106 slots, 2560 bytes
+20220328.224606.012 Waiting for 5 events or 0.311s
+20220328.224606.324 Got 0 events
+20220328.224606.324 Waiting for 5 events or 1.000s
+20220328.224607.358 Got 0 events
+20220328.224607.359 Waiting for 5 events or 0.966s
+20220328.224608.327 Got 0 events
+20220328.224608.328 Waiting for 5 events or 0.997s
+20220328.224609.015 Got 1 event
+20220328.224609.015 Reading host socket
+20220328.224609.015 Host socket read complete nr=8
+< 0x0   040000000001ffef
+20220328.224609.015 RCVD TN3270E(UNBIND NO-RESPONSE 0)
+< UNBIND normal
+20220328.224609.015 Now operating in connected-unbound mode.
+20220328.224609.016 cstate [connected-tn3270e] -> [connected-unbound] (host_in3270)
+20220328.224609.016 st_changed(negotiating,true)
+20220328.224609.016 st_changed(3270-mode,false)
+20220328.224609.016 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20220328.224609.016 Host negotiation step took 0.000408s to complete
+20220328.224609.016 ctlr_enable_cursor(true, connect)
+20220328.224609.016 ctlr_enable_cursor(true, nvt)
+20220328.224609.016 RCVD EOR
+20220328.224609.016 lazya_flush: 15 slots, 360 bytes
+20220328.224609.016 Waiting for 5 events
+20220328.224609.021 Got 1 event
+20220328.224609.021 Reading host socket
+20220328.224609.021 Host socket read complete nr=0
+20220328.224609.021 RCVD disconnect
+20220328.224609.021 st_changed(secure,false)
+20220328.224609.021 SENT disconnect
+20220328.224609.021 cstate [connected-unbound] -> [not-connected] (net_disconnect)
+20220328.224609.021 st_changed(connect,false)
+20220328.224609.021 Keyboard unlock(kybd_connect) -AWAITING_FIRST -OIA_LOCKED -BID
+20220328.224609.022 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220328.224609.022 Exiting with status 0
+20220328.224609.022 st_changed(exiting,true)
+20220328.224609.022 stop pager
+20220328.224609.022 Trace stopped

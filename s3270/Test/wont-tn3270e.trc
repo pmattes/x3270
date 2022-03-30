@@ -1,0 +1,165 @@
+20220329.132559.459 init_child: child_outpipe is 5 6
+20220329.132559.460 Trace started
+ Version: x3270 v4.2pre3 Sat Mar 26 20:59:11 UTC 2022 pdm
+ Build options: --enable-local-process via gcc 9.4.0 64-bit
+ Command: x3270 -trace -geometry +0+0
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: aidWait=true altCursor=false alwaysInsert=false aplMode=false
+  blankFill=true codePage=bracket crosshair=false cursorBlink=false
+  ftBufferSize=16384 httpd= insertMode=false lineMode=true lineWrap=true
+  loginMacro= marginedPaste=false model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true overlayPaste=true oversize=
+  preferIpv4=false preferIpv6=false printer.options= printerLu= proxy=
+  reconnect=false rectangleSelect=false reverseInputMode=false
+  rightToLeftMode=false saveLines=4096 screenTrace=false scriptPort=
+  scrollBar=true selectUrl=true showTiming=false termName= trace=true
+  typeahead=true unlockDelay=false unlockDelayMs=350 visibleControl=false
+ Connection state: not-connected
+ Data stream:
+20220329.132559.461 st_changed(secure,false)
+20220329.132559.461 st_changed(terminal-name,true)
+20220329.132559.461 Resolver slot is 0
+20220329.132559.461 cstate [not-connected] -> [resolving] (host_connect)
+20220329.132559.461 st_changed(connect,true)
+20220329.132559.461 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220329.132559.461 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220329.132559.461 ctlr_enable_cursor(false, connect)
+20220329.132559.461 st_changed(negotiating,true)
+20220329.132559.461 ConfigureNotify 581x656+0+0
+20220329.132559.461 setting fixed_width and fixed_height
+20220329.132559.461 Resolution complete, 1 address
+20220329.132559.462 TLS: will verify host certificate
+20220329.132559.462 Making host socket non-blocking
+20220329.132559.462 Trying 127.0.0.1, port 4001...
+20220329.132559.462 TCP connection pending.
+20220329.132559.462 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20220329.132559.462 st_changed(negotiating,true)
+20220329.132559.462 lazya_flush: 54 slots, 2256 bytes
+20220329.132559.462 Output possible
+20220329.132559.462 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20220329.132559.462 st_changed(connect,true)
+20220329.132559.462 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220329.132559.462 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20220329.132559.462 Host negotiation step took 0.000043s to complete
+20220329.132559.462 ctlr_enable_cursor(true, connect)
+20220329.132559.462 ctlr_enable_cursor(true, nvt)
+20220329.132559.463 st_changed(negotiating,true)
+20220329.132559.463 Connected to 127.0.0.1, port 4001.
+20220329.132559.463 st_changed(secure,false)
+20220329.132559.463 st_changed(line-mode,true)
+20220329.132559.463 lazya_flush: 13 slots, 312 bytes
+20220329.132559.463 ConfigureNotify 581x656+10+45
+20220329.132559.464 setting fixed_width and fixed_height
+20220329.132559.957 Reconfigure timer expired
+20220329.132559.964 Stream timer expired 581x656+10+45
+20220329.132559.964   width and height match, done
+20220329.132559.964 clearing fixed_width and fixed_height
+20220329.132604.649 Reading host socket
+20220329.132604.649 Host socket read complete nr=3
+< 0x0   fffd28
+20220329.132604.649 RCVD DO TN3270E
+> 0x0   fffb28
+20220329.132604.649 SENT WILL TN3270E
+20220329.132604.649 Now operating in connected-unbound mode.
+20220329.132604.649 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20220329.132604.649 st_changed(negotiating,true)
+20220329.132604.649 st_changed(3270-mode,false)
+20220329.132604.649 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20220329.132604.649 Host negotiation step took 0.000018s to complete
+20220329.132604.649 ctlr_enable_cursor(true, connect)
+20220329.132604.649 lazya_flush: 11 slots, 264 bytes
+20220329.132608.977 Reading host socket
+20220329.132608.977 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20220329.132608.977 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20220329.132608.977 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20220329.132610.129 Reading host socket
+20220329.132610.129 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d45015343305443503031fff0
+20220329.132610.129 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT SC0TCP01 SE
+> 0x0   fffa28030700020405fff0
+20220329.132610.129 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20220329.132612.154 Reading host socket
+20220329.132612.154 Host socket read complete nr=3
+< 0x0   fffc28
+20220329.132612.154 RCVD WONT TN3270E
+> 0x0   fffc28
+20220329.132612.154 SENT WONT TN3270E
+20220329.132612.154 Now operating in telnet-pending mode.
+20220329.132612.154 cstate [connected-unbound] -> [telnet-pending] (host_in3270)
+20220329.132612.154 st_changed(negotiating,true)
+20220329.132618.185 Reading host socket
+20220329.132618.185 Host socket read complete nr=3
+< 0x0   fffd18
+20220329.132618.185 RCVD DO TERMINAL TYPE
+> 0x0   fffb18
+20220329.132618.185 SENT WILL TERMINAL TYPE
+20220329.132619.457 Reading host socket
+20220329.132619.457 Host socket read complete nr=6
+< 0x0   fffa1801fff0
+20220329.132619.457 RCVD SB TERMINAL TYPE SEND
+> 0x0   fffa180049424d2d333237392d342d45fff0
+20220329.132619.457 SENT SB TERMINAL TYPE IS IBM-3279-4-E SE
+20220329.132620.409 Reading host socket
+20220329.132620.409 Host socket read complete nr=3
+< 0x0   fffd19
+20220329.132620.409 RCVD DO END OF RECORD
+> 0x0   fffb19
+20220329.132620.409 SENT WILL END OF RECORD
+20220329.132621.177 Reading host socket
+20220329.132621.177 Host socket read complete nr=3
+< 0x0   fffb19
+20220329.132621.177 RCVD WILL END OF RECORD
+> 0x0   fffd19
+20220329.132621.177 SENT DO END OF RECORD
+20220329.132621.977 Reading host socket
+20220329.132621.977 Host socket read complete nr=6
+< 0x0   fffd00fffb00
+20220329.132621.977 RCVD DO BINARY
+> 0x0   fffb00
+20220329.132621.977 SENT WILL BINARY
+20220329.132621.977 RCVD WILL BINARY
+> 0x0   fffd00
+20220329.132621.977 SENT DO BINARY
+20220329.132621.977 Now operating in connected-3270 mode.
+20220329.132621.977 cstate [telnet-pending] -> [connected-3270] (host_in3270)
+20220329.132621.977 st_changed(3270-mode,true)
+20220329.132621.977 Host negotiation step took 9.822874s to complete
+20220329.132621.977 ctlr_enable_cursor(true, connect)
+20220329.132621.977 lazya_flush: 11 slots, 264 bytes
+20220329.132625.649 Reading host socket
+20220329.132625.650 Host socket read complete nr=32
+< 0x0   0dc111f56f1d4011f56f1d401140401dc8c9d2d1f5f6f7f0f0c140c5d5e3c5d9
+20220329.132626.793 Reading host socket
+20220329.132626.793 Host socket read complete nr=17
+< 0x0   40e4e2c5d9c9c440601d4011c15013ffef
+< EraseWriteAlternate(reset,resetMDT) SetBufferAddress(43,80) StartField(de ...
+... fault) SetBufferAddress(43,80) StartField(default) SetBufferAddress(1,1 ...
+... ) StartField(intensified) 'IKJ56700A ENTER USERID -' StartField(1,26)(d ...
+... efault) SetBufferAddress(2,1) InsertCursor
+20220329.132626.793 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20220329.132626.793 RCVD EOR
+20220329.132626.793 lazya_flush: 37 slots, 888 bytes
+20220329.132639.937 Reading host socket
+20220329.132639.937 Host socket read complete nr=4
+< 0x0   01c2ffef
+< Write(reset,restore)
+20220329.132639.937 RCVD EOR
+20220329.132642.265 Reading host socket
+20220329.132642.265 Host socket read complete nr=0
+20220329.132642.265 RCVD disconnect
+20220329.132642.265 st_changed(secure,false)
+20220329.132642.265 SENT disconnect
+20220329.132642.265 cstate [connected-3270] -> [not-connected] (net_disconnect)
+20220329.132642.265 st_changed(connect,false)
+20220329.132642.265 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220329.132642.265 ctlr_enable_cursor(false, connect)
+20220329.132642.265 ctlr_enable_cursor(false, nvt)
+20220329.132642.265 st_changed(terminal-name,true)
+20220329.132642.265 lazya_flush: 11 slots, 264 bytes
+20220329.132812.154 Exiting with status 0
+20220329.132812.154 st_changed(exiting,true)
+20220329.132812.154 Trace stopped

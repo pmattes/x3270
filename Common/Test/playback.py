@@ -181,7 +181,7 @@ class playback():
             nleft -= len(chunk)
         return ret
 
-    def match(self):
+    def match(self, disconnect=True):
         '''Compare emulator I/O to trace file'''
         self.wait_accept()
         direction = ''
@@ -209,7 +209,8 @@ class playback():
                 # Start accumulating.
                 direction = line[0]
                 accum += line.split()[2]
-        self.disconnect()
+        if disconnect:
+            self.disconnect()
 
     def disconnect(self):
         '''Disconnect'''

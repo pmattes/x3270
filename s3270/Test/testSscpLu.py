@@ -25,7 +25,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# draft-04 BID tests
+# s3270 SSCP-LU mode tests
 
 import requests
 from subprocess import Popen, PIPE, DEVNULL
@@ -33,64 +33,14 @@ import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-class TestS3270Bid(cti.cti):
+class TestS3270SscpLu(cti.cti):
 
-    # s3270 BID test
-    def test_s3270_bid(self):
-
-        # Start 'playback' to read s3270's output.
-        port, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/bid.trc', port=port) as p:
-            socket.close()
-
-            # Start s3270.
-            s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
-                    stdout=DEVNULL)
-            self.children.append(s3270)
-
-            # Feed s3270 some actions.
-            s3270.stdin.write(b"PF(3)\n")
-            s3270.stdin.write(b"Quit()\n")
-            s3270.stdin.flush()
-
-            # Verify what s3270 does.
-            p.match()
-
-        # Wait for the processes to exit.
-        s3270.stdin.close()
-        self.vgwait(s3270)
-
-    # s3270 no-BID test
-    def test_s3270_no_bid(self):
-
-        # Start 'playback' to read s3270's output.
-        port, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/no_bid.trc', port=port) as p:
-            socket.close()
-
-            # Start s3270.
-            s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
-                f"127.0.0.1:{port}"]), stdin=PIPE, stdout=DEVNULL)
-            self.children.append(s3270)
-
-            # Feed s3270 some actions.
-            s3270.stdin.write(b"PF(3)\n")
-            s3270.stdin.write(b"Quit()\n")
-            s3270.stdin.flush()
-
-            # Verify what s3270 does.
-            p.match()
-
-        # Wait for the processes to exit.
-        s3270.stdin.close()
-        self.vgwait(s3270)
-
-    # s3270 contention resolution test
-    def test_s3270_cr(self):
+    # s3270 SSCP-LU mode test
+    def test_s3270_sscp_lu(self):
 
         # Start 'playback' to read s3270's output.
         pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/contention-resolution.trc', port=pport) as p:
+        with playback.playback(self, 's3270/Test/sscp-lu.trc', port=pport) as p:
             socket.close()
 
             # Start s3270.
@@ -99,21 +49,21 @@ class TestS3270Bid(cti.cti):
             self.children.append(s3270)
             socket.close()
 
-            # Send initial negotiations and half a screen.
-            p.send_records(6)
+            # Send initial negotiations and the first SSCP-LU message.
+            p.send_records(21)
 
-            # Make sure the keyboard remains locked.
+            # Make sure the emulator has switched to SSCP-LU mode.
             r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText(string,oia)')
             self.assertTrue(r.ok, 'Expected PrintText()) to succeed')
-            self.assertIn('X Wait', r.json()['result'][-1], 'Expected Wait')
+            self.assertEqual('4BS', r.json()['result'][-1][0:3], 'Expected SSCP-LU mode')
 
-            # Send 3270 data with SEND-DATA.
-            p.send_records(1)
+            # Send another SSCP-LU and then a regular 3270 record.
+            p.send_records(2)
 
-            # Make sure the keyboard is unlocked now.
+            # Make sure the emulator is back to 3270 mode.
             r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText(string,oia)')
             self.assertTrue(r.ok, 'Expected PrintText()) to succeed')
-            self.assertEqual('     ', r.json()['result'][-1][11:16], 'Expected no lock')
+            self.assertEqual('4B ', r.json()['result'][-1][0:3], 'Expected 3270 mode')
 
         # Wait for the processes to exit.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')

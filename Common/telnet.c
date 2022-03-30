@@ -1802,6 +1802,17 @@ telnet_fsm(unsigned char c)
 	    vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 	    check_in3270();
 	    check_linemode(false);
+	} else if (c == TELOPT_TN3270E && myopts[c]) {
+	    /*
+	     * Ugly hack for hosts that send WONT TN3270E instead of
+	     * DONT TN3270E.
+	     */
+	    myopts[c] = 0;
+	    wont_opt[2] = c;
+	    net_rawout(wont_opt, sizeof(wont_opt));
+	    vtrace("SENT %s %s\n", cmd(WONT), opt(c));
+	    check_in3270();
+	    check_linemode(false);
 	}
 	telnet_state = TNS_DATA;
 	break;
@@ -2595,8 +2606,14 @@ process_eor(void)
 		tn3270e_ack();
 	    }
 	    response_required = TN3270E_RSF_NO_RESPONSE;
-	    if (h->request_flag & TN3270E_RQF_SEND_DATA) {
-		kybd_send_data();
+	    if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_CONTENTION_RESOLUTION)) {
+		if (h->request_flag & TN3270E_RQF_SEND_DATA) {
+		    /* Okay to send data. */
+		    kybd_send_data();
+		} else {
+		    /* Not okay to send data. */
+		    (void) kybd_bid(false);
+		}
 	    }
 	    return 0;
 	case TN3270E_DT_BIND_IMAGE:
@@ -3464,30 +3481,14 @@ net_abort(void)
     static unsigned char buf[] = { IAC, AO };
 
     if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_SYSREQ)) {
-	/*
-	 * I'm not sure yet what to do here.  Should the host respond
-	 * to the AO by sending us SSCP-LU data (and putting us into
-	 * SSCP-LU mode), or should we put ourselves in it?
-	 * Time, and testers, will tell.
-	 */
 	switch (tn3270e_submode) {
 	case E_UNBOUND:
 	case E_NVT:
 	    break;
 	case E_SSCP:
-	    net_rawout(buf, sizeof(buf));
-	    vtrace("SENT AO\n");
-	    if (tn3270e_bound || !b8_bit_is_set(&e_funcs,
-					TN3270E_FUNC_BIND_IMAGE)) {
-		    tn3270e_submode = E_3270;
-		    check_in3270();
-	    }
-	    break;
 	case E_3270:
 	    net_rawout(buf, sizeof(buf));
 	    vtrace("SENT AO\n");
-	    tn3270e_submode = E_SSCP;
-	    check_in3270();
 	    break;
 	}
     }
