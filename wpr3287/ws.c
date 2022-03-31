@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2019-2020 Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,7 @@ ws_flush(void)
  * Write a byte to the current print job.
  */
 int
-ws_putc(char c)
+ws_putc(int c)
 {
     DOC_INFO_1 doc_info;
 
@@ -164,7 +164,7 @@ ws_putc(char c)
 	return -1;
 
     /* Buffer this character. */
-    printer_buf[pbcnt++] = c;
+    printer_buf[pbcnt++] = (char)c;
     return 0;
 }
 

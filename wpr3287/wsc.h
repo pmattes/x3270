@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,6 @@
 char *ws_default_printer(void);
 int ws_endjob(void);
 int ws_flush(void);
-int ws_putc(char c);
+int ws_putc(int c);
 int ws_start(const char *printer_name);
 int ws_write(char *s, int len);

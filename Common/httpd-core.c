@@ -202,6 +202,7 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
     unsigned char linebuf[BPL];
     size_t j;
 
+    memset(linebuf, 0, BPL);
     for (i = 0; i < len; i++) {
 	if (!(i % BPL)) {
 	    if (i) {

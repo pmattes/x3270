@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, 2019 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1459,7 +1459,7 @@ stash(unsigned char c)
     }
 
     trace_pdc(c);
-    if (ws_putc((char)c)) {
+    if (ws_putc(c)) {
 	return -1;
     }
 #else /*][*/
@@ -2154,7 +2154,7 @@ static int
 copyfile(const char *filename)
 {
     FILE *f;
-    char c;
+    int c;
     int rc = 0;
 
     if ((f = fopen(filename, "rb")) == NULL) {
