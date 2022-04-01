@@ -6291,12 +6291,12 @@ split_name(const char *name, char res[15][256])
 	s = dash + 1;
     }
     if (*s) {
-	int nc = strlen(s);
+	size_t nc = strlen(s);
 
 	if (nc >= 256) {
 	    nc = 255;
 	}
-	strncpy(res[ns], s, nc);
+	strncpy(res[ns], s, 255);
 	res[ns][nc] = '\0';
 	ns++;
     }

@@ -185,7 +185,7 @@ passwd_cb(char *buf, int size, int rwflag _is_unused, void *userdata)
     if (pass_len > size - 1) {
 	pass_len = size - 1;
     }
-    strncpy(buf, p, pass_len);
+    strncpy(buf, p, size - 1);
     buf[pass_len] = '\0';
     if (need_free) {
 	Free(p);

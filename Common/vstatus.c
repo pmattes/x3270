@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 Paul Mattes.
+ * Copyright (c) 2020-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "kybd.h"
+#include "lazya.h"
 #include "status.h"
 #include "telnet.h"
 #include "utils.h"
@@ -328,7 +329,7 @@ vstatus_line(struct ea *ea)
 {
     int i;
     int rmargin = COLS - 1;
-    char cursor[9];
+    char *cursor;
     struct ea *ea2;
     int fa;
 
@@ -425,8 +426,8 @@ vstatus_line(struct ea *ea)
     }
 
     /* Cursor. */
-    snprintf(cursor, sizeof(cursor), "%03d/%03d ", cursor_addr / COLS + 1,
-	    cursor_addr % COLS + 1);
+    cursor = lazyaf("%03d/%03d ", ((cursor_addr / COLS) + 1) % 1000,
+	    ((cursor_addr % COLS) + 1) % 1000);
     for (i = 0; cursor[i]; i++) {
 	ea2[rmargin - 7 + i].ucs4 = cursor[i];
     }

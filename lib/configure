@@ -3364,13 +3364,11 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
-    		CCOPTIONS="-Wno-format-truncation -Wno-stringop-truncation"
     		ansi=""
 		;;
 hpux|*cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
 		;;
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
-    		CCOPTIONS="-Wno-format-truncation"
 		$as_echo "#define CONNECT_GETPEERNAME 1" >>confdefs.h
 
 		;;
@@ -3379,7 +3377,6 @@ darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
-    		CCOPTIONS=-Wno-format-truncation
 		;;
 esac
 if test "$GCC" = yes

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -303,8 +303,8 @@ static bool oia_reverse = false;
 static bool oia_kmap = false;
 static bool oia_script = false;
 static bool oia_printer = false;
-static char *oia_cursor = (char *) 0;
-static char *oia_timing = (char *) 0;
+static char *oia_cursor = NULL;
+static char *oia_timing = NULL;
 
 static unsigned char disc_msg[] = {
     CG_lock, CG_space, CG_commhi, CG_badcommhi, CG_commhi, CG_commjag,
@@ -954,29 +954,32 @@ status_timing(struct timeval *t0, struct timeval *t1)
 void
 status_untiming(void)
 {
-    do_timing(oia_timing = (char *) 0);
+    do_timing(oia_timing = NULL);
 }
 
 /* Update cursor position */
 void
 status_cursor_pos(int ca)
 {
-    static char buf[CCNT+1];
+    char *buf;
 
     if (xappres.xquartz_hack) {
-	snprintf(buf, sizeof(buf), "%02d/%02d", (ca/COLS + 1) % 100,
-		(ca%COLS + 1) % 100);
+	buf = xs_buffer("%02d/%02d", ((ca / COLS) + 1) % 100,
+		((ca % COLS) + 1) % 100);
     } else {
-	snprintf(buf, sizeof(buf), "%03d/%03d", ca/COLS + 1, ca%COLS + 1);
+	buf = xs_buffer("%03d/%03d", ((ca / COLS) + 1) % 1000,
+		((ca % COLS) + 1) % 1000);
     }
-    do_cursor(oia_cursor = buf);
+    Replace(oia_cursor, buf);
+    do_cursor(oia_cursor);
 }
 
 /* Erase cursor position */
 void
 status_uncursor_pos(void)
 {
-    do_cursor(oia_cursor = (char *) 0);
+    Replace(oia_cursor, NULL);
+    do_cursor(oia_cursor);
 }
 
 /* Internal routines */
