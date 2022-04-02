@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1994-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -183,7 +183,7 @@ save_icon(void)
 	    return;
 	}
 	if (actual_type != a_state || actual_format != 32 || nitems < 1) {
-	    return;
+	    goto done;
 	}
     }
 
@@ -199,7 +199,7 @@ save_icon(void)
     }
 
     if (nitems < 2) {
-	return;
+	goto done;
     }
 
     {
@@ -209,15 +209,15 @@ save_icon(void)
 
 	icon_window = *(Window *)(data + sizeof(unsigned long));
 	if (icon_window == None) {
-	    return;
+	    goto done;
 	}
 	if (!x_get_window_attributes(icon_window, &wa)) {
-	    return;
+	    goto done;
 	}
 	XTranslateCoordinates(display, icon_window, wa.root,
 		-wa.border_width, -wa.border_width, &iconX, &iconY, &child);
 	if (!iconX && !iconY) {
-	    return;
+	    goto done;
 	}
     }
 
@@ -238,6 +238,8 @@ save_icon(void)
 	cmd_append(OptIconY);
 	cmd_append(tbuf);
     }
+done:
+    XFree((char *)data);
     return;
 }
 

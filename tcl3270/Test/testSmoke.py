@@ -72,6 +72,7 @@ class TestTcl3270Smoke(cti.cti):
 
         # Wait for the processes to exit.
         tcl3270.kill()
+        self.children.remove(tcl3270)
         self.vgwait(tcl3270, assertOnFailure=False)
 
         # Compare the files

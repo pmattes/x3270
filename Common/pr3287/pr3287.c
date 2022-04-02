@@ -190,7 +190,6 @@ static char *proxy_portname = NULL;
 static unsigned short proxy_port = 0;
 
 void pr3287_exit(int);
-const char *build_options(void);
 
 /* Print a usage message and exit. */
 static void
@@ -575,6 +574,7 @@ main(int argc, char *argv[])
     unsigned tls_options = sio_all_options_supported();
     char hn[256];
     char pn[256];
+    const char *bo;
 
     /* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -771,7 +771,8 @@ main(int argc, char *argv[])
 	} else if (!strcmp(argv[i], OptReconnect)) {
 	    options.reconnect = 1;
 	} else if (!strcmp(argv[i], OptV) || !strcmp(argv[i], OptVersion)) {
-	    fprintf(stderr, "%s\n%s\n", build, build_options());
+	    fprintf(stderr, "%s\n%s\n", build, bo = build_options());
+	    Free((char *)bo);
 	    codepage_list();
 	    fprintf(stderr, "\n\
 Copyright 1989-%s, Paul Mattes, GTRC and others.\n\
@@ -962,7 +963,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	SETLINEBUF(tracef);
 	clk = time((time_t *)0);
 	vtrace_nts("Trace started %s", ctime(&clk));
-	vtrace_nts(" Version: %s\n %s\n", build, build_options());
+	vtrace_nts(" Version: %s\n %s\n", build, bo = build_options());
+	Free((char *)bo);
 #if !defined(_WIN32) /*[*/
 	vtrace_nts(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
@@ -1269,24 +1271,19 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 const char *
 build_options(void)
 {
-    const char *build = NULL;
-
-    if (build == NULL) {
-    	build = xs_buffer("Build options:%s"
+    return xs_buffer("Build options:%s"
 #if defined(_MSC_VER) /*[*/
-	    " via MSVC " xstr(_MSC_VER)
+	" via MSVC " xstr(_MSC_VER)
 #endif /*]*/
 #if defined(__GNUC__) /*[*/
-	    " via gcc " __VERSION__
+	" via gcc " __VERSION__
 #endif /*]*/
 #if defined(__LP64__) || defined(__LLP64__) /*[*/
-	    " 64-bit"
+	" 64-bit"
 #else /*][*/
-	    " 32-bit"
+	" 32-bit"
 #endif /*]*/
-	    , using_iconv()? " -with-iconv": "");
-    }
-    return build;
+	, using_iconv()? " -with-iconv": "");
 }
 
 /* Glue functions to allow proxy.c to link. */

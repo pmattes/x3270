@@ -25,41 +25,36 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# x3270if smoke tests
+# b3270 crash test
 
-import unittest
+import os
+import requests
 from subprocess import Popen, PIPE, DEVNULL
+import unittest
 import Common.Test.cti as cti
 
-class TestX3270ifSmoke(cti.cti):
+@unittest.skipUnless('CRASH' in os.environ, 'Test used to exercise test infra')
+class TestB3270Crash(cti.cti):
 
-    # x3270if smoke test
-    def test_x3270if_smoke(self):
+    # b3270 crash test
+    def test_b3270_crash(self):
 
-        # Start a copy of s3270 to talk to.
-        port, ts = cti.unused_port()
-        s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
-                stdin=DEVNULL, stdout=DEVNULL)
-        self.children.append(s3270)
-        self.check_listen(port)
-        ts.close()
+        # Start b3270.
+        hport, socket = cti.unused_port()
+        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(hport)]), stdin=PIPE, stdout=DEVNULL)
+        self.children.append(b3270)
+        self.check_listen(hport)
 
-        # Run x3270if with a trivial query.
-        x3270if = Popen(cti.vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]),
-                stdout=PIPE)
-        self.children.append(x3270if)
+        # Force it to crash.
+        # The HTTP request will fail and the test will bomb out. When the cti
+        # infra cleans up the child process, it will also bomb out, because
+        # the child was killed by a signal.
+        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Crash(null)')
+        self.assertTrue(r.ok)
 
-        # Decode the result.
-        stdout = x3270if.communicate()[0].decode('utf8')
-
-        # Wait for the processes to exit.
-        s3270.kill()
-        self.children.remove(s3270)
-        s3270.wait()
-        self.vgwait(x3270if)
-
-        # Test the output.
-        self.assertEqual('true\n', stdout)
+        # Wait for the process to exit.
+        b3270.stdin.close()
+        self.vgwait(b3270)
 
 if __name__ == '__main__':
     unittest.main()

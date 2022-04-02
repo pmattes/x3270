@@ -112,7 +112,7 @@ class TestX3270Smoke(cti.cti):
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.
-        self.assertEqual(0, os.system(f'cmp -l -i124 {name} x3270/Test/ibmlink.xwd'))
+        self.assertEqual(0, os.system(f'cmp -s -i124 {name} x3270/Test/ibmlink.xwd'))
         os.unlink(name)
 
 if __name__ == '__main__':

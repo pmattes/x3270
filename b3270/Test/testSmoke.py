@@ -58,23 +58,5 @@ class TestB3270Smoke(cti.cti):
         b3270.stdin.close()
         self.vgwait(b3270)
 
-    # b3270 NVT smoke test
-    @unittest.skipIf(True, 'Test used to exercise test infra')
-    def test_b3270_crash(self):
-
-        # Start b3270.
-        hport, socket = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(hport)]), stdin=PIPE, stdout=DEVNULL)
-        self.children.append(b3270)
-        self.check_listen(hport)
-
-        # Feed b3270 some actions.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Crash(null)')
-        self.assertTrue(r.ok)
-
-        # Wait for the process to exit.
-        b3270.stdin.close()
-        self.vgwait(b3270)
-
 if __name__ == '__main__':
     unittest.main()

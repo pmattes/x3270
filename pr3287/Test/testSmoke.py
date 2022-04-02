@@ -64,6 +64,7 @@ class TestPr3287Smoke(cti.cti):
 
         # Wait for the processes to exit.
         pr3287.kill()
+        self.children.remove(pr3287)
         self.vgwait(pr3287, assertOnFailure=False)
 
         # Read back the file.

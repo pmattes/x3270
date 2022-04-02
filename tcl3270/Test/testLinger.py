@@ -66,6 +66,7 @@ class TestTcl3270Linger(cti.cti):
 
         # Kill tcl3270.
         tcl3270.kill()
+        self.children.remove(tcl3270)
         self.vgwait(tcl3270, assertOnFailure=False)
 
         # Make sure s3270 is gone, too.

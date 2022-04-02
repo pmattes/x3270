@@ -31,7 +31,7 @@ import os
 import re
 import requests
 import socket
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL, TimeoutExpired
 import select
 import sys
 import threading
@@ -246,18 +246,15 @@ class cti(unittest.TestCase):
     def tearDown(self):
         '''Common tear-down procedure'''
         for child in self.children:
-            if sys.platform.startswith('win'):
-                child.kill()
-                child.wait()
-                continue
             try:
-                (pid, status) = os.waitpid(child.pid, os.WNOHANG)
-            except ChildProcessError:
+                status = child.wait(timeout=0.1)
+                if sys.platform.startswith('win'):
+                    self.assertLess(status, 0x1000, f'Process {child.args[0]} exited with status 0x{status:x}')
+                else:
+                    self.assertGreater(status, -1, f'Process {child.args[0]} killed by signal {-status}')
+            except TimeoutExpired:
                 child.kill()
                 child.wait()
-            else:
-                if os.WIFSIGNALED(status):
-                    self.assertTrue(False, f'Process {child.args[0]} killed by signal {os.WTERMSIG(status)}')
 
     def try_until(self, f, seconds, errmsg):
         '''Try f periodically until seconds elapse'''
@@ -364,7 +361,8 @@ class cti(unittest.TestCase):
         isVal = 'VALGRIND' in os.environ
         valLog = f'/tmp/valgrind.{pid}'
         if isVal:
-            self.assertTrue(valpass.valpass().check(valLog), f'Valgrind error(s) found, see {valLog}')
+            success, nomatch = valpass.valpass().check(valLog)
+            self.assertTrue(success, f'Valgrind error(s) found ({" ".join(nomatch)}), see {valLog}')
         if (assertOnFailure):
             self.assertEqual(0, rc, 'Program failed')
         if isVal:

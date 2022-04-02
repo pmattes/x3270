@@ -1339,6 +1339,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
 	Free(rsname);
+	Free(hide);
     }
 }
 

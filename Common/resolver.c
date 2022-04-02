@@ -619,6 +619,7 @@ mock_sync_resolver(const char *m, const char *host, char *portname,
 	assert(getaddrinfo(inner[0], inner[1], &hints, &res) == 0);
 	memcpy(sa, res->ai_addr, res->ai_addrlen);
 	sa_rlen[*nr] = (socklen_t)res->ai_addrlen;
+	freeaddrinfo(res);
 	sa = (struct sockaddr *)((char *)sa + sa_len);
 	++(*nr);
     }

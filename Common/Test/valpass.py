@@ -38,6 +38,8 @@ class valpass():
         # Leaks from getaddrinfo_a().
         'calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:__gai_create_helper_thread:__gai_enqueue_request:getaddrinfo_a:',
         'calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:__gai_notify_only:__gai_notify:handle_requests:start_thread',
+        'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current:__res_vinit:maybe_init:context_get:context_get:__resolv_context_get:gaih_inet.constprop.0:getaddrinfo:handle_requests:start_thread',
+        'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current:__res_vinit:maybe_init:context_get:context_get:__resolv_context_get:gethostbyname2_r:gaih_inet.constprop.0:getaddrinfo:handle_requests:start_thread',
         # Bad read from gmtime().
         'getenv:tzset_internal:__tz_convert:get_utc_time:',
         # This is necessary so c3270 can call setupterm separately.
@@ -83,18 +85,14 @@ class valpass():
         return [':'.join([re.sub('@@.*', '', wb.split(' ')[2]) for wb in chunk[1:]]) for chunk in chunks]
 
     # Returns True if the log is okay, False if it contains non-whitelisted walkbacks
-    def check(self, fileName, verbose=False):
+    def check(self, fileName: str):
         '''Check a Valgrind log for non-whitelisted leak walkbacks'''
 
         # Check the whitelist.
         wk = self.walkbacks(fileName)
         if all(any(wb.startswith(white) for white in self.whitelist) for wb in wk):
-            return True
-        if verbose:
-            for wb in wk:
-                if not any(wb.startswith(white) for white in self.whitelist):
-                    print(wb)
-        return False
+            return (True, [])
+        return (False, [wb for wb in wk if not any(wb.startswith(white) for white in self.whitelist)])
 
 def Usage():
     print("Usage: valpass [-check][-gen] <logfile>", file=sys.stderr)
@@ -105,10 +103,13 @@ if __name__ == '__main__':
         Usage()
     v = valpass()
     if sys.argv[1] == '-check':
-        if v.check(sys.argv[2], verbose=True):
+        success, mismatch = v.check(sys.argv[2])
+        if success:
             print('Pass')
         else:
             print('Fail')
+            for m in mismatch:
+                print(m)
             exit(1)
     elif sys.argv[1] == '-gen':
         for walkback in v.walkbacks(sys.argv[2]):
