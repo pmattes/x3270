@@ -329,7 +329,6 @@ vstatus_line(struct ea *ea)
     int rmargin = COLS - 1;
     char cursor[9];
     struct ea *ea2;
-    int fa;
 
     /* Begin with nothing. */
     memset(ea, 0, 2 * COLS * sizeof(struct ea));
@@ -429,10 +428,6 @@ vstatus_line(struct ea *ea)
     for (i = 0; cursor[i]; i++) {
 	ea2[rmargin - 7 + i].ucs4 = cursor[i];
     }
-
-    /* Copy the final field attribute. */
-    fa = find_field_attribute((ROWS * COLS) - 1);
-    ea2[COLS - 1] = ea[fa]; /* struct copy */
 }
 
 /**
