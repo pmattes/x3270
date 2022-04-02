@@ -30,6 +30,7 @@
 import os
 import re
 from subprocess import Popen, PIPE, DEVNULL
+import sys
 import tempfile
 import unittest
 import Common.Test.cti as cti
@@ -37,6 +38,7 @@ import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
+@unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
 class TestPr3287MultiHost(cti.cti):
 
     # pr3287 multi-host test

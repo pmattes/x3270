@@ -27,18 +27,18 @@
 #
 # Common functions for integration testing
 
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import time
-import re
-import sys
-import xml.etree.ElementTree as ET
-from xml.dom import minidom
-import socket
-import threading
-import select
 import os
+import re
+import requests
+import socket
+from subprocess import Popen, PIPE, DEVNULL
+import select
+import sys
+import threading
+import time
 import unittest
+from xml.dom import minidom
+import xml.etree.ElementTree as ET
 import Common.Test.valpass as valpass
 
 # Pretty-print an XML document.
@@ -246,8 +246,18 @@ class cti(unittest.TestCase):
     def tearDown(self):
         '''Common tear-down procedure'''
         for child in self.children:
-            child.kill()
-            child.wait()
+            if sys.platform.startswith('win'):
+                child.kill()
+                child.wait()
+                continue
+            try:
+                (pid, status) = os.waitpid(child.pid, os.WNOHANG)
+            except ChildProcessError:
+                child.kill()
+                child.wait()
+            else:
+                if os.WIFSIGNALED(status):
+                    self.assertTrue(False, f'Process {child.args[0]} killed by signal {os.WTERMSIG(status)}')
 
     def try_until(self, f, seconds, errmsg):
         '''Try f periodically until seconds elapse'''
