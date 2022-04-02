@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020, 2022 Paul Mattes.
+ * Copyright (c) 2017-2022 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -581,7 +581,7 @@ display_server_cert(varbuf_t *v, stransport_sio_t *s)
 	    char *prefix = "";
 
 	    if (i) {
-		prefix = lazyaf("CA %d ", i);
+		prefix = lazyaf("CA %ld ", i);
 	    }
 	    display_cert(v, prefix, SecTrustGetCertificateAtIndex(trust, i));
 	}

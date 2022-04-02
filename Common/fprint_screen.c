@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2018-2021 Paul Mattes.
+ * Copyright (c) 1994-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -376,6 +376,16 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
     return rv;
 }
 
+/* Get the DBCS state for part of the screen, real or imagined. */
+static enum dbcs_state
+protected_dbcs_state(int baddr)
+{
+    if (baddr < ROWS * COLS) {
+	return ctlr_dbcs_state(baddr);
+    }
+    return DBCS_NONE;
+}
+
 #define FAIL do { \
     rv = -1; \
     goto done; \
@@ -416,11 +426,15 @@ fprint_screen_body(fps_t ofps)
     }
 
     if (fps->opts & FPS_OIA) {
+	int fa;
+
 	xea = (struct ea *)Calloc(1 + ((ROWS + 2) * COLS), sizeof(struct ea));
 	lazya(xea);
 	memcpy(xea, ea_buf - 1, (1 + (ROWS * COLS)) * sizeof(struct ea));
 	xea++;
 	vstatus_line(xea + (ROWS * COLS));
+	fa = find_field_attribute((ROWS * COLS) - 1);
+	xea[((ROWS + 2) * COLS) - 1] = ea_buf[fa]; /* struct copy */
 	xrows = ROWS + 2;
     } else {
 	xea = ea_buf;
@@ -589,19 +603,19 @@ fprint_screen_body(fps_t ofps)
 	if (FA_IS_ZERO(fa) &&
 		(FA_IS_PROTECTED(fa) ||
 		 !(fps->opts & FPS_INCLUDE_ZERO_INPUT))) {
-	    if (ctlr_dbcs_state(i) == DBCS_LEFT) {
+	    if (protected_dbcs_state(i) == DBCS_LEFT) {
 		uc = 0x3000;
 	    } else {
 		uc = ' ';
 	    }
 	} else if (is_nvt(&xea[i], false, &uc)) {
 	    /* NVT-mode text. */
-	    if (ctlr_dbcs_state(i) == DBCS_RIGHT) {
+	    if (protected_dbcs_state(i) == DBCS_RIGHT) {
 		continue;
 	    }
 	} else {
 	    /* Convert EBCDIC to Unicode. */
-	    switch (ctlr_dbcs_state(i)) {
+	    switch (protected_dbcs_state(i)) {
 	    case DBCS_NONE:
 	    case DBCS_SB:
 		uc = ebcdic_to_unicode(xea[i].ec, xea[i].cs, EUO_NONE);

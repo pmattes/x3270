@@ -48,6 +48,7 @@ class TestS3270Wont(cti.cti):
             s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f"127.0.0.1:{pport}"]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             socket.close()
+            self.check_listen(hport)
 
             # Send negotiations and make sure the responses match, but don't disconnect.
             p.match(disconnect=False)
