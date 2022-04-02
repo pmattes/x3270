@@ -1364,13 +1364,17 @@ parse_set(const char *arg, const char *where, bool warn)
 	xrm_arg = xs_buffer("%s.%s: %s", programname, arg, ResTrue);
     }
     xparse_xrm(xrm_arg, where, warn);
+    Free(xrm_arg);
 }
 
 /* Parse a '-clear' option. */
 static void
 parse_clear(const char *arg, const char *where, bool warn)
 {
-    xparse_xrm(xs_buffer("%s.%s: %s", programname, arg, ResFalse), where, warn);
+    char *xrm_arg = xs_buffer("%s.%s: %s", programname, arg, ResFalse);
+
+    xparse_xrm(xrm_arg, where, warn);
+    Free(xrm_arg);
 }
 
 /*

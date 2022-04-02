@@ -898,13 +898,11 @@ send_nop(ioid_t id _is_unused)
 {
     static unsigned char nop[] = { IAC, NOP };
 
-    vtrace("SENT NOP\n");
-    net_rawout(nop, sizeof(nop));
-    if (cstate != NOT_CONNECTED) {
-	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
-    } else {
-	nop_timeout_id = NULL_IOID;
+    if (cstate >= TELNET_PENDING) {
+	net_rawout(nop, sizeof(nop));
+	vtrace("SENT NOP\n");
     }
+    nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
 }
 
 static void
@@ -976,7 +974,7 @@ net_connected_complete(void)
     }
 
     /* set up NOP transmission */
-    if (appres.nop_seconds != 0) {
+    if (appres.nop_seconds != 0 && !HOST_FLAG(NO_TELNET_HOST)) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
 }
@@ -4010,12 +4008,10 @@ net_nop_seconds(void)
 	nop_timeout_id = NULL_IOID;
     }
 
-    if (appres.nop_seconds == 0) {
-	return;
-    }
-
     /* Restart with the new interval. */
-    if (cstate >= TELNET_PENDING) {
+    if (appres.nop_seconds != 0 &&
+	    !HOST_FLAG(NO_TELNET_HOST) &&
+	    cstate >= TELNET_PENDING) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
 }
