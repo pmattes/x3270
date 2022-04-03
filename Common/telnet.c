@@ -974,7 +974,7 @@ net_connected_complete(void)
     }
 
     /* set up NOP transmission */
-    if (appres.nop_seconds != 0 && !HOST_FLAG(NO_TELNET_HOST)) {
+    if (appres.nop_seconds > 0 && !HOST_FLAG(NO_TELNET_HOST)) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
 }
@@ -4009,9 +4009,9 @@ net_nop_seconds(void)
     }
 
     /* Restart with the new interval. */
-    if (appres.nop_seconds != 0 &&
+    if (appres.nop_seconds > 0 &&
 	    !HOST_FLAG(NO_TELNET_HOST) &&
-	    cstate >= TELNET_PENDING) {
+	    cstate >= TCP_PENDING) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
 }
