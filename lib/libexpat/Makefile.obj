@@ -30,7 +30,7 @@ LIBEXPAT = libexpat.a
 
 include winenv.mk
 
-XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../Common/libexpat -I$(THIS)/../include -I$(TOP)/include -DWIN32 -DCOMPILED_FROM_DSP
+XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(TOP)/Common/libexpat/expat/lib -I$(THIS)/../include -I$(TOP)/include -DWIN32 -DCOMPILED_FROM_DSP
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS)
 
 all:: $(LIBEXPAT)

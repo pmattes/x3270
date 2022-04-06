@@ -33,11 +33,11 @@ endif
 top = ../../..
 this = $(top)/lib/libexpat
 
-export VPATH = $(this):$(top)/Common/libexpat
+export VPATH = $(this):$(top)/Common/libexpat/expat/lib
 export TOP = $(top)
 export THIS = $(this)
 
-MAKEINC = -I$(top)/Common/libexpat -I$(top)/Common/Win32 -I$(this)
+MAKEINC = -I$(top)/Common/libexpat/expat/lib -I$(top)/Common/Win32 -I$(this)
 
 all: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
