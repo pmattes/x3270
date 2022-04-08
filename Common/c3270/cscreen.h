@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, 2014-2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1999-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,9 @@
  *		c3270/wc3270 screen declarations.
  */
 
+extern bool screen_initted;
 extern bool escaped;
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 extern int windows_cp;
 extern HWND console_window;
 #endif /*]*/
@@ -41,7 +42,7 @@ FILE *start_pager(void);
 void screen_register(void);
 void screen_final(void);
 void screen_system_fixup(void);
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 typedef enum {
     PC_DEFAULT,
     PC_PROMPT,

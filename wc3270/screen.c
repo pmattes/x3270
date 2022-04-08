@@ -162,6 +162,7 @@ static int oia_white_attr = 0;
 static int xhattr = 0;
 static ioid_t input_id;
 
+bool screen_initted = true;
 bool escaped = true;
 bool isendwin = true;
 

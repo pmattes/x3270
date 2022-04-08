@@ -245,6 +245,7 @@ static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
 
+bool screen_initted = false;
 bool escaped = true;
 bool initscr_done = false;
 int curs_set_state = -1;
@@ -299,7 +300,6 @@ static bool curses_alt = false;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 static bool default_colors = false;
 #endif /*]*/
-static bool screen_initted = false;
 
 static ioid_t disabled_done_id = NULL_IOID;
 
