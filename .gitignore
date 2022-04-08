@@ -32,4 +32,5 @@ wversion.c
 .*.swp
 *.pyc
 __pycache__
+.vs
 

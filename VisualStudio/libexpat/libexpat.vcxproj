@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Common\libexpat\expat\lib\xmlparse.c" />
-    <ClCompile Include="..\..\Common\libexpat\expat\lib\xmlrole.c" />
-    <ClCompile Include="..\..\Common\libexpat\expat\lib\xmltok.c" />
-    <ClCompile Include="..\..\Common\libexpat\expat\lib\xmltok_impl.c" />
-    <ClCompile Include="..\..\Common\libexpat\expat\lib\xmltok_ns.c" />
+    <ClCompile Include="..\..\extern\libexpat\expat\lib\xmlparse.c" />
+    <ClCompile Include="..\..\extern\libexpat\expat\lib\xmlrole.c" />
+    <ClCompile Include="..\..\extern\libexpat\expat\lib\xmltok.c" />
+    <ClCompile Include="..\..\extern\libexpat\expat\lib\xmltok_impl.c" />
+    <ClCompile Include="..\..\extern\libexpat\expat\lib\xmltok_ns.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

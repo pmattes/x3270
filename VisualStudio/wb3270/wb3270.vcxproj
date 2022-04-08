@@ -81,7 +81,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\extern\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;XML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -111,7 +111,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\extern\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;XML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -131,7 +131,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\extern\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;XML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -155,7 +155,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\Common\b3270;%(ProjectDir)..\..\wb3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\extern\libexpat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;XML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>

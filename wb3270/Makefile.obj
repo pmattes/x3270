@@ -32,7 +32,7 @@ include winenv.mk
 
 MKFB = mkfb$(NATIVE_SFX)
 
-XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include -I$(TOP)/Common/libexpat/expat/lib
+XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include -I$(TOP)/extern/libexpat/expat/lib
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
