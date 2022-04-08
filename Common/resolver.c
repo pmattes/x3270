@@ -604,7 +604,7 @@ mock_sync_resolver(const char *m, const char *host, char *portname,
 	    (outer_chunk = strtok_r(outer_str, ";", &outer_saveptr)) != NULL) {
 	int np = 0;
 	char *inner[2];
-	struct addrinfo *res;
+	struct addrinfo *res = NULL;
 
 	outer_str = NULL;
 	inner_str = outer_chunk;
