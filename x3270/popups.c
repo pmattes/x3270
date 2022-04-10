@@ -51,6 +51,7 @@
 #include "names.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
+#include "resources.h"
 #include "screen.h"
 #include "task.h"
 #include "trace.h"
@@ -74,6 +75,12 @@ static enum form_type forms[] = { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 static Dimension wm_width, wm_height;
 
 static ioid_t info_id = NULL_IOID;
+
+static struct {		/* Error pop-up delay: */
+    bool active;	/*  Is it active? */
+    char *text;		/*  Saved text */
+    pae_t type;		/*  Error type */
+} epd = { true, NULL, ET_OTHER };
 
 /*
  * General popup support
@@ -850,7 +857,7 @@ struct rop {
 };
 
 static struct rop error_popup = {
-    "errorPopup", XtGrabExclusive, true, false,
+    "errorPopup", XtGrabExclusive, true, true,
     "first line\nsecond line\nthird line",
     NULL, NULL, NULL, NULL,
     false, false, NULL
@@ -1057,9 +1064,11 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 }
 
 static void
-error_exit(void)
+stop_trying(void)
 {
-    x3270_exit(0);
+    push_macro(AnSet "(" ResReconnect "=" ResFalse ","
+	    ResRetry "=" ResFalse ")");
+    popdown_an_error();
 }
 
 /* Pop up an error dialog. */
@@ -1068,11 +1077,19 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
     char *s = NULL;
 
-    if (type == ET_CONNECT) {
-	s = xs_buffer("Connection failed:\n%s", fmt);
+    if (epd.active) {
+	epd.type = type;
+	Replace(epd.text, xs_vbuffer(fmt, args));
+	return;
     }
 
-    popup_rop(&error_popup, appres.interactive.reconnect? error_exit: NULL,
+    if (type == ET_CONNECT) {
+	s = xs_buffer("Connection failed%s:\n%s",
+		host_retry_mode? ", retrying": "", fmt);
+    }
+
+    popup_rop(&error_popup,
+	    (host_retry_mode && !appres.secure)? stop_trying: NULL,
 	    (s != NULL)? s: fmt, args);
     if (s != NULL) {
 	Free(s);
@@ -1083,8 +1100,23 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 void
 popdown_an_error(void)
 {
+    if (epd.active && epd.text != NULL) {
+	Replace(epd.text, NULL);
+	return;
+    }
     if (error_popup.visible) {
 	XtPopdown(error_popup.shell);
+    }
+}
+
+/* Error popup delay completion. */
+void
+error_popup_resume(void)
+{
+    epd.active = false;
+    if (epd.text != NULL) {
+	popup_an_xerror(epd.type, "%s", epd.text);
+	Replace(epd.text, NULL);
     }
 }
 
@@ -1221,7 +1253,7 @@ child_popup_init(void)
 bool
 error_popup_visible(void)
 {
-    return error_popup.visible;
+    return (epd.active && epd.text != NULL) || error_popup.visible;
 }
 
 /*

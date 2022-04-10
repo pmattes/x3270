@@ -64,7 +64,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 
     if (task_redirect()) {
 	task_error(s);
-    } else if (!glue_gui_error(s)) {
+    } else if (!glue_gui_error(type, s)) {
 	fprintf(stderr, "%s\n", s);
 	fflush(stderr);
     }

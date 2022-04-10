@@ -126,10 +126,11 @@ typedef struct {
     /* TLS fields. */
     tls_config_t tls;
 
-    /* Interactive (x3270/c3270/wc3270) fields. */
+    /* Interactive (x3270/c3270/wc3270/b3270) fields. */
     struct {
 	bool	 mono;
 	bool	 reconnect;
+	bool	 retry;
 	bool	 do_confirms;
 	bool	 menubar;
 	bool	 visual_bell;

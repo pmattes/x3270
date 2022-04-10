@@ -474,3 +474,10 @@ enum resource_type {
   XRM_BOOLEAN,    /* bool */
   XRM_INT         /* int */
 };
+
+/* Error type for popup_an_xerror(). */
+typedef enum {
+    ET_CONNECT,
+    ET_OTHER
+} pae_t;
+

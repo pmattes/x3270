@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015, 2021 Paul Mattes.
+ * Copyright (c) 1999-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,12 +29,6 @@
  *	popups.h
  *		Common declarations for popups.c
  */
-
-/* Error type for popup_an_xerror(). */
-typedef enum {
-    ET_CONNECT,
-    ET_OTHER
-} pae_t;
 
 extern const char *popup_separator;
 

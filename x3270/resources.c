@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2017, 2019-2022 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -317,6 +317,8 @@ XtResource xresources[] = {
       boffset(socket), XtRString, ResFalse },
     { ResReconnect, ClsReconnect, XtRBoolean, sizeof(Boolean),
       boffset(interactive.reconnect), XtRString, ResFalse },
+    { ResRetry, ClsRetry, XtRBoolean, sizeof(Boolean),
+      boffset(interactive.retry), XtRString, ResFalse },
     { ResDoConfirms, ClsDoConfirms, XtRBoolean, sizeof(Boolean),
       boffset(interactive.do_confirms), XtRString, ResTrue },
     { ResNumericLock, ClsNumericLock, XtRBoolean, sizeof(Boolean),

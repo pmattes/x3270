@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2019-2022 Paul Mattes.
+ * Copyright (c) 2016-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,9 @@
 #include "globals.h"
 #include "resources.h"
 
+#include "appres.h"
 #include "b3270proto.h"
+#include "host.h"
 #include "lazya.h"
 #include "popups.h"
 #include "task.h"
@@ -51,19 +53,28 @@ const char *popup_separator = " ";
 typedef struct stored_popup {
     struct stored_popup *next;
     bool is_error;
+    pae_t error_type;
+    bool retrying;
     char *text;
 } stored_popup_t;
 static stored_popup_t *sp_first = NULL;
 static stored_popup_t *sp_last = NULL;
 static bool popups_ready = false;
 
+static const char *error_types[] = {
+    PtConnectionError,
+    PtError
+};
+
 /* Store a pending pop-up. */
 static void
-popup_store(bool is_error, char *text)
+popup_store(bool is_error, pae_t type, bool retrying, char *text)
 {
     stored_popup_t *sp =
 	(stored_popup_t *)Malloc(sizeof(stored_popup_t) + strlen(text) + 1);
     sp->is_error = is_error;
+    sp->error_type = type;
+    sp->retrying = retrying;
     sp->text = (char *)(sp + 1);
     strcpy(sp->text, text);
 
@@ -81,21 +92,20 @@ void
 popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 {
     char *s;
-    static const char *error_types[] = {
-	PtConnectionError,
-	PtError
-    };
 
     s = vlazyaf(fmt, ap);
     vtrace("Error: %s\n", s);
     if (task_redirect()) {
-	task_error(s);
-    } else if (!popups_ready) {
-	popup_store(true, s);
+	task_error_retrying(s, type == ET_CONNECT && host_retry_mode);
+	return;
+    }
+    if (!popups_ready) {
+	popup_store(true, type, host_retry_mode, s);
     } else {
 	ui_leaf(IndPopup,
 		AttrType, AT_STRING, error_types[type],
 		AttrText, AT_STRING, s,
+		AttrRetrying, AT_BOOLEAN, host_retry_mode,
 		NULL);
     }
 }
@@ -111,7 +121,7 @@ popup_an_info(const char *fmt, ...)
     s = vlazyaf(fmt, ap);
     va_end(ap);
     if (!popups_ready) {
-	popup_store(true, s);
+	popup_store(false, ET_OTHER, false, s);
     } else {
 	ui_leaf(IndPopup,
 		AttrType, AT_STRING, PtInfo,
@@ -189,8 +199,10 @@ popups_dump(void)
 
     while ((sp = sp_first) != NULL) {
 	ui_leaf(IndPopup,
-		AttrType, AT_STRING, sp->is_error? PtError: PtInfo,
+		AttrType, AT_STRING,
+		    sp->is_error? error_types[sp->error_type]: PtInfo,
 		AttrText, AT_STRING, sp->text,
+		sp->is_error? AttrRetrying: NULL, AT_BOOLEAN, sp->retrying,
 		NULL);
 	sp_first = sp->next;
 	Free(sp);

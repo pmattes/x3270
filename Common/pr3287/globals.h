@@ -148,3 +148,9 @@ typedef SOCKET socket_t;
 # define SE_EINTR	WSAEINTR
 # define SE_EPIPE	WSAECONNABORTED
 #endif /*]*/
+
+/* Error type for popup_an_xerror(). */
+typedef enum {
+    ET_CONNECT,
+    ET_OTHER
+} pae_t;

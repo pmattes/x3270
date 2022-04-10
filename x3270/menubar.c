@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -192,6 +192,8 @@ static Widget   locked_icon;
 static Widget   unlocked_icon;
 static Widget   unverified_icon;
 static Widget   keypad_button;
+static Widget	retry_button;
+static Widget	reconnect_button;
 static Widget   linemode_button;
 static Widget   charmode_button;
 static Widget   models_option;
@@ -1942,6 +1944,20 @@ charmode_callback(Widget w _is_unused, XtPointer client_data _is_unused,
     net_charmode();
 }
 
+static void
+toggle_retry(Widget w _is_unused, XtPointer client_data _is_unused, 
+	XtPointer call_data _is_unused)
+{
+    push_macro(AnToggle "(" ResRetry ")");
+}
+
+static void
+toggle_reconnect(Widget w _is_unused, XtPointer client_data _is_unused, 
+	XtPointer call_data _is_unused)
+{
+    push_macro(AnToggle "(" ResReconnect ")");
+}
+
 /* Called to change models */
 static void
 change_model_callback(Widget w, XtPointer client_data,
@@ -2226,6 +2242,18 @@ options_menu_init(bool regen, Position x, Position y)
 	toggle_init(t, TYPEAHEAD, "typeaheadOption", NULL, &spaced);
 	toggle_init(t, ALWAYS_INSERT, "alwaysInsertOption", NULL, &spaced);
 	toggle_init(t, SELECT_URL, "selectUrlOption", NULL, &spaced);
+	retry_button = add_menu_itemv("retryOption", t,
+		    toggle_retry, NULL,
+		    &spaced,
+		    XtNleftBitmap, appres.interactive.retry? dot: (Pixmap)NULL,
+		    XtNsensitive, True,
+		    NULL);
+	reconnect_button = add_menu_itemv("reconnectOption", t,
+		    toggle_reconnect, NULL,
+		    &spaced,
+		    XtNleftBitmap, appres.interactive.reconnect? dot: (Pixmap)NULL,
+		    XtNsensitive, True,
+		    NULL);
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);
@@ -2595,6 +2623,28 @@ screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
     stmenu_popup(STMP_AS_IS);
 }
 
+/* Extended toggle notification. */
+static void
+menubar_toggle_notify(const char *name, enum resource_type type,
+	void **value, ia_t ia)
+{
+    if (!strcasecmp(name, ResRetry)) {
+	if (retry_button != NULL) {
+	    XtVaSetValues(retry_button,
+		    XtNleftBitmap,
+		    *(bool *)value ? dot : None,
+		    NULL);
+	}
+    } else if (!strcasecmp(name, ResReconnect)) {
+	if (reconnect_button != NULL) {
+	    XtVaSetValues(reconnect_button,
+		    XtNleftBitmap,
+		    *(bool *)value ? dot : None,
+		    NULL);
+	}
+    }
+}
+
 /**
  * Menu module registration.
  */
@@ -2610,5 +2660,8 @@ menubar_register(void)
     register_schange(ST_CODEPAGE, menubar_codepage);
     register_schange(ST_KBD_DISABLE, menubar_keyboard_disable);
     register_schange(ST_SECURE, menubar_secure);
+
+    /* Register for extended toggle notifications. */
+    register_extended_toggle_notify(menubar_toggle_notify);
 }
 

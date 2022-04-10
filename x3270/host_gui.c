@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@
 #include "globals.h"
 #include "appres.h"
 
+#include "host.h"
 #include "host_gui.h"
 #include "xio.h"
 #include "xpopups.h"
@@ -41,7 +42,7 @@
 bool
 host_gui_connect(void)
 {
-    if (appres.once) {
+    if (appres.once && !host_retry_mode) {
 	/* Exit when the error pop-up pops down. */
 	exiting = true;
 	return true;
@@ -53,7 +54,7 @@ host_gui_connect(void)
 void
 host_gui_connect_initial(void)
 {
-    if (appres.interactive.reconnect && error_popup_visible()) {
+    if (host_retry_mode && error_popup_visible()) {
 	popdown_an_error();
     }
 }
@@ -61,7 +62,7 @@ host_gui_connect_initial(void)
 bool
 host_gui_disconnect(void)
 {
-    if (appres.once) {
+    if (appres.once && !host_retry_mode) {
 	if (error_popup_visible()) {
 	    /* If there is an error pop-up, exit when it pops down. */
 	    exiting = true;
@@ -79,7 +80,7 @@ host_gui_disconnect(void)
 void
 host_gui_connected(void)
 {
-    if (appres.interactive.reconnect && error_popup_visible()) {
+    if (error_popup_visible()) {
 	popdown_an_error();
     }
 }

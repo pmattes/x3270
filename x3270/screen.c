@@ -205,6 +205,8 @@ static char    *color_name[16] = {
     NULL, NULL, NULL, NULL
 };
 static bool	configure_ticking = false;
+static bool	initial_popup_ticking = false;
+static bool	need_keypad_first_up = false;
 static XtIntervalId configure_id;
 static bool highlight_bold = false;
 
@@ -273,6 +275,8 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 			 (BA_TO_ROW(b) == cursor_row))
 
 #define CROSS_COLOR	(mode.m3279? (GC_NONDEFAULT | crosshair_color) : FA_INT_NORM_NSEL)
+
+static bool keypad_was_up = false;
 
 /*
  * The screen state structure.  This structure is swapped whenever we switch
@@ -970,6 +974,25 @@ screen_reinit(unsigned cmask)
     clear_fixed();
 }
 
+/* The initial screen location is stable. Let pop-ups proceed. */
+static void
+popup_resume_timeout(XtPointer closure _is_unused,
+	XtIntervalId *id _is_unused)
+{
+    initial_popup_ticking = false;
+
+    /* Let the error pop-up pop up. */
+    error_popup_resume();
+
+    /* Let the keypad pop up. */
+    if (need_keypad_first_up) {
+	keypad_first_up();
+	if (iconic) {
+	    keypad_popdown(&keypad_was_up);
+	}
+    }
+}
+
 static void
 set_toplevel_sizes(const char *why)
 {
@@ -1043,6 +1066,8 @@ set_toplevel_sizes(const char *why)
 	static bool first = true;
 	if (first) {
 	    first = false;
+	    XtAppAddTimeOut(appcontext, 750, popup_resume_timeout, 0);
+	    initial_popup_ticking = true;
 	} else {
 	    popups_move();
 	}
@@ -1828,7 +1853,11 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
     int c0;
 
     if (w == nss.widget) {
-	keypad_first_up();
+	if (initial_popup_ticking) {
+	    need_keypad_first_up = true;
+	} else {
+	    keypad_first_up();
+	}
 	if (xappres.active_icon && iconic) {
 	    ss = &nss;
 	    iconic = false;
@@ -4185,7 +4214,6 @@ query_window_state(void)
     unsigned long nitems;
     unsigned long leftover;
     unsigned char *data = NULL;
-    static bool was_up = false;
     bool maximized_horz = false;
     bool maximized_vert = false;
     bool was_iconic = iconic;
@@ -4198,14 +4226,20 @@ query_window_state(void)
 	if (actual_type == a_state && actual_format == 32) {
 	    if (*(unsigned long *)data == IconicState) {
 		iconic = true;
-		keypad_popdown(&was_up);
+		if (!initial_popup_ticking) {
+		    keypad_popdown(&keypad_was_up);
+		}
 	    } else {
 		iconic = false;
 		invert_icon(false);
-		keypad_first_up();
-		if (was_up) {
+		if (initial_popup_ticking) {
+		    need_keypad_first_up = true;
+		} else {
+		    keypad_first_up();
+		}
+		if (keypad_was_up) {
 		    keypad_popup();
-		    was_up = false;
+		    keypad_was_up = false;
 		}
 	    }
 	}

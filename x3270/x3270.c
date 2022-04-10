@@ -815,24 +815,10 @@ main(int argc, char *argv[])
     set_rows_cols(model_number, ovc, ovr);
     net_set_default_termtype();
 
-    hostfile_init();
-
     /* Initialize the icon. */
     icon_init();
 
-    /*
-     * If no hostname is specified on the command line, ignore certain
-     * options.
-     */
-    if (argc <= 1) {
-#if defined(LOCAL_PROCESS) /*[*/
-	if (cl_hostname == NULL)
-#endif /*]*/
-	{
-	    appres.once = false;
-	}
-	appres.interactive.reconnect = false;
-    }
+    hostfile_init();
 
     if (xappres.char_class != NULL) {
 	reclass(xappres.char_class);
@@ -990,7 +976,7 @@ relabel(bool ignored _is_unused)
 {
     char *title;
     char icon_label[8];
-    bool reconnect = appres.interactive.reconnect && reconnect_host != NULL;
+    bool reconnect = host_retry_mode && reconnect_host != NULL;
 
     if (user_title != NULL && user_icon_name != NULL) {
 	return;
@@ -1224,17 +1210,12 @@ parse_set_clear(int *argcp, char **argv)
 	    }
 	}
 	if (!found) {
-	    const char *proper_name;
+	    const char *proper_name = argv[i];
 	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
 		    eq? eq + 1: (is_set? ResTrue: ResFalse), &proper_name);
 
-	    if (xt > 0) {
-		if (eq) {
-		    proper_name =
-			xs_buffer("%.*s", (int)(eq - argv[i]), argv[i]);
-		} else {
-		    proper_name = argv[i];
-		}
+	    if (xt > 0 && eq) {
+		proper_name = xs_buffer("%.*s", (int)(eq - argv[i]), argv[i]);
 	    }
 	    argv_out[argc_out++] = OptXrm;
 	    argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
@@ -1318,6 +1299,8 @@ copy_xres_to_res_bool(void)
     copy_bool(interactive.visual_bell);
     copy_bool(interactive.reconnect);
     copy_bool(interactive.do_confirms);
+    copy_bool(interactive.reconnect);
+    copy_bool(interactive.retry);
 
     for (i = 0; i < N_TOGGLES; i++) {
 	copy_bool(toggle[i]);

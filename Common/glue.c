@@ -1358,10 +1358,10 @@ parse_set(const char *arg, const char *where, bool warn)
     char *xrm_arg;
 
     if (eq != NULL) {
-	xrm_arg = xs_buffer("%s.%.*s: %s", programname, (int)(eq - arg), arg,
+	xrm_arg = xs_buffer("%s.%.*s: %s", app, (int)(eq - arg), arg,
 		eq + 1);
     } else {
-	xrm_arg = xs_buffer("%s.%s: %s", programname, arg, ResTrue);
+	xrm_arg = xs_buffer("%s.%s: %s", app, arg, ResTrue);
     }
     xparse_xrm(xrm_arg, where, warn);
     Free(xrm_arg);
@@ -1371,7 +1371,7 @@ parse_set(const char *arg, const char *where, bool warn)
 static void
 parse_clear(const char *arg, const char *where, bool warn)
 {
-    char *xrm_arg = xs_buffer("%s.%s: %s", programname, arg, ResFalse);
+    char *xrm_arg = xs_buffer("%s.%s: %s", app, arg, ResFalse);
 
     xparse_xrm(xrm_arg, where, warn);
     Free(xrm_arg);

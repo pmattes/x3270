@@ -132,6 +132,7 @@
 #define AttrProvider	"provider"
 #define AttrRecordsReceived "records-received"
 #define AttrRecordsSent	"records-sent"
+#define AttrRetrying	"retrying"
 #define AttrRTag	"r-tag"
 #define AttrRow		"row"
 #define AttrRows	"rows"

@@ -929,10 +929,11 @@ void
 keypad_move(void)
 {
     if (!keypad_popped) {
-	    return;
+	return;
     }
 
-    move_popup(keypad_shell, pp, NULL);
+    XtPopdown(keypad_shell);
+    keypad_popup();
 }
 
 void

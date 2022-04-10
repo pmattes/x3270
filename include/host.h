@@ -43,6 +43,7 @@ extern struct host *hosts;
 extern enum iaction connect_ia;
 extern char *host_prefix;
 extern char *host_suffix;
+extern bool host_retry_mode;
 
 /* Host connect/disconnect and state change. */
 void hostfile_init(void);

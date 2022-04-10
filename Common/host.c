@@ -78,6 +78,7 @@ char	       *reconnect_host = NULL;
 char	       *host_prefix = NULL;
 char	       *host_suffix = NULL;
 enum iaction	connect_ia = IA_NONE;
+bool		host_retry_mode = false;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
@@ -248,6 +249,20 @@ host_cancel_reconnect(void)
     }
 }
 
+static void
+reconnect_retry_touched(void)
+{
+    /*
+     * Turning off reconnect/retry is the way to stop a reconnect in progress.
+     */
+    if (!appres.interactive.reconnect && !appres.interactive.retry) {
+	host_cancel_reconnect();
+    }
+
+    /* They have changed one of the flags. Reset host_retry_mode. */
+    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
+}
+
 /**
  * Toggle the reconnect flag.
  *
@@ -267,9 +282,33 @@ set_reconnect(const char *name _is_unused, const char *value)
 	return false;
     }
 
-    if (appres.interactive.reconnect != previous &&
-	    !appres.interactive.reconnect) {
-	host_cancel_reconnect();
+    if (appres.interactive.reconnect != previous) {
+	reconnect_retry_touched();
+    }
+    return true;
+}
+
+/**
+ * Toggle the retry flag.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	New value.
+ *
+ * @return true if sucessful
+ */
+static bool
+set_retry(const char *name _is_unused, const char *value)
+{
+    bool previous = appres.interactive.retry;
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.interactive.retry)) != NULL) {
+	popup_an_error("%s", errmsg);
+	return false;
+    }
+
+    if (appres.interactive.reconnect != previous) {
+	reconnect_retry_touched();
     }
     return true;
 }
@@ -295,6 +334,8 @@ host_register(void)
     /* Register our toggles. */
     register_extended_toggle(ResReconnect, set_reconnect, NULL, NULL,
 	    (void **)&appres.interactive.reconnect, XRM_BOOLEAN);
+    register_extended_toggle(ResRetry, set_retry, NULL, NULL,
+	    (void **)&appres.interactive.retry, XRM_BOOLEAN);
 
     /* Register our actions. */
     register_actions(host_actions, array_count(host_actions));
@@ -313,6 +354,8 @@ hostfile_init(void)
     }
 
     read_hosts_file();
+
+    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
 
     hostfile_initted = true;
 }
@@ -527,11 +570,12 @@ host_connect(const char *n, enum iaction ia)
 	    (accept != NULL)? accept: ""));
 
     /* Attempt contact. */
+    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
     ever_3270 = false;
     nc = net_connect(chost, port, accept, localprocess_cmd != NULL, &net_sock);
     if (nc == NC_FAILED) {
 	if (!host_gui_connect()) {
-	    if (appres.interactive.reconnect) {
+	    if (host_retry_mode) {
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
 		change_cstate(RECONNECTING, "host_connect");
 	    }
@@ -688,7 +732,7 @@ host_disconnect(bool failed)
     net_disconnect(true);
     net_sock = INVALID_IOSRC;
     if (!host_gui_disconnect()) {
-	if (appres.interactive.reconnect && reconnect_id == NULL_IOID) {
+	if (host_retry_mode && reconnect_id == NULL_IOID) {
 	    /* Schedule an automatic reconnection. */
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 					      RECONNECT_MS,
@@ -729,6 +773,7 @@ void
 host_connected(void)
 {
     change_cstate(TELNET_PENDING, "host_connected");
+    host_retry_mode = appres.interactive.reconnect;
     host_gui_connected();
 }
 

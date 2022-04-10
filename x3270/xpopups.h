@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015, 2020 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@ Widget create_form_popup(const char *name, XtCallbackProc callback,
 void error_init(void);
 void error_popup_init(void);
 bool error_popup_visible(void);
+void error_popup_resume(void);
 void info_popup_init(void);
 void PA_confirm_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);

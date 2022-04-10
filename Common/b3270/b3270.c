@@ -1126,6 +1126,7 @@ b3270_register(void)
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
 	{ ResIndent,		aoffset(b3270.indent),XRM_BOOLEAN },
 	{ ResJson,		aoffset(b3270.json),XRM_BOOLEAN },
+	{ ResRetry,		aoffset(interactive.retry), XRM_BOOLEAN },
 	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN },
 	{ ResWrapperDoc,	aoffset(b3270.wrapper_doc), XRM_BOOLEAN },
     };

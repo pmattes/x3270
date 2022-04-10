@@ -702,6 +702,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 {
     ui_action_t *uia = (ui_action_t *)handle;
     unsigned long msec = task_cb_msec(handle);
+    bool retrying = task_cb_retrying(handle);
 
     /*
      * Repaint the screen, so the effect of the action can be seen before
@@ -717,6 +718,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 		XML_MODE? uia->xresult: (char *)uia->jresult,
 	    AttrAbort, abort? AT_BOOLEAN: AT_SKIP_BOOLEAN, abort,
 	    AttrTime, AT_DOUBLE, (double)msec / 1000.0,
+	    retrying? AttrRetrying: NULL, AT_BOOLEAN, retrying,
 	    NULL);
     if (XML_MODE) {
 	Replace(uia->xresult, NULL);

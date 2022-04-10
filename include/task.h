@@ -58,6 +58,7 @@ bool task_can_kbwait(void);
 void task_connect_wait(void);
 bool run_tasks(void);
 void task_error(const char *msg);
+void task_error_retrying(const char *msg, bool retrying);
 void task_host_output(void);
 void task_info(const char *fmt, ...) printflike(1, 2);
 bool task_ifield_can_proceed(void);
@@ -129,6 +130,7 @@ void task_activate(task_cbh handle);
 void task_register(void);
 char *task_cb_prompt(task_cbh handle);
 unsigned long task_cb_msec(task_cbh handle);
+bool task_cb_retrying(task_cbh handle);
 
 typedef bool continue_fn(void *, const char *);
 typedef void abort_fn(void *);

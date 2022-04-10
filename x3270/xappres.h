@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015-2016, 2018, 2020, 2022 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -115,6 +115,7 @@ typedef struct {
 	    Boolean menubar;
 	    Boolean visual_bell;
 	    Boolean reconnect;
+	    Boolean retry;
 	    Boolean do_confirms;
 	} interactive;
 	Boolean toggle[N_TOGGLES];

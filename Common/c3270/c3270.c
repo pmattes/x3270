@@ -449,10 +449,10 @@ c3270_connect(bool ignored)
     /* Not connected. */
     if (!appres.secure &&
 	    !PCONNECTED &&
-	    !appres.interactive.reconnect) {
+	    !host_retry_mode) {
 	glue_gui_error_cond("Disconnected.", false);
     }
-    if (connect_once) {
+    if (connect_once && !host_retry_mode) {
 	/* Exit after the connection is broken. */
 	if (command_running || PAGER_RUNNING) {
 	    /* Exit when the command and pager are complete. */
@@ -2248,12 +2248,16 @@ glue_gui_output(const char *s)
  * This handles asynchronous errors, such as file transfers that do not start
  * or abort.
  *
+ * @param[in] type	Error type
  * @param[in] s		Text to display
- * @returns true
+ * @returns true (the error has been handled)
  */
 bool
-glue_gui_error(const char *s)
+glue_gui_error(pae_t type, const char *s)
 {
+    if (type == ET_CONNECT && host_retry_mode) {
+	return true;
+    }
     return glue_gui_error_cond(s, true);
 }
 
@@ -2265,11 +2269,7 @@ glue_gui_error(const char *s)
 bool
 glue_gui_open_safe(void)
 {
-    /*
-     * It is safe if we are not at the c3270> prompt, or if the currently
-     * executing action is derived from something entered at the prompt.
-     */
-    return !escaped || task_running_cb_contains(&command_cb);
+    return screen_initted || task_running_cb_contains(&command_cb);
 }
 
 /**
@@ -2364,7 +2364,8 @@ c3270_register(void)
 	{ ResKeymap,	aoffset(interactive.key_map),	XRM_STRING },
 	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
-	{ ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
+	{ ResReconnect,	aoffset(interactive.reconnect),	XRM_BOOLEAN },
+	{ ResRetry,	aoffset(interactive.retry),	XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
 #if !defined(_WIN32) /*[*/
 	{ ResCbreak,	aoffset(c3270.cbreak_mode),	XRM_BOOLEAN },

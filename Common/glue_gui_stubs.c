@@ -41,7 +41,7 @@ glue_gui_output(const char *s _is_unused)
 }
 
 bool
-glue_gui_error(const char *s _is_unused)
+glue_gui_error(pae_t type, const char *s _is_unused)
 {
     return false;
 }

@@ -820,7 +820,7 @@ x3270.keymap.icelandic: \
 !=============================================================================
 !
 x3270.errorPopup.title:				x3270 Error
-x3270.errorPopup*cancelButton.label:		Exit
+x3270.errorPopup*cancelButton.label:		Cancel
 x3270.printerErrorPopup.title:			x3270 Printer Error
 x3270.childErrorPopup.title:			x3270 Child Process Error
 x3270.passwordPopup.title:			x3270 Password
@@ -1003,6 +1003,8 @@ x3270*oversizeOption.label:			Oversize...
 x3270*saveOption.label:				Save Changed Options
 x3270*alwaysInsertOption.label:			Default Insert Mode
 x3270*selectUrlOption.label:			Open selected URLs
+x3270*retryOption.label:			Retry connections
+x3270*reconnectOption.label:			Reconnect after disconnect
 !
 ! Messages
 x3270.message.processId:			Process ID:

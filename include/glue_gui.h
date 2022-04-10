@@ -32,6 +32,6 @@
  */
 
 bool glue_gui_output(const char *s);		/* default false */
-bool glue_gui_error(const char *s);		/* default false */
+bool glue_gui_error(pae_t type, const char *s);	/* default false */
 bool glue_gui_open_safe(void);			/* default true */
 bool glue_gui_script_interactive(void);		/* default false */
