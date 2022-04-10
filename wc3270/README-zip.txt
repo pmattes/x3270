@@ -8,12 +8,10 @@ It includes the following executable files:
     wc3270.exe       The wc3270 program, runs in a console window
     wc3270wiz.exe    The wc3270 Session Wizard, creates and edits session files
                       and desktop shortcuts
-    ws3270.exe       The scripting (screen-scraping) version of wc3270
+    s3270.exe        The scripting (screen-scraping) version of wc3270
     catf.exe         Helper application to monitor trace files
     x3270if.exe      Helper application for wc3270 scripting
 
 The documentation is here:
-    html\            HTML documentation, the root is html\README.html
     LICENSE.txt      Legal necessities
-    NO-INSTALL.txt   How to run wc3270 without installing it (it can be a bit
-                      tricky)
+    NO-INSTALL.txt   How to run wc3270 without installing it
