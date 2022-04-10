@@ -1,5 +1,5 @@
 '\" t
-.TH X3270IF 1 "26 March 2022"
+.TH X3270IF 1 "10 April 2022"
 .SH "NAME"
 x3270if \- script interface to 3270 emulators
 .SH "SYNOPSIS"
@@ -14,4 +14,4 @@ the 3270 emulators x3270, c3270, wc3270 s3270 and b3270.
 .SH "WIKI"
 Primary documentation for x3270if is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-x3270if 4.2beta2
+x3270if 4.2pre3
