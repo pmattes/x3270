@@ -376,10 +376,14 @@ class cti(unittest.TestCase):
 
     def vgwait_pid(self, pid, timeout=2, assertOnFailure=True):
         '''Wait for a process with a timeout, optionally assert on failure, and clean up the valgrind log file'''
-        (_, status) = os.waitpid(pid, 0) # xxx: should be timed
-        if os.WIFSIGNALED(status):
-            self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(status)}')
-        rc = os.WEXITSTATUS(status)
+        self.status = -1
+        def waitforit():
+            (gotpid, self.status) = os.waitpid(pid, os.WNOHANG)
+            return gotpid == pid
+        self.try_until(waitforit, timeout, 'Process did not exit')
+        if os.WIFSIGNALED(self.status):
+            self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(self.status)}')
+        rc = os.WEXITSTATUS(self.status)
         self.vgcheck(pid, rc, assertOnFailure)
 
     def timed_readline(self, p, timeout, errmsg):
