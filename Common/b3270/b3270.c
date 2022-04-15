@@ -547,9 +547,6 @@ main(int argc, char *argv[])
 
     check_min_version(appres.min_version);
 
-    /* Initialize the toggles, so we get tracing going. */
-    initialize_toggles();
-
     ui_io_init();
     if (XML_MODE) {
 	uix_push(IndInitialize, NULL);
@@ -641,6 +638,9 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /* Collect child exit status. */
     signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
+
+    /* Initialize the toggles. */
+    initialize_toggles();
 
     /* Send TLS set-up. */
     if (sio_supported()) {
