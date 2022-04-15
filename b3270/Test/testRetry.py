@@ -25,60 +25,56 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# c3270 prompt tests
+# b3270 retry tests
 
-import unittest
+import json
 from subprocess import Popen, PIPE, DEVNULL
-import sys
-if not sys.platform.startswith('win'):
-    import pty
-import os
-import os.path
-import time
+import unittest
+
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
-class TestC3270Prompt(cti.cti):
+class TestB3270Retry(cti.cti):
 
-    # c3270 prompt open test
-    def test_c3270_prompt_open(self):
+    # b3270 retry test
+    def test_b3270_retry(self):
 
-        # Start 'playback' to read s3270's output.
+        # Find an unused port, but do not listen on it yet.
         playback_port, ts = cti.unused_port()
+
+        # Start b3270.
+        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+
+        # Throw away b3270's initialization output.
+        self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+
+        # Tell b3270 to connect.
+        b3270.stdin.write(f'"open 127.0.0.1:{playback_port}"\n'.encode('utf8'))
+        b3270.stdin.flush()
+
+        # Wait for it to try to connect and fail.
+        while True:
+            out = self.timed_readline(b3270.stdout, 2, 'b3270 did not fail the connection')
+            if b'run-result' in out:
+                break
+        outj = json.loads(out.decode('utf8'))['run-result']
+        self.assertEqual(False, outj['success'])
+        self.assertEqual(True, outj['retrying'])
+
+        # Start 'playback' to talk to b3270.
         with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             ts.close()
 
-            # Fork a child process with a PTY between this process and it.
-            c3270_port, ts = cti.unused_port()
-            os.environ['TERM'] = 'xterm-256color'
-            (pid, fd) = pty.fork()
-            if pid == 0:
-                # Child process
-                ts.close()
-                os.execvp(cti.vgwrap_ecmd('c3270'),
-                    cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']))
-                self.assertTrue(False, 'c3270 did not start')
+            # Wait for b3270 to connect.
+            p.wait_accept(timeout=6)
 
-            # Parent process.
-
-            # Make sure c3270 started.
-            self.check_listen(c3270_port)
-            ts.close()
-
-            # Send an Open command to c3270.
-            os.write(fd, f'Open(127.0.0.1:{playback_port})\r'.encode('utf8'))
-
-            # Write the stream to c3270.
-            p.send_records(7)
-
-            # Break to the prompt and send a Quit command to c3270.
-            os.write(fd, b'\x1d')
-            time.sleep(0.1)
-            os.write(fd, b'Quit()\r')
-            p.close()
-
-        self.vgwait_pid(pid)
+        # Clean up.
+        b3270.stdin.write(b'"quit"\n')
+        b3270.stdin.flush()
+        b3270.stdin.close()
+        self.vgwait(b3270)
+        b3270.stdout.close()
 
 if __name__ == '__main__':
     unittest.main()
