@@ -96,7 +96,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
     s = vlazyaf(fmt, ap);
     vtrace("Error: %s\n", s);
     if (task_redirect()) {
-	task_error_retrying(s, type == ET_CONNECT && host_retry_mode);
+	task_error(s);
 	return;
     }
     if (!popups_ready) {

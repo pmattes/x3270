@@ -1218,7 +1218,7 @@ parse_set_clear(int *argcp, char **argv)
 		proper_name = xs_buffer("%.*s", (int)(eq - argv[i]), argv[i]);
 	    }
 	    argv_out[argc_out++] = OptXrm;
-	    argv_out[argc_out++] = xs_buffer("x3270.%s: %s", proper_name,
+	    argv_out[argc_out++] = lazyaf("x3270.%s: %s", proper_name,
 			(eq != NULL)? requote(eq + 1):
 			    (is_set? ResTrue: ResFalse));
 	}
@@ -1269,38 +1269,37 @@ copy_xres_to_res_bool(void)
     int i;
 #   define copy_bool(field)	appres.field = xappres.bools.field
 
-    copy_bool(once);
-    copy_bool(scripted);
-    copy_bool(scripted_always);
-    copy_bool(prefer_ipv4);
-    copy_bool(prefer_ipv6);
-    copy_bool(modified_sel);
-    copy_bool(unlock_delay);
     copy_bool(bind_limit);
     copy_bool(bind_unlock);
+    copy_bool(bsd_tm);
     copy_bool(contention_resolution);
-    copy_bool(new_environ);
-    copy_bool(socket);
-    copy_bool(numeric_lock);
-    copy_bool(secure);
-    copy_bool(oerr_lock);
     copy_bool(debug_tracing);
     copy_bool(disconnect_clear);
     copy_bool(highlight_bold);
-    copy_bool(bsd_tm);
-    copy_bool(trace_monitor);
     copy_bool(idle_command_enabled);
+    copy_bool(modified_sel);
+    copy_bool(numeric_lock);
+    copy_bool(new_environ);
     copy_bool(nvt_mode);
+    copy_bool(oerr_lock);
+    copy_bool(once);
+    copy_bool(prefer_ipv4);
+    copy_bool(prefer_ipv6);
+    copy_bool(reconnect);
+    copy_bool(retry);
     copy_bool(script_port_once);
+    copy_bool(scripted);
+    copy_bool(scripted_always);
+    copy_bool(secure);
+    copy_bool(socket);
+    copy_bool(trace_monitor);
+    copy_bool(unlock_delay);
     copy_bool(utf8);
 
+    copy_bool(interactive.do_confirms);
     copy_bool(interactive.mono);
     copy_bool(interactive.menubar);
     copy_bool(interactive.visual_bell);
-    copy_bool(interactive.reconnect);
-    copy_bool(interactive.do_confirms);
-    copy_bool(interactive.reconnect);
-    copy_bool(interactive.retry);
 
     for (i = 0; i < N_TOGGLES; i++) {
 	copy_bool(toggle[i]);

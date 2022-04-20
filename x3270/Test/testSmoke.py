@@ -27,13 +27,14 @@
 #
 # x3270 smoke tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
 import os
-import stat
-import tempfile
-import sys
 import requests
+import shutil
+import stat
+from subprocess import Popen, PIPE, DEVNULL
+import tempfile
+import unittest
+
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -68,6 +69,8 @@ class TestX3270Smoke(cti.cti):
         cwd=os.getcwd()
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
+        # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
+        os.environ['SSH_CONNECTION'] = 'foo'
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
 
@@ -79,8 +82,9 @@ class TestX3270Smoke(cti.cti):
 
             # Set up the fonts.
             os.environ['DISPLAY'] = ':2'
-            self.assertEqual(0, os.system(f'mkfontdir {os.environ["OBJ"]}/x3270'))
-            self.assertEqual(0, os.system(f'xset +fp {os.environ["OBJ"]}/x3270/'))
+            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
+            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
+            self.assertEqual(0, os.system(f'xset +fp {obj}/'))
             self.assertEqual(0, os.system('xset fp rehash'))
 
             # Start x3270.

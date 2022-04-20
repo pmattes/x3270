@@ -338,7 +338,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 
     gai[*slot].gaicbs = &gai[*slot].gaicb;
     gai[*slot].gaicb.ar_name = host;
-    gai[*slot].gaicb.ar_service = portname;
+    gai[*slot].gaicb.ar_service = gai[*slot].port;
     gai[*slot].gaicb.ar_request = &gai[*slot].hints;
     gai[*slot].gaicb.ar_result = NULL;
 

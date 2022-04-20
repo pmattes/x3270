@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1993-2012, 2016-2022 Paul Mattes.
- * Copyright (c) 1990, Jeff Sparkes.
+ * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,84 +43,88 @@
 
 typedef struct {
     /* Common options. */
-    bool	 modified_sel;
-    bool	 once;
-    bool	 scripted;
-    bool	 numeric_lock;
-    bool	 secure;
-    bool	 oerr_lock;
-    bool	 debug_tracing;
-    bool	 disconnect_clear;
-    bool	 highlight_bold;
-    bool	 bsd_tm;
-    bool	 unlock_delay;
-    bool	 qr_bg_color;
+    char	*alias;
     bool	 bind_limit;
-    bool	 new_environ;
-    bool	 socket;
-    bool	 trace_monitor;
-    bool	 script_port_once;
     bool	 bind_unlock;
-    bool	 contention_resolution;
-    bool	 scripted_always;
-    bool	 prefer_ipv4;
-    bool	 prefer_ipv6;
-    char	*script_port;
-    char	*httpd_port;
-    char	*dbcs_cgcsgid;
-    char	*conf_dir;
-    char	*model;
-    char	*hostsfile;
-    char	*port;
-    char	*codepage;
+    bool	 bsd_tm;
     char	*charset;	/* deprecated */
-    char	*sbcs_cgcsgid;
-    char	*termname;
-    char	*devname;	/* for 5250 */
-    char	*user;		/* for 5250 */
-    char	*login_macro;
-    char	*macros;
-    char	*trace_dir;
-    char	*trace_file;
-    char	*trace_file_size;
-    char	*oversize;
-    char	*ft_command;
+    char	*codepage;
+    char	*conf_dir;
+    int		 connect_timeout;
     char	*connectfile_name;
+    bool	 contention_resolution;
+    char	*dbcs_cgcsgid;
+    bool	 debug_tracing;
+    char	*devname;	/* for 5250 */
+    bool	 disconnect_clear;
+    char	*ft_command;
+#if defined(_WIN32) /*[*/
+    int		 ft_cp;
+#endif /*]*/
+    bool	 highlight_bold;
+    char	*hostname;
+    char	*hostsfile;
+    char	*httpd_port;
     char	*idle_command;
     bool	 idle_command_enabled;
     char	*idle_timeout;
-    char	*proxy;
-    int		 unlock_delay_ms;
-    char	*hostname;
-    bool	 utf8;
-    int	 	 max_recent;
-    bool	 nvt_mode;
-    char	*suppress_actions;
-    char	*min_version;
-    int		 connect_timeout;
-    int		 nop_seconds;
-    char	*alias;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
-    int		 ft_cp;
 #endif /*]*/
+    char	*login_macro;
+    bool	 oerr_lock;
+    char	*macros;
+    int	 	 max_recent;
+    char	*min_version;
+    char	*model;
+    bool	 modified_sel;
+    bool	 new_environ;
+    int		 nop_seconds;
+    bool	 numeric_lock;
+    bool	 nvt_mode;
+    bool	 once;
+    char	*oversize;
+    char	*port;
+    bool	 prefer_ipv4;
+    bool	 prefer_ipv6;
+    char	*proxy;
+    bool	 qr_bg_color;
+    bool	 reconnect;
+    bool	 retry;
+    char	*sbcs_cgcsgid;
+    char	*script_port;
+    bool	 script_port_once;
+    bool	 scripted;
+    bool	 scripted_always;
+    bool	 secure;
+    bool	 socket;
+    char	*suppress_actions;
+    char	*termname;
+    char	*trace_dir;
+    char	*trace_file;
+    char	*trace_file_size;
+    bool	 trace_monitor;
+    bool	 unlock_delay;
+    int		 unlock_delay_ms;
+    char	*user;		/* for 5250 */
+    bool	 utf8;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];
 
     /* Line-mode TTY parameters. */
     struct {
+	char	*eof;
+	char	*erase;
 	bool	 icrnl;
 	bool	 inlcr;
-	bool	 onlcr;
-	char	*erase;
-	char	*kill;
-	char	*werase;
-	char	*rprnt;
-	char	*lnext;
 	char	*intr;
+	char	*kill;
+	char	*lnext;
+	bool	 onlcr;
 	char	*quit;
-	char	*eof;
+	char	*rprnt;
+	char	*werase;
     } linemode;
 
     /* TLS fields. */
@@ -128,21 +132,19 @@ typedef struct {
 
     /* Interactive (x3270/c3270/wc3270/b3270) fields. */
     struct {
-	bool	 mono;
-	bool	 reconnect;
-	bool	 retry;
-	bool	 do_confirms;
-	bool	 menubar;
-	bool	 visual_bell;
-	char	*key_map;
 	char	*compose_map;
+	char	*console;
+	char	*crosshair_color;
+	bool	 do_confirms;
+	char	*key_map;
+	bool	 menubar;
+	bool	 mono;
+	char	*no_telnet_input_mode;
+	bool	 print_dialog;	/* Windows only */
 	char	*printer_lu;
 	char	*printer_opts;
 	int	 save_lines;
-	char	*crosshair_color;
-	char	*console;
-	bool	 print_dialog;	/* Windows only */
-	char	*no_telnet_input_mode;
+	bool	 visual_bell;
     } interactive;
 
     /* File transfer fields. */
@@ -150,7 +152,11 @@ typedef struct {
 	char	*allocation;
 	int	 avblock;
 	int	 blksize;
+#if defined(_WIN32) /*[*/
+	int	 codepage;
+#endif /*]*/
 	char	*cr;
+	int	 dft_buffer_size;
 	char	*direction;
 	char	*exist;
 	char	*host;
@@ -162,35 +168,36 @@ typedef struct {
 	char	*recfm;
 	char	*remap;
 	int	 secondary_space;
-	int	 dft_buffer_size;
-#if defined(_WIN32) /*[*/
-	int	 codepage;
-#endif /*]*/
     } ft;
 
     /* c3270/wc3270-specific fields. */
     struct {
-	bool	 all_bold_on;
-	bool	 ascii_box_draw;
-	bool	 acs;
-#if !defined(_WIN32) /*[*/
-	bool	 default_fgbg;
-	bool	 cbreak_mode;
-	bool	 curses_keypad;
-	bool	 mouse;
-	bool	 reverse_video;
-#else /*]*/
-	bool	 auto_shortcut;
-	bool	 lightpen_primary;
-#endif /*]*/
-
 	char	*all_bold;
+	bool	 all_bold_on;
 #if !defined(_WIN32) /*[*/
 	char	*altscreen;
-	char	*defscreen;
-	char	*meta_escape;
-#else /*][*/
+#endif /*]*/
+	bool	 ascii_box_draw;
+	bool	 acs;
+#if defined(_WIN32) /*[*/
+	bool	 auto_shortcut;
 	char	*bell_mode;
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+	bool	 cbreak_mode;
+	bool	 curses_keypad;
+	bool	 default_fgbg;
+	char	*defscreen;
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+	bool	 lightpen_primary;
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+	char	*meta_escape;
+	bool	 mouse;
+	bool	 reverse_video;
+#endif /*]*/
+#if defined(_WIN32) /*[*/
 	char	*title;
 #endif /*]*/
     } c3270;
@@ -209,8 +216,8 @@ typedef struct {
 
     /* b3270-specific fields. */
     struct {
-	bool	json;
 	bool	indent;
+	bool	json;
 	bool	wrapper_doc;
     } b3270;
 

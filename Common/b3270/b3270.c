@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2022 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -1126,7 +1126,6 @@ b3270_register(void)
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING },
 	{ ResIndent,		aoffset(b3270.indent),XRM_BOOLEAN },
 	{ ResJson,		aoffset(b3270.json),XRM_BOOLEAN },
-	{ ResRetry,		aoffset(interactive.retry), XRM_BOOLEAN },
 	{ ResUtf8,		aoffset(utf8),      XRM_BOOLEAN },
 	{ ResWrapperDoc,	aoffset(b3270.wrapper_doc), XRM_BOOLEAN },
     };

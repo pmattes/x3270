@@ -1077,6 +1077,14 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
     char *s = NULL;
 
+    if (task_redirect()) {
+	char *buf = xs_vbuffer(fmt, args);
+
+	task_error(buf);
+	Free(buf);
+	return;
+    }
+
     if (epd.active) {
 	epd.type = type;
 	Replace(epd.text, xs_vbuffer(fmt, args));

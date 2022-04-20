@@ -772,7 +772,7 @@ Type 'help' for help information.\n\n",
     if (cl_hostname != NULL) {
 	pause_for_errors();
 	/* Connect to the host. */
-	if (!appres.interactive.reconnect) {
+	if (!appres.reconnect) {
 	    connect_once = true;
 	}
 	c3270_push_command(lazyaf(AnConnect "(\"%s\")", cl_hostname));
@@ -2303,7 +2303,7 @@ c3270_register(void)
 	    aoffset(secure),
 	    NULL, "Alias for -secure" },
 	{ OptReconnect,OPT_BOOLEAN, true,  ResReconnect,
-	    aoffset(interactive.reconnect),
+	    aoffset(reconnect),
 	    NULL, "Reconnect to host as soon as it disconnects" },
 	{ OptSaveLines, OPT_INT,    false, ResSaveLines,
 	    aoffset(interactive.save_lines),
@@ -2364,8 +2364,6 @@ c3270_register(void)
 	{ ResKeymap,	aoffset(interactive.key_map),	XRM_STRING },
 	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
-	{ ResReconnect,	aoffset(interactive.reconnect),	XRM_BOOLEAN },
-	{ ResRetry,	aoffset(interactive.retry),	XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
 #if !defined(_WIN32) /*[*/
 	{ ResCbreak,	aoffset(c3270.cbreak_mode),	XRM_BOOLEAN },

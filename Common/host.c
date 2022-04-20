@@ -165,7 +165,7 @@ read_hosts_file(void)
 		continue;
 	    }
 	    h = (struct host *)Malloc(sizeof(*h));
-	    if (!split_hier(NewString(name), &h->name, &h->parents)) {
+	    if (!split_hier(name, &h->name, &h->parents)) {
 		Free(h);
 		continue;
 	    }
@@ -249,18 +249,21 @@ host_cancel_reconnect(void)
     }
 }
 
+/**
+ * Common logic for when the reconnect or retry options change.
+ */
 static void
 reconnect_retry_touched(void)
 {
     /*
      * Turning off reconnect/retry is the way to stop a reconnect in progress.
      */
-    if (!appres.interactive.reconnect && !appres.interactive.retry) {
+    if (!appres.reconnect && !appres.retry) {
 	host_cancel_reconnect();
     }
 
     /* They have changed one of the flags. Reset host_retry_mode. */
-    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
+    host_retry_mode = appres.reconnect || appres.retry;
 }
 
 /**
@@ -274,15 +277,15 @@ reconnect_retry_touched(void)
 static bool
 set_reconnect(const char *name _is_unused, const char *value)
 {
-    bool previous = appres.interactive.reconnect;
+    bool previous = appres.reconnect;
     const char *errmsg;
 
-    if ((errmsg = boolstr(value, &appres.interactive.reconnect)) != NULL) {
+    if ((errmsg = boolstr(value, &appres.reconnect)) != NULL) {
 	popup_an_error("%s", errmsg);
 	return false;
     }
 
-    if (appres.interactive.reconnect != previous) {
+    if (appres.reconnect != previous) {
 	reconnect_retry_touched();
     }
     return true;
@@ -299,15 +302,15 @@ set_reconnect(const char *name _is_unused, const char *value)
 static bool
 set_retry(const char *name _is_unused, const char *value)
 {
-    bool previous = appres.interactive.retry;
+    bool previous = appres.retry;
     const char *errmsg;
 
-    if ((errmsg = boolstr(value, &appres.interactive.retry)) != NULL) {
+    if ((errmsg = boolstr(value, &appres.retry)) != NULL) {
 	popup_an_error("%s", errmsg);
 	return false;
     }
 
-    if (appres.interactive.reconnect != previous) {
+    if (appres.reconnect != previous) {
 	reconnect_retry_touched();
     }
     return true;
@@ -333,9 +336,9 @@ host_register(void)
 
     /* Register our toggles. */
     register_extended_toggle(ResReconnect, set_reconnect, NULL, NULL,
-	    (void **)&appres.interactive.reconnect, XRM_BOOLEAN);
+	    (void **)&appres.reconnect, XRM_BOOLEAN);
     register_extended_toggle(ResRetry, set_retry, NULL, NULL,
-	    (void **)&appres.interactive.retry, XRM_BOOLEAN);
+	    (void **)&appres.retry, XRM_BOOLEAN);
 
     /* Register our actions. */
     register_actions(host_actions, array_count(host_actions));
@@ -355,7 +358,7 @@ hostfile_init(void)
 
     read_hosts_file();
 
-    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
+    host_retry_mode = appres.reconnect || appres.retry;
 
     hostfile_initted = true;
 }
@@ -500,7 +503,9 @@ host_connect(const char *n, enum iaction ia)
     }
 
     /* Remember this hostname, as the last hostname we connected to. */
-    Replace(reconnect_host, NewString(nb));
+    if (reconnect_host == NULL || strcmp(reconnect_host, nb)) {
+	Replace(reconnect_host, NewString(nb));
+    }
 
     /* Remember this hostname in the recent connection list and file. */
     save_recent(nb);
@@ -520,16 +525,16 @@ host_connect(const char *n, enum iaction ia)
 	    goto failure;
 	}
 
-	/* Look up the name in the hosts file. */
+	/* If the hostname is naked, look it up in the hosts file. */
 	if (!needed && hostfile_lookup(s, &target_name, &ps)) {
 	    /*
-	     * Rescan for qualifiers.
-	     * Qualifiers, LU names, ports and accept names  are all
-	     * overridden by the hosts file.
+	     * Split out all of the other decorations from the entry in the
+	     * hosts file.
 	     */
 	    Free(s);
-	    if (!(s = split_host(target_name, &host_flags, luname, &port,
-			    &accept, &needed))) {
+	    s = split_host(target_name, &host_flags, luname, &port, &accept,
+		    &needed);
+	    if (s == NULL) {
 		goto failure;
 	    }
 	}
@@ -547,7 +552,7 @@ host_connect(const char *n, enum iaction ia)
      *   and port number
      *  full_current_host is the entire string, for use in reconnecting
      */
-    if (n != full_current_host) {
+    if (full_current_host == NULL || strcmp(full_current_host, n)) {
 	Replace(full_current_host, NewString(n));
     }
     Replace(current_host, NULL);
@@ -570,9 +575,13 @@ host_connect(const char *n, enum iaction ia)
 	    (accept != NULL)? accept: ""));
 
     /* Attempt contact. */
-    host_retry_mode = appres.interactive.reconnect || appres.interactive.retry;
+    host_retry_mode = appres.reconnect || appres.retry;
     ever_3270 = false;
     nc = net_connect(chost, port, accept, localprocess_cmd != NULL, &net_sock);
+    if (port != appres.port) {
+	Replace(port, NULL);
+    }
+    Replace(accept, NULL);
     if (nc == NC_FAILED) {
 	if (!host_gui_connect()) {
 	    if (host_retry_mode) {
@@ -773,7 +782,7 @@ void
 host_connected(void)
 {
     change_cstate(TELNET_PENDING, "host_connected");
-    host_retry_mode = appres.interactive.reconnect;
+    host_retry_mode = appres.reconnect;
     host_gui_connected();
 }
 

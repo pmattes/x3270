@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1993-2022 Paul Mattes.
- * Copyright (c) 1990, Jeff Sparkes.
- * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ * Copyright (c) 1990 Jeff Sparkes.
+ * Copyright (c) 1989 Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
  * All rights reserved.
  *
@@ -1013,6 +1013,8 @@ static res_t base_resources[] = {
     { ResProxy,		aoffset(proxy),		XRM_STRING },
     { ResQrBgColor,	aoffset(qr_bg_color),	XRM_BOOLEAN },
     { ResQuit,		aoffset(linemode.quit),	XRM_STRING },
+    { ResReconnect,	aoffset(reconnect),	XRM_BOOLEAN },
+    { ResRetry,		aoffset(retry),		XRM_BOOLEAN },
     { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
     { ResScreenTraceFile,aoffset(screentrace.file),XRM_STRING },
     { ResScreenTraceTarget,aoffset(screentrace.target),XRM_STRING },

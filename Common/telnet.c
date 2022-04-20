@@ -654,7 +654,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     environ_init();
 
     Replace(hostname, NewString(host));
-    net_accept = accept;
+    Replace(net_accept, NewString(accept));
 
     starttls_pending = NOT_CONNECTED;
     st_changed(ST_SECURE, false);

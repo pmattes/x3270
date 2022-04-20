@@ -29,6 +29,8 @@
 
 import json
 from subprocess import Popen, PIPE, DEVNULL
+import requests
+import threading
 import unittest
 
 import Common.Test.playback as playback
@@ -37,7 +39,7 @@ import Common.Test.cti as cti
 class TestB3270Retry(cti.cti):
 
     # b3270 retry test
-    def test_b3270_retry(self):
+    def test_b3270_retry_5s(self):
 
         # Find an unused port, but do not listen on it yet.
         playback_port, ts = cti.unused_port()
@@ -54,13 +56,15 @@ class TestB3270Retry(cti.cti):
         b3270.stdin.flush()
 
         # Wait for it to try to connect and fail.
+        out_all = []
         while True:
             out = self.timed_readline(b3270.stdout, 2, 'b3270 did not fail the connection')
-            if b'run-result' in out:
+            out_all += [out]
+            if b'connection-error' in out:
                 break
-        outj = json.loads(out.decode('utf8'))['run-result']
-        self.assertEqual(False, outj['success'])
-        self.assertEqual(True, outj['retrying'])
+        outj = json.loads(out.decode('utf8'))['popup']
+        self.assertTrue(outj['retrying'])
+        self.assertFalse(any(b'run-result' in o for o in out_all), 'Open action should not complete')
 
         # Start 'playback' to talk to b3270.
         with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
@@ -68,6 +72,123 @@ class TestB3270Retry(cti.cti):
 
             # Wait for b3270 to connect.
             p.wait_accept(timeout=6)
+
+        # Clean up.
+        b3270.stdin.write(b'"quit"\n')
+        b3270.stdin.flush()
+        b3270.stdin.close()
+        self.vgwait(b3270)
+        b3270.stdout.close()
+
+    # Wait for an input field.
+    def wif(self, hport):
+        self.wait_result = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Wait(InputField)').json()
+
+    # b3270 reconnect/disconnect interference test
+    # Makes sure that even if reconnect mode is set, a Wait() action still fails when the connection is broken.
+    def test_b3270_reconnect_interference(self):
+
+        # Start 'playback' to talk to b3270.
+        playback_port, ts = cti.unused_port()
+        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+            ts.close()
+
+            # Start b3270.
+            hport, ts = cti.unused_port()
+            b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
+            ts.close()
+            self.children.append(b3270)
+
+            # Throw away b3270's initialization output.
+            self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+
+            # Tell b3270 to connect.
+            b3270.stdin.write(f'"open 127.0.0.1:{playback_port}"\n'.encode('utf8'))
+            b3270.stdin.flush()
+
+            # Wait for b3270 to connect.
+            p.wait_accept()
+
+            # Asynchronously block for an input field.
+            wait_thread = threading.Thread(target=self.wif, args = [hport])
+            wait_thread.start()
+
+            # Wait for the Wait() to block.
+            def wait_block():
+                r = ''.join(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Tasks)').json()['result'])
+                return 'Wait("InputField")' in r
+            self.try_until(wait_block, 2, 'Wait() did not block')
+
+            # Close the connection.
+            p.close()
+
+        # Wait for the input field thread to complete.
+        wait_thread.join(timeout=2)
+        self.assertFalse(wait_thread.is_alive(), 'Wait thread did not terminate')
+
+        # Check.
+        self.assertIn('Host disconnected', ''.join(self.wait_result['result']))
+
+        # Clean up.
+        b3270.stdin.write(b'"quit"\n')
+        b3270.stdin.flush()
+        b3270.stdin.close()
+        self.vgwait(b3270)
+        b3270.stdout.close()
+
+    # b3270 reconnect test
+    def test_b3270_reconnect_5s(self):
+
+        # Find an unused port, but do not listen on it yet.
+        playback_port, ts = cti.unused_port()
+
+        # Start b3270.
+        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+
+        # Throw away b3270's initialization output.
+        self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+
+        # Tell b3270 to connect.
+        b3270.stdin.write(f'"open c:a:127.0.0.1:{playback_port}"\n'.encode('utf8'))
+        b3270.stdin.flush()
+
+        # Wait for it to try to connect and fail.
+        out_all = []
+        while True:
+            out = self.timed_readline(b3270.stdout, 2, 'b3270 did not fail the connection')
+            out_all += [out]
+            if b'connection-error' in out:
+                break
+        outj = json.loads(out.decode('utf8'))['popup']
+        self.assertTrue(outj['retrying'])
+        self.assertFalse(any(b'run-result' in o for o in out_all), 'Open action should not complete')
+
+        # Start 'playback' to talk to b3270.
+        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+            ts.close()
+
+            # Wait for b3270 to connect.
+            p.wait_accept(timeout=6)
+
+            # Wait for the Open action to succeed.
+            while True:
+                out = self.timed_readline(b3270.stdout, 2, 'Open() did not succeed')
+                if b'run-result' in out:
+                    break
+            outj = json.loads(out.decode('utf8'))['run-result']
+            self.assertTrue(outj['success'])
+
+            # Disconnect.
+            p.close()
+
+            # Wait for reconnection to start.
+            while True:
+                out = self.timed_readline(b3270.stdout, 2, 'Reconnect did not happen')
+                if b'reconnecting' in out:
+                    break
+            outj = json.loads(out.decode('utf8'))['connection']
+            self.assertEqual('reconnecting', outj['state'])
 
         # Clean up.
         b3270.stdin.write(b'"quit"\n')

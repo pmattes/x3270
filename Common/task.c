@@ -146,7 +146,6 @@ typedef struct task {
     int passthru_index;	/* UI passthru command index */
     int depth;		/* depth on stack */
     bool fatal;		/* tear everything down after completion */
-    bool retrying;
 
     void *wait_context;	/* opaque context for waiting */
     xcontinue_fn *xcontinue_fn; /* continue function */
@@ -620,7 +619,6 @@ new_task(enum task_type type, taskq_t *q)
     gettimeofday(&s->t0, NULL);
     s->child_msec = 0L;
     s->fatal = false;
-    s->retrying = false;
     s->match.baddr = -1;
     s->match.string = NULL;
     s->match.force_utf8 = false;
@@ -1776,13 +1774,6 @@ task_result(task_t *s, const char *msg, bool success)
 void
 task_error(const char *msg)
 {
-    task_error_retrying(msg, false);
-}
-
-/* Handle an error generated during the execution of a task. */
-void
-task_error_retrying(const char *msg, bool retrying)
-{
     task_t *s;
 
     /* Print the error message. */
@@ -1790,9 +1781,7 @@ task_error_retrying(const char *msg, bool retrying)
     if (s != NULL) {
 	task_result(s, msg, false);
 	s->success = false;
-	s->retrying = retrying;
 	current_task->success = false;
-	current_task->retrying = retrying;
     } else {
 	fprintf(stderr, "%s\n", msg);
 	fflush(stderr);
@@ -1851,14 +1840,19 @@ task_info(const char *fmt, ...)
 static void
 task_disconnect_abort(task_t *s)
 {
+    task_t *t = s;
+
     vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 
-    while (s != NULL && s->type != ST_CB) {
-	s = s->next;
+    while (t != NULL && t->type != ST_CB) {
+	t = t->next;
     }
-    if (s != NULL) {
-	task_result(s, "Host disconnected", false);
-	s->success = false;
+    if (t != NULL) {
+	task_result(t,
+		(s->state == TS_CONNECT_WAIT)?
+		    "Connection failed": "Host disconnected",
+		false);
+	t->success = false;
 	current_task->success = false;
     }
 }
@@ -1893,7 +1887,7 @@ connect_error(const char *fmt, ...)
     msg = xs_vbuffer(fmt, ap);
     va_end(ap);
 
-    if (current_task == NULL) {
+    if (!host_retry_mode && current_task == NULL) {
 	taskq_t *q;
 	task_t *s;
 	bool found = false;
@@ -2072,7 +2066,7 @@ run_taskq(void)
 	    break;
 
 	case TS_WAIT_NVT:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2085,7 +2079,7 @@ run_taskq(void)
 	    return any;
 
 	case TS_WAIT_3270:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2104,7 +2098,7 @@ run_taskq(void)
 	    break;
 
 	case TS_WAIT_IFIELD:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2120,7 +2114,8 @@ run_taskq(void)
 		break;
 	    }
 	    if (HALF_CONNECTED ||
-		(CONNECTED && (kybdlock & KL_AWAITING_FIRST))) {
+		(CONNECTED && (kybdlock & KL_AWAITING_FIRST)) ||
+		cstate == RECONNECTING) {
 		return any;
 	    }
 	    break;
@@ -2130,7 +2125,7 @@ run_taskq(void)
 
 	case TS_WAIT_OUTPUT:
 	case TS_SWAIT_OUTPUT:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2138,14 +2133,14 @@ run_taskq(void)
 	    return any;
 
 	case TS_WAIT_DISC:
-	    if (!CONNECTED) {
+	    if (!CONNECTED || cstate == RECONNECTING) {
 		break;
 	    } else {
 		return any;
 	    }
 
 	case TS_EXPECTING:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2163,7 +2158,7 @@ run_taskq(void)
 	    return any;
 
 	case TS_WAIT_CURSOR_AT:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2174,7 +2169,7 @@ run_taskq(void)
 	    }
 	    return any;
 	case TS_WAIT_STRING_AT:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -2193,7 +2188,7 @@ run_taskq(void)
 	    }
 	    return any;
 	case TS_WAIT_IFIELD_AT:
-	    if (!PCONNECTED) {
+	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
 		any = true;
 		break;
@@ -3068,21 +3063,6 @@ task_cb_msec(task_cbh handle)
 	return 0;
     }
     return s->child_msec;
-}
-
-/**
- * Return the retrying state for a task.
- *
- * @param[in] handle	handle
- *
- * @return True if retrying.
- */
-bool
-task_cb_retrying(task_cbh handle)
-{
-    task_t *s = task_find_cb(handle);
-    
-    return s? s->retrying: false;
 }
 
 /* Save the state of the screen for Snap queries. */

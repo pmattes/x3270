@@ -69,6 +69,8 @@ class TestX3270BadAplDraw(cti.cti):
         cwd=os.getcwd()
         os.environ['HOME'] = cwd + '/x3270/Test/vnc'
         os.environ['USER'] = 'foo'
+        # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
+        os.environ['SSH_CONNECTION'] = 'foo'
         self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
 

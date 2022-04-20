@@ -419,7 +419,7 @@ PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf 
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
 TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
 
-RUNTESTS=PATH="$(TESTPATH)$$PATH" OBJ="$$PWD/obj/@host@" python3 -m unittest $(TESTOPTIONS)
+RUNTESTS=PATH="$(TESTPATH)$$PATH" python3 -m unittest $(TESTOPTIONS)
 
 b3270-test: b3270
 	$(RUNTESTS) b3270/Test/test*.py

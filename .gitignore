@@ -34,3 +34,4 @@ wversion.c
 __pycache__
 .vs
 
+.vscode/

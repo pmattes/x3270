@@ -575,7 +575,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
     /* "Connect..." menu */
 
-    if (!appres.interactive.reconnect)
+    if (!appres.reconnect)
 	connect_menu_init(mb_old != menubar_buttons,
 		BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 		TOP_MARGIN);
@@ -675,7 +675,7 @@ menubar_connect(bool ignored _is_unused)
     }
 
     /* Set up the connect menu. */
-    if (!appres.interactive.reconnect && connect_menu != NULL) {
+    if (!appres.reconnect && connect_menu != NULL) {
 	if (PCONNECTED && connect_button != NULL) {
 	    XtUnmapWidget(connect_button);
 	} else {
@@ -2245,13 +2245,13 @@ options_menu_init(bool regen, Position x, Position y)
 	retry_button = add_menu_itemv("retryOption", t,
 		    toggle_retry, NULL,
 		    &spaced,
-		    XtNleftBitmap, appres.interactive.retry? dot: (Pixmap)NULL,
+		    XtNleftBitmap, appres.retry? dot: (Pixmap)NULL,
 		    XtNsensitive, True,
 		    NULL);
 	reconnect_button = add_menu_itemv("reconnectOption", t,
 		    toggle_reconnect, NULL,
 		    &spaced,
-		    XtNleftBitmap, appres.interactive.reconnect? dot: (Pixmap)NULL,
+		    XtNleftBitmap, appres.reconnect? dot: (Pixmap)NULL,
 		    XtNsensitive, True,
 		    NULL);
 	spaced = false;

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1993-2022 Paul Mattes.
- * Copyright (c) 1990, Jeff Sparkes.
+ * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -86,37 +86,37 @@ typedef struct {
      * are the same type or not.
      */
     struct {
-	Boolean once;
-	Boolean scripted;
-	Boolean modified_sel;
-	Boolean unlock_delay;
 	Boolean bind_limit;
 	Boolean bind_unlock;
+	Boolean bsd_tm;
 	Boolean contention_resolution;
-	Boolean new_environ;
-	Boolean socket;
-	Boolean numeric_lock;
-	Boolean secure;
-	Boolean oerr_lock;
 	Boolean debug_tracing;
 	Boolean disconnect_clear;
 	Boolean highlight_bold;
-	Boolean bsd_tm;
-	Boolean trace_monitor;
 	Boolean idle_command_enabled;
+	Boolean modified_sel;
+	Boolean new_environ;
+	Boolean numeric_lock;
 	Boolean nvt_mode;
-	Boolean script_port_once;
-	Boolean utf8;
-	Boolean scripted_always;
+	Boolean oerr_lock;
+	Boolean once;
 	Boolean prefer_ipv4;
 	Boolean prefer_ipv6;
+	Boolean reconnect;
+	Boolean retry;
+	Boolean script_port_once;
+	Boolean scripted;
+	Boolean scripted_always;
+	Boolean secure;
+	Boolean socket;
+	Boolean trace_monitor;
+	Boolean unlock_delay;
+	Boolean utf8;
 	struct {
-	    Boolean mono;
-	    Boolean menubar;
-	    Boolean visual_bell;
-	    Boolean reconnect;
-	    Boolean retry;
 	    Boolean do_confirms;
+	    Boolean menubar;
+	    Boolean mono;
+	    Boolean visual_bell;
 	} interactive;
 	Boolean toggle[N_TOGGLES];
 	struct {

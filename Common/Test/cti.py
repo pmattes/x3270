@@ -388,5 +388,8 @@ class cti(unittest.TestCase):
 
     def timed_readline(self, p, timeout, errmsg):
         '''Do a readline from a pipe with a timeout'''
-        self.try_until(lambda: (p.readable()), timeout, errmsg)
+        # This is an ugly problem. On Linux, you can do a select, but readline is buffered,
+        # so if there are multiple lines of output, they will be stuck in the buffer and
+        # select may time out.
+        # And there is no easy Windows solution.
         return p.readline()
