@@ -27,15 +27,17 @@
 #
 # b3270 XML tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import xml.etree.ElementTree as ET
 import os
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
+import xml.etree.ElementTree as ET
+
 import Common.Test.cti as cti
+import Common.Test.pipeq as pipeq
 
 class TestB3270Xml(cti.cti):
 
-    # b3270 NVT XML smoke test
+    # b3270 NVT XML test
     def test_b3270_nvt_xml_smoke(self):
 
         # Start 'nc' to read b3270's output.
@@ -103,14 +105,16 @@ class TestB3270Xml(cti.cti):
 
         # Get the result.
         errmsg = 'b3270 did not produce the expected output'
-        self.timed_readline(b3270.stdout, 2, errmsg)
-        self.timed_readline(b3270.stdout, 2, errmsg)
-        self.timed_readline(b3270.stdout, 2, errmsg)
-        out = self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        pq = pipeq.pipeq(self, b3270.stdout)
+        pq.get(2, errmsg)
+        pq.get(2, errmsg)
+        pq.get(2, errmsg)
+        out = pq.get(2, errmsg).decode('utf8')
         et_ins = ET.fromstring(out)
-        out = self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8')
+        out = pq.get(2, errmsg).decode('utf8')
         et_tls = ET.fromstring(out)
         self.vgwait(b3270)
+        pq.close()
         b3270.stdin.close()
         b3270.stdout.close()
 

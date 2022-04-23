@@ -27,10 +27,12 @@
 #
 # b3270 JSON pass-through tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
 import json
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
+
 import Common.Test.cti as cti
+import Common.Test.pipeq as pipeq
 
 class TestB3270PassthruJson(cti.cti):
 
@@ -50,7 +52,8 @@ class TestB3270PassthruJson(cti.cti):
         b3270.stdin.flush()
 
         # Get the result.
-        out = json.loads(self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
+        pq = pipeq.pipeq(self, b3270.stdout)
+        out = json.loads(pq.get(2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('passthru' in out)
         passthru = out['passthru']
         self.assertTrue('action' in passthru)
@@ -69,7 +72,7 @@ class TestB3270PassthruJson(cti.cti):
         b3270.stdin.flush()
 
         # Get the result of that.
-        out = json.loads(self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8'))
+        out = json.loads(pq.get(2, 'b3270 did not produce expected output').decode('utf8'))
         self.assertTrue('run-result' in out)
         run_result = out['run-result']
         self.assertTrue('r-tag' in run_result)
@@ -83,6 +86,7 @@ class TestB3270PassthruJson(cti.cti):
         b3270.stdin.close()
         b3270.stdout.close()
         self.vgwait(b3270)
+        pq.close()
 
 if __name__ == '__main__':
     unittest.main()

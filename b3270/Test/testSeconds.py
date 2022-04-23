@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 #
+#!/usr/bin/env python3
 # Copyright (c) 2021-2022 Paul Mattes.
 # All rights reserved.
 #
@@ -27,11 +27,13 @@
 #
 # Validation of the b3270 time indication
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import xml.etree.ElementTree as ET
 import json
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
+import xml.etree.ElementTree as ET
+
 import Common.Test.cti as cti
+import Common.Test.pipeq as pipeq
 
 class TestB3270Seconds(cti.cti):
 
@@ -49,9 +51,10 @@ class TestB3270Seconds(cti.cti):
         b3270.stdin.flush()
 
         # Get the result.
+        pq = pipeq.pipeq(self, b3270.stdout)
         output = b''
         while True:
-            line = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            line = pq.get(2, 'b3270 did not produce expected output')
             self.assertNotEqual(b'', line)
             output += line
             if b'run-result' in line:
@@ -64,6 +67,7 @@ class TestB3270Seconds(cti.cti):
         b3270.stdin.close()
         b3270.stdout.close()
         self.vgwait(b3270)
+        pq.close()
 
         # Check.
         a = out.find('./run-result')
@@ -84,8 +88,9 @@ class TestB3270Seconds(cti.cti):
         b3270.stdin.flush()
 
         # Get the result.
+        pq = pipeq.pipeq(self, b3270.stdout)
         while True:
-            line = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output')
+            line = pq.get(2, 'b3270 did not produce expected output')
             self.assertNotEqual(b'', line)
             if b'run-result' in line:
                 break
@@ -95,6 +100,7 @@ class TestB3270Seconds(cti.cti):
         b3270.stdin.close()
         b3270.stdout.close()
         self.vgwait(b3270)
+        pq.close()
 
         # Check.
         run_result = out['run-result']

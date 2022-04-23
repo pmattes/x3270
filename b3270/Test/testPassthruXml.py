@@ -27,10 +27,12 @@
 #
 # b3270 XML pass-through tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import unittest
 import xml.etree.ElementTree as ET
+
 import Common.Test.cti as cti
+import Common.Test.pipeq as pipeq
 
 class TestB3270PassthruXml(cti.cti):
 
@@ -41,8 +43,9 @@ class TestB3270PassthruXml(cti.cti):
         self.children.append(b3270)
 
         # Get the initial dump.
+        pq = pipeq.pipeq(self, b3270.stdout)
         while True:
-            line = b3270.stdout.readline().decode('utf8')
+            line = pq.get(2, 'b3270 did not initialize').decode('utf8')
             if '</initialize>' in line:
                 break
 
@@ -55,7 +58,7 @@ class TestB3270PassthruXml(cti.cti):
         b3270.stdin.flush()
 
         # Get the result.
-        s = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
+        s = pq.get(2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('passthru', out.tag)
         attr = out.attrib
@@ -71,7 +74,7 @@ class TestB3270PassthruXml(cti.cti):
         b3270.stdin.flush()
 
         # Get the result of that.
-        s = self.timed_readline(b3270.stdout, 2, 'b3270 did not produce expected output').decode('utf8')
+        s = pq.get(2, 'b3270 did not produce expected output').decode('utf8')
         out = ET.fromstring(s)
         self.assertEqual('run-result', out.tag)
         attr = out.attrib
@@ -84,6 +87,7 @@ class TestB3270PassthruXml(cti.cti):
         b3270.stdin.close()
         b3270.stdout.close()
         self.vgwait(b3270)
+        pq.close()
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,6 +33,7 @@ import requests
 import threading
 import unittest
 
+import Common.Test.pipeq as pipeq
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -49,7 +50,8 @@ class TestB3270Retry(cti.cti):
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
-        self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+        pq = pipeq.pipeq(self, b3270.stdout)
+        pq.get(2, 'b3270 did not start')
 
         # Tell b3270 to connect.
         b3270.stdin.write(f'"open 127.0.0.1:{playback_port}"\n'.encode('utf8'))
@@ -58,7 +60,7 @@ class TestB3270Retry(cti.cti):
         # Wait for it to try to connect and fail.
         out_all = []
         while True:
-            out = self.timed_readline(b3270.stdout, 2, 'b3270 did not fail the connection')
+            out = pq.get(2, 'b3270 did not fail the connection')
             out_all += [out]
             if b'connection-error' in out:
                 break
@@ -78,6 +80,7 @@ class TestB3270Retry(cti.cti):
         b3270.stdin.flush()
         b3270.stdin.close()
         self.vgwait(b3270)
+        pq.close()
         b3270.stdout.close()
 
     # Wait for an input field.
@@ -100,7 +103,8 @@ class TestB3270Retry(cti.cti):
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.
-            self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+            pq = pipeq.pipeq(self, b3270.stdout)
+            pq.get(2, 'b3270 did not start')
 
             # Tell b3270 to connect.
             b3270.stdin.write(f'"open 127.0.0.1:{playback_port}"\n'.encode('utf8'))
@@ -134,6 +138,7 @@ class TestB3270Retry(cti.cti):
         b3270.stdin.flush()
         b3270.stdin.close()
         self.vgwait(b3270)
+        pq.close()
         b3270.stdout.close()
 
     # b3270 reconnect test
@@ -147,7 +152,8 @@ class TestB3270Retry(cti.cti):
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
-        self.timed_readline(b3270.stdout, 2, 'b3270 did not start')
+        pq = pipeq.pipeq(self, b3270.stdout)
+        pq.get(2, 'b3270 did not start')
 
         # Tell b3270 to connect.
         b3270.stdin.write(f'"open c:a:127.0.0.1:{playback_port}"\n'.encode('utf8'))
@@ -156,7 +162,7 @@ class TestB3270Retry(cti.cti):
         # Wait for it to try to connect and fail.
         out_all = []
         while True:
-            out = self.timed_readline(b3270.stdout, 2, 'b3270 did not fail the connection')
+            out = pq.get(2, 'b3270 did not fail the connection')
             out_all += [out]
             if b'connection-error' in out:
                 break
@@ -173,7 +179,7 @@ class TestB3270Retry(cti.cti):
 
             # Wait for the Open action to succeed.
             while True:
-                out = self.timed_readline(b3270.stdout, 2, 'Open() did not succeed')
+                out = pq.get(2, 'Open() did not succeed')
                 if b'run-result' in out:
                     break
             outj = json.loads(out.decode('utf8'))['run-result']
@@ -184,7 +190,7 @@ class TestB3270Retry(cti.cti):
 
             # Wait for reconnection to start.
             while True:
-                out = self.timed_readline(b3270.stdout, 2, 'Reconnect did not happen')
+                out = pq.get(2, 'Reconnect did not happen')
                 if b'reconnecting' in out:
                     break
             outj = json.loads(out.decode('utf8'))['connection']
@@ -195,6 +201,7 @@ class TestB3270Retry(cti.cti):
         b3270.stdin.flush()
         b3270.stdin.close()
         self.vgwait(b3270)
+        pq.close()
         b3270.stdout.close()
 
 if __name__ == '__main__':

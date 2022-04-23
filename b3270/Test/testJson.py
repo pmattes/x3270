@@ -27,15 +27,17 @@
 #
 # b3270 JSON tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
 import json
 import os
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
+
 import Common.Test.cti as cti
+import Common.Test.pipeq as pipeq
 
 class TestB3270Json(cti.cti):
 
-    # b3270 NVT JSON smoke test
+    # b3270 NVT JSON test
     def test_b3270_nvt_json_smoke(self):
 
         # Start 'nc' to read b3270's output.
@@ -98,12 +100,14 @@ class TestB3270Json(cti.cti):
         # Individual timed reads are used here because communicate() closes stdin and that will
         # cause b3270 to exit prematurely.
         errmsg = 'b3270 did not produce expected output'
-        self.timed_readline(b3270.stdout, 2, errmsg)
-        insert_mode = json.loads(self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
-        start_tls = json.loads(self.timed_readline(b3270.stdout, 2, errmsg).decode('utf8'))
+        pq = pipeq.pipeq(self, b3270.stdout)
+        pq.get(2, errmsg)
+        insert_mode = json.loads(pq.get(2, errmsg).decode('utf8'))
+        start_tls = json.loads(pq.get(2, errmsg).decode('utf8'))
         b3270.stdin.close()
         b3270.stdout.close()
         self.vgwait(b3270)
+        pq.close()
 
         # Check.
         self.assertTrue('run-result' in insert_mode)

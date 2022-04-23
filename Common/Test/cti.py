@@ -385,11 +385,3 @@ class cti(unittest.TestCase):
             self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(self.status)}')
         rc = os.WEXITSTATUS(self.status)
         self.vgcheck(pid, rc, assertOnFailure)
-
-    def timed_readline(self, p, timeout, errmsg):
-        '''Do a readline from a pipe with a timeout'''
-        # This is an ugly problem. On Linux, you can do a select, but readline is buffered,
-        # so if there are multiple lines of output, they will be stuck in the buffer and
-        # select may time out.
-        # And there is no easy Windows solution.
-        return p.readline()
