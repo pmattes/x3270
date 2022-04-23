@@ -30,6 +30,7 @@ objdir = ../../obj/win64/libexpat
 else
 objdir = ../../obj/win32/libexpat
 endif
+srcdir = ../../extern/libexpat/expat
 top = ../../..
 this = $(top)/lib/libexpat
 
@@ -39,7 +40,7 @@ export THIS = $(this)
 
 MAKEINC = -I$(top)/extern/libexpat/expat/lib -I$(top)/Common/Win32 -I$(this)
 
-all: $(objdir)
+all: $(srcdir) $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clean: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
@@ -48,3 +49,6 @@ clobber: $(objdir)
 
 $(objdir):
 	mkdir -p $(objdir)
+
+$(srcdir):
+	git submodule update --init ../../extern/libexpat
