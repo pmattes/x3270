@@ -1706,7 +1706,7 @@ telnet_fsm(unsigned char c)
 		    return false;
 		}
 	    } else {
-		Warning("EOR received when not in 3270 mode, ignored.");
+		popup_an_error("EOR received when not in 3270 mode, ignored");
 	    }
 	    vtrace("RCVD EOR\n");
 	    ibptr = ibuf;
@@ -4104,6 +4104,19 @@ toggle_ntim(const char *name, const char *value)
     return true;
 }
 
+/* Toggle bind limit mode. */
+static bool
+toggle_bind_limit(const char *name, const char *value)
+{
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.bind_limit)) != NULL) {
+        popup_an_error("%s", errmsg);
+        return false;
+    }
+    return true;
+}
+
 /* Module registration. */
 void
 net_register(void)
@@ -4117,4 +4130,6 @@ net_register(void)
     register_extended_toggle(ResNoTelnetInputMode, toggle_ntim, NULL,
 	    canonicalize_ntim,
 	    (void **)&appres.interactive.no_telnet_input_mode, XRM_STRING);
+    register_extended_toggle(ResBindLimit, toggle_bind_limit, NULL, NULL,
+	    (void **)&appres.bind_limit, XRM_BOOLEAN);
 }

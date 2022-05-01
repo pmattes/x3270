@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -612,7 +612,7 @@ process_ds(unsigned char *buf, size_t buflen, bool kybd_restore)
 	    break;
 	default:
 	    /* unknown 3270 command */
-	    popup_an_error("Unknown 3270 Data Stream command: 0x%X\n", buf[0]);
+	    popup_an_error("Unknown 3270 Data Stream command: X'%X'\n", buf[0]);
 	    rv = PDS_BAD_CMD;
 	    break;
 	}
@@ -1310,10 +1310,15 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 			formatted = true; \
 		}
 
+#define WRITE_ERROR "Host write error:\n"
+#define TOO_SHORT "Record too short, "
+
     kybd_inhibit(false);
 
     if (buflen < 2) {
-	return PDS_BAD_CMD;
+	/* Need flags at minimum. */
+	popup_an_error(WRITE_ERROR TOO_SHORT "missing write flags");
+	return PDS_BAD_ADDR;
     }
 
     default_fg = 0;
@@ -1363,15 +1368,17 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     last_zpt = false;
     current_fa = get_field_attribute(buffer_addr);
 
+#define END_WRITE END_TEXT("\n")
 #define ABORT_WRITEx { \
     rv = PDS_BAD_ADDR; \
     aborted = true; \
     break; \
 }
 #define ABORT_WRITE(s) { \
-    trace_ds(" [" s "; write aborted]\n"); \
+    END_WRITE; \
+    popup_an_error(WRITE_ERROR s); \
     ABORT_WRITEx; \
-} \
+}
 
     for (cp = &buf[2]; !aborted && cp < (buf + buflen); cp++) {
 	switch (*cp) {
@@ -1382,6 +1389,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    }
 	    previous = ORDER;
 	    cp++;		/* skip field attribute */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing SF attributes");
+	    }
 	    START_FIELD(*cp);
 	    ctlr_add_fg(buffer_addr, 0);
 	    ctlr_add_bg(buffer_addr, 0);
@@ -1390,14 +1400,19 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    last_zpt = false;
 	    break;
 	case ORDER_SBA:	/* set buffer address */
-	    cp += 2;	/* skip buffer address */
-	    buffer_addr = DECODE_BADDR(*(cp-1), *cp);
 	    END_TEXT("SetBufferAddress");
+	    cp += 2;	/* skip buffer address */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing SBA address");
+	    }
+	    buffer_addr = DECODE_BADDR(*(cp-1), *cp);
 	    previous = SBA;
 	    trace_ds("%s", rcba(buffer_addr));
 	    if (buffer_addr >= COLS * ROWS) {
-		trace_ds("COLS %d ROWS %d\n", COLS, ROWS);
-		ABORT_WRITE("invalid SBA address");
+		END_WRITE;
+		popup_an_error(WRITE_ERROR "SBA address %d > maximum %d",
+			buffer_addr, (COLS * ROWS) - 1);
+		ABORT_WRITEx;
 	    }
 	    current_fa = get_field_attribute(buffer_addr);
 	    last_cmd = true;
@@ -1467,9 +1482,21 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	case ORDER_RA:	/* repeat to address */
 	    END_TEXT("RepeatToAddress");
 	    cp += 2;	/* skip buffer address */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing RA address");
+	    }
 	    baddr = DECODE_BADDR(*(cp-1), *cp);
 	    trace_ds("%s", rcba(baddr));
+	    if (baddr >= COLS * ROWS) {
+		END_WRITE;
+		popup_an_error(WRITE_ERROR "RA address %d > maximum %d",
+			baddr, (COLS * ROWS) - 1);
+		ABORT_WRITEx;
+	    }
 	    cp++;		/* skip char to repeat */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing RA character");
+	    }
 	    add_dbcs = false;
 	    ra_ge = false;
 	    previous = ORDER;
@@ -1489,7 +1516,8 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		add_c1 = *cp;
 		cp++;
 		if (cp >= buf + buflen) {
-		    ABORT_WRITE("missing second half of DBCS character");
+		    ABORT_WRITE(TOO_SHORT "missing second half of RA DBCS "
+			    "character");
 		}
 		add_c2 = *cp;
 		if (add_c1 == EBC_null) {
@@ -1503,15 +1531,18 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		    case EBC_fm:
 			break;
 		    default:
-			trace_ds(" [invalid DBCS RA control character "
-				"X'%02x%02x'; write aborted]", add_c1, add_c2);
+			END_WRITE;
+			popup_an_error(WRITE_ERROR "Invalid DBCS RA "
+				"control character X'%02X%02X'", add_c1,
+				add_c2);
 			ABORT_WRITEx;
 		    }
 		} else if (add_c1 < 0x40 || add_c1 > 0xfe || add_c2 < 0x40 ||
 			add_c2 > 0xfe) {
-		    trace_ds(" [invalid DBCS RA character X'%02x%02x'; write "
-			    "aborted]", add_c1, add_c2);
-			ABORT_WRITEx;
+		    END_WRITE;
+		    popup_an_error(WRITE_ERROR "Invalid DBCS RA "
+			    "character X'%02X%02X'", add_c1, add_c2);
+		    ABORT_WRITEx;
 		}
 		ebcdic_to_multibyte((add_c1 << 8) | add_c2, mb, sizeof(mb));
 		trace_ds("'%s'", mb);
@@ -1520,6 +1551,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		    ra_ge = true;
 		    trace_ds("GraphicEscape");
 		    cp++;
+		    if (cp >= buf + buflen) {
+			ABORT_WRITE(TOO_SHORT "missing RA GE character");
+		    }
 		}
 		add_c1 = *cp;
 		if (add_c1) {
@@ -1529,9 +1563,6 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		if (add_c1) {
 		    trace_ds("'");
 		}
-	    }
-	    if (baddr >= COLS * ROWS) {
-		ABORT_WRITE("invalid RA address");
 	    }
 	    do {
 		if (add_dbcs) {
@@ -1563,15 +1594,19 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    last_zpt = false;
 	    break;
 	case ORDER_EUA:	/* erase unprotected to address */
-	    cp += 2;	/* skip buffer address */
-	    baddr = DECODE_BADDR(*(cp-1), *cp);
 	    END_TEXT("EraseUnprotectedAll");
-	    if (previous != SBA) {
-		trace_ds("%s", rcba(baddr));
+	    cp += 2;	/* skip buffer address */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing EUA address");
 	    }
+	    baddr = DECODE_BADDR(*(cp-1), *cp);
+	    trace_ds("%s", rcba(baddr));
 	    previous = ORDER;
 	    if (baddr >= COLS * ROWS) {
-		ABORT_WRITE("invalid EUA address");
+		END_WRITE;
+		popup_an_error(WRITE_ERROR "EUA address %d > maximum %d",
+			baddr, (COLS * ROWS) - 1);
+		ABORT_WRITEx;
 	    }
 	    d = ctlr_lookleft_state(buffer_addr, &why);
 	    if (d == DBCS_RIGHT) {
@@ -1597,6 +1632,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    /* XXX: DBCS? */
 	    END_TEXT("GraphicEscape ");
 	    cp++;		/* skip char */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing GE character");
+	    }
 	    previous = ORDER;
 	    if (*cp) {
 		trace_ds("'");
@@ -1623,10 +1661,16 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    }
 	    previous = ORDER;
 	    cp++;
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing MF count");
+	    }
 	    na = *cp;
 	    if (ea_buf[buffer_addr].fa) {
 		for (i = 0; i < (int)na; i++) {
 		    cp++;
+		    if (cp + 1 >= buf + buflen) {
+			ABORT_WRITE(TOO_SHORT "missing MF attribute");
+		    }
 		    if (*cp == XA_3270) {
 			trace_ds(" 3270");
 			cp++;
@@ -1685,6 +1729,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    }
 	    previous = ORDER;
 	    cp++;	/* skip order */
+	    if (cp >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing SFE count");
+	    }
 	    na = *cp;
 	    any_fa = 0;
 	    efa_fg = 0;
@@ -1694,6 +1741,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    efa_ic = 0;
 	    for (i = 0; i < (int)na; i++) {
 		cp++;
+		if (cp + 1 >= buf + buflen) {
+		    ABORT_WRITE(TOO_SHORT "missing SFE attribute");
+		}
 		if (*cp == XA_3270) {
 		    trace_ds(" 3270");
 		    cp++;
@@ -1755,6 +1805,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    END_TEXT("SetAttribute");
 	    previous = ORDER;
 	    cp++;
+	    if (cp + 1 >= buf + buflen) {
+		ABORT_WRITE(TOO_SHORT "missing SA attribute");
+	    }
 	    if (*cp == XA_FOREGROUND)  {
 		trace_ds("%s", see_efa(*cp, *(cp + 1)));
 		if (mode.m3279) {
@@ -1815,7 +1868,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    previous = ORDER;
 	    d = ctlr_lookleft_state(buffer_addr, &why);
 	    if (default_cs == CS_DBCS || d != DBCS_NONE) {
-		ABORT_WRITE("invalid format control order in DBCS field");
+		ABORT_WRITE("Invalid format control order in DBCS field");
 	    }
 	    ctlr_add(buffer_addr, *cp, default_cs);
 	    ctlr_add_fg(buffer_addr, default_fg);
@@ -1837,7 +1890,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		ABORT_WRITE("SO in DBCS field");
 	    }
 	    if (d != DBCS_NONE && why == DBCS_SUBFIELD) {
-		ABORT_WRITE("double SO");
+		ABORT_WRITE("Double SO");
 	    }
 	    /* All is well. */
 	    previous = ORDER;
@@ -1867,7 +1920,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		   ((fa_addr >= 0 && baddr != fa_addr) ||
 		    (fa_addr < 0 && baddr != ROWS*COLS - 1))) {
 		if (ea_buf[baddr].ec == FCORDER_SI) {
-		    ABORT_WRITE("double SI");
+		    ABORT_WRITE("Double SI");
 		}
 		if (ea_buf[baddr].ec == FCORDER_SO) {
 		    break;
@@ -1901,7 +1954,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		add_c1 = EBC_null;
 		cp++;
 		if (cp >= buf + buflen) {
-		    ABORT_WRITE("missing second half of DBCS character");
+		    ABORT_WRITE("Missing second half of DBCS character");
 		}
 		add_c2 = *cp;
 		switch (add_c2) {
@@ -1923,8 +1976,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		    cp--;
 		    break;
 		default:
-		    trace_ds(" [invalid DBCS control character X'%02x%02x'; "
-			    "write aborted]", add_c1, add_c2);
+		    END_WRITE;
+		    popup_an_error(WRITE_ERROR "Invalid DBCS control "
+			    "character X'%02X%02X'", add_c1, add_c2);
 		    ABORT_WRITEx;
 		    break;
 		}
@@ -1969,19 +2023,20 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    add_dbcs = false;
 	    d = ctlr_lookleft_state(buffer_addr, &why);
 	    if (d == DBCS_RIGHT) {
-		ABORT_WRITE("overwriting right half of DBCS character");
+		ABORT_WRITE("Overwriting right half of DBCS character");
 	    }
 	    if (d != DBCS_NONE || default_cs == CS_DBCS) {
 		add_c1 = *cp;
 		cp++;
 		if (cp >= buf + buflen) {
-		    ABORT_WRITE("missing second half of DBCS character");
+		    ABORT_WRITE("Missing second half of DBCS character");
 		}
 		add_c2 = *cp;
 		if (add_c1 < 0x40 || add_c1 > 0xfe ||
 		    add_c2 < 0x40 || add_c2 > 0xfe) {
-		    trace_ds(" [invalid DBCS character X'%02x%02x'; write "
-			    "aborted]", add_c1, add_c2);
+		    END_WRITE;
+		    popup_an_error(WRITE_ERROR "Invalid DBCS character "
+			    "X'%02X%02X'", add_c1, add_c2);
 		    ABORT_WRITEx;
 		}
 		add_dbcs = true;
@@ -2052,6 +2107,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 #undef START_FIELD
 #undef END_TEXT0
 #undef END_TEXT
+#undef WRITE_ERROR
 #undef ABORT_WRITEx
 #undef ABORT_WRITE
 
@@ -2076,7 +2132,7 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
      * we display other control codes as spaces.
      */
 
-    trace_ds("SSCP-LU data\n< ");
+    trace_ds("SSCP-LU data\n<");
     for (i = 0; i < buflen; cp++, i++) {
 	switch (*cp) {
 	case FCORDER_NL:
@@ -2108,8 +2164,12 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 		trace_ds("'");
 		text = false;
 	    }
-	    trace_ds(" SF%s %s [translated to space]\n", rcba(buffer_addr),
-		    see_attr(*cp));
+	    if (cp >= buf + buflen) {
+		trace_ds(" SF%s [translated to space]\n", rcba(buffer_addr));
+	    } else {
+		trace_ds(" SF%s %s [translated to space]\n", rcba(buffer_addr),
+			see_attr(*cp));
+	    }
 	    ctlr_add(buffer_addr, EBC_space, default_cs);
 	    ctlr_add_fg(buffer_addr, default_fg);
 	    ctlr_add_bg(buffer_addr, default_bg);
@@ -2125,8 +2185,12 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	    trace_ds(" IC%s [ignored]\n", rcba(buffer_addr));
 	    break;
 	case ORDER_SBA:
-	    baddr = DECODE_BADDR(*(cp+1), *(cp+2));
-	    trace_ds(" SBA%s [ignored]\n", rcba(baddr));
+	    if (cp + 2 >= buf + buflen) {
+		trace_ds(" SBA [ignored]\n");
+	    } else {
+		baddr = DECODE_BADDR(*(cp+1), *(cp+2));
+		trace_ds(" SBA%s [ignored]\n", rcba(baddr));
+	    }
 	    cp += 2;
 	    i += 2;
 	    break;
@@ -2134,6 +2198,11 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	case ORDER_GE:
 	    cp++;
 	    if (++i >= buflen) {
+		if (text) {
+		    trace_ds("'");
+		    text = false;
+		}
+		trace_ds(" GE");
 		break;
 	    }
 	    if (*cp <= 0x40) {

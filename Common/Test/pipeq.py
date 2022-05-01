@@ -48,7 +48,10 @@ class pipeq():
     def shuttle(self):
         '''Shuttle data from the pipe to the queue'''
         while True:
-            rdata = self.pipe.readline()
+            try:
+                rdata = self.pipe.readline()
+            except ValueError:
+                return
             if len(rdata) == 0:
                 return
             self.queue.put(rdata.strip())

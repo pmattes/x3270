@@ -1,0 +1,230 @@
+20220429.184247.995 ui>  <setting name="trace" value="true"/>
+20220429.184247.997 ui>  <trace-file name="C:\Users\torbj\Desktop\x3trc.29772.txt"/>
+20220429.184247.999 Trace started
+ Version: b3270 v4.1ga12 Mon Feb 21 17:35:40 UTC 2022 pdm
+ Build options: --disable-local-process
+ Command: b3270 b3270 -utf8 -minversion 4.0 C:\Users\torbj\AppData\Local\Temp\wx3270tmp0.b3270
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ ANSI codepage: 1252
+ Local codepage: 65001
+ Host codepage: 37
+ Docs: (null)
+ Install dir: C:\Program Files\wx3270\
+ Desktop: (null)
+ Settings: acceptHostname= aidWait=true altCursor=false alwaysInsert=false
+  aplMode=false blankFill=true clientCert= codePage=bracket crosshair=false
+  cursorBlink=false ftBufferSize=16384 httpd= insertMode=false lineMode=true
+  lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true overlayPaste=true oversize=
+  printer.codepage= printer.name= printer.options= printerLu= proxy=
+  reconnect=false reverseInputMode=false rightToLeftMode=false saveLines=4096
+  screenTrace=false scriptPort= showTiming=false startTls=true termName=
+  trace=true typeahead=true unlockDelay=true unlockDelayMs=350
+  verifyHostCert=true visibleControl=true
+ Connection state: not-connected
+ Data stream:
+20220429.184248.002 ui>  <setting name="trace" value="true"/>
+20220429.184248.002 ui>  <trace-file name="C:\Users\torbj\Desktop\x3trc.29772.txt"/>
+20220429.184248.003 Macro[#10.2] complete, success
+20220429.184248.003 CB(ui)[#10.1] RUNNING -> IDLE (about to resume)
+20220429.184248.003 CB(ui)[#10.1] child task done, success
+20220429.184248.003 ui>  <run-result r-tag="async-9" success="true" time="0.010"/>
+20220429.184248.003 CB(ui)[#10.1] complete, success
+20220429.184248.003 CB(ui)[#10] complete
+20220429.184248.003 Waiting for 1 event
+20220429.184339.027 Got event 0x0
+20220429.184339.027 ui< <run actions="Set(printerLu,&quot;&quot;,startTls,true,acceptHostname,&quot;&quot;,clientCert,&quot;&quot;,reconnect,false,loginMacro,&quot;&quot;,noTelnetInputMode,Line) Connect(192.168.1.26:2323)" r-tag="async-10" />
+20220429.184339.027 CB(ui)[#11] started
+20220429.184339.027 CB(ui)[#11.1] IDLE -> RUNNING (child task to be pushed next)
+20220429.184339.027 Macro[#11.2] IDLE -> RUNNING (fresh push)
+20220429.184339.027 lazya_flush: 32 slots
+20220429.184339.027 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20220429.184339.027 Macro[#11.2] running
+20220429.184339.027 Macro[#11.2] IDLE -> RUNNING (executing)
+20220429.184339.027 Macro[#11.2] 'Set(printerLu,"",startTls,true,acceptHostname,"",clientCert,"",reconnect,false,loginMacro,"",noTelnetInputMode,Line) Connect(192.168.1.26:2323)'
+20220429.184339.027 ui -> Set("printerLu", "", "startTls", "true", "acceptHostname", "", "clientCert", "", "reconnect", "false", "loginMacro", "", "noTelnetInputMode", "Line")
+20220429.184339.027 ui>  <setting name="printerLu" cause="ui"/>
+20220429.184339.027 ui>  <setting name="startTls" value="true" cause="ui"/>
+20220429.184339.028 ui>  <setting name="acceptHostname" cause="ui"/>
+20220429.184339.028 ui>  <setting name="clientCert" cause="ui"/>
+20220429.184339.028 ui>  <setting name="reconnect" value="false" cause="ui"/>
+20220429.184339.029 ui>  <setting name="loginMacro" cause="ui"/>
+20220429.184339.029 ui>  <setting name="noTelnetInputMode" value="line" cause="ui"/>
+20220429.184339.030 Macro[#11.2] 'Connect(192.168.1.26:2323)'
+20220429.184339.030 ui -> Connect("192.168.1.26:2323")
+20220429.184339.030 st_changed(secure,false)
+20220429.184339.030 st_changed(terminal-name,true)
+20220429.184339.031 Resolver slot is 0
+20220429.184339.031 cstate [not-connected] -> [resolving] (host_connect)
+20220429.184339.031 st_changed(connect,true)
+20220429.184339.031 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220429.184339.031 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20220429.184339.031 ctlr_enable_cursor(false, connect)
+20220429.184339.031 ui>  <screen>
+20220429.184339.031 ui>   <cursor enabled="false"/>
+20220429.184339.031 ui>  </screen>
+20220429.184339.032 ui>  <connection state="resolving" host="192.168.1.26" cause="ui"/>
+20220429.184339.032 st_changed(negotiating,true)
+20220429.184339.032 Macro[#11.2] RUNNING -> CONNECT_WAIT (Connect() or Reconnect())
+20220429.184339.032 Waiting for 2 events or 1000 msec
+20220429.184339.032 Got event 0x0
+20220429.184339.032 Resolution complete, 1 address
+20220429.184339.043 Making host socket non-blocking
+20220429.184339.043 Trying 192.168.1.26, port 2323...
+20220429.184339.043 ui>  <connect-attempt host-ip="192.168.1.26" port="2323"/>
+20220429.184339.044 TCP connection pending.
+20220429.184339.044 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20220429.184339.044 st_changed(negotiating,true)
+20220429.184339.044 ui>  <connection state="tcp-pending" host="192.168.1.26" cause="ui"/>
+20220429.184339.044 lazya_flush: 72 slots
+20220429.184339.044 Waiting for 3 events or 1 msec
+20220429.184339.047 Got event 0x102
+20220429.184339.047 Waiting for 3 events or 997 msec
+20220429.184339.076 Got event 0x0
+20220429.184339.076 Making host socket non-blocking
+20220429.184339.076 net_input: NetworkEvents 0x10 CONNECT
+20220429.184339.076 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20220429.184339.076 st_changed(connect,true)
+20220429.184339.076 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20220429.184339.076 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20220429.184339.076 ui>  <oia field="timing" value="0.0"/>
+20220429.184339.076 Host negotiation step took 0.031977s to complete
+20220429.184339.076 ui>  <oia field="timing"/>
+20220429.184339.077 ctlr_enable_cursor(true, connect)
+20220429.184339.077 ctlr_enable_cursor(true, nvt)
+20220429.184339.077 ui>  <connection state="telnet-pending" host="192.168.1.26" cause="ui"/>
+20220429.184339.077 st_changed(negotiating,true)
+20220429.184339.077 Connected to 192.168.1.26, port 2323.
+20220429.184339.077 st_changed(secure,false)
+20220429.184339.077 st_changed(line-mode,true)
+20220429.184339.077 Reading host socket
+20220429.184339.077 Host socket read complete nr=-1
+20220429.184339.077 EWOULDBLOCK
+20220429.184339.077 lazya_flush: 22 slots
+20220429.184339.078 ui>  <screen>
+20220429.184339.078 ui>   <cursor enabled="true" row="1" column="1"/>
+20220429.184339.078 ui>  </screen>
+20220429.184339.078 Waiting for 3 events or 999 msec
+20220429.184339.113 Got event 0x0
+20220429.184339.113 Making host socket non-blocking
+20220429.184339.113 net_input: NetworkEvents 0x1 READ
+20220429.184339.113 Reading host socket
+20220429.184339.113 Host socket read complete nr=3
+< 0x0   fffd28
+20220429.184339.113 RCVD DO TN3270E
+> 0x0   fffb28
+20220429.184339.114 SENT WILL TN3270E
+20220429.184339.114 Now operating in connected-unbound mode.
+20220429.184339.114 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20220429.184339.114 st_changed(negotiating,true)
+20220429.184339.114 ui>  <connection state="connected-unbound" host="192.168.1.26" cause="ui"/>
+20220429.184339.114 st_changed(3270-mode,false)
+20220429.184339.114 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20220429.184339.114 ui>  <oia field="timing" value="0.0"/>
+20220429.184339.115 Host negotiation step took 0.000000s to complete
+20220429.184339.115 ui>  <oia field="timing"/>
+20220429.184339.115 ctlr_enable_cursor(true, connect)
+20220429.184339.115 lazya_flush: 25 slots
+20220429.184339.115 Waiting for 3 events or 1998 msec
+20220429.184339.147 Got event 0x0
+20220429.184339.147 Making host socket non-blocking
+20220429.184339.147 net_input: NetworkEvents 0x1 READ
+20220429.184339.147 Reading host socket
+20220429.184339.147 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20220429.184339.147 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20220429.184339.147 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20220429.184339.147 Waiting for 3 events or 1966 msec
+20220429.184339.182 Got event 0x0
+20220429.184339.182 Making host socket non-blocking
+20220429.184339.182 net_input: NetworkEvents 0x1 READ
+20220429.184339.182 Reading host socket
+20220429.184339.182 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d45014930303030303037fff0
+20220429.184339.182 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT I0000007 SE
+20220429.184339.182 ui>  <oia field="lu" value="I0000007"/>
+> 0x0   fffa280307000204fff0
+20220429.184339.184 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ SE
+20220429.184339.184 Waiting for 3 events or 1929 msec
+20220429.184339.218 Got event 0x0
+20220429.184339.218 Making host socket non-blocking
+20220429.184339.218 net_input: NetworkEvents 0x1 READ
+20220429.184339.218 Reading host socket
+20220429.184339.218 Host socket read complete nr=8
+< 0x0   fffa28030400fff0
+20220429.184339.219 RCVD SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20220429.184339.219 TN3270E option negotiation complete.
+20220429.184339.219 Waiting for 3 events or 1894 msec
+20220429.184339.223 Got event 0x0
+20220429.184339.223 Making host socket non-blocking
+20220429.184339.223 net_input: NetworkEvents 0x1 READ
+20220429.184339.223 Reading host socket
+20220429.184339.223 Host socket read complete nr=33
+< 0x0   030000000031010303b190308000008787000002800000000018502b507e00ff
+< 0x20  ef
+20220429.184339.224 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name '' MaxSec-RU 1024 MaxPri-RU 1024 Rows-Cols Default 24x80 Al ...
+... ternate 24x80
+20220429.184339.224 Now operating in connected-tn3270e mode.
+20220429.184339.224 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20220429.184339.224 st_changed(3270-mode,true)
+20220429.184339.224 ctlr_enable_cursor(true, connect)
+20220429.184339.225 ui>  <oia field="lock" value="field"/>
+20220429.184339.225 ui>  <connection state="connected-tn3270e" host="192.168.1.26" cause="ui"/>
+20220429.184339.227 RCVD EOR
+20220429.184339.227 lazya_flush: 14 slots
+20220429.184339.227 ui>  <erase logical-rows="24" logical-columns="80" fg="blue" bg="neutralBlack"/>
+20220429.184339.228 Waiting for 3 events or 1885 msec
+20220429.184339.252 Got event 0x0
+20220429.184339.252 Making host socket non-blocking
+20220429.184339.252 net_input: NetworkEvents 0x1 READ
+20220429.184339.252 Reading host socket
+20220429.184339.253 Host socket read complete nr=14
+20220429.184339.256 SENT EOR
+20220429.184339.256 Keyboard lock(kybd_inhibit) +ENTER_INHIBIT
+20220429.184339.256 RCVD EOR
+20220429.184339.256 lazya_flush: 15 slots
+20220429.184339.256 Waiting for 3 events or 1857 msec
+20220429.184339.299 Got event 0x0
+20220429.184339.299 Making host socket non-blocking
+20220429.184339.299 net_input: NetworkEvents 0x1 READ
+20220429.184339.299 Reading host socket
+20220429.184339.299 Host socket read complete nr=536
+< 0x0   00000100027ec312ffef
+20220429.184339.343 RCVD TN3270E(3270-DATA NO-RESPONSE 2)
+20220429.184339.343 Keyboard unlock(kybd_inhibit) -ENTER_INHIBIT
+< EraseWriteAlternate(reset,restore,resetMDT) SetBufferAddress(43,80)COLS 8 ...
+... 0 ROWS 24
+ [invalid SBA address; write aborted]
+
+> 0x0   020001000202ffef
+
+20220429.184339.343 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20220429.184339.344 ui>  <oia field="lock"/>
+20220429.184339.344 RCVD EOR
+20220429.184339.344 lazya_flush: 12 slots
+20220429.184339.344 Macro[#11.2] CONNECT_WAIT -> IDLE (about to resume)
+20220429.184339.344 Macro[#11.2] running
+20220429.184339.344 Macro[#11.2] complete, success
+20220429.184339.344 CB(ui)[#11.1] RUNNING -> IDLE (about to resume)
+20220429.184339.344 CB(ui)[#11.1] child task done, success
+20220429.184339.344 ui>  <run-result r-tag="async-10" success="true" time="0.317"/>
+20220429.184339.345 CB(ui)[#11.1] complete, success
+20220429.184339.345 CB(ui)[#11] complete
+20220429.184339.345 Waiting for 3 events or 1768 msec
+20220429.184341.126 Got event 0x102
+20220429.184341.126 ui>  <stats bytes-received="3270" records-received="3" bytes-sent="221" records-sent="1"/>
+20220429.184341.127 lazya_flush: 20 slots
+20220429.184341.128 Waiting for 3 events
+20220429.184419.322 Got event 0x2
+20220429.184419.323 ui< <run actions="Set(trace,false)" r-tag="async-11" />
+20220429.184419.323 CB(ui)[#12] started
+20220429.184419.323 CB(ui)[#12.1] IDLE -> RUNNING (child task to be pushed next)
+20220429.184419.323 Macro[#12.2] IDLE -> RUNNING (fresh push)
+20220429.184419.323 Macro[#12.2] RUNNING -> IDLE (about to resume)
+20220429.184419.323 Macro[#12.2] running
+20220429.184419.323 Macro[#12.2] IDLE -> RUNNING (executing)
+20220429.184419.323 Macro[#12.2] 'Set(trace,false)'
+20220429.184419.328 ui -> Set("trace", "false")
+20220429.184419.330 Trace stopped
