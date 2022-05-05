@@ -32,6 +32,7 @@
  */
 
 #include "globals.h"
+
 #include <signal.h>
 #include "appres.h"
 #include "3270ds.h"
@@ -75,6 +76,11 @@
  * #including curses.h, and we use (curses) COLS and (c3270) cCOLS explicitly.
  */
 #undef COLS
+
+#if defined(CURSES_WIDE) /*[*/
+# include <wchar.h>
+# define NCURSES_WIDECHAR 1
+#endif /*]*/
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 # include <ncursesw/ncurses.h>
