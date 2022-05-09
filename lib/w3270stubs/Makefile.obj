@@ -44,9 +44,9 @@ $(LIB3270): $(OBJS) $(INCS)
 	$(AR) crs $@ $(OBJS)
 
 clean:
-	$(RM) *.o
+	$(RM) *.o $(LIB3270)
 
 clobber: clean
-	$(RM) $(LIB3270) *.d
+	$(RM) *.d
 
 -include $(OBJS:.o=.d)

@@ -54,9 +54,9 @@ mkicon$(NATIVE_SFX): mkicon.o
 	$(NATIVECC) -o $@ mkicon.o
 
 clean:
-	$(RM) *.o favicon.c mkicon$(NATIVE_SFX)
+	$(RM) *.o favicon.c mkicon$(NATIVE_SFX) $(LIB3270)
 
 clobber: clean
-	$(RM) $(LIB3270) *.d
+	$(RM) *.d
 
 -include $(OBJS:.o=.d)
