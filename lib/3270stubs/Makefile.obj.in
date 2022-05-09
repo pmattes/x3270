@@ -55,8 +55,8 @@ $(LIBSTUBS): $(OBJS) $(INCS)
 	$(RANLIB) $@
 
 clean:
-	$(RM) *.o
+	$(RM) *.o $(LIBSTUBS)
 clobber: clean
-	$(RM) $(LIBSTUBS) *.d
+	$(RM) *.d
 
 -include $(OBJS:.o=.d)

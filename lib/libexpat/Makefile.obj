@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2016 Paul Mattes.
+# Copyright (c) 1999-2022 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -43,9 +43,9 @@ $(LIBEXPAT): $(OBJS)
 	$(AR) crs $@ $(OBJS)
 
 clean:
-	$(RM) *.o
+	$(RM) *.o $(LIBEXPAT)
 
 clobber: clean
-	$(RM) $(LIBEXPAT) *.d
+	$(RM) *.d
 
 -include $(OBJS:.o=.d)
