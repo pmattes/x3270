@@ -1168,20 +1168,13 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	    return operator_error(KL_OERR_PROTECTED, oerr_fail);
 	}
     }
-    if (FA_IS_NUMERIC(fa) &&
+    if (FA_IS_NUMERIC(fa) && appres.numeric_lock &&
 	    !((ebc >= EBC_0 && ebc <= EBC_9) ||
+	      ebc == EBC_plus ||
 	      ebc == EBC_minus ||
 	      ebc == EBC_period ||
 	      ebc == EBC_comma)) {
-	if (appres.numeric_lock) {
-	    return operator_error(KL_OERR_NUMERIC, oerr_fail);
-	} else {
-#if 0
-	    /* Ignore it, successfully. */
-	    vtrace("Ignoring non-numeric character in numeric field\n");
-	    return true;
-#endif
-	}
+	return operator_error(KL_OERR_NUMERIC, oerr_fail);
     }
 
     /* Can't put an SBCS in a DBCS field. */
