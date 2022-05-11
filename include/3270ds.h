@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013, 2018, 2020-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -365,9 +365,11 @@
 #define EBC_fm		0x1e
 #define EBC_sub		0x3f
 #define EBC_space	0x40
+#define EBC_plus	0x4e
 #define EBC_nobreakspace 0x41   
 #define EBC_period	0x4b    
 #define EBC_ampersand	0x50    
+#define EBC_minus	0x60
 #define EBC_slash	0x61
 #define EBC_comma	0x6b
 #define EBC_percent	0x6c
@@ -376,7 +378,6 @@
 #define EBC_question	0x6f    
 #define EBC_Yacute	0xad
 #define EBC_diaeresis	0xbd
-#define EBC_minus	0xca
 #define EBC_0		0xf0
 #define EBC_1		0xf1
 #define EBC_2		0xf2
