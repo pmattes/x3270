@@ -480,7 +480,7 @@ set_appres_defaults(void)
 
     appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;
-    appres.port = "23";
+    appres.port = NewString("23");
     /* Do this when we finally deprecate 'charset'. */
     /* appres.codepage = NewString("bracket"); */
     appres.termname = NULL;
