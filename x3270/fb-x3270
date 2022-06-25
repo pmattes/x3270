@@ -53,6 +53,13 @@ x3270.colorScheme.default: \
 	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
 	white black dimGrey \
 	4 2 1 15
+x3270.colorScheme.lighter-bg: \
+	grey10 royalblue3 red magenta \
+	green4 cyan yellow white \
+	darkSlateGrey blue3 orange purple \
+	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
+	white grey10 dimGrey \
+	4 2 1 15
 x3270.colorScheme.old-default: \
 	black deepSkyBlue red pink \
 	green turquoise yellow white \
@@ -95,18 +102,24 @@ x3270.colorScheme.cpe: \
 	paleGreen paleTurquoise2 grey80 white \
 	white black dimGrey \
 	4 2 1 15
-x3270.colorScheme.greenScreen: \
-	green green green green \
-	green green green green \
-	green green green green \
-	green green green green \
-	white black dimGrey \
-	4 15 4 15
+!x3270.colorScheme.GreenScreen: \
+!        green3 green3 green green3  \
+!        green3 green3 green3 green \
+!        green3 green3 green3 green3 \
+!        green3 green3 green3 green \
+!        white black dimGrey \
+!        4 2 1 15
+x3270.colorScheme.GreenScreen: \
+        forestgreen forestgreen green forestgreen  \
+        forestgreen forestgreen forestgreen green \
+        forestgreen forestgreen forestgreen forestgreen \
+        forestgreen forestgreen forestgreen green \
+        white black dimGrey \
+        4 2 1 15
 !   Color schemes listed on the Options color menu
 x3270.schemeList:	Default 3279: default\n\
-			Bright: bright\n\
-			Reverse: reverse\n\
-			Green Screen: greenScreen
+			Lighter background: lighter-bg\n\
+			Reverse: reverse
 !   Character sets listed on the Options menu
 x3270.charsetList:	U.S. English (CP 037): us-intl\n\
 			Bracket (CP 037, modified): bracket\n\
@@ -967,7 +980,7 @@ x3270*togglesOption.label:			Toggles
 x3270*fontsOption.label:			Font
 x3270*modelsOption.label:			Screen Size
 x3270*snapOption.label:				Snap Window Size
-x3270*colorsOption.label:			Color Scheme
+x3270*colorsOption.label:			3279 Color Scheme
 x3270*codepageOption.label:			Code Page
 x3270*keymapOption.label:			Change Keymap...
 x3270*idleCommandOption.label:			Configure Idle Command
