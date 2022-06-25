@@ -1214,8 +1214,8 @@ parse_set_clear(int *argcp, char **argv)
 	    int xt = init_extended_toggle(argv[i], nlen, bool_only,
 		    eq? eq + 1: (is_set? ResTrue: ResFalse), &proper_name);
 
-	    if (xt > 0 && eq) {
-		proper_name = xs_buffer("%.*s", (int)(eq - argv[i]), argv[i]);
+	    if (xt == 0 && eq) {
+		proper_name = lazyaf("%.*s", (int)(eq - argv[i]), argv[i]);
 	    }
 	    argv_out[argc_out++] = OptXrm;
 	    argv_out[argc_out++] = lazyaf("x3270.%s: %s", proper_name,
