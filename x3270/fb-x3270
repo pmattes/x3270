@@ -47,8 +47,8 @@
 !=============================================================================
 !   Color schemes
 x3270.colorScheme.default: \
-	black royalblue3 red magenta \
-	green4 cyan yellow white \
+	grey10 dodgerBlue red magenta \
+	lime cyan yellow white \
 	darkSlateGrey blue3 orange purple \
 	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
 	white grey10 dimGrey \
@@ -66,7 +66,7 @@ x3270.colorScheme.reverse: \
 	black blue3 orange purple \
 	paleGreen paleTurquoise3 grey whiteSmoke \
 	black white dimGrey \
-	4 2 1 0
+	4 2 1 7
 x3270.colorScheme.old-reverse: \
 	black blue firebrick pink \
 	green4 cadetBlue goldenrod black \
@@ -75,11 +75,11 @@ x3270.colorScheme.old-reverse: \
 	black white dimGrey \
 	4 2 1 0
 x3270.colorScheme.bright: \
-	black royalblue3 red magenta \
-	green4 cyan yellow white \
+	grey10 dodgerBlue red magenta \
+	lime cyan yellow white \
 	darkSlateGrey blue3 orange purple \
 	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
-	white black dimGrey \
+	white grey10 dimGrey \
 	4 2 1 15
 x3270.colorScheme.old-bright: \
 	black blue red magenta \
@@ -95,19 +95,12 @@ x3270.colorScheme.cpe: \
 	paleGreen paleTurquoise2 grey80 white \
 	white black dimGrey \
 	4 2 1 15
-!x3270.colorScheme.GreenScreen: \
-!        green3 green3 green green3  \
-!        green3 green3 green3 green \
-!        green3 green3 green3 green3 \
-!        green3 green3 green3 green \
-!        white black dimGrey \
-!        4 2 1 15
 x3270.colorScheme.GreenScreen: \
-        forestgreen forestgreen green forestgreen  \
-        forestgreen forestgreen forestgreen green \
+        forestgreen forestgreen lime forestgreen  \
+        forestgreen forestgreen forestgreen lime \
         forestgreen forestgreen forestgreen forestgreen \
-        forestgreen forestgreen forestgreen green \
-        white black dimGrey \
+        forestgreen forestgreen forestgreen lime \
+        white grey10 dimGrey \
         4 2 1 15
 !   Color schemes listed on the Options color menu
 x3270.schemeList:	Default 3279: default\n\
