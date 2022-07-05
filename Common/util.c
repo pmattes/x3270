@@ -968,7 +968,15 @@ build_options(void)
 void
 dump_version(void)
 {
+    char *libdir = LIBX3270DIR;
+
+#if defined(_WIN32) /*[*/
+    if (!strcmp(libdir, ".")) {
+	libdir = getcwd(NULL, 0);
+    }
+#endif /*]*/
     fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
+    fprintf(stderr, "Library directory: %s\n", libdir);
     codepage_list();
     fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"

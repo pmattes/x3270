@@ -559,6 +559,7 @@ tcl3270_main(Tcl_Interp *interp, int argc, const char *argv[])
     if (argc > 1) {
 	if (!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version")) {
 	    fprintf(stderr, "%s\n", build);
+	    fprintf(stderr, "Library directory: %s\n", LIBX3270DIR);
 	    fprintf(stderr,
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"
