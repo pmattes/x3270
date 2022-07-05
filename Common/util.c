@@ -976,7 +976,7 @@ dump_version(void)
     }
 #endif /*]*/
     fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
-    fprintf(stderr, "Library directory: %s\n", libdir);
+    fprintf(stderr, "Default " ResConfDir ": %s\n", libdir);
     codepage_list();
     fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
