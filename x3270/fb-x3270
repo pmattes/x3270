@@ -95,11 +95,9 @@ x3270.colorScheme.cpe: \
 	paleGreen paleTurquoise2 grey80 white \
 	white black dimGrey \
 	4 2 1 15
-x3270.colorScheme.GreenScreen: \
-        forestgreen forestgreen lime forestgreen  \
-        forestgreen forestgreen forestgreen lime \
-        forestgreen forestgreen forestgreen forestgreen \
-        forestgreen forestgreen forestgreen lime \
+x3270.colorScheme.GreenScreen: #21a021 #21a021 \
+	lime #21a021 #21a021 #21a021 #21a021 \
+	lime #21a021 #21a021 #21a021 #21a021 #21a021 #21a021 #21a021 lime \
         white grey10 dimGrey \
         4 2 1 15
 !   Color schemes listed on the Options color menu
