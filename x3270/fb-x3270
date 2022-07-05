@@ -51,13 +51,6 @@ x3270.colorScheme.default: \
 	green4 cyan yellow white \
 	darkSlateGrey blue3 orange purple \
 	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
-	white black dimGrey \
-	4 2 1 15
-x3270.colorScheme.lighter-bg: \
-	grey10 royalblue3 red magenta \
-	green4 cyan yellow white \
-	darkSlateGrey blue3 orange purple \
-	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
 	white grey10 dimGrey \
 	4 2 1 15
 x3270.colorScheme.old-default: \
@@ -118,7 +111,6 @@ x3270.colorScheme.GreenScreen: \
         4 2 1 15
 !   Color schemes listed on the Options color menu
 x3270.schemeList:	Default 3279: default\n\
-			Lighter background: lighter-bg\n\
 			Reverse: reverse
 !   Character sets listed on the Options menu
 x3270.charsetList:	U.S. English (CP 037): us-intl\n\
