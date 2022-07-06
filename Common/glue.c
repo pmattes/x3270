@@ -476,7 +476,7 @@ set_appres_defaults(void)
     mode.extended = true;
     mode.m3279 = true;
     appres.debug_tracing = true;
-    appres.conf_dir = LIBX3270DIR;
+    appres.conf_dir = NewString(LIBX3270DIR);
 
     appres.model = NewString("3279-4-E");
     appres.hostsfile = NULL;

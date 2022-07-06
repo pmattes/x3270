@@ -37,11 +37,13 @@
 #include "resources.h"
 
 #include <assert.h>
+#include <limits.h>
 #include "actions.h"
 #include "boolstr.h"
 #include "glue_gui.h"
 #include "host.h"
 #include "host_gui.h"
+#include "lazya.h"
 #include "login_macro.h"
 #include "names.h"
 #include "popups.h"
@@ -267,6 +269,44 @@ reconnect_retry_touched(void)
 }
 
 /**
+ * Canonicalize the configuration directory.
+ *
+ * @param[in] dir	Configuration directory.
+ *
+ * @return Canonicalized form
+ */
+static const char *
+canon_conf_dir(const char *dir)
+{
+#if !defined(_WIN32) /*[*/
+    static char resolved_path[PATH_MAX];
+    char *result = realpath(dir, resolved_path);
+
+    return result? result: dir;
+#else /*][*/
+    static char resolved_path[MAX_PATH];
+    DWORD len = GetFullPathName(dir, MAX_PATH, resolved_path, NULL);
+
+    return len? resolved_path: dir;
+#endif /*]*/
+}
+
+/**
+ * Toggle the configuration directory.
+ *
+ * @param[in] name	Toggle name.
+ * @param[in] value	New value.
+ *
+ * @return true if sucessful
+ */
+static bool
+set_conf_dir(const char *name _is_unused, const char *value)
+{
+    popup_an_error("Cannot set " ResConfDir);
+    return false;
+}
+
+/**
  * Toggle the reconnect flag.
  *
  * @param[in] name	Toggle name.
@@ -335,6 +375,8 @@ host_register(void)
     register_schange(ST_EXITING, host_exiting);
 
     /* Register our toggles. */
+    register_extended_toggle(ResConfDir, set_conf_dir, NULL, canon_conf_dir,
+	    (void **)&appres.conf_dir, XRM_STRING);
     register_extended_toggle(ResReconnect, set_reconnect, NULL, NULL,
 	    (void **)&appres.reconnect, XRM_BOOLEAN);
     register_extended_toggle(ResRetry, set_retry, NULL, NULL,

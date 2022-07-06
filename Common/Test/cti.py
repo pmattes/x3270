@@ -292,8 +292,6 @@ class cti(unittest.TestCase):
         vprog = 'w' + prog if with_w else prog
         self.assertTrue(stderr[0].startswith(vprog + ' '), '-v does not start with program name')
         self.assertTrue(any('Copyright' in line for line in stderr), 'Copyright not found')
-        if prog != "pr3287":
-            self.assertTrue(any('Default confDir' in line for line in stderr), 'Library directory not found')
 
     def check_help(self, prog):
         '''Make sure the "--help" option works'''
