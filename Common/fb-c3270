@@ -1,5 +1,5 @@
 
-! Copyright (c) 1995-2020, Paul Mattes.
+! Copyright (c) 1995-2022, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,8 @@ keymap.base.3270: \n\
       Ctrl <Key>d: Dup()\n\
        Alt <Key>d: Dup()\n\
        Alt <Key>D: Dup()\n\
+       Alt <Key>e: EraseEOF()\n\
+       Alt <Key>E: EraseEOF()\n\
       Ctrl <Key>f: FieldMark()\n\
        Alt <Key>f: FieldMark()\n\
        Alt <Key>F: FieldMark()\n\
@@ -173,6 +175,7 @@ x3270.keymap.base: \n\
 x3270.keymap.base.3270: \n\
      Ctrl<Key>a <Key>a: Attn()\n\
  Ctrl<Key>a Ctrl<Key>i: BackTab()\n\
+ Ctrl<Key>a Ctrl<Key>f: EraseEOF()\n\
             Ctrl<Key>c: Clear()\n\
             Ctrl<Key>d: Dup()\n\
             Ctrl<Key>f: FieldMark()\n\
