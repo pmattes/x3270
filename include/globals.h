@@ -57,14 +57,31 @@
 # define BLOCKING_CONNECT_ONLY	1
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+/* Needs to happen before any system includes, so MinGW doesn't default it */
+# define _WIN32_WINNT	0x0600
+#endif /*]*/
+
 /*
  * Compiler-specific #defines.
  */
 
-/* '_is_unused' explicitly flags an unused parameter */
+/*
+ * '_is_unused' explicitly flags an unused parameter
+ *
+ * 'printflike' identifies printf-like functions.
+ * The conditional strangeness is because recent versions of MinGW sometimes
+ * force GNU-style definitions for the PRI*64 constants, so this definition has
+ * to use the same condition, and it depends on <stdint.h>. Sigh.
+ */
 #if defined(__GNUC__) /*[*/
+# include <stdint.h>
 # define _is_unused __attribute__((__unused__))
-# define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
+# if defined(_UCRT) || __USE_MINGW_ANSI_STDIO /*[ per MinGW inttypes.h */
+#  define printflike(s,f) __attribute__ ((__format__ (__gnu_printf__, s, f)))
+# else /*][*/
+#  define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
+# endif /*]*/
 #else /*][*/
 # define _is_unused /* nothing */
 # define printflike(s, f) /* nothing */
@@ -76,11 +93,6 @@
 /*
  * Prerequisite #includes.
  */
-#if defined(_WIN32) /*[*/
-# define _WIN32_WINNT	0x0600		/* Needs to happen before any system
-					   includes, so mingw doesn't default
-					   it */
-#endif /*]*/
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
 #if !defined(_MSC_VER) /*[*/
