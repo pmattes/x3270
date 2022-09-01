@@ -157,6 +157,9 @@ XrmOptionDescRec base_options[]= {
     { OptConnectTimeout,DotConnectTimeout,XrmoptionSepArg,	NULL },
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
     { OptTrace,		DotTrace,	XrmoptionNoArg,		ResTrue },
+#if defined(LOCAL_PROCESS) /*[*/
+    { OptLocalProcess,	NULL,		XrmoptionSkipLine,	NULL },
+#endif /*]*/
     { OptEmulatorFont,	DotEmulatorFont,XrmoptionSepArg,	NULL },
     { OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
     { OptHttpd,		DotHttpd,	XrmoptionSepArg,	NULL },
@@ -234,6 +237,9 @@ static struct option_help {
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
+#if defined(LOCAL_PROCESS) /*[*/
+    { OptLocalProcess, "<command> [arg...]", "Run process instead of connecting to host" },
+#endif /*]*/
     { OptEmulatorFont, "<font>", "Font for emulator window" },
     { OptHttpd, "[<addr>:]<port>", "TCP port to listen on for http requests" },
     { OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
