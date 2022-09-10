@@ -25,7 +25,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# b3270 invisible underscored tests
+# b3270 rendering bug tests
 
 import json
 from subprocess import Popen, PIPE, DEVNULL
@@ -35,7 +35,7 @@ import Common.Test.pipeq as pipeq
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-class TestB3270InvisibleUnderscore(cti.cti):
+class TestB3270Render(cti.cti):
 
     # b3270 invisible underscore test
     def test_invisible_underscore(self):
@@ -60,7 +60,7 @@ class TestB3270InvisibleUnderscore(cti.cti):
             # Wait for b3270 to connect.
             p.wait_accept()
 
-            # Send an invalid screen to b3270 and make sure it complains about it.
+            # Send the screen image.
             p.send_records(1)
 
             # Check for a screen update.
@@ -69,6 +69,54 @@ class TestB3270InvisibleUnderscore(cti.cti):
                 if b'Field:' in out:
                     break
             self.assertNotIn(b'underline', out)
+
+        # Clean up.
+        b3270.stdin.write(b'"quit"\n')
+        b3270.stdin.flush()
+        b3270.stdin.close()
+        self.vgwait(b3270)
+        pq.close()
+        b3270.stdout.close()
+
+    # b3270 reverse video test
+    def test_reverse(self):
+
+        # Start 'playback' to talk to b3270.
+        playback_port, ts = cti.unused_port()
+        with playback.playback(self, f'b3270/Test/reverse.trc', port=playback_port) as p:
+            ts.close()
+
+            # Start b3270.
+            b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+            self.children.append(b3270)
+
+            # Throw away b3270's initialization output.
+            pq = pipeq.pipeq(self, b3270.stdout)
+            pq.get(2, 'b3270 did not start')
+
+            # Tell b3270 to connect.
+            b3270.stdin.write(f'"open 127.0.0.1:{playback_port}"\n'.encode('utf8'))
+            b3270.stdin.flush()
+
+            # Wait for b3270 to connect.
+            p.wait_accept()
+
+            # Send the screen image.
+            p.send_records(1)
+
+            # Check for a screen update.
+            while True:
+                out = pq.get(2, 'b3270 did not produce screen output')
+                if b'_____' in out:
+                    break
+
+            # Check the output.
+            row1 = json.loads(out.decode('utf8'))['screen']['rows'][0]['changes']
+            change1 = row1[0]
+            self.assertNotIn('bg', change1)
+            change2 = row1[1]
+            self.assertIn('bg', change2)
+            self.assertEqual('red', change2['bg'])
 
         # Clean up.
         b3270.stdin.write(b'"quit"\n')
