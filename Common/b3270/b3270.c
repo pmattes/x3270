@@ -292,8 +292,7 @@ b3270_secure(bool ignored)
 	     AttrSecure, AT_BOOLEAN, net_secure_connection(),
 	     AttrVerified,
 		 net_secure_connection()? AT_BOOLEAN: AT_SKIP_BOOLEAN,
-		 net_secure_connection()?
-		     net_secure_unverified(): false,
+		 !net_secure_unverified(),
 	     AttrSession, AT_STRING, net_session_info(),
 	     AttrHostCert, AT_STRING, net_server_cert_info(),
 	     NULL);
