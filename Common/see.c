@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015, 2022 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -259,21 +259,36 @@ see_attr(unsigned char fa)
 static const char *
 see_highlight(unsigned char setting)
 {
-    switch (setting) {
-    case XAH_DEFAULT:
+
+    if (setting == XAH_DEFAULT) {
 	return "default";
-    case XAH_NORMAL:
-	return "normal";
-    case XAH_BLINK:
-	return "blink";
-    case XAH_REVERSE:
-	return "reverse";
-    case XAH_UNDERSCORE:
-	return "underscore";
-    case XAH_INTENSIFY:
-	return "intensify";
-    default:
+    }
+    if ((setting & 0xf0) != 0xf0) {
 	return unknown(setting);
+    }
+    {
+	varbuf_t r;
+	char *sep = "";
+
+	vb_init(&r);
+	if ((setting & XAH_BLINK) == XAH_BLINK) {
+	    vb_appendf(&r, "%s%s", sep, "blink");
+	    sep = ",";
+	}
+	if ((setting & XAH_REVERSE) == XAH_REVERSE) {
+	    vb_appendf(&r, "%s%s", sep, "reverse");
+	    sep = ",";
+	}
+	if ((setting & XAH_UNDERSCORE) == XAH_UNDERSCORE) {
+	    vb_appendf(&r, "%s%s", sep, "underscore");
+	    sep = ",";
+	}
+	if ((setting & XAH_INTENSIFY) == XAH_INTENSIFY) {
+	    vb_appendf(&r, "%s%s", sep, "intensify");
+	    sep = ",";
+	}
+
+	return lazya(vb_consume(&r));
     }
 }
 

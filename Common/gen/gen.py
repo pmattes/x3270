@@ -27,6 +27,7 @@
 #
 # 3270 screen generator
 
+import functools
 import sys
 import subprocess
 
@@ -78,6 +79,16 @@ class gen():
         'paleTurquoise': 'fd',
         'grey': 'fe',
         'white': 'ff' 
+    }
+
+    # Map from highlighting attributes to their encoded values
+    highlighting_map = {
+        'default': 0,
+        'normal': 0xf0,
+        'blink': 0xf1,
+        'reverse': 0xf2,
+        'underscore': 0xf4,
+        'intensify': 0xf8
     }
 
     # Maps an argument
@@ -295,6 +306,10 @@ class gen():
             raise self.GenSyntaxError('sf takes 1 argument')
         return self.quote('1d' + self.encode_sf_flags(args[0]))
 
+    # highlighting x,y,z
+    def highlighting(self, h: str):
+        return '{:#04x}'.format(functools.reduce(lambda x, y: x | y, [self.highlighting_map[hh] for hh in h.split(',')]))[2:]
+
     # sfe type value ...
     def sfe_sa_mf(self, keyword, order, args, include_count=True):
         if len(args) == 0:
@@ -304,14 +319,17 @@ class gen():
             if args[0] == '3270':
                 ret.append('c0' + self.encode_sf_flags(args[1]))
                 args = args[2:]
+            elif args[0] == 'highlighting':
+                ret.append('41' + self.highlighting(args[1]))
+                args = args[2:]
             elif args[0] == 'fg':
                 ret.append('42' + self.color_map[args[1]])
                 args = args[2:]
-            elif args[0] == 'bg':
-                ret.append('45' + self.color_map[args[1]])
-                args = args[2:]
             elif args[0] == 'charset':
                 ret.append('43' + args[1])
+                args = args[2:]
+            elif args[0] == 'bg':
+                ret.append('45' + self.color_map[args[1]])
                 args = args[2:]
             elif args[0] == 'all':
                 ret.append('00' + args[1])
