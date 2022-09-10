@@ -528,7 +528,7 @@ render_screen(struct ea *ea, screen_t *s)
 	} else {
 	    bg_color = fa_bg;
 	}
-	if (ea[i].gr & GR_REVERSE) {
+	if (!ea[i].fa && ((fa_gr | ea[i].gr) & GR_REVERSE)) {
 	    int tmp;
 
 	    tmp = fg_color;
@@ -536,7 +536,7 @@ render_screen(struct ea *ea, screen_t *s)
 	    bg_color = tmp;
 	}
 
-	if (ea[i].gr & GR_INTENSIFY) {
+	if ((fa_gr | ea[i].gr) & GR_INTENSIFY) {
 	    high = true;
 	} else {
 	    high = fa_high;
