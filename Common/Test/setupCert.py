@@ -96,20 +96,26 @@ if __name__ == '__main__':
                 assert 0 == os.system('powershell Common\\Test\\tls\\addrootca.ps1')
                 if present():
                     print(f"Done. To reverse, run '{sys.executable} -m {script} -reverse' (runs elevated)")
+                    exit(0)
                 else:
                     print('Failed.')
+                    exit(1)
             else:
                 print('Not needed.')
+                exit(0)
 
         # Revert.
         if present():
             assert 0 == os.system('powershell Common\\Test\\tls\\rmrootca.ps1')
             if not present():
                 print('Done.')
+                exit(0)
             else:
                 print('Failed.')
+                exit(1)
         else:
             print('Not needed.')
+            exit(0)
 
     else:
         print('Not needed on this platform.')

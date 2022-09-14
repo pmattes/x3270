@@ -99,5 +99,36 @@ class TestS3270Tls(cti.cti):
         s3270.stdin.close()
         self.vgwait(s3270)
 
+    # s3270 file transfer crash validation
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-specific test')
+    def test_s3270_ft_crash(self):
+
+        # Start a server to read s3270's output.
+        port, ts = cti.unused_port()
+        with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ft-crash.trc', port) as server:
+            ts.close()
+
+            # Start s3270.
+            args = ['s3270', f'l:y:127.0.0.1:{port}=TEST']
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
+
+            # Do the TLS thing.
+            server.wrap()
+
+            # Feed s3270 some actions.
+            s3270.stdin.write(b'Transfer(direction=send,localfile=s3270/Test/short.bin,hostfile=test,mode=binary)\n')
+            s3270.stdin.write(b"Enter()\n")
+            s3270.stdin.write(b"Disconnect()\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Make sure the right thing happens.
+            server.match()
+
+        # Wait for the process to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
