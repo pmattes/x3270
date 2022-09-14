@@ -1363,8 +1363,8 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
     if (recsz > INBUF) {
 	s->rcvbuf = Realloc(s->rcvbuf, recsz);
     }
-    s->prbuf = Malloc(s->sizes.cbMaximumMessage);
-    s->sendbuf = Malloc(s->sizes.cbMaximumMessage);
+    s->prbuf = Malloc(recsz);
+    s->sendbuf = Malloc(recsz);
 
     /* Success. */
     s->secure_unverified = !config->verify_host_cert;
