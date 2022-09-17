@@ -260,6 +260,7 @@ class gen():
 
     # Map for SF flags.
     sf_map = {
+        'normal': 0x00,
         'protect': 0x20,
         'numeric': 0x10,
         'modify': 0x01,
