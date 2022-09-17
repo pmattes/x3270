@@ -119,6 +119,18 @@ tn3270e 3270-data none error-response 1
   ord.sa fg white
   text X
   ord.sa all 00
+  ord.sba 19 1
+  ord.sf normal
+  text "Normal input field"
+  ord.sba 20 1
+  ord.sf high
+  text "Highlighted input field"
+  ord.sba 21 1
+  ord.sf protect
+  text "Protected field"
+  ord.sba 22 1
+  ord.sf protect,high
+  text "Protected, highlighted field"
   ord.sf protect
  telnet.eor
 flush

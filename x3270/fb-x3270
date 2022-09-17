@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2021 Paul Mattes.
+! Copyright (c) 1995-2022 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -61,12 +61,12 @@ x3270.colorScheme.old-default: \
 	white black dimGrey \
 	4 2 1 15
 x3270.colorScheme.reverse: \
-	white blue firebrick pink \
-	green4 turquoise2 yellow2 black \
+	white #0000c0 firebrick HotPink2 \
+	green4 DarkTurquoise yellow3 black \
 	black blue3 orange purple \
 	paleGreen paleTurquoise3 grey whiteSmoke \
-	black white dimGrey \
-	4 2 1 0
+	black white #e1e1e1 \
+	4 2 1 7
 x3270.colorScheme.old-reverse: \
 	black blue firebrick pink \
 	green4 cadetBlue goldenrod black \
