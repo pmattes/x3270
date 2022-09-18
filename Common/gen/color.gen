@@ -33,55 +33,55 @@ tn3270e 3270-data none error-response 1
   ord.sba 1 1
   ord.ic
   ord.sfe 3270 protect fg default
-  text "Default"
+  text "   Default"
   ord.sba 2 1
   ord.sfe 3270 protect fg neutralBlack
-  text "Neutral/Black (same as background)"
+  text "00 Neutral/Black (same as background)"
   ord.sba 3 1
   ord.sfe 3270 protect fg blue
-  text Blue
+  text "01 Blue"
   ord.sba 4 1
   ord.sfe 3270 protect fg red
-  text Red
+  text "02 Red"
   ord.sba 5 1
   ord.sfe 3270 protect fg pink
-  text Pink
+  text "03 Pink"
   ord.sba 6 1
   ord.sfe 3270 protect fg green
-  text Green
+  text "04 Green"
   ord.sba 7 1
   ord.sfe 3270 protect fg turquoise
-  text Turquoise
+  text "05 Turquoise"
   ord.sba 8 1
   ord.sfe 3270 protect fg yellow
-  text Yellow
+  text "06 Yellow"
   ord.sba 9 1
   ord.sfe 3270 protect fg neutralWhite
-  text "Neutral/White (same as foreground)"
+  text "07 Neutral/White (same as foreground)"
   ord.sba 10 1
   ord.sfe 3270 protect fg black
-  text Black
+  text "08 Black"
   ord.sba 11 1
   ord.sfe 3270 protect fg deepBlue
-  text "Deep Blue"
+  text "09 Deep Blue"
   ord.sba 12 1
   ord.sfe 3270 protect fg orange
-  text Orange
+  text "0A Orange"
   ord.sba 13 1
   ord.sfe 3270 protect fg purple
-  text Purple
+  text "0B Purple"
   ord.sba 14 1
   ord.sfe 3270 protect fg paleGreen
-  text "Pale Green"
+  text "0C Pale Green"
   ord.sba 15 1
   ord.sfe 3270 protect fg paleTurquoise
-  text "Pale Turquoise"
+  text "0D Pale Turquoise"
   ord.sba 16 1
   ord.sfe 3270 protect fg grey
-  text Grey
+  text "0E Grey"
   ord.sba 17 1
   ord.sfe 3270 protect fg white
-  text White
+  text "0F White"
   ord.sba 18 1
   ord.sf protect
   ord.sa fg default
