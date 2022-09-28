@@ -27,9 +27,9 @@ telnet.sb tn3270e
  telnet.se
 flush
 
-# Draw the screen.
+# Draw the first screen.
 tn3270e 3270-data none error-response 1
- cmd.ewa reset,alarm,restore
+ cmd.ewa reset,restore
   ord.sba 1 1
   ord.ic
   ord.sfe 3270 protect fg default
@@ -37,52 +37,102 @@ tn3270e 3270-data none error-response 1
   ord.sba 2 1
   ord.sfe 3270 protect fg neutralBlack
   text "00 Neutral/Black (same as background)"
+  ord.sba 2 40
+  ord.sfe 3270 protect fg neutralBlack highlighting reverse
+  text "00 Neutral/Black reverse"
   ord.sba 3 1
   ord.sfe 3270 protect fg blue
   text "01 Blue"
+  ord.sba 3 40
+  ord.sfe 3270 protect fg blue highlighting reverse
+  text "01 Blue reverse"
   ord.sba 4 1
   ord.sfe 3270 protect fg red
   text "02 Red"
+  ord.sba 4 40
+  ord.sfe 3270 protect fg red highlighting reverse
+  text "02 Red reverse"
   ord.sba 5 1
   ord.sfe 3270 protect fg pink
   text "03 Pink"
+  ord.sba 5 40
+  ord.sfe 3270 protect fg pink highlighting reverse
+  text "03 Pink reverse"
   ord.sba 6 1
   ord.sfe 3270 protect fg green
   text "04 Green"
+  ord.sba 6 40
+  ord.sfe 3270 protect fg green highlighting reverse
+  text "04 Green reverse"
   ord.sba 7 1
   ord.sfe 3270 protect fg turquoise
   text "05 Turquoise"
+  ord.sba 7 40
+  ord.sfe 3270 protect fg turquoise highlighting reverse
+  text "05 Turquoise reverse"
   ord.sba 8 1
   ord.sfe 3270 protect fg yellow
   text "06 Yellow"
+  ord.sba 8 40
+  ord.sfe 3270 protect fg yellow highlighting reverse
+  text "06 Yellow reverse"
   ord.sba 9 1
   ord.sfe 3270 protect fg neutralWhite
   text "07 Neutral/White (same as foreground)"
+  ord.sba 9 40
+  ord.sfe 3270 protect fg neutralWhite highlighting reverse
+  text "07 Neutral/white reverse"
   ord.sba 10 1
   ord.sfe 3270 protect fg black
   text "08 Black"
+  ord.sba 10 40
+  ord.sfe 3270 protect fg black highlighting reverse
+  text "08 Black reverse"
   ord.sba 11 1
   ord.sfe 3270 protect fg deepBlue
   text "09 Deep Blue"
+  ord.sba 11 40
+  ord.sfe 3270 protect fg deepBlue highlighting reverse
+  text "09 Deep Blue reverse"
   ord.sba 12 1
   ord.sfe 3270 protect fg orange
   text "0A Orange"
+  ord.sba 12 40
+  ord.sfe 3270 protect fg orange highlighting reverse
+  text "0A Orange reverse"
   ord.sba 13 1
   ord.sfe 3270 protect fg purple
   text "0B Purple"
+  ord.sba 13 40
+  ord.sfe 3270 protect fg purple highlighting reverse
+  text "0B Purple reverse"
   ord.sba 14 1
   ord.sfe 3270 protect fg paleGreen
   text "0C Pale Green"
+  ord.sba 14 40
+  ord.sfe 3270 protect fg paleGreen highlighting reverse
+  text "0C Pale Green reverse"
   ord.sba 15 1
   ord.sfe 3270 protect fg paleTurquoise
   text "0D Pale Turquoise"
+  ord.sba 15 40
+  ord.sfe 3270 protect fg turquoise highlighting reverse
+  text "0D Pale Turquoise reverse"
   ord.sba 16 1
   ord.sfe 3270 protect fg grey
   text "0E Grey"
+  ord.sba 16 40
+  ord.sfe 3270 protect fg grey highlighting reverse
+  text "0E Grey reverse"
   ord.sba 17 1
   ord.sfe 3270 protect fg white
   text "0F White"
+  ord.sba 17 40
+  ord.sfe 3270 protect fg white highlighting reverse
+  text "0F White reverse"
   ord.sba 18 1
+  ord.sf protect
+  ord.sba 19 1
   ord.sf protect
   ord.sa fg default
   text X
@@ -119,18 +169,596 @@ tn3270e 3270-data none error-response 1
   ord.sa fg white
   text X
   ord.sa all 00
-  ord.sba 19 1
+  ord.sba 21 1
   ord.sf normal
   text "Normal input field"
-  ord.sba 20 1
+  ord.sba 22 1
   ord.sf high
   text "Highlighted input field"
-  ord.sba 21 1
+  ord.sba 23 1
   ord.sf protect
   text "Protected field"
-  ord.sba 22 1
+  ord.sba 24 1
   ord.sf protect,high
   text "Protected, highlighted field"
+  ord.sba 26 1
+  ord.sfe 3270 protect fg default
+  text "   bg 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F"
+  ord.sba 27 1
+  ord.sfe 3270 protect fg default
+  text "fg 00"
+  ord.sfe 3270 protect fg neutralBlack bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg blue
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg red
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg pink
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg green
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg black
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg orange
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg purple
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg grey
+  text "XX"
+  ord.sfe 3270 protect fg neutralBlack bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 28 1
+  ord.sfe 3270 protect fg default
+  text "fg 01"
+  ord.sfe 3270 protect fg blue bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg blue bg blue
+  text "XX"
+  ord.sfe 3270 protect fg blue bg red
+  text "XX"
+  ord.sfe 3270 protect fg blue bg pink
+  text "XX"
+  ord.sfe 3270 protect fg blue bg green
+  text "XX"
+  ord.sfe 3270 protect fg blue bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg blue bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg blue bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg blue bg black
+  text "XX"
+  ord.sfe 3270 protect fg blue bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg blue bg orange
+  text "XX"
+  ord.sfe 3270 protect fg blue bg purple
+  text "XX"
+  ord.sfe 3270 protect fg blue bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg blue bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg blue bg grey
+  text "XX"
+  ord.sfe 3270 protect fg blue bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 29 1
+  ord.sfe 3270 protect fg default
+  text "fg 02"
+  ord.sfe 3270 protect fg red bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg red bg blue
+  text "XX"
+  ord.sfe 3270 protect fg red bg red
+  text "XX"
+  ord.sfe 3270 protect fg red bg pink
+  text "XX"
+  ord.sfe 3270 protect fg red bg green
+  text "XX"
+  ord.sfe 3270 protect fg red bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg red bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg red bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg red bg black
+  text "XX"
+  ord.sfe 3270 protect fg red bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg red bg orange
+  text "XX"
+  ord.sfe 3270 protect fg red bg purple
+  text "XX"
+  ord.sfe 3270 protect fg red bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg red bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg red bg grey
+  text "XX"
+  ord.sfe 3270 protect fg red bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 30 1
+  ord.sfe 3270 protect fg default
+  text "fg 03"
+  ord.sfe 3270 protect fg pink bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg pink bg blue
+  text "XX"
+  ord.sfe 3270 protect fg pink bg red
+  text "XX"
+  ord.sfe 3270 protect fg pink bg pink
+  text "XX"
+  ord.sfe 3270 protect fg pink bg green
+  text "XX"
+  ord.sfe 3270 protect fg pink bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg pink bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg pink bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg pink bg black
+  text "XX"
+  ord.sfe 3270 protect fg pink bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg pink bg orange
+  text "XX"
+  ord.sfe 3270 protect fg pink bg purple
+  text "XX"
+  ord.sfe 3270 protect fg pink bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg pink bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg pink bg grey
+  text "XX"
+  ord.sfe 3270 protect fg pink bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 31 1
+  ord.sfe 3270 protect fg default
+  text "fg 04"
+  ord.sfe 3270 protect fg green bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg green bg blue
+  text "XX"
+  ord.sfe 3270 protect fg green bg red
+  text "XX"
+  ord.sfe 3270 protect fg green bg pink
+  text "XX"
+  ord.sfe 3270 protect fg green bg green
+  text "XX"
+  ord.sfe 3270 protect fg green bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg green bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg green bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg green bg black
+  text "XX"
+  ord.sfe 3270 protect fg green bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg green bg orange
+  text "XX"
+  ord.sfe 3270 protect fg green bg purple
+  text "XX"
+  ord.sfe 3270 protect fg green bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg green bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg green bg grey
+  text "XX"
+  ord.sfe 3270 protect fg green bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 32 1
+  ord.sfe 3270 protect fg default
+  text "fg 05"
+  ord.sfe 3270 protect fg turquoise bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg blue
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg red
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg pink
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg green
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg black
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg orange
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg purple
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg grey
+  text "XX"
+  ord.sfe 3270 protect fg turquoise bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 33 1
+  ord.sfe 3270 protect fg default
+  text "fg 06"
+  ord.sfe 3270 protect fg yellow bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg blue
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg red
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg pink
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg green
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg black
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg orange
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg purple
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg grey
+  text "XX"
+  ord.sfe 3270 protect fg yellow bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 34 1
+  ord.sfe 3270 protect fg default
+  text "fg 07"
+  ord.sfe 3270 protect fg neutralWhite bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg blue
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg red
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg pink
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg green
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg black
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg orange
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg purple
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg grey
+  text "XX"
+  ord.sfe 3270 protect fg neutralWhite bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 35 1
+  ord.sfe 3270 protect fg default
+  text "fg 08"
+  ord.sfe 3270 protect fg black bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg black bg blue
+  text "XX"
+  ord.sfe 3270 protect fg black bg red
+  text "XX"
+  ord.sfe 3270 protect fg black bg pink
+  text "XX"
+  ord.sfe 3270 protect fg black bg green
+  text "XX"
+  ord.sfe 3270 protect fg black bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg black bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg black bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg black bg black
+  text "XX"
+  ord.sfe 3270 protect fg black bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg black bg orange
+  text "XX"
+  ord.sfe 3270 protect fg black bg purple
+  text "XX"
+  ord.sfe 3270 protect fg black bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg black bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg black bg grey
+  text "XX"
+  ord.sfe 3270 protect fg black bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 36 1
+  ord.sfe 3270 protect fg default
+  text "fg 09"
+  ord.sfe 3270 protect fg deepBlue bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg blue
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg red
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg pink
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg green
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg black
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg orange
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg purple
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg grey
+  text "XX"
+  ord.sfe 3270 protect fg deepBlue bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 37 1
+  ord.sfe 3270 protect fg default
+  text "fg 0A"
+  ord.sfe 3270 protect fg orange bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg orange bg blue
+  text "XX"
+  ord.sfe 3270 protect fg orange bg red
+  text "XX"
+  ord.sfe 3270 protect fg orange bg pink
+  text "XX"
+  ord.sfe 3270 protect fg orange bg green
+  text "XX"
+  ord.sfe 3270 protect fg orange bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg orange bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg orange bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg orange bg black
+  text "XX"
+  ord.sfe 3270 protect fg orange bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg orange bg orange
+  text "XX"
+  ord.sfe 3270 protect fg orange bg purple
+  text "XX"
+  ord.sfe 3270 protect fg orange bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg orange bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg orange bg grey
+  text "XX"
+  ord.sfe 3270 protect fg orange bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 38 1
+  ord.sfe 3270 protect fg default
+  text "fg 0B"
+  ord.sfe 3270 protect fg purple bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg purple bg blue
+  text "XX"
+  ord.sfe 3270 protect fg purple bg red
+  text "XX"
+  ord.sfe 3270 protect fg purple bg pink
+  text "XX"
+  ord.sfe 3270 protect fg purple bg green
+  text "XX"
+  ord.sfe 3270 protect fg purple bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg purple bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg purple bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg purple bg black
+  text "XX"
+  ord.sfe 3270 protect fg purple bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg purple bg orange
+  text "XX"
+  ord.sfe 3270 protect fg purple bg purple
+  text "XX"
+  ord.sfe 3270 protect fg purple bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg purple bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg purple bg grey
+  text "XX"
+  ord.sfe 3270 protect fg purple bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 39 1
+  ord.sfe 3270 protect fg default
+  text "fg 0C"
+  ord.sfe 3270 protect fg paleGreen bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg blue
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg red
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg pink
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg green
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg black
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg orange
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg purple
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg grey
+  text "XX"
+  ord.sfe 3270 protect fg paleGreen bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 40 1
+  ord.sfe 3270 protect fg default
+  text "fg 0D"
+  ord.sfe 3270 protect fg paleTurquoise bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg blue
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg red
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg pink
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg green
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg black
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg orange
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg purple
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg grey
+  text "XX"
+  ord.sfe 3270 protect fg paleTurquoise bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 41 1
+  ord.sfe 3270 protect fg default
+  text "fg 0E"
+  ord.sfe 3270 protect fg grey bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg grey bg blue
+  text "XX"
+  ord.sfe 3270 protect fg grey bg red
+  text "XX"
+  ord.sfe 3270 protect fg grey bg pink
+  text "XX"
+  ord.sfe 3270 protect fg grey bg green
+  text "XX"
+  ord.sfe 3270 protect fg grey bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg grey bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg grey bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg grey bg black
+  text "XX"
+  ord.sfe 3270 protect fg grey bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg grey bg orange
+  text "XX"
+  ord.sfe 3270 protect fg grey bg purple
+  text "XX"
+  ord.sfe 3270 protect fg grey bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg grey bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg grey bg grey
+  text "XX"
+  ord.sfe 3270 protect fg grey bg white
+  text "XX"
+  ord.sf protect
+  ord.sba 42 1
+  ord.sfe 3270 protect fg default
+  text "fg 0F"
+  ord.sfe 3270 protect fg white bg neutralBlack
+  text "XX"
+  ord.sfe 3270 protect fg white bg blue
+  text "XX"
+  ord.sfe 3270 protect fg white bg red
+  text "XX"
+  ord.sfe 3270 protect fg white bg pink
+  text "XX"
+  ord.sfe 3270 protect fg white bg green
+  text "XX"
+  ord.sfe 3270 protect fg white bg turquoise
+  text "XX"
+  ord.sfe 3270 protect fg white bg yellow
+  text "XX"
+  ord.sfe 3270 protect fg white bg neutralWhite
+  text "XX"
+  ord.sfe 3270 protect fg white bg black
+  text "XX"
+  ord.sfe 3270 protect fg white bg deepBlue
+  text "XX"
+  ord.sfe 3270 protect fg white bg orange
+  text "XX"
+  ord.sfe 3270 protect fg white bg purple
+  text "XX"
+  ord.sfe 3270 protect fg white bg paleGreen
+  text "XX"
+  ord.sfe 3270 protect fg white bg paleTurquoise
+  text "XX"
+  ord.sfe 3270 protect fg white bg grey
+  text "XX"
+  ord.sfe 3270 protect fg white bg white
+  text "XX"
   ord.sf protect
  telnet.eor
 flush
