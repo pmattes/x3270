@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021 Paul Mattes.
+ * Copyright (c) 2006-2022 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -532,6 +532,21 @@ get_printer_name(const char *defname, char *printername, int bufsize)
     return 0;
 }
 
+/**
+ * Request that the user press the Enter key.
+ *
+ * This generally happens after displaying an error message.
+ */
+static void
+ask_enter(void)
+{
+    char buf[2];
+
+    grayout("[Press <Enter>] ");
+    fflush(stdout);
+    fgets(buf, sizeof(buf), stdin);
+}
+
 typedef struct km {			/* Keymap: */
 	struct km *next;		/*  List linkage */
     	char name[MAX_PATH];		/*  Name */
@@ -665,6 +680,7 @@ save_keymap_name(const char *path, char *keymap_name, const char *description,
 		}
 		if (*def == NULL) {
 		    errout("Out of memory\n");
+		    ask_enter();
 		    exit(1);
 		}
 		if (!any) {
@@ -3212,6 +3228,7 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	old_us = strdup(*us);
 	if (old_us == NULL) {
 	    errout("Out of memory.\n");
+	    ask_enter();
 	    exit(1);
 	}
     }
@@ -3912,21 +3929,6 @@ menu_existing_session(char *name, bool include_public, src_t *lp,
 }
 
 /**
- * Request that the user press the Enter key.
- *
- * This generally happens after displaying an error message.
- */
-static void
-ask_enter(void)
-{
-    char buf[2];
-
-    grayout("[Press <Enter>] ");
-    fflush(stdout);
-    fgets(buf, sizeof(buf), stdin);
-}
-
-/**
  * Delete a session.
  *
  * Prompts for a session name, if none is provided in argc/argv.
@@ -4362,6 +4364,7 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
 	    xs = (xs_t *)malloc(sizeof(xs_t) + nlen + 1);
 	    if (xs == NULL) {
 		errout("Out of memory\n");
+		ask_enter();
 		exit(1);
 	    }
 	    xs->location = location;
@@ -5134,6 +5137,7 @@ w_usage(void)
 Usage: wc3270wiz [session-name]\n\
        wc3270wiz [-e] [session-file]\n\
        wc3270wiz -U[a]\n");
+    fflush(stderr);
     exit(1);
 }
 
@@ -5366,6 +5370,7 @@ create_wc3270_folder(src_t src)
 	if (_mkdir(wc3270_dir) < 0) {
 	    errout("Cannot create %s: %s\n", wc3270_dir,
 		    strerror(errno));
+	    ask_enter();
 	    exit(1);
 	}
 	printf("Created folder %s.\n", wc3270_dir);
