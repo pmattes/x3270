@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, 2019, 2022 Paul Mattes.
+ * Copyright (c) 2015-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,7 @@ screen_80(void)
 }
 
 bool
-screen_new_display_charsets(const char *realname, const char *cpname)
+screen_new_display_charsets(const char *realname)
 {
     return true;
 }

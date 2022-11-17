@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1999-2020 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ void screen_132(void);
 void screen_flip(void);
 bool screen_flipped(void);
 bool screen_selected(int baddr);
-bool screen_new_display_charsets(const char *realname, const char *csnames);
+bool screen_new_display_charsets(const char *realname);
 void screen_system_fixup(void);
 bool screen_suspend(void);
 void screen_set_thumb(float top, float shown, int saved, int screen, int back);

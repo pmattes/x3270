@@ -4451,6 +4451,25 @@ split_font_list_entry(char *entry, char **menu_name, bool *noauto,
     *font_name = s;
 }
 
+/* Test for a charset present in a comma-separated list of charsets. */
+static bool
+charset_present(const char *needle, const char *haystack)
+{
+    char *hcopy = NewString(haystack);
+    char *str = hcopy;
+    char *strand;
+    bool found = false;
+
+    while ((strand = strtok(str, ",")) != NULL) {
+	if ((found = !strcasecmp(needle, strand))) {
+	    break;
+	}
+	str = NULL;
+    }
+    Free(hcopy);
+    return found;
+}
+
 /*
  * Load a font with a display character set required by a charset.
  * Returns true for success, false for failure.
@@ -4458,7 +4477,7 @@ split_font_list_entry(char *entry, char **menu_name, bool *noauto,
  *	screen_reinit(FONT_CHANGE)
  */
 bool
-screen_new_display_charsets(const char *realname, const char *csnames)
+screen_new_display_charsets(const char *realname)
 {
     char *rl;
     char *s0, *s;
@@ -4468,7 +4487,6 @@ screen_new_display_charsets(const char *realname, const char *csnames)
     const char *display_charsets;
     const char *dbcs_display_charsets;
 
-    /* Handle the default. */
     if (realname == NULL) {
 	/* Handle the default. */
 	display_charsets = default_display_charset;
@@ -4484,9 +4502,11 @@ screen_new_display_charsets(const char *realname, const char *csnames)
     }
 
     /*
-     * If the emulator fonts already implement those charsets, we're done.
+     * If the emulator font already implements one of those charsets, we're
+     * done.
      */
-    if (efont_charset != NULL && !strcmp(display_charsets, efont_charset)) {
+    if (efont_charset != NULL &&
+	    charset_present(efont_charset, display_charsets)) {
 	goto done;
     }
 

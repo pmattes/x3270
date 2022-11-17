@@ -298,7 +298,7 @@ codepage_init2(const char *cpname, const char *realname, const char *codepage,
 	return CS_ILLEGAL;
     }
 
-    if (!screen_new_display_charsets(realname, cpname)) {
+    if (!screen_new_display_charsets(realname)) {
 	return CS_PREREQ;
     }
 
