@@ -4453,7 +4453,7 @@ split_font_list_entry(char *entry, char **menu_name, bool *noauto,
 
 /* Test for a charset present in a comma-separated list of charsets. */
 static bool
-charset_present(const char *needle, const char *haystack)
+find_charset(const char *needle, const char *haystack)
 {
     char *hcopy = NewString(haystack);
     char *str = hcopy;
@@ -4468,6 +4468,35 @@ charset_present(const char *needle, const char *haystack)
     }
     Free(hcopy);
     return found;
+}
+
+/* Test for charsets present in an SBCS+DBCS charset list. */
+static bool
+charsets_present(const char *sbcs, const char *dbcs, const char *list)
+{
+    char *plus = strchr(list, '+');
+    bool is_dbcs = plus != NULL;
+
+    if (sbcs == NULL || (dbcs == NULL && is_dbcs)) {
+	/* Missing one or the other. */
+	return false;
+    }
+
+    if (is_dbcs) {
+	char *list_copy;
+	bool found;
+
+	if (!find_charset(dbcs, plus + 1)) {
+	    return false;
+	}
+	list_copy = NewString(list);
+	*(list_copy + (plus - list)) = '\0';
+	found = find_charset(sbcs, list_copy);
+	Free(list_copy);
+	return found;
+    }
+
+    return find_charset(sbcs, list);
 }
 
 /*
@@ -4505,8 +4534,7 @@ screen_new_display_charsets(const char *realname)
      * If the emulator font already implements one of those charsets, we're
      * done.
      */
-    if (efont_charset != NULL &&
-	    charset_present(efont_charset, display_charsets)) {
+    if (charsets_present(efont_charset, efont_charset_dbcs, display_charsets)) {
 	goto done;
     }
 
@@ -5139,7 +5167,6 @@ screen_newcodepage(char *cpname)
 	/* Error already popped up. */
 	Free(old_codepage);
 	break;
-
     }
 }
 

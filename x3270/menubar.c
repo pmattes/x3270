@@ -1876,8 +1876,7 @@ codepages_init(void)
 }
 
 static void
-do_newcodepage(Widget w _is_unused, XtPointer userdata,
-	XtPointer calldata _is_unused)
+do_newcodepage(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
 {
     /* Change the code page. */
     screen_newcodepage((char *)userdata);
@@ -2098,8 +2097,8 @@ menubar_codepage(bool ignored _is_unused)
 	XtVaSetValues(codepage_widgets[i],
 		XtNleftBitmap,
 		(!strcmp(cpname, s->codepage) ||
-		 codepage_matches_alias(s->codepage, cpname)) ?
-		    diamond : no_diamond,
+		 codepage_matches_alias(s->codepage, cpname))?
+		    diamond: no_diamond,
 		NULL);
     }
 }
@@ -2461,6 +2460,7 @@ options_menu_init(bool regen, Position x, Position y)
     /* Create the "code page" pullright */
     if (codepage_count && !item_suppressed(options_menu, "codepageOption")) {
 	struct codepage *cs;
+	const char *cpname;
 
 	if (codepage_root != NULL) {
 	    free_menu_hier(codepage_root);
@@ -2471,14 +2471,16 @@ options_menu_init(bool regen, Position x, Position y)
 		"codepageMenu", complexMenuWidgetClass, menu_parent,
 		NULL);
 
+	cpname = get_codepage_name();
 	codepage_widgets = (Widget *)XtCalloc(codepage_count, sizeof(Widget));
 	for (ix = 0, cs = codepages; ix < codepage_count; ix++, cs = cs->next) {
 	    t = add_menu_hier(codepage_root, cs->parents, NULL, 0);
 	    codepage_widgets[ix] = XtVaCreateManagedWidget(
 		    cs->label, cmeBSBObjectClass, t,
 		    XtNleftBitmap,
-			(strcmp(get_codepage_name(), cs->codepage))? no_diamond:
-								   diamond,
+		    (!strcmp(cpname, cs->codepage) ||
+		     codepage_matches_alias(cs->codepage, cpname))?
+			diamond: no_diamond,
 		    NULL);
 	    XtAddCallback(codepage_widgets[ix], XtNcallback, do_newcodepage,
 		    cs->codepage);
