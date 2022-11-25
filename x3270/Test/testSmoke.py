@@ -40,6 +40,7 @@ import Common.Test.cti as cti
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(os.system('tightvncserver --help 2>/dev/null') != 65280, "tightvncserver needed for tests")
+@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
 class TestX3270Smoke(cti.cti):
 
     # Set up procedure.
@@ -91,7 +92,6 @@ class TestX3270Smoke(cti.cti):
             x3270_port, ts = cti.unused_port()
             x3270 = Popen(cti.vgwrap(["x3270",
                 "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
-                "-xrm", "x3270.colorScheme: old-default",
                 "-httpd", f"127.0.0.1:{x3270_port}",
                 f"127.0.0.1:{playback_port}"]), stdout=DEVNULL)
             self.children.append(x3270)
@@ -106,9 +106,9 @@ class TestX3270Smoke(cti.cti):
             wid = r.json()['status'].split()[-2]
 
             # Dump the window contents.
-            (handle, name) = tempfile.mkstemp()
+            (handle, name) = tempfile.mkstemp(suffix=".png")
             os.close(handle)
-            self.assertEqual(0, os.system(f'xwd -id {wid} -silent -nobdrs -out "{name}"'))
+            self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
 
         # Wait for the process to exit.
         requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
@@ -116,7 +116,7 @@ class TestX3270Smoke(cti.cti):
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.
-        self.assertEqual(0, os.system(f'cmp -s -i124 {name} x3270/Test/ibmlink.xwd'))
+        self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/ibmlink.png'))
         os.unlink(name)
 
 if __name__ == '__main__':
