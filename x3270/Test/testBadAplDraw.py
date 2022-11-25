@@ -106,7 +106,7 @@ class TestX3270BadAplDraw(cti.cti):
             wid = r.json()['status'].split()[-2]
 
             # Dump the window contents.
-            (handle, name) = tempfile.mkstemp(suffix=".png")
+            (handle, name) = tempfile.mkstemp(suffix=".bmp")
             os.close(handle)
             self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
 
@@ -116,7 +116,7 @@ class TestX3270BadAplDraw(cti.cti):
         self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
 
         # Make sure the image is correct.
-        self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/badapl.png'))
+        self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/badapl.bmp'))
         os.unlink(name)
 
 if __name__ == '__main__':
