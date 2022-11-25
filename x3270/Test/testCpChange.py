@@ -95,7 +95,7 @@ class TestX3270CpChange(cti.cti):
         wid = r.json()['status'].split()[-2]
 
         # Dump the window contents.
-        (handle, name1) = tempfile.mkstemp(suffix='.png')
+        (handle, name1) = tempfile.mkstemp(suffix='.bmp')
         os.close(handle)
         self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name1}"'))
 
@@ -104,7 +104,7 @@ class TestX3270CpChange(cti.cti):
         time.sleep(0.5)
 
         # Dump the window contents again.
-        (handle, name2) = tempfile.mkstemp(suffix='.png')
+        (handle, name2) = tempfile.mkstemp(suffix='.bmp')
         os.close(handle)
         self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name2}"'))
 
