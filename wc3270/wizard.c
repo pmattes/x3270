@@ -507,7 +507,7 @@ static int
 get_printer_name(const char *defname, char *printername, int bufsize)
 {
     for (;;) {
-	printf("\nEnter Windows printer name: [%s] ",
+	printf("\nEnter Windows printer name or folder path: [%s] ",
 		defname[0]? defname: "use system default");
 	fflush(stdout);
 	if (get_input(printername, bufsize) == NULL) {
@@ -522,12 +522,7 @@ get_printer_name(const char *defname, char *printername, int bufsize)
 	if (!strcmp(printername, "default")) {
 	    printername[0] = '\0';
 	}
-	if (strchr(printername, '!') || strchr(printername, ',')) {
-	    errout("\nInvalid printer name.");
-	    continue;
-	} else {
-	    break;
-	}
+	break;
     }
     return 0;
 }
@@ -749,52 +744,36 @@ save_keymaps(bool include_public)
 }
 
 /**
- * Fix up a UNC printer path in an old session file.
- *
- * The session wizard was originally written without understanding that
- * backslashes needed to be doubled. So it created session files with UNC
- * printer paths using incorrect syntax. This function patches that up.
+ * Fix up a printer path, doubling backslashes.
  *
  * @param[in,out] s	Session
  *
  * @return 1 if the name needed fixing, 0 otherwise.
  */
-static int
-fixup_printer(session_t *s)
+static void
+fixup_backslashes(session_t *s)
 {
     char buf[STR_SIZE];
     int i, j;
     char c;
 
-    if (s->printer[0] == '\\' &&
-	s->printer[1] == '\\' &&
-	s->printer[2] != '\\') {
-	/*
-	 * The session file was created by an earlier version of the
-	 * session wizard, and contains a UNC printer path that has
-	 * not had its backslashes expanded.  Expand them.
-	 */
-	j = 0;
-	for (i = 0; i < (STR_SIZE - 1) && (c = s->printer[i]) != '\0'; i++) {
-	    if (c == '\\') {
-		if (j < (STR_SIZE - 1)) {
-		    buf[j++] = '\\';
-		}
-		if (j < (STR_SIZE - 1)) {
-		    buf[j++] = '\\';
-		}
-	    } else {
-		if (j < (STR_SIZE - 1)) {
-			buf[j++] = c;
-		}
+    j = 0;
+    for (i = 0; i < (STR_SIZE - 1) && (c = s->printer[i]) != '\0'; i++) {
+	if (c == '\\' || c == '!') {
+	    if (j < (STR_SIZE - 1)) {
+		buf[j++] = '\\';
+	    }
+	    if (j < (STR_SIZE - 1)) {
+		buf[j++] = c;
+	    }
+	} else {
+	    if (j < (STR_SIZE - 1)) {
+		    buf[j++] = c;
 	    }
 	}
-	buf[j] = '\0';
-	strncpy(s->printer, buf, STR_SIZE);
-	return 1;
-    } else {
-	return 0;
     }
+    buf[j] = '\0';
+    strncpy(s->printer, buf, STR_SIZE);
 }
 
 /**
@@ -830,20 +809,17 @@ fixup_codepage(session_t *s)
 }
 
 /**
- * Reformat a quoted UNC path for display.
+ * Reformat a quoted path for display.
  *
- * @param[in] expanded		UNC path in session file (quoted) format
- * @param[out] condensed	UNC path in display format
- *
- * @return 1 if it was reformatted, 0 otherwise.
+ * @param[in] expanded		path in session file (quoted) format
+ * @param[out] condensed	path in display format
  */
-static int
+static void
 redisplay_printer(const char *expanded, char *condensed)
 {
     int i;
     int j;
-    int bsl = 0;
-    int reformatted = 0;
+    bool bsl = false;
 
     j = 0;
     for (i = 0; i < STR_SIZE; i++) {
@@ -858,25 +834,18 @@ redisplay_printer(const char *expanded, char *condensed)
 	}
 
 	if (bsl) {
-	    if (c == '\\') {
-		reformatted = 1;
-		bsl = 0;
-	    } else {
-		goto abort;
-	    }
-	} else {
+	    bsl = false;
+	} else if (c == '\\') {
+	    bsl = true;
+	}
+	if (!bsl) {
 	    condensed[j++] = c;
-	    if (c == '\\') {
-		    bsl = 1;
-	    }
 	}
     }
-
-    return reformatted;
+    return;
 
 abort:
     strcpy(condensed, expanded);
-    return 0;
 }
 
 /**
@@ -1325,14 +1294,6 @@ shortcut.");
 	editable = read_session(f, s, us);
 	fclose(f);
 	if (editable) {
-	    if (fixup_printer(s)) {
-		printf("\n"
-"NOTE: This session file contains a UNC printer name that needs to be updated\n"
-" to be compatible with the current version of wc3270.  Even if you do not\n"
-" need to make any other changes to the session, please update the session\n"
-" file to have this corrected.\n");
-		*modified = true;
-	    }
 	    if (fixup_codepage(s)) {
 		printf("\n"
 "NOTE: This session file contains a code page alias. Even if you do not need\n"
@@ -2520,10 +2481,13 @@ get_printer(session_t *s)
 pr3287 Session -- Windows Printer Name\n\
 \n\
 The pr3287 session can use the Windows default printer as its real printer,\n\
-or you can specify a particular Windows printer.  You can specify a local\n\
-printer, or specify a remote printer with a UNC path, e.g.,\n\
-'\\\\server\\printer22'.  You can specify the Windows default printer with\n\
-the name 'default'.");
+or you can specify a particular Windows printer. You can specify a local\n\
+printer; you can specify a remote printer with a UNC path, e.g.,\n\
+'\\\\server\\printer22'. You can specify the Windows default printer with\n\
+the name 'default'.\n\
+\n\
+pr3287 can also save documents as text files, which you can specify by\n\
+selecting 'Other' and giving the full pathname of a folder to save then in.");
 
     redisplay_printer(s->printer, cbuf);
 
@@ -2590,11 +2554,8 @@ the name 'default'.");
 	strcpy(s->printer, tbuf);
     }
 
-    /*
-     * If the resulting printer name is a UNC path, double the
-     * backslashes.
-     */
-    fixup_printer(s);
+    /* Double any backslashes. */
+    fixup_backslashes(s);
     return 0;
 }
 

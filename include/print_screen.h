@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,4 +31,5 @@
  */
 
 char *default_caption(void);
+char *print_file_name(const char *dir);
 void print_screen_register(void);

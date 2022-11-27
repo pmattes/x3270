@@ -66,6 +66,9 @@
 # define sockerr(s)     perror(s)
 #else /*][*/
 # define sockerr(s)     win32_perror(s)
+# if !defined(SHUT_WR) /*[*/
+#  define SHUT_WR 0x01
+# endif /*]*/
 #endif /*]*/
 
 char *me;
@@ -472,9 +475,6 @@ process_command(FILE *f, socket_t s)
 	printf("Stepping to EOF\n");
 	fflush(stdout);
 	while (step(f, s, STEP_EOR)) {
-#if !defined(_WIN32) /*[*/
-	    usleep(1000000 / 4);
-#endif /*]*/ /* XXX */
 	}
 	rv = -1;
 	goto done;
@@ -649,6 +649,9 @@ process(FILE *f, socket_t s)
 #endif /*]*/
     }
 
+    /* Shut down the connection gracefully. */
+    shutdown(s, SHUT_WR);
+    recv(s, buf, BSIZE, 0);
 #if !defined(_WIN32) /*[*/
     close(s);
 #else /*][*/
@@ -656,6 +659,7 @@ process(FILE *f, socket_t s)
     CloseHandle(socket2_event);
     socket2_event = INVALID_HANDLE_VALUE;
 #endif /*]*/
+
     pstate = NONE;
     tstate = T_NONE;
     fdisp = false;

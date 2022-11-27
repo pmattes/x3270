@@ -362,6 +362,7 @@ verrmsg(const char *fmt, va_list ap)
     } else {
 #endif /*]*/
 	fprintf(stderr, "%s: %s\n", programname, buf[ix]);
+	fflush(stderr);
 #if !defined(_WIN32) /*[*/
     }
 #endif /*]*/

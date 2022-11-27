@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,6 +67,7 @@
 #include "utils.h"
 #include "vstatus.h"
 #if defined(_WIN32) /*[*/
+# include <sys/stat.h>
 # include "w3misc.h"
 # include "windirs.h"
 # include "winprint.h"
@@ -252,6 +253,32 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
     char *caption = NULL;
     unsigned full_opts;
     screentrace_t *st;
+
+#if defined(_WIN32) /*[*/
+    /*
+     * If using the printer, but the printer name is a directory, switch to
+     * target FILE, type TEXT, and print to a file in that directory.
+     *
+     * This allows pr3287, screen tracing and screen printing to print text
+     * to files by setting printer.name to a directory name.
+     */
+    if (target == TSS_PRINTER && ptype == P_GDI) {
+	char *printer_name = tfn;
+	struct stat buf;
+
+	if (printer_name == NULL) {
+	    printer_name = screentrace_default_printer();
+	}
+	if (printer_name[0] &&
+		stat(printer_name, &buf) == 0 &&
+		(buf.st_mode & S_IFMT) == S_IFDIR) {
+	    target = TSS_FILE;
+	    ptype = P_TEXT;
+	    opts |= FPS_NO_DIALOG;
+	    tfn = print_file_name(printer_name);
+	}
+    }
+#endif /*]*/
 
     if (target == TSS_FILE) {
 	xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);

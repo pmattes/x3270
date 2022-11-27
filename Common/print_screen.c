@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2021 Paul Mattes.
+ * Copyright (c) 1994-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -202,6 +202,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     enum { PM_NONE, PM_FILE, PM_GDI, PM_COMMAND, PM_STRING } mode = PM_NONE;
     unsigned i;
     const char *name = NULL;
+    char *dyn_name = NULL;
     bool secure = appres.secure;
     ptype_t ptype = P_NONE;
     bool replace = false;
@@ -389,6 +390,28 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
+#if defined(_WIN32) /*[*/
+    /*
+     * If using the printer, but the printer name is a directory, switch to
+     * target FILE, type TEXT, and print to a file in that directory.
+     *
+     * This allows pr3287, screen tracing and screen printing to print text
+     * to files by setting printer.name to a directory name.
+     */
+    if (mode == PM_GDI) {
+        struct stat buf;
+
+	printf("Printer name: %s\n", name);
+	fflush(stdout);
+        if (stat(name, &buf) == 0 && (buf.st_mode & S_IFMT) == S_IFDIR) {
+            mode = PM_FILE;
+            ptype = P_TEXT;
+	    name = dyn_name = print_file_name(name);
+        }
+    }
+
+#endif /*]*/
+
     /* Infer the type from the file suffix. */
     if (mode == PM_FILE && ptype == P_NONE && name != NULL) {
 	size_t sl = strlen(name);
@@ -485,7 +508,15 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
+	if (dyn_name) {
+	    Free(dyn_name);
+	}
 	return false;
+    }
+
+    if (dyn_name != NULL) {
+	Free(dyn_name);
+	name = NULL;
     }
 
     /* Captions look nice on GDI, so create a default one. */
@@ -560,6 +591,42 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     Free(temp_name);
     return true;
 }
+
+#if defined(_WIN32) /*[*/
+char *
+print_file_name(const char *dir)
+{
+    int iter = 0;
+    char *path = NULL;
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+
+    /* Parts of the printer file name. */
+#   define PATH_PFX	"%s\\print-%04d%02d%02d-%02d%02d%02d"
+#   define PATH_ITER	".%d"
+#   define PATH_SFX	".txt"
+
+    while (true) {
+	path = xs_buffer(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
+	    dir,
+	    tm->tm_year + 1900,
+	    tm->tm_mon + 1,
+	    tm->tm_mday,
+	    tm->tm_hour,
+	    tm->tm_min,
+	    tm->tm_sec,
+	    iter);
+	if (access(path, F_OK) == 0) {
+	    iter++;
+	    free(path);
+	    continue;
+	} else {
+	    break;
+	}
+    }
+    return path;
+}
+#endif /*]*/
 
 /**
  * Print screen module registration.

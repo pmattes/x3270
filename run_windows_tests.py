@@ -19,7 +19,7 @@ if not sys.platform.startswith('win'):
 verbose = False
 verbose_flag = ''
 build = True
-dirs = ['lib', 's3270', 'b3270', 'c3270', 'wc3270']
+dirs = ['lib', 's3270', 'b3270', 'c3270', 'wc3270', 'pr3287']
 args = sys.argv[1:]
 while len(args) > 0 and args[0][0] == '-':
     if args[0] == '-v':

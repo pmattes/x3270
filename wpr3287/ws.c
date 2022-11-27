@@ -32,9 +32,12 @@
  *		Interactions with the Win32 print spooler (winspool).
  */
 
-#include <windows.h>
+#include "globals.h"
+
 #include <winspool.h>
-#include "localdefs.h"
+#include <sys/stat.h>
+
+#include "utils.h"
 #include "wsc.h"
 
 #define PRINTER_BUFSIZE	16384
@@ -45,7 +48,9 @@ static enum {
     PRINTER_JOB		/* print job pending */
 } printer_state = PRINTER_IDLE;
 
-static HANDLE printer_handle;
+static HANDLE printer_handle = INVALID_HANDLE_VALUE;
+static char *printer_dir = NULL;
+static FILE *printer_file = NULL;
 
 static char printer_buf[PRINTER_BUFSIZE];
 static int pbcnt = 0;
@@ -63,8 +68,8 @@ static int pbcnt = 0;
  * If printer_name is NULL, uses the default printer.
  * This call should should only be made once.
  */
-int
-ws_start(const char *printer_name)
+static int
+ws_start_printer(const char *printer_name)
 {
     PRINTER_DEFAULTS defaults;
 
@@ -97,15 +102,15 @@ ws_start(const char *printer_name)
 /*
  * flush the print buffer.
  */
-int
-ws_flush(void)
+static int
+ws_flush_printer(void)
 {
     DWORD wrote;
     int rv = 0;
 
     switch (printer_state) {
     case PRINTER_IDLE:
-	errmsg("ws_endjob: printer not open");
+	errmsg("ws_flush: printer not open");
 	return -1;
     case PRINTER_OPEN:
 	return 0;
@@ -130,8 +135,8 @@ ws_flush(void)
 /*
  * Write a byte to the current print job.
  */
-int
-ws_putc(int c)
+static int
+ws_putc_printer(int c)
 {
     DOC_INFO_1 doc_info;
 
@@ -160,7 +165,7 @@ ws_putc(int c)
     }
 
     /* Flush if needed. */
-    if ((pbcnt >= PRINTER_BUFSIZE) && (ws_flush() < 0))
+    if ((pbcnt >= PRINTER_BUFSIZE) && (ws_flush_printer() < 0))
 	return -1;
 
     /* Buffer this character. */
@@ -171,11 +176,11 @@ ws_putc(int c)
 /*
  * Write multiple bytes to the current print job.
  */
-int
-ws_write(char *s, int len)
+static int
+ws_write_printer(char *s, int len)
 {
     while (len--) {
-	if (ws_putc(*s++) < 0)
+	if (ws_putc_printer(*s++) < 0)
 	    return -1;
     }
     return 0;
@@ -186,8 +191,8 @@ ws_write(char *s, int len)
  * Leaves the connection open for the next job, which is implicitly started
  * by the next call to ws_putc() or ws_write().
  */
-int
-ws_endjob(void)
+static int
+ws_endjob_printer(void)
 {
     int rv = 0;
 
@@ -202,7 +207,7 @@ ws_endjob(void)
     }
 
     /* Flush whatever's pending. */
-    if (ws_flush() < 0)
+    if (ws_flush_printer() < 0)
 	rv = 1;
 
     /* Close out the job. */
@@ -254,4 +259,140 @@ ws_default_printer(void)
 	return NULL;
 
     return pstring;
+}
+
+/* Print-to-file versions of the functions. */
+
+static int
+ws_start_file(const char *printer_name)
+{
+    printer_dir = strdup(printer_name);
+    return 0;
+}
+
+static int
+ws_endjob_file(void)
+{
+    int rc;
+
+    if (printer_file == NULL) {
+	return 0;
+    }
+    rc = fclose(printer_file);
+    printer_file = NULL;
+    return rc;
+}
+
+static int
+ws_flush_file(void)
+{
+    return fflush(printer_file);
+}
+
+/* Open a print file. */
+static FILE *
+ws_open_file(void)
+{
+    int iter = 0;
+    char *path = NULL;
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    FILE *f;
+
+    /* Parts of the printer file name. */
+#   define PATH_PFX	"%s\\print-%04d%02d%02d-%02d%02d%02d"
+#   define PATH_ITER	".%d"
+#   define PATH_SFX	".txt"
+
+    while (true) {
+	path = xs_buffer(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
+	    printer_dir,
+	    tm->tm_year + 1900,
+	    tm->tm_mon + 1,
+	    tm->tm_mday,
+	    tm->tm_hour,
+	    tm->tm_min,
+	    tm->tm_sec,
+	    iter);
+	if (access(path, F_OK) == 0) {
+	    iter++;
+	    free(path);
+	    continue;
+	} else {
+	    break;
+	}
+    }
+    f = fopen(path, "w");
+    if (f == NULL) {
+	errmsg("ws_putc: fopen(%s) failed: %s", path, strerror(errno));
+    }
+    free(path);
+    return f;
+}
+
+static int
+ws_putc_file(int c)
+{
+    int rc;
+
+    if (printer_file == NULL && (printer_file = ws_open_file()) == NULL) {
+	return -1;
+    }
+
+    rc = fputc(c, printer_file);
+    return (rc == EOF)? -1: 0;
+}
+
+/*
+ * Generic versions of the functions, call the appropriate file- or
+ * printer-based version.
+ */
+
+int
+ws_write_file(char *s, int len)
+{
+    int i = len;
+
+    while (i-- > 0) {
+	if (ws_putc_file(*s) < 0) {
+	    return -1;
+	}
+    }
+    return 0;
+}
+
+int
+ws_start(const char *printer_name)
+{
+    struct stat buf;
+
+    if (stat(printer_name, &buf) == 0 && (buf.st_mode & S_IFMT) == S_IFDIR) {
+	return ws_start_file(printer_name);
+    }
+    return ws_start_printer(printer_name);
+}
+
+int
+ws_endjob(void)
+{
+    return (printer_dir != NULL)? ws_endjob_file(): ws_endjob_printer();
+}
+
+int
+ws_flush(void)
+{
+    return (printer_dir != NULL)? ws_flush_file(): ws_flush_printer();
+}
+
+int
+ws_putc(int c)
+{
+    return (printer_dir != NULL)? ws_putc_file(c): ws_putc_printer(c);
+}
+
+int
+ws_write(char *s, int len)
+{
+    return (printer_dir != NULL)?
+	ws_write_file(s, len): ws_write_printer(s, len);
 }
