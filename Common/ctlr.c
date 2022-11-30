@@ -1577,6 +1577,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		    }
 		}
 		ctlr_add_fg(buffer_addr, default_fg);
+		ctlr_add_bg(buffer_addr, default_bg);
 		ctlr_add_gr(buffer_addr, default_gr);
 		ctlr_add_ic(buffer_addr, default_ic);
 		INC_BA(buffer_addr);
