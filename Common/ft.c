@@ -527,6 +527,7 @@ ft_complete(const char *errmsg)
 	ft_gui_complete_popup(buf, false);
 	Free(buf);
     }
+    task_ft_done();
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */

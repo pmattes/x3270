@@ -129,6 +129,7 @@ typedef struct task {
 	TS_WAIT_DISC,	/* awaiting completion of Wait(Disconnect) */
 	TS_WAIT_IFIELD,	/* awaiting completion of Wait(InputField) */
 	TS_WAIT_UNLOCK,	/* awaiting completion of Wait(Unlock) */
+	TS_WAIT_XFER,	/* awaiting completion of Wait(Transfer) */
 	TS_EXPECTING,	/* awaiting completion of Expect() */
 	TS_PASSTHRU,	/* awaiting completion of a pass-through action */
 	TS_XWAIT,	/* extended wait */
@@ -218,6 +219,7 @@ static const char *task_state_name[] = {
     "WAIT_DISC",
     "WAIT_IFIELD",
     "WAIT_UNLOCK",
+    "WAIT_XFER",
     "EXPECTING",
     "PASSTHRU",
     "XWAIT",
@@ -2097,6 +2099,11 @@ run_taskq(void)
 	    }
 	    break;
 
+	case TS_WAIT_XFER:
+	    if (ft_state != FT_NONE) {
+		return any;
+	    }
+	    break;
 	case TS_WAIT_IFIELD:
 	    if (!PCONNECTED || cstate == RECONNECTING) {
 		task_disconnect_abort(current_task);
@@ -3336,6 +3343,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	{ KwInputField,    0, 0, TS_WAIT_IFIELD },
 	{ KwOutput,        0, 0, TS_WAIT_OUTPUT },
 	{ KwUnlock,        0, 0, TS_WAIT_UNLOCK },
+	{ KwTransfer,      0, 0, TS_WAIT_XFER },
 	{ KwSeconds,       0, 0, TS_TIME_WAIT },
 	{ KwCursorAt,      1, 2, TS_WAIT_CURSOR_AT },
 	{ KwStringAt,      2, 3, TS_WAIT_STRING_AT },
@@ -3428,6 +3436,11 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	if (!KBWAIT) {
 	    return true;
 	}
+	break;
+    case TS_WAIT_XFER:
+	CONNECTED_CHECK;
+	if (ft_state == FT_NONE)
+		return true;
 	break;
     case TS_TIME_WAIT:
 	break;
@@ -3563,6 +3576,17 @@ task_connect_wait(void)
     }
 }
 
+void
+task_ft_done(void)
+{
+    if (current_task != NULL &&
+	(int)current_task->state >= (int)TS_RUNNING &&
+	current_task->state != TS_WAIT_IFIELD &&
+	(HALF_CONNECTED || (CONNECTED && (kybdlock & KL_AWAITING_FIRST)))) {
+
+	task_set_state(current_task, TS_RUNNING, "file transfer done");
+    }
+}
 /*
  * Callback from ctlr.c, to indicate that the host has changed the screen.
  */

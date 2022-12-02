@@ -273,6 +273,7 @@
 #define KwNvtMode	"nvtmode"
 #define KwOutput	"output"
 #define KwUnlock	"unlock"
+#define KwTransfer	"transfer"
 #define KwSeconds	"seconds"
 #define KwCursorAt	"cursorat"
 #define KwStringAt	"stringat"
