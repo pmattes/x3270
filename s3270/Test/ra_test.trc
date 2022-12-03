@@ -1,0 +1,37 @@
+// # Data stream for RA background color test.
+// #
+// rows 43
+// columns 80
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  raw 0802 # send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  raw 0204 # device-type is
+//  atext IBM-3278-4-E
+//  raw 01 # connect
+//  atext IBM0TEQO
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d342d450149424d305445514ffff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  raw 0304 # functions is
+//  raw 0204 #  RESPONSES SYSREQ
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Draw the screen.
+// tn3270e 3270-data none error-response 1
+//  cmd.ewa reset,restore
+//   ord.sba 1 1
+//   ord.ic
+//   ord.sfe 3270 protect fg default
+//   ord.sa bg red
+//   ord.ra 1 10 f0
+//   ord.sfe 3270 protect fg default
+//  telnet.eor
+< 0x0   00000100017ec2114040132902c06042002845f23c40c9f02902c0604200ffef

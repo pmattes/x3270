@@ -2705,7 +2705,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    }
 	    if (buf[baddr].bg != current_bg) {
 		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_BACKGROUND,
-			buf[baddr].fg);
+			buf[baddr].bg);
 		current_bg = buf[baddr].bg;
 		any_sa = true;
 	    }
