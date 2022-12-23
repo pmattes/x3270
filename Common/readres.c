@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2016, 2018, 2021 Paul Mattes.
+ * Copyright (c) 2009-2022 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -193,13 +193,14 @@ read_resource_filex(const char *filename, bool fatal)
 	return false;
     }
 
-    /* Merge in what's in the file into the resource database. */
+    /* Merge the file into the resource database. */
     ilen = 0;
     while (fgets(buf + ilen, (int)(sizeof(buf) - ilen), f) != NULL ||
 	    ilen) {
 	char *s;
 	size_t sl;
 	bool bsl = false;
+	char c;
 
 	lno++;
 
@@ -211,9 +212,15 @@ read_resource_filex(const char *filename, bool fatal)
 
 	/* Check for a trailing backslash. */
 	s = buf + ilen;
-	if ((sl > 0) && (s[sl - 1] == '\\')) {
-	    s[sl - 1] = '\0';
-	    bsl = true;
+	while ((c = *s++) != '\0') {
+	    if (bsl) {
+		bsl = false;
+	    } else if (c == '\\') {
+		bsl = true;
+	    }
+	}
+	if (bsl) {
+	    (buf + ilen)[sl - 1] = '\0';
 	}
 
 	/* Skip leading whitespace. */

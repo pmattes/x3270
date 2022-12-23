@@ -1,0 +1,3 @@
+! termName should end up as 'foo.bar\', and model should be 2.
+s3270.termName: foo.bar\\
+s3270.model: 2
