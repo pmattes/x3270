@@ -982,7 +982,7 @@ popup_keypad(void *ignored _is_unused)
 
 /* Run an item from the Macros menu. */
 static void
-run_macro(void *param)
+menu_run_macro(void *param)
 {
     struct macro_def *m = (struct macro_def *)param;
 
@@ -1089,7 +1089,7 @@ menubar_connect(bool connected)
 		strcpy(mm->name, m->name);
 		mm->action = mm->name + strlen(mm->name) + 1;
 		strcpy(mm->action, m->action);
-		add_item(macros_menu, m->name, run_macro, mm);
+		add_item(macros_menu, m->name, menu_run_macro, mm);
 
 		macro_save = (struct macro_def **)Realloc(macro_save,
 			(n_ms + 1) * sizeof(struct macro_def *));

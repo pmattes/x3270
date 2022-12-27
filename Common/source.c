@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ source_done(task_cbh handle, bool success, bool abort)
 {
     source_t *s = (source_t *)handle;
 
-    if (!success) {
+    if (!success || abort) {
 	vtrace("%s %s terminated due to error\n", s->name, s->path);
 	close(s->fd);
 	s->fd = -1;

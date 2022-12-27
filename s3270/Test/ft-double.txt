@@ -1,0 +1,2 @@
+transfer direction=send host=vm localfile=s3270/Test/fttext "hostfile=ft1 text"
+transfer direction=send host=vm localfile=s3270/Test/fttext "hostfile=ft2 text"

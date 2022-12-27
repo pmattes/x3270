@@ -27,8 +27,11 @@
 #
 # File transfer tests
 
-import unittest
+import requests
 from subprocess import Popen, PIPE, DEVNULL
+import threading
+import time
+import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -83,6 +86,51 @@ class TestS3270ft(cti.cti):
 
         # Wait for the process to exit.
         s3270.stdin.close()
+        self.vgwait(s3270)
+
+    # Send the rest of the file to the emulator, after a brief delay, and absorb broken pipe errors,
+    # which can happen if the emulator fails.
+    def send_rest(self, p: playback):
+        time.sleep(0.5)
+        try:
+            p.send_to_mark()
+        except BrokenPipeError:
+            return
+        time.sleep(0.5)
+        try:
+            p.send_to_mark()
+        except BrokenPipeError:
+            return
+
+    # s3270 file transfer blocking test
+    def test_s3270_ft_block(self):
+
+        # Start 'playback' to read s3270's output.
+        port, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/ft-double.trc', port=port) as p:
+            socket.close()
+
+            # Start s3270.
+            sport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(["s3270", '-httpd', str(sport), f"127.0.0.1:{port}"]),
+                    stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+
+            # Get the connection going.
+            p.send_records(1)
+            athread = threading.Thread(target=self.send_rest, args=[p])
+            athread.start()
+
+            # Try two file transfers in a row.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Source(s3270/Test/ft-double.txt)')
+            self.assertTrue(r.ok)
+
+            # Clean up the async thread.
+            athread.join()
+
+        # Wait for the process to exit.
+        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':
