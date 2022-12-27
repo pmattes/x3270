@@ -1433,7 +1433,6 @@ run_macro(void)
 	enum iaction ia;
 	bool was_ckbwait = CKBWAIT;
 	unsigned int old_kybdlock = kybdlock;
-	task_t *parent;
 
 	/*
 	 * Check for command failure.
@@ -1494,15 +1493,12 @@ run_macro(void)
 	/*
 	 * Check for keyboard lock.
 	 * Minor hack: If interactive (x3270> prompt), don't change the task
-	 * state for file transfers. This allows the Transfer() action to
+	 * state just for file transfers. This allows the Transfer() action to
 	 * return immediately instead of waiting for the transfer to complete.
 	 */
-	parent = s->next;
-	if (parent != NULL &&
-	    parent->state == TS_RUNNING &&
-	    !was_ckbwait &&
+	if (!was_ckbwait &&
 	    CKBWAIT &&
-	    (!((old_kybdlock ^ kybdlock) & KL_FT) || !is_interactive(parent))) {
+	    !((old_kybdlock ^ kybdlock) == KL_FT && is_interactive(s->next))) {
 	    task_set_state(s, TS_KBWAIT, "keyboard locked");
 	}
 
