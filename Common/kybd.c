@@ -4279,6 +4279,7 @@ kybd_send_data()
 {
     kybdlock_clr(KL_BID, "kybd_send_data");
     vstatus_reset();
+    ps_process();
 }
 
 /*

@@ -119,5 +119,43 @@ class TestS3270Bid(cti.cti):
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
+    # s3270 BID typeahead test
+    def test_s3270_bid_ta(self):
+
+        # Start 'playback' to read s3270's output.
+        port, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/bid-ta.trc', port=port) as p:
+            socket.close()
+
+            # Start s3270.
+            hport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(["s3270", '-model', '5', '-oversize', '132x40',
+                    '-httpd', f'127.0.0.1:{hport}', f"127.0.0.1:{port}"]),
+                    stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+            self.check_listen(hport)
+
+            # Send data to get s3270 into a BID lock.
+            p.send_records(3)
+
+            # Type ahead an 'a' and Enter().
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Key(a)')
+            self.assertTrue(r.ok)
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Enter()')
+            self.assertTrue(r.ok)
+
+            # Unblock the BID.
+            p.send_records(1, send_tm = False)
+
+            # Get the queued response.
+            data = p.nread(8 + 14, 0.5)
+        
+        self.assertEqual(data, b'\x02\x00\x00\x00/\x00\xff\xef\x00\x00\x00\x00\x00}\x01\xa1\x11\x01\xa0\x81\xff\xef', 'Expected Enter')
+
+        # Wait for the processes to exit.
+        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
