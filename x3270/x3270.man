@@ -1,5 +1,5 @@
 '\" t
-.TH x3270 1 "27 September 2022"
+.TH x3270 1 "28 December 2022"
 .SH "NAME"
 x3270 \-
 \s-1IBM\s+1 host access tool
@@ -21,4 +21,4 @@ It is similar to \fItn3270\fP(1) except that it is X11-based, not curses-based.
 .SH "WIKI"
 Primary documentation for x3270 is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-x3270 4.2ga6
+x3270 4.2ga7
