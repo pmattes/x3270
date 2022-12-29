@@ -76,7 +76,7 @@
 
 /*#define KYBDLOCK_TRACE	1*/
 
-#define MarginedPaste()	(toggled(MARGINED_PASTE) || toggled(OVERLAY_PASTE))
+#define MarginedPaste()	(IN_3270 && !IN_SSCP && (toggled(MARGINED_PASTE) || toggled(OVERLAY_PASTE)))
 
 /* Statics */
 static enum	{ NONE, COMPOSE, FIRST } composing = NONE;
