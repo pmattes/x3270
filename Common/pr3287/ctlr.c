@@ -643,7 +643,9 @@ dump_scs_line(bool reset_pp, bool always_nl)
     if (i >= 1) {
 	int j;
 	int n_data = 0;
+#if defined(DEBUG_FF) /*[*/
 	int n_trn = 0;
+#endif /*]*/
 	int k;
 
 	for (j = 1; j <= i; j++) {
@@ -654,7 +656,9 @@ dump_scs_line(bool reset_pp, bool always_nl)
 	    if (trnbuf[j].data_len) {
 		unsigned k;
 
+#if defined(DEBUG_FF) /*[*/
 		n_trn += trnbuf[j].data_len;
+#endif /*]*/
 		for (k = 0; k < trnbuf[j].data_len; k++) {
 		    if (stash(trnbuf[j].buf[k]) < 0) {
 			return -1;
