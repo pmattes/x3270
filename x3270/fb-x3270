@@ -255,6 +255,8 @@ x3270.keymap.base: \
 	:<Key>F11:			PF(11)\n\
 	:<Key>F12:			PF(12)\n\
 	:<Key>Print:			PrintText()\n\
+	Meta<Key>l:			Redraw()\n\
+	Alt<Key>l:			Redraw()\n\
 	Alt<Key>q:			Quit()\n\
 	:<Key>dead_acute:		Compose() Key(apostrophe)\n\
 	:<Key>dead_grave:	 	Compose() Key(grave)\n\
@@ -263,7 +265,9 @@ x3270.keymap.base: \
 	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n\
 	:<Key>Prior:			Scroll(backward)\n\
 	:<Key>Next:			Scroll(forward)\n\
-	Shift<Key>Escape:		TemporaryKeymap(apl) TemporaryComposeMap(apl) Toggle(AplMode)\n
+	Shift<Key>Escape:		TemporaryKeymap(apl) TemporaryComposeMap(apl) Toggle(AplMode)\n\
+	Ctrl<Key>plus:			StepEfont(Bigger)\n\
+	Ctrl<Key>minus:			StepEfont(Smaller)\n
 !
 ! Base keymap for 3270 mode.  These mappings are added to the base keymap,
 ! but only when in 3270 mode.
@@ -305,8 +309,6 @@ x3270.keymap.base.3270: #override \
 	Alt<Key>h:			Home()\n\
 	Meta<Key>i:			Set(insertMode,true)\n\
 	Alt<Key>i:			Set(insertMode,true)\n\
-	Meta<Key>l:			Redraw()\n\
-	Alt<Key>l:			Redraw()\n\
 	Meta<Key>p:			PrintText()\n\
 	Alt<Key>p:			PrintText()\n\
 	Meta<Key>r:			Reset()\n\

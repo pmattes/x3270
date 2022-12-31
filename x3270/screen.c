@@ -957,7 +957,7 @@ screen_reinit(unsigned cmask)
 
     /* Initialize the input method. */
     if ((cmask & CODEPAGE_CHANGE) && dbcs) {
-	    xim_init();
+	xim_init();
     }
 
     cursor_changed = true;
@@ -1077,6 +1077,12 @@ set_toplevel_sizes(const char *why)
 static void
 inflate_screen(void)
 {
+    vtrace("inflate_screen: screen_width %d screen_height %d container_width %d container_height %d\n",
+	    nss.screen_width,
+	    nss.screen_height,
+	    container_width,
+	    container_height);
+
     /* Create the screen window */
     if (nss.widget == NULL) {
 	nss.widget = XtVaCreateManagedWidget(
@@ -1929,6 +1935,7 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	    }
 	}
 	ss->copied = false;
+	set_toplevel_sizes("redraw");
     }
     ctlr_changed(0, ROWS*COLS);
     cursor_changed = true;
@@ -1946,6 +1953,66 @@ Redraw_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     xaction_debug(Redraw_xaction, event, params, num_params);
     do_redraw(w, event, params, num_params);
+}
+
+/*
+ * Make the emulator font bigger or smaller.
+ */
+void
+StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    bool bigger;
+    int current_area;
+    struct rsfont *r, *best_r = NULL;
+    int best_area = -1;
+
+    xaction_debug(Redraw_xaction, event, params, num_params);
+    if (*num_params != 1) {
+	goto param_error;
+    }
+    if (!strcasecmp(params[0], "Bigger")) {
+	bigger = true;
+    } else if (!strcasecmp(params[0], "Smaller")) {
+	bigger = false;
+    } else {
+	goto param_error;
+    }
+
+    if (rsfonts == NULL) {
+	/* No resize fonts to use. */
+	vtrace("StepEfont: No resize fonts\n");
+	return;
+    }
+
+    current_area = *char_width * *char_height;
+    for (r = rsfonts; r != NULL; r = r->next) {
+	int area = r->width * r->height;
+
+	if ((bigger && area <= current_area) ||
+	    (!bigger && area >= current_area)) {
+	    continue;
+	}
+
+	if (best_area < 0 ||
+		abs(area - current_area) < abs(best_area - current_area)) {
+	    best_area = area;
+	    best_r = r;
+	}
+    }
+    
+    if (best_area < 0) {
+	/* No candidates left. */
+	vtrace("StepEfont: No better candidate\n");
+	return;
+    }
+
+    /* Switch. */
+    vtrace("StepEfont: Switching to %s\n", best_r->name);
+    screen_newfont(best_r->name, true, false);
+    return;
+
+param_error:
+    popup_an_error("Usage: StepEfont(Bigger|Smaller)");
 }
 
 /*

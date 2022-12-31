@@ -137,6 +137,7 @@ static bool know_mods = false;
 static XtActionsRec xactions[] = {
     { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
+    { "StepEfont",	StepEfont_xaction },
     { "HandleMenu",	HandleMenu_xaction },
     { "insert-selection",	insert_selection_xaction },
     { "KybdSelect",	KybdSelect_xaction },

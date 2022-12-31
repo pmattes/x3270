@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2022 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -139,6 +139,8 @@ void PA_VisibilityNotify_xaction(Widget w, XEvent *event, String *params,
 void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void Redraw_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void StepEfont_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void save_00translations(Widget w, XtTranslations *t00);
 void screen_change_model(int mn, int ovc, int ovr);
