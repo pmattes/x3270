@@ -266,10 +266,10 @@ x3270.keymap.base: \
 	:<Key>Prior:			Scroll(backward)\n\
 	:<Key>Next:			Scroll(forward)\n\
 	Shift<Key>Escape:		TemporaryKeymap(apl) TemporaryComposeMap(apl) Toggle(AplMode)\n\
-	Ctrl<Key>plus:			StepEfont(Bigger)\n\
-	Meta<Key>plus:			StepEfont(Bigger)\n\
-	Ctrl<Key>minus:			StepEfont(Smaller)\n\
-	Meta<Key>minus:			StepEfont(Smaller)\n
+	Ctrl<Key>plus:			StepEfont(bigger)\n\
+	Meta<Key>plus:			StepEfont(bigger)\n\
+	Ctrl<Key>minus:			StepEfont(smaller)\n\
+	Meta<Key>minus:			StepEfont(smaller)\n
 !
 ! Base keymap for 3270 mode.  These mappings are added to the base keymap,
 ! but only when in 3270 mode.

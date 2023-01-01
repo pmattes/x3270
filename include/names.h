@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 Paul Mattes.
+ * Copyright (c) 2020-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -130,6 +130,7 @@
 #define AnSnap		"Snap"
 #define AnSnapScreen	"SnapScreen"
 #define AnSource	"Source"
+#define AnStepEfont	"StepEfont"
 #define AnString	"String"
 #define AnSubjectNames	"SubjectNames"
 #define AnSysReq	"SysReq"
@@ -260,6 +261,9 @@
 #define KwSnapStatus	"status"
 #define KwRows		"rows"
 #define KwCols		"cols"
+/*  Parameters to StepEfont(). */
+#define KwBigger	"bigger"
+#define KwSmaller	"smaller"
 /*  Parameters to String(). */
 #define KwSubst		"-subst"
 /*  Parameters to Transfer(). */

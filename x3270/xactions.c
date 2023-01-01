@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -137,7 +137,7 @@ static bool know_mods = false;
 static XtActionsRec xactions[] = {
     { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
-    { "StepEfont",	StepEfont_xaction },
+    { AnStepEfont,	StepEfont_xaction },
     { "HandleMenu",	HandleMenu_xaction },
     { "insert-selection",	insert_selection_xaction },
     { "KybdSelect",	KybdSelect_xaction },

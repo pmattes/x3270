@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -1970,9 +1970,9 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     if (*num_params != 1) {
 	goto param_error;
     }
-    if (!strcasecmp(params[0], "Bigger")) {
+    if (!strcasecmp(params[0], KwBigger)) {
 	bigger = true;
-    } else if (!strcasecmp(params[0], "Smaller")) {
+    } else if (!strcasecmp(params[0], KwSmaller)) {
 	bigger = false;
     } else {
 	goto param_error;
@@ -1980,7 +1980,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
     if (rsfonts == NULL) {
 	/* No resize fonts to use. */
-	vtrace("StepEfont: No resize fonts\n");
+	vtrace(AnStepEfont ": No resize fonts\n");
 	return;
     }
 
@@ -2002,17 +2002,17 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     
     if (best_area < 0) {
 	/* No candidates left. */
-	vtrace("StepEfont: No better candidate\n");
+	vtrace(AnStepEfont ": No better candidate\n");
 	return;
     }
 
     /* Switch. */
-    vtrace("StepEfont: Switching to %s\n", best_r->name);
+    vtrace(AnStepEfont ": Switching to %s\n", best_r->name);
     screen_newfont(best_r->name, true, false);
     return;
 
 param_error:
-    popup_an_error("Usage: StepEfont(Bigger|Smaller)");
+    popup_an_error("Usage: " AnStepEfont "(" KwBigger "|" KwSmaller ")");
 }
 
 /*
