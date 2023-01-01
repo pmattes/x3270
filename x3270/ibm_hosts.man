@@ -1,5 +1,5 @@
 '\" t
-.TH IBM_HOSTS 5 "28 November 2022"
+.TH IBM_HOSTS 5 "01 January 2023"
 .SH "NAME"
 ibm_hosts \- host database for x3270 and c3270
 .SH "SYNOPSIS"
