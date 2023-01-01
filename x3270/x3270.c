@@ -573,11 +573,7 @@ main(int argc, char *argv[])
     /* Initialize. */
     toplevel = XtVaAppInitialize(
 	    &appcontext,
-#if defined(USE_APP_DEFAULTS) /*[*/
 	    "X3270",
-#else /*][*/
-	    "X3270xad",	/* explicitly _not_ X3270 */
-#endif /*]*/
 	    options, num_options,
 	    &argc, argv,
 	    fallbacks,
