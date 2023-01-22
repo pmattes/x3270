@@ -30,6 +30,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "base"; Description: "Basic executables"; Types: full compact custom; Flags: fixed
 Name: "wizard"; Description: "Session Wizard"; Types: full compact custom
 Name: "s3270"; Description: "s3270 (scripting app)"; Types: full custom
+Name: "ibm3270fonts"; Description: "IBM 3270 fonts (Ricardo Bánffy)"; Types: full compact custom
 
 [InstallDelete]
 ; Get rid of the AppData CA root certs files. The new install puts it in {app}.
@@ -81,6 +82,9 @@ Source: "obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "obj\win32\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "obj\win64\x3270if\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+Source: "wc3270\3270Condensed-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "IBM 3270 Condensed"; Components: ibm3270fonts
+Source: "wc3270\3270-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "IBM 3270"; Components: ibm3270fonts
+Source: "wc3270\3270SemiCondensed-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "IBM 3270 Semi-Condensed"; Components: ibm3270fonts
 
 [Tasks]
 Name: "desktopicons"; Description: "Create desktop icons"; GroupDescription: "{cm:AdditionalIcons}"
