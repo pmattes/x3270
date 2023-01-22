@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2013-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -371,5 +371,6 @@ create_shortcut(session_t *session, char *exepath, char *linkpath, char *args,
 				/* console columns */
 	    font,		/* font */
 	    session->point_size,/* point size */
+	    session->font_weight,/* font weight */
 	    codepage);		/* code page */
 }

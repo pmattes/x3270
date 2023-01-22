@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2022 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,7 @@ main(int argc, char *argv[])
 	    80,
 	    L"Lucida Console",
 	    0,
+	    400,
 	    0);
     if (hres) {
 	fprintf(stderr, "link creation \"%s\" failed\n", link_path);

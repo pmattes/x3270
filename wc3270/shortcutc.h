@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -29,4 +29,4 @@
 
 HRESULT create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
 	LPSTR dir, int rows, int cols, wchar_t *font, int pointsize,
-	int codepage);
+	DWORD weight, int codepage);

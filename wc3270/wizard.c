@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2022 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,8 @@
 #include <wincon.h>
 #include <lmcons.h>
 #include <winspool.h>
+#include <commdlg.h>
+#include <sys/stat.h>
 
 #include "winvers.h"
 #include "shortcutc.h"
@@ -107,7 +109,7 @@ enum {
     MN_3287_CODEPAGE,	/* printer code page */
     MN_KEYMAPS,		/* keymaps */
     MN_EMBED_KEYMAPS,	/* embed keymaps */
-    MN_FONT_SIZE,	/* font size */
+    MN_FONT,		/* font */
     MN_BG,		/* background color */
     MN_MENUBAR,		/* menu bar */
     MN_TRACE,		/* trace at start-up */
@@ -279,6 +281,8 @@ static sw_t do_upgrade(bool);
 static BOOL admin(void);
 static bool ad_exist(void);
 
+static wchar_t *reg_font_from_hcp(const char *hcpname, int *codepage);
+
 /* Set up the stdout handle. */
 static bool
 setup_stdout(void)
@@ -390,16 +394,24 @@ grayout(char *fmt, ...)
 static char *
 get_input(char *buf, int bufsize)
 {
+    char xbuf[8192];
     char *s;
     size_t sl;
 
     /* Make sure all of the output gets out. */
     fflush(stdout);
 
-    /* Get the raw input from stdin. */
-    if (fgets(buf, bufsize, stdin) == NULL) {
-	    return NULL;
+    /*
+     * Get the raw input from stdin.
+     * Use a large temporary buffer instead of reading directly into the
+     * caller's buffer, so oversize input will be truncated rather than being
+     * interpreted as the next line of input.
+     */
+    if (fgets(xbuf, sizeof(xbuf), stdin) == NULL) {
+	return NULL;
     }
+    strncpy(buf, xbuf, bufsize);
+    buf[bufsize - 1] = '\0';
 
     /* Trim leading whitespace. */
     s = buf;
@@ -491,6 +503,74 @@ enum_printers(void)
 }
 
 /**
+ * Request that the user press the Enter key.
+ *
+ * This generally happens after displaying an error message.
+ */
+static void
+ask_enter(void)
+{
+    char buf[2];
+
+    grayout("[Press <Enter>] ");
+    fflush(stdout);
+    fgets(buf, sizeof(buf), stdin);
+}
+
+/**
+ * Return true if the string names a folder.
+ * The string is assumed not to have doubled backslashes.
+ *
+ * @param[in] name	Name
+ * @return true if printer is a folder.
+ */
+static bool
+nprinter_is_folder(const char *name)
+{
+    return (((name[0] >= 'A' && name[0] <= 'Z') ||
+		(name[0] >= 'a' && name[0] <= 'z')) &&
+	    name[1] == ':' && name[2] == '\\' && name[3] == '\\') ||
+	(name[0] == '\\' && name[1] != '\\');
+}
+
+/**
+ * Return true if the printer in a session names a folder.
+ * Alas, the printer name has doubled backslashes.
+ *
+ * @param[in] s		Session
+ * @return true if printer is a folder.
+ */
+static bool
+printer_is_folder(const session_t *s)
+{
+    const char *p = s->printer;
+
+    return (((p[0] >= 'A' && p[0] <= 'Z') ||
+		(p[0] >= 'a' && p[0] <= 'z')) &&
+	    p[1] == ':' && p[2] == '\\') ||
+	(p[0] == '\\' && p[1] == '\\' && p[2] != '\\');
+}
+
+/**
+ * Check a printer name to see if it fits in the buffer.
+ * @param[in] s		Printer name
+ * @param[in] size	Buffer size, including trailing NUL
+ * @return true if the expanded name fits in the buffer.
+ */
+static bool
+printer_fits(const char *s, size_t size)
+{
+    size_t sl = strlen(s);
+    const char *t = s;
+    char c;
+
+    while ((c = *t++) != '\0') {
+	sl += c == '\\';
+    }
+    return (sl + 1) <= size;
+}
+
+/**
  * Get an 'other' printer name from the console.
  *
  * Accepts the name 'default' to mean the system default printer.
@@ -519,27 +599,27 @@ get_printer_name(const char *defname, char *printername, int bufsize)
 	    }
 	    break;
 	}
+	if (!printer_fits(printername, bufsize)) {
+	    yellowout("Name is too long\n");
+	    continue;
+	}
 	if (!strcmp(printername, "default")) {
 	    printername[0] = '\0';
+	}
+	if (nprinter_is_folder(printername)) {
+	    struct stat buf;
+
+	    if (stat(printername, &buf) != 0 ||
+		    (buf.st_mode & S_IFMT) != S_IFDIR) {
+		yellowout("Warning: %s does not exist or is not a folder\n",
+			printername);
+		ask_enter();
+	    }
+
 	}
 	break;
     }
     return 0;
-}
-
-/**
- * Request that the user press the Enter key.
- *
- * This generally happens after displaying an error message.
- */
-static void
-ask_enter(void)
-{
-    char buf[2];
-
-    grayout("[Press <Enter>] ");
-    fflush(stdout);
-    fgets(buf, sizeof(buf), stdin);
 }
 
 typedef struct km {			/* Keymap: */
@@ -747,8 +827,6 @@ save_keymaps(bool include_public)
  * Fix up a printer path, doubling backslashes.
  *
  * @param[in,out] s	Session
- *
- * @return 1 if the name needed fixing, 0 otherwise.
  */
 static void
 fixup_backslashes(session_t *s)
@@ -2461,7 +2539,7 @@ then that Logical Unit must be configured explicitly.");
 }
 
 /**
- * Prompt for pr3287 session printer name
+ * Prompt for pr3287 session printer name or folder
  *
  * @param[in,out] s	Session
  *
@@ -2476,82 +2554,82 @@ get_printer(session_t *s)
     unsigned long u;
     char cbuf[STR_SIZE];
     int matching_printer = -1;
+    int matching_option = 1;
+    int other_option = -1;
+    int extra_needed = 0;
 
     new_screen(s, NULL, "\
-pr3287 Session -- Windows Printer Name\n\
+pr3287 Session -- Windows Printer Name or Save Folder\n\
 \n\
 The pr3287 session can use the Windows default printer as its real printer,\n\
 or you can specify a particular Windows printer. You can specify a local\n\
-printer; you can specify a remote printer with a UNC path, e.g.,\n\
-'\\\\server\\printer22'. You can specify the Windows default printer with\n\
-the name 'default'.\n\
+rinter, or a remote printer with a UNC path such as '\\\\server\\printer22'.\n\
 \n\
 pr3287 can also save documents as text files, which you can specify by\n\
-selecting 'Other' and giving the full pathname of a folder to save then in.");
-
-    redisplay_printer(s->printer, cbuf);
+selecting 'Other' and giving the full pathname of a folder to save them in.");
 
     enum_printers();
+    redisplay_printer(s->printer, cbuf);
+
+    printf("\nOptions:\n");
+    printf(" %2d. System default printer", 1);
+    if (default_printer[0]) {
+	printf(" (currently %s)", default_printer);
+    }
+    printf("\n");
+
     if (num_printers) {
-	printf("\nWindows printers (system default is '*'):\n");
 	for (i = 0; i < num_printers; i++) {
-	    printf(" %2d. %c %s\n", i + 1,
-		    strcasecmp(default_printer,
-			printer_info[i].pName)? ' ': '*',
-		    printer_info[i].pName);
+	    printf(" %2d. Printer: %s\n", i + 2, printer_info[i].pName);
 	    if (!strcasecmp(cbuf, printer_info[i].pName)) {
 		matching_printer = i;
+		matching_option = i + 2;
 	    }
 	}
-	printf(" %2d.   Other\n", num_printers + 1);
-	if (cbuf[0] && matching_printer < 0) {
-	    matching_printer = num_printers;
+    }
+
+    if (s->printer[0]) {
+	if (printer_is_folder(s)) {
+	    matching_option = num_printers + 2;
+	    printf(" %2d. Save Folder: %s\n", matching_option, cbuf);
+	    extra_needed = 1;
+	} else if (matching_printer == -1) {
+	    matching_option = num_printers + 2;
+	    printf(" %2d. Printer: %s\n", matching_option, cbuf);
+	    extra_needed = 1;
 	}
-	for (;;) {
-	    if (s->printer[0]) {
-		    printf("\nEnter Windows printer (1-%d): [%d] ",
-			    num_printers + 1, matching_printer + 1);
-	    } else {
-		    printf("\nEnter Windows printer (1-%d): [use system "
-			    "default] ",
-			    num_printers + 1);
-	    }
-	    fflush(stdout);
-	    if (get_input(tbuf, STR_SIZE) == NULL) {
-		return -1;
-	    } else if (!tbuf[0]) {
-		if (!s->printer[0] || matching_printer < (int)num_printers) {
-		    break;
-		}
-		/*
-		 * An interesting hack. If they entered nothing, and the
-		 * default is 'other', pretend they typed in the number for
-		 * 'other'.
-		 */
-		snprintf(tbuf, sizeof(tbuf), "%d",
-			matching_printer + 1);
-	    } else if (!strcmp(tbuf, "default")) {
-		s->printer[0] = '\0';
-		break;
-	    }
-	    u = strtoul(tbuf, &ptr, 10);
-	    if (*ptr != '\0' || u == 0 || u > num_printers + 1) {
-		continue;
-	    } else if (u == num_printers + 1) {
-		if (get_printer_name(cbuf, tbuf, STR_SIZE) < 0) {
-		    return -1;
-		}
-		strcpy(s->printer, tbuf);
-		break;
-	    }
-	    strcpy(s->printer, printer_info[u - 1].pName);
-	    break;
-	}
-    } else {
-	if (get_printer_name(cbuf, tbuf, STR_SIZE) < 0) {
+    }
+    other_option = num_printers + 2 + extra_needed;
+    printf(" %2d. Other printer or save folder\n", other_option);
+    for (;;) {
+	printf("\nEnter option (1-%d): [%d] ", other_option, matching_option);
+	fflush(stdout);
+	if (get_input(tbuf, STR_SIZE) == NULL || !strcasecmp(tbuf, "quit")) {
 	    return -1;
 	}
-	strcpy(s->printer, tbuf);
+	if (!tbuf[0]) {
+	    return 0;
+	}
+	u = strtoul(tbuf, &ptr, 10);
+	if (*ptr != '\0' || u < 1 || u > other_option) {
+	    continue;
+	}
+	if (u == 1) {
+	   s->printer[0] = 0;
+	   break;
+	}
+	if (u == matching_option) {
+	    return 0;
+	}
+	if (u == other_option) {
+	    if (get_printer_name(cbuf, tbuf, STR_SIZE) < 0) {
+		return -1;
+	    }
+	    strcpy(s->printer, tbuf);
+	    break;
+	}
+	strcpy(s->printer, printer_info[u - 2].pName);
+	break;
     }
 
     /* Double any backslashes. */
@@ -2715,44 +2793,50 @@ session file, instead of being found at runtime.");
 }
 
 /**
- * Prompt for screen font size
+ * Prompt for screen font
  *
  * @param[in,out] s	Session
  *
  * @return 0 for success, -1 for failure
  */
 static int
-get_fontsize(session_t *s)
+get_font(session_t *s)
 {
-    new_screen(s, NULL, "\
-Font Size\n\
-\n\
-Allows the font size (character height in pixels) to be specified for the\n\
-wc3270 window.  The size must be between 5 and 72.  The default is 12.");
+    CHOOSEFONT ch;
+    LOGFONT lf;
+    HDC dc = GetDC(NULL);
+    int ps;
 
-    for (;;) {
-	char inbuf[STR_SIZE];
-	unsigned long u;
-	char *ptr;
+    new_screen(s, NULL, "Opening font dialog in separate window");
 
-	printf("\nFont size (5 to 72) [%u]: ",
-		s->point_size? s->point_size: 12);
-	fflush(stdout);
-	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
-	    return -1;
-	} else if (!inbuf[0]) {
-	    break;
-	} else if (!strcasecmp(inbuf, CHOICE_NONE)) {
-	    s->point_size = 0;
-	    break;
+    memset(&ch, 0, sizeof(ch));
+    ch.lStructSize = sizeof(ch);
+    ch.lpLogFont = &lf;
+    ch.Flags = CF_INITTOLOGFONTSTRUCT | CF_FIXEDPITCHONLY | CF_FORCEFONTEXIST |
+	CF_TTONLY | CF_LIMITSIZE;
+    ch.nSizeMin = 5;
+    ch.nSizeMax = 72;
+    memset(&lf, 0, sizeof(lf));
+    ps = s->point_size? s->point_size: 12;
+    lf.lfHeight = -MulDiv(ps, GetDeviceCaps(dc, LOGPIXELSY), 72);
+    lf.lfWeight = s->font_weight? s->font_weight: 400;
+    if (s->font_name[0]) {
+	strcpy(lf.lfFaceName, s->font_name);
+    } else {
+	int cp;
+
+	WideCharToMultiByte(CP_ACP, 0, reg_font_from_hcp(s->codepage, &cp),
+		-1, lf.lfFaceName, STR_SIZE, NULL, NULL);
+    }
+    if (ChooseFont(&ch)) {
+	strncpy(s->font_name, lf.lfFaceName, STR_SIZE);
+	s->font_name[sizeof(s->font_name) - 1] = '\0';
+	s->point_size = ch.iPointSize / 10;
+	s->font_weight = lf.lfWeight;
+	if (lf.lfItalic) {
+	    yellowout("Warning: Ignoring italic/oblique property in font\n");
+	    ask_enter();
 	}
-	u = strtoul(inbuf, &ptr, 10);
-	if (*ptr != '\0' || u == 0 || u < 5 || u > 72) {
-	    errout("\nInvalid font size.");
-	    continue;
-	}
-	s->point_size = (unsigned char)u;
-	break;
     }
     return 0;
 }
@@ -3146,6 +3230,53 @@ reg_font_from_hcp(const char *hcpname, int *codepage)
     return font;
 }
 
+static const char *
+weight_name(int weight)
+{
+    static struct {
+	int weight;
+	const char *name;
+    } names[] = {
+	{ 100, "Thin" },
+	{ 200, "Extra Light" },
+	{ 300, "Light" },
+	{ 400, "Regular" },
+	{ 500, "Medium" },
+	{ 600, "Semi-Bold" },
+	{ 700, "Bold" },
+	{ 800, "Extra Bold" },
+	{ 900, "Black" },
+	{ 0, NULL },
+    };
+    int i;
+    static char unk[64];
+
+    for (i = 0; names[i].name != NULL; i++) {
+	if (weight == names[i].weight) {
+	    return names[i].name;
+	}
+    }
+    snprintf(unk, sizeof(unk), "%d", weight);
+    return unk;
+}
+
+/**
+ * Return the default font for the current codepage, as a multi-byte string.
+ *
+ * @param[in] s		Session
+ * @return font name
+ */
+static const char *
+default_font(session_t *s)
+{
+    static char font[STR_SIZE];
+    int cp;
+
+    WideCharToMultiByte(CP_ACP, 0, reg_font_from_hcp(s->codepage, &cp),
+	    -1, font, STR_SIZE, NULL, NULL);
+    return font;
+}
+
 /**
  * Display the current settings for a session and allow them to be edited.
  *
@@ -3288,9 +3419,14 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 			MN_3287_LU, s->printerlu);
 	    }
 	    redisplay_printer(s->printer, pbuf);
-	    printf("%3d.  pr3287 Windows printer  : %s\n",
-		    MN_3287_PRINTER,
-		    s->printer[0]? pbuf: "(system default)");
+	    if (printer_is_folder(s)) {
+		printf("%3d.  pr3287 Save Folder .... : %s\n",
+			MN_3287_PRINTER, pbuf);
+	    } else {
+		printf("%3d.  pr3287 Windows printer  : %s\n",
+			MN_3287_PRINTER,
+			s->printer[0]? pbuf: "(system default)");
+	    }
 	    printf("%3d.  pr3287 Code Page ...... : ",
 		    MN_3287_CODEPAGE);
 	    if (s->printercp[0]) {
@@ -3306,9 +3442,11 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    MN_EMBED_KEYMAPS,
 		    (s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
 	}
-	printf("%3d. Font Size .............. : %u\n",
-		MN_FONT_SIZE,
-		s->point_size? s->point_size: 12);
+	printf("%3d. Font ................... : %s %s %u\n",
+		MN_FONT,
+		s->font_name[0]? s->font_name: default_font(s),
+		weight_name(s->font_weight? s->font_weight: 400),
+		(unsigned int)(s->point_size? s->point_size: 12));
 	printf("%3d. Background Color ....... : %s\n", MN_BG,
 		(s->flags & WF_WHITE_BG)? "white": "black");
 	printf("%3d. Menu Bar ............... : %s\n", MN_MENUBAR,
@@ -3535,8 +3673,8 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		    goto done;
 		}
 		break;
-	    case MN_FONT_SIZE:
-		if (get_fontsize(s) < 0) {
+	    case MN_FONT:
+		if (get_font(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -4504,6 +4642,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 		s->ov_cols: wcols[s->model],
 	    font,		/* font */
 	    s->point_size,	/* point size */
+	    s->font_weight,	/* font weight */
 	    codepage);		/* code page */
 
     if (SUCCEEDED(hres)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, 2014, 2016, 2019-2021 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 #define STR_SIZE	256
 
-#define WIZARD_VER	4
+#define WIZARD_VER	5
 
 typedef struct {
     	/* Fields for wc3270 3.3.9 (Wizard version 1) */
@@ -70,6 +70,10 @@ typedef struct {
 
 	/* Fields added for wc3270 4.1alpha7 (Wizard version 4) */
 	char  accept_hostname[STR_SIZE]; /* accept hostname */
+
+	/* Fields added for wc3270 4.3alpha1 (Wizard version 5) */
+	char  font_name[STR_SIZE];	/* font name */
+	DWORD font_weight;		/* font weight */
 } session_t;
 
 #define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */

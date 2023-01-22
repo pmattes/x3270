@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2020, 2022 Paul Mattes.
+# Copyright (c) 2007-2023 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ MKSHORTOBJECTS = mkshort.o shortcut.o wc3270res.o
 LIBS = -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
 LIBDEPS = $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
 SHRTLIBS = $(LD32XX) -lole32 -luuid
-WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
+WIZLIBS = $(LD32XX) -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe x3270if.exe

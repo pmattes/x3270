@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2015-2017, 2020 Paul Mattes.
+ * Copyright (c) 1996-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@
 HRESULT
 create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
 	LPSTR dir, int rows, int cols, wchar_t *font, int pointsize,
-	int codepage)
+	DWORD weight, int codepage)
 {
     HRESULT		hres;
     int	 		initialized;
@@ -129,7 +129,7 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     p.dwFontSize.X = 0;
     p.dwFontSize.Y = pointsize? pointsize: 12;
     p.uFontFamily = 0;			/* FF_DONTCARE */
-    p.uFontWeight = 400;		/* FW_NORMAL */
+    p.uFontWeight = weight;
     wcsncpy(p.FaceName, font, LF_FACESIZE - 1);
     p.FaceName[LF_FACESIZE - 1] = 0;
     p.uCursorSize = 100;
