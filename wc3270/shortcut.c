@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2015-2017, 2020 Paul Mattes.
+ * Copyright (c) 1996-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -91,12 +91,20 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     }
 
     /* Set the path to the shortcut target, and add the description. */
-    psl->lpVtbl->SetPath(psl, path_obj);
+    psl->lpVtbl->SetPath(psl, "conhost");
     if (desc) {
 	psl->lpVtbl->SetDescription(psl, desc);
     }
     if (args) {
-	psl->lpVtbl->SetArguments(psl, args);
+	char *xargs =
+	    malloc(strlen((char *)path_obj) + 1 + strlen((char *)args) + 1);
+
+	sprintf(xargs, "%s %s", (char *)path_obj, (char *)args);
+	psl->lpVtbl->SetArguments(psl, xargs);
+	free(xargs);
+
+    } else {
+	psl->lpVtbl->SetArguments(psl, path_obj);
     }
     if (dir) {
 	psl->lpVtbl->SetWorkingDirectory(psl, dir);
