@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2019-2020 Paul Mattes.
+# Copyright (c) 2019-2022 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,6 @@ function decho
 # Figure out the display dpi and the scale relative to 96.
 if [ -n "$DPI" ]
 then	dpi=$DPI
-    	dpi_xrm="-xrm"
     	dpi_opt="Xft.dpi: $DPI"
 else	dpi=$(xrdb -query | awk '/^Xft\.dpi:/ { print $2 }')
 	if [ -z "$dpi" ]
@@ -98,16 +97,23 @@ else	efont=3270
 fi
 decho "efont is $efont"
 
+f1="x3270*keyPad*large*font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1"
+f2="x3270*keyPad*small*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1"
+f3="x3270*value*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1"
+f4="x3270*filename*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1"
+f5="x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1"
+f6="x3270*smallLabel.font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1"
+f7="x3270*dataLabel.font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1"
+f8="x3270*dialog*value*font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1"
+f9="x3270*font: -*-helvetica-bold-r-normal--$s32-*-*-*-p-*-iso8859-1"
+
 set -x
-exec $d/x3270 \
- -xrm "x3270*keyPad*large*font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*keyPad*small*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*value*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*filename*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--$s20-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*smallLabel.font: -misc-fixed-medium-r-normal--$s24-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*dataLabel.font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*dialog*value*font: -misc-fixed-medium-r-normal--$s40-*-*-*-*-*-iso8859-1" \
- -xrm "x3270*font: -*-helvetica-bold-r-normal--$s32-*-*-*-p-*-iso8859-1" \
- -efont $efont \
- $dpi_xrm "$dpi_opt" "$@"
+if [ -n "$dpi_opt" ]
+then	exec $d/x3270 -xrm "$f1" -xrm "$f2" -xrm "$f3" -xrm "$f4" -xrm "$f5" \
+	    -xrm "$f6" -xrm "$f7" -xrm "$f8" -xrm "$f9" \
+	    -xrm "$dpi_opt" \
+	    -efont $efont "$@"
+else	exec $d/x3270 -xrm "$f1" -xrm "$f2" -xrm "$f3" -xrm "$f4" -xrm "$f5" \
+	    -xrm "$f6" -xrm "$f7" -xrm "$f8" -xrm "$f9" \
+	    -efont $efont "$@"
+fi
