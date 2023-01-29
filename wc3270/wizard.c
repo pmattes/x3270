@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2022 Paul Mattes.
+ * Copyright (c) 2006-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -4423,7 +4423,6 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 		    s.ov_cols: wcols[s.model],
 		font,			/* font */
 		s.point_size,		/* point size */
-		s.font_weight,		/* font weight */
 		codepage);		/* code page */
 
 	if (SUCCEEDED(hres)) {
