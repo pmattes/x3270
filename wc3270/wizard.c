@@ -148,6 +148,7 @@ typedef enum {
     MO_RENAME,		/* rename existing session */
     MO_SHORTCUT,	/* create shortcut */
     MO_MIGRATE,		/* migrate AppData files */
+    MO_RESHORT,		/* re-create all shortcuts */
     MO_QUIT,		/* quit wizard */
     MO_ERR = -1		/* error */
 } menu_op_t;
@@ -973,6 +974,7 @@ struct {		/* Menu options: */
     { "Rename session",             "rename",   "mv",     true,  false, 2 },
     { "Create shortcut",            "shortcut", NULL,     true,  false, 1 },
     { "Migrate files from AppData", "migrate",  NULL,     false, true,  0 },
+    { "Re-create all shortcuts",    "reshort",  NULL,     true, false,  0 },
     { "Quit",                       "quit",     "exit",   false, false, 0 },
     { NULL, NULL, FALSE, 0 } /* end marker */
 };
@@ -3846,12 +3848,12 @@ display_sessions(bool with_numbers, bool include_public)
     for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
 	size_t slen;
 
-	if (i == xs_my.count && !include_public) {
+	if (i >= xs_my.count && !include_public) {
 	    break;
 	}
 
 	if (i == 0 && xs_my.count != 0) {
-	    printf("Sessions for user '%s'in %.*s:\n",
+	    printf("Sessions for user '%s' in %.*s:\n",
 		    username,
 		    (int)(strlen(documents_wc3270) - 1),
 		    documents_wc3270);
@@ -3863,6 +3865,9 @@ display_sessions(bool with_numbers, bool include_public)
 	    printf("Sessions for all users in %.*s:\n",
 		    (int)(strlen(public_documents_wc3270) - 1),
 		    public_documents_wc3270);
+	    if (!with_numbers && !admin()) {
+		yellowout("(run the Session Wizard as administrator to edit these sessions)\n");
+	    }
 	}
 
 	slen = strlen(n);
@@ -4145,10 +4150,10 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
     if (argc == 0) {
 	if (is_rename) {
 	    new_screen(&empty_session, NULL, "\
-    Rename Session\n");
+Rename Session\n");
 	} else {
 	    new_screen(&empty_session, NULL, "\
-    Copy Session\n");
+Copy Session\n");
 	}
 	if (get_existing_session(is_rename? "rename": "copy",
 		    !is_rename || admin(),
@@ -4347,7 +4352,7 @@ new_shortcut(int argc, char **argv, char *result, size_t result_size)
 	new_screen(&empty_session, NULL, "\
 Create Shortcut\n");
 
-	if (get_existing_session("create shortcut for", true, &name, &l) < 0) {
+	if (get_existing_session("create shortcut for", admin(), &name, &l) < 0) {
 	    return -1;
 	} else if (name == NULL) {
 	    return 0;
@@ -4405,6 +4410,133 @@ Create Shortcut\n");
 failed:
     ask_enter();
     return 0;
+}
+
+/**
+ * Re-create all desktop shortcuts.
+ * Migration logic for Windows 11's use of Windows Terminal by default.
+ *
+ * @return SW_XXX
+ */
+static int
+reshort(void)
+{
+    int rc;
+    int i;
+    const char *n;
+    bool any = false;
+
+    new_screen(&empty_session, NULL, "\
+Re-Create Desktop Shortcuts\n\
+\n\
+This may be needed when upgrading to a new version of wc3270 that has corrected\n\
+a shortcut-related issue, such as Ctrl-C/Ctrl-V not working correctly on\n\
+Windows 10 or the use of Windows Terminal in Windows 11.");
+
+    while (true) {
+	printf("\nContinue? (y/n) [y] ");
+	rc = getyn(TRUE);
+	if (rc == YN_ERR) {
+	    return SW_ERR;
+	} else if (rc == FALSE) {
+	    return SW_SUCCESS;
+	} else if (rc == TRUE) {
+	    break;
+	}
+    }
+    printf("\n");
+
+    for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
+	char *session;
+	char *shortcut;
+	FILE *f;
+	session_t s;
+	int extra_height = 1;
+	wchar_t *font;
+	int codepage = 0;
+	char exepath[MAX_PATH];
+	char args[MAX_PATH];
+	HRESULT hres;
+	bool public;
+
+	fflush(stdout);
+	any = true;
+	if (i < xs_my.count) {
+	    /* User session. */
+	    public = false;
+	    session = malloc(strlen(documents_wc3270) + strlen(n) +
+		    strlen(SESS_SUFFIX) + 1);
+	    sprintf(session, "%s%s" SESS_SUFFIX, documents_wc3270, n);
+	    shortcut = malloc(strlen(desktop) + strlen(n) + strlen(".lnk") + 1);
+	    sprintf(shortcut, "%s%s.lnk", desktop, n);
+	} else {
+	    /* Public session. */
+	    if (!admin()) {
+		continue;
+	    }
+	    public = true;
+	    session = malloc(strlen(public_documents_wc3270) + strlen(n) +
+		    strlen(SESS_SUFFIX) + 1);
+	    sprintf(session, "%s%s" SESS_SUFFIX, public_documents_wc3270, n);
+	    shortcut = malloc(strlen(public_desktop) + strlen(n) +
+		    strlen(".lnk") + 1);
+	    sprintf(shortcut, "%s%s.lnk", public_desktop, n);
+	}
+
+	if (access(shortcut, R_OK) != 0) {
+	    /* No shortcut. */
+	    yellowout("No shortcut for%s session '%s'.\n",
+		    public? " public": "", n);
+	    continue;
+	}
+	if ((f = fopen(session, "r")) == NULL) {
+	    errout("Cannot open %s for reading: %s\n", session,
+		    strerror(errno));
+	    continue;
+	}
+	if (!read_session(f, &s, NULL)) {
+	    errout("Cannot read session file %s\n", session);
+	    fclose(f);
+	    continue;
+	}
+	fclose(f);
+
+	/* Re-create the desktop shorcut. */
+	sprintf(exepath, "%swc3270.exe", installdir);
+	sprintf(args, "+S \"%s\"", session);
+	if (!(s.flags & WF_NO_MENUBAR)) {
+	    extra_height += 2;
+	}
+
+	font = reg_font_from_hcp(s.codepage, &codepage);
+
+	hres = create_link(
+		exepath,		/* path to executable */
+		shortcut,		/* where to put the link */
+		"wc3270 session",	/* description */
+		args,			/* arguments */
+		installdir,		/* working directory */
+		(s.ov_rows?		/* console rows */
+		    s.ov_rows: wrows[s.model]) + extra_height,
+		s.ov_cols?		/* console cols */
+		    s.ov_cols: wcols[s.model],
+		font,			/* font */
+		s.point_size,		/* point size */
+		s.font_weight,		/* font weight */
+		codepage);		/* code page */
+
+	if (SUCCEEDED(hres)) {
+	    greenout("Re-created desktop shortcut for%s session '%s'.\n",
+		    public? " public": "", n);
+	} else {
+	    errout("Writing new shortcut for%s session '%s' failed.\n",
+		    public? " public": "", n);
+	}
+    }
+    if (any) {
+	ask_enter();
+    }
+    return SW_SUCCESS;
 }
 
 /**
@@ -4589,7 +4721,8 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
     HRESULT hres;
 
     /* If writing to the desktop, don't ask about a shortcut. */
-    if (src == SRC_PUBLIC_DESKTOP ||
+    if (src == SRC_NONE ||
+	src == SRC_PUBLIC_DESKTOP ||
 	src == SRC_DESKTOP ||
 	!strncasecmp(sess_path, desktop, strlen(desktop)) ||
 	!strncasecmp(sess_path, public_desktop, strlen(public_desktop))) {
@@ -4625,7 +4758,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
     sprintf(exepath, "%swc3270.exe", installdir);
     sprintf(args, "+S \"%s\"", sess_path);
     if (!(s->flags & WF_NO_MENUBAR)) {
-	    extra_height += 2;
+	extra_height += 2;
     }
 
     font = reg_font_from_hcp(s->codepage, &codepage);
@@ -4761,6 +4894,8 @@ Edit Session\n");
 	    free(cmd);
 	    return SW_SUCCESS;
 	}
+	case MO_RESHORT:
+	     return reshort();
 	}
     } else {
 	new_screen(&session, NULL, "");
@@ -5592,11 +5727,11 @@ Copy session to My Documents, Public Documents or neither?\n\
 	}
     }
 
-    snprintf(from_path, MAX_PATH, "%s%s.wc3270",
+    snprintf(from_path, MAX_PATH, "%s%s" SESS_SUFFIX,
 	    (xs->location == SRC_DOCUMENTS)?
 		appdata_wc3270: common_appdata_wc3270,
 	    xs->name);
-    snprintf(to_path, MAX_PATH, "%s%s.wc3270",
+    snprintf(to_path, MAX_PATH, "%s%s" SESS_SUFFIX,
 	    (to_src == SRC_DOCUMENTS)? documents_wc3270:
 				       public_documents_wc3270,
 	    xs->name);
