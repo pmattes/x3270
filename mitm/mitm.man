@@ -1,5 +1,5 @@
 '\" t
-.TH mitm 1 "28 December 2022"
+.TH mitm 1 "29 January 2023"
 .SH "NAME"
 mitm \- network stream trace facility
 .SH "SYNOPSIS"
@@ -35,7 +35,7 @@ is:
 s3270(1), 
 x3270(1), c3270(1)
 .SH "COPYRIGHTS"
-Copyright 2018-2022, Paul Mattes.
+Copyright 2018-2023, Paul Mattes.
 .br
 All rights reserved.
 .LP
@@ -70,4 +70,4 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .SH "VERSION"
-mitm 4.2ga7
+mitm 4.2ga8
