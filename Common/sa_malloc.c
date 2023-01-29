@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Paul Mattes.
+ * Copyright (c) 2021-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,7 +143,7 @@ xs_buffer(const char *fmt, ...)
     char *copy;
 
     va_start(ap, fmt);
-    vasprintf(&ret, fmt, ap);
+    (void) vasprintf(&ret, fmt, ap);
     va_end(ap);
 
     copy = Malloc(strlen(ret) + 1);
@@ -160,7 +160,7 @@ lazyaf(const char *fmt, ...)
     char *copy;
 
     va_start(ap, fmt);
-    vasprintf(&ret, fmt, ap);
+    (void) vasprintf(&ret, fmt, ap);
     va_end(ap);
 
     copy = Malloc(strlen(ret) + 1);
