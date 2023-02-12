@@ -45,7 +45,8 @@ class TestS3270Wont(cti.cti):
 
             # Start s3270.
             hport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f"127.0.0.1:{pport}"]), stdin=DEVNULL, stdout=DEVNULL)
+            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'wrongTerminalName', '-httpd', str(hport), f'127.0.0.1:{pport}']),
+                stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             socket.close()
             self.check_listen(hport)

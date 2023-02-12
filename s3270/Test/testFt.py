@@ -46,7 +46,7 @@ class TestS3270ft(cti.cti):
             socket.close()
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(["s3270", f"127.0.0.1:{port}"]), stdin=PIPE,
+            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'wrongTerminalName', f'127.0.0.1:{port}']), stdin=PIPE,
                     stdout=DEVNULL)
             self.children.append(s3270)
 
