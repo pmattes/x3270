@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
@@ -108,6 +108,7 @@ typedef struct {
     int		 unlock_delay_ms;
     char	*user;		/* for 5250 */
     bool	 utf8;
+    bool	 wrong_terminal_name;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];

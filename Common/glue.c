@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * Copyright (c) 1989 Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1031,7 +1031,8 @@ static res_t base_resources[] = {
     { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
-    { ResWerase,	aoffset(linemode.werase),XRM_STRING }
+    { ResWerase,	aoffset(linemode.werase),XRM_STRING },
+    { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN }
 };
 
 typedef struct reslist {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
@@ -112,6 +112,7 @@ typedef struct {
 	Boolean trace_monitor;
 	Boolean unlock_delay;
 	Boolean utf8;
+	Boolean wrong_terminal_name;
 	struct {
 	    Boolean do_confirms;
 	    Boolean menubar;

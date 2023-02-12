@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -3921,21 +3921,28 @@ net_hisopts(void)
 void
 net_set_default_termtype(void)
 {
+    char *previous = NewString(termtype);
+
     if (appres.termname) {
 	termtype = appres.termname;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	termtype = mode.m3279? "xterm-color": "xterm";
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
-    } else if (HOST_FLAG(STD_DS_HOST)) {
-	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
-		mode.m3279? '9': '8', model_num);
-	termtype = ttype_tmpval;
     } else {
-	termtype = full_model_name;
+	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d%s",
+		(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ?
+		     '9': '8', model_num,
+		     (!mode.extended || HOST_FLAG(STD_DS_HOST))? "": "-E");
+	termtype = ttype_tmpval;
     }
 
-    st_changed(ST_TERMINAL_NAME, true);
+    if (previous != NULL) {
+	if (strcmp(termtype, previous)) {
+	    st_changed(ST_TERMINAL_NAME, true);
+	}
+	Free(previous);
+    }
 }
 
 /* Handle an ST_REMODEL indication. */
@@ -4117,6 +4124,23 @@ toggle_bind_limit(const char *name, const char *value)
     return true;
 }
 
+/* Toggle wrong terminal name mode. */
+static bool
+toggle_wrong_terminal_name(const char *name, const char *value)
+{
+    const char *errmsg;
+    bool previous = appres.wrong_terminal_name;
+
+    if ((errmsg = boolstr(value, &appres.wrong_terminal_name)) != NULL) {
+        popup_an_error("%s", errmsg);
+        return false;
+    }
+    if (appres.wrong_terminal_name != previous) {
+	net_set_default_termtype();
+    }
+    return true;
+}
+
 /* Module registration. */
 void
 net_register(void)
@@ -4132,4 +4156,6 @@ net_register(void)
 	    (void **)&appres.interactive.no_telnet_input_mode, XRM_STRING);
     register_extended_toggle(ResBindLimit, toggle_bind_limit, NULL, NULL,
 	    (void **)&appres.bind_limit, XRM_BOOLEAN);
+    register_extended_toggle(ResWrongTerminalName, toggle_wrong_terminal_name,
+	    NULL, NULL, (void **)&appres.wrong_terminal_name, XRM_BOOLEAN);
 }

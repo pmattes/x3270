@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1297,6 +1297,7 @@ copy_xres_to_res_bool(void)
     copy_bool(trace_monitor);
     copy_bool(unlock_delay);
     copy_bool(utf8);
+    copy_bool(wrong_terminal_name);
 
     copy_bool(interactive.do_confirms);
     copy_bool(interactive.mono);

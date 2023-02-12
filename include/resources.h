@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -246,6 +246,7 @@
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
 #define ResWrapperDoc		"wrapperDoc"
+#define ResWrongTerminalName	"wrongTerminalName"
 #define ResXQuartzHack		"xQuartzHack"
 
 /* Dotted resource names. */
@@ -372,7 +373,7 @@
 #define ClsFtRecfm		"FtRecfm"
 #define ClsFtRemap		"FtRemap"
 #define ClsFtSecondarySpace	"FtSecondarySpace"
-#define ClsFtWindowsCodePage	"ClsWindowsCodePage"
+#define ClsFtWindowsCodePage	"FtWindowsCodePage"
 #define ClsHighlightBold	"HighlightBold"
 #define ClsHostname		"Hostname"
 #define ClsHostsFile		"HostsFile"
@@ -478,6 +479,7 @@
 #define ClsVisualSelectColor	"VisualSelectColor"
 #define ClsWaitCursor		"WaitCursor"
 #define ClsWerase		"Werase"
+#define ClsWrongTerminalName	"WrongTerminalName"
 #define ClsXQuartzHack		"XQuartzHack"
 
 /* Options. */

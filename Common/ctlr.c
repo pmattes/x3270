@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -287,7 +287,8 @@ set_rows_cols(int mn, int ovc, int ovr)
 
     /* Update the model name. */
     sprintf(model_name, "327%c-%d%s",
-	mode.m3279 ? '9' : '8',
+	(mode.m3279 &&
+	     (appres.wrong_terminal_name || model_num < 4)) ? '9' : '8',
 	model_num,
 	mode.extended ? "-E" : "");
 
