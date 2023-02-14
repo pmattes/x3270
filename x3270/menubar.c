@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1649,6 +1649,7 @@ tls_icon_init(Position x, Position y)
 		show_about_status, NULL);
     } else {
 	XtVaSetValues(locked_icon, XtNx, x, NULL);
+	XtVaSetValues(unverified_icon, XtNx, x, NULL);
 	XtVaSetValues(unlocked_icon, XtNx, x, NULL);
     }
 }
