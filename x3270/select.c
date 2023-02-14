@@ -105,8 +105,10 @@ static unsigned long down_time = 0;
 static unsigned long down1_time = 0;
 static Dimension down1_x, down1_y;
 static unsigned long up_time = 0;
-static int      saw_motion = 0;
+static bool      saw_motion = false;
 static int      num_clicks = 0;
+static int	last_move_baddr = 0;
+static bool	click_unselected = false;
 static bool grab_sel(int start, int end, bool really, Time t, bool as_url);
 #define NS		5
 static Atom     want_sel[NS];
@@ -134,25 +136,34 @@ static bool	any_selected = false;
 #define event_y(event)		event->xbutton.y
 #define event_time(event)	event->xbutton.time
 
-#define BOUNDED_XY(event, x, y) {	\
-    x = X_TO_COL(event_x(event));	\
-    if (x < 0) {			\
-	x = 0;				\
+#define xyBOUNDED_COL_ROW(_x, _y, _col, _row) {	\
+    _col = X_TO_COL(_x);		\
+    if (_col < 0) {			\
+	_col = 0;			\
     }					\
-    if (x >= COLS) {			\
-	x = COLS - 1;			\
+    if (_col >= COLS) {			\
+	_col = COLS - 1;		\
     }					\
     if (flipped) {			\
-	x = (COLS - x) - 1;		\
+	_col = (COLS - _col) - 1;	\
     }					\
-    y = Y_TO_ROW(event_y(event) - *descent);	\
-    if (y <= 0) {			\
-	y = 0;				\
+    _row = Y_TO_ROW(_y - *descent);	\
+    if (_row <= 0) {			\
+	_row = 0;			\
     }					\
-    if (y >= ROWS) {			\
-	y = ROWS - 1;			\
+    if (_row >= ROWS) {			\
+	_row = ROWS - 1;		\
     }					\
 }
+
+#define BOUNDED_COL_ROW(event, _col, _row) \
+    xyBOUNDED_COL_ROW(event_x(event), event_y(event), _col, _row)
+
+#define XOFFSET(x)	((x) - COL_TO_X(X_TO_COL(x)))
+#define LEFT_THIRD(x)	(XOFFSET(x) <= (*char_width) / 3)
+#define RIGHT_THIRD(x)	(XOFFSET(x) >= (*char_width) * 2 / 3)
+#define LEFT_HALF(x)	(XOFFSET(x) <= (*char_width) / 2)
+#define RIGHT_HALF(x)	(XOFFSET(x) >= (*char_width) / 2)
 
 /* Default character class. */
 static int char_class[256] = {
@@ -431,15 +442,15 @@ void
 select_start_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
     int baddr;
 
     xaction_debug(select_start_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
     f_start = f_end = v_start = v_end = baddr;
     down1_time = down_time = event_time(event);
     down1_x = event_x(event);
@@ -462,15 +473,15 @@ void
 move_select_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
     int baddr;
 
     xaction_debug(move_select_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
 
     f_start = f_end = v_start = v_end = baddr;
     down1_time = down_time = event_time(event);
@@ -501,7 +512,7 @@ void
 start_extend_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
     int baddr;
     bool continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
 
@@ -512,8 +523,8 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
 
     down1_time = 0L;
 
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
 
     if (continuous) {
 	/* Think linearly. */
@@ -562,7 +573,7 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
     }
 
     grab_sel(v_start, v_end, true, event_time(event), false);
-    saw_motion = 1;
+    saw_motion = true;
     num_clicks = 0;
 }
 
@@ -574,7 +585,7 @@ void
 select_extend_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
     int baddr;
 
     xaction_debug(select_extend_xaction, event, params, num_params);
@@ -597,8 +608,8 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
 	cursor_moved = false;
     }
 
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
 
     /*
      * If baddr falls outside if the v range, open up the v range.  In
@@ -627,7 +638,7 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
     }
 
     num_clicks = 0;
-    saw_motion = 1;
+    saw_motion = true;
     grab_sel(v_start, v_end, false, event_time(event), false);
 }
 
@@ -674,7 +685,7 @@ void
 select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
 
     xaction_debug(select_end_xaction, event, params, num_params);
     if (w != *screen) {
@@ -683,7 +694,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     set_want_sel(params, num_params, 0);
 
-    BOUNDED_XY(event, x, y);
+    BOUNDED_COL_ROW(event, col, row);
     up_time = event_time(event);
 
     if (up_time - down_time > CLICK_INTERVAL) {
@@ -716,7 +727,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	select_line(f_start, event_time(event));
 	break;
     }
-    saw_motion = 0;
+    saw_motion = false;
 }
 
 /*
@@ -742,26 +753,25 @@ void
 SelectDown_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
-    int baddr;
-
     xaction_debug(SelectDown_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
 
+    /* Just remember the start point. We haven't selected anything yet. */
     if (event_time(event) - down_time > CLICK_INTERVAL) {
 	num_clicks = 0;
     }
-
     down_time = event_time(event);
     if (num_clicks == 0) {
-	f_start = f_end = v_start = v_end = baddr;
+	/* f_start = f_end = v_start = v_end = baddr; */
 	down1_time = down_time;
+	down1_x = event_x(event);
+	down1_y = event_y(event);
 	if (any_selected) {
+	    vtrace("SelectDown: unselected\n");
 	    unselect(0, ROWS*COLS);
+	    click_unselected = true;
 	}
     }
 }
@@ -771,24 +781,85 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
     int x, y;
+    int col, row;
     int baddr;
+    int start_col, start_row;
+    int start_baddr;
 
     xaction_debug(SelectMotion_xaction, event, params, num_params);
     if (w != *screen) {
 	return;
     }
 
-    /* Ignore initial drag events if are too near. */
-    if (down1_time != 0L &&
-	abs((int)event_x(event) - (int)down1_x) < *char_width &&
-	abs((int)event_y(event) - (int)down1_y) < *char_height) {
-	return;
+    x = event_x(event);
+    y = event_y(event);
+    vtrace("SelectMotion: x %+d, y %+d\n",
+	(int)x - (int)down1_x, (int)y - (int)down1_y);
+
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
+    xyBOUNDED_COL_ROW(down1_x, down1_y, start_col, start_row);
+    start_baddr = ROWCOL_TO_BA(start_row, start_col);
+
+    /*
+     * In the horizontal, if the initial click was in the left third of a
+     * cell, and we are now in the right third of that cell, select that cell.
+     * If we are now halfway across a different cell, select that cell.
+     *
+     * In the vertical, if a cell boundary has been crossed, select
+     * everything from the start point to the new cell. As with X, if the
+     * initial click was in the left third, include that cell; otherwise don't.
+     */
+    if (!saw_motion) {
+	if ((x < down1_x && RIGHT_THIRD(down1_x) && LEFT_THIRD(x)) ||
+	    (x > down1_x && LEFT_THIRD(down1_x) && RIGHT_THIRD(x))) {
+	    /* Moved left or right far enough to select the initial cell. */
+	    f_start = f_end = v_start = v_end = start_baddr;
+	    saw_motion = true;
+	    down1_time = 0L;
+	} else if (col != start_col) {
+	    if ((x < down1_x && LEFT_HALF(x)) ||
+		(x > down1_x && RIGHT_HALF(x))) {
+		/* Moved far enough to select this cell. */
+		f_start = f_end = v_start = v_end = baddr;
+		saw_motion = true;
+		down1_time = 0L;
+	    }
+	}
+	if (!saw_motion && row != start_row) {
+	    /* Moved up or down by a row. */
+	    if (LEFT_THIRD(down1_x)) {
+		f_start = f_end = v_start = v_end = start_baddr;
+	    } else {
+		f_start = f_end = v_start = v_end = start_baddr + 1;
+	    }
+	    saw_motion = true;
+	    down1_time = 0L;
+	}
+	if (!saw_motion) {
+	    return;
+	}
     } else {
-	down1_time = 0L;
+	/*
+	 * Add to the selection horizontally only if we've crossed the middle
+	 * of a cell.
+	 */
+	if (baddr == last_move_baddr) {
+	    return;
+	}
+	if (col < last_move_baddr % COLS) {
+	    if (!LEFT_HALF(x)) {
+		return;
+	    }
+	} else if (col > last_move_baddr % COLS) {
+	    if (!RIGHT_HALF(x)) {
+		return;
+	    }
+	}
     }
 
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    last_move_baddr = baddr;
+
 
     /*
      * If baddr falls outside if the v range, open up the v range.  In
@@ -817,7 +888,6 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
 
     num_clicks = 0;
-    saw_motion = 1;
     grab_sel(v_start, v_end, false, event_time(event), false);
 }
 
@@ -825,7 +895,7 @@ void
 SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    int x, y;
+    int col, row;
     int baddr;
 
     xaction_debug(SelectUp_xaction, event, params, num_params);
@@ -835,8 +905,8 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     set_want_sel(params, num_params, 0);
 
-    BOUNDED_XY(event, x, y);
-    baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    baddr = ROWCOL_TO_BA(row, col);
 
     if (event_time(event) - up_time > CLICK_INTERVAL) {
 #if defined(DEBUG_CLICKS) /*[*/
@@ -867,20 +937,30 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    f_end = v_end;
 	    grab_sel(f_start, f_end, true, event_time(event), false);
 	} else if (IN_3270) {
-	    cursor_move(baddr);
+	    if (!click_unselected) {
+		cursor_moved = true;
+		saved_cursor_addr = cursor_addr;
+		cursor_move(baddr);
+	    }
 	}
 	break;
     case 2:
-	/*
-	 * If we moved the 3270 cursor on the first click, put it back.
-	 */
-	select_word(f_start, event_time(event));
+	if (cursor_moved) {
+	    cursor_move(saved_cursor_addr);
+	    cursor_moved = false;
+	}
+	select_word(baddr, event_time(event));
 	break;
     case 3:
-	select_line(f_start, event_time(event));
+	if (cursor_moved) {
+	    cursor_move(saved_cursor_addr);
+	    cursor_moved = false;
+	}
+	select_line(baddr, event_time(event));
 	break;
     }
-    saw_motion = 0;
+    saw_motion = false;
+    click_unselected = false;
 }
 
 static void
@@ -912,13 +992,13 @@ set_select_xaction(Widget w _is_unused, XEvent *event, String *params,
 int
 mouse_baddr(Widget w, XEvent *event)
 {
-    int x, y;
+    int col, row;
 
     if (w != *screen) {
 	return 0;
     }
-    BOUNDED_XY(event, x, y);
-    return ROWCOL_TO_BA(y, x);
+    BOUNDED_COL_ROW(event, col, row);
+    return ROWCOL_TO_BA(row, col);
 }
 
 /*
