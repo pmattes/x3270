@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2019-2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -213,11 +213,34 @@ enum placement *RightP = &RightD;
 static enum placement InsideRightD = InsideRight;
 enum placement *InsideRightP = &InsideRightD;
 
-typedef struct {
+typedef struct want {
+    struct want *next;
     Widget w;
     Position x, y;
     enum placement p;
+    XtIntervalId timeout_id;
 } want_t;
+static want_t *wants;
+
+/* Dequeue a pending move_again operation and free its context. */
+static void
+dequeue_and_free_want(want_t *wx)
+{
+    want_t *wp, *wp_prev = NULL;
+
+    for (wp = wants; wp != NULL; wp = wp->next) {
+	if (wp == wx) {
+	    if (wp_prev != NULL) {
+		wp_prev->next = wp->next;
+	    } else {
+		wants = wp->next;
+	    }
+	    break;
+	}
+	wp_prev = wp;
+    }
+    XtFree((XtPointer)wx);
+}
 
 static void
 popup_move_again(XtPointer closure, XtIntervalId *id _is_unused)
@@ -280,7 +303,9 @@ popup_move_again(XtPointer closure, XtIntervalId *id _is_unused)
 #endif /*]*/
 	XtVaSetValues(wx->w, XtNx, x, XtNy, y, NULL);
     }
-    XtFree((XtPointer)wx);
+
+    /* Dequeue and free. */
+    dequeue_and_free_want(wx);
 }
 
 /* Place a newly popped-up shell */
@@ -375,7 +400,10 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 	    wx->x = x;
 	    wx->y = y;
 	    wx->p = p;
-	    XtAppAddTimeOut(appcontext, 250, popup_move_again, (XtPointer)wx);
+	    wx->timeout_id = XtAppAddTimeOut(appcontext, 250, popup_move_again,
+		    (XtPointer)wx);
+	    wx->next = wants;
+	    wants = wx;
 	    break;
 	default:
 	case WMT_SIMPLE:
@@ -398,7 +426,10 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 	    wx->x = x;
 	    wx->y = y;
 	    wx->p = p;
-	    XtAppAddTimeOut(appcontext, 250, popup_move_again, (XtPointer)wx);
+	    wx->timeout_id = XtAppAddTimeOut(appcontext, 250, popup_move_again,
+		    (XtPointer)wx);
+	    wx->next = wants;
+	    wants = wx;
 	    break;
 	default:
 	case WMT_SIMPLE:
@@ -430,7 +461,10 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 	    wx->x = x;
 	    wx->y = y;
 	    wx->p = p;
-	    XtAppAddTimeOut(appcontext, 250, popup_move_again, (XtPointer)wx);
+	    wx->timeout_id = XtAppAddTimeOut(appcontext, 250, popup_move_again,
+		    (XtPointer)wx);
+	    wx->next = wants;
+	    wants = wx;
 	    break;
 	default:
 	case WMT_SIMPLE:
@@ -460,7 +494,10 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 	    wx->x = x;
 	    wx->y = y;
 	    wx->p = p;
-	    XtAppAddTimeOut(appcontext, 250, popup_move_again, (XtPointer)wx);
+	    wx->timeout_id = XtAppAddTimeOut(appcontext, 250, popup_move_again,
+		    (XtPointer)wx);
+	    wx->next = wants;
+	    wants = wx;
 	    break;
 	default:
 	case WMT_SIMPLE:
@@ -473,6 +510,22 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 	    XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 	}
 	break;
+    }
+}
+
+/* Cancel a pending pop-up placement. */
+void
+unplace_popup(Widget w)
+{
+    want_t *wx;
+
+    /* Cancel any pending move_again activity. */
+    for (wx = wants; wx != NULL; wx = wx->next) {
+	if (wx->w == w) {
+	    XtRemoveTimeOut(wx->timeout_id);
+	    dequeue_and_free_want(wx);
+	    return;
+	}
     }
 }
 

@@ -656,6 +656,7 @@ trace_event(XEvent *event)
     XConfigureEvent *cevent;
     XClientMessageEvent *cmevent;
     XExposeEvent *exevent;
+    XVisibilityEvent *vevent;
     const char *press = "Press";
     const char *direction = "Down";
     char dummystr[KSBUF+1];
@@ -663,6 +664,7 @@ trace_event(XEvent *event)
     int ambiguous = 0;
     int state;
     const char *symname = "";
+    const char *viz[3] = { "Unobscured", "PartiallyObscured", "FullyObscured" };
 
     if (event == NULL) {
 	vtrace(" %s", ia_name[(int)ia_cause]);
@@ -788,6 +790,15 @@ trace_event(XEvent *event)
 	cevent = (XConfigureEvent *)event;
 	vtrace("ConfigureNotify [%dx%d+%d+%d]",
 		cevent->width, cevent->height, cevent->x, cevent->y);
+	break;
+    case VisibilityNotify:
+	vevent = (XVisibilityEvent *)event;
+	if (vevent->state >= VisibilityUnobscured &&
+		vevent->state <= VisibilityFullyObscured) {
+	    vtrace("VisibilityNotify [%s]", viz[vevent->state]);
+	} else {
+	    vtrace("VisibilityNotify [%d]", vevent->state);
+	}
 	break;
     default:
 	vtrace("Event %d", event->type);

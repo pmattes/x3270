@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -50,6 +50,8 @@ extern Atom		a_net_wm_state;
 extern Atom		a_net_wm_state_maximized_horz;
 extern Atom		a_net_wm_state_maximized_vert;
 extern Atom		a_atom;
+extern Atom		a_pixel_size;
+extern Atom		a_font;
 extern Atom		a_spacing;
 extern Display		*display;
 extern Pixmap		gray;

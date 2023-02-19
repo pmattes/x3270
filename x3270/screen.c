@@ -87,6 +87,7 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
@@ -138,6 +139,9 @@ char	       *efontname;
 char           *efont_charset;
 char           *efont_charset_dbcs;
 bool		efont_matches = true;
+unsigned long	efont_scale_size = 0UL;
+bool		efont_is_scalable = false;
+bool		efont_has_variants = false;
 char	       *full_efontname;
 char	       *full_efontname_dbcs;
 bool		visible_control = false;
@@ -192,7 +196,10 @@ static Pixel    cursor_pixel;
 static bool     text_blinking_on = true;
 static bool     text_blinkers_exist = false;
 static bool     text_blink_scheduled = false;
+static Dimension last_width = 0, last_height = 0;
 static XtIntervalId text_blink_id;
+static XtIntervalId resized_id;
+static bool resized_pending = false;
 static XtTranslations screen_t00 = NULL;
 static XtTranslations screen_t0 = NULL;
 static XtTranslations container_t00 = NULL;
@@ -204,10 +211,8 @@ static char    *color_name[16] = {
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL
 };
-static bool	configure_ticking = false;
 static bool	initial_popup_ticking = false;
 static bool	need_keypad_first_up = false;
-static XtIntervalId configure_id;
 static bool highlight_bold = false;
 
 static Pixmap   inv_icon;
@@ -242,20 +247,6 @@ typedef struct {
 static XIMStyle style;
 char ic_focus;
 static void send_spot_loc(void);
-
-/* Globals for undoing reconfigurations. */
-static enum {
-    REDO_NONE,
-    REDO_FONT,
-    REDO_MODEL,
-    REDO_KEYPAD,
-    REDO_SCROLLBAR,
-    REDO_RESIZE
-} screen_redo = REDO_NONE;
-static char *redo_old_font = NULL;
-static int redo_old_model;
-static int redo_old_ov_cols;
-static int redo_old_ov_rows;
 
 static unsigned char blank_map[32];
 #define BKM_SET(n)	blank_map[(n)/8] |= 1 << ((n)%8)
@@ -361,14 +352,15 @@ static enum mcursor_state icon_cstate = NORMAL;
 
 /* Dumb font cache. */
 typedef struct dfc {
-    	struct dfc *next;
-    	char *name;
-	char *weight;
-	int points;
-	char *spacing;
-	char *charset;
-	bool good;
+    struct dfc *next;
+    char *name;
+    char *weight;
+    int points;
+    char *spacing;
+    char *charset;
+    bool good;
 } dfc_t;
+static dfc_t *dfc = NULL, *dfc_last = NULL;
 
 static void aicon_init(void);
 static void aicon_reinit(unsigned cmask);
@@ -401,7 +393,6 @@ static bool xfer_color_scheme(char *cs, bool do_popup);
 static void set_font_globals(XFontStruct *f, const char *ef, const char *fef,
     Font ff, bool is_dbcs);
 static void screen_connect(bool ignored);
-static void configure_stable(XtPointer closure, XtIntervalId *id);
 static void cancel_blink(void);
 static void render_blanks(int baddr, int height, struct sp *buffer);
 static void resync_text(int baddr, int len, struct sp *buffer);
@@ -420,6 +411,9 @@ static void xlate_dbcs_unicode(ucs4_t, XChar2b *);
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
+static bool check_scalable(const char *font_name);
+static bool check_variants(const char *font_name);
+static char *find_variant(const char *font_name, bool bigger);
 
 static action_t SetFont_action;
 static action_t Title_action;
@@ -430,16 +424,24 @@ static XChar2b apl_to_ldisplay(unsigned char c);
 
 /* Resize font list. */
 struct rsfont {
-	struct rsfont *next;
-	char *name;
-	int width;
-	int height;
-	int descent;
-	int total_width;	/* transient */
-	int total_height;	/* transient */
-	int area;		/* transient */
+    struct rsfont *next;
+    char *name;
+    int width;
+    int height;
+    int descent;
+    int total_width;	/* transient */
+    int total_height;	/* transient */
+    int area;		/* transient */
 };
 static struct rsfont *rsfonts;
+
+/* Resize cache. */
+typedef struct drc {
+    struct drc *next;
+    char *key;	/* first 7 properties */
+    struct rsfont *rsfonts;
+} drc_t;
+static struct drc *drc;
 
 #define BASE_MASK		0x0f	/* mask for 16 actual colors */
 #define INVERT_MASK		0x10	/* toggle for inverted colors */
@@ -452,6 +454,17 @@ static struct rsfont *rsfonts;
 
 #define DEFAULT_PIXEL		(mode.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
+
+static struct {
+    bool ticking;
+    Dimension width, height;
+    Position x, y;
+    XtIntervalId id;
+} cn = {
+    false, 0, 0, 0, 0, 0
+};
+static Position main_x = 0, main_y = 0;
+static void do_resize(void);
 
 /*
  * Rescale a dimension according to the DPI settings.
@@ -993,6 +1006,43 @@ popup_resume_timeout(XtPointer closure _is_unused,
     }
 }
 
+/* Check if there was a silent resize (WM bug). */
+static void
+check_resized(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
+{
+    Dimension width, height;
+
+    resized_pending = false;
+    XtVaGetValues(toplevel, XtNwidth, &width, XtNheight, &height, NULL);
+    if (width != last_width || height != last_height) {
+	vtrace("Window Mangaer bug: Window changed size without Xt telling "
+		"us\n");
+	cn.width = width;
+	cn.height = height;
+	do_resize();
+    }
+}
+
+/*
+ * Set the dimensions of 'toplevel', and set a timer to check for a
+ * bug where the Window Manager changes the window size (to a mysterious wrong
+ * value, somewhat larger in one dimension) but does not generate a
+ * ConfigureNotify event.
+ */
+static void
+redo_toplevel_size(Dimension width, Dimension height)
+{
+    XtVaSetValues(toplevel,
+	    XtNwidth, width,
+	    XtNheight, height,
+	    NULL);
+
+        last_width = width;
+        last_height = height;
+	resized_pending = true;
+	resized_id = XtAppAddTimeOut(appcontext, 500, check_resized, 0);
+}
+
 static void
 set_toplevel_sizes(const char *why)
 {
@@ -1002,12 +1052,9 @@ set_toplevel_sizes(const char *why)
     th = container_height;
     if (fixed_width) {
 	if (!maximized) {
-	    XtVaSetValues(toplevel,
-		    XtNwidth, fixed_width,
-		    XtNheight, fixed_height,
-		    NULL);
 	    vtrace("set_toplevel_sizes(%s), fixed: %dx%d\n", why, fixed_width,
 		    fixed_height);
+	    redo_toplevel_size(fixed_width, fixed_height);
 	    if (!user_resize_allowed) {
 		XtVaSetValues(toplevel,
 			XtNbaseWidth, fixed_width,
@@ -1027,11 +1074,8 @@ set_toplevel_sizes(const char *why)
 	main_height = fixed_height;
     } else {
 	if (!maximized) {
-	    XtVaSetValues(toplevel,
-		    XtNwidth, tw,
-		    XtNheight, th,
-		    NULL);
 	    vtrace("set_toplevel_sizes(%s), not fixed: %hux%hu\n", why, tw, th);
+	    redo_toplevel_size(tw, th);
 	    if (!allow_resize) {
 		XtVaSetValues(toplevel,
 			XtNbaseWidth, tw,
@@ -1050,16 +1094,6 @@ set_toplevel_sizes(const char *why)
 	main_width = tw;
 	main_height = th;
     }
-
-    /*
-     * Start a timer ticking, in case the window manager doesn't approve
-     * of the change.
-     */
-    if (configure_ticking) {
-	XtRemoveTimeOut(configure_id);
-    }
-    configure_id = XtAppAddTimeOut(appcontext, 500, configure_stable, 0);
-    configure_ticking = true;
 
     keypad_move();
     {
@@ -1194,7 +1228,6 @@ toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 
     if (toggled(SCROLL_BAR)) {
 	scrollbar_width = rescale(SCROLLBAR_WIDTH);
-	screen_redo = REDO_SCROLLBAR;
     } else {
 	scroll_to_bottom();
 	scrollbar_width = 0;
@@ -1299,10 +1332,6 @@ mcursor_locked(void)
 void
 screen_showikeypad(bool on)
 {
-    if (on) {
-	screen_redo = REDO_KEYPAD;
-    }
-
     inflate_screen(); /* redundant now? */
     screen_reinit(FONT_CHANGE);
 }
@@ -1935,7 +1964,6 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	    }
 	}
 	ss->copied = false;
-	set_toplevel_sizes("redraw");
     }
     ctlr_changed(0, ROWS*COLS);
     cursor_changed = true;
@@ -1955,6 +1983,41 @@ Redraw_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     do_redraw(w, event, params, num_params);
 }
 
+/* Split a font name into parts. */
+static int
+split_name(const char *name, char res[15][256])
+{
+    int ns;
+    const char *dash;
+    const char *s;
+
+    ns = 0;
+    s = name;
+    while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
+	int nc = dash - s;
+
+	if (nc >= 256) {
+	    nc = 255;
+	}
+	strncpy(res[ns], s, nc);
+	res[ns][nc] = '\0';
+	ns++;
+	s = dash + 1;
+    }
+    if (*s) {
+	size_t nc = strlen(s);
+
+	if (nc >= 256) {
+	    nc = 255;
+	}
+	strncpy(res[ns], s, 255);
+	res[ns][nc] = '\0';
+	ns++;
+    }
+
+    return ns;
+}
+
 /*
  * Make the emulator font bigger or smaller.
  */
@@ -1966,7 +2029,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     struct rsfont *r, *best_r = NULL;
     int best_area = -1;
 
-    xaction_debug(Redraw_xaction, event, params, num_params);
+    xaction_debug(StepEfont_xaction, event, params, num_params);
     if (*num_params != 1) {
 	goto param_error;
     }
@@ -1978,37 +2041,94 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	goto param_error;
     }
 
-    if (rsfonts == NULL) {
-	/* No resize fonts to use. */
-	vtrace(AnStepEfont ": No resize fonts\n");
+    if (!allow_resize) {
+	vtrace(AnStepEfont ": resize not allowed\n");
 	return;
     }
 
-    current_area = *char_width * *char_height;
-    for (r = rsfonts; r != NULL; r = r->next) {
-	int area = r->width * r->height;
-
-	if ((bigger && area <= current_area) ||
-	    (!bigger && area >= current_area)) {
-	    continue;
+    /*
+     * Check if this is possible at all.
+     * Note that if we are running a 3270 font, we assume we have a set of 3270
+     * resize fonts with at least one member in it.
+     */
+    if (nss.standard_font) {
+	if (!efont_scale_size) {
+	    vtrace(AnStepEfont ": font is not scalable\n");
+	    return;
 	}
-
-	if (best_area < 0 ||
-		abs(area - current_area) < abs(best_area - current_area)) {
-	    best_area = area;
-	    best_r = r;
+	if (!bigger && efont_scale_size <= 2UL) {
+	    vtrace(AnStepEfont ": scale limit reached\n");
+	    return;
 	}
     }
-    
-    if (best_area < 0) {
-	/* No candidates left. */
-	vtrace(AnStepEfont ": No better candidate\n");
-	return;
-    }
 
-    /* Switch. */
-    vtrace(AnStepEfont ": Switching to %s\n", best_r->name);
-    screen_newfont(best_r->name, true, false);
+    if (dbcs || !nss.standard_font) {
+	/* Use the 3270 fonts. */
+	current_area = *char_width * *char_height;
+	for (r = rsfonts; r != NULL; r = r->next) {
+	    int area = r->width * r->height;
+
+	    if ((bigger && area <= current_area) ||
+		(!bigger && area >= current_area)) {
+		continue;
+	    }
+
+	    if (best_area < 0 ||
+		    abs(area - current_area) < abs(best_area - current_area)) {
+		best_area = area;
+		best_r = r;
+	    }
+	}
+	
+	if (best_area < 0) {
+	    /* No candidates left. */
+	    vtrace(AnStepEfont ": No better candidate\n");
+	    return;
+	}
+
+	/* Switch. */
+	vtrace(AnStepEfont ": Switching to %s\n", best_r->name);
+	screen_newfont(best_r->name, true, false);
+    } else {
+	/* Try rescaling the current font. */
+	char res[15][256];
+	varbuf_t r;
+	char *dash = "";
+	int i;
+	char *new_font_name;
+	unsigned long new_font_size = bigger? efont_scale_size + 1UL:
+	    efont_scale_size - 1UL;
+
+	if (efont_is_scalable) {
+	    split_name(full_efontname, res);
+	    vb_init(&r);
+	    for (i = 0; i < 15; i++) {
+		switch (i) {
+		case 7:
+		    vb_appendf(&r, "%s%lu", dash, new_font_size);
+		    break;
+		case 8:
+		case 12:
+		    vb_appendf(&r, "%s*", dash);
+		    break;
+		default:
+		    vb_appendf(&r, "%s%s", dash, res[i]);
+		    break;
+		}
+		dash = "-";
+	    }
+	    new_font_name = lazya(vb_consume(&r));
+	} else {
+	    /* Has variants. */
+	    new_font_name = find_variant(full_efontname, bigger);
+	    if (new_font_name == NULL) {
+		vtrace(AnStepEfont ": no font to switch to\n");
+		return;
+	    }
+	}
+	vtrace(AnStepEfont ": Switching to %s\n", new_font_name);
+	screen_newfont(new_font_name, true, false);
+    }
     return;
 
 param_error:
@@ -2021,9 +2141,7 @@ param_error:
 void
 PA_Expose_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_Expose_xaction, event, params, num_params);
-#endif /*]*/
     do_redraw(w, event, params, num_params);
 }
 
@@ -4219,9 +4337,7 @@ PA_Focus_xaction(Widget w _is_unused, XEvent *event, String *params _is_unused,
 {
     XFocusChangeEvent *fe = (XFocusChangeEvent *)event;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_Focus_xaction, event, params, num_params);
-#endif /*]*/
     switch (fe->type) {
     case FocusIn:
 	if (fe->detail != NotifyPointer) {
@@ -4244,9 +4360,7 @@ PA_EnterLeave_xaction(Widget w _is_unused, XEvent *event _is_unused,
 {
     XCrossingEvent *ce = (XCrossingEvent *)event;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_EnterLeave_xaction, event, params, num_params);
-#endif /*]*/
     switch (ce->type) {
     case EnterNotify:
 	keypad_entered = true;
@@ -4267,9 +4381,7 @@ PA_KeymapNotify_xaction(Widget w _is_unused, XEvent *event,
 {
     XKeymapEvent *k = (XKeymapEvent *)event;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_KeymapNotify_xaction, event, params, num_params);
-#endif /*]*/
     shift_event(state_from_keymap(k->key_vector));
 }
 
@@ -4339,8 +4451,7 @@ query_window_state(void)
 
 	maximized = (maximized_horz && maximized_vert);
     }
-    if (maximized != was_maximized)
-    {
+    if (maximized != was_maximized) {
 	vtrace("%s\n", maximized? "Maximized": "Not maximized");
 	menubar_snap_enable(!maximized);
 
@@ -4358,9 +4469,7 @@ void
 PA_StateChanged_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_StateChanged_xaction, event, params, num_params);
-#endif /*]*/
     query_window_state();
 }
 
@@ -4738,7 +4847,7 @@ screen_newfont(const char *fontnames, bool do_popup, bool is_cs)
     }
 
     /* Save the old font before trying the new one. */
-    old_font = XtNewString(efontname);
+    old_font = XtNewString(full_efontname);
 
     /* Try the new one. */
     if ((lff = load_fixed_font(fontnames, required_display_charsets)) != NULL) {
@@ -4749,10 +4858,6 @@ screen_newfont(const char *fontnames, bool do_popup, bool is_cs)
 	XtFree(old_font);
 	return;
     }
-
-    /* Store the old name away, in case we have to go back to it. */
-    Replace(redo_old_font, old_font);
-    screen_redo = REDO_FONT;
 
     screen_reinit(FONT_CHANGE);
     efont_changed = true;
@@ -5008,6 +5113,8 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     char *font_encoding = NULL;
     char *fe = NULL;
     char *font_charset = NULL;
+    unsigned long pixel_size = 0;
+    char *full_font;
 
     if (XGetFontProperty(f, a_registry, &svalue)) {
 	family_name = XGetAtomName(display, svalue);
@@ -5026,6 +5133,12 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     } else {
 	fe = font_encoding;
     }
+    if (XGetFontProperty(f, a_pixel_size, &svalue)) {
+	pixel_size = svalue;
+    }
+    if (XGetFontProperty(f, a_font, &svalue)) {
+	full_font = XGetAtomName(display, svalue);
+    }
 
     font_charset = xs_buffer("%s-%s", family_name, fe);
     Free(font_encoding);
@@ -5037,7 +5150,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	dbcs_font.unicode = !strcasecmp(family_name, "iso10646");
 	dbcs_font.ascent = f->max_bounds.ascent;
 	dbcs_font.descent = f->max_bounds.descent;
-	dbcs_font.char_width  = fCHAR_WIDTH(f);
+	dbcs_font.char_width = fCHAR_WIDTH(f);
 	dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
 	dbcs_font.d16_ix = display16_init(font_charset);
 	dbcs = true;
@@ -5047,9 +5160,22 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	Free(family_name);
 	return;
     }
+
     Replace(efontname, XtNewString(ef));
-    Replace(full_efontname, XtNewString(fef));
+    Replace(full_efontname, XtNewString(full_font? full_font: fef));
     Replace(efont_charset, font_charset);
+    efont_is_scalable = getenv("NOSCALE")? false:
+	check_scalable(full_efontname);
+    efont_has_variants = getenv("NOVARIANTS")? false:
+	check_variants(full_efontname);
+    if (efont_is_scalable) {
+	vtrace("Font is scalable\n");
+    } else if (efont_has_variants) {
+	vtrace("Font has size variants\n");
+    } else {
+	vtrace("Font cannot be resized\n");
+    }
+    efont_scale_size = (efont_is_scalable || efont_has_variants)? pixel_size: 0;
 
     /* Set the dimensions. */
     nss.char_width  = fCHAR_WIDTH(f);
@@ -5145,11 +5271,6 @@ screen_change_model(int mn, int ovc, int ovr)
 	(model_num == mn && ovc == ov_cols && ovr == ov_rows)) {
 	    return;
     }
-
-    redo_old_model = model_num;
-    redo_old_ov_cols = ov_cols;
-    redo_old_ov_rows = ov_rows;
-    screen_redo = REDO_MODEL;
 
     model_changed = true;
     if (ov_cols != ovc || ov_rows != ovr) {
@@ -5294,9 +5415,7 @@ PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
 {
     XClientMessageEvent *cme = (XClientMessageEvent *)event;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_WMProtocols_xaction, event, params, num_params);
-#endif /*]*/
     if ((Atom)cme->data.l[0] == a_delete_me) {
 	if (w == toplevel) {
 	    x3270_exit(0);
@@ -5666,9 +5785,13 @@ init_rsfonts(char *charset_name)
 	bool resize;
 	char **matches;
 	int count;
+	char *plus;
+	char *fcopy;
 
 	ns = ms = NewString(ms);
 	while (split_lresource(&ms, &line) == 1) {
+
+	    vtrace("init_rsfonts: parsing %s\n", line);
 
 	    /* Figure out what it's about. */
 	    split_font_list_entry(line, &label, NULL, &resize, &font);
@@ -5691,9 +5814,19 @@ init_rsfonts(char *charset_name)
 	    if (!resize) {
 		continue;
 	    }
-	    matches = XListFontsWithInfo(display, NO_BANG(font), 1, &count,
-		    &fs);
+	    /*
+	     * If DBCS (names split by +), we need to load both, and use the
+	     * maximum height, width and descent of the two,
+	     */
+	    fcopy = NewString(NO_BANG(font));
+	    plus = strchr(fcopy, '+');
+	    if (plus != NULL) {
+		*plus = '\0';
+	    }
+	    matches = XListFontsWithInfo(display, fcopy, 1, &count, &fs);
 	    if (matches == NULL) {
+		vtrace("init_rsfonts: no such font %s\n", font);
+		Free(fcopy);
 		continue;
 	    }
 	    r = (struct rsfont *)XtMalloc(sizeof(*r));
@@ -5702,6 +5835,30 @@ init_rsfonts(char *charset_name)
 	    r->height = fCHAR_HEIGHT(fs);
 	    r->descent = fs->max_bounds.descent;
 	    XFreeFontInfo(matches, fs, count);
+
+	    if (plus != NULL) {
+		int w;
+
+		matches = XListFontsWithInfo(display, plus + 1, 1, &count, &fs);
+		if (matches == NULL) {
+		    vtrace("init_rsfonts: no such font %s\n", plus + 1);
+		    Free(fcopy);
+		    continue;
+		}
+		w = fCHAR_WIDTH(fs);
+		if (w > r->width * 2) {
+		    r->width = w / 2; /* XXX: round-off error if odd? */
+		}
+		if (fCHAR_HEIGHT(fs) > r->height) {
+		    r->height = fCHAR_HEIGHT(fs);
+		}
+		if (fs->max_bounds.descent > r->descent) {
+		    r->descent = fs->max_bounds.descent;
+		}
+		XFreeFontInfo(matches, fs, count);
+	    }
+	    Free(fcopy);
+
 	    r->next = rsfonts;
 	    rsfonts = r;
 	}
@@ -5757,29 +5914,56 @@ init_rsfonts(char *charset_name)
 /*
  * Handle ConfigureNotify events.
  */
-static struct {
-    bool ticking;
-    Dimension width, height;
-    Position x, y;
-    XtIntervalId id;
-} cn = {
-    false, 0, 0, 0, 0, 0
-};
-static Position main_x = 0, main_y = 0;
 
 /*
- * Timeout routine called 0.5 sec after x3270 sets new screen dimensions.
- * We assume that if this happens, the window manager is happy with our new
- * size.
+ * Find the next variant of a font.
  */
-static void
-configure_stable(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
+static char *
+find_next_variant(const char *font_name, void **dp, int *size)
 {
-    vtrace("Reconfigure timer expired\n");
-    configure_ticking = false;
-    if (!cn.ticking) {
-	screen_redo = REDO_NONE;
+    char res[15][256];
+    dfc_t *d;
+    dfc_t **xdp = (dfc_t **)dp;
+
+    /* Split out the fields for this font. */
+    split_name(font_name, res);
+
+    for (d = *xdp? (*xdp)->next: dfc; d != NULL; d = d->next) {
+	bool matches = true;
+	char res_check[15][256];
+	int i;
+
+	if (!strcasecmp(font_name, d->name) || !d->good) {
+	    continue;
+	}
+	split_name(d->name, res_check);
+	for (i = 0; matches && i < 15; i++) {
+	    switch (i) {
+	    case 7:
+	    case 8:
+	    case 9:
+	    case 10:
+	    case 12:
+	    	/* These can differ. */
+		break;
+	    default:
+	    	/* These can't. */
+		if (strcasecmp(res[i], res_check[i])) {
+		    matches = false;
+		}
+		break;
+	    }
+	}
+	if (!matches) {
+	    continue;
+	}
+	*size = atoi(res_check[7]);
+	*dp = (void **)d;
+	return d->name;
     }
+    *size = 0;
+    *dp = NULL;
+    return NULL;
 }
 
 /* Perform a resize operation. */
@@ -5788,17 +5972,17 @@ do_resize(void)
 {
     struct rsfont *r;
     struct rsfont *best = (struct rsfont *) NULL;
+    struct rsfont *rdyn = NULL;
+    struct rsfont *rlast = NULL;
+    struct rsfont *rcand = NULL;
 
-    /* What we're doing now is irreversible. */
-    screen_redo = REDO_RESIZE;
-
-    if (rsfonts == NULL || !allow_resize) {
-	/* Illegal or impossible. */
-	if (rsfonts == NULL) {
-	    vtrace("  no fonts available for resize\n");
-	} else {
-	    vtrace("  resize prohibited by resource\n");
-	}
+    if (nss.standard_font && !efont_scale_size) {
+	vtrace("  no scalable font available\n");
+	vtrace("setting fixed_width and fixed_height\n");
+	fixed_width = cn.width;
+	fixed_height = cn.height;
+	screen_reinit(FONT_CHANGE);
+	clear_fixed();
 	return;
     }
 
@@ -5807,7 +5991,156 @@ do_resize(void)
      * current keypad, model, and scrollbar settings, and snapped to the
      * minimum size.
      */
-    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
+    if (!dbcs && nss.standard_font) {
+	char res[15][256];
+	varbuf_t rv;
+	int i;
+	char *dash = "";
+	char *key;
+	drc_t *d;
+
+	/* Construct the cache key. */
+	split_name(full_efontname, res);
+	vb_init(&rv);
+	for (i = 0; i < 7; i++) {
+	    vb_appendf(&rv, "%s%s", dash, res[i]);
+	    dash = "-";
+	}
+	key = vb_consume(&rv);
+
+	/* Seach for a match. */
+	for (d = drc; d != NULL; d = d->next) {
+	    if (!strcasecmp(key, d->key)) {
+		break;
+	    }
+	}
+	if (d != NULL) {
+	    vtrace("Found %s in drc\n", key);
+	    rcand = d->rsfonts;
+	} else if (!efont_is_scalable) {
+	    /* Has variants. */
+	    char *next_name;
+	    void *x = NULL;
+	    int p;
+
+	    while ((next_name = find_next_variant(full_efontname, &x, &p))
+		    != NULL) {
+		int count;
+		XFontStruct *fs;
+		char **matches;
+
+		matches = XListFontsWithInfo(display, next_name, 1, &count,
+			&fs);
+		if (matches == NULL) {
+		    continue;
+		}
+		r = (struct rsfont *)XtMalloc(sizeof(*r));
+		r->name = XtNewString(next_name);
+		r->width = fCHAR_WIDTH(fs);
+		r->height = fCHAR_HEIGHT(fs);
+		r->descent = fs->max_bounds.descent;
+		XFreeFontInfo(matches, fs, count);
+
+		/* Add it to end of the list. */
+		r->next = NULL;
+		if (rlast != NULL) {
+		    rlast->next = r;
+		} else {
+		    rdyn = r;
+		}
+		rlast = r;
+	    }
+
+	    /* Add the list to the cache. */
+	    d = (drc_t *)Malloc(sizeof(drc_t));
+	    d->key = key;
+	    d->rsfonts = rdyn;
+	    d->next = drc;
+	    drc = d;
+
+	    /* That's our candidate list. */
+	    rcand = rdyn;
+	} else {
+	    int p;
+
+	    /* Is scalable. */
+
+	    /*
+	     * Query scaled from 2 to 100 points.
+	     * Inefficient? You bet.
+	     *
+	     * TODO: Optimize this so we save individual entries, and we scan
+	     * only until we find a match.
+	     */
+	    vtrace("Did not find %s in drc, building\n", key);
+	    for (p = 2; p <= 100; p++) {
+		char *dash = "";
+		char *new_font_name;
+		char **matches;
+		int count;
+		XFontStruct *fs;
+
+		split_name(full_efontname, res);
+		vb_init(&rv);
+		dash = "";
+		for (i = 0; i < 15; i++) {
+		    switch (i) {
+		    case 7:
+			vb_appendf(&rv, "%s%i", dash, p);
+			break;
+		    case 8:
+		    case 12:
+			vb_appendf(&rv, "%s*", dash);
+			break;
+		    default:
+			vb_appendf(&rv, "%s%s", dash, res[i]);
+			break;
+		    }
+		    dash = "-";
+		}
+		new_font_name = vb_consume(&rv);
+
+		/* Get the basic information. */
+		matches = XListFontsWithInfo(display, new_font_name, 1, &count,
+			&fs);
+		if (matches == NULL) {
+		    continue;
+		}
+		r = (struct rsfont *)XtMalloc(sizeof(*r));
+		r->name = XtNewString(new_font_name);
+		r->width = fCHAR_WIDTH(fs);
+		r->height = fCHAR_HEIGHT(fs);
+		r->descent = fs->max_bounds.descent;
+		XFreeFontInfo(matches, fs, count);
+
+		/* Add it to end of the list. */
+		r->next = NULL;
+		if (rlast != NULL) {
+		    rlast->next = r;
+		} else {
+		    rdyn = r;
+		}
+		rlast = r;
+	    }
+
+	    vtrace("drc build complete\n");
+
+	    /* Add the list to the cache. */
+	    d = (drc_t *)Malloc(sizeof(drc_t));
+	    d->key = key;
+	    d->rsfonts = rdyn;
+	    d->next = drc;
+	    drc = d;
+
+	    /* That's our candidate list. */
+	    rcand = rdyn;
+	}
+    } else {
+	rcand = rsfonts;
+    }
+
+    /* Compute the area of the screen with each font. */
+    for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
 	Dimension cw, ch;	/* container_width, container_height */
 	Dimension mkw;
 
@@ -5832,7 +6165,7 @@ do_resize(void)
      * Find the font with the largest area that fits within the requested
      * dimensions.
      */
-    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
+    for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
 	if (r->total_width <= cn.width &&
 	    r->total_height <= cn.height &&
 	    (best == NULL || r->area > best->area)) {
@@ -5845,7 +6178,7 @@ do_resize(void)
      * switch to the smallest.
      */
     if (!best && cn.width <= main_width && cn.height <= main_height) {
-	for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
+	for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
 	    if (best == NULL || r->area < best->area) {
 		best = r;
 	    }
@@ -5868,63 +6201,7 @@ do_resize(void)
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_newfont(best->name, false, false);
-
-	/* screen_newfont() sets screen_redo to REDO_FONT. */
-	screen_redo = REDO_RESIZE;
     }
-}
-
-static void
-revert_screen(void)
-{
-    const char *revert = NULL;
-
-    /*
-     * If we took a ConfigureNotify as new screen dimensions, ignore that now.
-     */
-    clear_fixed();
-
-    /* If there's a reconfiguration pending, try to undo it. */
-    switch (screen_redo) {
-    case REDO_FONT:
-	revert = "font";
-	screen_newfont(redo_old_font, false, false);
-	break;
-    case REDO_MODEL:
-	revert = "model number";
-	screen_change_model(redo_old_model,
-	    redo_old_ov_cols, redo_old_ov_rows);
-	break;
-    case REDO_KEYPAD:
-	revert = "keypad configuration";
-	xappres.keypad_on = False;
-	screen_showikeypad(xappres.keypad_on);
-	break;
-    case REDO_SCROLLBAR:
-	revert = "scrollbar configuration";
-	if (toggled(SCROLL_BAR)) {
-	    toggle_toggle(SCROLL_BAR);
-	    toggle_scrollBar(SCROLL_BAR, TT_INTERACTIVE);
-	}
-	break;
-    case REDO_RESIZE:
-	screen_redo = REDO_NONE;
-	/* fall through... */
-    case REDO_NONE:
-	/* Initial configuration, or user-generated resize. */
-	do_resize();
-	return;
-    default:
-	break;
-    }
-
-    /* Tell the user what we did. */
-    if (revert != NULL) {
-	popup_an_error("Main window does not fit on the X display\n"
-		"Reverting to previous %s", revert);
-    }
-
-    screen_redo = REDO_NONE;
 }
 
 /*
@@ -5951,26 +6228,14 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	needs_moving = true;
     }
 
-    /*
-     * If the dimensions are correct, do nothing, forget about any
-     * reconfig we may need to revert, and get out.
-     */
+    clear_fixed();
     if (cn.width == main_width && cn.height == main_height) {
 	vtrace("  width and height match, done\n");
-	screen_redo = REDO_NONE;
-	clear_fixed();
-	goto done;
-    }
-
-    /* The desired dimensions are different. Revert the screen. */
-    if (cn.width >= main_width && cn.height >= main_height) {
-	vtrace("  bigger\n");
     } else {
-	vtrace("  smaller\n");
+	vtrace("  width and height do not match, resizing\n");
+	do_resize();
     }
-    revert_screen();
 
-done:
     if (needs_moving && !iconic) {
 	keypad_move();
 	popups_move();
@@ -5984,9 +6249,12 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     XConfigureEvent *re = (XConfigureEvent *) event;
     Position xx, yy;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_ConfigureNotify_xaction, event, params, num_params);
-#endif /*]*/
+
+    if (resized_pending) {
+	XtRemoveTimeOut(resized_id);
+	resized_pending = false;
+    }
 
     /*
      * Get the new window coordinates.  If the configure event reports it
@@ -6033,9 +6301,7 @@ PA_VisibilityNotify_xaction(Widget w _is_unused, XEvent *event _is_unused,
 {
     XVisibilityEvent *e;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_VisibilityNotify_xaction, event, params, num_params);
-#endif /*]*/
     e = (XVisibilityEvent *)event;
     nss.obscured = (e->state != VisibilityUnobscured);
 }
@@ -6050,9 +6316,7 @@ PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
 {
     int i;
 
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_GraphicsExpose_xaction, event, params, num_params);
-#endif /*]*/
 
     if (nss.copied) {
 	/*
@@ -6415,43 +6679,6 @@ WindowState_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
-static dfc_t *dfc = NULL, *dfc_last = NULL;
-
-/* Split a font name into parts. */
-static int
-split_name(const char *name, char res[15][256])
-{
-    int ns;
-    const char *dash;
-    const char *s;
-
-    ns = 0;
-    s = name;
-    while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
-	int nc = dash - s;
-
-	if (nc >= 256) {
-	    nc = 255;
-	}
-	strncpy(res[ns], s, nc);
-	res[ns][nc] = '\0';
-	ns++;
-	s = dash + 1;
-    }
-    if (*s) {
-	size_t nc = strlen(s);
-
-	if (nc >= 256) {
-	    nc = 255;
-	}
-	strncpy(res[ns], s, 255);
-	res[ns][nc] = '\0';
-	ns++;
-    }
-
-    return ns;
-}
-
 /* Initialize the dumb font cache. */
 static void
 dfc_init(void)
@@ -6479,10 +6706,11 @@ dfc_init(void)
 	if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
 	    (nf != 15) ||
 	    (strcasecmp(nl_arr[4], "r") ||
-	     !strcmp(nl_arr[7], "0") ||
-	     !strcmp(nl_arr[8], "0") ||
 	     (strcasecmp(nl_arr[11], "c") &&
-	      strcasecmp(nl_arr[11], "m")) ||
+	      strcasecmp(nl_arr[11], "m"))) ||
+	    (getenv("NOSCALE") != NULL &&
+	     !strcmp(nl_arr[7], "0") &&
+	     !strcmp(nl_arr[8], "0") &&
 	     !strcmp(nl_arr[12], "0"))) {
 	    good = false;
 	}
@@ -6506,7 +6734,9 @@ dfc_init(void)
 	d->spacing = NewString(nl_arr[11]);
 	d->charset = xs_buffer("%s-%s", nl_arr[13], nl_arr[14]);
 	d->good = good;
-	if (!d->spacing[0] || !strcasecmp(d->spacing, "c")) {
+	if (!d->spacing[0] ||
+		(!strcasecmp(d->spacing, "c") ||
+		 !strcasecmp(d->spacing, "m"))) {
 	    if (c_last) {
 		c_last->next = d;
 	    } else {
@@ -6569,6 +6799,138 @@ dfc_search_family(const char *charset, dfc_t **dp, void **cookie)
     }
     *cookie = NULL;
     return NULL;
+}
+
+/*
+ * Check if a font is scalable.
+ * The definition is that given the name returned by the FONT property,
+ * there exists a font with 0 values for PIXEL_SIZE (7), POINT_SIZE (8), and
+ * AVERAGE_WIDTH (12).
+ * There are also scalable fonts that also have 0 values for RESOLUTION_X (9)
+ * and RESOLUTION_Y (10).
+ */
+static bool
+check_scalable(const char *font_name)
+{
+    char res[15][256];
+    varbuf_t r1, r2;
+    char *dash = "";
+    int i;
+    char *name1, *name2;
+    dfc_t *d;
+
+    /* Construct the target names. */
+    split_name(font_name, res);
+    vb_init(&r1);
+    vb_init(&r2);
+    for (i = 0; i < 15; i++) {
+	if (i == 7 || i == 8 || i == 12) {
+	    vb_appendf(&r1, "%s0", dash);
+	} else {
+	    vb_appendf(&r1, "%s%s", dash, res[i]);
+	}
+	if (i == 7 || i == 8 || i == 9 || i == 10 || i == 12) {
+	    vb_appendf(&r2, "%s0", dash);
+	} else {
+	    vb_appendf(&r2, "%s%s", dash, res[i]);
+	}
+	dash = "-";
+    }
+
+    /* Search. */
+    name1 = lazya(vb_consume(&r1));
+    name2 = lazya(vb_consume(&r2));
+    for (d = dfc; d != NULL; d = d->next) {
+	if (!strcasecmp(d->name, name1) ||
+	    !strcasecmp(d->name, name2)) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+/*
+ * Check if a font has pixel size variants.
+ * This is indicated by the presence of fonts with a different PIXEL_SIZE (7),
+ * but possibly different POINT_SIZE (8), RESOLUTION_X (9), RESOLUTION_Y (10)
+ * and AVERAGE_WIDTH (12).
+ */
+static bool
+check_variants(const char *font_name)
+{
+    char res[15][256];
+    dfc_t *d;
+
+    /* Split out the fields for this font. */
+    split_name(font_name, res);
+
+    for (d = dfc; d != NULL; d = d->next) {
+	bool matches = true;
+	char res_check[15][256];
+	int i;
+
+	if (!strcasecmp(font_name, d->name)) {
+	    continue;
+	}
+	split_name(d->name, res_check);
+	for (i = 0; matches && i < 15; i++) {
+	    switch (i) {
+		case 7:
+		case 8:
+		case 9:
+		case 10:
+		case 12:
+		    /* These can differ. */
+		    break;
+		default:
+		    /* These can't. */
+		    if (strcasecmp(res[i], res_check[i])) {
+			matches = false;
+		    }
+		    break;
+	    }
+	}
+	if (matches) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+/*
+ * Find a bigger or smaller variant of a font.
+ * Returns the font name, or NULL.
+ */
+static char *
+find_variant(const char *font_name, bool bigger)
+{
+    char res[15][256];
+    int psize;
+    void *d = NULL;
+    int best_psize = -1;
+    char *next_name;
+    char *best_name = NULL;
+    int p;
+
+    /* Split out the fields for this font and find its size. */
+    split_name(font_name, res);
+    psize = atoi(res[7]);
+
+    /* Find the best match. */
+    while ((next_name = find_next_variant(font_name, &d, &p)) != NULL) {
+	if (bigger) {
+	    if (p > psize && (best_psize < 0 || p < best_psize)) {
+		best_name = next_name;
+		best_psize = p;
+	    }
+	} else {
+	    if (p < psize && (best_psize < 0 || p > best_psize)) {
+		best_name = next_name;
+		best_psize = p;
+	    }
+	}
+    }
+    return best_name;
 }
 
 /* Return the window for the screen. */

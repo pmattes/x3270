@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -800,6 +800,7 @@ keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 	keypad_container = NULL;
 	key_pad = NULL;
 	spf_container = NULL;
+	unplace_popup(w);
     }
 
     if (xappres.keypad_on) {

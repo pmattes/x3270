@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,3 +63,4 @@ void toplevel_geometry(Position *x, Position *y, Dimension *width,
 void add_error_popdown_callback(void (*callback)(void));
 void popups_register(void);
 void popup_a_timed_info(int timeout_ms, const char *format, ...);
+void unplace_popup(Widget w);
