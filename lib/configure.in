@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2022 Paul Mattes.
+dnl Copyright (c) 2000-2023 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_PROG_EGREP
 AC_CHECK_TOOLS(AR, [ar])
 
 dnl Figure out what sort of host this is.
@@ -80,7 +81,7 @@ then	use_openssl=no
 fi
 
 dnl Check for OpenSSL header files.
-AC_ARG_WITH(ssl,[  --with-openssl=DIR      specify OpenSSL install directory])
+AC_ARG_WITH(openssl,[  --with-openssl=DIR      specify OpenSSL install directory])
 if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
