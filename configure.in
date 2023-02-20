@@ -1,4 +1,4 @@
-dnl Copyright (c) 2015-2016, 2018, 2020-2022 Paul Mattes.
+dnl Copyright (c) 2015-2023 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([suite3270],[4.2])
+AC_INIT([suite3270],[4.3])
 AC_PREREQ([2.69])
 
 AC_CANONICAL_HOST
@@ -351,3 +351,6 @@ AC_SUBST(WINDRES_SET)
 dnl Generate to top-level Makefile.
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+
+dnl Gather warnings.
+find . -type f -name config.log | xargs ls -t | xargs grep WARNING
