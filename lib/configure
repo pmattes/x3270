@@ -722,13 +722,13 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_tls
+enable_stransport
+enable_mock_tls
 with_openssl
 with_iconv
 enable_dbcs
 enable_local_process
-enable_tls
-enable_stransport
-enable_mock_tls
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1360,11 +1360,11 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --disable-tls           leave out TLS support
+  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (MacOS)
+  --enable-mock-tls       use TLS mock for testing
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
-  --disable-tls           leave out TLS support
-  --disable-stransport    use OpenSSL instead of Secure Transport (MacOS)
-  --enable-mock-tls       use TLS mock for testing
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4105,12 +4105,39 @@ then :
 fi
 
 
-if test ! "$enable_tls" = no
-then	use_openssl=yes
-else	use_openssl=no
+# OpenSSL is the default.
+use_openssl=yes
+
+# Check whether --enable-tls was given.
+if test ${enable_tls+y}
+then :
+  enableval=$enable_tls;
 fi
 
-if test ! -z "$mac_os" -a "$enable_stransport" != no
+# Check whether --enable-stransport was given.
+if test ${enable_stransport+y}
+then :
+  enableval=$enable_stransport;
+fi
+
+if test -z "$mac_os" -a -n "$enable_stransport"
+then	as_fn_error $? "--enable-stransport/--disable-stransport is only for MacOS" "$LINENO" 5;
+fi
+if test "$enable_stransport" = yes
+then	use_openssl=no
+fi
+# Check whether --enable-mock_tls was given.
+if test ${enable_mock_tls+y}
+then :
+  enableval=$enable_mock_tls;
+fi
+
+if test "$enable_mock_tls" = yes
+then	use_openssl=no
+	enable_stransport=no
+fi
+
+if test "$enable_tls" = no
 then	use_openssl=no
 fi
 
@@ -4914,39 +4941,12 @@ case "$enable_local_process" in
 
 	;;
 esac
-# Check whether --enable-tls was given.
-if test ${enable_tls+y}
-then :
-  enableval=$enable_tls;
-fi
-
-# Check whether --enable-stransport was given.
-if test ${enable_stransport+y}
-then :
-  enableval=$enable_stransport;
-fi
-
-if test ! -z "$mac_os" -a "$enable_stransport" = no -a "use_openssl" = no
-then	enable_tls=no
-fi
-if test -z "$mac_os" -a ! -z "$enable_stransport"
-then	as_fn_error $? "--enable-stransport/--disable-stransport is only for MacOS" "$LINENO" 5;
-fi
-# Check whether --enable-mock_tls was given.
-if test ${enable_mock_tls+y}
-then :
-  enableval=$enable_mock_tls;
-fi
-
-if test "$enable_mock_tls" = yes
-then	use_openssl=no
-fi
 
 if test "$enable_mock_tls" = yes
 then	TLS_MODULES=sio_mock.o
 elif test "$enable_tls" = no
 then	TLS_MODULES=""
-elif test ! -z "$mac_os" -a "$enable_stransport" != no
+elif test ! -z "$mac_os" -a "$enable_stransport" = yes
 then	TLS_MODULES=sio_secure_transport.o
 	TLS_LIBS="-framework CoreFoundation -framework Security"
 else	TLS_MODULES=sio_openssl.o

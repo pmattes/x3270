@@ -69,14 +69,25 @@ AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(malloc.h)
 
-dnl If TLS is disabled, don't go looking for OpenSSL.
-if test ! "$enable_tls" = no
-then	use_openssl=yes
-else	use_openssl=no
+# OpenSSL is the default.
+use_openssl=yes
+
+AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
+AC_ARG_ENABLE(stransport,[  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (MacOS)])
+if test -z "$mac_os" -a -n "$enable_stransport"
+then	AC_MSG_ERROR(--enable-stransport/--disable-stransport is only for MacOS);
+fi
+if test "$enable_stransport" = yes
+then	use_openssl=no
+fi
+AC_ARG_ENABLE(mock_tls,[  --enable-mock-tls       use TLS mock for testing])
+if test "$enable_mock_tls" = yes
+then	use_openssl=no
+	enable_stransport=no
 fi
 
-dnl Default to secure Transport on the Mac.
-if test ! -z "$mac_os" -a "$enable_stransport" != no
+dnl If TLS is disabled, don't go looking for OpenSSL.
+if test "$enable_tls" = no
 then	use_openssl=no
 fi
 
@@ -224,25 +235,13 @@ case "$enable_local_process" in
 ""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
 	;;
 esac
-AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
-AC_ARG_ENABLE(stransport,[  --disable-stransport    use OpenSSL instead of Secure Transport (MacOS)])
-if test ! -z "$mac_os" -a "$enable_stransport" = no -a "use_openssl" = no
-then	enable_tls=no
-fi
-if test -z "$mac_os" -a ! -z "$enable_stransport"
-then	AC_MSG_ERROR(--enable-stransport/--disable-stransport is only for MacOS);
-fi
-AC_ARG_ENABLE(mock_tls,[  --enable-mock-tls       use TLS mock for testing])
-if test "$enable_mock_tls" = yes
-then	use_openssl=no
-fi
 
 dnl Set up TLS modules and libraries
 if test "$enable_mock_tls" = yes
 then	TLS_MODULES=sio_mock.o
 elif test "$enable_tls" = no
 then	TLS_MODULES=""
-elif test ! -z "$mac_os" -a "$enable_stransport" != no
+elif test ! -z "$mac_os" -a "$enable_stransport" = yes
 then	TLS_MODULES=sio_secure_transport.o
 	TLS_LIBS="-framework CoreFoundation -framework Security"
 else	TLS_MODULES=sio_openssl.o
