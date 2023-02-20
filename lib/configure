@@ -4189,8 +4189,8 @@ done
 		any=1
 	done
 	if test $header_fail -eq 1
-	then	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Disabling OpenSSL -- missing headers" >&5
-printf "%s\n" "$as_me: WARNING: Disabling OpenSSL -- missing headers" >&2;}
+	then	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Disabling TLS -- missing OpenSSL headers" >&5
+printf "%s\n" "$as_me: WARNING: Disabling TLS -- missing OpenSSL headers" >&2;}
 		use_openssl="no"
 		enable_tls="no"
 		unset HAVE_LIBSSL
@@ -4899,8 +4899,8 @@ fi
 	done
 
 	if test $lib_fail -eq 1
-	then	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Disabling OpenSSL -- missing libs" >&5
-printf "%s\n" "$as_me: WARNING: Disabling OpenSSL -- missing libs" >&2;}
+	then	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Disabling TLS -- missing OpenSSL libraries" >&5
+printf "%s\n" "$as_me: WARNING: Disabling TLS -- missing OpenSSL libraries" >&2;}
 		use_openssl="no"
 		enable_tls="no"
 	else	TLS_LIBS="-lssl -lcrypto"

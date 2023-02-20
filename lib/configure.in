@@ -122,7 +122,7 @@ then	orig_CPPFLAGS="$CPPFLAGS"
 		any=1
 	done
 	if test $header_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL -- missing headers)
+	then	AC_MSG_WARN(Disabling TLS -- missing OpenSSL headers)
 		use_openssl="no"
 		enable_tls="no"
 		unset HAVE_LIBSSL
@@ -203,7 +203,7 @@ then	orig_LDFLAGS="$LDFLAGS"
 	done
 
 	if test $lib_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL -- missing libs)
+	then	AC_MSG_WARN(Disabling TLS -- missing OpenSSL libraries)
 		use_openssl="no"
 		enable_tls="no"
 	else	TLS_LIBS="-lssl -lcrypto"
