@@ -4124,7 +4124,7 @@ fi
 if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
-	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl
 	do	header_fail=0
 		if test -n "$dir" -a ! -d "$dir/include"
 		then	header_fail=1
@@ -4745,7 +4745,7 @@ then	orig_LDFLAGS="$LDFLAGS"
 	unset any
 	if test -n "$with_openssl"
 	then	ssl_libs="$with_openssl/lib $with_openssl/ssl/lib"
-	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib"
+	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib /usr/local/opt/openssl/lib"
 	fi
 	for dir in $ssl_libs
 	do	lib_fail=0
