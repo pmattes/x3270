@@ -85,17 +85,22 @@ AC_ARG_WITH(openssl,[  --with-openssl=DIR      specify OpenSSL install directory
 if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
-	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl
+	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl /opt/local/include/openssl-3
 	do	header_fail=0
-		if test -n "$dir" -a ! -d "$dir/include"
-		then	header_fail=1
-			continue
+		if test -n "$dir"
+		then if test -d "$dir/include"
+			then	idir="$dir/include"
+			elif test -d "$dir/openssl"
+			then	idir="$dir"
+			else	header_fail=1
+				continue
+			fi
 		fi
 		if test -n "$any"
-		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		then	AC_MSG_NOTICE(retrying with -I$idir)
 		fi
 		if test -n "$dir"
-		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$idir"
 		fi
 		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
 		if test "$header_fail" -eq 0
@@ -154,7 +159,7 @@ then	orig_LDFLAGS="$LDFLAGS"
 	unset any
 	if test -n "$with_openssl"
 	then	ssl_libs="$with_openssl/lib $with_openssl/ssl/lib"
-	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib /usr/local/opt/openssl/lib"
+	else	ssl_libs="nil /usr/local/ssl/lib /usr/pkg/ssl/lib /usr/ssl/lib /var/ssl/lib /opt/ssl/lib /usr/local/opt/openssl/lib /opt/local/lib/openssl-3"
 	fi
 	for dir in $ssl_libs
 	do	lib_fail=0
