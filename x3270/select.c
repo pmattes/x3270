@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -147,7 +147,7 @@ static bool	any_selected = false;
     if (flipped) {			\
 	_col = (COLS - _col) - 1;	\
     }					\
-    _row = Y_TO_ROW(_y - *descent);	\
+    _row = Y_TO_ROW(_y);		\
     if (_row <= 0) {			\
 	_row = 0;			\
     }					\
@@ -160,10 +160,16 @@ static bool	any_selected = false;
     xyBOUNDED_COL_ROW(event_x(event), event_y(event), _col, _row)
 
 #define XOFFSET(x)	((x) - COL_TO_X(X_TO_COL(x)))
+#define LEFT_QUARTER(x)	(XOFFSET(x) <= (*char_width) / 4)
+#define RIGHT_QUARTER(x) (XOFFSET(x) >= (*char_width) * 3 / 4)
 #define LEFT_THIRD(x)	(XOFFSET(x) <= (*char_width) / 3)
 #define RIGHT_THIRD(x)	(XOFFSET(x) >= (*char_width) * 2 / 3)
 #define LEFT_HALF(x)	(XOFFSET(x) <= (*char_width) / 2)
 #define RIGHT_HALF(x)	(XOFFSET(x) >= (*char_width) / 2)
+
+#define YOFFSET(y)	((y) - ROW_TO_Y(Y_TO_ROW(y) - 1))
+#define TOP_HALF(y)	(YOFFSET(y) <= (*char_height) / 2)
+#define BOTTOM_HALF(y)	(YOFFSET(y) >= (*char_height) / 2)
 
 /* Default character class. */
 static int char_class[256] = {
@@ -764,7 +770,6 @@ SelectDown_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     down_time = event_time(event);
     if (num_clicks == 0) {
-	/* f_start = f_end = v_start = v_end = baddr; */
 	down1_time = down_time;
 	down1_x = event_x(event);
 	down1_y = event_y(event);
@@ -785,6 +790,7 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
     int baddr;
     int start_col, start_row;
     int start_baddr;
+    int i;
 
     xaction_debug(SelectMotion_xaction, event, params, num_params);
     if (w != *screen) {
@@ -801,18 +807,24 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
     xyBOUNDED_COL_ROW(down1_x, down1_y, start_col, start_row);
     start_baddr = ROWCOL_TO_BA(start_row, start_col);
 
-    /*
-     * In the horizontal, if the initial click was in the left third of a
-     * cell, and we are now in the right third of that cell, select that cell.
-     * If we are now halfway across a different cell, select that cell.
-     *
-     * In the vertical, if a cell boundary has been crossed, select
-     * everything from the start point to the new cell. As with X, if the
-     * initial click was in the left third, include that cell; otherwise don't.
-     */
     if (!saw_motion) {
-	if ((x < down1_x && RIGHT_THIRD(down1_x) && LEFT_THIRD(x)) ||
-	    (x > down1_x && LEFT_THIRD(down1_x) && RIGHT_THIRD(x))) {
+	/*
+	 * We haven't selected any cells yet.
+	 *
+	 * If the initial click was in the right two-thirds of a cell, we're
+	 * goint to include that cell in the selection. If we're now in the
+	 * right quarter of that same cell, or in the right half of another
+	 * cell, we can start the selection. (Plus the equivalent if moving
+	 * right-to-left: started in the left two-thirds, etc, etc.)
+	 *
+	 * There is probably a simpler way to do this.
+	 */
+	if ((x < down1_x && !LEFT_THIRD(down1_x) &&
+	     ((col == start_col && LEFT_QUARTER(x)) ||
+	      (col != start_col && RIGHT_HALF(x)))) ||
+	    (x > down1_x && !RIGHT_THIRD(down1_x) &&
+	     ((col == start_col && RIGHT_QUARTER(x)) ||
+	      (col != start_col && RIGHT_HALF(x))))) {
 	    /* Moved left or right far enough to select the initial cell. */
 	    f_start = f_end = v_start = v_end = start_baddr;
 	    saw_motion = true;
@@ -827,6 +839,10 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    }
 	}
 	if (!saw_motion && row != start_row) {
+	    if (!((row < start_row && TOP_HALF(y)) ||
+		 (row > start_row && BOTTOM_HALF(y)))) {
+		return;
+	    }
 	    /* Moved up or down by a row. */
 	    if (LEFT_THIRD(down1_x)) {
 		f_start = f_end = v_start = v_end = start_baddr;
@@ -840,50 +856,66 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    return;
 	}
     } else {
-	/*
-	 * Add to the selection horizontally only if we've crossed the middle
-	 * of a cell.
-	 */
+	/* Extend the selection only if we've crossed the middle of a cell. */
+	int last_move_row = last_move_baddr / COLS;
+	int last_move_col = last_move_baddr % COLS;
+
+	if (baddr <= v_start || baddr >= v_end) {
+	    if (col < last_move_col && !LEFT_HALF(x)) {
+		col++;
+	    }
+	    if (col > last_move_col && !RIGHT_HALF(x)) {
+		col--;
+	    }
+	    if (row < last_move_row && !TOP_HALF(y)) {
+		row++;
+	    }
+	    if (row > last_move_row && !BOTTOM_HALF(y)) {
+		row--;
+	    }
+	}
+	baddr = ROWCOL_TO_BA(row, col);
+
 	if (baddr == last_move_baddr) {
+	    num_clicks = 0;
 	    return;
 	}
-	if (col < last_move_baddr % COLS) {
-	    if (!LEFT_HALF(x)) {
-		return;
-	    }
-	} else if (col > last_move_baddr % COLS) {
-	    if (!RIGHT_HALF(x)) {
-		return;
-	    }
-	}
-    }
-
-    last_move_baddr = baddr;
-
-
-    /*
-     * If baddr falls outside if the v range, open up the v range.  In
-     * addition, if we are extending one end of the v range, make sure the
-     * other end at least covers the f range.
-     */
-    if (baddr <= v_start) {
-	v_start = baddr;
-	v_end = f_end;
-    }
-    if (baddr >= v_end) {
-	v_end = baddr;
-	v_start = f_start;
     }
 
     /*
-     * If baddr falls within the v range, narrow up the nearer end of the
-     * v range.
+     * The following logic is subtly wrong.
+     * When we move from two rows selected to just one, it gets it wrong the
+     * first time, then the next time through, with no change in baddr, it gets
+     * it right.
+     *
+     * For now, we do it twice every time to fix this.
      */
-    if (baddr > v_start && baddr < v_end) {
-	if (baddr - v_start < v_end - baddr) {
+
+    for (i = 0; i < 2; i++) {
+	/*
+	 * If baddr falls outside if the v range, open up the v range.  In
+	 * addition, if we are extending one end of the v range, make sure the
+	 * other end at least covers the f range.
+	 */
+	if (baddr <= v_start) {
 	    v_start = baddr;
-	} else {
+	    v_end = f_end;
+	}
+	if (baddr >= v_end) {
 	    v_end = baddr;
+	    v_start = f_start;
+	}
+
+	/*
+	 * If baddr falls within the v range, narrow up the nearer end of the
+	 * v range.
+	 */
+	if (baddr > v_start && baddr < v_end) {
+	    if (baddr - v_start < v_end - baddr) {
+		v_start = baddr;
+	    } else {
+		v_end = baddr;
+	    }
 	}
     }
 
