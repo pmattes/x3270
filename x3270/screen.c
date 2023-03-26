@@ -1074,7 +1074,8 @@ set_toplevel_sizes(const char *why)
 	main_height = fixed_height;
     } else {
 	if (!maximized) {
-	    vtrace("set_toplevel_sizes(%s), not fixed: %hux%hu\n", why, tw, th);
+	    vtrace("set_toplevel_sizes(%s), not fixed: container %hux%hu\n",
+		    why, tw, th);
 	    redo_toplevel_size(tw, th);
 	    if (!allow_resize) {
 		XtVaSetValues(toplevel,
@@ -1111,7 +1112,7 @@ set_toplevel_sizes(const char *why)
 static void
 inflate_screen(void)
 {
-    vtrace("inflate_screen: screen_width %d screen_height %d container_width %d container_height %d\n",
+    vtrace("inflate_screen: nss.screen %dx%d container %dx%d\n",
 	    nss.screen_width,
 	    nss.screen_height,
 	    container_width,
@@ -5249,7 +5250,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
      * know.
      */
     if (container != NULL) {
-	vtrace("set_font_globals(%s)\n", ef);
+	vtrace("set_font_globals(\"%s\")\n", ef);
     }
 }
 
@@ -5833,7 +5834,7 @@ init_rsfonts(char *charset_name)
 	    r->name = XtNewString(font);
 	    r->width = fCHAR_WIDTH(fs);
 	    r->height = fCHAR_HEIGHT(fs);
-	    r->descent = fs->max_bounds.descent;
+	    r->descent = fs->descent;
 	    XFreeFontInfo(matches, fs, count);
 
 	    if (plus != NULL) {
@@ -5852,8 +5853,8 @@ init_rsfonts(char *charset_name)
 		if (fCHAR_HEIGHT(fs) > r->height) {
 		    r->height = fCHAR_HEIGHT(fs);
 		}
-		if (fs->max_bounds.descent > r->descent) {
-		    r->descent = fs->max_bounds.descent;
+		if (fs->descent > r->descent) {
+		    r->descent = fs->descent;
 		}
 		XFreeFontInfo(matches, fs, count);
 	    }
@@ -5978,7 +5979,7 @@ do_resize(void)
 
     if (nss.standard_font && !efont_scale_size) {
 	vtrace("  no scalable font available\n");
-	vtrace("setting fixed_width and fixed_height\n");
+	vtrace("setting fixed_from cn %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_reinit(FONT_CHANGE);
@@ -6038,7 +6039,7 @@ do_resize(void)
 		r->name = XtNewString(next_name);
 		r->width = fCHAR_WIDTH(fs);
 		r->height = fCHAR_HEIGHT(fs);
-		r->descent = fs->max_bounds.descent;
+		r->descent = fs->descent;
 		XFreeFontInfo(matches, fs, count);
 
 		/* Add it to end of the list. */
@@ -6110,7 +6111,7 @@ do_resize(void)
 		r->name = XtNewString(new_font_name);
 		r->width = fCHAR_WIDTH(fs);
 		r->height = fCHAR_HEIGHT(fs);
-		r->descent = fs->max_bounds.descent;
+		r->descent = fs->descent;
 		XFreeFontInfo(matches, fs, count);
 
 		/* Add it to end of the list. */
@@ -6144,18 +6145,19 @@ do_resize(void)
 	Dimension cw, ch;	/* container_width, container_height */
 	Dimension mkw;
 
-	cw = SCREEN_WIDTH(r->width, HHALO)+2 + scrollbar_width;
+	cw = SCREEN_WIDTH(r->width, HHALO) + 2 + scrollbar_width;
 	mkw = min_keypad_width();
 	if (kp_placement == kp_integral && xappres.keypad_on
 		&& cw < mkw) {
 	    cw = mkw;
 	}
 
-	ch = SCREEN_HEIGHT(r->height, r->descent, VHALO)+2 +
-	    menubar_qheight(cw);
+	ch = menubar_qheight(cw) + SCREEN_HEIGHT(r->height, r->descent, VHALO)
+	    + 2;
 	if (kp_placement == kp_integral && xappres.keypad_on) {
 	    ch += keypad_qheight();
 	}
+
 	r->total_width = cw;
 	r->total_height = ch;
 	r->area = cw * ch;
@@ -6188,7 +6190,7 @@ do_resize(void)
     if (!best || (efontname && !strcmp(best->name, efontname))) {
 	/* Accept the change and float inside the new size. */
 	vtrace("  no better font available\n");
-	vtrace("setting fixed_width and fixed_height\n");
+	vtrace("setting fixed %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_reinit(FONT_CHANGE);
@@ -6197,7 +6199,7 @@ do_resize(void)
 	/* Change fonts. */
 	vtrace("    switching to font '%s', snap size %dx%d\n",
 		best->name, best->total_width, best->total_height);
-	vtrace("setting fixed_width and fixed_height\n");
+	vtrace("setting fixed_from cn %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_newfont(best->name, false, false);
@@ -6266,8 +6268,7 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     } else {
 	XtVaGetValues(toplevel, XtNx, &xx, XtNy, &yy, NULL);
     }
-    vtrace("ConfigureNotify %dx%d+%hd+%hd\n", re->width, re->height, xx, yy);
-    
+
     /* Save the latest values. */
     cn.x = xx;
     cn.y = yy;
@@ -6278,7 +6279,7 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     query_window_state();
     if (user_resize_allowed) {
 	/* Take the current dimensions as fixed. */
-	vtrace("setting fixed_width and fixed_height\n");
+	vtrace("setting fixed %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
     }
