@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -293,6 +293,7 @@ extern enum cstate cstate;
 #define cIN_TN3270E(c)	(c == CONNECTED_TN3270E)
 #define cIN_E(c)	(c >= CONNECTED_UNBOUND)
 #define cFULL_SESSION(c) (cIN_NVT(c) || cIN_3270(c))
+#define cIN_E_NVT(c) 	(c == CONNECTED_E_NVT)
 
 #define PCONNECTED	cPCONNECTED(cstate)
 #define HALF_CONNECTED	cHALF_CONNECTED(cstate)
@@ -303,6 +304,7 @@ extern enum cstate cstate;
 #define IN_TN3270E	cIN_TN3270E(cstate)
 #define IN_E		cIN_E(cstate)
 #define FULL_SESSION	cFULL_SESSION(cstate)
+#define IN_E_NVT	cIN_E_NVT(cstate)
 
 /*   network connection status */
 typedef enum {
