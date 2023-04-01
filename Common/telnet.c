@@ -239,6 +239,8 @@ static const char *nnn(int c);
 
 static void net_hexnvt_out_framed(unsigned char *buf, size_t len, bool framed);
 
+static void trace_envt_in(unsigned const char *buf, size_t len);
+
 /* telnet states */
 #define TNS_DATA	0	/* receiving data */
 #define TNS_IAC		1	/* got an IAC */
@@ -2676,8 +2678,12 @@ process_eor(void)
 	    /* In tn3270e NVT mode */
 	    tn3270e_submode = E_NVT;
 	    check_in3270();
-	    for (s = ibuf; s < ibptr; s++) {
-		nvt_process(*s++);
+	    trace_envt_in(ibuf + EH_SIZE, ibptr - (ibuf + EH_SIZE));
+	    for (s = ibuf + EH_SIZE; s < ibptr; s++) {
+		nvt_process((unsigned int)*s);
+	    }
+	    if (h->response_flag == TN3270E_RSF_ALWAYS_RESPONSE) {
+		tn3270e_ack();
 	    }
 	    return 0;
 	case TN3270E_DT_SSCP_LU_DATA:
@@ -2756,14 +2762,35 @@ net_cookedout(const char *buf, size_t len)
 {
     if (toggled(TRACING)) {
 	size_t i;
+	bool any = false;
+	bool last_cmd = false;
 
-	vtrace(">");
+	ntvtrace(">.. ");
 	for (i = 0; i < len; i++) {
-	    vtrace(" %s", ctl_see((int)*(buf+i)));
+	    char *s = ctl_see((int)*(buf + i));
+
+	    if (strlen(s) > 1) {
+		/* Control character. */
+		ntvtrace("%s%s", any? " ": "", s);
+		last_cmd = true;
+	    } else {
+		/* Not a control character. */
+		ntvtrace("%s%s", last_cmd? " ": "", s);
+		last_cmd = false;
+	    }
+	    any = true;
 	}
-	vtrace("\n");
+	ntvtrace("\n");
     }
-    net_rawout((unsigned const char *)buf, len);
+
+    if (IN_E_NVT) {
+	space3270out(len);
+	memcpy(obuf, buf, len);
+	obptr = obuf + len;
+	net_output();
+    } else {
+	net_rawout((unsigned const char *)buf, len);
+    }
 }
 
 /*
@@ -3155,6 +3182,41 @@ trace_netdata(char direction, unsigned const char *buf, size_t len)
     ntvtrace("\n");
 }
 
+/* Trace incoming E-mode NVT data. */
+static void
+trace_envt_in(unsigned const char *buf, size_t len)
+{
+    int count;
+    bool any = false;
+    bool last_cmd = false;
+
+    ntvtrace("<.. ");
+    count = 4;
+    while (len--) {
+	const char *see_chr = ctl_see((int)*buf++);
+	size_t sl;
+	char *space;
+
+	sl = strlen(see_chr);
+	if (sl > 1) {
+	    space = any? " ": "";
+	} else {
+	    space = last_cmd? " ": "";
+	}
+	count += strlen(space) + sl;
+	if (count >= TRACELINE) {
+	    ntvtrace(" ...\n... ");
+	    count = 4 + sl;
+	    any = false;
+	    last_cmd = false;
+	}
+	ntvtrace("%s%s", space, see_chr);
+	last_cmd = sl > 1;
+	any = true;
+    }
+    ntvtrace("\n");
+}
+
 /*
  * net_output
  *	Send 3270 output over the network:
@@ -3170,10 +3232,10 @@ net_output(void)
     int need_resize = 0;
     unsigned char *nxoptr, *xoptr;
 
-#define BSTART	((IN_TN3270E || IN_SSCP)? obuf_base: obuf)
+#define BSTART	((IN_TN3270E || IN_SSCP || IN_E_NVT)? obuf_base: obuf)
 
     /* Set the TN3720E header. */
-    if (IN_TN3270E || IN_SSCP) {
+    if (IN_TN3270E || IN_SSCP || IN_E_NVT) {
 	tn3270e_header *h = (tn3270e_header *)obuf_base;
 
 	/* Check for sending a TN3270E response. */
@@ -3184,14 +3246,17 @@ net_output(void)
 
 	/* Set the outbound TN3270E header. */
 	h->data_type = IN_TN3270E? TN3270E_DT_3270_DATA:
-	    TN3270E_DT_SSCP_LU_DATA;
+	    ((IN_E_NVT)? TN3270E_DT_NVT_DATA:
+	     TN3270E_DT_SSCP_LU_DATA);
 	h->request_flag = 0;
 	h->response_flag = 0;
 	h->seq_number[0] = (e_xmit_seq >> 8) & 0xff;
 	h->seq_number[1] = e_xmit_seq & 0xff;
 
 	vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
-		IN_TN3270E? "3270-DATA": "SSCP-LU-DATA", e_xmit_seq);
+		IN_TN3270E? "3270-DATA":
+		((IN_E_NVT)? "NVT-DATA": "SSCP-LU-DATA"),
+		e_xmit_seq);
 	if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
 		e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
 	}
