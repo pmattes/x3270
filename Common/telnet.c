@@ -172,6 +172,8 @@ static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 
 static size_t   nvt_data = 0;
+static bool	nvt_any = false;
+static bool	nvt_last_cmd = false;
 static int	tn3270e_negotiated = 0;
 static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
 static int	tn3270e_bound = 0;
@@ -1653,17 +1655,29 @@ telnet_fsm(unsigned char c)
 	    ps_process();
 	}
 	if (IN_NVT && !IN_E) {
+	    const char *space;
+
 	    if (!nvt_data) {
-		vtrace("<.. ");
+		ntvtrace("<.. ");
 		nvt_data = 4;
+		nvt_any = false;
+		nvt_last_cmd = false;
 	    }
 	    see_chr = ctl_see((int) c);
-	    nvt_data += (sl = strlen(see_chr));
+	    sl = strlen(see_chr);
+	    if (sl > 1) {
+		space = nvt_any? " ": "";
+	    } else {
+		space = nvt_last_cmd? " ": "";
+	    }
+	    nvt_data += strlen(space) + sl;
 	    if (nvt_data >= TRACELINE) {
-		vtrace(" ...\n... ");
+		ntvtrace(" ...\n... ");
 		nvt_data = 4 + sl;
 	    }
-	    vtrace("%s", see_chr);
+	    ntvtrace("%s%s", space, see_chr);
+	    nvt_last_cmd = sl > 1;
+	    nvt_any = true;
 	    if (!syncing) {
 		if (((linemode && appres.linemode.onlcr) ||
 		     (!linemode && charmode_onlcr))
@@ -1683,17 +1697,31 @@ telnet_fsm(unsigned char c)
 	switch (c) {
 	case IAC:	/* escaped IAC, insert it */
 	    if (IN_NVT && !IN_E) {
+		const char *space;
+
 		if (!nvt_data) {
-		    vtrace("<.. ");
+		    ntvtrace("<.. ");
 		    nvt_data = 4;
+		    nvt_any = false;
+		    nvt_last_cmd = false;
 		}
 		see_chr = ctl_see((int) c);
-		nvt_data += (sl = strlen(see_chr));
-		if (nvt_data >= TRACELINE) {
-		    vtrace(" ...\n ...");
-		    nvt_data = 4 + sl;
+		sl = strlen(see_chr);
+		if (sl > 1) {
+		    space = nvt_any? " ": "";
+		} else {
+		    space = nvt_last_cmd? " ": "";
 		}
-		vtrace("%s", see_chr);
+		nvt_data += strlen(space) +  sl;
+		if (nvt_data >= TRACELINE) {
+		    ntvtrace(" ...\n ...");
+		    nvt_data = 4 + sl;
+		    nvt_any = false;
+		    nvt_last_cmd = false;
+		}
+		ntvtrace("%s%s", space, see_chr);
+		nvt_last_cmd = sl > 1;
+		nvt_any = true;
 		nvt_process((unsigned int) c);
 	    } else {
 		store3270in(c);
@@ -4086,7 +4114,7 @@ void
 net_nvt_break(void)
 {
     if (nvt_data) {
-	vtrace("\n");
+	ntvtrace("\n");
 	nvt_data = 0;
     }
 }
