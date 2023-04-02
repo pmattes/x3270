@@ -2155,6 +2155,10 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 		ctlr_add_ic(buffer_addr, default_ic);
 		INC_BA(buffer_addr);
 	    }
+	    if (buffer_addr == 0) {
+		ctlr_scroll(0, 0);
+		buffer_addr = (ROWS - 1) * COLS;
+	    }
 	    break;
 
 	case ORDER_SF:
@@ -2177,6 +2181,10 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	    ctlr_add_gr(buffer_addr, default_gr);
 	    ctlr_add_ic(buffer_addr, default_ic);
 	    INC_BA(buffer_addr);
+	    if (buffer_addr == 0) {
+		ctlr_scroll(0, 0);
+		buffer_addr = (ROWS - 1) * COLS;
+	    }
 	    break;
 	case ORDER_IC:
 	    if (text) {
@@ -2222,6 +2230,10 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	    ctlr_add_gr(buffer_addr, default_gr);
 	    ctlr_add_ic(buffer_addr, default_ic);
 	    INC_BA(buffer_addr);
+	    if (buffer_addr == 0) {
+		ctlr_scroll(0, 0);
+		buffer_addr = (ROWS - 1) * COLS;
+		}
 	    break;
 
 	default:
@@ -2236,6 +2248,10 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	    ctlr_add_gr(buffer_addr, default_gr);
 	    ctlr_add_ic(buffer_addr, default_ic);
 	    INC_BA(buffer_addr);
+	    if (buffer_addr == 0) {
+		ctlr_scroll(0, 0);
+		buffer_addr = (ROWS - 1) * COLS;
+	    }
 	    break;
 	}
     }
@@ -2252,6 +2268,14 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 
     /* Let a blocked task go. */
     task_host_output();
+}
+
+void
+ctlr_sscp_up(void)
+{
+    if (sscp_start > COLS) {
+	sscp_start -= COLS;
+    }
 }
 
 /*
