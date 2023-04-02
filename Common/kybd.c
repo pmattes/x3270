@@ -838,6 +838,8 @@ key_AID(unsigned char aid_code)
     }
 
     if (IN_SSCP) {
+	bool need_scroll = false;
+
 	if (kybdlock & KL_OIA_MINUS) {
 	    return;
 	}
@@ -846,6 +848,14 @@ key_AID(unsigned char aid_code)
 	    /* Handled locally. */
 	    break;
 	case AID_ENTER:
+	    /* Add a newline. */
+	    if (cursor_addr / COLS == ROWS - 1) {
+		need_scroll = true;
+	    } else {
+		/* Move the cursor to the beginning of the next row. */
+		cursor_move(((cursor_addr + COLS) / COLS) * COLS);
+	    }
+
 	    /*
 	     * Act as if the host had written our input, and
 	     * send it as a Read Modified.
@@ -854,6 +864,11 @@ key_AID(unsigned char aid_code)
 	    aid = aid_code;
 	    ctlr_read_modified(aid, false);
 	    vstatus_ctlr_done();
+	    if (need_scroll) {
+		ctlr_scroll(0, 0);
+		cursor_move((ROWS - 1) * COLS);
+		buffer_addr = (ROWS - 1) * COLS;
+	    }
 	    break;
 	default:
 	    /* Everything else is invalid in SSCP-LU mode. */
@@ -1311,6 +1326,14 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 	ctlr_add_gr(baddr, 0);
 	if (!toggled(REVERSE_INPUT)) {
 	    INC_BA(baddr);
+	    if (IN_SSCP && baddr == 0) {
+		/* Scroll. */
+		ctlr_scroll(0, 0);
+		ctlr_sscp_up();
+		cursor_move((ROWS - 1) * COLS);
+		buffer_addr = (ROWS - 1) * COLS;
+		baddr = (ROWS - 1) * COLS;
+	    }
 	}
     }
 

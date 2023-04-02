@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015, 2018, 2020-2021 Paul Mattes.
+ * Copyright (c) 2005-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,7 @@ void ctlr_shrink(void);
 void ctlr_snap_buffer(void);
 void ctlr_snap_buffer_sscp_lu(void);
 bool ctlr_snap_modes(void);
+void ctlr_sscp_up(void);
 void ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count);
 enum pds ctlr_write(unsigned char buf[], size_t buflen, bool erase);
 void ctlr_write_sscp_lu(unsigned char buf[], size_t buflen);

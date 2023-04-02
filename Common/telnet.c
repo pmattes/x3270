@@ -909,6 +909,25 @@ send_nop(ioid_t id _is_unused)
     nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
 }
 
+/* Initialize, or re-initialize TN3270E state. */
+static void
+tn3270e_init(void)
+{
+    b8_zero(&e_funcs);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
+    b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
+    if (appres.contention_resolution) {
+	b8_set_bit(&e_funcs, TN3270E_FUNC_CONTENTION_RESOLUTION);
+    }
+    e_xmit_seq = 0;
+    response_required = TN3270E_RSF_NO_RESPONSE;
+
+    tn3270e_negotiated = 0;
+    tn3270e_submode = E_UNBOUND;
+    tn3270e_bound = 0;
+}
+
 static void
 net_connected_complete(void)
 {
@@ -940,15 +959,7 @@ net_connected_complete(void)
     memset((char *)hisopts, 0, sizeof(hisopts));
     did_ne_send = false;
     deferred_will_ttype = false;
-    b8_zero(&e_funcs);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
-    b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
-    if (appres.contention_resolution) {
-	b8_set_bit(&e_funcs, TN3270E_FUNC_CONTENTION_RESOLUTION);
-    }
-    e_xmit_seq = 0;
-    response_required = TN3270E_RSF_NO_RESPONSE;
+    tn3270e_init();
     need_tls_follows = false;
     telnet_state = TNS_DATA;
     ibptr = ibuf;
@@ -960,9 +971,6 @@ net_connected_complete(void)
     ns_bsent = 0;
     ns_rsent = 0;
     syncing = 0;
-    tn3270e_negotiated = 0;
-    tn3270e_submode = E_UNBOUND;
-    tn3270e_bound = 0;
 
     setup_lus();
 
@@ -2108,6 +2116,7 @@ backoff_tn3270e(const char *why)
 
     /* Reset our internal state. */
     myopts[TELOPT_TN3270E] = 0;
+    tn3270e_init();
     check_in3270();
 }
 
@@ -2305,7 +2314,7 @@ tn3270e_function_names(const unsigned char *buf, int len)
     char *s = text_buf;
 
     if (!len) {
-	return("(null)");
+	return("(none)");
     }
     for (i = 0; i < len; i++) {
 	s += sprintf(s, "%s%s", (s == text_buf)? "": " ", fnn(buf[i]));
@@ -2715,9 +2724,6 @@ process_eor(void)
 	    }
 	    return 0;
 	case TN3270E_DT_SSCP_LU_DATA:
-	    if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
-		return 0;
-	    }
 	    tn3270e_submode = E_SSCP;
 	    check_in3270();
 	    ctlr_write_sscp_lu(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
@@ -3035,9 +3041,8 @@ check_in3270(void)
 
 	/* If we fell out of TN3270E, remove the state. */
 	if (!myopts[TELOPT_TN3270E]) {
-	    tn3270e_negotiated = 0;
-	    tn3270e_submode = E_UNBOUND;
-	    tn3270e_bound = 0;
+	    vtrace("Aborting TN3270E: negotiated off\n");
+	    tn3270e_init();
 	}
 	vtrace("Now operating in %s mode.\n", state_name[new_cstate]);
 	if (FULL_SESSION) {
