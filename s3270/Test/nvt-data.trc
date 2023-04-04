@@ -1,0 +1,179 @@
+20230403.225043.970 init_child: child_outpipe is 5 6
+20230403.225043.971 Trace started
+ Version: x3270 v4.3pre1 Mon Apr  3 14:50:33 UTC 2023 pdm
+ Build options: --enable-local-process via gcc 11.3.0 64-bit
+ Command: x3270 -trace -geometry +0+0
+ Model 3278-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: aidWait=true altCursor=false alwaysInsert=false aplMode=false
+  bindLimit=true blankFill=true codePage=bracket confDir=/usr/local/etc/x3270
+  crosshair=false cursorBlink=false ftBufferSize=16384 httpd= insertMode=false
+  lineMode=true lineWrap=true loginMacro= marginedPaste=false model=3279-4-E
+  monoCase=false noTelnetInputMode=line nopSeconds=0 oerrLock=true
+  overlayPaste=true oversize= preferIpv4=false preferIpv6=false
+  printer.options= printerLu= proxy= reconnect=false rectangleSelect=false
+  retry=false reverseInputMode=false rightToLeftMode=false saveLines=4096
+  screenTrace=false scriptPort= scrollBar=true selectUrl=true showTiming=false
+  termName= trace=true typeahead=true unlockDelay=false unlockDelayMs=350
+  visibleControl=false wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20230403.225043.972 st_changed(secure,false)
+20230403.225043.972 Resolver slot is 0
+20230403.225043.972 cstate [not-connected] -> [resolving] (host_connect)
+20230403.225043.972 st_changed(connect,true)
+20230403.225043.972 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20230403.225043.972 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20230403.225043.972 ctlr_enable_cursor(false, connect)
+20230403.225043.973 st_changed(negotiating,true)
+20230403.225043.973 ConfigureNotify [581x656+0+0] -> PA-ConfigureNotify()
+20230403.225043.974 setting fixed 581x656
+20230403.225043.974 ConfigureNotify [581x656+10+45] -> PA-ConfigureNotify()
+20230403.225043.974 setting fixed 581x656
+20230403.225043.974 Resolution complete, 1 address
+20230403.225043.976 TLS: will verify host certificate
+20230403.225043.976 Making host socket non-blocking
+20230403.225043.976 Trying 127.0.0.1, port 8021...
+20230403.225043.976 TCP connection pending.
+20230403.225043.976 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20230403.225043.976 st_changed(negotiating,true)
+20230403.225043.976 lazya_flush: 58 slots, 2560 bytes
+20230403.225043.976 PropertyNotify -> PA-StateChanged()
+20230403.225043.977 Output possible
+20230403.225043.977 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20230403.225043.977 st_changed(connect,true)
+20230403.225043.977 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20230403.225043.977 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20230403.225043.977 Host negotiation step took 0.000267s to complete
+20230403.225043.977 ctlr_enable_cursor(true, connect)
+20230403.225043.977 ctlr_enable_cursor(true, nvt)
+20230403.225043.977 st_changed(negotiating,true)
+20230403.225043.977 Connected to localhost, port 8021.
+20230403.225043.977 st_changed(secure,false)
+20230403.225043.977 st_changed(line-mode,true)
+20230403.225043.977 lazya_flush: 14 slots, 336 bytes
+20230403.225043.977 Reading host socket
+20230403.225043.977 Host socket read complete nr=3
+< 0x0   fffd28
+20230403.225043.977 RCVD DO TN3270E
+> 0x0   fffb28
+20230403.225043.977 SENT WILL TN3270E
+20230403.225043.977 Now operating in connected-unbound mode.
+20230403.225043.977 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20230403.225043.977 st_changed(negotiating,true)
+20230403.225043.977 st_changed(3270-mode,false)
+20230403.225043.977 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20230403.225043.977 Host negotiation step took 0.000015s to complete
+20230403.225043.977 ctlr_enable_cursor(true, connect)
+20230403.225043.977 lazya_flush: 11 slots, 264 bytes
+20230403.225043.977 Reading host socket
+20230403.225043.977 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20230403.225043.977 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20230403.225043.977 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20230403.225043.978 Reading host socket
+20230403.225043.978 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054453030fff0
+20230403.225043.978 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TE00 SE
+> 0x0   fffa28030700020405fff0
+20230403.225043.978 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20230403.225043.978 Reading host socket
+20230403.225043.978 Host socket read complete nr=8
+< 0x0   fffa28030700fff0
+20230403.225043.978 RCVD SB TN3270E FUNCTIONS REQUEST BIND-IMAGE SE
+> 0x0   fffa28030400fff0
+20230403.225043.978 SENT SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20230403.225043.978 TN3270E option negotiation complete.
+20230403.225043.979 Reading host socket
+20230403.225043.979 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4c1c10005007eec0b1008c9c2d4f0e3c5e2d8ffef
+20230403.225043.979 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SMAA' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20230403.225043.979 Now operating in connected-tn3270e mode.
+20230403.225043.979 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20230403.225043.979 st_changed(3270-mode,true)
+20230403.225043.979 ctlr_enable_cursor(true, connect)
+20230403.225043.979 RCVD EOR
+20230403.225043.983 VisibilityNotify [Unobscured] -> PA-VisibilityNotify()
+20230403.225043.983 Expose [564x624+0+0] -> PA-Expose()
+20230403.225043.984 FocusIn -> PA-Focus()
+20230403.225043.984 KeymapNotify -> PA-KeymapNotify()
+20230403.225044.027 Reading host socket
+20230403.225044.027 Host socket read complete nr=480
+< 0x0   050000000078333237302074657374207461726765742028544e333237304520
+< 0x20  4e5654206d6f6465290d0a0d0a206563686f20202020205472697669616c2065
+< 0x40  63686f207365727665720d0a2069626d6c696e6b2020544e333237302070726f
+< 0x60  746f636f6c207365727665722073696d756c6174696e672069626d6c696e6b2c
+< 0x80  20776974682068656c702073637265656e730d0a206d656e7520202020204d65
+< 0xa0  6e75207573696e6720706c61696e2054454c4e45540d0a206d656e752d656e20
+< 0xc0  204d656e75207573696e6720544e3332373045204e5654206d6f64650d0a206d
+< 0xe0  656e752d657320204d656e75207573696e6720544e333237304520535343502d
+< 0x100 4c55206d6f64650d0a20736e616b6520202020544e333237302070726f746f63
+< 0x120 6f6c2073657276657220706c6179696e6720736e616b650d0a20737275766d20
+< 0x140 202020544e333237302070726f746f636f6c207365727665722073696d756c61
+< 0x160 74696e6720737275766d20286d6f64656c2034207265717569726564290d0a20
+< 0x180 7576766d2020202020544e333237302070726f746f636f6c2073657276657220
+< 0x1a0 73696d756c6174696e67207576766d0d0a20717569742020202020446973636f
+< 0x1c0 6e6e6563742066726f6d2074657374207461726765740d0a0d0a3d3d3e20ffef
+20230403.225044.028 RCVD TN3270E(NVT-DATA NO-RESPONSE 0)
+20230403.225044.028 Now operating in connected-e-nvt mode.
+20230403.225044.028 cstate [connected-tn3270e] -> [connected-e-nvt] (host_in3270)
+20230403.225044.028 st_changed(line-mode,true)
+20230403.225044.028 st_changed(3270-mode,false)
+20230403.225044.028 Keyboard unlock(kybd_in3270) -AWAITING_FIRST
+20230403.225044.028 ctlr_enable_cursor(true, connect)
+20230403.225044.028 ctlr_enable_cursor(true, nvt)
+<.. x3270 test target (TN3270E NVT mode) ^M ^J ^M ^J  echo     Trivial  ...
+... echo server ^M ^J  ibmlink  TN3270 protocol server simulating ibmli ...
+... nk, with help screens ^M ^J  menu     Menu using plain TELNET ^M ^J ...
+...   menu-en  Menu using TN3270E NVT mode ^M ^J  menu-es  Menu using TN ...
+... 3270E SSCP-LU mode ^M ^J  snake    TN3270 protocol server playing s ...
+... nake ^M ^J  sruvm    TN3270 protocol server simulating sruvm (model ...
+...  4 required) ^M ^J  uvvm     TN3270 protocol server simulating uvvm ...
+...  ^M ^J  quit     Disconnect from test target ^M ^J ^M ^J ==> 
+20230403.225044.029 RCVD EOR
+20230403.225044.029 lazya_flush: 12 slots, 288 bytes
+20230403.225044.086 KeymapNotify -> PA-KeymapNotify()
+20230403.225044.201 FocusOut -> PA-Focus()
+20230403.225044.474 Stream timer expired 581x656+10+45
+20230403.225044.474 clearing fixed_width and fixed_height
+20230403.225044.474   width and height match, done
+20230403.225048.281 KeymapNotify -> PA-KeymapNotify()
+20230403.225049.243 FocusIn -> PA-Focus()
+20230403.225049.243 KeymapNotify -> PA-KeymapNotify()
+20230403.225049.432 KeymapNotify -> PA-KeymapNotify()
+20230403.225050.553 Event ':<KeyPress>f' (case-insensitive: '<KeyPress>f') -> Default()
+20230403.225050.553  default -> Key(U+0066)
+20230403.225050.833 Event ':<KeyPress>o' (case-insensitive: '<KeyPress>o') -> Default()
+20230403.225050.833  default -> Key(U+006f)
+20230403.225050.988 Event ':<KeyPress>o' (case-insensitive: '<KeyPress>o') -> Default()
+20230403.225050.989  default -> Key(U+006f)
+20230403.225052.361 Event ':<KeyPress>Return' -> Default()
+20230403.225052.361  default -> Key(U+000d)
+>.. foo ^M ^J
+20230403.225052.361 SENT TN3270E(NVT-DATA NO-RESPONSE 0)
+> 0x0   0500000000666f6f0d0affef
+20230403.225052.361 SENT EOR
+20230403.225052.361 Reading host socket
+20230403.225052.361 Host socket read complete nr=33
+< 0x0   05000000004e6f207375636820736572766963653a20666f6f0d0a3d3d3e20ff
+< 0x20  ef
+20230403.225052.361 RCVD TN3270E(NVT-DATA NO-RESPONSE 0)
+<.. No such service: foo ^M ^J ==> 
+20230403.225052.362 RCVD EOR
+20230403.225105.534 KeymapNotify -> PA-KeymapNotify()
+20230403.225110.740 ClientMessage [WM_DELETE_WINDOW] -> PA-WMProtocols()
+20230403.225110.740 Exiting with status 0
+20230403.225110.740 st_changed(exiting,true)
+20230403.225110.740 st_changed(secure,false)
+20230403.225110.740 SENT disconnect
+20230403.225110.740 cstate [connected-e-nvt] -> [not-connected] (net_disconnect)
+20230403.225110.740 st_changed(connect,false)
+20230403.225110.740 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20230403.225110.740 ctlr_enable_cursor(false, connect)
+20230403.225110.740 ctlr_enable_cursor(false, nvt)
+20230403.225110.740 Trace stopped
