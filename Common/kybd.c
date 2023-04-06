@@ -1004,8 +1004,8 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 
     /* Find the end of the field. */
     if (faddr == -1) {
-	/* Unformatted.  Use the end of the line. */
-	next_faddr = (((baddr / COLS) + 1) * COLS) % (ROWS*COLS);
+	/* Unformatted.  Use the end of the screen. */
+	next_faddr = (ROWS * COLS) - 1;
     } else {
 	next_faddr = faddr;
 	INC_BA(next_faddr);
@@ -2141,10 +2141,7 @@ do_delete(void)
 	} while (end_baddr != baddr);
 	DEC_BA(end_baddr);
     } else {
-	if ((baddr % COLS) == COLS - ndel) {
-	    return true;
-	}
-	end_baddr = baddr + (COLS - (baddr % COLS)) - 1;
+	end_baddr = (ROWS * COLS) - 1;
     }
 
     /* Shift the remainder of the field left. */
