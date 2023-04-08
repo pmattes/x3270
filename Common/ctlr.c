@@ -217,7 +217,9 @@ ctlr_reinit(unsigned cmask)
 	buffer_addr = 0;
 
 	ea_buf[-1].fa  = FA_PRINTABLE | FA_MODIFY;
+	ea_buf[-1].ic  = 1;
 	aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
+	aea_buf[-1].ic = 1;
     }
 }
 
