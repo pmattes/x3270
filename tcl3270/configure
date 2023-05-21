@@ -649,6 +649,7 @@ LIBOBJS
 LIBX3270DIR
 AWK
 tclsh
+BUILDCC
 CCOPTIONS
 host_os
 host_vendor
@@ -3584,6 +3585,7 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -Wno-long-long -MMD -MP"
 fi
+
 
 
 

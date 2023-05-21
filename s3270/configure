@@ -647,6 +647,7 @@ ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 LIBX3270DIR
+BUILDCC
 CCOPTIONS
 host_os
 host_vendor
@@ -3581,6 +3582,7 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
 	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
+
 
 
 

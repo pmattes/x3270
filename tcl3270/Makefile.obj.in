@@ -1,4 +1,4 @@
-# Copyright (c) 1993-2009, 2013-2018, 2020, 2022 Paul Mattes.
+# Copyright (c) 1993-2023 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,10 @@
 
 RM = rm -f
 CC = @CC@
+BUILDCC = @BUILDCC@
+ifeq ($(strip $(BUILDCC)),)
+BUILDCC=$(CC)
+endif
 
 all: tcl3270 x3270if s3270
 
@@ -70,7 +74,7 @@ fallbacks.c: mkfb $(FALLBACKS)
 	./mkfb -c -o $@ $(filter-out mkfb,$^)
 
 mkfb: mkfb.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(filter %.c,$^)
+	$(BUILDCC) $(XCPPFLAGS) -o $@ $(filter %.c,$^)
 
 tcl3270: $(OBJS1)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)

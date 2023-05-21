@@ -53,6 +53,7 @@ then	# Add common gcc options, plus flags for dependency generation.
 fi
 AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
+AC_SUBST(BUILDCC)
 
 dnl Figure out what version of Tcl they've got
 AC_CHECK_PROG(tclsh,tclsh,yes,no)

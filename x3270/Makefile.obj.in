@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2018, 2020, 2022 Paul Mattes.
+# Copyright (c) 1999-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,10 @@
 
 RM = rm -f
 CC = @CC@
-
+BUILDCC = @BUILDCC@
+ifeq ($(strip $(BUILDCC)),)
+BUILDCC=$(CC)
+endif
 HOST = @host@
 include x3270_files.mk libs.mk
 
@@ -82,7 +85,7 @@ fallbacks.c: mkfb $(FALLBACKS)
 	./mkfb -o $@ $(filter-out mkfb,$^)
 
 mkfb: mkfb.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(filter %.c,$^)
+	$(BUILDCC) $(XCPPFLAGS) -o $@ $(filter %.c,$^)
 
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)

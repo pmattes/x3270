@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2022 Paul Mattes.
+# Copyright (c) 1999-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,10 @@ LIB3270 = lib3270.a
 
 RM = rm -f
 CC = @CC@
+BUILDCC = @BUILDCC@
+ifeq ($(strip $(BUILDCC)),)
+BUILDCC=$(CC)
+endif
 AR = @AR@
 RANLIB = @RANLIB@
 
@@ -58,6 +62,9 @@ favicon.o: favicon.c
 
 favicon.c: favicon.ico mkicon
 	./mkicon $< >$@
+
+mkicon: mkicon.c
+	$(BUILDCC) $(XCPPFLAGS) -o $@ $<
 
 clean:
 	$(RM) *.o favicon.c mkicon $(LIB3270)

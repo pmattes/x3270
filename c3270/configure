@@ -651,6 +651,7 @@ LIBX3270DIR
 MOREPATH
 LESSPATH
 CURSES_WIDE
+BUILDCC
 CCOPTIONS
 BROKEN_NEWTERM
 host_os
@@ -3602,6 +3603,7 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
+
 
 
 

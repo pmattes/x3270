@@ -66,6 +66,7 @@ fi
 AC_SUBST(host)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
+AC_SUBST(BUILDCC)
 
 dnl Checks for header files.
 AC_CHECK_HEADERS(sys/select.h)

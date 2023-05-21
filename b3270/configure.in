@@ -55,6 +55,7 @@ fi
 AC_SUBST(host)
 AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)
+AC_SUBST(BUILDCC)
 
 dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear

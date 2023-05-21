@@ -657,6 +657,7 @@ DEFINE_UAD
 UAD_FLAGS
 CPP
 XMKMF
+BUILDCC
 CCOPTIONS
 host_os
 host_vendor
@@ -3646,6 +3647,7 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -MMD -MP"
 fi
+
 
 
 
