@@ -1,0 +1,38 @@
+f1c611404012404011d94c1311c1d9
+# IBM0SM13 target (system)
+# c9c2d4f0e2d4f1f3
+0808
+11c2d6
+# 23/03/17 target
+# f2f361f0f361f1f7
+0909
+11c2e9
+# IBM0TETQ target (termid)
+# c9c2d4f0e3c5e3d8
+0707
+11c3e6
+# 00:11:45 target
+# f0f07af1f17af4f5
+0101
+11c4d2
+f160f8f0f060f7f2f760f2f2f2f24040404040404040404040404040404011d9
+4c
+# X_______ target (account)
+# e76d6d6d6d6d6d6d
+0303
+11d95f
+# Y_______ target (userid)
+# e86d6d6d6d6d6d6d
+0404
+115b61d7938581a285408595
+a38599408140a5819389844081838396a495a34081958440a4a2859989844b40
+4040404040404040404040404040404040404040404040404040404040404040
+404040404040
+#20230316.231144.957 RCVD TN3270E(3270-DATA SEND-DATA|KEYBOARD-RESTORE ERROR-RESPONSE 4)
+#< Write(reset,alarm,restore) SetBufferAddress(1,1) EraseUnprotectedAll(1,1) ...
+#...  SetBufferAddress(21,13) InsertCursor SetBufferAddress(2,10) 'IBM0SM13' ...
+#...  SetBufferAddress(2,71) '23/03/17' SetBufferAddress(3,10) 'IBM0TETQ' Se ...
+#... tBufferAddress(3,71) '00:11:45' SetBufferAddress(4,35) '1-800-727-2222  ...
+#...                ' SetBufferAddress(21,13) 'X_______' SetBufferAddress(21 ...
+#... ,32) 'Y_______' SetBufferAddress(23,2) 'Please enter a valid account an ...
+#... d userid.                                       '
