@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2018 Paul Mattes.
+# Copyright (c) 2007-2023 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
 
 # Windows Makefile for mitm
 
-# Set GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and WIN32_FLAGS.
+# Set GT_PFX, BUILDXSFX, BUILDCC, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
 
-MKFB = mkfb$(NATIVE_SFX)
+MKFB = mkfb$(BUILDXSFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/mitm -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)

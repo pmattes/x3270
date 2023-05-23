@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2022 Paul Mattes.
+# Copyright (c) 1999-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,16 +45,16 @@ $(LIB3270): $(OBJS) $(INCS)
 
 favicon.o: favicon.c
 
-favicon.c: favicon.ico mkicon$(NATIVE_SFX)
-	./mkicon$(NATIVE_SFX) $< >favicon.c
+favicon.c: favicon.ico mkicon$(BUILDXSFX)
+	./mkicon$(BUILDXSFX) $< >favicon.c
 
-mkicon.o: CC = $(NATIVECC)
+mkicon.o: CC = $(BUILDCC)
 mkicon.o: CFLAGS =
-mkicon$(NATIVE_SFX): mkicon.o
-	$(NATIVECC) -o $@ mkicon.o
+mkicon$(BUILDXSFX): mkicon.o
+	$(BUILDCC) -o $@ mkicon.o
 
 clean:
-	$(RM) *.o favicon.c mkicon$(NATIVE_SFX) $(LIB3270)
+	$(RM) *.o favicon.c mkicon$(BUILDXSFX) $(LIB3270)
 
 clobber: clean
 	$(RM) *.d

@@ -10,20 +10,20 @@ GT_PFX = i686-w64-mingw32-
 WIN32_FLAGS = -D_WIN32
 endif
 
-NATIVECC = gcc
+BUILDCC = gcc
 CC = $(GT_PFX)gcc
 AR = $(GT_PFX)gcc-ar
 ifndef WINDRES
 WINDRES = $(GT_PFX)windres
 endif
 
-# Set the local executable suffix, depending on whether we are compiling on
-# Cygwin or Linux.
-NATIVE_SFX =
+# Set the build host's executable suffix, depending on whether we are
+# compiling on Cygwin, Msys or Linux.
+BUILDXSFX =
 OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
-NATIVE_SFX = .exe
+BUILDXSFX = .exe
 endif
 ifeq ($(OS),Msys)
-NATIVE_SFX = .exe
+BUILDXSFX = .exe
 endif
