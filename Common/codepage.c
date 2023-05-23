@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -52,7 +52,7 @@
 #include "utils.h"
 
 #include <locale.h>
-#if !defined(_WIN32) /*[*/
+#if !defined(_WIN32) && defined(HAVE_LANGINFO_H) /*[*/
 # include <langinfo.h>
 #endif /*]*/
 
@@ -86,6 +86,28 @@ static char *codepage_number = NULL;
 static char *codepage_name = NULL;
 static char *canon_codepage = NULL;
 
+#if !defined(_WIN32) && !defined(HAVE_LANGINFO_H) /*[*/
+/*
+ * Guess the codeset based on environment variables. */
+static char *
+guess_codeset(void)
+{
+    char *e = getenv("LC_CTYPE");
+
+    if (e == NULL) {
+	e = getenv("LANG");
+    }
+    if (e != NULL) {
+	char *dot = strchr(e, '.');
+
+	if (dot != NULL) {
+	    return dot + 1;
+	}
+    }
+    return (char *)"ASCII";
+}
+#endif /*]*/
+
 /*
  * Change host code pages.
  */
@@ -104,21 +126,12 @@ codepage_init(const char *cpname)
     /* Get all of the locale stuff right. */
     setlocale(LC_ALL, "");
 
+# if defined(HAVE_LANGINFO_H) /*[*/
     /* Figure out the locale code set (character set encoding). */
     codeset_name = nl_langinfo(CODESET);
-# if defined(__CYGWIN__) /*[*/
-    /*
-     * Cygwin's locale support is quite limited.  If the locale
-     * indicates "US-ASCII", which appears to be the only supported
-     * encoding, ignore it and use the Windows ANSI code page, which
-     * observation indicates is what is actually supported.
-     *
-     * Hopefully at some point Cygwin will start returning something
-     * meaningful here and this logic will stop triggering.
-     */
-    if (!strcmp(codeset_name, "US-ASCII")) {
-	codeset_name = lazyaf("CP%d", GetACP());
-    }
+# else /*][*/
+    /* No nl_langinfo. See if there's anything in the environment. */
+    codeset_name = guess_codeset();
 # endif /*]*/
 #else /*][*/
     codeset_name = lazyaf("CP%d", appres.local_cp);

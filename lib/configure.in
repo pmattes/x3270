@@ -69,6 +69,7 @@ AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(malloc.h)
+AC_CHECK_HEADERS(langinfo.h)
 
 # OpenSSL is the default.
 use_openssl=yes

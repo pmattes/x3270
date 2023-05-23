@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2022 Paul Mattes.
+ * Copyright (c) 2000-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #undef HAVE_UTIL_H
 #undef HAVE_GETOPT_H
 #undef HAVE_MALLOC_H
+#undef HAVE_LANGINFO_H
 
 /* Uncommon functions. */
 #undef HAVE_VASPRINTF
