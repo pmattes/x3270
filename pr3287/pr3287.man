@@ -1,5 +1,5 @@
 '\" t
-.TH PR3287 1 "05 March 2023"
+.TH PR3287 1 "29 May 2023"
 .SH "NAME"
 pr3287 \-
 \s-1IBM\s+1
@@ -16,4 +16,4 @@ It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection).
 .SH "WIKI"
 Primary documentation for pr3287 is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-pr3287 4.2ga9
+pr3287 4.2ga10
