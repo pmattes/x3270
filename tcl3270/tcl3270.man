@@ -1,5 +1,5 @@
 '\" t
-.TH tcl3270 1 "22 January 2023"
+.TH tcl3270 1 "29 May 2023"
 .SH "NAME"
 tcl3270 \-
 \s-1IBM\s+1 host access tool
@@ -41,4 +41,4 @@ s3270(1)
 .SH "WIKI"
 Primary documentation for tcl3270 is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-tcl3270 4.3pre1
+tcl3270 4.3beta1
