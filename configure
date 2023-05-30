@@ -3818,5 +3818,5 @@ printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2
 fi
 
 
-find . -type f -name config.log | xargs ls -t | xargs grep WARNING
+find . -type f -name config.log | xargs ls -t | xargs grep WARNING; true
 
