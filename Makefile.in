@@ -415,7 +415,8 @@ unix-lib-test:
 	cd lib/3270 && $(MAKE) -f Makefile.test
 	cd lib/32xx && $(MAKE) -f Makefile.test
 
-PYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/test*.py"; done)
+ALLPYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/test*.py"; done)
+PYTESTS=$(ALLPYTESTS)
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
 TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
 
@@ -442,8 +443,9 @@ x3270-test: x3270
 x3270if-test: x3270if
 	$(RUNTESTS) x3270if/Test/test*.py
 
-test: @T_ALLTESTS@
+pytests: @T_TEST@
 	$(RUNTESTS) $(PYTESTS)
+test: @T_ALLTESTS@ pytests
 smoketest: @T_TEST@
 	$(RUNTESTS) $(PYSMOKETESTS)
 endif
