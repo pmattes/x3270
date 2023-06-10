@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,8 +77,7 @@ char           *current_host = NULL;
 char           *full_current_host = NULL;
 unsigned short  current_port;
 char	       *reconnect_host = NULL;
-char	       *host_prefix = NULL;
-char	       *host_suffix = NULL;
+char	       *qualified_host = NULL;
 enum iaction	connect_ia = IA_NONE;
 bool		host_retry_mode = false;
 
@@ -510,6 +509,7 @@ host_connect(const char *n, enum iaction ia)
     char *port = NULL;
     char *accept = NULL;
     const char *localprocess_cmd = NULL;
+    bool has_colons = false;
     net_connect_t nc;
 
     if (!glue_gui_open_safe()) {
@@ -609,12 +609,16 @@ host_connect(const char *n, enum iaction ia)
 	current_host = s;
     }
 
-    Replace(host_prefix, xs_buffer("%s%s",
-	    HOST_FLAG(TLS_HOST)? "L:": "",
-	    HOST_FLAG(NO_VERIFY_CERT_HOST)? "Y:": ""));
-    Replace(host_suffix, xs_buffer("%s%s",
-	    (accept != NULL)? "=": "",
-	    (accept != NULL)? accept: ""));
+    has_colons = (strchr(chost, ':') != NULL);
+    Replace(qualified_host, xs_buffer("%s%s%s%s%s:%s%s%s",
+		HOST_FLAG(TLS_HOST)? "L:": "",
+		HOST_FLAG(NO_VERIFY_CERT_HOST)? "Y:": "",
+		has_colons? "[": "",
+		chost,
+		has_colons? "]": "",
+		port,
+		(accept != NULL)? "=": "",
+		(accept != NULL)? accept: ""));
 
     /* Attempt contact. */
     host_retry_mode = appres.reconnect || appres.retry;

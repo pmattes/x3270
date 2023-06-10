@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2022 Paul Mattes.
+ * Copyright (c) 2000-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -601,15 +601,16 @@ pr3287_start_now(const char *lu, bool associated)
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "H%", 2)) {
-		bool has_colons = strchr(numeric_host, ':') != NULL;
-
-		vb_appendf(&r, "%s%s%s%s:%s%s",
-			host_prefix,
-			has_colons? "[": "",
-			numeric_host,
-			has_colons? "]": "",
-			numeric_port,
-			host_suffix);
+		const char *spc = "";
+		if (appres.prefer_ipv4) {
+		    vb_appendf(&r, " %s", OptPreferIpv4);
+		    spc = " ";
+		}
+		if (appres.prefer_ipv6) {
+		    vb_appendf(&r, " %s", OptPreferIpv6);
+		    spc = " ";
+		}
+		vb_appendf(&r, "%s%s", spc, qualified_host);
 		s += 2;
 		continue;
 #if !defined(_WIN32) /*[*/

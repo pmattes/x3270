@@ -44,8 +44,8 @@ hostsSetup = setupHosts.present()
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
 class TestPr3287Session(cti.cti):
 
-    # pr3287 numeric session address test.
-    def test_numeric_pr3287_session(self):
+    # pr3287 IPv6 session address test.
+    def test_ipv6_pr3287_session(self):
 
         # Start playback to talk to s3270.
         pport, ts = cti.unused_port(ipv6=True)
@@ -78,7 +78,7 @@ class TestPr3287Session(cti.cti):
             self.try_until(lambda: os.path.getsize(tname) > 0, 4, 'Printer session not started')
             with open(tname, 'r') as file:
                 contents = file.readlines()
-            self.assertIn('[::1]', contents[0], 'Expected numeric host')
+            self.assertIn(f'-6 {setupHosts.test_hostname}', contents[0], 'Expected -6 and test hostname')
 
             # Wait for the process to exit.
             requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit())')
