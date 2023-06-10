@@ -56,7 +56,7 @@ AC_CHECK_PROG(windres_found,windres,yes,no)
 
 dnl You can use Msys to build Windows binaries, but not Unix-like ones.
 case "$host_os" in
-*msys)	enable_unix=no
+*msys|*mingw*)	enable_unix=no
 esac
 
 dnl Handle expansion of enable-unix.
