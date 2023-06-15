@@ -418,7 +418,7 @@ hostfile_lookup(const char *name, char **hostname, char **loginstring)
 	if (h->entry_type == RECENT) {
 	    continue;
 	}
-	if (!strcmp(name, h->name)) {
+	if (!strcasecmp(name, h->name)) {
 	    *hostname = h->hostname;
 	    if (h->loginstring != NULL) {
 		*loginstring = h->loginstring;
