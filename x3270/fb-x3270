@@ -985,6 +985,7 @@ x3270*marginedPasteOption.label:		Paste with Left Margin
 x3270*overlayPasteOption.label:			Overlay Paste
 x3270*rectangleSelectOption.label:		Select by Rectangles
 x3270*blankFillOption.label:			Blank Fill
+x3270*underscoreBlankFillOption.label:		Underscore Blank Fill
 x3270*crosshairOption.label:			Crosshair Cursor
 x3270*visibleControlOption.label:		Visible Control Chars
 x3270*underlineCursorOption.label:		Underline Cursor

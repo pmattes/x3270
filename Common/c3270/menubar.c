@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2022 Paul Mattes.
+ * Copyright (c) 2010-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -917,6 +917,7 @@ typedef enum {
     OM_VISIBLE_CONTROL,
     OM_TYPEAHEAD,
     OM_ALWAYS_INSERT,
+    OM_UNDERSCORE_BLANK_FILL,
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -933,7 +934,8 @@ toggle_index_t option_index[OM_COUNT] = {
 #endif /*]*/
     VISIBLE_CONTROL,
     TYPEAHEAD,
-    ALWAYS_INSERT
+    ALWAYS_INSERT,
+    UNDERSCORE_BLANK_FILL,
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
@@ -949,6 +951,7 @@ char *option_names[OM_COUNT] = {
     "Visible Control",
     "Typeahead",
     "Default Insert Mode",
+    "Underscore Blank Fill",
 };
 
 cmenu_t *file_menu;
