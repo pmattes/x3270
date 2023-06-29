@@ -347,6 +347,8 @@ XtResource xresources[] = {
       boffset(utf8), XtRString, ResFalse },
     { ResWrongTerminalName, ClsWrongTerminalName, XtRBoolean, sizeof(Boolean),
       boffset(wrong_terminal_name), XtRString, ResFalse },
+    { ResUnderscoreBlankFill, ClsUnderscoreBlankFill, XtRBoolean, sizeof(Boolean),
+      boffset(interactive.underscore_blank_fill), XtRString, ResTrue },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

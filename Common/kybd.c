@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -997,7 +997,6 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
     int xaddr;
     int need;
     int ntb;
-    int tb_start = -1;
     int copy_len;
 
     *no_room = false;
@@ -1014,7 +1013,7 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	}
     }
 
-    /* Are there enough NULLs or trailing blanks available? */
+    /* Are there enough NULs or trailing blanks available? */
     xaddr = baddr;
     need = count;
     ntb = 0;
@@ -1023,20 +1022,14 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	    need--; 
 	} else if (toggled(BLANK_FILL) &&
 		((ea_buf[xaddr].ec == EBC_space) ||
-		 (ea_buf[xaddr].ec == EBC_underscore))) {
-		if (tb_start == -1) {
-		    tb_start = xaddr;
-		}
+		 (appres.interactive.underscore_blank_fill &&
+		  (ea_buf[xaddr].ec == EBC_underscore)))) {
 		ntb++;
 	} else {
-	    tb_start = -1;
 	    ntb = 0;
 	}
 	INC_BA(xaddr);
     }
-#if defined(_ST) /*[*/
-    printf("need %d at %d, tb_start at %d\n", count, baddr, tb_start);
-#endif /*]*/
     if (need - ntb > 0) {
 	if (!toggled(REVERSE_INPUT)) {
 	    (void) operator_error(KL_OERR_OVERFLOW, oerr_fail);
@@ -1047,21 +1040,16 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	}
     }
 
-    /*
-     * Shift the buffer to the right until we've consumed the available
-     * (and needed) NULLs.
-     */
+    /* Shift the buffer to the right until we've consumed enough NULs. */
     need = count;
     xaddr = baddr;
     while (need && (xaddr != next_faddr)) {
 	int n_nulls = 0;
 	int first_null = -1;
 
-	while (need &&
-	       ((ea_buf[xaddr].ec == EBC_null) ||
-		(tb_start >= 0 && xaddr >= tb_start))) {
-		need--;
-		n_nulls++;
+	while (need && (ea_buf[xaddr].ec == EBC_null)) {
+	    need--;
+	    n_nulls++;
 	    if (first_null == -1) {
 		first_null = xaddr;
 	    }
@@ -1076,16 +1064,28 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 		copy_len += ROWS*COLS;
 	    }
 	    to = (baddr + n_nulls) % (ROWS*COLS);
-#if defined(_ST) /*[*/
-	    printf("found %d NULLs at %d\n", n_nulls, first_null);
-	    printf("copying %d from %d to %d\n", copy_len, to, first_null);
-#endif /*]*/
 	    if (copy_len) {
 		ctlr_wrapping_memmove(to, baddr, copy_len);
 	    }
 	}
 	INC_BA(xaddr);
     }
+
+    if (!need) {
+	return true;
+    }
+
+    /*
+     * Shift the buffer to the right over trailing spaces and underscores
+     * (which we know we have enough of).
+     */
+    xaddr = next_faddr;
+    copy_len = xaddr - baddr; /* field length */
+    if (copy_len < 0) {
+	copy_len += ROWS * COLS;
+    }
+    copy_len -= need;
+    ctlr_wrapping_memmove((baddr + need) % (ROWS * COLS), baddr, copy_len);
 
     return true;
 }
@@ -1349,7 +1349,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 		bool aborted = true;
 		register int baddr_scan = baddr_fill;
 
-		/* Check the field within the preceeding line for NULLs. */
+		/* Check the field within the preceeding line for NULs. */
 		while (baddr_scan != faddr) {
 		    if (ea_buf[baddr_scan].ec != EBC_null) {
 			aborted = false;

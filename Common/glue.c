@@ -526,6 +526,7 @@ set_appres_defaults(void)
     appres.interactive.print_dialog = product_has_display();
 #endif /*]*/
     appres.interactive.no_telnet_input_mode = NewString("line");
+    appres.interactive.underscore_blank_fill = true;
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -1029,6 +1030,8 @@ static res_t base_resources[] = {
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
     { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
     { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
+    { ResUnderscoreBlankFill,aoffset(interactive.underscore_blank_fill),
+	    XRM_BOOLEAN},
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING },
