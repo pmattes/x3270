@@ -785,6 +785,7 @@ kybd_register(void)
 	{ RIGHT_TO_LEFT,toggle_right_to_left,	0 },
 	{ REVERSE_INPUT,toggle_reverse_input,	0 },
 	{ INSERT_MODE,	toggle_insert_mode,	0 },
+	{ UNDERSCORE_BLANK_FILL, NULL,	0 },
     };
 
     /* Register interest in connect and disconnect events. */
@@ -1022,7 +1023,7 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	    need--; 
 	} else if (toggled(BLANK_FILL) &&
 		((ea_buf[xaddr].ec == EBC_space) ||
-		 (appres.interactive.underscore_blank_fill &&
+		 (toggled(UNDERSCORE_BLANK_FILL) &&
 		  (ea_buf[xaddr].ec == EBC_underscore)))) {
 		ntb++;
 	} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -105,6 +105,7 @@ toggle_name_t toggle_names[] = {
     { ResReverseInputMode,REVERSE_INPUT,	false },
     { ResInsertMode,	  INSERT_MODE,		false },
     { ResSelectUrl,	  SELECT_URL,		false },
+    { ResUnderscoreBlankFill, UNDERSCORE_BLANK_FILL, false },
     { NULL,               0,			false }
 };
 

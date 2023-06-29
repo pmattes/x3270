@@ -118,7 +118,6 @@ typedef struct {
 	    Boolean menubar;
 	    Boolean mono;
 	    Boolean visual_bell;
-	    Boolean underscore_blank_fill;
 	} interactive;
 	Boolean toggle[N_TOGGLES];
 	struct {

@@ -341,6 +341,8 @@ typedef enum {
     REVERSE_INPUT,	/* reverse input */
     INSERT_MODE,	/* insert mode */
     SELECT_URL,		/* double-click on a URL opens the browser */
+    UNDERSCORE_BLANK_FILL, /* treat trailing underscores as blanks when
+			      BLANK_FILL is on */
     N_TOGGLES
 } toggle_index_t;
 bool toggled(toggle_index_t ix);

@@ -347,8 +347,6 @@ XtResource xresources[] = {
       boffset(utf8), XtRString, ResFalse },
     { ResWrongTerminalName, ClsWrongTerminalName, XtRBoolean, sizeof(Boolean),
       boffset(wrong_terminal_name), XtRString, ResFalse },
-    { ResUnderscoreBlankFill, ClsUnderscoreBlankFill, XtRBoolean, sizeof(Boolean),
-      boffset(interactive.underscore_blank_fill), XtRString, ResTrue },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },
@@ -394,6 +392,8 @@ XtResource xresources[] = {
       btoffset(INSERT_MODE), XtRString, ResFalse },
     { ResSelectUrl, ClsSelectUrl, XtRBoolean, sizeof(Boolean),
       btoffset(SELECT_URL), XtRString, ResTrue },
+    { ResUnderscoreBlankFill, ClsUnderscoreBlankFill, XtRBoolean,
+	sizeof(Boolean), btoffset(UNDERSCORE_BLANK_FILL), XtRString, ResTrue },
 
     { ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
       boffset(linemode.icrnl), XtRString, ResTrue },
