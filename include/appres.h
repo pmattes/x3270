@@ -146,6 +146,7 @@ typedef struct {
 	char	*printer_opts;
 	int	 save_lines;
 	bool	 visual_bell;
+	bool	 underscore_blank_fill;
     } interactive;
 
     /* File transfer fields. */

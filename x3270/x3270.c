@@ -1306,6 +1306,7 @@ copy_xres_to_res_bool(void)
     copy_bool(interactive.mono);
     copy_bool(interactive.menubar);
     copy_bool(interactive.visual_bell);
+    copy_bool(interactive.underscore_blank_fill);
 
     for (i = 0; i < N_TOGGLES; i++) {
 	copy_bool(toggle[i]);

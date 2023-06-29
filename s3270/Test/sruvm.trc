@@ -1,0 +1,332 @@
+Trace started Mon Jun 29 10:43:29 2009
+ Version: c3270 v3.3.10alpha1 Sun Jun 28 23:41:52 CDT 2009 pdm
+ Build options: --enable-ansi --enable-apl --enable-dbcs --enable-ft --enable-local-process --enable-printer --enable-script --enable-tn3270e --enable-trace --with-ssl --with-readline --with-curses-wide
+ Command: c3270 ./c3270 -trace sruvm.sru.edu
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, bracket charset
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Data stream:
+Trying 205.149.70.48, port 23...
+Connection pending.
+Keyboard unlock(kybd_connect) -NOT_CONNECTED
+Keyboard lock(kybd_connect) +AWAITING_FIRST
+Connected to sruvm.sru.edu, port 23.
+< 0x0   fffd28
+RCVD DO TN3270E
+> 0x0   fffb28
+SENT WILL TN3270E
+Now operating in TN3270E mode.
+Keyboard lock(kybd_in3270) +AWAITING_FIRST
+< 0x0   fffa280802fff0
+RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+< 0x0   fffe28fffd18
+RCVD DONT TN3270E
+> 0x0   fffc28
+SENT WONT TN3270E
+Now operating in initial connection mode.
+RCVD DO TERMINAL TYPE
+> 0x0   fffb18
+SENT WILL TERMINAL TYPE
+< 0x0   fffa1801fff0
+RCVD SB TERMINAL TYPE SEND
+> 0x0   fffa180049424d2d333237392d342d45fff0
+SENT SB TERMINAL TYPE IS IBM-3279-4-E SE
+< 0x0   fffd19fffb19fffd00fffb00
+RCVD DO END OF RECORD
+> 0x0   fffb19
+SENT WILL END OF RECORD
+RCVD WILL END OF RECORD
+> 0x0   fffd19
+SENT DO END OF RECORD
+RCVD DO BINARY
+> 0x0   fffb00
+SENT WILL BINARY
+RCVD WILL BINARY
+> 0x0   fffd00
+SENT DO BINARY
+Now operating in TN3270 3270 mode.
+< +0.267502s
+< 0x0   fffd00fffb001100064000f1c0000501ffff02ffef
+RCVD DO BINARY
+RCVD WILL BINARY
+< WriteStructuredField OutboundDS(0x00) Write(reset,restore)
+Keyboard unlock(do_reset) -AWAITING_FIRST
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+< WriteStructuredField ReadPartition(0xff) Query
+> StructuredField
+> QueryReply(Summary(Summary,UsableArea,AlphanumericPartitions,CharacterSet ...
+... s,Color,Highlighting,ReplyModes,DistributedDataManagement,RPQNames,Impl ...
+... icitPartition))
+> QueryReply(UsableArea)
+> QueryReply(AlphanumericPartitions)
+> QueryReply(CharacterSets)
+> QueryReply(Color)
+> QueryReply(Highlighting)
+> QueryReply(ReplyModes)
+> QueryReply(DistributedDataManagement)
+> QueryReply(RPQNames)
+> QueryReply(ImplicitPartition)
+> +0.002428s
+> 0x0   88000e81808081848586878895a1a60017818101000050002b01000a02e50002
+> 0x20  006f090c0d7000088184000d7000001b81858200090c000000000700100002b9
+> 0x40  00250110f103c30136001a8186000800f4f1f1f2f2f3f3f4f4f5f5f6f6f7f704
+> 0x60  0200f0000f81870500f0f1f1f2f2f4f4f8f800078188000102000c8195000010
+> 0x80  0010000101001281a1000000000000000006a7f3f2f7f0001181a600000b0100
+> 0xa0  005000180050002bffef
+SENT EOR
+Keyboard lock(kybd_inhibit) +ENTER_INHIBIT
+RCVD EOR
+< +0.087967s
+< 0x0   0d8511f55b1d60d9e4d5d5c9d5c7404040e2d9e4404040404040401de8a961e5
+< 0x20  d440f34bf14bf040d69593899585404040404040404040404040404040404040
+< 0x40  4040404040404040404040404040404040404040404040404040404040404040
+< 0x60  40404040404040404040401d60110371404040404040404040401dc840404040
+< 0x80  40e240d340c940d740d740c540d940e8404040d940d640c340d2404040e440d5
+< 0xa0  40c940e540c540d940e240c940e340e840404040404040404040404040401103
+< 0xc0  c140404040404040404040404040404040404040404040404040404040404040
+< 0xe0  4040404040404040404040404040404040404040404040404040404040404040
+< 0x100 404040404040404040404040404040110411404040404040404040401d404040
+< 0x120 e2e2e2e2e2e2e2404040d9d9d9d9d9d9d9d9404040e4e44040404040e4e4401d
+< 0x140 f840e5e54040404040e5e54040d440404040404040d440404040404040404040
+< 0x160 110461404040404040404040401d4040e2e2e2e2e2e2e2e2e24040d9d9d9d9d9
+< 0x180 d9d9d9d94040e4e44040404040e4e4401df840e5e54040404040e5e54040d4d4
+< 0x1a0 4040404040d4d4404040404040404040401104b1404040404040404040401d40
+< 0x1c0 40e2e24040404040e2e24040d9d94040404040d9d94040e4e44040404040e4e4
+< 0x1e0 401df840e5e54040404040e5e54040d4d4d4404040d4d4d44040404040404040
+< 0x200 4040110501404040404040404040401d4040e2e2404040404040404040d9d940
+< 0x220 40404040d9d94040e4e44040404040e4e4401df840e5e54040404040e5e54040
+< 0x240 d4d4d4d440d4d4d4d44040404040404040404011055140404040404040404040
+< 0x260 1d4040e2e2e2e2e2e2e2e2404040d9d9d9d9d9d9d9d9d94040e4e44040404040
+< 0x280 e4e4401df840e5e54040404040e5e54040d4d440d4d4d440d4d4404040404040
+< 0x2a0 404040401105a1404040404040404040401d404040e2e2e2e2e2e2e2e24040d9
+< 0x2c0 d9d9d9d9d9d9d9404040e4e44040404040e4e4401df840e5e54040404040e5e5
+< 0x2e0 4040d4d44040d44040d4d4404040404040404040401105f14040404040404040
+< 0x300 40401d404040404040404040e2e24040d9d94040d9d94040404040e4e4404040
+< 0x320 4040e4e4401df840e5e54040404040e5e54040d4d44040404040d4d440404040
+< 0x340 404040404040110641404040404040404040401d4040e2e24040404040e2e240
+< 0x360 40d9d9404040d9d940404040e4e44040404040e4e4401df84040e5e5404040e5
+< 0x380 e5404040d4d44040404040d4d440404040404040404040110691404040404040
+< 0x3a0 404040401d4040e2e2e2e2e2e2e2e2e24040d9d940404040d9d9404040e4e4e4
+< 0x3c0 e4e4e4e4e4e4401df8404040e5e540e5e540404040d4d44040404040d4d44040
+< 0x3e0 40404040404040401106e1404040404040404040401d404040e2e2e2e2e2e2e2
+< 0x400 404040d9d94040404040d9d9404040e4e4e4e4e4e4e440401df84040404040e5
+< 0x420 404040404040d4d44040404040d4d44040404040404040404011073140404040
+< 0x440 4040404040404040404040404040404040404040404040404040404040404040
+< 0x460 4040404040404040404040404040404040404040404040404040404040404040
+< 0x480 40404040404040404040110781404040404040404040401dc840404040404040
+< 0x4a0 404040404040404040c6969940c1a4a388969989a9858440e4a28540d69593a8
+< 0x4c0 404040404040404040404040404040404040404040404040404040110b401df8
+< 0x4e0 c689939340899540a896a49940e4e2c5d9c9c44081958440d7c1e2e2e6d6d9c4
+< 0x500 4081958440979985a2a240c5d5e3c5d91d704040404040404040404040404040
+< 0x520 404040404040404040404040110b901df84de896a499409781a2a2a696998440
+< 0x540 a6899393409596a34081979785819940a688859540a896a440a3a897854089a3
+< 0x560 5d1d704040404040404040404040404040404040404040404040404040110be0
+< 0x580 1df8e4e2c5d9c9c44040407e7e7e6e1d701d401300000000000000001d704040
+< 0x5a0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x5c0 4040404040404040404040404040110c301df8d7c1e2e2e6d6d9c4407e7e7e6e
+< 0x5e0 1d701d4c00000000000000001d70404040404040404040404040404040404040
+< 0x600 4040404040404040404040404040404040404040404040404040404040404011
+< 0x620 0c801df0e3964081838385a2a240e5e3c1d461e2e6c9e3c3c8405040c3c9c3e2
+< 0x640 6b408595a38599401df8c489819340e5e3c1d41d7040969540a3888540839694
+< 0x660 9481958440938995854b404040404040110cd01df8c3d6d4d4c1d5c440407e7e
+< 0x680 7e6e1d701d400000000000000000000000000000000000000000000000000000
+< 0x6a0 0000000000000000000000000000000000000000000000000000000000000000
+< 0x6c0 00ffef
+< Keyboard unlock(kybd_inhibit) -ENTER_INHIBIT
+EraseWriteAlternate(reset,alarm,restore,resetMDT) SetBufferAddress(43,60) ...
+...  StartField(protected) 'RUNNING   SRU       ' StartField(1,1)(protected ...
+... ,intensified) 'z/VM 3.1.0 Online                                        ...
+...                       ' StartField(1,80)(protected) SetBufferAddress(12 ...
+... ,2) '          ' StartField(12,12)(intensified) '     S L I P P E R Y   ...
+...  R O C K   U N I V E R S I T Y              ' SetBufferAddress(13,2) '  ...
+...                                                                         ...
+...       ' SetBufferAddress(14,2) '          ' StartField(14,12)(default)  ...
+... '  SSSSSSS   RRRRRRRR   UU     UU ' StartField(14,46)(protected,skip,in ...
+... tensified) ' VV     VV  M       M          ' SetBufferAddress(15,2) '   ...
+...         ' StartField(15,12)(default) ' SSSSSSSSS  RRRRRRRRR  UU     UU  ...
+... ' StartField(15,46)(protected,skip,intensified) ' VV     VV  MM     MM  ...
+...          ' SetBufferAddress(16,2) '          ' StartField(16,12)(defaul ...
+... t) ' SS     SS  RR     RR  UU     UU ' StartField(16,46)(protected,skip ...
+... ,intensified) ' VV     VV  MMM   MMM          ' SetBufferAddress(17,2)  ...
+... '          ' StartField(17,12)(default) ' SS         RR     RR  UU      ...
+... UU ' StartField(17,46)(protected,skip,intensified) ' VV     VV  MMMM MM ...
+... MM          ' SetBufferAddress(18,2) '          ' StartField(18,12)(def ...
+... ault) ' SSSSSSSS   RRRRRRRRR  UU     UU ' StartField(18,46)(protected,s ...
+... kip,intensified) ' VV     VV  MM MMM MM          ' SetBufferAddress(19, ...
+... 2) '          ' StartField(19,12)(default) '  SSSSSSSS  RRRRRRRR   UU   ...
+...    UU ' StartField(19,46)(protected,skip,intensified) ' VV     VV  MM   ...
+... M  MM          ' SetBufferAddress(20,2) '          ' StartField(20,12)( ...
+... default) '        SS  RR  RR     UU     UU ' StartField(20,46)(protecte ...
+... d,skip,intensified) ' VV     VV  MM     MM          ' SetBufferAddress( ...
+... 21,2) '          ' StartField(21,12)(default) ' SS     SS  RR   RR    U ...
+... U     UU ' StartField(21,46)(protected,skip,intensified) '  VV   VV   M ...
+... M     MM          ' SetBufferAddress(22,2) '          ' StartField(22,1 ...
+... 2)(default) ' SSSSSSSSS  RR    RR   UUUUUUUUU ' StartField(22,46)(prote ...
+... cted,skip,intensified) '   VV VV    MM     MM          ' SetBufferAddre ...
+... ss(23,2) '          ' StartField(23,12)(default) '  SSSSSSS   RR     RR ...
+...    UUUUUUU  ' StartField(23,46)(protected,skip,intensified) '     V     ...
+...   MM     MM          ' SetBufferAddress(24,2) '                         ...
+...                                                       ' SetBufferAddres ...
+... s(25,2) '          ' StartField(25,12)(intensified) '                Fo ...
+... r Authorized Use Only                           ' SetBufferAddress(37,1 ...
+... ) StartField(protected,skip,intensified) 'Fill in your USERID and PASSW ...
+... ORD and press ENTER' StartField(37,50)(protected,skip) '                ...
+...            ' SetBufferAddress(38,1) StartField(protected,skip,intensifi ...
+... ed) '(Your password will not appear when you type it)' StartField(38,50 ...
+... )(protected,skip) '                          ' SetBufferAddress(39,1) S ...
+... tartField(protected,skip,intensified) 'USERID   ===>' StartField(39,15) ...
+... (protected,skip) StartField(39,16)(default) InsertCursor(39,17) NULL NU ...
+... LL NULL NULL NULL NULL NULL NULL StartField(39,25)(protected,skip) '    ...
+...                                              ' SetBufferAddress(40,1) S ...
+... tartField(protected,skip,intensified) 'PASSWORD ===>' StartField(40,15) ...
+... (protected,skip) StartField(40,16)(nondisplay) NULL NULL NULL NULL NULL ...
+...  NULL NULL NULL StartField(40,25)(protected,skip) '                     ...
+...                              ' SetBufferAddress(41,1) StartField(protec ...
+... ted,skip) 'To access VTAM/SWITCH & CICS, enter ' StartField(41,38)(prot ...
+... ected,skip,intensified) 'Dial VTAM' StartField(41,48)(protected,skip) ' ...
+...  on the command line.      ' SetBufferAddress(42,1) StartField(protecte ...
+... d,skip,intensified) 'COMMAND  ===>' StartField(42,15)(protected,skip) S ...
+... tartField(42,16)(default) NULL NULL NULL NULL NULL NULL NULL NULL NULL  ...
+... NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL N ...
+... ULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NU ...
+... LL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NUL ...
+... L NULL NULL NULL NULL NULL NULL NULL
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+RCVD EOR
+Keyboard unlock(defer_unlock) -DEFERRED_UNLOCK
+k=0 wch=9 regurg=0
+Key 'Ctrl<Key>I' (curses key 0x0, char code 0x9)
+ base.3270:6 -> Tab
+KeymapAction[1] running
+KeymapAction[1]: 'Tab'
+ Keymap -> Tab()
+KeymapAction[1] complete
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=9 regurg=0
+Key 'Ctrl<Key>I' (curses key 0x0, char code 0x9)
+ base.3270:6 -> Tab
+KeymapAction[1] running
+KeymapAction[1]: 'Tab'
+ Keymap -> Tab()
+KeymapAction[1] complete
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=108 regurg=0
+Key '<Key>l' (curses key 0x0, char code 0x6c)
+ Default -> Key("U+006c")
+ Key -> Key(U+006c)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=111 regurg=0
+Key '<Key>o' (curses key 0x0, char code 0x6f)
+ Default -> Key("U+006f")
+ Key -> Key(U+006f)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=103 regurg=0
+Key '<Key>g' (curses key 0x0, char code 0x67)
+ Default -> Key("U+0067")
+ Key -> Key(U+0067)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=111 regurg=0
+Key '<Key>o' (curses key 0x0, char code 0x6f)
+ Default -> Key("U+006f")
+ Key -> Key(U+006f)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=102 regurg=0
+Key '<Key>f' (curses key 0x0, char code 0x66)
+ Default -> Key("U+0066")
+ Key -> Key(U+0066)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=102 regurg=0
+Key '<Key>f' (curses key 0x0, char code 0x66)
+ Default -> Key("U+0066")
+ Key -> Key(U+0066)
+k=-1 wch=0 regurg=0
+k == ERR, return
+k=0 wch=13 regurg=0
+Key 'Ctrl<Key>M' (curses key 0x0, char code 0xd)
+ base.3270:9 -> Enter
+KeymapAction[1] running
+KeymapAction[1]: 'Enter'
+ Keymap -> Enter()
+Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(42,23) SetBufferAddress(42,17) 'logoff'
+> +3.23083s
+> 0x0   7df3e611f360939687968686ffef
+SENT EOR
+KeymapAction[1] paused KBWAIT
+k=-1 wch=0 regurg=0
+k == ERR, return
+< +0.075533s
+< 0x0   0dc211f34f4013110d6f1d6011f34f290342004100c0c111f55b290342004100
+< 0x20  c060d9e4d5d5c9d5c7404040e2d9e440404040401d60ffef
+< EraseWriteAlternate(reset,restore) SetBufferAddress(41,80) ' ' InsertCurs ...
+... or(42,1) SetBufferAddress(43,80) StartField(protected) SetBufferAddress ...
+... (41,80) StartFieldExtended foreground(default) highlighting(default) 32 ...
+... 70(modified) SetBufferAddress(43,60) StartFieldExtended foreground(defa ...
+... ult) highlighting(default) 3270(protected) 'RUNNING   SRU     ' StartFi ...
+... eld(43,79)(protected)
+Keyboard unlock(do_reset) -OIA_TWAIT -OIA_LOCKED
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+RCVD EOR
+< +0.013208s
+< 0x0   01c2110000284100284200d3d6c7d6c6c6280000110d6f1d6011f34f29034200
+< 0x20  4100c0c111f55b290342004100c060d9e4d5d5c9d5c7404040e2d9e440404040
+< 0x40  401d60ffef
+< Write(reset,restore) SetBufferAddress(1,1) SetAttribute highlighting(defa ...
+... ult) SetAttribute foreground(default) 'LOGOFF' SetAttribute all(0) SetB ...
+... ufferAddress(43,80) StartField(protected) SetBufferAddress(41,80) Start ...
+... FieldExtended foreground(default) highlighting(default) 3270(modified)  ...
+... SetBufferAddress(43,60) StartFieldExtended foreground(default) highligh ...
+... ting(default) 3270(protected) 'RUNNING   SRU     ' StartField(43,79)(pr ...
+... otected)
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+RCVD EOR
+< +0.010134s
+< 0x0   01c2110050284100284200d3d6c7d6c6c640c1e340f1f17af4f47af2f640c5c4
+< 0x20  e340d4d6d5c4c1e840f0f661f2f961f0f92800001100a0284100284200402800
+< 0x40  00110d6f1d6011f34f290342004100c0c111f55b290342004100c060d9e4d5d5
+< 0x60  c9d5c7404040e2d9e440404040401d60ffef01c21100f0284100284200d79985
+< 0x80  a2a2408595a38599409699408393858199409285a840a39640839695a38995a4
+< 0xa0  85280000110d6f1d6011f34f290342004100c0c111f55b290342004100c060d9
+< 0xc0  e4d5d5c9d5c7404040e2d9e440404040401d60ffef
+< Write(reset,restore) SetBufferAddress(2,1) SetAttribute highlighting(defa ...
+... ult) SetAttribute foreground(default) 'LOGOFF AT 11:44:26 EDT MONDAY 06 ...
+... /29/09' SetAttribute all(0) SetBufferAddress(3,1) SetAttribute highligh ...
+... ting(default) SetAttribute foreground(default) ' ' SetAttribute all(0)  ...
+... SetBufferAddress(43,80) StartField(protected) SetBufferAddress(41,80) S ...
+... tartFieldExtended foreground(default) highlighting(default) 3270(modifi ...
+... ed) SetBufferAddress(43,60) StartFieldExtended foreground(default) high ...
+... lighting(default) 3270(protected) 'RUNNING   SRU     ' StartField(43,79 ...
+... )(protected)
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+RCVD EOR
+< Write(reset,restore) SetBufferAddress(4,1) SetAttribute highlighting(defa ...
+... ult) SetAttribute foreground(default) 'Press enter or clear key to cont ...
+... inue' SetAttribute all(0) SetBufferAddress(43,80) StartField(protected) ...
+...  SetBufferAddress(41,80) StartFieldExtended foreground(default) highlig ...
+... hting(default) 3270(modified) SetBufferAddress(43,60) StartFieldExtende ...
+... d foreground(default) highlighting(default) 3270(protected) 'RUNNING    ...
+... SRU     ' StartField(43,79)(protected)
+Keyboard lock(do_reset) +DEFERRED_UNLOCK
+Deferring keyboard unlock 350ms
+RCVD EOR
+RCVD disconnect
+SENT disconnect
+Keyboard unlock(kybd_connect) -DEFERRED_UNLOCK
+Keyboard lock(kybd_connect) +NOT_CONNECTED
+KeymapAction[1] running
+KeymapAction[1] complete
+Trace stopped Mon Jun 29 10:43:34 2009
