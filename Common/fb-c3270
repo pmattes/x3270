@@ -1,5 +1,5 @@
-
-! Copyright (c) 1995-2022, Paul Mattes.
+!
+! Copyright (c) 1995-2023, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,8 @@ keymap.base: \n\
         Alt <Key>N: Menu()\n\
         Alt <Key>p: PrintText()\n\
         Alt <Key>P: PrintText()\n\
-        Alt <Key>q: Quit()\n\
-        Alt <Key>Q: Quit()\n\
+        Alt <Key>q: Quit(-force)\n\
+        Alt <Key>Q: Quit(-force)\n\
        Ctrl <Key>v: Paste()\n\
        Ctrl <Key>x: Cut()\n\
        Ctrl <Key>]: Escape()\n\
@@ -135,7 +135,7 @@ x3270.keymap.base: \n\
      Ctrl<Key>a <Key>m: Compose()\n\
      Ctrl<Key>a <Key>n: Menu()\n\
      Ctrl<Key>a <Key>p: PrintText()\n\
-     Ctrl<Key>a <Key>q: Quit()\n\
+     Ctrl<Key>a <Key>q: Quit(-force)\n\
      Ctrl<Key>a <Key>^: Key(notsign)\n\
                <Key>DC: Delete()\n\
                <Key>UP: Up()\n\
