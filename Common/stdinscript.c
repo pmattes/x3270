@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
+ * Copyright (c) 1993-2016, 2018-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -277,6 +277,22 @@ static void
 stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	bool success)
 {
+    /*
+     * Enforce the implicit assumption that there are no newlines in the
+     * output.
+     */
+    char *b;
+    char *newline;
+
+    while (len > 0 && buf[len - 1] == '\n') {
+	len--;
+    }
+
+    b = xs_buffer("%.*s", (int)len, buf);
+    while ((newline = strchr(b, '\n')) != NULL) {
+	*newline = ' ';
+    }
+
     if (pj_out.pending) {
 	json_t *result_array;
 
@@ -289,17 +305,17 @@ stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
                         &result_array));
         }
 
-        json_array_append(result_array, json_string(buf, len));
-	return;
-    }
-
-    if (!pushed_wait) {
-	printf(DATA_PREFIX "%.*s\n", (int)len, buf);
-	fflush(stdout);
+        json_array_append(result_array, json_string(b, len));
     } else {
-	fprintf(stderr, AnWait "(): %.*s\n", (int)len, buf);
-	fflush(stderr);
+	if (!pushed_wait) {
+	    printf(DATA_PREFIX "%.*s\n", (int)len, b);
+	    fflush(stdout);
+	} else {
+	    fprintf(stderr, AnWait "(): %.*s\n", (int)len, b);
+	    fflush(stderr);
+	}
     }
+    Free(b);
 }
 
 /**
