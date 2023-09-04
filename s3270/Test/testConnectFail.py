@@ -29,9 +29,7 @@
 
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
 import os
-import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class TestS3270ConnectFail(cti.cti):
