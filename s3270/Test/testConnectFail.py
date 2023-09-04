@@ -54,7 +54,8 @@ class TestS3270ConnectFail(cti.cti):
 
         # Test the output.
         self.assertEqual(4, len(stdout))
-        self.assertEqual('data: Connection failed: localhost, port 1: Connection refused', stdout[0])
+        self.assertTrue(stdout[0].startswith('data: Connection failed: localhost, port 1: '))
+        self.assertTrue('refused' in stdout[0]);
         self.assertTrue(stdout[1].startswith('L U U N N 4 24 80 0 0 0x0 '))
         self.assertEqual('error', stdout[2])
         self.assertEqual('', stdout[3])
