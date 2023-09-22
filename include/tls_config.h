@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2016-2017, 2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,8 @@ typedef struct {
     char	*key_file_type;
     char	*key_passwd;
     char	*client_cert;
+    char	*min_protocol;
+    char	*max_protocol;
 } tls_config_t;
 
 /* Required options. */
@@ -65,11 +67,14 @@ typedef struct {
 #define TLS_OPT_KEY_FILE_TYPE		0x00000200
 #define TLS_OPT_KEY_PASSWD		0x00000400
 #define TLS_OPT_CLIENT_CERT		0x00000800
+#define TLS_OPT_MIN_PROTOCOL		0x00001000
+#define TLS_OPT_MAX_PROTOCOL		0x00002000
 
 #define TLS_OPTIONAL_OPTS \
     (TLS_OPT_CA_DIR | TLS_OPT_CA_FILE | TLS_OPT_CERT_FILE | \
      TLS_OPT_CERT_FILE_TYPE | TLS_OPT_CHAIN_FILE | TLS_OPT_KEY_FILE | \
-     TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD | TLS_OPT_CLIENT_CERT)
+     TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD | TLS_OPT_CLIENT_CERT | \
+     TLS_OPT_MIN_PROTOCOL | TLS_OPT_MAX_PROTOCOL)
 
 #define TLS_ALL_OPTS	(TLS_REQUIRED_OPTS | TLS_OPTIONAL_OPTS)
 

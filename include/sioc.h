@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2022 Paul Mattes.
+ * Copyright (c) 2017, 2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,5 +35,6 @@ void sioc_set_error(const char *fmt, ...) printflike(1, 2);
 void sioc_error_reset(void);
 char *sioc_string_from_file(const char *path, size_t *len_ret);
 char *sioc_parse_password_spec(const char *spec);
+char *sioc_parse_protocol_min_max(const char *minstr, const char *maxstr, int rmin, int rmax, int *minp, int *maxp);
 void sioc_subject_add(char ***subjects, char *s, ssize_t len);
 void sioc_subject_print(varbuf_t *v, char ***subjects);

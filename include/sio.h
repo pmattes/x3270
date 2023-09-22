@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 2017, 2019-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,16 @@ typedef enum {
     SIG_FAILURE,	/* failure */
     SIG_WANTMORE	/* more input needed */
 } sio_negotiate_ret_t;
+
+/* TLS protocol versions, used to implement max/min options. */
+typedef enum {
+    SIP_SSL2,		/* SSL 2.0 (dangerously obsolete) */
+    SIP_SSL3,		/* SSL 3.0 (dangerously obsolete) */
+    SIP_TLS1,		/* TLS 1.0 */
+    SIP_TLS1_1,		/* TLS 1.1 */
+    SIP_TLS1_2,		/* TLS 1.2 */
+    SIP_TLS1_3		/* TLS 1.3 */
+} sio_protocol_t;
 
 typedef void *sio_t;
 

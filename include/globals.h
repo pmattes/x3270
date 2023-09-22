@@ -477,7 +477,7 @@ typedef SOCKET socket_t;
 #endif /*]*/
 
 /* Handy stuff. */
-#define array_count(a)	sizeof(a)/sizeof(a[0])
+#define array_count(a)	(sizeof(a)/sizeof(a[0]))
 
 /* Doubly-linked lists. */
 typedef struct llist {

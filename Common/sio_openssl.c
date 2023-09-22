@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -89,6 +89,8 @@ static ssl_sio_t *current_sio;
 #else /*][*/
 # define INFO_CONST
 #endif /*]*/
+
+static int proto_map[] = { -1, SSL3_VERSION, TLS1_VERSION, TLS1_1_VERSION, TLS1_2_VERSION, TLS1_3_VERSION };
 
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 #if !defined(OPENSSL102) /*[*/
@@ -477,6 +479,9 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
     char err_buf[120];
     int cert_file_type = SSL_FILETYPE_PEM;
     sio_init_ret_t err_ret = SI_FAILURE;
+    int min_protocol = -1;
+    int max_protocol = -1;
+    char *proto_error;
 
     sioc_error_reset();
 
@@ -497,6 +502,21 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
 	goto fail;
     }
     SSL_CTX_set_options(s->ctx, SSL_OP_ALL);
+    proto_error = sioc_parse_protocol_min_max(config->min_protocol, config->max_protocol, SIP_SSL3, -1, &min_protocol,
+	    &max_protocol);
+    if (proto_error != NULL) {
+	sioc_set_error("%s", proto_error);
+	Free(proto_error);
+	goto fail;
+    }
+    if (min_protocol >= 0 && SSL_CTX_set_min_proto_version(s->ctx, proto_map[min_protocol]) == 0) {
+	sioc_set_error("SSL_CTX_set_min_proto_version failed");
+	goto fail;
+    }
+    if (max_protocol >= 0 && SSL_CTX_set_max_proto_version(s->ctx, proto_map[max_protocol]) == 0) {
+	sioc_set_error("SSL_CTX_set_max_proto_version failed");
+	goto fail;
+    }
     SSL_CTX_set_info_callback(s->ctx, client_info_callback);
     SSL_CTX_set_default_passwd_cb_userdata(s->ctx, s);
     SSL_CTX_set_default_passwd_cb(s->ctx, passwd_cb);
@@ -960,6 +980,8 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	    } else {
 		sioc_set_error("SSL_connect failed:\n%s", strerror(errno));
 	    }
+	} else if (e == SSL_ERROR_ZERO_RETURN) {
+	    sioc_set_error("SSL_connect failed:\nUnexpected EOF");
 	} else {
 	    sioc_set_error("SSL_connect failed %d/%ld:\n%s", rv, e,
 		    get_ssl_error(err_buf));
@@ -1150,7 +1172,8 @@ sio_options_supported(void)
 {
     return TLS_OPT_CA_DIR | TLS_OPT_CA_FILE | TLS_OPT_CERT_FILE
 	| TLS_OPT_CERT_FILE_TYPE | TLS_OPT_CHAIN_FILE | TLS_OPT_KEY_FILE
-	| TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD;
+	| TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD | TLS_OPT_MIN_PROTOCOL
+	| TLS_OPT_MAX_PROTOCOL;
 }
 
 /*

@@ -1,2 +1,4 @@
+#define RT_MANIFEST 24
 LANGUAGE 0, 0
+1 RT_MANIFEST wb3270.exe.manifest
 100 ICON wb3270.ico

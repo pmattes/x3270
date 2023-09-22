@@ -66,8 +66,8 @@ class real_socket(socketwrapper.socketwrapper):
         try:
             self.conn = target_tls.wrap(self.conn)
             return True
-        except Exception:
-            self.logger.warning(f'TLS wrap failed')
+        except Exception as e:
+            self.logger.warning(f'TLS wrap failed: {e}')
             return False
     def fileno(self) -> int:
         return self.conn.fileno()
@@ -144,16 +144,19 @@ class target(aswitch.aswitch):
             r, _, _ = select.select([listensocket], [], [], 0.5)
             if r == []:
                 continue
+            good=True
             (conn, _) = listensocket.accept()
             if self.tls == target_tls.immediate:
                 try:
                     conn = target_tls.wrap(conn)
-                except Exception:
-                    self.logger.error(f'target: TLS wrap failed')
-                    break
-            t = threading.Thread(target=self.process_connection, args=[conn])
-            t.start()
-            self.servers.append(t)
+                except Exception as e:
+                    self.logger.error(f'target: TLS wrap failed: {e}')
+                    conn.close()
+                    good=False
+            if good:
+                t = threading.Thread(target=self.process_connection, args=[conn])
+                t.start()
+                self.servers.append(t)
         listensocket.close()
 
     def list(self) -> Dict[str,str]:
@@ -270,12 +273,22 @@ servers = {
 }
 
 if __name__ == '__main__':
+    def argconv(**convs):
+        def parse_argument(arg):
+            if arg in convs:
+                return convs[arg]
+            else:
+                msg = "invalid choice: {!r} (choose from {})"
+                choices = ", ".join(sorted(repr(choice) for choice in convs.keys()))
+                raise argparse.ArgumentTypeError(msg.format(arg,choices))
+        return parse_argument
+
     parser = argparse.ArgumentParser(description='x3270 test target')
     parser.add_argument('--address', default='127.0.0.1', help='address to listen on')
     parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
     parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server')
     parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level')
-    parser.add_argument('--tls', default='none', choices=['none', 'immediate', 'negotiated'], help='TLS support')
+    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate, negotiated=target_tls.negotiated), default=target_tls.none, help='TLS support')
     parser.add_argument('--tn3270e', default='True', choices=['True', 'False'], help='TN3270E support')
     parser.add_argument('--bind', default='True', choices=['True', 'False'], help='TN3270E BIND support')
     opts = vars(parser.parse_args())

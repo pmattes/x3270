@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 Paul Mattes.
+ * Copyright (c) 2017-2023 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -63,9 +63,13 @@
 # define SP_PROT_TLS1_2_CLIENT 0x800
 #endif
 
+#if !defined(SP_PROT_TLS1_3_CLIENT)
+# define SP_PROT_TLS1_3_CLIENT 0x2000
+#endif
+
 /* TLS protocols to negotiate. */
 #define TLS_PROTOCOLS	\
-    (SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT)
+    (SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT | SP_PROT_TLS1_3_CLIENT)
 
 /* #define VERBOSE		1 */	/* dump protocol packets in hex */
 
@@ -116,6 +120,15 @@ typedef struct {
 
 static tls_config_t *config;
 static HCERTSTORE my_cert_store;
+
+static DWORD proto_map[] = {
+    0, /* We don't support SSL2 */
+    SP_PROT_SSL3_CLIENT,
+    SP_PROT_TLS1_CLIENT,
+    SP_PROT_TLS1_1_CLIENT,
+    SP_PROT_TLS1_2_CLIENT,
+    SP_PROT_TLS1_3_CLIENT
+};
 
 /* Display the certificate chain. */
 static void
@@ -330,6 +343,19 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     SCHANNEL_CRED schannel_cred;
     varbuf_t v;
     char *s, *t;
+    int min_protocol = -1;
+    int max_protocol = -1;
+    char *proto_error;
+
+    /* Parse the min/max protocol options. */
+    /* Technically you can use SSL2 with schannel, but it is mutually exclusive with TLS, so we don't try. */
+    proto_error = sioc_parse_protocol_min_max(config->min_protocol, config->max_protocol, SIP_SSL3, -1, &min_protocol,
+            &max_protocol);
+    if (proto_error != NULL) {
+        sioc_set_error("%s", proto_error);
+        Free(proto_error);
+        return 1; /* which is not 0 */
+    }
 
     *manual = false;
 
@@ -409,12 +435,26 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	schannel_cred.paCred = &cert_context;
     }
 
-    /* Before Windows 10, you need to specify the protocols explicitly. */
-    if (!IsWindowsVersionOrGreater(10, 0, 0)) {
-	schannel_cred.grbitEnabledProtocols = TLS_PROTOCOLS;
+    /* If the user specified a range, or we're before Windows 10, specify the protocols explicitly. */
+    if (min_protocol >= 0 || max_protocol >= 0 || !IsWindowsVersionOrGreater(10, 0, 0)) {
+	DWORD protocols = 0;
+	int i;
+
+	if (min_protocol < 0) {
+	    min_protocol = SIP_SSL3;
+	}
+	if (max_protocol < 0) {
+	    max_protocol = SIP_TLS1_3;
+	}
+	for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
+	    if (i >= min_protocol && i <= max_protocol) {
+		protocols |= proto_map[i];
+	    }
+	}
+	schannel_cred.grbitEnabledProtocols = protocols;
     }
 
-    schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS;
+    schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
 
     /* 
      * If they don't want the host certificate checked, specify manual
@@ -1017,6 +1057,12 @@ display_connection_info(varbuf_t *v, CtxtHandle *context)
 
     vb_appendf(v, "Protocol: ");
     switch (connection_info.dwProtocol) {
+    case SP_PROT_SSL2_CLIENT:
+	vb_appendf(v, "SSL 2.0\n");
+	break;
+    case SP_PROT_SSL3_CLIENT:
+	vb_appendf(v, "SSL 3.0\n");
+	break;
     case SP_PROT_TLS1_CLIENT:
 	vb_appendf(v, "TLS 1.0\n");
 	break;
@@ -1026,11 +1072,8 @@ display_connection_info(varbuf_t *v, CtxtHandle *context)
     case SP_PROT_TLS1_2_CLIENT:
 	vb_appendf(v, "TLS 1.2\n");
 	break;
-    case SP_PROT_SSL3_CLIENT:
-	vb_appendf(v, "SSL 3.0\n");
-	break;
-    case SP_PROT_SSL2_CLIENT:
-	vb_appendf(v, "SSL 2.0\n");
+    case SP_PROT_TLS1_3_CLIENT:
+	vb_appendf(v, "TLS 1.3\n");
 	break;
     default:
 	vb_appendf(v, "0x%x\n", (unsigned)connection_info.dwProtocol);
@@ -1834,7 +1877,7 @@ sio_secure_unverified(sio_t sio)
 unsigned
 sio_options_supported(void)
 { 
-    return TLS_OPT_CLIENT_CERT;
+    return TLS_OPT_CLIENT_CERT | TLS_OPT_MIN_PROTOCOL | TLS_OPT_MAX_PROTOCOL;
 }
 
 /*

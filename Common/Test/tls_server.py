@@ -51,6 +51,10 @@ class tls_server(playback.playback):
             self.clear_conn = None
         playback.playback.__del__(self)
 
+    def limit_tls13(self):
+        '''Prohibit TLS 1.3'''
+        self.context.maximum_version = ssl.TLSVersion.TLSv1_2
+
     def wrap(self):
         '''Wrap an accepted connection'''
         self.wait_accept()

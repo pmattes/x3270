@@ -35,6 +35,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "utils.h"
 #include "tls_config.h"
@@ -51,6 +52,20 @@
 /* Typedefs */
 
 /* Statics */
+static struct {
+    const char *name1;
+    const char *name2;
+    const char *name3;
+    int protocol;
+} protos[] = {
+    { "SSL2", "SSL2.0", "SSL2_0", SIP_SSL2 },
+    { "SSL3", "SSL3.0", "SSL3_0", SIP_SSL3 },
+    { "TLS1", "TLS1.0", "TLS1_0", SIP_TLS1 },
+    { "TLS1.1", "TLS1_1", NULL, SIP_TLS1_1 },
+    { "TLS1.2", "TLS1_2", NULL, SIP_TLS1_2 },
+    { "TLS1.3", "TLS1_3", NULL, SIP_TLS1_3 },
+};
+static int max_proto = (int)array_count(protos) - 1;
 
 /* Globals */
 static char *sioc_last_error;
@@ -154,6 +169,88 @@ sioc_parse_password_spec(const char *spec)
 
     /* No qualifier, assume direct value */
     return (NewString(spec));
+}
+
+/*
+ * Parse a protocol number.
+ */
+static int
+parse_protocol(const char *protocol)
+{
+    int i;
+
+    for (i = 0; i <= max_proto; i++) {
+	if (!strcasecmp(protocol, protos[i].name1) ||
+		(protos[i].name2 != NULL && !strcasecmp(protocol, protos[i].name2)) ||
+		(protos[i].name3 != NULL && !strcasecmp(protocol, protos[i].name3))) {
+	    return protos[i].protocol;
+	}
+    }
+    return -1;
+}
+
+/*
+ * Produce an error string for an invalid protocol version.
+ */
+static char *
+invalid_version_string(const char *str, const char *which, int rmin, int rmax)
+{
+    varbuf_t r;
+    int i;
+
+    vb_init(&r);
+    vb_appendf(&r, "Invalid %s protocol '%s'\nValid protocols are", which, str);
+    for (i = ((rmin >= 0)? rmin: 0); i <= ((rmax >= 0)? rmax: max_proto); i++) {
+	vb_appendf(&r, " %s", protos[i].name1);
+    }
+    return vb_consume(&r);
+}
+
+/*
+ * Parse a set of min/max TLS protocol versions.
+ *
+ * @param[in] minstr	Specified minimum protocol string, or NULL
+ * @param[in] maxstr	Specified minimum protocol string, or NULL
+ * @param[in] rmin	Implementation-defined minimum version or -1
+ * @param[in] rmax	Implementation-defined maximum version or -1
+ * @param[out] minp	Returned numeric minimum protocol, or -1
+ * @param[out] maxp	Returned numeric maximum protocol, or -1
+ *
+ * @returns error string, or NULL if sucesful
+ */
+char *
+sioc_parse_protocol_min_max(const char *minstr, const char *maxstr, int rmin, int rmax, int *minp, int *maxp)
+{
+    int min = -1, max = -1;
+
+    if (rmin >= 0) {
+	assert(rmin <= max_proto);
+    }
+    if (rmax >= 0) {
+	assert(rmax <= max_proto);
+    }
+    if (rmin >=0 && rmax >= 0) {
+	assert(rmin <= rmax);
+    }
+
+    if (minstr != NULL) {
+	min = parse_protocol(minstr);
+	if (min < 0 || (rmin >= 0 && min < rmin) || (rmax >= 0 && min > rmax)) {
+	    return invalid_version_string(minstr, "minimum", rmin, rmax);
+	}
+    }
+    if (maxstr != NULL) {
+	max = parse_protocol(maxstr);
+	if (max < 0 || (rmin >= 0 && max < rmin) || (rmax >= 0 && max > rmax)) {
+	    return invalid_version_string(maxstr, "maximum", rmin, rmax);
+	}
+    }
+    if (max >= 0 && min >= 0 && min > max) {
+	return NewString("Minimum protocol > maximum protocol");
+    }
+    *minp = min;
+    *maxp = max;
+    return NULL;
 }
 
 /*

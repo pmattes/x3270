@@ -226,6 +226,8 @@
 #define ResSuppress		"suppress"
 #define ResTermName		"termName"
 #define ResTitle		"title"
+#define ResTlsMaxProtocol	"tlsMaxProtocol"
+#define ResTlsMinProtocol	"tlsMinProtocol"
 #define ResTrace		"trace"
 #define ResTraceDir		"traceDir"
 #define ResTraceFile		"traceFile"
@@ -277,6 +279,8 @@
 #define DotKeypadOn		"." ResKeypadOn
 #define DotKeyPasswd		"." ResKeyPasswd
 #define DotLoginMacro		"." ResLoginMacro
+#define DotTlsMaxProtocol	"." ResTlsMaxProtocol
+#define DotTlsMinProtocol	"." ResTlsMinProtocol
 #define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -462,6 +466,8 @@
 #define ClsSuppressHost		"SuppressHost"
 #define ClsSuppressFontMenu	"SuppressFontMenu"
 #define ClsTermName		"TermName"
+#define ClsTlsMaxProtocol	"TlsMaxProtocol"
+#define ClsTlsMinProtocol	"TlsMinProtocol"
 #define ClsTrace		"Trace"
 #define ClsTraceDir		"TraceDir"
 #define ClsTraceFile		"TraceFile"
@@ -559,6 +565,8 @@
 #define OptNoVerifyHostCert	"-noverifycert"
 #define OptTermName		"-tn"
 #define OptTitle		"-title"
+#define OptTlsMaxProtocol	"-tlsmaxprotocol"
+#define OptTlsMinProtocol	"-tlsminprotocol"
 #define OptTrace		"-trace"
 #define OptTraceFile		"-tracefile"
 #define OptTraceFileSize	"-tracefilesize"
