@@ -162,6 +162,10 @@ XtResource resources[] = {
       offset(tls.key_file_type), XtRString, 0 },
     { ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
       offset(tls.key_passwd), XtRString, 0 },
+    { ResTlsMaxProtocol, ClsTlsMaxProtocol, XtRString, sizeof(char *),
+      offset(tls.max_protocol), XtRString, 0 },
+    { ResTlsMinProtocol, ClsTlsMinProtocol, XtRString, sizeof(char *),
+      offset(tls.min_protocol), XtRString, 0 },
 
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },

@@ -49,6 +49,8 @@
 #include "toggles.h"
 #include "varbuf.h"
 
+#define TLS_PROTOCOLS "SSL2|SSL3|TLS1|TLS1_1|TLS1_2|TLS1_3"
+
 /* Typedefs */
 typedef struct {
     unsigned flag;
@@ -84,7 +86,11 @@ static flagged_res_t sio_flagged_res[] = {
     { TLS_OPT_KEY_PASSWD,
 	{ ResKeyPasswd, aoffset(tls.key_passwd), XRM_STRING } },
     { TLS_OPT_CLIENT_CERT,
-	{ ResClientCert, aoffset(tls.client_cert), XRM_STRING } }
+	{ ResClientCert, aoffset(tls.client_cert), XRM_STRING } },
+    { TLS_OPT_MIN_PROTOCOL,
+	{ ResTlsMinProtocol, aoffset(tls.min_protocol), XRM_STRING } },
+    { TLS_OPT_MAX_PROTOCOL,
+	{ ResTlsMaxProtocol, aoffset(tls.max_protocol), XRM_STRING } },
 };
 static int n_sio_flagged_res = (int)array_count(sio_flagged_res);
 
@@ -143,7 +149,15 @@ add_tls_opts(void)
 	{ TLS_OPT_CLIENT_CERT,
 	    { OptClientCert, OPT_STRING, false, ResClientCert,
 		aoffset(tls.client_cert),
-		"<name>", "TLS client certificate name" } }
+		"<name>", "TLS client certificate name" } },
+	{ TLS_OPT_MIN_PROTOCOL,
+	    { OptTlsMinProtocol, OPT_STRING, false, ResTlsMinProtocol,
+		aoffset(tls.min_protocol),
+		TLS_PROTOCOLS, "TLS minimum protocol version" } },
+	{ TLS_OPT_MAX_PROTOCOL,
+	    { OptTlsMaxProtocol, OPT_STRING, false, ResTlsMaxProtocol,
+		aoffset(tls.max_protocol),
+		TLS_PROTOCOLS, "TLS maximum protocol version" } },
     };
     int n_opts = (int)array_count(flagged_opts);
     unsigned n_tls_opts = 0;
@@ -383,6 +397,12 @@ sio_toggle(const char *name, const char *value)
 	break;
     case TLS_OPT_CLIENT_CERT:
 	Replace(appres.tls.client_cert, value[0]? NewString(value): NULL);
+	break;
+    case TLS_OPT_MIN_PROTOCOL:
+	Replace(appres.tls.min_protocol, value[0]? NewString(value): NULL);
+	break;
+    case TLS_OPT_MAX_PROTOCOL:
+	Replace(appres.tls.max_protocol, value[0]? NewString(value): NULL);
 	break;
     default:
 	popup_an_error("Unknown name '%s'", name);

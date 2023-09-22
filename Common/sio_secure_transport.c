@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022 Paul Mattes.
+ * Copyright (c) 2017-2023 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -66,6 +66,8 @@ typedef struct {
 
 static tls_config_t *config;
 static char *interactive_password;
+
+static SSLProtocol proto_map[] = { kSSLProtocol2, kSSLProtocol3, kTLSProtocol1, kTLSProtocol11, kTLSProtocol12 };
 
 #define CIPHER(s)	{ s, #s }
 typedef struct {
@@ -959,6 +961,9 @@ sio_init(tls_config_t *c, const char *password, sio_t *sio_ret)
     stransport_sio_t *s;
     OSStatus status;
     sio_init_ret_t ret = SI_SUCCESS;
+    int min_protocol = -1;
+    int max_protocol = -1;
+    char *proto_error;
 
     sioc_error_reset();
 
@@ -978,6 +983,21 @@ sio_init(tls_config_t *c, const char *password, sio_t *sio_ret)
     if (status != errSecSuccess) {
 	set_oserror(status, "SSLSetIOFuncs");
 	goto fail;
+    }
+    proto_error = sioc_parse_protocol_min_max(config->min_protocol, config->max_protocol, -1, SIP_TLS1_2, &min_protocol,
+	    &max_protocol);
+    if (proto_error != NULL) {
+        sioc_set_error("%s", proto_error);
+        Free(proto_error);
+        goto fail;
+    }
+    if (min_protocol >= 0 && SSLSetProtocolVersionMin(s->context, proto_map[min_protocol]) != errSecSuccess) {
+        sioc_set_error("SSLSetProtocolVersionMin failed");
+        goto fail;
+    }
+    if (max_protocol >= 0 && SSLSetProtocolVersionMax(s->context, proto_map[max_protocol]) != errSecSuccess) {
+        sioc_set_error("SSLSetProtocolVersionMax failed");
+        goto fail;
     }
 
     status = SSLSetConnection(s->context, s);
@@ -1005,7 +1025,7 @@ sio_init(tls_config_t *c, const char *password, sio_t *sio_ret)
 fail:
     sio_free(s);
     *sio_ret = NULL;
-    return ret;
+    return SI_FAILURE;
 }
 
 /*
@@ -1234,7 +1254,7 @@ sio_secure_unverified(sio_t sio)
 unsigned
 sio_options_supported(void)
 {   
-    return TLS_OPT_CERT_FILE | TLS_OPT_CLIENT_CERT | TLS_OPT_KEY_PASSWD;
+    return TLS_OPT_CERT_FILE | TLS_OPT_CLIENT_CERT | TLS_OPT_KEY_PASSWD | TLS_OPT_MIN_PROTOCOL | TLS_OPT_MAX_PROTOCOL;
 }
 
 const char *

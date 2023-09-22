@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, 2020 Paul Mattes.
+ * Copyright (c) 2017-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #include "popups.h"
 #include "sio.h"
 #include "telnet_sio.h"
+#include "task.h"
 #include "tls_passwd_gui.h"
 #include "trace.h"
 
@@ -162,12 +163,12 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 	case SI_SUCCESS:
 	    return s;
 	case SI_FAILURE:
-	    popup_an_error("%s", sio_last_error());
+	    connect_error("%s", sio_last_error());
 	    return NULL;
 	case SI_WRONG_PASSWORD:
 	    vtrace("TLS: Password is wrong\n");
 	    if (password == NULL) {
-		popup_an_error("%s", sio_last_error());
+		connect_error("%s", sio_last_error());
 		return NULL;
 	    }
 	    again = true;
@@ -191,7 +192,7 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 		return NULL;
 	    case SP_NOT_SUPPORTED:
 		vtrace("TLS: Password needed, GUI unavailable\n");
-		popup_an_error("Private key password needed");
+		connect_error("Private key password needed");
 		return NULL;
 	    }
 	    break;
