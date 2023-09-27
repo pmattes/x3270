@@ -1716,7 +1716,7 @@ dbcs_check(void)
 {
     if (IsWindowsVersionOrGreater(6, 0, 0)) {
 	printf("\n\
-Note: wc3270 DBCS support on Windows Vista and later requires setting the\n\
+Note: wc3270 DBCS support on Windows Vista and later may require setting the\n\
 Windows System Locale to a matching language.\n");
     } else {
 	printf("\n\
