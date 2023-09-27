@@ -103,22 +103,32 @@ int wrows[6] = { 0, 0,
 int wcols[6] = { 0, 0,
     MODEL_2_COLS, MODEL_3_COLS, MODEL_4_COLS, MODEL_5_COLS };
 
-static wchar_t *
-reg_font_from_cset(char *cset, int *codepage)
+const wchar_t *
+reg_font_from_host_codepage(const char *font_name, const char *codepage_name, int *codepage, int (*err)(const char *string, ...))
 {
+    const wchar_t *default_font;
     unsigned i, j;
     wchar_t *cpname = NULL;
     wchar_t data[1024];
     DWORD dlen;
     HKEY key;
+    static wchar_t dfont[1024];
     static wchar_t font[1024];
     DWORD type;
 
     *codepage = 0;
 
+    /* Figure out the default font to return. */
+    if (font_name[0]) {
+	MultiByteToWideChar(CP_ACP, 0, font_name, -1, dfont, 1024);
+	default_font = dfont;
+    } else {
+	default_font = L"Lucida Console";
+    }
+
     /* Search the table for a match. */
     for (i = 0; codepages[i].name != NULL; i++) {
-	if (!strcmp(cset, codepages[i].name)) {
+	if (!strcmp(codepage_name, codepages[i].name)) {
 	    cpname = codepages[i].codepage;
 	    break;
 	}
@@ -126,7 +136,7 @@ reg_font_from_cset(char *cset, int *codepage)
 
     /* If no match, use Lucida Console. */
     if (cpname == NULL) {
-	return L"Lucida Console";
+	return default_font;
     }
 
     /*
@@ -139,8 +149,8 @@ reg_font_from_cset(char *cset, int *codepage)
 		0,
 		KEY_READ,
 		&key) != ERROR_SUCCESS) {
-	printf("RegOpenKey failed -- cannot find font\n");
-	return L"Lucida Console";
+	err("RegOpenKey failed -- cannot find font\n");
+	return default_font;
     }
     dlen = sizeof(data);
     if (RegQueryValueExW(key, cpname, NULL, &type, (LPVOID)data,
@@ -150,8 +160,8 @@ reg_font_from_cset(char *cset, int *codepage)
 	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
 		    &dlen) != ERROR_SUCCESS) {
 	    RegCloseKey(key);
-	    printf("RegQueryValueEx failed -- cannot find font\n");
-	    return L"Lucida Console";
+	    err("RegQueryValueEx failed -- cannot find font\n");
+	    return default_font;
 	}
     }
     RegCloseKey(key);
@@ -162,8 +172,8 @@ reg_font_from_cset(char *cset, int *codepage)
 	    }
 	}
 	if (i + 1 >= dlen / sizeof(wchar_t) || data[i + 1] == 0x0000) {
-	    printf("Bad registry value -- cannot find font\n");
-	    return L"Lucida Console";
+	    err("Bad registry value -- cannot find font\n");
+	    return default_font;
 	}
 	i++;
     } else {
@@ -178,7 +188,7 @@ reg_font_from_cset(char *cset, int *codepage)
 	}
     }
     *codepage = _wtoi(cpname);
-    return font;
+    return font_name[0]? dfont: font;
 }
 
 /* Convert a hexadecimal digit to a nybble. */
@@ -349,11 +359,11 @@ HRESULT
 create_shortcut(session_t *session, char *exepath, char *linkpath, char *args,
 	char *workingdir)
 {
-    wchar_t *font;
+    const wchar_t *font;
     int codepage = 0;
     int extra_height = 1;
 
-    font = reg_font_from_cset(session->codepage, &codepage);
+    font = reg_font_from_host_codepage(session->font_name, session->codepage, &codepage, printf);
 
     if (!(session->flags & WF_NO_MENUBAR)) {
 	extra_height += 2;
@@ -369,7 +379,7 @@ create_shortcut(session_t *session, char *exepath, char *linkpath, char *args,
 		+ extra_height,	/* console rows */
 	    session->ov_cols? session->ov_cols: wcols[session->model],
 				/* console columns */
-	    font,		/* font */
+	    (wchar_t *)font,	/* font */
 	    session->point_size,/* point size */
 	    session->font_weight,/* font weight */
 	    codepage);		/* code page */

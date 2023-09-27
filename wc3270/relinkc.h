@@ -106,3 +106,5 @@ extern int read_user_settings(FILE *f, char **usp);
 extern int read_session(FILE *f, session_t *s, char **usp);
 extern HRESULT create_shortcut(session_t *session, char *exepath,
 	char *linkpath, char *args, char *workingdir);
+extern const wchar_t *reg_font_from_host_codepage(const char *font_name, const char *codepage_name, int *codepage,
+	int (*err)(const char *string, ...));
