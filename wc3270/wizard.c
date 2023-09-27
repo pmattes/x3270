@@ -282,8 +282,6 @@ static sw_t do_upgrade(bool);
 static BOOL admin(void);
 static bool ad_exist(void);
 
-static wchar_t *reg_font_from_hcp(const char *hcpname, int *codepage);
-
 /* Set up the stdout handle. */
 static bool
 setup_stdout(void)
@@ -309,7 +307,7 @@ cls(void)
 
 /* Generate output in specific colors. */
 static void
-color_out(char *fmt, int colors, va_list ap)
+color_out(const char *fmt, int colors, va_list ap)
 {
     if (!setup_stdout()) {
 	vprintf(fmt, ap);
@@ -326,19 +324,20 @@ color_out(char *fmt, int colors, va_list ap)
 }
 
 /* Generate error (actually just red) output. */
-static void
-errout(char *fmt, ...)
+static int
+errout(const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
     color_out(fmt, FOREGROUND_RED | FOREGROUND_INTENSITY, ap);
     va_end(ap);
+    return 0;
 }
 
 /* Generate green output. */
 static void
-greenout(char *fmt, ...)
+greenout(const char *fmt, ...)
 {
     va_list ap;
 
@@ -349,7 +348,7 @@ greenout(char *fmt, ...)
 
 /* Generate yellow output. */
 static void
-yellowout(char *fmt, ...)
+yellowout(const char *fmt, ...)
 {
     va_list ap;
 
@@ -361,7 +360,7 @@ yellowout(char *fmt, ...)
 
 /* Generate reverse output. */
 static void
-reverseout(char *fmt, ...)
+reverseout(const char *fmt, ...)
 {
     va_list ap;
 
@@ -372,7 +371,7 @@ reverseout(char *fmt, ...)
 
 /* Generate gray output. */
 static void
-grayout(char *fmt, ...)
+grayout(const char *fmt, ...)
 {
     va_list ap;
 
@@ -2827,7 +2826,7 @@ get_font(session_t *s)
     } else {
 	int cp;
 
-	WideCharToMultiByte(CP_ACP, 0, reg_font_from_hcp(s->codepage, &cp),
+	WideCharToMultiByte(CP_ACP, 0, reg_font_from_host_codepage(s->font_name, s->codepage, &cp, errout),
 		-1, lf.lfFaceName, STR_SIZE, NULL, NULL);
     }
     if (ChooseFont(&ch)) {
@@ -3143,95 +3142,6 @@ get_src(const char *name, src_t def)
     return src_out;
 }
 
-/**
- * Translate a wc3270 host code page name to a font for the console.
- *
- * @param[in] hcpname	Code page name
- * @param[out] codepage	Windows codepage
- *
- * @return Font name
- */
-static wchar_t *
-reg_font_from_hcp(const char *hcpname, int *codepage)
-{
-    unsigned i, j;
-    wchar_t *cpname = NULL;
-    wchar_t data[1024];
-    DWORD dlen;
-    HKEY key;
-    static wchar_t font[1024];
-    DWORD type;
-
-    *codepage = 0;
-
-    /* Search the table for a match. */
-    for (i = 0; codepages[i].name != NULL; i++) {
-	if (!strcmp(hcpname, codepages[i].name)) {
-	    cpname = codepages[i].codepage;
-	    break;
-	}
-    }
-
-    /* If no match, use Lucida Console. */
-    if (cpname == NULL) {
-	return L"Lucida Console";
-    }
-
-    /*
-     * Look in the registry for the console font associated with the
-     * Windows code page.
-     */
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		"Software\\Microsoft\\Windows NT\\CurrentVersion\\"
-		"Console\\TrueTypeFont",
-		0,
-		KEY_READ,
-		&key) != ERROR_SUCCESS) {
-	errout("RegOpenKey failed -- cannot find font\n");
-	return L"Lucida Console";
-    }
-    dlen = sizeof(data);
-    if (RegQueryValueExW(key,
-		cpname,
-		NULL,
-		&type,
-		(LPVOID)data,
-		&dlen) != ERROR_SUCCESS) {
-	/* No codepage-specific match, try the default. */
-	dlen = sizeof(data);
-	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
-		    &dlen) != ERROR_SUCCESS) {
-	    RegCloseKey(key);
-	    errout("RegQueryValueEx failed -- cannot find font\n");
-	    return L"Lucida Console";
-	}
-    }
-    RegCloseKey(key);
-    if (type == REG_MULTI_SZ) {
-	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
-	    if (data[i] == 0x0000) {
-		break;
-	    }
-	}
-	if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
-	    errout("Bad registry value -- cannot find font\n");
-	    return L"Lucida Console";
-	}
-	i++;
-    } else {
-	i = 0;
-    }
-    for (j = 0; i < dlen; i++, j++) {
-	if (j == 0 && data[i] == L'*') {
-	    i++;
-	} else if ((font[j] = data[i]) == 0x0000) {
-		break;
-	}
-    }
-    *codepage = _wtoi(cpname);
-    return font;
-}
-
 static const char *
 weight_name(int weight)
 {
@@ -3274,8 +3184,7 @@ default_font(session_t *s)
     static char font[STR_SIZE];
     int cp;
 
-    WideCharToMultiByte(CP_ACP, 0, reg_font_from_hcp(s->codepage, &cp),
-	    -1, font, STR_SIZE, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, reg_font_from_host_codepage("", s->codepage, &cp, errout), -1, font, STR_SIZE, NULL, NULL);
     return font;
 }
 
@@ -3787,10 +3696,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 done:
     {
 	int old_codepage;
-	wchar_t *old_font = reg_font_from_hcp(old_session.codepage,
-		&old_codepage);
+	const wchar_t *old_font = reg_font_from_host_codepage(old_session.font_name, old_session.codepage,
+		&old_codepage, errout);
 	int codepage;
-	wchar_t *font = reg_font_from_hcp(s->codepage, &codepage);
+	const wchar_t *font = reg_font_from_host_codepage(s->font_name, s->codepage, &codepage, errout);
 
 	if (old_session.model != s->model ||
 	    old_session.ov_rows != s->ov_rows ||
@@ -4452,7 +4361,7 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 	FILE *f;
 	session_t s;
 	int extra_height = 1;
-	wchar_t *font;
+	const wchar_t *font;
 	int codepage = 0;
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
@@ -4508,7 +4417,7 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 	    extra_height += 2;
 	}
 
-	font = reg_font_from_hcp(s.codepage, &codepage);
+	font = reg_font_from_host_codepage(s.font_name, s.codepage, &codepage, errout);
 
 	hres = create_link(
 		exepath,		/* path to executable */
@@ -4520,7 +4429,7 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 		    s.ov_rows: wrows[s.model]) + extra_height,
 		s.ov_cols?		/* console cols */
 		    s.ov_cols: wcols[s.model],
-		font,			/* font */
+		(wchar_t *)font,	/* font */
 		s.point_size,		/* point size */
 		s.font_weight,		/* font weight */
 		codepage);		/* code page */
@@ -4716,7 +4625,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
     char args[MAX_PATH];
     int shortcut_exists;
     int extra_height = 1;
-    wchar_t *font;
+    const wchar_t *font;
     int codepage = 0;
     HRESULT hres;
 
@@ -4761,7 +4670,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 	extra_height += 2;
     }
 
-    font = reg_font_from_hcp(s->codepage, &codepage);
+    font = reg_font_from_host_codepage(s->font_name, s->codepage, &codepage, errout);
 
     hres = create_link(
 	    exepath,		/* path to executable */
@@ -4773,7 +4682,7 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 		s->ov_rows: wrows[s->model]) + extra_height,
 	    s->ov_cols?		/* console cols */
 		s->ov_cols: wcols[s->model],
-	    font,		/* font */
+	    (wchar_t *)font,	/* font */
 	    s->point_size,	/* point size */
 	    s->font_weight,	/* font weight */
 	    codepage);		/* code page */

@@ -136,7 +136,7 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     p.nInputBufferSize = 0;
     p.dwFontSize.X = 0;
     p.dwFontSize.Y = pointsize? pointsize: 12;
-    p.uFontFamily = 0;			/* FF_DONTCARE */
+    p.uFontFamily = 0x36;		/* FF_MODERN | ? */
     p.uFontWeight = weight;
     wcsncpy(p.FaceName, font, LF_FACESIZE - 1);
     p.FaceName[LF_FACESIZE - 1] = 0;
