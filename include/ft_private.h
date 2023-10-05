@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, 2018-2020 Paul Mattes.
+ * Copyright (c) 1996-2023 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -80,6 +80,7 @@ typedef struct {
 #if defined(_WIN32) /*[*/
     int windows_codepage;
 #endif /*]*/
+    char *other_options;
 
     /* Invocation state. */
     bool is_action;

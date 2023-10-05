@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 2000-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,18 +67,18 @@ static struct {
 	int purpose;
 	const char *help;
 } cmd_help[] = {
-	{ AnAbort,	NULL, P_SCRIPTING, "Abort pending scripts and macros" },
-	{ AnAnsiText,	NULL, P_SCRIPTING, "Dump pending NVT text" },
-	{ AnAscii,	NULL, P_SCRIPTING, "Screen contents in ASCII" },
-	{ AnAscii,	"<n>", P_SCRIPTING,
+	{ AnAbort, NULL, P_SCRIPTING, "Abort pending scripts and macros" },
+	{ AnAnsiText, NULL, P_SCRIPTING, "Dump pending NVT text" },
+	{ AnAscii, NULL, P_SCRIPTING, "Screen contents in ASCII" },
+	{ AnAscii, "<n>", P_SCRIPTING,
 	    "<n> bytes of screen contents from cursor, in ASCII" },
-	{ AnAscii,	"<row>,<col>,<n>", P_SCRIPTING,
+	{ AnAscii, "<row>,<col>,<n>", P_SCRIPTING,
 	    "<n> bytes of screen contents from <row>,<col> (0-origin), in ASCII" },
-	{ AnAscii,	"<row>,<col>,<rows>,<cols>", P_SCRIPTING,
+	{ AnAscii, "<row>,<col>,<rows>,<cols>", P_SCRIPTING,
 	    "<rows>x<cols> of screen contents from <row>,<col> (0-origin), in ASCII" },
-	{ AnAscii1,	"<row>,<col>,<n>", P_SCRIPTING,
+	{ AnAscii1, "<row>,<col>,<n>", P_SCRIPTING,
 	    "<n> bytes of screen contents from <row>,<col> (1-origin), in ASCII" },
-	{ AnAscii1,	"<row>,<col>,<rows>,<cols>", P_SCRIPTING,
+	{ AnAscii1, "<row>,<col>,<rows>,<cols>", P_SCRIPTING,
 	    "<rows>x<cols> of screen contents from <row>,<col> (1-origin), in ASCII" },
 	{ AnAsciiField, NULL, P_SCRIPTING,
 	    "Contents of current field, in ASCII" },
@@ -128,6 +128,7 @@ static struct {
 	    "<rows>x<cols> of screen contents from <row>,<col> (1-origin), in EBCDIC" },
 	{ AnEbcdicField, NULL, P_SCRIPTING,
 	    "Contents of current field, in EBCDIC" },
+	{ AnEcho, "<text>", P_SCRIPTING, "Return text as a string" },
 	{ AnEnter, NULL, P_3270, "Send ENTER AID" },
 	{ AnErase, NULL, P_3270, "Destructive backspace" },
 	{ AnEraseEOF, NULL, P_3270, "Erase from cursor to end of field" },
@@ -137,6 +138,7 @@ static struct {
 	{ AnExecute, "<command>", P_SCRIPTING, "Execute a shell command" },
 	{ "Exit", NULL, P_INTERACTIVE, "Exit " HELP_W "c3270" },
 	{ AnExpect, "<pattern>", P_SCRIPTING, "Wait for NVT output" },
+	{ AnFail, "<text>", P_SCRIPTING, "Fail and return text" },
 	{ AnFieldEnd, NULL, P_3270, "Move to end of field" },
 	{ AnFieldMark, NULL, P_3270, "3270 FIELD MARK key (X'1E')" },
 	{ AnFlip, NULL, P_3270, "Flip display left-to-right" },
@@ -168,13 +170,15 @@ static struct {
 	    "Move cursor to specific location (1-origin)" },
 	{ AnNewline, NULL, P_3270, "Move cursor to first field in next row" },
 	{ AnNextWord, NULL, P_3270, "Move cursor to next word" },
+	{ AnNvtText, NULL, P_SCRIPTING, "Dump pending NVT text" },
 	{ AnOpen, NULL, P_INTERACTIVE, "Alias for " AnConnect "()" },
 	{ AnPA, "<n>", P_3270, "Send 3270 Program Attention" },
 #if defined(WC3270) /*[*/
 	{ "Paste", NULL, P_3270, "Paste clipboard contents" },
 #endif /*]*/
-	{ AnPF, "<n>", P_3270, "Send 3270 PF AID" },
+	{ AnPasteString, "hex-string...", P_SCRIPTING, "Enter input as if pasted" },
 	{ AnPause, NULL, P_SCRIPTING, "Wait for 350ms" },
+	{ AnPF, "<n>", P_3270, "Send 3270 PF AID" },
 	{ AnPreviousWord, NULL, P_3270, "Move cursor to previous word" },
 	{ AnPrinter, KwStart "[,lu]|" KwStop, P_3270|P_SCRIPTING|P_INTERACTIVE,
 	    "Start or stop " HELP_W "pr3287 printer session" },
@@ -203,8 +207,10 @@ static struct {
 	{ AnReconnect, NULL, P_INTERACTIVE, "Reconnect to previous host" },
 	{ AnRedraw, NULL, P_INTERACTIVE|P_3270, "Redraw screen" },
 	{ AnReset, NULL, P_3270, "Clear keyboard lock" },
+	{ AnRestoreInput, "[<set>]", P_INTERACTIVE, "Restore screen input fields" },
 	{ AnRight, NULL, P_3270, "Move cursor right" },
 	{ AnRight2, NULL, P_3270, "Move cursor right 2 columns" },
+	{ AnSaveInput, "[<set>]", P_INTERACTIVE, "Save screen input fields" },
 	{ AnScreenTrace, KwOn "[[," KwFile "],<filename>]",  P_INTERACTIVE,
 	    "Save screen images to file" },
 	{ AnScreenTrace,
@@ -229,6 +235,7 @@ static struct {
 	{ AnSnap, "<args>", P_SCRIPTING, "Screen snapshot manipulation" },
         { AnSource, "<file>", P_SCRIPTING|P_INTERACTIVE, "Read actions from file" },
 	{ AnString, "<text>", P_3270|P_SCRIPTING, "Input a string" },
+	{ AnSubjectNames, "<host>", P_INTERACTIVE, "List TLS cert subject names for a host" },
 	{ AnSysReq, NULL, P_3270,
 	    "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ AnTab, NULL, P_3270, "Move cursor to next field" },
@@ -344,7 +351,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 		    break;
 		}
 	    }
-	    if (!found) {
+	    if (!found && !(e->t.flags & ACTION_HIDDEN)) {
 		action_output("No Help for %s", e->t.name);
 		any = true;
 	    }

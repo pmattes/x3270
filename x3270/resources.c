@@ -191,6 +191,8 @@ XtResource resources[] = {
       offset(ft.lrecl), XtRString, "0" },
     { ResFtMode, ClsFtMode, XtRString, sizeof(char *),
       offset(ft.mode), XtRString, 0 },
+    { ResFtOtherOptions, ClsFtOtherOptions, XtRString, sizeof(char *),
+      offset(ft.other_options), XtRString, 0 },
     { ResFtPrimarySpace, ClsFtPrimarySpace, XtRInt, sizeof(int),
       offset(ft.primary_space), XtRString, "0" },
     { ResFtRecfm, ClsFtRecfm, XtRString, sizeof(char *),

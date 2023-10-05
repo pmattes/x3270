@@ -62,6 +62,7 @@
 #define AnEbcdic	"Ebcdic"
 #define AnEbcdic1	"Ebcdic1"
 #define AnEbcdicField	"EbcdicField"
+#define AnEcho		"Echo"
 #define AnEnter		"Enter"
 #define AnErase		"Erase"
 #define AnEraseEOF	"EraseEOF"

@@ -174,7 +174,7 @@ class playback():
         ret = b''
         while nleft > 0:
             r, _, _ = select.select([self.conn], [], [], timeout)
-            self.ct.assertNotEqual([], r, 'Emulator read timed out')
+            self.ct.assertNotEqual([], r, f'Emulator read timed out after {len(ret)} bytes read')
             chunk = self.conn.recv(nleft)
             self.ct.assertNotEqual(chunk, b'', 'Unexpected emulator EOF')
             ret += chunk

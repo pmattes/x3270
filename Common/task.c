@@ -146,6 +146,7 @@ typedef struct task {
     int passthru_index;	/* UI passthru command index */
     int depth;		/* depth on stack */
     bool fatal;		/* tear everything down after completion */
+    bool is_ft;		/* is waiting for a file transfer */
 
     void *wait_context;	/* opaque context for waiting */
     xcontinue_fn *xcontinue_fn; /* continue function */
@@ -489,11 +490,49 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Concatenate a set of arguments together. */
+static char *
+argcat(unsigned argc, const char **argv)
+{
+    varbuf_t r;
+    char *sep = "";
+    unsigned i;
+
+    vb_init(&r);
+    for (i = 0; i < argc; i++) {
+	vb_appendf(&r, "%s%s", sep, argv[i]);
+	sep = " ";
+    }
+    return vb_consume(&r);
+}
+
+static bool
+Echo_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnEcho, ia, argc, argv);
+    if (argc == 0) {
+	action_output(" ");
+    } else {
+	char *c = argcat(argc, argv);
+
+	action_output("%s", c);
+	Free(c);
+    }
+    return true;
+}
+
 static bool
 Fail_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug(AnFail, ia, argc, argv);
-    popup_an_error("%s", (argc > 0)? argv[0]: "Failed");
+    if (argc == 0) {
+	popup_an_error("Failed");
+    } else {
+	char *c = argcat(argc, argv);
+
+	popup_an_error("%s", c);
+	Free(c);
+    }
     return false;
 }
 
@@ -515,6 +554,7 @@ task_register(void)
 	{ AnEbcdic,		Ebcdic_action, 0 },
 	{ AnEbcdic1,		Ebcdic1_action, 0 },
 	{ AnEbcdicField,	EbcdicField_action, 0 },
+	{ AnEcho,		Echo_action, 0 },
 	{ AnExecute,		Execute_action, ACTION_KE },
 	{ AnExpect,		Expect_action, 0 },
 	{ AnFail,		Fail_action, 0 },
@@ -619,6 +659,7 @@ new_task(enum task_type type, taskq_t *q)
     gettimeofday(&s->t0, NULL);
     s->child_msec = 0L;
     s->fatal = false;
+    s->is_ft = false;
     s->match.baddr = -1;
     s->match.string = NULL;
     s->match.force_utf8 = false;
@@ -1397,7 +1438,7 @@ validate_command(const char *command, int offset, char **error)
 }
 
 /**
- * Tests a current task for interactivity.
+ * Tests a task for interactivity.
  *
  * @param[in] t		Task to inspect
  * @returns true if interactive.
@@ -1406,9 +1447,23 @@ static bool
 is_interactive(task_t *t)
 {
     return t != NULL &&
-	   t->cbx.cb != NULL &&
-	   t->cbx.cb->getflags != NULL &&
-	   ((*t->cbx.cb->getflags)(t->cbx.handle) & CBF_INTERACTIVE) != 0;
+	t->cbx.cb != NULL &&
+	t->cbx.cb->getflags != NULL &&
+	((*t->cbx.cb->getflags)(t->cbx.handle) & CBF_INTERACTIVE) != 0;
+}
+
+/**
+ * Test a specific task for non-blocking Connect() / Open() / Transfer().
+ *
+ * @param[in] t		Task to inspect
+ * @returns true if non-blocking.
+ */
+static bool is_nonblocking_connect(task_t *t)
+{
+    return t != NULL &&
+	t->cbx.cb != NULL &&
+	t->cbx.cb->getflags != NULL &&
+	((*t->cbx.cb->getflags)(t->cbx.handle) & CBF_CONNECT_FT_NONBLOCK) != 0;
 }
 
 /* Run the macro at the top of the stack. */
@@ -1497,9 +1552,13 @@ run_macro(void)
 	 * return immediately instead of waiting for the transfer to complete.
 	 */
 	if (!was_ckbwait &&
-	    CKBWAIT &&
-	    !((old_kybdlock ^ kybdlock) == KL_FT && is_interactive(s->next))) {
+		CKBWAIT &&
+		!(((old_kybdlock ^ kybdlock) & KL_FT) && is_nonblocking_connect(s->next))) {
 	    task_set_state(s, TS_KBWAIT, "keyboard locked");
+	    if ((old_kybdlock ^ kybdlock) & KL_FT) {
+		vtrace(TASK_NAME_FMT " setting is_ft\n", TASK_sNAME(s));
+		s->is_ft = true;
+	    }
 	}
 
 	/* Macro paused, implicitly or explicitly.  Suspend it. */
@@ -1944,6 +2003,54 @@ connect_errno(int e, const char *fmt, ...)
 }
 
 /**
+ * Complete a file transfer.
+ */
+void
+task_ft_complete(const char *msg, bool is_error)
+{
+    taskq_t *q;
+    task_t *s;
+    bool found = false;
+
+    /* Look for a task in the right state. */
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	for (s = q->top; s != NULL; s = s->next) {
+	    if (s->is_ft) {
+		found = true;
+		break;
+	    }
+	}
+	if (found) {
+	    break;
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+
+    if (found) {
+	task_t *parent = s->next;
+
+	/* XXX: Calling another task's data method in this task's context could be dangerous. */
+	if (parent != NULL && parent->type == ST_CB) {
+	    const char *fragment = msg;
+	    char *nl;
+
+	    while ((nl = strchr(fragment, '\n')) != NULL) {
+		if (nl > fragment) {
+		    (*parent->cbx.cb->data)(parent->cbx.handle, fragment, nl - fragment, !is_error);
+		}
+		fragment = nl + 1;
+	    }
+	    if (*fragment) {
+		(*parent->cbx.cb->data)(parent->cbx.handle, fragment, strlen(fragment), !is_error);
+	    }
+
+	    if (is_error) {
+		s->success = false;
+	    }
+	}
+    }
+}
+
+/**
  * Grabs a string from an offset on the screen.
  * Returns the string.
  *
@@ -2058,6 +2165,11 @@ run_taskq(void)
 	case TS_KBWAIT:
 	    if (CKBWAIT) {
 		return any;
+	    } else {
+		if (current_task->is_ft) {
+		    vtrace(TASK_NAME_FMT " clearing is_ft\n", TASK_NAME);
+		}
+		current_task->is_ft = false;
 	    }
 	    break;
 
@@ -4394,19 +4506,14 @@ task_is_interactive(void)
 }
 
 /**
- * Test the current task for non-blocking Connect(). 
+ * Test the current task for non-blocking Connect() / Open() / Transfer().
  *
  * @returns true if non-blocking.
  */
 bool
 task_nonblocking_connect(void)
 {
-    task_t *redirect = task_redirect_to();
-
-    return redirect != NULL &&
-	   redirect->cbx.cb->getflags != NULL &&
-	   ((*redirect->cbx.cb->getflags)(redirect->cbx.handle) &
-		CBF_CONNECT_NONBLOCK) != 0;
+    return is_nonblocking_connect(task_redirect_to());
 }
 
 /**

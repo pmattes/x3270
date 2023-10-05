@@ -54,20 +54,6 @@ class TestC3270IntScript(cti.cti):
         r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Escape({prompt_arg}"Script(-interactive,c3270/Test/ask.py)")')
         self.assertTrue(r.ok)
 
-    def wait_for_input(self, timeout: int, fd: int, text: str):
-        '''Wait for c3270 to produce specific output'''
-        result = ''
-        while True:
-            try:
-                r, _, _ = select.select([fd], [], [], timeout)
-                self.assertNotEqual([], r, f'c3270 did not produce desired output "{text}"')
-                rbuf = os.read(fd, 1024)
-            except OSError:
-                break
-            result += rbuf.decode('utf8')
-            if text in result:
-                break
-        
     # c3270 interactive script test
     def c3270_interactive_script_test(self, prompt:bool):
 
@@ -94,7 +80,7 @@ class TestC3270IntScript(cti.cti):
         request_thread.start()
 
         # Collect output until we get the prompt from the script.
-        self.wait_for_input(2, fd, 'Input: ')
+        self.wait_for_pty_output(2, fd, 'Input: ')
 
         # Tell the script to proceed.
         os.write(fd, b'\n')
@@ -102,7 +88,7 @@ class TestC3270IntScript(cti.cti):
 
         # Wait for the prompt.
         if prompt:
-            self.wait_for_input(2, fd, '[Press <Enter>]')
+            self.wait_for_pty_output(2, fd, '[Press <Enter>]')
 
         # Tell c3270 to exit.
         requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')

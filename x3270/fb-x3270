@@ -908,30 +908,31 @@ x3270.ftPopup*receive.label:			Receive from host
 x3270.ftPopup*ascii.label:			Transfer ASCII file
 x3270.ftPopup*cr.label:				Add/remove CR at end of line
 x3270.ftPopup*binary.label:			Transfer binary file
-x3270.ftPopup*local.label:			Local File Name
-x3270.ftPopup*host.label:			Host File Name
+x3270.ftPopup*local.label:			Local file name
+x3270.ftPopup*host.label:			Host file name
 x3270.ftPopup*append.label:			Append to file
-x3270.ftPopup*remap.label:			Remap ASCII Characters
+x3270.ftPopup*remap.label:			Remap ASCII characters
 x3270.ftPopup*vm.label:				Host is VM/CMS
 x3270.ftPopup*tso.label:			Host is TSO
 x3270.ftPopup*cics.label:			Host is CICS
 x3270.ftPopup*confirmButton.label:		Transfer File
-x3270.ftPopup*file.label:			Record Format
+x3270.ftPopup*file.label:			Record format
 x3270.ftPopup*recfmDefault.label:		Default
 x3270.ftPopup*fixed.label:			Fixed
 x3270.ftPopup*variable.label:			Variable
 x3270.ftPopup*undefined.label:			Undefined
-x3270.ftPopup*units.label:			Space Allocation Units
+x3270.ftPopup*units.label:			Space allocation units
 x3270.ftPopup*spaceDefault.label:		Default
 x3270.ftPopup*tracks.label:			Tracks
 x3270.ftPopup*cylinders.label:			Cylinders
 x3270.ftPopup*avblock.label:			Avblock
-x3270.ftPopup*lrecl.label:			Record Length
-x3270.ftPopup*blksize.label:			Block Size
-x3270.ftPopup*primspace.label:			Primary Space
-x3270.ftPopup*secspace.label:			Secondary Space
-x3270.ftPopup*avblockSize.label:		Avblock Size
-x3270.ftPopup*buffersize.label:			DFT Buffer Size
+x3270.ftPopup*lrecl.label:			Record length
+x3270.ftPopup*blksize.label:			Block size
+x3270.ftPopup*primspace.label:			Primary space
+x3270.ftPopup*secspace.label:			Secondary space
+x3270.ftPopup*avblockSize.label:		Avblock size
+x3270.ftPopup*buffersize.label:			DFT buffer size
+x3270.ftPopup*otherOptions.label:		Other options
 x3270.ftProgressPopup*fromLabel.label:		Source:
 x3270.ftProgressPopup*fromLabel.justify:	right
 x3270.ftProgressPopup*toLabel.label:		Destination:

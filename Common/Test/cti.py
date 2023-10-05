@@ -284,6 +284,20 @@ class cti(unittest.TestCase):
             return any(r.search(line) for line in stdout)
         self.try_until(test, 2, f"Port {port} is not bound")
 
+    def wait_for_pty_output(self, timeout: int, fd: int, text: str):
+        '''Wait for the emulator to produce specific output on the pty'''
+        result = ''
+        while True:
+            try:
+                r, _, _ = select.select([fd], [], [], timeout)
+                self.assertNotEqual([], r, f'Emulator did not produce desired output "{text}"')
+                rbuf = os.read(fd, 1024)
+            except OSError:
+                break
+            result += rbuf.decode('utf8')
+            if text in result:
+                break
+
     def check_dash_v(self, prog, with_w=False):
         '''Make sure the "-v" option works'''
         p = Popen([prog, '-v'], stderr=PIPE)

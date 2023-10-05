@@ -169,6 +169,7 @@ typedef struct {
 	char	*recfm;
 	char	*remap;
 	int	 secondary_space;
+	char	*other_options;
     } ft;
 
     /* c3270/wc3270-specific fields. */
