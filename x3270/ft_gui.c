@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018-2019, 2021 Paul Mattes.
+ * Copyright (c) 1996-2023 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -87,6 +87,7 @@ static Widget ascii_toggle, binary_toggle;
 static Widget cr_widget;
 static Widget remap_widget;
 static Widget buffersize_widget;
+static Widget other_options_widget;
 static Widget inprogress_cancel_button;
 
 static bool host_is_tso = true;	/* bools used by dialog */
@@ -187,6 +188,7 @@ ft_popup_init(void)
     Widget h_ref = NULL;
     Widget recfm_label, units_label;
     Widget buffersize_label;
+    Widget other_options_label;
     Widget start_button;
     Widget spacer_toggle;
     char *s;
@@ -797,14 +799,14 @@ ft_popup_init(void)
     /* Set up the DFT buffer size. */
     buffersize_label = XtVaCreateManagedWidget(
 	    "buffersize", labelWidgetClass, ft_dialog,
-	    XtNfromVert, blksize_label,
+	    XtNfromVert, avblock_size_label,
 	    XtNvertDistance, 3,
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
     buffersize_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
-	    XtNfromVert, blksize_label,
+	    XtNfromVert, avblock_size_label,
 	    XtNvertDistance, 3,
 	    XtNfromHoriz, buffersize_label,
 	    XtNhorizDistance, 0,
@@ -829,10 +831,45 @@ ft_popup_init(void)
     XawTextSetInsertionPoint(buffersize_widget, strlen(s));
     XtFree(s);
 
+    /* Set up the other options. */
+    other_options_label = XtVaCreateManagedWidget(
+	    "otherOptions", labelWidgetClass, ft_dialog,
+	    XtNfromVert, buffersize_label,
+	    XtNvertDistance, 3,
+	    XtNhorizDistance, MARGIN,
+	    XtNborderWidth, 0,
+	    NULL);
+    other_options_widget = XtVaCreateManagedWidget(
+	    "value", asciiTextWidgetClass, ft_dialog,
+	    XtNfromVert, buffersize_label,
+	    XtNvertDistance, 3,
+	    XtNfromHoriz, buffersize_label,
+	    XtNhorizDistance, 0,
+	    XtNwidth, 100,
+	    XtNeditType, XawtextEdit,
+	    XtNdisplayCaret, False,
+	    NULL);
+    dialog_match_dimension(other_options_label, other_options_widget, XtNheight);
+    w = XawTextGetSource(other_options_widget);
+    if (w == NULL) {
+	XtWarning("Cannot find text source in dialog");
+    } else {
+	XtAddCallback(w, XtNcallback, dialog_text_callback,
+		(XtPointer)&t_hostfile);
+    }
+    dialog_register_sensitivity(other_options_widget,
+	    NULL, false,
+	    NULL, false,
+	    NULL, false);
+    if (xftc.other_options) {
+	XtVaSetValues(other_options_widget, XtNstring, xftc.other_options, NULL);
+	XawTextSetInsertionPoint(other_options_widget, strlen(xftc.other_options));
+    }
+
     /* Set up the buttons at the bottom. */
     start_button = XtVaCreateManagedWidget(
 	    ObjConfirmButton, commandWidgetClass, ft_dialog,
-	    XtNfromVert, buffersize_label,
+	    XtNfromVert, other_options_label,
 	    XtNvertDistance, FAR_VGAP,
 	    XtNhorizDistance, MARGIN,
 	    NULL);
@@ -840,7 +877,7 @@ ft_popup_init(void)
 
     cancel_button = XtVaCreateManagedWidget(
 	    ObjCancelButton, commandWidgetClass, ft_dialog,
-	    XtNfromVert, buffersize_label,
+	    XtNfromVert, other_options_label,
 	    XtNvertDistance, FAR_VGAP,
 	    XtNfromHoriz, start_button,
 	    XtNhorizDistance, BUTTON_GAP,
@@ -1122,6 +1159,9 @@ ft_start(void)
 	popup_an_error("Missing or invalid Primary Space");
 	return false;
     }
+
+    /* Fetch the other options. */
+    XtVaGetValues(other_options_widget, XtNstring,  &xftc.other_options, NULL);
 
     /* Prompt for local file overwrite. */
     path = ft_resolve_dir(&xftc);

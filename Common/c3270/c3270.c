@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1862,7 +1862,7 @@ command_getflags(task_cbh handle)
      * CONNECT_NONBLOCK: We do not want Connect()/Open() to block.
      * PWINPUT: We understand [pwinput] responses.
      */
-    return CBF_INTERACTIVE | CBF_CONNECT_NONBLOCK | CBF_PWINPUT;
+    return CBF_INTERACTIVE | CBF_CONNECT_FT_NONBLOCK | CBF_PWINPUT;
 }
 
 /**

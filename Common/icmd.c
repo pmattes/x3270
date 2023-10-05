@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2016, 2020 Paul Mattes.
+ * Copyright (c) 2007-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,7 @@ fmt80(const char *s)
 	    }
 	}
 
-	action_output(" %.*s", (int)nc, s);
+	action_output("%.*s", (int)nc, s);
 	s += nc;
 	if (*s == '\n' || *s == ' ') {
 	    s++;
@@ -176,6 +176,7 @@ fmt80(const char *s)
  *                  ask for avblock size
  *  if not std data stream
  *      ask for buffer size
+ *  ask for additional IND$FILE options
  *  ask to go ahead with the transfer
  */
 
@@ -202,6 +203,7 @@ typedef enum {
     ITS_SECONDARY,	/* Secondary space: */
     ITS_AVBLOCK,	/* Avblock size: */
     ITS_BUFFER_SIZE,	/* DFT buffer size: */
+    ITS_OTHER_OPTIONS,	/* Other IND$FILE options: */
     ITS_GO		/* Continue? */
 } its_t;
 
@@ -244,6 +246,7 @@ static itret_fn it_primary;
 static itret_fn it_secondary;
 static itret_fn it_avblock;
 static itret_fn it_buffer_size;
+static itret_fn it_other_options;
 static itret_fn it_go;
 
 static itret_fn *it_resume_fn[] = {
@@ -268,6 +271,7 @@ static itret_fn *it_resume_fn[] = {
     it_secondary,
     it_avblock,
     it_buffer_size,
+    it_other_options,
     it_go
 };
 
@@ -294,6 +298,7 @@ static itpred_t pred_primary;
 static itpred_t pred_secondary;
 static itpred_t pred_avblock;
 static itpred_t pred_buffer_size;
+static itpred_t pred_other_options;
 static itpred_t pred_go;
 
 static itpred_t *it_pred[] = {
@@ -318,6 +323,7 @@ static itpred_t *it_pred[] = {
     pred_secondary,
     pred_avblock,
     pred_buffer_size,
+    pred_other_options,
     pred_go
 };
 
@@ -343,6 +349,7 @@ static it_ask_t ask_primary;
 static it_ask_t ask_secondary;
 static it_ask_t ask_avblock;
 static it_ask_t ask_buffer_size;
+static it_ask_t ask_other_options;
 static it_ask_t ask_go;
 
 static it_ask_t *it_ask[] = {
@@ -367,6 +374,7 @@ static it_ask_t *it_ask[] = {
     ask_secondary,
     ask_avblock,
     ask_buffer_size,
+    ask_other_options,
     ask_go
 };
 
@@ -868,6 +876,22 @@ it_buffer_size(itc_t *itc, const char *response)
     return ITR_CONTINUE;
 }
 
+/* Got an answer to "Other IND$FILE options?. */
+static itret_t
+it_other_options(itc_t *itc, const char *response)
+{
+    ft_conf_t *p = &itc->conf;
+
+    if (response[0]) {
+	if (!strcasecmp(response, "none")) {
+	    Replace(p->other_options, NULL);
+	} else {
+	    p->other_options = NewString(response);
+	}
+    }
+    return ITR_CONTINUE;
+}
+
 /* Got an answer to the final "Continue?". */
 static itret_t
 it_go(itc_t *itc, const char *response)
@@ -1004,6 +1028,12 @@ static bool
 pred_buffer_size(ft_conf_t *p)
 {
     return !HOST_FLAG(STD_DS_HOST);
+}
+
+static bool
+pred_other_options(ft_conf_t *p)
+{
+    return true;
 }
 
 static bool
@@ -1297,6 +1327,20 @@ ask_buffer_size(itc_t *itc)
 }
 
 static char *
+ask_other_options(itc_t *itc)
+{
+    ft_conf_t *p = &itc->conf;
+
+    /* Ask for the other IND$FILE options. */
+    action_output(" ");
+    action_output("You can specify additional options to pass to the IND$FILE command on the host.");
+    if (p->other_options) {
+	action_output("Enter 'none' to specify no additional options.");
+    }
+    return xs_buffer("Other IND$FILE options: [%s] ", p->other_options? p->other_options: "");
+}
+
+static char *
 ask_go(itc_t *itc)
 {
     ft_conf_t *p = &itc->conf;
@@ -1437,6 +1481,9 @@ ask_go(itc_t *itc)
     if (!HOST_FLAG(STD_DS_HOST)) {
 	action_output(" DFT buffer size: %d", p->dft_buffersize);
     }
+    if (p->other_options) {
+	action_output(" Other IND$FILE options: %s", p->other_options);
+    }
 
     action_output(" ");
 
@@ -1455,12 +1502,14 @@ ft_help(bool as_action _is_unused)
     action_output(
 "Syntax:\n\
   To be prompted interactively for parameters:\n\
-    Transfer\n\
+    Transfer()\n\
   To specify parameters on the command line:\n\
     Transfer(<keyword>=<value>...)\n\
     or Transfer(<keyword>,<value>...)\n\
   To do a transfer using the current defaults:\n\
     Transfer(defaults)\n\
+  To cancel a transfer in progress:\n\
+    Transfer(cancel)\n\
 Keywords:");
 
     action_output(
@@ -1561,8 +1610,10 @@ Keywords:");
 "  buffersize=<n>                       default %d",
 		conf.dft_buffersize? conf.dft_buffersize: DFT_BUF);
     action_output(
+"  otheroptions=<text>                  other options for IND$FILE");
+    action_output(
 "Note that when you use <keyword>=<value> syntax, to embed a space in a value,\n\
-you must quote the keyword, e.g.:\n\
+you must include the keyword inside the quotes, e.g.:\n\
   Transfer(direction=send,localfile=/tmp/foo,\"hostfile=foo text a\",host=vm)");
 
     if (conf.local_filename) {

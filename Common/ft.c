@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, 2018-2021 Paul Mattes.
+ * Copyright (c) 1996-2023 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -131,6 +131,7 @@ enum ft_parm_name {
 #if defined(_WIN32) /*[*/
     PARM_WINDOWS_CODEPAGE,
 #endif /*]*/
+    PARM_OTHER_OPTIONS,
     N_PARMS
 };
 static struct {
@@ -157,6 +158,7 @@ static struct {
 #if defined(_WIN32) /*[*/
     { "WindowsCodePage" },
 #endif /*]*/
+    { "OtherOptions" },
 };
 ft_tstate_t fts;
 
@@ -333,6 +335,7 @@ ft_init_conf(ft_conf_t *p)
     p->windows_codepage = appres.ft.codepage?
 	appres.ft.codepage: appres.local_cp;
 #endif /*]*/
+    Replace(p->other_options, NULL);
 
     /* Apply resources. */
     if (appres.ft.blksize) {
@@ -438,6 +441,31 @@ ft_init_conf(ft_conf_t *p)
 	p->avblock = appres.ft.avblock;
     }
     p->dft_buffersize = set_dft_buffersize(0);
+    if (appres.ft.other_options) {
+	/* Normalize the options. */
+	char *oo = appres.ft.other_options;
+	size_t sl = strlen(oo);
+
+	if (oo[0] == ' ' || (sl > 0 && oo[sl - 1] == ' ')) {
+	    char *oo_copy = NewString(oo);
+	    char *oo_start = oo_copy;
+
+	    while (*oo_start == ' ') {
+		oo_start++;
+	    }
+	    sl = strlen(oo_start);
+	    while (sl > 0 && oo_start[sl - 1] == ' ') {
+		oo_start[--sl] = '\0';
+	    }
+	    if (*oo_start) {
+		Replace(appres.ft.other_options, NewString(oo_start));
+	    } else {
+		Replace(appres.ft.other_options, NULL);
+	    }
+	    Free(oo_copy);
+	}
+	Replace(p->other_options, appres.ft.other_options? NewString(appres.ft.other_options): NULL);
+    }
 }
 
 /* Return the right value for fopen()ing the local file. */
@@ -502,6 +530,9 @@ ft_complete(const char *errmsg)
     if (errmsg != NULL) {
 	char *msg_copy = NewString(errmsg);
 
+	/* Send the error message to any waiting action. */
+	task_ft_complete(errmsg, true);
+
 	/* Make sure the error message will fit on the pop-up. */
 	ft_gui_errmsg_prepare(msg_copy);
 
@@ -523,8 +554,13 @@ ft_complete(const char *errmsg)
 	buf = xs_buffer(get_message("ftComplete"), fts.length,
 		display_scale(bytes_sec),
 		fts.is_cut ? "CUT" : "DFT");
+
+	/* Send the completion message to the UI. */
 	ft_gui_clear_progress();
 	ft_gui_complete_popup(buf, false);
+
+	/* Send the completion message to any waiting action. */
+	task_ft_complete(buf, false);
 	Free(buf);
     }
 }
@@ -729,6 +765,9 @@ ft_go(ft_conf_t *p, enum iaction cause)
 		}
 	    }
 	}
+    }
+    if (p->other_options) {
+	vb_appendf(&r, " %s", p->other_options);
     }
     vb_appends(&r, "\\n");
 
@@ -947,6 +986,9 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
     }
 #endif /*]*/
+    if (tp[PARM_OTHER_OPTIONS].value) {
+	Replace(p->other_options, NewString(tp[PARM_OTHER_OPTIONS].value));
+    }
 
     /* Check for required values. */
     if (!p->host_filename) {
@@ -1172,6 +1214,10 @@ ft_do_cancel(void)
 	return false;
     } else {
 	if (ft_state != FT_NONE) {
+	    if (ft_state == FT_AWAIT_ACK) {
+		/* If we're awaiting an ack, the host may not have unlocked the keyboard. */
+		kybdlock_clr(KL_OIA_TWAIT | KL_OIA_LOCKED, "ft_do_cancel");
+	    }
 	    ft_complete(get_message("ftUserCancel"));
 	}
 	return true;

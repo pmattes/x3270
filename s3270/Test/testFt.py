@@ -47,7 +47,7 @@ class TestS3270ft(cti.cti):
 
             # Start s3270.
             s3270 = Popen(cti.vgwrap(['s3270', '-set', 'wrongTerminalName', f'127.0.0.1:{port}']), stdin=PIPE,
-                    stdout=DEVNULL)
+                    stdout=PIPE)
             self.children.append(s3270)
 
             # Feed s3270 some actions.
@@ -57,6 +57,12 @@ class TestS3270ft(cti.cti):
 
             # Verify what s3270 does.
             p.match()
+
+            # Verify what it says.
+            stdout = s3270.communicate()[0].decode().split('\n')
+            self.assertEqual('data: Transfer complete, 19925 bytes transferred', stdout[0])
+            self.assertTrue('Mbytes/sec in DFT mode' in stdout[1])
+            self.assertEqual('ok', stdout[3])
 
         # Wait for the process to exit.
         s3270.stdin.close()
@@ -72,7 +78,7 @@ class TestS3270ft(cti.cti):
 
             # Start s3270.
             s3270 = Popen(cti.vgwrap(["s3270", "-model", "2", f"127.0.0.1:{port}"]),
-                    stdin=PIPE, stdout=DEVNULL)
+                    stdin=PIPE, stdout=PIPE)
             self.children.append(s3270)
 
             # Feed s3270 some actions.
@@ -83,6 +89,12 @@ class TestS3270ft(cti.cti):
 
             # Verify what s3270 does.
             p.match()
+
+            # Verify what it says.
+            stdout = s3270.communicate()[0].decode().split('\n')
+            self.assertEqual('data: Transfer complete, 19580 bytes transferred', stdout[0])
+            self.assertTrue('bytes/sec in CUT mode' in stdout[1])
+            self.assertEqual('ok', stdout[3])
 
         # Wait for the process to exit.
         s3270.stdin.close()
@@ -131,6 +143,94 @@ class TestS3270ft(cti.cti):
 
         # Wait for the process to exit.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def check_block(self, sport: int) -> bool:
+        '''Check for a blocking Transfer() action'''
+        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(task)').json()['result']
+        return any(['KBWAIT => Transfer' in line for line in r])
+
+    def cancel_transfer(self, sport: int):
+        '''Cancel the file transfer'''
+        # Wait for the file transfer to block.
+        self.try_until(lambda: (self.check_block(sport)), 2, 'Transfer() not blocking')
+        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Transfer(cancel)')
+        self.assertTrue(r.ok)
+
+    # s3270 file transfer cancel test
+    def test_s3270_ft_cancel(self):
+
+        # Start 'playback' to read s3270's output.
+        port, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/ft_cut.trc', port=port) as p:
+            socket.close()
+
+            # Start s3270.
+            sport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-model', '2', '-httpd', str(sport), f'127.0.0.1:{port}']),
+                    stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+
+            # Get everything going.
+            p.send_records(2)
+
+            # Start a thread to cancel the transfer.
+            athread = threading.Thread(target=self.cancel_transfer, args=[sport])
+            athread.start()
+
+            # Try a transfer.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Transfer(direction=send,host=vm,"localfile=s3270/Test/fttext","hostfile=ft text a")', timeout=2)
+            self.assertFalse(r.ok)
+
+            # Verify what it says.
+            self.assertEqual(r.json()['result'][0], 'Transfer canceled by user')
+
+            athread.join()
+            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
+    def disconnect_transfer(self, sport: int, p: playback.playback):
+        '''Disconnect the session'''
+        # Wait for the file transfer to block.
+        self.try_until(lambda: (self.check_block(sport)), 2, 'Transfer() not blocking')
+        p.disconnect()
+
+    # s3270 file transfer disconnect test
+    def test_s3270_ft_disconnect(self):
+
+        # Start 'playback' to read s3270's output.
+        port, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/ft_cut.trc', port=port) as p:
+            socket.close()
+
+            # Start s3270.
+            sport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-model', '2', '-httpd', str(sport), f'127.0.0.1:{port}']),
+                    stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+
+            # Get everything going.
+            p.send_records(2)
+
+            # Start a thread to disconnect the session.
+            athread = threading.Thread(target=self.disconnect_transfer, args=[sport, p])
+            athread.start()
+
+            # Try a transfer.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Transfer(direction=send,host=vm,"localfile=s3270/Test/fttext","hostfile=ft text a")', timeout=2)
+            self.assertFalse(r.ok)
+
+            # Verify what it says.
+            self.assertEqual(r.json()['result'][0], 'Host disconnected, transfer canceled')
+
+            athread.join()
+            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
         self.vgwait(s3270)
 
 if __name__ == '__main__':
