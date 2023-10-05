@@ -1166,9 +1166,6 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     script_port = ntohs(sin->sin_port);
     Free(sin);
 
-    putenv(lazyaf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
-    putenv(lazyaf(PORT_ENV "=%d", script_port));
-
 #if !defined(_WIN32) /*[*/
     /*
      * Create pipes and stdout stream for the script process.
@@ -1240,9 +1237,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    dup2(stdoutpipe[1], 2);
 	}
 
-	/* Export the names of the pipes into the environment. */
+	/* Export the names of the pipes, URL and port into the environment. */
 	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
 	putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
+	putenv(xs_buffer(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
+	putenv(xs_buffer(PORT_ENV "=%d", script_port));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1325,6 +1324,11 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	Free(args);
 	args = t;
     }
+
+    /* Export the names of the URL and port into the environment. */
+    SetEnvironmentVariable(URL_ENV, lazyaf("http://127.0.0.1:%u/3270/rest/", httpd_port));
+    SetEnvironmentVariable(PORT_ENV, lazyaf("%d", script_port));
+
     if (CreateProcess(NULL, args, NULL, NULL, TRUE,
 		(stdout_redirect && !share_console)? DETACHED_PROCESS: 0,
 		NULL, NULL, &startupinfo, &process_information) == 0) {
