@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2022 Paul Mattes.
+ * Copyright (c) 2000-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -774,6 +774,7 @@ main(int argc, char *argv[])
 	} else if (!strcmp(argv[i], OptV) || !strcmp(argv[i], OptVersion)) {
 	    fprintf(stderr, "%s\n%s\n", build, bo = build_options());
 	    Free((char *)bo);
+	    fprintf(stderr, "TLS provider: %s\n", sio_provider());
 	    codepage_list();
 	    fprintf(stderr, "\n\
 Copyright 1989-%s, Paul Mattes, GTRC and others.\n\

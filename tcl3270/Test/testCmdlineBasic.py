@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ class TestTcl3270BasicCmdline(cti.cti):
 
     # tcl3270 -v and -help test
     def test_tcl3270_v_help(self):
-        self.check_dash_v('tcl3270')
+        self.check_dash_v('tcl3270', check_tls = False)
         self.check_help('tcl3270')
         self.check_bad('tcl3270', extra = '--')
         self.check_bad2('tcl3270', extra = '--')

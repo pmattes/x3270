@@ -298,7 +298,7 @@ class cti(unittest.TestCase):
             if text in result:
                 break
 
-    def check_dash_v(self, prog, with_w=False):
+    def check_dash_v(self, prog, with_w=False, check_tls=True):
         '''Make sure the "-v" option works'''
         p = Popen([prog, '-v'], stderr=PIPE)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
@@ -306,6 +306,8 @@ class cti(unittest.TestCase):
         vprog = 'w' + prog if with_w else prog
         self.assertTrue(stderr[0].startswith(vprog + ' '), '-v does not start with program name')
         self.assertTrue(any('Copyright' in line for line in stderr), 'Copyright not found')
+        if check_tls:
+            self.assertTrue(any('TLS provider: ' in line for line in stderr), 'TLS provider not found')
 
     def check_help(self, prog):
         '''Make sure the "--help" option works'''
