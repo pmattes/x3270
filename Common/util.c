@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -46,6 +46,7 @@
 #include "lazya.h"
 #include "popups.h"
 #include "product.h"
+#include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "varbuf.h"
@@ -969,6 +970,7 @@ void
 dump_version(void)
 {
     fprintf(stderr, "%s\nBuild options: %s\n", build, build_options());
+    fprintf(stderr, "TLS provider: %s\n", net_sio_provider());
     codepage_list();
     fprintf(stderr, "\n"
 "Copyright 1989-%s, Paul Mattes, GTRC and others.\n"
