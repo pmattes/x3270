@@ -50,6 +50,8 @@ def base26(i: int) -> str:
     alphas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     return alphas[ldigit: ldigit + 1] + alphas[rdigit : rdigit + 1]
 
+liked_options = [ telopt.TTYPE, telopt.BINARY, telopt.EOR, telopt.TN3270E, telopt.STARTTLS, telopt.NEW_ENVIRON ]
+
 # Set up the LU queues.
 lu_count = 100
 termids = queue.Queue()
@@ -70,6 +72,7 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         self.system = None
         self.tls = tls
         self.do_tn3270e = opts.get('tn3270e', 'True') == 'True'
+        self.elf = opts.get('elf', 'True') == 'True'
     def __enter__(self):
         super().__enter__()
         return self
@@ -103,8 +106,10 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
                 if not self.wrap():
                     self.hangup()
                 self.send_do(telopt.TN3270E if self.do_tn3270e else telopt.TTYPE)
+                self.send_do(telopt.NEW_ENVIRON)
         else:
             self.send_do(telopt.TN3270E if self.do_tn3270e else telopt.TTYPE)
+            self.send_do(telopt.NEW_ENVIRON)
         return True
 
     # Called from TELNET.
@@ -148,6 +153,8 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
             if not self.wrap():
                 self.hangup()
             self.send_do(telopt.TN3270E if self.do_tn3270e else telopt.TTYPE)
+        if option == telopt.NEW_ENVIRON:
+            self.parse_new_environ(data)
 
     def rcv_will(self, option: telopt) -> bool:
         '''Approve WILL option'''
@@ -162,7 +169,10 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         if telopt.BINARY in self.theiropts and telopt.EOR in self.theiropts and telopt.BINARY in self.myopts and telopt.EOR in self.myopts:
             if not self.in3270:
                 self.switch_3270(True)
-        return option == telopt.TTYPE or option == telopt.BINARY or option == telopt.EOR or option == telopt.TN3270E or option == telopt.STARTTLS
+        if option == telopt.NEW_ENVIRON:
+            request = bytes([int(telobj.USERVAR)]) + 'IBMELF'.encode() + bytes([int(telobj.USERVAR)]) + 'IBMAPPLID'.encode() if self.elf else b''
+            self.ask_sb(option, request)
+        return option in liked_options
 
     def rcv_wont(self, option: telopt) -> bool:
         '''Notify of WONT option'''
@@ -209,6 +219,55 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         # Note: 0x00, 0x05 is a 16-bit length 5, which includes the length itself
         self.send_host(bytes([command.write_structured_field, 0x00, 0x05, sf.read_partition, 0xff, sf_rp.query]))
         self.debug('TN3270', 'sent Query')
+
+    def parse_new_environ(self, data: bytes):
+        '''Parse a NEW-ENVIRON sub-negotiation'''
+        if len(data) == 0:
+            return
+        if ftie(data[0], telqual) == telqual.IS:
+            decode = 'IS'
+        elif ftie(data[0], telqual) == telqual.INFO:
+            decode = 'INFO'
+        else:
+            self.warning('TN3270', f'Unknown NEW-ENVIRON SB code {data[0]}')
+            return
+        data = data[1:]
+        while len(data) > 0:
+            if telobj(data[0]) == telobj.VAR:
+                decode += ' VAR '
+            elif telobj(data[0]) == telobj.USERVAR:
+                decode += ' USERVAR '
+            else:
+                self.warning('TN3270', f'Unknown NEW-ENVIRON code {data[0]}')
+                return
+            # Accumulate bytes until we hit the end or a VALUE.
+            data = data[1:]
+            while len(data) > 0 and ftie(data[0], telobj) != telobj.VALUE and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
+                if ftie(data[0], telobj) == telobj.ESC:
+                    data = data[1:]
+                    if len(data) == 0:
+                        self.warning('TN3270', 'Missing data after ESC')
+                        return
+                decode += data[0:1].decode()
+                data = data[1:]
+            decode += '="'
+            if len(data) == 0:
+                decode += '"'
+                break
+            if ftie(data[0], telobj) == telobj.VAR or ftie(data[0], telobj) == telobj.USERVAR:
+                decode += '"'
+                continue
+            data = data[1:]
+            while len(data) > 0 and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
+                if ftie(data[0], telobj) == telobj.ESC:
+                    data = data[1:]
+                    if len(data) == 0:
+                        self.warning('TN3270', 'Missing data after ESC')
+                        return
+                decode += data[0:1].decode()
+                data = data[1:]
+            decode += '"'
+        self.debug('TN3270', f'NEW-ENVIRON {decode}')
 
     # TN3270E entry points.
     def e_sb(self, data: bytes):

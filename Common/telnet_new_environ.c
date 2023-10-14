@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,10 @@
      c == TELOBJ_VALUE)
 #define USER_VARNAME		"USER"
 #define DEVNAME_USERVARNAME	"DEVNAME"
+#define IBMELF_VARNAME		"IBMELF"
+#define IBMAPPLID_VARNAME	"IBMAPPLID"
+#define IBMELF_YES		"YES"
+#define IBMAPPLID_NONE		"None"
 
 /* Globals */
 
@@ -108,15 +112,15 @@ escaped_copy(char *to, const char *from, size_t len)
 
 /* Add a value to an environment list. */
 static void
-add_environ(llist_t *list, const char *name, size_t name_len,
-	const char *value, size_t value_len)
+add_environ(llist_t *list, const char *name, const char *value)
 {
+    size_t name_len = strlen(name);
     size_t name_xlen = escaped_len(name, name_len);
+    size_t value_len = strlen(value);
     size_t value_xlen = escaped_len(value, value_len);
 
     /* Add it to the list. */
-    environ_t *e = (environ_t *)Malloc(sizeof(environ_t) + name_xlen +
-	    value_xlen);
+    environ_t *e = (environ_t *)Malloc(sizeof(environ_t) + name_xlen + value_xlen);
 
     e->name = (char *)(e + 1);
     escaped_copy(e->name, name, name_len);
@@ -158,6 +162,7 @@ environ_init(void)
 {
     static bool initted = false;
     char *user;
+    char *ibmapplid;
 
     if (initted) {
 	return;
@@ -171,11 +176,16 @@ environ_init(void)
     if (user == NULL) {
 	user = "UNKNOWN";
     }
-    add_environ(&vars, USER_VARNAME, strlen(USER_VARNAME), user, strlen(user));
+    add_environ(&vars, USER_VARNAME, user);
     if (appres.devname != NULL) {
-	add_environ(&uservars, DEVNAME_USERVARNAME, strlen(DEVNAME_USERVARNAME),
-		appres.devname, strlen(appres.devname));
+	add_environ(&uservars, DEVNAME_USERVARNAME, appres.devname);
     }
+    add_environ(&uservars, IBMELF_VARNAME, IBMELF_YES);
+    ibmapplid = getenv(IBMAPPLID_VARNAME);
+    if (ibmapplid == NULL) {
+	ibmapplid = IBMAPPLID_NONE;
+    }
+    add_environ(&uservars, IBMAPPLID_VARNAME, ibmapplid);
 }
 
 /* Expand a name into a readable string. */

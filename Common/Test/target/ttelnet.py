@@ -191,9 +191,9 @@ class ttelnet():
             self.send_raw(bytes([int(telcmd.IAC), int(telcmd.DONT), int(opt)]))
             self.debug('TELNET', f'sent DONT {opt.name}')
 
-    def ask_sb(self, opt: telopt):
+    def ask_sb(self, opt: telopt, b=b''):
         '''Tell client to SB SEND an option'''
-        self.send_raw(bytes([int(telcmd.IAC), int(telcmd.SB), int(opt), int(telqual.SEND), int(telcmd.IAC), int(telcmd.SE)]))
+        self.send_raw(bytes([int(telcmd.IAC), int(telcmd.SB), int(opt), int(telqual.SEND)]) + b + bytes([int(telcmd.IAC), int(telcmd.SE)]))
         self.debug('TELNET', f'sent SB {opt.name} SEND')
 
     def send_sb(self, opt: telopt, b: bytes):

@@ -98,10 +98,16 @@ class telopt(enum.IntEnum):
 class telqual(enum.IntEnum):
     IS   = 0,     # option is...
     SEND = 1,     # please send option
-    debug = 2
+    INFO = 2,     # more info about option
 
 class teltls(enum.IntEnum):
 	FOLLOWS = 1,		# TLS negotiation follows
+
+class telobj(enum.IntEnum):	# NEW-ENVIRONMENT qualifiers
+	VAR = 0,
+	VALUE = 1,
+	ESC = 2,
+	USERVAR = 3
 
 class tn_state(enum.Enum):
     DATA = enum.auto(),  # receiving data
