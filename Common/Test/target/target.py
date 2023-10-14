@@ -291,6 +291,7 @@ if __name__ == '__main__':
     parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate, negotiated=target_tls.negotiated), default=target_tls.none, help='TLS support')
     parser.add_argument('--tn3270e', default='True', choices=['True', 'False'], help='TN3270E support')
     parser.add_argument('--bind', default='True', choices=['True', 'False'], help='TN3270E BIND support')
+    parser.add_argument('--elf', default='False', choices=['True', 'False'], help='IBM ELF support')
     opts = vars(parser.parse_args())
     with target(opts['port'], opts) as server:
         print('Press <Enter> to stop the server.')
