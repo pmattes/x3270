@@ -3219,7 +3219,7 @@ trace_netdata(char direction, unsigned const char *buf, size_t len)
 static void
 trace_envt_in(unsigned const char *buf, size_t len)
 {
-    int count;
+    size_t count;
     bool any = false;
     bool last_cmd = false;
 

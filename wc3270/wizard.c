@@ -1725,7 +1725,7 @@ Asian language support.\n");
 
     printf("[Press Enter to continue] ");
     fflush(stdout);
-    getchar();
+    (void) getchar();
 }
 
 /**
@@ -2612,7 +2612,7 @@ selecting 'Other' and giving the full pathname of a folder to save them in.");
 	    return 0;
 	}
 	u = strtoul(tbuf, &ptr, 10);
-	if (*ptr != '\0' || u < 1 || u > other_option) {
+	if (*ptr != '\0' || u < 1 || u > (unsigned long)other_option) {
 	    continue;
 	}
 	if (u == 1) {
@@ -3957,7 +3957,7 @@ static int
 delete_session(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
-    src_t l;
+    src_t l = SRC_ERR;
     char path[MAX_PATH];
 
     if (argc > 0) {
@@ -4244,7 +4244,7 @@ static int
 new_shortcut(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
-    src_t l;
+    src_t l = SRC_ERR;
     char from_path[MAX_PATH];
     FILE *f;
     ws_t rc;
