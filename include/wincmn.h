@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Paul Mattes.
+ * Copyright (c) 2007-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,6 +98,9 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 # if defined(_MSC_VER) /*[*/
 
 /* MSVC does not define the constants for access(). */
+#  define F_OK   0
+#  define X_OK   1
+#  define W_OK   2
 #  define R_OK   4
 
 /* MSVC says these POSIX names are deprecated. */
