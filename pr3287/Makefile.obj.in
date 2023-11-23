@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2010, 2013-2017, 2020, 2022 Paul Mattes.
+# Copyright (c) 1999-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ LIBS = @LIBS@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 HOST = @host@
 include pr3287_files.mk libs.mk
@@ -70,7 +71,7 @@ install: pr3287 prtodir
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) pr3287 $(DESTDIR)$(BINDIR)/pr3287
-	$(INSTALL_PROGRAM) prtodir $(DESTDIR)$(BINDIR)/prtodir
+	$(INSTALL_SCRIPT) prtodir $(DESTDIR)$(BINDIR)/prtodir
 
 install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
