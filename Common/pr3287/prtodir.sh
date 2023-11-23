@@ -1,6 +1,6 @@
-#!/usr/bin/env /bin/sh
+#!/bin/sh
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2022-2023 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
