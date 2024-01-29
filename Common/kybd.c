@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -3702,7 +3702,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
 	HEX, EBC
     } state = BASE;
-    int literal = 0;
+    ucs4_t literal = 0;
     int nc = 0;
     enum iaction ia = pasting ? IA_PASTE : IA_STRING;
     int orig_addr = cursor_addr;
@@ -4025,7 +4025,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		nc++;
 		break;
 	    } else {
-		key_UCharacter((unsigned char) literal, KT_STD, ia, true);
+		key_UCharacter(literal, KT_STD, ia, true);
 		state = BASE;
 		continue;
 	    }
