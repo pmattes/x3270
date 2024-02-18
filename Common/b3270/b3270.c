@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -112,6 +112,7 @@
 #endif /*]*/
 
 #define STATS_POLL	(2 * 1000)
+#define NC_DELAY	50
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -130,6 +131,8 @@ static ioid_t stats_ioid = NULL_IOID;
 static bool b3270_toggle_yet = false;
 static char* crashptr;
 
+static ioid_t csdelay_ioid = NULL_IOID;
+
 static void b3270_toggle(toggle_index_t ix, enum toggle_type tt);
 static toggle_register_t toggles[] = {
     { MONOCASE,		b3270_toggle,	TOGGLE_NEED_INIT },
@@ -147,8 +150,8 @@ static toggle_register_t toggles[] = {
 };
 
 static void b3270_register(void);
-static void b3270_toggle_notify(const char *name, enum resource_type type,
-	void **address, ia_t ia);
+static void b3270_toggle_notify(const char *name, enum resource_type type, void **address, ia_t ia, unsigned flags);
+static void delayed_nc_report(ioid_t id);
 
 void
 usage(const char *msg)
@@ -205,9 +208,31 @@ stats_poke(void)
  * Respond to a change in the connection, 3270 mode, or line mode.
  */
 static void
-b3270_connect(bool ignored)
+b3270_connect_common(bool direct_indication)
 {       
     static enum cstate old_cstate = NOT_CONNECTED;
+
+    /*
+     * If this is a direct call from the state change indication, and we've gone from something other than
+     * NOT_CONNECTED to NOT_CONNECTED, wait a moment before reporting that.  It's possible that NOT_CONNECTED
+     * was transient, and we don't want to report it.
+     *
+     * This is simpler than replumbing the retry/reconnect logic to skip the NOT_CONNECTED state, even if it is
+     * a bit awkward here.
+     */
+    if (direct_indication)
+    {
+	if (cstate == NOT_CONNECTED && old_cstate != NOT_CONNECTED && csdelay_ioid == NULL_IOID) {
+	    /* xxx => NOT_CONNECTED and no timer running. Start it. */
+	    csdelay_ioid = AddTimeOut(NC_DELAY, delayed_nc_report);
+	    return;
+	}
+	if (cstate != NOT_CONNECTED && csdelay_ioid != NULL_IOID) {
+	    /* Gone to something other than NOT_CONNECTED. Stop the timer, we want to report it. */
+	    RemoveTimeOut(csdelay_ioid);
+	    csdelay_ioid = NULL_IOID;
+	}
+    }
 
     if (cstate == old_cstate) {
 	return;
@@ -276,6 +301,23 @@ b3270_connect(bool ignored)
     }
 
     old_cstate = cstate;
+}
+
+/* Report connection state after a short delay, it if transtioned to NOT_CONNECTED. */
+static void delayed_nc_report(ioid_t id)
+{
+    RemoveTimeOut(csdelay_ioid);
+    csdelay_ioid = NULL_IOID;
+    b3270_connect_common(false);	/* suppress adding another delay */
+}
+
+/**
+ * Respond to a change in the connection, 3270 mode, or line mode.
+ */
+static void
+b3270_connect(bool ignored)
+{
+    b3270_connect_common(true);		/* add a short delay if NOT_CONNECTED */
 }
 
 static void
@@ -1017,8 +1059,7 @@ menubar_as_set(bool sensitive _is_unused)
  * Handle a generic toggle change.
  */
 static void
-b3270_toggle_notify(const char *name, enum resource_type type, void **address,
-	ia_t cause)
+b3270_toggle_notify(const char *name, enum resource_type type, void **address, ia_t cause, unsigned flags)
 {
     if (address == NULL) {
 	return;

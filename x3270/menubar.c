@@ -2631,8 +2631,7 @@ screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
 
 /* Extended toggle notification. */
 static void
-menubar_toggle_notify(const char *name, enum resource_type type,
-	void **value, ia_t ia)
+menubar_toggle_notify(const char *name, enum resource_type type, void **value, ia_t ia, unsigned flags)
 {
     if (!strcasecmp(name, ResRetry)) {
 	if (retry_button != NULL) {

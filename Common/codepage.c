@@ -307,7 +307,7 @@ codepage_init2(const char *cpname, const char *realname, const char *codepage,
 {
     /* Can't swap DBCS modes while connected. */
     if (IN_3270 && is_dbcs != dbcs) {
-	popup_an_error("Can't change DBCS modes while connected");
+	popup_an_error("Cannot change DBCS modes while connected");
 	return CS_ILLEGAL;
     }
 
@@ -361,10 +361,10 @@ get_codepage_name(void)
  * @param[in] name	Toggle name.
  * @param[in] value	New value, might be NULL.
  *
- * @returns true for success, false for failure.
+ * @returns toggle_upcall_ret_t
  */
-static bool
-toggle_codepage(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_codepage(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     enum cs_result result;
 
@@ -377,21 +377,20 @@ toggle_codepage(const char *name _is_unused, const char *value)
 	st_changed(ST_CODEPAGE, true);
 	codepage_changed = true;
 	Replace(appres.codepage, NewString(canonical_cs(value)));
-	return true;
+	return TU_SUCCESS;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition of host code page \"%s\"",
-		value);
-	return false;
+	popup_an_error("Cannot find definition of host code page \"%s\"", value);
+	return TU_FAILURE;
     case CS_BAD:
 	popup_an_error("Invalid code page definition for \"%s\"", value);
-	return false;
+	return TU_FAILURE;
     case CS_PREREQ:
 	popup_an_error("No fonts for host code page \"%s\"", value);
-	return false;
+	return TU_FAILURE;
     default:
     case CS_ILLEGAL:
 	/* error already popped up */
-	return false;
+	return TU_FAILURE;
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Paul Mattes.
+ * Copyright (c) 2014-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -783,10 +783,13 @@ hio_async_done(void *dhandle, httpd_status_t rv)
  * @param[in] name	Name of toggle
  * @param[in] value	Toggle value
  * @param[out] canonical_value	Returned canonical form of value
- * @returns true if toggle changed successfully
+ * @param[in] flags	Set() flags
+ * @param[in] ia	Cause
+ *
+ * @returns toggle_upcall_ret_t
  */
-static bool
-hio_toggle_upcall(const char *name, const char *value)
+static toggle_upcall_ret_t
+hio_toggle_upcall(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     struct sockaddr *sa;
     socklen_t sa_len;
@@ -794,16 +797,16 @@ hio_toggle_upcall(const char *name, const char *value)
     hio_stop();
     if (value == NULL || !*value) {
 	Replace(appres.httpd_port, NULL);
-	return true;
+	return TU_SUCCESS;
     }
 
     if (!parse_bind_opt(value, &sa, &sa_len)) {
 	popup_an_error("Invalid %s: %s", name, value);
-	return false;
+	return TU_FAILURE;
     }
     Replace(appres.httpd_port, NewString(canonical_bind_opt(sa)));
     hio_init(sa, sa_len);
-    return true;
+    return TU_SUCCESS;
 }
 
 /**

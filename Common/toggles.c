@@ -35,6 +35,7 @@
  */
 
 #include "globals.h"
+#include <assert.h>
 #include <limits.h>
 #include "appres.h"
 #include "resources.h"
@@ -46,6 +47,7 @@
 #include "names.h"
 #include "popups.h"
 #include "toggles.h"
+#include "trace.h"
 #include "utils.h"
 
 /* Live state of toggles. */
@@ -108,6 +110,18 @@ toggle_name_t toggle_names[] = {
     { ResUnderscoreBlankFill, UNDERSCORE_BLANK_FILL, false },
     { NULL,               0,			false }
 };
+
+/* Disconnect-deferred settings. */
+typedef struct disconnect_set {
+    struct disconnect_set *next;	/* linkage */
+    char *resource;			/* resource name */
+    char *value;			/* resource value */
+    ia_t ia;				/* cause */
+    bool processed;			/* used while processing elements after a disconnect */
+} disconnect_set_t;
+static disconnect_set_t *disconnect_sets;
+static disconnect_set_t *disconnect_set_last;
+static unsigned disconnect_set_count = 0;
 
 /*
  * Generic toggle stuff
@@ -241,7 +255,7 @@ u_value(toggle_extended_upcalls_t *u)
 	    value = *(char **)u->address;
 	    break;
 	case XRM_BOOLEAN:
-	    value = *(bool *)u->address? ResTrue: ResFalse;
+	    value = TrueFalse(*(bool *)u->address);
 	    break;
 	case XRM_INT:
 	    value = lazyaf("%d", *(int *)u->address);
@@ -280,8 +294,7 @@ toggle_values(void)
 	if (toggle_supported(toggle_names[i].index)) {
 	    tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
 	    tnv[n_tnv].name = toggle_names[i].name;
-	    tnv[n_tnv].value =
-		toggled(toggle_names[i].index)? ResTrue: ResFalse;
+	    tnv[n_tnv].value = TrueFalse(toggled(toggle_names[i].index));
 	    n_tnv++;
 	}
     }
@@ -308,17 +321,30 @@ toggle_values(void)
  * Show all toggles.
  */
 static void
-toggle_show(void)
+toggle_show(unsigned flags)
 {
     tnv_t *tnv = toggle_values();
     int i;
 
     /* Walk the array. */
     for (i = 0; tnv[i].name != NULL; i++) {
-	if (tnv[i].value != NULL) {
-	    action_output("%s: %s", tnv[i].name, tnv[i].value);
+	if (flags & XN_DEFER) {
+	    disconnect_set_t *s;
+
+	    for (s = disconnect_sets; s != NULL; s = s->next) {
+		if (!strcasecmp(s->resource, tnv[i].name) &&
+			((tnv[i].value == NULL && s->value[0]) ||
+			  strcmp(tnv[i].value, s->value))) {
+		    action_output("%s:%s%s", tnv[i].name, s->value[0]? " ": "", s->value);
+		    break;
+		}
+	    }
 	} else {
-	    action_output("%s:", tnv[i].name);
+	    if (tnv[i].value != NULL) {
+		action_output("%s: %s", tnv[i].name, tnv[i].value);
+	    } else {
+		action_output("%s:", tnv[i].name);
+	    }
 	}
     }
 }
@@ -373,7 +399,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
     unsigned arg = 0;
     typedef struct {
 	toggle_extended_done_t *done;
-	bool success;
+	toggle_upcall_ret_t ret;
     } done_success_t;
     done_success_t *dones;
     int n_dones = 0;
@@ -383,12 +409,13 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
     int d, du;
     toggle_extended_notifies_t *notifies;
     const char *value;
+    bool xn_flags = XN_NONE;
 
     action_debug(name, ia, argc, argv);
 
     /* Check for show-all. */
     if (argc == 0) {
-	toggle_show();
+	toggle_show(xn_flags);
 	return true;
     }
 
@@ -399,18 +426,28 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	/* Toggle() can only set one value. */
 	popup_an_error("%s() can only set one value", name);
 	return false;
-    } else if (!is_toggle_action && argc > 2 && (argc % 2)) {
-	/*
-	 * Set() accepts 0 arguments (show all), 1 argument (show one), or
-	 * an even number of arguments (set one or more).
-	 */
-	popup_an_error("%s(): '%s' requires a value", name, argv[argc - 1]);
-	return false;
+    } else {
+	if (!strcasecmp(argv[0], KwDefer)) {
+	    xn_flags |= XN_DEFER;
+	    argc--;
+	    argv++;
+	}
+	if (argc == 0) {
+	    toggle_show(xn_flags);
+	    return true;
+	}
+	if (!is_toggle_action && argc > 2 && (argc % 2)) {
+	    /*
+	     * Set() accepts 0 arguments (show all), 1 argument (show one), or
+	     * an even number of arguments (set one or more).
+	     */
+	    popup_an_error("%s(): '%s' requires a value", name, argv[argc - 1]);
+	    return false;
+	}
     }
 
     dones = (done_success_t *)Malloc(argc * sizeof(done_success_t *));
-    done_u = (toggle_extended_upcalls_t **)Malloc(argc
-	    * sizeof(toggle_extended_upcalls_t *));
+    done_u = (toggle_extended_upcalls_t **)Malloc(argc * sizeof(toggle_extended_upcalls_t *));
 
     /* Look up the toggle name. */
     while (arg < argc) {
@@ -446,11 +483,10 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		     * isn't a traditional toggle.
 		     */
 		    if (u->type != XRM_BOOLEAN) {
-			popup_an_error("%s(): '%s' requires a value", name,
-				argv[arg]);
+			popup_an_error("%s(): '%s' requires a value", name, argv[arg]);
 			goto failed;
 		    }
-		    value = (*(bool *)u->address)? ResFalse: ResTrue;
+		    value = TrueFalse(!(*(bool *)u->address));
 		    goto have_value;
 		}
 		/* Flip the toggle. */
@@ -458,12 +494,33 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		goto done;
 	    } else {
 		/* Set(x): Display one value. */
+		const char *live;
 		if (u != NULL) {
 		    const char *v = u_value(u);
 
-		    action_output("%s", v? v: "\n");
+		    live = v? v: "\n";
 		} else {
-		    action_output("%s", toggled(ix)? ResTrue: ResFalse);
+		    live = TrueFalse(toggled(ix));
+		}
+		if (xn_flags & XN_DEFER) {
+		    disconnect_set_t *s;
+		    const char *deferred;
+
+		    for (s = disconnect_sets; s != NULL; s = s->next) {
+			if (!strcasecmp(s->resource, argv[arg])) {
+			    if (s->value[0]) {
+				deferred = s->value;
+			    } else {
+				deferred = "\n";
+			    }
+			    if (strcmp(deferred, live)) {
+				action_output("%s", deferred);
+			    }
+			    break;
+			}
+		    }
+		} else {
+		    action_output("%s", live);
 		}
 		goto done_simple;
 	    }
@@ -491,6 +548,8 @@ have_value:
 	     * Call an extended toggle, remembering each unique 'done'
 	     * function.
 	     */
+	    toggle_upcall_ret_t ret;
+
 	    if (u->done != NULL) {
 		done_u[n_done_u++] = u;
 		for (d = 0; d < n_dones; d++) {
@@ -500,17 +559,18 @@ have_value:
 		}
 		if (d >= n_dones) {
 		    dones[n_dones].done = u->done;
-		    dones[n_dones++].success = false;
+		    dones[n_dones++].ret = TU_FAILURE;
 		}
 	    }
-	    if (!u->upcall(argv[arg], value)) {
+	    ret = u->upcall(argv[arg], value, xn_flags, ia);
+	    if (ret == TU_FAILURE) {
 		goto failed;
 	    }
-	    if (u->done == NULL) {
+	    if (ret != TU_DEFERRED && u->done == NULL) {
 		for (notifies = extended_notifies;
 		     notifies != NULL;
 		     notifies = notifies->next) {
-		    (*notifies->notify)(u->name, u->type, u->address, ia);
+		    (*notifies->notify)(u->name, u->type, u->address, ia, xn_flags);
 		}
 	    }
 	}
@@ -524,8 +584,8 @@ failed:
 done:
     /* Call each of the done functions. */
     for (d = 0; d < n_dones; d++) {
-	dones[d].success = (*dones[d].done)(success);
-	success &= dones[d].success;
+	dones[d].ret = (*dones[d].done)(success, xn_flags, ia);
+	success &= dones[d].ret != TU_FAILURE;
     }
 
     /* Call each of the notify functions with successful done functions. */
@@ -535,14 +595,14 @@ done:
 		break;
 	    }
 	}
-	if (d < n_dones && !dones[d].success) {
+	if (d < n_dones && dones[d].ret != TU_SUCCESS) {
 	    continue;
 	}
 	for (notifies = extended_notifies;
 	     notifies != NULL;
 	     notifies = notifies->next) {
 	    (*notifies->notify)(done_u[du]->name, done_u[du]->type,
-		    done_u[du]->address, ia);
+		    done_u[du]->address, ia, xn_flags);
 	}
     }
 
@@ -581,6 +641,159 @@ Set_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /**
+ * Register a Set() value to be performed when the host disconnects.
+ *
+ * @param[in] resouorce	Resource name.
+ * @param[in] value	Resource value.
+ * @param[in] ia	Cause of change.
+ */
+void
+toggle_save_disconnect_set(const char *resource, const char *value, ia_t ia)
+{
+    disconnect_set_t *s, *prev, *next;
+
+    /* Keep the set of resources unique. */
+    prev = NULL;
+    for (s = disconnect_sets; s != NULL; s = next)
+    {
+	next = s->next;
+	if (!strcasecmp(resource, s->resource))
+	{
+	    if (prev != NULL) {
+		prev->next = next;
+	    } else {
+		disconnect_sets = next;
+	    }
+	    Free(s);
+	    disconnect_set_count--;
+	} else {
+	    prev = s;
+	}
+    }
+    disconnect_set_last = prev;
+
+    /* Add this to the tail of the list. */
+    s = Malloc(sizeof(disconnect_set_t) + strlen(resource) + 1 + strlen(value) + 1);
+    s->next = NULL;
+    s->resource = (char *)(s + 1);
+    strcpy(s->resource, resource);
+    s->value = s->resource + strlen(resource) + 1;
+    strcpy(s->value, value);
+    s->ia = ia;
+    if (disconnect_sets == NULL) {
+	disconnect_sets = s;
+    } else {
+	disconnect_set_last->next = s;
+    }
+    disconnect_set_last = s;
+    disconnect_set_count++;
+}
+
+/**
+ * State change callback for disconnects.
+ *
+ * @param[in] mode     Unused.
+ */
+static void
+toggle_connect_change(bool mode _is_unused)
+{
+    disconnect_set_t *set;
+    disconnect_set_t *next = NULL;
+
+    if (cstate != NOT_CONNECTED || !disconnect_set_count) {
+	return;
+    }
+
+    vtrace("toggle_connect_change: applying pending Set() operations\n");
+
+    /* Clear the 'processed' flags. */
+    for (set = disconnect_sets; set != NULL; set = set->next) {
+	set->processed = false;
+    }
+
+    /*
+     * Walk through the set of changes and group together the ones that have a common 'done' callback.
+     * Call Set() separately for each group.
+     * Members of each group might have different ia values. Pick one at random, preferring non-UI to UI.
+     */
+
+    while (disconnect_set_count) {
+	char **argv = (char **)Malloc(((disconnect_set_count * 2) + 1) * sizeof(char **));
+	int argc = 0;
+	ia_t ia = IA_INVALID;
+	toggle_extended_upcalls_t *u = NULL;
+	toggle_extended_done_t *done_group = NULL;
+	bool solo = false;
+
+	for (set = disconnect_sets; !solo && set != NULL; set = set->next) {
+
+	    if (set->processed) {
+		continue;
+	    }
+
+	    /* See if it has a 'done' callback. */
+	    for (u = extended_upcalls; !solo && u != NULL; u = u->next) {
+		if (!strcasecmp(set->resource, u->name)) {
+		    /* It's an extended toggle. */
+		    if (u->done != NULL) {
+			/* It has a 'done' callback. */
+			if (done_group == NULL || u->done == done_group) {
+			    /* Start or continue a group. */
+			    done_group = u->done;
+			    argv[argc++] = set->resource;
+			    argv[argc++] = set->value;
+			    if (ia == IA_INVALID || ia != IA_UI) {
+				ia = set->ia;
+			    }
+			    set->processed = true;
+			    disconnect_set_count--;
+			}
+		    } else if (done_group == NULL) {
+			/* No 'done' for this, and no pending group. This one is solitary. */
+			argv[argc++] = set->resource;
+			argv[argc++] = set->value;
+			ia = set->ia;
+			set->processed = true;
+			disconnect_set_count--;
+			solo = true;
+		    }
+		    break;
+		}
+	    }
+	    if (u == NULL && done_group == NULL) {
+		/* Not an extended toggle, and no pending group. */
+		argv[argc++] = set->resource;
+		argv[argc++] = set->value;
+		ia = set->ia;
+		set->processed = true;
+		disconnect_set_count--;
+		solo = true;
+	    }
+	}
+
+	/* Call Set(). */
+	assert(argc > 0);
+	argv[argc] = NULL;
+	if (!Set_action(ia, argc, (const char **)argv)) {
+	    vtrace("toggle_connect_change: Unexpected failure from Set()\n");
+	}
+
+	/* Free argv. */
+	Free(argv);
+    }
+
+    /* Free the disconnect set. */
+    for (set = disconnect_sets; set != NULL; set = next) {
+	next = set->next;
+	Free(set);
+    }
+
+    disconnect_sets = NULL;
+    disconnect_set_last = NULL;
+    disconnect_set_count = 0;
+}
+
+/**
  * Toggles module registration.
  */
 void
@@ -593,6 +806,7 @@ toggles_register(void)
 
     /* Register the cleanup routine. */
     register_schange(ST_EXITING, toggle_exiting);
+    register_schange(ST_CONNECT, toggle_connect_change);
 
     /* Register the actions. */
     register_actions(toggle_actions, array_count(toggle_actions));
@@ -747,7 +961,7 @@ register_extended_toggle(const char *name, toggle_extended_upcall_t upcall,
     for (notifies = extended_notifies;
 	 notifies != NULL;
 	 notifies = notifies->next) {
-	(*notifies->notify)(name, u->type, u->address, IA_NONE);
+	(*notifies->notify)(name, u->type, u->address, IA_NONE, 0);
     }
 }
 
@@ -774,7 +988,7 @@ register_extended_toggle_notify(toggle_extended_notify_t notify)
 
     /* Call it with everything registered so far. */
     for (u = extended_upcalls; u != NULL; u = u->next) {
-	(*notify)(u->name, u->type, u->address, IA_NONE);
+	(*notify)(u->name, u->type, u->address, IA_NONE, 0);
     }
 }
 
@@ -798,7 +1012,7 @@ force_toggle_notify(const char *name, ia_t ia)
 
     /* Notify with the current value. */
     for (n = extended_notifies; n != NULL; n = n->next) {
-	(*n->notify)(name, u->type, u->address, ia);
+	(*n->notify)(name, u->type, u->address, ia, 0);
     }
 }
 

@@ -172,8 +172,8 @@ static action_t Transfer_action;
 /*
  * Toggle the buffer size.
  */
-static bool
-toggle_ft_buffer_size(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_ft_buffer_size(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     unsigned long l;
     char *end;
@@ -181,20 +181,20 @@ toggle_ft_buffer_size(const char *name _is_unused, const char *value)
 
     if (!*value) {
 	appres.ft.dft_buffer_size = DFT_BUF;
-	return true;
+	return TU_SUCCESS;
     }
 
     l = strtoul(value, &end, 10);
     bs = (int)l;
     if (*end != '\0' || (unsigned long)bs != l) {
 	popup_an_error("Invalid %s value", ResFtBufferSize);
-	return false;
+	return TU_FAILURE;
     }
     if (bs < DFT_MIN_BUF || bs > DFT_MAX_BUF) {
 	bs = DFT_BUF;
     }
     appres.ft.dft_buffer_size = bs;
-    return true;
+    return TU_SUCCESS;
 }
 
 /**

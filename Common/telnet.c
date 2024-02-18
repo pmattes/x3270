@@ -4132,27 +4132,27 @@ net_nvt_break(void)
 }
 
 /* Toggle line mode. */
-static bool
-toggle_linemode(const char *name, const char *value)
+static toggle_upcall_ret_t
+toggle_linemode(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     bool v;
     const char *errmsg;
 
     if (!IN_NVT || HOST_FLAG(NO_TELNET_HOST)) {
 	popup_an_error("Can only change %s in NVT mode", LINEMODE_NAME);
-	return false;
+	return TU_FAILURE;
     }
     errmsg = boolstr(value, &v);
     if (errmsg != NULL) {
 	popup_an_error("%s %s", LINEMODE_NAME, errmsg);
-	return false;
+	return TU_FAILURE;
     }
     if (v) {
 	net_linemode();
     } else {
 	net_charmode();
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /* Canonicalization for no-TELNET input mode. */
@@ -4188,8 +4188,8 @@ parse_ntim(const char *value)
 }
 
 /* Toggle no-TELNET input mode. */
-static bool
-toggle_ntim(const char *name, const char *value)
+static toggle_upcall_ret_t
+toggle_ntim(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     ntim_t n;
 
@@ -4197,7 +4197,7 @@ toggle_ntim(const char *name, const char *value)
     n = parse_ntim(value);
     if (n == NTIM_UNKNOWN) {
 	popup_an_error("Invalid %s value '%s'", ResNoTelnetInputMode, value);
-	return false;
+	return TU_FAILURE;
     }
 
     /* Implement it. */
@@ -4206,37 +4206,37 @@ toggle_ntim(const char *name, const char *value)
     if (CONNECTED && HOST_FLAG(NO_TELNET_HOST)) {
 	check_linemode(false);
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /* Toggle bind limit mode. */
-static bool
-toggle_bind_limit(const char *name, const char *value)
+static toggle_upcall_ret_t
+toggle_bind_limit(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg;
 
     if ((errmsg = boolstr(value, &appres.bind_limit)) != NULL) {
         popup_an_error("%s", errmsg);
-        return false;
+        return TU_FAILURE;
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /* Toggle wrong terminal name mode. */
-static bool
-toggle_wrong_terminal_name(const char *name, const char *value)
+static toggle_upcall_ret_t
+toggle_wrong_terminal_name(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg;
     bool previous = appres.wrong_terminal_name;
 
     if ((errmsg = boolstr(value, &appres.wrong_terminal_name)) != NULL) {
         popup_an_error("%s", errmsg);
-        return false;
+        return TU_FAILURE;
     }
     if (appres.wrong_terminal_name != previous) {
 	net_set_default_termtype();
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /* Module registration. */
@@ -4247,13 +4247,10 @@ net_register(void)
     register_schange(ST_REMODEL, net_remodel);
 
     /* Register extended toggles. */
-    register_extended_toggle(LINEMODE_NAME, toggle_linemode, NULL, NULL,
-	    (void **)&linemode, XRM_BOOLEAN);
-    register_extended_toggle(ResNoTelnetInputMode, toggle_ntim, NULL,
-	    canonicalize_ntim,
+    register_extended_toggle(LINEMODE_NAME, toggle_linemode, NULL, NULL, (void **)&linemode, XRM_BOOLEAN);
+    register_extended_toggle(ResNoTelnetInputMode, toggle_ntim, NULL, canonicalize_ntim,
 	    (void **)&appres.interactive.no_telnet_input_mode, XRM_STRING);
-    register_extended_toggle(ResBindLimit, toggle_bind_limit, NULL, NULL,
-	    (void **)&appres.bind_limit, XRM_BOOLEAN);
+    register_extended_toggle(ResBindLimit, toggle_bind_limit, NULL, NULL, (void **)&appres.bind_limit, XRM_BOOLEAN);
     register_extended_toggle(ResWrongTerminalName, toggle_wrong_terminal_name,
 	    NULL, NULL, (void **)&appres.wrong_terminal_name, XRM_BOOLEAN);
 }

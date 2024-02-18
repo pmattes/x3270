@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2017, 2020-2021 Paul Mattes.
+ * Copyright (c) 1994-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -529,8 +529,8 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Toggle the length of the scrollback buffer.
  */
-static bool
-toggle_save_lines(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_save_lines(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     unsigned long l;
     char *end;
@@ -538,18 +538,18 @@ toggle_save_lines(const char *name _is_unused, const char *value)
 
     if (!*value) {
 	appres.unlock_delay_ms = 0;
-	return true;
+	return TU_SUCCESS;
     }
 
     l = strtoul(value, &end, 10);
     lines = (int)l;
     if (*end != '\0' || (unsigned long)lines != l || lines < 0) {
 	popup_an_error("Invalid %s value", ResSaveLines);
-	return false;
+	return TU_FAILURE;
     }
     appres.interactive.save_lines = lines;
     scroll_buf_init();
-    return true;
+    return TU_SUCCESS;
 }
 
 /*

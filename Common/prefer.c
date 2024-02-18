@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Paul Mattes.
+ * Copyright (c) 2022-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,15 +43,15 @@
 /*
  * Toggle the value or prefer_ipv4 or prefer_ipv6.
  */
-static bool
-toggle_46(const char *name, const char *value)
+static toggle_upcall_ret_t
+toggle_46(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     bool b;
     const char *errmsg = boolstr(value, &b);
 
     if (errmsg != NULL) {
 	popup_an_error("'%s': %s", value, errmsg);
-	return false;
+	return TU_FAILURE;
     }
     if (!strcasecmp(name, ResPreferIpv4)) {
 	appres.prefer_ipv4 = b;
@@ -59,10 +59,10 @@ toggle_46(const char *name, const char *value)
 	appres.prefer_ipv6 = b;
     } else {
 	popup_an_error("Unknown setting '%s'", name);
-	return false;
+	return TU_FAILURE;
     }
     set_46(appres.prefer_ipv4, appres.prefer_ipv6);
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
