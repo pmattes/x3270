@@ -16,7 +16,7 @@ $pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServi
 # Sign the binaries.
 $files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName
 Write-Host -ForegroundColor Green 'Signing', $files.Count, 'binaries'
-& $signtool sign /f $cert /p $pass /td SHA256 /tr $timestamp $files
+& $signtool sign /f $cert /p $pass /td SHA256 /tr $timestamp /fd SHA256 $files
 
 # Create the noinstall files.
 Write-Host -ForegroundColor Green 'Creating no-install zipfiles'
@@ -46,5 +46,5 @@ Compress-Archive -Path $zip64 -DestinationPath wx3270-$version-extern-64.zip
 
 # Run Inno Setup to create the installer.
 Write-Host -ForegroundColor Green 'Running Inno Setup'
-$signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr $timestamp `$p" + '"'
+$signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr $timestamp /fd SHA256 `$p" + '"'
 & $inno $signparm /Qp wc3270.iss
