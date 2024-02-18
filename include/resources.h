@@ -609,3 +609,6 @@
 #define ResPrintTextVerticalMargin "printTextVerticalMargin"
 #define ResPrintWindowCommand	"printWindowCommand"
 #define ResUser			"user"
+
+/* Handy macro. */
+#define TrueFalse(b)	((b)? ResTrue: ResFalse)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020 Paul Mattes.
+ * Copyright (c) 2017-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -345,71 +345,131 @@ sio_option_names(void)
 /*
  * Toggle for TLS parameters.
  */
-static bool
-sio_toggle(const char *name, const char *value)
+static toggle_upcall_ret_t
+sio_toggle(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg;
+    bool b;
 
-    if (cstate != NOT_CONNECTED) {
+    bool connected = (cstate != NOT_CONNECTED);
+    if (connected && !(flags & XN_DEFER)) {
 	popup_an_error("%s cannot change while connected", name);
-	return false;
+	return TU_FAILURE;
     }
 
     switch (sio_toggle_value(name)) {
     case TLS_OPT_ACCEPT_HOSTNAME:
-	Replace(appres.tls.accept_hostname, value[0]? NewString(value) : NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.accept_hostname, value[0]? NewString(value) : NULL);
+	}
 	break;
     case TLS_OPT_VERIFY_HOST_CERT:
-	if ((errmsg = boolstr(value, &appres.tls.verify_host_cert)) != NULL) {
+	if ((errmsg = boolstr(value, &b)) != NULL) {
 	    popup_an_error("%s %s", name, errmsg);
-	    return false;
+	    return TU_FAILURE;
+	}
+	if (connected) {
+	    toggle_save_disconnect_set(name, TrueFalse(b), ia);
+	} else {
+	    appres.tls.verify_host_cert = b;
 	}
 	break;
     case TLS_OPT_STARTTLS:
-	if ((errmsg = boolstr(value, &appres.tls.starttls)) != NULL) {
+	if ((errmsg = boolstr(value, &b)) != NULL) {
 	    popup_an_error("%s %s", name, errmsg);
-	    return false;
+	    return TU_FAILURE;
+	}
+	if (connected) {
+	    toggle_save_disconnect_set(name, TrueFalse(b), ia);
+	} else {
+	    appres.tls.starttls = b;
 	}
 	break;
     case TLS_OPT_CA_DIR:
-	Replace(appres.tls.ca_dir, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.ca_dir, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_CA_FILE:
-	Replace(appres.tls.ca_file, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.ca_file, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_CERT_FILE:
-	Replace(appres.tls.cert_file, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.cert_file, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_CERT_FILE_TYPE:
-	Replace(appres.tls.cert_file_type, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.cert_file_type, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_CHAIN_FILE:
-	Replace(appres.tls.chain_file, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.chain_file, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_KEY_FILE:
-	Replace(appres.tls.key_file, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.key_file, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_KEY_FILE_TYPE:
-	Replace(appres.tls.key_file_type, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.key_file_type, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_KEY_PASSWD:
-	Replace(appres.tls.key_passwd, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.key_passwd, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_CLIENT_CERT:
-	Replace(appres.tls.client_cert, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.client_cert, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_MIN_PROTOCOL:
-	Replace(appres.tls.min_protocol, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.min_protocol, value[0]? NewString(value): NULL);
+	}
 	break;
     case TLS_OPT_MAX_PROTOCOL:
-	Replace(appres.tls.max_protocol, value[0]? NewString(value): NULL);
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    Replace(appres.tls.max_protocol, value[0]? NewString(value): NULL);
+	}
 	break;
     default:
 	popup_an_error("Unknown name '%s'", name);
-	return false;
+	return TU_FAILURE;
     }
 
-    return true;
+    return connected? TU_DEFERRED: TU_SUCCESS;
 }
 
 /*

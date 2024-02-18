@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -451,3 +451,6 @@
 #define MODEL_4_COLS		80
 #define MODEL_5_ROWS		27
 #define MODEL_5_COLS		132
+
+/* Largest combination of rows x columns. */
+#define MAX_ROWS_COLS		0x3fff

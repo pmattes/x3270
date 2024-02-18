@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2022 Paul Mattes.
+ * Copyright (c) 2016-2023 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,9 @@
 #include "resources.h"
 
 #include "ctlrc.h"
+#include "host.h"
 #include "lazya.h"
+#include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "telnet.h"
@@ -99,68 +101,80 @@ canonical_model(const char *res)
 }
 
 /*
+ * Canonical representation of oversize.
+ */
+static const char *
+canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr)
+{
+    char x, junk;
+
+    if (res == NULL) {
+	return NULL;
+    }
+    if (sscanf(res, "%u%c%u%c", ovc, &x, ovr, &junk) != 3 || x != 'x') {
+	return NULL;
+    }
+    return lazyaf("%ux%u", *ovc, *ovr);
+}
+
+/*
+ * Canonical representation of oversize.
+ */
+static const char *
+canonical_oversize(const char *res)
+{
+    unsigned ovc, ovr;
+
+    return canonical_oversize_x(res, &ovc, &ovr);
+}
+
+/*
  * Toggle the model.
  */
-static bool
-toggle_model(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_model(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     if (!model_can_change()) {
 	popup_an_error("Cannot change " ResModel);
-	return false;
+	return TU_FAILURE;
     }
 
     Replace(pending_model, *value? NewString(value): NULL);
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Toggle oversize.
  */
-static bool
-toggle_oversize(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_oversize(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     if (!model_can_change()) {
 	popup_an_error("Cannot change " ResOversize);
-	return false;
+	return TU_FAILURE;
     }
 
     Replace(pending_oversize, NewString(value));
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Done function for changing the model and oversize.
  */
-static bool
-toggle_model_done(bool success)
+static toggle_upcall_ret_t
+toggle_model_done(bool success, unsigned flags, ia_t ia)
 {
     unsigned ovr = 0, ovc = 0;
     int model_number = model_num;
     bool is_color = mode.m3279;
     bool is_extended = mode.extended;
-    struct {
-	int model_num;
-	int rows;
-	int cols;
-	int ov_cols;
-	int ov_rows;
-	bool m3279;
-	bool alt;
-	bool extended;
-    } old;
     bool oversize_was_pending = (pending_oversize != NULL);
-    bool res = true;
+    toggle_upcall_ret_t res = TU_SUCCESS;
 
     if (!success ||
 	    (pending_model == NULL &&
 	     pending_oversize == NULL)) {
 	goto done;
-    }
-
-    if (PCONNECTED) {
-	popup_an_error("Cannot change %s or %s while connected",
-		ResModel, ResOversize);
-	goto fail;
     }
 
     if (pending_model != NULL && !strcmp(pending_model, appres.model)) {
@@ -196,13 +210,13 @@ toggle_model_done(bool success)
 
     if (pending_oversize != NULL) {
 	if (*pending_oversize) {
-	    char x, junk;
-	    if (sscanf(pending_oversize, "%u%c%u%c", &ovc, &x, &ovr, &junk) != 3
-		    || x != 'x') {
-		popup_an_error("%s value must be <cols>x<rows>",
-			ResOversize);
+	    const char *canon = canonical_oversize_x(pending_oversize, &ovc, &ovr);
+
+	    if (canon == NULL) {
+		popup_an_error("%s value must be <cols>x<rows>", ResOversize);
 		goto fail;
 	    }
+	    Replace(pending_oversize, NewString(canon));
 	} else {
 	    ovc = 0;
 	    ovr = 0;
@@ -212,34 +226,37 @@ toggle_model_done(bool success)
 	ovr = ov_rows;
     }
 
-    /* Save the current settings. */
-    old.model_num = model_num;
-    old.rows = ROWS;
-    old.cols = COLS;
-    old.ov_rows = ov_rows;
-    old.ov_cols = ov_cols;
-    old.m3279 = mode.m3279;
-    old.alt = screen_alt;
-    old.extended = mode.extended;
+    /* Check settings. */
+    if (!check_rows_cols(model_number, ovc, ovr)) {
+	goto fail;
+    }
+
+    /* Check connection state. */
+    if (cstate >= TELNET_PENDING) {
+	/* A change is not valid in this state. */
+	if (!(flags & XN_DEFER)) {
+	    /* Not valid in this state. */
+	    popup_an_error("Cannot change %s or %s while connected", ResModel, ResOversize);
+	    goto fail;
+	}
+
+	/* Queue up the changes for when we disconnect. */
+	if (pending_model != NULL) {
+	    toggle_save_disconnect_set(ResModel, pending_model, ia);
+	}
+	if (pending_oversize != NULL) {
+	    toggle_save_disconnect_set(ResOversize, pending_oversize, ia);
+	}
+	res = TU_DEFERRED;
+	goto done;
+    }
 
     /* Change settings. */
     mode.m3279 = is_color;
     mode.extended = is_extended;
     set_rows_cols(model_number, ovc, ovr);
 
-    if (model_num != model_number ||
-	    ov_rows != (int)ovr ||
-	    ov_cols != (int)ovc) {
-	/* Failed. Restore the old settings. */
-	mode.m3279 = old.m3279;
-	set_rows_cols(old.model_num, old.ov_cols, old.ov_rows);
-	ROWS = old.rows;
-	COLS = old.cols;
-	screen_alt = old.alt;
-	mode.extended = old.extended;
-	return false;
-    }
-
+    /* Finish the rest of the switch. */
     ROWS = maxROWS;
     COLS = maxCOLS;
     ctlr_reinit(MODEL_CHANGE);
@@ -275,7 +292,7 @@ toggle_model_done(bool success)
     goto done;
 
 fail:
-    res = false;
+    res = TU_FAILURE;
 
 done:
     Replace(pending_model, NULL);
@@ -286,25 +303,25 @@ done:
 /*
  * Terminal name toggle.
  */
-static bool
-toggle_terminal_name(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_terminal_name(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
-    if (PCONNECTED) {
+    if (cstate >= TELNET_PENDING) {
 	popup_an_error("%s cannot change while connected",
 		ResTermName);
-	return false;
+	return TU_FAILURE;
     }
 
     appres.termname = clean_termname(*value? value: NULL);
     net_set_default_termtype();
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Toggle the NOP interval.
  */
-static bool
-toggle_nop_seconds(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_nop_seconds(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     unsigned long l;
     char *end;
@@ -313,18 +330,18 @@ toggle_nop_seconds(const char *name _is_unused, const char *value)
     if (!*value) {
 	appres.nop_seconds = 0;
 	net_nop_seconds();
-	return true;
+	return TU_SUCCESS;
     }
 
     l = strtoul(value, &end, 10);
     secs = (int)l;
     if (*end != '\0' || (unsigned long)secs != l || secs < 0) {
 	popup_an_error("Invalid %s value", ResNopSeconds);
-	return false;
+	return TU_FAILURE;
     }
     appres.nop_seconds = secs;
     net_nop_seconds();
-    return true;
+    return TU_SUCCESS;
 }
 
 /**
@@ -337,7 +354,7 @@ model_register(void)
     register_extended_toggle(ResModel, toggle_model, toggle_model_done,
 	    canonical_model, (void **)&appres.model, XRM_STRING);
     register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
-	    NULL, (void **)&appres.oversize, XRM_STRING);
+	    canonical_oversize, (void **)&appres.oversize, XRM_STRING);
     register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL,
 	    (void **)&appres.termname, XRM_STRING);
     register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,

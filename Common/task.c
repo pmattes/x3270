@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -445,10 +445,13 @@ macros_init(void)
  * @param[in] name	Name of toggle
  * @param[in] value	Toggle value
  * @param[out] canonical_value	Returned canonical value
- * @returns true if toggle changed successfully
+ * @param[in] flags	Set() flags
+ * @param[in] ia	Cause
+ *
+ * @returns toggle_upcall_ret_t
  */
-static bool
-scriptport_toggle_upcall(const char *name, const char *value)
+static toggle_upcall_ret_t
+scriptport_toggle_upcall(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     struct sockaddr *sa;
     socklen_t sa_len;
@@ -459,17 +462,17 @@ scriptport_toggle_upcall(const char *name, const char *value)
     }
     if (value == NULL || !*value) {
 	Replace(appres.script_port, NULL);
-	return true;
+	return TU_SUCCESS;
     }
 
     if (!parse_bind_opt(value, &sa, &sa_len)) {
 	popup_an_error("Invalid %s: %s", name, value);
-	return false;
+	return TU_FAILURE;
     }
     Replace(appres.script_port, NewString(canonical_bind_opt(sa)));
     global_peer_listen = peer_init(sa, sa_len, PLM_MULTI);
     Free(sa);
-    return true;
+    return TU_SUCCESS;
 }
 
 static bool

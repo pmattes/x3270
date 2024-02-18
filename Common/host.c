@@ -295,14 +295,16 @@ canon_conf_dir(const char *dir)
  *
  * @param[in] name	Toggle name.
  * @param[in] value	New value.
+ * @param[in] flags	Set() flags.
+ * @param[in] ia	Cause.
  *
- * @return true if sucessful
+ * @return toggle_upcall_ret_t
  */
-static bool
-set_conf_dir(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+set_conf_dir(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     popup_an_error("Cannot set " ResConfDir);
-    return false;
+    return TU_FAILURE;
 }
 
 /**
@@ -310,24 +312,26 @@ set_conf_dir(const char *name _is_unused, const char *value)
  *
  * @param[in] name	Toggle name.
  * @param[in] value	New value.
+ * @param[in] flags	Set() flags.
+ * @param[in] ia	Cause.
  *
- * @return true if sucessful
+ * @return toggle_upcall_ret_t
  */
-static bool
-set_reconnect(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+set_reconnect(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     bool previous = appres.reconnect;
     const char *errmsg;
 
     if ((errmsg = boolstr(value, &appres.reconnect)) != NULL) {
 	popup_an_error("%s", errmsg);
-	return false;
+	return TU_FAILURE;
     }
 
     if (appres.reconnect != previous) {
 	reconnect_retry_touched();
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /**
@@ -335,24 +339,26 @@ set_reconnect(const char *name _is_unused, const char *value)
  *
  * @param[in] name	Toggle name.
  * @param[in] value	New value.
+ * @param[in] flags	Set() flags.
+ * @param[in] ia	Cause.
  *
- * @return true if sucessful
+ * @return toggle_upcall_ret_t
  */
-static bool
-set_retry(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+set_retry(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     bool previous = appres.retry;
     const char *errmsg;
 
     if ((errmsg = boolstr(value, &appres.retry)) != NULL) {
 	popup_an_error("%s", errmsg);
-	return false;
+	return TU_FAILURE;
     }
 
     if (appres.reconnect != previous) {
 	reconnect_retry_touched();
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /**
@@ -637,6 +643,10 @@ host_connect(const char *n, enum iaction ia)
 	}
 	/* Redundantly signal a disconnect. */
 	change_cstate(NOT_CONNECTED, "host_connect");
+	if (reconnect_id != NULL_IOID) {
+	    /* Change it back so we are in the right state when we retry. */
+	    change_cstate(RECONNECTING, "host_connect");
+	}
 	goto failure;
     }
 

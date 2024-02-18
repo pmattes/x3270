@@ -224,6 +224,59 @@ ctlr_reinit(unsigned cmask)
 }
 
 /*
+ * Checks a model number and oversize rows and columns.
+ * Ideally this should be called by set_rows_cols() below.
+ */
+bool
+check_rows_cols(int mn, unsigned ovc, unsigned ovr)
+{
+    unsigned mxc, mxr; /* Maximum rows, columns */
+
+    switch (mn) {
+    case 2:
+	mxc = MODEL_2_COLS;
+	mxr = MODEL_2_ROWS; 
+	break;
+    case 3:
+	mxc = MODEL_3_COLS;
+	mxr = MODEL_3_ROWS; 
+	break;
+    case 4:
+	mxc = MODEL_4_COLS;
+	mxr = MODEL_4_ROWS; 
+	break;
+    case 5:
+	mxc = MODEL_5_COLS;
+	mxr = MODEL_5_ROWS; 
+	break;
+    default:
+	popup_an_error("Unknown model: %d", mn);
+	return false;
+    }
+
+    /* Check oversize. */
+    if (ovc > 0 || ovr > 0) {
+	if (ovc == 0) {
+	    popup_an_error("Invalid %s %dx%d columns:\nzero", ResOversize, ovc, ovr);
+	    return false;
+	} else if (ovr == 0) {
+	    popup_an_error("Invalid %s %dx%d rows:\nzero", ResOversize, ovc, ovr);
+	    return false;
+	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
+	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
+	    return false;
+	} else if (ovc > 0 && ovc < mxc) {
+	    popup_an_error("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, mn, mxc);
+	    return false;
+	} else if (ovr > 0 && ovr < mxr) {
+	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, mn, mxr);
+	    return false;
+	}
+    }
+    return true;
+}
+
+/*
  * Deal with the relationships between model numbers and rows/cols.
  */
 void
@@ -270,17 +323,13 @@ set_rows_cols(int mn, int ovc, int ovr)
     ov_rows = 0;
     if (ovc != 0 || ovr != 0) {
 	if (ovc <= 0 || ovr <= 0) {
-	    popup_an_error("Invalid %s %dx%d:\nNegative or zero", ResOversize,
-		    ovc, ovr);
-	} else if (ovc * ovr >= 0x4000) {
-	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit",
-		    ResOversize, ovc, ovr);
+	    popup_an_error("Invalid %s %dx%d:\nNegative or zero", ResOversize, ovc, ovr);
+	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
+	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
 	} else if (ovc > 0 && ovc < maxCOLS) {
-	    popup_an_error("Invalid %s cols (%d):\nLess than model %d cols "
-		    "(%d)", ResOversize, ovc, model_num, maxCOLS);
+	    popup_an_error("Invalid %s cols (%d):\nLess than model %d cols (%d)", ResOversize, ovc, model_num, maxCOLS);
 	} else if (ovr > 0 && ovr < maxROWS) {
-	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows "
-		    "(%d)", ResOversize, ovr, model_num, maxROWS);
+	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, model_num, maxROWS);
 	} else {
 	    ov_cols = maxCOLS = ovc;
 	    ov_rows = maxROWS = ovr;
@@ -289,8 +338,7 @@ set_rows_cols(int mn, int ovc, int ovr)
 
     /* Update the model name. */
     sprintf(model_name, "327%c-%d%s",
-	(mode.m3279 &&
-	     (appres.wrong_terminal_name || model_num < 4)) ? '9' : '8',
+	(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ? '9' : '8',
 	model_num,
 	mode.extended ? "-E" : "");
 

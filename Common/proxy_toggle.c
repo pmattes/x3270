@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Paul Mattes.
+ * Copyright (c) 2019-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,20 +68,20 @@ proxy_dump(void)
 /*
  * Proxy toggle.
  */
-static bool
-toggle_proxy(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_proxy(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     char *user, *host, *port;
 
     if (value == NULL || !*value) {
 	Replace(appres.proxy, NULL);
-	return true;
+	return TU_SUCCESS;
     }
     if (proxy_setup(value, &user, &host, &port) < 0) {
-	return false;
+	return TU_FAILURE;
     }
     Replace(appres.proxy, NewString(value));
-    return true;
+    return TU_SUCCESS;
 }
 
 /*

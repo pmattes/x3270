@@ -669,38 +669,38 @@ kybd_in3270(bool in3270 _is_unused)
 /*
  * Toggle the operator error lock setting.
  */
-static bool
-toggle_oerr_lock(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_oerr_lock(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg = boolstr(value, &appres.oerr_lock);
 
     if (errmsg != NULL) {
 	popup_an_error("%s %s", ResOerrLock, errmsg);
-	return false;
+	return TU_FAILURE;
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Toggle the unlock delay setting.
  */
-static bool
-toggle_unlock_delay(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_unlock_delay(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg = boolstr(value, &appres.unlock_delay);
 
     if (errmsg != NULL) {
 	popup_an_error("%s %s", ResUnlockDelay, errmsg);
-	return false;
+	return TU_FAILURE;
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Toggle the unlock delay milliseconds setting.
  */
-static bool
-toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_unlock_delay_ms(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     unsigned long l;
     char *end;
@@ -708,17 +708,17 @@ toggle_unlock_delay_ms(const char *name _is_unused, const char *value)
 
     if (!*value) {
 	appres.unlock_delay_ms = 0;
-	return true;
+	return TU_SUCCESS;
     }
 
     l = strtoul(value, &end, 10);
     ms = (int)l;
     if (*end != '\0' || (unsigned long)ms != l || ms < 0) {
 	popup_an_error("Invalid %s value", ResUnlockDelay);
-	return false;
+	return TU_FAILURE;
     }
     appres.unlock_delay_ms = ms;
-    return true;
+    return TU_SUCCESS;
 }
 
 /* The always-insert toggle changed. */

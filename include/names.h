@@ -287,3 +287,5 @@
 #define KwNormal	"normal"
 /*  Parameters to Escape(). */
 #define KwDashNoPromptAfter "-nopromptafter"
+/*  Parameters to Set(). */
+#define KwDefer		"-defer"

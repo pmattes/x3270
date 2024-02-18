@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -59,6 +59,7 @@ void set_toggle(toggle_index_t ix, bool value);
 void set_toggle_initial(toggle_index_t ix, bool value);
 bool toggle_changed(toggle_index_t ix);
 bool toggle_supported(toggle_index_t ix);
+void toggle_save_disconnect_set(const char *resource, const char *value, ia_t ia);
 
 #define TOGGLE_NEED_INIT	0x1	/* needs start-up initialization */
 #define TOGGLE_NEED_CLEANUP	0x2	/* needs shutdown clean-up */
@@ -69,15 +70,22 @@ typedef struct {
 } toggle_register_t;
 void register_toggles(toggle_register_t toggles[], unsigned count);
 
-typedef bool toggle_extended_upcall_t(const char *name, const char *value);
-typedef bool toggle_extended_done_t(bool success);
+#define XN_NONE			0x0
+#define XN_DEFER		0x1	/* defer Set operation, if needed */
+typedef enum {
+    TU_SUCCESS,		/* succeeded */
+    TU_FAILURE,		/* failed */
+    TU_DEFERRED,	/* deferred */
+} toggle_upcall_ret_t;
+typedef toggle_upcall_ret_t toggle_extended_upcall_t(const char *name, const char *value, unsigned flags, ia_t ia);
+typedef toggle_upcall_ret_t toggle_extended_done_t(bool success, unsigned flags, ia_t ia);
 typedef const char *toggle_extended_canonicalize_t(const char *value);
 void register_extended_toggle(const char *name,
 	toggle_extended_upcall_t upcall, toggle_extended_done_t done,
 	toggle_extended_canonicalize_t canonicalize, void **appres_address,
 	enum resource_type resource_type);
 typedef void toggle_extended_notify_t(const char *name, enum resource_type type,
-	void **value, ia_t ia);
+	void **value, ia_t ia, unsigned flags);
 void register_extended_toggle_notify(toggle_extended_notify_t notify);
 void force_toggle_notify(const char *name, ia_t ia);
 char **extended_toggle_names(int *countp, bool bool_only);

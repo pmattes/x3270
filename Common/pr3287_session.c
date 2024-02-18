@@ -127,12 +127,12 @@ static void	pr3287_host_connect(bool connected _is_unused);
 static void	pr3287_exiting(bool b _is_unused);
 static void	pr3287_accept(iosrc_t fd, ioid_t id);
 static void	pr3287_start_now(const char *lu, bool associated);
-static bool	pr3287_toggle_lu(const char *name, const char *value);
+static toggle_upcall_ret_t pr3287_toggle_lu(const char *name, const char *value, unsigned flags, ia_t ia);
 #if defined(_WIN32) /*[*/
-static bool	pr3287_toggle_name(const char *name, const char *value);
-static bool	pr3287_toggle_codepage(const char *name, const char *value);
+static toggle_upcall_ret_t pr3287_toggle_name(const char *name, const char *value, unsigned flags, ia_t ia);
+static toggle_upcall_ret_t pr3287_toggle_codepage(const char *name, const char *value, unsigned flags, ia_t ia);
 #endif /*]*/
-static bool	pr3287_toggle_opts(const char *name, const char *value);
+static toggle_upcall_ret_t pr3287_toggle_opts(const char *name, const char *value, unsigned flags, ia_t ia);
 
 /* Globals */
 
@@ -1387,18 +1387,17 @@ pr3287_session_running(void)
 /*
  * Extended toggle for pr3287 Logical Unit.
  */
-static bool
-pr3287_toggle_lu(const char *name, const char *value)
+static toggle_upcall_ret_t
+pr3287_toggle_lu(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     char *current = pr3287_saved_lu();
 
     if (!*value) {
 	value = NULL;
     }
-    if ((current == NULL && value == NULL) ||
-	    (current != NULL && value != NULL && !strcmp(current, value))) {
+    if ((current == NULL && value == NULL) || (current != NULL && value != NULL && !strcmp(current, value))) {
 	/* No change. */
-	return true;
+	return TU_SUCCESS;
     }
 
     /* Save the new value. */
@@ -1413,15 +1412,15 @@ pr3287_toggle_lu(const char *name, const char *value)
 	pr3287_connected();
     }
 
-    return true;
+    return TU_SUCCESS;
 }
 
 #if defined(_WIN32) /*[*/
 /*
  * Extended toggle for pr3287 printer name.
  */
-static bool
-pr3287_toggle_name(const char *name, const char *value)
+static toggle_upcall_ret_t
+pr3287_toggle_name(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     char *current = get_resource(ResPrinterName);
 
@@ -1431,7 +1430,7 @@ pr3287_toggle_name(const char *name, const char *value)
     if ((current == NULL && value == NULL) ||
 	    (current != NULL && value != NULL && !strcmp(current, value))) {
 	/* No change. */
-	return true;
+	return TU_SUCCESS;
     }
 
     /* Save the new value. */
@@ -1445,14 +1444,14 @@ pr3287_toggle_name(const char *name, const char *value)
 	pr3287_connected();
     }
 
-    return true;
+    return TU_SUCCESS;
 }
 
 /*
  * Extended toggle for pr3287 printer code page.
  */
-static bool
-pr3287_toggle_codepage(const char *name, const char *value)
+static toggle_upcall_ret_t
+pr3287_toggle_codepage(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     char *current = get_resource(ResPrinterCodepage);
 
@@ -1462,7 +1461,7 @@ pr3287_toggle_codepage(const char *name, const char *value)
     if ((current == NULL && value == NULL) ||
 	    (current != NULL && value != NULL && !strcmp(current, value))) {
 	/* No change. */
-	return true;
+	return TU_SUCCESS;
     }
 
     /* Save the new value. */
@@ -1476,25 +1475,24 @@ pr3287_toggle_codepage(const char *name, const char *value)
 	pr3287_connected();
     }
 
-    return true;
+    return TU_SUCCESS;
 }
 #endif /*]*/
 
 /*
  * Extended toggle for pr3287 printer options.
  */
-static bool
-pr3287_toggle_opts(const char *name, const char *value)
+static toggle_upcall_ret_t
+pr3287_toggle_opts(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     char *current = get_resource(ResPrinterOptions);
 
     if (!*value) {
 	value = NULL;
     }
-    if ((current == NULL && value == NULL) ||
-	    (current != NULL && value != NULL && !strcmp(current, value))) {
+    if ((current == NULL && value == NULL) || (current != NULL && value != NULL && !strcmp(current, value))) {
 	/* No change. */
-	return true;
+	return TU_SUCCESS;
     }
 
     /* Save the new value. */
@@ -1508,7 +1506,7 @@ pr3287_toggle_opts(const char *name, const char *value)
 	pr3287_connected();
     }
 
-    return true;
+    return TU_SUCCESS;
 }
 
 /* Return the running printer LU. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -168,17 +168,20 @@ login_macro(char *s)
  *
  * @param[in] name	Toggle name.
  * @param[in] value	Toggle value.
- * @returns true for success, false for failure.
+ * @param[in] flags	Set() flags.
+ * @param[in] ia	Cause.
+ *
+ * @return toggle_upcall_ret_t
  */
-static bool
-toggle_login_macro(const char *name _is_unused, const char *value)
+static toggle_upcall_ret_t
+toggle_login_macro(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
 {
     if (!*value) {
 	Replace(appres.login_macro, NULL);
     } else {
 	Replace(appres.login_macro, NewString(value));
     }
-    return true;
+    return TU_SUCCESS;
 }
 
 /**
