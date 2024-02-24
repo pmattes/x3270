@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,18 @@ class TestS3270Defer(cti.cti):
             self.assertTrue(r.ok)
             self.assertEqual(['3279-2-E'], r.json()['result'][0].split())
             #  'model' should be the only value reported by a -defer query.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            self.assertTrue(r.ok)
+            self.assertEqual(1, len(r.json()['result']))
+
+            # Set empty oversize with -defer. (bug fix validation)
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize,)')
+            self.assertTrue(r.ok)
+            #  A -defer query should show nothing, since nothing changed.
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
+            self.assertTrue(r.ok)
+            self.assertEqual(None, r.json()['result'])
+            #  Nothing should be reported by a -defer query.
             r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual(1, len(r.json()['result']))

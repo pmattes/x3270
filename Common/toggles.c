@@ -334,7 +334,7 @@ toggle_show(unsigned flags)
 	    for (s = disconnect_sets; s != NULL; s = s->next) {
 		if (!strcasecmp(s->resource, tnv[i].name) &&
 			((tnv[i].value == NULL && s->value[0]) ||
-			  strcmp(tnv[i].value, s->value))) {
+			 (tnv[i].value != NULL && strcmp(tnv[i].value, s->value)))) {
 		    action_output("%s:%s%s", tnv[i].name, s->value[0]? " ": "", s->value);
 		    break;
 		}
