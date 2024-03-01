@@ -61,6 +61,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "query.h"
 #include "screen.h"
 #include "scroll.h"
 #include "split_host.h"
@@ -772,6 +773,13 @@ toggle_insert_mode(toggle_index_t ix, enum toggle_type type)
     vstatus_insert_mode(toggled(INSERT_MODE));
 }
 
+/* Dump the keyboard lock state. */
+static const char *
+kybdlock_dump(void)
+{
+    return kybdlock? ResTrue: ResFalse;
+}
+
 /*
  * Keyboard module registration.
  */
@@ -786,6 +794,9 @@ kybd_register(void)
 	{ REVERSE_INPUT,toggle_reverse_input,	0 },
 	{ INSERT_MODE,	toggle_insert_mode,	0 },
 	{ UNDERSCORE_BLANK_FILL, NULL,	0 },
+    };
+    static query_t queries[] = {
+	{ KwKeyboardLock, kybdlock_dump, NULL, false, false },
     };
 
     /* Register interest in connect and disconnect events. */
@@ -808,6 +819,9 @@ kybd_register(void)
 	    (void **)&appres.unlock_delay, XRM_BOOLEAN);
     register_extended_toggle(ResUnlockDelayMs, toggle_unlock_delay_ms, NULL,
 	    NULL, (void **)&appres.unlock_delay_ms, XRM_INT);
+
+    /* Register queries. */
+    register_queries(queries, array_count(queries));
 }
 
 /*

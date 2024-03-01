@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,13 +52,13 @@ xterm_text_gui(int code, const char *text)
     switch (code) {
     case 0:	/* icon name and window title */
 	XtVaSetValues(toplevel, XtNiconName, text, NULL);
-	XtVaSetValues(toplevel, XtNtitle, text, NULL);
+	screen_set_title(text);
 	break;
     case 1:	/* icon name */
 	XtVaSetValues(toplevel, XtNiconName, text, NULL);
 	break;
     case 2:	/* window_title */
-	XtVaSetValues(toplevel, XtNtitle, text, NULL);
+	screen_set_title(text);
 	break;
     case 50:	/* font */
 	screen_newfont(text, False, False);

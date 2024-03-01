@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -165,6 +165,7 @@ void shift_event(int event_state);
 void screen_register(void);
 XChar2b screen_vcrosshair(void);
 Dimension rescale(Dimension d);
+void screen_set_title(const char *title);
 
 /* font list */
 struct font_list {
