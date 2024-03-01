@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -90,6 +90,7 @@
 #include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
+#include "xglobals.h"
 #include "xio.h"
 #include "xkybd.h"
 #include "xmenubar.h"
@@ -110,8 +111,8 @@ Widget          toplevel;
 XtAppContext    appcontext;
 Atom            a_delete_me, a_save_yourself, a_3270, a_registry, a_encoding,
 		a_state, a_net_wm_state, a_net_wm_state_maximized_horz,
-		a_net_wm_state_maximized_vert, a_atom, a_spacing, a_pixel_size,
-		a_font;
+		a_net_wm_state_maximized_vert, a_net_wm_name, a_atom, a_spacing,
+		a_pixel_size, a_font;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 Pixmap          gray;
@@ -742,21 +743,21 @@ main(int argc, char *argv[])
     /* Set up the resolver. */
     set_46(appres.prefer_ipv4, appres.prefer_ipv6);
 
-    a_delete_me = XInternAtom(display, "WM_DELETE_WINDOW", False);
-    a_save_yourself = XInternAtom(display, "WM_SAVE_YOURSELF", False);
+    /* Set up atoms. */
     a_3270 = XInternAtom(display, "3270", False);
-    a_registry = XInternAtom(display, "CHARSET_REGISTRY", False);
-    a_encoding = XInternAtom(display, "CHARSET_ENCODING", False);
-    a_spacing = XInternAtom(display, "SPACING", False);
-    a_pixel_size = XInternAtom(display, "PIXEL_SIZE", False);
-    a_font = XInternAtom(display, "FONT", False);
-    a_state = XInternAtom(display, "WM_STATE", False);
-    a_net_wm_state = XInternAtom(display, "_NET_WM_STATE", False);
-    a_net_wm_state_maximized_horz = XInternAtom(display,
-	    "_NET_WM_STATE_MAXIMIZED_HORZ", False);
-    a_net_wm_state_maximized_vert = XInternAtom(display,
-	    "_NET_WM_STATE_MAXIMIZED_VERT", False);
     a_atom = XInternAtom(display, "ATOM", False);
+    a_delete_me = XInternAtom(display, "WM_DELETE_WINDOW", False);
+    a_encoding = XInternAtom(display, "CHARSET_ENCODING", False);
+    a_font = XInternAtom(display, "FONT", False);
+    a_net_wm_name = XInternAtom(display, "_NET_WM_NAME", False);
+    a_net_wm_state_maximized_horz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    a_net_wm_state_maximized_vert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    a_net_wm_state = XInternAtom(display, "_NET_WM_STATE", False);
+    a_pixel_size = XInternAtom(display, "PIXEL_SIZE", False);
+    a_registry = XInternAtom(display, "CHARSET_REGISTRY", False);
+    a_save_yourself = XInternAtom(display, "WM_SAVE_YOURSELF", False);
+    a_spacing = XInternAtom(display, "SPACING", False);
+    a_state = XInternAtom(display, "WM_STATE", False);
 
     /* Add the Xt-only actions. */
     xaction_init();
@@ -996,7 +997,7 @@ relabel(bool ignored _is_unused)
 	sprintf(title, "x3270-%d%s %s", model_num, (IN_NVT ? "A" : ""),
 		reconnect_host);
 	if (user_title == NULL) {
-	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
+	    screen_set_title(title);
 	}
 	if (user_icon_name == NULL) {
 	    XtVaSetValues(toplevel, XtNiconName, reconnect_host, NULL);
@@ -1006,7 +1007,7 @@ relabel(bool ignored _is_unused)
 	sprintf(title, "x3270-%d", model_num);
 	sprintf(icon_label, "x3270-%d", model_num);
 	if (user_title == NULL) {
-	    XtVaSetValues(toplevel, XtNtitle, title, NULL);
+	    screen_set_title(title);
 	}
 	if (user_icon_name == NULL) {
 	    XtVaSetValues(toplevel, XtNiconName, icon_label, NULL);
@@ -1033,6 +1034,11 @@ label_init(void)
     user_icon_name = get_resource(XtNiconName);
     if (user_icon_name != NULL) {
 	set_aicon_label(user_icon_name);
+    }
+
+    /* Set the _NET_WM_NAME property, because Xt doesn't. */
+    if (user_title != NULL) {
+	screen_set_title(user_title);
     }
 }
 

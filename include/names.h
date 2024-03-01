@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 Paul Mattes.
+ * Copyright (c) 2020-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -237,6 +237,7 @@
 #define KwOff		"off"
 #define KwInfo		"info"
 #define KwFile		"file"
+#define KwKeyboardLock	"KeyboardLock"
 #define KwPrinter	"printer"
 #define KwText		"text"
 #define KwHtml		"html"
@@ -244,6 +245,7 @@
 #define KwGdi		"gdi"
 #define KwDialog	"dialog"
 #define KwNoDialog	"nodialog"
+#define KwWindowId	"WindowId"
 #define KwWordPad	"wordpad"
 /*  Parameters to Script(). */
 #define KwDashAsync	"-async"

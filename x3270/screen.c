@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -75,6 +75,7 @@
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
+#include "query.h"
 #include "save.h"
 #include "screen.h"
 #include "scroll.h"
@@ -315,6 +316,7 @@ struct sstate {
 static struct sstate nss;
 static struct sstate iss;
 static struct sstate *ss = &nss;
+static char *pending_title;
 
 #define	INIT_ODD(odd)	memset(odd, '\0', sizeof(odd))
 #define SET_ODD(odd, n)	(odd)[(n) / BPW] |= 1 << ((n) % BPW)
@@ -601,6 +603,13 @@ dpi_init(void)
 
     hhalo = HHALO;
     vhalo = VHALO;
+}
+
+/* Dump the window ID. */
+static const char *
+windowid_dump(void)
+{
+    return lazyaf("0x%lx", XtWindow(toplevel));
 }
 
 /*
@@ -959,6 +968,11 @@ screen_reinit(unsigned cmask)
     scrollbar_init((cmask & MODEL_CHANGE) != 0);
 
     XtRealizeWidget(toplevel);
+    if (pending_title != NULL) {
+        XChangeProperty(display, XtWindow(toplevel), a_net_wm_name, XInternAtom(display, "UTF8_STRING", False), 8,
+                PropModeReplace, (unsigned char *)pending_title, (int)strlen(pending_title));
+        Replace(pending_title, NULL);
+    }
     nss.window = XtWindow(nss.widget);
     set_mcursor();
 
@@ -6654,7 +6668,7 @@ Title_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     user_title = NewString(argv[0]);
-    XtVaSetValues(toplevel, XtNtitle, user_title, NULL);
+    screen_set_title(user_title);
     return true;
 }
 
@@ -7006,6 +7020,20 @@ screen_codepage_changed(bool ignored _is_unused)
     screen_reinit(CODEPAGE_CHANGE | FONT_CHANGE);
 }
 
+/* Change the window title and set the _NET_WM_NAME property (which Xt does not do). */
+void
+screen_set_title(const char *title)
+{
+    XtVaSetValues(toplevel, XtNtitle, title, NULL);
+    if (XtWindow(toplevel) != 0)
+    {
+        XChangeProperty(display, XtWindow(toplevel), a_net_wm_name, XInternAtom(display, "UTF8_STRING", False), 8,
+                PropModeReplace, (unsigned char *)title, (int)strlen(title));
+    } else {
+        Replace(pending_title, NewString(title));
+    }
+}
+
 /**
  * Screen module registration.
  */
@@ -7030,6 +7058,9 @@ screen_register(void)
 	{ AnTitle,		Title_action,		ACTION_KE },
 	{ AnWindowState,	WindowState_action,	ACTION_KE }
     };
+    static query_t queries[] = {
+	{ KwWindowId, windowid_dump, NULL, false, false },
+    };
 
     /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
@@ -7041,4 +7072,7 @@ screen_register(void)
     register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_3270_MODE, screen_connect);
     register_schange(ST_CODEPAGE, screen_codepage_changed);
+
+    /* Register our query. */
+    register_queries(queries, array_count(queries));
 }
