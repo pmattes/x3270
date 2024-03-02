@@ -1,0 +1,1017 @@
+20240229.133358.840 Trace started
+ Version: b3270 v4.3pre6 Sat Feb 24 21:33:59 UTC 2024 pdm
+ Build options: --disable-local-process via gcc 10-win32 20220113 32-bit
+ Command: b3270 b3270 -utf8 -minversion 4.0 C:\Users\lju\AppData\Local\Temp\wx3270tmp0.b3270
+ Model 3278-4-E, 43 rows x 132 cols, color display, extended data stream, color emulation, code page bracket
+ ANSI codepage: 1252
+ Local codepage: 65001
+ Host codepage: 37
+ Docs: (null)
+ Install dir: C:\Users\lju\Documents\git_projects\Wx3270-New\wx3270\bin\Debug\
+ Desktop: (null)
+ Settings: acceptHostname= aidWait=true altCursor=false alwaysInsert=false
+  aplMode=false bindLimit=true blankFill=true clientCert= codePage=bracket
+  confDir=C:\Users\lju\Documents\git_projects\Wx3270-New crosshair=false
+  cursorBlink=false ftBufferSize=16384 httpd= insertMode=false lineMode=true
+  lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true overlayPaste=true
+  oversize=132x43 preferIpv4=false preferIpv6=false printer.codepage=
+  printer.name= printer.options= printerLu= proxy= reconnect=false retry=false
+  reverseInputMode=false rightToLeftMode=false saveLines=4096 screenTrace=false
+  scriptPort= showTiming=false startTls=true termName= tlsMaxProtocol=
+  tlsMinProtocol= trace=true typeahead=true underscoreBlankFill=true
+  unlockDelay=false unlockDelayMs=350 verifyHostCert=true visibleControl=false
+  wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20240229.133358.857 ui> <initialize><hello version="4.3.6" build="b3270 v4.3pre6 Sat Feb 24 21:33:59 UTC 2024 pdm" copyright="Copyright © 1993-2024, Paul Mattes.&#10;Copyright © 1990, Jeff Sparkes.&#10;Copyright © 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA&#10; 30332.&#10;All rights reserved.&#10;&#10;Redistribution and use in source and binary forms, with or without&#10;modification, are permitted provided that the following conditions are met:&#10;    * Redistributions of source code must retain the above copyright&#10;      notice, this list of conditions and the following disclaimer.&#10;    * Redistributions in binary form must reproduce the above copyright&#10;      notice, this list of conditions and the following disclaimer in the&#10;      documentation and/or other materials provided with the distribution.&#10;    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of&#10;      their contributors may be used to endorse or promote products derived&#10;      from this software without specific prior written permission.&#10;&#10;THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC &quot;AS IS&quot; AND&#10;ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE&#10;IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE&#10;ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE&#10;LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR&#10;CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF&#10;SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS&#10;INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN&#10;CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)&#10;ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE&#10;POSSIBILITY OF SUCH DAMAGE."/><code-pages><code-page name="cp037" alias1="cp37" alias2="us" alias3="us-intl"/><code-page name="cp273" alias1="german"/><code-page name="cp275" alias1="brazilian"/><code-page name="cp277" alias1="norwegian"/><code-page name="cp278" alias1="finnish" alias2="swedish"/><code-page name="cp280" alias1="italian"/><code-page name="cp284" alias1="spanish"/><code-page name="cp285" alias1="uk"/><code-page name="cp297" alias1="french"/><code-page name="cp424" alias1="hebrew"/><code-page name="cp500" alias1="belgian"/><code-page name="cp803" alias1="hebrew-old"/><code-page name="cp870" alias1="polish" alias2="slovenian"/><code-page name="cp871" alias1="icelandic"/><code-page name="cp875" alias1="greek"/><code-page name="cp880" alias1="russian"/><code-page name="cp930" alias1="japanese-kana"/><code-page name="cp935" alias1="simplified-chinese"/><code-page name="cp937" alias1="traditional-chinese"/><code-page name="cp939" alias1="japanese-latin"/><code-page name="cp1026" alias1="turkish"/><code-page name="cp1047"/><code-page name="cp1140" alias1="us-euro"/><code-page name="cp1141" alias1="german-euro"/><code-page name="cp1142" alias1="norwegian-euro"/><code-page name="cp1143" alias1="finnish-euro" alias2="swedish-euro"/><code-page name="cp1144" alias1="italian-euro"/><code-page name="cp1145" alias1="spanish-euro"/><code-page name="cp1146" alias1="uk-euro"/><code-page name="cp1147" alias1="french-euro"/><code-page name="cp1148" alias1="belgian-euro"/><code-page name="cp1149" alias1="icelandic-euro"/><code-page name="cp1160" alias1="thai"/><code-page name="cp1388" alias1="chinese-gb18030"/><code-page name="bracket" alias1="oldibm" alias2="bracket437"/></code-pages><models><model model="2" rows="24" columns="80"/><model model="3" rows="32" columns="80"/><model model="4" rows="43" columns="80"/><model model="5" rows="27" columns="132"/></models><proxies><proxy name="passthru" username="false" port="3514"/><proxy name="http" username="true" port="3128"/><proxy name="telnet" username="false"/><proxy name="socks4" username="true" port="1080"/><proxy name="socks4a" username="true" port="1080"/><proxy name="socks5" username="true" port="1080"/><proxy name="socks5d" username="true" port="1080"/></proxies><prefixes value="ACLNPSBYT"/><oia field="lock" value="not-connected"/><screen-mode model="4" rows="43" columns="132" color="true" oversize="true" extended="true"/><erase logical-rows="43" logical-columns="132" fg="blue" bg="neutralBlack"/><thumb top="0" shown="1" saved="0" screen="43" back="0"/><terminal-name text="IBM-DYNAMIC" override="false"/><tls-hello supported="true" provider="Windows Schannel" options="acceptHostname verifyHostCert startTls clientCert tlsMinProtocol tlsMaxProtocol"/><setting name="codePage" value="bracket" cause="none"/><setting name="ftBufferSize" value="16384" cause="none"/><setting name="confDir" value="." cause="none"/><setting name="reconnect" value="false" cause="none"/><setting name="retry" value="false" cause="none"/><setting name="oerrLock" value="true" cause="none"/><setting name="unlockDelay" value="false" cause="none"/><setting name="unlockDelayMs" value="350" cause="none"/><setting name="scriptPort" cause="none"/><setting name="printerLu" cause="none"/><setting name="saveLines" value="4096" cause="none"/><setting name="acceptHostname" cause="none"/><setting name="verifyHostCert" value="true" cause="none"/><setting name="startTls" value="true" cause="none"/><setting name="clientCert" cause="none"/><setting name="tlsMinProtocol" cause="none"/><setting name="tlsMaxProtocol" cause="none"/><setting name="httpd" cause="none"/><setting name="proxy" cause="none"/><setting name="model" value="3279-4-E" cause="none"/><setting name="oversize" value="132x43" cause="none"/><setting name="termName" cause="none"/><setting name="nopSeconds" value="0" cause="none"/><setting name="lineMode" value="true" cause="none"/><setting name="noTelnetInputMode" value="line" cause="none"/><setting name="bindLimit" value="true" cause="none"/><setting name="wrongTerminalName" value="false" cause="none"/><setting name="loginMacro" cause="none"/><setting name="preferIpv4" value="false" cause="none"/><setting name="preferIpv6" value="false" cause="none"/><setting name="monoCase" value="false"/><setting name="altCursor" value="false"/><setting name="cursorBlink" value="false"/><setting name="showTiming" value="false"/><setting name="trace" value="true"/><trace-file name="C:\Users\lju\Desktop\x3trc.29920.txt"/><setting name="lineWrap" value="false"/><setting name="blankFill" value="true"/><setting name="screenTrace" value="false"/><setting name="crosshair" value="false"/><setting name="visibleControl" value="false"/><setting name="aidWait" value="true"/><setting name="overlayPaste" value="true"/><setting name="typeahead" value="true"/><setting name="aplMode" value="false"/><setting name="alwaysInsert" value="false"/><setting name="rightToLeftMode" value="false"/><setting name="reverseInputMode" value="false"/><setting name="insertMode" value="false"/><setting name="underscoreBlankFill" value="true"/></initialize>
+20240229.133358.857 Waiting for 1 event
+20240229.133358.857 Got event 0x0
+20240229.133358.857 ui< ﻿<?xml version="1.0" encoding="utf-8"?>
+20240229.133358.857 <b3270-in>
+20240229.133358.857 <register name="uQuitIfNotConnected" help-text="uQuitIfNotConnected" />
+20240229.133358.857 <register name="uKeyboardSelect" help-text="uKeyboardSelect" />
+20240229.133358.857 <register name="uCopy" help-text="uCopy" />
+20240229.133358.857 <register name="uCut" help-text="uCut" />
+20240229.133358.857 <register name="uPaste" help-text="uPaste" />
+20240229.133358.857 <register name="uHelp" help-text="uHelp" />
+20240229.133358.857 <register name="uChord" help-text="uChord" />
+20240229.133358.857 <register name="uPrintText" help-text="uPrintText" />
+20240229.133358.857 <register name="uSnapScreen" help-text="uSnapScreen" />
+20240229.133358.857 <register name="uStepEfont" help-text="uStepEfont" />
+20240229.133358.857 <register name="uFullScreen" help-text="uFullScreen" />
+20240229.133358.857 <register name="uMenuBar" help-text="uMenuBar" />
+20240229.133358.859 lazya_flush: 57 slots
+20240229.133358.859 Waiting for 1 event
+20240229.133359.270 Got event 0x0
+20240229.133359.270 ui< <run actions="Set(overlayPaste,set)" r-tag="async-0" />
+20240229.133359.270 CB(ui)[#1] started
+20240229.133359.270 CB(ui)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.270 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20240229.133359.270 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20240229.133359.270 Macro[#1.2] running
+20240229.133359.270 Macro[#1.2] IDLE -> RUNNING (executing)
+20240229.133359.270 Macro[#1.2] 'Set(overlayPaste,set)'
+20240229.133359.270 ui -> Set("overlayPaste", "set")
+20240229.133359.270 Macro[#1.2] complete, success
+20240229.133359.270 CB(ui)[#1.1] RUNNING -> IDLE (about to resume)
+20240229.133359.270 CB(ui)[#1.1] child task done, success
+20240229.133359.271 ui> <run-result r-tag="async-0" success="true" time="0"/>
+20240229.133359.271 CB(ui)[#1.1] complete, success
+20240229.133359.271 CB(ui)[#1] complete
+20240229.133359.271 Waiting for 1 event
+20240229.133359.305 Got event 0x0
+20240229.133359.305 ui< <run actions="Set(unlockDelayMs,60)" r-tag="async-1" />
+20240229.133359.305 CB(ui)[#2] started
+20240229.133359.305 CB(ui)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.305 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20240229.133359.305 lazya_flush: 27 slots
+20240229.133359.305 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20240229.133359.305 Macro[#2.2] running
+20240229.133359.305 Macro[#2.2] IDLE -> RUNNING (executing)
+20240229.133359.305 Macro[#2.2] 'Set(unlockDelayMs,60)'
+20240229.133359.305 ui -> Set("unlockDelayMs", "60")
+20240229.133359.305 ui> <setting name="unlockDelayMs" value="60" cause="ui"/>
+20240229.133359.305 Macro[#2.2] complete, success
+20240229.133359.305 CB(ui)[#2.1] RUNNING -> IDLE (about to resume)
+20240229.133359.305 CB(ui)[#2.1] child task done, success
+20240229.133359.306 ui> <run-result r-tag="async-1" success="true" time="0"/>
+20240229.133359.306 CB(ui)[#2.1] complete, success
+20240229.133359.306 CB(ui)[#2] complete
+20240229.133359.306 Waiting for 1 event
+20240229.133359.307 Got event 0x0
+20240229.133359.307 ui< <run actions="Set(-defer) Echo(&lt;mark&gt;) Set(-defer,model,3279-4-E,oversize,132x43) Set(-defer)" r-tag="async-2" />
+20240229.133359.307 CB(ui)[#3] started
+20240229.133359.307 CB(ui)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.307 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20240229.133359.307 lazya_flush: 29 slots
+20240229.133359.307 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20240229.133359.307 Macro[#3.2] running
+20240229.133359.307 Macro[#3.2] IDLE -> RUNNING (executing)
+20240229.133359.307 Macro[#3.2] 'Set(-defer) Echo(<mark>) Set(-defer,model,3279-4-E,oversize,132x43) Set(-defer)'
+20240229.133359.307 ui -> Set("-defer")
+20240229.133359.307 Macro[#3.2] 'Echo(<mark>) Set(-defer,model,3279-4-E,oversize,132x43) Set(-defer)'
+20240229.133359.308 ui -> Echo("<mark>")
+20240229.133359.308 Output for Macro[#3.2]: '<mark>'
+20240229.133359.308 Macro[#3.2] 'Set(-defer,model,3279-4-E,oversize,132x43) Set(-defer)'
+20240229.133359.308 ui -> Set("-defer", "model", "3279-4-E", "oversize", "132x43")
+20240229.133359.308 ui> <setting name="model" value="3279-4-E" cause="ui"/>
+20240229.133359.308 ui> <setting name="oversize" value="132x43" cause="ui"/>
+20240229.133359.308 Macro[#3.2] 'Set(-defer)'
+20240229.133359.308 ui -> Set("-defer")
+20240229.133359.308 Macro[#3.2] complete, success
+20240229.133359.308 CB(ui)[#3.1] RUNNING -> IDLE (about to resume)
+20240229.133359.308 CB(ui)[#3.1] child task done, success
+20240229.133359.308 ui> <run-result r-tag="async-2" success="true" text="&lt;mark&gt;" time="0.001"/>
+20240229.133359.308 CB(ui)[#3.1] complete, success
+20240229.133359.308 CB(ui)[#3] complete
+20240229.133359.308 Waiting for 1 event
+20240229.133359.308 Got event 0x0
+20240229.133359.308 ui< <run actions="Set(alwaysInsert,false,crosshair,false,cursorBlink,false,altCursor,false,codePage,bracket,monoCase,false,nopSeconds,0,preferIpv4,false,preferIpv6,false,printer.codepage,&quot;&quot;,printer.name,&quot;&quot;,printer.options,&quot;&quot;,retry,false,showTiming,false,termName,&quot;&quot;,typeahead,true)" r-tag="async-3" />
+20240229.133359.308 CB(ui)[#4] started
+20240229.133359.308 CB(ui)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.308 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20240229.133359.308 lazya_flush: 69 slots
+20240229.133359.308 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20240229.133359.308 Macro[#4.2] running
+20240229.133359.308 Macro[#4.2] IDLE -> RUNNING (executing)
+20240229.133359.308 Macro[#4.2] 'Set(alwaysInsert,false,crosshair,false,cursorBlink,false,altCursor,false,codePage,bracket,monoCase,false,nopSeconds,0,preferIpv4,false,preferIpv6,false,printer.codepage,"",printer.name,"",printer.options,"",retry,false,showTiming,false,termName,"",typeahead,true)'
+20240229.133359.308 ui -> Set("alwaysInsert", "false", "crosshair", "false", "cursorBlink", "false", "altCursor", "false", "codePage", "bracket", "monoCase", "false", "nopSeconds", "0", "preferIpv4", "false", "preferIpv6", "false", "printer.codepage", "", "printer.name", "", "printer.options", "", "retry", "false", "showTiming", "false", "termName", "", "typeahead", "true")
+20240229.133359.309 st_changed(codepage,true)
+20240229.133359.309 ui> <setting name="codePage" value="bracket" cause="ui"/>
+20240229.133359.309 ui> <setting name="nopSeconds" value="0" cause="ui"/>
+20240229.133359.309 ui> <setting name="preferIpv4" value="false" cause="ui"/>
+20240229.133359.309 ui> <setting name="preferIpv6" value="false" cause="ui"/>
+20240229.133359.309 ui> <setting name="retry" value="false" cause="ui"/>
+20240229.133359.309 ui> <setting name="termName" cause="ui"/>
+20240229.133359.309 Macro[#4.2] complete, success
+20240229.133359.309 CB(ui)[#4.1] RUNNING -> IDLE (about to resume)
+20240229.133359.309 CB(ui)[#4.1] child task done, success
+20240229.133359.309 ui> <run-result r-tag="async-3" success="true" time="0.001"/>
+20240229.133359.309 CB(ui)[#4.1] complete, success
+20240229.133359.309 CB(ui)[#4] complete
+20240229.133359.310 Waiting for 1 event
+20240229.133359.310 Got event 0x0
+20240229.133359.310 ui< <run actions="Set(proxy,&quot;&quot;)" r-tag="async-4" />
+20240229.133359.310 CB(ui)[#5] started
+20240229.133359.310 CB(ui)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.310 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20240229.133359.310 lazya_flush: 96 slots
+20240229.133359.310 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20240229.133359.310 Macro[#5.2] running
+20240229.133359.310 Macro[#5.2] IDLE -> RUNNING (executing)
+20240229.133359.310 Macro[#5.2] 'Set(proxy,"")'
+20240229.133359.310 ui -> Set("proxy", "")
+20240229.133359.310 ui> <setting name="proxy" cause="ui"/>
+20240229.133359.310 Macro[#5.2] complete, success
+20240229.133359.310 CB(ui)[#5.1] RUNNING -> IDLE (about to resume)
+20240229.133359.310 CB(ui)[#5.1] child task done, success
+20240229.133359.310 ui> <run-result r-tag="async-4" success="true" time="0"/>
+20240229.133359.310 CB(ui)[#5.1] complete, success
+20240229.133359.310 CB(ui)[#5] complete
+20240229.133359.310 Waiting for 1 event
+20240229.133359.310 Got event 0x0
+20240229.133359.310 ui< <run actions="Scroll(Set,0)" r-tag="async-5" />
+20240229.133359.310 CB(ui)[#6] started
+20240229.133359.310 CB(ui)[#6.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133359.310 Macro[#6.2] IDLE -> RUNNING (fresh push)
+20240229.133359.310 lazya_flush: 29 slots
+20240229.133359.310 Macro[#6.2] RUNNING -> IDLE (about to resume)
+20240229.133359.310 Macro[#6.2] running
+20240229.133359.310 Macro[#6.2] IDLE -> RUNNING (executing)
+20240229.133359.310 Macro[#6.2] 'Scroll(Set,0)'
+20240229.133359.310 ui -> Scroll("Set", "0")
+20240229.133359.310 Macro[#6.2] complete, success
+20240229.133359.310 CB(ui)[#6.1] RUNNING -> IDLE (about to resume)
+20240229.133359.310 CB(ui)[#6.1] child task done, success
+20240229.133359.310 ui> <run-result r-tag="async-5" success="true" time="0"/>
+20240229.133359.310 CB(ui)[#6.1] complete, success
+20240229.133359.310 CB(ui)[#6] complete
+20240229.133359.310 Waiting for 1 event
+20240229.133359.339 Got event 0x0
+20240229.133359.339 ui< <!--[Window] 33:58.591 Wx3270App Init done in 244 ms-->
+20240229.133359.339 <!--[Window] 33:58.591 MainScreen Init start-->
+20240229.133359.339 <!--[Window] 33:58.605 SecondaryInit: Size {Width=945, Height=546} ClientSize {Width=929, Height=507} MinimumSize {Width=341, Height=190}-->
+20240229.133359.339 <!--[Window] 33:58.605 ScreenBox.SetMinimumClient: {Width=325, Height=151}-->
+20240229.133359.339 <!--[Window] 33:58.607 ProcessNewFont 12 Points, 24 rows 80 columns, minSize {Width=325, Height=151}-->
+20240229.133359.339 <!--[Window] 33:58.607  Old cell size: {Width=0, Height=0}-->
+20240229.133359.339 <!--[Window] 33:58.609  New cell size: {Width=9, Height=19}-->
+20240229.133359.339 <!--[Window] 33:58.610 SetScreenBoxSize rows 24 columns 80 isExplcit False minimumParentSize {Width=325, Height=151}-->
+20240229.133359.339 <!--[Window] 33:58.610  pictureBox.Size {Width=100, Height=50} -> {Width=720, Height=456}-->
+20240229.133359.339 <!--[Window] 33:58.610  pictureBox.Parent.Size {Width=200, Height=100} -> {Width=720, Height=456}-->
+20240229.133359.339 <!--[Draw] 33:58.611 MainScreen ScreenNeedsDrawing ScreenDraw(sizeChange) all #4-->
+20240229.133359.339 <!--[Draw] 33:58.611 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:58.611  pictureBox Location {X=0,Y=0} size {Width=720, Height=456} cellSize {Width=9, Height=19} parentSize {Width=720, Height=456} newSize {Width=720, Height=456}-->
+20240229.133359.339 <!--[Window] 33:58.611  newSize {Width=720, Height=456}-->
+20240229.133359.339 <!--[Window] 33:58.613 MainScreen Resize #1 state Normal Size {Width=757, Height=556}  ClientSize {Width=741, Height=517} Location {X=234,Y=234}-->
+20240229.133359.339 <!--[Window] 33:58.613 Resize #1 done-->
+20240229.133359.339 <!--[Window] 33:58.614 ScreenBox.SetFixed: {Width=21, Height=42}-->
+20240229.133359.339 <!--[Draw] 33:58.639 ChangeOiaCursor disabled-->
+20240229.133359.339 <!--[Window] 33:58.671 MainScreen Init done in 79 ms-->
+20240229.133359.339 <!--[Window] 33:58.703 Initialization took 1.040 seconds-->
+20240229.133359.339 <!--[Window] 33:58.842 SetScreenBoxSize rows 43 columns 132 isExplcit True minimumParentSize -->
+20240229.133359.339 <!--[Window] 33:58.842  pictureBox.Size {Width=720, Height=456} -> {Width=1188, Height=817}-->
+20240229.133359.339 <!--[Window] 33:58.843  pictureBox.Parent.Size {Width=720, Height=456} -> {Width=1188, Height=817}-->
+20240229.133359.339 <!--[Draw] 33:58.843 MainScreen ScreenNeedsDrawing ScreenDraw(sizeChange) all #7-->
+20240229.133359.339 <!--[Draw] 33:58.843 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:58.843  pictureBox Location {X=0,Y=0} size {Width=1188, Height=817} cellSize {Width=9, Height=19} parentSize {Width=1188, Height=817} newSize {Width=1188, Height=817}-->
+20240229.133359.339 <!--[Window] 33:58.843  newSize {Width=1188, Height=817}-->
+20240229.133359.339 <!--[Window] 33:58.844 MainScreen Resize #2 state Normal Size {Width=1225, Height=917}  ClientSize {Width=1209, Height=878} Location {X=234,Y=234}-->
+20240229.133359.339 <!--[Window] 33:58.844 Resize #2 done-->
+20240229.133359.339 <!--[Draw] 33:58.844 MainScreen ScreenNeedsDrawing ScreenDraw(mode) all #5-->
+20240229.133359.339 <!--[Draw] 33:58.844 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Draw] 33:58.845 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #8-->
+20240229.133359.339 <!--[Draw] 33:58.845 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:58.846 Thumb: Saved 0 Screen 43 Back 0 -> Maximum 42 Value 0 LargeChange 43-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #11-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #12-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #13-->
+20240229.133359.339 <!--[Draw] 33:58.858 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Draw] 33:59.266 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #16-->
+20240229.133359.339 <!--[Draw] 33:59.266 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Draw] 33:59.266 MainScreen ScreenNeedsDrawing ScreenDraw(visibleControl) all #17-->
+20240229.133359.339 <!--[Draw] 33:59.266 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[BackEnd] 33:59.267 Back-end initialization complete-->
+20240229.133359.339 <!--[Window] 33:59.277 ProcessNewFont 14.25 Points, 43 rows 132 columns, minSize {Width=304, Height=109}-->
+20240229.133359.339 <!--[Window] 33:59.277  Old cell size: {Width=9, Height=19}-->
+20240229.133359.339 <!--[Window] 33:59.278  New cell size: {Width=10, Height=22}-->
+20240229.133359.339 <!--[Window] 33:59.278 SetScreenBoxSize rows 43 columns 132 isExplcit False minimumParentSize {Width=304, Height=109}-->
+20240229.133359.339 <!--[Wi
+20240229.133359.339 lazya_flush: 23 slots
+20240229.133359.339 Waiting for 1 event
+20240229.133359.339 Got event 0x0
+20240229.133359.339 ui< ndow] 33:59.278  pictureBox.Size {Width=1188, Height=817} -> {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.278  pictureBox.Parent.Size {Width=1188, Height=817} -> {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Draw] 33:59.278 MainScreen ScreenNeedsDrawing ScreenDraw(sizeChange) all #20-->
+20240229.133359.339 <!--[Draw] 33:59.278 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:59.278  pictureBox Location {X=0,Y=0} size {Width=1320, Height=946} cellSize {Width=10, Height=22} parentSize {Width=1320, Height=946} newSize {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.278  newSize {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.297 MainScreen Resize #3 state Normal Size {Width=1357, Height=1049}  ClientSize {Width=1341, Height=1010} Location {X=926,Y=157}-->
+20240229.133359.339 <!--[Window] 33:59.297 Resize #3 done-->
+20240229.133359.339 <!--[Draw] 33:59.301 MainScreen ScreenNeedsDrawing ScreenDraw(recolor) all #21-->
+20240229.133359.339 <!--[Draw] 33:59.301 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:59.309 MainScreen ChangeFinal Turning off scrollbar-->
+20240229.133359.339 <!--[Window] 33:59.310 ScreenBox.SetFixed: {Width=4, Height=42}-->
+20240229.133359.339 <!--[Window] 33:59.310 MainScreen Resize #4 state Normal Size {Width=1340, Height=1049}  ClientSize {Width=1324, Height=1010} Location {X=926,Y=157}-->
+20240229.133359.339 <!--[Window] 33:59.310 Resize #4 done-->
+20240229.133359.339 <!--[Profile] 33:59.312 Error: attempt to change profile (change scroll bar) while propagating profile-->
+20240229.133359.339 <!--[Window] 33:59.312 MainScreen ChangeFinal setting size to {Width=1406, Height=1086}-->
+20240229.133359.339 <!--[Window] 33:59.312 MainScreen Resize #5 state Normal Size {Width=1406, Height=1086}  ClientSize {Width=1390, Height=1047} Location {X=926,Y=157}-->
+20240229.133359.339 <!--[Window] 33:59.316  ==> resize -->
+20240229.133359.339 <!--[Window] 33:59.316 ScreenBox.Maximize nowMaximized=False clientSize={Width=1390, Height=1047}-->
+20240229.133359.339 <!--[Window] 33:59.316  Nop-->
+20240229.133359.339 <!--[Window] 33:59.317-->
+20240229.133359.339 <!--[Window] 33:59.317 RecomputeFont: targetSize {Width=1390, Height=1047} resizeType Dynamic-->
+20240229.133359.339 <!--[Window] 33:59.317  current font height: 14.25 Points-->
+20240229.133359.339 <!--[Window] 33:59.317  overhead {Width=4, Height=42}-->
+20240229.133359.339 <!--[Window] 33:59.317  current text size {Width=1320, Height=968}, current total size {Width=1324, Height=1010}-->
+20240229.133359.339 <!--[Window] 33:59.317  targetTextSize {Width=1386, Height=1005} maxCell {Width=10, Height=22}-->
+20240229.133359.339 <!--[Window] 33:59.317  initial  pixelHeight 22 => size {Width=12, Height=26}, total size {Width=1588, Height=1186}-->
+20240229.133359.339 <!--[Window] 33:59.317  iterated pixelHeight 21 => size {Width=12, Height=24}, total size {Width=1588, Height=1098}-->
+20240229.133359.339 <!--[Window] 33:59.317  iterated pixelHeight 20 => size {Width=11, Height=23}, total size {Width=1456, Height=1054}-->
+20240229.133359.339 <!--[Window] 33:59.317  iterated pixelHeight 19 => size {Width=10, Height=22}, total size {Width=1324, Height=1010}-->
+20240229.133359.339 <!--[Window] 33:59.317  newTextSize: {Width=1320, Height=968}, new total size {Width=1324, Height=1010}-->
+20240229.133359.339 <!--[Window] 33:59.317 ProcessNewFont 19 Pixels, 43 rows 132 columns, minSize {Width=1386, Height=1005}-->
+20240229.133359.339 <!--[Window] 33:59.317  Old cell size: {Width=10, Height=22}-->
+20240229.133359.339 <!--[Window] 33:59.318  New cell size: {Width=10, Height=22}-->
+20240229.133359.339 <!--[Window] 33:59.318 SetScreenBoxSize rows 43 columns 132 isExplcit False minimumParentSize {Width=1386, Height=1005}-->
+20240229.133359.339 <!--[Window] 33:59.318  pictureBox.Size {Width=1320, Height=946} -> {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.318  pictureBox.Parent.Size {Width=1320, Height=946} -> {Width=1386, Height=983}-->
+20240229.133359.339 <!--[Draw] 33:59.318 MainScreen ScreenNeedsDrawing ScreenDraw(sizeChange) all #23-->
+20240229.133359.339 <!--[Draw] 33:59.318 MainScreen ScreenNeedsDrawing all-->
+20240229.133359.339 <!--[Window] 33:59.318  pictureBox Location {X=33,Y=18} size {Width=1320, Height=946} cellSize {Width=10, Height=22} parentSize {Width=1386, Height=983} newSize {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.318  newSize {Width=1320, Height=946}-->
+20240229.133359.339 <!--[Window] 33:59.328 Resize #5 after RecomputeFont -> Consolas Regular 14.25-->
+20240229.133359.339 <!--[Window] 33:59.329 Resize #5 done-->
+20240229.133359.339 Waiting for 1 event
+20240229.133359.429 Got event 0x0
+20240229.133359.429 ui< <!--[Window] 33:59.360 MainWindow Load-->
+20240229.133359.429 <!--[Window] 33:59.400 MainScreen Activated-->
+20240229.133359.429 <!--[Key] 33:59.401 Activate: modDisqualified -> False-->
+20240229.133359.429 <!--[Key] 33:59.422 Enter: modDisqualified -> False-->
+20240229.133359.429 Waiting for 1 event
+20240229.133359.537 Got event 0x0
+20240229.133359.537 ui< <!--[Draw] 33:59.463 ScreenDraw(MainScreen): {X=0,Y=0,Width=1320,Height=946} all #23-->
+20240229.133359.537 <!--[Draw] 33:59.473 ScreenDraw 9ms 5676/5676/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133359.537 Waiting for 1 event
+20240229.133400.933 Got event 0x0
+20240229.133400.933 ui< <!--[Key] 34:00.881 Enter: modDisqualified -> False-->
+20240229.133400.933 Waiting for 1 event
+20240229.133403.844 Got event 0x0
+20240229.133403.844 ui< <run actions="Set(printerLu,&quot;&quot;,startTls,true,acceptHostname,&quot;&quot;,clientCert,&quot;&quot;,reconnect,false,loginMacro,&quot;&quot;,noTelnetInputMode,Line,retry,false) Connect(T24A2A)" r-tag="async-6" />
+20240229.133403.844 CB(ui)[#7] started
+20240229.133403.844 CB(ui)[#7.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133403.844 Macro[#7.2] IDLE -> RUNNING (fresh push)
+20240229.133403.844 Macro[#7.2] RUNNING -> IDLE (about to resume)
+20240229.133403.844 Macro[#7.2] running
+20240229.133403.844 Macro[#7.2] IDLE -> RUNNING (executing)
+20240229.133403.844 Macro[#7.2] 'Set(printerLu,"",startTls,true,acceptHostname,"",clientCert,"",reconnect,false,loginMacro,"",noTelnetInputMode,Line,retry,false) Connect(T24A2A)'
+20240229.133403.844 ui -> Set("printerLu", "", "startTls", "true", "acceptHostname", "", "clientCert", "", "reconnect", "false", "loginMacro", "", "noTelnetInputMode", "Line", "retry", "false")
+20240229.133403.844 ui> <setting name="printerLu" cause="ui"/>
+20240229.133403.844 ui> <setting name="startTls" value="true" cause="ui"/>
+20240229.133403.844 ui> <setting name="acceptHostname" cause="ui"/>
+20240229.133403.844 ui> <setting name="clientCert" cause="ui"/>
+20240229.133403.844 ui> <setting name="reconnect" value="false" cause="ui"/>
+20240229.133403.844 ui> <setting name="loginMacro" cause="ui"/>
+20240229.133403.844 ui> <setting name="noTelnetInputMode" value="Line" cause="ui"/>
+20240229.133403.844 ui> <setting name="retry" value="false" cause="ui"/>
+20240229.133403.844 Macro[#7.2] 'Connect(T24A2A)'
+20240229.133403.844 ui -> Connect("T24A2A")
+20240229.133403.844 st_changed(secure,false)
+20240229.133403.845 Resolver slot is 0
+20240229.133403.845 cstate [not-connected] -> [resolving] (host_connect)
+20240229.133403.845 st_changed(connect,true)
+20240229.133403.845 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20240229.133403.845 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20240229.133403.845 ctlr_enable_cursor(false, connect)
+20240229.133403.845 ui> <screen><cursor enabled="false"/></screen>
+20240229.133403.845 ui> <connection state="resolving" host="T24A2A" cause="ui"/>
+20240229.133403.845 st_changed(negotiating,true)
+20240229.133403.845 Macro[#7.2] RUNNING -> CONNECT_WAIT (Connect() or Reconnect())
+20240229.133403.845 Waiting for 2 events or 1000 msec
+20240229.133403.899 Got event 0x1
+20240229.133403.899 ui< <!--[BackEnd] 34:03.845 Cursor disabled-->
+20240229.133403.899 <!--[Draw] 34:03.845 ChangeOiaCursor disabled-->
+20240229.133403.899 <!--[Draw] 34:03.846 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #25-->
+20240229.133403.899 <!--[Draw] 34:03.850 MainScreen ScreenNeedsDrawing partial (none)-->
+20240229.133403.899 <!--[Key] 34:03.858 Enter: modDisqualified -> False-->
+20240229.133403.899 lazya_flush: 66 slots
+20240229.133403.899 Waiting for 2 events or 946 msec
+20240229.133403.900 Got event 0x0
+20240229.133403.900 Resolution complete, 1 address
+20240229.133403.937 Making host socket non-blocking
+20240229.133403.937 Trying 192.168.22.120, port 23...
+20240229.133403.938 ui> <connect-attempt host-ip="192.168.22.120" port="23"/>
+20240229.133403.938 TCP connection pending.
+20240229.133403.938 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20240229.133403.938 st_changed(negotiating,true)
+20240229.133403.938 ui> <connection state="tcp-pending" host="T24A2A" cause="ui"/>
+20240229.133403.938 lazya_flush: 11 slots
+20240229.133403.938 Waiting for 3 events or 1 msec
+20240229.133403.946 Got event 0x102
+20240229.133403.946 Waiting for 3 events or 992 msec
+20240229.133403.950 Got event 0x0
+20240229.133403.950 Making host socket non-blocking
+20240229.133403.950 net_input: NetworkEvents 0x10 CONNECT
+20240229.133403.950 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20240229.133403.950 st_changed(connect,true)
+20240229.133403.950 Keyboard unlock(kybd_connect) -NOT_CONNECTED
+20240229.133403.950 Keyboard lock(kybd_connect) +AWAITING_FIRST
+20240229.133403.950 ui> <oia field="timing" value="0.0"/>
+20240229.133403.950 Host negotiation step took 0.011833s to complete
+20240229.133403.951 ui> <oia field="timing"/>
+20240229.133403.951 ctlr_enable_cursor(true, connect)
+20240229.133403.951 ctlr_enable_cursor(true, nvt)
+20240229.133403.951 ui> <connection state="telnet-pending" host="T24A2A" cause="ui"/>
+20240229.133403.951 st_changed(negotiating,true)
+20240229.133403.951 Connected to T24A2A, port 23.
+20240229.133403.951 st_changed(secure,false)
+20240229.133403.951 st_changed(line-mode,true)
+20240229.133403.951 Reading host socket
+20240229.133403.951 Host socket read complete nr=-1
+20240229.133403.951 EWOULDBLOCK
+20240229.133403.951 lazya_flush: 22 slots
+20240229.133403.951 ui> <screen><cursor enabled="true" row="1" column="1"/></screen>
+20240229.133403.951 Waiting for 3 events or 1000 msec
+20240229.133403.959 Got event 0x0
+20240229.133403.959 Making host socket non-blocking
+20240229.133403.959 net_input: NetworkEvents 0x1 READ
+20240229.133403.959 Reading host socket
+20240229.133403.959 Host socket read complete nr=3
+< 0x0   fffd28
+20240229.133403.959 RCVD DO TN3270E
+> 0x0   fffb28
+20240229.133403.959 SENT WILL TN3270E
+20240229.133403.959 Now operating in connected-unbound mode.
+20240229.133403.959 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20240229.133403.959 st_changed(negotiating,true)
+20240229.133403.959 ui> <connection state="connected-unbound" host="T24A2A" cause="ui"/>
+20240229.133403.959 st_changed(3270-mode,false)
+20240229.133403.959 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20240229.133403.959 ui> <oia field="timing" value="0.0"/>
+20240229.133403.959 Host negotiation step took 0.000000s to complete
+20240229.133403.959 ui> <oia field="timing"/>
+20240229.133403.959 ctlr_enable_cursor(true, connect)
+20240229.133403.959 lazya_flush: 21 slots
+20240229.133403.959 Waiting for 3 events or 2000 msec
+20240229.133403.966 Got event 0x0
+20240229.133403.967 Making host socket non-blocking
+20240229.133403.967 net_input: NetworkEvents 0x1 READ
+20240229.133403.967 Reading host socket
+20240229.133403.967 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20240229.133403.967 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d44594e414d4943fff0
+20240229.133403.967 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-DYNAMIC SE
+20240229.133403.967 Waiting for 3 events or 1992 msec
+20240229.133403.975 Got event 0x0
+20240229.133403.975 Making host socket non-blocking
+20240229.133403.975 net_input: NetworkEvents 0x1 READ
+20240229.133403.975 Reading host socket
+20240229.133403.975 Host socket read complete nr=27
+< 0x0   fffa28020449424d2d44594e414d4943015443503030303439fff0
+20240229.133403.975 RCVD SB TN3270E DEVICE-TYPE IS IBM-DYNAMIC CONNECT TCP00049 SE
+20240229.133403.975 ui> <oia field="lu" value="TCP00049"/>
+> 0x0   fffa28030700020405fff0
+20240229.133403.976 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20240229.133403.976 Waiting for 3 events or 1983 msec
+20240229.133403.983 Got event 0x0
+20240229.133403.983 Making host socket non-blocking
+20240229.133403.983 net_input: NetworkEvents 0x1 READ
+20240229.133403.983 Reading host socket
+20240229.133403.983 Host socket read complete nr=11
+< 0x0   fffa28030400020405fff0
+20240229.133403.983 RCVD SB TN3270E FUNCTIONS IS BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20240229.133403.983 TN3270E option negotiation complete.
+20240229.133403.983 Waiting for 3 events or 1976 msec
+20240229.133403.984 Got event 0x0
+20240229.133403.984 Making host socket non-blocking
+20240229.133403.984 net_input: NetworkEvents 0x1 READ
+20240229.133403.984 Reading host socket
+20240229.133403.984 Host socket read complete nr=42
+< 0x0   03000000003101020200003080008487f88000028000000000185000007e0000
+< 0x20  06e3c5d3d5c5e300ffef
+20240229.133403.985 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+20240229.133403.985 ui> <oia field="lu" value="TELNET"/>
+< BIND PLU-name 'TELNET' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default 24 ...
+... x80 Alternate 24x80
+20240229.133403.985 Now operating in connected-tn3270e mode.
+20240229.133403.985 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20240229.133403.985 st_changed(3270-mode,true)
+20240229.133403.985 ctlr_enable_cursor(true, connect)
+20240229.133403.985 ui> <oia field="lock" value="field"/>
+20240229.133403.985 ui> <connection state="connected-tn3270e" host="T24A2A" cause="ui"/>
+20240229.133403.985 RCVD EOR
+20240229.133403.985 lazya_flush: 16 slots
+20240229.133403.985 ui> <erase logical-rows="24" logical-columns="80" fg="blue" bg="neutralBlack"/>
+20240229.133403.986 Waiting for 3 events or 1973 msec
+20240229.133403.987 Got event 0x0
+20240229.133403.987 Making host socket non-blocking
+20240229.133403.987 net_input: NetworkEvents 0x1 READ
+20240229.133403.987 Reading host socket
+20240229.133403.987 Host socket read complete nr=1353
+< 0x0   000100000005c711077f1dc8110000a961d6e240e9f1f840d385a5859340f0f6
+< 0x20  f0f9404040404040404040404040404040404040404040404040404040404040
+< 0x40  40c9d740c184849985a2a2407e40f1f7f24bf1f64bf2f0f04bf6404040110050
+< 0x60  4040404040404040404040404040404040404040404040404040404040404040
+< 0x80  40404040404040404040404040404040404040e5e3c1d440e385999489958193
+< 0xa0  407e40e3c3d7f0f0f0f4f9404040401100f04040404040404040404040404040
+< 0xc0  404040404040404040c1979793898381a389969540c485a585939697859940e2
+< 0xe0  a8a2a38594404040404040404040404040404040404040404040404040404040
+< 0x100 4011014040404040404040404040404040404040404040404040404040404040
+< 0x120 4040404040404040404040404040404040404040404040404040404040404040
+< 0x140 4040404040404040404040404040404040404011019040404040404040404040
+< 0x160 4040404040404040404040404040404040404040404061614040d6d6d6d6d6d6
+< 0x180 d6404040e2e2e2e2e21101e04040404040404040404040404040404040404040
+< 0x1a0 404040404040404040404061614040d6d640404040d6d640e2e2110230404040
+< 0x1c0 4040404040404040404040404040404040404040a9a9a9a9a9a94061614040d6
+< 0x1e0 d640404040d6d640e2e211028040404040404040404040404040404040404040
+< 0x200 404040404040a9a9404061614040d6d640404040d6d640e2e2e2e21102d04040
+< 0x220 404040404040404040404040404040404040404040a9a940404061614040d6d6
+< 0x240 40404040d6d64040404040e2e211032040404040404040404040404040404040
+< 0x260 4040404040a9a94040404061614040d6d640404040d6d64040404040e2e21103
+< 0x280 7040404040404040404040404040404040404040a9a9a9a9a9a9406161404040
+< 0x2a0 d6d6d6d6d6d6d64040e2e2e2e211041040404040404040404040404040404040
+< 0x2c0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x2e0 4040404040404040404040404040404040404040404040404040404040404011
+< 0x300 046040404040404040404040404040404040404040e2a8a2a3859440c3a4a2a3
+< 0x320 969489a981a3899695406040c1c4c3c44be9f1f84b5c40404040404040404040
+< 0x340 404040404040404040404040401104b040404040404040404040404040404040
+< 0x360 4040404040404040404040404040404040404040404040404040404040404040
+< 0x380 4040404040404040404040404040404040404040404040404040404040404011
+< 0x3a0 0550404040404040404040404040404040404040404040404040404040404040
+< 0x3c0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x3e0 40404040404040404040404040404040401105a0404040404040404040404040
+< 0x400 4040404040404040404040404040404040404040404040404040404040404040
+< 0x420 4040404040404040404040404040404040404040404040404040404040404040
+< 0x440 4040401105f0407e7e7e6e40c595a38599407fd3d6c7d6d57f408696939396a6
+< 0x460 85844082a840a3888540e3e2d640a4a2859989844b40c5a78194979385407fd3
+< 0x480 d6c7d6d540c9c2d4e4e2c5d97f409699404040404040404040110640407e7e7e
+< 0x4a0 6e40c595a3859940d3408696939396a685844082a840a3888540c1d7d7d3c9c4
+< 0x4c0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x4e0 404040404040404040404040110690407e7e7e6e40c5a78194979385a27a407f
+< 0x500 d340e3e2d67f6b407fd340c3c9c3e27f6b407fd340c9d4e2f3f2f7f040404040
+< 0x520 4040404040404040404040404040404040404040404040404040404040404011
+< 0x540 072f1d40130000ffef
+20240229.133403.994 RCVD TN3270E(3270-DATA SEND-DATA NO-RESPONSE 0)
+< EraseWrite(reset,alarm,restore,resetMDT) SetBufferAddress(24,80) StartFie ...
+... ld(intensified) SetBufferAddress(1,1) 'z/OS Z18 Level 0609              ...
+...                   IP Address = 172.16.200.6   ' SetBufferAddress(2,1) ' ...
+...                                                    VTAM Terminal = TCP0 ...
+... 0049    ' SetBufferAddress(4,1) '                       Application Dev ...
+... eloper System                            ' SetBufferAddress(5,1) '      ...
+...                                                                         ...
+...    ' SetBufferAddress(6,1) '                                //  OOOOOOO ...
+...    SSSSS' SetBufferAddress(7,1) '                               //  OO  ...
+...    OO SS' SetBufferAddress(8,1) '                       zzzzzz //  OO   ...
+...   OO SS' SetBufferAddress(9,1) '                         zz  //  OO     ...
+... OO SSSS' SetBufferAddress(10,1) '                       zz   //  OO     ...
+... OO     SS' SetBufferAddress(11,1) '                     zz    //  OO    ...
+...  OO     SS' SetBufferAddress(12,1) '                   zzzzzz //   OOOO ...
+... OOO  SSSS' SetBufferAddress(14,1) '                                     ...
+...                                            ' SetBufferAddress(15,1) '   ...
+...                  System Customization - ADCD.Z18.*                      ...
+...   ' SetBufferAddress(16,1) '                                            ...
+...                                     ' SetBufferAddress(18,1) '          ...
+...                                                                       ' ...
+...  SetBufferAddress(19,1) '                                               ...
+...                                  ' SetBufferAddress(20,1) ' ===> Enter  ...
+... "LOGON" followed by the TSO userid. Example "LOGON IBMUSER" or          ...
+... ' SetBufferAddress(21,1) ' ===> Enter L followed by the APPLID          ...
+...                                    ' SetBufferAddress(22,1) ' ===> Exam ...
+... ples: "L TSO", "L CICS", "L IMS3270                                   ' ...
+...  SetBufferAddress(23,80) StartField(default) InsertCursor(24,1) NULL NU ...
+... LL
+20240229.133404.002 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20240229.133404.002 ui> <oia field="lock"/>
+20240229.133404.002 ui> <bell/>
+20240229.133404.002 RCVD EOR
+20240229.133404.002 lazya_flush: 1312 slots
+20240229.133404.002 ui> <formatted state="true"/>
+20240229.133404.091 ui> <screen><cursor enabled="true" row="24" column="1"/><row row="1"><char column="1" fg="red" gr="highlight,selectable" text="z/OS Z18 Level 0609"/><attr column="20" fg="red" gr="highlight,selectable" count="31"/><char column="51" fg="red" gr="highlight,selectable" text="IP Address = 172.16.200.6     "/></row><row row="2"><attr column="1" fg="red" gr="highlight,selectable" count="51"/><char column="52" fg="red" gr="highlight,selectable" text="VTAM Terminal = TCP00049     "/></row><row row="3"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="4"><attr column="1" fg="red" gr="highlight,selectable" count="23"/><char column="24" fg="red" gr="highlight,selectable" text="Application Developer System"/><attr column="52" fg="red" gr="highlight,selectable" count="29"/></row><row row="5"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="6"><attr column="1" fg="red" gr="highlight,selectable" count="32"/><char column="33" fg="red" gr="highlight,selectable" text="//  OOOOOOO   SSSSS"/><attr column="52" fg="red" gr="highlight,selectable" count="29"/></row><row row="7"><attr column="1" fg="red" gr="highlight,selectable" count="31"/><char column="32" fg="red" gr="highlight,selectable" text="//  OO    OO SS"/><attr column="47" fg="red" gr="highlight,selectable" count="34"/></row><row row="8"><attr column="1" fg="red" gr="highlight,selectable" count="23"/><char column="24" fg="red" gr="highlight,selectable" text="zzzzzz //  OO    OO SS"/><attr column="46" fg="red" gr="highlight,selectable" count="35"/></row><row row="9"><attr column="1" fg="red" gr="highlight,selectable" count="25"/><char column="26" fg="red" gr="highlight,selectable" text="zz  //  OO    OO SSSS"/><attr column="47" fg="red" gr="highlight,selectable" count="34"/></row><row row="10"><attr column="1" fg="red" gr="highlight,selectable" count="23"/><char column="24" fg="red" gr="highlight,selectable" text="zz   //  OO    OO     SS"/><attr column="48" fg="red" gr="highlight,selectable" count="33"/></row><row row="11"><attr column="1" fg="red" gr="highlight,selectable" count="21"/><char column="22" fg="red" gr="highlight,selectable" text="zz    //  OO    OO     SS"/><attr column="47" fg="red" gr="highlight,selectable" count="34"/></row><row row="12"><attr column="1" fg="red" gr="highlight,selectable" count="19"/><char column="20" fg="red" gr="highlight,selectable" text="zzzzzz //   OOOOOOO  SSSS"/><attr column="45" fg="red" gr="highlight,selectable" count="36"/></row><row row="13"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="14"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="15"><attr column="1" fg="red" gr="highlight,selectable" count="19"/><char column="20" fg="red" gr="highlight,selectable" text="System Customization - ADCD.Z18.*"/><attr column="53" fg="red" gr="highlight,selectable" count="28"/></row><row row="16"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="17"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="18"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="19"><attr column="1" fg="red" gr="highlight,selectable" count="80"/></row><row row="20"><char column="1" fg="red" gr="highlight,selectable" text=" ===&gt; Enter &quot;LOGON&quot; followed by the TSO userid. Example &quot;LOGON IBMUSER&quot; or      "/></row><row row="21"><char column="1" fg="red" gr="highlight,selectable" text=" ===&gt; Enter L followed by the APPLID"/><attr column="37" fg="red" gr="highlight,selectable" count="44"/></row><row row="22"><char column="1" fg="red" gr="highlight,selectable" text=" ===&gt; Examples: &quot;L TSO&quot;, &quot;L CICS&quot;, &quot;L IMS3270"/><attr column="46" fg="red" gr="highlight,selectable" count="35"/></row><row row="23"><attr column="1" fg="red" gr="highlight,selectable" count="79"/><attr column="80" fg="green" count="1"/></row><row row="24"><attr column="1" fg="green" count="79"/><attr column="80" fg="red" gr="highlight,selectable" count="1"/></row></screen>
+20240229.133404.091 Macro[#7.2] CONNECT_WAIT -> IDLE (about to resume)
+20240229.133404.091 Macro[#7.2] running
+20240229.133404.091 Macro[#7.2] complete, success
+20240229.133404.091 CB(ui)[#7.1] RUNNING -> IDLE (about to resume)
+20240229.133404.091 CB(ui)[#7.1] child task done, success
+20240229.133404.091 ui> <run-result r-tag="async-6" success="true" time="0.249"/>
+20240229.133404.091 CB(ui)[#7.1] complete, success
+20240229.133404.091 CB(ui)[#7] complete
+20240229.133404.091 Waiting for 3 events or 1868 msec
+20240229.133404.091 Got event 0x2
+20240229.133404.091 ui< <!--[BackEnd] 34:03.956 Cursor enabled 1/1-->
+20240229.133404.091 <!--[Draw] 34:03.956 ChangeOiaCursor enabled 1/1-->
+20240229.133404.091 <!--[Draw] 34:03.957 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #27-->
+20240229.133404.091 <!--[Draw] 34:03.958 MainScreen ScreenNeedsDrawing partial {X=0,Y=0,Width=10,Height=22}-->
+20240229.133404.091 <!--[Draw] 34:03.970 ScreenDraw(MainScreen): {X=0,Y=0,Width=10,Height=22} partial #27-->
+20240229.133404.091 <!--[Draw] 34:03.972 ScreenDraw 2ms 5676/1/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133404.091 <!--[Draw] 34:03.989 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #30-->
+20240229.133404.091 <!--[Draw] 34:03.989 MainScreen ScreenNeedsDrawing all-->
+20240229.133404.091 <!--[Draw] 34:03.996 ScreenDraw(MainScreen): {X=0,Y=0,Width=1320,Height=946} all #30-->
+20240229.133404.091 <!--[Draw] 34:03.999 ScreenDraw 3ms 5676/5676/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133404.092 lazya_flush: 79 slots
+20240229.133404.092 Waiting for 3 events or 1867 msec
+20240229.133404.162 Got event 0x2
+20240229.133404.162 ui< <!--[BackEnd] 34:04.093 Cursor enabled 24/1-->
+20240229.133404.162 <!--[Draw] 34:04.093 ChangeOiaCursor enabled 24/1-->
+20240229.133404.162 <!--[Draw] 34:04.096 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #32-->
+20240229.133404.162 <!--[Draw] 34:04.099 MainScreen ScreenNeedsDrawing partial {X=0,Y=0,Width=800,Height=528}-->
+20240229.133404.162 <!--[Draw] 34:04.107 ScreenDraw(MainScreen): {X=0,Y=0,Width=800,Height=528} partial #32-->
+20240229.133404.162 <!--[Draw] 34:04.111 ScreenDraw 4ms 5676/1920/463 total/unclipped/drawn 0.009 ms/char-->
+20240229.133404.162 Waiting for 3 events or 1797 msec
+20240229.133405.974 Got event 0x102
+20240229.133405.974 ui> <stats bytes-received="1443" records-received="2" bytes-sent="32" records-sent="0"/>
+20240229.133405.974 Waiting for 3 events
+20240229.133409.271 Got event 0x2
+20240229.133409.271 ui< <!--[Key] 34:09.207 Enter: modDisqualified -> False-->
+20240229.133409.271 Waiting for 3 events
+20240229.133409.549 Got event 0x2
+20240229.133409.549 ui< <!--[Window] 34:09.486 MainScreen Activated-->
+20240229.133409.549 <!--[Key] 34:09.486 Activate: modDisqualified -> False-->
+20240229.133409.549 Waiting for 3 events
+20240229.133411.427 Got event 0x2
+20240229.133411.427 ui< <run actions="Prompt(wx3270,uHelp,C:\Users\lju\AppData\Local\Temp\tmpF748.tmp)" r-tag="async-7" />
+20240229.133411.427 CB(ui)[#8] started
+20240229.133411.427 CB(ui)[#8.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133411.427 Macro[#8.2] IDLE -> RUNNING (fresh push)
+20240229.133411.427 Macro[#8.2] RUNNING -> IDLE (about to resume)
+20240229.133411.427 Macro[#8.2] running
+20240229.133411.427 Macro[#8.2] IDLE -> RUNNING (executing)
+20240229.133411.427 Macro[#8.2] 'Prompt(wx3270,uHelp,C:\Users\lju\AppData\Local\Temp\tmpF748.tmp)'
+20240229.133411.427 ui -> Prompt("wx3270", "uHelp", "C:\Users\lju\AppData\Local\Temp\tmpF748.tmp")
+20240229.133411.427 ui -> Script("-async", "-single", "-single", "cmd.exe", "/c", "start", "\"wx3270\"", "/wait", "x3270if.exe", "-I", "wx3270", "-H", "uHelp", "-L", "\"C:\Users\lju\AppData\Local\Temp\tmpF748.tmp\"")
+20240229.133411.428 Listening for HTTP on 127.0.0.1:49166
+20240229.133411.428 Listening for s3sock scripts on 127.0.0.1:49167
+20240229.133411.439 CB(child)[#9] started
+20240229.133411.439 ui> <oia field="script" value="true"/>
+20240229.133411.439 CB(child)[#9] script process is 31180
+20240229.133411.439 Macro[#8.2] complete, success
+20240229.133411.439 CB(ui)[#8.1] RUNNING -> IDLE (about to resume)
+20240229.133411.439 CB(ui)[#8.1] child task done, success
+20240229.133411.439 ui> <run-result r-tag="async-7" success="true" time="0.012"/>
+20240229.133411.439 CB(ui)[#8.1] complete, success
+20240229.133411.439 CB(ui)[#8] complete
+20240229.133411.439 Waiting for 7 events
+20240229.133411.490 Got event 0x6
+20240229.133411.490 ui< <!--[Key] 34:11.428 Enter: modDisqualified -> False-->
+20240229.133411.490 lazya_flush: 53 slots
+20240229.133411.490 Waiting for 7 events
+20240229.133411.810 Got event 0x2
+20240229.133411.811 New script socket connection from 127.0.0.1:49168
+20240229.133411.811 Closing listener 127.0.0.1:49167 (single mode)
+20240229.133411.811 Waiting for 7 events or 1 msec
+20240229.133411.811 Got event 0x0
+20240229.133411.811 Input for s3sock complete, nr=26
+20240229.133411.811 CB(s3sock)[#10] started
+20240229.133411.811 CB(s3sock)[#10.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133411.811 Macro[#10.2] IDLE -> RUNNING (fresh push)
+20240229.133411.811 Macro[#10.2] RUNNING -> IDLE (about to resume)
+20240229.133411.811 Macro[#10.2] running
+20240229.133411.811 Macro[#10.2] IDLE -> RUNNING (executing)
+20240229.133411.811 Macro[#10.2] 'Capabilities(interactive)'
+20240229.133411.811 script -> Capabilities("interactive")
+20240229.133411.811 Macro[#10.2] complete, success
+20240229.133411.811 CB(s3sock)[#10.1] RUNNING -> IDLE (about to resume)
+20240229.133411.811 CB(s3sock)[#10.1] child task done, success
+20240229.133411.811 Output for CB(s3sock)[#10]: 'U F U C(T24A2A) I 4 24 80 23 0 0x0 0.000/ok'
+20240229.133411.811 CB(s3sock)[#10.1] complete, success
+20240229.133411.811 CB(s3sock)[#10] complete
+20240229.133411.811 Waiting for 7 events
+20240229.133417.198 Got event 0x0
+20240229.133417.198 Input for s3sock complete, nr=83
+20240229.133417.198 CB(s3sock)[#11] started
+20240229.133417.198 CB(s3sock)[#11.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133417.198 Macro[#11.2] IDLE -> RUNNING (fresh push)
+20240229.133417.198 lazya_flush: 26 slots
+20240229.133417.198 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20240229.133417.198 Macro[#11.2] running
+20240229.133417.198 Macro[#11.2] IDLE -> RUNNING (executing)
+20240229.133417.198 Macro[#11.2] 'Source(C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt)'
+20240229.133417.198 command -> Source("C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt")
+20240229.133417.198 CB(Source)[#11.3] IDLE -> NEED_RUN (need to call run callback)
+20240229.133417.198 Keyboard disabled implicitly by Source() start (0->1), now disabled
+20240229.133417.198 st_changed(kbd-disable,true)
+20240229.133417.198 CB(Source)[#11.3] NEED_RUN -> IDLE (about to resume)
+20240229.133417.198 Running CB(Source)[#11.3]
+20240229.133417.199 CB(Source)[#11.3] C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt read 'String("LOGON LJU")'
+20240229.133417.199 Macro[#11.4] IDLE -> RUNNING (fresh push)
+20240229.133417.199 Macro[#11.4] RUNNING -> IDLE (about to resume)
+20240229.133417.199 Macro[#11.4] running
+20240229.133417.199 Macro[#11.4] IDLE -> RUNNING (executing)
+20240229.133417.199 Macro[#11.4] 'String("LOGON LJU")'
+20240229.133417.199 script -> String("LOGON LJU")
+20240229.133417.199 CB(String)[#11.5] IDLE -> NEED_RUN (need to call run callback)
+20240229.133417.199 CB(String)[#11.5] NEED_RUN -> IDLE (about to resume)
+20240229.133417.199 Running CB(String)[#11.5]
+20240229.133417.199  string -> Key(U+004c)
+20240229.133417.200  string -> Key(U+004f)
+20240229.133417.200  string -> Key(U+0047)
+20240229.133417.200  string -> Key(U+004f)
+20240229.133417.200  string -> Key(U+004e)
+20240229.133417.200  string -> Key(U+0020)
+20240229.133417.200  string -> Key(U+004c)
+20240229.133417.200  string -> Key(U+004a)
+20240229.133417.200  string -> Key(U+0055)
+20240229.133417.200 CB(String)[#11.5] is complete, success
+20240229.133417.200 CB(String)[#11.5] complete, success
+20240229.133417.200 Macro[#11.4] RUNNING -> IDLE (about to resume)
+20240229.133417.200 Macro[#11.4] running
+20240229.133417.200 Macro[#11.4] complete, success
+20240229.133417.200 CB(Source)[#11.3] IDLE -> RUNNING (child popped)
+20240229.133417.200 CB(Source)[#11.3] RUNNING -> IDLE (about to resume)
+20240229.133417.200 CB(Source)[#11.3] child task done, success
+20240229.133417.200 Running CB(Source)[#11.3]
+20240229.133417.200 CB(Source)[#11.3] C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt read 'Enter()'
+20240229.133417.200 Macro[#11.4] IDLE -> RUNNING (fresh push)
+20240229.133417.200 Macro[#11.4] RUNNING -> IDLE (about to resume)
+20240229.133417.200 Macro[#11.4] running
+20240229.133417.200 Macro[#11.4] IDLE -> RUNNING (executing)
+20240229.133417.200 Macro[#11.4] 'Enter()'
+20240229.133417.200 script -> Enter()
+20240229.133417.200 ui> <oia field="not-undera" value="true"/>
+20240229.133417.200 ui> <oia field="lock" value="twait"/>
+20240229.133417.200 Keyboard lock(key_AID) +OIA_TWAIT +OIA_LOCKED
+> Enter(24,10) SetBufferAddress(24,1) 'LOGON LJU'
+20240229.133417.200 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000007d5cf9115cf0d3d6c7d6d540d3d1e4ffef
+20240229.133417.201 SENT EOR
+20240229.133417.201 ui> <oia field="not-undera" value="false"/>
+20240229.133417.201 ui> <screen><cursor enabled="true" row="24" column="10"/><row row="24"><char column="1" text="LOGON LJU"/></row></screen>
+20240229.133417.201 Macro[#11.4] RUNNING -> KBWAIT (keyboard locked)
+20240229.133417.201 Waiting for 6 events or 1000 msec
+20240229.133417.208 Got event 0x3
+20240229.133417.208 Making host socket non-blocking
+20240229.133417.208 net_input: NetworkEvents 0x1 READ
+20240229.133417.208 Reading host socket
+20240229.133417.208 Host socket read complete nr=8
+< 0x0   040000000001ffef
+20240229.133417.208 RCVD TN3270E(UNBIND NO-RESPONSE 0)
+< UNBIND normal
+20240229.133417.208 ui> <oia field="lu" value="TCP00049"/>
+20240229.133417.208 ui> <thumb top="0.0103093" shown="0.989691" saved="43" screen="43" back="0"/>
+20240229.133417.208 Now operating in connected-unbound mode.
+20240229.133417.208 cstate [connected-tn3270e] -> [connected-unbound] (host_in3270)
+20240229.133417.208 st_changed(negotiating,true)
+20240229.133417.208 ui> <oia field="lock" value="not-connected"/>
+20240229.133417.209 ui> <connection state="connected-unbound" host="T24A2A" cause="ui"/>
+20240229.133417.209 st_changed(3270-mode,false)
+20240229.133417.209 Keyboard lock(kybd_in3270) +AWAITING_FIRST
+20240229.133417.209 ui> <oia field="timing" value="0.0"/>
+20240229.133417.209 Host negotiation step took 0.000962s to complete
+20240229.133417.209 ui> <oia field="timing"/>
+20240229.133417.209 Keyboard unlock(ctlr_connect) -OIA_TWAIT
+20240229.133417.209 ctlr_enable_cursor(true, connect)
+20240229.133417.209 ctlr_enable_cursor(true, nvt)
+20240229.133417.209 RCVD EOR
+20240229.133417.209 lazya_flush: 114 slots
+20240229.133417.209 ui> <erase fg="blue" bg="neutralBlack"/>
+20240229.133417.209 ui> <screen><cursor enabled="true" row="1" column="1"/></screen>
+20240229.133417.209 Waiting for 6 events or 1992 msec
+20240229.133417.234 Got event 0x3
+20240229.133417.234 Making host socket non-blocking
+20240229.133417.234 net_input: NetworkEvents 0x1 READ
+20240229.133417.234 Reading host socket
+20240229.133417.234 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8800002800000000000000000030000
+< 0x20  08c1f2f6e3e2f0f0f10005007f22a91008e2c3d5e3c3d7f4f9ffef
+20240229.133417.234 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+20240229.133417.234 ui> <oia field="lu" value="A26TS001"/>
+< BIND PLU-name 'A26TS001' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80
+20240229.133417.234 Now operating in connected-tn3270e mode.
+20240229.133417.234 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20240229.133417.234 st_changed(3270-mode,true)
+20240229.133417.234 ctlr_enable_cursor(true, connect)
+20240229.133417.234 ui> <oia field="lock" value="field"/>
+20240229.133417.235 ui> <connection state="connected-tn3270e" host="T24A2A" cause="ui"/>
+20240229.133417.235 RCVD EOR
+20240229.133417.235 lazya_flush: 19 slots
+20240229.133417.235 Waiting for 6 events or 1966 msec
+20240229.133417.244 Got event 0x3
+20240229.133417.244 Making host socket non-blocking
+20240229.133417.244 net_input: NetworkEvents 0x1 READ
+20240229.133417.244 Reading host socket
+20240229.133417.244 Host socket read complete nr=7
+< 0x0   0900020001ffef
+20240229.133417.245 RCVD TN3270E(BID ALWAYS-RESPONSE 1)
+20240229.133417.245 Keyboard lock(kybd_bid) +BID
+20240229.133417.245 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 1) DEVICE-END
+> 0x0   020000000100ffef
+20240229.133417.245 RCVD EOR
+20240229.133417.245 lazya_flush: 12 slots
+20240229.133417.245 Waiting for 6 events or 1956 msec
+20240229.133417.252 Got event 0x3
+20240229.133417.252 Making host socket non-blocking
+20240229.133417.252 net_input: NetworkEvents 0x1 READ
+20240229.133417.252 Reading host socket
+20240229.133417.252 Host socket read complete nr=20
+< 0x0   0001020002f300064000f1c2000501ffff02ffef
+20240229.133417.252 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 2)
+< WriteStructuredField OutboundDS(0x00) Write(reset,restore)
+20240229.133417.252 Keyboard unlock(ctlr_write) -AWAITING_FIRST
+20240229.133417.252 Keyboard unlock(do_reset) -OIA_LOCKED
+20240229.133417.252 ui> <oia field="lock" value="twait"/>
+< WriteStructuredField ReadPartition(0xff) Query
+> StructuredField
+> QueryReply(Summary(Summary,UsableArea,AlphanumericPartitions,CharacterSet ...
+... s,Color,Highlighting,ReplyModes,DistributedDataManagement,RPQNames,Impl ...
+... icitPartition))
+> QueryReply(UsableArea)
+> QueryReply(AlphanumericPartitions)
+> QueryReply(CharacterSets)
+> QueryReply(Color)
+> QueryReply(Highlighting)
+> QueryReply(ReplyModes)
+> QueryReply(DistributedDataManagement INLIM/OUTLIM=16384)
+> QueryReply(RPQNames)
+> QueryReply(ImplicitPartition)
+20240229.133417.253 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 2) DEVICE-END
+> 0x0   020000000200ffef
+20240229.133417.253 SENT TN3270E(3270-DATA NO-RESPONSE 1)
+> 0x0   000000000188000e81808081848586878895a1a60017818101000084002b0100
+> 0x20  0a02e50002006f090c162c0008818400162c00001b81858200090c0000000007
+> 0x40  00100002b900250100f103c3013600268186001000f4f1f1f2f2f3f3f4f4f5f5
+> 0x60  f6f6f7f7f8f8f9f9fafafbfbfcfcfdfdfefeffffffff000f81870500f0f1f1f2
+> 0x80  f2f4f4f8f800078188000102000c81950000400040000101001281a100000000
+> 0xa0  0000000006a7f3f2f7f0001181a600000b0100005000180084002bffef
+20240229.133417.254 SENT EOR
+20240229.133417.254 Keyboard lock(kybd_inhibit) +ENTER_INHIBIT
+20240229.133417.254 Keyboard unlock(kybd_send_data) -BID
+20240229.133417.254 ui> <oia field="lock" value="inhibit"/>
+20240229.133417.254 RCVD EOR
+20240229.133417.254 lazya_flush: 19 slots
+20240229.133417.254 Waiting for 6 events or 1947 msec
+20240229.133417.261 Got event 0x5
+20240229.133417.261 ui< <!--[BackEnd] 34:17.203 Cursor enabled 24/10-->
+20240229.133417.261 <!--[Draw] 34:17.203 ChangeOiaCursor enabled 24/10-->
+20240229.133417.261 <!--[Draw] 34:17.204 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #35-->
+20240229.133417.261 <!--[Draw] 34:17.205 MainScreen ScreenNeedsDrawing partial {X=0,Y=506,Width=100,Height=22}-->
+20240229.133417.261 <!--[Window] 34:17.210 Thumb: Saved 43 Screen 43 Back 0 -> Maximum 85 Value 43 LargeChange 43-->
+20240229.133417.261 <!--[Draw] 34:17.214 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #39-->
+20240229.133417.261 <!--[Draw] 34:17.214 MainScreen ScreenNeedsDrawing all-->
+20240229.133417.261 <!--[BackEnd] 34:17.214 Cursor enabled 1/1-->
+20240229.133417.261 <!--[Draw] 34:17.214 ChangeOiaCursor enabled 1/1-->
+20240229.133417.261 <!--[Draw] 34:17.216 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #40-->
+20240229.133417.261 <!--[Draw] 34:17.216 MainScreen ScreenNeedsDrawing partial {X=0,Y=0,Width=800,Height=528}-->
+20240229.133417.261 <!--[Draw] 34:17.223 ScreenDraw(MainScreen): {X=0,Y=0,Width=1320,Height=946} all #40-->
+20240229.133417.261 <!--[Draw] 34:17.232 ScreenDraw 8ms 5676/5676/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133417.262 Waiting for 6 events or 1939 msec
+20240229.133417.294 Got event 0x3
+20240229.133417.294 Making host socket non-blocking
+20240229.133417.294 net_input: NetworkEvents 0x1 READ
+20240229.133417.294 Reading host socket
+20240229.133417.294 Host socket read complete nr=18
+< 0x0   0000020003f5c111077f1d4011000013ffef
+20240229.133417.294 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 3)
+20240229.133417.294 Keyboard unlock(kybd_inhibit) -ENTER_INHIBIT
+20240229.133417.294 ui> <oia field="lock"/>
+< EraseWrite(reset,resetMDT) SetBufferAddress(24,80) StartField(default) Se ...
+... tBufferAddress(1,1) InsertCursor
+20240229.133417.294 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 3) DEVICE-END
+> 0x0   020000000300ffef
+20240229.133417.294 Keyboard lock(kybd_bid) +BID
+20240229.133417.294 ui> <oia field="lock" value="twait"/>
+20240229.133417.294 RCVD EOR
+20240229.133417.295 lazya_flush: 17 slots
+20240229.133417.295 ui> <formatted state="true"/>
+20240229.133417.296 ui> <screen><row row="1"><attr column="1" fg="green" count="80"/></row><row row="2"><attr column="1" fg="green" count="80"/></row><row row="3"><attr column="1" fg="green" count="80"/></row><row row="4"><attr column="1" fg="green" count="80"/></row><row row="5"><attr column="1" fg="green" count="80"/></row><row row="6"><attr column="1" fg="green" count="80"/></row><row row="7"><attr column="1" fg="green" count="80"/></row><row row="8"><attr column="1" fg="green" count="80"/></row><row row="9"><attr column="1" fg="green" count="80"/></row><row row="10"><attr column="1" fg="green" count="80"/></row><row row="11"><attr column="1" fg="green" count="80"/></row><row row="12"><attr column="1" fg="green" count="80"/></row><row row="13"><attr column="1" fg="green" count="80"/></row><row row="14"><attr column="1" fg="green" count="80"/></row><row row="15"><attr column="1" fg="green" count="80"/></row><row row="16"><attr column="1" fg="green" count="80"/></row><row row="17"><attr column="1" fg="green" count="80"/></row><row row="18"><attr column="1" fg="green" count="80"/></row><row row="19"><attr column="1" fg="green" count="80"/></row><row row="20"><attr column="1" fg="green" count="80"/></row><row row="21"><attr column="1" fg="green" count="80"/></row><row row="22"><attr column="1" fg="green" count="80"/></row><row row="23"><attr column="1" fg="green" count="80"/></row><row row="24"><attr column="1" fg="green" count="80"/></row></screen>
+20240229.133417.296 Macro[#11.4] KBWAIT -> IDLE (about to resume)
+20240229.133417.296 Macro[#11.4] running
+20240229.133417.296 Macro[#11.4] complete, success
+20240229.133417.296 CB(Source)[#11.3] IDLE -> RUNNING (child popped)
+20240229.133417.296 CB(Source)[#11.3] RUNNING -> IDLE (about to resume)
+20240229.133417.296 CB(Source)[#11.3] child task done, success
+20240229.133417.296 Running CB(Source)[#11.3]
+20240229.133417.296 CB(Source)[#11.3] C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt EOF without newline
+20240229.133417.296 CB(Source)[#11.3] C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt read 'Wait(unlock)'
+20240229.133417.296 Macro[#11.4] IDLE -> RUNNING (fresh push)
+20240229.133417.297 Macro[#11.4] RUNNING -> IDLE (about to resume)
+20240229.133417.297 Macro[#11.4] running
+20240229.133417.297 Macro[#11.4] IDLE -> RUNNING (executing)
+20240229.133417.297 Macro[#11.4] 'Wait(unlock)'
+20240229.133417.297 script -> Wait("unlock")
+20240229.133417.297 Macro[#11.4] complete, success
+20240229.133417.297 CB(Source)[#11.3] IDLE -> RUNNING (child popped)
+20240229.133417.297 CB(Source)[#11.3] RUNNING -> IDLE (about to resume)
+20240229.133417.297 CB(Source)[#11.3] child task done, success
+20240229.133417.297 Running CB(Source)[#11.3]
+20240229.133417.297 CB(Source)[#11.3] C:\Users\lju\Documents\git_projects\x3270\VisualStudio\Debug\myActions.txt EOF
+20240229.133417.297 Keyboard enabled implicitly by Source() completion (1->0), now enabled
+20240229.133417.297 st_changed(kbd-disable,false)
+20240229.133417.297 CB(Source)[#11.3] is complete, success
+20240229.133417.297 CB(Source)[#11.3] complete, success
+20240229.133417.297 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20240229.133417.297 Macro[#11.2] running
+20240229.133417.297 Macro[#11.2] complete, success
+20240229.133417.297 CB(s3sock)[#11.1] RUNNING -> IDLE (about to resume)
+20240229.133417.297 CB(s3sock)[#11.1] child task done, success
+20240229.133417.297 Output for CB(s3sock)[#11]: 'L F U C(T24A2A) I 4 24 80 0 0 0x0 0.099/ok'
+20240229.133417.297 CB(s3sock)[#11.1] complete, success
+20240229.133417.297 CB(s3sock)[#11] complete
+20240229.133417.297 Waiting for 7 events or 1904 msec
+20240229.133417.305 Got event 0x4
+20240229.133417.305 Making host socket non-blocking
+20240229.133417.305 net_input: NetworkEvents 0x1 READ
+20240229.133417.305 Reading host socket
+20240229.133417.305 Host socket read complete nr=9
+< 0x0   0000020004f5c3ffef
+20240229.133417.305 RCVD TN3270E(3270-DATA ALWAYS-RESPONSE 4)
+< EraseWrite(reset,restore,resetMDT)
+20240229.133417.305 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 4) DEVICE-END
+> 0x0   020000000400ffef
+20240229.133417.305 Keyboard lock(kybd_bid) +BID
+20240229.133417.305 RCVD EOR
+20240229.133417.305 lazya_flush: 66 slots
+20240229.133417.305 ui> <erase fg="blue" bg="neutralBlack"/>
+20240229.133417.305 Waiting for 7 events or 1896 msec
+20240229.133417.324 Got event 0x4
+20240229.133417.324 Making host socket non-blocking
+20240229.133417.324 net_input: NetworkEvents 0x1 READ
+20240229.133417.324 Reading host socket
+20240229.133417.324 Host socket read complete nr=1112
+< 0x0   0001020005f5c31140403c4040401140401de860606060606060606060606060
+< 0x20  60606060606060606060606060606060606040e3e2d661c540d3d6c7d6d54060
+< 0x40  6060606060606060606060606060606060606060606060606060606060606060
+< 0x60  60606011c1501de8404040404040404040404040404040404040404040404040
+< 0x80  4040404040404040404040404040404040404040404040404040404040404040
+< 0xa0  40404040404040404040404040404040404040404040404011c2601de8404040
+< 0xc0  4040404040404040404040404040404040404040404040404040404040404040
+< 0xe0  4040404040404040404040404040404040404040404040404040404040404040
+< 0x100 40404040404040404040404040115b601de8d7c6f161d7c6f1f3407e7e6e40c8
+< 0x120 85939740404040d7c6f361d7c6f1f5407e7e6e40d3968796868640404040d7c1
+< 0x140 f1407e7e6e40c1a3a38595a389969540404040d7c1f2407e7e6e40d985a28896
+< 0x160 a6115cf01de8e896a4409481a840998598a485a2a340a2978583898689834088
+< 0x180 8593974089958696999481a38996954082a8408595a385998995874081407d6f
+< 0x1a0 7d408995408195a8408595a399a840868985938411c3f31de8c595a3859940d3
+< 0x1c0 d6c7d6d540978199819485a38599a24082859396a67a11c4e31de8d9c1c3c640
+< 0x1e0 d3d6c7d6d540978199819485a38599a27a11c6d21d6040e4a285998984404040
+< 0x200 407e7e7e6e11c6e21de8d3d1e440404040401df011c8f21d6040d781a2a2a696
+< 0x220 998440407e7e7e6e11c9c21d4c00000000000000001df0114df21d6040c18383
+< 0x240 a340d5948299407e7e7e6e114ec21dc8e3e2c300000000000000000000000000
+< 0x260 0000000000000000000000000000000000000000000000001df0114bd21d6040
+< 0x280 d79996838584a49985407e7e7e6e114be21dc8c9e2d7c6d7d9d6c31df01150d2
+< 0x2a0 1d6040e289a9854040404040407e7e7e6e1150e21dc8f1f0f4f8f5f7f61df011
+< 0x2c0 d2f21d6040d78599869699944040407e7e7e6e11d3c21dc80000001df0114cc2
+< 0x2e0 1d6040c79996a49740c9848595a340407e7e7e6e114cd51dc800000000000000
+< 0x300 001df011c9e21d6040d585a640d781a2a2a6969984407e7e7e6e11c9f51d4c00
+< 0x320 000000000000001df011d7f31de8c595a38599408195407de27d408285869699
+< 0x340 854085818388409697a3899695408485a2899985844082859396a67a1d6011d9
+< 0x360 c71de80011d9c91dc8401df060d596948189931d6011d9d71de80011d9d91dc8
+< 0x380 401df060d5969596a38983851d6011d9e81de80011d96a1dc8e21df060d98583
+< 0x3a0 9695958583a31d6011d97a1de80011d97c1dc8401df060d6c9c483819984401d
+< 0x3c0 6011d5d21d6040c39694948195844040407e7e7e6e11d5e21dc889a297864040
+< 0x3e0 4040404040404040404040404040404040404040404040404040404040404040
+< 0x400 4040404040404040404040404040404040404040404040404040404040404040
+< 0x420 404040404040404040401df011c7c21d7c40e28583938182859340404040407e
+< 0x440 7e7e6e11c7d51d7c40404040404040401df011c9c313ffef
+20240229.133417.329 RCVD TN3270E(3270-DATA SEND-DATA ALWAYS-RESPONSE 5)
+< EraseWrite(reset,restore,resetMDT) SetBufferAddress(1,1) RepeatToAddress( ...
+... 1,1)' ' SetBufferAddress(1,1) StartField(protected,intensified) '------ ...
+... ------------------------- TSO/E LOGON --------------------------------- ...
+... ---' SetBufferAddress(2,1) StartField20240229.133417.330 ui> <thumb top="0.0206186" shown="0.979381" saved="86" screen="43" back="0"/>
+(protected,intensified) '          ...
+...                                                                         ...
+... ' SetBufferAddress(3,1) StartField(protected,intensified) '             ...
+...                                                                     ' S ...
+... etBufferAddress(23,1) StartField(protected,intensified) 'PF1/PF13 ==> H ...
+... elp    PF3/PF15 ==> Logoff    PA1 ==> Attention    PA2 ==> Reshow' SetB ...
+... ufferAddress(24,1) StartField(protected,intensified) 'You may request s ...
+... pecific help information by entering a '?' in any entry field' SetBuffe ...
+... rAddress(4,4) StartField(protected,intensified) 'Enter LOGON parameters ...
+...  below:' SetBufferAddress(4,52) StartField(protected,intensified) 'RACF ...
+...  LOGON parameters:' SetBufferAddress(6,3) StartField(protected) ' Useri ...
+... d    ===>' SetBufferAddress(6,19) StartField(protected,intensified) 'LJ ...
+... U     ' StartField(6,28)(protected,skip) SetBufferAddress(8,3) StartFie ...
+... ld(protected) ' Password  ===>' SetBufferAddress(8,19) StartField(nondi ...
+... splay) NULL NULL NULL NULL NULL NULL NULL NULL StartField(8,28)(protect ...
+... ed,skip) SetBufferAddress(12,3) StartField(protected) ' Acct Nmbr ===>' ...
+...  SetBufferAddress(12,19) StartField(intensified) 'TSC' NULL NULL NULL N ...
+... ULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NU ...
+... LL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NUL ...
+... L NULL NULL NULL NULL NULL StartField(12,60)(protected,skip) SetBufferA ...
+... ddress(10,3) StartField(protected) ' Procedure ===>' SetBufferAddress(1 ...
+... 0,19) StartField(intensified) 'ISPFPROC' StartField(10,28)(protected,sk ...
+... ip) SetBufferAddress(14,3) StartField(protected) ' Size      ===>' SetB ...
+... ufferAddress(14,19) StartField(intensified) '1048576' StartField(14,27) ...
+... (protected,skip) SetBufferAddress(16,3) StartField(protected) ' Perform ...
+...    ===>' SetBufferAddress(16,19) StartField(intensified) NULL NULL NULL ...
+...  StartField(16,23)(protected,skip) SetBufferAddress(10,51) StartField(p ...
+... rotected) ' Group Ident  ===>' SetBufferAddress(10,70) StartField(inten ...
+... sified) NULL NULL NULL NULL NULL NULL NULL NULL StartField(10,79)(prote ...
+... cted,skip) SetBufferAddress(8,51) StartField(protected) ' New Password  ...
+... ===>' SetBufferAddress(8,70) StartField(nondisplay) NULL NULL NULL NULL ...
+...  NULL NULL NULL NULL StartField(8,79)(protected,skip) SetBufferAddress( ...
+... 20,4) StartField(protected,intensified) 'Enter an 'S' before each optio ...
+... n desired below:' StartField(20,51)(protected) SetBufferAddress(21,8) S ...
+... tartField(protected,intensified) NULL SetBufferAddress(21,10) StartFiel ...
+... d(intensified) ' ' StartField(21,12)(protected,skip) '-Nomail' StartFie ...
+... ld(21,20)(protected) SetBufferAddress(21,24) StartField(protected,inten ...
+... sified) NULL SetBufferAddress(21,26) StartField(intensified) ' ' StartF ...
+... ield(21,28)(protected,skip) '-Nonotice' StartField(21,38)(protected) Se ...
+... tBufferAddress(21,41) StartField(protected,intensified) NULL SetBufferA ...
+... ddress(21,43) StartField(intensified) 'S' StartField(21,45)(protected,s ...
+... kip) '-Reconnect' StartField(21,56)(protected) SetBufferAddress(21,59)  ...
+... StartField(protected,intensified) NULL SetBufferAddress(21,61) StartFie ...
+... ld(intensified) ' ' StartField(21,63)(protected,skip) '-OIDcard ' Start ...
+... Field(21,73)(protected) SetBufferAddress(18,3) StartField(protected) '  ...
+... Command   ===>' SetBufferAddress(18,19) StartField(intensified) 'ispf   ...
+...                                                                         ...
+...    ' StartField(19,20)(protected,skip) SetBufferAddress(6,51) StartFiel ...
+... d(protected,skip,nondisplay) ' Seclabel     ===>' SetBufferAddress(6,70 ...
+... ) StartField(protected,skip,nondisplay) '        ' StartField(6,79)(pro ...
+... tected,skip) SetBufferAddress(8,20) InsertCursor
+20240229.133417.337 SENT TN3270E(RESPONSE POSITIVE-RESPONSE 5) DEVICE-END
+> 0x0   020000000500ffef
+20240229.133417.337 Keyboard unlock(kybd_send_data) -BID
+20240229.133417.337 ui> <oia field="lock"/>
+20240229.133417.337 RCVD EOR
+20240229.133417.337 lazya_flush: 935 slots
+20240229.133417.337 ui> <formatted state="true"/>
+20240229.133417.349 ui> <screen><cursor enabled="true" row="8" column="20"/><row row="1"><char column="1" fg="neutralWhite" gr="highlight,selectable" text=" ------------------------------- TSO/E LOGON -----------------------------------"/></row><row row="2"><attr column="1" fg="neutralWhite" gr="highlight,selectable" count="80"/></row><row row="3"><attr column="1" fg="neutralWhite" gr="highlight,selectable" count="80"/></row><row row="4"><char column="1" fg="neutralWhite" gr="highlight,selectable" text="    Enter LOGON parameters below:"/><attr column="34" fg="neutralWhite" gr="highlight,selectable" count="19"/><char column="53" fg="neutralWhite" gr="highlight,selectable" text="RACF LOGON parameters:      "/></row><row row="5"><attr column="1" fg="neutralWhite" gr="highlight,selectable" count="80"/></row><row row="6"><attr column="1" fg="neutralWhite" gr="highlight,selectable" count="2"/><char column="5" text="Userid    ===&gt;"/><char column="19" fg="neutralWhite" gr="highlight,selectable" text=" LJU     "/><attr column="51" fg="neutralWhite" count="28"/></row><row row="8"><char column="5" text="Password  ===&gt;"/><attr column="19" fg="red" count="9"/><char column="53" text="New Password ===&gt;"/><attr column="70" fg="red" count="9"/></row><row row="10"><char column="5" text="Procedure ===&gt;"/><char column="19" fg="red" gr="highlight,selectable" text=" ISPFPROC"/><char column="53" text="Group Ident  ===&gt;"/><attr column="70" fg="red" gr="highlight,selectable" count="9"/></row><row row="12"><char column="5" text="Acct Nmbr ===&gt;"/><char column="19" fg="red" gr="highlight,selectable" text=" TSC"/><attr column="23" fg="red" gr="highlight,selectable" count="37"/></row><row row="14"><char column="5" text="Size      ===&gt;"/><char column="19" fg="red" gr="highlight,selectable" text=" 1048576"/></row><row row="16"><char column="5" text="Perform   ===&gt;"/><attr column="19" fg="red" gr="highlight,selectable" count="4"/></row><row row="18"><char column="5" text="Command   ===&gt;"/><char column="19" fg="red" gr="highlight,selectable" text=" ispf"/><attr column="24" fg="red" gr="highlight,selectable" count="57"/></row><row row="19"><attr column="1" fg="red" gr="highlight,selectable" count="19"/></row><row row="20"><char column="4" fg="neutralWhite" gr="highlight,selectable" text=" Enter an &apos;S&apos; before each option desired below:"/></row><row row="21"><attr column="8" fg="neutralWhite" gr="highlight,selectable" count="2"/><attr column="10" fg="red" gr="highlight,selectable" count="2"/><char column="13" text="-Nomail"/><attr column="24" fg="neutralWhite" gr="highlight,selectable" count="2"/><attr column="26" fg="red" gr="highlight,selectable" count="2"/><char column="29" text="-Nonotice"/><attr column="41" fg="neutralWhite" gr="highlight,selectable" count="2"/><char column="43" fg="red" gr="highlight,selectable" text=" S"/><char column="46" text="-Reconnect"/><attr column="59" fg="neutralWhite" gr="highlight,selectable" count="2"/><attr column="61" fg="red" gr="highlight,selectable" count="2"/><char column="64" text="-OIDcard"/></row><row row="23"><char column="1" fg="neutralWhite" gr="highlight,selectable" text=" PF1/PF13 ==&gt; Help    PF3/PF15 ==&gt; Logoff    PA1 ==&gt; Attention    PA2 ==&gt; Reshow"/></row><row row="24"><char column="1" fg="neutralWhite" gr="highlight,selectable" text=" You may request specific help information by entering a &apos;?&apos; in any entry field "/></row></screen>
+20240229.133417.349 Waiting for 7 events or 1852 msec
+20240229.133417.354 Got event 0x6
+20240229.133417.354 ui< <!--[Draw] 34:17.298 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #43-->
+20240229.133417.354 <!--[Draw] 34:17.298 MainScreen ScreenNeedsDrawing partial {X=0,Y=0,Width=800,Height=528}-->
+20240229.133417.354 <!--[Draw] 34:17.303 ScreenDraw(MainScreen): {X=0,Y=0,Width=800,Height=528} partial #43-->
+20240229.133417.354 <!--[Draw] 34:17.305 ScreenDraw 1ms 5676/1920/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133417.354 <!--[Draw] 34:17.310 MainScreen ScreenNeedsDrawing ScreenDraw(repaint) all #46-->
+20240229.133417.354 <!--[Draw] 34:17.310 MainScreen ScreenNeedsDrawing all-->
+20240229.133417.354 <!--[Draw] 34:17.312 ScreenDraw(MainScreen): {X=0,Y=0,Width=1320,Height=946} all #46-->
+20240229.133417.354 <!--[Draw] 34:17.318 ScreenDraw 5ms 5676/5676/0 total/unclipped/drawn ∞ ms/char-->
+20240229.133417.354 <!--[Window] 34:17.331 Thumb: Saved 86 Screen 43 Back 0 -> Maximum 128 Value 86 LargeChange 43-->
+20240229.133417.354 <!--[BackEnd] 34:17.341 Cursor enabled 8/20-->
+20240229.133417.354 <!--[Draw] 34:17.341 ChangeOiaCursor enabled 8/20-->
+20240229.133417.354 <!--[Draw] 34:17.349 MainScreen ScreenNeedsDrawing ScreenDraw(update) partial #50-->
+20240229.133417.354 <!--[Draw] 34:17.350 MainScreen ScreenNeedsDrawing partial {X=0,Y=0,Width=800,Height=528}-->
+20240229.133417.354 <!--[Draw] 34:17.351 ScreenDraw(MainScreen): {X=0,Y=0,Width=800,Height=528} partial #50-->
+20240229.133417.355 lazya_flush: 60 slots
+20240229.133417.355 Waiting for 7 events or 1846 msec
+20240229.133417.417 Got event 0x6
+20240229.133417.417 ui< <!--[Draw] 34:17.355 ScreenDraw 3ms 5676/1920/544 total/unclipped/drawn 0.006 ms/char-->
+20240229.133417.417 Waiting for 7 events or 1784 msec
+20240229.133419.205 Got event 0x102
+20240229.133419.205 ui> <stats bytes-received="2676" records-received="9" bytes-sent="283" records-sent="2"/>
+20240229.133419.205 Waiting for 7 events
+20240229.133429.324 Got event 0x6
+20240229.133429.324 ui< <!--[Key] 34:29.263 Enter: modDisqualified -> False-->
+20240229.133429.324 Waiting for 7 events
+20240229.133430.998 Got event 0x6
+20240229.133430.998 ui< <!--[Window] 34:30.945 MainScreen Activated-->
+20240229.133430.998 <!--[Key] 34:30.946 Activate: modDisqualified -> False-->
+20240229.133430.998 Waiting for 7 events
+20240229.133432.939 Got event 0x6
+20240229.133432.939 ui< <!--[Key] 34:32.879 Enter: modDisqualified -> False-->
+20240229.133432.939 Waiting for 7 events
+20240229.133436.099 Got event 0x0
+20240229.133436.100 Input for s3sock complete, nr=5
+20240229.133436.100 CB(s3sock)[#12] started
+20240229.133436.100 CB(s3sock)[#12.1] IDLE -> RUNNING (child task to be pushed next)
+20240229.133436.100 Macro[#12.2] IDLE -> RUNNING (fresh push)
+20240229.133436.100 Macro[#12.2] RUNNING -> IDLE (about to resume)
+20240229.133436.100 Macro[#12.2] running
+20240229.133436.100 Macro[#12.2] IDLE -> RUNNING (executing)
+20240229.133436.100 Macro[#12.2] 'quit'
+20240229.133436.100 command -> Quit()
+20240229.133436.100 Macro[#12.2] complete, success
+20240229.133436.100 CB(s3sock)[#12.1] RUNNING -> IDLE (about to resume)
+20240229.133436.100 CB(s3sock)[#12.1] child task done, success
+20240229.133436.100 Output for CB(s3sock)[#12]: 'U F U C(T24A2A) I 4 24 80 7 19 0x0 0.000/ok'
+20240229.133436.100 CB(s3sock)[#12.1] complete, success
+20240229.133436.100 CB(s3sock)[#12] complete
+20240229.133436.100 Waiting for 7 events or 0 msec
+20240229.133436.100 Got event 0x102
+20240229.133436.100 Exiting with status 0
+20240229.133436.100 st_changed(exiting,true)
+20240229.133436.100 st_changed(secure,false)
+20240229.133436.101 SENT disconnect
+20240229.133436.101 ui> <oia field="lu"/>
+20240229.133436.101 cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20240229.133436.101 st_changed(connect,false)
+20240229.133436.101 Keyboard lock(kybd_connect) +NOT_CONNECTED
+20240229.133436.101 ui> <oia field="lock" value="not-connected"/>
+20240229.133436.101 ctlr_enable_cursor(false, connect)
+20240229.133436.101 ui> <screen><cursor enabled="false"/></screen>
+20240229.133436.101 ctlr_enable_cursor(false, nvt)
+20240229.133436.101 Trace stopped

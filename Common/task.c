@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -251,7 +251,7 @@ static task_t *task_redirect_to(void);
 static bool expect_matches(task_t *task);
 
 /* Macro that defines that the keyboard is locked due to user input. */
-#define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST|KL_FT)
+#define KBWAIT_MASK	(KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST|KL_FT|KL_BID)
 #define _KBWAIT(k)	((k) & KBWAIT_MASK)
 #define KBWAIT	_KBWAIT(kybdlock)
 #define _CKBWAIT(k)	(toggled(AID_WAIT) && _KBWAIT(k))
@@ -3018,29 +3018,15 @@ status_string(void)
     char em_mode;
     char *r;
 
-    if (!kybdlock) {
-	kb_stat = 'U';
-    } else {
-	kb_stat = 'L';
-    }
-
-    if (formatted) {
-	fmt_stat = 'F';
-    } else {
-	fmt_stat = 'U';
-    }
+    kb_stat = task_kbwait_state()? 'L': 'U';
+    fmt_stat = formatted? 'F': 'U';
 
     if (!formatted) {
 	prot_stat = 'U';
     } else {
-	unsigned char fa;
+	unsigned char fa = get_field_attribute(cursor_addr);
 
-	fa = get_field_attribute(cursor_addr);
-	if (FA_IS_PROTECTED(fa)) {
-	    prot_stat = 'P';
-	} else {
-	    prot_stat = 'U';
-	}
+	prot_stat = FA_IS_PROTECTED(fa)? 'P': 'U';
     }
 
     if (cstate > RECONNECTING) {
@@ -3051,15 +3037,9 @@ status_string(void)
 
     if (PCONNECTED) {
 	if (IN_NVT) {
-	    if (linemode) {
-		em_mode = 'L';
-	    } else {
-		em_mode = 'C';
-	    }
-	} else if (IN_3270) {
-	    em_mode = 'I';
+	    em_mode = linemode? 'L': 'C';
 	} else {
-	    em_mode = 'P';
+	    em_mode = IN_3270? 'I': 'P';
 	}
     } else {
 	em_mode = 'N';
@@ -4961,4 +4941,11 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
     current_task->wait_context = context;
     current_task->xcontinue_fn = continue_fn;
     task_set_state(current_task, TS_XWAIT, lazyaf("extended wait: %s", why));
+}
+
+/* Return the current KBWAIT status. */
+bool
+task_kbwait_state(void)
+{
+    return KBWAIT != 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2023 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -157,3 +157,5 @@ bool validate_command(const char *command, int offset, char **error);
 
 bool task_running_cb_contains(tcb_t *cb);
 char *task_status_string(void);
+
+bool task_kbwait_state(void);

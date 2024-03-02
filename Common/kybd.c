@@ -400,12 +400,15 @@ flush_ta(void)
 static char *
 kybdlock_decode(char *how, unsigned int bits)
 {
-    static char *rs = NULL;
     varbuf_t r;
     char *space = "";
 
     if (bits == (unsigned int)-1) {
-	return "all";
+	return lazyaf("%sall", how);
+    }
+
+    if (bits == 0) {
+	return lazyaf("%snone", how);
     }
 
     vb_init(&r);
@@ -472,8 +475,7 @@ kybdlock_decode(char *how, unsigned int bits)
 	space = " ";
     }
 
-    Replace(rs, vb_consume(&r));
-    return rs;
+    return lazya(vb_consume(&r));
 }
 
 /* Set bits in the keyboard lock. */
@@ -482,13 +484,14 @@ kybdlock_set(unsigned int bits, const char *cause _is_unused)
 {
     unsigned int n;
 
-    vtrace("Keyboard lock(%s) %s\n", cause, kybdlock_decode("+", bits));
+    if (!(kybdlock & bits)) {
+	vtrace("Keyboard lock(%s) %s %s -> %s\n", cause,
+		kybdlock_decode("", kybdlock),
+		kybdlock_decode("+", bits),
+		kybdlock_decode("", kybdlock | bits));
+    }
     n = kybdlock | bits;
     if (n != kybdlock) {
-#if defined(KYBDLOCK_TRACE) /*[*/
-       vtrace("  %s: kybdlock |= 0x%04x, 0x%04x -> 0x%04x\n",
-	    cause, bits, kybdlock, n);
-#endif /*]*/
 	if ((kybdlock ^ bits) & KL_DEFERRED_UNLOCK) {
 	    /* Turned on deferred unlock. */
 	    unlock_delay_time = time(NULL);
@@ -504,15 +507,13 @@ kybdlock_clr(unsigned int bits, const char *cause)
     unsigned int n;
 
     if (kybdlock & bits) {
-	vtrace("Keyboard unlock(%s) %s\n", cause,
-		kybdlock_decode("-", kybdlock & bits));
+	vtrace("Keyboard unlock(%s) %s %s -> %s\n", cause,
+		kybdlock_decode("", kybdlock),
+		kybdlock_decode("-", kybdlock & bits),
+		kybdlock_decode("", kybdlock & ~bits));
     }
     n = kybdlock & ~bits;
     if (n != kybdlock) {
-#if defined(KYBDLOCK_TRACE) /*[*/
-	vtrace("  %s: kybdlock &= ~0x%04x, 0x%04x -> 0x%04x\n",
-		cause, bits, kybdlock, n);
-#endif /*]*/
 	if ((kybdlock ^ n) & KL_DEFERRED_UNLOCK) {
 	    /* Turned off deferred unlock. */
 	    unlock_delay_time = 0;
@@ -777,7 +778,7 @@ toggle_insert_mode(toggle_index_t ix, enum toggle_type type)
 static const char *
 kybdlock_dump(void)
 {
-    return kybdlock? ResTrue: ResFalse;
+    return TrueFalse(task_kbwait_state());
 }
 
 /*
