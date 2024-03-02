@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -203,6 +203,48 @@ class TestB3270Retry(cti.cti):
         self.vgwait(b3270)
         pq.close()
         b3270.stdout.close()
+
+    # b3270 reconnect without disconnect test
+    def test_b3270_reconnect_disconnect(self):
+
+        # Find an unused port, but do not listen on it yet.
+        playback_port, ts = cti.unused_port()
+
+        # Start b3270.
+        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+
+        # Throw away b3270's initialization output.
+        pq = pipeq.pipeq(self, b3270.stdout)
+        pq.get(2, 'b3270 did not start')
+
+        # Tell b3270 to connect.
+        b3270.stdin.write(f'"open c:a:127.0.0.1:{playback_port}"\n'.encode())
+        b3270.stdin.flush()
+
+        # Wait for it to try to connect and fail, twice.
+        out_all = []
+        resolve_count = 0
+        while True:
+            out = pq.get(10, 'b3270 did not fail the connection')
+            out_all += [out.decode()]
+            if b'resolving' in out:
+                resolve_count += 1
+                if resolve_count > 1:
+                    break
+
+        # Make sure that b3270 never entered not-connected state.
+        self.assertNotIn('not-connected', out_all, 'Should not enter not-connected state')
+
+        # Clean up.
+        ts.close()
+        b3270.stdin.write(b'"quit"\n')
+        b3270.stdin.flush()
+        b3270.stdin.close()
+        self.vgwait(b3270)
+        pq.close()
+        b3270.stdout.close()
+
 
 if __name__ == '__main__':
     unittest.main()
