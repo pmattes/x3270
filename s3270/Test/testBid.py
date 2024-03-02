@@ -27,6 +27,8 @@
 #
 # draft-04 BID tests
 
+import threading
+import time
 import requests
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
@@ -152,6 +154,58 @@ class TestS3270Bid(cti.cti):
             data = p.nread(8 + 14, 0.5)
         
         self.assertEqual(data, b'\x02\x00\x00\x00/\x00\xff\xef\x00\x00\x00\x00\x00}\x01\xa1\x11\x01\xa0\x81\xff\xef', 'Expected Enter')
+
+        # Wait for the processes to exit.
+        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    # Send a string and an Enter() with a timeout to s3270.
+    def send_string(self, port):
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/String("LOGIN LJU")')
+        try:
+            requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Enter()', timeout=1)
+        except:
+            pass
+
+    # Check for the Enter() action blocking.
+    def check_block(self, sport: int) -> bool:
+        '''Check for a blocking Enter() action'''
+        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(task)').json()['result']
+        return any(['KBWAIT => Enter' in line for line in r])
+
+    # s3270 BID lock test
+    def test_s3270_bid_lock(self):
+
+        # Start 'playback' to read s3270's output.
+        pport, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/bid-bug.trc', port=pport) as p:
+            socket.close()
+
+            # Start s3270.
+            hport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f"127.0.0.1:{pport}"]), stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+
+            # Send the initial screen.
+            p.send_records(2)
+
+            # Send a string and press Enter, asynchronously.
+            x = threading.Thread(target=self.send_string, args=[hport])
+            x.start()
+
+            # Wait for the Enter to block.
+            self.try_until(lambda: (self.check_block(hport)), 2, 'Enter() not blocking')
+
+            # Respond with a new screen, but not enough to clear the BID condition.
+            p.send_records(5)
+            x.join()
+
+            # Make sure that Enter() is still blocked and the keyboard is still locked.
+            self.assertTrue(self.check_block(hport), 'Expected Enter() to remain blocked')
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(KeyboardLock)')
+            self.assertEqual('true', r.json()['result'][0], 'Expected locked keyboard')
+            self.assertEqual('L', r.json()['status'].split()[0], 'Expected L in status')
 
         # Wait for the processes to exit.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
