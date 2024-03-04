@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2021 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -108,6 +108,9 @@
 #define STATUS_PUSH_MS		5000
 
 #define CM (60*10)	/* csec per minute */
+
+/* Delay for meta-escape mode. */
+#define ME_DELAY	25L
 
 #if !defined(HAVE_TIPARM) /*[*/
 #define tiparm		tparm
@@ -551,6 +554,10 @@ finish_screen_init(void)
 #endif /*]*/
     if ((cl = tigetstr("clear")) != NULL) {
 	putp(cl);
+    }
+
+    if (getenv("ESCDELAY") == NULL) {
+	putenv(xs_buffer("ESCDELAY=%ld", ME_DELAY));
     }
 
 #if !defined(C3270_80_132) /*[*/
@@ -1638,8 +1645,10 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
 	ucs4 = 0;
 #if defined(CURSES_WIDE) /*[*/
+	vtrace("kybd_input: calling wget_wch()\n");
 	k = wget_wch(stdscr, &wch);
 #else /*][*/
+	vtrace("kybd_input: calling wgetch()\n");
 	k = wgetch(stdscr);
 #endif /*]*/
 	vtrace("kbd_input: k=%d "
@@ -1762,7 +1771,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	} else if (me_mode == TS_ON && ucs4 == 0x1b) {
 	    vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 		    decode_key(k, ucs4, alt, dbuf), k, ucs4);
-	    eto = AddTimeOut(100L, escape_timeout);
+	    eto = AddTimeOut(ME_DELAY, escape_timeout);
 	    vtrace(" waiting to see if Escape is followed by another key\n");
 	    meta_escape = true;
 	    continue;
