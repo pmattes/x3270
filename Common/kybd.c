@@ -3727,6 +3727,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
     bool just_wrapped = false;
     ucs4_t c;
     bool auto_skip = true;
+    bool check_remargin = false;
 
     if (pasting && toggled(OVERLAY_PASTE)) {
 	auto_skip = false;
@@ -4050,7 +4051,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		nc++;
 		break;
 	    } else {
-		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
+		vtrace(" %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
 		if (!(literal & ~0xff)) {
 		    key_Character((unsigned char) literal, false, true, true,
 			    NULL);
@@ -4071,25 +4072,29 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 
     switch (state) {
     case BASE:
-	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    remargin(orig_col);
-	}
+	check_remargin = true;
 	break;
     case OCTAL:
-    case HEX:
 	key_UCharacter((unsigned char) literal, KT_STD, ia, true);
-	state = BASE;
-	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    remargin(orig_col);
-	}
+	check_remargin = true;
+	break;
+    case HEX:
+	key_UCharacter(literal, KT_STD, ia, true);
+	check_remargin = true;
 	break;
     case EBC:
-	vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
-	key_Character((unsigned char) literal, false, true, true, NULL);
-	state = BASE;
-	if (pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
-	    remargin(orig_col);
+	vtrace(" %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
+	if (!(literal & ~0xff)) {
+	    key_Character((unsigned char) literal, false, true, true,
+		    NULL);
+	} else {
+	    unsigned char ebc_pair[2];
+
+	    ebc_pair[0] = (literal >> 8) & 0xff;
+	    ebc_pair[1] = literal & 0xff;
+	    key_WCharacter(ebc_pair, true);
 	}
+	check_remargin = true;
 	break;
     case BACKPF:
 	if (nc > 0) {
@@ -4106,6 +4111,10 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
     default:
 	popup_an_error(AnString "(): Missing data after \\");
 	break;
+    }
+
+    if (check_remargin && pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	remargin(orig_col);
     }
 
     return xlen;

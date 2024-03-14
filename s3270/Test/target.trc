@@ -1,0 +1,212 @@
+20240313.213409.850 Trace started
+ Version: s3270 v4.4pre1 Thu Mar 14 00:47:25 UTC 2024 pdm
+ Build options: --enable-local-process via gcc 11.4.0 64-bit
+ Command: s3270 obj/x86_64-pc-linux-gnu/s3270/s3270 -trace localhost:8021
+ Model 3278-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true alwaysInsert=false bindLimit=true
+  blankFill=true caDir= caFile= certFile= certFileType= chainFile=
+  codePage=bracket confDir=/usr/local/etc/x3270 ftBufferSize=16384 httpd=
+  insertMode=false keyFile= keyFileType= keyPasswd= lineMode=true
+  lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true oversize= preferIpv4=false
+  preferIpv6=false printer.options= printerLu= proxy= reconnect=false
+  retry=false reverseInputMode=false rightToLeftMode=false screenTrace=false
+  scriptPort= showTiming=false startTls=true termName= tlsMaxProtocol=
+  tlsMinProtocol= trace=true underscoreBlankFill=true unlockDelay=false
+  unlockDelayMs=350 verifyHostCert=true wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20240313.213409.850 st_changed(secure,false)
+20240313.213409.850 Resolver slot is 0
+20240313.213409.850 cstate [not-connected] -> [resolving] (host_connect)
+20240313.213409.850 st_changed(connect,true)
+20240313.213409.850 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20240313.213409.850 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20240313.213409.850 ctlr_enable_cursor(false, connect)
+20240313.213409.850 st_changed(negotiating,true)
+20240313.213409.850 Waiting for 1 event or 1.000s
+20240313.213409.851 Got 1 event
+20240313.213409.851 Resolution complete, 1 address
+20240313.213409.853 TLS: will verify host certificate
+20240313.213409.853 Making host socket non-blocking
+20240313.213409.853 Trying 127.0.0.1, port 8021...
+20240313.213409.853 TCP connection pending.
+20240313.213409.853 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20240313.213409.853 st_changed(negotiating,true)
+20240313.213409.853 lazya_flush: 30 slots, 1536 bytes
+20240313.213409.853 Waiting for 4 events or 0.000s
+20240313.213409.853 Got 1 event
+20240313.213409.853 Output possible
+20240313.213409.853 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20240313.213409.853 st_changed(connect,true)
+20240313.213409.853 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20240313.213409.853 Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20240313.213409.853 Host negotiation step took 0.000091s to complete
+20240313.213409.853 ctlr_enable_cursor(true, connect)
+20240313.213409.853 ctlr_enable_cursor(true, nvt)
+20240313.213409.853 st_changed(negotiating,true)
+20240313.213409.853 Connected to localhost, port 8021.
+20240313.213409.853 st_changed(secure,false)
+20240313.213409.853 st_changed(line-mode,true)
+20240313.213409.853 lazya_flush: 21 slots, 504 bytes
+20240313.213409.853 Waiting for 3 events or 0.000s
+20240313.213409.853 Got 0 events
+20240313.213409.853 Waiting for 3 events or 1.000s
+20240313.213409.854 Got 1 event
+20240313.213409.854 Reading host socket
+20240313.213409.854 Host socket read complete nr=3
+< 0x0   fffd28
+20240313.213409.854 RCVD DO TN3270E
+> 0x0   fffb28
+20240313.213409.854 SENT WILL TN3270E
+20240313.213409.854 Now operating in connected-unbound mode.
+20240313.213409.854 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20240313.213409.854 st_changed(negotiating,true)
+20240313.213409.854 st_changed(3270-mode,false)
+20240313.213409.854 Host negotiation step took 0.000011s to complete
+20240313.213409.854 ctlr_enable_cursor(true, connect)
+20240313.213409.854 lazya_flush: 12 slots, 288 bytes
+20240313.213409.854 Waiting for 3 events
+20240313.213409.854 Got 1 event
+20240313.213409.854 Reading host socket
+20240313.213409.854 Host socket read complete nr=10
+< 0x0   fffd27fffa280802fff0
+20240313.213409.854 RCVD DO NEW-ENVIRON
+> 0x0   fffb27
+20240313.213409.854 SENT WILL NEW-ENVIRON
+20240313.213409.854 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20240313.213409.854 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20240313.213409.854 Waiting for 3 events
+20240313.213409.854 Got 1 event
+20240313.213409.854 Reading host socket
+20240313.213409.854 Host socket read complete nr=6
+< 0x0   fffa2701fff0
+20240313.213409.854 RCVD SB NEW-ENVIRON SEND SE
+> 0x0   fffa270000555345520170646d0349424d454c46015945530349424d4150504c
+> 0x20  4944014e6f6e65fff0
+20240313.213409.855 SENT SB NEW-ENVIRON IS VAR "USER" VALUE "pdm" USERVAR "IBMELF" VALUE "YES" USERVAR "IBMAPPLID" VALUE "None" SE
+20240313.213409.855 lazya_flush: 12 slots, 288 bytes
+20240313.213409.855 Waiting for 3 events
+20240313.213409.855 Got 1 event
+20240313.213409.855 Reading host socket
+20240313.213409.855 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054453032fff0
+20240313.213409.855 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TE02 SE
+> 0x0   fffa28030700020405fff0
+20240313.213409.855 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20240313.213409.855 Waiting for 3 events
+20240313.213409.899 Got 1 event
+20240313.213409.899 Reading host socket
+20240313.213409.899 Host socket read complete nr=8
+< 0x0   fffa28030700fff0
+20240313.213409.899 RCVD SB TN3270E FUNCTIONS REQUEST BIND-IMAGE SE
+> 0x0   fffa28030400fff0
+20240313.213409.899 SENT SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20240313.213409.899 TN3270E option negotiation complete.
+20240313.213409.899 Waiting for 3 events
+20240313.213409.899 Got 1 event
+20240313.213409.899 Reading host socket
+20240313.213409.899 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4c1c30005007eec0b1008c9c2d4f0e3c5e2d8ffef
+20240313.213409.899 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SMAC' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20240313.213409.899 Now operating in connected-tn3270e mode.
+20240313.213409.899 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20240313.213409.899 st_changed(3270-mode,true)
+20240313.213409.899 ctlr_enable_cursor(true, connect)
+20240313.213409.899 RCVD EOR
+20240313.213409.899 lazya_flush: 11 slots, 264 bytes
+20240313.213409.899 CB(s3stdin)[#1] started
+20240313.213409.899 CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20240313.213409.899 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20240313.213409.899 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20240313.213409.900 Macro[#1.2] running
+20240313.213409.900 Macro[#1.2] IDLE -> RUNNING (executing)
+20240313.213409.900 Macro[#1.2] 'Wait(inputfield)'
+20240313.213409.900 script -> Wait("inputfield")
+20240313.213409.900 Macro[#1.2] RUNNING -> WAIT_IFIELD (Wait())
+20240313.213409.900 Waiting for 3 events
+20240313.213409.943 Got 1 event
+20240313.213409.943 Reading host socket
+20240313.213409.943 Host socket read complete nr=607
+< 0x0   0000000000f542a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d160115a50115b607e7e6e2902c001fe0113115c6f1d30c6f37ec5d5c4ffef
+20240313.213409.945 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,restore) 'x3270 test target (formatted 3270)' SetBufferA ...
+... ddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' SetBu ...
+... fferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibmlink,  ...
+... with help screens' SetBufferAddress(5,1) ' menu     Menu using plain TE ...
+... LNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270 screen ...
+... ' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' SetBuff ...
+... erAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBufferAdd ...
+... ress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBufferAddre ...
+... ss(10,1) ' snake    TN3270 protocol server playing snake' SetBufferAddr ...
+... ess(11,1) ' sruvm    TN3270 protocol server simulating sruvm (model 4 r ...
+... equired)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol server simu ...
+... lating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from test tar ...
+... get' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddress(22, ...
+... 1) SetBufferAddress(23,1) '==>' StartFieldExtended(23,4) 3270(modified) ...
+...  input-control(enabled) InsertCursor(23,5) SetBufferAddress(23,80) Star ...
+... tField(protected,skip) 'F3=END'
+20240313.213409.947 Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+20240313.213409.947 RCVD EOR
+20240313.213409.947 lazya_flush: 586 slots, 14128 bytes
+20240313.213409.947 Macro[#1.2] WAIT_IFIELD -> IDLE (about to resume)
+20240313.213409.947 Macro[#1.2] running
+20240313.213409.947 Macro[#1.2] complete, success
+20240313.213409.947 CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20240313.213409.947 CB(s3stdin)[#1.1] child task done, success
+20240313.213409.947 CB(s3stdin)[#1.1] complete, success
+20240313.213409.947 CB(s3stdin)[#1] complete
+20240313.213409.947 Waiting for 4 events
+20240313.213413.103 Got 1 event
+20240313.213413.103 s3stdin read 'Quit'
+20240313.213413.103 CB(s3stdin)[#2] started
+20240313.213413.103 CB(s3stdin)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20240313.213413.103 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20240313.213413.103 lazya_flush: 18 slots, 432 bytes
+20240313.213413.103 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20240313.213413.103 Macro[#2.2] running
+20240313.213413.103 Macro[#2.2] IDLE -> RUNNING (executing)
+20240313.213413.103 Macro[#2.2] 'Quit'
+20240313.213413.103 script -> Quit()
+20240313.213413.103 Macro[#2.2] complete, success
+20240313.213413.103 CB(s3stdin)[#2.1] RUNNING -> IDLE (about to resume)
+20240313.213413.103 CB(s3stdin)[#2.1] child task done, success
+20240313.213413.103 Output for s3stdin: U F U C(localhost) I 4 24 80 22 4 0x0 0.000/ok
+20240313.213413.103 CB(s3stdin)[#2.1] complete, success
+20240313.213413.103 CB(s3stdin)[#2] complete
+20240313.213413.103 Waiting for 4 events or 0.000s
+20240313.213413.103 Got 0 events
+20240313.213413.103 Exiting with status 0
+20240313.213413.103 st_changed(exiting,true)
+20240313.213413.103 st_changed(secure,false)
+20240313.213413.103 SENT disconnect
+20240313.213413.103 cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20240313.213413.103 st_changed(connect,false)
+20240313.213413.103 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20240313.213413.103 ctlr_enable_cursor(false, connect)
+20240313.213413.103 ctlr_enable_cursor(false, nvt)
+20240313.213413.103 Trace stopped
