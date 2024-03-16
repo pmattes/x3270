@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -670,11 +670,11 @@ hio_verb(void *dhandle)
 /**
  * Send a command to x3270.
  *
- * @param[in] cmd       command to send, not including the newline and
- * @param[in] callback  callback function for completion
- * @param[in] handle    handle to pass to completion callback function
- * @param[in] request_content_type How to process input
- * @param[in] return_content_type How to return content
+ * @param[in] cmd	command to send, not including the newline and
+ * @param[in] callback	callback function for completion
+ * @param[in] dhandle	handle to pass to completion callback function
+ * @param[in] request_content_type	How to process input
+ * @param[in] return_content_type	How to return content
  * @param[out] errmsg	error message, if SENDTO_INVALID returned
  *
  * @return sendto_t
@@ -782,7 +782,6 @@ hio_async_done(void *dhandle, httpd_status_t rv)
  *
  * @param[in] name	Name of toggle
  * @param[in] value	Toggle value
- * @param[out] canonical_value	Returned canonical form of value
  * @param[in] flags	Set() flags
  * @param[in] ia	Cause
  *

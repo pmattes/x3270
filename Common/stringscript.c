@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2021 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -228,7 +228,7 @@ string_child_done(task_cbh handle, bool success, bool abort)
 /**
  * Translate a hex digit to a nybble.
  *
- * @param[in] digit	Hex digit
+ * @param[in] c		Hex digit
  *
  * @return Nybble (value from 0 to 16).
  */

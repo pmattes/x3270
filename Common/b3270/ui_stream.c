@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020, 2022 Paul Mattes.
+ * Copyright (c) 2016-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1697,9 +1697,6 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
 
 /**
  * Initialize the UI socket.
- *
- * @param[in] sa	address and port to listen on
- * @param[in] sa_len	length of sa
  */
 void
 ui_io_init()

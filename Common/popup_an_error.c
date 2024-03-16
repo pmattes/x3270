@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Paul Mattes.
+ * Copyright (c) 2021-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,6 @@ popup_an_errno(int errn, const char *fmt, ...)
  * Pop up a particular flavor of error message.
  *
  * @param[in] type	Error type
- * @param[in] errn	Error number
  * @param[in] fmt	Format
  */
 void

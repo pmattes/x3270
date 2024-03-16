@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2022 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -3559,7 +3559,7 @@ relabel(bool ignored _is_unused)
 /**
  * Callback for changes in screen selection state.
  *
- * @param[in] selecting		true if selection in progress
+ * @param[in] now_selecting		true if selection in progress
  */
 static void
 screen_selecting_changed(bool now_selecting)
@@ -3621,10 +3621,11 @@ screen_wait_for_key(char *c)
 }
 
 /**
- * Query the screen for selections, wc3270 version.
- * This just defers over to the select logic.
+ * Check if an area of the screen is selected.
  *
  * @param[in] baddr	Buffer address.
+ *
+ * @return true if cell is selected
  */
 bool
 screen_selected(int baddr)
@@ -3658,7 +3659,7 @@ get_console_size(int *rows, int *cols)
 }
 
 /**
- * Stub for scrollbar function.
+ * Set the scrollbar thumb.
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)

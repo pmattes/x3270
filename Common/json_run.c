@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016, 2018-2022 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -224,7 +224,6 @@ fail:
  * Parse a JSON-formatted command or a set of commands.
  *
  * @param[in] json	JSON object to split
- * @param[in] cmd_len	Length of command
  * @param[out] cmds	Parsed actions and arguments
  * @param[out] single	Parsed single action
  *l @param[out] errmsg	Error message if parsing fails

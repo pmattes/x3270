@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@ typedef union {
 
 /**
  * Parse a bind option for -httpd or -scriptport.
- *
+ * @verbatim
  * Syntax:
  *  <port> or :<port>
  *   implies 127.0.0.1
@@ -70,7 +70,7 @@ typedef union {
  *  [::]:4080
  * To bind to the IPv6 loopback address, specify:
  *  [::1]:4080
- *
+ * @endverbatim
  * It does not understand symbolic port names like 'telnet', and it does not
  * understand symbolic host names.
  *

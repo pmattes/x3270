@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -352,8 +352,8 @@ c3270_3270_mode(bool ignored)
  * This handles asynchronous errors, such as file transfers that do not start
  * or abort.
  *
- * @param[in] s		Text to display
- * @param[in] any_error	true to set any_error_output
+ * @param[in] s			Text to display
+ * @param[in] set_any_error	true to set any_error_output
  * @returns true
  */
 static bool

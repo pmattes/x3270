@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -563,7 +563,7 @@ cleanup_host_and_port(int slot)
 /**
  * Mock the behavior of the synchronous resolver.
  *
- * @praram[in] m	Mock definition
+ * @param[in] m		Mock definition
  * @param[in] host	Host name
  * @param[in] portname	Port name
  * @param[out] pport	Returned numeric port
@@ -574,7 +574,7 @@ cleanup_host_and_port(int slot)
  * @param[in] max	Maximum number of elements to return
  * @param[out] nr	Number of elements returned
  *
- * @returns RHP_XXX status
+ * @returns @ref rhp_t status
  */
 static rhp_t
 mock_sync_resolver(const char *m, const char *host, char *portname,

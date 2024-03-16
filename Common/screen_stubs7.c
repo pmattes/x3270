@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,6 @@
 #include "screen.h"
 
 void
-enable_cursor(bool enable _is_unused)
+enable_cursor(bool on _is_unused)
 {
 }

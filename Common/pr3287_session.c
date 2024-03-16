@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2023 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -424,7 +424,7 @@ pr3287_reaped(ioid_t id _is_unused, int status)
 /**
  * Callback for pr3287 session exit.
  *
- * @param[in] fd	File descriptor (unused)
+ * @param[in] iosrc	I/O source (unused)
  * @param[in] id	I/O identifier (unused)
  */
 static void

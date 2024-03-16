@@ -106,16 +106,16 @@ struct macro_def *macro_defs = NULL;
 
 typedef struct task {
     /* Common fields. */
-    struct task *next;	/* next task on the stack */
-    struct _taskq *taskq;	/* root of this stack */
+    struct task *next;		/**< next task on the stack */
+    struct _taskq *taskq;	/**< root of this stack */
     enum task_type {
-	ST_MACRO,	/* macro */
-	ST_CB		/* meta (script, string, httpd, login macro, idle) */
+	ST_MACRO,		/**< macro */
+	ST_CB,			/**< meta (script, string, httpd, login macro, idle) */
 #define NUM_ST (ST_CB + 1)
     } type;
     enum task_state {
-	TS_IDLE,	/* no command active */
-	TS_RUNNING,	/* command executing */
+	TS_IDLE,		/**< no command active */
+	TS_RUNNING,		/**< command executing */
 	TS_NEED_RUN,	/* need run callback */
 	/* --- all states after this are blocked --- */
 #define MIN_WAITING_STATE TS_KBWAIT
@@ -444,7 +444,6 @@ macros_init(void)
  *
  * @param[in] name	Name of toggle
  * @param[in] value	Toggle value
- * @param[out] canonical_value	Returned canonical value
  * @param[in] flags	Set() flags
  * @param[in] ia	Cause
  *
@@ -1657,8 +1656,6 @@ find_owait(const tcb_t *cb)
  * @param[in] buf	Macro to push, or NULL
  * @param[in] len	Length of macro
  * @param[in] cmds	Split-out commands, or NULL
- * @param[in] args	Arguments, or NULL
- * @param[in] len	Length of buf
  * @param[in] cb	Callback block
  * @param[in] handle	Callback handle
  *
@@ -4555,6 +4552,7 @@ task_can_request_input(const char *action, bool no_echo)
  * @param[in] action		Action name
  * @param[in] prompt		Prompt string
  * @param[in] continue_fn	Continue function
+ * @param[in] abort_fn		Abort function
  * @param[in] handle		Handle to pass to continue functon
  * @param[in] no_echo		True to use no-echo mode
  *

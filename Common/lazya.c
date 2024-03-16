@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,6 +99,7 @@ lazyaf(const char *fmt, ...)
  * Varargs version.
  *
  * @param[in] fmt	Format
+ * @param[in] args	Arguments
  *
  * @return Buffer
  */

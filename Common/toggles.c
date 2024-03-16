@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -643,7 +643,7 @@ Set_action(ia_t ia, unsigned argc, const char **argv)
 /**
  * Register a Set() value to be performed when the host disconnects.
  *
- * @param[in] resouorce	Resource name.
+ * @param[in] resource	Resource name.
  * @param[in] value	Resource value.
  * @param[in] ia	Cause of change.
  */
@@ -815,7 +815,7 @@ toggles_register(void)
 /**
  * Flip the value of a toggle without notifying anyone.
  *
- * @param ix	Toggle index
+ * @param[in] ix	Toggle index
  */
 void
 toggle_toggle(toggle_index_t ix)
@@ -826,7 +826,8 @@ toggle_toggle(toggle_index_t ix)
 /**
  * Set the value of a toggle, without notifying anyone.
  *
- * @param ix	Toggle index
+ * @param[in] ix	Toggle index
+ * @param[in] value	New value
  */
 void
 set_toggle(toggle_index_t ix, bool value)
@@ -839,7 +840,8 @@ set_toggle(toggle_index_t ix, bool value)
  * Set the initial value of a toggle, which does not include marking it
  * changed or notifying anyone.
  *
- * @param ix	Toggle index
+ * @param[in] ix	Toggle index
+ * @param[in] value	Initial value
  */
 void
 set_toggle_initial(toggle_index_t ix, bool value)

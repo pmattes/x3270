@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2022 Paul Mattes.
+# Copyright (c) 2015-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -130,3 +130,30 @@ wmitm-src.tgz:
 windows-release: man
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@ VPATH=../Common -I../Common
+
+doxygen: doxygen-b3270 doxygen-c3270 doxygen-pr3287 doxygen-s3270 doxygen-wb3270 doxygen-wc3270 doxygen-wpr3287 doxygen-ws3270 doxygen-x3270 doxygen-x3270if doxygen-wx3270if doxygen-wizard
+DOXY=Common/doxygen/mkdoxy -v Common/version.txt -t Common/doxygen/Doxyfile.tmpl
+doxygen-b3270:
+	$(DOXY) -p b3270/Doxygen.opts -o obj/doxygen/posix/b3270
+doxygen-c3270:
+	$(DOXY) -p c3270/Doxygen.opts -o obj/doxygen/posix/c3270
+doxygen-pr3287:
+	$(DOXY) -p pr3287/Doxygen.opts -o obj/doxygen/posix/pr3287
+doxygen-s3270:
+	$(DOXY) -p s3270/Doxygen.opts -o obj/doxygen/posix/s3270
+doxygen-wb3270:
+	$(DOXY) -p wb3270/Doxygen.opts -o obj/doxygen/windows/b3270
+doxygen-wc3270:
+	$(DOXY) -p wc3270/Doxygen.opts -o obj/doxygen/windows/wc3270
+doxygen-wizard:
+	$(DOXY) -p wc3270/Doxygen-wizard.opts -o obj/doxygen/windows/wizard
+doxygen-wpr3287:
+	$(DOXY) -p wpr3287/Doxygen.opts -o obj/doxygen/windows/pr3287
+doxygen-ws3270:
+	$(DOXY) -p ws3270/Doxygen.opts -o obj/doxygen/windows/s3270
+doxygen-wx3270if:
+	$(DOXY) -p wx3270if/Doxygen.opts -o obj/doxygen/windows/x3270if
+doxygen-x3270:
+	$(DOXY) -p x3270/Doxygen.opts -o obj/doxygen/posix/x3270
+doxygen-x3270if:
+	$(DOXY) -p x3270if/Doxygen.opts -o obj/doxygen/posix/x3270if

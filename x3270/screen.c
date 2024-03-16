@@ -1167,6 +1167,16 @@ inflate_screen(void)
 }
 
 /* Scrollbar support. */
+
+/**
+ * Set the scrollbar thumb.
+ *
+ * @param[in] top	Where the top of the scrollbar should be (percentage)
+ * @param[in] shown	How much of the scrollbar to show (percentage)
+ * @param[in] saved	Number of lines saved
+ * @param[in] screen	Size of a screen
+ * @param[in] back	Number of lines scrolled back
+ */
 void
 screen_set_thumb(float top, float shown, int saved _is_unused,
 	int screen _is_unused, int back _is_unused)
@@ -1820,8 +1830,10 @@ cursor_move(int baddr)
     }
 }
 
-/*
- * Enable or disable cursor display (used by scroll logic)
+/**
+ * Enable or disable the cursor.
+ *
+ * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
 enable_cursor(bool on)
@@ -6956,7 +6968,7 @@ screen_window_number(void)
 }
 
 /**
- * External interface to the SELECTED macro.
+ * Check if an area of the screen is selected.
  *
  * @param[in] baddr	Buffer address.
  *

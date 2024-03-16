@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1095,8 +1095,10 @@ screen_flipped(void)
 
 /* Scrollbar support. */
 
-/*
- * Enable or disable the cursor (scrolling)
+/**
+ * Enable or disable the cursor.
+ *
+ * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
 enable_cursor(bool on)
@@ -1131,7 +1133,6 @@ enable_cursor(bool on)
  * @param[in] saved	Number of lines saved
  * @param[in] screen	Size of a screen
  * @param[in] back	Number of lines scrolled back
- *
  */
 void
 screen_set_thumb(float top, float shown, int saved, int screen, int back)
