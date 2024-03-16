@@ -1,0 +1,3 @@
+PROJECT_NAME="pr3287 (POSIX)"
+INPUT="Common/doxygen/README.md Common/pr3287 Common/xpopen.c include lib/3270stubs lib/include lib/include/unix pr3287"
+EXCLUDE="Common/__init__.py Common/mitm.c Common/mkfb.c Common/mkicon.c Common/mktbl.c Common/playback.c include/globals.h"

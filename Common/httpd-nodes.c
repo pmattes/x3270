@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ extern unsigned favicon_size;
 /**
  * Capture the screen image.
  *
- * @param[in] d		Session handle
+ * @param[in] dhandle	Session handle
  * @param[out] image	Image in HTML, if succeeded; must free when finished
  * @param[out] status	Error code, if failed
  *

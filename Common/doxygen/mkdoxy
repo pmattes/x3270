@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Create Doxygen documentation for one executable
+
+version_txt=./version.txt
+if [ "x$1" = "x-v" ]
+then	shift
+    	version_txt=$1
+	shift
+fi
+tmpl=./Doxyfile.tmpl
+if [ "x$1" = "x-t" ]
+then	shift
+    	tmpl=$1
+	shift
+fi
+opts=./Doxygen.opts
+if [ "x$1" = "x-p" ]
+then	shift
+    	opts=$1
+	shift
+fi
+out=./Doxygen.out
+if [ "x$1" = "x-o" ]
+then	shift
+    	out=$1
+	shift
+fi
+
+set -e
+. $version_txt
+. $opts
+doxyfile=/tmp/doxygen$$
+trap "rm $doxyfile" EXIT
+mkdir -p $out
+sed -e "s/%VERSION%/$version/g" \
+    -e "s/%CYEAR%/$cyear/g" \
+    -e "s/%PROJECT_NAME%/$PROJECT_NAME/" \
+    -e "s~%OUTPUT_DIRECTORY%~$out~" \
+    -e "s~%INPUT%~$INPUT~" \
+    -e "s~%EXCLUDE%~$EXCLUDE~" $tmpl >$doxyfile
+doxygen $doxyfile >/dev/null

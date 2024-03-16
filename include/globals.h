@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -256,30 +256,30 @@ extern xmode_t mode;
 
 /* Data types and complex global variables */
 
-/*   connection state */
+/**   connection state */
 enum cstate {
-    NOT_CONNECTED,	/* no socket, unknown mode */
-    RECONNECTING,	/* delay before automatic reconnect */
-    TLS_PASS,		/* waiting for interactive TLS password */
+    NOT_CONNECTED,	/**< no socket, unknown mode */
+    RECONNECTING,	/**< delay before automatic reconnect */
+    TLS_PASS,		/**< waiting for interactive TLS password */
 
     /* Half-connected states. */
-    RESOLVING,		/* resolving hostname */
-    TCP_PENDING,	/* socket connection pending */
-    TLS_PENDING,	/* TLS negotiation pending */
-    PROXY_PENDING,	/* proxy negotiation pending */
-    TELNET_PENDING,	/* TELNET negotiation pending */
+    RESOLVING,		/**< resolving hostname */
+    TCP_PENDING,	/**< socket connection pending */
+    TLS_PENDING,	/**< TLS negotiation pending */
+    PROXY_PENDING,	/**< proxy negotiation pending */
+    TELNET_PENDING,	/**< TELNET negotiation pending */
 
     /* Connected states. */
-    CONNECTED_NVT,	/* connected in NVT mode */
-    CONNECTED_NVT_CHAR,	/* connected in NVT character-at-a-time mode */
-    CONNECTED_3270,	/* connected in RFC 1576 TN3270 mode */
-    CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
-    CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
-    CONNECTED_SSCP,	/* connected in TN3270E mode, SSCP-LU mode */
-    CONNECTED_TN3270E,	/* connected in TN3270E mode, 3270 mode */
-    NUM_CSTATE		/* number of cstates */
+    CONNECTED_NVT,	/**< connected in NVT mode */
+    CONNECTED_NVT_CHAR,	/**< connected in NVT character-at-a-time mode */
+    CONNECTED_3270,	/**< connected in RFC 1576 TN3270 mode */
+    CONNECTED_UNBOUND,	/**< connected in TN3270E mode, unbound */
+    CONNECTED_E_NVT,	/**< connected in TN3270E mode, NVT mode */
+    CONNECTED_SSCP,	/**< connected in TN3270E mode, SSCP-LU mode */
+    CONNECTED_TN3270E,	/**< connected in TN3270E mode, 3270 mode */
+    NUM_CSTATE		/**< number of cstates */
 };
-extern enum cstate cstate;
+extern enum cstate cstate; /**< connection state */
 
 #define cPCONNECTED(c)	(c > NOT_CONNECTED)
 #define cHALF_CONNECTED(c) (c >= RESOLVING && c < CONNECTED_NVT)
@@ -435,8 +435,8 @@ typedef int iosrc_t;
 typedef HANDLE iosrc_t;
 # define INVALID_IOSRC	INVALID_HANDLE_VALUE
 #endif /*]*/
-typedef uintptr_t ioid_t;
-#define NULL_IOID	0L
+typedef uintptr_t ioid_t;	/**< An I/O callback identifier. */
+#define NULL_IOID	0L	/**< An empty @ref ioid_t. */
 
 /* Screen print types. */
 typedef enum { P_NONE, P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;

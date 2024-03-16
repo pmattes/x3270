@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Paul Mattes.
+ * Copyright (c) 2006-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2497,6 +2497,7 @@ for the printer session.");
  * Prompt for pr3287 session LU name
  *
  * @param[in,out] s	Session
+ * @param[in] explain	True if the screen needs a header
  *
  * @return 0 for success, -1 for failure
  */
@@ -3099,9 +3100,10 @@ static char *how_name[N_SP] = {
  * Prompt for where a session file should go (all-users or current user's
  * Docs).
  *
- * @param[in] s		Session
+ * @param[in] name	Session name
+ * @param[in] def	Default folder
  *
- * @return 0 for success, -1 for failure
+ * @return selected folder
  */
 static src_t
 get_src(const char *name, src_t def)

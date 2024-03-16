@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Paul Mattes.
+ * Copyright (c) 2021-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -349,7 +349,7 @@ ucs4streq(ucs4_t *a, ucs4_t *b)
 /**
  * Format an error message that ends with a Unicode character.
  * @param[in] text	Body of message
- * @param[in] ucs4	Unicode character
+ * @param[in] u		Unicode character
  *
  * @returns Formatted message
  */
@@ -371,7 +371,7 @@ format_uerror(const char *text, ucs4_t u)
  * @param[out] result	Result if successful
  * @param[out] error	Error if not successful
  * @param[out] stop_token Character after this element
- * @param[out] r_any	True if something parsed
+ * @param[out] any	True if something parsed
  * @returns error code
  */
 static json_errcode_t

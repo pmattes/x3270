@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,9 @@
 #include "screen.h"
 
 /**
- * X11 version of the xterm text escape
+ * xterm text escape
  *
- * @param[in] opcode	Operation to perform
+ * @param[in] code	Operation to perform
  * @param[in] text	Associated text
  */
 void

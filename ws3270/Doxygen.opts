@@ -1,0 +1,3 @@
+PROJECT_NAME="s3270 (Windows)"
+INPUT="Common Common/doxygen/README.md Common/s3270 Common/Win32 include lib/include ws3270"
+EXCLUDE="Common/__init__.py Common/mitm.c Common/mkfb.c Common/mkicon.c Common/mktbl.c Common/playback.c Common/Win32/mkmanifest.c Common/Win32/mkversion.c Common/x3270if.c"

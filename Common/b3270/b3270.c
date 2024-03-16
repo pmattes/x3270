@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -961,8 +961,8 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 /**
  * xterm text escape
  *
- * @param[in] opcode    Operation to perform
- * @param[in] text      Associated text
+ * @param[in] code	Operation to perform
+ * @param[in] text	Associated text
  */
 void
 xterm_text_gui(int code, const char *text)

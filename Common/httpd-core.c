@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -188,6 +188,7 @@ status_text(int status_code)
 /**
  * Trace network data.
  *
+ * @param[in] h			Request context
  * @param[in] direction		Descriptive string for data direction
  * @param[in] buf		Data buffer
  * @param[in] len		Length of data
@@ -541,7 +542,7 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
 /**
  * Write the standard trailer.
  *
- * The trailer includes the </body> bracket.
+ * The trailer includes the \</body> bracket.
  *
  * @param[in] h		State
  * @param[in] type	Print type (send or buffer)
@@ -1227,6 +1228,7 @@ httpd_dirlist(httpd_t *h, const char *uri)
  * Look up the value of a field.
  *
  * @param[in] name	Field name
+ * @param[in] f		List of fields to search
  *
  * @return Field value, or NULL
  */
@@ -2305,7 +2307,7 @@ html_quote(const char *text)
 /**
  * Quote a URI. Uses percent encoding.
  *
- * @param[in] uri	URI to quote
+ * @param[in] text	URI to quote
  *
  * @return Expanded URI, needs to be freed afterward
  */

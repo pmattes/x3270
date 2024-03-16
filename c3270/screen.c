@@ -3107,9 +3107,10 @@ screen_final()
 
 /**
  * Check if an area of the screen is selected.
- * This is implemented by wc3270, but not c3270, so it is a stub here.
  *
  * @param[in] baddr	Buffer address.
+ *
+ * @return true if cell is selected
  */
 bool
 screen_selected(int baddr _is_unused)
@@ -3118,7 +3119,7 @@ screen_selected(int baddr _is_unused)
 }
 
 /**
- * Stub for scrollbar function.
+ * Set the scrollbar thumb.
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)
  * @param[in] shown	How much of the scrollbar to show (percentage)
@@ -3133,7 +3134,7 @@ screen_set_thumb(float top _is_unused, float shown _is_unused,
 }
 
 /**
- * Enable or disable the cursor when scrolling.
+ * Enable or disable the cursor.
  *
  * @param[in] on	Enable (true) or disable (false) the cursor display.
  */

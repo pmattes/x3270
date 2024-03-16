@@ -1,0 +1,3 @@
+PROJECT_NAME="c3270"
+INPUT="c3270 Common Common/c3270 Common/doxygen/README.md include lib/include lib/include/unix"
+EXCLUDE="Common/c3270/mkkeypad.c Common/__init__.py Common/mitm.c Common/mkfb.c Common/mkicon.c Common/mktbl.c Common/playback.c Common/s3270.c Common/x3270if.c"

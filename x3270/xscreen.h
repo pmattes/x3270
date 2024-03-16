@@ -31,7 +31,7 @@
  */
 
 /*
- *	xscreen.h
+ *	@file xscreen.h
  *
  *		Screen definitions for x3270.
  */

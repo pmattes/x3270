@@ -41,9 +41,9 @@
 #include "xscreen.h"
 
 /**
- * X11 version of the xterm text escape
+ * xterm text escape
  *
- * @param[in] opcode	Operation to perform
+ * @param[in] code	Operation to perform
  * @param[in] text	Associated text
  */
 void

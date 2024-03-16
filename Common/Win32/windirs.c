@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014-2017, 2019 Paul Mattes.
+ * Copyright (c) 2006-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,10 +138,10 @@ getcwd_bsl(void)
  * @param[out] common_desktop	common desktop directory (or NULL)
  * @param[out] common_appdata	common app-data directory (or NULL)
  * @param[out] documents	My Documents directory (or NULL)
- * @param[out] common_docunents	common Documents directory (or NULL)
- * @param[out] docs3270		My Documents\{appname} directory (or NULL)
- * @param[out] common_docs3270	common Documents\{appname} directory (or NULL)
- * @param[out] flags 		Is the program installed? Does catf,exe exist?
+ * @param[out] common_documents	common Documents directory (or NULL)
+ * @param[out] docs3270		My Documents\\{appname} directory (or NULL)
+ * @param[out] common_docs3270	common Documents\\{appname} directory (or NULL)
+ * @param[out] flags 		Is the program installed? Does catf.exe exist?
  *
  * @returns true for success, false for an unrecoverable error.
  *

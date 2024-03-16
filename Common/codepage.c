@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -360,11 +360,13 @@ get_codepage_name(void)
  *
  * @param[in] name	Toggle name.
  * @param[in] value	New value, might be NULL.
+ * @param[in] flags	Operation flags.
+ * @param[in] ia	Cause of operation.
  *
  * @returns toggle_upcall_ret_t
  */
 static toggle_upcall_ret_t
-toggle_codepage(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
+toggle_codepage(const char *name _is_unused, const char *value, unsigned flags _is_unused, ia_t ia _is_unused)
 {
     enum cs_result result;
 

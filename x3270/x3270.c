@@ -1,4 +1,5 @@
-/*
+/**
+ * @copyright
  * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -29,10 +30,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- *	x3270.c
- *		A 3270 Terminal Emulator for X11
- *		Main proceudre.
+/**
+ *	@file x3270.c
+ *		@par A 3270 Terminal Emulator for X11
+ *		Main procedure.
  */
 
 #include "globals.h"
@@ -211,13 +212,14 @@ XrmOptionDescRec base_options[]= {
 int num_base_options = XtNumber(base_options);
 
 XrmOptionDescRec *options;
-int num_options;
+int num_options; /**< number of options */
 
+/** Option help. */
 static struct option_help {
-    char *opt;
-    char *args;
-    char *help;
-    unsigned tls_flag;
+    char *opt;		/**< option name */
+    char *args;		/**< arguments or NULL */
+    char *help;		/**< help text */
+    unsigned tls_flag;	/**< flags for conditional TLS options */
 } option_help[] = {
     { OptAcceptHostname, "[DNS:]<name>",
 	"Host name to accept from server certificate",
@@ -1330,13 +1332,21 @@ copy_xres_to_res_bool(void)
 }
 
 /* Child exit callbacks. */
+
+/** Child exit state */
 typedef struct child_exit {
-    struct child_exit *next;
-    pid_t pid;
-    childfn_t proc;
+    struct child_exit *next;	/**< Linkage. */
+    pid_t pid;			/**< Child process ID. */
+    childfn_t proc;		/**< Function to call on exit.  */
 } child_exit_t;
 static child_exit_t *child_exits = NULL;
 
+/**
+ * Add a function to be called when a child exits.
+ * @param[in] pid	Child process ID.
+ * @param[in] fn	Function to call on exit.
+ * @return @ref ioid_t to identify this callback
+ */
 ioid_t
 AddChild(pid_t pid, childfn_t fn)
 {
@@ -1352,6 +1362,10 @@ AddChild(pid_t pid, childfn_t fn)
     return (ioid_t)cx;
 }
 
+
+/**
+ * Poll for exited children and call registered callbacks.
+ */
 static void
 poll_children(void)
 {

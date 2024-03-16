@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ int our_major, our_minor, our_iteration;
 
 /**
  * Parse a version number.
+ * @verbatim
  * Version numbers are of the form: <major>.<minor>text<iteration>, such as
  *  3.4ga10 (3, 4, 10)
  *  3.5apha3 (3, 5, 3)
@@ -46,6 +47,7 @@ int our_major, our_minor, our_iteration;
  *  3.4 (3, 4, 0)
  *  3 (3, 0, 0)
  * Numbers are limited to 0..999.
+ * @endverbatim
  * @param[in] text		String to decode.
  * @param[out] major		Major number.
  * @param[out] minor		Minor number.
