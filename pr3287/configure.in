@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2023 Paul Mattes.
+dnl Copyright (c) 2000-2024 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -61,38 +61,6 @@ AC_SEARCH_LIBS(socket, socket)
 
 dnl Checks for header files.
 AC_CHECK_HEADERS(iconv.h)
-
-dnl Check for SSL header file.
-AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
-if test "$enable_tls" != no
-then	orig_CPPFLAGS="$CPPFLAGS"
-	unset any
-	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
-	do	header_fail=0
-		if test -n "$dir" -a ! -d "$dir/include"
-		then	header_fail=1
-			continue
-		fi
-		if test -n "$any"
-		then	AC_MSG_NOTICE(retrying with -I$dir/include)
-		fi
-		if test -n "$dir"
-		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
-		fi
-		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
-		if test "$header_fail" -eq 0
-		then	break
-		fi
-		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
-		CPPFLAGS="$orig_CPPFLAGS"
-		any=1
-	done
-	if test $header_fail -eq 1
-	then	AC_MSG_WARN(Disabling TLS)
-		enable_tls="no"
-		unset HAVE_LIBSSL
-	fi
-fi
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
