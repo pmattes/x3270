@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2023 Paul Mattes.
+dnl Copyright (c) 2000-2024 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,12 @@ solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
+		dnl Find Homebrew.
+		if test -d /opt/homebrew/opt; then
+		 HOMEBREW=/opt/homebrew/opt
+	        elif test -d /usr/local/opt; then
+		 HOMEBREW=/usr/local/opt
+		fi
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
@@ -71,7 +77,14 @@ AC_SUBST(BUILDCC)
 dnl Checks for header files.
 AC_CHECK_HEADERS(sys/select.h)
 if test "$with_readline" != no; then
-AC_CHECK_HEADERS(readline/history.h)
+ if test -n "$with_readline" -a "$with_readline" != yes; then
+  dnl Use the specified readline install path.
+  CPPFLAGS="$CPPFLAGS -I${with_readline}/include"
+ elif test -n "$HOMEBREW" -a -d "$HOMEBREW/readline/include"; then
+  dnl Use the Homebrew readline install path.
+  CPPFLAGS="$CPPFLAGS -I$HOMEBREW/readline/include"
+ fi
+ AC_CHECK_HEADERS(readline/history.h)
 fi
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
@@ -87,8 +100,8 @@ AC_CHECK_HEADERS(ncursesw/term.h, ,
  [AC_CHECK_HEADERS(ncurses/term.h, ,
   [AC_CHECK_HEADERS(term.h)])])
 
-dnl Check for --without-readline
-AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library])
+dnl Check for --without-readline or --with-readline=
+AC_ARG_WITH(readline, [  --with-readline=path    use specific readline package (or specify =no)])
 
 dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear
@@ -98,7 +111,14 @@ AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(newterm, ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
 AC_SEARCH_LIBS(setupterm, tinfow tinfo, , [AC_MSG_ERROR(Can't find terminfo library)])
 if test "$with_readline" != no; then
-AC_CHECK_LIB(readline, rl_initialize)
+ if test -n "$with_readline" -a "$with_readline" != yes; then
+  dnl Use the speficied readline install path.
+  LDFLAGS="$LDFLAGS -L${with_readline}/lib"
+ elif test -n "$HOMEBREW" -a -d $HOMEBREW/readline/lib; then
+  dnl Use the Homebrew readline install path.
+  LDFLAGS="$LDFLAGS -L$HOMEBREW/readline/lib"
+ fi
+ AC_CHECK_LIB(readline, rl_initialize)
 fi
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)

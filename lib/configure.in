@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2023 Paul Mattes.
+dnl Copyright (c) 2000-2024 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,11 @@ solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+		if test -d /opt/homebrew/opt; then
+		 HOMEBREW=/opt/homebrew/opt
+		elif test -d /usr/local/opt; then
+		 HOMEBREW=/usr/local/opt
+		fi
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
@@ -75,9 +80,9 @@ AC_CHECK_HEADERS(langinfo.h)
 use_openssl=yes
 
 AC_ARG_ENABLE(tls,[  --disable-tls           leave out TLS support])
-AC_ARG_ENABLE(stransport,[  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (MacOS)])
+AC_ARG_ENABLE(stransport,[  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (macOS)])
 if test -z "$mac_os" -a -n "$enable_stransport"
-then	AC_MSG_ERROR(--enable-stransport/--disable-stransport is only for MacOS);
+then	AC_MSG_ERROR(--enable-stransport/--disable-stransport is only for macOS);
 fi
 if test "$enable_stransport" = yes
 then	use_openssl=no
@@ -98,6 +103,11 @@ AC_ARG_WITH(openssl,[  --with-openssl=DIR      specify OpenSSL install directory
 if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
+	if test -z "$with_openssl" -o "$with_openssl" = yes; then
+	 if test -n "$HOMEBREW" -a -d $HOMEBREW/openssl; then
+	  with_openssl=$HOMEBREW/openssl
+	 fi
+	fi
 	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl /opt/local/include/openssl-3
 	do	header_fail=0
 		if test -n "$dir"
