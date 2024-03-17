@@ -1362,7 +1362,7 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-tls           leave out TLS support
-  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (MacOS)
+  --enable-stransport     use Secure Transport instead of OpenSSL for TLS (macOS)
   --enable-mock-tls       use TLS mock for testing
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
@@ -4014,6 +4014,11 @@ solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
+		if test -d /opt/homebrew; then
+		 HOMEBREW=/opt/homebrew
+		elif test -d /usr/local/opt; then
+		 HOMEBREW=/usr/local/opt
+		fi
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
@@ -4130,7 +4135,7 @@ then :
 fi
 
 if test -z "$mac_os" -a -n "$enable_stransport"
-then	as_fn_error $? "--enable-stransport/--disable-stransport is only for MacOS" "$LINENO" 5;
+then	as_fn_error $? "--enable-stransport/--disable-stransport is only for macOS" "$LINENO" 5;
 fi
 if test "$enable_stransport" = yes
 then	use_openssl=no
@@ -4160,6 +4165,11 @@ fi
 if test "$use_openssl" != no
 then	orig_CPPFLAGS="$CPPFLAGS"
 	unset any
+	if test -z "$with_openssl" -o "$with_openssl" = yes; then
+	 if test -n "$HOMEBREW" -a -d $HOMEBREW/openssl; then
+	  with_openssl=$HOMEBREW/openssl
+	 fi
+	fi
 	for dir in "$with_openssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl /usr/local/opt/openssl /opt/local/include/openssl-3
 	do	header_fail=0
 		if test -n "$dir"
