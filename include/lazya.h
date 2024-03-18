@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,4 +33,4 @@
 char *lazya(void *buf);
 char *lazyaf(const char *fmt, ...) printflike(1, 2);
 char *vlazyaf(const char *fmt, va_list args);
-void lazya_flush();
+void lazya_flush(void);

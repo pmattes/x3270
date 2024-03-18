@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2022 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -126,7 +126,7 @@ static void interactive_io(int port, const char *emulator_name,
 	const char *help_name, const char *localization);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-static char **attempted_completion();
+static char **attempted_completion(const char *text, int start, int end);
 static char *completion_entry(const char *, int);
 #endif /*]*/
 

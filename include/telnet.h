@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -74,7 +74,7 @@ const char *net_proxy_host(void);
 const char *net_proxy_port(void);
 bool net_bound(void);
 extern bool linemode;
-bool net_secure_connection();
+bool net_secure_connection(void);
 void net_set_default_termtype(void);
 bool net_secure_unverified(void);
 const char *net_server_cert_info(void);

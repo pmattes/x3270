@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -642,8 +642,8 @@ dump_scs_line(bool reset_pp, bool always_nl)
      */
     if (i >= 1) {
 	int j;
-	int n_data = 0;
 #if defined(DEBUG_FF) /*[*/
+	int n_data = 0;
 	int n_trn = 0;
 #endif /*]*/
 	int k;
@@ -673,7 +673,9 @@ dump_scs_line(bool reset_pp, bool always_nl)
 		if (linebuf[j] == FCORDER_NOP) {
 		    continue;
 		}
+#if defined(DEBUG_FF) /*[*/
 		n_data++;
+#endif /*]*/
 		any_data = true;
 		scs_any = true;
 #if !defined(_WIN32) /*[*/
@@ -725,7 +727,9 @@ dump_scs_line(bool reset_pp, bool always_nl)
 static int
 scs_formfeed(bool explicit)
 {
+#if defined(DEBUG_FF) /*[*/
     int nls = 0;
+#endif /*]*/
 
     /*
      * In ffskip mode, if it's an explicit formfeed, and we haven't
@@ -764,7 +768,9 @@ scs_formfeed(bool explicit)
 	    if (stash('\n') < 0) {
 		return -1;
 	    }
+#if defined(DEBUG_FF) /*[*/
 	    nls++;
+#endif /*]*/
 	    line++;
 	}
 	line = 1;
@@ -779,7 +785,9 @@ scs_formfeed(bool explicit)
 	    if (stash('\n') < 0) {
 		return -1;
 	    }
+#if defined(DEBUG_FF) /*[*/
 	    nls++;
+#endif /*]*/
 	    line++;
 	}
 #if defined(DEBUG_FF) /*[*/

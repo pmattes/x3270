@@ -117,7 +117,7 @@ extern XIM im;
 extern XIC ic;
 extern bool xim_error;
 
-char *display_charset();
+char *display_charset(void);
 void font_init(void);
 void icon_init(void);
 void PA_ConfigureNotify_xaction(Widget w, XEvent *event, String *params,

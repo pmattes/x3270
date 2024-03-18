@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -721,7 +721,7 @@ revert_early(void)
 
 /* Keyboard disable flash. */
 void
-status_keyboard_disable_flash()
+status_keyboard_disable_flash(void)
 {
     if (keyboard_disabled()) {
 	if (oia_msg == KBD_DISABLED) {

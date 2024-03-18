@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -208,7 +208,6 @@ add_tls_resources(void)
     unsigned n_tls_res = 0;
     res_t *tls_res;
     int add_ix = 0;
-    int i;
 
     /* Fetch the list from the implementation. */
     unsigned supported_options = sio_all_options_supported();
@@ -233,7 +232,6 @@ add_tls_resources(void)
 
     /* Construct the list of resources to add. */
     tls_res = (res_t *)Malloc(n_tls_res * sizeof(res_t));
-    i = 0;
     FOREACH_TLS_OPTS(opt) {
 	if (supported_options & opt) {
 	    int j;
@@ -244,7 +242,6 @@ add_tls_resources(void)
 		}
 	    }
 	}
-	i++;
     } FOREACH_TLS_OPTS_END(opt);
 
     /* Add them. */

@@ -1,7 +1,7 @@
 /*
  * (from) $XConsortium: SmeP.h,v 1.4 89/12/11 15:20:22 kit Exp $
  *
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2024, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -81,9 +81,9 @@
  ************************************************************/
 
 typedef struct _CmeClassPart {
-  void (*highlight)();
-  void (*unhighlight)();
-  void (*notify)();	
+  void (*highlight)(Widget);
+  void (*unhighlight)(Widget);
+  void (*notify)(Widget);	
   XtPointer extension;
 } CmeClassPart;
 

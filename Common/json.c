@@ -1251,7 +1251,7 @@ json_object(void)
  * @returns array
  */
 json_t *
-json_array()
+json_array(void)
 {
     json_t *j = Calloc(1, sizeof(json_t));
 

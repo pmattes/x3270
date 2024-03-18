@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,4 +34,4 @@ void pr3287_session_register(void);
 void pr3287_session_start(const char *lu);
 void pr3287_session_stop(void);
 bool pr3287_session_running(void);
-const char *pr3287_session_lu();
+const char *pr3287_session_lu(void);

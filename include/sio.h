@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2023 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ typedef void *sio_t;
 
 /* Implemented in common code. */
 const char *sio_last_error(void);
-unsigned sio_all_options_supported();
+unsigned sio_all_options_supported(void);
 
 /* Implemented in platform-specific code. */
 bool sio_supported(void);

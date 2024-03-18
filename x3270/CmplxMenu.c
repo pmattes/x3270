@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SimpleMenu.c,v 1.41 92/09/10 16:25:07 converse Exp $ */
 
 /*
- * Copyright (c) 1995-2009, 2013-2014, 2019 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -159,7 +159,8 @@ static void Highlight(Widget, XEvent *, String *, Cardinal *);
  * Private Function Definitions.
  */
 
-static void Unhighlight(), Notify();
+static void Unhighlight(Widget, XEvent *, String *, Cardinal *);
+static void Notify(Widget, XEvent *, String *, Cardinal *);
 static void MakeSetValuesRequest(Widget, Dimension, Dimension);
 static void Layout(Widget, Dimension *, Dimension *);
 static void CreateLabel(Widget);

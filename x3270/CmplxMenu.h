@@ -1,7 +1,7 @@
 /*
  * (from) $XConsortium: SimpleMenu.h,v 1.20 91/02/17 13:18:55 rws Exp $
  *
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2024, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,8 @@
 #include <X11/Shell.h>
 #include <X11/Xmu/Converters.h>
 #include <X11/Xfuncproto.h>
+
+#define NeedFunctionPrototypes 1
 
 /****************************************************************
  *
