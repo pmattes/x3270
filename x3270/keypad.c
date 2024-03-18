@@ -789,13 +789,21 @@ keypad_first_up(void)
     popup_popup(keypad_shell, XtGrabNone);
 }
 
+/* Destroy the keypad shell, when idle. */
+static Boolean
+destroy_keypad_shell(XtPointer client_data)
+{
+    XtDestroyWidget((Widget)client_data);
+    return True;
+}
+
 /* Called when the keypad popup pops up or down */
 static void
 keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 {
     xappres.keypad_on = keypad_popped = *(bool *)client_data;
     if (!keypad_popped) {
-	XtDestroyWidget(keypad_shell);
+	XtAppAddWorkProc(appcontext, destroy_keypad_shell, (XtPointer)keypad_shell);
 	keypad_shell = NULL;
 	keypad_container = NULL;
 	key_pad = NULL;
