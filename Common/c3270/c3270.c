@@ -151,7 +151,7 @@ static bool merge_profile(void);
 #endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-static char **attempted_completion();
+static char **attempted_completion(const char *text, int start, int end);
 static char *completion_entry(const char *, int);
 static char *readline_command;
 static bool readline_done = false;

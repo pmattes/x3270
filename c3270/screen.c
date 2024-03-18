@@ -3096,7 +3096,7 @@ display_ge(unsigned char ebc)
 }
 
 void
-screen_final()
+screen_final(void)
 {
     char *cl;
 

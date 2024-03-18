@@ -1699,7 +1699,7 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
  * Initialize the UI socket.
  */
 void
-ui_io_init()
+ui_io_init(void)
 {
     /* See if we need to call out or use stdin/stdout. */
     if (appres.scripting.callback != NULL) {

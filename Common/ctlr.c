@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -594,7 +594,7 @@ ctlr_erase(bool alt)
 
 /* Restore the keyboard. */
 static void
-restore_keyboard()
+restore_keyboard(void)
 {
     aid = AID_NO;
     do_reset(false);

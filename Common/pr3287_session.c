@@ -1268,7 +1268,7 @@ pr3287_kill(ioid_t id _is_unused)
 
 /* Close the printer session. */
 void
-pr3287_session_stop()
+pr3287_session_stop(void)
 {
     switch (pr3287_state) {
     case PRS_DELAY:

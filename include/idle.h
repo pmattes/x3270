@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2002-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@ enum idle_enum {
 void cancel_idle_timer(void);
 void idle_init(void);
 void reset_idle_timer(void);
-char *get_idle_command();
-char *get_idle_timeout();
+char *get_idle_command(void);
+char *get_idle_timeout(void);
 extern bool idle_changed;
 extern char *idle_command;
 extern char *idle_timeout_string;

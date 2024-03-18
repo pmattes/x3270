@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,4 +58,4 @@ void PA_End_xaction(Widget w, XEvent *event, String *params,
 void PA_KeymapTrace_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 bool temporary_keymap(const char *k);
-void keymap_register();
+void keymap_register(void);

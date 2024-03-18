@@ -4320,7 +4320,7 @@ kybd_bid(bool signal _is_unused)
 
 /* Process a TN3270E SEND-DATA indication. */
 void
-kybd_send_data()
+kybd_send_data(void)
 {
     kybdlock_clr(KL_BID, "kybd_send_data");
     vstatus_reset();

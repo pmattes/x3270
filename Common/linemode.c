@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -119,7 +119,7 @@ just_ctl_see(int c)
  * @return number of UCS4 characters.
  */
 static int
-expand_lbuf()
+expand_lbuf(void)
 {
     size_t len = lbptr - lbuf;
     unsigned char *xbptr = lbuf;
