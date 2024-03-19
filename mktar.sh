@@ -12,7 +12,8 @@ trap exit INT
 mkdir -p $tardir
 
 # Create a git archive and dump it into the temporary directory.
-git archive --format=tar HEAD | (cd $tardir && tar -xf -)
+# Exclude the Webpage folder (its hard links cause issues) and anything starting with .git.
+git archive --format=tar HEAD | (cd $tardir && tar --exclude=Webpage "--exclude=.git*" -xf -)
 
 # Add submodules.
 for mod in $(git submodule | awk '{print $2}')
@@ -20,4 +21,5 @@ do	tar -cf - "--exclude=.git*" $mod | (cd $tardir && tar -xf -)
 done
 
 # Create an archive of the result.
-(cd $tmpdir && tar -czf - *) >suite3270-$version-src.tgz
+# Dereference soft and hard links, so this file can be expanded on platforms like MSYS2.
+(cd $tmpdir && tar --dereference --hard-dereference -czf - *) >suite3270-$version-src.tgz
