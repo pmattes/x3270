@@ -1,5 +1,5 @@
 '\" t
-.TH b3270 1 "22 January 2023"
+.TH b3270 1 "20 March 2024"
 .SH "NAME"
 b3270 \-
 \s-1IBM\s+1 host access tool
@@ -22,4 +22,4 @@ and supports IND$FILE file transfer.
 .SH "WIKI"
 Primary documentation for b3270 is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-b3270 4.3pre1
+b3270 4.4pre1
