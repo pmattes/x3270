@@ -12,8 +12,9 @@ trap exit INT
 mkdir -p $tardir
 
 # Create a git archive and dump it into the temporary directory.
-# Exclude the Webpage folder (its hard links cause issues) and anything starting with .git.
-git archive --format=tar HEAD | (cd $tardir && tar --exclude=Webpage "--exclude=.git*" -xf -)
+# Exclude some pages from the Webpage folder (its hard links to nonexistent files cause issues while flattening) and anything
+# starting with .git.
+git archive --format=tar HEAD | (cd $tardir && tar --exclude"=.git*" --exclude="*-man.html" --exclude=ibm_hosts.html -xf -)
 
 # Add submodules.
 for mod in $(git submodule | awk '{print $2}')
