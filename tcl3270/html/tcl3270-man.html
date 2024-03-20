@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>tcl3270 Manual Page</title>
+<link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+<h1>tcl3270 Manual Page</h1>
+<hr>
+<p><b>Note:</b> This page is no longer being maintained for tcl3270 4.0 and later.
+Please refer to the <a href="https://x3270.miraheze.org/wiki/Main_Page">the x3270 Wiki</a> for up-to-date documentation.</p>
+<hr>
+<h2>Contents</h2>
+<blockquote>
+<a HREF="#Name">Name</a><br>
+<a HREF="#Synopsis">Synopsis</a><br>
+<a HREF="#Description">Description</a><br>
+<a HREF="#tcl3270-Specific-Options">tcl3270-Specific Options</a><br>
+<a HREF="#See-Also">See Also</a><br>
+<a HREF="#Wiki">Wiki</a><br>
+<a HREF="#Version">Version</a><br>
+</blockquote>
+<a NAME="Name"></a><h2>Name</h2>
+tcl3270 -
+<font size=-1>IBM</font> host access tool
+<a NAME="Synopsis"></a><h2>Synopsis</h2>
+<b>tcl3270</b>
+[<i>script</i> [<i>script-arg...</i>]] [-- [<i>tcl3270-options</i>] [<i>s3270-options</i>] [<i>host</i>]
+<br>
+<b>tcl3270</b>
+[<i>script</i> [<i>script-arg...</i>]] [-- [<i>tcl3270-options</i>] [<i>s3270-options</i>] [<i>session-file</i>.tcl3270]
+<br>
+<b>tcl3270</b> -v
+<br>
+<b>tcl3270</b> --help
+<a NAME="Description"></a><h2>Description</h2>
+<b>tcl3270</b> opens a telnet connection to an <font size=-1>IBM</font>
+host, then allows a Tcl script to control the host login session.
+It is derived from
+<a HREF="s3270-man.html"><i>s3270</i>(1)</a>,
+a script-based IBM 3270 emulator.
+<p>
+For each action supported by s3270, tcl3270 defines a
+correcponding Tcl command.
+The result of the Tcl command is the output of the s3270 action.
+If the output is one line, the result is a string.
+If the output is multiple lines, the result is a list of strings.
+<p>
+On the command line, a session file can be named either
+<i>name</i>.<b>tcl3270</b> or <i>name</i>.<b>s3270</b>.
+Resource values, such as those used in <b>-xrm</b> options or in a
+session file, can be specified as <b>tcl3270</b>.<i>resource</i> or
+<b>s3270</b>.<i>resource</i>.
+<a NAME="tcl3270-Specific-Options"></a><h2>tcl3270-Specific Options</h2>
+<dt><b>-d</b></dt><dd>
+Turns on debugging information, tracing data going between tcl3270 and
+s3270.
+<a NAME="See-Also"></a><h2>See Also</h2>
+<a HREF="s3270-man.html">s3270(1)</a>
+<a NAME="Wiki"></a><h2>Wiki</h2>
+Primary documentation for tcl3270 is on the <b>x3270 Wiki</b>, <a HREF="https://x3270.miraheze.org/wiki/Main_Page">https://x3270.miraheze.org/wiki/Main_Page</a>.
+<a NAME="Version"></a><h2>Version</h2>
+tcl3270 4.3pre7
+<hr>
+<i>
+This HTML document and the accompanying troff document were generated with
+a set of write-only <b>m4</b> macros and the powerful <b>vi</b> editor.
+<br>Last modified 20 March 2024.
+</i>
+</body>
+</html>
