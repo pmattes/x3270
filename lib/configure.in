@@ -48,11 +48,10 @@ solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
-		if test -d /opt/homebrew/opt; then
-		 HOMEBREW=/opt/homebrew/opt
-		elif test -d /usr/local/opt; then
-		 HOMEBREW=/usr/local/opt
-		fi
+		case "$build" in
+		a*) if test -d /opt/homebrew/opt; then HOMEBREW=/opt/homebrew/opt; fi ;;
+		x*) if test -d /usr/local/opt; then HOMEBREW=/usr/local/opt; fi ;;
+                esac
 		mac_os=1
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE"
