@@ -2886,7 +2886,7 @@ static ucs4_t oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
-static char oia_timing[7]; /* :ss.s*/
+static char oia_timing[6]; /* :ss.s*/
 static char oia_screentrace = ' ';
 static char oia_script = ' ';
 
@@ -3139,18 +3139,19 @@ status_timing(struct timeval *t0, struct timeval *t1)
     static char no_time[] = ":??.?";
 
     if (t1->tv_sec - t0->tv_sec > (99*60)) {
-	strcpy(oia_timing, no_time);
+	strncpy(oia_timing, no_time, sizeof(oia_timing));
     } else {
 	unsigned long cs;	/* centiseconds */
 
 	cs = (t1->tv_sec - t0->tv_sec) * 10 +
 	     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
 	if (cs < CM) {
-	    sprintf(oia_timing, ":%02ld.%ld", cs / 10, cs % 10);
+	    snprintf(oia_timing, sizeof(oia_timing), ":%02ld.%ld", cs / 10, cs % 10);
 	} else {
-	    sprintf(oia_timing, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
+	    snprintf(oia_timing, sizeof(oia_timing), "%02ld:%02ld", cs / CM, (cs % CM) / 10);
 	}
     }
+    oia_timing[sizeof(oia_timing) - 1] = '\0';
 }
 
 void
