@@ -48,3 +48,9 @@ Compress-Archive -Path $zip64 -DestinationPath wx3270-$version-extern-64.zip
 Write-Host -ForegroundColor Green 'Running Inno Setup'
 $signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr $timestamp /fd SHA256 `$p" + '"'
 & $inno $signparm /Qp wc3270.iss
+
+# Archive to bgp.nu and moby.
+$v=[int[]]($version -split "\." -replace "[a-z].*", "")
+$vdir="{0:D2}.{1:D2}" -f @($v)
+& scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip bgp.nu:www/download/$vdir/
+& scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip 10.0.0.12:gr/
