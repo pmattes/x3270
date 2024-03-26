@@ -2815,7 +2815,7 @@ get_font(session_t *s)
     ch.lStructSize = sizeof(ch);
     ch.lpLogFont = &lf;
     ch.Flags = CF_INITTOLOGFONTSTRUCT | CF_FIXEDPITCHONLY | CF_FORCEFONTEXIST |
-	CF_TTONLY | CF_LIMITSIZE;
+	CF_TTONLY | CF_LIMITSIZE | CF_NOSCRIPTSEL | CF_NOVERTFONTS;
     ch.nSizeMin = 5;
     ch.nSizeMax = 72;
     memset(&lf, 0, sizeof(lf));
@@ -3163,15 +3163,14 @@ weight_name(int weight)
 	{ 0, NULL },
     };
     int i;
-    static char unk[64];
 
     for (i = 0; names[i].name != NULL; i++) {
-	if (weight == names[i].weight) {
+	if (weight == names[i].weight ||
+		(names[i + 1].name != NULL && weight < names[i + 1].weight)) {
 	    return names[i].name;
 	}
     }
-    snprintf(unk, sizeof(unk), "%d", weight);
-    return unk;
+    return "Black";
 }
 
 /**
