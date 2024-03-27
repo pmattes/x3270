@@ -4945,5 +4945,5 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
 bool
 task_kbwait_state(void)
 {
-    return KBWAIT != 0;
+    return kybdlock != 0;
 }
