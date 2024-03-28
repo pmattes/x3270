@@ -49,7 +49,7 @@ class TestC3270AltQ(cti.cti):
             # Child process
             ts.close()
             os.execvp(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-trace', '-httpd', f'127.0.0.1:{c3270_port}', '-e', '/bin/sh']))
+                cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', '-e', '/bin/sh']))
             self.assertTrue(False, 'c3270 did not start')
 
         # Parent process.
