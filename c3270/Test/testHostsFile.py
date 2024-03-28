@@ -60,7 +60,7 @@ class TestC3270HostsFile(cti.cti):
             os.execvp(cti.vgwrap_ecmd('c3270'),
                 cti.vgwrap_eargs(['c3270', '-model', '2', "-utf8",
                     '-httpd', str(hport), '-secure',
-                    '-set', f'hostsFile={name}', '-trace']))
+                    '-set', f'hostsFile={name}']))
             self.assertTrue(False, 'c3270 did not start')
         self.check_listen(hport)
         ts.close()
