@@ -61,7 +61,7 @@ class TestS3270ft(cti.cti):
             # Verify what it says.
             stdout = s3270.communicate()[0].decode().split('\n')
             self.assertEqual('data: Transfer complete, 19925 bytes transferred', stdout[0])
-            self.assertTrue('Mbytes/sec in DFT mode' in stdout[1])
+            self.assertTrue('bytes/sec in DFT mode' in stdout[1])
             self.assertEqual('ok', stdout[3])
 
         # Wait for the process to exit.

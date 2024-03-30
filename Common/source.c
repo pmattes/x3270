@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,6 +98,7 @@ static void
 free_source(source_t *s)
 {
     Replace(s->name, NULL);
+    Replace(s->result, NULL);
     Free(s);
     disable_keyboard(ENABLE, IMPLICIT, AnSource "() completion");
 }

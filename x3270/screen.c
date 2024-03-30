@@ -2012,12 +2012,13 @@ Redraw_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /* Split a font name into parts. */
 static int
-split_name(const char *name, char res[15][256])
+split_name(const char *name, char res[15][256], size_t size)
 {
     int ns;
     const char *dash;
     const char *s;
 
+    memset(res, 0, size);
     ns = 0;
     s = name;
     while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
@@ -2127,7 +2128,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	    efont_scale_size - 1UL;
 
 	if (efont_is_scalable) {
-	    split_name(full_efontname, res);
+	    split_name(full_efontname, res, sizeof(res));
 	    vb_init(&r);
 	    for (i = 0; i < 15; i++) {
 		switch (i) {
@@ -5141,7 +5142,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     char *fe = NULL;
     char *font_charset = NULL;
     unsigned long pixel_size = 0;
-    char *full_font;
+    char *full_font = NULL;
 
     if (XGetFontProperty(f, a_registry, &svalue)) {
 	family_name = XGetAtomName(display, svalue);
@@ -5190,6 +5191,9 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 
     Replace(efontname, XtNewString(ef));
     Replace(full_efontname, XtNewString(full_font? full_font: fef));
+    if (full_font != NULL) {
+	XFree(full_font);
+    }
     Replace(efont_charset, font_charset);
     efont_is_scalable = getenv("NOSCALE")? false:
 	check_scalable(full_efontname);
@@ -5781,14 +5785,16 @@ init_rsfonts(char *charset_name)
     /* Clear the old lists. */
     while (rsfonts != NULL) {
 	r = rsfonts->next;
+	Free(rsfonts->name);
 	Free(rsfonts);
 	rsfonts = r;
     }
     while (font_list != NULL) {
 	f = font_list->next;
-	if (font_list->parents) {
-	    Free(font_list->parents);
+	if (font_list->parents != NULL) {
+	    free_parents(font_list->parents);
 	}
+	Free(font_list->label);
 	Free(font_list->mlabel);
 	Free(font_list->font);
 	Free(font_list);
@@ -5953,7 +5959,7 @@ find_next_variant(const char *font_name, void **dp, int *size)
     dfc_t **xdp = (dfc_t **)dp;
 
     /* Split out the fields for this font. */
-    split_name(font_name, res);
+    split_name(font_name, res, sizeof(res));
 
     for (d = *xdp? (*xdp)->next: dfc; d != NULL; d = d->next) {
 	bool matches = true;
@@ -5963,7 +5969,7 @@ find_next_variant(const char *font_name, void **dp, int *size)
 	if (!strcasecmp(font_name, d->name) || !d->good) {
 	    continue;
 	}
-	split_name(d->name, res_check);
+	split_name(d->name, res_check, sizeof(res_check));
 	for (i = 0; matches && i < 15; i++) {
 	    switch (i) {
 	    case 7:
@@ -6027,7 +6033,7 @@ do_resize(void)
 	drc_t *d;
 
 	/* Construct the cache key. */
-	split_name(full_efontname, res);
+	split_name(full_efontname, res, sizeof(res));
 	vb_init(&rv);
 	for (i = 0; i < 7; i++) {
 	    vb_appendf(&rv, "%s%s", dash, res[i]);
@@ -6107,7 +6113,7 @@ do_resize(void)
 		int count;
 		XFontStruct *fs;
 
-		split_name(full_efontname, res);
+		split_name(full_efontname, res, sizeof(res));
 		vb_init(&rv);
 		dash = "";
 		for (i = 0; i < 15; i++) {
@@ -6727,7 +6733,7 @@ dfc_init(void)
     }
     for (i = 0; i < count; i++) {
 	/* Pick apart the font names. */
-	int nf = split_name(namelist[i], nl_arr);
+	int nf = split_name(namelist[i], nl_arr, sizeof(nl_arr));
 	int good = true;
 
 	if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
@@ -6847,7 +6853,7 @@ check_scalable(const char *font_name)
     dfc_t *d;
 
     /* Construct the target names. */
-    split_name(font_name, res);
+    split_name(font_name, res, sizeof(res));
     vb_init(&r1);
     vb_init(&r2);
     for (i = 0; i < 15; i++) {
@@ -6889,7 +6895,7 @@ check_variants(const char *font_name)
     dfc_t *d;
 
     /* Split out the fields for this font. */
-    split_name(font_name, res);
+    split_name(font_name, res, sizeof(res));
 
     for (d = dfc; d != NULL; d = d->next) {
 	bool matches = true;
@@ -6899,7 +6905,7 @@ check_variants(const char *font_name)
 	if (!strcasecmp(font_name, d->name)) {
 	    continue;
 	}
-	split_name(d->name, res_check);
+	split_name(d->name, res_check, sizeof(res_check));
 	for (i = 0; matches && i < 15; i++) {
 	    switch (i) {
 		case 7:
@@ -6940,7 +6946,7 @@ find_variant(const char *font_name, bool bigger)
     int p;
 
     /* Split out the fields for this font and find its size. */
-    split_name(font_name, res);
+    split_name(font_name, res, sizeof(res));
     psize = atoi(res[7]);
 
     /* Find the best match. */

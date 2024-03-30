@@ -40,10 +40,18 @@ class valpass():
         'calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:__gai_notify_only:__gai_notify:handle_requests:start_thread',
         'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current:__res_vinit:maybe_init:context_get:context_get:__resolv_context_get:gaih_inet.constprop.0:getaddrinfo:handle_requests:start_thread',
         'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current:__res_vinit:maybe_init:context_get:context_get:__resolv_context_get:gethostbyname2_r:gaih_inet.constprop.0:getaddrinfo:handle_requests:start_thread',
+        'calloc:calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:__gai_create_helper_thread:__gai_enqueue_request:getaddrinfo_a',
+        'calloc:calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:__gai_notify_only:__gai_notify',
         # Bad read from gmtime().
         'getenv:tzset_internal:__tz_convert:get_utc_time:',
         # This is necessary so c3270 can call setupterm separately.
         'calloc:_nc_setupterm:',
+        'malloc:strdup:???:_nc_tiparm:newterm_sp:newterm',
+        'malloc:strdup:???:_nc_tiparm:???:newterm_sp:newterm',
+        'malloc:tsearch:???:_nc_tiparm:newterm_sp:newterm',
+        'malloc:tsearch:???:_nc_tiparm:???:newterm_sp:newterm',
+        'calloc:???:_nc_tiparm:newterm_sp:newterm',
+        'calloc:???:_nc_tiparm:???:newterm_sp:newterm',
         # This one seems to be some confusion on valgrind's part. I could be wrong about it.
         'malloc:__vasprintf_internal:xs_vbuffer:xs_buffer:prompt_init:',
         # These are possibly lost by the Tcl library.
@@ -58,6 +66,15 @@ class valpass():
         # Apparent bug in getenv().
         'getenv:__gconv_load_cache',
         'getenv:_rl_init_locale',
+        # XML parser.
+        'free:free_res:__libc_freeres:_vgnU_freeres:__run_exit_handlers',
+        # Async address lookup.
+        'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current',
+        # TCL.
+        'calloc:calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:tcl3270_main:Tcl_AppInit:Tcl_MainEx:main',
+        # More ncurses.
+        'malloc:tsearch:???:get_color_pair',
+        'malloc:tsearch:???:assume_default_colors_sp',
     ]
 
     def walkbacks(self, fileName):

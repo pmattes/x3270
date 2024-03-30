@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ import sys
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipIf(not sys.platform.startswith('win'), 'Only runs on Windows')
+@unittest.skipIf(not sys.platform.startswith('win'), 'Windows-specific test')
 class TestPr3287WindowsDir(cti.cti):
 
     # test for files being (relatively) complete

@@ -3515,6 +3515,7 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
     } else {
 	ps_set(s, true, ia == IA_HTTPD);
     }
+    Free(s);
     return true;
 }
 
@@ -3559,6 +3560,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Set a pending string. */
     push_string(s, true, true, ia == IA_HTTPD);
+    Free(s);
     return true;
 }
 

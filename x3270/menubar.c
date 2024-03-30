@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -277,6 +277,7 @@ static bool	toggle_init(Widget, int, const char *, const char *, bool *);
 struct menu_hier {
     Widget menu_shell;		/* complexMenu widget */
     char *name;			/* my name (root name is NULL) */
+    char *menu_name;		/* menu name */
     struct menu_hier *parent;	/* parent menu */
     struct menu_hier *child;	/* child menu */
     struct menu_hier *sibling;	/* sibling menu */
@@ -354,6 +355,7 @@ add_menu_hier(struct menu_hier *root, char **parents, ArgList args,
 	     */
 	    XtSetArg(my_arglist[0], XtNrightBitmap, arrow);
 	    XtSetArg(my_arglist[1], XtNmenuName, menu_name);
+	    h->menu_name = menu_name;
 	    merged_args = XtMergeArgLists(my_arglist, 2, args, num_args);
 	    XtCreateManagedWidget(
 		    h->name, cmeBSBObjectClass, h->parent->menu_shell,
@@ -378,6 +380,7 @@ free_menu_hier(struct menu_hier *root)
     if (root->child) {
 	free_menu_hier(root->child);
     }
+    XtFree(root->menu_name);
     XtFree((char *)root);
 }
 
@@ -2067,8 +2070,7 @@ create_font_menu(bool regen, bool even_if_unknown)
 		XtNrightMargin, fm_rightMargin,
 		XtNbackground, fm_background,
 		NULL);
-	XtAddCallback(font_widgets[ix], XtNcallback, do_newfont,
-		XtNewString(f->font));
+	XtAddCallback(font_widgets[ix], XtNcallback, do_newfont, f->font);
     }
     if (!xappres.no_other) {
 	other_font = XtVaCreateManagedWidget(
