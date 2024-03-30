@@ -36,7 +36,7 @@ import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
-@unittest.skipUnless(shutil.which('xdotool') != '', 'Need xdotool')
+@unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
 class TestX3270Retry(cti.cti):
 
     # Wait for the Connection Error pop-up to appear.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,19 @@ if not sys.platform.startswith('win'):
     import pty
 import os
 import os.path
+import threading
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
 class TestC3270AltQ(cti.cti):
+
+    # Drain the PTY.
+    def drain(self, fd):
+        while True:
+            try:
+                os.read(fd, 1024)
+            except:
+                return
 
     # c3270 Alt-Q (quit) test.
     def test_c3270_alt_q(self):
@@ -54,6 +63,10 @@ class TestC3270AltQ(cti.cti):
 
         # Parent process.
 
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
         # Make sure c3270 started.
         self.check_listen(c3270_port)
         ts.close()
@@ -62,6 +75,8 @@ class TestC3270AltQ(cti.cti):
         os.write(fd, b'\x01q')
 
         self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
 
 if __name__ == '__main__':
     unittest.main()

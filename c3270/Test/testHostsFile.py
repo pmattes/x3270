@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,21 @@ import sys
 if not sys.platform.startswith('win'):
     import pty
 import tempfile
+import threading
 
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
 class TestC3270HostsFile(cti.cti):
+
+    # Drain the PTY.
+    def drain(self, fd):
+        while True:
+            try:
+                os.read(fd, 1024)
+            except:
+                return
 
     # c3270 hosts file test
     def test_c3270_hosts_file(self):
@@ -65,12 +74,16 @@ class TestC3270HostsFile(cti.cti):
         self.check_listen(hport)
         ts.close()
 
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
         # Start playback to connect to.
         with playback.playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
             pts.close()
 
             # Connect to an alias.
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(fubar)')
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(fubar)', timeout=5)
             self.assertTrue(r.ok)
 
             p.wait_accept()
@@ -80,6 +93,7 @@ class TestC3270HostsFile(cti.cti):
         requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait_pid(pid)
         os.close(fd)
+        drain_thread.join()
         os.unlink(name)
 
 if __name__ == '__main__':

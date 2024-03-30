@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,21 @@ import os
 import os.path
 import requests
 import select
+import threading
 import time
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
 class TestC3270Prompt(cti.cti):
+
+    # Drain the PTY.
+    def drain(self, fd):
+        while True:
+            try:
+                os.read(fd, 1024)
+            except:
+                return
 
     # c3270 prompt open test
     def test_c3270_prompt_open(self):
@@ -68,6 +77,10 @@ class TestC3270Prompt(cti.cti):
             self.check_listen(c3270_port)
             ts.close()
 
+            # Start a thread to drain c3270's output.
+            drain_thread = threading.Thread(target=self.drain, args=[fd])
+            drain_thread.start()
+
             # Send an Open command to c3270.
             os.write(fd, f'Open(127.0.0.1:{playback_port})\r'.encode('utf8'))
 
@@ -81,8 +94,11 @@ class TestC3270Prompt(cti.cti):
             p.close()
 
         self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
 
     # c3270 interactive file transfer test ('other' option)
+    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_c3270_prompt_ft_other(self):
 
         # Start 'playback' to read s3270's output.
