@@ -28,10 +28,11 @@
 # c3270 ibm_hosts tests
 
 import os
-import pty
+import sys
+if not sys.platform.startswith('win'):
+    import pty
 import requests
 from subprocess import Popen, PIPE, DEVNULL
-import sys
 import tempfile
 import unittest
 import Common.Test.playback as playback

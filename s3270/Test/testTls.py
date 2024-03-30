@@ -261,7 +261,7 @@ class TestS3270Tls(cti.cti):
             ts.close()
 
             # Start s3270.
-            args = ['s3270', f'l:y:127.0.0.1:{port}=TEST']
+            args = ['s3270', '-set', 'wrongTerminalName', f'l:y:127.0.0.1:{port}=TEST']
             s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
