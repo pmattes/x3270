@@ -30,6 +30,7 @@
 import json
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import sys
 import threading
 import unittest
 
@@ -44,9 +45,10 @@ class TestB3270Retry(cti.cti):
 
         # Find an unused port, but do not listen on it yet.
         playback_port, ts = cti.unused_port()
+        ts.close()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-trace', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
@@ -70,8 +72,6 @@ class TestB3270Retry(cti.cti):
 
         # Start 'playback' to talk to b3270.
         with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
-            ts.close()
-
             # Wait for b3270 to connect.
             p.wait_accept(timeout=6)
 
@@ -89,6 +89,7 @@ class TestB3270Retry(cti.cti):
 
     # b3270 reconnect/disconnect interference test
     # Makes sure that even if reconnect mode is set, a Wait() action still fails when the connection is broken.
+    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_b3270_reconnect_interference(self):
 
         # Start 'playback' to talk to b3270.
@@ -146,6 +147,7 @@ class TestB3270Retry(cti.cti):
 
         # Find an unused port, but do not listen on it yet.
         playback_port, ts = cti.unused_port()
+        ts.close()
 
         # Start b3270.
         b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
@@ -172,7 +174,6 @@ class TestB3270Retry(cti.cti):
 
         # Start 'playback' to talk to b3270.
         with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
-            ts.close()
 
             # Wait for b3270 to connect.
             p.wait_accept(timeout=6)
@@ -205,6 +206,7 @@ class TestB3270Retry(cti.cti):
         b3270.stdout.close()
 
     # b3270 reconnect without disconnect test
+    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_b3270_reconnect_disconnect(self):
 
         # Find an unused port, but do not listen on it yet.

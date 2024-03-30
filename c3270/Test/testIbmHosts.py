@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,12 +34,21 @@ if not sys.platform.startswith('win'):
 import requests
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
+import threading
 import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
 class TestC3270IbmHosts(cti.cti):
+
+    # Drain the PTY.
+    def drain(self, fd):
+        while True:
+            try:
+                os.read(fd, 1024)
+            except:
+                return
 
     # c3270 ibm_hosts case sensitivity test
     def test_c3270_ibm_hosts_ci(self):
@@ -71,6 +80,10 @@ class TestC3270IbmHosts(cti.cti):
 
             # Parent process.
 
+            # Start a thread to drain c3270's output.
+            drain_thread = threading.Thread(target=self.drain, args=[fd])
+            drain_thread.start()
+
             # Make sure c3270 started.
             self.check_listen(c3270_port)
             ts.close()
@@ -84,6 +97,8 @@ class TestC3270IbmHosts(cti.cti):
 
         # Wait for the processes to exit.
         self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
         os.unlink(hostsfile_name)
 
 if __name__ == '__main__':
