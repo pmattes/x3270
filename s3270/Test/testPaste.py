@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2023 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 
 import requests
 from subprocess import Popen, PIPE, DEVNULL
+import sys
 import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
@@ -39,7 +40,8 @@ class TestS3270Paste(cti.cti):
     def test_s3270_paste(self):
 
         port, ts = cti.unused_port()
-        with playback.playback(self, '/dev/null', port=port,) as p:
+        null = 'NUL:' if sys.platform.startswith('win') else '/dev/null'
+        with playback.playback(self, null, port=port,) as p:
             ts.close()
 
             # Start s3270.

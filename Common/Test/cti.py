@@ -99,9 +99,9 @@ class copyserver():
         (self.conn, _) = self.listensocket.accept()
         self.listensocket.close()
 
-    def close(self):
+    def close(self, timeout=2):
         '''Close the connection without reading'''
-        sa_try_until(lambda: (self.conn != None), 2, 'Emulator did not connect')
+        sa_try_until(lambda: (self.conn != None), timeout, 'Emulator did not connect')
         self.conn.close()
         self.conn = None
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,9 +60,9 @@ class TestS3270ft(cti.cti):
 
             # Verify what it says.
             stdout = s3270.communicate()[0].decode().split('\n')
-            self.assertEqual('data: Transfer complete, 19925 bytes transferred', stdout[0])
+            self.assertEqual('data: Transfer complete, 19925 bytes transferred', stdout[0].strip())
             self.assertTrue('bytes/sec in DFT mode' in stdout[1])
-            self.assertEqual('ok', stdout[3])
+            self.assertEqual('ok', stdout[3].strip())
 
         # Wait for the process to exit.
         s3270.stdin.close()
@@ -92,9 +92,9 @@ class TestS3270ft(cti.cti):
 
             # Verify what it says.
             stdout = s3270.communicate()[0].decode().split('\n')
-            self.assertEqual('data: Transfer complete, 19580 bytes transferred', stdout[0])
+            self.assertEqual('data: Transfer complete, 19580 bytes transferred', stdout[0].strip())
             self.assertTrue('bytes/sec in CUT mode' in stdout[1])
-            self.assertEqual('ok', stdout[3])
+            self.assertEqual('ok', stdout[3].strip())
 
         # Wait for the process to exit.
         s3270.stdin.close()
