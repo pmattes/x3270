@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,6 +74,7 @@ ks_t string_to_key(char *s);
 char *key_to_string(ks_t k);
 bool read_resource_file(const char *filename, bool fatal);
 bool split_hier(const char *label, char **base, char ***parents);
+void free_parents(char **parents);
 
 const char *build_options(void);
 void dump_version(void);

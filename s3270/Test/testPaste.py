@@ -49,6 +49,9 @@ class TestS3270Paste(cti.cti):
             socket.close()
             self.check_listen(hport)
 
+            # Wait for the connection to complete.
+            self.try_until(lambda: 'connected' in requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(ConnectionState)').json()['result'][0], 2, "didn't connect")
+
             # Pump in a string that almost wraps.
             a79 = ''.join(['A' for i in range(79)])
             requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/String({a79})')
@@ -61,7 +64,8 @@ class TestS3270Paste(cti.cti):
             col = r.json()['result'][0].split()[3]
 
             # Make sure it is 2 (not 80).
-            self.assertEqual(2, int(col))
+            rx = r.json()
+            self.assertEqual(2, int(col), f'result is {rx}')
 
         # Wait for s3270 to exit.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')

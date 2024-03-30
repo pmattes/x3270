@@ -539,6 +539,11 @@ finish_screen_init(void)
     bool oversize = false;
     char *cl;
 
+    /* Dummy globals so Valgrind doesn't think the arguments to putenv() are leaked. */
+    static char *pe_columns = NULL;
+    static char *pe_lines = NULL;
+    static char *pe_escdelay = NULL;
+
     if (screen_initted) {
 	return;
     }
@@ -548,8 +553,8 @@ finish_screen_init(void)
     /* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
     if (appres.c3270.defscreen != NULL) {
-	putenv(xs_buffer("COLUMNS=%d", defscreen_spec.cols));
-	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
+	putenv((pe_columns = xs_buffer("COLUMNS=%d", defscreen_spec.cols)));
+	putenv((pe_lines = xs_buffer("LINES=%d", defscreen_spec.rows)));
     }
 #endif /*]*/
     if ((cl = tigetstr("clear")) != NULL) {
@@ -557,7 +562,7 @@ finish_screen_init(void)
     }
 
     if (getenv("ESCDELAY") == NULL) {
-	putenv(xs_buffer("ESCDELAY=%ld", ME_DELAY));
+	putenv((pe_escdelay = xs_buffer("ESCDELAY=%ld", ME_DELAY)));
     }
 
 #if !defined(C3270_80_132) /*[*/

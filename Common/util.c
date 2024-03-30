@@ -930,6 +930,18 @@ split_hier(const char *label, char **base, char ***parents)
     return true;
 }
 
+/* Free a parent list. */
+void
+free_parents(char **parents)
+{
+    int i;
+
+    for (i = 0; parents[i] != NULL; i++) {
+	Free(parents[i]);
+    }
+    Free(parents);
+}
+
 #if defined(_MSC_VER) /*[*/
 #define xstr(s)	str(s)
 #define str(s)	#s
