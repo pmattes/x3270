@@ -48,9 +48,15 @@ class TestC3270Prompt(cti.cti):
     def drain(self, fd):
         while True:
             try:
-                os.read(fd, 1024)
+                b = os.read(fd, 1024)
+                self.drain_input += b.decode()
             except:
                 return
+    
+    def expect(self, timeout, fd: int, text: str):
+        '''Expect simple output from c3270'''
+        self.drain_input = ''
+        self.try_until(lambda: text in self.drain_input, timeout, f'expected "{text}"')
 
     # c3270 prompt open test
     def test_c3270_prompt_open(self):
@@ -78,6 +84,7 @@ class TestC3270Prompt(cti.cti):
             ts.close()
 
             # Start a thread to drain c3270's output.
+            self.drain_input = ''
             drain_thread = threading.Thread(target=self.drain, args=[fd])
             drain_thread.start()
 
@@ -98,7 +105,6 @@ class TestC3270Prompt(cti.cti):
         drain_thread.join()
 
     # c3270 interactive file transfer test ('other' option)
-    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_c3270_prompt_ft_other(self):
 
         # Start 'playback' to read s3270's output.
@@ -124,6 +130,11 @@ class TestC3270Prompt(cti.cti):
             self.check_listen(c3270_port)
             ts.close()
 
+            # Start a thread to drain c3270's output.
+            self.drain_input = ''
+            drain_thread = threading.Thread(target=self.drain, args=[fd])
+            drain_thread.start()
+
             # Write the stream to c3270.
             p.send_records(6)
 
@@ -133,45 +144,44 @@ class TestC3270Prompt(cti.cti):
 
             # Tab to the big field, break to the prompt and send an interactive Transfer() action to c3270.
             os.write(fd, b'\t\t\t\x1d')
-            self.wait_for_pty_output(2, fd, 'c3270> ')
+            self.expect(2, fd, 'c3270> ')
             os.write(fd, b'Transfer()\r')
-            self.wait_for_pty_output(2, fd, 'Continue? ')
+            self.expect(2, fd, 'Continue? ')
 
             # Answer mostly with defaults, sending /etc/group to ETC GROUP A on a VM host.
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, '[receive] ')
+            self.expect(2, fd, '[receive] ')
 
             os.write(fd, b'send\r')
-            self.wait_for_pty_output(2, fd, 'source file on this workstation: ')
+            self.expect(2, fd, 'source file on this workstation: ')
 
             os.write(fd, b'/etc/group\r')
-            self.wait_for_pty_output(2, fd, 'on the host: ')
+            self.expect(2, fd, 'on the host: ')
 
             os.write(fd, b'ETC GROUP A\r')
-            self.wait_for_pty_output(2, fd, '[tso] ')
+            self.expect(2, fd, '[tso] ')
 
             os.write(fd, b'vm\r')
-            self.wait_for_pty_output(2, fd, '[ascii] ')
+            self.expect(2, fd, '[ascii] ')
 
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, '[remove] ')
+            self.expect(2, fd, '[remove] ')
 
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, '[yes] ')
+            self.expect(2, fd, '[yes] ')
 
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, '[default] ')
+            self.expect(2, fd, '[default] ')
 
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, '[16384] ')
+            self.expect(2, fd, '[16384] ')
 
             os.write(fd, b'\r')
-            self.wait_for_pty_output(2, fd, 'Other IND$FILE options: [] ')
+            self.expect(2, fd, 'Other IND$FILE options: [] ')
 
             # Specify BAZ as an extra IND$FILE option, and make sure it is echoed back in the summary.
             os.write(fd, b'BAZ\r')
-            self.wait_for_pty_output(2, fd, ' Other IND$FILE options: BAZ')
-            self.wait_for_pty_output(2, fd, 'Continue? (y/n) [y] ')
+            self.expect(2, fd, 'Continue? (y/n) [y] ')
             
             # Go ahead, and make sure BAZ is specified (it's X'C2C1E9' in the text).
             os.write(fd, b'\r')
@@ -182,6 +192,8 @@ class TestC3270Prompt(cti.cti):
             p.close()
 
         self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
 
 if __name__ == '__main__':
     unittest.main()
