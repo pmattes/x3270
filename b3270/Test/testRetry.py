@@ -48,7 +48,7 @@ class TestB3270Retry(cti.cti):
         ts.close()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-trace', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
