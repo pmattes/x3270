@@ -66,6 +66,6 @@ package.zip: wc3270.iss package.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.z
 	    rm -f wc3270/package.zip && \
 	    zip wc3270/package.zip obj/win32 obj/win64 -r -i '*.exe' && \
 	    zip wc3270/package.zip wc3270/*.txt wc3270/*.zipit wc3270/wc3270.iss wc3270/x3270-icon2.bmp wc3270/*.ttf && \
-	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/CopyToWx3270.ps1 wc3270/wc3270.iss README.txt)
+	    zip wc3270/package.zip -j wc3270/package.ps1 wc3270/CopyToWx3270.ps1 wc3270/wc3270.iss wc3270/README.txt)
 
 windows-release: package.zip

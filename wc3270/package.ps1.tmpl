@@ -50,7 +50,9 @@ $signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA25
 & $inno $signparm /Qp wc3270.iss
 
 # Archive to bgp.nu and moby.
+Write-Host -ForegroundColor Green 'Archiving to bgp.nu'
 $v=[int[]]($version -split "\." -replace "[a-z].*", "")
 $vdir="{0:D2}.{1:D2}" -f @($v)
 & scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip bgp.nu:www/download/$vdir/
+Write-Host -ForegroundColor Green 'Archiving to moby'
 & scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip 10.0.0.12:gr/
