@@ -89,7 +89,6 @@ class TestB3270Retry(cti.cti):
 
     # b3270 reconnect/disconnect interference test
     # Makes sure that even if reconnect mode is set, a Wait() action still fails when the connection is broken.
-    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_b3270_reconnect_interference(self):
 
         # Start 'playback' to talk to b3270.
@@ -206,11 +205,11 @@ class TestB3270Retry(cti.cti):
         b3270.stdout.close()
 
     # b3270 reconnect without disconnect test
-    @unittest.skipIf(sys.platform == "darwin", "Simply doesn't work on macOS")
     def test_b3270_reconnect_disconnect(self):
 
         # Find an unused port, but do not listen on it yet.
         playback_port, ts = cti.unused_port()
+        ts.close()
 
         # Start b3270.
         b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
@@ -230,7 +229,7 @@ class TestB3270Retry(cti.cti):
         while True:
             out = pq.get(10, 'b3270 did not fail the connection')
             out_all += [out.decode()]
-            if b'resolving' in out:
+            if b'tcp-pending' in out:
                 resolve_count += 1
                 if resolve_count > 1:
                     break
@@ -239,7 +238,6 @@ class TestB3270Retry(cti.cti):
         self.assertNotIn('not-connected', out_all, 'Should not enter not-connected state')
 
         # Clean up.
-        ts.close()
         b3270.stdin.write(b'"quit"\n')
         b3270.stdin.flush()
         b3270.stdin.close()
