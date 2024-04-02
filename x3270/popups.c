@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -911,7 +911,7 @@ struct rop {
 
 static struct rop error_popup = {
     "errorPopup", XtGrabExclusive, true, true,
-    "first line\nsecond line\nthird line",
+    "first line\nsecond line\nthird line\nfourth line",
     NULL, NULL, NULL, NULL,
     false, false, NULL
 };
