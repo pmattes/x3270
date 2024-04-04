@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2023 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -235,7 +235,6 @@ static struct {
 	{ AnSnap, "<args>", P_SCRIPTING, "Screen snapshot manipulation" },
         { AnSource, "<file>", P_SCRIPTING|P_INTERACTIVE, "Read actions from file" },
 	{ AnString, "<text>", P_3270|P_SCRIPTING, "Input a string" },
-	{ AnSubjectNames, "<host>", P_INTERACTIVE, "List TLS cert subject names for a host" },
 	{ AnSysReq, NULL, P_3270,
 	    "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ AnTab, NULL, P_3270, "Move cursor to next field" },

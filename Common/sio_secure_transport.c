@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -251,8 +251,7 @@ set_oserror(OSStatus status, const char *fmt, ...)
     va_end(args);
 
     if (status == errSSLXCertChainInvalid) {
-	explanation = "\nPossibly use " AnSubjectNames
-	    "() to list the host cert names";
+	explanation = "\nTry Y: to connect and " AnShow "(" KwTlsSubjectNames ") to list names";
     }
 
     errmsg = SecCopyErrorMessageString(status, NULL);
