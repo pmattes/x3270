@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,7 +95,6 @@ static void try_reconnect(ioid_t id);
 static action_t Connect_action;
 static action_t Disconnect_action;
 static action_t Reconnect_action;
-static action_t SubjectNames_action;
 
 static char *
 stoken(char **s)
@@ -373,7 +372,6 @@ host_register(void)
 	{ AnDisconnect,	Disconnect_action,	ACTION_KE },
 	{ AnOpen,	Connect_action,		ACTION_KE },
 	{ AnReconnect,	Reconnect_action,	ACTION_KE },
-	{ AnSubjectNames,SubjectNames_action,	ACTION_KE }
     };
 
     /* Register for events. */
@@ -1150,36 +1148,6 @@ Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     host_disconnect(false);
-    return true;
-}
-
-/*
- * Display the subject names for a host.
- */
-static bool
-SubjectNames_action(ia_t ia, unsigned argc, const char **argv)
-{
-    char *s;
-
-    action_debug(AnSubjectNames, ia, argc, argv);
-    if (check_argc(AnSubjectNames, argc, 1, 1) < 0) {
-	return false;
-    }
-
-    /*
-     * Run the following commands in a macro:
-     *  Connect(Y:<hostname>)
-     *  Wait(InputField)	# needed for the c3270> prompt, which
-     *  			# does non-blocking connects
-     *  Show(TlsSubjectNames)
-     *  Disconnect()
-     */
-    s = xs_buffer(AnConnect "(Y:%s) "
-	    AnWait "(" KwInputField ") "
-	    AnShow "(" KwTlsSubjectNames ") "
-	    AnDisconnect "()", argv[0]);
-    push_stack_macro(s);
-    Free(s);
     return true;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -962,7 +962,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	    sioc_set_error("Host certificate verification failed:\n%s (%ld)%s",
 		    X509_verify_cert_error_string(vr), vr,
 		    (vr == X509_V_ERR_HOSTNAME_MISMATCH)?
-			"\nPossibly use " AnSubjectNames "() to list the host cert names":
+			"\nTry Y: to connect and " AnShow "(" KwTlsSubjectNames ") to list names":
 			"");
 	    return SIG_FAILURE;
 	}

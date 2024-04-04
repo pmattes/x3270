@@ -133,7 +133,6 @@
 #define AnSource	"Source"
 #define AnStepEfont	"StepEfont"
 #define AnString	"String"
-#define AnSubjectNames	"SubjectNames"
 #define AnSysReq	"SysReq"
 #define AnTab		"Tab"
 #define AnTemporaryComposeMap "TemporaryComposeMap"

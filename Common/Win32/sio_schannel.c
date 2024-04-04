@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -623,7 +623,7 @@ explain_error(SECURITY_STATUS ret)
     {
 	case CERT_E_CN_NO_MATCH:
 	case SEC_E_WRONG_PRINCIPAL:
-	    return "\nPossibly use " AnSubjectNames "() to display the host cert names";
+	    return "\nTry Y: to connect and " AnShow "(" KwTlsSubjectNames ") to display names";
 	case SEC_E_UNSUPPORTED_FUNCTION:
 	    return "\nHost may not support the requested TLS version";
 	default:
