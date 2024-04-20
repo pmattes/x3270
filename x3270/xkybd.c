@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2020 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -124,22 +124,19 @@ MouseSelect_xaction(Widget w, XEvent *event, String *params,
 }
 
 /*
- * MoveCursor Xt action.  Depending on arguments, this is either a move to the
+ * MoveCursor/MoveCursor1 Xt action.  Depending on arguments, this is either a move to the
  * mouse cursor position, or to an absolute location.
  */
-void
-MoveCursor_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params)
+static void
+MoveCursor_xcommon(char *name, Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-    xaction_debug(MoveCursor_xaction, event, params, num_params);
-
     /* With arguments, this isn't a mouse call. */
     if (*num_params != 0) {
 	if (*num_params > 2) {
-	    popup_an_error(AnMoveCursor "() takes 0, 1 or 2 arguments");
+	    popup_an_error("%s() takes 0, 1 or 2 arguments", name);
 	    return;
 	}
-	run_action(AnMoveCursor, IA_KEYMAP, params[0], params[1]);
+	run_action(name, IA_KEYMAP, params[0], params[1]);
 	return;
     }
 
@@ -153,9 +150,30 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
 	return;
     }
 
+    if (IN_NVT) {
+	popup_an_error("%s() is not valid in NVT mode", name);
+	return;
+    }
+
     /* Move the cursor to where the mouse is. */
     reset_idle_timer();
     cursor_move(mouse_baddr(w, event));
+}
+
+/* MoveCursor Xt action. */
+void
+MoveCursor_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    xaction_debug(MoveCursor_xaction, event, params, num_params);
+    MoveCursor_xcommon(AnMoveCursor, w, event, params, num_params);
+}
+
+/* MoveCursor1 Xt action. */
+void
+MoveCursor1_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    xaction_debug(MoveCursor1_xaction, event, params, num_params);
+    MoveCursor_xcommon(AnMoveCursor1, w, event, params, num_params);
 }
 
 /*

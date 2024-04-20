@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -142,7 +142,8 @@ static XtActionsRec xactions[] = {
     { "insert-selection",	insert_selection_xaction },
     { "KybdSelect",	KybdSelect_xaction },
     { "MouseSelect",	MouseSelect_xaction },
-    { "MoveCursor",	MoveCursor_xaction },
+    { AnMoveCursor,	MoveCursor_xaction },
+    { AnMoveCursor1,	MoveCursor1_xaction },
     { "move-select",	move_select_xaction },
     { PA_END,		PA_End_xaction },
     { PA_KEYMAP_TRACE,	PA_KeymapTrace_xaction },
@@ -367,7 +368,7 @@ xaction_init2(void)
 
     /* Fill in the table. */
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (strcmp(e->t.name, "MoveCursor") && (e->t.flags & ACTION_KE)) {
+	if (strcmp(e->t.name, AnMoveCursor) && strcmp(e->t.name, AnMoveCursor1) && (e->t.flags & ACTION_KE)) {
 	    wrapper_actions[nwrappers].string = (String)e->t.name;
 	    wrapper_actions[nwrappers].proc = xt_mapped_actions[nwrappers];
 	    nwrappers++;

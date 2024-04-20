@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015, 2020 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,9 @@
  *		Global declarations for xkybd.c.
  */
 
-void Default_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-void MouseSelect_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-void MoveCursor_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-void PA_Shift_xaction(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
+void Default_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void MouseSelect_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void MoveCursor_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void MoveCursor1_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
+void PA_Shift_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void xkybd_register(void);
