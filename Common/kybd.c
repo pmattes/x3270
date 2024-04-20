@@ -3276,6 +3276,11 @@ MoveCursor_common(int origin, const char *name, ia_t ia, unsigned argc,
 	return false;
     }
 
+    if (IN_NVT) {
+	popup_an_error("%s() is not valid in NVT mode", name);
+	return false;
+    }
+
     if (kybdlock) {
 	enq_ta(name, argv[0], argv[1]);
 	return true;
@@ -3283,18 +3288,36 @@ MoveCursor_common(int origin, const char *name, ia_t ia, unsigned argc,
 
     if (argc == 1) {
 	baddr = atoi(argv[0]);
+	if (baddr < 0 || baddr >= ROWS * COLS) {
+	    popup_an_error("%s(): Invalid offset", name);
+	    return false;
+	}
     } else {
 	row = atoi(argv[0]);
-	if (row < origin) {
+	if (row < 0) {
+	    if (-row > ROWS) {
+		popup_an_error("%s(): Invalid row", name);
+		return false;
+	    }
+	    row += ROWS + origin;
+	} else if (row < origin) {
 	    row = origin;
 	} else if (row > ROWS - !origin) {
-	    row = ROWS - !origin;
+	    popup_an_error("%s(): Invalid row", name);
+	    return false;
 	}
 	col = atoi(argv[1]);
-	if (col < origin) {
+	if (col < 0) {
+	    if (-col > COLS) {
+		popup_an_error("%s(): Invalid column", name);
+		return false;
+	    }
+	    col += COLS + origin;
+	} else if (col < origin) {
 	    col = origin;
 	} else if (col > COLS - !origin) {
-	    col = COLS - !origin;
+	    popup_an_error("%s(): Invalid column", name);
+	    return false;
 	}
 	baddr = (((row - origin) * COLS) + (col - origin)) % (ROWS * COLS);
     }

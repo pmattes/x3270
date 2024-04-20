@@ -2546,7 +2546,7 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
     case 0:	/* everything */
 	row = origin;
 	col = origin;
-	len = rel_rows*rel_cols;
+	len = rel_rows * rel_cols;
 	break;
     case 1:	/* from cursor, for n */
 	row = caddr / rel_cols;
@@ -2566,12 +2566,28 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	len = 0;
 	break;
     default:
-	popup_an_error("%s requires 0, 1, 3 or 4 arguments", name);
+	popup_an_error("%s() requires 0, 1, 3 or 4 arguments", name);
 	return false;
     }
 
-    row -= origin;
-    col -= origin;
+    if (row < 0) {
+	if (-row > rel_rows) {
+	    popup_an_error("%s(): Invalid row", name);
+	    return false;
+	}
+	row += rel_rows;
+    } else {
+	row -= origin;
+    }
+    if (col < 0) {
+	if (-col > rel_cols) {
+	    popup_an_error("%s(): Invalid column", name);
+	    return false;
+	}
+	col += rel_cols;
+    } else {
+	col -= origin;
+    }
 
     if ((row < 0 ||
 	 row > rel_rows ||
@@ -2585,7 +2601,7 @@ dump_fixed(const char **params, unsigned count, int origin, const char *name,
 	  rows < 0 ||
 	  col + cols > rel_cols ||
 	  row + rows > rel_rows))) {
-	popup_an_error("%s: Invalid argument", name);
+	popup_an_error("%s(): Invalid argument", name);
 	return false;
     }
     if (count < 4) {
@@ -3368,13 +3384,14 @@ parse_rco(const char *action, const char *keyword, unsigned argc,
 	const char **argv, int *baddr)
 {
     char *next;
-    unsigned long offset, row, column;
+    unsigned long offset;
+    long row, column;
 
     if (argc == 1) {
 	/* Offset. */
 	offset = strtoul(argv[0], &next, 10);
 	if (!argv[0][0] || *next != '\0' ||
-		offset >= (unsigned long)(maxROWS * maxCOLS)) {
+		offset >= (unsigned long)(ROWS * COLS)) {
 	    popup_an_error("%s(%s): Invalid offset '%s'", action, keyword,
 		    argv[0]);
 	    return false;
@@ -3384,16 +3401,29 @@ parse_rco(const char *action, const char *keyword, unsigned argc,
     }
 
     /* Row and column. */
-    row = strtoul(argv[0], &next, 10);
-    if (!argv[0][0] || *next != '\0' || row >= (unsigned long)maxROWS) {
+    row = strtol(argv[0], &next, 10);
+    if (!argv[0][0] || *next != '\0' || row >= (long)ROWS) {
 	popup_an_error("%s(%s): Invalid row '%s'", action, keyword, argv[0]);
 	return false;
     }
-    column = strtoul(argv[1], &next, 10);
-    if (!argv[1][0] || *next != '\0' || column >= (unsigned long)maxCOLS) {
-	popup_an_error("%s(%s): Invalid column '%s'", action, keyword,
-		argv[1]);
+    if (row < 0) {
+	if (-row > (long)ROWS) {
+	    popup_an_error("%s(%s): Invalid row '%s'", action, keyword, argv[0]);
+	    return false;
+	}
+	row += ROWS + 1;
+    }
+    column = strtol(argv[1], &next, 10);
+    if (!argv[1][0] || *next != '\0' || column >= (long)COLS) {
+	popup_an_error("%s(%s): Invalid column '%s'", action, keyword, argv[1]);
 	return false;
+    }
+    if (column < 0) {
+	if (-column > (long)COLS) {
+	    popup_an_error("%s(%s): Invalid column '%s'", action, keyword, argv[0]);
+	    return false;
+	}
+	column += COLS + 1;
     }
     *baddr = (int)(((row - 1) * COLS) + (column - 1));
     return true;
