@@ -31,6 +31,7 @@ import os
 from subprocess import Popen, PIPE, DEVNULL
 import requests
 import shutil
+import time
 import unittest
 
 import Common.Test.playback as playback
@@ -55,14 +56,14 @@ class TestX3270Retry(cti.cti):
         # Start x3270.
         hport, hts = cti.unused_port()
         hts.close()
-        x3270 = Popen(cti.vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), '127.0.0.1:{playback_port}']))
+        x3270 = Popen(cti.vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
         self.children.append(x3270)
 
         # Wait for the Connection Error pop-up to appear.
         self.try_until(self.find_popup, 4, 'Connect error pop-up did not appear')
 
         # Make it stop.
-        os.system("xdotool search --onlyvisible --name 'x3270 Error' windowfocus mousemove --window %1 42 63 click 1")
+        os.system("xdotool search --onlyvisible --name 'x3270 Error' windowfocus mousemove --window %1 42 83 click 1")
 
         # Verify that x3270 is no longer reconnecting.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
