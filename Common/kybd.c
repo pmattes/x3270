@@ -1907,8 +1907,12 @@ BackTab_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     OERR_CLEAR_OR_ENQ(AnBackTab);
-    if (!IN_3270) {
+    if (IN_NVT) {
+	popup_an_error("%s() is not valid in NVT mode", AnBackTab);
 	return false;
+    }
+    if (!IN_3270) {
+	return true;
     }
     baddr = cursor_addr;
     DEC_BA(baddr);
