@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -484,7 +484,7 @@ child_stdout(iosrc_t fd _is_unused, ioid_t id)
 #endif /*]*/
 
 /**
- * Callback for data returned to child script command via a pipe.
+ * Callback for data returned to child script command via a pipe (POSIX only).
  *
  * @param[in] handle    Callback handle
  * @param[in] buf       Buffer
@@ -496,18 +496,31 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
+    char *b;
+    char *newline;
+    char *s;
     ssize_t nw;
 
+    while (len > 0 && buf[len - 1] == '\n') {
+	len--;
+    }
+    b = xs_buffer("%.*s", (int)len, buf);
+    while ((newline = strchr(b, '\n')) != NULL) {
+	*newline = ' ';
+    }
+
+    s = xs_buffer("%s%s\n", DATA_PREFIX, b);
+    Free(b);
     nw = write(c->outfd, s, strlen(s));
     if (nw != (ssize_t)strlen(s)) {
 	vtrace("child_data: short write\n");
     }
+    Free(s);
 #endif /*]*/
 }
 
 /**
- * Callback for input request
+ * Callback for input request (POSIX only).
  *
  * @param[in] handle    Callback handle
  * @param[in] buf       Buffer

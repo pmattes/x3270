@@ -4395,8 +4395,8 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
 	unsigned flag;
 	const char *name;
     } fname[] = {
-	{ CBF_INTERACTIVE, "interactive" },
-	{ CBF_PWINPUT, "pwinput" },
+	{ CBF_INTERACTIVE, KwInteractive },
+	{ CBF_PWINPUT, KwPwInput },
 	{ 0, NULL }
     };
 
@@ -4426,7 +4426,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
     for (i = 0; i < argc; i++) {
 	for (j = 0; fname[j].name != NULL; j++) {
 	    if (!strcasecmp(argv[i], fname[j].name)) {
-		flags |= fname[i].flag;
+		flags |= fname[j].flag;
 		break;
 	    }
 	}

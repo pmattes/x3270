@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -302,7 +302,7 @@ run_next(peer_t *p)
 }
 
 /**
- * Read the next command from a peer socket (Unix version).
+ * Read the next command from a peer socket.
  * @param[in] fd	File descriptor
  * @param[in] id	I/O identifier
  */
@@ -332,11 +332,10 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 #if defined(_WIN32) /*[*/
 	if (GetLastError() != WSAECONNRESET) {
 	    /* Windows does this habitually. */
-	    popup_an_error("s3sock recv: %s",
-		    win32_strerror(GetLastError()));
+	    vtrace("s3sock recv: %s\n", win32_strerror(GetLastError()));
 	}
 #else /*][*/
-	popup_an_errno(errno, "s3sock read");
+	vtrace("s3sock recv: %s\n", strerror(errno));
 #endif /*]*/
 	close_peer(p);
 	return;
@@ -376,6 +375,31 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 }
 
 /**
+ * Send data on a socket and check the result.
+ *
+ * @param[in] s                Socket
+ * @param[in] data     Data to send
+ * @param[in] len      Length
+ * @paran[in] sender   Sending function
+ */
+static void
+check_send(socket_t s, const char *data, size_t len, const char *sender)
+{
+    ssize_t ns = send(s, data, (int)len, 0);
+    if (ns != (ssize_t)len) {
+	if (ns < 0) {
+#if !defined(_WIN32) /*[*/
+	    vtrace("%s send: %s\n", sender, strerror(errno));
+#else /*][*/
+	    vtrace("%s send: %s\n", sender, win32_strerror(GetLastError()));
+#endif/*]*/
+	} else {
+	    vtrace("%s: short send\n", sender);
+	}
+    }
+}
+
+/**
  * Callback for data returned to peer socket command.
  *
  * @param[in] handle	Callback handle
@@ -387,14 +411,22 @@ static void
 peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
-    char *s;
-    ssize_t ns;
+    char *b;
+    char *newline;
     static bool recursing = false;
 
     if (recursing) {
 	return;
     }
     recursing = true;
+
+    while (len > 0 && buf[len - 1] == '\n') {
+	len--;
+    }
+    b = xs_buffer("%.*s", (int)len, buf);
+    while ((newline = strchr(b, '\n')) != NULL) {
+	*newline = ' ';
+    }
 
     if (p->json_mode) {
 	json_t *result_array;
@@ -407,15 +439,15 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
             assert(json_object_member(p->json_result, "result", NT,
                         &result_array));
         }
-	json_array_append(result_array, json_string(buf, len));
+	json_array_append(result_array, json_string(b, strlen(b)));
     } else {
-	s = lazyaf(DATA_PREFIX "%.*s\n", (int)len, buf);
-	ns = send(p->socket, s, (int)strlen(s), 0);
-	if (ns < 0) {
-	    popup_a_sockerr("s3sock send");
-	}
+	char *data = xs_buffer("%s%s\n", DATA_PREFIX, b);
+
+	check_send(p->socket, data, strlen(data), "peer_data");
+	Free(data);
     }
 
+    Free(b);
     recursing = false;
 }
 
@@ -431,19 +463,17 @@ static void
 peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 {
     peer_t *p = (peer_t *)handle;
-    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len,
-	    buf);
-    ssize_t ns;
+    char *s;
     static bool recursing = false;
 
     if (recursing) {
 	return;
     }
     recursing = true;
-    ns = send(p->socket, s, (int)strlen(s), 0);
-    if (ns < 0) {
-	popup_a_sockerr("s3sock send");
-    }
+
+    s = xs_buffer("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len, buf);
+    check_send(p->socket, s, strlen(s), "peer_reqinput");
+    Free(s);
     recursing = false;
 }
 
@@ -474,19 +504,19 @@ peer_done(task_cbh handle, bool success, bool abort)
         }
         json_object_set(p->json_result, "success", NT, json_boolean(success));
         json_object_set(p->json_result, "status", NT, json_string(prompt, NT));
-        s = lazyaf("%s\n", w = json_write_o(p->json_result, JW_ONE_LINE));
+        s = xs_buffer("%s\n", w = json_write_o(p->json_result, JW_ONE_LINE));
         Free(w);
         json_free(p->json_result);
 	vtrace("JSON output for %s: '%s/%s'\n", p->name, prompt,
 		success? PROMPT_OK: PROMPT_ERROR);
-	send(p->socket, s, (int)strlen(s), 0);
     } else {
 	/* Print the prompt. */
 	vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
 		success? PROMPT_OK: PROMPT_ERROR);
-	s = lazyaf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
-	send(p->socket, s, (int)strlen(s), 0);
+	s = xs_buffer("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
     }
+    check_send(p->socket, s, strlen(s), "peer_done");
+    Free(s);
 
     if (abort || !p->enabled) {
 	close_peer(p);
@@ -660,7 +690,11 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     }
 
     if (accept_fd == INVALID_SOCKET) {
-	popup_an_errno(errno, "script socket accept");
+#if !defined(_WIN32) /*[*/
+	vtrace("s3sock accept: %s\n", strerror(errno));
+#else /*][*/
+	vtrace("s3sock accept: %s\n", win32_strerror(GetLastError()));
+#endif /*]*/
 	return;
     }
 
