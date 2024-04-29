@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -305,13 +305,13 @@ stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
                         &result_array));
         }
 
-        json_array_append(result_array, json_string(b, len));
+        json_array_append(result_array, json_string(b, strlen(b)));
     } else {
 	if (!pushed_wait) {
-	    printf(DATA_PREFIX "%.*s\n", (int)len, b);
+	    printf("%s%s\n", DATA_PREFIX, b);
 	    fflush(stdout);
 	} else {
-	    fprintf(stderr, AnWait "(): %.*s\n", (int)len, b);
+	    fprintf(stderr, AnWait "(): %s\n", b);
 	    fflush(stderr);
 	}
     }

@@ -151,6 +151,9 @@
 /*  Common keywords. */
 #define KwFailOnError	"failonerror"
 #define KwNoFailOnError	"nofailonerror"
+/*  Parameters to Capabilities(). */
+#define KwInteractive	"interactive"
+#define KwPwInput	"pwinput"
 /*  Parameters to Crash(). */
 #define KwAssert	"assert"
 #define KwExit		"exit"

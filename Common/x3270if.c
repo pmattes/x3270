@@ -85,6 +85,7 @@
 #endif
 
 #include "base64.h"
+#include "names.h"
 #include "s3270_proto.h"
 #include "w3misc.h"
 
@@ -1282,7 +1283,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
     /* Announce our capabilities. */
     data_ret = NULL;
-    single_io(0, 0, s, infd, outfd, NO_STATUS, "Capabilities(interactive)",
+    single_io(0, 0, s, infd, outfd, NO_STATUS, AnCapabilities "(" KwInteractive ")",
 	    &data_ret, NULL, &itype);
 
     /* Set up the prompt. */
