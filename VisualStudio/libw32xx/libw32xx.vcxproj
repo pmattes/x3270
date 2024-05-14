@@ -25,7 +25,6 @@
     <ClCompile Include="..\..\Common\boolstr.c" />
     <ClCompile Include="..\..\Common\copyright.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
-    <ClCompile Include="..\..\Common\lazya.c" />
     <ClCompile Include="..\..\Common\min_version.c" />
     <ClCompile Include="..\..\Common\popup_an_error.c" />
     <ClCompile Include="..\..\Common\pr3287_session.c" />
@@ -45,6 +44,7 @@
     <ClCompile Include="..\..\Common\Win32\snprintf.c" />
     <ClCompile Include="..\..\Common\tables.c" />
     <ClCompile Include="..\..\Common\toupper.c" />
+    <ClCompile Include="..\..\Common\txa.c" />
     <ClCompile Include="..\..\Common\unicode.c" />
     <ClCompile Include="..\..\Common\unicode_dbcs.c" />
     <ClCompile Include="..\..\Common\utf8.c" />

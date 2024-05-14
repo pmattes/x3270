@@ -208,10 +208,14 @@ class sendserver():
 
 def vgwrap(command):
     '''Wrap a command in valgrind'''
-    if 'VALGRIND' in os.environ:
-        return ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + command
+    if 'TRACEALL' in os.environ and not '-trace' in command:
+        cmd = [command[0], '-trace'] + command[1:]
     else:
-        return command
+        cmd = command
+    if 'VALGRIND' in os.environ:
+        return ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + cmd
+    else:
+        return cmd
 
 def vgwrap_ecmd(command):
     '''Wrap an execvp command in valgrind'''
@@ -219,11 +223,15 @@ def vgwrap_ecmd(command):
 
 def vgwrap_eargs(args):
     '''Wrap execvp arguments in valgrind'''
+    if 'TRACEALL' in os.environ and not '-trace' in args:
+        targs = ['-trace'] + args[1:]
+    else:
+        targs = args
     if 'VALGRIND' in os.environ:
         return ['valrgind', '--leak-check=full', '--log-file=/tmp/valgrind.%p',
-            '--child-silent-after-fork=yes'] + args
+            '--child-silent-after-fork=yes'] + targs
     else:
-        return args
+        return targs
 
 def sa_try_until(f, seconds, errmsg):
     '''Try f periodically until seconds elapse'''

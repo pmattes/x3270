@@ -52,8 +52,8 @@ int s_split_dresource(const char *st, size_t *offset, char **left,
 int split_dresource(char **st, char **left, char **right);
 int split_lresource(char **st, char **value);
 char *strip_whitespace(const char *s);
-char *xs_vbuffer(const char *fmt, va_list);
-char *xs_buffer(const char *fmt, ...) printflike(1, 2);
+char *Vasprintf(const char *fmt, va_list);
+char *Asprintf(const char *fmt, ...) printflike(1, 2);
 void xs_error(const char *fmt, ...) printflike(1, 2);
 void xs_warning(const char *fmt, ...) printflike(1, 2);
 

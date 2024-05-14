@@ -40,8 +40,8 @@
 #endif /*]*/
 
 #include "wincmn.h"
-#include "lazya.h"
 #include "resolver.h"
+#include "txa.h"
 #include "utils.h"
 
 #include "bind-opt.h"
@@ -189,12 +189,12 @@ canonical_bind_opt(struct sockaddr *sa)
     switch (sa->sa_family) {
     case AF_INET:
 	sin = (struct sockaddr_in *)sa;
-	return lazyaf("[%s]:%u",
+	return txAsprintf("[%s]:%u",
 	    inet_ntop(sa->sa_family, &sin->sin_addr, addrbuf, RET_LEN),
 	    ntohs(sin->sin_port));
     case AF_INET6:
 	sin6 = (struct sockaddr_in6 *)sa;
-	return lazyaf("[%s]:%u",
+	return txAsprintf("[%s]:%u",
 	    inet_ntop(sa->sa_family, &sin6->sin6_addr, addrbuf, RET_LEN),
 	    ntohs(sin6->sin6_port));
     default:

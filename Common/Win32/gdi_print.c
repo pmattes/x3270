@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2019 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -360,8 +360,8 @@ create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
 {
     char *w, *h;
 
-    w = fwidth? xs_buffer("%d", fwidth): NewString("(auto)");
-    h = fheight? xs_buffer("%d", fheight): NewString("(auto)");
+    w = fwidth? Asprintf("%d", fwidth): NewString("(auto)");
+    h = fheight? Asprintf("%d", fheight): NewString("(auto)");
     vtrace("[gdi] requesting a font %sx%s logical units\n", w, h);
     Free(w);
     Free(h);

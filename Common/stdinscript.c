@@ -44,6 +44,7 @@
 #include "names.h"
 #include "popups.h"
 #include "s3270_proto.h"
+#include "s3common.h"
 #include "source.h"
 #include "task.h"
 #include "trace.h"
@@ -57,6 +58,8 @@ static void stdin_data(task_cbh handle, const char *buf, size_t len,
 	bool success);
 static bool stdin_done(task_cbh handle, bool success, bool abort);
 static void stdin_closescript(task_cbh handle);
+static void stdin_setflags(task_cbh handle, unsigned flags);
+static unsigned stdin_getflags(task_cbh handle);
 
 /* Callback block for stdin. */
 static tcb_t stdin_cb = {
@@ -66,107 +69,103 @@ static tcb_t stdin_cb = {
     stdin_data,
     stdin_done,
     NULL,
-    stdin_closescript
+    stdin_closescript,
+    stdin_setflags,
+    stdin_getflags
 };
 
 static ioid_t stdin_id = NULL_IOID;
-#if defined(_WIN32) /*[*/
+static ssize_t stdin_nr;
+#if !defined(_WIN32) /*[*/
+static char *stdin_buf;
+static bool stdin_eof;
+#else /*][*/
+static char stdin_buf[8192];
 static HANDLE stdin_thread;
 static HANDLE stdin_enable_event, stdin_done_event;
-static char stdin_buf[8192];
-static ssize_t stdin_nr;
 static int stdin_errno;
 #endif /*]*/
 
 static bool pushed_wait = false;
 static bool enabled = true;
-static struct {		/* pending JSON input state */
-    char *buf;
-} pj_in;
-struct {		/* pending JSON output state */
-    bool pending;
-    json_t *json;
-} pj_out;
+static char *pj_in;	/* pending JSON input */
+static json_t *pj_out;		/* pending JSON output state */
+
+static unsigned stdin_capabilities;
 
 /**
  * Check a string for (possibly incremental) JSON.
  * If the JSON object is complete, executes it.
  *
- * @param[in] buf	NUL-terminated buffer with text.
+ * @param[in] buf		NUL-terminated buffer with text.
+ * @param[out] need_more	Returned true if more input needed.
  *
  * @return true if in JSON format.
  */
 static bool
-json_input(char *buf)
+json_input(char *buf, bool *need_more)
 {
-    size_t len = strlen(buf);
+    *need_more = false;
 
-    if (pj_in.buf != NULL) {
+    if (pj_in != NULL) {
 	/* Concatenate the input. */
-	char *s = pj_in.buf;
+	char *s = pj_in;
 
-	pj_in.buf = xs_buffer("%s%s", pj_in.buf, buf);
+	pj_in = Asprintf("%s%s", pj_in, buf);
 	Free(s);
     } else {
 	char *s = buf;
 
 	/* Check for JSON. */
-	while (len && isspace((int)*s)) {
-	    len--;
+	while (*s && isspace((int)*s)) {
 	    s++;
 	}
-	if (len && (*s == '{' || *s == '[' || *s == '"')) {
-	    pj_in.buf = NewString(buf);
+	if (*s == '{' || *s == '[' || *s == '"') {
+	    pj_in = NewString(buf);
 	}
     }
 
-    if (pj_in.buf != NULL) {
+    if (pj_in != NULL) {
 	cmd_t **cmds;
 	char *single;
 	char *errmsg;
 	hjparse_ret_t ret;
 
 	/* Try JSON parsing. */
-	ret = hjson_parse(pj_in.buf, strlen(pj_in.buf), &cmds, &single,
+	ret = hjson_parse(pj_in, strlen(pj_in), &cmds, &single,
 		&errmsg);
 	if (ret != HJ_OK) {
 	    /* Unsuccessful JSON. */
 	    if (ret == HJ_BAD_SYNTAX || ret == HJ_BAD_CONTENT) {
-		char *fail = xs_buffer(AnFail "(\"%s\")", errmsg);
+		char *fail = Asprintf(AnFail "(\"%s\")", errmsg);
 
 		/* Defective JSON. */
 		Free(errmsg);
 		push_cb(fail, strlen(fail), &stdin_cb, NULL);
 		Free(fail);
-		Replace(pj_in.buf, NULL);
-		pj_out.pending = (ret == HJ_BAD_CONTENT);
+		Replace(pj_in, NULL);
+		if (ret == HJ_BAD_CONTENT) {
+		    pj_out = s3json_init();
+		}
 		return true;
 	    }
 	    /* Incomplete JSON. */
 	    /* Enable more input. */
 	    assert(ret == HJ_INCOMPLETE);
 	    Free(errmsg);
-#if !defined(_WIN32) /*[*/
-	    stdin_id = AddInput(fileno(stdin), stdin_input);
-#else /*][*/
-	    stdin_nr = 0;
-	    SetEvent(stdin_enable_event);
-	    if (stdin_id == NULL_IOID) {
-		stdin_id = AddInput(stdin_done_event, stdin_input);
-	    }
-#endif /*]*/
+	    *need_more = true;
 	    return true;
 	}
 
 	/* Successful JSON. */
-	pj_out.pending = true;
+	pj_out = s3json_init();
 	if (cmds != NULL) {
 	    push_cb_split(cmds, &stdin_cb, NULL);
 	} else {
 	    push_cb(single, strlen(single), &stdin_cb, NULL);
 	    Free(single);
 	}
-	Replace(pj_in.buf, NULL);
+	Replace(pj_in, NULL);
 	return true;
     }
 
@@ -183,53 +182,64 @@ json_input(char *buf)
 static void
 stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    varbuf_t r;
-    char *buf;
-    size_t len = 0;
+    bool eol = false;
+    bool need_more = false;
+
+    while (!eol) {
+	char c;
+	int nr;
+	fd_set rfds;
+	struct timeval tv;
+	int ns;
+
+	FD_ZERO(&rfds);
+	FD_SET(fileno(stdin), &rfds);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	ns = select(fileno(stdin) + 1, &rfds, NULL, NULL, &tv);
+	if (ns == 0) {
+	    vtrace("s3stdin read blocked\n");
+	    return;
+	}
+
+	nr = read(fileno(stdin), &c, 1);
+	if (nr < 0) {
+	    vtrace("s3stdin read error: %s\n", strerror(errno));
+	    x3270_exit(1);
+	} else if (nr == 0) {
+	    vtrace("s3stdin EOF\n");
+	    if (stdin_nr == 0) {
+		x3270_exit(0);
+	    } else {
+		stdin_eof = true;
+		eol = true;
+	    }
+	} else if (c == '\r') {
+	    continue;
+	} else if (c == '\n') {
+	    eol = true;
+	} else {
+	    stdin_buf = Realloc(stdin_buf, stdin_nr + 2);
+	    stdin_buf[stdin_nr++] = c;
+	}
+    }
 
     /* Stop input. */
     RemoveInput(stdin_id);
     stdin_id = NULL_IOID;
 
-    vb_init(&r);
-
-    while (true) {
-	char c;
-	int nr;
-
-	nr = read(fileno(stdin), &c, 1);
-	if (nr < 0) {
-	    vtrace("s3stdin read error: %s\n", strerror(errno));
-	    vb_free(&r);
-	    x3270_exit(1);
-	}
-	if (nr == 0) {
-	    if (len == 0) {
-		vtrace("s3stdin EOF\n");
-		vb_free(&r);
-		x3270_exit(0);
-	    } else {
-		break;
-	    }
-	}
-	if (c == '\r') {
-	    continue;
-	}
-	if (c == '\n') {
-	    break;
-	}
-	vb_append(&r, &c, 1);
-	len++;
-    }
-
     /* Run the command as a macro. */
-    buf = vb_consume(&r);
-    vtrace("s3stdin read '%s'\n", buf);
-    if (!json_input(buf)) {
-	pj_out.pending = false;
-	push_cb(buf, len, &stdin_cb, NULL);
+    stdin_buf[stdin_nr] = '\0';
+    vtrace("s3stdin read '%s'\n", stdin_buf);
+    if (!json_input(stdin_buf, &need_more)) {
+	json_free(pj_out);
+	push_cb(stdin_buf, strlen(stdin_buf), &stdin_cb, NULL);
+    } else if (need_more) {
+	/* Allow more input. */
+	stdin_id = AddInput(fileno(stdin), stdin_input);
     }
-    Free(buf);
+    Replace(stdin_buf, NULL);
+    stdin_nr = 0;
 }
 
 #else /*][*/
@@ -242,6 +252,8 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 static void
 stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
+    bool need_more = false;
+
     if (stdin_nr < 0) {
 	vtrace("s3stdin read error: %s\n", strerror(stdin_errno));
 	x3270_exit(1);
@@ -252,7 +264,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     }
 
     vtrace("s3stdin read '%.*s'\n", (int)stdin_nr, stdin_buf);
-    if (!json_input(stdin_buf)) {
+    if (!json_input(stdin_buf, &need_more)) {
 	if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\n') {
 	    stdin_nr--;
 	}
@@ -260,6 +272,13 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    stdin_nr--;
 	}
 	push_cb(stdin_buf, stdin_nr, &stdin_cb, NULL);
+    } else if (need_more) {
+	/* Get more input. */
+	stdin_nr = 0;
+	SetEvent(stdin_enable_event);
+	if (stdin_id == NULL_IOID) {
+	    stdin_id = AddInput(stdin_done_event, stdin_input);
+	}
     }
 }
 
@@ -274,48 +293,21 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
  * @param[in] success	True if data, false if error message
  */
 static void
-stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
-	bool success)
+stdin_data(task_cbh handle _is_unused, const char *buf, size_t len, bool success)
 {
-    /*
-     * Enforce the implicit assumption that there are no newlines in the
-     * output.
-     */
-    char *b;
-    char *newline;
+    char *raw;
+    char *cooked;
 
-    while (len > 0 && buf[len - 1] == '\n') {
-	len--;
+    s3data(buf, len, success, stdin_capabilities, pj_out, &raw, &cooked);
+    if (pushed_wait) {
+	fprintf(stderr, AnWait "(): %s\n", raw);
+	fflush(stderr);
+    } else if (cooked != NULL) {
+	fputs(cooked, stdout);
+	fflush(stdout);
     }
-
-    b = xs_buffer("%.*s", (int)len, buf);
-    while ((newline = strchr(b, '\n')) != NULL) {
-	*newline = ' ';
-    }
-
-    if (pj_out.pending) {
-	json_t *result_array;
-
-	if (pj_out.json == NULL) {
-            pj_out.json = json_object();
-            result_array = json_array();
-            json_object_set(pj_out.json, "result", NT, result_array);
-        } else {
-            assert(json_object_member(pj_out.json, "result", NT,
-                        &result_array));
-        }
-
-        json_array_append(result_array, json_string(b, strlen(b)));
-    } else {
-	if (!pushed_wait) {
-	    printf("%s%s\n", DATA_PREFIX, b);
-	    fflush(stdout);
-	} else {
-	    fprintf(stderr, AnWait "(): %s\n", b);
-	    fflush(stderr);
-	}
-    }
-    Free(b);
+    Free(raw);
+    Free(cooked);
 }
 
 /**
@@ -330,37 +322,23 @@ stdin_data(task_cbh handle _is_unused, const char *buf, size_t len,
 static bool
 stdin_done(task_cbh handle, bool success, bool abort)
 {
-    /* Print the prompt. */
-    if (pj_out.pending) {
-	char *w;
-	char *prompt = task_cb_prompt(handle);
+    char *out;
 
-	if (pj_out.json == NULL) {
-	    pj_out.json = json_object();
-	    json_object_set(pj_out.json, "result", NT, json_array());
-	}
-	json_object_set(pj_out.json, "success", NT, json_boolean(success));
-	json_object_set(pj_out.json, "status", NT, json_string(prompt, NT));
-	printf("%s\n", w = json_write_o(pj_out.json, JW_ONE_LINE));
+    /* Print the output or the prompt. */
+    s3done(handle, success, &pj_out, &out);
+    if (!pushed_wait) {
+	printf("%s", out);
 	fflush(stdout);
-	Free(w);
-	json_free(pj_out.json);
-	pj_out.pending = false;
-    } else {
-	if (!pushed_wait) {
-	    char *prompt = task_cb_prompt(handle);
-
-	    vtrace("Output for s3stdin: %s/%s\n", prompt,
-		    success? PROMPT_OK: PROMPT_ERROR);
-	    printf("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
-	    fflush(stdout);
-	}
     }
+    Free(out);
     pushed_wait = false;
 
     /* Allow more. */
     if (enabled) {
 #if !defined(_WIN32) /*[*/
+	if (stdin_eof) {
+	    x3270_exit(0);
+	}
 	stdin_id = AddInput(fileno(stdin), stdin_input);
 #else /*][*/
 	stdin_nr = 0;
@@ -419,6 +397,20 @@ static void
 stdin_closescript(task_cbh handle _is_unused)
 {
     enabled = false;
+}
+
+/* Set flags. */
+static void
+stdin_setflags(task_cbh handle _is_unused, unsigned flags)
+{
+    stdin_capabilities = flags;
+}
+
+/* Get flags. */
+static unsigned
+stdin_getflags(task_cbh handle _is_unused)
+{
+    return stdin_capabilities;
 }
 
 /**

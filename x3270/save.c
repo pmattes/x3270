@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2022 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,11 +49,11 @@
 #endif /*]*/
 #include "idle.h"
 #include "keymap.h"
-#include "lazya.h"
 #include "popups.h"
 #include "save.h"
 #include "screen.h"
 #include "toggles.h"
+#include "txa.h"
 #include "utils.h"
 #include "xappres.h"
 #include "xkeypad.h"
@@ -153,7 +153,7 @@ save_xy(void)
 	y = wa.y;
     }
 
-    tbuf = lazyaf("+%d+%d", x, y);
+    tbuf = txAsprintf("+%d+%d", x, y);
     if ((ix = cmd_srch("-geometry"))) {
 	cmd_replace(ix + 1, tbuf);
     } else {
@@ -221,7 +221,7 @@ save_icon(void)
 	}
     }
 
-    tbuf = lazyaf("%d", iconX);
+    tbuf = txAsprintf("%d", iconX);
     ix = cmd_srch(OptIconX);
     if (ix) {
 	cmd_replace(ix + 1, tbuf);
@@ -230,7 +230,7 @@ save_icon(void)
 	cmd_append(tbuf);
     }
 
-    tbuf = lazyaf("%d", iconY);
+    tbuf = txAsprintf("%d", iconY);
     ix = cmd_srch(OptIconY);
     if (ix) {
 	cmd_replace(ix + 1, tbuf);
@@ -697,12 +697,12 @@ save_options(char *n)
 		efontname);
     }
     if (model_changed) {
-	buf = xs_buffer("%d", model_num);
+	buf = Asprintf("%d", model_num);
 	save_opt(f, "model", OptModel, ResModel, buf);
 	Free(buf);
     }
     if (oversize_changed) {
-	buf = xs_buffer("%dx%d", ov_cols, ov_rows);
+	buf = Asprintf("%dx%d", ov_cols, ov_rows);
 	save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	Free(buf);
     }

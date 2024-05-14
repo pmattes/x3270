@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,11 @@ import json
 import socket
 import select
 import os
+import pathlib
 import sys
 import time
 import requests
+import tempfile
 import Common.Test.cti as cti
 
 class TestS3270Json(cti.cti):
@@ -425,6 +427,119 @@ class TestS3270Json(cti.cti):
         # Clean up.
         requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
+
+    # Test JSON with child pipe I/O (POSIX only).
+    def s3270_pipechild(self, gulp=False, suffix=''):
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Run a script that will push requests (ending in Quit()) to s3270, and copy the output to a temp file.
+        (handle, outfile) = tempfile.mkstemp()
+        os.close(handle)
+        gulp_opt = ',-gulp' if gulp else ''
+        try:
+            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Script(python3,s3270/Test/pipescript.py{gulp_opt},s3270/Test/pipescript{suffix}.in,{outfile})')
+        except:
+            pass
+
+        # Wait for s3270.
+        self.vgwait(s3270)
+
+        # Verify the output.
+        # We have to wait explicitly for the output file to appear, because s3270 exits before the script writes it.
+        self.try_until(lambda: pathlib.Path(outfile).stat().st_size != 0, 2, 'outfile not updated')
+        self.assertEqual(pathlib.Path(outfile).read_text(), pathlib.Path(f's3270/Test/pipescript{suffix}.out').read_text())
+        os.unlink(outfile)
+
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
+    def test_s3270_pipechild(self):
+        self.s3270_pipechild()
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
+    def test_s3270_pipechild_gulp(self):
+        self.s3270_pipechild(gulp=True)
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
+    def test_s3270_pipechild_syntax_error(self):
+        self.s3270_pipechild(suffix='-syntax-error')
+
+    # Verify stdin JSON result-err.
+    def test_s3270_stdin_json_result_err(self):
+
+        # Start s3270.
+        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
+
+        # Push a JSON-formatted command at it.
+        command = json.dumps('Set(startTls)Set(trace)Set(foo)').encode() + b'\n'
+        s3270.stdin.write(command)
+
+        # Decode the result.
+        stdout = s3270.communicate()[0].decode()
+
+        # Wait for the process to exit successfully.
+        self.vgwait(s3270)
+
+        # Test the output.
+        out = json.loads(stdout)
+        self.assertEqual([False, False, True], out['result-err'])
+
+    # Verify HTTPD JSON result-err.
+    def test_s3270_http_json_result_err(self):
+
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Send a request.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(startTls)Set(trace)Set(foo)')
+        self.assertFalse(r.ok)
+        out = json.loads(r.text)
+        self.assertEqual([False, False, True], out['result-err'])
+
+        # Clean up.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+    
+    # Verify socket JSON result-err
+    def test_s3270_socket_json_result_err(self):
+
+        # Start s3270.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Push actions in JSON, where the last fails.
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'"Set(startTls)Set(trace)Set(foo)"\n')
+
+        # Decode the result.
+        result = json.loads(self.recv_to_eof(s, 2))
+        s.close()
+
+        # Wait for the process to exit successfully.
+        self.vgwait(s3270)
+
+        # Test the output.
+        self.assertEqual([False, False, True], result['result-err'])
+
+    # Test JSON with child pipe I/O (POSIX only).
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
+    def test_s3270_pipechild_json_result_err(self):
+        self.s3270_pipechild(self, suffix='-triple')
+    
+    # Test JSON with child pipe I/O (POSIX only).
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
+    def test_s3270_pipechild_json_result_spaces(self):
+        self.s3270_pipechild(self, suffix='-spaces')
 
 if __name__ == '__main__':
     unittest.main()

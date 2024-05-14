@@ -61,7 +61,6 @@
 #include "idle.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
@@ -86,6 +85,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "screentrace.h"
 #include "utils.h"
 #include "vstatus.h"
@@ -339,7 +339,7 @@ setup_options(void)
     for (i = 0; i < num_base_options; i++) {
 	struct option_help *help = find_option_help(base_options[i].option);
 	if (help == NULL) {
-	    Error(xs_buffer("Option %s has no help", base_options[i].option));
+	    Error(Asprintf("Option %s has no help", base_options[i].option));
 	}
 
 	if (!help->tls_flag || (help->tls_flag & tls_options)) {
@@ -356,7 +356,7 @@ setup_options(void)
     for (i = 0; i < num_base_options; i++) {
 	struct option_help *help = find_option_help(base_options[i].option);
 	if (help == NULL) {
-	    Error(xs_buffer("Option %s has no help", base_options[i].option));
+	    Error(Asprintf("Option %s has no help", base_options[i].option));
 	}
 
 	if (!help->tls_flag || (help->tls_flag & tls_options)) {
@@ -409,7 +409,7 @@ static void
 no_minus(char *arg)
 {
     if (arg[0] == '-') {
-	usage(xs_buffer("Unknown or incomplete option: '%s'", arg));
+	usage(Asprintf("Unknown or incomplete option: '%s'", arg));
     }
 }
 
@@ -481,7 +481,7 @@ main(int argc, char *argv[])
 	char *path = getenv("PATH");
 
 	/* Add our path to $PATH so we can find x3270if. */
-	putenv(xs_buffer("PATH=%.*s%s%s", 
+	putenv(Asprintf("PATH=%.*s%s%s", 
 		    (int)(programname - argv[0]), argv[0],
 		    path? ":": "",
 		    path? path: ""));
@@ -627,7 +627,7 @@ main(int argc, char *argv[])
 	}
 	no_minus(argv[1]);
 	no_minus(argv[2]);
-	cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
+	cl_hostname = Asprintf("%s:%s", argv[1], argv[2]);
 	break;
     default:
 	for (i = 0; i < argc; i++) {
@@ -896,8 +896,8 @@ main(int argc, char *argv[])
 	/* Run tasks. */
 	run_tasks();
 
-	/* Flush the lazy allocation ring. */
-	lazya_flush();
+	/* Free transaction memory. */
+	txflush();
     }
 }
 
@@ -1153,7 +1153,7 @@ requote(const char *s)
 	}
     }
     *r = '\0';
-    lazya(ret);
+    txdFree(ret);
     return ret;
 }
 
@@ -1220,7 +1220,7 @@ parse_set_clear(int *argcp, char **argv)
 		    }
 		}
 		argv_out[argc_out++] = OptXrm;
-		argv_out[argc_out++] = xs_buffer("x3270.%s: %s",
+		argv_out[argc_out++] = Asprintf("x3270.%s: %s",
 			toggle_names[j].name, value? ResTrue: ResFalse);
 		found = true;
 		break;
@@ -1232,10 +1232,10 @@ parse_set_clear(int *argcp, char **argv)
 		    eq? eq + 1: (is_set? ResTrue: ResFalse), &proper_name);
 
 	    if (xt == 0 && eq) {
-		proper_name = lazyaf("%.*s", (int)(eq - argv[i]), argv[i]);
+		proper_name = txAsprintf("%.*s", (int)(eq - argv[i]), argv[i]);
 	    }
 	    argv_out[argc_out++] = OptXrm;
-	    argv_out[argc_out++] = lazyaf("x3270.%s: %s", proper_name,
+	    argv_out[argc_out++] = txAsprintf("x3270.%s: %s", proper_name,
 			(eq != NULL)? requote(eq + 1):
 			    (is_set? ResTrue: ResFalse));
 	}

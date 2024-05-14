@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2022 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,6 @@
 #include "actions.h"
 #include "codepage.h"
 #include "fprint_screen.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "print_command.h"
@@ -56,6 +55,7 @@
 #include "task.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 
@@ -107,7 +107,7 @@ default_caption(void)
     if (r != NULL) {
 	Free(r);
     }
-    r = xs_buffer("%s @ %s %%T%%", user, hostname);
+    r = Asprintf("%s @ %s %%T%%", user, hostname);
 
 #else /*][*/
 
@@ -139,9 +139,9 @@ default_caption(void)
 	Free(r);
     }
     if (strcasecmp(userdomain, computername)) {
-	r = xs_buffer("%s\\%s @ %s %%T%%", userdomain, username, computername);
+	r = Asprintf("%s\\%s @ %s %%T%%", userdomain, username, computername);
     } else {
-	r = xs_buffer("%s @ %s %%T%%", username, computername);
+	r = Asprintf("%s @ %s %%T%%", username, computername);
     }
 #endif
 
@@ -477,7 +477,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	char *pct_e;
 
 	if ((pct_e = strstr(name, "%E%")) != NULL) {
-	    expanded_name = lazyaf("%.*s%s%s",
+	    expanded_name = txAsprintf("%.*s%s%s",
 		    (int)(pct_e - name), name,
 		    programname,
 		    pct_e + 3);
@@ -607,7 +607,7 @@ print_file_name(const char *dir)
 #   define PATH_SFX	".txt"
 
     while (true) {
-	path = xs_buffer(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
+	path = Asprintf(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
 	    dir,
 	    tm->tm_year + 1900,
 	    tm->tm_mon + 1,

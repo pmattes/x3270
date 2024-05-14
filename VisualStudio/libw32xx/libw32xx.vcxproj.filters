@@ -30,9 +30,6 @@
     <ClCompile Include="..\..\Common\copyright.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\lazya.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\min_version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -79,6 +76,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\toupper.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\txa.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\unicode.c">

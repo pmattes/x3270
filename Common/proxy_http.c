@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,13 +41,13 @@
 #endif /*]*/
 
 #include "base64.h"
-#include "lazya.h"
 #include "popups.h"
 #include "proxy.h"
 #include "proxy_private.h"
 #include "proxy_http.h"
 #include "resolver.h"
 #include "telnet_core.h"
+#include "txa.h"
 #include "trace.h"
 #include "utils.h"
 #include "w3misc.h"
@@ -74,7 +74,7 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 
     /* Send the CONNECT request. */
     colon = strchr(host, ':');
-    sbuf = xs_buffer("CONNECT %s%s%s:%u HTTP/1.1\r\n",
+    sbuf = Asprintf("CONNECT %s%s%s:%u HTTP/1.1\r\n",
 	    (colon? "[": ""),
 	    host,
 	    (colon? "]": ""),
@@ -90,7 +90,7 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
     }
 
     Free(sbuf);
-    sbuf = xs_buffer("Host: %s%s%s:%u\r\n",
+    sbuf = Asprintf("Host: %s%s%s:%u\r\n",
 	    (colon? "[": ""),
 	    host,
 	    (colon? "]": ""),
@@ -107,8 +107,8 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 
     if (user != NULL) {
 	Free(sbuf);
-	sbuf = xs_buffer("Proxy-Authorization: Basic %s\r\n",
-		lazya(base64_encode(user)));
+	sbuf = Asprintf("Proxy-Authorization: Basic %s\r\n",
+		txdFree(base64_encode(user)));
 
 	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
 	trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));

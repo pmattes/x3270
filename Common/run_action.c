@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,11 +39,11 @@
 #include "actions.h"
 #include "idle.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "popups.h"
 #include "source.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -249,11 +249,11 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2)
 {
     if (!parm1) {
-	push_action(cause, lazyaf("%s()", name));
+	push_action(cause, txAsprintf("%s()", name));
     } else if (!parm2) {
-	push_action(cause, lazyaf("%s(%s)", name, parm1));
+	push_action(cause, txAsprintf("%s(%s)", name, parm1));
     } else {
-	push_action(cause, lazyaf("%s(%s,%s)", name, parm1, parm2));
+	push_action(cause, txAsprintf("%s(%s,%s)", name, parm1, parm2));
     }
     return true;
 }
@@ -308,7 +308,7 @@ safe_param(const char *s)
 
     vb_appends(&r, "\"");
     ret = vb_consume(&r);
-    lazya(ret);
+    txdFree(ret);
     return ret;
 }
 

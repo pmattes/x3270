@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2022 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,9 +46,9 @@
 #if defined(_WIN32) /*[*/
 # include "gdi_print.h"
 #endif /*]*/
-#include "lazya.h"
 #include "nvt.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
@@ -235,7 +235,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	    time_t t = time(NULL);
 	    struct tm *tm = localtime(&t);
 
-	    xcaption = xs_buffer("%.*s" "%04d-%02d-%02d %02d:%02d:%02d" "%s",
+	    xcaption = Asprintf("%.*s" "%04d-%02d-%02d %02d:%02d:%02d" "%s",
 		    (int)(ts - caption), caption,
 		    tm->tm_year + 1900,
 		    tm->tm_mon + 1,
@@ -429,7 +429,7 @@ fprint_screen_body(fps_t ofps)
 	int fa;
 
 	xea = (struct ea *)Calloc(1 + ((ROWS + 2) * COLS), sizeof(struct ea));
-	lazya(xea);
+	txdFree(xea);
 	memcpy(xea, ea_buf - 1, (1 + (ROWS * COLS)) * sizeof(struct ea));
 	xea++;
 	vstatus_line(xea + (ROWS * COLS));

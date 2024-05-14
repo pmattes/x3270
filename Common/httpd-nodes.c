@@ -44,7 +44,8 @@
 
 #include "fprint_screen.h"
 #include "json.h"
-#include "lazya.h"
+#include "s3270_proto.h"
+#include "txa.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"
@@ -271,9 +272,9 @@ hn_interact(const char *uri, void *dhandle)
 	case SENDTO_PENDING:
 	    return HS_PENDING;
 	case SENDTO_INVALID:
-	    lazya(errmsg);
+	    txdFree(errmsg);
 	    return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
-		    "%s", lazyaf("%s\n", errmsg));
+		    "%s", txAsprintf("%s\n", errmsg));
 	default:
 	case SENDTO_FAILURE:
 	    return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
@@ -360,9 +361,9 @@ rest_text_dyn(const char *url, void *dhandle)
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	lazya(errmsg);
+	txdFree(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL, "%s",
-		lazyaf("%s\n", errmsg));
+		txAsprintf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
@@ -431,9 +432,9 @@ rest_status_text_dyn(const char *url, void *dhandle)
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	lazya(errmsg);
+	txdFree(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		"%s", lazyaf("%s\n%s\n", task_status_string(), errmsg));
+		"%s", txAsprintf("%s\n%s\n", task_status_string(), errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_TEXT, 500, NULL,
@@ -524,15 +525,16 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
     switch (cbs) {
     case SC_SUCCESS:
 	if (jresult != NULL) {
-	    json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
+	    json_object_set(jresult, JRET_STATUS, NT, json_string(sl_buf, sl_len));
 	    w = json_write_o(jresult, JW_ONE_LINE);
 	    rv = httpd_dyn_complete(dhandle, "%s\n", w);
 	    Free(w);
 	} else {
 	    json_t *j = json_object();
 
-	    json_object_set(j, "result", NT, NULL);
-	    json_object_set(j, "status", NT, json_string(sl_buf, sl_len));
+	    json_object_set(j, JRET_RESULT, NT, json_array());
+	    json_object_set(j, JRET_RESULT_ERR, NT, json_array());
+	    json_object_set(j, JRET_STATUS, NT, json_string(sl_buf, sl_len));
 	    w = json_write_o(j, JW_ONE_LINE);
 	    rv = httpd_dyn_complete(dhandle, "%s\n", w);
 	    Free(w);
@@ -540,12 +542,12 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	}
 	break;
     case SC_USER_ERROR:
-	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
+	json_object_set(jresult, JRET_STATUS, NT, json_string(sl_buf, sl_len));
 	rv = httpd_dyn_error(dhandle, CT_JSON, 400, jresult, "%.*s", (int)len,
 		buf);
 	break;
     case SC_SYSTEM_ERROR:
-	json_object_set(jresult, "status", NT, json_string(sl_buf, sl_len));
+	json_object_set(jresult, JRET_STATUS, NT, json_string(sl_buf, sl_len));
 	rv = httpd_dyn_error(dhandle, CT_JSON, 500, jresult, "%.*s", (int)len,
 		buf);
 	break;
@@ -580,9 +582,9 @@ rest_html_dyn(const char *url, void *dhandle)
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	lazya(errmsg);
+	txdFree(errmsg);
 	return httpd_dyn_error(dhandle, CT_HTML, 400, NULL,
-		"%s", lazyaf("%s\n", errmsg));
+		"%s", txAsprintf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_HTML, 500, NULL,
@@ -614,9 +616,9 @@ rest_json_dyn(const char *url, void *dhandle)
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	lazya(errmsg);
+	txdFree(errmsg);
 	return httpd_dyn_error(dhandle, CT_TEXT, 400, NULL,
-		"%s", lazyaf("%s\n", errmsg));
+		"%s", txAsprintf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, CT_JSON, 500, NULL,
@@ -669,9 +671,9 @@ rest_post_dyn(const char *url, void *dhandle)
     case SENDTO_PENDING:
 	return HS_PENDING;
     case SENDTO_INVALID:
-	lazya(errmsg);
+	txdFree(errmsg);
 	return httpd_dyn_error(dhandle, request_content_type, 400, NULL,
-		"%s", lazyaf("%s\n", errmsg));
+		"%s", txAsprintf("%s\n", errmsg));
     default:
     case SENDTO_FAILURE:
 	return httpd_dyn_error(dhandle, request_content_type, 500, NULL,

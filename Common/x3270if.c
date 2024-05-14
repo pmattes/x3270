@@ -110,9 +110,16 @@
 
 typedef enum {
     ITYPE_DATA,		/* data: */
+    ITYPE_ERRD,		/* errd: */
     ITYPE_INPUT,	/* input: */
     ITYPE_PWINPUT	/* pwinput: */
 } itype_t;
+
+typedef enum {
+    AUX_NONE,		/* new command */
+    AUX_INPUT,		/* requested input */
+    AUX_PWINPUT		/* password (no echo) input */
+} aux_t;
 
 static char *me;
 static int verbose = 0;
@@ -121,7 +128,7 @@ static size_t buf_size = 0;
 
 static void iterative_io(int pid, unsigned short port);
 static int single_io(int pid, unsigned short port, socket_t socket, int infd,
-	int outfd, int fn, char *cmd, char **data_ret, char **prompt_ret,
+	int outfd, int fn, char *cmd, char **data_ret, char **errd_ret, char **prompt_ret,
 	itype_t *itype);
 static void interactive_io(int port, const char *emulator_name,
 	const char *help_name, const char *localization);
@@ -140,6 +147,10 @@ typedef struct i18n {
 i18n_t *i18n = NULL;
 #define BANNER	"x3270if.banner"
 #define QUIT	"x3270if.quit"
+
+#if defined(_WIN32) /*[*/
+static HANDLE conin = NULL;
+#endif /*]*/
 
 static void
 x3270if_usage(void)
@@ -332,6 +343,8 @@ main(int argc, char *argv[])
     } else {
 	int infd = -1;
 	int outfd = -1;
+	char *cmd = Malloc(strlen(AnCapabilities) + 1 + strlen(KwErrd) + 2 + strlen(argv[optind]) + 1);
+	int rv;
 
 #if !defined(_WIN32) /*[*/
 	if (force_pipes) {
@@ -339,8 +352,11 @@ main(int argc, char *argv[])
 	    outfd = fd_env(INPUT_ENV, true);
 	}
 #endif /*]*/
-	return single_io(pid, port, INVALID_SOCKET, infd, outfd, fn,
-		argv[optind], NULL, NULL, NULL);
+
+	sprintf(cmd, AnCapabilities "(" KwErrd ") %s", argv[optind]);
+	rv = single_io(pid, port, INVALID_SOCKET, infd, outfd, fn, cmd, NULL, NULL, NULL, NULL);
+	Free(cmd);
+	return rv;
     }
     return 0;
 }
@@ -400,12 +416,42 @@ tsock(unsigned short port)
     return fd;
 }
 
+/* Set or clear echo mode. */
+static void
+echo_mode(bool echo)
+{
+#if !defined(_WIN32) /*[*/
+    struct termios t;
+
+    tcgetattr(0, &t);
+    if (echo) {
+	t.c_lflag |= ECHO;
+    } else {
+	t.c_lflag &= ~ECHO;
+    }
+    tcsetattr(0, TCSANOW, &t);
+#else /*][*/
+    if (echo) {
+	if (SetConsoleMode(conin, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror("\nSetConsoleMode(CONIN$) failed");
+	}
+    } else {
+	if (SetConsoleMode(conin, ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT) == 0) {
+	    win32_perror("\nSetConsoleMode(CONIN$) failed");
+	}
+    }
+#endif /*]*/
+}
+
 /* Get the input type from a buffer. */
 static itype_t
 get_itype(const char *buf)
 {
     if (!strncmp(buf, DATA_PREFIX, PREFIX_LEN)) {
 	return ITYPE_DATA;
+    }
+    if (!strncmp(buf, ERROR_DATA_PREFIX, PREFIX_LEN)) {
+	return ITYPE_ERRD;
     }
     if (!strncmp(buf, INPUT_PREFIX, PREFIX_LEN)) {
 	return ITYPE_INPUT;
@@ -419,7 +465,7 @@ get_itype(const char *buf)
 /* Do a single command, and interpret the results. */
 static int
 single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
-	int fn, char *cmd, char **data_ret, char **prompt_ret, itype_t *itype)
+	int fn, char *cmd, char **data_ret, char **errd_ret, char **prompt_ret, itype_t *itype)
 {
     int port_env;
     int infd = -1, outfd = -1;
@@ -435,6 +481,7 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
     char *cmd_nl;
     char *wstr;
     size_t ret_sl = 0;
+    size_t eret_sl = 0;
     itype_t input_itype = ITYPE_DATA;
 
     /* Verify the environment and open files. */
@@ -522,6 +569,9 @@ single_io(int pid, unsigned short port, socket_t socket, int xinfd, int xoutfd,
     if (data_ret != NULL) {
 	*data_ret = NULL;
     }
+    if (errd_ret != NULL) {
+	*errd_ret = NULL;
+    }
 
 #if defined(_WIN32) /*[*/
 retry:
@@ -576,33 +626,36 @@ retry:
 		done = 1;
 		break;
 	    } else if (!strncmp(buf, DATA_PREFIX, PREFIX_LEN)
+		    || !strncmp(buf, ERROR_DATA_PREFIX, PREFIX_LEN)
 		    || !strncmp(buf, INPUT_PREFIX, PREFIX_LEN)
 		    || !strncmp(buf, PWINPUT_PREFIX, PREFIX_LEN)) {
+		itype_t this_itype;
+
+		this_itype = get_itype(buf);
+		input_itype = this_itype;
+
 		/*
 		 * The protocol is somewhat ambiguous: You could get multiple
 		 * inpt: and inpw: in the same response.
 		 * We only keep the last.
 		 */
 		if (data_ret != NULL) {
-		    itype_t this_itype;
-
-		    this_itype = get_itype(buf);
-		    if (this_itype == ITYPE_INPUT
-			    || this_itype == ITYPE_PWINPUT) {
-			input_itype = this_itype;
+		    if (this_itype == ITYPE_INPUT || this_itype == ITYPE_PWINPUT) {
 			if (*prompt_ret != NULL) {
 			    Free(*prompt_ret);
 			}
 			*prompt_ret = NewString(buf + PREFIX_LEN);
 		    } else {
-			*data_ret = Realloc(*data_ret,
-				ret_sl + strlen(buf + PREFIX_LEN) + 2);
-			*(*data_ret + ret_sl) = '\0';
-			strcat(strcat(*data_ret, buf + PREFIX_LEN), "\n");
-			ret_sl += strlen(buf + PREFIX_LEN) + 1;
+			char **dret = (this_itype == ITYPE_DATA)? data_ret: errd_ret;
+			size_t *sl = (this_itype == ITYPE_DATA)? &ret_sl: &eret_sl;
+
+			*dret = Realloc(*dret, *sl + strlen(buf + PREFIX_LEN) + 2);
+			*(*dret + *sl) = '\0';
+			strcat(strcat(*dret, buf + PREFIX_LEN), "\n");
+			*sl += strlen(buf + PREFIX_LEN) + 1;
 		    }
 		} else {
-		    if (printf("%s\n", buf + PREFIX_LEN) < 0) {
+		    if (fprintf((input_itype == ITYPE_ERRD)? stderr: stdout, "%s\n", buf + PREFIX_LEN) < 0) {
 			perror("x3270if: printf");
 			exit(__LINE__);
 		    }
@@ -1203,8 +1256,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     int infd = -1, outfd = -1;
     size_t prompt_len;
     char *data_ret;
+    char *errd_ret;
     char *prompt_ret;
-    bool aux_input = false;
+    aux_t aux_input = AUX_NONE;
     itype_t itype;
     const char *l;
 #if defined(_WIN32) /*[*/
@@ -1283,8 +1337,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
     /* Announce our capabilities. */
     data_ret = NULL;
-    single_io(0, 0, s, infd, outfd, NO_STATUS, AnCapabilities "(" KwInteractive ")",
-	    &data_ret, NULL, &itype);
+    errd_ret = NULL;
+    single_io(0, 0, s, infd, outfd, NO_STATUS, AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")",
+	    &data_ret, &errd_ret, NULL, &itype);
 
     /* Set up the prompt. */
 #if !defined(_WIN32) /*[*/
@@ -1317,8 +1372,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
 #if defined(_WIN32) /*[*/
     /* Open the console handle. */
-    conout = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
-	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    conout = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (conout == NULL) {
 	win32_perror("Can't open console output handle");
 	exit(__LINE__);
@@ -1326,6 +1380,11 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     if (!GetConsoleScreenBufferInfo(conout, &info)) {
 	win32_perror("Can't get console info");
 	exit(__LINE__);
+    }
+    conin = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (conin == NULL) {
+        win32_perror("Can't popen console input handle");
+        exit(__LINE__);
     }
 
     /* wx3270 speaks Unicode. */
@@ -1390,7 +1449,6 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 
     for (;;) {
 	char *command;
-	int rc;
 	char *nl;
 	size_t sl;
 	bool done = false;
@@ -1403,6 +1461,10 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	DWORD rv;
 #endif /*]*/
 
+	if (aux_input == AUX_PWINPUT) {
+	    echo_mode(false);
+	}
+
 	/* Display the prompt. */
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_LIBREADLINE) /*[*/
@@ -1412,12 +1474,12 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	fflush(stdout);
 # endif /*]*/
 #else /*][*/
-	if (!aux_input) {
+	if (aux_input == AUX_NONE) {
 	    set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
 	}
 	fputs(prompt, stdout);
 	fflush(stdout);
-	if (!aux_input) {
+	if (aux_input == AUX_NONE) {
 	    set_text_attribute(conout, info.wAttributes);
 	}
 
@@ -1508,16 +1570,17 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	    done = true;
 	}
 # if defined(HAVE_LIBREADLINE) /*[*/
-	if (!aux_input && command[0]) {
+	if (aux_input == AUX_NONE && command[0]) {
 	    add_history(command);
 	}
 # endif /*]*/
 
 	data_ret = NULL;
+	errd_ret = NULL;
 	prompt_ret = NULL;
-	if (!aux_input) {
-	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, command,
-		    &data_ret, &prompt_ret, &itype);
+	if (aux_input == AUX_NONE) {
+	    single_io(0, 0, s, infd, outfd, NO_STATUS, command,
+		    &data_ret, &errd_ret, &prompt_ret, &itype);
 	} else {
 	    char *command_base64 = base64_encode(command);
 	    char *response = Malloc(strlen(command_base64) + 128);
@@ -1529,12 +1592,18 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	    sprintf(response, RESUME_INPUT "(%s)",
 		    command_base64[0]? command_base64: "\"\"");
 	    Free(command_base64);
-	    rc = single_io(0, 0, s, infd, outfd, NO_STATUS, response,
-		    &data_ret, &prompt_ret, &itype);
+	    single_io(0, 0, s, infd, outfd, NO_STATUS, response,
+		    &data_ret, &errd_ret, &prompt_ret, &itype);
 	    Free(response);
 	    Free(prompt);
 	    prompt = real_prompt;
-	    aux_input = false;
+	    if (aux_input == AUX_PWINPUT) {
+		echo_mode(true);
+#if !defined(_WIN32) /*[*/
+		fputc('\n', stdout);
+#endif /*[*/
+	    }
+	    aux_input = AUX_NONE;
 	}
 # if defined(HAVE_LIBREADLINE) /*[*/
 	Free(command);
@@ -1543,43 +1612,37 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	if (prompt_ret != NULL) {
 	    prompt = base64_decode(prompt_ret);
 	    Free(prompt_ret);
-	    aux_input = true;
+	    aux_input = (itype == ITYPE_PWINPUT)? AUX_PWINPUT: AUX_INPUT;
 	}
 
+	/* Display the output or prompt. */
 	if (data_ret != NULL) {
 	    if ((sl = strlen(data_ret)) > 0 && data_ret[sl - 1] == '\n') {
 		data_ret[sl - 1] = '\0';
 	    }
 	    if (*data_ret) {
+		printf("%s\n", data_ret);
+	    }
+	    Free(data_ret);
+	}
+	if (errd_ret != NULL) {
+	    if ((sl = strlen(errd_ret)) > 0 && errd_ret[sl - 1] == '\n') {
+		errd_ret[sl - 1] = '\0';
+	    }
+	    if (*errd_ret) {
 #if !defined(_WIN32) /*[*/
-		if (aux_input) {
-		    printf("%s\n", data_ret);
-		} else {
-		    if (rc) {
-			printf("%s%s%s\n", xsetaf(setaf,
-				    color_offset + COLOR_RED, sgr), data_ret,
-				op);
-		    } else {
-			printf("%s\n", data_ret);
-		    }
-		}
-# else /*][*/
-		if (!aux_input) {
-		    set_text_attribute(conout,
-			    rc? (FOREGROUND_INTENSITY | FOREGROUND_RED):
-				 info.wAttributes);
-		}
-		fputs(data_ret, stdout);
+		printf("%s%s%s\n", xsetaf(setaf, color_offset + COLOR_RED, sgr), errd_ret, op);
+#else /*][*/
+		set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_RED);
+		fputs(errd_ret, stdout);
 		fflush(stdout);
-		if (!aux_input) {
-		    set_text_attribute(conout, info.wAttributes);
-		}
+		set_text_attribute(conout, info.wAttributes);
 		fputc('\n', stdout);
 #endif /*]*/
 	    }
-	    Free(data_ret);
-	    fflush(stdout);
+	    Free(errd_ret);
 	}
+	fflush(stdout);
 
 	if (done) {
 	    exit(0);

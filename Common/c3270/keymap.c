@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2016, 2019-2021 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,13 +40,13 @@
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -372,8 +372,8 @@ add_keymap_entry(int ncodes, k_t *codes, int *hints, const char *name,
 static bool
 read_keymap(const char *name, bool temp)
 {
-    char *name_3270 = xs_buffer("%s.3270", name);
-    char *name_nvt = xs_buffer("%s.nvt", name);
+    char *name_3270 = Asprintf("%s.3270", name);
+    char *name_nvt = Asprintf("%s.nvt", name);
     int rc, rc_3270, rc_nvt;
     char *fn, *fn_3270, *fn_nvt;
     char *r0, *r0_3270, *r0_nvt;
@@ -1162,5 +1162,5 @@ keymap_dump(void)
 	s[sl - 1] = '\0';
     }
 
-    return lazya(s);
+    return txdFree(s);
 }

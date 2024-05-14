@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015, 2019 Paul Mattes.
+ * Copyright (c) 2008-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
  */
 #include "globals.h"
 
-#include "lazya.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 
@@ -4254,7 +4254,7 @@ set_uni_dbcs(const char *cpname, const char **codepage)
      * not cause any misidentification.
      */
     if (is_all_digits(realname)) {
-	realname = lazyaf("cp%s", realname);
+	realname = txAsprintf("cp%s", realname);
     }
 
     /* Search for an alias. */

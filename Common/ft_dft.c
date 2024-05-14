@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -395,7 +395,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 	    /* write failed */
 	    char *buf;
 
-	    buf = xs_buffer("write(%s): %s", ftc->local_filename,
+	    buf = Asprintf("write(%s): %s", ftc->local_filename,
 		    strerror(errno));
 
 	    dft_abort(buf, TR_DATA_INSERT);
@@ -615,7 +615,7 @@ dft_get_request(void)
     if (ferror(fts.local_file)) {
 	char *buf;
 
-	buf = xs_buffer("read(%s): %s", ftc->local_filename, strerror(errno));
+	buf = Asprintf("read(%s): %s", ftc->local_filename, strerror(errno));
 	dft_abort(buf, TR_GET_REQ);
 	Free(buf);
 	return;

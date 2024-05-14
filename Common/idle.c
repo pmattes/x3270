@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2023 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -339,7 +339,7 @@ idle_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
 
-    Replace(idle_result, xs_buffer("%.*s", (int)len, buf));
+    Replace(idle_result, Asprintf("%.*s", (int)len, buf));
 }
 
 /**

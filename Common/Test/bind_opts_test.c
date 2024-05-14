@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Paul Mattes.
+ * Copyright (c) 2021-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -230,7 +230,7 @@ resolve_host_and_port_abs(const char *host, char *portname,
 
 	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
 	    if (errmsg) {
-		*errmsg = xs_buffer("%s/%s:\n%s", host, portname,
+		*errmsg = Asprintf("%s/%s:\n%s", host, portname,
 			"Invalid port");
 	    }
 	    return RHP_CANNOT_RESOLVE;
@@ -245,7 +245,7 @@ resolve_host_and_port_abs(const char *host, char *portname,
     rc = getaddrinfo(host, portname, &hints, &res0);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = xs_buffer("%s/%s:\n%s", host,
+	    *errmsg = Asprintf("%s/%s:\n%s", host,
 		    portname? portname: "(none)",
 		    gai_strerror(rc));
 	}
@@ -270,7 +270,7 @@ resolve_host_and_port_abs(const char *host, char *portname,
 		break;
 	    default:
 		if (errmsg) {
-		    *errmsg = xs_buffer("%s:\nunknown family %d", host,
+		    *errmsg = Asprintf("%s:\nunknown family %d", host,
 			    res->ai_family);
 		}
 		freeaddrinfo(res0);

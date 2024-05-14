@@ -53,12 +53,12 @@
 #include "b_password.h"
 #include "json.h"
 #include "json_run.h"
-#include "lazya.h"
 #include "popups.h"
 #include "resources.h"
 #include "screen.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "xio.h"
@@ -121,8 +121,10 @@ static struct {
 /* Action state. */
 typedef struct {
     char *tag;
-    char *xresult;	/* XML result */
-    json_t *jresult;	/* JSON result */
+    char *xresult;		/* XML result */
+    char *xresult_err;		/* XML result error indicators */
+    json_t *jresult;		/* JSON result */
+    json_t *jresult_err;	/* JSON result error indicators */
 } ui_action_t;
 
 /* Callback blocks. */
@@ -188,7 +190,7 @@ uprintf(const char *fmt, ...)
     ssize_t nw;
 
     va_start(ap, fmt);
-    s = xs_vbuffer(fmt, ap);
+    s = Vasprintf(fmt, ap);
     va_end(ap);
     if (ui_socket != INVALID_SOCKET) {
 	nw = send(ui_socket, s, (int)strlen(s), 0);
@@ -197,7 +199,7 @@ uprintf(const char *fmt, ...)
     }
 
     if (pending_trace != NULL) {
-	char *pt = xs_buffer("%s%s", pending_trace, s);
+	char *pt = Asprintf("%s%s", pending_trace, s);
 
 	Replace(pending_trace, pt);
 	Free(s);
@@ -661,11 +663,15 @@ ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
 
     if (XML_MODE) {
 	if (uia->xresult) {
-	    uia->xresult = Realloc(uia->xresult,
-		    strlen(uia->xresult) + 1 + len + 1);
+	    char *re = success? ResFalse: ResTrue;
+
+	    uia->xresult = Realloc(uia->xresult, strlen(uia->xresult) + 1 + len + 1);
 	    sprintf(strchr(uia->xresult, '\0'), "\n%.*s", (int)len, buf);
+	    uia->xresult_err = Realloc(uia->xresult_err, strlen(uia->xresult_err) + 1 + strlen(re) + 1);
+	    sprintf(strchr(uia->xresult_err, '\0'), ",%s", re);
 	} else {
-	    uia->xresult = xs_buffer("%.*s", (int)len, buf);
+	    uia->xresult = Asprintf("%.*s", (int)len, buf);
+	    uia->xresult_err = Asprintf("%s", success? ResFalse: ResTrue);
 	}
     } else {
 	const char *cur = buf;
@@ -674,6 +680,7 @@ ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
 
 	if (uia->jresult == NULL) {
 	    uia->jresult = json_array();
+	    uia->jresult_err = json_array();
 	}
 
 	/*
@@ -683,15 +690,15 @@ ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
 	 */
 	while (len_left--) {
 	    if (*cur++ == '\n') {
-		json_array_append(uia->jresult,
-			json_string(start, cur - start - 1));
+		json_array_append(uia->jresult, json_string(start, cur - start - 1));
+		json_array_append(uia->jresult_err, json_boolean(!success));
 		start = cur;
 		continue;
 	    }
 	}
 	if (cur > start) {
-	    json_array_append(uia->jresult,
-		    json_string(start, cur - start));
+	    json_array_append(uia->jresult, json_string(start, cur - start));
+	    json_array_append(uia->jresult_err, json_boolean(!success));
 	}
     }
 }
@@ -715,11 +722,15 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 	    AttrText,
 		XML_MODE? AT_STRING: AT_NODE,
 		XML_MODE? uia->xresult: (char *)uia->jresult,
+	    AttrTextErr,
+		XML_MODE? AT_STRING: AT_NODE,
+		XML_MODE? uia->xresult_err: (char *)uia->jresult_err,
 	    AttrAbort, abort? AT_BOOLEAN: AT_SKIP_BOOLEAN, abort,
 	    AttrTime, AT_DOUBLE, (double)msec / 1000.0,
 	    NULL);
     if (XML_MODE) {
 	Replace(uia->xresult, NULL);
+	Replace(uia->xresult_err, NULL);
     }
 
     Free(uia);
@@ -788,7 +799,7 @@ get_jstring(const json_t *j, const char *element, const char *attribute)
 	return NULL;
     }
     svalue = json_string_value(j, &slen);
-    return lazyaf("%.*s", (int)slen, svalue);
+    return txAsprintf("%.*s", (int)slen, svalue);
 }
 
 /* Run the command. */
@@ -806,6 +817,7 @@ run_command(const char *tag, const char *type, const char *actions,
 	strcpy(uia->tag, tag);
     }
     uia->xresult = NULL;
+    uia->xresult_err = NULL;
     if (type != NULL && !strcasecmp(type, "keymap")) {
 	tcb = &cb_keymap;
     } else if (type != NULL && !strcasecmp(type, "command")) {
@@ -888,7 +900,7 @@ do_jrun(json_t *j)
 		return;
 	    }
 	    svalue = json_string_value(member, &slen);
-	    tag = lazyaf("%.*s", (int)slen, svalue);
+	    tag = txAsprintf("%.*s", (int)slen, svalue);
 	} else if (json_key_matches(key, key_length, AttrActions)) {
 	    char *errmsg;
 
@@ -904,7 +916,7 @@ do_jrun(json_t *j)
 	    }
 	} else {
 	    ui_unknown_attribute(OperRun,
-		    lazyaf("%.*s", (int)key_length, key));
+		    txAsprintf("%.*s", (int)key_length, key));
 	}
     } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
 
@@ -948,7 +960,7 @@ Passthru_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	for (in_ix = 0; in_ix < argc; in_ix++) {
-	    args[out_ix++] = lazyaf(AttrArg "%d", in_ix + 1);
+	    args[out_ix++] = txAsprintf(AttrArg "%d", in_ix + 1);
 	    args[out_ix++] = argv[in_ix];
 	}
 	args[out_ix] = NULL;
@@ -1087,7 +1099,7 @@ do_jregister(json_t *j)
 	    }
 	} else {
 	    ui_unknown_attribute(OperRegister,
-		    lazyaf("%.*s", (int)key_length, key));
+		    txAsprintf("%.*s", (int)key_length, key));
 	}
     } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
 
@@ -1154,7 +1166,7 @@ jtext_array(const json_t *j, const char *element, const char *attribute)
 	if (ret != NULL) {
 	    char *t = ret;
 
-	    ret = xs_buffer("%s\n%s", ret, json_string_value(e, &len));
+	    ret = Asprintf("%s\n%s", ret, json_string_value(e, &len));
 	    Free(t);
 	} else {
 	    ret = NewString(json_string_value(e, &len));
@@ -1191,7 +1203,7 @@ do_jpassthru_complete(const json_t *j, bool success)
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
 		AttrText, AT_STRING,
-		    lazyaf("%s parameter must be an object", cmd),
+		    txAsprintf("%s parameter must be an object", cmd),
 		NULL);
 	return;
     }
@@ -1207,7 +1219,7 @@ do_jpassthru_complete(const json_t *j, bool success)
 		return;
 	    }
 	} else {
-	    ui_unknown_attribute(cmd, lazyaf("%.*s", (int)key_length, key));
+	    ui_unknown_attribute(cmd, txAsprintf("%.*s", (int)key_length, key));
 	}
     } END_JSON_OBJECT_FOREACH(j, key, key_length, element);
 
@@ -1360,7 +1372,7 @@ process_input(const char *buf, ssize_t nr)
 	    if (XML_Parse(uix.parser, buf, (int)i, 0) == 0) {
 		ui_leaf(IndUiError,
 			AttrFatal, AT_BOOLEAN, true,
-			AttrText, AT_STRING, lazyaf("XML parsing error: %s",
+			AttrText, AT_STRING, txAsprintf("XML parsing error: %s",
 			    XML_ErrorString(XML_GetErrorCode(uix.parser))),
 			AttrLine, AT_INT,
 			    (int64_t)XML_GetCurrentLineNumber(uix.parser),
@@ -1389,10 +1401,10 @@ process_input(const char *buf, ssize_t nr)
 	    char *p = uij.pending_input;
 
 	    /* Handle multi-line input. */
-	    uij.pending_input = xs_buffer("%s%.*s", p, (int)nr, buf);
+	    uij.pending_input = Asprintf("%s%.*s", p, (int)nr, buf);
 	    Free(p);
 	} else {
-	    uij.pending_input = xs_buffer("%.*s", (int)nr, buf);
+	    uij.pending_input = Asprintf("%.*s", (int)nr, buf);
 	}
 
 	/*

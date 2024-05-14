@@ -44,7 +44,6 @@
 #include "actions.h"
 #include "dialog.h"
 #include "keymap.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "resources.h"
@@ -52,6 +51,7 @@
 #include "selectc.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "xactions.h"
 #include "xkybd.h"
@@ -686,7 +686,7 @@ trace_event(XEvent *event)
 	} if (ks == NoSymbol) {
 	    symname = "NoSymbol";
 	} else if ((symname = XKeysymToString(ks)) == NULL) {
-	    symname = lazyaf("0x%lx", (unsigned long)ks);
+	    symname = txAsprintf("0x%lx", (unsigned long)ks);
 	}
 	do {
 	    int was_ambiguous = ambiguous;

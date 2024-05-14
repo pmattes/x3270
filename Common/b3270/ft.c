@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020, 2022 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@
 #include "ft.h"
 #include "ft_private.h"
 #include "ft_gui.h"
-#include "lazya.h"
+#include "txa.h"
 #include "ui_stream.h"
 
 void

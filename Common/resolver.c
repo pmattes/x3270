@@ -42,8 +42,8 @@
 #endif /*]*/
 
 #include <stdio.h>
-#include "lazya.h"
 #include "resolver.h"
+#include "txa.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
 # include "winvers.h"
@@ -130,7 +130,7 @@ resolve_host_and_port_v46(const char *host, char *portname,
 
 	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
 	    if (errmsg) {
-		*errmsg = lazyaf("%s/%s:\n%s", host, portname, "Invalid port");
+		*errmsg = txAsprintf("%s/%s:\n%s", host, portname, "Invalid port");
 	    }
 	    return RHP_CANNOT_RESOLVE;
 	}
@@ -144,7 +144,7 @@ resolve_host_and_port_v46(const char *host, char *portname,
     rc = getaddrinfo(host, portname, &hints, &res0);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
+	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
 		    my_gai_strerror(rc));
 	}
 	return RHP_CANNOT_RESOLVE;
@@ -168,7 +168,7 @@ resolve_host_and_port_v46(const char *host, char *portname,
 		break;
 	    default:
 		if (errmsg) {
-		    *errmsg = lazyaf("%s:\nunknown family %d", host,
+		    *errmsg = txAsprintf("%s:\nunknown family %d", host,
 			    res->ai_family);
 		}
 		freeaddrinfo(res0);
@@ -300,7 +300,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 
 	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
 	    if (errmsg) {
-		*errmsg = lazyaf("%s/%s:\n%s", host, portname, "Invalid port");
+		*errmsg = txAsprintf("%s/%s:\n%s", host, portname, "Invalid port");
 	    }
 	    return RHP_CANNOT_RESOLVE;
 	}
@@ -315,7 +315,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     if (*slot >= GAI_SLOTS) {
 	*slot = -1;
 	if (errmsg) {
-	    *errmsg = lazya(NewString("Too many resolver reqests pending"));
+	    *errmsg = txdFree(NewString("Too many resolver reqests pending"));
 	}
 	return RHP_FATAL;
     }
@@ -349,7 +349,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     rc = getaddrinfo_a(GAI_NOWAIT, &gai[*slot].gaicbs, 1, &gai[*slot].sigevent);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
+	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
 		    my_gai_strerror(rc));
 	}
 	cleanup_partial_slot(*slot);
@@ -359,7 +359,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     thread = CreateThread(NULL, 0, async_resolve, &gai[*slot], 0, NULL);
     if (thread == INVALID_HANDLE_VALUE) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
+	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
 		    win32_strerror(GetLastError()));
 	}
 	cleanup_partial_slot(*slot);
@@ -428,7 +428,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    return RHP_SUCCESS;
 	} else {
 	    if (errmsg) {
-		*errmsg = lazyaf("%s/%s:\n%s", gaip->host,
+		*errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
 			gaip->port? gaip->port: "(none)",
 			"no suitable resolution");
 	    }
@@ -452,7 +452,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    gaip->gaicb.ar_result = NULL;
 	}
 	if (errmsg) {
-	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
+	    *errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
 		    gaip->port? gaip->port: "(none)",
 		    my_gai_strerror(rc));
 	}
@@ -465,7 +465,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 
     if (gaip->rc != 0) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s/%s:\n%s", gaip->host,
+	    *errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
 		    gaip->port? gaip->port: "(none)",
 		    my_gai_strerror(gaip->rc));
 	}
@@ -492,7 +492,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 		break;
 	    default:
 		if (errmsg) {
-		    *errmsg = lazyaf("%s:\nunknown family %d", gaip->host,
+		    *errmsg = txAsprintf("%s:\nunknown family %d", gaip->host,
 			    res->ai_family);
 		}
 		freeaddrinfo(gaip->result);
@@ -514,7 +514,7 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 #else /*][*/
     if (errmsg != NULL) {
 	*errmsg =
-	    lazya(NewString("Asynchronous name resolution not supported"));
+	    txdFree(NewString("Asynchronous name resolution not supported"));
     }
     return RHP_FATAL;
 #endif /*]*/
@@ -736,7 +736,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	    NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = lazyaf("%s", my_gai_strerror(rc));
+	    *errmsg = txAsprintf("%s", my_gai_strerror(rc));
 	}
 	return false;
     }

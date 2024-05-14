@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2019, 2021 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -51,10 +51,10 @@ const char *popup_separator = " ";
 void
 popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
-    char *s = xs_vbuffer(fmt, args);
+    char *s = Vasprintf(fmt, args);
 
     if (type == ET_CONNECT) {
-	char *t = xs_buffer("Connection failed:\n%s", s);
+	char *t = Asprintf("Connection failed:\n%s", s);
 
 	Replace(s, t);
     }
@@ -78,7 +78,7 @@ action_output(const char *fmt, ...)
     char *s;
 
     va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
+    s = Vasprintf(fmt, args);
     va_end(args);
     if (task_redirect()) {
 	task_info("%s", s);
@@ -99,7 +99,7 @@ popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
     char *m;
 
     va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
+    m = Vasprintf(fmt, args);
     va_end(args);
     popup_an_error("Printer session: %s", m);
     Free(m);
@@ -113,7 +113,7 @@ popup_child_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
     char *m;
 
     va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
+    m = Vasprintf(fmt, args);
     va_end(args);
     action_output("%s", m);
     Free(m);

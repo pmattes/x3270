@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2022 Paul Mattes.
+ * Copyright (c) 2009-2024 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -67,32 +67,32 @@ validate_and_split_resource(const char *where, const char *arg,
 #endif /*]*/
 
     if (me_dot == NULL) {
-	me_dot = xs_buffer("%s.", app);
-	me_star = xs_buffer("%s*", app);
+	me_dot = Asprintf("%s.", app);
+	me_star = Asprintf("%s*", app);
 	me_len = strlen(me_dot);
 #if defined(_WIN32) /*[*/
 	if (app[0] == 'w') {
-	    wme_dot = xs_buffer("%s.", app + 1);
-	    wme_star = xs_buffer("%s.", app + 1);
+	    wme_dot = Asprintf("%s.", app + 1);
+	    wme_star = Asprintf("%s.", app + 1);
 	    wme_len = strlen(wme_dot);
 	} else {
-	    wme_dot = xs_buffer("w%s.", app);
-	    wme_star = xs_buffer("w%s.", app);
+	    wme_dot = Asprintf("w%s.", app);
+	    wme_star = Asprintf("w%s.", app);
 	    wme_len = strlen(wme_dot);
 	}
 #endif /*]*/
 	if (appres.alias != NULL) {
-	    alias_dot = xs_buffer("%s.", appres.alias);
-	    alias_star = xs_buffer("%s*", appres.alias);
+	    alias_dot = Asprintf("%s.", appres.alias);
+	    alias_star = Asprintf("%s*", appres.alias);
 	    alias_len = strlen(alias_dot);
 #if defined(_WIN32) /*[*/
 	    if (appres.alias[0] == 'w') {
-		walias_dot = xs_buffer("%s.", appres.alias + 1);
-		walias_star = xs_buffer("%s.", appres.alias + 1);
+		walias_dot = Asprintf("%s.", appres.alias + 1);
+		walias_star = Asprintf("%s.", appres.alias + 1);
 		walias_len = strlen(walias_dot);
 	    } else {
-		walias_dot = xs_buffer("w%s.", appres.alias);
-		walias_star = xs_buffer("w%s.", appres.alias);
+		walias_dot = Asprintf("w%s.", appres.alias);
+		walias_star = Asprintf("w%s.", appres.alias);
 		walias_len = strlen(walias_dot);
 	    }
 #endif /*]*/
@@ -262,7 +262,7 @@ read_resource_filex(const char *filename, bool fatal)
 	}
 
 	/* Digest it. */
-	where = xs_buffer("%s:%d", filename, lno);
+	where = Asprintf("%s:%d", filename, lno);
 	parse_xrm(s, where);
 	Free(where);
 

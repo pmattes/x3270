@@ -357,8 +357,8 @@ static char *
 format_uerror(const char *text, ucs4_t u)
 {
     return (u < 0xff && isprint((int)u))?
-	xs_buffer("%s '%c'", text, u):
-	xs_buffer("%s U+%04x", text, u);
+	Asprintf("%s '%c'", text, u):
+	Asprintf("%s U+%04x", text, u);
 }
 
 /**
@@ -922,13 +922,13 @@ json_write_indent(const json_t *json, unsigned options, int indent)
     case JT_BOOLEAN:
 	return NewString(json_boolean_value(json)? "true": "false");
     case JT_INTEGER:
-	return xs_buffer("%"JSON_INT_PRINT, json_integer_value(json));
+	return Asprintf("%"JSON_INT_PRINT, json_integer_value(json));
     case JT_DOUBLE:
-	return xs_buffer("%g", json_double_value(json));
+	return Asprintf("%g", json_double_value(json));
     case JT_STRING:
 	v = json_string_value(json, &len);
 	s = json_expand_string(v, len, options);
-	t = xs_buffer("\"%s\"", s);
+	t = Asprintf("\"%s\"", s);
 	Free(s);
 	return t;
     case JT_OBJECT:

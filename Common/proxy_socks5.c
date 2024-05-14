@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 #endif /*]*/
 
 #include "3270ds.h"
-#include "lazya.h"
 #include "popups.h"
 #include "proxy.h"
 #include "proxy_private.h"
@@ -49,6 +48,7 @@
 #include "resolver.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "w3misc.h"
 

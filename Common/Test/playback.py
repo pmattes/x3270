@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -57,10 +57,13 @@ class playback():
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        return
+        self.close()
     
-    # Shutdown.
-    def __del__(self):
+    def close(self):
+        '''Close the object'''
+        if (self.listensocket != None):
+            self.listensocket.close()
+            self.listensocket = None
         if self.conn != None:
             self.conn.close()
             self.conn = None
@@ -70,18 +73,12 @@ class playback():
         if self.thread != None:
             self.thread.join()
             self.thread = None
-        if self.file != None:
-            self.file.close()
-            self.file = None
-
-    def close(self):
-        '''Close the object'''
-        self.__del__()
 
     # Accept a connection asynchronously.
     def process(self):
         (self.conn, _) = self.listensocket.accept()
         self.listensocket.close()
+        self.listensocket = None
     
     def wait_accept(self, timeout=2):
         '''Wait for a connection'''

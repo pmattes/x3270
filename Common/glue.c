@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * Copyright (c) 1989 Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -171,7 +171,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	char *path = getenv("PATH");
 
 	/* Add our path to $PATH so we can find x3270if. */
-	(void) putenv(xs_buffer("PATH=%.*s%s%s",
+	(void) putenv(Asprintf("PATH=%.*s%s%s",
 		    (int)(programname - argv[0]), argv[0],
 		    path? ":": "",
 		    path? path: ""));
@@ -242,7 +242,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	if (supports_cmdline_host) {
 	    no_minus(argv[1]);
 	    no_minus(argv[2]);
-	    *cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
+	    *cl_hostname = Asprintf("%s:%s", argv[1], argv[2]);
 	    break;
 	}
 	/* else fall through... */
@@ -266,18 +266,18 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 
     /* Merge in the session. */
     if (n_session_suffixes == 0) {
-	add_session_suffix(xs_buffer(".%s", app));
+	add_session_suffix(Asprintf(".%s", app));
 #if defined(_WIN32) /*[*/
 	if (app[0] == 'w') {
-	    add_session_suffix(xs_buffer(".%s", app + 1));
-	    add_session_suffix(xs_buffer(".%.3s", app));
+	    add_session_suffix(Asprintf(".%s", app + 1));
+	    add_session_suffix(Asprintf(".%.3s", app));
 	} else {
-	    add_session_suffix(xs_buffer(".w%s", app));
-	    add_session_suffix(xs_buffer(".w%.2s", app));
+	    add_session_suffix(Asprintf(".w%s", app));
+	    add_session_suffix(Asprintf(".w%.2s", app));
 	}
 #endif /*]*/
 	if (appres.alias != NULL) {
-	    add_session_suffix(xs_buffer(".%s", appres.alias));
+	    add_session_suffix(Asprintf(".%s", appres.alias));
 	}
     }
     if (*cl_hostname != NULL &&
@@ -428,7 +428,7 @@ static void
 no_minus(const char *arg)
 {
     if (arg[0] == '-') {
-	usage(xs_buffer("Unknown or incomplete option: '%s'", arg));
+	usage(Asprintf("Unknown or incomplete option: '%s'", arg));
     }
 }
 
@@ -686,7 +686,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_STRING:
 	    if (i == *argcp - 1) {	/* missing arg */
-		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		usage(Asprintf("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    Free(*(char **)opts[j].aoff);
@@ -697,21 +697,21 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_XRM:
 	    if (i == *argcp - 1) {	/* missing arg */
-		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		usage(Asprintf("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    xparse_xrm(argv[++i], OptXrm, warn);
 	    break;
 	case OPT_SET:
 	    if (i == *argcp - 1) {	/* missing arg */
-		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		usage(Asprintf("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    parse_set(argv[++i], OptSet, warn);
 	    break;
 	case OPT_CLEAR:
 	    if (i == *argcp - 1) {	/* missing arg */
-		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		usage(Asprintf("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    parse_clear(argv[++i], OptClear, warn);
@@ -726,7 +726,7 @@ parse_options(int *argcp, const char **argv, bool warn)
 	    break;
 	case OPT_INT:
 	    if (i == *argcp - 1) {	/* missing arg */
-		usage(xs_buffer("Missing value for '%s'", argv[i]));
+		usage(Asprintf("Missing value for '%s'", argv[i]));
 		continue;
 	    }
 	    *(int *)opts[j].aoff = atoi(argv[++i]);
@@ -849,7 +849,7 @@ cmdline_help(bool as_action)
 
 	if (sorted_help[i].type == OPT_XRM &&
 		h != NULL && (star = strchr(h, '*')) != NULL) {
-	    ht = hx = xs_buffer("%.*s%s%s", (int)(star - h), h, app,
+	    ht = hx = Asprintf("%.*s%s%s", (int)(star - h), h, app,
 		    star + 1);
 	} else {
 	    ht = h;
@@ -1166,7 +1166,7 @@ valid_explicit(const char *resname, size_t len)
 		for (j = 0; host_color[j].name != NULL; j++) {
 		    char *xbuf;
 
-		    xbuf = xs_buffer("%s%s", x->xresources[i].name,
+		    xbuf = Asprintf("%s%s", x->xresources[i].name,
 			    host_color[j].name);
 		    if (strlen(xbuf) == len &&
 			!strncmp(xbuf, resname, len)) {
@@ -1174,7 +1174,7 @@ valid_explicit(const char *resname, size_t len)
 			    return 0;
 		    }
 		    Free(xbuf);
-		    xbuf = xs_buffer("%s%d", x->xresources[i].name,
+		    xbuf = Asprintf("%s%d", x->xresources[i].name,
 			    host_color[j].index);
 		    if (strlen(xbuf) == len &&
 			!strncmp(xbuf, resname, len)) {
@@ -1363,10 +1363,10 @@ parse_set(const char *arg, const char *where, bool warn)
     char *xrm_arg;
 
     if (eq != NULL) {
-	xrm_arg = xs_buffer("%s.%.*s: %s", app, (int)(eq - arg), arg,
+	xrm_arg = Asprintf("%s.%.*s: %s", app, (int)(eq - arg), arg,
 		eq + 1);
     } else {
-	xrm_arg = xs_buffer("%s.%s: %s", app, arg, ResTrue);
+	xrm_arg = Asprintf("%s.%s: %s", app, arg, ResTrue);
     }
     xparse_xrm(xrm_arg, where, warn);
     Free(xrm_arg);
@@ -1376,7 +1376,7 @@ parse_set(const char *arg, const char *where, bool warn)
 static void
 parse_clear(const char *arg, const char *where, bool warn)
 {
-    char *xrm_arg = xs_buffer("%s.%s: %s", app, arg, ResFalse);
+    char *xrm_arg = Asprintf("%s.%s: %s", app, arg, ResFalse);
 
     xparse_xrm(xrm_arg, where, warn);
     Free(xrm_arg);

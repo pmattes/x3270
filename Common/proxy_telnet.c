@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,13 @@
 #include "globals.h"
 
 #include "3270ds.h"
-#include "lazya.h"
 #include "popups.h"
 #include "proxy.h"
 #include "proxy_private.h"
 #include "proxy_telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "w3misc.h"
 
@@ -47,7 +47,7 @@
 proxy_negotiate_ret_t
 proxy_telnet(socket_t fd, const char *host, unsigned short port)
 {
-    char *sbuf = xs_buffer("connect %s %u\r\n", host, port);
+    char *sbuf = Asprintf("connect %s %u\r\n", host, port);
 
     vtrace("TELNET Proxy: xmit '%.*s'", (int)(strlen(sbuf) - 2), sbuf);
     trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));

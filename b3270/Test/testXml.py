@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 # b3270 XML tests
 
 import os
+import re
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 import xml.etree.ElementTree as ET
@@ -309,6 +310,27 @@ class TestB3270Xml(cti.cti):
         self.assertEqual('', out[4])
 
         self.vgwait(b3270)
+
+    # b3270 XML error output test
+    def test_b3270_xml_error_output(self):
+
+        b3270 = Popen(cti.vgwrap(['b3270', '-xml', '-nowrapperdoc']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+
+        # Feed b3270 an action.
+        b3270.stdin.write(b'<run actions="Set(startTls) Set(trace) Set(foo)"/>\n')
+
+        # Get the result.
+        out = b3270.communicate(timeout=2)[0].decode().split('\n')[-2]
+
+        # Wait for the process to exit.
+        b3270.stdin.close()
+        self.vgwait(b3270)
+
+        # Check the 'text-err' output.
+        match = re.search(r'text-err="([^"]*)"', out)
+        self.assertIsNotNone(match, 'Did not find text-err in output')
+        self.assertEqual('false,false,true', match.group(1))
 
 if __name__ == '__main__':
     unittest.main()

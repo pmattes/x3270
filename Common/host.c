@@ -43,7 +43,6 @@
 #include "glue_gui.h"
 #include "host.h"
 #include "host_gui.h"
-#include "lazya.h"
 #include "login_macro.h"
 #include "names.h"
 #include "popups.h"
@@ -54,6 +53,7 @@
 #include "telnet_core.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "screentrace.h"
 #include "utils.h"
 #include "xio.h"
@@ -137,7 +137,7 @@ read_hosts_file(void)
 
     hostfile_name = appres.hostsfile;
     if (hostfile_name == NULL) {
-	hostfile_name = xs_buffer("%s/ibm_hosts", appres.conf_dir);
+	hostfile_name = Asprintf("%s/ibm_hosts", appres.conf_dir);
     } else {
 	hostfile_name = do_subst(appres.hostsfile, DS_VARS | DS_TILDE);
     }
@@ -614,7 +614,7 @@ host_connect(const char *n, enum iaction ia)
     }
 
     has_colons = (strchr(chost, ':') != NULL);
-    Replace(qualified_host, xs_buffer("%s%s%s%s%s:%s%s%s",
+    Replace(qualified_host, Asprintf("%s%s%s%s%s:%s%s%s",
 		HOST_FLAG(TLS_HOST)? "L:": "",
 		HOST_FLAG(NO_VERIFY_CERT_HOST)? "Y:": "",
 		has_colons? "[": "",

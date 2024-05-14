@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@
 #include "copyright.h"
 #include "ctlrc.h"
 #include "host.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "query.h"
@@ -47,7 +46,8 @@
 #include "telnet.h"
 #include "task.h"
 #include "trace.h"
-#include "screentrace.h"
+#include "screentrace.h" /* has to come after trace.h */
+#include "txa.h"
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
@@ -92,19 +92,19 @@ get_connect_time(void)
     sc = td % 60;
 
     return (dy > 0)?
-	lazyaf("%ud%02u:%02u:%02u", (u_int)dy, (u_int)hr, (u_int)mn,
+	txAsprintf("%ud%02u:%02u:%02u", (u_int)dy, (u_int)hr, (u_int)mn,
 		(u_int)sc):
-	lazyaf("%02u:%02u:%02u", (u_int)hr, (u_int)mn, (u_int)sc);
+	txAsprintf("%02u:%02u:%02u", (u_int)hr, (u_int)mn, (u_int)sc);
 }
 
 static const char *
 get_codepage(void)
 {
-    char *sbcs = lazyaf("%s sbcs gcsgid %u cpgid %u",
+    char *sbcs = txAsprintf("%s sbcs gcsgid %u cpgid %u",
 	    get_canonical_codepage(),
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));
-    return dbcs? lazyaf("%s dbcs gcsgid %u cpgid %u",
+    return dbcs? txAsprintf("%s dbcs gcsgid %u cpgid %u",
 	    sbcs,
 	    (unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid_dbcs & 0xffff)):
@@ -129,7 +129,7 @@ get_codepages(void)
     }
 
     free_cpnames(c);
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 static const char *
@@ -139,7 +139,7 @@ get_proxy(void)
     const char *user = net_proxy_user();
 
     return (ptype != NULL)?
-	lazyaf("%s %s %s%s%s",
+	txAsprintf("%s %s %s%s%s",
 		ptype,
 		net_proxy_host(),
 		net_proxy_port(),
@@ -156,8 +156,8 @@ get_rx(void)
     }
 
     return IN_3270?
-	lazyaf("records %u bytes %u", ns_rrcvd, ns_brcvd):
-	lazyaf("bytes %u", ns_brcvd);
+	txAsprintf("records %u bytes %u", ns_rrcvd, ns_brcvd):
+	txAsprintf("bytes %u", ns_brcvd);
 }
 
 static const char *
@@ -178,7 +178,7 @@ get_tasks(void)
     if (sl > 0 && r[sl - 1] == '\n') {
 	r[sl - 1] = '\0';
     }
-    return lazya(r);
+    return txdFree(r);
 }
 
 static const char *
@@ -198,14 +198,14 @@ get_tx(void)
     }
 
     return IN_3270?
-	lazyaf("records %u bytes %u", ns_rsent, ns_bsent):
-	lazyaf("bytes %u", ns_bsent);
+	txAsprintf("records %u bytes %u", ns_rsent, ns_bsent):
+	txAsprintf("bytes %u", ns_bsent);
 }
 
 const char *
 get_about(void)
 {
-    return lazyaf("%s\nCopyright 1989-%s by Paul Mattes, GTRC and others.",
+    return txAsprintf("%s\nCopyright 1989-%s by Paul Mattes, GTRC and others.",
 	    build, cyear);
 }
 

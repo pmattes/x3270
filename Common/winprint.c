@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2020 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -93,9 +93,9 @@ win_mkstemp(char **path, ptype_t ptype)
 	    s = "C:";
 	}
 	if (gen) {
-	    *path = xs_buffer("%s\\x3h-%u-%u.%s", s, getpid(), gen, suffix);
+	    *path = Asprintf("%s\\x3h-%u-%u.%s", s, getpid(), gen, suffix);
 	} else {
-	    *path = xs_buffer("%s\\x3h-%u.%s", s, getpid(), suffix);
+	    *path = Asprintf("%s\\x3h-%u.%s", s, getpid(), suffix);
 	}
 	fd = open(*path, O_CREAT | O_EXCL | O_RDWR | xflags,
 		S_IREAD | S_IWRITE);

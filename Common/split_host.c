@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -363,7 +363,7 @@ done:
 	Free(skip_map);
     }
     if (!rc) {
-	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);
+	*error = Asprintf("Hostname syntax error in '%s': %s", raw, errmsg);
     }
     return rc;
 }

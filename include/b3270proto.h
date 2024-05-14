@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 Paul Mattes.
+ * Copyright (c) 2018-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,6 +145,7 @@
 #define AttrSuccess	"success"
 #define AttrSupported	"supported"
 #define AttrText	"text"
+#define AttrTextErr	"text-err"
 #define AttrTime	"time"
 #define AttrTop		"top"
 #define AttrType	"type"

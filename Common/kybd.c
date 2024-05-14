@@ -54,7 +54,6 @@
 #include "idle.h"
 #include "kybd.h"
 #include "latin1.h"
-#include "lazya.h"
 #include "linemode.h"
 #include "names.h"
 #include "nvt.h"
@@ -70,6 +69,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -404,11 +404,11 @@ kybdlock_decode(char *how, unsigned int bits)
     char *space = "";
 
     if (bits == (unsigned int)-1) {
-	return lazyaf("%sall", how);
+	return txAsprintf("%sall", how);
     }
 
     if (bits == 0) {
-	return lazyaf("%snone", how);
+	return txAsprintf("%snone", how);
     }
 
     vb_init(&r);
@@ -475,7 +475,7 @@ kybdlock_decode(char *how, unsigned int bits)
 	space = " ";
     }
 
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /* Set bits in the keyboard lock. */
@@ -1171,7 +1171,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     if (kybdlock) {
 	char *codename;
 
-	codename = lazyaf("%d", ebc |
+	codename = txAsprintf("%d", ebc |
 		(with_ge ? GE_WFLAG : 0) |
 		(pasting ? PASTE_WFLAG : 0));
 	enq_fta(key_Character_wrapper, codename,
@@ -1452,7 +1452,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
     if (kybdlock) {
 	char *codename;
 
-	codename = lazyaf("%d", (ebc_pair[0] << 8) | ebc_pair[1]);
+	codename = txAsprintf("%d", (ebc_pair[0] << 8) | ebc_pair[1]);
 	enq_fta(key_WCharacter_wrapper, codename,
 		oerr_fail ? KwFailOnError : KwNoFailOnError);
 	return false;
@@ -1739,13 +1739,13 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	const char *apl_name;
 
 	if (keytype == KT_STD) {
-	    enq_ta(AnKey, lazyaf("U+%04x", ucs4),
+	    enq_ta(AnKey, txAsprintf("U+%04x", ucs4),
 		    oerr_fail ? KwFailOnError : KwNoFailOnError);
 	} else {
 	    /* APL character */
 	    apl_name = ucs4_to_apl_key(ucs4);
 	    if (apl_name != NULL) {
-		enq_ta(AnKey, lazyaf("apl_%s", apl_name),
+		enq_ta(AnKey, txAsprintf("apl_%s", apl_name),
 			oerr_fail ? KwFailOnError : KwNoFailOnError);
 	    } else {
 		vtrace("  dropped (invalid key type or name)\n");
@@ -3623,7 +3623,7 @@ do_pa(unsigned n)
 	return;
     }
     if (kybdlock) {
-	enq_ta(AnPA, lazyaf("%d", n), NULL);
+	enq_ta(AnPA, txAsprintf("%d", n), NULL);
 	return;
     }
     key_AID(pa_xlate[n-1]);
@@ -3638,7 +3638,7 @@ do_pf(unsigned n)
 	return;
     }
     if (kybdlock) {
-	enq_ta(AnPF, lazyaf("%d", n), NULL);
+	enq_ta(AnPF, txAsprintf("%d", n), NULL);
 	return;
     }
     key_AID(pf_xlate[n-1]);

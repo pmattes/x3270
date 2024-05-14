@@ -52,12 +52,13 @@ class TestS3270NewEnviron(cti.cti):
             ts.close()
 
             # Start s3270.
+            env = os.environ.copy()
             if applid != None:
-                os.environ['IBMAPPLID'] = applid
+                env['IBMAPPLID'] = applid
             else:
-                if 'IBMAPPLID' in os.environ:
-                    del os.environ['IBMAPPLID']
-            s3270 = Popen(cti.vgwrap(['s3270', f'a:c:127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+                if 'IBMAPPLID' in env:
+                    del env['IBMAPPLID']
+            s3270 = Popen(cti.vgwrap(['s3270', f'a:c:127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -86,20 +87,21 @@ class TestS3270NewEnviron(cti.cti):
             ts.close()
 
             # Start s3270.
+            env = os.environ.copy()
             match (user):
                 case user.resource:
                     opt = ['-user', '']
                 case user.user_env:
                     opt = []
-                    os.environ['USER'] = ''
+                    env['USER'] = ''
                 case user.username_env:
                     opt = []
-                    del os.environ['USER']
-                    os.environ['USERNAME'] = ''
+                    del env['USER']
+                    env['USERNAME'] = ''
             command = ['s3270']
             command += opt
             command.append(f'a:c:127.0.0.1:{port}')
-            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -123,11 +125,13 @@ class TestS3270NewEnviron(cti.cti):
 
         # Create a trace file on the fly, expecting the enum name as the USER value.
         (handle, file_name) = tempfile.mkstemp()
-        os.write(handle, b'< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
-        os.write(handle, b'> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
-        os.write(handle, b'< 0x0   fffa27010055534552fff0\n') # RCVD SB NEW-ENVIRON SEND VAR "USER" SE
-        os.write(handle, b'> 0x0   fffa2700005553455201' + bytes.hex(user.name.encode()).encode() + b'fff0\n') # SENT SB NEW-ENVIRON IS VAR "USER" "xxx" SE
         os.close(handle)
+        f = open(file_name, 'w')
+        f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
+        f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
+        f.write('< 0x0   fffa27010055534552fff0\n') # RCVD SB NEW-ENVIRON SEND VAR "USER" SE
+        f.write('> 0x0   fffa2700005553455201' + bytes.hex(user.name.encode()) + 'fff0\n') # SENT SB NEW-ENVIRON IS VAR "USER" "xxx" SE
+        f.close()
 
         # Start 'playback' to read s3270's output.
         port, ts = cti.unused_port()
@@ -135,12 +139,13 @@ class TestS3270NewEnviron(cti.cti):
             ts.close()
 
             # Start s3270.
-            if 'USER' in os.environ:
-                user_value = os.environ['USER']
+            env = os.environ.copy()
+            if 'USER' in env:
+                user_value = env['USER']
             else:
                 user_value = None
-            if 'USERNAME' in os.environ:
-                username_value = os.environ['USERNAME']
+            if 'USERNAME' in env:
+                username_value = env['USERNAME']
             else:
                 username_value = None
             match (user):
@@ -148,22 +153,22 @@ class TestS3270NewEnviron(cti.cti):
                     opt = ['-user', user.name]
                 case user.user_env:
                     opt = []
-                    os.environ['USER'] = user.name
+                    env['USER'] = user.name
                 case user.username_env:
                     opt = []
                     if user_value != None:
-                        del os.environ['USER']
-                    os.environ['USERNAME'] = user.name
+                        del env['USER']
+                    env['USERNAME'] = user.name
                 case user.UNKNOWN:
                     opt = []
                     if user_value != None:
-                        del os.environ['USER']
+                        del env['USER']
                     if username_value != None:
-                        del os.environ['USERNAME']
+                        del env['USERNAME']
             command = ['s3270']
             command += opt
             command.append(f'a:c:127.0.0.1:{port}')
-            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -171,9 +176,9 @@ class TestS3270NewEnviron(cti.cti):
 
         # Fix up the environment.
         if user_value != None:
-            os.environ['USER'] = user_value
+            env['USER'] = user_value
         if username_value != None:
-            os.environ['USERNAME'] = username_value
+            env['USERNAME'] = username_value
 
         # Wait for the process to exit.
         s3270.stdin.write(b'Quit()\n')

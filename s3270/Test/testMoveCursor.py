@@ -50,6 +50,7 @@ class TestS3270MoveCursor(cti.cti):
         ts.close()
 
         # Feed s3270 some actions that will fail.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(nvtMode)')
         r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/MoveCursor(1,1)')
         self.assertFalse(r.ok)
         self.assertIn('NVT mode', r.json()['result'][0])

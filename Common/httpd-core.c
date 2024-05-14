@@ -38,8 +38,9 @@
 #include "appres.h"
 #include "asprintf.h"
 #include "json.h"
-#include "lazya.h"
 #include "task.h"
+#include "s3270_proto.h"
+#include "txa.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -292,7 +293,7 @@ httpd_vprint(httpd_t *h, httpd_print_t type, const char *format, va_list ap)
     char *sp;			/* pointer through the string */
 
     /* Expand the text. */
-    buf = xs_vbuffer(format, ap);
+    buf = Vasprintf(format, ap);
     sl = strlen(buf);
 
     /* Write it in chunks, doing CR/LF expansion. */
@@ -368,7 +369,7 @@ httpd_content_len(httpd_t *h, size_t len)
     char *cl;
 
     /* Do our own CR+LF expansion and send directly. */
-    cl = lazyaf("Content-Length: %u\r\n\r\n", (unsigned)len);
+    cl = txAsprintf("Content-Length: %u\r\n\r\n", (unsigned)len);
     httpd_send(h, cl, strlen(cl));
 }
 
@@ -622,7 +623,7 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	    break;
 	case CT_JSON:
 	    {
-		char *buf = xs_vbuffer(format, ap);
+		char *buf = Vasprintf(format, ap);
 		size_t sl = strlen(buf);
 		char *w = NULL;
 
@@ -633,13 +634,16 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 		    httpd_print(h, HP_BUFFER, "%s\n",
 			    (w = json_write_o(jresult, JW_ONE_LINE)));
 		} else {
-		    json_t *j, *k;
+		    json_t *j, *result_array, *err_array;
 
-		    k = json_array();
-		    json_array_set(k, 0, json_string(buf, sl));
+		    result_array = json_array();
+		    json_array_set(result_array, 0, json_string(buf, sl));
+		    err_array = json_array();
+		    json_array_set(err_array, 0, json_boolean(true));
 		    j = json_object();
-		    json_object_set(j, "result", NT, k);
-		    json_object_set(j, "status", NT,
+		    json_object_set(j, JRET_RESULT, NT, result_array);
+		    json_object_set(j, JRET_RESULT_ERR, NT, err_array);
+		    json_object_set(j, JRET_STATUS, NT,
 			    json_string(task_status_string(), NT));
 		    httpd_print(h, HP_BUFFER, "%s\n",
 			    (w = json_write_o(j, JW_ONE_LINE)));
@@ -1262,7 +1266,7 @@ httpd_redirect(httpd_t *h, const char *uri)
 	return httpd_error(h, ERRMODE_NONFATAL, CT_HTML, 404, "Document not found.");
     }
 
-    r->location = xs_buffer("http://%s%s/", host, uri);
+    r->location = Asprintf("http://%s%s/", host, uri);
     httpd_error(h, ERRMODE_NONFATAL, CT_HTML, 301, "The document has moved "
 	    "<a href=\"http://%s%s/\">here.</a>.", host, uri);
     Free(r->location);

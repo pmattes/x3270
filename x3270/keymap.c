@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, 2013-2016, 2019, 2021 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -190,7 +190,7 @@ setup_keymaps(const char *km, bool do_popup)
     if (km == NULL) {
 	bkm = XtNewString("base");
     } else {
-	bkm = xs_buffer("base,%s", km);
+	bkm = Asprintf("base,%s", km);
     }
 
     if (do_popup) {
@@ -249,7 +249,7 @@ get_file_keymap(const char *name, char **pathp)
 
     /* Look for a global keymap file. */
     if (dd == NULL) {
-	path = xs_buffer("%s/keymap.%s", appres.conf_dir, name);
+	path = Asprintf("%s/keymap.%s", appres.conf_dir, name);
 	dd = XrmGetFileDatabase(path);
 	if (dd != NULL) {
 	    *pathp = path;
@@ -260,7 +260,7 @@ get_file_keymap(const char *name, char **pathp)
     }
 
     /* Look up the resource in that file. */
-    resname = xs_buffer("%s.%s.%s", XtName(toplevel), ResKeymap, name);
+    resname = Asprintf("%s.%s.%s", XtName(toplevel), ResKeymap, name);
     if ((XrmGetResource(dd, resname, 0, &type, &value) == True) &&
 	    *value.addr) {
 	r = XtNewString(value.addr);
@@ -289,7 +289,7 @@ add_keymap(const char *name, bool do_popup)
 	if (current_keymap == NULL) {
 	    current_keymap = XtNewString(name);
 	} else {
-	    Replace(current_keymap, xs_buffer("%s,%s", current_keymap, name));
+	    Replace(current_keymap, Asprintf("%s,%s", current_keymap, name));
 	}
     }
 
@@ -333,9 +333,9 @@ add_keymap(const char *name, bool do_popup)
 
     /* Try for a file first, then resources. */
     translations = get_file_keymap(name, &path);
-    buf_nvt = xs_buffer("%s.%s", name, ResNvt);
+    buf_nvt = Asprintf("%s.%s", name, ResNvt);
     translations_nvt = get_file_keymap(buf_nvt, &path_nvt);
-    buf_3270 = xs_buffer("%s.%s", name, Res3270);
+    buf_3270 = Asprintf("%s.%s", name, Res3270);
     translations_3270 = get_file_keymap(buf_3270, &path_3270);
     if (translations != NULL || translations_nvt != NULL ||
 	    translations_3270 != NULL) {
@@ -359,11 +359,11 @@ add_keymap(const char *name, bool do_popup)
 	XtFree(buf_3270);
 
 	/* Shared keymap. */
-	buf = xs_buffer("%s.%s", ResKeymap, name);
+	buf = Asprintf("%s.%s", ResKeymap, name);
 	translations = get_resource(buf);
-	buf_nvt = xs_buffer("%s.%s.%s", ResKeymap, name, ResNvt);
+	buf_nvt = Asprintf("%s.%s.%s", ResKeymap, name, ResNvt);
 	translations_nvt = get_resource(buf_nvt);
-	buf_3270 = xs_buffer("%s.%s.%s", ResKeymap, name, Res3270);
+	buf_3270 = Asprintf("%s.%s.%s", ResKeymap, name, Res3270);
 	translations_3270 = get_resource(buf_3270);
 	if (translations != NULL || translations_nvt != NULL ||
 		translations_3270) {
@@ -385,11 +385,11 @@ add_keymap(const char *name, bool do_popup)
 	XtFree(buf_3270);
 
 	/* User keymap */
-	buf = xs_buffer("%s.%s.%s", ResKeymap, name, ResUser);
+	buf = Asprintf("%s.%s.%s", ResKeymap, name, ResUser);
 	translations = get_resource(buf);
-	buf_nvt = xs_buffer("%s.%s.%s.%s", ResKeymap, name, ResNvt, ResUser);
+	buf_nvt = Asprintf("%s.%s.%s.%s", ResKeymap, name, ResNvt, ResUser);
 	translations_nvt = get_resource(buf_nvt);
-	buf_3270 = xs_buffer("%s.%s.%s.%s", ResKeymap, name, Res3270, ResUser);
+	buf_3270 = Asprintf("%s.%s.%s.%s", ResKeymap, name, Res3270, ResUser);
 	translations_3270 = get_resource(buf_3270);
 	if (translations != NULL || translations_nvt != NULL ||
 		translations_3270 != NULL) {

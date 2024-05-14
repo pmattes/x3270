@@ -32,8 +32,8 @@
 
 #include "globals.h"
 
-#include "lazya.h"
 #include "popups.h"
+#include "txa.h"
 #include "utils.h"
 
 /**
@@ -49,7 +49,7 @@ popup_an_errno(int errn, const char *fmt, ...)
     char *s;
 
     va_start(ap, fmt);
-    s = xs_vbuffer(fmt, ap);
+    s = Vasprintf(fmt, ap);
     va_end(ap);
     if (errn > 0) {
 	popup_an_xerror(ET_OTHER, "%s:%s%s", s, popup_separator,

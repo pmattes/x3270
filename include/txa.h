@@ -26,11 +26,11 @@
  */
 
 /*
- *      lazya.h
- *              Lazy allocations.
+ *      txa.h
+ *              Transaction allocator.
  */
 
-char *lazya(void *buf);
-char *lazyaf(const char *fmt, ...) printflike(1, 2);
-char *vlazyaf(const char *fmt, va_list args);
-void lazya_flush(void);
+char *txdFree(void *buf);
+char *txAsprintf(const char *fmt, ...) printflike(1, 2);
+char *txVasprintf(const char *fmt, va_list args);
+void txflush(void);

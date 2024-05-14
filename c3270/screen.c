@@ -49,7 +49,6 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "screen.h"
@@ -59,6 +58,7 @@
 #include "telnet.h"
 #include "toupper.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
@@ -488,7 +488,7 @@ screen_has_ansi_color(void)
 
     /* Recompute 'op'. */
     if (ti.op != NULL && ti.sgr0 != NULL) {
-	char *s = xs_buffer("%s%s", ti.op, ti.sgr0);
+	char *s = Asprintf("%s%s", ti.op, ti.sgr0);
 
 	Replace(ti.op, s);
     }
@@ -517,11 +517,11 @@ screen_setaf(acolor_t color)
 
     setaf = tiparm(ti.setaf,
 	    (ti.colors >= 16)? color_map16[color]: color_map8[color]);
-    setaf = lazya(NewString(setaf));
+    setaf = txdFree(NewString(setaf));
     if (ti.bold && color_map16[color] >= 8) {
 	char *sgr = tiparm(ti.sgr, 0, 0, 0, 0, 0, 1, 0, 0, 0);
 
-	return lazyaf("%s%s", sgr, setaf);
+	return txAsprintf("%s%s", sgr, setaf);
     } else {
 	return setaf;
     }
@@ -553,8 +553,8 @@ finish_screen_init(void)
     /* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
     if (appres.c3270.defscreen != NULL) {
-	putenv((pe_columns = xs_buffer("COLUMNS=%d", defscreen_spec.cols)));
-	putenv((pe_lines = xs_buffer("LINES=%d", defscreen_spec.rows)));
+	putenv((pe_columns = Asprintf("COLUMNS=%d", defscreen_spec.cols)));
+	putenv((pe_lines = Asprintf("LINES=%d", defscreen_spec.rows)));
     }
 #endif /*]*/
     if ((cl = tigetstr("clear")) != NULL) {
@@ -562,7 +562,7 @@ finish_screen_init(void)
     }
 
     if (getenv("ESCDELAY") == NULL) {
-	putenv((pe_escdelay = xs_buffer("ESCDELAY=%ld", ME_DELAY)));
+	putenv((pe_escdelay = Asprintf("ESCDELAY=%ld", ME_DELAY)));
     }
 
 #if !defined(C3270_80_132) /*[*/
@@ -575,8 +575,8 @@ finish_screen_init(void)
 #else /*][*/
     /* Set up ncurses, and see if it's within bounds. */
     if (appres.c3270.defscreen != NULL) {
-	putenv(xs_buffer("COLUMNS=%d", defscreen_spec.cols));
-	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
+	putenv(Asprintf("COLUMNS=%d", defscreen_spec.cols));
+	putenv(Asprintf("LINES=%d", defscreen_spec.rows));
 	def_screen = newterm(NULL, stdout, stdin);
 	initscr_done = true;
 	if (def_screen == NULL) {
@@ -591,8 +591,8 @@ finish_screen_init(void)
 	}
     }
     if (appres.c3270.altscreen) {
-	putenv(xs_buffer("COLUMNS=%d", altscreen_spec.cols));
-	putenv(xs_buffer("LINES=%d", altscreen_spec.rows));
+	putenv(Asprintf("COLUMNS=%d", altscreen_spec.cols));
+	putenv(Asprintf("LINES=%d", altscreen_spec.rows));
     }
     alt_screen = newterm(NULL, stdout, stdin);
     if (alt_screen == NULL) {
@@ -2415,7 +2415,7 @@ void
 status_scrolled(int n)
 {
     if (n) {
-	Replace(scrolled_msg, xs_buffer("X Scrolled %d", n));
+	Replace(scrolled_msg, Asprintf("X Scrolled %d", n));
     } else {
 	Replace(scrolled_msg, NULL);
     }

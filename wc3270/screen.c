@@ -50,7 +50,6 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -62,6 +61,7 @@
 #include "task.h"
 #include "telnet.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -281,7 +281,7 @@ win32_perror_fatal(const char *fmt, ...)
     char *buf;
 
     va_start(ap, fmt);
-    buf = xs_vbuffer(fmt, ap);
+    buf = Vasprintf(fmt, ap);
     va_end(ap);
     win32_perror("%s", buf);
     x3270_exit(1);
@@ -648,7 +648,7 @@ printw(char *fmt, ...)
     int i;
 
     va_start(ap, fmt);
-    buf = xs_vbuffer(fmt, ap);
+    buf = Vasprintf(fmt, ap);
     va_end(ap);
     sl = strlen(buf);
 
@@ -675,7 +675,7 @@ mvprintw(int row, int col, char *fmt, ...)
     cur_row = row;
     cur_col = col;
     va_start(ap, fmt);
-    buf = xs_vbuffer(fmt, ap);
+    buf = Vasprintf(fmt, ap);
     va_end(ap);
     sl = strlen(buf);
 
@@ -2242,7 +2242,7 @@ decode_state(int state, bool limited, const char *skip)
 	vb_free(&r);
 	return "none";
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /* Handle mouse events. */
@@ -2429,7 +2429,7 @@ decode_mflags(DWORD flags, decode_t names[])
     if (f != 0 && f != flags) {
 	vb_appendf(&r, "%s0x%x", any? "|": " ", f);
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /* Redraw the screen in response to a screen resize event. */
@@ -2573,7 +2573,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
     } else {
 	vb_appendf(&r, "<Key>%c", (unsigned char)xk);
     }
-    vtrace(" %s ->", lazya(vb_consume(&r)));
+    vtrace(" %s ->", txdFree(vb_consume(&r)));
 }
 
 /* Translate a Windows virtual key to a menubar abstract key. */
@@ -2706,14 +2706,14 @@ kybd_input2(INPUT_RECORD *ir)
 
     /* Catch PF keys. */
     if (k >= VK_F1 && k <= VK_F24) {
-	run_action(AnPF, IA_DEFAULT, lazyaf("%d", k - VK_F1 + 1), NULL);
+	run_action(AnPF, IA_DEFAULT, txAsprintf("%d", k - VK_F1 + 1), NULL);
 	return;
     }
 
     /* Then any other character. */
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
 	run_action(AnKey, IA_DEFAULT,
-		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
+		txAsprintf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
 		NULL);
     } else {
 	vtrace(" dropped (no default)\n");
@@ -3164,7 +3164,7 @@ void
 status_scrolled(int n)
 {
     if (n) {
-	Replace(scrolled_msg, xs_buffer("X Scrolled %d", n));
+	Replace(scrolled_msg, Asprintf("X Scrolled %d", n));
     } else {
 	Replace(scrolled_msg, NULL);
     }
@@ -3510,7 +3510,7 @@ static void
 set_console_title(const char *text, bool selecting)
 {
     if (selecting) {
-	SetConsoleTitle(lazyaf("%s [select]", text));
+	SetConsoleTitle(txAsprintf("%s [select]", text));
     } else {
 	SetConsoleTitle(text);
     }
@@ -3551,7 +3551,7 @@ relabel(bool ignored _is_unused)
 	    hostname = reconnect_host;
 	}
 
-	screen_title(lazyaf("%s - wc3270", hostname));
+	screen_title(txAsprintf("%s - wc3270", hostname));
     } else {
 	screen_title("wc3270");
     }

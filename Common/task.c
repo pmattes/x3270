@@ -64,7 +64,6 @@
 #include "host.h"
 #include "idle.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "menubar.h"
 #include "names.h"
 #include "nvt.h"
@@ -83,6 +82,7 @@
 #include "telnet.h"
 #include "toupper.h"
 #include "trace.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -320,7 +320,7 @@ static const char *
 stsname(task_t *s)
 {
     if (s->type == ST_CB) {
-	return lazyaf("CB(%s)", s->cbx.cb->shortname);
+	return txAsprintf("CB(%s)", s->cbx.cb->shortname);
     } else {
 	return st_name[(int)s->type];
     }
@@ -340,7 +340,7 @@ trace_task_output(task_t *s, const char *fmt, ...)
     }
 
     va_start(args, fmt);
-    msgbuf = xs_vbuffer(fmt, args);
+    msgbuf = Vasprintf(fmt, args);
     va_end(args);
 
     m = msgbuf;
@@ -379,7 +379,7 @@ macros_init(void)
 	}
 	s = get_fresource("%s.%s", ResMacros, rname);
 	if (s != NULL) {
-	    macros_resource = lazyaf("%s.%s", ResMacros, rname);
+	    macros_resource = txAsprintf("%s.%s", ResMacros, rname);
 	}
 	Free(rname);
     }
@@ -636,7 +636,7 @@ static void
 task_set_match(task_t *s, int baddr, const char *string, bool force_utf8)
 {
     vtrace(TASK_NAME_FMT " wait @%d%s\n", TASK_sNAME(s),
-	    baddr, (string != NULL)? lazyaf(" '%s'", string): "");
+	    baddr, (string != NULL)? txAsprintf(" '%s'", string): "");
     s->match.baddr = baddr;
     s->match.string = NewString(string);
     s->match.force_utf8 = force_utf8;
@@ -902,7 +902,7 @@ peer_script_init(void)
 static void
 cleanup_socket(bool b _is_unused)
 {
-    unlink(lazyaf("/tmp/x3sck.%u", getpid()));
+    unlink(txAsprintf("/tmp/x3sck.%u", getpid()));
 }
 #endif /*]*/
 
@@ -932,7 +932,7 @@ lookup_action(const char *action, char **errorp)
 	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	    if (!strncasecmp(action, e->t.name, strlen(action))) {
 		if (any != NULL) {
-		    *errorp = xs_buffer("Ambiguous action name: %s", action);
+		    *errorp = Asprintf("Ambiguous action name: %s", action);
 		    return NULL;
 		}
 		any = e;
@@ -941,7 +941,7 @@ lookup_action(const char *action, char **errorp)
     }
 
     if (any == NULL) {
-	*errorp = xs_buffer("Unknown action: %s", action);
+	*errorp = Asprintf("Unknown action: %s", action);
     }
 
     return any;
@@ -1265,7 +1265,7 @@ success:
     return true;
 
 failure:
-    *errorp = xs_buffer("%s at column %d", fail_text[failreason-1],
+    *errorp = Asprintf("%s at column %d", fail_text[failreason-1],
 	    (int)(s - s_orig) + offset);
 silent_failure:
     if (vbcount) {
@@ -1685,7 +1685,7 @@ push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
 	q->deleted = false;
 	q->output_wait_needed = find_owait(cb);
 	LLIST_APPEND(&q->llist, taskq);
-	name = q->unique_name = xs_buffer("CB(%s)[#%u]", q->name, q->index);
+	name = q->unique_name = Asprintf("CB(%s)[#%u]", q->name, q->index);
 	vtrace("%s started%s\n", name, q->output_wait_needed? " (owait)": "");
     } else {
 	q = current_task->taskq;
@@ -1696,7 +1696,7 @@ push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
     s->cbx.cb = cb;
     s->cbx.handle = handle;
     if (name == NULL) {
-	name = lazyaf(TASK_NAME_FMT, TASK_sNAME(s));
+	name = txAsprintf(TASK_NAME_FMT, TASK_sNAME(s));
     }
 
     /* Push the command as a macro on top of the callback. */
@@ -1859,7 +1859,7 @@ task_info(const char *fmt, ...)
     task_t *s;
 
     va_start(args, fmt);
-    msgbuf = xs_vbuffer(fmt, args);
+    msgbuf = Vasprintf(fmt, args);
     va_end(args);
 
     msg = msgbuf;
@@ -1939,7 +1939,7 @@ connect_error(const char *fmt, ...)
 
     /* Expand the message. */
     va_start(ap, fmt);
-    msg = xs_vbuffer(fmt, ap);
+    msg = Vasprintf(fmt, ap);
     va_end(ap);
 
     if (!host_retry_mode && current_task == NULL) {
@@ -1996,7 +1996,7 @@ connect_errno(int e, const char *fmt, ...)
 
     /* Expand the message. */
     va_start(ap, fmt);
-    msg = xs_vbuffer(fmt, ap);
+    msg = Vasprintf(fmt, ap);
     va_end(ap);
     connect_error("%s: %s", msg, strerror(e));
     Free(msg);
@@ -3043,7 +3043,7 @@ status_string(void)
     }
 
     if (cstate > RECONNECTING) {
-	connect_stat = xs_buffer("C(%s)", current_host);
+	connect_stat = Asprintf("C(%s)", current_host);
     } else {
 	connect_stat = NewString("N");
     }
@@ -3058,7 +3058,7 @@ status_string(void)
 	em_mode = 'N';
     }
 
-    r = xs_buffer("%c %c %c %s %c %d %d %d %d %d 0x%lx",
+    r = Asprintf("%c %c %c %s %c %d %d %d %d %d 0x%lx",
 	    kb_stat,
 	    fmt_stat,
 	    prot_stat,
@@ -3077,7 +3077,7 @@ status_string(void)
 char *
 task_status_string(void)
 {
-    return lazyaf("%s 0.000", lazya(status_string()));
+    return txAsprintf("%s 0.000", txdFree(status_string()));
 }
 
 /* Call a run callback. */
@@ -3144,11 +3144,19 @@ task_cb_prompt(task_cbh handle)
     }
 
     st = status_string();
-    t = lazyaf("%s %ld.%03ld", st,
+    t = txAsprintf("%s %ld.%03ld", st,
 	    s->child_msec / 1000L,
 	    s->child_msec % 1000L);
     Free(st);
     return t;
+}
+
+const char *
+task_cb_name(task_cbh handle)
+{
+    task_t *s = task_find_cb(handle);
+
+    return (s != NULL)? txAsprintf(TASK_NAME_FMT, TASK_sNAME(s)): "???";
 }
 
 /**
@@ -3494,7 +3502,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     if (np > 0) {
 	for (i = 0; keywords[i].keyword != NULL; i++) {
 	    if (!strcasecmp(pr[0], keywords[i].keyword)) {
-		if (check_argc(lazyaf(AnWait "(%s)", keywords[i].keyword),
+		if (check_argc(txAsprintf(AnWait "(%s)", keywords[i].keyword),
 			    np - 1, keywords[i].min_args,
 			    keywords[i].max_args) < 0) {
 		    return false;
@@ -4397,6 +4405,7 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
     } fname[] = {
 	{ CBF_INTERACTIVE, KwInteractive },
 	{ CBF_PWINPUT, KwPwInput },
+	{ CBF_ERRD, KwErrd },
 	{ 0, NULL }
     };
 
@@ -4623,7 +4632,7 @@ task_request_input(const char *action, const char *prompt,
     (*redirect->cbx.cb->irv->setir)(redirect->cbx.handle, ir);
 
     /* Tell them we want input. */
-    encoded = lazya(base64_encode(prompt));
+    encoded = txdFree(base64_encode(prompt));
     (*redirect->cbx.cb->reqinput)(redirect->cbx.handle, encoded,
 	    strlen(encoded), !no_echo);
     return true;
@@ -4902,7 +4911,7 @@ task_set_passthru(task_cbh **ret_cbh)
 
 	task_set_state(current_task, TS_PASSTHRU, "passthru processing");
 	current_task->passthru_index = ++passthru_index;
-	return lazyaf("emu-%d", passthru_index);
+	return txAsprintf("emu-%d", passthru_index);
     } else {
 	return NULL;
     }
@@ -4945,7 +4954,7 @@ task_resume_xwait(void *context, bool cancel, const char *why)
 	for (s = q->top; s != NULL; s = s->next) {
 	    if (s->state == TS_XWAIT && s->wait_context == context) {
 		task_set_state(s, TS_RUNNING,
-			lazyaf("extended wait done%s: %s",
+			txAsprintf("extended wait done%s: %s",
 			    cancel? " - cancel": "", why));
 		s->wait_context = NULL;
 		(*s->xcontinue_fn)(context, cancel);
@@ -4968,7 +4977,7 @@ task_xwait(void *context, xcontinue_fn *continue_fn, const char *why)
     assert(current_task != NULL);
     current_task->wait_context = context;
     current_task->xcontinue_fn = continue_fn;
-    task_set_state(current_task, TS_XWAIT, lazyaf("extended wait: %s", why));
+    task_set_state(current_task, TS_XWAIT, txAsprintf("extended wait: %s", why));
 }
 
 /* Return the current KBWAIT status. */

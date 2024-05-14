@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Paul Mattes.
+ * Copyright (c) 2021-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,8 @@
 #include <assert.h>
 
 #include "asprintf.h"
-#include "lazya.h"
+#include "txa.h"
+
 #include "sa_malloc.h"
 
 static size_t allocated;
@@ -50,11 +51,11 @@ typedef struct {
 #define SIGNATURE	0x4a534f4e
 
 /* Lazy allocator record. */
-typedef struct lazya {
-    struct lazya *next;
+typedef struct txa_block {
+    struct txa_block *next;
     void *buf;
-} lazya_t;
-static lazya_t *lazya_list = NULL;
+} txa_block_t;
+static txa_block_t *txa_block_list = NULL;
 
 /* Increment the allocated memory count. */
 static void
@@ -70,6 +71,13 @@ dec_allocated(const char *why, size_t len)
     allocated -= len;
 }
 
+/**
+ * Allocate and track a block of memory.
+ * Crash if there is no memory available.
+ *
+ * @param[in] len	Buffer size
+ * @returns buffer
+ */
 void *
 Malloc(size_t len)
 {
@@ -85,6 +93,14 @@ Malloc(size_t len)
     return (void *)(p + 1);
 }
 
+/**
+ * Reallocate and track a block of memory.
+ * Crash if there is no memory available.
+ *
+ * @param[in] buf	Existing buffer
+ * @param[in] len	Buffer size
+ * @returns reallocated buffer
+ */
 void *
 Realloc(void *buf, size_t len)
 {
@@ -104,6 +120,14 @@ Realloc(void *buf, size_t len)
     return (void *)(p + 1);
 }
 
+/**
+ * Allocate and track an array of buffers.
+ * Crash if there is no memory available.
+ *
+ * @param[in] nmemb	Number of members
+ * @param[in] size	Size of each member
+ * @returns allocated buffer
+ */
 void *
 Calloc(size_t nmemb, size_t size)
 {
@@ -115,6 +139,10 @@ Calloc(size_t nmemb, size_t size)
     return ret;
 }
 
+/**
+ * Free a tracked buffer.
+ * @param[in] buf	Buffer
+ */
 void
 Free(void *buf)
 {
@@ -127,6 +155,13 @@ Free(void *buf)
     }
 }
 
+/**
+ * Duplicate a string in tracked memory.
+ * Crash if there is no memory available.
+ * 
+ * @param[in] s		String to duplicate
+ * @returns duplicated string
+ */
 char *
 NewString(const char *s)
 {
@@ -135,8 +170,15 @@ NewString(const char *s)
     return strcpy(buf, s);
 }
 
+/**
+ * Print to a buffer allocated from the heap.
+ * Crash if there is no memory available.
+ *
+ * @param[in] fmt	Format
+ * @returns Malloc'd formatted text
+ */
 char *
-xs_buffer(const char *fmt, ...)
+Asprintf(const char *fmt, ...)
 {
     va_list ap;
     char *ret;
@@ -152,8 +194,15 @@ xs_buffer(const char *fmt, ...)
     return copy;
 }
 
+/**
+ * Print to a buffer from the heap, marking it to be freed at the end
+ * of this transaction.
+ *
+ * @param[in] fmt	Format
+ * @returns Malloc'd formatted text
+ */
 char *
-lazyaf(const char *fmt, ...)
+txAsprintf(const char *fmt, ...)
 {
     va_list ap;
     char *ret;
@@ -166,30 +215,38 @@ lazyaf(const char *fmt, ...)
     copy = Malloc(strlen(ret) + 1);
     strcpy(copy, ret);
     free(ret);
-    return lazya(copy);
+    return txdFree(copy);
 }
 
+/**
+ * Mark a Malloc'd buffer to be freed at the end of this transaction.
+ *
+ * @param[in] buf	Buffer
+ * @returns buf
+ */
 char *
-lazya(void *buf)
+txdFree(void *buf)
 {
-    lazya_t *l = (lazya_t *)Malloc(sizeof(lazya_t));
-    l->next = lazya_list;
+    txa_block_t *l = (txa_block_t *)Malloc(sizeof(txa_block_t));
+    l->next = txa_block_list;
     l->buf = buf;
     return buf;
 }
 
-/* Free all of the lazya blocks. */
+/**
+ * End of transaction: Free all of the transaction memory.
+ */
 void
-lazya_free(void)
+txflush(void)
 {
-    lazya_t *l;
+    txa_block_t *l;
 
-    while ((l = lazya_list) != NULL) {
-	lazya_t *next = l->next;
+    while ((l = txa_block_list) != NULL) {
+	txa_block_t *next = l->next;
 
 	Free(l->buf);
 	Free(l);
-	lazya_list = next;
+	txa_block_list = next;
     }
 }
 
@@ -205,6 +262,6 @@ vscprintf(const char *fmt, va_list ap)
 void
 sa_malloc_leak_check(void)
 {
-    lazya_free();
+    txflush();
     assert(allocated == 0);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 Paul Mattes.
+ * Copyright (c) 2020-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,9 +38,9 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "status.h"
 #include "telnet.h"
+#include "txa.h"
 #include "utils.h"
 #include "vstatus.h"
 
@@ -175,7 +175,7 @@ void
 vstatus_scrolled(int n)
 {
     if (n) {
-        Replace(voia_scrolled_msg, xs_buffer("X Scrolled %d", n));
+        Replace(voia_scrolled_msg, Asprintf("X Scrolled %d", n));
     } else {
         Replace(voia_scrolled_msg, NULL);
     }
@@ -425,7 +425,7 @@ vstatus_line(struct ea *ea)
     }
 
     /* Cursor. */
-    cursor = lazyaf("%03d/%03d ", ((cursor_addr / COLS) + 1) % 1000,
+    cursor = txAsprintf("%03d/%03d ", ((cursor_addr / COLS) + 1) % 1000,
 	    ((cursor_addr % COLS) + 1) % 1000);
     for (i = 0; cursor[i]; i++) {
 	ea2[rmargin - 7 + i].ucs4 = cursor[i];

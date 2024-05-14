@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, 2020 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,11 @@
 
 #include "actions.h"
 #include "b_password.h"
-#include "lazya.h"
+#include "host.h"
 #include "task.h"
 #include "telnet.h"
-#include "host.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 
 /* Macros. */
@@ -83,7 +83,7 @@ password_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
 
-    Replace(password_result, xs_buffer("%.*s", (int)len, buf));
+    Replace(password_result, Asprintf("%.*s", (int)len, buf));
 }
 
 /*
@@ -150,7 +150,7 @@ push_password(bool again)
     Replace(password_result, NULL);
 
     /* Push a callback with a macro. */
-    cmd = lazyaf("%s(%s)", PASSWORD_PASSTHRU_NAME, again? "again": "");
+    cmd = txAsprintf("%s(%s)", PASSWORD_PASSTHRU_NAME, again? "again": "");
     push_cb(cmd, strlen(cmd), &password_cb, (task_cbh)&password_cb);
     return true;
 }

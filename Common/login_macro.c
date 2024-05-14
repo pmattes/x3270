@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@
 #include "actions.h"
 #include "appres.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "login_macro.h"
 #include "names.h"
 #include "popups.h"
@@ -49,6 +48,7 @@
 #include "task.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -86,7 +86,7 @@ login_data(task_cbh handle _is_unused, const char *buf, size_t len,
 	return;
     }
 
-    Replace(login_result, xs_buffer("%.*s", (int)len, buf));
+    Replace(login_result, Asprintf("%.*s", (int)len, buf));
 }
 
 /**
@@ -152,11 +152,11 @@ login_macro(char *s)
     }
 
     if (is_actions) {
-	action = lazyaf("%s%s",
+	action = txAsprintf("%s%s",
 		HOST_FLAG(NO_LOGIN_HOST)? "": AnWait "(" KwInputField ") ",
 		s);
     } else {
-	action = lazyaf("%sString(%s)",
+	action = txAsprintf("%sString(%s)",
 		HOST_FLAG(NO_LOGIN_HOST)? "": AnWait "(" KwInputField ") ",
 		safe_param(s));
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -69,7 +69,6 @@
 #include "host.h"
 #include "indent_s.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "linemode.h"
 #include "names.h"
 #include "nvt.h"
@@ -92,6 +91,7 @@
 #include "tls_passwd_gui.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "vstatus.h"
@@ -386,7 +386,7 @@ popup_a_sockerr(const char *fmt, ...)
     char *buffer;
 
     va_start(args, fmt);
-    buffer = vlazyaf(fmt, args);
+    buffer = txVasprintf(fmt, args);
     va_end(args);
     connect_error("%s: %s", buffer, win32_strerror(socket_errno()));
 }
@@ -398,7 +398,7 @@ popup_a_sockerr(const char *fmt, ...)
     char *buffer;
 
     va_start(args, fmt);
-    buffer = vlazyaf(fmt, args);
+    buffer = txVasprintf(fmt, args);
     va_end(args);
     connect_errno(errno, "%s", buffer);
 }
@@ -810,7 +810,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    connect_errno(errno, "forkpty");
 	    close_fail;
 	case 0:	/* child */
-	    putenv(xs_buffer("TERM=%s",
+	    putenv(Asprintf("TERM=%s",
 		appres.termname?
 		    appres.termname:
 		    (mode.m3279? "xterm-color": "xterm")));
@@ -980,7 +980,7 @@ net_connected_complete(void)
     if (HOST_FLAG(PASSTHRU_HOST)) {
 	char *buf;
 
-	buf = xs_buffer("%s %d\r\n", hostname, current_port);
+	buf = Asprintf("%s %d\r\n", hostname, current_port);
 	send(sock, buf, (int)strlen(buf), 0);
 	Free(buf);
     }
@@ -2565,7 +2565,7 @@ unbind_reason (unsigned char r)
     case TN3270E_UNBIND_BAD_SENSE:
 	return "bad sense code or user-supplied sense code";
     default:
-	return lazyaf("unknown X'%02x'", r);
+	return txAsprintf("unknown X'%02x'", r);
     }
 }
 
@@ -2588,7 +2588,7 @@ e_rq(unsigned char data_type, unsigned char request_flag)
 
     if (data_type == TN3270E_DT_REQUEST) {
 	return (request_flag == TN3270E_RQF_ERR_COND_CLEARED)?
-	    " ERR-COND-CLEARED": lazyaf("%02x", request_flag);
+	    " ERR-COND-CLEARED": txAsprintf("%02x", request_flag);
     }
 
     vb_init(&r);
@@ -2602,7 +2602,7 @@ e_rq(unsigned char data_type, unsigned char request_flag)
     if (request_flag != 0) {
 	vb_appendf(&r, "%s%02x", sep, request_flag);
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 static int
@@ -3159,7 +3159,7 @@ check_linemode(bool init)
 static const char *
 nnn(int c)
 {
-    return lazyaf("%d", c);
+    return txAsprintf("%d", c);
 }
 
 /*
@@ -3883,10 +3883,10 @@ net_query_host(void)
     if (CONNECTED) {
 #if defined(LOCAL_PROCESS) /*[*/
 	if (local_process) {
-	    return lazyaf("process %s", hostname);
+	    return txAsprintf("process %s", hostname);
 	}
 #endif /*]*/
-	return lazyaf("host %s %u", hostname, current_port);
+	return txAsprintf("host %s %u", hostname, current_port);
     } else {
 	return "";
     }
@@ -3902,7 +3902,7 @@ net_query_tls(void)
 	if (!secure_connection) {
 	    return not_secure;
 	}
-	return lazyaf("secure %s",
+	return txAsprintf("secure %s",
 		net_secure_unverified()? "host-unverified": "host-verified");
     } else {
 	return "";
@@ -3990,7 +3990,7 @@ net_opts(unsigned char opts[])
 	    sl += strlen(o);
 	}
     }
-    return lazya(ret);
+    return txdFree(ret);
 }
 
 /* Return my TELNET options. */

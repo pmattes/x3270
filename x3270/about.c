@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -49,11 +49,11 @@
 #include "codepage.h"
 #include "host.h"
 #include "keymap.h"
-#include "lazya.h"
 #include "linemode.h"
 #include "popups.h"
 #include "split_host.h"
 #include "telnet.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -96,7 +96,7 @@ hms(time_t ts)
     sc = td % 60;
 
     if (hr > 0) {
-	return lazyaf("%ld %s %ld %s %ld %s",
+	return txAsprintf("%ld %s %ld %s %ld %s",
 		hr, (hr == 1)?
 		    get_message("hour"): get_message("hours"),
 		mn, (mn == 1)?
@@ -104,13 +104,13 @@ hms(time_t ts)
 		sc, (sc == 1)?
 		    get_message("second"): get_message("seconds"));
     } else if (mn > 0) {
-	return lazyaf("%ld %s %ld %s",
+	return txAsprintf("%ld %s %ld %s",
 		mn, (mn == 1)?
 		    get_message("minute"): get_message("minutes"),
 		sc, (sc == 1)?
 		    get_message("second"): get_message("seconds"));
     } else {
-	    return lazyaf("%ld %s",
+	    return txAsprintf("%ld %s",
 		sc, (sc == 1)?
 		    get_message("second"): get_message("seconds"));
     }
@@ -260,7 +260,7 @@ DAMAGE.";
 	left_anchor = NULL;
 
 	if (line1 == NULL) {
-	    line1 = xs_buffer(
+	    line1 = Asprintf(
 "Copyright \251 1993-%s, Paul Mattes.\n\
 Copyright \251 2004-2005, Don Russell.\n\
 Copyright \251 1995, Dick Altenbern.\n\
@@ -337,11 +337,11 @@ popup_about_config(void)
     left_anchor = NULL;
 
     MAKE_LABEL(get_message("processId"), 4);
-    MAKE_VALUE(lazyaf("%d", getpid()));
+    MAKE_VALUE(txAsprintf("%d", getpid()));
     MAKE_LABEL2(get_message("windowId"));
-    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
+    MAKE_VALUE(txAsprintf("0x%lx", XtWindow(toplevel)));
 
-    MAKE_LABEL(lazyaf("%s %s: %d %s x %d %s, %s, %s",
+    MAKE_LABEL(txAsprintf("%s %s: %d %s x %d %s, %s, %s",
 	get_message("model"), model_name,
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
@@ -361,7 +361,7 @@ popup_about_config(void)
     } else {
 	ftype = get_message("cgFont");
     }
-    xbuf = xs_buffer("  %s", ftype);
+    xbuf = Asprintf("  %s", ftype);
     MAKE_LABEL(xbuf, 0);
     XtFree(xbuf);
 
@@ -372,7 +372,7 @@ popup_about_config(void)
 
     MAKE_LABEL(get_message("displayCharacterSet"), 4);
     if (!efont_matches) {
-	xbuf = xs_buffer("ascii-7 (%s %s, %s %s)",
+	xbuf = Asprintf("ascii-7 (%s %s, %s %s)",
 		get_message("require"), display_charset(),
 		get_message("have"), efont_charset);
 	MAKE_VALUE(xbuf);
@@ -386,19 +386,19 @@ popup_about_config(void)
     }
 
     MAKE_LABEL(get_message("codepage"), 4);
-    xbuf = xs_buffer("%s (%s)", get_codepage_name(), get_codepage_number());
+    xbuf = Asprintf("%s (%s)", get_codepage_name(), get_codepage_number());
     MAKE_VALUE(xbuf);
     XtFree(xbuf);
 
     MAKE_LABEL(get_message("sbcsCgcsgid"), 4);
-    xbuf = xs_buffer("GCSGID %u, CPGID %u",
+    xbuf = Asprintf("GCSGID %u, CPGID %u",
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));
     MAKE_VALUE(xbuf);
     XtFree(xbuf);
     if (dbcs) {
 	MAKE_LABEL(get_message("dbcsCgcsgid"), 4);
-	xbuf = xs_buffer("GCSGID %u, CPGID %u",
+	xbuf = Asprintf("GCSGID %u, CPGID %u",
 		(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
 		(unsigned short)(cgcsgid_dbcs & 0xffff));
 	MAKE_VALUE(xbuf);
@@ -463,12 +463,12 @@ popup_about_config(void)
 
     if (xappres.active_icon) {
 	MAKE_LABEL(get_message("activeIcon"), 4);
-	xbuf = xs_buffer("  %s", get_message("iconFont"));
+	xbuf = Asprintf("  %s", get_message("iconFont"));
 	MAKE_LABEL(xbuf, 0);
 	XtFree(xbuf);
 	MAKE_VALUE(xappres.icon_font);
 	if (xappres.label_icon) {
-	    xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
+	    xbuf = Asprintf("  %s", get_message("iconLabelFont"));
 	    MAKE_LABEL(xbuf, 0);
 	    XtFree(xbuf);
 	    MAKE_VALUE(xappres.icon_label_font);
@@ -550,8 +550,8 @@ popup_about_status(void)
 #if defined(LOCAL_PROCESS) /*[*/
 	if (!local_process) {
 #endif /*]*/
-	    MAKE_LABEL2(lazyaf("  %s", get_message("port")));
-	    MAKE_VALUE(lazyaf("%d", current_port));
+	    MAKE_LABEL2(txAsprintf("  %s", get_message("port")));
+	    MAKE_VALUE(txAsprintf("%d", current_port));
 #if defined(LOCAL_PROCESS) /*[*/
 	}
 #endif /*]*/
@@ -559,20 +559,20 @@ popup_about_status(void)
 	    const char *session, *cert;
 	    const char *newline;
 
-	    MAKE_LABEL2(lazyaf("%s%s%s",
+	    MAKE_LABEL2(txAsprintf("%s%s%s",
 			get_message("secure"),
 			net_secure_unverified()? ", ": "",
 			net_secure_unverified()? get_message("unverified"): ""));
-	    MAKE_LABEL(lazyaf("%s %s",
+	    MAKE_LABEL(txAsprintf("%s %s",
 			get_message("provider"), net_sio_provider()), 2);
 	    if ((session = net_session_info()) != NULL) {
 		MAKE_LABEL(get_message("sessionInfo"), 2);
 		while ((newline = strchr(session, '\n')) != NULL) {
-		    MAKE_LABEL(lazyaf("   %.*s", (int)(newline - session),
+		    MAKE_LABEL(txAsprintf("   %.*s", (int)(newline - session),
 				session), 0);
 		    session = newline + 1;
 		}
-		MAKE_LABEL(lazyaf("   %s", session), 0);
+		MAKE_LABEL(txAsprintf("   %s", session), 0);
 	    }
 	    if ((cert = net_server_cert_info()) != NULL) {
 		int line_len;
@@ -583,14 +583,14 @@ popup_about_status(void)
 		while ((newline = strchr(cert, '\n')) != NULL) {
 		    line_len = (int)(newline - cert);
 		    while (line_len > CERT_WRAP) {
-			MAKE_LABEL(lazyaf("   %s%.*s", break_indent, CERT_WRAP,
+			MAKE_LABEL(txAsprintf("   %s%.*s", break_indent, CERT_WRAP,
 				    cert), 0);
 			cert += CERT_WRAP;
 			line_len -= CERT_WRAP;
 			break_indent = "  ";
 		    }
 
-		    MAKE_LABEL(lazyaf("   %s%.*s", break_indent, line_len,
+		    MAKE_LABEL(txAsprintf("   %s%.*s", break_indent, line_len,
 				cert), 0);
 		    cert = newline + 1;
 		    break_indent = "";
@@ -598,22 +598,22 @@ popup_about_status(void)
 
 		line_len = (int)strlen(cert);
 		while (line_len > CERT_WRAP) {
-		    MAKE_LABEL(lazyaf("   %s%.*s", break_indent, CERT_WRAP,
+		    MAKE_LABEL(txAsprintf("   %s%.*s", break_indent, CERT_WRAP,
 				cert), 0);
 		    cert += CERT_WRAP;
 		    line_len -= CERT_WRAP;
 		    break_indent = "  ";
 		}
-		MAKE_LABEL(lazyaf("   %s%s", break_indent, cert), 0);
+		MAKE_LABEL(txAsprintf("   %s%s", break_indent, cert), 0);
 	    }
 	}
 	ptype = net_proxy_type();
 	if (ptype) {
 	    MAKE_LABEL(get_message("proxyType"), 4);
 	    MAKE_VALUE(ptype);
-	    MAKE_LABEL2(lazyaf("  %s", get_message("server")));
+	    MAKE_LABEL2(txAsprintf("  %s", get_message("server")));
 	    MAKE_VALUE(net_proxy_host());
-	    MAKE_LABEL2(lazyaf("  %s", get_message("port")));
+	    MAKE_LABEL2(txAsprintf("  %s", get_message("port")));
 	    MAKE_VALUE(net_proxy_port());
 	}
 
@@ -628,39 +628,39 @@ popup_about_status(void)
 	    } else {
 		ftype = get_message("charMode");
 	    }
-	    fbuf = lazyaf("%s%s, ", emode, ftype);
+	    fbuf = txAsprintf("%s%s, ", emode, ftype);
 	} else if (IN_SSCP) {
-	    fbuf = lazyaf("%s%s, ", emode, get_message("sscpMode"));
+	    fbuf = txAsprintf("%s%s, ", emode, get_message("sscpMode"));
 	} else if (IN_3270) {
-	    fbuf = lazyaf("%s%s, ", emode, get_message("dsMode"));
+	    fbuf = txAsprintf("%s%s, ", emode, get_message("dsMode"));
 	} else if (cstate == CONNECTED_UNBOUND) {
-	    fbuf = lazyaf("%s%s, ", emode, get_message("unboundMode"));
+	    fbuf = txAsprintf("%s%s, ", emode, get_message("unboundMode"));
 	} else {
 	    fbuf = "";
 	}
-	fbuf = lazyaf("%s%s", fbuf, hms(ns_time));
+	fbuf = txAsprintf("%s%s", fbuf, hms(ns_time));
 	MAKE_LABEL(fbuf, 0);
 
 	if (connected_lu != NULL && connected_lu[0]) {
-	    MAKE_LABEL(lazyaf("  %s", get_message("luName")), 0);
+	    MAKE_LABEL(txAsprintf("  %s", get_message("luName")), 0);
 	    MAKE_VALUE(connected_lu);
 	}
 	bplu = net_query_bind_plu_name();
 	if (bplu != NULL && bplu[0]) {
-	    MAKE_LABEL(lazyaf("  %s", get_message("bindPluName")), 0);
+	    MAKE_LABEL(txAsprintf("  %s", get_message("bindPluName")), 0);
 	    MAKE_VALUE(bplu);
 	}
 
 	eopts = tn3270e_current_opts();
 	if (eopts != NULL) {
-	    MAKE_LABEL(lazyaf("  %s", get_message("tn3270eOpts")), 0);
+	    MAKE_LABEL(txAsprintf("  %s", get_message("tn3270eOpts")), 0);
 	    MAKE_VALUE(eopts);
 	} else if (IN_E) {
-	    MAKE_LABEL(lazyaf("  %s", get_message("tn3270eNoOpts")), 0);
+	    MAKE_LABEL(txAsprintf("  %s", get_message("tn3270eNoOpts")), 0);
 	}
 
 	if (IN_3270) {
-	    fbuf = lazyaf("%s %d %s, %d %s\n%s %d %s, %d %s",
+	    fbuf = txAsprintf("%s %d %s, %d %s\n%s %d %s, %d %s",
 		    get_message("sent"),
 		    ns_bsent, (ns_bsent == 1)?
 			get_message("byte"): get_message("bytes"),
@@ -672,7 +672,7 @@ popup_about_status(void)
 		    ns_rrcvd, (ns_rrcvd == 1)?
 			get_message("record"): get_message("records"));
 	} else {
-	    fbuf = lazyaf("%s %d %s, %s %d %s",
+	    fbuf = txAsprintf("%s %d %s, %s %d %s",
 		    get_message("sent"),
 		    ns_bsent, (ns_bsent == 1)?
 			get_message("byte"): get_message("bytes"),
@@ -689,7 +689,7 @@ popup_about_status(void)
 	    MAKE_LABEL(get_message("specialCharacters"), 4);
 	    for (i = 0; c[i].name; i++) {
 		if (!i || !(i % 4)) {
-		    MAKE_LABEL(lazyaf("  %s", c[i].name), 0);
+		    MAKE_LABEL(txAsprintf("  %s", c[i].name), 0);
 		} else {
 		    MAKE_LABEL2(c[i].name);
 		}

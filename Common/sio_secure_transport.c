@@ -39,13 +39,13 @@
 
 #include "tls_config.h"
 
-#include "lazya.h"
 #include "names.h"
 #include "sio.h"
 #include "varbuf.h"	/* must precede sioc.h */
 #include "sioc.h"
 #include "tls_passwd_gui.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 
 #define ARRAY_SIZE(n)	(int)(sizeof(n) / sizeof(n[0]))
@@ -247,7 +247,7 @@ set_oserror(OSStatus status, const char *fmt, ...)
     char *explanation = "";
 
     va_start(args, fmt);
-    t = xs_vbuffer(fmt, args);
+    t = Vasprintf(fmt, args);
     va_end(args);
 
     if (status == errSSLXCertChainInvalid) {
@@ -509,7 +509,7 @@ cipher_name(int n)
 
     for (i = 0; cipher_names[i].name != NULL; i++) {
 	if (cipher_names[i].value == n) {
-	    char *s = lazyaf("%s", cipher_names[i].name);
+	    char *s = txAsprintf("%s", cipher_names[i].name);
 	    int j;
 
 	    for (j = 0; substs[j].orig != NULL; j++) {
@@ -523,7 +523,7 @@ cipher_name(int n)
 	}
     }
 
-    return lazyaf("0x%x\n", n);
+    return txAsprintf("0x%x\n", n);
 }
 
 /* Display connection info. */
@@ -582,7 +582,7 @@ display_server_cert(varbuf_t *v, stransport_sio_t *s)
 	    char *prefix = "";
 
 	    if (i) {
-		prefix = lazyaf("CA %ld ", i);
+		prefix = txAsprintf("CA %ld ", i);
 	    }
 	    display_cert(v, prefix, SecTrustGetCertificateAtIndex(trust, i));
 	}

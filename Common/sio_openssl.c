@@ -146,7 +146,7 @@ check_cert_name(ssl_sio_t *s)
 
 	    s->secure_unverified = true;
 	    vtrace("Host certificate name(s) do not match hostname.\n");
-	    reason = xs_buffer("Host certificate name(s) do not match '%s': "
+	    reason = Asprintf("Host certificate name(s) do not match '%s': "
 		    "%s", s->hostname, unmatched_names);
 	    Free(reason);
 	    return true;
@@ -377,7 +377,7 @@ expand_namelist(char **list)
 	for (i = 0; list[i] != NULL; i++) {
 	    char *new;
 
-	    new = xs_buffer("%s%s%s", r? r: "", r? " ": "", list[i]);
+	    new = Asprintf("%s%s%s", r? r: "", r? " ": "", list[i]);
 	    Replace(r, new);
 	}
     }
@@ -415,7 +415,7 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 	} else {
 	    vtrace("SSL_connect: non-matching commonName: %s\n",
 		    expand_hostname(name, len));
-	    nnl = xs_buffer("DNS:%s", expand_hostname(name, len));
+	    nnl = Asprintf("DNS:%s", expand_hostname(name, len));
 	    namelist = add_to_namelist(namelist, nnl);
 	    Free(nnl);
 	}
@@ -441,7 +441,7 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 		} else {
 		    vtrace("SSL_connect: non-matching alternateName: DNS:%s\n",
 			    expand_hostname((char *)dns, len));
-		    nnl = xs_buffer("DNS:%s", expand_hostname((char *)dns,
+		    nnl = Asprintf("DNS:%s", expand_hostname((char *)dns,
 				len));
 		    namelist = add_to_namelist(namelist, nnl);
 		    Free(nnl);
@@ -689,7 +689,7 @@ client_info_callback(INFO_CONST SSL *s, int where, int ret)
 	    } else {
 		err_buf[0] = '\0';
 	    }
-	    st = xs_buffer("SSL_connect trace: error in %s%s",
+	    st = Asprintf("SSL_connect trace: error in %s%s",
 		    SSL_state_string_long(s), err_buf);
 	    if ((colon = strrchr(st, ':')) != NULL) {
 		*colon = '\n';
@@ -805,7 +805,7 @@ display_server_cert(varbuf_t *v, SSL *con)
     }
 
     for (i = 0; i < sk_X509_num(chain); i++) {
-	char *who = i? xs_buffer("CA %d ", i): "";
+	char *who = i? Asprintf("CA %d ", i): "";
 
 	cert = sk_X509_value(chain, i);
 	display_cert(v, cert, 0, who);

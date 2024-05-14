@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,12 @@
 
 #include "appres.h"
 
-#include "lazya.h"
 #include "sio.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "telnet_private.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 
@@ -213,7 +213,7 @@ expand_name(const char *s, size_t len)
 	    vb_append(&v, (char *)&c, 1);
 	}
     }
-    return lazya(vb_consume(&v));
+    return txdFree(vb_consume(&v));
 }
 
 /* Expand IACs in a reply buffer. */

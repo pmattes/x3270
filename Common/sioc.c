@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,10 +78,10 @@ sioc_set_error(const char *fmt, ...)
     char *t, *u;
 
     va_start(args, fmt);
-    t = xs_vbuffer(fmt, args);
+    t = Vasprintf(fmt, args);
     va_end(args);
 
-    u = xs_buffer("TLS: %s", t);
+    u = Asprintf("TLS: %s", t);
     Free(t);
     Replace(sioc_last_error, u);
 }

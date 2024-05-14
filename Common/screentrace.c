@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,6 @@
 #include "ctlrc.h"
 #include "find_console.h"
 #include "fprint_screen.h"
-#include "lazya.h"
 #include "menubar.h"
 #include "names.h"
 #include "nvt.h"
@@ -63,6 +62,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "vstatus.h"
@@ -307,7 +307,7 @@ screentrace_go(tss_t target, ptype_t ptype, unsigned opts, char *tfn)
 
 	/* Do %E% substitution. */
 	if ((pct_e = strstr(tfn, "%E%")) != NULL) {
-	    xtfn = xs_buffer("%.*s%s%s",
+	    xtfn = Asprintf("%.*s%s%s",
 		    (int)(pct_e - tfn), tfn,
 		    programname,
 		    pct_e + 3);
@@ -457,12 +457,12 @@ screentrace_default_file(ptype_t ptype)
 	break;
     }
 #if defined(_WIN32) /*[*/
-    return xs_buffer("%s%sx3scr.$UNIQUE.%s",
+    return Asprintf("%s%sx3scr.$UNIQUE.%s",
 	    appres.trace_dir? appres.trace_dir: default_trace_dir(),
 	    appres.trace_dir? "\\": "",
 	    suffix);
 #else /*][*/
-    return xs_buffer("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);
+    return Asprintf("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);
 #endif /*]*/
 }
 
@@ -589,7 +589,7 @@ screentrace_show(bool as_info)
     char *message;
 
     if (toggled(SCREEN_TRACE)) {
-	message = xs_buffer("Screen tracing is enabled, %s: %s.",
+	message = Asprintf("Screen tracing is enabled, %s: %s.",
 		(screentrace_current.target == TSS_FILE)? "file":
 #if !defined(_WIN32) /*[*/
 		"with print command",
@@ -627,13 +627,13 @@ screentrace_off(bool as_info)
     /* Get the current parameters and turn it off. */
     target = screentrace_current.target;
     if (target == TSS_FILE) {
-	name = lazya(NewString(trace_get_screentrace_name()));
+	name = txdFree(NewString(trace_get_screentrace_name()));
     }
     do_toggle(SCREEN_TRACE);
 
     /* Display what it was. */
     if (target == TSS_FILE) {
-	message = xs_buffer("Screen tracing complete. Trace file is %s.", name);
+	message = Asprintf("Screen tracing complete. Trace file is %s.", name);
     } else {
 	message = NewString("Screen tracing to printer complete.");
     }

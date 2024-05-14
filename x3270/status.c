@@ -964,10 +964,10 @@ status_cursor_pos(int ca)
     char *buf;
 
     if (xappres.xquartz_hack) {
-	buf = xs_buffer("%02d/%02d", ((ca / COLS) + 1) % 100,
+	buf = Asprintf("%02d/%02d", ((ca / COLS) + 1) % 100,
 		((ca % COLS) + 1) % 100);
     } else {
-	buf = xs_buffer("%03d/%03d", ((ca / COLS) + 1) % 1000,
+	buf = Asprintf("%03d/%03d", ((ca / COLS) + 1) % 1000,
 		((ca % COLS) + 1) % 1000);
     }
     Replace(oia_cursor, buf);
@@ -1704,5 +1704,5 @@ do_cursor(char *buf)
 static unsigned char *
 make_amsg(const char *key)
 {
-    return (unsigned char *)xs_buffer("X %s", get_message(key));
+    return (unsigned char *)Asprintf("X %s", get_message(key));
 }

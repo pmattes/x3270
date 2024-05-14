@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,9 @@
 
 #include "b3270proto.h"
 #include "ctlr.h"
-#include "lazya.h"
 #include "screen.h"
 #include "telnet_gui.h"
+#include "txa.h"
 #include "ui_stream.h"
 
 /* stubs1 */

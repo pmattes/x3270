@@ -42,12 +42,12 @@
 
 #include "actions.h"
 #include "boolstr.h"
-#include "lazya.h"
 #include "menubar.h"
 #include "names.h"
 #include "popups.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 
 /* Live state of toggles. */
@@ -258,7 +258,7 @@ u_value(toggle_extended_upcalls_t *u)
 	    value = TrueFalse(*(bool *)u->address);
 	    break;
 	case XRM_INT:
-	    value = lazyaf("%d", *(int *)u->address);
+	    value = txAsprintf("%d", *(int *)u->address);
 	    break;
 	}
     } else {
@@ -313,7 +313,7 @@ toggle_values(void)
     tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
     tnv[n_tnv].name = NULL;
     tnv[n_tnv].value = NULL;
-    lazya(tnv);
+    txdFree(tnv);
     return tnv;
 }
 
@@ -361,7 +361,7 @@ split_equals(unsigned *argc, const char ***argv)
     int out_ix = 0;
     unsigned i;
 
-    lazya((void *)out_argv);
+    txdFree((void *)out_argv);
     for (i = 0; i < *argc; i++) {
 	const char *arg = (*argv)[i];
 
@@ -371,8 +371,8 @@ split_equals(unsigned *argc, const char ***argv)
 	    if (colon == NULL || colon == arg) {
 		out_argv[out_ix++] = arg;
 	    } else {
-		out_argv[out_ix++] = lazyaf("%.*s", (int)(colon - arg), arg);
-		out_argv[out_ix++] = lazya(NewString(colon + 1));
+		out_argv[out_ix++] = txAsprintf("%.*s", (int)(colon - arg), arg);
+		out_argv[out_ix++] = txdFree(NewString(colon + 1));
 		left = false;
 	    }
 	} else {
@@ -1032,7 +1032,7 @@ extended_toggle_names(int *countp, bool bool_only)
 	}
     }
     *countp = count;
-    ret = (char **)lazya(Malloc(count * sizeof(char *)));
+    ret = (char **)txdFree(Malloc(count * sizeof(char *)));
     count = 0;
     for (u = extended_upcalls; u != NULL; u = u->next) {
 	if (!bool_only || u->type == XRM_BOOLEAN) {

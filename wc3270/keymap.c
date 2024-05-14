@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2022 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
-#include "lazya.h"
+#include "txa.h"
 #include "names.h"
 #include "popups.h"
 #include "screen.h"
@@ -276,11 +276,11 @@ locate_keymap(const char *name, char **fullname, char **r)
 
     /* See if it's a file. */
     fnx = do_subst(name, DS_VARS | DS_TILDE);
-    fny = xs_buffer("%s.%s", fnx, WC3270KM_SUFFIX);
+    fny = Asprintf("%s.%s", fnx, WC3270KM_SUFFIX);
 
     /* My Documents\wc3270\foo.wc3270km? */
     if (mydocs3270 != NULL) {
-	fnp = xs_buffer("%s%s", mydocs3270, fny);
+	fnp = Asprintf("%s%s", mydocs3270, fny);
 	a = access(fnp, R_OK);
 	if (a == 0) {
 	    *fullname = fnp;
@@ -293,7 +293,7 @@ locate_keymap(const char *name, char **fullname, char **r)
 
     /* Public Documents\wc3270\foo.wc3270km? */
     if (commondocs3270 != NULL) {
-	fnp = xs_buffer("%s%s", commondocs3270, fny);
+	fnp = Asprintf("%s%s", commondocs3270, fny);
 	a = access(fnp, R_OK);
 	if (a == 0) {
 	    *fullname = fnp;
@@ -305,7 +305,7 @@ locate_keymap(const char *name, char **fullname, char **r)
     }
 
     /* InstDir\foo.wc3270km? */
-    fnp = xs_buffer("%s%s", instdir, fny);
+    fnp = Asprintf("%s%s", instdir, fny);
     a = access(fnp, R_OK);
     if (a == 0) {
 	Free(fny);
@@ -401,8 +401,8 @@ add_keymap_entry(int ncodes, int *codes, int *hints, const char *name,
 static bool
 read_keymap(const char *name, bool temp)
 {
-    char *name_3270 = xs_buffer("%s.3270", name);
-    char *name_nvt = xs_buffer("%s.nvt", name);
+    char *name_3270 = Asprintf("%s.3270", name);
+    char *name_nvt = Asprintf("%s.nvt", name);
     int rc, rc_3270, rc_nvt;
     char *fn, *fn_3270, *fn_nvt;
     char *r0, *r0_3270, *r0_nvt;
@@ -991,7 +991,7 @@ lookup_cname(unsigned long ccode)
     }
 
     if (ccode >= (1 << 16) && ccode <= (0xfe << 16)) {
-	return lazyaf("VKEY-0x%02lx", ccode >> 16);
+	return txAsprintf("VKEY-0x%02lx", ccode >> 16);
     }
 
     return NULL;
@@ -1285,5 +1285,5 @@ keymap_dump(void)
 	s[sl - 1] = '\0';
     }
 
-    return lazya(s);
+    return txdFree(s);
 }

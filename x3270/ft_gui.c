@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2023 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -55,9 +55,9 @@
 #include "ft_dft.h"
 #include "ft_private.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "objects.h"
 #include "popups.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "xft_gui.h"
@@ -453,7 +453,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.lrecl && xftc.host_type != HT_CICS) {
-	char *lr = lazyaf("%d", xftc.lrecl);
+	char *lr = txAsprintf("%d", xftc.lrecl);
 
 	XtVaSetValues(lrecl_widget, XtNstring, lr, NULL);
 	XawTextSetInsertionPoint(lrecl_widget, strlen(lr));
@@ -494,7 +494,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.blksize && xftc.host_type != HT_CICS) {
-	char *bs = lazyaf("%d", xftc.blksize);
+	char *bs = txAsprintf("%d", xftc.blksize);
 
 	XtVaSetValues(blksize_widget, XtNstring, bs, NULL);
 	XawTextSetInsertionPoint(blksize_widget, strlen(bs));
@@ -694,7 +694,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.primary_space) {
-	s = xs_buffer("%d", xftc.primary_space);
+	s = Asprintf("%d", xftc.primary_space);
 	XtVaSetValues(primspace_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(primspace_widget, strlen(s));
 	XtFree(s);
@@ -736,7 +736,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.secondary_space) {
-	s = xs_buffer("%d", xftc.secondary_space);
+	s = Asprintf("%d", xftc.secondary_space);
 	XtVaSetValues(secspace_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(secspace_widget, strlen(s));
 	XtFree(s);
@@ -778,7 +778,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.avblock) {
-	s = xs_buffer("%d", xftc.avblock);
+	s = Asprintf("%d", xftc.avblock);
 	XtVaSetValues(avblock_size_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(avblock_size_widget, strlen(s));
 	XtFree(s);
@@ -826,7 +826,7 @@ ft_popup_init(void)
 	    NULL, false,
 	    NULL, false,
 	    NULL, false);
-    s = xs_buffer("%d", xftc.dft_buffersize);
+    s = Asprintf("%d", xftc.dft_buffersize);
     XtVaSetValues(buffersize_widget, XtNstring, s, NULL);
     XawTextSetInsertionPoint(buffersize_widget, strlen(s));
     XtFree(s);
@@ -1129,7 +1129,7 @@ ft_start(void)
      * entered nothing (or an explicit 0).
      */
     size = set_dft_buffersize(get_widget_n(buffersize_widget));
-    XtVaSetValues(buffersize_widget, XtNstring, lazyaf("%d", size), NULL);
+    XtVaSetValues(buffersize_widget, XtNstring, txAsprintf("%d", size), NULL);
 
     /* Get the host file from its widget */
     XtVaGetValues(host_file, XtNstring, &xftc.host_filename, NULL);
@@ -1391,7 +1391,7 @@ overwrite_popup_init(const char *path)
 	    XtNresizable, True,
 	    NULL);
     XtVaGetValues(overwrite_name, XtNlabel, &overwrite_string, NULL);
-    label = xs_buffer(overwrite_string, path);
+    label = Asprintf(overwrite_string, path);
     XtVaSetValues(overwrite_name, XtNlabel, label, NULL);
     XtFree(label);
     XtVaGetValues(overwrite_name, XtNwidth, &d, NULL);
@@ -1503,7 +1503,7 @@ ft_gui_update_length(size_t length)
 {
     char *s;
 
-    s = xs_buffer(status_string, (unsigned long)length);
+    s = Asprintf(status_string, (unsigned long)length);
     XtVaSetValues(ft_status, XtNlabel, s, NULL);
     XtFree(s);
 }

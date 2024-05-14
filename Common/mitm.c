@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Paul Mattes.
+ * Copyright (c) 2018-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
     /* Open the output file. */
     if (file == NULL) {
 #if !defined(_WIN32) /*[*/
-	file = xs_buffer("/tmp/mitm.%d", (int)getpid());
+	file = Asprintf("/tmp/mitm.%d", (int)getpid());
 #else /*][*/
 	char desktop[MAX_PATH];
 	HRESULT r;
@@ -151,7 +151,7 @@ main(int argc, char *argv[])
 		    (int)r);
 	    exit(1);
 	}
-	file = xs_buffer("%s\\mitm.%d.txt", desktop, (int)getpid());
+	file = Asprintf("%s\\mitm.%d.txt", desktop, (int)getpid());
 #endif /*]*/
     }
     f = fopen(file, "w");

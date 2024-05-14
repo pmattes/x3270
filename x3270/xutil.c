@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -63,7 +63,7 @@ get_underlying_resource(const char *resource)
     tlname = XtName(toplevel);
 
     /* Figure out the full resource name. */
-    fq_resource = xs_buffer("%s.%s", tlname, resource);
+    fq_resource = Asprintf("%s.%s", tlname, resource);
 
     /* Figure out the full class name. */
     fq_class = XtNewString(fq_resource);

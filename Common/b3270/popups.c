@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2022 Paul Mattes.
+ * Copyright (c) 2016-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,10 +38,10 @@
 #include "appres.h"
 #include "b3270proto.h"
 #include "host.h"
-#include "lazya.h"
 #include "popups.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "ui_stream.h"
 
 #include "b3270_popups.h"
@@ -93,7 +93,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 {
     char *s;
 
-    s = vlazyaf(fmt, ap);
+    s = txVasprintf(fmt, ap);
     vtrace("Error: %s\n", s);
     if (task_redirect()) {
 	task_error(s);
@@ -118,7 +118,7 @@ popup_an_info(const char *fmt, ...)
     char *s;
 
     va_start(ap, fmt);
-    s = vlazyaf(fmt, ap);
+    s = txVasprintf(fmt, ap);
     va_end(ap);
     if (!popups_ready) {
 	popup_store(false, ET_OTHER, false, s);
@@ -138,7 +138,7 @@ action_output(const char *fmt, ...)
     char *s;
 
     va_start(ap, fmt);
-    s = vlazyaf(fmt, ap);
+    s = txVasprintf(fmt, ap);
     va_end(ap);
     if (task_redirect()) {
 	task_info("%s", s);
@@ -159,7 +159,7 @@ popup_printer_output(bool is_err, abort_callback_t *a _is_unused,
     char *s;
 
     va_start(ap, fmt);
-    s = vlazyaf(fmt, ap);
+    s = txVasprintf(fmt, ap);
     va_end(ap);
     ui_leaf(IndPopup,
 	    AttrType, AT_STRING, PtPrinter,
@@ -177,7 +177,7 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
     char *s;
 
     va_start(ap, fmt);
-    s = vlazyaf(fmt, ap);
+    s = txVasprintf(fmt, ap);
     va_end(ap);
     ui_leaf(IndPopup,
 	    AttrType, AT_STRING, PtChild,

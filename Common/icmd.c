@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2023 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,10 @@
 #include "ft_private.h" /* must precede ft_gui */
 #include "ft_gui.h"
 #include "icmdc.h"
-#include "lazya.h"
 #include "popups.h"
 #include "split_host.h"
 #include "task.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 
@@ -398,7 +398,7 @@ it_resume(void *handle, const char *response)
 	size_t sl;
 
 	/* Trim spaces. */
-	r = lazya(NewString(response));
+	r = txdFree(NewString(response));
 	while (*r == ' ') {
 	    r++;
 	}
@@ -1079,7 +1079,7 @@ ask_direction(itc_t *itc)
     action_output(
 "'receive' means copy a file from the host to this workstation.");
 
-    return xs_buffer("Direction: (send/receive) [%s] ",
+    return Asprintf("Direction: (send/receive) [%s] ",
 	    p->receive_flag? "receive": "send");
 }
 
@@ -1091,16 +1091,16 @@ ask_source_file(itc_t *itc)
 
     /* Ask about the source file. */
     if (p->receive_flag && p->host_filename) {
-	default_file = lazyaf(" [%s]", p->host_filename);
+	default_file = txAsprintf(" [%s]", p->host_filename);
     } else if (!p->receive_flag && p->local_filename) {
-	default_file = lazyaf(" [%s]", p->local_filename);
+	default_file = txAsprintf(" [%s]", p->local_filename);
     } else {
 	default_file = "";
     }
 
     action_output(" ");
 
-    return xs_buffer("Name of source file on %s:%s ",
+    return Asprintf("Name of source file on %s:%s ",
 	    p->receive_flag? "the host": "this workstation", default_file);
 }
 
@@ -1112,13 +1112,13 @@ ask_dest_file(itc_t *itc)
 
     /* Ask about the destination file. */
     if (!p->receive_flag && p->host_filename) {
-	default_file = lazyaf(" [%s]", p->host_filename);
+	default_file = txAsprintf(" [%s]", p->host_filename);
     } else if (p->receive_flag && p->local_filename) {
-	default_file = lazyaf(" [%s]", p->local_filename);
+	default_file = txAsprintf(" [%s]", p->local_filename);
     } else {
 	default_file = "";
     }
-    return xs_buffer("Name of destination file%s on %s:%s ",
+    return Asprintf("Name of destination file%s on %s:%s ",
 	    p->receive_flag? " or folder": "",
 	    p->receive_flag? "this workstation": "the host",
 	    default_file);
@@ -1131,7 +1131,7 @@ ask_host_type(itc_t *itc)
 
     /* Ask about the host type. */
     action_output(" ");
-    return xs_buffer("Host type: (tso/vm/cics) [%s] ",
+    return Asprintf("Host type: (tso/vm/cics) [%s] ",
 	    ft_decode_host_type(p->host_type));
 }
 
@@ -1148,7 +1148,7 @@ ask_ascii(itc_t *itc)
     action_output(
 "A 'binary' transfer does no data translation.");
 
-    return xs_buffer("Transfer mode: (ascii/binary) [%s] ",
+    return Asprintf("Transfer mode: (ascii/binary) [%s] ",
 	    p->ascii_flag? "ascii": "binary");
 }
 
@@ -1172,7 +1172,7 @@ ask_cr(itc_t *itc)
     action_output(
 "'keep' means that no special action is taken with CRs.");
     default_cr = p->cr_flag? (p->receive_flag? "add": "remove"): "keep";
-    return xs_buffer("CR handling: (%s/keep) [%s] ",
+    return Asprintf("CR handling: (%s/keep) [%s] ",
 	    p->receive_flag? "add": "remove", default_cr);
 }
 
@@ -1182,7 +1182,7 @@ ask_remap(itc_t *itc)
     ft_conf_t *p = &itc->conf;
 
     /* Ask about character set remapping. */
-    fmt80(lazyaf("For ASCII transfers, "
+    fmt80(txAsprintf("For ASCII transfers, "
 #if defined(WC3270) /*[*/
 "w"
 #endif /*]*/
@@ -1201,7 +1201,7 @@ ask_remap(itc_t *itc)
 	locale_codeset,
 #endif /*]*/
 	get_codepage_number()));
-    return xs_buffer("Re-map character set? (yes/no) [%s] ",
+    return Asprintf("Re-map character set? (yes/no) [%s] ",
 	    p->remap_flag? "yes": "no");
 }
 
@@ -1212,7 +1212,7 @@ ask_windows_cp(itc_t *itc)
     ft_conf_t *p = &itc->conf;
 
     /* Ask about the Windows code page. */
-    return xs_buffer("Windows code page for re-mapping: [%d] ",
+    return Asprintf("Windows code page for re-mapping: [%d] ",
 	    p->windows_codepage);
 }
 #endif /*]*/
@@ -1235,7 +1235,7 @@ ask_keep(itc_t *itc)
     } else {
 	default_fe = "keep";
     }
-    return xs_buffer("Action if destination file exists: "
+    return Asprintf("Action if destination file exists: "
 	    "(keep/replace/append) [%s] ", default_fe);
 }
 
@@ -1246,7 +1246,7 @@ ask_recfm(itc_t *itc)
 
     /* Ask for the record format. */
     action_output("[optional] Destination file record format:");
-    return xs_buffer(" (default/fixed/variable/undefined) [%s] ",
+    return Asprintf(" (default/fixed/variable/undefined) [%s] ",
 	    ft_decode_recfm(p->recfm));
 }
 
@@ -1271,7 +1271,7 @@ ask_alloc(itc_t *itc)
 
     /* Ask for units. */
     action_output("[optional] Destination file allocation type:");
-    return xs_buffer(" (default/tracks/cylinders/avblock) [%s] ",
+    return Asprintf(" (default/tracks/cylinders/avblock) [%s] ",
 	    ft_decode_units(p->units));
 }
 
@@ -1282,7 +1282,7 @@ ask_primary(itc_t *itc)
 
     /* Ask for primary allocation. */
     if (p->primary_space) {
-	return xs_buffer("Destination file primary space: [%d]",
+	return Asprintf("Destination file primary space: [%d]",
 		p->primary_space);
     } else {
 	return  NewString("Destination file primary space: ");
@@ -1296,7 +1296,7 @@ ask_secondary(itc_t *itc)
 
     /* Ask for secondary. */
     if (p->secondary_space) {
-	return xs_buffer("Destination file secondary space: [%d]",
+	return Asprintf("Destination file secondary space: [%d]",
 		p->secondary_space);
     } else {
 	return NewString("Destination file secondary space: ");
@@ -1310,7 +1310,7 @@ ask_avblock(itc_t *itc)
 
     /* Ask for AVBLOCK. */
     if (p->avblock) {
-	return xs_buffer("Destination file avblock size: [%d]", p->avblock);
+	return Asprintf("Destination file avblock size: [%d]", p->avblock);
     } else {
 	return NewString("Destination file abvlock size: ");
     }
@@ -1323,7 +1323,7 @@ ask_buffer_size(itc_t *itc)
 
     /* Ask for the DFT buffer size. */
     action_output(" ");
-    return xs_buffer("DFT buffer size: [%d] ", p->dft_buffersize);
+    return Asprintf("DFT buffer size: [%d] ", p->dft_buffersize);
 }
 
 static char *
@@ -1337,7 +1337,7 @@ ask_other_options(itc_t *itc)
     if (p->other_options) {
 	action_output("Enter 'none' to specify no additional options.");
     }
-    return xs_buffer("Other IND$FILE options: [%s] ", p->other_options? p->other_options: "");
+    return Asprintf("Other IND$FILE options: [%s] ", p->other_options? p->other_options: "");
 }
 
 static char *
@@ -1393,7 +1393,7 @@ ask_go(itc_t *itc)
 	}
 #if defined(_WIN32) /*[*/
 	if (p->remap_flag) {
-	    windows_cp = lazyaf(", Windows code page %d", p->windows_codepage);
+	    windows_cp = txAsprintf(", Windows code page %d", p->windows_codepage);
 	}
 #endif /*]*/
     }
@@ -1453,10 +1453,10 @@ ask_go(itc_t *itc)
 	    char *units = "";
 
 	    if (p->primary_space) {
-		primary = lazyaf(" primary %d", p->primary_space);
+		primary = txAsprintf(" primary %d", p->primary_space);
 	    }
 	    if (p->secondary_space) {
-		secondary = lazyaf(" secondary %d", p->secondary_space);
+		secondary = txAsprintf(" secondary %d", p->secondary_space);
 	    }
 	    switch (p->units) {
 	    case DEFAULT_UNITS:
@@ -1468,7 +1468,7 @@ ask_go(itc_t *itc)
 		units = " cylinders";
 		break;
 	    case AVBLOCK:
-		units = lazyaf(" avblock %d", p->avblock);
+		units = txAsprintf(" avblock %d", p->avblock);
 		break;
 	    }
 	    action_output("  Allocation:%s%s%s",
@@ -1518,7 +1518,7 @@ Keywords:");
 
     if ((conf.receive_flag && conf.host_filename) ||
 	    (!conf.receive_flag && conf.local_filename)) {
-	s = lazyaf("default '%s'",
+	s = txAsprintf("default '%s'",
 		conf.receive_flag? conf.host_filename: conf.local_filename);
     } else {
 	s = "(required)";
@@ -1528,7 +1528,7 @@ Keywords:");
 
     if ((!conf.receive_flag && conf.host_filename) ||
 	    (conf.receive_flag && conf.local_filename)) {
-	s = lazyaf("default '%s'",
+	s = txAsprintf("default '%s'",
 		conf.receive_flag? conf.local_filename: conf.host_filename);
     } else {
 	s = "(required)";

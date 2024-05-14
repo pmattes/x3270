@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Paul Mattes.
+ * Copyright (c) 2018-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,9 @@
 /* Common length for all prefixes. */
 #define PREFIX_LEN	6
 
-/* Prefix for data output. */
+/* Prefixes for data output. */
 #define DATA_PREFIX	"data: "
+#define ERROR_DATA_PREFIX "errd: "
 
 /* Prefixes for input. */
 #define INPUT_PREFIX	"inpt: "
@@ -53,3 +54,9 @@
 /* Action to continue or abort interactive input. */
 #define RESUME_INPUT	"ResumeInput"
 #define RESUME_INPUT_ABORT	"-Abort"
+
+/* JSON object member names. */
+#define JRET_RESULT	"result"
+#define JRET_RESULT_ERR	"result-err"
+#define JRET_SUCCESS	"success"
+#define JRET_STATUS	"status"

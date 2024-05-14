@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,9 @@
 #include "b3270proto.h"
 #include "ctlr.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "screen.h"
 #include "status.h"
+#include "txa.h"
 #include "ui_stream.h"
 #include "utils.h"
 
@@ -83,7 +83,7 @@ status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
     ui_leaf(IndOia,
 	    AttrField, OiaCompose,
 	    AttrValue, AT_BOOLEAN, on,
-	    AttrChar, AT_STRING, on? lazyaf("U+%04x", ucs4): NULL,
+	    AttrChar, AT_STRING, on? txAsprintf("U+%04x", ucs4): NULL,
 	    AttrType, AT_STRING, on? ((keytype == KT_STD)? "std": "ge"): NULL,
 	    NULL);
 }
@@ -180,9 +180,9 @@ status_oerr(int error_type)
     oia_kybdlock = K_OERR;
 
     if (error_type >= 1 && error_type <= 4) {
-	name = xs_buffer(OiaLockOerr " %s", oerr_names[error_type - 1]);
+	name = Asprintf(OiaLockOerr " %s", oerr_names[error_type - 1]);
     } else {
-	name = xs_buffer(OiaLockOerr " %d", error_type);
+	name = Asprintf(OiaLockOerr " %d", error_type);
     }
     status_lock(name);
 }
@@ -289,7 +289,7 @@ status_scrolled(int n)
 	if (!flashing) {
 	    ui_leaf(IndOia,
 		    AttrField, AT_STRING, OiaLock,
-		    AttrValue, AT_STRING, lazyaf(OiaLockScrolled " %d", n),
+		    AttrValue, AT_STRING, txAsprintf(OiaLockScrolled " %d", n),
 		    NULL);
 	}
     } else {
@@ -366,7 +366,7 @@ status_timing(struct timeval *t0, struct timeval *t1)
 	 (t1->tv_usec - t0->tv_usec + 50000) / 100000;
     ui_leaf(IndOia,
 	    AttrField, AT_STRING, OiaTiming,
-	    AttrValue, AT_STRING, lazyaf("%lu.%lu", cs / 10, cs % 10),
+	    AttrValue, AT_STRING, txAsprintf("%lu.%lu", cs / 10, cs % 10),
 	    NULL);
 }
 

@@ -39,12 +39,12 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "ui_stream.h"
-#include "lazya.h"
 #include "nvt.h"
 #include "screen.h"
 #include "see.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "utf8.h"
@@ -179,7 +179,7 @@ see_gr(u_short gr)
 	vb_appendf(&r, "%swrap", sep);
 	sep = ",";
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /* Save empty screen state. */
@@ -805,7 +805,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 		vb_appendf(&r, "%.*s", utf8_len, utf8_buf);
 	    }
 	    ccode_value = vb_consume(&r);
-	    lazya(ccode_value);
+	    txdFree(ccode_value);
 	    ui_add_element(AttrText, AT_STRING, ccode_value);
 	} else {
 	    ui_add_element(AttrCount, AT_INT, (int64_t)d->width);

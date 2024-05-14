@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2022-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,11 +45,11 @@ class tls_server(playback.playback):
         playback.playback.__init__(self, cti, trace_file, port, ipv6)
 
     # Cleanup.
-    def __del__(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         if self.clear_conn != None:
             self.clear_conn.close()
             self.clear_conn = None
-        playback.playback.__del__(self)
+        playback.playback.__exit__(self, exc_type, exc_value, traceback)
 
     def limit_tls13(self):
         '''Prohibit TLS 1.3'''

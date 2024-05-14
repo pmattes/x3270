@@ -26,8 +26,8 @@
  */
 
 /*
- *      lazya.c
- *              Lazy allocations
+ *      txa.c
+ *              Transaction allocator.
  */
 
 #include "globals.h"
@@ -39,32 +39,32 @@
 #include "trace.h"
 #include "utils.h"
 
-#include "lazya.h"
+#include "txa.h"
 
 #define BLOCK_SLOTS  1024	/* slots per block */
 
-typedef struct lazy_block {
-    struct lazy_block *next;
+typedef struct txa_block {
+    struct txa_block *next;
     void *slot[BLOCK_SLOTS];
-} lazy_block_t;
-static lazy_block_t *blocks;
-static lazy_block_t **last_block = &blocks;
-static lazy_block_t *current_block;
+} txa_block_t;
+static txa_block_t *blocks;
+static txa_block_t **last_block = &blocks;
+static txa_block_t *current_block;
 static int slot_ix = 0;
 
 /**
- * Add a buffer to the lazy allocation table.
+ * Do a deferred free on a malloc'd block of memory.
  *
  * @param[in] buf	Buffer to store
  * 
  * @return buf, for convenience
  */
 char *
-lazya(void *buf)
+txdFree(void *buf)
 {
     if (current_block == NULL || slot_ix >= BLOCK_SLOTS) {
 	/* Allocate a new block. */
-	current_block = (lazy_block_t *)Calloc(1, sizeof(lazy_block_t));
+	current_block = (txa_block_t *)Calloc(1, sizeof(txa_block_t));
 	*last_block = current_block;
 	last_block = &current_block->next;
 	slot_ix = 0;
@@ -76,26 +76,26 @@ lazya(void *buf)
 }
 
 /**
- * Format a string into Malloc'd memory and put it into the lazy table.
+ * Format a string into malloc'd memory and do a deferred free on it.
  *
  * @param[in] fmt	Format
  *
  * @return Buffer
  */
 char *
-lazyaf(const char *fmt, ...)
+txAsprintf(const char *fmt, ...)
 {
     va_list args;
     char *r;
 
     va_start(args, fmt);
-    r = xs_vbuffer(fmt, args);
+    r = Vasprintf(fmt, args);
     va_end(args);
-    return lazya(r);
+    return txdFree(r);
 }
 
 /**
- * Format a string into Malloc'd memory and put it into the lazy table.
+ * Format a string into malloc'd memory and do a deferred free on it.
  * Varargs version.
  *
  * @param[in] fmt	Format
@@ -104,22 +104,22 @@ lazyaf(const char *fmt, ...)
  * @return Buffer
  */
 char *
-vlazyaf(const char *fmt, va_list args)
+txVasprintf(const char *fmt, va_list args)
 {
-    return lazya(xs_vbuffer(fmt, args));
+    return txdFree(Vasprintf(fmt, args));
 }
 
 /**
- * Flush the lazy allocation table.
+ * Perform the deferred free operations at the end of a transaction.
  */
 void
-lazya_flush(void)
+txflush(void)
 {
     unsigned nf = 0;
 #if defined(HAVE_MALLOC_USABLE_SIZE) /*[*/
     size_t nb = 0;
 #endif /*]*/
-    lazy_block_t *r, *next = NULL;
+    txa_block_t *r, *next = NULL;
 
     for (r = blocks; r != NULL; r = next) {
 	int i;
@@ -144,12 +144,12 @@ lazya_flush(void)
 
 #if defined(HAVE_MALLOC_USABLE_SIZE) /*[*/
     if (nf > 10 || nb > 1024) {
-	vtrace("lazya_flush: %u slot%s, %zu bytes\n", nf, (nf == 1)? "": "s",
+	vtrace("txflush: %u slot%s, %zu bytes\n", nf, (nf == 1)? "": "s",
 		nb);
     }
 #else /*][*/
     if (nf > 10) {
-	vtrace("lazya_flush: %u slot%s\n", nf, (nf == 1)? "": "s");
+	vtrace("txflush: %u slot%s\n", nf, (nf == 1)? "": "s");
     }
 #endif /*]*/
 }

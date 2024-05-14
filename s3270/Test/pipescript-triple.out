@@ -1,0 +1,3 @@
+{"result":["true","false","Set(): Unknown toggle name 'foo'"],"result-err":[false,false,true],"success":false,"status":"L U U N N 4 24 80 0 0 0x0 0.000"}
+L U U N N 4 24 80 0 0 0x0 0.000
+ok

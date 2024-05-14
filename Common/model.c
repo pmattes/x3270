@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2023 Paul Mattes.
+ * Copyright (c) 2016-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,12 +37,12 @@
 
 #include "ctlrc.h"
 #include "host.h"
-#include "lazya.h"
 #include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "telnet.h"
 #include "toggles.h"
+#include "txa.h"
 #include "utils.h"
 
 #include "model.h"
@@ -85,7 +85,7 @@ canonical_model_x(const char *res, int *model, bool *is_color,
     *model = *digitp - '0';
     *is_color = (*colorp == '9');
     *is_extended = extended;
-    return lazyaf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
+    return txAsprintf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
 }
 
 /*
@@ -114,7 +114,7 @@ canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr)
     if (sscanf(res, "%u%c%u%c", ovc, &x, ovr, &junk) != 3 || x != 'x') {
 	return NULL;
     }
-    return lazyaf("%ux%u", *ovc, *ovr);
+    return txAsprintf("%ux%u", *ovc, *ovr);
 }
 
 /*

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -262,6 +262,25 @@ class TestB3270Json(cti.cti):
         self.b3270_json_socket()
     def test_b3270_json_socket_ipv6(self):
         self.b3270_json_socket(ipv6=True)
+
+    # b3270 JSON error output test
+    def test_b3270_json_error_output(self):
+
+        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+
+        # Feed b3270 an action.
+        b3270.stdin.write(b'"Set(startTls) Set(trace) Set(foo)"\n')
+
+        # Get the result.
+        out = json.loads(b3270.communicate(timeout=2)[0].split(b'\n')[-2].decode())
+
+        # Wait for the process to exit.
+        b3270.stdin.close()
+        self.vgwait(b3270)
+
+        # Check the 'text-err' output.
+        self.assertEqual([False, False, True], out['run-result']['text-err'])
 
 if __name__ == '__main__':
     unittest.main()

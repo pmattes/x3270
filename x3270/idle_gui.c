@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2016, 2019, 2021 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -450,7 +450,7 @@ idle_start(void)
     XtVaGetValues(command_value, XtNstring, &cmd, NULL);
     XtVaGetValues(timeout_value, XtNstring, &tmo, NULL);
     Replace(idle_command, NewString(cmd));
-    its = xs_buffer("%s%s%c", fuzz? "~": "", tmo, hms);
+    its = Asprintf("%s%s%c", fuzz? "~": "", tmo, hms);
     Replace(idle_timeout_string, its);
 
     /* See if they've turned it off. */

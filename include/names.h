@@ -154,6 +154,7 @@
 /*  Parameters to Capabilities(). */
 #define KwInteractive	"interactive"
 #define KwPwInput	"pwinput"
+#define KwErrd		"errd"
 /*  Parameters to Crash(). */
 #define KwAssert	"assert"
 #define KwExit		"exit"

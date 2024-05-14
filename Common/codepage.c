@@ -42,10 +42,10 @@
 
 #include "actions.h"
 #include "codepage.h"
-#include "lazya.h"
 #include "popups.h"
 #include "screen.h"
 #include "toggles.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
@@ -134,7 +134,7 @@ codepage_init(const char *cpname)
     codeset_name = guess_codeset();
 # endif /*]*/
 #else /*][*/
-    codeset_name = lazyaf("CP%d", appres.local_cp);
+    codeset_name = txAsprintf("CP%d", appres.local_cp);
 #endif /*]*/
     set_codeset(codeset_name, appres.utf8);
 
@@ -153,7 +153,7 @@ codepage_init(const char *cpname)
 	if (appres.dbcs_cgcsgid != NULL) {
 	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
-	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
+	cgcsgid = txAsprintf("%s+%s", cgcsgid, dbcs_cgcsgid);
     }
 
     rc = codepage_init2(cpname, realname, codepage, cgcsgid, is_dbcs);

@@ -47,12 +47,13 @@
 #include "bind-opt.h"
 #include "json.h"
 #include "json_run.h"
-#include "lazya.h"
 #include "popups.h"
 #include "resources.h"
+#include "s3270_proto.h"
 #include "task.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 
@@ -217,7 +218,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 	    if (socket_errno() == SE_EWOULDBLOCK) {
 		harmless = true;
 	    }
-	    ebuf = lazyaf("recv error: %s", socket_errtext());
+	    ebuf = txAsprintf("recv error: %s", socket_errtext());
 	    vtrace("httpd %s%s\n", ebuf, harmless? " (harmless)": "");
 	} else {
 	    ebuf = "session EOF";
@@ -319,13 +320,13 @@ hio_connection(iosrc_t fd, ioid_t id)
 #endif /*]*/
     if (sa.sa.sa_family == AF_INET) {
 	session->dhandle = httpd_new(session,
-		lazyaf("%s:%u",
+		txAsprintf("%s:%u",
 		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
 			sizeof(hostbuf)),
 		    ntohs(sa.sin.sin_port)));
     } else if (sa.sa.sa_family == AF_INET6) {
 	session->dhandle = httpd_new(session,
-		lazyaf("%s:%u",
+		txAsprintf("%s:%u",
 		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
 			sizeof(hostbuf)),
 		    ntohs(sa.sin6.sin6_port)));
@@ -427,14 +428,14 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
     if (sa->sa_family == AF_INET) {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
-	l->desc = xs_buffer("%s:%u", inet_ntop(sa->sa_family,
+	l->desc = Asprintf("%s:%u", inet_ntop(sa->sa_family,
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
 	vtrace("Listening for HTTP on %s\n", l->desc);
     } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
-	l->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
+	l->desc = Asprintf("[%s]:%u", inet_ntop(sa->sa_family,
 		&sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
 	    ntohs(sin6->sin6_port));
 	vtrace("Listening for HTTP on %s\n", l->desc);
@@ -573,17 +574,21 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 	}
     } else if (s->pending.return_content_type == CT_JSON) {
 	json_t *result_array;
+	json_t *err_array;
 
 	if (s->pending.jresult == NULL) {
 	    s->pending.jresult = json_object();
 	    result_array = json_array();
-	    json_object_set(s->pending.jresult, "result", NT, result_array);
+	    json_object_set(s->pending.jresult, JRET_RESULT, NT, result_array);
+	    err_array = json_array();
+	    json_object_set(s->pending.jresult, JRET_RESULT_ERR, NT, err_array);
 	} else {
-	    assert(json_object_member(s->pending.jresult, "result", NT,
-			&result_array));
+	    assert(json_object_member(s->pending.jresult, JRET_RESULT, NT, &result_array));
+	    assert(json_object_member(s->pending.jresult, JRET_RESULT_ERR, NT, &err_array));
 	}
 
 	json_array_append(result_array, json_string(buf, len));
+	json_array_append(err_array, json_boolean(!success));
     } else {
 	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);

@@ -68,7 +68,6 @@
 #include "idle.h"
 #include "json.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
@@ -98,6 +97,7 @@
 #include "tls_passwd_gui.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "screentrace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -397,7 +397,7 @@ dump_codepages(void)
 	    uix_open_leaf(IndCodePage);
 	    ui_add_element("name", AT_STRING, cpnames[i].name);
 	    for (j = 0; j < cpnames[i].num_aliases; j++) {
-		ui_add_element(lazyaf("alias%d", j + 1), AT_STRING,
+		ui_add_element(txAsprintf("alias%d", j + 1), AT_STRING,
 			cpnames[i].aliases[j]);
 	    }
 	    uix_close_leaf();
@@ -596,10 +596,10 @@ main(int argc, char *argv[])
 	uij_open_array(IndInitialize);
     }
     ui_leaf(IndHello,
-	    AttrVersion, AT_STRING, lazyaf("%d.%d.%d", our_major, our_minor, our_iteration),
+	    AttrVersion, AT_STRING, txAsprintf("%d.%d.%d", our_major, our_minor, our_iteration),
 	    AttrBuild, AT_STRING, build,
 	    AttrCopyright, AT_STRING,
-lazyaf("\
+txAsprintf("\
 Copyright © 1993-%s, Paul Mattes.\n\
 Copyright © 1990, Jeff Sparkes.\n\
 Copyright © 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA\n\
@@ -906,7 +906,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	ui_leaf(IndOia,
 		AttrField, AT_STRING, OiaLock,
 		AttrValue, AT_STRING,
-		    lazyaf("%s %s", reasons[reason], oerrs[oerr]),
+		    txAsprintf("%s %s", reasons[reason], oerrs[oerr]),
 		NULL);
     } else if (!strcmp(argv[0], OiaLockScrolled)) {
 	int n;
@@ -924,7 +924,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	
 	ui_leaf(IndOia,
 		AttrField, AT_STRING, OiaLock,
-		AttrValue, AT_STRING, lazyaf("%s %d", reasons[reason], n),
+		AttrValue, AT_STRING, txAsprintf("%s %d", reasons[reason], n),
 		NULL);
     } else if (argc > 1) {
 	popup_an_error("ForceStatus: Reason '%s' does not take an argument",

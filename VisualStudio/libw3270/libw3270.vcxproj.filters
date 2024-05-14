@@ -56,5 +56,6 @@
     <ClCompile Include="..\..\Common\stdinscript.c" />
     <ClCompile Include="..\..\Common\save_restore.c" />
     <ClCompile Include="..\..\Common\vstatus.c" />
+    <ClCompile Include="..\..\Common\s3common.c" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2022 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -530,7 +530,7 @@ cut_data_request(void)
 	}
 
 	/* Abort the transfer. */
-	msg = xs_buffer("read(%s): %s", ftc->local_filename, strerror(errno));
+	msg = Asprintf("read(%s): %s", ftc->local_filename, strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
 	return;
@@ -634,7 +634,7 @@ cut_data(void)
     if (fwrite((char *)cvobuf, conv_length, 1, fts.local_file) == 0) {
 	char *msg;
 
-	msg = xs_buffer("write(%s): %s", ftc->local_filename, strerror(errno));
+	msg = Asprintf("write(%s): %s", ftc->local_filename, strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
     } else {

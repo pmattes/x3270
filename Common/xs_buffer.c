@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 
 /*
  *	xs_buffer.c
- *		Simplified version of asprintf/vsprintf.
+ *		Simplified/guaranteed version of asprintf/vsprintf.
  */
 
 #include "globals.h"
@@ -42,17 +42,17 @@
  * @param[in] fmt	printf format string
  * @param[in] args	argument list
  *
- * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
+ * @return Malloc'd buffer, guaranteed not to be NULL. Must Free() when done.
  */
 char *
-xs_vbuffer(const char *fmt, va_list args)
+Vasprintf(const char *fmt, va_list args)
 {
     char *r = NULL;
     int nw;
 
     nw = vasprintf(&r, fmt, args);
     if (nw < 0) {
-	Error("xs_vbuffer: vasprintf failure");
+	Error("Vasprintf: vasprintf failure");
     }
     if (r == NULL) {
 	Error("Out of memory");
@@ -61,21 +61,21 @@ xs_vbuffer(const char *fmt, va_list args)
 }
 
 /**
- * Local variation of vsprintf(). Returns the buffer instead of a count, and
+ * Local variation of asprintf(). Returns the buffer instead of a count, and
  * crashes if it runs out of memory.
  *
  * @param[in] fmt	printf format string
  *
- * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
+ * @return Malloc'd buffer, guaranteed not to be NULL. Must Free() when done.
  */
 char *
-xs_buffer(const char *fmt, ...)
+Asprintf(const char *fmt, ...)
 {
     va_list args;
     char *r;
 
     va_start(args, fmt);
-    r = xs_vbuffer(fmt, args);
+    r = Vasprintf(fmt, args);
     va_end(args);
     return r;
 }

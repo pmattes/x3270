@@ -825,7 +825,7 @@ create_form_popup(const char *name, XtCallbackProc callback,
 
     /* Create the popup shell */
 
-    widgetname = xs_buffer("%sPopup", name);
+    widgetname = Asprintf("%sPopup", name);
     if (isupper((unsigned char)widgetname[0])) {
 	widgetname[0] = tolower((unsigned char)widgetname[0]);
     }
@@ -1076,7 +1076,7 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 {
     char *buf;
 
-    buf = xs_vbuffer(fmt, args);
+    buf = Vasprintf(fmt, args);
     if (!rop->shell || (rop->visible && !rop->overwrites)) {
 	struct rsm *r, **s;
 
@@ -1131,7 +1131,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
     char *s = NULL;
 
     if (task_redirect()) {
-	char *buf = xs_vbuffer(fmt, args);
+	char *buf = Vasprintf(fmt, args);
 
 	task_error(buf);
 	Free(buf);
@@ -1140,12 +1140,12 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 
     if (epd.active) {
 	epd.type = type;
-	Replace(epd.text, xs_vbuffer(fmt, args));
+	Replace(epd.text, Vasprintf(fmt, args));
 	return;
     }
 
     if (type == ET_CONNECT) {
-	s = xs_buffer("Connection failed%s:\n%s",
+	s = Asprintf("Connection failed%s:\n%s",
 		host_retry_mode? ", retrying": "", fmt);
     }
 
@@ -1237,7 +1237,7 @@ action_output(const char *fmt, ...)
     if (task_redirect()) {
 	char *s;
 
-	s = xs_vbuffer(fmt, args);
+	s = Vasprintf(fmt, args);
 	task_info("%s", s);
 	Free(s);
     } else {

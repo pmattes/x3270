@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -45,7 +45,6 @@
 #include "cscreen.h"
 #include "host.h"
 #include "keymap.h"
-#include "lazya.h"
 #include "linemode.h"
 #include "popups.h"
 #include "query.h"
@@ -53,6 +52,7 @@
 #include "split_host.h"
 #include "status_dump.h"
 #include "telnet.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -72,7 +72,7 @@ hms(time_t ts)
     sc = td % 60;
 
     if (hr > 0) {
-	return lazyaf("%ld %s %ld %s %ld %s",
+	return txAsprintf("%ld %s %ld %s %ld %s",
 	    hr, (hr == 1) ?
 		get_message("hour") : get_message("hours"),
 	    mn, (mn == 1) ?
@@ -80,13 +80,13 @@ hms(time_t ts)
 	    sc, (sc == 1) ?
 		get_message("second") : get_message("seconds"));
     } else if (mn > 0) {
-	return lazyaf("%ld %s %ld %s",
+	return txAsprintf("%ld %s %ld %s",
 	    mn, (mn == 1) ?
 		get_message("minute") : get_message("minutes"),
 	    sc, (sc == 1) ?
 		get_message("second") : get_message("seconds"));
     } else {
-	return lazyaf("%ld %s",
+	return txAsprintf("%ld %s",
 	    sc, (sc == 1) ?
 		get_message("second") : get_message("seconds"));
     }
@@ -294,5 +294,5 @@ status_dump(void)
     if (sl > 0 && s[sl - 1] == '\n') {
 	s[sl - 1] = '\0';
     }
-    return lazya(s);
+    return txdFree(s);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016, 2018, 2020 Paul Mattes.
+ * Copyright (c) 2013-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -337,7 +337,7 @@ url_click(int row, int col)
     }
 
     /* Launch the browser. */
-    command = xs_buffer("start \"browser\" \"%s\"", url);
+    command = Asprintf("start \"browser\" \"%s\"", url);
     Free(url);
     vtrace("Starting URL: %s\n", url);
     rc = system(command);

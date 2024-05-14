@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013-2016, 2019 Paul Mattes.
+ * Copyright (c) 1999-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,9 @@
 #include "glue.h"
 #include "appres.h"
 #include "latin1.h"
-#include "lazya.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
@@ -961,8 +961,8 @@ process_events(bool block)
 	/* Process some events. */
 	done = process_some_events(block, &any_this_time);
 
-	/* Flush the lazy allocator ring. */
-	lazya_flush();
+	/* Free transaction memory. */
+	txflush();
 
 	/* Don't block a second time. */
 	block = false;

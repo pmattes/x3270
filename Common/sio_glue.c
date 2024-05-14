@@ -39,13 +39,13 @@
 
 #include "boolstr.h"
 #include "opts.h"
-#include "lazya.h"
 #include "popups.h"
 #include "utils.h"
 #include "sio.h"
 #include "sio_glue.h"
 #include "sio_internal.h"
 #include "telnet.h"
+#include "txa.h"
 #include "toggles.h"
 #include "varbuf.h"
 
@@ -336,7 +336,7 @@ sio_option_names(void)
 	}
     } FOREACH_TLS_OPTS_END(opt);
 
-    return lazya(vb_consume(&v));
+    return txdFree(vb_consume(&v));
 }
 
 /*

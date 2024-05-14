@@ -71,7 +71,6 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -85,6 +84,7 @@
 #include "telnet.h"
 #include "toupper.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utils.h"
@@ -609,7 +609,7 @@ dpi_init(void)
 static const char *
 windowid_dump(void)
 {
-    return lazyaf("0x%lx", XtWindow(toplevel));
+    return txAsprintf("0x%lx", XtWindow(toplevel));
 }
 
 /*
@@ -2145,7 +2145,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 		}
 		dash = "-";
 	    }
-	    new_font_name = lazya(vb_consume(&r));
+	    new_font_name = txdFree(vb_consume(&r));
 	} else {
 	    /* Has variants. */
 	    new_font_name = find_variant(full_efontname, bigger);
@@ -4070,7 +4070,7 @@ xfer_color_scheme(char *cs, bool do_popup)
     if (cs == NULL) {
 	goto failure;
     }
-    scheme_name = xs_buffer("%s.%s", ResColorScheme, cs);
+    scheme_name = Asprintf("%s.%s", ResColorScheme, cs);
     s0 = get_resource(scheme_name);
     if (s0 == NULL) {
 	if (do_popup) {
@@ -4729,7 +4729,7 @@ screen_new_display_charsets(const char *realname)
 	assert(display_charsets != NULL);
 	dbcs_display_charsets = lookup_display_charset_dbcs(realname);
 	if (dbcs_display_charsets != NULL) {
-	    display_charsets = lazyaf("%s+%s", display_charsets,
+	    display_charsets = txAsprintf("%s+%s", display_charsets,
 		    dbcs_display_charsets);
 	}
     }
@@ -5041,31 +5041,31 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	/* Check the character set */
 	names = XListFontsWithInfo(display, name, 1, &count, &f);
 	if (names == NULL) {
-	    return xs_buffer("Font %s\nnot found", name);
+	    return Asprintf("Font %s\nnot found", name);
 	}
 	if (XGetFontProperty(f, a_spacing, &svalue)) {
 	    spacing = XGetAtomName(display, svalue);
-	    lazya(spacing);
+	    txdFree(spacing);
 	} else {
 	    XFreeFontInfo(names, f, count);
-	    return xs_buffer("Font %s\nhas no spacing property", name);
+	    return Asprintf("Font %s\nhas no spacing property", name);
 	}
 	if (strcasecmp(spacing, "c") && strcasecmp(spacing, "m")) {
 	    XFreeFontInfo(names, f, count);
-	    return xs_buffer("Font %s\nhas invalid spacing property '%s'",
+	    return Asprintf("Font %s\nhas invalid spacing property '%s'",
 		    name, spacing);
 	}
 	if (XGetFontProperty(f, a_registry, &svalue)) {
 	    family_name = XGetAtomName(display, svalue);
 	} else {
 	    XFreeFontInfo(names, f, count);
-	    return xs_buffer("Font %s\nhas no registry property", name);
+	    return Asprintf("Font %s\nhas no registry property", name);
 	}
 	if (XGetFontProperty(f, a_encoding, &svalue)) {
 	    font_encoding = XGetAtomName(display, svalue);
 	} else {
 	    XFreeFontInfo(names, f, count);
-	    return xs_buffer("Font %s\nhas no encoding property", name);
+	    return Asprintf("Font %s\nhas no encoding property", name);
 	}
 	if (font_encoding[0] == '-') {
 	    fe = font_encoding + 1;
@@ -5073,11 +5073,11 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	    fe = font_encoding;
 	}
 	XFreeFontInfo(names, f, count);
-	charset = xs_buffer("%s-%s", family_name, fe);
+	charset = Asprintf("%s-%s", family_name, fe);
 	Free(family_name);
 	Free(font_encoding);
 	if (!charset_in_reqd(charset, reqd_display_charset)) {
-	    char *r = xs_buffer("Font %s\nimplements %s, not %s\n", name,
+	    char *r = Asprintf("Font %s\nimplements %s, not %s\n", name,
 		    charset, reqd_display_charset);
 
 	    Free(charset);
@@ -5106,13 +5106,13 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 	    }
 	}
 	if (best == NULL) {
-	    return xs_buffer("No %s fonts found", reqd_display_charset);
+	    return Asprintf("No %s fonts found", reqd_display_charset);
 	}
     }
 
     g = XLoadQueryFont(display, best);
     if (g == NULL) {
-	return xs_buffer("Font %s could not be loaded", best);
+	return Asprintf("Font %s could not be loaded", best);
     }
     set_font_globals(g, best, best, g->fid, is_dbcs);
     return NULL;
@@ -5168,7 +5168,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	full_font = XGetAtomName(display, svalue);
     }
 
-    font_charset = xs_buffer("%s-%s", family_name, fe);
+    font_charset = Asprintf("%s-%s", family_name, fe);
     Free(font_encoding);
 
     if (is_dbcs) {
@@ -5932,10 +5932,10 @@ init_rsfonts(char *charset_name)
 		    }
 		}
 		if (dash2 != NULL) {
-		    hier_name = xs_buffer("%s>%.*s>%s",
+		    hier_name = Asprintf("%s>%.*s>%s",
 			    csn, (int)(dash2 - name - 1), name + 1, dash2 + 1);
 		} else
-		    hier_name = xs_buffer("%s>%s", csn, name);
+		    hier_name = Asprintf("%s>%s", csn, name);
 		add_font_to_menu(hier_name, name);
 		Free(hier_name);
 	    }
@@ -6552,7 +6552,7 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 	int charset_count;
 	char *def_string;
 
-	fsname = xs_buffer("-*-%s,-*-iso8859-1", efont_charset_dbcs);
+	fsname = Asprintf("-*-%s,-*-iso8859-1", efont_charset_dbcs);
 	for (;;) {
 #if defined(_ST) /*[*/
 	    printf("trying fsname: %s\n", fsname);
@@ -6567,7 +6567,7 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 #if defined(_ST) /*[*/
 			printf("missing: %s\n", charset_list[0]);
 #endif /*]*/
-			fsname = xs_buffer("%s,-*-%s", fsname,
+			fsname = Asprintf("%s,-*-%s", fsname,
 				charset_list[i]);
 		    }
 		    continue;
@@ -6648,7 +6648,7 @@ xim_init(void)
     }
 
     if (xappres.input_method != NULL) {
-	buf = lazyaf("@im=%s", xappres.input_method);
+	buf = txAsprintf("@im=%s", xappres.input_method);
     }
     if (XSetLocaleModifiers(buf) == NULL) {
 	popup_an_error("XSetLocaleModifiers failed\nXIM-based input disabled");
@@ -6765,7 +6765,7 @@ dfc_init(void)
 	d->weight = NewString(nl_arr[3]);
 	d->points = atoi(nl_arr[7]);
 	d->spacing = NewString(nl_arr[11]);
-	d->charset = xs_buffer("%s-%s", nl_arr[13], nl_arr[14]);
+	d->charset = Asprintf("%s-%s", nl_arr[13], nl_arr[14]);
 	d->good = good;
 	if (!d->spacing[0] ||
 		(!strcasecmp(d->spacing, "c") ||
@@ -6871,8 +6871,8 @@ check_scalable(const char *font_name)
     }
 
     /* Search. */
-    name1 = lazya(vb_consume(&r1));
-    name2 = lazya(vb_consume(&r2));
+    name1 = txdFree(vb_consume(&r1));
+    name2 = txdFree(vb_consume(&r2));
     for (d = dfc; d != NULL; d = d->next) {
 	if (!strcasecmp(d->name, name1) ||
 	    !strcasecmp(d->name, name2)) {

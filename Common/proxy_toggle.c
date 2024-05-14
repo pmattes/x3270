@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2023 Paul Mattes.
+ * Copyright (c) 2019-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,11 @@
 #include "globals.h"
 
 #include "appres.h"
-#include "lazya.h"
 #include "proxy.h"
 #include "query.h"
 #include "resources.h"
 #include "toggles.h"
+#include "txa.h"
 #include "varbuf.h"
 
 #include "proxy_toggle.h"
@@ -58,11 +58,11 @@ proxy_dump(void)
 	vb_appendf(&r, "%s %s%s%s",
 		proxy_type_name(type),
 		proxy_takes_username(type)? "username": "no-username",
-		port? lazyaf(" %d", port): "",
+		port? txAsprintf(" %d", port): "",
 		(type < PT_MAX - 1)? "\n": "");
     }
 
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /*

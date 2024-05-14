@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2016, 2018-2020 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,6 @@
 #include "ctlrc.h"
 #include "find_console.h"
 #include "fprint_screen.h"
-#include "lazya.h"
 #include "menubar.h"
 #include "names.h"
 #include "nvt.h"
@@ -64,6 +63,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #if defined(_WIN32) /*[*/
@@ -128,7 +128,7 @@ static bool 	 wrote_ts = false;
 const char *
 rcba(int baddr)
 {
-    return lazyaf("(%d,%d)", baddr/COLS + 1, baddr%COLS + 1);
+    return txAsprintf("(%d,%d)", baddr/COLS + 1, baddr%COLS + 1);
 }
 
 /* Data Stream trace print, handles line wraps */
@@ -240,7 +240,7 @@ trace_ds(const char *fmt, ...)
 
     /* print out remainder of message */
     va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
+    s = Vasprintf(fmt, args);
     va_end(args);
     trace_ds_s(s, true);
     Free(s);
@@ -291,7 +291,7 @@ gen_ts(void)
     gettimeofday(&tv, NULL);
     t = tv.tv_sec;
     tm = localtime(&t);
-    return lazyaf("%d%02d%02d.%02d%02d%02d.%03d ",
+    return txAsprintf("%d%02d%02d.%02d%02d%02d.%03d ",
 	    tm->tm_year + 1900,
 	    tm->tm_mon + 1,
 	    tm->tm_mday,
@@ -329,7 +329,7 @@ vwtrace(bool do_ts, const char *fmt, va_list args)
 
     ts = NULL;
 
-    buf = xs_vbuffer(fmt, args);
+    buf = Vasprintf(fmt, args);
     n2w_left = strlen(buf);
     bp = buf;
 
@@ -435,12 +435,12 @@ trace_rollover_check(void)
 #if defined(_WIN32) /*[*/
 	period = strrchr(tracefile_name, '.');
 	if (period != NULL) {
-	    alt_filename = xs_buffer("%.*s-%s", (int)(period - tracefile_name),
+	    alt_filename = Asprintf("%.*s-%s", (int)(period - tracefile_name),
 		    tracefile_name, period);
 	} else
 #endif /*]*/
 	{
-	    alt_filename = xs_buffer("%s-", tracefile_name);
+	    alt_filename = Asprintf("%s-", tracefile_name);
 	}
 	unlink(alt_filename);
 	rename(tracefile_name, alt_filename);
@@ -518,9 +518,9 @@ create_tracefile_header(const char *trace_mode)
     tnv = toggle_values();
     for (i = 0; tnv[i].name != NULL; i++) {
 	if (tnv[i].value != NULL) {
-	    setting = xs_buffer("%s=%s", tnv[i].name, tnv[i].value);
+	    setting = Asprintf("%s=%s", tnv[i].name, tnv[i].value);
 	} else {
-	    setting = xs_buffer("%s=", tnv[i].name);
+	    setting = Asprintf("%s=", tnv[i].name);
 	}
 	if (len + 1 + strlen(setting) >= 80) {
 	    wtrace(false, "\n ");
@@ -710,10 +710,10 @@ start_trace_window(const char *path)
 	argc = console_args(t, path, &argv, argc);
 	array_add(&argv, argc++, "/bin/sh");
 	array_add(&argv, argc++, "-c");
-	array_add(&argv, argc++, xs_buffer("tail -n+0 -f %s", path));
+	array_add(&argv, argc++, Asprintf("tail -n+0 -f %s", path));
 	array_add(&argv, argc++, NULL);
 	execvp(t->program, (char *const*)argv);
-	perror(xs_buffer("exec(%s) failed", t->program));
+	perror(Asprintf("exec(%s) failed", t->program));
 	_exit(1);
 	break;
     default:	/* parent */
@@ -741,8 +741,8 @@ start_trace_window(const char *path)
     startupinfo.cb = sizeof(STARTUPINFO);
     startupinfo.lpTitle = (char *)path;
     memset(&process_information, 0, sizeof(PROCESS_INFORMATION));
-    if (CreateProcess(lazyaf("%scatf.exe", instdir),
-		lazyaf("\"%scatf.exe\"%s \"%s\"",
+    if (CreateProcess(txAsprintf("%scatf.exe", instdir),
+		txAsprintf("\"%scatf.exe\"%s \"%s\"",
 		    instdir,
 		    appres.utf8? " -utf8": "",
 		    path),
@@ -874,11 +874,11 @@ tracefile_on(int reason, enum toggle_type tt)
 	tracefile = appres.trace_file;
     } else {
 #if defined(_WIN32) /*[*/
-	tracefile_buf = xs_buffer("%s%sx3trc.$UNIQUE.txt",
+	tracefile_buf = Asprintf("%s%sx3trc.$UNIQUE.txt",
 		appres.trace_dir? appres.trace_dir: default_trace_dir(),
 		appres.trace_dir? "\\": "");
 #else /*][*/
-	tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE", appres.trace_dir);
+	tracefile_buf = Asprintf("%s/x3trc.$UNIQUE", appres.trace_dir);
 #endif /*]*/
 	tracefile = tracefile_buf;
     }

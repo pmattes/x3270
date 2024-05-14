@@ -50,15 +50,16 @@
 #include "json.h"
 #include "json_run.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "names.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "s3270_proto.h"
+#include "s3common.h"
 #include "source.h"
 #include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -135,7 +136,6 @@ typedef struct {
     unsigned capabilities; /* self-reported capabilities */
     void *irhandle;	/* input request handle */
     task_cb_ir_state_t ir_state; /* named input request state */
-    bool json_mode;	/* true if in JSON mode */
     json_t *json_result; /* pending JSON result */
 } peer_t;
 static llist_t peer_scripts = LLIST_INIT(peer_scripts);
@@ -213,8 +213,7 @@ do_push(peer_t *p, const char *buf, size_t len)
     }
 
     /* Try JSON parsing. */
-    if (!(p->capabilities & CBF_INTERACTIVE) &&
-	    (*s == '{' || *s == '[' || *s == '"')) {
+    if (!(p->capabilities & CBF_INTERACTIVE) && (*s == '{' || *s == '[' || *s == '"')) {
 	cmd_t **cmds;
 	char *single;
 	char *errmsg;
@@ -223,7 +222,7 @@ do_push(peer_t *p, const char *buf, size_t len)
 	ret = hjson_parse(s, len, &cmds, &single, &errmsg);
 	if (ret == HJ_OK) {
 	    /* Good JSON. */
-	    p->json_mode = true;
+	    p->json_result = s3json_init();
 	    if (cmds != NULL) {
 		name = push_cb_split(cmds, tcb, (task_cbh)p);
 	    } else {
@@ -235,16 +234,18 @@ do_push(peer_t *p, const char *buf, size_t len)
 	    return false;
 	} else {
 	    /* Bad JSON. */
-	    char *fail = xs_buffer(AnFail "(\"%s\")", errmsg);
+	    char *fail = Asprintf(AnFail "(\"%s\")", errmsg);
 
 	    /* Answer in JSON only if successfully parsed. */
-	    p->json_mode = (ret != HJ_BAD_SYNTAX);
+	    if (ret != HJ_BAD_SYNTAX) {
+		p->json_result = s3json_init();
+	    }
 	    Free(errmsg);
 	    name = push_cb(fail, strlen(fail), tcb, (task_cbh)p);
 	    Free(fail);
 	}
     } else {
-	p->json_mode = false;
+	json_free(p->json_result);
 	name = push_cb(s, len, tcb, (task_cbh)p);
     }
     Replace(p->name, NewString(name));
@@ -377,10 +378,10 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 /**
  * Send data on a socket and check the result.
  *
- * @param[in] s                Socket
- * @param[in] data     Data to send
- * @param[in] len      Length
- * @paran[in] sender   Sending function
+ * @param[in] s		Socket
+ * @param[in] data	Data to send
+ * @param[in] len	Length
+ * @paran[in] sender	Sending function
  */
 static void
 check_send(socket_t s, const char *data, size_t len, const char *sender)
@@ -411,8 +412,7 @@ static void
 peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     peer_t *p = (peer_t *)handle;
-    char *b;
-    char *newline;
+    char *cooked;
     static bool recursing = false;
 
     if (recursing) {
@@ -420,34 +420,12 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
     }
     recursing = true;
 
-    while (len > 0 && buf[len - 1] == '\n') {
-	len--;
-    }
-    b = xs_buffer("%.*s", (int)len, buf);
-    while ((newline = strchr(b, '\n')) != NULL) {
-	*newline = ' ';
+    s3data(buf, len, success, p->capabilities, p->json_result, NULL, &cooked);
+    if (cooked != NULL) {
+	check_send(p->socket, cooked, strlen(cooked), "peer_data");
+	Free(cooked);
     }
 
-    if (p->json_mode) {
-	json_t *result_array;
-
-	if (p->json_result == NULL) {
-            p->json_result = json_object();
-            result_array = json_array();
-            json_object_set(p->json_result, "result", NT, result_array);
-        } else {
-            assert(json_object_member(p->json_result, "result", NT,
-                        &result_array));
-        }
-	json_array_append(result_array, json_string(b, strlen(b)));
-    } else {
-	char *data = xs_buffer("%s%s\n", DATA_PREFIX, b);
-
-	check_send(p->socket, data, strlen(data), "peer_data");
-	Free(data);
-    }
-
-    Free(b);
     recursing = false;
 }
 
@@ -471,7 +449,7 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     }
     recursing = true;
 
-    s = xs_buffer("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len, buf);
+    s = Asprintf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len, buf);
     check_send(p->socket, s, strlen(s), "peer_reqinput");
     Free(s);
     recursing = false;
@@ -490,33 +468,12 @@ static bool
 peer_done(task_cbh handle, bool success, bool abort)
 {
     peer_t *p = (peer_t *)handle;
-    char *prompt = task_cb_prompt(handle);
-    char *s;
+    char *out;
     bool new_child = false;
 
-    if (p->json_mode) {
-	char *w;
-	/* Print the result. */
-
-        if (p->json_result == NULL) {
-            p->json_result = json_object();
-            json_object_set(p->json_result, "result", NT, json_array());
-        }
-        json_object_set(p->json_result, "success", NT, json_boolean(success));
-        json_object_set(p->json_result, "status", NT, json_string(prompt, NT));
-        s = xs_buffer("%s\n", w = json_write_o(p->json_result, JW_ONE_LINE));
-        Free(w);
-        json_free(p->json_result);
-	vtrace("JSON output for %s: '%s/%s'\n", p->name, prompt,
-		success? PROMPT_OK: PROMPT_ERROR);
-    } else {
-	/* Print the prompt. */
-	vtrace("Output for %s: '%s/%s'\n", p->name, prompt,
-		success? PROMPT_OK: PROMPT_ERROR);
-	s = xs_buffer("%s\n%s\n", prompt, success? PROMPT_OK: PROMPT_ERROR);
-    }
-    check_send(p->socket, s, strlen(s), "peer_done");
-    Free(s);
+    s3done(handle, success, &p->json_result, &out);
+    check_send(p->socket, out, strlen(out), "peer_done");
+    Free(out);
 
     if (abort || !p->enabled) {
 	close_peer(p);
@@ -873,14 +830,14 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
     if (sa->sa_family == AF_INET) {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
-	listener->desc = xs_buffer("%s:%u", inet_ntop(sa->sa_family,
+	listener->desc = Asprintf("%s:%u", inet_ntop(sa->sa_family,
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
 	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
     } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
-	listener->desc = xs_buffer("[%s]:%u", inet_ntop(sa->sa_family,
+	listener->desc = Asprintf("[%s]:%u", inet_ntop(sa->sa_family,
 		    &sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin6->sin6_port));
 	vtrace("Listening for s3sock scripts on %s\n", listener->desc);

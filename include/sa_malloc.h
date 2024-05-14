@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Paul Mattes.
+ * Copyright (c) 2021-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,5 +30,5 @@
  *              Headers for standalone instrumented malloc.
  */
 
-void lazya_free(void);
+void txflush(void);
 void sa_malloc_leak_check(void);

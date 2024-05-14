@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2023 Paul Mattes.
+ * Copyright (c) 2010-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1037,7 +1037,7 @@ menu_init(void)
 	if (j == FM_WIZARD_SESS) {
 	    char *text;
 
-	    text = xs_buffer("Edit Session %s", profile_name);
+	    text = Asprintf("Edit Session %s", profile_name);
 
 	    file_menu_items[j] = add_item(file_menu, text,
 		    file_menu_actions[j], profile_path);
@@ -1052,7 +1052,7 @@ menu_init(void)
     for (j = 0; j < OM_COUNT; j++) {
 	char *name;
 
-	name = xs_buffer("%s %s",
+	name = Asprintf("%s %s",
 		toggled(option_index[j])? "Disable": "Enable",
 		option_names[j]);
 	options_menu_items[j] = add_item(options_menu, name, toggle_option,
@@ -1143,13 +1143,13 @@ menubar_retoggle(toggle_index_t ix)
 	}
     }
     if (j < OM_COUNT) {
-	s = xs_buffer("%sable %s", toggled(ix)? "Dis": "En", option_names[j]);
+	s = Asprintf("%sable %s", toggled(ix)? "Dis": "En", option_names[j]);
 	rename_item(options_menu_items[j], s);
 	Free(s);
 	return;
     }
     if (ix == TRACING && !appres.secure) {
-	s = xs_buffer("%sable Tracing", (toggled(TRACING))? "Dis": "En");
+	s = Asprintf("%sable Tracing", (toggled(TRACING))? "Dis": "En");
 	rename_item(file_menu_items[FM_TRACE], s);
 	Free(s);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015, 2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -40,10 +40,10 @@
 #include <fcntl.h>
 #include "3270ds.h"
 
-#include "lazya.h"
 #include "utf8.h"
 #include "utils.h"
 #include "see.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "varbuf.h"
 
@@ -57,7 +57,7 @@
 static const char *
 unknown(unsigned char value)
 {
-    return lazyaf("unknown[0x%x]", value);
+    return txAsprintf("unknown[0x%x]", value);
 }
 
 /**
@@ -102,9 +102,9 @@ see_ebc(unsigned char ch)
 
     if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)
 	    && (mb[0] != ' ' || ch == 0x40)) {
-	return lazya(NewString(mb));
+	return txdFree(NewString(mb));
     } else {
-	return lazyaf("X'%02X'", ch);
+	return txAsprintf("X'%02X'", ch);
     }
 }
 
@@ -246,7 +246,7 @@ see_attr(unsigned char fa)
 	vb_appends(&r, "(default)");
     }
 
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /**
@@ -288,7 +288,7 @@ see_highlight(unsigned char setting)
 	    sep = ",";
 	}
 
-	return lazya(vb_consume(&r));
+	return txdFree(vb_consume(&r));
     }
 }
 
@@ -420,7 +420,7 @@ see_validation(unsigned char setting)
     } else {
 	vb_appends(&r, "(none)");
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /**
@@ -458,7 +458,7 @@ see_outline(unsigned char setting)
     } else {
 	vb_appends(&r, "(none)");
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /**
@@ -494,27 +494,27 @@ see_efa(unsigned char efa, unsigned char value)
 {
     switch (efa) {
     case XA_ALL:
-	return lazyaf(" all(%x)", value);
+	return txAsprintf(" all(%x)", value);
     case XA_3270:
-	return lazyaf(" 3270%s", see_attr(value));
+	return txAsprintf(" 3270%s", see_attr(value));
     case XA_VALIDATION:
-	return lazyaf(" validation%s", see_validation(value));
+	return txAsprintf(" validation%s", see_validation(value));
     case XA_OUTLINING:
-	return lazyaf(" outlining(%s)", see_outline(value));
+	return txAsprintf(" outlining(%s)", see_outline(value));
     case XA_HIGHLIGHTING:
-	return lazyaf(" highlighting(%s)", see_highlight(value));
+	return txAsprintf(" highlighting(%s)", see_highlight(value));
     case XA_FOREGROUND:
-	return lazyaf(" foreground(%s)", see_color(value));
+	return txAsprintf(" foreground(%s)", see_color(value));
     case XA_CHARSET:
-	return lazyaf(" charset(%x)", value);
+	return txAsprintf(" charset(%x)", value);
     case XA_BACKGROUND:
-	return lazyaf(" background(%s)", see_color(value));
+	return txAsprintf(" background(%s)", see_color(value));
     case XA_TRANSPARENCY:
-	return lazyaf(" transparency(%s)", see_transparency(value));
+	return txAsprintf(" transparency(%s)", see_transparency(value));
     case XA_INPUT_CONTROL:
-	return lazyaf(" input-control(%s)", see_input_control(value));
+	return txAsprintf(" input-control(%s)", see_input_control(value));
     default:
-	return lazyaf(" %s[0x%x]", unknown(efa), value);
+	return txAsprintf(" %s[0x%x]", unknown(efa), value);
     }
 }
 

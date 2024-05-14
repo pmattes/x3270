@@ -73,7 +73,6 @@
 #include "idle.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "lazya.h"
 #include "login_macro.h"
 #include "model.h"
 #include "names.h"
@@ -99,7 +98,8 @@
 #include "telnet_gui.h"
 #include "toggles.h"
 #include "trace.h"
-#include "screentrace.h"
+#include "screentrace.h" /* has to come after trace.h */
+#include "txa.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -129,9 +129,9 @@
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_LIBREADLINE) /*[*/
-#  define PROMPT_PRE	xs_buffer("%c%s%c", '\001', \
+#  define PROMPT_PRE	Asprintf("%c%s%c", '\001', \
 				screen_setaf(ACOLOR_BLUE), '\002')
-#  define PROMPT_POST	xs_buffer("%c%s%c", '\001', screen_op(), '\002')
+#  define PROMPT_POST	Asprintf("%c%s%c", '\001', screen_op(), '\002')
 # else /*][*/
 #  define PROMPT_PRE	screen_setaf(ACOLOR_BLUE)
 #  define PROMPT_POST	screen_op()
@@ -364,7 +364,7 @@ glue_gui_error_cond(const char *s, bool set_any_error)
     if (command_running || PAGER_RUNNING) {
 	/* You can't interrupt a running command. */
 	if (error_pending != NULL) {
-	    char *xerror = xs_buffer("%s\n%s", error_pending, s);
+	    char *xerror = Asprintf("%s\n%s", error_pending, s);
 
 	    Replace(error_pending, xerror);
 	} else {
@@ -509,7 +509,7 @@ c3270_Warning(const char *s)
 {
     if (!escaped) {
 	if (error_pending != NULL) {
-	    char *xerror = xs_buffer("%s\n%s", error_pending, s);
+	    char *xerror = Asprintf("%s\n%s", error_pending, s);
 
 	    Replace(error_pending, xerror);
 	} else {
@@ -558,8 +558,8 @@ prompt_init(void)
 {
     prompt.default_string = appres.secure? "[Press <Enter>] ":
 	(color_prompt?
-	 xs_buffer("%s%s> %s", PROMPT_PRE, app, PROMPT_POST):
-	 xs_buffer("%s> ", app));
+	 Asprintf("%s%s> %s", PROMPT_PRE, app, PROMPT_POST):
+	 Asprintf("%s> ", app));
     prompt.string = prompt.default_string;
 }
 
@@ -775,7 +775,7 @@ Type 'help' for help information.\n\n",
 	if (!appres.reconnect) {
 	    connect_once = true;
 	}
-	c3270_push_command(lazyaf(AnConnect "(\"%s\")", cl_hostname));
+	c3270_push_command(txAsprintf(AnConnect "(\"%s\")", cl_hostname));
 	screen_resume();
     } else {
 	/* Drop to the prompt. */
@@ -1213,8 +1213,8 @@ c3270_input(iosrc_t fd, ioid_t id)
 	aux_input = false;
 	aux_pwinput = false;
 	echo_mode(true);
-	c3270_push_command(lazyaf(RESUME_INPUT "(%s)",
-		    *s? lazya(base64_encode(s)): "\"\""));
+	c3270_push_command(txAsprintf(RESUME_INPUT "(%s)",
+		    *s? txdFree(base64_encode(s)): "\"\""));
 	reset_prompt();
     } else {
 	c3270_push_command(s);
@@ -1746,7 +1746,7 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
 	return;
     }
 
-    glue_gui_xoutput(lazyaf("%.*s", (int)len, buf), success);
+    glue_gui_xoutput(txAsprintf("%.*s", (int)len, buf), success);
 }
 
 /**
@@ -1767,14 +1767,14 @@ command_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 	return;
     }
 
-    p = lazya(base64_decode(buf));
+    p = txdFree(base64_decode(buf));
 
     if (prompt.string != prompt.default_string) {
 	Free(prompt.string);
     }
     prompt.string =
 	color_prompt?
-	    xs_buffer("%s%s%s", PROMPT_PRE, p, PROMPT_POST):
+	    Asprintf("%s%s%s", PROMPT_PRE, p, PROMPT_POST):
 	    NewString(p);
     aux_input = true;
     aux_pwinput = !echo;
@@ -2097,10 +2097,10 @@ start_wizard(const char *session)
     char *cmd;
 
     if (session != NULL) {
-	cmd = xs_buffer("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" "
+	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" "
 		"-e \"%s\"", instdir, session);
     } else {
-	cmd = xs_buffer("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\"",
+	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\"",
 		instdir);
     }
     system(cmd);

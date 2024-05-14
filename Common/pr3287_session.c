@@ -46,7 +46,6 @@
 
 #include "codepage.h"
 #include "host.h"
-#include "lazya.h"
 #include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -55,6 +54,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -512,7 +512,7 @@ pr3287_start_now(const char *lu, bool associated)
 	pr3287_ls = INVALID_SOCKET;
 	return;
     }
-    syncopt = lazyaf("%s %d", OptSyncPort, ntohs(pr3287_lsa.sin_port));
+    syncopt = txAsprintf("%s %d", OptSyncPort, ntohs(pr3287_lsa.sin_port));
     if (listen(pr3287_ls, 5) < 0) {
 	popup_a_sockerr("listen(printer sync)");
 	SOCK_CLOSE(pr3287_ls);
@@ -564,14 +564,14 @@ pr3287_start_now(const char *lu, bool associated)
 #endif /*]*/
 
     /* Construct the charset option. */
-    charset_cmd = lazyaf(OptCodePage " %s", get_codepage_name());
+    charset_cmd = txAsprintf(OptCodePage " %s", get_codepage_name());
 
     /* Construct proxy option. */
     if (appres.proxy != NULL) {
 #if !defined(_WIN32) /*[*/
-	proxy_cmd = lazyaf(OptProxy  " \"%s\"", appres.proxy);
+	proxy_cmd = txAsprintf(OptProxy  " \"%s\"", appres.proxy);
 #else /*][ */
-	proxy_cmd = lazyaf(OptProxy " %s", appres.proxy);
+	proxy_cmd = txAsprintf(OptProxy " %s", appres.proxy);
 #endif /*]*/
     }
 
@@ -579,7 +579,7 @@ pr3287_start_now(const char *lu, bool associated)
     /* Get the codepage for the printer. */
     pcp_res = get_resource(ResPrinterCodepage);
     if (pcp_res) {
-	printercp = lazyaf("-printercp %s", pcp_res);
+	printercp = txAsprintf("-printercp %s", pcp_res);
     }
 #endif /*]*/
 
@@ -760,13 +760,13 @@ pr3287_start_now(const char *lu, bool associated)
 #else /*][*/
 /* Pass the command via the environment. */
     if (printerName != NULL) {
-	putenv(lazyaf("PRINTER=%s", printerName));
+	putenv(txAsprintf("PRINTER=%s", printerName));
     }
 
     /* Create the pr3287 process. */
     if (!strncasecmp(cmd_text, "pr3287.exe", 10) ||
 	    !strncasecmp(cmd_text, "wpr3287.exe", 11)) {
-	cp_cmdline = lazyaf("%s%s", instdir, cmd_text);
+	cp_cmdline = txAsprintf("%s%s", instdir, cmd_text);
     } else {
 	cp_cmdline = cmd_text;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Paul Mattes.
+ * Copyright (c) 2019-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 
 #include "appres.h"
 #include "find_console.h"
-#include "lazya.h"
+#include "txa.h"
 #include "utils.h"
 
 /* Well-known consoles, in order of preference. */
@@ -68,7 +68,7 @@ find_in_path(const char *program)
     path = getenv("PATH");
     while ((colon = strchr(path, ':')) != NULL) {
 	if (colon != path) {
-	    char *xpath = lazyaf("%.*s/%s", (int)(colon - path), path, program);
+	    char *xpath = txAsprintf("%.*s/%s", (int)(colon - path), path, program);
 
 	    if (access(xpath, X_OK) == 0) {
 		return true;
@@ -77,7 +77,7 @@ find_in_path(const char *program)
 	path = colon + 1;
     }
     if (*path) {
-	char *xpath = lazyaf("%s/%s", path, program);
+	char *xpath = txAsprintf("%s/%s", path, program);
 
 	if (access(xpath, X_OK) == 0) {
 	    return true;
@@ -125,7 +125,7 @@ find_console(const char **errmsg)
     }
 
     space = strchr(override, ' ');
-    dup = lazya(NewString(override));
+    dup = txdFree(NewString(override));
     dup[space - override] = '\0';
     if (find_in_path(dup)) {
 	static console_desc_t t_ret;
@@ -143,7 +143,7 @@ find_console(const char **errmsg)
 int
 console_args(console_desc_t *t, const char *title, const char ***s, int ix)
 {
-    char *str = lazya(NewString(t->command_string));
+    char *str = txdFree(NewString(t->command_string));
     char *saveptr;
     char *token;
 

@@ -35,7 +35,9 @@
 #include <assert.h>
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
+# include <errno.h>
 # include <signal.h>
+# include <string.h>
 # include <sys/wait.h>
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -54,13 +56,16 @@
 #include "glue_gui.h"
 #include "httpd-core.h"
 #include "httpd-io.h"
-#include "lazya.h"
+#include "json.h"
+#include "json_run.h"
 #include "names.h"
 #include "peerscript.h"
 #include "s3270_proto.h"
+#include "s3common.h"
 #include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -182,6 +187,7 @@ typedef struct {
     unsigned capabilities;	/* self-reported capabilities */
     void *irhandle;		/* input request handle */
     task_cb_ir_state_t ir_state; /* named input request state */
+    json_t *json_result;	/* pending JSON result */
 #if defined(_WIN32) /*[*/
     DWORD pid;			/* process ID */
     HANDLE child_handle;	/* status collection handle */
@@ -224,6 +230,7 @@ free_child(child_t *c)
     Replace(c->child_name, NULL);
 #endif /*]*/
     Replace(c->output_buf, NULL);
+    json_free(c->json_result);
     Free(c);
 }
 
@@ -256,8 +263,10 @@ close_listeners(listeners_t *l)
 static bool
 run_next(child_t *c)
 {
-    size_t cmdlen;
-    char *name;
+    size_t cmdlen, xlen;
+    char *name = NULL;
+    bool ret = true;
+    char *start;
 
     /* Find a newline in the buffer. */
     for (cmdlen = 0; cmdlen < c->buf_len; cmdlen++) {
@@ -269,13 +278,59 @@ run_next(child_t *c)
 	return false;
     }
 
-    /*
-     * Run the first command.
-     * cmdlen is the number of characters in the command, not including the
-     * newline.
-     */
-    name = push_cb(c->buf, cmdlen, &child_cb, (task_cbh)c);
-    Replace(c->child_name, NewString(name));
+    /* Skip whitespace. */
+    start = c->buf;
+    xlen = cmdlen;
+    while (xlen > 0 && isspace(*start)) {
+	start++;
+	xlen--;
+    }
+
+    if (!(c->capabilities & CBF_INTERACTIVE) && (*start == '{' || *start == '[' || *start == '"')) {
+	cmd_t **cmds;
+	char *single;
+	char *errmsg;
+	hjparse_ret_t ret;
+
+	/* Looks like JSON. */
+	ret = hjson_parse(start, xlen, &cmds, &single, &errmsg);
+	if (ret == HJ_OK) {
+	    /* Good JSON. */
+	    c->json_result = s3json_init();
+	    if (cmds != NULL) {
+		name = push_cb_split(cmds, &child_cb, (task_cbh)c);
+	    } else {
+		name = push_cb(single, strlen(single), &child_cb, (task_cbh)c);
+		Free(single);
+	    }
+	} else if (ret == HJ_INCOMPLETE) {
+	    Free(errmsg);
+	    ret = false;
+	} else {
+	    /* Bad JSON. */
+	    char *fail = Asprintf(AnFail "(\"%s\")", errmsg);
+
+            /* Answer in JSON only if successfully parsed. */
+	    if (ret != HJ_BAD_SYNTAX) {
+		c->json_result = s3json_init();
+	    }
+            Free(errmsg);
+            name = push_cb(fail, strlen(fail), &child_cb, (task_cbh)c);
+            Free(fail);
+        }
+    } else {
+	/*
+	 * Run the first command.
+	 * xlen is the number of characters in the command, not including the
+	 * newline.
+	 */
+	json_free(c->json_result);
+	name = push_cb(start, xlen, &child_cb, (task_cbh)c);
+    }
+
+    if (name != NULL) {
+	Replace(c->child_name, NewString(name));
+    }
 
     /* If there is more, shift it over. */
     cmdlen++; /* count the newline */
@@ -286,7 +341,8 @@ run_next(child_t *c)
 	Replace(c->buf, NULL);
 	c->buf_len = 0;
     }
-    return true;
+
+    return ret;
 }
 
 /**
@@ -481,6 +537,28 @@ child_stdout(iosrc_t fd _is_unused, ioid_t id)
     c->output_buflen = new_buflen;
     c->output_buf[new_buflen] = '\0';
 }
+
+/**
+ * Send data on a pipe and check the result.
+ *
+ * @param[in] fd	File descriptor
+ * @param[in] data	Data to send
+ * @param[in] len	Length
+ * @param[in] sender	Sending function
+ */
+static void
+check_write(int fd, const char *data, size_t len, const char *sender)
+{
+    ssize_t nw = write(fd, data, len);
+
+    if (nw != (ssize_t)len) {
+	if (nw < 0) {
+	    vtrace("%s write: %s\n", sender, strerror(errno));
+	} else {
+	    vtrace("%s: short write\n", sender);
+	}
+    }
+}
 #endif /*]*/
 
 /**
@@ -496,31 +574,18 @@ child_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *b;
-    char *newline;
-    char *s;
-    ssize_t nw;
+    char *cooked;
 
-    while (len > 0 && buf[len - 1] == '\n') {
-	len--;
+    s3data(buf, len, success, c->capabilities, c->json_result, NULL, &cooked);
+    if (cooked != NULL) {
+	check_write(c->outfd, cooked, strlen(cooked), "child_data");
+	Free(cooked);
     }
-    b = xs_buffer("%.*s", (int)len, buf);
-    while ((newline = strchr(b, '\n')) != NULL) {
-	*newline = ' ';
-    }
-
-    s = xs_buffer("%s%s\n", DATA_PREFIX, b);
-    Free(b);
-    nw = write(c->outfd, s, strlen(s));
-    if (nw != (ssize_t)strlen(s)) {
-	vtrace("child_data: short write\n");
-    }
-    Free(s);
 #endif /*]*/
 }
 
 /**
- * Callback for input request (POSIX only).
+ * Callback for input request via a pipe (POSIX only).
  *
  * @param[in] handle    Callback handle
  * @param[in] buf       Buffer
@@ -532,14 +597,10 @@ child_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 {
 #if !defined(_WIN32) /*[*/
     child_t *c = (child_t *)handle;
-    char *s = lazyaf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX,
-	    (int)len, buf);
-    ssize_t nw;
+    char *s = Asprintf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len, buf);
 
-    nw = write(c->outfd, s, strlen(s));
-    if (nw != (ssize_t)strlen(s)) {
-	vtrace("child_reqinput: short write\n");
-    }
+    check_write(c->outfd, s, strlen(s), "child_reqinput");
+    Free(s);
 #endif /*]*/
 }
 
@@ -558,10 +619,8 @@ child_done(task_cbh handle, bool success, bool abort)
 {
     child_t *c = (child_t *)handle;
 #if !defined(_WIN32) /*[*/
+    char *out;
     bool new_child;
-    char *prompt;
-    char *s;
-    ssize_t nw;
 
     if (abort || !c->enabled) {
 	close_listeners(&c->listeners);
@@ -573,15 +632,9 @@ child_done(task_cbh handle, bool success, bool abort)
 	return true;
     }
 
-    /* Print the prompt. */
-    prompt = task_cb_prompt(handle);
-    s = lazyaf("%s\n%s\n", prompt, success? "ok": "error");
-    vtrace("Output for %s: %s/%s\n", c->child_name, prompt,
-	success? "ok": "error");
-    nw = write(c->outfd, s, strlen(s));
-    if (nw != (ssize_t)strlen(s)) {
-	vtrace("child_done: short write\n");
-    }
+    s3done(handle, success, &c->json_result, &out);
+    check_write(c->outfd, out, strlen(out), "child_done");
+    Free(out);
 
     /* Run any pending command that we already read in. */
     new_child = run_next(c);
@@ -1251,10 +1304,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	}
 
 	/* Export the names of the pipes, URL and port into the environment. */
-	putenv(xs_buffer(OUTPUT_ENV "=%d", outpipe[0]));
-	putenv(xs_buffer(INPUT_ENV "=%d", inpipe[1]));
-	putenv(xs_buffer(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
-	putenv(xs_buffer(PORT_ENV "=%d", script_port));
+	putenv(Asprintf(OUTPUT_ENV "=%d", outpipe[0]));
+	putenv(Asprintf(INPUT_ENV "=%d", inpipe[1]));
+	putenv(Asprintf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
+	putenv(Asprintf(PORT_ENV "=%d", script_port));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));
@@ -1281,6 +1334,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->enabled = true;
     c->stdoutpipe = interactive? -1: stdoutpipe[0];
     task_cb_init_ir_state(&c->ir_state);
+    c->json_result = NULL;
 
     /* Clean up our ends of the pipes. */
     c->infd = inpipe[0];
@@ -1330,17 +1384,17 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	if (strchr(argv[i], ' ') != NULL &&
 	    argv[i][0] != '"' &&
 	    argv[i][strlen(argv[i]) - 1] != '"') {
-	    t = xs_buffer("%s \"%s\"", args, argv[i]);
+	    t = Asprintf("%s \"%s\"", args, argv[i]);
 	} else {
-	    t = xs_buffer("%s %s", args, argv[i]);
+	    t = Asprintf("%s %s", args, argv[i]);
 	}
 	Free(args);
 	args = t;
     }
 
     /* Export the names of the URL and port into the environment. */
-    SetEnvironmentVariable(URL_ENV, lazyaf("http://127.0.0.1:%u/3270/rest/", httpd_port));
-    SetEnvironmentVariable(PORT_ENV, lazyaf("%d", script_port));
+    SetEnvironmentVariable(URL_ENV, txAsprintf("http://127.0.0.1:%u/3270/rest/", httpd_port));
+    SetEnvironmentVariable(PORT_ENV, txAsprintf("%d", script_port));
 
     if (CreateProcess(NULL, args, NULL, NULL, TRUE,
 		(stdout_redirect && !share_console)? DETACHED_PROCESS: 0,
@@ -1459,14 +1513,14 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	size_t sl = strlen(params[0]);
 
 	if (sl > 4 && !strcasecmp(params[0] + sl - 4, ".exe")) {
-	    params[0] = lazyaf("%.*s", (int)(sl - 4), params[0]);
+	    params[0] = txAsprintf("%.*s", (int)(sl - 4), params[0]);
 	}
     }
 #endif /*]*/
 
     for (i = 0; i < argc; i++) {
 	const char *in = argv[i];
-	char *new_param = lazya(NewString(argv[i]));
+	char *new_param = txdFree(NewString(argv[i]));
 	char *out = new_param;
 	char c;
 
@@ -1484,20 +1538,20 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, KwDashAsync);
     array_add(&nargv, nargc++, KwDashSingle);
 #if !defined(_WIN32) /*[*/
-    nargc = console_args(t, lazyaf("%s>", params[0]), &nargv, nargc);
+    nargc = console_args(t, txAsprintf("%s>", params[0]), &nargv, nargc);
     array_add(&nargv, nargc++, "/bin/sh");
     array_add(&nargv, nargc++, "-c");
     array_add(&nargv, nargc++,
-	    lazyaf("x3270if -I '%s'%s%s || (echo 'Press <Enter>'; read x)",
+	    txAsprintf("x3270if -I '%s'%s%s || (echo 'Press <Enter>'; read x)",
 		params[0],
-		(params[1] != NULL)? lazyaf(" -H '%s'", params[1]): "",
-		(params[2] != NULL)? lazyaf(" -L '%s'", params[2]): ""));
+		(params[1] != NULL)? txAsprintf(" -H '%s'", params[1]): "",
+		(params[2] != NULL)? txAsprintf(" -L '%s'", params[2]): ""));
 #else /*][*/
     array_add(&nargv, nargc++, KwDashSingle);
     array_add(&nargv, nargc++, "cmd.exe");
     array_add(&nargv, nargc++, "/c");
     array_add(&nargv, nargc++, "start");
-    array_add(&nargv, nargc++, lazyaf("\"%s\"", params[0]));
+    array_add(&nargv, nargc++, txAsprintf("\"%s\"", params[0]));
     array_add(&nargv, nargc++, "/wait");
     array_add(&nargv, nargc++, "x3270if.exe");
     array_add(&nargv, nargc++, "-I");
@@ -1508,11 +1562,11 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (params[2] != NULL) {
 	array_add(&nargv, nargc++, "-L");
-	array_add(&nargv, nargc++, lazyaf("\"%s\"", params[2]));
+	array_add(&nargv, nargc++, txAsprintf("\"%s\"", params[2]));
     }
 #endif /*]*/
     array_add(&nargv, nargc++, NULL);
-    lazya((void *)nargv);
+    txdFree((void *)nargv);
 
     return Script_action(ia, nargc - 1, nargv);
 }

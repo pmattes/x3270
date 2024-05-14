@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -43,11 +43,11 @@
 #include "resources.h"
 #include "codepage.h"
 #include "fallbacks.h"
-#include "lazya.h"
 #include "popups.h"
 #include "product.h"
 #include "telnet.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "varbuf.h"
 
@@ -74,7 +74,7 @@ xs_warning(const char *fmt, ...)
     char *r;
 
     va_start(args, fmt);
-    r = xs_vbuffer(fmt, args);
+    r = Vasprintf(fmt, args);
     va_end(args);
     Warning(r);
     Free(r);
@@ -93,7 +93,7 @@ xs_error(const char *fmt, ...)
     char *r;
 
     va_start(args, fmt);
-    r = xs_vbuffer(fmt, args);
+    r = Vasprintf(fmt, args);
     va_end(args);
     Error(r);
     Free(r);
@@ -149,7 +149,7 @@ catv_common(const char *s, bool quoted)
     if (quoted) {
 	vb_appends(&r, "\"");
     }
-    return lazya(vb_consume(&r));
+    return txdFree(vb_consume(&r));
 }
 
 /**
@@ -434,10 +434,10 @@ get_message(const char *key)
 {
     char *r;
 
-    if ((r = get_resource(lazyaf("%s.%s", ResMessage, key))) != NULL) {
+    if ((r = get_resource(txAsprintf("%s.%s", ResMessage, key))) != NULL) {
 	return r;
     } else {
-	return lazyaf("[missing \"%s\" message]", key);
+	return txAsprintf("[missing \"%s\" message]", key);
     }
 }
 
@@ -455,7 +455,7 @@ ex_getenv(const char *name, unsigned long flags, int *up)
 	}
 	t = tv.tv_sec;
 	tm = localtime(&t);
-	return xs_buffer("%04u%02u%02u%02u%02u%02u%06u",
+	return Asprintf("%04u%02u%02u%02u%02u%02u%06u",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday,
@@ -466,9 +466,9 @@ ex_getenv(const char *name, unsigned long flags, int *up)
     } else if (!strcasecmp(name, "UNIQUE")) {
 	++*up;
 	if (*up == 0) {
-	    return xs_buffer("%u", (unsigned)getpid());
+	    return Asprintf("%u", (unsigned)getpid());
 	} else {
-	    return xs_buffer("%u-%u", (unsigned)getpid(), *up);
+	    return Asprintf("%u-%u", (unsigned)getpid(), *up);
 	}
     } else {
 	return NewString(getenv(name));
@@ -705,7 +705,7 @@ tilde_subst(const char *s)
 	return NewString(t);
     case '/':
     case '\\':
-	return xs_buffer("%s%s", t, s + 1);
+	return Asprintf("%s%s", t, s + 1);
     default:
 	return NewString(s);
     }
@@ -829,7 +829,7 @@ get_fresource(const char *fmt, ...)
     char *r;
 
     va_start(args, fmt);
-    name = xs_vbuffer(fmt, args);
+    name = Vasprintf(fmt, args);
     va_end(args);
     r = get_resource(name);
     Free(name);
@@ -920,7 +920,7 @@ split_hier(const char *label, char **base, char ***parents)
 	for (n_parents = 0, lp = label;
 	     (gt = strchr(lp, '>')) != NULL;
 	     lp = gt + 1) {
-	    (*parents)[n_parents++] = xs_buffer("%.*s", (int)(gt - lp), lp);
+	    (*parents)[n_parents++] = Asprintf("%.*s", (int)(gt - lp), lp);
 	}
 	*base = NewString(lp);
     } else {
@@ -957,7 +957,7 @@ build_options(void)
 	p = "";
     }
 
-    return lazyaf("%s%s%s%s",
+    return txAsprintf("%s%s%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 	    "--enable-local-process"
 #else /*][*/
@@ -998,11 +998,11 @@ const char *
 display_scale(double d)
 {
     if (d >= 1000000.0) {
-	return lazyaf("%.3g M", d / 1000000.0);
+	return txAsprintf("%.3g M", d / 1000000.0);
     } else if (d >= 1000.0) {
-	return lazyaf("%.3g K", d / 1000.0);
+	return txAsprintf("%.3g K", d / 1000.0);
     } else {
-	return lazyaf("%.3g ", d);
+	return txAsprintf("%.3g ", d);
     }
 }
 
@@ -1061,20 +1061,20 @@ start_help(void)
     while (*s != '\0' && (*s == '.' || isdigit((unsigned char)*s))) {
 	s++;
     }
-    url = xs_buffer("http://x3270.bgp.nu/%.*s-help/%.*s/",
+    url = Asprintf("http://x3270.bgp.nu/%.*s-help/%.*s/",
 	    (int)pnl, programname,
 	    (int)(s - build_rpq_version), build_rpq_version);
 
     /* Get appropriate help. */
 #if defined(_WIN32) /*[*/
-    command = xs_buffer("start \"%.*s help\" \"%s\"", (int)pnl, programname,
+    command = Asprintf("start \"%.*s help\" \"%s\"", (int)pnl, programname,
 	url);
 #elif defined(linux) || defined(__linux__) /*[*/
-    command = xs_buffer("xdg-open %s", url);
+    command = Asprintf("xdg-open %s", url);
 #elif defined(__APPLE__) /*][*/
-    command = xs_buffer("open %s", url);
+    command = Asprintf("open %s", url);
 #elif defined(__CYGWIN__) /*][*/
-    command = xs_buffer("cygstart -o %s", url);
+    command = Asprintf("cygstart -o %s", url);
 #endif /*]*/
     if (command != NULL) {
 	int rc;

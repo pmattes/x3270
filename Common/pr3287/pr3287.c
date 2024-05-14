@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2023 Paul Mattes.
+ * Copyright (c) 2000-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -208,7 +208,7 @@ usage(const char *errmsg)
 static void
 missing_value(const char *option)
 {
-    usage(xs_buffer("Missing value for '%s'\n", option));
+    usage(Asprintf("Missing value for '%s'\n", option));
 }
 
 /* Print command-line help. */
@@ -386,7 +386,7 @@ xs_warning(const char *fmt, ...)
     char *b;
 
     va_start(args, fmt);
-    b = xs_vbuffer(fmt, args);
+    b = Vasprintf(fmt, args);
     va_end(args);
     errmsg("%s", b);
 }
@@ -1273,7 +1273,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 const char *
 build_options(void)
 {
-    return xs_buffer("Build options:%s"
+    return Asprintf("Build options:%s"
 #if defined(_MSC_VER) /*[*/
 	" via MSVC " xstr(_MSC_VER)
 #endif /*]*/

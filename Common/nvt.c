@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1440,7 +1440,7 @@ ansi_status_report(int nn, int ig2 _is_unused)
 	net_sends("\033[0n");
 	break;
     case 6:
-	s = xs_buffer("\033[%d;%dR",
+	s = Asprintf("\033[%d;%dR",
 		(cursor_addr/COLS) + 1, (cursor_addr%COLS) + 1);
 	net_sends(s);
 	Free(s);
@@ -1923,7 +1923,7 @@ nvt_send_pf(int nn)
 	nvt_send_pa(nn);
 	return;
     }
-    s = xs_buffer("\033[%d~", code[nn-1]);
+    s = Asprintf("\033[%d~", code[nn-1]);
     net_sends(s);
     Free(s);
 }
@@ -1937,7 +1937,7 @@ nvt_send_pa(int nn)
     if (nn < 1 || nn > 4) {
 	return;
     }
-    s = xs_buffer("\033O%c", code[nn-1]);
+    s = Asprintf("\033O%c", code[nn-1]);
     net_sends(s);
     Free(s);
 }
@@ -1989,7 +1989,7 @@ emit_cup(int baddr)
 	char *s;
 	size_t sl;
 
-	s = xs_buffer("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+	s = Asprintf("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
 	sl = strlen(s);
 	space3270out(sl);
 	strcpy((char *)obptr, s);
@@ -2020,7 +2020,7 @@ ansi_dump_spaces(size_t spaces, int baddr)
      * It is possible to optimize this further with clever
      * CU[UDFB] sequences, but not (yet) worth the effort.
      */
-    s = xs_buffer("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+    s = Asprintf("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
     sl = strlen(s);
     if (sl < spaces) {
 	space3270out(sl);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1827,13 +1827,13 @@ grab_sel(int start, int end, bool really, Time t, bool as_url)
 	(!strncmp(select_buf, HTTP_PREFIX, strlen(HTTP_PREFIX)) ||
 	 !strncmp(select_buf, HTTPS_PREFIX, strlen(HTTPS_PREFIX)))) {
 #if defined(_WIN32) /*[*/
-	char *command = xs_buffer("start %s", select_buf);
+	char *command = Asprintf("start %s", select_buf);
 #elif defined(linux) || defined(__linux__) /*[*/
-	char *command = xs_buffer("xdg-open %s", select_buf);
+	char *command = Asprintf("xdg-open %s", select_buf);
 #elif defined(__APPLE__) /*][*/
-	char *command = xs_buffer("open %s", select_buf);
+	char *command = Asprintf("open %s", select_buf);
 #elif defined(__CYGWIN__) /*][*/
-	char *command = xs_buffer("cygstart -o %s", select_buf);
+	char *command = Asprintf("cygstart -o %s", select_buf);
 #endif /*]*/
 	int rc;
 

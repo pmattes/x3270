@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -38,11 +38,11 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "lazya.h"
 #include "popups.h"
 #include "resources.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "vstatus.h"
@@ -79,7 +79,7 @@ init_suppressed(const char *actions)
     if (actions == NULL) {
 	return;
     }
-    a = lazya(NewString(actions));
+    a = txdFree(NewString(actions));
     while ((action = strtok(a, " \t\r\n")) != NULL) {
 	size_t sl = strlen(action);
 	action_elt_t *e;

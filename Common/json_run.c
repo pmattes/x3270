@@ -133,7 +133,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 	goto fail;
     }
     value = json_string_value(jaction, &len);
-    action = xs_buffer("%.*s", (int)len, value);
+    action = Asprintf("%.*s", (int)len, value);
 
     BEGIN_JSON_OBJECT_FOREACH(json, key, key_length, member) {
 	if (json_key_matches(key, key_length, AttrAction)) {
@@ -171,18 +171,18 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 		    args[i] = NewString("");
 		    break;
 		case JT_BOOLEAN:
-		    args[i] = xs_buffer("%s",
+		    args[i] = Asprintf("%s",
 			    json_boolean_value(arg)? "true": "false");
 		    break;
 		case JT_INTEGER:
-		    args[i] = xs_buffer("%"PRId64, json_integer_value(arg));
+		    args[i] = Asprintf("%"PRId64, json_integer_value(arg));
 		    break;
 		case JT_DOUBLE:
-		    args[i] = xs_buffer("%g", json_double_value(arg));
+		    args[i] = Asprintf("%g", json_double_value(arg));
 		    break;
 		case JT_STRING:
 		    value = json_string_value(arg, &len);
-		    args[i] = xs_buffer("%.*s", (int)len, value);
+		    args[i] = Asprintf("%.*s", (int)len, value);
 		    break;
 		default:
 		    break;
@@ -190,7 +190,7 @@ hjson_parse_one(const json_t *json, cmd_t **cmd, char **errmsg)
 	    }
 	    continue;
 	}
-	*errmsg = xs_buffer("Unknown object member '%.*s'", (int)key_length,
+	*errmsg = Asprintf("Unknown object member '%.*s'", (int)key_length,
 		key);
 	goto fail;
     } END_JSON_OBJECT_FOREACH(j, key, key_length, member);
@@ -268,7 +268,7 @@ hjson_split(const json_t *json, cmd_t ***cmds, char **single, char **errmsg)
 
 	    if (!hjson_parse_one(json_array_element(json, i), &c[i],
 			&elt_error)) {
-		*errmsg = xs_buffer("Element %u: %s", i, elt_error);
+		*errmsg = Asprintf("Element %u: %s", i, elt_error);
 		Free(elt_error);
 		goto fail;
 	    }
@@ -317,7 +317,7 @@ hjson_parse(const char *cmd, size_t cmd_len, cmd_t ***cmds, char **single,
     /* Parse the JSON. */
     errcode = json_parse(cmd, cmd_len, &json, &error);
     if (errcode != JE_OK) {
-	*errmsg = xs_buffer("JSON parse error: line %d, column %d: %s",
+	*errmsg = Asprintf("JSON parse error: line %d, column %d: %s",
 		error->line, error->column, error->errmsg);
 	json_free_both(json, error);
 	return (errcode == JE_INCOMPLETE)? HJ_INCOMPLETE: HJ_BAD_SYNTAX;

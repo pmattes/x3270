@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2023 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -551,7 +551,7 @@ ft_complete(const char *errmsg)
 	bytes_sec = (double)fts.length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
-	buf = xs_buffer(get_message("ftComplete"), fts.length,
+	buf = Asprintf(get_message("ftComplete"), fts.length,
 		display_scale(bytes_sec),
 		fts.is_cut ? "CUT" : "DFT");
 
@@ -626,7 +626,7 @@ ft_resolve_dir(ft_conf_t *p)
 
     /* If the local file is a directory, append the host file name to it. */
     if (stat(p->local_filename, &s) == 0 && (s.st_mode & S_IFDIR)) {
-	return xs_buffer("%s%s%s",
+	return Asprintf("%s%s%s",
 		p->local_filename,
 #if defined(_WIN32) /*[*/
 		"\\",

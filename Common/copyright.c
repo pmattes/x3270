@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2018 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -53,7 +53,7 @@ show_copyright(void)
 	return copyright;
     }
 
-    copyright = xs_buffer("\
+    copyright = Asprintf("\
 %s\n\
 \n\
 Copyright (c) 1993-%s, Paul Mattes.\n\

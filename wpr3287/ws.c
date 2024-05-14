@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Paul Mattes.
+ * Copyright (c) 2007-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -305,7 +305,7 @@ ws_open_file(void)
 #   define PATH_SFX	".txt"
 
     while (true) {
-	path = xs_buffer(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
+	path = Asprintf(iter? PATH_PFX PATH_ITER PATH_SFX: PATH_PFX PATH_SFX,
 	    printer_dir,
 	    tm->tm_year + 1900,
 	    tm->tm_mon + 1,

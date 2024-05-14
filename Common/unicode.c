@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2022 Paul Mattes.
+ * Copyright (c) 2008-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,8 @@
 #include <errno.h>
 #include "3270ds.h"
 #include "apl.h"
-#include "lazya.h"
 #include "toupper.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
@@ -567,7 +567,7 @@ set_uni(const char *cpname, int local_cp _is_unused,
      * not cause any misidentification.
      */
     if (is_all_digits(realname)) {
-	realname = lazyaf("cp%s", realname);
+	realname = txAsprintf("cp%s", realname);
     }
 
     /* Search for an alias. */
@@ -670,7 +670,7 @@ canonical_codepage(const char *alias)
     const char *realname = alias;
 
     if (is_all_digits(realname)) {
-	realname = lazyaf("cp%s", alias);
+	realname = txAsprintf("cp%s", alias);
     }
 
     for (i = 0; cpaliases[i].alias != NULL; i++) {
