@@ -229,6 +229,9 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     stdin_id = NULL_IOID;
 
     /* Run the command as a macro. */
+    if (stdin_buf == NULL) {
+	stdin_buf = Malloc(1);
+    }
     stdin_buf[stdin_nr] = '\0';
     vtrace("s3stdin read '%s'\n", stdin_buf);
     if (!json_input(stdin_buf, &need_more)) {
