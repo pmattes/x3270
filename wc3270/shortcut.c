@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2023 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,8 @@
 #endif /*]*/
 
 #include "globals.h"
+
+#include <versionhelpers.h>
 
 #include "shortcutc.h"
 #include "winvers.h"
@@ -91,21 +93,27 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     }
 
     /* Set the path to the shortcut target, and add the description. */
-    psl->lpVtbl->SetPath(psl, "conhost");
+    psl->lpVtbl->SetPath(psl, IsWindows10OrGreater()? "conhost": path_obj);
     if (desc) {
 	psl->lpVtbl->SetDescription(psl, desc);
     }
-    if (args) {
-	char *xargs =
-	    malloc(strlen((char *)path_obj) + 1 + strlen((char *)args) + 1);
 
-	sprintf(xargs, "%s %s", (char *)path_obj, (char *)args);
-	psl->lpVtbl->SetArguments(psl, xargs);
-	free(xargs);
+    if (IsWindows10OrGreater()) {
+	if (args) {
+	    char *xargs =
+		malloc(strlen((char *)path_obj) + 1 + strlen((char *)args) + 1);
 
-    } else {
-	psl->lpVtbl->SetArguments(psl, path_obj);
+	    sprintf(xargs, "%s %s", (char *)path_obj, (char *)args);
+	    psl->lpVtbl->SetArguments(psl, xargs);
+	    free(xargs);
+
+	} else {
+	    psl->lpVtbl->SetArguments(psl, path_obj);
+	}
+    } else if (args) {
+	psl->lpVtbl->SetArguments(psl, args);
     }
+
     if (dir) {
 	psl->lpVtbl->SetWorkingDirectory(psl, dir);
     }
