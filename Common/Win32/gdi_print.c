@@ -444,6 +444,21 @@ print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
 }
 
 /*
+ * Hook procedure for the print dialog.
+ */
+static UINT_PTR CALLBACK
+print_dialog_hook(HWND hdlg, UINT ui_msg, WPARAM wparam, LPARAM lparam)
+{
+    /* When WM_INITDIALOG comes, make this the topmost window. */
+    if (ui_msg == WM_INITDIALOG) {
+	SetWindowPos(hdlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
  */
@@ -482,7 +497,8 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
 	pstate.dlg.lStructSize = sizeof(pstate.dlg);
 	pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
-	    PD_NOSELECTION;
+	    PD_NOSELECTION | PD_ENABLEPRINTHOOK;
+	pstate.dlg.lpfnPrintHook = print_dialog_hook;
     }
 
     if (printer_name == NULL || !*printer_name) {
