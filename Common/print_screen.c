@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2022 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -401,8 +401,6 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     if (mode == PM_GDI) {
         struct stat buf;
 
-	printf("Printer name: %s\n", name);
-	fflush(stdout);
         if (stat(name, &buf) == 0 && (buf.st_mode & S_IFMT) == S_IFDIR) {
             mode = PM_FILE;
             ptype = P_TEXT;
