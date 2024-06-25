@@ -684,8 +684,8 @@ host_connect(const char *n, enum iaction ia)
     /* Set state and tell the world. */
     if (nc == NC_CONNECT_PENDING) {
 	change_cstate(TCP_PENDING, "host_connect");
-    } else {
-	/* cstate == NC_CONNECTED */
+    } else if (cstate != TLS_PENDING) {
+	/* nc == NC_CONNECTED and TLS not pending */
 	if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	    change_cstate(CONNECTED_NVT, "host_connect");
 	} else {
