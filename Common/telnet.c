@@ -456,7 +456,8 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* set the socket to be non-delaying */
-    if (non_blocking(true) < 0) {
+    if (getenv("BLOCKING_CONNECT") == NULL && non_blocking(true) < 0) {
+	popup_an_error("non-blocking failure");
 	close_fail;
     }
 
@@ -1004,6 +1005,12 @@ net_connected(void)
 
     if (cstate != TLS_PENDING) {
 	vtrace("Connected to %s, port %u.\n", hostname, current_port);
+    }
+
+    if (getenv("BLOCKING_CONNECT") != NULL && non_blocking(true) < 0) {
+	connect_error("non-blocking failure");
+	host_disconnect(true);
+	return;
     }
 
     if (proxy_pending) {

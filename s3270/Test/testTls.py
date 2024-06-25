@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #
 # s3270 TLS tests
 
+import os
 import requests
 from subprocess import Popen, PIPE, DEVNULL
 import sys
@@ -276,6 +277,39 @@ class TestS3270Tls(cti.cti):
             s3270.stdin.flush()
 
             # Make sure the right thing happens.
+            server.match()
+
+        # Wait for the process to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+    # s3270 blocking connect test
+    def test_s3270_blocking_connect(self):
+
+        # Start a server to read s3270's output.
+        port, ts = cti.unused_port()
+        with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
+            ts.close()
+
+            # Start s3270.
+            args = ['s3270', '-xrm', 's3270.contentionResolution: false']
+            if sys.platform != 'darwin' and not sys.platform.startswith('win'):
+                args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
+            args.append(f'l:127.0.0.1:{port}=TEST')
+
+            # Simulate a specific environment where hostname resolution and connect operations are synchronous.
+            os.environ['SYNC_RESOLVER'] = '1'
+            os.environ['BLOCKING_CONNECT'] = '1'
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            del os.environ['SYNC_RESOLVER']
+            del os.environ['BLOCKING_CONNECT']
+            self.children.append(s3270)
+
+            # Make sure it all works.
+            server.wrap()
+            s3270.stdin.write(b"PF(3)\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
             server.match()
 
         # Wait for the process to exit.

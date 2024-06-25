@@ -59,6 +59,7 @@ class tls_server(playback.playback):
         '''Wrap an accepted connection'''
         self.wait_accept()
         self.clear_conn = self.conn
+        self.clear_conn.settimeout(2)
         self.conn = self.context.wrap_socket(self.clear_conn, server_side=True)
 
     def starttls(self, timeout=2):
