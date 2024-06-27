@@ -116,9 +116,9 @@ main(int argc, char *argv[])
 
     /* Get ready for stderr redirection when we expect an assertion to fail. */
 #if !defined(_WIN32) /*[*/
-    dev_null = open("/dev/null", 0);
+    dev_null = open("/dev/null", O_WRONLY);
 #else /*][*/
-    dev_null = open("nul", 0);
+    dev_null = open("nul", O_WRONLY);
 #endif /*]*/
     old_stderr = dup(2);
     assert(dev_null >= 0);
