@@ -1361,6 +1361,9 @@ start_pager(void)
 
 	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
 	sprintf(s, "%s%s", pager_cmd, or_cat);
+	if (appres.secure) {
+	    putenv("LESSSECURE=1");
+	}
 	pager.fp = xpopen(s, "w", &pager.pid);
 	Free(s);
 	if (pager.fp == NULL) {

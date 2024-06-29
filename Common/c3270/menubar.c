@@ -902,6 +902,25 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_quit
 };
 
+static file_menu_enum fm_insecure[] = {
+    FM_PROMPT,
+    FM_PRINT,
+    FM_XFER,
+    FM_TRACE,
+    FM_SCREENTRACE,
+    FM_SCREENTRACE_PRINTER,
+    FM_SAVE_INPUT,
+    FM_RESTORE_INPUT,
+#if defined(HAVE_START) /*[*/
+    FM_HELP,
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+    FM_WIZARD,
+    FM_WIZARD_SESS,
+#endif /*]*/
+};
+#define NUM_FM_INSECURE	((int)(sizeof(fm_insecure) / sizeof(file_menu_enum)))
+
 /* Options menu. */
 typedef enum {
     OM_MONOCASE,
@@ -1020,43 +1039,54 @@ draw_topline(void)
 void
 menu_init(void)
 {
-    int j;
+    file_menu_enum f;
+    options_menu_enum o;
 
     basic_menu_init();
 
     file_menu = add_menu("File");
-    for (j = 0; j < FM_COUNT; j++) {
-	if (appres.secure &&
-		(j == FM_PROMPT || j == FM_XFER || j == FM_TRACE)) {
-	    continue;
+    for (f = 0; f < FM_COUNT; f++) {
+	if (appres.secure) {
+	    int fi;
+	    bool secure = true;
+
+	    for (fi = 0; fi < NUM_FM_INSECURE; fi++) {
+		if (f == fm_insecure[fi]) {
+		    secure = false;
+		    break;
+		}
+	    }
+	    if (!secure) {
+		continue;
+	    }
 	}
 #if defined(WC3270) /*[*/
-	if (j == FM_WIZARD_SESS && profile_path == NULL) {
+	if (f == FM_WIZARD_SESS && profile_path == NULL) {
 	    continue;
 	}
-	if (j == FM_WIZARD_SESS) {
+	if (f == FM_WIZARD_SESS) {
 	    char *text;
 
 	    text = xs_buffer("Edit Session %s", profile_name);
 
-	    file_menu_items[j] = add_item(file_menu, text,
-		    file_menu_actions[j], profile_path);
+	    file_menu_items[f] = add_item(file_menu, text,
+		    file_menu_actions[f], profile_path);
 	} else
 #endif /*]*/
 	{
-	    file_menu_items[j] = add_item(file_menu, file_menu_names[j],
-		    file_menu_actions[j], NULL);
+	    file_menu_items[f] = add_item(file_menu, file_menu_names[f],
+		    file_menu_actions[f], NULL);
 	}
     }
     options_menu = add_menu("Options");
-    for (j = 0; j < OM_COUNT; j++) {
+    for (o = 0; o < OM_COUNT; o++) {
 	char *name;
 
 	name = xs_buffer("%s %s",
-		toggled(option_index[j])? "Disable": "Enable",
-		option_names[j]);
-	options_menu_items[j] = add_item(options_menu, name, toggle_option,
-		&option_index[j]);
+		toggled(option_index[o])? "Disable": "Enable",
+		option_names[o]);
+	options_menu_items[o] = add_item(options_menu, name, toggle_option,
+		&option_index[o]);
 	Free(name);
     }
     keypad_menu = add_menu("Keypad");
