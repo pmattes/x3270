@@ -1213,16 +1213,18 @@ file_menu_init(bool regen, Dimension x, Dimension y)
 
     /* Save/restore input. */
     spaced = false;
-    save_input_button = add_menu_itemv("saveInputOption", file_menu,
-	    do_save_input, NULL, &spaced,
-	    XtNsensitive, IN_3270,
-	    NULL);
-    any |= (save_input_button != NULL);
-    restore_input_button = add_menu_itemv("restoreInputOption", file_menu,
-	    do_restore_input, NULL, &spaced,
-	    XtNsensitive, IN_3270,
-	    NULL);
-    any |= (restore_input_button != NULL);
+    if (!appres.secure) {
+	save_input_button = add_menu_itemv("saveInputOption", file_menu,
+		do_save_input, NULL, &spaced,
+		XtNsensitive, IN_3270,
+		NULL);
+	any |= (save_input_button != NULL);
+	restore_input_button = add_menu_itemv("restoreInputOption", file_menu,
+		do_restore_input, NULL, &spaced,
+		XtNsensitive, IN_3270,
+		NULL);
+	any |= (restore_input_button != NULL);
+    }
 
     /* Re-enable keyboard. */
     spaced = false;
