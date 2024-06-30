@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,8 @@ static dcd_t dcd[] = {
     { "cp937",  "big5-0,iso10646-1"          },
     { "cp939",  "jisx0208.1983-0,iso10646-1" },
     { "cp1388", "gb18030.2000-1,iso10646-1"  },
+    { "cp1390", "jisx0208.1983-0,iso10646-1" },
+    { "cp1399", "jisx0208.1983-0,iso10646-1" },
     { NULL, NULL }
 };
 
