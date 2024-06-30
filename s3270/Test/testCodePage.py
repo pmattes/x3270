@@ -301,6 +301,14 @@ class TestS3270CodePage(cti.cti):
             'cp939': [
                 ' Japanese test for code page 930                                                ',
                 '   高度な音声信号処理を行う高精度ボイスピックアップテクノロジーにより、高い通話品',
+                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが'],
+            'cp1390': [
+                ' Jｧﾆｧﾄｵﾍｵ ﾎｵﾍﾎ ｶﾅﾈ ｳﾅｴｵ ﾆｧｷｵ 930                                                ',
+                '   高度な音声信号処理を行う高精度ボイスピッ アップテ ノロジーにより、高い通話品',
+                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダ ションシステムが'],
+            'cp1399': [
+                ' Japanese test for code page 930                                                ',
+                '   高度な音声信号処理を行う高精度ボイスピックアップテクノロジーにより、高い通話品',
                 '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが']
         }
 
@@ -331,6 +339,10 @@ class TestS3270CodePage(cti.cti):
         self.s3270_japanese('cp930')
     def test_s3270_japanese_939(self):
         self.s3270_japanese('cp939')
+    def test_s3270_japanese_1390(self):
+        self.s3270_japanese('cp1390')
+    def test_s3270_japanese_1399(self):
+        self.s3270_japanese('cp1399')
 
 if __name__ == '__main__':
     unittest.main()

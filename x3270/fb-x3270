@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2023 Paul Mattes.
+! Copyright (c) 1995-2024 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,9 @@ x3270.charsetList:	U.S. English (CP 037): us-intl\n\
 			Italian (CP 280): italian\n\
 #ifdef X3270_DBCS
 			Japanese w/Kana (CP 930): japanese-kana\n\
+			Japanese w/Kana extended (CP 1390): japanese-kana-extended\n\
 			Japanese w/Latin (CP 939): japanese-latin\n\
+			Japanese w/Latin extended (CP 1399): japanese-latin-extended\n\
 #endif
 			Norwegian (CP 277): norwegian\n\
 			Open Systems (CP 1047): cp1047\n\

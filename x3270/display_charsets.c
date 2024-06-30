@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, 2019 Paul Mattes.
+ * Copyright (c) 2008-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,6 +73,8 @@ static dcs_t dcs[] = {
     { "cp1149", "3270cg-1a,3270cg-1,iso10646-1,iso8859-15" },
     { "cp1160", "iso10646-1,iso8859-11" },
     { "cp1388", "3270cg-1a,3270cg-1,iso10646-1,iso8859-1" },
+    { "cp1390", "iso10646-1,jisx0201.1976-0" },
+    { "cp1399", "iso10646-1,jisx0201.1976-0" },
     { "apl", "3270cg-1a,iso10646-1" },
     { "bracket", "3270cg-1a,3270cg-1,iso10646-1,iso8859-1" },
     { NULL, NULL }
