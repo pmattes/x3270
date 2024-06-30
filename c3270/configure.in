@@ -70,7 +70,10 @@ fi
 AC_SUBST(host)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
-AC_SUBST(BUILDCC)
+AC_SUBST(BUILD_CC)
+AC_SUBST(BUILD_LDFLAGS)
+AC_SUBST(BUILD_LIBS)
+AC_SUBST(BUILD_CFLAGS)
 
 dnl Checks for header files.
 AC_CHECK_HEADERS(sys/select.h)
@@ -137,8 +140,8 @@ AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
 
 dnl Check for curses wide character support.
-AC_SEARCH_LIBS(wadd_wch, ncursesw ncurses curses, [AC_DEFINE(CURSES_WIDE,1)
-Cw=1], [AC_MSG_WARN(Wide curses not found -- c3270 will not be able to support multi-byte character encodings)])
+AC_CHECK_FUNC(wadd_wch, [AC_DEFINE(CURSES_WIDE,1)],
+ [AC_MSG_WARN(Wide curses not found -- c3270 will not be able to support multi-byte character encodings)])
 AC_SUBST(CURSES_WIDE)
 AC_CHECK_FUNCS(tiparm)
 

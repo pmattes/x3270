@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2023 Paul Mattes.
+# Copyright (c) 1999-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,12 @@ LIB3270 = lib3270.a
 
 RM = rm -f
 CC = @CC@
-BUILDCC = @BUILDCC@
-ifeq ($(strip $(BUILDCC)),)
-BUILDCC=$(CC)
-endif
+
+BUILD_CC = @BUILD_CC@
+BUILD_LDFLAGS = @BUILD_LDFLAGS@
+BUILD_LIBS = @BUILD_LIBS@
+BUILD_CFLAGS = @BUILD_CFLAGS@
+
 AR = @AR@
 RANLIB = @RANLIB@
 
@@ -54,6 +56,8 @@ CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 
+include buildmacros.mk
+
 $(LIB3270): $(OBJS) $(INCS)
 	$(AR) cr $@ $(OBJS)
 	$(RANLIB) $@
@@ -64,7 +68,7 @@ favicon.c: favicon.ico mkicon
 	./mkicon $< >$@
 
 mkicon: mkicon.c
-	$(BUILDCC) $(XCPPFLAGS) -o $@ $<
+	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $< $(BUILD_LDFLAGS) $(BUILD_LIBS)
 
 clean:
 	$(RM) *.o favicon.c mkicon $(LIB3270)
