@@ -48,10 +48,10 @@ favicon.o: favicon.c
 favicon.c: favicon.ico mkicon$(BUILDXSFX)
 	./mkicon$(BUILDXSFX) $< >favicon.c
 
-mkicon.o: CC = $(BUILDCC)
+mkicon.o: CC = $(BUILD_CC)
 mkicon.o: CFLAGS =
 mkicon$(BUILDXSFX): mkicon.o
-	$(BUILDCC) -o $@ mkicon.o
+	$(BUILD_CC) -o $@ mkicon.o
 
 clean:
 	$(RM) *.o favicon.c mkicon$(BUILDXSFX) $(LIB3270)

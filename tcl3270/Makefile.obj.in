@@ -1,4 +1,4 @@
-# Copyright (c) 1993-2023 Paul Mattes.
+# Copyright (c) 1993-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@
 
 RM = rm -f
 CC = @CC@
-BUILDCC = @BUILDCC@
-ifeq ($(strip $(BUILDCC)),)
-BUILDCC=$(CC)
-endif
+BUILD_CC = @BUILD_CC@
+BUILD_LDFLAGS = @BUILD_LDFLAGS@
+BUILD_LIBS = @BUILD_LIBS@
+BUILD_CFLAGS = @BUILD_CFLAGS@
 
 all: tcl3270 x3270if s3270
 
@@ -61,6 +61,8 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
+include buildmacros.mk
+
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
@@ -74,7 +76,7 @@ fallbacks.c: mkfb $(FALLBACKS)
 	./mkfb -c -o $@ $(filter-out mkfb,$^)
 
 mkfb: mkfb.c
-	$(BUILDCC) $(XCPPFLAGS) -o $@ $(filter %.c,$^)
+	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
 
 tcl3270: $(OBJS1)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)

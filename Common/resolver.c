@@ -707,10 +707,8 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
 {
 #if defined(ASYNC_RESOLVER) /*[*/
     if (getenv("SYNC_RESOLVER") == NULL) {
-#endif /*]*/
 	return resolve_host_and_port_v46_a(host, portname, pport, sa, sa_len,
 		sa_rlen, errmsg, max, nr, slot, pipe, event);
-#if defined(ASYNC_RESOLVER) /*[*/
     }
 #endif /*]*/
     *slot = -1;

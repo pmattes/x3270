@@ -651,7 +651,10 @@ LIBX3270DIR
 MOREPATH
 LESSPATH
 CURSES_WIDE
-BUILDCC
+BUILD_CFLAGS
+BUILD_LIBS
+BUILD_LDFLAGS
+BUILD_CC
 CCOPTIONS
 BROKEN_NEWTERM
 host_os
@@ -3613,6 +3616,9 @@ fi
 
 
 
+
+
+
 ac_header= ac_cache=
 for ac_item in $ac_header_c_list
 do
@@ -4224,65 +4230,11 @@ printf "%s\n" "#define HAVE_FSEEKO 1" >>confdefs.h
 fi
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing wadd_wch" >&5
-printf %s "checking for library containing wadd_wch... " >&6; }
-if test ${ac_cv_search_wadd_wch+y}
+ac_fn_c_check_func "$LINENO" "wadd_wch" "ac_cv_func_wadd_wch"
+if test "x$ac_cv_func_wadd_wch" = xyes
 then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-char wadd_wch ();
-int
-main (void)
-{
-return wadd_wch ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' ncursesw ncurses curses
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_search_wadd_wch=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_wadd_wch+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_wadd_wch+y}
-then :
-
-else $as_nop
-  ac_cv_search_wadd_wch=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_wadd_wch" >&5
-printf "%s\n" "$ac_cv_search_wadd_wch" >&6; }
-ac_res=$ac_cv_search_wadd_wch
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   printf "%s\n" "#define CURSES_WIDE 1" >>confdefs.h
 
-Cw=1
 else $as_nop
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Wide curses not found -- c3270 will not be able to support multi-byte character encodings" >&5
 printf "%s\n" "$as_me: WARNING: Wide curses not found -- c3270 will not be able to support multi-byte character encodings" >&2;}

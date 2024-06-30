@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2023 Paul Mattes.
+# Copyright (c) 2007-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 
 # Makefile for wc3270
 
-# Set GT_PFX, BUILDXSFX, BUILDCC, CC, WINDRES and WIN32_FLAGS.
+# Set GT_PFX, BUILDXSFX, BUILD_CC, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
 
 MKFB = mkfb$(BUILDXSFX)
@@ -69,7 +69,7 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 	./$(MKFB) -c -o $@ $(filter-out $(MKFB),$^)
 
 $(MKFB): mkfb.c
-	$(BUILDCC) -DFOR_WIN32 -MMD -MP -I$(THIS) -I$(TOP)/include -o $@ $^
+	$(BUILD_CC) -DFOR_WIN32 -MMD -MP -I$(THIS) -I$(TOP)/include -o $@ $^
 
 keypad.o: keypad.c compiled_keypad.h
 
@@ -77,7 +77,7 @@ compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.ca
 	./$(MKKEYPAD) -I$(TOP)/Common/c3270 >$@
 
 $(MKKEYPAD): mkkeypad.c
-	$(BUILDCC) -MMD -MP -I$(THIS) -o $@ $^
+	$(BUILD_CC) -MMD -MP -I$(THIS) -o $@ $^
 
 wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wc3270 "wc3270 terminal emulator" $(WIN64) >$@.tmp
