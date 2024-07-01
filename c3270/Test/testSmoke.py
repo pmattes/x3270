@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -53,15 +53,16 @@ class TestC3270Smoke(cti.cti):
 
             # Fork a child process with a PTY between this process and it.
             c3270_port, ts = cti.unused_port()
-            os.environ['TERM'] = 'xterm-256color'
             (pid, fd) = pty.fork()
             if pid == 0:
                 # Child process
                 ts.close()
-                os.execvp(cti.vgwrap_ecmd('c3270'),
+                env = os.environ.copy()
+                env['TERM'] = 'xterm-256color'
+                os.execvpe(cti.vgwrap_ecmd('c3270'),
                     cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
                         "-httpd", f"127.0.0.1:{c3270_port}",
-                        f"127.0.0.1:{playback_port}"]))
+                        f"127.0.0.1:{playback_port}"]), env)
                 self.assertTrue(False, 'c3270 did not start')
 
             # Parent process.

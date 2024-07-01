@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -63,9 +63,10 @@ class TestPr3287Session(cti.cti):
                 file.write(f's3270.printer.assocCommandLine: echo "%H%" >{tname} && sleep 5\n')
 
             # Start s3270 with that profile.
-            os.environ['PRINTER_DELAY_MS'] = '1'
+            env = os.environ.copy()
+            env['PRINTER_DELAY_MS'] = '1'
             hport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-6', sname]))
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-6', sname]), env=env)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()

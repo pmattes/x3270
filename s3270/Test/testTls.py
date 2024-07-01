@@ -298,11 +298,10 @@ class TestS3270Tls(cti.cti):
             args.append(f'l:127.0.0.1:{port}=TEST')
 
             # Simulate a specific environment where hostname resolution and connect operations are synchronous.
-            os.environ['SYNC_RESOLVER'] = '1'
-            os.environ['BLOCKING_CONNECT'] = '1'
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
-            del os.environ['SYNC_RESOLVER']
-            del os.environ['BLOCKING_CONNECT']
+            env = os.environ.copy()
+            env['SYNC_RESOLVER'] = '1'
+            env['BLOCKING_CONNECT'] = '1'
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure it all works.

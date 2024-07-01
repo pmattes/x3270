@@ -66,10 +66,11 @@ class TestX3270ifPassword(cti.cti):
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
-            os.environ['X3270PORT'] = str(port)
-            os.environ['TERM'] = 'dumb'
-            os.environ['PAGER'] = 'none'
-            os.execvp(cti.vgwrap_ecmd('x3270if'), cti.vgwrap_eargs(['x3270if', '-I', 's3270']))
+            env = os.environ.copy()
+            env['X3270PORT'] = str(port)
+            env['TERM'] = 'dumb'
+            env['PAGER'] = 'none'
+            os.execvpe(cti.vgwrap_ecmd('x3270if'), cti.vgwrap_eargs(['x3270if', '-I', 's3270']), env)
             self.assertTrue(False, 'x3270if did not start')
 
         # Parent process.

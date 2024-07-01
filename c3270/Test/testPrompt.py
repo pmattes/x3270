@@ -68,13 +68,14 @@ class TestC3270Prompt(cti.cti):
 
             # Fork a child process with a PTY between this process and it.
             c3270_port, ts = cti.unused_port()
-            os.environ['TERM'] = 'xterm-256color'
             (pid, fd) = pty.fork()
             if pid == 0:
                 # Child process
                 ts.close()
-                os.execvp(cti.vgwrap_ecmd('c3270'),
-                    cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']))
+                env = os.environ.copy()
+                env['TERM'] = 'xterm-256color'
+                os.execvpe(cti.vgwrap_ecmd('c3270'),
+                    cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']), env)
                 self.assertTrue(False, 'c3270 did not start')
 
             # Parent process.
@@ -114,14 +115,15 @@ class TestC3270Prompt(cti.cti):
 
             # Fork a child process with a PTY between this process and it.
             c3270_port, ts = cti.unused_port()
-            os.environ['TERM'] = 'dumb'
-            os.environ['PAGER'] = 'none'
             (pid, fd) = pty.fork()
             if pid == 0:
                 # Child process
                 ts.close()
-                os.execvp(cti.vgwrap_ecmd('c3270'),
-                    cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', f'127.0.0.1:{playback_port}']))
+                env = os.environ.copy()
+                env['TERM'] = 'dumb'
+                env['PAGER'] = 'none'
+                os.execvpe(cti.vgwrap_ecmd('c3270'),
+                    cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', f'127.0.0.1:{playback_port}']), env)
                 self.assertTrue(False, 'c3270 did not start')
 
             # Parent process.
