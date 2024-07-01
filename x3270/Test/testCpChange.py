@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,20 +45,14 @@ class TestX3270CpChange(cti.cti):
 
     # Set up procedure.
     def setUp(self):
-        if 'DISPLAY' in os.environ:
-            self.display = os.environ['DISPLAY']
-        else:
-            self.display = None
         cti.cti.setUp(self)
 
     # Tear-down procedure.
     def tearDown(self):
-        # Restore DISPLAY so other tests aren't confused.
-        if self.display != None:
-            os.environ['DISPLAY'] = self.display
         # Tear down the VNC server, in case a test failed and did not
         # clean up.
-        os.system('tightvncserver -kill :2 2>/dev/null')
+        cwd=os.getcwd()
+        os.system(f'HOME={cwd}/x3270/Test/vnc tightvncserver -kill :2 2>/dev/null')
         cti.cti.tearDown(self)
 
     # x3270 code page change test
@@ -68,24 +62,22 @@ class TestX3270CpChange(cti.cti):
         # The password file needs to be 0600 or Vnc will prompt for it again.
         os.chmod('x3270/Test/vnc/.vnc/passwd', stat.S_IREAD | stat.S_IWRITE)
         cwd=os.getcwd()
-        os.environ['HOME'] = cwd + '/x3270/Test/vnc'
-        os.environ['USER'] = 'foo'
         # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
-        os.environ['SSH_CONNECTION'] = 'foo'
-        self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
+        self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
 
-        os.environ['DISPLAY'] = ':2'
         obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
         self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-        self.assertEqual(0, os.system(f'xset +fp {obj}/'))
-        self.assertEqual(0, os.system('xset fp rehash'))
+        self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
+        self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
         # Start x3270.
         x3270_port, ts = cti.unused_port()
+        env = os.environ.copy()
+        env['DISPLAY'] = ':2'
         x3270 = Popen(cti.vgwrap(["x3270",
             "-httpd", f"127.0.0.1:{x3270_port}",
-            "-efont", "3270-12"]), stdout=DEVNULL)
+            "-efont", "3270-12"]), stdout=DEVNULL, env=env)
         self.children.append(x3270)
         self.check_listen(x3270_port)
         ts.close()

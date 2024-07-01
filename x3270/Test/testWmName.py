@@ -44,20 +44,14 @@ class TestX3270WmName(cti.cti):
 
     # Set up procedure.
     def setUp(self):
-        if 'DISPLAY' in os.environ:
-            self.display = os.environ['DISPLAY']
-        else:
-            self.display = None
         cti.cti.setUp(self)
 
     # Tear-down procedure.
     def tearDown(self):
-        # Restore DISPLAY so other tests aren't confused.
-        if self.display != None:
-            os.environ['DISPLAY'] = self.display
         # Tear down the VNC server, in case a test failed and did not
         # clean up.
-        os.system('tightvncserver -kill :2 2>/dev/null')
+        cwd=os.getcwd()
+        os.system(f'HOME={cwd}/x3270/Test/vnc tightvncserver -kill :2 2>/dev/null')
         cti.cti.tearDown(self)
 
     # x3270 title test.
@@ -67,11 +61,8 @@ class TestX3270WmName(cti.cti):
         # The password file needs to be 0600 or Vnc will prompt for it again.
         os.chmod('x3270/Test/vnc/.vnc/passwd', stat.S_IREAD | stat.S_IWRITE)
         cwd=os.getcwd()
-        os.environ['HOME'] = cwd + '/x3270/Test/vnc'
-        os.environ['USER'] = 'foo'
         # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
-        os.environ['SSH_CONNECTION'] = 'foo'
-        self.assertEqual(0, os.system('tightvncserver :2 2>/dev/null'))
+        self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
 
         # Start 'playback' to feed x3270.
@@ -81,7 +72,6 @@ class TestX3270WmName(cti.cti):
             ts.close()
 
             # Start x3270.
-            os.environ['DISPLAY'] = ':2'
             x3270_port, ts = cti.unused_port()
             cmdline = ["x3270",
                 "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
@@ -89,7 +79,9 @@ class TestX3270WmName(cti.cti):
             if cmdlineTitle:
                 cmdline += [ '-title', 'foo']
             cmdline.append(f'127.0.0.1:{playback_port}')
-            x3270 = Popen(cti.vgwrap(cmdline), stdout=DEVNULL)
+            env = os.environ.copy()
+            env['DISPLAY'] = ':2'
+            x3270 = Popen(cti.vgwrap(cmdline), stdout=DEVNULL, env=env)
             self.children.append(x3270)
             self.check_listen(x3270_port)
             ts.close()
@@ -102,7 +94,7 @@ class TestX3270WmName(cti.cti):
             wid = r.json()['result'][0]
 
             # Check the _NET_WM_NAME property (the window title).
-            name = check_output(['xprop', '-id', wid, '_NET_WM_NAME'])
+            name = check_output(['xprop', '-display', ':2', '-id', wid, '_NET_WM_NAME'])
             if cmdlineTitle:
                 self.assertEqual(name.decode(), f'_NET_WM_NAME(UTF8_STRING) = "foo"\n')
             else:
@@ -111,7 +103,7 @@ class TestX3270WmName(cti.cti):
         # Wait for the process to exit.
         requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
         self.vgwait(x3270)
-        self.assertEqual(0, os.system('tightvncserver -kill :2 2>/dev/null'))
+        self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc tightvncserver -kill :2 2>/dev/null'))
 
     # x3270 default title test.
     def test_default_title(self):

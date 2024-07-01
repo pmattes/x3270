@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -101,10 +101,10 @@ class TestPr3287MultiHost(cti.cti):
         vport, ts = cti.unused_port()
         ts.close()
         # Set up a mock resolver result with the unused port, the real port and the other unused port.
-        os.environ['MOCK_SYNC_RESOLVER'] = f'127.0.0.1/{uport};127.0.0.1/{c.port};127.0.0.1/{vport}'
+        env = os.environ.copy()
+        env['MOCK_SYNC_RESOLVER'] = f'127.0.0.1/{uport};127.0.0.1/{c.port};127.0.0.1/{vport}'
         pr3287 = Popen(cti.vgwrap(['pr3287', '-trace', '-tracefile', tracefile,
-            f'foo:9999']), stdout=DEVNULL, stderr=DEVNULL)
-        os.environ['MOCK_SYNC_RESOLVER'] = ''
+            f'foo:9999']), stdout=DEVNULL, stderr=DEVNULL, env=env)
         self.children.append(pr3287)
 
         # Wait for the process to exit.
