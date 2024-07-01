@@ -48,11 +48,13 @@ class TestX3270ifOneLine(cti.cti):
 
         # Run x3270if with a trivial query.
         x3270if = Popen(cti.vgwrap(["x3270if", "-t", str(port), "Open(abc:def)"]),
-                stdout=PIPE)
+                stdout=PIPE, stderr=PIPE)
         self.children.append(x3270if)
 
         # Decode the result.
-        stdout = x3270if.communicate()[0].decode('utf8')
+        ifout = x3270if.communicate()
+        stdout = ifout[0].decode('utf8')
+        stderr = ifout[1].decode('utf8')
 
         # Wait for the processes to exit.
         s3270.kill()
@@ -61,7 +63,8 @@ class TestX3270ifOneLine(cti.cti):
         self.vgwait(x3270if, assertOnFailure=False)
 
         # Test the output, making sure it is on one line and contains the entire text.
-        self.assertEqual('Connection failed: abc/def: Servname not supported for ai_socktype\n', stdout)
+        self.assertEqual('', stdout)
+        self.assertEqual('Connection failed: abc/def: Servname not supported for ai_socktype\n', stderr)
 
 if __name__ == '__main__':
     unittest.main()
