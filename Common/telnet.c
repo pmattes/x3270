@@ -4246,6 +4246,19 @@ toggle_wrong_terminal_name(const char *name, const char *value, unsigned flags, 
     return TU_SUCCESS;
 }
 
+/* Toggle contention resolution. */
+static toggle_upcall_ret_t
+toggle_contention_resolution(const char *name, const char *value, unsigned flags, ia_t ia)
+{
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.contention_resolution)) != NULL) {
+        popup_an_error("%s", errmsg);
+        return TU_FAILURE;
+    }
+    return TU_SUCCESS;
+}
+
 /* Module registration. */
 void
 net_register(void)
@@ -4260,4 +4273,6 @@ net_register(void)
     register_extended_toggle(ResBindLimit, toggle_bind_limit, NULL, NULL, (void **)&appres.bind_limit, XRM_BOOLEAN);
     register_extended_toggle(ResWrongTerminalName, toggle_wrong_terminal_name,
 	    NULL, NULL, (void **)&appres.wrong_terminal_name, XRM_BOOLEAN);
+    register_extended_toggle(ResContentionResolution, toggle_contention_resolution, NULL, NULL,
+	    (void **)&appres.contention_resolution, XRM_BOOLEAN);
 }
