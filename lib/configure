@@ -655,10 +655,6 @@ TLS_LIBS
 TLS_LDFLAGS
 ICONV_LIBS
 USE_ICONV
-BUILD_CFLAGS
-BUILD_LIBS
-BUILD_LDFLAGS
-BUILD_CC
 CONNECT_GETPEERNAME
 CCOPTIONS
 host_os
@@ -4029,10 +4025,6 @@ esac
 if test "$GCC" = yes
 then	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-
-
-
-
 
 
 

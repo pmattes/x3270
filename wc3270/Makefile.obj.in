@@ -1,0 +1,108 @@
+# Copyright (c) 2007-2024 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Makefile for wc3270
+
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -I$(TOP)/include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -Wno-format-zero-length -MMD -MP $(XCPPFLAGS)
+
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include $(THIS)/wc3270_files.mk libs.mk
+
+VOBJS = $(WC3270_OBJECTS) fallbacks.o wc3270res.o
+
+OBJECTS = $(VOBJS) version.o
+WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
+MKSHORTOBJECTS = mkshort.o shortcut.o wc3270res.o
+LIBS = -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
+SHRTLIBS = $(LD32XX) -lole32 -luuid
+WIZLIBS = $(LD32XX) -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
+
+PROGS = wc3270.exe c3270.exe mkshort.exe wc3270wiz.exe catf.exe
+all: $(PROGS)
+
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
+	$(RM) xversion.c
+	sh $< wc3270 $(filter %.txt,$^) >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
+
+FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
+fallbacks.c: $(FALLBACKS)
+	$(RM) $@
+	../../@host@/mkfb/mkfb$(BUILDXSFX) -w -c -o $@ $^
+
+keypad.o: keypad.c compiled_keypad.h
+
+compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks
+	../../@host@/mkkeypad/mkkeypad$(BUILDXSFX) -I$(TOP)/Common/c3270 >$@
+
+wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wc3270 "wc3270 terminal emulator" $(WIN64) >$@.tmp
+	mv -f $@.tmp $@
+
+wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico wc3270.exe.manifest
+	$(WINDRES) -i $< -o $@
+
+wc3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
+	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+c3270.exe: wc3270.exe
+	cp -p wc3270.exe $@
+
+mkshort.exe: $(MKSHORTOBJECTS) $(DEP32XX)
+	$(CC) -o mkshort.exe $(CFLAGS) $(MKSHORTOBJECTS) $(SHRTLIBS)
+
+wversion.o: mkwversion.sh version.txt
+	sh $< $(CC) $(filter %.txt,$^)
+
+wc3270wiz.exe: $(WOBJECTS) $(DEP32XX)
+	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
+
+catf_res.o: catf.rc catf.ico
+	$(WINDRES) -i $< -o $@
+
+catf.exe: catf.o catf_res.o
+	$(CC) $(CFLAGS) -o $@ catf.o catf_res.o
+
+clean:
+	rm -f *.o $(MKKEYPAD) compiled_keypad.h fallbacks.c wc3270.exe.manifest
+
+clobber: clean
+	rm -f $(PROGS) *.d
+
+# Include auto-generated dependencies.
+-include $(OBJS:.o=.d) mkbf.d wc3270wiz.d

@@ -1,1 +1,6 @@
-../Common/pr3287/instlist.man
+usr
+usr/local
+usr/local/share
+usr/local/share/man
+usr/local/share/man/man1
+usr/local/share/man/man1/pr3287.1

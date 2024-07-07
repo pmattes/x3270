@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2016, 2018, 2020 Paul Mattes.
+# Copyright (c) 1995-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,8 @@
 all:
 	@echo "Must pick a specific make target."
 
-src.tgz:
-
+src.tgz: prepare
+prepare: configure
+configure: configure.in
+	autoconf
 man:
-

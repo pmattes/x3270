@@ -52,10 +52,6 @@ then	# Add common gcc options, plus flags for dependency generation.
 fi
 AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
-AC_SUBST(BUILD_CC)
-AC_SUBST(BUILD_LDFLAGS)
-AC_SUBST(BUILD_LIBS)
-AC_SUBST(BUILD_CFLAGS)
 
 dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear

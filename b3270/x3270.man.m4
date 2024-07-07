@@ -1,1 +1,0 @@
-../Common/x3270.man.m4

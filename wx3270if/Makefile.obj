@@ -26,10 +26,8 @@
 
 # Windows Makefile for x3270if
 
-# Set GT_PFX, BUILDXSFX, BUILD_CC, CC, WINDRES and WIN32_FLAGS.
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
-
-MKFB = mkfb$(BUILDXSFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/x3270if -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
@@ -73,7 +71,7 @@ wversion.o: mkwversion.sh version.txt
 	sh $< x3270if $(CC) $(filter %.txt,$^)
 
 clean:
-	rm -f *.o mkfb mkfb.exe fallbacks.c x3270if.exe.manifest
+	rm -f *.o x3270if.exe.manifest
 
 clobber: clean
 	rm -f $(PROGS) *.d

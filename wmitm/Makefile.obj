@@ -26,10 +26,8 @@
 
 # Windows Makefile for mitm
 
-# Set GT_PFX, BUILDXSFX, BUILD_CC, CC, WINDRES and WIN32_FLAGS.
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
-
-MKFB = mkfb$(BUILDXSFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/mitm -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)

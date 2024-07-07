@@ -1,4 +1,4 @@
-dnl Copyright (c) 2015-2023 Paul Mattes.
+dnl Copyright (c) 2015-2024 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -232,6 +232,8 @@ if test "x$enable_wc3270" = xyes -o \
 	"x$enable_wpr3287" = xyes; then
     enable_windows_lib=yes
 fi
+unset do_ibm_hosts
+if test "x$enable_x3270" = xyes -o "x$enable_c3270" = xyes; then do_ibm_hosts=yes; fi
 
 dnl Start recursing.
 if test "x$enable_unix_lib" = xyes; then
@@ -240,6 +242,11 @@ fi
 
 if test "x$enable_windows_lib" = xyes; then
     AC_CONFIG_SUBDIRS(lib/w32xx)
+    AC_CONFIG_SUBDIRS(lib/w3270)
+fi
+
+if test "x$do_ibm_hosts" = xyes; then
+    AC_CONFIG_SUBDIRS(ibm_hosts)
 fi
 
 T_ALL=""
@@ -323,7 +330,16 @@ if test "x$enable_x3270if" = xyes; then AC_CONFIG_SUBDIRS(x3270if)
 fi
 if test "x$enable_playback" = xyes; then AC_CONFIG_SUBDIRS(playback)
 fi
+if test "x$enable_ws3270" = xyes; then AC_CONFIG_SUBDIRS(ws3270)
+fi
+if test "x$enable_wc3270" = xyes; then AC_CONFIG_SUBDIRS(wc3270)
+fi
+if test "x$enable_wb3270" = xyes; then AC_CONFIG_SUBDIRS(wb3270)
+fi
 AC_CONFIG_SUBDIRS(mitm)
+AC_CONFIG_SUBDIRS(mkfb)
+AC_CONFIG_SUBDIRS(mkkeypad)
+AC_CONFIG_SUBDIRS(mkicon)
 
 AC_SUBST(host)
 AC_SUBST(T_ALL)

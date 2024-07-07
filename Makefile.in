@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2016, 2018, 2020-2022 Paul Mattes.
+# Copyright (c) 2015-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -98,6 +98,26 @@ wc3270 ws3270 wb3270 wpr3287: windows-lib
 c3270 s3270 b3270 tcl3270 x3270: x3270if
 wc3270 ws3270 wb3270: wx3270if
 
+# pr3287 dependencies.
+c3270 s3270 b3270 tcl3270 x3270: pr3287
+wc3270 ws3270 wb3270: wpr3287
+
+# ibm_hosts dependencies
+c3270 x3270: ibm_hosts
+.PHONY: ibm_hosts
+
+# mkfb dependencies.
+c3270 s3270 b3270 x3270 wc3270 ws3270 wb3270: mkfb
+.PHONY: mkfb
+
+# mkkeypad dependencies.
+c3270 wc3270: mkkeypad
+.PHONY: mkkeypad
+
+# mkicon dependencies.
+unix-lib windows-lib: mkicon
+.PHONY: mkicon
+
 .PHONY: x3270if
 
 # s3270 dependencies.
@@ -160,6 +180,14 @@ x3270if:
 	cd x3270if && $(MAKE)
 playback: lib3270 lib32xx
 	cd playback && $(MAKE)
+ibm_hosts:
+	cd ibm_hosts && $(MAKE)
+mkfb:
+	cd mkfb && $(MAKE)
+mkkeypad:
+	cd mkkeypad && $(MAKE)
+mkicon:
+	cd mkicon && $(MAKE)
 wc3270: wc3270@WIN32_SUFFIX@ wc3270@WIN64_SUFFIX@
 wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
 	cd wc3270 && $(MAKE) @WINDRES_SET@
@@ -198,37 +226,41 @@ windows: @T_WINDOWS_ALL@
 
 # Installation
 install unix-install: @T_INSTALL@
-x3270-install: x3270
+x3270-install: x3270 pr3287-install x3270if-install ibm_hosts-install
 	cd x3270 && $(MAKE) install
-c3270-install: c3270
+c3270-install: c3270 pr3287-install x3270if-install ibm_hosts-install
 	cd c3270 && $(MAKE) install
-s3270-install: s3270
+s3270-install: s3270 pr3287-install x3270if-install
 	cd s3270 && $(MAKE) install
-b3270-install: b3270
+b3270-install: b3270 pr3287-install x3270if-install
 	cd b3270 && $(MAKE) install
-tcl3270-install: tcl3270
+tcl3270-install: tcl3270 pr3287-install s3270-install x3270if-install
 	cd tcl3270 && $(MAKE) install
 pr3287-install: pr3287
 	cd pr3287 && $(MAKE) install
 x3270if-install: x3270if
 	cd x3270if && $(MAKE) install
+ibm_hosts-install:
+	cd ibm_hosts && $(MAKE) install
 
 # Manual page install
 install.man unix-install.man: @T_INSTALL_MAN@
-x3270-install.man: x3270
+x3270-install.man: x3270 pr3287-install.man x3270if-install.man ibm_hosts-install.man
 	cd x3270 && $(MAKE) install.man
-c3270-install.man: c3270
+c3270-install.man: c3270 pr3287-install.man x3270if-install.man ibm_hosts-install.man
 	cd c3270 && $(MAKE) install.man
-s3270-install.man: s3270
+s3270-install.man: s3270 pr3287-install.man x3270if-install.man
 	cd s3270 && $(MAKE) install.man
-b3270-install.man: b3270
+b3270-install.man: b3270 pr3287-install.man x3270if-install.man
 	cd b3270 && $(MAKE) install.man
-tcl3270-install.man: tcl3270
+tcl3270-install.man: tcl3270 pr3287-install.man s3270-install.man x3270if-install.man
 	cd tcl3270 && $(MAKE) install.man
 pr3287-install.man: pr3287
 	cd pr3287 && $(MAKE) install.man
 x3270if-install.man: x3270if
 	cd x3270if && $(MAKE) install.man
+ibm_hosts-install.man:
+	cd ibm_hosts && $(MAKE) install.man
 
 # Clean and clobber targets
 clean: @T_CLEAN@
@@ -316,7 +348,7 @@ clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
 windows-lib-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber libexpat-clobber
 lib-clobber: @T_LIB_CLOBBER@
-unix-clobber: @T_UNIX_CLOBBER@
+unix-clobber: @T_UNIX_CLOBBER@ ibm_hosts-clobber
 windows-clobber: @T_WINDOWS_CLOBBER@
 lib3270-clobber:
 	cd lib/3270 && $(MAKE) clobber && $(MAKE) -f Makefile.test clobber
@@ -367,6 +399,8 @@ x3270if-clobber:
 	cd x3270if && $(MAKE) clobber
 playback-clobber:
 	cd playback && $(MAKE) clobber
+ibm_hosts-clobber:
+	cd ibm_hosts && $(MAKE) clobber
 wc3270-clobber: wc3270-clobber@WIN32_SUFFIX@ wc3270-clobber@WIN64_SUFFIX@
 wc3270-clobber-32:
 	cd wc3270 && $(MAKE) clobber

@@ -1,0 +1,57 @@
+# Copyright (c) 1999-2024 Paul Mattes.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# Makefile for 3270 emulation library (Windows)
+
+LIB3270 = lib3270.a
+
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
+
+all:: $(LIB3270)
+
+INCS = lib3270_files.mk libw3270_files.mk
+include $(INCS)
+OBJS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
+
+$(LIB3270): $(OBJS) $(INCS)
+	$(RM) $@
+	$(AR) crs $@ $(OBJS)
+
+favicon.o: favicon.c
+
+favicon.c: favicon.ico
+	../../@host@/mkicon/mkicon$(BUILDXSFX) $< >favicon.c
+
+clean:
+	$(RM) *.o favicon.c $(LIB3270)
+
+clobber: clean
+	$(RM) *.d
+
+-include $(OBJS:.o=.d)

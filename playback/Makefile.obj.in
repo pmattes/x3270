@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2018, 2020-2022 Paul Mattes.
+# Copyright (c) 1999-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -49,4 +49,4 @@ clobber: clean
 	$(RM) playback *.d
 
 # Include auto-generated dependencies.
--include $(PLAYBACK_OBJECTS:.o=.d) mkfb.d
+-include $(PLAYBACK_OBJECTS:.o=.d)

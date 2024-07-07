@@ -1,5 +1,5 @@
 '\" t
-.TH x3270 1 "20 March 2024"
+.TH x3270 1 "02 July 2024"
 .SH "NAME"
 x3270 \-
 \s-1IBM\s+1 host access tool

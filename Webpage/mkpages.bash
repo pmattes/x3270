@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Create x3270 webpages, using a common template.
-. ./version.txt
 if [ "X$1" = "X-g" ]
 then	geo_sub="http://x3270.bgp.nu/"
 	shift
@@ -12,8 +11,18 @@ if [ "X$1" = "X-w" ]
 then	w3=1
 	shift
 fi
-# hard wire it now
+path="."
+while [[ "$1" =~ ^-I ]]
+do
+	path="$path ${1#-I}"
+	PATH="${1#-I}:$PATH"
+	shift
+done
+
+# hard wire w3 now
 w3=1
+
+. version.txt
 
 case "$1" in
 index)
@@ -64,7 +73,15 @@ x026)
 	;;
 esac
 html="$1"
-if [ ! -f ${html}-body.html ]
+unset body
+for dir in $path
+do
+	if [ -f $dir/${html}-body.html ]
+	then	body=$dir/${html}-body.html
+	    	break
+	fi
+done
+if [ -z "$body" ]
 then	echo >&2 "No body file found."
 	exit 1
 fi
@@ -142,7 +159,7 @@ Please refer to the <a href="https://x3270.miraheze.org/wiki/Main_Page">the x327
 EOF
      ;;
  esac
- sed "s/CYEAR/$cyear/g" ${html}-body.html
+ sed "s/CYEAR/$cyear/g" $body
  cat <<EOF
     </td>
   </tr>

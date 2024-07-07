@@ -1,0 +1,55 @@
+#
+# Copyright (c) 1995-2024 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+
+# Auxiliary makefile for ibm_hosts
+
+PRODUCT = ibm_hosts
+
+all:
+	@echo "Must pick a specific make target."
+
+include m4man.mk
+
+DOCS = $(PRODUCT).man html/$(PRODUCT).html
+
+# Rule for building the source tarball: run autoconf and build the
+# documentation.
+src.tgz: prepare $(DOCS) Makefile.aux
+
+# Rule for preparing a freshly-pulled working copy.
+prepare: configure
+configure: configure.in
+	autoconf
+
+# Rule for building the documentation.
+man: $(DOCS)
+
+# Rules for building man pages and derived HTML documentation.
+$(PRODUCT).man: $(MANDEP) ibm_hosts.man.m4
+	$< $(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
+html/$(PRODUCT).html: $(MANDEP) ibm_hosts.man.m4
+	$< $(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4

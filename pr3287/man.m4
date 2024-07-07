@@ -1,1 +1,0 @@
-../Common/man.m4

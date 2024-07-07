@@ -1,0 +1,107 @@
+# Copyright (c) 2007-2024 Paul Mattes.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# Makefile for the Webpage directory
+
+PAGES = documentation-bugs.html documentation-manpages.html \
+	documentation-misc.html documentation-other.html documentation.html \
+	index.html screenshots.html x026.html
+
+MANPAGES = c3270-man.html ibm_hosts.html pr3287-man.html s3270-man.html \
+	tcl3270-man.html wc3270-man.html x3270-man.html
+
+LOCAL = .htaccess SS-HCS12-1372-00.pdf c3270-help/.htaccess c3270-thumb.png \
+	c3270.png cyrillic-thumb.png cyrillic.png japanese-thumb.png \
+	japanese.png keypad-thumb.png keypad.png man/FAQ.html styles.css \
+	wc3270-help/.htaccess wc3270-thumb.png wc3270.png \
+	wx3270-help/.htaccess x3270_main-thumb.png x3270_main.png
+
+DIRS = man c3270-help wc3270-help wx3270-help
+
+ODD = x3270.jpg x026.gif
+
+all: webpage.tgz
+
+INC = $(foreach dir,$(subst :, ,$(VPATH)),-I$(dir))
+
+# Rules for HTML files with the navigation bar.
+documentation.html: mkpages.bash documentation-body.html version.txt
+	$< $(INC) documentation
+documentation-bugs.html: mkpages.bash documentation-bugs-body.html mkpages.bash version.txt
+	$< $(INC) documentation-bugs
+documentation-manpages.html: mkpages.bash documentation-manpages-body.html version.txt
+	$< $(INC) documentation-manpages
+documentation-misc.html: mkpages.bash documentation-misc-body.html version.txt
+	$< $(INC) documentation-misc
+documentation-other.html: mkpages.bash documentation-other-body.html version.txt
+	$< $(INC) documentation-other
+index.html: mkpages.bash index-body.html version.txt
+	$< $(INC) index
+screenshots.html: mkpages.bash screenshots-body.html version.txt
+	$< $(INC) screenshots
+x026.html: mkpages.bash x026-body.html version.txt
+	$< $(INC) x026
+
+# Rules for manpages.
+c3270-man.html:
+	cd $(TOP)/c3270 && VPATH=../Common $(MAKE) -I ../Common -f Makefile.aux html/c3270-man.html
+	cp -p $(TOP)/c3270/html/c3270-man.html $@
+ibm_hosts.html:
+	cd $(TOP)/ibm-hosts && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/ibm_hosts.html
+	cp -p $(TOP)/ibm-hosts/html/ibm_hosts.html $@
+pr3287-man.html:
+	cd $(TOP)/pr3287 && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/pr3287-man.html
+	cp -p $(TOP)/pr3287/html/pr3287-man.html $@
+s3270-man.html:
+	cd $(TOP)/s3270 && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/s3270-man.html
+	cp -p $(TOP)/s3270/html/s3270-man.html $@
+tcl3270-man.html:
+	cd $(TOP)/tcl3270 && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/tcl3270-man.html
+	cp -p $(TOP)/tcl3270/html/tcl3270-man.html $@
+x3270-man.html:
+	cd $(TOP)/x3270 && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/x3270-man.html
+	cp -p $(TOP)/x3270/html/x3270-man.html $@
+wc3270-man.html:
+	cd $(TOP)/wc3270 && VPATH=../Common $(MAKE) -I../Common -f Makefile.aux html/wc3270-man.html
+	cp -p $(TOP)/wc3270/html/wc3270-man.html $@
+
+# Miscellaneous files that come from odd places.
+x026.gif: $(TOP)/x3270/html/x026.gif
+	cp -p $^ $@
+x3270.jpg: $(TOP)/x3270/html/x3270.jpg
+	cp -p $^ $@
+
+# Get it all together.
+webpage.tgz: $(PAGES) $(MANPAGES) $(LOCAL) $(ODD) mkpages.bash Makefile
+	mkdir -p $(DIRS)
+	tar -C $(THIS) -cf - $(LOCAL) | tar -xf -
+	$(RM) -f tmp-webpage.tgz
+	tar -czhf tmp-webpage.tgz $(PAGES) $(MANPAGES) $(LOCAL) $(ODD)
+	mv -f tmp-webpage.tgz webpage.tgz
+
+clean:
+	$(RM) -r $(PAGES) $(MANPAGES) $(LOCAL) $(ODD) $(DIRS)
+clobber: clean
+	$(RM) webpage.tgz

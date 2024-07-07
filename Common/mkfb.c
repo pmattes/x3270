@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,14 +80,7 @@ struct {
 #define NPARTS	(sizeof(parts)/sizeof(parts[0]))
 
 unsigned long is_defined =
-    MODE_COLOR | MODE_APL |
-    MODE_DBCS |
-#if defined(FOR_WIN32) || defined(_WIN32)
-    MODE__WIN32
-#else
-    0
-#endif
-    ;
+    MODE_COLOR | MODE_APL | MODE_DBCS;
 unsigned long is_undefined;
 
 char *me;
@@ -97,7 +90,7 @@ void emit(FILE *t, int ix, char c);
 void
 usage(void)
 {
-    fprintf(stderr, "usage: %s [-c] [-o outfile] [infile...]\n",
+    fprintf(stderr, "usage: %s [-c] -[w] [-o outfile] [infile...]\n",
 	    me);
     exit(1);
 }
@@ -167,6 +160,8 @@ main(int argc, char *argv[])
 	}
 	if (!strcmp(argv[ix], "-c")) {
 	    cmode = 1;
+	} else if (!strcmp(argv[ix], "-w")) {
+	    is_defined |= MODE__WIN32;
 	} else if (!strcmp(argv[ix], "-o")) {
 	    if (argc < ix + 1) {
 		usage();

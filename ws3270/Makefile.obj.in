@@ -1,0 +1,89 @@
+# Copyright (c) 2007-2024 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Makefile for s3270
+
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
+
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include ws3270_files.mk libs.mk
+
+VOBJS = $(WS3270_OBJECTS) fallbacks.o ws3270res.o
+
+OBJECTS = $(VOBJS) version.o
+LIBS = -lws2_32 -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
+SHRTLIBS = -lole32 -luuid
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
+
+PROGS = s3270.exe ws3270.exe
+all: $(PROGS)
+
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
+	$(RM) $(XVERSION)
+	sh $< s3270 $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+FALLBACKS = fb-common fb-printSession
+fallbacks.c: $(FALLBACKS)
+	$(RM) $@
+	../../@host@/mkfb/mkfb$(BUILDXSFX) -w -c -o $@ $^
+
+ws3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
+	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) s3270 "s3270 scripting terminal emulator" $(WIN64) >$@.tmp
+	mv -f $@.tmp $@
+
+ws3270res.o: ws3270.rc ws3270.ico Makefile ws3270.exe.manifest
+	$(WINDRES) -i $< -o $@
+
+s3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+ws3270.exe: s3270.exe
+	cp -p s3270.exe $@
+
+wversion.o: mkwversion.sh version.txt
+	sh $< s3270 $(CC) $(filter %.txt,$^)
+
+clean:
+	rm -f *.o fallbacks.c ws3270.exe.manifest
+
+clobber: clean
+	rm -f $(PROGS) *.d
+
+# Include auto-generated eependencies
+-include $(OBJS:.o=.d)

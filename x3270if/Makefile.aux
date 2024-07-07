@@ -31,7 +31,7 @@ PRODUCT=x3270if
 all:
 	@echo "Must pick a specific make target."
 
-include version.mk
+include m4man.mk
 
 # Development tools.
 
@@ -49,13 +49,9 @@ prepare: configure
 configure: configure.in
 	autoconf
 
-MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt find-version
-MKMAN = ./m4man -t man -p $(PRODUCT) -v $(VERSION_TXT)
-MKHTML = ./m4man -t html -p $(PRODUCT) -v $(VERSION_TXT)
-
 man: $(PRODUCT).man html/Unix-$(PRODUCT).html
 
-$(PRODUCT).man: x3270if.man.m4 $(MANDEP)
-	$(MKMAN) -n x3270if -o $@ x3270if.man.m4
-html/Unix-$(PRODUCT).html: x3270if.man.m4 $(MANDEP)
-	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
+$(PRODUCT).man: $(MANDEP) $(PRODUCT).man.m4
+	$< $(MKMAN) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
+html/Unix-$(PRODUCT).html: $(MANDEP) $(PRODUCT).man.m4
+	$< $(MKHTML) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4

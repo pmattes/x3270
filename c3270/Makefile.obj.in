@@ -28,12 +28,8 @@
 
 RM = rm -f
 CC = @CC@
-BUILD_CC = @BUILD_CC@
-BUILD_LDFLAGS = @BUILD_LDFLAGS@
-BUILD_LIBS = @BUILD_LIBS@
-BUILD_CFLAGS = @BUILD_CFLAGS@
 
-all: c3270 x3270if
+all: c3270
 
 HOST = @host@
 include c3270_files.mk libs.mk
@@ -60,8 +56,6 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
-include buildmacros.mk
-
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
@@ -70,55 +64,37 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
-fallbacks.c: mkfb $(FALLBACKS)
+fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	./mkfb -c -o $@ $(filter-out mkfb,$^)
-
-mkfb: mkfb.c
-	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
-
-mkkeypad: mkkeypad.c
-	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $< $(BUILD_LDFLAGS) $(BUILD_LIBS)
+	../mkfb/mkfb -c -o $@ $^
 
 keypad.o: compiled_keypad.h
 
-compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks mkkeypad
-	./mkkeypad -I$(TOP)/Common/c3270 >$@
+compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks
+	../mkkeypad/mkkeypad -I$(TOP)/Common/c3270 >$@
 
 c3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-x3270if: ../x3270if/x3270if
-	cp -p ../x3270if/x3270if $@
-
-man:: c3270.man
-	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
-man:: ibm_hosts.man
+man: c3270.man
 	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
-install:: c3270
+install: c3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) c3270 $(DESTDIR)$(BINDIR)/c3270
-install:: ibm_hosts
-	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
-		mkdir -p $(DESTDIR)$(LIBX3270DIR)
-	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
-		$(INSTALL_DATA) $< $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
-
 install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man5
 	$(INSTALL_DATA) c3270.man $(DESTDIR)$(MANDIR)/man1/c3270.1
-	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 
 clean:
-	$(RM) *.o mkfb fallbacks.c compiled_keypad.h
+	$(RM) *.o fallbacks.c compiled_keypad.h
 
 clobber: clean
 	$(RM) c3270 *.d *.man
 
 # Include auto-generated dependencies.
--include $(C3270_OBJECTS:.o=.d) mkfb.d
+-include $(C3270_OBJECTS:.o=.d)

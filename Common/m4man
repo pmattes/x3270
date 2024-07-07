@@ -11,11 +11,16 @@ version_txt=./version.txt
 
 while [ $# -gt 0 ]
 do	case $1 in
+	    -I*)
+		export PATH=${1#-I}:$PATH
+		include=$1
+		shift
+		;;
 	    -t)
 		shift
 		case $1 in
 		    html|man)
-			type=$1
+			type=$1.m4
 			shift
 			;;
 		    *)
@@ -117,11 +122,11 @@ then	tf=/tmp/m4man$$
 	trap "exit" INT QUIT HUP TERM
 fi
 
-/usr/bin/m4 -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
+/usr/bin/m4 $include -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
     -DXX_PLATFORM=$platform -DXX_MODE=$mode -DXX_INTERACTIVE=$interactive \
     -DXX_C3270=$c3270 -DXX_S3270=$s3270 -DXX_PR3287=$pr3287 -DXX_X3270=$x3270 \
     -DXX_B3270=$b3270 -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version \
-    -DXX_CYEAR=$cyear $type.m4 $source |
+    -DXX_CYEAR=$cyear $type $source |
  if [ -n "$outfile" ]
  then	cat >$tf
  else	cat

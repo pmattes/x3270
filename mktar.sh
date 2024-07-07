@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create a git archive that includes an expanded copy of submodules.
-set -x
+#set -x
 . Common/version.txt
 ver=${version%%[a-z]*}
 
@@ -23,4 +23,9 @@ done
 
 # Create an archive of the result.
 # Dereference soft and hard links, so this file can be expanded on platforms like MSYS2.
-(cd $tmpdir && tar --dereference --hard-dereference -czf - *) >suite3270-$version-src.tgz
+objdir=obj/release
+tarball=$objdir/suite3270-$version-src.tgz
+mkdir -p $objdir
+rm -f $tarball
+(cd $tmpdir && tar --dereference --hard-dereference -czf - *) >$tarball
+ls -l $tarball

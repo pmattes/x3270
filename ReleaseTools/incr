@@ -1,0 +1,190 @@
+#!/bin/bash
+# Copyright (c) 2024 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Do an incremental release.
+
+# Bail if anything bad happens.
+set -e
+
+unset noop
+unset verbose
+while [ $# -gt 0 ]
+do
+    case "$1" in
+    	-n)	noop=1;;
+	-v)	verbose=1;;
+	*)	echo >&2 "Unknown option: $1"
+	    	exit 1
+    esac
+    shift
+done
+
+a_red="[31m"
+a_green="[32m"
+a_none="[0m"
+
+# Display text in green.
+function green()
+{
+    echo -n $a_green
+    echo -n "$@"
+    echo $a_none
+}
+
+# Display text in red on stderr.
+function red()
+{
+    echo >&2 -n $a_red
+    echo >&2 -n "$@"
+    echo >&2 $a_none
+}
+
+# Execute an action. This function has its own error recovery, so
+# it clears and re-sets -e.
+function execute()
+{
+    set +e
+    tf1=/tmp/ex1-$$
+    tf2=/tmp/ex2-$$
+    echo ">>" "$@"
+    if [ ! "$noop" ]
+    then
+	if [ "$verbose" ]
+	then "$@"
+	else
+	    "$@" >$tf1 2>$tf2
+	    if [ $? -ne 0 ]
+	    then
+		cat $tf1
+		cat $tf2
+		rm -f $tf1 $tf2
+		exit 1
+	    fi
+	fi
+    fi
+    rm -f $tf1 $tf2
+    set -e
+}
+
+# Make sure the repo is clean.
+if git status | grep '^nothing to commit,' >/dev/null
+then	:
+else	red "Abort: Repo is not clean."
+	exit 1
+fi
+
+# Figure out the current version.
+. Common/version.txt
+ver=$(echo $version | sed 's/[a-z].*//')
+
+# Make sure this is a pre-release version.
+case "$version" in
+*pre*) 	;;
+*)	red "Abort: Version '$version' is not a pre-release."
+	exit 1
+esac
+
+# Make sure we are on a matching git branch.
+git_branch=$(git status | awk '/^On branch/ { print $3 }')
+if [ "$ver" != "$git_branch" ]
+then	red "Abort: git branch '$git_branch' does not match version '$ver'"
+	exit 1
+fi
+
+# Fail.
+#green "This should fail"
+#execute "farble blurf"
+
+# Clean up
+green "Cleaning up"
+execute make clobber
+
+# Get a clean set of Makefiles.
+green "Configuring"
+execute ./configure -C CFLAGS="-ggdb3 -Werror -Wno-format-zero-length -fno-common"
+
+# Update the version file.
+new_version=$(echo $version | sed "s/pre/$phase/")
+green "Advancing version from $version to $new_version"
+tf=/tmp/sed$$
+sed "s/$version/$new_version/" Common/version.txt >$tf
+[ "$noop" -o "$verbose" ] && (diff Common/version.txt $tf || true)
+execute cp $tf Common/version.txt
+rm -f $tf
+
+# Build with the changed code.
+green "Building"
+execute make -j12
+
+# Build a Windows release, which also updates the man pages.
+green "Building Windows release"
+execute make -f Makefile.aux windows-release
+
+# Commit.
+green "Committing $new_version"
+execute git add .
+execute git commit -m$new_version
+
+# Build the source tarball and append it to the package zipfile.
+green "Building source tarball"
+execute make -f Makefile.aux src.tgz
+execute zip --junk-paths obj/release/package.zip obj/release/suite3270-$new_version-src.tgz
+
+# Archive the tarball.
+green "Archiving the tarball"
+execute cp -p obj/release/suite3270-$new_version-src.tgz ../../Release/
+left=$(echo $version | sed 's/\..*//')
+right=$(echo $version | sed -e 's/^[0-9]*\.//' -e 's/[a-z].*//')
+bdir=$(printf "%02d.%02d" $left $right)
+execute ssh bgp.nu mkdir -p www/download/$bdir
+execute scp obj/release/suite3270-$new_version-src.tgz bgp.nu:www/download/$bdir/
+
+# Tag the release.
+green "Tagging"
+execute git tag -a -m$new_version $new_version
+
+# Move ahead to the next pre-release.
+point=$(echo $version | sed 's/.*pre//')
+new_point=$(expr $point + 1)
+next_version=$(echo $version | sed "s/pre.*/pre$new_point/")
+green "Advancing version from $new_version to $next_version for ongoing development"
+tf=/tmp/sed$$
+sed "s/$new_version/$next_version/" Common/version.txt >$tf
+[ "$noop" -o "$verbose" ] && (diff Common/version.txt $tf || true)
+execute cp $tf Common/version.txt
+rm -f $tf
+execute git add .
+execute git commit -m"Start ${ver}pre${new_point}"
+
+# Push everything out.
+green "Pushing to git"
+execute git push xfer
+execute git push xfer --tags
+execute git push --set-upstream origin $git_branch
+execute git push origin --tags
+execute git push --set-upstream github $git_branch
+execute git push github --tags

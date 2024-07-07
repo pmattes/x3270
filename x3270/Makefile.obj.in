@@ -28,11 +28,6 @@
 
 RM = rm -f
 CC = @CC@
-# Set BUILD_CC, BUILD_LDFLAGS and BUILD_LIBS.
-BUILD_CC = @BUILD_CC@
-BUILD_LDFLAGS = @BUILD_LDFLAGS@
-BUILD_LIBS = @BUILD_LIBS@
-BUILD_CFLAGS = @BUILD_CFLAGS@
 HOST = @host@
 include x3270_files.mk libs.mk
 
@@ -49,7 +44,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 ICONS = x3270-192x192.png x3270-256x256.png x3270-48x48.png \
 	x3270-512x512.png x3270-96x96.png
 
-all: x3270 x3270a x3270.desktop x3270if $(FONTS) $(ICONS) dryrun
+all: x3270 x3270a x3270.desktop $(FONTS) $(ICONS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -73,8 +68,6 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @XLIB@ @LDFLAGS@
 LIBS = @LIBS@
 
-include buildmacros.mk
-
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
@@ -83,12 +76,9 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
-fallbacks.c: mkfb $(FALLBACKS)
+fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	./mkfb -o $@ $(filter-out mkfb,$^)
-
-mkfb: mkfb.c
-	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
+	../mkfb/mkfb -o $@ $^
 
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
@@ -108,12 +98,7 @@ x3270a: x3270a.in
 x3270.desktop: x3270.desktop.in
 	cp $< $@
 
-x3270if: ../x3270if/x3270if
-	cp -p ../x3270if/x3270if $@
-
-man:: x3270.man
-	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
-man:: ibm_hosts.man
+man: x3270.man
 	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
 
 install:: x3270
@@ -124,11 +109,6 @@ install:: x3270a
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_SCRIPT) x3270a $(DESTDIR)$(BINDIR)/x3270a
-install:: ibm_hosts
-	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
-		mkdir -p $(DESTDIR)$(LIBX3270DIR)
-	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
-		$(INSTALL_DATA) $< $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
 install::
 	[ -d $(DESTDIR)$(CIFONTDIR) ] || \
 		mkdir -p $(DESTDIR)$(CIFONTDIR)
@@ -157,12 +137,11 @@ install.man: man
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man5
 	$(INSTALL_DATA) x3270.man $(DESTDIR)$(MANDIR)/man1/x3270.1
-	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 
 clean:
-	$(RM) *.o *pcf.gz mkfb fallbacks.c
+	$(RM) *.o *pcf.gz fallbacks.c
 clobber: clean
 	$(RM) x3270 x3270a *.d *.man dryrun
 
 # Include auto-generated dependencies.
--include $(X3270_OBJECTS:.o=.d) mkfb.d
+-include $(X3270_OBJECTS:.o=.d)

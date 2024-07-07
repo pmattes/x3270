@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2018, 2020 Paul Mattes.
+# Copyright (c) 1995-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,11 @@
 
 # Auxiliary makefile for ws3270
 
-PRODUCT = ws3270
-
 all:
 	@echo "Must pick a specific make target."
 
-src.tgz:
-
+src.tgz: prepare
+prepare: configure
+configure: configure.in
+	autoconf
 man:

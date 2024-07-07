@@ -38,7 +38,7 @@ src.tgz: prepare man Webpage program-src
 prepare: configure
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare mitm-prepare Webpage-prepare
+prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare ibm_hosts-prepare mitm-prepare Webpage-prepare mkfb-prepare mkkeypad-prepare mkicon-prepare ws3270-prepare wc3270-prepare wb3270-prepare
 lib-prepare:
 	cd lib && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 c3270-prepare:
@@ -55,13 +55,27 @@ pr3287-prepare:
 	cd pr3287 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 x3270if-prepare:
 	cd x3270if && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+ibm_hosts-prepare:
+	cd ibm_hosts && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 mitm-prepare:
 	cd mitm && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 Webpage-prepare:
 	cd Webpage && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+mkfb-prepare:
+	cd mkfb && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+mkkeypad-prepare:
+	cd mkkeypad && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+mkicon-prepare:
+	cd mkicon && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+ws3270-prepare:
+	cd ws3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+wc3270-prepare:
+	cd wc3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+wb3270-prepare:
+	cd wb3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 
 man: prepare
-man: c3270-man s3270-man b3270-man tcl3270-man x3270-man pr3287-man x3270if-man mitm-man wc3270-man ws3270-man wb3270-man wpr3287-man wx3270if-man wmitm-man
+man: c3270-man s3270-man b3270-man tcl3270-man x3270-man pr3287-man x3270if-man ibm_hosts-man mitm-man wc3270-man ws3270-man wb3270-man wpr3287-man wx3270if-man wmitm-man
 c3270-man:
 	cd c3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
 s3270-man:
@@ -76,6 +90,8 @@ pr3287-man:
 	cd pr3287 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
 x3270if-man:
 	cd x3270if && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
+ibm_hosts-man:
+	cd ibm_hosts && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
 mitm-man:
 	cd mitm && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
 wc3270-man:
@@ -94,7 +110,7 @@ wmitm-man:
 Webpage: program-src man FORCE
 	cd Webpage && $(MAKE)
 
-program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz mitm-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz wmitm-src.tgz lib-src.tgz
+program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz ibm_hosts-src.tgz mitm-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz wmitm-src.tgz lib-src.tgz
 lib-src.tgz:
 	cd lib && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 c3270-src.tgz:
@@ -111,6 +127,8 @@ pr3287-src.tgz:
 	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 x3270if-src.tgz:
 	cd x3270if && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
+ibm_hosts-src.tgz:
+	cd ibm_hosts && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 mitm-src.tgz:
 	cd mitm && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 wc3270-src.tgz:

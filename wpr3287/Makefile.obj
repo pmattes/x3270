@@ -26,7 +26,7 @@
 
 # Makefile for Windows pr3287
 
-# Set GT_PFX, BUILDXSFX, BUILD_CC, CC, WINDRES and WIN32_FLAGS.
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
 include winenv.mk
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/Common/pr3287 -I$(TOP)/include

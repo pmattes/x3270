@@ -1,0 +1,112 @@
+<html>
+<head>
+<title>ibm_hosts Manual Page</title>
+<link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+<h1>ibm_hosts Manual Page</h1>
+<hr>
+<p><b>Note:</b> This page is no longer being maintained for ibm_hosts 4.0 and later.
+Please refer to the <a href="https://x3270.miraheze.org/wiki/Main_Page">the x3270 Wiki</a> for up-to-date documentation.</p>
+<hr>
+<h2>Contents</h2>
+<blockquote>
+<a HREF="#Name">Name</a><br>
+<a HREF="#Synopsis">Synopsis</a><br>
+<a HREF="#Description">Description</a><br>
+<a HREF="#Example">Example</a><br>
+<a HREF="#Files">Files</a><br>
+<a HREF="#See-Also">See Also</a><br>
+</blockquote>
+<a NAME="Name"></a><h2>Name</h2>
+ibm_hosts - host database for x3270 and c3270
+<a NAME="Synopsis"></a><h2>Synopsis</h2>
+/usr/lib/X11/x3270/ibm_hosts
+<a NAME="Description"></a><h2>Description</h2>
+The <b>ibm_hosts</b>
+file contains information regarding IBM hosts on the network.
+An <i>IBM host</i> is a host which can communicate with a 3270 terminal
+emulator such as <b>x3270</b> or <b>c3270</b>.
+Each line defines a name in the following format
+(optional fields are shown in brackets):
+<p>
+<i>name</i>	<i>type</i> [<i>opt</i>:]...[<i>luname</i>@]<i>hostname</i>[:<i>port</i>] [<i>actions</i>]
+<p>
+Items are separated by any number of blanks and/or TAB characters.
+A line beginning with # is taken as a comment (note that # anywhere
+else on a line does <i>not</i> indicate a comment).
+<p>
+The <i>name</i> field is a mnemonic used to identify the host.
+<p>
+The <i>type</i> field is a keyword that indicates the type of entry.
+The value <b>primary</b> means that the <i>name</i>
+will be included in host-selection menus that may be displayed by a
+3270 emulator.
+The value <b>alias</b> means that the <i>name</i>
+will not be included in menus, but will still be accepted as valid input
+when a host name is required.
+<p>
+The <i>hostname</i>
+field is the Internet hostname or dot-notation Internet address of the host.
+<p>
+The <i>hostname</i>
+can include `s:' or `p:' prefixes, e.g., <b>s:finicky</b>
+(see the <a HREF="x3270-man.html"><i>x3270</i>(1)</a> or
+<a HREF="c3270-man.html"><i>c3270</i>(1)</a> man page sfor details).
+It can also include an LU name, separated by an `@' character, e.g.,
+<b>oddlu@bluehost</b>.
+Finally, it can include a non-default <i>port</i> number, appended to the
+<i>hostname</i> with a colon `:' character, e.g.,
+<b>bluehost:97</b>.
+(For compatibility with earlier versions of <i>x3270</i>,
+the <i>port</i> can also be separated by a slash `/' character.)
+<p>
+The optional <i>actions</i>
+field specifies actions to be taken once the connection is made and a
+data-entry field is defined.
+If the text looks like an action, e.g.,
+<b>PF(1)</b>,
+it is unmodified; otherwise it is taken as the parameter to the
+<b>String()</b>
+action.
+The
+<i>actions</i>
+are not intended for entering usernames and passwords; rather they provide an
+automated way of specifying a front-end menu option.
+<a NAME="Example"></a><h2>Example</h2>
+Given the following
+<b>ibm_hosts</b>
+file:
+<p>
+<blockquote>mvs	primary	mvs-host
+<br>
+tso	alias	mvs-host
+<br>
+mvs2	primary	mvs-host:4012
+<br>
+vm	primary	vtam	Tab() String(3) Enter()
+</blockquote>
+A 3270 emulator will display four names (<b>mvs</b>, <b>mvs2</b>,
+<b>afhost</b> and <b>vm</b>) on its hosts menu.
+The names <b>mvs</b> and <b>tso</b> will cause connections to the host
+<b>mvs-host</b>.
+The name <b>mvs2</b> will also cause a connection to
+<b>mvs-host</b>,
+but to port 4012 rather than the emulator's default port (usually 23).
+The name <b>vm</b> will cause the 3270 emulator to connect to the host
+<b>vtam</b> (presumably some sort of host-selection front-end),
+enter the string `3' on the second data-entry field on the screen, and
+send the Enter <font size=-1>AID</font> sequence.
+<a NAME="Files"></a><h2>Files</h2>
+/usr/lib/X11/x3270/ibm_hosts
+<a NAME="See-Also"></a><h2>See Also</h2>
+<a HREF="x3270-man.html">x3270(1)</a>,
+<a HREF="c3270-man.html">c3270(1)</a>
+<hr>
+<i>
+This HTML document and the accompanying troff document were generated with
+a set of write-only <b>m4</b> macros and the powerful <b>vi</b> editor.
+<br>Last modified 06 July 2024.
+</i>
+</body>
+</html>

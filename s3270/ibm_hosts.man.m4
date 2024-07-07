@@ -1,1 +1,0 @@
-../Common/ibm_hosts.man.m4

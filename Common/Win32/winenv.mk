@@ -10,7 +10,6 @@ GT_PFX = i686-w64-mingw32-
 WIN32_FLAGS = -D_WIN32
 endif
 
-BUILD_CC = gcc
 CC = $(GT_PFX)gcc
 AR = $(GT_PFX)gcc-ar
 ifndef WINDRES

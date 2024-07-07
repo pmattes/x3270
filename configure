@@ -714,6 +714,8 @@ host_alias
 target_alias'
 ac_subdirs_all='lib
 lib/w32xx
+lib/w3270
+ibm_hosts
 x3270
 c3270
 s3270
@@ -722,7 +724,13 @@ tcl3270
 pr3287
 x3270if
 playback
-mitm'
+ws3270
+wc3270
+wb3270
+mitm
+mkfb
+mkkeypad
+mkicon'
 
 # Initialize some variables set by options.
 ac_init_help=
@@ -2394,6 +2402,8 @@ if test "x$enable_wc3270" = xyes -o \
 	"x$enable_wpr3287" = xyes; then
     enable_windows_lib=yes
 fi
+unset do_ibm_hosts
+if test "x$enable_x3270" = xyes -o "x$enable_c3270" = xyes; then do_ibm_hosts=yes; fi
 
 if test "x$enable_unix_lib" = xyes; then
 
@@ -2404,6 +2414,13 @@ fi
 
 if test "x$enable_windows_lib" = xyes; then
     subdirs="$subdirs lib/w32xx"
+
+    subdirs="$subdirs lib/w3270"
+
+fi
+
+if test "x$do_ibm_hosts" = xyes; then
+    subdirs="$subdirs ibm_hosts"
 
 fi
 
@@ -2496,7 +2513,22 @@ fi
 if test "x$enable_playback" = xyes; then subdirs="$subdirs playback"
 
 fi
+if test "x$enable_ws3270" = xyes; then subdirs="$subdirs ws3270"
+
+fi
+if test "x$enable_wc3270" = xyes; then subdirs="$subdirs wc3270"
+
+fi
+if test "x$enable_wb3270" = xyes; then subdirs="$subdirs wb3270"
+
+fi
 subdirs="$subdirs mitm"
+
+subdirs="$subdirs mkfb"
+
+subdirs="$subdirs mkkeypad"
+
+subdirs="$subdirs mkicon"
 
 
 

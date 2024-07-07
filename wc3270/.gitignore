@@ -6,3 +6,4 @@ wc3270.iss
 *-noinstall-*.zip
 package.ps1
 package.zip
+Makefile.obj

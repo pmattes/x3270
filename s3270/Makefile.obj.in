@@ -28,12 +28,8 @@
 
 RM = rm -f
 CC = @CC@
-BUILD_CC = @BUILD_CC@
-BUILD_LDFLAGS = @BUILD_LDFLAGS@
-BUILD_LIBS = @BUILD_LIBS@
-BUILD_CFLAGS = @BUILD_CFLAGS@
 
-all: s3270 x3270if
+all: s3270
 
 HOST = @host@
 include s3270_files.mk libs.mk
@@ -60,8 +56,6 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
-include buildmacros.mk
-
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
@@ -70,18 +64,12 @@ version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-common fb-printSession
-fallbacks.c: mkfb $(FALLBACKS)
+fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	./mkfb -c -o $@ $(filter-out mkfb,$^)
-
-mkfb: mkfb.c
-	$(BUILD_CC) $(BUILD_CFLAGS) -o $@ $(filter %.c,$^) $(BUILD_LDFLAGS) $(BUILD_LIBS)
+	../mkfb/mkfb -c -o $@ $^
 
 s3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
-
-x3270if: ../x3270if/x3270if
-	cp -p ../x3270if/x3270if $@
 
 man:: s3270.man
 	if [ ! -f $(notdir $^) ]; then cp $< $(notdir $^); fi
@@ -97,9 +85,9 @@ install.man: man
 	$(INSTALL_DATA) s3270.man $(DESTDIR)$(MANDIR)/man1/s3270.1
 
 clean:
-	$(RM) *.o mkfb
+	$(RM) *.o fallbacks.c
 clobber: clean
 	$(RM) s3270 *.d *.man
 
 # Include auto-generated dependencies.
--include $(S3270_OBJECTS:.o=.d) mkfb.d
+-include $(S3270_OBJECTS:.o=.d)

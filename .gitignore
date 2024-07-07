@@ -13,8 +13,6 @@ favicon.c
 Makefile
 Makefile.bak
 instlist.man
-mkfb
-mkicon
 obj/
 Release/
 ReleaseNotes.html

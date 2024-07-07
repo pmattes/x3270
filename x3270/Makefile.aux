@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2022 Paul Mattes.
+# Copyright (c) 1995-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -32,35 +32,24 @@ all:
 	@echo "Must pick a specific make target."
 
 # Get the rule for setting VERSION_TXT to the path of version.txt.
-include version.mk
+include m4man.mk
 
-DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html \
-	html/ibm_hosts.html ibm_hosts.man
+DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html
 
 # Rule for building the source tarball: run autoconf and build the
 # documentation.
 src.tgz: prepare $(DOCS) Makefile.aux
 
 # Rule for preparing a freshly-pulled working copy: run autoconf.
-prepare: configure $(PRODUCT).man
+prepare: configure
 configure: configure.in
 	autoconf
-
-MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt find-version
-MKMAN = ./m4man -t man -p $(PRODUCT) -v $(VERSION_TXT)
-MKHTML = ./m4man -t html -p $(PRODUCT) -v $(VERSION_TXT)
-
-MANSRC = x3270.man.m4
 
 # Rule for building the documentation.
 man: $(DOCS)
 
 # Rules for building man pages and derived HTML documentation.
-$(PRODUCT).man: $(MANSRC) $(MANDEP)
-	$(MKMAN) -n x3270 -o $@ x3270.man.m4
-html/$(PRODUCT)-man.html: $(MANSRC) $(MANDEP)
-	$(MKHTML) -n x3270 -o $@ x3270.man.m4
-ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
-	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
-html/ibm_hosts.html: ibm_hosts.man.m4 $(MANDEP)
-	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
+$(PRODUCT).man: $(MANDEP) x3270.man.m4
+	$< $(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
+html/$(PRODUCT)-man.html: $(MANDEP) x3270.man.m4
+	$< $(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4

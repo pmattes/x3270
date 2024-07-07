@@ -4,4 +4,3 @@ usr/local/share
 usr/local/share/man
 usr/local/share/man/man1
 usr/local/share/man/man1/s3270.1
-usr/local/share/man/man1/x3270if.1

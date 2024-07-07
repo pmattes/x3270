@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Test installation.
+
+# If anything fails, stop.
+set -e
+
+# Make sure 'sort' works correctly.
+export LC_ALL="C"
+
+prods=$(ls */instlist.* | sed -e 's-/.*--' | sort -u)
+
+# Make sure the product directories exist.
+if [ ! -d Common ]
+then	echo >&2 "Must be run from top-level dir."
+    	exit 1
+fi
+
+# Trace whatever we do.
+# set -x
+
+# Build everything.
+make -j12 $prods
+
+tmpdir=/tmp/te$$
+mkdir $tmpdir
+
+builddir=$PWD
+
+# Test the installation.
+for prod in $prods
+do
+	cd $builddir/$prod
+	td=$tmpdir/$prod
+	if [ -f instlist.base ]
+	then	echo "===== Test installing $prod (base)."
+		mkdir $td
+		make install DESTDIR=$td
+		find $td -print | tail -n +2 | sed "s-^$td/--" | sort >$tmpdir/cmp.files
+		diff instlist.base $tmpdir/cmp.files || exit 1
+		rm -rf $td
+	fi
+	if [ -f instlist.man ]
+	then	echo "===== Test installing $prod (man)."
+		mkdir $td
+		make install.man DESTDIR=$td
+		find $td -print | tail -n +2 | sed "s-^$td/--" | sort >$tmpdir/cmp.files
+		diff instlist.man $tmpdir/cmp.files || exit 1
+		rm -rf $td
+	fi
+done
+
+# Clean up.
+rm -rf $tmpdir
