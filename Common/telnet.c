@@ -106,6 +106,7 @@
 # define TELOPT_STARTTLS	46
 #endif /*]*/
 #define TLS_FOLLOWS	1
+#define TELNETS_PORT	992
 
 #define BUFSZ		32768
 #define TRACELINE	72
@@ -420,6 +421,8 @@ connect_to(int ix, bool noisy, bool *pending)
     int			on = 1;
     char		hn[256];
     char		pn[256];
+    u_short		*portp;
+    int			port;
     char		*errmsg;
 #if defined(OMTU) /*[*/
     int			mtu = OMTU;
@@ -467,6 +470,11 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* Init TLS. */
+    portp = (haddr[ix].sa.sa_family == AF_INET)? &haddr[ix].sin.sin_port: &haddr[ix].sin6.sin6_port;
+    port = ntohs(*portp);
+    if (appres.tls992 && port == TELNETS_PORT) {
+	SET_HOST_nFLAG(host_flags, TLS_HOST);
+    }
     if (HOST_FLAG(TLS_HOST)) {
 	if (!sio_supported()) {
 	    popup_an_error("TLS not supported\n");
@@ -486,6 +494,18 @@ connect_to(int ix, bool noisy, bool *pending)
     if (appres.connect_timeout) {
 	connect_timeout_id = AddTimeOut(appres.connect_timeout * 1000,
 		connect_timed_out);
+    }
+
+    /*
+     * Implement a test point to remap port 992, so the tls992 resource can be tested without binding
+     * to port 992, which requires root.
+     */
+    if (port == TELNETS_PORT) {
+	char *remap992 = getenv("REMAP992");
+
+	if (remap992 != NULL) {
+	    *portp = htons(atoi(remap992));
+	}
     }
 
     /* connect */
@@ -4259,6 +4279,19 @@ toggle_contention_resolution(const char *name, const char *value, unsigned flags
     return TU_SUCCESS;
 }
 
+/* Toggle port 992 TLS mapping. */
+static toggle_upcall_ret_t
+toggle_tls992(const char *name, const char *value, unsigned flags, ia_t ia)
+{
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.tls992)) != NULL) {
+        popup_an_error("%s", errmsg);
+        return TU_FAILURE;
+    }
+    return TU_SUCCESS;
+}
+
 /* Module registration. */
 void
 net_register(void)
@@ -4275,4 +4308,5 @@ net_register(void)
 	    NULL, NULL, (void **)&appres.wrong_terminal_name, XRM_BOOLEAN);
     register_extended_toggle(ResContentionResolution, toggle_contention_resolution, NULL, NULL,
 	    (void **)&appres.contention_resolution, XRM_BOOLEAN);
+    register_extended_toggle(ResTls992, toggle_tls992, NULL, NULL, (void **)&appres.tls992, XRM_BOOLEAN);
 }

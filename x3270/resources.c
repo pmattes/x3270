@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2023 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -353,6 +353,8 @@ XtResource xresources[] = {
       boffset(utf8), XtRString, ResFalse },
     { ResWrongTerminalName, ClsWrongTerminalName, XtRBoolean, sizeof(Boolean),
       boffset(wrong_terminal_name), XtRString, ResFalse },
+    { ResTls992, ClsTls992, XtRBoolean, sizeof(Boolean),
+      boffset(tls992), XtRString, ResTrue },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

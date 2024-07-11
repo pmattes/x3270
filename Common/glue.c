@@ -527,6 +527,7 @@ set_appres_defaults(void)
     appres.interactive.print_dialog = product_has_display();
 #endif /*]*/
     appres.interactive.no_telnet_input_mode = NewString("line");
+    appres.tls992 = true;
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -1034,7 +1035,8 @@ static res_t base_resources[] = {
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING },
-    { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN }
+    { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN },
+    { ResTls992,	aoffset(tls992),	XRM_BOOLEAN }
 };
 
 typedef struct reslist {

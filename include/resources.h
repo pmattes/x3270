@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2023 Paul Mattes.
+ * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -227,6 +227,7 @@
 #define ResSuppress		"suppress"
 #define ResTermName		"termName"
 #define ResTitle		"title"
+#define ResTls992		"tls992"
 #define ResTlsMaxProtocol	"tlsMaxProtocol"
 #define ResTlsMinProtocol	"tlsMinProtocol"
 #define ResTrace		"trace"
@@ -468,6 +469,7 @@
 #define ClsSuppressHost		"SuppressHost"
 #define ClsSuppressFontMenu	"SuppressFontMenu"
 #define ClsTermName		"TermName"
+#define ClsTls992		"Tls992"
 #define ClsTlsMaxProtocol	"TlsMaxProtocol"
 #define ClsTlsMinProtocol	"TlsMinProtocol"
 #define ClsTrace		"Trace"

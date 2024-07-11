@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2020 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@ typedef enum {
     NO_TELNET_HOST	/* T: */
 } host_flags_t;
 #define HOST_nFLAG(flags, t)    ((flags & (1 << t)) != 0)
+#define SET_HOST_nFLAG(flags, t) flags |= 1 << t
 
 extern const char *host_prefixes(void);
 bool new_split_host(char *raw, char **lu, char **host, char **port,

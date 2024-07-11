@@ -315,5 +315,73 @@ class TestS3270Tls(cti.cti):
         s3270.stdin.close()
         self.vgwait(s3270)
 
+    # s3270 tls992 test
+    def test_s3270_tls_992(self):
+
+        # Start a server to read s3270's output.
+        port, ts = cti.unused_port()
+        with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, port) as server:
+            ts.close()
+
+            # Start s3270, pointing to port 992 without a TLS tunnel and without STARTTLS support.
+            # Remap 992 to the server's port, which happens after the automatic TLS tunnel is chosen.
+            args = ['s3270', '-set', 'startTls=false']
+            if sys.platform != 'darwin' and not sys.platform.startswith('win'):
+                args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
+            args.append(f'a:c:t:127.0.0.1:992=TEST')
+            env = os.environ.copy()
+            env['REMAP992'] = str(port)
+            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
+            self.children.append(s3270)
+
+            # Do the TLS thing.
+            server.wrap()
+
+            # Feed s3270 some actions.
+            s3270.stdin.write(b"String(abc)\n")
+            s3270.stdin.write(b"Enter()\n")
+            s3270.stdin.write(b"Disconnect()\n")
+            s3270.stdin.write(b"Quit()\n")
+            s3270.stdin.flush()
+
+            # Make sure they are passed through.
+            out = server.recv_to_end()
+            self.assertEqual(b"abc\r\n", out)
+
+        # Wait for the process to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+    # s3270 tls992 disable test
+    def test_s3270_tls_992_disable(self):
+
+        # Start a server to read s3270's output.
+        nc = cti.copyserver()
+
+        # Start s3270, pointing to port 992 without an explicit TLS tunnel, without STARTTLS support and
+        # (what's being verified here) without automatic TLS tunnels on port 992.
+        # Remap 992 to the server's port, which happens after the automatic TLS tunnel is chosen.
+        args = ['s3270', '-set', 'startTls=false', '-set', 'tls992=false']
+        args.append(f'a:c:t:127.0.0.1:992')
+        env = os.environ.copy()
+        env['REMAP992'] = str(nc.port)
+        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
+        self.children.append(s3270)
+
+        # Feed s3270 some actions.
+        s3270.stdin.write(b"String(abc)\n")
+        s3270.stdin.write(b"Enter()\n")
+        s3270.stdin.write(b"Disconnect()\n")
+        s3270.stdin.write(b"Quit()\n")
+        s3270.stdin.flush()
+
+        # Make sure they are passed through.
+        out = nc.data()
+        self.assertEqual(b"abc\r\n", out)
+
+        # Wait for the process to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
