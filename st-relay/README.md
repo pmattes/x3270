@@ -1,8 +1,10 @@
 # README for the st-relay service
 ## Overview
-st-relay is a service that relays TCP connections from one port to another, handling TLS encryption and TELNET STARTTLS negotiation. It is a bit like a single-purpose version of *stunnel*.
+st-relay is a service that relays TELNET connections from one port (and host) to another, handling TLS encryption and TELNET STARTTLS negotiation. It is a bit like a single-purpose version of *stunnel*.
 
 ## Protocol negotiation
+st-relay handles both client-side and server-side TLS initiation.
+
 In the default negotiation mode, st-relay waits up to 2 seconds for the client to initiate a TLS tunnel. After 2 seconds, it sends a TELNET DO STARTTLS sequence, asking the client to initiate the tunnel. If the client does not agree to STARTTLE and create the tunnel within 5 seconds, st-relay closes the connection.
 
 If the client sends other TELNET negotiations besides WILL STARTTLS, st-relay refuses them with a DONT. If the client refuses STARTTLS (WONT STARTTLS), st-relay closes the connection.
