@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020-2022 Paul Mattes.
+# Copyright (c) 1999-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,16 +34,18 @@ all: test
 JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o
 BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o sa_malloc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o
+URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
-test: json_test bind_opts_test utf8_test
+test: json_test bind_opts_test utf8_test uri_test
 	$(RM) json_test.gcda bind_opts_test.gcda utf8_test.gcda
 	./json_test $(TESTOPTIONS)
 	./bind_opts_test $(TESTOPTIONS)
 	./utf8_test $(TESTOPTIONS)
+	./uri_test $(TESTOPTIONS)
 
 json_test: $(JSON_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(JSON_OBJS)
@@ -54,7 +56,10 @@ bind_opts_test: $(BIND_OPTS_OBJS)
 utf8_test: $(UTF8_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(UTF8_OBJS)
 
-coverage: json_coverage bind_opts_coverage utf8_coverage
+uri_test: $(URI_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(URI_OBJS)
+
+coverage: json_coverage bind_opts_coverage utf8_coverage uri_coverage
 
 json_coverage: json_test
 	./json_test
@@ -68,6 +73,10 @@ utf8_coverage: utf8_test
 	./utf8_test
 	gcov -k utf8.c
 
+uri_coverage: uri_test
+	./utf8_test
+	gcov -k uri.c
+
 clean:
 	$(RM) *.o *.gcda *.gcno *.gcov
 
@@ -77,3 +86,4 @@ clobber: clean
 -include $(JSON_OBJS:.o=.d)
 -include $(BIND_OPTS_OBJS:.o=.d)
 -include $(UTF8_OBJS:.o=.d)
+-include $(URI_OBJS:.o=.d)

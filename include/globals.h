@@ -213,6 +213,7 @@ extern char		full_model_name[];
 extern bool		*funky_font;
 extern char		*hostname;
 extern unsigned		host_flags;
+extern char		*host_user;
 extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
 extern bool		local_process;

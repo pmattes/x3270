@@ -39,6 +39,7 @@ class user_method(enum.Enum):
         resource = enum.auto()
         user_env = enum.auto()
         username_env = enum.auto()
+        uri = enum.auto()
         UNKNOWN = enum.auto()
 
 class TestS3270NewEnviron(cti.cti):
@@ -159,6 +160,8 @@ class TestS3270NewEnviron(cti.cti):
                     if user_value != None:
                         del env['USER']
                     env['USERNAME'] = user.name
+                case user.uri:
+                    opt = []
                 case user.UNKNOWN:
                     opt = []
                     if user_value != None:
@@ -167,7 +170,10 @@ class TestS3270NewEnviron(cti.cti):
                         del env['USERNAME']
             command = ['s3270']
             command += opt
-            command.append(f'a:c:127.0.0.1:{port}')
+            if user != user.uri:
+                command.append(f'a:c:127.0.0.1:{port}')
+            else:
+                command.append(f'telnet://{user.name}@127.0.0.1:{port}?waitoutput=false')
             s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
@@ -193,6 +199,8 @@ class TestS3270NewEnviron(cti.cti):
         self.s3270_specific_user(user_method.username_env)
     def test_s3270_specific_user_resource(self):
         self.s3270_specific_user(user_method.resource)
+    def test_s3270_specific_user_uri(self):
+        self.s3270_specific_user(user_method.uri)
     def test_s3270_specific_unknown(self):
         self.s3270_specific_user(user_method.UNKNOWN)
 

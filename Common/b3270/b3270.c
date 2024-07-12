@@ -94,6 +94,7 @@
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
+#include "telnet_new_environ.h"
 #include "tls_passwd_gui.h"
 #include "toggles.h"
 #include "trace.h"
@@ -579,6 +580,7 @@ main(int argc, char *argv[])
     login_macro_register();
     vstatus_register();
     prefer_register();
+    telnet_new_environ_register();
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);

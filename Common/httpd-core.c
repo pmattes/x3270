@@ -38,6 +38,7 @@
 #include "appres.h"
 #include "asprintf.h"
 #include "json.h"
+#include "percent_decode.h"
 #include "task.h"
 #include "s3270_proto.h"
 #include "txa.h"
@@ -846,105 +847,6 @@ httpd_digest_request_line(httpd_t *h)
     }
 
     return HS_CONTINUE;
-}
-
-/**
- * Translate a hex digit to a number.
- *
- * @param[in] c		Digit character
- *
- * @return Value, or -1 if not a valid digit
- */
-static int
-hex_digit(char c)
-{
-    static const char *xlc = "0123456789abcdef";
-    static const char *xuc = "0123456789ABCDEF";
-    char *x;
-
-    x = strchr(xlc, c);
-    if (x != NULL) {
-	return (int)(x - xlc);
-    }
-    x = strchr(xuc, c);
-    if (x != NULL) {
-	return (int)(x - xuc);
-    }
-    return -1;
-}
-
-/**
- * Do percent substitution decoding on a URI element.
- *
- * @param[in] uri	URI to parse
- * @param[in] len	Length of URI
- * @param[in] plus	Translate '+' to ' ' as well
- *
- * @return Translated, newly-allocated and NULL-terminated URI, or NULL if
- *  there is a syntax error
- */
-static char *
-percent_decode(const char *uri, size_t len, bool plus)
-{
-    enum {
-	PS_BASE,	/* base state */
-	PS_PCT,		/* saw % */
-	PS_HEX1		/* saw % and one hex digit */
-    } state = PS_BASE;
-    int hex1 = 0, hex2;
-    const char *s;
-    char c;
-    varbuf_t r;
-    char xc;
-
-    vb_init(&r);
-
-    /* Walk and translate. */
-    s = uri;
-    while (s < uri + len) {
-	c = *s++;
-
-	switch (state) {
-	case PS_BASE:
-	    if (c == '%') {
-		state = PS_PCT;
-	    } else {
-		if (plus && c == '+') {
-		    vb_appends(&r, " ");
-		} else {
-		    vb_append(&r, &c, 1);
-		}
-	    }
-	    break;
-	case PS_PCT:
-	    hex1 = hex_digit(c);
-	    if (hex1 < 0) {
-		vb_free(&r);
-		return NULL;
-	    }
-	    state = PS_HEX1;
-	    break;
-	case PS_HEX1:
-	    hex2 = hex_digit(c);
-	    if (hex2 < 0) {
-		vb_free(&r);
-		return NULL;
-	    }
-	    xc = (hex1 << 4) | hex2;
-	    vb_append(&r, &xc, 1);
-	    state = PS_BASE;
-	    break;
-	}
-    }
-
-    /* If we end with a partially-digested sequence, fail. */
-    if (state != PS_BASE) {
-	vb_free(&r);
-	return NULL;
-    }
-
-    /* Done. */
-    return vb_consume(&r);
 }
 
 /**

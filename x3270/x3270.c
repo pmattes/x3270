@@ -83,6 +83,7 @@
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
+#include "telnet_new_environ.h"
 #include "toggles.h"
 #include "trace.h"
 #include "txa.h"
@@ -539,6 +540,7 @@ main(int argc, char *argv[])
     login_macro_register();
     vstatus_register();
     prefer_register();
+    telnet_new_environ_register();
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/

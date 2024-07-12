@@ -41,9 +41,6 @@ def str_expand(text: str) -> List[int]:
     return [b for b in bytes(text.encode('iso8859-1'))]
 
 # BIND image boilerplate borrowed from a real host
-
-
-
 bind1 = '31010303b1903080008787f88700028000000000' # before dimensions
 bind2 = '0000'                                     # between dimensions and PLU name length
 bind3 = '0005007eec0b1008c9c2d4f0e3c5e2d8'         # after PLU name
@@ -96,8 +93,16 @@ class tn3270e():
                 if buffer[1] != int(op.request):
                     self.atn3270.e_warning(f'unknown DEVICE-TYPE verb {buffer[1]}')
                     return
-                ttype = buffer[2:].decode('iso8859-1')
-                self.atn3270.e_debug(f'got SB DEVICE-TYPE REQUEST {ttype}')
+                # The next line is inadequate: It ignores the CONNECT opcode (1) that might follow the terminal type,
+                # followed by the requested Logical Unit
+                if int(op.connect) in buffer:
+                    text = buffer[2:].decode('iso8859-1').split(chr(int(op.connect)))
+                    ttype = text[0]
+                    connect = text[1]
+                    self.atn3270.e_debug(f'got SB DEVICE-TYPE REQUEST {ttype} CONNECT {connect}')
+                else:
+                    ttype = buffer[2:].decode('iso8859-1')
+                    self.atn3270.e_debug(f'got SB DEVICE-TYPE REQUEST {ttype}')
                 if not re.match(r'IBM-3278(-E)?', ttype) and ttype != 'IBM-DYNAMIC':
                     self.atn3270.e_warning(f'rejecting DEVICE-TYPE {ttype}')
                     self.atn3270.e_sb(bytes([int(op.device_type), int(op.reject),

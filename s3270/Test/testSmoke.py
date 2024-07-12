@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -69,17 +69,17 @@ class TestS3270Smoke(cti.cti):
         self.s3270_nvt_smoke(ipv6=True)
 
     # s3270 3270 smoke test
-    def s3270_3270_smoke(self, ipv6=False):
+    def s3270_3270_smoke(self, ipv6=False, uri=False):
 
         # Start 'playback' to read s3270's output.
         port, ts = cti.unused_port(ipv6=ipv6)
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=port, ipv6=ipv6) as p:
+        with playback.playback(self, 's3270/Test/ibmlink-cr.trc', port=port, ipv6=ipv6) as p:
             ts.close()
 
             # Start s3270.
             loopback = '[::1]' if ipv6 else '127.0.0.1'
-            s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
-                f'{loopback}:{port}']), stdin=PIPE, stdout=DEVNULL)
+            host = f'{loopback}:{port}' if not uri else f'tn3270://{loopback}:{port}'
+            s3270 = Popen(cti.vgwrap(["s3270", host]), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Feed s3270 some actions.
@@ -99,6 +99,10 @@ class TestS3270Smoke(cti.cti):
         self.s3270_3270_smoke()
     def test_s3270_3270_smoke_ipv6(self):
         self.s3270_3270_smoke(ipv6=True)
+    def test_s3270_3270_uri_smoke(self):
+        self.s3270_3270_smoke(uri=True)
+    def test_s3270_3270_uri_smoke_ipv6(self):
+        self.s3270_3270_smoke(ipv6=True, uri=True)
 
     # s3270 httpd smoke test
     def s3270_httpd_smoke(self, ipv6=False):

@@ -54,6 +54,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "txa.h"
+#include "uri.h"
 #include "screentrace.h"
 #include "utils.h"
 #include "xio.h"
@@ -80,6 +81,7 @@ char	       *reconnect_host = NULL;
 char	       *qualified_host = NULL;
 enum iaction	connect_ia = IA_NONE;
 bool		host_retry_mode = false;
+char 	       *host_user = NULL;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
@@ -477,6 +479,17 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
     *flags = 0;
     *needed = false;
 
+    if (is_x3270_uri(s)) {
+	char *password;
+	const char *err;
+
+	if (!parse_x3270_uri(s, &host, port, flags, &host_user, &password, &lu, accept, &err)) {
+	    popup_an_error("URI error in '%s': %s", s, err);
+	    return NULL;
+	}
+	goto done;
+    }
+
     /* Call the sane, new version. */
     if (!new_split_host(s, &lu, &host, port, accept, flags, &error)) {
 	popup_an_error("%s", error);
@@ -484,6 +497,7 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
 	return NULL;
     }
 
+done:
     if (lu) {
 	strncpy(xluname, lu, LUNAME_SIZE);
 	xluname[LUNAME_SIZE] = '\0';
@@ -815,8 +829,9 @@ host_disconnect(bool failed)
     if (cstate != RECONNECTING) {
 	change_cstate(NOT_CONNECTED, "host_disconnect");
 
-	/* Forget pending state. */
+	/* Forget pending string. */
 	Replace(host_ps, NULL);
+	Replace(host_user, NULL);
     }
 
     /* No more host, no more host flags. */

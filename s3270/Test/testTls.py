@@ -41,7 +41,7 @@ import Common.Test.tls_server as tls_server
 class TestS3270Tls(cti.cti):
 
     # s3270 TLS smoke test
-    def test_s3270_tls_smoke(self):
+    def s3270_tls_smoke(self, uri=False):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
@@ -52,7 +52,7 @@ class TestS3270Tls(cti.cti):
             args = ['s3270']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-            args.append(f'l:a:c:t:127.0.0.1:{port}=TEST')
+            args.append(f'l:a:c:t:127.0.0.1:{port}=TEST' if not uri else f'telnets://127.0.0.1:{port}?accepthostname=TEST?waitoutput=false?')
             s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
@@ -73,6 +73,11 @@ class TestS3270Tls(cti.cti):
         # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
+
+    def test_s3270_tls_smoke(self):
+        self.s3270_tls_smoke()
+    def test_s3270_tls_smoke_uri(self):
+        self.s3270_tls_smoke(uri=True)
 
     # s3270 STARTTLS test
     def test_s3270_starttls(self):
@@ -253,8 +258,7 @@ class TestS3270Tls(cti.cti):
         self.vgwait(s3270)
 
     # s3270 file transfer crash validation
-    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-specific test')
-    def test_s3270_ft_crash(self):
+    def s3270_ft_crash(self, uri=False):
 
         # Start a server to read s3270's output.
         port, ts = cti.unused_port()
@@ -262,7 +266,7 @@ class TestS3270Tls(cti.cti):
             ts.close()
 
             # Start s3270.
-            args = ['s3270', '-set', 'wrongTerminalName', f'l:y:127.0.0.1:{port}=TEST']
+            args = ['s3270', '-set', 'wrongTerminalName', f'l:y:127.0.0.1:{port}=TEST' if not uri else f'tn3270s://127.0.0.1:{port}?accepthostname=TEST?verifyhostcert=false']
             s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
@@ -282,6 +286,11 @@ class TestS3270Tls(cti.cti):
         # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
+
+    def test_s3270_ft_crash(self):
+        self.s3270_ft_crash()
+    def test_s3270_ft_crash_uri(self):
+        self.s3270_ft_crash(uri=True)
 
     # s3270 blocking connect test
     def test_s3270_blocking_connect(self):

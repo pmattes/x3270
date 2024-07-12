@@ -194,6 +194,8 @@
     <ClCompile Include="..\..\Common\save_restore.c" />
     <ClCompile Include="..\..\Common\vstatus.c" />
     <ClCompile Include="..\..\Common\s3common.c" />
+    <ClCompile Include="..\..\Common\uri.c" />
+    <ClCompile Include="..\..\Common\percent_decode.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

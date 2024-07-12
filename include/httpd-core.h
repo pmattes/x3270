@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -98,3 +98,4 @@ const char *httpd_fetch_query(void *dhandle, const char *name);
 content_t httpd_content_type(void *dhandle);
 char *httpd_content(void *dhandle);
 verb_t httpd_verb(void *dhandle);
+char *percent_decode(const char *uri, size_t len, bool plus);

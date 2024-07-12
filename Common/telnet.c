@@ -106,6 +106,7 @@
 # define TELOPT_STARTTLS	46
 #endif /*]*/
 #define TLS_FOLLOWS	1
+#define TELNET_PORT	23
 #define TELNETS_PORT	992
 
 #define BUFSZ		32768
@@ -505,6 +506,13 @@ connect_to(int ix, bool noisy, bool *pending)
 
 	if (remap992 != NULL) {
 	    *portp = htons(atoi(remap992));
+	}
+    }
+    if (port == TELNET_PORT) {
+	char *remap23 = getenv("REMAP23");
+
+	if (remap23 != NULL) {
+	    *portp = htons(atoi(remap23));
 	}
     }
 

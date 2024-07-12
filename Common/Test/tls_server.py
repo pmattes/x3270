@@ -76,3 +76,49 @@ class tls_server(playback.playback):
         self.conn.send(startTlsSb)
         # Wrap the clear socket with TLS.
         self.wrap()
+
+# TLS send server.
+class tls_sendserver(cti.sendserver):
+    '''TLS send server'''
+    clear_conn = None
+    def __init__(self, cert: str, key: str, cti: cti.cti, port: int, ipv6=False):
+        self.cti = cti
+
+        # Set up the TLS context.
+        self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        self.context.load_cert_chain(cert, key)
+
+        # Do common initialization.
+        super().__init__(cti, port, ipv6)
+
+    def __enter__(self):
+        return self
+
+    # Cleanup.
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.clear_conn != None:
+            self.clear_conn.close()
+            self.clear_conn = None
+        super().close()
+
+    def wrap(self):
+        '''Wrap an accepted connection'''
+        self.cti.try_until(lambda: (self.conn != None), 2, 'emulator did not connect')
+        self.clear_conn = self.conn
+        self.clear_conn.settimeout(2)
+        self.conn = self.context.wrap_socket(self.clear_conn, server_side=True)
+
+    def starttls(self, timeout=2):
+        '''Do STARTTLS negotiation'''
+        self.wait_accept()
+        # Send IAC DO STARTTLS.
+        self.conn.send(telnet.iac + telnet.do + telnet.startTls)
+        # Make sure they respond with IAC WILL STARTTLS and the right SB.
+        startTlsSb = telnet.iac + telnet.sb + telnet.startTls + telnet.follows + telnet.iac + telnet.se
+        expectStartTls = telnet.iac + telnet.will + telnet.startTls + startTlsSb
+        data = self.nread(len(expectStartTls), timeout)
+        assert data == expectStartTls
+        # Send the SB.
+        self.conn.send(startTlsSb)
+        # Wrap the clear socket with TLS.
+        self.wrap()
