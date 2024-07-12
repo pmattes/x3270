@@ -69,7 +69,6 @@ class TestX3270BadAplDraw(cti.cti):
         # Start 'playback' to feed x3270's.
         playback_port, ts = cti.unused_port()
         with playback.playback(self, 'x3270/Test/badapl.trc', port=playback_port) as p:
-            self.check_listen(playback_port)
             ts.close()
 
             # Start x3270.

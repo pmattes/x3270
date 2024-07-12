@@ -69,7 +69,6 @@ class TestX3270Smoke(cti.cti):
         # Start 'playback' to feed x3270.
         playback_port, ts = cti.unused_port()
         with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
-            self.check_listen(playback_port)
             ts.close()
 
             # Set up the fonts.

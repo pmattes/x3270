@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@ class TestS3270BlankFill(cti.cti):
 
         pport, socket = cti.unused_port()
         with playback.playback(self, 's3270/Test/sruvm.trc', pport) as p:
-            self.check_listen(pport)
             socket.close()
 
             # Start s3270.
@@ -83,7 +82,6 @@ class TestS3270BlankFill(cti.cti):
 
         pport, socket = cti.unused_port()
         with playback.playback(self, 's3270/Test/sruvm.trc', pport) as p:
-            self.check_listen(pport)
             socket.close()
 
             # Start s3270.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -245,6 +245,17 @@ def sa_try_until(f, seconds, errmsg):
             return
         time.sleep(0.1)
 
+def connect_test(port: int, ipv6: bool):
+    connected = False
+    s = socket.socket(socket.AF_INET6 if ipv6 else socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect(('::1' if ipv6 else '127.0.0.1', port))
+        connected = True
+    except ConnectionRefusedError:
+        pass
+    s.close()
+    return connected
+
 # Common test infrastructure class.
 class cti(unittest.TestCase):
     def setUp(self):
@@ -274,23 +285,19 @@ class cti(unittest.TestCase):
                 return
             time.sleep(0.1)
 
+    def try_until2(self, f, p1, p2, seconds, errmsg):
+        '''Try f periodically until seconds elapse, passing 2 arguments to the test function'''
+        start = time.monotonic_ns()
+        while True:
+            now = time.monotonic_ns()
+            self.assertLess(now - start, seconds * 1e9, errmsg)
+            if f(p1, p2):
+                return
+            time.sleep(0.1)
+
     def check_listen(self, port, ipv6=False):
         '''Check for a particular port being listened on'''
-        if sys.platform == 'darwin':
-            r = re.compile(rf'\.{port} .* LISTEN')
-        else:
-            r = re.compile(rf':{port} .* LISTEN')
-        if sys.platform.startswith("win") and ipv6:
-            cmd = 'netstat -an -p TCPv6'
-        elif sys.platform.startswith("win") or sys.platform == 'darwin':
-            cmd = 'netstat -an -p TCP'
-        else:
-            cmd = 'netstat -ant'
-        def test():
-            netstat = Popen(cmd, shell=True, stdout=PIPE)
-            stdout = netstat.communicate()[0].decode('utf8').split('\n')
-            return any(r.search(line) for line in stdout)
-        self.try_until(test, 2, f"Port {port} is not bound")
+        self.try_until2(lambda p, i: connect_test(p, i), port, ipv6, 2, f'Port {port} is not bound')
 
     def wait_for_pty_output(self, timeout: int, fd: int, text: str):
         '''Wait for the emulator to produce specific output on the pty'''

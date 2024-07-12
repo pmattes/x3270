@@ -59,7 +59,6 @@ class TestS3270Uri(cti.cti):
         port, ts = cti.unused_port(ipv6=ipv6)
         with playback.playback(self, 's3270/Test/lu.trc', port=port, ipv6=ipv6) as p:
             ts.close()
-            self.check_listen(port)
             
             # Start s3270.
             loopback = '[::1]' if ipv6 else '127.0.0.1'
@@ -89,7 +88,6 @@ class TestS3270Uri(cti.cti):
         port, ts = cti.unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
-            self.check_listen(port)
             
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270s is 992, and it overrides s3270.port.
@@ -120,7 +118,6 @@ class TestS3270Uri(cti.cti):
         port, ts = cti.unused_port()
         with playback.playback(self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
-            self.check_listen(port)
             
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270 is 23, and it overrides s3270.port.
@@ -146,7 +143,6 @@ class TestS3270Uri(cti.cti):
         # Start a server to throw data at s3270.
         port, ts = cti.unused_port()
         with tls_server.tls_sendserver('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, port) as s:
-            self.check_listen(port)
             ts.close()
 
             # Start s3270.

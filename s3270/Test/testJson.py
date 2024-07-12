@@ -99,7 +99,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -114,6 +114,11 @@ class TestS3270Json(cti.cti):
         result = self.recv_to_eof(s, 2)
         s.close()
 
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
+        s.close()
+
         # Wait for the process to exit successfully.
         self.vgwait(s3270)
 
@@ -125,7 +130,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -140,6 +145,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -193,7 +203,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -206,6 +216,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -242,7 +257,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -255,6 +270,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = self.recv_to_eof(s, 2)
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -296,7 +316,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -308,6 +328,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = self.recv_to_eof(s, 2).split('\n')
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -355,7 +380,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -371,6 +396,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = self.recv_to_eof(s, 2).split('\n')
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.
@@ -511,7 +541,7 @@ class TestS3270Json(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-scriptportonce']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -523,6 +553,11 @@ class TestS3270Json(cti.cti):
 
         # Decode the result.
         result = json.loads(self.recv_to_eof(s, 2))
+        s.close()
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', port))
+        s.sendall(b'quit\n')
         s.close()
 
         # Wait for the process to exit successfully.

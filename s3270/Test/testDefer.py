@@ -40,7 +40,6 @@ class TestS3270Defer(cti.cti):
 
         pport, socket = cti.unused_port()
         with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
-            self.check_listen(pport)
             socket.close()
 
             # Start s3270.
@@ -111,7 +110,6 @@ class TestS3270Defer(cti.cti):
 
         pport, socket = cti.unused_port()
         with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
-            self.check_listen(pport)
             socket.close()
 
             # Start s3270.
