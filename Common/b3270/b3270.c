@@ -55,6 +55,7 @@
 #include "bscreen.h"
 #include "b_password.h"
 #include "codepage.h"
+#include "cookiefile.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "unicodec.h"
@@ -673,6 +674,9 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     }
     ft_init();
     hostfile_init();
+    if (!cookiefile_init()) {
+        exit(1);
+    }
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */

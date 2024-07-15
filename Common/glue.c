@@ -546,6 +546,8 @@ static opt_t base_opts[] = {
     "<name>", "Use host ECBDIC code page <name>"},
 { OptConnectTimeout, OPT_INT,false,ResConnectTimeout,aoffset(connect_timeout),
     "<seconds>", "Timeout for host connect requests" },
+{ OptCookieFile, OPT_STRING,false,ResCookieFile,aoffset(cookie_file),
+    "<path>", "Pathname of the security cookie file" },
 { OptDevName,  OPT_STRING,  false, ResDevName,   aoffset(devname),
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
@@ -1036,7 +1038,8 @@ static res_t base_resources[] = {
     { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING },
     { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN },
-    { ResTls992,	aoffset(tls992),	XRM_BOOLEAN }
+    { ResTls992,	aoffset(tls992),	XRM_BOOLEAN },
+    { ResCookieFile,	aoffset(cookie_file), 	XRM_STRING },
 };
 
 typedef struct reslist {

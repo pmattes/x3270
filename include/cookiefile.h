@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Paul Mattes.
+ * Copyright (c) 2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,8 @@
  */
 
 /*
- *	s3270_proto.h
- *		The s3270 protocol.
+ *      cookiefile.h
+ *              Cookie file operations.
  */
 
-/* Environment variables passed to child scripts. */
-#define OUTPUT_ENV	"X3270OUTPUT"
-#define INPUT_ENV	"X3270INPUT"
-#define PORT_ENV	"X3270PORT"
-#define URL_ENV		"X3270URL"
-#define COOKIEFILE_ENV	"X3270COOKIEFILE"
-
-/* Common length for all prefixes. */
-#define PREFIX_LEN	6
-
-/* Prefixes for data output. */
-#define DATA_PREFIX	"data: "
-#define ERROR_DATA_PREFIX "errd: "
-
-/* Prefixes for input. */
-#define INPUT_PREFIX	"inpt: "
-#define PWINPUT_PREFIX	"inpw: "
-
-/* Prompt terminators. */
-#define PROMPT_OK	"ok"
-#define PROMPT_ERROR	"error"
-
-/* Action to continue or abort interactive input. */
-#define RESUME_INPUT	"ResumeInput"
-#define RESUME_INPUT_ABORT	"-Abort"
-
-/* JSON object member names. */
-#define JRET_RESULT	"result"
-#define JRET_RESULT_ERR	"result-err"
-#define JRET_SUCCESS	"success"
-#define JRET_STATUS	"status"
+bool cookiefile_init(void);

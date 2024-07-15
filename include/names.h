@@ -48,6 +48,7 @@
 #define AnClose		"Close"
 #define AnCompose	"Compose"
 #define AnConnect	"Connect"
+#define AnCookie	"Cookie"
 #define AnCopy		"Copy"
 #define AnCrash		"Crash"
 #define AnCursorSelect	"CursorSelect"

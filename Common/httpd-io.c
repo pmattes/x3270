@@ -149,6 +149,34 @@ hio_socket_close(session_t *session)
 }
 
 /**
+ * Walk the sessions to find the one that matches the ID.
+ * If found, kill it.
+ *
+ * @param[in] id	I/O ID
+ */
+void
+hio_error_timeout(ioid_t id)
+{
+    session_t *session = NULL;
+    session_t *fatal_session = NULL;
+
+    vtrace("httpd deferred error timeout\n");
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (httpd_waiting(session->dhandle, id)) {
+	    fatal_session = session;
+	    break;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (fatal_session == NULL) {
+	vtrace("httpd deferred error timeout: not found\n");
+	return;
+    }
+
+    httpd_close(fatal_session->dhandle, "deferred error timeout");
+    hio_socket_close(fatal_session);
+}
+
+/**
  * httpd timeout.
  *
  * @param[in] id	timeout ID

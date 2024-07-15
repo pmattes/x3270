@@ -49,6 +49,7 @@
 #include "actions.h"
 #include "bind-opt.h"
 #include "codepage.h"
+#include "cookiefile.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -248,6 +249,9 @@ main(int argc, char *argv[])
     }
     ft_init();
     hostfile_init();
+    if (!cookiefile_init()) {
+	exit(1);
+    }
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */

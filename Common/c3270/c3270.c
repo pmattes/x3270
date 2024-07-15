@@ -55,6 +55,7 @@
 #include "bind-opt.h"
 #include "boolstr.h"
 #include "codepage.h"
+#include "cookiefile.h"
 #include "ckeypad.h"
 #include "cscreen.h"
 #include "cstatus.h"
@@ -734,6 +735,9 @@ Type 'help' for help information.\n\n",
     idle_init();
     keymap_init();
     hostfile_init();
+    if (!cookiefile_init()) {
+        exit(1);
+    }
     httpd_objects_init();
 
     if (appres.httpd_port) {

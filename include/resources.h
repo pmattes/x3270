@@ -77,6 +77,7 @@
 #define ResConsole		"console"
 #define ResConsoleColorForHostColor "consoleColorForHostColor"
 #define ResContentionResolution	"contentionResolution"
+#define ResCookieFile		"cookieFile"
 #define ResCrosshair		"crosshair"
 #define ResCrosshairColor	"crosshairColor"
 #define ResCursesColorFor	"cursesColorFor"
@@ -270,6 +271,7 @@
 #define DotCodePage		"." ResCodePage
 #define DotColorScheme		"." ResColorScheme
 #define DotConnectTimeout	"." ResConnectTimeout
+#define DotCookieFile		"." ResCookieFile
 #define DotDevName		"." ResDevName
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotHostsFile		"." ResHostsFile
@@ -350,6 +352,7 @@
 #define ClsConnectTimeout	"ConnectTimeout"
 #define ClsConsole		"Console"
 #define ClsContentionResolution	"ContentionResolution"
+#define ClsCookieFile		"CookieFile"
 #define ClsCrosshair		"Crosshair"
 #define ClsCrosshairColor	"CrosshairColor"
 #define ClsCursorBlink		"CursorBlink"
@@ -515,6 +518,7 @@
 #define OptCodePage		"-codepage"
 #define OptColorScheme		"-scheme"
 #define OptConnectTimeout	"-connecttimeout"
+#define OptCookieFile		"-cookiefile"
 #define OptDefaultFgBg		"-defaultfgbg"
 #define OptDefScreen		"-defscreen"
 #define OptDevName		"-devname"

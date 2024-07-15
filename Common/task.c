@@ -99,8 +99,13 @@
 /* IA test for UTF-8 overrides. */
 #define IA_UTF8(ia)	((ia) == IA_HTTPD)
 
+/* Base and variable wait times for a wrong cookie, in ms. */
+#define WRONG_COOKIE_BASE	1000
+#define WRONG_COOKIE_VAR	1000
+
 /* Globals */
 struct macro_def *macro_defs = NULL;
+char *security_cookie;
 
 /* Statics */
 
@@ -301,6 +306,7 @@ static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
 static action_t Capabilities_action;
+static action_t Cookie_action;
 static action_t ResumeInput_action;
 static action_t RequestInput_action;
 
@@ -553,6 +559,7 @@ task_register(void)
 	{ AnBell,		Bell_action, 0 },
 	{ AnCapabilities,	Capabilities_action, ACTION_HIDDEN },
 	{ AnCloseScript,	CloseScript_action, 0 },
+	{ AnCookie,		Cookie_action, 0 },
 	{ AnEbcdic,		Ebcdic_action, 0 },
 	{ AnEbcdic1,		Ebcdic1_action, 0 },
 	{ AnEbcdicField,	EbcdicField_action, 0 },
@@ -837,6 +844,7 @@ task_pop(void)
 void
 peer_script_init(void)
 {
+    /* TODO: When this function returns early, it should check for the cookie resource expecting stdin/stdout. */
     if (appres.script_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
@@ -1287,12 +1295,13 @@ silent_failure:
  * @param[in] args	Arguments
  * @param[out] last	Returned action and paramters, canonicalized
  * @param[in] last_len	Length of the last
+ * @param[in] cbx	Context
  *
  * @return success or failure
  */
 static bool
 execute_command_backend(enum iaction cause, action_elt_t *entry,
-	const char **args, char *last, size_t last_len)
+	const char **args, char *last, size_t last_len, struct task_cbx *cbx)
 {
     bool stat = true;
     int i;
@@ -1303,6 +1312,16 @@ execute_command_backend(enum iaction cause, action_elt_t *entry,
     if (entry->t.ia_restrict != IA_NONE && cause != entry->t.ia_restrict) {
 	popup_an_error("Action %s is invalid in this context",
 		entry->t.name);
+	return false;
+    }
+
+    /* Check for cookies. */
+    if (security_cookie != NULL &&
+	    cbx != NULL &&
+	    (cbx->cb->flags & CB_NEEDCOOKIE) &&
+	    cbx->cb->getxflags != NULL && !((cbx->cb->getxflags)(cbx->handle) & XF_HAVECOOKIE) &&
+	    strcasecmp(entry->t.name, AnCookie)) {
+	popup_an_error("Security cookie not supplied");
 	return false;
     }
 
@@ -1343,12 +1362,13 @@ execute_command_backend(enum iaction cause, action_elt_t *entry,
  * @param[in] cmd	Action and arguments
  * @param[out] last	Returned action and paramters, canonicalized
  * @param[in] last_len	Length of the last
+ * @param[in] cbx	Context
  *
  * @return success or failure
  */
 static bool
 execute_command_split(enum iaction cause, cmd_t *cmd, char *last,
-	size_t last_len)
+	size_t last_len, struct task_cbx *cbx)
 {
     action_elt_t *entry;
     char *error;
@@ -1359,7 +1379,7 @@ execute_command_split(enum iaction cause, cmd_t *cmd, char *last,
 	Free(error);
 	return false;
     }
-    return execute_command_backend(cause, entry, cmd->args, last, last_len);
+    return execute_command_backend(cause, entry, cmd->args, last, last_len, cbx);
 }
 
 /**
@@ -1370,12 +1390,13 @@ execute_command_split(enum iaction cause, cmd_t *cmd, char *last,
  * @param[out] np	Returned pointer to next action
  * @param[out] last	Returned action and paramters, canonicalized
  * @param[in] last_len	Length of the last
+ * @param[in] cbx	Context
  *
  * @return success or failure
  */
 static bool
 execute_command(enum iaction cause, const char *s, const char **np, char *last,
-	size_t last_len)
+	size_t last_len, struct task_cbx *cbx)
 {
     bool stat;
     action_elt_t *entry;
@@ -1398,7 +1419,7 @@ execute_command(enum iaction cause, const char *s, const char **np, char *last,
 
     /* Run it. */
     stat = execute_command_backend(cause, entry, (const char **)args, last,
-	    last_len);
+	    last_len, cbx);
 
     /* Free the arguments. */
     for (i = 0; args[i] != NULL; i++) {
@@ -1490,6 +1511,7 @@ run_macro(void)
 	enum iaction ia;
 	bool was_ckbwait = CKBWAIT;
 	unsigned int old_kybdlock = kybdlock;
+	struct task_cbx *cbx = NULL;
 
 	/*
 	 * Check for command failure.
@@ -1513,16 +1535,17 @@ run_macro(void)
 		s->next != NULL &&
 		s->next->type == ST_CB) {
 	    ia = s->next->cbx.cb->ia;
+	    cbx = &s->next->cbx;
 	} else {
 	    ia = IA_MACRO;
 	}
 
 	if (s->macro.cmd_next != NULL) {
 	    es = execute_command_split(ia, *s->macro.cmd_next, s->macro.last,
-		    LAST_BUF);
+		    LAST_BUF, cbx);
 	    s->macro.cmd_next++;
 	} else {
-	    es = execute_command(ia, a, &nextm, s->macro.last, LAST_BUF);
+	    es = execute_command(ia, a, &nextm, s->macro.last, LAST_BUF, cbx);
 	    s->macro.dptr = nextm;
 	}
 
@@ -4448,6 +4471,79 @@ Capabilities_action(ia_t ia, unsigned argc, const char **argv)
     if (flags) {
 	(*redirect->cbx.cb->setflags)(redirect->cbx.handle, flags);
     }
+
+    return true;
+}
+
+/* Timeout for displaying the error message for a wrong cookie. */
+static void
+wrong_cookie_timeout(ioid_t id)
+{
+    taskq_t *q;
+    task_t *s;
+    bool found = false;
+
+    assert(current_task == NULL);
+
+    FOREACH_LLIST(&taskq, q, taskq_t *) {
+	for (s = q->top; s != NULL; s = s->next) {
+	    if (s->wait_id == id) {
+		found = true;
+		break;
+	    }
+	}
+	if (found) {
+	    break;
+	}
+    } FOREACH_LLIST_END(&taskq, q, taskq_t *);
+
+    if (!found) {
+	vtrace("cookie_timed_out: no match\n");
+	return;
+    }
+
+    /* Fail it. */
+    task_result(s->next, AnCookie "(): Incorrect cookie", false);
+    s->success = false;
+    task_set_state(s, TS_RUNNING, AnCookie "() completed");
+    s->wait_id = NULL_IOID;
+}
+
+/* Cookie  action, provides the security cookie. */
+static bool
+Cookie_action(ia_t ia, unsigned argc, const char **argv)
+{
+    task_t *redirect;
+
+    action_debug(AnCookie, ia, argc, argv);
+    if (check_argc(AnCookie, argc, 1, 1) < 0) {
+	return false;
+    }
+
+    if (security_cookie == NULL) {
+	/* Trying to set the cookie when none is needed is a no-op. */
+	return true;
+    }
+
+    redirect = task_redirect_to();
+    if (redirect == NULL || !(redirect->cbx.cb->flags & CB_NEEDCOOKIE) || redirect->cbx.cb->setxflags == NULL) {
+	/* Trying to set the cookie when none is needed is a no-op. */
+	return true;
+    }
+
+    if (strcmp(argv[0], security_cookie)) {
+	unsigned long wait_ms = WRONG_COOKIE_BASE + (random() % WRONG_COOKIE_VAR);
+
+	/* popup_an_error(AnCookie "(): Incorrect cookie"); */
+	task_set_state(current_task, TS_TIME_WAIT, AnCookie "()");
+	current_task->wait_id = AddTimeOut(wait_ms, wrong_cookie_timeout);
+	(*redirect->cbx.cb->setxflags)(redirect->cbx.handle,
+		(*redirect->cbx.cb->getxflags)(redirect->cbx.handle) & ~XF_HAVECOOKIE);
+	return true;
+    }
+
+    /* Set the have-the-cookie flag. */
+    (*redirect->cbx.cb->setxflags)(redirect->cbx.handle, XF_HAVECOOKIE);
 
     return true;
 }

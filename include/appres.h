@@ -110,6 +110,7 @@ typedef struct {
     bool	 utf8;
     bool	 wrong_terminal_name;
     bool	 tls992;
+    char	*cookie_file;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];

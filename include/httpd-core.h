@@ -30,6 +30,8 @@
  *              x3270 webserver, header file for core protocol module
  */
 
+#define SECURITY_COOKIE	"x3270-security"
+
 typedef enum {
     CT_HTML,
     CT_TEXT,
@@ -99,3 +101,5 @@ content_t httpd_content_type(void *dhandle);
 char *httpd_content(void *dhandle);
 verb_t httpd_verb(void *dhandle);
 char *percent_decode(const char *uri, size_t len, bool plus);
+
+bool httpd_waiting(void *dhandle, ioid_t id);

@@ -52,6 +52,7 @@
 #include "bind-opt.h"
 #include "boolstr.h"
 #include "codepage.h"
+#include "cookiefile.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "host.h"
@@ -159,6 +160,7 @@ XrmOptionDescRec base_options[]= {
     { OptCodePage,	DotCodePage,	XrmoptionSepArg,	NULL },
     { OptColorScheme,	DotColorScheme,	XrmoptionSepArg,	NULL },
     { OptConnectTimeout,DotConnectTimeout,XrmoptionSepArg,	NULL },
+    { OptCookieFile,	DotCookieFile,	XrmoptionSepArg,	NULL },
     { OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
     { OptTrace,		DotTrace,	XrmoptionNoArg,		ResTrue },
 #if defined(LOCAL_PROCESS) /*[*/
@@ -243,6 +245,7 @@ static struct option_help {
     { OptCodePage, "<name>", "Use host EBCDIC code page <name>" },
     { OptColorScheme, "<name>", "Use color scheme <name>" },
     { OptConnectTimeout, "<seconds>", "Timeout for host connect requests" },
+    { OptCookieFile, "<path>", "Pathname of security cookie file" },
     { OptDevName, "<name>", "Device name (workstation ID)" },
 #if defined(LOCAL_PROCESS) /*[*/
     { OptLocalProcess, "<command> [arg...]", "Run process instead of connecting to host" },
@@ -833,6 +836,9 @@ main(int argc, char *argv[])
     icon_init();
 
     hostfile_init();
+    if (!cookiefile_init()) {
+        exit(1);
+    }
 
     if (xappres.char_class != NULL) {
 	reclass(xappres.char_class);

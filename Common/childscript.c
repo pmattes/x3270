@@ -52,6 +52,7 @@
 #include "popups.h"
 #include "child_popups.h"
 #include "childscript.h"
+#include "cookiefile.h"
 #include "find_console.h"
 #include "glue_gui.h"
 #include "httpd-core.h"
@@ -1308,6 +1309,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	putenv(Asprintf(INPUT_ENV "=%d", inpipe[1]));
 	putenv(Asprintf(URL_ENV "=http://127.0.0.1:%u/3270/rest/", httpd_port));
 	putenv(Asprintf(PORT_ENV "=%d", script_port));
+	if (appres.cookie_file != NULL) {
+	    putenv(Asprintf(COOKIEFILE_ENV "=%s", appres.cookie_file));
+	}
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));

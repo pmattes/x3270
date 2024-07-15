@@ -71,6 +71,8 @@ static bool peer_done(task_cbh handle, bool success, bool abort);
 static void peer_closescript(task_cbh handle);
 static void peer_setflags(task_cbh handle, unsigned flags);
 static unsigned peer_getflags(task_cbh handle);
+static void peer_setxflags(task_cbh handle, unsigned flags);
+static unsigned peer_getxflags(task_cbh handle);
 
 static void peer_setir(task_cbh handle, void *irhandle);
 static void *peer_getir(task_cbh handle);
@@ -91,7 +93,7 @@ static irv_t peer_irv = {
 static tcb_t peer_cb = {
     "s3sock",
     IA_SCRIPT,
-    CB_NEW_TASKQ | CB_PEER,
+    CB_NEW_TASKQ | CB_PEER | CB_NEEDCOOKIE,
     peer_data,
     peer_done,
     NULL,
@@ -100,14 +102,16 @@ static tcb_t peer_cb = {
     peer_getflags,
     &peer_irv,
     NULL,
-    peer_reqinput
+    peer_reqinput,
+    peer_setxflags,
+    peer_getxflags,
 };
 
 /* Callback block for an interactive peer. */
 static tcb_t interactive_cb = {
     "s3sock",
     IA_COMMAND,
-    CB_NEW_TASKQ | CB_PEER,
+    CB_NEW_TASKQ | CB_PEER | CB_NEEDCOOKIE,
     peer_data,
     peer_done,
     NULL,
@@ -116,7 +120,9 @@ static tcb_t interactive_cb = {
     peer_getflags,
     &peer_irv,
     NULL,
-    peer_reqinput
+    peer_reqinput,
+    peer_setxflags,
+    peer_getxflags,
 };
 
 /* Peer script context. */
@@ -134,6 +140,7 @@ typedef struct {
     bool enabled;	/* is this peer enabled? */
     char *name;		/* task name */
     unsigned capabilities; /* self-reported capabilities */
+    unsigned xflags;	/* extended flags */
     void *irhandle;	/* input request handle */
     task_cb_ir_state_t ir_state; /* named input request state */
     json_t *json_result; /* pending JSON result */
@@ -549,6 +556,34 @@ peer_setir(task_cbh handle, void *irhandle)
     peer_t *p = (peer_t *)handle;
 
     p->irhandle = irhandle;
+}
+
+/**
+ * Get extended flags.
+ *
+ * @param[in] handle	Peer context
+ * @returns flags
+ */
+static unsigned
+peer_getxflags(task_cbh handle)
+{
+    peer_t *p = (peer_t *)handle;
+
+    return p->xflags;
+}
+
+/**
+ * Set extended flags.
+ *
+ * @param[in] handle	Peer context
+ * @param[in] flags	Flags
+ */
+static void
+peer_setxflags(task_cbh handle, unsigned flags)
+{
+    peer_t *p = (peer_t *)handle;
+
+    p->xflags = flags;
 }
 
 /**

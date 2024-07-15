@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, 2018-2019, 2021 Paul Mattes.
+ * Copyright (c) 2014-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,3 +64,4 @@ void hio_stop_x(hio_listener_t *l);
 void hio_register(void);
 content_t hio_content_type(void *dhandle);
 char *hio_content(void *dhandle);
+void hio_error_timeout(ioid_t id);

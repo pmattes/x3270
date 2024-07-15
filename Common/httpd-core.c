@@ -45,6 +45,7 @@
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
+#include "w3misc.h"
 
 #include "httpd-core.h"
 #include "httpd-io.h"
@@ -66,6 +67,13 @@ typedef enum {		/* Error type: */
     ERRMODE_NONFATAL	/*  The request cannot be satisfied, but if this is a
 			     persistent connection, keep it open. */
 } errmode_t;
+
+typedef enum {		/* Cookie check resul: */
+    CX_NONE,		/*  No cookie defined */
+    CX_CORRECT,		/*  Cookie defined, supplied correctly */
+    CX_MISSING,		/*  Cookie defined, not supplied */
+    CX_INCORRECT	/*  Cookie defined, supplied incorrectly */
+} cookie_check_t;
 
 /* fields */
 typedef struct _field {	/* HTTP request fields (name: value) */
@@ -99,6 +107,7 @@ typedef struct {
     int content_length;	/* content length */
     int content_length_left; /* remaining content to be read */
     char *content;	/* content */
+    ioid_t cookie_timeout_id; /* bad cookie timeout identifier */
 } request_t;
 
 /* connection state */
@@ -174,6 +183,8 @@ status_text(int status_code)
 	return "Moved Permanently";
     case 400:
 	return "Bad Request";
+    case 403:
+	return "Forbidden";
     case 404:
 	return "Not Found";
     case 409:
@@ -1484,6 +1495,93 @@ decode_content_type(const char *content_type)
 }
 
 /**
+ * Check for a securtty cookie match.
+ *
+ * @param[in] fields	Header fields
+ * @return cookie_check_t
+ */
+static cookie_check_t
+check_cookie(field_t *fields)
+{
+    const char *cookie_field;
+    char *cookies;
+    char *cookie;
+    char *ptr;
+    cookie_check_t rv;
+
+    if (security_cookie == NULL) {
+	return CX_NONE;
+    }
+    if ((cookie_field = lookup_field("Cookie", fields)) == NULL) {
+	return CX_MISSING;
+    }
+
+    /* Find the security cookie. */
+    cookies = NewString(cookie_field);
+    ptr = cookies;
+    rv = CX_MISSING;
+    while ((cookie = strtok(ptr, ";")) != NULL) {
+	char *s = cookie;
+	char *name_start;
+	char *value_start;
+
+	ptr = NULL;
+	while (*s && isspace((int)*s)) {
+	    s++;
+	}
+	if (!*s) {
+	    continue;
+	}
+	name_start = s;
+	while (*s && *s != '=') {
+	    s++;
+	}
+	if (s == name_start || !*s) {
+	    continue;
+	}
+	if (strncmp(SECURITY_COOKIE, name_start, s - name_start)) {
+	    continue;
+	}
+
+	/* Found the right cookie. */
+	value_start = ++s;
+	while (*s && !isspace((int)*s)) {
+	    s++;
+	}
+	if (((size_t)(s - value_start) == strlen(security_cookie)) &&
+	    !strncmp(security_cookie, value_start, strlen(security_cookie))) {
+	    rv = CX_CORRECT;
+	} else {
+	    rv = CX_INCORRECT;
+	}
+	break;
+    }
+
+    Free(cookies);
+    return rv;
+}
+
+/**
+ * Check for a match for a waiting cookie error.
+ * @param[in] dhandle	Daemon handle
+ * @param[in] id	I/O ID
+ *
+ *@returns true if there is a match
+ */
+bool
+httpd_waiting(void *dhandle, ioid_t id)
+{
+    httpd_t *h = dhandle;
+    request_t *r = &h->request;
+
+    if (r->cookie_timeout_id == id) {
+	(void) httpd_error(h, ERRMODE_FATAL, CT_HTML, 403, "Invalid x3270-security cookie.");
+	return true;
+    }
+    return false;
+}
+
+/**
  * Digest the fields.
  *
  * The entire text is in r->request_buf, NULL terminated, including newline
@@ -1613,6 +1711,18 @@ httpd_digest_fields(httpd_t *h)
     if ((content_length = lookup_field("Content-Length", r->fields)) != NULL) {
 	r->content_length_left = r->content_length = atoi(content_length);
 	r->content = &r->request_buf[r->nr];
+    }
+
+    /* Check the security cookie. */
+    switch (check_cookie(r->fields)) {
+    case CX_NONE:
+    case CX_CORRECT:
+	break;
+    case CX_MISSING:
+	return httpd_error(h, ERRMODE_FATAL, CT_HTML, 403, "Missing x3270-security cookie.");
+    case CX_INCORRECT:
+	r->cookie_timeout_id = AddTimeOut(1000 + (rand() % 1000), hio_error_timeout);
+	return HS_PENDING;
     }
 
     return HS_CONTINUE;

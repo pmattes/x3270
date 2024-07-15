@@ -50,6 +50,7 @@
 #include "globals.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #if !defined(_WIN32) /*[*/
 # include <signal.h>
 # include <sys/types.h>
@@ -207,6 +208,40 @@ fd_env(const char *name, bool required)
     return fd;
 }
 
+/* Get the cookie from the cookie file. */
+const char *
+get_cookie(void)
+{
+    char *cookiefile = getenv(COOKIEFILE_ENV);
+    int fd;
+    char *buf;
+    ssize_t nr;
+
+    if (cookiefile == NULL) {
+	return NULL;
+    }
+    fd = open(cookiefile, O_RDONLY);
+    if (fd < 0) {
+	return NULL;
+    }
+    buf = Malloc(1024);
+    nr = read(fd, buf, 1023);
+    if (nr < 0) {
+	close(fd);
+	Free(buf);
+	return NULL;
+    }
+
+    /* Ignore trailing white space. */
+    while (nr > 0 && isspace((int)buf[nr - 1])) {
+	nr--;
+    }
+
+    close(fd);
+    buf[nr] = '\0';
+    return buf;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -341,19 +376,28 @@ main(int argc, char *argv[])
     } else if (iterative) {
 	iterative_io(pid, port);
     } else {
+	const char *cookie = get_cookie();
 	int infd = -1;
 	int outfd = -1;
-	char *cmd = Malloc(strlen(AnCapabilities) + 1 + strlen(KwErrd) + 2 + strlen(argv[optind]) + 1);
+	char *cmd;
 	int rv;
 
 #if !defined(_WIN32) /*[*/
 	if (force_pipes) {
 	    infd  = fd_env(OUTPUT_ENV, true);
 	    outfd = fd_env(INPUT_ENV, true);
+	    cookie = NULL;
 	}
 #endif /*]*/
 
-	sprintf(cmd, AnCapabilities "(" KwErrd ") %s", argv[optind]);
+	if (cookie) {
+	    cmd = Malloc(strlen(AnCookie) + 1 + strlen(cookie) + 2 +
+		    strlen(AnCapabilities) + 1 + strlen(KwErrd) + 2 + strlen(argv[optind]) + 1);
+	    sprintf(cmd, AnCookie "(%s) " AnCapabilities "(" KwErrd ") %s", cookie, argv[optind]);
+	} else {
+	    cmd = Malloc(strlen(AnCapabilities) + 1 + strlen(KwErrd) + 2 + strlen(argv[optind]) + 1);
+	    sprintf(cmd, AnCapabilities "(" KwErrd ") %s", argv[optind]);
+	}
 	rv = single_io(pid, port, INVALID_SOCKET, infd, outfd, fn, cmd, NULL, NULL, NULL, NULL);
 	Free(cmd);
 	return rv;
@@ -1254,6 +1298,8 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     char *prompt, *real_prompt;
     socket_t s = INVALID_SOCKET;
     int infd = -1, outfd = -1;
+    const char *cookie;
+    char *cmd;
     size_t prompt_len;
     char *data_ret;
     char *errd_ret;
@@ -1310,11 +1356,15 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     }
 #endif
 
+    cookie = get_cookie();
     if (port) {
 	s = tsock(port);
     } else {
 #if !defined(_WIN32) /*[*/
 	get_ports(&s, &infd, &outfd);
+	if (infd != -1 && outfd != -1) {
+	    cookie = NULL;
+	}
 #else /*][*/
 	get_ports(&s, NULL, NULL);
 #endif /*]*/
@@ -1335,11 +1385,20 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	read_localization(localization);
     }
 
-    /* Announce our capabilities. */
+    /* Set the cookie and announce our capabilities. */
+#    define CAP_STRING AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")"
+    if (cookie) {
+	size_t len = strlen(AnCookie) + 1 + strlen(cookie) + 2 + strlen(CAP_STRING) + 1;
+
+	cmd = Malloc(len);
+	snprintf(cmd, len, AnCookie "(%s) " CAP_STRING, cookie);
+	cmd[len - 1] = '\0';
+    } else {
+	cmd = CAP_STRING;
+    }
     data_ret = NULL;
     errd_ret = NULL;
-    single_io(0, 0, s, infd, outfd, NO_STATUS, AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")",
-	    &data_ret, &errd_ret, NULL, &itype);
+    single_io(0, 0, s, infd, outfd, NO_STATUS, cmd, &data_ret, &errd_ret, NULL, &itype);
 
     /* Set up the prompt. */
 #if !defined(_WIN32) /*[*/
