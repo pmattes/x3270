@@ -118,7 +118,7 @@ cookiefile_init(void)
 
 	    /* Generate a new cookie and write it to the file. */
 	    lseek(fd, 0, SEEK_SET);
-	    nw = write(fd, gen, strlen(gen));
+	    nw = write(fd, gen, (unsigned int)strlen(gen));
 	    if (nw < 0) {
 		perror(appres.cookie_file);
 		goto fail;
