@@ -115,7 +115,7 @@ c3270 wc3270: mkkeypad
 .PHONY: mkkeypad
 
 # mkicon dependencies.
-unix-lib windows-lib: mkicon
+lib3270 libw3270: mkicon
 .PHONY: mkicon
 
 .PHONY: x3270if
