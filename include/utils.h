@@ -133,3 +133,4 @@ void change_cstate(enum cstate cstate, const char *why);
 #endif /*]*/
 char *clean_termname(const char *tn);
 void start_help(void);
+const char *ut_getenv(const char *name);

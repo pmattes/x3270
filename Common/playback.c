@@ -919,3 +919,10 @@ done:
 
     return false;
 }
+
+/* Local copy of ut_getenv(), which always fails. */
+const char *
+ut_getenv(const char *name)
+{
+    return NULL;
+}

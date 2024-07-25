@@ -460,7 +460,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* set the socket to be non-delaying */
-    if (getenv("BLOCKING_CONNECT") == NULL && non_blocking(true) < 0) {
+    if (ut_getenv("BLOCKING_CONNECT") == NULL && non_blocking(true) < 0) {
 	popup_an_error("non-blocking failure");
 	close_fail;
     }
@@ -502,14 +502,14 @@ connect_to(int ix, bool noisy, bool *pending)
      * to port 992, which requires root.
      */
     if (port == TELNETS_PORT) {
-	char *remap992 = getenv("REMAP992");
+	const char *remap992 = ut_getenv("REMAP992");
 
 	if (remap992 != NULL) {
 	    *portp = htons(atoi(remap992));
 	}
     }
     if (port == TELNET_PORT) {
-	char *remap23 = getenv("REMAP23");
+	const char *remap23 = ut_getenv("REMAP23");
 
 	if (remap23 != NULL) {
 	    *portp = htons(atoi(remap23));
@@ -1035,7 +1035,7 @@ net_connected(void)
 	vtrace("Connected to %s, port %u.\n", hostname, current_port);
     }
 
-    if (getenv("BLOCKING_CONNECT") != NULL && non_blocking(true) < 0) {
+    if (ut_getenv("BLOCKING_CONNECT") != NULL && non_blocking(true) < 0) {
 	connect_error("non-blocking failure");
 	host_disconnect(true);
 	return;

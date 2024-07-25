@@ -601,6 +601,8 @@ static opt_t base_opts[] = {
     "<n>[KM]", "Limit trace file to <n> bytes" },
 { OptUser,     OPT_STRING,  false, ResUser,      aoffset(user),
     "<name>", "User name for RFC 4777" },
+{ OptUtEnv,    OPT_BOOLEAN, true,  ResUtEnv,     aoffset(ut_env),
+    NULL,     "Allow unit test options in the environment" },
 { OptV,        OPT_V,       false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 { OptVersion,  OPT_V,       false, NULL,	     NULL,
@@ -1040,6 +1042,7 @@ static res_t base_resources[] = {
     { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN },
     { ResTls992,	aoffset(tls992),	XRM_BOOLEAN },
     { ResCookieFile,	aoffset(cookie_file), 	XRM_STRING },
+    { ResUtEnv,		aoffset(ut_env),	XRM_BOOLEAN },
 };
 
 typedef struct reslist {

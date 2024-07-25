@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019-2020 Paul Mattes.
+ * Copyright (c) 2017-2024 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -83,7 +83,7 @@ static int wrongs;
 static void
 set_fail_mode(void)
 {
-    char *s = getenv(SIO_MOCK);
+    const char *s = getenv(SIO_MOCK);
     int i;
 
     if (fail_mode != SM_UNKNOWN) {

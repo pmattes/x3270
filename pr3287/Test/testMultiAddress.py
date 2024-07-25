@@ -103,7 +103,7 @@ class TestPr3287MultiHost(cti.cti):
         # Set up a mock resolver result with the unused port, the real port and the other unused port.
         env = os.environ.copy()
         env['MOCK_SYNC_RESOLVER'] = f'127.0.0.1/{uport};127.0.0.1/{c.port};127.0.0.1/{vport}'
-        pr3287 = Popen(cti.vgwrap(['pr3287', '-trace', '-tracefile', tracefile,
+        pr3287 = Popen(cti.vgwrap(['pr3287', '-utenv', '-trace', '-tracefile', tracefile,
             f'foo:9999']), stdout=DEVNULL, stderr=DEVNULL, env=env)
         self.children.append(pr3287)
 

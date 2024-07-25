@@ -301,7 +301,7 @@ class TestS3270Tls(cti.cti):
             ts.close()
 
             # Start s3270.
-            args = ['s3270', '-xrm', 's3270.contentionResolution: false']
+            args = ['s3270', '-xrm', 's3270.contentionResolution: false', '-utenv']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'l:127.0.0.1:{port}=TEST')
@@ -334,7 +334,7 @@ class TestS3270Tls(cti.cti):
 
             # Start s3270, pointing to port 992 without a TLS tunnel and without STARTTLS support.
             # Remap 992 to the server's port, which happens after the automatic TLS tunnel is chosen.
-            args = ['s3270', '-set', 'startTls=false']
+            args = ['s3270', '-set', 'startTls=false', '-utenv']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'a:c:t:127.0.0.1:992=TEST')
@@ -370,7 +370,7 @@ class TestS3270Tls(cti.cti):
         # Start s3270, pointing to port 992 without an explicit TLS tunnel, without STARTTLS support and
         # (what's being verified here) without automatic TLS tunnels on port 992.
         # Remap 992 to the server's port, which happens after the automatic TLS tunnel is chosen.
-        args = ['s3270', '-set', 'startTls=false', '-set', 'tls992=false']
+        args = ['s3270', '-set', 'startTls=false', '-set', 'tls992=false', '-utenv']
         args.append(f'a:c:t:127.0.0.1:992')
         env = os.environ.copy()
         env['REMAP992'] = str(nc.port)

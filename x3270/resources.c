@@ -357,6 +357,8 @@ XtResource xresources[] = {
       boffset(wrong_terminal_name), XtRString, ResFalse },
     { ResTls992, ClsTls992, XtRBoolean, sizeof(Boolean),
       boffset(tls992), XtRString, ResTrue },
+    { ResUtEnv, ClsUtEnv, XtRBoolean, sizeof(Boolean),
+      boffset(ut_env), XtRString, ResTrue },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

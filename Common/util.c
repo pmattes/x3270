@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "appres.h"
 #include "boolstr.h"
 #include "resources.h"
 #include "codepage.h"
@@ -1089,3 +1090,10 @@ start_help(void)
     Free(url);
 }
 #endif /*]*/
+
+/* Get a unit-testing-specific environment variable. */
+const char *
+ut_getenv(const char *name)
+{
+    return appres.ut_env? getenv(name): NULL;
+}

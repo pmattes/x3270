@@ -208,6 +208,7 @@ XrmOptionDescRec base_options[]= {
     { OptInputMethod,	DotInputMethod,	XrmoptionSepArg,	NULL },
     { OptPreeditType,	DotPreeditType,	XrmoptionSepArg,	NULL },
     { OptUser,		DotUser,	XrmoptionSepArg,	NULL },
+    { OptUtEnv,		DotUtEnv,	XrmoptionNoArg,		ResTrue },
     { OptUtf8,		DotUtf8,	XrmoptionNoArg,		ResTrue },
     { OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
     { OptXrm,		NULL,		XrmoptionResArg,	NULL }
@@ -299,6 +300,7 @@ static struct option_help {
     { OptInputMethod, "<name>", "Multi-byte input method" },
     { OptPreeditType, "<style>", "Define input method pre-edit type" },
     { OptUser, "<name>", "User name for RFC 4777" },
+    { OptUtEnv, NULL, "Allow unit test options in the environment" },
     { OptUtf8, NULL, "Force script I/O to use UTF-8" },
     { OptV, NULL, "Display build options and character sets" },
     { OptVerifyHostCert, NULL, "Verify TLS host certificate (enabled by default)",
@@ -1322,6 +1324,7 @@ copy_xres_to_res_bool(void)
     copy_bool(utf8);
     copy_bool(wrong_terminal_name);
     copy_bool(tls992);
+    copy_bool(ut_env);
 
     copy_bool(interactive.do_confirms);
     copy_bool(interactive.mono);

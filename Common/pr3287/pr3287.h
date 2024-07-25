@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2022 Paul Mattes.
+ * Copyright (c) 2013-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,7 @@ typedef struct {
 	bool prefer_ipv4;	/* -4 */
 	bool prefer_ipv6;	/* -6 */
 	int verbose;		/* -V */
+	bool ut_env;		/* -utenv */
 } options_t;
 extern options_t options;
 

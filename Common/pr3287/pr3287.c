@@ -825,6 +825,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    }
 	    options.proxy_spec = argv[i + 1];
 	    i++;
+	} else if (!strcmp(argv[i], OptUtEnv)) {
+	    options.ut_env = true;
 	} else if (!strcmp(argv[i], "-xtable")) {
 	    if (argc <= i + 1 || !argv[i + 1][0]) {
 		missing_value("-xtable");
@@ -1306,4 +1308,10 @@ void
 RemoveTimeOut(ioid_t cookie)
 {
     assert(false);
+}
+
+const char *
+ut_getenv(const char *name)
+{
+    return options.ut_env? getenv(name): NULL;
 }

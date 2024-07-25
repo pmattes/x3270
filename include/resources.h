@@ -243,6 +243,7 @@
 #define ResUnlockDelayMs	"unlockDelayMs"
 #define ResUseCursorColor	"useCursorColor"
 #define ResUser			"user"
+#define ResUtEnv		"utEnv"
 #define ResUtf8			"utf8"
 #define ResVerifyHostCert	"verifyHostCert"
 #define ResVisibleControl	"visibleControl"
@@ -313,6 +314,7 @@
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
+#define DotUtEnv		"." ResUtEnv
 #define DotUtf8			"." ResUtf8
 #define DotVerifyHostCert	"." ResVerifyHostCert
 
@@ -486,6 +488,7 @@
 #define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
 #define ClsUser			"User"
+#define ClsUtEnv		"UtEnv"
 #define ClsUtf8			"Utf8"
 #define ClsVerifyHostCert	"VerifyHostCert"
 #define ClsVisibleControl	"VisibleControl"
@@ -579,6 +582,7 @@
 #define OptTraceFile		"-tracefile"
 #define OptTraceFileSize	"-tracefilesize"
 #define OptUser			"-user"
+#define OptUtEnv		"-utenv"
 #define OptUtf8			"-utf8"
 #define OptV			"-v"
 #define OptVerifyHostCert	"-verifycert"

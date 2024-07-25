@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include "resolver.h"
 #include "txa.h"
+#include "utils.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
 # include "winvers.h"
@@ -649,7 +650,7 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, char **errmsg,
 	int max, int *nr)
 {
-    const char *m = getenv("MOCK_SYNC_RESOLVER");
+    const char *m = ut_getenv("MOCK_SYNC_RESOLVER");
 
     if (m != NULL && *m != '\0') {
 	return mock_sync_resolver(m, host, portname, pport, sa, sa_len,
@@ -706,7 +707,7 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
 	int max, int *nr, int *slot, int pipe, iosrc_t event)
 {
 #if defined(ASYNC_RESOLVER) /*[*/
-    if (getenv("SYNC_RESOLVER") == NULL) {
+    if (ut_getenv("SYNC_RESOLVER") == NULL) {
 	return resolve_host_and_port_v46_a(host, portname, pport, sa, sa_len,
 		sa_rlen, errmsg, max, nr, slot, pipe, event);
     }

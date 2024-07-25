@@ -94,7 +94,7 @@ class TestS3270Uri(cti.cti):
             # But we have to map 992 to something else, so we don't need to run the TLS server as root.
             env = os.environ
             env['REMAP992'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', 'tn3270s://127.0.0.1?verifyhostcert=false']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270s://127.0.0.1?verifyhostcert=false']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Do the TLS thing.
@@ -124,7 +124,7 @@ class TestS3270Uri(cti.cti):
             # But we have to map 23 to something else, so we don't need to run the TLS server as root.
             env = os.environ
             env['REMAP23'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', 'tn3270://127.0.0.1']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270://127.0.0.1']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Get out.
@@ -151,7 +151,7 @@ class TestS3270Uri(cti.cti):
             hport, ts = cti.unused_port()
             env = os.environ.copy()
             env['REMAP992'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', f'telnets://127.0.0.1?verifyhostcert=false']), env=env)
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnets://127.0.0.1?verifyhostcert=false']), env=env)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()
@@ -181,7 +181,7 @@ class TestS3270Uri(cti.cti):
         hport, ts = cti.unused_port()
         env = os.environ.copy()
         env['REMAP23'] = str(s.port)
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', f'telnet://127.0.0.1']), env=env)
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnet://127.0.0.1']), env=env)
         self.children.append(s3270)
         self.check_listen(hport)
         ts.close()
