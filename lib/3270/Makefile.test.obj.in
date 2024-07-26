@@ -78,10 +78,10 @@ uri_coverage: uri_test
 	gcov -k uri.c
 
 clean:
-	$(RM) *.o *.gcda *.gcno *.gcov
+	$(RM) *.o *.d *.gcda *.gcno *.gcov
 
 clobber: clean
-	$(RM) json_test bind_opts_test utf8_test
+	$(RM) json_test bind_opts_test utf8_test uri_test
 
 -include $(JSON_OBJS:.o=.d)
 -include $(BIND_OPTS_OBJS:.o=.d)

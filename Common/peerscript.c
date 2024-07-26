@@ -388,7 +388,7 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
  * @param[in] s		Socket
  * @param[in] data	Data to send
  * @param[in] len	Length
- * @paran[in] sender	Sending function
+ * @param[in] sender	Sending function
  */
 static void
 check_send(socket_t s, const char *data, size_t len, const char *sender)

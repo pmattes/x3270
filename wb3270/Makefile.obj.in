@@ -82,7 +82,7 @@ wversion.o: mkwversion.sh version.txt
 	sh $< b3270 $(CC) $(filter %.txt,$^)
 
 clean:
-	rm -f *.o fallbacks.c
+	rm -f *.o fallbacks.c wb3270.exe.manifest
 
 clobber: clean
 	rm -f $(PROGS) *.d

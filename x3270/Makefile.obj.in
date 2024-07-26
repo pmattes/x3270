@@ -141,7 +141,7 @@ install.man: man
 clean:
 	$(RM) *.o *pcf.gz fallbacks.c
 clobber: clean
-	$(RM) x3270 x3270a *.d *.man dryrun
+	$(RM) x3270 x3270a *.d *.man dryrun x3270.desktop $(ICONS)
 
 # Include auto-generated dependencies.
 -include $(X3270_OBJECTS:.o=.d)

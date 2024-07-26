@@ -60,4 +60,4 @@ install.man: man
 clean:
 
 clobber: clean
-	$(RM) *.man
+	$(RM) ibm_hosts *.man

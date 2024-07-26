@@ -109,7 +109,7 @@ done:
 /**
  * Check a query for all supported matches.
  * @param[in] query		Query string.
- * @param[out]lu		Returned LU name.
+ * @param[out] lu		Returned LU name.
  * @param[out] accept		Returned accept hostname.
  * @param[in,out] prefixes	Modified prefix flags.
  */

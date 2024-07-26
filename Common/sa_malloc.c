@@ -219,10 +219,11 @@ txAsprintf(const char *fmt, ...)
 }
 
 /**
- * Mark a Malloc'd buffer to be freed at the end of this transaction.
+ * Do a deferred free on a malloc'd block of memory.
  *
- * @param[in] buf	Buffer
- * @returns buf
+ * @param[in] buf       Buffer to store
+ *
+ * @return buf, for convenience
  */
 char *
 txdFree(void *buf)

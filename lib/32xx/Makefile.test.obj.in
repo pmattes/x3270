@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2017, 2020-2022 Paul Mattes.
+# Copyright (c) 1999-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ xpopen_coverage: xpopen_test
 	gcov -k xpopen.c
 
 clean:
-	$(RM) *.o *.gcda *.gcno *.gcov
+	$(RM) *.o *.d *.gcda *.gcno *.gcov
 
 clobber: clean
 	$(RM) base64_test xpopen_test

@@ -149,6 +149,11 @@ windows-release: man
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@ VPATH=../Common -I../Common
 
+clean: release-clean doxygen-clean
+
+release-clean:
+	rm -rf obj/release/*
+
 doxygen: doxygen-b3270 doxygen-c3270 doxygen-pr3287 doxygen-s3270 doxygen-wb3270 doxygen-wc3270 doxygen-wpr3287 doxygen-ws3270 doxygen-x3270 doxygen-x3270if doxygen-wx3270if doxygen-wizard
 DOXY=Common/doxygen/mkdoxy -v Common/version.txt -t Common/doxygen/Doxyfile.tmpl
 doxygen-b3270:
@@ -175,3 +180,5 @@ doxygen-x3270:
 	$(DOXY) -p x3270/Doxygen.opts -o obj/doxygen/posix/x3270
 doxygen-x3270if:
 	$(DOXY) -p x3270if/Doxygen.opts -o obj/doxygen/posix/x3270if
+doxygen-clean:
+	rm -rf obj/doxygen/*
