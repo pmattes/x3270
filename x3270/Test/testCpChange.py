@@ -63,7 +63,9 @@ class TestX3270CpChange(cti.cti):
         os.chmod('x3270/Test/vnc/.vnc/passwd', stat.S_IREAD | stat.S_IWRITE)
         cwd=os.getcwd()
         # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
-        self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'))
+        unset = 'unset ' + ' '.join([x for x in os.environ.keys() if x.startswith('XDG') or x.startswith('GNOME') or x.startswith('SSH')])
+        cmd = f'{unset}; HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'
+        self.assertEqual(0, os.system(cmd))
         self.check_listen(5902)
 
         obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
