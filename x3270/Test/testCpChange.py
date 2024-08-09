@@ -30,81 +30,62 @@
 import os
 import requests
 import shutil
-import stat
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import time
 import unittest
 
 import Common.Test.cti as cti
+import x3270.Test.tvs as tvs
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-@unittest.skipIf(os.system('tightvncserver --help 2>/dev/null') != 65280, "tightvncserver needed for tests")
+@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
 @unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
 class TestX3270CpChange(cti.cti):
-
-    # Set up procedure.
-    def setUp(self):
-        cti.cti.setUp(self)
-
-    # Tear-down procedure.
-    def tearDown(self):
-        # Tear down the VNC server, in case a test failed and did not
-        # clean up.
-        cwd=os.getcwd()
-        os.system(f'HOME={cwd}/x3270/Test/vnc tightvncserver -kill :2 2>/dev/null')
-        cti.cti.tearDown(self)
 
     # x3270 code page change test
     def test_x3270_codepage_change(self):
 
         # Start a tightvnc server.
-        # The password file needs to be 0600 or Vnc will prompt for it again.
-        os.chmod('x3270/Test/vnc/.vnc/passwd', stat.S_IREAD | stat.S_IWRITE)
-        cwd=os.getcwd()
-        # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
-        unset = 'unset ' + ' '.join([x for x in os.environ.keys() if x.startswith('XDG') or x.startswith('GNOME') or x.startswith('SSH')])
-        cmd = f'{unset}; HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'
-        self.assertEqual(0, os.system(cmd))
-        self.check_listen(5902)
+        with tvs.tightvncserver(self):
 
-        obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
-        self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-        self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
-        self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
+            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
+            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
+            self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
+            self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
-        # Start x3270.
-        x3270_port, ts = cti.unused_port()
-        env = os.environ.copy()
-        env['DISPLAY'] = ':2'
-        x3270 = Popen(cti.vgwrap(["x3270",
-            "-httpd", f"127.0.0.1:{x3270_port}",
-            "-efont", "3270-12"]), stdout=DEVNULL, env=env)
-        self.children.append(x3270)
-        self.check_listen(x3270_port)
-        ts.close()
+            # Start x3270.
+            x3270_port, ts = cti.unused_port()
+            env = os.environ.copy()
+            env['DISPLAY'] = ':2'
+            x3270 = Popen(cti.vgwrap(["x3270",
+                "-httpd", f"127.0.0.1:{x3270_port}",
+                "-efont", "3270-12"]), stdout=DEVNULL, env=env)
+            self.children.append(x3270)
+            self.check_listen(x3270_port)
+            ts.close()
 
-        # Get x3270's window ID.
-        r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
-        wid = r.json()['status'].split()[-2]
+            # Get x3270's window ID.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
+            wid = r.json()['status'].split()[-2]
 
-        # Dump the window contents.
-        (handle, name1) = tempfile.mkstemp(suffix='.bmp')
-        os.close(handle)
-        self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name1}"'))
+            # Dump the window contents.
+            (handle, name1) = tempfile.mkstemp(suffix='.bmp')
+            os.close(handle)
+            self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name1}"'))
 
-        # Change the code page.
-        r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(codepage,cp275)')
-        time.sleep(0.5)
+            # Change the code page.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(codepage,cp275)')
+            time.sleep(0.5)
 
-        # Dump the window contents again.
-        (handle, name2) = tempfile.mkstemp(suffix='.bmp')
-        os.close(handle)
-        self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name2}"'))
+            # Dump the window contents again.
+            (handle, name2) = tempfile.mkstemp(suffix='.bmp')
+            os.close(handle)
+            self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name2}"'))
 
-        # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
-        self.vgwait(x3270)
+            # Wait for the process to exit.
+            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.vgwait(x3270)
 
         # Make sure the images match.
         self.assertEqual(0, os.system(f'cmp {name1} {name2}'))
