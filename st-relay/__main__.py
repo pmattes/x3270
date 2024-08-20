@@ -83,7 +83,7 @@ class relay():
         self.opts = oopts.oopts(opts)
         self.logger = logging.getLogger()
         self.relaysocket = None
-        if (self.opts.get('logfile') != None):
+        if (self.opts.get('logfile') != None and self.opts.get('logfile') != 'stdout'):
             ch = logging.handlers.RotatingFileHandler(self.opts.get('logfile'), maxBytes=128*1024, backupCount=10)
         else:
             ch = logging.StreamHandler()
@@ -104,7 +104,8 @@ class relay():
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((address, port))
         s.listen()
-        self.logger.info(f'st-relay: listening on {addr} port {port}')
+        addr_text = str(addr) if addr.version == 4 else f'[{addr}]'
+        self.logger.info(f'st-relay: listening on {addr_text}/{port}')
         t = threading.Thread(target=self.accept, args=[s], name='listen')
         t.start()
         self.servers.append(t)
@@ -238,19 +239,16 @@ if __name__ == '__main__':
         exit_event.set()
 
     parser = argparse.ArgumentParser(description='TELNET STARTTLS wrapper relay')
+    parser.add_argument('--cert', default=None, action='store', help='server certificate path', required=True)
+    parser.add_argument('--key', default=None, action='store', help='server key path', required=True)
     parser.add_argument('--fromaddress', default='::', help='address to listen on (::)')
     parser.add_argument('--fromport', type=int, default=8023, action='store', help='port to listen on (8023)')
     parser.add_argument('--toaddress', default='::1', help='address to connect to (::1)')
     parser.add_argument('--toport', type=int, default=3270, action='store', help='port to connect to (3270)')
     parser.add_argument('--log', default='WARNING', choices=['NONE', 'DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level (WARNING)')
-    parser.add_argument('--logfile', default=None, action='store', help='pathname of log file')
-    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate, negotiated=target_tls.negotiated), default=target_tls.negotiated, help='TLS type {none, immediate, negotiated} (negotiated)')
-    parser.add_argument('--cert', default=None, action='store', help='server certificate path')
-    parser.add_argument('--key', default=None, action='store', help='server key path')
+    parser.add_argument('--logfile', default=None, action='store', help='pathname of log file (stdout)')
+    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate, negotiated=target_tls.negotiated), default=target_tls.negotiated, help='TLS type {none,immediate,negotiated} (negotiated)')
     opts = vars(parser.parse_args())
-    if opts['cert'] == None or opts['key'] == None:
-        print("--cert and --key are mandatory")
-        exit(1)
     signal.signal(signal.SIGINT, exit_signal)
     signal.signal(signal.SIGTERM, exit_signal)
     with relay(opts['fromport'], opts) as server:
