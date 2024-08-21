@@ -69,11 +69,11 @@ class TestS3270ft(cti.cti):
         self.vgwait(s3270)
 
     # s3270 CUT-mode file transfer test
-    def test_s3270_ft_cut(self):
+    def ft_cut(self, trace_file: str):
 
         # Start 'playback' to read s3270's output.
         port, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ft_cut.trc', port=port) as p:
+        with playback.playback(self, trace_file, port=port) as p:
             socket.close()
 
             # Start s3270.
@@ -99,6 +99,13 @@ class TestS3270ft(cti.cti):
         # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
+
+    def test_s3270_ft_cut(self):
+        '''Test CUT mode with ordinary EW commands from the host.'''
+        self.ft_cut('s3270/Test/ft_cut.trc')
+    def test_s3270_ft_cut_ewa(self):
+        '''Test CUT mode with EWA commands from the host.'''
+        self.ft_cut('s3270/Test/ft_cut_ewa.trc')
 
     # Send the rest of the file to the emulator, after a brief delay, and absorb broken pipe errors,
     # which can happen if the emulator fails.

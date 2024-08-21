@@ -2613,12 +2613,9 @@ ps_process(void)
 	;
 
     /* Process file transfers. */
-    if (ft_state != FT_NONE &&      /* transfer in progress */
-	    formatted &&                /* screen is formatted */
-	    !screen_alt &&              /* 24x80 screen */
-	    !(kybdlock & ~KL_FT) &&     /* keyboard not locked */
-	    /* magic field */
-	    ea_buf[1919].fa && FA_IS_SKIP(ea_buf[1919].fa)) {
+    if (ft_state != FT_NONE &&		/* transfer in progress */
+	    formatted &&		/* screen is formatted */
+	    !(kybdlock & ~KL_FT)) {	/* keyboard not locked */
 	ft_cut_data();
     }
 }

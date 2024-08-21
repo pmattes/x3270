@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2015 Paul Mattes.
+ * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@
  *		Data Stream definitions for CUT-style file transfers.
  */
 
+#define O_SF			1919	/* offset to CUT SF */
+
 /* Primary Area */
 #define O_FRAME_TYPE		0	/* offset to frame type */
 #define  FT_CONTROL_CODE	0xc3	/*  frame type: control code (host->) */
@@ -52,7 +54,7 @@
 #define   O_DT_DATA		5	/*   offset to data */
 
 /* Response Area */
-#define O_RESPONSE		1914	/* offset to response area */
+#define O_RESPONSE		(O_SF-5)	/* offset to response area */
 #define RO_FRAME_TYPE		(O_RESPONSE+1)	/* response frame type */
 #define  RFT_RETRANSMIT		0x4c	/* response frame type: retransmit */
 #define  RFT_CONTROL_CODE	0xc3	/* response frame type: control code */
@@ -76,4 +78,4 @@
 #define O_UP_CSUM		4	/* offset to checksum */
 #define O_UP_LEN		5	/* offset to length */
 #define O_UP_DATA		7	/* offset to start of data */
-#define O_UP_MAX		(1919 - O_UP_DATA)	/* max upload data */
+#define O_UP_MAX		(O_SF-O_UP_DATA)	/* max upload data */
