@@ -108,7 +108,7 @@ wmitm-man:
 	cd wmitm && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
 
 Webpage: program-src man FORCE
-	cd Webpage && $(MAKE)
+	cd Webpage && $(MAKE) VPATH=../Common -I../Common
 
 program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz ibm_hosts-src.tgz mitm-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz wmitm-src.tgz lib-src.tgz
 lib-src.tgz:
