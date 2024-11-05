@@ -470,7 +470,7 @@ fprint_screen_body(fps_t ofps)
     fa_underline = xea[fa_addr].gr & GR_UNDERLINE;
     current_underline = fa_underline;
     fa_reverse = xea[fa_addr].gr & GR_REVERSE;
-    current_reverse = fa_underline;
+    current_reverse = fa_reverse;
 
     switch (fps->ptype) {
     case P_RTF:
@@ -655,7 +655,9 @@ fprint_screen_body(fps_t ofps)
 	    bool underline;
 	    bool reverse;
 
-	    if (xea[i].gr & GR_INTENSIFY) {
+	    if (xea[i].fa) {
+		high = false;
+	    } else if (xea[i].gr & GR_INTENSIFY) {
 		high = true;
 	    } else {
 		high = fa_high;
@@ -672,7 +674,9 @@ fprint_screen_body(fps_t ofps)
 		}
 		current_high = high;
 	    }
-	    if (xea[i].gr & GR_UNDERLINE) {
+	    if (xea[i].fa) {
+		underline = false;
+	    } else if (xea[i].gr & GR_UNDERLINE) {
 		underline = true;
 	    } else {
 		underline = fa_underline;
@@ -689,7 +693,9 @@ fprint_screen_body(fps_t ofps)
 		}
 		current_underline = underline;
 	    }
-	    if (xea[i].gr & GR_REVERSE) {
+	    if (xea[i].fa) {
+		reverse = false;
+	    } else if (xea[i].gr & GR_REVERSE) {
 		reverse = true;
 	    } else {
 		reverse = fa_reverse;
@@ -714,39 +720,51 @@ fprint_screen_body(fps_t ofps)
 	    int fg_color, bg_color;
 	    bool high;
 	    bool underline;
+	    bool reverse;
 
 	    if (xea[i].fg) {
 		fg_color = xea[i].fg & 0x0f;
 	    } else {
 		fg_color = fa_fg;
 	    }
-	    if (xea[i].bg) {
+	    if (xea[i].fa) {
+		bg_color = HOST_COLOR_BLACK;
+	    } else if (xea[i].bg) {
 		bg_color = xea[i].bg & 0x0f;
 	    } else {
 		bg_color = fa_bg;
 	    }
-	    if (xea[i].gr & GR_REVERSE) {
-		int tmp;
-
-		tmp = fg_color;
-		fg_color = bg_color;
-		bg_color = tmp;
+	    if (xea[i].fa) {
+		reverse = false;
+	    } else if (xea[i].gr & GR_REVERSE) {
+		reverse = true;
+	    } else {
+		reverse = fa_reverse;
+	    }
+	    if (xea[i].fa) {
+		high = false;
+	    } else if (xea[i].gr & GR_INTENSIFY) {
+		high = true;
+	    } else {
+		high = fa_high;
+	    }
+	    if (xea[i].fa) {
+		underline = false;
+	    } else if (xea[i].gr & GR_UNDERLINE) {
+		underline = true;
+	    } else {
+		underline = fa_underline;
 	    }
 
 	    if (i == cursor_addr) {
 		fg_color = (bg_color == HOST_COLOR_RED)?
 		    HOST_COLOR_BLACK: bg_color;
 		bg_color = HOST_COLOR_RED;
-	    }
-	    if (xea[i].gr & GR_INTENSIFY) {
-		high = true;
-	    } else {
-		high = fa_high;
-	    }
-	    if (xea[i].gr & GR_UNDERLINE) {
-		underline = true;
-	    } else {
-		underline = fa_underline;
+	    } else if (reverse) {
+		int tmp = fg_color;
+
+		fg_color = bg_color;
+		bg_color = tmp;
 	    }
 
 	    if (fg_color != current_fg ||
