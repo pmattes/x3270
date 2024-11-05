@@ -288,6 +288,28 @@ typedef struct {
     ir_state_abort_cb abort;	/* abort callback */
 } ir_state_t;
 
+/* Wait() keywords. */
+static struct {
+    const char *keyword;
+    int min_args;
+    int max_args;
+    enum task_state next_state;
+} wait_keywords[] = {
+    { Kw3270Mode,      0, 0, TS_WAIT_3270 },
+    { Kw3270,          0, 0, TS_WAIT_3270 },
+    { KwNvtMode,       0, 0, TS_WAIT_NVT },
+    { KwAnsi,          0, 0, TS_WAIT_NVT },
+    { KwDisconnect,    0, 0, TS_WAIT_DISC },
+    { KwInputField,    0, 0, TS_WAIT_IFIELD },
+    { KwOutput,        0, 0, TS_WAIT_OUTPUT },
+    { KwUnlock,        0, 0, TS_WAIT_UNLOCK },
+    { KwSeconds,       0, 0, TS_TIME_WAIT },
+    { KwCursorAt,      1, 2, TS_WAIT_CURSOR_AT },
+    { KwStringAt,      2, 3, TS_WAIT_STRING_AT },
+    { KwInputFieldAt,  1, 2, TS_WAIT_IFIELD_AT },
+    { NULL, 0, 0 }
+};
+
 static action_t Abort_action;
 static action_t Ascii_action;
 static action_t Ascii1_action;
@@ -3299,7 +3321,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    popup_an_error("Too few arguments to " AnSnap "(" AnWait ")");
 	    return false;
 	}
-	if (strcasecmp(argv[argc - 1], "Output")) {
+	if (strcasecmp(argv[argc - 1], KwOutput)) {
 	    popup_an_error("Unknown parameter to " AnSnap "(" AnWait ")");
 	    return false;
 	}
@@ -3460,6 +3482,20 @@ parse_rco(const char *action, const char *keyword, unsigned argc,
     return true;
 }
 
+/* Find the keyword for a wait state. */
+static const char *
+find_wait_kw(enum task_state state)
+{
+    int i;
+
+    for (i = 0; wait_keywords[i].keyword != NULL; i++) {
+	if (wait_keywords[i].next_state == state) {
+	    return wait_keywords[i].keyword;
+	}
+    }
+    return "Unknown";
+}
+
 /*
  * Wait for various conditions.
  */
@@ -3471,29 +3507,10 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     char *ptr;
     unsigned np;
     const char **pr;
-    static struct {
-	const char *keyword;
-	int min_args;
-	int max_args;
-	enum task_state next_state;
-    } keywords[] = {
-	{ Kw3270,          0, 0, TS_WAIT_3270 },
-	{ Kw3270Mode,      0, 0, TS_WAIT_3270 },
-	{ KwAnsi,          0, 0, TS_WAIT_NVT },
-	{ KwNvtMode,       0, 0, TS_WAIT_NVT },
-	{ KwDisconnect,    0, 0, TS_WAIT_DISC },
-	{ KwInputField,    0, 0, TS_WAIT_IFIELD },
-	{ KwOutput,        0, 0, TS_WAIT_OUTPUT },
-	{ KwUnlock,        0, 0, TS_WAIT_UNLOCK },
-	{ KwSeconds,       0, 0, TS_TIME_WAIT },
-	{ KwCursorAt,      1, 2, TS_WAIT_CURSOR_AT },
-	{ KwStringAt,      2, 3, TS_WAIT_STRING_AT },
-	{ KwInputFieldAt,  1, 2, TS_WAIT_IFIELD_AT },
-	{ NULL, 0, 0 }
-    };
     int i;
     int match_baddr = -1;
     const char *match_string = NULL;
+    char *next_why;
 #define CONNECTED_CHECK do { \
     if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) { \
 	popup_an_error(AnWait "(): Not connected"); \
@@ -3523,18 +3540,18 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 
     /* Do the initial keyword match and argument count check. */
     if (np > 0) {
-	for (i = 0; keywords[i].keyword != NULL; i++) {
-	    if (!strcasecmp(pr[0], keywords[i].keyword)) {
-		if (check_argc(txAsprintf(AnWait "(%s)", keywords[i].keyword),
-			    np - 1, keywords[i].min_args,
-			    keywords[i].max_args) < 0) {
+	for (i = 0; wait_keywords[i].keyword != NULL; i++) {
+	    if (!strcasecmp(pr[0], wait_keywords[i].keyword)) {
+		if (check_argc(txAsprintf(AnWait "(%s)", wait_keywords[i].keyword),
+			    np - 1, wait_keywords[i].min_args,
+			    wait_keywords[i].max_args) < 0) {
 		    return false;
 		}
-		next_state = keywords[i].next_state;
+		next_state = wait_keywords[i].next_state;
 		break;
 	    }
 	}
-	if (keywords[i].keyword == NULL) {
+	if (wait_keywords[i].keyword == NULL) {
 	    return action_args_are(AnWait, KwInputField, KwNvtMode, Kw3270Mode,
 		    KwOutput, KwSeconds, KwDisconnect, KwUnlock, KwCursorAt,
 		    KwStringAt, KwInputFieldAt, NULL);
@@ -3625,7 +3642,10 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     }
 
     /* Wait for whatever it is to happen. */
-    task_set_state(current_task, next_state, AnWait "()");
+    next_why = txAsprintf(AnWait "(%s%s)",
+	    tmo >= 0.0 ? txAsprintf("%g,", tmo) : "",
+	    find_wait_kw(next_state));
+    task_set_state(current_task, next_state, next_why);
     if (match_baddr >= 0) {
 	task_set_match(current_task, match_baddr, match_string,
 		ia == IA_HTTPD);
@@ -4048,6 +4068,7 @@ wait_timed_out(ioid_t id)
     taskq_t *q;
     task_t *s;
     bool found = false;
+    const char *wait_kw;
 
     assert(current_task == NULL);
 
@@ -4068,20 +4089,22 @@ wait_timed_out(ioid_t id)
 	return;
     }
 
+    wait_kw = find_wait_kw(s->state);
+
     /* If they just wanted a delay, succeed. */
     if (s->state == TS_TIME_WAIT) {
 	s->success = true;
-	task_set_state(s, TS_RUNNING, AnWait "() timed out");
+	task_set_state(s, TS_RUNNING, txAsprintf(AnWait "(%s) timed out", wait_kw));
 	s->wait_id = NULL_IOID;
 	return;
     }
 
     /* Pop up the error message. */
-    popup_an_error_to(s, ET_OTHER, AnWait "(): Timed out");
+    popup_an_error_to(s, ET_OTHER, AnWait "(%s): Timed out", wait_kw);
 
     /* Forget the ID. */
     s->success = false;
-    task_set_state(s, TS_RUNNING, AnWait "() timed out");
+    task_set_state(s, TS_RUNNING, txAsprintf(AnWait "(%s) timed out", wait_kw));
     s->wait_id = NULL_IOID;
 }
 
