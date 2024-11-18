@@ -91,7 +91,7 @@ class TestC3270Smoke(cti.cti):
             result = re.sub('(?s).*\x07', '', result)
             result = result.replace('\x1b', '<ESC>').split('\n')
             for i in range(len(result)):
-                result[i] = re.sub(' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
+                result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
             rtext = '\n'.join(result)
             if 'GENERATE' in os.environ:
                 # Use this to regenerate the template file.
