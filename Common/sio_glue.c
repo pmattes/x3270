@@ -91,6 +91,8 @@ static flagged_res_t sio_flagged_res[] = {
 	{ ResTlsMinProtocol, aoffset(tls.min_protocol), XRM_STRING } },
     { TLS_OPT_MAX_PROTOCOL,
 	{ ResTlsMaxProtocol, aoffset(tls.max_protocol), XRM_STRING } },
+    { TLS_OPT_SECURITY_LEVEL,
+	{ ResTlsSecurityLevel, aoffset(tls.security_level), XRM_STRING } },
 };
 static int n_sio_flagged_res = (int)array_count(sio_flagged_res);
 
@@ -459,6 +461,13 @@ sio_toggle(const char *name, const char *value, unsigned flags, ia_t ia)
 	    toggle_save_disconnect_set(name, value, ia);
 	} else {
 	    Replace(appres.tls.max_protocol, value[0]? NewString(value): NULL);
+	}
+	break;
+    case TLS_OPT_SECURITY_LEVEL:
+	if (connected) {
+	    toggle_save_disconnect_set(name, value, ia);
+	} else {
+	    appres.tls.security_level = NewString(value);
 	}
 	break;
     default:

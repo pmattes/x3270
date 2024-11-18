@@ -168,6 +168,8 @@ XtResource resources[] = {
       offset(tls.max_protocol), XtRString, 0 },
     { ResTlsMinProtocol, ClsTlsMinProtocol, XtRString, sizeof(char *),
       offset(tls.min_protocol), XtRString, 0 },
+    { ResTlsSecurityLevel, ClsTlsSecurityLevel, XtRString, sizeof(char *),
+      offset(tls.security_level), XtRString, 0 },
 
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },

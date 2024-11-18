@@ -47,6 +47,7 @@
 #include "names.h"
 #include "sio.h"
 #include "varbuf.h"	/* must precede sioc.h */
+#include "resources.h"
 #include "sioc.h"
 #include "trace.h"
 #include "utils.h"
@@ -520,6 +521,17 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
     SSL_CTX_set_info_callback(s->ctx, client_info_callback);
     SSL_CTX_set_default_passwd_cb_userdata(s->ctx, s);
     SSL_CTX_set_default_passwd_cb(s->ctx, passwd_cb);
+    if (config->security_level != NULL && config->security_level[0] != '\0') {
+	char *end;
+	unsigned long i = strtoul(config->security_level, &end, 10);
+
+	if (*end != '\0' || i > INT_MAX) {
+	    sioc_set_error("Invalid %s: '%s'", ResTlsSecurityLevel, config->security_level);
+	    goto fail;
+	}
+
+	SSL_CTX_set_security_level(s->ctx, (int)i);
+    }
 
     s->config = config;
 
@@ -783,6 +795,7 @@ display_session(varbuf_t *v, SSL *con)
 {
     vb_appendf(v, "Version: %s\n", SSL_get_version(con));
     vb_appendf(v, "Cipher: %s\n", SSL_get_cipher_name(con));
+    vb_appendf(v, "Security level: %d\n", SSL_get_security_level(con));
 }
 
 /* Display server certificate info. */
@@ -1173,7 +1186,7 @@ sio_options_supported(void)
     return TLS_OPT_CA_DIR | TLS_OPT_CA_FILE | TLS_OPT_CERT_FILE
 	| TLS_OPT_CERT_FILE_TYPE | TLS_OPT_CHAIN_FILE | TLS_OPT_KEY_FILE
 	| TLS_OPT_KEY_FILE_TYPE | TLS_OPT_KEY_PASSWD | TLS_OPT_MIN_PROTOCOL
-	| TLS_OPT_MAX_PROTOCOL;
+	| TLS_OPT_MAX_PROTOCOL | TLS_OPT_SECURITY_LEVEL;
 }
 
 /*
