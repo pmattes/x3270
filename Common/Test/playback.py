@@ -29,6 +29,7 @@
 
 import re
 import socket
+import time
 import threading
 import select
 import Common.Test.cti as cti
@@ -76,9 +77,18 @@ class playback():
 
     # Accept a connection asynchronously.
     def process(self):
-        (self.conn, _) = self.listensocket.accept()
-        self.listensocket.close()
-        self.listensocket = None
+        self.listensocket.setblocking(False)
+        while self.listensocket != None and self.conn == None:
+            try:
+                (self.conn, _) = self.listensocket.accept()
+            except BlockingIOError:
+                pass
+            except OSError:
+                break
+            time.sleep(0.1)
+        if self.listensocket != None:
+            self.listensocket.close()
+            self.listensocket = None
     
     def wait_accept(self, timeout=2):
         '''Wait for a connection'''
