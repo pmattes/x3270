@@ -63,11 +63,16 @@ class TestX3270MoveCursor(cti.cti):
                 '-keymap', 'foo', '-xrm', f'x3270.keymap.foo: #override <Btn1Down>: MoveCursor{suffix}()',
                 f'a:c:t:127.0.0.1:{playback_port}']))
             self.children.append(x3270)
-
+            self.check_listen(hport)
             self.try_until(lambda: self.find_window('Under Test'), 4, 'x3270 did not appear')
 
+            # Find x3270's window ID.
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(WindowId)')
+            self.assertTrue(r.ok, 'Expected Window ID query to succeed')
+            window_id = r.json()['result'][0]
+
             # Try clicking, invalidly.
-            os.system("xdotool search --onlyvisible --name 'Under Test' windowfocus mousemove --window %1 50 50 click 1")
+            os.system(f'xdotool windowfocus --sync {window_id} mousemove --window {window_id} 50 50 click 1')
             self.try_until(lambda: self.find_window('X3270 Error'), 4, 'Error pop-up did not appear')
 
             # Verify the error pop-up contents.
