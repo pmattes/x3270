@@ -49,6 +49,9 @@ class tightvncserver:
         cti.assertEqual(0, os.system(cmd))
         cti.check_listen(5902)
 
+        # As of Ubuntu 24.04, Xvncserver returns garbage the first time a client asks for font info.
+        cti.try_until(lambda: os.system('xlsfonts -display :2 -ll -fn "-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1" >/dev/null 2>&1'), 2, 'Xvncserver is not sane')
+
     def __enter__(self):
         return self
 
