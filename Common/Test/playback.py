@@ -79,13 +79,11 @@ class playback():
     def process(self):
         self.listensocket.setblocking(False)
         while self.listensocket != None and self.conn == None:
+            select.select([self.listensocket], [self.listensocket], [self.listensocket], None)
             try:
                 (self.conn, _) = self.listensocket.accept()
-            except BlockingIOError:
-                pass
-            except OSError:
+            except:
                 break
-            time.sleep(0.1)
         if self.listensocket != None:
             self.listensocket.close()
             self.listensocket = None
