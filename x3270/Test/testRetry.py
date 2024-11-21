@@ -41,11 +41,11 @@ import Common.Test.cti as cti
 class TestX3270Retry(cti.cti):
 
     # Wait for the Connection Error pop-up to appear.
-    def find_popup(self):
+    def find_popup(self) -> str:
         xdotool = Popen(['xdotool', 'search', '--onlyvisible', '--name', 'x3270 Error'], stdout=PIPE, stderr=DEVNULL)
-        out = xdotool.communicate()[0].decode('utf8').strip()
+        out = xdotool.communicate()[0].decode('utf8').strip().split()
         xdotool.wait(2)
-        return out != ''
+        return out
 
     # x3270 retry cancel test
     def test_x3270_retry_cancel(self):
@@ -60,10 +60,12 @@ class TestX3270Retry(cti.cti):
         self.children.append(x3270)
 
         # Wait for the Connection Error pop-up to appear.
-        self.try_until(self.find_popup, 4, 'Connect error pop-up did not appear')
+        self.try_until(lambda: self.find_popup() != [], 4, 'Connect error pop-up did not appear')
 
         # Make it stop.
-        os.system("xdotool search --onlyvisible --name 'x3270 Error' windowfocus mousemove --window %1 42 83 click 1")
+        ids = self.find_popup()
+        id = ids[0] if len(ids) == 1 else ids[1]
+        os.system(f'xdotool windowfocus --sync {id} mousemove --window {id} 42 83 click 1')
 
         # Verify that x3270 is no longer reconnecting.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
@@ -86,7 +88,7 @@ class TestX3270Retry(cti.cti):
         self.children.append(x3270)
 
         # Wait for the Connection Error pop-up to appear.
-        self.try_until(self.find_popup, 4, 'Connect error pop-up did not appear')
+        self.try_until(lambda: self.find_popup != [], 4, 'Connect error pop-up did not appear')
 
         # Start playback to accept the connection.
         with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
