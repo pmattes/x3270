@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,43 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# A queue-based pipe reader that allows timed reads
+# b3270 stdout EPIPE tests
 
-import queue
-import threading
-from Common.Test.cti import cti
+import json
+from subprocess import Popen, PIPE, DEVNULL
+import sys
+import unittest
 
-# Queue-based pipe reader.
-class pipeq():
+import Common.Test.pipeq as pipeq
+import Common.Test.setupCert as setupCert
+import Common.Test.cti as cti
+import Common.Test.tls_server as tls_server
 
-    pipe = None
-    queue = None
-    limit = -1
-    count = 0
+class TestB3270Epipe(cti.cti):
 
-    # Initialization.
-    def __init__(self, cti: cti, pipe, limit=-1):
-        self.pipe = pipe
-        self.limit = limit
-        self.cti = cti
-        self.queue = queue.Queue()
-        self.thread = threading.Thread(target=self.shuttle)
-        self.thread.start()
+    # b3270 TLSEPIPE test
+    def test_b3270_tls(self):
 
-    def shuttle(self):
-        '''Shuttle data from the pipe to the queue'''
-        while True:
-            try:
-                rdata = self.pipe.readline()
-            except ValueError:
-                return
-            if len(rdata) == 0:
-                return
-            self.queue.put(rdata.strip())
-            if self.limit > 0:
-                self.count += 1
-                if self.count >= self.limit:
-                    break
+        # Start b3270.
+        args = ['b3270', '-json']
+        b3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
 
-    def get(self, timeout=2, error='Pipe read timed out'):
-        '''Timed read'''
-        try:
-            r = self.queue.get(block=True, timeout=timeout)
-        except queue.Empty:
-            r = None
-        self.cti.assertIsNotNone(r, error)
-        return r
-    
-    def close(self):
-        self.thread.join()
+        # Throw away b3270's initialization output.
+        pq = pipeq.pipeq(self, b3270.stdout, limit=1)
+        pq.get(2, 'b3270 did not start')
+
+        # Close stdout.
+        pq.close()
+        b3270.stdout.close()
+
+        # Generate a lot of output.
+        b3270.stdin.write(b'"readbuffer"\n')
+        b3270.stdin.flush()
+
+        # Wait for the process to exit.
+        b3270.stdin.close()
+        self.vgwait(b3270)
+
+if __name__ == '__main__':
+    unittest.main()

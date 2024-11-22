@@ -226,7 +226,6 @@ uprintf(const char *fmt, ...)
 			win32_strerror(GetLastError()):
 #endif /*]*/
 		    strerror(errno));
-	x3270_exit(1);
     }
 }
 
