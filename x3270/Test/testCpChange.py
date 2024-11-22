@@ -65,6 +65,7 @@ class TestX3270CpChange(cti.cti):
         # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
         self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
+        self.try_until(lambda: os.system('xlsfonts -display :2 -ll -fn "-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1" >/dev/null 2>&1'), 2, 'Xvncserver is not sane')
 
         obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
         self.assertEqual(0, os.system(f'mkfontdir {obj}'))

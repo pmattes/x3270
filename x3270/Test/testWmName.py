@@ -64,6 +64,7 @@ class TestX3270WmName(cti.cti):
         # Set SSH_CONNECTION to keep the VirtualBox extensions from starting in the tightvncserver.
         self.assertEqual(0, os.system(f'HOME={cwd}/x3270/Test/vnc USER=foo SSH_CONNECTION=foo tightvncserver :2 2>/dev/null'))
         self.check_listen(5902)
+        self.try_until(lambda: os.system('xlsfonts -display :2 -ll -fn "-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1" >/dev/null 2>&1'), 2, 'Xvncserver is not sane')
 
         # Start 'playback' to feed x3270.
         playback_port, ts = cti.unused_port()
