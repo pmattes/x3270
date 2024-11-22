@@ -5,6 +5,7 @@ config.log
 config.status
 configure.in~
 configure~
+core.*
 cscope.*
 Debug/
 *.exe
