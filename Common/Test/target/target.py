@@ -53,7 +53,8 @@ class real_socket(socketwrapper.socketwrapper):
         self.conn = conn
         self.logger = logger
     def send(self, b: bytes):
-        self.conn.send(b)
+        if self.conn != None:
+            self.conn.send(b)
     def recv(self, count: int) -> bytes:
         return self.conn.recv(count)
     def close(self):
@@ -286,12 +287,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='x3270 test target')
     parser.add_argument('--address', default='127.0.0.1', help='address to listen on')
     parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
-    parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server')
-    parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level')
-    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate, negotiated=target_tls.negotiated), default=target_tls.none, help='TLS support')
-    parser.add_argument('--tn3270e', default='True', choices=['True', 'False'], help='TN3270E support')
-    parser.add_argument('--bind', default='True', choices=['True', 'False'], help='TN3270E BIND support')
-    parser.add_argument('--elf', default='False', choices=['True', 'False'], help='IBM ELF support')
+    parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server [menu-f]')
+    parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level [WARNING]')
+    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate,
+                                            negotiated=target_tls.negotiated), default=target_tls.none,
+                                            choices=['none', 'immediate', 'negotiated'], help='TLS support [none]')
+    parser.add_argument('--tn3270e', action=argparse.BooleanOptionalAction, default=True, help='TN3270E support [on]')
+    parser.add_argument('--bind', action=argparse.BooleanOptionalAction, default=True, help='TN3270E BIND support [on]')
+    parser.add_argument('--elf', action=argparse.BooleanOptionalAction, default=False, help='IBM ELF support [off]')
+    parser.add_argument('--devname', type=int, default=0, action='store', metavar='LIMIT', help='RFC 4777 devname limit [0]')
     opts = vars(parser.parse_args())
     with target(opts['port'], opts) as server:
         print('Press <Enter> to stop the server.')

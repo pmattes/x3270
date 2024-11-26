@@ -66,7 +66,7 @@ strcasestr(const char *haystack, const char *needle)
     }
 
     while (*s) {
-	if (!strncasecmp(needle, haystack, strlen(needle))) {
+	if (!strncasecmp(needle, s, strlen(needle))) {
 	    return (char *)s;
 	}
 	s++;

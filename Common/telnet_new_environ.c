@@ -39,6 +39,7 @@
 
 #include "appres.h"
 
+#include "devname.h"
 #include "resources.h"
 #include "sio.h"
 #include "telnet.h"
@@ -74,6 +75,7 @@ typedef struct {
     size_t name_len;
     char *value;
     size_t value_len;
+    devname_t *devname;
 } environ_t;
 
 static llist_t vars = LLIST_INIT(vars);
@@ -115,7 +117,7 @@ escaped_copy(char *to, const char *from, size_t len)
 }
 
 /* Add a value to an environment list. */
-static void
+static environ_t *
 add_environ(llist_t *list, const char *name, const char *value)
 {
     size_t name_len = strlen(name);
@@ -124,7 +126,7 @@ add_environ(llist_t *list, const char *name, const char *value)
     size_t value_xlen = escaped_len(value, value_len);
 
     /* Add it to the list. */
-    environ_t *e = (environ_t *)Malloc(sizeof(environ_t) + name_xlen + value_xlen);
+    environ_t *e = (environ_t *)Calloc(sizeof(environ_t) + name_xlen + value_xlen, 1);
 
     e->name = (char *)(e + 1);
     escaped_copy(e->name, name, name_len);
@@ -135,6 +137,7 @@ add_environ(llist_t *list, const char *name, const char *value)
 
     llist_init(&e->list);
     llist_insert_before(&e->list, list);
+    return e;
 }
 
 /*
@@ -160,18 +163,33 @@ find_environ(llist_t *list, const char *name, size_t namelen)
     return NULL;
 }
 
+/* Reset an environment variable list. */
+static void
+environ_clear(llist_t *list)
+{
+    while (!llist_isempty(list)) {
+	llist_t *l = list->next;
+	environ_t *e;
+
+	llist_unlink(l);
+	e = (environ_t *)l;
+	if (e->devname != NULL) {
+	    devname_free(e->devname);
+	}
+	Free(e);
+    }
+}
+
 /* Initialize the NEW-ENVIRON variables. */
 void
 environ_init(void)
 {
-    static bool initted = false;
     char *user;
     char *ibmapplid;
 
-    if (initted) {
-	return;
-    }
-    initted = true;
+    /* Clean up from last time. */
+    environ_clear(&vars);
+    environ_clear(&uservars);
 
     user = host_user? host_user: (appres.user? appres.user: getenv("USER"));
     if (user == NULL) {
@@ -182,7 +200,8 @@ environ_init(void)
     }
     add_environ(&vars, USER_VARNAME, user);
     if (appres.devname != NULL) {
-	add_environ(&uservars, DEVNAME_USERVARNAME, appres.devname);
+	environ_t *e = add_environ(&uservars, DEVNAME_USERVARNAME, appres.devname);
+	e->devname = devname_init(appres.devname);
     }
     add_environ(&uservars, IBMELF_VARNAME, IBMELF_YES);
     ibmapplid = getenv(IBMAPPLID_VARNAME);
@@ -457,6 +476,7 @@ telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
 	    } FOREACH_LLIST_END(l, ereq, ereq_t *)
 	} else {
 	    environ_t *value;
+	    const char *dnext = NULL;
 
 	    /* Trace thr request. */
 	    vb_appendf(&trace_in, " %s \"%s\"", telobjs[ereq->group],
@@ -471,7 +491,13 @@ telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
 	    vb_append(&reply, ereq->name, ereq->name_len);
 	    if (value != NULL) {
 		vb_appendf(&reply, "%c", TELOBJ_VALUE);
-		vb_append(&reply, value->value, value->value_len);
+		if (value->devname != NULL) {
+		    dnext = devname_next(value->devname);
+
+		    vb_append(&reply, dnext, strlen(dnext));
+		} else {
+		    vb_append(&reply, value->value, value->value_len);
+		}
 	    }
 
 	    /* Trace the reply, */
@@ -481,7 +507,9 @@ telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
 	    if (value != NULL) {
 		vb_appendf(&trace_out, " %s \"%s\"",
 		    telobjs[TELOBJ_VALUE],
-		    expand_name(value->value, value->value_len));
+		    (dnext != NULL)?
+			expand_name(dnext, strlen(dnext)):
+			expand_name(value->value, value->value_len));
 	    }
 	}
     } FOREACH_LLIST_END(ereqs, ereq, ereq_t);
@@ -522,7 +550,7 @@ telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
 }
 
 /**
- * Toggle the user name.
+ * Toggle a simple string.
  * @param[in] name	Toggle name.
  * @param[in] value	Toggle value.
  * @param[in] flags	Flags.
@@ -530,9 +558,24 @@ telnet_new_environ(unsigned char *request_buf, size_t request_buflen,
  * @returns success/failure/deferred
  */
 static toggle_upcall_ret_t
-toggle_user(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
+toggle_string(const char *name, const char *value, unsigned flags, ia_t ia)
 {
-    Replace(appres.user, NewString(value));
+    char **target;
+
+    if (!strcasecmp(name, ResUser)) {
+	target = &appres.user;
+    } else if (!strcasecmp(name, ResDevName)) {
+	target = &appres.devname;
+    } else {
+	return TU_FAILURE;
+    }
+
+    if (value == NULL || !value[0]) {
+	Replace(*target, NULL);
+    } else {
+	Replace(*target, NewString(value));
+    }
+
     return TU_SUCCESS;
 }
 
@@ -543,5 +586,6 @@ void
 telnet_new_environ_register(void)
 {
     /* Register the toggles. */
-    register_extended_toggle(ResUser, toggle_user, NULL, NULL, (void **)&appres.user, XRM_STRING);
+    register_extended_toggle(ResUser, toggle_string, NULL, NULL, (void **)&appres.user, XRM_STRING);
+    register_extended_toggle(ResDevName, toggle_string, NULL, NULL, (void **)&appres.devname, XRM_STRING);
 }

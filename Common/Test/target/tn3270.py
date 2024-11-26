@@ -71,8 +71,9 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         self.termid = None
         self.system = None
         self.tls = tls
-        self.do_tn3270e = opts.get('tn3270e', 'True') == 'True'
-        self.elf = opts.get('elf', 'True') == 'True'
+        self.do_tn3270e = opts.get('tn3270e')
+        self.elf = opts.get('elf')
+        self.devname_max = opts.get('devname')
     def __enter__(self):
         super().__enter__()
         return self
@@ -170,8 +171,14 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
             if not self.in3270:
                 self.switch_3270(True)
         if option == telopt.NEW_ENVIRON:
-            request = bytes([int(telobj.USERVAR)]) + 'IBMELF'.encode() + bytes([int(telobj.USERVAR)]) + 'IBMAPPLID'.encode() if self.elf else b''
-            self.ask_sb(option, request)
+            request = b''
+            if self.elf:
+                request += bytes([int(telobj.USERVAR)]) + 'IBMELF'.encode() + bytes([int(telobj.USERVAR)]) + 'IBMAPPLID'.encode()
+            if self.devname_max > 0:
+                request += bytes([int(telobj.USERVAR)]) + 'DEVNAME'.encode()
+            self.ask_sb(option, request, decode_new_environ_sb_send(request))
+            self.devname_last_value = None
+            self.devname_count = 0
         return option in liked_options
 
     def rcv_wont(self, option: telopt) -> bool:
@@ -224,50 +231,72 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         '''Parse a NEW-ENVIRON sub-negotiation'''
         if len(data) == 0:
             return
+        is_is = False
         if ftie(data[0], telqual) == telqual.IS:
             decode = 'IS'
+            is_is = True
         elif ftie(data[0], telqual) == telqual.INFO:
             decode = 'INFO'
+            is_is = False
         else:
             self.warning('TN3270', f'Unknown NEW-ENVIRON SB code {data[0]}')
             return
+        is_uservar = False
+        varname = ''
+        value = ''
         data = data[1:]
+        devname = None
         while len(data) > 0:
             if telobj(data[0]) == telobj.VAR:
                 decode += ' VAR '
+                is_uservar = False
             elif telobj(data[0]) == telobj.USERVAR:
                 decode += ' USERVAR '
+                is_uservar = True
             else:
                 self.warning('TN3270', f'Unknown NEW-ENVIRON code {data[0]}')
                 return
             # Accumulate bytes until we hit the end or a VALUE.
             data = data[1:]
+            varname = ''
             while len(data) > 0 and ftie(data[0], telobj) != telobj.VALUE and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
                 if ftie(data[0], telobj) == telobj.ESC:
                     data = data[1:]
                     if len(data) == 0:
                         self.warning('TN3270', 'Missing data after ESC')
                         return
-                decode += data[0:1].decode()
+                nxb = data[0:1].decode()
                 data = data[1:]
+                decode += nxb
+                varname += nxb
             decode += '="'
-            if len(data) == 0:
-                decode += '"'
-                break
-            if ftie(data[0], telobj) == telobj.VAR or ftie(data[0], telobj) == telobj.USERVAR:
-                decode += '"'
-                continue
-            data = data[1:]
-            while len(data) > 0 and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
-                if ftie(data[0], telobj) == telobj.ESC:
-                    data = data[1:]
-                    if len(data) == 0:
-                        self.warning('TN3270', 'Missing data after ESC')
-                        return
-                decode += data[0:1].decode()
+            value = ''
+            if len(data) > 0 and ftie(data[0], telobj) == telobj.VALUE:
                 data = data[1:]
+                while len(data) > 0 and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
+                    if ftie(data[0], telobj) == telobj.ESC:
+                        data = data[1:]
+                        if len(data) == 0:
+                            self.warning('TN3270', 'Missing data after ESC')
+                            return
+                    nxb = data[0:1].decode()
+                    data = data[1:]
+                    decode += nxb
+                    value += nxb
             decode += '"'
+            if is_is and is_uservar and varname == 'DEVNAME':
+                devname = value
         self.debug('TN3270', f'NEW-ENVIRON {decode}')
+        if self.devname_max > 0 and devname != None:
+            if devname == self.devname_last_value:
+                self.info('TN3270', 'DEVNAME repeated, disconnecting')
+                self.hangup()
+                return
+            self.devname_last_value = devname
+            self.devname_count += 1
+            if self.devname_count <= self.devname_max:
+                sb = bytes([int(telobj.USERVAR)]) + 'DEVNAME'.encode()
+                self.ask_sb(telopt.NEW_ENVIRON, sb, decode_new_environ_sb_send(sb))
 
     # TN3270E entry points.
     def e_sb(self, data: bytes):
@@ -326,3 +355,23 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
         self.ttype = ttype
         self.dinfo = ds.dinfo(ttype)
         return self.dinfo
+
+
+def decode_new_environ_sb_send(b: bytes) -> str:
+    '''Decode a NEW_ENVIRON SB send'''
+    data = b
+    decode = ''
+    space = ''
+    while len(data) > 0:
+        if telobj(data[0]) == telobj.VAR:
+            decode += space + 'VAR '
+        elif telobj(data[0]) == telobj.USERVAR:
+            decode += space + 'USERVAR '
+        else:
+            break
+        space = ' '
+        data = data[1:]
+        while len(data) > 0 and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
+            decode += data[0:1].decode()
+            data = data[1:]
+    return decode

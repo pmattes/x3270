@@ -1,0 +1,308 @@
+20241125.214500.576 s3stdin read 'set devname bar='
+20241125.214500.576 CB(s3stdin)[#2] started
+20241125.214500.576 CB(s3stdin)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20241125.214500.576 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20241125.214500.576 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20241125.214500.576 Macro[#2.2] running
+20241125.214500.576 Macro[#2.2] IDLE -> RUNNING (executing)
+20241125.214500.576 Macro[#2.2] 'set devname bar='
+20241125.214500.576 script -> Set("devname", "bar=")
+20241125.214500.576 Macro[#2.2] complete, success
+20241125.214500.576 CB(s3stdin)[#2.1] RUNNING -> IDLE (about to resume)
+20241125.214500.576 CB(s3stdin)[#2.1] child task done, success
+20241125.214500.576 Output for CB(s3stdin)[#2.1]: L F U N N 4 24 80 22 4 0x0 0.000/ok
+20241125.214500.576 CB(s3stdin)[#2.1] complete, success
+20241125.214500.576 CB(s3stdin)[#2] complete
+20241125.214500.576 Waiting for 2 events
+20241125.214506.920 Got 1 event
+20241125.214506.921 s3stdin read 'open localhost:8021'
+20241125.214506.921 CB(s3stdin)[#3] started
+20241125.214506.921 CB(s3stdin)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20241125.214506.921 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20241125.214506.921 txflush: 30 slots, 800 bytes
+20241125.214506.921 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20241125.214506.921 Macro[#3.2] running
+20241125.214506.921 Macro[#3.2] IDLE -> RUNNING (executing)
+20241125.214506.921 Macro[#3.2] 'open localhost:8021'
+20241125.214506.921 script -> Connect("localhost:8021")
+20241125.214506.921 st_changed(secure,false)
+20241125.214506.921 Resolver slot is 0
+20241125.214506.921 cstate [not-connected] -> [resolving] (host_connect)
+20241125.214506.921 st_changed(connect,true)
+20241125.214506.921 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20241125.214506.921 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20241125.214506.921 ctlr_enable_cursor(false, connect)
+20241125.214506.921 st_changed(negotiating,true)
+20241125.214506.921 Macro[#3.2] RUNNING -> CONNECT_WAIT (Connect() or Reconnect())
+20241125.214506.921 Waiting for 1 event or 1.000s
+20241125.214506.921 Got 1 event
+20241125.214506.921 Resolution complete, 1 address
+20241125.214506.921 TLS: will verify host certificate
+20241125.214506.942 Making host socket non-blocking
+20241125.214506.942 Trying 127.0.0.1, port 8021...
+20241125.214506.942 TCP connection pending.
+20241125.214506.942 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20241125.214506.942 st_changed(negotiating,true)
+20241125.214506.942 txflush: 33 slots, 872 bytes
+20241125.214506.942 Waiting for 4 events or 0.000s
+20241125.214506.942 Got 1 event
+20241125.214506.942 Output possible
+20241125.214506.942 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20241125.214506.942 st_changed(connect,true)
+20241125.214506.942 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20241125.214506.942 Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20241125.214506.942 Host negotiation step took 0.000072s to complete
+20241125.214506.942 ctlr_enable_cursor(true, connect)
+20241125.214506.942 ctlr_enable_cursor(true, nvt)
+20241125.214506.942 st_changed(negotiating,true)
+20241125.214506.943 Connected to localhost, port 8021.
+20241125.214506.943 st_changed(secure,false)
+20241125.214506.943 st_changed(line-mode,true)
+20241125.214506.943 txflush: 21 slots, 504 bytes
+20241125.214506.943 Waiting for 3 events or 0.000s
+20241125.214506.943 Got 0 events
+20241125.214506.943 Waiting for 3 events or 1.000s
+20241125.214506.943 Got 1 event
+20241125.214506.943 Reading host socket
+20241125.214506.943 Host socket read complete nr=3
+< 0x0   fffd28
+20241125.214506.943 RCVD DO TN3270E
+> 0x0   fffb28
+20241125.214506.943 SENT WILL TN3270E
+20241125.214506.943 Now operating in connected-unbound mode.
+20241125.214506.943 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20241125.214506.943 st_changed(negotiating,true)
+20241125.214506.943 st_changed(3270-mode,false)
+20241125.214506.943 Host negotiation step took 0.000008s to complete
+20241125.214506.943 ctlr_enable_cursor(true, connect)
+20241125.214506.943 ctlr_enable_cursor(true, nvt)
+20241125.214506.943 txflush: 13 slots, 312 bytes
+20241125.214506.943 Waiting for 3 events
+20241125.214506.943 Got 1 event
+20241125.214506.943 Reading host socket
+20241125.214506.943 Host socket read complete nr=10
+< 0x0   fffd27fffa280802fff0
+20241125.214506.943 RCVD DO NEW-ENVIRON
+> 0x0   fffb27
+20241125.214506.943 SENT WILL NEW-ENVIRON
+20241125.214506.943 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20241125.214506.943 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20241125.214506.943 Waiting for 3 events
+20241125.214506.944 Got 1 event
+20241125.214506.944 Reading host socket
+20241125.214506.944 Host socket read complete nr=31
+< 0x0   fffa27010349424d454c460349424d4150504c4944034445564e414d45fff0
+20241125.214506.944 RCVD SB NEW-ENVIRON SEND USERVAR "IBMELF" USERVAR "IBMAPPLID" USERVAR "DEVNAME" SE
+> 0x0   fffa27000349424d454c46015945530349424d4150504c4944014e6f6e650344
+> 0x20  45564e414d450162617231fff0
+20241125.214506.944 SENT SB NEW-ENVIRON IS USERVAR "IBMELF" VALUE "YES" USERVAR "IBMAPPLID" VALUE "None" USERVAR "DEVNAME" VALUE "bar1" SE
+20241125.214506.944 txflush: 15 slots, 360 bytes
+20241125.214506.944 Waiting for 3 events
+20241125.214506.944 Got 1 event
+20241125.214506.944 Reading host socket
+20241125.214506.944 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054453032fff0
+20241125.214506.944 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TE02 SE
+> 0x0   fffa28030700020405fff0
+20241125.214506.944 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20241125.214506.944 Waiting for 3 events
+20241125.214506.944 Got 1 event
+20241125.214506.944 Reading host socket
+20241125.214506.944 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214506.944 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617232fff0
+20241125.214506.945 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar2" SE
+20241125.214506.945 Waiting for 3 events
+20241125.214506.945 Got 1 event
+20241125.214506.945 Reading host socket
+20241125.214506.945 Host socket read complete nr=8
+< 0x0   fffa28030700fff0
+20241125.214506.945 RCVD SB TN3270E FUNCTIONS REQUEST BIND-IMAGE SE
+> 0x0   fffa28030400fff0
+20241125.214506.945 SENT SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20241125.214506.945 TN3270E option negotiation complete.
+20241125.214506.945 Waiting for 3 events
+20241125.214506.945 Got 1 event
+20241125.214506.945 Reading host socket
+20241125.214506.945 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214506.945 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617233fff0
+20241125.214506.945 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar3" SE
+20241125.214506.945 Waiting for 3 events
+20241125.214506.945 Got 1 event
+20241125.214506.945 Reading host socket
+20241125.214506.945 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4c1c30005007eec0b1008c9c2d4f0e3c5e2d8ffef
+20241125.214506.945 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SMAC' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20241125.214506.945 Now operating in connected-tn3270e mode.
+20241125.214506.945 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20241125.214506.945 st_changed(3270-mode,true)
+20241125.214506.945 ctlr_enable_cursor(true, connect)
+20241125.214506.945 RCVD EOR
+20241125.214506.945 txflush: 11 slots, 264 bytes
+20241125.214506.946 Waiting for 3 events
+20241125.214506.946 Got 1 event
+20241125.214506.946 Reading host socket
+20241125.214506.946 Host socket read complete nr=607
+< 0x0   0000000000f542a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d160115a50115b607e7e6e2902c001fe0113115c6f1d30c6f37ec5d5c4ffef
+20241125.214506.947 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,restore) 'x3270 test target (formatted 3270)' SetBufferA ...
+... ddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' SetBu ...
+... fferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibmlink,  ...
+... with help screens' SetBufferAddress(5,1) ' menu     Menu using plain TE ...
+... LNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270 screen ...
+... ' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' SetBuff ...
+... erAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBufferAdd ...
+... ress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBufferAddre ...
+... ss(10,1) ' snake    TN3270 protocol server playing snake' SetBufferAddr ...
+... ess(11,1) ' sruvm    TN3270 protocol server simulating sruvm (model 4 r ...
+... equired)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol server simu ...
+... lating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from test tar ...
+... get' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddress(22, ...
+... 1) SetBufferAddress(23,1) '==>' StartFieldExtended(23,4) 3270(modified) ...
+...  input-control(enabled) InsertCursor(23,5) SetBufferAddress(23,80) Star ...
+... tField(protected,skip) 'F3=END'
+20241125.214506.949 Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+20241125.214506.949 RCVD EOR
+20241125.214506.949 txflush: 572 slots, 13744 bytes
+20241125.214506.949 Macro[#3.2] CONNECT_WAIT -> IDLE (about to resume)
+20241125.214506.949 Macro[#3.2] running
+20241125.214506.949 Macro[#3.2] complete, success
+20241125.214506.949 CB(s3stdin)[#3.1] RUNNING -> IDLE (about to resume)
+20241125.214506.949 CB(s3stdin)[#3.1] child task done, success
+20241125.214506.949 Output for CB(s3stdin)[#3.1]: U F U C(localhost) I 4 24 80 22 4 0x0 0.028/ok
+20241125.214506.949 CB(s3stdin)[#3.1] complete, success
+20241125.214506.949 CB(s3stdin)[#3] complete
+20241125.214506.949 Waiting for 4 events
+20241125.214506.999 Got 1 event
+20241125.214506.999 Reading host socket
+20241125.214506.999 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214506.999 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617234fff0
+20241125.214506.999 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar4" SE
+20241125.214507.000 txflush: 24 slots, 608 bytes
+20241125.214507.000 Waiting for 4 events
+20241125.214507.000 Got 1 event
+20241125.214507.000 Reading host socket
+20241125.214507.000 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.000 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617235fff0
+20241125.214507.000 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar5" SE
+20241125.214507.000 Waiting for 4 events
+20241125.214507.000 Got 1 event
+20241125.214507.000 Reading host socket
+20241125.214507.000 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.000 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617236fff0
+20241125.214507.001 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar6" SE
+20241125.214507.001 Waiting for 4 events
+20241125.214507.001 Got 1 event
+20241125.214507.001 Reading host socket
+20241125.214507.001 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.001 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617237fff0
+20241125.214507.001 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar7" SE
+20241125.214507.001 Waiting for 4 events
+20241125.214507.002 Got 1 event
+20241125.214507.002 Reading host socket
+20241125.214507.002 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.002 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617238fff0
+20241125.214507.002 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar8" SE
+20241125.214507.002 Waiting for 4 events
+20241125.214507.002 Got 1 event
+20241125.214507.002 Reading host socket
+20241125.214507.002 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.002 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617239fff0
+20241125.214507.003 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar9" SE
+20241125.214507.003 Waiting for 4 events
+20241125.214507.003 Got 1 event
+20241125.214507.003 Reading host socket
+20241125.214507.003 Host socket read complete nr=14
+< 0x0   fffa2701034445564e414d45fff0
+20241125.214507.003 RCVD SB NEW-ENVIRON SEND USERVAR "DEVNAME" SE
+> 0x0   fffa2700034445564e414d450162617239fff0
+20241125.214507.003 SENT SB NEW-ENVIRON IS USERVAR "DEVNAME" VALUE "bar9" SE
+20241125.214507.003 Waiting for 4 events
+20241125.214507.004 Got 1 event
+20241125.214507.004 Reading host socket
+20241125.214507.004 Host socket read complete nr=0
+20241125.214507.004 RCVD disconnect
+20241125.214507.005 st_changed(secure,false)
+20241125.214507.005 SENT disconnect
+20241125.214507.005 cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20241125.214507.005 st_changed(connect,false)
+20241125.214507.005 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20241125.214507.005 ctlr_enable_cursor(false, connect)
+20241125.214507.005 ctlr_enable_cursor(false, nvt)
+20241125.214507.005 txflush: 15 slots, 360 bytes
+20241125.214507.005 Waiting for 2 events or 0.000s
+20241125.214507.005 Got 0 events
+20241125.214507.005 Waiting for 2 events
+20241125.214509.147 Got 1 event
+20241125.214509.147 s3stdin read ''
+20241125.214509.147 CB(s3stdin)[#4] started
+20241125.214509.147 CB(s3stdin)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20241125.214509.147 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20241125.214509.147 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20241125.214509.147 Macro[#4.2] running
+20241125.214509.147 Macro[#4.2] complete, success
+20241125.214509.147 CB(s3stdin)[#4.1] RUNNING -> IDLE (about to resume)
+20241125.214509.147 CB(s3stdin)[#4.1] child task done, success
+20241125.214509.147 Output for CB(s3stdin)[#4.1]: L F U N N 4 24 80 22 4 0x0 0.000/ok
+20241125.214509.147 CB(s3stdin)[#4.1] complete, success
+20241125.214509.147 CB(s3stdin)[#4] complete
+20241125.214509.147 Waiting for 2 events
+20241125.214512.163 Got 1 event
+20241125.214512.163 s3stdin read 'Quit'
+20241125.214512.163 CB(s3stdin)[#5] started
+20241125.214512.163 CB(s3stdin)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20241125.214512.163 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20241125.214512.163 txflush: 21 slots, 536 bytes
+20241125.214512.163 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20241125.214512.163 Macro[#5.2] running
+20241125.214512.163 Macro[#5.2] IDLE -> RUNNING (executing)
+20241125.214512.163 Macro[#5.2] 'Quit'
+20241125.214512.163 script -> Quit()
+20241125.214512.163 Macro[#5.2] complete, success
+20241125.214512.163 CB(s3stdin)[#5.1] RUNNING -> IDLE (about to resume)
+20241125.214512.163 CB(s3stdin)[#5.1] child task done, success
+20241125.214512.163 Output for CB(s3stdin)[#5.1]: L F U N N 4 24 80 22 4 0x0 0.000/ok
+20241125.214512.163 CB(s3stdin)[#5.1] complete, success
+20241125.214512.163 CB(s3stdin)[#5] complete
+20241125.214512.163 Waiting for 2 events or 0.000s
+20241125.214512.163 Got 0 events
+20241125.214512.163 Exiting with status 0
+20241125.214512.163 st_changed(exiting,true)
+20241125.214512.163 Trace stopped

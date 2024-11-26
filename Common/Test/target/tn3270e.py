@@ -56,7 +56,7 @@ class tn3270e():
         self.got_functions = False
         self.sequence = 0
         self.functions = []
-        self.do_bind = opts.get('bind', 'True') == 'True'
+        self.do_bind = opts.get('bind')
         self.dinfo = ds.dinfo('IBM-3278-2-E')
 
     def negotiate(self):

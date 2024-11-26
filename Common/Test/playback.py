@@ -186,13 +186,14 @@ class playback():
             nleft -= len(chunk)
         return ret
 
-    def match(self, disconnect=True, nrecords=-1):
+    def match(self, disconnect=True, nrecords=-1, nlines=-1):
         '''Compare emulator I/O to trace file'''
         self.wait_accept()
         direction = ''
         accum = ''
         lno = 0
         records = 0
+        lines = 0
         while True:
             lno += 1
             line = self.file.readline()
@@ -204,7 +205,11 @@ class playback():
                 if direction == '<':
                     # Send to emulator.
                     self.conn.send(bytes.fromhex(accum))
-                    # See if we have sent enough.
+                    # See if we have sent enough lines.
+                    lines += 1
+                    if nlines > 0 and lines >= nlines:
+                        break
+                    # See if we have sent enough records.
                     if accum.endswith('ffef'):
                         records += 1
                         if nrecords > 0 and records >= nrecords:

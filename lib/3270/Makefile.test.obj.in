@@ -35,17 +35,19 @@ JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o
 BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o sa_malloc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o
 URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o
+DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
-test: json_test bind_opts_test utf8_test uri_test
-	$(RM) json_test.gcda bind_opts_test.gcda utf8_test.gcda
+test: json_test bind_opts_test utf8_test uri_test devname_test
+	$(RM) json_test.gcda bind_opts_test.gcda utf8_test.gcda devname_test.gcda
 	./json_test $(TESTOPTIONS)
 	./bind_opts_test $(TESTOPTIONS)
 	./utf8_test $(TESTOPTIONS)
 	./uri_test $(TESTOPTIONS)
+	./devname_test $(TESTOPTIONS)
 
 json_test: $(JSON_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(JSON_OBJS)
@@ -59,7 +61,10 @@ utf8_test: $(UTF8_OBJS)
 uri_test: $(URI_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(URI_OBJS)
 
-coverage: json_coverage bind_opts_coverage utf8_coverage uri_coverage
+devname_test: $(DEVNAME_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(DEVNAME_OBJS)
+
+coverage: json_coverage bind_opts_coverage utf8_coverage uri_coverage devname_coverage
 
 json_coverage: json_test
 	./json_test
@@ -77,11 +82,15 @@ uri_coverage: uri_test
 	./utf8_test
 	gcov -k uri.c
 
+devname_coverage: uri_test
+	./devname_test
+	gcov -k devname.c
+
 clean:
 	$(RM) *.o *.d *.gcda *.gcno *.gcov
 
 clobber: clean
-	$(RM) json_test bind_opts_test utf8_test uri_test
+	$(RM) json_test bind_opts_test utf8_test uri_test devname_test
 
 -include $(JSON_OBJS:.o=.d)
 -include $(BIND_OPTS_OBJS:.o=.d)

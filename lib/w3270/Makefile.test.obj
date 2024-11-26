@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2022 Paul Mattes.
+# Copyright (c) 1999-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,20 @@ all: test
 JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o snprintf.o asprintf.o
 BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o sa_malloc.o snprintf.o asprintf.o w3misc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o snprintf.o asprintf.o
+URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o snprintf.o asprintf.o
+DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o snprintf.o asprintf.o
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
-test: json_test bind_opts_test utf8_test
+test: json_test bind_opts_test utf8_test uri_test devname_test
 	@case `uname -s` in \
 	*_NT*) \
 	  ./json_test.exe $(TESTOPTIONS) && \
 	  ./bind_opts_test.exe $(TESTOPTIONS) && \
-	  ./utf8_test.exe $(TESTOPTIONS) \
+	  ./utf8_test.exe $(TESTOPTIONS) && \
+	  ./uri_test.exe $(TESTOPTIONS) && \
+	  ./devname_test.exe $(TESTOPTIONS) \
 	  ;; \
 	*) \
 	  echo "Error: Must run tests on Windows"; exit 1 \
@@ -58,13 +62,21 @@ bind_opts_test: $(BIND_OPTS_OBJS)
 utf8_test: $(UTF8_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(UTF8_OBJS)
 
+uri_test: $(URI_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(URI_OBJS)
+
+devname_test: $(DEVNAME_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(DEVNAME_OBJS)
+
 clean:
 	$(RM) *.o
 
 clobber: clean
-	$(RM) json_test.exe bind_opts_test.exe utf8_test.exe
+	$(RM) json_test.exe bind_opts_test.exe utf8_test.exe uri_test.exe devname_test.exe
 	$(RM) $(LIB3270) *.d
 
 -include $(JSON_OBJS:.o=.d)
 -include $(BIND_OPTS_OBJS:.o=.d)
 -include $(UTF8_OBJS:.o=.d)
+-include $(URI_OBJS:.o=.d)
+-include $(DEVNAME_OBJS:.o=.d)

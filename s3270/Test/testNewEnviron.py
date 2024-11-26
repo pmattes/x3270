@@ -204,5 +204,101 @@ class TestS3270NewEnviron(cti.cti):
     def test_s3270_specific_unknown(self):
         self.s3270_specific_user(user_method.UNKNOWN)
 
+    def test_s3270_devname_success(self):
+        '''s3270 NEW-ENVIRON DEVNAME success test'''
+
+        # Start 'playback' to read s3270's output.
+        port, ts = cti.unused_port()
+        with playback.playback(self, f's3270/Test/devname_success.trc', port=port) as p:
+            ts.close()
+
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo===', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+            # Feed s3270 some actions.
+            s3270.stdin.write(b'Quit()\n')
+            s3270.stdin.flush()
+
+        # Wait for the processes to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+    def test_s3270_devname_failure(self):
+        '''s3270 NEW-ENVIRON DEVNAME failure test'''
+
+        # Start 'playback' to read s3270's output.
+        port, ts = cti.unused_port()
+        with playback.playback(self, f's3270/Test/devname_failure.trc', port=port) as p:
+            ts.close()
+
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+            # Feed s3270 some actions.
+            s3270.stdin.write(b'Quit()\n')
+            s3270.stdin.flush()
+
+        # Wait for the processes to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+    def test_s3270_devname_change(self):
+        '''s3270 NEW-ENVIRON DEVNAME change test'''
+
+        # Start 'playback' to read s3270's output.
+        port, ts = cti.unused_port()
+        with playback.playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
+            ts.close()
+
+            # Start s3270.
+            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+        # Start 'playback' again to read s3270's output.
+        # It should start over with devname foo1.
+        port, ts = cti.unused_port()
+        with playback.playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
+            ts.close()
+
+            # Connect again.
+            s3270.stdin.write(f'open 127.0.0.1:{port}\n'.encode())
+            s3270.stdin.flush()
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+        # Start 'playback' again to read s3270's output.
+        # c3270 should start over with devname bar1.
+        port, ts = cti.unused_port()
+        with playback.playback(self, f's3270/Test/devname_change2.trc', port=port) as p:
+            ts.close()
+
+            # Change the devname and connect again.
+            s3270.stdin.write(b'Set(devname,bar=)\n')
+            s3270.stdin.flush()
+            s3270.stdin.write(f'open 127.0.0.1:{port}\n'.encode())
+            s3270.stdin.flush()
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+        s3270.stdin.write(b'Quit()\n')
+        s3270.stdin.flush()
+
+        # Wait for the processes to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
