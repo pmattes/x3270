@@ -54,7 +54,7 @@ class TestS3270LocalProcess(cti.cti):
         # Wait for the script to exit and get the result.
         r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(Disconnect)', timeout=2)
         self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Ascii1(1,1,1,80)')
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Ascii1(1,1,1,80)', timeout=2)
         self.assertEqual(requests.codes.ok, r.status_code)
         j = r.json()
         self.assertEqual(term, j['result'][0].strip())

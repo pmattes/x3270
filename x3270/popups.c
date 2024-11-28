@@ -1128,32 +1128,42 @@ stop_trying(void)
 void
 popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
-    char *s = NULL;
+    char *s = Vasprintf(fmt, args);
+    char *xfmt = NULL;
+
+    trace_error(type, s);
 
     if (task_redirect()) {
-	char *buf = Vasprintf(fmt, args);
+	if (type == ET_CONNECT) {
+	    char *t = Asprintf("Connection failed:\n%s", s);
 
-	task_error(buf);
-	Free(buf);
+	    task_error(t);
+	    Free(t);
+	} else {
+	    task_error(s);
+	}
+	Free(s);
 	return;
     }
 
+    /* Handle delayed error pop-ups. */
     if (epd.active) {
 	epd.type = type;
-	Replace(epd.text, Vasprintf(fmt, args));
+	Replace(epd.text, s);
 	return;
     }
 
+    /* Pop up a dialog with a possible retry button. */
     if (type == ET_CONNECT) {
-	s = Asprintf("Connection failed%s:\n%s",
+	xfmt = Asprintf("Connection failed%s:\n%s",
 		host_retry_mode? ", retrying": "", fmt);
     }
 
     popup_rop(&error_popup,
 	    (host_retry_mode && !appres.secure)? stop_trying: NULL,
-	    (s != NULL)? s: fmt, args);
-    if (s != NULL) {
-	Free(s);
+	    (xfmt != NULL)? xfmt: fmt, args);
+    if (xfmt != NULL) {
+	Free(xfmt);
     }
 }
 

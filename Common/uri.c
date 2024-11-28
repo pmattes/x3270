@@ -329,6 +329,7 @@ parse_uri(const char *uri, char **scheme, char **username, char **password, char
     if (!parse_authority(authority, host, port, username, password, error)) {
 	goto fail;
     }
+    Replace(authority, NULL);
 
     /* Isolate the path. */
     if (slash != NULL) {

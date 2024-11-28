@@ -53,14 +53,12 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list args)
 {
     char *s = Vasprintf(fmt, args);
 
+    trace_error(type, s);
     if (type == ET_CONNECT) {
 	char *t = Asprintf("Connection failed:\n%s", s);
 
 	Replace(s, t);
     }
-
-    /* Log to the trace file. */
-    vtrace("error: %s\n", s);
 
     if (task_redirect()) {
 	task_error(s);

@@ -498,9 +498,10 @@ split_host(char *s, unsigned *flags, char *xluname, char **port, char **accept,
     }
 
 done:
-    if (lu) {
+    if (lu != NULL) {
 	strncpy(xluname, lu, LUNAME_SIZE);
 	xluname[LUNAME_SIZE] = '\0';
+	Free(lu);
     } else {
 	*xluname = '\0';
     }

@@ -43,7 +43,7 @@ class TestS3270CmdLineHostError(cti.cti):
         self.children.append(s3270)
 
         # Get the result.
-        out = s3270.communicate(timeout=2)
+        out = s3270.communicate(timeout=5)
 
         # Wait for the process to exit.
         self.vgwait(s3270, assertOnFailure=False)

@@ -575,6 +575,11 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     session_t *s = handle;
 
+    /* Remove trailing newlines. */
+    while (len > 0 && buf[len - 1] == '\n') {
+        len--;
+     }
+
     if (s->pending.return_content_type == CT_HTML) {
 	size_t i;
 	char c;
@@ -600,9 +605,13 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 		break;
 	    }
 	}
+	vb_appends(&s->pending.result, "\n");
     } else if (s->pending.return_content_type == CT_JSON) {
 	json_t *result_array;
 	json_t *err_array;
+	char *bcopy;
+	char *bnext;
+	char *newline;
 
 	if (s->pending.jresult == NULL) {
 	    s->pending.jresult = json_object();
@@ -615,13 +624,20 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 	    assert(json_object_member(s->pending.jresult, JRET_RESULT_ERR, NT, &err_array));
 	}
 
-	json_array_append(result_array, json_string(buf, len));
+	bnext = bcopy = Asprintf("%.*s", (int)len, buf);
+	while ((newline = strchr(bnext, '\n')) != NULL) {
+	    json_array_append(result_array, json_string(bnext, newline - bnext));
+	    json_array_append(err_array, json_boolean(!success));
+	    bnext = newline + 1;
+	}
+	json_array_append(result_array, json_string(bnext, strlen(bnext)));
 	json_array_append(err_array, json_boolean(!success));
+	Free(bcopy);
     } else {
 	/* Plain text. */
 	vb_append(&s->pending.result, buf, len);
+	vb_appends(&s->pending.result, "\n");
     }
-    vb_appends(&s->pending.result, "\n");
 }
 
 /**

@@ -40,6 +40,7 @@
 #include "task.h"
 #include "trace.h"
 #include "utils.h"
+#include "varbuf.h"
 
 /**
  * Initialize a JSON return object.
@@ -75,16 +76,16 @@ s3data(const char *buf, size_t len, bool success, unsigned capabilities, json_t 
      * output.
      */
     char *b;
+    char *bnext;
     char *newline;
 
+    /* Remove trailing newlines. */
     while (len > 0 && buf[len - 1] == '\n') {
 	len--;
     }
 
     b = Asprintf("%.*s", (int)len, buf);
-    while ((newline = strchr(b, '\n')) != NULL) {
-	*newline = ' ';
-    }
+    bnext = b;
 
     if (json != NULL) {
 	json_t *result_array;
@@ -92,8 +93,13 @@ s3data(const char *buf, size_t len, bool success, unsigned capabilities, json_t 
 
 	assert(json_object_member(json, JRET_RESULT, NT, &result_array));
 	assert(json_object_member(json, JRET_RESULT_ERR, NT, &err_array));
-        json_array_append(result_array, json_string(b, strlen(b)));
-        json_array_append(err_array, json_boolean(!success));
+	while ((newline = strchr(bnext, '\n')) != NULL) {
+	    json_array_append(result_array, json_string(bnext, newline - bnext));
+	    json_array_append(err_array, json_boolean(!success));
+	    bnext = newline + 1;
+	}
+	json_array_append(result_array, json_string(bnext, strlen(bnext)));
+	json_array_append(err_array, json_boolean(!success));
 	if (raw != NULL) {
 	    *raw = NULL;
 	}
@@ -103,7 +109,17 @@ s3data(const char *buf, size_t len, bool success, unsigned capabilities, json_t 
 	Free(b);
     } else {
 	if (cooked != NULL) {
-	    *cooked = Asprintf("%s%s\n", !success && (capabilities & CBF_ERRD)? ERROR_DATA_PREFIX: DATA_PREFIX, b);
+	    varbuf_t r;
+
+	    vb_init(&r);
+	    while ((newline = strchr(bnext, '\n')) != NULL) {
+		vb_appendf(&r, "%s%.*s\n", !success && (capabilities & CBF_ERRD)? ERROR_DATA_PREFIX: DATA_PREFIX,
+			(int)(newline - bnext), bnext);
+		bnext = newline + 1;
+	    }
+	    vb_appendf(&r, "%s%s\n", !success && (capabilities & CBF_ERRD)? ERROR_DATA_PREFIX: DATA_PREFIX, bnext);
+
+	    *cooked = vb_consume(&r);
 	}
 	if (raw != NULL) {
 	    *raw = b;

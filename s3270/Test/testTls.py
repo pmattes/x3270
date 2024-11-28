@@ -189,7 +189,7 @@ class TestS3270Tls(cti.cti):
 
         r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
         self.assertEqual(r.status_code, 400, 'Expected HTTP 400 failure')
-        self.assertTrue('Invalid maximum protocol' in r.json()['result'][0])
+        self.assertTrue(any(['Invalid maximum protocol' in x for x in r.json()['result']]))
 
         requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
@@ -212,7 +212,7 @@ class TestS3270Tls(cti.cti):
 
         r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
         self.assertEqual(r.status_code, 400, 'Expected HTTP 400 failure')
-        self.assertTrue('Minimum protocol > maximum protocol' in r.json()['result'][0])
+        self.assertTrue(any(['Minimum protocol > maximum protocol' in x for x in r.json()['result']]))
 
         requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
@@ -450,7 +450,7 @@ class TestS3270Tls(cti.cti):
         self.assertEqual(r.status_code, 200, 'Expected HTTP success for Set(tlsSecurityLevel)')
         r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
         self.assertFalse(r.ok, 'Expected HTTP failure for Open()')
-        self.assertIn('Invalid tlsSecurityLevel', r.json()['result'][0])
+        self.assertTrue(any(['Invalid tlsSecurityLevel' in x for x in r.json()['result']]))
 
         requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 

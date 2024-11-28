@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2022 Paul Mattes.
+ * Copyright (c) 1999-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,3 +41,4 @@ void popup_an_xerror(pae_t type, const char *fmt, ...) printflike(2, 3);
 typedef void abort_callback_t(void);
 void popup_printer_output(bool is_err, abort_callback_t *a,
 	const char *fmt, ...) printflike(3, 4);
+void trace_error(pae_t type, const char *message);

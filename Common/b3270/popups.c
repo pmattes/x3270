@@ -43,6 +43,7 @@
 #include "trace.h"
 #include "txa.h"
 #include "ui_stream.h"
+#include "utils.h"
 
 #include "b3270_popups.h"
 
@@ -91,15 +92,19 @@ popup_store(bool is_error, pae_t type, bool retrying, char *text)
 void
 popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 {
-    char *s;
+    char *s = Vasprintf(fmt, ap);
 
-    s = txVasprintf(fmt, ap);
-    vtrace("Error: %s\n", s);
+    trace_error(type, s);
     if (task_redirect()) {
-	task_error(s);
-	return;
-    }
-    if (!popups_ready) {
+	if (type == ET_CONNECT) {
+	    char *t = Asprintf("Connection failed:\n%s", s);
+
+	    task_error(t);
+	    Free(t);
+	} else {
+	    task_error(s);
+	}
+    } else if (!popups_ready) {
 	popup_store(true, type, host_retry_mode, s);
     } else {
 	ui_leaf(IndPopup,
@@ -108,6 +113,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 		AttrRetrying, AT_BOOLEAN, host_retry_mode,
 		NULL);
     }
+    Free(s);
 }
 
 /* Pop up an info message. */

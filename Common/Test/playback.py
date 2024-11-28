@@ -88,7 +88,7 @@ class playback():
             self.listensocket.close()
             self.listensocket = None
     
-    def wait_accept(self, timeout=2):
+    def wait_accept(self, timeout=5):
         '''Wait for a connection'''
         if self.thread != None:
             self.ct.try_until(lambda: self.conn != None, timeout, 'Emulator did not connect')

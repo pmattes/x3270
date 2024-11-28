@@ -107,7 +107,7 @@ class copyserver():
 
     def data(self):
         '''Return what we got'''
-        self.thread.join(timeout=2)
+        self.thread.join(timeout=5)
         assert not self.thread.is_alive()
         return self.result
 

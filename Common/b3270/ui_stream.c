@@ -661,16 +661,33 @@ ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
     ui_action_t *uia = (ui_action_t *)handle;
 
     if (XML_MODE) {
-	if (uia->xresult) {
-	    char *re = success? ResFalse: ResTrue;
+	size_t i;
+	int nlines = 1;
+	int j;
+	char *re = success? ResFalse: ResTrue;
 
+	/* Count the lines. */
+	for (i = 0; i < len; i++) {
+	    if (buf[i] == '\n') {
+		nlines++;
+	    }
+	}
+
+	if (uia->xresult) {
+	    /* Extend the result. */
 	    uia->xresult = Realloc(uia->xresult, strlen(uia->xresult) + 1 + len + 1);
 	    sprintf(strchr(uia->xresult, '\0'), "\n%.*s", (int)len, buf);
+	} else {
+	    /* Create the result. */
+	    uia->xresult = Asprintf("%.*s", (int)len, buf);
+	    uia->xresult_err = Asprintf("%s", re);
+	    nlines--; /* already added one in the line above */
+	}
+
+	/* Add needed error status. */
+	for (j = 0; j < nlines; j++) {
 	    uia->xresult_err = Realloc(uia->xresult_err, strlen(uia->xresult_err) + 1 + strlen(re) + 1);
 	    sprintf(strchr(uia->xresult_err, '\0'), ",%s", re);
-	} else {
-	    uia->xresult = Asprintf("%.*s", (int)len, buf);
-	    uia->xresult_err = Asprintf("%s", success? ResFalse: ResTrue);
 	}
     } else {
 	const char *cur = buf;
@@ -692,13 +709,10 @@ ui_action_data(task_cbh handle, const char *buf, size_t len, bool success)
 		json_array_append(uia->jresult, json_string(start, cur - start - 1));
 		json_array_append(uia->jresult_err, json_boolean(!success));
 		start = cur;
-		continue;
 	    }
 	}
-	if (cur > start) {
-	    json_array_append(uia->jresult, json_string(start, cur - start));
-	    json_array_append(uia->jresult_err, json_boolean(!success));
-	}
+	json_array_append(uia->jresult, json_string(start, cur - start));
+	json_array_append(uia->jresult_err, json_boolean(!success));
     }
 }
 

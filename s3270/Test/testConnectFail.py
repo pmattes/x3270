@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -51,12 +51,13 @@ class TestS3270ConnectFail(cti.cti):
         self.vgwait(s3270)
 
         # Test the output.
-        self.assertEqual(4, len(stdout))
-        self.assertTrue(stdout[0].startswith('data: Connection failed: localhost, port 1: '))
-        self.assertTrue('refused' in stdout[0]);
-        self.assertTrue(stdout[1].startswith('L U U N N 4 24 80 0 0 0x0 '))
-        self.assertEqual('error', stdout[2])
-        self.assertEqual('', stdout[3])
+        self.assertEqual(5, len(stdout))
+        self.assertTrue(stdout[0].startswith('data: Connection failed:'))
+        self.assertTrue(stdout[1].startswith('data: localhost, port 1: '))
+        self.assertTrue('refused' in stdout[1])
+        self.assertTrue(stdout[2].startswith('L U U N N 4 24 80 0 0 0x0 '))
+        self.assertEqual('error', stdout[3])
+        self.assertEqual('', stdout[4])
 
 if __name__ == '__main__':
     unittest.main()

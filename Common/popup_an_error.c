@@ -33,8 +33,10 @@
 #include "globals.h"
 
 #include "popups.h"
+#include "trace.h"
 #include "txa.h"
 #include "utils.h"
+#include "varbuf.h"
 
 /**
  * Pop up an error message with a strerror appended.
@@ -89,4 +91,31 @@ popup_an_error(const char *fmt, ...)
     va_start(ap, fmt);
     popup_a_vxerror(ET_OTHER, fmt, ap);
     va_end(ap);
+}
+
+/**
+ * Trace an error.
+ *
+ * @param[in] type	Error type
+ * @param[in] message	Error message
+ */
+void
+trace_error(pae_t type, const char *message)
+{
+    varbuf_t r;
+    char c;
+    char *res;
+
+    vb_init(&r);
+    while ((c = *message++) != '\0') {
+	if (c == '\n') {
+	    vb_appends(&r, "\\n");
+	} else {
+	    vb_appendf(&r, "%c", c);
+	}
+    }
+
+    res = vb_consume(&r);
+    vtrace("Error: %s%s\n", (type == ET_CONNECT)? "Connection failed:\\n": "", res);
+    Free(res);
 }
