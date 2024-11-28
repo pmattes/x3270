@@ -81,6 +81,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "sio_glue.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -537,6 +538,7 @@ main(int argc, char *argv[])
     screentrace_register();
     x3270_register();
     xio_register();
+    sio_glue_register();
     hio_register();
     proxy_register();
     model_register();
