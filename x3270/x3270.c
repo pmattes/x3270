@@ -1408,17 +1408,38 @@ poll_children(void)
 }
 
 /* Glue for redundant functions normally supplied by glue.c. */
+
+typedef struct dummy_reg {
+   struct dummy_reg *next;
+   void *value;
+} dummy_reg_t;
+static dummy_reg_t *dummy_reg;
+
+/* Put a little piece of allocated memory somewhere Valgrind can find it. */
+static void
+valkeep(void *p)
+{
+    dummy_reg_t *d = Malloc(sizeof(dummy_reg_t));
+
+    d->next = dummy_reg;
+    d->value = p;
+    dummy_reg = d;
+}
+
 void
 register_opts(opt_t *opts, unsigned num_opts)
 {
+    valkeep((void *)opts);
 }
 
 void
 register_resources(res_t *res, unsigned num_res)
 {
+    valkeep((void *)res);
 }
 
 void
 register_xresources(xres_t *res, unsigned num_xres)
 {
+    valkeep((void *)res);
 }
