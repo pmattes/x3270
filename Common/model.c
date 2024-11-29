@@ -35,6 +35,7 @@
 #include "appres.h"
 #include "resources.h"
 
+#include "boolstr.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "names.h"
@@ -49,19 +50,19 @@
 
 static char *pending_model;
 static char *pending_oversize;
+static char *pending_extended_data_stream;
 
 /*
  * Canonical representation of the model, returning color and extended
  * state.
  */
 static const char *
-canonical_model_x(const char *res, int *model, bool *is_color,
-	bool *is_extended)
+canonical_model_x(const char *res, int *model, bool *is_color, bool *is_extended, bool force_extended)
 {
     size_t sl;
     char *digitp = NULL;
     char *colorp = "9";
-    bool extended = false;
+    bool extended = force_extended;
 
     if (res == NULL) {
 	return NULL;
@@ -79,7 +80,7 @@ canonical_model_x(const char *res, int *model, bool *is_color,
 	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
 	return NULL;
     }
-    if (sl == 1 || sl == 8) {
+    if (sl == 8) {
 	extended = true;
     }
     *model = *digitp - '0';
@@ -97,7 +98,7 @@ canonical_model(const char *res)
     int model;
     bool color, extended;
 
-    return canonical_model_x(res, &model, &color, &extended);
+    return canonical_model_x(res, &model, &color, &extended, appres.extended_data_stream);
 }
 
 /*
@@ -159,7 +160,22 @@ toggle_oversize(const char *name _is_unused, const char *value, unsigned flags, 
 }
 
 /*
- * Done function for changing the model and oversize.
+ * Toggle extended data stream mode.
+ */
+static toggle_upcall_ret_t
+toggle_extended_data_stream(const char *name _is_unused, const char *value, unsigned flags, ia_t ia)
+{
+    if (!model_can_change()) {
+	popup_an_error("Cannot change " ResExtendedDataStream);
+	return TU_FAILURE;
+    }
+
+    Replace(pending_extended_data_stream, *value? NewString(value): NULL);
+    return TU_SUCCESS;
+}
+
+/*
+ * Done function for changing the model, oversize and extended mode.
  */
 static toggle_upcall_ret_t
 toggle_model_done(bool success, unsigned flags, ia_t ia)
@@ -169,11 +185,13 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     bool is_color = mode.m3279;
     bool is_extended = mode.extended;
     bool oversize_was_pending = (pending_oversize != NULL);
+    bool xext;
     toggle_upcall_ret_t res = TU_SUCCESS;
 
     if (!success ||
 	    (pending_model == NULL &&
-	     pending_oversize == NULL)) {
+	     pending_oversize == NULL &&
+	     pending_extended_data_stream == NULL)) {
 	goto done;
     }
 
@@ -185,22 +203,37 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	    !strcmp(pending_oversize, appres.oversize)) {
 	Replace(pending_oversize, NULL);
     }
-    if (pending_model == NULL && pending_oversize == NULL) {
+    if (pending_extended_data_stream != NULL &&
+	    boolstr(pending_extended_data_stream, &xext) == NULL &&
+	    appres.extended_data_stream == xext)
+    {
+	Replace(pending_extended_data_stream, NULL);
+    }
+    if (pending_model == NULL && pending_oversize == NULL && pending_extended_data_stream == NULL) {
 	goto done;
     }
 
     /* Reconcile simultaneous changes. */
-    if (pending_model != NULL) {
-	const char *canon = canonical_model_x(pending_model, &model_number,
-		&is_color, &is_extended);
+    if (pending_extended_data_stream != NULL) {
+	if (boolstr(pending_extended_data_stream, &xext) != NULL) {
+	    popup_an_error("Invalid " ResExtendedDataStream);
+	    goto fail;
+	}
+    } else {
+	xext = appres.extended_data_stream;
+    }
+    if (pending_extended_data_stream != NULL || pending_model != NULL) {
+	const char *canon = canonical_model_x(pending_model? pending_model: appres.model,
+		&model_number, &is_color, &is_extended, xext);
 
 	if (canon == NULL) {
-	    popup_an_error("%s value must be 327{89}-{2345}[-E]",
-		    ResModel);
+	    popup_an_error("%s value must be 327{89}-{2345}[-E]", ResModel);
 	    goto fail;
 	}
 
-	Replace(pending_model, NewString(canon));
+	if (pending_model != NULL) {
+	    Replace(pending_model, NewString(canon));
+	}
     }
 
     if (!is_extended) {
@@ -247,6 +280,9 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	if (pending_oversize != NULL) {
 	    toggle_save_disconnect_set(ResOversize, pending_oversize, ia);
 	}
+	if (pending_extended_data_stream != NULL) {
+	    toggle_save_disconnect_set(ResExtendedDataStream, pending_extended_data_stream, ia);
+	}
 	res = TU_DEFERRED;
 	goto done;
     }
@@ -262,7 +298,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     ctlr_reinit(MODEL_CHANGE);
 
     /* Reset the screen state. */
-    screen_init();
+    screen_change_model(model_number, ovc, ovr);
     ctlr_erase(true);
 
     /* Report the new terminal name. */
@@ -288,6 +324,10 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	    }
 	}
     }
+    if (pending_extended_data_stream != NULL) {
+	appres.extended_data_stream = xext;
+    }
+    Replace(pending_extended_data_stream, NULL);
 
     goto done;
 
@@ -297,6 +337,7 @@ fail:
 done:
     Replace(pending_model, NULL);
     Replace(pending_oversize, NULL);
+    Replace(pending_extended_data_stream, NULL);
     return res;
 }
 
@@ -351,12 +392,14 @@ void
 model_register(void)
 {
     /* Register the toggles. */
+    register_extended_toggle(ResExtendedDataStream, toggle_extended_data_stream,
+	    toggle_model_done, NULL, (void **)&appres.extended_data_stream, XRM_BOOLEAN);
     register_extended_toggle(ResModel, toggle_model, toggle_model_done,
 	    canonical_model, (void **)&appres.model, XRM_STRING);
+    register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,
+	    NULL, (void **)&appres.nop_seconds, XRM_INT);
     register_extended_toggle(ResOversize, toggle_oversize, toggle_model_done,
 	    canonical_oversize, (void **)&appres.oversize, XRM_STRING);
     register_extended_toggle(ResTermName, toggle_terminal_name, NULL, NULL,
 	    (void **)&appres.termname, XRM_STRING);
-    register_extended_toggle(ResNopSeconds, toggle_nop_seconds, NULL,
-	    NULL, (void **)&appres.nop_seconds, XRM_INT);
 }

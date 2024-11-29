@@ -5293,10 +5293,10 @@ font_init(void)
 }
 
 /*
- * Change models.
+ * Change models, from the menu.
  */
 void
-screen_change_model(int mn, int ovc, int ovr)
+screen_remodel(int mn, int ovc, int ovr)
 {
     if (CONNECTED ||
 	(model_num == mn && ovc == ov_cols && ovr == ov_rows)) {
@@ -5311,7 +5311,22 @@ screen_change_model(int mn, int ovc, int ovr)
     screen_reinit(MODEL_CHANGE);
 
     /* Redo the terminal type. */
-	net_set_default_termtype();
+    net_set_default_termtype();
+}
+
+/*
+ * Change models, from a script.
+ */
+void
+screen_change_model(int mn, int ovc, int ovr)
+{
+    model_changed = true;
+    oversize_changed = true;
+    screen_reinit(MODEL_CHANGE);
+    screen_m3279(mode.m3279);
+
+    /* Redo the terminal type. */
+    net_set_default_termtype();
 }
 
 /*
@@ -5322,6 +5337,12 @@ screen_extended(bool extended _is_unused)
 {
     set_rows_cols(model_num, ov_cols, ov_rows);
     model_changed = true;
+}
+
+bool
+model_can_change(void)
+{
+    return true;
 }
 
 void

@@ -115,6 +115,7 @@ typedef struct {
 	Boolean wrong_terminal_name;
 	Boolean tls992;
 	Boolean ut_env;
+	Boolean extended_data_stream;
 	struct {
 	    Boolean do_confirms;
 	    Boolean menubar;

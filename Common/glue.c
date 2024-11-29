@@ -350,6 +350,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.local_cp = CP_UTF8;
     }
 #endif /*]*/
+    mode.extended = appres.extended_data_stream;
 
     /*
      * Handle the deprecated 'charset' resource.
@@ -396,6 +397,7 @@ model_init(void)
 	mode.m3279 = false;
     }
 
+    mode.extended = appres.extended_data_stream;
     if (!mode.extended) {
 	appres.oversize = NULL;
     }
@@ -473,12 +475,11 @@ static void
 set_appres_defaults(void)
 {
     /* Set the defaults. */
-    mode.extended = true;
-    mode.m3279 = true;
     appres.debug_tracing = true;
     appres.conf_dir = NewString(LIBX3270DIR);
 
-    appres.model = NewString("3279-4-E");
+    appres.model = NewString("3279-4");
+    mode.m3279 = true; /* needs to match the '9' in appres.model */
     appres.hostsfile = NULL;
     appres.port = NewString("23");
     /* Do this when we finally deprecate 'charset'. */
@@ -528,6 +529,8 @@ set_appres_defaults(void)
 #endif /*]*/
     appres.interactive.no_telnet_input_mode = NewString("line");
     appres.tls992 = true;
+    appres.extended_data_stream = true;
+    mode.extended = true; /* needs to match appres.extended_data_stream */
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -970,6 +973,7 @@ static res_t base_resources[] = {
     { ResDevName,	aoffset(devname),	XRM_STRING },
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
+    { ResExtendedDataStream, aoffset(extended_data_stream),	XRM_BOOLEAN },
     { ResFtAllocation,	aoffset(ft.allocation),	XRM_STRING },
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2020 Paul Mattes.
+ * Copyright (c) 1999-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,3 +57,4 @@ bool screen_suspend(void);
 void screen_set_thumb(float top, float shown, int saved, int screen, int back);
 void enable_cursor(bool on);
 void screen_init(void);
+void screen_change_model(int mn, int ovc, int ovr);

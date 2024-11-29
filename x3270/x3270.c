@@ -973,11 +973,13 @@ parse_model_number(char *m)
 	}
 	switch (sl) {
 	case 1: /* n */
+	    mode.extended = appres.extended_data_stream;
 	    break;
 	case 3:	/* n-E */
 	    if (strcasecmp(m + 1, "-E")) {
 		return -1;
 	    }
+	    mode.extended = true;
 	    break;
 	default:
 	    return -1;
@@ -1304,6 +1306,7 @@ copy_xres_to_res_bool(void)
     copy_bool(contention_resolution);
     copy_bool(debug_tracing);
     copy_bool(disconnect_clear);
+    copy_bool(extended_data_stream);
     copy_bool(highlight_bold);
     copy_bool(idle_command_enabled);
     copy_bool(modified_sel);

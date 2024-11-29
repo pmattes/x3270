@@ -57,6 +57,7 @@ typedef struct {
     bool	 debug_tracing;
     char	*devname;	/* for 5250 */
     bool	 disconnect_clear;
+    bool	 extended_data_stream;
     char	*ft_command;
 #if defined(_WIN32) /*[*/
     int		 ft_cp;

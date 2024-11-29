@@ -34,6 +34,8 @@
  */
 
 #include "globals.h"
+
+#include <assert.h>
 #include <signal.h>
 #include "appres.h"
 #include "3270ds.h"
@@ -3672,6 +3674,19 @@ void
 screen_set_thumb(float top _is_unused, float shown _is_unused,
 	int saved _is_unused, int screen _is_unused, int back _is_unused)
 {
+}
+
+/**
+ * Change the model number, from a script.
+ *
+ * @param[in] mn        Model number
+ * @param[in] ovc       Oversize columns
+ * @param[in] ovr       Oversize rowa.
+ */
+void
+screen_change_model(int mn, int ovc, int ovr)
+{
+    assert(false);
 }
 
 /**

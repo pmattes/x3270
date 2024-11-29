@@ -143,7 +143,6 @@ void Redraw_xaction(Widget w, XEvent *event, String *params,
 void StepEfont_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void save_00translations(Widget w, XtTranslations *t00);
-void screen_change_model(int mn, int ovc, int ovr);
 GC screen_crosshair_gc(void);
 void screen_disp(bool erasing);
 void screen_extended(bool extended);
@@ -155,6 +154,7 @@ void screen_newfont(const char *fontname, bool do_popup, bool is_cs);
 void screen_newscheme(char *s);
 bool screen_obscured(void);
 void screen_preinit(void);
+void screen_remodel(int mn, int ovc, int ovr);
 void screen_set_keymap(void);
 void screen_set_temp_keymap(XtTranslations trans);
 void screen_showikeypad(bool on);

@@ -313,6 +313,11 @@ screen_init(void)
 {
 }
 
+void
+screen_change_model(int mn, int ovc, int ovr)
+{
+}
+
 /**
  * Main module registration.
  */

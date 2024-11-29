@@ -268,6 +268,13 @@ screen_init(void)
     internal_screen_init();
 }
 
+/* Change models. */
+void
+screen_change_model(int mn, int ovc, int ovr)
+{
+    internal_screen_init();
+}
+
 /* Codepage change handler. */
 void
 b3270_new_codepage(bool unused _is_unused)
