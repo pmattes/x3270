@@ -46,6 +46,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "linemode.h"
+#include "model.h"
 #include "popups.h"
 #include "query.h"
 #include "resources.h"
@@ -120,11 +121,11 @@ status_dump(void)
 
     vb_appendf(&r, "%s\n", build);
     vb_appendf(&r, "%s %s: %d %s x %d %s, %s, %s\n",
-	    get_message("model"), model_name,
+	    get_message("model"), get_model(),
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
 	    mode.m3279? get_message("fullColor"): get_message("mono"),
-	    (mode.extended && !HOST_FLAG(STD_DS_HOST))?
+	    (appres.extended_data_stream && !HOST_FLAG(STD_DS_HOST))?
 		get_message("extendedDs"): get_message("standardDs"));
     vb_appendf(&r, "%s %s\n", get_message("terminalName"), termtype);
     clu = net_query_lu_name();

@@ -1386,7 +1386,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     }
 
     /* Set the cookie and announce our capabilities. */
-#    define CAP_STRING AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")"
+#   define CAP_STRING AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")"
     if (cookie) {
 	size_t len = strlen(AnCookie) + 1 + strlen(cookie) + 2 + strlen(CAP_STRING) + 1;
 

@@ -70,6 +70,7 @@
 #include "indent_s.h"
 #include "kybd.h"
 #include "linemode.h"
+#include "model.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -4064,9 +4065,8 @@ net_set_default_termtype(void)
 	termtype = "IBM-DYNAMIC";
     } else {
 	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d%s",
-		(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ?
-		     '9': '8', model_num,
-		     (!mode.extended || HOST_FLAG(STD_DS_HOST))? "": "-E");
+		(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ?  '9': '8', model_num,
+		(!appres.extended_data_stream || HOST_FLAG(STD_DS_HOST))? "": "-E");
 	termtype = ttype_tmpval;
     }
 

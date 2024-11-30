@@ -57,12 +57,11 @@ static char *pending_extended_data_stream;
  * state.
  */
 static const char *
-canonical_model_x(const char *res, int *model, bool *is_color, bool *is_extended, bool force_extended)
+canonical_model_x(const char *res, int *model, bool *is_color, bool extended)
 {
     size_t sl;
     char *digitp = NULL;
     char *colorp = "9";
-    bool extended = force_extended;
 
     if (res == NULL) {
 	return NULL;
@@ -80,25 +79,35 @@ canonical_model_x(const char *res, int *model, bool *is_color, bool *is_extended
 	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
 	return NULL;
     }
-    if (sl == 8) {
-	extended = true;
-    }
     *model = *digitp - '0';
     *is_color = (*colorp == '9');
-    *is_extended = extended;
     return txAsprintf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
 }
 
 /*
- * Canonical representation of the model.
+ * Canonical representation of a model, for toggle operations.
  */
 static const char *
 canonical_model(const char *res)
 {
     int model;
-    bool color, extended;
+    bool color;
 
-    return canonical_model_x(res, &model, &color, &extended, appres.extended_data_stream);
+    return canonical_model_x(res, &model, &color, appres.extended_data_stream);
+}
+
+/* Get the model. */
+const char *
+get_model(void)
+{
+    return canonical_model(appres.model);
+}
+
+/* Get the model, including the IBM- at the front. */
+const char *
+get_full_model(void)
+{
+    return txAsprintf("IBM-%s", get_model());
 }
 
 /*
@@ -183,9 +192,8 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     unsigned ovr = 0, ovc = 0;
     int model_number = model_num;
     bool is_color = mode.m3279;
-    bool is_extended = mode.extended;
     bool oversize_was_pending = (pending_oversize != NULL);
-    bool xext;
+    bool xext = appres.extended_data_stream;
     toggle_upcall_ret_t res = TU_SUCCESS;
 
     if (!success ||
@@ -205,8 +213,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     }
     if (pending_extended_data_stream != NULL &&
 	    boolstr(pending_extended_data_stream, &xext) == NULL &&
-	    appres.extended_data_stream == xext)
-    {
+	    appres.extended_data_stream == xext) {
 	Replace(pending_extended_data_stream, NULL);
     }
     if (pending_model == NULL && pending_oversize == NULL && pending_extended_data_stream == NULL) {
@@ -219,12 +226,10 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	    popup_an_error("Invalid " ResExtendedDataStream);
 	    goto fail;
 	}
-    } else {
-	xext = appres.extended_data_stream;
     }
     if (pending_extended_data_stream != NULL || pending_model != NULL) {
 	const char *canon = canonical_model_x(pending_model? pending_model: appres.model,
-		&model_number, &is_color, &is_extended, xext);
+		&model_number, &is_color, false);
 
 	if (canon == NULL) {
 	    popup_an_error("%s value must be 327{89}-{2345}[-E]", ResModel);
@@ -236,7 +241,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	}
     }
 
-    if (!is_extended) {
+    if (!xext) {
 	/* Without extended, no oversize. */
 	Replace(pending_oversize, NewString(""));
     }
@@ -249,6 +254,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 		popup_an_error("%s value must be <cols>x<rows>", ResOversize);
 		goto fail;
 	    }
+
 	    Replace(pending_oversize, NewString(canon));
 	} else {
 	    ovc = 0;
@@ -289,17 +295,25 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 
     /* Change settings. */
     mode.m3279 = is_color;
-    mode.extended = is_extended;
-    set_rows_cols(model_number, ovc, ovr);
+    if (pending_extended_data_stream != NULL) {
+	appres.extended_data_stream = xext;
+    }
+    if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
+	set_rows_cols(model_number, ovc, ovr);
+    }
 
     /* Finish the rest of the switch. */
-    ROWS = maxROWS;
-    COLS = maxCOLS;
-    ctlr_reinit(MODEL_CHANGE);
+    if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
+	ROWS = maxROWS;
+	COLS = maxCOLS;
+	ctlr_reinit(MODEL_CHANGE);
+    }
 
     /* Reset the screen state. */
     screen_change_model(model_number, ovc, ovr);
-    ctlr_erase(true);
+    if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
+	ctlr_erase(true);
+    }
 
     /* Report the new terminal name. */
     if (appres.termname == NULL) {
@@ -328,6 +342,8 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	appres.extended_data_stream = xext;
     }
     Replace(pending_extended_data_stream, NULL);
+
+    net_set_default_termtype();
 
     goto done;
 

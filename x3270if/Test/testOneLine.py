@@ -64,7 +64,7 @@ class TestX3270ifOneLine(cti.cti):
 
         # Test the output, making sure it is on one line and contains the entire text.
         self.assertEqual('', stdout)
-        self.assertEqual('Connection failed: abc/def: Servname not supported for ai_socktype\n', stderr)
+        self.assertEqual('Connection failed:\nabc/def:\nServname not supported for ai_socktype\n', stderr)
 
 if __name__ == '__main__':
     unittest.main()

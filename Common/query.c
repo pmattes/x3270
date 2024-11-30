@@ -39,6 +39,7 @@
 #include "copyright.h"
 #include "ctlrc.h"
 #include "host.h"
+#include "model.h"
 #include "names.h"
 #include "popups.h"
 #include "query.h"
@@ -333,7 +334,7 @@ query_register(void)
 	{ KwHost, net_query_host, NULL, false, false },
 	{ KwLocalEncoding, get_codeset, NULL, false, false },
 	{ KwLuName, net_query_lu_name, NULL, false, false },
-	{ KwModel, NULL, full_model_name, true, false },
+	{ KwModel, get_full_model, NULL, true, false },
 	{ KwPrefixes, host_prefixes, NULL, false, false },
 	{ KwProxy, get_proxy, NULL, false, false },
 	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, true, false },

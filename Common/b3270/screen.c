@@ -240,7 +240,7 @@ internal_screen_init(void)
 	    AttrColumns, AT_INT, (int64_t)maxCOLS,
 	    AttrColor, AT_BOOLEAN, mode.m3279,
 	    AttrOversize, AT_BOOLEAN, ov_rows || ov_cols,
-	    AttrExtended, AT_BOOLEAN, mode.extended,
+	    AttrExtended, AT_BOOLEAN, appres.extended_data_stream,
 	    NULL);
 
     emit_erase(maxROWS, maxCOLS);

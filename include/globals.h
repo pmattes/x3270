@@ -209,7 +209,6 @@ extern bool		flipped;
 extern char		*full_current_host;
 extern char		*full_efontname;
 extern char		*full_efontname_dbcs;
-extern char		full_model_name[];
 extern bool		*funky_font;
 extern char		*hostname;
 extern unsigned		host_flags;
@@ -218,7 +217,6 @@ extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
 extern bool		local_process;
 #endif /*]*/
-extern char		*model_name;
 extern int		model_num;
 extern bool		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
@@ -252,7 +250,6 @@ extern unsigned		windirs_flags;
 
 typedef struct {
     bool		m3279;		/* 3270 (color) mode */
-    bool		extended;	/* 3270 extended (-E) mode */
 } xmode_t;
 extern xmode_t mode;
 

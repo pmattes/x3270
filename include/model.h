@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Paul Mattes.
+ * Copyright (c) 2016-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,3 +33,6 @@
 
 void model_register(void);
 bool model_can_change(void);
+const char *get_model(void);
+const char *get_full_model(void);
+

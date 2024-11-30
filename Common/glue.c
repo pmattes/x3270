@@ -102,8 +102,6 @@ unsigned sorted_help_count = 0;
 /* Globals */
 const char     *programname;
 bool		supports_cmdline_host = true;
-char		full_model_name[13] = "IBM-";
-char	       *model_name = &full_model_name[4];
 AppRes          appres;
 bool		exiting = false;
 char	       *command_string = NULL;
@@ -350,7 +348,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.local_cp = CP_UTF8;
     }
 #endif /*]*/
-    mode.extended = appres.extended_data_stream;
 
     /*
      * Handle the deprecated 'charset' resource.
@@ -396,15 +393,15 @@ model_init(void)
     if (appres.interactive.mono) {
 	mode.m3279 = false;
     }
+    Replace(appres.model, Asprintf("327%c-%d", mode.m3279? '9': '8', model_number));
 
-    mode.extended = appres.extended_data_stream;
-    if (!mode.extended) {
+    if (!appres.extended_data_stream) {
 	appres.oversize = NULL;
     }
 
     ovc = 0;
     ovr = 0;
-    if (mode.extended && appres.oversize != NULL) {
+    if (appres.extended_data_stream && appres.oversize != NULL) {
 	if (product_auto_oversize() && !strcasecmp(appres.oversize, "auto")) {
 	    ovc = -1;
 	    ovr = -1;
@@ -530,7 +527,6 @@ set_appres_defaults(void)
     appres.interactive.no_telnet_input_mode = NewString("line");
     appres.tls992 = true;
     appres.extended_data_stream = true;
-    mode.extended = true; /* needs to match appres.extended_data_stream */
 
     /* Let the product set the ones it wants. */
     product_set_appres_defaults();
@@ -914,7 +910,7 @@ parse_model_number(char *m)
 	m += 4;
 	sl -= 4;
 
-	/* Check more syntax.  -E is allowed, but ignored. */
+	/* Check more syntax. -E is allowed, but ignored. */
 	switch (m[0]) {
 	case '\0':
 	    /* Use default model number. */

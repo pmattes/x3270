@@ -273,11 +273,11 @@ save_model(void)
     if (!model_changed) {
 	return;
     }
-    if ((ix = cmd_srch(OptModel)) && strcmp(tmp_cmd[ix], model_name)) {
-	cmd_replace(ix + 1, model_name);
+    if ((ix = cmd_srch(OptModel)) && strcmp(tmp_cmd[ix], appres.model)) {
+	cmd_replace(ix + 1, appres.model);
     } else {
 	cmd_append(OptModel);
-	cmd_append(model_name);
+	cmd_append(appres.model);
     }
 }
 

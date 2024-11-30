@@ -2025,14 +2025,14 @@ menubar_remodel(bool ignored _is_unused)
     /* Enable/disable the oversize option. */
     if (oversize_button != NULL) {
 	XtVaSetValues(oversize_button,
-		XtNsensitive, mode.extended,
+		XtNsensitive, appres.extended_data_stream,
 		NULL);
     }
 
     /* Set the toggle on the extended mode button. */
     if (extended_button != NULL) {
 	XtVaSetValues(extended_button,
-		XtNleftBitmap, mode.extended? dot: (Pixmap)NULL,
+		XtNleftBitmap, appres.extended_data_stream? dot: (Pixmap)NULL,
 		NULL);
     }
 
@@ -2150,22 +2150,21 @@ static void
 toggle_extended(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    mode.extended = !mode.extended;
-    appres.extended_data_stream = mode.extended;
+    appres.extended_data_stream = !appres.extended_data_stream;
     if (extended_button != NULL) {
 	XtVaSetValues(extended_button,
-		XtNleftBitmap, mode.extended? dot: (Pixmap)NULL,
+		XtNleftBitmap, appres.extended_data_stream? dot: (Pixmap)NULL,
 		NULL);
     }
     if (oversize_button != NULL) {
 	XtVaSetValues(oversize_button,
-		XtNsensitive, mode.extended,
+		XtNsensitive, appres.extended_data_stream,
 		NULL);
     }
-    if (!mode.extended) {
+    if (!appres.extended_data_stream) {
 	screen_remodel(model_num, 0, 0);
     }
-    screen_extended(mode.extended);
+    screen_extended(appres.extended_data_stream);
 }
 
 static void
@@ -2332,7 +2331,7 @@ options_menu_init(bool regen, Position x, Position y)
 	extended_button = add_menu_itemv("extendedDsOption", t,
 		    toggle_extended, NULL,
 		    &spaced,
-		    XtNleftBitmap, mode.extended? dot: (Pixmap)NULL,
+		    XtNleftBitmap, appres.extended_data_stream? dot: (Pixmap)NULL,
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
 	if (keypad_option_button != NULL ||
@@ -2443,7 +2442,7 @@ options_menu_init(bool regen, Position x, Position y)
 	oversize_button = add_menu_itemv("oversizeOption", t,
 		do_oversize_popup, NULL,
 		NULL,
-		XtNsensitive, mode.extended,
+		XtNsensitive, appres.extended_data_stream,
 		NULL);
 	if (model_2_button != NULL ||
 	    model_3_button != NULL ||

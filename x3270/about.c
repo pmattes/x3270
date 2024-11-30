@@ -50,6 +50,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "linemode.h"
+#include "model.h"
 #include "popups.h"
 #include "split_host.h"
 #include "telnet.h"
@@ -342,13 +343,13 @@ popup_about_config(void)
     MAKE_VALUE(txAsprintf("0x%lx", XtWindow(toplevel)));
 
     MAKE_LABEL(txAsprintf("%s %s: %d %s x %d %s, %s, %s",
-	get_message("model"), model_name,
+	get_message("model"), get_model(),
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
 	appres.interactive.mono? get_message("mono"):
 	    (mode.m3279? get_message("fullColor"):
 		get_message("pseudoColor")),
-	(mode.extended && !HOST_FLAG(STD_DS_HOST))?
+	(appres.extended_data_stream && !HOST_FLAG(STD_DS_HOST))?
 	    get_message("extendedDs"): get_message("standardDs")), 4);
 
     MAKE_LABEL(get_message("terminalName"), 4);

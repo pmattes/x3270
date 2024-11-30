@@ -117,8 +117,6 @@ Atom            a_delete_me, a_save_yourself, a_3270, a_registry, a_encoding,
 		a_state, a_net_wm_state, a_net_wm_state_maximized_horz,
 		a_net_wm_state_maximized_vert, a_net_wm_name, a_atom, a_spacing,
 		a_pixel_size, a_font;
-char		full_model_name[13] = "IBM-";
-char	       *model_name = &full_model_name[4];
 Pixmap          gray;
 XrmDatabase     rdb;
 AppRes		appres;
@@ -744,12 +742,13 @@ main(int argc, char *argv[])
 	xappres.use_cursor_color = False;
 	mode.m3279 = false;
     }
-    if (!mode.extended) {
+    if (!appres.extended_data_stream) {
 	appres.oversize = NULL;
     }
     if (appres.secure) {
 	appres.disconnect_clear = true;
     }
+    Replace(appres.model, Asprintf("327%c-%d", mode.m3279? '9': '8', model_number));
 
     /* Set up the resolver. */
     set_46(appres.prefer_ipv4, appres.prefer_ipv6);
@@ -828,7 +827,7 @@ main(int argc, char *argv[])
     /* Set up the window and icon labels. */
     label_init();
 
-    if (!mode.extended || appres.oversize == NULL ||
+    if (!appres.extended_data_stream || appres.oversize == NULL ||
 	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 	ovc = 0;
 	ovr = 0;
@@ -958,7 +957,7 @@ parse_model_number(char *m)
 	m += 4;
 	sl -= 4;
 
-	/* Check more syntax.  -E is allowed, but ignored. */
+	/* Check more syntax. -E is allowed, but ignored. */
 	switch (m[0]) {
 	case '\0':
 	    /* Use default model number. */
@@ -973,13 +972,11 @@ parse_model_number(char *m)
 	}
 	switch (sl) {
 	case 1: /* n */
-	    mode.extended = appres.extended_data_stream;
 	    break;
 	case 3:	/* n-E */
 	    if (strcasecmp(m + 1, "-E")) {
 		return -1;
 	    }
-	    mode.extended = true;
 	    break;
 	default:
 	    return -1;
@@ -993,7 +990,6 @@ parse_model_number(char *m)
     } else {
 	return -1;
     }
-
 }
 
 /* Change the window and icon labels. */

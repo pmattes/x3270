@@ -49,6 +49,7 @@
 #include "find_console.h"
 #include "fprint_screen.h"
 #include "menubar.h"
+#include "model.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -483,10 +484,10 @@ create_tracefile_header(const char *trace_mode)
     wtrace(false, " Build options: %s\n", build_options());
     save_yourself();
     wtrace(false, " Command: %s\n", command_string);
-    wtrace(false, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
+    wtrace(false, " Model %s, %d rows x %d cols", get_model(), maxROWS, maxCOLS);
     wtrace(false, ", %s display",
 	    appres.interactive.mono? "monochrome": "color");
-    if (mode.extended) {
+    if (appres.extended_data_stream) {
 	wtrace(false, ", extended data stream");
     }
     wtrace(false, ", %s emulation", mode.m3279 ? "color" : "monochrome");

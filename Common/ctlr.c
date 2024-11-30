@@ -100,7 +100,7 @@ unsigned char reply_mode = SF_SRM_FIELD;
 int crm_nattr = 0;
 unsigned char crm_attr[16];
 bool dbcs = false;
-xmode_t mode = { true, true };
+xmode_t mode = { true };
 
 /* Statics */
 static unsigned char *zero_buf;	/* empty buffer, for area clears */
@@ -335,12 +335,6 @@ set_rows_cols(int mn, int ovc, int ovr)
 	    ov_rows = maxROWS = ovr;
 	}
     }
-
-    /* Update the model name. */
-    sprintf(model_name, "327%c-%d%s",
-	(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ? '9' : '8',
-	model_num,
-	mode.extended ? "-E" : "");
 
     /* Make sure that the current rows/cols are still 24x80. */
     COLS = defCOLS = MODEL_2_COLS;

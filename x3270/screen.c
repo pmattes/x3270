@@ -5324,9 +5324,6 @@ screen_change_model(int mn, int ovc, int ovr)
     oversize_changed = true;
     screen_reinit(MODEL_CHANGE);
     screen_m3279(mode.m3279);
-
-    /* Redo the terminal type. */
-    net_set_default_termtype();
 }
 
 /*
