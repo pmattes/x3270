@@ -57,9 +57,9 @@ class TestX3270Resize(cti.cti):
             x3270_port, ts = cti.unused_port()
             env = os.environ.copy()
             env['DISPLAY'] = ':2'
-            x3270 = Popen(cti.vgwrap(["x3270",
-                "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
-                "-httpd", f"127.0.0.1:{x3270_port}"]), stdout=DEVNULL, env=env)
+            x3270 = Popen(cti.vgwrap(['x3270',
+                '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
+                '-httpd', f'127.0.0.1:{x3270_port}']), stdout=DEVNULL, env=env)
             self.children.append(x3270)
             self.check_listen(x3270_port)
             ts.close()
@@ -67,6 +67,47 @@ class TestX3270Resize(cti.cti):
             # Resize it.
             r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,2,oversize,100x100,extendedDataStream,false)')
             self.assertTrue(r.ok)
+
+            # Make sure oversize failed, because we also turned off extendedDataStream.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(oversize)')
+            self.assertTrue(r.ok)
+            self.assertEqual('', r.json()['result'][0])
+
+            # Wait for the process to exit.
+            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.vgwait(x3270)
+
+    # x3270 color-mode change test
+    def test_x3270_color_mode_change(self):
+
+        # Start a tightvnc server.
+        with tvs.tightvncserver(self):
+
+            # Set up the fonts.
+            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
+            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
+            self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
+            self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
+
+            # Start x3270 in monochrome mode.
+            x3270_port, ts = cti.unused_port()
+            env = os.environ.copy()
+            env['DISPLAY'] = ':2'
+            x3270 = Popen(cti.vgwrap(['x3270', '-mono',
+                '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
+                '-httpd', f'127.0.0.1:{x3270_port}']), stdout=DEVNULL, env=env)
+            self.children.append(x3270)
+            self.check_listen(x3270_port)
+            ts.close()
+
+            # Resize it.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,3279-2)')
+            self.assertTrue(r.ok)
+
+            # Make sure the model stayed as a 3278, since we're in -mono mode.
+            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model)')
+            self.assertTrue(r.ok)
+            self.assertEqual('3278-2-E', r.json()['result'][0])
 
             # Wait for the process to exit.
             requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')

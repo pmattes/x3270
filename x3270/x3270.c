@@ -133,7 +133,6 @@ static bool  colormap_failure = false;
 #if defined(LOCAL_PROCESS) /*[*/
 static void	parse_local_process(int *argcp, char **argv, char **cmds);
 #endif /*]*/
-static int	parse_model_number(char *m);
 #if defined(DEBUG_SET_CLEAR) /*[*/
 static void	dump_argv(const char *, int, char **);
 #endif /*]*/
@@ -923,73 +922,6 @@ sigchld_handler(int ignored)
 #if !defined(_AIX) /*[*/
     signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
-}
-
-/*
- * Parse the model number.
- * Returns -1 (error), 0 (default), or the specified number.
- */
-static int
-parse_model_number(char *m)
-{
-    int sl;
-    int n;
-
-    sl = strlen(m);
-
-    /* An empty model number is no good. */
-    if (!sl) {
-	return 0;
-    }
-
-    if (sl > 1) {
-	/*
-	 * If it's longer than one character, it needs to start with
-	 * '327[89]', and it sets the m3279 resource.
-	 */
-	if (!strncmp(m, "3278", 4)) {
-	    mode.m3279 = false;
-	} else if (!strncmp(m, "3279", 4)) {
-	    mode.m3279 = true;
-	} else {
-	    return -1;
-	}
-	m += 4;
-	sl -= 4;
-
-	/* Check more syntax. -E is allowed, but ignored. */
-	switch (m[0]) {
-	case '\0':
-	    /* Use default model number. */
-	    return 0;
-	case '-':
-	    /* Model number specified. */
-	    m++;
-	    sl--;
-	    break;
-	default:
-	    return -1;
-	}
-	switch (sl) {
-	case 1: /* n */
-	    break;
-	case 3:	/* n-E */
-	    if (strcasecmp(m + 1, "-E")) {
-		return -1;
-	    }
-	    break;
-	default:
-	    return -1;
-	}
-    }
-
-    /* Check the numeric model number. */
-    n = atoi(m);
-    if (n >= 2 && n <= 5) {
-	return n;
-    } else {
-	return -1;
-    }
 }
 
 /* Change the window and icon labels. */

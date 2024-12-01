@@ -5345,10 +5345,12 @@ model_can_change(void)
 void
 screen_m3279(bool m3279 _is_unused)
 {
-    destroy_pixels();
-    screen_reinit(COLOR_CHANGE);
-    set_rows_cols(model_num, ov_cols, ov_rows);
-    model_changed = true;
+    if (!appres.interactive.mono) {
+	destroy_pixels();
+	screen_reinit(COLOR_CHANGE);
+	set_rows_cols(model_num, ov_cols, ov_rows);
+	model_changed = true;
+    }
 }
 
 /*

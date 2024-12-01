@@ -31,8 +31,8 @@
  *		Declarations for model.c.
  */
 
-void model_register(void);
-bool model_can_change(void);
-const char *get_model(void);
 const char *get_full_model(void);
-
+const char *get_model(void);
+bool model_can_change(void);
+void model_register(void);
+int parse_model_number(char *m);

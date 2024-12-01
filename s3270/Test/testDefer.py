@@ -69,7 +69,7 @@ class TestS3270Defer(cti.cti):
             #  A -defer query should show the new value.
             r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
-            self.assertEqual(['3279-2-E'], r.json()['result'][0].split())
+            self.assertEqual(['3279-2'], r.json()['result'][0].split())
             #  'model' should be the only value reported by a -defer query.
             r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
@@ -152,7 +152,7 @@ class TestS3270Defer(cti.cti):
             #  A -defer query should show the new value.
             r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
-            self.assertEqual(['3279-2-E'], r.json()['result'][0].split())
+            self.assertEqual(['3279-2'], r.json()['result'][0].split())
             r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
             self.assertTrue(r.ok)
             self.assertEqual(['100x100'], r.json()['result'][0].split())

@@ -184,6 +184,73 @@ toggle_extended_data_stream(const char *name _is_unused, const char *value, unsi
 }
 
 /*
+ * Parse the model number.
+ * Returns -1 (error), 0 (default), or the specified number.
+ */
+int
+parse_model_number(char *m)
+{
+    size_t sl;
+    int n;
+
+    sl = strlen(m);
+
+    /* An empty model number is no good. */
+    if (!sl) {
+	return 0;
+    }
+
+    if (sl > 1) {
+	/*
+	 * If it's longer than one character, it needs to start with
+	 * '327[89]', and it sets color mode.
+	 */
+	if (!strncmp(m, "3278", 4)) {
+	    mode.m3279 = false;
+	} else if (!strncmp(m, "3279", 4)) {
+	    mode.m3279 = true;
+	} else {
+	    return -1;
+	}
+	m += 4;
+	sl -= 4;
+
+	/* Check more syntax. -E is allowed, but ignored. */
+	switch (m[0]) {
+	case '\0':
+	    /* Use default model number. */
+	    return 0;
+	case '-':
+	    /* Model number specified. */
+	    m++;
+	    sl--;
+	    break;
+	default:
+	    return -1;
+	}
+	switch (sl) {
+	case 1: /* n */
+	    break;
+	case 3:	/* n-E */
+	    if (strcasecmp(m + 1, "-E")) {
+		return -1;
+	    }
+	    break;
+	default:
+	    return -1;
+	}
+    }
+
+    /* Check the numeric model number. */
+    n = atoi(m);
+    if (n >= 2 && n <= 5) {
+	return n;
+    } else {
+	return -1;
+    }
+}
+
+/*
  * Done function for changing the model, oversize and extended mode.
  */
 static toggle_upcall_ret_t
@@ -223,7 +290,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     /* Reconcile simultaneous changes. */
     if (pending_extended_data_stream != NULL) {
 	if (boolstr(pending_extended_data_stream, &xext) != NULL) {
-	    popup_an_error("Invalid " ResExtendedDataStream);
+	     popup_an_error("Invalid " ResExtendedDataStream);
 	    goto fail;
 	}
     }
@@ -237,7 +304,13 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	}
 
 	if (pending_model != NULL) {
-	    Replace(pending_model, NewString(canon));
+	    char *new_model = NewString(canon);
+	    if (appres.interactive.mono) {
+		/* You can't change to a color model when in mono mode. */
+		new_model[3] = '8';
+		is_color = false;
+	    }
+	    Replace(pending_model, new_model);
 	}
     }
 
