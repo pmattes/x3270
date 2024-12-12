@@ -81,7 +81,8 @@ int defROWS, defCOLS;
 int altROWS, altCOLS;
 int ov_rows, ov_cols;
 bool ov_auto;
-int model_num;
+int model_num = 4;
+bool mode3279 = true;
 int cursor_addr, buffer_addr;
 bool screen_alt = false;	/* alternate screen? */
 bool is_altbuffer = false;
@@ -100,7 +101,6 @@ unsigned char reply_mode = SF_SRM_FIELD;
 int crm_nattr = 0;
 unsigned char crm_attr[16];
 bool dbcs = false;
-xmode_t mode = { true };
 
 /* Statics */
 static unsigned char *zero_buf;	/* empty buffer, for area clears */
@@ -1725,13 +1725,13 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		    } else if (*cp == XA_FOREGROUND) {
 			trace_ds("%s", see_efa(*cp, *(cp + 1)));
 			cp++;
-			if (mode.m3279) {
+			if (mode3279) {
 			    ctlr_add_fg(buffer_addr, *cp);
 			}
 		    } else if (*cp == XA_BACKGROUND) {
 			trace_ds("%s", see_efa(*cp, *(cp + 1)));
 			cp++;
-			if (mode.m3279) {
+			if (mode3279) {
 			    ctlr_add_bg(buffer_addr, *cp);
 			}
 		    } else if (*cp == XA_HIGHLIGHTING) {
@@ -1798,13 +1798,13 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 		} else if (*cp == XA_FOREGROUND) {
 		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
 		    cp++;
-		    if (mode.m3279) {
+		    if (mode3279) {
 			efa_fg = *cp;
 		    }
 		} else if (*cp == XA_BACKGROUND) {
 		    trace_ds("%s", see_efa(*cp, *(cp + 1)));
 		    cp++;
-		    if (mode.m3279) {
+		    if (mode3279) {
 			efa_bg = *cp;
 		    }
 		} else if (*cp == XA_HIGHLIGHTING) {
@@ -1856,12 +1856,12 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	    }
 	    if (*cp == XA_FOREGROUND)  {
 		trace_ds("%s", see_efa(*cp, *(cp + 1)));
-		if (mode.m3279) {
+		if (mode3279) {
 		    default_fg = *(cp + 1);
 		}
 	    } else if (*cp == XA_BACKGROUND)  {
 		trace_ds("%s", see_efa(*cp, *(cp + 1)));
-		if (mode.m3279) {
+		if (mode3279) {
 		    default_bg = *(cp + 1);
 		}
 	    } else if (*cp == XA_HIGHLIGHTING)  {
@@ -2803,7 +2803,7 @@ ctlr_add_gr(int baddr, unsigned char gr)
 void
 ctlr_add_fg(int baddr, unsigned char color)
 {
-    if (!mode.m3279) {
+    if (!mode3279) {
 	return;
     }
     if ((color & 0xf0) != 0xf0) {
@@ -2824,7 +2824,7 @@ ctlr_add_fg(int baddr, unsigned char color)
 void
 ctlr_add_bg(int baddr, unsigned char color)
 {
-    if (!mode.m3279) {
+    if (!mode3279) {
 	return;
     }
     if ((color & 0xf0) != 0xf0) {

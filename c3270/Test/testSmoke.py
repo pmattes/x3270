@@ -27,15 +27,16 @@
 #
 # c3270 smoke tests
 
-import unittest
+import os
+import os.path
 from subprocess import Popen, PIPE, DEVNULL
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import os
+import unittest
 import re
-import os.path
 import requests
+import threading
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
@@ -43,72 +44,84 @@ import Common.Test.cti as cti
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
 class TestC3270Smoke(cti.cti):
 
+    # Asynchronous connect from c3270 to playback.
+    def async_connect(self, c3270_port: int, playback_port: int):
+        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(127.0.0.1:{playback_port})')
+        self.assertTrue(r.ok)
+
     # c3270 3270 smoke test
     def test_c3270_3270_smoke(self):
 
-        # Start 'playback' to read s3270's output.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
-            ts.close()
+        playback_port, pts = cti.unused_port()
 
-            # Fork a child process with a PTY between this process and it.
-            c3270_port, ts = cti.unused_port()
-            (pid, fd) = pty.fork()
-            if pid == 0:
-                # Child process
-                ts.close()
-                env = os.environ.copy()
-                env['TERM'] = 'xterm-256color'
-                os.execvpe(cti.vgwrap_ecmd('c3270'),
-                    cti.vgwrap_eargs(["c3270", "-model", "2", "-utf8",
-                        "-httpd", f"127.0.0.1:{c3270_port}",
-                        f"127.0.0.1:{playback_port}"]), env)
-                self.assertTrue(False, 'c3270 did not start')
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, cts = cti.unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            cts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(cti.vgwrap_ecmd('c3270'),
+                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+                    '-httpd', f'127.0.0.1:{c3270_port}', '-secure']), env)
+            self.assertTrue(False, 'c3270 did not start')
 
-            # Parent process.
+        # Parent process.
 
-            # Make sure c3270 started.
-            self.check_listen(c3270_port)
-            ts.close()
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        cts.close()
 
-            # Write the stream to c3270.
-            p.send_records(5)
-            requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
-            requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
-            p.send_records(2)
-            p.close()
+        # Start 'playback' to feed c3270.
+        p = playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
+        pts.close()
 
-            # Collect the output.
-            result = ''
-            while True:
-                try:
-                    rbuf = os.read(fd, 1024)
-                except OSError:
-                    break
-                result += rbuf.decode('utf8')
-            
-            # Make the output a bit more readable and split it into lines.
-            result = re.sub('(?s).*\x07', '', result)
-            result = result.replace('\x1b', '<ESC>').split('\n')
-            for i in range(len(result)):
-                result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
-            rtext = '\n'.join(result)
-            if 'GENERATE' in os.environ:
-                # Use this to regenerate the template file.
-                file = open(os.environ['GENERATE'], "w")
-                file.write(rtext)
-                file.close()
+        # Connect c3270 to playback.
+        thread = threading.Thread(target=self.async_connect, args=[c3270_port, playback_port])
+        thread.start()
+
+        # Write the stream to c3270.
+        p.send_records(5)
+        thread.join()
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
+        p.send_records(2)
+        p.send_tm()
+        p.close()
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+
+        # Collect the output.
+        result = ''
+        while True:
+            try:
+                rbuf = os.read(fd, 1024)
+            except OSError:
+                break
+            result += rbuf.decode('utf8')
+        
+        # Make the output a bit more readable and split it into lines.
+        result = re.sub('(?s).*\x07', '', result)
+        result = result.replace('\x1b', '<ESC>').split('\n')
+        for i in range(len(result)):
+            result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
+        rtext = '\n'.join(result)
+        if 'GENERATE' in os.environ:
+            # Use this to regenerate the template file.
+            file = open(os.environ['GENERATE'], "w")
+            file.write(rtext)
+            file.close()
+        else:
+            # Compare what we just got to the reference file.
+            localtext = f'c3270/Test/smoke_{sys.platform}.txt'
+            if os.path.exists(localtext):
+                text = localtext
             else:
-                # Compare what we just got to the reference file.
-                localtext = f'c3270/Test/smoke_{sys.platform}.txt'
-                if os.path.exists(localtext):
-                    text = localtext
-                else:
-                    text = 'c3270/Test/smoke.txt'
-                file = open(text, "r", newline='')
-                ctext = file.read()
-                file.close()
-                self.assertEqual(rtext, ctext)
+                text = 'c3270/Test/smoke.txt'
+            file = open(text, "r", newline='')
+            ctext = file.read()
+            file.close()
+            self.assertEqual(rtext, ctext)
 
         self.vgwait_pid(pid)
 

@@ -18,7 +18,13 @@
     <ClCompile Include="..\..\Common\ft_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\glue_gui_stubs.c">
+    <ClCompile Include="..\..\Common\glue_gui_stubs1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\glue_gui_stubs2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\glue_gui_stubs3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\host_gui_stubs.c">

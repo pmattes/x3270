@@ -218,6 +218,7 @@ extern char		luname[];
 extern bool		local_process;
 #endif /*]*/
 extern int		model_num;
+extern bool		mode3279;
 extern bool		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
 extern bool		ov_auto;
@@ -247,11 +248,6 @@ extern char		*commondocs3270;
 #if defined(_WIN32) /*[*/
 extern unsigned		windirs_flags;
 #endif /*]*/
-
-typedef struct {
-    bool		m3279;		/* 3270 (color) mode */
-} xmode_t;
-extern xmode_t mode;
 
 /* Data types and complex global variables */
 

@@ -376,51 +376,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 void
 model_init(void)
 {
-    int model_number;
-    int ovc, ovr;
+    /* Set up the model. */
+    int model_number = common_model_init();
 
-    /*
-     * Sort out model and color modes, based on the model number resource.
-     */
-    model_number = parse_model_number(appres.model);
-    if (model_number < 0) {
-	popup_an_error("Invalid model number: %s", appres.model);
-	model_number = 0;
-    }
-    if (!model_number) {
-	model_number = 4;
-    }
-    if (appres.interactive.mono) {
-	mode.m3279 = false;
-    }
-    Replace(appres.model, Asprintf("327%c-%d", mode.m3279? '9': '8', model_number));
-
-    if (!appres.extended_data_stream) {
-	appres.oversize = NULL;
-    }
-
-    ovc = 0;
-    ovr = 0;
-    if (appres.extended_data_stream && appres.oversize != NULL) {
-	if (product_auto_oversize() && !strcasecmp(appres.oversize, "auto")) {
-	    ovc = -1;
-	    ovr = -1;
-	} else {
-	    int x_ovc, x_ovr;
-	    char junk;
-
-	    if (sscanf(appres.oversize, "%dx%d%c", &x_ovc, &x_ovr,
-			&junk) == 2) {
-		ovc = x_ovc;
-		ovr = x_ovr;
-	    } else {
-		xs_warning("Invalid %s value '%s'", ResOversize,
-			appres.oversize);
-	    }
-	}
-    }
-    set_rows_cols(model_number, ovc, ovr);
-    net_set_default_termtype();
+    /* Initialize oversize. */
+    oversize_init(model_number);
 }
 
 static void
@@ -476,7 +436,6 @@ set_appres_defaults(void)
     appres.conf_dir = NewString(LIBX3270DIR);
 
     appres.model = NewString("3279-4");
-    mode.m3279 = true; /* needs to match the '9' in appres.model */
     appres.hostsfile = NULL;
     appres.port = NewString("23");
     /* Do this when we finally deprecate 'charset'. */

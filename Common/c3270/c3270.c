@@ -2189,7 +2189,7 @@ product_set_appres_defaults(void)
     appres.trace_monitor = true;
     set_toggle(UNDERSCORE, true);
 #else /*][*/
-    appres.c3270.meta_escape = NewString("auto");
+    appres.c3270.meta_escape = NewString(KwAuto);
     appres.c3270.curses_keypad = true;
     appres.c3270.mouse = true;
 #endif /*]*/

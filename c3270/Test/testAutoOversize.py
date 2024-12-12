@@ -25,41 +25,34 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# c3270 ibm_hosts tests
+# c3270 auto-oversize tests
 
 import os
+import os.path
+from subprocess import Popen, PIPE, DEVNULL
 import sys
 if not sys.platform.startswith('win'):
     import pty
+import re
 import requests
-from subprocess import Popen, PIPE, DEVNULL
-import tempfile
 import threading
 import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
+@unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270IbmHosts(cti.cti):
+class TestC3270AutoOversize(cti.cti):
 
-    # Drain the PTY.
-    def drain(self, fd):
-        while True:
-            try:
-                os.read(fd, 1024)
-            except:
-                return
+    # Asynchronous connect from c3270 to playback.
+    def async_connect(self, c3270_port: int, playback_port: int):
+        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(127.0.0.1:{playback_port})')
+        self.assertTrue(r.ok)
 
-    # c3270 ibm_hosts case sensitivity test
-    def test_c3270_ibm_hosts_ci(self):
+    # c3270 auto-oversize test
+    def test_c3270_auto_oversize(self):
 
         playback_port, pts = cti.unused_port()
-
-        # Create an ibm_hosts file that points to playback.
-        (handle, hostsfile_name) = tempfile.mkstemp()
-        os.close(handle)
-        with open(hostsfile_name, 'w') as f:
-            f.write(f"fooey primary a:c:t:127.0.0.1:{playback_port}\n")
 
         # Fork a child process with a PTY between this process and it.
         c3270_port, cts = cti.unused_port()
@@ -70,39 +63,41 @@ class TestC3270IbmHosts(cti.cti):
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
             os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2',
+                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8',
                     '-httpd', f'127.0.0.1:{c3270_port}',
-                    '-hostsfile', hostsfile_name]), env)
+                    '-oversize', 'auto',
+                    '-secure']), env)
             self.assertTrue(False, 'c3270 did not start')
 
         # Parent process.
-
-        # Start a thread to drain c3270's output.
-        drain_thread = threading.Thread(target=self.drain, args=[fd])
-        drain_thread.start()
 
         # Make sure c3270 started.
         self.check_listen(c3270_port)
         cts.close()
 
-        # Start 'playback' to read c3270's output.
-        p = playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port)
+        # Start 'playback' to feed c3270.
+        p = playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
         pts.close()
 
-        # Make sure c3270 is connected.
-        os.write(fd, b'open fOOey\r')
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(2,inputField)')
-        self.assertTrue(r.ok)
-        cs = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(connectionState)').json()['result'][0]
-        self.assertEqual('connected-nvt', cs)
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        # Connect c3270 to playback.
+        thread = threading.Thread(target=self.async_connect, args=[c3270_port, playback_port])
+        thread.start()
 
-        # Wait for the processes to exit.
+        # Write the stream to c3270.
+        p.send_records(5)
+        thread.join(timeout=5)
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
+        p.send_records(2)
+
+        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(oversize)')
+        self.assertTrue(r.ok)
+        value = r.json()['result'][0]
+        self.assertEqual('auto', value)
+
+        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
         p.close()
         self.vgwait_pid(pid)
-        os.close(fd)
-        drain_thread.join()
-        os.unlink(hostsfile_name)
 
 if __name__ == '__main__':
     unittest.main()

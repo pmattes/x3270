@@ -152,6 +152,7 @@
 /*  Common keywords. */
 #define KwFailOnError	"failonerror"
 #define KwNoFailOnError	"nofailonerror"
+#define KwAuto		"auto"
 /*  Parameters to Capabilities(). */
 #define KwInteractive	"interactive"
 #define KwPwInput	"pwinput"

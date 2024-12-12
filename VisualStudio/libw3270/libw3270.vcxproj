@@ -183,7 +183,6 @@
     <ClCompile Include="..\..\Common\winprint.c" />
     <ClCompile Include="..\..\Common\xio.c" />
     <ClCompile Include="..\..\Common\XtGlue.c" />
-    <ClCompile Include="..\..\Common\popups_glue.c" />
     <ClCompile Include="..\..\Common\sio_glue.c" />
     <ClCompile Include="..\..\Common\run_action.c" />
     <ClCompile Include="..\..\Common\login_macro.c" />

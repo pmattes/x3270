@@ -47,6 +47,7 @@
 
 #include "fprint_screen.h"
 #include "gdi_print.h"
+#include "names.h"
 #include "nvt.h"
 #include "popups.h"
 #include "task.h"
@@ -304,7 +305,7 @@ gdi_get_params(uparm_t *up)
 
     /* Font size. */
     if ((s = get_resource(ResPrintTextSize)) != NULL) {
-	if (strcasecmp(s, "auto")) {
+	if (strcasecmp(s, KwAuto)) {
 	    l = strtoul(s, &nextp, 0);
 	    if (l > 0) {
 		up->font_size = (int)l;

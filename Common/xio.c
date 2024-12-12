@@ -37,6 +37,7 @@
 
 #include "globals.h"
 
+#include <assert.h>
 #include "actions.h"
 #include "names.h"
 #include "telnet.h"
@@ -138,6 +139,11 @@ x3270_exit(int n)
 
     /* Tell everyone else who's interested. */
     st_changed(ST_EXITING, true);
+
+    /* In certain unit test scenarios, crash on exit. */
+    if (ut_getenv("CRASH_ON_EXIT")) {
+	assert(false);
+    }
 
 #if !defined(_WIN32) /*[*/
     exit(n);

@@ -180,6 +180,7 @@ socket_t syncsock = INVALID_SOCKET;
 char *instdir;
 #endif /* ]*/
 const char *popup_separator = " ";
+bool host_retry_mode = false;
 
 /* Locals. */
 static char *programname = NULL;
@@ -1261,10 +1262,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 }
 
 /* Error pop-ups. */
-void
-popup_a_vxerror(pae_t type, const char *fmt, va_list args)
+bool
+glue_gui_error(pae_t type, const char *s)
 {
-    verrmsg(fmt, args);
+    errmsg(s);
+    return true;
 }
 
 #if defined(_MSC_VER) /*[*/
@@ -1314,4 +1316,15 @@ const char *
 ut_getenv(const char *name)
 {
     return options.ut_env? getenv(name): NULL;
+}
+
+bool
+task_redirect(void)
+{
+    return false;
+}
+
+void
+task_error(const char *s)
+{
 }

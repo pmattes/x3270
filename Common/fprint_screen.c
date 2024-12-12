@@ -87,7 +87,7 @@ color_from_fa(unsigned char fa)
 	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
     };
 
-    if (mode.m3279) {
+    if (mode3279) {
 	return field_colors[DEFCOLOR_MAP(fa)];
     } else {
 	return HOST_COLOR_GREEN;

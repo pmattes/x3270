@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013-2015, 2018-2019, 2022 Paul Mattes.
+ * Copyright (c) 1994-2024 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -742,7 +742,7 @@ do_qr_color(void)
     *obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
     for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
 	*obptr++ = i;
-	if (mode.m3279) {
+	if (mode3279) {
 	    *obptr++ = i;
 	} else {
 	    *obptr++ = 0x00;
@@ -751,7 +751,7 @@ do_qr_color(void)
 
     if (screen_has_bg_color()) {
 	/* Add background color. */
-	if (mode.m3279 && appres.qr_bg_color) {
+	if (mode3279 && appres.qr_bg_color) {
 	    space3270out(4);
 	    *obptr++ = 4;	/* length */
 	    *obptr++ = 0x02;	/* background color */

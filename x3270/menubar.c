@@ -58,6 +58,7 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "menubar.h"
+#include "model.h"
 #include "names.h"
 #include "popups.h"
 #include "print_screen.h"
@@ -1971,9 +1972,8 @@ static void
 change_model_callback(Widget w, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-    int m;
+    int m = atoi(client_data);
 
-    m = atoi(client_data);
     switch (model_num) {
     case 2:
 	if (model_2_button != NULL) {
@@ -2039,12 +2039,12 @@ menubar_remodel(bool ignored _is_unused)
     /* Set the 3278/3279 toggles. */
     if (m3278_button != NULL) {
 	XtVaSetValues(m3278_button, XtNleftBitmap,
-		mode.m3279 ? no_diamond : diamond,
+		mode3279 ? no_diamond : diamond,
 		NULL);
     }
     if (m3279_button != NULL) {
 	XtVaSetValues(m3279_button, XtNleftBitmap,
-		mode.m3279 ? diamond : no_diamond,
+		mode3279 ? diamond : no_diamond,
 		NULL);
     }
 }
@@ -2171,29 +2171,24 @@ static void
 toggle_m3279(Widget w, XtPointer client_data _is_unused, XtPointer
 	call_data _is_unused)
 {
-    char *new_model;
-
     if (w == m3278_button) {
-	mode.m3279 = false;
+	mode3279 = false;
     } else if (w == m3279_button) {
-	mode.m3279 = true;
+	mode3279 = true;
     } else {
 	return;
     }
-    new_model = NewString(appres.model);
-    new_model[3] = mode.m3279? '9': '8';
-    Replace(appres.model, new_model);
-
     XtVaSetValues(m3278_button, XtNleftBitmap,
-	    mode.m3279 ? no_diamond : diamond,
+	    mode3279 ? no_diamond : diamond,
 	    NULL);
     XtVaSetValues(m3279_button, XtNleftBitmap,
-	    mode.m3279 ? diamond : no_diamond,
+	    mode3279 ? diamond : no_diamond,
 	    NULL);
     if (scheme_button != NULL) {
-	XtVaSetValues(scheme_button, XtNsensitive, mode.m3279, NULL);
+	XtVaSetValues(scheme_button, XtNsensitive, mode3279, NULL);
     }
-    screen_m3279(mode.m3279);
+    Replace(appres.model, create_model(model_num, mode3279));
+    screen_m3279(mode3279);
 }
 
 static void
@@ -2317,13 +2312,13 @@ options_menu_init(bool regen, Position x, Position y)
 	    m3278_button = add_menu_itemv( "m3278Option", t,
 		    toggle_m3279, NULL,
 		    &spaced,
-		    XtNleftBitmap, mode.m3279? no_diamond: diamond,
+		    XtNleftBitmap, mode3279? no_diamond: diamond,
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
 	    m3279_button = add_menu_itemv("m3279Option", t,
 		    toggle_m3279, NULL,
 		    &spaced,
-		    XtNleftBitmap, mode.m3279? diamond: no_diamond,
+		    XtNleftBitmap, mode3279? diamond: no_diamond,
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
 	}
@@ -2496,7 +2491,7 @@ options_menu_init(bool regen, Position x, Position y)
 		"colorsOption", cmeBSBObjectClass, options_menu,
 		XtNrightBitmap, arrow,
 		XtNmenuName, "colorsMenu",
-		XtNsensitive, mode.m3279,
+		XtNsensitive, mode3279,
 		NULL);
 	any = true;
     }

@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\Common\popup_an_error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\popups_glue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>

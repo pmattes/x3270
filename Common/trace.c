@@ -490,7 +490,7 @@ create_tracefile_header(const char *trace_mode)
     if (appres.extended_data_stream) {
 	wtrace(false, ", extended data stream");
     }
-    wtrace(false, ", %s emulation", mode.m3279 ? "color" : "monochrome");
+    wtrace(false, ", %s emulation", mode3279 ? "color" : "monochrome");
     wtrace(false, ", code page %s", get_codepage_name());
     if (toggled(APL_MODE)) {
 	wtrace(false, ", APL mode");

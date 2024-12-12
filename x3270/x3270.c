@@ -426,7 +426,7 @@ cleanup_Xt(bool b _is_unused)
 
 /* Duplicate string resources so they can be reallocated later. */
 static void
-dup_resource_strings(XtResourceList res, Cardinal num)
+dup_resource_strings(void *ap, XtResourceList res, Cardinal num)
 {
     Cardinal c;
 
@@ -437,7 +437,7 @@ dup_resource_strings(XtResourceList res, Cardinal num)
 	if (r->resource_type != XtRString) {
 	    continue;
 	}
-	value = (char **)(void *)((char *)(void *)&appres + r->resource_offset);
+	value = (char **)(void *)((char *)ap + r->resource_offset);
 	if (*value != NULL) {
 	    *value = NewString(*value);
 	}
@@ -453,12 +453,11 @@ main(int argc, char *argv[])
 #endif /*]*/
     Atom protocols[2];
     char *cl_hostname = NULL;
-    int	ovc, ovr;
-    char junk;
     int	model_number;
     bool mono = false;
     char *session = NULL;
     XtResource *res;
+    XtResource *xres;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -661,6 +660,8 @@ main(int argc, char *argv[])
      */
     res = (XtResource *)Malloc(num_resources * sizeof(XtResource));
     memcpy(res, resources, num_resources * sizeof(XtResource));
+    xres = (XtResource *)Malloc(num_xresources * sizeof(XtResource));
+    memcpy(xres, xresources, num_xresources * sizeof(XtResource));
 
     /* Fill in appres. */
     old_emh = XtAppSetWarningMsgHandler(appcontext,
@@ -686,7 +687,8 @@ main(int argc, char *argv[])
     }
 
     /* Duplicate the strings in appres, so they can be reallocated later. */
-    dup_resource_strings(res, num_resources);
+    dup_resource_strings((void *)&appres, res, num_resources);
+    dup_resource_strings((void *)&xappres, xres, num_xresources);
 
     /* Check the minimum version. */
     check_min_version(appres.min_version);
@@ -726,28 +728,16 @@ main(int argc, char *argv[])
     /*
      * Sort out model and color modes, based on the model number resource.
      */
-    model_number = parse_model_number(appres.model);
-    if (model_number < 0) {
-	popup_an_error("Invalid model number: %s", appres.model);
-	model_number = 0;
-    }
-    if (!model_number) {
-	model_number = 4;
-    }
     if (screen_depth <= 1 || colormap_failure) {
 	appres.interactive.mono = true;
-    }
-    if (appres.interactive.mono) {
 	xappres.use_cursor_color = False;
-	mode.m3279 = false;
     }
-    if (!appres.extended_data_stream) {
-	appres.oversize = NULL;
-    }
+    model_number = common_model_init();
+
+    /* Do a bit of security init. */
     if (appres.secure) {
 	appres.disconnect_clear = true;
     }
-    Replace(appres.model, Asprintf("327%c-%d", mode.m3279? '9': '8', model_number));
 
     /* Set up the resolver. */
     set_46(appres.prefer_ipv4, appres.prefer_ipv6);
@@ -826,13 +816,8 @@ main(int argc, char *argv[])
     /* Set up the window and icon labels. */
     label_init();
 
-    if (!appres.extended_data_stream || appres.oversize == NULL ||
-	sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
-	ovc = 0;
-	ovr = 0;
-    }
-    set_rows_cols(model_number, ovc, ovr);
-    net_set_default_termtype();
+    /* Set up oversize. */
+    oversize_init(model_number);
 
     /* Initialize the icon. */
     icon_init();

@@ -31,8 +31,10 @@
  *		Declarations for model.c.
  */
 
+int common_model_init(void);
+char *create_model(int model_num, bool color);
 const char *get_full_model(void);
 const char *get_model(void);
 bool model_can_change(void);
 void model_register(void);
-int parse_model_number(char *m);
+void oversize_init(int model_number);

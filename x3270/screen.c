@@ -266,7 +266,7 @@ static int crosshair_color = HOST_COLOR_PURPLE;
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
 
-#define CROSS_COLOR	(mode.m3279? (GC_NONDEFAULT | crosshair_color) : FA_INT_NORM_NSEL)
+#define CROSS_COLOR	(mode3279? (GC_NONDEFAULT | crosshair_color) : FA_INT_NORM_NSEL)
 
 static bool keypad_was_up = false;
 
@@ -454,7 +454,7 @@ static struct drc *drc;
 #define INVERT_COLOR(c)		((c) ^ INVERT_MASK)
 #define NO_INVERT(c)		((c) & ~INVERT_MASK)
 
-#define DEFAULT_PIXEL		(mode.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
+#define DEFAULT_PIXEL		(mode3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
 static struct {
@@ -691,7 +691,7 @@ screen_reinit(unsigned cmask)
 
     /* Allocate colors. */
     if (cmask & COLOR_CHANGE) {
-	if (mode.m3279) {
+	if (mode3279) {
 	    default_color_scheme();
 	    xfer_color_scheme(xappres.color_scheme, false);
 	}
@@ -701,7 +701,7 @@ screen_reinit(unsigned cmask)
 	 * In color mode, set highlight_bold from the resource.
 	 * In monochrome, set it unconditionally.
 	 */
-	if (mode.m3279) {
+	if (mode3279) {
 	    highlight_bold = appres.highlight_bold;
 	} else {
 	    highlight_bold = true;
@@ -2939,7 +2939,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
 	if (ss->overstrike && ((attrs->u.bits.gr & GR_INTENSIFY) ||
 		    ((appres.interactive.mono ||
-		      (!mode.m3279 && highlight_bold)) &&
+		      (!mode3279 && highlight_bold)) &&
 		     ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
 	    XDrawText16(display, ss->window, dgc, x+1, y, text, n_texts);
 	}
@@ -3165,7 +3165,7 @@ draw_fields(struct sp *buffer, int first, int last)
 	    if (visible_control) {
 		b.u.bits.ec = visible_ebcdic(fa);
 		b.u.bits.gr = GR_UNDERLINE;
-		b.u.bits.fg = mode.m3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
+		b.u.bits.fg = mode3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
 		    FA_INT_HIGH_SEL;
 	    } else if (crossable && CROSSED(baddr)) {
 		b.u.bits.cs = CS_APL;
@@ -3916,7 +3916,7 @@ allocate_pixels(void)
     }
 
     /* Allocate pseudocolors. */
-    if (!mode.m3279) {
+    if (!mode3279) {
 	if (!alloc_color(xappres.normal_name, FB_WHITE, &normal_pixel)) {
 	    popup_an_error("Cannot allocate colormap \"%s\" for text, "
 		    "using \"white\"", xappres.normal_name);
@@ -3957,7 +3957,7 @@ make_gcs(struct sstate *s)
 {
     XGCValues xgcv;
 
-    if (mode.m3279) {
+    if (mode3279) {
 	int i;
 
 	for (i = 0; i < NGCS; i++) {
@@ -4146,7 +4146,9 @@ xfer_color_scheme(char *cs, bool do_popup)
 	color_name[i] = XtNewString(tmp_color_name[i]);
     }
     ibm_fb = tmp_ibm_fb;
+    XtFree(xappres.colorbg_name);
     xappres.colorbg_name = XtNewString(tmp_colorbg_name);
+    XtFree(xappres.selbg_name);
     xappres.selbg_name = XtNewString(tmp_selbg_name);
     for (i = 0; i < 4; i++) {
 	field_colors[i] = tmp_field_colors[i];
@@ -4324,7 +4326,7 @@ fa_color(unsigned char fa)
 #   define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 
-    if (mode.m3279) {
+    if (mode3279) {
 	/*
 	 * Color indices are the low-order 4 bits of a 3279 color
 	 * identifier (0 through 15)
@@ -5323,7 +5325,7 @@ screen_change_model(int mn, int ovc, int ovr)
     model_changed = true;
     oversize_changed = true;
     screen_reinit(MODEL_CHANGE);
-    screen_m3279(mode.m3279);
+    screen_m3279(mode3279);
 }
 
 /*
@@ -5361,7 +5363,7 @@ screen_newscheme(char *s)
 {
     bool xferred;
 
-    if (!mode.m3279) {
+    if (!mode3279) {
 	return;
     }
 

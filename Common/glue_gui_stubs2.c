@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 Paul Mattes.
+ * Copyright (c) 2015-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	glue_gui_stubs.c
+ *	glue_gui_stubs2.c
  *		Stubs for GUI-specific functions called from the glue logic.
  */
 
@@ -36,24 +36,6 @@
 
 bool
 glue_gui_output(const char *s _is_unused)
-{
-    return false;
-}
-
-bool
-glue_gui_error(pae_t type, const char *s _is_unused)
-{
-    return false;
-}
-
-bool
-glue_gui_open_safe(void)
-{
-    return true;
-}
-
-bool
-glue_gui_script_interactive(void)
 {
     return false;
 }

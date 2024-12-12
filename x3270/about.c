@@ -347,7 +347,7 @@ popup_about_config(void)
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
 	appres.interactive.mono? get_message("mono"):
-	    (mode.m3279? get_message("fullColor"):
+	    (mode3279? get_message("fullColor"):
 		get_message("pseudoColor")),
 	(appres.extended_data_stream && !HOST_FLAG(STD_DS_HOST))?
 	    get_message("extendedDs"): get_message("standardDs")), 4);

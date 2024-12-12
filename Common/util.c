@@ -44,6 +44,7 @@
 #include "resources.h"
 #include "codepage.h"
 #include "fallbacks.h"
+#include "names.h"
 #include "popups.h"
 #include "product.h"
 #include "telnet.h"
@@ -1096,4 +1097,27 @@ const char *
 ut_getenv(const char *name)
 {
     return appres.ut_env? getenv(name): NULL;
+}
+
+/*
+ * Parse a tri-state resource value.
+ * Returns true for success, false for failure.
+ */
+bool
+ts_value(const char *s, enum ts *tsp)
+{
+    *tsp = TS_AUTO;
+
+    if (s != NULL && s[0]) {
+	int sl = strlen(s);
+
+	if (!strncasecmp(s, ResTrue, sl)) {
+	    *tsp = TS_ON;
+	} else if (!strncasecmp(s, ResFalse, sl)) {
+	    *tsp = TS_OFF;
+	} else if (strncasecmp(s, KwAuto, sl)) {
+	    return false;
+	}
+    }
+    return true;
 }

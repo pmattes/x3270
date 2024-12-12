@@ -40,7 +40,7 @@ class TestS3270ExtendedDataStream(cti.cti):
 
         # Start s3270.
         port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f'{port}']))
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}']))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -80,6 +80,66 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual(2, len(result))
         self.assertEqual('3279-3', result[0])
         self.assertEqual('IBM-3279-3', result[1])
+
+        # Wait for the process to exit.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    # s3270 mixed-case test model test
+    def test_s3270_mixed_case_model(self):
+
+        # Start s3270 with a mixed-case IBM- model on the command line.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Verify the model is right.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
+        s = r.json()
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual(1, len(result))
+        self.assertEqual('3279-2-E', result[0])
+
+        # Try a model name with a different-cased IBM- at the front and a lowercase -E.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
+        s = r.json()
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual(1, len(result))
+        self.assertEqual('3278-3-E', result[0])
+
+        # Wait for the process to exit.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+    
+    # s3270 mixed-case oversize test
+    def test_s3270_mixed_case_oversize(self):
+
+        # Start s3270 with an uppercase and leading-zero oversize on the command line.
+        port, ts = cti.unused_port()
+        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}', '-oversize', '0100X100']))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Verify oversize is right.
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
+        s = r.json()
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual(1, len(result))
+        self.assertEqual('100x100', result[0])
+
+        # Try an uppercase-X oversize with a Set().
+        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,99X99) Set(oversize)')
+        s = r.json()
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual(1, len(result))
+        self.assertEqual('99x99', result[0])
 
         # Wait for the process to exit.
         requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')

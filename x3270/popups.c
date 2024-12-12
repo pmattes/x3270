@@ -1070,18 +1070,15 @@ rop_init(struct rop *rop)
     }
 }
 
-/* Pop up a dialog.  Common logic for all forms. */
+/* Pop up a dialog. Common logic for all forms. */
 static void
-popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
+popup_rop(struct rop *rop, abort_callback_t *a, const char *buf)
 {
-    char *buf;
-
-    buf = Vasprintf(fmt, args);
     if (!rop->shell || (rop->visible && !rop->overwrites)) {
 	struct rsm *r, **s;
 
 	r = (struct rsm *)Malloc(sizeof(struct rsm));
-	r->text = buf;
+	r->text = NewString(buf);
 	r->next = NULL;
 	for (s = &rop->rsms; *s != NULL; s = &(*s)->next) {
 	}
@@ -1096,16 +1093,15 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 
     if (rop->is_error && task_redirect()) {
 	task_error(buf);
-	Free(buf);
 	return;
     }
 
     XtVaSetValues(rop->form, XtNlabel, buf, NULL);
-    Free(buf);
-    if (a != NULL)
+    if (a != NULL) {
 	XtMapWidget(rop->cancel_button);
-    else
+    } else {
 	XtUnmapWidget(rop->cancel_button);
+    }
     rop->cancel_callback = a;
     if (!rop->visible) {
 	if (rop->is_error) {
@@ -1116,55 +1112,49 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
     }
 }
 
+/* Pop up a dialog. Common logic for all forms. */
+static void
+popup_vrop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
+{
+    char *buf = Vasprintf(fmt, args);
+
+    popup_rop(rop, a, buf);
+    Free(buf);
+}
+
 static void
 stop_trying(void)
 {
-    push_macro(AnSet "(" ResReconnect "=" ResFalse ","
-	    ResRetry "=" ResFalse ")");
+    push_macro(AnSet "(" ResReconnect "=" ResFalse "," ResRetry "=" ResFalse ")");
     popdown_an_error();
 }
 
 /* Pop up an error dialog. */
-void
-popup_a_vxerror(pae_t type, const char *fmt, va_list args)
+bool
+glue_gui_error(pae_t type, const char *s)
 {
-    char *s = Vasprintf(fmt, args);
-    char *xfmt = NULL;
-
-    trace_error(type, s);
-
-    if (task_redirect()) {
-	if (type == ET_CONNECT) {
-	    char *t = Asprintf("Connection failed:\n%s", s);
-
-	    task_error(t);
-	    Free(t);
-	} else {
-	    task_error(s);
-	}
-	Free(s);
-	return;
-    }
+    char *t = NULL;
 
     /* Handle delayed error pop-ups. */
     if (epd.active) {
 	epd.type = type;
-	Replace(epd.text, s);
-	return;
+	Replace(epd.text, NewString(s));
+	return true;
     }
 
     /* Pop up a dialog with a possible retry button. */
     if (type == ET_CONNECT) {
-	xfmt = Asprintf("Connection failed%s:\n%s",
-		host_retry_mode? ", retrying": "", fmt);
+	t = Asprintf("Connection failed%s:\n%s",
+		host_retry_mode? ", retrying": "", s);
     }
-
     popup_rop(&error_popup,
 	    (host_retry_mode && !appres.secure)? stop_trying: NULL,
-	    (xfmt != NULL)? xfmt: fmt, args);
-    if (xfmt != NULL) {
-	Free(xfmt);
+	    (t != NULL)? t: s);
+    if (t != NULL) {
+	Free(t);
     }
+
+    return true;
 }
 
 /* Pop down an error dialog. */
@@ -1198,7 +1188,7 @@ popup_an_info(const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    popup_rop(&info_popup, NULL, fmt, args);
+    popup_vrop(&info_popup, NULL, fmt, args);
     va_end(args);
 }
 
@@ -1223,7 +1213,7 @@ popup_a_timed_info(int timeout_ms, const char *fmt, ...)
     info_id = AddTimeOut(timeout_ms, timed_info_popdown);
 
     va_start(args, fmt);
-    popup_rop(&info_popup, NULL, fmt, args);
+    popup_vrop(&info_popup, NULL, fmt, args);
     va_end(args);
 }
 
@@ -1235,25 +1225,13 @@ add_error_popdown_callback(void (*callback)(void))
 }
 
 /*
- * Produce a result of some sort.  If there is a script running, return it
- * as the value; otherwise, pop it up as an info.
+ * Pop up some asynchronous action output.
  */
-void
-action_output(const char *fmt, ...)
+bool
+glue_gui_output(const char *s)
 {
-    va_list args;
-
-    va_start(args, fmt);
-    if (task_redirect()) {
-	char *s;
-
-	s = Vasprintf(fmt, args);
-	task_info("%s", s);
-	Free(s);
-    } else {
-	popup_rop(&info_popup, NULL, fmt, args);
-    }
-    va_end(args);
+    popup_rop(&info_popup, NULL, s);
+    return true;
 }
 
 /* Callback for x3270 exit.  Dumps any undisplayed error messages to stderr. */
@@ -1343,7 +1321,7 @@ popup_printer_output(bool is_err, abort_callback_t *a, const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    popup_rop(is_err? &printer_error_popup: &printer_info_popup, a, fmt, args);
+    popup_vrop(is_err? &printer_error_popup: &printer_info_popup, a, fmt, args);
     va_end(args);
 }
 
@@ -1363,7 +1341,7 @@ popup_child_output(bool is_err, abort_callback_t *a, const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    popup_rop(is_err? &child_error_popup: &child_info_popup, a, fmt, args);
+    popup_vrop(is_err? &child_error_popup: &child_info_popup, a, fmt, args);
     va_end(args);
 }
 

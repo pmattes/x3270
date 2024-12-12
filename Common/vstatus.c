@@ -335,7 +335,7 @@ vstatus_line(struct ea *ea)
     /* Begin with nothing. */
     memset(ea, 0, 2 * COLS * sizeof(struct ea));
     for (i = 0; i < 2 * COLS; i++) {
-	ea[i].fg = mode.m3279? HOST_COLOR_BLUE: HOST_COLOR_GREEN;
+	ea[i].fg = mode3279? HOST_COLOR_BLUE: HOST_COLOR_GREEN;
     }
 
     /* Ignore any previous field attributes. */
@@ -378,7 +378,7 @@ vstatus_line(struct ea *ea)
 
 	for (i = 0; i < 35 && *msg; i++) {
 	    ea2[7 + i].ucs4 = *msg++;
-	    ea2[7 + i].fg = mode.m3279? voia_msg_color: HOST_COLOR_GREEN;
+	    ea2[7 + i].fg = mode3279? voia_msg_color: HOST_COLOR_GREEN;
 	    ea2[7 + i].gr = GR_INTENSIFY;
 	}
     }

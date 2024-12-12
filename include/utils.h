@@ -134,3 +134,6 @@ void change_cstate(enum cstate cstate, const char *why);
 char *clean_termname(const char *tn);
 void start_help(void);
 const char *ut_getenv(const char *name);
+
+enum ts { TS_AUTO, TS_ON, TS_OFF };
+bool ts_value(const char *s, enum ts *tsp);

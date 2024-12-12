@@ -40,6 +40,7 @@
 #include "host.h"
 #include "names.h"
 #include "popups.h"
+#include "product.h"
 #include "screen.h"
 #include "telnet.h"
 #include "toggles.h"
@@ -52,19 +53,29 @@ static char *pending_model;
 static char *pending_oversize;
 static char *pending_extended_data_stream;
 
-/*
- * Canonical representation of the model, returning color and extended
- * state.
+/**
+ * Canonical representation of the model, returning color and extended state.
+ *
+ * @param[in] res	Resource (raw) value
+ * @param[out] canon	Returned canonical representation
+ * @param[out] model	Returned model number
+ * @param[out] is_color	Returned true if it's a 3279
+ * @param[in] extended	Append -E to canon if true
+ *
+ * @returns true for success, false for error.
  */
-static const char *
-canonical_model_x(const char *res, int *model, bool *is_color, bool extended)
+static bool
+canonical_model_x(const char *res, const char **canon, int *model, bool *is_color, bool extended)
 {
     size_t sl;
     char *digitp = NULL;
     char *colorp = "9";
 
     if (res == NULL) {
-	return NULL;
+	return false;
+    }
+    if (!strncasecmp("IBM-", res, 4)) {
+	res += 4;
     }
     sl = strlen(res);
     if ((sl != 1 && sl != 6 && sl != 8) ||
@@ -77,11 +88,18 @@ canonical_model_x(const char *res, int *model, bool *is_color, bool extended)
 	  (digitp = strchr("2345", res[5])) == NULL)) ||
 	((sl == 8) &&
 	 (res[6] != '-' || strchr("Ee", res[7]) == NULL))) {
-	return NULL;
+	return false;
     }
-    *model = *digitp - '0';
-    *is_color = (*colorp == '9');
-    return txAsprintf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
+    if (model != NULL) {
+	*model = *digitp - '0';
+    }
+    if (is_color != NULL) {
+	*is_color = (*colorp == '9');
+    }
+    if (canon != NULL) {
+	*canon = txAsprintf("327%c-%c%s", *colorp, *digitp, extended? "-E": "");
+    }
+    return true;
 }
 
 /*
@@ -90,13 +108,15 @@ canonical_model_x(const char *res, int *model, bool *is_color, bool extended)
 static const char *
 canonical_model(const char *res)
 {
-    int model;
-    bool color;
+    const char *canon;
 
-    return canonical_model_x(res, &model, &color, appres.extended_data_stream);
+    if (!canonical_model_x(res, &canon, NULL, NULL, appres.extended_data_stream)) {
+	return NULL;
+    }
+    return canon;
 }
 
-/* Get the model. */
+/* Get the model, for display purposes. */
 const char *
 get_model(void)
 {
@@ -110,32 +130,96 @@ get_full_model(void)
     return txAsprintf("IBM-%s", get_model());
 }
 
-/*
- * Canonical representation of oversize.
- */
-static const char *
-canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr)
+/* Create a canonical model name. */
+char *
+create_model(int model_num, bool color)
 {
-    char x, junk;
+    return Asprintf("327%c-%d", color? '9': '8', model_num);
+}
 
-    if (res == NULL) {
-	return NULL;
+/* Set up the model. */
+int
+common_model_init(void)
+{
+    int model_number = 0;
+    bool is_color = true;
+
+    if (appres.model != NULL && appres.model[0]) {
+	if (!canonical_model_x(appres.model, NULL, &model_number, &is_color, false)) {
+	    popup_an_error("Invalid model number: %s", appres.model);
+	}
     }
-    if (sscanf(res, "%u%c%u%c", ovc, &x, ovr, &junk) != 3 || x != 'x') {
-	return NULL;
+    if (!model_number) {
+        model_number = 4;
     }
-    return txAsprintf("%ux%u", *ovc, *ovr);
+    mode3279 = !appres.interactive.mono && is_color;
+    Replace(appres.model, create_model(model_number, mode3279));
+    return model_number;
 }
 
 /*
  * Canonical representation of oversize.
  */
 static const char *
+canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr)
+{
+    unsigned x_ovc, x_ovr;
+    char x, junk;
+
+    if (res != NULL && (product_auto_oversize() && !strcasecmp(appres.oversize, KwAuto))) {
+	return KwAuto;
+    }
+
+    if (res == NULL ||
+	    sscanf(res, "%u%c%u%c", &x_ovc, &x, &x_ovr, &junk) != 3 ||
+	    strchr("Xx", x) == NULL) {
+	return NULL;
+    }
+
+    if (ovc != NULL) {
+	*ovc = x_ovc;
+    }
+    if (ovr != NULL) {
+	*ovr = x_ovr;
+    }
+    return txAsprintf("%ux%u", x_ovc, x_ovr);
+}
+
+/*
+ * Canonical representation of oversize, for toggles.
+ */
+static const char *
 canonical_oversize(const char *res)
 {
-    unsigned ovc, ovr;
+    return canonical_oversize_x(res, NULL, NULL);
+}
 
-    return canonical_oversize_x(res, &ovc, &ovr);
+/* Set up oversize, canonicalizing the value and setting up the model- and oversize-related globals. */
+void
+oversize_init(int model_number)
+{
+    int ovc = 0;
+    int ovr = 0;
+
+    if (!appres.extended_data_stream) {
+        Replace(appres.oversize, NULL);
+    }
+    if (appres.oversize != NULL) {
+	if (product_auto_oversize() && !strcasecmp(appres.oversize, KwAuto)) {
+            ovc = -1;
+            ovr = -1;
+        } else {
+	    const char *canon = canonical_oversize_x(appres.oversize, (unsigned *)&ovc, (unsigned *)&ovr);
+
+	    if (canon != NULL) {
+		Replace(appres.oversize, NewString(canon));
+	    } else {
+		xs_warning("Invalid %s value '%s'", ResOversize, appres.oversize);
+		Replace(appres.oversize, NULL);
+	    }
+	}
+    }
+    set_rows_cols(model_number, ovc, ovr);
 }
 
 /*
@@ -184,73 +268,6 @@ toggle_extended_data_stream(const char *name _is_unused, const char *value, unsi
 }
 
 /*
- * Parse the model number.
- * Returns -1 (error), 0 (default), or the specified number.
- */
-int
-parse_model_number(char *m)
-{
-    size_t sl;
-    int n;
-
-    sl = strlen(m);
-
-    /* An empty model number is no good. */
-    if (!sl) {
-	return 0;
-    }
-
-    if (sl > 1) {
-	/*
-	 * If it's longer than one character, it needs to start with
-	 * '327[89]', and it sets color mode.
-	 */
-	if (!strncmp(m, "3278", 4)) {
-	    mode.m3279 = false;
-	} else if (!strncmp(m, "3279", 4)) {
-	    mode.m3279 = true;
-	} else {
-	    return -1;
-	}
-	m += 4;
-	sl -= 4;
-
-	/* Check more syntax. -E is allowed, but ignored. */
-	switch (m[0]) {
-	case '\0':
-	    /* Use default model number. */
-	    return 0;
-	case '-':
-	    /* Model number specified. */
-	    m++;
-	    sl--;
-	    break;
-	default:
-	    return -1;
-	}
-	switch (sl) {
-	case 1: /* n */
-	    break;
-	case 3:	/* n-E */
-	    if (strcasecmp(m + 1, "-E")) {
-		return -1;
-	    }
-	    break;
-	default:
-	    return -1;
-	}
-    }
-
-    /* Check the numeric model number. */
-    n = atoi(m);
-    if (n >= 2 && n <= 5) {
-	return n;
-    } else {
-	return -1;
-    }
-}
-
-/*
  * Done function for changing the model, oversize and extended mode.
  */
 static toggle_upcall_ret_t
@@ -258,7 +275,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 {
     unsigned ovr = 0, ovc = 0;
     int model_number = model_num;
-    bool is_color = mode.m3279;
+    bool is_color = mode3279;
     bool oversize_was_pending = (pending_oversize != NULL);
     bool xext = appres.extended_data_stream;
     toggle_upcall_ret_t res = TU_SUCCESS;
@@ -295,10 +312,9 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	}
     }
     if (pending_extended_data_stream != NULL || pending_model != NULL) {
-	const char *canon = canonical_model_x(pending_model? pending_model: appres.model,
-		&model_number, &is_color, false);
+	const char *canon;
 
-	if (canon == NULL) {
+	if (!canonical_model_x(pending_model? pending_model: appres.model, &canon, &model_number, &is_color, false)) {
 	    popup_an_error("%s value must be 327{89}-{2345}[-E]", ResModel);
 	    goto fail;
 	}
@@ -367,7 +383,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     }
 
     /* Change settings. */
-    mode.m3279 = is_color;
+    mode3279 = is_color;
     if (pending_extended_data_stream != NULL) {
 	appres.extended_data_stream = xext;
     }

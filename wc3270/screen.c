@@ -169,7 +169,6 @@ bool screen_initted = true;
 bool escaped = true;
 bool isendwin = true;
 
-enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts ab_mode = TS_AUTO;
 
 int windows_cp = 0;
@@ -220,7 +219,6 @@ static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char fa);
 static void set_status_row(int screen_rows, int emulator_rows);
-static bool ts_value(const char *s, enum ts *tsp);
 static void relabel(bool ignored);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
@@ -1328,12 +1326,12 @@ screen_init(void)
 		ResAllBold, appres.c3270.all_bold);
     }
     if (ab_mode == TS_AUTO) {
-	ab_mode = mode.m3279? TS_ON: TS_OFF;
+	ab_mode = mode3279? TS_ON: TS_OFF;
     }
 
     /* If the want monochrome, assume they want green. */
     /* XXX: I believe that init_user_colors makes this a no-op. */
-    if (!mode.m3279) {
+    if (!mode3279) {
 	defattr |= FOREGROUND_GREEN;
 	xhattr |= FOREGROUND_GREEN;
 	if (ab_mode == TS_ON) {
@@ -1345,7 +1343,7 @@ screen_init(void)
     init_user_colors();
     init_user_attribute_colors();
 
-    if (mode.m3279) {
+    if (mode3279) {
 	oia_attr = cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	oia_bold_attr = oia_attr; /* not used */
 	oia_red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY |
@@ -1405,29 +1403,6 @@ set_status_row(int screen_rows, int emulator_rows)
     }
 }
 
-/*
- * Parse a tri-state resource value.
- * Returns true for success, false for failure.
- */
-static bool
-ts_value(const char *s, enum ts *tsp)
-{
-    *tsp = TS_AUTO;
-
-    if (s != NULL && s[0]) {
-	size_t sl = strlen(s);
-
-	if (!strncasecmp(s, "true", sl)) {
-	    *tsp = TS_ON;
-	} else if (!strncasecmp(s, "false", sl)) {
-	    *tsp = TS_OFF;
-	} else if (strncasecmp(s, "auto", sl)) {
-	    return false;
-	}
-    }
-    return true;
-}
-
 /* Allocate a color pair. */
 static int
 get_color_pair(int fg, int bg)
@@ -1485,7 +1460,7 @@ init_user_attribute_colors(void)
 
 /*
  * Map a field attribute to a 3270 color index.
- * Applies only to m3279 mode -- does not work for mono.
+ * Applies only to 3279 mode -- does not work for mono.
  */
 static int
 color3270_from_fa(unsigned char fa)
@@ -1500,7 +1475,7 @@ color3270_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-    if (mode.m3279) {
+    if (mode3279) {
 	int fg;
 
 	fg = color3270_from_fa(fa);
@@ -1607,7 +1582,7 @@ init_user_colors(void)
 	init_user_color(host_color[i].name, host_color[i].index);
     }
 
-    if (mode.m3279) {
+    if (mode3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	crosshair_color_init();
@@ -1669,7 +1644,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     /* Compute the color. */
 
     /* Monochrome is easy, and so is color if nothing is specified. */
-    if (!mode.m3279 ||
+    if (!mode3279 ||
 	    (!ea_buf[baddr].fg &&
 	     !ea_buf[fa_addr].fg &&
 	     !ea_buf[baddr].bg &&
@@ -1710,7 +1685,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
     }
 
     if (!toggled(UNDERSCORE) &&
-	    mode.m3279 &&
+	    mode3279 &&
 	    (gr & (GR_BLINK | GR_UNDERLINE)) &&
 	    !(gr & GR_REVERSE) &&
 	    !bg) {
@@ -1718,7 +1693,7 @@ calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
 	a |= BACKGROUND_INTENSITY;
     }
 
-    if (!mode.m3279 &&
+    if (!mode3279 &&
 	    ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa))) {
 
 	a |= FOREGROUND_INTENSITY;
@@ -3272,7 +3247,7 @@ draw_oia(void)
     }
 
     /* Offsets 0, 1, 2 */
-    if (mode.m3279) {
+    if (mode3279) {
 	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | cmap_bg[HOST_COLOR_GREY]);
     } else {
 	attrset(reverse_colors(defattr));
@@ -3327,7 +3302,7 @@ draw_oia(void)
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	attrset(mode.m3279?
+	attrset(mode3279?
 		    (cmap_fg[(status_secure == SS_SECURE)?
 				HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
 		    cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):

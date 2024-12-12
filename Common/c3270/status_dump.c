@@ -124,7 +124,7 @@ status_dump(void)
 	    get_message("model"), get_model(),
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
-	    mode.m3279? get_message("fullColor"): get_message("mono"),
+	    mode3279? get_message("fullColor"): get_message("mono"),
 	    (appres.extended_data_stream && !HOST_FLAG(STD_DS_HOST))?
 		get_message("extendedDs"): get_message("standardDs"));
     vb_appendf(&r, "%s %s\n", get_message("terminalName"), termtype);

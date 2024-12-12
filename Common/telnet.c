@@ -843,7 +843,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    putenv(Asprintf("TERM=%s",
 		appres.termname?
 		    appres.termname:
-		    (mode.m3279? "xterm-color": "xterm")));
+		    (mode3279? "xterm-color": "xterm")));
 	    if (strchr(host, ' ') != NULL) {
 		execlp("/bin/sh", "sh", "-c", host, NULL);
 	    } else {
@@ -2089,6 +2089,20 @@ telnet_fsm(unsigned char c)
     return true;
 }
 
+/* Create a 3270 termtype string. */
+static char *
+create_3270_termtype(bool force_3278)
+{
+    char *base_type = create_model(model_num,
+	    !force_3278 && mode3279 && (appres.wrong_terminal_name || model_num < 4));
+    char *ret = Asprintf("IBM-%s%s",
+	    base_type,
+	    (!appres.extended_data_stream || HOST_FLAG(STD_DS_HOST))? "": "-E");
+
+    Free(base_type);
+    return ret;
+}
+
 /* Send a TN3270E terminal type request. */
 static void
 tn3270e_request(void)
@@ -2098,12 +2112,8 @@ tn3270e_request(void)
     char *t;
     char *xtn;
 
-    /* Convert 3279 to 3278, per the RFC. */
-    xtn = NewString(termtype);
-    if (!strncmp(xtn, "IBM-3279", 8)) {
-	xtn[7] = '8';
-    }
-
+    /* Always use 3278, per the RFC. */
+    xtn = create_3270_termtype(true);
     tt_len = strlen(termtype);
     if (try_lu != NULL && *try_lu) {
 	tt_len += strlen(try_lu) + 1;
@@ -4060,13 +4070,15 @@ net_set_default_termtype(void)
     if (appres.termname) {
 	termtype = appres.termname;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	termtype = mode.m3279? "xterm-color": "xterm";
+	termtype = mode3279? "xterm-color": "xterm";
     } else if (ov_rows || ov_cols) {
 	termtype = "IBM-DYNAMIC";
     } else {
-	snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d%s",
-		(mode.m3279 && (appres.wrong_terminal_name || model_num < 4)) ?  '9': '8', model_num,
-		(!appres.extended_data_stream || HOST_FLAG(STD_DS_HOST))? "": "-E");
+	char *ttype = create_3270_termtype(false);
+
+	strncpy(ttype_tmpval, ttype, sizeof(ttype_tmpval) - 1);
+	ttype_tmpval[sizeof(ttype_tmpval) - 1] = '\0';
+	Free(ttype);
 	termtype = ttype_tmpval;
     }
 

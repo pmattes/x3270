@@ -260,7 +260,6 @@ bool escaped = true;
 bool initscr_done = false;
 int curs_set_state = -1;
 
-enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts me_mode = TS_AUTO;
 enum ts ab_mode = TS_AUTO;
 
@@ -341,7 +340,6 @@ static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char);
 static void set_status_row(int screen_rows, int emulator_rows);
-static bool ts_value(const char *s, enum ts *tsp);
 static void display_linedraw(ucs4_t ucs);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
@@ -720,7 +718,7 @@ finish_screen_init(void)
 		    ResAllBold, appres.c3270.all_bold);
 	}
 	if (ab_mode == TS_AUTO) {
-	    ab_mode = (mode.m3279 && (COLORS < 16) &&
+	    ab_mode = (mode3279 && (COLORS < 16) &&
 		    !appres.c3270.reverse_video)? TS_ON: TS_OFF;
 	}
 	if (ab_mode == TS_ON) {
@@ -743,7 +741,7 @@ finish_screen_init(void)
 	}
 #endif /*]*/
 	if (has_colors() && COLORS >= 8) {
-	    if (mode.m3279) {
+	    if (mode3279) {
 		/* Use 'protected' attributes for the OIA. */
 		defattr = get_color_pair(field_colors[2], bg_color) |
 		    field_cattrmap[2];
@@ -775,7 +773,7 @@ finish_screen_init(void)
 #endif /*]*/
 	} else {
 	    appres.interactive.mono = true;
-	    mode.m3279 = false;
+	    mode3279 = false;
 	    /* Get the terminal name right. */
 	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
@@ -898,29 +896,6 @@ set_status_row(int screen_rows, int emulator_rows)
     }
 }
 
-/*
- * Parse a tri-state resource value.
- * Returns true for success, false for failure.
- */
-static bool
-ts_value(const char *s, enum ts *tsp)
-{
-    *tsp = TS_AUTO;
-
-    if (s != NULL && s[0]) {
-	int sl = strlen(s);
-
-	if (!strncasecmp(s, "true", sl)) {
-	    *tsp = TS_ON;
-	} else if (!strncasecmp(s, "false", sl)) {
-	    *tsp = TS_OFF;
-	} else if (strncasecmp(s, "auto", sl)) {
-	    return false;
-	}
-    }
-    return true;
-}
-
 /* Allocate a color pair. */
 static curses_attr
 get_color_pair(curses_color fg, curses_color bg)
@@ -1024,7 +999,7 @@ init_user_attribute_colors(void)
 
 /*
  * Map a field attribute to a curses color index.
- * Applies only to m3279 mode -- does not work for mono.
+ * Applies only to 3279 mode -- does not work for mono.
  */
 #define DEFCOLOR_MAP(f) \
 	((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
@@ -1043,7 +1018,7 @@ attrmap_from_fa(unsigned char fa)
 static curses_attr
 color_from_fa(unsigned char fa)
 {
-    if (mode.m3279) {
+    if (mode3279) {
 	int ai = attrmap_from_fa(fa);
 	curses_color fg = default_color_from_fa(fa);
 
@@ -1144,7 +1119,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
      * Monochrome is easy, and so is color if nothing is
      * specified.
      */
-    if (!mode.m3279 ||
+    if (!mode3279 ||
 	    (!ea_buf[baddr].fg &&
 	     !ea_buf[fa_addr].fg &&
 	     !ea_buf[baddr].bg &&
@@ -1345,7 +1320,7 @@ screen_disp(bool erasing _is_unused)
 	curses_attr norm, high;
 
 	if (menu_is_up) {
-	    if (mode.m3279) {
+	    if (mode3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
 	    } else {
@@ -1353,7 +1328,7 @@ screen_disp(bool erasing _is_unused)
 		high = defattr | A_BOLD;
 	    }
 	} else {
-	    if (mode.m3279) {
+	    if (mode3279) {
 		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 		high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 	    } else {
@@ -1416,7 +1391,7 @@ screen_disp(bool erasing _is_unused)
 		if (!u) {
 		    abort();
 		}
-		if (mode.m3279) {
+		if (mode3279) {
 		    if (highlight) {
 			attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
 				    HOST_COLOR_NEUTRAL_WHITE));
@@ -2231,7 +2206,7 @@ status_colors(curses_color fg)
 	    (fg == COLOR_WHITE || fg == defcolor_offset + COLOR_WHITE)) {
 	fg = COLOR_BLACK;
     }
-    return mode.m3279? get_color_pair(fg, bg_color): defattr;
+    return mode3279? get_color_pair(fg, bg_color): defattr;
 }
 
 void

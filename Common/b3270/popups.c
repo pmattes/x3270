@@ -69,7 +69,7 @@ static const char *error_types[] = {
 
 /* Store a pending pop-up. */
 static void
-popup_store(bool is_error, pae_t type, bool retrying, char *text)
+popup_store(bool is_error, pae_t type, bool retrying, const char *text)
 {
     stored_popup_t *sp =
 	(stored_popup_t *)Malloc(sizeof(stored_popup_t) + strlen(text) + 1);
@@ -89,22 +89,10 @@ popup_store(bool is_error, pae_t type, bool retrying, char *text)
 }
 
 /* Pop up an error message, given a va_list. */
-void
-popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
+bool
+glue_gui_error(pae_t type, const char *s)
 {
-    char *s = Vasprintf(fmt, ap);
-
-    trace_error(type, s);
-    if (task_redirect()) {
-	if (type == ET_CONNECT) {
-	    char *t = Asprintf("Connection failed:\n%s", s);
-
-	    task_error(t);
-	    Free(t);
-	} else {
-	    task_error(s);
-	}
-    } else if (!popups_ready) {
+    if (!popups_ready) {
 	popup_store(true, type, host_retry_mode, s);
     } else {
 	ui_leaf(IndPopup,
@@ -113,7 +101,7 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
 		AttrRetrying, AT_BOOLEAN, host_retry_mode,
 		NULL);
     }
-    Free(s);
+    return true;
 }
 
 /* Pop up an info message. */
@@ -137,23 +125,14 @@ popup_an_info(const char *fmt, ...)
 }
 
 /* Output from an action. */
-void
-action_output(const char *fmt, ...)
+bool
+glue_gui_output(const char *s)
 {
-    va_list ap;
-    char *s;
-
-    va_start(ap, fmt);
-    s = txVasprintf(fmt, ap);
-    va_end(ap);
-    if (task_redirect()) {
-	task_info("%s", s);
-    } else {
-	ui_leaf(IndPopup,
-		AttrType, AT_STRING, PtResult,
-		AttrText, AT_STRING, s,
-		NULL);
-    }
+    ui_leaf(IndPopup,
+	    AttrType, AT_STRING, PtResult,
+	    AttrText, AT_STRING, s,
+	    NULL);
+    return true;
 }
 
 /* Output from the printer process. */
