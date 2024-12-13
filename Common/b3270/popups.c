@@ -49,8 +49,6 @@
 
 bool error_popup_visible = false;
 
-const char *popup_separator = " ";
-
 typedef struct stored_popup {
     struct stored_popup *next;
     bool is_error;

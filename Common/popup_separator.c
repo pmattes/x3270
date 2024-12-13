@@ -30,51 +30,12 @@
  */
 
 /*
- *	popups_glue.c
- *		Pop-up messages.
+ *	popups_separator.c
+ *		Default separator character for pop-up messages.
  */
 
 #include "globals.h"
 
-#include "glue.h"
-#include "glue_gui.h"
-#include "host.h"
-#include "popups.h" /* must come before child_popups.h */
-#include "child_popups.h"
-#include "screen.h"
-#include "task.h"
-#include "trace.h"
-#include "utils.h"
+#include "popups.h"
 
-void
-popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = Vasprintf(fmt, args);
-    va_end(args);
-    popup_an_error("Printer session: %s", m);
-    Free(m);
-}
-
-void
-popup_child_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = Vasprintf(fmt, args);
-    va_end(args);
-    action_output("%s", m);
-    Free(m);
-}
-
-void
-child_popup_init(void)
-{
-}
+const char *popup_separator = " ";

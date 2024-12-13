@@ -179,7 +179,6 @@ socket_t syncsock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
 char *instdir;
 #endif /* ]*/
-const char *popup_separator = " ";
 bool host_retry_mode = false;
 
 /* Locals. */
@@ -1292,6 +1291,13 @@ build_options(void)
 	, using_iconv()? " -with-iconv": "");
 }
 
+/* Get a unit-testing-specific environment variable. */
+const char *
+ut_getenv(const char *name)
+{
+    return options.ut_env? getenv(name): NULL;
+}
+
 /* Glue functions to allow proxy.c to link. */
 void
 connect_error(const char *fmt, ...)
@@ -1312,12 +1318,7 @@ RemoveTimeOut(ioid_t cookie)
     assert(false);
 }
 
-const char *
-ut_getenv(const char *name)
-{
-    return options.ut_env? getenv(name): NULL;
-}
-
+/* Glue functions to allow popup_an_error.c to link. */
 bool
 task_redirect(void)
 {

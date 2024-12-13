@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\min_version.c" />
     <ClCompile Include="..\..\Common\popup_an_error.c" />
+    <ClCompile Include="..\..\Common\popup_separator.c" />
     <ClCompile Include="..\..\Common\popups_glue.c" />
     <ClCompile Include="..\..\Common\pr3287_session.c" />
     <ClCompile Include="..\..\Common\prefer.c" />
