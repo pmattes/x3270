@@ -1,5 +1,5 @@
 '\" t
-.TH c3270 1 "20 March 2024"
+.TH c3270 1 "15 December 2024"
 .SH "NAME"
 c3270 \-
 curses-based 
@@ -20,4 +20,4 @@ If the console is capable of displaying colors, then \fBc3270\fP emulates an
 .SH "WIKI"
 Primary documentation for c3270 is on the \fBx3270 Wiki\fP, https://x3270.miraheze.org/wiki/Main_Page.
 .SH "VERSION"
-c3270 4.4pre1
+c3270 4.4alpha1
