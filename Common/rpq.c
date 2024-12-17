@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2022 Paul Mattes.
+ * Copyright (c) 2005-2024 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -61,15 +61,11 @@
 static bool select_rpq_terms(void);
 static int get_rpq_timezone(void);
 static size_t get_rpq_user(unsigned char buf[], const size_t buflen);
-#if !defined(_WIN32) /*[*/
 static size_t get_rpq_address(unsigned char buf[], const size_t buflen);
-#endif /*]*/
 static void rpq_warning(const char *fmt, ...);
 static void rpq_dump_warnings(void);
 static bool rpq_complained = false;
-#if !defined(_WIN32) /*[*/
 static bool omit_due_space_limit = false;
-#endif /*]*/
 
 /*
  * Define symbolic names for RPQ self-defining terms.
@@ -187,9 +183,7 @@ do_qr_rpqnames(void)
 	    break;
 
 	case RPQ_ADDRESS:	/* Workstation address */
-#if !defined(_WIN32) /*[*/
 	    obptr += get_rpq_address(obptr, remaining);
-#endif /*]*/
 	    break;
 
 	case RPQ_VERSION:	/* program version */
@@ -590,7 +584,6 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
     return x;
 }
 
-#if !defined(_WIN32) /*[*/
 static size_t
 get_rpq_address(unsigned char *buf, const size_t maxlen) 
 {
@@ -706,7 +699,6 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
     }
     return x;
 }
-#endif /*]*/
 
 #define RPQ_WARNBUF_SIZE	1024
 static char *rpq_warnbuf = NULL;
