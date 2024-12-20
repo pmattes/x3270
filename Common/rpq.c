@@ -400,6 +400,7 @@ get_rpq_timezone(void)
 	p1 = x3270rpq + kw->oride;
 	
 	x = strtol(p1, &p2, 10);
+	errno = 0;
 	if (errno != 0) {
 	    rpq_warning("RPQ TIMEZONE term is invalid - use +/-hhmm");
 	    return 4;
