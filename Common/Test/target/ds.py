@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2023 Paul Mattes.
+# Copyright (c) 2022-2024 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,8 @@
 #
 # x3270 test target host, data stream helper.
 
-from typing import List
+import sys
+from typing import List, Tuple
 
 from ibm3270ds import *
 
@@ -118,6 +119,7 @@ class dinfo():
         self.ttype = ttype
         self.dynamic = self.ttype == 'IBM-DYNAMIC'
         self.extended = self.ttype.endswith('-E') or self.dynamic
+        self.rpqnames = None
         if not self.dynamic:
             self.model = self.ttype[9]
             self.alt_rows = rows[self.model]
@@ -128,20 +130,20 @@ class dinfo():
             self.alt_rows = 24
             self.alt_columns = 80
 
-    def parse_query_reply(self, b: bytes) -> bool:
+    def parse_query_reply(self, b: bytes) -> Tuple[bool, str]:
         '''Parse a Query Reply'''
         if len(b) < 1 or b[0] != aid.SF.value:
-            return False
+            return (False, 'overall len or AID is wrong')
         b = b[1:]
-        while True:
+        while len(b) > 0:
             # Get the length.
             if len(b) < 2:
-                return True
+                return (False, f'not enough buffer for subfield len ({len(b)})')
             field_len = b[0] << 8 | b[1]
             if field_len < 2 or len(b) < field_len:
-                return False
+                return (False, 'subfield len too small')
             if b[2] != aid.SF_QREPLY.value:
-                return False
+                return (False, 'subfield isn\'t QREPLY')
             if b[3] == qr.usable_area.value:
                 # Usable area:
                 #  +1 12/14-bit
@@ -150,8 +152,10 @@ class dinfo():
                 #  +5/+6 height
                 self.alt_columns = b[6] << 8 | b[7]
                 self.alt_rows = b[8] << 8 | b[9]
+            elif b[3] == qr.rpq_names.value:
+                self.rpqnames = b[4:field_len]
 
             # Get the next field.
             b = b[field_len:]
 
-        return True
+        return (True, '')

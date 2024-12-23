@@ -1,0 +1,58 @@
+Trace started Mon Jun 29 10:43:29 2009
+ Version: c3270 v3.3.10alpha1 Sun Jun 28 23:41:52 CDT 2009 pdm
+ Build options: --enable-ansi --enable-apl --enable-dbcs --enable-ft --enable-local-process --enable-printer --enable-script --enable-tn3270e --enable-trace --with-ssl --with-readline --with-curses-wide
+ Command: c3270 ./c3270 -trace sruvm.sru.edu
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, bracket charset
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Data stream:
+Trying 205.149.70.48, port 23...
+Connection pending.
+Keyboard unlock(kybd_connect) -NOT_CONNECTED
+Keyboard lock(kybd_connect) +AWAITING_FIRST
+Connected to sruvm.sru.edu, port 23.
+< 0x0   fffd28
+RCVD DO TN3270E
+> 0x0   fffb28
+SENT WILL TN3270E
+Now operating in TN3270E mode.
+Keyboard lock(kybd_in3270) +AWAITING_FIRST
+< 0x0   fffa280802fff0
+RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+< 0x0   fffe28fffd18
+RCVD DONT TN3270E
+> 0x0   fffc28
+SENT WONT TN3270E
+Now operating in initial connection mode.
+RCVD DO TERMINAL TYPE
+> 0x0   fffb18
+SENT WILL TERMINAL TYPE
+< 0x0   fffa1801fff0
+RCVD SB TERMINAL TYPE SEND
+> 0x0   fffa180049424d2d333237392d342d45fff0
+SENT SB TERMINAL TYPE IS IBM-3279-4-E SE
+< 0x0   fffd19fffb19fffd00fffb00
+RCVD DO END OF RECORD
+> 0x0   fffb19
+SENT WILL END OF RECORD
+RCVD WILL END OF RECORD
+> 0x0   fffd19
+SENT DO END OF RECORD
+RCVD DO BINARY
+> 0x0   fffb00
+SENT WILL BINARY
+RCVD WILL BINARY
+> 0x0   fffd00
+SENT DO BINARY
+Now operating in TN3270 3270 mode.
+< +0.267502s
+< 0x0   fffd00fffb00
+RCVD DO BINARY
+RCVD WILL BINARY
++
+< 0x0   f3000701ffff0300a1ffef
+< WriteStructuredField ReadPartition(0xff) QueryList List(RPQNames)
+< 0x0   f3000701ffff0300a1ffef
+< WriteStructuredField ReadPartition(0xff) QueryList List(RPQNames)

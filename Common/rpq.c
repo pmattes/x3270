@@ -52,6 +52,7 @@
 #include "telnet_core.h"
 #include "trace.h"
 #include "unicodec.h"
+#include "utils.h"
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
@@ -59,12 +60,13 @@
 
 /* Statics */
 static bool select_rpq_terms(void);
-static int get_rpq_timezone(void);
+static int get_rpq_timezone(int *offsetp);
 static size_t get_rpq_user(unsigned char buf[], const size_t buflen);
 static size_t get_rpq_address(unsigned char buf[], const size_t buflen);
 static void rpq_warning(const char *fmt, ...);
 static void rpq_dump_warnings(void);
 static bool rpq_complained = false;
+static char *rpq_warnbuf = NULL;
 static bool omit_due_space_limit = false;
 
 /*
@@ -95,11 +97,11 @@ static struct rpq_keyword {
     const unsigned char id;
     const char *text;
 } rpq_keywords[] = {
-    {true, 0, 	true,	RPQ_ADDRESS,	"ADDRESS"},
-    {true, 0, 	false,	RPQ_TIMESTAMP,	"TIMESTAMP"},
-    {true, 0, 	true,	RPQ_TIMEZONE,	"TIMEZONE"},
-    {true, 0, 	true,	RPQ_USER,	"USER"},
-    {true, 0, 	false,	RPQ_VERSION,	"VERSION"},
+    { true, 0, 	true,	RPQ_ADDRESS,	"ADDRESS" },
+    { true, 0, 	false,	RPQ_TIMESTAMP,	"TIMESTAMP" },
+    { true, 0, 	true,	RPQ_TIMEZONE,	"TIMEZONE" },
+    { true, 0, 	true,	RPQ_USER,	"USER" },
+    { true, 0, 	false,	RPQ_VERSION,	"VERSION" },
 };
 #define NS_RPQ (sizeof(rpq_keywords)/sizeof(rpq_keywords[0]))
 
@@ -111,8 +113,7 @@ static char *x3270rpq;
 void
 do_qr_rpqnames(void)
 {
-#   define TERM_PREFIX_SIZE 2	/* Each term has 1 byte length and 1
-					   byte id */
+#   define TERM_PREFIX_SIZE 2	/* Each term has 1 byte length and 1 byte id */
 
     unsigned char *rpql, *p_term;
     unsigned j;
@@ -130,8 +131,8 @@ do_qr_rpqnames(void)
      */
     space3270out(4+4+1+remaining);	/* Maximum space for an RPQNAME item */
 
-    SET32(obptr, 0);		/* Device number, 0 = All */
-    SET32(obptr, 0);		/* Model number, 0 = All */
+    SET32(obptr, 0);			/* Device number, 0 = All */
+    SET32(obptr, 0);			/* Model number, 0 = All */
 
     rpql = obptr++;			/* Save address to place data length. */
 
@@ -152,14 +153,17 @@ do_qr_rpqnames(void)
 	    continue;
 	}
 
+	if (remaining < TERM_PREFIX_SIZE) {
+	    rpq_warning("RPQ %s term omitted due to insufficient space", rpq_keywords[j].text);
+	    continue;
+	}
+
 	omit_due_space_limit = false;
 
 	term_id = rpq_keywords[j].id;
 
-	p_term = obptr;		/* save starting address (to insert
-				   length later) */
-	obptr++;		/* skip length of term, fill in
-				   later */
+	p_term = obptr;		/* save starting address (to insert length later) */
+	obptr++;		/* skip length of term, fill in later */
 	*obptr++ = term_id;	/* identify this term */
 
 	/*
@@ -177,8 +181,13 @@ do_qr_rpqnames(void)
 
 	case RPQ_TIMEZONE:	/* UTC time offset */
 	    omit_due_space_limit = (remaining < 2);
-	    if (!omit_due_space_limit)  {
-		SET16(obptr, get_rpq_timezone());
+	    if (!omit_due_space_limit) {
+		int offset = 0;
+		int err = get_rpq_timezone(&offset);
+
+		if (!err) {
+		    SET16(obptr, offset);
+		}
 	    }
 	    break;
 
@@ -217,9 +226,10 @@ do_qr_rpqnames(void)
 	    break;		
 	}
 
-	if (omit_due_space_limit)
-		rpq_warning("RPQ %s term omitted due to insufficient space",
-			rpq_keywords[j].text);
+	if (omit_due_space_limit) {
+	    rpq_warning("RPQ %s term omitted due to insufficient space", rpq_keywords[j].text);
+	}
+
 	/*
 	 * The item is built, insert item length as needed and
 	 * adjust space remaining.
@@ -282,7 +292,7 @@ select_rpq_terms(void)
      * If there are override values, I'll get those from the ORIGINAL
      * string so upper/lower case is preserved as necessary.
      */
-    uplist = (char *) malloc(strlen(x3270rpq)+1);
+    uplist = (char *)Malloc(strlen(x3270rpq)+1);
     assert(uplist != NULL);
     p1 = uplist;
     p2 = x3270rpq;
@@ -305,10 +315,14 @@ select_rpq_terms(void)
 	p1 = kw;
 	do {
 	    p1 = strchr(p1+1,':');
-	    if (p1 == NULL) break;
+	    if (p1 == NULL) {
+		break;
+	    }
 	} while (*(p1-1) == '\\');
 	/* p1 points to the : separating a term, or is NULL */
-	if (p1 != NULL) *p1 = '\0';
+	if (p1 != NULL) {
+	    *p1 = '\0';
+	}
 	/* kw is now a string of the entire, single term. */
 
 	i = (kw - uplist) + strlen(kw) + 1;
@@ -329,6 +343,9 @@ select_rpq_terms(void)
 	for (j = 0; j < NS_RPQ; j++) {
 	    if (strncmp(kw, rpq_keywords[j].text, len) == 0) {
 		rpq_keywords[j].omit = is_no_form;
+		while (*p1 && isspace((unsigned char)*p1)) {
+		    p1++;
+		}
 		if (*p1 == '=') {
 		    if (rpq_keywords[j].allow_oride) {
 			rpq_keywords[j].oride = p1 - uplist + 1;
@@ -351,7 +368,7 @@ select_rpq_terms(void)
 	}
     }
 
-    free(uplist);
+    Free(uplist);
 
     /*
      * Return to caller with indication (T/F) of any items 
@@ -366,31 +383,45 @@ select_rpq_terms(void)
     return false;
 }
 
-/* Utility function used by the RPQNAMES query reply. */
+/* Locate a keyword table entry. */
+static struct rpq_keyword *
+find_kw(int id)
+{
+    unsigned j;
+
+    for (j = 0; j < NS_RPQ; j++) {
+	if (rpq_keywords[j].id == id) {
+	    return &rpq_keywords[j];
+	}
+    }
+    assert(j < NS_RPQ);
+    return NULL;
+}
+
+/*
+ * Utility function used by the RPQNAMES query reply.
+ * Returns 0 or an error code:
+ * 1 - Cannot determine local calendar time
+ * 2 - Cannot determine UTC
+ * 3 - Difference exceeds 12 hours
+ * 4 - User override is invalid
+*/
 static int
-get_rpq_timezone(void)
+get_rpq_timezone(int *offsetp)
 {
     /*
      * Return the signed number of minutes we're offset from UTC.
      * Example: North America Pacific Standard Time = UTC - 8 Hours, so we
      * return (-8) * 60 = -480.
-     * Since the smallest variance between two timezones is 15 minutes,
-     * use small, positive values to represent various errors:
-     * 1 - Cannot determine local calendar time
-     * 2 - Cannot determine UTC
-     * 3 - Difference exceeds 12 hours
-     * 4 - User override is invalid
      */
     time_t here;
     struct tm here_tm;
     struct tm *utc_tm;
     double delta;
     char *p1, *p2;
-    struct rpq_keyword *kw;
+    struct rpq_keyword *kw = find_kw(RPQ_TIMEZONE);
 
-    /* id isn't necessarily the table index... locate item */	
-    for (kw = &rpq_keywords[0]; kw -> id != RPQ_TIMEZONE; kw++) {
-    }
+    *offsetp = 0;
 
     /* Is there a user override? */
     if ((kw->allow_oride) && (kw->oride > 0)) {
@@ -399,25 +430,24 @@ get_rpq_timezone(void)
 
 	p1 = x3270rpq + kw->oride;
 	
-	x = strtol(p1, &p2, 10);
 	errno = 0;
-	if (errno != 0) {
+	x = strtol(p1, &p2, 10);
+	if (errno != 0 || ((*p2 != '\0') && (*p2 != ':') && (!isspace((unsigned char)*p2)))) {
 	    rpq_warning("RPQ TIMEZONE term is invalid - use +/-hhmm");
 	    return 4;
-	}
-	if ((*p2 != '\0') && (*p2 != ':') && (!isspace((unsigned char)*p2))) {
-	    return 4; 
 	}
 
 	hhmm = ldiv(x, 100L);
 
 	if (hhmm.rem > 59L) {
-	    rpq_warning("RPQ TIMEZONE term is invalid - use +/-hhmm");
+	    rpq_warning("RPQ TIMEZONE term is invalid (minutes > 59)");
 	    return 4;
 	}
 
 	delta = (labs(hhmm.quot) * 60L) + hhmm.rem;
-	if (hhmm.quot < 0L) delta = -delta;
+	if (hhmm.quot < 0L) {
+	    delta = -delta;
+	}
     } else {
 	/*
 	 * No override specified, try to get information from the system.
@@ -443,11 +473,13 @@ get_rpq_timezone(void)
 
     /* sanity check: difference cannot exceed +/- 12 hours */
     if (labs((long)delta) > 720L) {
-	rpq_warning("RPQ timezone exceeds 12 hour UTC offset");
+	rpq_warning("RPQ TIMEZONE exceeds 12 hour UTC offset");
+	return 3;
     }
-    return (labs((long)delta) > 720L)? 3 : (int) delta;
-}
 
+    *offsetp = (int)delta;
+    return 0;
+}
 
 /* Utility function used by the RPQNAMES query reply. */
 static size_t
@@ -469,15 +501,12 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
      */
     const char *rpqtext = NULL;
     size_t x = 0;
-    struct rpq_keyword *kw;
+    struct rpq_keyword *kw = find_kw(RPQ_USER);
     char *sbuf, *sbuf0;
     const char *s;
     enum me_fail error;
+    bool truncated = false;
     int xlen;
-
-    /* id isn't necessarily the table index... locate item */	
-    for (kw = &rpq_keywords[0]; kw -> id != RPQ_USER; kw++) {
-    }
 
     if ((!kw->allow_oride) || (kw->oride <= 0)) {
 	return 0;
@@ -570,7 +599,7 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 
     /* Translate multibyte to EBCDIC in the target buffer. */
     xlen = multibyte_to_ebcdic_string(sbuf0, strlen(sbuf0), buf, buflen,
-	    &error);
+	    &error, &truncated);
     if (xlen < 0) {
 	rpq_warning("RPQ USER term translation error");
 	if (buflen) {
@@ -578,6 +607,9 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	    x = 1;
 	}
     } else {
+	if (truncated) {
+	    rpq_warning("RPQ USER term truncated");
+	}
 	x = xlen;
     }
     Free(sbuf0);
@@ -588,16 +620,12 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 static size_t
 get_rpq_address(unsigned char *buf, const size_t maxlen) 
 {
-    struct rpq_keyword *kw;
+    struct rpq_keyword *kw = find_kw(RPQ_ADDRESS);
     size_t x = 0;
 
     if (maxlen < 2) {
 	omit_due_space_limit = true;
 	return 0;
-    }
-
-    /* id isn't necessarily the table index... locate item */	
-    for (kw = &rpq_keywords[0]; kw->id != RPQ_ADDRESS; kw++) {
     }
 
     /* Is there a user override? */
@@ -607,7 +635,7 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	int ga_err;
 
 	p1 = x3270rpq + kw->oride;
-	rpqtext = (char *) malloc(strlen(p1) + 1);
+	rpqtext = (char *)Malloc(strlen(p1) + 1);
 	for (p2 = rpqtext; *p1; p2++) {
 	    if (*p1 == ':') {
 		break;
@@ -660,7 +688,7 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 # endif /*]*/
 		    );
 	}
-	free(rpqtext);
+	Free(rpqtext);
     } else {
 	/* No override... get our address from the actual socket */
 	union {
@@ -701,30 +729,27 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
     return x;
 }
 
-#define RPQ_WARNBUF_SIZE	1024
-static char *rpq_warnbuf = NULL;
-static int rpq_wbcnt = 0;
-
 static void
 rpq_warning(const char *fmt, ...)
 {
     va_list a;
+    char *msg;
 
     /* Only accumulate RPQ warnings if they have not been displayed already. */
-    if (!rpq_complained) {
-	va_start(a, fmt);
-	if (rpq_warnbuf == NULL) {
-	    rpq_warnbuf = Malloc(RPQ_WARNBUF_SIZE);
-	}
-	if (rpq_wbcnt < RPQ_WARNBUF_SIZE) {
-	    *(rpq_warnbuf + rpq_wbcnt++) = '\n';
-	    *(rpq_warnbuf + rpq_wbcnt) = '\0';
-	}
-	if (rpq_wbcnt < RPQ_WARNBUF_SIZE) {
-	    rpq_wbcnt += vsnprintf(rpq_warnbuf + rpq_wbcnt,
-		    RPQ_WARNBUF_SIZE - rpq_wbcnt, fmt, a);
-	}
-	va_end(a);
+    if (rpq_complained) {
+	return;
+    }
+
+    va_start(a, fmt);
+    msg = Vasprintf(fmt, a);
+    va_end(a);
+    if (rpq_warnbuf == NULL) {
+	rpq_warnbuf = msg;
+    } else {
+	char *old = rpq_warnbuf;
+
+	rpq_warnbuf = Asprintf("%s\n%s", old, msg);
+	Free(old);
     }
 }
 
@@ -732,12 +757,9 @@ static void
 rpq_dump_warnings(void)
 {
     /* If there's something to complain about, only complain once. */
-    if (!rpq_complained && rpq_wbcnt) {
+    if (rpq_warnbuf != NULL) {
 	popup_an_error("%s", rpq_warnbuf);
-	rpq_wbcnt = 0;
 	rpq_complained = true;
-
-	free(rpq_warnbuf);
-	rpq_warnbuf = NULL;
+	Replace(rpq_warnbuf, NULL);
     }
 }

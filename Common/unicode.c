@@ -474,28 +474,28 @@ ebcdic_base_to_unicode(ebc_t c, unsigned flags)
 	ebc_t uc = cur_uni->code[c - UT_OFFSET];
 
 	return uc? uc: ((flags & EUO_BLANK_UNDEF)? ' ': 0);
-
-    } else switch (c) {
-
-    case EBC_fm:
-	return (flags & EUO_UPRIV)? UPRIV_fm: ';';
-    case EBC_dup:
-	return (flags & EUO_UPRIV)? UPRIV_dup: '*';
-    case EBC_eo:
-	if (flags & EUO_ASCII_BOX) {
-	    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
-	}
-	return (flags & EUO_UPRIV)? UPRIV_eo: 0x25cf; /* solid circle */
-    case EBC_sub:
-	if (flags & EUO_ASCII_BOX) {
-	    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
-	}
-	return (flags & EUO_UPRIV)? UPRIV_sub: 0x25a0; /* solid block */
-    default:
-	if (flags & EUO_BLANK_UNDEF) {
-	    return ' ';
-	} else {
-	    return 0;
+    } else {
+	switch (c) {
+	case EBC_fm:
+	    return (flags & EUO_UPRIV)? UPRIV_fm: ';';
+	case EBC_dup:
+	    return (flags & EUO_UPRIV)? UPRIV_dup: '*';
+	case EBC_eo:
+	    if (flags & EUO_ASCII_BOX) {
+		return (flags & EUO_BLANK_UNDEF)? ' ': 0;
+	    }
+	    return (flags & EUO_UPRIV)? UPRIV_eo: 0x25cf; /* solid circle */
+	case EBC_sub:
+	    if (flags & EUO_ASCII_BOX) {
+		return (flags & EUO_BLANK_UNDEF)? ' ': 0;
+	    }
+	    return (flags & EUO_UPRIV)? UPRIV_sub: 0x25a0; /* solid block */
+	default:
+	    if (flags & EUO_BLANK_UNDEF) {
+		return ' ';
+	    } else {
+		return 0;
+	    }
 	}
     }
 }
@@ -1122,14 +1122,15 @@ mb_max_len(int len)
     /* Allocate enough space for shift-state transitions. */
     return (MB_CUR_MAX * (len * 2)) + 1;
 #else /*]*/
-    if (is_utf8)
+    if (is_utf8) {
 	return (len * 6) + 1;
-    else
+    } else {
 	/*
 	 * We don't actually know.  Guess that MB_CUR_MAX is 16, and compute
 	 * as for UNICODE_WCHAR.
 	 */
 	return (16 * (len * 2)) + 1;
+    }
 #endif /*]*/
 }
 
@@ -1177,8 +1178,9 @@ multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
 	for (i = 1; i <= mb_len; i++) {
 	    nw = MultiByteToWideChar(u_local_cp, MB_ERR_INVALID_CHARS,
 		    mb, i, wc, 3);
-	    if (nw != 0)
+	    if (nw != 0) {
 		break;
+	    }
 	}
 	if (i > mb_len) {
 	    *errorp = ME_INVALID;
@@ -1194,10 +1196,11 @@ multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
 	/* mbtowc() will translate to Unicode. */
 	nw = mbtowc(wc, mb, mb_len);
 	if (nw == -1) {
-	    if (errno == EILSEQ)
+	    if (errno == EILSEQ) {
 		*errorp = ME_INVALID;
-	    else
+	    } else {
 		*errorp = ME_SHORT;
+	    }
 	    nw = mbtowc(NULL, NULL, 0);
 	    return 0;
 	}
@@ -1243,8 +1246,9 @@ multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
 			return 0;
 		    }
 		}
-	    } else
+	    } else {
 	    	break;
+	    }
 	}
 	*consumedp = ibl - inbytesleft;
 
@@ -1280,10 +1284,11 @@ multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
 	nr++;
     }
 
-    if (error != ME_NONE)
+    if (error != ME_NONE) {
 	return -1;
-    else
+    } else {
 	return nr;
+    }
 }
 
 /*
@@ -1300,8 +1305,9 @@ multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
     ucs4_t ucs4;
 
     ucs4 = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
-    if (ucs4 == 0)
+    if (ucs4 == 0) {
 	return 0;
+    }
     return unicode_to_ebcdic(ucs4);
 }
 
@@ -1312,24 +1318,29 @@ multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
  */
 int
 multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
-	size_t ebc_len, enum me_fail *errorp)
+	size_t ebc_len, enum me_fail *errorp, bool *truncated)
 {
     int ne = 0;
     bool in_dbcs = false;
+
+    *truncated = false;
 
     while (mb_len > 0 && ebc_len > 0) {
 	ebc_t e;
 	int consumed;
 
 	e = multibyte_to_ebcdic(mb, mb_len, &consumed, errorp);
-	if (e == 0)
+	if (e == 0) {
 	    return -1;
+	}
 	if (e & 0xff00) {
 	    /* DBCS. */
 	    if (!in_dbcs) {
 		/* Make sure there's room for SO, b1, b2, SI. */
-		if (ebc_len < 4)
+		if (ebc_len < 4) {
+		    *truncated = true;
 		    return ne;
+		}
 		*ebc++ = EBC_so;
 		ebc_len++;
 		ne++;
@@ -1339,6 +1350,7 @@ multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	    if (ebc_len < 3) {
 		*ebc++ = EBC_si;
 		ne++;
+		*truncated = true;
 		return ne;
 	    }
 	    *ebc++ = (e >> 8) & 0xff;
@@ -1350,8 +1362,10 @@ multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	    if (in_dbcs) {
 		*ebc++ = EBC_si;
 		ne++;
-		if (!--ebc_len)
+		if (!--ebc_len) {
+		    *truncated = true;
 		    return ne;
+		}
 		in_dbcs = false;
 	    }
 	    *ebc++ = e & 0xff;
@@ -1372,6 +1386,9 @@ multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
 	ne++;
     }
 
+    if (mb_len > 0) {
+	*truncated = true;
+    }
     return ne;
 }
 
@@ -1389,16 +1406,18 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
 	    (u_local_cp == CP_UTF8)? NULL: "?",
 	    (u_local_cp == CP_UTF8)? NULL: &udc);
-    if (nc > 0)
+    if (nc > 0) {
 	mb[nc++] = '\0';
+    }
     return nc;
 #elif defined(UNICODE_WCHAR) /*][*/
     int nc;
 
     if (is_utf8) {
 	nc = unicode_to_utf8(ucs4, mb);
-	if (nc < 0)
+	if (nc < 0) {
 	    return 0;
+	}
 	mb[nc++] = '\0';
 	return nc;
     }
@@ -1425,8 +1444,9 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
 
     /* Translate the wchar_t we got from UCS-4 to UTF-8. */
     nu8 = unicode_to_utf8(ucs4, u8b);
-    if (nu8 < 0)
+    if (nu8 < 0) {
 	return 0;
+    }
 
     /* Local multi-byte might be UTF-8, in which case, we're done. */
     if (is_utf8) {

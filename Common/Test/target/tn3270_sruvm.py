@@ -45,9 +45,14 @@ class sruvm(tn3270.tn3270_server):
             case aid.SF.value:
                 # Parse the QueryReply, assuming that's what it is
                 self.debug('sruvm', 'got SF')
-                if (self.dinfo.parse_query_reply(data)):
+                qr = self.dinfo.parse_query_reply(data)
+                if (qr[0]):
                     self.debug('sruvm', f'alt rows {self.dinfo.alt_rows} columns {self.dinfo.alt_columns}')
+                    if self.dinfo.rpqnames != None:
+                        self.debug('sruvm', 'RPQ Names: ' + self.dinfo.rpqnames.hex())
                     self.query_done()
+                else:
+                    self.error('sruvm', 'Query Reply: ' + qr[1])
             case _:
                 self.homescreen()
 
