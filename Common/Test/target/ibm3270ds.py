@@ -103,6 +103,7 @@ class sf_rp(enum.IntEnum):
 
 class qr(enum.IntEnum):
     usable_area = 0x81
+    rpq_names = 0xa1
 
 class xa(enum.IntEnum):
     m3270 = 0xc0,

@@ -95,7 +95,7 @@ class playback():
             self.thread.join()
             self.thread = None
 
-    def send_tm(self):
+    def send_tm(self) -> str:
         '''Send a timing mark'''
         self.conn.send(b'\xff\xfd\x06')
         # Wait for it to come back. This code assumes that the emulator will do
@@ -107,6 +107,7 @@ class playback():
             accum += bytes.hex(self.conn.recv(1024))
             if accum.endswith('fffc06'):
                 break
+        return accum
 
     def recv_to_end(self, timeout=2):
         '''Return everything sent on the socket'''
