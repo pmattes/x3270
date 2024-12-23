@@ -220,6 +220,13 @@ if test "x$enable_wc3270" = xyes -o \
     enable_wx3270if=yes
 fi
 if test "x$enable_x3270" = xyes -o \
+	"x$enable_c3270" = xyes; then
+    enable_pr3287=yes
+fi
+if test "x$enable_wc3270" = xyes; then
+    enable_wpr3287=yes
+fi
+if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
