@@ -47,7 +47,6 @@
 #include "popups.h"
 #include "sf.h"	 /* has to come before rpq.h */
 #include "rpq.h"
-#include "tables.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
@@ -91,7 +90,7 @@ static bool omit_due_space_limit = false;
  * should match TIMESTAMP instead of TIMEZONE.
  */
 static struct rpq_keyword {
-    bool omit;	/* set from X3270RPQ="kw1:kw2..." environment var */
+    bool omit;		/* set from X3270RPQ="kw1:kw2..." environment var */
     size_t oride;	/* displacement */
     const bool allow_oride;
     const unsigned char id;
@@ -114,13 +113,17 @@ void
 do_qr_rpqnames(void)
 {
 #   define TERM_PREFIX_SIZE 2	/* Each term has 1 byte length and 1 byte id */
-
+    size_t nw;
+    enum me_fail error;
+    bool truncated = false;
     unsigned char *rpql, *p_term;
     unsigned j;
     int term_id;
     size_t i, x;
     size_t remaining = 254;	/* maximum data area for rpqname reply */
     bool omit_due_space_limit;
+    static const char x3270name[] = "x3270";
+#   define X3270_NAMESIZE (sizeof(x3270name) - 1)
 
     trace_ds("> QueryReply(RPQNames)\n");
 
@@ -129,7 +132,7 @@ do_qr_rpqnames(void)
      * By pre-allocating the space I don't have to worry about the
      * possibility of addresses changing.
      */
-    space3270out(4+4+1+remaining);	/* Maximum space for an RPQNAME item */
+    space3270out(4 + 4 + 1 + remaining);/* Maximum space for an RPQNAME item */
 
     SET32(obptr, 0);			/* Device number, 0 = All */
     SET32(obptr, 0);			/* Model number, 0 = All */
@@ -138,12 +141,11 @@ do_qr_rpqnames(void)
 
     /*
      * Create fixed length portion - program id: x3270
-     * This is known 8-bit text so we can use asc2ebc0 to translate it.
      */
-    for (j = 0; j < 5; j++) {
-	*obptr++ = asc2ebc0[(int)"x3270"[j]];
-	remaining--;
-    }
+    nw = multibyte_to_ebcdic_string(x3270name, X3270_NAMESIZE, obptr, X3270_NAMESIZE, &error, &truncated);
+    assert(nw == X3270_NAMESIZE);
+    obptr += nw;
+    remaining -= nw;
 
     /* Create user selected variable-length self-defining terms. */
     select_rpq_terms();
@@ -196,17 +198,12 @@ do_qr_rpqnames(void)
 	    break;
 
 	case RPQ_VERSION:	/* program version */
-	    /*
-	     * Note: It is legal to use asc2ebc0 to translate the
-	     * build string from ASCII to EBCDIC because the build
-	     * string is always generated in the "C" locale.
-	     */
 	    x = strlen(build_rpq_version);
 	    omit_due_space_limit = (x > remaining);
 	    if (!omit_due_space_limit) {
-		for (i = 0; i < x; i++) {
-		    *obptr++ = asc2ebc0[(int)(*(build_rpq_version+i) & 0xff)];
-		}
+		nw = multibyte_to_ebcdic_string(build_rpq_version, x, obptr, x, &error, &truncated);
+		assert(nw == x);
+		obptr += nw;
 	    }
 	    break;
 
@@ -215,8 +212,8 @@ do_qr_rpqnames(void)
 	    omit_due_space_limit = ((x + 1) / 2 > remaining);
 	    if (!omit_due_space_limit) {
 		for (i = 0; i < x; i += 2) {
-		    *obptr++ = ((*(build_rpq_timestamp+i) - '0') << 4)
-			+ (*(build_rpq_timestamp+i+1) - '0');
+		    *obptr++ = ((*(build_rpq_timestamp + i) - '0') << 4)
+			+ (*(build_rpq_timestamp + i + 1) - '0');
 		}
 	    }
 	    break;
@@ -235,11 +232,10 @@ do_qr_rpqnames(void)
 	 * adjust space remaining.
 	 * obptr now points at "next available byte".
 	 */
-	x = obptr-p_term;
+	x = obptr - p_term;
 	if (x > TERM_PREFIX_SIZE) {
 	    *p_term = (unsigned char)x;
-	    remaining -= x;	/* This includes length and id fields,
-				   correction below */
+	    remaining -= x;	/* This includes length and id fields, correction below */
 	} else {
 	    /* We didn't add an item after all, reset pointer. */
 	    obptr = p_term;
@@ -292,7 +288,7 @@ select_rpq_terms(void)
      * If there are override values, I'll get those from the ORIGINAL
      * string so upper/lower case is preserved as necessary.
      */
-    uplist = (char *)Malloc(strlen(x3270rpq)+1);
+    uplist = (char *)Malloc(strlen(x3270rpq) + 1);
     assert(uplist != NULL);
     p1 = uplist;
     p2 = x3270rpq;
@@ -302,7 +298,7 @@ select_rpq_terms(void)
     *p1 = '\0';
 
     for (i = 0; i < strlen(x3270rpq); ) {
-	kw = uplist+i;
+	kw = uplist + i;
 	i++;
 	if (isspace((unsigned char)*kw)) {
 	    continue;	/* skip leading white space */
@@ -314,11 +310,11 @@ select_rpq_terms(void)
 	/* : separates terms, but \: is literal : */
 	p1 = kw;
 	do {
-	    p1 = strchr(p1+1,':');
+	    p1 = strchr(p1 + 1,':');
 	    if (p1 == NULL) {
 		break;
 	    }
-	} while (*(p1-1) == '\\');
+	} while (*(p1 - 1) == '\\');
 	/* p1 points to the : separating a term, or is NULL */
 	if (p1 != NULL) {
 	    *p1 = '\0';
@@ -514,7 +510,7 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 
     rpqtext = x3270rpq + kw->oride;
 
-    if ((*rpqtext == '0') && (toupper((unsigned char)*(rpqtext+1)) == 'X')) {
+    if ((*rpqtext == '0') && (toupper((unsigned char)*(rpqtext + 1)) == 'X')) {
 	/* Text has 0x prefix... interpret as hex, no translation */
 	char hexstr[512];	/* more than enough room to copy */
 	char *p_h;
@@ -564,13 +560,11 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	if (!is_first_hex_digit) {
 	    rpq_warning("RPQ USER term has odd number of hex digits");
 	}
-	*buf = 0;	/* initialize first byte for possible implied
-			   leading zero */
+	*buf = 0;	/* initialize first byte for possible implied leading zero */
 	for (p_h = &hexstr[0]; *p_h; p_h++) {
-	    int n;
-
 	    /* convert the hex character to a value 0-15 */
-	    n = isdigit((unsigned char)*p_h) ? *p_h - '0' : *p_h - 'A' + 10;
+	    int n = isdigit((unsigned char)*p_h) ? *p_h - '0' : *p_h - 'A' + 10;
+
 	    if (is_first_hex_digit) {
 		*buf = n << 4;
 	    } else {
@@ -603,7 +597,9 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
     if (xlen < 0) {
 	rpq_warning("RPQ USER term translation error");
 	if (buflen) {
-	    *buf = asc2ebc0['?'];
+	    int consumed;
+
+	    *buf = multibyte_to_ebcdic("?", 1, &consumed, &error);
 	    x = 1;
 	}
     } else {
