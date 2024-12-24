@@ -1317,7 +1317,7 @@ multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
  * conversion error.
  */
 int
-multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
+multibyte_to_ebcdic_string(const char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp, bool *truncated)
 {
     int ne = 0;

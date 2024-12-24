@@ -49,7 +49,7 @@ class sruvm(tn3270.tn3270_server):
                 if (qr[0]):
                     self.debug('sruvm', f'alt rows {self.dinfo.alt_rows} columns {self.dinfo.alt_columns}')
                     if self.dinfo.rpqnames != None:
-                        self.debug('sruvm', 'RPQ Names: ' + self.dinfo.rpqnames.hex())
+                        self.debug('sruvm', 'RPQ Names: ' + self.dinfo.rpqnames.hex().replace('ffff', 'ff'))
                     self.query_done()
                 else:
                     self.error('sruvm', 'Query Reply: ' + qr[1])
