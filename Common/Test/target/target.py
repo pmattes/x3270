@@ -33,6 +33,7 @@ import logging
 import select
 import socket
 import threading
+import time
 import traceback
 from typing import Dict, Any
 
@@ -202,14 +203,20 @@ class target(aswitch.aswitch):
                 wrapper = real_socket(conn, self.logger)
                 with servers[self.active_type[peername]](wrapper, self.logger, peername, self.tls == target_tls.negotiated, self, self.opts) as dynserver:
                     if dynserver.ready():
+                        idle_limit = self.opts.get('idle_timeout')
+                        idle_start = time.monotonic()
                         while not self.exiting and not peername in self.switch_to and wrapper.isopen():
                             try:
                                 data = wrapper.recv(1024)
                             except TimeoutError:
+                                if idle_limit > 0 and time.monotonic() - idle_start >= idle_limit:
+                                    self.logger.info(f'target:{peername} idle timeout')
+                                    break
                                 continue
                             if data == b'':
                                 # EOF
                                 break
+                            idle_start = time.monotonic()
                             dynserver.process(data)
             except Exception as e:
                 self.log_exception(peername, e)
@@ -286,16 +293,17 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='x3270 test target')
     parser.add_argument('--address', default='127.0.0.1', help='address to listen on')
-    parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
-    parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server [menu-f]')
+    parser.add_argument('--bind', action=argparse.BooleanOptionalAction, default=True, help='TN3270E BIND support [on]')
+    parser.add_argument('--devname', type=int, default=0, action='store', metavar='LIMIT', help='RFC 4777 devname limit [0]')
+    parser.add_argument('--elf', action=argparse.BooleanOptionalAction, default=False, help='IBM ELF support [off]')
+    parser.add_argument('--idle-timeout', type=int, default=0, action='store', help='idle timeout in seconds')
     parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level [WARNING]')
+    parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
     parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate,
                                             negotiated=target_tls.negotiated), default=target_tls.none,
                                             choices=['none', 'immediate', 'negotiated'], help='TLS support [none]')
     parser.add_argument('--tn3270e', action=argparse.BooleanOptionalAction, default=True, help='TN3270E support [on]')
-    parser.add_argument('--bind', action=argparse.BooleanOptionalAction, default=True, help='TN3270E BIND support [on]')
-    parser.add_argument('--elf', action=argparse.BooleanOptionalAction, default=False, help='IBM ELF support [off]')
-    parser.add_argument('--devname', type=int, default=0, action='store', metavar='LIMIT', help='RFC 4777 devname limit [0]')
+    parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server [menu-f]')
     opts = vars(parser.parse_args())
     with target(opts['port'], opts) as server:
         print('Press <Enter> to stop the server.')
