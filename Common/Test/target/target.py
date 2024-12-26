@@ -296,7 +296,7 @@ if __name__ == '__main__':
     parser.add_argument('--bind', action=argparse.BooleanOptionalAction, default=True, help='TN3270E BIND support [on]')
     parser.add_argument('--devname', type=int, default=0, action='store', metavar='LIMIT', help='RFC 4777 devname limit [0]')
     parser.add_argument('--elf', action=argparse.BooleanOptionalAction, default=False, help='IBM ELF support [off]')
-    parser.add_argument('--idle-timeout', type=int, default=0, action='store', help='idle timeout in seconds')
+    parser.add_argument('--idle-timeout', type=int, default=0, action='store', metavar='SECONDS', help='idle timeout in seconds')
     parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level [WARNING]')
     parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
     parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate,
