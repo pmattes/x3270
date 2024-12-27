@@ -204,6 +204,9 @@ typedef struct _taskq {
 static llist_t taskq = LLIST_INIT(taskq);
 static unsigned short taskq_index = 1;
 
+ioid_t async_fail_id = NULL_IOID;
+static char *async_fail_msg;
+
 typedef struct _owait {
     struct _owait *next;	/* linkage */
     const tcb_t *cb;		/* callback block */
@@ -551,6 +554,18 @@ Echo_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Timeout function for async failures. */
+static void
+async_fail(ioid_t id)
+{
+    char *msg = async_fail_msg;
+
+    async_fail_msg = NULL;
+    async_fail_id = NULL_IOID;
+    popup_an_error("%s", msg);
+    Free(msg);
+}
+
 static bool
 Fail_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -558,10 +573,23 @@ Fail_action(ia_t ia, unsigned argc, const char **argv)
     if (argc == 0) {
 	popup_an_error("Failed");
     } else {
-	char *c = argcat(argc, argv);
+	if (!strcasecmp(argv[0], KwDashAsync)) {
+	    if (async_fail_id != NULL_IOID) {
+		popup_an_error(AnFail "(): async already pending");
+		return false;
+	    }
+	    if (argc > 1) {
+		async_fail_msg = argcat(argc - 1, argv +1);
+	    } else {
+		async_fail_msg = NewString("Failed");
+	    }
+	    async_fail_id = AddTimeOut(0, async_fail);
+	} else {
+	    char *c = argcat(argc, argv);
 
-	popup_an_error("%s", c);
-	Free(c);
+	    popup_an_error("%s", c);
+	    Free(c);
+	}
     }
     return false;
 }
