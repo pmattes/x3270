@@ -75,7 +75,7 @@ int multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
 	size_t u_len, bool force_utf8);
 ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp);
-int multibyte_to_ebcdic_string(const char *mb, size_t mb_len, unsigned char *ebc,
+ssize_t multibyte_to_ebcdic_string(const char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp, bool *truncated);
 int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
 int unicode_to_multibyte_f(ucs4_t ucs4, char *mb, size_t mb_len,

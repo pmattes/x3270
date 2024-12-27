@@ -28,6 +28,7 @@
 # s3270 RPQNAMES tests
 
 from enum import IntEnum
+import itertools
 import os
 from subprocess import Popen, PIPE, DEVNULL
 import requests
@@ -62,59 +63,99 @@ class RpqName(IntEnum):
     Version = 4
     def encode(self) -> str:
         return f'{self.value:02x}'
+
+def split_list(input_list, match):
+    '''Split a list by a match'''
+    output = []
+    for k, g in itertools.groupby(input_list, lambda x: x != match):
+        if k:
+            output.append(list(g))
+        else:
+            output.append([])
+    return output
         
 class TestS3270RpqNames(cti.cti):
 
-    # s3270 RPQNAMES test
-    def s3270_rpqnames(self, reply: str, rpq='', ipv6=False, stderr_count=0, twice=False):
+    # s3270 RPQNAMES test, multi-session
+    def s3270_rpqnames_multi_session(self, rpq: str, sessions):
+        '''Test with multiple sessions, tuples provide reply, v6, stderr_count, twice_same_session'''
 
-        # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/rpqnames.trc', port=port, ipv6=ipv6) as p:
-            ts.close()
+        # Start s3270.
+        env = os.environ
+        env['X3270RPQ'] = rpq
+        s3270 = Popen(cti.vgwrap(['s3270']), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
+        self.children.append(s3270)
 
-            # Start s3270.
-            env = os.environ
-            if rpq != '':
-                env['X3270RPQ'] = rpq
-            loopback = 'c:[::1]' if ipv6 else 'c:127.0.0.1'
-            host = f'{loopback}:{port}'
-            s3270 = Popen(cti.vgwrap(["s3270", host]), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
-            self.children.append(s3270)
+        delimiter = b'-----'
 
-            # Write to the mark in the trace and discard whatever comes back until this point.
-            p.send_to_mark()
+        for i, t in enumerate(sessions):
+            if i > 0:
+                # Send a marker to stderr to separate each session's output.
+                # This is a little obscure. s3270 async errors go to stderr, so we use a variant of the Fail()
+                # action to generate one.
+                s3270.stdin.write(b'Fail(-async,' + delimiter + b')\n')
+                s3270.stdin.flush()
 
-            # Send the Query WSF.
-            p.send_records(1, send_tm=False)
+            reply = t['reply']
+            ipv6 = t['ipv6']
 
-            # Get the response.
-            ret = p.send_tm()
+            # Start 'playback' to read s3270's output.
+            port, ts = cti.unused_port()
+            with playback.playback(self, 's3270/Test/rpqnames.trc', port=port, ipv6=ipv6) as p:
+                ts.close()
 
-            if twice:
-                # Send another one.
-                p.send_records(1)
+                # Connect s3270 to playback.
+                loopback = '[::1]' if ipv6 else '127.0.0.1'
+                s3270.stdin.write(f'Open(c:{loopback}:{port})\n'.encode())
+                s3270.stdin.flush()
 
-            # Parse the response.
-            # print('ret =', ret)
-            prefix = ret[:10]
-            self.assertTrue(prefix.startswith('88')) # QueryReply
-            self.assertTrue(prefix.endswith('81a1')) # RPQ names
-            ret = ret[10:]
-            self.assertTrue(ret.endswith('ffeffffc06')) # IAC EOR IAC WONT TM
-            ret = ret[:-10]
-            self.assertEqual(reply, ret)
+                # Write to the mark in the trace and discard whatever comes back until this point.
+                p.send_to_mark()
 
-        # Wait for the processes to exit.
+                # Send the Query WSF.
+                p.send_records(1, send_tm=False)
+                # if t['twice_same_session']:
+                    # p.send_records(1, send_tm=False)
+
+                # Get the response.
+                ret = p.send_tm()
+
+                if t['twice_same_session']:
+                    p.send_records(1, send_tm=False)
+
+                # Parse the response.
+                prefix = ret[:10]
+                self.assertTrue(prefix.startswith('88')) # QueryReply
+                self.assertTrue(prefix.endswith('81a1')) # RPQ names
+                ret = ret[10:]
+                self.assertTrue(ret.endswith('ffeffffc06')) # IAC EOR IAC WONT TM
+                ret = ret[:-10]
+                self.assertEqual(reply, ret)
+
+        # Wait for s3270 to exit.
         s3270.stdin.write(b"Quit()\n")
         s3270.stdin.flush()
         s3270.stdin.close()
         self.vgwait(s3270)
+
+        # Verify stderr.
         stderr = s3270.stderr.readlines()
-        self.assertEqual(stderr_count, len(stderr))
-        self.longMessage
         s3270.stderr.close()
-    
+
+        # Split the errors.
+        if len(sessions) > 1:
+            split_stderr = split_list(stderr, delimiter + b'\n')
+            self.assertEqual(len(sessions), len(split_stderr))
+            self.assertSequenceEqual([t['stderr_count'] for t in sessions], [len(t) for t in split_stderr])
+        else:
+            self.assertEqual(sessions[0]['stderr_count'], len(stderr))
+
+    # s3270 RPQNAMES test, single session
+    def s3270_rpqnames(self, reply: str, rpq='', ipv6=False, stderr_count=0, twice_same_session=False):
+
+        self.s3270_rpqnames_multi_session(rpq,
+            [{'reply': reply, 'ipv6': ipv6, 'stderr_count': stderr_count, 'twice_same_session': twice_same_session}])
+
     def s3270quick(self, action:str):
         '''Get the output of an s3270 action'''
         port, ts = cti.unused_port()
@@ -145,6 +186,10 @@ class TestS3270RpqNames(cti.cti):
         tz = -(time.timezone // 60) & 0xffff
         return add_len(RpqName.Timezone.encode() + f'{tz:04x}')
 
+    def get_address(self, ipv6=False) -> str:
+        '''Get the address'''
+        return add_len(RpqName.Address.encode() + ('000a00000000000000000000000000000001' if ipv6 else '00027f000001'))
+
     # s3270 RPQNAMES test
     def test_s3270_rpqnames(self):
         '''Default, no fields.'''
@@ -152,11 +197,11 @@ class TestS3270RpqNames(cti.cti):
 
     def test_s3270_rpqnames_address(self):
         '''IPv4 address'''
-        self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '00027f000001')), rpq='ADDRESS')
+        self.s3270_rpqnames(make_rpq(self.get_address()), rpq='ADDRESS')
 
     def test_s3270_rpqnames_address_ipv6(self):
         '''IPv6 address'''
-        self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '000a00000000000000000000000000000001')), rpq='ADDRESS', ipv6=True)
+        self.s3270_rpqnames(make_rpq(self.get_address(ipv6=True)), rpq='ADDRESS', ipv6=True)
 
     def test_s3270_rpqnames_address_override(self):
         '''IPv4 address override'''
@@ -215,7 +260,7 @@ class TestS3270RpqNames(cti.cti):
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'USER={user}')
 
     def test_s3270_rpqnames_all(self):
-        str = add_len(RpqName.Address.encode() + '00027f000001') + \
+        str = self.get_address() + \
               self.get_ts() + \
               self.get_timezone() + \
               self.get_version()
@@ -223,20 +268,20 @@ class TestS3270RpqNames(cti.cti):
 
     def test_s3270_rpqnames_no(self):
         '''NO form of keywords'''
-        str = add_len(RpqName.Address.encode() + '00027f000001') + \
+        str = self.get_address() + \
               self.get_ts() + \
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='ALL:NOTIMEZONE')
 
-    def test_s3270_rpqnames_truncate_user_ebcdic(self):
-        '''User override too long, truncated, in EBCDIC'''
+    def test_s3270_rpqnames_overflow_user_ebcdic(self):
+        '''User override too long, in EBCDIC'''
         user = ''.join(['x' for x in range(1, 512)])
-        self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user[:247]))), rpq=f'USER={user}', stderr_count=1)
+        self.s3270_rpqnames(make_rpq(''), rpq=f'USER={user}', stderr_count=1)
 
-    def test_s3270_rpqnames_truncate_user_hex(self):
-        '''User override too long, truncated, in hex'''
+    def test_s3270_rpqnames_overflow_user_hex(self):
+        '''User override too long, in hex'''
         user = ''.join([f'{x:02x}' for x in range(0, 256)])
-        self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + user[:-18])), rpq=f'USER=0x{user}', stderr_count=1)
+        self.s3270_rpqnames(make_rpq(''), rpq=f'USER=0x{user}', stderr_count=1)
 
     def test_s3270_rpqnames_bad_user_hex(self):
         '''User override, garbage value in hex'''
@@ -247,12 +292,23 @@ class TestS3270RpqNames(cti.cti):
         '''Overflow with field suppressed'''
         # Because the fields are always processed in order, the code has lots of untestable logic around space overflows.
         # The one case that's actually possible is if there is a USER field that fills the buffer, followed by the VERSION field.
-        user = ''.join(['x' for x in range(1, 512)])
-        self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user[:247]))), rpq=f'USER={user}:VERSION', stderr_count=2)
+        user = ''.join(['x' for x in range(1, 247)])
+        self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'USER={user}:VERSION', stderr_count=1)
 
     def test_s3270_rpqnames_single_errmsg(self):
         '''Multiple RPQNAMES generation attempts, verifying error messages are not repeated'''
-        self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=fred', stderr_count=1, twice=True)
+        self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=fred', stderr_count=1, twice_same_session=True)
+
+    def test_s3270_rpqnames_changed_errmsg(self):
+        '''Overflow with VERSION field suppressed, works with v4, fails with v6, uses more-generic infra'''
+        user = ''.join(['x' for x in range(1, 220)])
+        rpq = 'ADDRESS:USER=' + user + ':VERSION'
+        # With and IPv4 address, there is room for the VERSION. With an IPv6 address, there is not.
+        reply_v4 = make_rpq(self.get_address() + add_len(RpqName.User.encode() + ebcdic(user)) + self.get_version())
+        reply_v6 = make_rpq(self.get_address(ipv6=True) + add_len(RpqName.User.encode() + ebcdic(user)))
+        self.s3270_rpqnames_multi_session(rpq,
+            [{ 'reply': reply_v4, 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False },
+             { 'reply': reply_v6, 'ipv6': True, 'stderr_count': 1, 'twice_same_session': False }])
 
     def test_s3270_rpqnames_whitespace1(self):
         '''White space inside the environment variable, should be ignored'''

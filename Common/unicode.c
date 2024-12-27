@@ -1316,11 +1316,11 @@ multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
  * Returns the length of the resulting EBCDIC string, or -1 if there is a
  * conversion error.
  */
-int
+ssize_t
 multibyte_to_ebcdic_string(const char *mb, size_t mb_len, unsigned char *ebc,
 	size_t ebc_len, enum me_fail *errorp, bool *truncated)
 {
-    int ne = 0;
+    size_t ne = 0;
     bool in_dbcs = false;
 
     *truncated = false;

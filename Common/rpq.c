@@ -57,17 +57,6 @@
 # include "w3misc.h"
 #endif /*]*/
 
-/* Statics */
-static bool select_rpq_terms(void);
-static int get_rpq_timezone(int *offsetp);
-static size_t get_rpq_user(unsigned char buf[], const size_t buflen);
-static size_t get_rpq_address(unsigned char buf[], const size_t buflen);
-static void rpq_warning(const char *fmt, ...);
-static void rpq_dump_warnings(void);
-static bool rpq_complained = false;
-static char *rpq_warnbuf = NULL;
-static bool omit_due_space_limit = false;
-
 /*
  * Define symbolic names for RPQ self-defining terms.
  * (Numbering is arbitrary, but must be 0-255 inclusive.
@@ -75,11 +64,37 @@ static bool omit_due_space_limit = false;
  * self-defining term to the mainframe software. Changing pre-existing
  * values will possibly impact host based software.
  */
-#define	RPQ_ADDRESS	0
-#define	RPQ_TIMESTAMP	1
-#define	RPQ_TIMEZONE	2
-#define	RPQ_USER	3
-#define	RPQ_VERSION	4
+typedef enum {
+    RPQ_ADDRESS = 0,
+    RPQ_TIMESTAMP = 1,
+    RPQ_TIMEZONE = 2,
+    RPQ_USER = 3,
+    RPQ_VERSION = 4,
+} rpq_id_t;
+
+#define RPQ_ADDRESS_NAME	"ADDRESS"
+#define RPQ_TIMESTAMP_NAME	"TIMESTAMP"
+#define RPQ_TIMEZONE_NAME	"TIMEZONE"
+#define RPQ_USER_NAME		"USER"
+#define RPQ_VERSION_NAME	"VERSION"
+
+/* Error code return by individual term get functions. */
+typedef enum {
+    TR_SUCCESS,		/* successful generation */
+    TR_OMIT,		/* term intentionally omitted */
+    TR_NOSPACE,		/* insufficient space to store term */
+    TR_ERROR,		/* other error generating term */
+} term_result_t;
+typedef term_result_t get_term_fn(unsigned char *buf, const size_t buflen, size_t *len);
+
+/* Statics */
+static bool select_rpq_terms(void);
+static get_term_fn get_rpq_address, get_rpq_timestamp, get_rpq_timezone, get_rpq_user, get_rpq_version;
+static void rpq_warning(const char *fmt, ...);
+static void rpq_init_warnings(void);
+static void rpq_dump_warnings(void);
+static char *rpq_warnbuf = NULL;
+static char *rpq_warnbuf_prev = NULL;
 
 /*
  * Define a table of RPQ self-defing terms. 
@@ -93,14 +108,15 @@ static struct rpq_keyword {
     bool omit;		/* set from X3270RPQ="kw1:kw2..." environment var */
     size_t oride;	/* displacement */
     const bool allow_oride;
-    const unsigned char id;
+    const rpq_id_t id;
     const char *text;
+    get_term_fn *get;
 } rpq_keywords[] = {
-    { true, 0, 	true,	RPQ_ADDRESS,	"ADDRESS" },
-    { true, 0, 	false,	RPQ_TIMESTAMP,	"TIMESTAMP" },
-    { true, 0, 	true,	RPQ_TIMEZONE,	"TIMEZONE" },
-    { true, 0, 	true,	RPQ_USER,	"USER" },
-    { true, 0, 	false,	RPQ_VERSION,	"VERSION" },
+    { true, 0, 	true,	RPQ_ADDRESS,	RPQ_ADDRESS_NAME,	get_rpq_address },
+    { true, 0, 	false,	RPQ_TIMESTAMP,	RPQ_TIMESTAMP_NAME,	get_rpq_timestamp },
+    { true, 0, 	true,	RPQ_TIMEZONE,	RPQ_TIMEZONE_NAME,	get_rpq_timezone },
+    { true, 0, 	true,	RPQ_USER,	RPQ_USER_NAME,		get_rpq_user },
+    { true, 0, 	false,	RPQ_VERSION,	RPQ_VERSION_NAME,	get_rpq_version },
 };
 #define NS_RPQ (sizeof(rpq_keywords)/sizeof(rpq_keywords[0]))
 
@@ -113,19 +129,19 @@ void
 do_qr_rpqnames(void)
 {
 #   define TERM_PREFIX_SIZE 2	/* Each term has 1 byte length and 1 byte id */
-    size_t nw;
+    ssize_t nw;
     enum me_fail error;
     bool truncated = false;
-    unsigned char *rpql, *p_term;
-    unsigned j;
-    int term_id;
-    size_t i, x;
+    unsigned char *rpql;
+    unsigned i;
     size_t remaining = 254;	/* maximum data area for rpqname reply */
-    bool omit_due_space_limit;
     static const char x3270name[] = "x3270";
 #   define X3270_NAMESIZE (sizeof(x3270name) - 1)
 
     trace_ds("> QueryReply(RPQNames)\n");
+
+    /* Start with a fresh warning buffer. */
+    rpq_init_warnings();
 
     /*
      * Allocate enough space for the maximum allowed item.
@@ -133,10 +149,8 @@ do_qr_rpqnames(void)
      * possibility of addresses changing.
      */
     space3270out(4 + 4 + 1 + remaining);/* Maximum space for an RPQNAME item */
-
     SET32(obptr, 0);			/* Device number, 0 = All */
     SET32(obptr, 0);			/* Model number, 0 = All */
-
     rpql = obptr++;			/* Save address to place data length. */
 
     /*
@@ -150,113 +164,33 @@ do_qr_rpqnames(void)
     /* Create user selected variable-length self-defining terms. */
     select_rpq_terms();
 
-    for (j = 0; j < NS_RPQ; j++) {
-	if (rpq_keywords[j].omit) {
+    for (i = 0; i < NS_RPQ; i++) {
+	bool omit_due_space_limit = false;
+
+	if (rpq_keywords[i].omit) {
 	    continue;
 	}
 
-	if (remaining < TERM_PREFIX_SIZE) {
-	    rpq_warning("RPQ %s term omitted due to insufficient space", rpq_keywords[j].text);
-	    continue;
-	}
+	omit_due_space_limit = remaining < TERM_PREFIX_SIZE;
+	if (!omit_due_space_limit) {
+	    size_t term_len = 0;
+	    term_result_t term_result;
 
-	omit_due_space_limit = false;
-
-	term_id = rpq_keywords[j].id;
-
-	p_term = obptr;		/* save starting address (to insert length later) */
-	obptr++;		/* skip length of term, fill in later */
-	*obptr++ = term_id;	/* identify this term */
-
-	/*
-	 * Adjust remaining space by the term prefix size so each case
-	 * can use the "remaining" space without concern for the
-	 * prefix.  This subtraction is accounted for after the item
-	 * is built and the updated remaining space is determined.
-	 */
-	remaining -= TERM_PREFIX_SIZE;
-
-	switch (term_id) {	/* build the term based on id */
-	case RPQ_USER:		/* User text from env. vars */
-	    obptr += get_rpq_user(obptr, remaining);
-	    break;
-
-	case RPQ_TIMEZONE:	/* UTC time offset */
-	    omit_due_space_limit = (remaining < 2);
-	    if (!omit_due_space_limit) {
-		int offset = 0;
-		int err = get_rpq_timezone(&offset);
-
-		if (!err) {
-		    SET16(obptr, offset);
-		}
+	    term_result = rpq_keywords[i].get(obptr + TERM_PREFIX_SIZE, remaining - TERM_PREFIX_SIZE, &term_len);
+	    if (term_result == TR_SUCCESS) {
+		*obptr++ = TERM_PREFIX_SIZE + term_len;		/* length of term */
+		*obptr++ = rpq_keywords[i].id;			/* term ID */
+		obptr += term_len;				/* jump over term contents */
+		remaining -= TERM_PREFIX_SIZE + term_len;	/* account for space taken */
+	    } else {
+		/* Failed, check for overflow, which will cause error output. */
+		omit_due_space_limit = (term_result == TR_NOSPACE);
 	    }
-	    break;
-
-	case RPQ_ADDRESS:	/* Workstation address */
-	    obptr += get_rpq_address(obptr, remaining);
-	    break;
-
-	case RPQ_VERSION:	/* program version */
-	    x = strlen(build_rpq_version);
-	    omit_due_space_limit = (x > remaining);
-	    if (!omit_due_space_limit) {
-		nw = multibyte_to_ebcdic_string(build_rpq_version, x, obptr, x, &error, &truncated);
-		assert(nw == x);
-		obptr += nw;
-	    }
-	    break;
-
-	case RPQ_TIMESTAMP:	/* program build time (yyyymmddhhmmss bcd) */
-	    x = strlen(build_rpq_timestamp);
-	    omit_due_space_limit = ((x + 1) / 2 > remaining);
-	    if (!omit_due_space_limit) {
-		for (i = 0; i < x; i += 2) {
-		    *obptr++ = ((*(build_rpq_timestamp + i) - '0') << 4)
-			+ (*(build_rpq_timestamp + i + 1) - '0');
-		}
-	    }
-	    break;
-
-	default:		/* unsupported ID, (can't happen) */
-	    Error("Unsupported RPQ term");
-	    break;		
 	}
 
 	if (omit_due_space_limit) {
-	    rpq_warning("RPQ %s term omitted due to insufficient space", rpq_keywords[j].text);
+	    rpq_warning("RPQ %s term omitted due to insufficient space", rpq_keywords[i].text);
 	}
-
-	/*
-	 * The item is built, insert item length as needed and
-	 * adjust space remaining.
-	 * obptr now points at "next available byte".
-	 */
-	x = obptr - p_term;
-	if (x > TERM_PREFIX_SIZE) {
-	    *p_term = (unsigned char)x;
-	    remaining -= x;	/* This includes length and id fields, correction below */
-	} else {
-	    /* We didn't add an item after all, reset pointer. */
-	    obptr = p_term;
-	}
-	/*
-	 * When we calculated the length of the term, a few lines
-	 * above, that length included the term length and term id
-	 * prefix too. (TERM_PREFIX_SIZE)
-	 * But just prior to the switch statement, we decremented the 
-	 * remaining space by that amount so subsequent routines would
-	 * be told how much space they have for their data, without
-	 * each routine having to account for that prefix.
-	 * That means the remaining space is actually more than we
-	 * think right now, by the length of the prefix.... add that
-	 * back so the remaining space is accurate.
-	 *
-	 * And... if there was no item added, we still have to make the
-	 * same correction to "claim back" the term prefix area so it
-	 * may be used by the next possible term.
-	 */
-	remaining += TERM_PREFIX_SIZE;
     }
 
     /* Fill in overall length of RPQNAME info */
@@ -265,12 +199,12 @@ do_qr_rpqnames(void)
     rpq_dump_warnings();
 }
 
-/* Utility function used by the RPQNAMES query reply. */
+/* Selects which terms will be returned in RPQNAMES. */
 static bool
 select_rpq_terms(void)
 {
     size_t i;
-    unsigned j,k;
+    unsigned j ,k;
     size_t len;
     char *uplist;
     char *p1, *p2;
@@ -292,9 +226,9 @@ select_rpq_terms(void)
     assert(uplist != NULL);
     p1 = uplist;
     p2 = x3270rpq;
-    do {
+    while (*p2) {
 	*p1++ = toupper((unsigned char)*p2++);
-    } while (*p2);
+    }
     *p1 = '\0';
 
     for (i = 0; i < strlen(x3270rpq); ) {
@@ -329,7 +263,7 @@ select_rpq_terms(void)
 		break;
 	    }
 	}
-	len = p1-kw; 
+	len = p1 - kw; 
 
 	is_no_form = ((len > 2) && (strncmp("NO", kw, 2) == 0));
 	if (is_no_form) {
@@ -379,9 +313,9 @@ select_rpq_terms(void)
     return false;
 }
 
-/* Locate a keyword table entry. */
+/* Locates a keyword table entry by ID. */
 static struct rpq_keyword *
-find_kw(int id)
+find_kw(rpq_id_t id)
 {
     unsigned j;
 
@@ -394,16 +328,9 @@ find_kw(int id)
     return NULL;
 }
 
-/*
- * Utility function used by the RPQNAMES query reply.
- * Returns 0 or an error code:
- * 1 - Cannot determine local calendar time
- * 2 - Cannot determine UTC
- * 3 - Difference exceeds 12 hours
- * 4 - User override is invalid
-*/
-static int
-get_rpq_timezone(int *offsetp)
+/* Fetches the TIMEZONE term. */
+static term_result_t
+get_rpq_timezone(unsigned char *buf, const size_t buflen, size_t *lenp)
 {
     /*
      * Return the signed number of minutes we're offset from UTC.
@@ -415,9 +342,14 @@ get_rpq_timezone(int *offsetp)
     struct tm *utc_tm;
     double delta;
     char *p1, *p2;
+    unsigned char *ptr;
     struct rpq_keyword *kw = find_kw(RPQ_TIMEZONE);
 
-    *offsetp = 0;
+    *lenp = 0;
+
+    if (buflen < 2) {
+	return TR_NOSPACE;
+    }
 
     /* Is there a user override? */
     if ((kw->allow_oride) && (kw->oride > 0)) {
@@ -425,19 +357,19 @@ get_rpq_timezone(int *offsetp)
 	long x;
 
 	p1 = x3270rpq + kw->oride;
-	
+
 	errno = 0;
 	x = strtol(p1, &p2, 10);
 	if (errno != 0 || ((*p2 != '\0') && (*p2 != ':') && (!isspace((unsigned char)*p2)))) {
-	    rpq_warning("RPQ TIMEZONE term is invalid - use +/-hhmm");
-	    return 4;
+	    rpq_warning("RPQ " RPQ_TIMEZONE_NAME " term is invalid - use +/-hhmm");
+	    return TR_ERROR;
 	}
 
 	hhmm = ldiv(x, 100L);
 
 	if (hhmm.rem > 59L) {
-	    rpq_warning("RPQ TIMEZONE term is invalid (minutes > 59)");
-	    return 4;
+	    rpq_warning("RPQ " RPQ_TIMEZONE_NAME " term is invalid (minutes > 59)");
+	    return TR_ERROR;
 	}
 
 	delta = (labs(hhmm.quot) * 60L) + hhmm.rem;
@@ -450,12 +382,12 @@ get_rpq_timezone(int *offsetp)
 	 */
 	if ((here = time(NULL)) == (time_t)(-1)) {
 	    rpq_warning("RPQ: Unable to determine workstation local time");
-	    return 1;
+	    return TR_ERROR;
 	}
 	memcpy(&here_tm, localtime(&here), sizeof(struct tm));
 	if ((utc_tm = gmtime(&here)) == NULL) {
 	    rpq_warning("RPQ: Unable to determine workstation UTC time");
-	    return 2;
+	    return TR_ERROR;
 	}
 
 	/*
@@ -469,17 +401,19 @@ get_rpq_timezone(int *offsetp)
 
     /* sanity check: difference cannot exceed +/- 12 hours */
     if (labs((long)delta) > 720L) {
-	rpq_warning("RPQ TIMEZONE exceeds 12 hour UTC offset");
-	return 3;
+	rpq_warning("RPQ " RPQ_TIMEZONE_NAME " exceeds 12 hour UTC offset");
+	return TR_ERROR;
     }
 
-    *offsetp = (int)delta;
-    return 0;
+    ptr = buf;
+    SET16(ptr, (int)delta);
+    *lenp = 2;
+    return TR_SUCCESS;
 }
 
-/* Utility function used by the RPQNAMES query reply. */
-static size_t
-get_rpq_user(unsigned char buf[], const size_t buflen) 
+/* Fetches the USER term. */
+static term_result_t
+get_rpq_user(unsigned char *buf, const size_t buflen, size_t *lenp) 
 {
     /*
      * Text may be specified in one of two ways, but not both.
@@ -502,22 +436,25 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
     const char *s;
     enum me_fail error;
     bool truncated = false;
-    int xlen;
+    ssize_t xlen;
+    term_result_t ret = TR_SUCCESS;
+
+    *lenp = 0;
 
     if ((!kw->allow_oride) || (kw->oride <= 0)) {
-	return 0;
+	return TR_OMIT;
     }
 
     rpqtext = x3270rpq + kw->oride;
 
     if ((*rpqtext == '0') && (toupper((unsigned char)*(rpqtext + 1)) == 'X')) {
 	/* Text has 0x prefix... interpret as hex, no translation */
-	char hexstr[512];	/* more than enough room to copy */
+	char *hexstr = Malloc(strlen(rpqtext));
 	char *p_h;
 	char c;
 	bool is_first_hex_digit;
 
-	p_h = &hexstr[0];
+	p_h = hexstr;
 	/*
 	 * Copy the hex digits from X3270RPQ, removing white
 	 * space, and using all upper case for the hex digits a-f.
@@ -532,24 +469,23 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 		continue;	 /* skip white space */
 	    }
 	    if (!isxdigit((unsigned char)c)) {
-		rpq_warning("RPQ USER term has non-hex character");
+		rpq_warning("RPQ " RPQ_USER_NAME " term has non-hex character");
 		break;
 	    }
 	    x = (p_h - hexstr) / 2;
 	    if (x >= buflen) {
-		x = buflen;
-		rpq_warning("RPQ USER term truncated after %d bytes", x);
-		break; /* too long, truncate */
+		/* Too long. */
+		Free(hexstr);
+		return TR_NOSPACE;
 	    }
 
 	    *p_h++ = c;		/* copy (upper case) character */
 	    *p_h = '\0';	/* keep string properly terminated */
 	}
 	/*
-	 * 'hexstr' is now a character string of 0-9, A-F only,
-	 * (a-f were converted to upper case).
-	 * There may be an odd number of characters, implying a leading
-	 * 0.  The string is also known to fit in the area specified.
+	 * 'hexstr' is now a character string of 0-9, A-F only, (a-f were converted to upper case).
+	 * There may be an odd number of characters, implying a leading 0.
+	 * The string is also known to fit in the area specified.
 	 */
 
 	/*
@@ -558,7 +494,7 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	 */
 	is_first_hex_digit = ((strlen(hexstr) % 2) == 0);
 	if (!is_first_hex_digit) {
-	    rpq_warning("RPQ USER term has odd number of hex digits");
+	    rpq_warning("RPQ " RPQ_USER_NAME " term has odd number of hex digits");
 	}
 	*buf = 0;	/* initialize first byte for possible implied leading zero */
 	for (p_h = &hexstr[0]; *p_h; p_h++) {
@@ -572,7 +508,9 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	    }
 	    is_first_hex_digit = !is_first_hex_digit;
 	}
-	return (strlen(hexstr) + 1) / 2;
+	*lenp = (strlen(hexstr) + 1) / 2;
+	Free(hexstr);
+	return TR_SUCCESS;
     }
 
     /* plain text - subject to ascii/ebcdic translation */
@@ -592,36 +530,35 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
     *sbuf = '\0';
 
     /* Translate multibyte to EBCDIC in the target buffer. */
-    xlen = multibyte_to_ebcdic_string(sbuf0, strlen(sbuf0), buf, buflen,
-	    &error, &truncated);
+    xlen = multibyte_to_ebcdic_string(sbuf0, strlen(sbuf0), buf, buflen, &error, &truncated);
     if (xlen < 0) {
-	rpq_warning("RPQ USER term translation error");
-	if (buflen) {
-	    int consumed;
-
-	    *buf = multibyte_to_ebcdic("?", 1, &consumed, &error);
-	    x = 1;
-	}
+	rpq_warning("RPQ " RPQ_USER_NAME " term translation error");
+	ret = TR_ERROR;
     } else {
 	if (truncated) {
-	    rpq_warning("RPQ USER term truncated");
+	    ret = TR_NOSPACE;
 	}
 	x = xlen;
     }
     Free(sbuf0);
 
-    return x;
+    if (ret == TR_SUCCESS) {
+	*lenp = x;
+    }
+    return ret;
 }
 
-static size_t
-get_rpq_address(unsigned char *buf, const size_t maxlen) 
+/* Fetches the ADDRESS term. */
+static term_result_t
+get_rpq_address(unsigned char *buf, const size_t maxlen, size_t *lenp)
 {
     struct rpq_keyword *kw = find_kw(RPQ_ADDRESS);
     size_t x = 0;
 
+    *lenp = 0;
+
     if (maxlen < 2) {
-	omit_due_space_limit = true;
-	return 0;
+	return TR_NOSPACE;
     }
 
     /* Is there a user override? */
@@ -662,16 +599,15 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 		len = sizeof(struct in6_addr);
 		break;
 	    default:
-		rpq_warning("RPQ ADDRESS term has unrecognized family %u",
-			res->ai_family);
-		break;
+		rpq_warning("RPQ " RPQ_ADDRESS_NAME " term has unrecognized family %u", res->ai_family);
+		return TR_ERROR;
 	    }
 
 	    if (x + len <= maxlen) {
 		x += len;
 		memcpy(buf, src, len);
 	    } else {
-		rpq_warning("RPQ ADDRESS term incomplete due to space limit");
+		return TR_NOSPACE;
 	    }
 	    /* Give back storage obtained by getaddrinfo */
 	    freeaddrinfo(res);
@@ -697,7 +633,8 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	int len = 0;
 
 	if (net_getsockname(&u, &addrlen) < 0) {
-	    return 0;
+	    /* XXX: display error message */
+	    return TR_ERROR;
 	}
 	SET16(buf, u.sa.sa_family);
 	x += 2;
@@ -711,30 +648,72 @@ get_rpq_address(unsigned char *buf, const size_t maxlen)
 	    len = sizeof(struct in6_addr);
 	    break;
 	default:
-	    rpq_warning("RPQ ADDRESS term has unrecognized family %u",
-		    u.sa.sa_family);
-	    break;
+	    rpq_warning("RPQ " RPQ_ADDRESS_NAME " term has unrecognized family %u", u.sa.sa_family);
+	    return TR_ERROR;
 	}
 	if (x + len <= maxlen) {
 	    memcpy(buf, src, len);
 	    x += len;
 	} else {
-	    rpq_warning("RPQ ADDRESS term incomplete due to space limit");
+	    return TR_NOSPACE;
 	}
     }
-    return x;
+    *lenp = x;
+    return TR_SUCCESS;
 }
 
+/* Fetches the VERSION term. */
+static term_result_t
+get_rpq_version(unsigned char *buf, const size_t buflen, size_t *lenp)
+{
+    int nw;
+    enum me_fail error;
+    bool truncated;
+
+    *lenp = 0;
+
+    nw = multibyte_to_ebcdic_string(build_rpq_version, strlen(build_rpq_version), buf, buflen, &error, &truncated);
+    if (truncated) {
+	return TR_NOSPACE;
+    }
+    *lenp = nw;
+    return TR_SUCCESS;
+}
+
+/* Fetches the TIMESTAMP term. */
+static term_result_t
+get_rpq_timestamp(unsigned char *buf, const size_t buflen, size_t *lenp)
+{
+    size_t x = strlen(build_rpq_timestamp);
+    unsigned i;
+    unsigned char *bufp = buf;
+
+    *lenp = 0;
+    if ((x + 1) / 2 > buflen) {
+	return TR_NOSPACE;
+    }
+    for (i = 0; i < x; i += 2) {
+	*bufp++ = ((*(build_rpq_timestamp + i) - '0') << 4) + (*(build_rpq_timestamp + i + 1) - '0');
+    }
+
+    *lenp = bufp - buf;
+    return TR_SUCCESS;
+}
+
+/* Initializes a new cycle of warning messages. */
+static void
+rpq_init_warnings(void)
+{
+    Replace(rpq_warnbuf_prev, rpq_warnbuf);
+    rpq_warnbuf = NULL;
+}
+
+/* Stores a warning message. */
 static void
 rpq_warning(const char *fmt, ...)
 {
     va_list a;
     char *msg;
-
-    /* Only accumulate RPQ warnings if they have not been displayed already. */
-    if (rpq_complained) {
-	return;
-    }
 
     va_start(a, fmt);
     msg = Vasprintf(fmt, a);
@@ -749,13 +728,12 @@ rpq_warning(const char *fmt, ...)
     }
 }
 
+/* Dumps warnings. */
 static void
 rpq_dump_warnings(void)
 {
-    /* If there's something to complain about, only complain once. */
-    if (rpq_warnbuf != NULL) {
+    /* Only complain if different from what was complained about last time. */
+    if (rpq_warnbuf != NULL && (rpq_warnbuf_prev == NULL || strcmp(rpq_warnbuf, rpq_warnbuf_prev))) {
 	popup_an_error("%s", rpq_warnbuf);
-	rpq_complained = true;
-	Replace(rpq_warnbuf, NULL);
     }
 }
