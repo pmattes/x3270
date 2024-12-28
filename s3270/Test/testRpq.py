@@ -183,7 +183,7 @@ class TestS3270RpqNames(cti.cti):
         s3270.wait(timeout=2)
         return res
 
-    def get_ts(self) -> str:
+    def get_timestamp(self) -> str:
         '''Get the build timestamp'''
         timestamp = time.strptime(' '.join(self.s3270quick('Show(version)')[0].split(' ')[2:][:-1]), '%a %b %d %H:%M:%S UTC %Y')
         tsf = f'{timestamp.tm_year:04d}{timestamp.tm_mon:02d}{timestamp.tm_mday:02d}{timestamp.tm_hour:02d}{timestamp.tm_min:02d}{timestamp.tm_sec:02d}'
@@ -230,11 +230,15 @@ class TestS3270RpqNames(cti.cti):
 
     def test_s3270_rpqnames_timestamp(self):
         '''Program build timestamp'''
-        self.s3270_rpqnames(make_rpq(self.get_ts()), rpq='TIMESTAMP')
+        self.s3270_rpqnames(make_rpq(self.get_timestamp()), rpq='TIMESTAMP')
 
     def test_s3270_rpqnames_timezone(self):
         '''Time zone'''
         self.s3270_rpqnames(make_rpq(self.get_timezone()), rpq='TIMEZONE')
+
+    def test_s3270_rpqnames_timezone(self):
+        '''Time zone'''
+        self.s3270_rpqnames(make_rpq(self.get_timezone()), rpq='TIMEZONE:NOTIMEZONE:ALL:NOALL:TIMEZONE')
 
     def test_s3270_rpqnames_timezone_override1(self):
         '''Time zone override, negative offset'''
@@ -259,6 +263,10 @@ class TestS3270RpqNames(cti.cti):
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=1201', stderr_count=1)
 
     def test_s3270_rpqnames_bad_timezone_override4(self):
+        '''Time zone override, garbage after value'''
+        self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=0600 junk!', stderr_count=1)
+
+    def test_s3270_rpqnames_bad_timezone_override4(self):
         '''Time zone override, overflow'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=9999999999999999999999999999999999999999999999999999999999', stderr_count=1)
 
@@ -274,17 +282,34 @@ class TestS3270RpqNames(cti.cti):
 
     def test_s3270_rpqnames_all(self):
         str = self.get_address() + \
-              self.get_ts() + \
+              self.get_timestamp() + \
               self.get_timezone() + \
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='ALL')
 
+    def test_s3270_rpqnames_noall(self):
+        self.s3270_rpqnames(make_rpq(''), rpq='NOALL')
+    
+    def test_s3270_rpqnames_all2(self):
+        str = self.get_address() + \
+              self.get_timestamp() + \
+              self.get_timezone() + \
+              self.get_version()
+        self.s3270_rpqnames(make_rpq(str), rpq='all')
+
     def test_s3270_rpqnames_no(self):
         '''NO form of keywords'''
         str = self.get_address() + \
-              self.get_ts() + \
+              self.get_timestamp() + \
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='ALL:NOTIMEZONE')
+    
+    def test_s3270_rpqnames_no2(self):
+        '''NO form of keywords, mixed case'''
+        str = self.get_address() + \
+              self.get_timestamp() + \
+              self.get_version()
+        self.s3270_rpqnames(make_rpq(str), rpq='AlL:NoTimeZone')
 
     def test_s3270_rpqnames_overflow_user_ebcdic(self):
         '''User override too long, in EBCDIC'''
@@ -333,6 +358,10 @@ class TestS3270RpqNames(cti.cti):
         user = ' a b  '
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'  USER  ={user}:')
 
+    def test_s3270_rpqnames_whitespace3(self):
+        '''White space inside the environment variable, ADDRESS override'''
+        self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '00027f000002')), rpq='ADDRESS = 127.0.0.2 ')
+
     def test_s3270_rpqnames_no_match(self):
         '''No match on term'''
         self.s3270_rpqnames(make_rpq(''), rpq='123', stderr_count=1)
@@ -343,7 +372,15 @@ class TestS3270RpqNames(cti.cti):
 
     def test_s3270_rpqnames_partial_match(self):
         '''Partial match on term'''
-        self.s3270_rpqnames(make_rpq(''), rpq='TIME', stderr_count=1)
+        self.s3270_rpqnames(make_rpq(self.get_timestamp()), rpq='TIME')
+
+    def test_s3270_rpqnames_junk_after(self):
+        '''Something other than = after a term'''
+        self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE*', stderr_count=1)
+
+    def test_s3270_rpqnames_junk(self):
+        '''Something other than a term'''
+        self.s3270_rpqnames(make_rpq(''), rpq='*', stderr_count=1)
 
     def test_s3270_rpqnames_set_basic(self):
         '''Use Set() instread of X3270RPQ'''
