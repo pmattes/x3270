@@ -301,7 +301,7 @@ select_rpq_terms(void)
 		    s++;
 		}
 		if (*s == '=') {
-		    if (rpq_keywords[j].allow_override) {
+		    if (rpq_keywords[j].allow_override && !is_no_form) {
 			rpq_keywords[j].override_offset = s - spec_copy + 1;
 		    } else {
 			rpq_warning("RPQ %s term override ignored", rpq_keywords[j].text);
