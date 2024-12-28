@@ -43,14 +43,17 @@
 #include <assert.h>
 #include "3270ds.h"
 
+#include "appres.h"
 #include "ctlrc.h"
 #include "popups.h"
+#include "resources.h"
 #include "sf.h"	 /* has to come before rpq.h */
 #include "rpq.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
 #include "unicodec.h"
+#include "toggles.h"
 #include "utils.h"
 
 #if defined(_WIN32) /*[*/
@@ -88,7 +91,7 @@ typedef enum {
 typedef term_result_t get_term_fn(unsigned char *buf, const size_t buflen, size_t *len);
 
 /* Statics */
-static bool select_rpq_terms(void);
+static void select_rpq_terms(void);
 static get_term_fn get_rpq_address, get_rpq_timestamp, get_rpq_timezone, get_rpq_user, get_rpq_version;
 static void rpq_warning(const char *fmt, ...);
 static void rpq_init_warnings(void);
@@ -200,7 +203,7 @@ do_qr_rpqnames(void)
 }
 
 /* Selects which terms will be returned in RPQNAMES. */
-static bool
+static void
 select_rpq_terms(void)
 {
     size_t i;
@@ -211,9 +214,23 @@ select_rpq_terms(void)
     char *kw;
     bool is_no_form;
 
-    /* See if the user wants any rpqname self-defining terms returned */
-    if ((x3270rpq = getenv("X3270RPQ")) == NULL) {
-	return false;
+    /* Reinitialize. */
+    for (j = 0; j < NS_RPQ; j++) {
+	rpq_keywords[j].omit = true;
+	rpq_keywords[j].oride = 0;
+    }
+
+    /* See if the user wants any rpqname self-defining terms returned. */
+    if (appres.rpq != NULL) {
+	x3270rpq = appres.rpq;
+    } else if ((x3270rpq = getenv("X3270RPQ")) == NULL) {
+	return;
+    }
+    for (p1 = x3270rpq; *p1 && isspace((unsigned char)*p1); p1++) {
+    }
+    if (!*p1) {
+	x3270rpq = NULL;
+	return;
     }
 
     /*
@@ -223,7 +240,6 @@ select_rpq_terms(void)
      * string so upper/lower case is preserved as necessary.
      */
     uplist = (char *)Malloc(strlen(x3270rpq) + 1);
-    assert(uplist != NULL);
     p1 = uplist;
     p2 = x3270rpq;
     while (*p2) {
@@ -232,6 +248,9 @@ select_rpq_terms(void)
     *p1 = '\0';
 
     for (i = 0; i < strlen(x3270rpq); ) {
+	char *after_kw;
+	size_t kw_len;
+
 	kw = uplist + i;
 	i++;
 	if (isspace((unsigned char)*kw)) {
@@ -264,14 +283,20 @@ select_rpq_terms(void)
 	    }
 	}
 	len = p1 - kw; 
-
-	is_no_form = ((len > 2) && (strncmp("NO", kw, 2) == 0));
+	is_no_form = len > 2 && !strncmp("NO", kw, 2);
 	if (is_no_form) {
 	    kw += 2;		/* skip "NO" prefix for matching keyword */
 	    len -= 2;		/* adjust keyword length */
 	}
+
+	after_kw = kw;
+	while (isupper((unsigned char)*after_kw)) {
+	    after_kw++;
+	}
+	kw_len = (size_t)(after_kw - kw);
+
 	for (j = 0; j < NS_RPQ; j++) {
-	    if (strncmp(kw, rpq_keywords[j].text, len) == 0) {
+	    if (kw_len == strlen(rpq_keywords[j].text) && !strncmp(kw, rpq_keywords[j].text, kw_len)) {
 		rpq_keywords[j].omit = is_no_form;
 		while (*p1 && isspace((unsigned char)*p1)) {
 		    p1++;
@@ -280,15 +305,16 @@ select_rpq_terms(void)
 		    if (rpq_keywords[j].allow_oride) {
 			rpq_keywords[j].oride = p1 - uplist + 1;
 		    } else {
-			rpq_warning("RPQ %s term override ignored", p1);
+			rpq_warning("RPQ %s term override ignored", rpq_keywords[j].text);
 		    }
 		}
 		break;
 	    }
 	}
+
 	if (j >= NS_RPQ) {
 	    /* unrecognized keyword... */
-	    if (strcmp(kw,"ALL") == 0) {
+	    if (!strcmp(kw, "ALL")) {
 		for (k = 0; k < NS_RPQ; k++) {
 		    rpq_keywords[k].omit = is_no_form;
 		}
@@ -299,18 +325,6 @@ select_rpq_terms(void)
     }
 
     Free(uplist);
-
-    /*
-     * Return to caller with indication (T/F) of any items 
-     * to be selected (T) or are all terms suppressed? (F)
-     */
-    for (i = 0; i < NS_RPQ; i++) {
-	if (!rpq_keywords[i].omit) {
-	    return true;
-	}
-    }
-
-    return false;
 }
 
 /* Locates a keyword table entry by ID. */
@@ -736,4 +750,20 @@ rpq_dump_warnings(void)
     if (rpq_warnbuf != NULL && (rpq_warnbuf_prev == NULL || strcmp(rpq_warnbuf, rpq_warnbuf_prev))) {
 	popup_an_error("%s", rpq_warnbuf);
     }
+}
+
+
+/* Toggle the value of rpq. */
+static toggle_upcall_ret_t
+toggle_rpq(const char *name, const char *value, unsigned flags, ia_t ia)
+{
+    Replace(appres.rpq, NewString(value));
+    return TU_SUCCESS;
+}
+
+/* Module registration. */
+void
+rpq_register(void)
+{
+    register_extended_toggle(ResRpq, toggle_rpq, NULL, NULL, (void **)&appres.rpq, XRM_STRING);
 }

@@ -86,6 +86,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "rpq.h"
 #include "s3270_proto.h"
 #include "save_restore.h"
 #include "screen.h"
@@ -642,6 +643,7 @@ main(int argc, char *argv[])
     vstatus_register();
     prefer_register();
     telnet_new_environ_register();
+    rpq_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);

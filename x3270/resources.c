@@ -124,6 +124,8 @@ XtResource resources[] = {
       offset(min_version), XtRString, 0 },
     { ResCookieFile, ClsCookieFile, XtRString, sizeof(String),
       offset(cookie_file), XtRString, 0 },
+    { ResRpq, ClsRpq, XtRString, sizeof(char *),
+      offset(rpq), XtRString, 0 },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },

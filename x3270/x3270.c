@@ -77,6 +77,7 @@
 #include "query.h"
 #include "resolver.h"
 #include "resourcesc.h"
+#include "rpq.h"
 #include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
@@ -544,6 +545,7 @@ main(int argc, char *argv[])
     vstatus_register();
     prefer_register();
     telnet_new_environ_register();
+    rpq_register();
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/
