@@ -203,83 +203,87 @@ class TestS3270RpqNames(cti.cti):
         '''Get the address'''
         return add_len(RpqName.Address.encode() + ('000a00000000000000000000000000000001' if ipv6 else '00027f000001'))
 
-    # s3270 RPQNAMES test
+    # Default, no fields
     def test_s3270_rpqnames(self):
-        '''Default, no fields.'''
         self.s3270_rpqnames(make_rpq(''))
 
+    # IPv4 address
     def test_s3270_rpqnames_address(self):
-        '''IPv4 address'''
         self.s3270_rpqnames(make_rpq(self.get_address()), rpq='ADDRESS')
 
+    # IPv6 address
     def test_s3270_rpqnames_address_ipv6(self):
-        '''IPv6 address'''
         self.s3270_rpqnames(make_rpq(self.get_address(ipv6=True)), rpq='ADDRESS', ipv6=True)
 
+    # IPv4 address override
     def test_s3270_rpqnames_address_override(self):
-        '''IPv4 address override'''
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '000201020304')), rpq='ADDRESS=1.2.3.4')
 
+    # IPv6 address override
     def test_s3270_rpqnames_address_override_ipv6(self):
-        '''IPv6 address override'''
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '000a00010002000300000000000000000004')), rpq=r'ADDRESS=1\:2\:3\:\:4')
 
+    # Program version
     def test_s3270_rpqnames_version(self):
-        '''Program version'''
         self.s3270_rpqnames(make_rpq(self.get_version()), rpq='VERSION')
 
+    # Program build timestamp
     def test_s3270_rpqnames_timestamp(self):
-        '''Program build timestamp'''
         self.s3270_rpqnames(make_rpq(self.get_timestamp()), rpq='TIMESTAMP')
 
+    # Time zone
     def test_s3270_rpqnames_timezone(self):
-        '''Time zone'''
         self.s3270_rpqnames(make_rpq(self.get_timezone()), rpq='TIMEZONE')
 
+    # Time zone, with lots of contradictory noise beforehand
     def test_s3270_rpqnames_timezone(self):
-        '''Time zone'''
         self.s3270_rpqnames(make_rpq(self.get_timezone()), rpq='TIMEZONE:NOTIMEZONE:ALL:NOALL:TIMEZONE')
 
+    # Time zone override, negative offset
     def test_s3270_rpqnames_timezone_override1(self):
-        '''Time zone override, negative offset'''
         tz = -(60 * 6) & 0xffff
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Timezone.encode() + f'{tz:04x}')), rpq='TIMEZONE=-0600')
 
+    # Time zone override, positive offset
     def test_s3270_rpqnames_timezone_override2(self):
-        '''Time zone override, positive offset'''
         tz = (60 * 6) & 0xffff
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Timezone.encode() + f'{tz:04x}')), rpq='TIMEZONE=0600')
 
+    # Time zone override, nonsense text
     def test_s3270_rpqnames_bad_timezone_override1(self):
-        '''Time zone override, nonsense text'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=fred', stderr_count=1)
 
+    # Time zone override, minutes > 59
     def test_s3270_rpqnames_bad_timezone_override2(self):
-        '''Time zone override, minutes > 59'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=0099', stderr_count=1)
 
+    # Time zone override, more than 12 hours
     def test_s3270_rpqnames_bad_timezone_override3(self):
-        '''Time zone override, more than 12 hours'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=1201', stderr_count=1)
 
+    # Time zone override, garbage after value
     def test_s3270_rpqnames_bad_timezone_override4(self):
-        '''Time zone override, garbage after value'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=0600 junk!', stderr_count=1)
 
+    # Time zone override, overflow
     def test_s3270_rpqnames_bad_timezone_override4(self):
-        '''Time zone override, overflow'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=9999999999999999999999999999999999999999999999999999999999', stderr_count=1)
 
+    # Time zone specifying NO form and override
+    def test_s3270_rpqnames_bad_timezone_override5(self):
+        self.s3270_rpqnames(make_rpq(''), rpq='NOTIMEZONE=-0600', stderr_count=1)
+
+    # User override in hex
     def test_s3270_rpqnames_user_override_hex(self):
-        '''User override in hex'''
         hex_user = '010203'
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + hex_user)), rpq=f'USER=0x{hex_user}')
 
+    # User override in EBCDIC
     def test_s3270_rpqnames_user_override_ebcdic(self):
-        '''User override in EBCDIC'''
         user = 'bob'
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'USER={user}')
 
+    # ALL meaning everything
     def test_s3270_rpqnames_all(self):
         str = self.get_address() + \
               self.get_timestamp() + \
@@ -287,9 +291,11 @@ class TestS3270RpqNames(cti.cti):
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='ALL')
 
+    # NOALL meaning nothing
     def test_s3270_rpqnames_noall(self):
         self.s3270_rpqnames(make_rpq(''), rpq='NOALL')
     
+    # ALL in lowercase
     def test_s3270_rpqnames_all2(self):
         str = self.get_address() + \
               self.get_timestamp() + \
@@ -297,48 +303,48 @@ class TestS3270RpqNames(cti.cti):
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='all')
 
+    # NO form or keywords
     def test_s3270_rpqnames_no(self):
-        '''NO form of keywords'''
         str = self.get_address() + \
               self.get_timestamp() + \
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='ALL:NOTIMEZONE')
     
+    # NO form of keywords, mixed case
     def test_s3270_rpqnames_no2(self):
-        '''NO form of keywords, mixed case'''
         str = self.get_address() + \
               self.get_timestamp() + \
               self.get_version()
         self.s3270_rpqnames(make_rpq(str), rpq='AlL:NoTimeZone')
 
+    # User override too long, in EBCDIC
     def test_s3270_rpqnames_overflow_user_ebcdic(self):
-        '''User override too long, in EBCDIC'''
         user = ''.join(['x' for x in range(1, 512)])
         self.s3270_rpqnames(make_rpq(''), rpq=f'USER={user}', stderr_count=1)
 
+    # User override too long, in hex
     def test_s3270_rpqnames_overflow_user_hex(self):
-        '''User override too long, in hex'''
         user = ''.join([f'{x:02x}' for x in range(0, 256)])
         self.s3270_rpqnames(make_rpq(''), rpq=f'USER=0x{user}', stderr_count=1)
 
+    # User override, garbage value in hex
     def test_s3270_rpqnames_bad_user_hex(self):
-        '''User override, garbage value in hex'''
         user = '0a0b0c'
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + user)), rpq=f'USER=0x{user}J', stderr_count=1)
 
+    # Overflow with field suppressed
     def test_s3270_rpqnames_overflow(self):
-        '''Overflow with field suppressed'''
         # Because the fields are always processed in order, the code has lots of untestable logic around space overflows.
         # The one case that's actually possible is if there is a USER field that fills the buffer, followed by the VERSION field.
         user = ''.join(['x' for x in range(1, 247)])
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'USER={user}:VERSION', stderr_count=1)
 
+    # Multiple RPQNAMES generation attempts, verifying error messages are not repeated
     def test_s3270_rpqnames_single_errmsg(self):
-        '''Multiple RPQNAMES generation attempts, verifying error messages are not repeated'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE=fred', stderr_count=1, twice_same_session=True)
 
+    # Overflow with VERSION field suppressed, works with v4, fails with v6, uses more-generic infra
     def test_s3270_rpqnames_changed_errmsg(self):
-        '''Overflow with VERSION field suppressed, works with v4, fails with v6, uses more-generic infra'''
         user = ''.join(['x' for x in range(1, 220)])
         rpq = 'ADDRESS:USER=' + user + ':VERSION'
         # With and IPv4 address, there is room for the VERSION. With an IPv6 address, there is not.
@@ -348,46 +354,46 @@ class TestS3270RpqNames(cti.cti):
             [{ 'reply': reply_v4, 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': None },
              { 'reply': reply_v6, 'ipv6': True, 'stderr_count': 1, 'twice_same_session': False, 'set_value': None }])
 
+    # White space inside the environment variable, should be ignored
     def test_s3270_rpqnames_whitespace1(self):
-        '''White space inside the environment variable, should be ignored'''
         tz = -(60 * 6) & 0xffff
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Timezone.encode() + f'{tz:04x}')), rpq='  TIMEZONE  =  -0600  ')
 
+    # White space inside the environment variable, *not* ignored for USER after the =
     def test_s3270_rpqnames_whitespace2(self):
-        '''White space inside the environment variable, *not* ignored for USER after the ='''
         user = ' a b  '
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'  USER  ={user}:')
 
+    # White space inside the environment variable, ADDRESS override
     def test_s3270_rpqnames_whitespace3(self):
-        '''White space inside the environment variable, ADDRESS override'''
         self.s3270_rpqnames(make_rpq(add_len(RpqName.Address.encode() + '00027f000002')), rpq='ADDRESS = 127.0.0.2 ')
 
+    # No match on term
     def test_s3270_rpqnames_no_match(self):
-        '''No match on term'''
         self.s3270_rpqnames(make_rpq(''), rpq='123', stderr_count=1)
 
+    # Term is NO with nothing following
     def test_s3270_rpqnames_no_no(self):
-        '''Term is NO with nothing following'''
         self.s3270_rpqnames(make_rpq(''), rpq='NO', stderr_count=1)
 
+    # Partial match on term
     def test_s3270_rpqnames_partial_match(self):
-        '''Partial match on term'''
         self.s3270_rpqnames(make_rpq(self.get_timestamp()), rpq='TIME')
 
+    # Something other than = after a term
     def test_s3270_rpqnames_junk_after(self):
-        '''Something other than = after a term'''
         self.s3270_rpqnames(make_rpq(''), rpq='TIMEZONE*', stderr_count=1)
 
+    # Something other than a term
     def test_s3270_rpqnames_junk(self):
-        '''Something other than a term'''
         self.s3270_rpqnames(make_rpq(''), rpq='*', stderr_count=1)
 
+    # Use Set() instread of X3270RPQ
     def test_s3270_rpqnames_set_basic(self):
-        '''Use Set() instread of X3270RPQ'''
         self.s3270_rpqnames(make_rpq(self.get_version()), rpq='Blorf!', set_value='VERSION')
 
+    # Use Set() to test several combinations and errors
     def test_s3270_rpqnames_set_multi(self):
-        '''Use Set() to test several combinations and errors'''
         timezone_reply = self.get_timezone()
         address_reply = self.get_address()
         user='fred'
@@ -398,8 +404,8 @@ class TestS3270RpqNames(cti.cti):
              { 'reply': make_rpq(user_reply), 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': f'USER={user}' },
              { 'reply': make_rpq(''), 'ipv6': False, 'stderr_count': 1, 'twice_same_session': False, 'set_value': '123' }])
 
+    # Make sure the command-line option works
     def test_s3270_rpqnames_set_see(self):
-        '''Make sure the command-line option works'''
         s3270 = Popen(cti.vgwrap(['s3270', '-set', 'rpq=foo']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.children.append(s3270)
 
