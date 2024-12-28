@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2022 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -73,6 +73,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "rpq.h"
 #include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
@@ -221,6 +222,7 @@ main(int argc, char *argv[])
     vstatus_register();
     prefer_register();
     telnet_new_environ_register();
+    rpq_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

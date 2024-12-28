@@ -28,7 +28,6 @@
 # s3270 RPQNAMES tests
 
 from enum import IntEnum
-import itertools
 import os
 from subprocess import Popen, PIPE, DEVNULL
 import requests
@@ -66,23 +65,33 @@ class RpqName(IntEnum):
 
 def split_list(input_list, match):
     '''Split a list by a match'''
-    output = []
-    for k, g in itertools.groupby(input_list, lambda x: x != match):
-        if k:
-            output.append(list(g))
+    result = []
+    accum = None
+    for elt in input_list:
+        if elt == match:
+            if accum == None:
+                accum = []
+            result.append(accum)
+            accum = []
         else:
-            output.append([])
-    return output
+            if accum == None:
+                accum = [elt]
+            else:
+                accum.append(elt)
+    if accum != None:
+        result.append(accum)
+    return result
         
 class TestS3270RpqNames(cti.cti):
 
     # s3270 RPQNAMES test, multi-session
     def s3270_rpqnames_multi_session(self, rpq: str, sessions):
-        '''Test with multiple sessions, tuples provide reply, v6, stderr_count, twice_same_session'''
+        '''Test with multiple sessions, dicts provide reply, v6, stderr_count, twice_same_session, set_value'''
 
         # Start s3270.
         env = os.environ
-        env['X3270RPQ'] = rpq
+        if rpq != None:
+            env['X3270RPQ'] = rpq
         s3270 = Popen(cti.vgwrap(['s3270']), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
         self.children.append(s3270)
 
@@ -105,6 +114,9 @@ class TestS3270RpqNames(cti.cti):
                 ts.close()
 
                 # Connect s3270 to playback.
+                set_value = t['set_value']
+                if set_value != None:
+                    s3270.stdin.write(f'Set(rpq,{set_value})'.encode())
                 loopback = '[::1]' if ipv6 else '127.0.0.1'
                 s3270.stdin.write(f'Open(c:{loopback}:{port})\n'.encode())
                 s3270.stdin.flush()
@@ -145,16 +157,17 @@ class TestS3270RpqNames(cti.cti):
         # Split the errors.
         if len(sessions) > 1:
             split_stderr = split_list(stderr, delimiter + b'\n')
+            # print('sessions', sessions, 'stderr', stderr, 'split_stderr', split_stderr)
             self.assertEqual(len(sessions), len(split_stderr))
             self.assertSequenceEqual([t['stderr_count'] for t in sessions], [len(t) for t in split_stderr])
         else:
             self.assertEqual(sessions[0]['stderr_count'], len(stderr))
 
     # s3270 RPQNAMES test, single session
-    def s3270_rpqnames(self, reply: str, rpq='', ipv6=False, stderr_count=0, twice_same_session=False):
+    def s3270_rpqnames(self, reply: str, rpq='', ipv6=False, stderr_count=0, twice_same_session=False, set_value=None):
 
         self.s3270_rpqnames_multi_session(rpq,
-            [{'reply': reply, 'ipv6': ipv6, 'stderr_count': stderr_count, 'twice_same_session': twice_same_session}])
+            [{'reply': reply, 'ipv6': ipv6, 'stderr_count': stderr_count, 'twice_same_session': twice_same_session, 'set_value': set_value}])
 
     def s3270quick(self, action:str):
         '''Get the output of an s3270 action'''
@@ -307,8 +320,8 @@ class TestS3270RpqNames(cti.cti):
         reply_v4 = make_rpq(self.get_address() + add_len(RpqName.User.encode() + ebcdic(user)) + self.get_version())
         reply_v6 = make_rpq(self.get_address(ipv6=True) + add_len(RpqName.User.encode() + ebcdic(user)))
         self.s3270_rpqnames_multi_session(rpq,
-            [{ 'reply': reply_v4, 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False },
-             { 'reply': reply_v6, 'ipv6': True, 'stderr_count': 1, 'twice_same_session': False }])
+            [{ 'reply': reply_v4, 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': None },
+             { 'reply': reply_v6, 'ipv6': True, 'stderr_count': 1, 'twice_same_session': False, 'set_value': None }])
 
     def test_s3270_rpqnames_whitespace1(self):
         '''White space inside the environment variable, should be ignored'''
@@ -319,6 +332,60 @@ class TestS3270RpqNames(cti.cti):
         '''White space inside the environment variable, *not* ignored for USER after the ='''
         user = ' a b  '
         self.s3270_rpqnames(make_rpq(add_len(RpqName.User.encode() + ebcdic(user))), rpq=f'  USER  ={user}:')
+
+    def test_s3270_rpqnames_no_match(self):
+        '''No match on term'''
+        self.s3270_rpqnames(make_rpq(''), rpq='123', stderr_count=1)
+
+    def test_s3270_rpqnames_no_no(self):
+        '''Term is NO with nothing following'''
+        self.s3270_rpqnames(make_rpq(''), rpq='NO', stderr_count=1)
+
+    def test_s3270_rpqnames_partial_match(self):
+        '''Partial match on term'''
+        self.s3270_rpqnames(make_rpq(''), rpq='TIME', stderr_count=1)
+
+    def test_s3270_rpqnames_set_basic(self):
+        '''Use Set() instread of X3270RPQ'''
+        self.s3270_rpqnames(make_rpq(self.get_version()), rpq='Blorf!', set_value='VERSION')
+
+    def test_s3270_rpqnames_set_multi(self):
+        '''Use Set() to test several combinations and errors'''
+        timezone_reply = self.get_timezone()
+        address_reply = self.get_address()
+        user='fred'
+        user_reply = add_len(RpqName.User.encode() + ebcdic(user))
+        self.s3270_rpqnames_multi_session('fred',
+            [{ 'reply': make_rpq(timezone_reply), 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': 'TIMEZONE' },
+             { 'reply': make_rpq(address_reply + timezone_reply), 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': 'ADDRESS:TIMEZONE' },
+             { 'reply': make_rpq(user_reply), 'ipv6': False, 'stderr_count': 0, 'twice_same_session': False, 'set_value': f'USER={user}' },
+             { 'reply': make_rpq(''), 'ipv6': False, 'stderr_count': 1, 'twice_same_session': False, 'set_value': '123' }])
+
+    def test_s3270_rpqnames_set_see(self):
+        '''Make sure the command-line option works'''
+        s3270 = Popen(cti.vgwrap(['s3270', '-set', 'rpq=foo']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.children.append(s3270)
+
+        # Push some commands to s3270.
+        s3270.stdin.write(b'Set(rpq)\n')
+        s3270.stdin.write(b'Set(rpq,bar)\n')
+        s3270.stdin.write(b'Set(rpq)\n')
+
+        # Wait for s3270 to exit.
+        s3270.stdin.write(b"Quit()\n")
+        s3270.stdin.flush()
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+        # Check stdout and stderr.
+        stdout = s3270.stdout.readlines()
+        result = [x for x in stdout if x.startswith(b'data: ')]
+        self.assertEqual([b'data: foo\n', b'data: bar\n'], result)
+        s3270.stdout.close()
+
+        stderr = s3270.stderr.readlines()
+        self.assertEqual([], stderr)
+        s3270.stderr.close()
 
 if __name__ == '__main__':
     unittest.main()

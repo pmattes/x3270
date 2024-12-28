@@ -30,6 +30,11 @@
  *		Global declarations for sf.c.
  */
 
+#if !defined(_SF_H_) /*[*/
+# define _SF_H_ 1
+
 typedef void qr_single_fn_t(void);
 
 enum pds write_structured_field(unsigned char buf[], size_t buflen);
+
+#endif /*]*/

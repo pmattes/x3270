@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013, 2015 Paul Mattes.
+ * Copyright (c) 2005-2024 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -33,4 +33,7 @@
  *
  */
 
+#include "sf.h"
+
 extern qr_single_fn_t do_qr_rpqnames;
+extern void rpq_register(void);

@@ -113,6 +113,7 @@ typedef struct {
     bool	 tls992;
     char	*cookie_file;
     bool	 ut_env;
+    char	*rpq;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];

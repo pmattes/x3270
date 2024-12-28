@@ -84,6 +84,7 @@
 #include "proxy.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "rpq.h"
 #include "save_restore.h"
 #include "screen.h"
 #include "selectc.h"
@@ -582,6 +583,7 @@ main(int argc, char *argv[])
     vstatus_register();
     prefer_register();
     telnet_new_environ_register();
+    rpq_register();
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);

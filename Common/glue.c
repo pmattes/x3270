@@ -935,6 +935,7 @@ static res_t base_resources[] = {
     { ResTls992,	aoffset(tls992),	XRM_BOOLEAN },
     { ResCookieFile,	aoffset(cookie_file), 	XRM_STRING },
     { ResUtEnv,		aoffset(ut_env),	XRM_BOOLEAN },
+    { ResRpq,		aoffset(rpq),		XRM_STRING },
 };
 
 typedef struct reslist {
