@@ -584,6 +584,7 @@ Fail_action(ia_t ia, unsigned argc, const char **argv)
 		async_fail_msg = NewString("Failed");
 	    }
 	    async_fail_id = AddTimeOut(0, async_fail);
+	    return true;
 	} else {
 	    char *c = argcat(argc, argv);
 
