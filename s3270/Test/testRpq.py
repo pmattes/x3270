@@ -237,11 +237,11 @@ class TestS3270RpqNames(cti.cti):
         self.s3270_rpqnames(rpq.make_rpq(''), rpq='TIMEZONE=0600 junk!', stderr_count=1)
 
     # Time zone override, overflow
-    def test_s3270_rpqnames_bad_timezone_override4(self):
+    def test_s3270_rpqnames_bad_timezone_override5(self):
         self.s3270_rpqnames(rpq.make_rpq(''), rpq='TIMEZONE=9999999999999999999999999999999999999999999999999999999999', stderr_count=1)
 
     # Time zone specifying NO form and override
-    def test_s3270_rpqnames_bad_timezone_override5(self):
+    def test_s3270_rpqnames_bad_timezone_override6(self):
         self.s3270_rpqnames(rpq.make_rpq(''), rpq='NOTIMEZONE=-0600', stderr_count=1)
 
     # User override in hex
