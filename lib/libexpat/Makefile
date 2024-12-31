@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2022 Paul Mattes.
+# Copyright (c) 2016-2024 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,8 @@ objdir = ../../obj/win64/libexpat
 else
 objdir = ../../obj/win32/libexpat
 endif
-srcdir = ../../extern/libexpat/expat
+extern = ../../extern
+srcdir = $(extern)/libexpat/expat
 top = ../../..
 this = $(top)/lib/libexpat
 
@@ -50,5 +51,17 @@ clobber: $(objdir)
 $(objdir):
 	mkdir -p $(objdir)
 
+EXPAT_VERSION = R_2_4_8
+zip = $(EXPAT_VERSION).zip
+# If this is a git repo, init the libexpat submodule. Otherwise, get
+# the libexpat tarball from github.
 $(srcdir):
-	git submodule update --init ../../extern/libexpat
+	if [ -f $(top)/.git ]; \
+	then	git submodule update --init $(extern)/libexpat; \
+	else	tmpdir=/tmp/expat$$$$; \
+		mkdir $$tmpdir && \
+		wget -P $$tmpdir https://github.com/libexpat/libexpat/archive/refs/tags/$(zip) && \
+		unzip -d $$tmpdir $$tmpdir/$(zip) -x libexpat-$(EXPAT_VERSION)/README.md && \
+		mv $$tmpdir/libexpat-$(EXPAT_VERSION)/* $(extern)/libexpat && \
+		rm -rf $$tmpdir; \
+	fi
