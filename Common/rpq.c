@@ -199,8 +199,8 @@ do_qr_rpqnames(void)
 	    if (term_result == TR_SUCCESS) {
 		trace_ds("%s%s%s", sep, kw->text, kw->override_offset? "=": "");
 		sep = ",";
-		*obptr++ = TERM_PREFIX_SIZE + term_len;		/* length of term */
-		*obptr++ = kw->id;			/* term ID */
+		*obptr++ = (unsigned char)(TERM_PREFIX_SIZE + term_len); /* length of term */
+		*obptr++ = kw->id;				/* term ID */
 		obptr += term_len;				/* jump over term contents */
 		remaining -= TERM_PREFIX_SIZE + term_len;	/* account for space taken */
 	    } else {
@@ -723,7 +723,7 @@ get_rpq_address(unsigned char *buf, const size_t maxlen, size_t *lenp)
 static term_result_t
 get_rpq_version(unsigned char *buf, const size_t buflen, size_t *lenp)
 {
-    int nw;
+    ssize_t nw;
     enum me_fail error;
     bool truncated;
 

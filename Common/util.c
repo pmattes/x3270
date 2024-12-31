@@ -1109,7 +1109,7 @@ ts_value(const char *s, enum ts *tsp)
     *tsp = TS_AUTO;
 
     if (s != NULL && s[0]) {
-	int sl = strlen(s);
+	size_t sl = strlen(s);
 
 	if (!strncasecmp(s, ResTrue, sl)) {
 	    *tsp = TS_ON;
