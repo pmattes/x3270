@@ -172,6 +172,7 @@ libexpat-32:
 	cd lib/libexpat && $(MAKE)
 libexpat-64:
 	cd lib/libexpat && $(MAKE) WIN64=1
+.NOTPARALLEL: libexpat@WIN32_SUFFIX@ libexpat@WIN64_SUFFIX@
 c3270: lib3270 lib3270i lib32xx
 	cd c3270 && $(MAKE)
 s3270: lib3270 lib32xx
