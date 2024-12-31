@@ -30,6 +30,7 @@
     <ClCompile Include="..\..\Common\model.c" />
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\nvt.c" />
+    <ClCompile Include="..\..\Common\output.c" />
     <ClCompile Include="..\..\Common\print_screen.c" />
     <ClCompile Include="..\..\Common\query.c" />
     <ClCompile Include="..\..\Common\readres.c" />
