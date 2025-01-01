@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -393,6 +393,7 @@ class TestS3270Tls(cti.cti):
         self.vgwait(s3270)
 
     # s3270 TLS security level test
+    @unittest.skipIf(sys.platform.startswith('win'), 'security level is POSIX-specific')
     def test_s3270_tls_security_level(self):
 
         # Start a server to read s3270's output.
@@ -430,6 +431,7 @@ class TestS3270Tls(cti.cti):
         self.vgwait(s3270)
 
     # s3270 TLS security level test failure
+    @unittest.skipIf(sys.platform.startswith('win'), 'security level is POSIX-specific')
     def test_s3270_tls_security_level_fail(self):
 
         # Start a server to read s3270's output.

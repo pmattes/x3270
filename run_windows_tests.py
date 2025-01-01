@@ -40,12 +40,6 @@ def run_gcc_tests():
     if build and os.system('make windows') != 0:
         exit(1)
 
-    # Run the library tests.
-    if 'lib' in dirs:
-        dirs.remove('lib')
-        if os.system('make windows-lib-test') != 0:
-            exit(1)
-
     # Set the path.
     if os.path.exists('obj\\win64'):
         obj = 'obj\\win64'
@@ -56,8 +50,18 @@ def run_gcc_tests():
         exit(1)
     os.environ['PATH'] = ';'.join([os.getcwd() + '\\' + obj + '\\' + dir for dir in dirs] + [os.environ['PATH']])
 
+    if 'PYTESTS' in os.environ:
+        cmd = sys.executable + ' -m unittest ' + verbose_flag + ' ' + os.environ['PYTESTS']
+    else:
+        # Run the library tests.
+        if 'lib' in dirs:
+            dirs.remove('lib')
+            if os.system('make windows-lib-test') != 0:
+                exit(1)
+
+        cmd = sys.executable + ' -m unittest ' + verbose_flag + ' ' + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs])
+
     # Run the tests.
-    cmd = sys.executable + ' -m unittest ' + verbose_flag + ' ' + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs])
     os.system(cmd)
 
 # Run Visual Studio tests.

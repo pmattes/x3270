@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,9 @@ class TestS3270Cookie(cti.cti):
     def test_s3270_s3270_cookie(self):
 
         port, ts = cti.unused_port()
-        with tempfile.NamedTemporaryFile() as tf:
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+
+            tf_name = tf.name
 
             # Start s3270.
             s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
@@ -110,12 +112,15 @@ class TestS3270Cookie(cti.cti):
 
         # Wait for the processes to exit.
         self.vgwait(s3270)
+        os.unlink(tf_name)
 
     # s3270 HTTP cookie test
     def test_s3270_http_cookie(self):
 
         port, ts = cti.unused_port()
-        with tempfile.NamedTemporaryFile() as tf:
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+
+            tf_name = tf.name
 
             # Start s3270.
             s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
@@ -150,28 +155,31 @@ class TestS3270Cookie(cti.cti):
             # Stop.
             r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()', cookies={"x3270-security": cookie})
 
+        os.unlink(tf_name)
+
         # Wait for the processes to exit.
         self.vgwait(s3270)
+
     
     # s3270 s3270-mode cookie test with a file that does not exist yet.
     def test_s3270_s3270_cookie_create_file(self):
 
         port, ts = cti.unused_port()
-        tf = tempfile.mktemp()
+        tf = tempfile.NamedTemporaryFile(delete=False)
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf]), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
 
         # Make sure s3270 creates and puts something in the file. Then read the cookie from it.
-        self.try_until(lambda: os.path.exists(tf) and os.path.getsize(tf) > 0, 2, 's3270 did not write to the cookie file')
-        with open(tf, 'r') as cookiefile:
+        self.try_until(lambda: os.path.exists(tf.name) and os.path.getsize(tf.name) > 0, 2, 's3270 did not write to the cookie file')
+        with open(tf.name, 'r') as cookiefile:
             cookie = cookiefile.read()
 
         # Except on Windows, make sure the file has 0400 permissions now.
         if not sys.platform.startswith('win'):
-            s = os.stat(tf)
+            s = os.stat(tf.name)
             self.assertEqual(0o400, (s.st_mode & 0o777))
 
         # Try an s3270 protocol command without specifying a cookie.
@@ -193,13 +201,16 @@ class TestS3270Cookie(cti.cti):
         # Wait for the processes to exit.
         self.vgwait(s3270)
 
-        os.unlink(tf)
+        tf.close()
+        os.unlink(tf.name)
     
     # s3270 s3270-mode cookie test with a file that we create and fill in
     def test_s3270_s3270_cookie_filled(self):
 
         port, ts = cti.unused_port()
-        with tempfile.NamedTemporaryFile() as tf:
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+
+            tf_name = tf.name
 
             # Generate a cookie.
             cookie = random_word(10)
@@ -238,12 +249,15 @@ class TestS3270Cookie(cti.cti):
 
         # Wait for the processes to exit.
         self.vgwait(s3270)
+        os.unlink(tf_name)
 
     # s3270 s3270-mode cookie test with a file that we create and fill in with a bad cookie value.
     def s3270_s3270_cookie_filled_wrong(self, contents: str):
 
         port, ts = cti.unused_port()
-        with tempfile.NamedTemporaryFile() as tf:
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+
+            tf_name = tf.name
 
             # Write it into the temporary file.
             fd = os.open(tf.name, os.O_WRONLY)
@@ -261,6 +275,7 @@ class TestS3270Cookie(cti.cti):
         errmsg = s3270.stderr.readlines()
         s3270.stderr.close()
         self.assertTrue(b'invalid cookie' in errmsg[0])
+        os.unlink(tf_name)
     
     def test_s3270_s3270_cookie_filled_wrong_char(self):
         self.s3270_s3270_cookie_filled_wrong(',')
