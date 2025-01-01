@@ -110,7 +110,7 @@ class TestS3270RpqNames(cti.cti):
                 ret = p.send_tm()
 
                 if t['twice_same_session']:
-                    p.send_records(1, send_tm=False)
+                    p.send_records(1)
 
                 # Parse the response.
                 prefix = ret[:10]
