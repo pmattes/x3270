@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -110,7 +110,10 @@ class TestS3270MultiLine(cti.cti):
         while True:
             r, _, _ = select.select([s], [], [], 5)
             self.assertNotEqual([], r)
-            blob = s.recv(1024)
+            try:
+                blob = s.recv(1024)
+            except ConnectionResetError:
+                blob = b''
             if len(blob) == 0:
                 break
             output += blob
@@ -151,7 +154,10 @@ class TestS3270MultiLine(cti.cti):
         while True:
             r, _, _ = select.select([s], [], [], 5)
             self.assertNotEqual([], r)
-            blob = s.recv(1024)
+            try:
+                blob = s.recv(1024)
+            except ConnectionResetError:
+                blob = b''
             if len(blob) == 0:
                 break
             output += blob

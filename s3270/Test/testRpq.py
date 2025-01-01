@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 import os
 from subprocess import Popen, PIPE, DEVNULL
 import requests
+import sys
 import time
 import unittest
 
@@ -55,8 +56,12 @@ def split_list(input_list, match):
     if accum != None:
         result.append(accum)
     return result
-        
+
+# Define the AF value for IPv6.
+v6family = '17' if sys.platform.startswith('win') else '0a'
+
 class TestS3270RpqNames(cti.cti):
+
 
     # s3270 RPQNAMES test, multi-session
     def s3270_rpqnames_multi_session(self, rpq: str, sessions):
@@ -128,7 +133,7 @@ class TestS3270RpqNames(cti.cti):
 
         # Split the errors.
         if len(sessions) > 1:
-            split_stderr = split_list(stderr, delimiter + b'\n')
+            split_stderr = split_list(stderr, delimiter + os.linesep.encode())
             # print('sessions', sessions, 'stderr', stderr, 'split_stderr', split_stderr)
             self.assertEqual(len(sessions), len(split_stderr))
             self.assertSequenceEqual([t['stderr_count'] for t in sessions], [len(t) for t in split_stderr])
@@ -172,7 +177,7 @@ class TestS3270RpqNames(cti.cti):
 
     def get_address(self, ipv6=False) -> str:
         '''Get the address'''
-        return rpq.add_len(rpq.RpqName.Address.encode() + ('000a00000000000000000000000000000001' if ipv6 else '00027f000001'))
+        return rpq.add_len(rpq.RpqName.Address.encode() + ('00' + v6family + '00000000000000000000000000000001' if ipv6 else '00027f000001'))
 
     # Default, no fields
     def test_s3270_rpqnames(self):
@@ -192,7 +197,7 @@ class TestS3270RpqNames(cti.cti):
 
     # IPv6 address override
     def test_s3270_rpqnames_address_override_ipv6(self):
-        self.s3270_rpqnames(rpq.make_rpq(rpq.add_len(rpq.RpqName.Address.encode() + '000a00010002000300000000000000000004')), rpq=r'ADDRESS=1\:2\:3\:\:4')
+        self.s3270_rpqnames(rpq.make_rpq(rpq.add_len(rpq.RpqName.Address.encode() + '00' + v6family + '00010002000300000000000000000004')), rpq=r'ADDRESS=1\:2\:3\:\:4')
 
     # Program version
     def test_s3270_rpqnames_version(self):
@@ -394,7 +399,7 @@ class TestS3270RpqNames(cti.cti):
         # Check stdout and stderr.
         stdout = s3270.stdout.readlines()
         result = [x for x in stdout if x.startswith(b'data: ')]
-        self.assertEqual([b'data: foo\n', b'data: bar\n'], result)
+        self.assertEqual([b'data: foo' + os.linesep.encode(), b'data: bar' + os.linesep.encode()], result)
         s3270.stdout.close()
 
         stderr = s3270.stderr.readlines()

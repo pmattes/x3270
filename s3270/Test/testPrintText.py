@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #
 # s3270 PrintText() tests
 
-import filecmp
 import os
 import requests
 from subprocess import Popen, PIPE, DEVNULL
@@ -35,6 +34,17 @@ import tempfile
 import unittest
 import Common.Test.playback as playback
 import Common.Test.cti as cti
+
+# Line-ending-independent file comparison.
+def cmp_lines(file1, file2):
+    l1 = l2 = True
+    with open(file1, 'r') as f1, open(file2, 'r') as f2:
+        while l1 and l2:
+            l1 = f1.readline()
+            l2 = f2.readline()
+            if l1 != l2:
+                return False
+    return True
 
 class TestS3270PrintText(cti.cti):
 
@@ -58,15 +68,18 @@ class TestS3270PrintText(cti.cti):
             p.send_records(1)
 
             # Generate an image file.
-            image_file = tempfile.NamedTemporaryFile(suffix='.' + type)
+            image_file = tempfile.NamedTemporaryFile(suffix='.' + type, delete=False)
+            if_name = image_file.name
             tparam = (type + ',') if type != 'txt' else ''
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText({tparam}file,{image_file.name})')
+            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText({tparam}file,{if_name})')
             self.assertTrue(r.ok, 'Expected PrintText()) to succeed')
-            self.assertTrue(filecmp.cmp(image_file.name, f's3270/Test/login.{type}'), f'Expected correct {type} output')
+            self.assertTrue(cmp_lines(image_file.name, f's3270/Test/login.{type}'), f'Expected correct {type} output')
 
         # Wait for s3270 to exit.
         r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
+        image_file.close()
+        os.unlink(if_name)
 
     def test_s3270_html(self):
         self.s3270_PrintText('html')
