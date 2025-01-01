@@ -68,7 +68,7 @@ class TestS3270RpqNames(cti.cti):
         '''Test with multiple sessions, dicts provide reply, v6, stderr_count, twice_same_session, set_value'''
 
         # Start s3270.
-        env = os.environ
+        env = os.environ.copy()
         if rpq != None:
             env['X3270RPQ'] = rpq
         s3270 = Popen(cti.vgwrap(['s3270']), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
