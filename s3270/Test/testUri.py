@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ class TestS3270Uri(cti.cti):
             
             # Start s3270.
             loopback = '[::1]' if ipv6 else '127.0.0.1'
-            env = os.environ
+            env = os.environ.copy()
             env['USER'] = 'foo'
             s3270 = Popen(cti.vgwrap(['s3270', f'tn3270://{loopback}:{port}?lu=foo']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
@@ -92,7 +92,7 @@ class TestS3270Uri(cti.cti):
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270s is 992, and it overrides s3270.port.
             # But we have to map 992 to something else, so we don't need to run the TLS server as root.
-            env = os.environ
+            env = os.environ.copy()
             env['REMAP992'] = str(port)
             s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270s://127.0.0.1?verifyhostcert=false']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
@@ -122,7 +122,7 @@ class TestS3270Uri(cti.cti):
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270 is 23, and it overrides s3270.port.
             # But we have to map 23 to something else, so we don't need to run the TLS server as root.
-            env = os.environ
+            env = os.environ.copy()
             env['REMAP23'] = str(port)
             s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270://127.0.0.1']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)

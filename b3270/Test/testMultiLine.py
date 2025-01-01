@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 # b3270 multi-line output tests
 
 import json
+import os
 import requests
 import select
 import socket
@@ -116,7 +117,7 @@ class TestB3270MultiLine(cti.cti):
 
         # Start b3270.
         port, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-scriptport', str(port)]), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-scriptport', str(port)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         ts.close()
         self.check_listen(port)
@@ -129,7 +130,10 @@ class TestB3270MultiLine(cti.cti):
         while True:
             r, _, _ = select.select([s], [], [], 5)
             self.assertNotEqual([], r)
-            blob = s.recv(1024)
+            try:
+                blob = s.recv(1024)
+            except ConnectionResetError:
+                blob = b''
             if len(blob) == 0:
                 break
             output += blob
@@ -152,14 +156,13 @@ class TestB3270MultiLine(cti.cti):
         # Wait for the process to exit.
         self.vgwait(b3270)
         b3270.stdin.close()
-        b3270.stdout.close()
     
     # b3270 multi-line output scriptport test, JSON mode
     def test_b3270_multiline_scriptport_json(self):
 
         # Start b3270.
         port, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-scriptport', str(port)]), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-scriptport', str(port)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         ts.close()
         self.check_listen(port)
@@ -172,7 +175,10 @@ class TestB3270MultiLine(cti.cti):
         while True:
             r, _, _ = select.select([s], [], [], 5)
             self.assertNotEqual([], r)
-            blob = s.recv(1024)
+            try:
+                blob = s.recv(1024)
+            except ConnectionResetError:
+                blob = b''
             if len(blob) == 0:
                 break
             output += blob
@@ -196,14 +202,13 @@ class TestB3270MultiLine(cti.cti):
         # Wait for the process to exit.
         self.vgwait(b3270)
         b3270.stdin.close()
-        b3270.stdout.close()
 
     # b3270 multi-line output httpd test, text mode
     def test_b3270_multiline_httpd_text(self):
 
         # Start b3270.
         port, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         ts.close()
         self.check_listen(port)
@@ -225,14 +230,13 @@ class TestB3270MultiLine(cti.cti):
         requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(b3270)
         b3270.stdin.close()
-        b3270.stdout.close()
     
     # b3270 multi-line output httpd test, HTML mode
     def test_b3270_multiline_httpd_html(self):
 
         # Start b3270.
         port, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         ts.close()
         self.check_listen(port)
@@ -256,14 +260,13 @@ class TestB3270MultiLine(cti.cti):
         requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(b3270)
         b3270.stdin.close()
-        b3270.stdout.close()
     
     # b3270 multi-line output httpd test, JSON mode
     def test_b3270_multiline_httpd_json(self):
 
         # Start b3270.
         port, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(port)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         ts.close()
         self.check_listen(port)
@@ -287,7 +290,6 @@ class TestB3270MultiLine(cti.cti):
         requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(b3270)
         b3270.stdin.close()
-        b3270.stdout.close()
 
 if __name__ == '__main__':
     unittest.main()
