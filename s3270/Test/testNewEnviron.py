@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -174,7 +174,7 @@ class TestS3270NewEnviron(cti.cti):
                 command.append(f'a:c:127.0.0.1:{port}')
             else:
                 command.append(f'telnet://{user.name}@127.0.0.1:{port}?waitoutput=false')
-            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
