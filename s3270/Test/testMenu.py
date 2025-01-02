@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -74,12 +74,12 @@ class TestMenu(cti.cti):
         requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
+    # Test basic NVT-DATA I/O
     def test_nvt_data(self):
-        '''Test basic NVT-DATA I/O'''
         self.menu_test('nvt-data')
 
+    # Test basic SSCP-LU-DATA I/O
     def test_sscp_lu_data(self):
-        '''Test basic SSCP-LU-DATA I/O'''
         self.menu_test('sscp-lu-data')
 
 if __name__ == '__main__':
