@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -162,6 +162,11 @@ typedef unsigned short ebc_t;
 /* Check for some version of 'start' or 'open'. */
 #if defined(_WIN32) || defined(linux) || defined(__linux__) || defined(__APPLE__) || defined(__CYGWIN__) /*[*/
 #define HAVE_START	1
+#endif /*]*/
+
+/* If NO_POLL is defined, it overrides HAVE_POLL. */
+#if defined(NO_POLL) /*[*/
+# undef HAVE_POLL
 #endif /*]*/
 
 /* Memory allocation. */

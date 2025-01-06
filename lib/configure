@@ -729,6 +729,7 @@ with_openssl
 with_iconv
 enable_dbcs
 enable_local_process
+enable_poll
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1365,6 +1366,7 @@ Optional Features:
   --enable-mock-tls       use TLS mock for testing
   --disable-dbcs          leave out DBCS support
   --disable-local-process leave out local process support
+  --disable-poll          leave out poll() support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4066,6 +4068,13 @@ then :
 
 fi
 
+ac_fn_c_check_header_compile "$LINENO" "sys/poll.h" "ac_cv_header_sys_poll_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_poll_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_SYS_POLL_H 1" >>confdefs.h
+
+fi
+
 ac_fn_c_check_header_compile "$LINENO" "readline/history.h" "ac_cv_header_readline_history_h" "$ac_includes_default"
 if test "x$ac_cv_header_readline_history_h" = xyes
 then :
@@ -4786,6 +4795,13 @@ printf "%s\n" "#define HAVE_FSEEKO 1" >>confdefs.h
 
 fi
 
+ac_fn_c_check_func "$LINENO" "poll" "ac_cv_func_poll"
+if test "x$ac_cv_func_poll" = xyes
+then :
+  printf "%s\n" "#define HAVE_POLL 1" >>confdefs.h
+
+fi
+
 
 if test "$use_openssl" != no
 then	orig_LDFLAGS="$LDFLAGS"
@@ -4969,6 +4985,16 @@ else	TLS_MODULES=sio_openssl.o
 fi
 
 
+
+# Check whether --enable-poll was given.
+if test ${enable_poll+y}
+then :
+  enableval=$enable_poll;
+fi
+
+if test "$enable_poll" = no
+then	CPPFLAGS="$CPPFLAGS -DNO_POLL=1"
+fi
 
 ac_config_headers="$ac_config_headers include/unix/conf.h"
 

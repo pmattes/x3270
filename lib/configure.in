@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,7 @@ AC_SUBST(CONNECT_GETPEERNAME)
 
 dnl Checks for header files.
 AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(sys/poll.h)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
@@ -172,6 +173,7 @@ dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
 AC_CHECK_FUNCS(malloc_usable_size)
 AC_FUNC_FSEEKO
+AC_CHECK_FUNCS(poll)
 
 dnl Check for OpenSSL libraries.
 if test "$use_openssl" != no
@@ -258,6 +260,12 @@ else	TLS_MODULES=sio_openssl.o
 fi
 AC_SUBST(TLS_MODULES)
 AC_SUBST(TLS_LIBS)
+
+dnl Set up override for using poll().
+AC_ARG_ENABLE(poll,[  --disable-poll          leave out poll() support])
+if test "$enable_poll" = no
+then	CPPFLAGS="$CPPFLAGS -DNO_POLL=1"
+fi
 
 dnl Generate the files.
 AC_CONFIG_HEADERS(include/unix/conf.h)

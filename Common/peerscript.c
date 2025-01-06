@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -129,6 +129,7 @@ static tcb_t interactive_cb = {
 typedef struct {
     llist_t llist;	/* list linkage */
     socket_t socket;	/* socket */
+    char *desc;		/* description */
 #if defined(_WIN32) /*[*/
     HANDLE event;	/* event */
 #endif /*]*/
@@ -183,6 +184,7 @@ close_peer(peer_t *p)
 	RemoveInput(p->id);
 	p->id = NULL_IOID;
     }
+    Replace(p->desc, NULL);
     Replace(p->buf, NULL);
     Replace(p->name, NULL);
 
@@ -340,17 +342,17 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 #if defined(_WIN32) /*[*/
 	if (GetLastError() != WSAECONNRESET) {
 	    /* Windows does this habitually. */
-	    vtrace("s3sock recv: %s\n", win32_strerror(GetLastError()));
+	    vtrace("s3sock %s recv: %s\n", p->desc, win32_strerror(GetLastError()));
 	}
 #else /*][*/
-	vtrace("s3sock recv: %s\n", strerror(errno));
+	vtrace("s3sock %s recv: %s\n", p->desc, strerror(errno));
 #endif /*]*/
 	close_peer(p);
 	return;
     }
-    vtrace("Input for s3sock complete, nr=%d\n", (int)nr);
+    vtrace("Input for s3sock %s complete, nr=%d\n", p->desc, (int)nr);
     if (nr == 0) {
-	vtrace("s3sock EOF\n");
+	vtrace("s3sock %s EOF\n", p->desc);
 	close_peer(p);
 	return;
     }
@@ -651,6 +653,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     char hostbuf[128];
     peer_listen_t listener;
     bool found = false;
+    const char *desc;
 
     FOREACH_LLIST(&peer_listeners, listener, peer_listen_t) {
 	if (listener->id == id) {
@@ -663,22 +666,21 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     accept_fd = accept(listener->socket, &sa.sa, &len);
     if (accept_fd != INVALID_SOCKET) {
 	if (sa.sa.sa_family == AF_INET) {
-	    vtrace("New script socket connection from %s:%u\n",
-		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
-			sizeof(hostbuf)), ntohs(sa.sin.sin_port));
+	    desc = txAsprintf("%s:%u", inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf, sizeof(hostbuf)),
+		    ntohs(sa.sin.sin_port));
 	} else if (sa.sa.sa_family == AF_INET6) {
-	    vtrace("New script socket connection from %s:%u\n",
-		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
-			sizeof(hostbuf)), ntohs(sa.sin6.sin6_port));
+	    desc = txAsprintf("[%s]:%u", inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf, sizeof(hostbuf)),
+		    ntohs(sa.sin6.sin6_port));
 	}
 #if !defined(_WIN32) /*[*/
 	else if (sa.sa.sa_family == AF_UNIX) {
-	    vtrace("New Unix-domain script socket connection");
+	    desc = "Unix-domain socket";
 	}
 #endif /*]*/
 	else {
-	    vtrace("New script socket connection from ???\n");
+	    desc = "???";
 	}
+	vtrace("New script socket connection from %s\n", desc);
     }
 
     if (accept_fd == INVALID_SOCKET) {
@@ -712,7 +714,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     }
 
     /* Allocate the peer state and remember it. */
-    peer_accepted(accept_fd, listener);
+    peer_accepted(accept_fd, listener, desc);
 }
 
 /**
@@ -720,9 +722,10 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
  *
  * @param[in] s		Socket
  * @param[in] listener	Listener, or null
+ * @param[in] desc	Peer description
  */
 void
-peer_accepted(socket_t s, void *listener)
+peer_accepted(socket_t s, void *listener, const char *desc)
 {
     peer_t *p = (peer_t *)Calloc(1, sizeof(peer_t));
 #if defined(_WIN32) /*[*/
@@ -746,6 +749,7 @@ peer_accepted(socket_t s, void *listener)
     llist_init(&p->llist);
     p->listener = listener;
     p->socket = s;
+    p->desc = NewString(desc);
 #if defined(_WIN32) /*[*/
     p->event = event;
     p->id = AddInput(p->event, peer_input);

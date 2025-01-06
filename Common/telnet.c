@@ -3888,6 +3888,27 @@ continue_tls(unsigned char *sbbuf, int len)
     net_starttls_continue();
 }
 
+/* Gets the string representation of a socket peer name. */
+const char *
+net_peername(socket_t s)
+{
+    sockaddr_46_t sa;
+    socklen_t len = sizeof(sa);
+    char hostbuf[128];
+    const char *desc = "???";
+
+    if (getpeername(s, &sa.sa, &len) >= 0) {
+	if (sa.sa.sa_family == AF_INET) {
+	    desc = txAsprintf("%s:%u", inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf, sizeof(hostbuf)),
+		    ntohs(sa.sin.sin_port));
+	} else if (sa.sa.sa_family == AF_INET6) {
+	    desc = txAsprintf("[%s]:%u", inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf, sizeof(hostbuf)),
+		    ntohs(sa.sin6.sin6_port));
+	}
+    }
+    return desc;
+}
+
 /* Return the current BIND application name, if any. */
 const char *
 net_query_bind_plu_name(void)

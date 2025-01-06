@@ -5,7 +5,7 @@ LIB3270_OBJECTS = Malloc.o XtGlue.o actions.o b8.o bind-opt.o child.o \
 	httpd-core.o httpd-io.o httpd-nodes.o icmd.o idle.o json.o json_run.o \
 	kybd.o linemode.o llist.o login_macro.o model.o nvt.o output.o \
 	peerscript.o percent_decode.o print_screen.o query.o readres.o \
-	resources.o rpq.o run_action.o s3common.o save_restore.o \
+	resources.o rpq.o run_action.o s3common.o save_restore.o sched.o \
 	screentrace.o sf.o sio_glue.o source.o stdinscript.o stringscript.o \
-	task.o telnet.o telnet_new_environ.o telnet_sio.o toggles.o trace.o \
-	uri.o util.o vstatus.o xio.o
+	task.o telnet.o telnet_new_environ.o telnet_sio.o timeouts.o \
+	toggles.o trace.o uri.o util.o vstatus.o xio.o

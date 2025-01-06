@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Paul Mattes.
+ * Copyright (c) 2024-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -128,7 +128,7 @@ cookiefile_init(void)
 	    /* Check for invalid characters. */
 	    for (i = 0; read_buf[i]; i++) {
 		if (isspace((int)read_buf[i])) {
-		    fprintf(stderr, "%s containts an invalid cookie, contains whitespace\n", appres.cookie_file);
+		    fprintf(stderr, "%s contains an invalid cookie, contains whitespace\n", appres.cookie_file);
 		    goto fail;
 		}
 	    }

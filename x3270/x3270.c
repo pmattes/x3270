@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1184,12 +1184,14 @@ parse_set_clear(int *argcp, char **argv)
 void
 Error(const char *s)
 {
+    vtrace("Error: %s\n", s);
     XtError(s);
 }
 
 void
 Warning(const char *s)
 {
+    vtrace("Warning: %s\n", s);
     XtWarning(s);
 }
 
