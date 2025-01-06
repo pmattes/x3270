@@ -126,7 +126,16 @@ string_run(task_cbh handle, bool *success)
 	goto clean_up;
     }
 
-    /* Any other keyboard lock is fatal, such as disconnect. */
+    /*
+     * Check for a disconnect at the end of the string, e.g., a string that ends
+     * with an AID that caused a disconnect.
+     */
+    if ((kybdlock & KL_NOT_CONNECTED) && ((s->is_paste && !s->pdata_len) || !s->len)) {
+	done = true;
+	goto clean_up;
+    }
+
+    /* Any other keyboard lock is fatal. */
     if (kybdlock) {
 	popup_an_error("Canceled");
 	*success = false;
