@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -172,7 +172,7 @@ callback_init(void)
 	}
 
 	/* Get ready for I/O. */
-	peer_accepted(s, NULL);
+	peer_accepted(s, NULL, net_peername(s));
     }
 }
 

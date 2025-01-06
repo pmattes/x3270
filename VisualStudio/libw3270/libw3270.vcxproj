@@ -173,9 +173,11 @@
     <ClCompile Include="..\..\Common\readres.c" />
     <ClCompile Include="..\..\Common\Nodisplay/resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
+    <ClCompile Include="..\..\Common\sched.c" />
     <ClCompile Include="..\..\Common\screentrace.c" />
     <ClCompile Include="..\..\Common\sf.c" />
     <ClCompile Include="..\..\Common\task.c" />
+    <ClCompile Include="..\..\Common\timeouts.c" />
     <ClCompile Include="..\..\Common\telnet.c" />
     <ClCompile Include="..\..\Common\telnet_new_environ.c" />
     <ClCompile Include="..\..\Common\toggles.c" />

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2024 Paul Mattes.
+ * Copyright (c) 2014-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,6 @@ struct hio_listener {
 static hio_listener_t *global_listener = NULL;
 static llist_t listeners = LLIST_INIT(listeners);
 
-#define N_SESSIONS	32
 typedef struct {
     llist_t link;	/* list linkage */
     socket_t s;		/* socket */
@@ -312,11 +311,6 @@ hio_connection(iosrc_t fd, ioid_t id)
     if (t == INVALID_SOCKET) {
 	vtrace("httpd accept error: %s%s\n", socket_errtext(),
 		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
-	return;
-    }
-    if (l->n_sessions >= N_SESSIONS) {
-	vtrace("Too many connections.\n");
-	SOCK_CLOSE(t);
 	return;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -59,6 +59,7 @@ void net_interrupt(char c);
 void net_linemode(void);
 void net_nop_seconds(void);
 void net_nvt_break(void);
+const char *net_peername(socket_t s);
 const char *net_query_bind_plu_name(void);
 const char *net_query_connection_state(void);
 const char *net_query_host(void);
