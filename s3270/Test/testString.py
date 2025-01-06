@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #
 # s3270 String() tests
 
+import threading
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
@@ -162,6 +163,51 @@ class TestS3270String(cti.cti):
         # Wait for the processes to exit.
         requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
+
+    # Wait for n bytes from the emulator, then disconnect.
+    def async_disconnect(self, p: playback.playback, nbytes: int):
+        p.nread(17)
+        p.disconnect()
+
+    # Verify that a String() action that causes a disconnect succeeds.
+    def s3270_string_disconnect(self, extra=False):
+
+        pport, socket = cti.unused_port()
+        with playback.playback(self, 's3270/Test/target.trc', pport) as p:
+            socket.close()
+
+            # Start s3270.
+            sport, socket = cti.unused_port()
+            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            self.check_listen(sport)
+            socket.close()
+
+            # Fill in the screen.
+            p.send_records(2)
+
+            # Prime playback to disconnect as soon as it receives 17 bytes from the emulator.
+            t = threading.Thread(target=self.async_disconnect, args=[p, 17])
+            t.start()
+
+            # Send 'quit\n' to the host, plus optionally more.
+            quit_string = 'quit\\nfoo' if extra else 'quit\\n'
+            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({quit_string})')
+            if extra:
+                self.assertFalse(r.ok)
+            else:
+                self.assertTrue(r.ok)
+
+        t.join()
+
+        # Wait for the processes to exit.
+        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def test_x3270_string_disconnect_success(self):
+        self.s3270_string_disconnect()
+    def test_x3270_string_disconnect_fail(self):
+        self.s3270_string_disconnect(extra=True)
 
 if __name__ == '__main__':
     unittest.main()
