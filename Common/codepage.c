@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -73,6 +73,7 @@ bool codepage_changed = false;
 #define DEFAULT_CSET	0x00000025
 unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 unsigned long cgcsgid_dbcs = 0L;
+char *kybdtype = NULL;
 
 /* Statics. */
 static enum cs_result codepage_init2(const char *cpname, const char *realname,
@@ -121,6 +122,7 @@ codepage_init(const char *cpname)
     const char *dbcs_cgcsgid = NULL;
     const char *realname;
     bool is_dbcs;
+    const char *kt;
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
@@ -143,9 +145,10 @@ codepage_init(const char *cpname)
     }
 
     if (!set_uni(cpname, LOCAL_CODEPAGE, &codepage, &cgcsgid, &realname,
-		&is_dbcs)) {
+		&is_dbcs, &kt)) {
 	return CS_NOTFOUND;
     }
+    Replace(kybdtype, kt? NewString(kt): NULL);
     if (appres.sbcs_cgcsgid != NULL) {
 	cgcsgid = appres.sbcs_cgcsgid; /* override */
     }

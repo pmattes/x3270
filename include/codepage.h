@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -35,6 +35,7 @@
 extern bool codepage_changed;
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;
+extern char *kybdtype;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 enum cs_result codepage_init(const char *cpname);
 const char *get_codepage_name(void);

@@ -225,6 +225,10 @@ class playback():
                 # Start accumulating.
                 direction = line[0]
                 accum += line.split()[2]
+        if accum != '':
+            want = bytes.fromhex(accum)
+            r = self.nread(len(want))
+            self.ct.assertEqual(r, want)
         if disconnect:
             self.disconnect()
 

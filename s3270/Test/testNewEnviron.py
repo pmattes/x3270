@@ -29,18 +29,20 @@
 
 import enum
 import os
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
+from typing import Any
+import unittest
+
 import Common.Test.playback as playback
 import Common.Test.cti as cti
 
 class user_method(enum.Enum):
-        resource = enum.auto()
-        user_env = enum.auto()
-        username_env = enum.auto()
-        uri = enum.auto()
-        UNKNOWN = enum.auto()
+    resource = enum.auto()
+    user_env = enum.auto()
+    username_env = enum.auto()
+    uri = enum.auto()
+    UNKNOWN = enum.auto()
 
 class TestS3270NewEnviron(cti.cti):
 
@@ -180,12 +182,6 @@ class TestS3270NewEnviron(cti.cti):
             # Make sure the emulator does what we expect.
             p.match()
 
-        # Fix up the environment.
-        if user_value != None:
-            env['USER'] = user_value
-        if username_value != None:
-            env['USERNAME'] = username_value
-
         # Wait for the process to exit.
         s3270.stdin.write(b'Quit()\n')
         s3270.stdin.flush()
@@ -299,6 +295,89 @@ class TestS3270NewEnviron(cti.cti):
         # Wait for the processes to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
+
+    def construct_tracefile(self, expect) -> str:
+        '''Create a trace file on the fly'''
+        (handle, file_name) = tempfile.mkstemp()
+        os.close(handle)
+        f = open(file_name, 'w')
+        e_codepage = bytes.hex('CODEPAGE'.encode())
+        e_charset = bytes.hex('CHARSET'.encode())
+        e_kbdtype = bytes.hex('KBDTYPE'.encode())
+        f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
+        f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
+        f.write('< 0x0   fffa270103' + e_codepage
+                            + '03' + e_charset
+                            + '03' + e_kbdtype + 'fff0\n') # RCVD SB NEW-ENVIRON SEND USERVAR "CODEPAGE" USERVAR "CHARSET" USERVAR "KBDTYPE" SE
+        f.write('> 0x0   fffa270003' + e_codepage + '01' + bytes.hex(expect[1].encode()) +
+                                '03' + e_charset + '01' + bytes.hex(expect[2].encode()) +
+                                '03' + e_kbdtype + '01' + bytes.hex(expect[3].encode()) +
+                        'fff0\n') # SENT SB NEW-ENVIRON IS USERVAR "CODEPAGE" "xxx" ... SE
+        f.close()
+        return file_name
+
+    def s3270_new_environ_charset(self, env_override: Any, expect: Any, expect2=None):
+        '''s3270 NEW-ENVIRON CODEPAGE test'''
+
+        # Start s3270.
+        env = env_override if env_override != None else os.environ.copy()
+        s3270 = Popen(cti.vgwrap(['s3270', '-codepage', expect[0]]), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
+        self.children.append(s3270)
+
+        # Create a trace file on the fly.
+        file_name = self.construct_tracefile(expect)
+
+        # Start 'playback' to read s3270's output.
+        port, ts = cti.unused_port()
+        with playback.playback(self, file_name, port=port) as p:
+            ts.close()
+            s3270.stdin.write(f'Open(a:c:127.0.0.1:{port})\n'.encode())
+            s3270.stdin.flush()
+
+            # Make sure the emulator does what we expect.
+            p.match()
+
+        # If there is a second expect tuple, switch code pages and try again.
+        if expect2 != None:
+            os.unlink(file_name)
+            file_name = self.construct_tracefile(expect2)
+            port, ts = cti.unused_port()
+            with playback.playback(self, file_name, port=port) as p:
+                ts.close()
+                s3270.stdin.write(f'Wait(disconnect)\n'.encode())
+                s3270.stdin.write(f'Set(codepage,{expect2[0]})\n'.encode())
+                s3270.stdin.write(f'Open(a:c:127.0.0.1:{port})\n'.encode())
+                s3270.stdin.flush()
+
+                # Make sure the emulator does what we expect.
+                p.match()
+
+        # Wait for the process to exit.
+        s3270.stdin.write(b'Quit()\n')
+        s3270.stdin.flush()
+        s3270.stdin.close()
+        self.vgwait(s3270)
+        os.unlink(file_name)
+
+    def test_s3270_new_environ_charset_us(self):
+        self.s3270_new_environ_charset(None, ('bracket', '037', '697', 'USB'))
+    def test_s3270_new_environ_charset_dbcs(self):
+        self.s3270_new_environ_charset(None, ('simplified-chinese', '836', '1174', 'RCB'))
+    def test_s3270_new_environ_charset_override_codepage(self):
+        env = os.environ.copy()
+        env['CODEPAGE'] = 'foo'
+        self.s3270_new_environ_charset(env, ('simplified-chinese', 'foo', '1174', 'RCB'))
+    def test_s3270_new_environ_charset_override_charset(self):
+        env = os.environ.copy()
+        env['CHARSET'] = 'foo'
+        self.s3270_new_environ_charset(env, ('simplified-chinese', '836', 'foo', 'RCB'))
+    def test_s3270_new_environ_charset_override_kbdtype(self):
+        env = os.environ.copy()
+        env['KBDTYPE'] = 'foo'
+        self.s3270_new_environ_charset(env, ('simplified-chinese', '836', '1174', 'foo'))
+    def test_s3270_new_environ_charset_switch(self):
+        self.s3270_new_environ_charset(None, ('bracket', '037', '697', 'USB'), ('simplified-chinese', '836', '1174', 'RCB'))
+
 
 if __name__ == '__main__':
     unittest.main()
