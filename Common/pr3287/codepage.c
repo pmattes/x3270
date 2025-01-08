@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013-2015, 2019 Paul Mattes.
+ * Copyright (c) 2001-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -102,7 +102,7 @@ codepage_init(const char *cpname)
 #endif /*]*/
 
     if (!set_uni(cpname, LOCAL_CODEPAGE, &host_codepage, &cgcsgid_str, NULL,
-		NULL)) {
+		NULL, NULL)) {
 	return CS_NOTFOUND;
     }
     cgcsgid = strtoul(cgcsgid_str, NULL, 0);

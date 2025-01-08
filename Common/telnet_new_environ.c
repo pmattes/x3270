@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 
 #include "appres.h"
 
+#include "codepage.h"
 #include "devname.h"
 #include "resources.h"
 #include "sio.h"
@@ -56,12 +57,22 @@
 #define ESCAPED(c)	\
     (c == TELOBJ_VAR || c == TELOBJ_USERVAR || c == TELOBJ_ESC || \
      c == TELOBJ_VALUE)
+
+/* VAR names. */
 #define USER_VARNAME		"USER"
-#define DEVNAME_USERVARNAME	"DEVNAME"
 #define IBMELF_VARNAME		"IBMELF"
 #define IBMAPPLID_VARNAME	"IBMAPPLID"
+
+/* USERVAR names. */
+#define DEVNAME_USERVARNAME	"DEVNAME"
+#define CODEPAGE_USERVARNAME	"CODEPAGE"
+#define CHARSET_USERVARNAME	"CHARSET"
+#define KBDTYPE_USERVARNAME	"KBDTYPE"
+
+/* Well known values. */
 #define IBMELF_YES		"YES"
 #define IBMAPPLID_NONE		"None"
+#define SYSVAL			"*SYSVAL"
 
 /* Globals */
 
@@ -186,11 +197,27 @@ environ_init(void)
 {
     char *user;
     char *ibmapplid;
+    typedef enum {
+	CODEPAGE,
+	CHARSET,
+	KBDTYPE,
+	CODEPAGE_COUNT
+    } codepage_index_t;
+    struct {
+	const char *name;
+	char *value;
+    } codepage_vars[CODEPAGE_COUNT] = {
+	{ CODEPAGE_USERVARNAME, NULL },
+	{ CHARSET_USERVARNAME, NULL },
+	{ KBDTYPE_USERVARNAME, NULL },
+    };
+    codepage_index_t i;
 
     /* Clean up from last time. */
     environ_clear(&vars);
     environ_clear(&uservars);
 
+    /* Set USER. Resource first, then from the environment. */
     user = host_user? host_user: (appres.user? appres.user: getenv("USER"));
     if (user == NULL) {
 	user = getenv("USERNAME");
@@ -199,16 +226,56 @@ environ_init(void)
 	user = "UNKNOWN";
     }
     add_environ(&vars, USER_VARNAME, user);
+
+    /* Set DEVNAME, from appres. */
     if (appres.devname != NULL) {
 	environ_t *e = add_environ(&uservars, DEVNAME_USERVARNAME, appres.devname);
+
 	e->devname = devname_init(appres.devname);
     }
+
+    /* Set IBMELF. */
     add_environ(&uservars, IBMELF_VARNAME, IBMELF_YES);
+
+    /* Set IBMAPPLID, from the environment. */
     ibmapplid = getenv(IBMAPPLID_VARNAME);
     if (ibmapplid == NULL) {
 	ibmapplid = IBMAPPLID_NONE;
     }
     add_environ(&uservars, IBMAPPLID_VARNAME, ibmapplid);
+
+    /* Set CODEPAGE, CHARSET and KBDTYPE from the host codepage, with overrides from the environment. */
+    for (i = CODEPAGE; i < CODEPAGE_COUNT; i++) {
+	codepage_vars[i].value = getenv(codepage_vars[i].name);
+	if (codepage_vars[i].value == NULL) {
+	    unsigned codepage;
+
+	    switch (i) {
+		case CODEPAGE:
+		    codepage = cgcsgid & 0xffff;
+		    if (codepage < 100) {
+			codepage_vars[i].value = txAsprintf("%03d", codepage);
+		    } else {
+			codepage_vars[i].value = txAsprintf("%d", codepage);
+		    }
+		    break;
+		case CHARSET:
+		    codepage_vars[i].value = txAsprintf("%lu", (cgcsgid >> 16) & 0xffff);
+		    break;
+		case KBDTYPE:
+		    if (kybdtype != NULL) {
+			codepage_vars[i].value = kybdtype;
+		    }
+		    break;
+		default:
+		    break;
+	    }
+	}
+	if (codepage_vars[i].value == NULL) {
+	    codepage_vars[i].value = SYSVAL;
+	}
+	add_environ(&uservars, codepage_vars[i].name, codepage_vars[i].value);
+    }
 }
 
 /* Expand a name into a readable string. */

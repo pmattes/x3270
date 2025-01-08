@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2024 Paul Mattes.
+ * Copyright (c) 2008-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,8 @@ ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);
 ebc_t unicode_to_ebcdic_ge(ucs4_t u, bool *ge, bool prefer_apl);
 bool set_uni(const char *cpname, int local_cp, const char **host_codepage,
-	const char **cgcsgid, const char **realnamep, bool *is_dbcs);
+	const char **cgcsgid, const char **realnamep, bool *is_dbcs,
+	const char **kybdtype);
 ucs4_t linedraw_to_unicode(ucs4_t e, bool ascii_art);
 int apl_to_unicode(ebc_t e, unsigned flags);
 size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
