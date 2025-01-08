@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2024 Paul Mattes.
+# Copyright (c) 1999-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o snprintf.o asp
 DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o snprintf.o asprintf.o
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
+override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 test: json_test bind_opts_test utf8_test uri_test devname_test
 	@case `uname -s` in \

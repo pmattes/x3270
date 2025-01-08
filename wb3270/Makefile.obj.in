@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2024 Paul Mattes.
+# Copyright (c) 2007-2025 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 include winenv.mk
 
 XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include -I$(TOP)/extern/libexpat/expat/lib
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
+override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
 ifdef WIN64
