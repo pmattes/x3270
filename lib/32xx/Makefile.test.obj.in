@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2024 Paul Mattes.
+# Copyright (c) 1999-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ OBJS = $(BASE64_OBJS) $(XPOPEN_OBJS)
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
+override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
 test: base64_test xpopen_test
 	$(RM) base64_test.gcda

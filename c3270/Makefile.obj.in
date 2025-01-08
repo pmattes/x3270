@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2024 Paul Mattes.
+# Copyright (c) 1999-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ INSTALL_DATA = @INSTALL_DATA@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 

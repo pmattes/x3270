@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2024 Paul Mattes.
+# Copyright (c) 1999-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
+override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -fprofile-arcs -ftest-coverage @CFLAGS@
 
 test: json_test bind_opts_test utf8_test uri_test devname_test
 	$(RM) json_test.gcda bind_opts_test.gcda utf8_test.gcda devname_test.gcda

@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2023 Paul Mattes.
+# Copyright (c) 1999-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,7 @@ sysconfdir = @sysconfdir@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS =  @CPPFLAGS@ -I$(THIS) -I$(TOP)/include
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) \
-	-DLIBX3270DIR=\"@LIBX3270DIR@\" @CFLAGS@
+override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) -DLIBX3270DIR=\"@LIBX3270DIR@\" @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 INSTALL = @INSTALL@
