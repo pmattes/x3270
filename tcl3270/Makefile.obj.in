@@ -67,7 +67,7 @@ version.o: mkversion.sh $(VOBJS) version.txt
 FALLBACKS = fb-common
 fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	../mkfb/mkfb -c -o $@ $^
+	$(TOP)/obj/@build@/mkfb/mkfb -c -o $@ $^
 
 tcl3270: $(OBJS1)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)

@@ -78,7 +78,7 @@ version.o: mkversion.sh $(VOBJS) version.txt
 FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
 fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	../mkfb/mkfb -o $@ $^
+	$(TOP)/obj/@build@/mkfb/mkfb -o $@ $^
 
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)

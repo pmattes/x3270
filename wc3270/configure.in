@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,9 @@ AC_PREREQ([2.69])
 
 dnl Figure out what sort of host and compiler this is.
 AC_CANONICAL_HOST
+AC_CANONICAL_BUILD
 AC_SUBST(host)
+AC_SUBST(build)
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile.obj)

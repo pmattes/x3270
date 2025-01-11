@@ -27,7 +27,7 @@
 # Makefile for mkkeypad (keypad compiler)
 
 RM = rm -f
-CC = @CC@
+CC = @BUILD_CC@
 
 all: mkkeypad
 
@@ -42,12 +42,12 @@ LIBX3270DIR = @LIBX3270DIR@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
-override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+override CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 mkkeypad: $(MKKEYPAD_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(MKKEYPAD_OBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(BUILD_CFLAGS) -o $@ $(MKKEYPAD_OBJECTS) $(LDFLAGS) $(LIBS)
 
 clean:
 	$(RM) *.o mkkeypad

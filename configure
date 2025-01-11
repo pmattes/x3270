@@ -700,6 +700,7 @@ enable_tcl3270
 enable_pr3287
 enable_x3270if
 enable_playback
+enable_mitm
 enable_unix_lib
 enable_wc3270
 enable_ws3270
@@ -707,6 +708,7 @@ enable_wb3270
 enable_wpr3287
 enable_wx3270if
 enable_wplayback
+enable_wmitm
 enable_windows_lib
 '
       ac_precious_vars='build_alias
@@ -724,10 +726,10 @@ tcl3270
 pr3287
 x3270if
 playback
+mitm
 ws3270
 wc3270
 wb3270
-mitm
 mkfb
 mkkeypad
 mkicon'
@@ -1362,6 +1364,7 @@ Optional Features:
   --enable-pr3287         build pr3287
   --enable-x3270if        build x3270if
   --enable-playback       build playback
+  --enable-mitm           build mitm
   --enable-lib            build Unix libraries
   --enable-wc3270         build wc3270
   --enable-ws3270         build Windows s3270
@@ -1369,6 +1372,7 @@ Optional Features:
   --enable-wpr3287        build Windows pr3287
   --enable-wx3270if       build Windows x3270if
   --enable-wplayback      build Windows playback
+  --enable-wmitm          build Windows mitm
   --enable-windows-lib    build Windows libraries
 
 Report bugs to the package provider.
@@ -2050,6 +2054,12 @@ then :
   enableval=$enable_playback;
 fi
 
+# Check whether --enable-mitm was given.
+if test ${enable_mitm+y}
+then :
+  enableval=$enable_mitm;
+fi
+
 # Check whether --enable-unix-lib was given.
 if test ${enable_unix_lib+y}
 then :
@@ -2091,6 +2101,12 @@ fi
 if test ${enable_wplayback+y}
 then :
   enableval=$enable_wplayback;
+fi
+
+# Check whether --enable-wmitm was given.
+if test ${enable_wmitm+y}
+then :
+  enableval=$enable_wmitm;
 fi
 
 # Check whether --enable-windows-lib was given.
@@ -2230,9 +2246,7 @@ fi
 
 
 
-case "$host_os" in
-*msys|*mingw*)	enable_unix=no
-esac
+if test "`uname -o`" = Msys; then enable_unix=no; fi
 
 if test "x$enable_unix" = xyes; then
     if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
@@ -2243,6 +2257,7 @@ if test "x$enable_unix" = xyes; then
     if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
     if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
     if test "x$enable_playback" != xno; then enable_playback=yes; fi
+    if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
 fi
 if test "x$enable_unix" = xno; then
     enable_x3270=no
@@ -2253,6 +2268,7 @@ if test "x$enable_unix" = xno; then
     enable_pr3287=no
     enable_x3270if=no
     enable_playback=no
+    enable_mitm=no
 fi
 
 WIN32_SUFFIX=-32
@@ -2279,6 +2295,7 @@ if test "x$enable_windows" = xyes; then
     if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
     if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
     if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
+    if test "x$enable_wmitm" != xno; then enable_wmitm=yes; fi
 fi
 if test "x$enable_windows" = xno; then
     enable_wc3270=no
@@ -2287,6 +2304,7 @@ if test "x$enable_windows" = xno; then
     enable_wpr3287=no
     enable_wx3270if=no
     enable_wplayback=no
+    enable_wmitm=no
     enable_windows_lib=no
 fi
 
@@ -2298,6 +2316,7 @@ if test "x$enable_x3270" = x -a \
         "x$enable_pr3287" = x -a \
         "x$enable_x3270if" = x -a \
         "x$enable_playback" = x -a \
+        "x$enable_mitm" = x -a \
 	"x$enable_unix_lib" = x -a \
         "x$enable_wc3270" = x -a \
         "x$enable_ws3270" = x -a \
@@ -2305,6 +2324,7 @@ if test "x$enable_x3270" = x -a \
         "x$enable_wpr3287" = x -a \
         "x$enable_wx3270if" = x -a \
         "x$enable_wplayback" = x -a \
+        "x$enable_wmitm" = x -a \
 	"x$enable_windows_lib" = x; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: configuring all emulators... use --enable or --disable options to pick a subset" >&5
 printf "%s\n" "$as_me: configuring all emulators... use --enable or --disable options to pick a subset" >&6;}
@@ -2316,12 +2336,14 @@ printf "%s\n" "$as_me: configuring all emulators... use --enable or --disable op
     enable_pr3287=yes
     enable_x3270if=yes
     enable_playback=yes
+    enable_mitm=yes
     enable_wc3270=yes
     enable_ws3270=yes
     enable_wb3270=yes
     enable_wpr3287=yes
     enable_wx3270if=yes
     enable_wplayback=yes
+    enable_wmitm=yes
 fi
 
 lparen="("
@@ -2334,6 +2356,7 @@ if test "x$enable_x3270" != xyes -a \
 	"x$enable_pr3287" != xyes -a \
 	"x$enable_x3270if" != xyes -a \
 	"x$enable_playback" != xyes -a \
+	"x$enable_mitm" != xyes -a \
 	"x$enable_unix_lib" != xyes -a \
 	"x$enable_wc3270" != xyes -a \
 	"x$enable_ws3270" != xyes -a \
@@ -2341,6 +2364,7 @@ if test "x$enable_x3270" != xyes -a \
 	"x$enable_wpr3287" != xyes -a \
 	"x$enable_wx3270if" != xyes -a \
 	"x$enable_wplayback" != xyes -a \
+	"x$enable_wmitm" != xyes -a \
 	"x$enable_windows_lib" != xyes -a \
 	$lparen "x$enable_x3270" = xno -o \
 	 "x$enable_c3270" = xno -o \
@@ -2350,6 +2374,7 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_pr3287" = xno -o \
 	 "x$enable_x3270if" = xno -o \
 	 "x$enable_playback" = xno -o \
+	 "x$enable_mitm" = xno -o \
 	 "x$enable_unix_lib" = xno -o \
 	 "x$enable_wc3270" = xno -o \
 	 "x$enable_ws3270" = xno -o \
@@ -2357,6 +2382,7 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_wpr3287" = xno -o \
 	 "x$enable_wx3270if" = xno -o \
 	 "x$enable_wplayback" = xno -o \
+	 "x$enable_wmitm" = xno -o \
 	 "x$enable_windows_lib" = xno $rparen; then
         if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
@@ -2366,12 +2392,14 @@ if test "x$enable_x3270" != xyes -a \
     if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
     if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
     if test "x$enable_playback" != xno; then enable_playback=yes; fi
+    if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
     if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
     if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
     if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
     if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
     if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
     if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
+    if test "x$enable_wmitm" != xno; then enable_wmitm=yes; fi
 fi
 
 if test "x$enable_tcl3270" = xyes; then
@@ -2390,10 +2418,15 @@ if test "x$enable_wc3270" = xyes -o \
     enable_wx3270if=yes
 fi
 if test "x$enable_x3270" = xyes -o \
-	"x$enable_c3270" = xyes; then
+	"x$enable_c3270" = xyes -o \
+	"x$enable_s3270" = xyes -o \
+	"x$enable_b3270" = xyes -o \
+	"x$enable_tcl3270" = xyes; then
     enable_pr3287=yes
 fi
-if test "x$enable_wc3270" = xyes; then
+if test "x$enable_wc3270" = xyes -o \
+	"x$enable_ws3270" = xyes -o \
+	"x$enable_wb3270" = xyes; then
     enable_wpr3287=yes
 fi
 if test "x$enable_x3270" = xyes -o \
@@ -2450,14 +2483,14 @@ T_ALLTESTS=""
 T_TEST_CLEAN=""
 T_TEST_CLOBBER=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if wplayback; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback mitm wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if wplayback wmitm; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
 	T_CLEAN="$T_CLEAN $i-clean"
 	T_CLOBBER="$T_CLOBBER $i-clobber"
 	case "$i" in
-	playback)
+	playback|mitm)
 		T_UNIX_ALL="$T_UNIX_ALL $i"
 		;;
 	w*)	T_WINDOWS_ALL="$T_WINDOWS_ALL $i"
@@ -2520,6 +2553,9 @@ fi
 if test "x$enable_playback" = xyes; then subdirs="$subdirs playback"
 
 fi
+if test "x$enable_mitm" = xyes; then subdirs="$subdirs mitm"
+
+fi
 if test "x$enable_ws3270" = xyes; then subdirs="$subdirs ws3270"
 
 fi
@@ -2529,14 +2565,25 @@ fi
 if test "x$enable_wb3270" = xyes; then subdirs="$subdirs wb3270"
 
 fi
-subdirs="$subdirs mitm"
+if test "x$enable_x3270" = xyes -o \
+	"x$enable_c3270" = xyes -o \
+	"x$enable_s3270" = xyes -o \
+	"x$enable_b3270" = xyes -o \
+	"x$enable_tcl3270" = xyes -o \
+	"x$enable_ws3270" = xyes -o \
+	"x$enable_wc3270" = xyes -o \
+	"x$enable_wb3270" = xyes; then
+    subdirs="$subdirs mkfb"
 
-subdirs="$subdirs mkfb"
+fi
+if test "x$enable_c3270" = xyes -o "x$enable_wc3270" = xyes; then
+    subdirs="$subdirs mkkeypad"
 
-subdirs="$subdirs mkkeypad"
+fi
+if test "x$enable_unix_lib" = xyes -o "x$enable_windows_lib" = xyes; then
+    subdirs="$subdirs mkicon"
 
-subdirs="$subdirs mkicon"
-
+fi
 
 
 

@@ -3568,6 +3568,7 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
@@ -3582,6 +3583,7 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
+
 
 
 

@@ -4002,6 +4002,7 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+
 ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED -D_GNU_SOURCE"
@@ -4027,6 +4028,7 @@ esac
 if test "$GCC" = yes
 then	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
+
 
 
 

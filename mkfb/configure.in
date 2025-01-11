@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@ AC_PROG_CC
 
 dnl Figure out what sort of host and compiler this is.
 AC_CANONICAL_HOST
+AC_CANONICAL_BUILD
 ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	ansi=""
@@ -50,8 +51,18 @@ then	# Add common gcc options, plus flags for dependency generation.
 	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
+AC_SUBST(build)
 AC_SUBST(CCOPTIONS)
 AC_SUBST(CPPFLAGS)
+
+if test -z "$BUILD_CC"
+then	BUILD_CC=gcc
+fi
+AC_CHECK_PROG(buildcc,[$BUILD_CC],[yes],[no])
+if test "$buildcc" = no
+then	AC_MSG_ERROR(Cannot find compiler for build system $build (tried '$BUILD_CC') -- please set BUILD_CC to point to it)
+fi
+AC_SUBST(BUILD_CC)
 
 dnl Generate conf.h.
 AC_CONFIG_HEADERS([conf.h])

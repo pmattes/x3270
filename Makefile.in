@@ -90,7 +90,7 @@ ifdef M1
 endif
 endif
 
-# Library ependencies.
+# Library dependencies.
 c3270 s3270 b3270 tcl3270 x3270 pr3287: unix-lib
 wc3270 ws3270 wb3270 wpr3287: windows-lib
 
@@ -134,6 +134,8 @@ tcl3270: s3270
 .PHONY: s3270
 
 .PHONY: playback
+
+.PHONY: mitm
 
 # Individual targets.
 unix-lib: lib3270 lib3270i lib32xx lib3270stubs
@@ -189,6 +191,8 @@ x3270if:
 	cd x3270if && $(MAKE)
 playback: lib3270 lib32xx
 	cd playback && $(MAKE)
+mitm: lib32xx
+	cd mitm && $(MAKE)
 ibm_hosts:
 	cd ibm_hosts && $(MAKE)
 mkfb:
@@ -227,6 +231,11 @@ wplayback-32: libw3270-32 libw32xx-32
 	cd wplayback && $(MAKE) @WINDRES_SET@
 wplayback-64: libw3270-64 libw32xx-64
 	cd wplayback && $(MAKE) WIN64=1 @WINDRES_SET@
+wmitm: wmitm@WIN32_SUFFIX@ wmitm@WIN64_SUFFIX@
+wmitm-32: libw32xx-32
+	cd wmitm && $(MAKE) @WINDRES_SET@
+wmitm-64: libw32xx-64
+	cd wmitm && $(MAKE) WIN64=1 @WINDRES_SET@
 
 FORCE:
 
@@ -327,6 +336,8 @@ x3270if-clean:
 	cd x3270if && $(MAKE) clean
 playback-clean:
 	cd playback && $(MAKE) clean
+mitm-clean:
+	cd mitm && $(MAKE) clean
 ibm_hosts-clean:
 	cd ibm_hosts && $(MAKE) clean
 mkfb-clean:
@@ -365,6 +376,11 @@ wplayback-clean-32:
 	cd wplayback && $(MAKE) clean
 wplayback-clean-64:
 	cd wplayback && $(MAKE) clean WIN64=1
+wmitm-clean: wmitm-clean@WIN32_SUFFIX@ wmitm-clean@WIN64_SUFFIX@
+wmitm-clean-32:
+	cd wmitm && $(MAKE) clean
+wmitm-clean-64:
+	cd wmitm && $(MAKE) clean WIN64=1
 
 clobber:
 	rm -rf obj
@@ -423,6 +439,8 @@ x3270if-clobber:
 	cd x3270if && $(MAKE) clobber
 playback-clobber:
 	cd playback && $(MAKE) clobber
+mitm-clobber:
+	cd mitm && $(MAKE) clobber
 ibm_hosts-clobber:
 	cd ibm_hosts && $(MAKE) clobber
 mkfb-clobber:
@@ -461,6 +479,11 @@ wplayback-clobber-32:
 	cd wplayback && $(MAKE) clobber
 wplayback-clobber-64:
 	cd wplayback && $(MAKE) clobber WIN64=1
+wmitm-clobber: wmitm-clobber@WIN32_SUFFIX@ wmitm-clobber@WIN64_SUFFIX@
+wmitm-clobber-32:
+	cd wmitm && $(MAKE) clobber
+wmitm-clobber-64:
+	cd wmitm && $(MAKE) clobber WIN64=1
 
 windows-lib-test: libw3270-test libw32xx-test
 libw3270-test: libw3270-test@WIN32_SUFFIX@ libw3270-test@WIN64_SUFFIX@

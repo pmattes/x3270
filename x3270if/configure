@@ -3777,18 +3777,13 @@ then :
   printf "%s\n" "#define HAVE_NCURSES_H 1" >>confdefs.h
 
 else $as_nop
-         for ac_header in curses.h
-do :
   ac_fn_c_check_header_compile "$LINENO" "curses.h" "ac_cv_header_curses_h" "$ac_includes_default"
 if test "x$ac_cv_header_curses_h" = xyes
 then :
   printf "%s\n" "#define HAVE_CURSES_H 1" >>confdefs.h
 
-else $as_nop
-  as_fn_error $? "No curses header file" "$LINENO" 5
 fi
 
-done
 fi
 
 done
@@ -3969,8 +3964,6 @@ if test "$ac_res" != no
 then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 
-else $as_nop
-  as_fn_error $? "Can't find libncurses or new-enough libcurses" "$LINENO" 5
 fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing setupterm" >&5
@@ -4030,8 +4023,6 @@ if test "$ac_res" != no
 then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 
-else $as_nop
-  as_fn_error $? "Can't find terminfo library" "$LINENO" 5
 fi
 
 ac_fn_c_check_func "$LINENO" "tiparm" "ac_cv_func_tiparm"
@@ -4042,7 +4033,7 @@ then :
 fi
 
 if test "$with_readline" != no; then
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for rl_initialize in -lreadline" >&5
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for rl_initialize in -lreadline" >&5
 printf %s "checking for rl_initialize in -lreadline... " >&6; }
 if test ${ac_cv_lib_readline_rl_initialize+y}
 then :

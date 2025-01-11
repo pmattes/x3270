@@ -46,7 +46,7 @@ $(LIB3270): $(OBJS) $(INCS)
 favicon.o: favicon.c
 
 favicon.c: favicon.ico
-	../../@host@/mkicon/mkicon$(BUILDXSFX) $< >favicon.c
+	$(TOP)/obj/@build@/mkicon/mkicon $< >favicon.c
 
 clean:
 	$(RM) *.o favicon.c $(LIB3270)

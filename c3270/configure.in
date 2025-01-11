@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ dnl If it's solaris2, then pass the -D__EXTENSIONS__ flas to cc, so that all
 dnl of the usual Unix functions are visible.
 ansi="-std=c99 -pedantic"
 AC_CANONICAL_HOST
+AC_CANONICAL_BUILD
 case "$host_os" in
 *cygwin*)	CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
     		dnl On Cygwin, gcc -ansi or -std=xxx hides POSIX declarations,
@@ -68,6 +69,7 @@ then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
+AC_SUBST(build)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 

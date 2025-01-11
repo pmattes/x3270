@@ -27,7 +27,7 @@
 # Makefile for mkfb (fallbacks compiler)
 
 RM = rm -f
-CC = @CC@
+CC = @BUILD_CC@
 
 all: mkfb
 
@@ -42,12 +42,12 @@ LIBX3270DIR = @LIBX3270DIR@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include -DFOR_WIN32 @CPPFLAGS@
-override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+override CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 mkfb: $(MKFB_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(MKFB_OBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(BUILD_CFLAGS) -o $@ $(MKFB_OBJECTS) $(LDFLAGS) $(LIBS)
 
 clean:
 	$(RM) *.o mkfb

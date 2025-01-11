@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2023 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,7 @@ dnl we found.
 AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
  [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
   [AC_CHECK_HEADERS(ncurses.h, ,
-   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
+   [AC_CHECK_HEADERS(curses.h, , )])])])
 AC_CHECK_HEADERS(ncursesw/term.h, ,
  [AC_CHECK_HEADERS(ncurses/term.h, ,
   [AC_CHECK_HEADERS(term.h)])])
@@ -81,11 +81,11 @@ AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library]
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
-AC_SEARCH_LIBS(newterm, ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
-AC_SEARCH_LIBS(setupterm, tinfow tinfo, , [AC_MSG_ERROR(Can't find terminfo library)])
+AC_SEARCH_LIBS(newterm, ncursesw ncurses curses)
+AC_SEARCH_LIBS(setupterm, tinfow tinfo)
 AC_CHECK_FUNCS(tiparm)
 if test "$with_readline" != no; then
-AC_CHECK_LIB(readline, rl_initialize)
+    AC_CHECK_LIB(readline, rl_initialize)
 fi
 
 dnl Set up the configuration directory.
