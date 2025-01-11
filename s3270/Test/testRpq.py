@@ -58,7 +58,7 @@ def split_list(input_list, match):
     return result
 
 # Define the AF value for IPv6.
-v6family = '17' if sys.platform.startswith('win') else '0a'
+v6family = f'{int(socket.AF_INET6):02x}'
 
 class TestS3270RpqNames(cti.cti):
 
