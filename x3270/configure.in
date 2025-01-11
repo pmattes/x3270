@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ AC_PROG_CC
 
 dnl Compute host-specific flags.
 AC_CANONICAL_HOST
+AC_CANONICAL_BUILD
 case "$host_os" in
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
@@ -49,6 +50,7 @@ then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
+AC_SUBST(build)
 AC_SUBST(CCOPTIONS)
 
 dnl Checks for header files.

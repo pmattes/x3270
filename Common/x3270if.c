@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,12 +63,16 @@
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #  include <ncursesw/ncurses.h>
+#  define _CURSES 1
 # elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
 #  include <ncurses/ncurses.h>
+#  define _CURSES 1
 # elif defined(HAVE_NCURSES_H) /*][*/
 #  include <ncurses.h>
-# else /*][*/
+#  define _CURSES 1
+# elif defined(HAVE_CURSES_H) /*][*/
 #  include <curses.h>
+#  define _CURSES 1
 # endif /*]*/
 # if defined(HAVE_NCURSESW_TERM_H) /*[*/
 #  include <ncursesw/term.h>
@@ -464,7 +468,7 @@ tsock(unsigned short port)
 static void
 echo_mode(bool echo)
 {
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
     struct termios t;
 
     tcgetattr(0, &t);
@@ -474,7 +478,7 @@ echo_mode(bool echo)
 	t.c_lflag &= ~ECHO;
     }
     tcsetattr(0, TCSANOW, &t);
-#else /*][*/
+#elif defined(_WIN32) /*][*/
     if (echo) {
 	if (SetConsoleMode(conin, ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT) == 0) {
 	    win32_perror("\nSetConsoleMode(CONIN$) failed");
@@ -1243,7 +1247,7 @@ i18n_get(const char *key)
     return NULL;
 }
 
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
 static char *
 tigetstr_def(const char *name, char *def)
 {
@@ -1311,7 +1315,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     HANDLE conout;
     CONSOLE_SCREEN_BUFFER_INFO info;
     HANDLE socket_event;
-#else /*][*/
+#elif defined(_CURSES) /*][*/
     int colors;
     char *setaf;
     char *op;
@@ -1321,7 +1325,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     int color_offset = 0;
 #endif /*]*/
 
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
     /* Set up terminfo and check for ANSI color. */
     setupterm(NULL, fileno(stdout), NULL);
     colors = tigetnum("colors");
@@ -1386,7 +1390,11 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     }
 
     /* Set the cookie and announce our capabilities. */
-#   define CAP_STRING AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")"
+#   if defined(_CURSES) || defined(_WIN32) /*[*/
+#    define CAP_STRING AnCapabilities "(" KwInteractive "," KwPwInput "," KwErrd ")"
+#   else /*][*/
+#    define CAP_STRING AnCapabilities "(" KwInteractive "," KwErrd ")"
+#   endif /*]*/
     if (cookie) {
 	size_t len = strlen(AnCookie) + 1 + strlen(cookie) + 2 + strlen(CAP_STRING) + 1;
 
@@ -1401,7 +1409,7 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
     single_io(0, 0, s, infd, outfd, NO_STATUS, cmd, &data_ret, &errd_ret, NULL, &itype);
 
     /* Set up the prompt. */
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
     prompt_setaf = (char *)xsetaf(setaf, color_offset + COLOR_BLUE, sgr);
     prompt_setaf = Malloc(strlen(prompt_setaf) + 1);
     strcpy(prompt_setaf, xsetaf(setaf, color_offset + COLOR_BLUE, sgr));
@@ -1485,9 +1493,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	    printf("To get help, use the '%s()' action.\n", help_name);
 	}
     }
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
     printf("%s", xsetaf(setaf, color_offset + COLOR_YELLOW, sgr));
-# else /*][*/
+#elif defined(_WIN32) /*][*/
     fflush(stdout);
     set_text_attribute(conout, FOREGROUND_GREEN | FOREGROUND_RED);
 #endif /*]*/
@@ -1498,9 +1506,9 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 	printf("Note: The 'Quit()' action will cause %s to exit.",
 		emulator_name);
     }
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
     printf("%s", op);
-# else /*][*/
+# elif defined(_WIN32) /*][*/
     fflush(stdout);
     set_text_attribute(conout, info.wAttributes);
 #endif /*]*/
@@ -1689,14 +1697,16 @@ interactive_io(int port, const char *emulator_name, const char *help_name,
 		errd_ret[sl - 1] = '\0';
 	    }
 	    if (*errd_ret) {
-#if !defined(_WIN32) /*[*/
+#if defined(_CURSES) /*[*/
 		printf("%s%s%s\n", xsetaf(setaf, color_offset + COLOR_RED, sgr), errd_ret, op);
-#else /*][*/
+#elif defined(_WIN32) /*][*/
 		set_text_attribute(conout, FOREGROUND_INTENSITY | FOREGROUND_RED);
 		fputs(errd_ret, stdout);
 		fflush(stdout);
 		set_text_attribute(conout, info.wAttributes);
 		fputc('\n', stdout);
+#else /*][*/
+		printf("%s\n", errd_ret);
 #endif /*]*/
 	    }
 	    Free(errd_ret);

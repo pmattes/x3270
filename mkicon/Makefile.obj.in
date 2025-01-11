@@ -27,7 +27,7 @@
 # Makefile for mkicon (icon compiler)
 
 RM = rm -f
-CC = @CC@
+CC = @BUILD_CC@
 
 all: mkicon
 
@@ -42,12 +42,12 @@ LIBX3270DIR = @LIBX3270DIR@
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include -DFOR_WIN32 @CPPFLAGS@
-override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+override CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 mkicon: $(MKICON_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $(MKICON_OBJECTS) $(LDFLAGS) $(LIBS)
+	$(CC) $(BUILD_CFLAGS) -o $@ $(MKICON_OBJECTS) $(LDFLAGS) $(LIBS)
 
 clean:
 	$(RM) *.o mkicon

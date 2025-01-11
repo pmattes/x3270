@@ -63,12 +63,12 @@ version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
 FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
 fallbacks.c: $(FALLBACKS)
 	$(RM) $@
-	../../@host@/mkfb/mkfb$(BUILDXSFX) -w -c -o $@ $^
+	$(TOP)/obj/@build@/mkfb/mkfb -w -c -o $@ $^
 
 keypad.o: keypad.c compiled_keypad.h
 
 compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks
-	../../@host@/mkkeypad/mkkeypad$(BUILDXSFX) -I$(TOP)/Common/c3270 >$@
+	$(TOP)/obj/@build@/mkkeypad/mkkeypad -I$(TOP)/Common/c3270 >$@
 
 wc3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
 	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) wc3270 "wc3270 terminal emulator" $(WIN64) >$@.tmp

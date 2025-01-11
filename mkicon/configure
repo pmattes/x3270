@@ -614,6 +614,8 @@ PACKAGE_URL=''
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+BUILD_CC
+buildcc
 CCOPTIONS
 host_os
 host_vendor
@@ -3271,6 +3273,7 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+
 ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	ansi=""
@@ -3288,6 +3291,57 @@ then	# Add common gcc options, plus flags for dependency generation.
 fi
 
 
+
+
+if test -z "$BUILD_CC"
+then	BUILD_CC=gcc
+fi
+# Extract the first word of "$BUILD_CC", so it can be a program name with args.
+set dummy $BUILD_CC; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_buildcc+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$buildcc"; then
+  ac_cv_prog_buildcc="$buildcc" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_buildcc="yes"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_buildcc" && ac_cv_prog_buildcc="no"
+fi
+fi
+buildcc=$ac_cv_prog_buildcc
+if test -n "$buildcc"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $buildcc" >&5
+printf "%s\n" "$buildcc" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+if test "$buildcc" = no
+then	as_fn_error $? "Cannot find compiler for build system $build (tried '$BUILD_CC') -- please set BUILD_CC to point to it" "$LINENO" 5
+fi
 
 
 ac_config_files="$ac_config_files Makefile Makefile.obj"

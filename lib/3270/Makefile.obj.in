@@ -58,7 +58,7 @@ $(LIB3270): $(OBJS) $(INCS)
 favicon.o: favicon.c
 
 favicon.c: favicon.ico
-	../mkicon/mkicon $< >$@
+	$(TOP)/obj/@build@/mkicon/mkicon $< >$@
 
 clean:
 	$(RM) *.o favicon.c $(LIB3270)
