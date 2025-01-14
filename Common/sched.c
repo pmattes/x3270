@@ -682,7 +682,7 @@ process_some_events(bool block, bool *processed_any)
 	/* Set pending output event. */
 	if (ip->condition == WantWrite) {
 #if defined(HAVE_POLL) /*[*/
-	    nfds += add_poll(ip, POLLIN, nfds);
+	    nfds += add_poll(ip, POLLOUT, nfds);
 #else /*][*/
 	    assert(ip->source <= FD_SETSIZE);
 	    FD_SET(ip->source, &wfds);
@@ -695,7 +695,7 @@ process_some_events(bool block, bool *processed_any)
 	/* Set pending exception event. */
 	if (ip->condition == WantExcept) {
 #if defined(HAVE_POLL) /*[*/
-	    nfds += add_poll(ip, POLLIN, nfds);
+	    nfds += add_poll(ip, POLLPRI, nfds);
 #else /*][*/
 	    assert(ip->source <= FD_SETSIZE);
 	    FD_SET(ip->source, &xfds);
