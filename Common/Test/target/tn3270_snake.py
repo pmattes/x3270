@@ -60,7 +60,7 @@ class snake(tn3270.tn3270_server):
             case aid.SF.value:
                 # Parse the QueryReply, assuming that's what it is
                 self.debug('snake', 'got SF')
-                if (self.dinfo.parse_query_reply(data)):
+                if (self.dinfo.parse_query_reply(data)[0]):
                     self.rows = self.dinfo.alt_rows
                     self.columns = self.dinfo.alt_columns
                     self.debug('snake', f'rows {self.rows} columns {self.columns}')

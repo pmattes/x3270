@@ -1,4 +1,4 @@
-xdnl Copyright (c) 2015-2025 Paul Mattes.
+dnl Copyright (c) 2015-2025 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([suite3270],[4.3])
+AC_INIT([suite3270],[4.4])
 AC_PREREQ([2.69])
 
 AC_CANONICAL_HOST
@@ -55,6 +55,21 @@ AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib    build Windows libraries])
 AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
 AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
 AC_CHECK_PROG(windres_found,windres,yes,no)
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl You can use Msys to build Windows binaries, but not Unix-like ones.
 if test "`uname -o`" = Msys; then enable_unix=no; fi
@@ -364,21 +379,11 @@ if test "x$enable_wc3270" = xyes; then AC_CONFIG_SUBDIRS(wc3270)
 fi
 if test "x$enable_wb3270" = xyes; then AC_CONFIG_SUBDIRS(wb3270)
 fi
-if test "x$enable_x3270" = xyes -o \
-	"x$enable_c3270" = xyes -o \
-	"x$enable_s3270" = xyes -o \
-	"x$enable_b3270" = xyes -o \
-	"x$enable_tcl3270" = xyes -o \
-	"x$enable_ws3270" = xyes -o \
-	"x$enable_wc3270" = xyes -o \
-	"x$enable_wb3270" = xyes; then
-    AC_CONFIG_SUBDIRS(mkfb)
+if test "x$enable_wpr3287" = xyes; then AC_CONFIG_SUBDIRS(wpr3287)
 fi
-if test "x$enable_c3270" = xyes -o "x$enable_wc3270" = xyes; then
-    AC_CONFIG_SUBDIRS(mkkeypad)
+if test "x$enable_wx3270if" = xyes; then AC_CONFIG_SUBDIRS(wx3270if)
 fi
-if test "x$enable_unix_lib" = xyes -o "x$enable_windows_lib" = xyes; then
-    AC_CONFIG_SUBDIRS(mkicon)
+if test "x$enable_wmitm" = xyes; then AC_CONFIG_SUBDIRS(wmitm)
 fi
 
 AC_SUBST(host)

@@ -1,0 +1,76 @@
+# Copyright (c) 2007-2025 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Makefile for Windows pr3287
+
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/Common/pr3287 -I$(TOP)/include
+override CFLAGS += -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(CDEBUGFLAGS)
+
+PYTHON = @PYTHON@
+
+include pr3287_files.mk
+include wpr3287_files.mk
+VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
+
+OBJECTS = $(VOBJS) version.o
+LIBS = -lws2_32 -lwinspool -lcrypt32 -lsecur32
+LIBDEPS = $(DEP32XX) $(DEP3270STUBS)
+
+W = w
+include libs.mk
+
+all: pr3287.exe wpr3287.exe
+
+XVERSION = xversion.c
+version.o: mkversion.py $(VOBJS) $(LIBDEPS) version.txt
+	$(RM) $(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) pr3287 $(filter %.txt,$^)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+wpr3287.exe.manifest: mkmanifest.py version.txt manifest.tmpl
+	$(PYTHON) $< -o $@ $(filter %.txt,$^) $(filter %.tmpl,$^) pr3287 "pr3287 printer emulator"
+
+wpr3287res.o: wpr3287.rc pr3287.ico wpr3287.exe.manifest
+	$(WINDRES) -i $< -o $@
+
+pr3287.exe: $(OBJECTS) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+wpr3287.exe: pr3287.exe
+	cp -p pr3287.exe $@
+
+clean:
+	rm -f *.o wpr3287.exe.manifest
+
+clobber: clean
+	rm -f wpr3287.exe pr3287.exe *.d
+
+# Include auto-generated dependencies.
+-include $(OBJS:.o=.d)

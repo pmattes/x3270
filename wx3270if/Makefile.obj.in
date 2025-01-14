@@ -1,0 +1,70 @@
+# Copyright (c) 2007-2025 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Windows Makefile for x3270if
+
+# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/x3270if -I$(TOP)/include
+override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
+
+PYTHON = @PYTHON@
+
+W = w
+include x3270if_files.mk libs.mk
+
+VOBJS = $(X3270IF_OBJECTS)
+
+OBJECTS = $(VOBJS) version.o
+LIBS = -lws2_32
+LIBDEPS = $(DEP32XX)
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
+
+PROGS = x3270if.exe
+all: $(PROGS)
+
+XVERSION = xversion.c
+version.o: mkversion.py $(VOBJS) $(LIBDEPS) version.txt
+	$(RM) $(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) x3270if $(filter %.txt,$^)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+x3270ifres.o: x3270if.rc x3270if.ico Makefile
+	$(WINDRES) -i $< -o $@
+
+x3270if.exe: $(OBJECTS) x3270ifres.o $(LIBDEPS)
+	$(CC) -o $@ $(CFLAGS) $(OBJECTS) x3270ifres.o $(LD32XX) $(LIBS)
+
+clean:
+	rm -f *.o x3270if.exe.manifest
+
+clobber: clean
+	rm -f $(PROGS) *.d
+
+# Include auto-generated eependencies
+-include $(OBJS:.o=.d)

@@ -1,0 +1,2 @@
+python3 ..\..\Common\mkversion.py -o version.c pr3287 ..\..\Common\version.txt
+python3 ..\..\Common\Win32\mkmanifest.py -o ..\..\wpr3287\wpr3287.exe.manifest ..\..\Common\version.txt ..\..\Common\Win32\manifest.tmpl pr3287 "pr3287 printer emulator"

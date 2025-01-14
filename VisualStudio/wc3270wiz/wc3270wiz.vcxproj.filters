@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\wc3270\wizard.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270\wversion.c">
+    <ClCompile Include="version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\ws3270\fallbacks.c" />
     <ClCompile Include="..\..\Common\s3270.c" />
-    <ClCompile Include="..\..\ws3270\version.c" />
+    <ClCompile Include="fallbacks.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{74911F0D-82AF-4FFC-8A43-C411597A64C1}</ProjectGuid>
@@ -123,6 +123,9 @@
     <PostBuildEvent>
       <Command>cmd.exe /c copy "$(OutDir)\s3270.exe" "$(OutDir)\ws3270.exe"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>prebuild.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

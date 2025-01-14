@@ -20,9 +20,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wb3270\fallbacks.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\b3270\async.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -47,7 +44,10 @@
     <ClCompile Include="..\..\Common\b3270\ui_stream.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wb3270\version.c">
+    <ClCompile Include="version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

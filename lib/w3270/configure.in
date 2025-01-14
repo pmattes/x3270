@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2024 Paul Mattes.
+dnl Copyright (c) 2000-2025 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([libw3270],[4.3])
+AC_INIT([libw3270],[4.4])
 AC_PREREQ([2.69])
 
 dnl Checks for programs.
@@ -52,6 +52,21 @@ fi
 AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
 AC_SUBST(CPPFLAGS)
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile.obj)

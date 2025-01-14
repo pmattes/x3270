@@ -29,6 +29,8 @@
 RM = rm -f
 CC = @CC@
 HOST = @host@
+PYTHON = @PYTHON@
+
 include x3270_files.mk libs.mk
 
 VOBJS = $(X3270_OBJECTS) fallbacks.o
@@ -69,16 +71,16 @@ LDFLAGS = @XLIB@ @LDFLAGS@
 LIBS = @LIBS@
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.py $(VOBJS) version.txt
 	$(RM) $(XVERSION)
-	sh $< x3270 $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) x3270 $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
-fallbacks.c: $(FALLBACKS)
+fallbacks.c: mkfb.py $(FALLBACKS)
 	$(RM) $@
-	$(TOP)/obj/@build@/mkfb/mkfb -o $@ $^
+	$(PYTHON) $< -o $@ $(filter-out %.py,$^)
 
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)

@@ -106,8 +106,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>prebuild.bat</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -177,17 +176,6 @@
     <ResourceCompile Include="..\..\wb3270\wb3270.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\mkfb\mkfb.vcxproj">
-      <Project>{2a000dfc-320a-4f19-afb1-42f11775664f}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\mkversion\mkversion.vcxproj">
-      <Project>{1a5b909a-4e61-4ab0-bc7a-2bc07f3be1ce}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\wb3270\fallbacks.c" />
     <ClCompile Include="..\..\Common\b3270\async.c" />
     <ClCompile Include="..\..\Common\b3270\b3270.c" />
     <ClCompile Include="..\..\Common\b3270\ft.c" />
@@ -196,7 +184,8 @@
     <ClCompile Include="..\..\Common\b3270\screen.c" />
     <ClCompile Include="..\..\Common\b3270\status.c" />
     <ClCompile Include="..\..\Common\b3270\ui_stream.c" />
-    <ClCompile Include="..\..\wb3270\version.c" />
+    <ClCompile Include="fallbacks.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

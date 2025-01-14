@@ -22,7 +22,7 @@
     <ClCompile Include="..\..\wc3270\relink.c" />
     <ClCompile Include="..\..\wc3270\shortcut.c" />
     <ClCompile Include="..\..\wc3270\wizard.c" />
-    <ClCompile Include="..\..\wc3270\wversion.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7CC1CB4D-16D7-446A-B132-963F5C1247E9}</ProjectGuid>
@@ -115,6 +115,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutDir)libw32xx.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>python3 ..\..\Common\mkversion.py -o version.c wc3270 ..\..\Common\version.txt</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

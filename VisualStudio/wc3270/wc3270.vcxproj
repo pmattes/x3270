@@ -104,12 +104,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>prebuild.bat</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(RootDir)%(Directory);%(ProjectDir);%(ProjectDir)..\..\include;%(ProjectDir)..\..\wc3270;%(ProjectDir)..\..\Common;%(ProjectDir)..\..\Common\c3270;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -181,22 +180,7 @@
     <ResourceCompile Include="..\..\wc3270\wc3270.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\mkfb\mkfb.vcxproj">
-      <Project>{2a000dfc-320a-4f19-afb1-42f11775664f}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\mkkeypad\mkkeypad.vcxproj">
-      <Project>{54f94101-1334-443a-b501-5bfbdfec5323}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\mkversion\mkversion.vcxproj">
-      <Project>{1a5b909a-4e61-4ab0-bc7a-2bc07f3be1ce}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\Common\c3270\c3270.c" />
-    <ClCompile Include="..\..\wc3270\fallbacks.c" />
     <ClCompile Include="..\..\Common\c3270\ft_gui.c" />
     <ClCompile Include="..\..\Common\c3270\help.c" />
     <ClCompile Include="..\..\wc3270\keymap.c" />
@@ -210,7 +194,8 @@
     <ClCompile Include="..\..\Common\c3270\status_dump.c" />
     <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c" />
     <ClCompile Include="..\..\wc3270\snap.c" />
-    <ClCompile Include="..\..\wc3270\version.c" />
+    <ClCompile Include="fallbacks.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

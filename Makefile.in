@@ -108,24 +108,6 @@ c3270 x3270: ibm_hosts
 c3270-clean x3270-clean: ibm_hosts-clean
 c3270-clobber x3270-clobber: ibm_hosts-clobber
 
-# mkfb dependencies.
-c3270 s3270 b3270 x3270 wc3270 ws3270 wb3270: mkfb
-.PHONY: mkfb
-x3270-clean c3270-clean s3270-clean b3270-clean: mkfb-clean
-x3270-clobber c3270-clobber s3270-clobber b3270-clobber: mkfb-clobber
-
-# mkkeypad dependencies.
-c3270 wc3270: mkkeypad
-.PHONY: mkkeypad
-c3270-clean wc3270-clean: mkkeypad-clean
-c3270-clobber wc3270-clobber: mkkeypad-clobber
-
-# mkicon dependencies.
-lib3270 libw3270: mkicon
-.PHONY: mkicon
-lib3270-clean libw3270-clean: mkicon-clean
-lib3270-clobber libw3270-clobber: mkicon-clobber
-
 .PHONY: x3270if
 
 # s3270 dependencies.
@@ -195,12 +177,6 @@ mitm: lib32xx
 	cd mitm && $(MAKE)
 ibm_hosts:
 	cd ibm_hosts && $(MAKE)
-mkfb:
-	cd mkfb && $(MAKE)
-mkkeypad:
-	cd mkkeypad && $(MAKE)
-mkicon:
-	cd mkicon && $(MAKE)
 wc3270: wc3270@WIN32_SUFFIX@ wc3270@WIN64_SUFFIX@
 wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
 	cd wc3270 && $(MAKE) @WINDRES_SET@
@@ -340,12 +316,6 @@ mitm-clean:
 	cd mitm && $(MAKE) clean
 ibm_hosts-clean:
 	cd ibm_hosts && $(MAKE) clean
-mkfb-clean:
-	cd mkfb && $(MAKE) clean
-mkkeypad-clean:
-	cd mkkeypad && $(MAKE) clean
-mkicon-clean:
-	cd mkicon && $(MAKE) clean
 wc3270-clean: wc3270-clean@WIN32_SUFFIX@ wc3270-clean@WIN64_SUFFIX@
 wc3270-clean-32:
 	cd wc3270 && $(MAKE) clean
@@ -443,12 +413,6 @@ mitm-clobber:
 	cd mitm && $(MAKE) clobber
 ibm_hosts-clobber:
 	cd ibm_hosts && $(MAKE) clobber
-mkfb-clobber:
-	cd mkfb && $(MAKE) clobber
-mkkeypad-clobber:
-	cd mkkeypad && $(MAKE) clobber
-mkicon-clobber:
-	cd mkicon && $(MAKE) clobber
 wc3270-clobber: wc3270-clobber@WIN32_SUFFIX@ wc3270-clobber@WIN64_SUFFIX@
 wc3270-clobber-32:
 	cd wc3270 && $(MAKE) clobber
@@ -529,7 +493,8 @@ PYTESTS=$(ALLPYTESTS)
 PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
 TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
 
-RUNTESTS=PATH="$(TESTPATH)$$PATH" python3 -m unittest $(TESTOPTIONS)
+PYTHON = @PYTHON@
+RUNTESTS=PATH="$(TESTPATH)$$PATH" $(PYTHON) -m unittest $(TESTOPTIONS)
 
 b3270-test: b3270
 	$(RUNTESTS) b3270/Test/test*.py

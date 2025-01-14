@@ -56,9 +56,9 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.py $(VOBJS) version.txt
 	$(RM) $(XVERSION)
-	sh $< x3270if $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) x3270if $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 

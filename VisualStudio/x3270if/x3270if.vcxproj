@@ -22,15 +22,10 @@
     <ClCompile Include="..\..\Common\base64.c" />
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\x3270if.c" />
-    <ClCompile Include="..\..\x3270if\version.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\wx3270if\x3270if.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\mkversion\mkversion.vcxproj">
-      <Project>{1a5b909a-4e61-4ab0-bc7a-2bc07f3be1ce}</Project>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{25CA97FA-186C-4235-8280-BF1F56FD3CFF}</ProjectGuid>
@@ -123,6 +118,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(OutDir)libw32xx.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>python3 ..\..\Common\mkversion.py -o version.c x3270if ..\..\Common\version.txt</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

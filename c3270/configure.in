@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([c3270],[4.3])
+AC_INIT([c3270],[4.4])
 AC_PREREQ([2.69])
 AC_CONFIG_HEADERS([conf.h])
 
@@ -69,7 +69,6 @@ then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
-AC_SUBST(build)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 
@@ -167,6 +166,21 @@ case "$enable_local_process" in
 ""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
 	;;
 esac
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl Generate the Makefile.
 AC_CONFIG_FILES(Makefile Makefile.obj)
