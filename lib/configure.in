@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([lib],[4.3])
+AC_INIT([lib],[4.4])
 AC_PREREQ([2.69])
 
 dnl Checks for programs.
@@ -62,7 +62,6 @@ if test "$GCC" = yes
 then	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
-AC_SUBST(build)
 AC_SUBST(CCOPTIONS)
 AC_SUBST(CONNECT_GETPEERNAME)
 
@@ -268,6 +267,21 @@ AC_ARG_ENABLE(poll,[  --disable-poll          leave out poll() support])
 if test "$enable_poll" = no
 then	CPPFLAGS="$CPPFLAGS -DNO_POLL=1"
 fi
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl Generate the files.
 AC_CONFIG_HEADERS(include/unix/conf.h)

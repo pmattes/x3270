@@ -30,6 +30,7 @@ LIB3270 = lib3270.a
 
 RM = rm -f
 CC = @CC@
+PYTHON = @PYTHON@
 
 AR = @AR@
 RANLIB = @RANLIB@
@@ -57,8 +58,8 @@ $(LIB3270): $(OBJS) $(INCS)
 
 favicon.o: favicon.c
 
-favicon.c: favicon.ico
-	$(TOP)/obj/@build@/mkicon/mkicon $< >$@
+favicon.c: mkicon.py favicon.ico
+	$(PYTHON) $< -o $@ $(filter %.ico,$^)
 
 clean:
 	$(RM) *.o favicon.c $(LIB3270)

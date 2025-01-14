@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2024 Paul Mattes.
+# Copyright (c) 2015-2025 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ src.tgz: prepare man Webpage program-src
 prepare: configure
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare ibm_hosts-prepare mitm-prepare Webpage-prepare mkfb-prepare mkkeypad-prepare mkicon-prepare ws3270-prepare wc3270-prepare wb3270-prepare
+prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare ibm_hosts-prepare mitm-prepare Webpage-prepare ws3270-prepare wc3270-prepare wb3270-prepare
 lib-prepare:
 	cd lib && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 c3270-prepare:
@@ -61,12 +61,6 @@ mitm-prepare:
 	cd mitm && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 Webpage-prepare:
 	cd Webpage && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-mkfb-prepare:
-	cd mkfb && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-mkkeypad-prepare:
-	cd mkkeypad && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-mkicon-prepare:
-	cd mkicon && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 ws3270-prepare:
 	cd ws3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
 wc3270-prepare:

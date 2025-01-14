@@ -28,6 +28,7 @@
 
 RM = rm -f
 CC = @CC@
+PYTHON = @PYTHON@
 
 all: c3270
 
@@ -57,21 +58,21 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.py $(VOBJS) version.txt
 	$(RM) $(XVERSION)
-	sh $< c3270 $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) c3270 $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
-fallbacks.c: $(FALLBACKS)
+fallbacks.c: mkfb.py $(FALLBACKS)
 	$(RM) $@
-	$(TOP)/obj/@build@/mkfb/mkfb -c -o $@ $^
+	$(PYTHON) $< -c -o $@ $(filter-out %.py,$^)
 
 keypad.o: compiled_keypad.h
 
-compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks
-	$(TOP)/obj/@build@/mkkeypad/mkkeypad -I$(TOP)/Common/c3270 >$@
+compiled_keypad.h: mkkeypad.py keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks
+	$(PYTHON) $< -I$(TOP)/Common/c3270 -o $@
 
 c3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)

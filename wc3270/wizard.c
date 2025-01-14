@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2024 Paul Mattes.
+ * Copyright (c) 2006-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -173,8 +173,6 @@ typedef enum {
     WS_FAILED,		/* operation failed */
     WS_ERR = -1		/* error */
 } ws_t;
-
-extern char *wversion;
 
 #define CS_WIDTH	19
 #define CP_WIDTH	8
@@ -938,10 +936,10 @@ new_screen(session_t *s, const char *path, const char *title)
 {
     static char wizard[] = "wc3270 Session Wizard";
     cls();
-    reverseout("%s%*s%s\n",
+    reverseout("%s%*sv%s\n",
 	    wizard,
-	    (int)(79 - strlen(wizard) - strlen(wversion)), " ",
-	    wversion);
+	    (int)(79 - strlen(wizard) - (strlen(build_rpq_version) + 1)), " ",
+	    build_rpq_version);
     if (s->session[0]) {
 	printf("\nSession: %s\n", s->session);
     }
@@ -5038,8 +5036,8 @@ write_session_file(const session_t *session, char *us, const char *path)
     fprintf(f, "! wc3270 session '%s'\n", session->session);
 
     t = time(NULL);
-    fprintf(f, "! Created or modified by the wc3270 %s Session Wizard %s",
-	    wversion, ctime(&t));
+    fprintf(f, "! Created or modified by the wc3270 %s Session Wizard v%s",
+	    build_rpq_version, ctime(&t));
 
     if (strcmp(session->host, CHOICE_NONE)) {
 	bracket = (strchr(session->host, ':') != NULL);
@@ -5883,17 +5881,17 @@ do_upgrade(bool automatic_from_cmdline)
     if (!automatic_from_cmdline) {
 	/* Say hello. */
 	cls();
-	reverseout("%s%*s%s\n",
+	reverseout("%s%*sv%s\n",
 		wizard,
-		(int)(79 - strlen(wizard) - strlen(wversion)), " ",
-		wversion);
+		(int)(79 - strlen(wizard) - (strlen(build_rpq_version) + 1)), " ",
+		build_rpq_version);
 
 	/* Ask if they want to upgrade. */
 	printf("\n\
-wc3270 %s no longer keeps user-defined files in AppData. Session and\n\
+wc3270 v%s no longer keeps user-defined files in AppData. Session and\n\
 keymap files are kept in Documents folders instead.\n\n\
 The following files were found in %s:\n",
-		wversion,
+		build_rpq_version,
 		admin()? "wc3270 AppData folders":
 		         "your wc3270 AppData folder");
 	if (xs_my.count || xs_public.count) {

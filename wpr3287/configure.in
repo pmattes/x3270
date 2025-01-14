@@ -1,0 +1,49 @@
+dnl Copyright (c) 2000-2025 Paul Mattes.
+dnl All rights reserved.
+dnl 
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the name of Paul Mattes nor his contributors may be used
+dnl       to endorse or promote products derived from this software without
+dnl       specific prior written permission.
+dnl 
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
+dnl OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+dnl WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED. IN NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT,
+dnl INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+dnl POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT([wpr3287],[4.4])
+AC_PREREQ([2.69])
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
+
+dnl Generate the Makefiles.
+AC_CONFIG_FILES(Makefile.obj)
+AC_OUTPUT

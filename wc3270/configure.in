@@ -26,14 +26,23 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([wc3270],[4.3])
+AC_INIT([wc3270],[4.4])
 AC_PREREQ([2.69])
 
-dnl Figure out what sort of host and compiler this is.
-AC_CANONICAL_HOST
-AC_CANONICAL_BUILD
-AC_SUBST(host)
-AC_SUBST(build)
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile.obj)

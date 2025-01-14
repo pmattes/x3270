@@ -97,6 +97,9 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>python3 ..\..\Common\mkicon.py -o favicon.c ..\..\Common\favicon.ico</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -146,7 +149,6 @@
     <ClCompile Include="..\..\Common\devname.c" />
     <ClCompile Include="..\..\Common\event.c" />
     <ClCompile Include="..\..\Common\telnet_sio.c" />
-    <ClCompile Include="..\..\lib\w3270\favicon.c" />
     <ClCompile Include="..\..\Common\fprint_screen.c" />
     <ClCompile Include="..\..\Common\ft.c" />
     <ClCompile Include="..\..\Common\ft_cut.c" />
@@ -200,6 +202,7 @@
     <ClCompile Include="..\..\Common\uri.c" />
     <ClCompile Include="..\..\Common\percent_decode.c" />
     <ClCompile Include="..\..\Common\cookiefile.c" />
+    <ClCompile Include="favicon.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

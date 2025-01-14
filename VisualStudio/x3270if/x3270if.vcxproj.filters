@@ -24,7 +24,7 @@
     <ClCompile Include="..\..\Common\Malloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\x3270if\version.c">
+    <ClCompile Include="version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

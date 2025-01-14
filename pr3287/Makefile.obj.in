@@ -52,9 +52,9 @@ include pr3287_files.mk libs.mk
 OBJECTS = $(PR3287_OBJECTS)
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(OBJECTS) version.txt
+version.o: mkversion.py $(OBJECTS) version.txt
 	$(RM) $(XVERSION)
-	sh $< pr3287 $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) pr3287 $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 

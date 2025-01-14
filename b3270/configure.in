@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([b3270],[4.3])
+AC_INIT([b3270],[4.4])
 AC_PREREQ([2.69])
 
 dnl Checks for programs.
@@ -38,7 +38,6 @@ dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
 dnl all of usual Unix functions are visible to strict ANSI compilers.
 ansi="-std=c99 -pedantic"
 AC_CANONICAL_HOST
-AC_CANONICAL_BUILD
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
@@ -54,7 +53,6 @@ then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
-AC_SUBST(build)
 AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)
 
@@ -96,6 +94,21 @@ case "$enable_local_process" in
 ""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
 	;;
 esac
+
+dnl Find Python
+AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
+if test "x$with_python" != x; then
+    python=$with_python
+elif test "x$PYTHON" != x; then
+    python=$PYTHON
+else
+    python=python3
+fi
+AC_PATH_PROG(PYTHON,$python,not found)
+if test "$PYTHON" = "not found"; then
+    AC_MSG_ERROR([Can't find Python using '$python', try --with-python=])
+fi
+AC_SUBST(PYTHON)
 
 dnl Generate the Makefiles.
 AC_CONFIG_FILES(Makefile Makefile.obj)

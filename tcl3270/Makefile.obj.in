@@ -29,6 +29,7 @@
 
 RM = rm -f
 CC = @CC@
+PYTHON = @PYTHON@
 
 all: tcl3270
 
@@ -58,16 +59,16 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.py $(VOBJS) version.txt
 	$(RM) $(XVERSION)
-	sh $< tcl3270 $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) tcl3270 $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-common
-fallbacks.c: $(FALLBACKS)
+fallbacks.c: mkfb.py $(FALLBACKS)
 	$(RM) $@
-	$(TOP)/obj/@build@/mkfb/mkfb -c -o $@ $^
+	$(PYTHON) $< -c -o $@ $(filter-out %.py,$^)
 
 tcl3270: $(OBJS1)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS)

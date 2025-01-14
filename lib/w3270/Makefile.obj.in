@@ -32,6 +32,7 @@ include winenv.mk
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
 override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
+PYTHON = @PYTHON@
 
 all:: $(LIB3270)
 
@@ -45,8 +46,8 @@ $(LIB3270): $(OBJS) $(INCS)
 
 favicon.o: favicon.c
 
-favicon.c: favicon.ico
-	$(TOP)/obj/@build@/mkicon/mkicon $< >favicon.c
+favicon.c: mkicon.py favicon.ico
+	$(PYTHON) $< -o $@ $(filter %.ico,$^)
 
 clean:
 	$(RM) *.o favicon.c $(LIB3270)

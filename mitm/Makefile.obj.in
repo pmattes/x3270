@@ -32,6 +32,7 @@ CC = @CC@
 all: mitm
 
 HOST = @host@
+PYTHON = @PYTHON@
 include mitm_files.mk libs.mk
 
 VOBJS = $(MITM_OBJECTS)
@@ -56,9 +57,9 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) version.txt
+version.o: mkversion.py $(VOBJS) version.txt
 	$(RM) $(XVERSION)
-	sh $< mitm $(filter %.txt,$^) >$(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) mitm $(filter %.txt,$^)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 

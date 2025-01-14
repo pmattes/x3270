@@ -25,9 +25,9 @@
     <ClCompile Include="..\..\Common\pr3287\sf.c" />
     <ClCompile Include="..\..\Common\pr3287\telnet.c" />
     <ClCompile Include="..\..\Common\pr3287\trace.c" />
-    <ClCompile Include="..\..\wpr3287\version.c" />
     <ClCompile Include="..\..\wpr3287\ws.c" />
     <ClCompile Include="..\..\Common\pr3287\xtable.c" />
+    <ClCompile Include="version.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0094B3D7-0924-4296-BED4-300B53F63562}</ProjectGuid>
@@ -127,6 +127,9 @@
     <PostBuildEvent>
       <Command>cmd.exe /c copy "$(OutDir)\pr3287.exe" "$(OutDir)\wpr3287.exe"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>prebuild.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

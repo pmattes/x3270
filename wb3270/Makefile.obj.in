@@ -33,12 +33,9 @@ include winenv.mk
 XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include -I$(TOP)/extern/libexpat/expat/lib
 override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
+PYTHON = @PYTHON@
+
 OBJ = o
-ifdef WIN64
-HOST = win64
-else
-HOST = win32
-endif
 W = w
 include b3270_files.mk libs.mk
 
@@ -54,20 +51,19 @@ PROGS = b3270.exe wb3270.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
-version.o: mkversion.sh $(VOBJS) $(LIBDEPS) version.txt
+version.o: mkversion.py $(VOBJS) $(LIBDEPS) version.txt
 	$(RM) $(XVERSION)
-	sh $< b3270 $(filter %.txt,$^) >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(PYTHON) $< -o $(XVERSION) b3270 $(filter %.txt,$^)
+	$(CC) $(CFLAGS) -w -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
 FALLBACKS = fb-common fb-printSession
-fallbacks.c: $(FALLBACKS)
+fallbacks.c: mkfb.py $(FALLBACKS)
 	$(RM) $@
-	$(TOP)/obj/@build@/mkfb/mkfb -w -c -o $@ $^
+	$(PYTHON) $< -w -c -o $@ $(filter-out %.py,$^)
 
-wb3270.exe.manifest: mkmanifest.sh version.txt manifest.tmpl
-	sh $< $(filter %.txt,$^) $(filter %.tmpl,$^) b3270 "b3270 terminal emulator back-end" $(WIN64) >$@.tmp
-	mv -f $@.tmp $@
+wb3270.exe.manifest: mkmanifest.py version.txt manifest.tmpl
+	$(PYTHON) $< -o $@ $(filter %.txt,$^) $(filter %.tmpl,$^) b3270 "b3270 terminal emulator back-end"
 
 wb3270res.o: wb3270.rc wb3270.ico Makefile wb3270.exe.manifest
 	$(WINDRES) -i $< -o $@
@@ -77,9 +73,6 @@ b3270.exe: $(OBJECTS) $(LIBDEPS) Makefile
 
 wb3270.exe: b3270.exe
 	cp -p b3270.exe $@
-
-wversion.o: mkwversion.sh version.txt
-	sh $< b3270 $(CC) $(filter %.txt,$^)
 
 clean:
 	rm -f *.o fallbacks.c wb3270.exe.manifest
