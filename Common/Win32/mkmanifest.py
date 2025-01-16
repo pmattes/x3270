@@ -58,8 +58,6 @@
 #     -e "s/%DESCRIPTION%/$description/g" \
 #     $2
 
-from datetime import datetime, timezone
-import os
 import re
 import sys
 
@@ -77,7 +75,7 @@ def mkmanifest(outfile_name: str, version_txt: str, template: str, exe_name: str
             line = line.strip()
             m = re.fullmatch('^([a-z]+)="(.*)"$', line)
             if m == None:
-                print(f'Syntax error in version.txt at line {lno}', file = sys.stderr)
+                print(f'Syntax error in {version_txt}:{lno}', file = sys.stderr)
                 continue
             ver[m.group(1)] = m.group(2)
 
@@ -87,7 +85,7 @@ def mkmanifest(outfile_name: str, version_txt: str, template: str, exe_name: str
     version = ver['version']
 
     # Transform the version.
-    m = re.fullmatch('^([0-9][0-9]*)\\.([0-9][0-9]*)[a-z][a-z]*([0-9][0-9]*)$', version)
+    m = re.fullmatch(r'^([0-9][0-9]*)\.([0-9][0-9]*)[a-z][a-z]*([0-9][0-9]*)$', version)
     if m == None:
         print(f'Version "{version}" does not have the right format', file = sys.stderr)
         exit(1)

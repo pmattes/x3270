@@ -47,7 +47,6 @@
 #  unsigned char lr_x, lr_y;   lower right corner
 #  unsigned char callback_name; 'a', 'b', etc.
 
-from io import TextIOWrapper
 import os
 import os.path
 import sys
@@ -68,64 +67,73 @@ class Sensmap:
         self.index = Sensmap.index
         Sensmap.index += 1
 
-def fopen_inc(name: str) -> TextIOWrapper:
-    '''Open a file, using the -I directory if needed'''
-    try:
-        f = open(name)
-    except Exception as ex:
-        if incdir != None:
-            f = open(os.path.join(incdir, name))
-        else:
-            raise ex
-    return f
+class fopen_inc():
+    def __init__(self, name: str, incdir: str):
+        self.file = None
+        try:
+            self.file = open(name)
+        except Exception as ex:
+            if incdir != None:
+                self.file = open(os.path.join(incdir, name))
+            else:
+                raise ex
+
+    def __enter__(self):
+        return self.file
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.close()
+
+    def close(self):
+        if self.file != None:
+            self.file.close()
+            self.file = None
 
 def mkkeypad(incdir: str, out_file_name: str):
-    '''Genereate the keypad map'''
-    map = fopen_inc('keypad.map')
-    callbacks = fopen_inc('keypad.callbacks')
+    '''Generate the keypad map'''
     sensmaps = {}
+    with fopen_inc('keypad.callbacks', incdir) as callbacks:
+        with fopen_inc('keypad.map', incdir) as map:
 
-    if out_file_name != None:
-        out_file = open(out_file_name, 'w')
-    else:
-        out_file = sys.stdout
+            if out_file_name != None:
+                out_file = open(out_file_name, 'w')
+            else:
+                out_file = sys.stdout
 
-    # Read in the map file.
-    x = 0
-    y = 0
-    while True:
-        c = map.read(1)
-        if c == '':
-            break
-        if c == '\n':
-            y += 1
+            # Read in the map file.
             x = 0
-            continue
-        if c == ' ':
-            x += 1
-            continue
-        if c in sensmaps:
-            sensmaps[c].lr_x = x
-            sensmaps[c].lr_y = y
-        else:
-            sensmaps[c] = Sensmap(x, y)
-        x += 1
-    map.close()
+            y = 0
+            while True:
+                c = map.read(1)
+                if c == '':
+                    break
+                if c == '\n':
+                    y += 1
+                    x = 0
+                    continue
+                if c == ' ':
+                    x += 1
+                    continue
+                if c in sensmaps:
+                    sensmaps[c].lr_x = x
+                    sensmaps[c].lr_y = y
+                else:
+                    sensmaps[c] = Sensmap(x, y)
+                x += 1
 
-    # Read in the callbacks.
-    while True:
-        buf = callbacks.readline()
-        if buf == '':
-            break
-        buf = buf.strip()
-        c = buf[0]
-        buf = buf[1:].strip()
-        if c in sensmaps:
-            sensmaps[c].callback = buf
-        else:
-            print( 'Unknown map: {c}', file=sys.stderr)
-            exit(1)
-    callbacks.close()
+            # Read in the callbacks.
+            while True:
+                buf = callbacks.readline()
+                if buf == '':
+                    break
+                buf = buf.strip()
+                c = buf[0]
+                buf = buf[1:].strip()
+                if c in sensmaps:
+                    sensmaps[c].callback = buf
+                else:
+                    print( 'Unknown map: {c}', file=sys.stderr)
+                    exit(1)
 
     # Check the sensmaps.
     for key, s in sensmaps.items():
@@ -145,47 +153,45 @@ def mkkeypad(incdir: str, out_file_name: str):
     print('};', file=out_file)
 
     # Read in the label and outline files, and use them to dump out keypad_desc[].
-    labels = fopen_inc('keypad.labels')
-    outline = fopen_inc('keypad.outline')
+    with fopen_inc('keypad.labels', incdir) as labels:
+        with fopen_inc('keypad.outline', incdir) as outline:
 
-    print(f'keypad_desc_t keypad_desc[{y}][80] = ' + '{', file=out_file)
-    print('{ /* row 0 */', file=out_file)
-    x = 0
-    y = 0
-    while True:
-        c = labels.read(1)
-        if c == '':
-            break
-        d = outline.read(1)
-        if c == '\n':
-            if d != '\n':
-                print(f'labels and outline are out of sync at line {y + 1}', file=sys.stderr)
-                exit(1)
-            y += 1
+            print(f'keypad_desc_t keypad_desc[{y}][80] = ' + '{', file=out_file)
+            print('{ /* row 0 */', file=out_file)
             x = 0
-            continue
-        if x == 0 and y != 0:
-            print('},', file=out_file)
-            print('{ ' + f'/* row {y} */', file=out_file)
-        found = False
-        for _, s in sensmaps.items():
-            if x >= s.ul_x and y >= s.ul_y and x <= s.lr_x and y <= s.lr_y:
-                print('  { ' + f"'{c}', '{d}', &sens[{s.index}]" + ' },', file=out_file)
-                found = True
-                break
-        if not found:
-            if c == ' ' and d == ' ':
-                print('  {   0,   0, NULL },', file=out_file)
-            else:
-                print('  { ' + f"'{c}', '{d}', NULL" + ' },', file=out_file)
-        x += 1
-    d = outline.read(1)
-    if d != '':
-        print('labels and outlines are out of sync at EOF', file=os.stderr)
-        exit(1)
-    print('} };', file=out_file)
-    labels.close()
-    outline.close()
+            y = 0
+            while True:
+                c = labels.read(1)
+                if c == '':
+                    break
+                d = outline.read(1)
+                if c == '\n':
+                    if d != '\n':
+                        print(f'labels and outline are out of sync at line {y + 1}', file=sys.stderr)
+                        exit(1)
+                    y += 1
+                    x = 0
+                    continue
+                if x == 0 and y != 0:
+                    print('},', file=out_file)
+                    print('{ ' + f'/* row {y} */', file=out_file)
+                found = False
+                for _, s in sensmaps.items():
+                    if x >= s.ul_x and y >= s.ul_y and x <= s.lr_x and y <= s.lr_y:
+                        print('  { ' + f"'{c}', '{d}', &sens[{s.index}]" + ' },', file=out_file)
+                        found = True
+                        break
+                if not found:
+                    if c == ' ' and d == ' ':
+                        print('  {   0,   0, NULL },', file=out_file)
+                    else:
+                        print('  { ' + f"'{c}', '{d}', NULL" + ' },', file=out_file)
+                x += 1
+            d = outline.read(1)
+            if d != '':
+                print('labels and outlines are out of sync at EOF', file=os.stderr)
+                exit(1)
+            print('} };', file=out_file)
 
     if out_file_name != None:
         out_file.close()
