@@ -28,27 +28,29 @@
 # Utility to create RDB string definitions from a simple #ifdef'd .ad file.
 #  mkfb [-c] [-o outfile] [infile...]
 
+from enum import Flag
 import os
 import sys
-import tempfile
 
 # #ifdef bit masks.
-MODE_COLOR = 0x1
-MODE_APL = 0x2
-MODE_DBCS = 0x4
-MODE__WIN32 = 0x8
-MODEMASK = 0xfff
+class Mode(Flag):
+    NONE = 0
+    COLOR = 0x1
+    APL = 0x2
+    X3270_DBCS = 0x4
+    _WIN32 = 0x8
+    MASK = 0xfff
 
 # Globals.
 cmode = False
-is_defined = MODE_COLOR | MODE_APL | MODE_DBCS
-is_undefined = 0
+is_defined = Mode.COLOR | Mode.APL | Mode.X3270_DBCS
+is_undefined = Mode.NONE
 
 class Ss:
     '''#ifdef stack element'''
     def __init__(self):
-        self.ifdefs = 0
-        self.ifndefs = 0
+        self.ifdefs = Mode.NONE
+        self.ifndefs = Mode.NONE
         self.lno = 0
 
 # Set up ss (the #ifdef nesting stack) as an array for now.
@@ -59,28 +61,36 @@ ssp = 0
 
 class FilteredRecord:
     '''#ifdef temp'''
-    def __init__(self, ifdefs: int, ifndefs: int, lno: int, value: str):
+    def __init__(self, ifdefs: Mode, ifndefs: Mode, lno: int, filename: str, value: str):
         self.ifdefs = ifdefs
         self.ifndefs = ifndefs
         self.lno = lno
+        self.filename = os.path.basename(filename)
         self.value = value
 
 # Dictionary mapping #ifdef symbols to bit masks.
 parts = {
-    'COLOR': MODE_COLOR,
-    'X3270_APL': MODE_APL,
-    'X3270_DBCS': MODE_DBCS,
-    '_WIN32': MODE__WIN32
+    Mode.COLOR.name: Mode.COLOR,
+    Mode.APL.name: Mode.APL,
+    Mode.X3270_DBCS.name: Mode.X3270_DBCS,
+    Mode._WIN32.name: Mode._WIN32
 }
 
-n_out = [ 0, 0, 0]
-def emit(t, ix: int, c: str):
-    '''Emit a byte, with nice formatting'''
-    if n_out[ix] >= 19:
-        t.append('')
-        n_out[ix] = 0
-    t[len(t)-1] += f'{ord(c):3d},'
-    n_out[ix] += 1
+class OutBuffer:
+    n_per_line = 19
+    def __init__(self):
+        self.text = []
+        self.n_out = 0
+    def append(self, text: str):
+        '''Append a line of text'''
+        self.text.append(text)
+    def emit(self, c:str):
+        '''Emit a byte, with nice formatting'''
+        if self.n_out >= OutBuffer.n_per_line:
+            self.append('')
+            self.n_out = 0
+        self.text[-1] += f'{ord(c):3d},'
+        self.n_out += 1
 
 def mkfb(infiles, ofile: str):
     '''Generate the fallback files'''
@@ -89,13 +99,7 @@ def mkfb(infiles, ofile: str):
     lno = 0
     ssp = 0
 
-    # Open the output file.
-    if ofile != None:
-        out_file = open(ofile, 'w')
-    else:
-        out_file = sys.stdout
-
-    is_undefined = MODE_COLOR | (~is_defined & MODEMASK)
+    is_undefined = Mode.COLOR | (~is_defined & Mode.MASK)
 
     # Start accumulating filtered output.
     filtered = []
@@ -108,6 +112,7 @@ def mkfb(infiles, ofile: str):
             in_file = open(infiles[0])
             filename = infiles[0]
             infiles = infiles[1:]
+            lno = 0
         else:
             in_file = sys.stdin
             filename = 'standard input'
@@ -127,64 +132,67 @@ def mkfb(infiles, ofile: str):
                 continue
 
             if s.startswith('#'):
-                is_ifndef = 1 if s.startswith('#ifndef') else 0
-                if s.startswith('#ifdef') or s.startswith('#ifndef'):
+                is_ifndef = s.startswith('#ifndef')
+                if s.startswith('#ifdef') or is_ifndef:
                     if ssp >= SSSZ:
-                        print(f'{filename}, line {lno}: Stack overflow', file=sys.stderr)
+                        print(f'{filename}:{lno}: Stack overflow', file=sys.stderr)
                         exit(1)
-                    ss[ssp].ifdefs = 0
-                    ss[ssp].ifndefs = 0
+                    ss[ssp].ifdefs = Mode.NONE
+                    ss[ssp].ifndefs = Mode.NONE
                     ss[ssp].lno = lno
 
-                    tk = 7 + is_ifndef
-                    if s[tk:] in parts:
-                        if is_ifndef != 0:
-                            ss[ssp].ifndefs = parts[s[tk:]]
+                    tk = 6 + (1 if is_ifndef else 0)
+                    condition = s[tk:].lstrip()
+                    if condition in parts:
+                        if is_ifndef:
+                            ss[ssp].ifndefs = parts[condition]
                         else:
-                            ss[ssp].ifdefs = parts[s[tk:]]
+                            ss[ssp].ifdefs = parts[condition]
                         ssp += 1
                     else:
-                        print(f'{filename}, line {lno}: Unknown condition {s[tk:]}', file=sys.stderr)
+                        print(f'{filename}:{lno}: Unknown condition {condition}', file=sys.stderr)
                         exit(1)
                     continue
                 elif s == '#else':
                     if ssp == 0:
-                        print(f'{filename}, line {lno}: Missing #if[n]def', file=sys.stderr)
+                        print(f'{filename}:{lno}: Missing #if[n]def', file=sys.stderr)
                         exit(1)
                     tmp = ss[ssp-1].ifdefs
                     ss[ssp-1].ifdefs = ss[ssp-1].ifndefs
                     ss[ssp-1].ifndefs = tmp
                 elif s == '#endif':
                     if ssp == 0:
-                        print(f'{filename}, line {lno}: Missing #if[n]def', file=sys.stderr)
+                        print(f'{filename}:{lno}: Missing #if[n]def', file=sys.stderr)
                         exit(1)
                     ssp -= 1
                 else:
-                    print(f'{filename}, line {lno}: Unrecognized # directive', file=sys.stderr)
+                    print(f'{filename}:{lno}: Unrecognized # directive', file=sys.stderr)
                     exit(1)
                 continue
 
             # Figure out if there's anything to emit.
             # First, look for contradictions.
-            ifdefs = 0
-            ifndefs = 0
+            ifdefs = Mode.NONE
+            ifndefs = Mode.NONE
             for i in range(ssp):
                 ifdefs |= ss[i].ifdefs
                 ifndefs |= ss[i].ifndefs
-            if ifdefs != 0 and ifndefs != 0:
+            if ifdefs != Mode.NONE and ifndefs != Mode.NONE:
                 continue
 
             # Then, apply the actual values.
-            if ifdefs != 0 and (ifdefs & is_defined) != ifdefs:
+            if ifdefs != Mode.NONE and (ifdefs & is_defined) != ifdefs:
                 continue
-            if ifndefs != 0 and (ifndefs & is_undefined) != ifndefs:
+            if ifndefs != Mode.NONE and (ifndefs & is_undefined) != ifndefs:
                 continue
 
             # Emit the text.
-            filtered.append(FilteredRecord(ifdefs, ifndefs, lno, s))
+            filtered.append(FilteredRecord(ifdefs, ifndefs, lno, filename, s))
             last_continue = s.endswith('\\')
 
-        if infiles == None:
+        if infiles != None:
+            in_file.close()
+        else:
             break
     
     if ssp != 0:
@@ -193,27 +201,33 @@ def mkfb(infiles, ofile: str):
         exit(1)
 
     # Re-scan, emitting code this time.
-    t = []
+    t = OutBuffer()
     if not cmode:
-        tc = []
-        tm = []
+        tc = OutBuffer()
+        tm = OutBuffer()
     
     # Emit the initial boilerplate.
     t.append('/* This file was created automatically by mkfb. */')
     t.append('')
     t.append('#include "globals.h"',)
     t.append('#include "fallbacks.h"')
+    t.append('')
     if cmode:
         t.append('static unsigned char fsd[] = {')
+        t.append('')
     else:
         t.append('unsigned char common_fallbacks[] = {')
+        t.append('')
         tc.append('unsigned char color_fallbacks[] = {')
+        tc.append('')
         tm.append('unsigned char mono_fallbacks[] = {')
+        tm.append('')
 
     # Scan the file, emitting the fsd array and creating the indices.
     cc = 0
     aix = []
     xlno = []
+    xfilename = []
     backslash = False
     for rec in filtered:
         ifdefs = rec.ifdefs
@@ -221,27 +235,24 @@ def mkfb(infiles, ofile: str):
         lno = rec.lno
         buf = rec.value
 
-        t_this = t
-        ix = 0
         if cmode:
             # Ignore color. Accumulate offsets into an array.
+            t_this = t
             if not backslash:
                 aix.append(cc)
                 xlno.append(lno)
+                xfilename.append(rec.filename)
         else:
-            # Use color to decide which file to write into.
-            if (ifdefs & MODE_COLOR) == 0 and (ifndefs & MODE_COLOR) == 0:
+            # Use color to decide which list to write into.
+            if not Mode.COLOR in ifdefs and not Mode.COLOR in ifndefs:
                 # Both.
                 t_this = t
-                ix = 0
-            elif (ifdefs & MODE_COLOR) != 0:
+            elif Mode.COLOR in ifdefs:
                 # Just color.
                 t_this = tc
-                ix = 1
             else:
                 # Just mono.
                 t_this = tm
-                ix = 2
 
         backslash = False
         white = 0
@@ -253,71 +264,77 @@ def mkfb(infiles, ofile: str):
                     elif c == 'n':
                         c = '\n'
                 else:
-                    emit(t_this, ix, '\\')
+                    t_this.emit('\\')
                     cc += 1
                 backslash = False
             if c == ' ' or c == '\t':
                 white += 1
             elif white > 0:
-                emit(t_this, ix, ' ')
+                t_this.emit(' ')
                 cc += 1
                 white = 0
             if c != ' ' and c != '\t':
                 if c == '#':
                     if not cmode:
-                        emit(t_this, ix, '\\')
-                        emit(t_this, ix, '#') 
+                        t_this.emit('\\')
+                        t_this.emit('#')
                         cc += 2
                     else:
-                        emit(t_this, ix, c)
+                        t_this.emit(c)
                         cc += 1
                 elif c == '\\':
                     backslash = True
                 else:
-                    emit(t_this, ix, c)
+                    t_this.emit(c)
                     cc += 1
         if white > 0:
             # Line ended with whitespace pending.
-            emit(t_this, ix, ' ')
+            t_this.emit(' ')
             cc += 1
             white = 0
         if not backslash:
             # Line is not a continuation, terminate it.
             if cmode:
-                emit(t_this, ix, '\0')
+                t_this.emit('\0')
             else:
-                emit(t_this, ix, '\n')
+                t_this.emit('\n')
             cc += 1
 
     if cmode:
         t.append('};',)
         t.append('')
     else:
-        emit(t, 0, '\0')
+        t.emit('\0')
         t.append('};',)
         t.append('')
-        emit(tc, 0, '\0')
+        tc.emit('\0')
         tc.append('};')
         tc.append('')
-        emit(tm, 0, '\0')
+        tm.emit('\0')
         tm.append('};')
         tm.append('')
 
     # Copy tmp to output.
-    for line in t:
+
+    # Open the output file.
+    if ofile != None:
+        out_file = open(ofile, 'w')
+    else:
+        out_file = sys.stdout
+    for line in t.text:
         out_file.write(line + '\n')
     if not cmode:
-        for line in tc:
+        for line in tc.text:
             out_file.write(line + '\n')
-        for line in tm:
+        for line in tm.text:
             out_file.write(line + '\n')
     
     if cmode:
         # Emit the fallback array.
         print(f'char *fallbacks[{len(aix)+1}] = ' + '{', file=out_file)
         for i in range(len(aix)):
-            print(f'\t(char *)&fsd[{aix[i]}], /* line {xlno[i]} */', file=out_file)
-        print('\tNULL\n};', file=out_file)
+            print(f'    (char *)&fsd[{aix[i]}], /* {xfilename[i]}:{xlno[i]} */', file=out_file)
+        print('    NULL\n};', file=out_file)
         print(file=out_file)
 
     # Emit some test code.
@@ -340,9 +357,6 @@ def mkfb(infiles, ofile: str):
     print('}', file=out_file)
     print('#endif /*]*/', file=out_file)
 
-    if infiles != None:
-        in_file.close()
-
 def usage():
     '''Print a usage message and exit'''
     print('usage: mkfb [-c] -[w] [-o outfile] [infile...]', file=sys.stderr)
@@ -360,7 +374,7 @@ while len(args) > 0:
     if arg == '-c':
         cmode = True
     elif arg == '-w':
-        is_defined |= MODE__WIN32
+        is_defined |= Mode._WIN32
     elif arg == '-o':
         if len(args) < 2:
             usage()
