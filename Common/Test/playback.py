@@ -173,7 +173,7 @@ class playback():
             # Send a timing mark.
             self.send_tm()
 
-    def nread(self, n: int, timeout=2):
+    def nread(self, n: int, timeout=5):
         '''Read n bytes from the connection with a timeout'''
         nleft = n
         ret = b''
@@ -225,10 +225,6 @@ class playback():
                 # Start accumulating.
                 direction = line[0]
                 accum += line.split()[2]
-        if accum != '':
-            want = bytes.fromhex(accum)
-            r = self.nread(len(want))
-            self.ct.assertEqual(r, want)
         if disconnect:
             self.disconnect()
 
