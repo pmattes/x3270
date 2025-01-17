@@ -244,37 +244,39 @@ environ_init(void)
     }
     add_environ(&uservars, IBMAPPLID_VARNAME, ibmapplid);
 
-    /* Set CODEPAGE, CHARSET and KBDTYPE from the host codepage, with overrides from the environment. */
-    for (i = CODEPAGE; i < CODEPAGE_COUNT; i++) {
-	codepage_vars[i].value = getenv(codepage_vars[i].name);
-	if (codepage_vars[i].value == NULL) {
-	    unsigned codepage;
+    if (ut_getenv("NO_CODEPAGE") == NULL) {
+	/* Set CODEPAGE, CHARSET and KBDTYPE from the host codepage, with overrides from the environment. */
+	for (i = CODEPAGE; i < CODEPAGE_COUNT; i++) {
+	    codepage_vars[i].value = getenv(codepage_vars[i].name);
+	    if (codepage_vars[i].value == NULL) {
+		unsigned codepage;
 
-	    switch (i) {
-		case CODEPAGE:
-		    codepage = cgcsgid & 0xffff;
-		    if (codepage < 100) {
-			codepage_vars[i].value = txAsprintf("%03d", codepage);
-		    } else {
-			codepage_vars[i].value = txAsprintf("%d", codepage);
-		    }
-		    break;
-		case CHARSET:
-		    codepage_vars[i].value = txAsprintf("%lu", (cgcsgid >> 16) & 0xffff);
-		    break;
-		case KBDTYPE:
-		    if (kybdtype != NULL) {
-			codepage_vars[i].value = kybdtype;
-		    }
-		    break;
-		default:
-		    break;
+		switch (i) {
+		    case CODEPAGE:
+			codepage = cgcsgid & 0xffff;
+			if (codepage < 100) {
+			    codepage_vars[i].value = txAsprintf("%03d", codepage);
+			} else {
+			    codepage_vars[i].value = txAsprintf("%d", codepage);
+			}
+			break;
+		    case CHARSET:
+			codepage_vars[i].value = txAsprintf("%lu", (cgcsgid >> 16) & 0xffff);
+			break;
+		    case KBDTYPE:
+			if (kybdtype != NULL) {
+			    codepage_vars[i].value = kybdtype;
+			}
+			break;
+		    default:
+			break;
+		}
 	    }
+	    if (codepage_vars[i].value == NULL) {
+		codepage_vars[i].value = SYSVAL;
+	    }
+	    add_environ(&uservars, codepage_vars[i].name, codepage_vars[i].value);
 	}
-	if (codepage_vars[i].value == NULL) {
-	    codepage_vars[i].value = SYSVAL;
-	}
-	add_environ(&uservars, codepage_vars[i].name, codepage_vars[i].value);
     }
 }
 

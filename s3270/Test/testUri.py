@@ -64,7 +64,8 @@ class TestS3270Uri(cti.cti):
             loopback = '[::1]' if ipv6 else '127.0.0.1'
             env = os.environ.copy()
             env['USER'] = 'foo'
-            s3270 = Popen(cti.vgwrap(['s3270', f'tn3270://{loopback}:{port}?lu=foo']), stdin=PIPE, stdout=DEVNULL, env=env)
+            env['NO_CODEPAGE'] = '1'
+            s3270 = Popen(cti.vgwrap(['s3270', '-utenv', f'tn3270://{loopback}:{port}?lu=foo']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             s3270.stdin.write(b'String(logoff) Enter()\n')
