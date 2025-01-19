@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,35 +27,35 @@
 #
 # s3270 resource file read test
 
-import requests
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
-class TestS3270ReadResource(cti.cti):
+from Common.Test.cti import *
+
+@requests_timeout
+class TestS3270ReadResource(cti):
 
     # s3270 read resource test
     def test_s3270_read_resource(self):
 
         # Start s3270.
-        hport, socket = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), 's3270/Test/bsResource.s3270']), stdin=DEVNULL, stdout=DEVNULL)
+        hport, socket = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), 's3270/Test/bsResource.s3270']), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         socket.close()
         self.check_listen(hport)
 
         # Check the terminal name. It should have a trailing backslash, which was impossible
         # until the parser was fixed.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(TerminalName)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(TerminalName)')
         self.assertEqual('foo.bar\\', r.json()['result'][-1], 'Expected TerminalName')
 
         # Check the model, which would have been missed with the broken parser.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Model)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Model)')
         self.assertEqual('IBM-3279-2-E', r.json()['result'][-1], 'Expected Model')
 
         # Wait for s3270 to exit.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

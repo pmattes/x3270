@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,27 +29,28 @@
 
 import json
 import os
-import requests
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen
 import sys
 import tempfile
 import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.setupHosts as setupHosts
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(sys.platform.startswith('win'), 'Unix-specific test')
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
-class TestPr3287Session(cti.cti):
+@requests_timeout
+class TestPr3287Session(cti):
 
     # pr3287 IPv6 session address test.
     def test_ipv6_pr3287_session(self):
 
         # Start playback to talk to s3270.
-        pport, ts = cti.unused_port(ipv6=True)
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=pport, ipv6=True) as p:
+        pport, ts = unused_port(ipv6=True)
+        with playback(self, 's3270/Test/ibmlink.trc', port=pport, ipv6=True) as p:
             ts.close()
 
             # Create an s3270 session file that starts a fake printer session.
@@ -65,8 +66,8 @@ class TestPr3287Session(cti.cti):
             # Start s3270 with that profile.
             env = os.environ.copy()
             env['PRINTER_DELAY_MS'] = '1'
-            hport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-6', sname]), env=env)
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-6', sname]), env=env)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()
@@ -82,7 +83,7 @@ class TestPr3287Session(cti.cti):
             self.assertIn(f'-6 {setupHosts.test_hostname}', contents[0], 'Expected -6 and test hostname')
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit())')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit())')
             self.vgwait(s3270)
 
         os.unlink(sname)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,10 @@
 # pr3287 basic command-line tests
 
 import unittest
-import Common.Test.cti as cti
 
-class TestPr3287BasicCmdline(cti.cti):
+from Common.Test.cti import *
+
+class TestPr3287BasicCmdline(cti):
 
     # pr3287 -v and -help test
     def test_pr3287_v_help(self):

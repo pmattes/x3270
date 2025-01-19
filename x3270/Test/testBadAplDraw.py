@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,20 @@
 #
 # x3270 APL bugfix validation
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
 import os
+from subprocess import Popen, DEVNULL
 import tempfile
-import requests
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import x3270.Test.tvs as tvs
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
 @unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
-class TestX3270BadAplDraw(cti.cti):
+@requests_timeout
+class TestX3270BadAplDraw(cti):
 
     # x3270 bad APL draw test.
     # There was a bug that caused '-' characters in NVT mode to be drawn
@@ -50,15 +51,15 @@ class TestX3270BadAplDraw(cti.cti):
         with tvs.tightvncserver(self):
 
             # Start 'playback' to feed x3270's.
-            playback_port, ts = cti.unused_port()
-            with playback.playback(self, 'x3270/Test/badapl.trc', port=playback_port) as p:
+            playback_port, ts = unused_port()
+            with playback(self, 'x3270/Test/badapl.trc', port=playback_port) as p:
                 ts.close()
 
                 # Start x3270.
                 env = os.environ.copy()
                 env['DISPLAY'] = ':2'
-                x3270_port, ts = cti.unused_port()
-                x3270 = Popen(cti.vgwrap(['x3270', '-efont', 'fixed',
+                x3270_port, ts = unused_port()
+                x3270 = Popen(vgwrap(['x3270', '-efont', 'fixed',
                     '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
                     '-httpd', f'127.0.0.1:{x3270_port}',
                     f'127.0.0.1:{playback_port}']), stdout=DEVNULL, env=env)
@@ -71,12 +72,12 @@ class TestX3270BadAplDraw(cti.cti):
 
                 # Wait for the data to be processed.
                 def is_ready():
-                    r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Query(statsRx)')
+                    r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Query(statsRx)')
                     return r.json()['result'][0] == 'bytes 80'
                 self.try_until(is_ready, 2, "NVT data was not processed")
 
                 # Find x3270's window ID.
-                r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
+                r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
                 wid = r.json()['status'].split()[-2]
 
                 # Dump the window contents.
@@ -85,7 +86,7 @@ class TestX3270BadAplDraw(cti.cti):
                 self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
 
             # Wait for the processes to exit.
-            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
         # Make sure the image is correct.

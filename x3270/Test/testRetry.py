@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,17 @@
 # x3270 retry tests
 
 import os
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import shutil
+from subprocess import Popen, PIPE, DEVNULL
 import time
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
-class TestX3270Retry(cti.cti):
+@requests_timeout
+class TestX3270Retry(cti):
 
     # Wait for the Connection Error pop-up to appear.
     def find_popup(self) -> str:
@@ -51,12 +51,12 @@ class TestX3270Retry(cti.cti):
     def test_x3270_retry_cancel(self):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Start x3270.
-        hport, hts = cti.unused_port()
+        hport, hts = unused_port()
         hts.close()
-        x3270 = Popen(cti.vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
+        x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
         self.children.append(x3270)
 
         # Wait for the Connection Error pop-up to appear.
@@ -68,10 +68,10 @@ class TestX3270Retry(cti.cti):
         os.system(f'xdotool windowfocus --sync {id} mousemove --window {id} 42 83 click 1')
 
         # Verify that x3270 is no longer reconnecting.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
         self.assertEqual('X Not Connected', r[-1][7:22])
 
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
         self.vgwait(x3270)
         pts.close()
 
@@ -79,19 +79,19 @@ class TestX3270Retry(cti.cti):
     def test_x3270_retry_succeed_5s(self):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Start x3270.
-        hport, hts = cti.unused_port()
+        hport, hts = unused_port()
         hts.close()
-        x3270 = Popen(cti.vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
+        x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
         self.children.append(x3270)
 
         # Wait for the Connection Error pop-up to appear.
         self.try_until(lambda: self.find_popup != [], 4, 'Connect error pop-up did not appear')
 
         # Start playback to accept the connection.
-        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             pts.close()
 
             # Wait for x3270 to connect.
@@ -99,14 +99,14 @@ class TestX3270Retry(cti.cti):
 
             # Wait for the status to update.
             def connected():
-                r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/query host').json()['result'][0]
+                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/query host').json()['result'][0]
                 return r == f'host 127.0.0.1 {playback_port}'
             self.try_until(connected, 2, 'x3270 did not connect')
 
             # Make sure the pop-up has popped itself down.
             self.assertFalse(self.find_popup())
 
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
         self.vgwait(x3270)
         pts.close()
 

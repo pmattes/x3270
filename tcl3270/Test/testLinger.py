@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,26 +27,27 @@
 #
 # tcl3270 smoke tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
+import os
+import signal
+from subprocess import Popen, DEVNULL
 import sys
 if sys.platform != 'cygwin':
     import psutil
-import requests
-import os
-import signal
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
 
 @unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
 @unittest.skipIf(sys.platform == 'cygwin', "Cygwin does not have psutil")
-class TestTcl3270Linger(cti.cti):
+@requests_timeout
+class TestTcl3270Linger(cti):
 
     # tcl3270 linger test, making sure s3270 exits when tcl3270 does.
     def test_tcl3270_linger1(self):
 
         # Start tcl3270.
-        port, ts = cti.unused_port()
-        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/linger.tcl", "--",
+        port, ts = unused_port()
+        tcl3270 = Popen(vgwrap(["tcl3270", "tcl3270/Test/linger.tcl", "--",
             "-httpd", f"127.0.0.1:{port}"]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(tcl3270)
         self.check_listen(port)
@@ -54,7 +55,7 @@ class TestTcl3270Linger(cti.cti):
 
         # Make sure it is blocked.
         def test():
-            j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
+            j = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
             return any('Wait(' in line for line in j['result'])
         self.try_until(test, 2, "emulator did not block")
 
@@ -78,8 +79,8 @@ class TestTcl3270Linger(cti.cti):
     def test_tcl3270_linger2(self):
 
         # Start tcl3270.
-        port, ts = cti.unused_port()
-        tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/linger2.tcl", "--",
+        port, ts = unused_port()
+        tcl3270 = Popen(vgwrap(["tcl3270", "tcl3270/Test/linger2.tcl", "--",
             "-httpd", f"127.0.0.1:{port}"]),
             stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(tcl3270)

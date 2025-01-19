@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,20 @@
 # x3270 code page change test
 
 import os
-import requests
 import shutil
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import time
 import unittest
 
-import Common.Test.cti as cti
+from Common.Test.cti import *
 import x3270.Test.tvs as tvs
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
 @unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
-class TestX3270CpChange(cti.cti):
+@requests_timeout
+class TestX3270CpChange(cti):
 
     # x3270 code page change test
     def test_x3270_codepage_change(self):
@@ -55,10 +55,10 @@ class TestX3270CpChange(cti.cti):
             self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
             # Start x3270.
-            x3270_port, ts = cti.unused_port()
+            x3270_port, ts = unused_port()
             env = os.environ.copy()
             env['DISPLAY'] = ':2'
-            x3270 = Popen(cti.vgwrap(["x3270",
+            x3270 = Popen(vgwrap(["x3270",
                 "-httpd", f"127.0.0.1:{x3270_port}",
                 "-efont", "3270-12"]), stdout=DEVNULL, env=env)
             self.children.append(x3270)
@@ -66,7 +66,7 @@ class TestX3270CpChange(cti.cti):
             ts.close()
 
             # Get x3270's window ID.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/query')
             wid = r.json()['status'].split()[-2]
 
             # Dump the window contents.
@@ -75,7 +75,7 @@ class TestX3270CpChange(cti.cti):
             self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name1}"'))
 
             # Change the code page.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(codepage,cp275)')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(codepage,cp275)')
             time.sleep(0.5)
 
             # Dump the window contents again.
@@ -84,7 +84,7 @@ class TestX3270CpChange(cti.cti):
             self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name2}"'))
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
         # Make sure the images match.

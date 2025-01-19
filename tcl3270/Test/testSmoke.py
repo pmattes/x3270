@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,32 +27,33 @@
 #
 # tcl3270 smoke tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import tempfile
-import os
 import filecmp
+import os
 import sys
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from subprocess import Popen, DEVNULL
+import tempfile
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
-class TestTcl3270Smoke(cti.cti):
+class TestTcl3270Smoke(cti):
 
     # tcl3270 3270 smoke test
     def test_tcl3270_smoke(self):
 
         # Start 'playback' to feed data to tcl3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
             ts.close()
 
             # Create a temporary file.
             (handle, name) = tempfile.mkstemp()
 
             # Start tcl3270.
-            tcl_port, ts = cti.unused_port()
-            tcl3270 = Popen(cti.vgwrap(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
+            tcl_port, ts = unused_port()
+            tcl3270 = Popen(vgwrap(["tcl3270", "tcl3270/Test/smoke.tcl", name, "--",
                 "-xrm", "tcl3270.contentionResolution: false",
                 "-httpd", f"127.0.0.1:{tcl_port}",
                 f"127.0.0.1:{playback_port}"]),

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,21 @@
 # b3270 crash test
 
 import os
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 
 @unittest.skipUnless('CRASH' in os.environ, 'Test used to exercise test infra')
-class TestB3270Crash(cti.cti):
+@requests_timeout
+class TestB3270Crash(cti):
 
     # b3270 crash test
     def test_b3270_crash(self):
 
         # Start b3270.
-        hport, socket = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-httpd', str(hport)]), stdin=PIPE, stdout=DEVNULL)
+        hport, socket = unused_port()
+        b3270 = Popen(vgwrap(['b3270', '-httpd', str(hport)]), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
         self.check_listen(hport)
 
@@ -49,7 +50,7 @@ class TestB3270Crash(cti.cti):
         # The HTTP request will fail and the test will bomb out. When the cti
         # infra cleans up the child process, it will also bomb out, because
         # the child was killed by a signal.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Crash(null)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Crash(null)', timeout=5)
         self.assertTrue(r.ok)
 
         # Wait for the process to exit.

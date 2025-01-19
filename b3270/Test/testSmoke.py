@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,21 @@
 #
 # b3270 smoke tests
 
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
-import Common.Test.cti as cti
 
-class TestB3270Smoke(cti.cti):
+from Common.Test.cti import *
+
+class TestB3270Smoke(cti):
 
     # b3270 NVT smoke test
     def test_b3270_nvt_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = cti.copyserver()
+        nc = copyserver()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=DEVNULL)
+        b3270 = Popen(vgwrap(['b3270']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 some actions.

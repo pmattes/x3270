@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,24 +27,25 @@
 #
 # s3270 String() tests
 
+from subprocess import Popen, DEVNULL
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.cti as cti
-import Common.Test.playback as playback
 
-class TestS3270String(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270String(cti):
 
     # s3270 numeric field test.
     def test_s3270_numeric_field(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/numeric.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/numeric.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-set', 'numericLock',
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-set', 'numericLock',
                     f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -57,7 +58,7 @@ class TestS3270String(cti.cti):
             # Legal characters are 0..9, plus, minus, period, comma (in EBCDIC).
             legals = { 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0x4e, 0x60, 0x4b, 0x6b }
             for i in range(0x40, 0x100):
-                r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Reset() Home() HexString(0x{i:02x})')
+                r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Reset() Home() HexString(0x{i:02x})')
                 if i in legals:
                     self.assertTrue(r.ok, f'0x{i:02x} should have succeeded')
                 else:
@@ -67,19 +68,19 @@ class TestS3270String(cti.cti):
                     self.assertIn('Operator error', j)
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 numeric field test, no locking.
     def test_s3270_numeric_field_no_lock(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/numeric.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/numeric.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport),
                     f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -90,14 +91,14 @@ class TestS3270String(cti.cti):
 
             # Try some non-numeric text.
             text = 'hello'
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({text})')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({text})')
             self.assertTrue(r.ok, 'string should have succeeded')
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,80)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,80)')
             j = r.json()['result'][0].strip()
             self.assertEqual(text, j, 'Should have gotten the same string back')
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

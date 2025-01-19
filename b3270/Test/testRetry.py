@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,26 @@
 # b3270 retry tests
 
 import json
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import sys
+from subprocess import Popen, PIPE
 import threading
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.playback import playback
 
-class TestB3270Retry(cti.cti):
+@requests_timeout
+class TestB3270Retry(cti):
 
     # b3270 retry test
     def test_b3270_retry_5s(self):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, ts = cti.unused_port()
+        playback_port, ts = unused_port()
         ts.close()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-set', 'retry', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
@@ -71,7 +70,7 @@ class TestB3270Retry(cti.cti):
         self.assertFalse(any(b'run-result' in o for o in out_all), 'Open action should not complete')
 
         # Start 'playback' to talk to b3270.
-        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             # Wait for b3270 to connect.
             p.wait_accept(timeout=6)
 
@@ -85,20 +84,20 @@ class TestB3270Retry(cti.cti):
 
     # Wait for an input field.
     def wif(self, hport):
-        self.wait_result = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Wait(InputField)').json()
+        self.wait_result = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Wait(InputField)').json()
 
     # b3270 reconnect/disconnect interference test
     # Makes sure that even if reconnect mode is set, a Wait() action still fails when the connection is broken.
     def test_b3270_reconnect_interference(self):
 
         # Start 'playback' to talk to b3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             ts.close()
 
             # Start b3270.
-            hport, ts = cti.unused_port()
-            b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
+            hport, ts = unused_port()
+            b3270 = Popen(vgwrap(['b3270', '-set', 'reconnect', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
             ts.close()
             self.children.append(b3270)
 
@@ -119,7 +118,7 @@ class TestB3270Retry(cti.cti):
 
             # Wait for the Wait() to block.
             def wait_block():
-                r = ''.join(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Tasks)').json()['result'])
+                r = ''.join(self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Tasks)').json()['result'])
                 return 'Wait("InputField")' in r
             self.try_until(wait_block, 2, 'Wait() did not block')
 
@@ -145,11 +144,11 @@ class TestB3270Retry(cti.cti):
     def test_b3270_reconnect_5s(self):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, ts = cti.unused_port()
+        playback_port, ts = unused_port()
         ts.close()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
@@ -172,7 +171,7 @@ class TestB3270Retry(cti.cti):
         self.assertFalse(any(b'run-result' in o for o in out_all), 'Open action should not complete')
 
         # Start 'playback' to talk to b3270.
-        with playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
 
             # Wait for b3270 to connect.
             p.wait_accept(timeout=6)
@@ -208,11 +207,11 @@ class TestB3270Retry(cti.cti):
     def test_b3270_reconnect_disconnect(self):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, ts = cti.unused_port()
+        playback_port, ts = unused_port()
         ts.close()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-set', 'reconnect', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.

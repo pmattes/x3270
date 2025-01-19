@@ -173,6 +173,49 @@ json_input(char *buf, bool *need_more)
     return false;
 }
 
+/**
+ * Trace stdin text.
+ * @param[in] buf	Input buffer
+ * @param[in] len	Length of input buffer
+ */
+static void
+trace_stdin(const char *buf, size_t len)
+{
+    varbuf_t r;
+    unsigned c;
+    char *result;
+
+    vb_init(&r);
+    while (len > 0) {
+	c = *buf++;
+	if (c < ' ') {
+	    switch(c) {
+	    case '\r':
+		vb_appends(&r, "\\r");
+		break;
+	    case '\n':
+		vb_appends(&r, "\\n");
+		break;
+	    case '\t':
+		vb_appends(&r, "\\t");
+		break;
+	    case '\f':
+		vb_appends(&r, "\\f");
+		break;
+	    default:
+		vb_appendf(&r, "\\%03o", c);
+	    }
+	} else {
+	    vb_appendf(&r, "%c", c);
+	}
+	len--;
+    }
+
+    result = vb_consume(&r);
+    vtrace("s3stdin read '%s'\n", result);
+    Free(result);
+}
+
 #if !defined(_WIN32) /*[*/
 /**
  * Read the next command from stdin (Unix version).
@@ -233,7 +276,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	stdin_buf = Malloc(1);
     }
     stdin_buf[stdin_nr] = '\0';
-    vtrace("s3stdin read '%s'\n", stdin_buf);
+    trace_stdin(stdin_buf, stdin_nr);
     if (!json_input(stdin_buf, &need_more)) {
 	json_free(pj_out);
 	push_cb(stdin_buf, strlen(stdin_buf), &stdin_cb, NULL);
@@ -266,7 +309,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	x3270_exit(0);
     }
 
-    vtrace("s3stdin read '%.*s'\n", (int)stdin_nr, stdin_buf);
+    trace_stdin(stdin_buf, stdin_nr);
     if (!json_input(stdin_buf, &need_more)) {
 	if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\n') {
 	    stdin_nr--;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,21 +29,22 @@
 
 import json
 import os
-import requests
 import select
 import socket
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-class TestX3270MultiLine(cti.cti):
+@requests_timeout
+class TestX3270MultiLine(cti):
 
     # x3270 multi-line output stdin test
     def test_x3270_multiline_stdin(self):
 
         # Start x3270.
-        x3270 = Popen(cti.vgwrap(['x3270', '-script']), stdin=PIPE, stdout=PIPE)
+        x3270 = Popen(vgwrap(['x3270', '-script']), stdin=PIPE, stdout=PIPE)
         self.children.append(x3270)
 
         # Feed it some actions and see what it says.
@@ -69,7 +70,7 @@ class TestX3270MultiLine(cti.cti):
     def test_x3270_multiline_stdin_json(self):
 
         # Start x3270.
-        x3270 = Popen(cti.vgwrap(['x3270', '-script']), stdin=PIPE, stdout=PIPE)
+        x3270 = Popen(vgwrap(['x3270', '-script']), stdin=PIPE, stdout=PIPE)
         self.children.append(x3270)
 
         # Feed it some actions and see what it says.
@@ -96,8 +97,8 @@ class TestX3270MultiLine(cti.cti):
     def test_x3270_multiline_scriptport(self):
 
         # Start x3270.
-        port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(x3270)
         ts.close()
         self.check_listen(port)
@@ -137,8 +138,8 @@ class TestX3270MultiLine(cti.cti):
     def test_x3270_multiline_scriptport_json(self):
 
         # Start x3270.
-        port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(x3270)
         ts.close()
         self.check_listen(port)
@@ -179,16 +180,16 @@ class TestX3270MultiLine(cti.cti):
     def test_x3270_multiline_httpd_text(self):
 
         # Start x3270.
-        port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(x3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.text.splitlines()
 
@@ -199,23 +200,23 @@ class TestX3270MultiLine(cti.cti):
         self.assertTrue(reply[3].startswith('Valid protocols are'))
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(x3270)
     
     # x3270 multi-line output httpd test, HTML mode
     def test_x3270_multiline_httpd_html(self):
 
         # Start x3270.
-        port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(x3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/html/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/html/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.text.splitlines()
 
@@ -228,23 +229,23 @@ class TestX3270MultiLine(cti.cti):
         self.assertTrue(reply[indices[3]].startswith('Valid protocols are'))
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(x3270)
     
     # x3270 multi-line output httpd test, JSON mode
     def test_x3270_multiline_httpd_json(self):
 
         # Start x3270.
-        port, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(x3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.json()
 
@@ -257,7 +258,7 @@ class TestX3270MultiLine(cti.cti):
         self.assertEqual([False,True,True,True], reply['result-err'])
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(x3270)
 
 if __name__ == '__main__':

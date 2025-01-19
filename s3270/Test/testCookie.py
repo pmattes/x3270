@@ -31,15 +31,15 @@ import os
 import os.path
 import random
 import string
-import requests
 import socket
 from subprocess import Popen, PIPE, DEVNULL
 import sys
 import tempfile
 import time
 import unittest
+
+from Common.Test.cti import *
 import Common.Test.playback as playback
-import Common.Test.cti as cti
 
 def x3270if(port: int, command: str, timeout=0.5) -> tuple[bool, list[str], int]:
     '''Send an s3270-protocol command to s3270'''
@@ -69,18 +69,19 @@ def random_word(length: int) -> str:
     letters = string.ascii_lowercase + string.ascii_uppercase + string.digits + '-_.'
     return ''.join(random.choice(letters) for i in range(length))
 
-class TestS3270Cookie(cti.cti):
+@requests_timeout
+class TestS3270Cookie(cti):
 
     # s3270 s3270-mode cookie test
     def test_s3270_s3270_cookie(self):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tempfile.NamedTemporaryFile(delete=False) as tf:
 
             tf_name = tf.name
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
 
@@ -117,13 +118,13 @@ class TestS3270Cookie(cti.cti):
     # s3270 HTTP cookie test
     def test_s3270_http_cookie(self):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tempfile.NamedTemporaryFile(delete=False) as tf:
 
             tf_name = tf.name
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
 
@@ -138,22 +139,22 @@ class TestS3270Cookie(cti.cti):
                 self.assertEqual(0o400, (s.st_mode & 0o777))
 
             # Try an command without specifying a cookie.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
             self.assertFalse(r.ok)
 
             # Specify the wrong cookie.
             t = time.time()
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)', cookies={"x3270-security": "foo"})
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)', cookies={"x3270-security": "foo"})
             self.assertFalse(r.ok)
             self.assertEqual(403, r.status_code)
             self.assertGreater(time.time() - t, 1.0)
 
             # Specify the right cookie.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)', cookies={"x3270-security": cookie})
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)', cookies={"x3270-security": cookie})
             self.assertTrue(r.ok)
 
             # Stop.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()', cookies={"x3270-security": cookie})
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()', cookies={"x3270-security": cookie})
 
         os.unlink(tf_name)
 
@@ -164,11 +165,11 @@ class TestS3270Cookie(cti.cti):
     # s3270 s3270-mode cookie test with a file that does not exist yet.
     def test_s3270_s3270_cookie_create_file(self):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         tf = tempfile.NamedTemporaryFile(delete=False)
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
 
@@ -207,7 +208,7 @@ class TestS3270Cookie(cti.cti):
     # s3270 s3270-mode cookie test with a file that we create and fill in
     def test_s3270_s3270_cookie_filled(self):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tempfile.NamedTemporaryFile(delete=False) as tf:
 
             tf_name = tf.name
@@ -221,7 +222,7 @@ class TestS3270Cookie(cti.cti):
             os.close(fd)
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
             self.check_listen(port)
@@ -254,7 +255,7 @@ class TestS3270Cookie(cti.cti):
     # s3270 s3270-mode cookie test with a file that we create and fill in with a bad cookie value.
     def s3270_s3270_cookie_filled_wrong(self, contents: str):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tempfile.NamedTemporaryFile(delete=False) as tf:
 
             tf_name = tf.name
@@ -265,7 +266,7 @@ class TestS3270Cookie(cti.cti):
             os.close(fd)
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE)
+            s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE)
             self.children.append(s3270)
             ts.close()
 

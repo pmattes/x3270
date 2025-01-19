@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,18 +28,18 @@
 # b3270 JSON pass-through tests
 
 import json
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
 
-import Common.Test.cti as cti
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
 
-class TestB3270PassthruJson(cti.cti):
+class TestB3270PassthruJson(cti):
 
     # b3270 passthru Json test
     def test_b3270_passthru_json(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Get the initial dump.

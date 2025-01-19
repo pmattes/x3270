@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,18 @@
 #
 # c3270 Alt-Q tests
 
-import unittest
+import os
+import os.path
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import os
-import os.path
 import threading
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
-class TestC3270AltQ(cti.cti):
+class TestC3270AltQ(cti):
 
     # Drain the PTY.
     def drain(self, fd):
@@ -51,15 +52,15 @@ class TestC3270AltQ(cti.cti):
     def test_c3270_alt_q(self):
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, ts = cti.unused_port()
+        c3270_port, ts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             ts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', '-e', '/bin/sh']), env)
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', '-e', '/bin/sh']), env)
             self.assertTrue(False, 'c3270 did not start')
 
         # Parent process.

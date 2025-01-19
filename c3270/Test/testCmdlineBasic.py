@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,11 +27,12 @@
 #
 # c3270 basic command-line tests
 
-import unittest
 import sys
-import Common.Test.cti as cti
+import unittest
 
-class TestC3270BasicCmdline(cti.cti):
+from Common.Test.cti import *
+
+class TestC3270BasicCmdline(cti):
 
     # c3270 -v and -help test
     def test_c3270_v_help(self):

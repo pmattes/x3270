@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,19 @@
 #
 # s3270 connection fail tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
 import os
-import Common.Test.cti as cti
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
 
-class TestS3270ConnectFail(cti.cti):
+from Common.Test.cti import *
+
+class TestS3270ConnectFail(cti):
 
     # s3270 connect fail test
     def test_s3270_connect_fail(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a trivial command at it.

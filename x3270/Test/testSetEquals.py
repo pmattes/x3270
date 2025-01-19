@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,31 +29,30 @@
 
 import os
 from subprocess import Popen, PIPE, DEVNULL
-import requests
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.playback as playback
-import Common.Test.cti as cti
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-
-class TestX3270SetEquals(cti.cti):
+@requests_timeout
+class TestX3270SetEquals(cti):
 
     # x3270 -set model= test
     def test_x3270_set_equals(self):
 
         # Start x3270.
-        hport, hts = cti.unused_port()
+        hport, hts = unused_port()
         hts.close()
-        x3270 = Popen(cti.vgwrap(['x3270', '-set', 'model=3278', '-httpd', str(hport)]))
+        x3270 = Popen(vgwrap(['x3270', '-set', 'model=3278', '-httpd', str(hport)]))
         self.children.append(x3270)
         self.check_listen(hport)
 
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(terminalname)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(terminalname)')
         j = r.json()
         self.assertEqual('IBM-3278-4-E', j['result'][0], 'Expecting "IBM-3278-4-E" as the terminal name')
 
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
         self.vgwait(x3270)
 
 if __name__ == '__main__':

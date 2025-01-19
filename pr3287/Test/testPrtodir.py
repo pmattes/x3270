@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,18 @@
 #
 # prtodir tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import tempfile
 import os
 import pathlib
+from subprocess import Popen
 import sys
 import tempfile
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform.startswith('win'), 'Does not run on Windows')
-class TestPrtodir(cti.cti):
+class TestPrtodir(cti):
 
     # prtodir command line test
     def test_prtodir_cmdline(self):
@@ -81,12 +81,12 @@ class TestPrtodir(cti.cti):
         # Set up a temporary directory.
         with tempfile.TemporaryDirectory() as tempdir:
             # Start 'playback' to feed data to pr3287.
-            port, ts = cti.unused_port()
-            with playback.playback(self, 'pr3287/Test/smoke.trc', port=port) as p:
+            port, ts = unused_port()
+            with playback(self, 'pr3287/Test/smoke.trc', port=port) as p:
                 ts.close()
 
                 # Start pr3287.
-                pr3287 = Popen(cti.vgwrap(['pr3287', '-command', f'prtodir {tempdir}',
+                pr3287 = Popen(vgwrap(['pr3287', '-command', f'prtodir {tempdir}',
                     f'127.0.0.1:{port}']))
                 self.children.append(pr3287)
 

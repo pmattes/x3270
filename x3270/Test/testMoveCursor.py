@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,17 @@
 # x3270 MoveCursor tests
 
 import os
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import shutil
+from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
-class TestX3270MoveCursor(cti.cti):
+@requests_timeout
+class TestX3270MoveCursor(cti):
 
     # Wait for a window to appear.
     def find_window(self, title: str):
@@ -51,15 +51,15 @@ class TestX3270MoveCursor(cti.cti):
     def x3270_MoveCursor_nvt(self, suffix: str):
 
         # Find an unused port, but do not listen on it yet.
-        playback_port, pts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', playback_port) as p:
+        playback_port, pts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', playback_port) as p:
 
             # Start x3270.
-            hport, hts = cti.unused_port()
+            hport, hts = unused_port()
             hts.close()
             (handle, tf) = tempfile.mkstemp()
             os.close(handle)
-            x3270 = Popen(cti.vgwrap(['x3270', '-title', 'Under Test', '-httpd', str(hport), '-trace', '-tracefile', tf, '-set', 'traceMonitor=false',
+            x3270 = Popen(vgwrap(['x3270', '-title', 'Under Test', '-httpd', str(hport), '-trace', '-tracefile', tf, '-set', 'traceMonitor=false',
                 '-keymap', 'foo', '-xrm', f'x3270.keymap.foo: #override <Btn1Down>: MoveCursor{suffix}()',
                 f'a:c:t:127.0.0.1:{playback_port}']))
             self.children.append(x3270)
@@ -67,7 +67,7 @@ class TestX3270MoveCursor(cti.cti):
             self.try_until(lambda: self.find_window('Under Test'), 4, 'x3270 did not appear')
 
             # Find x3270's window ID.
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(WindowId)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(WindowId)')
             self.assertTrue(r.ok, 'Expected Window ID query to succeed')
             window_id = r.json()['result'][0]
 
@@ -76,12 +76,12 @@ class TestX3270MoveCursor(cti.cti):
             self.try_until(lambda: self.find_window('X3270 Error'), 4, 'Error pop-up did not appear')
 
             # Verify the error pop-up contents.
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/trace off')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/trace off')
             with open(tf, "r") as t:
                 lines = t.readlines()
             self.assertTrue(any('is not valid in NVT mode' in line for line in lines))
 
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
             self.vgwait(x3270)
             pts.close()
             os.unlink(tf)

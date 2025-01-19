@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,26 +27,27 @@
 #
 # s3270 negative-coordinate screen scrape tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import os
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from subprocess import Popen, DEVNULL
+import unittest
 
-class TestS3270AsciiNegative(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270AsciiNegative(cti):
 
     # s3270 Ascii() with negative coordinates success test
     def s3270_Ascii_negative_success(self, origin: int):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=port,) as p:
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=port,) as p:
             ts.close()
 
             # Start s3270.
-            hport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()
@@ -55,14 +56,14 @@ class TestS3270AsciiNegative(cti.cti):
             p.send_records(4)
             suffix = '1' if origin == 1 else ''
             sub = 1 if origin == 0 else 0
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(-1,{2-sub},1,4)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(-1,{2-sub},1,4)')
             self.assertEqual('===>', r.json()['result'][0])
 
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}({24-sub},-80,1,5)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}({24-sub},-80,1,5)')
             self.assertEqual(' ===>', r.json()['result'][0])
 
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Disconnect()')
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Disconnect()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         # Wait for the processes to exit.
         self.vgwait(s3270)
@@ -76,13 +77,13 @@ class TestS3270AsciiNegative(cti.cti):
     def s3270_Ascii_negative_failure(self, origin: int):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=port,) as p:
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=port,) as p:
             ts.close()
 
             # Start s3270.
-            hport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()
@@ -91,14 +92,14 @@ class TestS3270AsciiNegative(cti.cti):
             p.send_records(4)
             suffix = '1' if origin == 1 else ''
             sub = 1 if origin == 0 else 0
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(-25,1,1,4)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(-25,1,1,4)')
             self.assertFalse(r.ok)
 
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(1,-81,1,4)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii{suffix}(1,-81,1,4)')
             self.assertFalse(r.ok)
 
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Disconnect()')
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Disconnect()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         # Wait for the processes to exit.
         self.vgwait(s3270)

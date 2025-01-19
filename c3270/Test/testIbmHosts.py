@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,16 @@ import os
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import requests
-from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import threading
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270IbmHosts(cti.cti):
+@requests_timeout
+class TestC3270IbmHosts(cti):
 
     # Drain the PTY.
     def drain(self, fd):
@@ -53,7 +53,7 @@ class TestC3270IbmHosts(cti.cti):
     # c3270 ibm_hosts case sensitivity test
     def test_c3270_ibm_hosts_ci(self):
 
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Create an ibm_hosts file that points to playback.
         (handle, hostsfile_name) = tempfile.mkstemp()
@@ -62,15 +62,15 @@ class TestC3270IbmHosts(cti.cti):
             f.write(f"fooey primary a:c:t:127.0.0.1:{playback_port}\n")
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = cti.unused_port()
+        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             cts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2',
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2',
                     '-httpd', f'127.0.0.1:{c3270_port}',
                     '-hostsfile', hostsfile_name]), env)
             self.assertTrue(False, 'c3270 did not start')
@@ -86,16 +86,16 @@ class TestC3270IbmHosts(cti.cti):
         cts.close()
 
         # Start 'playback' to read c3270's output.
-        p = playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port)
+        p = playback(self, 's3270/Test/ibmlink.trc', port=playback_port)
         pts.close()
 
         # Make sure c3270 is connected.
         os.write(fd, b'open fOOey\r')
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(2,inputField)')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(2,inputField)')
         self.assertTrue(r.ok)
-        cs = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(connectionState)').json()['result'][0]
+        cs = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(connectionState)').json()['result'][0]
         self.assertEqual('connected-nvt', cs)
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
 
         # Wait for the processes to exit.
         p.close()

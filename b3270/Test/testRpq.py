@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,22 +30,22 @@
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.rpq as rpq
 
-class TestB3270RpqNames(cti.cti):
+class TestB3270RpqNames(cti):
 
     # b3270 RPQNAMES test
     def b3270_rpqnames(self, rpq: str, reply: str, stderr_count=0):
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
         self.children.append(b3270)
 
         # Start 'playback' to read b3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/rpqnames.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/rpqnames.trc', port=port) as p:
             ts.close()
 
             # Connect b3270 to playback.

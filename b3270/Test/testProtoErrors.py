@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,25 +28,25 @@
 # b3270 protocol error tests
 
 import json
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.playback import playback
 
-class TestB3270ProtoErrors(cti.cti):
+class TestB3270ProtoErrors(cti):
 
     # b3270 invalid SBA test
     def invalid_address(self, order: str):
 
         # Start 'playback' to talk to b3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, f'b3270/Test/invalid_{order}.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, f'b3270/Test/invalid_{order}.trc', port=playback_port) as p:
             ts.close()
 
             # Start b3270.
-            b3270 = Popen(cti.vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
+            b3270 = Popen(vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.
@@ -96,12 +96,12 @@ class TestB3270ProtoErrors(cti.cti):
     def test_b3270_ignore_eor(self):
 
         # Start 'playback' to talk to b3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 'b3270/Test/ignore_eor.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 'b3270/Test/ignore_eor.trc', port=playback_port) as p:
             ts.close()
 
             # Start b3270.
-            b3270 = Popen(cti.vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
+            b3270 = Popen(vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.
@@ -139,12 +139,12 @@ class TestB3270ProtoErrors(cti.cti):
     def test_b3270_invalid_command(self):
 
         # Start 'playback' to talk to b3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 'b3270/Test/invalid_command.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 'b3270/Test/invalid_command.trc', port=playback_port) as p:
             ts.close()
 
             # Start b3270.
-            b3270 = Popen(cti.vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
+            b3270 = Popen(vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.
@@ -182,12 +182,12 @@ class TestB3270ProtoErrors(cti.cti):
     def too_short(self, trc: str):
 
         # Start 'playback' to talk to b3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, f'b3270/Test/{trc}.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, f'b3270/Test/{trc}.trc', port=playback_port) as p:
             ts.close()
 
             # Start b3270.
-            b3270 = Popen(cti.vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
+            b3270 = Popen(vgwrap(['b3270', '-json', '-clear', 'contentionResolution']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.

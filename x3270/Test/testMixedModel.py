@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,18 +28,18 @@
 # x3270 mixed-case model and oversize tests
 
 import os
-import requests
 import shutil
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.playback as playback
-import Common.Test.cti as cti
 import x3270.Test.tvs as tvs
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-class TestX3270MixedModel(cti.cti):
+@requests_timeout
+class TestX3270MixedModel(cti):
 
     # x3270 mixed-case model test
     def test_x3270_mixed_case_model(self):
@@ -54,21 +54,21 @@ class TestX3270MixedModel(cti.cti):
             self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
             # Start x3270 with a mixed-case IBM- model on the command line.
-            port, ts = cti.unused_port()
-            x3270 = Popen(cti.vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
+            port, ts = unused_port()
+            x3270 = Popen(vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
             self.children.append(x3270)
             self.check_listen(port)
             ts.close()
 
             # Verify the model is right.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             result = r.json()['result']
             self.assertEqual(1, len(result))
             self.assertEqual('3279-2-E', result[0])
 
             # Try a model name with a different-cased IBM- at the front and a lowercase -E.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
             s = r.json()
             self.assertTrue(r.ok)
             result = r.json()['result']
@@ -76,7 +76,7 @@ class TestX3270MixedModel(cti.cti):
             self.assertEqual('3278-3-E', result[0])
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
     # x3270 mixed-case overize test
@@ -92,21 +92,21 @@ class TestX3270MixedModel(cti.cti):
             self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
             # Start x3270 with an uppercase and leading-zero oversize on the command line.
-            port, ts = cti.unused_port()
-            x3270 = Popen(cti.vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-oversize', '0100X100']))
+            port, ts = unused_port()
+            x3270 = Popen(vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-oversize', '0100X100']))
             self.children.append(x3270)
             self.check_listen(port)
             ts.close()
 
             # Verify oversize is right.
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
             self.assertTrue(r.ok)
             result = r.json()['result']
             self.assertEqual(1, len(result))
             self.assertEqual('100x100', result[0])
 
             # Try an uppercase-X oversize with a Set().
-            r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,99X99) Set(oversize)')
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,99X99) Set(oversize)')
             s = r.json()
             self.assertTrue(r.ok)
             result = r.json()['result']
@@ -114,7 +114,7 @@ class TestX3270MixedModel(cti.cti):
             self.assertEqual('99x99', result[0])
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
 if __name__ == '__main__':

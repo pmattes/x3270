@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,41 +29,39 @@
 
 import os
 import os.path
-from subprocess import Popen, PIPE, DEVNULL
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import re
-import requests
 import threading
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270AutoOversize(cti.cti):
+@requests_timeout
+class TestC3270AutoOversize(cti):
 
     # Asynchronous connect from c3270 to playback.
     def async_connect(self, c3270_port: int, playback_port: int):
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(127.0.0.1:{playback_port})')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(127.0.0.1:{playback_port})')
         self.assertTrue(r.ok)
 
     # c3270 auto-oversize test
     def test_c3270_auto_oversize(self):
 
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = cti.unused_port()
+        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             cts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
                     '-httpd', f'127.0.0.1:{c3270_port}',
                     '-oversize', 'auto',
                     '-secure']), env)
@@ -76,7 +74,7 @@ class TestC3270AutoOversize(cti.cti):
         cts.close()
 
         # Start 'playback' to feed c3270.
-        p = playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
+        p = playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
         pts.close()
 
         # Connect c3270 to playback.
@@ -86,16 +84,16 @@ class TestC3270AutoOversize(cti.cti):
         # Write the stream to c3270.
         p.send_records(5)
         thread.join(timeout=5)
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
         p.send_records(2)
 
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(oversize)')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(oversize)')
         self.assertTrue(r.ok)
         value = r.json()['result'][0]
         self.assertEqual('auto', value)
 
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
         p.close()
         self.vgwait_pid(pid)
 

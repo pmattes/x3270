@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,19 @@
 #
 # wc3270 smoke tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import os
-import tempfile
-import sys
-import requests
 import filecmp
+import os
+import sys
+import tempfile
 import time
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipUnless(sys.platform.startswith("win"), "Only works on native Windows")
-class TestWc3270Smoke(cti.cti):
+@requests_timeout
+class TestWc3270Smoke(cti):
 
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
@@ -53,12 +53,12 @@ class TestWc3270Smoke(cti.cti):
     def test_wc3270_smoke(self):
 
         # Start 'playback' to feed wc3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
             ts.close()
 
             # Create a session file.
-            wc3270_port, ts = cti.unused_port()
+            wc3270_port, ts = unused_port()
             (handle, sname) = tempfile.mkstemp(suffix='.wc3270')
             os.write(handle, f'wc3270.title: wc3270\n'.encode('utf8'))
             os.write(handle, f'wc3270.httpd: 127.0.0.1:{wc3270_port}\n'.encode('utf8'))
@@ -86,7 +86,7 @@ class TestWc3270Smoke(cti.cti):
             time.sleep(0.5)
             (handle, name) = tempfile.mkstemp(suffix='.bmp')
             os.close(handle)
-            requests.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/SnapScreen({name})')
+            self.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/SnapScreen({name})')
 
         # Make sure the image is correct.
         self.assertTrue(filecmp.cmp(name, 'wc3270/Test/ibmlink.bmp') or filecmp.cmp(name, 'wc3270/Test/ibmlink-notfront.bmp'),

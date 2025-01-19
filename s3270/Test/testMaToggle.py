@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,52 +27,52 @@
 #
 # s3270 multi-address toggle tests
 
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
-class TestS3270MultiAddressToggle(cti.cti):
+class TestS3270MultiAddressToggle(cti):
 
     def s3270_prefer_toggles(self, ipv4_cl: bool, ipv6_cl: bool):
-        hport, ts = cti.unused_port()
+        hport, ts = unused_port()
         opt_46 = []
         if ipv4_cl:
             opt_46 += ['-4']
         if ipv6_cl:
             opt_46 += ['-6']
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport)] + opt_46), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport)] + opt_46), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(hport)
 
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
         self.assertEqual(str(ipv4_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Toggle(preferIpv4)')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Toggle(preferIpv4)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
         self.assertEqual(str(not ipv4_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,{str(ipv4_cl)})')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,{str(ipv4_cl)})')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4)')
         self.assertEqual(str(ipv4_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,Foo)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,Foo)')
         self.assertFalse(r.ok)
 
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
         self.assertEqual(str(ipv6_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Toggle(preferIpv6)')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Toggle(preferIpv6)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
         self.assertEqual(str(not ipv6_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,{str(ipv6_cl)})')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,{str(ipv6_cl)})')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6)')
         self.assertEqual(str(ipv6_cl).lower(), r.json()['result'][0])
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,Foo)')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,Foo)')
         self.assertFalse(r.ok)
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Test various combinations of command-line options and set commands.

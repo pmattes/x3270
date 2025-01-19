@@ -28,23 +28,24 @@
 # s3270 TLS tests
 
 import os
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import sys
 import threading
 import unittest
+
+from Common.Test.cti import *
 import Common.Test.setupCert as setupCert
-import Common.Test.cti as cti
 import Common.Test.tls_server as tls_server
 
 @unittest.skipUnless(setupCert.present(), setupCert.warning)
-class TestS3270Tls(cti.cti):
+@requests_timeout
+class TestS3270Tls(cti):
 
     # s3270 TLS smoke test
     def s3270_tls_smoke(self, uri=False):
 
         # Start a server to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, port) as server:
             ts.close()
 
@@ -53,7 +54,7 @@ class TestS3270Tls(cti.cti):
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'l:a:c:t:127.0.0.1:{port}=TEST' if not uri else f'telnets://127.0.0.1:{port}?accepthostname=TEST?waitoutput=false?')
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Do the TLS thing.
@@ -83,7 +84,7 @@ class TestS3270Tls(cti.cti):
     def test_s3270_starttls(self):
 
         # Start a server to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
             ts.close()
 
@@ -92,7 +93,7 @@ class TestS3270Tls(cti.cti):
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args.append(f'127.0.0.1:{port}=TEST')
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Make sure it all works.
@@ -111,17 +112,17 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_min(self):
 
         # Start a server to read s3270's output.
-        server_port, server_ts = cti.unused_port()
+        server_port, server_ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, server_port) as server:
             server_ts.close()
 
             # Start s3270, requiring TLS 1.3.
-            http_port, http_ts = cti.unused_port()
+            http_port, http_ts = unused_port()
             args = ['s3270', '-httpd', f':{http_port}', '-tlsminprotocol', 'tls1.3' ]
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args += [ f'l:a:c:t:127.0.0.1:{server_port}=TEST' ]
-            s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
             self.children.append(s3270)
             self.check_listen(http_port)
             http_ts.close()
@@ -147,17 +148,17 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_max(self):
 
         # Start a server to read s3270's output.
-        server_port, server_ts = cti.unused_port()
+        server_port, server_ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, server_port) as server:
             server_ts.close()
 
             # Start s3270, requiring TLS 1.2.
-            http_port, http_ts = cti.unused_port()
+            http_port, http_ts = unused_port()
             args = ['s3270', '-httpd', f':{http_port}', '-tlsmaxprotocol', 'tls1.2' ]
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
             args += [ f'l:a:c:t:127.0.0.1:{server_port}=TEST' ]
-            s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
             self.children.append(s3270)
             self.check_listen(http_port)
             http_ts.close()
@@ -165,10 +166,10 @@ class TestS3270Tls(cti.cti):
             # Accept the connection.
             server.wrap()
 
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(tlssession)').json()
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(tlssession)').json()
             self.assertEqual(r['result'][0], 'Version: TLSv1.2', 'Expected TLS 1.2 session')
 
-            requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+            self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
         # Wait for the process to exit.
         self.vgwait(s3270)
@@ -178,20 +179,20 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_junk_protocol(self):
 
         # Start s3270 with a junk TLS protocol version.
-        http_port, http_ts = cti.unused_port()
+        http_port, http_ts = unused_port()
         args = ['s3270', '-httpd', f':{http_port}', '-tlsmaxprotocol', 'fred' ]
         if sys.platform != 'darwin' and not sys.platform.startswith('win'):
             args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-        s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+        s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(s3270)
         self.check_listen(http_port)
         http_ts.close()
 
-        r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
         self.assertEqual(r.status_code, 400, 'Expected HTTP 400 failure')
         self.assertTrue(any(['Invalid maximum protocol' in x for x in r.json()['result']]))
 
-        requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
         # Wait for the process to exit.
         self.vgwait(s3270)
@@ -201,20 +202,20 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_contradictory_protocols(self):
 
         # Start s3270 with contradictory TLS protocol versions.
-        http_port, http_ts = cti.unused_port()
+        http_port, http_ts = unused_port()
         args = ['s3270', '-httpd', f':{http_port}', '-tlsmaxprotocol', 'tls1.2', '-tlsminprotocol', 'tls1.3' ]
         if sys.platform != 'darwin' and not sys.platform.startswith('win'):
             args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-        s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+        s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(s3270)
         self.check_listen(http_port)
         http_ts.close()
 
-        r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:123=TEST)')
         self.assertEqual(r.status_code, 400, 'Expected HTTP 400 failure')
         self.assertTrue(any(['Minimum protocol > maximum protocol' in x for x in r.json()['result']]))
 
-        requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
         # Wait for the process to exit.
         self.vgwait(s3270)
@@ -227,31 +228,31 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_basic_min_max(self):
 
         # Start a server to read s3270's output.
-        server_port, server_ts = cti.unused_port()
+        server_port, server_ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, server_port) as server:
             server_ts.close()
 
             # Start s3270.
-            http_port, http_ts = cti.unused_port()
+            http_port, http_ts = unused_port()
             args = ['s3270', '-httpd', f':{http_port}' ]
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-            s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
             self.children.append(s3270)
             self.check_listen(http_port)
             http_ts.close()
 
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsminprotocol,tls1.2,tlsmaxprotocol,tls1.2)')
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsminprotocol,tls1.2,tlsmaxprotocol,tls1.2)')
             self.assertEqual(r.status_code, 200, 'Expected HTTP success for Set()')
             x = threading.Thread(target=self.do_wrap, args=[server])
             x.start()
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
             self.assertEqual(r.status_code, 200, 'Expected HTTP success for Open()')
 
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(tlssession)').json()
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(tlssession)').json()
             self.assertTrue('1.2' in r['result'][0], 'Expected TLS 1.2 session')
 
-            requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+            self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
             x.join(timeout=2)
 
         # Wait for the process to exit.
@@ -261,13 +262,13 @@ class TestS3270Tls(cti.cti):
     def s3270_ft_crash(self, uri=False):
 
         # Start a server to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ft-crash.trc', port) as server:
             ts.close()
 
             # Start s3270.
             args = ['s3270', '-set', 'wrongTerminalName', f'l:y:127.0.0.1:{port}=TEST' if not uri else f'tn3270s://127.0.0.1:{port}?accepthostname=TEST?verifyhostcert=false']
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Do the TLS thing.
@@ -296,7 +297,7 @@ class TestS3270Tls(cti.cti):
     def test_s3270_blocking_connect(self):
 
         # Start a server to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as server:
             ts.close()
 
@@ -310,7 +311,7 @@ class TestS3270Tls(cti.cti):
             env = os.environ.copy()
             env['SYNC_RESOLVER'] = '1'
             env['BLOCKING_CONNECT'] = '1'
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure it all works.
@@ -328,7 +329,7 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_992(self):
 
         # Start a server to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, port) as server:
             ts.close()
 
@@ -340,7 +341,7 @@ class TestS3270Tls(cti.cti):
             args.append(f'a:c:t:127.0.0.1:992=TEST')
             env = os.environ.copy()
             env['REMAP992'] = str(port)
-            s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Do the TLS thing.
@@ -365,7 +366,7 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_992_disable(self):
 
         # Start a server to read s3270's output.
-        nc = cti.copyserver()
+        nc = copyserver()
 
         # Start s3270, pointing to port 992 without an explicit TLS tunnel, without STARTTLS support and
         # (what's being verified here) without automatic TLS tunnels on port 992.
@@ -374,7 +375,7 @@ class TestS3270Tls(cti.cti):
         args.append(f'a:c:t:127.0.0.1:992')
         env = os.environ.copy()
         env['REMAP992'] = str(nc.port)
-        s3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
+        s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL, env=env)
         self.children.append(s3270)
 
         # Feed s3270 some actions.
@@ -397,34 +398,34 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_security_level(self):
 
         # Start a server to read s3270's output.
-        server_port, server_ts = cti.unused_port()
+        server_port, server_ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, server_port) as server:
             server_ts.close()
 
             # Start s3270.
-            http_port, http_ts = cti.unused_port()
+            http_port, http_ts = unused_port()
             args = ['s3270', '-httpd', f':{http_port}' ]
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-            s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
             self.children.append(s3270)
             self.check_listen(http_port)
             http_ts.close()
 
             wanted_level = 1
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsSecurityLevel,{wanted_level})')
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsSecurityLevel,{wanted_level})')
             self.assertEqual(r.status_code, 200, 'Expected HTTP success for Set(tlsSecurityLevel)')
             x = threading.Thread(target=self.do_wrap, args=[server])
             x.start()
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
             self.assertEqual(r.status_code, 200, 'Expected HTTP success for Open()')
 
-            r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Show(tlsSessionInfo)')
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Show(tlsSessionInfo)')
             self.assertEqual(r.status_code, 200, 'Expected HTTP success for Get()')
             level = int([line for line in r.json()['result'] if line.startswith('Security level')][0].split(':')[1])
             self.assertEqual(wanted_level, level)
 
-            requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+            self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
             x.join(timeout=2)
 
         # Wait for the process to exit.
@@ -435,26 +436,26 @@ class TestS3270Tls(cti.cti):
     def test_s3270_tls_security_level_fail(self):
 
         # Start a server to read s3270's output.
-        server_port, server_ts = cti.unused_port()
+        server_port, server_ts = unused_port()
         server_ts.close()
 
         # Start s3270.
-        http_port, http_ts = cti.unused_port()
+        http_port, http_ts = unused_port()
         args = ['s3270', '-httpd', f':{http_port}' ]
         if sys.platform != 'darwin' and not sys.platform.startswith('win'):
             args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-        s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+        s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(s3270)
         self.check_listen(http_port)
         http_ts.close()
 
-        r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsSecurityLevel,fred)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(tlsSecurityLevel,fred)')
         self.assertEqual(r.status_code, 200, 'Expected HTTP success for Set(tlsSecurityLevel)')
-        r = requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Open(l:a:c:t:127.0.0.1:{server_port}=TEST)')
         self.assertFalse(r.ok, 'Expected HTTP failure for Open()')
         self.assertTrue(any(['Invalid tlsSecurityLevel' in x for x in r.json()['result']]))
 
-        requests.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
 
         # Wait for the process to exit.
         self.vgwait(s3270)

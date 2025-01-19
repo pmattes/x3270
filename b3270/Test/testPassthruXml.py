@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,19 @@
 #
 # b3270 XML pass-through tests
 
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
 import xml.etree.ElementTree as ET
 
-import Common.Test.cti as cti
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
 
-class TestB3270PassthruXml(cti.cti):
+class TestB3270PassthruXml(cti):
 
     # b3270 passthru XML test
     def test_b3270_passthru_xml(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Get the initial dump.
@@ -53,7 +53,7 @@ class TestB3270PassthruXml(cti.cti):
         top = ET.Element('b3270-in')
         ET.SubElement(top, 'register', { 'name': 'Foo' })
         ET.SubElement(top, 'run', { 'r-tag': 'abc', 'actions': "Foo(a,b)" })
-        *first, _, _ = cti.xml_prettify(top).split(b'\n')
+        *first, _, _ = xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'\n')
         b3270.stdin.flush()
 

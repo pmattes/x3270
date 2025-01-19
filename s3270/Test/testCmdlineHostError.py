@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,18 +27,19 @@
 #
 # s3270 test for command-line host connection errors
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
 
-class TestS3270CmdLineHostError(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+class TestS3270CmdLineHostError(cti):
 
     # s3270 command-line host connect failure test.
     def test_s3270_cmdline_host_connect_error(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270', '255.255.255.255:22']), stdin=DEVNULL, stdout=PIPE,
+        s3270 = Popen(vgwrap(['s3270', '255.255.255.255:22']), stdin=DEVNULL, stdout=PIPE,
                 stderr=PIPE)
         self.children.append(s3270)
 
@@ -57,13 +58,13 @@ class TestS3270CmdLineHostError(cti.cti):
     def test_s3270_cmdline_host_negotiation_error(self):
 
         # Start 'playback' to read s3270's output.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
             ts.close()
 
             # Start s3270.
-            s3270_port, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270',
+            s3270_port, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270',
                 '-xrm', 's3270.contentionResolution: false',
                 '-xrm', 's3270.scriptedAlways: true',
                 '-httpd', f'127.0.0.1:{s3270_port}',

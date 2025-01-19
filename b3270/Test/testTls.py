@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,19 +32,19 @@ from subprocess import Popen, PIPE, DEVNULL
 import sys
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
 import Common.Test.setupCert as setupCert
-import Common.Test.cti as cti
 import Common.Test.tls_server as tls_server
 
 @unittest.skipUnless(setupCert.present(), setupCert.warning)
-class TestB3270Tls(cti.cti):
+class TestB3270Tls(cti):
 
     # b3270 TLS test
     def test_b3270_tls(self):
 
         # Start a server to read b3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, None, port) as server:
             ts.close()
 
@@ -52,7 +52,7 @@ class TestB3270Tls(cti.cti):
             args = ['b3270', '-json']
             if sys.platform != 'darwin' and not sys.platform.startswith('win'):
                 args += [ '-cafile', 'Common/Test/tls/myCA.pem' ]
-            b3270 = Popen(cti.vgwrap(args), stdin=PIPE, stdout=PIPE)
+            b3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
 
             # Throw away b3270's initialization output.

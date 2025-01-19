@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,25 +28,26 @@
 # s3270 extendedDataStream tests
 
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
+from subprocess import Popen
 import os
-import Common.Test.cti as cti
 
-class TestS3270ExtendedDataStream(cti.cti):
+from Common.Test.cti import *
+
+@requests_timeout
+class TestS3270ExtendedDataStream(cti):
 
     # s3270 extended data stream test
     def test_s3270_extended_data_stream(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}']))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'{port}']))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
 
         # Set the model with just a digit.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,3) Set(model) Show(TerminalName)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,3) Set(model) Show(TerminalName)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -55,7 +56,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('IBM-3279-3-E', result[1])
 
         # Change extendedDataStream and make sure the model and terminal name change.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,false) Set(model) Show(TerminalName)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,false) Set(model) Show(TerminalName)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -64,7 +65,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('IBM-3279-3', result[1])
 
         # Change extendedDataStream back and make sure the model and terminal name change back.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,true) Set(model) Show(TerminalName)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,true) Set(model) Show(TerminalName)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -73,7 +74,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('IBM-3279-3-E', result[1])
 
         # Clear extendedDataStream, then set the model explicitly with -E, and make sure it disappears.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,false,model,3279-3-E) Set(model) Show(TerminalName)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(extendedDataStream,false,model,3279-3-E) Set(model) Show(TerminalName)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -82,21 +83,21 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('IBM-3279-3', result[1])
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 mixed-case test model test
     def test_s3270_mixed_case_model(self):
 
         # Start s3270 with a mixed-case IBM- model on the command line.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
 
         # Verify the model is right.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -104,7 +105,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('3279-2-E', result[0])
 
         # Try a model name with a different-cased IBM- at the front and a lowercase -E.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -112,21 +113,21 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('3278-3-E', result[0])
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
     
     # s3270 mixed-case oversize test
     def test_s3270_mixed_case_oversize(self):
 
         # Start s3270 with an uppercase and leading-zero oversize on the command line.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', f'{port}', '-oversize', '0100X100']))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'{port}', '-oversize', '0100X100']))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
 
         # Verify oversize is right.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -134,7 +135,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('100x100', result[0])
 
         # Try an uppercase-X oversize with a Set().
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,99X99) Set(oversize)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,99X99) Set(oversize)')
         s = r.json()
         self.assertTrue(r.ok)
         result = r.json()['result']
@@ -142,7 +143,7 @@ class TestS3270ExtendedDataStream(cti.cti):
         self.assertEqual('99x99', result[0])
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

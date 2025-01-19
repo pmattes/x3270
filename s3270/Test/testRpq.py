@@ -28,15 +28,13 @@
 # s3270 RPQNAMES tests
 
 import os
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import socket
-import sys
+from subprocess import Popen, PIPE, DEVNULL
 import time
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.rpq as rpq
 
 def split_list(input_list, match):
@@ -61,8 +59,8 @@ def split_list(input_list, match):
 # Define the AF value for IPv6.
 v6family = f'{int(socket.AF_INET6):02x}'
 
-class TestS3270RpqNames(cti.cti):
-
+@requests_timeout
+class TestS3270RpqNames(cti):
 
     # s3270 RPQNAMES test, multi-session
     def s3270_rpqnames_multi_session(self, rpq: str, sessions):
@@ -72,7 +70,7 @@ class TestS3270RpqNames(cti.cti):
         env = os.environ.copy()
         if rpq != None:
             env['X3270RPQ'] = rpq
-        s3270 = Popen(cti.vgwrap(['s3270']), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
+        s3270 = Popen(vgwrap(['s3270']), env=env, stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
         self.children.append(s3270)
 
         delimiter = b'-----'
@@ -89,8 +87,8 @@ class TestS3270RpqNames(cti.cti):
             ipv6 = t['ipv6']
 
             # Start 'playback' to read s3270's output.
-            port, ts = cti.unused_port()
-            with playback.playback(self, 's3270/Test/rpqnames.trc', port=port, ipv6=ipv6) as p:
+            port, ts = unused_port()
+            with playback(self, 's3270/Test/rpqnames.trc', port=port, ipv6=ipv6) as p:
                 ts.close()
 
                 # Connect s3270 to playback.
@@ -148,15 +146,15 @@ class TestS3270RpqNames(cti.cti):
 
     def s3270quick(self, action:str):
         '''Get the output of an s3270 action'''
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         s3270 = Popen(['s3270', '-httpd', str(port)], stdin=DEVNULL, stdout=DEVNULL)
         ts.close()
         self.children.append(s3270)
         self.check_listen(port)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/{action}')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/{action}')
         self.assertTrue(r.ok)
         res = r.json()['result']
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         s3270.wait(timeout=2)
         return res
 
@@ -383,7 +381,7 @@ class TestS3270RpqNames(cti.cti):
 
     # Make sure the command-line option works
     def test_s3270_rpqnames_set_see(self):
-        s3270 = Popen(cti.vgwrap(['s3270', '-set', 'rpq=foo']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        s3270 = Popen(vgwrap(['s3270', '-set', 'rpq=foo']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.children.append(s3270)
 
         # Push some commands to s3270.

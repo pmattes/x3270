@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,36 +30,37 @@
 import re
 import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
 import sys
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 
 @unittest.skipIf(sys.platform.startswith("win"), "No local process on Windows")
-class TestS3270LocalProcess(cti.cti):
+@requests_timeout
+class TestS3270LocalProcess(cti):
 
     # s3270 TERM variable test
     def s3270_lp_term(self, model, term, override=None):
 
         # Start s3270.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         args = [ 's3270', '-model', model, '-httpd', str(port) ]
         if override != None:
             args += ['-tn', override]
         args += ['-e', '/bin/bash', '-c', 's3270/Test/echo_term.bash']
-        s3270 = Popen(cti.vgwrap(args), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL)
         self.check_listen(port)
         self.children.append(s3270)
         ts.close()
 
         # Wait for the script to exit and get the result.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(Disconnect)', timeout=2)
-        self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Ascii1(1,1,1,80)', timeout=2)
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(Disconnect)')
+        self.assertTrue(r.ok)
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Ascii1(1,1,1,80)')
+        self.assertTrue(r.ok)
         j = r.json()
         self.assertEqual(term, j['result'][0].strip())
 
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 TERM tests

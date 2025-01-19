@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,13 @@
 #
 # tcl3270 basic command-line tests
 
-import unittest
 import sys
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import cti
 
 @unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
-class TestTcl3270BasicCmdline(cti.cti):
+class TestTcl3270BasicCmdline(cti):
 
     # tcl3270 -v and -help test
     def test_tcl3270_v_help(self):

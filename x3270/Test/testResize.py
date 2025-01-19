@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,18 +28,18 @@
 # x3270 resize tests
 
 import os
-import requests
 import shutil
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
+from Common.Test.cti import *
 import Common.Test.playback as playback
-import Common.Test.cti as cti
 import x3270.Test.tvs as tvs
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-class TestX3270Resize(cti.cti):
+@requests_timeout
+class TestX3270Resize(cti):
 
     # x3270 resize test
     def test_x3270_resize(self):
@@ -54,10 +54,10 @@ class TestX3270Resize(cti.cti):
             self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
             # Start x3270.
-            x3270_port, ts = cti.unused_port()
+            x3270_port, ts = unused_port()
             env = os.environ.copy()
             env['DISPLAY'] = ':2'
-            x3270 = Popen(cti.vgwrap(['x3270',
+            x3270 = Popen(vgwrap(['x3270',
                 '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
                 '-httpd', f'127.0.0.1:{x3270_port}']), stdout=DEVNULL, env=env)
             self.children.append(x3270)
@@ -65,16 +65,16 @@ class TestX3270Resize(cti.cti):
             ts.close()
 
             # Resize it.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,2,oversize,100x100,extendedDataStream,false)')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,2,oversize,100x100,extendedDataStream,false)')
             self.assertTrue(r.ok)
 
             # Make sure oversize failed, because we also turned off extendedDataStream.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(oversize)')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(oversize)')
             self.assertTrue(r.ok)
             self.assertEqual('', r.json()['result'][0])
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
     # x3270 color-mode change test
@@ -90,10 +90,10 @@ class TestX3270Resize(cti.cti):
             self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
 
             # Start x3270 in monochrome mode.
-            x3270_port, ts = cti.unused_port()
+            x3270_port, ts = unused_port()
             env = os.environ.copy()
             env['DISPLAY'] = ':2'
-            x3270 = Popen(cti.vgwrap(['x3270', '-mono',
+            x3270 = Popen(vgwrap(['x3270', '-mono',
                 '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
                 '-httpd', f'127.0.0.1:{x3270_port}']), stdout=DEVNULL, env=env)
             self.children.append(x3270)
@@ -101,16 +101,16 @@ class TestX3270Resize(cti.cti):
             ts.close()
 
             # Resize it.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,3279-2)')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model,3279-2)')
             self.assertTrue(r.ok)
 
             # Make sure the model stayed as a 3278, since we're in -mono mode.
-            r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual('3278-2-E', r.json()['result'][0])
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
 if __name__ == '__main__':

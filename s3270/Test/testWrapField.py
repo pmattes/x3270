@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,16 +27,11 @@
 #
 # s3270 field wrap tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.cti as cti
-import Common.Test.playback as playback
+import unittest
 
-
-def get_cursor(port: int):
-    rs = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(cursor1)').json()['result'][0].split()
-    return (int(rs[1]), int(rs[3]))
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 def kw_split(result):
     ret = {}
@@ -50,18 +45,23 @@ def ebcdic(s: str) -> bytes:
     dd = Popen(['dd', 'conv=ebcdic'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
     return dd.communicate(s.encode())[0]
 
-class TestS3270WrapField(cti.cti):
+@requests_timeout
+class TestS3270WrapField(cti):
+
+    def get_cursor(self, port: int):
+        rs = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(cursor1)').json()['result'][0].split()
+        return (int(rs[1]), int(rs[3]))
 
     # s3270 field wrap test
     def test_s3270_wrap_field(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/wrap_field.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport),
                     f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -74,36 +74,36 @@ class TestS3270WrapField(cti.cti):
             p.send_records(1)
 
             # Verify that the cursor lands at row 2, column 1.
-            self.assertEqual((2, 1), get_cursor(sport))
+            self.assertEqual((2, 1), self.get_cursor(sport))
 
             # Jump to the end of the screen and wrap input back to the top of the screen.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/MoveCursor1(43,79)')
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(xx)')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/MoveCursor1(43,79)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(xx)')
             self.assertTrue(r.ok)
-            self.assertEqual((2, 2), get_cursor(sport))
+            self.assertEqual((2, 2), self.get_cursor(sport))
 
             # Move the cursor up into the read-only field and try typing. It should fail.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Up()')
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(xx)')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Up()')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(xx)')
             self.assertFalse(r.ok)
             rs = r.json()['result']
             self.assertIn('Operator error', rs)
             self.assertIn('Keyboard locked', rs)
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 ReadBuffer(field) test
     def test_s3270_readbuffer_field(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/wrap_field.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport),
                     f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -116,7 +116,7 @@ class TestS3270WrapField(cti.cti):
             p.send_records(1)
 
             # Check the field we land on.
-            rs = kw_split(requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field)').json()['result'])
+            rs = kw_split(self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field)').json()['result'])
             self.assertEqual('1 80', rs['Start1'])
             self.assertEqual('79', rs['StartOffset'])
             self.assertEqual('2 1', rs['Cursor1'])
@@ -126,8 +126,8 @@ class TestS3270WrapField(cti.cti):
             self.assertEqual(['00' for i in range(0, 3359)], c[1:])
 
             # Check the one above it.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Up()')
-            rs = kw_split(requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field)').json()['result'])
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Up()')
+            rs = kw_split(self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field)').json()['result'])
             self.assertEqual('43 80', rs['Start1'])
             self.assertEqual('3439', rs['StartOffset'])
             self.assertEqual('1 1', rs['Cursor1'])
@@ -140,13 +140,13 @@ class TestS3270WrapField(cti.cti):
             self.assertEqual(c.replace(' ', ''), 'SF(c0=f0)' + b)
 
             # Try again with EBCDIC.
-            rs = kw_split(requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field,ebcdic)').json()['result'])
+            rs = kw_split(self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ReadBuffer(field,ebcdic)').json()['result'])
             b = bytes.hex(ebcdic(s.ljust(79, '\0')))
             c = rs['Contents']
             self.assertEqual(c.replace(' ', ''), 'SF(c0=f0)' + b)
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,12 +27,13 @@
 #
 # b3270 session file suffix tests
 
-import unittest
 import sys
-import Common.Test.cti as cti
+import unittest
+
+from Common.Test.cti import *
 import Common.Test.suffix as suffix
 
-class TestB3270Suffix(cti.cti):
+class TestB3270Suffix(cti):
 
     def test_b3270_b3270(self):
         suffix.suffix_test(self, 'b3270', '.b3270', self.children)
