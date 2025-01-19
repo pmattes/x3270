@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,15 +29,15 @@
 
 import select
 import socket
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import threading
 import time
 import unittest
 
-import Common.Test.cti as cti
+from Common.Test.cti import *
 
-class TestS3270Sched(cti.cti):
+@requests_timeout
+class TestS3270Sched(cti):
 
     def hammer_s3270_scriptport(self, port: int, script1go: bool):
         '''Send a command to s3270, optionally in pieces.'''
@@ -60,7 +60,7 @@ class TestS3270Sched(cti.cti):
 
     def hammer_s3270_http(self, port: int):
         '''Send an HTTP command to s3270.'''
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(0.1,seconds)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Wait(0.1,seconds)')
         self.assertTrue(r.ok)
 
     # s3270 scheduler test
@@ -71,15 +71,15 @@ class TestS3270Sched(cti.cti):
         
         # Start s3270.
         if http:
-            hport, htp = cti.unused_port()
+            hport, htp = unused_port()
         if scriptport:
-            sport, stp = cti.unused_port()
+            sport, stp = unused_port()
         command = ['s3270']
         if http:
             command += ['-httpd', str(hport)]
         if scriptport:
             command += ['-scriptport', str(sport)]
-        s3270 = Popen(cti.vgwrap(command), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(command), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         if http:
             self.check_listen(hport)
@@ -107,7 +107,7 @@ class TestS3270Sched(cti.cti):
 
         # Wait for the process to exit successfully.
         if http:
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         else:
             with socket.socket() as s:
                 s.connect(('127.0.0.1', sport))

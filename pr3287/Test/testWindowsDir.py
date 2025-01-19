@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,18 @@
 #
 # Windows pr3287 print to dir tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import tempfile
 import os
 import pathlib
+from subprocess import Popen
 import sys
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import tempfile
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(not sys.platform.startswith('win'), 'Windows-specific test')
-class TestPr3287WindowsDir(cti.cti):
+class TestPr3287WindowsDir(cti):
 
     # test for files being (relatively) complete
     def file_check(self, tempdir: str):
@@ -58,14 +59,14 @@ class TestPr3287WindowsDir(cti.cti):
         with tempfile.TemporaryDirectory() as tempdir:
 
             # Start 'playback' to feed data to pr3287.
-            port, ts = cti.unused_port()
-            with playback.playback(self, 'pr3287/Test/smoke.trc', port=port) as p:
+            port, ts = unused_port()
+            with playback(self, 'pr3287/Test/smoke.trc', port=port) as p:
                 ts.close()
 
                 # Start pr3287.
                 (po_handle, po_name) = tempfile.mkstemp()
                 (sy_handle, sy_name) = tempfile.mkstemp()
-                pr3287 = Popen(cti.vgwrap(["pr3287", "-printer", tempdir, '-nocrlf',
+                pr3287 = Popen(vgwrap(["pr3287", "-printer", tempdir, '-nocrlf',
                     f"127.0.0.1:{port}"]))
                 self.children.append(pr3287)
 

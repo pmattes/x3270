@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,18 +29,18 @@
 
 import os
 import re
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
-class TestX3270MultiHost(cti.cti):
+class TestX3270MultiHost(cti):
 
     # x3270 multi-host test
     def x3270_multi_host(self, ipv4=True, ipv6=True):
@@ -53,18 +53,18 @@ class TestX3270MultiHost(cti.cti):
             args46 += ['-6']
         if not ipv6:
             args46 += ['-4']
-        hport, ts = cti.unused_port()
-        x3270 = Popen(cti.vgwrap(['x3270', '-httpd', str(hport), '-trace', '-tracefile', tracefile,
+        hport, ts = unused_port()
+        x3270 = Popen(vgwrap(['x3270', '-httpd', str(hport), '-trace', '-tracefile', tracefile,
             '-xrm', 'x3270.traceMonitor: false'] + args46))
         self.children.append(x3270)
         self.check_listen(hport)
         ts.close()
 
         # Feed x3270 some actions.
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        self.assertTrue(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        self.assertTrue(self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
 
         # Wait for the process to exit.
         self.vgwait(x3270)

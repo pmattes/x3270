@@ -28,12 +28,12 @@
 # s3270 PrintText() tests
 
 import os
-import requests
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import tempfile
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 # Line-ending-independent file comparison.
 def cmp_lines(file1, file2):
@@ -46,19 +46,20 @@ def cmp_lines(file1, file2):
                 return False
     return True
 
-class TestS3270PrintText(cti.cti):
+@requests_timeout
+class TestS3270PrintText(cti):
 
     # s3270 PrintText(html) test
     def s3270_PrintText(self, type: str):
 
         # Start 'playback' to emulate the host.
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/login.trc', port=pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/login.trc', port=pport) as p:
             socket.close()
 
             # Start s3270.
-            hport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{pport}']),
+            hport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{pport}']),
                 stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             socket.close()
@@ -71,12 +72,12 @@ class TestS3270PrintText(cti.cti):
             image_file = tempfile.NamedTemporaryFile(suffix='.' + type, delete=False)
             if_name = image_file.name
             tparam = (type + ',') if type != 'txt' else ''
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText({tparam}file,{if_name})')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText({tparam}file,{if_name})')
             self.assertTrue(r.ok, 'Expected PrintText()) to succeed')
             self.assertTrue(cmp_lines(image_file.name, f's3270/Test/login.{type}'), f'Expected correct {type} output')
 
         # Wait for s3270 to exit.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
         image_file.close()
         os.unlink(if_name)

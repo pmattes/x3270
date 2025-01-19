@@ -28,21 +28,21 @@
 # s3270 URI tests
 
 import os
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
+import unittest
 
-import requests
-import Common.Test.cti as cti
-import Common.Test.playback as playback
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.tls_server as tls_server
 
-class TestS3270Uri(cti.cti):
+@requests_timeout
+class TestS3270Uri(cti):
 
     # s3270 bad URI test
     def test_s3270_bad_uri(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270', 'tn3270://127.0.0.1:9999#frag']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
+        s3270 = Popen(vgwrap(['s3270', 'tn3270://127.0.0.1:9999#frag']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
         self.children.append(s3270)
 
         # Wait for the processes to exit.
@@ -56,8 +56,8 @@ class TestS3270Uri(cti.cti):
     def s3270_uri_lu(self, ipv6=False):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port(ipv6=ipv6)
-        with playback.playback(self, 's3270/Test/lu.trc', port=port, ipv6=ipv6) as p:
+        port, ts = unused_port(ipv6=ipv6)
+        with playback(self, 's3270/Test/lu.trc', port=port, ipv6=ipv6) as p:
             ts.close()
             
             # Start s3270.
@@ -65,7 +65,7 @@ class TestS3270Uri(cti.cti):
             env = os.environ.copy()
             env['USER'] = 'foo'
             env['NO_CODEPAGE'] = '1'
-            s3270 = Popen(cti.vgwrap(['s3270', '-utenv', f'tn3270://{loopback}:{port}?lu=foo']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(['s3270', '-utenv', f'tn3270://{loopback}:{port}?lu=foo']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             s3270.stdin.write(b'String(logoff) Enter()\n')
@@ -86,7 +86,7 @@ class TestS3270Uri(cti.cti):
     def test_s3270_tn3270s_uri_port(self):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
             
@@ -95,7 +95,7 @@ class TestS3270Uri(cti.cti):
             # But we have to map 992 to something else, so we don't need to run the TLS server as root.
             env = os.environ.copy()
             env['REMAP992'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270s://127.0.0.1?verifyhostcert=false']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270s://127.0.0.1?verifyhostcert=false']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Do the TLS thing.
@@ -116,8 +116,8 @@ class TestS3270Uri(cti.cti):
     def test_s3270_tn3270_uri_port(self):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port) as p:
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
             
             # Start s3270.
@@ -125,7 +125,7 @@ class TestS3270Uri(cti.cti):
             # But we have to map 23 to something else, so we don't need to run the TLS server as root.
             env = os.environ.copy()
             env['REMAP23'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270://127.0.0.1']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(['s3270', '-set', 'contentionResolution=false', '-set', 'port=123', '-utenv', 'tn3270://127.0.0.1']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Get out.
@@ -142,17 +142,17 @@ class TestS3270Uri(cti.cti):
     def test_s3270_telnets_uri_port(self):
 
         # Start a server to throw data at s3270.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         with tls_server.tls_sendserver('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, port) as s:
             ts.close()
 
             # Start s3270.
             # What we're trying to prove here is that the default port for telnets is 992, and it overrides s3270.port.
             # But we have to map 992 to something else, so we don't need to run the TLS server as root.
-            hport, ts = cti.unused_port()
+            hport, ts = unused_port()
             env = os.environ.copy()
             env['REMAP992'] = str(port)
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnets://127.0.0.1?verifyhostcert=false']), env=env)
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnets://127.0.0.1?verifyhostcert=false']), env=env)
             self.children.append(s3270)
             self.check_listen(hport)
             ts.close()
@@ -162,11 +162,11 @@ class TestS3270Uri(cti.cti):
 
             # Send some text and read it back.
             s.send(b'hello')
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
+            self.assertTrue(r.ok)
 
             # Clean up.
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         self.vgwait(s3270)
 
@@ -174,27 +174,27 @@ class TestS3270Uri(cti.cti):
     def test_s3270_telnet_uri_port(self):
 
         # Start a server to throw data at s3270.
-        s = cti.sendserver(self)
+        s = sendserver(self)
 
         # Start s3270.
         # What we're trying to prove here is that the default port for telnet is 23, and it overrides s3270.port.
         # But we have to map 23 to something else, so we don't need to run the TLS server as root.
-        hport, ts = cti.unused_port()
+        hport, ts = unused_port()
         env = os.environ.copy()
         env['REMAP23'] = str(s.port)
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnet://127.0.0.1']), env=env)
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-set', 'port=123', '-utenv', f'telnet://127.0.0.1']), env=env)
         self.children.append(s3270)
         self.check_listen(hport)
         ts.close()
 
         # Send some text and read it back.
         s.send(b'hello')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
+        self.assertTrue(r.ok)
 
         # Clean up.
         s.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
     
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,10 +34,11 @@ if not sys.platform.startswith('win'):
     import pty
 import threading
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
-class TestX3270ifPassword(cti.cti):
+class TestX3270ifPassword(cti):
 
     # Drain the PTY.
     def drain(self, fd):
@@ -57,7 +58,7 @@ class TestX3270ifPassword(cti.cti):
     def test_x3270if_password(self):
 
         # Start a copy of s3270 to talk to.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         s3270 = Popen(['s3270', '-scriptport', f'127.0.0.1:{port}'], stdout=DEVNULL, stderr=DEVNULL)
         ts.close()
         self.children.append(s3270)
@@ -70,7 +71,7 @@ class TestX3270ifPassword(cti.cti):
             env['X3270PORT'] = str(port)
             env['TERM'] = 'dumb'
             env['PAGER'] = 'none'
-            os.execvpe(cti.vgwrap_ecmd('x3270if'), cti.vgwrap_eargs(['x3270if', '-I', 's3270']), env)
+            os.execvpe(vgwrap_ecmd('x3270if'), vgwrap_eargs(['x3270if', '-I', 's3270']), env)
             self.assertTrue(False, 'x3270if did not start')
 
         # Parent process.

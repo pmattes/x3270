@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,38 +31,38 @@ import os
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import requests
 import threading
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.rpq as rpq
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270RpqNames(cti.cti):
+@requests_timeout
+class TestC3270RpqNames(cti):
 
     # Asynchronous connect from c3270 to playback.
     def async_connect(self, c3270_port: int, playback_port: int):
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(c:127.0.0.1:{playback_port})')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(c:127.0.0.1:{playback_port})')
         self.assertTrue(r.ok)
 
     # c3270 RPQNAMES test
     def c3270_rpqnames(self, rpq: str, reply: str):
 
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = cti.unused_port()
+        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             cts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
                     '-httpd', f'127.0.0.1:{c3270_port}', '-secure']), env)
             self.assertTrue(False, 'c3270 did not start')
 
@@ -73,7 +73,7 @@ class TestC3270RpqNames(cti.cti):
         cts.close()
 
         # Start 'playback' to feed c3270.
-        p = playback.playback(self, 's3270/Test/rpqnames.trc', port=playback_port)
+        p = playback(self, 's3270/Test/rpqnames.trc', port=playback_port)
         pts.close()
 
         # Connect c3270 to playback. This has to be async, because the 'Connect()' action blocks until the
@@ -86,7 +86,7 @@ class TestC3270RpqNames(cti.cti):
         thread.join()
 
         # Set the rpq value.
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(rpq,{rpq})')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(rpq,{rpq})')
         self.assertTrue(r.ok)
 
         # Send the Query WSF.
@@ -106,7 +106,7 @@ class TestC3270RpqNames(cti.cti):
         self.assertEqual(reply, ret)
 
         # Wait for c3270 to exit.
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
         self.vgwait_pid(pid)
 
     # User override in EBCDIC

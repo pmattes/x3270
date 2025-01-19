@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,19 +32,19 @@ import os
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
-import Common.Test.cti as cti
+from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
 
-class TestB3270Json(cti.cti):
+class TestB3270Json(cti):
 
     # b3270 NVT JSON test
     def test_b3270_nvt_json_smoke(self):
 
         # Start 'nc' to read b3270's output.
-        nc = cti.copyserver()
+        nc = copyserver()
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(b3270)
 
         # Feed b3270 some actions.
@@ -63,7 +63,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON single test
     def test_b3270_json_single(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -87,7 +87,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON multiple test
     def test_b3270_json_multiple(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 two sets of actions, which it will run concurrently and complete
@@ -127,7 +127,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON split-line test
     def test_b3270_json_split(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -151,7 +151,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON semantic error test
     def test_b3270_json_semantic_error(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.
@@ -173,7 +173,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON syntax error test
     def test_b3270_json_syntax_error(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE,
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE,
                 stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -197,7 +197,7 @@ class TestB3270Json(cti.cti):
     def test_b3270_json_default(self):
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -213,7 +213,7 @@ class TestB3270Json(cti.cti):
     def test_b3270_json_indented(self):
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-indent']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
+        b3270 = Popen(vgwrap(['b3270', '-json', '-indent']), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Grab its output.
@@ -232,10 +232,10 @@ class TestB3270Json(cti.cti):
     def b3270_json_socket(self, ipv6=False):
 
         # Listen for a connection from b3270.
-        l = cti.listenserver(self, ipv6=ipv6)
+        l = listenserver(self, ipv6=ipv6)
 
         # Start b3270.
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-callback', f'{l.qloopback}:{l.port}']),
+        b3270 = Popen(vgwrap(['b3270', '-json', '-callback', f'{l.qloopback}:{l.port}']),
             stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(b3270)
 
@@ -266,7 +266,7 @@ class TestB3270Json(cti.cti):
     # b3270 JSON error output test
     def test_b3270_json_error_output(self):
 
-        b3270 = Popen(cti.vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
 
         # Feed b3270 an action.

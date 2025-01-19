@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,18 @@
 #
 # x3270if smoke tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import Common.Test.cti as cti
+import unittest
 
-class TestX3270ifSmoke(cti.cti):
+from Common.Test.cti import *
+
+class TestX3270ifSmoke(cti):
 
     # x3270if smoke test
     def test_x3270if_smoke(self):
 
         # Start a copy of s3270 to talk to.
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
                 stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
@@ -45,8 +46,7 @@ class TestX3270ifSmoke(cti.cti):
         ts.close()
 
         # Run x3270if with a trivial query.
-        x3270if = Popen(cti.vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]),
-                stdout=PIPE)
+        x3270if = Popen(vgwrap(["x3270if", "-t", str(port), "Set(startTls)"]), stdout=PIPE)
         self.children.append(x3270if)
 
         # Decode the result.

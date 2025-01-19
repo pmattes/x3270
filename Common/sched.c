@@ -111,6 +111,9 @@ AddInput(iosrc_t source, iofn_t fn)
     ip->sflags = 0;
     append_input(ip);
     inputs_changed = true;
+#if defined(VERBOSE_HANDLES) /*[*/
+    vtrace("sched: AddInput 0x%lx\n", (unsigned long)(size_t)source);
+#endif /*]*/
     return (ioid_t)ip;
 }
 
@@ -158,17 +161,14 @@ RemoveInput(ioid_t id)
     input_t *ip;
 
     for (ip = inputs; ip != NULL; ip = ip->next) {
-	if (ip == (input_t *)id) {
-	    break;
+	if (ip->valid && ip == (input_t *)id) {
+	    ip->valid = false;
+#if defined(VERBOSE_HANDLES) /*[*/
+	    vtrace("sched: RemoveInput 0x%lx\n", (unsigned long)(size_t)ip->source);
+#endif /*]*/
+	    return;
 	}
     }
-    if (ip == NULL) {
-	return;
-    }
-    ip->valid = false;
-#if 0
-    inputs_changed = true;
-#endif
 }
 
 #if !defined(_WIN32) /*[*/
@@ -481,7 +481,7 @@ wait_threads_go(void)
     }
 }
 
-/* Synchronizes the wait threads after the main thread has finished WaitForMultipleEvents(). */
+/* Synchronizes the wait threads after the main thread has finished WaitForMultipleObjects(). */
 static void
 sync_wait_threads(DWORD ret)
 {
@@ -539,6 +539,7 @@ purge_inputs(void)
 		Free(ip);
 	    } else {
 		/* Move to the tail of the hold queue. */
+		ip->sflags &= ~SF_RAN;
 		if (hold_last != NULL) {
 		    hold_last->next = ip;
 		} else {
@@ -605,7 +606,7 @@ process_some_events(bool block, bool *processed_any)
 # endif /*]*/
 #endif /*]*/
     TIMEOUT_T tmo;
-    input_t *ip, *ip_next;
+    input_t *ip;
     bool any_events_pending;
     int i;
     const char *tmo_str;
@@ -613,6 +614,8 @@ process_some_events(bool block, bool *processed_any)
 
 #if defined(_WIN32) /*[*/
 # define SOURCE_READY(i, ip)    (waitgroups[i / maximum_wait_objects()].ret == WAIT_OBJECT_0 + 1 + (i % maximum_wait_objects()))
+# define WRITE_READY(i, ip)     false
+# define EXCEPT_READY(i, ip)    false
 # define WAIT_BAD        	(ret == WAIT_FAILED)
 #else /*][*/
 # if defined(HAVE_POLL) /*[*/
@@ -658,6 +661,11 @@ process_some_events(bool block, bool *processed_any)
 #endif /*]*/
 
     for (ip = inputs; ip != NULL; ip = ip->next) {
+
+	if (!ip->valid) {
+	    /* We will clean these up at the bottom of this function. */
+	    continue;
+	}
 
 	ip->sflags = 0;
 
@@ -726,6 +734,18 @@ process_some_events(bool block, bool *processed_any)
     vtrace("sched: Waiting for ");
 #if defined(_WIN32) /*[*/
     vtrace("%d handle%s", (int)ha_total, (ha_total == 1)? "": "s");
+# if defined(VERBOSE_HANDLES) /*[*/
+    {
+	int i;
+
+	vtrace("handles:");
+	for (i = 1; i < waitgroups[0].nha; i++) {
+	    vtrace(" 0x%lx", (unsigned long)(size_t)waitgroups[0].ha[i]);
+	}
+	vtrace("\n");
+
+    }
+# endif /*]*/
 #else /*][*/
     vtrace("%d event%s", ne, (ne == 1)? "": "s");
 #endif /*]*/
@@ -789,26 +809,24 @@ process_some_events(bool block, bool *processed_any)
 
     /* Process the events that completed. */
     inputs_changed = false;
-    for (i = 0, ip = inputs; ip != NULL; ip = ip_next, i++) {
-	ip_next = ip->next;
-	if (!ip->valid) {
-	    continue;
-	}
-	if (!(ip->sflags & SF_CURRENT)) {
-	    /* From here on are entries that were added by callbacks. */
-	    break;
-	}
+    i = 0;
+    for (ip = inputs; ip != NULL; ip = ip->next) {
+	if (ip->valid) {
+	    if (!(ip->sflags & SF_CURRENT)) {
+		/* From here on are entries that were added by callbacks. */
+		break;
+	    }
 
-	/* Check for completion. */
-	if ((ip->condition == WantInput  && SOURCE_READY(i, ip))
-#if !defined(_WIN32) /*[*/
-	 || (ip->condition == WantWrite  && WRITE_READY(i, ip))
-	 || (ip->condition == WantExcept && EXCEPT_READY(i, ip))
-#endif /*]*/
-	   ) {
-	    (*ip->proc)(ip->source, (ioid_t)ip);
-	    ip->sflags |= SF_RAN;
-	    *processed_any = true;
+	    /* Check for completion. */
+	    if ((ip->condition == WantInput  && SOURCE_READY(i, ip)) ||
+		(ip->condition == WantWrite  && WRITE_READY(i, ip)) ||
+		(ip->condition == WantExcept && EXCEPT_READY(i, ip))) {
+		(*ip->proc)(ip->source, (ioid_t)ip);
+		ip->sflags |= SF_RAN;
+		*processed_any = true;
+	    }
+
+	    i++;
 	}
     }
 

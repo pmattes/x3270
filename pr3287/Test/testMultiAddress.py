@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,17 +29,18 @@
 
 import os
 import re
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import sys
 import tempfile
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
-class TestPr3287MultiHost(cti.cti):
+class TestPr3287MultiHost(cti):
 
     # pr3287 multi-host test
     @unittest.skipUnless(hostsSetup, setupHosts.warning)
@@ -48,14 +49,14 @@ class TestPr3287MultiHost(cti.cti):
         # Start pr3287.
         handle, tracefile = tempfile.mkstemp()
         os.close(handle)
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
         args46 = []
         if not ipv4:
             args46 += ['-6']
         if not ipv6:
             args46 += ['-4']
-        pr3287 = Popen(cti.vgwrap(['pr3287', '-trace', '-tracefile', tracefile]
+        pr3287 = Popen(vgwrap(['pr3287', '-trace', '-tracefile', tracefile]
             + args46 + [f'{setupHosts.test_hostname}:{uport}']), stdout=DEVNULL, stderr=DEVNULL)
         self.children.append(pr3287)
 
@@ -91,19 +92,19 @@ class TestPr3287MultiHost(cti.cti):
     def test_pr3287_multi_host_sequence(self):
 
         # Start a copy server.
-        c = cti.copyserver(justAccept=True)
+        c = copyserver(justAccept=True)
 
         # Start pr3287.
         handle, tracefile = tempfile.mkstemp()
         os.close(handle)
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
-        vport, ts = cti.unused_port()
+        vport, ts = unused_port()
         ts.close()
         # Set up a mock resolver result with the unused port, the real port and the other unused port.
         env = os.environ.copy()
         env['MOCK_SYNC_RESOLVER'] = f'127.0.0.1/{uport};127.0.0.1/{c.port};127.0.0.1/{vport}'
-        pr3287 = Popen(cti.vgwrap(['pr3287', '-utenv', '-trace', '-tracefile', tracefile,
+        pr3287 = Popen(vgwrap(['pr3287', '-utenv', '-trace', '-tracefile', tracefile,
             f'foo:9999']), stdout=DEVNULL, stderr=DEVNULL, env=env)
         self.children.append(pr3287)
 

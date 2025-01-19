@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,42 +27,43 @@
 #
 # s3270 paste test
 
-import requests
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import sys
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
-class TestS3270Paste(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270Paste(cti):
 
     # s3270 paste test
     def test_s3270_paste(self):
 
-        port, ts = cti.unused_port()
+        port, ts = unused_port()
         null = 'NUL:' if sys.platform.startswith('win') else '/dev/null'
-        with playback.playback(self, null, port=port,) as p:
+        with playback(self, null, port=port,) as p:
             ts.close()
 
             # Start s3270.
-            hport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), '-nvt', f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
+            hport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-nvt', f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             socket.close()
             self.check_listen(hport)
 
             # Wait for the connection to complete.
-            self.try_until(lambda: 'connected' in requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(ConnectionState)').json()['result'][0], 2, "didn't connect")
+            self.try_until(lambda: 'connected' in self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(ConnectionState)').json()['result'][0], 2, "didn't connect")
 
             # Pump in a string that almost wraps.
             a79 = ''.join(['A' for i in range(79)])
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/String({a79})')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/String({a79})')
 
             # Paste in a string that wraps.
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/PasteString(4242)')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/PasteString(4242)')
 
             # Get the cursor location.
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(cursor1)')
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(cursor1)')
             col = r.json()['result'][0].split()[3]
 
             # Make sure it is 2 (not 80).
@@ -70,7 +71,7 @@ class TestS3270Paste(cti.cti):
             self.assertEqual(2, int(col), f'result is {rx}')
 
         # Wait for s3270 to exit.
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

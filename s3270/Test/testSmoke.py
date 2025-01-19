@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,23 +27,24 @@
 #
 # s3270 smoke tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import os
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
 
-class TestS3270Smoke(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270Smoke(cti):
 
     # s3270 NVT smoke test
     def s3270_nvt_smoke(self, ipv6=False):
 
         # Start a thread to read s3270's output.
-        nc = cti.copyserver(ipv6=ipv6)
+        nc = copyserver(ipv6=ipv6)
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270", f"a:c:t:{nc.qloopback}:{nc.port}"]), stdin=PIPE,
+        s3270 = Popen(vgwrap(["s3270", f"a:c:t:{nc.qloopback}:{nc.port}"]), stdin=PIPE,
                 stdout=DEVNULL)
         self.children.append(s3270)
 
@@ -72,14 +73,14 @@ class TestS3270Smoke(cti.cti):
     def s3270_3270_smoke(self, ipv6=False, uri=False):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port(ipv6=ipv6)
-        with playback.playback(self, 's3270/Test/ibmlink-cr.trc', port=port, ipv6=ipv6) as p:
+        port, ts = unused_port(ipv6=ipv6)
+        with playback(self, 's3270/Test/ibmlink-cr.trc', port=port, ipv6=ipv6) as p:
             ts.close()
 
             # Start s3270.
             loopback = '[::1]' if ipv6 else '127.0.0.1'
             host = f'{loopback}:{port}' if not uri else f'tn3270://{loopback}:{port}'
-            s3270 = Popen(cti.vgwrap(["s3270", host]), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(["s3270", host]), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Feed s3270 some actions.
@@ -108,28 +109,28 @@ class TestS3270Smoke(cti.cti):
     def s3270_httpd_smoke(self, ipv6=False):
 
         # Start s3270.
-        port, ts = cti.unused_port(ipv6=ipv6)
+        port, ts = unused_port(ipv6=ipv6)
         loopback = '[::1]' if ipv6 else '127.0.0.1'
-        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f'{loopback}:{port}']))
+        s3270 = Popen(vgwrap(["s3270", "-httpd", f'{loopback}:{port}']))
         self.children.append(s3270)
         self.check_listen(port, ipv6=ipv6)
         ts.close()
 
         # Send it a JSON GET.
-        r = requests.get(f'http://{loopback}:{port}/3270/rest/json/Set(monoCase)')
+        r = self.get(f'http://{loopback}:{port}/3270/rest/json/Set(monoCase)')
         s = r.json()
         self.assertEqual(s['result'], ['false'])
         self.assertTrue(s['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
         # Send it a JSON POST.
-        r = requests.post(f'http://{loopback}:{port}/3270/rest/post',
+        r = self.post(f'http://{loopback}:{port}/3270/rest/post',
                 json={'action': 'set', 'args': ['monoCase']})
         s = r.json()
         self.assertEqual(s['result'], ['false'])
         self.assertTrue(s['status'].startswith('L U U N N 4 24 80 0 0 0x0 '))
 
         # Wait for the process to exit.
-        requests.get(f'http://{loopback}:{port}/3270/rest/json/Quit()')
+        self.get(f'http://{loopback}:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 httpd smoke test
@@ -142,7 +143,7 @@ class TestS3270Smoke(cti.cti):
     def test_s3270_stdin(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Push a trivial command at it.

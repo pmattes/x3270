@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2023 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,28 +27,29 @@
 #
 # Test for TN3270E renegotiation.
 
+from subprocess import Popen
 import threading
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
-class TestRenegotiate(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestRenegotiate(cti):
 
     def send_pf3(self, s3270_port: int):
-        requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/PF(3)')
+        self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/PF(3)')
 
     def test_renegotiate(self):
 
         # Start 'playback' to drive s3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/tn3270e-renegotiate.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, f's3270/Test/tn3270e-renegotiate.trc', port=playback_port) as p:
             ts.close()
 
             # Start s3270 with a webserver.
-            s3270_port, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
+            s3270_port, ts = unused_port()
+            s3270 = Popen(vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
             self.children.append(s3270)
             self.check_listen(s3270_port)
             ts.close()
@@ -58,8 +59,8 @@ class TestRenegotiate(cti.cti):
             p.send_tm()
 
             # Select an option.
-            requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/String(uvvm)')
-            requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Enter()')
+            self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/String(uvvm)')
+            self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Enter()')
 
             # Get the login screen.
             p.match(disconnect=False, nrecords=2)
@@ -74,7 +75,7 @@ class TestRenegotiate(cti.cti):
             x.join(timeout=2)
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

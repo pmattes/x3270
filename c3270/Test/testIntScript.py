@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,23 +27,23 @@
 #
 # c3270 tests for interactive scripts
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
+import os
+import os.path
+import select
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import os
-import os.path
-import requests
-import select
 import threading
 import time
+import unittest
+
+from Common.Test.cti import *
 import Common.Test.playback as playback
-import Common.Test.cti as cti
 
 @unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270IntScript(cti.cti):
+@requests_timeout
+class TestC3270IntScript(cti):
 
     # Used to stop the timeout thread.
     stop_timeout = False
@@ -51,22 +51,22 @@ class TestC3270IntScript(cti.cti):
     # Push a script command to c3270.
     def push_command(self, port: int, prompt: bool):
         prompt_arg = '' if prompt else '-nopromptafter,'
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Escape({prompt_arg}"Script(-interactive,c3270/Test/ask.py)")')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Escape({prompt_arg}"Script(-interactive,c3270/Test/ask.py)")')
         self.assertTrue(r.ok)
 
     # c3270 interactive script test
     def c3270_interactive_script_test(self, prompt:bool):
 
         # Fork c3270 with a PTY between this process and it.
-        c3270_port, ts = cti.unused_port()
+        c3270_port, ts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             ts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-secure',
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-secure',
                     '-httpd', f'127.0.0.1:{c3270_port}']), env)
             self.assertTrue(False, 'c3270 did not start')
 
@@ -92,7 +92,7 @@ class TestC3270IntScript(cti.cti):
             self.wait_for_pty_output(2, fd, '[Press <Enter>]')
 
         # Tell c3270 to exit.
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')
 
         self.vgwait_pid(pid)
         os.close(fd)
@@ -108,15 +108,15 @@ class TestC3270IntScript(cti.cti):
     def test_c3270_interactive_script_wrong(self):
 
         # Fork c3270 with a PTY between this process and it.
-        c3270_port, ts = cti.unused_port()
+        c3270_port, ts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             ts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-secure',
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-secure',
                     '-httpd', f'127.0.0.1:{c3270_port}']), env)
             self.assertTrue(False, 'c3270 did not start')
 
@@ -127,11 +127,11 @@ class TestC3270IntScript(cti.cti):
         ts.close()
 
         # Tell c3270 to run an interactive script with invalid arguments.
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Script(-interactive,-async,"Foo,bar"))')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Script(-interactive,-async,"Foo,bar"))')
         self.assertFalse(r.ok, 'Expected a syntax error')
 
         # Tell c3270 to exit.
-        requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit())')
 
         self.vgwait_pid(pid)
         os.close(fd)

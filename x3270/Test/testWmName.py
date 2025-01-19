@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,15 @@
 # x3270 _NET_WM_NAME tests
 
 import os
-import requests
-from subprocess import Popen, PIPE, DEVNULL, check_output
+from subprocess import Popen, DEVNULL, check_output
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import x3270.Test.tvs as tvs
 
 @unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-class TestX3270WmName(cti.cti):
+class TestX3270WmName(cti):
 
     # x3270 title test.
     def title_test(self, cmdlineTitle: bool = False):
@@ -46,12 +45,12 @@ class TestX3270WmName(cti.cti):
         with tvs.tightvncserver(self):
 
             # Start 'playback' to feed x3270.
-            playback_port, ts = cti.unused_port()
-            with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+            playback_port, ts = unused_port()
+            with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
                 ts.close()
 
                 # Start x3270.
-                x3270_port, ts = cti.unused_port()
+                x3270_port, ts = unused_port()
                 cmdline = ["x3270",
                     "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
                     "-httpd", f"127.0.0.1:{x3270_port}" ]
@@ -60,7 +59,7 @@ class TestX3270WmName(cti.cti):
                 cmdline.append(f'127.0.0.1:{playback_port}')
                 env = os.environ.copy()
                 env['DISPLAY'] = ':2'
-                x3270 = Popen(cti.vgwrap(cmdline), stdout=DEVNULL, env=env)
+                x3270 = Popen(vgwrap(cmdline), stdout=DEVNULL, env=env)
                 self.children.append(x3270)
                 self.check_listen(x3270_port)
                 ts.close()
@@ -69,7 +68,7 @@ class TestX3270WmName(cti.cti):
                 p.send_records(4)
 
                 # Find x3270's window ID using Query().
-                r = requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Query(WindowId)')
+                r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Query(WindowId)')
                 wid = r.json()['result'][0]
 
                 # Check the _NET_WM_NAME property (the window title).
@@ -80,7 +79,7 @@ class TestX3270WmName(cti.cti):
                     self.assertEqual(name.decode(), f'_NET_WM_NAME(UTF8_STRING) = "x3270-4 127.0.0.1:{playback_port}"\n')
 
             # Wait for the process to exit.
-            requests.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
     # x3270 default title test.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,12 @@ from subprocess import Popen, PIPE, DEVNULL
 import sys
 import tempfile
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(not sys.platform.startswith('win'), 'Windows-specific test')
-class TestS3270WindowsPrintDir(cti.cti):
+class TestS3270WindowsPrintDir(cti):
 
     # s3270 Windows print-to-dir test
     def s3270_windows_print_dir(self, kind: str):
@@ -47,13 +48,13 @@ class TestS3270WindowsPrintDir(cti.cti):
         with tempfile.TemporaryDirectory() as tempdir:
 
             # Start 'playback' to talk to s3270.
-            port, ts = cti.unused_port()
-            with playback.playback(self, 's3270/Test/ibmlink.trc', port=port) as p:
+            port, ts = unused_port()
+            with playback(self, 's3270/Test/ibmlink.trc', port=port) as p:
                 ts.close()
 
                 # Start s3270.
                 loopback = '127.0.0.1'
-                s3270 = Popen(cti.vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
+                s3270 = Popen(vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
                     '-xrm', f's3270.printer.name: {tempdir}',
                     f'{loopback}:{port}']), stdin=PIPE, stdout=DEVNULL)
                 self.children.append(s3270)

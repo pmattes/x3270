@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,25 +27,27 @@
 #
 # s3270 HTTPS tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import requests
-import Common.Test.cti as cti
+import unittest
 
-class TestS3270Httpd(cti.cti):
+from Common.Test.cti import *
+
+class TestS3270Httpd(cti):
 
     # s3270 HTTPD persist test.
     def test_s3270_httpd_persist(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
 
         # Start a requests session and do a get.
         # Doing the get within a session keeps the connection alive.
+        # Note: This is done by most tests now, without the explcit check for the pool.
         s = requests.Session()
         r = s.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)')
         self.assertEqual(requests.codes.ok, r.status_code)
@@ -68,8 +70,8 @@ class TestS3270Httpd(cti.cti):
     def s3270_httpd_stext_error_test(self, actions:str, content:str):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -99,8 +101,8 @@ class TestS3270Httpd(cti.cti):
     def s3270_httpd_json_error_test(self, actions:str, content: str):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -130,8 +132,8 @@ class TestS3270Httpd(cti.cti):
     def s3270_httpd_html_error_test(self, actions:str, content: str):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()

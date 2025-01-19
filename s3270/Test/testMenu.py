@@ -27,24 +27,25 @@
 #
 # Test for basic TN3270E NVT-DATA and SSCP-LU mode I/O.
 
+from subprocess import Popen
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
-class TestMenu(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestMenu(cti):
 
     def menu_test(self, file: str):
 
         # Start 'playback' to drive s3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/{file}.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, f's3270/Test/{file}.trc', port=playback_port) as p:
             ts.close()
 
             # Start s3270 with a webserver.
-            s3270_port, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
+            s3270_port, ts = unused_port()
+            s3270 = Popen(vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
             self.children.append(s3270)
             self.check_listen(s3270_port)
             ts.close()
@@ -54,24 +55,24 @@ class TestMenu(cti.cti):
             p.send_tm()
 
             # Make sure the menu appears on the screen.
-            r = requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Ascii1(1,1,5)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Ascii1(1,1,5)')
+            self.assertTrue(r.ok)
             self.assertEqual('x3270', r.json()['result'][0])
 
             # Send 'foo'.
-            requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/String(foo)')
-            requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Enter()')
+            self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/String(foo)')
+            self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Enter()')
 
             # Make sure it is echoed properly.
-            r = requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Ascii1(13,5,3)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Ascii1(13,5,3)')
+            self.assertTrue(r.ok)
             self.assertEqual('foo', r.json()['result'][0])
 
             # Make sure it is sent to the host.
             p.match()
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Test basic NVT-DATA I/O

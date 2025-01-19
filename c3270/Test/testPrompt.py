@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,19 +29,19 @@
 
 import os
 import os.path
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import sys
 if not sys.platform.startswith('win'):
     import pty
 import threading
 import time
 import unittest
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
-class TestC3270Prompt(cti.cti):
+@requests_timeout
+class TestC3270Prompt(cti):
 
     # Drain the PTY.
     def drain(self, fd):
@@ -61,18 +61,18 @@ class TestC3270Prompt(cti.cti):
     # c3270 prompt open test
     def test_c3270_prompt_open(self):
 
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = cti.unused_port()
+        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             pts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']), env)
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']), env)
             self.assertTrue(False, 'c3270 did not start')
 
         # Parent process.
@@ -82,7 +82,7 @@ class TestC3270Prompt(cti.cti):
         cts.close()
 
         # Start 'playback' to feed c3270.
-        p = playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
+        p = playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
         pts.close()
 
         # Start a thread to drain c3270's output.
@@ -109,10 +109,10 @@ class TestC3270Prompt(cti.cti):
     # c3270 interactive file transfer test ('other' option)
     def test_c3270_prompt_ft_other(self):
 
-        playback_port, pts = cti.unused_port()
+        playback_port, pts = unused_port()
 
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = cti.unused_port()
+        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
@@ -120,8 +120,8 @@ class TestC3270Prompt(cti.cti):
             env = os.environ.copy()
             env['TERM'] = 'dumb'
             env['PAGER'] = 'none'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']), env)
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}']), env)
             self.assertTrue(False, 'c3270 did not start')
 
         # Parent process.
@@ -136,7 +136,7 @@ class TestC3270Prompt(cti.cti):
         drain_thread.start()
 
         # Start 'playback' to talk to c3270.
-        p = playback.playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
+        p = playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
         pts.close()
 
         # Connect c3270 to playback.
@@ -147,7 +147,7 @@ class TestC3270Prompt(cti.cti):
         p.send_records(6)
 
         # Wait for the connection to finish.
-        r = requests.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(2,InputField)')
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(2,InputField)')
         self.assertTrue(r.ok, 'Connection did not complete')
 
         # Tab to the big field, break to the prompt and send an interactive Transfer() action to c3270.

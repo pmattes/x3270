@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,11 @@
 import unittest
 import sys
 import os
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 
 @unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-class TestX3270BasicCmdline(cti.cti):
+class TestX3270BasicCmdline(cti):
 
     # x3270 -v and -help test
     def test_x3270_v_help(self):

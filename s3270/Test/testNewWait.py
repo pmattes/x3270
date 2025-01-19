@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,39 +27,40 @@
 #
 # Tests for new Wait() options
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
+from subprocess import Popen
 import threading
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
 
-class TestNewWait(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
-    def to_playback(self, port: int, second_actions, p: playback.playback = None, n=0):
+@requests_timeout
+class TestNewWait(cti):
+
+    def to_playback(self, port: int, second_actions, p: playback = None, n=0):
         '''Write a string to playback after verifying the emulator is blocked'''
         # Wait for the action to block.
         def test():
-            j = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
+            j = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(Tasks)').json()
             return any('Wait(' in line for line in j['result'])
         self.try_until(test, 2, "emulator did not block")
         # Perform the additional actions.
         for action in second_actions:
-            requests.get(f'http://127.0.0.1:{port}/3270/rest/json/{action}', timeout=2)
+            self.get(f'http://127.0.0.1:{port}/3270/rest/json/{action}')
         # Push additional records.
         if n > 0:
             p.send_records(1, send_tm=False)
 
-    def new_wait(self, initial_eors, second_actions, wait_params, p: playback.playback = None, n: int=0):
+    def new_wait(self, initial_eors, second_actions, wait_params, p: playback = None, n: int=0):
 
         # Start 'playback' to drive s3270.
-        playback_port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
+        playback_port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
             ts.close()
 
             # Start s3270 with a webserver.
-            s3270_port, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
+            s3270_port, ts = unused_port()
+            s3270 = Popen(vgwrap(["s3270", "-httpd", f"127.0.0.1:{s3270_port}", f"127.0.0.1:{playback_port}"]))
             self.children.append(s3270)
             self.check_listen(s3270_port)
             ts.close()
@@ -72,14 +73,12 @@ class TestNewWait(cti.cti):
             x.start()
 
             # Wait for the change.
-            r = requests.get(
-                    f'http://127.0.0.1:{s3270_port}/3270/rest/json/Wait({wait_params})',
-                    timeout=2)
-            self.assertEqual(r.status_code, requests.codes.ok)
+            r = self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Wait({wait_params})')
+            self.assertTrue(r.ok)
 
         # Wait for the processes to exit.
         x.join(timeout=2)
-        requests.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Generic flavor of CursorAt test.
@@ -103,16 +102,16 @@ class TestNewWait(cti.cti):
     # Simple negative test framework.
     def simple_negative_test(self, port, action, message):
         # Send the action to s3270.
-        r = requests.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}")
-        self.assertEqual(r.status_code, requests.codes.bad)
+        r = self.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}")
+        self.assertFalse(r.ok);
         self.assertTrue(message in r.json()['result'][0])
 
     # Some basic negative tests.
     def test_simple_negatives(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{port}"]))
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(["s3270", "-httpd", f"127.0.0.1:{port}"]))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
@@ -134,26 +133,25 @@ class TestNewWait(cti.cti):
         self.simple_negative_test(port, 'Wait(InputFieldAt,0,0)', 'connected')
 
         # Clean up.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Run an action that succeeds immediately.
     def nop(self, port, action):
-        r = requests.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}",
-                timeout=2)
-        self.assertEqual(r.status_code, requests.codes.ok)
+        r = self.get(f"http://127.0.0.1:{port}/3270/rest/json/{action}")
+        self.assertTrue(r.ok)
 
     # No-op tests (things that don't block).
     def test_nops(self):
 
         # Start 'playback' to drive s3270.
-        pport, pts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
+        pport, pts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
             pts.close()
 
             # Start s3270 with a webserver.
-            sport, sts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(["s3270", "-httpd", f"127.0.0.1:{sport}",
+            sport, sts = unused_port()
+            s3270 = Popen(vgwrap(["s3270", "-httpd", f"127.0.0.1:{sport}",
                 f"127.0.0.1:{pport}"]))
             self.children.append(s3270)
             self.check_listen(sport)
@@ -166,7 +164,7 @@ class TestNewWait(cti.cti):
             self.nop(sport, 'Wait(InputFieldAt,21,13)')
             self.nop(sport, 'Wait(StringAt,21,13,"___")')
 
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

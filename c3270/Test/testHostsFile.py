@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,20 @@
 #
 # c3270 hosts file tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
 import os
 import sys
 if not sys.platform.startswith('win'):
     import pty
 import tempfile
 import threading
+import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
-class TestC3270HostsFile(cti.cti):
+@requests_timeout
+class TestC3270HostsFile(cti):
 
     # Drain the PTY.
     def drain(self, fd):
@@ -55,19 +54,19 @@ class TestC3270HostsFile(cti.cti):
     def test_c3270_hosts_file(self):
 
         # Set up a hosts file.
-        pport, pts = cti.unused_port()
+        pport, pts = unused_port()
         handle, name = tempfile.mkstemp()
         os.write(handle, f'fubar primary a:c:127.0.0.1:{pport}=gazoo\n'.encode('utf8'))
         os.close(handle)
 
         # Start c3270.
-        hport, ts = cti.unused_port()
+        hport, ts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
             ts.close()
-            os.execvp(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', "-utf8",
+            os.execvp(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', "-utf8",
                     '-httpd', str(hport), '-secure',
                     '-set', f'hostsFile={name}']))
             self.assertTrue(False, 'c3270 did not start')
@@ -79,18 +78,18 @@ class TestC3270HostsFile(cti.cti):
         drain_thread.start()
 
         # Start playback to connect to.
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
+        with playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
             pts.close()
 
             # Connect to an alias.
-            r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(fubar)', timeout=5)
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(fubar)', timeout=5)
             self.assertTrue(r.ok)
 
             p.wait_accept()
             p.close()
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait_pid(pid)
         os.close(fd)
         drain_thread.join()

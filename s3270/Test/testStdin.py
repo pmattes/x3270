@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,25 +27,26 @@
 #
 # s3270 standard input tests
 
+from subprocess import Popen, PIPE, DEVNULL
 import sys
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import Common.Test.playback as playback
-import Common.Test.cti as cti
 
-class TestS3270Stdin(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+class TestS3270Stdin(cti):
 
     # s3270 stdin hang test
     @unittest.skipIf(sys.platform.startswith('win'), "POSIX-only test")
     def test_s3270_stdin_hang(self):
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             p.send_records(4)

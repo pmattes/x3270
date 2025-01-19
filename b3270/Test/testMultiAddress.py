@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,17 @@
 # b3270 multi-address tests
 
 import json
-import requests
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
-class TestB3270MultiAddress(cti.cti):
+@requests_timeout
+class TestB3270MultiAddress(cti):
 
     def check_result(self, b3270: Popen, ipv4: bool, ipv6: bool):
         # Make sure both are processed.
@@ -66,8 +67,8 @@ class TestB3270MultiAddress(cti.cti):
             args46 += ['-6']
         if not ipv6:
             args46 += ['-4']
-        hport, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)] + args46), stdin=PIPE, stdout=PIPE)
+        hport, ts = unused_port()
+        b3270 = Popen(vgwrap(['b3270', '-json', '-httpd', str(hport)] + args46), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
         ts.close()
         self.check_listen(hport)
@@ -77,10 +78,10 @@ class TestB3270MultiAddress(cti.cti):
         b3270.stdout.readline()
 
         # Feed b3270 some actions.
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         self.check_result(b3270, ipv4, ipv6)
 
@@ -95,8 +96,8 @@ class TestB3270MultiAddress(cti.cti):
         self.b3270_multi_address(ipv4=False)
 
     def b3270_ma_switch_test(self, ipv4=True, ipv6=True):
-        hport, ts = cti.unused_port()
-        b3270 = Popen(cti.vgwrap(['b3270', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
+        hport, ts = unused_port()
+        b3270 = Popen(vgwrap(['b3270', '-json', '-httpd', str(hport)]), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
         ts.close()
         self.check_listen(hport)
@@ -106,14 +107,14 @@ class TestB3270MultiAddress(cti.cti):
         b3270.stdout.readline()
 
         # Feed b3270 some actions.
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
         if ipv4:
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,true)')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv4,true)')
         if ipv6:
-            requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,true)')
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Set(preferIpv6,true)')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         self.check_result(b3270, ipv4, ipv6)
 

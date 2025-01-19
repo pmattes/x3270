@@ -29,6 +29,7 @@
 
 import re
 import socket
+import sys
 import threading
 import select
 import Common.Test.cti as cti
@@ -189,11 +190,11 @@ class playback():
     def match(self, disconnect=True, nrecords=-1, nlines=-1):
         '''Compare emulator I/O to trace file'''
         self.wait_accept()
-        direction = ''
-        accum = ''
-        lno = 0
-        records = 0
-        lines = 0
+        direction = ''  # '<' if sending to emulator, '>' if receiving
+        accum = ''      # accumulated data from previous direction
+        lno = 0         # line number
+        records = 0     # sent record count
+        lines = 0       # sent line count
         while True:
             lno += 1
             line = self.file.readline()
@@ -205,28 +206,32 @@ class playback():
                 if direction == '<':
                     # Send to emulator.
                     self.conn.send(bytes.fromhex(accum))
+                    is_eor = accum.endswith('ffef')
+                    accum = ''
                     # See if we have sent enough lines.
                     lines += 1
                     if nlines > 0 and lines >= nlines:
                         break
                     # See if we have sent enough records.
-                    if accum.endswith('ffef'):
+                    if is_eor:
                         records += 1
                         if nrecords > 0 and records >= nrecords:
                             break
                 elif direction == '>':
                     # Receive from emulator.
                     want = bytes.fromhex(accum)
+                    accum = ''
                     r = self.nread(len(want))
                     self.ct.assertEqual(r, want)
                 direction = ''
-                accum = ''
             if isIo:
                 # Start accumulating.
                 direction = line[0]
                 accum += line.split()[2]
         if disconnect:
             self.disconnect()
+        if accum != '':
+            print(f'playback.match: warning: accum {accum} still pending, direction={direction}', file=sys.stderr)
 
     def disconnect(self):
         '''Disconnect'''

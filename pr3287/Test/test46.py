@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,34 +27,35 @@
 #
 # pr3287 -4/-6 tests
 
-import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import tempfile
 import os
+from subprocess import Popen
 import sys
-import Common.Test.playback as playback
+import tempfile
+import unittest
+
+from Common.Test.cti import *
+from Common.Test.playback import playback
 import Common.Test.setupHosts as setupHosts
-import Common.Test.cti as cti
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(sys.platform.startswith('win'), 'Does not run on Windows')
 @unittest.skipIf(sys.platform == 'cygwin', 'This does some very strange things on Cygwin')
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
-class TestPr3287_46(cti.cti):
+class TestPr3287_46(cti):
 
     # pr3287 -4/-6 test
     def pr3287_46(self, ipv6=False):
 
         # Start 'playback' to feed data to pr3287.
-        port, ts = cti.unused_port()
-        with playback.playback(self, 'pr3287/Test/smoke.trc', port=port, ipv6=ipv6) as p:
+        port, ts = unused_port()
+        with playback(self, 'pr3287/Test/smoke.trc', port=port, ipv6=ipv6) as p:
             ts.close()
 
             # Start pr3287.
             (po_handle, po_name) = tempfile.mkstemp()
             (sy_handle, sy_name) = tempfile.mkstemp()
-            pr3287 = Popen(cti.vgwrap(["pr3287",
+            pr3287 = Popen(vgwrap(["pr3287",
                 '-6' if ipv6 else '-4',
                 "-command", f"cat >'{po_name}'; date >'{sy_name}'",
                 f'{setupHosts.test_hostname}:{port}']))

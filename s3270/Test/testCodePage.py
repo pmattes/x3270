@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,25 +27,26 @@
 #
 # s3270 code page tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+import unittest
 
-class TestS3270CodePage(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270CodePage(cti):
 
     # s3270 SBCS code page test.
     def test_s3270_sbcs_code_page(self):
 
         # Start playback.
-        pport, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/all_chars.trc', port=pport) as p:
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/all_chars.trc', port=pport) as p:
             ts.close()
 
             # Start s3270.
-            sport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
             self.children.append(s3270)
             self.check_listen(sport)
             ts.close()
@@ -172,12 +173,12 @@ class TestS3270CodePage(cti.cti):
 
             # Check the SBCS code pages.
             for cp in cp_all_map.keys():
-                requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(codePage,{cp})')
-                r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
+                self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(codePage,{cp})')
+                r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
                 self.assertEqual(cp_all_map[cp], r.json()['result'])
 
         # Wait for the process to exit successfully.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 APL code page test.
@@ -199,13 +200,13 @@ class TestS3270CodePage(cti.cti):
         ]
 
         # Start playback.
-        pport, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/apl.trc', port=pport) as p:
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/apl.trc', port=pport) as p:
             ts.close()
 
             # Start s3270.
-            sport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', f'127.0.0.1:{pport}']))
             self.children.append(s3270)
             self.check_listen(sport)
             ts.close()
@@ -214,11 +215,11 @@ class TestS3270CodePage(cti.cti):
             p.send_records(1)
 
         # Check the SBCS code pages.
-        r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
+        r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
         self.assertEqual(apl_chars, r.json()['result'])
         
         # Wait for the process to exit successfully.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 simplified Chinese test.
@@ -231,13 +232,13 @@ class TestS3270CodePage(cti.cti):
         ]
 
         # Start playback.
-        pport, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/935.trc', port=pport) as p:
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/935.trc', port=pport) as p:
             ts.close()
 
             # Start s3270.
-            sport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
             self.children.append(s3270)
             self.check_listen(sport)
             ts.close()
@@ -246,11 +247,11 @@ class TestS3270CodePage(cti.cti):
             p.send_records(1)
 
             # Check the DBCS output.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
             self.assertEqual(expect_chinese, r.json()['result'])
         
         # Wait for the process to exit successfully.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Simplified Chinese tests.
@@ -268,13 +269,13 @@ class TestS3270CodePage(cti.cti):
         ]
 
         # Start playback.
-        pport, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/937.trc', port=pport) as p:
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/937.trc', port=pport) as p:
             ts.close()
 
             # Start s3270.
-            sport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'cp937', f'127.0.0.1:{pport}']))
             self.children.append(s3270)
             self.check_listen(sport)
             ts.close()
@@ -283,11 +284,11 @@ class TestS3270CodePage(cti.cti):
             p.send_records(1)
 
             # Check the DBCS output.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
             self.assertEqual(expect_chinese, r.json()['result'])
         
         # Wait for the process to exit successfully.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 Japanese DBCS test.
@@ -313,13 +314,13 @@ class TestS3270CodePage(cti.cti):
         }
 
         # Start playback.
-        pport, ts = cti.unused_port()
-        with playback.playback(self, 's3270/Test/930.trc', port=pport) as p:
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/930.trc', port=pport) as p:
             ts.close()
 
             # Start s3270.
-            sport, ts = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
             self.children.append(s3270)
             self.check_listen(sport)
             ts.close()
@@ -328,11 +329,11 @@ class TestS3270CodePage(cti.cti):
             p.send_records(1)
 
             # Check the DBCS output.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
             self.assertEqual(expect_japanese[codePage], r.json()['result'])
         
         # Wait for the process to exit successfully.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     def test_s3270_japanese_930(self):

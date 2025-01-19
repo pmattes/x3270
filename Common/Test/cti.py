@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,8 @@
 #
 # Common functions for integration testing
 
+import functools
 import os
-import re
 import requests
 import socket
 from subprocess import Popen, PIPE, DEVNULL, TimeoutExpired
@@ -261,6 +261,9 @@ class cti(unittest.TestCase):
     def setUp(self):
         '''Common set-up procedure'''
         self.children = []
+        if hasattr(self, 'requests_timeout'): # and not sys.platform.startswith('win'):
+            self.session = requests.Session()
+            self.session.request = functools.partial(self.session.request, timeout=self.requests_timeout)
 
     def tearDown(self):
         '''Common tear-down procedure'''
@@ -274,6 +277,20 @@ class cti(unittest.TestCase):
             except TimeoutExpired:
                 child.kill()
                 child.wait()
+        if hasattr(self, 'session'):
+            self.session.close()
+
+    def request(self, method, url, **kwargs):
+        if hasattr(self, 'requests_timeout'):
+            return self.session.request(method, url, **kwargs)
+        else:
+            return requests.request(method, url, **kwargs)
+
+    def get(self, url, **kwargs):
+        return self.request('GET', url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self.request('POST', url, **kwargs)
 
     def try_until(self, f, seconds, errmsg):
         '''Try f periodically until seconds elapse'''
@@ -416,3 +433,11 @@ class cti(unittest.TestCase):
             self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(self.status)}')
         rc = os.WEXITSTATUS(self.status)
         self.vgcheck(pid, rc, assertOnFailure)
+
+# Define a class decorator to create a requests session and set the requests timeout.
+# I could probably figure out how to pass a timeout override as a parameter, but for now, you can just set
+# requests_timeout to a number from with your class definition.
+def requests_timeout(original_class):
+    '''Sets a default requests timeout'''
+    original_class.requests_timeout = 5
+    return original_class

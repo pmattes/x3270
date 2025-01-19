@@ -28,20 +28,21 @@
 # s3270 multi-line output tests
 
 import json
-import requests
 import select
 import socket
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
-import Common.Test.cti as cti
 
-class TestS3270MultiLine(cti.cti):
+from Common.Test.cti import *
+
+@requests_timeout
+class TestS3270MultiLine(cti):
 
     # s3270 multi-line output stdin test
     def test_s3270_multiline_stdin(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Feed it some actions and see what it says.
@@ -68,7 +69,7 @@ class TestS3270MultiLine(cti.cti):
     def test_s3270_multiline_stdin_json(self):
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
+        s3270 = Popen(vgwrap(['s3270']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
 
         # Feed it some actions and see what it says.
@@ -96,8 +97,8 @@ class TestS3270MultiLine(cti.cti):
     def test_s3270_multiline_scriptport(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(port)
@@ -140,8 +141,8 @@ class TestS3270MultiLine(cti.cti):
     def test_s3270_multiline_scriptport_json(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(port)
@@ -185,16 +186,16 @@ class TestS3270MultiLine(cti.cti):
     def test_s3270_multiline_httpd_text(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.text.splitlines()
 
@@ -205,23 +206,23 @@ class TestS3270MultiLine(cti.cti):
         self.assertTrue(reply[3].startswith('Valid protocols are'))
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(s3270)
     
     # s3270 multi-line output httpd test, HTML mode
     def test_s3270_multiline_httpd_html(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/html/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/html/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.text.splitlines()
 
@@ -234,23 +235,23 @@ class TestS3270MultiLine(cti.cti):
         self.assertTrue(reply[indices[3]].startswith('Valid protocols are'))
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(s3270)
     
     # s3270 multi-line output httpd test, JSON mode
     def test_s3270_multiline_httpd_json(self):
 
         # Start s3270.
-        port, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(port)
 
         # Feed it some actions and see what it says.
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/text/Set(tlsMaxProtocol,foo)')
         self.assertTrue(r.ok)
-        r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)Connect(127.0.0.1)')
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(monoCase)Connect(127.0.0.1)')
         self.assertFalse(r.ok)
         reply = r.json()
 
@@ -263,7 +264,7 @@ class TestS3270MultiLine(cti.cti):
         self.assertEqual([False,True,True,True], reply['result-err'])
 
         # Wait for the process to exit.
-        requests.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
+        self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(s3270)
 
 if __name__ == '__main__':

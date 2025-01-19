@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,60 +28,61 @@
 # s3270 NVT tests
 
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.cti as cti
+from subprocess import Popen
 
-class TestS3270Nvt(cti.cti):
+from Common.Test.cti import *
+
+@requests_timeout
+class TestS3270Nvt(cti):
 
     # NVT 1049 mode test
     def nvt_1049(self, mode_alt, mode_normal):
 
         # Start a server to throw NVT escape sequences at s3270.
-        s = cti.sendserver(self)
+        s = sendserver(self)
 
         # Start s3270.
-        hport, ts = cti.unused_port()
-        s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        hport, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
         self.children.append(s3270)
         self.check_listen(hport)
         ts.close()
 
         # Send some text and read it back.
         s.send(b'hello')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
-        self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,80)')
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hello,1)')
+        self.assertTrue(r.ok)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,80)')
+        self.assertTrue(r.ok)
         self.assertEqual('hello', r.json()['result'][0].strip())
 
         # Switch to the alternate display.
         s.send(b'\x1b[?1049' + mode_alt + b'there')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(there,1)')
-        self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,10)')
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(there,1)')
+        self.assertTrue(r.ok)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,10)')
+        self.assertTrue(r.ok)
         self.assertEqual('     there', r.json()['result'][0])
 
         # Switch back to the main display. Make sure it picks back up exactly as it was.
         s.send(b'\x1b[?1049' + mode_normal + b'fella')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(fella,1)')
-        self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,10)')
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(fella,1)')
+        self.assertTrue(r.ok)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,10)')
+        self.assertTrue(r.ok)
         self.assertEqual('hellofella', r.json()['result'][0])
         
         # Alternate again. Make sure it's blank.
         s.send(b'\x1b[?1049' + mode_alt + b'hubba')
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hubba,1)')
-        self.assertEqual(requests.codes.ok, r.status_code)
-        r = requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,15)')
-        self.assertEqual(requests.codes.ok, r.status_code)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hubba,1)')
+        self.assertTrue(r.ok)
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,15)')
+        self.assertTrue(r.ok)
         self.assertEqual('          hubba', r.json()['result'][0])
 
         # Clean up.
         s.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
     
     # Test with set/reset.

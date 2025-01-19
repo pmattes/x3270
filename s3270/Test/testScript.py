@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,22 @@
 #
 # s3270 script tests
 
-import unittest
 from subprocess import Popen, PIPE, DEVNULL
 import sys
-import Common.Test.cti as cti
+import unittest
 
-class TestS3270Script(cti.cti):
+from Common.Test.cti import *
+
+class TestS3270Script(cti):
 
     # Run the test in one of three modes.
     def run_script_test(self, mode):
 
         # Start a thread to read s3270's output.
-        nc = cti.copyserver()
+        nc = copyserver()
 
         # Start s3270.
-        s3270 = Popen(cti.vgwrap(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
+        s3270 = Popen(vgwrap(['s3270', '-xrm', 's3270.noTelnetInputMode: character',
                 f'a:c:t:127.0.0.1:{nc.port}']), stdin=PIPE, stdout=DEVNULL)
         self.children.append(s3270)
 

@@ -34,8 +34,8 @@ import tempfile
 from typing import Any
 import unittest
 
-import Common.Test.playback as playback
-import Common.Test.cti as cti
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
 class user_method(enum.Enum):
     resource = enum.auto()
@@ -44,14 +44,14 @@ class user_method(enum.Enum):
     uri = enum.auto()
     UNKNOWN = enum.auto()
 
-class TestS3270NewEnviron(cti.cti):
+class TestS3270NewEnviron(cti):
 
     def s3270_elf(self, file: str, applid=None):
         '''s3270 NEW-ENVIRON ELF test'''
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/{file}.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/{file}.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
@@ -61,7 +61,7 @@ class TestS3270NewEnviron(cti.cti):
             else:
                 if 'IBMAPPLID' in env:
                     del env['IBMAPPLID']
-            s3270 = Popen(cti.vgwrap(['s3270', f'a:c:127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(['s3270', f'a:c:127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -85,8 +85,8 @@ class TestS3270NewEnviron(cti.cti):
         '''s3270 NEW-ENVIRON empty USER test'''
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/empty-user.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/empty-user.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
@@ -104,7 +104,7 @@ class TestS3270NewEnviron(cti.cti):
             command = ['s3270']
             command += opt
             command.append(f'a:c:127.0.0.1:{port}')
-            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(command), stdin=PIPE, stdout=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -129,16 +129,16 @@ class TestS3270NewEnviron(cti.cti):
         # Create a trace file on the fly, expecting the enum name as the USER value.
         (handle, file_name) = tempfile.mkstemp()
         os.close(handle)
-        f = open(file_name, 'w')
-        f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
-        f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
-        f.write('< 0x0   fffa27010055534552fff0\n') # RCVD SB NEW-ENVIRON SEND VAR "USER" SE
-        f.write('> 0x0   fffa2700005553455201' + bytes.hex(user.name.encode()) + 'fff0\n') # SENT SB NEW-ENVIRON IS VAR "USER" "xxx" SE
-        f.close()
+        with open(file_name, 'w') as f:
+            f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
+            f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
+            f.write('< 0x0   fffa27010055534552fff0\n') # RCVD SB NEW-ENVIRON SEND VAR "USER" SE
+            f.write('> 0x0   fffa2700005553455201' + bytes.hex(user.name.encode()) + 'fff0\n') # SENT SB NEW-ENVIRON IS VAR "USER" "xxx" SE
+            f.write('# trigger comparison\n')
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, file_name, port=port) as p:
+        port, ts = unused_port()
+        with playback(self, file_name, port=port) as p:
             ts.close()
 
             # Start s3270.
@@ -176,7 +176,7 @@ class TestS3270NewEnviron(cti.cti):
                 command.append(f'a:c:127.0.0.1:{port}')
             else:
                 command.append(f'telnet://{user.name}@127.0.0.1:{port}?waitoutput=false')
-            s3270 = Popen(cti.vgwrap(command), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
+            s3270 = Popen(vgwrap(command), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -204,12 +204,12 @@ class TestS3270NewEnviron(cti.cti):
         '''s3270 NEW-ENVIRON DEVNAME success test'''
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/devname_success.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/devname_success.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo===', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-devname', 'foo===', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -227,12 +227,12 @@ class TestS3270NewEnviron(cti.cti):
         '''s3270 NEW-ENVIRON DEVNAME failure test'''
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/devname_failure.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/devname_failure.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -250,12 +250,12 @@ class TestS3270NewEnviron(cti.cti):
         '''s3270 NEW-ENVIRON DEVNAME change test'''
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
             ts.close()
 
             # Start s3270.
-            s3270 = Popen(cti.vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(['s3270', '-devname', 'foo=', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.
@@ -263,8 +263,8 @@ class TestS3270NewEnviron(cti.cti):
 
         # Start 'playback' again to read s3270's output.
         # It should start over with devname foo1.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/devname_change1.trc', port=port) as p:
             ts.close()
 
             # Connect again.
@@ -276,8 +276,8 @@ class TestS3270NewEnviron(cti.cti):
 
         # Start 'playback' again to read s3270's output.
         # c3270 should start over with devname bar1.
-        port, ts = cti.unused_port()
-        with playback.playback(self, f's3270/Test/devname_change2.trc', port=port) as p:
+        port, ts = unused_port()
+        with playback(self, f's3270/Test/devname_change2.trc', port=port) as p:
             ts.close()
 
             # Change the devname and connect again.
@@ -300,20 +300,20 @@ class TestS3270NewEnviron(cti.cti):
         '''Create a trace file on the fly'''
         (handle, file_name) = tempfile.mkstemp()
         os.close(handle)
-        f = open(file_name, 'w')
-        e_codepage = bytes.hex('CODEPAGE'.encode())
-        e_charset = bytes.hex('CHARSET'.encode())
-        e_kbdtype = bytes.hex('KBDTYPE'.encode())
-        f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
-        f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
-        f.write('< 0x0   fffa270103' + e_codepage
-                            + '03' + e_charset
-                            + '03' + e_kbdtype + 'fff0\n') # RCVD SB NEW-ENVIRON SEND USERVAR "CODEPAGE" USERVAR "CHARSET" USERVAR "KBDTYPE" SE
-        f.write('> 0x0   fffa270003' + e_codepage + '01' + bytes.hex(expect[1].encode()) +
-                                '03' + e_charset + '01' + bytes.hex(expect[2].encode()) +
-                                '03' + e_kbdtype + '01' + bytes.hex(expect[3].encode()) +
-                        'fff0\n') # SENT SB NEW-ENVIRON IS USERVAR "CODEPAGE" "xxx" ... SE
-        f.close()
+        with open(file_name, 'w') as f:
+            e_codepage = bytes.hex('CODEPAGE'.encode())
+            e_charset = bytes.hex('CHARSET'.encode())
+            e_kbdtype = bytes.hex('KBDTYPE'.encode())
+            f.write('< 0x0   fffd27\n') # RCVD DO NEW-ENVIRON
+            f.write('> 0x0   fffb27\n') # SENT WILL NEW-ENVIRON
+            f.write('< 0x0   fffa270103' + e_codepage
+                                + '03' + e_charset
+                                + '03' + e_kbdtype + 'fff0\n') # RCVD SB NEW-ENVIRON SEND USERVAR "CODEPAGE" USERVAR "CHARSET" USERVAR "KBDTYPE" SE
+            f.write('> 0x0   fffa270003' + e_codepage + '01' + bytes.hex(expect[1].encode()) +
+                                    '03' + e_charset + '01' + bytes.hex(expect[2].encode()) +
+                                    '03' + e_kbdtype + '01' + bytes.hex(expect[3].encode()) +
+                            'fff0\n') # SENT SB NEW-ENVIRON IS USERVAR "CODEPAGE" "xxx" ... SE
+            f.write('# trigger comparison\n')
         return file_name
 
     def s3270_new_environ_charset(self, env_override: Any, expect: Any, expect2=None):
@@ -321,15 +321,15 @@ class TestS3270NewEnviron(cti.cti):
 
         # Start s3270.
         env = env_override if env_override != None else os.environ.copy()
-        s3270 = Popen(cti.vgwrap(['s3270', '-codepage', expect[0]]), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
+        s3270 = Popen(vgwrap(['s3270', '-codepage', expect[0]]), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL, env=env)
         self.children.append(s3270)
 
         # Create a trace file on the fly.
         file_name = self.construct_tracefile(expect)
 
         # Start 'playback' to read s3270's output.
-        port, ts = cti.unused_port()
-        with playback.playback(self, file_name, port=port) as p:
+        port, ts = unused_port()
+        with playback(self, file_name, port=port) as p:
             ts.close()
             s3270.stdin.write(f'Open(a:c:127.0.0.1:{port})\n'.encode())
             s3270.stdin.flush()
@@ -341,8 +341,8 @@ class TestS3270NewEnviron(cti.cti):
         if expect2 != None:
             os.unlink(file_name)
             file_name = self.construct_tracefile(expect2)
-            port, ts = cti.unused_port()
-            with playback.playback(self, file_name, port=port) as p:
+            port, ts = unused_port()
+            with playback(self, file_name, port=port) as p:
                 ts.close()
                 s3270.stdin.write(f'Wait(disconnect)\n'.encode())
                 s3270.stdin.write(f'Set(codepage,{expect2[0]})\n'.encode())

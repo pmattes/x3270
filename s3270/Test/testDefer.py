@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,24 +27,25 @@
 #
 # s3270 Set(-defer) tests
 
+from subprocess import Popen, DEVNULL
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.cti as cti
-import Common.Test.playback as playback
 
-class TestS3270Defer(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270Defer(cti):
 
     # s3270 Set(-defer) with model
     def test_s3270_set_defer_simple(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/wrap_field.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
             socket.close()
@@ -53,68 +54,68 @@ class TestS3270Defer(cti.cti):
             p.send_records(1)
 
             # Try to set the model. Make sure it fails.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model,2)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model,2)')
             self.assertFalse(r.ok)
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-4-E'], r.json()['result'][0].split())
 
             # Set the model with -defer. Make sure it takes.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model,2)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model,2)')
             self.assertTrue(r.ok)
             #  A simple query should show the old value.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-4-E'], r.json()['result'][0].split())
             #  A -defer query should show the new value.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-2'], r.json()['result'][0].split())
             #  'model' should be the only value reported by a -defer query.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual(1, len(r.json()['result']))
 
             # Set empty oversize with -defer. (bug fix validation)
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize,)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize,)')
             self.assertTrue(r.ok)
             #  A -defer query should show nothing, since nothing changed.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'])
             #  Nothing should be reported by a -defer query.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual(1, len(r.json()['result']))
 
             # Disconnect. Make sure it takes now.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Disconnect()')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Disconnect()')
             self.assertTrue(r.ok)
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-2-E'], r.json()['result'][0].split())
             #  A -defer query should show nothing.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'])
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'])
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 Set(-defer) with multiple attributes
     def test_s3270_set_defer_multi(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/wrap_field.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/wrap_field.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
             socket.close()
@@ -123,63 +124,63 @@ class TestS3270Defer(cti.cti):
             p.send_records(1)
 
             # Try to set the model, oversize and accept hostname. Make sure it fails.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model,2,oversize,100x100,accepthostname,fred)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model,2,oversize,100x100,accepthostname,fred)')
             self.assertFalse(r.ok)
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-4-E'], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(accepthostname)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(accepthostname)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'][0].split())
 
 
             # Set them with -defer. Make sure it takes.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model,2,oversize,100x100,accepthostname,fred)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model,2,oversize,100x100,accepthostname,fred)')
             self.assertTrue(r.ok)
             #  A simple query should show the old values.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-4-E'], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(accepthostname)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(accepthostname)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'][0].split())
             #  A -defer query should show the new value.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-2'], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,oversize)')
             self.assertTrue(r.ok)
             self.assertEqual(['100x100'], r.json()['result'][0].split())
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,accepthostname)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,accepthostname)')
             self.assertTrue(r.ok)
             self.assertEqual(['fred'], r.json()['result'][0].split())
             #  These three should be the only values reported by a -defer query.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual(3, len(r.json()['result']))
 
             # Disconnect. Make sure it takes now.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Disconnect()')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Disconnect()')
             self.assertTrue(r.ok)
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
             self.assertEqual(['3279-2-E'], r.json()['result'][0].split())
             #  A -defer query should show nothing.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer,model)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'])
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(-defer)')
             self.assertTrue(r.ok)
             self.assertEqual([], r.json()['result'])
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 if __name__ == '__main__':
     unittest.main()

@@ -27,26 +27,27 @@
 #
 # s3270 String() tests
 
+from subprocess import Popen, DEVNULL
 import threading
 import unittest
-from subprocess import Popen, PIPE, DEVNULL
-import requests
-import Common.Test.cti as cti
-import Common.Test.playback as playback
 
-class TestS3270String(cti.cti):
+from Common.Test.cti import *
+from Common.Test.playback import playback
+
+@requests_timeout
+class TestS3270String(cti):
 
     # s3270 field overflow (no) margin test.
     # Verifying a bug fix for String() accidentally applying margined paste mode.
     def test_s3270_string_no_margin(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/wrap.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/wrap.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport),
                     f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -56,31 +57,31 @@ class TestS3270String(cti.cti):
             p.send_records(2)
 
             # Fill the first field, almost. Then fill it with one more byte.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(ffffff)')
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(f)')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(ffffff)')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String(f)')
 
             # Make sure the cursor lands in the right spot.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(cursor1)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(cursor1)')
+            self.assertTrue(r.ok)
             result = r.json()['result'][0]
             _, row, _, column, *_ = result.split()
             self.assertEqual(8, int(row), 'Cursor is on the wrong row')
             self.assertEqual(36, int(column), 'Cursor is on the wrong coluumn')
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # s3270 String() \u bugfix test.
     def test_s3270_string_slash_u(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '424']),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '424']),
                             stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -90,28 +91,28 @@ class TestS3270String(cti.cti):
             p.send_records(4)
 
             # Enter a Unicode character above U+00FF.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\u0061\\u05E9\\u0062")')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\u0061\\u05E9\\u0062")')
 
             # Make sure it was interpreted correctly.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(21,13,1,3)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(21,13,1,3)')
+            self.assertTrue(r.ok)
             result = r.json()['result'][0]
             self.assertEqual("aשb", result, 'Expected text is wrong')
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Second s3270 String() \u bugfix test.
     def test_s3270_string_slash_u_at_end(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/ibmlink.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '424']),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '424']),
                             stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -121,28 +122,28 @@ class TestS3270String(cti.cti):
             p.send_records(4)
 
             # Enter a Unicode character above U+00FF.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\u0061\\u05E9")')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\u0061\\u05E9")')
 
             # Make sure it was interpreted correctly.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(21,13,1,2)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(21,13,1,2)')
+            self.assertTrue(r.ok)
             result = r.json()['result'][0]
             self.assertEqual("aש", result, 'Expected text is wrong')
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # EBCDIC (\e) version of the second s3270 String() bugfix test.
     def test_s3270_string_slash_e_dbcs_at_end(self):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/target.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/target.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '935']),
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}', '-codepage', '935']),
                             stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
@@ -152,33 +153,33 @@ class TestS3270String(cti.cti):
             p.send_records(2)
 
             # Enter a DBCS character in EBCDIC.
-            requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\e57f0")')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("\\e57f0")')
 
             # Make sure it was interpreted correctly.
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(23,6,1,2)')
-            self.assertEqual(requests.codes.ok, r.status_code)
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/ascii1(23,6,1,2)')
+            self.assertTrue(r.ok)
             result = r.json()['result'][0]
             self.assertEqual("务", result, 'Expected text is wrong')
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     # Wait for n bytes from the emulator, then disconnect.
-    def async_disconnect(self, p: playback.playback, nbytes: int):
+    def async_disconnect(self, p: playback, nbytes: int):
         p.nread(17)
         p.disconnect()
 
     # Verify that a String() action that causes a disconnect succeeds.
     def s3270_string_disconnect(self, extra=False):
 
-        pport, socket = cti.unused_port()
-        with playback.playback(self, 's3270/Test/target.trc', pport) as p:
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/target.trc', pport) as p:
             socket.close()
 
             # Start s3270.
-            sport, socket = cti.unused_port()
-            s3270 = Popen(cti.vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
+            sport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), f'127.0.0.1:{pport}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             self.check_listen(sport)
             socket.close()
@@ -192,7 +193,7 @@ class TestS3270String(cti.cti):
 
             # Send 'quit\n' to the host, plus optionally more.
             quit_string = 'quit\\nfoo' if extra else 'quit\\n'
-            r = requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({quit_string})')
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({quit_string})')
             if extra:
                 self.assertFalse(r.ok)
             else:
@@ -201,7 +202,7 @@ class TestS3270String(cti.cti):
         t.join()
 
         # Wait for the processes to exit.
-        requests.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
     def test_x3270_string_disconnect_success(self):

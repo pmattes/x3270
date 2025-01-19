@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,14 @@
 
 import os
 import re
-import requests
 from subprocess import Popen, PIPE, DEVNULL
 import sys
 if not sys.platform.startswith('win'):
     import pty
 import tempfile
 import unittest
-import Common.Test.cti as cti
+
+from Common.Test.cti import *
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
@@ -44,7 +44,8 @@ hostsSetup = setupHosts.present()
 @unittest.skipIf(sys.platform.startswith('win'), 'No PTY on Windows')
 @unittest.skipIf(sys.platform == 'darwin', 'macOS not ready for c3270 graphic tests')
 @unittest.skipUnless(hostsSetup, setupHosts.warning)
-class TestC3270MultiHost(cti.cti):
+@requests_timeout
+class TestC3270MultiHost(cti):
 
     # c3270 multi-host test
     def c3270_multi_host(self, ipv4=True, ipv6=True):
@@ -57,7 +58,7 @@ class TestC3270MultiHost(cti.cti):
             args46 += ['-6']
         if not ipv6:
             args46 += ['-4']
-        hport, ts = cti.unused_port()
+        hport, ts = unused_port()
 
         (pid, fd) = pty.fork()
         if pid == 0:
@@ -65,8 +66,8 @@ class TestC3270MultiHost(cti.cti):
             ts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            os.execvpe(cti.vgwrap_ecmd('c3270'),
-                cti.vgwrap_eargs(['c3270', '-model', '2', '-httpd', str(hport),
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-httpd', str(hport),
                 '-trace', '-tracefile', tracefile, '-secure'] + args46), env)
             self.assertTrue(False, 'c3270 did not start')
 
@@ -75,10 +76,10 @@ class TestC3270MultiHost(cti.cti):
         ts.close()
 
         # Feed c3270 some actions.
-        uport, ts = cti.unused_port()
+        uport, ts = unused_port()
         ts.close()
-        requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
-        self.assertTrue(requests.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Open({setupHosts.test_hostname}:{uport})')
+        self.assertTrue(self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()').ok, 'Quit failed')
 
         # Wait for the process to exit.
         self.vgwait_pid(pid)
