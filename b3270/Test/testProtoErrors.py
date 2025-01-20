@@ -159,7 +159,7 @@ class TestB3270ProtoErrors(cti):
             p.wait_accept()
 
             # Send a bad command to b3270.
-            p.match()
+            p.match(nrecords=2,disconnect=False)
 
             # Check for a pop-up about the bad command.
             while True:
