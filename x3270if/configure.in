@@ -42,6 +42,10 @@ case "$host_os" in
 solaris2*)	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
 		;;
 darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
+		case "$build" in
+                a*) if test -d /opt/homebrew/opt; then HOMEBREW=/opt/homebrew/opt; fi ;;
+                x*) if test -d /usr/local/opt; then HOMEBREW=/usr/local/opt; fi ;;
+                esac
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE"
 		;;
@@ -63,7 +67,14 @@ dnl Checks for header files.
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(getopt.h)
 if test "$with_readline" != no; then
-AC_CHECK_HEADERS(readline/history.h)
+ if test -n "$with_readline" -a "$with_readline" != yes; then
+  dnl Use the specified readline install path.
+  CPPFLAGS="$CPPFLAGS -I${with_readline}/include"
+ elif test -n "$HOMEBREW" -a -d "$HOMEBREW/readline/include"; then
+  dnl Use the Homebrew readline install path.
+  CPPFLAGS="$CPPFLAGS -I$HOMEBREW/readline/include"
+ fi
+ AC_CHECK_HEADERS(readline/history.h)
 fi
 dnl Find the best curses header file and hope it's consistent with the library
 dnl we found.
@@ -85,7 +96,14 @@ AC_SEARCH_LIBS(newterm, ncursesw ncurses curses)
 AC_SEARCH_LIBS(setupterm, tinfow tinfo)
 AC_CHECK_FUNCS(tiparm)
 if test "$with_readline" != no; then
-    AC_CHECK_LIB(readline, rl_initialize)
+ if test -n "$with_readline" -a "$with_readline" != yes; then
+  dnl Use the speficied readline install path.
+  LDFLAGS="$LDFLAGS -L${with_readline}/lib"
+ elif test -n "$HOMEBREW" -a -d $HOMEBREW/readline/lib; then
+  dnl Use the Homebrew readline install path.
+  LDFLAGS="$LDFLAGS -L$HOMEBREW/readline/lib"
+ fi
+ AC_CHECK_LIB(readline, rl_initialize)
 fi
 
 dnl Set up the configuration directory.
