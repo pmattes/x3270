@@ -29,7 +29,7 @@
 
 import select
 import socket
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import threading
 import time
 import unittest
@@ -64,7 +64,7 @@ class TestS3270Sched(cti):
         self.assertTrue(r.ok)
 
     # s3270 scheduler test
-    def s3270_scheduler_test(self, nthreads=256, http=False, scriptport=True, script1go=False):
+    def s3270_scheduler_test(self, nthreads=256, http=False, scriptport=False, script1go=False,):
 
         if not http and not scriptport:
             return
@@ -114,10 +114,10 @@ class TestS3270Sched(cti):
                 s.send(b'Quit()\n')
         self.vgwait(s3270)
 
-    def test_s3270_scheduler(self):
-        self.s3270_scheduler_test()
+    def test_s3270_scheduler_scriptport(self):
+        self.s3270_scheduler_test(http=False, scriptport=True)
     def test_s3270_scheduler_http(self):
-        self.s3270_scheduler_test(http=True)
+        self.s3270_scheduler_test(http=True, scriptport=False)
     def test_s3270_scheduler_both(self):
         self.s3270_scheduler_test(http=True, scriptport=True, nthreads=128, script1go=True)
 
