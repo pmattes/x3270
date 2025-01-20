@@ -182,5 +182,5 @@
 20220429.184339.299 Reading host socket
 20220429.184339.299 Host socket read complete nr=536
 < 0x0   00000100027ffeffef
-
-> 0x0   020001000202ffef
+# trigger send failure
+# > 0x0   020001000202ffef

@@ -261,7 +261,7 @@ class cti(unittest.TestCase):
     def setUp(self):
         '''Common set-up procedure'''
         self.children = []
-        if hasattr(self, 'requests_timeout'): # and not sys.platform.startswith('win'):
+        if hasattr(self, 'requests_timeout'):
             self.session = requests.Session()
             self.session.request = functools.partial(self.session.request, timeout=self.requests_timeout)
 
