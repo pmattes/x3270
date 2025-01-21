@@ -885,12 +885,18 @@ main(int argc, char *argv[])
 	    XtAppProcessEvent(appcontext, XtIMXEvent | XtIMTimer);
 	}
 	screen_disp(false);
+
+	/* Run tasks triggered by the events we polled for. */
+	run_tasks();
+
+	/* Block and process the next event. */
 	XtAppProcessEvent(appcontext, XtIMAll);
+	screen_disp(false);
 
 	/* Poll for exited children. */
 	poll_children();
 
-	/* Run tasks. */
+	/* Run tasks triggered by the event we blocked for. */
 	run_tasks();
 
 	/* Free transaction memory. */
