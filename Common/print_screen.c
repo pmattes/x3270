@@ -529,6 +529,8 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     case FPS_STATUS_SUCCESS_WRITTEN:
 	vtrace("PrintText: printing succeeded.\n");
 	Free(pt);
+	fclose(f);
+	f = NULL;
 	break;
     case FPS_STATUS_ERROR:
 	popup_an_error("Screen print failed.");
