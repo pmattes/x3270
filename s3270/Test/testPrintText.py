@@ -27,6 +27,7 @@
 #
 # s3270 PrintText() tests
 
+import glob
 import os
 from subprocess import Popen, DEVNULL
 import tempfile
@@ -88,6 +89,41 @@ class TestS3270PrintText(cti):
         self.s3270_PrintText('rtf')
     def test_s3270_txt(self):
         self.s3270_PrintText('txt')
+
+    # s3270 PrintText(html) test
+    def test_s3270_prtodir(self):
+
+        # Start 'playback' to emulate the host.
+        pport, socket = unused_port()
+        with playback(self, 's3270/Test/login.trc', port=pport) as p:
+            socket.close()
+
+            # Start s3270.
+            hport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'127.0.0.1:{pport}']),
+                stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+            self.check_listen(hport)
+
+            # Paint the screen.
+            p.send_records(1)
+
+            # Dump the screen with prtodir.
+            with tempfile.TemporaryDirectory() as td:
+                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/PrintText("prtodir {td}")')
+                self.assertTrue(r.ok)
+
+                # Wait for the file to be created.
+                wild = os.path.join(td, '*')
+                self.try_until(lambda: glob.glob(wild) != [], 5, 'PrintText file not created')
+
+                # Wait for the file to have nonzero size.
+                self.try_until(lambda: os.stat(glob.glob(wild)[0]).st_size > 0, 5, 'PrintText file is empty')
+
+        # Wait for s3270 to exit.
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()
