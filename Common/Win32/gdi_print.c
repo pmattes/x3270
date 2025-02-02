@@ -450,11 +450,8 @@ print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
 static UINT_PTR CALLBACK
 print_dialog_hook(HWND hdlg, UINT ui_msg, WPARAM wparam, LPARAM lparam)
 {
-    /*
-     * Set the window to be topmost. The only thing that seems to work consistently is to do
-     * this for every message.
-     */
     if (ui_msg == WM_ACTIVATE) {
+	/* Set the window to be topmost. */
         SetWindowPos(hdlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 
