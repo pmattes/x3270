@@ -454,7 +454,10 @@ print_dialog_hook(HWND hdlg, UINT ui_msg, WPARAM wparam, LPARAM lparam)
      * Set the window to be topmost. The only thing that seems to work consistently is to do
      * this for every message.
      */
-    SetWindowPos(hdlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    if (ui_msg == WM_ACTIVATE) {
+        SetWindowPos(hdlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+
     return ui_msg == WM_INITDIALOG;
 }
 
