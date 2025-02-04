@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,10 @@
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
+
+#if defined(_WIN32) /*[*/
+# include "main_window.h"
+#endif /*]*/
 
 /* Globals */
 
@@ -210,6 +214,14 @@ get_about(void)
 	    build, cyear);
 }
 
+#if defined(_WIN32) /*[*/
+static const char *
+get_windowid(void)
+{
+    return get_main_window_str();
+}
+#endif /*]*/
+
 /* Common code for Query() and Show() actions. */
 bool
 query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
@@ -356,7 +368,10 @@ query_register(void)
 	{ KwTlsProvider, net_sio_provider, NULL, false, false },
 	{ KwTlsSessionInfo, net_session_info, NULL, false, true },
 	{ KwTn3270eOptions, tn3270e_current_opts, NULL, false, false },
-	{ KwVersion, query_build, NULL, false, false }
+	{ KwVersion, query_build, NULL, false, false },
+#if defined(_WIN32) /*[*/
+	{ KwWindowId, get_windowid, NULL, false, false },
+#endif /*]*/
     };
 
     /* Register actions.*/

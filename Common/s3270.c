@@ -89,6 +89,7 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
+# include "main_window.h"
 # include "w3misc.h"
 # include "windirs.h"
 # include "winvers.h"
@@ -223,6 +224,9 @@ main(int argc, char *argv[])
     prefer_register();
     telnet_new_environ_register();
     rpq_register();
+#if defined(_WIN32) /*[*/
+    main_window_register();
+#endif /*]*/
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

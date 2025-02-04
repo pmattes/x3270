@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * Copyright (c) 1989 Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -936,6 +936,9 @@ static res_t base_resources[] = {
     { ResCookieFile,	aoffset(cookie_file), 	XRM_STRING },
     { ResUtEnv,		aoffset(ut_env),	XRM_BOOLEAN },
     { ResRpq,		aoffset(rpq),		XRM_STRING },
+#if defined(_WIN32) /*[*/
+    { ResWindowId,	aoffset(window_id),	XRM_STRING },
+#endif /*]*/
 };
 
 typedef struct reslist {

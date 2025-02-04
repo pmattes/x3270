@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -255,6 +255,7 @@
 #define ResVisualSelectColor	"visualSelectColor"
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
+#define ResWindowId		"windowId"
 #define ResWrapperDoc		"wrapperDoc"
 #define ResWrongTerminalName	"wrongTerminalName"
 #define ResXQuartzHack		"xQuartzHack"
