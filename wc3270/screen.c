@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2024 Paul Mattes.
+ * Copyright (c) 2000-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,7 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
+#include "main_window.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -529,6 +530,7 @@ initscr(void)
     }
 
     console_window = get_console_hwnd();
+    set_main_window(console_window);
 
     /* Get its dimensions. */
     if (GetConsoleScreenBufferInfo(cohandle, &base_info) == 0) {

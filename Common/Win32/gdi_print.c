@@ -47,6 +47,7 @@
 
 #include "fprint_screen.h"
 #include "gdi_print.h"
+#include "main_window.h"
 #include "names.h"
 #include "nvt.h"
 #include "popups.h"
@@ -96,10 +97,13 @@ static struct {			/* printer state */
     SIZE space_size;		/*  size of a space character */
     INT *dx;			/*  spacing array */
 
-    HANDLE thread;		/* thread to run the print dialog */
+    HANDLE run_thread;		/* thread to run the print dialog */
     HANDLE done_event;		/* event to signal dialog is done */
-    bool cancel;		/* true if dialog canceled */
+    bool canceled;		/* true if dialog canceled */
+    bool activated;		/* true if dialog window has been activated */
     void *wait_context;		/* task wait context */
+    HWND hwnd;			/* window handle of dialog box */
+    HANDLE top_thread;		/* thread to make the window topmost */
 } pstate;
 static bool pstate_initted = false;
 
@@ -426,9 +430,8 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 static DWORD WINAPI
 post_print_dialog(LPVOID lpParameter _is_unused)
 {
-    if (!PrintDlg(&pstate.dlg)) {
-	pstate.cancel = true;
-    }
+    pstate.activated = false;
+    pstate.canceled = !PrintDlg(&pstate.dlg);
     SetEvent(pstate.done_event);
     return 0;
 }
@@ -437,11 +440,95 @@ post_print_dialog(LPVOID lpParameter _is_unused)
 static void
 print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    vtrace("Printer dialog complete (%s)\n",
-	    pstate.cancel? "cancel": "continue");
-    pstate.thread = INVALID_HANDLE_VALUE;
-    task_resume_xwait(pstate.wait_context, pstate.cancel,
-	    "print dialog complete");
+    vtrace("Printer dialog complete (%s)\n", pstate.canceled? "canceled": "continue");
+    CloseHandle(pstate.run_thread);
+    pstate.run_thread = INVALID_HANDLE_VALUE;
+    CloseHandle(pstate.top_thread);
+    pstate.top_thread = INVALID_HANDLE_VALUE;
+    pstate.hwnd = INVALID_HANDLE_VALUE;
+    task_resume_xwait(pstate.wait_context, pstate.canceled, "print dialog complete");
+}
+
+/* Compute the proper location for the dialog. */
+static bool
+compute_location(int w, int h, int *x, int *y)
+{
+    int parent_x, parent_y, parent_w, parent_h;
+    HWND main_window = get_main_window();
+
+    if (main_window == INVALID_HANDLE_VALUE || main_window == 0) {
+	/* We don't know what the main window is, use the primary display. */
+	parent_x = 0;
+	parent_y = 0;
+	parent_w = GetSystemMetrics(SM_CXFULLSCREEN);
+	parent_h = GetSystemMetrics(SM_CYFULLSCREEN);
+    } else {
+	RECT rect;
+
+	/* Get the rectangle for the primary window. */
+	if (!GetWindowRect(main_window, &rect)) {
+	    vtrace("Can't get rectangle for main window 0x%08lx\n", (u_long)(size_t)main_window);
+	    return false;
+	}
+	parent_x = rect.left;
+	parent_y = rect.top;
+	parent_w = rect.right - rect.left;
+	parent_h = rect.bottom - rect.top;
+    }
+
+    if (parent_w < w || parent_h < h) {
+	/* Strange, but possible. */
+	*x = 0;
+	*y = 0;
+    } else {
+	*x = parent_x + (parent_w - w) / 2;
+	*y = parent_y + (parent_h - h) / 2;
+    }
+    return true;
+}
+
+/* Make the dialog topmost. */
+static void
+make_dialog_topmost(HWND hdlg, bool move)
+{
+    RECT rect;
+    int x = 0, y = 0;
+    UINT flags = SWP_NOSIZE;
+
+    if (move) {
+	/* Figure out where to move it. */
+	if (!GetWindowRect(hdlg, &rect)) {
+	    vtrace("make_dialog_topmost: Can't get rectangle for dialog\n");
+	    flags |= SWP_NOMOVE;
+	} else if (!compute_location(rect.right - rect.left, rect.bottom - rect.top, &x, &y)) {
+	    vtrace("make_dialog_topmost: Can't get rectangle for parent window\n");
+	    flags |= SWP_NOMOVE;
+	}
+    } else {
+	flags |= SWP_NOMOVE;
+    }
+
+    SetWindowPos(hdlg, HWND_TOPMOST, x, y, 0, 0, flags);
+}
+
+/*
+ * Thread to make the dialog topmost, after a 2-second delay.
+ *
+ * This is a belt-and-suspenders action, given that we still don't understand why the window either
+ * isn't topmost in the first place.
+ */
+static DWORD WINAPI
+delayed_topmost(LPVOID lpParameter _is_unused)
+{
+    /* Wait 2 seconds. If the window still exists, make it topmost. */
+    Sleep(2000);
+    if (pstate.hwnd != INVALID_HANDLE_VALUE) {
+	vtrace("Making the print dialog window topmost\n");
+	make_dialog_topmost(pstate.hwnd, false);
+    } else {
+	vtrace("Too late to move print dialog window to topmost\n");
+    }
+    return 0;
 }
 
 /*
@@ -450,9 +537,39 @@ print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
 static UINT_PTR CALLBACK
 print_dialog_hook(HWND hdlg, UINT ui_msg, WPARAM wparam, LPARAM lparam)
 {
-    if (ui_msg == WM_ACTIVATE) {
-	/* Set the window to be topmost. */
-        SetWindowPos(hdlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    pstate.hwnd = hdlg;
+
+    if (ui_msg == WM_ACTIVATE && !pstate.activated) {
+	pstate.activated = true;
+	make_dialog_topmost(hdlg, true);
+    }
+
+    if (ui_msg == WM_INITDIALOG) {
+	int text_len;
+
+	/* Kick off the thread that will put the dialog on top, no matter what. */
+	pstate.top_thread = CreateThread(NULL, 0, delayed_topmost, NULL, 0, NULL);
+
+	/* Change the window title to include the application name. */
+	text_len = GetWindowTextLength(hdlg);
+	if (text_len) {
+	    char *text = Malloc(text_len + 1);
+
+	    if (GetWindowText(hdlg, text, text_len + 1)) {
+		char *new_title;
+
+		if (appres.alias != NULL) {
+		    new_title = Asprintf("%s - %s", text, appres.alias);
+		} else {
+		    const char *space = strchr(build, ' ');
+
+		    new_title = Asprintf("%s - %.*s", text, (int)(space - build), build);
+		}
+		SetWindowText(hdlg, new_title);
+		Free(new_title);
+	    }
+	    Free(text);
+	}
     }
 
     return ui_msg == WM_INITDIALOG;
@@ -478,8 +595,10 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
     int fheight, fwidth;
 
     if (!pstate_initted) {
-	pstate.thread = INVALID_HANDLE_VALUE;
+	pstate.run_thread = INVALID_HANDLE_VALUE;
 	pstate.done_event = INVALID_HANDLE_VALUE;
+	pstate.hwnd = INVALID_HANDLE_VALUE;
+	pstate.top_thread = INVALID_HANDLE_VALUE;
 	pstate_initted = true;
     }
 
@@ -488,7 +607,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	goto failed;
     }
 
-    if (pstate.thread != INVALID_HANDLE_VALUE) {
+    if (pstate.run_thread != INVALID_HANDLE_VALUE) {
 	*fail = "Print dialog already pending";
 	goto failed;
     }
@@ -543,7 +662,6 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	}
 
 	/* Pop up the dialog to get the printer characteristics. */
-	pstate.cancel = false;
 	pstate.wait_context = wait_context;
 	if (pstate.done_event == INVALID_HANDLE_VALUE) {
 	    pstate.done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -551,8 +669,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	} else {
 	    ResetEvent(pstate.done_event); /* just in case */
 	}
-	pstate.cancel = false;
-	pstate.thread = CreateThread(NULL, 0, post_print_dialog, NULL, 0, NULL);
+	pstate.run_thread = CreateThread(NULL, 0, post_print_dialog, NULL, 0, NULL);
 	return GDI_STATUS_WAIT;
     }
     dc = pstate.dlg.hDC;

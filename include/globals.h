@@ -248,9 +248,7 @@ extern char		*instdir;
 extern char		*mydesktop;
 extern char		*mydocs3270;
 extern char		*commondocs3270;
-#endif /*]*/
 
-#if defined(_WIN32) /*[*/
 extern unsigned		windirs_flags;
 #endif /*]*/
 

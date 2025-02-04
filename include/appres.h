@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
@@ -114,6 +114,9 @@ typedef struct {
     char	*cookie_file;
     bool	 ut_env;
     char	*rpq;
+#if defined(_WIN32) /*[*/
+    char	*window_id;
+#endif /*]*/
 
     /* Toggles. */
     bool toggle[N_TOGGLES];

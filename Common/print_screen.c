@@ -401,7 +401,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     if (mode == PM_GDI) {
         struct stat buf;
 
-        if (stat(name, &buf) == 0 && (buf.st_mode & S_IFMT) == S_IFDIR) {
+        if (name != NULL && stat(name, &buf) == 0 && (buf.st_mode & S_IFMT) == S_IFDIR) {
             mode = PM_FILE;
             ptype = P_TEXT;
 	    name = dyn_name = print_file_name(name);

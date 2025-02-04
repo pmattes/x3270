@@ -166,6 +166,7 @@
     <ClCompile Include="..\..\Common\kybd.c" />
     <ClCompile Include="..\..\Common\linemode.c" />
     <ClCompile Include="..\..\Common\llist.c" />
+    <ClCompile Include="..\..\Common\Win32\main_window.c" />
     <ClCompile Include="..\..\Common\model.c" />
     <ClCompile Include="..\..\Common\Malloc.c" />
     <ClCompile Include="..\..\Common\nvt.c" />
@@ -173,7 +174,7 @@
     <ClCompile Include="..\..\Common\print_screen.c" />
     <ClCompile Include="..\..\Common\query.c" />
     <ClCompile Include="..\..\Common\readres.c" />
-    <ClCompile Include="..\..\Common\Nodisplay/resources.c" />
+    <ClCompile Include="..\..\Common\Nodisplay\resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
     <ClCompile Include="..\..\Common\sched.c" />
     <ClCompile Include="..\..\Common\screentrace.c" />

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -109,6 +109,7 @@
 #include "xscroll.h"
 
 #if defined(_WIN32) /*[*/
+# include "main_window.h"
 # include "w3misc.h"
 # include "windirs.h"
 # include "winvers.h"
@@ -584,6 +585,9 @@ main(int argc, char *argv[])
     prefer_register();
     telnet_new_environ_register();
     rpq_register();
+#if defined(_WIN32) /*[*/
+    main_window_register();
+#endif /*]*/
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
