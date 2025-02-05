@@ -1,4 +1,4 @@
-version="4.4pre3"
+version="4.4ga3"
 adversion="3.3.4"
 cyear="2025"
 phase="ga"
