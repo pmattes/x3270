@@ -2093,13 +2093,17 @@ telnet_fsm(unsigned char c)
 static char *
 create_3270_termtype(bool force_3278)
 {
-    char *base_type = create_model(model_num,
-	    !force_3278 && mode3279 && (appres.wrong_terminal_name || model_num < 4));
-    char *ret = Asprintf("IBM-%s%s",
-	    base_type,
-	    (!appres.extended_data_stream || HOST_FLAG(STD_DS_HOST))? "": "-E");
+    char *ret;
 
-    Free(base_type);
+    if (ov_rows || ov_cols) {
+	ret = NewString("IBM-DYNAMIC");
+    } else {
+	char *base_type = create_model(model_num,
+		!force_3278 && mode3279 && (appres.wrong_terminal_name || model_num < 4));
+
+	ret = Asprintf("IBM-%s%s", base_type, (!appres.extended_data_stream || HOST_FLAG(STD_DS_HOST))? "": "-E");
+	Free(base_type);
+    }
     return ret;
 }
 
@@ -2114,7 +2118,7 @@ tn3270e_request(void)
 
     /* Always use 3278, per the RFC. */
     xtn = create_3270_termtype(true);
-    tt_len = strlen(termtype);
+    tt_len = strlen(xtn);
     if (try_lu != NULL && *try_lu) {
 	tt_len += strlen(try_lu) + 1;
     }
@@ -4092,8 +4096,6 @@ net_set_default_termtype(void)
 	termtype = appres.termname;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
 	termtype = mode3279? "xterm-color": "xterm";
-    } else if (ov_rows || ov_cols) {
-	termtype = "IBM-DYNAMIC";
     } else {
 	char *ttype = create_3270_termtype(false);
 

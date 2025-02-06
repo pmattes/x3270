@@ -529,8 +529,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     case FPS_STATUS_SUCCESS_WRITTEN:
 	vtrace("PrintText: printing succeeded.\n");
 	Free(pt);
-	fclose(f);
-	f = NULL;
+	fflush(f);
 	break;
     case FPS_STATUS_ERROR:
 	popup_an_error("Screen print failed.");
@@ -574,15 +573,14 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
+    fclose(f);
     if (use_file) {
 	/* Print to specified file. */
-	fclose(f);
 	return true;
     }
 
     /* Print to printer. */
 #if defined(_WIN32) /*[*/
-    fclose(f);
     unlink(temp_name);
     if (appres.interactive.do_confirms) {
 	popup_an_info("Screen image printing.\n");
