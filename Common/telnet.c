@@ -2114,7 +2114,7 @@ tn3270e_request(void)
 
     /* Always use 3278, per the RFC. */
     xtn = create_3270_termtype(true);
-    tt_len = strlen(termtype);
+    tt_len = strlen(xtn);
     if (try_lu != NULL && *try_lu) {
 	tt_len += strlen(try_lu) + 1;
     }
