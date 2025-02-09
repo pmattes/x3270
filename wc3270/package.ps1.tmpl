@@ -1,22 +1,23 @@
 ﻿# Set up constants.
 $inno = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
-$cert = 'C:\Users\pdm\Documents\Certs\Cert2022.pfx'
-$signtool = 'C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe'
-$timestamp = 'http://timestamp.digicert.com'
-# timestamp was http://timestamp.comodoca.com
 $version = '%VERSION%'
 
 # Any error kills the script.
 $ErrorActionPreference = 'Stop'
 
-# Read the password.
-$p = Read-Host 'Enter key password' -AsSecureString
-$pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))
+# Set up Azure login to do signing.
+Write-Host -ForegroundColor Green 'Loading Az module'
+Import-Module Az -Function Connect-AzAccount
+Connect-AzAccount | Out-Null
 
-# Sign the binaries.
-$files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName
-Write-Host -ForegroundColor Green 'Signing', $files.Count, 'binaries'
-& $signtool sign /f $cert /p $pass /td SHA256 /tr $timestamp /fd SHA256 $files
+# Sign the binaries that have not been signed yet.
+$files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName |
+    Where-Object { (Get-AuthenticodeSignature $_).Status -eq "NotSigned" }
+if ($files.Count -ne 0)
+{
+    Write-Host -ForegroundColor Green 'Signing', $files.Count, 'binaries'
+    & .\run-signtool.ps1 $files
+}
 
 # Create the noinstall files.
 Write-Host -ForegroundColor Green 'Creating no-install zipfiles'
@@ -46,7 +47,12 @@ Compress-Archive -Path $zip64 -DestinationPath wx3270-$version-extern-64.zip
 
 # Run Inno Setup to create the installer.
 Write-Host -ForegroundColor Green 'Running Inno Setup'
-$signparm = '/smystandard="' + "$signtool sign /f `$q$cert`$q /p $pass /td SHA256 /tr $timestamp /fd SHA256 `$p" + '"'
+# The signtool command passed to Inno Setup is a bit strange, but passing the current directory through an
+# environment variable overcomes the problem of Inno Setup running from its own install directory, and the
+# peculiarities of trying to pass the pathname of the run-signtool script (which may contain spaces) through
+# various layers of Inno Setup and PowerShell.
+$Env:mydir = (Get-Location)
+$signparm = '/smystandard="powershell.exe -command $q& { & $$Env:mydir\run-signtool.ps1 ''$f'' }$q"'
 & $inno $signparm /Qp wc3270.iss
 
 # Archive to bgp.nu and moby.
