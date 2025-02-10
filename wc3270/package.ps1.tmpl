@@ -6,8 +6,6 @@ $version = '%VERSION%'
 $ErrorActionPreference = 'Stop'
 
 # Set up Azure login to do signing.
-Write-Host -ForegroundColor Green 'Loading Az module'
-Import-Module Az -Function Connect-AzAccount
 Connect-AzAccount | Out-Null
 
 # Sign the binaries that have not been signed yet.
