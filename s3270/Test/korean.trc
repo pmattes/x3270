@@ -1,0 +1,369 @@
+20250212.140704.766 Trace started
+ Version: s3270 v4.5pre1 Wed Feb 12 17:11:35 UTC 2025 pdm
+ Build options: --enable-local-process via gcc 13.3.0 64-bit
+ Command: s3270 s3270 -trace -codepage 933 localhost:8021
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page cp933
+ Locale codeset: UTF-8
+ Host codepage: 833+834
+ Settings: acceptHostname= aidWait=true alwaysInsert=false bindLimit=true
+  blankFill=true caDir= caFile= certFile= certFileType= chainFile=
+  codePage=cp933 confDir=/usr/local/etc/x3270 contentionResolution=true
+  devName= extendedDataStream=true ftBufferSize=16384 httpd= insertMode=false
+  keyFile= keyFileType= keyPasswd= lineMode=true lineWrap=false loginMacro=
+  model=3279-4-E monoCase=false noTelnetInputMode=line nopSeconds=0
+  oerrLock=true oversize= preferIpv4=false preferIpv6=false printer.options=
+  printerLu= proxy= reconnect=false retry=false reverseInputMode=false
+  rightToLeftMode=false rpq= screenTrace=false scriptPort= showTiming=false
+  startTls=true termName= tls992=true tlsMaxProtocol= tlsMinProtocol=
+  tlsSecurityLevel= trace=true underscoreBlankFill=true unlockDelay=false
+  unlockDelayMs=350 user= verifyHostCert=true wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20250212.140704.767 st_changed(secure,false)
+20250212.140704.767 Resolver slot is 0
+20250212.140704.767 cstate [not-connected] -> [resolving] (host_connect)
+20250212.140704.767 st_changed(connect,true)
+20250212.140704.767 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20250212.140704.767 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20250212.140704.767 ctlr_enable_cursor(false, connect)
+20250212.140704.767 st_changed(negotiating,true)
+20250212.140704.767 sched: Waiting for 1 event or 0.999 sec
+20250212.140704.767 sched: Got 1 fd, 1 event
+20250212.140704.767 Resolution complete, 1 address
+20250212.140704.769 TLS: will verify host certificate
+20250212.140704.790 Making host socket non-blocking
+20250212.140704.790 Trying 127.0.0.1, port 8021...
+20250212.140704.790 TCP connection pending.
+20250212.140704.790 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20250212.140704.790 st_changed(negotiating,true)
+20250212.140704.790 txflush: 38 slots, 1872 bytes
+20250212.140704.790 sched: Waiting for 4 events or 0.000 sec
+20250212.140704.790 sched: Got 1 fd, 1 event
+20250212.140704.790 Output possible
+20250212.140704.790 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20250212.140704.790 st_changed(connect,true)
+20250212.140704.790 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20250212.140704.790 Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20250212.140704.790 Host negotiation step took 0.000086s to complete
+20250212.140704.790 ctlr_enable_cursor(true, connect)
+20250212.140704.790 ctlr_enable_cursor(true, nvt)
+20250212.140704.790 st_changed(negotiating,true)
+20250212.140704.790 Connected to localhost, port 8021.
+20250212.140704.790 st_changed(secure,false)
+20250212.140704.790 st_changed(line-mode,true)
+20250212.140704.790 txflush: 21 slots, 504 bytes
+20250212.140704.790 sched: Waiting for 3 events or 0.999 sec
+20250212.140704.790 sched: Got 1 fd, 1 event
+20250212.140704.790 Reading host socket
+20250212.140704.790 Host socket read complete nr=3
+< 0x0   fffd28
+20250212.140704.790 RCVD DO TN3270E
+> 0x0   fffb28
+20250212.140704.791 SENT WILL TN3270E
+20250212.140704.791 Now operating in connected-unbound mode.
+20250212.140704.791 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20250212.140704.791 st_changed(negotiating,true)
+20250212.140704.791 st_changed(3270-mode,false)
+20250212.140704.791 Host negotiation step took 0.000008s to complete
+20250212.140704.791 ctlr_enable_cursor(true, connect)
+20250212.140704.791 txflush: 13 slots, 312 bytes
+20250212.140704.791 sched: Waiting for 3 events
+20250212.140704.791 sched: Got 1 fd, 1 event
+20250212.140704.791 Reading host socket
+20250212.140704.791 Host socket read complete nr=10
+< 0x0   fffd27fffa280802fff0
+20250212.140704.791 RCVD DO NEW-ENVIRON
+> 0x0   fffb27
+20250212.140704.791 SENT WILL NEW-ENVIRON
+20250212.140704.791 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20250212.140704.791 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20250212.140704.791 sched: Waiting for 3 events
+20250212.140704.791 sched: Got 1 fd, 1 event
+20250212.140704.791 Reading host socket
+20250212.140704.791 Host socket read complete nr=6
+< 0x0   fffa2701fff0
+20250212.140704.791 RCVD SB NEW-ENVIRON SEND SE
+> 0x0   fffa270000555345520170646d0349424d454c46015945530349424d4150504c
+> 0x20  4944014e6f6e6503434f44455041474501383333034348415253455401313137
+> 0x40  33034b424454595045014b5142fff0
+20250212.140704.791 SENT SB NEW-ENVIRON IS VAR "USER" VALUE "pdm" USERVAR "IBMELF" VALUE "YES" USERVAR "IBMAPPLID" VALUE "None" USERVAR "CODEPAGE" VALUE "833" USERVAR "CHARSET" VALUE "1173" USERVAR "KBDTYPE" VALUE "KQB" SE
+20250212.140704.791 txflush: 18 slots, 432 bytes
+20250212.140704.791 sched: Waiting for 3 events
+20250212.140704.791 sched: Got 1 fd, 1 event
+20250212.140704.791 Reading host socket
+20250212.140704.791 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054453036fff0
+20250212.140704.791 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TE06 SE
+> 0x0   fffa28030700020405fff0
+20250212.140704.791 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20250212.140704.791 sched: Waiting for 3 events
+20250212.140704.867 sched: Got 1 fd, 1 event
+20250212.140704.867 Reading host socket
+20250212.140704.867 Host socket read complete nr=8
+< 0x0   fffa28030700fff0
+20250212.140704.867 RCVD SB TN3270E FUNCTIONS REQUEST BIND-IMAGE SE
+> 0x0   fffa28030400fff0
+20250212.140704.868 SENT SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20250212.140704.868 TN3270E option negotiation complete.
+20250212.140704.868 sched: Waiting for 3 events
+20250212.140704.868 sched: Got 1 fd, 1 event
+20250212.140704.868 Reading host socket
+20250212.140704.868 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4c1c70005007eec0b1008c9c2d4f0e3c5e2d8ffef
+20250212.140704.868 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SMAG' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20250212.140704.868 Now operating in connected-tn3270e mode.
+20250212.140704.868 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20250212.140704.868 st_changed(3270-mode,true)
+20250212.140704.868 ctlr_enable_cursor(true, connect)
+20250212.140704.868 RCVD EOR
+20250212.140704.868 txflush: 11 slots, 264 bytes
+20250212.140704.868 CB(s3stdin)[#1] started
+20250212.140704.868 CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20250212.140704.868 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20250212.140704.868 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20250212.140704.868 Macro[#1.2] running
+20250212.140704.868 Macro[#1.2] IDLE -> RUNNING (executing)
+20250212.140704.868 Macro[#1.2] 'Wait(inputfield)'
+20250212.140704.868 script -> Wait("inputfield")
+20250212.140704.868 Macro[#1.2] RUNNING -> WAIT_IFIELD (Wait(inputfield))
+20250212.140704.868 sched: Waiting for 3 events
+20250212.140704.909 sched: Got 1 fd, 1 event
+20250212.140704.909 Reading host socket
+20250212.140704.909 Host socket read complete nr=607
+< 0x0   0000000000f542a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d160115a50115b607e7e6e2902c001fe0113115c6f1d30c6f37ec5d5c4ffef
+20250212.140704.911 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,restore) 'x3270 test target (formatted 3270)' SetBufferA ...
+... ddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' SetBu ...
+... fferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibmlink,  ...
+... with help screens' SetBufferAddress(5,1) ' menu     Menu using plain TE ...
+... LNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270 screen ...
+... ' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' SetBuff ...
+... erAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBufferAdd ...
+... ress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBufferAddre ...
+... ss(10,1) ' snake    TN3270 protocol server playing snake' SetBufferAddr ...
+... ess(11,1) ' sruvm    TN3270 protocol server simulating sruvm (model 4 r ...
+... equired)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol server simu ...
+... lating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from test tar ...
+... get' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddress(22, ...
+... 1) SetBufferAddress(23,1) '==>' StartFieldExtended(23,4) 3270(modified) ...
+...  input-control(enabled) InsertCursor(23,5) SetBufferAddress(23,80) Star ...
+... tField(protected,skip) 'F3=END'
+20250212.140704.913 Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+20250212.140704.913 RCVD EOR
+20250212.140704.913 txflush: 587 slots, 14152 bytes
+20250212.140704.913 Macro[#1.2] WAIT_IFIELD -> IDLE (about to resume)
+20250212.140704.913 Macro[#1.2] running
+20250212.140704.913 Macro[#1.2] complete, success
+20250212.140704.913 CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20250212.140704.913 CB(s3stdin)[#1.1] child task done, success
+20250212.140704.913 Output for CB(s3stdin)[#1.1]: U F U C(localhost) I 4 24 80 22 4 0x0 0.045/ok
+20250212.140704.913 CB(s3stdin)[#1.1] complete, success
+20250212.140704.913 CB(s3stdin)[#1] complete
+20250212.140704.913 sched: Waiting for 4 events
+20250212.140712.368 sched: Got 1 fd, 1 event
+20250212.140712.368 s3stdin read 'string 국민과 함께하는 민생토론회'
+20250212.140712.368 CB(s3stdin)[#2] started
+20250212.140712.368 CB(s3stdin)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20250212.140712.368 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20250212.140712.368 txflush: 22 slots, 560 bytes
+20250212.140712.368 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20250212.140712.368 Macro[#2.2] running
+20250212.140712.368 Macro[#2.2] IDLE -> RUNNING (executing)
+20250212.140712.368 Macro[#2.2] 'string 국민과 함께하는 민생토론회'
+20250212.140712.368 script -> String("국민과", "함께하는", "민생토론회")
+20250212.140712.368 CB(String)[#2.3] IDLE -> NEED_RUN (need to call run callback)
+20250212.140712.368 CB(String)[#2.3] NEED_RUN -> IDLE (about to resume)
+20250212.140712.368 Running CB(String)[#2.3]
+20250212.140712.368  string -> Key(U+ad6d)
+20250212.140712.368  string -> Key(U+bbfc)
+20250212.140712.368  string -> Key(U+acfc)
+20250212.140712.368  string -> Key(U+d568)
+20250212.140712.368  string -> Key(U+aed8)
+20250212.140712.368  string -> Key(U+d558)
+20250212.140712.368  string -> Key(U+b294)
+20250212.140712.368  string -> Key(U+bbfc)
+20250212.140712.368  string -> Key(U+c0dd)
+20250212.140712.368  string -> Key(U+d1a0)
+20250212.140712.368  string -> Key(U+b860)
+20250212.140712.368  string -> Key(U+d68c)
+20250212.140712.368 CB(String)[#2.3] is complete, success
+20250212.140712.368 CB(String)[#2.3] complete, success
+20250212.140712.368 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20250212.140712.368 Macro[#2.2] running
+20250212.140712.368 Macro[#2.2] complete, success
+20250212.140712.368 CB(s3stdin)[#2.1] RUNNING -> IDLE (about to resume)
+20250212.140712.368 CB(s3stdin)[#2.1] child task done, success
+20250212.140712.368 Output for CB(s3stdin)[#2.1]: U F U C(localhost) I 4 24 80 22 29 0x0 0.000/ok
+20250212.140712.368 CB(s3stdin)[#2.1] complete, success
+20250212.140712.368 CB(s3stdin)[#2] complete
+20250212.140712.368 sched: Waiting for 4 events
+20250212.140714.548 sched: Got 1 fd, 1 event
+20250212.140714.548 s3stdin read 'enter'
+20250212.140714.548 CB(s3stdin)[#3] started
+20250212.140714.548 CB(s3stdin)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20250212.140714.548 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20250212.140714.548 txflush: 58 slots, 1728 bytes
+20250212.140714.548 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20250212.140714.548 Macro[#3.2] running
+20250212.140714.548 Macro[#3.2] IDLE -> RUNNING (executing)
+20250212.140714.548 Macro[#3.2] 'enter'
+20250212.140714.548 script -> Enter()
+20250212.140714.548 Keyboard lock(key_AID) none +OIA_TWAIT +OIA_LOCKED -> OIA_TWAIT OIA_LOCKED
+> Enter(23,30) SetBufferAddress(23,5) SO 'ￂbtviA}X'71'ￅX'41'}/lﾳtvￔpI~ￍvKX' ...
+... 41'' SI
+20250212.140714.548 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000007d5b7d115be40e8a82a3a589c1d0718d41d0619365a3a5ac97c9a1
+> 0x20  9da5d2410fffef
+20250212.140714.548 SENT EOR
+20250212.140714.548 Macro[#3.2] RUNNING -> KBWAIT (keyboard locked)
+20250212.140714.548 sched: Waiting for 3 events or 0.999 sec
+20250212.140714.549 sched: Got 1 fd, 1 event
+20250212.140714.549 Reading host socket
+20250212.140714.549 Host socket read complete nr=676
+< 0x0   0000000000f546a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d160115a50d59640a2a4838840a28599a58983857a400e8a82a3a589c1d0718d
+< 0x260 41d0619365a3a5ac97c9a19da5d2410f115b607e7e6e2902c001fe01130e8a82
+< 0x280 a3a589c1d0718d41d0619365a3a5ac97c9a19da5d2410f115c6f1d30c6f37ec5
+< 0x2a0 d5c4ffef
+20250212.140714.550 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,alarm,restore) 'x3270 test target (formatted 3270)' SetB ...
+... ufferAddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' ...
+...  SetBufferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibm ...
+... link, with help screens' SetBufferAddress(5,1) ' menu     Menu using pl ...
+... ain TELNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270  ...
+... screen' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' S ...
+... etBufferAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBuf ...
+... ferAddress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBuffe ...
+... rAddress(10,1) ' snake    TN3270 protocol server playing snake' SetBuff ...
+... erAddress(11,1) ' sruvm    TN3270 protocol server simulating sruvm (mod ...
+... el 4 required)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol serve ...
+... r simulating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from te ...
+... st target' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddre ...
+... ss(22,1) 'No such service: ' SO '국민과함께하는민생토론회' SI SetBufferAddress(23,1 ...
+... ) '==>' StartFieldExtended(23,4) 3270(modified) input-control(enabled)  ...
+... InsertCursor(23,5) SO '국민과함께하는민생토론회' SI SetBufferAddress(23,80) StartFi ...
+... eld(protected,skip) 'F3=END'
+20250212.140714.553 Keyboard unlock(do_reset) OIA_TWAIT OIA_LOCKED -OIA_TWAIT -OIA_LOCKED -> none
+20250212.140714.553 Host operation took 0.000429s to complete
+20250212.140714.553 RCVD EOR
+20250212.140714.553 txflush: 629 slots, 15208 bytes
+20250212.140714.553 Macro[#3.2] KBWAIT -> IDLE (about to resume)
+20250212.140714.553 Macro[#3.2] running
+20250212.140714.553 Macro[#3.2] complete, success
+20250212.140714.553 CB(s3stdin)[#3.1] RUNNING -> IDLE (about to resume)
+20250212.140714.553 CB(s3stdin)[#3.1] child task done, success
+20250212.140714.553 Output for CB(s3stdin)[#3.1]: U F U C(localhost) I 4 24 80 22 4 0x0 0.005/ok
+20250212.140714.553 CB(s3stdin)[#3.1] complete, success
+20250212.140714.553 CB(s3stdin)[#3] complete
+20250212.140714.553 sched: Waiting for 4 events
+20250212.140716.279 sched: Got 1 fd, 1 event
+20250212.140716.279 s3stdin read 'ascii'
+20250212.140716.279 CB(s3stdin)[#4] started
+20250212.140716.279 CB(s3stdin)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20250212.140716.279 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20250212.140716.279 txflush: 22 slots, 560 bytes
+20250212.140716.279 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20250212.140716.279 Macro[#4.2] running
+20250212.140716.279 Macro[#4.2] IDLE -> RUNNING (executing)
+20250212.140716.279 Macro[#4.2] 'ascii'
+20250212.140716.280 script -> Ascii()
+20250212.140716.280 Output for Macro[#4.2]: 'x3270 test target (formatted 3270)                                              '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: ' echo     Trivial echo server                                                   '
+20250212.140716.280 Output for Macro[#4.2]: ' ibmlink  TN3270 protocol server simulating ibmlink, with help screens          '
+20250212.140716.280 Output for Macro[#4.2]: ' menu     Menu using plain TELNET                                               '
+20250212.140716.280 Output for Macro[#4.2]: ' menu-f   Menu using formatted 3270 screen                                      '
+20250212.140716.280 Output for Macro[#4.2]: ' menu-n   Menu using TN3270E NVT mode                                           '
+20250212.140716.280 Output for Macro[#4.2]: ' menu-s   Menu using TN3270E SSCP-LU mode                                       '
+20250212.140716.280 Output for Macro[#4.2]: ' menu-u   Menu using unformatted 3270 screen                                    '
+20250212.140716.280 Output for Macro[#4.2]: ' snake    TN3270 protocol server playing snake                                  '
+20250212.140716.280 Output for Macro[#4.2]: ' sruvm    TN3270 protocol server simulating sruvm (model 4 required)            '
+20250212.140716.280 Output for Macro[#4.2]: ' uvvm     TN3270 protocol server simulating uvvm                                '
+20250212.140716.280 Output for Macro[#4.2]: ' quit     Disconnect from test target                                           '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: '                                                                                '
+20250212.140716.280 Output for Macro[#4.2]: 'No such service:  국민과함께하는민생토론회                                      '
+20250212.140716.280 Output for Macro[#4.2]: '==>  국민과함께하는민생토론회                                                   '
+20250212.140716.280 Output for Macro[#4.2]: 'F3=END                                                                          '
+20250212.140716.280 Macro[#4.2] complete, success
+20250212.140716.280 CB(s3stdin)[#4.1] RUNNING -> IDLE (about to resume)
+20250212.140716.280 CB(s3stdin)[#4.1] child task done, success
+20250212.140716.280 Output for CB(s3stdin)[#4.1]: U F U C(localhost) I 4 24 80 22 4 0x0 0.001/ok
+20250212.140716.280 CB(s3stdin)[#4.1] complete, success
+20250212.140716.280 CB(s3stdin)[#4] complete
+20250212.140716.280 sched: Waiting for 4 events
+20250212.140717.967 sched: Got 1 fd, 1 event
+20250212.140717.967 s3stdin read 'quit'
+20250212.140717.967 CB(s3stdin)[#5] started (owait)
+20250212.140717.967 CB(s3stdin)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20250212.140717.967 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20250212.140717.967 txflush: 50 slots, 1440 bytes
+20250212.140717.967 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20250212.140717.967 Macro[#5.2] running
+20250212.140717.967 Macro[#5.2] IDLE -> RUNNING (executing)
+20250212.140717.967 Macro[#5.2] 'quit'
+20250212.140717.967 script -> Quit()
+20250212.140717.967 Macro[#5.2] complete, success
+20250212.140717.967 CB(s3stdin)[#5.1] RUNNING -> IDLE (about to resume)
+20250212.140717.967 CB(s3stdin)[#5.1] child task done, success
+20250212.140717.967 Output for CB(s3stdin)[#5.1]: U F U C(localhost) I 4 24 80 22 4 0x0 0.000/ok
+20250212.140717.967 CB(s3stdin)[#5.1] complete, success
+20250212.140717.967 CB(s3stdin)[#5] complete
+20250212.140717.967 sched: Timeout(s) already expired
+20250212.140717.967 sched: Waiting for 4 events or 0.000 sec
+20250212.140717.967 sched: Got 0 fds, 0 events
+20250212.140717.967 Exiting with status 0
+20250212.140717.967 st_changed(exiting,true)
+20250212.140717.967 st_changed(secure,false)
+20250212.140717.967 SENT disconnect
+20250212.140717.967 cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20250212.140717.967 st_changed(connect,false)
+20250212.140717.967 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20250212.140717.967 ctlr_enable_cursor(false, connect)
+20250212.140717.967 ctlr_enable_cursor(false, nvt)
+20250212.140717.967 Trace stopped

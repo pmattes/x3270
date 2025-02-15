@@ -361,8 +361,10 @@ class TestS3270NewEnviron(cti):
 
     def test_s3270_new_environ_charset_us(self):
         self.s3270_new_environ_charset(None, ('bracket', '037', '697', 'USB'))
-    def test_s3270_new_environ_charset_dbcs(self):
+    def test_s3270_new_environ_charset_dbcs_chinese(self):
         self.s3270_new_environ_charset(None, ('simplified-chinese', '836', '1174', 'RCB'))
+    def test_s3270_new_environ_charset_dbcs_korean(self):
+        self.s3270_new_environ_charset(None, ('korean', '833', '1173', 'KQB'))
     def test_s3270_new_environ_charset_override_codepage(self):
         env = os.environ.copy()
         env['CODEPAGE'] = 'foo'
@@ -377,7 +379,6 @@ class TestS3270NewEnviron(cti):
         self.s3270_new_environ_charset(env, ('simplified-chinese', '836', '1174', 'foo'))
     def test_s3270_new_environ_charset_switch(self):
         self.s3270_new_environ_charset(None, ('bracket', '037', '697', 'USB'), ('simplified-chinese', '836', '1174', 'RCB'))
-
 
 if __name__ == '__main__':
     unittest.main()

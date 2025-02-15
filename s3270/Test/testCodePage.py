@@ -345,5 +345,56 @@ class TestS3270CodePage(cti):
     def test_s3270_japanese_1399(self):
         self.s3270_japanese('cp1399')
 
+    def async_reply(self, p: playback):
+        '''Send '''
+        got = p.nread(39)
+        self.assertEqual('00000000007d5b7d115be40e8a82a3a589c1d0718d41d0619365a3a5ac97c9a19da5d2410fffef', got.hex())
+        p.send_records(1)
+
+    # s3270 Korean DBCS test.
+    def s3270_korean(self, codePage: str, show_codepage: str):
+
+        korean_text = "국민과함께하는민생토론회"
+
+        # Start playback.
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/korean.trc', port=pport) as p:
+            ts.close()
+
+            # Start s3270.
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', codePage, f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
+
+            # Check the codepage config.
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Show(codepage)')
+            out = r.json()['result'][0]
+            self.assertEqual(out, show_codepage)
+
+            # Fill up the screen.
+            p.send_records(2)
+
+            # Prepare for the Enter.
+            reply_thread = threading.Thread(target=self.async_reply, args=[p])
+            reply_thread.start()
+
+            # Send the text.
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String("{korean_text}")')
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Enter())')
+
+        # Wait for the thread.
+        reply_thread.join(timeout=2)
+
+        # Wait for the process to exit successfully.
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    def test_korean_933(self):
+        self.s3270_korean('korean', 'cp933 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
+    def test_korean_1364(self):
+        self.s3270_korean('korean-euro', 'cp1364 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
+
 if __name__ == '__main__':
     unittest.main()
