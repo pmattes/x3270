@@ -174,7 +174,7 @@ class playback():
             # Send a timing mark.
             self.send_tm()
 
-    def nread(self, n: int, timeout=5):
+    def nread(self, n: int, timeout=5) -> bytes:
         '''Read n bytes from the connection with a timeout'''
         nleft = n
         ret = b''

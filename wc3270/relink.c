@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2023 Paul Mattes.
+ * Copyright (c) 2006-2024 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -79,6 +79,8 @@ codepages_t codepages[] = {
     { "italian-euro",	"1144",	0, L"1252"	},
     { "japanese-kana",	"930",  1, L"932"	},
     { "japanese-latin",	"939",  1, L"932"	},
+    { "korean",		"933",	1, L"949"	},
+    { "korean-euro",	"1364",	1, L"949"	},
     { "norwegian",	"277",	0, L"1252"	},
     { "norwegian-euro",	"1142",	0, L"1252"	},
     { "russian",	"880",	0, L"1251"	},
