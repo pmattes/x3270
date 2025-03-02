@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,11 +35,18 @@
 
 #include "globals.h"
 
+#if defined(_MSC_VER) /*[*/
+typedef struct {
+    DWORD unused;
+} UNICODE_STRING, *PUNICODE_STRING;
+#endif /*]*/
+
 #define SECURITY_WIN32
+#define SCHANNEL_USE_BLACKLISTS
 #include <wincrypt.h>
 #include <wintrust.h>
-#include <schannel.h>
 #include <security.h>
+#include <schannel.h>
 #include <sspi.h>
 
 #include "tls_config.h"
@@ -66,10 +73,6 @@
 #if !defined(SP_PROT_TLS1_3_CLIENT)
 # define SP_PROT_TLS1_3_CLIENT 0x2000
 #endif
-
-/* TLS protocols to negotiate. */
-#define TLS_PROTOCOLS	\
-    (SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_1_CLIENT | SP_PROT_TLS1_2_CLIENT | SP_PROT_TLS1_3_CLIENT)
 
 /* #define VERBOSE		1 */	/* dump protocol packets in hex */
 
@@ -138,7 +141,7 @@ display_cert_chain(varbuf_t *v, PCCERT_CONTEXT cert)
     PCCERT_CONTEXT current_cert, issuer_cert;
     PCERT_EXTENSION ext;
     WCHAR *wcbuf = NULL;
-    DWORD wcsize;
+    DWORD wcsize = 0;
     DWORD mbsize;
     char *mbbuf = NULL;
     int i;
@@ -273,7 +276,7 @@ display_cert_subjects(varbuf_t *v, PCCERT_CONTEXT cert)
 
     /* Display the alternate names. */
     do {
-	DWORD wcsize;
+	DWORD wcsize = 0;
 	DWORD mbsize;
 	PCERT_EXTENSION ext = CertFindExtension(szOID_SUBJECT_ALT_NAME2,
 		cert->pCertInfo->cExtension,
@@ -341,11 +344,14 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     SECURITY_STATUS status;
     PCCERT_CONTEXT cert_context = NULL;
     SCHANNEL_CRED schannel_cred;
+    SCH_CREDENTIALS sch_credentials;
+    TLS_PARAMETERS tls_parameters;
     varbuf_t v;
     char *s, *t;
     int min_protocol = -1;
     int max_protocol = -1;
     char *proto_error;
+    BOOL win10_or_greater = IsWindowsVersionOrGreater(10, 0, 0);
 
     /* Parse the min/max protocol options. */
     /* Technically you can use SSL2 with schannel, but it is mutually exclusive with TLS, so we don't try. */
@@ -428,15 +434,24 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     }
 
     /* Build Schannel credential structure. */
-    memset(&schannel_cred, 0, sizeof(schannel_cred));
-    schannel_cred.dwVersion  = SCHANNEL_CRED_VERSION;
-    if (cert_context != NULL) {
-	schannel_cred.cCreds = 1;
-	schannel_cred.paCred = &cert_context;
+    if (win10_or_greater) {
+	memset(&sch_credentials, 0, sizeof(sch_credentials));
+	sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
+	if (cert_context != NULL) {
+	    sch_credentials.cCreds = 1;
+	    sch_credentials.paCred = &cert_context;
+	}
+    } else {
+	memset(&schannel_cred, 0, sizeof(schannel_cred));
+	schannel_cred.dwVersion  = SCHANNEL_CRED_VERSION;
+	if (cert_context != NULL) {
+	    schannel_cred.cCreds = 1;
+	    schannel_cred.paCred = &cert_context;
+	}
     }
 
     /* If the user specified a range, or we're before Windows 10, specify the protocols explicitly. */
-    if (min_protocol >= 0 || max_protocol >= 0 || !IsWindowsVersionOrGreater(10, 0, 0)) {
+    if (min_protocol >= 0 || max_protocol >= 0 || !win10_or_greater) {
 	DWORD protocols = 0;
 	int i;
 
@@ -446,25 +461,52 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	if (max_protocol < 0) {
 	    max_protocol = SIP_TLS1_3;
 	}
-	for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
-	    if (i >= min_protocol && i <= max_protocol) {
-		protocols |= proto_map[i];
+
+	if (win10_or_greater) {
+	    /* With sch_credentials, we disable protocols. */
+	    for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
+		if (i < min_protocol || i > max_protocol) {
+		    protocols |= proto_map[i];
+		}
 	    }
+	    memset(&tls_parameters, 0, sizeof(tls_parameters));
+	    tls_parameters.grbitDisabledProtocols = protocols;
+	    sch_credentials.cTlsParameters = 1;
+	    sch_credentials.pTlsParameters = &tls_parameters;
+	} else {
+	    /* With schannel_cres, we enable protocols. */
+	    for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
+		if (i >= min_protocol && i <= max_protocol) {
+		    protocols |= proto_map[i];
+		}
+	    }
+	    schannel_cred.grbitEnabledProtocols = protocols;
 	}
-	schannel_cred.grbitEnabledProtocols = protocols;
     }
 
-    schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
+    if (win10_or_greater) {
+	sch_credentials.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
+    } else {
+	schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
+    }
 
     /* 
      * If they don't want the host certificate checked, specify manual
      * validation here and then don't validate.
      */
     if (!config->verify_host_cert || is_wine()) {
-	schannel_cred.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
+	if (win10_or_greater) {
+	    sch_credentials.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
+	} else {
+	    schannel_cred.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
+	}
 	*manual = true;
     } else {
-	schannel_cred.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
+	if (win10_or_greater) {
+	    sch_credentials.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
+	} else {
+	    schannel_cred.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
+	}
     }
 
     /* Create an SSPI credential. */
@@ -473,7 +515,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    UNISP_NAME,			/* Name of package */
 	    SECPKG_CRED_OUTBOUND,	/* Flags indicating use */
 	    NULL,			/* Pointer to logon ID */
-	    &schannel_cred,		/* Package specific data */
+	    win10_or_greater? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 	    NULL,			/* Pointer to GetKey() func */
 	    NULL,			/* Value to pass to GetKey() */
 	    creds,			/* (out) Cred Handle */
@@ -504,6 +546,8 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
     TimeStamp                         expiry;
     SECURITY_STATUS                   status;
     SCHANNEL_CRED                     schannel_cred;
+    SCH_CREDENTIALS		      sch_credentials;
+    BOOL			      win10_or_greater = IsWindowsVersionOrGreater(10, 0, 0);
 
     /* Read the list of trusted issuers from schannel. */
     status = QueryContextAttributes(context, SECPKG_ATTR_ISSUER_LIST_EX,
@@ -544,17 +588,25 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
 	/* Get pointer to leaf certificate context. */
 	cert_context = chain_context->rgpChain[0]->rgpElement[0]->pCertContext;
 
-	/* Create schannel credential. */
-	schannel_cred.dwVersion = SCHANNEL_CRED_VERSION;
-	schannel_cred.cCreds = 1;
-	schannel_cred.paCred = &cert_context;
+	/* Create Schannel credential. */
+	if (win10_or_greater) {
+	    memset(&sch_credentials, 0, sizeof(sch_credentials));
+	    sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
+	    sch_credentials.cCreds = 1;
+	    sch_credentials.paCred = &cert_context;
+	} else {
+	    memset(&schannel_cred, 0, sizeof(schannel_cred));
+	    schannel_cred.dwVersion = SCHANNEL_CRED_VERSION;
+	    schannel_cred.cCreds = 1;
+	    schannel_cred.paCred = &cert_context;
+	}
 
 	status = AcquireCredentialsHandle(
 		NULL,                   /* Name of principal */
 		UNISP_NAME_A,           /* Name of package */
 		SECPKG_CRED_OUTBOUND,   /* Flags indicating use */
 		NULL,                   /* Pointer to logon ID */
-		&schannel_cred,         /* Package specific data */
+		win10_or_greater? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 		NULL,                   /* Pointer to GetKey() func */
 		NULL,                   /* Value to pass to GetKey() */
 		&new_creds,             /* (out) Cred Handle */
@@ -1451,7 +1503,8 @@ fail:
 static SECURITY_STATUS
 read_decrypt(
 	schannel_sio_t *s,	/* in */
-	CtxtHandle *context)	/* in */
+	CtxtHandle *context,	/* in */
+	bool *renegotiated)	/* out */
 {
     SecBuffer          *data_buffer_ptr, *extra_buffer_ptr;
 
@@ -1462,6 +1515,8 @@ read_decrypt(
     int                nr;
     int                i;
     int                n2read = s->sizes.cbHeader;
+
+    *renegotiated = false;
 
     /* Read data from server until done. */
     ret = SEC_E_OK;
@@ -1582,7 +1637,7 @@ read_decrypt(
 		s->negotiated = false;
 		return ret;
 	    }
-	    /* XXX: And if it succeeds? */
+	    *renegotiated = true; /* so we try to read more */
 	}
 
 	if (ret == SEC_E_OK) {
@@ -1751,6 +1806,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 {
     schannel_sio_t *s;
     SECURITY_STATUS ret;
+    bool renegotiated;
 
     sioc_error_reset();
 
@@ -1780,7 +1836,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	return (int)copy_len;
     }
 
-    ret = read_decrypt(s, &s->context);
+    ret = read_decrypt(s, &s->context, &renegotiated);
     if (ret != SEC_E_OK) {
 	if (ret == WSAEWOULDBLOCK) {
 	    return SIO_EWOULDBLOCK;
@@ -1790,9 +1846,10 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	return SIO_FATAL_ERROR;
     }
 
-    if (s->prbuf_len == 0) {
+    if (!renegotiated && s->prbuf_len == 0) {
 	/* End of file. */
 	s->negotiated = false;
+	vtrace("TLS: sio_read: EOF\n");
 	return SIO_EOF;
     }
 

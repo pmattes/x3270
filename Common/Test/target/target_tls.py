@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2023 Paul Mattes.
+# Copyright (c) 2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,14 +27,16 @@
 #
 # x3270 test target host, TLS support.
 
+from enum import Enum
 import pathlib
 import socket
 import ssl
 
 # TLS support types.
-none = 0
-immediate = 1
-negotiated = 2
+class tls_type(str, Enum):
+    none = 'none'
+    immediate = 'immediate'
+    negotiated = 'negotiated'
 
 def certpath(name: str):
     '''Resolve a pathname in the cert folder'''
