@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2023 Paul Mattes.
+# Copyright (c) 2022-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 # x3270 test target host.
 
 import argparse
+from enum import Enum
 import ipaddress
 import logging
 import select
@@ -43,16 +44,23 @@ import oopts
 import server
 import socketwrapper
 import target_tls
+from target_tls import tls_type
 import tn3270_ibmlink
 import tn3270_snake
 import tn3270_sruvm
 import tn3270_uvvm
 
+def peername_string(conn: socket.socket):
+    '''Get a peername'''
+    peer = conn.getpeername()
+    return f'{peer[0]}/{peer[1]}'
+
 class real_socket(socketwrapper.socketwrapper):
     '''Concrete implementation of socketwrapper'''
-    def __init__(self, conn: socket.socket, logger: logging.Logger):
+    def __init__(self, conn: socket.socket, logger: logging.Logger, peername: str):
         self.conn = conn
         self.logger = logger
+        self.peername = peername
     def send(self, b: bytes):
         if self.conn != None:
             self.conn.send(b)
@@ -65,11 +73,13 @@ class real_socket(socketwrapper.socketwrapper):
     def isopen(self):
         return self.conn != None
     def wrap(self) -> bool:
+        '''Do a delayed TLS wrap'''
         try:
             self.conn = target_tls.wrap(self.conn)
+            self.logger.info(f'target:{self.peername}: TLS delayed wrap complete {self.conn.version()}')
             return True
         except Exception as e:
-            self.logger.warning(f'TLS wrap failed: {e}')
+            self.logger.warning(f'target:{self.peername}: TLS delayed wrap failed: {e}')
             return False
     def fileno(self) -> int:
         return self.conn.fileno()
@@ -97,7 +107,7 @@ class target(aswitch.aswitch):
         self.logger.addHandler(ch)
         self.logger.setLevel(self.opts.get('log', logging.WARNING))
 
-        self.tls = self.opts.get('tls', target_tls.none)
+        self.tls = self.opts.get('tls', tls_type.none)
         self.type = self.opts.get('type', 'menu')
         address = self.opts.get('address', '127.0.0.1')
         addr = ipaddress.ip_address(address)
@@ -148,11 +158,13 @@ class target(aswitch.aswitch):
                 continue
             good=True
             (conn, _) = listensocket.accept()
-            if self.tls == target_tls.immediate:
+            if self.tls == tls_type.immediate:
+                p = peername_string(conn)
                 try:
                     conn = target_tls.wrap(conn)
+                    self.logger.info(f'target:{p}: TLS immediate wrap complete {conn.version()}')
                 except Exception as e:
-                    self.logger.error(f'target: TLS wrap failed: {e}')
+                    self.logger.error(f'target:{p}: TLS immediate wrap failed: {e}')
                     conn.close()
                     good=False
             if good:
@@ -192,7 +204,7 @@ class target(aswitch.aswitch):
     # Process a connection, asynchronously.
     def process_connection(self, conn: socket.socket):
         peer = conn.getpeername()
-        peername = f'{peer[0]}/{peer[1]}'
+        peername = peername_string(conn)
         conn.settimeout(0.5)
         self.active_type[peername] = self.type
         if peername in self.switch_to:
@@ -200,8 +212,8 @@ class target(aswitch.aswitch):
         self.logger.info(f'target:{peername}: new connection')
         while True:
             try:
-                wrapper = real_socket(conn, self.logger)
-                with servers[self.active_type[peername]](wrapper, self.logger, peername, self.tls == target_tls.negotiated, self, self.opts) as dynserver:
+                wrapper = real_socket(conn, self.logger, peername)
+                with servers[self.active_type[peername]](wrapper, self.logger, peername, self.tls == tls_type.negotiated, self, self.opts) as dynserver:
                     if dynserver.ready():
                         idle_limit = self.opts.get('idle_timeout')
                         idle_start = time.monotonic()
@@ -213,8 +225,12 @@ class target(aswitch.aswitch):
                                     self.logger.info(f'target:{peername} idle timeout')
                                     break
                                 continue
+                            except ConnectionResetError:
+                                self.logger.info(f'target:{peername} Connection reset by peer')
+                                break
                             if data == b'':
                                 # EOF
+                                self.logger.info(f'target:{peername} EOF')
                                 break
                             idle_start = time.monotonic()
                             dynserver.process(data)
@@ -240,7 +256,7 @@ class target(aswitch.aswitch):
                         except TimeoutError:
                             drained = True
                             break
-            self.tls = target_tls.none # so it doesn't get negotiated again
+            self.tls = tls_type.none # so it doesn't get negotiated again
         wrapper.close()
         self.active_type.pop(peername)
         if peername in self.previous_type:
@@ -281,16 +297,6 @@ servers = {
 }
 
 if __name__ == '__main__':
-    def argconv(**convs):
-        def parse_argument(arg):
-            if arg in convs:
-                return convs[arg]
-            else:
-                msg = "invalid choice: {!r} (choose from {})"
-                choices = ", ".join(sorted(repr(choice) for choice in convs.keys()))
-                raise argparse.ArgumentTypeError(msg.format(arg,choices))
-        return parse_argument
-
     parser = argparse.ArgumentParser(description='x3270 test target')
     parser.add_argument('--address', default='127.0.0.1', help='address to listen on')
     parser.add_argument('--bind', action=argparse.BooleanOptionalAction, default=True, help='TN3270E BIND support [on]')
@@ -299,9 +305,7 @@ if __name__ == '__main__':
     parser.add_argument('--idle-timeout', type=int, default=0, action='store', metavar='SECONDS', help='idle timeout in seconds')
     parser.add_argument('--log', default='WARNING', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help='logging level [WARNING]')
     parser.add_argument('--port', type=int, default=8021, action='store', help='port to listen on')
-    parser.add_argument('--tls', type=argconv(none=target_tls.none, immediate=target_tls.immediate,
-                                            negotiated=target_tls.negotiated), default=target_tls.none,
-                                            choices=['none', 'immediate', 'negotiated'], help='TLS support [none]')
+    parser.add_argument('--tls', type=tls_type, default=tls_type.none, choices=[type.value for type in tls_type], help='TLS support [none]')
     parser.add_argument('--tn3270e', action=argparse.BooleanOptionalAction, default=True, help='TN3270E support [on]')
     parser.add_argument('--type', default='menu-f', choices=servers.keys(), help='type of server [menu-f]')
     opts = vars(parser.parse_args())
