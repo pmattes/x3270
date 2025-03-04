@@ -210,10 +210,11 @@ class target(aswitch.aswitch):
         if peername in self.switch_to:
             self.switch_to.pop(peername)
         self.logger.info(f'target:{peername}: new connection')
+        negotiated = self.tls == tls_type.negotiated
         while True:
             try:
                 wrapper = real_socket(conn, self.logger, peername)
-                with servers[self.active_type[peername]](wrapper, self.logger, peername, self.tls == tls_type.negotiated, self, self.opts) as dynserver:
+                with servers[self.active_type[peername]](wrapper, self.logger, peername, negotiated, self, self.opts) as dynserver:
                     if dynserver.ready():
                         idle_limit = self.opts.get('idle_timeout')
                         idle_start = time.monotonic()
@@ -231,6 +232,7 @@ class target(aswitch.aswitch):
                             if data == b'':
                                 # EOF
                                 self.logger.info(f'target:{peername} EOF')
+                                time.sleep(20)
                                 break
                             idle_start = time.monotonic()
                             dynserver.process(data)
@@ -256,7 +258,7 @@ class target(aswitch.aswitch):
                         except TimeoutError:
                             drained = True
                             break
-            self.tls = tls_type.none # so it doesn't get negotiated again
+            negotiated = False
         wrapper.close()
         self.active_type.pop(peername)
         if peername in self.previous_type:
