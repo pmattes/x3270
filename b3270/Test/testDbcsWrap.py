@@ -74,11 +74,11 @@ class TestB3270DbcsWrap(cti):
                 if s.decode().startswith('{"screen":{'):
                     break
             
-            # Verify that the split character is (for now) translate to periods.
+            # Verify that the split character is rendered properly.
             ret = json.loads(s.decode())
             rows = ret['screen']['rows']
-            self.assertEqual([{'row': 22, 'changes': [{'column': 6, 'gr': 'wide', 'text': japanese_text[:37]}, {'column': 80, 'text': '.'}]},
-                {'row': 23, 'changes': [{'column': 1, 'text': '.'}, {'column': 2, 'gr': 'wide', 'text': japanese_text[38:]}]}],
+            self.assertEqual([{'row': 22, 'changes': [{'column': 6, 'gr': 'wide', 'text': japanese_text[:37]}, {'column': 80, 'gr': 'left-half', 'text': '取'}]},
+                {'row': 23, 'changes': [{'column': 1, 'gr': 'no-copy,right-half', 'text': '取'}, {'column': 2, 'gr': 'wide', 'text': japanese_text[38:]}]}],
                 rows)
             
         # Wait for the processes to exit.

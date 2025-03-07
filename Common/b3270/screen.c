@@ -182,11 +182,11 @@ see_gr(u_short gr)
 	sep = ",";
     }
     if (gr & XX_LEFT_HALF) {
-	vb_appendf(&r, "%slefthalf", sep);
+	vb_appendf(&r, "%sleft-half", sep);
 	sep = ",";
     }
     if (gr & XX_RIGHT_HALF) {
-	vb_appendf(&r, "%srighthalf", sep);
+	vb_appendf(&r, "%sright-half", sep);
 	sep = ",";
     }
     return txdFree(vb_consume(&r));
@@ -613,7 +613,7 @@ render_screen(struct ea *ea, screen_t *s)
 		s[si].gr |= XX_LEFT_HALF;
 	    }
 	    if (dbcs_right_half) {
-		s[si].gr |= XX_RIGHT_HALF;
+		s[si].gr |= XX_RIGHT_HALF | XX_NO_COPY;
 	    }
 	    if (order || (toggled(VISIBLE_CONTROL) && ea[i].fa)) {
 		s[si].gr |= XX_ORDER;
