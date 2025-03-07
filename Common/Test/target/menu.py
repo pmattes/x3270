@@ -39,7 +39,7 @@ import tn3270
 import tn3270e_proto
 
 title = 'x3270 test target'
-default_prompt = '==> '.encode('iso8859-1')
+default_prompt = '==> '.encode()
 no_such_msg = 'No such service'
 quit = 'quit'
 
@@ -54,26 +54,26 @@ def get_menu(kind: str, switch: aswitch.aswitch, prompt=default_prompt) -> bytes
             ret += servers[server]
         ret += '\r\n'
     ret += ' ' + quit.ljust(mx + 2) + 'Disconnect from test target\r\n\r\n'
-    return ret.encode('iso8859-1') + prompt
+    return ret.encode() + prompt
 
 def clean(b: bytes):
     '''Clean an input string'''
     b = b.strip(b' \r\n\x85')
     bfilt = bytes([x if x >= 0x20 and x < 0x7f else 0x2e for x in b])
-    return bfilt.decode('iso8859-1')
+    return bfilt.decode()
 
 def no_such(cmd: str, prompt=default_prompt) -> bytes:
     '''Build 'no such command' error message'''
-    return f'{no_such_msg}: {cmd}\r\n'.encode('iso8859-1') + prompt
+    return f'{no_such_msg}: {cmd}\r\n'.encode() + prompt
 
 def to_ebc(b: bytes) -> bytes:
     '''Convert ASCII to EBCDIC'''
     # Slight funkiness: U+0085 (NEL) becomes EBCDIC X'15' (NL).
-    return b.decode('iso8859-1').replace('\r\n', '\x85').encode('cp037')
+    return b.decode().replace('\r\n', '\x85').encode('cp037')
 
 def to_ascii(b: bytes):
     '''Convert EBCDIC to ASCII'''
-    return b.decode('cp037').encode('iso8859-1')
+    return b.decode('cp037').encode()
 
 def expand_newlines(text: bytes) -> bytes:
     '''Expand X'15' into SBA orders'''
@@ -216,7 +216,7 @@ class menu_s(tn3270.tn3270_server):
 class menu_u(tn3270.tn3270_server):
     '''Menu using unformatted 3270 screen'''
 
-    unformatted_prompt = 'Press CLEAR, type selection and press ENTER\r\nF3=END\r\n'.encode('iso8859-1')
+    unformatted_prompt = 'Press CLEAR, type selection and press ENTER\r\nF3=END\r\n'.encode()
 
     def __init__(self, conn: socketwrapper.socketwrapper, logger: logging.Logger, peername: str, tls: bool, switch: aswitch.aswitch, opts: oopts.oopts):
         '''Initialize'''
@@ -287,6 +287,7 @@ class menu_f(tn3270.tn3270_server):
         self.peername = peername
         self.switch = switch
         self.cmd = ''
+        self.raw_cmd = b''
         pass
     def __enter__(self):
         return self
@@ -320,10 +321,10 @@ class menu_f(tn3270.tn3270_server):
             alarm = 0
         self.send_host(bytes([command.erase_write, wcc.keyboard_restore | wcc.reset | alarm])
                     + expand_newlines(to_ebc(get_menu('formatted 3270', self.switch, b'')))
-                    + sba_bytes(22, 1, 80) + errmsg
-                    + sba_bytes(23, 1, 80) + to_ebc(b'==>')
+                    + sba_bytes(21, 1, 80) + errmsg
+                    + sba_bytes(22, 1, 80) + to_ebc(b'==>')
                     + bytes([order.sfe, 2, xa.m3270, fa.normal_nonsel | fa.modify, xa.input_control, 1, order.ic])
-                    + to_ebc(self.cmd.encode('iso8859-1'))
+                    + self.raw_cmd
                     + sba_bytes(23, 80, 80) + bytes([order.sf, fa.protect | fa.numeric])
                     + to_ebc(b'F3=END'))
 
@@ -331,6 +332,31 @@ class menu_f(tn3270.tn3270_server):
         '''Ready'''
         self.display_menu()
         return True
+
+    def dbtrunc(self, text: bytes, length: int):
+        '''Truncate a string to 'length' bytes, being mindful of SO/SI'''
+        ret = [i for i in text][0:length]
+        if len(ret) > 0:
+            if ret[-1] == 0x0e:
+                ret = ret[0:len(ret) - 1]
+            else:
+                dbcs = -1
+                for i in ret:
+                    if i == 0x0e:
+                        dbcs = 0
+                    elif i == 0x0f:
+                        dbcs = -1
+                    elif dbcs >= 0:
+                        dbcs += 1
+                if dbcs > 0:
+                    if dbcs % 2 == 1:
+                        # Odd number of DBCS characters, replace the odd one with an SO.
+                        ret[-1] = 0x0f
+                    else:
+                        # Even number of DBCS characters, replace the last two with an SO.
+                        ret = ret[0:len(ret)-1]
+                        ret[-1] = 0x0f
+        return bytes(ret)
 
     def enter(self, data: bytes):
         '''Process an ENTER AID'''
@@ -349,7 +375,8 @@ class menu_f(tn3270.tn3270_server):
                 if buffer_addr >= 24 * 80:
                     buffer_addr = 0
                 i += 1
-        self.cmd = get_field(reported_data, 23, 1, 80, 79, underscore=False, pad=False, upper=False)
+        self.cmd = get_field(reported_data, 22, 1, 80, 79, underscore=False, pad=False, upper=False)
+        self.raw_cmd = get_field_raw(reported_data, 22, 1, 80, 79, underscore=False, pad=False)
         if self.cmd == '':
             self.start3270()
             return
@@ -360,6 +387,6 @@ class menu_f(tn3270.tn3270_server):
             self.undo()
             self.switch.switch(self.peername, self.cmd, drain=True)
             return
-        no = no_such(self.cmd, b'').replace(b'\r\n', b'')[0:80]
-        self.display_menu(to_ebc(no))
+        no = no_such('', b'').replace(b'\r\n', b'')
+        self.display_menu(to_ebc(no) + self.dbtrunc(self.raw_cmd, 63))
 

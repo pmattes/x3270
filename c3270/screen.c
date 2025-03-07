@@ -1485,7 +1485,9 @@ screen_disp(bool erasing _is_unused)
 		    int xaddr = baddr;
 
 		    INC_BA(xaddr);
-		    if (toggled(VISIBLE_CONTROL) &&
+		    if (d == DBCS_LEFT_WRAP) {
+			addstr(".");
+		    } else if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ec == EBC_null &&
 			    ea_buf[xaddr].ec == EBC_null) {
 			attrset(attrs | A_UNDERLINE);
@@ -1568,6 +1570,8 @@ screen_disp(bool erasing _is_unused)
 #endif /*]*/
 			}
 		    }
+		} else if (d == DBCS_RIGHT_WRAP) {
+		    addstr(".");
 		}
 	    }
 	}

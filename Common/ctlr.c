@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -829,6 +829,8 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 		trace_ds(" SetBufferAddress%s", rcba(baddr));
 		while (!ea_buf[baddr].fa) {
 		    if (send_data && ea_buf[baddr].ec) {
+			enum dbcs_state d;
+
 			insert_sa(baddr,
 			    &current_fg,
 			    &current_bg,
@@ -852,14 +854,26 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 			    if (any) {
 				trace_ds("'");
 			    }
-
 			    trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
 			    any = false;
 			} else {
 			    if (!any) {
 				trace_ds(" '");
 			    }
-			    trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+			    d = ctlr_dbcs_state(baddr);
+			    if (d == DBCS_LEFT) {
+				char mb[3];
+				ucs4_t uc;
+				ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
+
+				if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)) {
+				    trace_ds("%s", mb);
+				} else {
+				    trace_ds(" ");
+				}
+			    } else if (d != DBCS_RIGHT) {
+				trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+			    }
 			    any = true;
 			}
 		    }
@@ -1055,10 +1069,25 @@ ctlr_read_buffer(unsigned char aid_byte)
 		trace_ds(" %s", see_ebc(ea_buf[baddr].ec));
 		any = false;
 	    } else {
+		enum dbcs_state d;
+
 		if (!any) {
 		    trace_ds(" '");
 		}
-		trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+		d = ctlr_dbcs_state(baddr);
+		if (d == DBCS_LEFT) {
+		    char mb[3];
+		    ucs4_t uc;
+		    ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
+
+		    if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)) {
+			trace_ds("%s", mb);
+		    } else {
+			trace_ds(" ");
+		    }
+		} else if (d != DBCS_RIGHT) {
+		    trace_ds("%s", see_ebc(ea_buf[baddr].ec));
+		}
 		any = true;
 	    }
 	}
@@ -1339,7 +1368,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     bool insert_cursor = false;
     int ic_baddr = 0;
 
-#define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
+#define END_TEXT0	{ if (previous == TEXT) { trace_ds("'"); previous = NONE; } }
 #define END_TEXT(cmd)	{ END_TEXT0; trace_ds(" %s", cmd); }
 
 /* XXX: Should there be a ctlr_add_cs call here? */
@@ -2113,7 +2142,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     }
     set_formatted();
     END_TEXT0;
-    trace_ds("\n");
+    if (!aborted) {
+	trace_ds("\n");
+    }
     if (insert_cursor) {
 	cursor_move(ic_baddr);
     }
@@ -2550,14 +2581,15 @@ ctlr_dbcs_postprocess(void)
 		if (dbaddr >= 0) {
 		    /* Turn invalid characters into spaces, silently. */
 		    if ((baddr + ROWS*COLS - dbaddr) % 2) {
-			if (!valid_dbcs_char( ea_buf[pbaddr].ec,
-				    ea_buf[baddr].ec)) {
+			/* Right side. */
+			if (!valid_dbcs_char(ea_buf[pbaddr].ec, ea_buf[baddr].ec)) {
 			    ea_buf[pbaddr].ec = EBC_space;
 			    ea_buf[baddr].ec = EBC_space;
 			}
-			MAKE_RIGHT(baddr);
+			ea_buf[baddr].db = (baddr % COLS)? DBCS_RIGHT: DBCS_RIGHT_WRAP;
 		    } else {
-			MAKE_LEFT(baddr);
+			/* Left side. */
+			ea_buf[baddr].db = (baddr % COLS == COLS - 1)? DBCS_LEFT_WRAP: DBCS_LEFT;
 		    }
 		} else {
 		    ea_buf[baddr].db = DBCS_NONE;

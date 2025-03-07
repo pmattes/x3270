@@ -1086,11 +1086,6 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *buf)
 	return;
     }
 
-    /* Put the error in the trace file. */
-    if (rop->is_error) {
-	vtrace("Error: %s\n", buf);
-    }
-
     if (rop->is_error && task_redirect()) {
 	task_error(buf);
 	return;

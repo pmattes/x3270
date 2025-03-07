@@ -220,6 +220,12 @@ class target(aswitch.aswitch):
                         idle_start = time.monotonic()
                         while not self.exiting and not peername in self.switch_to and wrapper.isopen():
                             try:
+                                r, _, _ = select.select([wrapper], [], [], 0.5)
+                                if r == []:
+                                    if idle_limit > 0 and time.monotonic() - idle_start >= idle_limit:
+                                        self.logger.info(f'target:{peername} idle timeout')
+                                        break
+                                    continue
                                 data = wrapper.recv(1024)
                             except TimeoutError:
                                 if idle_limit > 0 and time.monotonic() - idle_start >= idle_limit:
@@ -232,7 +238,6 @@ class target(aswitch.aswitch):
                             if data == b'':
                                 # EOF
                                 self.logger.info(f'target:{peername} EOF')
-                                time.sleep(20)
                                 break
                             idle_start = time.monotonic()
                             dynserver.process(data)

@@ -2063,7 +2063,9 @@ screen_disp(bool erasing _is_unused)
 			int xaddr = baddr;
 
 			INC_BA(xaddr);
-			if (toggled(VISIBLE_CONTROL) &&
+			if (d == DBCS_LEFT_WRAP) {
+			    addch('.');
+			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_null &&
 				ea_buf[xaddr].ec == EBC_null) {
 			    attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
@@ -2119,6 +2121,8 @@ screen_disp(bool erasing _is_unused)
 			}
 			attrset(attr_this);
 			addch(blinkmap(blinking, underlined, u));
+		    } else if (d == DBCS_RIGHT_WRAP) {
+			addch('.');
 		    }
 		}
 	    }

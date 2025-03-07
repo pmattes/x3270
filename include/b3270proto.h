@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Paul Mattes.
+ * Copyright (c) 2018-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -108,6 +108,7 @@
 #define AttrExtended	"extended"
 #define AttrFatal	"fatal"
 #define AttrField	"field"
+#define AttrGr		"gr"
 #define AttrHelpText	"help-text"
 #define AttrHelpParms	"help-parms"
 #define AttrHost	"host"
