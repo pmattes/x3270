@@ -71,8 +71,8 @@ def baddr(row1: int, col1: int, columns: int) -> int:
     '''Translate 1-origin row and column to a buffer address'''
     return ((row1 - 1) * columns) + (col1 - 1)
 
-def get_field(buffer: List[int], row1: int, col1: int, columns: int, length: int, underscore=True, pad=True, upper=True) -> str:
-    '''Extract a field from a buffer'''
+def get_field_raw(buffer: List[int], row1: int, col1: int, columns: int, length: int, underscore=True, pad=True) -> bytes:
+    '''Extract a field from a buffer, as raw bytes'''
     b = baddr(row1, col1, columns)
     field = buffer[b : b + length]
     # Remove NUL characters.
@@ -95,7 +95,12 @@ def get_field(buffer: List[int], row1: int, col1: int, columns: int, length: int
     elif pad:
         while len(field) < length:
             field.append(0x00)
-    ret = bytes(field).decode('cp037')
+    return bytes(field)
+
+def get_field(buffer: List[int], row1: int, col1: int, columns: int, length: int, underscore=True, pad=True, upper=True) -> str:
+    '''Extract a field from a buffer'''
+    raw = get_field_raw(buffer, row1, col1, columns, length, underscore, pad)
+    ret = raw.decode('cp037')
     if upper:
         ret = ret.upper()
     return ret

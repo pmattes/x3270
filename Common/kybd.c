@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -147,6 +147,7 @@ static char dxl[] = "0123456789abcdef";
 	if (KYBDLOCK_IS_OERR) { \
 	    kybdlock_clr(KL_OERR_MASK, action); \
 	    vstatus_reset(); \
+	    mcursor_normal(); \
 	} else { \
 	    enq_ta(action, NULL, NULL); \
 	    return true; \
@@ -3117,6 +3118,8 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 	    do_erase();
 	}
     }
+
+    ctlr_dbcs_postprocess();
     return true;
 }
 
@@ -3162,6 +3165,8 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 	ctlr_add(baddr, EBC_null, 0);
 	INC_BA(baddr);
     }
+
+    ctlr_dbcs_postprocess();
     return true;
 }
 

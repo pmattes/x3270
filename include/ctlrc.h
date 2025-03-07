@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2023 Paul Mattes.
+ * Copyright (c) 2005-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,18 +110,6 @@ enum dbcs_state {
 #define IS_LEFT(d)	((d) == DBCS_LEFT || (d) == DBCS_LEFT_WRAP)
 #define IS_RIGHT(d)	((d) == DBCS_RIGHT || (d) == DBCS_RIGHT_WRAP)
 #define IS_DBCS(d)	(IS_LEFT(d) || IS_RIGHT(d))
-#define MAKE_LEFT(b)	{ \
-	if (((b) % COLS) == ((ROWS * COLS) - 1)) \
-		ea_buf[(b)].db = DBCS_LEFT_WRAP; \
-	else \
-		ea_buf[(b)].db = DBCS_LEFT; \
-}
-#define MAKE_RIGHT(b)	{ \
-	if (!((b) % COLS)) \
-		ea_buf[(b)].db = DBCS_RIGHT_WRAP; \
-	else \
-		ea_buf[(b)].db = DBCS_RIGHT; \
-}
 #define SOSI(c)	(((c) == EBC_so)? EBC_si: EBC_so)
 
 enum dbcs_why { DBCS_FIELD, DBCS_SUBFIELD, DBCS_ATTRIBUTE };

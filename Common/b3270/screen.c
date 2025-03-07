@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 2015-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,8 @@
 #define XX_PUA		0x0080	/* private use area */
 #define XX_NO_COPY	0x0100	/* do not copy into paste buffer */
 #define XX_WRAP		0x0200	/* NVT text wrapped here */
+#define XX_LEFT_HALF	0x0400	/* DBCS left half */
+#define XX_RIGHT_HALF	0x0800	/* DBCS right half */
 
 typedef struct {
     u_int ccode;	/* unicode character to display */
@@ -177,6 +179,14 @@ see_gr(u_short gr)
     }
     if (gr & XX_WRAP) {
 	vb_appendf(&r, "%swrap", sep);
+	sep = ",";
+    }
+    if (gr & XX_LEFT_HALF) {
+	vb_appendf(&r, "%slefthalf", sep);
+	sep = ",";
+    }
+    if (gr & XX_RIGHT_HALF) {
+	vb_appendf(&r, "%srighthalf", sep);
 	sep = ",";
     }
     return txdFree(vb_consume(&r));
@@ -397,13 +407,17 @@ render_screen(struct ea *ea, screen_t *s)
 	int fg_color, bg_color;
 	bool high;
 	bool dbcs = false;
+	bool dbcs_left_half = false;
+	bool dbcs_right_half = false;
 	bool order = false;
 	bool extra_underline = false;
 	bool pua = false;
 	bool no_copy = false;
+	enum dbcs_state d;
 
 	uc = 0;
 
+	d = ctlr_dbcs_state(i);
 	if (ea[i].fa) {
 	    uc = ' ';
 	    fa = ea[i].fa;
@@ -424,7 +438,7 @@ render_screen(struct ea *ea, screen_t *s)
 	    }
 	    fa_gr = ea[i].gr;
 	} else if (FA_IS_ZERO(fa)) {
-	    if (ctlr_dbcs_state(i) == DBCS_LEFT) {
+	    if (d == DBCS_LEFT) {
 		uc = 0x3000;
 		dbcs = true;
 	    } else {
@@ -433,7 +447,7 @@ render_screen(struct ea *ea, screen_t *s)
 	} else {
 	    if (is_nvt(&ea[i], false, &uc)) {
 		/* NVT-mode text. */
-		switch (ctlr_dbcs_state(i)) {
+		switch (d) {
 		case DBCS_RIGHT:
 		    uc = 0;
 		    dbcs = true;
@@ -450,8 +464,10 @@ render_screen(struct ea *ea, screen_t *s)
 		    break;
 		}
 	    } else {
+		int j;
+
 		/* Convert EBCDIC to Unicode. */
-		switch (ctlr_dbcs_state(i)) {
+		switch (d) {
 		case DBCS_NONE:
 		case DBCS_SI:
 		case DBCS_SB:
@@ -507,16 +523,31 @@ render_screen(struct ea *ea, screen_t *s)
 		    }
 		    break;
 		case DBCS_LEFT:
+		case DBCS_LEFT_WRAP:
 		    uc = ebcdic_to_unicode((ea[i].ec << 8) | ea[i + 1].ec,
 			    CS_BASE, EUO_NONE);
 		    if (uc == 0) {
 			uc = 0x3000;
 		    }
-		    dbcs = true;
+		    if (d == DBCS_LEFT) {
+			dbcs = true;
+		    } else {
+			dbcs_left_half = true;
+		    }
 		    break;
 		case DBCS_RIGHT:
 		    uc = 0;
 		    dbcs = true;
+		    break;
+		case DBCS_RIGHT_WRAP:
+		    j = i;
+		    DEC_BA(j);
+		    uc = ebcdic_to_unicode((ea[j].ec << 8) | ea[i].ec,
+			    CS_BASE, EUO_NONE);
+		    if (uc == 0) {
+			uc = 0x3000;
+		    }
+		    dbcs_right_half = true;
 		    break;
 		default:
 		    uc = ' ';
@@ -577,6 +608,12 @@ render_screen(struct ea *ea, screen_t *s)
 	    }
 	    if (dbcs) {
 		s[si].gr |= XX_WIDE;
+	    }
+	    if (dbcs_left_half) {
+		s[si].gr |= XX_LEFT_HALF;
+	    }
+	    if (dbcs_right_half) {
+		s[si].gr |= XX_RIGHT_HALF;
 	    }
 	    if (order || (toggled(VISIBLE_CONTROL) && ea[i].fa)) {
 		s[si].gr |= XX_ORDER;
@@ -791,7 +828,7 @@ emit_rowdiffs(screen_t *oldr, screen_t *newr, rowdiff_t *diffs)
 		    see_color(0xf0 | newr[d->start_col].bg));
 	}
 	if (oldr[d->start_col].gr != newr[d->start_col].gr) {
-	    ui_add_element("gr", AT_STRING, see_gr(newr[d->start_col].gr));
+	    ui_add_element(AttrGr, AT_STRING, see_gr(newr[d->start_col].gr));
 	}
 
 	if (d->reason == RD_TEXT) {

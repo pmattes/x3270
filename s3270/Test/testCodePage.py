@@ -265,7 +265,7 @@ class TestS3270CodePage(cti):
 
         expect_chinese = [
             '   辦理中止委託轉帳代繳，須提供原代繳帳號，申辦資料如有疑義或不明，經本公司聯繫補',
-            '正資料，請配合提供補正；不願提供者不予受理。                                   '
+            ' 正資料，請配合提供補正；不願提供者不予受理。                                   '
         ]
 
         # Start playback.
@@ -298,19 +298,19 @@ class TestS3270CodePage(cti):
             'cp930': [
                 ' Jｧﾆｧﾄｵﾍｵ ﾎｵﾍﾎ ｶﾅﾈ ｳﾅｴｵ ﾆｧｷｵ 930                                                ',
                 '   高度な音声信号処理を行う高精度ボイスピックアップテクノロジーにより、高い通話品',
-                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが'],
+                ' 質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが'],
             'cp939': [
                 ' Japanese test for code page 930                                                ',
                 '   高度な音声信号処理を行う高精度ボイスピックアップテクノロジーにより、高い通話品',
-                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが'],
+                ' 質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが'],
             'cp1390': [
                 ' Jｧﾆｧﾄｵﾍｵ ﾎｵﾍﾎ ｶﾅﾈ ｳﾅｴｵ ﾆｧｷｵ 930                                                ',
                 '   高度な音声信号処理を行う高精度ボイスピッ アップテ ノロジーにより、高い通話品',
-                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダ ションシステムが'],
+                ' 質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダ ションシステムが'],
             'cp1399': [
                 ' Japanese test for code page 930                                                ',
                 '   高度な音声信号処理を行う高精度ボイスピックアップテクノロジーにより、高い通話品',
-                '質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが']
+                ' 質を実現。 AI による機械学習アルゴリズムで実現されたノイズリダクションシステムが']
         }
 
         # Start playback.
@@ -395,6 +395,51 @@ class TestS3270CodePage(cti):
         self.s3270_korean('korean', 'cp933 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
     def test_korean_1364(self):
         self.s3270_korean('korean-euro', 'cp1364 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
+
+    # s3270 PrintText() wrap test.
+    def s3270_dbcs_wrap(self, which: str):
+
+        japanese_text = "国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を生かし"
+
+        # Start playback.
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/dbcs-wrap.trc', port=pport) as p:
+            ts.close()
+
+            # Start s3270.
+            sport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(sport), '-utf8', '-codepage', 'japanese-latin', f'127.0.0.1:{pport}']))
+            self.children.append(s3270)
+            self.check_listen(sport)
+            ts.close()
+
+            # Fill up the screen.
+            p.send_records(2)
+
+            # Send the text.
+            self.get(f'http://127.0.0.1:{sport}/3270/rest/json/String({japanese_text})')
+
+        # Get the resulting text from the display. The result should have the wrapped character displayed properly
+        # on the first line, and a space at the beginning of the second line.
+        if which == 'PrintText':
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/PrintText(string)')
+            result = r.json()['result']
+            self.assertEqual('==>  ' + japanese_text[:38], result[21])
+            self.assertEqual(' ' + japanese_text[38:] + '                                             ', result[22])
+        elif which == 'Ascii1':
+            r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(22, 1, 2, 80)')
+            result = r.json()['result']
+            self.assertEqual('==>  ' + japanese_text[:38], result[0])
+            self.assertEqual(' ' + japanese_text[38:] + '                                             ', result[1])
+
+        # Wait for the process to exit successfully.
+        self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+    # s3270 wrap tests.
+    def test_s3270_dbcs_wrap_printtext(self):
+        self.s3270_dbcs_wrap('PrintText')
+    def test_s3270_dbcs_wrap_ascii1(self):
+        self.s3270_dbcs_wrap('Ascii1')
 
 if __name__ == '__main__':
     unittest.main()

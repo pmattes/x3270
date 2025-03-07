@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1078,12 +1078,14 @@ Cut_xaction(Widget w _is_unused, XEvent *event, String *params,
 		ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
 		break;
 	    case DBCS_LEFT:
+	    case DBCS_LEFT_WRAP:
 		ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
 		ba2 = baddr;
 		INC_BA(ba2);
 		ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
 		break;
 	    case DBCS_RIGHT:
+	    case DBCS_RIGHT_WRAP:
 		ba2 = baddr;
 		DEC_BA(ba2);
 		ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
@@ -1493,6 +1495,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
     /* Handle DBCS. */
     switch (ctlr_dbcs_state(baddr)) {
     case DBCS_LEFT:
+    case DBCS_LEFT_WRAP:
 	if (ea_buf[baddr].ucs4) {
 	    *rlen = unicode_to_utf8(ea_buf[baddr].ucs4, (char *)r);
 	} else {
@@ -1505,6 +1508,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	}
 	return;
     case DBCS_RIGHT:
+    case DBCS_RIGHT_WRAP:
 	/* Returned the entire character when the left half was read. */
 	*rlen = 0;
 	return;

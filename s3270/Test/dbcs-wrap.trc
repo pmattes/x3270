@@ -1,0 +1,1279 @@
+20250303.184447.499 Trace started
+ Version: c3270 v4.5pre1 Sun Mar 02 21:21:25 UTC 2025 pdm
+ Build options: --enable-local-process --with-readline --with-curses-wide via gcc 13.3.0 64-bit
+ Command: c3270 c3270 -trace -codepage japanese-latin localhost:8021
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page cp939
+ Locale codeset: UTF-8
+ Host codepage: 1027+300
+ Settings: acceptHostname= aidWait=true alwaysInsert=false bindLimit=true
+  blankFill=true caDir= caFile= certFile= certFileType= chainFile=
+  codePage=cp939 confDir=/usr/local/etc/x3270 contentionResolution=true
+  crosshair=false devName= extendedDataStream=true ftBufferSize=16384 httpd=
+  insertMode=false keyFile= keyFileType= keyPasswd= lineMode=true
+  lineWrap=false loginMacro= model=3279-4-E monoCase=false
+  noTelnetInputMode=line nopSeconds=0 oerrLock=true oversize= preferIpv4=false
+  preferIpv6=false printer.options= printerLu= proxy= reconnect=false
+  retry=false reverseInputMode=false rightToLeftMode=false rpq= saveLines=4096
+  screenTrace=false scriptPort= showTiming=false startTls=true termName=
+  tls992=true tlsMaxProtocol= tlsMinProtocol= tlsSecurityLevel= trace=true
+  typeahead=true underscore=false underscoreBlankFill=true unlockDelay=false
+  unlockDelayMs=350 user= verifyHostCert=true visibleControl=false
+  wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20250303.184447.499 CB(command)[#1] started
+20250303.184447.499 CB(command)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184447.499 Macro[#1.2] IDLE -> RUNNING (fresh push)
+20250303.184447.503 ctlr_enable_cursor(true, scroll)
+20250303.184447.505 Macro[#1.2] RUNNING -> IDLE (about to resume)
+20250303.184447.505 Macro[#1.2] running
+20250303.184447.505 Macro[#1.2] IDLE -> RUNNING (executing)
+20250303.184447.505 Macro[#1.2] 'Connect("localhost:8021")'
+20250303.184447.505 command -> Connect("localhost:8021")
+20250303.184447.505 st_changed(secure,false)
+20250303.184447.505 Resolver slot is 0
+20250303.184447.505 cstate [not-connected] -> [resolving] (host_connect)
+20250303.184447.505 st_changed(connect,true)
+20250303.184447.505 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20250303.184447.505 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20250303.184447.505 ctlr_enable_cursor(false, connect)
+20250303.184447.505 st_changed(negotiating,true)
+20250303.184447.506 Macro[#1.2] complete, success
+20250303.184447.506 CB(command)[#1.1] RUNNING -> IDLE (about to resume)
+20250303.184447.506 CB(command)[#1.1] child task done, success
+20250303.184447.506 command complete
+20250303.184447.506 stop pager
+20250303.184447.506 CB(command)[#1.1] complete, success
+20250303.184447.506 CB(command)[#1] complete
+20250303.184447.508 sched: Waiting for 3 events or 0.996 sec
+20250303.184447.508 sched: Got 1 fd, 1 event
+20250303.184447.508 Resolution complete, 1 address
+20250303.184447.511 TLS: will verify host certificate
+20250303.184447.538 Making host socket non-blocking
+20250303.184447.538 Trying 127.0.0.1, port 8021...
+20250303.184447.538 TCP connection pending.
+20250303.184447.538 cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20250303.184447.538 st_changed(negotiating,true)
+20250303.184447.538 txflush: 61 slots, 2648 bytes
+20250303.184447.538 sched: Waiting for 6 events or 0.000 sec
+20250303.184447.538 sched: Got 1 fd, 1 event
+20250303.184447.538 Output possible
+20250303.184447.538 cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20250303.184447.538 st_changed(connect,true)
+20250303.184447.538 Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20250303.184447.538 Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20250303.184447.539 Host negotiation step took 0.001444s to complete
+20250303.184447.540 ctlr_enable_cursor(true, connect)
+20250303.184447.540 ctlr_enable_cursor(true, nvt)
+20250303.184447.540 st_changed(negotiating,true)
+20250303.184447.540 Connected to localhost, port 8021.
+20250303.184447.540 st_changed(secure,false)
+20250303.184447.540 st_changed(line-mode,true)
+20250303.184447.540 txflush: 21 slots, 504 bytes
+20250303.184447.542 sched: Waiting for 5 events or 0.998 sec
+20250303.184447.542 sched: Got 1 fd, 1 event
+20250303.184447.542 Reading host socket
+20250303.184447.542 Host socket read complete nr=6
+< 0x0   fffd28fffd27
+20250303.184447.542 RCVD DO TN3270E
+> 0x0   fffb28
+20250303.184447.542 SENT WILL TN3270E
+20250303.184447.542 Now operating in connected-unbound mode.
+20250303.184447.542 cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20250303.184447.542 st_changed(negotiating,true)
+20250303.184447.542 st_changed(3270-mode,false)
+20250303.184447.542 Host negotiation step took 0.000065s to complete
+20250303.184447.542 ctlr_enable_cursor(true, connect)
+20250303.184447.542 RCVD DO NEW-ENVIRON
+> 0x0   fffb27
+20250303.184447.542 SENT WILL NEW-ENVIRON
+20250303.184447.542 txflush: 15 slots, 360 bytes
+20250303.184447.543 sched: Waiting for 5 events
+20250303.184447.543 sched: Got 1 fd, 1 event
+20250303.184447.543 Reading host socket
+20250303.184447.543 Host socket read complete nr=7
+< 0x0   fffa280802fff0
+20250303.184447.544 RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20250303.184447.544 SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20250303.184447.545 sched: Waiting for 5 events
+20250303.184447.545 sched: Got 1 fd, 1 event
+20250303.184447.545 Reading host socket
+20250303.184447.545 Host socket read complete nr=6
+< 0x0   fffa2701fff0
+20250303.184447.545 RCVD SB NEW-ENVIRON SEND SE
+> 0x0   fffa270000555345520170646d0349424d454c46015945530349424d4150504c
+> 0x20  4944014e6f6e6503434f44455041474501313032370343484152534554013131
+> 0x40  3732034b424454595045014a5042fff0
+20250303.184447.545 SENT SB NEW-ENVIRON IS VAR "USER" VALUE "pdm" USERVAR "IBMELF" VALUE "YES" USERVAR "IBMAPPLID" VALUE "None" USERVAR "CODEPAGE" VALUE "1027" USERVAR "CHARSET" VALUE "1172" USERVAR "KBDTYPE" VALUE "JPB" SE
+20250303.184447.545 txflush: 18 slots, 432 bytes
+20250303.184447.547 sched: Waiting for 5 events
+20250303.184447.547 sched: Got 1 fd, 1 event
+20250303.184447.547 Reading host socket
+20250303.184447.547 Host socket read complete nr=28
+< 0x0   fffa28020449424d2d333237382d342d450149424d3054453031fff0
+20250303.184447.547 RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT IBM0TE01 SE
+> 0x0   fffa28030700020405fff0
+20250303.184447.547 SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20250303.184447.548 sched: Waiting for 5 events
+20250303.184447.548 sched: Got 1 fd, 1 event
+20250303.184447.548 Reading host socket
+20250303.184447.548 Host socket read complete nr=8
+< 0x0   fffa28030700fff0
+20250303.184447.549 RCVD SB TN3270E FUNCTIONS REQUEST BIND-IMAGE SE
+> 0x0   fffa28030400fff0
+20250303.184447.549 SENT SB TN3270E FUNCTIONS IS BIND-IMAGE SE
+20250303.184447.549 TN3270E option negotiation complete.
+20250303.184447.550 sched: Waiting for 5 events
+20250303.184447.550 sched: Got 1 fd, 1 event
+20250303.184447.550 Reading host socket
+20250303.184447.550 Host socket read complete nr=59
+< 0x0   030000000031010303b1903080008787f8870002800000000018502b507f0000
+< 0x20  08c9c2d4f0e2d4c1c20005007eec0b1008c9c2d4f0e3c5e2d8ffef
+20250303.184447.550 RCVD TN3270E(BIND-IMAGE NO-RESPONSE 0)
+< BIND PLU-name 'IBM0SMAB' MaxSec-RU 1024 MaxPri-RU 3840 Rows-Cols Default  ...
+... 24x80 Alternate 43x80
+20250303.184447.552 Now operating in connected-tn3270e mode.
+20250303.184447.552 cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20250303.184447.552 st_changed(3270-mode,true)
+20250303.184447.553 ctlr_enable_cursor(true, connect)
+20250303.184447.553 RCVD EOR
+20250303.184447.553 txflush: 11 slots, 264 bytes
+20250303.184447.555 sched: Waiting for 5 events
+20250303.184447.590 sched: Got 1 fd, 1 event
+20250303.184447.590 Reading host socket
+20250303.184447.590 Host socket read complete nr=607
+< 0x0   0000000000f542a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d16011d940115a507e7e6e2902c001fe0113115c6f1d30c6f37ec5d5c4ffef
+20250303.184447.592 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,restore) 'x3270 test target (formatted 3270)' SetBufferA ...
+... ddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' SetBu ...
+... fferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibmlink,  ...
+... with help screens' SetBufferAddress(5,1) ' menu     Menu using plain TE ...
+... LNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270 screen ...
+... ' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' SetBuff ...
+... erAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBufferAdd ...
+... ress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBufferAddre ...
+... ss(10,1) ' snake    TN3270 protocol server playing snake' SetBufferAddr ...
+... ess(11,1) ' sruvm    TN3270 protocol server simulating sruvm (model 4 r ...
+... equired)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol server simu ...
+... lating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from test tar ...
+... get' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddress(21, ...
+... 1) SetBufferAddress(22,1) '==>' StartFieldExtended(22,4) 3270(modified) ...
+...  input-control(enabled) InsertCursor(22,5) SetBufferAddress(23,80) Star ...
+... tField(protected,skip) 'F3=END'
+20250303.184447.596 Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+20250303.184447.596 RCVD EOR
+20250303.184447.596 txflush: 572 slots, 13744 bytes
+20250303.184447.597 sched: Waiting for 5 events
+20250303.184452.655 sched: Got 1 fd, 1 event
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=22269 
+20250303.184452.656 Key '<Key>国' (curses key 0x0, char code 0x56fd)
+20250303.184452.656 CB(default)[#2] started
+20250303.184452.656 CB(default)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#2.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=20869 
+20250303.184452.656 Key '<Key>内' (curses key 0x0, char code 0x5185)
+20250303.184452.656 CB(default)[#3] started
+20250303.184452.656 CB(default)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#3.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=22806 
+20250303.184452.656 Key '<Key>外' (curses key 0x0, char code 0x5916)
+20250303.184452.656 CB(default)[#4] started
+20250303.184452.656 CB(default)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#4.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=12398 
+20250303.184452.656 Key '<Key>の' (curses key 0x0, char code 0x306e)
+20250303.184452.656 CB(default)[#5] started
+20250303.184452.656 CB(default)[#5.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#5.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=21462 
+20250303.184452.656 Key '<Key>取' (curses key 0x0, char code 0x53d6)
+20250303.184452.656 CB(default)[#6] started
+20250303.184452.656 CB(default)[#6.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#6.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=26448 
+20250303.184452.656 Key '<Key>材' (curses key 0x0, char code 0x6750)
+20250303.184452.656 CB(default)[#7] started
+20250303.184452.656 CB(default)[#7.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#7.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=32178 
+20250303.184452.656 Key '<Key>網' (curses key 0x0, char code 0x7db2)
+20250303.184452.656 CB(default)[#8] started
+20250303.184452.656 CB(default)[#8.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#8.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=12434 
+20250303.184452.656 Key '<Key>を' (curses key 0x0, char code 0x3092)
+20250303.184452.656 CB(default)[#9] started
+20250303.184452.656 CB(default)[#9.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#9.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=29983 
+20250303.184452.656 Key '<Key>生' (curses key 0x0, char code 0x751f)
+20250303.184452.656 CB(default)[#10] started
+20250303.184452.656 CB(default)[#10.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#10.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=12363 
+20250303.184452.656 Key '<Key>か' (curses key 0x0, char code 0x304b)
+20250303.184452.656 CB(default)[#11] started
+20250303.184452.656 CB(default)[#11.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#11.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=0 wch=12375 
+20250303.184452.656 Key '<Key>し' (curses key 0x0, char code 0x3057)
+20250303.184452.656 CB(default)[#12] started
+20250303.184452.656 CB(default)[#12.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184452.656 Macro[#12.2] IDLE -> RUNNING (fresh push)
+20250303.184452.656 kybd_input: calling wget_wch()
+20250303.184452.656 kbd_input: k=-1 wch=0 
+20250303.184452.656 kbd_input: k == ERR, return
+20250303.184452.656 txflush: 94 slots, 2256 bytes
+20250303.184452.657 Macro[#2.2] RUNNING -> IDLE (about to resume)
+20250303.184452.657 Macro[#2.2] running
+20250303.184452.657 Macro[#2.2] IDLE -> RUNNING (executing)
+20250303.184452.657 Macro[#2.2] 'Key(U+56fd)'
+20250303.184452.657 default -> Key("U+56fd")
+20250303.184452.657  default -> Key(U+56fd)
+20250303.184452.659 Macro[#2.2] complete, success
+20250303.184452.659 CB(default)[#2.1] RUNNING -> IDLE (about to resume)
+20250303.184452.659 CB(default)[#2.1] child task done, success
+20250303.184452.659 CB(default)[#2.1] complete, success
+20250303.184452.659 CB(default)[#2] complete
+20250303.184452.659 Macro[#3.2] RUNNING -> IDLE (about to resume)
+20250303.184452.659 Macro[#3.2] running
+20250303.184452.659 Macro[#3.2] IDLE -> RUNNING (executing)
+20250303.184452.659 Macro[#3.2] 'Key(U+5185)'
+20250303.184452.659 default -> Key("U+5185")
+20250303.184452.659  default -> Key(U+5185)
+20250303.184452.660 Macro[#3.2] complete, success
+20250303.184452.660 CB(default)[#3.1] RUNNING -> IDLE (about to resume)
+20250303.184452.660 CB(default)[#3.1] child task done, success
+20250303.184452.660 CB(default)[#3.1] complete, success
+20250303.184452.660 CB(default)[#3] complete
+20250303.184452.660 Macro[#4.2] RUNNING -> IDLE (about to resume)
+20250303.184452.660 Macro[#4.2] running
+20250303.184452.660 Macro[#4.2] IDLE -> RUNNING (executing)
+20250303.184452.660 Macro[#4.2] 'Key(U+5916)'
+20250303.184452.660 default -> Key("U+5916")
+20250303.184452.660  default -> Key(U+5916)
+20250303.184452.661 Macro[#4.2] complete, success
+20250303.184452.661 CB(default)[#4.1] RUNNING -> IDLE (about to resume)
+20250303.184452.661 CB(default)[#4.1] child task done, success
+20250303.184452.661 CB(default)[#4.1] complete, success
+20250303.184452.661 CB(default)[#4] complete
+20250303.184452.661 Macro[#5.2] RUNNING -> IDLE (about to resume)
+20250303.184452.661 Macro[#5.2] running
+20250303.184452.661 Macro[#5.2] IDLE -> RUNNING (executing)
+20250303.184452.661 Macro[#5.2] 'Key(U+306e)'
+20250303.184452.661 default -> Key("U+306e")
+20250303.184452.661  default -> Key(U+306e)
+20250303.184452.663 Macro[#5.2] complete, success
+20250303.184452.663 CB(default)[#5.1] RUNNING -> IDLE (about to resume)
+20250303.184452.663 CB(default)[#5.1] child task done, success
+20250303.184452.663 CB(default)[#5.1] complete, success
+20250303.184452.663 CB(default)[#5] complete
+20250303.184452.663 Macro[#6.2] RUNNING -> IDLE (about to resume)
+20250303.184452.663 Macro[#6.2] running
+20250303.184452.663 Macro[#6.2] IDLE -> RUNNING (executing)
+20250303.184452.663 Macro[#6.2] 'Key(U+53d6)'
+20250303.184452.663 default -> Key("U+53d6")
+20250303.184452.663  default -> Key(U+53d6)
+20250303.184452.664 Macro[#6.2] complete, success
+20250303.184452.664 CB(default)[#6.1] RUNNING -> IDLE (about to resume)
+20250303.184452.664 CB(default)[#6.1] child task done, success
+20250303.184452.664 CB(default)[#6.1] complete, success
+20250303.184452.664 CB(default)[#6] complete
+20250303.184452.664 Macro[#7.2] RUNNING -> IDLE (about to resume)
+20250303.184452.664 Macro[#7.2] running
+20250303.184452.664 Macro[#7.2] IDLE -> RUNNING (executing)
+20250303.184452.664 Macro[#7.2] 'Key(U+6750)'
+20250303.184452.664 default -> Key("U+6750")
+20250303.184452.664  default -> Key(U+6750)
+20250303.184452.665 Macro[#7.2] complete, success
+20250303.184452.665 CB(default)[#7.1] RUNNING -> IDLE (about to resume)
+20250303.184452.665 CB(default)[#7.1] child task done, success
+20250303.184452.665 CB(default)[#7.1] complete, success
+20250303.184452.665 CB(default)[#7] complete
+20250303.184452.665 Macro[#8.2] RUNNING -> IDLE (about to resume)
+20250303.184452.665 Macro[#8.2] running
+20250303.184452.665 Macro[#8.2] IDLE -> RUNNING (executing)
+20250303.184452.665 Macro[#8.2] 'Key(U+7db2)'
+20250303.184452.665 default -> Key("U+7db2")
+20250303.184452.665  default -> Key(U+7db2)
+20250303.184452.667 Macro[#8.2] complete, success
+20250303.184452.667 CB(default)[#8.1] RUNNING -> IDLE (about to resume)
+20250303.184452.667 CB(default)[#8.1] child task done, success
+20250303.184452.667 CB(default)[#8.1] complete, success
+20250303.184452.667 CB(default)[#8] complete
+20250303.184452.667 Macro[#9.2] RUNNING -> IDLE (about to resume)
+20250303.184452.667 Macro[#9.2] running
+20250303.184452.667 Macro[#9.2] IDLE -> RUNNING (executing)
+20250303.184452.667 Macro[#9.2] 'Key(U+3092)'
+20250303.184452.667 default -> Key("U+3092")
+20250303.184452.667  default -> Key(U+3092)
+20250303.184452.668 Macro[#9.2] complete, success
+20250303.184452.668 CB(default)[#9.1] RUNNING -> IDLE (about to resume)
+20250303.184452.668 CB(default)[#9.1] child task done, success
+20250303.184452.668 CB(default)[#9.1] complete, success
+20250303.184452.668 CB(default)[#9] complete
+20250303.184452.668 Macro[#10.2] RUNNING -> IDLE (about to resume)
+20250303.184452.668 Macro[#10.2] running
+20250303.184452.668 Macro[#10.2] IDLE -> RUNNING (executing)
+20250303.184452.668 Macro[#10.2] 'Key(U+751f)'
+20250303.184452.668 default -> Key("U+751f")
+20250303.184452.668  default -> Key(U+751f)
+20250303.184452.669 Macro[#10.2] complete, success
+20250303.184452.669 CB(default)[#10.1] RUNNING -> IDLE (about to resume)
+20250303.184452.669 CB(default)[#10.1] child task done, success
+20250303.184452.669 CB(default)[#10.1] complete, success
+20250303.184452.669 CB(default)[#10] complete
+20250303.184452.669 Macro[#11.2] RUNNING -> IDLE (about to resume)
+20250303.184452.669 Macro[#11.2] running
+20250303.184452.669 Macro[#11.2] IDLE -> RUNNING (executing)
+20250303.184452.669 Macro[#11.2] 'Key(U+304b)'
+20250303.184452.669 default -> Key("U+304b")
+20250303.184452.669  default -> Key(U+304b)
+20250303.184452.670 Macro[#11.2] complete, success
+20250303.184452.670 CB(default)[#11.1] RUNNING -> IDLE (about to resume)
+20250303.184452.670 CB(default)[#11.1] child task done, success
+20250303.184452.670 CB(default)[#11.1] complete, success
+20250303.184452.670 CB(default)[#11] complete
+20250303.184452.670 Macro[#12.2] RUNNING -> IDLE (about to resume)
+20250303.184452.670 Macro[#12.2] running
+20250303.184452.670 Macro[#12.2] IDLE -> RUNNING (executing)
+20250303.184452.670 Macro[#12.2] 'Key(U+3057)'
+20250303.184452.670 default -> Key("U+3057")
+20250303.184452.670  default -> Key(U+3057)
+20250303.184452.671 Macro[#12.2] complete, success
+20250303.184452.671 CB(default)[#12.1] RUNNING -> IDLE (about to resume)
+20250303.184452.671 CB(default)[#12.1] child task done, success
+20250303.184452.671 CB(default)[#12.1] complete, success
+20250303.184452.671 CB(default)[#12] complete
+20250303.184452.673 sched: Waiting for 5 events
+20250303.184453.198 sched: Got 1 fd, 1 event
+20250303.184453.198 kybd_input: calling wget_wch()
+20250303.184453.198 kbd_input: k=0 wch=22269 
+20250303.184453.198 Key '<Key>国' (curses key 0x0, char code 0x56fd)
+20250303.184453.199 CB(default)[#13] started
+20250303.184453.199 CB(default)[#13.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#13.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=20869 
+20250303.184453.199 Key '<Key>内' (curses key 0x0, char code 0x5185)
+20250303.184453.199 CB(default)[#14] started
+20250303.184453.199 CB(default)[#14.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#14.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=22806 
+20250303.184453.199 Key '<Key>外' (curses key 0x0, char code 0x5916)
+20250303.184453.199 CB(default)[#15] started
+20250303.184453.199 CB(default)[#15.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#15.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=12398 
+20250303.184453.199 Key '<Key>の' (curses key 0x0, char code 0x306e)
+20250303.184453.199 CB(default)[#16] started
+20250303.184453.199 CB(default)[#16.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#16.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=21462 
+20250303.184453.199 Key '<Key>取' (curses key 0x0, char code 0x53d6)
+20250303.184453.199 CB(default)[#17] started
+20250303.184453.199 CB(default)[#17.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#17.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=26448 
+20250303.184453.199 Key '<Key>材' (curses key 0x0, char code 0x6750)
+20250303.184453.199 CB(default)[#18] started
+20250303.184453.199 CB(default)[#18.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#18.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=32178 
+20250303.184453.199 Key '<Key>網' (curses key 0x0, char code 0x7db2)
+20250303.184453.199 CB(default)[#19] started
+20250303.184453.199 CB(default)[#19.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#19.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=12434 
+20250303.184453.199 Key '<Key>を' (curses key 0x0, char code 0x3092)
+20250303.184453.199 CB(default)[#20] started
+20250303.184453.199 CB(default)[#20.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#20.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=29983 
+20250303.184453.199 Key '<Key>生' (curses key 0x0, char code 0x751f)
+20250303.184453.199 CB(default)[#21] started
+20250303.184453.199 CB(default)[#21.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#21.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=12363 
+20250303.184453.199 Key '<Key>か' (curses key 0x0, char code 0x304b)
+20250303.184453.199 CB(default)[#22] started
+20250303.184453.199 CB(default)[#22.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#22.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=0 wch=12375 
+20250303.184453.199 Key '<Key>し' (curses key 0x0, char code 0x3057)
+20250303.184453.199 CB(default)[#23] started
+20250303.184453.199 CB(default)[#23.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.199 Macro[#23.2] IDLE -> RUNNING (fresh push)
+20250303.184453.199 kybd_input: calling wget_wch()
+20250303.184453.199 kbd_input: k=-1 wch=0 
+20250303.184453.199 kbd_input: k == ERR, return
+20250303.184453.199 txflush: 281 slots, 8376 bytes
+20250303.184453.200 Macro[#13.2] RUNNING -> IDLE (about to resume)
+20250303.184453.200 Macro[#13.2] running
+20250303.184453.200 Macro[#13.2] IDLE -> RUNNING (executing)
+20250303.184453.200 Macro[#13.2] 'Key(U+56fd)'
+20250303.184453.200 default -> Key("U+56fd")
+20250303.184453.200  default -> Key(U+56fd)
+20250303.184453.202 Macro[#13.2] complete, success
+20250303.184453.202 CB(default)[#13.1] RUNNING -> IDLE (about to resume)
+20250303.184453.202 CB(default)[#13.1] child task done, success
+20250303.184453.202 CB(default)[#13.1] complete, success
+20250303.184453.202 CB(default)[#13] complete
+20250303.184453.202 Macro[#14.2] RUNNING -> IDLE (about to resume)
+20250303.184453.202 Macro[#14.2] running
+20250303.184453.202 Macro[#14.2] IDLE -> RUNNING (executing)
+20250303.184453.202 Macro[#14.2] 'Key(U+5185)'
+20250303.184453.202 default -> Key("U+5185")
+20250303.184453.202  default -> Key(U+5185)
+20250303.184453.203 Macro[#14.2] complete, success
+20250303.184453.203 CB(default)[#14.1] RUNNING -> IDLE (about to resume)
+20250303.184453.203 CB(default)[#14.1] child task done, success
+20250303.184453.203 CB(default)[#14.1] complete, success
+20250303.184453.203 CB(default)[#14] complete
+20250303.184453.203 Macro[#15.2] RUNNING -> IDLE (about to resume)
+20250303.184453.203 Macro[#15.2] running
+20250303.184453.203 Macro[#15.2] IDLE -> RUNNING (executing)
+20250303.184453.203 Macro[#15.2] 'Key(U+5916)'
+20250303.184453.203 default -> Key("U+5916")
+20250303.184453.203  default -> Key(U+5916)
+20250303.184453.204 Macro[#15.2] complete, success
+20250303.184453.204 CB(default)[#15.1] RUNNING -> IDLE (about to resume)
+20250303.184453.204 CB(default)[#15.1] child task done, success
+20250303.184453.204 CB(default)[#15.1] complete, success
+20250303.184453.204 CB(default)[#15] complete
+20250303.184453.204 Macro[#16.2] RUNNING -> IDLE (about to resume)
+20250303.184453.204 Macro[#16.2] running
+20250303.184453.204 Macro[#16.2] IDLE -> RUNNING (executing)
+20250303.184453.204 Macro[#16.2] 'Key(U+306e)'
+20250303.184453.204 default -> Key("U+306e")
+20250303.184453.204  default -> Key(U+306e)
+20250303.184453.206 Macro[#16.2] complete, success
+20250303.184453.206 CB(default)[#16.1] RUNNING -> IDLE (about to resume)
+20250303.184453.206 CB(default)[#16.1] child task done, success
+20250303.184453.206 CB(default)[#16.1] complete, success
+20250303.184453.206 CB(default)[#16] complete
+20250303.184453.206 Macro[#17.2] RUNNING -> IDLE (about to resume)
+20250303.184453.206 Macro[#17.2] running
+20250303.184453.206 Macro[#17.2] IDLE -> RUNNING (executing)
+20250303.184453.206 Macro[#17.2] 'Key(U+53d6)'
+20250303.184453.206 default -> Key("U+53d6")
+20250303.184453.206  default -> Key(U+53d6)
+20250303.184453.207 Macro[#17.2] complete, success
+20250303.184453.207 CB(default)[#17.1] RUNNING -> IDLE (about to resume)
+20250303.184453.207 CB(default)[#17.1] child task done, success
+20250303.184453.207 CB(default)[#17.1] complete, success
+20250303.184453.207 CB(default)[#17] complete
+20250303.184453.207 Macro[#18.2] RUNNING -> IDLE (about to resume)
+20250303.184453.207 Macro[#18.2] running
+20250303.184453.207 Macro[#18.2] IDLE -> RUNNING (executing)
+20250303.184453.207 Macro[#18.2] 'Key(U+6750)'
+20250303.184453.207 default -> Key("U+6750")
+20250303.184453.207  default -> Key(U+6750)
+20250303.184453.208 Macro[#18.2] complete, success
+20250303.184453.208 CB(default)[#18.1] RUNNING -> IDLE (about to resume)
+20250303.184453.208 CB(default)[#18.1] child task done, success
+20250303.184453.208 CB(default)[#18.1] complete, success
+20250303.184453.208 CB(default)[#18] complete
+20250303.184453.208 Macro[#19.2] RUNNING -> IDLE (about to resume)
+20250303.184453.208 Macro[#19.2] running
+20250303.184453.208 Macro[#19.2] IDLE -> RUNNING (executing)
+20250303.184453.208 Macro[#19.2] 'Key(U+7db2)'
+20250303.184453.208 default -> Key("U+7db2")
+20250303.184453.208  default -> Key(U+7db2)
+20250303.184453.210 Macro[#19.2] complete, success
+20250303.184453.210 CB(default)[#19.1] RUNNING -> IDLE (about to resume)
+20250303.184453.210 CB(default)[#19.1] child task done, success
+20250303.184453.210 CB(default)[#19.1] complete, success
+20250303.184453.210 CB(default)[#19] complete
+20250303.184453.210 Macro[#20.2] RUNNING -> IDLE (about to resume)
+20250303.184453.210 Macro[#20.2] running
+20250303.184453.210 Macro[#20.2] IDLE -> RUNNING (executing)
+20250303.184453.210 Macro[#20.2] 'Key(U+3092)'
+20250303.184453.210 default -> Key("U+3092")
+20250303.184453.210  default -> Key(U+3092)
+20250303.184453.211 Macro[#20.2] complete, success
+20250303.184453.211 CB(default)[#20.1] RUNNING -> IDLE (about to resume)
+20250303.184453.211 CB(default)[#20.1] child task done, success
+20250303.184453.211 CB(default)[#20.1] complete, success
+20250303.184453.211 CB(default)[#20] complete
+20250303.184453.211 Macro[#21.2] RUNNING -> IDLE (about to resume)
+20250303.184453.211 Macro[#21.2] running
+20250303.184453.211 Macro[#21.2] IDLE -> RUNNING (executing)
+20250303.184453.211 Macro[#21.2] 'Key(U+751f)'
+20250303.184453.211 default -> Key("U+751f")
+20250303.184453.211  default -> Key(U+751f)
+20250303.184453.213 Macro[#21.2] complete, success
+20250303.184453.213 CB(default)[#21.1] RUNNING -> IDLE (about to resume)
+20250303.184453.213 CB(default)[#21.1] child task done, success
+20250303.184453.213 CB(default)[#21.1] complete, success
+20250303.184453.213 CB(default)[#21] complete
+20250303.184453.213 Macro[#22.2] RUNNING -> IDLE (about to resume)
+20250303.184453.213 Macro[#22.2] running
+20250303.184453.213 Macro[#22.2] IDLE -> RUNNING (executing)
+20250303.184453.213 Macro[#22.2] 'Key(U+304b)'
+20250303.184453.213 default -> Key("U+304b")
+20250303.184453.213  default -> Key(U+304b)
+20250303.184453.214 Macro[#22.2] complete, success
+20250303.184453.214 CB(default)[#22.1] RUNNING -> IDLE (about to resume)
+20250303.184453.214 CB(default)[#22.1] child task done, success
+20250303.184453.214 CB(default)[#22.1] complete, success
+20250303.184453.214 CB(default)[#22] complete
+20250303.184453.214 Macro[#23.2] RUNNING -> IDLE (about to resume)
+20250303.184453.214 Macro[#23.2] running
+20250303.184453.214 Macro[#23.2] IDLE -> RUNNING (executing)
+20250303.184453.214 Macro[#23.2] 'Key(U+3057)'
+20250303.184453.214 default -> Key("U+3057")
+20250303.184453.214  default -> Key(U+3057)
+20250303.184453.216 Macro[#23.2] complete, success
+20250303.184453.216 CB(default)[#23.1] RUNNING -> IDLE (about to resume)
+20250303.184453.216 CB(default)[#23.1] child task done, success
+20250303.184453.216 CB(default)[#23.1] complete, success
+20250303.184453.216 CB(default)[#23] complete
+20250303.184453.217 sched: Waiting for 5 events
+20250303.184453.702 sched: Got 1 fd, 1 event
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=22269 
+20250303.184453.702 Key '<Key>国' (curses key 0x0, char code 0x56fd)
+20250303.184453.702 CB(default)[#24] started
+20250303.184453.702 CB(default)[#24.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#24.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=20869 
+20250303.184453.702 Key '<Key>内' (curses key 0x0, char code 0x5185)
+20250303.184453.702 CB(default)[#25] started
+20250303.184453.702 CB(default)[#25.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#25.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=22806 
+20250303.184453.702 Key '<Key>外' (curses key 0x0, char code 0x5916)
+20250303.184453.702 CB(default)[#26] started
+20250303.184453.702 CB(default)[#26.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#26.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=12398 
+20250303.184453.702 Key '<Key>の' (curses key 0x0, char code 0x306e)
+20250303.184453.702 CB(default)[#27] started
+20250303.184453.702 CB(default)[#27.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#27.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=21462 
+20250303.184453.702 Key '<Key>取' (curses key 0x0, char code 0x53d6)
+20250303.184453.702 CB(default)[#28] started
+20250303.184453.702 CB(default)[#28.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#28.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=26448 
+20250303.184453.702 Key '<Key>材' (curses key 0x0, char code 0x6750)
+20250303.184453.702 CB(default)[#29] started
+20250303.184453.702 CB(default)[#29.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#29.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=32178 
+20250303.184453.702 Key '<Key>網' (curses key 0x0, char code 0x7db2)
+20250303.184453.702 CB(default)[#30] started
+20250303.184453.702 CB(default)[#30.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#30.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=12434 
+20250303.184453.702 Key '<Key>を' (curses key 0x0, char code 0x3092)
+20250303.184453.702 CB(default)[#31] started
+20250303.184453.702 CB(default)[#31.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#31.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=29983 
+20250303.184453.702 Key '<Key>生' (curses key 0x0, char code 0x751f)
+20250303.184453.702 CB(default)[#32] started
+20250303.184453.702 CB(default)[#32.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#32.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=12363 
+20250303.184453.702 Key '<Key>か' (curses key 0x0, char code 0x304b)
+20250303.184453.702 CB(default)[#33] started
+20250303.184453.702 CB(default)[#33.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#33.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=0 wch=12375 
+20250303.184453.702 Key '<Key>し' (curses key 0x0, char code 0x3057)
+20250303.184453.702 CB(default)[#34] started
+20250303.184453.702 CB(default)[#34.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184453.702 Macro[#34.2] IDLE -> RUNNING (fresh push)
+20250303.184453.702 kybd_input: calling wget_wch()
+20250303.184453.702 kbd_input: k=-1 wch=0 
+20250303.184453.702 kbd_input: k == ERR, return
+20250303.184453.702 txflush: 281 slots, 8120 bytes
+20250303.184453.704 Macro[#24.2] RUNNING -> IDLE (about to resume)
+20250303.184453.704 Macro[#24.2] running
+20250303.184453.704 Macro[#24.2] IDLE -> RUNNING (executing)
+20250303.184453.704 Macro[#24.2] 'Key(U+56fd)'
+20250303.184453.704 default -> Key("U+56fd")
+20250303.184453.704  default -> Key(U+56fd)
+20250303.184453.705 Macro[#24.2] complete, success
+20250303.184453.705 CB(default)[#24.1] RUNNING -> IDLE (about to resume)
+20250303.184453.705 CB(default)[#24.1] child task done, success
+20250303.184453.705 CB(default)[#24.1] complete, success
+20250303.184453.705 CB(default)[#24] complete
+20250303.184453.705 Macro[#25.2] RUNNING -> IDLE (about to resume)
+20250303.184453.705 Macro[#25.2] running
+20250303.184453.705 Macro[#25.2] IDLE -> RUNNING (executing)
+20250303.184453.705 Macro[#25.2] 'Key(U+5185)'
+20250303.184453.705 default -> Key("U+5185")
+20250303.184453.705  default -> Key(U+5185)
+20250303.184453.706 Macro[#25.2] complete, success
+20250303.184453.706 CB(default)[#25.1] RUNNING -> IDLE (about to resume)
+20250303.184453.706 CB(default)[#25.1] child task done, success
+20250303.184453.706 CB(default)[#25.1] complete, success
+20250303.184453.706 CB(default)[#25] complete
+20250303.184453.706 Macro[#26.2] RUNNING -> IDLE (about to resume)
+20250303.184453.706 Macro[#26.2] running
+20250303.184453.706 Macro[#26.2] IDLE -> RUNNING (executing)
+20250303.184453.706 Macro[#26.2] 'Key(U+5916)'
+20250303.184453.707 default -> Key("U+5916")
+20250303.184453.707  default -> Key(U+5916)
+20250303.184453.708 Macro[#26.2] complete, success
+20250303.184453.708 CB(default)[#26.1] RUNNING -> IDLE (about to resume)
+20250303.184453.708 CB(default)[#26.1] child task done, success
+20250303.184453.708 CB(default)[#26.1] complete, success
+20250303.184453.708 CB(default)[#26] complete
+20250303.184453.708 Macro[#27.2] RUNNING -> IDLE (about to resume)
+20250303.184453.708 Macro[#27.2] running
+20250303.184453.708 Macro[#27.2] IDLE -> RUNNING (executing)
+20250303.184453.708 Macro[#27.2] 'Key(U+306e)'
+20250303.184453.708 default -> Key("U+306e")
+20250303.184453.708  default -> Key(U+306e)
+20250303.184453.709 Macro[#27.2] complete, success
+20250303.184453.709 CB(default)[#27.1] RUNNING -> IDLE (about to resume)
+20250303.184453.709 CB(default)[#27.1] child task done, success
+20250303.184453.709 CB(default)[#27.1] complete, success
+20250303.184453.709 CB(default)[#27] complete
+20250303.184453.709 Macro[#28.2] RUNNING -> IDLE (about to resume)
+20250303.184453.709 Macro[#28.2] running
+20250303.184453.709 Macro[#28.2] IDLE -> RUNNING (executing)
+20250303.184453.709 Macro[#28.2] 'Key(U+53d6)'
+20250303.184453.709 default -> Key("U+53d6")
+20250303.184453.709  default -> Key(U+53d6)
+20250303.184453.710 Macro[#28.2] complete, success
+20250303.184453.710 CB(default)[#28.1] RUNNING -> IDLE (about to resume)
+20250303.184453.710 CB(default)[#28.1] child task done, success
+20250303.184453.710 CB(default)[#28.1] complete, success
+20250303.184453.710 CB(default)[#28] complete
+20250303.184453.710 Macro[#29.2] RUNNING -> IDLE (about to resume)
+20250303.184453.710 Macro[#29.2] running
+20250303.184453.710 Macro[#29.2] IDLE -> RUNNING (executing)
+20250303.184453.710 Macro[#29.2] 'Key(U+6750)'
+20250303.184453.710 default -> Key("U+6750")
+20250303.184453.710  default -> Key(U+6750)
+20250303.184453.711 Macro[#29.2] complete, success
+20250303.184453.711 CB(default)[#29.1] RUNNING -> IDLE (about to resume)
+20250303.184453.711 CB(default)[#29.1] child task done, success
+20250303.184453.711 CB(default)[#29.1] complete, success
+20250303.184453.711 CB(default)[#29] complete
+20250303.184453.711 Macro[#30.2] RUNNING -> IDLE (about to resume)
+20250303.184453.711 Macro[#30.2] running
+20250303.184453.711 Macro[#30.2] IDLE -> RUNNING (executing)
+20250303.184453.711 Macro[#30.2] 'Key(U+7db2)'
+20250303.184453.711 default -> Key("U+7db2")
+20250303.184453.711  default -> Key(U+7db2)
+20250303.184453.713 Macro[#30.2] complete, success
+20250303.184453.713 CB(default)[#30.1] RUNNING -> IDLE (about to resume)
+20250303.184453.713 CB(default)[#30.1] child task done, success
+20250303.184453.713 CB(default)[#30.1] complete, success
+20250303.184453.713 CB(default)[#30] complete
+20250303.184453.713 Macro[#31.2] RUNNING -> IDLE (about to resume)
+20250303.184453.713 Macro[#31.2] running
+20250303.184453.713 Macro[#31.2] IDLE -> RUNNING (executing)
+20250303.184453.713 Macro[#31.2] 'Key(U+3092)'
+20250303.184453.713 default -> Key("U+3092")
+20250303.184453.713  default -> Key(U+3092)
+20250303.184453.714 Macro[#31.2] complete, success
+20250303.184453.714 CB(default)[#31.1] RUNNING -> IDLE (about to resume)
+20250303.184453.714 CB(default)[#31.1] child task done, success
+20250303.184453.714 CB(default)[#31.1] complete, success
+20250303.184453.714 CB(default)[#31] complete
+20250303.184453.714 Macro[#32.2] RUNNING -> IDLE (about to resume)
+20250303.184453.714 Macro[#32.2] running
+20250303.184453.714 Macro[#32.2] IDLE -> RUNNING (executing)
+20250303.184453.714 Macro[#32.2] 'Key(U+751f)'
+20250303.184453.714 default -> Key("U+751f")
+20250303.184453.714  default -> Key(U+751f)
+20250303.184453.715 Macro[#32.2] complete, success
+20250303.184453.715 CB(default)[#32.1] RUNNING -> IDLE (about to resume)
+20250303.184453.715 CB(default)[#32.1] child task done, success
+20250303.184453.715 CB(default)[#32.1] complete, success
+20250303.184453.715 CB(default)[#32] complete
+20250303.184453.715 Macro[#33.2] RUNNING -> IDLE (about to resume)
+20250303.184453.715 Macro[#33.2] running
+20250303.184453.715 Macro[#33.2] IDLE -> RUNNING (executing)
+20250303.184453.715 Macro[#33.2] 'Key(U+304b)'
+20250303.184453.715 default -> Key("U+304b")
+20250303.184453.715  default -> Key(U+304b)
+20250303.184453.716 Macro[#33.2] complete, success
+20250303.184453.716 CB(default)[#33.1] RUNNING -> IDLE (about to resume)
+20250303.184453.716 CB(default)[#33.1] child task done, success
+20250303.184453.716 CB(default)[#33.1] complete, success
+20250303.184453.716 CB(default)[#33] complete
+20250303.184453.716 Macro[#34.2] RUNNING -> IDLE (about to resume)
+20250303.184453.716 Macro[#34.2] running
+20250303.184453.716 Macro[#34.2] IDLE -> RUNNING (executing)
+20250303.184453.716 Macro[#34.2] 'Key(U+3057)'
+20250303.184453.716 default -> Key("U+3057")
+20250303.184453.717  default -> Key(U+3057)
+20250303.184453.718 Macro[#34.2] complete, success
+20250303.184453.718 CB(default)[#34.1] RUNNING -> IDLE (about to resume)
+20250303.184453.718 CB(default)[#34.1] child task done, success
+20250303.184453.718 CB(default)[#34.1] complete, success
+20250303.184453.718 CB(default)[#34] complete
+20250303.184453.720 sched: Waiting for 5 events
+20250303.184454.213 sched: Got 1 fd, 1 event
+20250303.184454.213 kybd_input: calling wget_wch()
+20250303.184454.213 kbd_input: k=0 wch=22269 
+20250303.184454.213 Key '<Key>国' (curses key 0x0, char code 0x56fd)
+20250303.184454.213 CB(default)[#35] started
+20250303.184454.213 CB(default)[#35.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.213 Macro[#35.2] IDLE -> RUNNING (fresh push)
+20250303.184454.213 kybd_input: calling wget_wch()
+20250303.184454.213 kbd_input: k=0 wch=20869 
+20250303.184454.214 Key '<Key>内' (curses key 0x0, char code 0x5185)
+20250303.184454.214 CB(default)[#36] started
+20250303.184454.214 CB(default)[#36.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#36.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=22806 
+20250303.184454.214 Key '<Key>外' (curses key 0x0, char code 0x5916)
+20250303.184454.214 CB(default)[#37] started
+20250303.184454.214 CB(default)[#37.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#37.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=12398 
+20250303.184454.214 Key '<Key>の' (curses key 0x0, char code 0x306e)
+20250303.184454.214 CB(default)[#38] started
+20250303.184454.214 CB(default)[#38.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#38.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=21462 
+20250303.184454.214 Key '<Key>取' (curses key 0x0, char code 0x53d6)
+20250303.184454.214 CB(default)[#39] started
+20250303.184454.214 CB(default)[#39.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#39.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=26448 
+20250303.184454.214 Key '<Key>材' (curses key 0x0, char code 0x6750)
+20250303.184454.214 CB(default)[#40] started
+20250303.184454.214 CB(default)[#40.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#40.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=32178 
+20250303.184454.214 Key '<Key>網' (curses key 0x0, char code 0x7db2)
+20250303.184454.214 CB(default)[#41] started
+20250303.184454.214 CB(default)[#41.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#41.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=12434 
+20250303.184454.214 Key '<Key>を' (curses key 0x0, char code 0x3092)
+20250303.184454.214 CB(default)[#42] started
+20250303.184454.214 CB(default)[#42.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#42.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=29983 
+20250303.184454.214 Key '<Key>生' (curses key 0x0, char code 0x751f)
+20250303.184454.214 CB(default)[#43] started
+20250303.184454.214 CB(default)[#43.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#43.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=12363 
+20250303.184454.214 Key '<Key>か' (curses key 0x0, char code 0x304b)
+20250303.184454.214 CB(default)[#44] started
+20250303.184454.214 CB(default)[#44.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#44.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=0 wch=12375 
+20250303.184454.214 Key '<Key>し' (curses key 0x0, char code 0x3057)
+20250303.184454.214 CB(default)[#45] started
+20250303.184454.214 CB(default)[#45.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184454.214 Macro[#45.2] IDLE -> RUNNING (fresh push)
+20250303.184454.214 kybd_input: calling wget_wch()
+20250303.184454.214 kbd_input: k=-1 wch=0 
+20250303.184454.214 kbd_input: k == ERR, return
+20250303.184454.214 txflush: 281 slots, 8152 bytes
+20250303.184454.215 Macro[#35.2] RUNNING -> IDLE (about to resume)
+20250303.184454.215 Macro[#35.2] running
+20250303.184454.215 Macro[#35.2] IDLE -> RUNNING (executing)
+20250303.184454.215 Macro[#35.2] 'Key(U+56fd)'
+20250303.184454.215 default -> Key("U+56fd")
+20250303.184454.215  default -> Key(U+56fd)
+20250303.184454.217 Macro[#35.2] complete, success
+20250303.184454.217 CB(default)[#35.1] RUNNING -> IDLE (about to resume)
+20250303.184454.217 CB(default)[#35.1] child task done, success
+20250303.184454.217 CB(default)[#35.1] complete, success
+20250303.184454.217 CB(default)[#35] complete
+20250303.184454.217 Macro[#36.2] RUNNING -> IDLE (about to resume)
+20250303.184454.217 Macro[#36.2] running
+20250303.184454.217 Macro[#36.2] IDLE -> RUNNING (executing)
+20250303.184454.217 Macro[#36.2] 'Key(U+5185)'
+20250303.184454.217 default -> Key("U+5185")
+20250303.184454.217  default -> Key(U+5185)
+20250303.184454.218 Macro[#36.2] complete, success
+20250303.184454.218 CB(default)[#36.1] RUNNING -> IDLE (about to resume)
+20250303.184454.218 CB(default)[#36.1] child task done, success
+20250303.184454.218 CB(default)[#36.1] complete, success
+20250303.184454.218 CB(default)[#36] complete
+20250303.184454.218 Macro[#37.2] RUNNING -> IDLE (about to resume)
+20250303.184454.218 Macro[#37.2] running
+20250303.184454.218 Macro[#37.2] IDLE -> RUNNING (executing)
+20250303.184454.218 Macro[#37.2] 'Key(U+5916)'
+20250303.184454.218 default -> Key("U+5916")
+20250303.184454.218  default -> Key(U+5916)
+20250303.184454.219 Macro[#37.2] complete, success
+20250303.184454.219 CB(default)[#37.1] RUNNING -> IDLE (about to resume)
+20250303.184454.219 CB(default)[#37.1] child task done, success
+20250303.184454.219 CB(default)[#37.1] complete, success
+20250303.184454.219 CB(default)[#37] complete
+20250303.184454.219 Macro[#38.2] RUNNING -> IDLE (about to resume)
+20250303.184454.219 Macro[#38.2] running
+20250303.184454.219 Macro[#38.2] IDLE -> RUNNING (executing)
+20250303.184454.219 Macro[#38.2] 'Key(U+306e)'
+20250303.184454.219 default -> Key("U+306e")
+20250303.184454.219  default -> Key(U+306e)
+20250303.184454.221 Macro[#38.2] complete, success
+20250303.184454.221 CB(default)[#38.1] RUNNING -> IDLE (about to resume)
+20250303.184454.221 CB(default)[#38.1] child task done, success
+20250303.184454.221 CB(default)[#38.1] complete, success
+20250303.184454.221 CB(default)[#38] complete
+20250303.184454.221 Macro[#39.2] RUNNING -> IDLE (about to resume)
+20250303.184454.221 Macro[#39.2] running
+20250303.184454.221 Macro[#39.2] IDLE -> RUNNING (executing)
+20250303.184454.221 Macro[#39.2] 'Key(U+53d6)'
+20250303.184454.221 default -> Key("U+53d6")
+20250303.184454.221  default -> Key(U+53d6)
+20250303.184454.222 Macro[#39.2] complete, success
+20250303.184454.222 CB(default)[#39.1] RUNNING -> IDLE (about to resume)
+20250303.184454.222 CB(default)[#39.1] child task done, success
+20250303.184454.222 CB(default)[#39.1] complete, success
+20250303.184454.222 CB(default)[#39] complete
+20250303.184454.222 Macro[#40.2] RUNNING -> IDLE (about to resume)
+20250303.184454.222 Macro[#40.2] running
+20250303.184454.222 Macro[#40.2] IDLE -> RUNNING (executing)
+20250303.184454.222 Macro[#40.2] 'Key(U+6750)'
+20250303.184454.222 default -> Key("U+6750")
+20250303.184454.222  default -> Key(U+6750)
+20250303.184454.223 Macro[#40.2] complete, success
+20250303.184454.224 CB(default)[#40.1] RUNNING -> IDLE (about to resume)
+20250303.184454.224 CB(default)[#40.1] child task done, success
+20250303.184454.224 CB(default)[#40.1] complete, success
+20250303.184454.224 CB(default)[#40] complete
+20250303.184454.224 Macro[#41.2] RUNNING -> IDLE (about to resume)
+20250303.184454.224 Macro[#41.2] running
+20250303.184454.224 Macro[#41.2] IDLE -> RUNNING (executing)
+20250303.184454.224 Macro[#41.2] 'Key(U+7db2)'
+20250303.184454.224 default -> Key("U+7db2")
+20250303.184454.224  default -> Key(U+7db2)
+20250303.184454.225 Macro[#41.2] complete, success
+20250303.184454.226 CB(default)[#41.1] RUNNING -> IDLE (about to resume)
+20250303.184454.226 CB(default)[#41.1] child task done, success
+20250303.184454.226 CB(default)[#41.1] complete, success
+20250303.184454.226 CB(default)[#41] complete
+20250303.184454.226 Macro[#42.2] RUNNING -> IDLE (about to resume)
+20250303.184454.226 Macro[#42.2] running
+20250303.184454.226 Macro[#42.2] IDLE -> RUNNING (executing)
+20250303.184454.226 Macro[#42.2] 'Key(U+3092)'
+20250303.184454.226 default -> Key("U+3092")
+20250303.184454.226  default -> Key(U+3092)
+20250303.184454.227 Macro[#42.2] complete, success
+20250303.184454.227 CB(default)[#42.1] RUNNING -> IDLE (about to resume)
+20250303.184454.227 CB(default)[#42.1] child task done, success
+20250303.184454.227 CB(default)[#42.1] complete, success
+20250303.184454.227 CB(default)[#42] complete
+20250303.184454.227 Macro[#43.2] RUNNING -> IDLE (about to resume)
+20250303.184454.227 Macro[#43.2] running
+20250303.184454.227 Macro[#43.2] IDLE -> RUNNING (executing)
+20250303.184454.227 Macro[#43.2] 'Key(U+751f)'
+20250303.184454.227 default -> Key("U+751f")
+20250303.184454.227  default -> Key(U+751f)
+20250303.184454.228 Macro[#43.2] complete, success
+20250303.184454.228 CB(default)[#43.1] RUNNING -> IDLE (about to resume)
+20250303.184454.228 CB(default)[#43.1] child task done, success
+20250303.184454.228 CB(default)[#43.1] complete, success
+20250303.184454.228 CB(default)[#43] complete
+20250303.184454.228 Macro[#44.2] RUNNING -> IDLE (about to resume)
+20250303.184454.228 Macro[#44.2] running
+20250303.184454.228 Macro[#44.2] IDLE -> RUNNING (executing)
+20250303.184454.228 Macro[#44.2] 'Key(U+304b)'
+20250303.184454.228 default -> Key("U+304b")
+20250303.184454.229  default -> Key(U+304b)
+20250303.184454.230 Macro[#44.2] complete, success
+20250303.184454.230 CB(default)[#44.1] RUNNING -> IDLE (about to resume)
+20250303.184454.230 CB(default)[#44.1] child task done, success
+20250303.184454.230 CB(default)[#44.1] complete, success
+20250303.184454.230 CB(default)[#44] complete
+20250303.184454.230 Macro[#45.2] RUNNING -> IDLE (about to resume)
+20250303.184454.230 Macro[#45.2] running
+20250303.184454.231 Macro[#45.2] IDLE -> RUNNING (executing)
+20250303.184454.231 Macro[#45.2] 'Key(U+3057)'
+20250303.184454.231 default -> Key("U+3057")
+20250303.184454.231  default -> Key(U+3057)
+20250303.184454.232 Macro[#45.2] complete, success
+20250303.184454.232 CB(default)[#45.1] RUNNING -> IDLE (about to resume)
+20250303.184454.232 CB(default)[#45.1] child task done, success
+20250303.184454.232 CB(default)[#45.1] complete, success
+20250303.184454.232 CB(default)[#45] complete
+20250303.184454.233 sched: Waiting for 5 events
+20250303.184455.247 sched: Got 1 fd, 1 event
+20250303.184455.247 kybd_input: calling wget_wch()
+20250303.184455.247 kbd_input: k=0 wch=22269 
+20250303.184455.247 Key '<Key>国' (curses key 0x0, char code 0x56fd)
+20250303.184455.247 CB(default)[#46] started
+20250303.184455.247 CB(default)[#46.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.247 Macro[#46.2] IDLE -> RUNNING (fresh push)
+20250303.184455.247 kybd_input: calling wget_wch()
+20250303.184455.247 kbd_input: k=0 wch=20869 
+20250303.184455.247 Key '<Key>内' (curses key 0x0, char code 0x5185)
+20250303.184455.247 CB(default)[#47] started
+20250303.184455.247 CB(default)[#47.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.247 Macro[#47.2] IDLE -> RUNNING (fresh push)
+20250303.184455.247 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=22806 
+20250303.184455.248 Key '<Key>外' (curses key 0x0, char code 0x5916)
+20250303.184455.248 CB(default)[#48] started
+20250303.184455.248 CB(default)[#48.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#48.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=12398 
+20250303.184455.248 Key '<Key>の' (curses key 0x0, char code 0x306e)
+20250303.184455.248 CB(default)[#49] started
+20250303.184455.248 CB(default)[#49.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#49.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=21462 
+20250303.184455.248 Key '<Key>取' (curses key 0x0, char code 0x53d6)
+20250303.184455.248 CB(default)[#50] started
+20250303.184455.248 CB(default)[#50.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#50.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=26448 
+20250303.184455.248 Key '<Key>材' (curses key 0x0, char code 0x6750)
+20250303.184455.248 CB(default)[#51] started
+20250303.184455.248 CB(default)[#51.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#51.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=32178 
+20250303.184455.248 Key '<Key>網' (curses key 0x0, char code 0x7db2)
+20250303.184455.248 CB(default)[#52] started
+20250303.184455.248 CB(default)[#52.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#52.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=12434 
+20250303.184455.248 Key '<Key>を' (curses key 0x0, char code 0x3092)
+20250303.184455.248 CB(default)[#53] started
+20250303.184455.248 CB(default)[#53.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#53.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=29983 
+20250303.184455.248 Key '<Key>生' (curses key 0x0, char code 0x751f)
+20250303.184455.248 CB(default)[#54] started
+20250303.184455.248 CB(default)[#54.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#54.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=12363 
+20250303.184455.248 Key '<Key>か' (curses key 0x0, char code 0x304b)
+20250303.184455.248 CB(default)[#55] started
+20250303.184455.248 CB(default)[#55.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#55.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=0 wch=12375 
+20250303.184455.248 Key '<Key>し' (curses key 0x0, char code 0x3057)
+20250303.184455.248 CB(default)[#56] started
+20250303.184455.248 CB(default)[#56.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184455.248 Macro[#56.2] IDLE -> RUNNING (fresh push)
+20250303.184455.248 kybd_input: calling wget_wch()
+20250303.184455.248 kbd_input: k=-1 wch=0 
+20250303.184455.248 kbd_input: k == ERR, return
+20250303.184455.248 txflush: 281 slots, 8088 bytes
+20250303.184455.249 Macro[#46.2] RUNNING -> IDLE (about to resume)
+20250303.184455.249 Macro[#46.2] running
+20250303.184455.249 Macro[#46.2] IDLE -> RUNNING (executing)
+20250303.184455.249 Macro[#46.2] 'Key(U+56fd)'
+20250303.184455.249 default -> Key("U+56fd")
+20250303.184455.249  default -> Key(U+56fd)
+20250303.184455.251 Macro[#46.2] complete, success
+20250303.184455.251 CB(default)[#46.1] RUNNING -> IDLE (about to resume)
+20250303.184455.251 CB(default)[#46.1] child task done, success
+20250303.184455.251 CB(default)[#46.1] complete, success
+20250303.184455.251 CB(default)[#46] complete
+20250303.184455.251 Macro[#47.2] RUNNING -> IDLE (about to resume)
+20250303.184455.251 Macro[#47.2] running
+20250303.184455.251 Macro[#47.2] IDLE -> RUNNING (executing)
+20250303.184455.251 Macro[#47.2] 'Key(U+5185)'
+20250303.184455.251 default -> Key("U+5185")
+20250303.184455.251  default -> Key(U+5185)
+20250303.184455.252 Macro[#47.2] complete, success
+20250303.184455.252 CB(default)[#47.1] RUNNING -> IDLE (about to resume)
+20250303.184455.252 CB(default)[#47.1] child task done, success
+20250303.184455.252 CB(default)[#47.1] complete, success
+20250303.184455.252 CB(default)[#47] complete
+20250303.184455.252 Macro[#48.2] RUNNING -> IDLE (about to resume)
+20250303.184455.252 Macro[#48.2] running
+20250303.184455.252 Macro[#48.2] IDLE -> RUNNING (executing)
+20250303.184455.252 Macro[#48.2] 'Key(U+5916)'
+20250303.184455.252 default -> Key("U+5916")
+20250303.184455.252  default -> Key(U+5916)
+20250303.184455.254 Macro[#48.2] complete, success
+20250303.184455.254 CB(default)[#48.1] RUNNING -> IDLE (about to resume)
+20250303.184455.254 CB(default)[#48.1] child task done, success
+20250303.184455.254 CB(default)[#48.1] complete, success
+20250303.184455.254 CB(default)[#48] complete
+20250303.184455.254 Macro[#49.2] RUNNING -> IDLE (about to resume)
+20250303.184455.254 Macro[#49.2] running
+20250303.184455.254 Macro[#49.2] IDLE -> RUNNING (executing)
+20250303.184455.254 Macro[#49.2] 'Key(U+306e)'
+20250303.184455.254 default -> Key("U+306e")
+20250303.184455.254  default -> Key(U+306e)
+20250303.184455.256 Macro[#49.2] complete, success
+20250303.184455.256 CB(default)[#49.1] RUNNING -> IDLE (about to resume)
+20250303.184455.256 CB(default)[#49.1] child task done, success
+20250303.184455.256 CB(default)[#49.1] complete, success
+20250303.184455.256 CB(default)[#49] complete
+20250303.184455.256 Macro[#50.2] RUNNING -> IDLE (about to resume)
+20250303.184455.256 Macro[#50.2] running
+20250303.184455.256 Macro[#50.2] IDLE -> RUNNING (executing)
+20250303.184455.256 Macro[#50.2] 'Key(U+53d6)'
+20250303.184455.256 default -> Key("U+53d6")
+20250303.184455.256  default -> Key(U+53d6)
+20250303.184455.258 Macro[#50.2] complete, success
+20250303.184455.258 CB(default)[#50.1] RUNNING -> IDLE (about to resume)
+20250303.184455.258 CB(default)[#50.1] child task done, success
+20250303.184455.258 CB(default)[#50.1] complete, success
+20250303.184455.258 CB(default)[#50] complete
+20250303.184455.258 Macro[#51.2] RUNNING -> IDLE (about to resume)
+20250303.184455.258 Macro[#51.2] running
+20250303.184455.258 Macro[#51.2] IDLE -> RUNNING (executing)
+20250303.184455.258 Macro[#51.2] 'Key(U+6750)'
+20250303.184455.258 default -> Key("U+6750")
+20250303.184455.258  default -> Key(U+6750)
+20250303.184455.259 Macro[#51.2] complete, success
+20250303.184455.259 CB(default)[#51.1] RUNNING -> IDLE (about to resume)
+20250303.184455.259 CB(default)[#51.1] child task done, success
+20250303.184455.259 CB(default)[#51.1] complete, success
+20250303.184455.259 CB(default)[#51] complete
+20250303.184455.259 Macro[#52.2] RUNNING -> IDLE (about to resume)
+20250303.184455.259 Macro[#52.2] running
+20250303.184455.259 Macro[#52.2] IDLE -> RUNNING (executing)
+20250303.184455.259 Macro[#52.2] 'Key(U+7db2)'
+20250303.184455.259 default -> Key("U+7db2")
+20250303.184455.259  default -> Key(U+7db2)
+20250303.184455.261 Macro[#52.2] complete, success
+20250303.184455.261 CB(default)[#52.1] RUNNING -> IDLE (about to resume)
+20250303.184455.261 CB(default)[#52.1] child task done, success
+20250303.184455.261 CB(default)[#52.1] complete, success
+20250303.184455.261 CB(default)[#52] complete
+20250303.184455.261 Macro[#53.2] RUNNING -> IDLE (about to resume)
+20250303.184455.261 Macro[#53.2] running
+20250303.184455.261 Macro[#53.2] IDLE -> RUNNING (executing)
+20250303.184455.261 Macro[#53.2] 'Key(U+3092)'
+20250303.184455.261 default -> Key("U+3092")
+20250303.184455.261  default -> Key(U+3092)
+20250303.184455.263 Macro[#53.2] complete, success
+20250303.184455.263 CB(default)[#53.1] RUNNING -> IDLE (about to resume)
+20250303.184455.263 CB(default)[#53.1] child task done, success
+20250303.184455.263 CB(default)[#53.1] complete, success
+20250303.184455.263 CB(default)[#53] complete
+20250303.184455.263 Macro[#54.2] RUNNING -> IDLE (about to resume)
+20250303.184455.263 Macro[#54.2] running
+20250303.184455.263 Macro[#54.2] IDLE -> RUNNING (executing)
+20250303.184455.263 Macro[#54.2] 'Key(U+751f)'
+20250303.184455.263 default -> Key("U+751f")
+20250303.184455.263  default -> Key(U+751f)
+20250303.184455.264 Macro[#54.2] complete, success
+20250303.184455.264 CB(default)[#54.1] RUNNING -> IDLE (about to resume)
+20250303.184455.264 CB(default)[#54.1] child task done, success
+20250303.184455.264 CB(default)[#54.1] complete, success
+20250303.184455.264 CB(default)[#54] complete
+20250303.184455.264 Macro[#55.2] RUNNING -> IDLE (about to resume)
+20250303.184455.264 Macro[#55.2] running
+20250303.184455.264 Macro[#55.2] IDLE -> RUNNING (executing)
+20250303.184455.264 Macro[#55.2] 'Key(U+304b)'
+20250303.184455.264 default -> Key("U+304b")
+20250303.184455.264  default -> Key(U+304b)
+20250303.184455.265 Macro[#55.2] complete, success
+20250303.184455.265 CB(default)[#55.1] RUNNING -> IDLE (about to resume)
+20250303.184455.265 CB(default)[#55.1] child task done, success
+20250303.184455.265 CB(default)[#55.1] complete, success
+20250303.184455.265 CB(default)[#55] complete
+20250303.184455.265 Macro[#56.2] RUNNING -> IDLE (about to resume)
+20250303.184455.265 Macro[#56.2] running
+20250303.184455.265 Macro[#56.2] IDLE -> RUNNING (executing)
+20250303.184455.265 Macro[#56.2] 'Key(U+3057)'
+20250303.184455.265 default -> Key("U+3057")
+20250303.184455.265  default -> Key(U+3057)
+20250303.184455.267 Macro[#56.2] complete, success
+20250303.184455.267 CB(default)[#56.1] RUNNING -> IDLE (about to resume)
+20250303.184455.267 CB(default)[#56.1] child task done, success
+20250303.184455.267 CB(default)[#56.1] complete, success
+20250303.184455.267 CB(default)[#56] complete
+20250303.184455.269 sched: Waiting for 5 events
+20250303.184457.050 sched: Got 1 fd, 1 event
+20250303.184457.050 kybd_input: calling wget_wch()
+20250303.184457.050 kbd_input: k=0 wch=13 
+20250303.184457.050 Key 'Return' (curses key 0x0, char code 0xd)
+20250303.184457.050  base.3270:12 -> Enter()
+20250303.184457.050 CB(keymap)[#57] started
+20250303.184457.050 CB(keymap)[#57.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184457.050 Macro[#57.2] IDLE -> RUNNING (fresh push)
+20250303.184457.050 kybd_input: calling wget_wch()
+20250303.184457.050 kbd_input: k=-1 wch=0 
+20250303.184457.050 kbd_input: k == ERR, return
+20250303.184457.050 txflush: 201 slots, 5672 bytes
+20250303.184457.051 Macro[#57.2] RUNNING -> IDLE (about to resume)
+20250303.184457.051 Macro[#57.2] running
+20250303.184457.051 Macro[#57.2] IDLE -> RUNNING (executing)
+20250303.184457.051 Macro[#57.2] 'Enter()'
+20250303.184457.051 keymap -> Enter()
+20250303.184457.051 Keyboard lock(key_AID) none +OIA_TWAIT +OIA_LOCKED -> OIA_TWAIT OIA_LOCKED
+> Enter(23,36) SetBufferAddress(22,5) SO '国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を生かし ...
+... 国内外の･w材網を生かし国内外の取材網を生かし' SI
+20250303.184457.051 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000007d5cc3115ad40e458f458e4694449a46a646bc4a53444645994486
+> 0x20  448d458f458e4694449a46a646bc4a53444645994486448d458f458e4694449a
+> 0x40  46a646bc4a53444645994486448d458f458e4694449a46a646bc4a5344464599
+> 0x60  4486448d458f458e4694449a46a646bc4a53444645994486448d0fffef
+20250303.184457.052 SENT EOR
+20250303.184457.053 Macro[#57.2] RUNNING -> KBWAIT (keyboard locked)
+20250303.184457.054 sched: Waiting for 5 events or 0.997 sec
+20250303.184457.054 sched: Got 1 fd, 1 event
+20250303.184457.054 Reading host socket
+20250303.184457.054 Host socket read complete nr=761
+< 0x0   0000000000f546a7f3f2f7f040a385a2a340a381998785a3404d8696999481a3
+< 0x20  a3858440f3f2f7f05d11c15011c26040858388964040404040e39989a5898193
+< 0x40  408583889640a28599a5859911c3f040898294938995924040e3d5f3f2f7f040
+< 0x60  979996a39683969340a28599a5859940a28994a49381a3899587408982949389
+< 0x80  95926b40a689a388408885939740a28399858595a211c54040948595a4404040
+< 0xa0  4040d48595a440a4a289958740979381899540e3c5d3d5c5e311c65040948595
+< 0xc0  a46086404040d48595a440a4a2899587408696999481a3a3858440f3f2f7f040
+< 0xe0  a2839985859511c76040948595a46095404040d48595a440a4a289958740e3d5
+< 0x100 f3f2f7f0c540d5e5e3409496848511c8f040948595a460a2404040d48595a440
+< 0x120 a4a289958740e3d5f3f2f7f0c540e2e2c3d760d3e44094968485114a40409485
+< 0x140 95a460a4404040d48595a440a4a289958740a4958696999481a3a3858440f3f2
+< 0x160 f7f040a28399858595114b5040a29581928540404040e3d5f3f2f7f040979996
+< 0x180 a39683969340a28599a5859940979381a889958740a295819285114c6040a299
+< 0x1a0 a4a59440404040e3d5f3f2f7f040979996a39683969340a28599a5859940a289
+< 0x1c0 94a49381a389958740a299a4a594404d949684859340f440998598a489998584
+< 0x1e0 5d114df040a4a5a5944040404040e3d5f3f2f7f040979996a39683969340a285
+< 0x200 99a5859940a28994a49381a389958740a4a5a594114f404098a489a340404040
+< 0x220 40c489a2839695958583a3408699969440a385a2a340a381998785a311505011
+< 0x240 d16011d940d59640a2a4838840a28599a58983857a400e458f458e4694449a46
+< 0x260 a646bc4a53444645994486448d458f458e4694449a46a646bc4a534446459944
+< 0x280 86448d458f458e4694449a46a646bc4a5344460f115a507e7e6e2902c001fe01
+< 0x2a0 130e458f458e4694449a46a646bc4a53444645994486448d458f458e4694449a
+< 0x2c0 46a646bc4a53444645994486448d458f458e4694449a46a646bc4a5344464599
+< 0x2e0 4486448d458f458e4694449a115c6f1d30c6f37ec5d5c4ffef
+20250303.184457.056 RCVD TN3270E(3270-DATA NO-RESPONSE 0)
+< EraseWrite(reset,alarm,restore) 'x3270 test target (formatted 3270)' SetB ...
+... ufferAddress(2,1) SetBufferAddress(3,1) ' echo     Trivial echo server' ...
+...  SetBufferAddress(4,1) ' ibmlink  TN3270 protocol server simulating ibm ...
+... link, with help screens' SetBufferAddress(5,1) ' menu     Menu using pl ...
+... ain TELNET' SetBufferAddress(6,1) ' menu-f   Menu using formatted 3270  ...
+... screen' SetBufferAddress(7,1) ' menu-n   Menu using TN3270E NVT mode' S ...
+... etBufferAddress(8,1) ' menu-s   Menu using TN3270E SSCP-LU mode' SetBuf ...
+... ferAddress(9,1) ' menu-u   Menu using unformatted 3270 screen' SetBuffe ...
+... rAddress(10,1) ' snake    TN3270 protocol server playing snake' SetBuff ...
+... erAddress(11,1) ' sruvm    TN3270 protocol server simulating sruvm (mod ...
+... el 4 required)' SetBufferAddress(12,1) ' uvvm     TN3270 protocol serve ...
+... r simulating uvvm' SetBufferAddress(13,1) ' quit     Disconnect from te ...
+... st target' SetBufferAddress(14,1) SetBufferAddress(15,1) SetBufferAddre ...
+... ss(21,1) 'No such service: ' SO '国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を' SI Set ...
+... BufferAddress(22,1) '==>' StartFieldExtended(22,4) 3270(modified) input ...
+... -control(enabled) InsertCursor(22,5) SO '国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を ...
+... 生かし国内外の' SetBufferAddress(23,80) StartField(protected,skip) 'F3=END'
+20250303.184457.059 Keyboard unlock(do_reset) OIA_TWAIT OIA_LOCKED -OIA_TWAIT -OIA_LOCKED -> none
+20250303.184457.059 Host operation took 0.002466s to complete
+20250303.184457.059 RCVD EOR
+20250303.184457.059 txflush: 607 slots, 14648 bytes
+20250303.184457.060 Macro[#57.2] KBWAIT -> IDLE (about to resume)
+20250303.184457.060 Macro[#57.2] running
+20250303.184457.060 Macro[#57.2] complete, success
+20250303.184457.060 CB(keymap)[#57.1] RUNNING -> IDLE (about to resume)
+20250303.184457.060 CB(keymap)[#57.1] child task done, success
+20250303.184457.060 CB(keymap)[#57.1] complete, success
+20250303.184457.060 CB(keymap)[#57] complete
+20250303.184457.061 sched: Waiting for 5 events
+20250303.184503.646 sched: Got 1 fd, 1 event
+20250303.184503.646 kybd_input: calling wget_wch()
+20250303.184503.646 kbd_input: k=256 wch=267 
+20250303.184503.646 Key '<Key>F3' (curses key 0x10b, char code 0x0)
+20250303.184503.646  base:29 -> PF(3)
+20250303.184503.646 CB(keymap)[#58] started
+20250303.184503.646 CB(keymap)[#58.1] IDLE -> RUNNING (child task to be pushed next)
+20250303.184503.646 Macro[#58.2] IDLE -> RUNNING (fresh push)
+20250303.184503.646 kybd_input: calling wget_wch()
+20250303.184503.646 kbd_input: k=-1 wch=0 
+20250303.184503.646 kbd_input: k == ERR, return
+20250303.184503.646 txflush: 24 slots, 576 bytes
+20250303.184503.648 Macro[#58.2] RUNNING -> IDLE (about to resume)
+20250303.184503.648 Macro[#58.2] running
+20250303.184503.648 Macro[#58.2] IDLE -> RUNNING (executing)
+20250303.184503.648 Macro[#58.2] 'PF(3)'
+20250303.184503.648 keymap -> PF("3")
+20250303.184503.648 Keyboard lock(key_AID) none +OIA_TWAIT +OIA_LOCKED -> OIA_TWAIT OIA_LOCKED
+> PF3(22,5) SetBufferAddress(22,5) SO '国内外の取材網を生かし国内外の取材網を生かし国内外の取材網を生かし国内外 ...
+... の  　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　'
+20250303.184503.648 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   0000000000f35ad4115ad40e458f458e4694449a46a646bc4a53444645994486
+> 0x20  448d458f458e4694449a46a646bc4a53444645994486448d458f458e4694449a
+> 0x40  46a646bc4a53444645994486448d458f458e4694449a40404040404040404040
+> 0x60  4040404040404040404040404040404040404040404040404040404040404040
+> 0x80  4040404040404040404040404040404040404040404040404040404040404040
+> 0xa0  404040404040ffef
+20250303.184503.649 SENT EOR
+20250303.184503.650 Macro[#58.2] RUNNING -> KBWAIT (keyboard locked)
+20250303.184503.651 sched: Waiting for 5 events or 0.997 sec
+20250303.184503.651 sched: Got 1 fd, 1 event
+20250303.184503.651 Reading host socket
+20250303.184503.651 Host socket read complete nr=0
+20250303.184503.651 RCVD disconnect
+20250303.184503.653 st_changed(secure,false)
+20250303.184503.653 SENT disconnect
+20250303.184503.653 cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20250303.184503.653 st_changed(connect,false)
+20250303.184503.653 Keyboard unlock(kybd_connect) OIA_TWAIT OIA_LOCKED -OIA_TWAIT -OIA_LOCKED -> none
+20250303.184503.653 Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20250303.184503.653 Exiting with status 0
+20250303.184503.653 st_changed(exiting,true)
+20250303.184503.653 stop pager
+20250303.184503.653 Trace stopped

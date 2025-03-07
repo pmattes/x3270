@@ -2538,14 +2538,19 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    ucs4_t uc;
 	    size_t j;
 	    size_t xlen;
+	    enum dbcs_state d = ctlr_dbcs_state(first + i);
 
 	    if (buf[first + i].fa) {
 		is_zero = FA_IS_ZERO(buf[first + i].fa);
 		vb_appends(&r, " ");
 	    } else if (is_zero) {
 		vb_appends(&r, " ");
-	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
-		continue;
+	    } else if (IS_RIGHT(d)) {
+		if (d == DBCS_RIGHT_WRAP) {
+		    vb_appends(&r, " ");
+		} else {
+		    continue;
+		}
 	    } else {
 		if (is_nvt(&buf[first + i], false, &uc)) {
 		    /* NVT-mode text. */
@@ -2562,7 +2567,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 		    }
 		} else {
 		    /* 3270-mode text. */
-		    if (IS_LEFT(ctlr_dbcs_state(first + i))) {
+		    if (IS_LEFT(d)) {
 			xlen = ebcdic_to_multibyte_f((buf[first + i].ec << 8) |
 				buf[first + i + 1].ec,
 				mb, sizeof(mb), force_utf8);

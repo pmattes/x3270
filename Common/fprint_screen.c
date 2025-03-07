@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2024 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -624,6 +624,7 @@ fprint_screen_body(fps_t ofps)
 		}
 		break;
 	    case DBCS_LEFT:
+	    case DBCS_LEFT_WRAP:
 		uc = ebcdic_to_unicode((xea[i].ec << 8) | xea[i + 1].ec,
 			CS_BASE, EUO_NONE);
 		if (uc == 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -2458,7 +2458,7 @@ resync_text(int baddr, int len, struct sp *buffer)
 
 	    /* Dump the region and start a new one with this character. */
 #if defined(_ST) /*[*/
-	    printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
+	    printf("%s:%d: rt%s\n", "render_text", __LINE__, rcba(baddr+i0));
 #endif /*]*/
 	    render_text(&buffer[baddr+i0], baddr+i0, i - i0, false, &ra);
 	    attrs = attrs2;
@@ -2470,7 +2470,7 @@ resync_text(int baddr, int len, struct sp *buffer)
 
 	/* Dump the remainder of the region. */
 #if defined(_ST) /*[*/
-	printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
+	printf("%s:%d: rt%s\n", "render_text", __LINE__, rcba(baddr+i0));
 #endif /*]*/
 	render_text(&buffer[baddr+i0], baddr+i0, len - i0, false, &ra);
     }
@@ -2720,8 +2720,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		} else {
 		    /* Only draw if there is an EBCDIC mapping. */
 		    bool ge;
-		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge,
-			    toggled(APL_MODE));
+		    ebc_t e = unicode_to_ebcdic_ge(buffer[i].ucs4, &ge, toggled(APL_MODE));
 
 		    if (ge) {
 			if (ss->extended_3270font) {
@@ -2737,8 +2736,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		    } else {
 			rt_buf[j].byte1 = 0;
 			if (e != 0) {
-			    rt_buf[j].byte2 = font_index(e, d8_ix,
-				    !ge && toggled(MONOCASE));
+			    rt_buf[j].byte2 = font_index(e, d8_ix, !ge && toggled(MONOCASE));
 			} else {
 			    rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
 			}
@@ -2747,28 +2745,23 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	    } else {
 		rt_buf[j].byte1 = 0;
 		if (toggled(MONOCASE)) {
-		    rt_buf[j].byte2 = font_index(buffer[i].u.bits.ec, d8_ix,
-			    true);
+		    rt_buf[j].byte2 = font_index(buffer[i].u.bits.ec, d8_ix, true);
 		} else {
 		    if (visible_control) {
 			if (buffer[i].u.bits.ec == EBC_so) {
 			    rt_buf[j].byte1 = 0;
-			    rt_buf[j].byte2 = font_index(EBC_less, d8_ix,
-				    false);
+			    rt_buf[j].byte2 = font_index(EBC_less, d8_ix, false);
 			} else if (buffer[i].u.bits.ec == EBC_si) {
 			    rt_buf[j].byte1 = 0;
-			    rt_buf[j].byte2 = font_index(EBC_greater, d8_ix,
-				    false);
+			    rt_buf[j].byte2 = font_index(EBC_greater, d8_ix, false);
 			} else {
-			    unsigned short c = font_index(buffer[i].u.bits.ec,
-				    d8_ix, false);
+			    unsigned short c = font_index(buffer[i].u.bits.ec, d8_ix, false);
 
 			    rt_buf[j].byte1 = (c >> 8) & 0xff;
 			    rt_buf[j].byte2 = c & 0xff;
 			}
 		    } else {
-			unsigned short c = font_index(buffer[i].u.bits.ec,
-				d8_ix, false);
+			unsigned short c = font_index(buffer[i].u.bits.ec, d8_ix, false);
 
 			rt_buf[j].byte1 = (c >> 8) & 0xff;
 			rt_buf[j].byte2 = c & 0xff;
@@ -2816,8 +2809,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 		if (buffer[i].ucs4 /* && dbcs_font.unicode*/) {
 		    xlate_dbcs_unicode(buffer[i].ucs4, &rt_buf[j]);
 		} else {
-		    xlate_dbcs(buffer[i].u.bits.ec, buffer[i+1].u.bits.ec,
-			    &rt_buf[j]);
+		    xlate_dbcs(buffer[i].u.bits.ec, buffer[i+1].u.bits.ec, &rt_buf[j]);
 		}
 		/* Skip the next byte as well. */
 		i++;
@@ -2895,8 +2887,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	}
     }
 #endif /*]*/
-    if (one_at_a_time || (n_sbcs && ss->xtra_width) ||
-	    (n_dbcs && dbcs_font.xtra_width)) {
+    if (one_at_a_time || (n_sbcs && ss->xtra_width) || (n_dbcs && dbcs_font.xtra_width)) {
 	int i, j;
 	int xn = x;
 	XTextItem16 text1;
@@ -2910,8 +2901,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 			text1.nchars = 1;
 			text1.delta = 0;
 			text1.font = ss->fid;
-			XDrawText16(display, ss->window, dgc, xn, y, &text1,
-				1);
+			XDrawText16(display, ss->window, dgc, xn, y, &text1, 1);
 			xn += ss->char_width;
 		    }
 		} else {
@@ -2925,8 +2915,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 			text1.nchars = 1;
 			text1.delta = 0;
 			text1.font = dbcs_font.font;
-			XDrawText16(display, ss->window, dgc, xn, y, &text1,
-				1);
+			XDrawText16(display, ss->window, dgc, xn, y, &text1, 1);
 			xn += dbcs_font.char_width;
 		    }
 		} else {
@@ -3099,12 +3088,12 @@ draw_fields(struct sp *buffer, int first, int last)
 {
     int	baddr = 0;
     int	faddr;
-    unsigned char	fa;
-    struct ea       *field_ea;
-    struct ea	*sbp = ea_buf;
+    unsigned char fa;
+    struct ea *field_ea;
+    struct ea *sbp = ea_buf;
     int	field_color;
     int	zero;
-    bool	any_blink = false;
+    bool any_blink = false;
     int	crossable = CROSSABLE;
     enum dbcs_state d;
     int	cursor_col = 0, cursor_row = 0;
@@ -3165,8 +3154,7 @@ draw_fields(struct sp *buffer, int first, int last)
 	    if (visible_control) {
 		b.u.bits.ec = visible_ebcdic(fa);
 		b.u.bits.gr = GR_UNDERLINE;
-		b.u.bits.fg = mode3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
-		    FA_INT_HIGH_SEL;
+		b.u.bits.fg = mode3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW): FA_INT_HIGH_SEL;
 	    } else if (crossable && CROSSED(baddr)) {
 		b.u.bits.cs = CS_APL;
 		b.u.bits.ec = map_crosshair(baddr);
@@ -3249,23 +3237,26 @@ draw_fields(struct sp *buffer, int first, int last)
 		    if (visible_control && !u && c == EBC_null) {
 			b.u.bits.ec = EBC_period;
 			is_vc = true;
-		    } else if (visible_control &&
-			(c == EBC_so || c == EBC_si)) {
+		    } else if (visible_control && (c == EBC_so || c == EBC_si)) {
 			b.u.bits.ec = (c == EBC_so)? EBC_less: EBC_greater;
 			is_vc = true;
+		    } else if (d == DBCS_LEFT_WRAP || d == DBCS_RIGHT_WRAP) {
+			b.u.bits.ec = EBC_period;
+			b.ucs4 = u;
 		    } else {
 			b.u.bits.ec = c;
 			b.ucs4 = u;
 		    }
-		    if (sbp->cs) {
+		    if (is_vc) {
+			b.u.bits.cs = CS_BASE;
+		    } else if (sbp->cs) {
 			b.u.bits.cs = sbp->cs;
 		    } else {
 			b.u.bits.cs = field_ea->cs;
 		    }
 		    if (b.u.bits.cs & CS_GE) {
 			b.u.bits.cs = CS_APL;
-		    } else if ((b.u.bits.cs & CS_MASK) != CS_DBCS ||
-			     d != DBCS_NONE) {
+		    } else if ((b.u.bits.cs & CS_MASK) != CS_DBCS || d != DBCS_NONE) {
 			b.u.bits.cs &= CS_MASK;
 		    } else {
 			b.u.bits.cs = CS_BASE;
@@ -3288,8 +3279,7 @@ draw_fields(struct sp *buffer, int first, int last)
 	    }
 
 	    /* Check for blanks. */
-	    if (crossable && CROSSED(baddr) &&
-		    b.u.bits.cs == CS_BASE && bkm_isset(&b)) {
+	    if (crossable && CROSSED(baddr) && b.u.bits.cs == CS_BASE && bkm_isset(&b)) {
 		b.u.bits.cs = CS_APL;
 		b.u.bits.ec = map_crosshair(baddr);
 		b.u.bits.fg = CROSS_COLOR;
@@ -3358,6 +3348,7 @@ draw_fields(struct sp *buffer, int first, int last)
 	    *(buffer + fl_baddr(baddr)) = b;
 	}
 	sbp++;
+
 	INC_BA(baddr);
     } while (baddr != last);
 
@@ -3574,82 +3565,55 @@ cursor_gc(int baddr)
 }
 
 /*
- * Redraw one character.
- * If 'invert' is true, invert the foreground and background colors.
+ * Redraw one character as an inverted cursor.
+ *
+ * Note:
+ * baddr is guaranteed not to be the right-hand side of a DBCS character, and
+ * d is guaranteed not to be DBCS_RIGHT.
  */
 static void
-redraw_char(int baddr, bool invert)
+redraw_char_inverted(int baddr, enum dbcs_state d)
 {
-    enum dbcs_state d;
     struct sp buffer[2];
+    struct sp *b = buffer;
     int faddr;
     unsigned char fa;
     int gr;
-    int blank_it = 0;
-    int baddr2;
-    int len = 1;
+    bool blank_it = false;
+    bool bad_wrap = false;
     int cursor_col = BA_TO_COL(cursor_addr);
     int cursor_row = BA_TO_ROW(cursor_addr);
 
-    /*
-     * Figure out the DBCS state of this position.  If it's the right-hand
-     * side of a DBCS character, repaint the left side instead.
-     */
-    switch ((d = ctlr_dbcs_state(baddr))) {
-    case DBCS_LEFT:
-    case DBCS_SI:
-	len = 2;
+    switch (d) {
+    case DBCS_LEFT_WRAP:
+    case DBCS_RIGHT_WRAP:
+	bad_wrap = true;
 	break;
-    case DBCS_RIGHT:
-	len = 2;
-	DEC_BA(baddr);
+    case DBCS_DEAD:
+	blank_it = true;
 	break;
     default:
 	break;
     }
 
-    if (!invert) {
-	int flb = fl_baddr(baddr);
-
-	/*
-	 * Put back what belongs there.
-	 * Note that the cursor may have been covering a DBCS character
-	 * that is no longer DBCS, so if we're not at the right margin,
-	 * we should redraw two positions.
-	 */
-#if defined(_ST) /*[*/
-	printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(flb));
-#endif /*]*/
-	if (dbcs && ((baddr % COLS) != (COLS - 1)) && len == 1) {
-	    len = 2;
-	}
-	render_text(&ss->image[flb], flb, len, false, &ss->image[flb]);
-	return;
-    }
-
-    baddr2 = baddr;
-    INC_BA(baddr2);
-
     /*
      * Fabricate the right thing.
-     * ss->image isn't going to help, because it may contain shortcuts
-     *  for faster display, so we have to construct a buffer to use.
      */
-    buffer[0].u.word = 0L;
-    buffer[0].ucs4 = 0L;
-    buffer[0].u.bits.ec = ea_buf[baddr].ec;
-    buffer[0].u.bits.cs = ea_buf[baddr].cs;
-    if (buffer[0].u.bits.cs & CS_GE) {
-	buffer[0].u.bits.cs = CS_APL;
+    b->u.word = 0L;
+    b->ucs4 = 0L;
+    b->u.bits.ec = bad_wrap? EBC_period: ea_buf[baddr].ec;
+    if (d == DBCS_LEFT) {
+	b->u.bits.cs = CS_DBCS;
+    } else if (bad_wrap) {
+	b->u.bits.cs = CS_BASE;
+    } else if (b->u.bits.cs & CS_GE) {
+	b->u.bits.cs = CS_APL;
     } else {
-	buffer[0].u.bits.cs &= CS_MASK;
+	b->u.bits.cs = ea_buf[baddr].cs & CS_MASK;
     }
-    buffer[0].ucs4 = ea_buf[baddr].ucs4;
+    b->ucs4 = ea_buf[baddr].ucs4;
 
     faddr = find_field_attribute(baddr);
-    if (d == DBCS_LEFT || d == DBCS_RIGHT) {
-	buffer[0].u.bits.cs = CS_DBCS;
-    }
     fa = ea_buf[faddr].fa;
     if (FA_IS_ZERO(fa)) {
 	gr = 0;
@@ -3661,39 +3625,114 @@ redraw_char(int baddr, bool invert)
     }
     if (ea_buf[baddr].fa) {
 	if (!visible_control) {
-	    blank_it = 1;
+	    blank_it = true;
 	}
     } else if (FA_IS_ZERO(fa)) {
-	blank_it = 1;
+	blank_it = true;
     } else if (text_blinkers_exist && !text_blinking_on) {
 	if (gr & GR_BLINK) {
-	    blank_it = 1;
+	    blank_it = true;
 	}
     }
-    if (buffer[0].u.bits.cs == CS_BASE && bkm_isset(&buffer[0])) {
-	blank_it = true;
-    }
+    blank_it |= b->u.bits.cs == CS_BASE && bkm_isset(b);
     if (blank_it) {
 	if (CROSSABLE && CROSSED(baddr)) {
-	    buffer[0].u.bits.cs = CS_APL;
-	    buffer[0].u.bits.ec = map_crosshair(baddr);
-	    buffer[0].u.bits.fg = CROSS_COLOR;
-	    buffer[0].u.bits.gr = 0;
+	    b->u.bits.cs = CS_APL;
+	    b->u.bits.ec = map_crosshair(baddr);
+	    b->u.bits.fg = CROSS_COLOR;
+	    b->u.bits.gr = 0;
 	} else {
-	    buffer[0].u.bits.ec = EBC_space;
-	    buffer[0].u.bits.cs = 0;
+	    b->u.bits.ec = EBC_space;
+	    b->u.bits.cs = 0;
 	}
     }
-    buffer[0].u.bits.fg = char_color(baddr);
-    buffer[0].u.bits.gr |= (gr & GR_INTENSIFY);
-    if (len == 2) {
-	buffer[1].u.word = buffer[0].u.word;
-	if (!blank_it) {
-	    buffer[1].u.bits.ec = ea_buf[baddr2].ec;
-	    buffer[1].ucs4 = ea_buf[baddr2].ucs4;
-	}
+    b->u.bits.fg = char_color(baddr);
+    b->u.bits.gr |= (gr & GR_INTENSIFY);
+
+    if (d == DBCS_LEFT) {
+	int baddr2 = baddr;
+
+	/* Get the other byte of DBCS data. */
+	INC_BA(baddr2);
+	buffer[1] = buffer[0]; /* struct copy */
+	buffer[1].u.bits.ec = ea_buf[baddr2].ec;
     }
-    render_text(buffer, fl_baddr(baddr), len, true, buffer);
+
+    render_text(buffer, fl_baddr(baddr), 1, true, buffer);
+}
+
+/*
+ * Redraw one character.
+ * If 'invert' is true, invert the foreground and background colors.
+ */
+static void
+redraw_char(int baddr, bool invert)
+{
+    int baddr2;
+    enum dbcs_state d;
+
+    if (!invert) {
+	int flb = fl_baddr(baddr);
+
+	/* Put back what belongs there. */
+#if defined(_ST) /*[*/
+	printf("%s:%d: rt%s\n", "redraw_char", __LINE__, rcba(flb));
+#endif /*]*/
+	render_text(&ss->image[flb], flb, 1, false, &ss->image[flb]);
+	if (dbcs) {
+	    /*
+	     * The cursor may have been covering a DBCS character, so re-draw
+	     * the position to the right.
+	     */
+	    baddr2 = baddr;
+	    INC_BA(baddr2);
+	    flb = fl_baddr(baddr2);
+	    render_text(&ss->image[flb], flb, 1, false, &ss->image[flb]);
+	}
+	return;
+    }
+
+    /* Handle DBCS special cases */
+    d = ctlr_dbcs_state(baddr);
+    switch (d) {
+    case DBCS_RIGHT:
+	/*
+	 * When asked to draw the right side of a normal DBCS character, draw the
+	 * left side (and the right side) at the correct location.
+	 */
+	DEC_BA(baddr);
+	d = DBCS_LEFT;
+	break;
+    case DBCS_RIGHT_WRAP:
+	/*
+	 * When asked to draw the right side of a wrapped DBCS character, draw the
+	 * left side, at the correct location, first.
+	 */
+	DEC_BA(baddr);
+	d = DBCS_LEFT_WRAP;
+	break;
+    default:
+	break;
+    }
+
+    /* Flip the character under the cursor. */
+    redraw_char_inverted(baddr, d);
+
+    /* More DBCS special cases. */
+    baddr2 = baddr;
+    INC_BA(baddr2);
+    switch (d) {
+    case DBCS_SI:
+	/* Create a fake DBCS wide cursor after an SI. */
+	redraw_char_inverted(baddr2, DBCS_NONE);
+	break;
+    case DBCS_LEFT_WRAP:
+	/* Split the wide DBCS cursor when there is a wrap. */
+	redraw_char_inverted(baddr2, DBCS_RIGHT_WRAP);
+	break;
+    default:
+	break;
+    }
 }
 
 /*
@@ -6464,7 +6503,7 @@ xlate_dbcs_unicode(ucs4_t ucs, XChar2b *r)
     }
 
 #if defined(_ST) /*[*/
-    printf("UCS4 %04x -> X11 font %02x%02x\n", ucs4, r->byte1, r->byte2);
+    printf("UCS4 %04x -> X11 font %02x%02x\n", ucs, r->byte1, r->byte2);
 #endif /*]*/
 }
 
@@ -6635,17 +6674,6 @@ error_return:
 }
 
 static void
-cleanup_xim(bool b _is_unused)
-{
-    if (ic != NULL) {
-	XDestroyIC(ic);
-    }
-    if (im != NULL) {
-	XCloseIM(im);
-    }
-}
-
-static void
 xim_init(void)
 {
     char *buf = "";
@@ -6681,7 +6709,6 @@ xim_init(void)
 		"XIM-based input disabled");
 	xim_error = true;
     }
-    register_schange(ST_EXITING, cleanup_xim);
     return;
 }
 
