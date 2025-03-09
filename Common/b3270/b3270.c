@@ -109,6 +109,7 @@
 #include "xscroll.h"
 
 #if defined(_WIN32) /*[*/
+# include "dialog_indication.h"
 # include "main_window.h"
 # include "w3misc.h"
 # include "windirs.h"
@@ -1138,6 +1139,20 @@ b3270_terminal_name(bool on _is_unused)
 {
     report_terminal_name();
 }
+
+#if defined(_WIN32) /*[*/
+/* Send a dialog indication. */
+void
+send_dialog_indication(HWND hwnd)
+{
+    char *window_id = Asprintf("0x%p", hwnd);
+
+    ui_leaf(IndDialog,
+	    AttrWindowId, AT_STRING, window_id,
+	    NULL);
+    Free(window_id);
+}
+#endif /*]*/
 
 /* Give the model change logic permission to run. */
 bool

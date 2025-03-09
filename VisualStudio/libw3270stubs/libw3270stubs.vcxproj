@@ -49,6 +49,7 @@
     <ClCompile Include="..\..\Common\telnet_gui_stubs.c" />
     <ClCompile Include="..\..\Common\tls_passwd_gui_stubs.c" />
     <ClCompile Include="..\..\Common\trace_gui_stubs.c" />
+    <ClCompile Include="..\..\Common\Win32\dialog_stubs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A6D4C4FA-6515-416C-9EB2-244A5C40488E}</ProjectGuid>
