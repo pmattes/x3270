@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2024 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 
 #include "resources.h"
 
+#include "dialog_indication.h"
 #include "fprint_screen.h"
 #include "gdi_print.h"
 #include "main_window.h"
@@ -509,6 +510,7 @@ make_dialog_topmost(HWND hdlg, bool move)
     }
 
     SetWindowPos(hdlg, HWND_TOPMOST, x, y, 0, 0, flags);
+    send_dialog_indication(hdlg);
 }
 
 /*
@@ -540,6 +542,7 @@ print_dialog_hook(HWND hdlg, UINT ui_msg, WPARAM wparam, LPARAM lparam)
     pstate.hwnd = hdlg;
 
     if (ui_msg == WM_ACTIVATE && !pstate.activated) {
+
 	pstate.activated = true;
 	make_dialog_topmost(hdlg, true);
     }

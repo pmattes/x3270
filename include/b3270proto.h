@@ -44,6 +44,7 @@
 #define IndConnectAttempt "connect-attempt"
 #define IndConnection	"connection"
 #define IndCursor	"cursor"
+#define IndDialog	"dialog"
 #define IndErase	"erase"
 #define IndFlipped	"flipped"
 #define IndFont		"font"
@@ -154,6 +155,7 @@
 #define AttrValue	"value"
 #define AttrVerified	"verified"
 #define AttrVersion	"version"
+#define AttrWindowId	"window-id"
 
 /* Connection states. */
 #define CstateNotConnected "not-connected"

@@ -87,6 +87,12 @@
     <ClCompile Include="..\..\Common\select_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\sio_none.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\stats_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\status_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -99,10 +105,7 @@
     <ClCompile Include="..\..\Common\trace_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\sio_none.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\stats_stubs.c">
+    <ClCompile Include="..\..\Common\Win32\dialog_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
