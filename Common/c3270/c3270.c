@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -39,9 +39,9 @@
 #include "globals.h"
 
 #if !defined(_WIN32) /*[*/
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <termios.h>
+# include <sys/wait.h>
+# include <fcntl.h>
+# include <termios.h>
 #endif /*]*/
 #include <signal.h>
 #include <errno.h>
@@ -112,18 +112,18 @@
 #include "xscroll.h"
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-#include <readline/readline.h>
-#if defined(HAVE_READLINE_HISTORY_H) /*[*/
-#include <readline/history.h>
+# include <readline/readline.h>
+# if defined(HAVE_READLINE_HISTORY_H) /*[*/
+#  include <readline/history.h>
 #endif /*]*/
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-#include "relinkc.h"
-#include "w3misc.h"
-#include "wc3270.h"
-#include "windirs.h"
-#include "winvers.h"
+# include "relinkc.h"
+# include "w3misc.h"
+# include "wc3270.h"
+# include "windirs.h"
+# include "winvers.h"
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
