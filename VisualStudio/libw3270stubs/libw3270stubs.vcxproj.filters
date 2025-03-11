@@ -105,8 +105,5 @@
     <ClCompile Include="..\..\Common\trace_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\dialog_stubs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

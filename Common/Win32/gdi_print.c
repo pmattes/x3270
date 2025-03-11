@@ -45,7 +45,6 @@
 
 #include "resources.h"
 
-#include "dialog_indication.h"
 #include "fprint_screen.h"
 #include "gdi_print.h"
 #include "main_window.h"
@@ -105,6 +104,7 @@ static struct {			/* printer state */
     void *wait_context;		/* task wait context */
     HWND hwnd;			/* window handle of dialog box */
     HANDLE top_thread;		/* thread to make the window topmost */
+    HWND parent_hwnd;		/* window handle of invisible parent window */
 } pstate;
 static bool pstate_initted = false;
 
@@ -431,6 +431,7 @@ get_default_printer_name(char *errbuf, size_t errbuf_size)
 static DWORD WINAPI
 post_print_dialog(LPVOID lpParameter _is_unused)
 {
+    pstate.dlg.hwndOwner = get_main_window();
     pstate.activated = false;
     pstate.canceled = !PrintDlg(&pstate.dlg);
     SetEvent(pstate.done_event);
@@ -457,7 +458,7 @@ compute_location(int w, int h, int *x, int *y)
     int parent_x, parent_y, parent_w, parent_h;
     HWND main_window = get_main_window();
 
-    if (main_window == INVALID_HANDLE_VALUE || main_window == 0) {
+    if (main_window == NULL) {
 	/* We don't know what the main window is, use the primary display. */
 	parent_x = 0;
 	parent_y = 0;
@@ -509,8 +510,13 @@ make_dialog_topmost(HWND hdlg, bool move)
 	flags |= SWP_NOMOVE;
     }
 
-    SetWindowPos(hdlg, HWND_TOPMOST, x, y, 0, 0, flags);
-    send_dialog_indication(hdlg);
+    /* Bring it to the top, in the new position. */
+    SetWindowPos(hdlg, HWND_TOP, x, y, 0, 0, flags);
+
+    /* Make the dialog the foreground window, if it isn't parented. */
+    if (pstate.dlg.hwndOwner == NULL) {
+	SetForegroundWindow(hdlg);
+    }
 }
 
 /*
@@ -602,6 +608,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	pstate.done_event = INVALID_HANDLE_VALUE;
 	pstate.hwnd = INVALID_HANDLE_VALUE;
 	pstate.top_thread = INVALID_HANDLE_VALUE;
+	pstate.parent_hwnd = INVALID_HANDLE_VALUE;
 	pstate_initted = true;
     }
 

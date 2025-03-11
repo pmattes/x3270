@@ -63,7 +63,7 @@ get_main_window(void)
     if (appres.window_id != NULL) {
         return (HWND)PTRCONV(get_main_window_str(), NULL, 0);
     } else {
-        return INVALID_HANDLE_VALUE;
+        return NULL;
     }
 }
 
