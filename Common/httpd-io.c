@@ -380,7 +380,9 @@ hio_connection(iosrc_t fd, ioid_t id)
 hio_listener_t *
 hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 {
+#if !defined(_WIN32) /*[*/
     int on = 1;
+#endif /*]*/
     char hostbuf[128];
 
     hio_listener_t *l = Calloc(sizeof(hio_listener_t), 1);
@@ -396,6 +398,7 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 	popup_an_error("httpd socket: %s", socket_errtext());
 	goto fail;
     }
+#if !defined(_WIN32) /*[*/
     if (setsockopt(l->listen_s, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
 		sizeof(on)) < 0) {
 	popup_an_error("httpd setsockopt: %s", socket_errtext());
@@ -403,6 +406,7 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 	l->listen_s = INVALID_SOCKET;
 	goto fail;
     }
+#endif /*]*/
     if (bind(l->listen_s, sa, sa_len) < 0) {
 	popup_an_error("httpd bind: %s", socket_errtext());
 	SOCK_CLOSE(l->listen_s);
