@@ -777,7 +777,9 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 {
     peer_listen_t listener;
     char hostbuf[128];
+#if !defined(_WIN32) /*[*/
     int on = 1;
+#endif /*]*/
 
     /* Create the listening socket. */
     listener = (peer_listen_t)Calloc(sizeof(struct _peer_listen), 1);
@@ -804,16 +806,13 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	goto fail;
     }
 
+#if !defined(_WIN32) /*[*/
     if (setsockopt(listener->socket, SOL_SOCKET, SO_REUSEADDR,
 		(char *)&on, sizeof(on)) < 0) {
-#if !defined(_WIN32) /*[*/
 	popup_an_errno(errno, "script setsockopt(SO_REUSEADDR)");
-#else /*][*/
-	popup_an_error("script setsockopt(SO_REUSEADDR): %s",
-		win32_strerror(GetLastError()));
-#endif /*]*/
 	goto fail;
     }
+#endif /*]*/
 
     if (bind(listener->socket, sa, sa_len) < 0) {
 #if !defined(_WIN32) /*[*/
