@@ -325,6 +325,9 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
 	Ctrl<Key>w:			DeleteWord()\n\
 	Ctrl<Key>x:			Cut(CLIPBOARD)
+x3270.keymap.base.nvt: #override \
+	Shift<Key>Prior:		PageUp()\n\
+	Shift<Key>Next:			PageDown()\n
 ! Keymap that restores the old (pre 3.3) mouse-click behavior.
 x3270.keymap.oldclick: #override\n\
 	Ctrl<Btn1Down>:                 HandleMenu(fileMenu)\n\

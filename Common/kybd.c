@@ -193,6 +193,8 @@ static action_t MoveCursor1_action;
 static action_t Newline_action;
 static action_t NextWord_action;
 static action_t PA_action;
+static action_t PageDown_action;
+static action_t PageUp_action;
 static action_t PasteString_action;
 static action_t PF_action;
 static action_t PreviousWord_action;
@@ -217,6 +219,7 @@ static action_table_t kybd_actions[] = {
     { AnDeleteWord,	DeleteWord_action,	ACTION_KE },
     { AnDown,		Down_action,		ACTION_KE },
     { AnDup,		Dup_action,		ACTION_KE },
+    { AnEnd,		FieldEnd_action,	ACTION_KE },
     { AnEnter,		Enter_action,		ACTION_KE },
     { AnErase,		Erase_action,		ACTION_KE },
     { AnEraseEOF,	EraseEOF_action,	ACTION_KE },
@@ -237,6 +240,8 @@ static action_table_t kybd_actions[] = {
     { AnNewline,	Newline_action,		ACTION_KE },
     { AnNextWord,	NextWord_action,	ACTION_KE },
     { AnPA,		PA_action,		ACTION_KE },
+    { AnPageDown,	PageDown_action,	ACTION_KE },
+    { AnPageUp,		PageUp_action,		ACTION_KE },
     { AnPasteString,	PasteString_action,	ACTION_KE },
     { AnPF,		PF_action,		ACTION_KE },
     { AnPreviousWord,	PreviousWord_action,	ACTION_KE },
@@ -3218,6 +3223,9 @@ ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Move the cursor to the first blank after the last nonblank in the
  * field, or if the field is full, to the last character in the field.
+ *
+ * Generally mapped to the End key, so in NVT mode, it sends the xterm
+ * sequence for the End key.
  */
 static bool
 FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
@@ -3232,7 +3240,8 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
     }
     OERR_CLEAR_OR_ENQ(AnFieldEnd);
     if (IN_NVT) {
-	return false;
+	nvt_send_end();
+	return true;
     }
     if (!formatted) {
 	return false;
@@ -3268,6 +3277,34 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
     }
     cursor_move(baddr);
     return true;
+}
+
+static bool
+PageDown_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnPageDown, ia, argc, argv);
+    if (check_argc(AnPageDown, argc, 0, 0) < 0) {
+        return false;
+    }
+    if (IN_NVT) {
+        nvt_send_page_down();
+        return true;
+    }
+    return false;
+}
+
+static bool
+PageUp_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug(AnPageUp, ia, argc, argv);
+    if (check_argc(AnPageUp, argc, 0, 0) < 0) {
+        return false;
+    }
+    if (IN_NVT) {
+        nvt_send_page_up();
+        return true;
+    }
+    return false;
 }
 
 /*

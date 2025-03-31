@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Paul Mattes.
+ * Copyright (c) 2020-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,7 @@
 #define AnEbcdic1	"Ebcdic1"
 #define AnEbcdicField	"EbcdicField"
 #define AnEcho		"Echo"
+#define AnEnd		"End"
 #define AnEnter		"Enter"
 #define AnErase		"Erase"
 #define AnEraseEOF	"EraseEOF"
@@ -99,6 +100,8 @@
 #define AnNvtText	"NvtText"
 #define AnOpen		"Open"
 #define AnPA		"PA"
+#define AnPageDown	"PageDown"
+#define AnPageUp	"PageUp"
 #define AnPaste		"Paste"
 #define AnPasteString	"PasteString"
 #define AnPF		"PF"

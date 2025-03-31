@@ -99,6 +99,10 @@ class copyserver():
         (self.conn, _) = self.listensocket.accept()
         self.listensocket.close()
 
+    def send(self, data: str, timeout=2):
+        sa_try_until(lambda: (self.conn != None), timeout, 'Emulator did not connect')
+        self.conn.send(data.encode())
+
     def close(self, timeout=2):
         '''Close the connection without reading'''
         sa_try_until(lambda: (self.conn != None), timeout, 'Emulator did not connect')

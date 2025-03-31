@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -377,6 +377,9 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	case XK_Home:
 	    run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	    break;
+	case XK_End:
+	    run_action(AnFieldEnd, IA_DEFAULT, NULL, NULL);
+	    break;
 	case XK_Tab:
 	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
 	    break;
@@ -393,7 +396,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    break;
 #if defined(XK_EuroSign) /*[*/
 	case XK_EuroSign:
-	    run_action(AnKey, IA_DEFAULT, "currency", NULL);
+	    run_action(AnKey, IA_DEFAULT, "euro", NULL);
 	    break;
 #endif /*]*/
 

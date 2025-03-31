@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1886,7 +1886,33 @@ nvt_send_left(void)
 void
 nvt_send_home(void)
 {
-    net_sends("\033[H");
+    if (appl_cursor) {
+	net_sends("\033[OH");
+    } else {
+	net_sends("\033[H");
+    }
+}
+
+void
+nvt_send_end(void)
+{
+    if (appl_cursor) {
+	net_sends("\033[OF");
+    } else {
+	net_sends("\033[F");
+    }
+}
+
+void
+nvt_send_page_up(void)
+{
+    net_sends("\033[5~");
+}
+
+void
+nvt_send_page_down(void)
+{
+    net_sends("\033[6~");
 }
 
 void

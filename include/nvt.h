@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,12 @@ void nvt_init(void);
 void nvt_process(unsigned int c);
 void nvt_send_clear(void);
 void nvt_send_down(void);
+void nvt_send_end(void);
 void nvt_send_home(void);
 void nvt_send_left(void);
 void nvt_send_pa(int nn);
+void nvt_send_page_down(void);
+void nvt_send_page_up(void);
 void nvt_send_pf(int nn);
 void nvt_send_right(void);
 void nvt_send_up(void);
