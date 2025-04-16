@@ -25,14 +25,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for Windows libexpat
-ifdef WIN64
-objdir = ../../obj/win64/libexpat
-else
-objdir = ../../obj/win32/libexpat
-endif
-extern = ../../extern
-srcdir = $(extern)/libexpat/expat
+xtop = ../..
 top = ../../..
+ifdef WIN64
+objdir = $(xtop)/obj/win64/libexpat
+else
+objdir = $(xtop)/obj/win32/libexpat
+endif
+extern = $(xtop)/extern
+srcdir = $(extern)/libexpat/expat
 this = $(top)/lib/libexpat
 
 export VPATH = $(this):$(top)/extern/libexpat/expat/lib
@@ -56,7 +57,7 @@ zip = $(EXPAT_VERSION).zip
 # If this is a git repo, init the libexpat submodule. Otherwise, get
 # the libexpat tarball from github.
 $(srcdir):
-	if [ -f $(top)/.git ]; \
+	if [ -d $(xtop)/.git ]; \
 	then	git submodule update --init $(extern)/libexpat; \
 	else	tmpdir=/tmp/expat$$$$; \
 		mkdir $$tmpdir && \
