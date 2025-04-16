@@ -53,7 +53,7 @@ $(objdir):
 	mkdir -p $(objdir)
 
 EXPAT_VERSION = R_2_4_8
-zip = $(EXPAT_VERSION).zip
+tgz = $(EXPAT_VERSION).tar.gz
 # If this is a git repo, init the libexpat submodule. Otherwise, get
 # the libexpat tarball from github.
 $(srcdir):
@@ -61,8 +61,8 @@ $(srcdir):
 	then	git submodule update --init $(extern)/libexpat; \
 	else	tmpdir=/tmp/expat$$$$; \
 		mkdir $$tmpdir && \
-		wget -P $$tmpdir https://github.com/libexpat/libexpat/archive/refs/tags/$(zip) && \
-		unzip -d $$tmpdir $$tmpdir/$(zip) -x libexpat-$(EXPAT_VERSION)/README.md && \
+		wget -P $$tmpdir https://github.com/libexpat/libexpat/archive/refs/tags/$(tgz) && \
+		tar -C $$tmpdir --exclude=libexpat-$(EXPAT_VERSION)/README.md -xzf $$tmpdir/$(tgz) && \
 		mv $$tmpdir/libexpat-$(EXPAT_VERSION)/* $(extern)/libexpat && \
 		rm -rf $$tmpdir; \
 	fi
