@@ -381,6 +381,35 @@ model_cols(int m)
     }
 }
 
+/* Check the requested model against the console maximum. */
+static void
+check_console_max(void)
+{
+    int model_num_orig = model_num;
+    bool remodeled = false;
+
+    /* Switch models, if the chosen model won't fit on the maximum console window. */
+    while ((console_max.Y != 0 && console_max.Y < model_rows(model_num)) ||
+	   (console_max.X != 0 && console_max.X < model_cols(model_num))) {
+	if (model_num == 2) {
+	    /* Can't go any smaller. */
+	    popup_an_error("Maximum console window is %d rows x %d columns.\n"
+		    "wc3270 needs at least %d rows x %d columns. Try a smaller font.",
+		    console_max.Y, console_max.X,
+		    MODEL_2_ROWS, MODEL_2_COLS);
+	    x3270_exit(1);
+	}
+	set_rows_cols(model_num - 1, 0, 0);
+	remodeled = true;
+    }
+
+    if (remodeled) {
+	popup_an_error("Maximum console window is %d rows x %d columns.\n"
+		"Switching from model %d to model %d. Try a smaller font.",
+		console_max.Y, console_max.X, model_num_orig, model_num);
+    }
+}
+
 /*
  * Resize the newly-created console.
  *
@@ -408,6 +437,7 @@ resize_console(void)
     if (console_max.Y && want_bs.Y > console_max.Y) {
 	want_bs.Y = console_max.Y;
     }
+
     want_bs.X = model_cols(model_num);
     if (ov_cols > want_bs.X) {
 	want_bs.X = ov_cols;
@@ -472,32 +502,62 @@ resize_console(void)
 	 */
 	if (ov_cols > model_cols(model_num)) {
 	    if (ov_cols > console_cols) {
-		popup_an_error("Oversize columns (%d) truncated to maximum "
-			"window width (%d)", ov_cols, console_cols);
-			ov_cols = console_cols;
-			ov_changed = true;
+		ov_cols = console_cols;
+		popup_an_error("Oversize columns reduced to the maximum window width (%d).", ov_cols);
+		ov_changed = true;
 	    }
 	}
 
 	if (ov_rows > model_rows(model_num)) {
 	    if (ov_rows + XTRA_ROWS > console_rows) {
-		popup_an_error("Oversize rows (%d) truncated to maximum "
-			"window height (%d) - %d -> %d rows", ov_rows,
-			console_rows, XTRA_ROWS, console_rows - XTRA_ROWS);
 		ov_rows = console_rows - XTRA_ROWS;
-		if (ov_rows <= model_rows(model_num)) {
-		    ov_rows = 0;
+		if (ov_rows < model_rows(model_num)) {
+		    ov_rows = model_rows(model_num);
 		}
+		popup_an_error("Oversize rows reduced to the maximum window height (%d).", ov_rows);
 		ov_changed = true;
 	    }
 	}
     }
 
     if (ov_changed) {
+	popup_an_error("Try a smaller font.");
 	set_rows_cols(model_num, ov_cols, ov_rows);
     }
 
     return 0;
+}
+
+/* Console pre-initialization. */
+void
+screen_pre_init(void)
+{
+    /* Get the console handles. */
+    if (chandle == NULL) {
+	chandle = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (chandle == NULL) {
+	    win32_perror("CreateFile(CONIN$) failed");
+	    x3270_exit(1);
+	}
+    }
+
+    if (cohandle == NULL) {
+	cohandle = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (cohandle == NULL) {
+	    win32_perror("CreateFile(CONOUT$) failed");
+	    x3270_exit(1);
+	}
+    }
+
+    /* Get the console dimensions. */
+    if (GetConsoleScreenBufferInfo(cohandle, &base_info) == 0) {
+	win32_perror("GetConsoleScreenBufferInfo failed");
+	x3270_exit(1);
+    }
+    console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
+    console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
 }
 
 /*
@@ -509,38 +569,17 @@ initscr(void)
     size_t buffer_size;
     CONSOLE_CURSOR_INFO cursor_info;
 
-    /* Get a handle to the console. */
-    chandle = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
-	    FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (chandle == NULL) {
-	win32_perror("CreateFile(CONIN$) failed");
-	return NULL;
-    }
+    screen_pre_init();
     if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
 				ENABLE_MOUSE_INPUT) == 0) {
 	win32_perror("SetConsoleMode failed");
 	return NULL;
     }
 
-    cohandle = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
-	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-    if (cohandle == NULL) {
-	win32_perror("CreateFile(CONOUT$) failed");
-	return NULL;
-    }
-
     console_window = get_console_hwnd();
     set_main_window(console_window);
 
-    /* Get its dimensions. */
-    if (GetConsoleScreenBufferInfo(cohandle, &base_info) == 0) {
-	win32_perror("GetConsoleScreenBufferInfo failed");
-	return NULL;
-    }
-    console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
-    console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
-
-    /* Get its cursor configuration. */
+    /* Get the console cursor configuration. */
     if (GetConsoleCursorInfo(cohandle, &cursor_info) == 0) {
 	win32_perror("GetConsoleCursorInfo failed");
 	return NULL;
@@ -548,6 +587,9 @@ initscr(void)
 
     /* Get its maximum dimensions. */
     console_max = GetLargestConsoleWindowSize(cohandle);
+
+    /* Check the maximum size. */
+    check_console_max();
 
     /* Create the screen buffer. */
     sbuf = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
@@ -1234,10 +1276,6 @@ endwin(void)
 void
 screen_init(void)
 {
-    int want_ov_rows;
-    int want_ov_cols;
-    bool oversize = false;
-
     if (appres.interactive.menubar) {
 	menu_init();
     }
@@ -1247,57 +1285,9 @@ screen_init(void)
 	fprintf(stderr, "Can't initialize terminal.\n");
 	x3270_exit(1);
     }
-    want_ov_rows = ov_rows;
-    want_ov_cols = ov_cols;
     windows_cp = GetConsoleCP();
 
-    /*
-     * Respect the console size we are given.
-     */
-    while (console_rows < maxROWS || console_cols < maxCOLS) {
-	/*
-	 * First, cancel any oversize.  This will get us to the correct
-	 * model number, if there is any.
-	 */
-	if ((ov_cols && ov_cols > console_cols) ||
-	    (ov_rows && ov_rows > console_rows)) {
-
-	    ov_cols = 0;
-	    ov_rows = 0;
-	    oversize = true;
-	}
-
-	/* If we're at the smallest screen now, give up. */
-	if (model_num == 2) {
-	    fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
-		    console_rows, console_cols);
-	    x3270_exit(1);
-	}
-
-	/* Try a smaller model. */
-	set_rows_cols(model_num - 1, 0, 0);
-    }
-
-    /*
-     * Now, if they wanted an oversize, but didn't get it, try applying it
-     * again.
-     */
-    if (oversize) {
-	if (want_ov_rows > console_rows - 2) {
-	    want_ov_rows = console_rows - 2;
-	}
-	if (want_ov_rows < maxROWS) {
-	    want_ov_rows = maxROWS;
-	}
-	if (want_ov_cols > console_cols) {
-	    want_ov_cols = console_cols;
-	}
-	set_rows_cols(model_num, want_ov_cols, want_ov_rows);
-    }
-
-    /*
-     * Finally, if they want automatic oversize, see if that's possible.
-     */
+    /* If they want automatic oversize, see if that's possible. */
     if (ov_auto && (maxROWS < console_rows - 3 || maxCOLS < console_cols)) {
 	set_rows_cols(model_num, console_cols, console_rows - 3);
     }
@@ -3705,7 +3695,8 @@ static WORD color_attr[] = {
 void
 screen_color(pc_t pc)
 {
-    if (!SetConsoleTextAttribute(cohandle,
+    if (cohandle != NULL &&
+	    !SetConsoleTextAttribute(cohandle,
 		color_attr[pc]? color_attr[pc]: base_info.wAttributes)) {
 	win32_perror("Can't set console text attribute");
 	exit(1);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2024 Paul Mattes.
+ * Copyright (c) 1999-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,3 +58,6 @@ void screen_set_thumb(float top, float shown, int saved, int screen, int back);
 void enable_cursor(bool on);
 void screen_init(void);
 void screen_change_model(int mn, int ovc, int ovr);
+#if defined(WC3270) /*[*/
+void screen_pre_init(void);
+#endif /*]*/
