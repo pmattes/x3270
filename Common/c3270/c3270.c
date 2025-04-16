@@ -582,6 +582,9 @@ main(int argc, char *argv[])
     /* Redirect Error() so we pause. */
     Error_redirect = c3270_Error;
 
+    /* Open the console handles so we can color error messages. */
+    screen_pre_init();
+
     /* Register a final exit function, so we pause. */
     register_schange_ordered(ST_EXITING, exit_pause, ORDER_LAST);
 

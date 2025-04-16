@@ -327,7 +327,7 @@ set_rows_cols(int mn, int ovc, int ovr)
 	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
 	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
 	} else if (ovc > 0 && ovc < maxCOLS) {
-	    popup_an_error("Invalid %s cols (%d):\nLess than model %d cols (%d)", ResOversize, ovc, model_num, maxCOLS);
+	    popup_an_error("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, model_num, maxCOLS);
 	} else if (ovr > 0 && ovr < maxROWS) {
 	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, model_num, maxROWS);
 	} else {
