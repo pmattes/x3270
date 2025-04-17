@@ -71,6 +71,7 @@
 #include "codepage.h"
 #include "ctlrc.h"
 #include "kybd.h"
+#include "names.h"
 #include "popups.h"
 #include "screen.h"
 #include "selectc.h"
@@ -1893,7 +1894,7 @@ static bool	paste_utf8;
 #endif /*]*/
 
 static void
-paste_callback(Widget w, XtPointer client_data _is_unused,
+paste_callback(Widget w, XtPointer client_data,
 	Atom *selection _is_unused, Atom *type _is_unused, XtPointer value,
 	unsigned long *length, int *format _is_unused)
 {
@@ -1910,7 +1911,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	if (paste_utf8) {
 	    paste_utf8 = false;
 	    XtGetSelectionValue(w, paste_atom[(pix - 1)], XA_STRING,
-		    paste_callback, NULL, paste_time);
+		    paste_callback, client_data, paste_time);
 	} else
 #endif /*]*/
 	if (n_pasting > pix) {
@@ -1923,7 +1924,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 #else /*][*/
 		    XA_STRING,
 #endif /*]*/
-		    paste_callback, NULL,
+		    paste_callback, client_data,
 		    paste_time);
 	}
 	return;
@@ -1958,7 +1959,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	}
 	u_buf[u_len++] = uc;
     }
-    emulate_uinput(u_buf, u_len, true);
+    emulate_uinput(u_buf, u_len, true, *(bool *)client_data);
 
     Free(u_buf);
     XtFree(value);
@@ -1973,11 +1974,20 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
     Cardinal i;
     Atom a;
     XButtonEvent *be = (XButtonEvent *)event;
+    bool margin = true;
+    int param0 = 0;
+    static bool static_true = true;
+    static bool static_false = false;
 
     xaction_debug(insert_selection_xaction, event, params, num_params);
 
+    if (*num_params > 0 && !strcasecmp(KwNoMargin, params[0])) {
+	margin = false;
+	param0++;
+    }
+
     n_pasting = 0;
-    for (i = 0; i < *num_params; i++) {
+    for (i = param0; i < *num_params; i++) {
 	a = XInternAtom(display, params[i], true);
 	if (a == None) {
 	    popup_an_error("%s(): No atom for selection",
@@ -2000,7 +2010,7 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
 #else /*][*/
 		XA_STRING,
 #endif /*]*/
-		paste_callback, NULL,
+		paste_callback, margin? &static_true: &static_false,
 		paste_time);
     }
 }

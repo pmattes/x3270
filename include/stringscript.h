@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018-2019 Paul Mattes.
+ * Copyright (c) 2016-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,4 +30,4 @@
  *		Global declarations for stringscript.c.
  */
 
-void push_string(char *st, bool is_hex, bool is_paste, bool force_utf8);
+void push_string(char *st, bool is_hex, bool is_paste, bool force_utf8, bool wrap);

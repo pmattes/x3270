@@ -3433,10 +3433,20 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
     HGLOBAL hglb;
     LPTSTR lptstr;
     UINT format = CF_UNICODETEXT;
+    bool margin = true;
 
     action_debug(AnPaste, ia, argc, argv);
-    if (check_argc(AnPaste, argc, 0, 0) < 0) {
+    if (check_argc(AnPaste, argc, 0, 1) < 0) {
 	return false;
+    }
+
+    if (argc > 0) {
+	if (!strcasecmp(argv[0], KwNoMargin)) {
+	    margin = false;
+	} else {
+	    popup_an_error(AnPaste "(): Unknown option");
+	    return false;
+	}
     }
 
     if (!IsClipboardFormatAvailable(format)) {
@@ -3468,7 +3478,7 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 	    for (i = 0; i < sl; i++) {
 		*us++ = *w++;
 	    }
-	    emulate_uinput(u, sl, true);
+	    emulate_uinput(u, sl, true, margin);
 	    Free(u);
 	}
 	GlobalUnlock(hglb); 

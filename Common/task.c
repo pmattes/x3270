@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1867,7 +1867,7 @@ task_activate(task_cbh handle)
 void
 ps_set(char *s, bool is_hex, bool force_utf8)
 {
-    push_string(s, is_hex, false, force_utf8);
+    push_string(s, is_hex, false, force_utf8, false);
 }
 
 /* Callback for macros menu. */

@@ -57,6 +57,7 @@ keymap.base: \n\
         Alt <Key>P: PrintText()\n\
         Alt <Key>q: Quit(-force)\n\
         Alt <Key>Q: Quit(-force)\n\
+        Alt <Key>v: Paste(-nomargin)\n\
        Ctrl <Key>v: Paste()\n\
        Ctrl <Key>x: Cut()\n\
        Ctrl <Key>]: Escape()\n\

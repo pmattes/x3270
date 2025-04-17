@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2024 Paul Mattes.
+! Copyright (c) 1995-2025 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -197,6 +197,8 @@ x3270.keymap.base: \
 	~Shift<Btn1Motion>:		SelectMotion()\n\
 	<Btn2Down>:			ignore()\n\
 	<Btn2Motion>:			ignore()\n\
+	Alt<Btn2Up>:			insert-selection(-nomargin,PRIMARY)\n\
+	Meta<Btn2Up>:			insert-selection(-nomargin,PRIMARY)\n\
 	<Btn2Up>:			insert-selection(PRIMARY)\n\
 	<Btn3Down>:			start-extend()\n\
 	<Btn3Motion>:			select-extend()\n\
@@ -322,6 +324,8 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>a:			SelectAll(PRIMARY)\n\
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
+	Alt Ctrl<Key>v:			insert-selection(-nomargin,CLIPBOARD)\n\
+	Meta Ctrl<Key>v:		insert-selection(-nomargin,CLIPBOARD)\n\
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
 	Ctrl<Key>w:			DeleteWord()\n\
 	Ctrl<Key>x:			Cut(CLIPBOARD)

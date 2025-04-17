@@ -170,6 +170,8 @@
 #define KwForceEnable	"forceenable"
 /*  Parameters to Keymap(). */
 #define KwNone		"none"
+/*  Parameters to PasteString(). */
+#define KwNoMargin	"-nomargin"
 /*  Parameters to Printer(). */
 #define KwStart		"start"
 #define KwStop		"stop"

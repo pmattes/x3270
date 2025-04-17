@@ -74,6 +74,7 @@ typedef struct {
     bool is_hex;	/* true if data is hexadecimal */
     bool is_paste;	/* true to use paste mode */
     bool force_utf8;	/* true to force UTF-8 conversion */
+    bool margin;	/* true to respect margin when pasting */
     char *result;	/* error message from child action */
     bool aborted;	/* action aborted due to child error */
 } string_t;
@@ -145,7 +146,7 @@ string_run(task_cbh handle, bool *success)
 
     if (s->is_paste) {
 	/* Push in paste data. */
-	emulate_uinput(s->pdata, s->pdata_len, true);
+	emulate_uinput(s->pdata, s->pdata_len, true, s->margin);
 	done = true;
     } else if (s->is_hex) {
 	/* Run the whole string. */
@@ -310,9 +311,11 @@ hex_to_unicode(const char *s, size_t *lenp, bool force_utf8)
  * @param[in] is_hex	True if string is in hex
  * @param[in] is_paste	True if paste mode
  * @param[in] force_utf8 True to force UTF-8 conversion
+ * @param[in] margin	If true and is_paste is true, respect the margined paste
+ * 			 and overlay paste settings
  */
 void
-push_string(char *st, bool is_hex, bool is_paste, bool force_utf8)
+push_string(char *st, bool is_hex, bool is_paste, bool force_utf8, bool margin)
 {
     string_t *s;
     ucs4_t *pdata = NULL;
@@ -336,6 +339,7 @@ push_string(char *st, bool is_hex, bool is_paste, bool force_utf8)
     s->is_hex = is_hex;
     s->is_paste = is_paste;
     s->force_utf8 = force_utf8;
+    s->margin = margin;
     s->result = NULL;
     s->aborted = false;
 

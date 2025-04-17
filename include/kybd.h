@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2019, 2021 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ extern unsigned char aid;
 
 void do_reset(bool explicit);
 size_t emulate_input(const char *s, size_t len, bool pasting, bool force_utf8);
-size_t emulate_uinput(const ucs4_t *s, size_t len, bool pasting);
+size_t emulate_uinput(const ucs4_t *s, size_t len, bool pasting, bool margin);
 void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
 bool kybd_bid(bool signal);

@@ -74,5 +74,40 @@ class TestS3270Paste(cti):
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
+    # s3270 paste -nowrap test
+    def test_s3270_paste_nowrap(self):
+
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/target.trc', port=port,) as p:
+            ts.close()
+
+            # Start s3270.
+            hport, socket = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-nvt', f'127.0.0.1:{port}']), stdin=DEVNULL, stdout=DEVNULL)
+            self.children.append(s3270)
+            socket.close()
+            self.check_listen(hport)
+
+            # Paint the screen.
+            p.send_records(2)
+
+            # Pump in a string that would normally wrap.
+            s = ''.join(['41' for i in range(81)])
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/PasteString(-nomargin,0x{s})')
+
+            # Get the cursor location.
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(cursor1)')
+            rx = r.json()['result'][0].split()
+            row = rx[1]
+            col = rx[3]
+
+            # Make sure it is row 24, column 6.
+            self.assertEqual(24, int(row), f'result is {rx}')
+            self.assertEqual(6, int(col), f'result is {rx}')
+
+        # Wait for s3270 to exit.
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()

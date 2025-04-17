@@ -3598,14 +3598,23 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     size_t len = 0;
     char *s;
     const char *t;
+    bool margin = true;
+    int arg0 = 0;
 
     action_debug(AnPasteString, ia, argc, argv);
     if (check_argc(AnPasteString, argc, 1, 2) < 0) {
 	return false;
     }
 
+    /* Check for -nomargin. */
+    if (!strcasecmp(argv[0], KwNoMargin))
+    {
+	margin = false;
+	arg0++;
+    }
+
     /* Determine the total length of the strings. */
-    for (i = 0; i < argc; i++) {
+    for (i = arg0; i < argc; i++) {
 	t = argv[i];
 	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
@@ -3619,7 +3628,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     /* Allocate a block of memory and copy them in. */
     s = Malloc(len + 1);
     *s = '\0';
-    for (i = 0; i < argc; i++) {
+    for (i = arg0; i < argc; i++) {
 	t = argv[i];
 	if (!strncasecmp(t, "0x", 2)) {
 	    t += 2;
@@ -3628,7 +3637,7 @@ PasteString_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Set a pending string. */
-    push_string(s, true, true, ia == IA_HTTPD);
+    push_string(s, true, true, ia == IA_HTTPD, margin);
     Free(s);
     return true;
 }
@@ -3769,10 +3778,7 @@ ns_action(action_t action, enum iaction cause, const char *param)
  * "Pasting" means that the sequence came from the X clipboard.  Returns are
  * ignored; newlines mean "move to beginning of next line"; tabs and formfeeds
  * become spaces.  Backslashes are not special, but ASCII ESC characters are
- * used to signify 3270 Graphic Escapes. If the NOSKIP_PASTE toggle is set,
- * then we don't do auto-skip, except at the end of the string; when the cursor
- * lands on a protected region of the screen, we treat printable characters as
- * cursor-right actions.
+ * used to signify 3270 Graphic Escapes.
  *
  * "Not pasting" means that the sequence is a login string specified in the
  * hosts file, or a parameter to the String action.  Returns are "move to
@@ -3782,7 +3788,7 @@ ns_action(action_t action, enum iaction cause, const char *param)
  * Returns the number of unprocessed characters.
  */
 size_t
-emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
+emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 {
     enum {
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
@@ -3827,7 +3833,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	    }
 
 	    /* Jump cursor over left margin. */
-	    if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	    if (margin && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 		if (!remargin(orig_col)) {
 		    return xlen-1;
 		}
@@ -4184,7 +4190,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	break;
     }
 
-    if (check_remargin && pasting && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+    if (check_remargin && pasting && margin && MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	remargin(orig_col);
     }
 
@@ -4211,7 +4217,7 @@ emulate_input(const char *s, size_t len, bool pasting, bool force_utf8)
     }
 
     /* Process it as Unicode. */
-    return emulate_uinput(w_ibuf, xlen, pasting);
+    return emulate_uinput(w_ibuf, xlen, pasting, true);
 }
 
 /*
