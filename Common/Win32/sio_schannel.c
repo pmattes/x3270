@@ -133,6 +133,29 @@ static DWORD proto_map[] = {
     SP_PROT_TLS1_3_CLIENT
 };
 
+/* SCH_CREDENTIALS state. */
+static enum {
+    USC_UNKNOWN = -1,	/* now known yet */
+    USC_ON = 1,		/* known to be true */
+    USC_OFF = 0,	/* known to be false */
+} usc_state = USC_UNKNOWN;
+
+/*
+ * Indicates whether to use SCH_CREDENTIALS (returns true) or SCHANNEL_CRED (false).
+ *
+ * Includes logic to force 'true' for unit testing via the environment and to force 'false'
+ * by manually setting usc_state.
+ */
+static bool
+use_sch_credentials(void)
+{
+    if (usc_state == USC_UNKNOWN) {
+	usc_state = ((getenv("FORCE_SCH") != NULL) || IsWindowsVersionOrGreater(10, 0, 0))? USC_ON: USC_OFF;
+    }
+
+    return usc_state == USC_ON;
+}
+
 /* Display the certificate chain. */
 static void
 display_cert_chain(varbuf_t *v, PCCERT_CONTEXT cert)
@@ -338,7 +361,7 @@ display_cert_subjects(varbuf_t *v, PCCERT_CONTEXT cert)
 
 /* Create security credentials. */
 static SECURITY_STATUS
-create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
+create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
 {
     TimeStamp ts_expiry;
     SECURITY_STATUS status;
@@ -351,7 +374,6 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     int min_protocol = -1;
     int max_protocol = -1;
     char *proto_error;
-    BOOL win10_or_greater = IsWindowsVersionOrGreater(10, 0, 0);
 
     /* Parse the min/max protocol options. */
     /* Technically you can use SSL2 with schannel, but it is mutually exclusive with TLS, so we don't try. */
@@ -434,7 +456,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     }
 
     /* Build Schannel credential structure. */
-    if (win10_or_greater) {
+    if (use_sch_credentials()) {
 	memset(&sch_credentials, 0, sizeof(sch_credentials));
 	sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
 	if (cert_context != NULL) {
@@ -443,7 +465,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	}
     } else {
 	memset(&schannel_cred, 0, sizeof(schannel_cred));
-	schannel_cred.dwVersion  = SCHANNEL_CRED_VERSION;
+	schannel_cred.dwVersion = SCHANNEL_CRED_VERSION;
 	if (cert_context != NULL) {
 	    schannel_cred.cCreds = 1;
 	    schannel_cred.paCred = &cert_context;
@@ -451,7 +473,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     }
 
     /* If the user specified a range, or we're before Windows 10, specify the protocols explicitly. */
-    if (min_protocol >= 0 || max_protocol >= 0 || !win10_or_greater) {
+    if (min_protocol >= 0 || max_protocol >= 0 || !use_sch_credentials()) {
 	DWORD protocols = 0;
 	int i;
 
@@ -462,7 +484,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    max_protocol = SIP_TLS1_3;
 	}
 
-	if (win10_or_greater) {
+	if (use_sch_credentials()) {
 	    /* With sch_credentials, we disable protocols. */
 	    for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
 		if (i < min_protocol || i > max_protocol) {
@@ -484,7 +506,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	}
     }
 
-    if (win10_or_greater) {
+    if (use_sch_credentials()) {
 	sch_credentials.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
     } else {
 	schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
@@ -495,14 +517,14 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
      * validation here and then don't validate.
      */
     if (!config->verify_host_cert || is_wine()) {
-	if (win10_or_greater) {
+	if (use_sch_credentials()) {
 	    sch_credentials.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
 	} else {
 	    schannel_cred.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
 	}
 	*manual = true;
     } else {
-	if (win10_or_greater) {
+	if (use_sch_credentials()) {
 	    sch_credentials.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
 	} else {
 	    schannel_cred.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
@@ -515,7 +537,7 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    UNISP_NAME,			/* Name of package */
 	    SECPKG_CRED_OUTBOUND,	/* Flags indicating use */
 	    NULL,			/* Pointer to logon ID */
-	    win10_or_greater? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
+	    use_sch_credentials()? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 	    NULL,			/* Pointer to GetKey() func */
 	    NULL,			/* Value to pass to GetKey() */
 	    creds,			/* (out) Cred Handle */
@@ -534,6 +556,28 @@ create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
     return status;
 }
 
+/* Create security credentials. */
+static SECURITY_STATUS
+create_credentials(LPSTR friendly_name, PCredHandle creds, bool *manual)
+{
+    /* Try with sch_credentials enabled. */
+    SECURITY_STATUS status = create_credentials_single(friendly_name, creds, manual);
+
+    if (status == SEC_E_UNKNOWN_CREDENTIALS && usc_state == USC_ON) {
+	/*
+	 * This can happen on Server 2016 and early versions of Windows 10, which do not
+	 * support TLS 1.3 and the SCH_CREDENTIALS struct.
+	 *
+	 * Try again with SCH_CREDENTIALS explicitly disabled.
+	 */
+	vtrace("sio_schannel: Got SEC_E_UNKNOWN_CREDENTIALS, retrying credential creation using SSCHANNEL_CRED.\n");
+	usc_state = USC_OFF;
+	status = create_credentials_single(friendly_name, creds, manual);
+    }
+
+    return status;
+}
+
 /* Get new client credentials. */
 static void
 get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
@@ -547,7 +591,6 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
     SECURITY_STATUS                   status;
     SCHANNEL_CRED                     schannel_cred;
     SCH_CREDENTIALS		      sch_credentials;
-    BOOL			      win10_or_greater = IsWindowsVersionOrGreater(10, 0, 0);
 
     /* Read the list of trusted issuers from schannel. */
     status = QueryContextAttributes(context, SECPKG_ATTR_ISSUER_LIST_EX,
@@ -589,7 +632,7 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
 	cert_context = chain_context->rgpChain[0]->rgpElement[0]->pCertContext;
 
 	/* Create Schannel credential. */
-	if (win10_or_greater) {
+	if (use_sch_credentials()) {
 	    memset(&sch_credentials, 0, sizeof(sch_credentials));
 	    sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
 	    sch_credentials.cCreds = 1;
@@ -606,7 +649,7 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
 		UNISP_NAME_A,           /* Name of package */
 		SECPKG_CRED_OUTBOUND,   /* Flags indicating use */
 		NULL,                   /* Pointer to logon ID */
-		win10_or_greater? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
+		use_sch_credentials()? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 		NULL,                   /* Pointer to GetKey() func */
 		NULL,                   /* Value to pass to GetKey() */
 		&new_creds,             /* (out) Cred Handle */
