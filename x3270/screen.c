@@ -1432,7 +1432,7 @@ screen_vcrosshair(void)
 {
     XChar2b v;
 
-    apl_display_char(&v, 0xbf);
+    apl_display_char(&v, 0x85);
     return v;
 }
 
@@ -1526,7 +1526,7 @@ crosshair_margin(bool draw, const char *why)
 	if (maxROWS > ROWS) {
 	    XChar2b text;
 
-	    apl_display_char(&text, 0xbf);
+	    apl_display_char(&text, 0x85);
 	    text1.chars = &text;
 	    text1.nchars = 1;
 	    text1.delta = 0;
@@ -1544,7 +1544,7 @@ crosshair_margin(bool draw, const char *why)
 	if (vhalo_chars) {
 	    XChar2b text;
 
-	    apl_display_char(&text, 0xbf);
+	    apl_display_char(&text, 0x85);
 	    text1.chars = &text;
 	    text1.nchars = 1;
 	    text1.delta = 0;
@@ -3076,7 +3076,7 @@ map_crosshair(int baddr)
 	return 0xa2;
     } else {
 	/* Vertical. */
-	return 0xbf;
+	return 0x85;
     }
 }
 
