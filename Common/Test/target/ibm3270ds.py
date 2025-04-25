@@ -72,6 +72,7 @@ class order(enum.IntEnum):
     sba = 0x11,
     ic = 0x13,
     sf = 0x1d,
+    sa = 0x28,
     sfe = 0x29,
 
 class command(enum.IntEnum):
@@ -106,8 +107,34 @@ class qr(enum.IntEnum):
     rpq_names = 0xa1
 
 class xa(enum.IntEnum):
-    m3270 = 0xc0,
-    input_control = 0xfe,
+    all = 0
+    highlighting = 0x41
+    fg = 0x42
+    bg = 0x45
+    m3270 = 0xc0
+    input_control = 0xfe
+
+class color(enum.IntEnum):
+    default = 0x00
+    neutral_black = 0xf0
+    blue = 0xf1
+    red = 0xf2
+    pink = 0xf3
+    green = 0xf4
+    turquoise = 0xf5
+    yellow = 0xf6
+    neutral_white = 0xf7
+    black = 0xf8
+    deep_blue = 0xf9
+    orange = 0xfa
+    purple = 0xfb
+    pale_green = 0xfc
+    pale_turquoise = 0xfd
+    pale_grey = 0xfe
+    white = 0xff
+
+class highlight(enum.IntEnum):
+    reverse = 0xf2
 
 class binpresz(enum.IntEnum):
     '''Presentation size from https://www.ibm.com/docs/en/zos/2.1.0?topic=image-bind-area-format-dsect'''

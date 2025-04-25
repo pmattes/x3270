@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -77,7 +77,7 @@ void screen_set_select(int baddr);
 void screen_unselect_all(void);
 
 /*
- * Screen position structure.
+ * Screen position structure -- what is (or should be) on the screen.
  */
 struct sp {
     union {
@@ -85,6 +85,7 @@ struct sp {
 	    unsigned ec  : 8;	/* EBCDIC character code */
 	    unsigned sel : 1;	/* selection status */
 	    unsigned fg  : 6;	/* foreground color (flag/inv/0-15) */
+	    unsigned bg  : 6;	/* background color */
 	    unsigned gr  : 4;	/* graphic rendition */
 	    unsigned cs  : 3;	/* character set */
 	} bits;
@@ -94,7 +95,7 @@ struct sp {
 };
 
 /*
- * screen.c data structures. *
+ * screen.c data structures.
  */
 extern int	 *ascent, *descent;
 extern Dimension *screen_height;

@@ -86,7 +86,7 @@ class TestX3270FieldEnd(cti):
             os.system(f'xdotool windowfocus --sync {window_id} key --window {window_id} End')
             p.send_tm()
 
-            # Verify the error pop-up contents.
+            # Verify the cursor moved to the end of the field.
             r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(cursor1)')
             self.assertTrue(r.ok, 'Expected cursor query to succeed')
             cursor = (r.json()['result'][0]).split(' ')[3]

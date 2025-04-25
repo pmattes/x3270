@@ -45,6 +45,7 @@ import server
 import socketwrapper
 import target_tls
 from target_tls import tls_type
+import tn3270_colortest
 import tn3270_ibmlink
 import tn3270_snake
 import tn3270_sruvm
@@ -291,6 +292,7 @@ class echo_server(server.server):
     desc = 'Simple echo server'
 
 servers = {
+    'color': tn3270_colortest.colortest,
     'echo': echo_server,
     'ibmlink': tn3270_ibmlink.ibmlink,
     'menu': menu.menu,

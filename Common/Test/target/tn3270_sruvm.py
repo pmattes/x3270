@@ -33,7 +33,7 @@ import tn3270
 import tn3270e_proto
 
 class sruvm(tn3270.tn3270_server):
-    '''TN3270 protocol server simulating sruvm (model 4 required)'''
+    '''TN3270 protocol server simulating sruvm (plain model 4 required)'''
 
     def rcv_data_cooked(self, data: bytes, mode=tn3270e_proto.data_type.d3270_data):
         '''Consume data'''
@@ -60,7 +60,7 @@ class sruvm(tn3270.tn3270_server):
         '''Start 3270 mode'''
         self.debug('sruvm', f'ttype is {self.dinfo.ttype}')
         if not self.dinfo.ttype.startswith('IBM-327') or not self.dinfo.ttype[9] == '4':
-            self.send_host(bytes([command.erase_write, 0xc7]) + 'Model 4 required. '.encode('cp037') + bytes([order.sf, fa.protect, order.ic]))
+            self.send_host(bytes([command.erase_write, 0xc7]) + 'Plain model 4 required. '.encode('cp037') + bytes([order.sf, fa.protect, order.ic]))
             self.hangup()
             return
         if self.dinfo.extended:

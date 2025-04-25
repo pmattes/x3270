@@ -169,7 +169,7 @@ static bool	lower_crosshair_displayed = false;
 static bool     cursor_enabled = true;
 static bool     cursor_blink_pending = false;
 static XtIntervalId cursor_blink_id;
-static int	field_colors[4];
+static int	field_fg[4];
 static bool     in_focus = false;
 static bool     line_changed = false;
 static bool     cursor_changed = false;
@@ -259,14 +259,14 @@ static enum fallback_color ibm_fb = FB_WHITE;
 static char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 static char *required_display_charsets;
 
-static int crosshair_color = HOST_COLOR_PURPLE;
+static int crosshair_fg = HOST_COLOR_PURPLE;
 
 #define CROSSABLE	(toggled(CROSSHAIR) && cursor_enabled && \
 			 crosshair_enabled && in_focus)
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
 
-#define CROSS_COLOR	(mode3279? (GC_NONDEFAULT | crosshair_color) : FA_INT_NORM_NSEL)
+#define CROSS_FG	(mode3279? (GC_NONDEFAULT | crosshair_fg) : FA_INT_NORM_NSEL)
 
 static bool keypad_was_up = false;
 
@@ -378,7 +378,7 @@ static void cursor_on(const char *why);
 static void schedule_cursor_blink(void);
 static void schedule_text_blink(void);
 static void inflate_screen(void);
-static int fa_color(unsigned char fa);
+static int fa_fg(unsigned char fa);
 static void redraw_lower_crosshair(void);
 static bool cursor_off(const char *why, bool including_lower_crosshair,
 	bool *xwo);
@@ -456,6 +456,9 @@ static struct drc *drc;
 
 #define DEFAULT_PIXEL		(mode3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
+
+/* Convert a host color (0 or 0xfx) to a sp color. */
+#define HCOLOR_TO_SPCOLOR(c)	((c)? (GC_NONDEFAULT | ((c) & COLOR_MASK)): 0)
 
 static struct {
     bool ticking;
@@ -536,16 +539,15 @@ screen_set_keymap(void)
  * Crosshair color init.
  */
 static void
-crosshair_color_init(void)
+crosshair_fg_init(void)
 {
     int c = decode_host_color(appres.interactive.crosshair_color);
 
     if (c >= 0) {
-	crosshair_color = c;
+	crosshair_fg = c;
     } else {
-	xs_warning("Invalid %s: %s", ResCrosshairColor,
-		appres.interactive.crosshair_color);
-	crosshair_color = HOST_COLOR_PURPLE;
+	xs_warning("Invalid %s: %s", ResCrosshairColor, appres.interactive.crosshair_color);
+	crosshair_fg = HOST_COLOR_PURPLE;
     }
 }
 
@@ -675,7 +677,7 @@ screen_init(void)
     keypad_placement_init();
 
     /* Initialize the crosshair color. */
-    crosshair_color_init();
+    crosshair_fg_init();
 
     /* Now call the "reinitialize" function to set everything else up. */
     screen_reinit(ALL_CHANGE);
@@ -1442,7 +1444,7 @@ screen_vcrosshair(void)
 GC
 screen_crosshair_gc(void)
 {
-    return screen_gc(CROSS_COLOR);
+    return screen_gc(CROSS_FG);
 }
 
 /* Draw the line at the top of the OIA. */
@@ -1513,7 +1515,7 @@ crosshair_margin(bool draw, const char *why)
 	    text1.nchars = maxCOLS - cCOLS;
 	    text1.delta = 0;
 	    text1.font = ss->fid;
-	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 		    ssCOL_TO_X(cCOLS),
 		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
 		    &text1, 1);
@@ -1532,7 +1534,7 @@ crosshair_margin(bool draw, const char *why)
 	    text1.delta = 0;
 	    text1.font = ss->fid;
 	    for (i = ROWS; i < maxROWS; i++) {
-		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
 	    }
 
@@ -1551,13 +1553,13 @@ crosshair_margin(bool draw, const char *why)
 	    text1.font = ss->fid;
 
 	    for (i = -vhalo_chars; i < 0; i++) {
-		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
 	    }
 	    for (i = maxROWS;
 		 i < maxROWS + (2 * vhalo_chars);
 		 i++) {
-		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
 	    }
 	}
@@ -1568,11 +1570,11 @@ crosshair_margin(bool draw, const char *why)
 	    text1.nchars = hhalo_chars;
 	    text1.delta = 0;
 	    text1.font = ss->fid;
-	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 		    ssCOL_TO_X(-hhalo_chars),
 		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
 		    &text1, 1);
-	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_FG),
 		    ssCOL_TO_X(maxCOLS),
 		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
 		    &text1, 1);
@@ -2337,6 +2339,7 @@ empty_space(register struct sp *buffer, int len)
 	if (buffer->u.bits.gr ||
 	    buffer->u.bits.sel ||
 	    (buffer->u.bits.fg & INVERT_MASK) ||
+	    (buffer->u.bits.bg) ||
 	    (buffer->u.bits.cs != CS_BASE) ||
 	    !bkm_isset(buffer)) {
 	    return false;
@@ -2356,10 +2359,9 @@ resync_text(int baddr, int len, struct sp *buffer)
 {
     static bool ever = false;
     static unsigned long cmask = 0L;
-    static unsigned long gmask = 0L;
 
-#if defined(_ST) /*[*/
-    printf("resync_text(baddr=%s, len=%d)\n", rcba(baddr), len);
+#if defined(_STRT) /*[*/
+    printf("resync_text(baddr=%s len=%d)", rcba(baddr), len);
 #endif /*]*/
 
     /*
@@ -2379,18 +2381,13 @@ resync_text(int baddr, int len, struct sp *buffer)
     if (!ever) {
 	struct sp b;
 
-	/* Create masks for the "important" fields in an sp. */
+	/* Create a mask for the "important" fields in an sp. */
 	b.u.word = 0L;
 	b.u.bits.fg = COLOR_MASK | INVERT_MASK;
+	b.u.bits.bg = COLOR_MASK;
 	b.u.bits.sel = 1;
 	b.u.bits.gr = GR_UNDERLINE | GR_INTENSIFY;
 	cmask = b.u.word;
-
-	b.u.word = 0L;
-	b.u.bits.fg = INVERT_MASK;
-	b.u.bits.sel = 1;
-	b.u.bits.gr = 0xf;
-	gmask = b.u.word;
 
 	ever = true;
     }
@@ -2402,15 +2399,13 @@ resync_text(int baddr, int len, struct sp *buffer)
 	y = ssROW_TO_Y(BA_TO_ROW(baddr));
 
 	/* All empty, fill a rectangle */
-#if defined(_ST) /*[*/
-	printf("FillRectangle(baddr=%s, len=%d)\n", rcba(baddr), len);
+#if defined(_STRT) /*[*/
+	printf(" FillRectangle(baddr=%s len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)), x,
 		y - ss->ascent, (ss->char_width * len) + 1, ss->char_height);
     } else {
 	unsigned long attrs, attrs2;
-	bool has_gr, has_gr2;
-	bool empty, empty2;
 	struct sp ra;
 	int i;
 	int i0 = 0;
@@ -2419,58 +2414,38 @@ resync_text(int baddr, int len, struct sp *buffer)
 
 	/* Note the characteristics of the beginning of the region. */
 	attrs = buffer[baddr].u.word & cmask;
-	has_gr = (buffer[baddr].u.word & gmask) != 0;
-	empty = !has_gr && bkm_isset(&buffer[baddr]);
 
 	for (i = 0; i < len; i++) {
 	    /* Note the characteristics of this character. */
 	    attrs2 = buffer[baddr+i].u.word & cmask;
-	    has_gr2 = (buffer[baddr+i].u.word & gmask) != 0;
-	    empty2 = !has_gr2 && bkm_isset(&buffer[baddr+i]);
+
+#if defined(_STRT) /*[*/
+	    printf(" 0x%lx-0x%lx", attrs, attrs2);
+#endif /*]*/
 
 	    /* If this character has exactly the same attributes
 	       as the current region, simply add it, noting that
 	       the region might now not be empty. */
 	    if (attrs2 == attrs) {
-		if (!empty2) {
-		    empty = 0;
-		}
-		continue;
-	    }
-
-	    /* If this character is empty, and the current region
-	       has no GR attributes, pretend it matches. */
-	    if (empty2 && !has_gr) {
-		continue;
-	    }
-
-	    /* If the current region is empty, this character
-	       isn't empty, and this character has no GR
-	       attributes, change the current region's attributes
-	       to this character's attributes and add it. */
-	    if (empty && !empty2 && !has_gr2) {
-		attrs = attrs2;
-		has_gr = has_gr2;
-		empty = empty2;
-		ra = buffer[baddr+i];
+#if defined(_STRT) /*[*/
+		printf(" c1");
+#endif /*]*/
 		continue;
 	    }
 
 	    /* Dump the region and start a new one with this character. */
-#if defined(_ST) /*[*/
-	    printf("%s:%d: rt%s\n", "render_text", __LINE__, rcba(baddr+i0));
+#if defined(_STRT) /*[*/
+	    printf(" %s+%d", rcba(baddr+i0), i-i0);
 #endif /*]*/
 	    render_text(&buffer[baddr+i0], baddr+i0, i - i0, false, &ra);
 	    attrs = attrs2;
-	    has_gr = has_gr2;
-	    empty = empty2;
 	    i0 = i;
 	    ra = buffer[baddr+i];
 	}
 
 	/* Dump the remainder of the region. */
-#if defined(_ST) /*[*/
-	printf("%s:%d: rt%s\n", "render_text", __LINE__, rcba(baddr+i0));
+#if defined(_STRT) /*[*/
+	printf(" %s+%d\n", rcba(baddr+i0), len-i0);
 #endif /*]*/
 	render_text(&buffer[baddr+i0], baddr+i0, len - i0, false, &ra);
     }
@@ -2620,16 +2595,17 @@ linedraw_to_udisplay(int d8_ix, unsigned char c)
 }
 
 /*
- * Render text onto the X display.  The region must not span lines.
+ * Render text onto the X display. The region must not span lines.
  */
 static void
 render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	struct sp *attrs)
 {
-    int color;
+    int fg;
+    int bg;
     int x, y;
-    GC dgc = (GC)None;	/* drawing text */
-    GC cleargc = (GC)None;	/* clearing under undersized characters */
+    GC fg_dc = (GC)None;	/* drawing text */
+    GC bg_dc = (GC)None;	/* clearing under undersized characters */
     int sel = attrs->u.bits.sel;
     register int i, j;
     bool one_at_a_time = false;
@@ -2838,55 +2814,44 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 
     x = ssCOL_TO_X(BA_TO_COL(baddr));
     y = ssROW_TO_Y(BA_TO_ROW(baddr));
-    color = attrs->u.bits.fg;
+    fg = attrs->u.bits.fg;
+    bg = attrs->u.bits.bg;
 
     /* Select the GCs. */
     if (sel && !block_cursor) {
 	/* Selected, but not a block cursor. */
 	if (!appres.interactive.mono) {
 	    /* Color: Use the special select GCs. */
-	    dgc = get_selgc(ss, color);
-	    cleargc = ss->clrselgc;
+	    fg_dc = get_selgc(ss, fg);
+	    bg_dc = ss->clrselgc;
 	} else {
 	    /* Mono: Invert the color. */
-	    dgc = get_gc(ss, INVERT_COLOR(color));
-	    cleargc = get_gc(ss, color);
+	    fg_dc = get_gc(ss, INVERT_COLOR(fg));
+	    bg_dc = get_gc(ss, fg);
 	}
     } else if (block_cursor && !(appres.interactive.mono && sel)) {
 	/* Block cursor, but neither mono nor selected. */
 	if (xappres.use_cursor_color) {
 	    /* Use the specific-color inverted GC. */
-	    dgc = ss->invucgc;
-	    cleargc = ss->ucgc;
+	    fg_dc = ss->invucgc;
+	    bg_dc = ss->ucgc;
 	} else {
 	    /* Just invert the specified color. */
-	    dgc = get_gc(ss, INVERT_COLOR(color));
-	    cleargc = get_gc(ss, color);
+	    fg_dc = get_gc(ss, INVERT_COLOR(fg));
+	    bg_dc = get_gc(ss, fg);
 	}
     } else {
 	/* Ordinary text, or a selected block cursor. */
-	dgc = get_gc(ss, color);
-	cleargc = get_gc(ss, INVERT_COLOR(color));
+	fg_dc = get_gc(ss, fg);
+	if (bg != 0) {
+	    bg_dc = get_gc(ss, bg);
+	} else {
+	    bg_dc = get_gc(ss, INVERT_COLOR(fg));
+	}
     }
 
     /* Draw the text */
-    XFillRectangle(display, ss->window, cleargc, x, y - ss->ascent, clear_len,
-	    ss->char_height);
-#if defined(_ST) /*[*/
-    {
-	int k, l;
-
-	for (k = 0; k < n_texts; k++) {
-	    printf("text[%d]: %d chars, %s:", k, text[k].nchars,
-		    (text[k].font == dbcs_font.font)? "dbcs": "sbcs");
-	    for (l = 0; l < text[k].nchars; l++) {
-		printf(" %02x%02x", text[k].chars[l].byte1,
-			text[k].chars[l].byte2);
-	    }
-	    printf("\n");
-	}
-    }
-#endif /*]*/
+    XFillRectangle(display, ss->window, bg_dc, x, y - ss->ascent, clear_len, ss->char_height);
     if (one_at_a_time || (n_sbcs && ss->xtra_width) || (n_dbcs && dbcs_font.xtra_width)) {
 	int i, j;
 	int xn = x;
@@ -2901,11 +2866,11 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 			text1.nchars = 1;
 			text1.delta = 0;
 			text1.font = ss->fid;
-			XDrawText16(display, ss->window, dgc, xn, y, &text1, 1);
+			XDrawText16(display, ss->window, fg_dc, xn, y, &text1, 1);
 			xn += ss->char_width;
 		    }
 		} else {
-		    XDrawText16(display, ss->window, dgc, xn, y, &text[i], 1);
+		    XDrawText16(display, ss->window, fg_dc, xn, y, &text[i], 1);
 			xn += ss->char_width * text[i].nchars;
 		}
 	    } else {
@@ -2915,27 +2880,27 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 			text1.nchars = 1;
 			text1.delta = 0;
 			text1.font = dbcs_font.font;
-			XDrawText16(display, ss->window, dgc, xn, y, &text1, 1);
+			XDrawText16(display, ss->window, fg_dc, xn, y, &text1, 1);
 			xn += dbcs_font.char_width;
 		    }
 		} else {
-		    XDrawText16(display, ss->window, dgc, xn, y, &text[i], 1);
+		    XDrawText16(display, ss->window, fg_dc, xn, y, &text[i], 1);
 		    xn += dbcs_font.char_width * text[i].nchars;
 		}
 	    }
 	}
     } else {
-	XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
+	XDrawText16(display, ss->window, fg_dc, x, y, text, n_texts);
 	if (ss->overstrike && ((attrs->u.bits.gr & GR_INTENSIFY) ||
 		    ((appres.interactive.mono ||
 		      (!mode3279 && highlight_bold)) &&
-		     ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
-	    XDrawText16(display, ss->window, dgc, x+1, y, text, n_texts);
+		     ((fg & BASE_MASK) == FA_INT_HIGH_SEL)))) {
+	    XDrawText16(display, ss->window, fg_dc, x+1, y, text, n_texts);
 	}
     }
 
     if (attrs->u.bits.gr & GR_UNDERLINE) {
-	XDrawLine(display, ss->window, dgc, x,
+	XDrawLine(display, ss->window, fg_dc, x,
 		y - ss->ascent + ss->char_height - 1, x + clear_len,
 		y - ss->ascent + ss->char_height - 1);
     }
@@ -3081,7 +3046,7 @@ map_crosshair(int baddr)
 }
 
 /*
- * "Draw" ea_buf into a buffer
+ * "Draw" ea_buf into a buffer.
  */
 static void
 draw_fields(struct sp *buffer, int first, int last)
@@ -3091,7 +3056,7 @@ draw_fields(struct sp *buffer, int first, int last)
     unsigned char fa;
     struct ea *field_ea;
     struct ea *sbp = ea_buf;
-    int	field_color;
+    int	ffg, fbg;
     int	zero;
     bool any_blink = false;
     int	crossable = CROSSABLE;
@@ -3127,9 +3092,14 @@ draw_fields(struct sp *buffer, int first, int last)
 
     zero = FA_IS_ZERO(fa);
     if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
-	field_color = field_ea->fg & COLOR_MASK;
+	ffg = HCOLOR_TO_SPCOLOR(field_ea->fg);
     } else {
-	field_color = fa_color(fa);
+	ffg = fa_fg(fa);
+    }
+    if (field_ea->bg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
+	fbg = HCOLOR_TO_SPCOLOR(field_ea->bg);
+    } else {
+	fbg = 0;
     }
 
     do {
@@ -3147,9 +3117,14 @@ draw_fields(struct sp *buffer, int first, int last)
 	    field_ea = sbp;
 	    zero = FA_IS_ZERO(fa);
 	    if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
-		field_color = field_ea->fg & COLOR_MASK;
+		ffg = HCOLOR_TO_SPCOLOR(field_ea->fg);
 	    } else {
-		field_color = fa_color(fa);
+		ffg = fa_fg(fa);
+	    }
+	    if (field_ea->bg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
+		fbg = HCOLOR_TO_SPCOLOR(field_ea->bg);
+	    } else {
+		fbg = 0;
 	    }
 	    if (visible_control) {
 		b.u.bits.ec = visible_ebcdic(fa);
@@ -3158,12 +3133,12 @@ draw_fields(struct sp *buffer, int first, int last)
 	    } else if (crossable && CROSSED(baddr)) {
 		b.u.bits.cs = CS_APL;
 		b.u.bits.ec = map_crosshair(baddr);
-		b.u.bits.fg = CROSS_COLOR;
+		b.u.bits.fg = CROSS_FG;
 		b.u.bits.gr = 0;
 	    }
 	} else {
 	    unsigned short gr;
-	    int e_color;
+	    int e_fg, x_fg, e_bg;
 	    bool is_vc = false;
 
 	    /* Find the right graphic rendition. */
@@ -3181,25 +3156,54 @@ draw_fields(struct sp *buffer, int first, int last)
 		    gr |= GR_INTENSIFY;
 		}
 	    }
+	    if (gr & GR_REVERSE) {
+		reverse = true;
+	    }
 
-	    /* Find the right color. */
 	    if (zero) {
-		e_color = fa_color(FA_INT_HIGH_SEL);
+		e_fg = x_fg = fa_fg(FA_INT_HIGH_SEL);
+		e_bg = 0;
 	    } else {
+		/* Foreground. */
 		if (sbp->fg) {
-		    e_color = sbp->fg & COLOR_MASK;
+		    /* Explicit color. Only happens on a 3279. */
+		    x_fg = HCOLOR_TO_SPCOLOR(sbp->fg);
 		} else if (appres.interactive.mono && (gr & GR_INTENSIFY)) {
-		    e_color = fa_color(FA_INT_HIGH_SEL);
+		    /* Mono mode, intensified. */
+		    x_fg = fa_fg(FA_INT_HIGH_SEL);
 		} else {
-		    e_color = field_color;
+		    /* Use the color from the field attribute. */
+		    x_fg = ffg;
 		}
-		if (gr & GR_REVERSE) {
-		    e_color = INVERT_COLOR(e_color);
-		    reverse = true;
+		e_fg = x_fg;
+
+		/* Background. */
+		if (sbp->bg) {
+		    e_bg = HCOLOR_TO_SPCOLOR(sbp->bg);
+		} else if (fbg) {
+		    e_bg = fbg;
+		} else {
+		    e_bg = 0;
 		}
 	    }
+
+	    if (!zero && reverse) {
+		/* Foreground. */
+		if (mode3279 && e_bg) {
+		    /* Swap fg and bg. */
+		    e_fg = e_bg;
+		} else {
+		    /* Invert when rendering. */
+		    e_fg = INVERT_COLOR(e_fg);
+		}
+
+		/* Background. */
+		e_bg = x_fg;
+	    }
+
 	    if (!appres.interactive.mono) {
-		b.u.bits.fg = e_color;
+		b.u.bits.fg = e_fg;
+		b.u.bits.bg = e_bg;
 	    }
 
 	    /* Find the right character and character set. */
@@ -3210,7 +3214,7 @@ draw_fields(struct sp *buffer, int first, int last)
 		} else if (crossable && CROSSED(baddr)) {
 		    b.u.bits.cs = CS_APL;
 		    b.u.bits.ec = map_crosshair(baddr);
-		    b.u.bits.fg = CROSS_COLOR;
+		    b.u.bits.fg = CROSS_FG;
 		    b.u.bits.gr = 0;
 		}
 	    } else if (((!visible_control || (u || c != EBC_null)) &&
@@ -3218,7 +3222,7 @@ draw_fields(struct sp *buffer, int first, int last)
 		       (gr & (GR_REVERSE | GR_UNDERLINE)) ||
 		       visible_control) {
 
-		b.u.bits.fg = e_color;
+		b.u.bits.fg = e_fg;
 
 		/*
 		 * Replace blanked-out blinking text with
@@ -3230,7 +3234,7 @@ draw_fields(struct sp *buffer, int first, int last)
 		    } else {
 			b.u.bits.cs = CS_APL;
 			b.u.bits.ec = map_crosshair(baddr);
-			b.u.bits.fg = CROSS_COLOR;
+			b.u.bits.fg = CROSS_FG;
 			b.u.bits.gr = 0;
 		    }
 		} else {
@@ -3282,7 +3286,7 @@ draw_fields(struct sp *buffer, int first, int last)
 	    if (crossable && CROSSED(baddr) && b.u.bits.cs == CS_BASE && bkm_isset(&b)) {
 		b.u.bits.cs = CS_APL;
 		b.u.bits.ec = map_crosshair(baddr);
-		b.u.bits.fg = CROSS_COLOR;
+		b.u.bits.fg = CROSS_FG;
 		b.u.bits.gr = 0;
 	    }
 	}
@@ -3490,13 +3494,12 @@ fl_baddr(int baddr)
 /*
  * Return the proper foreground color for a character position.
  */
-
 static int
-char_color(int baddr)
+char_fg(int baddr)
 {
     int faddr;
     unsigned char fa;
-    int color;
+    int fg;
 
     faddr = find_field_attribute(baddr);
     fa = ea_buf[faddr].fa;
@@ -3505,23 +3508,22 @@ char_color(int baddr)
      * For non-display fields, we ignore gr and fg.
      */
     if (FA_IS_ZERO(fa)) {
-	color = fa_color(fa);
+	fg = fa_fg(fa);
 	if (appres.interactive.mono && SELECTED(baddr)) {
-	    color = INVERT_COLOR(color);
+	    fg = INVERT_COLOR(fg);
 	}
-	return color;
+	return fg;
     }
 
     /*
-     * Find the color of the character or the field.
+     * Find the foreground color of the character or the field.
      */
     if (ea_buf[baddr].fg) {
-	color = ea_buf[baddr].fg & COLOR_MASK;
-    } else if (fa2ea(faddr)->fg && (!appres.modified_sel ||
-				  !FA_IS_MODIFIED(fa))) {
-	color = fa2ea(faddr)->fg & COLOR_MASK;
+	fg = ea_buf[baddr].fg & COLOR_MASK;
+    } else if (fa2ea(faddr)->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
+	fg = fa2ea(faddr)->fg & COLOR_MASK;
     } else {
-	color = fa_color(fa);
+	fg = fa_fg(fa);
     }
 
     /*
@@ -3534,17 +3536,17 @@ char_color(int baddr)
     if (!((ea_buf[baddr].fa && !visible_control)) &&
 	((ea_buf[baddr].gr & GR_REVERSE) ||
 	 (fa2ea(faddr)->gr & GR_REVERSE))) {
-	color = INVERT_COLOR(color);
+	fg = INVERT_COLOR(fg);
     }
 
     /*
      * In monochrome, apply selection status as well.
      */
     if (appres.interactive.mono && SELECTED(baddr)) {
-	color = INVERT_COLOR(color);
+	fg = INVERT_COLOR(fg);
     }
 
-    return color;
+    return fg;
 }
 
 
@@ -3560,7 +3562,7 @@ cursor_gc(int baddr)
     if (xappres.use_cursor_color) {
 	return ss->ucgc;
     } else {
-	return get_gc(ss, char_color(baddr));
+	return get_gc(ss, char_fg(baddr));
     }
 }
 
@@ -3639,14 +3641,14 @@ redraw_char_inverted(int baddr, enum dbcs_state d)
 	if (CROSSABLE && CROSSED(baddr)) {
 	    b->u.bits.cs = CS_APL;
 	    b->u.bits.ec = map_crosshair(baddr);
-	    b->u.bits.fg = CROSS_COLOR;
+	    b->u.bits.fg = CROSS_FG;
 	    b->u.bits.gr = 0;
 	} else {
 	    b->u.bits.ec = EBC_space;
 	    b->u.bits.cs = 0;
 	}
     }
-    b->u.bits.fg = char_color(baddr);
+    b->u.bits.fg = char_fg(baddr);
     b->u.bits.gr |= (gr & GR_INTENSIFY);
 
     if (d == DBCS_LEFT) {
@@ -3954,7 +3956,7 @@ allocate_pixels(void)
 		"using \"white\"", xappres.cursor_color_name);
     }
 
-    /* Allocate pseudocolors. */
+    /* Allocate 3278 colors. */
     if (!mode3279) {
 	if (!alloc_color(xappres.normal_name, FB_WHITE, &normal_pixel)) {
 	    popup_an_error("Cannot allocate colormap \"%s\" for text, "
@@ -4017,14 +4019,11 @@ make_gcs(struct sstate *s)
 	if (!appres.interactive.mono) {
 	    make_gc_set(s, FA_INT_NORM_NSEL, normal_pixel, colorbg_pixel);
 	    make_gc_set(s, FA_INT_NORM_SEL,  select_pixel, colorbg_pixel);
-	    make_gc_set(s, FA_INT_HIGH_SEL,  bold_pixel, colorbg_pixel);
+	    make_gc_set(s, FA_INT_HIGH_SEL,  bold_pixel,   colorbg_pixel);
 	} else {
-	    make_gc_set(s, FA_INT_NORM_NSEL, xappres.foreground,
-		    xappres.background);
-	    make_gc_set(s, FA_INT_NORM_SEL,  xappres.foreground,
-		    xappres.background);
-	    make_gc_set(s, FA_INT_HIGH_SEL,  xappres.foreground,
-		    xappres.background);
+	    make_gc_set(s, FA_INT_NORM_NSEL, xappres.foreground, xappres.background);
+	    make_gc_set(s, FA_INT_NORM_SEL,  xappres.foreground, xappres.background);
+	    make_gc_set(s, FA_INT_HIGH_SEL,  xappres.foreground, xappres.background);
 	}
     }
     if (s->clrselgc != (GC)None) {
@@ -4059,10 +4058,8 @@ make_gcs(struct sstate *s)
 	    s->invucgc = (GC)None;
 	}
 	xgcv.foreground = colorbg_pixel;
-	xgcv.background = cursor_pixel;
 	xgcv.font = s->fid;
-	s->invucgc = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
-		&xgcv);
+	s->invucgc = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
     }
 
     /* Set the flag for overstriking bold. */
@@ -4073,7 +4070,7 @@ make_gcs(struct sstate *s)
 static void
 default_color_scheme(void)
 {
-    static int default_attrib_colors[4] = {
+    static int default_attrib_fg[4] = {
 	GC_NONDEFAULT | HOST_COLOR_GREEN,	/* default */
 	GC_NONDEFAULT | HOST_COLOR_RED,		/* intensified */
 	GC_NONDEFAULT | HOST_COLOR_BLUE,	/* protected */
@@ -4087,7 +4084,7 @@ default_color_scheme(void)
 	color_name[i] = XtNewString("white");
     }
     for (i = 0; i < 4; i++) {
-	field_colors[i] = default_attrib_colors[i];
+	field_fg[i] = default_attrib_fg[i];
     }
 }
 
@@ -4104,7 +4101,7 @@ xfer_color_scheme(char *cs, bool do_popup)
     enum fallback_color tmp_ibm_fb = FB_WHITE;
     char *tmp_colorbg_name = NULL;
     char *tmp_selbg_name = NULL;
-    int tmp_field_colors[4];
+    int tmp_field_fg[4];
 
     if (cs == NULL) {
 	goto failure;
@@ -4154,9 +4151,9 @@ xfer_color_scheme(char *cs, bool do_popup)
 	    tmp_selbg_name = tk;
 	    break;
 	case 19: case 20: case 21: case 22:	/* attribute colors */
-	    tmp_field_colors[i-19] = atoi(tk);
-	    if (tmp_field_colors[i-19] < 0 ||
-		tmp_field_colors[i-19] > 0x0f) {
+	    tmp_field_fg[i-19] = atoi(tk);
+	    if (tmp_field_fg[i-19] < 0 ||
+		tmp_field_fg[i-19] > 0x0f) {
 		if (do_popup) {
 		    popup_an_error("Invalid %s resource, ignoring",
 			    scheme_name);
@@ -4165,7 +4162,7 @@ xfer_color_scheme(char *cs, bool do_popup)
 		}
 		goto failure;
 	    }
-	    tmp_field_colors[i-19] |= GC_NONDEFAULT;
+	    tmp_field_fg[i-19] |= GC_NONDEFAULT;
 	}
     }
     if (i < 23) {
@@ -4190,7 +4187,7 @@ xfer_color_scheme(char *cs, bool do_popup)
     XtFree(xappres.selbg_name);
     xappres.selbg_name = XtNewString(tmp_selbg_name);
     for (i = 0; i < 4; i++) {
-	field_colors[i] = tmp_field_colors[i];
+	field_fg[i] = tmp_field_fg[i];
     }
 
     /* Clean up and exit. */
@@ -4245,21 +4242,10 @@ get_gc(struct sstate *s, int color)
     xgcv.font = s->fid;
     if (!(color & INVERT_MASK)) {
 	xgcv.foreground = cpx[pixel_index];
-	xgcv.background = colorbg_pixel;
     } else {
 	xgcv.foreground = colorbg_pixel;
-	xgcv.background = cpx[pixel_index];
     }
-    if (s == &nss && pixel_index == DEFAULT_PIXEL) {
-	xgcv.graphics_exposures = true;
-	r = XtGetGC(toplevel,
-		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
-		&xgcv);
-    } else {
-	r = XtGetGC(toplevel,
-		GCForeground|GCBackground|GCFont,
-		&xgcv);
-    }
+    r = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
     return s->gc[color] = r;
 }
 
@@ -4294,9 +4280,7 @@ get_selgc(struct sstate *s, int color)
     /* Allocate the GC. */
     xgcv.font = s->fid;
     xgcv.foreground = cpx[color];
-    xgcv.background = selbg_pixel;
-    return s->selgc[color] =
-	XtGetGC(toplevel, GCForeground|GCBackground|GCFont, &xgcv);
+    return s->selgc[color] = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
 }
 
 /* External entry points for GC allocation. */
@@ -4316,7 +4300,7 @@ screen_invgc(int color)
 /*
  * Preallocate a set of graphics contexts for a given color.
  *
- * This logic is used only in pseudo-color mode.  In full color mode,
+ * This logic is used only in 3278 mode. In full color mode,
  * GCs are allocated dynamically by get_gc().
  */
 static void
@@ -4328,39 +4312,29 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 	XtReleaseGC(toplevel, s->gc[i]);
     }
     xgcv.foreground = fg;
-    xgcv.background = bg;
-    xgcv.graphics_exposures = true;
     xgcv.font = s->fid;
-    if (s == &nss && !i) {
-	s->gc[i] = XtGetGC(toplevel,
-		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
-		&xgcv);
-    } else {
-	s->gc[i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont, &xgcv);
-    }
+    s->gc[i] = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
+
     if (s->gc[NGCS + i] != (GC)None) {
 	XtReleaseGC(toplevel, s->gc[NGCS + i]);
     }
     xgcv.foreground = bg;
-    xgcv.background = fg;
-    s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
-	    &xgcv);
+    s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
+
     if (!appres.interactive.mono) {
 	if (s->selgc[i] != (GC)None) {
 	    XtReleaseGC(toplevel, s->selgc[i]);
 	}
 	xgcv.foreground = fg;
-	xgcv.background = selbg_pixel;
-	s->selgc[i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
-		&xgcv);
+	s->selgc[i] = XtGetGC(toplevel, GCForeground|GCFont, &xgcv);
     }
 }
 
 /*
- * Convert an attribute to a color index.
+ * Convert an attribute to a foreground color index.
  */
 static int
-fa_color(unsigned char fa)
+fa_fg(unsigned char fa)
 {
 #   define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
@@ -4377,7 +4351,7 @@ fa_color(unsigned char fa)
 		 !FA_IS_INTENSE(fa)) {
 	    return GC_NONDEFAULT | (xappres.visual_select_color & 0xf);
 	} else {
-	    return field_colors[DEFCOLOR_MAP(fa)];
+	    return field_fg[DEFCOLOR_MAP(fa)];
 	}
     } else {
 	/*
@@ -5666,9 +5640,7 @@ aicon_init(void)
 
 	xgcv.font = ailabel_font->fid;
 	xgcv.foreground = xappres.foreground;
-	xgcv.background = xappres.background;
-	ailabel_gc = XtGetGC(toplevel, GCFont|GCForeground|GCBackground,
-		&xgcv);
+	ailabel_gc = XtGetGC(toplevel, GCFont|GCForeground, &xgcv);
     }
 }
 
