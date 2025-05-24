@@ -63,7 +63,7 @@ version.o: mkversion.py $(VOBJS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-mitm: $(OBJS1) $(DEP3270)
+mitm: $(OBJS1) $(DEP32XX)
 	$(CC) -o $@ $(LDFLAGS) $(OBJS1) $(LD32XX) $(LIBS)
 
 man:: mitm.man
