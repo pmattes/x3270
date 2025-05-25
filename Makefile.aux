@@ -38,141 +38,53 @@ src.tgz: prepare man Webpage program-src
 prepare: configure
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare b3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare x3270if-prepare ibm_hosts-prepare mitm-prepare Webpage-prepare ws3270-prepare wc3270-prepare wb3270-prepare
-lib-prepare:
-	cd lib && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-c3270-prepare:
-	cd c3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-s3270-prepare:
-	cd s3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-b3270-prepare:
-	cd b3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-tcl3270-prepare:
-	cd tcl3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-x3270-prepare:
-	cd x3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-pr3287-prepare:
-	cd pr3287 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-x3270if-prepare:
-	cd x3270if && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-ibm_hosts-prepare:
-	cd ibm_hosts && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-mitm-prepare:
-	cd mitm && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-Webpage-prepare:
-	cd Webpage && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-ws3270-prepare:
-	cd ws3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-wc3270-prepare:
-	cd wc3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
-wb3270-prepare:
-	cd wb3270 && $(MAKE) -f Makefile.aux prepare VPATH=../Common -I../Common
+PREPARE = Webpage-prepare b3270-prepare c3270-prepare ibm_hosts-prepare \
+	lib-prepare mitm-prepare pr3287-prepare s3270-prepare tcl3270-prepare \
+	wb3270-prepare wc3270-prepare ws3270-prepare x3270-prepare \
+	x3270if-prepare
+prepare: $(PREPARE)
+$(PREPARE):
+	$(MAKE) -C $(@:-prepare=) -f Makefile.aux prepare VPATH=../Common -I../Common
 
 man: prepare
-man: c3270-man s3270-man b3270-man tcl3270-man x3270-man pr3287-man x3270if-man ibm_hosts-man mitm-man wc3270-man ws3270-man wb3270-man wpr3287-man wx3270if-man wmitm-man
-c3270-man:
-	cd c3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-s3270-man:
-	cd s3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-b3270-man:
-	cd b3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-tcl3270-man:
-	cd tcl3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-x3270-man:
-	cd x3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-pr3287-man:
-	cd pr3287 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-x3270if-man:
-	cd x3270if && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-ibm_hosts-man:
-	cd ibm_hosts && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-mitm-man:
-	cd mitm && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-wc3270-man:
-	cd wc3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-ws3270-man:
-	cd ws3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-wb3270-man:
-	cd wb3270 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-wpr3287-man:
-	cd wpr3287 && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-wx3270if-man:
-	cd wx3270if && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
-wmitm-man:
-	cd wmitm && $(MAKE) -f Makefile.aux man VPATH=../Common -I../Common
+MAN = b3270-man c3270-man ibm_hosts-man mitm-man pr3287-man s3270-man \
+	tcl3270-man wb3270-man wc3270-man wmitm-man wpr3287-man ws3270-man \
+	wx3270if-man x3270-man x3270if-man
+man: $(MAN)
+$(MAN):
+	$(MAKE) -C $(@:-man=) -f Makefile.aux man VPATH=../Common -I../Common
 
 Webpage: program-src man FORCE
-	cd Webpage && $(MAKE) VPATH=../Common -I../Common
+	$(MAKE) -C Webpage VPATH=../Common -I../Common
 
-program-src: c3270-src.tgz s3270-src.tgz b3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz x3270if-src.tgz ibm_hosts-src.tgz mitm-src.tgz wc3270-src.tgz ws3270-src.tgz wb3270-src.tgz wpr3287-src.tgz wx3270if-src.tgz wmitm-src.tgz lib-src.tgz
-lib-src.tgz:
-	cd lib && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-c3270-src.tgz:
-	cd c3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-s3270-src.tgz:
-	cd s3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-b3270-src.tgz:
-	cd b3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-tcl3270-src.tgz:
-	cd tcl3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-x3270-src.tgz:
-	cd x3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-pr3287-src.tgz:
-	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-x3270if-src.tgz:
-	cd x3270if && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-ibm_hosts-src.tgz:
-	cd ibm_hosts && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-mitm-src.tgz:
-	cd mitm && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-wc3270-src.tgz:
-	cd wc3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-ws3270-src.tgz:
-	cd ws3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-wb3270-src.tgz:
-	cd wb3270 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-wpr3287-src.tgz:
-	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-wx3270if-src.tgz:
-	cd wx3270if && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
-wmitm-src.tgz:
-	cd wmitm && $(MAKE) -f Makefile.aux src.tgz VPATH=../Common -I../Common
+PROGRAMSRC = b3270-src.tgz c3270-src.tgz ibm_hosts-src.tgz lib-src.tgz \
+	mitm-src.tgz playback-src.tgz pr3287-src.tgz s3270-src.tgz \
+	tcl3270-src.tgz wb3270-src.tgz wc3270-src.tgz wmitm-src.tgz \
+	wpr3287-src.tgz ws3270-src.tgz wx3270if-src.tgz x3270-src.tgz \
+	x3270if-src.tgz
+program-src: $(PROGRAMSRC)
+$(PROGRAMSRC):
+	$(MAKE) -C $(@:-src.tgz=) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 
 # Target for building the Inno Setup .exe file and the .zip file.
 windows-release: man
 	$(MAKE) windows
-	cd wc3270 && $(MAKE) -f Makefile.aux $@ VPATH=../Common -I../Common
+	$(MAKE) -C wc3270 -f Makefile.aux $@ VPATH=../Common -I../Common
 
 clean: release-clean doxygen-clean
 
 release-clean:
 	rm -rf obj/release/*
 
-doxygen: doxygen-b3270 doxygen-c3270 doxygen-pr3287 doxygen-s3270 doxygen-wb3270 doxygen-wc3270 doxygen-wpr3287 doxygen-ws3270 doxygen-x3270 doxygen-x3270if doxygen-wx3270if doxygen-wizard
-DOXY=Common/doxygen/mkdoxy -v Common/version.txt -t Common/doxygen/Doxyfile.tmpl
-doxygen-b3270:
-	$(DOXY) -p b3270/Doxygen.opts -o obj/doxygen/posix/b3270
-doxygen-c3270:
-	$(DOXY) -p c3270/Doxygen.opts -o obj/doxygen/posix/c3270
-doxygen-pr3287:
-	$(DOXY) -p pr3287/Doxygen.opts -o obj/doxygen/posix/pr3287
-doxygen-s3270:
-	$(DOXY) -p s3270/Doxygen.opts -o obj/doxygen/posix/s3270
-doxygen-wb3270:
-	$(DOXY) -p wb3270/Doxygen.opts -o obj/doxygen/windows/b3270
-doxygen-wc3270:
-	$(DOXY) -p wc3270/Doxygen.opts -o obj/doxygen/windows/wc3270
+DOXY = Common/doxygen/mkdoxy -v Common/version.txt -t Common/doxygen/Doxyfile.tmpl
+UDOXYGEN = doxygen-b3270 doxygen-c3270 doxygen-pr3287 doxygen-s3270 doxygen-x3270 doxygen-x3270if
+WDOXYGEN = doxygen-wb3270 doxygen-wc3270 doxygen-wpr3287 doxygen-ws3270 doxygen-wx3270if
+doxygen: $(UDOXYGEN) $(WDOXYGEN) doxygen-wizard
+$(UDOXYGEN):
+	$(DOXY) -p $(@:doxygen-%=%)/Doxygen.opts -o obj/doxygen/posix/$(@:doxygen-%=%)
+$(WDOXYGEN):
+	$(DOXY) -p $(@:doxygen-%=%)/Doxygen.opts -o obj/doxygen/windows/$(@:doxygen-w%=%)
 doxygen-wizard:
 	$(DOXY) -p wc3270/Doxygen-wizard.opts -o obj/doxygen/windows/wizard
-doxygen-wpr3287:
-	$(DOXY) -p wpr3287/Doxygen.opts -o obj/doxygen/windows/pr3287
-doxygen-ws3270:
-	$(DOXY) -p ws3270/Doxygen.opts -o obj/doxygen/windows/s3270
-doxygen-wx3270if:
-	$(DOXY) -p wx3270if/Doxygen.opts -o obj/doxygen/windows/x3270if
-doxygen-x3270:
-	$(DOXY) -p x3270/Doxygen.opts -o obj/doxygen/posix/x3270
-doxygen-x3270if:
-	$(DOXY) -p x3270if/Doxygen.opts -o obj/doxygen/posix/x3270if
 doxygen-clean:
 	rm -rf obj/doxygen/*

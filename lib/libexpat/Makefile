@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2024 Paul Mattes.
+# Copyright (c) 2016-2025 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -43,11 +43,9 @@ export THIS = $(this)
 MAKEINC = -I$(top)/extern/libexpat/expat/lib -I$(top)/Common/Win32 -I$(this)
 
 all: $(srcdir) $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clean: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clobber: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+	$(MAKE) -C $(objdir) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean clobber: $(objdir)
+	$(MAKE) -C $(objdir) $(MAKEINC) -f $(this)/Makefile.obj $@
 
 $(objdir):
 	mkdir -p $(objdir)

@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2024 Paul Mattes.
+# Copyright (c) 2007-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,20 +62,10 @@ screenshots.html: screenshots-body.html mkpages.bash version.txt
 x026.html: x026-body.html mkpages.bash version.txt
 	./mkpages.bash -I../Common x026
 
-c3270-man.html:
-	cd ../c3270 && $(MAKE) -f Makefile.aux html/c3270-man.html
+c3270-man.html pr3287-man.html s3270-man.html tcl3270-man.html x3270-man.html wc3270-man.html:
+	$(MAKE) -C ../$(@:-man.html=) -f Makefile.aux html/$@
 ibm_hosts.html:
-	cd ../ibm_hosts && $(MAKE) -f Makefile.aux html/ibm_hosts.html
-pr3287-man.html:
-	cd ../pr3287 && $(MAKE) -f Makefile.aux html/pr3287-man.html
-s3270-man.html:
-	cd ../s3270 && $(MAKE) -f Makefile.aux html/s3270-man.html
-tcl3270-man.html:
-	cd ../tcl3270 && $(MAKE) -f Makefile.aux html/tcl3270-man.html
-x3270-man.html:
-	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-man.html
-wc3270-man.html:
-	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
+	$(MAKE) -C ../ibm_hosts -f Makefile.aux html/ibm_hosts.html
 
 WPDIR=../obj/Webpage
 TARBALL=$(WPDIR)/webpage.tgz

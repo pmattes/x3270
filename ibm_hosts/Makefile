@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2024 Paul Mattes.
+# Copyright (c) 2016-2025 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -35,16 +35,10 @@ export THIS = $(this)
 
 MAKEINC = -I$(this) -I$(top)/Common
 
-all: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-install: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-install.man: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clean: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clobber: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+default: all
+
+all install install.man clean clobber: $(objdir)
+	$(MAKE) -C $(objdir) $(MAKEINC) -f $(this)/Makefile.obj $@
 
 $(objdir):
 	mkdir -p $(objdir)
