@@ -616,8 +616,8 @@ enable_option_checking=no
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 WINDRES_SET
-WIN64_SUFFIX
-WIN32_SUFFIX
+WIN64_SET
+WIN32_SET
 T_TEST_CLOBBER
 T_TEST_CLEAN
 T_ALLTESTS
@@ -693,6 +693,8 @@ ac_user_opts='
 enable_option_checking
 enable_unix
 enable_windows
+enable_windows32
+enable_windows64
 enable_x3270
 enable_c3270
 enable_s3270
@@ -1357,7 +1359,9 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-unix           build all Unix emulators
-  --enable-windows        build all Windows emulators
+  --enable-windows        build all 32- and 64-bit Windows emulators
+  --enable-windows32      build all 32-bit Windows emulators
+  --enable-windows64      build all 64-bit Windows emulators
   --enable-x3270          build x3270
   --enable-c3270          build c3270
   --enable-s3270          build s3270
@@ -2012,6 +2016,18 @@ then :
   enableval=$enable_windows;
 fi
 
+# Check whether --enable-windows32 was given.
+if test ${enable_windows32+y}
+then :
+  enableval=$enable_windows32;
+fi
+
+# Check whether --enable-windows64 was given.
+if test ${enable_windows64+y}
+then :
+  enableval=$enable_windows64;
+fi
+
 
 # Check whether --enable-x3270 was given.
 if test ${enable_x3270+y}
@@ -2320,6 +2336,16 @@ fi
 
 if test "`uname -o`" = Msys; then enable_unix=no; fi
 
+if test "x$enable_windows64" = xyes -a "x$enable_windows32" != xyes; then
+    enable_windows32=no
+fi
+if test "x$enable_windows32" = xyes -a "x$enable_windows64" != xyes; then
+    enable_windows64=no
+fi
+if test "x$enable_windows32" = xno -a "x$enable_windows64" = xno; then
+    enable_windows=no
+fi
+
 if test "x$enable_unix" = xyes; then
     if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
@@ -2343,21 +2369,28 @@ if test "x$enable_unix" = xno; then
     enable_mitm=no
 fi
 
-WIN32_SUFFIX=-32
-WIN64_SUFFIX=-64
-if test "$mingw64_found" = "no" -a "$mingw32_found" = "no"
+if test "$mingw64_found" = no -a "$mingw32_found" = no
 then	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Disabling Windows cross-compile" >&5
 printf "%s\n" "$as_me: WARNING: Disabling Windows cross-compile" >&2;}
 	enable_windows=no
-else	if test "$mingw64_found" = "no"
-    	then	WIN64_SUFFIX=-32
-	fi
-	if test "$mingw32_found" = "no"
-	then	WIN32_SUFFIX=-64
-	fi
-	if test "$windres_found" = "yes"
+	enable_windows32=no
+	enable_windows64=no
+else	if test "$windres_found" = yes
 	then	WINDRES_SET="WINDRES=windres"
 	fi
+fi
+
+if test "x$enable_windows" != xno; then
+        if test "x$enable_windows32" = x -a "x$enable_windows64" = x; then
+	enable_windows32=$mingw32_found
+	enable_windows64=$mingw64_found
+    fi
+    if test "x$enable_windows32" != xno; then
+	WIN32_SET="B32 = 1"
+    fi
+    if test "x$enable_windows64" != xno; then
+	WIN64_SET="B64 = 1"
+    fi
 fi
 
 if test "x$enable_windows" = xyes; then
