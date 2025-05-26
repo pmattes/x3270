@@ -246,9 +246,9 @@ tcl3270-install.man: tcl3270 pr3287-install.man s3270-install.man x3270if-instal
 pr3287-install.man: pr3287
 	$(MAKE) -C pr3287 install.man
 x3270if-install.man: x3270if
-	$(MAKE) -f x3270if install.man
+	$(MAKE) -C x3270if install.man
 ibm_hosts-install.man:
-	$(MAKE) -f ibm_hosts install.man
+	$(MAKE) -C ibm_hosts install.man
 
 # Clean and clobber targets
 
