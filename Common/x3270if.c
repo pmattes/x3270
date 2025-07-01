@@ -52,6 +52,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
+# include <termios.h>
 # include <signal.h>
 # include <sys/types.h>
 # include <sys/socket.h>
