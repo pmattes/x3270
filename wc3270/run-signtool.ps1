@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 
 # Find everything.
 $signtool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'
-$dlib = 'C:\Users\pdm\AppData\Local\Microsoft\MicrosoftTrustedSigningClientTools\Azure.CodeSigning.Dlib.dll'
+$dlib = 'C:\users\pdm\Microsoft.Trusted.Signing.Client\bin\x64\Azure.CodeSigning.Dlib.dll'
 $timestamp = 'http://timestamp.acs.microsoft.com'
 
 # Put the Azure Trusted Signing metadata in a temporary file.
@@ -16,7 +16,6 @@ $json = @'
   "CodeSigningAccountName": "x3270",
   "CertificateProfileName": "x3270",
   "ExcludeCredentials": [
-    "AzureCliCredential",
     "ManagedIdentityCredential",
     "EnvironmentCredential",
     "WorkloadIdentityCredential",
@@ -34,11 +33,10 @@ function Sign {
     param (
       [string]$FileName
     )
-    $out = (& $signtool sign /v /td SHA256 /tr $timestamp /fd SHA256 /dlib $dlib /dmdf $tempjson "$FileName")
+    $out = (& $signtool sign /debug /v /td SHA256 /tr $timestamp /fd SHA256 /dlib $dlib /dmdf $tempjson "$FileName")
     if ((Get-AuthenticodeSignature "$FileName").Status -ne "Valid")
     {
-        Write-Error "$FileName not signed"
-        Write-Error "Signtool output: $out"
+        Write-Error "$FileName not signed, signtool output: $out"
         exit 1
     }
 }
