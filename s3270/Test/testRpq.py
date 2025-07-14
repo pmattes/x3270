@@ -171,7 +171,8 @@ class TestS3270RpqNames(cti):
     
     def get_timezone(self) -> str:
         '''Get the timezone'''
-        tz = -(time.timezone // 60) & 0xffff
+        offset = time.altzone if time.daylight != 0 else time.timezone
+        tz = -(offset // 60) & 0xffff
         return rpq.add_len(rpq.RpqName.Timezone.encode() + f'{tz:04x}')
 
     def get_address(self, ipv6=False) -> str:
