@@ -290,7 +290,7 @@ usage(const char *msg)
     }
     fprintf(stderr, "Usage: %s [options] [prefix:][LUname@]hostname[:port]\n",
 	    programname);
-    fprintf(stderr, "       %s [options] [<session-file>.s3270]\n",
+    fprintf(stderr, "       %s [options] [<session-file>.c3270]\n",
 	    programname);
     fprintf(stderr, "Use " OptHelp1 " for the list of options\n");
     exit(1);
