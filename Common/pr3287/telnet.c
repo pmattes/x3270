@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -183,6 +183,8 @@ static void tn3270e_cleared(void);
 static bool net_input(socket_t s);
 
 #define trace_str(str)	vtrace("%s", (str))
+#define trace_str_socket(str)	vctrace(TC_SOCKET, "%s", (str))
+#define trace_str_telnet(str)	vctrace(TC_TELNET, "%s", (str))
 static const char *cmd(int c);
 static const char *opt(unsigned char c);
 static const char *nnn(int c);
@@ -331,7 +333,7 @@ pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
 	secure_connection = true;
 	session = indent_s(sio_session_info(sio));
 	cert = indent_s(sio_server_cert_info(sio));
-	vtrace("TLS tunneled connection complete.  "
+	vctrace(TC_TLS, "TLS tunneled connection complete.  "
 		"Connection is now secure.\n"
 		"Session:\n%s\nServer certificate:\n%s\n",
 		   session, cert);
@@ -448,7 +450,7 @@ void
 net_disconnect(bool including_tls)
 {
     if (sock != INVALID_SOCKET) {
-	vtrace("SENT disconnect\n");
+	vctrace(TC_SOCKET, "SENT disconnect\n");
 	SOCK_CLOSE(sock);
 	sock = INVALID_SOCKET;
 	if (sio != NULL) {
@@ -548,22 +550,22 @@ net_input(socket_t s)
     if (nr < 0) {
 	if ((sio != NULL && nr == SIO_EWOULDBLOCK) ||
 	    (sio == NULL && socket_errno() == SE_EWOULDBLOCK)) {
-	    vtrace("EWOULDBLOCK\n");
+	    vctrace(TC_SOCKET, "EWOULDBLOCK\n");
 	    return true;
 	}
 	if (sio != NULL) {
-	    vtrace("RCVD sio error %s\n", sio_last_error());
+	    vctrace(TC_SOCKET, "RCVD sio error %s\n", sio_last_error());
 	    errmsg("%s\n", sio_last_error());
 	    cstate = NOT_CONNECTED;
 	    return false;
 	}
-	vtrace("RCVD socket error %s\n", sockerrmsg());
+	vctrace(TC_SOCKET, "RCVD socket error %s\n", sockerrmsg());
 	popup_a_sockerr("Socket read");
 	cstate = NOT_CONNECTED;
 	return false;
     } else if (nr == 0) {
 	/* Host disconnected. */
-	trace_str("RCVD disconnect\n");
+	trace_str_socket("RCVD disconnect\n");
 	cstate = NOT_CONNECTED;
 	return true;
     }
@@ -613,7 +615,7 @@ telnet_fsm(unsigned char c)
 	break;
     case TNS_IAC:	/* process a telnet command */
 	if (c != EOR && c != IAC) {
-	    vtrace("RCVD %s ", cmd(c));
+	    vctrace(TC_TELNET, "RCVD %s ", cmd(c));
 	}
 	switch (c) {
 	case IAC:	/* escaped IAC, insert it */
@@ -625,7 +627,7 @@ telnet_fsm(unsigned char c)
 	    telnet_state = TNS_DATA;
 	    break;
 	case EOR:	/* eor, process accumulated input */
-	    trace_str("RCVD EOR");
+	    trace_str_telnet("RCVD EOR");
 	    if (IN_3270 || (IN_E && tn3270e_negotiated)) {
 		trace_str("\n");
 		ns_rrcvd++;
@@ -698,14 +700,14 @@ telnet_fsm(unsigned char c)
 		    hisopts[c] = 1;
 		    do_opt[2] = c;
 		    net_rawout(do_opt, sizeof(do_opt));
-		    vtrace("SENT %s %s\n", cmd(DO), opt(c));
+		    vctrace(TC_TELNET, "SENT %s %s\n", cmd(DO), opt(c));
 
 		    /* For UTS, volunteer to do EOR when they do. */
 		    if (c == TELOPT_EOR && !myopts[c]) {
 			myopts[c] = 1;
 			will_opt[2] = c;
 			net_rawout(will_opt, sizeof(will_opt));
-			vtrace("SENT %s %s\n", cmd(WILL), opt(c));
+			vctrace(TC_TELNET, "SENT %s %s\n", cmd(WILL), opt(c));
 		    }
 
 		    check_in3270();
@@ -714,7 +716,7 @@ telnet_fsm(unsigned char c)
 	    default:
 		dont_opt[2] = c;
 		net_rawout(dont_opt, sizeof(dont_opt));
-		vtrace("SENT %s %s\n", cmd(DONT), opt(c));
+		vctrace(TC_TELNET, "SENT %s %s\n", cmd(DONT), opt(c));
 		break;
 	    }
 	    telnet_state = TNS_DATA;
@@ -725,7 +727,7 @@ telnet_fsm(unsigned char c)
 		hisopts[c] = 0;
 		dont_opt[2] = c;
 		net_rawout(dont_opt, sizeof(dont_opt));
-		vtrace("SENT %s %s\n", cmd(DONT), opt(c));
+		vctrace(TC_TELNET, "SENT %s %s\n", cmd(DONT), opt(c));
 		check_in3270();
 	    }
 	    telnet_state = TNS_DATA;
@@ -750,7 +752,7 @@ telnet_fsm(unsigned char c)
 		    }
 		    will_opt[2] = c;
 		    net_rawout(will_opt, sizeof(will_opt));
-		    vtrace("SENT %s %s\n", cmd(WILL), opt(c));
+		    vctrace(TC_TELNET, "SENT %s %s\n", cmd(WILL), opt(c));
 		    check_in3270();
 		}
 		if (c == TELOPT_STARTTLS) {
@@ -763,7 +765,7 @@ telnet_fsm(unsigned char c)
 		     * to announce that what follows is TLS.
 		     */
 		    net_rawout(follows_msg, sizeof(follows_msg));
-		    vtrace("SENT %s %s FOLLOWS %s\n",
+		    vctrace(TC_TELNET, "SENT %s %s FOLLOWS %s\n",
 			    cmd(SB),
 			    opt(TELOPT_STARTTLS),
 			    cmd(SE));
@@ -774,7 +776,7 @@ telnet_fsm(unsigned char c)
 	    default:
 		wont_opt[2] = c;
 		net_rawout(wont_opt, sizeof(wont_opt));
-		vtrace("SENT %s %s\n", cmd(WONT), opt(c));
+		vctrace(TC_TELNET, "SENT %s %s\n", cmd(WONT), opt(c));
 		break;
 	    }
 	    telnet_state = TNS_DATA;
@@ -785,7 +787,7 @@ telnet_fsm(unsigned char c)
 		myopts[c] = 0;
 		wont_opt[2] = c;
 		net_rawout(wont_opt, sizeof(wont_opt));
-		vtrace("SENT %s %s\n", cmd(WONT), opt(c));
+		vctrace(TC_TELNET, "SENT %s %s\n", cmd(WONT), opt(c));
 		check_in3270();
 	    }
 	    telnet_state = TNS_DATA;
@@ -833,10 +835,10 @@ telnet_fsm(unsigned char c)
 			    IAC, SE);
 		    net_rawout((unsigned char *)tt_out, tb_len);
 
-		    vtrace("SENT %s %s %s %.*s %s\n",
+		    vctrace(TC_TELNET, "SENT %s %s %s %.*s %s\n",
 			    cmd(SB), opt(TELOPT_TTYPE),
 			    telquals[TELQUAL_IS],
-			    tt_len, tt_out + 4,
+			    (int)tt_len, tt_out + 4,
 			    cmd(SE));
 		    Free(tt_out);
 
@@ -895,8 +897,8 @@ tn3270e_request(void)
 
     net_rawout((unsigned char *)tt_out, tb_len);
 
-    vtrace("SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s%s%s %s\n",
-	    cmd(SB), opt(TELOPT_TN3270E), strlen(termtype), tt_out + 5,
+    vctrace(TC_TELNET, "SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s%s%s %s\n",
+	    cmd(SB), opt(TELOPT_TN3270E), (int)strlen(termtype), tt_out + 5,
 	    (try_assoc != NULL) ? " ASSOCIATE " : "",
 	    (try_assoc != NULL) ? try_assoc : "",
 	    (try_lu != NULL && *try_lu) ? " CONNECT " : "",
@@ -926,7 +928,7 @@ tn3270e_negotiate(void)
 	}
     }
 
-    vtrace("TN3270E ");
+    vctrace(TC_TN3270, "TN3270E ");
 
     switch (sbbuf[1]) {
 
@@ -1043,7 +1045,7 @@ tn3270e_negotiate(void)
 		e_funcs = e_rcvd;
 		tn3270e_subneg_send(TN3270E_OP_IS, e_funcs);
 		tn3270e_negotiated = 1;
-		vtrace("TN3270E option negotiation complete.\n");
+		vctrace(TC_TN3270, "TN3270E option negotiation complete.\n");
 		check_in3270();
 	    } else {
 		/*
@@ -1069,18 +1071,18 @@ tn3270e_negotiate(void)
 		     * They've added something.  Abandon
 		     * TN3270E, they're brain dead.
 		     */
-		    vtrace("Host illegally added function(s), aborting "
+		    vctrace(TC_TN3270, "Host illegally added function(s), aborting "
 			    "TN3270E\n");
 		    wont_opt[2] = TELOPT_TN3270E;
 		    net_rawout(wont_opt, sizeof(wont_opt));
-		    vtrace("SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
+		    vctrace(TC_TELNET, "SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
 		    myopts[TELOPT_TN3270E] = 0;
 		    check_in3270();
 		    break;
 		}
 	    }
 	    tn3270e_negotiated = 1;
-	    vtrace("TN3270E option negotiation complete.\n");
+	    vctrace(TC_TN3270, "TN3270E option negotiation complete.\n");
 	    check_in3270();
 	    break;
 
@@ -1139,7 +1141,7 @@ tn3270e_subneg_send(unsigned char op, unsigned long funcs)
     net_rawout(proto_buf, proto_len);
 
     /* Complete and send out the trace text. */
-    vtrace("SENT %s %s FUNCTIONS %s %s %s\n",
+    vctrace(TC_TELNET, "SENT %s %s FUNCTIONS %s %s %s\n",
 	    cmd(SB), opt(TELOPT_TN3270E),
 	    (op == TN3270E_OP_REQUEST)? "REQUEST": "IS",
 	    tn3270e_function_names(proto_buf + 5, proto_len - 7),
@@ -1174,7 +1176,7 @@ process_eor(void)
     if (IN_E) {
 	tn3270e_header *h = (tn3270e_header *)ibuf;
 
-	vtrace("RCVD TN3270E(%s%s %s %u)\n",
+	vctrace(TC_TN3270, "RCVD TN3270E(%s%s %s %u)\n",
 		e_dt(h->data_type),
 		e_rq(h->data_type, h->request_flag),
 		e_rsp(h->data_type, h->response_flag),
@@ -1278,7 +1280,7 @@ process_eor(void)
 void
 net_exception(void)
 {
-    trace_str("RCVD urgent data indication\n");
+    trace_str_socket("RCVD urgent data indication\n");
     if (!syncing) {
 	syncing = 1;
     }
@@ -1323,12 +1325,12 @@ net_rawout(unsigned const char *buf, size_t len)
 	}
 	if (nw < 0) {
 	    if (sio != NULL) {
-		vtrace("RCVD socket error: %s\n", sio_last_error());
+		vctrace(TC_SOCKET, "RCVD socket error: %s\n", sio_last_error());
 		errmsg("%s\n", sio_last_error());
 		cstate = NOT_CONNECTED;
 		return;
 	    }
-	    vtrace("RCVD socket error %s\n", sockerrmsg());
+	    vctrace(TC_SOCKET, "RCVD socket error %s\n", sockerrmsg());
 	    if (socket_errno() == SE_EPIPE || socket_errno() == SE_ECONNRESET) {
 		cstate = NOT_CONNECTED;
 		return;
@@ -1410,7 +1412,7 @@ check_in3270(void)
     if (new_cstate != cstate) {
 	int was_in_e = IN_E;
 
-	vtrace("Now operating in %s mode.\n", state_name[new_cstate]);
+	vctrace(TC_TN3270, "Now operating in %s mode.\n", state_name[new_cstate]);
 	cstate =  new_cstate;
 
 	/*
@@ -1633,7 +1635,7 @@ net_output(void)
     *obptr++ = IAC;
     *obptr++ = EOR;
     if (IN_TN3270E || IN_SSCP) {
-	vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
+	vctrace(TC_TN3270, "SENT TN3270E(%s NO-RESPONSE %u)\n",
 		IN_TN3270E ? "3270-DATA" : "SSCP-LU-DATA", e_xmit_seq);
 	if (e_funcs & E_OPT(TN3270E_FUNC_RESPONSES)) {
 	    e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
@@ -1641,7 +1643,7 @@ net_output(void)
     }
     net_rawout(BSTART, obptr - BSTART);
 
-    trace_str("SENT EOR\n");
+    trace_str_telnet("SENT EOR\n");
     ns_rsent++;
 #undef BSTART
 }
@@ -1660,7 +1662,7 @@ tn3270_ack(void)
     rsp_buf[4] = 0x00; /* No error */
     rsp_buf[5] = IAC;
     rsp_buf[6] = EOR;
-    vtrace("SENT TN3270 PRINTER STATUS(OKAY)\n");
+    vctrace(TC_TN3270, "SENT TN3270 PRINTER STATUS(OKAY)\n");
     net_rawout(rsp_buf, rsp_len);
 }
 
@@ -1691,7 +1693,7 @@ tn3270_nak(enum pds rv)
     }
     rsp_buf[5] = IAC;
     rsp_buf[6] = EOR;
-    vtrace("SENT TN3270 PRINTER STATUS(ERROR)\n");
+    vctrace(TC_TN3270, "SENT TN3270 PRINTER STATUS(ERROR)\n");
     net_rawout(rsp_buf, rsp_len);
 
     /*
@@ -1725,7 +1727,7 @@ tn3270e_ack(void)
     rsp_buf[rsp_len++] = TN3270E_POS_DEVICE_END;
     rsp_buf[rsp_len++] = IAC;
     rsp_buf[rsp_len++] = EOR;
-    vtrace("SENT TN3270E(RESPONSE POSITIVE-RESPONSE %u) DEVICE-END\n",
+    vctrace(TC_TN3270, "SENT TN3270E(RESPONSE POSITIVE-RESPONSE %u) DEVICE-END\n",
 	    h_in->seq_number[0] << 8 | h_in->seq_number[1]);
     net_rawout(rsp_buf, rsp_len);
 }
@@ -1763,7 +1765,7 @@ tn3270e_nak(enum pds rv)
     }
     rsp_buf[rsp_len++] = IAC;
     rsp_buf[rsp_len++] = EOR;
-    vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
+    vctrace(TC_TN3270, "SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
 	    h_in->seq_number[0] << 8 | h_in->seq_number[1],
 	    e_neg_type(r));
     net_rawout(rsp_buf, rsp_len);
@@ -1798,7 +1800,7 @@ tn3270e_cleared(void)
     }
     rsp_buf[rsp_len++] = IAC;
     rsp_buf[rsp_len++] = EOR;
-    vtrace("SENT TN3270E(REQUEST ERR-COND-CLEARED %u)\n", e_xmit_seq);
+    vctrace(TC_TN3270, "SENT TN3270E(REQUEST ERR-COND-CLEARED %u)\n", e_xmit_seq);
     net_rawout(rsp_buf, rsp_len);
 
     e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
@@ -1884,7 +1886,7 @@ continue_tls(unsigned char *sbbuf, int len)
     /* Success. */
     session = indent_s(sio_session_info(sio));
     cert = indent_s(sio_server_cert_info(sio));
-    vtrace("TLS negotiated connection complete.  "
+    vctrace(TC_TLS, "TLS negotiated connection complete.  "
 	      "Connection is now secure.\n"
 	      "Session:\n%s\nServer certificate:\n%s\n",
 	      session, cert);

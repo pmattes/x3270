@@ -319,7 +319,7 @@ sio_toggle_value(const char *name)
 }
 
 /* Translate supported TLS options to a list of names. */
-char *
+const char *
 sio_option_names(void)
 {
     unsigned options = sio_all_options_supported();

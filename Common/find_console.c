@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 Paul Mattes.
+ * Copyright (c) 2019-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@ find_in_path(const char *program)
     path = getenv("PATH");
     while ((colon = strchr(path, ':')) != NULL) {
 	if (colon != path) {
-	    char *xpath = txAsprintf("%.*s/%s", (int)(colon - path), path, program);
+	    const char *xpath = txAsprintf("%.*s/%s", (int)(colon - path), path, program);
 
 	    if (access(xpath, X_OK) == 0) {
 		return true;
@@ -77,7 +77,7 @@ find_in_path(const char *program)
 	path = colon + 1;
     }
     if (*path) {
-	char *xpath = txAsprintf("%s/%s", path, program);
+	const char *xpath = txAsprintf("%s/%s", path, program);
 
 	if (access(xpath, X_OK) == 0) {
 	    return true;
@@ -125,8 +125,9 @@ find_console(const char **errmsg)
     }
 
     space = strchr(override, ' ');
-    dup = txdFree(NewString(override));
+    dup = NewString(override);
     dup[space - override] = '\0';
+    txdFree(dup);
     if (find_in_path(dup)) {
 	static console_desc_t t_ret;
 
@@ -143,7 +144,7 @@ find_console(const char **errmsg)
 int
 console_args(console_desc_t *t, const char *title, const char ***s, int ix)
 {
-    char *str = txdFree(NewString(t->command_string));
+    char *str = NewString(t->command_string);
     char *saveptr;
     char *token;
 
@@ -156,5 +157,6 @@ console_args(console_desc_t *t, const char *title, const char ***s, int ix)
 	    array_add(s, ix++, token);
 	}
     }
+    txdFree(str);
     return ix;
 }

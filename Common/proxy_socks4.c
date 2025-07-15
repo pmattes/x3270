@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -118,12 +118,12 @@ proxy_socks4(socket_t fd, const char *user, const char *host,
 	strcpy(s, host);
 	s += strlen(host) + 1;
 
-	vtrace("SOCKS4 Proxy: version 4 connect port %u address 0.0.0.1 user "
+	vctrace(TC_PROXY, "SOCKS4: version 4 connect port %u address 0.0.0.1 user "
 		"'%s' host '%s'\n", port, ruser, host);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {
-	    popup_a_sockerr("SOCKS4 Proxy: send error");
+	    popup_a_sockerr("SOCKS4 proxy: send error");
 	    Free(sbuf);
 	    return PX_FAILURE;
 	}
@@ -141,13 +141,13 @@ proxy_socks4(socket_t fd, const char *user, const char *host,
 	strcpy(s, ruser);
 	s += strlen(ruser) + 1;
 
-	vtrace("SOCKS4 Proxy: xmit version 4 connect port %u address %s user "
+	vctrace(TC_PROXY, "SOCKS4: xmit version 4 connect port %u address %s user "
 		"'%s'\n", port, inet_ntoa(ipaddr), ruser);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {
 	    Free(sbuf);
-	    popup_a_sockerr("SOCKS4 Proxy: send error");
+	    popup_a_sockerr("SOCKS4 proxy: send error");
 	    return PX_FAILURE;
 	}
 	Free(sbuf);
@@ -174,14 +174,14 @@ proxy_socks4_continue(void)
 		}
 		return PX_WANTMORE;
 	    }
-	    popup_a_sockerr("SOCKS4 Proxy: receive error");
+	    popup_a_sockerr("SOCKS4 proxy: receive error");
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
-	    popup_an_error("SOCKS4 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS4 proxy: unexpected EOF");
 	    return PX_FAILURE;
 	    /* XXX: was break */
 	}
@@ -196,27 +196,26 @@ proxy_socks4_continue(void)
 	unsigned short rport = (ps.rbuf[2] << 8) | ps.rbuf[3];
 
 	memcpy(&a, &ps.rbuf[4], 4);
-	vtrace("SOCKS4 Proxy: recv status 0x%02x port %u address %s\n",
+	vctrace(TC_PROXY, "SOCKS4: recv status 0x%02x port %u address %s\n",
 		ps.rbuf[1], rport, inet_ntoa(a));
     } else {
-	vtrace("SOCKS4 Proxy: recv status 0x%02x\n", ps.rbuf[1]);
+	vctrace(TC_PROXY, "SOCKS4: recv status 0x%02x\n", ps.rbuf[1]);
     }
 
     switch (ps.rbuf[1]) {
     case 0x5a:
 	break;
     case 0x5b:
-	popup_an_error("SOCKS4 Proxy: request rejected or failed");
+	popup_an_error("SOCKS4 proxy: request rejected or failed");
 	return PX_FAILURE;
     case 0x5c:
-	popup_an_error("SOCKS4 Proxy: client is not reachable");
+	popup_an_error("SOCKS4 proxy: client is not reachable");
 	return PX_FAILURE;
     case 0x5d:
-	popup_an_error("SOCKS4 Proxy: userid error");
+	popup_an_error("SOCKS4 proxy: userid error");
 	return PX_FAILURE;
     default:
-	popup_an_error("SOCKS4 Proxy: unknown status 0x%02x",
-		ps.rbuf[1]);
+	popup_an_error("SOCKS4 proxy: unknown status 0x%02x", ps.rbuf[1]);
 	return PX_FAILURE;
     }
 

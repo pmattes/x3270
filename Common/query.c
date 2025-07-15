@@ -105,7 +105,7 @@ get_connect_time(void)
 static const char *
 get_codepage(void)
 {
-    char *sbcs = txAsprintf("%s sbcs gcsgid %u cpgid %u",
+    const char *sbcs = txAsprintf("%s sbcs gcsgid %u cpgid %u",
 	    get_canonical_codepage(),
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));

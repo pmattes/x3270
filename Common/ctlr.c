@@ -3225,7 +3225,7 @@ ticking_stop(struct timeval *tp)
 
     cs = ((tp->tv_sec - t_start.tv_sec) * 1000000L) +
 	(tp->tv_usec - t_start.tv_usec);
-    vtrace("Host %s took %ld.%06lds to complete\n",
+    vctrace(TC_INFRA, "Host %s took %ld.%06lds to complete\n",
 	    ticking_anyway? "negotiation step": "operation",
 	    cs / 1000000L,
 	    cs % 1000000L);
@@ -3294,7 +3294,7 @@ ctlr_enable_cursor(bool enable, unsigned source)
 	"connect"
     };
 
-    vtrace("ctlr_enable_cursor(%s, %s)\n", enable? ResTrue: ResFalse,
+    vctrace(TC_INFRA, "ctlr_enable_cursor(%s, %s)\n", enable? ResTrue: ResFalse,
 	    source_name[source]);
 
     /* Compute the new disable mask. */

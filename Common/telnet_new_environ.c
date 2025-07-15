@@ -205,7 +205,7 @@ environ_init(void)
     } codepage_index_t;
     struct {
 	const char *name;
-	char *value;
+	const char *value;
     } codepage_vars[CODEPAGE_COUNT] = {
 	{ CODEPAGE_USERVARNAME, NULL },
 	{ CHARSET_USERVARNAME, NULL },
@@ -281,7 +281,7 @@ environ_init(void)
 }
 
 /* Expand a name into a readable string. */
-static char *
+static const char *
 expand_name(const char *s, size_t len)
 {
     varbuf_t v;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -668,7 +668,7 @@ trace_event(XEvent *event)
     const char *viz[3] = { "Unobscured", "PartiallyObscured", "FullyObscured" };
 
     if (event == NULL) {
-	vtrace(" %s", ia_name[(int)ia_cause]);
+	vctrace(TC_UI, " %s", ia_name[(int)ia_cause]);
     } else switch (event->type) {
     case KeyRelease:
 	press = "Release";
@@ -691,7 +691,7 @@ trace_event(XEvent *event)
 	do {
 	    int was_ambiguous = ambiguous;
 
-	    vtrace("%s ':%s<Key%s>%s'",
+	    vctrace(TC_UI, "%s ':%s<Key%s>%s'",
 		    was_ambiguous? " or": "Event",
 		    key_symbolic_state(state, &ambiguous),
 		    press,
@@ -707,7 +707,7 @@ trace_event(XEvent *event)
 	    do {
 		int was_ambiguous = ambiguous;
 
-		vtrace(" %s '%s<Key%s>%s'",
+		vctrace(TC_UI, " %s '%s<Key%s>%s'",
 			was_ambiguous? "or": "(case-insensitive:",
 			key_symbolic_state(state, &ambiguous),
 			press,
@@ -732,7 +732,7 @@ trace_event(XEvent *event)
 	do {
 	    int was_ambiguous = ambiguous;
 
-	    vtrace("%s '%s<Btn%d%s>'",
+	    vctrace(TC_UI, "%s '%s<Btn%d%s>'",
 		    was_ambiguous? " or": "Event",
 		    key_symbolic_state(bevent->state, &ambiguous),
 		    bevent->button,
@@ -749,7 +749,7 @@ trace_event(XEvent *event)
 	do {
 	    int was_ambiguous = ambiguous;
 
-	    vtrace("%s '%s<Motion>'",
+	    vctrace(TC_UI, "%s '%s<Motion>'",
 		    was_ambiguous? " or": "Event",
 		    key_symbolic_state(mevent->state, &ambiguous));
 	} while (ambiguous);
@@ -759,54 +759,54 @@ trace_event(XEvent *event)
 #endif /*]*/
 	break;
     case EnterNotify:
-	vtrace("EnterNotify");
+	vctrace(TC_UI, "EnterNotify");
 	break;
     case LeaveNotify:
-	vtrace("LeaveNotify");
+	vctrace(TC_UI, "LeaveNotify");
 	break;
     case FocusIn:
-	vtrace("FocusIn");
+	vctrace(TC_UI, "FocusIn");
 	break;
     case FocusOut:
-	vtrace("FocusOut");
+	vctrace(TC_UI, "FocusOut");
 	break;
     case KeymapNotify:
-	vtrace("KeymapNotify");
+	vctrace(TC_UI, "KeymapNotify");
 	break;
     case Expose:
 	exevent = (XExposeEvent *)event;
-	vtrace("Expose [%dx%d+%d+%d]",
+	vctrace(TC_UI, "Expose [%dx%d+%d+%d]",
 		exevent->width, exevent->height, exevent->x, exevent->y);
 	break;
     case PropertyNotify:
-	vtrace("PropertyNotify");
+	vctrace(TC_UI, "PropertyNotify");
 	break;
     case ClientMessage:
 	cmevent = (XClientMessageEvent *)event;
 	atom_name = XGetAtomName(display, (Atom)cmevent->data.l[0]);
-	vtrace("ClientMessage [%s]",
+	vctrace(TC_UI, "ClientMessage [%s]",
 		(atom_name == NULL)? "(unknown)": atom_name);
 	break;
     case ConfigureNotify:
 	cevent = (XConfigureEvent *)event;
-	vtrace("ConfigureNotify [%dx%d+%d+%d]",
+	vctrace(TC_UI, "ConfigureNotify [%dx%d+%d+%d]",
 		cevent->width, cevent->height, cevent->x, cevent->y);
 	break;
     case VisibilityNotify:
 	vevent = (XVisibilityEvent *)event;
 	if (vevent->state >= VisibilityUnobscured &&
 		vevent->state <= VisibilityFullyObscured) {
-	    vtrace("VisibilityNotify [%s]", viz[vevent->state]);
+	    vctrace(TC_UI, "VisibilityNotify [%s]", viz[vevent->state]);
 	} else {
-	    vtrace("VisibilityNotify [%d]", vevent->state);
+	    vctrace(TC_UI, "VisibilityNotify [%d]", vevent->state);
 	}
 	break;
     default:
-	vtrace("Event %d", event->type);
+	vctrace(TC_UI, "Event %d", event->type);
 	break;
     }
     if (keymap_trace != NULL) {
-	vtrace(" via %s", keymap_trace);
+	vctrace(TC_UI, " via %s", keymap_trace);
     }
 }
 
@@ -823,7 +823,7 @@ xaction_ndebug(const char *aname, XEvent *event, String *params,
 	return;
     }
     trace_event(event);
-    vtrace(" -> %s(", aname);
+    vctrace(TC_UI, " -> %s(", aname);
     for (i = 0; i < *num_params; i++) {
 	vtrace("%s%s",
 		i? ", ": "",

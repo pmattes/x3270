@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2024 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,7 +156,7 @@ printtext_continue(void *context, bool cancel)
     fps_status_t status;
 
     if (cancel) {
-	vtrace("PrintText canceled\n");
+	vctrace(TC_PRINT, "PrintText canceled\n");
 	fclose(pt->f);
 	if (pt->temp_name != NULL) {
 	    unlink(pt->temp_name);
@@ -171,14 +171,14 @@ printtext_continue(void *context, bool cancel)
     switch (status) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
-	vtrace("PrintText: printing succeeded.\n");
+	vctrace(TC_PRINT, "PrintText: printing succeeded.\n");
 	break;
     case FPS_STATUS_ERROR:
 	popup_an_error("Screen print failed");
 	/* fall through */
     case FPS_STATUS_CANCEL:
 	if (status == FPS_STATUS_CANCEL) {
-	    vtrace("PrintText: printing canceled.\n");
+	    vctrace(TC_PRINT, "PrintText: printing canceled.\n");
 	}
 	break;
     case FPS_STATUS_WAIT:
@@ -461,7 +461,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 		return false;
 	    }
 	    f = fdopen(fd, "w+");
-	    vtrace("PrintText: using '%s'\n", temp_name);
+	    vctrace(TC_PRINT, "PrintText: using '%s'\n", temp_name);
 	} else {
 	    if (name == NULL || !*name) {
 		popup_an_error(AnPrintText "(): missing filename");
@@ -494,7 +494,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    f = fdopen(fd, "w+");
 	}
-	vtrace("PrintText: using '%s'\n", temp_name);
+	vctrace(TC_PRINT, "PrintText: using '%s'\n", temp_name);
 #endif /*]*/
     }
     if (f == NULL) {
@@ -527,7 +527,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     switch (status) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
-	vtrace("PrintText: printing succeeded.\n");
+	vctrace(TC_PRINT, "PrintText: printing succeeded.\n");
 	Free(pt);
 	fflush(f);
 	break;
@@ -536,7 +536,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	/* fall through */
     case FPS_STATUS_CANCEL:
 	if (status == FPS_STATUS_CANCEL) {
-	    vtrace("PrintText: printing canceled.\n");
+	    vctrace(TC_PRINT, "PrintText: printing canceled.\n");
 	}
 	Free(pt);
 	fclose(f);

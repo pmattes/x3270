@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -93,7 +93,7 @@ snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     if (!print_window_command) {
 	return;
     }
-    vtrace("PrintWindow: Running '%s'\n", print_window_command);
+    vctrace(TC_PRINT, "PrintWindow: Running '%s'\n", print_window_command);
     XSync(display, 0);
     print_window_done(system(print_window_command));
 }
@@ -179,7 +179,7 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
     if (secure) {
 	char *xcommand = expand_print_window_command(command);
 
-	vtrace("PrintWindow: Running '%s'\n", xcommand);
+	vctrace(TC_PRINT, "PrintWindow: Running '%s'\n", xcommand);
 	print_window_done(system(xcommand));
 	XtFree(xcommand);
 	return true;

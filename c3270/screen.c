@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2024 Paul Mattes.
+ * Copyright (c) 2000-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -512,7 +512,7 @@ screen_setaf(acolor_t color)
 {
     static int color_map8[] = { COLOR_BLUE, COLOR_RED, COLOR_YELLOW };
     static int color_map16[] = { 8 + COLOR_BLUE, COLOR_RED, 8 + COLOR_YELLOW };
-    char *setaf;
+    const char *setaf;
 
     setaf = tiparm(ti.setaf,
 	    (ti.colors >= 16)? color_map16[color]: color_map8[color]);
@@ -1287,7 +1287,7 @@ screen_disp(bool erasing _is_unused)
 			strlen(altscreen_spec.mode_switch)) < 0) {
 		exit(1);
 	    }
-	    vtrace("Switching to alt (%dx%d) screen.\n",
+	    vctrace(TC_UI, "Switching to alt (%dx%d) screen.\n",
 		    altscreen_spec.rows, altscreen_spec.cols);
 	    swap_screens(alt_screen);
 	    cur_spec = &altscreen_spec;
@@ -1296,7 +1296,7 @@ screen_disp(bool erasing _is_unused)
 			strlen(defscreen_spec.mode_switch)) < 0) {
 		exit(1);
 	    }
-	    vtrace("Switching to default (%dx%d) screen.\n",
+	    vctrace(TC_UI, "Switching to default (%dx%d) screen.\n",
 		    defscreen_spec.rows, defscreen_spec.cols);
 	    swap_screens(def_screen);
 	    cur_spec = &defscreen_spec;
@@ -1602,7 +1602,7 @@ static bool meta_escape = false;
 static void
 escape_timeout(ioid_t id _is_unused)
 {
-    vtrace("Timeout waiting for key following Escape, processing separately\n");
+    vctrace(TC_UI, "Timeout waiting for key following Escape, processing separately\n");
     eto = 0L;
     meta_escape = false;
     kybd_input2(0, 0x1b, 0);
@@ -1630,13 +1630,13 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
 	ucs4 = 0;
 #if defined(CURSES_WIDE) /*[*/
-	vtrace("kybd_input: calling wget_wch()\n");
+	vctrace(TC_UI, "kybd_input: calling wget_wch()\n");
 	k = wget_wch(stdscr, &wch);
 #else /*][*/
-	vtrace("kybd_input: calling wgetch()\n");
+	vctrace(TC_UI, "kybd_input: calling wgetch()\n");
 	k = wgetch(stdscr);
 #endif /*]*/
-	vtrace("kbd_input: k=%d "
+	vctrace(TC_UI, "kybd_input: k=%d "
 # if defined(CURSES_WIDE) /*[*/
 		       "wch=%lu "
 # endif /*]*/
@@ -1649,12 +1649,12 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (k == ERR) {
 	    if (first) {
 		if (failed_first) {
-		    vtrace("End of File, exiting.\n");
+		    vctrace(TC_UI, "End of File, exiting.\n");
 		    x3270_exit(1);
 		}
 		failed_first = true;
 	    }
-	    vtrace("kbd_input: k == ERR, return\n");
+	    vctrace(TC_UI, "kybd_input: k == ERR, return\n");
 	    return;
 	} else {
 	    failed_first = false;
@@ -1671,7 +1671,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    mb[1] = '\0';
 	    ucs4 = multibyte_to_unicode(mb, 1, &consumed, &error);
 	    if (ucs4 == 0) {
-		vtrace("Invalid input char 0x%x\n", k);
+		vctrace(TC_UI, "Invalid input char 0x%x\n", k);
 		return;
 	    }
 	    k = 0;
@@ -1689,7 +1689,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    wcs[1] = 0;
 	    sz = wcstombs(mbs, wcs, sizeof(mbs));
 	    if (sz == (size_t)-1) {
-		vtrace("Invalid input wchar 0x%lx\n", (unsigned long)wch);
+		vctrace(TC_UI, "Invalid input wchar 0x%lx\n", (unsigned long)wch);
 		return;
 	    }
 	    if (sz == 1) {
@@ -1700,7 +1700,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 		ucs4 = multibyte_to_unicode(mbs, sz, &consumed, &error);
 		if (ucs4 == 0) {
-		    vtrace("Unsupported input wchar 0x%lx\n",
+		    vctrace(TC_UI, "Unsupported input wchar 0x%lx\n",
 			    (unsigned long)wch);
 		    return;
 		}
@@ -1720,7 +1720,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		return;
 	    }
 	    if ((m.bstate & BUTTON1_RELEASED)) {
-		vtrace("Mouse BUTTON1_RELEASED (x=%d,y=%d)\n", m.x, m.y);
+		vctrace(TC_UI, "Mouse BUTTON1_RELEASED (x=%d,y=%d)\n", m.x, m.y);
 		if (screen_yoffset != 0 && m.y == 0) {
 		    popup_menu(m.x, (screen_yoffset != 0));
 		    screen_disp(false);
@@ -1754,14 +1754,14 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    meta_escape = false;
 	    alt = KM_ALT;
 	} else if (me_mode == TS_ON && ucs4 == 0x1b) {
-	    vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+	    vctrace(TC_UI, "Key '%s' (curses key 0x%x, char code 0x%x)\n",
 		    decode_key(k, ucs4, alt, dbuf), k, ucs4);
 	    eto = AddTimeOut(ME_DELAY, escape_timeout);
-	    vtrace(" waiting to see if Escape is followed by another key\n");
+	    vctrace(TC_UI, " waiting to see if Escape is followed by another key\n");
 	    meta_escape = true;
 	    continue;
 	}
-	vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+	vctrace(TC_UI, "Key '%s' (curses key 0x%x, char code 0x%x)\n",
 		decode_key(k, ucs4, alt, dbuf), k, ucs4);
 	kybd_input2(k, ucs4, alt);
 	first = false;
@@ -1823,25 +1823,31 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     /* These first cases apply to both 3270 and NVT modes. */
     switch (k) {
     case KEY_UP:
+	vctrace(TC_UI, " Default -> " AnUp "()\n");
 	run_action(AnUp, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_DOWN:
+	vctrace(TC_UI, " Default -> " AnDown "()\n");
 	run_action(AnDown, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_LEFT:
+	vctrace(TC_UI, " Default -> " AnLeft "()\n");
 	run_action(AnLeft, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_RIGHT:
+	vctrace(TC_UI, " Default -> " AnRight "()\n");
 	run_action(AnRight, IA_DEFAULT, NULL, NULL);
 	return;
     case KEY_HOME:
-	run_action(AnRight, IA_DEFAULT, NULL, NULL);
+	vctrace(TC_UI, " Default -> " AnHome "()\n");
+	run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	return;
     default:
 	break;
     }
     switch (ucs4) {
     case 0x1d:
+	vctrace(TC_UI, " Default -> " AnEscape "()\n");
 	run_action(AnEscape, IA_DEFAULT, NULL, NULL);
 	return;
     }
@@ -1850,12 +1856,15 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     if (IN_3270) {
 	switch (k) {
 	case KEY_DC:
+	    vctrace(TC_UI, " Default -> " AnDelete "()\n");
 	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case KEY_BACKSPACE:
+	    vctrace(TC_UI, " Default -> " AnBackSpace "()\n");
 	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case KEY_HOME:
+	    vctrace(TC_UI, " Default -> " AnHome "()\n");
 	    run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
@@ -1863,27 +1872,35 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	}
 	switch (ucs4) {
 	case 0x03:
+	    vctrace(TC_UI, " Default -> " AnClear "()\n");
 	    run_action(AnClear, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 0x12:
+	    vctrace(TC_UI, " Default -> " AnReset "()\n");
 	    run_action(AnReset, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 'L' & 0x1f:
+	    vctrace(TC_UI, " Default -> " AnRedraw "()\n");
 	    run_action(AnRedraw, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\t':
+	    vctrace(TC_UI, " Default -> " AnTab "()\n");
 	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
 	    return;
 	case 0177:
+	    vctrace(TC_UI, " Default -> " AnDelete "()\n");
 	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\b':
+	    vctrace(TC_UI, " Default -> " AnBackSpace "()\n");
 	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\r':
+	    vctrace(TC_UI, " Default -> " AnEnter "()\n");
 	    run_action(AnEnter, IA_DEFAULT, NULL, NULL);
 	    return;
 	case '\n':
+	    vctrace(TC_UI, " Default -> " AnNewline "()\n");
 	    run_action(AnNewline, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
@@ -1909,6 +1926,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
     for (i = 1; i <= 24; i++) {
 	if (k == KEY_F(i)) {
 	    sprintf(buf, "%d", i);
+	    vctrace(TC_UI, " Default -> " AnPF "(%s)\n", buf);
 	    run_action(AnPF, IA_DEFAULT, buf, NULL);
 	    return;
 	}
@@ -1919,11 +1937,12 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	char ks[16];
 
 	sprintf(ks, "U+%04x", ucs4);
+	vctrace(TC_UI, " Default -> " AnKey "(%s)\n", ks);
 	run_action(AnKey, IA_DEFAULT, ks, NULL);
 	return;
     }
 
-    vtrace(" dropped (no default)\n");
+    vctrace(TC_UI, " dropped (no default)\n");
 }
 
 bool

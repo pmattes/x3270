@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 1993-2024 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,28 @@
  */
 
 /*
- *      txa.h
- *              Transaction allocator.
+ *	cats.c
+ *		Trace categories.
+ *
  */
 
-const char *txdFree(void *buf);
-const char *txAsprintf(const char *fmt, ...) printflike(1, 2);
-const char *txVasprintf(const char *fmt, va_list args);
-void txflush(void);
+#include "globals.h"
+
+#include "trace.h"
+
+const char *cats[NUM_TC] = {
+    "ft",
+    "httpd",
+    "infra",
+    "kybd",
+    "print",
+    "proxy",
+    "sched",
+    "script",
+    "socket",
+    "task",
+    "telnet",
+    "tls",
+    "tn3270",
+    "ui",
+};

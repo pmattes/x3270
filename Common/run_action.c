@@ -160,7 +160,7 @@ action_done(task_cbh handle, bool success, bool abort)
  * @param[in] s		Text of action.
  */
 static void
-push_action(enum iaction ia, char *s)
+push_action(enum iaction ia, const char *s)
 {
     action_cb_t *acb;
     tcb_t *cb;

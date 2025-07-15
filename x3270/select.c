@@ -775,7 +775,7 @@ SelectDown_xaction(Widget w _is_unused, XEvent *event, String *params,
 	down1_x = event_x(event);
 	down1_y = event_y(event);
 	if (any_selected) {
-	    vtrace("SelectDown: unselected\n");
+	    vctrace(TC_UI, "SelectDown: unselected\n");
 	    unselect(0, ROWS*COLS);
 	    click_unselected = true;
 	}
@@ -800,7 +800,7 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     x = event_x(event);
     y = event_y(event);
-    vtrace("SelectMotion: x %+d, y %+d\n",
+    vctrace(TC_UI, "SelectMotion: x %+d, y %+d\n",
 	(int)x - (int)down1_x, (int)y - (int)down1_y);
 
     BOUNDED_COL_ROW(event, col, row);
@@ -1415,7 +1415,7 @@ lose_sel(Widget w _is_unused, Atom *selection)
     int initial_before = n_owned_initial;
 
     a = XGetAtomName(display, *selection);
-    vtrace("main lose_sel %s\n", a);
+    vctrace(TC_UI, "main lose_sel %s\n", a);
     XFree(a);
     for (i = 0; i < NS; i++) {
 	if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
@@ -1430,7 +1430,7 @@ lose_sel(Widget w _is_unused, Atom *selection)
 	}
     }
     if (initial_before && !n_owned_initial) {
-	vtrace("main: lost all initial selections\n");
+	vctrace(TC_UI, "main: lost all initial selections\n");
 	unselect(0, ROWS*COLS);
     }
 }
@@ -1635,20 +1635,20 @@ own_sels(Time t, bool initial)
 	    memmove(own_sel[j].buffer, select_buf, strlen(select_buf) + 1);
 	    own_sel[j].time = t;
 	    a = XGetAtomName(display, want_sel[i]);
-	    vtrace("main own_sel %s %s %lu\n", a,
+	    vctrace(TC_UI, "main own_sel %s %s %lu\n", a,
 		    initial? "initial": "subsequent",
 		    (unsigned long)t);
 	    XFree(a);
 	} else {
 	    a = XGetAtomName(display, want_sel[i]);
-	    vtrace("Could not get selection %s\n", a);
+	    vctrace(TC_UI, "Could not get selection %s\n", a);
 	    XFree(a);
 	    if (already_own) {
 		XtFree(own_sel[j].buffer);
 		own_sel[j].buffer = NULL;
 		own_sel[j].atom = None;
 		if (own_sel[j].initial && !--n_owned_initial) {
-		    vtrace("main: lost all initial selections\n");
+		    vctrace(TC_UI, "main: lost all initial selections\n");
 		    unselect(0, ROWS*COLS);
 		}
 	    }
@@ -1842,7 +1842,7 @@ grab_sel(int start, int end, bool really, Time t, bool as_url)
 #endif /*]*/
 	int rc;
 
-	vtrace("Starting URL open command: %s\n", command);
+	vctrace(TC_UI, "Starting URL open command: %s\n", command);
 	rc = system(command);
 	if (rc != 0) {
 	    popup_an_error("URL open failed, return code %d", rc);

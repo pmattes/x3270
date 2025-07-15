@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,9 @@ char *get_resource(const char *name);
 int get_resource_int(const char *name);
 bool get_resource_bool(const char *name);
 char *get_underlying_resource(const char *name);
-char *qscatv(const char *s);
-char *scatv(const char *s);
+const char *qscatv(const char *s);
+const char *scatv(const char *s);
+const char *sncatv(const char *s, size_t len);
 int split_dbcs_resource(const char *value, char sep, char **part1,
 	char **part2);
 int s_split_dresource(const char *st, size_t *offset, char **left,

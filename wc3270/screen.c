@@ -309,7 +309,7 @@ cc_handler(DWORD type)
 	return TRUE;
     } else if (type == CTRL_CLOSE_EVENT) {
 	/* Exit gracefully. */
-	vtrace("Window closed\n");
+	vctrace(TC_UI, "Window closed\n");
 	x3270_exit(0);
 	return TRUE;
     } else {
@@ -326,7 +326,7 @@ synchronous_cc(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     char *action;
 
-    vtrace("^C received %s\n", escaped? "at prompt": "in session");
+    vctrace(TC_UI, "^C received %s\n", escaped? "at prompt": "in session");
     if (escaped) {
 	if (ctrlc_fn) {
 	    (*ctrlc_fn)();
@@ -898,7 +898,7 @@ hdraw(int row, int lrow, int col, int lcol)
     {
 	int trow, tcol;
 
-	vtrace("hdraw row %d-%d col %d-%d attr 0x%x:\n",
+	vctrace(TC_UI, "hdraw row %d-%d col %d-%d attr 0x%x:\n",
 		row, lrow, col, lcol, tos_a(row, col));
 	for (trow = 0; trow < console_rows; trow++) {
 	    for (tcol = 0; tcol < console_cols; tcol++) {
@@ -964,7 +964,7 @@ draw_rect(const char *why, int pc_start, int pc_end, int pr_start, int pr_end)
     {
 	int trow, tcol;
 
-	vtrace("draw_rect %s row %d-%d col %d-%d\n",
+	vctrace(TC_UI, "draw_rect %s row %d-%d col %d-%d\n",
 		why, pr_start, pr_end, pc_start, pc_end);
 	for (trow = 0; trow < console_rows; trow++) {
 	    for (tcol = 0; tcol < console_cols; tcol++) {
@@ -1060,7 +1060,7 @@ sync_onscreen(void)
     {
 	int trow, tcol;
 
-	vtrace("sync_onscreen:\n");
+	vctrace(TC_UI, "sync_onscreen:\n");
 	for (trow = 0; trow < console_rows; trow++) {
 	    for (tcol = 0; tcol < console_cols; tcol++) {
 		if (changed(trow, tcol)) {
@@ -1717,7 +1717,7 @@ done:
 static void
 blink_em(ioid_t id _is_unused)
 {
-    vtrace("blink timeout\n");
+    vctrace(TC_UI, "blink timeout\n");
 
     /* We're not ticking any more. */
     blink_id = NULL_IOID;
@@ -1736,7 +1736,7 @@ blink_em(ioid_t id _is_unused)
 static void
 cblink_timeout(ioid_t id _is_unused)
 {
-    vtrace("cursor blink timeout\n");
+    vctrace(TC_UI, "cursor blink timeout\n");
     cblink.id = AddTimeOut(CURSOR_BLINK_MS, cblink_timeout);
     cblink.visible = !cblink.visible;
     set_cursor_size(sbuf);
@@ -2329,7 +2329,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	!= 0;
     if (appres.c3270.lightpen_primary? !is_alt: is_alt) {
 	if (event == SE_BUTTON_DOWN) {
-	    vtrace(" lightpen select\n");
+	    vctrace(TC_UI, " lightpen select\n");
 	    lightpen_select((row * COLS) + col);
 	}
 	return;
@@ -2341,7 +2341,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
      */
     if (!select_event(row, col, event,
 		(me->dwControlKeyState & SHIFT_PRESSED) != 0) && ever_3270) {
-	vtrace(" cursor move\n");
+	vctrace(TC_UI, " cursor move\n");
 	cursor_move((row * COLS) + col);
     }
 }
@@ -2440,7 +2440,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     switch (ir.EventType) {
     case FOCUS_EVENT:
-	vtrace("Focus %s\n", ir.Event.FocusEvent.bSetFocus? "set": "unset");
+	vctrace(TC_UI, "Focus %s\n", ir.Event.FocusEvent.bSetFocus? "set": "unset");
 	/*
 	 * When we get a focus event, the system may have (incorrectly) redrawn
 	 * our window.  Do it again ourselves.
@@ -2460,7 +2460,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (s == NULL) {
 	    s = "?";
 	}
-	vtrace("Key%s vkey 0x%x (%s) scan 0x%x char U+%04x state 0x%x (%s)\n",
+	vctrace(TC_UI, "Key%s vkey 0x%x (%s) scan 0x%x char U+%04x state 0x%x (%s)\n",
 		ir.Event.KeyEvent.bKeyDown? "Down": "Up",
 		ir.Event.KeyEvent.wVirtualKeyCode, s,
 		ir.Event.KeyEvent.wVirtualScanCode,
@@ -2474,10 +2474,10 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	kybd_input2(&ir);
 	break;
     case MENU_EVENT:
-	vtrace("Menu\n");
+	vctrace(TC_UI, "Menu\n");
 	break;
     case MOUSE_EVENT:
-	vtrace("Mouse (%d,%d) ButtonState %s "
+	vctrace(TC_UI, "Mouse (%d,%d) ButtonState %s "
 		"ControlKeyState %s EventFlags %s\n",
 		ir.Event.MouseEvent.dwMousePosition.X,
 		ir.Event.MouseEvent.dwMousePosition.Y,
@@ -2492,14 +2492,14 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     case WINDOW_BUFFER_SIZE_EVENT:
 	x = ir.Event.WindowBufferSizeEvent.dwSize.X;
 	y = ir.Event.WindowBufferSizeEvent.dwSize.Y;
-	vtrace("WindowBufferSize X %d Y %d\n", x, y);
+	vctrace(TC_UI, "WindowBufferSize X %d Y %d\n", x, y);
 	if (redraw_id != NULL_IOID) {
 	    RemoveInput(redraw_id);
 	}
 	redraw_id = AddTimeOut(500, resize_redraw);
 	break;
     default:
-	vtrace("Unknown input event %d\n", ir.EventType);
+	vctrace(TC_UI, "Unknown input event %d\n", ir.EventType);
 	break;
     }
 }
@@ -2546,7 +2546,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
     } else {
 	vb_appendf(&r, "<Key>%c", (unsigned char)xk);
     }
-    vtrace(" %s ->", txdFree(vb_consume(&r)));
+    vctrace(TC_UI, " %s ->", txdFree(vb_consume(&r)));
 }
 
 /* Translate a Windows virtual key to a menubar abstract key. */
@@ -2635,21 +2635,27 @@ kybd_input2(INPUT_RECORD *ir)
     /* These first cases apply to both 3270 and NVT modes. */
     switch (k) {
     case VK_ESCAPE:
+	vctrace(TC_UI, " Default -> " AnEscape "()\n");
 	run_action(AnEscape, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_UP:
+	vctrace(TC_UI, " Default -> " AnUp "()\n");
 	run_action(AnUp, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_DOWN:
+	vctrace(TC_UI, " Default -> " AnDown "()\n");
 	run_action(AnDown, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_LEFT:
+	vctrace(TC_UI, " Default -> " AnLeft "()\n");
 	run_action(AnLeft, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_RIGHT:
+	vctrace(TC_UI, " Default -> " AnRight "()\n");
 	run_action(AnRight, IA_DEFAULT, NULL, NULL);
 	return;
     case VK_HOME:
+	vctrace(TC_UI, " Default -> " AnHome "()\n");
 	run_action(AnHome, IA_DEFAULT, NULL, NULL);
 	return;
     default:
@@ -2661,15 +2667,19 @@ kybd_input2(INPUT_RECORD *ir)
 	switch(k) {
 	/* These cases apply only to 3270 mode. */
 	case VK_TAB:
+	    vctrace(TC_UI, " Default -> " AnTab "()\n");
 	    run_action(AnTab, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_DELETE:
+	    vctrace(TC_UI, " Default -> " AnDelete "()\n");
 	    run_action(AnDelete, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_BACK:
+	    vctrace(TC_UI, " Default -> " AnBackSpace "()\n");
 	    run_action(AnBackSpace, IA_DEFAULT, NULL, NULL);
 	    return;
 	case VK_RETURN:
+	    vctrace(TC_UI, " Default -> " AnEnter "()\n");
 	    run_action(AnEnter, IA_DEFAULT, NULL, NULL);
 	    return;
 	default:
@@ -2679,17 +2689,21 @@ kybd_input2(INPUT_RECORD *ir)
 
     /* Catch PF keys. */
     if (k >= VK_F1 && k <= VK_F24) {
-	run_action(AnPF, IA_DEFAULT, txAsprintf("%d", k - VK_F1 + 1), NULL);
+	const char *s = txAsprintf("%d", k - VK_F1 + 1);
+
+	vctrace(TC_UI, " Default -> " AnEnter "(%s)\n", s);
+	run_action(AnPF, IA_DEFAULT, s, NULL);
 	return;
     }
 
     /* Then any other character. */
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
-	run_action(AnKey, IA_DEFAULT,
-		txAsprintf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
-		NULL);
+	const char *s = txAsprintf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar);
+
+	vctrace(TC_UI, " Default -> " AnKey "(%s)\n", s);
+	run_action(AnKey, IA_DEFAULT, s, NULL);
     } else {
-	vtrace(" dropped (no default)\n");
+	vctrace(TC_UI, " dropped (no default)\n");
     }
 }
 
@@ -2773,7 +2787,7 @@ toggle_altCursor(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 static void
 set_cblink(bool mode)
 {
-    vtrace("set_cblink(%s)\n", mode? "true": "false");
+    vctrace(TC_UI, "set_cblink(%s)\n", mode? "true": "false");
     if (mode) {
 	/* Turn it on. */
 	if (cblink.id == NULL_IOID) {

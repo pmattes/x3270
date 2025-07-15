@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -398,7 +398,8 @@ it_resume(void *handle, const char *response)
 	size_t sl;
 
 	/* Trim spaces. */
-	r = txdFree(NewString(response));
+	r = NewString(response);
+	txdFree(r);
 	while (*r == ' ') {
 	    r++;
 	}
@@ -1087,7 +1088,7 @@ static char *
 ask_source_file(itc_t *itc)
 {
     ft_conf_t *p = &itc->conf;
-    char *default_file;
+    const char *default_file;
 
     /* Ask about the source file. */
     if (p->receive_flag && p->host_filename) {
@@ -1108,7 +1109,7 @@ static char *
 ask_dest_file(itc_t *itc)
 {
     ft_conf_t *p = &itc->conf;
-    char *default_file;
+    const char *default_file;
 
     /* Ask about the destination file. */
     if (!p->receive_flag && p->host_filename) {
@@ -1347,7 +1348,7 @@ ask_go(itc_t *itc)
     char *ht = "";
     char *cr = "";
     char *remap = "";
-    char *windows_cp = "";
+    const char *windows_cp = "";
 
     /* Sum up and ask about starting the transfer. */
     action_output(" ");
@@ -1448,9 +1449,9 @@ ask_go(itc_t *itc)
 	}
 
 	if (p->primary_space || p->secondary_space) {
-	    char *primary = "";
-	    char *secondary = "";
-	    char *units = "";
+	    const char *primary = "";
+	    const char *secondary = "";
+	    const char *units = "";
 
 	    if (p->primary_space) {
 		primary = txAsprintf(" primary %d", p->primary_space);
@@ -1495,7 +1496,7 @@ void
 ft_help(bool as_action _is_unused)
 {
     ft_conf_t conf;
-    char *s;
+    const char *s;
 
     memset(&conf, 0, sizeof(ft_conf_t));
     ft_init_conf(&conf);

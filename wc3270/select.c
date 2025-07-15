@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2024 Paul Mattes.
+ * Copyright (c) 2013-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -339,7 +339,7 @@ url_click(int row, int col)
     /* Launch the browser. */
     command = Asprintf("start \"browser\" \"%s\"", url);
     Free(url);
-    vtrace("Starting URL: %s\n", url);
+    vctrace(TC_UI, "Starting URL: %s\n", url);
     rc = system(command);
     if (rc != 0) {
 	popup_an_error("URL failed, return code %d", rc);
@@ -454,7 +454,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
     assert((int)row <= ROWS);
     assert((int)col <= COLS);
 
-    vtrace(" select_event(%u,%u,%s,%s)\n", row, col, event_name[event],
+    vctrace(TC_UI, " select_event(%u,%u,%s,%s)\n", row, col, event_name[event],
 	    shift? "shift": "no-shift");
 
     if (!rubber_banding) {
@@ -462,9 +462,9 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	case SE_BUTTON_DOWN:
 	    if (shift && select_started) {
 		/* Extend selection. */
-		vtrace("  Extending selection\n");
+		vctrace(TC_UI, "  Extending selection\n");
 	    } else {
-		vtrace("  New selection\n");
+		vctrace(TC_UI, "  New selection\n");
 		select_start_row = row;
 		select_start_col = col;
 
@@ -480,7 +480,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    moved = false;
 	    break;
 	case SE_DOUBLE_CLICK:
-	    vtrace("  Word select\n");
+	    vctrace(TC_UI, "  Word select\n");
 	    if (toggled(SELECT_URL) && url_click(row, col)) {
 		if (click_cursor_addr != -1) {
 		    /* Move the cursor back from the first click. */
@@ -504,11 +504,11 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	case SE_RIGHT_BUTTON_DOWN:
 	    if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
 		/* No selection pending: Paste. */
-		vtrace("  Paste\n");
+		vctrace(TC_UI, "  Paste\n");
 		run_action(AnPaste, IA_KEYMAP, NULL, NULL);
 	    } else {
 		/* Selection pending: Copy. */
-		vtrace("  Copy\n");
+		vctrace(TC_UI, "  Copy\n");
 		run_action(AnCopy, IA_KEYMAP, NULL, NULL);
 	    }
 	    break;
@@ -529,13 +529,13 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 		s_pending[(row * COLS) + col] = 0;
 		screen_changed = true;
 		if (ever_3270) {
-		    vtrace("  Cursor move\n");
+		    vctrace(TC_UI, "  Cursor move\n");
 		    click_cursor_addr = cursor_addr;
 		}
 		/* We did not consume the event. */
 		return false;
 	    }
-	    vtrace("  Finish selection\n");
+	    vctrace(TC_UI, "  Finish selection\n");
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect(true);
@@ -543,7 +543,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    break;
 	case SE_MOVE:
 	    /* Extend. */
-	    vtrace("  Extend\n");
+	    vctrace(TC_UI, "  Extend\n");
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect(true);
@@ -932,7 +932,7 @@ copy_cut_action(bool cutting)
 	return;
     }
 
-    vtrace("Word %sselected\n", word_selected? "": "not ");
+    vctrace(TC_UI, "Word %sselected\n", word_selected? "": "not ");
 
     /* Open the clipboard. */
     if (!OpenClipboard(console_window)) {
@@ -973,7 +973,7 @@ copy_cut_action(bool cutting)
 
 	/* Place the handle on the clipboard. */
 	SetClipboardData(types[i].type, hglb);
-	vtrace("Copy(): Put %ld %s characters on the clipboard\n",
+	vctrace(TC_UI, "Copy(): Put %ld %s characters on the clipboard\n",
 		(long)sl, types[i].name);
     }
 
@@ -1122,9 +1122,9 @@ keyboard_cursor_select(void)
 {
     if (select_started) {
 	/* Extend selection. */
-	vtrace("  Extending selection\n");
+	vctrace(TC_UI, "  Extending selection\n");
     } else {
-	vtrace("  New selection\n");
+	vctrace(TC_UI, "  New selection\n");
 	select_start_row = cursor_addr / COLS;
 	select_start_col = cursor_addr % COLS;
     }

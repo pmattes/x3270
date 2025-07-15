@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -149,7 +149,7 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
     if (password == NULL) {
 	password = lookup_cache(&appres.tls);
 	if (password != NULL) {
-	    vtrace("TLS: Using cached password\n");
+	    vctrace(TC_TLS, "Using cached password\n");
 	}
     } else {
 	add_to_cache(&appres.tls, password);
@@ -166,7 +166,7 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 	    connect_error("%s", sio_last_error());
 	    return NULL;
 	case SI_WRONG_PASSWORD:
-	    vtrace("TLS: Password is wrong\n");
+	    vctrace(TC_TLS, "Password is wrong\n");
 	    if (password == NULL) {
 		connect_error("%s", sio_last_error());
 		return NULL;
@@ -178,20 +178,20 @@ sio_init_wrapper(const char *password, bool force_no_verify, char *accept,
 			sizeof(password_buf), again)) {
 	    case SP_SUCCESS:
 		/* Got it right away. */
-		vtrace("TLS: Password needed, supplied by GUI\n");
+		vctrace(TC_TLS, "Password needed, supplied by GUI\n");
 		password = password_buf;
 		add_to_cache(&appres.tls, password);
 		/* Try again. */
 		break;
 	    case SP_FAILURE:
-		vtrace("TLS: Password needed, GUI failed\n");
+		vctrace(TC_TLS, "Password needed, GUI failed\n");
 		return NULL;
 	    case SP_PENDING:
-		vtrace("TLS: Password needed, GUI pending\n");
+		vctrace(TC_TLS, "Password needed, GUI pending\n");
 		*pending = true;
 		return NULL;
 	    case SP_NOT_SUPPORTED:
-		vtrace("TLS: Password needed, GUI unavailable\n");
+		vctrace(TC_TLS, "Password needed, GUI unavailable\n");
 		connect_error("Private key password needed");
 		return NULL;
 	    }

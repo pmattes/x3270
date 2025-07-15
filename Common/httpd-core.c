@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2024 Paul Mattes.
+ * Copyright (c) 2014-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -225,7 +225,7 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
 		    vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
 		}
 	    }
-	    vtrace("%sh%s [%lu] 0x%04x",
+	    vctrace(TC_HTTPD, "%s%s[%lu] 0x%04x",
 		    i? "\n": "",
 		    direction,
 		    h->seq,
@@ -378,7 +378,7 @@ httpd_print(httpd_t *h, httpd_print_t type, const char *format, ...)
 static void
 httpd_content_len(httpd_t *h, size_t len)
 {
-    char *cl;
+    const char *cl;
 
     /* Do our own CR+LF expansion and send directly. */
     cl = txAsprintf("Content-Length: %u\r\n\r\n", (unsigned)len);
@@ -527,7 +527,7 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
     request_t *r = &h->request;
     const char *a;
 
-    vtrace("h> [%lu] Response: %d %s\n", h->seq, status_code,
+    vctrace(TC_HTTPD, ">[%lu] Response: %d %s\n", h->seq, status_code,
 	    status_text(status_code));
 
     httpd_print(h, HP_BUFFER, "HTTP/1.1 %d %s\n", status_code,
@@ -597,7 +597,7 @@ httpd_verror(httpd_t *h, errmode_t mode, content_t content_type,
 	httpd_http_header(h, status_code, mode <= ERRMODE_FATAL, content_type,
 		"");
     } else {
-	vtrace("h> [%lu] Response: %d %s\n", h->seq, status_code,
+	vctrace(TC_HTTPD, ">[%lu] Response: %d %s\n", h->seq, status_code,
 		status_text(status_code));
     }
 
@@ -783,7 +783,7 @@ httpd_digest_request_line(httpd_t *h)
     errmode = ERRMODE_NON_HTTP;
 
     rq = r->request_buf;
-    vtrace("h< [%lu] Request: %s\n", h->seq, rq);
+    vctrace(TC_HTTPD, "<[%lu] Request: %s\n", h->seq, rq);
 
     /*
      * We need to see something that looks like:
@@ -2087,7 +2087,7 @@ httpd_new(void *mhandle, const char *client_name)
     memset(h, 0, sizeof(*h));
     httpd_init_state(h, mhandle);
 
-    vtrace("h< [%lu] New session from %s\n", h->seq, client_name);
+    vctrace(TC_HTTPD, "<[%lu] New session from %s\n", h->seq, client_name);
 
     return h;
 }
@@ -2151,7 +2151,7 @@ httpd_close(void *dhandle, const char *why)
 {
     httpd_t *h = dhandle;
 
-    vtrace("h> [%lu] Close: %s\n", h->seq, why);
+    vctrace(TC_HTTPD, ">[%lu] Close: %s\n", h->seq, why);
 
     /* Wipe the existing request state. */
     httpd_free_request(&h->request);

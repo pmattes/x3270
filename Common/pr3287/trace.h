@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,14 @@
  */
 
 /*
- *	trace_dsc.h
- *		Global declarations for trace_ds.c.
+ *	trace.h
+ *		Global declarations for trace.c.
  */
+
+#include "trace_common.h"
 
 extern FILE *tracef;
 
-const char *rcba(int baddr);
 const char *see_aid(unsigned char code);
 const char *see_attr(unsigned char fa);
 const char *see_color(unsigned char setting);
@@ -40,8 +41,6 @@ const char *see_ebc(unsigned char ch);
 const char *see_efa(unsigned char efa, unsigned char value);
 const char *see_efa_only(unsigned char efa);
 const char *see_qcode(unsigned char id);
-void trace_ds(const char *fmt, ...);
-void vtrace(const char *fmt, ...);
 void vtrace_nts(const char *fmt, ...);
 void trace_pdb(unsigned char *buf, size_t len);
 void trace_pdc(unsigned char c);

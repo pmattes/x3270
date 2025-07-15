@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,11 +46,11 @@ proxy_passthru(socket_t fd, const char *host, unsigned short port)
 {
     char *sbuf = Asprintf("%s %u\r\n", host, port);
 
-    vtrace("Passthru Proxy: xmit '%.*s'", (int)(strlen(sbuf) - 2), sbuf);
+    vctrace(TC_PROXY, "Passthru: xmit '%.*s'", (int)(strlen(sbuf) - 2), sbuf);
     trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));
 
     if (send(fd, sbuf, (int)strlen(sbuf), 0) < 0) {
-	popup_a_sockerr("Passthru Proxy: send error");
+	popup_a_sockerr("Passthru proxy: send error");
 	Free(sbuf);
 	return PX_FAILURE;
     }

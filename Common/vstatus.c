@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Paul Mattes.
+ * Copyright (c) 2020-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -329,7 +329,7 @@ vstatus_line(struct ea *ea)
 {
     int i;
     int rmargin = COLS - 1;
-    char *cursor;
+    const char *cursor;
     struct ea *ea2;
 
     /* Begin with nothing. */

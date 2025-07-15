@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 2015-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ static int slot_ix = 0;
  * 
  * @return buf, for convenience
  */
-char *
+const char *
 txdFree(void *buf)
 {
     if (current_block == NULL || slot_ix >= BLOCK_SLOTS) {
@@ -82,7 +82,7 @@ txdFree(void *buf)
  *
  * @return Buffer
  */
-char *
+const char *
 txAsprintf(const char *fmt, ...)
 {
     va_list args;
@@ -103,7 +103,7 @@ txAsprintf(const char *fmt, ...)
  *
  * @return Buffer
  */
-char *
+const char *
 txVasprintf(const char *fmt, va_list args)
 {
     return txdFree(Vasprintf(fmt, args));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -105,7 +105,7 @@ proxy_socks5(socket_t fd, const char *user, const char *host,
     if (force_d) {
 	ps.use_name = true;
     } else {
-	char *errmsg;
+	const char *errmsg;
 	rhp_t rv;
 	int nr;
 
@@ -128,17 +128,17 @@ proxy_socks5(socket_t fd, const char *user, const char *host,
     /* Send the authentication request to the server. */
     if (user != NULL) {
 	memcpy((char *)sbuf, "\005\002\000\002", 4);
-	vtrace("SOCKS5 Proxy: xmit version 5 nmethods 2 (no auth, "
+	vctrace(TC_PROXY, "SOCKS5: xmit version 5 nmethods 2 (no auth, "
 		"username/password)\n");
 	nw0 = 4;
     } else {
 	strcpy((char *)sbuf, "\005\001\000");
-	vtrace("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
+	vctrace(TC_PROXY, "SOCKS5: xmit version 5 nmethods 1 (no auth)\n");
 	nw0 = 3;
     }
     trace_netdata('>', sbuf, nw0);
     if (send(fd, (char *)sbuf, nw0, 0) < 0) {
-	popup_a_sockerr("SOCKS5 Proxy: send error");
+	popup_a_sockerr("SOCKS5 proxy: send error");
 	return PX_FAILURE;
     }
 
@@ -165,14 +165,14 @@ proxy_socks5_process_auth_reply(void)
 		}
 		return PX_WANTMORE;
 	    }
-	    popup_a_sockerr("SOCKS5 Proxy: receive error");
+	    popup_a_sockerr("SOCKS5 proxy: receive error");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
-	    popup_an_error("SOCKS5 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS5 proxy: unexpected EOF");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
@@ -186,25 +186,25 @@ proxy_socks5_process_auth_reply(void)
     trace_netdata('<', ps.rbuf, ps.nread);
 
     if (ps.rbuf[0] != 0x05) {
-	popup_an_error("SOCKS5 Proxy: bad authentication response");
+	popup_an_error("SOCKS5 proxy: bad authentication response");
 	return PX_FAILURE;
     }
 
-    vtrace("SOCKS5 Proxy: recv version %d method %d\n", ps.rbuf[0],
+    vctrace(TC_PROXY, "SOCKS5: recv version %d method %d\n", ps.rbuf[0],
 	    ps.rbuf[1]);
 
     if (ps.rbuf[1] == 0xff) {
-	popup_an_error("SOCKS5 Proxy: authentication failure");
+	popup_an_error("SOCKS5 proxy: authentication failure");
 	return PX_FAILURE;
     }
 
     if (ps.user == NULL && ps.rbuf[1] != 0x00) {
-	popup_an_error("SOCKS5 Proxy: bad authentication response");
+	popup_an_error("SOCKS5 proxy: bad authentication response");
 	return PX_FAILURE;
     }
 
     if (ps.user != NULL && (ps.rbuf[1] != 0x00 && ps.rbuf[1] != 0x02)) {
-	popup_an_error("SOCKS5 Proxy: bad authentication response");
+	popup_an_error("SOCKS5 proxy: bad authentication response");
 	return PX_FAILURE;
     }
 
@@ -218,7 +218,7 @@ proxy_socks5_process_auth_reply(void)
 		*(colon + 1) == '\0' ||
 		colon - ps.user > 255 ||
 		strlen(colon + 1) > 255) {
-	    popup_an_error("SOCKS5 Proxy: invalid username:password");
+	    popup_an_error("SOCKS5 proxy: invalid username:password");
 	    return PX_FAILURE;
 	}
 
@@ -228,7 +228,7 @@ proxy_socks5_process_auth_reply(void)
 		ps.user,		/* user */
 		(int)strlen(colon + 1),	/* length of password */
 		colon + 1);		/* password */
-	vtrace("SOCKS5 Proxy: xmit version 1 ulen %d username '%.*s' plen %d "
+	vctrace(TC_PROXY, "SOCKS5: xmit version 1 ulen %d username '%.*s' plen %d "
 		"password '%s'\n",
 		(int)(colon - ps.user),
 		(int)(colon - ps.user),
@@ -237,7 +237,7 @@ proxy_socks5_process_auth_reply(void)
 		colon + 1);
 	trace_netdata('>', upbuf, strlen((char *)upbuf));
 	if (send(ps.fd, (char *)upbuf, (int)strlen((char *)upbuf), 0) < 0) {
-	    popup_a_sockerr("SOCKS5 Proxy: send error");
+	    popup_a_sockerr("SOCKS5 proxy: send error");
 	    return PX_FAILURE;
 	}
 
@@ -264,14 +264,14 @@ proxy_socks5_process_cred_reply(void)
 		}
 		return PX_WANTMORE;
 	    }
-	    popup_a_sockerr("SOCKS5 Proxy: receive error");
+	    popup_a_sockerr("SOCKS5 proxy: receive error");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
-	    popup_an_error("SOCKS5 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS5 proxy: unexpected EOF");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
@@ -285,14 +285,14 @@ proxy_socks5_process_cred_reply(void)
     trace_netdata('<', ps.rbuf, ps.nread);
 
     if (ps.rbuf[0] != 0x01) {
-	popup_an_error("SOCKS5 Proxy: bad username/password "
+	popup_an_error("SOCKS5 proxy: bad username/password "
 		"authentication response type, expected 1, got %d",
 		ps.rbuf[0]);
 	return PX_FAILURE;
     }
 
     if (ps.rbuf[1] != 0x00) {
-	popup_an_error("SOCKS5 Proxy: bad username/password response %d",
+	popup_an_error("SOCKS5 proxy: bad username/password response %d",
 		ps.rbuf[1]);
 	return PX_FAILURE;
     }
@@ -330,7 +330,7 @@ proxy_socks5_send_connect(void)
     }
     SET16(s, ps.port);
 
-    vtrace("SOCKS5 Proxy: xmit version 5 connect %s %s port %u\n",
+    vctrace(TC_PROXY, "SOCKS5: xmit version 5 connect %s %s port %u\n",
 	    ps.use_name? "domainname":
 		      ((ps.ha.sa.sa_family == AF_INET)? "IPv4": "IPv6"),
 	    ps.use_name? ps.host: nbuf,
@@ -338,7 +338,7 @@ proxy_socks5_send_connect(void)
     trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
     if (send(ps.fd, sbuf, (int)(s - sbuf), 0) < 0) {
-	popup_a_sockerr("SOCKS5 Proxy: send error");
+	popup_a_sockerr("SOCKS5 proxy: send error");
 	Free(sbuf);
 	return PX_FAILURE;
     }
@@ -384,14 +384,14 @@ proxy_socks5_process_connect_reply(void)
 	    if (ps.nread) {
 		trace_netdata('<', ps.vrbuf, ps.nread);
 	    }
-	    popup_a_sockerr("SOCKS5 Proxy: receive error");
+	    popup_a_sockerr("SOCKS5 proxy: receive error");
 	    return PX_FAILURE;
 	}
 	if (nr == 0) {
 	    if (ps.nread) {
 		trace_netdata('<', ps.vrbuf, ps.nread);
 	    }
-	    popup_an_error("SOCKS5 Proxy: unexpected EOF");
+	    popup_an_error("SOCKS5 proxy: unexpected EOF");
 	    return PX_FAILURE;
 	}
 
@@ -401,7 +401,7 @@ proxy_socks5_process_connect_reply(void)
 	switch (ps.nread++) {
 	case 0:
 	    if (r != 0x05) {
-		popup_an_error("SOCKS5 Proxy: incorrect reply version 0x%02x",
+		popup_an_error("SOCKS5 proxy: incorrect reply version 0x%02x",
 			r);
 		if (ps.nread) {
 		    trace_netdata('<', ps.vrbuf, ps.nread);
@@ -417,31 +417,31 @@ proxy_socks5_process_connect_reply(void)
 	    case 0x00:
 		break;
 	    case 0x01:
-		popup_an_error("SOCKS5 Proxy: server failure");
+		popup_an_error("SOCKS5 proxy: server failure");
 		return PX_FAILURE;
 	    case 0x02:
-		popup_an_error("SOCKS5 Proxy: connection not allowed");
+		popup_an_error("SOCKS5 proxy: connection not allowed");
 		return PX_FAILURE;
 	    case 0x03:
-		popup_an_error("SOCKS5 Proxy: network unreachable");
+		popup_an_error("SOCKS5 proxy: network unreachable");
 		return PX_FAILURE;
 	    case 0x04:
-		popup_an_error("SOCKS5 Proxy: host unreachable");
+		popup_an_error("SOCKS5 proxy: host unreachable");
 		return PX_FAILURE;
 	    case 0x05:
-		popup_an_error("SOCKS5 Proxy: connection refused");
+		popup_an_error("SOCKS5 proxy: connection refused");
 		return PX_FAILURE;
 	    case 0x06:
-		popup_an_error("SOCKS5 Proxy: ttl expired");
+		popup_an_error("SOCKS5 proxy: ttl expired");
 		return PX_FAILURE;
 	    case 0x07:
-		popup_an_error("SOCKS5 Proxy: command not supported");
+		popup_an_error("SOCKS5 proxy: command not supported");
 		return PX_FAILURE;
 	    case 0x08:
-		popup_an_error("SOCKS5 Proxy: address type not supported");
+		popup_an_error("SOCKS5 proxy: address type not supported");
 		return PX_FAILURE;
 	    default:
-		popup_an_error("SOCKS5 Proxy: unknown server error 0x%02x", r);
+		popup_an_error("SOCKS5 proxy: unknown server error 0x%02x", r);
 		return PX_FAILURE;
 	    }
 	    break;
@@ -459,7 +459,7 @@ proxy_socks5_process_connect_reply(void)
 		ps.n2read = sizeof(struct in6_addr) + 2;
 		break;
 	    default:
-		popup_an_error("SOCKS5 Proxy: unknown server address type "
+		popup_an_error("SOCKS5 proxy: unknown server address type "
 			"0x%02x", r);
 		if (ps.nread) {
 		    trace_netdata('<', ps.vrbuf, ps.nread);
@@ -502,8 +502,7 @@ proxy_socks5_process_connect_reply(void)
 	break;
     }
     rport = (*portp << 8) + *(portp + 1);
-    vtrace("SOCKS5 Proxy: recv version %d status 0x%02x address %s %s "
-	    "port %u\n",
+    vctrace(TC_PROXY, "SOCKS5: recv version %d status 0x%02x address %s %s port %u\n",
 	    ps.vrbuf[0], ps.vrbuf[1],
 	    atype_name[ps.vrbuf[3]],
 	    nbuf,

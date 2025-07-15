@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2022 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,20 +39,20 @@ typedef enum {
 #define RHP_IS_ERROR(r)	((r) < 0)
 rhp_t resolve_host_and_port(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr);
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr);
 rhp_t resolve_host_and_port_abs(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr);
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr);
 rhp_t resolve_host_and_port_a(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr, int *slot,
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr, int *slot,
 	int pipe, iosrc_t event);
 rhp_t collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, unsigned short *pport, char **errmsg, int max,
+	socklen_t *sa_rlen, unsigned short *pport, const char **errmsg, int max,
 	int *nr);
 void cleanup_host_and_port(int slot);
 
 bool numeric_host_and_port(const struct sockaddr *sa, socklen_t salen,
-	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg);
+	char *host, size_t hostlen, char *serv, size_t servlen, const char **errmsg);
 
 void set_46(bool prefer4, bool prefer6);

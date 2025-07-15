@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2017, 2020 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,8 @@
  *		Global declarations for trace.c.
  */
 
+#include "trace_common.h"
+
 typedef enum {
     TSS_FILE,	/* trace to file */
     TSS_PRINTER	/* trace to printer */
@@ -39,9 +41,6 @@ extern bool trace_skipping;
 extern char *tracefile_name;
 extern struct timeval ds_ts;
 
-const char *rcba(int baddr);
-void trace_ds(const char *fmt, ...) printflike(1, 2);
-void vtrace(const char *fmt, ...) printflike(1, 2);
 void ntvtrace(const char *fmt, ...) printflike(1, 2);
 void trace_set_trace_file(const char *path);
 void trace_rollover_check(void);

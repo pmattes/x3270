@@ -79,8 +79,8 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
     /* Convert the multibyte string to UCS4. */
     ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
     if (ucs4 == 0) {
-	vtrace(" %s -> Key(?)\n", ia_name[(int) cause]);
-	vtrace("  dropped (invalid multibyte sequence)\n");
+	vctrace(TC_UI, " %s -> Key(?)\n", ia_name[(int) cause]);
+	vctrace(TC_UI, "  dropped (invalid multibyte sequence)\n");
 	return;
     }
 
@@ -218,7 +218,7 @@ xim_lookup(XKeyEvent *event)
 	rv = true;
 	break;
     case XLookupChars:
-	vtrace("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
+	vctrace(TC_UI, "%d XIM char%s:", rlen, (rlen != 1)? "s": "");
 	for (i = 0; i < rlen; i++) {
 	    vtrace(" %02x", buf[i] & 0xff);
 	}
@@ -513,7 +513,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 		if (ucs4 != (ucs4_t)-1) {
 		    key_UCharacter(ucs4, KT_STD, IA_DEFAULT, false);
 		} else {
-		    vtrace(" Default: dropped (unknown keysym)\n");
+		    vctrace(TC_UI, " Default: dropped (unknown keysym)\n");
 		}
 	    }
 	    break;
@@ -522,10 +522,10 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     case ButtonPress:
     case ButtonRelease:
-	vtrace(" Default: dropped (no action configured)\n");
+	vctrace(TC_UI, " Default: dropped (no action configured)\n");
 	break;
     default:
-	vtrace(" Default: dropped (unknown event type)\n");
+	vctrace(TC_UI, " Default: dropped (unknown event type)\n");
 	break;
     }
 }

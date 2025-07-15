@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,32 @@
  */
 
 /*
- *      txa.h
- *              Transaction allocator.
+ *	trace_common.h
+ *		Common global declarations for trace.c.
  */
 
-const char *txdFree(void *buf);
-const char *txAsprintf(const char *fmt, ...) printflike(1, 2);
-const char *txVasprintf(const char *fmt, va_list args);
-void txflush(void);
+/* Trace categories. */
+typedef enum {
+    TC_FT,		/* File transfer */
+    TC_HTTPD,		/* HTTP server */
+    TC_INFRA,		/* Infrastructure */
+    TC_KYBD,		/* Keyboard */
+    TC_PRINT,		/* Printing */
+    TC_PROXY,		/* Proxy protocols */
+    TC_SCHED,		/* Scheduler */
+    TC_SCRIPT,		/* Script operations */
+    TC_SOCKET,		/* Socket operations */
+    TC_TASK,		/* Task operations */
+    TC_TELNET,		/* TELNET protocol */
+    TC_TLS,		/* TLS protocl */
+    TC_TN3270,		/* TN3270 and TN3270E protocols */
+    TC_UI,		/* User interface */
+    NUM_TC
+} tc_t;
+
+extern const char *cats[];
+
+const char *rcba(int baddr);
+void trace_ds(const char *fmt, ...) printflike(1, 2);
+void vtrace(const char *fmt, ...) printflike(1, 2);
+void vctrace(tc_t, const char *fmt, ...) printflike(2, 3);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2024 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ cmd_delete(int ix)
 static void
 save_xy(void)
 {
-    char *tbuf;
+    const char *tbuf;
     Window window, frame, child;
     XWindowAttributes wa;
     int x, y;
@@ -168,7 +168,7 @@ save_icon(void)
 {
     unsigned char *data;
     int iconX, iconY;
-    char *tbuf;
+    const char *tbuf;
     int ix;
     unsigned long nitems;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013, 2015, 2019 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,7 @@ trace_ds(const char *fmt, ...)
 
 /* Trace something that isn't the host or printer data stream. */
 static void
-vatrace(int do_ts, const char *fmt, va_list args)
+vatrace(bool do_ts, tc_t category, const char *fmt, va_list args)
 {
     size_t sl;
     char *s;
@@ -174,14 +174,15 @@ vatrace(int do_ts, const char *fmt, va_list args)
 	gettimeofday(&tv, NULL);
 	t = tv.tv_sec;
 	tm = localtime(&t);
-	fprintf(tracef, "%d%02d%02d.%02d%02d%02d.%03d ",
+	fprintf(tracef, "%d%02d%02d.%02d%02d%02d.%03d %s ",
 		tm->tm_year + 1900,
 		tm->tm_mon + 1,
 		tm->tm_mday,
 		tm->tm_hour,
 		tm->tm_min,
 		tm->tm_sec,
-		(int)(tv.tv_usec / 1000L));
+		(int)(tv.tv_usec / 1000L),
+		cats[category]);
 	fflush(tracef);
     }
 
@@ -215,7 +216,22 @@ vtrace(const char *fmt, ...)
     }
 
     va_start(args, fmt);
-    vatrace(1, fmt, args);
+    vatrace(true, TC_INFRA, fmt, args);
+    va_end(args);
+}
+
+/* Trace something that isn't host or printer data, with a timestamp. */
+void
+vctrace(tc_t category, const char *fmt, ...)
+{
+    va_list args;
+
+    if (tracef == NULL) {
+	return;
+    }
+
+    va_start(args, fmt);
+    vatrace(true, category, fmt, args);
     va_end(args);
 }
 
@@ -230,7 +246,7 @@ vtrace_nts(const char *fmt, ...)
     }
 
     va_start(args, fmt);
-    vatrace(0, fmt, args);
+    vatrace(false, TC_INFRA, fmt, args);
     va_end(args);
 }
 

@@ -37,6 +37,7 @@
 
 #include "asprintf.h"
 #include "txa.h"
+#include "varbuf.h"
 
 #include "sa_malloc.h"
 
@@ -201,7 +202,7 @@ Asprintf(const char *fmt, ...)
  * @param[in] fmt	Format
  * @returns Malloc'd formatted text
  */
-char *
+const char *
 txAsprintf(const char *fmt, ...)
 {
     va_list ap;
@@ -225,7 +226,7 @@ txAsprintf(const char *fmt, ...)
  *
  * @return buf, for convenience
  */
-char *
+const char *
 txdFree(void *buf)
 {
     txa_block_t *l = (txa_block_t *)Malloc(sizeof(txa_block_t));

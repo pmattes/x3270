@@ -378,7 +378,7 @@ trace_task_output(task_t *s, const char *fmt, ...)
     st = msgbuf;
     while ((c = *st++)) {
 	if (c == '\n') {
-	    vtrace("Output for " TASK_NAME_FMT ": '%.*s'\n", TASK_sNAME(s),
+	    vctrace(TC_TASK, "Output for " TASK_NAME_FMT ": '%.*s'\n", TASK_sNAME(s),
 		    (int)((st - 1) - m), m);
 	    m = st;
 	    continue;
@@ -674,7 +674,7 @@ static void
 task_set_state(task_t *s, enum task_state state, const char *why)
 {
     if (s->state != state) {
-	vtrace(TASK_NAME_FMT " %s -> %s (%s)\n", TASK_sNAME(s),
+	vctrace(TC_TASK, TASK_NAME_FMT " %s -> %s (%s)\n", TASK_sNAME(s),
 		task_state_name[s->state],
 		task_state_name[state],
 		why);
@@ -693,7 +693,7 @@ task_set_state(task_t *s, enum task_state state, const char *why)
 static void
 task_set_match(task_t *s, int baddr, const char *string, bool force_utf8)
 {
-    vtrace(TASK_NAME_FMT " wait @%d%s\n", TASK_sNAME(s),
+    vctrace(TC_TASK, TASK_NAME_FMT " wait @%d%s\n", TASK_sNAME(s),
 	    baddr, (string != NULL)? txAsprintf(" '%s'", string): "");
     s->match.baddr = baddr;
     s->match.string = NewString(string);
@@ -825,7 +825,7 @@ task_pop(void)
     unsigned long msec;
     struct timeval t1;
 
-    vtrace(TASK_NAME_FMT " complete, %s\n", TASK_NAME,
+    vctrace(TC_TASK, TASK_NAME_FMT " complete, %s\n", TASK_NAME,
 	    current_task->success? "success": "failure");
 
     /*
@@ -852,7 +852,7 @@ task_pop(void)
 	taskq_t *q = current_task->taskq;
 
 	assert(q != NULL);
-	vtrace("CB(%s)[#%u] complete\n", q->name, q->index);
+	vctrace(TC_TASK, "CB(%s)[#%u] complete\n", q->name, q->index);
 
 	/* Do not delete the taskq yet -- someone might be walking it. */
 	q->top = NULL;
@@ -1550,7 +1550,7 @@ run_macro(void)
     bool es;
     bool fatal = false;
 
-    vtrace(TASK_NAME_FMT " running\n", TASK_NAME);
+    vctrace(TC_TASK, TASK_NAME_FMT " running\n", TASK_NAME);
 
     /*
      * Keep executing commands off the line until one pauses or
@@ -1568,7 +1568,7 @@ run_macro(void)
 	 * Check for command failure.
 	 */
 	if (!s->success) {
-	    vtrace(TASK_NAME_FMT " failed\n", TASK_NAME);
+	    vctrace(TC_TASK, TASK_NAME_FMT " failed\n", TASK_NAME);
 
 	    /* Propagate it. */
 	    if (s->next != NULL) {
@@ -1578,7 +1578,7 @@ run_macro(void)
 	}
 
 	task_set_state(s, TS_RUNNING, "executing");
-	vtrace(TASK_NAME_FMT " '%s'\n", TASK_NAME,
+	vctrace(TC_TASK, TASK_NAME_FMT " '%s'\n", TASK_NAME,
 		scatv((a != NULL)? a: (*s->macro.cmd_next)->action));
 	s->success = true;
 
@@ -1610,7 +1610,7 @@ run_macro(void)
 
 	/* Macro could not execute.  Abort it. */
 	if (!es) {
-	    vtrace(TASK_NAME_FMT " error\n", TASK_NAME);
+	    vctrace(TC_TASK, TASK_NAME_FMT " error\n", TASK_NAME);
 
 	    /* Propagate it. */
 	    s->success = false;
@@ -1632,7 +1632,7 @@ run_macro(void)
 		!(((old_kybdlock ^ kybdlock) & KL_FT) && is_nonblocking_connect(s->next))) {
 	    task_set_state(s, TS_KBWAIT, "keyboard locked");
 	    if ((old_kybdlock ^ kybdlock) & KL_FT) {
-		vtrace(TASK_NAME_FMT " setting is_ft\n", TASK_sNAME(s));
+		vctrace(TC_TASK, TASK_NAME_FMT " setting is_ft\n", TASK_sNAME(s));
 		s->is_ft = true;
 	    }
 	}
@@ -1735,13 +1735,13 @@ find_owait(const tcb_t *cb)
  *
  * @return Name of the new cb.
  */
-static char *
+static const char *
 push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
 	task_cbh handle)
 {
     task_t *s;
     taskq_t *q = NULL;
-    char *name = NULL;
+    const char *name = NULL;
     bool is_ui = (cb->flags & CB_UI) != 0;
 
     /* We performed some new action, so we're not idle. */
@@ -1760,7 +1760,7 @@ push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
 	q->output_wait_needed = find_owait(cb);
 	LLIST_APPEND(&q->llist, taskq);
 	name = q->unique_name = Asprintf("CB(%s)[#%u]", q->name, q->index);
-	vtrace("%s started%s\n", name, q->output_wait_needed? " (owait)": "");
+	vctrace(TC_TASK, "%s started%s\n", name, q->output_wait_needed? " (owait)": "");
     } else {
 	q = current_task->taskq;
     }
@@ -1806,7 +1806,7 @@ push_cb_backend(const char *buf, size_t len, cmd_t **cmds, const tcb_t *cb,
  *
  * @return Name of the new cb.
  */
-char *
+const char *
 push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
 {
     return push_cb_backend(buf, len, NULL, cb, handle);
@@ -1820,7 +1820,7 @@ push_cb(const char *buf, size_t len, const tcb_t *cb, task_cbh handle)
  *
  * @return Name of the new cb.
  */
-char *
+const char *
 push_cb_split(cmd_t **cmds, const tcb_t *cb, task_cbh handle)
 {
     return push_cb_backend(NULL, 0, cmds, cb, handle);
@@ -1971,7 +1971,7 @@ task_disconnect_abort(task_t *s)
 {
     task_t *t = s;
 
-    vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+    vctrace(TC_TASK, "Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 
     while (t != NULL && t->type != ST_CB) {
 	t = t->next;
@@ -2241,7 +2241,7 @@ run_taskq(void)
 		return any;
 	    } else {
 		if (current_task->is_ft) {
-		    vtrace(TASK_NAME_FMT " clearing is_ft\n", TASK_NAME);
+		    vctrace(TC_TASK, TASK_NAME_FMT " clearing is_ft\n", TASK_NAME);
 		}
 		current_task->is_ft = false;
 	    }
@@ -3153,7 +3153,7 @@ status_string(void)
 }
 
 /* Return a status string for error reporting purposes. */
-char *
+const char *
 task_status_string(void)
 {
     return txAsprintf("%s 0.000", txdFree(status_string()));
@@ -3165,10 +3165,10 @@ call_run(task_t *s)
 {
     bool success;
 
-    vtrace("Running " TASK_NAME_FMT "\n", TASK_NAME);
+    vctrace(TC_TASK, "Running " TASK_NAME_FMT "\n", TASK_NAME);
     if ((*current_task->cbx.cb->run)(current_task->cbx.handle, &success)) {
 	/* CB is complete. */
-	vtrace(TASK_NAME_FMT " is complete, %s\n", TASK_NAME,
+	vctrace(TC_TASK, TASK_NAME_FMT " is complete, %s\n", TASK_NAME,
 		success? "success": "failure");
 	current_task->success = success;
 	if (current_task->next) {
@@ -3190,7 +3190,7 @@ task_done(bool success)
 
     assert(current_task->type == ST_CB);
 
-    vtrace(TASK_NAME_FMT " child task done, %s\n", TASK_NAME,
+    vctrace(TC_TASK, TASK_NAME_FMT " child task done, %s\n", TASK_NAME,
 	    success? "success": "failure");
 
     /* Tell the callback its child is done. */
@@ -3209,12 +3209,12 @@ task_done(bool success)
  *
  * @return prompt
  */
-char *
+const char *
 task_cb_prompt(task_cbh handle)
 {
     task_t *s;
     char *st;
-    char *t;
+    const char *t;
 
     s = task_find_cb(handle);
     
@@ -3544,7 +3544,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     int i;
     int match_baddr = -1;
     const char *match_string = NULL;
-    char *next_why;
+    const char *next_why;
 #define CONNECTED_CHECK do { \
     if (next_state != TS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) { \
 	popup_an_error(AnWait "(): Not connected"); \
@@ -4260,19 +4260,19 @@ abortq(taskq_t *q)
 
 	/* Don't abort a peer script. */
 	if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
-	    vtrace("Abort skipping peer\n");
+	    vctrace(TC_TASK, "Abort skipping peer\n");
 	    continue;
 	}
 
 	/* Abort the cb. */
 	if (s->type == ST_CB) {
-	    vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	    vctrace(TC_TASK, "Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 	    task_result(s, "Canceled", false);
 	    (*s->cbx.cb->done)(s->cbx.handle, true, true);
 	}
 
 	/* Free the task -- this is not a pop */
-	vtrace("Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	vctrace(TC_TASK, "Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
 	free_task(s);
 
 	/* Take it out of the taskq. */
@@ -4298,7 +4298,7 @@ abort_script_by_cb(const char *cb_name)
     /* child_ignore_output(); */ /* Needed? */
 #endif /*]*/
 
-    vtrace("Canceling all pending scripts for %s\n", cb_name);
+    vctrace(TC_TASK, "Canceling all pending scripts for %s\n", cb_name);
 
     FOREACH_LLIST(&taskq, q, taskq_t *) {
 	if (!strcmp(cb_name, q->cb->shortname)) {
@@ -4323,7 +4323,7 @@ abort_queue(const char *unique_name)
     /* child_ignore_output(); */ /* Needed? */
 #endif /*]*/
 
-    vtrace("Canceling all pending scripts for %s\n", unique_name);
+    vctrace(TC_TASK, "Canceling all pending scripts for %s\n", unique_name);
 
     FOREACH_LLIST(&taskq, q, taskq_t *) {
 	if (!strcmp(unique_name, q->unique_name)) {
@@ -4346,7 +4346,7 @@ abort_script(void)
     child_ignore_output();
 #endif /*]*/
 
-    vtrace("Canceling all pending scripts\n");
+    vctrace(TC_TASK, "Canceling all pending scripts\n");
 
     /*
      * - Call the kill callbacks for every cb.
@@ -4362,19 +4362,19 @@ abort_script(void)
 
 	    /* Don't abort a peer script. */
 	    if (s->type == ST_CB && (s->cbx.cb->flags & CB_PEER)) {
-		vtrace("Abort skipping peer\n");
+		vctrace(TC_TASK, "Abort skipping peer\n");
 		continue;
 	    }
 
 	    /* Abort the cb. */
 	    if (s->type == ST_CB) {
-		vtrace("Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
+		vctrace(TC_TASK, "Canceling " TASK_NAME_FMT "\n", TASK_sNAME(s));
 		task_result(s, "Canceled", false);
 		(*s->cbx.cb->done)(s->cbx.handle, true, true);
 	    }
 
 	    /* Free the task -- this is not a pop */
-	    vtrace("Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
+	    vctrace(TC_TASK, "Freeing " TASK_NAME_FMT "\n", TASK_sNAME(s));
 	    free_task(s);
 
 	    /* Take it out of the taskq. */
@@ -4758,7 +4758,7 @@ task_request_input(const char *action, const char *prompt,
     task_t *redirect = task_redirect_to();
     unsigned flags;
     input_request_t *ir;
-    char *encoded;
+    const char *encoded;
 
     if (redirect == NULL ||
 	    redirect->cbx.cb->getflags == NULL ||

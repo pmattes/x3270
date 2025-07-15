@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -79,7 +79,8 @@ init_suppressed(const char *actions)
     if (actions == NULL) {
 	return;
     }
-    a = txdFree(NewString(actions));
+    a = NewString(actions);
+    txdFree(a);
     while ((action = strtok(a, " \t\r\n")) != NULL) {
 	size_t sl = strlen(action);
 	action_elt_t *e;

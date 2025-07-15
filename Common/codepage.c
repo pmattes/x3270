@@ -116,7 +116,7 @@ enum cs_result
 codepage_init(const char *cpname)
 {
     enum cs_result rc;
-    char *codeset_name;
+    const char *codeset_name;
     const char *codepage;
     const char *cgcsgid;
     const char *dbcs_cgcsgid = NULL;

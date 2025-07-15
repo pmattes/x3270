@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -59,7 +59,7 @@
 #include "varbuf.h"
 
 /* Return a time difference in English */
-static char *
+static const char *
 hms(time_t ts)
 {
     time_t t, td;

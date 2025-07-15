@@ -146,16 +146,16 @@ gdi_print_start(const char *printer_name, unsigned opts, void *wait_context)
     /* Initialize the printer and pop up the dialog. */
     switch (gdi_init(printer_name, opts, &fail, wait_context)) {
     case GDI_STATUS_SUCCESS:
-	vtrace("[gdi] initialized\n");
+	vctrace(TC_PRINT, "[gdi] initialized\n");
 	break;
     case GDI_STATUS_ERROR:
 	popup_an_error("Printer initialization error: %s", fail);
 	return GDI_STATUS_ERROR;
     case GDI_STATUS_CANCEL:
-	vtrace("[gdi] canceled\n");
+	vctrace(TC_PRINT, "[gdi] canceled\n");
 	return GDI_STATUS_CANCEL;
     case GDI_STATUS_WAIT:
-	vtrace("[gdi] waiting\n");
+	vctrace(TC_PRINT, "[gdi] waiting\n");
 	return GDI_STATUS_WAIT;
     }
 
@@ -255,11 +255,11 @@ parse_margin(char *s, const char *what)
 	} else if (!strcasecmp(nextp, "cm")) {
 	    d /= 2.54;
 	} else {
-	    vtrace("gdi: unknown %s unit '%s'\n",
+	    vctrace(TC_PRINT, "[gdi] unknown %s unit '%s'\n",
 		    what, nextp);
 	}
     } else {
-	vtrace("gdi: invalid %s '%s'\n", what, s);
+	vctrace(TC_PRINT, "[gdi] invalid %s '%s'\n", what, s);
 	return 0;
     }
     return d;
@@ -283,7 +283,7 @@ gdi_get_params(uparm_t *up)
 	} else if (!strcasecmp(s, "landscape")) {
 	    up->orientation = DMORIENT_LANDSCAPE;
 	} else {
-	    vtrace("gdi: unknown orientation '%s'\n", s);
+	    vctrace(TC_PRINT, "[gdi] unknown orientation '%s'\n", s);
 	}
     }
 
@@ -315,7 +315,7 @@ gdi_get_params(uparm_t *up)
 	    if (l > 0) {
 		up->font_size = (int)l;
 	    } else {
-		vtrace("gdi: invalid %s '%s'\n", ResPrintTextSize, s);
+		vctrace(TC_PRINT, "[gdi] invalid %s '%s'\n", ResPrintTextSize, s);
 	    }
 	}
     }
@@ -326,7 +326,7 @@ gdi_get_params(uparm_t *up)
 	if (l > 0) {
 	    up->spp = (int)l;
 	} else {
-	    vtrace("gdi: invalid %s '%s'\n", ResPrintTextScreensPerPage, s);
+	    vctrace(TC_PRINT, "[gdi] invalid %s '%s'\n", ResPrintTextScreensPerPage, s);
 	}
     }
 }
@@ -368,7 +368,7 @@ create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
 
     w = fwidth? Asprintf("%d", fwidth): NewString("(auto)");
     h = fheight? Asprintf("%d", fheight): NewString("(auto)");
-    vtrace("[gdi] requesting a font %sx%s logical units\n", w, h);
+    vctrace(TC_PRINT, "[gdi] requesting a font %sx%s logical units\n", w, h);
     Free(w);
     Free(h);
 
@@ -398,11 +398,11 @@ create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
 	*fail = "GetTextExtentPoint32 failed";
 	return -1;
     }
-    vtrace("[gdi] space character is %dx%d logical units\n",
+    vctrace(TC_PRINT, "[gdi] space character is %dx%d logical units\n",
 	    (int)pstate.space_size.cx, (int)pstate.space_size.cy);
     pstate.usable_cols = pstate.usable_xpixels / pstate.space_size.cx;
     pstate.usable_rows = pstate.usable_ypixels / pstate.space_size.cy;
-    vtrace("[gdi] usable area is %dx%d characters\n",
+    vctrace(TC_PRINT, "[gdi] usable area is %dx%d characters\n",
 	    pstate.usable_cols, pstate.usable_rows);
     return 0;
 }
@@ -442,7 +442,7 @@ post_print_dialog(LPVOID lpParameter _is_unused)
 static void
 print_dialog_complete(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    vtrace("Printer dialog complete (%s)\n", pstate.canceled? "canceled": "continue");
+    vctrace(TC_PRINT, "Printer dialog complete (%s)\n", pstate.canceled? "canceled": "continue");
     CloseHandle(pstate.run_thread);
     pstate.run_thread = INVALID_HANDLE_VALUE;
     CloseHandle(pstate.top_thread);
@@ -469,7 +469,7 @@ compute_location(int w, int h, int *x, int *y)
 
 	/* Get the rectangle for the primary window. */
 	if (!GetWindowRect(main_window, &rect)) {
-	    vtrace("Can't get rectangle for main window 0x%08lx\n", (u_long)(size_t)main_window);
+	    vctrace(TC_PRINT, "Can't get rectangle for main window 0x%08lx\n", (u_long)(size_t)main_window);
 	    return false;
 	}
 	parent_x = rect.left;
@@ -500,10 +500,10 @@ make_dialog_topmost(HWND hdlg, bool move)
     if (move) {
 	/* Figure out where to move it. */
 	if (!GetWindowRect(hdlg, &rect)) {
-	    vtrace("make_dialog_topmost: Can't get rectangle for dialog\n");
+	    vctrace(TC_PRINT, "make_dialog_topmost: Can't get rectangle for dialog\n");
 	    flags |= SWP_NOMOVE;
 	} else if (!compute_location(rect.right - rect.left, rect.bottom - rect.top, &x, &y)) {
-	    vtrace("make_dialog_topmost: Can't get rectangle for parent window\n");
+	    vctrace(TC_PRINT, "make_dialog_topmost: Can't get rectangle for parent window\n");
 	    flags |= SWP_NOMOVE;
 	}
     } else {
@@ -531,10 +531,10 @@ delayed_topmost(LPVOID lpParameter _is_unused)
     /* Wait 2 seconds. If the window still exists, make it topmost. */
     Sleep(2000);
     if (pstate.hwnd != INVALID_HANDLE_VALUE) {
-	vtrace("Making the print dialog window topmost\n");
+	vctrace(TC_PRINT, "Making the print dialog window topmost\n");
 	make_dialog_topmost(pstate.hwnd, false);
     } else {
-	vtrace("Too late to move print dialog window to topmost\n");
+	vctrace(TC_PRINT, "Too late to move print dialog window to topmost\n");
     }
     return 0;
 }
@@ -753,16 +753,16 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 
     /* Trace the device characteristics. */
     devnames = (DEVNAMES *)GlobalLock(pstate.dlg.hDevNames);
-    vtrace("[gdi] Printer '%s' capabilities:\n",
+    vctrace(TC_PRINT, "[gdi] Printer '%s' capabilities:\n",
 	    (char *)devnames + devnames->wDeviceOffset);
     GlobalUnlock(devnames);
-    vtrace("[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
+    vctrace(TC_PRINT, "[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
 	    pchar.ppiX, pchar.ppiY);
-    vtrace("[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
+    vctrace(TC_PRINT, "[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
 	    pchar.poffX, pchar.poffY);
-    vtrace("[gdi]  HORZRES %d VERTRES %d\n",
+    vctrace(TC_PRINT, "[gdi]  HORZRES %d VERTRES %d\n",
 	    pchar.horzres, pchar.vertres);
-    vtrace("[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
+    vctrace(TC_PRINT, "[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
 	    pchar.pwidth, pchar.pheight);
 
     /* Compute the scale factors (points to pixels). */
@@ -782,7 +782,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
     } else {
 	maxpvmargin = pchar.poffY;
     }
-    vtrace("[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
+    vctrace(TC_PRINT, "[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
 	    maxphmargin, maxpvmargin);
 
     /* Compute the margins in pixels. */
@@ -792,23 +792,23 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
     /* See if the margins are too small. */
     if (pstate.hmargin_pixels < maxphmargin) {
 	pstate.hmargin_pixels = maxphmargin;
-	vtrace("[gdi] hmargin is too small, setting to %g\"\n",
+	vctrace(TC_PRINT, "[gdi] hmargin is too small, setting to %g\"\n",
 		(float)pstate.hmargin_pixels / pchar.ppiX);
     }
     if (pstate.vmargin_pixels < maxpvmargin) {
 	pstate.vmargin_pixels = maxpvmargin;
-	vtrace("[gdi] vmargin is too small, setting to %g\"\n",
+	vctrace(TC_PRINT, "[gdi] vmargin is too small, setting to %g\"\n",
 		(float)pstate.vmargin_pixels / pchar.ppiX);
     }
 
     /* See if the margins are too big. */
     if (pstate.hmargin_pixels * 2 >= pchar.horzres) {
 	pstate.hmargin_pixels = pchar.ppiX;
-	vtrace("[gdi] hmargin is too big, setting to 1\"\n");
+	vctrace(TC_PRINT, "[gdi] hmargin is too big, setting to 1\"\n");
     }
     if (pstate.vmargin_pixels * 2 >= pchar.vertres) {
 	pstate.vmargin_pixels = pchar.ppiY;
-	vtrace("[gdi] vmargin is too big, setting to 1\"\n");
+	vctrace(TC_PRINT, "[gdi] vmargin is too big, setting to 1\"\n");
     }
 
     /*
@@ -817,7 +817,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
      */
     pstate.usable_xpixels = pchar.pwidth - (2 * pstate.hmargin_pixels);
     pstate.usable_ypixels = pchar.pheight - (2 * pstate.vmargin_pixels);
-    vtrace("[gdi] usable area is %dx%d pixels\n",
+    vctrace(TC_PRINT, "[gdi] usable area is %dx%d pixels\n",
 	    pstate.usable_xpixels, pstate.usable_ypixels);
 
     /*
@@ -876,7 +876,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	     * overflows.
 	     */
 	    if (pstate.space_size.cx * maxCOLS > pstate.usable_xpixels) {
-		vtrace("[gdi] font too wide, retrying\n");
+		vctrace(TC_PRINT, "[gdi] font too wide, retrying\n");
 		DeleteObject(pstate.font);
 		pstate.font = NULL;
 
@@ -893,7 +893,7 @@ gdi_init(const char *printer_name, unsigned opts, const char **fail,
 	     */
 	    if (pstate.space_size.cy * (maxROWS + 2) >
 		    pstate.usable_xpixels) {
-		vtrace("[gdi] font too high, retrying\n");
+		vctrace(TC_PRINT, "[gdi] font too high, retrying\n");
 		DeleteObject(pstate.font);
 		pstate.font = NULL;
 
@@ -1258,7 +1258,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		SelectObject(dc, want_font);
 		got_font = want_font;
 #if defined(GDI_DEBUG) /*[*/
-		vtrace("[gdi] selecting %s\n", want_font_name);
+		vctrace(TC_PRINT, "[gdi] selecting %s\n", want_font_name);
 #endif /*]*/
 	    }
 
@@ -1296,7 +1296,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	     */
 #if defined(GDI_DEBUG) /*[*/
 	    if (uc != ' ') {
-		vtrace("[gdi] row %d col %d x=%ld y=%ld uc=%lx\n",
+		vctrace(TC_PRINT, "[gdi] row %d col %d x=%ld y=%ld uc=%lx\n",
 			row, col,
 			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
 			    pchar.poffX,

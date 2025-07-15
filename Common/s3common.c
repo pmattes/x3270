@@ -140,7 +140,7 @@ s3data(const char *buf, size_t len, bool success, unsigned capabilities, json_t 
 void
 s3done(void *handle, bool success, json_t **json, char **out)
 {
-    char *prompt = task_cb_prompt(handle);
+    const char *prompt = task_cb_prompt(handle);
 
     vtrace("Output for %s: %s/%s\n", task_cb_name(handle), prompt, success? PROMPT_OK: PROMPT_ERROR);
 

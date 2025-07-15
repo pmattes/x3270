@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2024 Paul Mattes.
+ * Copyright (c) 1996-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -406,7 +406,7 @@ ft_cut_data(void)
 	    cut_data();
 	    break;
 	default:
-	    trace_ds("< FT unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].ec);
+	    vctrace(TC_FT, "< unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].ec);
 	    cut_abort(get_message("ftCutUnknownFrame"), SC_ABORT_XMIT);
 	    break;
 	}
@@ -424,12 +424,12 @@ cut_control_code(void)
     char *bp;
     int i;
 
-    trace_ds("< FT CONTROL_CODE ");
+    vctrace(TC_FT, "< CONTROL_CODE ");
     code = (ea_buf[O_CC_STATUS_CODE].ec << 8) |
 	    ea_buf[O_CC_STATUS_CODE + 1].ec;
     switch (code) {
     case SC_HOST_ACK:
-	trace_ds("HOST_ACK\n");
+	vctrace(TC_FT, "HOST_ACK\n");
 	cut_xfer_in_progress = true;
 	expanded_length = 0;
 	quadrant = -1;
@@ -440,14 +440,14 @@ cut_control_code(void)
 	ft_running(true);
 	break;
     case SC_XFER_COMPLETE:
-	trace_ds("XFER_COMPLETE\n");
+	vctrace(TC_FT, "XFER_COMPLETE\n");
 	cut_ack();
 	cut_xfer_in_progress = false;
 	ft_complete(NULL);
 	break;
     case SC_ABORT_FILE:
     case SC_ABORT_XMIT:
-	trace_ds("ABORT\n");
+	vctrace(TC_FT, "ABORT\n");
 	cut_xfer_in_progress = false;
 	cut_ack();
 	if (ft_state == FT_ABORT_SENT && saved_errmsg != NULL) {
@@ -485,7 +485,7 @@ cut_control_code(void)
 	Free(buf);
 	break;
     default:
-	trace_ds("unknown 0x%04x\n", code);
+	vctrace(TC_FT, "unknown 0x%04x\n", code);
 	cut_abort(get_message("ftCutUnknownControl"), SC_ABORT_XMIT);
 	break;
     }
@@ -504,7 +504,7 @@ cut_data_request(void)
     int i;
     unsigned char attr;
 
-    trace_ds("< FT DATA_REQUEST %u\n", from6(seq));
+    vctrace(TC_FT, "< DATA_REQUEST %u\n", from6(seq));
     if (ft_state == FT_ABORT_WAIT) {
 	cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
 	return;
@@ -561,7 +561,7 @@ cut_data_request(void)
     ctlr_add_fa(O_DR_SF, attr, 0);
 
     /* Send it up to the host. */
-    trace_ds("> FT DATA %u\n", from6(seq));
+    vctrace(TC_FT, "> DATA %u\n", from6(seq));
     ft_update_length();
     expanded_length += count;
     run_action(AnEnter, IA_FT, NULL, NULL);
@@ -573,7 +573,7 @@ cut_data_request(void)
 static void
 cut_retransmit(void)
 {
-    trace_ds("< FT RETRANSMIT\n");
+    vctrace(TC_FT, "< RETRANSMIT\n");
     cut_abort(get_message("ftCutRetransmit"), SC_ABORT_XMIT);
 }
 
@@ -605,7 +605,7 @@ cut_data(void)
     int conv_length;
     register int i;
 
-    trace_ds("< FT DATA\n");
+    vctrace(TC_FT, "< DATA\n");
     if (ft_state == FT_ABORT_WAIT) {
 	cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
 	return;
@@ -623,7 +623,7 @@ cut_data(void)
     }
 
     if (raw_length == 2 && cvbuf[0] == EOF_DATA1 && cvbuf[1] == EOF_DATA2) {
-	trace_ds("< FT EOF\n");
+	vctrace(TC_FT, "< EOF\n");
 	cut_ack();
 	return;
     }
@@ -652,7 +652,7 @@ cut_data(void)
 static void
 cut_ack(void)
 {
-    trace_ds("> FT ACK\n");
+    vctrace(TC_FT, "> ACK\n");
     run_action(AnEnter, IA_FT, NULL, NULL);
 }
 
@@ -670,7 +670,7 @@ cut_abort(const char *s, unsigned short reason)
     ctlr_add(RO_FRAME_SEQ, ea_buf[O_DT_FRAME_SEQ].ec, 0);
     ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
     ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
-    trace_ds("> FT CONTROL_CODE ABORT\n");
+    vctrace(TC_FT, "> CONTROL_CODE ABORT\n");
     run_action(AnPF, IA_FT, "2", NULL);
 
     /* Update the in-progress pop-up. */
