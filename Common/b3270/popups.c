@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2024 Paul Mattes.
+ * Copyright (c) 2016-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -107,7 +107,7 @@ void
 popup_an_info(const char *fmt, ...)
 {
     va_list ap;
-    char *s;
+    const char *s;
 
     va_start(ap, fmt);
     s = txVasprintf(fmt, ap);
@@ -139,7 +139,7 @@ popup_printer_output(bool is_err, abort_callback_t *a _is_unused,
 	const char *fmt, ...)
 {
     va_list ap;
-    char *s;
+    const char *s;
 
     va_start(ap, fmt);
     s = txVasprintf(fmt, ap);
@@ -157,7 +157,7 @@ popup_child_output(bool is_err, abort_callback_t *a _is_unused,
 	const char *fmt, ...)
 {
     va_list ap;
-    char *s;
+    const char *s;
 
     va_start(ap, fmt);
     s = txVasprintf(fmt, ap);

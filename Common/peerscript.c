@@ -189,7 +189,7 @@ close_peer(peer_t *p)
     Replace(p->name, NULL);
 
     if (p->listener == NULL || p->listener->mode == PLM_ONCE) {
-	vtrace("once-only socket closed, exiting\n");
+	vctrace(TC_SCRIPT, "once-only socket closed, exiting\n");
 	x3270_exit(0);
     }
     task_cb_abort_ir_state(&p->ir_state);
@@ -212,7 +212,7 @@ static bool
 do_push(peer_t *p, const char *buf, size_t len)
 {
     const char *s = buf;
-    char *name;
+    const char *name;
     tcb_t *tcb = (p->capabilities & CBF_INTERACTIVE)?
 	&interactive_cb : &peer_cb;
 
@@ -342,20 +342,22 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 #if defined(_WIN32) /*[*/
 	if (GetLastError() != WSAECONNRESET) {
 	    /* Windows does this habitually. */
-	    vtrace("s3sock %s recv: %s\n", p->desc, win32_strerror(GetLastError()));
+	    vctrace(TC_SCRIPT, "s3sock %s recv: %s\n", p->desc, win32_strerror(GetLastError()));
 	}
 #else /*][*/
-	vtrace("s3sock %s recv: %s\n", p->desc, strerror(errno));
+	vctrace(TC_SCRIPT, "s3sock %s recv: %s\n", p->desc, strerror(errno));
 #endif /*]*/
 	close_peer(p);
 	return;
     }
-    vtrace("Input for s3sock %s complete, nr=%d\n", p->desc, (int)nr);
+    vctrace(TC_SCRIPT, "Input for s3sock %s complete, nr=%d\n", p->desc, (int)nr);
     if (nr == 0) {
-	vtrace("s3sock %s EOF\n", p->desc);
+	vctrace(TC_SCRIPT, "s3sock %s EOF\n", p->desc);
 	close_peer(p);
 	return;
     }
+
+    vctrace(TC_SCRIPT, "s3sock %s got '%s'\n", p->desc, sncatv(buf, nr));
 
     /* Append, filtering out CRs. */
     p->buf = Realloc(p->buf, p->buf_len + nr + 1);
@@ -399,12 +401,12 @@ check_send(socket_t s, const char *data, size_t len, const char *sender)
     if (ns != (ssize_t)len) {
 	if (ns < 0) {
 #if !defined(_WIN32) /*[*/
-	    vtrace("%s send: %s\n", sender, strerror(errno));
+	    vctrace(TC_SCRIPT, "%s send: %s\n", sender, strerror(errno));
 #else /*][*/
-	    vtrace("%s send: %s\n", sender, win32_strerror(GetLastError()));
+	    vctrace(TC_SCRIPT, "%s send: %s\n", sender, win32_strerror(GetLastError()));
 #endif/*]*/
 	} else {
-	    vtrace("%s: short send\n", sender);
+	    vctrace(TC_SCRIPT, "%s: short send\n", sender);
 	}
     }
 }
@@ -680,21 +682,21 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	else {
 	    desc = "???";
 	}
-	vtrace("New script socket connection from %s\n", desc);
+	vctrace(TC_SCRIPT, "New script socket connection from %s\n", desc);
     }
 
     if (accept_fd == INVALID_SOCKET) {
 #if !defined(_WIN32) /*[*/
-	vtrace("s3sock accept: %s\n", strerror(errno));
+	vctrace(TC_SCRIPT, "s3sock accept: %s\n", strerror(errno));
 #else /*][*/
-	vtrace("s3sock accept: %s\n", win32_strerror(GetLastError()));
+	vctrace(TC_SCRIPT, "s3sock accept: %s\n", win32_strerror(GetLastError()));
 #endif /*]*/
 	return;
     }
 
     if (listener->mode == PLM_SINGLE || listener->mode == PLM_ONCE) {
 	/* Close the listener. */
-	vtrace("Closing listener %s (single mode)\n", listener->desc);
+	vctrace(TC_SCRIPT, "Closing listener %s (single mode)\n", listener->desc);
 	if (listener->socket != INVALID_SOCKET) {
 	    SOCK_CLOSE(listener->socket);
 	    listener->socket = INVALID_SOCKET;
@@ -709,8 +711,6 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	    RemoveInput(listener->id);
 	    listener->id = NULL_IOID;
 	}
-    } else {
-	vtrace("Not closing listener %s (multi mode)\n", listener->desc);
     }
 
     /* Allocate the peer state and remember it. */
@@ -871,21 +871,21 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	listener->desc = Asprintf("%s:%u", inet_ntop(sa->sa_family,
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
-	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
+	vctrace(TC_SCRIPT, "Listening for s3sock scripts on %s\n", listener->desc);
     } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
 	listener->desc = Asprintf("[%s]:%u", inet_ntop(sa->sa_family,
 		    &sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin6->sin6_port));
-	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
+	vctrace(TC_SCRIPT, "Listening for s3sock scripts on %s\n", listener->desc);
     }
 #if !defined(_WIN32) /*[*/
     else if (sa->sa_family == AF_UNIX) {
 	struct sockaddr_un *ssun = (struct sockaddr_un *)sa;
 
 	listener->desc = NewString(ssun->sun_path);
-	vtrace("Listening for s3sock scripts on %s\n", listener->desc);
+	vctrace(TC_SCRIPT, "Listening for s3sock scripts on %s\n", listener->desc);
     }
 #endif /*]*/
 
@@ -924,7 +924,7 @@ void
 peer_shutdown(peer_listen_t listener)
 {
     if (listener->socket != INVALID_SOCKET) {
-	vtrace("Stopped listening for s3sock scripts on %s\n",
+	vctrace(TC_SCRIPT, "Stopped listening for s3sock scripts on %s\n",
 		listener->desc);
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;

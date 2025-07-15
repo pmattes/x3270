@@ -159,7 +159,7 @@ hio_error_timeout(ioid_t id)
     session_t *session = NULL;
     session_t *fatal_session = NULL;
 
-    vtrace("httpd deferred error timeout\n");
+    vctrace(TC_HTTPD, "deferred error timeout\n");
     FOREACH_LLIST(&sessions, session, session_t *) {
 	if (httpd_waiting(session->dhandle, id)) {
 	    fatal_session = session;
@@ -167,7 +167,7 @@ hio_error_timeout(ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (fatal_session == NULL) {
-	vtrace("httpd deferred error timeout: not found\n");
+	vctrace(TC_HTTPD, "deferred error timeout: not found\n");
 	return;
     }
 
@@ -192,7 +192,7 @@ hio_timeout(ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (session == NULL) {
-	vtrace("httpd mystery timeout\n");
+	vctrace(TC_HTTPD, "mystery timeout\n");
 	return;
     }
 
@@ -221,7 +221,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (session == NULL) {
-	vtrace("httpd mystery input\n");
+	vctrace(TC_HTTPD, "mystery input\n");
 	return;
     }
 
@@ -246,7 +246,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 		harmless = true;
 	    }
 	    ebuf = txAsprintf("recv error: %s", socket_errtext());
-	    vtrace("httpd %s%s\n", ebuf, harmless? " (harmless)": "");
+	    vctrace(TC_HTTPD, "%s%s\n", ebuf, harmless? " (harmless)": "");
 	} else {
 	    ebuf = "session EOF";
 	}
@@ -301,7 +301,7 @@ hio_connection(iosrc_t fd, ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (!found) {
-	vtrace("httpd accept: session not found\n");
+	vctrace(TC_HTTPD, "accept: session not found\n");
 	return;
     }
 
@@ -309,7 +309,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     len = sizeof(sa);
     t = accept(l->listen_s, &sa.sa, &len);
     if (t == INVALID_SOCKET) {
-	vtrace("httpd accept error: %s%s\n", socket_errtext(),
+	vctrace(TC_HTTPD, "accept error: %s%s\n", socket_errtext(),
 		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
 	return;
     }
@@ -327,13 +327,13 @@ hio_connection(iosrc_t fd, ioid_t id)
 #if defined(_WIN32) /*[*/
     session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (session->event == NULL) {
-	vtrace("httpd: can't create socket handle\n");
+	vctrace(TC_HTTPD, "can't create socket handle\n");
 	SOCK_CLOSE(t);
 	Free(session);
 	return;
     }
     if (WSAEventSelect(session->s, session->event, FD_READ | FD_CLOSE) != 0) {
-	vtrace("httpd: Can't set socket handle events\n");
+	vctrace(TC_HTTPD, "Can't set socket handle events\n");
 	CloseHandle(session->event);
 	SOCK_CLOSE(t);
 	Free(session);
@@ -457,14 +457,14 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
 	l->desc = Asprintf("%s:%u", inet_ntop(sa->sa_family,
 		    &sin->sin_addr, hostbuf, sizeof(hostbuf)),
 		ntohs(sin->sin_port));
-	vtrace("Listening for HTTP on %s\n", l->desc);
+	vctrace(TC_HTTPD, "Listening on %s\n", l->desc);
     } else if (sa->sa_family == AF_INET6) {
 	struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
 
 	l->desc = Asprintf("[%s]:%u", inet_ntop(sa->sa_family,
 		&sin6->sin6_addr, hostbuf, sizeof(hostbuf)),
 	    ntohs(sin6->sin6_port));
-	vtrace("Listening for HTTP on %s\n", l->desc);
+	vctrace(TC_HTTPD, "Listening on %s\n", l->desc);
     }
 
     goto done;
@@ -523,7 +523,7 @@ hio_stop_x(hio_listener_t *l)
     } FOREACH_LLIST_END(&sessions, session, session_t *);
 
     l->n_sessions = 0;
-    vtrace("Stopped listening for HTTP connections on %s\n", l->desc);
+    vctrace(TC_HTTPD, "Stopped listening on %s\n", l->desc);
     Replace(l->desc, NULL);
     llist_unlink(&l->link);
     Free(l);
@@ -556,7 +556,7 @@ hio_send(void *mhandle, const char *buf, size_t len)
 
     nw = send(s->s, buf, (int)len, 0);
     if (nw < 0) {
-	vtrace("http send error: %s\n", socket_errtext());
+	vctrace(TC_HTTPD, "send error: %s\n", socket_errtext());
     }
 }
 
@@ -651,7 +651,7 @@ static bool
 hio_complete(task_cbh handle, bool success, bool abort)
 {
     session_t *s = handle;
-    char *prompt = task_cb_prompt(handle);
+    const char *prompt = task_cb_prompt(handle);
 
     /* We're done. */
     s->pending.done = true;

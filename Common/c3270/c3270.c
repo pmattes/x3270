@@ -878,7 +878,7 @@ synchronous_signal(iosrc_t fd, ioid_t id)
     }
 
     if (!escaped) {
-	vtrace("Ignoring synchronous signals\n");
+	vctrace(TC_UI, "Ignoring synchronous signals\n");
 	return;
     }
 
@@ -897,12 +897,12 @@ synchronous_signal(iosrc_t fd, ioid_t id)
     /* Handle SIGINT first. */
     if (got_sigint) {
 	if (command_running) {
-	    vtrace("SIGINT while running an action\n");
+	    vctrace(TC_UI, "SIGINT while running an action\n");
 	    abort_script_by_cb(command_cb.shortname);
 	} else if (!aux_input) {
-	    vtrace("SIGINT at the normal prompt -- ignoring\n");
+	    vctrace(TC_UI, "SIGINT at the normal prompt -- ignoring\n");
 	} else {
-	    vtrace("SIGINT with aux input -- aborting action\n");
+	    vctrace(TC_UI, "SIGINT with aux input -- aborting action\n");
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
@@ -924,10 +924,10 @@ synchronous_signal(iosrc_t fd, ioid_t id)
     if (got_sigtstp) {
 	if (command_running) {
 	    /* Defer handling until command completes. */
-	    vtrace("SIGTSTP while running an action -- deferring\n");
+	    vctrace(TC_UI, "SIGTSTP while running an action -- deferring\n");
 	    sigtstp_pending = true;
 	} else {
-	    vtrace("SIGTSTP at the %s\n", (pager.pid == 0)? "prompt": "pager");
+	    vctrace(TC_UI, "SIGTSTP at the %s\n", (pager.pid == 0)? "prompt": "pager");
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
 #endif /*]*/
@@ -978,12 +978,12 @@ static void
 windows_sigint(iosrc_t fd, ioid_t id)
 {
     if (command_running) {
-	vtrace("SIGINT while running an action\n");
+	vctrace(TC_UI, "SIGINT while running an action\n");
 	abort_script_by_cb(command_cb.shortname);
     } else if (!aux_input) {
-	vtrace("SIGINT at the normal prompt -- ignoring\n");
+	vctrace(TC_UI, "SIGINT at the normal prompt -- ignoring\n");
     } else {
-	vtrace("SIGINT with aux input -- handled when 0-length read arrives\n");
+	vctrace(TC_UI, "SIGINT with aux input -- handled when 0-length read arrives\n");
     }
 }
 #endif /*]*/
@@ -1039,8 +1039,7 @@ display_prompt(void)
 #else /*][*/
 	    screen_color(PC_PROMPT);
 #endif /*]*/
-	    printf("File transfer in progress. Use Transfer(Cancel) to "
-		    "cancel.");
+	    printf("File transfer in progress. Use " AnTransfer "(" KwCancel ") to cancel.");
 #if !defined(_WIN32) /*[*/
 	    if (color_prompt) {
 		printf("%s", screen_op());
@@ -1095,7 +1094,7 @@ display_prompt(void)
 static void
 enable_input(enum imode mode)
 {
-    vtrace("enable_input(%s)\n", (mode == LINE)? "LINE": "KEY");
+    vctrace(TC_UI, "enable_input(%s)\n", (mode == LINE)? "LINE": "KEY");
     inthread.mode = mode;
     SetEvent(inthread.enable_event);
 }
@@ -1136,10 +1135,10 @@ c3270_input(iosrc_t fd, ioid_t id)
     c3270_input_id = NULL_IOID;
 #else /*][*/
     if (inthread.nr < 0) {
-	vtrace("c3270_input: input failed\n");
+	vctrace(TC_UI, "c3270_input: input failed\n");
 	enable_input(LINE);
     }
-    vtrace("c3270_input: got %d bytes\n", inthread.nr);
+    vctrace(TC_UI, "c3270_input: got %d bytes\n", inthread.nr);
     command = inthread.buf;
 #endif /*]*/
 
@@ -1161,7 +1160,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 	 */
 	if (aux_input) {
 	    /* Abort the input. */
-	    vtrace("Aborting auxiliary input\n");
+	    vctrace(TC_UI, "Aborting auxiliary input\n");
 	    aux_input = false;
 	    aux_pwinput = false;
 	    echo_mode(true);
@@ -1228,6 +1227,7 @@ c3270_input(iosrc_t fd, ioid_t id)
 		    *s? txdFree(base64_encode(s)): "\"\""));
 	reset_prompt();
     } else {
+	vctrace(TC_UI, "%s> got '%s\\n'\n", app, sncatv(s, strlen(s)));
 	c3270_push_command(s);
     }
 
@@ -1315,7 +1315,7 @@ interact(void)
 static void
 pager_exit(ioid_t id, int status)
 {
-    vtrace("pager exited with status %d\n", status);
+    vctrace(TC_UI, "pager exited with status %d\n", status);
 
     if (pager.pid == 0) {
 	sigtstp_pending = false;
@@ -1328,7 +1328,7 @@ pager_exit(ioid_t id, int status)
 
 	/* Process a pending stop. */
 	if (sigtstp_pending) {
-	    vtrace("Processing deferred SIGTSTP on pager exit\n");
+	    vctrace(TC_UI, "Processing deferred SIGTSTP on pager exit\n");
 	    sigtstp_pending = false;
 #if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();
@@ -1403,7 +1403,7 @@ start_pager(void)
 static void
 stop_pager(void)
 {
-    vtrace("stop pager\n");
+    vctrace(TC_UI, "stop pager\n");
 #if !defined(_WIN32) /*[*/
     if (pager.fp != NULL) {
 	if (pager.fp != stdout) {
@@ -1427,7 +1427,7 @@ pager_key_done(void)
     char *p;
 
     pager.flushing = inthread.buf[0] == 'q';
-    vtrace("Got pager key%s\n", pager.flushing? " (quit)": "");
+    vctrace(TC_UI, "Got pager key%s\n", pager.flushing? " (quit)": "");
 
     /* Overwrite the prompt and reset. */
     printf("\r%*s\r", (pager.nw > 0)? pager.nw: 79, "");
@@ -1459,7 +1459,7 @@ pager_output(const char *s, bool success)
 
     if (pager.residual != NULL) {
 	/* Output is pending already. */
-	vtrace("pager accumulate\n");
+	vctrace(TC_UI, "pager accumulate\n");
 	pager.residual = Realloc(pager.residual,
 		strlen(pager.residual) + strlen(s) + 2);
 	strcat(strcat(pager.residual, "\n"), s);
@@ -1472,7 +1472,7 @@ pager_output(const char *s, bool success)
 
 	/* Pause for a screenful. */
 	if (pager.rowcnt >= (pager.rows - 1)) {
-	    vtrace("pager pausing\n");
+	    vctrace(TC_UI, "pager pausing\n");
 	    Replace(pager.residual, NewString(s));
 	    screen_color(PC_PROMPT);
 	    pager.nw = printf(PAGER_PROMPT);
@@ -1756,7 +1756,7 @@ static void
 command_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     if (handle != (tcb_t *)&command_cb) {
-	vtrace("command_data: no match\n");
+	vctrace(TC_UI, "command_data: no match\n");
 	return;
     }
 
@@ -1774,10 +1774,10 @@ command_data(task_cbh handle, const char *buf, size_t len, bool success)
 static void
 command_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
 {
-    char *p;
+    const char *p;
 
     if (handle != (tcb_t *)&command_cb) {
-	vtrace("command_reqinput: no match\n");
+	vctrace(TC_UI, "command_reqinput: no match\n");
 	return;
     }
 
@@ -1809,11 +1809,11 @@ static bool
 command_done(task_cbh handle, bool success, bool abort)
 {
     if (handle != (tcb_t *)&command_cb) {
-	vtrace("command_data: no match\n");
+	vctrace(TC_UI, "command_data: no match\n");
 	return true;
     }
 
-    vtrace("command complete\n");
+    vctrace(TC_UI, "command complete\n");
 
     command_running = false;
 
@@ -1841,7 +1841,7 @@ command_done(task_cbh handle, bool success, bool abort)
 #if !defined(_WIN32) /*[*/
 	/* Process a pending stop. */
 	if (sigtstp_pending) {
-	    vtrace("Processing deferred SIGTSTP on command completion\n");
+	    vctrace(TC_UI, "Processing deferred SIGTSTP on command completion\n");
 	    sigtstp_pending = false;
 # if defined(HAVE_LIBREADLINE) /*[*/
 	    rl_callback_handler_remove();

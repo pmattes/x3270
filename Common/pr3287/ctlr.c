@@ -231,7 +231,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 
 #define START_FIELD(fa) { \
 	    ctlr_add(0, FA_IS_ZERO(fa)?INVISIBLE:VISIBLE, 0, default_gr); \
-	    trace_ds(see_attr(fa)); \
+	    trace_ds("%s", see_attr(fa)); \
 	}
 
     if (buflen < 2) {
@@ -2075,7 +2075,7 @@ print_eoj(void)
     /* Close the stream to the print process. */
 #if defined(_WIN32) /*[*/
     if (ws_initted) {
-	trace_ds("End of print job.\n");
+	vctrace(TC_TN3270, "End of print job.\n");
 	if (options.trnpost != NULL && copyfile(options.trnpost) < 0) {
 	    rc = -1;
 	}
@@ -2086,7 +2086,7 @@ print_eoj(void)
     }
 #else /*]*/
     if (prfile != NULL) {
-	trace_ds("End of print job.\n");
+	vctrace(TC_TN3270, "End of print job.\n");
 	if (options.trnpost != NULL && copyfile(options.trnpost) < 0) {
 	    rc = -1;
 	}

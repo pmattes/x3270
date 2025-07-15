@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Paul Mattes.
+ * Copyright (c) 2021-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -215,7 +215,7 @@ negative_parse_tests(void)
 rhp_t
 resolve_host_and_port_abs(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
     struct addrinfo hints, *res0, *res;
     int rc;

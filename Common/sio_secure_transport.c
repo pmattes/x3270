@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -284,13 +284,13 @@ read_func(SSLConnectionRef connection, void *data, size_t *data_length)
      */
     while (n_read < *data_length) {
 	nr = recv(s->sock, (char *)data + n_read, *data_length - n_read, 0);
-	vtrace("TLS: read %d/%d bytes\n", nr, (int)(*data_length - n_read));
+	vctrace(TC_TLS, "read %d/%d bytes\n", nr, (int)(*data_length - n_read));
 	if (nr < 0) {
 	    if (errno == EWOULDBLOCK) {
 		*data_length = n_read;
 		return errSSLWouldBlock;
 	    }
-	    vtrace("TLS recv: %s\n", strerror(errno));
+	    vctrace(TC_TLS, "recv: %s\n", strerror(errno));
 	    *data_length = n_read;
 	    return errSecIO;
 	} else if (nr == 0) {
@@ -317,9 +317,9 @@ write_func(SSLConnectionRef connection, const void *data, size_t *data_length)
     }
 
     nw = send(s->sock, data, *data_length, 0);
-    vtrace("TLS: wrote %d/%d bytes\n", nw, (int)*data_length);
+    vctrace(TC_TLS, "wrote %d/%d bytes\n", nw, (int)*data_length);
     if (nw < 0) {
-	vtrace("TLS send: %s\n", strerror(errno));
+	vctrace(TC_TLS, "send: %s\n", strerror(errno));
 	*data_length = 0;
 	return errSecIO;
     } else {
@@ -509,7 +509,7 @@ cipher_name(int n)
 
     for (i = 0; cipher_names[i].name != NULL; i++) {
 	if (cipher_names[i].value == n) {
-	    char *s = txAsprintf("%s", cipher_names[i].name);
+	    const char *s = txAsprintf("%s", cipher_names[i].name);
 	    int j;
 
 	    for (j = 0; substs[j].orig != NULL; j++) {
@@ -579,7 +579,7 @@ display_server_cert(varbuf_t *v, stransport_sio_t *s)
 	CFIndex i;
 
 	for (i = 0L ; i < count ; i++) {
-	    char *prefix = "";
+	    const char *prefix = "";
 
 	    if (i) {
 		prefix = txAsprintf("CA %ld ", i);
@@ -797,7 +797,7 @@ identity_from_keychain(char *name, SecIdentityRef *identity_ret)
 	bool matched = false;
 
 	/* TODO: Could do a case-independent match, or a substring match. */
-	vtrace("identity_from_keychain: Got %d match%s\n", (int)count,
+	vctrace(TC_TLS, "identity_from_keychain: Got %d match%s\n", (int)count,
 		((int)count == 1)? "": "es");
 	for (i = 0; i < count && !matched; i++) {
 	    SecIdentityRef identity =
@@ -877,7 +877,7 @@ set_client_cert(stransport_sio_t *s)
 
 	    vb_init(&v);
 	    display_cert(&v, "Client", cert);
-	    vtrace("%s", vb_buf(&v));
+	    vctrace(TC_TLS, "%s", vb_buf(&v));
 	    vb_free(&v);
 	    CFRelease(cert);
 	}
@@ -1173,11 +1173,11 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 
     status = SSLRead(s->context, buf, buflen, &n_read);
     if (status == errSSLClosedGraceful || status == errSSLClosedNoNotify) {
-	vtrace("TLS: EOF\n");
+	vctrace(TC_TLS, "EOF\n");
 	return 0;
     }
     if (status == errSSLWouldBlock) {
-	vtrace("TLS: EWOULDBLOCK\n");
+	vctrace(TC_TLS, "EWOULDBLOCK\n");
 	return SIO_EWOULDBLOCK;
     }
     if (status != errSecSuccess) {

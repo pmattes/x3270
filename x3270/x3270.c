@@ -1100,7 +1100,7 @@ parse_set_clear(int *argcp, char **argv)
 {
     int i, j;
     int argc_out = 0;
-    char **argv_out = (char **) XtMalloc((*argcp + 1) * sizeof(char *));
+    const char **argv_out = (const char **) XtMalloc((*argcp + 1) * sizeof(char *));
 
     argv_out[argc_out++] = argv[0];
 

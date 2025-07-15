@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -265,7 +265,7 @@ static bool
 run_next(child_t *c)
 {
     size_t cmdlen, xlen;
-    char *name = NULL;
+    const char *name = NULL;
     bool ret = true;
     char *start;
 
@@ -358,7 +358,7 @@ delayed_close(ioid_t id)
 
     FOREACH_LLIST(&delayed_closes, dc, delayed_close_t *) {
 	if (dc->id == id) {
-	    vtrace("Delayed shutdown of listeners\n");
+	    vctrace(TC_SCRIPT, "Delayed shutdown of listeners\n");
 	    close_listeners(&dc->listeners);
 	    llist_unlink(&dc->llist);
 	    Free(dc);
@@ -366,7 +366,7 @@ delayed_close(ioid_t id)
 	}
     } FOREACH_LLIST_END(&delayed_closes, dc, delayed_close_t *);
 
-    vtrace("Error: Delayed shutdown record not found\n");
+    vctrace(TC_SCRIPT, "Error: Delayed shutdown record not found\n");
 }
 
 /**
@@ -455,9 +455,9 @@ child_input(iosrc_t fd _is_unused, ioid_t id)
     n2r = sizeof(buf);
     nr = read(c->infd, buf, (int)n2r);
     assert(nr >= 0);
-    vtrace("%s input complete, nr=%d\n", c->parent_name, (int)nr);
+    vctrace(TC_SCRIPT, "%s input complete, nr=%d\n", c->parent_name, (int)nr);
     if (nr == 0) {
-	vtrace("%s script EOF\n", c->parent_name);
+	vctrace(TC_SCRIPT, "%s script EOF\n", c->parent_name);
 	close_child(c);
 	if (c->exit_id == NULL_IOID) {
 	    c->done = true;
@@ -469,6 +469,8 @@ child_input(iosrc_t fd _is_unused, ioid_t id)
 	c->infd = -1;
 	return;
     }
+
+    vctrace(TC_SCRIPT, "%s got '%s'\n", c->parent_name, sncatv(buf, nr));
 
     /* Append, filtering out CRs. */
     c->buf = Realloc(c->buf, c->buf_len + nr + 1);
@@ -521,9 +523,9 @@ child_stdout(iosrc_t fd _is_unused, ioid_t id)
     n2r = sizeof(buf);
     nr = read(fd, buf, (int)n2r);
     assert(nr >= 0);
-    vtrace("%s stdout read complete, nr=%d\n", c->parent_name, (int)nr);
+    vctrace(TC_SCRIPT, "%s stdout read complete, nr=%d\n", c->parent_name, (int)nr);
     if (nr == 0) {
-	vtrace("%s script stdout EOF\n", c->parent_name);
+	vctrace(TC_SCRIPT, "%s script stdout EOF\n", c->parent_name);
 	RemoveInput(c->stdout_id);
 	c->stdout_id = NULL_IOID;
 	close(c->stdoutpipe);
@@ -554,9 +556,9 @@ check_write(int fd, const char *data, size_t len, const char *sender)
 
     if (nw != (ssize_t)len) {
 	if (nw < 0) {
-	    vtrace("%s write: %s\n", sender, strerror(errno));
+	    vctrace(TC_SCRIPT, "%s write: %s\n", sender, strerror(errno));
 	} else {
-	    vtrace("%s: short write\n", sender);
+	    vctrace(TC_SCRIPT, "%s: short write\n", sender);
 	}
     }
 }
@@ -625,7 +627,7 @@ child_done(task_cbh handle, bool success, bool abort)
 
     if (abort || !c->enabled) {
 	close_listeners(&c->listeners);
-	vtrace("%s terminating script process\n", c->parent_name);
+	vctrace(TC_SCRIPT, "%s terminating script process\n", c->parent_name);
 	kill(c->pid, SIGTERM);
 	if (c->keyboard_lock) {
 	    disable_keyboard(ENABLE, IMPLICIT, AnScript "() abort");
@@ -654,7 +656,7 @@ child_done(task_cbh handle, bool success, bool abort)
 
     if (abort) {
 	close_listeners(&c->listeners);
-	vtrace("%s terminating script process\n", c->parent_name);
+	vctrace(TC_SCRIPT, "%s terminating script process\n", c->parent_name);
 	TerminateProcess(c->child_handle, 1);
 	if (c->keyboard_lock) {
 	    disable_keyboard(ENABLE, IMPLICIT, AnScript "() abort");
@@ -725,10 +727,10 @@ cr_collect(child_t *c)
 {
     cr_t *cr = &c->cr;
     if (cr->nr != 0) {
-	vtrace("Got %d bytes of script stdout/stderr\n", (int)cr->nr);
+	vctrace(TC_SCRIPT, "Got %d bytes of script stdout/stderr\n", (int)cr->nr);
 	if (cr->nr == 2 && !strncmp(cr->buf, "^C", 2)) {
 	    /* Hack, hack, hack. */
-	    vtrace("Suppressing '^C' output from child\n");
+	    vctrace(TC_SCRIPT, "Suppressing '^C' output from child\n");
 	} else {
 	    c->output_buf = Realloc(c->output_buf,
 		    c->output_buflen + cr->nr + 1);
@@ -742,7 +744,7 @@ cr_collect(child_t *c)
     }
     if (cr->dead) {
 	if (cr->error != 0) {
-	    vtrace("Script stdout/stderr read failed: %s\n",
+	    vctrace(TC_SCRIPT, "Script stdout/stderr read failed: %s\n",
 		    win32_strerror(cr->error));
 	}
 	cr->collected_eof = true;
@@ -773,7 +775,7 @@ child_run(task_cbh handle, bool *success)
 
 	if (!cr->collected_eof) {
 	    do {
-		vtrace("Waiting for child final stdout/stderr\n");
+		vctrace(TC_SCRIPT, "Waiting for child final stdout/stderr\n");
 		WaitForSingleObject(cr->done_event, INFINITE);
 	    } while (cr_collect(c));
 	}
@@ -956,11 +958,11 @@ child_exited(ioid_t id, int status)
     } FOREACH_LLIST_END(&child_scripts, c, child_t *);
 
     if (!found_child) {
-	vtrace("child_exited: no match\n");
+	vctrace(TC_SCRIPT, "child_exited: no match\n");
 	return;
     }
 
-    vtrace("%s script %d exited with status %d\n",
+    vctrace(TC_SCRIPT, "%s script %d exited with status %d\n",
 	    (c->child_name != NULL) ? c->child_name : "socket",
 	    (int)c->pid, status);
 
@@ -994,7 +996,7 @@ child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
     } FOREACH_LLIST_END(&child_scripts, c, child_t *);
 
     if (!found_child) {
-	vtrace("child_exited: no match\n");
+	vctrace(TC_SCRIPT, "child_exited: no match\n");
 	return;
     }
 
@@ -1003,7 +1005,7 @@ child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	popup_an_error("GetExitCodeProcess failed: %s",
 	win32_strerror(GetLastError()));
     } else if (status != STILL_ACTIVE) {
-	vtrace("%s script exited with status %d\n", c->parent_name,
+	vctrace(TC_SCRIPT, "%s script exited with status %d\n", c->parent_name,
 		(unsigned)status);
 	c->exit_status = status;
 	if (status != 0) {
@@ -1126,7 +1128,7 @@ bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     child_t *c;
-    char *name;
+    const char *name;
     bool async = false;
     bool keyboard_lock = true;
     bool stdout_redirect = true;
@@ -1138,6 +1140,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     unsigned short script_port;
     struct sockaddr_in *sin;
     bool interactive = false;
+    const char *safe_argv0;
 #if !defined(_WIN32) /*[*/
     pid_t pid;
     int inpipe[2] = { -1, -1 };
@@ -1191,7 +1194,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	    argv++;
 #endif /*]*/
 	} else if (argv[0][0] == '-') {
-	    popup_an_error(AnScript "() unknown option %s", argv[0]);
+	    popup_an_error(AnScript "() unknown option %s", scatv(argv[0]));
 	    return false;
 	} else {
 	    break;
@@ -1232,6 +1235,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     }
     script_port = ntohs(sin->sin_port);
     Free(sin);
+
+    safe_argv0 = scatv(argv[0]);
 
 #if !defined(_WIN32) /*[*/
     /*
@@ -1322,7 +1327,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
 	/* Exec. */
 	execvp(argv[0], child_argv);
-	fprintf(stderr, "exec(%s) failed\n", argv[0]);
+	fprintf(stderr, "exec(%s) failed\n", safe_argv0);
 	_exit(1);
     }
 
@@ -1403,7 +1408,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (CreateProcess(NULL, args, NULL, NULL, TRUE,
 		(stdout_redirect && !share_console)? DETACHED_PROCESS: 0,
 		NULL, NULL, &startupinfo, &process_information) == 0) {
-	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
+	popup_an_error("CreateProcess(%s) failed: %s", safe_argv0,
 		win32_strerror(GetLastError()));
 	close_listeners(&listeners);
 
@@ -1461,8 +1466,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     c->is_async = async;
     c->keyboard_lock = keyboard_lock;
     name = push_cb(NULL, 0, async? &async_script_cb: &script_cb, (task_cbh)c);
-    Replace(c->parent_name, NewString(name));
-    vtrace("%s script process is %d\n", c->parent_name, (int)c->pid);
+    Replace(c->parent_name, Asprintf("@%s", name));
+    vctrace(TC_SCRIPT, "%s script process is %d\n", c->parent_name, (int)c->pid);
 
     if (keyboard_lock) {
 	disable_keyboard(DISABLE, IMPLICIT, AnScript "() start");
@@ -1524,7 +1529,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 
     for (i = 0; i < argc; i++) {
 	const char *in = argv[i];
-	char *new_param = txdFree(NewString(argv[i]));
+	char *new_param = NewString(argv[i]);
 	char *out = new_param;
 	char c;
 
@@ -1537,6 +1542,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	if (strlen(new_param) > 0) {
 	    params[i] = new_param;
 	}
+	txdFree(new_param);
     }
 
     array_add(&nargv, nargc++, KwDashAsync);

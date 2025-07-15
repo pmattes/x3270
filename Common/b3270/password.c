@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,7 +79,7 @@ static void
 password_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     if (handle != (tcb_t *)&password_cb) {
-	vtrace("password_data: no match\n");
+	vctrace(TC_UI, "password_data: no match\n");
 	return;
     }
 
@@ -110,14 +110,14 @@ static bool
 password_done(task_cbh handle, bool success, bool abort)
 {
     if (handle != (tcb_t *)&password_cb) {
-	vtrace("password_data: no match\n");
+	vctrace(TC_UI, "password_data: no match\n");
 	return true;
     }
 
     if (success) {
 	net_password_continue(password_result);
     } else {
-	vtrace("Password command failed%s%s\n",
+	vctrace(TC_UI, "Password command failed%s%s\n",
 		password_result? ": ": "",
 		password_result? password_result: "");
 	AddTimeOut(1, password_error);
@@ -134,7 +134,7 @@ push_password(bool again)
 {
     action_elt_t *e;
     bool found = false;
-    char *cmd;
+    const char *cmd;
 
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	if (!strcasecmp(e->t.name, PASSWORD_PASSTHRU_NAME)) {

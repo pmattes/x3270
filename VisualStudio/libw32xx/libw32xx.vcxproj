@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\Common\asprintf.c" />
     <ClCompile Include="..\..\Common\base64.c" />
     <ClCompile Include="..\..\Common\boolstr.c" />
+    <ClCompile Include="..\..\Common\cats.c" />
     <ClCompile Include="..\..\Common\copyright.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\min_version.c" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\..\Common\Win32\w3misc.c" />
     <ClCompile Include="..\..\Common\Win32\windirs.c" />
     <ClCompile Include="..\..\Common\Win32\winvers.c" />
+    <ClCompile Include="..\..\Common\xscatv.c" />
     <ClCompile Include="..\..\Common\xs_buffer.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

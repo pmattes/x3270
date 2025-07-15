@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,7 +123,7 @@ do_screentrace(bool always _is_unused)
     if (FPS_IS_ERROR(status)) {
 	popup_an_error("Screen trace failed");
     } else if (status == FPS_STATUS_SUCCESS) {
-	vtrace("screentrace: nothing written\n");
+	vctrace(TC_PRINT, "screentrace: nothing written\n");
     } else {
 	vstatus_screentrace(++screentrace_count);
     }
@@ -180,7 +180,7 @@ screentrace_continue(void *context, bool cancel)
     int srv;
 
     if (cancel) {
-	vtrace("Toggle(ScreenTrace) canceled\n");
+	vctrace(TC_PRINT, "Toggle(ScreenTrace) canceled\n");
 	Free(st);
 	return;
     }
@@ -193,7 +193,7 @@ screentrace_continue(void *context, bool cancel)
 	if (srv == FPS_STATUS_ERROR) {
 	    popup_an_error("Screen trace start failed");
 	} else if (srv == FPS_STATUS_CANCEL) {
-	    vtrace("Screen trace canceled.\n");
+	    vctrace(TC_PRINT, "Screen trace canceled.\n");
 	}
 	fclose(screentracef);
 	screentracef = NULL;
@@ -235,7 +235,7 @@ static void
 screentrace_abort(void)
 {
     if (toggled(SCREEN_TRACE)) {
-	vtrace("Turning off screen tracing due to print failure\n");
+	vctrace(TC_PRINT, "Turning off screen tracing due to print failure\n");
 	do_toggle(SCREEN_TRACE);
     }
 }
@@ -398,7 +398,7 @@ end_screentrace(bool is_final _is_unused)
     screentracef = NULL;
 
 #if defined(_WIN32) /*[*/
-    vtrace("Cleaning up screenTrace\n");
+    vctrace(TC_PRINT, "Cleaning up screenTrace\n");
     if (screentrace_current.target == TSS_PRINTER) {
 	/* Get rid of the temp file. */
 	unlink(screentrace_tmpfn);

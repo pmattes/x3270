@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -175,45 +175,14 @@ json_input(char *buf, bool *need_more)
 
 /**
  * Trace stdin text.
- * @param[in] buf	Input buffer
- * @param[in] len	Length of input buffer
+ * @param[in] buf		Input buffer
+ * @param[in] len		Length of input buffer
+ * @param[in] fake_newline	True to add fake newline
  */
 static void
-trace_stdin(const char *buf, size_t len)
+trace_stdin(const char *buf, size_t len, bool fake_newline)
 {
-    varbuf_t r;
-    unsigned c;
-    char *result;
-
-    vb_init(&r);
-    while (len > 0) {
-	c = *buf++;
-	if (c < ' ') {
-	    switch(c) {
-	    case '\r':
-		vb_appends(&r, "\\r");
-		break;
-	    case '\n':
-		vb_appends(&r, "\\n");
-		break;
-	    case '\t':
-		vb_appends(&r, "\\t");
-		break;
-	    case '\f':
-		vb_appends(&r, "\\f");
-		break;
-	    default:
-		vb_appendf(&r, "\\%03o", c);
-	    }
-	} else {
-	    vb_appendf(&r, "%c", c);
-	}
-	len--;
-    }
-
-    result = vb_consume(&r);
-    vtrace("s3stdin read '%s'\n", result);
-    Free(result);
+    vctrace(TC_SCRIPT, "s3stdin got '%s%s'\n", sncatv(buf, len), fake_newline? "\\n": "");
 }
 
 #if !defined(_WIN32) /*[*/
@@ -241,16 +210,16 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	tv.tv_usec = 0;
 	ns = select(fileno(stdin) + 1, &rfds, NULL, NULL, &tv);
 	if (ns == 0) {
-	    vtrace("s3stdin read blocked\n");
+	    vctrace(TC_SCRIPT, "s3stdin read blocked\n");
 	    return;
 	}
 
 	nr = read(fileno(stdin), &c, 1);
 	if (nr < 0) {
-	    vtrace("s3stdin read error: %s\n", strerror(errno));
+	    vctrace(TC_SCRIPT, "s3stdin read error: %s\n", strerror(errno));
 	    x3270_exit(1);
 	} else if (nr == 0) {
-	    vtrace("s3stdin EOF\n");
+	    vctrace(TC_SCRIPT, "s3stdin EOF\n");
 	    if (stdin_nr == 0) {
 		x3270_exit(0);
 	    } else {
@@ -276,7 +245,7 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	stdin_buf = Malloc(1);
     }
     stdin_buf[stdin_nr] = '\0';
-    trace_stdin(stdin_buf, stdin_nr);
+    trace_stdin(stdin_buf, stdin_nr, true);
     if (!json_input(stdin_buf, &need_more)) {
 	json_free(pj_out);
 	push_cb(stdin_buf, strlen(stdin_buf), &stdin_cb, NULL);
@@ -301,15 +270,15 @@ stdin_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     bool need_more = false;
 
     if (stdin_nr < 0) {
-	vtrace("s3stdin read error: %s\n", strerror(stdin_errno));
+	vctrace(TC_SCRIPT, "s3stdin read error: %s\n", strerror(stdin_errno));
 	x3270_exit(1);
     }
     if (stdin_nr == 0) {
-	vtrace("s3stdin EOF\n");
+	vctrace(TC_SCRIPT, "s3stdin EOF\n");
 	x3270_exit(0);
     }
 
-    trace_stdin(stdin_buf, stdin_nr);
+    trace_stdin(stdin_buf, stdin_nr, false);
     if (!json_input(stdin_buf, &need_more)) {
 	if (stdin_nr > 0 && stdin_buf[stdin_nr] == '\n') {
 	    stdin_nr--;

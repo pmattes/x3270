@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2024 Paul Mattes.
+ * Copyright (c) 1996-2025 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -453,7 +453,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.lrecl && xftc.host_type != HT_CICS) {
-	char *lr = txAsprintf("%d", xftc.lrecl);
+	const char *lr = txAsprintf("%d", xftc.lrecl);
 
 	XtVaSetValues(lrecl_widget, XtNstring, lr, NULL);
 	XawTextSetInsertionPoint(lrecl_widget, strlen(lr));
@@ -494,7 +494,7 @@ ft_popup_init(void)
 	    XtNdisplayCaret, False,
 	    NULL);
     if (xftc.blksize && xftc.host_type != HT_CICS) {
-	char *bs = txAsprintf("%d", xftc.blksize);
+	const char *bs = txAsprintf("%d", xftc.blksize);
 
 	XtVaSetValues(blksize_widget, XtNstring, bs, NULL);
 	XawTextSetInsertionPoint(blksize_widget, strlen(bs));

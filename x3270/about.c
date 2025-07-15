@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -83,7 +83,7 @@ destroy_about(Widget w _is_unused, XtPointer client_data _is_unused,
 }
 
 /* Return a time difference in English */
-static char *
+static const char *
 hms(time_t ts)
 {
     time_t t, td;

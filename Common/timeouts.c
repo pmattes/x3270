@@ -178,7 +178,7 @@ compute_timeout(TIMEOUT_T *tmop, bool block)
 	    GET_TS(&now);
 #if defined(_WIN32) /*[*/
 	    if (now > timeouts->ts) {
-		vtrace("sched: Timeout(s) already expired\n");
+		vctrace(TC_SCHED, "Timeout(s) already expired\n");
 		*tmop = 0;
 	    } else {
 		*tmop = (DWORD)(timeouts->ts - now);
@@ -191,7 +191,7 @@ compute_timeout(TIMEOUT_T *tmop, bool block)
 		twait.tv_usec += MILLION;
 	    }
 	    if (twait.tv_sec < 0L) {
-		vtrace("sched: Timeout(s) already expired\n");
+		vctrace(TC_SCHED, "Timeout(s) already expired\n");
 		twait.tv_sec = twait.tv_usec = 0L;
 	    }
 # if defined(HAVE_POLL) /*[*/
@@ -204,7 +204,7 @@ compute_timeout(TIMEOUT_T *tmop, bool block)
 		 * there is no I/O pending and we end up spinning until the clock time
 		 * reaches the time of the first timeout.
 		 */
-		vtrace("sched: Timeout(s) less than 1ms\n");
+		vctrace(TC_SCHED, "Timeout(s) less than 1ms\n");
 		*tmop = 1;
 	    }
 # else /*][*/
@@ -258,6 +258,7 @@ process_timeouts(void)
 	    if (EXPIRED(t, now)) {
 		timeouts = t->next;
 		t->in_play = true;
+		vctrace(TC_SCHED, "Processing timeout\n");
 		(*t->proc)((ioid_t)t);
 		processed_any = true;
 		Free(t);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -118,7 +118,7 @@ source_done(task_cbh handle, bool success, bool abort)
     source_t *s = (source_t *)handle;
 
     if (!success || abort) {
-	vtrace("%s %s terminated due to error\n", s->name, s->path);
+	vctrace(TC_SCRIPT, "%s %s terminated due to error\n", s->name, s->path);
 	close(s->fd);
 	s->fd = -1;
 	free_source(s);
@@ -142,6 +142,7 @@ source_run(task_cbh handle, bool *success)
     source_t *s = (source_t *)handle;
     varbuf_t r;
     char *buf;
+    bool newline = false;
 
     /* Check for failure. */
     if (s->fd == -1) {
@@ -170,19 +171,20 @@ source_run(task_cbh handle, bool *success)
 	}
 	if (nr == 0) {
 	    if (vb_len(&r) == 0) {
-		vtrace("%s %s EOF\n", s->name, s->path);
+		vctrace(TC_SCRIPT, "%s %s EOF\n", s->name, s->path);
 		vb_free(&r);
 		close(s->fd);
 		free_source(s);
 		*success = true;
 		return true;
 	    } else {
-		vtrace("%s %s EOF without newline\n", s->name, s->path);
+		vctrace(TC_SCRIPT, "%s %s EOF without newline\n", s->name, s->path);
 		break;
 	    }
 	}
 	if (c == '\r' || c == '\n') {
 	    if (vb_len(&r)) {
+		newline = true;
 		break;
 	    } else {
 		continue;
@@ -193,7 +195,7 @@ source_run(task_cbh handle, bool *success)
 
     /* Run the command as a macro. */
     buf = vb_consume(&r);
-    vtrace("%s %s read '%s'\n", s->name, s->path, buf);
+    vctrace(TC_SCRIPT, "%s %s got '%s%s'\n", s->name, s->path, scatv(buf), newline? "\\n": "");
     push_stack_macro(buf);
     Free(buf);
 
@@ -214,7 +216,8 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     int fd;
     char *expanded_filename;
     source_t *s;
-    char *name;
+    const char *safe_filename;
+    const char *name;
 
     action_debug(AnSource, ia, argc, argv);
     if (check_argc(AnSource, argc, 1, 1) < 0) {
@@ -222,9 +225,10 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     }
     expanded_filename = do_subst(argv[0], DS_VARS | DS_TILDE);
     fd = open(expanded_filename, O_RDONLY);
+    safe_filename = scatv(expanded_filename);
     if (fd < 0) {
 	Free(expanded_filename);
-	popup_an_errno(errno, "%s", argv[0]);
+	popup_an_errno(errno, "%s", safe_filename);
 	return false;
     }
 #if !defined(_WIN32) /*[*/
@@ -233,13 +237,13 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     Free(expanded_filename);
 
     /* Start reading from the file. */
-    s = (source_t *)Malloc(sizeof(source_t) + strlen(argv[0]) + 1);
+    s = (source_t *)Malloc(sizeof(source_t) + strlen(safe_filename) + 1);
     s->fd = fd;
     s->path = (char *)(s + 1);
-    strcpy(s->path, argv[0]);
+    strcpy(s->path, safe_filename);
     s->result = NULL;
     name = push_cb(NULL, 0, &source_cb, (task_cbh)s);
-    s->name = NewString(name);
+    s->name = Asprintf("@%s", name);
     disable_keyboard(DISABLE, IMPLICIT, AnSource "() start");
     return true;
 }

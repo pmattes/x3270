@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -134,7 +134,7 @@ login_macro(char *s)
 {
     char *t = s;
     bool is_actions = false;
-    char *action;
+    const char *action;
 
     while (isspace((unsigned char)*t)) {
 	t++;

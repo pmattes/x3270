@@ -130,7 +130,7 @@ ea_equal_attrs(screen_t *a, screen_t *b)
     return ea_equal(&ax, &bx);
 }
 
-static char *
+static const char *
 see_gr(u_short gr)
 {
     varbuf_t r;

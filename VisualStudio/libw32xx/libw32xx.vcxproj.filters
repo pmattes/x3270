@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\Common\boolstr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\cats.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\copyright.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -106,6 +109,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\Win32\winvers.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Common\xscatv.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Common\xs_buffer.c">

@@ -112,7 +112,7 @@ AddInput(iosrc_t source, iofn_t fn)
     append_input(ip);
     inputs_changed = true;
 #if defined(VERBOSE_HANDLES) /*[*/
-    vtrace("sched: AddInput 0x%lx\n", (unsigned long)(size_t)source);
+    vctrace(TC_SCHED, "AddInput 0x%lx\n", (unsigned long)(size_t)source);
 #endif /*]*/
     return (ioid_t)ip;
 }
@@ -164,7 +164,7 @@ RemoveInput(ioid_t id)
 	if (ip->valid && ip == (input_t *)id) {
 	    ip->valid = false;
 #if defined(VERBOSE_HANDLES) /*[*/
-	    vtrace("sched: RemoveInput 0x%lx\n", (unsigned long)(size_t)ip->source);
+	    vctrace(TC_SCHED, "RemoveInput 0x%lx\n", (unsigned long)(size_t)ip->source);
 #endif /*]*/
 	    return;
 	}
@@ -388,7 +388,7 @@ wait_thread(LPVOID parameter)
 static void
 allocate_wait_group(void)
 {
-    vtrace("sched: Allocating wait group %d\n", num_wait_groups);
+    vctrace(TC_SCHED, "Allocating wait group %d\n", num_wait_groups);
     waitgroups = (waitgroup_t *)Realloc(waitgroups, (num_wait_groups + 1) * sizeof(waitgroup_t));
     waitgroups[num_wait_groups].ha[0] = done_event;
     waitgroups[num_wait_groups].nha = 1;
@@ -557,7 +557,7 @@ purge_inputs(void)
     if (hold_first != NULL) {
 #if defined(HAVE_POLL) /*[*/
 	if (appres.ut_env && getenv("ORDER") != NULL) {
-	    vtrace("sched: Moved to rear:");
+	    vctrace(TC_SCHED, "Moved to rear:");
 	    for (ip = hold_first; ip != NULL; ip = ip->next) {
 		vtrace(" %d", ip->source);
 	    }
@@ -731,7 +731,7 @@ process_some_events(bool block, bool *processed_any)
     }
 
     /* Trace what we're about to do. */
-    vtrace("sched: Waiting for ");
+    vctrace(TC_SCHED, "Waiting for ");
 #if defined(_WIN32) /*[*/
     vtrace("%d handle%s", (int)ha_total, (ha_total == 1)? "": "s");
 # if defined(VERBOSE_HANDLES) /*[*/
@@ -755,7 +755,7 @@ process_some_events(bool block, bool *processed_any)
     if (appres.ut_env && getenv("ORDER") != NULL) {
 	nfds_t n;
 
-	vtrace("sched: Order:");
+	vctrace(TC_SCHED, "Order:");
 	for (n = 0; n < nfds; n++) {
 	    vtrace(" %d", fds[n].fd);
 	}
@@ -791,15 +791,15 @@ process_some_events(bool block, bool *processed_any)
     /* Trace what we got. */
 #if defined(_WIN32) /*[*/
     if (ret != WAIT_OBJECT_0) {
-	vtrace("sched: Got event 0x%lx\n", ret);
+	vctrace(TC_SCHED, "Got event 0x%lx\n", ret);
     }
 #elif defined(HAVE_POLL) /*[*/
     events = count_revents(fds, nfds);
-    vtrace("sched: Got %u fd%s, %d event%s\n",
+    vctrace(TC_SCHED, "Got %u fd%s, %d event%s\n",
 	    ns, (ns == 1)? "": "s",
 	    events, (events == 1)? "": "s");
 #else /*][*/
-    vtrace("sched: Got %u event%s\n", ns, (ns == 1)? "": "s");
+    vctrace(TC_SCHED, "Got %u event%s\n", ns, (ns == 1)? "": "s");
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/

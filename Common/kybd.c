@@ -271,34 +271,34 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
 
     /* If no connection, forget it. */
     if (!IN_3270 && !IN_NVT && !IN_SSCP) {
-	vtrace("  dropped (not connected)\n");
+	vctrace(TC_KYBD, "  dropped (not connected)\n");
 	return;
     }
 
     /* If operator error, complain and drop it. */
     if (kybdlock & KL_OERR_MASK) {
 	ring_bell();
-	vtrace("  dropped (operator error)\n");
+	vctrace(TC_KYBD, "  dropped (operator error)\n");
 	return;
     }
 
     /* If scroll lock, complain and drop it. */
     if (kybdlock & KL_SCROLLED) {
 	ring_bell();
-	vtrace("  dropped (scrolled)\n");
+	vctrace(TC_KYBD, "  dropped (scrolled)\n");
 	return;
     }
 
     /* If file transfer in progress, complain and drop it. */
     if (kybdlock & KL_FT) {
 	ring_bell();
-	vtrace("  dropped (file transfer in progress)\n");
+	vctrace(TC_KYBD, "  dropped (file transfer in progress)\n");
 	return;
     }
 
     /* If typeahead disabled, complain and drop it. */
     if (!toggled(TYPEAHEAD)) {
-	vtrace("  dropped (no typeahead)\n");
+	vctrace(TC_KYBD, "  dropped (no typeahead)\n");
 	return;
     }
 
@@ -321,7 +321,7 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
     }
     ta_tail = ta;
 
-    vtrace("  action queued (kybdlock 0x%x)\n", kybdlock);
+    vctrace(TC_KYBD, "  action queued (kybdlock 0x%x)\n", kybdlock);
 }
 
 /*
@@ -403,7 +403,7 @@ flush_ta(void)
 }
 
 /* Decode keyboard lock bits. */
-static char *
+static const char *
 kybdlock_decode(char *how, unsigned int bits)
 {
     varbuf_t r;
@@ -491,7 +491,7 @@ kybdlock_set(unsigned int bits, const char *cause _is_unused)
     unsigned int n;
 
     if (!(kybdlock & bits)) {
-	vtrace("Keyboard lock(%s) %s %s -> %s\n", cause,
+	vctrace(TC_KYBD, "Keyboard lock(%s) %s %s -> %s\n", cause,
 		kybdlock_decode("", kybdlock),
 		kybdlock_decode("+", bits),
 		kybdlock_decode("", kybdlock | bits));
@@ -513,7 +513,7 @@ kybdlock_clr(unsigned int bits, const char *cause)
     unsigned int n;
 
     if (kybdlock & bits) {
-	vtrace("Keyboard unlock(%s) %s %s -> %s\n", cause,
+	vctrace(TC_KYBD, "Keyboard unlock(%s) %s %s -> %s\n", cause,
 		kybdlock_decode("", kybdlock),
 		kybdlock_decode("-", kybdlock & bits),
 		kybdlock_decode("", kybdlock & ~bits));
@@ -922,7 +922,7 @@ PF_action(ia_t ia, unsigned argc, const char **argv)
     }
     k = atoi(argv[0]);
     if (k < 1 || k > PF_SZ) {
-	popup_an_error(AnPF "(): Invalid argument '%s'", argv[0]);
+	popup_an_error(AnPF "(): Invalid argument '%s'", scatv(argv[0]));
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
@@ -947,7 +947,7 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
     }
     k = atoi(argv[0]);
     if (k < 1 || k > PA_SZ) {
-	popup_an_error(AnPA "(): Invalid argument '%s'", argv[0]);
+	popup_an_error(AnPA "(): Invalid argument '%s'", scatv(argv[0]));
 	return false;
     }
     if (kybdlock & KL_OIA_MINUS) {
@@ -1144,7 +1144,7 @@ key_Character_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     }
     ebcdic_to_multibyte_x(ebc, with_ge? CS_GE: CS_BASE,
 	    mb, sizeof(mb), EUO_BLANK_UNDEF, &uc);
-    vtrace(" %s -> Key(%s\"%s\")\n",
+    vctrace(TC_KYBD, " %s -> Key(%s\"%s\")\n",
 	ia_name[(int) ia_cause],
 	with_ge ? "GE " : "", mb);
     key_Character(ebc, with_ge, pasting, oerr_fail, NULL);
@@ -1175,7 +1175,7 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
     }
 
     if (kybdlock) {
-	char *codename;
+	const char *codename;
 
 	codename = txAsprintf("%d", ebc |
 		(with_ge ? GE_WFLAG : 0) |
@@ -1432,7 +1432,7 @@ key_WCharacter_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
 	oerr_fail = true;
     }
     ebc_wide = atoi(argv[0]);
-    vtrace(" %s -> Key(X'%04x')\n", ia_name[(int) ia_cause], ebc_wide);
+    vctrace(TC_KYBD, " %s -> Key(X'%04x')\n", ia_name[(int) ia_cause], ebc_wide);
     ebc_pair[0] = (ebc_wide >> 8) & 0xff;
     ebc_pair[1] = ebc_wide & 0xff;
     key_WCharacter(ebc_pair, oerr_fail);
@@ -1456,7 +1456,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
     bool no_room = false;
 
     if (kybdlock) {
-	char *codename;
+	const char *codename;
 
 	codename = txAsprintf("%d", (ebc_pair[0] << 8) | ebc_pair[1]);
 	enq_fta(key_WCharacter_wrapper, codename,
@@ -1465,7 +1465,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
     }
 
     if (!dbcs) {
-	vtrace("DBCS character received when not in DBCS mode, ignoring.\n");
+	vctrace(TC_KYBD, "DBCS character received when not in DBCS mode, ignoring.\n");
 	return true;
     }
 
@@ -1494,7 +1494,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
 	} else {
 #if 0
 	    /* Ignore it, successfully. */
-	    vtrace("Ignoring non-numeric character in numeric field\n");
+	    vctrace(TC_KYBD, "Ignoring non-numeric character in numeric field\n");
 	    return true;
 #endif
 	}
@@ -1736,7 +1736,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
     struct akey ak;
 
     if (keyboard_disabled() && IA_IS_KEY(cause)) {
-	vtrace("  [suppressed, keyboard disabled]\n");
+	vctrace(TC_KYBD, "  [suppressed, keyboard disabled]\n");
 	vstatus_keyboard_disable_flash();
 	return;
     }
@@ -1754,7 +1754,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		enq_ta(AnKey, txAsprintf("apl_%s", apl_name),
 			oerr_fail ? KwFailOnError : KwNoFailOnError);
 	    } else {
-		vtrace("  dropped (invalid key type or name)\n");
+		vctrace(TC_KYBD, "  dropped (invalid key type or name)\n");
 	    }
 	}
 	return;
@@ -1804,19 +1804,19 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	break;
     }
 
-    vtrace(" %s -> Key(U+%04x)\n", ia_name[(int) cause], ucs4);
+    vctrace(TC_KYBD, " %s -> Key(U+%04x)\n", ia_name[(int) cause], ucs4);
     if (IN_3270) {
 	ebc_t ebc;
 	bool ge;
 
 	if (ucs4 < 0x20) {
-	    vtrace("  dropped (control char)\n");
+	    vctrace(TC_KYBD, "  dropped (control char)\n");
 	    return;
 	}
 	ebc = unicode_to_ebcdic_ge(ucs4, &ge,
 		keytype == KT_GE || toggled(APL_MODE));
 	if (ebc == 0) {
-	    vtrace("  dropped (no EBCDIC translation)\n");
+	    vctrace(TC_KYBD, "  dropped (no EBCDIC translation)\n");
 	    return;
 	}
 	if (ebc & 0xff00) {
@@ -1850,7 +1850,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    break;
 	}
 
-	vtrace("  dropped (not %s)\n", why);
+	vctrace(TC_KYBD, "  dropped (not %s)\n", why);
     }
 }
 
@@ -2020,7 +2020,7 @@ do_reset(bool explicit)
 	kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
 	kybdlock_set(KL_DEFERRED_UNLOCK, "do_reset");
 	unlock_id = AddTimeOut(appres.unlock_delay_ms, defer_unlock);
-	vtrace("Deferring keyboard unlock %dms\n", appres.unlock_delay_ms);
+	vctrace(TC_KYBD, "Deferring keyboard unlock %dms\n", appres.unlock_delay_ms);
     }
 
     /* Clean up other modes. */
@@ -2858,7 +2858,7 @@ lightpen_select(int baddr)
     faddr = find_field_attribute(baddr);
     fa = ea_buf[faddr].fa;
     if (!FA_IS_SELECTABLE(fa)) {
-	vtrace("  lightpen select on non-selectable field\n");
+	vctrace(TC_KYBD, "  lightpen select on non-selectable field\n");
 	ring_bell();
 	    return;
     }
@@ -3821,7 +3821,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 	 * so if the keyboard is locked, it's fatal
 	 */
 	if (kybdlock) {
-	    vtrace("  keyboard locked, string dropped\n");
+	    vctrace(TC_KYBD, "  keyboard locked, string dropped\n");
 	    return 0;
 	}
 
@@ -3923,14 +3923,14 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 	    case UPRIV_fm: /* private-use FM */
 	    case UPRIV2_fm:
 		if (pasting) {
-		    vtrace(" %s -> FM\n", ia_name[(int) ia]);
+		    vctrace(TC_KYBD, " %s -> FM\n", ia_name[(int) ia]);
 		    key_Character(EBC_fm, false, true, true, NULL);
 		}
 		break;
 	    case UPRIV_dup: /* private-use DUP */
 	    case UPRIV2_dup:
 		if (pasting) {
-		    vtrace(" %s -> DUP\n", ia_name[(int) ia]);
+		    vctrace(TC_KYBD, " %s -> DUP\n", ia_name[(int) ia]);
 		    key_Character(EBC_dup, false, true, true, NULL);
 		}
 		break;
@@ -4128,7 +4128,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 		nc++;
 		break;
 	    } else {
-		vtrace(" %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
+		vctrace(TC_KYBD, " %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
 		if (!(literal & ~0xff)) {
 		    key_Character((unsigned char) literal, false, true, true,
 			    NULL);
@@ -4160,7 +4160,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 	check_remargin = true;
 	break;
     case EBC:
-	vtrace(" %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
+	vctrace(TC_KYBD, " %s -> Key(X'%04X')\n", ia_name[(int) ia], literal);
 	if (!(literal & ~0xff)) {
 	    key_Character((unsigned char) literal, false, true, true,
 		    NULL);

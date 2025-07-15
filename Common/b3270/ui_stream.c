@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2024 Paul Mattes.
+ * Copyright (c) 2016-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -213,14 +213,14 @@ uprintf(const char *fmt, ...)
 	while (*t) {
 	    char *newline = strchr(t, '\n');
 
-	    vtrace("ui> %.*s", (int)(newline - t) + 1, t);
+	    vctrace(TC_UI, "> %s\n", sncatv(t, (newline - t) + 1));
 	    t = newline + 1;
 	}
 	Replace(pending_trace, NULL);
     }
 
     if (nw < 0) {
-	    vtrace("UI write failure: %s\n",
+	    vctrace(TC_UI, "Write failure: %s\n",
 #if defined(_WIN32) /*[*/
 		    (ui_socket != INVALID_SOCKET)?
 			win32_strerror(GetLastError()):
@@ -801,7 +801,7 @@ uij_non_string_attribute(const char *element, const char *attribute)
 }
 
 /* Get a string attribute. */
-static char *
+static const char *
 get_jstring(const json_t *j, const char *element, const char *attribute)
 {
     const char *svalue;
@@ -1205,7 +1205,7 @@ fail:
 static void
 do_jpassthru_complete(const json_t *j, bool success)
 {
-    char *tag = NULL;
+    const char *tag = NULL;
     char *text = NULL;
     const char *key;
     size_t key_length;
@@ -1509,7 +1509,7 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	x3270_exit(1);
     }
     if (nr == 0) {
-	vtrace("UI input EOF, exiting\n");
+	vctrace(TC_UI, "EOF, exiting\n");
 	if (uix.input_nest) {
 	    ui_leaf(IndUiError,
 		    AttrFatal, AT_BOOLEAN, false,
@@ -1527,20 +1527,27 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Trace it, skipping any initial newline. */
     {
 	int nrd = (int)nr;
-	char *bufd = buf;
+	char *s = buf;
+	int chunk_len = 0;
+	char *chunk_start = s;
 
-	if (bufd[0] == '\r') {
+	while (nrd > 0) {
+	    if (*s == '\r') {
+		chunk_start++;
+	    } else if (*s == '\n') {
+		if (chunk_len) {
+		    vctrace(TC_UI, "< %s\n", sncatv(chunk_start, chunk_len));
+		}
+		chunk_start = s + 1;
+		chunk_len = 0;
+	    } else {
+		chunk_len++;
+	    }
+	    s++;
 	    nrd--;
-	    bufd++;
 	}
-	if (nrd > 0 && bufd[0] == '\n') {
-	    nrd--;
-	    bufd++;
-	}
-
-	vtrace("ui< %.*s", nrd, bufd);
-	if (nrd == 0 || bufd[nrd - 1] != '\n') {
-	    vtrace("\n");
+	if (chunk_len) {
+	    vctrace(TC_UI, "< %s\n", sncatv(chunk_start, chunk_len));
 	}
     }
 
@@ -1755,7 +1762,7 @@ ui_io_init(void)
 	}
 	Free(sa);
 
-	vtrace("Callback: connected to %s\n", appres.scripting.callback);
+	vctrace(TC_UI, "Callback: connected to %s\n", appres.scripting.callback);
     }
 
     if (XML_MODE) {

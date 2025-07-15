@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Paul Mattes.
+ * Copyright (c) 2017-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -31,4 +31,4 @@
  *		Internal secure I/O data and functions.
  */
 
-char *sio_option_names(void);
+const char *sio_option_names(void);

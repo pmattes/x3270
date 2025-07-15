@@ -567,7 +567,7 @@ static void
 clear_fixed(void)
 {
     if (!maximized && user_resize_allowed && (fixed_width || fixed_height)) {
-	vtrace("clearing fixed_width and fixed_height\n");
+	vctrace(TC_UI, "clearing fixed_width and fixed_height\n");
 	fixed_width = 0;
 	fixed_height = 0;
     }
@@ -869,7 +869,7 @@ screen_reinit(unsigned cmask)
 	    /* Compute the horizontal halo. */
 	    w = SCREEN_WIDTH(ss->char_width, 0)+2 + scrollbar_width;
 	    if (w > fixed_width) {
-		vtrace("Screen is too wide for fixed width, will clip\n");
+		vctrace(TC_UI, "Screen is too wide for fixed width, will clip\n");
 		hhalo = HHALO;
 		h_clip = true;
 	    } else {
@@ -887,7 +887,7 @@ screen_reinit(unsigned cmask)
 		h += keypad_qheight();
 	    }
 	    if (h > fixed_height) {
-		vtrace("Screen is too tall for fixed height, will clip\n");
+		vctrace(TC_UI, "Screen is too tall for fixed height, will clip\n");
 		vhalo = VHALO;
 	    } else {
 		/*
@@ -1031,8 +1031,7 @@ check_resized(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     resized_pending = false;
     XtVaGetValues(toplevel, XtNwidth, &width, XtNheight, &height, NULL);
     if (width != last_width || height != last_height) {
-	vtrace("Window Mangaer bug: Window changed size without Xt telling "
-		"us\n");
+	vctrace(TC_UI, "Window Mangaer bug: Window changed size without Xt telling us\n");
 	cn.width = width;
 	cn.height = height;
 	do_resize();
@@ -1068,8 +1067,7 @@ set_toplevel_sizes(const char *why)
     th = container_height;
     if (fixed_width) {
 	if (!maximized) {
-	    vtrace("set_toplevel_sizes(%s), fixed: %dx%d\n", why, fixed_width,
-		    fixed_height);
+	    vctrace(TC_UI, "set_toplevel_sizes(%s), fixed: %dx%d\n", why, fixed_width, fixed_height);
 	    redo_toplevel_size(fixed_width, fixed_height);
 	    if (!user_resize_allowed) {
 		XtVaSetValues(toplevel,
@@ -1090,7 +1088,7 @@ set_toplevel_sizes(const char *why)
 	main_height = fixed_height;
     } else {
 	if (!maximized) {
-	    vtrace("set_toplevel_sizes(%s), not fixed: container %hux%hu\n",
+	    vctrace(TC_UI, "set_toplevel_sizes(%s), not fixed: container %hux%hu\n",
 		    why, tw, th);
 	    redo_toplevel_size(tw, th);
 	    if (!allow_resize) {
@@ -1128,7 +1126,7 @@ set_toplevel_sizes(const char *why)
 static void
 inflate_screen(void)
 {
-    vtrace("inflate_screen: nss.screen %dx%d container %dx%d\n",
+    vctrace(TC_UI, "inflate_screen: nss.screen %dx%d container %dx%d\n",
 	    nss.screen_width,
 	    nss.screen_height,
 	    container_width,
@@ -1470,7 +1468,7 @@ crosshair_margin(bool draw, const char *why)
     int hhalo_chars = 0, vhalo_chars = 0;
 
 #ifdef CROSSHAIR_DEBUG /*[*/
-    vtrace("crosshair_margin(%s, %s) cursor=%d", why,
+    vctrace(TC_UI, "crosshair_margin(%s, %s) cursor=%d", why,
 	    draw? "draw": "undraw",
 	    draw? cursor_addr: ss->cursor_daddr);
 #endif /*]*/
@@ -1581,7 +1579,7 @@ crosshair_margin(bool draw, const char *why)
 	}
 
 #ifdef CROSSHAIR_DEBUG /*[*/
-	vtrace(" -> %s\n", ss->xh_alt? "draw": "nop");
+	vctrace(TC_UI, " -> %s\n", ss->xh_alt? "draw": "nop");
 #endif /*]*/
 	goto fix_status;
     }
@@ -1621,12 +1619,12 @@ crosshair_margin(bool draw, const char *why)
 
     if (!ss->xh_alt) {
 #ifdef CROSSHAIR_DEBUG /*[*/
-	vtrace(" -> nop\n");
+	vctrace(TC_UI, " -> nop\n");
 #endif /*]*/
 	goto fix_status;
     }
 #ifdef CROSSHAIR_DEBUG /*[*/
-    vtrace(" -> erase\n");
+    vctrace(TC_UI, " -> erase\n");
 #endif /*]*/
 
     /* To the right. */
@@ -2072,7 +2070,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     }
 
     if (!allow_resize) {
-	vtrace(AnStepEfont ": resize not allowed\n");
+	vctrace(TC_UI, AnStepEfont ": resize not allowed\n");
 	return;
     }
 
@@ -2083,11 +2081,11 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
      */
     if (nss.standard_font) {
 	if (!efont_scale_size) {
-	    vtrace(AnStepEfont ": font is not scalable\n");
+	    vctrace(TC_UI, AnStepEfont ": font is not scalable\n");
 	    return;
 	}
 	if (!bigger && efont_scale_size <= 2UL) {
-	    vtrace(AnStepEfont ": scale limit reached\n");
+	    vctrace(TC_UI, AnStepEfont ": scale limit reached\n");
 	    return;
 	}
     }
@@ -2112,12 +2110,12 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	
 	if (best_area < 0) {
 	    /* No candidates left. */
-	    vtrace(AnStepEfont ": No better candidate\n");
+	    vctrace(TC_UI, AnStepEfont ": No better candidate\n");
 	    return;
 	}
 
 	/* Switch. */
-	vtrace(AnStepEfont ": Switching to %s\n", best_r->name);
+	vctrace(TC_UI, AnStepEfont ": Switching to %s\n", best_r->name);
 	screen_newfont(best_r->name, true, false);
     } else {
 	/* Try rescaling the current font. */
@@ -2125,7 +2123,7 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	varbuf_t r;
 	char *dash = "";
 	int i;
-	char *new_font_name;
+	const char *new_font_name;
 	unsigned long new_font_size = bigger? efont_scale_size + 1UL:
 	    efont_scale_size - 1UL;
 
@@ -2152,11 +2150,11 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	    /* Has variants. */
 	    new_font_name = find_variant(full_efontname, bigger);
 	    if (new_font_name == NULL) {
-		vtrace(AnStepEfont ": no font to switch to\n");
+		vctrace(TC_UI, AnStepEfont ": no font to switch to\n");
 		return;
 	    }
 	}
-	vtrace(AnStepEfont ": Switching to %s\n", new_font_name);
+	vctrace(TC_UI, AnStepEfont ": Switching to %s\n", new_font_name);
 	screen_newfont(new_font_name, true, false);
     }
     return;
@@ -4469,7 +4467,7 @@ query_window_state(void)
     }
     if (iconic != was_iconic)
     {
-	vtrace("%s\n", iconic? "Iconified": "Not iconified");
+	vctrace(TC_UI, "%s\n", iconic? "Iconified": "Not iconified");
     }
 
     /* Get _NET_WM_STATE to see if we're maximized. */
@@ -4495,7 +4493,7 @@ query_window_state(void)
 	maximized = (maximized_horz && maximized_vert);
     }
     if (maximized != was_maximized) {
-	vtrace("%s\n", maximized? "Maximized": "Not maximized");
+	vctrace(TC_UI, "%s\n", maximized? "Maximized": "Not maximized");
 	menubar_snap_enable(!maximized);
 
 	/*
@@ -5215,11 +5213,11 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     efont_has_variants = getenv("NOVARIANTS")? false:
 	check_variants(full_efontname);
     if (efont_is_scalable) {
-	vtrace("Font is scalable\n");
+	vctrace(TC_UI, "Font is scalable\n");
     } else if (efont_has_variants) {
-	vtrace("Font has size variants\n");
+	vctrace(TC_UI, "Font has size variants\n");
     } else {
-	vtrace("Font cannot be resized\n");
+	vctrace(TC_UI, "Font cannot be resized\n");
     }
     efont_scale_size = (efont_is_scalable || efont_has_variants)? pixel_size: 0;
 
@@ -5295,7 +5293,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
      * know.
      */
     if (container != NULL) {
-	vtrace("set_font_globals(\"%s\")\n", ef);
+	vctrace(TC_UI, "set_font_globals(\"%s\")\n", ef);
     }
 }
 
@@ -5857,7 +5855,7 @@ init_rsfonts(char *charset_name)
 	ns = ms = NewString(ms);
 	while (split_lresource(&ms, &line) == 1) {
 
-	    vtrace("init_rsfonts: parsing %s\n", line);
+	    vctrace(TC_UI, "init_rsfonts: parsing %s\n", line);
 
 	    /* Figure out what it's about. */
 	    split_font_list_entry(line, &label, NULL, &resize, &font);
@@ -5891,7 +5889,7 @@ init_rsfonts(char *charset_name)
 	    }
 	    matches = XListFontsWithInfo(display, fcopy, 1, &count, &fs);
 	    if (matches == NULL) {
-		vtrace("init_rsfonts: no such font %s\n", font);
+		vctrace(TC_UI, "init_rsfonts: no such font %s\n", font);
 		Free(fcopy);
 		continue;
 	    }
@@ -5907,7 +5905,7 @@ init_rsfonts(char *charset_name)
 
 		matches = XListFontsWithInfo(display, plus + 1, 1, &count, &fs);
 		if (matches == NULL) {
-		    vtrace("init_rsfonts: no such font %s\n", plus + 1);
+		    vctrace(TC_UI, "init_rsfonts: no such font %s\n", plus + 1);
 		    Free(fcopy);
 		    continue;
 		}
@@ -6043,8 +6041,8 @@ do_resize(void)
     struct rsfont *rcand = NULL;
 
     if (nss.standard_font && !efont_scale_size) {
-	vtrace("  no scalable font available\n");
-	vtrace("setting fixed_from cn %dx%d\n", cn.width, cn.height);
+	vctrace(TC_UI, "  no scalable font available\n");
+	vctrace(TC_UI, "setting fixed_from cn %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_reinit(FONT_CHANGE);
@@ -6081,7 +6079,7 @@ do_resize(void)
 	    }
 	}
 	if (d != NULL) {
-	    vtrace("Found %s in drc\n", key);
+	    vctrace(TC_UI, "Found %s in drc\n", key);
 	    rcand = d->rsfonts;
 	} else if (!efont_is_scalable) {
 	    /* Has variants. */
@@ -6138,7 +6136,7 @@ do_resize(void)
 	     * TODO: Optimize this so we save individual entries, and we scan
 	     * only until we find a match.
 	     */
-	    vtrace("Did not find %s in drc, building\n", key);
+	    vctrace(TC_UI, "Did not find %s in drc, building\n", key);
 	    for (p = 2; p <= 100; p++) {
 		char *dash = "";
 		char *new_font_name;
@@ -6189,7 +6187,7 @@ do_resize(void)
 		rlast = r;
 	    }
 
-	    vtrace("drc build complete\n");
+	    vctrace(TC_UI, "drc build complete\n");
 
 	    /* Add the list to the cache. */
 	    d = (drc_t *)Malloc(sizeof(drc_t));
@@ -6254,17 +6252,17 @@ do_resize(void)
 
     if (!best || (efontname && !strcmp(best->name, efontname))) {
 	/* Accept the change and float inside the new size. */
-	vtrace("  no better font available\n");
-	vtrace("setting fixed %dx%d\n", cn.width, cn.height);
+	vctrace(TC_UI, "  no better font available\n");
+	vctrace(TC_UI, "setting fixed %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_reinit(FONT_CHANGE);
 	clear_fixed();
     } else {
 	/* Change fonts. */
-	vtrace("    switching to font '%s', snap size %dx%d\n",
+	vctrace(TC_UI, "    switching to font '%s', snap size %dx%d\n",
 		best->name, best->total_width, best->total_height);
-	vtrace("setting fixed_from cn %dx%d\n", cn.width, cn.height);
+	vctrace(TC_UI, "setting fixed_from cn %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
 	screen_newfont(best->name, false, false);
@@ -6282,7 +6280,7 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
     bool needs_moving = false;
 
-    vtrace("Stream timer expired %hux%hu+%hd+%hd\n",
+    vctrace(TC_UI, "Stream timer expired %hux%hu+%hd+%hd\n",
 	    cn.width, cn.height, cn.x, cn.y);
 
     /* Not ticking any more. */
@@ -6297,9 +6295,9 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 
     clear_fixed();
     if (cn.width == main_width && cn.height == main_height) {
-	vtrace("  width and height match, done\n");
+	vctrace(TC_UI, "  width and height match, done\n");
     } else {
-	vtrace("  width and height do not match, resizing\n");
+	vctrace(TC_UI, "  width and height do not match, resizing\n");
 	do_resize();
     }
 
@@ -6344,7 +6342,7 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     query_window_state();
     if (user_resize_allowed) {
 	/* Take the current dimensions as fixed. */
-	vtrace("setting fixed %dx%d\n", cn.width, cn.height);
+	vctrace(TC_UI, "setting fixed %dx%d\n", cn.width, cn.height);
 	fixed_width = cn.width;
 	fixed_height = cn.height;
     }
@@ -6648,7 +6646,7 @@ error_return:
 static void
 xim_init(void)
 {
-    char *buf = "";
+    const char *buf = "";
     static bool xim_initted = false;
     char *s;
 
@@ -6870,7 +6868,7 @@ check_scalable(const char *font_name)
     varbuf_t r1, r2;
     char *dash = "";
     int i;
-    char *name1, *name2;
+    const char *name1, *name2;
     dfc_t *d;
 
     /* Construct the target names. */

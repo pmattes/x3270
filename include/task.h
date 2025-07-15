@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -125,16 +125,16 @@ typedef struct {
 #define CBF_ERRD	0x8	/* understands 'errd:' error output */
 
 #define XF_HAVECOOKIE	0x1	/* has a valid cookie */
-char *push_cb(const char *buf, size_t len, const tcb_t *cb,
+const char *push_cb(const char *buf, size_t len, const tcb_t *cb,
 	task_cbh handle);
 struct cmd {
     const char *action;	/* action to execute */
     const char **args;	/* arguments */
 };
-char *push_cb_split(cmd_t **cmds, const tcb_t *cb, task_cbh handle);
+const char *push_cb_split(cmd_t **cmds, const tcb_t *cb, task_cbh handle);
 void task_activate(task_cbh handle);
 void task_register(void);
-char *task_cb_prompt(task_cbh handle);
+const char *task_cb_prompt(task_cbh handle);
 unsigned long task_cb_msec(task_cbh handle);
 const char *task_cb_name(void *);
 
@@ -163,6 +163,6 @@ char *task_get_tasks(void);
 bool validate_command(const char *command, int offset, char **error);
 
 bool task_running_cb_contains(tcb_t *cb);
-char *task_status_string(void);
+const char *task_status_string(void);
 
 bool task_kbwait_state(void);

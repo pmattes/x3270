@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2016, 2019 Paul Mattes.
+ * Copyright (c) 1996-2025 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -356,7 +356,7 @@ dialog_lose_sel(Widget w, Atom *selection)
     int i;
 
     a = XGetAtomName(display, *selection);
-    vtrace("dialog lose_sel %s\n", a);
+    vctrace(TC_UI, "dialog lose_sel %s\n", a);
     XFree(a);
     for (i = 0; i < NS; i++) {
 	if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
@@ -435,11 +435,11 @@ dialog_own_sels(Widget w, Time t, String *parms, Cardinal *num_parms,
 	    own_sel[j].buffer[block->length] = '\0';
 	    own_sel[j].time = t;
 	    a = XGetAtomName(display, sel);
-	    vtrace("dialog own_sel %s %lu\n", a, (unsigned long)t);
+	    vctrace(TC_UI, "dialog own_sel %s %lu\n", a, (unsigned long)t);
 	    XFree(a);
 	} else {
 	    a = XGetAtomName(display, sel);
-	    vtrace("Could not get selection %s\n", a);
+	    vctrace(TC_UI, "Could not get selection %s\n", a);
 	    XFree(a);
 	    if (already_own) {
 		XtFree(own_sel[j].buffer);

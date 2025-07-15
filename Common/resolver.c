@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@
 # include "w3misc.h"
 # include "winvers.h"
 #endif /*]*/
+#include "xscatv.h"
 
 #if defined(_WIN32) || defined(HAVE_GETADDRINFO_A) /*[*/
 # define ASYNC_RESOLVER 1
@@ -109,6 +110,13 @@ my_gai_strerror(int rc)
 # else /*][*/
 # define my_gai_strerror(x)	gai_strerror(x)
 # endif /*]*/
+
+/* Local version of xscatv. */
+static char *lscatv(const char *s)
+{
+    return s? xscatv(s, strlen(s), false): NewString("(none)");
+}
+
 /*
  * Resolve a hostname and port using getaddrinfo, allowing IPv4 or IPv6.
  * Synchronous version.
@@ -116,7 +124,7 @@ my_gai_strerror(int rc)
 static rhp_t
 resolve_host_and_port_v46(const char *host, char *portname,
 	bool abs, unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
     struct addrinfo hints, *res0, *res;
     int rc;
@@ -131,7 +139,12 @@ resolve_host_and_port_v46(const char *host, char *portname,
 
 	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
 	    if (errmsg) {
-		*errmsg = txAsprintf("%s/%s:\n%s", host, portname, "Invalid port");
+		char *sh = lscatv(host);
+		char *sp = lscatv(portname);
+
+		*errmsg = txAsprintf("%s/%s:\n%s", sh, sp, "Invalid port");
+		Free(sh);
+		Free(sp);
 	    }
 	    return RHP_CANNOT_RESOLVE;
 	}
@@ -145,8 +158,12 @@ resolve_host_and_port_v46(const char *host, char *portname,
     rc = getaddrinfo(host, portname, &hints, &res0);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
-		    my_gai_strerror(rc));
+	    char *sh = lscatv(host);
+	    char *sp = lscatv(portname);
+
+	    *errmsg = txAsprintf("%s/%s:\n%s", sh, sp, my_gai_strerror(rc));
+	    Free(sh);
+	    Free(sp);
 	}
 	return RHP_CANNOT_RESOLVE;
     }
@@ -272,7 +289,7 @@ cleanup_partial_slot(int slot)
 static rhp_t
 resolve_host_and_port_v46_a(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr, int *slot,
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr, int *slot,
 	int pipe, iosrc_t event)
 {
     static bool initted = false;
@@ -301,7 +318,12 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 
 	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
 	    if (errmsg) {
-		*errmsg = txAsprintf("%s/%s:\n%s", host, portname, "Invalid port");
+		char *sh = lscatv(host);
+		char *sp = lscatv(portname);
+
+		*errmsg = txAsprintf("%s/%s:\n%s", sh, sp, "Invalid port");
+		Free(sh);
+		Free(sp);
 	    }
 	    return RHP_CANNOT_RESOLVE;
 	}
@@ -350,8 +372,12 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     rc = getaddrinfo_a(GAI_NOWAIT, &gai[*slot].gaicbs, 1, &gai[*slot].sigevent);
     if (rc != 0) {
 	if (errmsg) {
-	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
-		    my_gai_strerror(rc));
+	    char *sh = lscatv(host);
+	    char *sp = lscatv(portname);
+
+	    *errmsg = txAsprintf("%s/%s:\n%s", sh, sp, my_gai_strerror(rc));
+	    Free(sh);
+	    Free(sp);
 	}
 	cleanup_partial_slot(*slot);
 	return RHP_CANNOT_RESOLVE;
@@ -360,8 +386,12 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
     thread = CreateThread(NULL, 0, async_resolve, &gai[*slot], 0, NULL);
     if (thread == INVALID_HANDLE_VALUE) {
 	if (errmsg) {
-	    *errmsg = txAsprintf("%s/%s:\n%s", host, portname? portname: "(none)",
-		    win32_strerror(GetLastError()));
+	    char *sh = lscatv(host);
+	    char *sp = lscatv(portname);
+
+	    *errmsg = txAsprintf("%s/%s:\n%s", sh, sp, win32_strerror(GetLastError()));
+	    Free(sh);
+	    Free(sp);
 	}
 	cleanup_partial_slot(*slot);
 	return RHP_CANNOT_RESOLVE;
@@ -377,7 +407,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 /* Collect the status for a slot. */
 rhp_t
 collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, unsigned short *pport, char **errmsg, int max,
+	socklen_t *sa_rlen, unsigned short *pport, const char **errmsg, int max,
 	int *nr)
 {
 #if defined(ASYNC_RESOLVER) /*[*/
@@ -429,9 +459,12 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    return RHP_SUCCESS;
 	} else {
 	    if (errmsg) {
-		*errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
-			gaip->port? gaip->port: "(none)",
-			"no suitable resolution");
+		char *sh = lscatv(gaip->host);
+		char *sp = lscatv(gaip->port);
+
+		*errmsg = txAsprintf("%s/%s:\n%s", sh, sp, "no suitable resolution");
+		Free(sh);
+		Free(sp);
 	    }
 	    Replace(gai->host, NULL);
 	    Replace(gai->port, NULL);
@@ -453,9 +486,12 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 	    gaip->gaicb.ar_result = NULL;
 	}
 	if (errmsg) {
-	    *errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
-		    gaip->port? gaip->port: "(none)",
-		    my_gai_strerror(rc));
+	    char *sh = lscatv(gaip->host);
+	    char *sp = lscatv(gaip->port);
+
+	    *errmsg = txAsprintf("%s/%s:\n%s", sh, sp, my_gai_strerror(rc));
+	    Free(sh);
+	    Free(sp);
 	}
 	Replace(gai->host, NULL);
 	Replace(gai->port, NULL);
@@ -466,9 +502,12 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 
     if (gaip->rc != 0) {
 	if (errmsg) {
-	    *errmsg = txAsprintf("%s/%s:\n%s", gaip->host,
-		    gaip->port? gaip->port: "(none)",
-		    my_gai_strerror(gaip->rc));
+	    char *sh = lscatv(gaip->host);
+	    char *sp = lscatv(gaip->port);
+
+	    *errmsg = txAsprintf("%s/%s:\n%s", sh, sp, my_gai_strerror(gaip->rc));
+	    Free(sh);
+	    Free(sp);
 	}
 	Replace(gai->host, NULL);
 	Replace(gai->port, NULL);
@@ -493,8 +532,10 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
 		break;
 	    default:
 		if (errmsg) {
-		    *errmsg = txAsprintf("%s:\nunknown family %d", gaip->host,
-			    res->ai_family);
+		    char *sh = lscatv(gaip->host);
+
+		    *errmsg = txAsprintf("%s:\nunknown family %d", sh, res->ai_family);
+		    Free(sh);
 		}
 		freeaddrinfo(gaip->result);
 		Replace(gai->host, NULL);
@@ -580,7 +621,7 @@ cleanup_host_and_port(int slot)
 static rhp_t
 mock_sync_resolver(const char *m, const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
     /*
      * m is a string that looks like:
@@ -647,7 +688,7 @@ mock_sync_resolver(const char *m, const char *host, char *portname,
  */
 rhp_t
 resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
-	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, char **errmsg,
+	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, const char **errmsg,
 	int max, int *nr)
 {
     const char *m = ut_getenv("MOCK_SYNC_RESOLVER");
@@ -679,7 +720,7 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 rhp_t
 resolve_host_and_port_abs(const char *host, char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, char **errmsg, int max, int *nr)
+	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
     return resolve_host_and_port_v46(host, portname, true, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
@@ -703,7 +744,7 @@ resolve_host_and_port_abs(const char *host, char *portname,
  */
 rhp_t
 resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
-	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, char **errmsg,
+	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, const char **errmsg,
 	int max, int *nr, int *slot, int pipe, iosrc_t event)
 {
 #if defined(ASYNC_RESOLVER) /*[*/
@@ -729,7 +770,7 @@ resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
  */
 bool
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
-	size_t hostlen, char *serv, size_t servlen, char **errmsg)
+	size_t hostlen, char *serv, size_t servlen, const char **errmsg)
 {
     int rc;
 

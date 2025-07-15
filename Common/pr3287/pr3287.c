@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2024 Paul Mattes.
+ * Copyright (c) 2000-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -155,6 +155,7 @@
 #include "unicodec.h"
 #include "utf8.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "xtablec.h"
 
 #if defined(_WIN32) /*[*/
@@ -1092,7 +1093,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	sockaddr_46_t ha[NUM_HA];
 	socklen_t ha_len[NUM_HA];
 	int ha_ix;
-	char *errtxt;
+	const char *errtxt;
 	int n_ha;
 
 	/* Resolve the host name. */
@@ -1141,7 +1142,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 	    if (numeric_host_and_port(&ha[ha_ix].sa, ha_len[ha_ix], hn,
 			sizeof(hn), pn, sizeof(pn), &errtxt)) {
-		vtrace("Trying %s, port %s...\n", hn, pn);
+		vctrace(TC_SOCKET, "Trying %s, port %s...\n", hn, pn);
 	    }
 	    if (connect(s, &ha[ha_ix].sa, ha_len[ha_ix]) == 0) {
 		/* Success! */
@@ -1190,12 +1191,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		    options.printer? options.printer: "(none)");
 #endif /*]*/
 	}
-	vtrace("Connected to %s, port %u%s\n", host, p,
+	vctrace(TC_SOCKET, "Connected to %s, port %u%s\n", host, p,
 		options.tls_host? " via TLS": "");
 	if (options.assoc != NULL) {
-	    vtrace("Associating with LU %s\n", options.assoc);
+	    vctrace(TC_TN3270, "Associating with LU %s\n", options.assoc);
 	} else if (lu != NULL) {
-	    vtrace("Connecting to LU %s\n", lu);
+	    vctrace(TC_TN3270, "Connecting to LU %s\n", lu);
 	}
 #if !defined(_WIN32) /*[*/
 	vtrace("Command: %s\n", options.command);

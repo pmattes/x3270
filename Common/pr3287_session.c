@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2024 Paul Mattes.
+ * Copyright (c) 2000-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -242,7 +242,7 @@ pr3287_reap_now(void)
 
     assert(pr3287_state == PRS_TERMINATING);
 
-    vtrace("Waiting for old printer session to exit.\n");
+    vctrace(TC_PRINT, "Waiting for old printer session to exit.\n");
 #if !defined(_WIN32) /*[*/
     if (waitpid(pr3287_pid, &status, 0) < 0) {
 	popup_an_errno(errno, "Printer process waitpid() failed");
@@ -287,7 +287,7 @@ pr3287_reap_now(void)
     }
 #endif /*]*/
 
-    vtrace("Old printer session exited.\n");
+    vctrace(TC_PRINT, "Old printer session exited.\n");
     pr3287_state = PRS_NONE;
     st_changed(ST_PRINTER, false);
 }
@@ -298,7 +298,7 @@ delayed_start(ioid_t id _is_unused)
 {
     assert(pr3287_state == PRS_DELAY);
 
-    vtrace("Printer session start delay complete.\n");
+    vctrace(TC_PRINT, "Printer session start delay complete.\n");
 
     /* Start the printer. */
     pr3287_state = PRS_NONE;
@@ -373,7 +373,7 @@ pr3287_session_start(const char *lu)
 	 * Remember what was requested, and set a timeout to start the
 	 * new session.
 	 */
-	vtrace("Delaying printer session start %dms.\n",
+	vctrace(TC_PRINT, "Delaying printer session start %dms.\n",
 		get_printer_delay_ms());
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
@@ -394,7 +394,7 @@ pr3287_session_start(const char *lu)
 	 * get in after a manual stop. This is needed because we can't
 	 * distinguish a manual from an automatic start.
 	 */
-	vtrace("Delaying printer session start %dms after exit.\n",
+	vctrace(TC_PRINT, "Delaying printer session start %dms after exit.\n",
 		get_printer_delay_ms());
 	Replace(pr3287_delay_lu, NewString(lu));
 	pr3287_delay_associated = pr3287_associated;
@@ -454,12 +454,12 @@ pr3287_start_now(const char *lu, bool associated)
     const char *s;
     char *cmd_text;
     char c;
-    char *charset_cmd;		/* -charset <csname> */
-    char *proxy_cmd = NULL;	/* -proxy <spec> */
+    const char *charset_cmd;		/* -charset <csname> */
+    const char *proxy_cmd = NULL;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
     char *pcp_res = NULL;
-    char *printercp = NULL;	/* -printercp <n> */
-    char *cp_cmdline;
+    const char *printercp = NULL;	/* -printercp <n> */
+    const char *cp_cmdline;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     SECURITY_ATTRIBUTES sa;
@@ -472,7 +472,7 @@ pr3287_start_now(const char *lu, bool associated)
     bool success = true;
     struct sockaddr_in pr3287_lsa;
     socklen_t len;
-    char *syncopt;
+    const char *syncopt;
     varbuf_t r;
 
     assert(pr3287_state == PRS_NONE);
@@ -484,8 +484,7 @@ pr3287_start_now(const char *lu, bool associated)
 	cmdlineName = ResLuCommandLine;
     }
 
-    vtrace("Starting %s%s printer session.\n", lu,
-	    associated? " associated": "");
+    vctrace(TC_PRINT, "Starting %s%s printer session.\n", lu, associated? " associated": "");
 
     /* Create a listening socket for pr3287 to connect back to. */
     pr3287_ls = socket(PF_INET, SOCK_STREAM, 0);
@@ -701,7 +700,7 @@ pr3287_start_now(const char *lu, bool associated)
     cmd_text = vb_consume(&r);
 
 #if !defined(_WIN32) /*[*/
-    vtrace("Printer command: %s\n", cmd_text);
+    vctrace(TC_PRINT, "Printer command: %s\n", cmd_text);
 
     /* Make pipes for printer's stdout and stderr. */
     if (pipe(stdout_pipe) < 0) {
@@ -771,9 +770,9 @@ pr3287_start_now(const char *lu, bool associated)
 	cp_cmdline = cmd_text;
     }
 
-    vtrace("Printer command: %s\n", cp_cmdline);
+    vctrace(TC_PRINT, "Printer command: %s\n", cp_cmdline);
     if (printerName != NULL) {
-	vtrace("Printer (via %%PRINTER%%): %s\n", printerName);
+	vctrace(TC_PRINT, "Printer (via %%PRINTER%%): %s\n", printerName);
     }
 
     /* Create a named pipe for pr3287's stderr. */
@@ -815,7 +814,7 @@ pr3287_start_now(const char *lu, bool associated)
     si.dwFlags |= STARTF_USESTDHANDLES;
 
     memset(&pi, '\0', sizeof(pi));
-    if (!CreateProcess(NULL, cp_cmdline, NULL, NULL, TRUE, DETACHED_PROCESS,
+    if (!CreateProcess(NULL, (char *)cp_cmdline, NULL, NULL, TRUE, DETACHED_PROCESS,
 		NULL, NULL, &si, &pi)) {
 	popup_an_error("CreateProcess() for printer session failed: %s",
 		win32_strerror(GetLastError()));
@@ -863,7 +862,7 @@ pr3287_data(struct pr3o *p, bool is_err)
 	return;
     }
     if (nr == 0) {
-	vtrace("Printer session %s EOF.\n", is_err? "stderr": "stdout");
+	vctrace(TC_PRINT, "Printer session %s EOF.\n", is_err? "stderr": "stdout");
 	if (pr3287_stderr.timeout_id != NULL_IOID) {
 	    /*
 	     * Append a termination error message to whatever the
@@ -989,7 +988,7 @@ pr3287_stop_sync(void)
 static void
 pr3287_sync_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    vtrace("Input or EOF on printer sync socket.\n");
+    vctrace(TC_PRINT, "Input or EOF on printer sync socket.\n");
     assert(pr3287_state >= PRS_RUNNING);
 
     /*
@@ -1040,7 +1039,7 @@ pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
     if (pr3287_sync == INVALID_SOCKET) {
 	popup_a_sockerr("accept(printer sync)");
     } else {
-	vtrace("Accepted sync connection from printer.\n");
+	vctrace(TC_PRINT, "Accepted sync connection from printer.\n");
 
 #if !defined(_WIN32) /*[*/
 	fcntl(pr3287_sync, F_SETFD, 1);
@@ -1099,7 +1098,7 @@ pr3287_cleanup_io(void)
      * to exit gracefully.
      */
     if (pr3287_sync != INVALID_SOCKET) {
-	vtrace("Stopping printer by shutting down sync socket.\n");
+	vctrace(TC_PRINT, "Stopping printer by shutting down sync socket.\n");
 	assert(pr3287_ls == INVALID_SOCKET);
 
 	/* The separate shutdown() call is likely redundant. */
@@ -1200,7 +1199,7 @@ pr3287_session_check(
     }
 #endif /*]*/
 
-    vtrace("Printer session exited.\n");
+    vctrace(TC_PRINT, "Printer session exited.\n");
 
     /* Stop any pending printer kill request. */
     if (pr3287_state == PRS_SHUTDOWN) {
@@ -1250,7 +1249,7 @@ pr3287_session_check(
 static void
 pr3287_kill(ioid_t id _is_unused)
 {
-    vtrace("Forcibly terminating printer session.\n");
+    vctrace(TC_PRINT, "Forcibly terminating printer session.\n");
 
     /* Kill the process. */
 #if defined(_WIN32) /*[*/
@@ -1272,7 +1271,7 @@ pr3287_session_stop(void)
 {
     switch (pr3287_state) {
     case PRS_DELAY:
-	vtrace("Canceling delayed printer session start.\n");
+	vctrace(TC_PRINT, "Canceling delayed printer session start.\n");
 	assert(pr3287_delay_id != NULL_IOID);
 	RemoveTimeOut(pr3287_delay_id);
 	pr3287_delay_id = NULL_IOID;
@@ -1288,7 +1287,7 @@ pr3287_session_stop(void)
 	return;
     }
 
-    vtrace("Stopping printer session.\n");
+    vctrace(TC_PRINT, "Stopping printer session.\n");
 
     pr3287_cleanup_io();
 

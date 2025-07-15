@@ -51,7 +51,7 @@
 #include "trace.h"
 #include "txa.h"
 #include "unicodec.h"
-#include "varbuf.h"
+#include "xscatv.h"
 
 #include "utils.h"
 
@@ -103,55 +103,15 @@ xs_error(const char *fmt, ...)
 
 /**
  * Expand control characters in a string.
- *
  * @param[in] s		String to format
- * @param[in] quoted	If true, quote the string.
+ * @param[in] len	Length of string
  *
- * @returns Expanded string
+ * @returns Expanded string.
  */
-static char *
-catv_common(const char *s, bool quoted)
+const char *
+sncatv(const char *s, size_t len)
 {
-    char c;
-    varbuf_t r;
-
-    vb_init(&r);
-    if (quoted) {
-	vb_appends(&r, "\"");
-    }
-    while ((c = *s++)) {
-	unsigned char uc = c;
-
-	/* Expand this character. */
-	switch (uc) {
-	case '\n':
-	    vb_appends(&r, "\\n");
-	    break;
-	case '\t':
-	    vb_appends(&r, "\\t");
-	    break;
-	case '\b':
-	    vb_appends(&r, "\\b");
-	    break;
-	case '"':
-	    if (quoted) {
-		vb_appends(&r, "\\\"");
-		break;
-	    }
-	    /* else fall through */
-	default:
-	    if (uc < ' ' || uc == 0x7f) {
-		vb_appendf(&r, "\\%03o", uc);
-	    } else {
-		vb_append(&r, &c, 1);
-	    }
-	    break;
-	}
-    }
-    if (quoted) {
-	vb_appends(&r, "\"");
-    }
-    return txdFree(vb_consume(&r));
+    return txdFree(xscatv(s, len, false));
 }
 
 /**
@@ -161,10 +121,10 @@ catv_common(const char *s, bool quoted)
  *
  * @returns Expanded string
  */
-char *
+const char *
 scatv(const char *s)
 {
-    return catv_common(s, false);
+    return txdFree(xscatv(s, strlen(s), false));
 }
 
 /**
@@ -174,10 +134,10 @@ scatv(const char *s)
  *
  * @returns Expanded string
  */
-char *
+const char *
 qscatv(const char *s)
 {
-    return catv_common(s, true);
+    return txdFree(xscatv(s, strlen(s), true));
 }
 
 /**

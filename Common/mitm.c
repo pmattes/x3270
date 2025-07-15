@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 Paul Mattes.
+ * Copyright (c) 2018-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 	exit(1);
     }
     buf[nr - 2] = '\0';
-    if (sscanf(buf, "%256s %u", thru_host, &thru_port) != 2) {
+    if (sscanf(buf, "%255s %u", thru_host, &thru_port) != 2) {
 	fprintf(stderr, "Malformed request line\n");
 	exit(1);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,11 +80,11 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 	    (colon? "]": ""),
 	    port);
 
-    vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
+    vctrace(TC_PROXY, "HTTP: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
     trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));
 
     if (send(fd, sbuf, (int)strlen(sbuf), 0) < 0) {
-	popup_a_sockerr("HTTP Proxy: send error");
+	popup_a_sockerr("HTTP proxy: send error");
 	Free(sbuf);
 	return PX_FAILURE;
     }
@@ -96,11 +96,11 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 	    (colon? "]": ""),
 	    port);
 
-    vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
+    vctrace(TC_PROXY, "HTTP: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
     trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));
 
     if (send(fd, sbuf, (int)strlen(sbuf), 0) < 0) {
-	popup_a_sockerr("HTTP Proxy: send error");
+	popup_a_sockerr("HTTP proxy: send error");
 	Free(sbuf);
 	return PX_FAILURE;
     }
@@ -110,11 +110,11 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 	sbuf = Asprintf("Proxy-Authorization: Basic %s\r\n",
 		txdFree(base64_encode(user)));
 
-	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
+	vctrace(TC_PROXY, "HTTP: xmit '%.*s'\n", (int)(strlen(sbuf) - 2), sbuf);
 	trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));
 
 	if (send(fd, sbuf, (int)strlen(sbuf), 0) < 0) {
-	    popup_a_sockerr("HTTP Proxy: send error");
+	    popup_a_sockerr("HTTP proxy: send error");
 	    Free(sbuf);
 	    return PX_FAILURE;
 	}
@@ -122,11 +122,11 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 
     Free(sbuf);
     sbuf = "\r\n";
-    vtrace("HTTP Proxy: xmit ''\n");
+    vctrace(TC_PROXY, "HTTP: xmit ''\n");
     trace_netdata('>', (unsigned char *)sbuf, strlen(sbuf));
 
     if (send(fd, sbuf, (int)strlen(sbuf), 0) < 0) {
-	popup_a_sockerr("HTTP Proxy: send error");
+	popup_a_sockerr("HTTP proxy: send error");
 	return PX_FAILURE;
     }
 
@@ -153,7 +153,7 @@ proxy_http_continue(void)
 		}
 		return PX_WANTMORE;
 	    }
-	    popup_a_sockerr("HTTP Proxy: receive error");
+	    popup_a_sockerr("HTTP proxy: receive error");
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
@@ -163,7 +163,7 @@ proxy_http_continue(void)
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
-	    popup_an_error("HTTP Proxy: unexpected EOF");
+	    popup_an_error("HTTP proxy: unexpected EOF");
 	    return PX_FAILURE;
 	}
 	if (++ps.nread >= RBUF) {
@@ -192,15 +192,15 @@ proxy_http_continue(void)
 	--ps.nread;
     }
     ps.rbuf[ps.nread] = '\0';
-    vtrace("HTTP Proxy: recv '%s'\n", (char *)ps.rbuf);
+    vctrace(TC_PROXY, "HTTP: recv '%s'\n", (char *)ps.rbuf);
 
     if (strncmp((char *)ps.rbuf, "HTTP/", 5) ||
 	    (space = strchr((char *)ps.rbuf, ' ')) == NULL) {
-	popup_an_error("HTTP Proxy: unrecognized reply");
+	popup_an_error("HTTP proxy: unrecognized reply");
 	return PX_FAILURE;
     }
     if (*(space + 1) != '2') {
-	popup_an_error("HTTP Proxy: CONNECT failed:\n%s",
+	popup_an_error("HTTP proxy: CONNECT failed:\n%s",
 		(char *)ps.rbuf);
 	return PX_FAILURE;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2024 Paul Mattes.
+ * Copyright (c) 1996-2025 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -916,7 +916,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 		break;
 	    }
 	    if (i >= N_PARMS) {
-		popup_an_error(AnTransfer "(): Unknown option: '%s'", argv[j]);
+		popup_an_error(AnTransfer "(): Unknown option: '%s'", scatv(argv[j]));
 		return NULL;
 	    }
 	}

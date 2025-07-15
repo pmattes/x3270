@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013, 2015, 2019 Paul Mattes.
+ * Copyright (c) 2007-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ bool is_utf8 = false;
  * Save the codeset from the locale, and set globals based on known values.
  */
 void
-set_codeset(char *codeset_name, bool force_utf8)
+set_codeset(const char *codeset_name, bool force_utf8)
 {
     /*
      * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force

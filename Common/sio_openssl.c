@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -129,7 +129,7 @@ check_cert_name(ssl_sio_t *s)
 	    return false;
 	} else {
 	    s->secure_unverified = true;
-	    vtrace("No host certificate.\n");
+	    vctrace(TC_TLS, "No host certificate.\n");
 	    return true;
 	}
     }
@@ -146,7 +146,7 @@ check_cert_name(ssl_sio_t *s)
 	    char *reason;
 
 	    s->secure_unverified = true;
-	    vtrace("Host certificate name(s) do not match hostname.\n");
+	    vctrace(TC_TLS, "Host certificate name(s) do not match hostname.\n");
 	    reason = Asprintf("Host certificate name(s) do not match '%s': "
 		    "%s", s->hostname, unmatched_names);
 	    Free(reason);
@@ -411,10 +411,10 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 	name[sizeof(name) - 1] = '\0';
 	if (!strcmp(hostname, "*") || hostname_matches(hostname, name, len)) {
 	    ok = 1;
-	    vtrace("SSL_connect: commonName %s matches hostname %s\n", name,
+	    vctrace(TC_TLS, "SSL_connect: commonName %s matches hostname %s\n", name,
 		    hostname);
 	} else {
-	    vtrace("SSL_connect: non-matching commonName: %s\n",
+	    vctrace(TC_TLS, "SSL_connect: non-matching commonName: %s\n",
 		    expand_hostname(name, len));
 	    nnl = Asprintf("DNS:%s", expand_hostname(name, len));
 	    namelist = add_to_namelist(namelist, nnl);
@@ -434,13 +434,13 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 		    hostname_matches(hostname, (char *)dns, len)) {
 
 		    ok = 1;
-		    vtrace("SSL_connect: alternameName DNS:%s matches "
+		    vctrace(TC_TLS, "SSL_connect: alternameName DNS:%s matches "
 			    "hostname %s\n", expand_hostname((char *)dns, len),
 			    hostname);
 		    OPENSSL_free(dns);
 		    break;
 		} else {
-		    vtrace("SSL_connect: non-matching alternateName: DNS:%s\n",
+		    vctrace(TC_TLS, "SSL_connect: non-matching alternateName: DNS:%s\n",
 			    expand_hostname((char *)dns, len));
 		    nnl = Asprintf("DNS:%s", expand_hostname((char *)dns,
 				len));
@@ -535,7 +535,7 @@ sio_init(tls_config_t *config, const char *password, sio_t *sio_ret)
 
     s->config = config;
 
-    vtrace("TLS: will%s verify host certificate\n",
+    vctrace(TC_TLS, "Will%s verify host certificate\n",
 	    s->config->verify_host_cert? "": " not");
 
     if (password != NULL) {
@@ -680,11 +680,11 @@ static void
 client_info_callback(INFO_CONST SSL *s, int where, int ret)
 {
     if (where == SSL_CB_CONNECT_LOOP) {
-	vtrace("SSL_connect trace: %s %s\n", SSL_state_string(s),
+	vctrace(TC_TLS, "SSL_connect trace: %s %s\n", SSL_state_string(s),
 		SSL_state_string_long(s));
     } else if (where == SSL_CB_CONNECT_EXIT) {
 	if (ret == 0) {
-	    vtrace("SSL_connect trace: failed in %s\n",
+	    vctrace(TC_TLS, "SSL_connect trace: failed in %s\n",
 		    SSL_state_string_long(s));
 	} else if (ret < 0) {
 	    unsigned long e;
@@ -922,7 +922,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 	return SIG_FAILURE;
     }
 
-    vtrace("%s OpenSSL negotiation, host '%s'",
+    vctrace(TC_TLS, "%s OpenSSL negotiation, host '%s'",
 	    s->negotiate_pending? "Continuing": "Starting",
 	    hostname);
     if (s->accept_dnsname != NULL) {
@@ -955,7 +955,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 
 	/* Set up the TLS/SSL connection. */
 	if (SSL_set_fd(s->con, (int)s->sock) != 1) {
-	    vtrace("OpenSSL sio_negotiate: can't set fd\n");
+	    vctrace(TC_TLS, "OpenSSL sio_negotiate: can't set fd\n");
 	    return SIG_FAILURE;
 	}
     }
@@ -1005,7 +1005,7 @@ sio_negotiate(sio_t sio, socket_t sock, const char *hostname, bool *data)
 #if !defined(OPENSSL102) /*[*/
     /* Check the host certificate. */
     if (!check_cert_name(s)) {
-	vtrace("disconnect: check_cert_name failed\n");
+	vctrace(TC_TLS, "disconnect: check_cert_name failed\n");
 	return SIG_FAILURE;
     }
 #endif /*]*/
@@ -1070,7 +1070,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	char err_buf[120];
 
 	if (errno == EWOULDBLOCK) {
-	    vtrace("SSL_read: EWOULDBLOCK\n");
+	    vctrace(TC_TLS, "SSL_read: EWOULDBLOCK\n");
 	    return SIO_EWOULDBLOCK;
 	}
 	e = ERR_get_error();
@@ -1079,7 +1079,7 @@ sio_read(sio_t sio, char *buf, size_t buflen)
 	} else {
 	    strcpy(err_buf, "unknown error");
 	}
-	vtrace("RCVD SSL_read error %ld (%s)\n", e, err_buf);
+	vctrace(TC_TLS, "RCVD SSL_read error %ld (%s)\n", e, err_buf);
 	sioc_set_error("SSL_read:\n%s", err_buf);
 	return SIO_FATAL_ERROR;
     }
@@ -1116,7 +1116,7 @@ sio_write(sio_t sio, const char *buf, size_t buflen)
 
 	e = ERR_get_error();
 	ERR_error_string(e, err_buf);
-	vtrace("RCVD SSL_write error %ld (%s)\n", e, err_buf);
+	vctrace(TC_TLS, "RCVD SSL_write error %ld (%s)\n", e, err_buf);
 	sioc_set_error("SSL_write:\n%s", err_buf);
 	return SIO_FATAL_ERROR;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,11 +26,8 @@
  */
 
 /*
- *      txa.h
- *              Transaction allocator.
+ *      xscatv.h
+ *              Declarations for xscatv.c.
  */
 
-const char *txdFree(void *buf);
-const char *txAsprintf(const char *fmt, ...) printflike(1, 2);
-const char *txVasprintf(const char *fmt, va_list args);
-void txflush(void);
+char *xscatv(const char *s, size_t len, bool quote);
