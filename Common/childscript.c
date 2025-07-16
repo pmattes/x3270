@@ -282,7 +282,7 @@ run_next(child_t *c)
     /* Skip whitespace. */
     start = c->buf;
     xlen = cmdlen;
-    while (xlen > 0 && isspace(*start)) {
+    while (xlen > 0 && isspace((int)*start)) {
 	start++;
 	xlen--;
     }
