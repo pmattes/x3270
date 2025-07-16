@@ -83,9 +83,16 @@
 #  include <term.h>
 # endif /*]*/
 # if defined(HAVE_LIBREADLINE) /*[*/
+#  if defined(__clang__) /*[*/
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wstrict-prototypes"
+#  endif /*]*/
 #  include <readline/readline.h>
 #  if defined(HAVE_READLINE_HISTORY_H) /*[*/
 #   include <readline/history.h>
+#  endif /*]*/
+#  if defined(__clang__) /*[*/
+#   pragma clang diagnostic pop
 #  endif /*]*/
 # endif /*]*/
 #endif

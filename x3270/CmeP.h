@@ -1,7 +1,7 @@
 /*
  * (from) $XConsortium: SmeP.h,v 1.4 89/12/11 15:20:22 kit Exp $
  *
- * Copyright (c) 1995-2024, Paul Mattes.
+ 4 Copyright (c) 1995-2025, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -120,7 +120,14 @@ typedef struct _CmeRec {
  *
  ************************************************************/
 
+#if defined(__clang__) /*[*/
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wstrict-prototypes"
+#endif /*]*/
 typedef void (*_XawEntryVoidFunc)();
+#if defined(__clang__) /*[*/
+# pragma clang diagnostic pop
+#endif /*]*/
 
 #define XtInheritHighlight   ((_XawEntryVoidFunc) _XtInherit)
 #define XtInheritUnhighlight XtInheritHighlight
