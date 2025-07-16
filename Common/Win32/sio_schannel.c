@@ -374,6 +374,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
     int min_protocol = -1;
     int max_protocol = -1;
     char *proto_error;
+    bool usc = use_sch_credentials();
 
     /* Parse the min/max protocol options. */
     /* Technically you can use SSL2 with schannel, but it is mutually exclusive with TLS, so we don't try. */
@@ -456,7 +457,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
     }
 
     /* Build Schannel credential structure. */
-    if (use_sch_credentials()) {
+    if (usc) {
 	memset(&sch_credentials, 0, sizeof(sch_credentials));
 	sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
 	if (cert_context != NULL) {
@@ -473,7 +474,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
     }
 
     /* If the user specified a range, or we're before Windows 10, specify the protocols explicitly. */
-    if (min_protocol >= 0 || max_protocol >= 0 || !use_sch_credentials()) {
+    if (min_protocol >= 0 || max_protocol >= 0 || !usc) {
 	DWORD protocols = 0;
 	int i;
 
@@ -484,7 +485,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    max_protocol = SIP_TLS1_3;
 	}
 
-	if (use_sch_credentials()) {
+	if (usc) {
 	    /* With sch_credentials, we disable protocols. */
 	    for (i = SIP_SSL2; i <= SIP_TLS1_3; i++) {
 		if (i < min_protocol || i > max_protocol) {
@@ -506,7 +507,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	}
     }
 
-    if (use_sch_credentials()) {
+    if (usc) {
 	sch_credentials.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
     } else {
 	schannel_cred.dwFlags |= SCH_CRED_NO_DEFAULT_CREDS | SCH_USE_STRONG_CRYPTO;
@@ -517,14 +518,14 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
      * validation here and then don't validate.
      */
     if (!config->verify_host_cert || is_wine()) {
-	if (use_sch_credentials()) {
+	if (usc) {
 	    sch_credentials.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
 	} else {
 	    schannel_cred.dwFlags |= SCH_CRED_MANUAL_CRED_VALIDATION;
 	}
 	*manual = true;
     } else {
-	if (use_sch_credentials()) {
+	if (usc) {
 	    sch_credentials.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
 	} else {
 	    schannel_cred.dwFlags |= SCH_CRED_AUTO_CRED_VALIDATION;
@@ -537,7 +538,7 @@ create_credentials_single(LPSTR friendly_name, PCredHandle creds, bool *manual)
 	    UNISP_NAME,			/* Name of package */
 	    SECPKG_CRED_OUTBOUND,	/* Flags indicating use */
 	    NULL,			/* Pointer to logon ID */
-	    use_sch_credentials()? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
+	    usc? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 	    NULL,			/* Pointer to GetKey() func */
 	    NULL,			/* Value to pass to GetKey() */
 	    creds,			/* (out) Cred Handle */
@@ -591,6 +592,7 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
     SECURITY_STATUS                   status;
     SCHANNEL_CRED                     schannel_cred;
     SCH_CREDENTIALS		      sch_credentials;
+    bool                              usc = use_sch_credentials();
 
     /* Read the list of trusted issuers from schannel. */
     status = QueryContextAttributes(context, SECPKG_ATTR_ISSUER_LIST_EX,
@@ -632,7 +634,7 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
 	cert_context = chain_context->rgpChain[0]->rgpElement[0]->pCertContext;
 
 	/* Create Schannel credential. */
-	if (use_sch_credentials()) {
+	if (usc) {
 	    memset(&sch_credentials, 0, sizeof(sch_credentials));
 	    sch_credentials.dwVersion = SCH_CREDENTIALS_VERSION;
 	    sch_credentials.cCreds = 1;
@@ -649,7 +651,7 @@ get_new_client_credentials(CredHandle *creds, CtxtHandle *context)
 		UNISP_NAME_A,           /* Name of package */
 		SECPKG_CRED_OUTBOUND,   /* Flags indicating use */
 		NULL,                   /* Pointer to logon ID */
-		use_sch_credentials()? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
+		usc? (PVOID)&sch_credentials: (PVOID)&schannel_cred, /* Package specific data */
 		NULL,                   /* Pointer to GetKey() func */
 		NULL,                   /* Value to pass to GetKey() */
 		&new_creds,             /* (out) Cred Handle */
