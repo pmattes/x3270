@@ -587,6 +587,11 @@ purge_inputs(void)
  * I think it is easier to read and maintain as a single function with three variants of each
  * step, rather than three different platform-specific functions.
  */
+#if defined(__clang__) /*[*/
+/* This function is so much uglier without the common code that uselessly sets 'i'. */
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif /*]*/
 static bool
 process_some_events(bool block, bool *processed_any)
 {
@@ -839,6 +844,9 @@ process_some_events(bool block, bool *processed_any)
     /* If inputs have changed, retry. */
     return !inputs_changed;
 }
+#if defined(__clang__) /*[*/
+# pragma clang diagnostic pop
+#endif /*]*/
 
 /*
  * Event dispatcher.
