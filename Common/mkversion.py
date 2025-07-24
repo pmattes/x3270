@@ -111,7 +111,7 @@ def mkversion(outfile_name: str, program: str, version_txt: str):
 
     # Get the date.
     if 'SOURCE_DATE_EPOCH' in os.environ:
-        now = datetime.strptime(os.environ['SOURCE_DATE_EPOCH'], '%a %b %d %H:%M:%S %Z %Y').replace(tzinfo=timezone.utc)
+        now = datetime.fromtimestamp(int(os.environ['SOURCE_DATE_EPOCH'])).replace(tzinfo=timezone.utc)
     else:
         now = datetime.now(timezone.utc)
     builddate = datetime.strftime(now, '%a %b %d %H:%M:%S %Z %Y')
