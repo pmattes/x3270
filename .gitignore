@@ -13,6 +13,8 @@ fallbacks.c
 favicon.c
 Makefile
 Makefile.bak
+Makefile.windows
+Makefile.unix
 instlist.man
 obj/
 Release/
