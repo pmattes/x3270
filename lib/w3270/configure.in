@@ -29,9 +29,6 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT([libw3270],[4.4])
 AC_PREREQ([2.69])
 
-dnl Checks for programs.
-AC_PROG_CC
-
 dnl Figure out what sort of host and compiler this is.
 AC_CANONICAL_HOST
 ansi="-std=c99 -pedantic"

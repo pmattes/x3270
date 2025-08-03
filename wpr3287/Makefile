@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for Windows pr3287
-ifdef WIN64
-objdir = ../obj/win64/pr3287
-else
-objdir = ../obj/win32/pr3287
-endif
+objdir = ../obj/$(HOST)/pr3287
 top = ../../..
 this = $(top)/wpr3287
 

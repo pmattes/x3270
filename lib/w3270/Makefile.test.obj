@@ -24,9 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Makefile for 3270 emulation library testing (Windows)
-
-include winenv.mk
+# Windows makefile for 3270 emulation library testing
 
 all: test
 

@@ -1,0 +1,152 @@
+# Copyright (c) 2015-2025 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Top-level Windows Makefile for suite3270.
+
+all: @T_ALL@
+windows: all
+
+# Cleverness for 'make targets':
+#  M1 is true if there is more than one target
+M1 := $(shell test `echo @T_ALL@ | wc -w` -gt 1 && echo true)
+
+# List targets
+targets:
+	@echo "Targets:"
+	@echo " all                  build" @T_ALL@
+	@echo "  lib                 build all libraries"
+ifdef M1
+	@echo "  <program>           build <program>"
+endif
+	@echo " clean                remove all intermediate files"
+	@echo "  lib-clean           remove library intermediate files"
+ifdef M1
+	@echo "  <program>-clean     remove <program> intermediate files"
+endif
+	@echo " clobber              remove all derived files"
+	@echo "  lib-clobber         remove library derived files"
+ifdef M1
+	@echo "  <program>-clobber   remove <program> derived files"
+endif
+	@echo " lib-test             run library tests"
+
+.PHONY: x3270if s3270 playback mitm
+
+# Do some common exports.
+export CC=@WINDOWS_CC@
+export AR=@WINDOWS_AR@
+export WINDRES=@WINDRES@
+export HOST=@host@
+export WIN32_FLAGS=@WIN32_FLAGS@
+
+# Library dependencies.
+wc3270 s3270 b3270 pr3287: lib
+
+# x3270if dependencies.
+wc3270 s3270 b3270: x3270if
+
+# pr3287 dependencies.
+wc3270 s3270 b3270: pr3287
+
+# Prevent nonexistent targets.
+.PHONY: @T_WRONG_MODE@
+@T_WRONG_MODE@:
+	@echo >&2 No such target for Windows: "'$@'".
+	@exit 1
+
+# Aliases.
+aliases = wb3270 ws3270 wpr3287 wplayback wmitm
+.PHONY: $(aliases)
+.SECONDEXPANSION:
+$(aliases):: $$(subst w,,$$@)
+	@echo >&2 Warning: Please use the target "'$(subst w,,$@)'" instead of "'$@'".
+
+# Transform a Windows library target to its directory.
+# Arg 1 is the library name, arg 2 is the suffix (-clean, etc.) to remove.
+wlb = $(subst $(1),,$(2:lib%=lib/w%))
+
+# Transform a Windows program target to its directory.
+# Arg 1 is the program name, arg 2 is the suffix (-clean, etc.) to remove.
+wx = $(subst $(1),,w$(2))
+
+# Individual targets.
+lib: lib3270 lib3270i lib32xx lib3270stubs libexpat
+lib3270 lib3270i lib32xx lib3270stubs:
+	$(MAKE) -C $(call wlb,,$@)
+libexpat:
+	$(MAKE) -C lib/libexpat
+wc3270: lib3270 lib3270i lib32xx
+	$(MAKE) -C wc3270
+s3270 b3270 playback: lib3270 lib32xx
+	$(MAKE) -C w$@
+pr3287 mitm: lib32xx
+	$(MAKE) -C w$@
+x3270if:
+	$(MAKE) -C w$@
+
+# Test targets.
+lib-test: lib3270-test lib32xx-test
+lib3270-test lib32xx-test: lib3270
+	$(MAKE) -C $(call wlb,-test,$@) -f Makefile.test
+
+# Clean and clobber targets.
+clean: @T_CLEAN@
+windows-clean: clean
+
+lib-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean lib-test-clean libexpat-clean
+lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean:
+	$(MAKE) -C $(call wlb,-clean,$@) clean
+libexpat-clean:
+	$(MAKE) -C lib/libexpat clean
+
+wc3270-clean:
+	$(MAKE) -C wc3270 clean
+s3270-clean b3270-clean pr3287-clean x3270if-clean playback-clean mitm-clean:
+	$(MAKE) -C $(call wx,-clean,$@) clean
+
+lib-test-clean: lib3270-test-clean lib32xx-test-clean
+lib3270-test-clean lib32xx-test-clean:
+	$(MAKE) -C $(call wlb,-test-clean,$@) -f Makefile.test clean
+
+clobber:
+	rm -rf obj
+parts-clobber: @T_CLOBBER@
+windows-clobber: parts-clobber
+
+lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber lib-test-clobber libexpat-clobber
+lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber:
+	$(MAKE) -C $(call wlb,-clobber,$@) clobber
+libexpat-clobber:
+	$(MAKE) -C lib/libexpat clobber
+
+wc3270-clobber:
+	$(MAKE) -C wc3270 clobber
+s3270-clobber b3270-clobber pr3287-clobber x3270if-clobber playback-clobber mitm-clobber:
+	$(MAKE) -C $(call wx,-clobber,$@) clobber
+
+lib-test-clobber: lib3270-test-clobber lib32xx-test-clobber
+lib3270-test-clobber lib32xx-test-clobber:
+	$(MAKE) -C $(call wlb,-test-clobber,$@) -f Makefile.test clean

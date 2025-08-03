@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for wc3270
-ifdef WIN64
-objdir = ../obj/win64/wc3270
-else
-objdir = ../obj/win32/wc3270
-endif
+objdir = ../obj/$(HOST)/wc3270
 top = ../../..
 this = $(top)/wc3270
 

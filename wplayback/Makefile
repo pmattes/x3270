@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for Windows playback
-ifdef WIN64
-objdir = ../obj/win64/playback
-else
-objdir = ../obj/win32/playback
-endif
+objdir = ../obj/$(HOST)/playback
 top = ../../..
 this = $(top)/wplayback
 

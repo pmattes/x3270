@@ -1,0 +1,174 @@
+# Copyright (c) 2015-2025 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Top-level Unix Makefile for suite3270.
+
+all: @T_ALL@
+unix: all
+
+# Cleverness for 'make targets':
+#  M1 is true if there is more than one target
+M1 := $(shell test `echo @T_ALL@ | wc -w` -gt 1 && echo true)
+
+# List targets
+targets:
+	@echo "Targets:"
+	@echo " all                  build" @T_ALL@
+	@echo "  lib                 build all libraries"
+ifdef M1
+	@echo "  <program>           build <program>"
+endif
+	@echo " install              install programs"
+	@echo " install.man          install man pages"
+	@echo " clean                remove all intermediate files"
+	@echo "  lib-clean           remove library intermediate files"
+ifdef M1
+	@echo "  <program>-clean     remove <program> intermediate files"
+endif
+	@echo " clobber              remove all derived files"
+	@echo "  lib-clobber         remove library derived files"
+ifdef M1
+	@echo "  <program>-clobber   remove <program> derived files"
+endif
+	@echo " test                 run unit and integration tests"
+	@echo "  smoketest           run smoke tests"
+	@echo "  lib-test            run library tests"
+ifdef M1
+	@echo "  <program>-test      run <program> tests"
+endif
+
+.PHONY: ibm_hosts x3270if s3270 playback mitm
+
+# Library dependencies.
+c3270 s3270 b3270 tcl3270 x3270 pr3287: lib
+
+# x3270if dependencies.
+c3270 s3270 b3270 tcl3270 x3270: x3270if
+
+# pr3287 dependencies.
+c3270 s3270 b3270 tcl3270 x3270: pr3287
+
+# ibm_hosts dependencies
+c3270 x3270: ibm_hosts
+c3270-clean x3270-clean: ibm_hosts-clean
+c3270-clobber x3270-clobber: ibm_hosts-clobber
+
+# s3270 dependencies.
+tcl3270: s3270
+
+# Prevent nonexistent targets.
+.PHONY: @T_WRONG_MODE@
+@T_WRONG_MODE@:
+	@echo >&2 No such target for Unix: "'$@'".
+	@exit 1
+
+# Individual targets.
+lib: lib3270 lib3270i lib32xx lib3270stubs
+lib3270 lib3270i lib32xx lib3270stubs:
+	$(MAKE) -C lib/$(@:lib%=%)
+c3270 x3270: lib3270 lib3270i lib32xx
+	$(MAKE) -C $@
+s3270 b3270 tcl3270 playback: lib3270 lib32xx
+	$(MAKE) -C $@
+pr3287 mitm: lib32xx
+	$(MAKE) -C $@
+x3270if ibm_hosts:
+	$(MAKE) -C $@
+
+# Construct a make command to do installs.
+irule = $(MAKE) -C $(subst -$(1),,$@) $(1)
+
+# Installation
+install: @T_INSTALL@
+%-install: %
+	$(call irule,install)
+x3270-install c3270-install:: pr3287-install x3270if-install ibm_hosts-install
+s3270-install b3270-install:: pr3287-install x3270if-install
+tcl3270-install:: pr3287-install s3270-install x3270if-install
+
+# Manual page install
+install.man: @T_INSTALL_MAN@
+%-install.man: %
+	$(call irule,install.man)
+x3270-install.man c3270-install.man:: pr3287-install.man x3270if-install.man ibm_hosts-install.man
+s3270-install.man b3270-install.man:: pr3287-install.man x3270if-install.man
+tcl3270-install.man:: pr3287-install.man s3270-install.man x3270if-install.man
+
+# Clean and clobber targets
+
+# Transform a Unix library -clean or -clobber target to its directory.
+ulb = $(subst $(1),,$(2:lib%=lib/%))
+
+clean: @T_CLEAN@
+unix-clean: clean
+
+lib-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean lib-test-clean
+lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean:
+	$(MAKE) -C $(call ulb,-clean,$@) clean
+	[ ! -f $(call ulb,-clean,$@)/Makefile.test ] || $(MAKE) -C $(call ulb,-clean,$@) -f Makefile.test clean
+
+x3270-clean c3270-clean s3270-clean b3270-clean tcl3270-clean pr3287-clean x3270if-clean playback-clean mitm-clean ibm_hosts-clean:
+	$(MAKE) -C $(subst -clean,,$@) clean
+
+clobber:
+	rm -rf obj
+parts-clobber: @T_CLOBBER@
+unix-clobber: parts-clobber
+
+lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber lib-test-clobber
+lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber:
+	$(MAKE) -C $(call ulb,-clobber,$@) clobber
+	[ ! -f $(call ulb,-clobber,$@)/Makefile.test ] || $(MAKE) -C $(call ulb,-clobber,$@) -f Makefile.test clobber
+
+x3270-clobber c3270-clobber s3270-clobber b3270-clobber tcl3270-clobber pr3287-clobber x3270if-clobber playback-clobber mitm-clobber ibm_hosts-clobber:
+	$(MAKE) -C $(subst -clobber,,$@) clobber
+
+lib-test:
+	$(MAKE) -C lib/3270 -f Makefile.test
+	$(MAKE) -C lib/32xx -f Makefile.test
+lib-test-clean:
+	$(MAKE) -C lib/3270 -f Makefile.test clean
+	$(MAKE) -C lib/32xx -f Makefile.test clean
+lib-test-clobber:
+	$(MAKE) -C lib/3270 -f Makefile.test clobber
+	$(MAKE) -C lib/32xx -f Makefile.test clobber
+
+ALLPYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/test*.py"; done)
+PYTESTS=$(ALLPYTESTS)
+PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
+TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
+
+PYTHON = @PYTHON@
+RUNTESTS=PATH="$(TESTPATH)$$PATH" $(PYTHON) -m unittest $(TESTOPTIONS)
+
+.SECONDEXPANSION:
+b3270-test c3270-test pr3287-test s3270-test tcl3270-test x3270-test x3270if-test: $$(subst -test,,$$@)
+	$(RUNTESTS) $(subst -test,,$@)/Test/test*.py
+pytests: @T_TEST@
+	$(RUNTESTS) $(PYTESTS)
+test: @T_ALLTESTS@ pytests
+smoketest: @T_TEST@
+	$(RUNTESTS) $(PYSMOKETESTS)

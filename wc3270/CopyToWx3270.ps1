@@ -8,10 +8,10 @@ if (-Not $x) {
    Write-Host "No such directory"
    exit 1
 }
-foreach ($i in @('win32', 'win64')) {
-   copy obj\$i\playback\playback.exe $Destdir\extern\x3270-$i
-   copy obj\$i\b3270\b3270.exe $Destdir\extern\x3270-$i
-   copy obj\$i\pr3287\pr3287.exe $Destdir\extern\x3270-$i
-   copy obj\$i\s3270\s3270.exe $Destdir\extern\x3270-$i
-   copy obj\$i\x3270if\x3270if.exe $Destdir\extern\x3270-$i
+foreach ($i in @(@('i686-w64-mingw32', 'win32'), @('x86_64-w64-mingw32', 'win64'))) {
+   copy ("obj\" + $i[0] + "\playback\playback.exe") ("$Destdir\extern\x3270-" + $i[1])
+   copy ("obj\" + $i[0] + "\b3270\b3270.exe") ("$Destdir\extern\x3270-" + $i[1])
+   copy ("obj\" + $i[0] + "\pr3287\pr3287.exe") ("$Destdir\extern\x3270-" + $i[1])
+   copy ("obj\" + $i[0] + "\s3270\s3270.exe") ("$Destdir\extern\x3270-" + $i[1])
+   copy ("obj\" + $i[0] + "\x3270if\x3270if.exe") ("$Destdir\extern\x3270-" + $i[1])
 }

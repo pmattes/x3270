@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for mitm
-ifdef WIN64
-objdir = ../obj/win64/mitm
-else
-objdir = ../obj/win32/mitm
-endif
+objdir = ../obj/$(HOST)/mitm
 top = ../../..
 this = $(top)/wmitm
 

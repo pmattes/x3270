@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for libw3270stubs
-ifdef WIN64
-objdir = ../../obj/win64/lib3270stubs
-else
-objdir = ../../obj/win32/lib3270stubs
-endif
+objdir = ../../obj/$(HOST)/lib3270stubs
 top = ../../..
 this = $(top)/lib/w3270stubs
 
