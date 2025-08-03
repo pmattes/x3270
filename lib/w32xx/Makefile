@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for libw32xx
-ifdef WIN64
-objdir = ../../obj/win64/lib32xx
-else
-objdir = ../../obj/win32/lib32xx
-endif
+objdir = ../../obj/$(HOST)/lib32xx
 top = ../../..
 this = $(top)/lib/w32xx
 

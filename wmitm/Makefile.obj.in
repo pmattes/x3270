@@ -24,20 +24,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Windows Makefile for mitm
-
-# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
-include winenv.mk
+# Windows makefile for mitm
 
 XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/mitm -I$(TOP)/include
 override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS)
 PYTHON = @PYTHON@
 
-ifdef WIN64
-HOST = win64
-else
-HOST = win32
-endif
 W = w
 include mitm_files.mk libs.mk
 

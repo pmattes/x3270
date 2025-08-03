@@ -24,15 +24,10 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([suite3270],[4.4])
+AC_INIT([suite3270],[4.5])
 AC_PREREQ([2.69])
 
 AC_CANONICAL_HOST
-
-AC_ARG_ENABLE(unix,[  --enable-unix           build all Unix emulators])
-AC_ARG_ENABLE(windows,[  --enable-windows        build all 32- and 64-bit Windows emulators])
-AC_ARG_ENABLE(windows32,[  --enable-windows32      build all 32-bit Windows emulators])
-AC_ARG_ENABLE(windows64,[  --enable-windows64      build all 64-bit Windows emulators])
 
 AC_ARG_ENABLE(x3270,[  --enable-x3270          build x3270])
 AC_ARG_ENABLE(c3270,[  --enable-c3270          build c3270])
@@ -43,20 +38,53 @@ AC_ARG_ENABLE(pr3287,[  --enable-pr3287         build pr3287])
 AC_ARG_ENABLE(x3270if,[  --enable-x3270if        build x3270if])
 AC_ARG_ENABLE(playback,[  --enable-playback       build playback])
 AC_ARG_ENABLE(mitm,[  --enable-mitm           build mitm])
-AC_ARG_ENABLE(unix-lib,[  --enable-lib            build Unix libraries])
-
 AC_ARG_ENABLE(wc3270,[  --enable-wc3270         build wc3270])
-AC_ARG_ENABLE(ws3270,[  --enable-ws3270         build Windows s3270])
-AC_ARG_ENABLE(wb3270,[  --enable-wb3270         build Windows b3270])
-AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287        build Windows pr3287])
-AC_ARG_ENABLE(wx3270if,[  --enable-wx3270if       build Windows x3270if])
-AC_ARG_ENABLE(wplayback,[  --enable-wplayback      build Windows playback])
-AC_ARG_ENABLE(wmitm,[  --enable-wmitm          build Windows mitm])
-AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib    build Windows libraries])
 
-AC_CHECK_PROG(mingw64_found,x86_64-w64-mingw32-gcc,yes,no)
-AC_CHECK_PROG(mingw32_found,i686-w64-mingw32-gcc,yes,no)
-AC_CHECK_PROG(windres_found,windres,yes,no)
+dnl Figure out if this is a Windows build or not.
+case "$host" in
+x86_64-w64-mingw32)	dnl 64-bit Windows
+    enable_windows=yes
+    enable_windows32=no
+    enable_windows64=yes
+    enable_unix=no
+    MODE=windows
+    dirpfx="w"
+    WIN32_FLAGS="-D_WIN32 -D_WIN64"
+    ;;
+i686-w64-mingw32)	dnl 32-bit Windows
+    enable_windows=yes
+    enable_windows32=yes
+    enable_windows64=no
+    enable_unix=no
+    MODE=windows
+    WIN32_FLAGS="-D_WIN32"
+    dirpfx="w"
+    ;;
+*)			dnl unix
+    enable_windows=no
+    enable_windows32=no
+    enable_windows64=no
+    enable_unix=yes
+    MODE=unix
+    dirpfx=""
+esac
+
+dnl Look for Windows tools
+if test $enable_windows = yes
+then
+    AC_PATH_PROGS(WINDOWS_CC,$host-gcc,no)
+    if test $WINDOWS_CC = no
+    then	AC_MSG_ERROR([Can't find Windows C compiler])
+    fi
+    AC_PATH_PROGS(WINDOWS_AR,$host-gcc-ar,no)
+    if test $WINDOWS_AR = no
+    then	AC_MSG_ERROR([Can't find Windows C library archiver])
+    fi
+    AC_PATH_PROGS(WINDRES,$host-windres windres.exe,no)
+    if test $WINDRES = no
+    then	AC_MSG_ERROR([Can't find windres])
+    fi
+fi
 
 dnl Find Python
 AC_ARG_WITH(python,[  --with-python=path      specify path to Python interpreter])
@@ -73,24 +101,8 @@ if test "$PYTHON" = "not found"; then
 fi
 AC_SUBST(PYTHON)
 
-dnl You can use Msys to build Windows binaries, but not Unix-like ones.
-if test "`uname -o`" = Msys; then enable_unix=no; fi
-
-dnl --enable-windows64 without --enable-windows32 means just 64-bit Windows.
-dnl --enable-windows32 without --enable-windows64 means just 32-bit Windows.
-if test "x$enable_windows64" = xyes -a "x$enable_windows32" != xyes; then
-    enable_windows32=no
-fi
-if test "x$enable_windows32" = xyes -a "x$enable_windows64" != xyes; then
-    enable_windows64=no
-fi
-dnl --disable-windows32 and --disable-windows64 means no windows at all.
-if test "x$enable_windows32" = xno -a "x$enable_windows64" = xno; then
-    enable_windows=no
-fi
-
 dnl Handle expansion of enable-unix.
-if test "x$enable_unix" = xyes; then
+if test $MODE = unix; then
     if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
     if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
@@ -100,28 +112,9 @@ if test "x$enable_unix" = xyes; then
     if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
     if test "x$enable_playback" != xno; then enable_playback=yes; fi
     if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
-fi
-if test "x$enable_unix" = xno; then
+else
     enable_x3270=no
-    enable_c3270=no
-    enable_s3270=no
-    enable_b3270=no
     enable_tcl3270=no
-    enable_pr3287=no
-    enable_x3270if=no
-    enable_playback=no
-    enable_mitm=no
-fi
-
-dnl Handle missing Windows tools.
-if test "$mingw64_found" = no -a "$mingw32_found" = no
-then	AC_MSG_WARN([Disabling Windows cross-compile])
-	enable_windows=no
-	enable_windows32=no
-	enable_windows64=no
-else	if test "$windres_found" = yes
-	then	WINDRES_SET="WINDRES=windres"
-	fi
 fi
 
 dnl Set the 32-bit and 64-bit conditionals for Windows builds
@@ -131,33 +124,19 @@ if test "x$enable_windows" != xno; then
 	enable_windows32=$mingw32_found
 	enable_windows64=$mingw64_found
     fi
-    if test "x$enable_windows32" != xno; then
-	WIN32_SET="B32 = 1"
-    fi
-    if test "x$enable_windows64" != xno; then
-	WIN64_SET="B64 = 1"
-    fi
 fi
 
 dnl Handle expansion of enable-windows.
-if test "x$enable_windows" = xyes; then
+if test $MODE = windows; then
     if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
-    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
-    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
-    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
-    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
-    if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
-    if test "x$enable_wmitm" != xno; then enable_wmitm=yes; fi
-fi
-if test "x$enable_windows" = xno; then
+    if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
+    if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
+    if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
+    if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
+    if test "x$enable_playback" != xno; then enable_playback=yes; fi
+    if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
+else
     enable_wc3270=no
-    enable_ws3270=no
-    enable_wb3270=no
-    enable_wpr3287=no
-    enable_wx3270if=no
-    enable_wplayback=no
-    enable_wmitm=no
-    enable_windows_lib=no
 fi
 
 dnl Handle all-default case.
@@ -170,32 +149,22 @@ if test "x$enable_x3270" = x -a \
         "x$enable_x3270if" = x -a \
         "x$enable_playback" = x -a \
         "x$enable_mitm" = x -a \
-	"x$enable_unix_lib" = x -a \
-        "x$enable_wc3270" = x -a \
-        "x$enable_ws3270" = x -a \
-        "x$enable_wb3270" = x -a \
-        "x$enable_wpr3287" = x -a \
-        "x$enable_wx3270if" = x -a \
-        "x$enable_wplayback" = x -a \
-        "x$enable_wmitm" = x -a \
-	"x$enable_windows_lib" = x; then
+	"x$enable_wc3270" = x; then
     AC_MSG_NOTICE(configuring all emulators... use --enable or --disable options to pick a subset)
-    enable_x3270=yes
+    if test $MODE = unix; then
+	enable_x3270=yes
+	enable_tcl3270=yes
+    fi
+    if test $MODE = windows; then
+	enable_wc3270=yes
+    fi
     enable_c3270=yes
     enable_s3270=yes
     enable_b3270=yes
-    enable_tcl3270=yes
     enable_pr3287=yes
     enable_x3270if=yes
     enable_playback=yes
     enable_mitm=yes
-    enable_wc3270=yes
-    enable_ws3270=yes
-    enable_wb3270=yes
-    enable_wpr3287=yes
-    enable_wx3270if=yes
-    enable_wplayback=yes
-    enable_wmitm=yes
 fi
 
 dnl Handle the just-disable case.
@@ -210,15 +179,7 @@ if test "x$enable_x3270" != xyes -a \
 	"x$enable_x3270if" != xyes -a \
 	"x$enable_playback" != xyes -a \
 	"x$enable_mitm" != xyes -a \
-	"x$enable_unix_lib" != xyes -a \
 	"x$enable_wc3270" != xyes -a \
-	"x$enable_ws3270" != xyes -a \
-	"x$enable_wb3270" != xyes -a \
-	"x$enable_wpr3287" != xyes -a \
-	"x$enable_wx3270if" != xyes -a \
-	"x$enable_wplayback" != xyes -a \
-	"x$enable_wmitm" != xyes -a \
-	"x$enable_windows_lib" != xyes -a \
 	$lparen "x$enable_x3270" = xno -o \
 	 "x$enable_c3270" = xno -o \
 	 "x$enable_s3270" = xno -o \
@@ -227,33 +188,34 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_pr3287" = xno -o \
 	 "x$enable_x3270if" = xno -o \
 	 "x$enable_playback" = xno -o \
-	 "x$enable_mitm" = xno -o \
-	 "x$enable_unix_lib" = xno -o \
-	 "x$enable_wc3270" = xno -o \
-	 "x$enable_ws3270" = xno -o \
-	 "x$enable_wb3270" = xno -o \
-	 "x$enable_wpr3287" = xno -o \
-	 "x$enable_wx3270if" = xno -o \
-	 "x$enable_wplayback" = xno -o \
-	 "x$enable_wmitm" = xno -o \
-	 "x$enable_windows_lib" = xno $rparen; then
+	 "x$enable_wc3270" = xno $rparen; then
     dnl Enable everything that wasn't explicitly disabled.
-    if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+    if test $MODE = unix; then
+	if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
+	if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
+    fi
+    if test $MODE = windows; then
+	if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
+    fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
     if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
     if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
-    if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
     if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
     if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
     if test "x$enable_playback" != xno; then enable_playback=yes; fi
     if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
-    if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
-    if test "x$enable_ws3270" != xno; then enable_ws3270=yes; fi
-    if test "x$enable_wb3270" != xno; then enable_wb3270=yes; fi
-    if test "x$enable_wpr3287" != xno; then enable_wpr3287=yes; fi
-    if test "x$enable_wx3270if" != xno; then enable_wx3270if=yes; fi
-    if test "x$enable_wplayback" != xno; then enable_wplayback=yes; fi
-    if test "x$enable_wmitm" != xno; then enable_wmitm=yes; fi
+fi
+
+dnl Handle impossibilities.
+if test $MODE = windows -a $lparen x$enable_x3270 = xyes -o x$enable_tcl3270 = xyes -o x$enable_c3270 = xyes $rparen; then
+    AC_MSG_NOTICE([ignoring Unix-specific targets])
+    enable_x3270=no
+    enable_tcl3270=no
+    enable_c3270=no
+fi
+if test $MODE = unix -a x$enable_wc3270 = xyes; then
+    AC_MSG_NOTICE([ignoring Windows-specific targets])
+    enable_wc3270=no
 fi
 
 dnl Handle dependencies.
@@ -267,11 +229,6 @@ if test "x$enable_x3270" = xyes -o \
 	"x$enable_tcl3270" = xyes; then
     enable_x3270if=yes
 fi
-if test "x$enable_wc3270" = xyes -o \
-        "x$enable_ws3270" = xyes -o \
-	"x$enable_wb3270" = xyes; then
-    enable_wx3270if=yes
-fi
 if test "x$enable_x3270" = xyes -o \
 	"x$enable_c3270" = xyes -o \
 	"x$enable_s3270" = xyes -o \
@@ -279,35 +236,26 @@ if test "x$enable_x3270" = xyes -o \
 	"x$enable_tcl3270" = xyes; then
     enable_pr3287=yes
 fi
-if test "x$enable_wc3270" = xyes -o \
-	"x$enable_ws3270" = xyes -o \
-	"x$enable_wb3270" = xyes; then
-    enable_wpr3287=yes
-fi
 if test "x$enable_x3270" = xyes -o \
         "x$enable_c3270" = xyes -o \
+        "x$enable_wc3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
 	"x$enable_pr3287" = xyes; then
-    enable_unix_lib=yes
-fi
-if test "x$enable_wc3270" = xyes -o \
-        "x$enable_ws3270" = xyes -o \
-        "x$enable_wb3270" = xyes -o \
-	"x$enable_wpr3287" = xyes; then
-    enable_windows_lib=yes
+    enable_lib=yes
 fi
 unset do_ibm_hosts
 if test "x$enable_x3270" = xyes -o "x$enable_c3270" = xyes; then do_ibm_hosts=yes; fi
 
 dnl Start recursing.
-if test "x$enable_unix_lib" = xyes; then
-    AC_CONFIG_SUBDIRS(lib)
-fi
-
-if test "x$enable_windows_lib" = xyes; then
-    AC_CONFIG_SUBDIRS(lib/w32xx)
-    AC_CONFIG_SUBDIRS(lib/w3270)
+if test "x$enable_lib" = xyes; then
+    if test $MODE = unix; then
+	AC_CONFIG_SUBDIRS(lib)
+    fi
+    if test $MODE = windows; then
+	AC_CONFIG_SUBDIRS(lib/w32xx)
+	AC_CONFIG_SUBDIRS(lib/w3270)
+    fi
 fi
 
 if test "x$do_ibm_hosts" = xyes; then
@@ -319,122 +267,94 @@ T_CLEAN=""
 T_CLOBBER=""
 T_INSTALL=""
 T_INSTALL_MAN=""
-T_LIB=""
-T_LIB_CLEAN=""
-T_LIB_CLOBBER=""
-T_UNIX_ALL=""
-T_UNIX_CLEAN=""
-T_UNIX_CLOBBER=""
-T_WINDOWS_ALL=""
-T_WINDOWS_CLEAN=""
-T_WINDOWS_CLOBBER=""
 T_TEST=""
 T_ALLTESTS=""
+T_TEST_TARGETS=""
 T_TEST_CLEAN=""
 T_TEST_CLOBBER=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback mitm wc3270 ws3270 wb3270 wc3270 wpr3287 wx3270if wplayback wmitm; do
+for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback mitm wc3270; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
 	T_CLEAN="$T_CLEAN $i-clean"
 	T_CLOBBER="$T_CLOBBER $i-clobber"
-	case "$i" in
-	playback|mitm)
-		T_UNIX_ALL="$T_UNIX_ALL $i"
-		;;
-	w*)	T_WINDOWS_ALL="$T_WINDOWS_ALL $i"
-		T_WINDOWS_CLEAN="$T_WINDOWS $i-clean"
-		T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER $i-clobber"
-		;;
-	*)	T_UNIX_ALL="$T_UNIX_ALL $i"
+	if test $MODE = unix; then
+	    case $i in
+	    playback|mitm)	;;
+	    *)
 		T_INSTALL="$T_INSTALL $i-install"
 		T_INSTALL_MAN="$T_INSTALL_MAN $i-install.man"
-		T_TEST="$T_TEST $i"
-		T_UNIX_CLEAN="$T_UNIX_CLEAN $i-clean"
-		T_UNIX_CLOBBER="$T_UNIX_CLOBBER $i-clobber"
-	esac
+	    esac
+	    T_TEST="$T_TEST $i"
+	    T_TEST_TARGETS="$T_TEST_TARGETS ${i}-test"
+	fi
     fi
 done
 T_ALLTESTS=$T_TEST
 
-if test "x$enable_unix_lib" = xyes; then
-    T_CLEAN="$T_CLEAN unix-lib-clean"
-    T_CLOBBER="$T_CLOBBER unix-lib-clobber"
-    T_LIB="$T_LIB unix-lib"
-    T_LIB_CLEAN="$T_LIB_CLEAN unix-lib-clean"
-    T_LIB_CLOBBER="$T_LIB_CLOBBER unix-lib-clobber"
-    T_UNIX_CLEAN="$T_UNIX_CLEAN unix-lib-clean"
-    T_UNIX_CLOBBER="$T_UNIX_CLOBBER unix-lib-clobber"
-    T_ALLTESTS="$T_ALLTESTS unix-lib-test"
-fi
-
-if test "x$enable_windows_lib" = xyes; then
-    T_CLEAN="$T_CLEAN windows-lib-clean"
-    T_CLOBBER="$T_CLOBBER windows-lib-clobber"
-    T_LIB="$T_LIB windows-lib"
-    T_LIB_CLEAN="$T_LIB_CLEAN windows-lib-clean"
-    T_LIB_CLOBBER="$T_LIB_CLOBBER windows-lib-clobber"
-    T_WINDOWS_CLEAN="$T_WINDOWS_CLEAN windows-lib-clean"
-    T_WINDOWS_CLOBBER="$T_WINDOWS_CLOBBER windows-lib-clobber"
+if test "x$enable_lib" = xyes; then
+    T_CLEAN="$T_CLEAN lib-clean"
+    T_CLOBBER="$T_CLOBBER lib-clobber"
+    T_ALLTESTS="$T_ALLTESTS lib-test"
 fi
 
 if test "x$enable_x3270" = xyes; then AC_CONFIG_SUBDIRS(x3270)
 fi
 if test "x$enable_c3270" = xyes; then AC_CONFIG_SUBDIRS(c3270)
 fi
-if test "x$enable_s3270" = xyes; then AC_CONFIG_SUBDIRS(s3270)
+if test "x$enable_s3270" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(s3270)
 fi
-if test "x$enable_b3270" = xyes; then AC_CONFIG_SUBDIRS(b3270)
+if test "x$enable_s3270" = xyes -a $MODE = windows; then AC_CONFIG_SUBDIRS(ws3270)
+fi
+if test "x$enable_b3270" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(b3270)
+fi
+if test "x$enable_b3270" = xyes -a $MODE = windows; then AC_CONFIG_SUBDIRS(wb3270)
 fi
 if test "x$enable_tcl3270" = xyes; then AC_CONFIG_SUBDIRS(tcl3270)
 fi
-if test "x$enable_pr3287" = xyes; then AC_CONFIG_SUBDIRS(pr3287)
+if test "x$enable_pr3287" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(pr3287)
 fi
-if test "x$enable_x3270if" = xyes; then AC_CONFIG_SUBDIRS(x3270if)
+if test "x$enable_pr3287" = xyes -a $MODE = windows; then AC_CONFIG_SUBDIRS(wpr3287)
 fi
-if test "x$enable_playback" = xyes; then AC_CONFIG_SUBDIRS(playback)
+if test "x$enable_x3270if" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(x3270if)
 fi
-if test "x$enable_mitm" = xyes; then AC_CONFIG_SUBDIRS(mitm)
+if test "x$enable_x3270if" = xyes -a $MODE = windows; then AC_CONFIG_SUBDIRS(wx3270if)
 fi
-if test "x$enable_ws3270" = xyes; then AC_CONFIG_SUBDIRS(ws3270)
+if test "x$enable_playback" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(playback)
+fi
+if test "x$enable_mitm" = xyes -a $MODE = unix; then AC_CONFIG_SUBDIRS(mitm)
+fi
+if test "x$enable_mitm" = xyes -a $MODE = windows; then AC_CONFIG_SUBDIRS(wmitm)
 fi
 if test "x$enable_wc3270" = xyes; then AC_CONFIG_SUBDIRS(wc3270)
 fi
-if test "x$enable_wb3270" = xyes; then AC_CONFIG_SUBDIRS(wb3270)
-fi
-if test "x$enable_wpr3287" = xyes; then AC_CONFIG_SUBDIRS(wpr3287)
-fi
-if test "x$enable_wx3270if" = xyes; then AC_CONFIG_SUBDIRS(wx3270if)
-fi
-if test "x$enable_wmitm" = xyes; then AC_CONFIG_SUBDIRS(wmitm)
-fi
+
+dnl Set the targets that don't work in each mode.
+case $MODE in
+    unix)	T_WRONG_MODE="wb3270 wc3270 ws3270 wpr3287 wx3270if wplayback wmitm"
+    ;;
+    windows)	T_WRONG_MODE="x3270 tcl3270 ibm_hosts"
+    ;;
+esac
 
 AC_SUBST(host)
+AC_SUBST(MODE)
 AC_SUBST(T_ALL)
 AC_SUBST(T_CLEAN)
 AC_SUBST(T_CLOBBER)
 AC_SUBST(T_INSTALL)
 AC_SUBST(T_INSTALL_MAN)
-AC_SUBST(T_LIB)
-AC_SUBST(T_LIB_CLEAN)
-AC_SUBST(T_LIB_CLOBBER)
-AC_SUBST(T_UNIX_ALL)
-AC_SUBST(T_UNIX_CLEAN)
-AC_SUBST(T_UNIX_CLOBBER)
-AC_SUBST(T_WINDOWS_ALL)
-AC_SUBST(T_WINDOWS_CLEAN)
-AC_SUBST(T_WINDOWS_CLOBBER)
 AC_SUBST(T_TEST)
 AC_SUBST(T_ALLTESTS)
+AC_SUBST(T_TEST_TARGETS)
 AC_SUBST(T_TEST_CLEAN)
 AC_SUBST(T_TEST_CLOBBER)
-AC_SUBST(WIN32_SET)
-AC_SUBST(WIN64_SET)
-AC_SUBST(WINDRES_SET)
+AC_SUBST(T_WRONG_MODE)
+AC_SUBST(WIN32_FLAGS)
 
-dnl Generate to top-level Makefile.
-AC_CONFIG_FILES([Makefile])
+dnl Generate to top-level Makefiles.
+AC_CONFIG_FILES([Makefile Makefile.$MODE])
 AC_OUTPUT
 
 dnl Gather warnings.

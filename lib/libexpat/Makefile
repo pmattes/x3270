@@ -27,11 +27,7 @@
 # Makefile for Windows libexpat
 xtop = ../..
 top = ../../..
-ifdef WIN64
-objdir = $(xtop)/obj/win64/libexpat
-else
-objdir = $(xtop)/obj/win32/libexpat
-endif
+objdir = $(xtop)/obj/$(HOST)/libexpat
 extern = $(xtop)/extern
 srcdir = $(extern)/libexpat/expat
 this = $(top)/lib/libexpat

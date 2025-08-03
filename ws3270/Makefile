@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for Windows s3270
-ifdef WIN64
-objdir = ../obj/win64/s3270
-else
-objdir = ../obj/win32/s3270
-endif
+objdir = ../obj/$(HOST)/s3270
 top = ../../..
 this = $(top)/ws3270
 

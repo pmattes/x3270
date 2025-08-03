@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for x3270if
-ifdef WIN64
-objdir = ../obj/win64/x3270if
-else
-objdir = ../obj/win32/x3270if
-endif
+objdir = ../obj/$(HOST)/x3270if
 top = ../../..
 this = $(top)/wx3270if
 

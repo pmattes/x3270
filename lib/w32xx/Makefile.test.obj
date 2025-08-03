@@ -24,9 +24,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Makefile for 32xx library testing (Windows)
-
-include winenv.mk
+# Windows makefile for 32xx library testing
 
 all: test
 

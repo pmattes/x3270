@@ -26,9 +26,6 @@
 
 # Makefile for wc3270
 
-# Set GT_PFX, BUILDXSFX, CC, WINDRES and WIN32_FLAGS.
-include winenv.mk
-
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -I$(TOP)/include
 override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror -Wno-format-zero-length -MMD -MP $(XCPPFLAGS)
 PYTHON = @PYTHON@

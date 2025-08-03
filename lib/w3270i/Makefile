@@ -25,11 +25,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Makefile for libw3270
-ifdef WIN64
-objdir = ../../obj/win64/lib3270i
-else
-objdir = ../../obj/win32/lib3270i
-endif
+objdir = ../../obj/$(HOST)/lib3270i
 top = ../../..
 this = $(top)/lib/w3270i
 

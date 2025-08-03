@@ -37,14 +37,14 @@ if len(args) > 0:
 # Run Makefile/gcc-based tests.
 def run_gcc_tests():
     # Build the code.
-    if build and os.system('make windows') != 0:
+    if build and os.system('make') != 0:
         exit(1)
 
     # Set the path.
-    if os.path.exists('obj\\win64'):
-        obj = 'obj\\win64'
-    elif os.path.exists('obj\\win32'):
-        obj = 'obj\\win32'
+    if os.path.exists('obj\\x86_64-w64-mingw32'):
+        obj = 'obj\\x86_64-w64-mingw32'
+    elif os.path.exists('obj\\i686-w64-mingw32)'):
+        obj = 'obj\\i686-w64-mingw32)'
     else:
         print("Missing object directory.", file=sys.stderr)
         exit(1)
@@ -56,7 +56,7 @@ def run_gcc_tests():
         # Run the library tests.
         if 'lib' in dirs:
             dirs.remove('lib')
-            if os.system('make windows-lib-test') != 0:
+            if os.system('make -f Makefile.windows lib-test') != 0:
                 exit(1)
 
         cmd = sys.executable + ' -m unittest ' + verbose_flag + ' ' + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs])
