@@ -41,11 +41,11 @@ def run_gcc_tests():
         exit(1)
 
     # Set the path.
-    if os.path.exists('obj\\x86_64-w64-mingw32'):
-        obj = 'obj\\x86_64-w64-mingw32'
-    elif os.path.exists('obj\\i686-w64-mingw32)'):
-        obj = 'obj\\i686-w64-mingw32)'
-    else:
+    obj = None
+    for dir in ['obj\\x86_64-w64-mingw32', 'obj\\i686-w64-mingw32', 'obj\\x86_64-pc-msys', 'obj\i868-pc-msys']:
+        if os.path.exists(dir):
+            obj = dir
+    if obj == None:
         print("Missing object directory.", file=sys.stderr)
         exit(1)
     os.environ['PATH'] = ';'.join([os.getcwd() + '\\' + obj + '\\' + dir for dir in dirs] + [os.environ['PATH']])
