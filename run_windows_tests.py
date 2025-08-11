@@ -42,7 +42,7 @@ def run_gcc_tests():
 
     # Set the path.
     obj = None
-    for dir in ['obj\\x86_64-w64-mingw32', 'obj\\i686-w64-mingw32', 'obj\\x86_64-pc-msys', 'obj\i868-pc-msys']:
+    for dir in ['obj\\x86_64-w64-mingw32', 'obj\\i686-w64-mingw32', 'obj\\x86_64-pc-msys', 'obj\i686-pc-msys']:
         if os.path.exists(dir):
             obj = dir
     if obj == None:
