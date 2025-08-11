@@ -2034,21 +2034,23 @@ fi
 
 
 case "$host" in
-x86_64-w64-mingw32)	    enable_windows=yes
+x86_64-w64-mingw32|x86_64-pc-msys)	    enable_windows=yes
     enable_windows32=no
     enable_windows64=yes
     enable_unix=no
     MODE=windows
     dirpfx="w"
     WIN32_FLAGS="-D_WIN32 -D_WIN64"
+    if test $host = x86_64-w64-mingw32; then toolpfx=$host-; else toolpfx=""; fi
     ;;
-i686-w64-mingw32)	    enable_windows=yes
+i686-w64-mingw32|i686-pc-msys)	    enable_windows=yes
     enable_windows32=yes
     enable_windows64=no
     enable_unix=no
     MODE=windows
     WIN32_FLAGS="-D_WIN32"
     dirpfx="w"
+    if test $host = i686-w64-mingw32; then toolpfx=$host-; else toolpfx=""; fi
     ;;
 *)			    enable_windows=no
     enable_windows32=no
@@ -2060,7 +2062,7 @@ esac
 
 if test $enable_windows = yes
 then
-    for ac_prog in $host-gcc
+    for ac_prog in ${toolpfx}gcc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2114,7 +2116,7 @@ test -n "$WINDOWS_CC" || WINDOWS_CC="no"
     if test $WINDOWS_CC = no
     then	as_fn_error $? "Can't find Windows C compiler" "$LINENO" 5
     fi
-    for ac_prog in $host-gcc-ar
+    for ac_prog in ${toolpfx}gcc-ar
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2168,7 +2170,7 @@ test -n "$WINDOWS_AR" || WINDOWS_AR="no"
     if test $WINDOWS_AR = no
     then	as_fn_error $? "Can't find Windows C library archiver" "$LINENO" 5
     fi
-    for ac_prog in $host-windres windres.exe
+    for ac_prog in ${toolpfx}windres windres.exe
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
