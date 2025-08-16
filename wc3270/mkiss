@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
-version_txt=./version.txt
 if [ "x$1" = "x-v" ]
 then	shift
     	version_txt=$1
 	shift
+	. $version_txt
 fi
-. $version_txt
 
-sed -e "s/%VERSION%/$version/g" -e "s/%CYEAR%/$cyear/g"
+if [ "x$1" = "x-d" ]
+then	shift
+	dirnames=$1
+	shift
+	. $dirnames
+fi
+
+sed -e "s/%VERSION%/$version/g" -e "s/%CYEAR%/$cyear/g" -e "s/%WIN32%/$win32/g" -e "s/%WIN64%/$win64/g"
