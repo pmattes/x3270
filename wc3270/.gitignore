@@ -1,11 +1,12 @@
 compiled_keypad.h
 LICENSE.txt
 README.txt
+README
 mkkeypad
 wc3270.iss
 *-noinstall-*.zip
 package.ps1
 package.zip
+CopyToWx3270.ps1
 Makefile.obj
 *.zipit
-CopyToWx3270.ps1
