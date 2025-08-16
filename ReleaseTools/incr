@@ -123,8 +123,9 @@ fi
 green "Cleaning up"
 execute make clobber
 
-# Get a clean set of Makefiles.
+# Get a clean set of Unix Makefiles.
 green "Configuring"
+execute rm -f config.cache
 execute ./configure -C CFLAGS="-ggdb3 -Werror -Wno-format-zero-length -fno-common"
 
 # Update the version file.
