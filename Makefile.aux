@@ -70,10 +70,10 @@ $(PROGRAMSRC):
 include Common/dirnames
 windows-release: man
 	rm -f config.cache
-	./configure -C --host=$(win64)
+	./configure -C --host=$(win32)
 	$(MAKE) -j12
 	rm -f config.cache
-	./configure -C --host=$(win32)
+	./configure -C --host=$(win64)
 	$(MAKE) -j12
 	$(MAKE) -C wc3270 -f Makefile.aux $@ VPATH=../Common -I../Common
 
