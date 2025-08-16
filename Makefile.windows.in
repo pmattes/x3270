@@ -29,6 +29,8 @@
 all: @T_ALL@
 windows: all
 
+@WINHOST@
+
 # Cleverness for 'make targets':
 #  M1 is true if there is more than one target
 M1 := $(shell test `echo @T_ALL@ | wc -w` -gt 1 && echo true)
@@ -51,7 +53,14 @@ endif
 ifdef M1
 	@echo "  <program>-clobber   remove <program> derived files"
 endif
-	@echo " lib-test             run library tests"
+ifdef WINHOST
+	@echo " test                 run unit and integration tests"
+	@echo "  smoketest           run smoke tests"
+	@echo "  lib-test            run library tests"
+ifdef M1
+	@echo "  <program>-test      run <program> tests"
+endif
+endif
 
 .PHONY: x3270if s3270 playback mitm
 
@@ -107,11 +116,6 @@ pr3287 mitm: lib32xx
 x3270if:
 	$(MAKE) -C w$@
 
-# Test targets.
-lib-test: lib3270-test lib32xx-test
-lib3270-test lib32xx-test: lib3270
-	$(MAKE) -C $(call wlb,-test,$@) -f Makefile.test
-
 # Clean and clobber targets.
 clean: @T_CLEAN@
 windows-clean: clean
@@ -150,3 +154,31 @@ s3270-clobber b3270-clobber pr3287-clobber x3270if-clobber playback-clobber mitm
 lib-test-clobber: lib3270-test-clobber lib32xx-test-clobber
 lib3270-test-clobber lib32xx-test-clobber:
 	$(MAKE) -C $(call wlb,-test-clobber,$@) -f Makefile.test clean
+
+ifdef WINHOST
+# Test targets.
+lib-test: lib3270-test lib32xx-test
+lib3270-test lib32xx-test: lib3270
+	$(MAKE) -C $(call wlb,-test,$@) -f Makefile.test
+
+ALLPYTESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/test*.py"; done)
+PYTESTS=$(ALLPYTESTS)
+PYSMOKETESTS := $(shell for i in @T_TEST@; do [ -f $$i/Test/testSmoke.py ] && printf " %s" "$$i/Test/testSmoke.py"; done)
+TESTPATH := $(shell for i in @T_TEST@; do printf "%s" "obj/@host@/$$i/:"; done)
+
+PYTHON = @PYTHON@
+RUNTESTS=PATH="$(TESTPATH)$$PATH" $(PYTHON) -m unittest $(TESTOPTIONS)
+
+.SECONDEXPANSION:
+@T_TEST_TARGETS@: $$(subst -test,,$$@)
+	$(RUNTESTS) $(subst -test,,$@)/Test/test*.py
+pytests: @T_TEST@
+	$(RUNTESTS) $(PYTESTS)
+test: @T_ALLTESTS@ pytests
+smoketest: @T_TEST@
+	$(RUNTESTS) $(PYSMOKETESTS)
+else
+test pytests smoketest @T_TEST_TARGETS@:
+	@echo >&2 Must run Windows tests on a Windows host.
+	@exit 1
+endif
