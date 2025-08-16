@@ -1,4 +1,4 @@
-version="4.5alpha2"
+version="4.5pre3"
 adversion="3.3.4"
 cyear="2025"
 phase="alpha"
