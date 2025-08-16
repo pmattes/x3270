@@ -179,15 +179,19 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 
     /* Save the command string for tracing purposes. */
-    cl = strlen(programname);
+    cl = 0;
     for (i = 0; i < argc; i++) {
 	cl += 1 + strlen(argv[i]);
     }
     cl++;
     command_string = Malloc(cl);
-    strcpy(command_string, programname);
+    command_string[0] = '\0';
     for (i = 0; i < argc; i++) {
-	strcat(strcat(command_string, " "), argv[i]);
+	if (i == 0) {
+	    strcpy(command_string, argv[i]);
+	} else {
+	    strcat(strcat(command_string, " "), argv[i]);
+	}
     }
 
     /*
