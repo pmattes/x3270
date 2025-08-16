@@ -7,3 +7,5 @@ wc3270.iss
 package.ps1
 package.zip
 Makefile.obj
+*.zipit
+CopyToWx3270.ps1

@@ -2034,24 +2034,25 @@ then :
 fi
 
 
+. Common/dirnames
 case "$host" in
-x86_64-w64-mingw32|x86_64-pc-msys)	    enable_windows=yes
+$win64|x86_64-pc-msys)	    enable_windows=yes
     enable_windows32=no
     enable_windows64=yes
     enable_unix=no
     MODE=windows
     dirpfx="w"
     WIN32_FLAGS="-D_WIN32 -D_WIN64"
-    if test $host = x86_64-w64-mingw32; then toolpfx=$host-; else toolpfx=""; fi
+    if test $host = $win64; then toolpfx=$host-; else toolpfx=""; fi
     ;;
-i686-w64-mingw32|i686-pc-msys)	    enable_windows=yes
+$win32|i686-pc-msys)	    enable_windows=yes
     enable_windows32=yes
     enable_windows64=no
     enable_unix=no
     MODE=windows
     WIN32_FLAGS="-D_WIN32"
     dirpfx="w"
-    if test $host = i686-w64-mingw32; then toolpfx=$host-; else toolpfx=""; fi
+    if test $host = $win32; then toolpfx=$host-; else toolpfx=""; fi
     ;;
 *)			    enable_windows=no
     enable_windows32=no

@@ -1,0 +1,4 @@
+# Define the common directory names for windows objects.
+# Intended to be read into a shell script with the "." command.
+win64=x86_64-w64-mingw32
+win32=i686-w64-mingw32

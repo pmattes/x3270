@@ -67,12 +67,13 @@ $(PROGRAMSRC):
 	$(MAKE) -C $(@:-src.tgz=) -f Makefile.aux src.tgz VPATH=../Common -I../Common
 
 # Target for building the Inno Setup .exe file and the .zip file.
+include Common/dirnames
 windows-release: man
 	rm -f config.cache
-	./configure -C --host=x86_64-w64-mingw32
+	./configure -C --host=$(win64)
 	$(MAKE) -j12
 	rm -f config.cache
-	./configure -C --host=i686-w64-mingw32
+	./configure -C --host=$(win32)
 	$(MAKE) -j12
 	$(MAKE) -C wc3270 -f Makefile.aux $@ VPATH=../Common -I../Common
 
