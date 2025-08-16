@@ -62,7 +62,6 @@ README.txt: version.txt README.txt.tmpl mkiss find-version
 	./mkiss -v $(VERSION_TXT) <README.txt.tmpl >$@
 
 # Create the packaging archive.
-# XXX: Are the object files going to end up in mingw32 directories?
 WROBJ = obj/release
 .PHONY: package.zip
 package.zip: wc3270.iss package.ps1 run-signtool.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.zipit wx3270-32.zipit wx3270-64.zipit LICENSE.txt README.txt
