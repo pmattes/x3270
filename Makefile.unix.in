@@ -165,7 +165,7 @@ PYTHON = @PYTHON@
 RUNTESTS=PATH="$(TESTPATH)$$PATH" $(PYTHON) -m unittest $(TESTOPTIONS)
 
 .SECONDEXPANSION:
-b3270-test c3270-test pr3287-test s3270-test tcl3270-test x3270-test x3270if-test: $$(subst -test,,$$@)
+@T_TEST_TARGETS@: $$(subst -test,,$$@)
 	$(RUNTESTS) $(subst -test,,$@)/Test/test*.py
 pytests: @T_TEST@
 	$(RUNTESTS) $(PYTESTS)

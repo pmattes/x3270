@@ -103,7 +103,17 @@ if test "$PYTHON" = "not found"; then
 fi
 AC_SUBST(PYTHON)
 
-dnl Handle expansion of enable-unix.
+dnl Figure out if our host is Windows.
+if test $MODE = windows; then
+    platform=`python3 -c 'import sys; print(sys.platform)'`
+    case "$platform" in
+    cygwin|win*) WINHOST=WINHOST=1;;
+    *) unset WINHOST;;
+    esac
+    AC_SUBST(WINHOST)
+fi
+
+dnl Handle expansion of Unix targets.
 if test $MODE = unix; then
     if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
     if test "x$enable_c3270" != xno; then enable_c3270=yes; fi
@@ -128,7 +138,7 @@ if test "x$enable_windows" != xno; then
     fi
 fi
 
-dnl Handle expansion of enable-windows.
+dnl Handle expansion of Windows targets.
 if test $MODE = windows; then
     if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
     if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
@@ -288,12 +298,13 @@ for i in x3270 c3270 s3270 b3270 tcl3270 pr3287 x3270if playback mitm wc3270; do
 		T_INSTALL="$T_INSTALL $i-install"
 		T_INSTALL_MAN="$T_INSTALL_MAN $i-install.man"
 	    esac
-	    T_TEST="$T_TEST $i"
-	    T_TEST_TARGETS="$T_TEST_TARGETS ${i}-test"
 	fi
+	T_TEST="$T_TEST $i"
+	T_TEST_TARGETS="$T_TEST_TARGETS ${i}-test"
     fi
 done
 T_ALLTESTS=$T_TEST
+T_TEST_TARGETS=`echo $T_TEST_TARGETS | sed -e 's/^ //'`
 
 if test "x$enable_lib" = xyes; then
     T_CLEAN="$T_CLEAN lib-clean"
