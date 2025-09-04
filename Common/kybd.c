@@ -79,6 +79,8 @@
 
 #define MarginedPaste()	(IN_3270 && !IN_SSCP && (toggled(MARGINED_PASTE) || toggled(OVERLAY_PASTE)))
 
+#define LOCK_NONE	"none"
+
 /* Statics */
 static enum	{ NONE, COMPOSE, FIRST } composing = NONE;
 static unsigned char pf_xlate[] = { 
@@ -404,17 +406,34 @@ flush_ta(void)
 
 /* Decode keyboard lock bits. */
 static const char *
-kybdlock_decode(char *how, unsigned int bits)
+kybdlock_decode(const char *how, unsigned int bits)
 {
+    static struct {
+	unsigned flag;
+	const char *name;
+    } lock_name[] = {
+	{ KL_NOT_CONNECTED, "NOT_CONNECTED" },
+	{ KL_AWAITING_FIRST, "AWAITING_FIRST" },
+	{ KL_OIA_TWAIT, "OIA_TWAIT" },
+	{ KL_OIA_LOCKED, "OIA_LOCKED" },
+	{ KL_DEFERRED_UNLOCK, "DEFERRED_UNLOCK" },
+	{ KL_ENTER_INHIBIT, "ENTER_INHIBIT" },
+	{ KL_SCROLLED, "SCROLLED" },
+	{ KL_OIA_MINUS, "OIA_MINUS" },
+	{ KL_FT, "FT" },
+	{ KL_BID, "BID" },
+	{ 0, NULL },
+    };
     varbuf_t r;
-    char *space = "";
+    const char *space = "";
+    int i;
 
     if (bits == (unsigned int)-1) {
 	return txAsprintf("%sall", how);
     }
 
     if (bits == 0) {
-	return txAsprintf("%snone", how);
+	return txAsprintf("%s" LOCK_NONE, how);
     }
 
     vb_init(&r);
@@ -439,46 +458,17 @@ kybdlock_decode(char *how, unsigned int bits)
 	}
 	vb_appendf(&r, ")");
 	space = " ";
+	bits &= ~KL_OERR_MASK;
     }
-    if (bits & KL_NOT_CONNECTED) {
-	vb_appendf(&r, "%s%sNOT_CONNECTED", space, how);
-	space = " ";
+    for (i = 0; lock_name[i].name != NULL; i++) {
+	if (bits & lock_name[i].flag) {
+	    vb_appendf(&r, "%s%s%s", space, how, lock_name[i].name);
+	    space = " ";
+	    bits &= ~lock_name[i].flag;
+	}
     }
-    if (bits & KL_AWAITING_FIRST) {
-	vb_appendf(&r, "%s%sAWAITING_FIRST", space, how);
-	space = " ";
-    }
-    if (bits & KL_OIA_TWAIT) {
-	vb_appendf(&r, "%s%sOIA_TWAIT", space, how);
-	space = " ";
-    }
-    if (bits & KL_OIA_LOCKED) {
-	vb_appendf(&r, "%s%sOIA_LOCKED", space, how);
-	space = " ";
-    }
-    if (bits & KL_DEFERRED_UNLOCK) {
-	vb_appendf(&r, "%s%sDEFERRED_UNLOCK", space, how);
-	space = " ";
-    }
-    if (bits & KL_ENTER_INHIBIT) {
-	vb_appendf(&r, "%s%sENTER_INHIBIT", space, how);
-	space = " ";
-    }
-    if (bits & KL_SCROLLED) {
-	vb_appendf(&r, "%s%sSCROLLED", space, how);
-	space = " ";
-    }
-    if (bits & KL_OIA_MINUS) {
-	vb_appendf(&r, "%s%sOIA_MINUS", space, how);
-	space = " ";
-    }
-    if (bits & KL_FT) {
-	vb_appendf(&r, "%s%sFT", space, how);
-	space = " ";
-    }
-    if (bits & KL_BID) {
-	vb_appendf(&r, "%s%sBID", space, how);
-	space = " ";
+    if (bits) {
+	vb_appendf(&r, "%s%s?0x%x", space, how, bits);
     }
 
     return txdFree(vb_consume(&r));
@@ -787,6 +777,29 @@ kybdlock_dump(void)
     return TrueFalse(task_kbwait_state());
 }
 
+/* Dump the keyboard lock state details. */
+static const char *
+kybdlock_dump_detail(void)
+{
+    const char *trcd = kybdlock_decode("", kybdlock);
+
+    if (!strcmp(trcd, LOCK_NONE)) {
+	return "";
+    } else {
+	char *out = Malloc(strlen(trcd) + 1);
+	char *to = out;
+	char c;
+
+	while ((c = *trcd++) != '\0') {
+	    if (c != ')') {
+		*to++ = (c == '(' || c == '_')? '-': tolower((int)c);
+	    }
+	}
+	*to = '\0';
+	return txdFree(out);
+    }
+}
+
 /*
  * Keyboard module registration.
  */
@@ -804,6 +817,7 @@ kybd_register(void)
     };
     static query_t queries[] = {
 	{ KwKeyboardLock, kybdlock_dump, NULL, false, false },
+	{ KwKeyboardLockDetail, kybdlock_dump_detail, NULL, false, false },
     };
 
     /* Register interest in connect and disconnect events. */

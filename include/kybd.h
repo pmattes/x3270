@@ -32,21 +32,21 @@
 
 /* keyboard lock states */
 extern unsigned int kybdlock;
-#define KL_OERR_MASK		0x000f
-#define  KL_OERR_PROTECTED	1
-#define  KL_OERR_NUMERIC	2
-#define  KL_OERR_OVERFLOW	3
-#define  KL_OERR_DBCS		4
-#define	KL_NOT_CONNECTED	0x0010
-#define	KL_AWAITING_FIRST	0x0020
-#define	KL_OIA_TWAIT		0x0040
-#define	KL_OIA_LOCKED		0x0080
-#define	KL_DEFERRED_UNLOCK	0x0100
-#define KL_ENTER_INHIBIT	0x0200
-#define KL_SCROLLED		0x0400
-#define KL_OIA_MINUS		0x0800
-#define KL_FT			0x1000
-#define KL_BID			0x2000
+#define KL_OERR_MASK		0x000f	/* Operator errors: */
+#define  KL_OERR_PROTECTED	1	/*  Protected field */
+#define  KL_OERR_NUMERIC	2	/*  Numeric field */
+#define  KL_OERR_OVERFLOW	3	/*  Field overflow */
+#define  KL_OERR_DBCS		4	/*  Invalid DBCS operation */
+#define	KL_NOT_CONNECTED	0x0010	/* Not connected */
+#define	KL_AWAITING_FIRST	0x0020	/* Awaiting first output from host */
+#define	KL_OIA_TWAIT		0x0040	/* Awaiting reset after AID sent */
+#define	KL_OIA_LOCKED		0x0080	/* Explicit lock across disconnect/reconnect */
+#define	KL_DEFERRED_UNLOCK	0x0100	/* Deferred unlock after host keyboard reset */
+#define KL_ENTER_INHIBIT	0x0200	/* Awaiting unlock after QueryReply */
+#define KL_SCROLLED		0x0400	/* Display is scrolled back */
+#define KL_OIA_MINUS		0x0800	/* Invalid SSCP-LU or ATTN operation */
+#define KL_FT			0x1000	/* File transfer active */
+#define KL_BID			0x2000	/* Contention resolution Bid operation */
 
 extern unsigned char aid;
 

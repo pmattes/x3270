@@ -874,7 +874,7 @@ static bool
 ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 {
     static const char *reasons[] = {
-	OiaLockDeferred, OiaLockInhibit, OiaLockMinus, OiaLockNotConnected,
+	OiaLockDeferred, OiaLockMinus, OiaLockNotConnected,
 	OiaLockOerr, OiaLockScrolled, OiaLockSyswait, OiaLockTwait,
 	OiaLockDisabled, STATUS_RECONNECTING, STATUS_RESOLVING, NULL
     };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -177,7 +177,6 @@ static void do_telnet(void);
 static void do_tn3270e(void);
 static void do_awaiting_first(void);
 static void do_unlock_delay(void);
-static void do_inhibit(void);
 static void do_blank(void);
 static void do_twait(void);
 static void do_syswait(void);
@@ -209,7 +208,6 @@ static enum msg {
     TN3270E,		/* X [TN3270E] */
     AWAITING_FIRST,	/* X [Field] */
     UNLOCK_DELAY,	/* X */
-    INHIBIT,		/* X Inhibit */
     BLANK,		/* (blank) */
     TWAIT,		/* X Wait */
     SYSWAIT,		/* X SYSTEM */
@@ -237,7 +235,6 @@ static void (*msg_proc[N_MSGS])(void) = {
     do_tn3270e,
     do_awaiting_first,
     do_unlock_delay,
-    do_inhibit,
     do_blank,
     do_twait,
     do_syswait,
@@ -261,7 +258,6 @@ static int msg_color[N_MSGS] = {
     FA_INT_NORM_NSEL,	/* tn3270e */
     FA_INT_NORM_NSEL,	/* awaiting_first */
     FA_INT_NORM_NSEL,	/* unlock_delay */
-    FA_INT_NORM_NSEL,	/* inhibit */
     FA_INT_NORM_NSEL,	/* blank */
     FA_INT_NORM_NSEL,	/* twait */
     FA_INT_NORM_NSEL,	/* syswait */
@@ -285,7 +281,6 @@ static int msg_color3279[N_MSGS] = {
     HOST_COLOR_WHITE,	/* tn3270e */
     HOST_COLOR_WHITE,	/* awaiting_first */
     HOST_COLOR_WHITE,	/* unlock_delay */
-    HOST_COLOR_WHITE,	/* inhibit */
     HOST_COLOR_BLUE,	/* blank */
     HOST_COLOR_WHITE,	/* twait */
     HOST_COLOR_WHITE,	/* syswait */
@@ -370,7 +365,6 @@ static unsigned char *a_proxy;
 static unsigned char *a_telnet;
 static unsigned char *a_tn3270e;
 static unsigned char *a_awaiting_first;
-static unsigned char *a_inhibit;
 static unsigned char *a_twait;
 static unsigned char *a_syswait;
 static unsigned char *a_protected;
@@ -433,7 +427,6 @@ status_init(void)
     a_telnet = make_amsg("statusTelnetPending");
     a_tn3270e = make_amsg("statusTn3270ePending");
     a_awaiting_first = make_amsg("statusAwaitingFirst");
-    a_inhibit = make_amsg("statusInhibit");
     a_twait = make_amsg("statusTwait");
     a_syswait = make_amsg("statusSyswait");
     a_protected = make_amsg("statusProtected");
@@ -647,10 +640,7 @@ status_connect(bool connected)
 	} else if (kybdlock & KL_AWAITING_FIRST) {
 	    cancel_disabled_revert();
 	    do_msg(AWAITING_FIRST);
-	} else if (kybdlock & KL_ENTER_INHIBIT) {
-	    cancel_disabled_revert();
-	    do_msg(INHIBIT);
-        } else if (kybdlock & KL_BID) {
+	} else if (kybdlock & (KL_ENTER_INHIBIT | KL_BID)) {
 	    cancel_disabled_revert();
 	    do_msg(TWAIT);
         } else if (kybdlock & KL_FT) {
@@ -1359,20 +1349,6 @@ do_unlock_delay(void)
 	status_msg_set((unsigned const char *)"X", 1);
     } else {
 	status_msg_set(unlock_delay, sizeof(unlock_delay));
-    }
-}
-
-static void
-do_inhibit(void)
-{
-    static unsigned char inhibit[] = {
-	CG_lock, CG_space, CG_I, CG_n, CG_h, CG_i, CG_b, CG_i, CG_t
-    };
-
-    if (*standard_font) {
-	status_msg_set(a_inhibit, strlen((char *)a_inhibit));
-    } else {
-	status_msg_set(inhibit, sizeof(inhibit));
     }
 }
 
