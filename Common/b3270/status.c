@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2024 Paul Mattes.
+ * Copyright (c) 2015-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,6 @@ typedef enum {
     K_OERR,
     K_SYSWAIT,
     K_NOT_CONNECTED,
-    K_INHIBIT,
     K_DEFERRED,
     K_TWAIT,
     K_FIELD,
@@ -197,11 +196,12 @@ status_reset(void)
 	oia_kybdlock = K_NOT_CONNECTED;
 	status_lock(NewString(OiaLockNotConnected));
     } else if (kybdlock & KL_ENTER_INHIBIT) {
-	if (oia_kybdlock == K_INHIBIT) {
+	/* Note: OiaLockInhibit is now deprecated, we use OiaLockTwait instead. */
+	if (oia_kybdlock == K_TWAIT) {
 	    return;
 	}
-	oia_kybdlock = K_INHIBIT;
-	status_lock(NewString(OiaLockInhibit));
+	oia_kybdlock = K_TWAIT;
+	status_lock(NewString(OiaLockTwait));
     } else if (kybdlock & KL_DEFERRED_UNLOCK) {
 	if (oia_kybdlock == K_DEFERRED) {
 	    return;

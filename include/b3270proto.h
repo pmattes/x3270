@@ -187,7 +187,6 @@
 /* OIA lock reasons. */
 #define OiaLockNotConnected "not-connected"
 #define OiaLockDeferred "deferred"
-#define OiaLockInhibit "inhibit"
 #define OiaLockMinus	"minus"
 #define OiaLockOerr	"oerr"
 #define OiaLockScrolled	"scrolled"

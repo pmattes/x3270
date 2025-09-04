@@ -273,9 +273,7 @@ vstatus_connect(bool connected)
             voia_msg = "X [TN3270E]";
         } else if (kybdlock & KL_AWAITING_FIRST) {
             voia_msg = "X [Field]";
-	} else if (kybdlock & KL_ENTER_INHIBIT) {
-	    voia_msg = "X Inhibit";
-	} else if (kybdlock & KL_BID) {
+	} else if (kybdlock & (KL_ENTER_INHIBIT | KL_BID)) {
 	    voia_msg = "X Wait";
 	} else if (kybdlock & KL_FT) {
 	    voia_msg = "X File Transfer";
