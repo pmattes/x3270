@@ -1489,7 +1489,7 @@ do_disabled(void)
     };
 
     if (*standard_font) {
-	status_msg_set(a_minus, strlen((char *)a_minus));
+	status_msg_set(a_disabled, strlen((char *)a_disabled));
     } else {
 	status_msg_set(disabled, sizeof(disabled));
     }

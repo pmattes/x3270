@@ -138,6 +138,9 @@ vstatus_oerr(int error_type)
     case KL_OERR_OVERFLOW:
         voia_msg = "X Overflow";
         break;
+    case KL_OERR_DBCS:
+	voia_msg = "X <S>";
+	break;
     }
     voia_msg_color = HOST_COLOR_RED;
     status_oerr(error_type);
