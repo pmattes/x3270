@@ -269,8 +269,7 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
                 data = data[1:]
                 decode += nxb
                 varname += nxb
-            decode += '="'
-            value = ''
+            bvalue = b''
             if len(data) > 0 and ftie(data[0], telobj) == telobj.VALUE:
                 data = data[1:]
                 while len(data) > 0 and ftie(data[0], telobj) != telobj.VAR and ftie(data[0], telobj) != telobj.USERVAR:
@@ -279,11 +278,12 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
                         if len(data) == 0:
                             self.warning('TN3270', 'Missing data after ESC')
                             return
-                    nxb = data[0:1].decode()
+                    nxb = data[0:1]
                     data = data[1:]
-                    decode += nxb
-                    value += nxb
-            decode += '"'
+                    bvalue += nxb
+            # Decode the value.
+            value = bvalue.decode(errors='replace')
+            decode += f'="{value}"'
             if is_is and is_uservar and varname == 'DEVNAME':
                 devname = value
         self.debug('TN3270', f'NEW-ENVIRON {decode}')
