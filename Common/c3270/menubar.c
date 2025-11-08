@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Paul Mattes.
+ * Copyright (c) 2010-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -668,7 +668,7 @@ menu_char(int row, int col, bool persistent, ucs4_t *u,
 	*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
 	*acs = menu_acs[(row * MODEL_2_COLS) + col];
 	return true;
-    } else if (persistent && row == 0 && menu_topline[col]) {
+    } else if (persistent && row == 0 && col < MODEL_2_COLS && menu_topline[col]) {
 	*u = menu_topline[col];
 	*highlighted = 0;
 	return true;

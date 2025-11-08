@@ -122,7 +122,12 @@ typedef int curses_attr;
 typedef int host_color_ix;
 typedef int color_pair;
 
-static color_pair cp[16][16][2];
+static color_pair cp[40][40][2];
+
+typedef struct {
+    curses_attr attrs;
+    color_pair pair;
+} attr_pair_t;
 
 static curses_color cmap8[16] = {
     COLOR_BLACK,	/* neutral black */
@@ -204,6 +209,46 @@ static curses_color cmap16_rv[16] = {
     8 + COLOR_WHITE	/* white */
 };
 
+/* Default colors in RGB mode. */
+static unsigned rgbmap[16] = {
+    0x1a1a1a,	/* neutral black */
+    0x1e90ff,	/* blue */
+    0xff0000,	/* red */
+    0xff00ff,	/* pink */
+    0x32cd32,	/* green */
+    0x00ffff,	/* turquoise */
+    0xffff00,	/* yellow */
+    0xffffff,	/* neutral white */
+    0x2f4f4f,	/* black */
+    0x0000cd,	/* deep blue */
+    0xffa500,	/* orange */
+    0xa020f0,	/* purple */
+    0x90ee90,	/* pale green */
+    0x96cdcd,	/* pale turquoise */
+    0x778899,	/* gray */
+    0xf5f5f5,	/* white */
+};
+
+/* Default reverse-video colors in RGB mode. */
+static unsigned rgbmap_rv[16] = {
+    0xffffff,	/* neutral black (reversed) */
+    0x0000c0,	/* blue */
+    0xb22222,	/* red */
+    0xee6aa7,	/* pink */
+    0x008b00,	/* green */
+    0x40e0d0,	/* turquoise */
+    0xcdcd00,	/* yellow */
+    0x000000,	/* neutral white (reversed) */
+    0x000000,	/* black */
+    0x0000cd,	/* deep blue */
+    0xffa500,	/* orange */
+    0xa020f0,	/* purple */
+    0x98fb98,	/* pale green */
+    0x96cdcd,	/* pale turquoise */
+    0xbebebe,	/* gray */
+    0xf5f5f5,	/* white */
+};
+
 static curses_color *cmap = cmap8;
 static curses_attr cattrmap[16] = {
     A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
@@ -213,44 +258,22 @@ static curses_attr cattrmap[16] = {
 };
 static int defcolor_offset = 0;
 
-static curses_color field_colors8[4] = {
-    COLOR_GREEN,	/* default */
-    COLOR_RED,		/* intensified */
-    COLOR_BLUE,		/* protected */
-    COLOR_WHITE		/* protected, intensified */
+static host_color_ix field_color_map[4] = {
+    HOST_COLOR_GREEN,	/* default */
+    HOST_COLOR_RED,	/* intensified */
+    HOST_COLOR_BLUE,	/* protected */
+    HOST_COLOR_WHITE,	/* protected, intensified */
 };
-
-static curses_color field_colors8_rv[4] = {
-    COLOR_GREEN,	/* default */
-    COLOR_RED,		/* intensified */
-    COLOR_BLUE,		/* protected */
-    COLOR_BLACK		/* protected, intensified */
-};
-
-static curses_color field_colors16[4] = {
-    8 + COLOR_GREEN,	/* default */
-    COLOR_RED,		/* intensified */
-    8 + COLOR_BLUE,	/* protected */
-    8 + COLOR_WHITE	/* protected, intensified */
-};
-
-static curses_color field_colors16_rv[4] = {
-    COLOR_GREEN,	/* default */
-    COLOR_RED,		/* intensified */
-    COLOR_BLUE,		/* protected */
-    COLOR_BLACK		/* protected, intensified */
-};
-
-static curses_color *field_colors = field_colors8;
 
 static curses_attr field_cattrmap[4] = {
     A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL
 };
 
 static curses_color bg_color = COLOR_BLACK;
+static attr_pair_t defattr = { A_NORMAL, 0 };
+static attr_pair_t xhattr = { A_NORMAL, 0 };
+static int rgb_color_index = 16;
 
-static curses_attr defattr = A_NORMAL;
-static curses_attr xhattr = A_NORMAL;
 static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
@@ -317,7 +340,7 @@ static char *disabled_msg = NULL;	/* layer 0 (top) */
 static char *scrolled_msg = NULL;	/* layer 1 */
 static char *info_msg = NULL;		/* layer 2 */
 static char *other_msg = NULL;		/* layer 3 */
-static curses_attr other_attr;		/* layer 3 color */
+static attr_pair_t other_attr;		/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
@@ -337,13 +360,12 @@ static void draw_oia(void);
 static void status_connect(bool ignored);
 static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
-static int get_color_pair(int fg, int bg);
-static int color_from_fa(unsigned char);
+static color_pair get_color_pair(int fg, int bg);
+static attr_pair_t color_from_fa(unsigned char);
 static void set_status_row(int screen_rows, int emulator_rows);
 static void display_linedraw(ucs4_t ucs);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
-static void init_user_attribute_colors(void);
 static void screen_init2(void);
 
 static action_t Redraw_action;
@@ -681,11 +703,6 @@ finish_screen_init(void)
 	set_status_row(cursesLINES, maxROWS);
     }
 
-    /* Implement reverse video. */
-    if (appres.c3270.reverse_video) {
-	bg_color = COLOR_WHITE;
-    }
-
     /* Play with curses color. */
     if (!appres.interactive.mono) {
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
@@ -694,21 +711,19 @@ finish_screen_init(void)
 	start_color();
 	if (has_colors() && COLORS >= 16) {
 	    cmap = appres.c3270.reverse_video? cmap16_rv: cmap16;
-	    field_colors = appres.c3270.reverse_video? field_colors16_rv:
-		field_colors16;
-	    if (appres.c3270.reverse_video) {
-		bg_color += 8;
-	    } else {
+	    if (!appres.c3270.reverse_video) {
 		defcolor_offset = 8;
 	    }
 	} else if (appres.c3270.reverse_video) {
 	    cmap = cmap8_rv;
-	    field_colors = field_colors8_rv;
 	}
 
 	init_user_colors();
-	init_user_attribute_colors();
 	crosshair_color_init();
+	if (appres.c3270.reverse_video) {
+	    /* Swap white to black for protected+intensified fields. */
+	    field_color_map[3] = HOST_COLOR_BLACK;
+	}
 
 	/* See about all-bold behavior. */
 	if (appres.c3270.all_bold_on) {
@@ -724,7 +739,7 @@ finish_screen_init(void)
 	if (ab_mode == TS_ON) {
 	    int i;
 
-	    defattr |= A_BOLD;
+	    defattr.attrs |= A_BOLD;
 	    for (i = 0; i < 4; i++) {
 		field_cattrmap[i] = A_BOLD;
 	    }
@@ -740,18 +755,22 @@ finish_screen_init(void)
 	    default_colors = true;
 	}
 #endif /*]*/
+
+	bg_color = cmap[HOST_COLOR_NEUTRAL_BLACK];
 	if (has_colors() && COLORS >= 8) {
 	    if (mode3279) {
 		/* Use 'protected' attributes for the OIA. */
-		defattr = get_color_pair(field_colors[2], bg_color) |
-		    field_cattrmap[2];
-		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
-			bg_color) | cattrmap[crosshair_color];
+		defattr.attrs = field_cattrmap[2];
+		defattr.pair = get_color_pair(cmap[field_color_map[2]], bg_color);
+
+		xhattr.attrs = cattrmap[crosshair_color];
+		xhattr.pair = get_color_pair(defcolor_offset + cmap[crosshair_color], bg_color);
 	    } else {
-		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
-			bg_color);
-		xhattr = get_color_pair(defcolor_offset + COLOR_GREEN,
-			bg_color);
+		defattr.attrs = A_NORMAL;
+		defattr.pair = get_color_pair(defcolor_offset + COLOR_GREEN, bg_color);
+
+		xhattr.attrs = A_NORMAL;
+		xhattr.pair = get_color_pair(defcolor_offset + COLOR_GREEN, bg_color);
 	    }
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
 	    if (def_screen != alt_screen) {
@@ -765,7 +784,7 @@ finish_screen_init(void)
 		}
 		start_color();
 		curses_alt = !curses_alt;
-		get_color_pair(field_colors[2], bg_color);
+		get_color_pair(cmap[field_color_map[2]], bg_color);
 		curses_alt = !curses_alt;
 		set_term(s);
 
@@ -897,7 +916,7 @@ set_status_row(int screen_rows, int emulator_rows)
 }
 
 /* Allocate a color pair. */
-static curses_attr
+static color_pair
 get_color_pair(curses_color fg, curses_color bg)
 {
     static int next_pair[2] = { 1, 1 };
@@ -912,10 +931,13 @@ get_color_pair(curses_color fg, curses_color bg)
     curses_color bg_arg = bg;
     curses_color fg_arg = fg;
 
+    assert(fg < 40);
+    assert(bg < 40);
     if ((pair = cp[fg][bg][pair_index])) {
-	return COLOR_PAIR(pair);
+	return pair;
     }
     if (next_pair[pair_index] >= COLOR_PAIRS) {
+	vtrace("get_color_pair(%d,%d): ran out of color pairs\n", fg, bg);
 	return 0;
     }
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
@@ -937,64 +959,7 @@ get_color_pair(curses_color fg, curses_color bg)
 	return 0;
     }
     pair = cp[fg][bg][pair_index] = next_pair[pair_index]++;
-    return COLOR_PAIR(pair);
-}
-
-/*
- * Initialize the user-specified attribute color mappings.
- */
-static void
-init_user_attribute_color(curses_color *color, curses_attr *attr,
-	const char *resname)
-{
-    char *r;
-    unsigned long l;
-    char *ptr;
-    int i;
-
-    if ((r = get_resource(resname)) == NULL) {
-	return;
-    }
-    for (i = 0; cc_name[i].name != NULL; i++) {
-	if (!strcasecmp(r, cc_name[i].name)) {
-	    if (cc_name[i].index < COLORS) {
-		*color = cc_name[i].index;
-	    } else {
-		*color = cc_name[i].index - 8;
-		*attr = A_BOLD;
-	    }
-	    return;
-	}
-    }
-    l = strtoul(r, &ptr, 0);
-    if (ptr == r || *ptr != '\0') {
-	xs_warning("Invalid %s value: %s", resname, r);
-	return;
-    }
-    if ((int)l >= COLORS) {
-	if (l < 16 && COLORS == 8) {
-	    *color = (int)l;
-	    *attr = A_BOLD;
-	} else {
-	    xs_warning("Invalid %s value %s exceeds maximum color index %d",
-		    resname, r, COLORS - 1);
-	    return;
-	}
-    }
-    *color = (int)l;
-}
-
-static void
-init_user_attribute_colors(void)
-{
-    init_user_attribute_color(&field_colors[0], &field_cattrmap[0],
-	    ResCursesColorForDefault);
-    init_user_attribute_color(&field_colors[1], &field_cattrmap[0],
-	    ResCursesColorForIntensified);
-    init_user_attribute_color(&field_colors[2], &field_cattrmap[2],
-	    ResCursesColorForProtected);
-    init_user_attribute_color(&field_colors[3], &field_cattrmap[3],
-	    ResCursesColorForProtectedIntensified);
+    return pair;
 }
 
 /*
@@ -1006,7 +971,7 @@ init_user_attribute_colors(void)
 static curses_color
 default_color_from_fa(unsigned char fa)
 {
-    return field_colors[DEFCOLOR_MAP(fa)];
+    return cmap[field_color_map[DEFCOLOR_MAP(fa)]];
 }
 
 static int
@@ -1015,29 +980,43 @@ attrmap_from_fa(unsigned char fa)
     return DEFCOLOR_MAP(fa);
 }
 
-static curses_attr
+static attr_pair_t
 color_from_fa(unsigned char fa)
 {
+    attr_pair_t ret;
+
     if (mode3279) {
 	int ai = attrmap_from_fa(fa);
 	curses_color fg = default_color_from_fa(fa);
 
-	return get_color_pair(fg, bg_color) |
-	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL) |
-	    field_cattrmap[ai];
+	ret.attrs = (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL) | field_cattrmap[ai];
+	ret.pair = get_color_pair(fg, bg_color);
     } else if (!appres.interactive.mono) {
-	return get_color_pair(defcolor_offset + COLOR_GREEN, bg_color) |
-	    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
+	ret.attrs = (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
+	ret.pair = get_color_pair(defcolor_offset + COLOR_GREEN, bg_color);
     } else {
 	/* No color at all. */
-	return ((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL;
+	ret.attrs = ((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL;
+	ret.pair = 0;
     }
+    return ret;
+}
+
+/* Add an RGB color. */
+static void
+add_rgb(host_color_ix ix, unsigned rgb)
+{
+    init_color(rgb_color_index,
+	    ((((rgb & 0xff0000) >> 16) & 0xff) * 1000) / 255,
+	    ((((rgb & 0x00ff00) >>  8) & 0xff) * 1000) / 255,
+	    ((((rgb & 0x0000ff)      ) & 0xff) * 1000) / 255);
+    cmap[ix] = rgb_color_index++;
 }
 
 /*
  * Set up the user-specified color mappings.
  */
-void
+static void
 init_user_color(const char *name, host_color_ix ix)
 {
     char *r;
@@ -1051,6 +1030,31 @@ init_user_color(const char *name, host_color_ix ix)
 	r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
     }
     if (r == NULL) {
+	if (COLORS >= 32 && can_change_color() == TRUE) {
+	    /* Use the default RGB color. */
+	    add_rgb(ix, appres.c3270.reverse_video ? rgbmap_rv[ix] : rgbmap[ix]);
+	}
+	return;
+    }
+
+    if (r[0] == '#') {
+	unsigned long rgb;
+	char *end;
+
+	if (COLORS < 32) {
+	    xs_warning("RGB colors require at least 32-color support");
+	    return;
+	}
+	if (can_change_color() != TRUE) {
+	    xs_warning("RGB colors require a terminal that can change colors");
+	    return;
+	}
+	rgb = strtoul(r + 1, &end, 16);
+	if (end == r + 1 || *end != '\0' || (rgb & ~0xffffffUL) != 0) {
+	    xs_warning("Invalid RGB color '%s'", r);
+	    return;
+	}
+	add_rgb(ix, (unsigned)rgb);
 	return;
     }
 
@@ -1102,12 +1106,12 @@ init_user_colors(void)
 /*
  * Find the display attributes for a baddr, fa_addr and fa.
  */
-static curses_attr
+static attr_pair_t
 calc_attrs(int baddr, int fa_addr, int fa)
 {
     curses_color fg, bg;
     int gr;
-    curses_attr a;
+    attr_pair_t a;
 
     if (FA_IS_ZERO(fa)) {
 	return color_from_fa(fa);
@@ -1154,7 +1158,8 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	    bg = cmap[HOST_COLOR_NEUTRAL_BLACK];
 	}
 
-	a = get_color_pair(fg, bg) | attr;
+	a.attrs = attr;
+	a.pair = get_color_pair(fg, bg);
     }
 
     /* Compute the display attributes. */
@@ -1167,16 +1172,16 @@ calc_attrs(int baddr, int fa_addr, int fa)
     }
 
     if (gr & GR_BLINK) {
-	a |= A_BLINK;
+	a.attrs |= A_BLINK;
     }
     if (gr & GR_REVERSE) {
-	a |= A_REVERSE;
+	a.attrs |= A_REVERSE;
     }
     if (gr & GR_UNDERLINE) {
-	a |= A_UNDERLINE;
+	a.attrs |= A_UNDERLINE;
     }
     if ((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa)) {
-	a |= A_BOLD;
+	a.attrs |= A_BOLD;
     }
 
     return a;
@@ -1237,6 +1242,13 @@ crosshair_blank(int baddr, unsigned char *acs)
     return u;
 }
 
+/* Set attributes and color. */
+static void
+xattrset(attr_pair_t a)
+{
+    attr_set(a.attrs, a.pair, NULL);
+}
+
 /**
  * Draw a crosshair line-drawing character returned by crosshair_blank().
  *
@@ -1248,7 +1260,7 @@ draw_crosshair(ucs4_t u, bool acs)
 {
     char mb[16];
 
-    attrset(xhattr);
+    xattrset(xhattr);
 #if defined(CURSES_WIDE) /*[*/
     if (u < 0x100 || acs) {
 	addch(u);
@@ -1262,12 +1274,23 @@ draw_crosshair(ucs4_t u, bool acs)
 #endif /*]*/
 }
 
+/* Get a color pair for the menu. */
+static color_pair
+menu_pair(bool highlight)
+{
+    curses_color fg = cmap[HOST_COLOR_NEUTRAL_WHITE];
+
+    return highlight?
+	get_color_pair(bg_color, fg):
+	get_color_pair(fg, bg_color);
+}
+
 /* Display what's in the buffer. */
 void
 screen_disp(bool erasing _is_unused)
 {
     int row, col;
-    curses_attr field_attrs;
+    attr_pair_t field_attrs;
     unsigned char fa;
     struct screen_spec *cur_spec;
     enum dbcs_state d;
@@ -1317,31 +1340,39 @@ screen_disp(bool erasing _is_unused)
 	ucs4_t u = 0;
 	bool highlight;
 	unsigned char acs;
-	curses_attr norm, high;
+	attr_pair_t norm, high;
 
 	if (menu_is_up) {
 	    if (mode3279) {
-		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
-		high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
+		norm.attrs = A_NORMAL;
+		norm.pair = menu_pair(false);
+		high.attrs = A_NORMAL;
+		high.pair = menu_pair(true);
 	    } else {
-		norm = defattr & ~A_BOLD;
-		high = defattr | A_BOLD;
+		norm = defattr;
+		norm.attrs &= ~A_BOLD;
+		high = defattr;
+		high.attrs |= A_BOLD;
 	    }
 	} else {
 	    if (mode3279) {
-		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
-		high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+		norm.attrs = A_NORMAL;
+		norm.pair = menu_pair(false);
+		high.attrs = A_NORMAL;
+		high.pair = menu_pair(false);
 	    } else {
-		norm = defattr & ~A_BOLD;
-		high = defattr & ~A_BOLD;
+		norm = defattr;
+		norm.attrs &= ~A_BOLD;
+		high = defattr;
+		high.attrs &= ~A_BOLD;
 	    }
 	}
 
 	for (row = 0; row < screen_yoffset; row++) {
 	    move(row, 0);
-	    for (col = 0; col < cCOLS; col++) {
+	    for (col = 0; col < cursesCOLS; col++) {
 		if (menu_char(row, col, true, &u, &highlight, &acs)) {
-		    attrset(highlight? high: norm);
+		    xattrset(highlight? high: norm);
 #if defined(CURSES_WIDE) /*[*/
 		    if (u < 0x100 || acs) {
 			addch(u);
@@ -1354,7 +1385,7 @@ screen_disp(bool erasing _is_unused)
 		    addch(u);
 #endif /*]*/
 		} else {
-		    attrset(norm);
+		    xattrset(norm);
 		    addch(' ');
 		}
 	    }
@@ -1392,18 +1423,12 @@ screen_disp(bool erasing _is_unused)
 		    abort();
 		}
 		if (mode3279) {
-		    if (highlight) {
-			attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
-				    HOST_COLOR_NEUTRAL_WHITE));
-		    } else {
-			attrset(get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
-				    HOST_COLOR_NEUTRAL_BLACK));
-		    }
+		    attr_set(A_NORMAL, menu_pair(highlight), NULL);
 		} else {
 		    if (highlight) {
-			attrset(defattr | A_BOLD);
+			attr_set(defattr.attrs | A_BOLD, defattr.pair, NULL);
 		    } else {
-			attrset(defattr);
+			xattrset(defattr);
 		    }
 		}
 #if defined(CURSES_WIDE) /*[*/
@@ -1426,13 +1451,12 @@ screen_disp(bool erasing _is_unused)
 		field_attrs = calc_attrs(baddr, baddr, fa);
 		if (!is_menu) {
 		    if (toggled(VISIBLE_CONTROL)) {
-			attrset(get_color_pair(COLOR_YELLOW,
-				    COLOR_BLACK) | A_BOLD | A_UNDERLINE);
+			attr_set(A_BOLD | A_UNDERLINE, get_color_pair(cmap[HOST_COLOR_YELLOW], bg_color), NULL);
 			addch(visible_fa(fa));
 		    } else {
 			u = crosshair_blank(baddr, &acs);
 			if (u == ' ') {
-			    attrset(defattr);
+			    xattrset(defattr);
 			    addch(' ');
 			} else {
 			    draw_crosshair(u, acs);
@@ -1443,19 +1467,19 @@ screen_disp(bool erasing _is_unused)
 		if (!is_menu) {
 		    u = crosshair_blank(baddr, &acs);
 		    if (u == ' ') {
-			attrset(field_attrs & attr_mask);
+			attr_set(field_attrs.attrs & attr_mask, field_attrs.pair, NULL);
 			addch(' ');
 		    } else {
 			draw_crosshair(u, acs);
 		    }
-		    if (field_attrs & A_UNDERLINE) {
+		    if (field_attrs.attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
 		}
 	    } else {
 		char mb[16];
 		int len;
-		int attrs;
+		attr_pair_t attrs;
 
 		if (is_menu) {
 		    continue;
@@ -1464,19 +1488,21 @@ screen_disp(bool erasing _is_unused)
 		if (!(ea_buf[baddr].gr ||
 		      ea_buf[baddr].fg ||
 		      ea_buf[baddr].bg)) {
-		    attrs = field_attrs & attr_mask;
-		    attrset(attrs);
-		    if (field_attrs & A_UNDERLINE) {
+		    attrs = field_attrs;
+		    attrs.attrs &= attr_mask;
+		    xattrset(attrs);
+		    if (field_attrs.attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
 
 		} else {
-		    int buf_attrs;
+		    attr_pair_t buf_attrs;
 
 		    buf_attrs = calc_attrs(baddr, fa_addr, fa);
-		    attrs = buf_attrs & attr_mask;
-		    attrset(attrs);
-		    if (buf_attrs & A_UNDERLINE) {
+		    attrs = buf_attrs;
+		    attrs.attrs &= attr_mask;
+		    xattrset(attrs);
+		    if (buf_attrs.attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
 		}
@@ -1490,7 +1516,7 @@ screen_disp(bool erasing _is_unused)
 		    } else if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ec == EBC_null &&
 			    ea_buf[xaddr].ec == EBC_null) {
-			attrset(attrs | A_UNDERLINE);
+			attr_set(attrs.attrs | A_UNDERLINE, attrs.pair, NULL);
 			addstr("..");
 		    } else {
 			if (ea_buf[baddr].ucs4 != 0) {
@@ -1508,15 +1534,15 @@ screen_disp(bool erasing _is_unused)
 		    if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ucs4 == 0 &&
 			    ea_buf[baddr].ec == EBC_null) {
-			attrset(attrs | A_UNDERLINE);
+			attr_set(attrs.attrs | A_UNDERLINE, attrs.pair, NULL);
 			addstr(".");
 		    } else if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ec == EBC_so) {
-			attrset(attrs | A_UNDERLINE);
+			attr_set(attrs.attrs | A_UNDERLINE, attrs.pair, NULL);
 			addstr("<");
 		    } else if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ec == EBC_si) {
-			attrset(attrs | A_UNDERLINE);
+			attr_set(attrs.attrs | A_UNDERLINE, attrs.pair, NULL);
 			addstr(">");
 		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
 			display_linedraw(ea_buf[baddr].ucs4);
@@ -1579,7 +1605,7 @@ screen_disp(bool erasing _is_unused)
     if (status_row) {
 	draw_oia();
     }
-    attrset(defattr);
+    xattrset(defattr);
     if (menu_is_up) {
 	menu_cursor(&row, &col);
 	move(row, col);
@@ -2222,21 +2248,25 @@ set_info_timer(void)
 }
 
 /* Compute the color pair for an OIA field. */
-static curses_attr
-status_colors(curses_color fg)
+static attr_pair_t
+status_colors(host_color_ix hfg)
 {
-    if (appres.c3270.reverse_video &&
-	    (fg == COLOR_WHITE || fg == defcolor_offset + COLOR_WHITE)) {
-	fg = COLOR_BLACK;
+    if (mode3279) {
+	attr_pair_t ret;
+
+	ret.attrs = A_NORMAL;
+	ret.pair = get_color_pair(cmap[hfg], bg_color);
+	return ret;
     }
-    return mode3279? get_color_pair(fg, bg_color): defattr;
+    return defattr;
 }
 
 void
 status_minus(void)
 {
     other_msg = "X -f";
-    other_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
+    other_attr = status_colors(HOST_COLOR_RED);
+    other_attr.attrs |= A_BOLD;
 }
 
 void
@@ -2253,7 +2283,8 @@ status_oerr(int error_type)
 	other_msg = "X Overflow";
 	break;
     }
-    other_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
+    other_attr = status_colors(HOST_COLOR_RED);
+    other_attr.attrs |= A_BOLD;
 }
 
 void
@@ -2272,7 +2303,8 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
-    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+    other_attr = status_colors(HOST_COLOR_WHITE);
+    other_attr.attrs |= A_BOLD;
 }
 
 void
@@ -2280,7 +2312,8 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
-    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+    other_attr = status_colors(HOST_COLOR_WHITE);
+    other_attr.attrs |= A_BOLD;
 }
 
 void
@@ -2360,7 +2393,8 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
-    other_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+    other_attr = status_colors(HOST_COLOR_WHITE);
+    other_attr.attrs |= A_BOLD;
     status_untiming();
 }
 
@@ -2466,7 +2500,7 @@ draw_oia(void)
     int cursor_col = cursor_addr % cCOLS;
     int fl_cursor_col = flipped? (cursesCOLS - 1 - cursor_col): cursor_col;
     char *status_msg_now;
-    int msg_attr;
+    attr_pair_t msg_attr;
     static struct {
 	ucs4_t u;
 	unsigned char acs;
@@ -2497,7 +2531,7 @@ draw_oia(void)
     if (!appres.interactive.mono && !filled_extra[!!curses_alt]) {
 	int r, c;
 
-	attrset(defattr);
+	xattrset(defattr);
 	for (r = 0; r <= status_row; r++) {
 	    int c0;
 
@@ -2517,7 +2551,7 @@ draw_oia(void)
     if (!appres.interactive.mono) {
 	int i;
 
-	attrset(defattr);
+	xattrset(defattr);
 	if (status_skip) {
 	    move(status_skip + screen_yoffset, 0);
 	    for (i = 0; i < rmargin; i++) {
@@ -2531,7 +2565,7 @@ draw_oia(void)
     }
 
     /* Draw or undraw the crosshair cursor outside the primary display. */
-    attrset(xhattr);
+    xattrset(xhattr);
 
     /* Draw the crosshair over the menubar line. */
     if (screen_yoffset && toggled(CROSSHAIR) && !menu_is_up &&
@@ -2601,7 +2635,7 @@ draw_oia(void)
      */
     if (status_row > screen_yoffset + maxROWS) {
 	int i;
-	attrset(A_UNDERLINE | defattr);
+	attr_set(defattr.attrs | A_UNDERLINE, defattr.pair, NULL);
 	move(status_row - 1, 0);
 	for (i = 0; i < rmargin; i++) {
 	    if (toggled(CROSSHAIR) && i == fl_cursor_col) {
@@ -2617,21 +2651,21 @@ draw_oia(void)
 	int i;
 
 	move(status_row, 0);
-	attrset(defattr);
+	xattrset(defattr);
 	for (i = 0; i < cursesCOLS - 1; i++) {
 	    printw(" ");
 	}
     }
 
-    attrset(A_REVERSE | defattr);
+    attr_set(defattr.attrs | A_REVERSE, defattr.pair, NULL);
     mvprintw(status_row, 0, "4");
-    attrset(A_UNDERLINE | defattr);
+    attr_set(defattr.attrs | A_UNDERLINE, defattr.pair, NULL);
     if (oia_undera) {
 	printw("%c", IN_E? 'B': 'A');
     } else {
 	printw(" ");
     }
-    attrset(A_REVERSE | defattr);
+    attr_set(defattr.attrs | A_REVERSE, defattr.pair, NULL);
     if (IN_NVT) {
 	printw("N");
     } else if (oia_boxsolid) {
@@ -2645,15 +2679,18 @@ draw_oia(void)
     /* Figure out the status message. */
     msg_attr = defattr;
     if (disabled_msg != NULL) {
-	msg_attr = status_colors(defcolor_offset + COLOR_RED) | A_BOLD;
+	msg_attr = status_colors(HOST_COLOR_RED);
+	msg_attr.attrs |= A_BOLD;
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
-	msg_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+	msg_attr = status_colors(HOST_COLOR_WHITE);
+	msg_attr.attrs |= A_BOLD;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
-	msg_attr = status_colors(defcolor_offset + COLOR_WHITE) | A_BOLD;
+	msg_attr = status_colors(HOST_COLOR_WHITE);
+	msg_attr.attrs |= A_BOLD;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
@@ -2663,9 +2700,9 @@ draw_oia(void)
 	status_msg_now = "";
     }
 
-    attrset(msg_attr);
+    xattrset(msg_attr);
     mvprintw(status_row, 7, "%-35.35s", status_msg_now);
-    attrset(defattr);
+    xattrset(defattr);
     mvprintw(status_row, rmargin-35,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
@@ -2675,11 +2712,11 @@ draw_oia(void)
 	status_im? 'I': ' ',
 	oia_printer? 'P': ' ');
     if (status_secure != SS_INSECURE) {
-	attrset(status_colors(defcolor_offset +
-		    ((status_secure == SS_SECURE)? COLOR_GREEN: COLOR_YELLOW))
-		| A_BOLD);
+	attr_pair_t a = status_colors(((status_secure == SS_SECURE)? HOST_COLOR_GREEN: HOST_COLOR_YELLOW));
+
+	attr_set(a.attrs | A_BOLD, a.pair, NULL);
 	printw("S");
-	attrset(defattr);
+	xattrset(defattr);
     } else {
 	printw(" ");
     }
