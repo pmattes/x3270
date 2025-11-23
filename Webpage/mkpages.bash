@@ -132,6 +132,9 @@ cat <<EOF
       <a href="https://x3270.miraheze.org/wiki/Downloads">Download</a><br>
       <a href="https://x3270.miraheze.org/wiki/Credits">Credits</a><br>
       <p>
+        <a href="https://github.com/pmattes/x3270"><img src="GitHub_Logo.png" width="88" height="31" style="border-width: 0" alt="GitHub Logo" /></a>
+      </p>
+      <p>
         <a href="http://sourceforge.net/projects/x3270"><img src="http://sourceforge.net/sflogo.php?group_id=153338&amp;type=1" width="88" height="31" style="border-width: 0" alt="SourceForge.net Logo" /></a>
       </p>
 EOF
