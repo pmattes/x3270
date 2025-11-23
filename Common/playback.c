@@ -73,7 +73,7 @@
 
 char *me;
 static enum {
-    NONE, WRONG, BASE,
+    NONE, WRONG, BASE, MARK,
     LESS, SPACE, ZERO, X, N, SPACE2, D1, D2
 } pstate = NONE;
 static enum {
@@ -88,7 +88,7 @@ typedef enum {
     STEP_MARK,	/* step until a mark (line starting with '+') */
     STEP_BIDIR,	/* step bidirectionally */
 } step_t;
-static bool step(FILE *f, socket_t s, step_t type);
+static bool step(FILE *f, socket_t s, step_t type, const char *mark);
 static int process_command(FILE *f, socket_t s);
 void trace_netdata(char *direction, unsigned char *buf, size_t len);
 
@@ -368,7 +368,7 @@ main(int argc, char *argv[])
 	pstate = BASE;
 	fdisp = false;
 	if (bidir) {
-	    while (step(f, s2, STEP_BIDIR)) {
+	    while (step(f, s2, STEP_BIDIR, NULL)) {
 	    }
 	    exit(0); /* needs to be smarter */
 	} else {
@@ -430,7 +430,7 @@ process_command(FILE *f, socket_t s)
     }
     t = stdin_buf;
 #endif /*]*/
-    while (*t == ' ') {
+    while (isspace((int)*t)) {
 	t++;
     }
     if (!*t) {
@@ -443,7 +443,7 @@ process_command(FILE *f, socket_t s)
 	    ;
 	}
 	repeat = atoi(r_start);
-	while (*t == ' ') {
+	while (isspace((int)*t)) {
 	    t++;
 	}
 	if (!*t) {
@@ -459,7 +459,7 @@ process_command(FILE *f, socket_t s)
 	while (repeat--) {
 	    printf("Stepping one line\n");
 	    fflush(stdout);
-	    if (!step(f, s, STEP_LINE)) {
+	    if (!step(f, s, STEP_LINE, NULL)) {
 		rv = -1;
 		goto done;
 	    }
@@ -472,18 +472,42 @@ process_command(FILE *f, socket_t s)
 	while (repeat--) {
 	    printf("Stepping to EOR\n");
 	    fflush(stdout);
-	    if (!step(f, s, STEP_EOR)) {
+	    if (!step(f, s, STEP_EOR, NULL)) {
 		rv = -1;
 		goto done;
 	    }
 	}
     } else if (!strncmp(t, "m", 1)) {	/* to mark */
+	char *mark = NULL;
+
 	if (f == NULL) {
 	    printf("Not connected.\n");
 	    goto done;
 	}
+	/* Skip the rest of the command. */
+	t++;
+	while (*t && !isspace((int)*t)) {
+	    t++;
+	}
+	/* Skip spaces after the command. */
+	while (isspace((int)*t)) {
+	    t++;
+	}
+	if (*t) {
+	    mark = t++;
+	    /* Find the mark name. */
+	    while (*t && !isspace(*t)) {
+		t++;
+	    }
+	    *t = '\0';
+	}
 	while (repeat--) {
-	    if (!step(f, s, STEP_MARK)) {
+	    if (mark) {
+		printf("Stepping to mark '%s'\n", mark);
+	    } else {
+		printf("Stepping to next mark\n");
+	    }
+	    if (!step(f, s, STEP_MARK, mark)) {
 		rv = -1;
 		goto done;
 	    }
@@ -495,7 +519,7 @@ process_command(FILE *f, socket_t s)
 	}
 	printf("Stepping to EOF\n");
 	fflush(stdout);
-	while (step(f, s, STEP_EOR)) {
+	while (step(f, s, STEP_EOR, NULL)) {
 	}
 	rv = -1;
 	goto done;
@@ -528,16 +552,16 @@ process_command(FILE *f, socket_t s)
 	goto done;
     } else if (t[0] == '?' || t[0] == 'h') {
 	printf("\
-s: step line\n\
-r: step record\n\
-m: play to mark\n\
-e: play to EOF\n\
-c: comment\n\
-t: send TM to emulator\n\
-q: quit\n\
-d: disconnect\n\
-?: help\n\
-Commands can be prefixed by a number to repeat them.\n");
+[<number>] s: step line(s)\n\
+[<number>] r: step record(s)\n\
+[<number>] m: play to mark(s)\n\
+           m <name>: play to named mark\n\
+           e: play to EOF\n\
+           c: comment\n\
+           t: send TM to emulator\n\
+           q: quit\n\
+           d: disconnect\n\
+           ?: help\n");
     } else {
 	printf("%c? Use '?' for help.\n", *t);
     }
@@ -694,7 +718,7 @@ process(FILE *f, socket_t s)
  * Returns false for EOF or error, true otherwise.
  */
 static bool
-step(FILE *f, socket_t s, step_t type)
+step(FILE *f, socket_t s, step_t type, const char *mark)
 {
     int c = 0;
     static ssize_t d1;
@@ -709,6 +733,8 @@ step(FILE *f, socket_t s, step_t type)
     static char dchars[] = { '<', '>' };
     char dchar = dchars[direction];
     char other_dchar = dchars[!direction];
+    char mbuf[256];
+    size_t mbuf_size = 0;
 #   define NO_FDISP { if (fdisp) { printf("\n"); fdisp = false; } }
 
 top:
@@ -737,9 +763,9 @@ top:
 	    break;
 	case BASE:
 	    if (c == '+' && type == STEP_MARK) {
-		/* Hit the mark. */
-		at_mark = true;
-		goto run_it;
+		pstate = MARK;
+		mbuf_size = 0;
+		break;
 	    }
 	    if (c == dchar) {
 		pstate = LESS;
@@ -753,6 +779,18 @@ top:
 	    } else {
 		pstate = WRONG;
 		again = true;
+	    }
+	    break;
+	case MARK:
+	    if (c == '\n') {
+		pstate = BASE;
+		if (type == STEP_MARK && (mark == NULL || !strcmp(mbuf, mark))) {
+		    at_mark = true;
+		    goto run_it;
+		}
+	    } else if (mbuf_size < sizeof(mbuf) - 1 && (mbuf_size > 0 || !isspace((int)c))) {
+		mbuf[mbuf_size++] = c;
+		mbuf[mbuf_size] = '\0';
 	    }
 	    break;
 	case LESS:
