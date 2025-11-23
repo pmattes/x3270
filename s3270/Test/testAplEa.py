@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,36 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# A queue-based pipe reader that allows timed reads
+# s3270 APL extended attribute tests
 
-import queue
-import threading
-from Common.Test.cti import cti
+from subprocess import Popen, PIPE, DEVNULL
+import unittest
 
-# Queue-based pipe reader.
-class pipeq():
+from Common.Test.cti import *
+from Common.Test.playback import playback
 
-    pipe = None
-    queue = None
-    limit = -1
-    count = 0
+@requests_timeout
+class TestS3270AplEa(cti):
 
-    # Initialization.
-    def __init__(self, cti: cti, pipe, limit=-1):
-        self.pipe = pipe
-        self.limit = limit
-        self.cti = cti
-        self.queue = queue.Queue()
-        self.thread = threading.Thread(target=self.shuttle)
-        self.thread.start()
+    # s3270 APL extended attribute test
+    def test_s3270_apl_ea(self):
 
-    def shuttle(self):
-        '''Shuttle data from the pipe to the queue'''
-        while True:
-            try:
-                rdata = self.pipe.readline()
-            except ValueError:
-                return
-            if len(rdata) == 0:
-                return
-            self.queue.put(rdata.strip())
-            if self.limit > 0:
-                self.count += 1
-                if self.count >= self.limit:
-                    break
+        # Start 'playback' to read s3270's output.
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/apl_all_ge.trc', port=port) as p:
+            ts.close()
 
-    def get(self, timeout=2, error='Pipe read timed out') -> bytes:
-        '''Timed read'''
-        try:
-            r = self.queue.get(block=True, timeout=timeout)
-        except queue.Empty:
-            r = None
-        self.cti.assertIsNotNone(r, error)
-        return r
-    
-    def close(self):
-        self.thread.join()
+            # Start s3270.
+            s3270 = Popen(vgwrap(['s3270', f'127.0.0.1:{port}']), stdin=PIPE, stdout=DEVNULL)
+            self.children.append(s3270)
+
+            # Make sure the emulator does what we expect, which is to report all APL characters with GEs.
+            # Also verifies that in a ReadModified reply, SFEs with CHARSET defined are reported as SAs.
+            p.match()
+
+        # Wait for the processes to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
+if __name__ == '__main__':
+    unittest.main()

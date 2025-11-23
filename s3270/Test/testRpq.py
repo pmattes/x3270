@@ -171,7 +171,7 @@ class TestS3270RpqNames(cti):
     
     def get_timezone(self) -> str:
         '''Get the timezone'''
-        offset = time.altzone if time.daylight != 0 else time.timezone
+        offset = time.timezone
         tz = -(offset // 60) & 0xffff
         return rpq.add_len(rpq.RpqName.Timezone.encode() + f'{tz:04x}')
 
@@ -212,7 +212,7 @@ class TestS3270RpqNames(cti):
         self.s3270_rpqnames(rpq.make_rpq(self.get_timezone()), rpq='TIMEZONE')
 
     # Time zone, with lots of contradictory noise beforehand
-    def test_s3270_rpqnames_timezone(self):
+    def test_s3270_rpqnames_timezone_noise(self):
         self.s3270_rpqnames(rpq.make_rpq(self.get_timezone()), rpq='TIMEZONE:NOTIMEZONE:ALL:NOALL:TIMEZONE')
 
     # Time zone override, negative offset

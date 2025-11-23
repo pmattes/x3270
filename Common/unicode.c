@@ -63,6 +63,9 @@
 # include <iconv.h>
 #endif /*]*/
 
+/* The circled 'A' character. */
+#define CIRCLED_A	0x24b6
+
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;
 iconv_t i_mb2u = (iconv_t)-1;
@@ -922,12 +925,29 @@ fail:
     x = strchr(undera, c);
     if (x != NULL) {
 	if (flags & EUO_APL_CIRCLED) {
-	    return 0x24b6 + (int)(x - undera);
+	    return CIRCLED_A + (int)(x - undera);
 	} else {
-	    return c;
+	    return 'A' + (char)(x - undera);
 	}
     }
     return -1;
+}
+
+/* Check if a character is an underlined APL character mapped to a circled alphabetic. */
+bool
+unicode_is_apl_circled(ucs4_t u)
+{
+    return u >= CIRCLED_A && u < CIRCLED_A + 26;
+}
+
+/* Translate a APL-mapped circled alphabetic back to its un-underlined form. */
+ucs4_t unicode_uncircle(ucs4_t u)
+{
+    if (unicode_is_apl_circled(u)) {
+	return u - CIRCLED_A + 'A';
+    } else {
+	return u;
+    }
 }
 
 /*

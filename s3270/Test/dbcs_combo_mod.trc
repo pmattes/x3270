@@ -1,0 +1,74 @@
+// # DBCS with an SA-based field and a DBCS (SFE) field.
+// rows 43
+// columns 80
+// codepage cp930
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  raw 0802 # send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  raw 0204 # device-type is
+//  atext IBM-3278-4-E
+//  raw 01 # connect
+//  atext TEST
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d342d450154455354fff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  raw 0304 # functions is
+//  raw 0204 #  RESPONSES SYSREQ
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Set reply mode to character.
+// tn3270e 3270-data none error-response 1
+// #    wsf len=6 set-reply-mode partition 00 character-mode charset
+//  raw 11000609000243
+//  telnet.eor
+< 0x0   000001000111000609000243ffef
+// # Draw the screen.
+// tn3270e 3270-data none error-response 2
+//  cmd.ewa restore
+//   ord.sba 1 1
+//   ord.sfe 3270 protect fg default
+//   text "DBCS characters"
+//   ord.sba 2 1
+//   ord.sf protect,high,modify
+//   text "DBCS SA "
+//   ord.sf high,modify
+//   ord.sa charset dbcs
+//   text 国内外の
+//   ord.sa charset default
+//   text abc
+//   ord.sa charset dbcs
+//   text 国内外の
+//   ord.sa charset default
+//   ord.sf protect
+//   ord.sba 3 1
+//   ord.sf protect,high,modify
+//   text "DBCS SFE"
+//   ord.sfe 3270 high,modify charset dbcs
+//   text 国内外の国内外の
+//   ord.sf protect
+//   ord.sba 4 1
+//   ord.sf protect,high,modify
+//   text "Another field"
+//   ord.sba 14 1
+//   ord.sf modify
+//   ord.ic
+//   ord.sba 15 1
+//   ord.sf protect
+//  telnet.eor
+// # Read it back.
+// tn3270e 3270-data none error-response 2
+//  cmd.rm
+//  telnet.eor
+< 0x0   00000100027e021140402902c0604200c4c2c3e2406469629b6264b3669bab11
+< 0x20  c1501de9c4c2c3e240e2c1401dc92843f8458f458e4694449a28430062636428
+< 0x40  43f8458f458e4694449a2843001d6011c2601de9c4c2c3e240e2c6c52902c0c9
+< 0x60  43f8458f458e4694449a458f458e4694449a1d6011c3f01de9c17677b369669b
+< 0x80  4067716674651150501dc11311d1601d60ffef000001000206ffef

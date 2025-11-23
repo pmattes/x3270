@@ -187,7 +187,7 @@ class playback():
             nleft -= len(chunk)
         return ret
 
-    def match(self, disconnect=True, nrecords=-1, nlines=-1):
+    def match(self, disconnect=True, nrecords=-1, nlines=-1, verbose=False):
         '''Compare emulator I/O to trace file'''
         self.wait_accept()
         direction = ''  # '<' if sending to emulator, '>' if receiving
@@ -223,6 +223,8 @@ class playback():
                     accum = ''
                     r = self.nread(len(want))
                     self.ct.assertEqual(r, want)
+                    if (verbose):
+                        print(f'playback.match: verified {r}')
                 direction = ''
             if isIo:
                 # Start accumulating.

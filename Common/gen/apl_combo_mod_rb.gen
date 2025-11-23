@@ -1,0 +1,73 @@
+rows 43
+columns 80
+
+# Ask for TN3270E.
+telnet.do tn3270e
+flush
+
+# Ask for the device type.
+telnet.sb tn3270e
+ raw 0802 # send device-type
+ telnet.se
+flush
+
+# Tell them what the device type is.
+telnet.sb tn3270e
+ raw 0204 # device-type is
+ atext IBM-3278-4-E
+ raw 01 # connect
+ atext TEST
+ telnet.se
+flush
+
+# Tell them what TN3270E we will support (no BIND-IMAGE)
+telnet.sb tn3270e
+ raw 0304 # functions is
+ raw 0204 #  RESPONSES SYSREQ
+ telnet.se
+flush
+
+# Draw the screen.
+tn3270e 3270-data none error-response 1
+ cmd.ewa reset,alarm,restore
+  ord.sba 1 1
+  ord.sfe 3270 protect fg default
+  text "APL characters"
+  # Define an ordinary field with APL extended attributes, interrupted by a stretch of non-APL.
+  # The APL regions should be reported with GEs by the RM below.
+  ord.sba 2 1
+  ord.sf protect,high,modify
+  text "APL SA "
+  ord.sf high,modify
+  ord.sa charset apl
+  raw 4041424344
+  ord.sa charset default
+  raw 454647
+  ord.sa charset apl
+  raw 48494a4b4c4d4e4f
+  ord.sa charset default
+  ord.sf protect
+  ord.sba 3 1
+  ord.sf protect,high,modify
+  text "APL SFE"
+  # Define an extended field with the APL charset, with redundant APL extended attributes in the middle.
+  # The APL EA region should be reported with GEs by the RM below.
+  ord.sfe 3270 high,modify charset apl
+  raw 5051525354
+  ord.sa charset apl
+  raw 555657
+  ord.sa charset default
+  raw 58595a5b5c5d5e5f
+  ord.sf protect
+  # Then the usual input field.
+  ord.sba 14 1
+  ord.sf modify
+  ord.ic
+  ord.sba 15 1
+  ord.sf protect
+ telnet.eor
+# Read it back.
+tn3270e 3270-data none error-response 2
+ cmd.rb
+ telnet.eor
+flush

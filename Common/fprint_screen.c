@@ -408,6 +408,7 @@ fprint_screen_body(fps_t ofps)
     unsigned char fa;
     int fa_fg, current_fg;
     int fa_bg, current_bg;
+    int fa_cs;
     bool fa_high, current_high;
     bool fa_ital, current_ital;
     bool fa_underline, current_underline;
@@ -458,6 +459,11 @@ fprint_screen_body(fps_t ofps)
 	fa_bg = HOST_COLOR_BLACK;
     }
     current_bg = fa_bg;
+    if (xea[fa_addr].cs) {
+	fa_cs = xea[fa_addr].cs;
+    } else {
+	fa_cs = 0;
+    }
 
     if (xea[fa_addr].gr & GR_INTENSIFY) {
 	fa_high = true;
@@ -556,6 +562,7 @@ fprint_screen_body(fps_t ofps)
     for (i = 0; i < xrows * COLS; i++) {
 	char mb[16];
 	int nmb;
+	bool extra_underline = false;
 
 	uc = 0;
 
@@ -581,6 +588,11 @@ fprint_screen_body(fps_t ofps)
 	    } else {
 		fa_bg = HOST_COLOR_BLACK;
 	    }
+	    if (xea[i].cs) {
+		fa_cs = xea[i].cs;
+	    } else {
+		fa_cs = 0;
+	    }
 	    if (xea[i].gr & GR_INTENSIFY) {
 		fa_high = true;
 	    } else {
@@ -595,6 +607,7 @@ fprint_screen_body(fps_t ofps)
 	    fa = 0;
 	    fa_fg = HOST_COLOR_NEUTRAL_BLACK;
 	    fa_bg = HOST_COLOR_BLACK;
+	    fa_cs = 0;
 	    fa_high = false;
 	    fa_ital = false;
 	    fa_underline = false;
@@ -615,12 +628,26 @@ fprint_screen_body(fps_t ofps)
 	    }
 	} else {
 	    /* Convert EBCDIC to Unicode. */
+	    int cs;
+
+	    if (xea[i].fa) {
+		cs = 0;
+	    } else if (xea[i].cs) {
+		cs = xea[i].cs;
+	    } else {
+		cs = fa_cs;
+	    }
 	    switch (protected_dbcs_state(i)) {
 	    case DBCS_NONE:
 	    case DBCS_SB:
-		uc = ebcdic_to_unicode(xea[i].ec, xea[i].cs, EUO_NONE);
+		uc = ebcdic_to_unicode(xea[i].ec, cs, EUO_APL_CIRCLED);
 		if (uc == 0) {
 		    uc = ' ';
+		}
+		if (unicode_is_apl_circled(uc)) {
+		    /* Underlined APL alphabetics. */
+		    uc = unicode_uncircle(uc);
+		    extra_underline = true;
 		}
 		break;
 	    case DBCS_LEFT:
@@ -682,6 +709,7 @@ fprint_screen_body(fps_t ofps)
 	    } else {
 		underline = fa_underline;
 	    }
+	    underline |= extra_underline;
 	    if (underline != current_underline) {
 		if (underline) {
 		    if (fprintf(fps->file, "\\ul ") < 0) {
@@ -756,6 +784,7 @@ fprint_screen_body(fps_t ofps)
 	    } else {
 		underline = fa_underline;
 	    }
+	    underline |= extra_underline;
 
 	    if (i == cursor_addr) {
 		fg_color = (bg_color == HOST_COLOR_RED)?

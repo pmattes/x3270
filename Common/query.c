@@ -34,6 +34,7 @@
 
 #include "appres.h"
 
+#include "3270ds.h"
 #include "actions.h"
 #include "codepage.h"
 #include "copyright.h"
@@ -43,6 +44,7 @@
 #include "names.h"
 #include "popups.h"
 #include "query.h"
+#include "see.h"
 #include "split_host.h"
 #include "telnet.h"
 #include "task.h"
@@ -151,6 +153,29 @@ get_proxy(void)
 		(user != NULL)? " ": "",
 		(user != NULL)? user: ""):
 	NULL;
+}
+
+static const char *
+get_reply_mode(void)
+{
+    varbuf_t r;
+    int i;
+
+    switch (reply_mode) {
+    case SF_SRM_FIELD:
+	return "field";
+    case SF_SRM_XFIELD:
+	return "extended-field";
+    case SF_SRM_CHAR:
+	vb_init(&r);
+	vb_appends(&r, "character");
+	for (i = 0; i < crm_nattr; i++) {
+	    vb_appendf(&r, " +%s", see_efa_only(crm_attr[i]));
+	}
+	return txdFree(vb_consume(&r));
+    default:
+	return txAsprintf("0x%02x", reply_mode);
+    }
 }
 
 static const char *
@@ -349,6 +374,7 @@ query_register(void)
 	{ KwModel, get_full_model, NULL, true, false },
 	{ KwPrefixes, host_prefixes, NULL, false, false },
 	{ KwProxy, get_proxy, NULL, false, false },
+	{ KwReplyMode, get_reply_mode, NULL, false, false },
 	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, true, false },
 	{ KwScreenMaxSize, ctlr_query_max_size_old, NULL, true, false },
 	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, false, false },

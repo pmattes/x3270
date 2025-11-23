@@ -1,0 +1,65 @@
+// rows 43
+// columns 80
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  tn3270e.send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  tn3270e.device-type is IBM-3278-4-E
+//  tn3270e.connect TEST
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d342d450154455354fff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  tn3270e.functions is responses,sysreq
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Draw the screen.
+// tn3270e 3270-data
+//  cmd.ewa reset,alarm,restore
+//   ord.sba 1 1
+//   ord.sfe 3270 protect,high fg default
+//   text "APL characters"
+//   ord.sba 2 1
+//   ord.sf protect
+//   text "Using SA "
+//   ord.sf protect,modify
+//   ord.sa charset apl
+//   raw 4041424344
+//   ord.sa charset default
+//   raw 454647
+//   ord.sa charset apl
+//   raw 48494a4b4c4d4e4f
+//   ord.sa charset default
+//   ord.sf protect
+//   ord.sba 3 1
+//   ord.sf protect
+//   text "Using SFE"
+//   ord.sfe 3270 protect,modify charset apl
+//   raw 5051525354
+//   ord.sa charset apl
+//   raw 555657
+//   ord.sa charset default
+//   raw 58595a5b5c5d5e5f
+//   ord.sf protect
+//   ord.sba 14 1
+//   ord.sf modify
+//   ord.ic
+//   ord.sba 15 1
+//   ord.sf protect
+//  telnet.eor
+< 0x0   00000100017e461140402902c0e84200c1d7d340838881998183a38599a211c1
+< 0x20  501d60e4a289958740e2c1401d612843f140414243442843004546472843f148
+< 0x40  494a4b4c4d4e4f2843001d6011c2601d60e4a289958740e2c6c52902c06143f1
+< 0x60  50515253542843f155565728430058595a5b5c5d5e5f1d601150501dc11311d1
+< 0x80  601d60ffef
+// # Read it back.
+// tn3270e 3270-data
+//  cmd.rm
+//  telnet.eor
+< 0x0   000001000206ffef

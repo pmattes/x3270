@@ -1,0 +1,188 @@
+20251122.110923.115 infra  Trace started
+ Version: s3270 v4.6pre1 Sat Nov 22 01:05:11 UTC 2025 pdm
+ Build options: --enable-local-process via gcc 13.3.0 64-bit
+ Command: s3270 -trace localhost:4001
+ Model 3279-4-E, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true alwaysInsert=false bindLimit=true
+  blankFill=true caDir= caFile= certFile= certFileType= chainFile=
+  codePage=bracket confDir=/usr/local/etc/x3270 contentionResolution=true
+  devName= extendedDataStream=true ftBufferSize=16384 httpd= insertMode=false
+  keyFile= keyFileType= keyPasswd= lineMode=true lineWrap=false loginMacro=
+  model=3279-4-E monoCase=false noTelnetInputMode=line nopSeconds=0
+  oerrLock=true oversize= preferIpv4=false preferIpv6=false printer.options=
+  printerLu= proxy= reconnect=false retry=false reverseInputMode=false
+  rightToLeftMode=false rpq= screenTrace=false scriptPort= showTiming=false
+  startTls=true termName= tls992=true tlsMaxProtocol= tlsMinProtocol=
+  tlsSecurityLevel= trace=true underscoreBlankFill=true unlockDelay=false
+  unlockDelayMs=350 user= verifyHostCert=true wrongTerminalName=false
+ Connection state: not-connected
+ Data stream:
+20251122.110923.115 infra  st_changed(secure,false)
+20251122.110923.115 socket Resolver slot is 0
+20251122.110923.115 infra  cstate [not-connected] -> [resolving] (host_connect)
+20251122.110923.115 infra  st_changed(connect,true)
+20251122.110923.115 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20251122.110923.115 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20251122.110923.115 infra  ctlr_enable_cursor(false, connect)
+20251122.110923.115 infra  st_changed(negotiating,true)
+20251122.110923.115 sched  Waiting for 1 event or 0.999 sec
+20251122.110923.115 sched  Got 1 fd, 1 event
+20251122.110923.115 socket Resolution complete, 1 address
+20251122.110923.118 tls    Will verify host certificate
+20251122.110923.140 socket Making host socket non-blocking
+20251122.110923.140 socket Trying 127.0.0.1, port 4001...
+20251122.110923.140 socket TCP connection pending.
+20251122.110923.141 infra  cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20251122.110923.141 infra  st_changed(negotiating,true)
+20251122.110923.141 infra  txflush: 33 slots, 2008 bytes
+20251122.110923.141 sched  Waiting for 4 events or 0.000 sec
+20251122.110923.141 sched  Got 1 fd, 1 event
+20251122.110923.141 socket Output possible
+20251122.110923.141 infra  cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20251122.110923.141 infra  st_changed(connect,true)
+20251122.110923.141 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20251122.110923.141 kybd   Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20251122.110923.141 infra  Host negotiation step took 0.000083s to complete
+20251122.110923.141 infra  ctlr_enable_cursor(true, connect)
+20251122.110923.141 infra  ctlr_enable_cursor(true, nvt)
+20251122.110923.141 infra  st_changed(negotiating,true)
+20251122.110923.141 socket Connected to localhost, port 4001.
+20251122.110923.141 infra  st_changed(secure,false)
+20251122.110923.141 infra  st_changed(line-mode,true)
+20251122.110923.141 infra  txflush: 21 slots, 744 bytes
+20251122.110923.141 sched  Waiting for 3 events or 0.999 sec
+20251122.110924.141 sched  Got 0 fds, 0 events
+20251122.110924.141 sched  Processing timeout
+20251122.110924.141 sched  Waiting for 3 events or 0.999 sec
+20251122.110924.863 sched  Got 1 fd, 1 event
+20251122.110924.863 socket Reading host socket
+20251122.110924.863 socket Host socket read complete nr=43
+< 0x0   fffd28fffa280802fff0fffa28020449424d2d333237382d342d450154455354
+< 0x20  fff0fffa2803040204fff0
+20251122.110924.863 telnet RCVD DO TN3270E
+> 0x0   fffb28
+20251122.110924.863 telnet SENT WILL TN3270E
+20251122.110924.863 tn3270 Now operating in connected-unbound mode.
+20251122.110924.863 infra  cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20251122.110924.863 infra  st_changed(negotiating,true)
+20251122.110924.863 infra  st_changed(3270-mode,false)
+20251122.110924.863 infra  Host negotiation step took 0.000010s to complete
+20251122.110924.863 infra  ctlr_enable_cursor(true, connect)
+20251122.110924.863 telnet RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20251122.110924.863 telnet SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20251122.110924.863 telnet RCVD SB TN3270E DEVICE-TYPE IS IBM-3278-4-E CONNECT TEST SE
+> 0x0   fffa28030700020405fff0
+20251122.110924.863 telnet SENT SB TN3270E FUNCTIONS REQUEST BIND-IMAGE RESPONSES SYSREQ CONTENTION-RESOLUTION SE
+20251122.110924.863 telnet RCVD SB TN3270E FUNCTIONS IS RESPONSES SYSREQ SE
+20251122.110924.863 tn3270 TN3270E option negotiation complete.
+20251122.110924.863 tn3270 Now operating in connected-tn3270e mode.
+20251122.110924.863 infra  cstate [connected-unbound] -> [connected-tn3270e] (host_in3270)
+20251122.110924.863 infra  st_changed(3270-mode,true)
+20251122.110924.863 infra  ctlr_enable_cursor(true, connect)
+20251122.110924.863 infra  txflush: 22 slots, 880 bytes
+20251122.110924.863 task   CB(s3stdin)[#1] started
+20251122.110924.863 task   CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20251122.110924.863 task   Macro[#1.2] IDLE -> RUNNING (fresh push)
+20251122.110924.863 task   Macro[#1.2] RUNNING -> IDLE (about to resume)
+20251122.110924.863 task   Macro[#1.2] running
+20251122.110924.863 task   Macro[#1.2] IDLE -> RUNNING (executing)
+20251122.110924.863 task   Macro[#1.2] 'Wait(inputfield)'
+20251122.110924.863 infra  script -> Wait("inputfield")
+20251122.110924.863 task   Macro[#1.2] RUNNING -> WAIT_IFIELD (Wait(inputfield))
+20251122.110924.863 sched  Waiting for 3 events
+20251122.110924.863 sched  Got 1 fd, 1 event
+20251122.110924.863 socket Reading host socket
+20251122.110924.863 socket Host socket read complete nr=14
+< 0x0   000001000111000609000243ffef
+20251122.110924.863 tn3270 RCVD TN3270E(3270-DATA ERROR-RESPONSE 1)
+< WriteStructuredField SetReplyMode(0x00) Character(charset)
+20251122.110924.863 telnet RCVD EOR
+20251122.110924.863 infra  txflush: 23 slots, 824 bytes
+20251122.110924.863 sched  Waiting for 3 events
+20251122.110925.650 sched  Got 1 fd, 1 event
+20251122.110925.650 socket Reading host socket
+20251122.110925.650 socket Host socket read complete nr=32
+< 0x0   00000100027e021140402902c0604200c1d7d340838881998183a38599a211c1
+20251122.110925.650 sched  Waiting for 3 events
+20251122.110925.690 sched  Got 1 fd, 1 event
+20251122.110925.690 socket Reading host socket
+20251122.110925.690 socket Host socket read complete nr=115
+< 0x0   501de9c1d7d340e2c1401dc92843f140414243442843004546472843f148494a
+< 0x20  4b4c4d4e4f2843001d6011c2601de9c1d7d340e2c6c52902c0c943f150515253
+< 0x40  542843f155565728430058595a5b5c5d5e5f1d6011c3f01de9c19596a3888599
+< 0x60  4086898593841150501dc11311d1601d60ffef
+20251122.110925.691 tn3270 RCVD TN3270E(3270-DATA ERROR-RESPONSE 2)
+< EraseWriteAlternate(restore) SetBufferAddress(1,1) StartFieldExtended 327 ...
+... 0(protected) foreground(default) 'APL characters' SetBufferAddress(2,1) ...
+...  StartField(protected,intensified,modified) 'APL SA ' StartField(2,9)(i ...
+... ntensified,modified) SetAttribute charset(f1) '  âäà' SetAttribute char ...
+... set(0) 'áãå' SetAttribute charset(f1) 'çñ¢.<(+|' SetAttribute charset(0 ...
+... ) StartField(2,26)(protected) SetBufferAddress(3,1) StartField(protecte ...
+... d,intensified,modified) 'APL SFE' StartFieldExtended(3,9) 3270(intensif ...
+... ied,modified) charset(f1) '&éêëè' SetAttribute charset(f1) 'íîï' SetAtt ...
+... ribute charset(0) 'ìß!$*);¬' StartField(3,26)(protected) SetBufferAddre ...
+... ss(4,1) StartField(protected,intensified,modified) 'Another field' SetB ...
+... ufferAddress(14,1) StartField(modified) InsertCursor(14,2) SetBufferAdd ...
+... ress(15,1) StartField(protected)
+20251122.110925.691 kybd   Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+20251122.110925.691 telnet RCVD EOR
+20251122.110925.691 infra  txflush: 113 slots, 3000 bytes
+20251122.110925.691 task   Macro[#1.2] WAIT_IFIELD -> IDLE (about to resume)
+20251122.110925.691 task   Macro[#1.2] running
+20251122.110925.691 task   Macro[#1.2] complete, success
+20251122.110925.691 task   CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20251122.110925.691 task   CB(s3stdin)[#1.1] child task done, success
+20251122.110925.691 infra  Output for CB(s3stdin)[#1.1]: U F U C(localhost) I 4 43 80 13 1 0x0 0.829/ok
+20251122.110925.691 task   CB(s3stdin)[#1.1] complete, success
+20251122.110925.691 task   CB(s3stdin)[#1] complete
+20251122.110925.691 sched  Waiting for 4 events
+20251122.110926.438 sched  Got 1 fd, 1 event
+20251122.110926.438 socket Reading host socket
+20251122.110926.438 socket Host socket read complete nr=8
+< 0x0   000001000206ffef
+20251122.110926.438 tn3270 RCVD TN3270E(3270-DATA ERROR-RESPONSE 2)
+< ReadModified
+> NoAID(14,2) SetBufferAddress(2,2) 'APL SA ' SetBufferAddress(2,10) SetAtt ...
+... ribute charset(f1) GraphicEscape ' ' GraphicEscape ' ' GraphicEscape 'â ...
+... ' GraphicEscape 'ä' GraphicEscape 'à' SetAttribute charset(0) 'áãå' Set ...
+... Attribute charset(f1) GraphicEscape 'ç' GraphicEscape 'ñ' GraphicEscape ...
+...  '¢' GraphicEscape '.' GraphicEscape '<' GraphicEscape '(' GraphicEscap ...
+... e '+' GraphicEscape '|' SetBufferAddress(3,2) SetAttribute charset(0) ' ...
+... APL SFE' SetBufferAddress(3,10) SetAttribute charset(f1) GraphicEscape  ...
+... '&' GraphicEscape 'é' GraphicEscape 'ê' GraphicEscape 'ë' GraphicEscape ...
+...  'è' GraphicEscape 'í' GraphicEscape 'î' GraphicEscape 'ï' GraphicEscap ...
+... e 'ì' GraphicEscape 'ß' GraphicEscape '!' GraphicEscape '$' GraphicEsca ...
+... pe '*' GraphicEscape ')' GraphicEscape ';' GraphicEscape '¬' SetBufferA ...
+... ddress(4,2) SetAttribute charset(0) 'Another field' SetBufferAddress(14 ...
+... ,2)
+20251122.110926.438 tn3270 SENT TN3270E(3270-DATA NO-RESPONSE 0)
+> 0x0   00000000006050d111c1d1c1d7d340e2c14011c1d92843f10840084108420843
+> 0x20  08442843004546472843f108480849084a084b084c084d084e084f11c2612843
+> 0x40  00c1d7d340e2c6c511c2e92843f1085008510852085308540855085608570858
+> 0x60  0859085a085b085c085d085e085f11c3f1284300c19596a38885994086898593
+> 0x80  841150d1ffef
+20251122.110926.439 telnet SENT EOR
+20251122.110926.439 telnet RCVD EOR
+20251122.110926.439 infra  txflush: 96 slots, 2608 bytes
+20251122.110926.439 sched  Waiting for 4 events
+20251122.110927.922 sched  Got 1 fd, 1 event
+20251122.110927.923 socket Reading host socket
+20251122.110927.923 socket Host socket read complete nr=0
+20251122.110927.923 socket RCVD disconnect
+20251122.110927.923 infra  st_changed(secure,false)
+20251122.110927.923 socket SENT disconnect
+20251122.110927.923 infra  cstate [connected-tn3270e] -> [not-connected] (net_disconnect)
+20251122.110927.923 infra  st_changed(connect,false)
+20251122.110927.923 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20251122.110927.923 infra  ctlr_enable_cursor(false, connect)
+20251122.110927.923 infra  ctlr_enable_cursor(false, nvt)
+20251122.110927.923 infra  txflush: 16 slots, 592 bytes
+20251122.110927.924 sched  Waiting for 2 events
+20251122.110936.180 sched  Got 1 fd, 1 event
+20251122.110936.180 script s3stdin EOF
+20251122.110936.180 infra  Exiting with status 0
+20251122.110936.180 infra  st_changed(exiting,true)
+20251122.110936.180 infra  Trace stopped
