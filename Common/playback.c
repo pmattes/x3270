@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2022 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -108,7 +108,7 @@ usage(const char *s)
     if (s != NULL) {
 	fprintf(stderr, "%s\n", s);
     }
-    fprintf(stderr, "usage: %s [-b] [-w] [-p port] file\n", me);
+    fprintf(stderr, "usage: %s [-b] [-w] [-p [address:]port] file\n", me);
     exit(1);
 }
 
@@ -393,6 +393,7 @@ process_command(FILE *f, socket_t s)
 #endif /*]*/
     char *t;
     int rv = 0;
+    int repeat = 1;
 
 #if !defined(_WIN32) /*[*/
     /* Get the input line, a character at a time. */
@@ -435,37 +436,57 @@ process_command(FILE *f, socket_t s)
     if (!*t) {
 	goto done;
     }
+    if (isdigit(*t)) {
+	char *r_start = t;
+
+	while (isdigit(*++t)) {
+	    ;
+	}
+	repeat = atoi(r_start);
+	while (*t == ' ') {
+	    t++;
+	}
+	if (!*t) {
+	    goto done;
+	}
+    }
 
     if (!strncmp(t, "s", 1)) {		/* step line */
 	if (f == NULL) {
 	    printf("Not connected.\n");
 	    goto done;
 	}
-	printf("Stepping one line\n");
-	fflush(stdout);
-	if (!step(f, s, STEP_LINE)) {
-	    rv = -1;
-	    goto done;
+	while (repeat--) {
+	    printf("Stepping one line\n");
+	    fflush(stdout);
+	    if (!step(f, s, STEP_LINE)) {
+		rv = -1;
+		goto done;
+	    }
 	}
     } else if (!strncmp(t, "r", 1)) {	/* step record */
 	if (f == NULL) {
 	    printf("Not connected.\n");
 	    goto done;
 	}
-	printf("Stepping to EOR\n");
-	fflush(stdout);
-	if (!step(f, s, STEP_EOR)) {
-	    rv = -1;
-	    goto done;
+	while (repeat--) {
+	    printf("Stepping to EOR\n");
+	    fflush(stdout);
+	    if (!step(f, s, STEP_EOR)) {
+		rv = -1;
+		goto done;
+	    }
 	}
     } else if (!strncmp(t, "m", 1)) {	/* to mark */
 	if (f == NULL) {
 	    printf("Not connected.\n");
 	    goto done;
 	}
-	if (!step(f, s, STEP_MARK)) {
-	    rv = -1;
-	    goto done;
+	while (repeat--) {
+	    if (!step(f, s, STEP_MARK)) {
+		rv = -1;
+		goto done;
+	    }
 	}
     } else if (!strncmp(t, "e", 1)) {	/* to EOF */
 	if (f == NULL) {
@@ -515,7 +536,8 @@ c: comment\n\
 t: send TM to emulator\n\
 q: quit\n\
 d: disconnect\n\
-?: help\n");
+?: help\n\
+Commands can be prefixed by a number to repeat them.\n");
     } else {
 	printf("%c? Use '?' for help.\n", *t);
     }
