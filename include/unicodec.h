@@ -92,4 +92,5 @@ typedef struct {
 cpname_t *get_cpnames(void);
 void free_cpnames(cpname_t *cpnames);
 bool is_all_digits(const char *s);
-
+bool unicode_is_apl_circled(ucs4_t u);
+ucs4_t unicode_uncircle(ucs4_t u);

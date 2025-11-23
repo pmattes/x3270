@@ -1049,6 +1049,16 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
 	}
     }
 
+    if (!ctlr_mutable_cs()) {
+	/* If there are any charset SAs to the right of this position, say no. We can't move them. */
+	for (xaddr = baddr; xaddr != next_faddr;) {
+	    if (ea_buf[xaddr].cs & CS_MASK) {
+		return false;
+	    }
+	    INC_BA(xaddr);
+	}
+    }
+
     /* Are there enough NULs or trailing blanks available? */
     xaddr = baddr;
     need = count;
@@ -1230,6 +1240,13 @@ key_Character(unsigned ebc, bool with_ge, bool pasting, bool oerr_fail,
 
     /* Can't put an SBCS in a DBCS field. */
     if (ea_buf[faddr].cs == CS_DBCS) {
+	vctrace(TC_KYBD, "  [error, cannot put SBCS in a DBCS field]\n");
+	return operator_error(KL_OERR_DBCS, oerr_fail);
+    }
+
+    /* Can't put SBCS in a DBCS sub-field, unless reply mode is right. */
+    if (ea_buf[baddr].cs == CS_DBCS && !ctlr_mutable_cs()) {
+	vctrace(TC_KYBD, "  [error, cannot overwrite DBCS with SBCS unless in character reply mode]\n");
 	return operator_error(KL_OERR_DBCS, oerr_fail);
     }
 
@@ -1684,7 +1701,8 @@ retry:
 		ctlr_add(baddr, EBC_si, ea_buf[baddr].cs);
 	    }
 	    done = true;
-	} else if (reply_mode == SF_SRM_CHAR) {
+	} else if (ctlr_mutable_cs()) {
+
 	    /* Use the character attribute. */
 	    if (toggled(INSERT_MODE)) {
 		if (!ins_prep(faddr, baddr, 2, &no_room, oerr_fail)) {
@@ -1702,6 +1720,8 @@ retry:
 	    ctlr_add(baddr, ebc_pair[1], CS_DBCS);
 	    INC_BA(baddr);
 	    done = true;
+	} else {
+	    vctrace(TC_KYBD, "  [DBCS character ignored, no input control and not in character reply mode]\n");
 	}
 	break;
     }
@@ -1831,6 +1851,17 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		keytype == KT_GE || toggled(APL_MODE));
 	if (ebc == 0) {
 	    vctrace(TC_KYBD, "  dropped (no EBCDIC translation)\n");
+	    return;
+	}
+	if (ea_buf[find_field_attribute(cursor_addr)].cs == CS_APL && !ge) {
+	    /*
+	     * Unlike adding n APL character to a non-APL field, which is marked with a CS,
+	     * there is no way to add a non-APL character to an APL field. The representation of
+	     * a character set in struct ea does not distinguish between an explicit default and
+	     * an implicit default (meaning falling back to the field's character set). So setting
+	     * the character set to 0 here would not mark it as non-APL.
+	     */
+	    vctrace(TC_KYBD, "  dropped (non-APL character in APL-only field)\n");
 	    return;
 	}
 	if (ebc & 0xff00) {
@@ -2182,6 +2213,16 @@ do_delete(void)
 	DEC_BA(end_baddr);
     } else {
 	end_baddr = (ROWS * COLS) - 1;
+    }
+
+    if (!ctlr_mutable_cs()) {
+	/* If there are any charset SAs to the right of this position, say no. We can't move them. */
+	for (xaddr = baddr; xaddr != end_baddr;) {
+	    if (ea_buf[xaddr].cs & CS_MASK) {
+		return false;
+	    }
+	    INC_BA(xaddr);
+	}
     }
 
     /* Shift the remainder of the field left. */
@@ -2987,13 +3028,13 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (formatted) {	/* erase to next field attribute */
 	do {
-	    ctlr_add(baddr, EBC_null, 0);
+	    ctlr_add(baddr, EBC_null, ctlr_mutable_cs()? 0: ea_buf[baddr].cs);
 	    INC_BA(baddr);
 	} while (!ea_buf[baddr].fa);
 	mdt_set(cursor_addr);
     } else {	/* erase to end of screen */
 	do {
-	    ctlr_add(baddr, EBC_null, 0);
+	    ctlr_add(baddr, EBC_null, ctlr_mutable_cs()? 0: ea_buf[baddr].cs);
 	    INC_BA(baddr);
 	} while (baddr != 0);
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022 Paul Mattes.
+# Copyright (c) 2022-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,52 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# A queue-based pipe reader that allows timed reads
+# 3270 screen generator, common code
 
-import queue
-import threading
-from Common.Test.cti import cti
+class GenSyntaxError(SyntaxError):
+    # Constructor method
+    def __init__(self, value):
+        self.value = value
+    # __str__ display function
+    def __str__(self):
+        return(repr(self.value))
 
-# Queue-based pipe reader.
-class pipeq():
+class GenValueError(ValueError):
+    # Constructor method
+    def __init__(self, value):
+        self.value = value
+    # __str__ display function
+    def __str__(self):
+        return(repr(self.value))
 
-    pipe = None
-    queue = None
-    limit = -1
-    count = 0
+class GenCommon():
+    rows = 24
+    columns = 80
+    max_rows = 24
+    max_columns = 80
+    auto_seq = 1
 
-    # Initialization.
-    def __init__(self, cti: cti, pipe, limit=-1):
-        self.pipe = pipe
-        self.limit = limit
-        self.cti = cti
-        self.queue = queue.Queue()
-        self.thread = threading.Thread(target=self.shuttle)
-        self.thread.start()
+# Maps an argument
+def map_arg(arg, map, type):
+    if not arg in map:
+        raise GenValueError(f'Unkown {type} {arg}')
+    return map[arg]
 
-    def shuttle(self):
-        '''Shuttle data from the pipe to the queue'''
-        while True:
-            try:
-                rdata = self.pipe.readline()
-            except ValueError:
-                return
-            if len(rdata) == 0:
-                return
-            self.queue.put(rdata.strip())
-            if self.limit > 0:
-                self.count += 1
-                if self.count >= self.limit:
-                    break
+code_table = [
+    '40', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7',
+    'c8', 'c9', '4a', '4b', '4c', '4d', '4e', '4f',
+    '50', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7',
+    'd8', 'd9', '5a', '5b', '5c', '5d', '5e', '5f',
+    '60', '61', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7',
+    'e8', 'e9', '6a', '6b', '6c', '6d', '6e', '6f',
+    'f0', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7',
+    'f8', 'f9', '7a', '7b', '7c', '7d', '7e', '7f'
+]
 
-    def get(self, timeout=2, error='Pipe read timed out') -> bytes:
-        '''Timed read'''
-        try:
-            r = self.queue.get(block=True, timeout=timeout)
-        except queue.Empty:
-            r = None
-        self.cti.assertIsNotNone(r, error)
-        return r
-    
-    def close(self):
-        self.thread.join()
+# Makes non-TELNET data IAC safe.
+def quote(hex):
+    return ''.join([b+'ff' if b == 'ff' else b for b in [hex[i:i+2] for i in range(0, len(hex), 2)]])
+
+# Expand a string into encoded text.
+def atext_str(s: str):
+    return ''.join([f'{c:2x}' for c in s.encode('utf8')])

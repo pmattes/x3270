@@ -37,7 +37,7 @@ enum pds {
     PDS_BAD_ADDR = -2		/* command contained a bad address */
 };
 
-extern unsigned char crm_attr[];
+extern unsigned char *crm_attr;
 extern int crm_nattr;
 extern unsigned char reply_mode;
 extern bool screen_alt;
@@ -62,6 +62,7 @@ void ctlr_clear(bool can_snap);
 void ctlr_erase(bool alt);
 void ctlr_erase_all_unprotected(void);
 void ctlr_init(unsigned cmask);
+bool ctlr_mutable_cs(void);
 const char *ctlr_query_cur_size(void);
 const char *ctlr_query_cur_size_old(void);
 const char *ctlr_query_cursor(void);

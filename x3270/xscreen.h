@@ -88,6 +88,7 @@ struct sp {
 	    unsigned bg  : 6;	/* background color */
 	    unsigned gr  : 4;	/* graphic rendition */
 	    unsigned cs  : 3;	/* character set */
+	    unsigned db  : 4;	/* DBCS state */
 	} bits;
 	unsigned long word;
     } u;

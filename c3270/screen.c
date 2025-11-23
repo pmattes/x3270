@@ -1519,18 +1519,28 @@ screen_disp(bool erasing _is_unused)
 			attr_set(attrs.attrs | A_UNDERLINE, attrs.pair, NULL);
 			addstr("..");
 		    } else {
-			if (ea_buf[baddr].ucs4 != 0) {
-			    len = unicode_to_multibyte(ea_buf[baddr].ucs4,
-				    mb, sizeof(mb));
+			if (menu_char(row + screen_yoffset,
+				    flipped? (cCOLS-1 - (col+1)): (col+1),
+				    false,
+				    &u, &highlight, &acs)) {
+			    addstr(" ");
 			} else {
-			    len = ebcdic_to_multibyte(
-				    (ea_buf[baddr].ec << 8) |
-				     ea_buf[xaddr].ec,
-				    mb, sizeof(mb));
+			    if (ea_buf[baddr].ucs4 != 0) {
+				len = unicode_to_multibyte(ea_buf[baddr].ucs4,
+					mb, sizeof(mb));
+			    } else {
+				len = ebcdic_to_multibyte(
+					(ea_buf[baddr].ec << 8) |
+					 ea_buf[xaddr].ec,
+					mb, sizeof(mb));
+			    }
+			    addstr(mb);
 			}
-			addstr(mb);
 		    }
 		} else if (!IS_RIGHT(d)) {
+		    int cs = ea_buf[baddr].cs? ea_buf[baddr].cs:
+			(ea_buf[fa_addr].cs? ea_buf[fa_addr].cs: 0);
+
 		    if (toggled(VISIBLE_CONTROL) &&
 			    ea_buf[baddr].ucs4 == 0 &&
 			    ea_buf[baddr].ec == EBC_null) {
@@ -1546,8 +1556,7 @@ screen_disp(bool erasing _is_unused)
 			addstr(">");
 		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
 			display_linedraw(ea_buf[baddr].ucs4);
-		    } else if (ea_buf[baddr].cs == CS_APL ||
-			    (ea_buf[baddr].cs & CS_GE)) {
+		    } else if (cs == CS_APL || (cs & CS_GE)) {
 			display_ge(ea_buf[baddr].ec);
 		    } else {
 			bool done_sbcs = false;
@@ -2281,6 +2290,9 @@ status_oerr(int error_type)
 	break;
     case KL_OERR_OVERFLOW:
 	other_msg = "X Overflow";
+	break;
+    case KL_OERR_DBCS:
+	other_msg = "X DBCS";
 	break;
     }
     other_attr = status_colors(HOST_COLOR_RED);

@@ -51,14 +51,7 @@
 #include "varbuf.h"
 #include "xscroll.h"
 
-/* Unicode circled A character. */
-#define CIRCLED_A	0x24b6
-/*
- * How many columns to span with redundant information to avoid near-adjacent
- * <attr> or <col> elements.
- */
 #define RED_SPAN	16
-
 /* How many columns of attr diff to join with a text diff. */
 #define AM_MAX		16
 
@@ -343,18 +336,7 @@ visible_fa(unsigned char fa)
 static bool
 is_apl_underlined(unsigned char cs, unsigned long uc)
 {
-    return ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) &&
-	uc >= CIRCLED_A &&
-	uc < CIRCLED_A + 26;
-}
-
-/*
- * Remap a circled alphabetic to a plain alphabetic.
- */
-static unsigned long
-uncircle(unsigned long uc)
-{
-    return 'A' + (uc - CIRCLED_A);
+    return ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) && unicode_is_apl_circled(uc);
 }
 
 /*
@@ -373,6 +355,7 @@ render_screen(struct ea *ea, screen_t *s)
     int fa_fg;
     int fa_bg;
     int fa_gr;
+    int fa_cs;
     bool fa_high;
 
     /* Start with all blanks, blue on black. */
@@ -402,9 +385,11 @@ render_screen(struct ea *ea, screen_t *s)
     }
 
     fa_gr = ea[fa_addr].gr;
+    fa_cs = ea[fa_addr].cs;
 
     for (i = 0; i < ROWS * COLS; i++) {
 	int fg_color, bg_color;
+	int cs = 0;
 	bool high;
 	bool dbcs = false;
 	bool dbcs_left_half = false;
@@ -437,6 +422,7 @@ render_screen(struct ea *ea, screen_t *s)
 		fa_high = FA_IS_HIGH(fa);
 	    }
 	    fa_gr = ea[i].gr;
+	    fa_cs = ea[i].cs;
 	} else if (FA_IS_ZERO(fa)) {
 	    if (d == DBCS_LEFT) {
 		uc = 0x3000;
@@ -445,6 +431,11 @@ render_screen(struct ea *ea, screen_t *s)
 		uc = ' ';
 	    }
 	} else {
+	    if (ea[i].cs) {
+		cs = ea[i].cs;
+	    } else {
+		cs = fa_cs;
+	    }
 	    if (is_nvt(&ea[i], false, &uc)) {
 		/* NVT-mode text. */
 		switch (d) {
@@ -510,10 +501,9 @@ render_screen(struct ea *ea, screen_t *s)
 			break;
 		    }
 		    if (!order) {
-			uc = ebcdic_to_unicode(ea[i].ec, ea[i].cs,
-				EUO_APL_CIRCLED);
-			if (is_apl_underlined(ea[i].cs, uc)) {
-			    uc = uncircle(uc);
+			uc = ebcdic_to_unicode(ea[i].ec, cs, EUO_APL_CIRCLED);
+			if (is_apl_underlined(cs, uc)) {
+			    uc = unicode_uncircle(uc);
 			    extra_underline = true;
 			    pua = true;
 			}
@@ -588,6 +578,7 @@ render_screen(struct ea *ea, screen_t *s)
 		visible_fa(ea[i].fa): uc;
 	    s[si].fg = mode3279? fg_color: HOST_COLOR_NEUTRAL_WHITE;
 	    s[si].bg = mode3279? bg_color: HOST_COLOR_NEUTRAL_BLACK;
+	    s[si].gr = 0;
 
 	    if (!ea[i].fa &&
 		    !FA_IS_ZERO(fa) &&

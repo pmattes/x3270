@@ -194,8 +194,8 @@ class TestS3270CodePage(cti):
 
         apl_chars = [
             ' ABCDEFGHI      ',
-            ' QRSTUVWXY      ',
-            '  bcdefghi      ',
+            ' JKLMNOPQR      ',
+            '  STUVWXYZ      ',
             '⋄∧¨⌻⍸⍷⊢⊣∨       ',
             '∼  ⎸⎹│    ↑↓≤⌈⌊→',
             '⎕▌▐▀▄■    ⊃⊂¤○±←',

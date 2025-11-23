@@ -99,7 +99,7 @@ int first_changed = -1;
 int last_changed = -1;
 unsigned char reply_mode = SF_SRM_FIELD;
 int crm_nattr = 0;
-unsigned char crm_attr[16];
+unsigned char *crm_attr = NULL;
 bool dbcs = false;
 
 /* Statics */
@@ -673,13 +673,13 @@ process_ds(unsigned char *buf, size_t buflen, bool kybd_restore)
  * Functions to insert SA attributes into the inbound data stream.
  */
 static void
-insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp,
+insert_sa1(unsigned char attr, unsigned char value, unsigned char *prevp,
 	bool *anyp)
 {
-    if (value == *currentp) {
+    if (value == *prevp) {
 	return;
     }
-    *currentp = value;
+    *prevp = value;
     space3270out(3);
     *obptr++ = ORDER_SA;
     *obptr++ = attr;
@@ -687,7 +687,7 @@ insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp,
     if (*anyp) {
 	trace_ds("'");
     }
-    trace_ds(" SetAttribute(%s)", see_efa(attr, value));
+    trace_ds(" SetAttribute%s", see_efa(attr, value));
     *anyp = false;
 }
 
@@ -709,31 +709,31 @@ host_cs(unsigned char cs)
 }
 
 static void
-insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
-	unsigned char *current_grp, unsigned char *current_csp,
-	unsigned char *current_icp, bool *anyp)
+insert_sa(unsigned char new_fg, unsigned char new_bg, unsigned char new_gr, unsigned char new_cs,
+	unsigned char *prev_fgp, unsigned char *prev_bgp, unsigned char *prev_grp, unsigned char *prev_csp,
+	bool *anyp)
 {
     if (reply_mode != SF_SRM_CHAR) {
 	return;
     }
 
     if (memchr((char *)crm_attr, XA_FOREGROUND, crm_nattr)) {
-	insert_sa1(XA_FOREGROUND, ea_buf[baddr].fg, current_fgp, anyp);
+	insert_sa1(XA_FOREGROUND, new_fg, prev_fgp, anyp);
     }
     if (memchr((char *)crm_attr, XA_BACKGROUND, crm_nattr)) {
-	insert_sa1(XA_BACKGROUND, ea_buf[baddr].bg, current_bgp, anyp);
+	insert_sa1(XA_BACKGROUND, new_bg, prev_bgp, anyp);
     }
     if (memchr((char *)crm_attr, XA_HIGHLIGHTING, crm_nattr)) {
 	unsigned char gr;
 
-	gr = ea_buf[baddr].gr;
+	gr = new_gr;
 	if (gr) {
 	    gr |= 0xf0;
 	}
-	insert_sa1(XA_HIGHLIGHTING, gr, current_grp, anyp);
+	insert_sa1(XA_HIGHLIGHTING, gr, prev_grp, anyp);
     }
     if (memchr((char *)crm_attr, XA_CHARSET, crm_nattr)) {
-	insert_sa1(XA_CHARSET, host_cs(ea_buf[baddr].cs), current_csp, anyp);
+	insert_sa1(XA_CHARSET, host_cs(new_cs), prev_csp, anyp);
     }
 }
 
@@ -745,14 +745,13 @@ insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
 void
 ctlr_read_modified(unsigned char aid_byte, bool all)
 {
-    int baddr, sbaddr;
+    int baddr, sbaddr, fa_addr;
     bool send_data = true;
     bool short_read = false;
-    unsigned char current_fg = 0x00;
-    unsigned char current_bg = 0x00;
-    unsigned char current_gr = 0x00;
-    unsigned char current_cs = 0x00;
-    unsigned char current_ic = 0x00;
+    unsigned char prev_fg = 0x00;
+    unsigned char prev_bg = 0x00;
+    unsigned char prev_gr = 0x00;
+    unsigned char prev_cs = 0x00;
 
     if (IN_SSCP && aid_byte != AID_ENTER) {
 	return;
@@ -777,35 +776,35 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 	trace_ds("SysReq");
 	break;
 
-	case AID_PA1:			/* short-read AIDs */
-	case AID_PA2:
-	case AID_PA3:
-	case AID_CLEAR:
-	    if (!all) {
-		short_read = true;
-	    }
-	    /* fall through... */
+    case AID_PA1:			/* short-read AIDs */
+    case AID_PA2:
+    case AID_PA3:
+    case AID_CLEAR:
+	if (!all) {
+	    short_read = true;
+	}
+	/* fall through... */
 
-	case AID_SELECT:		/* No data on READ MODIFIED */
-	    if (!all) {
-		send_data = false;
-	    }
-	    /* fall through... */
+    case AID_SELECT:		/* No data on READ MODIFIED */
+	if (!all) {
+	    send_data = false;
+	}
+	/* fall through... */
 
-	default:			/* ordinary AID */
-	    if (!IN_SSCP) {
-		space3270out(3);
-		*obptr++ = aid_byte;
-		trace_ds("%s", see_aid(aid_byte));
-		if (short_read) {
-		    goto rm_done;
-		}
-		ENCODE_BADDR(obptr, cursor_addr);
-		trace_ds("%s", rcba(cursor_addr));
-	    } else {
-		space3270out(1);	/* just in case */
+    default:			/* ordinary AID */
+	if (!IN_SSCP) {
+	    space3270out(3);
+	    *obptr++ = aid_byte;
+	    trace_ds("%s", see_aid(aid_byte));
+	    if (short_read) {
+		goto rm_done;
 	    }
-	    break;
+	    ENCODE_BADDR(obptr, cursor_addr);
+	    trace_ds("%s", rcba(cursor_addr));
+	} else {
+	    space3270out(1);	/* just in case */
+	}
+	break;
     }
 
     baddr = 0;
@@ -818,6 +817,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 	    INC_BA(baddr);
 	} while (baddr != 0);
 	sbaddr = baddr;
+	fa_addr = baddr;
 	do {
 	    if (FA_IS_MODIFIED(ea_buf[baddr].fa)) {
 		bool any = false;
@@ -830,15 +830,20 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 		while (!ea_buf[baddr].fa) {
 		    if (send_data && ea_buf[baddr].ec) {
 			enum dbcs_state d;
+			unsigned char cs = ea_buf[baddr].cs;
 
-			insert_sa(baddr,
-			    &current_fg,
-			    &current_bg,
-			    &current_gr,
-			    &current_cs,
-			    &current_ic,
-			    &any);
-			if (ea_buf[baddr].cs & CS_GE) {
+			insert_sa(ea_buf[baddr].fg? ea_buf[baddr].fg: ea_buf[fa_addr].fg,
+				ea_buf[baddr].bg? ea_buf[baddr].bg: ea_buf[fa_addr].bg,
+				ea_buf[baddr].gr? ea_buf[baddr].gr: ea_buf[fa_addr].gr,
+				ea_buf[baddr].cs? ea_buf[baddr].cs: ea_buf[fa_addr].cs,
+				&prev_fg,
+				&prev_bg,
+				&prev_gr,
+				&prev_cs,
+				&any);
+			if ((cs & CS_GE) ||
+				(cs & CS_MASK) == CS_APL ||
+				((ea_buf[fa_addr].cs == CS_APL) && (!(cs & CS_MASK)))) {
 			    space3270out(1);
 			    *obptr++ = ORDER_GE;
 			    if (any) {
@@ -879,6 +884,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 		    }
 		    INC_BA(baddr);
 		}
+		fa_addr = baddr;
 		if (any) {
 		    trace_ds("'");
 		}
@@ -886,6 +892,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 		do {
 		    INC_BA(baddr);
 		} while (!ea_buf[baddr].fa);
+		fa_addr = baddr;
 	    }
 	} while (baddr != sbaddr);
     } else {
@@ -902,13 +909,15 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 
 	do {
 	    if (ea_buf[baddr].ec) {
-		insert_sa(baddr,
-		    &current_fg,
-		    &current_bg,
-		    &current_gr,
-		    &current_cs,
-		    &current_ic,
-		    &any);
+		insert_sa(ea_buf[baddr].fg,
+			ea_buf[baddr].bg,
+			ea_buf[baddr].gr,
+			ea_buf[baddr].cs,
+			&prev_fg,
+			&prev_bg,
+			&prev_gr,
+			&prev_cs,
+			&any);
 		if (ea_buf[baddr].cs & CS_GE) {
 		    space3270out(1);
 		    *obptr++ = ORDER_GE;
@@ -968,11 +977,11 @@ ctlr_read_buffer(unsigned char aid_byte)
     unsigned char fa;
     bool any = false;
     size_t attr_count = 0;
-    unsigned char current_fg = 0x00;
-    unsigned char current_bg = 0x00;
-    unsigned char current_gr = 0x00;
-    unsigned char current_cs = 0x00;
-    unsigned char current_ic = 0x00;
+    unsigned char prev_fg = 0x00;
+    unsigned char prev_bg = 0x00;
+    unsigned char prev_gr = 0x00;
+    unsigned char prev_cs = 0x00;
+    unsigned char fa_cs;
 
     if (aid_byte == AID_SF) {
 	dft_read_modified();
@@ -987,6 +996,7 @@ ctlr_read_buffer(unsigned char aid_byte)
     ENCODE_BADDR(obptr, cursor_addr);
     trace_ds("%s%s", see_aid(aid_byte), rcba(cursor_addr));
 
+    fa_cs = ea_buf[find_field_attribute(0)].cs;
     baddr = 0;
     do {
 	if (ea_buf[baddr].fa) {
@@ -1001,6 +1011,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 		*obptr++ = XA_3270;
 	    }
 	    fa = ea_buf[baddr].fa & ~FA_PRINTABLE;
+	    fa_cs = ea_buf[baddr].cs;
 	    *obptr++ = code_table[fa];
 	    if (any) {
 		trace_ds("'");
@@ -1042,14 +1053,20 @@ ctlr_read_buffer(unsigned char aid_byte)
 	    }
 	    any = false;
 	} else {
-	    insert_sa(baddr,
-		&current_fg,
-		&current_bg,
-		&current_gr,
-		&current_cs,
-		&current_ic,
-		&any);
-	    if (ea_buf[baddr].cs & CS_GE) {
+	    unsigned char cs = ea_buf[baddr].cs;
+
+	    insert_sa(ea_buf[baddr].fg,
+		    ea_buf[baddr].bg,
+		    ea_buf[baddr].gr,
+		    ea_buf[baddr].cs,
+		    &prev_fg,
+		    &prev_bg,
+		    &prev_gr,
+		    &prev_cs,
+		    &any);
+	    if ((cs & CS_GE) ||
+		    (cs & CS_MASK) == CS_APL ||
+		    ((fa_cs == CS_APL) && (!(cs & CS_MASK)))) {
 		space3270out(1);
 		*obptr++ = ORDER_GE;
 		if (any) {
@@ -1110,18 +1127,17 @@ ctlr_snap_buffer(void)
 {
     int baddr = 0;
     size_t attr_count;
-    unsigned char current_fg = 0x00;
-    unsigned char current_bg = 0x00;
-    unsigned char current_gr = 0x00;
-    unsigned char current_cs = 0x00;
-    unsigned char current_ic = 0x00;
+    unsigned char prev_fg = 0x00;
+    unsigned char prev_bg = 0x00;
+    unsigned char prev_gr = 0x00;
+    unsigned char prev_cs = 0x00;
+    unsigned char prev_ic = 0x00;
     unsigned char av;
 
     space3270out(2);
     *obptr++ = screen_alt ? CMD_EWA : CMD_EW;
-    *obptr++ = code_table[(kybdlock &
-		(KL_OERR_MASK | KL_OIA_TWAIT | KL_OIA_LOCKED))? 0:
-	    WCC_KEYBOARD_RESTORE_BIT];
+    *obptr++ = (kybdlock & (KL_OERR_MASK | KL_OIA_TWAIT | KL_OIA_LOCKED))? 0:
+	    WCC_KEYBOARD_RESTORE_BIT;
 
     do {
 	if (ea_buf[baddr].fa) {
@@ -1157,16 +1173,16 @@ ctlr_snap_buffer(void)
 	    }
 	} else {
 	    av = ea_buf[baddr].fg;
-	    if (current_fg != av) {
-		current_fg = av;
+	    if (prev_fg != av) {
+		prev_fg = av;
 		space3270out(3);
 		*obptr++ = ORDER_SA;
 		*obptr++ = XA_FOREGROUND;
 		*obptr++ = av;
 	    }
 	    av = ea_buf[baddr].bg;
-	    if (current_bg != av) {
-		current_bg = av;
+	    if (prev_bg != av) {
+		prev_bg = av;
 		space3270out(3);
 		*obptr++ = ORDER_SA;
 		*obptr++ = XA_BACKGROUND;
@@ -1176,8 +1192,8 @@ ctlr_snap_buffer(void)
 	    if (av) {
 		av |= 0xf0;
 	    }
-	    if (current_gr != av) {
-		current_gr = av;
+	    if (prev_gr != av) {
+		prev_gr = av;
 		space3270out(3);
 		*obptr++ = ORDER_SA;
 		*obptr++ = XA_HIGHLIGHTING;
@@ -1187,16 +1203,16 @@ ctlr_snap_buffer(void)
 	    if (av) {
 		av = host_cs(av);
 	    }
-	    if (current_cs != av) {
-		current_cs = av;
+	    if (prev_cs != av) {
+		prev_cs = av;
 		space3270out(3);
 		*obptr++ = ORDER_SA;
 		*obptr++ = XA_CHARSET;
 		*obptr++ = av;
 	    }
 	    av = ea_buf[baddr].ic;
-	    if (current_ic != av) {
-		current_ic = av;
+	    if (prev_ic != av) {
+		prev_ic = av;
 		space3270out(3);
 		*obptr++ = ORDER_SA;
 		*obptr++ = XA_INPUT_CONTROL;
@@ -3311,3 +3327,13 @@ ctlr_enable_cursor(bool enable, unsigned source)
     disables = new_disables;
 }
 
+/*
+ * Returns true if we are in Field reply mode with Charset. This means
+ * we are free to change the charset attribute in the buffer, because we have a way
+ * to report it to the host.
+ */
+bool
+ctlr_mutable_cs(void)
+{
+    return reply_mode == SF_SRM_CHAR && memchr((char *)crm_attr, XA_CHARSET, crm_nattr) != NULL;
+}

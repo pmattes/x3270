@@ -212,6 +212,7 @@
 #define KwModel		"Model"
 #define KwPrefixes	"Prefixes"
 #define KwProxy		"Proxy"
+#define KwReplyMode	"ReplyMode"
 #define KwScreenCurSize	"ScreenCurSize"
 #define KwScreenMaxSize	"ScreenMaxSize"
 #define KwScreenSizeCurrent "ScreenSizeCurrent"

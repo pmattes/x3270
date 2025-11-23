@@ -366,8 +366,6 @@ static enum pds
 sf_set_reply_mode(unsigned char buf[], int buflen)
 {
     unsigned char partition;
-    int i;
-    const char *comma = "(";
 
     if (buflen < 5) {
 	trace_ds(" error: wrong field length %d\n", buflen);
@@ -398,12 +396,18 @@ sf_set_reply_mode(unsigned char buf[], int buflen)
     reply_mode = buf[4];
     if (buf[4] == SF_SRM_CHAR) {
 	crm_nattr = buflen - 5;
-	for (i = 5; i < buflen; i++) {
-	    crm_attr[i - 5] = buf[i];
-	    trace_ds("%s%s", comma, see_efa_only(buf[i]));
-	    comma = ",";
+	if (crm_nattr) {
+	    int i;
+
+	    Replace(crm_attr, Malloc(crm_nattr));
+	    memcpy(crm_attr, buf + 5, crm_nattr);
+	    for (i = 0; i < crm_nattr; i++) {
+		trace_ds("%s%s", i? ",": "(", see_efa_only(crm_attr[i]));
+	    }
+	} else {
+	    Replace(crm_attr, NULL);
 	}
-	trace_ds("%s\n", crm_nattr ? ")" : "");
+	trace_ds("%s\n", crm_nattr? ")": "");
     }
     return PDS_OKAY_NO_OUTPUT;
 }

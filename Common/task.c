@@ -2501,9 +2501,11 @@ static bool
 dump_range(int first, int len, bool in_ascii, struct ea *buf,
     int rel_rows _is_unused, int rel_cols, bool force_utf8)
 {
+    int attr;
     int i;
     bool any = false;
     bool is_zero = false;
+    int fa_cs;
     varbuf_t r;
 
     vb_init(&r);
@@ -2525,7 +2527,9 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	set_output_needed(true);
     }
 
-    is_zero = FA_IS_ZERO(get_field_attribute(first));
+    attr = find_field_attribute_ea(first, buf);
+    is_zero = FA_IS_ZERO(buf[attr].fa);
+    fa_cs = buf[attr].cs;
 
     for (i = 0; i < len; i++) {
 	if (i && !((first + i) % rel_cols)) {
@@ -2541,6 +2545,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    enum dbcs_state d = ctlr_dbcs_state(first + i);
 
 	    if (buf[first + i].fa) {
+		fa_cs = buf[first + i].cs;
 		is_zero = FA_IS_ZERO(buf[first + i].fa);
 		vb_appends(&r, " ");
 	    } else if (is_zero) {
@@ -2576,9 +2581,9 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 			}
 		    } else {
 			xlen = ebcdic_to_multibyte_fx(buf[first + i].ec,
-				buf[first + i].cs, mb, sizeof(mb),
-				EUO_BLANK_UNDEF |
-				 (toggled(MONOCASE)? EUO_TOUPPER: 0),
+				fa_cs? fa_cs: buf[first + i].cs,
+				mb, sizeof(mb),
+				EUO_BLANK_UNDEF | (toggled(MONOCASE)? EUO_TOUPPER: 0),
 				&uc, force_utf8);
 			for (j = 0; j < xlen - 1; j++) {
 			    vb_appendf(&r, "%c", mb[j]);
@@ -2811,6 +2816,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     bool field = false;
     int field_baddr = 0;
     bool any = false;
+    int fa_addr;
+    unsigned char fa_cs;
 
     if (num_params > 0) {
 	unsigned i;
@@ -2864,6 +2871,14 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	baddr = 0;
     }
 
+    /* Find the field attribute and its character set. */
+    if (field) {
+	fa_addr = baddr;
+    } else {
+	fa_addr = find_field_attribute(0);
+    }
+    fa_cs = buf[fa_addr].cs;
+
     vb_init(&r);
     for (;;) {
 	if (!field && !(baddr % COLS)) {
@@ -2876,6 +2891,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    if (field && any) {
 		break;
 	    }
+	    fa_addr = baddr;
+	    fa_cs = buf[baddr].cs;
 	    vb_appendf(&r, " SF(%02x=%02x", XA_3270, buf[baddr].fa);
 	    if (buf[baddr].fg) {
 		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
@@ -2898,6 +2915,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	} else {
 	    bool any_sa = false;
 	    unsigned char xcs;
+	    unsigned char cs;
 #           define SA_SEP (any_sa? ",": " SA(")
 
 	    if (buf[baddr].fg != current_fg) {
@@ -2937,6 +2955,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    if (any_sa) {
 		vb_appends(&r, ")");
 	    }
+	    cs = buf[baddr].cs? buf[baddr].cs: fa_cs;
 	    if (mode == RB_EBCDIC) {
 		/*
 		 * When dumping the buffer in EBCDIC mode, we implicitly
@@ -2994,7 +3013,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 			mb[1] = '\0';
 			break;
 		    default:
-			ebcdic_to_multibyte_fx(buf[baddr].ec, buf[baddr].cs,
+			mb[0] = '\0';
+			ebcdic_to_multibyte_fx(buf[baddr].ec, cs,
 				mb, sizeof(mb), EUO_NONE, &uc, force_utf8);
 			break;
 		    }
@@ -3037,8 +3057,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 				uc = 0x0f;
 				break;
 			    default:
-				uc = ebcdic_to_unicode(buf[baddr].ec,
-					buf[baddr].cs, 0);
+				uc = ebcdic_to_unicode(buf[baddr].ec, cs, 0);
 				break;
 			    }
 			}

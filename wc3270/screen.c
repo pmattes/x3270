@@ -2064,17 +2064,24 @@ screen_disp(bool erasing _is_unused)
 			    addch('.');
 			    addch('.');
 			} else {
-			    u = ebcdic_to_unicode(
-				    (ea_buf[baddr].ec << 8) |
-				    ea_buf[xaddr].ec,
-				    CS_BASE, EUO_NONE);
-			    attrset(attr_this);
-			    cur_attr |= COMMON_LVB_LEAD_BYTE;
-			    addch(u);
-			    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
-			    cur_attr |= COMMON_LVB_TRAILING_BYTE;
-			    addch(u);
-			    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
+			    if (menu_char(row + screen_yoffset,
+					flipped? (cCOLS-1 - (col+1)): (col+1),
+					false,
+					&u, &highlight, &acs)) {
+				addch(' ');
+			    } else {
+				u = ebcdic_to_unicode(
+					(ea_buf[baddr].ec << 8) |
+					ea_buf[xaddr].ec,
+					CS_BASE, EUO_NONE);
+				attrset(attr_this);
+				cur_attr |= COMMON_LVB_LEAD_BYTE;
+				addch(u);
+				cur_attr &= ~COMMON_LVB_LEAD_BYTE;
+				cur_attr |= COMMON_LVB_TRAILING_BYTE;
+				addch(u);
+				cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
+			    }
 			}
 		    } else if (!IS_RIGHT(d)) {
 			if (toggled(VISIBLE_CONTROL) &&
@@ -2087,8 +2094,10 @@ screen_disp(bool erasing _is_unused)
 				ea_buf[baddr].ec == EBC_si) {
 			    u = '>';
 			} else {
-			    u = ebcdic_to_unicode(ea_buf[baddr].ec,
-				    ea_buf[baddr].cs,
+			    int cs = ea_buf[baddr].cs? ea_buf[baddr].cs:
+				(ea_buf[fa_addr].cs? ea_buf[fa_addr].cs: 0);
+
+			    u = ebcdic_to_unicode(ea_buf[baddr].ec, cs,
 				    appres.c3270.ascii_box_draw?
 					EUO_ASCII_BOX: 0);
 			    if (u == 0) {
@@ -2989,6 +2998,9 @@ status_oerr(int error_type)
 	break;
     case KL_OERR_OVERFLOW:
 	other_msg = "X Overflow";
+	break;
+    case KL_OERR_DBCS:
+	other_msg = "X DBCS";
 	break;
     }
     other_attr = oia_red_attr;

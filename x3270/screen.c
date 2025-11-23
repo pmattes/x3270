@@ -2623,8 +2623,7 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
      * If the region starts with the right-hand side of a DBCS, back off
      * one column.
      */
-    switch (ctlr_dbcs_state(baddr)) {
-    case DBCS_RIGHT:
+    if (buffer[0].u.bits.db == DBCS_RIGHT) {
 	/*
 	 * Lots of assumptions -- the buffer really does go back one byte,
 	 * and baddr is greater than zero.
@@ -2635,9 +2634,6 @@ render_text(struct sp *buffer, int baddr, int len, bool block_cursor,
 	buffer--;
 	baddr--;
 	len++;
-	break;
-    default:
-	break;
     }
 
     for (i = 0, j = 0; i < len; i++) {
@@ -3206,6 +3202,7 @@ draw_fields(struct sp *buffer, int first, int last)
 
 	    /* Find the right character and character set. */
 	    d = ctlr_dbcs_state(baddr);
+	    b.u.bits.db = d;
 	    if (zero) {
 		if (visible_control) {
 		    b.u.bits.ec = EBC_space;
@@ -3244,12 +3241,12 @@ draw_fields(struct sp *buffer, int first, int last)
 			is_vc = true;
 		    } else if (d == DBCS_LEFT_WRAP || d == DBCS_RIGHT_WRAP) {
 			b.u.bits.ec = EBC_period;
-			b.ucs4 = u;
+			b.ucs4 = '.';
 		    } else {
 			b.u.bits.ec = c;
 			b.ucs4 = u;
 		    }
-		    if (is_vc) {
+		    if (is_vc || d == DBCS_LEFT_WRAP || d == DBCS_RIGHT_WRAP) {
 			b.u.bits.cs = CS_BASE;
 		    } else if (sbp->cs) {
 			b.u.bits.cs = sbp->cs;
@@ -3599,6 +3596,7 @@ redraw_char_inverted(int baddr, enum dbcs_state d)
     /*
      * Fabricate the right thing.
      */
+    faddr = find_field_attribute(baddr);
     b->u.word = 0L;
     b->ucs4 = 0L;
     b->u.bits.ec = bad_wrap? EBC_period: ea_buf[baddr].ec;
@@ -3609,11 +3607,12 @@ redraw_char_inverted(int baddr, enum dbcs_state d)
     } else if (b->u.bits.cs & CS_GE) {
 	b->u.bits.cs = CS_APL;
     } else {
-	b->u.bits.cs = ea_buf[baddr].cs & CS_MASK;
+	unsigned char cs = ea_buf[baddr].cs & CS_MASK;
+
+	b->u.bits.cs = cs? cs: ea_buf[faddr].cs;
     }
     b->ucs4 = ea_buf[baddr].ucs4;
 
-    faddr = find_field_attribute(baddr);
     fa = ea_buf[faddr].fa;
     if (FA_IS_ZERO(fa)) {
 	gr = 0;
