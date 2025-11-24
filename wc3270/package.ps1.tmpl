@@ -6,7 +6,7 @@ $version = '%VERSION%'
 $ErrorActionPreference = 'Stop'
 
 # Set up Azure login to do signing.
-Connect-AzAccount | Out-Null
+Connect-AzAccount -TenantId 16375de7-ceed-4050-a848-5002e9b8f912 -SubscriptionName Pay-As-You-Go
 
 # Sign the binaries that have not been signed yet.
 $files = (Get-ChildItem -Path obj -Recurse -Filter "*.exe").FullName |
