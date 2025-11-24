@@ -33,11 +33,11 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 	japanese-thumb.png japanese.png keypad-thumb.png keypad.png \
 	wc3270-thumb.png wc3270.png x3270_main-thumb.png x3270_main.png
 
-OTHERS = $(SCREENS) SS-HCS12-1372-00.pdf c3270-man.html ibm_hosts.html \
-	 man/FAQ.html pr3287-man.html s3270-man.html styles.css \
-	 tcl3270-man.html wc3270-man.html x026.gif x3270-man.html \
-	 x3270.jpg .htaccess c3270-help/.htaccess wc3270-help/.htaccess \
-	 wx3270-help/.htaccess x3270-help/.htaccess
+OTHERS = $(SCREENS) .htaccess GitHub_Logo.png SS-HCS12-1372-00.pdf \
+	c3270-help/.htaccess c3270-man.html ibm_hosts.html man/FAQ.html \
+	pr3287-man.html s3270-man.html styles.css tcl3270-man.html \
+	wc3270-help/.htaccess wc3270-man.html wx3270-help/.htaccess x026.gif \
+	x3270-help/.htaccess x3270-man.html x3270.jpg
 
 all: $(PAGES) webpage.tgz
 
