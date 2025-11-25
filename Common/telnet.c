@@ -843,7 +843,9 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    putenv(Asprintf("TERM=%s",
 		appres.termname?
 		    appres.termname:
-		    (mode3279? "xterm-color": "xterm")));
+		    (mode3279? "xterm-16color": "xterm")));
+	    unsetenv("COLORTERM");
+	    unsetenv("VTE_VERSION");
 	    if (strchr(host, ' ') != NULL) {
 		execlp("/bin/sh", "sh", "-c", host, NULL);
 	    } else {
@@ -4095,7 +4097,7 @@ net_set_default_termtype(void)
     if (appres.termname) {
 	termtype = appres.termname;
     } else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-	termtype = mode3279? "xterm-color": "xterm";
+	termtype = mode3279? "xterm-16color": "xterm";
     } else {
 	char *ttype = create_3270_termtype(false);
 
