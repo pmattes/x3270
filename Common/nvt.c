@@ -939,55 +939,71 @@ ansi_sgr(int ig1 _is_unused, int ig2 _is_unused)
 	    gr |= GR_REVERSE;
 	    break;
 	case 30:
-	    fg = 0xf0;	/* black -> neutral black */
+	case 90:
+	    fg = 0xf0 | HOST_COLOR_NEUTRAL_BLACK;	/* black -> neutral black */
 	    break;
 	case 31:
-	    fg = 0xf2;	/* red -> red */
+	case 91:
+	    fg = 0xf0 | HOST_COLOR_RED;	/* red -> red */
 	    break;
 	case 32:
-	    fg = 0xf4;	/* green -> green */
+	case 92:
+	    fg = 0xf0 | HOST_COLOR_GREEN;	/* green -> green */
 	    break;
 	case 33:
-	    fg = 0xf6;	/* yellow -> yellow */
+	case 93:
+	    fg = 0xf0 | HOST_COLOR_YELLOW;	/* yellow -> yellow */
 	    break;
 	case 34:
-	    fg = 0xf1;	/* blue -> blue */
+	case 94:
+	    fg = 0xf0 | HOST_COLOR_BLUE;	/* blue -> blue */
 	    break;
 	case 35:
-	    fg = 0xf3;	/* magenta -> pink */
+	case 95:
+	    fg = 0xf0 | HOST_COLOR_PINK;	/* magenta -> pink */
 	    break;
 	case 36:
-	    fg = 0xf5;	/* cyan -> turquiose */
+	case 96:
+	    fg = 0xf0 | HOST_COLOR_TURQUOISE;	/* cyan -> turquiose */
 	    break;
 	case 37:
-	    fg = 0xf7;	/* white -> neutral white */
+	case 97:
+	    fg = 0xf0 | HOST_COLOR_NEUTRAL_WHITE;	/* white -> neutral white */
 	    break;
 	case 39:
 	    fg = 0;	/* default */
 	    break;
 	case 40:
-	    bg = 0xf0;	/* black -> neutral black */
+	case 100:
+	    bg = 0xf0 | HOST_COLOR_NEUTRAL_BLACK;	/* black -> neutral black */
 	    break;
 	case 41:
-	    bg = 0xf2;	/* red -> red */
+	case 101:
+	    bg = 0xf0 | HOST_COLOR_RED;	/* red -> red */
 	    break;
 	case 42:
-	    bg = 0xf4;	/* green -> green */
+	case 102:
+	    bg = 0xf0 | HOST_COLOR_GREEN;	/* green -> green */
 	    break;
 	case 43:
-	    bg = 0xf6;	/* yellow -> yellow */
+	case 103:
+	    bg = 0xf0 | HOST_COLOR_YELLOW;	/* yellow -> yellow */
 	    break;
 	case 44:
-	    bg = 0xf1;	/* blue -> blue */
+	case 104:
+	    bg = 0xf0 | HOST_COLOR_BLUE;	/* blue -> blue */
 	    break;
 	case 45:
-	    bg = 0xf3;	/* magenta -> pink */
+	case 105:
+	    bg = 0xf0 | HOST_COLOR_PINK;	/* magenta -> pink */
 	    break;
 	case 46:
-	    bg = 0xf5;	/* cyan -> turquoise */
+	case 106:
+	    bg = 0xf0 | HOST_COLOR_TURQUOISE;	/* cyan -> turquoise */
 	    break;
 	case 47:
-	    bg = 0xf7;	/* white -> neutral white */
+	case 107:
+	    bg = 0xf0 | HOST_COLOR_NEUTRAL_WHITE;	/* white -> neutral white */
 	    break;
 	case 49:
 	    bg = 0;	/* default */
