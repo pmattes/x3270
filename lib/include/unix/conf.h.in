@@ -60,3 +60,4 @@
 
 /* Optional parts. */
 #undef X3270_LOCAL_PROCESS
+#undef TAIL_PID

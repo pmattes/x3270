@@ -283,6 +283,19 @@ if test "$PYTHON" = "not found"; then
 fi
 AC_SUBST(PYTHON)
 
+dnl Check for tail supporting the --pid option.
+AC_CACHE_CHECK([for tail that supports --pid], [ac_cv_path_tail],
+  [AC_PATH_PROGS_FEATURE_CHECK([tail], [tail],
+    [[$ac_path_tail -f --pid=99999999 /dev/null >/dev/null 2>&1
+     if test $? -eq 0; then
+        ac_cv_path_tail=$ac_path_tail
+        ac_path_tail_found=:
+        TAIL_PID=1
+     fi]])])
+if test -n "$TAIL_PID"; then
+    AC_DEFINE([TAIL_PID])
+fi
+
 dnl Generate the files.
 AC_CONFIG_HEADERS(include/unix/conf.h)
 AC_CONFIG_FILES(3270/Makefile 3270/Makefile.obj 3270/Makefile.test 3270/Makefile.test.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 32xx/Makefile.test 32xx/Makefile.test.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk)

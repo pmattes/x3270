@@ -729,7 +729,11 @@ start_trace_window(const char *path)
 	argc = console_args(t, path, &argv, argc);
 	array_add(&argv, argc++, "/bin/sh");
 	array_add(&argv, argc++, "-c");
+#if defined(TAIL_PID) /*[*/
+	array_add(&argv, argc++, Asprintf("tail -n+0 -f --pid=%u %s", (unsigned)getppid(), path));
+#else /*][*/
 	array_add(&argv, argc++, Asprintf("tail -n+0 -f %s", path));
+#endif /*]*/
 	array_add(&argv, argc++, NULL);
 	execvp(t->program, (char *const*)argv);
 	perror(Asprintf("exec(%s) failed", t->program));

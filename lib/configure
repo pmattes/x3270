@@ -5065,6 +5065,55 @@ if test "$PYTHON" = "not found"; then
 fi
 
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for tail that supports --pid" >&5
+printf %s "checking for tail that supports --pid... " >&6; }
+if test ${ac_cv_path_tail+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -z "$tail"; then
+  ac_path_tail_found=false
+  # Loop through the user's path and test for each of PROGNAME-LIST
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_prog in tail
+   do
+    for ac_exec_ext in '' $ac_executable_extensions; do
+      ac_path_tail="$as_dir$ac_prog$ac_exec_ext"
+      as_fn_executable_p "$ac_path_tail" || continue
+$ac_path_tail -f --pid=99999999 /dev/null >/dev/null 2>&1
+     if test $? -eq 0; then
+        ac_cv_path_tail=$ac_path_tail
+        ac_path_tail_found=:
+        TAIL_PID=1
+     fi
+      $ac_path_tail_found && break 3
+    done
+  done
+  done
+IFS=$as_save_IFS
+  if test -z "$ac_cv_path_tail"; then
+    :
+  fi
+else
+  ac_cv_path_tail=$tail
+fi
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_tail" >&5
+printf "%s\n" "$ac_cv_path_tail" >&6; }
+if test -n "$TAIL_PID"; then
+    printf "%s\n" "#define TAIL_PID 1" >>confdefs.h
+
+fi
+
 ac_config_headers="$ac_config_headers include/unix/conf.h"
 
 ac_config_files="$ac_config_files 3270/Makefile 3270/Makefile.obj 3270/Makefile.test 3270/Makefile.test.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 32xx/Makefile.test 32xx/Makefile.test.obj 3270stubs/Makefile 3270stubs/Makefile.obj 32xx/32xx-deplibs.mk"
