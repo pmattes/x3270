@@ -950,7 +950,7 @@ status_untiming(void)
 void
 status_cursor_pos(int ca)
 {
-    static char buf[CCNT+1];
+    static char buf[256];
 
     if (xappres.xquartz_hack) {
 	snprintf(buf, sizeof(buf), "%02d/%02d", (ca/COLS + 1) % 100,
