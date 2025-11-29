@@ -198,9 +198,12 @@ static bool     text_blinking_on = true;
 static bool     text_blinkers_exist = false;
 static bool     text_blink_scheduled = false;
 static Dimension last_width = 0, last_height = 0;
+static Dimension snap_width = 0, snap_height = 0;
 static XtIntervalId text_blink_id;
 static XtIntervalId resized_id;
 static bool resized_pending = false;
+static XtIntervalId snap_id;
+static bool snap_pending = false;
 static XtTranslations screen_t00 = NULL;
 static XtTranslations screen_t0 = NULL;
 static XtTranslations container_t00 = NULL;
@@ -1022,7 +1025,18 @@ popup_resume_timeout(XtPointer closure _is_unused,
     }
 }
 
-/* Check if there was a silent resize (WM bug). */
+/* Second phase of recovery from the Gnome window manager bug. */
+static void
+snap_back(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
+{
+    snap_pending = false;
+    vctrace(TC_UI, "Gnome window manager bug workaround:\n Step 2: Snapping back to desired width %d, height %d\n", snap_width, snap_height);
+    cn.width = snap_width;
+    cn.height = snap_height;
+    do_resize();
+}
+
+/* Check if there was a silent resize (Gnome window manager bug). */
 static void
 check_resized(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
@@ -1031,10 +1045,25 @@ check_resized(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     resized_pending = false;
     XtVaGetValues(toplevel, XtNwidth, &width, XtNheight, &height, NULL);
     if (width != last_width || height != last_height) {
-	vctrace(TC_UI, "Window Mangaer bug: Window changed size without Xt telling us\n");
-	cn.width = width;
-	cn.height = height;
+	vctrace(TC_UI, "Gnome window manager bug: Window changed size without Xt telling us\n");
+	if (width != last_width) {
+	    vctrace(TC_UI, " width %d -> %d\n", last_width, width);
+	}
+	if (height != last_height) {
+	    vctrace(TC_UI, " height %d -> %d\n", last_height, height);
+	}
+
+	/* Remember the right size for snap_back() to use. */
+	snap_width = last_width;
+	snap_height = last_height;
+
+	/* Go a bit bigger, to unscramble its brain. */
+	cn.width = width + 10;
+	cn.height = height + 10;
+	vctrace(TC_UI, " Step 1: Temporarily switching to width %d, height %d to un-confuse it\n", cn.width, cn.height);
 	do_resize();
+	snap_pending = true;
+	snap_id = XtAppAddTimeOut(appcontext, 100, snap_back, 0);
     }
 }
 
@@ -1052,10 +1081,10 @@ redo_toplevel_size(Dimension width, Dimension height)
 	    XtNheight, height,
 	    NULL);
 
-        last_width = width;
-        last_height = height;
-	resized_pending = true;
-	resized_id = XtAppAddTimeOut(appcontext, 500, check_resized, 0);
+    last_width = width;
+    last_height = height;
+    resized_pending = true;
+    resized_id = XtAppAddTimeOut(appcontext, 100, check_resized, 0);
 }
 
 static void
@@ -6318,6 +6347,10 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     if (resized_pending) {
 	XtRemoveTimeOut(resized_id);
 	resized_pending = false;
+    }
+    if (snap_pending) {
+	XtRemoveTimeOut(snap_id);
+	snap_pending = false;
     }
 
     /*
