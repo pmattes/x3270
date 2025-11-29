@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@
 #include "actions.h"
 #include "about.h"
 #include "codepage.h"
+#include "ctlrc.h"
 #include "ft_private.h"
 #include "ft_gui.h"
 #include "host.h"
@@ -1713,8 +1714,10 @@ oversize_button_callback(Widget w _is_unused, XtPointer client_data,
 	return;
     }
     if (sscanf(s, "%dx%d%c", &ovc, &ovr, &junk) == 2) {
-	XtPopdown(oversize_shell);
-	screen_remodel(model_num, ovc, ovr);
+	if (check_rows_cols(model_num, ovc, ovr)) {
+	    XtPopdown(oversize_shell);
+	    screen_remodel(model_num, ovc, ovr);
+	}
     } else {
 	popup_an_error("Illegal size: %s", s);
     }
