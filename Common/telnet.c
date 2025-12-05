@@ -2846,11 +2846,16 @@ net_exception(iosrc_t fd _is_unused, ioid_t id _is_unused)
 void
 net_cookedout(const char *buf, size_t len)
 {
+    if (!len) {
+	return;
+    }
+
     if (toggled(TRACING)) {
 	size_t i;
 	bool any = false;
 	bool last_cmd = false;
 
+	net_nvt_break();
 	ntvtrace(">.. ");
 	for (i = 0; i < len; i++) {
 	    char *s = ctl_see((int)*(buf + i));
