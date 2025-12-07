@@ -28,6 +28,7 @@
 # 3270 screen generator: structured fields
 
 from common import *
+import telnet
 
 reply_modes = {
     'field': ('00', 2),
@@ -46,7 +47,7 @@ attributes = {
 def set_reply_mode(gen: GenCommon, *argx):
     args = argx[0] if len(argx) == 1 and isinstance(argx[0], list) else argx
     if len(args) < 2:
-        raise GenSyntaxError('write-structured-field takes at least 2 arguments')
+        raise GenSyntaxError('set-reply-mode takes at least 2 arguments')
     partition = args[0]
     mode = args[1]
     if not mode in reply_modes:
@@ -60,4 +61,26 @@ def set_reply_mode(gen: GenCommon, *argx):
         attrs = ''
     payload = '09' + partition + rm[0] + attrs
     payload_len = int((4 + len(payload)) / 2)
-    return '11' + f'{payload_len:04x}' + payload
+    return telnet.quote('11' + f'{payload_len:04x}' + payload)
+
+operations = {
+    'query': '02',
+    'query-list': '03',
+    'read-modified-all': '6e',
+    'read-buffer': 'f2',
+    'read-modified': 'f6',
+}
+
+# wsf.read-partition <partition> <operation>
+def read_partition(gen: GenCommon, *argx):
+    args = argx[0] if len(argx) == 1 and isinstance(argx[0], list) else argx
+    if len(args) < 2:
+        raise GenSyntaxError('read-partition takes at least 2 arguments')
+    partition = args[0]
+    operation = args[1]
+    if not operation in operations:
+        raise GenValueError(f"unknown operation '{operation}'")
+    rm = operations[operation]
+    payload = '01' + partition + rm
+    payload_len = int((4 + len(payload)) / 2)
+    return telnet.quote('11' + f'{payload_len:04x}' + payload)

@@ -61,3 +61,10 @@ def eor(_, *argx):
     if len(args) != 0:
         raise GenSyntaxError('eor takes 0 arguments')
     return 'ffef'
+
+def quote(data: str) -> str:
+    '''Quote a string for TELNET'''
+    ret = ''
+    for byte in [data[i:i+2] for i in range(0, len(data), 2)]:
+        ret += byte + byte if byte == 'ff' else byte
+    return ret

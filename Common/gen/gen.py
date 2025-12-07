@@ -146,6 +146,7 @@ class Gen(GenCommon):
         'tn3270e.device-type': tn3270e.device_type,
         'tn3270e.functions': tn3270e.functions,
         'tn3270e.send': tn3270e.send,
+        'wsf.read-partition': wsf.read_partition,
         'wsf.set-reply-mode': wsf.set_reply_mode,
     }
 
