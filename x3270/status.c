@@ -91,7 +91,7 @@ static int colors[SSZ] =  {
 
 static int colors3279[SSZ] =  {
     HOST_COLOR_BLUE,
-    HOST_COLOR_WHITE,
+    HOST_COLOR_NEUTRAL_WHITE,
     HOST_COLOR_BLUE
 };
 
@@ -271,27 +271,27 @@ static int msg_color[N_MSGS] = {
     FA_INT_NORM_NSEL,	/* file transfer */
 };
 static int msg_color3279[N_MSGS] = {
-    HOST_COLOR_WHITE,	/* disconnected */
-    HOST_COLOR_WHITE,	/* reconnecting */
-    HOST_COLOR_WHITE,	/* resolving */
-    HOST_COLOR_WHITE,	/* connecting */
-    HOST_COLOR_WHITE,	/* tls */
-    HOST_COLOR_WHITE,	/* proxy */
-    HOST_COLOR_WHITE,	/* telnet */
-    HOST_COLOR_WHITE,	/* tn3270e */
-    HOST_COLOR_WHITE,	/* awaiting_first */
-    HOST_COLOR_WHITE,	/* unlock_delay */
+    HOST_COLOR_NEUTRAL_WHITE,	/* disconnected */
+    HOST_COLOR_NEUTRAL_WHITE,	/* reconnecting */
+    HOST_COLOR_NEUTRAL_WHITE,	/* resolving */
+    HOST_COLOR_NEUTRAL_WHITE,	/* connecting */
+    HOST_COLOR_NEUTRAL_WHITE,	/* tls */
+    HOST_COLOR_NEUTRAL_WHITE,	/* proxy */
+    HOST_COLOR_NEUTRAL_WHITE,	/* telnet */
+    HOST_COLOR_NEUTRAL_WHITE,	/* tn3270e */
+    HOST_COLOR_NEUTRAL_WHITE,	/* awaiting_first */
+    HOST_COLOR_NEUTRAL_WHITE,	/* unlock_delay */
     HOST_COLOR_BLUE,	/* blank */
-    HOST_COLOR_WHITE,	/* twait */
-    HOST_COLOR_WHITE,	/* syswait */
+    HOST_COLOR_NEUTRAL_WHITE,	/* twait */
+    HOST_COLOR_NEUTRAL_WHITE,	/* syswait */
     HOST_COLOR_RED,	/* protected */
     HOST_COLOR_RED,	/* numeric */
     HOST_COLOR_RED,	/* overflow */
     HOST_COLOR_RED,	/* dbcs */
-    HOST_COLOR_WHITE,	/* scrolled */
+    HOST_COLOR_NEUTRAL_WHITE,	/* scrolled */
     HOST_COLOR_RED,	/* minus */
     HOST_COLOR_RED,	/* disabled */
-    HOST_COLOR_WHITE,	/* file transfer */
+    HOST_COLOR_NEUTRAL_WHITE,	/* file transfer */
 };
 static bool oia_insert = false;
 static bool oia_reverse = false;
