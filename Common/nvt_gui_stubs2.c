@@ -26,22 +26,74 @@
  */
 
 /*
- *	nvt_gui.h
- *		Global declarations for nvt_gui.c.
+ *	nvt_gui_stubs2.c
+ *		Stubs for the NVT-mode GUI functions.
  */
 
-void xterm_text_gui(unsigned short code, const char *text);
-void xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned short *rp1, unsigned short *rp2,
-	const char **rtext);
-void get_screen_pixels(unsigned *height, unsigned *width);
-void get_window_pixels(unsigned *height, unsigned *width);
-void get_character_pixels(unsigned *height, unsigned *width);
-void get_window_location(int *x, int *y);
-typedef enum {
-    WS_NONE,		/* no window */
-    WS_NORMAL,		/* normal */
-    WS_MAXIMIZED,	/* maximized */
-    WS_FULLSCREEN,	/* full screen */
-    WS_ICONIFIED,	/* iconified */
-} window_state_t;
-window_state_t get_window_state(void);
+#include "globals.h"
+
+#include "model.h"
+#include "xtwinops.h"
+
+#include "nvt_gui.h"
+
+void
+xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned short *rp1, unsigned short *rp2, const char **rtext)
+{
+    *rp1 = 0;
+    *rp2 = 0;
+    *rtext = NULL;
+
+    switch (p1) {
+    case XTW_8RESIZE_CHARACTERS: /* set screen size to h,w characters */
+		/* omitted parameters re-use the current values */
+		/* 0 parameters use the screen size (not supported) */
+	if ((p2 && *p2 == 0) || (p3 && *p3 == 0)) {
+	    /* Screen size not supported. */
+	    return;
+	}
+	if (p2 || p3) {
+	    live_change_oversize(p3? *p3: COLS, p2? *p2: ROWS);
+	}
+	break;
+    default:
+	if (p1 >= 24) {
+	    live_change_oversize(COLS, p1);
+	}
+	break;
+    }
+}
+
+void
+get_screen_pixels(unsigned *height, unsigned *width)
+{
+    *height = 0;
+    *width = 0;
+}
+
+void
+get_window_pixels(unsigned *height, unsigned *width)
+{
+    *height = 0;
+    *width = 0;
+}
+
+void
+get_character_pixels(unsigned *height, unsigned *width)
+{
+    *height = 0;
+    *width = 0;
+}
+
+void
+get_window_location(int *x, int *y)
+{
+    *x = 0;
+    *y = 0;
+}
+
+window_state_t
+get_window_state(void)
+{
+    return WS_NONE;
+}

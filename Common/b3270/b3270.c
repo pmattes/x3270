@@ -977,7 +977,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
  * @param[in] text	Associated text
  */
 void
-xterm_text_gui(int code, const char *text)
+xterm_text_gui(unsigned short code, const char *text)
 {
     if (code == 0 || code == 1) {
 	ui_leaf(IndIconName,

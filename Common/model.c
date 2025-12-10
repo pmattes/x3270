@@ -355,7 +355,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     }
 
     /* Check settings. */
-    if (!check_rows_cols(model_number, ovc, ovr)) {
+    if (!check_rows_cols(model_number, ovc, ovr, true)) {
 	goto fail;
     }
 
@@ -444,6 +444,24 @@ done:
     Replace(pending_oversize, NULL);
     Replace(pending_extended_data_stream, NULL);
     return res;
+}
+
+/*
+ * Change oversize while connected (in NVT mode).
+ */
+void
+live_change_oversize(int ovc, int ovr)
+{
+    if ((ovc == ov_cols && ovr == ov_rows) || !check_rows_cols(model_num, ovc, ovr, false)) {
+	return;
+    }
+    set_rows_cols(model_num, ovc, ovr);
+    ROWS = maxROWS;
+    COLS = maxCOLS;
+    screen_change_model(model_num, ovc, ovr);
+    ctlr_erase(true);
+    Replace(appres.oversize, Asprintf("%dx%d", ovc, ovr));
+    st_changed(ST_TERMINAL_SIZE, false);
 }
 
 /*

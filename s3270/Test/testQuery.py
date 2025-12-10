@@ -27,7 +27,6 @@
 #
 # s3270 Query() tests
 
-import os
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
@@ -48,9 +47,10 @@ class TestS3270Query(cti):
             # Start s3270.
             http_port, ts = unused_port()
             s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}',
-                f'127.0.0.1:{playback_port}']), stdin=PIPE, stdout=DEVNULL)
+                f'127.0.0.1:{playback_port}']), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
+            self.check_listen(http_port)
 
             # Feed x3270 some data.
             p.send_records(4)
@@ -74,7 +74,37 @@ class TestS3270Query(cti):
             self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
 
         # Wait for the processes to exit.
-        s3270.stdin.close()
+        self.vgwait(s3270)
+
+    # s3270 Query() test for window-specific items.
+    def test_s3270_query_window(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState']
+
+        # Query everything and make sure it doesn't include the window items.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query()')
+        result = r.json()['result']
+        for query in q_window:
+            matches = [query for qline in result if query in qline]
+            self.assertEqual(0, len(matches), f'did not expect {matches}')
+
+        # Query those items specifically to make sure they are merely hidden.
+        for query in q_window:
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query({query})')
+            result = r.json()['result']
+            self.assertTrue(r.ok)
+            self.assertEqual(1, len(result))
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
         self.vgwait(s3270)
 
 if __name__ == '__main__':

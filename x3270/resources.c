@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -291,6 +291,10 @@ XtResource xresources[] = {
       offset(dpi), XtRString, 0 },
     { ResXQuartzHack, ClsXQuartzHack, XtRBoolean, sizeof(Boolean),
       offset(xquartz_hack), XtRString, "false" },
+    { ResFullScreen, ClsFullScreen, XtRBoolean, sizeof(Boolean),
+      offset(fullscreen), XtRString, "false" },
+    { ResMaximize, ClsMaximize, XtRBoolean, sizeof(Boolean),
+      offset(maximize), XtRString, "false" },
 
 #if defined(USE_APP_DEFAULTS) /*[*/
     { ResAdVersion, ClsAdVersion, XtRString, sizeof(char *),
@@ -365,6 +369,8 @@ XtResource xresources[] = {
       boffset(ut_env), XtRString, ResTrue },
     { ResExtendedDataStream, ClsExtendedDataStream, XtRBoolean, sizeof(Boolean),
       boffset(extended_data_stream), XtRString, ResTrue },
+    { ResXtwinops, ClsXtwinops, XtRBoolean, sizeof(Boolean),
+      boffset(xtwinops), XtRString, ResTrue },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

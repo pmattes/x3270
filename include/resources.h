@@ -120,6 +120,7 @@
 #define ResFtRemap		"ftRemap"
 #define ResFtSecondarySpace	"ftSecondarySpace"
 #define ResFtWindowsCodePage	"ftWindowsCodePage"
+#define ResFullScreen		"fullScreen"
 #define ResHighlightBold	"highlightBold"
 #define ResHostColorFor		"hostColorFor"
 #define ResHostColorForDefault ResHostColorFor "Default"
@@ -161,6 +162,7 @@
 #define ResLuCommandLine	"printer.luCommandLine"
 #define ResMacros		"macros"
 #define ResMarginedPaste	"marginedPaste"
+#define ResMaximize		"maximize"
 #define ResMaxRecent		"maxRecent"
 #define ResMenuBar		"menuBar"
 #define ResMetaEscape		"metaEscape"
@@ -259,6 +261,7 @@
 #define ResWrapperDoc		"wrapperDoc"
 #define ResWrongTerminalName	"wrongTerminalName"
 #define ResXQuartzHack		"xQuartzHack"
+#define ResXtwinops		"xtwinops"
 
 /* Dotted resource names. */
 #define DotAcceptHostname	"." ResAcceptHostname
@@ -279,6 +282,7 @@
 #define DotCookieFile		"." ResCookieFile
 #define DotDevName		"." ResDevName
 #define DotEmulatorFont		"." ResEmulatorFont
+#define DotFullScreen		"." ResFullScreen
 #define DotHostsFile		"." ResHostsFile
 #define DotHttpd		"." ResHttpd
 #define DotInputMethod		"." ResInputMethod
@@ -290,6 +294,7 @@
 #define DotLoginMacro		"." ResLoginMacro
 #define DotTlsMaxProtocol	"." ResTlsMaxProtocol
 #define DotTlsMinProtocol	"." ResTlsMinProtocol
+#define DotMaximize		"." ResMaximize
 #define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -392,6 +397,7 @@
 #define ClsFtRemap		"FtRemap"
 #define ClsFtSecondarySpace	"FtSecondarySpace"
 #define ClsFtWindowsCodePage	"FtWindowsCodePage"
+#define ClsFullScreen		"FullScreen"
 #define ClsHighlightBold	"HighlightBold"
 #define ClsHostname		"Hostname"
 #define ClsHostsFile		"HostsFile"
@@ -423,6 +429,7 @@
 #define ClsLoginMacro		"LoginMacro"
 #define ClsMacros		"Macros"
 #define ClsMarginedPaste	"MarginedPaste"
+#define ClsMaximize		"Maximize"
 #define ClsMaxRecent		"MaxRecent"
 #define ClsMenuBar		"MenuBar"
 #define ClsMetaEscape		"MetaEscape"
@@ -506,6 +513,7 @@
 #define ClsWerase		"Werase"
 #define ClsWrongTerminalName	"WrongTerminalName"
 #define ClsXQuartzHack		"XQuartzHack"
+#define ClsXtwinops		"Xtwinops"
 
 /* Options. */
 #define OptAcceptHostname	"-accepthostname"
@@ -533,6 +541,7 @@
 #define OptDefScreen		"-defscreen"
 #define OptDevName		"-devname"
 #define OptEmulatorFont		"-efont"
+#define OptFullScreen		"-fullscreen"
 #define OptHostsFile		"-hostsfile"
 #define OptHelp1		"--help"
 #define OptHelp2		"-?"
@@ -552,6 +561,7 @@
 #define OptLocalCp		"-localcp"
 #define OptLocalProcess		"-e"
 #define OptLoginMacro		"-loginmacro"
+#define OptMaximize		"-maximize"
 #define OptMinVersion		"-minversion"
 #define OptModel		"-model"
 #define OptMono			"-mono"

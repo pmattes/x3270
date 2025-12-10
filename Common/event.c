@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -118,7 +118,8 @@ st_changed(enum st tx, bool mode)
 	"selecting",
 	"secure",
 	"kbd-disable",
-	"terminal-name"
+	"terminal-name",
+	"terminal-size",
     };
     struct st_callback *st;
 

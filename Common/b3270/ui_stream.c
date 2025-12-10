@@ -61,6 +61,7 @@
 #include "txa.h"
 #include "utf8.h"
 #include "utils.h"
+#include "winops.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
@@ -751,7 +752,7 @@ ui_action_done(task_cbh handle, bool success, bool abort)
 }
 
 /* Emit a warning about an unknown attribute/member. */
-static void
+void
 ui_unknown_attribute(const char *element, const char *attribute)
 {
     ui_leaf(IndUiError,
@@ -770,13 +771,31 @@ ui_unknown_attribute(const char *element, const char *attribute)
 }
 
 /* Emit a warning about a missing attribute/member. */
-static void
+void
 ui_missing_attribute(const char *element, const char *attribute)
 {
     ui_leaf(IndUiError,
 	    AttrFatal, AT_BOOLEAN, false,
 	    AttrText, AT_STRING, XML_MODE? "missing attribute":
 		"missing member",
+	    XML_MODE? AttrElement: AttrOperation, AT_STRING, element,
+	    XML_MODE? AttrAttribute: AttrMember, AT_STRING, attribute,
+	    AttrLine,
+		XML_MODE? AT_INT: AT_SKIP_INT,
+		XML_MODE? (int64_t)XML_GetCurrentLineNumber(uix.parser): 0,
+	    AttrColumn,
+		XML_MODE? AT_INT: AT_SKIP_INT,
+		XML_MODE? (int64_t)XML_GetCurrentColumnNumber(uix.parser): 0,
+	    NULL);
+}
+
+/* Emit a warning about an invalid attribute/member. */
+void
+ui_invalid_attribute(const char *element, const char *attribute, const char *issue)
+{
+    ui_leaf(IndUiError,
+	    AttrFatal, AT_BOOLEAN, false,
+	    AttrText, AT_STRING, txAsprintf("invalid %s: %s", XML_MODE? "attribute": "member", issue),
 	    XML_MODE? AttrElement: AttrOperation, AT_STRING, element,
 	    XML_MODE? AttrAttribute: AttrMember, AT_STRING, attribute,
 	    AttrLine,
@@ -801,7 +820,7 @@ uij_non_string_attribute(const char *element, const char *attribute)
 }
 
 /* Get a string attribute. */
-static const char *
+const char *
 get_jstring(const json_t *j, const char *element, const char *attribute)
 {
     const char *svalue;
@@ -1323,6 +1342,8 @@ handle_json_input(char *buf, size_t nr, size_t *offset)
 	do_jpassthru_complete(element, true);
     } else if (json_object_member(result, OperFail, NT, &element)) {
 	do_jpassthru_complete(element, false);
+    } else if (json_object_member(result, OperWindowChange, NT, &element)) {
+	do_jwindow_change(element);
     } else {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,
@@ -1672,6 +1693,8 @@ xml_start(void *userData _is_unused, const XML_Char *name,
 	do_passthru_complete(true, name, atts);
     } else if (!strcasecmp(name, OperFail)) {
 	do_passthru_complete(false, name, atts);
+    } else if (!strcasecmp(name, OperWindowChange)) {
+	do_window_change(name, atts);
     } else {
 	ui_leaf(IndUiError,
 		AttrFatal, AT_BOOLEAN, false,

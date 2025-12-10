@@ -118,6 +118,9 @@ extern char *efont_charset_dbcs;
 extern XIM im;
 extern XIC ic;
 extern bool xim_error;
+extern bool maximized;
+extern bool iconic;
+extern bool fullscreen;
 
 char *display_charset(void);
 void font_init(void);
@@ -168,6 +171,10 @@ void screen_register(void);
 XChar2b screen_vcrosshair(void);
 Dimension rescale(Dimension d);
 void screen_set_title(const char *title);
+#define NWS_REMOVE	0
+#define NWS_ADD		1
+#define NWS_TOGGLE	2
+void send_wmgr(const char *why, unsigned long message_type, unsigned long l0, unsigned long l1, unsigned long l2);
 
 /* font list */
 struct font_list {

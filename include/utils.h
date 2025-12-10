@@ -118,6 +118,8 @@ enum st {
     ST_SECURE,		/* secure mode changing */
     ST_KBD_DISABLE,	/* keyboard disable changing */
     ST_TERMINAL_NAME,	/* terminal name changing */
+    ST_TERMINAL_SIZE,	/* screen size changing (live) */
+    ST_FULLSCREEN,	/* full-screen mode */
     N_ST
 };
 

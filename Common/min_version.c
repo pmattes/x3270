@@ -56,7 +56,7 @@ int our_major, our_minor, our_iteration;
  * @return true if parse successful.
  */
 #define MAX_VERSION 999
-static bool
+bool
 parse_version(const char *text, int *major, int *minor, int *iteration)
 {
     const char *t = text;

@@ -200,8 +200,10 @@
 #define KwCodePage	"CodePage"
 #define KwCodePages	"CodePages"
 #define KwCopyright	"Copyright"
+#define KwCharacterPixels	"CharacterPixels"
 #define KwCursor	"Cursor"
 #define KwCursor1	"Cursor1"
+#define KwDisplayPixels	"DisplayPixels"
 #define KwFormatted	"Formatted"
 #define KwHost		"Host"
 #define KwKeyboardLock	"KeyboardLock"
@@ -235,6 +237,9 @@
 #define KwTlsSessionInfo "TlsSessionInfo"
 #define KwTlsSubjectNames "TlsSubjectNames"
 #define KwVersion	"Version"
+#define KwWindowLocation	"WindowLocation"
+#define KwWindowPixels	"WindowPixels"
+#define KwWindowState	"WindowState"
 /*  Parameters to Quit(). */
 #define KwDashForce	"-force"
 #define KwForce		"force"
@@ -299,6 +304,9 @@
 /*  Parameters to WindowState(). */
 #define KwIconic	"iconic"
 #define KwNormal	"normal"
+#define KwMaximized	"maximized"
+#define KwFullScreen	"fullscreen"
+#define KwToggle	"toggle"
 /*  Parameters to Escape(). */
 #define KwDashNoPromptAfter "-nopromptafter"
 /*  Parameters to Set(). */

@@ -228,9 +228,10 @@ ctlr_reinit(unsigned cmask)
  * Ideally this should be called by set_rows_cols() below.
  */
 bool
-check_rows_cols(int mn, unsigned ovc, unsigned ovr)
+check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
 {
     unsigned mxc, mxr; /* Maximum rows, columns */
+    const char *err;
 
     switch (mn) {
     case 2:
@@ -250,26 +251,56 @@ check_rows_cols(int mn, unsigned ovc, unsigned ovr)
 	mxr = MODEL_5_ROWS; 
 	break;
     default:
-	popup_an_error("Unknown model: %d", mn);
+	err = txAsprintf("Unknown model: %d", mn);
+	if (complain) {
+	    popup_an_error("%s", err);
+	} else {
+	    vctrace(TC_INFRA, "%s\n", err);
+	}
 	return false;
     }
 
     /* Check oversize. */
     if (ovc > 0 || ovr > 0) {
 	if (ovc == 0) {
-	    popup_an_error("Invalid %s %dx%d columns:\nzero", ResOversize, ovc, ovr);
+	    err = txAsprintf("Invalid %s %dx%d columns:\nzero", ResOversize, ovc, ovr);
+	    if (complain) {
+		popup_an_error("%s", err);
+	    } else {
+		vctrace(TC_INFRA, "%s\n", err);
+	    }
 	    return false;
 	} else if (ovr == 0) {
-	    popup_an_error("Invalid %s %dx%d rows:\nzero", ResOversize, ovc, ovr);
+	    err = txAsprintf("Invalid %s %dx%d rows:\nzero", ResOversize, ovc, ovr);
+	    if (complain) {
+		popup_an_error("%s", err);
+	    } else {
+		vctrace(TC_INFRA, "%s\n", err);
+	    }
 	    return false;
 	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
-	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
+	    err = txAsprintf("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
+	    if (complain) {
+		popup_an_error("%s", err);
+	    } else {
+		vctrace(TC_INFRA, "%s\n", err);
+	    }
 	    return false;
 	} else if (ovc > 0 && ovc < mxc) {
-	    popup_an_error("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, mn, mxc);
+	    err = txAsprintf("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, mn, mxc);
+	    if (complain) {
+		popup_an_error("%s", err);
+	    } else {
+		vctrace(TC_INFRA, "%s\n", err);
+	    }
 	    return false;
 	} else if (ovr > 0 && ovr < mxr) {
-	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, mn, mxr);
+	    err = txAsprintf("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, mn, mxr);
+	    if (complain) {
+		popup_an_error("%s", err);
+	    } else {
+		vctrace(TC_INFRA, "%s\n", err);
+	    }
 	    return false;
 	}
     }

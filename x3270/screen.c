@@ -73,6 +73,7 @@
 #include "kybd.h"
 #include "names.h"
 #include "nvt.h"
+#include "nvt_gui.h"
 #include "popups.h"
 #include "query.h"
 #include "save.h"
@@ -123,6 +124,9 @@
 #define SELECTED(baddr)		(selected[(baddr)/8] & (1 << ((baddr)%8)))
 #define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
 
+#define COVER_PENDING		((xappres.fullscreen || xappres.maximize) && !fullmax_done)
+#define COVER_TRIGGERED		((xappres.fullscreen || xappres.maximize) && fullmax_done)
+
 /* Globals */
 Dimension       main_width;		/* desired toplevel width */
 bool            scrollbar_changed = false;
@@ -152,6 +156,9 @@ int		hhalo, vhalo;
 int		dpi = 96;
 int		dpi_scale = 100;
 bool		dpi_override = false;
+bool     	maximized = false;
+bool     	iconic = false;
+bool		fullscreen = false;
 
 #define gray_width 2
 #define gray_height 2
@@ -173,10 +180,9 @@ static int	field_fg[4];
 static bool     in_focus = false;
 static bool     line_changed = false;
 static bool     cursor_changed = false;
-static bool     iconic = false;
-static bool     maximized = false;
 static Widget   container;
 static Widget   scrollbar;
+static Widget	container_cover;
 static Dimension menubar_height;
 static Dimension container_width;
 static Dimension cwidth_nkp;		/* container width, without integral
@@ -217,7 +223,8 @@ static char    *color_name[16] = {
 };
 static bool	initial_popup_ticking = false;
 static bool	need_keypad_first_up = false;
-static bool highlight_bold = false;
+static bool	highlight_bold = false;
+static bool	fullmax_done = false;
 
 static Pixmap   inv_icon;
 static Pixmap   wait_icon;
@@ -388,7 +395,7 @@ static bool cursor_off(const char *why, bool including_lower_crosshair,
 static void draw_aicon_label(void);
 static void set_mcursor(void);
 static void scrollbar_init(bool is_reset);
-static void init_rsfonts(char *charset_name);
+static void init_fonts_from_resources(char *charset_name);
 static void allocate_pixels(void);
 static int fl_baddr(int baddr);
 static GC get_gc(struct sstate *s, int color);
@@ -427,9 +434,8 @@ static action_t WindowState_action;
 static XChar2b apl_to_udisplay(int d8_ix, unsigned char c);
 static XChar2b apl_to_ldisplay(unsigned char c);
 
-/* Resize font list. */
-struct rsfont {
-    struct rsfont *next;
+/* Resize font description. */
+struct rsfont_desc {
     char *name;
     int width;
     int height;
@@ -438,13 +444,25 @@ struct rsfont {
     int total_height;	/* transient */
     int area;		/* transient */
 };
-static struct rsfont *rsfonts;
 
-/* Resize cache. */
+/* Resize font list. */
+struct rsfont {
+    struct rsfont *next;
+    struct rsfont_desc desc;
+};
+
+/* Resource-defined resize fonts. */
+static struct rsfont *resource_rsfonts;
+
+/* Dynamic resize font cache. */
 typedef struct drc {
     struct drc *next;
-    char *key;	/* first 7 properties */
-    struct rsfont *rsfonts;
+    char *key;		/* first 7 properties */
+    bool scalable;	/* true if font is scalable */
+    union {
+	struct rsfont_desc **rsfont_descs; /* Array of rsfont_desc, if scalable */
+	struct rsfont *rsfonts; /* Linked list of struct rsfont, if not scalable */
+    } u;
 } drc_t;
 static struct drc *drc;
 
@@ -462,6 +480,10 @@ static struct drc *drc;
 
 /* Convert a host color (0 or 0xfx) to a sp color. */
 #define HCOLOR_TO_SPCOLOR(c)	((c)? (GC_NONDEFAULT | ((c) & COLOR_MASK)): 0)
+
+/* Smallest and largest font sizes searched for scalable fonts. */
+#define F_MIN	2
+#define F_MAX	100
 
 static struct {
     bool ticking;
@@ -569,7 +591,7 @@ screen_preinit(void)
 static void
 clear_fixed(void)
 {
-    if (!maximized && user_resize_allowed && (fixed_width || fixed_height)) {
+    if (!(maximized | fullscreen) && user_resize_allowed && (fixed_width || fixed_height)) {
 	vctrace(TC_UI, "clearing fixed_width and fixed_height\n");
 	fixed_width = 0;
 	fixed_height = 0;
@@ -933,12 +955,15 @@ screen_reinit(unsigned cmask)
 		XtNborderWidth, 0,
 		XtNwidth, container_width,
 		XtNheight, 10, /* XXX -- a temporary lie to make Xt happy */
+		XtNbackground, appres.interactive.mono? xappres.background: colorbg_pixel,
 		NULL);
 	save_00translations(container, &container_t00);
 	set_translations(container, NULL, &container_t0);
 	if (appres.interactive.mono) {
 	    XtVaSetValues(container, XtNbackgroundPixmap, gray, NULL);
 	}
+    } else if (!appres.interactive.mono) {
+	XtVaSetValues(container, XtNbackground, colorbg_pixel, NULL);
     }
 
     /* Initialize the menu bar and integral keypad */
@@ -973,6 +998,10 @@ screen_reinit(unsigned cmask)
     scrollbar_init((cmask & MODEL_CHANGE) != 0);
 
     XtRealizeWidget(toplevel);
+    if (COVER_PENDING) {
+	/* The menubar was created before the cover, so it ends up on top. We need to raise the cover over it. */
+	XRaiseWindow(display, XtWindow(container_cover));
+    }
     if (pending_title != NULL) {
         XChangeProperty(display, XtWindow(toplevel), a_net_wm_name, XInternAtom(display, "UTF8_STRING", False), 8,
                 PropModeReplace, (unsigned char *)pending_title, (int)strlen(pending_title));
@@ -1058,8 +1087,8 @@ check_resized(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	snap_height = last_height;
 
 	/* Go a bit bigger, to unscramble its brain. */
-	cn.width = width + 10;
-	cn.height = height + 10;
+	cn.width = width + 1;
+	cn.height = height + 1;
 	vctrace(TC_UI, " Step 1: Temporarily switching to width %d, height %d to un-confuse it\n", cn.width, cn.height);
 	do_resize();
 	snap_pending = true;
@@ -1095,7 +1124,7 @@ set_toplevel_sizes(const char *why)
     tw = container_width;
     th = container_height;
     if (fixed_width) {
-	if (!maximized) {
+	if (!(maximized | fullscreen)) {
 	    vctrace(TC_UI, "set_toplevel_sizes(%s), fixed: %dx%d\n", why, fixed_width, fixed_height);
 	    redo_toplevel_size(fixed_width, fixed_height);
 	    if (!user_resize_allowed) {
@@ -1116,7 +1145,7 @@ set_toplevel_sizes(const char *why)
 	main_width = fixed_width;
 	main_height = fixed_height;
     } else {
-	if (!maximized) {
+	if (!(maximized | fullscreen)) {
 	    vctrace(TC_UI, "set_toplevel_sizes(%s), not fixed: container %hux%hu\n",
 		    why, tw, th);
 	    redo_toplevel_size(tw, th);
@@ -1160,6 +1189,36 @@ inflate_screen(void)
 	    nss.screen_height,
 	    container_width,
 	    container_height);
+
+    if (container_cover == NULL && COVER_PENDING) {
+	/*
+	 * Some strange stuff.
+	 * I can't find a way to create the window as maximized or fullscreen. I need to
+	 * create it in normal state, then change it to maximized or fullscreen via the window
+	 * manager. Unfortunately, that is a visibly slow process, especially the first time.
+	 * And what it on the screen during that time is the smaller window in the upper-left
+	 * corner, and the container's background color in the rest. Ugly.
+	 *
+	 * To fix this, I create a temporary window, container_cover, which covers the
+	 * normal-sized window with a rectangle of background color, so that window disappears
+	 * while the maximized/fullscreen area is being populated. When we get the Expose event
+	 * for the big window, I unmap the container cover.
+	 */
+	container_cover = XtVaCreateManagedWidget(
+		"container_cover", widgetClass, container,
+		XtNwidth, container_width,
+		XtNheight, container_height,
+		XtNx, 0,
+		XtNy, 0,
+		XtNbackground, appres.interactive.mono? xappres.background: colorbg_pixel,
+		XtNborderWidth, 0,
+		NULL);
+	if (appres.interactive.mono) {
+	    XtVaSetValues(container_cover, XtNbackgroundPixmap, gray, NULL);
+	}
+    } else if (container_cover != NULL && !appres.interactive.mono) {
+	XtVaSetValues(container_cover, XtNbackground, colorbg_pixel, NULL);
+    }
 
     /* Create the screen window */
     if (nss.widget == NULL) {
@@ -1943,6 +2002,15 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
     int i;
     int c0;
 
+    if (COVER_TRIGGERED) {
+	/*
+	 * There is a container cover (see the comment in the code where it is created), and
+	 * we've been asked to redraw the screen, having been told the final dimensions of
+	 * the window. Time to remove the cover.
+	 */
+	XtUnmapWidget(container_cover);
+    }
+
     if (w == nss.widget) {
 	if (initial_popup_ticking) {
 	    need_keypad_first_up = true;
@@ -2122,8 +2190,8 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     if (dbcs || !nss.standard_font) {
 	/* Use the 3270 fonts. */
 	current_area = *char_width * *char_height;
-	for (r = rsfonts; r != NULL; r = r->next) {
-	    int area = r->width * r->height;
+	for (r = resource_rsfonts; r != NULL; r = r->next) {
+	    int area = r->desc.width * r->desc.height;
 
 	    if ((bigger && area <= current_area) ||
 		(!bigger && area >= current_area)) {
@@ -2144,8 +2212,8 @@ StepEfont_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	}
 
 	/* Switch. */
-	vctrace(TC_UI, AnStepEfont ": Switching to %s\n", best_r->name);
-	screen_newfont(best_r->name, true, false);
+	vctrace(TC_UI, AnStepEfont ": Switching to %s\n", best_r->desc.name);
+	screen_newfont(best_r->desc.name, true, false);
     } else {
 	/* Try rescaling the current font. */
 	char res[15][256];
@@ -4421,6 +4489,21 @@ PA_Focus_xaction(Widget w _is_unused, XEvent *event, String *params _is_unused,
 	}
 	break;
     }
+
+    /* Implement the -maximize and -fullscreen command-line options. */
+    {
+	static bool first = true;
+
+	if (first) {
+	    first = false;
+	    if (xappres.fullscreen) {
+		send_wmgr(AnWindowState, a_net_wm_state, NWS_ADD, a_net_wm_state_fullscreen, 0);
+	    } else if (xappres.maximize) {
+		send_wmgr(AnWindowState, a_net_wm_state, NWS_ADD, a_net_wm_state_maximized_horz, a_net_wm_state_maximized_vert);
+	    }
+	    fullmax_done = true;
+	}
+    }
 }
 
 void
@@ -4466,6 +4549,8 @@ query_window_state(void)
     bool maximized_vert = false;
     bool was_iconic = iconic;
     bool was_maximized = maximized;
+    bool was_fullscreen = fullscreen;
+    bool now_fullscreen = false;
 
     /* Get WM_STATE to see if we're iconified. */
     if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L,
@@ -4498,7 +4583,7 @@ query_window_state(void)
 	vctrace(TC_UI, "%s\n", iconic? "Iconified": "Not iconified");
     }
 
-    /* Get _NET_WM_STATE to see if we're maximized. */
+    /* Get _NET_WM_STATE to see if we're maximized or fullscreen. */
     data = NULL;
     if (XGetWindowProperty(display, XtWindow(toplevel), a_net_wm_state, 0L,
 		(long)BUFSIZ, false, AnyPropertyType, &actual_type,
@@ -4514,21 +4599,31 @@ query_window_state(void)
 		if (prop[item] == a_net_wm_state_maximized_vert) {
 		    maximized_vert = true;
 		}
+		if (prop[item] == a_net_wm_state_fullscreen) {
+		    now_fullscreen = true;
+		}
 	    }
 	}
 	XFree(data);
 
 	maximized = (maximized_horz && maximized_vert);
+	fullscreen = now_fullscreen;
     }
-    if (maximized != was_maximized) {
-	vctrace(TC_UI, "%s\n", maximized? "Maximized": "Not maximized");
-	menubar_snap_enable(!maximized);
+    if (maximized != was_maximized || fullscreen != was_fullscreen) {
+	if (maximized != was_maximized) {
+	    vctrace(TC_UI, "%s\n", maximized? "Maximized": "Not maximized");
+	}
+	if (fullscreen != was_fullscreen) {
+	    vctrace(TC_UI, "%s\n", fullscreen? "Full-screen": "Not full-screen");
+	    st_changed(ST_FULLSCREEN, fullscreen);
+	}
+	menubar_snap_enable(!(maximized | fullscreen));
 
 	/*
 	 * If the integral keypad is on when we are maximized, then it is okay
 	 * to toggle it on and off. Otherwise, no.
 	 */
-	menubar_keypad_sensitive(!maximized ||
+	menubar_keypad_sensitive(!(maximized | fullscreen) ||
 		kp_placement != kp_integral ||
 		xappres.keypad_on);
     }
@@ -4899,7 +4994,7 @@ done:
     /* Set the appropriate global. */
     Replace(required_display_charsets,
 	    display_charsets? NewString(display_charsets): NULL);
-    init_rsfonts(required_display_charsets);
+    init_fonts_from_resources(required_display_charsets);
 
     return true;
 }
@@ -5831,7 +5926,7 @@ add_font_to_menu(char *label, const char *font)
  * Resize font list parser.
  */
 static void
-init_rsfonts(char *charset_name)
+init_fonts_from_resources(char *charset_name)
 {
     char *ms;
     struct rsfont *r;
@@ -5842,11 +5937,11 @@ init_rsfonts(char *charset_name)
     char *hier_name;
 
     /* Clear the old lists. */
-    while (rsfonts != NULL) {
-	r = rsfonts->next;
-	Free(rsfonts->name);
-	Free(rsfonts);
-	rsfonts = r;
+    while (resource_rsfonts != NULL) {
+	r = resource_rsfonts->next;
+	Free(resource_rsfonts->desc.name);
+	Free(resource_rsfonts);
+	resource_rsfonts = r;
     }
     while (font_list != NULL) {
 	f = font_list->next;
@@ -5883,7 +5978,7 @@ init_rsfonts(char *charset_name)
 	ns = ms = NewString(ms);
 	while (split_lresource(&ms, &line) == 1) {
 
-	    vctrace(TC_UI, "init_rsfonts: parsing %s\n", line);
+	    vctrace(TC_UI, "init_fonts_from_resources: parsing %s\n", line);
 
 	    /* Figure out what it's about. */
 	    split_font_list_entry(line, &label, NULL, &resize, &font);
@@ -5917,15 +6012,15 @@ init_rsfonts(char *charset_name)
 	    }
 	    matches = XListFontsWithInfo(display, fcopy, 1, &count, &fs);
 	    if (matches == NULL) {
-		vctrace(TC_UI, "init_rsfonts: no such font %s\n", font);
+		vctrace(TC_UI, "init_fonts_from_resources: no such font %s\n", font);
 		Free(fcopy);
 		continue;
 	    }
 	    r = (struct rsfont *)XtMalloc(sizeof(*r));
-	    r->name = XtNewString(font);
-	    r->width = fCHAR_WIDTH(fs);
-	    r->height = fCHAR_HEIGHT(fs);
-	    r->descent = fs->descent;
+	    r->desc.name = XtNewString(font);
+	    r->desc.width = fCHAR_WIDTH(fs);
+	    r->desc.height = fCHAR_HEIGHT(fs);
+	    r->desc.descent = fs->descent;
 	    XFreeFontInfo(matches, fs, count);
 
 	    if (plus != NULL) {
@@ -5933,26 +6028,26 @@ init_rsfonts(char *charset_name)
 
 		matches = XListFontsWithInfo(display, plus + 1, 1, &count, &fs);
 		if (matches == NULL) {
-		    vctrace(TC_UI, "init_rsfonts: no such font %s\n", plus + 1);
+		    vctrace(TC_UI, "init_fonts_from_resources: no such font %s\n", plus + 1);
 		    Free(fcopy);
 		    continue;
 		}
 		w = fCHAR_WIDTH(fs);
-		if (w > r->width * 2) {
-		    r->width = w / 2; /* XXX: round-off error if odd? */
+		if (w > r->desc.width * 2) {
+		    r->desc.width = w / 2; /* XXX: round-off error if odd? */
 		}
-		if (fCHAR_HEIGHT(fs) > r->height) {
-		    r->height = fCHAR_HEIGHT(fs);
+		if (fCHAR_HEIGHT(fs) > r->desc.height) {
+		    r->desc.height = fCHAR_HEIGHT(fs);
 		}
-		if (fs->descent > r->descent) {
-		    r->descent = fs->descent;
+		if (fs->descent > r->desc.descent) {
+		    r->desc.descent = fs->descent;
 		}
 		XFreeFontInfo(matches, fs, count);
 	    }
 	    Free(fcopy);
 
-	    r->next = rsfonts;
-	    rsfonts = r;
+	    r->next = resource_rsfonts;
+	    resource_rsfonts = r;
 	}
 	free(ns);
     }
@@ -6058,14 +6153,229 @@ find_next_variant(const char *font_name, void **dp, int *size)
     return NULL;
 }
 
+/* Generate the variants of a non-scalable font. */
+static struct rsfont *
+generate_non_scalable(char *key)
+{
+    struct rsfont *rdyn = NULL;
+    struct rsfont *rlast = NULL;
+    char *next_name;
+    void *x = NULL;
+    int p;
+    drc_t *d;
+
+    while ((next_name = find_next_variant(full_efontname, &x, &p)) != NULL) {
+	int count;
+	XFontStruct *fs;
+	char **matches;
+	struct rsfont *r;
+
+	matches = XListFontsWithInfo(display, next_name, 1, &count, &fs);
+	if (matches == NULL) {
+	    continue;
+	}
+	r = (struct rsfont *)XtMalloc(sizeof(*r));
+	r->desc.name = XtNewString(next_name);
+	r->desc.width = fCHAR_WIDTH(fs);
+	r->desc.height = fCHAR_HEIGHT(fs);
+	r->desc.descent = fs->descent;
+	XFreeFontInfo(matches, fs, count);
+
+	/* Add it to end of the list. */
+	r->next = NULL;
+	if (rlast != NULL) {
+	    rlast->next = r;
+	} else {
+	    rdyn = r;
+	}
+	rlast = r;
+    }
+
+    /* Add the list to the cache. */
+    d = (drc_t *)Malloc(sizeof(drc_t));
+    d->key = key;
+    d->scalable = false;
+    d->u.rsfonts = rdyn;
+    d->next = drc;
+    drc = d;
+
+    /* That's our candidate list. */
+    return rdyn;
+}
+
+/* Compute the area for a font. */
+static void
+compute_area(struct rsfont_desc *r)
+{
+    Dimension cw, ch;	/* container_width, container_height */
+    Dimension mkw;
+
+    /* Recompute for the current screen rows/columns. */
+    cw = SCREEN_WIDTH(r->width, HHALO) + 2 + scrollbar_width;
+    mkw = min_keypad_width();
+    if (kp_placement == kp_integral && xappres.keypad_on && cw < mkw) {
+	cw = mkw;
+    }
+
+    ch = menubar_qheight(cw) + SCREEN_HEIGHT(r->height, r->descent, VHALO) + 2;
+    if (kp_placement == kp_integral && xappres.keypad_on) {
+	ch += keypad_qheight();
+    }
+
+    r->total_width = cw;
+    r->total_height = ch;
+    r->area = cw * ch;
+}
+
+/* Allocate a scalable font. */
+struct rsfont_desc *
+allocate_rsfont(int p)
+{
+    char res[15][256];
+    varbuf_t rv;
+    char *dash = "";
+    char *new_font_name;
+    char **matches;
+    int count;
+    XFontStruct *fs;
+    struct rsfont_desc *r;
+    int i;
+
+    split_name(full_efontname, res, sizeof(res));
+    vb_init(&rv);
+    dash = "";
+    for (i = 0; i < 15; i++) {
+	switch (i) {
+	case 7:
+	    vb_appendf(&rv, "%s%i", dash, p);
+	    break;
+	case 8:
+	case 12:
+	    vb_appendf(&rv, "%s*", dash);
+	    break;
+	default:
+	    vb_appendf(&rv, "%s%s", dash, res[i]);
+	    break;
+	}
+	dash = "-";
+    }
+    new_font_name = vb_consume(&rv);
+
+    /* Get the basic information. */
+    matches = XListFontsWithInfo(display, new_font_name, 1, &count, &fs);
+    if (matches == NULL) {
+	/* XXX: This could mess with the binary search. */
+	return NULL;
+    }
+    r = Malloc(sizeof(struct rsfont_desc));
+    r->name = XtNewString(new_font_name);
+    r->width = fCHAR_WIDTH(fs);
+    r->height = fCHAR_HEIGHT(fs);
+    r->descent = fs->descent;
+    XFreeFontInfo(matches, fs, count);
+    return r;
+}
+
+/* Search for the best scalable font. */
+static struct rsfont_desc *
+search_scalable(drc_t *d)
+{
+    struct rsfont_desc *best = NULL;
+    struct rsfont_desc *r;
+    int current;
+    int low_bound = F_MIN - 1;
+    int high_bound = F_MAX + 1;
+    bool any = false;
+
+    /*
+     * Find the font with the largest area that fits within the requested
+     * dimensions.
+     *
+     * Classic binary search.
+     */
+    current = (high_bound - low_bound) / 2;
+    while (true) {
+	int cnext;
+
+	vctrace(TC_UI, "%s [%d %d %d]", any? ";": "    search_scalable:",
+		low_bound, current, high_bound);
+	any = true;
+	if ((r = d->u.rsfont_descs[current]) == NULL) {
+	    /* This is a new size. */
+	    r = allocate_rsfont(current);
+	    if (r != NULL) {
+		vctrace(TC_UI, "*");
+		compute_area(r);
+		d->u.rsfont_descs[current] = r;
+	    } else {
+		vctrace(TC_UI, " no font\n");
+		return NULL;
+	    }
+	}
+
+	if (r->total_width > cn.width || r->total_height > cn.height) {
+	    /* Too big. */
+	    vctrace(TC_UI, " too big");
+	    if (current == F_MIN) {
+		/* Nothing fits. */
+		vctrace(TC_UI, ", nothing fits\n");
+		return r;
+	    }
+
+	    /* Search down. */
+	    cnext = current - (current - low_bound) / 2;
+	    if (cnext == current) {
+		vctrace(TC_UI, ", can't to go down");
+		current = F_MIN;
+		continue;
+	    }
+	    high_bound = current;
+	    current = cnext;
+	    continue;
+	}
+
+	vctrace(TC_UI, " not too big");
+	best = r;
+
+	/* Try going up to see if we can do better. */
+	cnext = current + (high_bound - current) / 2;
+	if (cnext == current) {
+	    vctrace(TC_UI, ", can't go up\n");
+	    return r;
+	}
+	low_bound = current - 1;
+	current = cnext;
+    }
+
+    return best;
+}
+
+/* Generate a resize cache for a scalable font, and search it. */
+static struct rsfont_desc *
+generate_scalable(char *key)
+{
+    drc_t *d;
+
+    vctrace(TC_UI, "Did not find scalable font %s in drc, building\n", key);
+
+    /* Add to the cache. */
+    d = (drc_t *)Malloc(sizeof(drc_t));
+    d->key = key;
+    d->scalable = true;
+    d->u.rsfont_descs = Calloc(F_MAX + 1, sizeof(struct rsfont_desc *));
+    d->next = drc;
+    drc = d;
+
+    /* Search the list. */
+    return search_scalable(d);
+}
+
 /* Perform a resize operation. */
 static void
 do_resize(void)
 {
     struct rsfont *r;
-    struct rsfont *best = (struct rsfont *) NULL;
-    struct rsfont *rdyn = NULL;
-    struct rsfont *rlast = NULL;
+    struct rsfont_desc *best = (struct rsfont_desc *) NULL;
     struct rsfont *rcand = NULL;
 
     if (nss.standard_font && !efont_scale_size) {
@@ -6107,151 +6417,27 @@ do_resize(void)
 	    }
 	}
 	if (d != NULL) {
-	    vctrace(TC_UI, "Found %s in drc\n", key);
-	    rcand = d->rsfonts;
-	} else if (!efont_is_scalable) {
-	    /* Has variants. */
-	    char *next_name;
-	    void *x = NULL;
-	    int p;
-
-	    while ((next_name = find_next_variant(full_efontname, &x, &p))
-		    != NULL) {
-		int count;
-		XFontStruct *fs;
-		char **matches;
-
-		matches = XListFontsWithInfo(display, next_name, 1, &count,
-			&fs);
-		if (matches == NULL) {
-		    continue;
-		}
-		r = (struct rsfont *)XtMalloc(sizeof(*r));
-		r->name = XtNewString(next_name);
-		r->width = fCHAR_WIDTH(fs);
-		r->height = fCHAR_HEIGHT(fs);
-		r->descent = fs->descent;
-		XFreeFontInfo(matches, fs, count);
-
-		/* Add it to end of the list. */
-		r->next = NULL;
-		if (rlast != NULL) {
-		    rlast->next = r;
-		} else {
-		    rdyn = r;
-		}
-		rlast = r;
+	    if (d->scalable) {
+		vctrace(TC_UI, "Found scalable font %s in drc\n", key);
+		best = search_scalable(d);
+	    } else {
+		vctrace(TC_UI, "Found non-scalable font %s in drc\n", key);
+		rcand = d->u.rsfonts;
 	    }
-
-	    /* Add the list to the cache. */
-	    d = (drc_t *)Malloc(sizeof(drc_t));
-	    d->key = key;
-	    d->rsfonts = rdyn;
-	    d->next = drc;
-	    drc = d;
-
-	    /* That's our candidate list. */
-	    rcand = rdyn;
 	} else {
-	    int p;
-
-	    /* Is scalable. */
-
-	    /*
-	     * Query scaled from 2 to 100 points.
-	     * Inefficient? You bet.
-	     *
-	     * TODO: Optimize this so we save individual entries, and we scan
-	     * only until we find a match.
-	     */
-	    vctrace(TC_UI, "Did not find %s in drc, building\n", key);
-	    for (p = 2; p <= 100; p++) {
-		char *dash = "";
-		char *new_font_name;
-		char **matches;
-		int count;
-		XFontStruct *fs;
-
-		split_name(full_efontname, res, sizeof(res));
-		vb_init(&rv);
-		dash = "";
-		for (i = 0; i < 15; i++) {
-		    switch (i) {
-		    case 7:
-			vb_appendf(&rv, "%s%i", dash, p);
-			break;
-		    case 8:
-		    case 12:
-			vb_appendf(&rv, "%s*", dash);
-			break;
-		    default:
-			vb_appendf(&rv, "%s%s", dash, res[i]);
-			break;
-		    }
-		    dash = "-";
-		}
-		new_font_name = vb_consume(&rv);
-
-		/* Get the basic information. */
-		matches = XListFontsWithInfo(display, new_font_name, 1, &count,
-			&fs);
-		if (matches == NULL) {
-		    continue;
-		}
-		r = (struct rsfont *)XtMalloc(sizeof(*r));
-		r->name = XtNewString(new_font_name);
-		r->width = fCHAR_WIDTH(fs);
-		r->height = fCHAR_HEIGHT(fs);
-		r->descent = fs->descent;
-		XFreeFontInfo(matches, fs, count);
-
-		/* Add it to end of the list. */
-		r->next = NULL;
-		if (rlast != NULL) {
-		    rlast->next = r;
-		} else {
-		    rdyn = r;
-		}
-		rlast = r;
+	    if (efont_is_scalable) {
+		best = generate_scalable(key);
+	    } else {
+		rcand = generate_non_scalable(key);
 	    }
-
-	    vctrace(TC_UI, "drc build complete\n");
-
-	    /* Add the list to the cache. */
-	    d = (drc_t *)Malloc(sizeof(drc_t));
-	    d->key = key;
-	    d->rsfonts = rdyn;
-	    d->next = drc;
-	    drc = d;
-
-	    /* That's our candidate list. */
-	    rcand = rdyn;
 	}
     } else {
-	rcand = rsfonts;
+	rcand = resource_rsfonts;
     }
 
     /* Compute the area of the screen with each font. */
     for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
-	Dimension cw, ch;	/* container_width, container_height */
-	Dimension mkw;
-
-	cw = SCREEN_WIDTH(r->width, HHALO) + 2 + scrollbar_width;
-	mkw = min_keypad_width();
-	if (kp_placement == kp_integral && xappres.keypad_on
-		&& cw < mkw) {
-	    cw = mkw;
-	}
-
-	ch = menubar_qheight(cw) + SCREEN_HEIGHT(r->height, r->descent, VHALO)
-	    + 2;
-	if (kp_placement == kp_integral && xappres.keypad_on) {
-	    ch += keypad_qheight();
-	}
-
-	r->total_width = cw;
-	r->total_height = ch;
-	r->area = cw * ch;
+	compute_area(&r->desc);
     }
 
     /*
@@ -6259,10 +6445,10 @@ do_resize(void)
      * dimensions.
      */
     for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
-	if (r->total_width <= cn.width &&
-	    r->total_height <= cn.height &&
-	    (best == NULL || r->area > best->area)) {
-	    best = r;
+	if (r->desc.total_width <= cn.width &&
+	    r->desc.total_height <= cn.height &&
+	    (best == NULL || r->desc.area > best->area)) {
+	    best = &r->desc;
 	}
     }
 
@@ -6272,8 +6458,8 @@ do_resize(void)
      */
     if (!best && cn.width <= main_width && cn.height <= main_height) {
 	for (r = rcand; r != (struct rsfont *) NULL; r = r->next) {
-	    if (best == NULL || r->area < best->area) {
-		best = r;
+	    if (best == NULL || r->desc.area < best->area) {
+		best = &r->desc;
 	    }
 	}
     }
@@ -6745,22 +6931,103 @@ Title_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 WindowState_action(ia_t ia, unsigned argc, const char **argv)
 {
-    int state;
+    bool toggle = false;
+    window_state_t ws = WS_NONE;
+    unsigned i;
 
     action_debug(AnWindowState, ia, argc, argv);
-    if (check_argc(AnWindowState, argc, 1, 1) < 0) {
+    if (check_argc(AnWindowState, argc, 1, 2) < 0) {
 	return false;
     }
 
-    if (!strcasecmp(argv[0], KwIconic)) {
-	state = true;
-    } else if (!strcasecmp(argv[0], KwNormal)) {
-	state = false;
-    } else {
-	return action_args_are(AnWindowState, KwIconic, KwNormal, NULL);
+    for (i = 0; i < argc; i++) {
+	if (!strcasecmp(argv[i], KwNormal)) {
+	    if (ws != WS_NONE) {
+		goto usage;
+	    }
+	    ws = WS_NORMAL;
+	} else if (!strcasecmp(argv[i], KwIconic)) {
+	    if (ws != WS_NONE) {
+		goto usage;
+	    }
+	    ws = WS_ICONIFIED;
+	} else if (!strcasecmp(argv[i], KwMaximized)) {
+	    if (ws != WS_NONE) {
+		goto usage;
+	    }
+	    ws = WS_MAXIMIZED;
+	} else if (!strcasecmp(argv[i], KwFullScreen)) {
+	    if (ws != WS_NONE) {
+		goto usage;
+	    }
+	    ws = WS_FULLSCREEN;
+	} else if (!strcasecmp(argv[i], KwToggle)) {
+	    if (toggle) {
+		goto usage;
+	    }
+	    toggle = true;
+	}
     }
-    XtVaSetValues(toplevel, XtNiconic, state, NULL);
+
+    switch (ws) {
+	default:
+	case WS_NONE:
+	    goto usage;
+	case WS_NORMAL:
+	    if (toggle) {
+		goto usage;
+	    }
+	    /* Not iconic, not maximized, not fullscreen. */
+	    XtVaSetValues(toplevel, XtNiconic, false, NULL);
+	    send_wmgr(AnWindowState, a_net_wm_state, NWS_REMOVE, a_net_wm_state_maximized_horz, a_net_wm_state_maximized_vert);
+	    send_wmgr(AnWindowState, a_net_wm_state, NWS_REMOVE, a_net_wm_state_fullscreen, 0L);
+	    break;
+	case WS_MAXIMIZED:
+	    if (!iconic) {
+		send_wmgr(AnWindowState, a_net_wm_state, toggle? NWS_TOGGLE: NWS_ADD,
+			a_net_wm_state_maximized_horz, a_net_wm_state_maximized_vert);
+	    }
+	    break;
+	case WS_FULLSCREEN:
+	    if (!iconic) {
+		send_wmgr(AnWindowState, a_net_wm_state, toggle? NWS_TOGGLE: NWS_ADD, a_net_wm_state_fullscreen, 0);
+	    }
+	    break;
+	case WS_ICONIFIED:
+	    XtVaSetValues(toplevel, XtNiconic, toggle? !iconic: true, NULL);
+	    break;
+    }
     return true;
+
+usage:
+    popup_an_error(AnWindowState "(): Parameter must be '" KwIconic "', '" KwMaximized "', or '"
+	    KwFullScreen "' optionally followed by '" KwToggle "', or '" KwNormal "'");
+    return false;
+}
+
+/* Send a message to the window manager. */
+void
+send_wmgr(const char *why, unsigned long message_type, unsigned long l0, unsigned long l1, unsigned long l2)
+{
+    XEvent xev;
+    int ret = 0;
+    XWindowAttributes wattr;
+
+    memset(&xev, 0, sizeof(xev));
+    xev.type = ClientMessage;
+    xev.xclient.display = display;
+    xev.xclient.send_event = True;
+    xev.xclient.window = XtWindow(toplevel);
+    xev.xclient.message_type = message_type;
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = l0;
+    xev.xclient.data.l[1] = l1;
+    xev.xclient.data.l[2] = l2;
+    XGetWindowAttributes(display, XtWindow(toplevel), &wattr);
+    ret = XSendEvent(display, wattr.screen->root, False, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
+    if (ret == 0) {
+	vctrace(TC_UI, "%s: XSendEvent failed\n", why);
+    }
 }
 
 /* Initialize the dumb font cache. */

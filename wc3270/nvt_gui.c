@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
  * @param[in] text	Associated text
  */
 void
-xterm_text_gui(int code, const char *text)
+xterm_text_gui(unsigned short code, const char *text)
 {
     switch (code) {
     case 0:	/* icon name and window title */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,6 @@
 #include "nvt_gui.h"
 
 void
-xterm_text_gui(int code _is_unused, const char *text _is_unused)
+xterm_text_gui(unsigned short code _is_unused, const char *text _is_unused)
 {
 }

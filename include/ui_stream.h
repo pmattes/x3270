@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2022 Paul Mattes.
+ * Copyright (c) 2016, 2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,3 +62,9 @@ void uij_open_object(const char *name);
 void uij_open_array(const char *name);
 void uij_close_object(void);
 void uij_close_array(void);
+
+/* Helper functions. */
+const char *get_jstring(const json_t *j, const char *element, const char *attribute);
+void ui_unknown_attribute(const char *element, const char *attribute);
+void ui_missing_attribute(const char *element, const char *attribute);
+void ui_invalid_attribute(const char *element, const char *attribute, const char *issue);

@@ -55,6 +55,8 @@ typedef struct {
     Boolean	 keypad_on;
     Boolean	 apl_circled_alpha;
     Boolean	 xquartz_hack;
+    Boolean	 maximize;
+    Boolean	 fullscreen;
     char	*keypad;
     char	*efontname;
     char	*fixed_size;
@@ -116,6 +118,7 @@ typedef struct {
 	Boolean tls992;
 	Boolean ut_env;
 	Boolean extended_data_stream;
+	Boolean xtwinops;
 	struct {
 	    Boolean do_confirms;
 	    Boolean menubar;

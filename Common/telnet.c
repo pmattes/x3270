@@ -4127,6 +4127,24 @@ net_remodel(bool ignored _is_unused)
     net_set_default_termtype();
 }
 
+#if defined(LOCAL_PROCESS) && defined(TIOCSWINSZ) /*[*/
+/* Handle an ST_TERMINAL_SIZE change. */
+static void
+net_size_change(bool ignored _is_unused)
+{
+    if (local_process && sock != INVALID_SOCKET) {
+	struct winsize w;
+
+	(void) memset(&w, 0, sizeof(w));
+	w.ws_row = maxROWS;
+	w.ws_col = maxCOLS;
+	if (ioctl(sock, TIOCSWINSZ, &w) < 0) {
+	    vctrace(TC_SOCKET, "TIOCSWINSZ failed: %s", strerror(errno));
+	}
+    }
+}
+#endif /*]*/
+
 bool
 net_secure_unverified(void)
 {
@@ -4348,6 +4366,9 @@ net_register(void)
 {
     /* Register for state changes. */
     register_schange(ST_REMODEL, net_remodel);
+#if defined(LOCAL_PROCESS) && defined(TIOCSWINSZ) /*[*/
+    register_schange(ST_TERMINAL_SIZE, net_size_change);
+#endif /*]*/
 
     /* Register extended toggles. */
     register_extended_toggle(LINEMODE_NAME, toggle_linemode, NULL, NULL, (void **)&linemode, XRM_BOOLEAN);

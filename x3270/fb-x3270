@@ -244,8 +244,8 @@ x3270.keymap.base: \
 	Alt<Key>F9:			PF(21)\n\
 	Meta<Key>F10:			PF(22)\n\
 	Alt<Key>F10:			PF(22)\n\
-	Meta<Key>F11:			PF(23)\n\
-	Alt<Key>F11:			PF(23)\n\
+	Meta<Key>F11:			WindowState(toggle,fullscreen)\n\
+	Alt<Key>F11:			WindowState(toggle,fullscreen)\n\
 	Meta<Key>F12:			PF(24)\n\
 	Alt<Key>F12:			PF(24)\n\
 	:<Key>F1:			PF(1)\n\
@@ -356,6 +356,10 @@ x3270.keymap.righttoleft: #override \
 	Alt<Key>f:			Toggle(rightToLeftMode)\n\
 	Meta<Key>v:			Toggle(reverseInputMode)\n\
 	Alt<Key>v:			Toggle(reverseInputMode)
+! Disable full-size toggle from the keyboard.
+x3270.keymap.nofullscreen: #override \
+	Meta<Key>F11:			PF(23)\n\
+	Alt<Key>F11:			PF(23)
 !
 ! Start of keyboard-specific mappings.
 !
@@ -1006,6 +1010,7 @@ x3270*otherFontOption.label:			Other...
 x3270*lineModeOption.label:			Line Mode
 x3270*characterModeOption.label:		Character Mode
 x3270*extendedDsOption.label:			Extended 3270 Data Stream
+x3270*fullscreenOption.label:			Full Screen Mode
 x3270*m3278Option.label:			Monochrome (3278) Emulation
 x3270*m3279Option.label:			Color (3279) Emulation
 x3270*model2Option.label:			Model 2 (80x24)

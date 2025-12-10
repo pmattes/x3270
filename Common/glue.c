@@ -454,6 +454,7 @@ set_appres_defaults(void)
     appres.contention_resolution = true;
     appres.new_environ = true;
     appres.max_recent = 5;
+    appres.xtwinops = true;
 
     appres.ft.dft_buffer_size = DFT_BUF;
 
@@ -943,6 +944,7 @@ static res_t base_resources[] = {
 #if defined(_WIN32) /*[*/
     { ResWindowId,	aoffset(window_id),	XRM_STRING },
 #endif /*]*/
+    { ResXtwinops,	aoffset(xtwinops),	XRM_BOOLEAN },
 };
 
 typedef struct reslist {

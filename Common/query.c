@@ -42,6 +42,7 @@
 #include "host.h"
 #include "model.h"
 #include "names.h"
+#include "nvt_gui.h"
 #include "popups.h"
 #include "query.h"
 #include "see.h"
@@ -247,6 +248,66 @@ get_windowid(void)
 }
 #endif /*]*/
 
+static const char *
+format_pixels(unsigned height, unsigned width)
+{
+    return txAsprintf("height %u width %d", height, width);
+}
+
+static const char *
+query_character_pixels(void)
+{
+    unsigned height = 0, width = 0;
+
+    get_character_pixels(&height, &width);
+    return format_pixels(height, width);
+}
+
+static const char *
+query_display_pixels(void)
+{
+    unsigned height = 0, width = 0;
+
+    get_screen_pixels(&height, &width);
+    return format_pixels(height, width);
+}
+
+static const char *
+query_window_pixels(void)
+{
+    unsigned height = 0, width = 0;
+
+    get_window_pixels(&height, &width);
+    return format_pixels(height, width);
+}
+
+static const char *
+query_window_location(void)
+{
+    int x = 0, y = 0;
+
+    get_window_location(&x, &y);
+    return txAsprintf("x %d y %d", x, y);
+}
+
+static const char *
+query_window_state(void)
+{
+    switch (get_window_state()) {
+	case WS_NORMAL:
+	    return "normal";
+	case WS_ICONIFIED:
+	    return "iconified";
+       case WS_MAXIMIZED:
+	    return "maximized";
+       case WS_FULLSCREEN:
+	    return "full-screen";
+       case WS_NONE:
+       default:
+	    return "none";
+    }
+}
+
 /* Common code for Query() and Show() actions. */
 bool
 query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
@@ -399,10 +460,31 @@ query_register(void)
 	{ KwWindowId, get_windowid, NULL, false, false },
 #endif /*]*/
     };
+    static query_t hidden_window_queries[] = {
+	{ KwCharacterPixels, query_character_pixels, NULL, true, false },
+	{ KwDisplayPixels, query_display_pixels, NULL, true, false },
+	{ KwWindowPixels, query_window_pixels, NULL, true, false },
+	{ KwWindowLocation, query_window_location, NULL, true, false },
+	{ KwWindowState, query_window_state, NULL, true, false },
+    };
+    static query_t visible_window_queries[] = {
+	{ KwCharacterPixels, query_character_pixels, NULL, false, false },
+	{ KwDisplayPixels, query_display_pixels, NULL, false, false },
+	{ KwWindowPixels, query_window_pixels, NULL, false, false },
+	{ KwWindowLocation, query_window_location, NULL, false, false },
+	{ KwWindowState, query_window_state, NULL, false, false },
+    };
 
     /* Register actions.*/
     register_actions(actions, array_count(actions));
 
-    /* Register queries. */
+    /* Register base queries. */
     register_queries(base_queries, array_count(base_queries));
+
+    /* Register possibly-hidden queries. */
+    if (get_window_state() == WS_NONE) {
+	register_queries(hidden_window_queries, array_count(hidden_window_queries));
+    } else {
+	register_queries(visible_window_queries, array_count(visible_window_queries));
+    }
 }

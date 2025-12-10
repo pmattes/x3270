@@ -116,7 +116,8 @@ Widget          toplevel;
 XtAppContext    appcontext;
 Atom            a_delete_me, a_save_yourself, a_3270, a_registry, a_encoding,
 		a_state, a_net_wm_state, a_net_wm_state_maximized_horz,
-		a_net_wm_state_maximized_vert, a_net_wm_name, a_atom, a_spacing,
+		a_net_wm_state_maximized_vert, a_net_wm_state_fullscreen,
+		a_net_wm_name, a_atom, a_spacing,
 		a_pixel_size, a_font;
 Pixmap          gray;
 XrmDatabase     rdb;
@@ -166,6 +167,7 @@ XrmOptionDescRec base_options[]= {
     { OptLocalProcess,	NULL,		XrmoptionSkipLine,	NULL },
 #endif /*]*/
     { OptEmulatorFont,	DotEmulatorFont,XrmoptionSepArg,	NULL },
+    { OptFullScreen,	DotFullScreen,	XrmoptionNoArg,		ResTrue },
     { OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
     { OptHttpd,		DotHttpd,	XrmoptionSepArg,	NULL },
     { OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
@@ -179,6 +181,7 @@ XrmOptionDescRec base_options[]= {
     { OptLoginMacro,	DotLoginMacro,	XrmoptionSepArg,	NULL },
     { OptTlsMaxProtocol,DotTlsMaxProtocol,XrmoptionSepArg,	NULL },
     { OptTlsMinProtocol,DotTlsMinProtocol,XrmoptionSepArg,	NULL },
+    { OptMaximize,	DotMaximize,	XrmoptionNoArg,		ResTrue },
     { OptMinVersion,	DotMinVersion,	XrmoptionSepArg,	NULL },
     { OptModel,		DotModel,	XrmoptionSepArg,	NULL },
     { OptMono,		DotMono,	XrmoptionNoArg,		ResTrue },
@@ -251,6 +254,7 @@ static struct option_help {
     { OptLocalProcess, "<command> [arg...]", "Run process instead of connecting to host" },
 #endif /*]*/
     { OptEmulatorFont, "<font>", "Font for emulator window" },
+    { OptFullScreen, NULL, "Start in full-screen mode" },
     { OptHttpd, "[<addr>:]<port>", "TCP port to listen on for http requests" },
     { OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
     { OptIconName, "<name>", "Title for icon" },
@@ -265,6 +269,7 @@ static struct option_help {
     { OptKeyPasswd, "file:<filename>|string:<text>",
 	"TLS private key password", TLS_OPT_KEY_PASSWD },
     { OptLoginMacro, "Action([arg[,...]]) [...]", "Macro to run at login" },
+    { OptMaximize, NULL, "Start with window maximized" },
     { OptMinVersion, "<version>", "Fail unless at this version or greater" },
     { OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
     { OptMono, NULL, "Do not use color" },
@@ -753,6 +758,7 @@ main(int argc, char *argv[])
     a_net_wm_name = XInternAtom(display, "_NET_WM_NAME", False);
     a_net_wm_state_maximized_horz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
     a_net_wm_state_maximized_vert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    a_net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
     a_net_wm_state = XInternAtom(display, "_NET_WM_STATE", False);
     a_pixel_size = XInternAtom(display, "PIXEL_SIZE", False);
     a_registry = XInternAtom(display, "CHARSET_REGISTRY", False);
@@ -1253,6 +1259,7 @@ copy_xres_to_res_bool(void)
     copy_bool(wrong_terminal_name);
     copy_bool(tls992);
     copy_bool(ut_env);
+    copy_bool(xtwinops);
 
     copy_bool(interactive.do_confirms);
     copy_bool(interactive.mono);

@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\Common\menubar_stubs.c" />
     <ClCompile Include="..\..\Common\model_stubs.c" />
     <ClCompile Include="..\..\Common\nvt_gui_stubs.c" />
+    <ClCompile Include="..\..\Common\nvt_gui_stubs2.c" />
     <ClCompile Include="..\..\Common\popups_stubs.c" />
     <ClCompile Include="..\..\Common\pr3287_session_stubs.c" />
     <ClCompile Include="..\..\Common\print_gui_stubs.c" />

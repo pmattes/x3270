@@ -196,6 +196,7 @@ static Widget   unverified_icon;
 static Widget   keypad_button;
 static Widget	retry_button;
 static Widget	reconnect_button;
+static Widget	fullscreen_button;
 static Widget   linemode_button;
 static Widget   charmode_button;
 static Widget   models_option;
@@ -632,6 +633,16 @@ menubar_secure(bool ignored _is_unused)
 	    XtUnmapWidget(unverified_icon);
 	    XtUnmapWidget(unlocked_icon);
 	}
+    }
+}
+
+static void
+menubar_fullscreen(bool ignored _is_unused)
+{
+    if (fullscreen_button != NULL) {
+	XtVaSetValues(fullscreen_button,
+		XtNleftBitmap, fullscreen? dot: (Pixmap)NULL,
+		NULL);
     }
 }
 
@@ -1714,7 +1725,7 @@ oversize_button_callback(Widget w _is_unused, XtPointer client_data,
 	return;
     }
     if (sscanf(s, "%dx%d%c", &ovc, &ovr, &junk) == 2) {
-	if (check_rows_cols(model_num, ovc, ovr)) {
+	if (check_rows_cols(model_num, ovc, ovr, true)) {
 	    XtPopdown(oversize_shell);
 	    screen_remodel(model_num, ovc, ovr);
 	}
@@ -1968,6 +1979,13 @@ toggle_reconnect(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     push_macro(AnToggle "(" ResReconnect ")");
+}
+
+static void
+toggle_fullscreen(Widget w _is_unused, XtPointer client_data _is_unused, 
+	XtPointer call_data _is_unused)
+{
+    push_macro(AnWindowState "(" KwToggle "," KwFullScreen ")");
 }
 
 /* Called to change models */
@@ -2294,6 +2312,14 @@ options_menu_init(bool regen, Position x, Position y)
 		    XtNleftBitmap, appres.reconnect? dot: (Pixmap)NULL,
 		    XtNsensitive, True,
 		    NULL);
+	if (!appres.secure) {
+	    fullscreen_button = add_menu_itemv("fullscreenOption", t,
+			toggle_fullscreen, NULL,
+			&spaced,
+			XtNleftBitmap, fullscreen? dot: (Pixmap)NULL,
+			XtNsensitive, True,
+			NULL);
+	}
 	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);
@@ -2703,6 +2729,7 @@ menubar_register(void)
     register_schange(ST_CODEPAGE, menubar_codepage);
     register_schange(ST_KBD_DISABLE, menubar_keyboard_disable);
     register_schange(ST_SECURE, menubar_secure);
+    register_schange(ST_FULLSCREEN, menubar_fullscreen);
 
     /* Register for extended toggle notifications. */
     register_extended_toggle_notify(menubar_toggle_notify);

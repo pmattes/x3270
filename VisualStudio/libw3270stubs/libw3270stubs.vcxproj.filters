@@ -39,6 +39,9 @@
     <ClCompile Include="..\..\Common\nvt_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\nvt_gui_stubs2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\popups_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

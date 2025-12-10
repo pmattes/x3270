@@ -37,11 +37,15 @@
 #include "3270ds.h"
 #include "toggles.h"
 
+#include "boolstr.h"
 #include "codepage.h"
 #include "ctlrc.h"
 #include "host.h"
+#include "min_version.h"
 #include "nvt.h"
 #include "nvt_gui.h"
+#include "popups.h"
+#include "resources.h"
 #include "screen.h"
 #include "scroll.h"
 #include "tables.h"
@@ -49,9 +53,11 @@
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
+#include "txa.h"
 #include "screentrace.h"
 #include "unicodec.h"
 #include "utils.h"
+#include "xtwinops.h"
 
 #define MB_MAX	16
 
@@ -116,11 +122,16 @@
 #define VP	57	/* vertical position absolute (VPA) */
 #define GT	58	/* > (after ESC [) */
 #define D2	59	/* secondary device attributes */
+#define WM	60	/* window manipulation */
+#define Dx	61	/* DCS */
+#define Dy	62	/* DCS + ESC */
+#define EC	63	/* erase n characters in this line */
 
 static enum state {
     DATA = 0, ESC = 1, CSDES = 2,
     N1 = 3, DECP = 4, TEXT = 5, TEXT2 = 6,
-    MBPEND = 7, ESCGT = 8, NUM_STATES = 9
+    MBPEND = 7, ESCGT = 8, DCS = 9, DCS_ESC = 10,
+    NUM_STATES = 11
 } state = DATA;
 
 /*
@@ -128,68 +139,72 @@ static enum state {
  * DEC VT100-specific functions are called dec_xxx.
  * Xterm-specific functions are called xterm_xxx.
  */
-static enum state ansi_data_mode(int, int);
-static enum state dec_save_cursor(int, int);
-static enum state dec_restore_cursor(int, int);
-static enum state ansi_newline(int, int);
-static enum state ansi_cursor_up(int, int);
-static enum state ansi_esc2(int, int);
-static enum state ansi_reset(int, int);
-static enum state ansi_insert_chars(int, int);
-static enum state ansi_cursor_down(int, int);
-static enum state ansi_cursor_right(int, int);
-static enum state ansi_cursor_left(int, int);
-static enum state ansi_cursor_motion(int, int);
-static enum state ansi_erase_in_display(int, int);
-static enum state ansi_erase_in_line(int, int);
-static enum state ansi_insert_lines(int, int);
-static enum state ansi_delete_lines(int, int);
-static enum state ansi_delete_chars(int, int);
-static enum state ansi_sgr(int, int);
-static enum state ansi_bell(int, int);
-static enum state ansi_newpage(int, int);
-static enum state ansi_backspace(int, int);
-static enum state ansi_cr(int, int);
-static enum state ansi_lf(int, int);
-static enum state ansi_htab(int, int);
-static enum state ansi_escape(int, int);
-static enum state ansi_nop(int, int);
-static enum state ansi_printing(int, int);
-static enum state ansi_semicolon(int, int);
-static enum state ansi_digit(int, int);
-static enum state ansi_reverse_index(int, int);
-static enum state ansi_send_attributes(int, int);
-static enum state ansi_set_mode(int, int);
-static enum state ansi_reset_mode(int, int);
-static enum state dec_return_terminal_id(int, int);
-static enum state ansi_status_report(int, int);
-static enum state ansi_cs_designate(int, int);
-static enum state ansi_esc3(int, int);
-static enum state dec_set(int, int);
-static enum state dec_reset(int, int);
-static enum state dec_save(int, int);
-static enum state dec_restore(int, int);
-static enum state dec_scrolling_region(int, int);
-static enum state xterm_text_mode(int, int);
-static enum state xterm_text_semicolon(int, int);
-static enum state xterm_text(int, int);
-static enum state xterm_text_do(int, int);
-static enum state ansi_htab_set(int, int);
-static enum state ansi_htab_clear(int, int);
-static enum state ansi_cs_designate2(int, int);
-static enum state ansi_select_g0(int, int);
-static enum state ansi_select_g1(int, int);
-static enum state ansi_select_g2(int, int);
-static enum state ansi_select_g3(int, int);
-static enum state ansi_one_g2(int, int);
-static enum state ansi_one_g3(int, int);
-static enum state ansi_multibyte(int, int);
-static enum state ansi_cursor_horizontal_absolute(int, int);
-static enum state ansi_vertical_position_absolute(int, int);
-static enum state ansi_gt(int, int);
-static enum state dec_secondary_device_attributes(int, int);
+static enum state ansi_data_mode(unsigned short, unsigned short);
+static enum state dec_save_cursor(unsigned short, unsigned short);
+static enum state dec_restore_cursor(unsigned short, unsigned short);
+static enum state ansi_newline(unsigned short, unsigned short);
+static enum state ansi_cursor_up(unsigned short, unsigned short);
+static enum state ansi_esc2(unsigned short, unsigned short);
+static enum state ansi_reset(unsigned short, unsigned short);
+static enum state ansi_insert_chars(unsigned short, unsigned short);
+static enum state ansi_cursor_down(unsigned short, unsigned short);
+static enum state ansi_cursor_right(unsigned short, unsigned short);
+static enum state ansi_cursor_left(unsigned short, unsigned short);
+static enum state ansi_cursor_motion(unsigned short, unsigned short);
+static enum state ansi_erase_in_display(unsigned short, unsigned short);
+static enum state ansi_erase_in_line(unsigned short, unsigned short);
+static enum state ansi_insert_lines(unsigned short, unsigned short);
+static enum state ansi_delete_lines(unsigned short, unsigned short);
+static enum state ansi_delete_chars(unsigned short, unsigned short);
+static enum state ansi_sgr(unsigned short, unsigned short);
+static enum state ansi_bell(unsigned short, unsigned short);
+static enum state ansi_newpage(unsigned short, unsigned short);
+static enum state ansi_backspace(unsigned short, unsigned short);
+static enum state ansi_cr(unsigned short, unsigned short);
+static enum state ansi_lf(unsigned short, unsigned short);
+static enum state ansi_htab(unsigned short, unsigned short);
+static enum state ansi_escape(unsigned short, unsigned short);
+static enum state ansi_nop(unsigned short, unsigned short);
+static enum state ansi_printing(unsigned short, unsigned short);
+static enum state ansi_semicolon(unsigned short, unsigned short);
+static enum state ansi_digit(unsigned short, unsigned short);
+static enum state ansi_reverse_index(unsigned short, unsigned short);
+static enum state ansi_send_attributes(unsigned short, unsigned short);
+static enum state ansi_set_mode(unsigned short, unsigned short);
+static enum state ansi_reset_mode(unsigned short, unsigned short);
+static enum state dec_return_terminal_id(unsigned short, unsigned short);
+static enum state ansi_status_report(unsigned short, unsigned short);
+static enum state ansi_cs_designate(unsigned short, unsigned short);
+static enum state ansi_esc3(unsigned short, unsigned short);
+static enum state dec_set(unsigned short, unsigned short);
+static enum state dec_reset(unsigned short, unsigned short);
+static enum state dec_save(unsigned short, unsigned short);
+static enum state dec_restore(unsigned short, unsigned short);
+static enum state dec_scrolling_region(unsigned short, unsigned short);
+static enum state xterm_text_mode(unsigned short, unsigned short);
+static enum state xterm_text_semicolon(unsigned short, unsigned short);
+static enum state xterm_text(unsigned short, unsigned short);
+static enum state xterm_text_do(unsigned short, unsigned short);
+static enum state ansi_htab_set(unsigned short, unsigned short);
+static enum state ansi_htab_clear(unsigned short, unsigned short);
+static enum state ansi_cs_designate2(unsigned short, unsigned short);
+static enum state ansi_select_g0(unsigned short, unsigned short);
+static enum state ansi_select_g1(unsigned short, unsigned short);
+static enum state ansi_select_g2(unsigned short, unsigned short);
+static enum state ansi_select_g3(unsigned short, unsigned short);
+static enum state ansi_one_g2(unsigned short, unsigned short);
+static enum state ansi_one_g3(unsigned short, unsigned short);
+static enum state ansi_multibyte(unsigned short, unsigned short);
+static enum state ansi_cursor_horizontal_absolute(unsigned short, unsigned short);
+static enum state ansi_vertical_position_absolute(unsigned short, unsigned short);
+static enum state ansi_gt(unsigned short, unsigned short);
+static enum state dec_secondary_device_attributes(unsigned short, unsigned short);
+static enum state xterm_xtwinops(unsigned short, unsigned short);
+static enum state dcs(unsigned short, unsigned short);
+static enum state dcs_esc(unsigned short, unsigned short);
+static enum state ansi_ech(unsigned short, unsigned short);
 
-typedef enum state (*afn_t)(int, int);
+typedef enum state (*afn_t)(unsigned short, unsigned short);
 static afn_t nvt_fn[] = {
 /* 0 */		&ansi_data_mode,
 /* 1 */		&dec_save_cursor,
@@ -251,6 +266,10 @@ static afn_t nvt_fn[] = {
 /* 57 */	&ansi_vertical_position_absolute,
 /* 58 */	&ansi_gt,
 /* 59 */	&dec_secondary_device_attributes,
+/* 60 */	&xterm_xtwinops,
+/* 62 */	&dcs,
+/* 62 */	&dcs_esc,
+/* 63 */	&ansi_ech,
 };
 
 static unsigned char st[NUM_STATES][256] = {
@@ -287,7 +306,7 @@ static unsigned char st[NUM_STATES][256] = {
 /* 20 */	0, 0, 0, 0, 0, 0, 0, 0,CS,CS,CS,CS, 0, 0, 0, 0,
 /* 30 */	0, 0, 0, 0, 0, 0, 0,SC,RC, 0, 0, 0, 0, 0, 0, 0,
 /* 40 */	0, 0, 0, 0, 0,NL, 0, 0,TS, 0, 0, 0, 0,RI,S2,S3,
-/* 50 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,E2, 0,TM, 0, 0,
+/* 50 */       Dx, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,E2, 0,TM, 0, 0,
 /* 60 */	0, 0, 0,rS, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,G2,G3,
 /* 70 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 80 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -328,22 +347,22 @@ static unsigned char st[NUM_STATES][256] = {
  */
 {
 	     /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  */
-/* 00 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 10 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 20 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 00 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 10 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 20 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0,Sc, 0, 0,GT,E3,
 /* 40 */       IC,UP,DN,RT,LT, 0, 0,CH,CM, 0,ED,EL,IL,DL, 0, 0,
-/* 50 */       DC, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 60 */	0, 0, 0,DA,VP, 0,CM,TC,SM, 0, 0, 0,RM,SG,SR, 0,
-/* 70 */	0, 0,SS, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 80 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 90 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* a0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* b0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* c0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* d0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* e0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* f0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+/* 50 */       DC, 0, 0, 0, 0, 0, 0, 0,EC, 0, 0, 0, 0, 0, 0, 0,
+/* 60 */        0, 0, 0,DA,VP, 0,CM,TC,SM, 0, 0, 0,RM,SG,SR, 0,
+/* 70 */        0, 0,SS, 0,WM, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 80 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 },
 
 /*
@@ -445,7 +464,7 @@ static unsigned char st[NUM_STATES][256] = {
 /* 00 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 10 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 20 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0, 0, 0, 0, 0, 0,
+/* 30 */       Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg,Dg, 0,Sc, 0, 0, 0, 0,
 /* 40 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 50 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* 60 */	0, 0, 0,D2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -458,6 +477,52 @@ static unsigned char st[NUM_STATES][256] = {
 /* d0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* e0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /* f0 */	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+},
+
+/*
+ * State table for state DCS
+ */
+{
+	     /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  */
+/* 00 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 10 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,Dy, 0, 0, 0, 0,
+/* 20 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,
+/* 30 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,
+/* 40 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,
+/* 50 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,
+/* 60 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,
+/* 70 */       Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx,Dx, 0,
+/* 80 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+},
+
+/*
+ * State table for state DCS_ESC
+ */
+{
+	     /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  */
+/* 00 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 10 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 20 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 30 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 40 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 50 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 60 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 70 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 80 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* 90 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* b0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* c0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* d0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* e0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* f0 */        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 },
 };
 
@@ -474,7 +539,9 @@ static unsigned char st[NUM_STATES][256] = {
 
 static int      saved_cursor = 0;
 #define NN	20
-static int      n[NN], nx = 0;
+static unsigned short n[NN];
+static int      nx = 0;
+static bool	n_present[NN];
 #define NT	256
 static char     text[NT + 1];
 static int      tx = 0;
@@ -520,13 +587,13 @@ static bool  held_wrap = false;
 static void nvt_scroll(void);
 
 static enum state
-ansi_data_mode(int ig1 _is_unused, int ig2 _is_unused)
+ansi_data_mode(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return DATA;
 }
 
 static enum state
-dec_save_cursor(int ig1 _is_unused, int ig2 _is_unused)
+dec_save_cursor(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -542,7 +609,7 @@ dec_save_cursor(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-dec_restore_cursor(int ig1 _is_unused, int ig2 _is_unused)
+dec_restore_cursor(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -559,7 +626,7 @@ dec_restore_cursor(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_newline(int ig1 _is_unused, int ig2 _is_unused)
+ansi_newline(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int nc;
 
@@ -575,7 +642,7 @@ ansi_newline(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cursor_up(int nn, int ig2 _is_unused)
+ansi_cursor_up(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int rr;
 
@@ -593,19 +660,20 @@ ansi_cursor_up(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_esc2(int ig1 _is_unused, int ig2 _is_unused)
+ansi_esc2(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
     for (i = 0; i < NN; i++) {
 	n[i] = 0;
+	n_present[i] = false;
     }
     nx = 0;
     return N1;
 }
 
 static enum state
-ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
+ansi_reset(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
     static bool first = true;
@@ -657,7 +725,7 @@ ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_insert_chars(int nn, int ig2 _is_unused)
+ansi_insert_chars(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int cc = cursor_addr % COLS;	/* current col */
     int mc = COLS - cc;			/* max chars that can be inserted */
@@ -682,7 +750,7 @@ ansi_insert_chars(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cursor_down(int nn, int ig2 _is_unused)
+ansi_cursor_down(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int rr;
 
@@ -700,7 +768,7 @@ ansi_cursor_down(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cursor_right(int nn, int ig2 _is_unused)
+ansi_cursor_right(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int cc;
 
@@ -720,7 +788,7 @@ ansi_cursor_right(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cursor_left(int nn, int ig2 _is_unused)
+ansi_cursor_left(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int cc;
 
@@ -743,7 +811,7 @@ ansi_cursor_left(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cursor_motion(int n1, int n2)
+ansi_cursor_motion(unsigned short n1, unsigned short n2)
 {
     if (n1 < 1) {
 	n1 = 1;
@@ -763,7 +831,7 @@ ansi_cursor_motion(int n1, int n2)
 }
 
 static enum state
-ansi_cursor_horizontal_absolute(int n1, int n2 _is_unused)
+ansi_cursor_horizontal_absolute(unsigned short n1, unsigned short n2 _is_unused)
 {
     if (n1 < 1) {
 	n1 = 1;
@@ -777,7 +845,7 @@ ansi_cursor_horizontal_absolute(int n1, int n2 _is_unused)
 }
 
 static enum state
-ansi_vertical_position_absolute(int n1, int n2 _is_unused)
+ansi_vertical_position_absolute(unsigned short n1, unsigned short n2 _is_unused)
 {
     if (n1 < 1) {
 	n1 = 1;
@@ -791,7 +859,7 @@ ansi_vertical_position_absolute(int n1, int n2 _is_unused)
 }
 
 static enum state
-ansi_erase_in_display(int nn, int ig2 _is_unused)
+ansi_erase_in_display(unsigned short nn, unsigned short ig2 _is_unused)
 {
     switch (nn) {
     case 0:	/* below */
@@ -811,7 +879,7 @@ ansi_erase_in_display(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_erase_in_line(int nn, int ig2 _is_unused)
+ansi_erase_in_line(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int nc = cursor_addr % COLS;
 
@@ -830,7 +898,7 @@ ansi_erase_in_line(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_insert_lines(int nn, int ig2 _is_unused)
+ansi_insert_lines(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int rr = cursor_addr / COLS;	/* current row */
     int mr = scroll_bottom - rr;	/* rows left at and below this one */
@@ -860,7 +928,7 @@ ansi_insert_lines(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_delete_lines(int nn, int ig2 _is_unused)
+ansi_delete_lines(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int rr = cursor_addr / COLS;	/* current row */
     int mr = scroll_bottom - rr;	/* max rows that can be deleted */
@@ -890,7 +958,7 @@ ansi_delete_lines(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_delete_chars(int nn, int ig2 _is_unused)
+ansi_delete_chars(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int cc = cursor_addr % COLS;	/* current col */
     int mc = COLS - cc;			/* max chars that can be deleted */
@@ -915,7 +983,7 @@ ansi_delete_chars(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_sgr(int ig1 _is_unused, int ig2 _is_unused)
+ansi_sgr(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -1015,21 +1083,21 @@ ansi_sgr(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_bell(int ig1 _is_unused, int ig2 _is_unused)
+ansi_bell(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     ring_bell();
     return DATA;
 }
 
 static enum state
-ansi_newpage(int ig1 _is_unused, int ig2 _is_unused)
+ansi_newpage(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     ctlr_clear(false);
     return DATA;
 }
 
 static enum state
-ansi_backspace(int ig1 _is_unused, int ig2 _is_unused)
+ansi_backspace(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     if (held_wrap) {
 	held_wrap = false;
@@ -1048,7 +1116,7 @@ ansi_backspace(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cr(int ig1 _is_unused, int ig2 _is_unused)
+ansi_cr(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     if (cursor_addr % COLS) {
 	cursor_move(cursor_addr - (cursor_addr % COLS));
@@ -1061,7 +1129,7 @@ ansi_cr(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_lf(int ig1 _is_unused, int ig2 _is_unused)
+ansi_lf(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int nc = cursor_addr + COLS;
 
@@ -1084,7 +1152,7 @@ ansi_lf(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_htab(int ig1 _is_unused, int ig2 _is_unused)
+ansi_htab(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int col = cursor_addr % COLS;
     int i;
@@ -1103,13 +1171,13 @@ ansi_htab(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_escape(int ig1 _is_unused, int ig2 _is_unused)
+ansi_escape(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return ESC;
 }
 
 static enum state
-ansi_nop(int ig1 _is_unused, int ig2 _is_unused)
+ansi_nop(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return DATA;
 }
@@ -1132,7 +1200,7 @@ ansi_nop(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
+ansi_printing(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int nc;
     enum dbcs_state d;
@@ -1294,7 +1362,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_multibyte(int ig1, int ig2)
+ansi_multibyte(unsigned short ig1, unsigned short ig2)
 {
     unsigned long ucs4;
     int consumed;
@@ -1340,7 +1408,7 @@ ansi_multibyte(int ig1, int ig2)
 }
 
 static enum state
-ansi_semicolon(int ig1 _is_unused, int ig2 _is_unused)
+ansi_semicolon(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     if (nx >= NN) {
 	return DATA;
@@ -1350,14 +1418,15 @@ ansi_semicolon(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_digit(int ig1 _is_unused, int ig2 _is_unused)
+ansi_digit(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     n[nx] = (n[nx] * 10) + (nvt_ch - '0');
+    n_present[nx] = true;
     return state;
 }
 
 static enum state
-ansi_reverse_index(int ig1 _is_unused, int ig2 _is_unused)
+ansi_reverse_index(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int rr = cursor_addr / COLS;	/* current row */
     int np = (scroll_top - 1) - rr;	/* number of rows in the scrolling
@@ -1396,7 +1465,7 @@ ansi_reverse_index(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_send_attributes(int nn, int ig2 _is_unused)
+ansi_send_attributes(unsigned short nn, unsigned short ig2 _is_unused)
 {
     if (!nn) {
 	net_sends("\033[?1;2c");
@@ -1405,21 +1474,26 @@ ansi_send_attributes(int nn, int ig2 _is_unused)
 }
 
 static enum state
-dec_return_terminal_id(int ig1 _is_unused, int ig2 _is_unused)
+dec_return_terminal_id(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return ansi_send_attributes(0, 0);
 }
 
 static enum state
-dec_secondary_device_attributes(int ig1 _is_unused, int ig2 _is_unused)
+dec_secondary_device_attributes(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
-    /* Don't respond. It can trigger all sorts of additional chatter. */
-    /* net_sends("\033[>0;3270;0c"); */
+    int major, minor, iteration;
+    const char *version = "0";
+
+    if (parse_version(build_rpq_version, &major, &minor, &iteration)) {
+	version = txAsprintf("%02d%02d%02d", major, minor, iteration);
+    }
+    net_sends(txAsprintf("\033[>0;%s;3270c", version));
     return DATA;
 }
 
 static enum state
-ansi_set_mode(int nn, int ig2 _is_unused)
+ansi_set_mode(unsigned short nn, unsigned short ig2 _is_unused)
 {
     switch (nn) {
     case 4:
@@ -1433,7 +1507,7 @@ ansi_set_mode(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_reset_mode(int nn, int ig2 _is_unused)
+ansi_reset_mode(unsigned short nn, unsigned short ig2 _is_unused)
 {
     switch (nn) {
     case 4:
@@ -1447,7 +1521,7 @@ ansi_reset_mode(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_status_report(int nn, int ig2 _is_unused)
+ansi_status_report(unsigned short nn, unsigned short ig2 _is_unused)
 {
     char *s;
 
@@ -1456,7 +1530,7 @@ ansi_status_report(int nn, int ig2 _is_unused)
 	net_sends("\033[0n");
 	break;
     case 6:
-	s = Asprintf("\033[%d;%dR",
+	s = Asprintf("\033[%u;%uR",
 		(cursor_addr/COLS) + 1, (cursor_addr%COLS) + 1);
 	net_sends(s);
 	Free(s);
@@ -1466,69 +1540,69 @@ ansi_status_report(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_cs_designate(int ig1 _is_unused, int ig2 _is_unused)
+ansi_cs_designate(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     cs_to_change = (int)(strchr(gnnames, nvt_ch) - gnnames);
     return CSDES;
 }
 
 static enum state
-ansi_cs_designate2(int ig1 _is_unused, int ig2 _is_unused)
+ansi_cs_designate2(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     csd[cs_to_change] = (int)(strchr(csnames, nvt_ch) - csnames);
     return DATA;
 }
 
 static enum state
-ansi_select_g0(int ig1 _is_unused, int ig2 _is_unused)
+ansi_select_g0(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     cset = CS_G0;
     return DATA;
 }
 
 static enum state
-ansi_select_g1(int ig1 _is_unused, int ig2 _is_unused)
+ansi_select_g1(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     cset = CS_G1;
     return DATA;
 }
 
 static enum state
-ansi_select_g2(int ig1 _is_unused, int ig2 _is_unused)
+ansi_select_g2(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     cset = CS_G2;
     return DATA;
 }
 
 static enum state
-ansi_select_g3(int ig1 _is_unused, int ig2 _is_unused)
+ansi_select_g3(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     cset = CS_G3;
     return DATA;
 }
 
 static enum state
-ansi_one_g2(int ig1 _is_unused, int ig2 _is_unused)
+ansi_one_g2(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     once_cset = CS_G2;
     return DATA;
 }
 
 static enum state
-ansi_one_g3(int ig1 _is_unused, int ig2 _is_unused)
+ansi_one_g3(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     once_cset = CS_G3;
     return DATA;
 }
 
 static enum state
-ansi_esc3(int ig1 _is_unused, int ig2 _is_unused)
+ansi_esc3(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return DECP;
 }
 
 static enum state
-dec_set(int ig1 _is_unused, int ig2 _is_unused)
+dec_set(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -1571,7 +1645,7 @@ dec_set(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-dec_reset(int ig1 _is_unused, int ig2 _is_unused)
+dec_reset(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -1611,7 +1685,7 @@ dec_reset(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-dec_save(int ig1 _is_unused, int ig2 _is_unused)
+dec_save(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -1643,7 +1717,7 @@ dec_save(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-dec_restore(int ig1 _is_unused, int ig2 _is_unused)
+dec_restore(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int i;
 
@@ -1683,7 +1757,7 @@ dec_restore(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-dec_scrolling_region(int top, int bottom)
+dec_scrolling_region(unsigned short top, unsigned short bottom)
 {
     if (top < 1) {
 	top = 1;
@@ -1703,7 +1777,7 @@ dec_scrolling_region(int top, int bottom)
 }
 
 static enum state
-xterm_text_mode(int ig1 _is_unused, int ig2 _is_unused)
+xterm_text_mode(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     nx = 0;
     n[0] = 0;
@@ -1711,14 +1785,14 @@ xterm_text_mode(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-xterm_text_semicolon(int ig1 _is_unused, int ig2 _is_unused)
+xterm_text_semicolon(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     tx = 0;
     return TEXT2;
 }
 
 static enum state
-xterm_text(int ig1 _is_unused, int ig2 _is_unused)
+xterm_text(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     if (tx < NT) {
 	text[tx++] = nvt_ch;
@@ -1727,7 +1801,7 @@ xterm_text(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-xterm_text_do(int ig1 _is_unused, int ig2 _is_unused)
+xterm_text_do(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     net_nvt_break();
     text[tx] = '\0';
@@ -1735,8 +1809,133 @@ xterm_text_do(int ig1 _is_unused, int ig2 _is_unused)
     return DATA;
 }
 
+/* Remove control characters from a string. */
+static const char *
+clean_text(const char *text)
+{
+    const char *s = text;
+    char *copy = Malloc(strlen(text) + 1);
+    char *t = copy;
+    char c;
+
+    while ((c = *s++) != 0) {
+	if ((c & 0xff) >= ' ') {
+	    *t++ = c;
+	}
+    }
+    *t = '\0';
+    return txdFree(copy);
+}
+
 static enum state
-ansi_htab_set(int ig1 _is_unused, int ig2 _is_unused)
+xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
+{
+    unsigned short rp1 = 0, rp2 = 0;
+    const char *rtext = NULL;
+
+    if (!appres.xtwinops && (n[0] < XTWR_11WINDOWSTATE || n[0] >= 24)) {
+	/* Prohibited. */
+	return DATA;
+    }
+
+    switch (n[0]) {
+    case XTW_1DEICONIFY: /* de-iconify */
+    case XTW_2ICONIFY: /* iconify */
+    case XTW_5RAISE: /* raise */
+    case XTW_6LOWER: /* lower */
+    case XTW_7REFRESH: /* refresh */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	break;
+    case XTW_3MOVE: /* move window to x,y */
+	if (n_present[1] && n_present[2]) {
+	    xtwinops(n[0], &n[1], &n[2], &rp1, &rp2, &rtext);
+	}
+	break;
+    case XTW_4RESIZE_PIXELS:	/* resize to h,w pixels */
+    case XTW_8RESIZE_CHARACTERS: 	/* resize text area to h,w characters */
+		/* omitted means use current value */
+		/* 0 means use the whole screen */
+	if (n_present[1] || n_present[2]) {
+	    xtwinops(n[0],
+		    n_present[1]? &n[1]: NULL,
+		    n_present[2]? &n[2]: NULL,
+		    &rp1, &rp2, &rtext);
+	}
+	break;
+    case XTW_9MAXIMIZE: /* restore (0) or maximize (1) */
+	xtwinops(n[0], n_present[1]? &n[1]: NULL, NULL, &rp1, &rp2, &rtext);
+	break;
+    case XTW_10FULLSCREEN: /* full-screen (0), undo full-screen (1), toggle full-screen (2): */
+	xtwinops(n[0], n_present[1]? &n[1]: NULL, NULL, &rp1, &rp2, &rtext);
+	break;
+    case XTWR_11WINDOWSTATE: /* report window state (1) normal or (2) iconified */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[%ut", rp1? rp1: 1));
+	break;
+    case XTWR_13WINDOWPOSITION: /* report window position x;y */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[3;%u;%ut", rp1, rp2));
+	break;
+    case XTWR_14WINDOWSIZE_PIXELS: /* report window size in pixels height;width */
+	xtwinops(n[0], n_present[1]? &n[1]: NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[4;%u;%ut", rp1, rp2));
+	break;
+    case XTWR_15SCREENSIZE_PIXELS: /* report screen size in pixels height;width */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[5;%u;%ut", rp1, rp2));
+	break;
+    case XTWR_16CHARACTERSIZE_PIXELS: /* report character cell size in pixels height;width */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[6;%u;%ut", rp1, rp2));
+	break;
+    case XTWR_18TEXTAREA_CHARACTERS: /* report text area in characters */
+	net_sends(txAsprintf("\033[8;%u;%ut", ROWS, COLS));
+	break;
+    case XTWR_19SCREENSIZE_PIXELS: /* report screen area in characters */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033[9;%u;%ut", rp1, rp2));
+	break;
+    case XTWR_20ICONLABEL: /* send icon label */
+    case XTWR_21WINDOWLABEL: /* send window label */
+	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	net_sends(txAsprintf("\033]%s%s\033\\", n[0] == 20? "L": "l", rtext? clean_text(rtext): ""));
+	break;
+    default:
+	if (n[0] >= defROWS) {
+	    /* resize to n lines */
+	    xtwinops(n[0], &n[1], NULL, &rp1, &rp2, &rtext);
+	}
+	break;
+    }
+
+    return DATA;
+}
+
+static enum state
+dcs(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
+{
+    return DCS;
+}
+
+static enum state
+dcs_esc(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
+{
+    return DCS_ESC;
+}
+
+static enum state
+ansi_ech(unsigned short nn, unsigned short ig2 _is_unused)
+{
+    if (nn) {
+	int max = COLS - (cursor_addr % COLS);
+
+	ctlr_aclear(cursor_addr, (nn < max)? nn: max, 1);
+    }
+    return DATA;
+}
+
+static enum state
+ansi_htab_set(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     int col = cursor_addr % COLS;
 
@@ -1745,7 +1944,7 @@ ansi_htab_set(int ig1 _is_unused, int ig2 _is_unused)
 }
 
 static enum state
-ansi_htab_clear(int nn, int ig2 _is_unused)
+ansi_htab_clear(unsigned short nn, unsigned short ig2 _is_unused)
 {
     int col, i;
 
@@ -1764,7 +1963,7 @@ ansi_htab_clear(int nn, int ig2 _is_unused)
 }
 
 static enum state
-ansi_gt(int ig1 _is_unused, int ig2 _is_unused)
+ansi_gt(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
     return ESCGT;
 }
@@ -1814,6 +2013,13 @@ nvt_in3270(bool in3270)
     } else {
 	ansi_reset(0, 0);
     }
+}
+
+/* Handle a size change. */
+static void
+nvt_size_change(bool unused _is_unused)
+{
+    ansi_reset(0, 0);
 }
 
 /* Callback for when we change connection state. */
@@ -1965,7 +2171,7 @@ nvt_send_pf(int nn)
 	nvt_send_pa(nn);
 	return;
     }
-    s = Asprintf("\033[%d~", code[nn-1]);
+    s = Asprintf("\033[%u~", code[nn-1]);
     net_sends(s);
     Free(s);
 }
@@ -2031,7 +2237,7 @@ emit_cup(int baddr)
 	char *s;
 	size_t sl;
 
-	s = Asprintf("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+	s = Asprintf("\033[%u;%uH", (baddr / COLS) + 1, (baddr % COLS) + 1);
 	sl = strlen(s);
 	space3270out(sl);
 	strcpy((char *)obptr, s);
@@ -2062,7 +2268,7 @@ ansi_dump_spaces(size_t spaces, int baddr)
      * It is possible to optimize this further with clever
      * CU[UDFB] sequences, but not (yet) worth the effort.
      */
-    s = Asprintf("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+    s = Asprintf("\033[%u;%uH", (baddr / COLS) + 1, (baddr % COLS) + 1);
     sl = strlen(s);
     if (sl < spaces) {
 	space3270out(sl);
@@ -2512,7 +2718,7 @@ nvt_snap_modes(void)
     }
     if (scroll_top != 1 || scroll_bottom != ROWS) {
 	space3270out(10);
-	obptr += sprintf((char *)obptr, "\033[%d;%dr", scroll_top,
+	obptr += sprintf((char *)obptr, "\033[%u;%ur", scroll_top,
 		scroll_bottom);
     }
     if (tabs) {
@@ -2528,7 +2734,7 @@ nvt_snap_modes(void)
 			/* Tab was cleared. */
 			space3270out(15);
 			obptr += sprintf((char *)obptr,
-				"\033[%d;%dH",
+				"\033[%u;%uH",
 				(cursor_addr / COLS) + 1,
 				((cursor_addr + i) % COLS) + 1);
 			*obptr++ = 0x1b;
@@ -2541,7 +2747,7 @@ nvt_snap_modes(void)
 		    /* Tab was set. */
 		    space3270out(13);
 		    obptr += sprintf((char *)obptr,
-			    "\033[%d;%dH",
+			    "\033[%u;%uH",
 			    (cursor_addr / COLS) + 1,
 			    ((cursor_addr + i) % COLS) + 1);
 		    *obptr++ = 0x1b;
@@ -2600,6 +2806,19 @@ nvt_snap_modes(void)
     }
 }
 
+/* Toggle contention resolution. */
+static toggle_upcall_ret_t
+toggle_xtwinops(const char *name, const char *value, unsigned flags, ia_t ia)
+{
+    const char *errmsg;
+
+    if ((errmsg = boolstr(value, &appres.xtwinops)) != NULL) {
+        popup_an_error("%s", errmsg);
+        return TU_FAILURE;
+    }
+    return TU_SUCCESS;
+}
+
 /**
  * NVT-mode module registration.
  */
@@ -2612,10 +2831,12 @@ nvt_register(void)
 
     /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
+    register_extended_toggle(ResXtwinops, toggle_xtwinops, NULL, NULL, (void **)&appres.xtwinops, XRM_BOOLEAN);
 
     /* Register for state changes. */
     register_schange(ST_3270_MODE, nvt_in3270);
     register_schange(ST_CONNECT, nvt_connect);
+    register_schange(ST_TERMINAL_SIZE, nvt_size_change);
 }
 
 /**

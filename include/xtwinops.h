@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2025 Paul Mattes.
+ * Copyright (c) 2025 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,33 @@
  */
 
 /*
- *	nvt_gui.h
- *		Global declarations for nvt_gui.c.
+ *	xtwinops.h
+ *		Constants for the XTWINOPS control sequence.
  */
 
-void xterm_text_gui(unsigned short code, const char *text);
-void xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned short *rp1, unsigned short *rp2,
-	const char **rtext);
-void get_screen_pixels(unsigned *height, unsigned *width);
-void get_window_pixels(unsigned *height, unsigned *width);
-void get_character_pixels(unsigned *height, unsigned *width);
-void get_window_location(int *x, int *y);
-typedef enum {
-    WS_NONE,		/* no window */
-    WS_NORMAL,		/* normal */
-    WS_MAXIMIZED,	/* maximized */
-    WS_FULLSCREEN,	/* full screen */
-    WS_ICONIFIED,	/* iconified */
-} window_state_t;
-window_state_t get_window_state(void);
+#define XTW_1DEICONIFY	1
+#define XTW_2ICONIFY	2
+#define XTW_3MOVE	3
+#define XTW_4RESIZE_PIXELS 4
+#define XTW_5RAISE	5
+#define XTW_6LOWER	6
+#define XTW_7REFRESH	7
+#define XTW_8RESIZE_CHARACTERS 8
+#define XTW_9MAXIMIZE	9
+#define XTW_9MAXIMIZE_0RESET 0
+#define XTW_9MAXIMIZE_1SET 1
+#define XTW_10FULLSCREEN 10
+#define XTW_10FULLSCREEN_0RESET 0
+#define XTW_10FULLSCREEN_1SET 1
+#define XTW_10FULLSCREEN_2TOGGLE 2
+#define XTWR_11WINDOWSTATE 11
+#define XTWR_13WINDOWPOSITION 13
+#define XTWR_14WINDOWSIZE_PIXELS 14
+#define XTWR_14WINDOWSIZE_PIXELS_0TEXTAREA 0
+#define XTWR_14WINDOWSIZE_PIXELS_2WINDOW 2
+#define XTWR_15SCREENSIZE_PIXELS 15
+#define XTWR_16CHARACTERSIZE_PIXELS 16
+#define XTWR_18TEXTAREA_CHARACTERS 18
+#define XTWR_19SCREENSIZE_PIXELS 19
+#define XTWR_20ICONLABEL 20
+#define XTWR_21WINDOWLABEL 21

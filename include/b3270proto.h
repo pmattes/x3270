@@ -75,12 +75,14 @@
 #define IndTraceFile	"trace-file"
 #define IndUiError	"ui-error"
 #define IndWindowTitle	"window-title"
+#define IndWindowChange	"window-change"
 
 /* Operations. */
 #define OperFail	"fail"
 #define OperRegister	"register"
 #define OperRun		"run"
 #define OperSucceed	"succeed"
+#define OperWindowChange "window-change"
 
 /* Attributes. */
 #define AttrAbort	"abort"
@@ -109,6 +111,7 @@
 #define AttrFatal	"fatal"
 #define AttrField	"field"
 #define AttrGr		"gr"
+#define AttrHeight	"height"
 #define AttrHelpText	"help-text"
 #define AttrHelpParms	"help-parms"
 #define AttrHost	"host"
@@ -125,6 +128,7 @@
 #define AttrName	"name"
 #define AttrOperation	"operation"
 #define AttrOptions	"options"
+#define AttrOrder	"order"
 #define AttrOverride	"override"
 #define AttrOversize	"oversize"
 #define AttrPTag	"p-tag"
@@ -154,6 +158,9 @@
 #define AttrValue	"value"
 #define AttrVerified	"verified"
 #define AttrVersion	"version"
+#define AttrWidth	"width"
+#define AttrX		"x"
+#define AttrY		"y"
 
 /* Connection states. */
 #define CstateNotConnected "not-connected"
@@ -209,6 +216,30 @@
 #define PtInfo		"info"
 #define PtPrinter	"printer"
 #define PtResult	"result"
+
+/* Window operations. */
+#define WinState	"state"		/* state=normal|iconfied|maxmimzed|full-screen */
+#define WinMove		"move"		/* x=n y=n */
+#define WinRefresh	"refresh"
+#define WinSize		"size"		/* type=window|character|screen width=n height=n */
+#define WinStack	"stack"		/* order=raise|lower */
+#define WinTitle	"title"		/* text=xxx */
+
+/* Window states. */
+#define StateNormal	"normal"
+#define StateIconified	"iconified"
+#define StateMaximized	"maximized"
+#define StateFullScreen	"full-screen"
+#define StateToggleFullScreen	"toggle-full-screen" /* not actually a state */
+
+/* Stacking order. */
+#define OrderLower	"lower"
+#define OrderRaise	"raise"
+
+/* Size types. */
+#define SizeWindow	"window"
+#define SizeCharacter	"character"
+#define SizeScreen	"screen"
 
 /* Values. */
 #define ValTrue		ResTrue

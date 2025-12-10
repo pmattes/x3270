@@ -27,6 +27,7 @@
 #
 # s3270 NVT tests
 
+import re
 import unittest
 from subprocess import Popen
 
@@ -91,6 +92,146 @@ class TestS3270Nvt(cti):
     # Test with save/restore
     def test_nvt_1049_save(self):
         self.nvt_1049(b'h', b'r')
+
+    # ECH test.
+    def test_ech(self):
+
+        # Start a server to throw NVT escape sequences at s3270.
+        s = sendserver(self)
+
+        # Start s3270.
+        hport, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        self.children.append(s3270)
+        self.check_listen(hport)
+        ts.close()
+
+        # Send some text that fills two lines.
+        ten = b'1234567890'
+        for i in range(16):
+            s.send(ten)
+
+        # Move the cursor near the end of the first line, then erase 5 characters (ECH).
+        s.send(b'\033[1;70H')
+        s.send(b'\033[5X')
+        # Make sure the cursor has not moved, and the first line is as we expect.
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Cursor1)')
+        self.assertTrue(r.ok)
+        self.assertEqual('row 1 column 70 offset 69', r.json()['result'][0])
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,69,1,7)')
+        self.assertTrue(r.ok)
+        self.assertEqual('9     5', r.json()['result'][0])
+
+        # Move the cursor past that area and try erasing past the end of the line.
+        s.send(b'\033[1;79H')
+        s.send(b'\033[5X')
+        # Make sure the end of the line has been erased.
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,78,1,3)')
+        self.assertTrue(r.ok)
+        self.assertEqual('8  ', r.json()['result'][0])
+
+        # Make sure the next line has not been modified.
+        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(2,1,1,10)')
+        self.assertTrue(r.ok)
+        self.assertEqual('1234567890', r.json()['result'][0])
+
+        # Clean up.
+        s.close()
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    # Secondary DA test.
+    def test_secondary_da(self):
+
+        # Start a server to throw NVT escape sequences at s3270.
+        s = copyserver()
+
+        # Start s3270.
+        hport, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        self.children.append(s3270)
+        self.check_listen(hport)
+        ts.close()
+
+        # Send the secondary DA sequence.
+        s.send('\033[>c')
+
+        # End the session.
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+
+        # Compute the current version number, as reported by DA.
+        with open('Common/version.txt') as f:
+            version_lines = f.readlines()
+        version = [line for line in version_lines if line.startswith('version=')][0].replace('version=', '').replace('"', '').strip()
+        version = ''.join([f'{int(chunk):02d}' for chunk in re.sub('[a-z]+', '.', version).split('.')])
+
+        # See what we get back.
+        reply = s.data().decode().split(';')
+        self.assertEqual('\033[>0', reply[0])
+        self.assertEqual(version, reply[1])
+        self.assertEqual('3270c', reply[2])
+
+        # Clean up.
+        self.vgwait(s3270)
+
+    # Window report test.
+    def window_report(self, send: str, receive: str):
+
+        # Start a server to throw NVT escape sequences at s3270.
+        s = copyserver()
+
+        # Start s3270.
+        hport, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        self.children.append(s3270)
+        self.check_listen(hport)
+        ts.close()
+
+        # Send what they want.
+        if send != None:
+            s.send(send)
+
+        # Ask for rows and columns.
+        s.send('\033[18t')
+
+        # End the session.
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+
+        # See what we get back.
+        reply = s.data().decode()
+        self.assertEqual(receive,reply)
+
+        # Clean up.
+        self.vgwait(s3270)
+
+    # Basic window report test.
+    def test_window_report(self):
+        self.window_report(None, '\033[8;43;80t')
+    # Window size change success test.
+    def test_window_change_success(self):
+        self.window_report('\033[8;45;81t', '\033[8;45;81t')
+    # Window size change by lines test.
+    def test_window_change_success_lines(self):
+        self.window_report('\033[45t', '\033[8;45;80t')
+
+    # Window change request that fails.
+    def window_change_fail(self, rows: int, cols: int):
+        self.window_report(f'\033[8;{rows};{cols}t', '\033[8;43;80t')
+    
+    def test_window_change_fail_small(self):
+        self.window_change_fail(20, 20)
+    def test_window_change_fail_large(self):
+        self.window_change_fail(1000, 1000)
+    def test_window_change_fail_zero_rows(self):
+        self.window_change_fail(0, 80)
+    def test_window_change_fail_zero_cols(self):
+        self.window_change_fail(43, 0)
+
+    # Window changes with missing (use existing value) parameters.
+    def test_window_change_omit_rows(self):
+        self.window_report('\033[8;;81t', '\033[8;43;81t')
+    def test_window_change_omit_cols(self):
+        self.window_report('\033[8;45t', '\033[8;45;80t')
 
 if __name__ == '__main__':
     unittest.main()

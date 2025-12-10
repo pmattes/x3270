@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2025 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -50,6 +50,7 @@ extern Atom		a_net_wm_name;
 extern Atom		a_net_wm_state;
 extern Atom		a_net_wm_state_maximized_horz;
 extern Atom		a_net_wm_state_maximized_vert;
+extern Atom		a_net_wm_state_fullscreen;
 extern Atom		a_pixel_size;
 extern Atom		a_save_yourself;
 extern Atom		a_spacing;
