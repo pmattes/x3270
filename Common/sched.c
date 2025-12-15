@@ -743,11 +743,9 @@ process_some_events(bool block, bool *processed_any)
     {
 	int i;
 
-	vtrace("handles:");
 	for (i = 1; i < waitgroups[0].nha; i++) {
 	    vtrace(" 0x%lx", (unsigned long)(size_t)waitgroups[0].ha[i]);
 	}
-	vtrace("\n");
 
     }
 # endif /*]*/
@@ -819,6 +817,9 @@ process_some_events(bool block, bool *processed_any)
 	if (ip->valid) {
 	    if (!(ip->sflags & SF_CURRENT)) {
 		/* From here on are entries that were added by callbacks. */
+#if defined(VERBOSE_HANDLES) /*[*/
+		vctrace(TC_SCHED, "0x%08lx is not current\n", (unsigned long)(size_t)ip->source);
+#endif /*]*/
 		break;
 	    }
 
@@ -826,6 +827,9 @@ process_some_events(bool block, bool *processed_any)
 	    if ((ip->condition == WantInput  && SOURCE_READY(i, ip)) ||
 		(ip->condition == WantWrite  && WRITE_READY(i, ip)) ||
 		(ip->condition == WantExcept && EXCEPT_READY(i, ip))) {
+#if defined(VERBOSE_HANDLES) /*[*/
+		vctrace(TC_SCHED, "Running 0x%lx\n", (unsigned long)(size_t)ip->source);
+#endif /*]*/
 		(*ip->proc)(ip->source, (ioid_t)ip);
 		ip->sflags |= SF_RAN;
 		*processed_any = true;

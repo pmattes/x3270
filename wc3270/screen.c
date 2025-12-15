@@ -275,6 +275,8 @@ static action_t Title_action;
 
 static ioid_t redraw_id = NULL_IOID;
 
+static char *fatal_error = NULL;
+
 static void
 win32_perror_fatal(const char *fmt, ...)
 {
@@ -285,6 +287,7 @@ win32_perror_fatal(const char *fmt, ...)
     buf = Vasprintf(fmt, ap);
     va_end(ap);
     win32_perror("%s", buf);
+    fatal_error = buf;
     x3270_exit(1);
 }
 
@@ -571,7 +574,8 @@ initscr(void)
 
     screen_pre_init();
     if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
-				ENABLE_MOUSE_INPUT) == 0) {
+				ENABLE_MOUSE_INPUT |
+				ENABLE_EXTENDED_FLAGS) == 0) {
 	win32_perror("SetConsoleMode failed");
 	return NULL;
     }
@@ -1208,7 +1212,8 @@ set_console_cooked(void)
     if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
 				ENABLE_LINE_INPUT |
 				ENABLE_PROCESSED_INPUT |
-				ENABLE_MOUSE_INPUT) == 0) {
+				ENABLE_MOUSE_INPUT |
+				ENABLE_EXTENDED_FLAGS) == 0) {
 	win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
     }
     if (SetConsoleMode(cohandle, ENABLE_PROCESSED_OUTPUT |
@@ -1225,13 +1230,15 @@ screen_echo_mode(bool echo)
 	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
 				    ENABLE_LINE_INPUT |
 				    ENABLE_PROCESSED_INPUT |
-				    ENABLE_MOUSE_INPUT) == 0) {
+				    ENABLE_MOUSE_INPUT |
+				    ENABLE_EXTENDED_FLAGS) == 0) {
 	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
 	}
     } else {
 	if (SetConsoleMode(chandle, ENABLE_LINE_INPUT |
 				    ENABLE_PROCESSED_INPUT |
-				    ENABLE_MOUSE_INPUT) == 0) {
+				    ENABLE_MOUSE_INPUT |
+				    ENABLE_EXTENDED_FLAGS) == 0) {
 	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
 	}
     }
@@ -1269,6 +1276,9 @@ endwin(void)
 
     system("cls");
     printf("[wc3270]\n\n");
+    if (fatal_error != NULL) {
+	printf("Fatal error: %s\n", fatal_error);
+    }
     fflush(stdout);
 }
 
@@ -2434,16 +2444,27 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     int rc;
     INPUT_RECORD ir;
-    DWORD nr;
+    DWORD nr = 0;
     const char *s;
     SHORT x, y;
 
     /* Get the next input event. */
+    vctrace(TC_UI, "Keyboard input: ");
+    if (GetNumberOfConsoleInputEvents(chandle, &nr) == 0) {
+	win32_perror_fatal("GetNumberOfConsoleInputEvents failed");
+    }
+    if (nr == 0) {
+	vctrace(TC_UI, "GetNumberOfConsoleInputEvents -> 0\n");
+	return;
+    }
+
+    nr = 0;
     rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
     if (rc == 0) {
 	win32_perror_fatal("ReadConsoleInput failed");
     }
     if (nr == 0) {
+	vctrace(TC_UI, "ReadConsoleInput -> no events\n");
 	return;
     }
 
@@ -2463,6 +2484,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	break;
     case KEY_EVENT:
 	if (!ir.Event.KeyEvent.bKeyDown) {
+	    vctrace(TC_UI, "KeyUp, ignoring\n");
 	    return;
 	}
 	s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16);
@@ -2747,7 +2769,8 @@ screen_system_fixup(void)
 {
     if (!escaped) {
 	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
-				    ENABLE_MOUSE_INPUT) == 0) {
+				    ENABLE_MOUSE_INPUT |
+				    ENABLE_EXTENDED_FLAGS) == 0) {
 	    win32_perror("SetConsoleMode failed");
 	}
     }
@@ -2767,7 +2790,8 @@ screen_resume(void)
     input_id = AddInput(chandle, kybd_input);
 
     if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
-				ENABLE_MOUSE_INPUT) == 0) {
+				ENABLE_MOUSE_INPUT |
+				ENABLE_EXTENDED_FLAGS) == 0) {
 	win32_perror("SetConsoleMode failed");
     }
 }
