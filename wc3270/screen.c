@@ -1159,6 +1159,13 @@ refresh(void)
     CONSOLE_SCREEN_BUFFER_INFO info;
     COORD coord;
     bool wasendwin = isendwin;
+    static bool ever = false;
+
+    if (!ever) {
+	ever = true;
+	printf("\033[8;%d;%dt", maxROWS + 3, maxCOLS);
+	fflush(stdout);
+    }
 
     isendwin = false;
 
@@ -1217,7 +1224,8 @@ set_console_cooked(void)
 	win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
     }
     if (SetConsoleMode(cohandle, ENABLE_PROCESSED_OUTPUT |
-				 ENABLE_WRAP_AT_EOL_OUTPUT) == 0) {
+				 ENABLE_WRAP_AT_EOL_OUTPUT |
+				 ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) {
 	win32_perror_fatal("\nSetConsoleMode(CONOUT$) failed");
     }
 }
