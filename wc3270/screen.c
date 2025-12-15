@@ -1346,7 +1346,7 @@ screen_init(void)
     init_user_attribute_colors();
 
     if (mode3279) {
-	oia_attr = cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	oia_attr = cmap_fg[HOST_COLOR_BLUE] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	oia_bold_attr = oia_attr; /* not used */
 	oia_red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY |
 	    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
@@ -3291,17 +3291,15 @@ draw_oia(void)
     }
 
     /* Offsets 0, 1, 2 */
-    if (mode3279) {
-	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | cmap_bg[HOST_COLOR_GREY]);
-    } else {
-	attrset(reverse_colors(defattr));
-    }
+    attrset(mode3279? reverse_colors(oia_attr): defattr);
     mvprintw(status_row, 0, "4");
+    attrset(oia_attr);
     if (oia_undera) {
 	addch(IN_E? 'B': 'A');
     } else {
 	addch(' ');
     }
+    attrset(mode3279? reverse_colors(oia_attr): defattr);
     if (IN_NVT) {
 	addch('N');
     } else if (oia_boxsolid) {
