@@ -187,10 +187,8 @@ reselect(bool generate_event)
 static bool
 is_blank(int baddr)
 {
-    ucs4_t u;
     unsigned char fa;
-    int xbaddr;
-    int c;
+    ucs4_t u;
 
     /* Check for FA or blanked field. */
     fa = get_field_attribute(baddr);
@@ -198,49 +196,31 @@ is_blank(int baddr)
 	return true;
     }
 
-    /* Handle NVT-mode text. */
-    if ((u = ea_buf[baddr].ucs4)) {
-	if (IS_LEFT(baddr)) {
-	    return u == IDEOGRAPHIC_SPACE;
-	} else if (IS_RIGHT(baddr)) {
+    if (!is_nvt(&ea_buf[baddr], appres.c3270.ascii_box_draw, &u)) {
+	enum dbcs_state d = ctlr_dbcs_state(baddr);
+	int xbaddr;
+
+	if (IS_LEFT(d)) {
 	    xbaddr = baddr;
 	    INC_BA(xbaddr);
-	    return ea_buf[xbaddr].ucs4 == IDEOGRAPHIC_SPACE;
+	    u = ebcdic_to_unicode((ea_buf[baddr].ec << 8) |
+				  ea_buf[xbaddr].ec,
+				  CS_BASE, EUO_NONE);
+	} else if (IS_RIGHT(d)) {
+	    xbaddr = baddr;
+	    DEC_BA(xbaddr);
+	    u = ebcdic_to_unicode((ea_buf[xbaddr].ec << 8) |
+				  ea_buf[baddr].ec,
+				  CS_BASE, EUO_NONE);
 	} else {
-	    return u == ' ' || u == 0xa0;
+	    u = ebcdic_to_unicode(ea_buf[baddr].ec,
+		    ea_buf[baddr].cs,
+		    appres.c3270.ascii_box_draw?
+			EUO_ASCII_BOX: 0);
 	}
     }
 
-    /* Translate to Unicode, exactly as we would display it. */
-    if (IS_LEFT(baddr)) {
-	xbaddr = baddr;
-	DEC_BA(xbaddr);
-	c = ebcdic_to_unicode((ea_buf[xbaddr].ec << 8) |
-			      ea_buf[baddr].ec,
-			      CS_BASE, EUO_NONE);
-	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
-	    return true;
-	}
-    } else if (IS_RIGHT(baddr)) {
-	xbaddr = baddr;
-	INC_BA(xbaddr);
-	c = ebcdic_to_unicode((ea_buf[baddr].ec << 8) |
-			      ea_buf[xbaddr].ec,
-			      CS_BASE, EUO_NONE);
-	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
-	    return true;
-	}
-    } else {
-	c = ebcdic_to_unicode(ea_buf[baddr].ec,
-		ea_buf[baddr].cs,
-		appres.c3270.ascii_box_draw?
-		    EUO_ASCII_BOX: 0);
-	if (c == 0 || c == ' ') {
-	    return true;
-	}
-    }
-
-    return false;
+    return u == 0 || u == ' ' || u == 0xa0 || u == IDEOGRAPHIC_SPACE;
 }
 
 /*
