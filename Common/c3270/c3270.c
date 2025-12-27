@@ -2205,7 +2205,6 @@ product_set_appres_defaults(void)
     appres.c3270.curses_keypad = true;
     appres.c3270.mouse = true;
 #endif /*]*/
-
 #if !defined(_WIN32) /*[*/
 # if defined(CURSES_WIDE) /*[*/
     appres.c3270.acs = true;
@@ -2213,6 +2212,7 @@ product_set_appres_defaults(void)
     appres.c3270.ascii_box_draw = true;
 # endif /*]*/
 #endif /*]*/
+    appres.c3270.use_rgb = true;
 
     set_toggle(SELECT_URL, true);
 }
@@ -2386,6 +2386,7 @@ c3270_register(void)
 	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
+	{ ResUseRgb,	aoffset(c3270.use_rgb),		XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
 	{ ResCbreak,	aoffset(c3270.cbreak_mode),	XRM_BOOLEAN },
 	{ ResCursesKeypad,aoffset(c3270.curses_keypad),	XRM_BOOLEAN },

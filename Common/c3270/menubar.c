@@ -929,6 +929,7 @@ typedef enum {
     OM_CROSSHAIR,
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
+    OM_ALT_CURSOR,
     OM_CURSOR_BLINK,
     OM_MARGINED_PASTE,
     OM_OVERLAY_PASTE,
@@ -947,6 +948,7 @@ toggle_index_t option_index[OM_COUNT] = {
     CROSSHAIR,
     UNDERSCORE,
 #if defined(WC3270) /*[*/
+    ALT_CURSOR,
     CURSOR_BLINK,
     MARGINED_PASTE,
     OVERLAY_PASTE,
@@ -963,6 +965,7 @@ char *option_names[OM_COUNT] = {
     "Crosshair Cursor",
     "Underscore Mode",
 #if defined(WC3270) /*[*/
+    "Alternate Cursor",
     "Cursor Blink",
     "Margined Paste",
     "Overlay Paste",

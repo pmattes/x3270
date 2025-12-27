@@ -247,6 +247,7 @@
 #define ResUnlockDelay		"unlockDelay"
 #define ResUnlockDelayMs	"unlockDelayMs"
 #define ResUseCursorColor	"useCursorColor"
+#define ResUseRgb		"useRgb"
 #define ResUser			"user"
 #define ResUtEnv		"utEnv"
 #define ResUtf8			"utf8"

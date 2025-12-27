@@ -72,6 +72,7 @@
 #include "wselectc.h"
 #include "xio.h"
 #include "xscroll.h"
+#include "warning.h"
 
 #include <wincon.h>
 #include "winvers.h"
@@ -99,6 +100,10 @@
 #define MAX_COLORS	16
 
 #define CURSOR_BLINK_MS	500
+
+#define WINDOW_TOO_SMALL	"Console window is too small"
+#define WINDOW_TOO_SMALL_WARNING	WINDOW_TOO_SMALL ":\n\
+Some display information will be lost and the cursor location may not be accurate"
 
 /*
  * N.B.: F0 "neutral black" means black on a screen (white-on-black device) and
@@ -156,6 +161,34 @@ static int field_colors[4] = {
     HOST_COLOR_RED,		/* intensified */
     HOST_COLOR_BLUE,		/* protected */
     HOST_COLOR_NEUTRAL_WHITE	/* protected, intensified */
+};
+
+/* Screen output color map. */
+static WORD color_attr[] = {
+    0,						/* PC_DEFAULT */
+    FOREGROUND_INTENSITY | FOREGROUND_BLUE,	/* PC_PROMPT */
+    FOREGROUND_INTENSITY | FOREGROUND_RED,	/* PC_ERROR */
+    0,						/* PC_NORMAL */
+};
+
+/* Default colors in RGB mode, in X11 format (00RRGGBB). */
+static unsigned rgbmap[16] = {
+    0x1a1a1a,	/* neutral black */
+    0x1e90ff,	/* blue */
+    0xff0000,	/* red */
+    0xff00ff,	/* pink */
+    0x32cd32,	/* green */
+    0x00ffff,	/* turquoise */
+    0xffff00,	/* yellow */
+    0xffffff,	/* neutral white */
+    0x2f4f4f,	/* black */
+    0x0000cd,	/* deep blue */
+    0xffa500,	/* orange */
+    0xa020f0,	/* purple */
+    0x90ee90,	/* pale green */
+    0x96cdcd,	/* pale turquoise */
+    0x778899,	/* gray */
+    0xf5f5f5,	/* white */
 };
 
 static int defattr = 0;
@@ -268,6 +301,14 @@ static HANDLE cc_event;
 static ioid_t cc_id;
 
 CONSOLE_SCREEN_BUFFER_INFO base_info;
+CONSOLE_SCREEN_BUFFER_INFOEX base_infoex_cohandle;
+CONSOLE_SCREEN_BUFFER_INFOEX base_infoex_sbuf;
+CONSOLE_SCREEN_BUFFER_INFOEX rgb_infoex_cohandle;
+CONSOLE_SCREEN_BUFFER_INFOEX rgb_infoex_sbuf;
+static int base_console_rows;
+static int base_console_cols;
+static DWORD base_coflags;
+#define IS_WT ((base_coflags & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0)
 
 static action_t Paste_action;
 static action_t Redraw_action;
@@ -277,16 +318,59 @@ static ioid_t redraw_id = NULL_IOID;
 
 static char *fatal_error = NULL;
 
+static int lr_cursor_attempts = 0;
+static bool lr_cursor_success = true;
+static bool lr_resize = false;
+
 static void
-win32_perror_fatal(const char *fmt, ...)
+screen_perror_fatal(const char *fmt, ...)
 {
     va_list ap;
     char *buf;
 
+    /* Make the console behave sanely. */
+    if (cohandle != NULL) {
+	(void) SetConsoleActiveScreenBuffer(cohandle);
+    }
+    if (chandle != NULL) {
+	(void) SetConsoleMode(chandle, ENABLE_LINE_INPUT |
+		ENABLE_PROCESSED_INPUT |
+		ENABLE_MOUSE_INPUT |
+		ENABLE_EXTENDED_FLAGS);
+    }
+
     va_start(ap, fmt);
     buf = Vasprintf(fmt, ap);
     va_end(ap);
-    win32_perror("%s", buf);
+    win32_perror("\n%s", buf);
+    fatal_error = buf;
+    x3270_exit(1);
+}
+
+static void
+screen_fatal(const char *fmt, ...)
+{
+    va_list ap;
+    char *buf;
+
+    /* Make the console behave sanely. */
+    if (cohandle != NULL) {
+	(void) SetConsoleActiveScreenBuffer(cohandle);
+    }
+    if (chandle != NULL) {
+	(void) SetConsoleMode(chandle, ENABLE_LINE_INPUT |
+		ENABLE_PROCESSED_INPUT |
+		ENABLE_MOUSE_INPUT |
+		ENABLE_EXTENDED_FLAGS);
+    }
+
+    va_start(ap, fmt);
+    buf = Vasprintf(fmt, ap);
+    va_end(ap);
+    screen_color(PC_ERROR);
+    fprintf(stderr, "\nFatal error: %s\n", buf);
+    fflush(stderr);
+    screen_color(PC_NORMAL);
     fatal_error = buf;
     x3270_exit(1);
 }
@@ -427,6 +511,8 @@ resize_console(void)
     COORD want_bs;
     SMALL_RECT sr;
     bool ov_changed = false;
+    COORD coord;
+    bool backed_off_wt = false;
 
     /*
      * Calculate the rows and columns we want -- start with the
@@ -495,6 +581,75 @@ resize_console(void)
 	console_rows = want_bs.Y;
 	console_cols = want_bs.X;
 
+	/* Resize the Windows Terminal window. */
+	if ((console_rows != base_console_rows || console_cols != base_console_cols) && IS_WT) {
+	    char *e = Asprintf("\033[8;%d;%dt", console_rows, console_cols);
+
+	    /*
+	     * Hack. With the resize and buffer switch, the screen image is not stable and the first
+	     * few writes end up randomly strewn over the screen. So wait a bit.
+	     *
+	     * We could also do a refresh after a delay, but I'd rather see the screen pause and then
+	     * be drawn correctly, rather than see it scrambled and then unscramble itself a bit later.
+	     */
+	    WriteConsoleA(cohandle, e, (int)strlen(e), NULL, NULL);
+	    Free(e);
+	    Sleep(500);
+	}
+
+	/*
+	 * Check for Windows Terminal stubborness.
+	 *
+	 * If Windows Terminal has more than one tab open, the Escape sequence above has no
+	 * effect. Even though we have created a screen buffer that is larger than the window
+	 * and can write into it anywhere, the 'extra' area is invisible and the cursor can't be
+	 * moved into it. The latter is how this condition can be detected.
+	 */
+
+	/* 1. Switch to the alternate screen buffer. */
+	if (SetConsoleActiveScreenBuffer(sbuf) == 0) {
+	    screen_perror_fatal("resize_console SetConsoleActiveScreenBuffer");
+	}
+
+	/*
+	 * 2. Try moving the cursor to its lower-right-hand corner.
+	 *    If Windows terminal is in its stubborn mode, this will fail.
+	 */
+	coord.X = console_cols - 1;
+	coord.Y = console_rows - 1;
+	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
+	    /*
+	     * Can't acutally write to the whole screen buffer.
+	     * Try a model 2's outer boundary.
+	     */
+	    coord.X = MODEL_2_COLS - 1;
+	    coord.Y = MODEL_2_ROWS + XTRA_ROWS - 1;
+	    if (SetConsoleCursorPosition(sbuf, coord) != 0) {
+		/*
+		 * Big enough for a model 2 at least. Quietly go back to the original
+		 * dimensions we read when we started, and switch to a model 2 plus
+		 * oversize to fill the window.
+		 */
+		console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
+		console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
+		ov_cols = console_cols;
+		ov_rows = console_rows - XTRA_ROWS;
+		vctrace(TC_UI, "resize_console: Windows Terminal won't let us make the window bigger, "
+			"but a model 2 will fit -- switching to model 2 with ov_cols %d ov_rows %d\n",
+			ov_cols, ov_rows);
+		set_rows_cols(2, ov_cols, ov_rows);
+		backed_off_wt = true;
+	    }
+	}
+
+	/* 3. Switch back to the original screen buffer. */
+	if (SetConsoleActiveScreenBuffer(cohandle) == 0) {
+	    screen_perror_fatal("resize_console SetConsoleActiveScreenBuffer");
+	}
+	if (backed_off_wt) {
+	    return 0;
+	}
+
 	/*
 	 * Calculate new oversize and maximum logical screen
 	 * dimensions.
@@ -559,8 +714,53 @@ screen_pre_init(void)
 	win32_perror("GetConsoleScreenBufferInfo failed");
 	x3270_exit(1);
     }
-    console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
-    console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
+    base_console_rows = console_rows = base_info.srWindow.Bottom - base_info.srWindow.Top + 1;
+    base_console_cols = console_cols = base_info.srWindow.Right - base_info.srWindow.Left + 1;
+
+    /* Get the initial console output flags. */
+    if (GetConsoleMode(cohandle, &base_coflags) == 0) {
+	screen_fatal("screen_pre_init GetConsoleFlags");
+    }
+}
+
+/* Set up RGB color definitions. */
+static void
+setup_rgb_colors_buf(HANDLE buf, CONSOLE_SCREEN_BUFFER_INFOEX *info, CONSOLE_SCREEN_BUFFER_INFOEX *base)
+{
+    memset(info, '\0', sizeof(CONSOLE_SCREEN_BUFFER_INFOEX));
+    info->cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+    if (GetConsoleScreenBufferInfoEx(buf, info) == 0) {
+	screen_perror_fatal("GetConsoleScreenBufferInfoEx");
+    }
+
+    /* This works around a well-known bug in the API. */
+    info->srWindow.Bottom++;
+    info->srWindow.Right++;
+
+    /* Save a copy for when we exit. */
+    memcpy(base, info, sizeof(CONSOLE_SCREEN_BUFFER_INFOEX));
+
+    /* Just change bright blue. On a Windows Console, it's still too dark to read. Others are fine. */
+    info->ColorTable[cmap_fg[HOST_COLOR_BLUE]] = ((rgbmap[HOST_COLOR_BLUE] & 0xff) << 16) |
+						 (rgbmap[HOST_COLOR_BLUE] & 0x00ff00) |
+						 ((rgbmap[HOST_COLOR_BLUE] & 0xff0000) >> 16);
+
+    /* Change the screen buffers */
+    if (SetConsoleScreenBufferInfoEx(buf, info) == 0) {
+	screen_perror_fatal("SetConsoleScreenBufferInfoEx");
+    }
+}
+
+/* Set up RGB color definitions. */
+static void
+setup_rgb_colors(void)
+{
+    if (!appres.c3270.use_rgb || IS_WT) {
+	return;
+    }
+
+    setup_rgb_colors_buf(cohandle, &rgb_infoex_cohandle, &base_infoex_cohandle);
+    setup_rgb_colors_buf(sbuf, &rgb_infoex_sbuf, &base_infoex_sbuf);
 }
 
 /*
@@ -605,10 +805,8 @@ initscr(void)
     }
 
     /* Set its dimensions. */
-    if (!ov_auto) {
-	if (resize_console() < 0) {
-	    return NULL;
-	}
+    if (!ov_auto && resize_console() < 0) {
+	return NULL;
     }
 
     /* Define a console handler. */
@@ -630,6 +828,9 @@ initscr(void)
     onscreen_valid = FALSE;
     toscreen = (CHAR_INFO *)Malloc(buffer_size);
     memset(toscreen, '\0', buffer_size);
+
+    /* Set RGB colors. */
+    setup_rgb_colors();
 
     /* More will no doubt follow. */
     return chandle;
@@ -892,7 +1093,6 @@ hdraw(int row, int lrow, int col, int lcol)
     COORD bufferCoord;
     SMALL_RECT writeRegion;
     int xrow;
-    int rc;
 
 #if defined(DEBUG_SCREEN_DRAW) /*[*/
     /*
@@ -921,18 +1121,121 @@ hdraw(int row, int lrow, int col, int lcol)
 #endif /*]*/
 
     /* Write it. */
-    bufferSize.X = console_cols;
-    bufferSize.Y = console_rows;
-    bufferCoord.X = col;
-    bufferCoord.Y = row;
-    writeRegion.Left = col;
-    writeRegion.Top = row;
-    writeRegion.Right = lcol;
-    writeRegion.Bottom = lrow;
-    rc = WriteConsoleOutputW(sbuf, toscreen, bufferSize, bufferCoord,
-	    &writeRegion);
-    if (rc == 0) {
-	win32_perror_fatal("WriteConsoleOutput failed");
+    {
+	int r, c;
+	bool blast = true;
+
+	if (IS_WT) {
+	    for (r = row; r <= lrow && blast; r++) {
+		for (c = col; c <= lcol; c++) {
+		    if (toscreen[ix(r, c)].Attributes & (COMMON_LVB_LEADING_BYTE | COMMON_LVB_TRAILING_BYTE)) {
+			blast = false;
+			break;
+		    }
+		}
+	    }
+	}
+
+	if (blast) {
+	    /* Blast it out in one go with WriteConsoleOutput. */
+	    bufferSize.X = console_cols;
+	    bufferSize.Y = console_rows;
+	    bufferCoord.X = col;
+	    bufferCoord.Y = row;
+	    writeRegion.Left = col;
+	    writeRegion.Top = row;
+	    writeRegion.Right = lcol;
+	    writeRegion.Bottom = lrow;
+	    if (WriteConsoleOutputW(sbuf, toscreen, bufferSize, bufferCoord, &writeRegion) == 0) {
+		screen_perror_fatal("hdraw WriteConsoleOutput");
+	    }
+	} else {
+	    /* DBCS on Windows Terminal. Dribble it out in runs with common attributes using WriteConsole. */
+	    CONSOLE_CURSOR_INFO cursor_info;
+	    CONSOLE_SCREEN_BUFFER_INFO screen_buffer_info;
+	    int last_attr = -1;
+	    wchar_t *run = (wchar_t *)Malloc(maxCOLS * sizeof(wchar_t));
+	    wchar_t *run_next = run;
+	    bool cursor_was_visible = false;
+
+	    /* Get the current cursor info. */
+	    if (GetConsoleCursorInfo(sbuf, &cursor_info) == 0) {
+		screen_perror_fatal("hdraw GetConsoleCursorInfo");
+	    }
+	    if (GetConsoleScreenBufferInfo(sbuf, &screen_buffer_info) == 0) {
+		screen_perror_fatal("hdraw GetConsoleScreenBufferInfo");
+	    }
+
+	    /* Turn off the cursor, if it is on. */
+	    if (cursor_info.bVisible) {
+		cursor_was_visible = true;
+		cursor_info.bVisible = FALSE;
+		if (SetConsoleCursorInfo(sbuf, &cursor_info) == 0) {
+		    screen_perror_fatal("hdraw SetConsoleCursorInfo");
+		}
+	    }
+
+	    for (r = row; r <= lrow; r++) {
+		COORD coord;
+
+		/* Go to the beginning of the line. */
+		coord.X = col;
+		coord.Y = r;
+		if (SetConsoleCursorPosition(sbuf, coord) == 0) {
+		    vctrace(TC_UI, "hdraw: can't move to (%d,%d)\n", col + 1, r + 1);
+		    continue;
+		}
+
+		for (c = col; c <= lcol; c++) {
+		    CHAR_INFO ch = toscreen[ix(r, c)];
+		    int attr = ch.Attributes & ~COMMON_LVB_LEADING_BYTE;
+
+		    if (attr & COMMON_LVB_TRAILING_BYTE) {
+			continue;
+		    }
+		    if (last_attr != attr && run_next != run) {
+			/* Write the pending text. */
+			if (SetConsoleTextAttribute(sbuf, last_attr) == 0) {
+			    screen_perror_fatal("hdraw SetConsoleTextAttribute");
+			}
+			if (WriteConsoleW(sbuf, run, (int)(run_next - run), NULL, NULL) == 0) {
+			    screen_perror_fatal("hdraw WriteConsoleW");
+			}
+			run_next = run;
+		    }
+
+		    /* Store the attribute and character. */
+		    last_attr = attr;
+		    *run_next++ = ch.Char.UnicodeChar;
+		}
+		if (run_next != run) {
+		    /* Write the final pending text. */
+		    if (SetConsoleTextAttribute(sbuf, last_attr) == 0) {
+			screen_perror_fatal("hdraw SetConsoleTextAttribute");
+		    }
+		    if (WriteConsoleW(sbuf, run, (int)(run_next - run), NULL, NULL) == 0) {
+			screen_perror_fatal("hdraw WriteConsoleW");
+		    }
+		    run_next = run;
+		}
+
+	    }
+
+	    Free(run);
+
+	    /* Put the cursor back where it was. */
+	    if (SetConsoleCursorPosition(sbuf, screen_buffer_info.dwCursorPosition) == 0) {
+		screen_perror_fatal("hdraw SetConsoleCursorPosition");
+	    }
+
+	    /* Turn the cursor back on, if we turned it off. */
+	    if (cursor_was_visible) {
+		cursor_info.bVisible = TRUE;
+		if (SetConsoleCursorInfo(sbuf, &cursor_info) == 0) {
+		    screen_perror_fatal("hdraw SetConsoleCursorInfo");
+		}
+	    }
+	}
     }
 
     /* Sync 'onscreen'. */
@@ -1138,17 +1441,38 @@ sync_onscreen(void)
 static void
 set_cursor_size(HANDLE handle)
 {
-    CONSOLE_CURSOR_INFO cci;
-	
-    memset(&cci, 0, sizeof(cci));
-    cci.bVisible = (cursor_enabled && cblink.visible)? TRUE: FALSE;
-    if (toggled(ALT_CURSOR)) {
-	cci.dwSize = 25;
-    } else {
-	cci.dwSize = 100;
-    }
-    if (SetConsoleCursorInfo(handle, &cci) == 0) {
-	win32_perror_fatal("\nSetConsoleCursorInfo failed");
+    if (screen_swapped) {
+	CONSOLE_CURSOR_INFO cci;
+
+	/*
+	 * Ask Windows Console for a particular cursor size, and enable/disable it.
+	 * This needs to happen when the screen buffer is swapped.
+	 */
+	memset(&cci, 0, sizeof(cci));
+	cci.bVisible = (cursor_enabled && cblink.visible)? TRUE: FALSE;
+	if (toggled(ALT_CURSOR)) {
+	    cci.dwSize = 25;
+	} else {
+	    cci.dwSize = 100;
+	}
+	if (SetConsoleCursorInfo(handle, &cci) == 0) {
+	    screen_perror_fatal("set_cursor_size SetConsoleCursorInfo");
+	}
+
+	/* Set the cursor type on Windows Terminal. */
+	if (IS_WT && cursor_enabled) {
+	    static const char *type_str[] = {
+		"\033[2 q",	/* block cursor, not blinking */
+		"\033[1 q",	/* block cursor, blinking */
+		"\033[4 q",	/* underscore cursor, not blinking */
+		"\033[3 q",	/* underscore cursor, blinking */
+	    };
+	    int ix = (toggled(ALT_CURSOR)? 2: 0) + (toggled(CURSOR_BLINK)? 1: 0);
+
+	    if (WriteConsoleA(handle, type_str[ix], 5, NULL, NULL) == 0) {
+		screen_perror_fatal("set_cursor_size WriteConsoleA");
+	    }
+	}
     }
 }
 
@@ -1159,18 +1483,46 @@ refresh(void)
     CONSOLE_SCREEN_BUFFER_INFO info;
     COORD coord;
     bool wasendwin = isendwin;
-    static bool ever = false;
-
-    if (!ever) {
-	ever = true;
-	printf("\033[8;%d;%dt", maxROWS + 3, maxCOLS);
-	fflush(stdout);
-    }
 
     isendwin = false;
 
+    /* Put the colors back. */
+    if (wasendwin && rgb_infoex_sbuf.cbSize != 0) {
+	(void) SetConsoleScreenBufferInfoEx(sbuf, &rgb_infoex_sbuf);
+    }
+
     /* Draw the differences between 'onscreen' and 'toscreen' into sbuf. */
     sync_onscreen();
+
+    /* Set the cursor size (wt). */
+    set_cursor_size(sbuf);
+
+    /*
+     * Check if it is still legal to move the cursor to the lower-right-hand corner.
+     * This can happen in three different ways:
+     * [1] At start-up on Windows Terminal.
+     * [2] The user resized the console window while connected.
+     * [3] The user resized the console Windows Terminal window while at the wc3270> prompt.
+     */
+    if (screen_swapped && !lr_cursor_attempts++) {
+	coord.X = console_cols - 1;
+	coord.Y = console_rows - 1;
+
+	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
+	    if (!lr_resize) {
+		/* Windows Terminal, at start-up. */
+		screen_fatal(WINDOW_TOO_SMALL);
+	    }
+	    if (lr_cursor_success) {
+		/* Resize while connected, or after resuming. */
+		popup_warning(WINDOW_TOO_SMALL_WARNING);
+		lr_cursor_success = false;
+	    }
+	} else {
+	    lr_cursor_success = true;
+	}
+	lr_resize = false;
+    }
 
     /* Move the cursor. */
     coord.X = cur_col;
@@ -1179,25 +1531,24 @@ refresh(void)
 	coord.X--;
     }
     if (GetConsoleScreenBufferInfo(sbuf, &info) == 0) {
-	win32_perror_fatal("\nrefresh: GetConsoleScreenBufferInfo failed");
+	screen_perror_fatal("refresh GetConsoleScreenBufferInfo");
     }
     if ((info.dwCursorPosition.X != coord.X ||
 	 info.dwCursorPosition.Y != coord.Y)) {
 	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
-	    win32_perror_fatal("\nrefresh: SetConsoleCursorPosition(x=%d,y=%d) "
-		    "failed", coord.X, coord.Y);
+	    vctrace(TC_UI, "refresh: SetConsoleCursorPosition(x=%d,y=%d) failed\n", coord.X, coord.Y);
 	}
     }
 
     /* Swap in this buffer. */
     if (!screen_swapped) {
 	if (SetConsoleActiveScreenBuffer(sbuf) == 0) {
-	    win32_perror_fatal("\nSetConsoleActiveScreenBuffer failed");
+	    screen_perror_fatal("refesh SetConsoleActiveScreenBuffer");
 	}
 	screen_swapped = true;
     }
 
-    /* Set the cursor size. */
+    /* Set the cursor size (wc). */
     set_cursor_size(sbuf);
 
     /* Start blinking again. */
@@ -1221,12 +1572,12 @@ set_console_cooked(void)
 				ENABLE_PROCESSED_INPUT |
 				ENABLE_MOUSE_INPUT |
 				ENABLE_EXTENDED_FLAGS) == 0) {
-	win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	screen_perror_fatal("set_console_cooked SetConsoleMode(CONIN$)");
     }
     if (SetConsoleMode(cohandle, ENABLE_PROCESSED_OUTPUT |
 				 ENABLE_WRAP_AT_EOL_OUTPUT |
 				 ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) {
-	win32_perror_fatal("\nSetConsoleMode(CONOUT$) failed");
+	screen_perror_fatal("set_console_cooked SetConsoleMode(CONOUT$)");
     }
 }
 
@@ -1240,14 +1591,14 @@ screen_echo_mode(bool echo)
 				    ENABLE_PROCESSED_INPUT |
 				    ENABLE_MOUSE_INPUT |
 				    ENABLE_EXTENDED_FLAGS) == 0) {
-	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	    screen_perror_fatal("screen_echo_mode SetConsoleMode(CONIN$)");
 	}
     } else {
 	if (SetConsoleMode(chandle, ENABLE_LINE_INPUT |
 				    ENABLE_PROCESSED_INPUT |
 				    ENABLE_MOUSE_INPUT |
 				    ENABLE_EXTENDED_FLAGS) == 0) {
-	    win32_perror_fatal("\nSetConsoleMode(CONIN$) failed");
+	    screen_perror_fatal("screen_echo_mode SetConsoleMode(CONIN$)");
 	}
     }
 }
@@ -1273,11 +1624,12 @@ endwin(void)
     /* Turn off the blinking cursor. */
     set_cblink(false);
 
+    /* Turn echo back on. */
     set_console_cooked();
 
     /* Swap in the original buffer. */
     if (SetConsoleActiveScreenBuffer(cohandle) == 0) {
-	win32_perror_fatal("\nSetConsoleActiveScreenBuffer failed");
+	screen_perror_fatal("endwin SetConsoleActiveScreenBuffer");
     }
 
     screen_swapped = false;
@@ -1285,7 +1637,11 @@ endwin(void)
     system("cls");
     printf("[wc3270]\n\n");
     if (fatal_error != NULL) {
+	screen_color(PC_ERROR);
 	printf("Fatal error: %s\n", fatal_error);
+	fflush(stdout);
+	screen_color(PC_NORMAL);
+	fatal_error = NULL;
     }
     fflush(stdout);
 }
@@ -1306,8 +1662,20 @@ screen_init(void)
     windows_cp = GetConsoleCP();
 
     /* If they want automatic oversize, see if that's possible. */
-    if (ov_auto && (maxROWS < console_rows - 3 || maxCOLS < console_cols)) {
-	set_rows_cols(model_num, console_cols, console_rows - 3);
+    if (ov_auto) {
+	if (console_rows - 3 < MODEL_2_ROWS || console_cols < MODEL_2_COLS) {
+	    /* Too small. */
+	    screen_fatal(WINDOW_TOO_SMALL);
+	} else {
+	    if (!check_rows_cols(2, console_cols, console_rows - 3, false)) {
+		/* Too big. */
+		popup_an_error("Console window is too big, ignoring auto-oversize");
+		set_rows_cols(model_num, 0, 0);
+	    } else {
+		/* Should all be good. */
+		set_rows_cols(2, console_cols, console_rows - 3);
+	    }
+	}
     }
 
     /* Figure out where the status line goes, if it fits. */
@@ -1356,7 +1724,7 @@ screen_init(void)
     if (mode3279) {
 	oia_attr = cmap_fg[HOST_COLOR_BLUE] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	oia_bold_attr = oia_attr; /* not used */
-	oia_red_attr = FOREGROUND_RED | FOREGROUND_INTENSITY |
+	oia_red_attr = FOREGROUND_RED | (IS_WT? 0: FOREGROUND_INTENSITY) |
 	    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	oia_white_attr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 	    FOREGROUND_INTENSITY | cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
@@ -1587,6 +1955,16 @@ static void
 init_user_colors(void)
 {
     int i;
+
+    /*
+     * On Windows Terminal, change the mapping for Red to plain-old red. Highlighted red
+     * is basically salmon, at least with the default color scheme.
+     */
+    if (IS_WT) {
+	cmap_fg[HOST_COLOR_RED] = FOREGROUND_RED;
+	cmap_bg[HOST_COLOR_RED] = BACKGROUND_RED;
+	color_attr[PC_ERROR] = FOREGROUND_RED;
+    }
 
     for (i = 0; host_color[i].name != NULL; i++) {
 	init_user_color(host_color[i].name, host_color[i].index);
@@ -1867,9 +2245,7 @@ screen_disp(bool erasing _is_unused)
 		coord.X--;
 	    }
 	    if (SetConsoleCursorPosition(sbuf, coord) == 0) {
-		win32_perror_fatal("\nscreen_disp: "
-			"SetConsoleCursorPosition(x=%d,y=%d) failed",
-			coord.X, coord.Y);
+		vctrace(TC_UI, "screen_disp: SetConsoleCursorPosition(x=%d,y=%d) failed\n", coord.X, coord.Y);
 	    }
 	}
 
@@ -2432,6 +2808,14 @@ decode_mflags(DWORD flags, decode_t names[])
     return txdFree(vb_consume(&r));
 }
 
+/* Arm the window-too-small detector. */
+static void
+arm_too_small_detector(void)
+{
+    lr_cursor_attempts = 0;
+    lr_resize = true;
+}
+
 /* Redraw the screen in response to a screen resize event. */
 static void
 resize_redraw(ioid_t ignored)
@@ -2443,6 +2827,8 @@ resize_redraw(ioid_t ignored)
 	system("cls");
 	screen_system_fixup();
 	Redraw_action(IA_NONE, 0, no_argv);
+
+	arm_too_small_detector();
     }
 }
 
@@ -2459,7 +2845,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Get the next input event. */
     vctrace(TC_UI, "Keyboard input: ");
     if (GetNumberOfConsoleInputEvents(chandle, &nr) == 0) {
-	win32_perror_fatal("GetNumberOfConsoleInputEvents failed");
+	screen_perror_fatal("kybd_input GetNumberOfConsoleInputEvents");
     }
     if (nr == 0) {
 	vctrace(TC_UI, "GetNumberOfConsoleInputEvents -> 0\n");
@@ -2469,7 +2855,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     nr = 0;
     rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
     if (rc == 0) {
-	win32_perror_fatal("ReadConsoleInput failed");
+	screen_perror_fatal("kybd_input ReadConsoleInput");
     }
     if (nr == 0) {
 	vctrace(TC_UI, "ReadConsoleInput -> no events\n");
@@ -2802,6 +3188,9 @@ screen_resume(void)
 				ENABLE_EXTENDED_FLAGS) == 0) {
 	win32_perror("SetConsoleMode failed");
     }
+
+    /* Enable the too-small warning. */
+    arm_too_small_detector();
 }
 
 void
@@ -2828,21 +3217,23 @@ toggle_altCursor(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 static void
 set_cblink(bool mode)
 {
-    vctrace(TC_UI, "set_cblink(%s)\n", mode? "true": "false");
-    if (mode) {
-	/* Turn it on. */
-	if (cblink.id == NULL_IOID) {
-	    cblink.id = AddTimeOut(CURSOR_BLINK_MS, cblink_timeout);
-	}
-    } else {
-	/* Turn it off. */
-	if (cblink.id != NULL_IOID) {
-	    RemoveTimeOut(cblink.id);
-	    cblink.id = NULL_IOID;
-	}
-	if (!cblink.visible) {
-	    cblink.visible = true;
-	    set_cursor_size(sbuf);
+    if (!IS_WT) {
+	vctrace(TC_UI, "set_cblink(%s)\n", mode? "true": "false");
+	if (mode) {
+	    /* Turn it on. */
+	    if (cblink.id == NULL_IOID) {
+		cblink.id = AddTimeOut(CURSOR_BLINK_MS, cblink_timeout);
+	    }
+	} else {
+	    /* Turn it off. */
+	    if (cblink.id != NULL_IOID) {
+		RemoveTimeOut(cblink.id);
+		cblink.id = NULL_IOID;
+	    }
+	    if (!cblink.visible) {
+		cblink.visible = true;
+		set_cursor_size(sbuf);
+	    }
 	}
     }
 }
@@ -3606,6 +3997,20 @@ screen_selecting_changed(bool now_selecting)
     set_console_title(window_title? window_title: "wc3270", selecting);
 }
 
+/**
+ * Callback for exiting.
+ *
+ * @param[in] exiting		true if exiting
+ */
+static void
+screen_exiting(bool exiting)
+{
+    /* Put back the original color map. */
+    if (base_infoex_cohandle.cbSize != 0) {
+	(void) SetConsoleScreenBufferInfoEx(cohandle, &base_infoex_cohandle);
+    }
+}
+
 /* Get the window handle for the console. */
 static HWND
 get_console_hwnd(void)
@@ -3747,23 +4152,12 @@ screen_send_esc(void)
     }
 }
 
-/* Screen output color map. */
-static WORD color_attr[] = {
-    0,						/* PC_DEFAULT */
-    FOREGROUND_INTENSITY | FOREGROUND_BLUE,	/* PC_PROMPT */
-    FOREGROUND_INTENSITY | FOREGROUND_RED,	/* PC_ERROR */
-    0,						/* PC_NORMAL */
-};
-
 /* Change the screen output color. */
 void
 screen_color(pc_t pc)
 {
-    if (cohandle != NULL &&
-	    !SetConsoleTextAttribute(cohandle,
-		color_attr[pc]? color_attr[pc]: base_info.wAttributes)) {
-	win32_perror("Can't set console text attribute");
-	exit(1);
+    if (cohandle != NULL) {
+	(void) SetConsoleTextAttribute(cohandle, color_attr[pc]? color_attr[pc]: base_info.wAttributes);
     }
 }
 
@@ -3798,6 +4192,7 @@ screen_register(void)
     /* Register the actions. */
     register_actions(screen_actions, array_count(screen_actions));
 
-    /* Register for selection state changes. */
+    /* Register for state changes. */
     register_schange(ST_SELECTING, screen_selecting_changed);
+    register_schange(ST_EXITING, screen_exiting);
 }

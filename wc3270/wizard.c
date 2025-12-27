@@ -5205,6 +5205,8 @@ resize_window(int rows)
     int rv = 0;
     HANDLE h;
     CONSOLE_SCREEN_BUFFER_INFO info;
+    bool resized = false;
+    int cols;
 
     do {
 	/* Get a handle to the console. */
@@ -5212,41 +5214,70 @@ resize_window(int rows)
 		GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
 		OPEN_EXISTING, 0, NULL);
 	if (h == NULL) {
+	    errout("Console handle open failed, error %ld\n", (long)GetLastError());
 	    rv = -1;
 	    break;
 	}
 
 	/* Get its current geometry. */
 	if (GetConsoleScreenBufferInfo(h, &info) == 0) {
+	    errout("GetConsoleScreenBufferInfo failed, error %ld\n", (long)GetLastError());
 	    rv = -1;
 	    break;
 	}
 
 	/* If the buffer isn't big enough, make it bigger. */
-	if (info.dwSize.Y < rows) {
+	if (info.dwSize.Y < rows || info.dwSize.X < 80) {
 	    COORD new_size;
+	    cols = (info.dwSize.X > 80)? info.dwSize.X: 80;
 
-	    new_size.X = info.dwSize.X;
+	    new_size.X = cols;
 	    new_size.Y = rows;
-
 	    if (SetConsoleScreenBufferSize(h, new_size) == 0) {
+		errout("SetConsoleScreenBufferSize failed, error %ld\n", (long)GetLastError());
 		rv = -1;
 		break;
 	    }
+	    resized = true;
 	}
 
 	/* If the window isn't big enough, make it bigger. */
-	if (info.srWindow.Bottom - info.srWindow.Top < rows) {
+	if (info.srWindow.Bottom - info.srWindow.Top < rows || info.srWindow.Right - info.srWindow.Left < 80) {
 	    SMALL_RECT sr;
+	    cols = info.srWindow.Right - info.srWindow.Left;
+
+	    if (cols < 80) {
+		cols = 80;
+	    }
 
 	    sr.Top = 0;
-	    sr.Bottom = rows;
+	    sr.Bottom = rows - 1;
 	    sr.Left = 0;
-	    sr.Right = info.srWindow.Right - info.srWindow.Left;
-
+	    sr.Right = cols - 1;
 	    if (SetConsoleWindowInfo(h, TRUE, &sr) == 0) {
+		errout("SetConsoleWindowInfo failed, error %ld\n", (long)GetLastError());
 		rv = -1;
 		break;
+	    }
+	    resized = true;
+	}
+
+	if (resized) {
+	    DWORD mode;
+
+	    /* Do the Windows Terminal version of resize. */
+	    if (GetConsoleMode(h, &mode) == 0) {
+		rv = -1;
+		break;
+	    }
+	    if (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) {
+		char *msg = malloc(64);
+
+		snprintf(msg, 63, "\033[8;%d;%dt", rows, cols);
+		msg[63] = '\0';
+		WriteConsoleA(h, msg, (int)strlen(msg), NULL, NULL);
+		free(msg);
+		Sleep(500);
 	    }
 	}
 
@@ -5368,7 +5399,9 @@ main(int argc, char *argv[])
     }
 
     /* Resize the console window. */
-    resize_window(44);
+    if (resize_window(44) < 0) {
+	return 1;
+    }
 
     signal(SIGINT, SIG_IGN);
 

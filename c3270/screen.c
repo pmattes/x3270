@@ -1030,7 +1030,7 @@ init_user_color(const char *name, host_color_ix ix)
 	r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
     }
     if (r == NULL) {
-	if (COLORS >= 32 && can_change_color() == TRUE) {
+	if (appres.c3270.use_rgb && COLORS >= 32 && can_change_color() == TRUE) {
 	    /* Use the default RGB color. */
 	    add_rgb(ix, appres.c3270.reverse_video ? rgbmap_rv[ix] : rgbmap[ix]);
 	}
@@ -1041,6 +1041,10 @@ init_user_color(const char *name, host_color_ix ix)
 	unsigned long rgb;
 	char *end;
 
+	if (!appres.c3270.use_rgb) {
+	    xs_warning(ResUseRgb " is not set, ignoring RGB color specification %s", r);
+	    return;
+	}
 	if (COLORS < 32) {
 	    xs_warning("RGB colors require at least 32-color support");
 	    return;

@@ -211,6 +211,7 @@ typedef struct {
 #if defined(_WIN32) /*[*/
 	char	*title;
 #endif /*]*/
+	bool	 use_rgb;
     } c3270;
 
     /* screen tracing */
