@@ -2277,7 +2277,7 @@ screen_disp(bool erasing _is_unused)
 		a = calc_attrs(baddr, baddr, fa, &a_underlined, &a_blinking);
 		if (!is_menu) {
 		    if (toggled(VISIBLE_CONTROL)) {
-			attrset(apply_select(get_color_pair(HOST_COLOR_NEUTRAL_BLACK, HOST_COLOR_YELLOW) | COMMON_LVB_UNDERSCORE,
+			attrset(apply_select(get_color_pair(HOST_COLOR_YELLOW, HOST_COLOR_NEUTRAL_BLACK) | COMMON_LVB_UNDERSCORE,
 				    baddr));
 			addch(visible_fa(fa));
 		    } else {
