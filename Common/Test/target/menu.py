@@ -144,8 +144,9 @@ class menu_n(tn3270.tn3270_server):
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        pass
+        self.__del__()
     def __del__(self):
+        super().__del__()
         pass
 
     def rcv_data_cooked(self, b: bytes, mode: tn3270e_proto.data_type):
@@ -186,9 +187,9 @@ class menu_s(tn3270.tn3270_server):
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        pass
+        self.__del__()
     def __del__(self):
-        pass
+        super().__del__()
 
     def rcv_data_cooked(self, b: bytes, mode: tn3270e_proto.data_type):
         '''Process data'''
@@ -229,9 +230,9 @@ class menu_u(tn3270.tn3270_server):
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        pass
+        self.__del__()
     def __del__(self):
-        pass
+        super().__del__()
 
     def rcv_data_cooked(self, b: bytes, mode: tn3270e_proto.data_type):
         '''Process data'''
@@ -288,13 +289,12 @@ class menu_f(tn3270.tn3270_server):
         self.switch = switch
         self.cmd = ''
         self.raw_cmd = b''
-        pass
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        pass
+        self.__del__()
     def __del__(self):
-        pass
+        super().__del__()
 
     def rcv_data_cooked(self, b: bytes, mode: tn3270e_proto.data_type):
         '''Process data'''

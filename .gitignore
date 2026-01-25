@@ -30,9 +30,9 @@ wversion.c
 *.exe.manifest
 *.aps
 *-deplibs.mk
+.*.swo
 .*.swp
 *.pyc
 __pycache__
 .vs
-
 .vscode/

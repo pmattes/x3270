@@ -131,7 +131,7 @@ def mkfb(infiles, ofile: str):
             if (not last_continue and s.startswith('!')) or len(s) == 0:
                 continue
 
-            if s.startswith('#'):
+            if buf.startswith('#'):
                 is_ifndef = s.startswith('#ifndef')
                 if s.startswith('#ifdef') or is_ifndef:
                     if ssp >= SSSZ:

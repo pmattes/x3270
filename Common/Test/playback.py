@@ -75,15 +75,21 @@ class playback():
             self.thread.join()
             self.thread = None
 
+    # Stop listening.
+    def abandon(self):
+        self.listensocket.close()
+        self.listensocket = None
+
     # Accept a connection asynchronously.
     def process(self):
         self.listensocket.setblocking(False)
         while self.listensocket != None and self.conn == None:
-            select.select([self.listensocket], [self.listensocket], [self.listensocket], None)
-            try:
-                (self.conn, _) = self.listensocket.accept()
-            except:
-                break
+            (r, w, x) = select.select([self.listensocket], [], [self.listensocket], 0.25)
+            if r == [self.listensocket] or x == [self.listensocket]:
+                try:
+                    (self.conn, _) = self.listensocket.accept()
+                except:
+                    break
         if self.listensocket != None:
             self.listensocket.close()
             self.listensocket = None

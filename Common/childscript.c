@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1563,7 +1563,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, "start");
     array_add(&nargv, nargc++, txAsprintf("\"%s\"", params[0]));
     array_add(&nargv, nargc++, "/wait");
-    array_add(&nargv, nargc++, "x3270if.exe");
+    array_add(&nargv, nargc++, txAsprintf("%sx3270if.exe", instdir));
     array_add(&nargv, nargc++, "-I");
     array_add(&nargv, nargc++, params[0]);
     if (params[1] != NULL) {

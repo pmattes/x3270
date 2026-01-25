@@ -44,6 +44,8 @@
     <ClCompile Include="..\..\Common\b3270\ui_stream.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\b3270\winops.c">
+      <Filter>Source Files</Filter>
     <ClCompile Include="version.c">
       <Filter>Source Files</Filter>
     </ClCompile>

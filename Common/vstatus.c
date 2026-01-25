@@ -324,18 +324,19 @@ vstatus_printer(bool on)
  * line.
  *
  * @param[out] ea	Returned text and attributes
+ * @param[in] width	Output width
  */
 void
-vstatus_line(struct ea *ea)
+vstatus_line(struct ea *ea, int width)
 {
     int i;
-    int rmargin = COLS - 1;
+    int rmargin = width - 1;
     const char *cursor;
     struct ea *ea2;
 
     /* Begin with nothing. */
-    memset(ea, 0, 2 * COLS * sizeof(struct ea));
-    for (i = 0; i < 2 * COLS; i++) {
+    memset(ea, 0, 2 * width * sizeof(struct ea));
+    for (i = 0; i < 2 * width; i++) {
 	ea[i].fg = mode3279? HOST_COLOR_BLUE: HOST_COLOR_GREEN;
     }
 
@@ -343,12 +344,12 @@ vstatus_line(struct ea *ea)
     ea[0].gr = GR_RESET;
 
     /* Create the dividing line. */
-    for (i = 0; i < COLS; i++) {
+    for (i = 0; i < width; i++) {
 	ea[i].ucs4 = ' ';
 	ea[i].gr = GR_UNDERLINE;
     }
 
-/* The OIA looks like (in Model 2/3/4 mode):
+/* The OIA looks like this (in Model 2/3/4 mode):
 
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -358,12 +359,13 @@ vstatus_line(struct ea *ea)
                                                                         ^ -7
                                                                  ^ -14
                                                       ^-25
+					   ^-36
 
-   On wider displays, there is a bigger gap between TRIPS+s and LU-Name.
+   On wider displays, there is a bigger gap between the status message and Cn.
 
 */
 
-    ea2 = ea + COLS;
+    ea2 = ea + width;
     ea2[0].gr = GR_REVERSE;
     ea2[0].ucs4 = '4';
     ea2[1].gr = GR_UNDERLINE;
@@ -385,11 +387,9 @@ vstatus_line(struct ea *ea)
     }
 
     /* Display the miscellaneous state. */
-    i = rmargin - 35;
-    if (voia_compose) {
-	ea2[i++].ucs4 = voia_compose? 'C': 0;
-	ea2[i++].ucs4 = voia_compose? voia_compose_char: 0;
-    }
+    i = rmargin - 36;
+    ea2[i++].ucs4 = voia_compose? 'C': 0;
+    ea2[i++].ucs4 = voia_compose? voia_compose_char: 0;
     i++;
     ea2[i++].ucs4 = voia_ta? 'T': 0;
     ea2[i++].ucs4 = voia_rm? 'R': 0;

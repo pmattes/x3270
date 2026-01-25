@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
@@ -206,12 +206,16 @@ typedef struct {
 #if !defined(_WIN32) /*[*/
 	char	*meta_escape;
 	bool	 mouse;
-	bool	 reverse_video;
 #endif /*]*/
+	bool	 oia;
+	bool	 reverse_video;
 #if defined(_WIN32) /*[*/
 	char	*title;
 #endif /*]*/
 	bool	 use_rgb;
+#if defined(_WIN32) /*[*/
+	bool	 vt;
+#endif /*]*/
     } c3270;
 
     /* screen tracing */

@@ -184,6 +184,7 @@
     <ClCompile Include="..\..\Common\b3270\screen.c" />
     <ClCompile Include="..\..\Common\b3270\status.c" />
     <ClCompile Include="..\..\Common\b3270\ui_stream.c" />
+    <ClCompile Include="..\..\Common\b3270\winops.c" />
     <ClCompile Include="fallbacks.c" />
     <ClCompile Include="version.c" />
   </ItemGroup>

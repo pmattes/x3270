@@ -50,6 +50,7 @@ import tn3270_ibmlink
 import tn3270_snake
 import tn3270_sruvm
 import tn3270_uvvm
+import tn3270_apl
 
 def peername_string(conn: socket.socket):
     '''Get a peername'''
@@ -119,6 +120,7 @@ class target(aswitch.aswitch):
         self.logger.info(f'target: listening on {addr} port {port}')
         t = threading.Thread(target=self.accept, args=[s])
         t.start()
+        t.name = 'listener'
         self.servers.append(t)
 
     def __enter__(self):
@@ -130,10 +132,13 @@ class target(aswitch.aswitch):
 
     # Shutdown.
     def __del__(self):
-        self.exiting = True
-        for t in self.servers:
-            t.join()
-        self.servers = []
+        if not self.exiting:
+            self.exiting = True
+            self.logger.debug(f'target: {len(self.servers)} server(s) remaining at shutdown')
+            for t in self.servers:
+                self.logger.debug(f'target: shutdown reaping {t.name}')
+                t.join()
+            self.servers = []
 
     def close(self):
         '''Close the object'''
@@ -152,6 +157,7 @@ class target(aswitch.aswitch):
         while not self.exiting:
             for u in self.servers:
                 if not u.is_alive():
+                    self.logger.debug(f'target: single reaping {u.name}')
                     u.join()
                     self.servers.remove(u)
             r, _, _ = select.select([listensocket], [], [], 0.5)
@@ -171,6 +177,7 @@ class target(aswitch.aswitch):
             if good:
                 t = threading.Thread(target=self.process_connection, args=[conn])
                 t.start()
+                t.name = peername_string(conn)
                 self.servers.append(t)
         listensocket.close()
 
@@ -302,7 +309,8 @@ servers = {
     'menu-u': menu.menu_u,
     'snake': tn3270_snake.snake,
     'sruvm': tn3270_sruvm.sruvm,
-    'uvvm': tn3270_uvvm.uvvm
+    'uvvm': tn3270_uvvm.uvvm,
+    'apl': tn3270_apl.apl
 }
 
 if __name__ == '__main__':

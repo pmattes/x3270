@@ -125,6 +125,8 @@ class dinfo():
         self.dynamic = self.ttype == 'IBM-DYNAMIC'
         self.extended = self.ttype.endswith('-E') or self.dynamic
         self.rpqnames = None
+        self.ge = False
+        self.dbcs = False
         if not self.dynamic:
             self.model = self.ttype[9]
             self.alt_rows = rows[self.model]
@@ -159,6 +161,9 @@ class dinfo():
                 self.alt_rows = b[8] << 8 | b[9]
             elif b[3] == qr.rpq_names.value:
                 self.rpqnames = b[4:field_len]
+            elif b[3] == qr.charsets.value:
+                self.ge = (b[4] & 0x80) != 0
+                self.dbcs = (b[4] & 0x04) != 0
 
             # Get the next field.
             b = b[field_len:]

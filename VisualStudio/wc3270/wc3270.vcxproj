@@ -192,6 +192,7 @@
     <ClCompile Include="..\..\wc3270\select.c" />
     <ClCompile Include="..\..\wc3270\shortcut.c" />
     <ClCompile Include="..\..\wc3270\warning.c" />
+    <ClCompile Include="..\..\Common\c3270\cscreen.c" />
     <ClCompile Include="..\..\Common\c3270\status_dump.c" />
     <ClCompile Include="..\..\Common\c3270\tls_passwd_gui.c" />
     <ClCompile Include="..\..\wc3270\snap.c" />

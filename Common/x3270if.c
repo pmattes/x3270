@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2025 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,6 +96,10 @@
 #  endif /*]*/
 # endif /*]*/
 #endif
+
+#if defined(_CURSES) /*[*/
+# include "stripdelay.h"
+#endif /*]*/
 
 #include "base64.h"
 #include "names.h"
@@ -1262,7 +1266,7 @@ tigetstr_def(const char *name, char *def)
     char *s = tigetstr((char *)name);
 
     if (s != NULL && s != (char *)-1) {
-	return s;
+	return stripdelay(s);
     }
     return def;
 }

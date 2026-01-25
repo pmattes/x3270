@@ -56,6 +56,9 @@
     <ClCompile Include="..\..\Common\c3270\menubar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\c3270\cscreen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\c3270\status_dump.c">
       <Filter>Source Files</Filter>
     </ClCompile>

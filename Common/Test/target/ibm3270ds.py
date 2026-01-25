@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2023 Paul Mattes.
+# Copyright (c) 2023-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -104,6 +104,7 @@ class sf_rp(enum.IntEnum):
 
 class qr(enum.IntEnum):
     usable_area = 0x81
+    charsets = 0x85
     rpq_names = 0xa1
 
 class xa(enum.IntEnum):

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -313,7 +313,9 @@ bool
 query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 {
     size_t i;
-    size_t sl;
+    ssize_t exact = -1;
+    ssize_t any = -1;
+    int matches = 0;
 
     action_debug(name, ia, argc, argv);
     if (check_argc(name, argc, 0, 1) < 0) {
@@ -338,33 +340,56 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 	}
 	break;
     case 1:
-	sl = strlen(argv[0]);
+	/* Look for an exact match. */
 	for (i = 0; i < num_queries; i++) {
-	    if (!strncasecmp(argv[0], queries[i].name, sl)) {
-		const char *s;
-
-		if (strlen(queries[i].name) > sl &&
-			queries[i + 1].name != NULL &&
-			!strncasecmp(argv[0], queries[i + 1].name, sl)) {
-		    popup_an_error("%s: Ambiguous parameter", name);
-		    return false;
-		}
-
-		if (queries[i].fn) {
-		    s = (*queries[i].fn)();
-		} else {
-		    s = queries[i].string;
-		}
-		if (s == NULL) {
-		    s = "";
-		}
-		action_output("%s\n", s);
-		return true;
+	    if (!strcasecmp(argv[0], queries[i].name)) {
+		exact = i;
+		break;
 	    }
 	}
-	popup_an_error("%s: Unknown parameter", name);
+
+	if (exact < 0) {
+	    varbuf_t r;
+	    size_t sl = strlen(argv[0]);
+
+	    vb_init(&r);
+
+	    /* Look for an inexact match. */
+	    for (i = 0; i < num_queries; i++) {
+		if (!strncasecmp(argv[0], queries[i].name, sl)) {
+		    any = i;
+		    vb_appendf(&r, "%s%s", matches? ", ": "", queries[i].name);
+		    matches++;
+		}
+	    }
+
+	    if (matches > 1) {
+		popup_an_error("%s(): Ambiguous parameter '%s': %s", name, argv[0], txdFree(vb_consume(&r)));
+		return false;
+	    }
+
+	    vb_free(&r);
+	}
+
+	if (exact >= 0 || any >= 0) {
+	    const char *s;
+
+	    i = (exact >= 0)? exact: any;
+	    if (queries[i].fn) {
+		s = (*queries[i].fn)();
+	    } else {
+		s = queries[i].string;
+	    }
+	    if (s == NULL) {
+		s = "";
+	    }
+	    action_output("%s\n", s);
+	    return true;
+	}
+	popup_an_error("%s(): Unknown parameter '%s'", name, argv[0]);
 	return false;
     }
+
     return true;
 }
 

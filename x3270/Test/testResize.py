@@ -107,7 +107,7 @@ class TestX3270Resize(cti):
             # Make sure the model stayed as a 3278, since we're in -mono mode.
             r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(model)')
             self.assertTrue(r.ok)
-            self.assertEqual('3278-2-E', r.json()['result'][0])
+            self.assertEqual('3278-2', r.json()['result'][0])
 
             # Wait for the process to exit.
             self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')

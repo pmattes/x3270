@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2023 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@ class sruvm(tn3270.tn3270_server):
                     self.debug('sruvm', f'alt rows {self.dinfo.alt_rows} columns {self.dinfo.alt_columns}')
                     if self.dinfo.rpqnames != None:
                         self.debug('sruvm', 'RPQ Names: ' + self.dinfo.rpqnames.hex().replace('ffff', 'ff'))
+                    self.debug('sruvm', f'GE: {self.dinfo.ge}, DBCS: {self.dinfo.dbcs}')
                     self.query_done()
                 else:
                     self.error('sruvm', 'Query Reply: ' + qr[1])

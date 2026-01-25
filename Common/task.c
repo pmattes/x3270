@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -979,6 +979,10 @@ lookup_action(const char *action, char **errorp)
     action_elt_t *e;
     action_elt_t *any = NULL;
     action_elt_t *exact = NULL;
+    int matches = 0;
+    varbuf_t r;
+
+    vb_init(&r);
 
     /* Search the action list. */
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
@@ -990,19 +994,23 @@ lookup_action(const char *action, char **errorp)
     if (exact == NULL) {
 	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	    if (!strncasecmp(action, e->t.name, strlen(action))) {
-		if (any != NULL) {
-		    *errorp = Asprintf("Ambiguous action name: %s", action);
-		    return NULL;
-		}
+		vb_appendf(&r, "%s%s()", matches? ", ": "", e->t.name);
+		matches++;
 		any = e;
 	    }
 	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    }
+
+    if (matches > 1) {
+	*errorp = Asprintf("Ambiguous action name '%s': %s", action, txdFree(vb_consume(&r)));
+	return NULL;
     }
 
     if (any == NULL) {
 	*errorp = Asprintf("Unknown action: %s", action);
     }
 
+    vb_free(&r);
     return any;
 }
 

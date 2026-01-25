@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Paul Mattes.
+ * Copyright (c) 2013-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@ typedef enum {
 } select_event_t;
 bool select_event(unsigned row, unsigned col, select_event_t event,
 	bool shift);
-void select_init(unsigned max_rows, unsigned max_cols);
 void select_sync(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
 bool select_return_key(void);

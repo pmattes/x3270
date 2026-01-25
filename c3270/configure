@@ -653,7 +653,6 @@ MOREPATH
 LESSPATH
 CURSES_WIDE
 CCOPTIONS
-BROKEN_NEWTERM
 host_os
 host_vendor
 host_cpu
@@ -3601,8 +3600,6 @@ darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
-aix*)		BROKEN_NEWTERM=1
-		;;
 *bsd*)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 esac
@@ -3610,7 +3607,6 @@ if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-
 
 
 
@@ -3864,7 +3860,7 @@ return newterm ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' ncursesw ncurses curses
+for ac_lib in '' $NCURSES_ALT ncursesw ncurses curses
 do
   if test -z "$ac_lib"; then
     ac_res="none required"
@@ -3962,6 +3958,13 @@ then :
 
 else $as_nop
   as_fn_error $? "Can't find terminfo library" "$LINENO" 5
+fi
+
+ac_fn_c_check_func "$LINENO" "resizeterm" "ac_cv_func_resizeterm"
+if test "x$ac_cv_func_resizeterm" = xyes
+then :
+  printf "%s\n" "#define HAVE_RESIZETERM 1" >>confdefs.h
+
 fi
 
 if test "$with_readline" != no; then
@@ -4132,14 +4135,6 @@ then :
 
 fi
 
-
-if test -n "$BROKEN_NEWTERM"
-then	if test "$ac_cv_lib_ncurses_newterm" = yes
-	then	:
-	else	printf "%s\n" "#define BROKEN_NEWTERM 1" >>confdefs.h
-
-	fi
-fi
 
 ac_fn_c_check_func "$LINENO" "use_default_colors" "ac_cv_func_use_default_colors"
 if test "x$ac_cv_func_use_default_colors" = xyes

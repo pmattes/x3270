@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2026 Paul Mattes.
+ * Copyright (c) 2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,9 @@
  */
 
 /*
- *	conf.h
- *              System-specific #defines for libraries and library functions.
- *		Automatically generated from conf.h.in by configure.
+ *	stripdelay.h
+ *		A curses-based 3270 Terminal Emulator
+ *		Terminfo utility function
  */
 
-
-/* Libraries. */
-#undef HAVE_LIBNCURSESW
-#undef HAVE_LIBNCURSES
-#undef HAVE_LIBCURSES
-#undef HAVE_LIBREADLINE
-
-/* Header files. */
-#undef HAVE_NCURSESW_NCURSES_H
-#undef HAVE_NCURSES_NCURSES_H
-#undef HAVE_NCURSES_H
-#undef HAVE_CURSES_H
-#undef HAVE_NCURSESW_TERM_H
-#undef HAVE_NCURSES_TERM_H
-#undef HAVE_TERM_H
-#undef HAVE_SYS_SELECT_H
-#undef HAVE_READLINE_HISTORY_H
-#undef HAVE_PTY_H
-#undef HAVE_LIBUTIL_H
-#undef HAVE_UTIL_H
-#undef HAVE_GETOPT_H
-
-/* Uncommon functions. */
-#undef HAVE_VASPRINTF
-#undef HAVE_FSEEKO
-#undef HAVE_FORKPTY
-#undef HAVE_USE_DEFAULT_COLORS
-#undef HAVE_TIPARM
-#undef HAVE_RESIZETERM
-
-/* Default pager. */
-#define LESSPATH ""
-#define MOREPATH ""
-
-/* Wide curses. */
-#undef CURSES_WIDE
-
-/* Configuration options. */
-
-/* Optional parts. */
-#undef X3270_LOCAL_PROCESS
+char *stripdelay(const char *tstr);

@@ -47,11 +47,11 @@
 !=============================================================================
 !   Color schemes
 x3270.colorScheme.default: \
-	grey10 dodgerBlue red magenta \
+	#101010 dodgerBlue red magenta \
 	lime cyan yellow white \
 	darkSlateGrey blue3 orange purple \
 	paleGreen2 paleTurquoise3 lightSlateGrey whiteSmoke \
-	white grey10 dimGrey \
+	white #101010 dimGrey \
 	4 2 1 15
 x3270.colorScheme.old-default: \
 	black deepSkyBlue red pink \
@@ -61,8 +61,8 @@ x3270.colorScheme.old-default: \
 	white black dimGrey \
 	4 2 1 15
 x3270.colorScheme.reverse: \
-	white #0000c0 firebrick HotPink2 \
-	green4 DarkTurquoise yellow3 black \
+	white #0000ff firebrick HotPink2 \
+	#00cc00 DarkTurquoise yellow3 black \
 	black blue3 orange purple \
 	paleGreen paleTurquoise3 grey whiteSmoke \
 	black white #e1e1e1 \

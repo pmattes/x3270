@@ -39,6 +39,9 @@
 #include "trace.h"
 #include "utils.h"
 
+#if defined(WIN32_HEAP_CHECK) /*[*/
+# include <malloc.h>
+#endif /*]*/
 #include <stdio.h>
 
 #define MILLION		1000000L
@@ -260,6 +263,9 @@ process_timeouts(void)
 		t->in_play = true;
 		vctrace(TC_SCHED, "Processing timeout\n");
 		(*t->proc)((ioid_t)t);
+#if defined(WIN32_HEAP_CHECK) /*[*/
+		assert(_heapchk() == _HEAPOK);
+#endif /*]*/
 		processed_any = true;
 		Free(t);
 	    } else {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# c3270 smoke tests
+# c3270 80/132 mode-switch tests
 
 import os
 import re
@@ -33,64 +33,32 @@ import sys
 if not sys.platform.startswith('win'):
     import pty
 import termios
-import threading
 import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
 
-@unittest.skipIf(sys.platform == "darwin", "Not ready for c3270 graphic tests")
 @unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
 @requests_timeout
-class TestC3270Smoke(cti):
+class TestC327080_132(cti):
 
-    # Asynchronous connect from c3270 to playback.
-    def async_connect(self, c3270_port: int, playback_port: int):
-        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Connect(127.0.0.1:{playback_port})')
-        self.assertTrue(r.ok)
+    # c3270 test for bad altscreen/defscreen syntax.
+    def c3270_bad_altscreen(self, spec: str, errmsg: str):
 
-    # c3270 3270 smoke test
-    def test_c3270_3270_smoke(self):
-
-        playback_port, pts = unused_port()
-
+        full_spec = '27x132=' + spec
         # Fork a child process with a PTY between this process and it.
-        c3270_port, cts = unused_port()
         (pid, fd) = pty.fork()
         if pid == 0:
             # Child process
-            cts.close()
-            termios.tcsetwinsize(0, (28, 80))
+            termios.tcsetwinsize(0, (22, 79))
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
             os.execvpe(vgwrap_ecmd('c3270'),
-                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
-                    '-httpd', f'127.0.0.1:{c3270_port}', '-secure']), env)
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-altscreen', full_spec, '-defscreen', full_spec]), env)
             self.assertTrue(False, 'c3270 did not start')
 
-        # Parent process.
-
-        # Make sure c3270 started.
-        self.check_listen(c3270_port)
-        cts.close()
-
-        # Start 'playback' to feed c3270.
-        p = playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port)
-        pts.close()
-
-        # Connect c3270 to playback.
-        thread = threading.Thread(target=self.async_connect, args=[c3270_port, playback_port])
-        thread.start()
-
-        # Write the stream to c3270.
-        p.send_records(5)
-        thread.join()
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
-        p.send_records(2)
-        p.send_tm()
-        p.close()
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        # The child process is supposed to exit, because of the syntax error.
+        self.vgwait_pid(pid, assertOnFailure=False)
 
         # Collect the output.
         result = ''
@@ -100,31 +68,64 @@ class TestC3270Smoke(cti):
             except OSError:
                 break
             result += rbuf.decode('utf8')
-        
-        # Make the output a bit more readable and split it into lines.
-        result = re.sub('(?s).*File', 'File', result, count=1)
-        result = result.replace('\x1b', '<ESC>').split('\n')
-        for i in range(len(result)):
-            result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
-        rtext = '\n'.join(result)
-        if 'GENERATE' in os.environ:
-            # Use this to regenerate the template file.
-            file = open(os.environ['GENERATE'], "w")
-            file.write(rtext)
-            file.close()
-        else:
-            # Compare what we just got to the reference file.
-            localtext = f'c3270/Test/smoke_{sys.platform}.txt'
-            if os.path.exists(localtext):
-                text = localtext
-            else:
-                text = 'c3270/Test/smoke.txt'
-            file = open(text, "r", newline='')
-            ctext = file.read()
-            file.close()
-            self.assertEqual(rtext, ctext)
+
+        self.assertIn(errmsg, result)
+
+        os.close(fd)
+
+    def test_c3270_bad_altscreen(self):
+        self.c3270_bad_altscreen('\\xq', 'Invalid hex string')
+        self.c3270_bad_altscreen('\\x', 'Incomplete hex or octal string')
+        self.c3270_bad_altscreen('\\0p', 'Invalid octal string')
+        self.c3270_bad_altscreen('\\0', 'Incomplete hex or octal string')
+        self.c3270_bad_altscreen('\\', 'Incomplete backslash sequence')
+
+    # c3270 test for new altscreen/defscreen syntax.
+    def c3270_fancy_altscreen(self, spec: str):
+
+        full_spec = f'27x132=<{spec}>'
+        expect = f'<{spec}>'.replace('\\e', '\033').replace('\\033', '\033').replace('\\x1b', '\033')
+
+        playback_port, pts = unused_port()
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, cts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            cts.close()
+            termios.tcsetwinsize(0, (43, 80))
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+                    '-httpd', f'127.0.0.1:{c3270_port}', '-set', 'retry',
+                    '-altscreen', full_spec, '-defscreen', full_spec,
+                      f'127.0.0.1:{playback_port}']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+        cts.close()
+
+        # Start 'playback' to feed c3270.
+        with playback(self, 'c3270/Test/alt.trc', port=playback_port) as p:
+            pts.close()
+            p.send_records(1)
+
+        # Collect the output.
+        result = ''
+        while True:
+            try:
+                rbuf = os.read(fd, 1024)
+            except OSError:
+                break
+            result += rbuf.decode('utf8')
+
+        self.assertIn(expect, result)
 
         self.vgwait_pid(pid)
+        os.close(fd)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_c3270_fancy_altscreen(self):
+        self.c3270_fancy_altscreen('\\e123')
+        self.c3270_fancy_altscreen('\\033123')
+        self.c3270_fancy_altscreen('\\x1b123')

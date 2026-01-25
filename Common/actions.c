@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -350,7 +350,7 @@ register_actions(action_table_t *new_actions, unsigned count)
 		/* Replace. */
 		e->t = new_actions[i]; /* struct copy */
 		return;
-	    } else if (cmp < 0) {
+	    } else if (cmp > 0) {
 		/* Goes ahead of this one. */
 		before = e;
 		break;

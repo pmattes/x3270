@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2024 Paul Mattes.
+ * Copyright (c) 2016-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -108,9 +108,10 @@ canonical_model_x(const char *res, const char **canon, int *model, bool *is_colo
 static const char *
 canonical_model(const char *res)
 {
+    const char *synthetic_res = txAsprintf("327%c-%d", mode3279? '9': '8', model_num);
     const char *canon;
 
-    if (!canonical_model_x(res, &canon, NULL, NULL, appres.extended_data_stream)) {
+    if (!canonical_model_x(synthetic_res, &canon, NULL, NULL, false)) {
 	return NULL;
     }
     return canon;
@@ -219,7 +220,7 @@ oversize_init(int model_number)
 	    }
 	}
     }
-    set_rows_cols(model_number, ovc, ovr);
+    set_cols_rows(model_number, ovc, ovr);
 }
 
 /*
@@ -355,7 +356,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     }
 
     /* Check settings. */
-    if (!check_rows_cols(model_number, ovc, ovr, true)) {
+    if (!check_cols_rows(model_number, ovc, ovr, true)) {
 	goto fail;
     }
 
@@ -388,7 +389,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
 	appres.extended_data_stream = xext;
     }
     if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
-	set_rows_cols(model_number, ovc, ovr);
+	set_cols_rows(model_number, ovc, ovr);
     }
 
     /* Finish the rest of the switch. */
@@ -452,10 +453,10 @@ done:
 void
 live_change_oversize(int ovc, int ovr)
 {
-    if ((ovc == ov_cols && ovr == ov_rows) || !check_rows_cols(model_num, ovc, ovr, false)) {
+    if ((ovc == ov_cols && ovr == ov_rows) || !check_cols_rows(model_num, ovc, ovr, false)) {
 	return;
     }
-    set_rows_cols(model_num, ovc, ovr);
+    set_cols_rows(model_num, ovc, ovr);
     ROWS = maxROWS;
     COLS = maxCOLS;
     screen_change_model(model_num, ovc, ovr);

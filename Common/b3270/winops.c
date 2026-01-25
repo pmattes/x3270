@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2025 Paul Mattes.
+ * Copyright (c) 2016-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -221,7 +221,7 @@ do_window_change(const char *name, const char **attrs)
 static bool
 valid_short(const json_t *element)
 {
-    int v;
+    int64_t v;
 
     if (!json_is_integer(element) || (v = json_integer_value(element)) < SHRT_MIN || v > SHRT_MAX) {
 	ui_invalid_attribute(OperWindowChange, AttrX, "must be a short integer");
@@ -234,7 +234,7 @@ valid_short(const json_t *element)
 static bool
 valid_ushort(const json_t *element)
 {
-    int v;
+    int64_t v;
 
     if (!json_is_integer(element) || (v = json_integer_value(element)) < 0 || v > USHRT_MAX) {
 	ui_invalid_attribute(OperWindowChange, AttrX, "must be an unsigned short integer");
@@ -286,13 +286,13 @@ do_jwindow_change(const json_t *j)
 	    if (!valid_short(element)) {
 		return;
 	    }
-	    v_x = json_integer_value(element);
+	    v_x = (int)json_integer_value(element);
 	    x = &v_x;
 	} else if (json_key_matches(key, key_length, AttrY)) {
 	    if (!valid_short(element)) {
 		return;
 	    }
-	    v_y = json_integer_value(element);
+	    v_y = (int)json_integer_value(element);
 	    y = &v_y;
 	} else if (json_key_matches(key, key_length, AttrType)) {
 	    if ((type = get_jstring(element, OperWindowChange, AttrType)) == NULL) {
@@ -302,13 +302,13 @@ do_jwindow_change(const json_t *j)
 	    if (!valid_ushort(element)) {
 		return;
 	    }
-	    v_width = json_integer_value(element);
+	    v_width = (int)json_integer_value(element);
 	    width = &v_width;
 	} else if (json_key_matches(key, key_length, AttrHeight)) {
 	    if (!valid_ushort(element)) {
 		return;
 	    }
-	    v_height = json_integer_value(element);
+	    v_height = (int)json_integer_value(element);
 	    height = &v_height;
 	} else if (json_key_matches(key, key_length, AttrText)) {
 	    if ((text = get_jstring(element, OperWindowChange, AttrText)) == NULL) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2023 Paul Mattes.
+ * Copyright (c) 1994-2025 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -124,12 +124,12 @@ scroll_buf_init(void)
     defaults_buf = Calloc(maxCOLS, sizeof(struct ea));
     for (i = 0; i < maxCOLS; i++) {
 	/*
-	 * Black and intensify ensure that the area outside of the primary
-	 * screen don't inherit other display attributes from fields at the
+	 * GR_SBMARGIN ensures that the area outside of the primary
+	 * screen doesn't inherit other display attributes from fields at the
 	 * edges.
 	 */
-	defaults_buf[i].bg = HOST_COLOR_BLACK;
-	defaults_buf[i].gr = XAH_INTENSIFY & 0x0f;
+	defaults_buf[i].bg = HOST_COLOR_NEUTRAL_BLACK;
+	defaults_buf[i].gr = GR_SBMARGIN;
     }
     s = (unsigned char *)sbuf;
     for (i = 0; i < sa_size; s += (maxCOLS * sizeof(struct ea)), i++) {
@@ -565,6 +565,15 @@ scroll_connect(bool ignored _is_unused)
     }
 }
 
+/*
+ * Called when the screen size changes.
+ */
+static void
+scroll_remodel(bool ignored _is_unused)
+{
+    scroll_buf_init();
+}
+
 /**
  * Scrollbar module registration.
  */
@@ -585,4 +594,5 @@ scroll_register(void)
     /* Register the state change callbacks. */
     register_schange(ST_CONNECT, scroll_connect);
     register_schange(ST_3270_MODE, scroll_connect);
+    register_schange(ST_REMODEL, scroll_remodel);
 }

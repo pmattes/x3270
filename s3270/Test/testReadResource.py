@@ -52,7 +52,7 @@ class TestS3270ReadResource(cti):
 
         # Check the model, which would have been missed with the broken parser.
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Model)')
-        self.assertEqual('IBM-3279-2-E', r.json()['result'][-1], 'Expected Model')
+        self.assertEqual('IBM-3279-2', r.json()['result'][-1], 'Expected Model')
 
         # Wait for s3270 to exit.
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015, 2018, 2020-2021 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ void vstatus_compose(bool on, ucs4_t ucs4, enum keytype keytype);
 void vstatus_ctlr_done(void);
 void vstatus_insert_mode(bool on);
 void vstatus_keyboard_disable_flash(void);
-void vstatus_line(struct ea *ea);
+void vstatus_line(struct ea *ea, int cols);
 void vstatus_lu(const char *);
 void vstatus_minus(void);
 void vstatus_oerr(int error_type);

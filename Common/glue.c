@@ -976,27 +976,6 @@ register_resources(res_t *res, unsigned num_res)
     last_reslist = &r->next;
 }
 
-/*
- * Compare two strings, allowing the second to differ by uppercasing the
- * first character of the second.
- */
-static int
-strncapcmp(const char *known, const char *unknown, size_t unk_len)
-{
-    if (unk_len != strlen(known)) {
-	return -1;
-    }
-    if (!strncmp(known, unknown, unk_len)) {
-	return 0;
-    }
-    if (unk_len > 1 &&
-	unknown[0] == toupper((unsigned char)known[0]) &&
-	!strncmp(known + 1, unknown + 1, unk_len - 1)) {
-	return 0;
-    }
-    return -1;
-}
-
 typedef struct xreslist {
     struct xreslist *next;
     xres_t *xresources;
@@ -1059,7 +1038,7 @@ valid_explicit(const char *resname, size_t len)
 	    case V_FLAT:
 		/* Exact match. */
 		if (len == sl &&
-		    !strncmp(x->xresources[i].name, resname, sl)) {
+		    !strncasecmp(x->xresources[i].name, resname, sl)) {
 		    return 0;
 		}
 		break;
@@ -1067,7 +1046,7 @@ valid_explicit(const char *resname, size_t len)
 		/* xxx.* match. */
 		if (len > sl + 1 &&
 		    resname[sl] == '.' &&
-		    !strncmp(x->xresources[i].name, resname, sl)) {
+		    !strncasecmp(x->xresources[i].name, resname, sl)) {
 		    return 0;
 		}
 		break;
@@ -1079,7 +1058,7 @@ valid_explicit(const char *resname, size_t len)
 		    xbuf = Asprintf("%s%s", x->xresources[i].name,
 			    host_color[j].name);
 		    if (strlen(xbuf) == len &&
-			!strncmp(xbuf, resname, len)) {
+			!strncasecmp(xbuf, resname, len)) {
 			    Free(xbuf);
 			    return 0;
 		    }
@@ -1087,7 +1066,7 @@ valid_explicit(const char *resname, size_t len)
 		    xbuf = Asprintf("%s%d", x->xresources[i].name,
 			    host_color[j].index);
 		    if (strlen(xbuf) == len &&
-			!strncmp(xbuf, resname, len)) {
+			!strncasecmp(xbuf, resname, len)) {
 			    Free(xbuf);
 			    return 0;
 		    }
@@ -1128,7 +1107,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	bool found = false;
 
 	for (i = 0; i < r->count && !found; i++) {
-	    if (!strncapcmp(r->resources[i].name, name, rnlen)) {
+	    if (!strncasecmp(r->resources[i].name, name, rnlen)) {
 		address = r->resources[i].address;
 		type = r->resources[i].type;
 		found = true;
@@ -1182,7 +1161,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	 * versions of the Session Wizard to continue to work, even though the
 	 * rules now require quoted backslashes in resource values.
 	 */
-	if (!strncapcmp(ResPrinterName, name, rnlen) &&
+	if (!strncasecmp(ResPrinterName, name, rnlen) &&
 	    s[0] == '\\' &&
 	    s[1] == '\\' &&
 	    s[2] != '\\' &&

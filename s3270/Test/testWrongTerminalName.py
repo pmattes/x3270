@@ -85,7 +85,7 @@ class TestS3270WrongTerminalName(cti):
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(terminalName)').json()['result'][0]
         self.assertEqual(j, 'IBM-3278-4-E')
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model))').json()['result'][0]
-        self.assertEqual(j, '3279-4-E')
+        self.assertEqual(j, '3279-4')
 
         # Switch modes.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(wrongTerminalName,true)')
@@ -94,7 +94,7 @@ class TestS3270WrongTerminalName(cti):
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(terminalName)').json()['result'][0]
         self.assertEqual(j, 'IBM-3279-4-E')
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model))').json()['result'][0]
-        self.assertEqual(j, '3279-4-E')
+        self.assertEqual(j, '3279-4')
 
         # Switch modes back.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(wrongTerminalName,false)')
@@ -103,7 +103,7 @@ class TestS3270WrongTerminalName(cti):
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Query(terminalName)').json()['result'][0]
         self.assertEqual(j, 'IBM-3278-4-E')
         j = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model))').json()['result'][0]
-        self.assertEqual(j, '3279-4-E')
+        self.assertEqual(j, '3279-4')
 
         # Wait for the processes to exit.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')

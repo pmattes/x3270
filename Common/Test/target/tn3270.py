@@ -86,6 +86,7 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
             systems.put(self.system)
             self.termid = None
             self.system = None
+            self.debug('TN3270', f'{termids.qsize()} termids remaining')
 
     def ready(self) -> bool:
         '''Initialize TN3270 state'''
@@ -93,7 +94,7 @@ class tn3270_server(ttelnet, atn3270, consumer.consumer):
             self.termid = termids.get_nowait()
             self.system = systems.get_nowait()
         except Exception as e:
-            self.info('TN3270', f'Caught {type(e)}')
+            self.info('TN3270', f'Logical units exhausted')
             self.send_data(b'Logical units exhausted\r\n')
             return False
         if self.tls:

@@ -107,5 +107,27 @@ class TestS3270Query(cti):
         # Wait for the process to exit.
         self.vgwait(s3270)
 
+    # s3270 Query() ambiguous query test.
+    def test_s3270_query_ambiguous(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState']
+
+        # Query something ambiguous.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(p)')
+        result = r.json()['result']
+        self.assertEqual("Query(): Ambiguous parameter 'p': Prefixes, Proxies, Proxy", result[0])
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()
