@@ -2277,7 +2277,8 @@ screen_disp(bool erasing _is_unused)
 		a = calc_attrs(baddr, baddr, fa, &a_underlined, &a_blinking);
 		if (!is_menu) {
 		    if (toggled(VISIBLE_CONTROL)) {
-			attrset(apply_select(get_color_pair(HOST_COLOR_NEUTRAL_BLACK, HOST_COLOR_YELLOW), baddr));
+			attrset(apply_select(get_color_pair(HOST_COLOR_NEUTRAL_BLACK, HOST_COLOR_YELLOW) | COMMON_LVB_UNDERSCORE,
+				    baddr));
 			addch(visible_fa(fa));
 		    } else {
 			u = crosshair_blank(baddr);
@@ -2367,7 +2368,8 @@ screen_disp(bool erasing _is_unused)
 			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_null &&
 				ea_buf[xaddr].ec == EBC_null) {
-			    attrset(apply_select(get_color_pair(HOST_COLOR_NEUTRAL_BLACK, HOST_COLOR_YELLOW), baddr));
+			    attrset(apply_select(get_color_pair(HOST_COLOR_NEUTRAL_BLACK, HOST_COLOR_YELLOW) |
+					COMMON_LVB_UNDERSCORE, baddr));
 			    addch('.');
 			    addch('.');
 			} else {
@@ -2393,12 +2395,15 @@ screen_disp(bool erasing _is_unused)
 		    } else if (!IS_RIGHT(d)) {
 			if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_null) {
+			    attr_this |= COMMON_LVB_UNDERSCORE;
 			    u = '.';
 			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_so) {
+			    attr_this |= COMMON_LVB_UNDERSCORE;
 			    u = '<';
 			} else if (toggled(VISIBLE_CONTROL) &&
 				ea_buf[baddr].ec == EBC_si) {
+			    attr_this |= COMMON_LVB_UNDERSCORE;
 			    u = '>';
 			} else {
 			    int cs = ea_buf[baddr].cs? ea_buf[baddr].cs:
