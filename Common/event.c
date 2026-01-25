@@ -32,6 +32,10 @@
 
 #include "globals.h"
 
+#if defined(WIN32_HEAP_CHECK) /*[*/
+# include <assert.h>
+# include <malloc.h>
+#endif /*]*/
 #include "telnet.h"
 #include "trace.h"
 #include "utils.h"
@@ -126,6 +130,9 @@ st_changed(enum st tx, bool mode)
     vtrace("st_changed(%s,%s)\n", st_name[tx], mode? "true": "false");
     FOREACH_LLIST(&st_callbacks[tx], st, st_callback_t *) {
 	(*st->func)(mode);
+#if defined(WIN32_HEAP_CHECK) /*[*/
+	assert(_heapchk() == _HEAPOK);
+#endif /*]*/
     } FOREACH_LLIST_END(&st_callbacks[tx], st, st_callback_t *);
 }
 

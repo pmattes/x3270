@@ -81,8 +81,11 @@ class TestX3270BadAplDraw(cti):
                 wid = r.json()['status'].split()[-2]
 
                 # Dump the window contents.
-                (handle, name) = tempfile.mkstemp(suffix=".bmp")
-                os.close(handle)
+                if 'GENERATE' in os.environ:
+                    name = os.environ['GENERATE']
+                else:
+                    (handle, name) = tempfile.mkstemp(suffix=".bmp")
+                    os.close(handle)
                 self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
 
             # Wait for the processes to exit.
@@ -91,7 +94,8 @@ class TestX3270BadAplDraw(cti):
 
         # Make sure the image is correct.
         self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/badapl.bmp'))
-        os.unlink(name)
+        if not 'GENERATE' in os.environ:
+            os.unlink(name)
 
 if __name__ == '__main__':
     unittest.main()

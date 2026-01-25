@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2025 Paul Mattes.
+ * Copyright (c) 2013-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -99,11 +99,11 @@ static bool moved;
 /*
  * Initialize the selection logic, given the maximum screen dimensions.
  */
-void
+static void
 select_init(unsigned max_rows, unsigned max_cols)
 {
-    s_pending = Malloc(max_rows * max_cols);
-    s_onscreen = Malloc(max_rows * max_cols);
+    Replace(s_pending, Malloc(max_rows * max_cols));
+    Replace(s_onscreen, Malloc(max_rows * max_cols));
     unselect(0, max_rows * max_cols);
     memset(s_onscreen, 0, max_rows * max_cols);
 }
@@ -1186,6 +1186,13 @@ SelectDown_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Respond to a change in screen dimensions. */
+static void
+select_remodel(bool ignored _is_unused)
+{
+    select_init(maxROWS, maxCOLS);
+}
+
 /**
  * Selection module registration.
  */
@@ -1204,6 +1211,12 @@ select_register(void)
 	{ SELECT_URL, NULL, 0 }
     };
 
-    register_actions(select_actions, array_count(select_actions));
+    /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register for state changes. */
+    register_schange(ST_REMODEL, select_remodel);
+
+    /* Register our actions. */
+    register_actions(select_actions, array_count(select_actions));
 }

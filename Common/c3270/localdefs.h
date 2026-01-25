@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 #endif /*]*/
 
 /* Conditional 80/132 mode switch support. */
-#if defined(BROKEN_NEWTERM) || defined(_WIN32) /*[*/
+#if !defined(HAVE_RESIZETERM) || defined(_WIN32) /*[*/
 #undef C3270_80_132
 #else /*][*/
 #define C3270_80_132 1

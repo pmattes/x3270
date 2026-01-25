@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -46,6 +46,9 @@
 #include <signal.h>
 #include <errno.h>
 #include <assert.h>
+#if defined(WIN32_HEAP_CHECK) /*[*/
+# include <malloc.h>
+#endif /*]*/
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
@@ -407,6 +410,7 @@ glue_gui_error_cond(const char *s, bool set_any_error)
 #else /*][*/
     screen_color(PC_ERROR);
     printf("%s", s);
+    fflush(stdout);
     screen_color(PC_DEFAULT);
     printf("\n");
 #endif /*]*/
@@ -417,16 +421,11 @@ glue_gui_error_cond(const char *s, bool set_any_error)
 
     if (was_escaped) {
 	/* Interrupted the prompt. */
-#if defined(HAVE_LIBREADLINE) /*[*/
-	/* Redisplay the prompt and any pending input. */
-	rl_forced_update_display();
-#elif !defined(_WIN32) /*[*/
+#if !defined(HAVE_LIBREADLINE) && !defined(_WIN32) /*[*/
 	/* Discard any pending input. */
 	tcflush(0, TCIFLUSH);
-	prompt.displayed = false;
-#else /*][*/
-	prompt.displayed = false;
 #endif /*]*/
+	prompt.displayed = false;
     }
 
     return true;
@@ -573,6 +572,32 @@ prompt_init(void)
     prompt.string = prompt.default_string;
 }
 
+static void
+check_for_pending_error(void)
+{
+    if (error_pending != NULL) {
+#if !defined(_WIN32) /*[*/
+	if (color_prompt) {
+	    printf("%s", screen_setaf(ACOLOR_RED));
+	}
+#else /*][*/
+	screen_color(PC_ERROR);
+#endif /*]*/
+	printf("%s", error_pending);
+	fflush(stdout);
+#if !defined(_WIN32) /*[*/
+	if (color_prompt) {
+	    printf("%s", screen_op());
+	}
+#else /*][*/
+	screen_color(PC_DEFAULT);
+#endif /*]*/
+	printf("\n");
+	fflush(stdout);
+	Replace(error_pending, NULL);
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -606,6 +631,9 @@ main(int argc, char *argv[])
     if (sockstart()) {
 	x3270_exit(1);
     }
+#else /*][*/
+    /* Make screen resizing work sanely. */
+    screen_pre_init();
 #endif /*]*/
 
 #if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
@@ -680,7 +708,7 @@ Type 'help' for help information.\n\n",
     delenv = getenv(DELENV);
     if (delenv != NULL) {
 	unlink(delenv);
-	putenv(DELENV "=");
+	(void) putenv(DELENV "=");
     }
 
     /* Check for auto-shortcut mode. */
@@ -794,7 +822,10 @@ Type 'help' for help information.\n\n",
 	    connect_once = true;
 	}
 	c3270_push_command(txAsprintf(AnConnect "(\"%s\")", cl_hostname));
-	screen_resume();
+	if (!screen_resume()) {
+	    check_for_pending_error();
+	    x3270_exit(1);
+	}
     } else {
 	/* Drop to the prompt. */
 	if (!appres.secure) {
@@ -802,7 +833,10 @@ Type 'help' for help information.\n\n",
 	} else {
 	    /* Blank screen. */
 	    pause_for_errors();
-	    screen_resume();
+	    if (!screen_resume()) {
+		check_for_pending_error();
+		x3270_exit(1);
+	    }
 	}
     }
 
@@ -810,6 +844,9 @@ Type 'help' for help information.\n\n",
     while (1) {
 	/* Process some events. */
 	process_events(true);
+#if defined(WIN32_HEAP_CHECK) /*[*/
+	assert(_heapchk() == _HEAPOK);
+#endif /*]*/
 
 	/* Update the screen. */
 	if (!escaped) {
@@ -1011,26 +1048,7 @@ rl_handler(char *command)
 static void
 display_prompt(void)
 {
-    if (error_pending != NULL) {
-#if !defined(_WIN32) /*[*/
-	if (color_prompt) {
-	    printf("%s", screen_setaf(ACOLOR_RED));
-	}
-#else /*][*/
-	screen_color(PC_ERROR);
-#endif /*]*/
-	printf("%s", error_pending);
-#if !defined(_WIN32) /*[*/
-	if (color_prompt) {
-	    printf("%s", screen_op());
-	}
-#else /*][*/
-	screen_color(PC_DEFAULT);
-#endif /*]*/
-	printf("\n");
-	fflush(stdout);
-	Replace(error_pending, NULL);
-    }
+    check_for_pending_error();
     if (exit_pending) {
 #if defined(_WIN32) /*[*/
 	pause_for_errors();
@@ -1310,8 +1328,9 @@ interact(void)
 
 	/* Wait for input. */
 #if !defined(_WIN32) /*[*/
-	assert(c3270_input_id == NULL_IOID);
-	c3270_input_id = AddInput(0, c3270_input);
+	if (c3270_input_id == NULL_IOID) {
+	    c3270_input_id = AddInput(0, c3270_input);
+	}
 #else /*][*/
 	enable_input(LINE);
 #endif /*]*/
@@ -2095,7 +2114,7 @@ start_auto_shortcut(int argc, char *argv[])
 
     /* Execute it. */
     sprintf(delenv, "%s=%s", DELENV, linkpath);
-    putenv(delenv);
+    (void) putenv(delenv);
     h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
     if ((uintptr_t)h <= 32) {
 	fprintf(stderr, "ShellExecute failed, error %d\n", (int)(uintptr_t)h);
@@ -2199,13 +2218,11 @@ product_set_appres_defaults(void)
     appres.interactive.save_lines = 4096;
 #if defined(_WIN32) /*[*/
     appres.trace_monitor = true;
-    set_toggle(UNDERSCORE, true);
 #else /*][*/
     appres.c3270.meta_escape = NewString(KwAuto);
     appres.c3270.curses_keypad = true;
     appres.c3270.mouse = true;
 #endif /*]*/
-
 #if !defined(_WIN32) /*[*/
 # if defined(CURSES_WIDE) /*[*/
     appres.c3270.acs = true;
@@ -2213,6 +2230,8 @@ product_set_appres_defaults(void)
     appres.c3270.ascii_box_draw = true;
 # endif /*]*/
 #endif /*]*/
+    appres.c3270.oia = true;
+    appres.c3270.use_rgb = true;
 
     set_toggle(SELECT_URL, true);
 }
@@ -2326,6 +2345,9 @@ c3270_register(void)
 	{ OptReconnect,OPT_BOOLEAN, true,  ResReconnect,
 	    aoffset(reconnect),
 	    NULL, "Reconnect to host as soon as it disconnects" },
+	{ OptReverseVideo,OPT_BOOLEAN,true,ResReverseVideo,
+	    aoffset(c3270.reverse_video),
+	    NULL, "Switch to black-on-white mode" },
 	{ OptSaveLines, OPT_INT,    false, ResSaveLines,
 	    aoffset(interactive.save_lines),
 	    "<lines>", "Number of lines to save for scrolling" },
@@ -2360,9 +2382,6 @@ c3270_register(void)
 	{ OptMono,     OPT_BOOLEAN, true,  ResMono,
 	    aoffset(interactive.mono),
 	    NULL, "Do not use terminal color capabilities" },
-	{ OptReverseVideo,OPT_BOOLEAN,true,ResReverseVideo,
-	    aoffset(c3270.reverse_video),
-	    NULL, "Switch to black-on-white mode" },
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 	{ OptAutoShortcut,OPT_BOOLEAN, true, ResAutoShortcut,
@@ -2385,14 +2404,16 @@ c3270_register(void)
 	{ ResKeymap,	aoffset(interactive.key_map),	XRM_STRING },
 	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
+	{ ResOia,	aoffset(c3270.oia),		XRM_BOOLEAN },
+	{ ResReverseVideo,aoffset(c3270.reverse_video),	XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
+	{ ResUseRgb,	aoffset(c3270.use_rgb),		XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
 	{ ResCbreak,	aoffset(c3270.cbreak_mode),	XRM_BOOLEAN },
 	{ ResCursesKeypad,aoffset(c3270.curses_keypad),	XRM_BOOLEAN },
 	{ ResMetaEscape,aoffset(c3270.meta_escape),	XRM_STRING },
 	{ ResMono,	aoffset(interactive.mono),	XRM_BOOLEAN },
 	{ ResMouse,	aoffset(c3270.mouse),		XRM_BOOLEAN },
-	{ ResReverseVideo,aoffset(c3270.reverse_video),XRM_BOOLEAN },
 #endif /*]*/
 #if defined(C3270_80_132) /*[*/
 	{ ResAltScreen,	aoffset(c3270.altscreen),	XRM_STRING },
@@ -2410,6 +2431,7 @@ c3270_register(void)
 	{ ResLightPenPrimary,aoffset(c3270.lightpen_primary),XRM_BOOLEAN },
 	{ ResTitle,	aoffset(c3270.title),		XRM_STRING },
 	{ ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
+	{ ResVt,	aoffset(c3270.vt),		XRM_BOOLEAN },
 #endif /*]*/
     };
     static xres_t c3270_xresources[] = {

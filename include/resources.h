@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2025 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -183,6 +183,7 @@
 #define ResNumericLock		"numericLock"
 #define ResNvtMode		"nvtMode"
 #define ResOerrLock		"oerrLock"
+#define ResOia			"oia"
 #define ResOnce			"once"
 #define ResOnlcr		"onlcr"
 #define ResOverlayPaste		"overlayPaste"
@@ -247,6 +248,7 @@
 #define ResUnlockDelay		"unlockDelay"
 #define ResUnlockDelayMs	"unlockDelayMs"
 #define ResUseCursorColor	"useCursorColor"
+#define ResUseRgb		"useRgb"
 #define ResUser			"user"
 #define ResUtEnv		"utEnv"
 #define ResUtf8			"utf8"
@@ -255,6 +257,7 @@
 #define ResVisualBell		"visualBell"
 #define ResVisualSelect		"visualSelect"
 #define ResVisualSelectColor	"visualSelectColor"
+#define ResVt			"vt"
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
 #define ResWindowId		"windowId"

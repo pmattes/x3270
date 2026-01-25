@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -220,18 +220,75 @@ ctlr_reinit(unsigned cmask)
 	ea_buf[-1].ic  = 1;
 	aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
 	aea_buf[-1].ic = 1;
+	ctlr_clear(false);
     }
 }
 
+/**
+ * Computes the minimum number of rows needed by the given model number.
+ *
+ * @param[in] m		Model number
+ * @returns minimum number of rows for that model
+ */
+int
+model_rows(int m)
+{
+    switch (m) {
+    default:
+    case 2:
+        return MODEL_2_ROWS;
+    case 3:
+        return MODEL_3_ROWS;
+    case 4:
+        return MODEL_4_ROWS;
+    case 5:
+        return MODEL_5_ROWS;
+    }
+}
+
+/**
+ * Computes the number of columns implied by the given model number.
+ * Computes the minimum number of columns needed by the given model number.
+ *
+ * @param[in] m		Model number
+ * @returns minimum number of columns for that model
+ */
+int
+model_cols(int m)
+{
+    switch (m) {
+    default:
+    case 2:
+        return MODEL_2_COLS;
+    case 3:
+        return MODEL_3_COLS;
+    case 4:
+        return MODEL_4_COLS;
+    case 5:
+        return MODEL_5_COLS;
+    }
+}
+
+
 /*
  * Checks a model number and oversize rows and columns.
- * Ideally this should be called by set_rows_cols() below.
+ * Ideally this should be called by set_cols_rows() below.
  */
 bool
-check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
+check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 {
     unsigned mxc, mxr; /* Maximum rows, columns */
     const char *err;
+
+    if (ovc != 0 || ovr != 0) {
+	/* Oversize implies a model 2. */
+	mn = 2;
+
+	if (ovc < 0 || ovr < 0) {
+	    ovc = 0;
+	    ovr = 0;
+	}
+    }
 
     switch (mn) {
     case 2:
@@ -270,7 +327,8 @@ check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
 	    return false;
-	} else if (ovr == 0) {
+	}
+	if (ovr == 0) {
 	    err = txAsprintf("Invalid %s %dx%d rows:\nzero", ResOversize, ovc, ovr);
 	    if (complain) {
 		popup_an_error("%s", err);
@@ -278,7 +336,8 @@ check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
 	    return false;
-	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
+	}
+	if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
 	    err = txAsprintf("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
 	    if (complain) {
 		popup_an_error("%s", err);
@@ -286,16 +345,18 @@ check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
 	    return false;
-	} else if (ovc > 0 && ovc < mxc) {
-	    err = txAsprintf("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, mn, mxc);
+	}
+	if (ovc > 0 && ovc < mxc) {
+	    err = txAsprintf("Invalid %s columns (%d):\nLess than minimum columns (%d)", ResOversize, ovc, mxc);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
 	    return false;
-	} else if (ovr > 0 && ovr < mxr) {
-	    err = txAsprintf("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, mn, mxr);
+	}
+	if (ovr > 0 && ovr < mxr) {
+	    err = txAsprintf("Invalid %s rows (%d):\nLess than minimum rows (%d)", ResOversize, ovr, mxr);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
@@ -311,14 +372,27 @@ check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain)
  * Deal with the relationships between model numbers and rows/cols.
  */
 void
-set_rows_cols(int mn, int ovc, int ovr)
+set_cols_rows(int mn, int ovc, int ovr)
 {
+    static bool ever = false;
     int defmod;
 
-    if (ovc < 0 || ovr < 0) {
-	ov_auto = true;
-	ovc = 0;
-	ovr = 0;
+    if (ever &&
+	    mn == model_num &&
+	    (((ovc < 0 || ovr < 0) && ov_auto) || (ovc == ov_rows && ovr == ov_cols))) {
+	/* No need for extra thrash. */
+	return;
+    }
+
+    if (ovc != 0 || ovr != 0) {
+	/* With oversize, the model is always 2. */
+	mn = 2;
+
+	if (ovc < 0 || ovr < 0) {
+	    ov_auto = true;
+	    ovc = 0;
+	    ovr = 0;
+	}
     }
 
     switch (mn) {
@@ -343,24 +417,22 @@ set_rows_cols(int mn, int ovc, int ovr)
 	model_num = 5;
 	break;
     default:
-	defmod = 4;
+	defmod = 2;
 	popup_an_error("Unknown model: %d\nDefaulting to %d", mn, defmod);
-	set_rows_cols(defmod, ovc, ovr);
+	set_cols_rows(defmod, ovc, ovr);
 	return;
     }
 
     /* Apply oversize. */
     ov_cols = 0;
     ov_rows = 0;
-    if (ovc != 0 || ovr != 0) {
-	if (ovc <= 0 || ovr <= 0) {
-	    popup_an_error("Invalid %s %dx%d:\nNegative or zero", ResOversize, ovc, ovr);
-	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
+    if (ovc > 0 || ovr > 0) {
+	if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
 	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
 	} else if (ovc > 0 && ovc < maxCOLS) {
-	    popup_an_error("Invalid %s columns (%d):\nLess than model %d columns (%d)", ResOversize, ovc, model_num, maxCOLS);
+	    popup_an_error("Invalid %s columns (%d):\nLess than minimuim columns (%d)", ResOversize, ovc, maxCOLS);
 	} else if (ovr > 0 && ovr < maxROWS) {
-	    popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)", ResOversize, ovr, model_num, maxROWS);
+	    popup_an_error("Invalid %s rows (%d):\nLess than minimum rows (%d)", ResOversize, ovr, maxROWS);
 	} else {
 	    ov_cols = maxCOLS = ovc;
 	    ov_rows = maxROWS = ovr;
@@ -3156,13 +3228,7 @@ mdt_clear(int baddr)
 void
 ctlr_shrink(void)
 {
-    int baddr;
-
-    for (baddr = 0; baddr < ROWS*COLS; baddr++) {
-	if (!ea_buf[baddr].fa) {
-	    ea_buf[baddr].ec = visible_control? EBC_space : EBC_null;
-	}
-    }
+    memset((char *)ea_buf, 0, ROWS*COLS*sizeof(struct ea));
     ALL_CHANGED;
     screen_disp(false);
 }

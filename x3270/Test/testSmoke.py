@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -80,8 +80,11 @@ class TestX3270Smoke(cti):
                 wid = r.json()['status'].split()[-2]
 
                 # Dump the window contents.
-                (handle, name) = tempfile.mkstemp(suffix=".bmp")
-                os.close(handle)
+                if 'GENERATE' in os.environ:
+                    name = os.environ['GENERATE']
+                else:
+                    (handle, name) = tempfile.mkstemp(suffix=".bmp")
+                    os.close(handle)
                 self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
 
             # Wait for the process to exit.
@@ -90,7 +93,8 @@ class TestX3270Smoke(cti):
 
         # Make sure the image is correct.
         self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/ibmlink.bmp'))
-        os.unlink(name)
+        if not 'GENERATE' in os.environ:
+            os.unlink(name)
 
 if __name__ == '__main__':
     unittest.main()

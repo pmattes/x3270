@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2025 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -119,6 +119,7 @@ class Gen(GenCommon):
     # Function dispatch table
     funcs = {
         'atext': atext,
+        'cmd.ew': write.ew,
         'cmd.ewa': write.ewa,
         'cmd.rb': read.rb,
         'cmd.rm': read.rm,

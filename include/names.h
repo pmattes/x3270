@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2025 Paul Mattes.
+ * Copyright (c) 2020-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -195,12 +195,14 @@
 #define KwActions	"Actions"
 #define KwBindPluName	"BindPluName"
 #define KwBuildOptions	"BuildOptions"
+#define KwCharacterPixels	"CharacterPixels"
 #define KwConnectionState "ConnectionState"
 #define KwConnectTime	"ConnectTime"
+#define KwConsole	"Console"
 #define KwCodePage	"CodePage"
 #define KwCodePages	"CodePages"
 #define KwCopyright	"Copyright"
-#define KwCharacterPixels	"CharacterPixels"
+#define KwCurses	"Curses"
 #define KwCursor	"Cursor"
 #define KwCursor1	"Cursor1"
 #define KwDisplayPixels	"DisplayPixels"
@@ -237,7 +239,7 @@
 #define KwTlsSessionInfo "TlsSessionInfo"
 #define KwTlsSubjectNames "TlsSubjectNames"
 #define KwVersion	"Version"
-#define KwWindowLocation	"WindowLocation"
+#define KwWindowLocation "WindowLocation"
 #define KwWindowPixels	"WindowPixels"
 #define KwWindowState	"WindowState"
 /*  Parameters to Quit(). */

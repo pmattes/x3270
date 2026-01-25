@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -1269,7 +1269,7 @@ void
 screen_set_thumb(float top, float shown, int saved _is_unused,
 	int screen _is_unused, int back _is_unused)
 {
-    if (toggled(SCROLL_BAR)) {
+    if (toggled(SCROLL_BAR) && scrollbar != NULL) {
 	XawScrollbarSetThumb(scrollbar, top, shown);
     }
 }
@@ -5443,7 +5443,7 @@ screen_remodel(int mn, int ovc, int ovr)
     if (ov_cols != ovc || ov_rows != ovr) {
 	oversize_changed = true;
     }
-    set_rows_cols(mn, ovc, ovr);
+    set_cols_rows(mn, ovc, ovr);
     screen_reinit(MODEL_CHANGE);
 
     /* Redo the terminal type. */
@@ -5468,7 +5468,7 @@ screen_change_model(int mn, int ovc, int ovr)
 void
 screen_extended(bool extended _is_unused)
 {
-    set_rows_cols(model_num, ov_cols, ov_rows);
+    set_cols_rows(model_num, ov_cols, ov_rows);
     model_changed = true;
 }
 
@@ -5484,7 +5484,7 @@ screen_m3279(bool m3279 _is_unused)
     if (!appres.interactive.mono) {
 	destroy_pixels();
 	screen_reinit(COLOR_CHANGE);
-	set_rows_cols(model_num, ov_cols, ov_rows);
+	set_cols_rows(model_num, ov_cols, ov_rows);
 	model_changed = true;
     }
 }

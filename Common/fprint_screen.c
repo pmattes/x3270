@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2025 Paul Mattes.
+ * Copyright (c) 1994-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -433,7 +433,7 @@ fprint_screen_body(fps_t ofps)
 	txdFree(xea);
 	memcpy(xea, ea_buf - 1, (1 + (ROWS * COLS)) * sizeof(struct ea));
 	xea++;
-	vstatus_line(xea + (ROWS * COLS));
+	vstatus_line(xea + (ROWS * COLS), COLS);
 	fa = find_field_attribute((ROWS * COLS) - 1);
 	xea[((ROWS + 2) * COLS) - 1] = ea_buf[fa]; /* struct copy */
 	xrows = ROWS + 2;

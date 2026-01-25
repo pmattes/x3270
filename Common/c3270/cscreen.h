@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2022 Paul Mattes.
+ * Copyright (c) 1999-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,15 @@
 
 /*
  * 	cscreen.h
- *		c3270/wc3270 screen declarations.
+ *		Common c3270/wc3270 screen declarations.
  */
 
-extern bool screen_initted;
-extern bool escaped;
 #if defined(_WIN32) /*[*/
 extern int windows_cp;
 extern HWND console_window;
 #endif /*]*/
 
-void screen_resume(void);
+bool screen_resume(void);
 FILE *start_pager(void);
 void screen_register(void);
 void screen_final(void);
@@ -68,3 +66,24 @@ typedef enum {
 } acolor_t;
 const char *screen_setaf(acolor_t color);
 #endif /*]*/
+
+extern bool screen_initted;
+extern bool escaped;
+
+extern int status_row;
+extern int status_skip;
+extern int screen_yoffset;
+
+char *screen_adapt(int want_model_num, bool want_ov_auto, int want_ov_rows, int want_ov_cols,
+	int hard_rows, int hard_cols);
+void set_status_row(int hard_rows, int emulator_rows);
+
+void screen_set_minimum_rows_cols(int rows, int cols);
+int screen_map_rows(int hard_rows);
+int model_min_xtra(int model);
+
+#define MAX_HOST_COLORS	16
+extern unsigned rgbmap[MAX_HOST_COLORS];
+extern unsigned rgbmap_rv[MAX_HOST_COLORS];
+
+extern unsigned char visible_fa(unsigned char fa);

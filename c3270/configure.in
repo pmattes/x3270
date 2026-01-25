@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2025 Paul Mattes.
+dnl Copyright (c) 2000-2026 Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -59,8 +59,6 @@ darwin*)	CCOPTIONS="$CCOPTIONS -no-cpp-precomp -Wno-deprecated-declarations"
 		;;
 linux*)		CPPFLAGS="$CPPFLAGS -D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
-aix*)		BROKEN_NEWTERM=1
-		;;
 *bsd*)		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE_EXTENDED"
 		;;
 esac
@@ -69,7 +67,6 @@ then	# Add common gcc options, plus flags for dependency generation.
     	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
-AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 
 dnl Checks for header files.
@@ -106,8 +103,9 @@ dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
 AC_SEARCH_LIBS(forkpty, util)
 AC_CHECK_FUNCS(forkpty)
-AC_SEARCH_LIBS(newterm, ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
+AC_SEARCH_LIBS(newterm, $NCURSES_ALT ncursesw ncurses curses, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])
 AC_SEARCH_LIBS(setupterm, tinfow tinfo, , [AC_MSG_ERROR(Can't find terminfo library)])
+AC_CHECK_FUNCS(resizeterm)
 if test "$with_readline" != no; then
  if test -n "$with_readline" -a "$with_readline" != yes; then
   dnl Use the speficied readline install path.
@@ -120,14 +118,6 @@ if test "$with_readline" != no; then
 fi
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
-
-dnl If we're on AIX and have ncurses, cancel BROKEN_NEWTERM.
-if test -n "$BROKEN_NEWTERM"
-then	if test "$ac_cv_lib_ncurses_newterm" = yes
-	then	:
-	else	AC_DEFINE(BROKEN_NEWTERM,1)
-	fi
-fi
 
 dnl Check for the ncurses default-color extensions.
 AC_CHECK_FUNCS(use_default_colors)

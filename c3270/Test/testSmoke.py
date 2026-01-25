@@ -28,11 +28,11 @@
 # c3270 smoke tests
 
 import os
-import os.path
 import re
 import sys
 if not sys.platform.startswith('win'):
     import pty
+import termios
 import threading
 import unittest
 
@@ -60,6 +60,7 @@ class TestC3270Smoke(cti):
         if pid == 0:
             # Child process
             cts.close()
+            termios.tcsetwinsize(0, (28, 80))
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
             os.execvpe(vgwrap_ecmd('c3270'),
@@ -101,7 +102,7 @@ class TestC3270Smoke(cti):
             result += rbuf.decode('utf8')
         
         # Make the output a bit more readable and split it into lines.
-        result = re.sub('(?s).*\x07', '', result)
+        result = re.sub('(?s).*File', 'File', result, count=1)
         result = result.replace('\x1b', '<ESC>').split('\n')
         for i in range(len(result)):
             result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)

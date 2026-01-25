@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -644,6 +644,7 @@ resolve_done(iosrc_t fd, ioid_t id)
 	    (num_ha == 1)? "": "es");
 
     /* Proceed with the connection. */
+    resolver_slot = -1;
     nc = finish_connect(&iosrc);
     if (nc == NC_FAILED) {
 	host_disconnect(true);
@@ -1182,13 +1183,22 @@ connection_complete(void)
 static void
 net_pre_close(void)
 {
-    SOCK_CLOSE(sock);
-    sock = INVALID_SOCKET;
+    /* Stop resolution. */
+    if (cstate == RESOLVING) {
+	vctrace(TC_SOCKET, "Canceling name resolution, slot %d\n", resolver_slot);
+	resolver_slot = -1;
+    }
+
+    /* Close the socket. */
+    if (sock != INVALID_SOCKET) {
+	SOCK_CLOSE(sock);
+	sock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
-    CloseHandle(sock_handle);
-    sock_handle = INVALID_HANDLE_VALUE;
+	CloseHandle(sock_handle);
+	sock_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
-    vctrace(TC_SOCKET, "SENT disconnect\n");
+	vctrace(TC_SOCKET, "SENT disconnect\n");
+    }
 
     /* Cancel the timeout. */
     if (connect_timeout_id != NULL_IOID) {

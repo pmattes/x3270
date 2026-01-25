@@ -1,0 +1,30 @@
+// rows 27
+// columns 132
+// # Ask for TN3270E.
+// telnet.do tn3270e
+< 0x0   fffd28
+// # Ask for the device type.
+// telnet.sb tn3270e
+//  tn3270e.send device-type
+//  telnet.se
+< 0x0   fffa280802fff0
+// # Tell them what the device type is.
+// telnet.sb tn3270e
+//  tn3270e.device-type is IBM-3278-5-E
+//  tn3270e.connect TEST
+//  telnet.se
+< 0x0   fffa28020449424d2d333237382d352d450154455354fff0
+// # Tell them what TN3270E we will support (no BIND-IMAGE)
+// telnet.sb tn3270e
+//  tn3270e.functions is responses,sysreq
+//  telnet.se
+< 0x0   fffa2803040204fff0
+// # Draw the screen.
+// tn3270e 3270-data
+//  cmd.ewa reset,restore
+//   ord.sba 1 1
+//   ord.sfe 3270 protect,high fg default
+//   text "Hello"
+//   ord.sf protect
+//  telnet.eor
+< 0x0   00000100017e421140402902c0e84200c8859393961d60ffef

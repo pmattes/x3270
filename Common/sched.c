@@ -33,6 +33,9 @@
  */
 
 #include "globals.h"
+#if defined(WIN32_HEAP_CHECK) /*[*/
+# include <malloc.h>
+#endif /*]*/
 #include "glue.h"
 #include "appres.h"
 #include "task.h"
@@ -831,6 +834,9 @@ process_some_events(bool block, bool *processed_any)
 		vctrace(TC_SCHED, "Running 0x%lx\n", (unsigned long)(size_t)ip->source);
 #endif /*]*/
 		(*ip->proc)(ip->source, (ioid_t)ip);
+#if defined(WIN32_HEAP_CHECK) /*[*/
+		assert(_heapchk() == _HEAPOK);
+#endif /*]*/
 		ip->sflags |= SF_RAN;
 		*processed_any = true;
 	    }

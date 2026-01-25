@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2025 Paul Mattes.
+ * Copyright (c) 2005-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ extern bool screen_changed;
 extern int first_changed;
 extern int last_changed;
 
-bool check_rows_cols(int mn, unsigned ovc, unsigned ovr, bool complain);
+bool check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain);
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);
 void ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs);
@@ -91,10 +91,12 @@ bool get_bounded_field_attribute(register int baddr, register int bound,
     unsigned char *fa_out);
 void mdt_clear(int baddr);
 void mdt_set(int baddr);
+int model_rows(int m);
+int model_cols(int m);
 int next_unprotected(int baddr0);
 enum pds process_ds(unsigned char *buf, size_t buflen, bool kybd_restore);
 void ps_process(void);
-void set_rows_cols(int mn, int ovc, int ovr);
+void set_cols_rows(int mn, int ovc, int ovr);
 void ticking_start(bool anyway);
 void ctlr_register(void);
 

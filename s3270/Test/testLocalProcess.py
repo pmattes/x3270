@@ -65,7 +65,7 @@ class TestS3270LocalProcess(cti):
 
     # s3270 TERM tests
     def test_s3270_lp_color(self):
-        self.s3270_lp_term('3279-2-E', 'xterm-color')
+        self.s3270_lp_term('3279-2-E', 'xterm-16color')
     def test_s3270_lp_mono(self):
         self.s3270_lp_term('3278-2-E', 'xterm')
     def test_s3270_lp_override(self):

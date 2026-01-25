@@ -52,7 +52,7 @@ class TestS3270ExtendedDataStream(cti):
         self.assertTrue(r.ok)
         result = r.json()['result']
         self.assertEqual(2, len(result))
-        self.assertEqual('3279-3-E', result[0])
+        self.assertEqual('3279-3', result[0])
         self.assertEqual('IBM-3279-3-E', result[1])
 
         # Change extendedDataStream and make sure the model and terminal name change.
@@ -70,7 +70,7 @@ class TestS3270ExtendedDataStream(cti):
         self.assertTrue(r.ok)
         result = r.json()['result']
         self.assertEqual(2, len(result))
-        self.assertEqual('3279-3-E', result[0])
+        self.assertEqual('3279-3', result[0])
         self.assertEqual('IBM-3279-3-E', result[1])
 
         # Clear extendedDataStream, then set the model explicitly with -E, and make sure it disappears.
@@ -102,7 +102,7 @@ class TestS3270ExtendedDataStream(cti):
         self.assertTrue(r.ok)
         result = r.json()['result']
         self.assertEqual(1, len(result))
-        self.assertEqual('3279-2-E', result[0])
+        self.assertEqual('3279-2', result[0])
 
         # Try a model name with a different-cased IBM- at the front and a lowercase -E.
         r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model,IbM-3278-3-e) Set(model)')
@@ -110,7 +110,7 @@ class TestS3270ExtendedDataStream(cti):
         self.assertTrue(r.ok)
         result = r.json()['result']
         self.assertEqual(1, len(result))
-        self.assertEqual('3278-3-E', result[0])
+        self.assertEqual('3278-3', result[0])
 
         # Wait for the process to exit.
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')

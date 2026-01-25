@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2025 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,9 @@
 #include "globals.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <signal.h>
+#include <sys/ioctl.h>
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
@@ -52,9 +54,11 @@
 #include "kybd.h"
 #include "names.h"
 #include "popups.h"
+#include "query.h"
 #include "screen.h"
 #include "see.h"
 #include "status.h"
+#include "stripdelay.h"
 #include "task.h"
 #include "telnet.h"
 #include "toupper.h"
@@ -100,6 +104,10 @@
 # include <term.h>
 #endif /*]*/
 
+#if defined(HAVE_WCHAR) /*[*/
+# define CURSES_WIDE 1
+#endif /*]*/
+
 /* Curses' 'COLS' becomes cursesCOLS, to remove any ambiguity. */
 #define cursesCOLS	COLS
 #define cursesLINES	LINES
@@ -117,12 +125,14 @@
 #define tiparm		tparm
 #endif /*]*/
 
+#define WONT_FIT	"c3270 won't fit in a terminal with %d rows and %d columns.\nMinimum is %d rows and %d columns."
+
 typedef int curses_color;
 typedef int curses_attr;
 typedef int host_color_ix;
 typedef int color_pair;
 
-static color_pair cp[40][40][2];
+static color_pair cp[40][40];
 
 typedef struct {
     curses_attr attrs;
@@ -209,46 +219,6 @@ static curses_color cmap16_rv[16] = {
     8 + COLOR_WHITE	/* white */
 };
 
-/* Default colors in RGB mode. */
-static unsigned rgbmap[16] = {
-    0x1a1a1a,	/* neutral black */
-    0x1e90ff,	/* blue */
-    0xff0000,	/* red */
-    0xff00ff,	/* pink */
-    0x32cd32,	/* green */
-    0x00ffff,	/* turquoise */
-    0xffff00,	/* yellow */
-    0xffffff,	/* neutral white */
-    0x2f4f4f,	/* black */
-    0x0000cd,	/* deep blue */
-    0xffa500,	/* orange */
-    0xa020f0,	/* purple */
-    0x90ee90,	/* pale green */
-    0x96cdcd,	/* pale turquoise */
-    0x778899,	/* gray */
-    0xf5f5f5,	/* white */
-};
-
-/* Default reverse-video colors in RGB mode. */
-static unsigned rgbmap_rv[16] = {
-    0xffffff,	/* neutral black (reversed) */
-    0x0000c0,	/* blue */
-    0xb22222,	/* red */
-    0xee6aa7,	/* pink */
-    0x008b00,	/* green */
-    0x40e0d0,	/* turquoise */
-    0xcdcd00,	/* yellow */
-    0x000000,	/* neutral white (reversed) */
-    0x000000,	/* black */
-    0x0000cd,	/* deep blue */
-    0xffa500,	/* orange */
-    0xa020f0,	/* purple */
-    0x98fb98,	/* pale green */
-    0x96cdcd,	/* pale turquoise */
-    0xbebebe,	/* gray */
-    0xf5f5f5,	/* white */
-};
-
 static curses_color *cmap = cmap8;
 static curses_attr cattrmap[16] = {
     A_NORMAL, A_NORMAL, A_NORMAL, A_NORMAL,
@@ -278,10 +248,8 @@ static ioid_t input_id = NULL_IOID;
 
 static int rmargin;
 
-bool screen_initted = false;
-bool escaped = true;
-bool initscr_done = false;
 int curs_set_state = -1;
+bool cursor_enabled = true;
 
 enum ts me_mode = TS_AUTO;
 enum ts ab_mode = TS_AUTO;
@@ -290,11 +258,12 @@ enum ts ab_mode = TS_AUTO;
 struct screen_spec {
     int rows, cols;
     char *mode_switch;
-} screen_spec;
-struct screen_spec altscreen_spec, defscreen_spec;
-static SCREEN *def_screen = NULL, *alt_screen = NULL;
-static SCREEN *cur_screen = NULL;
+} screen_spec[2];
+# define IS_80_132	(screen_spec[false].mode_switch != NULL || screen_spec[true].mode_switch != NULL)
 static void parse_screen_spec(const char *str, struct screen_spec *spec);
+static void swap_screens(bool alt);
+#else /*][*/
+# define IS_80_132	false
 #endif /*]*/
 
 static struct {
@@ -320,13 +289,6 @@ static struct {
     { NULL,			0 }
 };
 
-static int status_row = 0;	/* Row to display the status line on */
-static int status_skip = 0;	/* Row to blank above the status line */
-static int screen_yoffset = 0;	/* Vertical offset to top of screen.
-				   If 0, there is no menu bar.
-				   If nonzero (2, actually), menu bar is at the
-				    top of the display. */
-
 static host_color_ix crosshair_color = HOST_COLOR_PURPLE;
 static bool curses_alt = false;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
@@ -335,12 +297,26 @@ static bool default_colors = false;
 
 static ioid_t disabled_done_id = NULL_IOID;
 
+static bool init2_done;
+#if defined(HAVE_RESIZETERM) /*[*/
+static int sigwinch_pipe[2];
+#endif /*]*/
+static int pending_rows;
+static int pending_cols;
+static int minimum_rows;
+static int minimum_cols;
+
+static int orig_model_num;
+static int orig_ov_rows;
+static int orig_ov_cols;
+static bool orig_ov_auto;
+
 /* Layered OIA messages. */
 static char *disabled_msg = NULL;	/* layer 0 (top) */
 static char *scrolled_msg = NULL;	/* layer 1 */
 static char *info_msg = NULL;		/* layer 2 */
 static char *other_msg = NULL;		/* layer 3 */
-static attr_pair_t other_attr;		/* layer 3 color */
+static host_color_ix other_color;	/* layer 3 color */
 
 static char *info_base_msg = NULL;	/* original info message (unscrolled) */
 
@@ -354,6 +330,9 @@ static struct {
     bool bold;		/* use bold SGR for certain colors */
 } ti;
 
+static enum { MS_UNINITIALIZED, MS_PRESENT, MS_ABSENT } mouse_state = MS_UNINITIALIZED;
+static const char *mouse_state_name[] = { "uninitialized", "true", "false" };
+
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
@@ -362,13 +341,31 @@ static void status_3270_mode(bool ignored);
 static void status_printer(bool on);
 static color_pair get_color_pair(int fg, int bg);
 static attr_pair_t color_from_fa(unsigned char);
-static void set_status_row(int screen_rows, int emulator_rows);
 static void display_linedraw(ucs4_t ucs);
-static void display_ge(unsigned char ebc);
+static void display_ge(unsigned char ebc, attr_pair_t *attrs);
 static void init_user_colors(void);
 static void screen_init2(void);
 
 static action_t Redraw_action;
+
+static void
+screen_fatal(const char *fmt, ...)
+{
+    va_list ap;
+    char *buf;
+
+    if (!isendwin()) {
+	endwin();
+    }
+    fflush(stdout);
+    fflush(stderr);
+    va_start(ap, fmt);
+    buf = Vasprintf(fmt, ap);
+    va_end(ap);
+    vctrace(TC_UI, "Fatal error: %s\n", buf);
+    fprintf(stderr, "\nFatal error: %s\n", buf);
+    x3270_exit(1);
+}
 
 /*
  * Crosshair color init.
@@ -391,33 +388,143 @@ crosshair_color_init(void)
     crosshair_color = HOST_COLOR_PURPLE;
 }
 
+#if defined(HAVE_RESIZETERM) /*[*/
+/* Store new LINES/COLUMNS environment variables. */
+static void
+putenv_rows_cols(int rows, int cols)
+{
+    static char *last_rows = NULL;
+    static char *last_cols = NULL;
+    char *p_rows = Asprintf("LINES=%d", rows);
+    char *p_cols = Asprintf("COLUMNS=%d", cols);
+
+    putenv(p_rows);
+    putenv(p_cols);
+    if (last_rows != NULL) {
+	Free(last_rows);
+    }
+    if (last_cols != NULL) {
+	Free(last_cols);
+    }
+    last_rows = p_rows;
+    last_cols = p_cols;
+}
+
+/* SIGWINCH signal handler. */
+static void
+sigwinch_handler(int ignored)
+{
+    /* Restore the handler. */
+    signal(SIGWINCH, sigwinch_handler);
+
+    /* Process it synchronously. */
+    if (write(sigwinch_pipe[1], "s", 1) < 0) {
+	vctrace(TC_UI, "sigwinch_handler: write: %s\n", strerror(errno));
+    }
+}
+
+static bool
+check_resize(int rows, int cols, const char *why)
+{
+    if (rows < minimum_rows || cols < minimum_cols) {
+	popup_an_error(WONT_FIT, rows, cols, minimum_rows, minimum_cols);
+	return false;
+    }
+    return true;
+}
+
+/*
+ * Apply new screen dimensions.
+ * Returns true for success, false for failure.
+ */
+static bool
+screen_resize(int rows, int cols, const char *why)
+{
+    vctrace(TC_UI, "screen_resize(%s) %d rows %d cols\n", why, rows, cols);
+    if (!check_resize(rows, cols, "screen_resize")) {
+	return false;
+    }
+    putenv_rows_cols(rows, cols);
+    if (resizeterm(rows, cols) == ERR) {
+	screen_fatal("resizeterm failed");
+    }
+    set_status_row(rows, maxROWS);
+    screen_disp(false);
+    return true;
+}
+
+/* Synchronous SIGWINCH handler. */
+static void
+sigwinch_sync(iosrc_t fd _is_unused, ioid_t id _is_unused)
+{
+    char buf;
+    struct winsize winsize;
+
+    if (read(sigwinch_pipe[0], &buf, 1) < 0) {
+	vctrace(TC_UI, "read(sigwinch_pipe): %s\n", strerror(errno));
+	return;
+    }
+
+    if (ioctl(0, TIOCGWINSZ, &winsize) < 0) {
+	vctrace(TC_UI, "ioctl(TIOCGWINSIZ) failed: %s\n", strerror(errno));
+	return;
+    }
+
+    vctrace(TC_UI, "SIGWINCH %d rows %d cols", winsize.ws_row, winsize.ws_col);
+
+    if (!IS_80_132) {
+	if (!(init2_done && !isendwin() && screen_resize(winsize.ws_row, winsize.ws_col, "SIGWINCH"))) {
+	    /* Not ready yet, not currently in window mode, or failed: Defer until later. */
+	    vtrace(", deferring");
+	    pending_rows = winsize.ws_row;
+	    pending_cols = winsize.ws_col;
+	    putenv_rows_cols(pending_rows, pending_cols);
+	}
+	vtrace("\n");
+    } else {
+	if (!isendwin()) {
+	    vtrace(", refreshing");
+	    clearok(stdscr, TRUE);
+	    refresh();
+	}
+	vtrace("\n");
+    }
+}
+#endif /*]*/
+
+/* Do setup that has to happen before any other curses calls. */
+void
+screen_pre_init(void)
+{
+}
+
 /* Initialize the screen. */
 void
 screen_init(void)
 {
     setupterm(NULL, fileno(stdout), NULL);
+    if (cursesLINES == 0 || cursesCOLS == 0) {
+	cursesLINES = lines;
+	cursesCOLS = columns;
+    }
 
     menu_init();
 
 #if defined(C3270_80_132) /*[*/
     /* Parse altscreen/defscreen. */
-    if ((appres.c3270.altscreen != NULL) ^
-	(appres.c3270.defscreen != NULL)) {
-	fprintf(stderr, "Must specify both altscreen and defscreen\n");
-	exit(1);
+    if ((appres.c3270.altscreen != NULL) ^ (appres.c3270.defscreen != NULL)) {
+	screen_fatal("Must specify both altscreen and defscreen");
     }
     if (appres.c3270.altscreen != NULL) {
-	parse_screen_spec(appres.c3270.altscreen, &altscreen_spec);
-	if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
-	    fprintf(stderr, "Rows and/or cols too small on "
-		"alternate screen (minimum 27x132)\n");
-	    exit(1);
+	parse_screen_spec(appres.c3270.altscreen, &screen_spec[true]);
+	if (screen_spec[true].rows < MODEL_5_ROWS || screen_spec[true].cols < MODEL_5_COLS) {
+	    screen_fatal("Rows and/or cols too small on alternate screen (minimum %dx%d)",
+		    MODEL_5_ROWS, MODEL_5_COLS);
 	}
-	parse_screen_spec(appres.c3270.defscreen, &defscreen_spec);
-	if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
-	    fprintf(stderr, "Rows and/or cols too small on "
-		"default screen (minimum 24x80)\n");
-	    exit(1);
+	parse_screen_spec(appres.c3270.defscreen, &screen_spec[false]);
+	if (screen_spec[false].rows < MODEL_2_ROWS || screen_spec[false].cols < MODEL_2_COLS) {
+	    screen_fatal("Rows and/or cols too small on default screen (minimum %dx%d)",
+		    MODEL_2_ROWS, MODEL_2_COLS);
 	}
     }
 #endif /*]*/
@@ -455,6 +562,22 @@ screen_init(void)
 
     /* Initialize the controller. */
     ctlr_init(ALL_CHANGE);
+
+#if defined(HAVE_RESIZETERM) /*[*/
+    /* Listen to SIGWINCH. */
+    if (pipe(sigwinch_pipe) >= 0) {
+	AddInput(sigwinch_pipe[0], sigwinch_sync);
+	signal(SIGWINCH, sigwinch_handler);
+    } else {
+	vctrace(TC_UI, "SIGWINCH pipe failed: %s", strerror(errno));
+    }
+#endif /*]*/
+
+    /* Remember the original screen configuration, so we can restore it after we disconnect. */
+    orig_model_num = model_num;
+    orig_ov_rows = ov_rows;
+    orig_ov_cols = ov_cols;
+    orig_ov_auto = ov_auto;
 }
 
 /*
@@ -466,7 +589,7 @@ ti_save(const char *name)
     char *str = tigetstr((char *)name);
 
     if (str != NULL && str != (char *)-1) {
-	return NewString(str);
+	return stripdelay(str);
     }
     return NULL;
 }
@@ -549,20 +672,27 @@ screen_setaf(acolor_t color)
 }
 
 /*
+ * Returns the absolute minimum number of rows needed for a given model -- the 'squeezed' format,
+ * which can include removing the menubar and OIA altogether in some situations.
+ */
+int
+model_min_xtra(int model)
+{
+    return ((model == 2 || (model == 5 && IS_80_132))? 0:
+	    (appres.interactive.menubar + appres.c3270.oia));
+}
+
+/*
  * Finish screen initialization, when a host connects or when we go into
  * 'zombie' mode (no prompt, no connection).
  */
 static void
 finish_screen_init(void)
 {
-    int want_ov_rows = ov_rows;
-    int want_ov_cols = ov_cols;
-    bool oversize = false;
     char *cl;
+    char *errmsg = NULL;
 
-    /* Dummy globals so Valgrind doesn't think the arguments to putenv() are leaked. */
-    static char *pe_columns = NULL;
-    static char *pe_lines = NULL;
+    /* Dummy global so Valgrind doesn't think the argument to putenv() is leaked. */
     static char *pe_escdelay = NULL;
 
     if (screen_initted) {
@@ -574,8 +704,7 @@ finish_screen_init(void)
     /* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
     if (appres.c3270.defscreen != NULL) {
-	putenv((pe_columns = Asprintf("COLUMNS=%d", defscreen_spec.cols)));
-	putenv((pe_lines = Asprintf("LINES=%d", defscreen_spec.rows)));
+	putenv_rows_cols(screen_spec[false].rows, screen_spec[false].cols);
     }
 #endif /*]*/
     if ((cl = tigetstr("clear")) != NULL) {
@@ -586,121 +715,51 @@ finish_screen_init(void)
 	putenv((pe_escdelay = Asprintf("ESCDELAY=%ld", ME_DELAY)));
     }
 
-#if !defined(C3270_80_132) /*[*/
     /* Initialize curses. */
     if (initscr() == NULL) {
-	fprintf(stderr, "Can't initialize terminal.\n");
-	exit(1);
-    }
-    initscr_done = true;
-#else /*][*/
-    /* Set up ncurses, and see if it's within bounds. */
-    if (appres.c3270.defscreen != NULL) {
-	putenv(Asprintf("COLUMNS=%d", defscreen_spec.cols));
-	putenv(Asprintf("LINES=%d", defscreen_spec.rows));
-	def_screen = newterm(NULL, stdout, stdin);
-	initscr_done = true;
-	if (def_screen == NULL) {
-	    fprintf(stderr, "Can't initialize %dx%d defscreen terminal.\n",
-		    defscreen_spec.rows, defscreen_spec.cols);
-	    exit(1);
-	}
-	if (write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch)) < 0) {
-	    endwin();
-	    exit(1);
-	}
-    }
-    if (appres.c3270.altscreen) {
-	putenv(Asprintf("COLUMNS=%d", altscreen_spec.cols));
-	putenv(Asprintf("LINES=%d", altscreen_spec.rows));
-    }
-    alt_screen = newterm(NULL, stdout, stdin);
-    if (alt_screen == NULL) {
-	popup_an_error("Can't initialize terminal.\n");
-	exit(1);
-    }
-    initscr_done = true;
-    if (def_screen == NULL) {
-	def_screen = alt_screen;
-	cur_screen = def_screen;
-    }
-    if (appres.c3270.altscreen) {
-	set_term(alt_screen);
-	cur_screen = alt_screen;
+	screen_fatal("Can't initialize terminal.");
     }
 
-    /* If they want 80/132 switching, then they want a model 5. */
-    if (def_screen != alt_screen && model_num != 5) {
-	set_rows_cols(5, 0, 0);
-    }
-#endif /*]*/
-
-    while (cursesLINES < maxROWS || cursesCOLS < maxCOLS) {
-	/*
-	 * First, cancel any oversize.  This will get us to the correct
-	 * model number, if there is any.
-	 */
-	if ((ov_cols && ov_cols > cursesCOLS) ||
-	    (ov_rows && ov_rows > cursesLINES)) {
-
-	    ov_cols = 0;
-	    ov_rows = 0;
-	    oversize = true;
-	    continue;
-	}
-
-	/* If we're at the smallest screen now, give up. */
-	if (model_num == 2) {
-	    popup_an_error("Emulator won't fit on a %dx%d display.\n",
-		    cursesLINES, cursesCOLS);
-	    exit(1);
-	}
-
-	/* Try a smaller model. */
-	set_rows_cols(model_num - 1, 0, 0);
-    }
-
-    /*
-     * Now, if they wanted an oversize, but didn't get it, try applying it
-     * again.
-     */
-    if (oversize) {
-	if (want_ov_rows > cursesLINES - 2) {
-	    want_ov_rows = cursesLINES - 2;
-	}
-	if (want_ov_rows < maxROWS) {
-	    want_ov_rows = maxROWS;
-	}
-	if (want_ov_cols > cursesCOLS) {
-	    want_ov_cols = cursesCOLS;
-	}
-	set_rows_cols(model_num, want_ov_cols, want_ov_rows);
-    }
-
-    /*
-     * Finally, if they want automatic oversize, see if that's possible.
-     */
-    if (ov_auto && (maxROWS < cursesLINES - 3 || maxCOLS < cursesCOLS)) {
-	set_rows_cols(model_num, cursesCOLS, cursesLINES - 3);
-    }
-
-#if defined(NCURSES_MOUSE_VERSION) /*[*/
-    if (appres.c3270.mouse && mousemask(BUTTON1_RELEASED, NULL) == 0) {
-	appres.c3270.mouse = false;
-    }
-#endif /*]*/
-
-    /* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
-    if (def_screen != alt_screen) {
-	/* Start out in defscreen mode. */
-	set_status_row(defscreen_spec.rows, MODEL_2_ROWS);
-    } else
+    /* Switch to the alternate screen. */
+    if (IS_80_132) {
+	swap_screens(true);
+	set_cols_rows(5, screen_spec[true].cols, screen_spec[true].rows);
+    }
 #endif /*]*/
+
+    /* Curses is initialized, no need to resize now. */
+    pending_rows = 0;
+    pending_cols = 0;
+
+    /* Set up the mouse, which affects whether we have a menubar or not. */
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+    if (appres.c3270.mouse) {
+	if (mousemask(BUTTON1_RELEASED, NULL) == 0) {
+	    appres.c3270.mouse = false;
+	    appres.interactive.menubar = false;
+	    mouse_state = MS_ABSENT;
+	} else {
+	    mouse_state = MS_PRESENT;
+	}
+    } else
+#else /*][*/
     {
-	/* Start out in altscreen mode. */
-	set_status_row(cursesLINES, maxROWS);
+	appres.c3270.mouse = false;
+	appres.interactive.menubar = false;
+	mouse_state = MS_ABSENT;
+    }
+#endif /*]*/
+
+    /*
+     * Adapt the 3270 display to the curses terminal dimensions.
+     * Failure here is fatal.
+     */
+    /* N.B.: Due to a gcc bug, if the following vctrace call is not present, the screen_adapt call is never made. */
+    vctrace(TC_UI, "finish_screen_init calling screen_adapt\n");
+    errmsg = screen_adapt(model_num, ov_auto, ov_rows, ov_cols, cursesLINES, cursesCOLS);
+    if (errmsg != NULL) {
+	screen_fatal("%s", errmsg);
     }
 
     /* Play with curses color. */
@@ -772,29 +831,9 @@ finish_screen_init(void)
 		xhattr.attrs = A_NORMAL;
 		xhattr.pair = get_color_pair(defcolor_offset + COLOR_GREEN, bg_color);
 	    }
-#if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
-	    if (def_screen != alt_screen) {
-		SCREEN *s = cur_screen;
-
-		/* Initialize the colors for the other screen. */
-		if (s == def_screen) {
-		    set_term(alt_screen);
-		} else {
-		    set_term(def_screen);
-		}
-		start_color();
-		curses_alt = !curses_alt;
-		get_color_pair(cmap[field_color_map[2]], bg_color);
-		curses_alt = !curses_alt;
-		set_term(s);
-
-	    }
-#endif /*]*/
 	} else {
 	    appres.interactive.mono = true;
 	    mode3279 = false;
-	    /* Get the terminal name right. */
-	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
     }
 
@@ -827,11 +866,25 @@ setup_tty(void)
 }
 
 #if defined(C3270_80_132) /*[*/
+/*
+ * Write out the the appropriate escape sequence to swap 80/132 mode and update curses.
+ * This does not include any 3270-specific actions.
+ */
 static void
-swap_screens(SCREEN *new_screen)
+swap_screens(bool alt)
 {
-    set_term(new_screen);
-    cur_screen = new_screen;
+    if (IS_80_132 && curses_alt != alt) {
+	vctrace(TC_UI, "Switching to %s (%dx%d) curses terminal.\n", alt? "alternate": "default",
+		screen_spec[alt].rows, screen_spec[alt].cols);
+	if (write(1, screen_spec[alt].mode_switch, strlen(screen_spec[alt].mode_switch)) < 0) {
+	    screen_fatal("Can't write terminal size switch string: %s", strerror(errno));
+	}
+	putenv_rows_cols(screen_spec[alt].rows, screen_spec[alt].cols);
+	if (resizeterm(screen_spec[alt].rows, screen_spec[alt].cols) == ERR) {
+	    screen_fatal("resizeterm failed");
+	}
+	curses_alt = alt;
+    }
 }
 #endif /*]*/
 
@@ -846,30 +899,16 @@ screen_init2(void)
      * will send anything to the terminal.
      */
 
-    /* Set up the keyboard. */
 #if defined(C3270_80_132) /*[*/
-    swap_screens(alt_screen);
-#endif /*]*/
-    setup_tty();
-    scrollok(stdscr, FALSE);
-
-#if defined(C3270_80_132) /*[*/
-    if (def_screen != alt_screen) {
-	/*
-	 * The first setup_tty() set up altscreen.
-	 * Set up defscreen now, and leave it as the
-	 * current curses screen.
-	 */
-	swap_screens(def_screen);
-	setup_tty();
-	scrollok(stdscr, FALSE);
-#if defined(NCURSES_MOUSE_VERSION) /*[*/
-	if (appres.c3270.mouse) {
-	    mousemask(BUTTON1_RELEASED, NULL);
-	}
-#endif /*]*/
+    /* Switch to the alternate screen. */
+    if (IS_80_132) {
+	swap_screens(true);
     }
 #endif /*]*/
+
+    /* Set up the keyboard. */
+    setup_tty();
+    scrollok(stdscr, FALSE);
 
     /* Subscribe to input events. */
     if (input_id == NULL_IOID) {
@@ -880,63 +919,25 @@ screen_init2(void)
     signal(SIGINT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
 
-#if defined(C3270_80_132) /*[*/
-    /* Ignore SIGWINCH -- it might happen when we do 80/132 changes. */
-    if (def_screen != alt_screen) {
-	signal(SIGWINCH, SIG_IGN);
-    }
-#endif /*]*/
-}
-
-/* Calculate where the status line goes now. */
-static void
-set_status_row(int screen_rows, int emulator_rows)
-{
-    /* Check for OIA room first. */
-    if (screen_rows < emulator_rows + 1) {
-	status_row = status_skip = 0;
-    } else if (screen_rows == emulator_rows + 1) {
-	status_skip = 0;
-	status_row = emulator_rows;
-    } else {
-	status_skip = screen_rows - 2;
-	status_row = screen_rows - 1;
-    }
-
-    /* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-    if (appres.interactive.menubar && appres.c3270.mouse) {
-	if (screen_rows >= emulator_rows + (status_row != 0) + 2) {
-	    screen_yoffset = 2;
-	} else if (screen_rows >= emulator_rows + (status_row != 0) + 1) {
-	    screen_yoffset = 1;
-	} else {
-	    screen_yoffset = 0;
-	}
-    }
+    init2_done = true;
 }
 
 /* Allocate a color pair. */
 static color_pair
 get_color_pair(curses_color fg, curses_color bg)
 {
-    static int next_pair[2] = { 1, 1 };
+    static int next_pair = 1;
     color_pair pair;
-#if defined(C3270_80_132) && defined(NCURSES_VERSION) /*[*/
-	    /* ncurses allocates colors for each screen. */
-    int pair_index = !!curses_alt;
-#else /*][*/
-	    /* curses allocates colors globally. */
-    const int pair_index = 0;
-#endif /*]*/
     curses_color bg_arg = bg;
     curses_color fg_arg = fg;
 
+    assert(screen_initted);
     assert(fg < 40);
     assert(bg < 40);
-    if ((pair = cp[fg][bg][pair_index])) {
+    if ((pair = cp[fg][bg])) {
 	return pair;
     }
-    if (next_pair[pair_index] >= COLOR_PAIRS) {
+    if (next_pair >= COLOR_PAIRS) {
 	vtrace("get_color_pair(%d,%d): ran out of color pairs\n", fg, bg);
 	return 0;
     }
@@ -955,10 +956,10 @@ get_color_pair(curses_color fg, curses_color bg)
 	}
     }
 #endif /*]*/
-    if (init_pair(next_pair[pair_index], fg_arg, bg_arg) != OK) {
+    if (init_pair(next_pair, fg_arg, bg_arg) != OK) {
 	return 0;
     }
-    pair = cp[fg][bg][pair_index] = next_pair[pair_index]++;
+    pair = cp[fg][bg] = next_pair++;
     return pair;
 }
 
@@ -1030,7 +1031,7 @@ init_user_color(const char *name, host_color_ix ix)
 	r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
     }
     if (r == NULL) {
-	if (COLORS >= 32 && can_change_color() == TRUE) {
+	if (appres.c3270.use_rgb && COLORS >= 32 && can_change_color() == TRUE) {
 	    /* Use the default RGB color. */
 	    add_rgb(ix, appres.c3270.reverse_video ? rgbmap_rv[ix] : rgbmap[ix]);
 	}
@@ -1041,6 +1042,10 @@ init_user_color(const char *name, host_color_ix ix)
 	unsigned long rgb;
 	char *end;
 
+	if (!appres.c3270.use_rgb) {
+	    xs_warning(ResUseRgb " is not set, ignoring RGB color specification %s", r);
+	    return;
+	}
 	if (COLORS < 32) {
 	    xs_warning("RGB colors require at least 32-color support");
 	    return;
@@ -1187,28 +1192,6 @@ calc_attrs(int baddr, int fa_addr, int fa)
     return a;
 }
 
-/*
- * Return a visible control character for a field attribute.
- */
-static unsigned char
-visible_fa(unsigned char fa)
-{
-    static unsigned char varr[32] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
-
-    unsigned ix;
-
-    /*
-     * This code knows that:
-     *  FA_PROTECT is   0b100000, and we map it to 0b010000
-     *  FA_NUMERIC is   0b010000, and we map it to 0b001000
-     *  FA_INTENSITY is 0b001100, and we map it to 0b000110
-     *  FA_MODIFY is    0b000001, and we copy to   0b000001
-     */
-    ix = ((fa & (FA_PROTECT | FA_NUMERIC | FA_INTENSITY)) >> 1) |
-	(fa & FA_MODIFY);
-    return varr[ix];
-}
-
 /**
  * Return a space or a line-drawing character, depending on whether the
  * given buffer address has a crosshair cursor on it.
@@ -1227,7 +1210,7 @@ crosshair_blank(int baddr, unsigned char *acs)
     ucs4_t u = ' ';
 
     *acs = 0;
-    if (toggled(CROSSHAIR)) {
+    if (cursor_enabled && toggled(CROSSHAIR)) {
 	bool same_row = ((baddr / cCOLS) == (cursor_addr / cCOLS));
 	bool same_col = ((baddr % cCOLS) == (cursor_addr % cCOLS));
 
@@ -1289,10 +1272,10 @@ menu_pair(bool highlight)
 void
 screen_disp(bool erasing _is_unused)
 {
+    static bool in_screen_disp = false;
     int row, col;
     attr_pair_t field_attrs;
     unsigned char fa;
-    struct screen_spec *cur_spec;
     enum dbcs_state d;
     int fa_addr;
     char mb[16];
@@ -1302,36 +1285,36 @@ screen_disp(bool erasing _is_unused)
 	return;
     }
 
+    /* Check for recursion. */
+    if (in_screen_disp) {
+	return;
+    }
+    in_screen_disp = true;
+
 #if defined(C3270_80_132) /*[*/
     /* See if they've switched screens on us. */
-    if (def_screen != alt_screen && screen_alt != curses_alt) {
-	if (screen_alt) {
-	    if (write(1, altscreen_spec.mode_switch,
-			strlen(altscreen_spec.mode_switch)) < 0) {
-		exit(1);
-	    }
-	    vctrace(TC_UI, "Switching to alt (%dx%d) screen.\n",
-		    altscreen_spec.rows, altscreen_spec.cols);
-	    swap_screens(alt_screen);
-	    cur_spec = &altscreen_spec;
-	} else {
-	    if (write(1, defscreen_spec.mode_switch,
-			strlen(defscreen_spec.mode_switch)) < 0) {
-		exit(1);
-	    }
-	    vctrace(TC_UI, "Switching to default (%dx%d) screen.\n",
-		    defscreen_spec.rows, defscreen_spec.cols);
-	    swap_screens(def_screen);
-	    cur_spec = &defscreen_spec;
-	}
+    if (IS_80_132 && screen_alt != curses_alt) {
+	swap_screens(screen_alt);
 
 	/* Figure out where the status line goes now, if it fits. */
-	set_status_row(cur_spec->rows, ROWS);
+	set_status_row(screen_spec[screen_alt].rows, ROWS);
 
 	curses_alt = screen_alt;
 
 	/* Tell curses to forget what may be on the screen already. */
 	clear();
+    }
+#endif /*]*/
+
+#if defined(HAVE_RESIZETERM) /*[*/
+    /* Check for a pending screen resize. */
+    if (pending_rows || pending_cols) {
+	if (screen_resize(pending_rows, pending_cols, "screen_disp")) {
+	    pending_rows = 0;
+	    pending_cols = 0;
+	} else {
+	    goto done;
+	}
     }
 #endif /*]*/
 
@@ -1557,7 +1540,7 @@ screen_disp(bool erasing _is_unused)
 		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
 			display_linedraw(ea_buf[baddr].ucs4);
 		    } else if (cs == CS_APL || (cs & CS_GE)) {
-			display_ge(ea_buf[baddr].ec);
+			display_ge(ea_buf[baddr].ec, &attrs);
 		    } else {
 			bool done_sbcs = false;
 			ucs4_t uu;
@@ -1628,6 +1611,11 @@ screen_disp(bool erasing _is_unused)
 	}
     }
     refresh();
+
+#if defined(HAVE_RESIZETERM) /*[*/
+done:
+#endif /*]*/
+    in_screen_disp = false;
 }
 
 /* ESC processing. */
@@ -1660,7 +1648,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	size_t sz;
 #endif /*]*/
 
-	if (!initscr_done || isendwin()) {
+	if (!screen_initted || isendwin()) {
 	    return;
 	}
 	ucs4 = 0;
@@ -1779,6 +1767,14 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    return;
 	}
 #endif /*]*/
+
+#if defined(KEY_RESIZE) /*[*/
+	/* Resize pseudo-key, which we handle separately. */
+	if (k == KEY_RESIZE) {
+	    vctrace(TC_UI, "kybd_input: Resize %d rows %d cols (ignored)\n", cursesLINES, cursesCOLS);
+	    return;
+	}
+#endif
 
 	/* Handle Meta-Escapes. */
 	if (meta_escape) {
@@ -1986,37 +1982,21 @@ screen_suspend(void)
     static bool need_to_scroll = false;
     bool needed = false;
 
-    if (!initscr_done) {
+    if (!screen_initted) {
 	return false;
     }
 
+    vctrace(TC_UI, "screen_suspend\n");
+
     if (!isendwin()) {
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != alt_screen) {
-	    /*
-	     * Call endwin() for the last-defined screen
-	     * (altscreen) first.  Note that this will leave
-	     * the curses screen set to defscreen when this
-	     * function exits; if the 3270 is really in altscreen
-	     * mode, we will have to switch it back when we resume
-	     * the screen, below.
-	     */
-	    if (!curses_alt) {
-		swap_screens(alt_screen);
-	    }
-	    curs_set_state = curs_set(1);
-	    endwin();
-	    swap_screens(def_screen);
-	    (void) curs_set(1);
-	    endwin();
-	} else {
-	    curs_set_state = curs_set(1);
-	    endwin();
+	/* Back to default. */
+	if (IS_80_132) {
+	    swap_screens(false);
 	}
-#else /*][*/
+#endif /*]*/
 	curs_set_state = curs_set(1);
 	endwin();
-#endif /*]*/
 	needed = true;
     }
 
@@ -2029,11 +2009,8 @@ screen_suspend(void)
 	    need_to_scroll = true;
 	}
 #if defined(C3270_80_132) /*[*/
-	if (curses_alt && def_screen != alt_screen) {
-	    if (write(1, defscreen_spec.mode_switch,
-			strlen(defscreen_spec.mode_switch)) < 0) {
-		x3270_exit(1);
-	    }
+	if (IS_80_132) {
+	    swap_screens(false);
 	}
 #endif /*]*/
 	RemoveInput(input_id);
@@ -2043,20 +2020,56 @@ screen_suspend(void)
     return needed;
 }
 
+/* Set the minimum number of rows and columns. */
 void
+screen_set_minimum_rows_cols(int rows, int cols)
+{
+    minimum_rows = rows;
+#if defined(C3270_80_132) /*[*/
+    if (IS_80_132) {
+        minimum_cols = curses_alt? cols: MODEL_5_COLS;
+    } else
+#endif /*]*/
+    {
+        minimum_cols = cols;
+    }
+}
+
+/* Possibly override the status row location. */
+int
+screen_map_rows(int hard_rows)
+{
+#if defined(C3270_80_132) /*[*/
+    if (IS_80_132 && !curses_alt) {
+        /* Start out in defscreen mode. */
+	return screen_spec[false].rows;
+    } else
+#endif /*]*/
+    {
+        /* Start out in altscreen mode. */
+        return hard_rows;
+    }
+}
+
+/*
+ * Display the emulator.
+ * Returns true if successful, false otherwise.
+ *
+ * If it returns false, then nothing has changes, and we are still in escaped mode.
+ */
+bool
 screen_resume(void)
 {
     char *cl;
 
     if (!escaped) {
-	return;
+	return true;
     }
 
-    escaped = false;
-
-    /* Ignore signals we don't like. */
-    signal(SIGINT, SIG_IGN);
-    signal(SIGTSTP, SIG_IGN);
+    vctrace(TC_UI, "screen_resume rows/cols curses %d/%d env %s/%s pending %d/%d\n",
+	    cursesLINES, cursesCOLS,
+	    getenv("LINES"), getenv("COLUMNS"),
+	    pending_rows, pending_cols);
 
     /*
      * Clear the screen first, if possible, so future command output
@@ -2066,22 +2079,75 @@ screen_resume(void)
 	putp(cl);
     }
 
+    /*
+     * Re-evaluate the screen dimensions if there is a new connection and curses has been initialized.
+     * If it doesn't fit, complain, but there is no need to abandon the connection.
+     */
+    if (!IS_80_132 && PCONNECTED && !CONNECTED && screen_initted) {
+	char *errmsg = screen_adapt(model_num, ov_auto, ov_rows, ov_cols,
+		pending_rows? pending_rows: cursesLINES,
+		pending_cols? pending_cols: cursesCOLS);
+
+	if (errmsg != NULL) {
+	    popup_an_error("%s", errmsg);
+	    Free(errmsg);
+	    return false;
+	}
+    }
+
+    /*
+     * Check against the minimum screen size.
+     * We do that separately here because finish_screen_init() will crash if
+     * the screen is smaller than a model 2, and we want to be more polite
+     * than that.
+     */
+    {
+	int check_rows = pending_rows? pending_rows: cursesLINES;
+	int check_cols = pending_cols? pending_cols: cursesCOLS;
+	int min_rows = minimum_rows? minimum_rows: MODEL_2_ROWS;
+	int min_cols = minimum_cols? minimum_cols: MODEL_2_COLS;
+
+	if (!IS_80_132 && (check_rows < min_rows || check_cols < min_cols)) {
+	    popup_an_error(WONT_FIT, check_rows, check_cols, min_rows, min_cols);
+	    if (PCONNECTED && !screen_initted) {
+		/*
+		 * We are failing here because the terminal is too small, and we have
+		 * not finished screen initialization. Because of that, the screen
+		 * dimensions are not final, so we cannot proceed with the connection.
+		 */
+		appres.retry = false;
+		run_action(AnDisconnect, IA_UI, NULL, NULL);
+	    }
+	    return false;
+	}
+    }
+
     /* Finish screen initialization. */
     if (!screen_initted) {
 	finish_screen_init();
     }
 
-#if defined(C3270_80_132) /*[*/
-    if (def_screen != alt_screen && curses_alt) {
-	/*
-	 * When we suspended the screen, we switched to defscreen so
-	 * that endwin() got called in the right order.  Switch back.
-	 */
-	swap_screens(alt_screen);
-	if (write(1, altscreen_spec.mode_switch,
-	    strlen(altscreen_spec.mode_switch)) < 0) {
-	    x3270_exit(1);
+#if defined(HAVE_RESIZETERM) /*[*/
+    /* If there is a pending resize, run it. */
+    if ((pending_rows || pending_cols)) {
+	if (screen_resize(pending_rows, pending_cols, "screen_resume")) {
+	    pending_rows = 0;
+	    pending_cols = 0;
+	} else {
+	    return false;
 	}
+    }
+#endif /*]*/
+
+    escaped = false;
+
+    /* Ignore signals we don't like. */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+
+#if defined(C3270_80_132) /*[*/
+    if (IS_80_132 && screen_alt != curses_alt) {
+	swap_screens(screen_alt);
     }
 #endif /*]*/
     screen_disp(false);
@@ -2093,6 +2159,9 @@ screen_resume(void)
     if (input_id == NULL_IOID) {
 	input_id = AddInput(0, kybd_input);
     }
+
+    /* Success. */
+    return true;
 }
 
 void
@@ -2274,8 +2343,7 @@ void
 status_minus(void)
 {
     other_msg = "X -f";
-    other_attr = status_colors(HOST_COLOR_RED);
-    other_attr.attrs |= A_BOLD;
+    other_color = HOST_COLOR_RED;
 }
 
 void
@@ -2295,8 +2363,7 @@ status_oerr(int error_type)
 	other_msg = "X DBCS";
 	break;
     }
-    other_attr = status_colors(HOST_COLOR_RED);
-    other_attr.attrs |= A_BOLD;
+    other_color = HOST_COLOR_RED;
 }
 
 void
@@ -2315,8 +2382,7 @@ void
 status_syswait(void)
 {
     other_msg = "X SYSTEM";
-    other_attr = status_colors(HOST_COLOR_WHITE);
-    other_attr.attrs |= A_BOLD;
+    other_color = HOST_COLOR_NEUTRAL_WHITE;
 }
 
 void
@@ -2324,8 +2390,7 @@ status_twait(void)
 {
     oia_undera = false;
     other_msg = "X Wait";
-    other_attr = status_colors(HOST_COLOR_WHITE);
-    other_attr.attrs |= A_BOLD;
+    other_color = HOST_COLOR_NEUTRAL_WHITE;
 }
 
 void
@@ -2405,8 +2470,7 @@ status_connect(bool connected)
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
-    other_attr = status_colors(HOST_COLOR_WHITE);
-    other_attr.attrs |= A_BOLD;
+    other_color = HOST_COLOR_NEUTRAL_WHITE;
     status_untiming();
 }
 
@@ -2527,12 +2591,8 @@ draw_oia(void)
     }
 
 #if defined(C3270_80_132) /*[*/
-    if (def_screen != alt_screen) {
-	if (curses_alt) {
-	    rmargin = altscreen_spec.cols - 1;
-	} else {
-	    rmargin = defscreen_spec.cols - 1;
-	}
+    if (IS_80_132) {
+	rmargin = screen_spec[curses_alt].cols - 1;
     } else
 #endif /*]*/
     {
@@ -2580,7 +2640,7 @@ draw_oia(void)
     xattrset(xhattr);
 
     /* Draw the crosshair over the menubar line. */
-    if (screen_yoffset && toggled(CROSSHAIR) && !menu_is_up &&
+    if (screen_yoffset && cursor_enabled && toggled(CROSSHAIR) && !menu_is_up &&
 	    (mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	draw_crosshair(vbar.u, vbar.acs);
     }
@@ -2589,7 +2649,7 @@ draw_oia(void)
     if (!menu_is_up && screen_yoffset > 1) {
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(1, j);
-	    if (toggled(CROSSHAIR) && j == fl_cursor_col) {
+	    if (cursor_enabled && toggled(CROSSHAIR) && j == fl_cursor_col) {
 		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
@@ -2601,7 +2661,7 @@ draw_oia(void)
     for (i = 0; i < ROWS; i++) {
 	for (j = cCOLS; j < cursesCOLS; j++) {
 	    move(i + screen_yoffset, j);
-	    if (toggled(CROSSHAIR) && i == cursor_row) {
+	    if (cursor_enabled && toggled(CROSSHAIR) && i == cursor_row) {
 		draw_crosshair(hbar.u, hbar.acs);
 	    } else {
 		addch(' ');
@@ -2616,7 +2676,7 @@ draw_oia(void)
     for (i = screen_yoffset + ROWS; i < status_row; i++) {
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(i, j);
-	    if (toggled(CROSSHAIR) && j == fl_cursor_col) {
+	    if (cursor_enabled && toggled(CROSSHAIR) && j == fl_cursor_col) {
 		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
@@ -2624,18 +2684,19 @@ draw_oia(void)
 	}
     }
 
-/* The OIA looks like (in Model 2/3/4 mode):
+/* The OIA looks like this (in Model 2/3/4 mode):
 
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 4AN    Status-Message--------------------- Cn TRIPS+s LU-Name-   :ss.s  000/000
          7         6         5         4         3         2         1
 98765432109876543210987654321098765432109876543210987654321098765432109876543210
-                                                                        ^ -7
-                                                                 ^ -14
+                                                                        ^-7
+                                                                 ^-14
                                                       ^-25
+				           ^-36
 
-   On wider displays, there is a bigger gap between TRIPSs and LU-Name.
+   On wider displays, there is a bigger gap between the Status Message and Cn.
 
 */
 
@@ -2650,7 +2711,7 @@ draw_oia(void)
 	attr_set(defattr.attrs | A_UNDERLINE, defattr.pair, NULL);
 	move(status_row - 1, 0);
 	for (i = 0; i < rmargin; i++) {
-	    if (toggled(CROSSHAIR) && i == fl_cursor_col) {
+	    if (cursor_enabled && toggled(CROSSHAIR) && i == fl_cursor_col) {
 		move(status_row - 1, i + 1);
 	    } else {
 		printw(" ");
@@ -2696,18 +2757,19 @@ draw_oia(void)
 	status_msg_now = disabled_msg;
 	reset_info();
     } else if (scrolled_msg != NULL) {
-	msg_attr = status_colors(HOST_COLOR_WHITE);
+	msg_attr = status_colors(HOST_COLOR_NEUTRAL_WHITE);
 	msg_attr.attrs |= A_BOLD;
 	status_msg_now = scrolled_msg;
 	reset_info();
     } else if (info_msg != NULL) {
-	msg_attr = status_colors(HOST_COLOR_WHITE);
+	msg_attr = status_colors(HOST_COLOR_NEUTRAL_WHITE);
 	msg_attr.attrs |= A_BOLD;
 	status_msg_now = info_msg;
 	set_info_timer();
     } else if (other_msg != NULL) {
 	status_msg_now = other_msg;
-	msg_attr = other_attr;
+	msg_attr = status_colors(other_color);
+	msg_attr.attrs |= A_BOLD;
     } else {
 	status_msg_now = "";
     }
@@ -2715,7 +2777,7 @@ draw_oia(void)
     xattrset(msg_attr);
     mvprintw(status_row, 7, "%-35.35s", status_msg_now);
     xattrset(defattr);
-    mvprintw(status_row, rmargin-35,
+    mvprintw(status_row, rmargin-36,
 	"%c%c %c%c%c%c",
 	oia_compose? 'C': ' ',
 	oia_compose? oia_compose_char: ' ',
@@ -2732,7 +2794,7 @@ draw_oia(void)
     } else {
 	printw(" ");
     }
-    printw("%c%c", oia_screentrace,oia_script);
+    printw("%c%c", oia_screentrace, oia_script);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
@@ -2742,7 +2804,8 @@ draw_oia(void)
 	    cursor_addr%cCOLS + 1);
 
     /* Draw the crosshair in the OIA. */
-    if (toggled(CROSSHAIR) &&
+    if (cursor_enabled &&
+	    toggled(CROSSHAIR) &&
 	    cursor_col > 2 &&
 	    (mvinch(status_row, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	draw_crosshair(vbar.u, vbar.acs);
@@ -2758,7 +2821,7 @@ Redraw_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!escaped) {
-	endwin();
+	clearok(stdscr, TRUE);
 	refresh();
     }
     return true;
@@ -2791,19 +2854,25 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
     char msbuf[3];
     char *s, *t, c;
     bool escaped = false;
+    int n_hex = -1;
+    int n_octal = -1;
+    unsigned accum;
+    static const char *octal_digits = "01234567";
+    static const char *hex_digits = "0123456789abcdef";
 
     if (sscanf(str, "%dx%d=%2s", &spec->rows, &spec->cols, msbuf) != 3) {
-	fprintf(stderr, "Invalid screen screen spec '%s', must "
-		"be '<rows>x<cols>=<init_string>'\n", str);
-	exit(1);
+	screen_fatal("Invalid screen spec '%s', must be '<rows>x<cols>=<init_string>'", str);
     }
     s = strchr(str, '=') + 1;
     spec->mode_switch = Malloc(strlen(s) + 1);
     t = spec->mode_switch;
     while ((c = *s++)) {
+	char *ix;
+
 	if (escaped) {
 	    switch (c) {
 	    case 'E':
+	    case 'e':
 		*t++ = 0x1b;
 		break;
 	    case 'n':
@@ -2818,14 +2887,41 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
 	    case 't':
 		*t++ = '\t';
 		break;
-	    case '\\':
-		*t++ = '\\';
+	    case 'f':
+		*t++ = '\f';
+		break;
+	    case 'x':
+		n_hex = 0;
+		accum = 0;
 		break;
 	    default:
-		*t++ = c;
+		if ((ix = strchr(octal_digits, c)) != NULL) {
+		    accum = (unsigned)(ix - octal_digits);
+		    n_octal = 1;
+		} else {
+		    *t++ = c;
+		}
 		break;
 	    }
 	    escaped = false;
+	} else if (n_hex >= 0) {
+	    if ((ix = strchr(hex_digits, (char)(tolower((int)c)))) == NULL) {
+		screen_fatal("Invalid hex string in screen spec '%s'", str);
+	    }
+	    accum = (accum * 16) + (unsigned)(ix - hex_digits);
+	    if (++n_hex >= 2) {
+		*t++ = (char)accum;
+		n_hex = -1;
+	    }
+	} else if (n_octal >= 0) {
+	    if ((ix = strchr(octal_digits, c)) == NULL) {
+		screen_fatal("Invalid octal string in screen spec '%s'", str);
+	    }
+	    accum = (accum * 8) + (unsigned)(ix - octal_digits);
+	    if (++n_octal >= 3) {
+		*t++ = (char)accum;
+		n_octal = -1;
+	    }
 	} else if (c == '\\') {
 	    escaped = true;
 	} else {
@@ -2833,6 +2929,13 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
 	}
     }
     *t = '\0';
+
+    if (escaped) {
+	screen_fatal("Incomplete backslash sequence in screen spec '%s'", str);
+    }
+    if (n_hex >= 0 || n_octal >= 0) {
+	screen_fatal("Incomplete hex or octal string in screen spec '%s'", str);
+    }
 }
 #endif /*]*/
 
@@ -2840,12 +2943,8 @@ void
 screen_132(void)
 {
 #if defined(C3270_80_132) /*[*/
-    if (cur_screen != alt_screen) {
-	swap_screens(alt_screen);
-	if (write(1, altscreen_spec.mode_switch,
-		    strlen(altscreen_spec.mode_switch)) < 0) {
-	    x3270_exit(1);
-	}
+    if (IS_80_132 && !curses_alt) {
+	swap_screens(true);
 	ctlr_erase(true);
 	screen_disp(true);
     }
@@ -2856,12 +2955,8 @@ void
 screen_80(void)
 {
 #if defined(C3270_80_132) /*[*/
-    if (cur_screen != def_screen) {
-	swap_screens(def_screen);
-	if (write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch)) < 0) {
-	    x3270_exit(1);
-	}
+    if (IS_80_132 && curses_alt) {
+	swap_screens(false);
 	ctlr_erase(false);
 	screen_disp(true);
     }
@@ -3110,7 +3205,7 @@ apl_to_acs(unsigned char c)
 }
 
 static void
-display_ge(unsigned char ebc)
+display_ge(unsigned char ebc, attr_pair_t *attrs)
 {
     int c;
     char mb[16];
@@ -3126,6 +3221,15 @@ display_ge(unsigned char ebc)
 	    addch(c);
 	    return;
 	}
+    }
+
+    /* See if it's an underlined alphabetic. */
+    c = apl_to_unicode(ebc, EUO_APL_CIRCLED);
+    if (unicode_is_apl_circled(c)) {
+	attr_set(attrs->attrs | A_UNDERLINE, attrs->pair, NULL);
+	addch(unicode_uncircle(c));
+	attr_set(attrs->attrs, attrs->pair, NULL);
+	return;
     }
 
     /* Then try Unicode. */
@@ -3205,9 +3309,50 @@ screen_change_model(int mn, int ovc, int ovr)
 void
 enable_cursor(bool on)
 {
-    if (initscr_done && !isendwin()) {
+    cursor_enabled = on;
+
+    if (screen_initted && !isendwin()) {
 	curs_set(on? 1: 0);
     }
+}
+
+/**
+ * Report curses info.
+ *
+ * @returns Curses info
+ */
+const char *
+query_curses(void)
+{
+    return txAsprintf("Provider: %s\nTerminal: rows %d columns %d colors %s mouse %s wchar %s",
+#if defined(NCURSES_VERSION) /*[*/
+	    txAsprintf("ncurses %s %d", NCURSES_VERSION, NCURSES_VERSION_PATCH),
+#else /*][*/
+	    "curses",
+#endif /*]*/
+	    pending_rows? pending_rows: cursesLINES,
+	    pending_cols? pending_cols: cursesCOLS,
+	    screen_initted? txAsprintf("%d", COLORS): "uninitialized",
+	    mouse_state_name[mouse_state],
+#if defined(CURSES_WIDE) /*[*/
+	    "true"
+#else /*][*/
+	    "false"
+#endif /*]*/
+	    );
+}
+
+/* Connection state change handler. */
+static void
+screen_connect(bool ignored)
+{
+    if (!PCONNECTED) {
+	/* Put back the original screen dimensions. */
+	set_cols_rows(orig_model_num, orig_ov_auto? -1: orig_ov_cols, orig_ov_auto? -1: orig_ov_rows);
+    }
+
+    /* Update the OIA. */
+    status_connect(ignored);
 }
 
 /**
@@ -3216,6 +3361,9 @@ enable_cursor(bool on)
 void
 screen_register(void)
 {
+    static query_t queries[] = {
+	{ KwCurses, query_curses, NULL, false, true }
+    };
     static toggle_register_t toggles[] = {
 	{ MONOCASE,	toggle_monocase,	0 },
 	{ SHOW_TIMING,	toggle_showTiming,	0 },
@@ -3231,9 +3379,12 @@ screen_register(void)
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
 
+    /* Register the queries. */
+    register_queries(queries, array_count(queries));
+
     /* Register for state changes. */
     register_schange(ST_NEGOTIATING, status_connect);
-    register_schange(ST_CONNECT, status_connect);
+    register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_3270_MODE, status_3270_mode);
     register_schange(ST_PRINTER, status_printer);
 

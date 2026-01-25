@@ -228,7 +228,7 @@ def vgwrap_ecmd(command):
 def vgwrap_eargs(args):
     '''Wrap execvp arguments in valgrind'''
     if 'TRACEALL' in os.environ and not '-trace' in args:
-        targs = ['-trace'] + args[1:]
+        targs = [args[0]] + ['-trace'] + args[1:]
     else:
         targs = args
     if 'VALGRIND' in os.environ:

@@ -1725,7 +1725,7 @@ oversize_button_callback(Widget w _is_unused, XtPointer client_data,
 	return;
     }
     if (sscanf(s, "%dx%d%c", &ovc, &ovr, &junk) == 2) {
-	if (check_rows_cols(model_num, ovc, ovr, true)) {
+	if (check_cols_rows(model_num, ovc, ovr, true)) {
 	    XtPopdown(oversize_shell);
 	    screen_remodel(model_num, ovc, ovr);
 	}

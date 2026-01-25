@@ -57,7 +57,7 @@ def suffix_test(ti, program, suffix, children):
     ti.assertEqual('foo', j['result'][0], 'Expecting "foo" as the terminal name')
     r = requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(model)')
     j = r.json()
-    ti.assertEqual('3279-3-E', j['result'][0], 'Expecting 3279-3-E as the model')
+    ti.assertEqual('3279-3', j['result'][0], 'Expecting 3279-3 as the model')
 
     # Wait for the process to exit.
     requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
