@@ -233,6 +233,7 @@ static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static HWND get_console_hwnd(void);
 static void codepage_changed(bool ignored);
+static void crosshair_color_init(void);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
@@ -631,32 +632,47 @@ remap_blue(HANDLE buf, unsigned *map)
     }
 }
 
-/* Set up RGB color definitions. */
+/* Initialize reverse-video settings. */
 static void
-setup_rgb_colors(void)
+init_reverse_video(void)
 {
     if (appres.c3270.reverse_video) {
-	int t;
-
 	/* Pick the right RGB map. */
 	rgb = rgbmap_rv;
 
-	/* For Windows Console, swap neutral black and neutral white. */
-	t = cmap_fg[HOST_COLOR_NEUTRAL_WHITE];
-	cmap_fg[HOST_COLOR_NEUTRAL_WHITE] = cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
-	cmap_fg[HOST_COLOR_NEUTRAL_BLACK] = t;
+	if (!USING_VT) {
+	    int t;
 
-	t = cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
-	cmap_bg[HOST_COLOR_NEUTRAL_WHITE] = cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
-	cmap_bg[HOST_COLOR_NEUTRAL_BLACK] = t;
+	    /* For Windows Console, swap neutral black and neutral white. */
+	    t = cmap_fg[HOST_COLOR_NEUTRAL_WHITE];
+	    cmap_fg[HOST_COLOR_NEUTRAL_WHITE] = cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+	    cmap_fg[HOST_COLOR_NEUTRAL_BLACK] = t;
+
+	    t = cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
+	    cmap_bg[HOST_COLOR_NEUTRAL_WHITE] = cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	    cmap_bg[HOST_COLOR_NEUTRAL_BLACK] = t;
+	}
     }
+}
 
-    /*
-     * Patch up light blue on Windows Console.
-     * Do this for white-on-black mode.
-     */
-    if (!USING_VT && !appres.c3270.reverse_video) {
-	remap_blue(cohandle, rgbmap);
+/* Initialize the basic screen attributes. */
+static void
+init_default_attrs(void)
+{
+    if (mode3279) {
+	defattr = get_color_pair(HOST_COLOR_NEUTRAL_WHITE, HOST_COLOR_NEUTRAL_BLACK);
+	crosshair_color_init();
+	xhattr = get_color_pair(crosshair_color, HOST_COLOR_NEUTRAL_BLACK);
+	oia_attr = get_color_pair(HOST_COLOR_BLUE, HOST_COLOR_NEUTRAL_BLACK);
+	oia_red_attr = get_color_pair(HOST_COLOR_RED, HOST_COLOR_NEUTRAL_BLACK);
+	oia_white_attr = get_color_pair(HOST_COLOR_NEUTRAL_WHITE, HOST_COLOR_NEUTRAL_BLACK);
+    }
+    else {
+	defattr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
+	xhattr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
+	oia_attr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
+	oia_red_attr = get_color_pair(HOST_COLOR_GREEN, HOST_COLOR_NEUTRAL_BLACK);
+	oia_white_attr = oia_attr;
     }
 }
 
@@ -1650,18 +1666,16 @@ screen_init(void)
     init_user_colors();
     init_user_attribute_colors();
 
-    if (mode3279) {
-	oia_attr = get_color_pair(HOST_COLOR_BLUE, HOST_COLOR_NEUTRAL_BLACK);
-	oia_red_attr = get_color_pair(HOST_COLOR_RED, HOST_COLOR_NEUTRAL_BLACK);
-	oia_white_attr = get_color_pair(HOST_COLOR_NEUTRAL_WHITE, HOST_COLOR_NEUTRAL_BLACK);
-    } else {
-	oia_attr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
-	oia_red_attr = get_color_pair(HOST_COLOR_GREEN, HOST_COLOR_NEUTRAL_BLACK);
-	oia_white_attr = oia_attr;
-    }
+    /* Set up reverse video. */
+    init_reverse_video();
 
-    /* Set RGB colors. */
-    setup_rgb_colors();
+    /* Now it's safe to set up default attributes. */
+    init_default_attrs();
+
+    /* Remap highlighted blue. */
+    if (!USING_VT && !appres.c3270.reverse_video) {
+	remap_blue(cohandle, rgbmap);
+    }
 
     /* Set up the controller. */
     ctlr_init(ALL_CHANGE);
@@ -1897,16 +1911,6 @@ init_user_colors(void)
     /* Look for user-defined overrides. */
     for (i = 0; host_color[i].name != NULL; i++) {
 	init_user_color(host_color[i].name, host_color[i].index);
-    }
-
-    /* Now set up the basic screen attributes. */
-    if (mode3279) {
-	defattr = get_color_pair(HOST_COLOR_NEUTRAL_WHITE, HOST_COLOR_NEUTRAL_BLACK);
-	crosshair_color_init();
-	xhattr = get_color_pair(crosshair_color, HOST_COLOR_NEUTRAL_BLACK);
-    } else {
-	defattr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
-	xhattr = get_color_pair(HOST_COLOR_PALE_GREEN, HOST_COLOR_NEUTRAL_BLACK);
     }
 }
 
@@ -4222,11 +4226,7 @@ screen_color(pc_t pc)
 	    (void) SetConsoleTextAttribute(cohandle, base_wAttributes);
 	} else {
 	    if (color == HOST_COLOR_BLUE && appres.c3270.reverse_video) {
-		/*
-		 * Blue is unreadable, switch to green.
-		 * See the comment at the bottom of setup_rgb_colors to see why we can't
-		 * use an acceptable shade of blue in this case.
-		 */
+		/* Blue is unreadable, switch to green. */
 		color = HOST_COLOR_PALE_GREEN;
 	    }
 	    (void) SetConsoleTextAttribute(cohandle, cmap_fg[color] |
