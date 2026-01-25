@@ -323,6 +323,7 @@ screen_perror_fatal(const char *fmt, ...)
 				       ENABLE_PROCESSED_INPUT |
 				       ENABLE_MOUSE_INPUT |
 				       ENABLE_INSERT_MODE |
+				       ENABLE_QUICK_EDIT_MODE |
 				       ENABLE_EXTENDED_FLAGS);
     }
 
@@ -700,6 +701,8 @@ allocate_onscreen_toscreen(void)
 static HANDLE
 initscr(void)
 {
+    DWORD mode;
+    (void) GetConsoleMode(chandle, &mode);
     if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
 				ENABLE_MOUSE_INPUT |
 				ENABLE_INSERT_MODE |
@@ -1501,6 +1504,7 @@ set_console_cooked(void)
 				ENABLE_PROCESSED_INPUT |
 				ENABLE_MOUSE_INPUT |
 				ENABLE_INSERT_MODE |
+				ENABLE_QUICK_EDIT_MODE |
 				ENABLE_EXTENDED_FLAGS) == 0) {
 	screen_perror_fatal("set_console_cooked SetConsoleMode(CONIN$)");
     }
@@ -1521,6 +1525,7 @@ screen_echo_mode(bool echo)
 				    ENABLE_PROCESSED_INPUT |
 				    ENABLE_MOUSE_INPUT |
 				    ENABLE_INSERT_MODE |
+				    ENABLE_QUICK_EDIT_MODE |
 				    ENABLE_EXTENDED_FLAGS) == 0) {
 	    screen_perror_fatal("screen_echo_mode SetConsoleMode(CONIN$)");
 	}
