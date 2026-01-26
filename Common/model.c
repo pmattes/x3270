@@ -388,12 +388,12 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     if (pending_extended_data_stream != NULL) {
 	appres.extended_data_stream = xext;
     }
-    if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
+    if (pending_model != NULL || pending_oversize != NULL) {
 	set_cols_rows(model_number, ovc, ovr);
     }
 
     /* Finish the rest of the switch. */
-    if (pending_model != NULL || (pending_oversize != NULL && *pending_oversize)) {
+    if (pending_model != NULL || pending_oversize != NULL) {
 	ROWS = maxROWS;
 	COLS = maxCOLS;
 	ctlr_reinit(MODEL_CHANGE);
