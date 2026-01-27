@@ -732,31 +732,32 @@ finish_screen_init(void)
     pending_rows = 0;
     pending_cols = 0;
 
-    /* Set up the mouse, which affects whether we have a menubar or not. */
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
+    /* Set up the mouse. */
     if (appres.c3270.mouse) {
 	if (mousemask(BUTTON1_RELEASED, NULL) == 0) {
+	    /* Mouse could not be inialized. */
 	    appres.c3270.mouse = false;
-	    appres.interactive.menubar = false;
-	    mouse_state = MS_ABSENT;
 	} else {
+	    /* Mouse works. */
 	    mouse_state = MS_PRESENT;
 	}
-    } else
+    }
 #else /*][*/
-    {
-	appres.c3270.mouse = false;
+    /* No mouse support in curses. */
+    appres.c3270.mouse = false;
+#endif /*]*/
+
+    /* No mouse, no menubar. */
+    if (!appres.c3270.mouse) {
 	appres.interactive.menubar = false;
 	mouse_state = MS_ABSENT;
     }
-#endif /*]*/
 
     /*
      * Adapt the 3270 display to the curses terminal dimensions.
      * Failure here is fatal.
      */
-    /* N.B.: Due to a gcc bug, if the following vctrace call is not present, the screen_adapt call is never made. */
-    vctrace(TC_UI, "finish_screen_init calling screen_adapt\n");
     errmsg = screen_adapt(model_num, ov_auto, ov_rows, ov_cols, cursesLINES, cursesCOLS);
     if (errmsg != NULL) {
 	screen_fatal("%s", errmsg);
