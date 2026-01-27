@@ -4106,7 +4106,29 @@ screen_exiting(bool exiting)
 static HWND
 get_console_hwnd(void)
 {
-    return GetConsoleWindow();
+#   define MY_BUFSIZE 1024	/* buffer size for console window titles */
+    HWND hwnd_found;        		/* returned to the caller */
+    char new_window_title[MY_BUFSIZE];	/* fabricated WindowTitle */
+    char old_window_title[MY_BUFSIZE];	/* original WindowTitle */
+
+    /* Fetch current window title. */
+    GetConsoleTitle(old_window_title, MY_BUFSIZE);
+
+    /* Format a "unique" NewWindowTitle. */
+    wsprintf(new_window_title, "%d/%d", GetTickCount(), GetCurrentProcessId());
+
+    /* Change current window title. */
+    SetConsoleTitle(new_window_title);
+
+    /* Ensure window title has been updated. */
+    Sleep(40);
+
+    /* Look for NewWindowTitle. */
+    hwnd_found = FindWindow(NULL, new_window_title);
+
+    /* Restore original window title. */
+    SetConsoleTitle(old_window_title);
+    return hwnd_found;
 }
 
 /*
