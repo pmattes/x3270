@@ -45,26 +45,21 @@ class TestS3270Model(cti):
         self.check_listen(sport)
         socket.close()
 
-        # Set oversize. Make sure the model switches to 2.
+        # Set oversize to something invalid for a model 4. It should fail.
         r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize,80x25)')
-        self.assertTrue(r.ok)
-        r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
-        self.assertTrue(r.ok)
-        self.assertEqual('3279-2', r.json()['result'][0])
+        self.assertFalse(r.ok)
 
-        # Try to set the model to 5. It should fail silently.
+        # Set oversize to something reasonable for model 4, but not for a model 5. It should succeed.
+        r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize,80x50)')
+        self.assertTrue(r.ok)
+
+        # Now try setting the model to 5. It should fail.
         r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model,5)')
-        self.assertTrue(r.ok)
-        r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
-        self.assertTrue(r.ok)
-        self.assertEqual('3279-2', r.json()['result'][0])
+        self.assertFalse(r.ok)
 
-        # Now clear oversize and set the model again. It should succeed.
+        # Clear oversize and try model 5 again. It should succeed.
         r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(oversize,"",model,5)')
         self.assertTrue(r.ok)
-        r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Set(model)')
-        self.assertTrue(r.ok)
-        self.assertEqual('3279-5', r.json()['result'][0])
 
         # Wait for the processes to exit.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')

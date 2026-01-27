@@ -280,14 +280,10 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
     unsigned mxc, mxr; /* Maximum rows, columns */
     const char *err;
 
-    if (ovc != 0 || ovr != 0) {
-	/* Oversize implies a model 2. */
-	mn = 2;
-
-	if (ovc < 0 || ovr < 0) {
-	    ovc = 0;
-	    ovr = 0;
-	}
+    if (ovc < 0 || ovr < 0) {
+	mn = 2; /* auto-oversize implies a model 2. */
+	ovc = 0;
+	ovr = 0;
     }
 
     switch (mn) {
@@ -338,7 +334,8 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 	    return false;
 	}
 	if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
-	    err = txAsprintf("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
+	    err = txAsprintf("Invalid %s %dx%d:\nExceeds protocol limit of %d columns x rows",
+		    ResOversize, ovc, ovr, MAX_ROWS_COLS);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
@@ -347,7 +344,7 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 	    return false;
 	}
 	if (ovc > 0 && ovc < mxc) {
-	    err = txAsprintf("Invalid %s columns (%d):\nLess than minimum columns (%d)", ResOversize, ovc, mxc);
+	    err = txAsprintf("Invalid %s columns (%d):\nLess than minimum columns (%d) for model %d", ResOversize, ovc, mxc, mn);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
@@ -356,7 +353,7 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 	    return false;
 	}
 	if (ovr > 0 && ovr < mxr) {
-	    err = txAsprintf("Invalid %s rows (%d):\nLess than minimum rows (%d)", ResOversize, ovr, mxr);
+	    err = txAsprintf("Invalid %s rows (%d):\nLess than minimum rows (%d) for model %d", ResOversize, ovr, mxr, mn);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
@@ -384,15 +381,11 @@ set_cols_rows(int mn, int ovc, int ovr)
 	return;
     }
 
-    if (ovc != 0 || ovr != 0) {
-	/* With oversize, the model is always 2. */
-	mn = 2;
-
-	if (ovc < 0 || ovr < 0) {
-	    ov_auto = true;
-	    ovc = 0;
-	    ovr = 0;
-	}
+    if (ovc < 0 || ovr < 0) {
+	ov_auto = true;
+	mn = 2; /* auto-oversize implies a model 2 */
+	ovc = 0;
+	ovr = 0;
     }
 
     switch (mn) {
@@ -428,11 +421,14 @@ set_cols_rows(int mn, int ovc, int ovr)
     ov_rows = 0;
     if (ovc > 0 || ovr > 0) {
 	if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
-	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit", ResOversize, ovc, ovr);
+	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit of %d columns x rows",
+		    ResOversize, ovc, ovr, MAX_ROWS_COLS);
 	} else if (ovc > 0 && ovc < maxCOLS) {
-	    popup_an_error("Invalid %s columns (%d):\nLess than minimuim columns (%d)", ResOversize, ovc, maxCOLS);
+	    popup_an_error("Invalid %s columns (%d):\nLess than minimuim columns (%d) for model %d",
+		    ResOversize, ovc, maxCOLS, mn);
 	} else if (ovr > 0 && ovr < maxROWS) {
-	    popup_an_error("Invalid %s rows (%d):\nLess than minimum rows (%d)", ResOversize, ovr, maxROWS);
+	    popup_an_error("Invalid %s rows (%d):\nLess than minimum rows (%d) for model %d",
+		    ResOversize, ovr, maxROWS, mn);
 	} else {
 	    ov_cols = maxCOLS = ovc;
 	    ov_rows = maxROWS = ovr;

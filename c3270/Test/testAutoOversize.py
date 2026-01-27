@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
 # c3270 auto-oversize tests
 
 import os
-import os.path
 import sys
 if not sys.platform.startswith('win'):
     import pty
@@ -61,7 +60,7 @@ class TestC3270AutoOversize(cti):
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
             os.execvpe(vgwrap_ecmd('c3270'),
-                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+                vgwrap_eargs(['c3270', '-model', '5', '-utf8',
                     '-httpd', f'127.0.0.1:{c3270_port}',
                     '-oversize', 'auto',
                     '-secure']), env)
@@ -88,10 +87,17 @@ class TestC3270AutoOversize(cti):
         self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
         p.send_records(2)
 
+        # Oversize should display as 'auto'.
         r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(oversize)')
         self.assertTrue(r.ok)
         value = r.json()['result'][0]
         self.assertEqual('auto', value)
+
+        # The model number should be '2' even though we specified 5 -- that happens with auto-oversize.
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Set(model)')
+        self.assertTrue(r.ok)
+        value = r.json()['result'][0]
+        self.assertEqual('3279-2', value)
 
         self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
         p.close()
