@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -162,9 +162,6 @@ static char dxl[] = "0123456789abcdef";
     ((kybdlock & ~KL_FT) || \
      ((kybdlock & KL_FT) && (ia != IA_FT)))
 
-static action_t Attn_action;
-static action_t BackSpace_action;
-static action_t BackTab_action;
 static action_t Attn_action;
 static action_t BackSpace_action;
 static action_t BackTab_action;
