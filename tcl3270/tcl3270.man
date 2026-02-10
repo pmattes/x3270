@@ -21,7 +21,7 @@ It is derived from
 a script-based IBM 3270 emulator.
 .LP
 For each action supported by s3270, tcl3270 defines a
-correcponding Tcl command.
+corresponding Tcl command.
 The result of the Tcl command is the output of the s3270 action.
 If the output is one line, the result is a string.
 If the output is multiple lines, the result is a list of strings.
