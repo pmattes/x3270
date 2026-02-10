@@ -1,0 +1,356 @@
+20260210.143423.130 infra  init_child: child_outpipe is 5 6
+20260210.143423.131 infra  Trace started
+ Version: x3270 v4.6pre1 Tue Feb 10 20:24:12 UTC 2026 pdm
+ Build options: --enable-local-process via gcc 13.3.0 64-bit
+ Command: x3270 -trace -script -geometry +0+0
+ Model 3279-4, 43 rows x 80 cols, color display, extended data stream, color emulation, code page bracket
+ Locale codeset: UTF-8
+ Host codepage: 37
+ Settings: acceptHostname= aidWait=true altCursor=false alwaysInsert=false
+  aplMode=false bindLimit=true blankFill=true caDir= caFile= certFile=
+  certFileType= chainFile= codePage=bracket confDir=/usr/local/etc/x3270
+  contentionResolution=true crosshair=false cursorBlink=false devName=
+  extendedDataStream=true ftBufferSize=16384 httpd= insertMode=false keyFile=
+  keyFileType= keyPasswd= lineMode=true lineWrap=true loginMacro=
+  marginedPaste=false model=3279-4 monoCase=false noTelnetInputMode=line
+  nopSeconds=0 oerrLock=true overlayPaste=true oversize= preferIpv4=false
+  preferIpv6=false printer.options= printerLu= proxy= reconnect=false
+  rectangleSelect=false retry=false reverseInputMode=false
+  rightToLeftMode=false rpq= saveLines=4096 screenTrace=false scriptPort=
+  scrollBar=true selectUrl=true showTiming=false startTls=true termName=
+  tls992=true tlsMaxProtocol= tlsMinProtocol= tlsSecurityLevel= trace=true
+  typeahead=true underscoreBlankFill=true unlockDelay=false unlockDelayMs=350
+  user= verifyHostCert=true visibleControl=false wrongTerminalName=false
+  xtwinops=true
+ Connection state: not-connected
+ Data stream:
+20260210.143423.132 infra  st_changed(secure,false)
+20260210.143423.132 socket Resolver slot is 0
+20260210.143423.132 infra  cstate [not-connected] -> [resolving] (host_connect)
+20260210.143423.132 infra  st_changed(connect,true)
+20260210.143423.132 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20260210.143423.132 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20260210.143423.132 infra  ctlr_enable_cursor(false, connect)
+20260210.143423.132 infra  st_changed(negotiating,true)
+20260210.143423.132 task   CB(s3stdin)[#1] started
+20260210.143423.132 task   CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20260210.143423.132 task   Macro[#1.2] IDLE -> RUNNING (fresh push)
+20260210.143423.132 ui     ConfigureNotify [581x656+0+0] -> PA-ConfigureNotify()
+20260210.143423.133 ui     setting fixed 581x656
+20260210.143423.133 ui     PropertyNotify -> PA-StateChanged()
+20260210.143423.133 task   Macro[#1.2] RUNNING -> IDLE (about to resume)
+20260210.143423.133 task   Macro[#1.2] running
+20260210.143423.133 task   Macro[#1.2] IDLE -> RUNNING (executing)
+20260210.143423.133 task   Macro[#1.2] 'Wait(inputfield)'
+20260210.143423.133 infra  script -> Wait("inputfield")
+20260210.143423.133 task   Macro[#1.2] RUNNING -> WAIT_IFIELD (Wait(inputfield))
+20260210.143423.133 socket Resolution complete, 1 address
+20260210.143423.135 tls    Will verify host certificate
+20260210.143423.160 socket Making host socket non-blocking
+20260210.143423.160 socket Trying 127.0.0.1, port 4001...
+20260210.143423.160 socket TCP connection pending.
+20260210.143423.160 infra  cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20260210.143423.160 infra  st_changed(negotiating,true)
+20260210.143423.160 infra  txflush: 94 slots, 4640 bytes
+20260210.143423.160 ui     ConfigureNotify [581x656+66+32] -> PA-ConfigureNotify()
+20260210.143423.160 ui     setting fixed 581x656
+20260210.143423.160 socket Output possible
+20260210.143423.160 infra  cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20260210.143423.160 infra  st_changed(connect,true)
+20260210.143423.160 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20260210.143423.160 kybd   Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20260210.143423.160 infra  Host negotiation step took 0.000243s to complete
+20260210.143423.160 infra  ctlr_enable_cursor(true, connect)
+20260210.143423.161 infra  ctlr_enable_cursor(true, nvt)
+20260210.143423.161 infra  st_changed(negotiating,true)
+20260210.143423.161 socket Connected to localhost, port 4001.
+20260210.143423.161 infra  st_changed(secure,false)
+20260210.143423.161 infra  st_changed(line-mode,true)
+20260210.143423.161 infra  txflush: 21 slots, 744 bytes
+20260210.143423.161 socket Reading host socket
+20260210.143423.161 socket Host socket read complete nr=343
+< 0x0   fffd28fffa280802fff0fffe28fffd18fffa1801fff0fffd19fffb19fffd00ff
+< 0x20  fb00fffd00fffb001100064000f1c0000501ffff02ffef
+< 0x0   0d8511f55b1d60d9e4
+20260210.143423.162 telnet RCVD DO TN3270E
+> 0x0   fffb28
+20260210.143423.162 telnet SENT WILL TN3270E
+20260210.143423.162 tn3270 Now operating in connected-unbound mode.
+20260210.143423.162 infra  cstate [telnet-pending] -> [connected-unbound] (host_in3270)
+20260210.143423.162 infra  st_changed(negotiating,true)
+20260210.143423.162 infra  st_changed(3270-mode,false)
+20260210.143423.162 infra  Host negotiation step took 0.000009s to complete
+20260210.143423.162 infra  ctlr_enable_cursor(true, connect)
+20260210.143423.162 telnet RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333237382d342d45fff0
+20260210.143423.162 telnet SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3278-4-E SE
+20260210.143423.162 telnet RCVD DONT TN3270E
+> 0x0   fffc28
+20260210.143423.162 telnet SENT WONT TN3270E
+20260210.143423.162 tn3270 Aborting TN3270E: negotiated off
+20260210.143423.162 tn3270 Now operating in telnet-pending mode.
+20260210.143423.162 infra  cstate [connected-unbound] -> [telnet-pending] (host_in3270)
+20260210.143423.162 infra  st_changed(negotiating,true)
+20260210.143423.162 telnet RCVD DO TERMINAL TYPE
+> 0x0   fffb18
+20260210.143423.162 telnet SENT WILL TERMINAL TYPE
+20260210.143423.162 telnet RCVD SB TERMINAL TYPE SEND
+> 0x0   fffa180049424d2d333237382d342d45fff0
+20260210.143423.162 telnet SENT SB TERMINAL TYPE IS IBM-3278-4-E SE
+20260210.143423.162 telnet RCVD DO END OF RECORD
+> 0x0   fffb19
+20260210.143423.162 telnet SENT WILL END OF RECORD
+20260210.143423.162 telnet RCVD WILL END OF RECORD
+> 0x0   fffd19
+20260210.143423.162 telnet SENT DO END OF RECORD
+20260210.143423.162 telnet RCVD DO BINARY
+> 0x0   fffb00
+20260210.143423.162 telnet SENT WILL BINARY
+20260210.143423.162 telnet RCVD WILL BINARY
+> 0x0   fffd00
+20260210.143423.162 telnet SENT DO BINARY
+20260210.143423.162 tn3270 Aborting TN3270E: negotiated off
+20260210.143423.162 tn3270 Now operating in connected-3270 mode.
+20260210.143423.162 infra  cstate [telnet-pending] -> [connected-3270] (host_in3270)
+20260210.143423.162 infra  st_changed(3270-mode,true)
+20260210.143423.162 infra  Host negotiation step took 0.000258s to complete
+20260210.143423.162 infra  ctlr_enable_cursor(true, connect)
+20260210.143423.166 telnet RCVD DO BINARY
+20260210.143423.166 telnet RCVD WILL BINARY
+< WriteStructuredField OutboundDS(0x00) Write(reset)
+20260210.143423.166 kybd   Keyboard unlock(ctlr_write) AWAITING_FIRST -AWAITING_FIRST -> none
+< WriteStructuredField ReadPartition(0xff) Query
+> StructuredField
+> QueryReply(Summary(Summary,UsableArea,AlphanumericPartitions,CharacterSet ...
+... s,Color,Highlighting,ReplyModes,DistributedDataManagement,RPQNames,Impl ...
+... icitPartition))
+> QueryReply(UsableArea)
+> QueryReply(AlphanumericPartitions)
+> QueryReply(CharacterSets)
+> QueryReply(Color)
+> QueryReply(Highlighting)
+> QueryReply(ReplyModes)
+> QueryReply(DistributedDataManagement INLIM/OUTLIM=16384)
+> QueryReply(RPQNames '' -> 0 0 x3270)
+> QueryReply(ImplicitPartition)
+> 0x0   88000e81808081848586878895a1a60017818101000050002b01000a02e50002
+> 0x20  006f090c0d7000088184000d7000001b81858200090c000000000700100002b9
+> 0x40  00250100f103c3013600268186001000f4f1f1f2f2f3f3f4f4f5f5f6f6f7f7f8
+> 0x60  f8f9f9fafafbfbfcfcfdfdfefeffffffff000f81870500f0f1f1f2f2f4f4f8f8
+> 0x80  00078188000102000c81950000400040000101001281a1000000000000000006
+> 0xa0  a7f3f2f7f0001181a600000b0100005000180050002bffef
+20260210.143423.167 telnet SENT EOR
+20260210.143423.167 kybd   Keyboard lock(kybd_inhibit) none +ENTER_INHIBIT -> ENTER_INHIBIT
+20260210.143423.167 telnet RCVD EOR
+20260210.143423.167 infra  txflush: 49 slots, 1864 bytes
+20260210.143423.167 ui     ConfigureNotify [581x656+66+32] -> PA-ConfigureNotify()
+20260210.143423.169 ui     setting fixed 581x656
+20260210.143423.169 ui     PropertyNotify -> PA-StateChanged()
+20260210.143423.170 ui     ConfigureNotify [581x656+14+49] -> PA-ConfigureNotify()
+20260210.143423.170 ui     setting fixed 581x656
+20260210.143423.170 ui     VisibilityNotify [Unobscured] -> PA-VisibilityNotify()
+20260210.143423.170 ui     Expose [564x624+0+0] -> PA-Expose()
+20260210.143423.170 ui     ConfigureNotify [581x656+115+118] -> PA-ConfigureNotify()
+20260210.143423.170 ui     setting fixed 581x656
+20260210.143423.170 ui     PropertyNotify -> PA-StateChanged()
+20260210.143423.171 ui     FocusIn -> PA-Focus()
+20260210.143423.171 ui     KeymapNotify -> PA-KeymapNotify()
+20260210.143423.171 socket Reading host socket
+20260210.143423.172 socket Host socket read complete nr=1443
+< 0x40  d5d5c9d5c7404040e2d9e4404040404040401de8a961e5d440f34bf14bf040d6
+< 0x60  9593899585404040404040404040404040404040404040404040404040404040
+< 0x80  4040404040404040404040404040404040404040404040404040404040404040
+< 0xa0  40401d60110371404040404040404040401dc84040404040e240d340c940d740
+< 0xc0  d740c540d940e8404040d940d640c340d2404040e440d540c940e540c540d940
+< 0xe0  e240c940e340e840404040404040404040404040401103c14040404040404040
+< 0x100 4040404040404040404040404040404040404040404040404040404040404040
+< 0x120 4040404040404040404040404040404040404040404040404040404040404040
+< 0x140 404040404040110411404040404040404040401d404040
+< 0x0   e2e2e2e2e2e2e2404040d9d9d9d9d9d9d9d9404040e4e44040404040e4e4401d
+< 0x20  f840e5e54040404040e5e54040d440404040404040d440404040404040404040
+< 0x40  110461404040404040404040401d4040e2e2e2e2e2e2e2e2e24040d9d9d9d9d9
+< 0x60  d9d9d9d94040e4e44040404040e4e4401df840e5e54040404040e5e54040d4d4
+< 0x80  4040404040d4d4404040404040404040401104b1404040404040404040401d40
+< 0xa0  40e2e24040404040e2e24040d9d94040404040d9d94040e4e44040404040e4e4
+< 0xc0  401df840e5e54040404040e5e54040d4d4d4404040d4d4d44040404040404040
+< 0xe0  4040110501404040404040404040401d4040e2e2404040404040404040d9d940
+< 0x100 40404040d9d94040e4e44040404040e4e4401df840e5e54040404040e5e54040
+< 0x120 d4d4d4d440d4d4d4d44040404040404040404011055140404040404040404040
+< 0x140 1d4040e2e2e2e2e2e2e2e2404040d9d9d9d9d9d9d9d9d94040e4e44040404040
+< 0x160 e4e4401df840e5e54040404040e5e54040d4d440d4d4d440d4d4404040404040
+< 0x180 404040401105a1404040404040404040401d404040e2e2e2e2e2e2e2e24040d9
+< 0x1a0 d9d9d9d9d9d9d9404040e4e44040404040e4e4401df840e5e54040404040e5e5
+< 0x1c0 4040d4d44040d44040d4d4404040404040404040401105f14040404040404040
+< 0x1e0 40401d404040404040404040e2e24040d9d94040d9d94040404040e4e4404040
+< 0x200 4040e4e4401df840e5e54040404040e5e54040d4d44040404040d4d440404040
+< 0x220 404040404040110641404040404040404040401d4040e2e24040404040e2e240
+< 0x240 40d9d9404040d9d940404040e4e44040404040e4e4401df84040e5e5404040e5
+< 0x260 e5404040d4d44040404040d4d440404040404040404040110691404040404040
+< 0x280 404040401d4040e2e2e2e2e2e2e2e2e24040d9d940404040d9d9404040e4e4e4
+< 0x2a0 e4e4e4e4e4e4401df8404040e5e540e5e540404040d4d44040404040d4d44040
+< 0x2c0 40404040404040401106e1404040404040404040401d404040e2e2e2e2e2e2e2
+< 0x2e0 404040d9d94040404040d9d9404040e4e4e4e4e4e4e440401df84040404040e5
+< 0x300 404040404040d4d44040404040d4d44040404040404040404011073140404040
+< 0x320 4040404040404040404040404040404040404040404040404040404040404040
+< 0x340 4040404040404040404040404040404040404040404040404040404040404040
+< 0x360 40404040404040404040110781404040404040404040401dc840404040404040
+< 0x380 404040404040404040c6969940c1a4a388969989a9858440e4a28540d69593a8
+< 0x3a0 404040404040404040404040404040404040404040404040404040110b401df8
+< 0x3c0 c689939340899540a896a49940e4e2c5d9c9c44081958440d7c1e2e2e6d6d9c4
+< 0x3e0 4081958440979985a2a240c5d5e3c5d91d704040404040404040404040404040
+< 0x400 404040404040404040404040110b901df84de896a499409781a2a2a696998440
+< 0x420 a6899393409596a34081979785819940a688859540a896a440a3a897854089a3
+< 0x440 5d1d704040404040404040404040404040404040404040404040404040110be0
+< 0x460 1df8e4e2c5d9c9c44040407e7e7e6e1d701d401300000000000000001d704040
+< 0x480 4040404040404040404040404040404040404040404040404040404040404040
+< 0x4a0 4040404040404040404040404040110c301df8d7c1e2e2e6d6d9c4407e7e7e6e
+< 0x4c0 1d701d4c00000000000000001d70404040404040404040404040404040404040
+< 0x4e0 4040404040404040404040404040404040404040404040404040404040404011
+< 0x500 0c801df0e3964081838385a2a240e5e3c1d461e2e6c9e3c3c8405040c3c9c3e2
+< 0x520 6b408595a38599401df8c489819340e5e3c1d41d7040969540a3888540839694
+< 0x540 9481958440938995854b404040404040110cd01df8c3d6d4d4c1d5c440407e7e
+< 0x560 7e6e1d701d400000000000000000000000000000000000000000000000000000
+< 0x580 0000000000000000000000000000000000000000000000000000000000000000
+< 0x5a0 00ffef
+20260210.143423.175 kybd   Keyboard unlock(kybd_inhibit) ENTER_INHIBIT -ENTER_INHIBIT -> none
+< EraseWriteAlternate(alarm,resetMDT) SetBufferAddress(43,60) StartField(pr ...
+... otected) 'RUNNING   SRU       ' StartField(1,1)(protected,intensified)  ...
+... 'z/VM 3.1.0 Online                                                      ...
+...         ' StartField(1,80)(protected) SetBufferAddress(12,2) '          ...
+...  ' StartField(12,12)(intensified) '     S L I P P E R Y   R O C K   U N ...
+...  I V E R S I T Y              ' SetBufferAddress(13,2) '                ...
+...                                                                ' SetBuf ...
+... ferAddress(14,2) '          ' StartField(14,12)(default) '  SSSSSSS   R ...
+... RRRRRRR   UU     UU ' StartField(14,46)(protected,skip,intensified) ' V ...
+... V     VV  M       M          ' SetBufferAddress(15,2) '          ' Star ...
+... tField(15,12)(default) ' SSSSSSSSS  RRRRRRRRR  UU     UU ' StartField(1 ...
+... 5,46)(protected,skip,intensified) ' VV     VV  MM     MM          ' Set ...
+... BufferAddress(16,2) '          ' StartField(16,12)(default) ' SS     SS ...
+...   RR     RR  UU     UU ' StartField(16,46)(protected,skip,intensified)  ...
+... ' VV     VV  MMM   MMM          ' SetBufferAddress(17,2) '          ' S ...
+... tartField(17,12)(default) ' SS         RR     RR  UU     UU ' StartFiel ...
+... d(17,46)(protected,skip,intensified) ' VV     VV  MMMM MMMM          '  ...
+... SetBufferAddress(18,2) '          ' StartField(18,12)(default) ' SSSSSS ...
+... SS   RRRRRRRRR  UU     UU ' StartField(18,46)(protected,skip,intensifie ...
+... d) ' VV     VV  MM MMM MM          ' SetBufferAddress(19,2) '           ...
+... ' StartField(19,12)(default) '  SSSSSSSS  RRRRRRRR   UU     UU ' StartF ...
+... ield(19,46)(protected,skip,intensified) ' VV     VV  MM  M  MM          ...
+...  ' SetBufferAddress(20,2) '          ' StartField(20,12)(default) '     ...
+...     SS  RR  RR     UU     UU ' StartField(20,46)(protected,skip,intensi ...
+... fied) ' VV     VV  MM     MM          ' SetBufferAddress(21,2) '        ...
+...    ' StartField(21,12)(default) ' SS     SS  RR   RR    UU     UU ' Sta ...
+... rtField(21,46)(protected,skip,intensified) '  VV   VV   MM     MM       ...
+...     ' SetBufferAddress(22,2) '          ' StartField(22,12)(default) '  ...
+... SSSSSSSSS  RR    RR   UUUUUUUUU ' StartField(22,46)(protected,skip,inte ...
+... nsified) '   VV VV    MM     MM          ' SetBufferAddress(23,2) '     ...
+...       ' StartField(23,12)(default) '  SSSSSSS   RR     RR   UUUUUUU  '  ...
+... StartField(23,46)(protected,skip,intensified) '     V      MM     MM    ...
+...        ' SetBufferAddress(24,2) '                                       ...
+...                                         ' SetBufferAddress(25,2) '      ...
+...      ' StartField(25,12)(intensified) '                For Authorized U ...
+... se Only                           ' SetBufferAddress(37,1) StartField(p ...
+... rotected,skip,intensified) 'Fill in your USERID and PASSWORD and press  ...
+... ENTER' StartField(37,50)(protected,skip) '                          ' S ...
+... etBufferAddress(38,1) StartField(protected,skip,intensified) '(Your pas ...
+... sword will not appear when you type it)' StartField(38,50)(protected,sk ...
+... ip) '                          ' SetBufferAddress(39,1) StartField(prot ...
+... ected,skip,intensified) 'USERID   ===>' StartField(39,15)(protected,ski ...
+... p) StartField(39,16)(default) InsertCursor(39,17) NULL NULL NULL NULL N ...
+... ULL NULL NULL NULL StartField(39,25)(protected,skip) '                  ...
+...                                ' SetBufferAddress(40,1) StartField(prot ...
+... ected,skip,intensified) 'PASSWORD ===>' StartField(40,15)(protected,ski ...
+... p) StartField(40,16)(nondisplay) NULL NULL NULL NULL NULL NULL NULL NUL ...
+... L StartField(40,25)(protected,skip) '                                   ...
+...                ' SetBufferAddress(41,1) StartField(protected,skip) 'To  ...
+... access VTAM/SWITCH & CICS, enter ' StartField(41,38)(protected,skip,int ...
+... ensified) 'Dial VTAM' StartField(41,48)(protected,skip) ' on the comman ...
+... d line.      ' SetBufferAddress(42,1) StartField(protected,skip,intensi ...
+... fied) 'COMMAND  ===>' StartField(42,15)(protected,skip) StartField(42,1 ...
+... 6)(default) NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL ...
+...  NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL  ...
+... NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL N ...
+... ULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NU ...
+... LL NULL NULL NULL NULL
+20260210.143423.181 telnet RCVD EOR
+20260210.143423.182 task   Macro[#1.2] WAIT_IFIELD -> IDLE (about to resume)
+20260210.143423.182 task   Macro[#1.2] running
+20260210.143423.182 task   Macro[#1.2] complete, success
+20260210.143423.182 task   CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20260210.143423.182 task   CB(s3stdin)[#1.1] child task done, success
+20260210.143423.182 infra  Output for CB(s3stdin)[#1.1]: U F U C(localhost) I 4 43 80 38 16 0xe00169 0.050/ok
+20260210.143423.182 task   CB(s3stdin)[#1.1] complete, success
+20260210.143423.182 task   CB(s3stdin)[#1] complete
+20260210.143423.182 infra  txflush: 1637 slots, 40168 bytes
+20260210.143423.461 ui     FocusOut -> PA-Focus()
+20260210.143423.670 ui     Stream timer expired 581x656+115+118
+20260210.143423.671 ui     clearing fixed_width and fixed_height
+20260210.143423.671 ui       width and height match, done
+20260210.143429.325 ui     KeymapNotify -> PA-KeymapNotify()
+20260210.143430.278 ui     FocusIn -> PA-Focus()
+20260210.143430.279 ui     KeymapNotify -> PA-KeymapNotify()
+20260210.143430.509 ui     KeymapNotify -> PA-KeymapNotify()
+20260210.143431.778 ui     Event ':<KeyPress>Return' via base.3270:4 -> Enter()
+20260210.143431.778 task   CB(keymap)[#2] started
+20260210.143431.778 task   CB(keymap)[#2.1] IDLE -> RUNNING (child task to be pushed next)
+20260210.143431.778 task   Macro[#2.2] IDLE -> RUNNING (fresh push)
+20260210.143431.778 task   Macro[#2.2] RUNNING -> IDLE (about to resume)
+20260210.143431.778 task   Macro[#2.2] running
+20260210.143431.778 task   Macro[#2.2] IDLE -> RUNNING (executing)
+20260210.143431.778 task   Macro[#2.2] 'Enter()'
+20260210.143431.778 infra  keymap -> Enter()
+20260210.143431.778 kybd   Keyboard lock(key_AID) none +OIA_TWAIT +OIA_LOCKED -> OIA_TWAIT OIA_LOCKED
+> Enter(39,17)
+> 0x0   7d6ff0ffef
+20260210.143431.778 telnet SENT EOR
+20260210.143431.778 task   Macro[#2.2] RUNNING -> KBWAIT (keyboard locked)
+20260210.143431.779 infra  txflush: 18 slots, 656 bytes
+20260210.143434.842 ui     FocusOut -> PA-Focus()
+20260210.143440.876 script s3stdin got 'Attn()\n'
+20260210.143440.876 task   CB(s3stdin)[#3] started
+20260210.143440.876 task   CB(s3stdin)[#3.1] IDLE -> RUNNING (child task to be pushed next)
+20260210.143440.876 task   Macro[#3.2] IDLE -> RUNNING (fresh push)
+20260210.143440.876 task   Macro[#3.2] RUNNING -> IDLE (about to resume)
+20260210.143440.876 task   Macro[#3.2] running
+20260210.143440.876 task   Macro[#3.2] IDLE -> RUNNING (executing)
+20260210.143440.876 task   Macro[#3.2] 'Attn()'
+20260210.143440.876 infra  script -> Attn()
+> PA1
+> 0x0   6cffef
+20260210.143440.877 telnet SENT EOR
+> 0x0   fff3
+20260210.143440.877 telnet SENT BREAK
+20260210.143440.877 task   Macro[#3.2] complete, success
+20260210.143440.877 task   CB(s3stdin)[#3.1] RUNNING -> IDLE (about to resume)
+20260210.143440.877 task   CB(s3stdin)[#3.1] child task done, success
+20260210.143440.877 infra  Output for CB(s3stdin)[#3.1]: L F U C(localhost) I 4 43 80 38 16 0xe00169 0.000/ok
+20260210.143440.877 task   CB(s3stdin)[#3.1] complete, success
+20260210.143440.877 task   CB(s3stdin)[#3] complete
+20260210.143440.877 infra  txflush: 26 slots, 960 bytes
+20260210.143444.186 script s3stdin got 'Quit\n'
+20260210.143444.186 task   CB(s3stdin)[#4] started
+20260210.143444.186 task   CB(s3stdin)[#4.1] IDLE -> RUNNING (child task to be pushed next)
+20260210.143444.186 task   Macro[#4.2] IDLE -> RUNNING (fresh push)
+20260210.143444.186 task   Macro[#4.2] RUNNING -> IDLE (about to resume)
+20260210.143444.186 task   Macro[#4.2] running
+20260210.143444.186 task   Macro[#4.2] IDLE -> RUNNING (executing)
+20260210.143444.186 task   Macro[#4.2] 'Quit'
+20260210.143444.186 infra  script -> Quit()
+20260210.143444.186 task   Macro[#4.2] complete, success
+20260210.143444.186 task   CB(s3stdin)[#4.1] RUNNING -> IDLE (about to resume)
+20260210.143444.186 task   CB(s3stdin)[#4.1] child task done, success
+20260210.143444.186 infra  Output for CB(s3stdin)[#4.1]: L F U C(localhost) I 4 43 80 38 16 0xe00169 0.000/ok
+20260210.143444.186 task   CB(s3stdin)[#4.1] complete, success
+20260210.143444.186 task   CB(s3stdin)[#4] complete
+20260210.143444.186 infra  txflush: 24 slots, 896 bytes
+20260210.143444.186 infra  Exiting with status 0
+20260210.143444.186 infra  st_changed(exiting,true)
+20260210.143444.187 infra  st_changed(secure,false)
+20260210.143444.187 socket SENT disconnect
+20260210.143444.187 infra  cstate [connected-3270] -> [not-connected] (net_disconnect)
+20260210.143444.187 infra  st_changed(connect,false)
+20260210.143444.187 kybd   Keyboard unlock(kybd_connect) OIA_TWAIT OIA_LOCKED -OIA_TWAIT -OIA_LOCKED -> none
+20260210.143444.187 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20260210.143444.187 infra  Host operation took 12.408329s to complete
+20260210.143444.187 infra  ctlr_enable_cursor(false, connect)
+20260210.143444.187 infra  ctlr_enable_cursor(false, nvt)
+20260210.143444.187 infra  Trace stopped

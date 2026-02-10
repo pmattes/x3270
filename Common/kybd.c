@@ -992,6 +992,8 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
     if (IN_3270) {
+	/* This is what PCOMM does in plain TN3270 mode: PA1, then TELNET BREAK. */
+	ctlr_read_modified(AID_PA1, false);
 	net_break(0);
 	return true;
     }
