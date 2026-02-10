@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2025 Paul Mattes.
+ * Copyright (c) 1994-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ static enum {
 } tstate = T_NONE;
 bool fdisp = false;
 
-static void process(FILE *f, socket_t s);
+static void process(FILE *f, socket_t s, const char *initial_action);
 typedef enum {
     STEP_LINE,	/* step one line in the file */
     STEP_EOR,	/* step until IAC EOR */
@@ -89,7 +89,7 @@ typedef enum {
     STEP_BIDIR,	/* step bidirectionally */
 } step_t;
 static bool step(FILE *f, socket_t s, step_t type, const char *mark);
-static int process_command(FILE *f, socket_t s);
+static int read_and_process_command(FILE *f, socket_t s);
 void trace_netdata(char *direction, unsigned char *buf, size_t len);
 
 #if defined(_WIN32) /*[*/
@@ -167,6 +167,7 @@ main(int argc, char *argv[])
     bool bidir = false;
     bool wait = false;
     const char *portstring = "4001";
+    const char *initial_action = NULL;
 #if defined(_WIN32) /*[*/
     HANDLE socket_event;
 #endif /*]*/
@@ -178,8 +179,11 @@ main(int argc, char *argv[])
 	    me = argv[0];
     }
 
-    while ((c = getopt(argc, argv, "bwp:")) != -1) {
+    while ((c = getopt(argc, argv, "a:bwp:")) != -1) {
 	switch (c) {
+	case 'a':
+	    initial_action = optarg;
+	    break;
 	case 'b':
 	    bidir = true;
 	    break;
@@ -305,7 +309,7 @@ main(int argc, char *argv[])
 		exit(2);
 	    }
 	    if (FD_ISSET(0, &rfds)) {
-		process_command(NULL, -1);
+		read_and_process_command(NULL, -1);
 	    }
 	    if (FD_ISSET(s, &rfds)) {
 		break;
@@ -331,7 +335,7 @@ main(int argc, char *argv[])
 		done = true;
 		break;
 	    case WAIT_OBJECT_0 + 1: /* stdin input */
-		process_command(NULL, -1);
+		read_and_process_command(NULL, -1);
 		break;
 	    case WAIT_FAILED:
 		win32_perror("WaitForMultipleObjects");
@@ -372,9 +376,150 @@ main(int argc, char *argv[])
 	    }
 	    exit(0); /* needs to be smarter */
 	} else {
-	    process(f, s2);
+	    process(f, s2, initial_action);
 	}
     }
+}
+
+/*
+ * Process a command.
+ * Returns 0 for no change, -1 to stop processing the file.
+ */
+static int
+process_command(FILE *f, socket_t s, const char *t)
+{
+    int repeat = 1;
+
+    while (isspace((int)*t)) {
+	t++;
+    }
+    if (!*t) {
+	return 0;
+    }
+    if (isdigit(*t)) {
+	const char *r_start = t;
+
+	while (isdigit(*++t)) {
+	    ;
+	}
+	repeat = atoi(r_start);
+	while (isspace((int)*t)) {
+	    t++;
+	}
+	if (!*t) {
+	    return 0;
+	}
+    }
+
+    if (!strncmp(t, "s", 1)) {		/* step line */
+	if (f == NULL) {
+	    printf("Not connected.\n");
+	    return 0;
+	}
+	while (repeat--) {
+	    printf("Stepping one line\n");
+	    fflush(stdout);
+	    if (!step(f, s, STEP_LINE, NULL)) {
+		return -1;
+	    }
+	}
+    } else if (!strncmp(t, "r", 1)) {	/* step record */
+	if (f == NULL) {
+	    printf("Not connected.\n");
+	    return 0;
+	}
+	while (repeat--) {
+	    printf("Stepping to EOR\n");
+	    fflush(stdout);
+	    if (!step(f, s, STEP_EOR, NULL)) {
+		return -1;
+	    }
+	}
+    } else if (!strncmp(t, "m", 1)) {	/* to mark */
+	const char *mark = NULL;
+
+	if (f == NULL) {
+	    printf("Not connected.\n");
+	    return 0;
+	}
+	/* Skip the rest of the command. */
+	t++;
+	while (*t && !isspace((int)*t)) {
+	    t++;
+	}
+	/* Skip spaces after the command. */
+	while (isspace((int)*t)) {
+	    t++;
+	}
+	if (*t) {
+	    mark = t;
+	}
+	while (repeat--) {
+	    if (mark) {
+		printf("Stepping to mark '%s'\n", mark);
+	    } else {
+		printf("Stepping to next mark\n");
+	    }
+	    if (!step(f, s, STEP_MARK, mark)) {
+		return -1;
+	    }
+	}
+    } else if (!strncmp(t, "e", 1)) {	/* to EOF */
+	if (f == NULL) {
+	    printf("Not connected.\n");
+	    return 0;
+	}
+	printf("Stepping to EOF\n");
+	fflush(stdout);
+	while (step(f, s, STEP_EOR, NULL)) {
+	}
+	return -1;
+    } else if (!strncmp(t, "c", 1)) {	/* comment */
+	t++;
+	while (*t && isspace((int)*t)) {
+	    t++;
+	}
+	printf("Comment: %s\n", t);
+	fflush(stdout);
+    } else if (!strncmp(t, "t", 1)) {	/* timing mark */
+	if (s >= 0) {
+	    static unsigned char tm[] = { 0xff, 0xfd, 0x06 };
+
+	    printf("Timing mark\n");
+	    fflush(stdout);
+	    if (send(s, (char *)tm, sizeof(tm), 0) < 0) {
+		sockerr("send");
+		exit(1);
+	    }
+	    trace_netdata("host", tm, sizeof(tm));
+	} else {
+	    printf("Not connected.\n");
+	    fflush(stdout);
+	}
+    } else if (!strncmp(t, "q", 1)) {	/* quit */
+	exit(0);
+    } else if (!strncmp(t, "d", 1)) {	/* disconnect */
+	if (f == NULL) {
+	    printf("Not connected.\n");
+	    return 0;
+	}
+	return -1;
+    } else if (t[0] == '?' || t[0] == 'h') {
+	printf("\
+[<number>] s: step line(s)\n\
+[<number>] r: step record(s)\n\
+[<number>] m: play to mark(s)\n\
+           m <name>: play to named mark\n\
+           e: play to EOF\n\
+           c: comment\n\
+           t: send TM to emulator\n\
+           q: quit\n\
+           d: disconnect\n\
+           ?: help\n");
+    } else {
+	printf("%c? Use '?' for help.\n", *t);
+    }
+    return 0;
 }
 
 /*
@@ -385,7 +530,7 @@ main(int argc, char *argv[])
  * Returns 0 for no change, -1 to stop processing the file.
  */
 static int
-process_command(FILE *f, socket_t s)
+read_and_process_command(FILE *f, socket_t s)
 {
 #if !defined(_WIN32) /*[*/
     int rx = 0;
@@ -393,7 +538,6 @@ process_command(FILE *f, socket_t s)
 #endif /*]*/
     char *t;
     int rv = 0;
-    int repeat = 1;
 
 #if !defined(_WIN32) /*[*/
     /* Get the input line, a character at a time. */
@@ -430,144 +574,9 @@ process_command(FILE *f, socket_t s)
     }
     t = stdin_buf;
 #endif /*]*/
-    while (isspace((int)*t)) {
-	t++;
-    }
-    if (!*t) {
-	goto done;
-    }
-    if (isdigit(*t)) {
-	char *r_start = t;
 
-	while (isdigit(*++t)) {
-	    ;
-	}
-	repeat = atoi(r_start);
-	while (isspace((int)*t)) {
-	    t++;
-	}
-	if (!*t) {
-	    goto done;
-	}
-    }
+    rv = process_command(f, s, t);
 
-    if (!strncmp(t, "s", 1)) {		/* step line */
-	if (f == NULL) {
-	    printf("Not connected.\n");
-	    goto done;
-	}
-	while (repeat--) {
-	    printf("Stepping one line\n");
-	    fflush(stdout);
-	    if (!step(f, s, STEP_LINE, NULL)) {
-		rv = -1;
-		goto done;
-	    }
-	}
-    } else if (!strncmp(t, "r", 1)) {	/* step record */
-	if (f == NULL) {
-	    printf("Not connected.\n");
-	    goto done;
-	}
-	while (repeat--) {
-	    printf("Stepping to EOR\n");
-	    fflush(stdout);
-	    if (!step(f, s, STEP_EOR, NULL)) {
-		rv = -1;
-		goto done;
-	    }
-	}
-    } else if (!strncmp(t, "m", 1)) {	/* to mark */
-	char *mark = NULL;
-
-	if (f == NULL) {
-	    printf("Not connected.\n");
-	    goto done;
-	}
-	/* Skip the rest of the command. */
-	t++;
-	while (*t && !isspace((int)*t)) {
-	    t++;
-	}
-	/* Skip spaces after the command. */
-	while (isspace((int)*t)) {
-	    t++;
-	}
-	if (*t) {
-	    mark = t++;
-	    /* Find the mark name. */
-	    while (*t && !isspace(*t)) {
-		t++;
-	    }
-	    *t = '\0';
-	}
-	while (repeat--) {
-	    if (mark) {
-		printf("Stepping to mark '%s'\n", mark);
-	    } else {
-		printf("Stepping to next mark\n");
-	    }
-	    if (!step(f, s, STEP_MARK, mark)) {
-		rv = -1;
-		goto done;
-	    }
-	}
-    } else if (!strncmp(t, "e", 1)) {	/* to EOF */
-	if (f == NULL) {
-	    printf("Not connected.\n");
-	    goto done;
-	}
-	printf("Stepping to EOF\n");
-	fflush(stdout);
-	while (step(f, s, STEP_EOR, NULL)) {
-	}
-	rv = -1;
-	goto done;
-    } else if (!strncmp(t, "c", 1)) {	/* comment */
-	printf("Comment: %s\n", t);
-	fflush(stdout);
-    } else if (!strncmp(t, "t", 1)) {	/* timing mark */
-	if (s >= 0) {
-	    static unsigned char tm[] = { 0xff, 0xfd, 0x06 };
-
-	    printf("Timing mark\n");
-	    fflush(stdout);
-	    if (send(s, (char *)tm, sizeof(tm), 0) < 0) {
-		sockerr("send");
-		exit(1);
-	    }
-	    trace_netdata("host", tm, sizeof(tm));
-	} else {
-	    printf("Not connected.\n");
-	    fflush(stdout);
-	}
-    } else if (!strncmp(t, "q", 1)) {	/* quit */
-	exit(0);
-    } else if (!strncmp(t, "d", 1)) {	/* disconnect */
-	if (f == NULL) {
-	    printf("Not connected.\n");
-	    goto done;
-	}
-	rv = -1;
-	goto done;
-    } else if (t[0] == '?' || t[0] == 'h') {
-	printf("\
-[<number>] s: step line(s)\n\
-[<number>] r: step record(s)\n\
-[<number>] m: play to mark(s)\n\
-           m <name>: play to named mark\n\
-           e: play to EOF\n\
-           c: comment\n\
-           t: send TM to emulator\n\
-           q: quit\n\
-           d: disconnect\n\
-           ?: help\n");
-    } else {
-	printf("%c? Use '?' for help.\n", *t);
-    }
-
-
-done:
 #if defined(_WIN32) /*[*/
     /* Prime for more input. */
     SetEvent(stdin_enable_event);
@@ -595,7 +604,7 @@ trace_netdata(char *direction, unsigned char *buf, size_t len)
  * EOF.
  */
 static void
-process(FILE *f, socket_t s)
+process(FILE *f, socket_t s, const char *initial_action)
 {
     char buf[BSIZE];
 
@@ -608,6 +617,15 @@ process(FILE *f, socket_t s)
 
 	printf("playback> ");
 	fflush(stdout);
+
+	if (initial_action != NULL) {
+	    printf("%s\n", initial_action);
+	    if (process_command(f, s, initial_action) < 0) {
+		break;
+	    }
+	    initial_action = NULL;
+	    continue;
+	}
 
 #if !defined(_WIN32) /*[*/
 	FD_ZERO(&rfds);
@@ -638,7 +656,7 @@ process(FILE *f, socket_t s)
 	    fdisp = false;
 	}
 	if (FD_ISSET(0, &rfds)) {
-	    if (process_command(f, s) < 0) {
+	    if (read_and_process_command(f, s) < 0) {
 		break;
 	    }
 	}
@@ -676,7 +694,7 @@ process(FILE *f, socket_t s)
 	    fdisp = false;
 	    break;
 	case WAIT_OBJECT_0 + 1: /* stdin input */
-	    if (process_command(f, s) < 0) {
+	    if (read_and_process_command(f, s) < 0) {
 		done = true;
 		break;
 	    }
