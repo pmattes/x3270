@@ -32,7 +32,7 @@ In bidirectional mode, selected by the
 .B \-b
 option,
 .B playback
-verfies that the emulator connected to it sends the correct stream of bytes
+verifies that the emulator connected to it sends the correct stream of bytes
 in response to the host stream.
 This is useful for automated testing.
 .LP
