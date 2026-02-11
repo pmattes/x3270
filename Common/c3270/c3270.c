@@ -2471,9 +2471,9 @@ c3270_register(void)
 #endif /*]*/
     };
     static query_t queries[] = {
-	{ KwKeymap, keymap_dump, NULL, false, true },
-	{ KwStatus, status_dump, NULL, false, true },
-	{ KwStats, status_dump, NULL, true, true }
+	{ KwKeymap, keymap_dump, NULL, QF_SPECIFIC },
+	{ KwStatus, status_dump, NULL, QF_SPECIFIC },
+	{ KwStats, status_dump, NULL, QF_SPECIFIC | QF_ALIAS }
     };
 
     /* Register for state changes. */

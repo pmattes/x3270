@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 Paul Mattes.
+ * Copyright (c) 2019-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,7 @@ void
 proxy_register(void)
 {
     static query_t queries[] = {
-	{ "Proxies", proxy_dump, NULL, false, true }
+	{ "Proxies", proxy_dump, NULL, QF_SPECIFIC }
     };
 
     /* Register the toggles. */

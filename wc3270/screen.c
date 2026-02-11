@@ -4345,7 +4345,7 @@ void
 screen_register(void)
 {
     static query_t queries[] = {
-	{ KwConsole, console_dump, NULL, false, true }
+	{ KwConsole, console_dump, NULL, QF_SPECIFIC }
     };
     static toggle_register_t toggles[] = {
 	{ ALT_CURSOR,		toggle_altCursor,	0 },

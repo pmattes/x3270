@@ -3364,7 +3364,7 @@ void
 screen_register(void)
 {
     static query_t queries[] = {
-	{ KwCurses, query_curses, NULL, false, true }
+	{ KwCurses, query_curses, NULL, QF_SPECIFIC }
     };
     static toggle_register_t toggles[] = {
 	{ MONOCASE,	toggle_monocase,	0 },

@@ -123,7 +123,7 @@ void
 show_dirs_register(void)
 {
     static query_t queries[] = {
-	{ KwDirs, dirs_dump, NULL, true, true },
+	{ KwDirs, dirs_dump, NULL, QF_HIDDEN | QF_SPECIFIC },
     };
 
     /* Register our queries. */

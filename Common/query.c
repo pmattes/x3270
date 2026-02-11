@@ -310,6 +310,56 @@ query_window_state(void)
     }
 }
 
+/* Query everything, hidden or not, specific or not. */
+static const char *
+query_all(void)
+{
+    size_t i;
+    varbuf_t r;
+    const char *bk = "";
+
+    vb_init(&r);
+    for (i = 0; i < num_queries; i++) {
+	const char *s;
+
+	if (queries[i].fn == query_all || (queries[i].flags & (QF_ALIAS | QF_DEPRECATED))) {
+	    continue;
+	}
+
+	s = (queries[i].fn? (*queries[i].fn)(): queries[i].string);
+	if (s == NULL) {
+	    s = "";
+	}
+	if (queries[i].flags & QF_SPECIFIC) {
+	    const char *rest = s;
+	    const char *nl;
+
+	    if (!*s) {
+		vb_appendf(&r, "%s%s:", bk, queries[i].name);
+		bk = "\n";
+		continue;
+	    }
+	    while ((nl = strchr(rest, '\n')) != NULL) {
+		vb_appendf(&r, "%s%s: %.*s", bk, queries[i].name, (int)(nl - rest), rest);
+		rest = nl + 1;
+		bk = "\n";
+	    }
+	    if (*rest) {
+		vb_appendf(&r, "%s%s: %s", bk, queries[i].name, rest);
+		bk = "\n";
+	    }
+	} else {
+	    vb_appendf(&r, "%s%s:%s%s",
+		    bk,
+		    queries[i].name,
+		    *s? " ": "",
+		    s);
+	    bk = "\n";
+	}
+    }
+    return txdFree(vb_consume(&r));
+}
+
 /* Common code for Query() and Show() actions. */
 bool
 query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
@@ -327,14 +377,14 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
     switch (argc) {
     case 0:
 	for (i = 0; i < num_queries; i++) {
-	    if (!queries[i].hidden) {
+	    if (!(queries[i].flags & (QF_HIDDEN | QF_ALIAS | QF_DEPRECATED))) {
 		const char *s = (queries[i].fn? (*queries[i].fn)():
 			queries[i].string);
 
 		if (s == NULL) {
 		    s = "";
 		}
-		if (queries[i].specific && strcmp(s, "")) {
+		if ((queries[i].flags & QF_SPECIFIC) && strcmp(s, "")) {
 		    s = "...";
 		}
 		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
@@ -462,67 +512,68 @@ query_register(void)
 	{ AnShow,		Show_action, 0 }
     };
     static query_t base_queries[] = {
-	{ KwAbout, get_about, NULL, false, true },
-	{ KwActions, all_actions, NULL, false, true },
-	{ KwBindPluName, net_query_bind_plu_name, NULL, false, false },
-	{ KwBuildOptions, build_options, NULL, false, false },
-	{ KwConnectionState, net_query_connection_state, NULL, false, false },
-	{ KwConnectTime, get_connect_time, NULL, false, false },
-	{ KwCodePage, get_codepage, NULL, false, false },
-	{ KwCodePages, get_codepages, NULL, false, true },
-	{ KwCopyright, show_copyright, NULL, false, true },
-	{ KwCursor, ctlr_query_cursor, NULL, true, false },
-	{ KwCursor1, ctlr_query_cursor1, NULL, false, false },
-	{ KwFormatted, ctlr_query_formatted, NULL, false, false },
-	{ KwHost, net_query_host, NULL, false, false },
-	{ KwLocalEncoding, get_codeset, NULL, false, false },
-	{ KwLuName, net_query_lu_name, NULL, false, false },
-	{ KwModel, get_full_model, NULL, true, false },
-	{ KwPrefixes, host_prefixes, NULL, false, false },
-	{ KwProxy, get_proxy, NULL, false, false },
-	{ KwReplyMode, get_reply_mode, NULL, false, false },
-	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, true, false },
-	{ KwScreenMaxSize, ctlr_query_max_size_old, NULL, true, false },
-	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, false, false },
-	{ KwScreenSizeMax, ctlr_query_max_size, NULL, false, false },
-	{ KwScreenTraceFile, get_screentracefile, NULL, false, false },
-	{ KwSpecialCharacters, get_special_characters, NULL, false, true },
-	{ KwSsl, net_query_tls, NULL, true, false },
-	{ KwStatsRx, get_rx, NULL, false, false },
-	{ KwStatsTx, get_tx, NULL, false, false },
-	{ KwTasks, get_tasks, NULL, false, true },
-	{ KwTelnetMyOptions, net_myopts, NULL, false, false },
-	{ KwTelnetHostOptions, net_hisopts, NULL, false, false },
-	{ KwTerminalName, query_terminal_name, NULL, false, false },
-	{ KwTraceFile, get_tracefile, NULL, false, false },
-	{ KwTls, net_query_tls, NULL, false, false },
-	{ KwTlsCertInfo, net_server_cert_info, NULL, false, true },
-	{ KwTlsSubjectNames, net_server_subject_names, NULL, false, true },
-	{ KwTlsProvider, net_sio_provider, NULL, false, false },
-	{ KwTlsSessionInfo, net_session_info, NULL, false, true },
-	{ KwTn3270eOptions, tn3270e_current_opts, NULL, false, false },
-	{ KwVersion, query_build, NULL, false, false },
+	{ KwAbout, get_about, NULL, QF_SPECIFIC },
+	{ KwActions, all_actions, NULL, QF_SPECIFIC },
+	{ KwAll, query_all, NULL, QF_SPECIFIC },
+	{ KwBindPluName, net_query_bind_plu_name, NULL, 0 },
+	{ KwBuildOptions, build_options, NULL, 0 },
+	{ KwConnectionState, net_query_connection_state, NULL, 0 },
+	{ KwConnectTime, get_connect_time, NULL, 0 },
+	{ KwCodePage, get_codepage, NULL, 0 },
+	{ KwCodePages, get_codepages, NULL, QF_SPECIFIC },
+	{ KwCopyright, show_copyright, NULL, QF_SPECIFIC },
+	{ KwCursor, ctlr_query_cursor, NULL, QF_DEPRECATED },
+	{ KwCursor1, ctlr_query_cursor1, NULL, 0 },
+	{ KwFormatted, ctlr_query_formatted, NULL, 0 },
+	{ KwHost, net_query_host, NULL, 0 },
+	{ KwLocalEncoding, get_codeset, NULL, 0 },
+	{ KwLuName, net_query_lu_name, NULL, 0 },
+	{ KwModel, get_full_model, NULL, QF_DEPRECATED },
+	{ KwPrefixes, host_prefixes, NULL, 0 },
+	{ KwProxy, get_proxy, NULL, 0 },
+	{ KwReplyMode, get_reply_mode, NULL, 0 },
+	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, QF_DEPRECATED },
+	{ KwScreenMaxSize, ctlr_query_max_size_old, NULL, QF_DEPRECATED },
+	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, 0 },
+	{ KwScreenSizeMax, ctlr_query_max_size, NULL, 0 },
+	{ KwScreenTraceFile, get_screentracefile, NULL, 0 },
+	{ KwSpecialCharacters, get_special_characters, NULL, QF_SPECIFIC },
+	{ KwSsl, net_query_tls, NULL, QF_ALIAS },
+	{ KwStatsRx, get_rx, NULL, 0 },
+	{ KwStatsTx, get_tx, NULL, 0 },
+	{ KwTasks, get_tasks, NULL, QF_SPECIFIC },
+	{ KwTelnetMyOptions, net_myopts, NULL, 0 },
+	{ KwTelnetHostOptions, net_hisopts, NULL, 0 },
+	{ KwTerminalName, query_terminal_name, NULL, 0 },
+	{ KwTraceFile, get_tracefile, NULL, 0 },
+	{ KwTls, net_query_tls, NULL, 0 },
+	{ KwTlsCertInfo, net_server_cert_info, NULL, QF_SPECIFIC },
+	{ KwTlsSubjectNames, net_server_subject_names, NULL, QF_SPECIFIC },
+	{ KwTlsProvider, net_sio_provider, NULL, 0 },
+	{ KwTlsSessionInfo, net_session_info, NULL, QF_SPECIFIC },
+	{ KwTn3270eOptions, tn3270e_current_opts, NULL, 0 },
+	{ KwVersion, query_build, NULL, 0 },
     };
     static query_t hidden_window_queries[] = {
-	{ KwCharacterPixels, query_character_pixels, NULL, true, false },
-	{ KwDisplayPixels, query_display_pixels, NULL, true, false },
-	{ KwWindowPixels, query_window_pixels, NULL, true, false },
-	{ KwWindowLocation, query_window_location, NULL, true, false },
-	{ KwWindowState, query_window_state, NULL, true, false },
+	{ KwCharacterPixels, query_character_pixels, NULL, QF_HIDDEN },
+	{ KwDisplayPixels, query_display_pixels, NULL, QF_HIDDEN },
+	{ KwWindowPixels, query_window_pixels, NULL, QF_HIDDEN },
+	{ KwWindowLocation, query_window_location, NULL, QF_HIDDEN },
+	{ KwWindowState, query_window_state, NULL, QF_HIDDEN },
     };
     static query_t visible_window_queries[] = {
-	{ KwCharacterPixels, query_character_pixels, NULL, false, false },
-	{ KwDisplayPixels, query_display_pixels, NULL, false, false },
-	{ KwWindowPixels, query_window_pixels, NULL, false, false },
-	{ KwWindowLocation, query_window_location, NULL, false, false },
-	{ KwWindowState, query_window_state, NULL, false, false },
+	{ KwCharacterPixels, query_character_pixels, NULL, 0 },
+	{ KwDisplayPixels, query_display_pixels, NULL, 0 },
+	{ KwWindowPixels, query_window_pixels, NULL, 0 },
+	{ KwWindowLocation, query_window_location, NULL, 0 },
+	{ KwWindowState, query_window_state, NULL, 0 },
     };
 #if defined(_WIN32) /*[*/
     static query_t visible_window_id_queries[] = {
-	{ KwWindowId, get_windowid, NULL, false, false },
+	{ KwWindowId, get_windowid, NULL, 0 },
     };
     static query_t hidden_window_id_queries[] = {
-	{ KwWindowId, get_windowid, NULL, true, false },
+	{ KwWindowId, get_windowid, NULL, QF_HIDDEN },
     };
 #endif /*]*/
 

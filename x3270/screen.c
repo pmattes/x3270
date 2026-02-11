@@ -7395,7 +7395,7 @@ screen_register(void)
 	{ AnWindowState,	WindowState_action,	ACTION_KE }
     };
     static query_t queries[] = {
-	{ KwWindowId, windowid_dump, NULL, false, false },
+	{ KwWindowId, windowid_dump, NULL, 0 },
     };
 
     /* Register our toggles. */

@@ -172,5 +172,34 @@ class TestS3270Query(cti):
         # Wait for the process to exit.
         self.vgwait(s3270)
 
+    # s3270 Query(All) test.
+    def test_s3270_query_special_characters(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Query all.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(All)')
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        # Spot checks -- we did get Tls, we didn't get Ssl, we did get Cursor1, we didn't get Cursor.
+        self.assertTrue(any([line for line in result if line.startswith('Tls:')]))
+        self.assertFalse(any([line for line in result if line.startswith('Ssl:')]))
+        self.assertTrue(any([line for line in result if line.startswith('Cursor1:')]))
+        self.assertFalse(any([line for line in result if line.startswith('Cursor:')]))
+        # On Windows, we should get WindowId and Dirs, which are hidden.
+        if sys.platform.startswith('win'):
+            self.assertTrue(any([line for line in result if line.startswith('WindowId:')]))
+            self.assertTrue(any([line for line in result if line.startswith('Dirs:')]))
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2019 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,12 @@ typedef struct {
     char *name;
     const char *(*fn)(void);
     const char *string;
-    bool hidden;
-    bool specific;
+    unsigned flags;
 } query_t;
+#define QF_HIDDEN	0x1
+#define QF_SPECIFIC	0x2
+#define QF_ALIAS	0x4
+#define QF_DEPRECATED	0x8
 void register_queries(query_t queries[], size_t count);
 void query_register(void);
 bool Query_action(ia_t ia, unsigned argc, const char **argv);

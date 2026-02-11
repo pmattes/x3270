@@ -193,6 +193,7 @@
 /*  Parameters to Query(). */
 #define KwAbout		"About"
 #define KwActions	"Actions"
+#define KwAll		"All"
 #define KwBindPluName	"BindPluName"
 #define KwBuildOptions	"BuildOptions"
 #define KwCharacterPixels	"CharacterPixels"
