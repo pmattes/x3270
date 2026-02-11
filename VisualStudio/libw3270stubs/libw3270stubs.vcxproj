@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\Common\product_stubs1.c" />
     <ClCompile Include="..\..\Common\product_stubs2.c" />
     <ClCompile Include="..\..\Common\product_stubs3.c" />
+    <ClCompile Include="..\..\Common\product_stubs5.c" />
     <ClCompile Include="..\..\Common\save_stubs.c" />
     <ClCompile Include="..\..\Common\screen_stubs1.c" />
     <ClCompile Include="..\..\Common\screen_stubs2.c" />

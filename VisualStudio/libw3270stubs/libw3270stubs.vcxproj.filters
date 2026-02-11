@@ -60,6 +60,9 @@
     <ClCompile Include="..\..\Common\product_stubs3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\product_stubs5.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\save_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

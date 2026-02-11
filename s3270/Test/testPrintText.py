@@ -90,7 +90,8 @@ class TestS3270PrintText(cti):
     def test_s3270_txt(self):
         self.s3270_PrintText('txt')
 
-    # s3270 PrintText(html) test
+    # s3270 prtodir test
+    @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support PTYs")
     def test_s3270_prtodir(self):
 
         # Start 'playback' to emulate the host.

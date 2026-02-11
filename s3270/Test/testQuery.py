@@ -86,6 +86,8 @@ class TestS3270Query(cti):
         self.check_listen(http_port)
 
         q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState']
+        if sys.platform.startswith('win'):
+            q_window.append('WindowId')
 
         # Query everything and make sure it doesn't include the window items.
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query()')
@@ -116,12 +118,53 @@ class TestS3270Query(cti):
         ts.close()
         self.check_listen(http_port)
 
-        q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState']
-
         # Query something ambiguous.
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(p)')
         result = r.json()['result']
         self.assertEqual("Query(): Ambiguous parameter 'p': Prefixes, Proxies, Proxy", result[0])
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
+    # s3270 Query(Dirs) test.
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-specific test')
+    def test_s3270_query_dirs(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Query Dirs and make sure appdata is the current directory.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Dirs)')
+        result = r.json()['result']
+        appdata = [line for line in result if 'Appdata:' in line]
+        self.assertEqual(1, len(appdata))
+        self.assertEqual(os.getcwd().replace('/', '\\') + '\\', appdata[0].split()[1])
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
+    # s3270 Query(SpecialCharacters) test.
+    def test_s3270_query_special_characters(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Query special characters.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(SpecialCharacters)')
+        result = r.json()['result']
+        self.assertEqual(['intr ^C quit ^\\ erase ^H kill ^U', 'eof ^D werase ^W rprnt ^R lnext ^V'], result)
 
         # Stop s3270.
         self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')

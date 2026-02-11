@@ -111,7 +111,7 @@ init_suppressed(const char *actions)
 	/* Add it to the list. */
 	s = (suppress_t *)Malloc(sizeof(suppress_t) + sl + 1);
 	s->name = (char *)(s + 1);
-	strcpy(s->name, action);
+	strncpy(s->name, action, sl + 1);
 	llist_init(&s->list);
 	LLIST_APPEND(&s->list, suppressed);
     }

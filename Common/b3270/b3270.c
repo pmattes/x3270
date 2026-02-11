@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -110,6 +110,7 @@
 
 #if defined(_WIN32) /*[*/
 # include "main_window.h"
+# include "show_dirs.h"
 # include "w3misc.h"
 # include "windirs.h"
 # include "winvers.h"
@@ -587,6 +588,7 @@ main(int argc, char *argv[])
     rpq_register();
 #if defined(_WIN32) /*[*/
     main_window_register();
+    show_dirs_register();
 #endif /*]*/
 
     supports_cmdline_host = false;
@@ -1016,6 +1018,18 @@ product_set_appres_defaults(void)
     /* UTF-8 by default. */
     appres.utf8 = true;
 }
+
+#if defined(_WIN32) /*[*/
+/**
+ * Return the Window ID capability.
+ * @returns true if product suppors a Window ID.
+ */
+bool
+product_has_window_id(void)
+{
+    return true;
+}
+#endif /*]*/
 
 /**
  * Handle a toggle change.

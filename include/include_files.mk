@@ -7,7 +7,7 @@ INCLUDE_HEADERS = 3270ds.h actions.h apl.h appres.h arpa_telnet.h asprintf.h \
 	nvt_gui.h opts.h percent_decode.h popups.h pr3287_session.h \
 	print_gui.h print_screen.h product.h proxy.h proxy_names.h readres.h \
 	resolver.h resources.h rpq.h save.h screen.h scroll.h see.h selectc.h \
-	sf.h status.h tables.h telnet.h telnet_core.h telnet_gui.h \
-	telnet_private.h tls_passwd_gui.h tn3270e.h toggles.h trace.h \
-	trace_gui.h unicode_dbcs.h unicodec.h utf8.h util.h varbuf.h w3misc.h \
-	wincmn.h windirs.h winprint.h winvers.h xio.h
+	sf.h show_dirs.h status.h tables.h telnet.h telnet_core.h \
+	telnet_gui.h telnet_private.h tls_passwd_gui.h tn3270e.h toggles.h \
+	trace.h trace_gui.h unicode_dbcs.h unicodec.h utf8.h util.h varbuf.h \
+	w3misc.h wincmn.h windirs.h winprint.h winvers.h xio.h

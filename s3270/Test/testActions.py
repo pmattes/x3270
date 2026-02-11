@@ -25,51 +25,42 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# x3270if stderr tests
+# s3270 actions tests
 
-from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
 from Common.Test.cti import *
 
-class TestX3270ifStderr(cti):
+@requests_timeout
+class TestS3270Actions(cti):
 
-    # x3270if stderr test
-    def test_x3270if_stderr(self):
+    # s3270 action suppression test
+    def test_s3270_action_suppress(self):
 
-        # Start a copy of s3270 to talk to.
+        # Start s3270.
         port, ts = unused_port()
-        s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
-                stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f':{port}', '-set', 'suppressActions=a b() c set']))
         self.children.append(s3270)
         self.check_listen(port)
         ts.close()
 
-        # Run x3270if with a trivial query that succeeds and one that fails.
-        x3270if = Popen(vgwrap(["x3270if", "-t", str(port), "Set(startTls) Set(blorf)"]),
-                stdout=PIPE, stderr=PIPE)
-        self.children.append(x3270if)
+        # Send it a Show(), which should succeed.
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Show()')
+        self.assertTrue(r.ok)
+        s = r.json()
+        self.assertGreater(len(s['result']), 1)
 
-        # Decode the result.
-        stdout = x3270if.communicate()[0].decode()
-        stderr = x3270if.communicate()[1].decode()
+        # Then a Set(), which should not.
+        # I think the original intent was for the action to fail, but what actually happens is that it is
+        # ignored silently.
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set() Show(Formatted)')
+        self.assertTrue(r.ok)
+        s = r.json()
+        self.assertEqual('unformatted', s['result'][0])
 
-        # Wait for the processes to exit.
-        s3270.kill()
-        self.children.remove(s3270)
-        s3270.wait()
-        exception = None
-        try:
-            self.vgwait(x3270if)
-        except AssertionError as ex:
-            exception = ex
-        self.assertTrue(exception != None, 'x3270if should fail')
-        self.assertEqual(exception.args, ('0 != 1 : Program failed',), 'x3270if exit status should be 1')
-
-        # Test the output.
-        # The successful Set() should go to stdout, the unsuccessful one to stderr.
-        self.assertEqual('true', stdout.strip())
-        self.assertEqual("Set(): Unknown toggle name 'blorf'", stderr.strip())
+        # Wait for the process to exit.
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

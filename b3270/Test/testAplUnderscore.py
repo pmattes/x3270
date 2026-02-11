@@ -1,6 +1,6 @@
 #
 #!/usr/bin/env python3
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@ class TestB3270AplUnderscore(cti):
 
             b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
+            pq = pipeq.pipeq(self, b3270.stdout)
 
             # Connect to playback.
             j = { "run": { "actions": { "action": "open", "args": [ f"localhost:{pport}" ] } } }
@@ -58,7 +59,6 @@ class TestB3270AplUnderscore(cti):
             p.send_records(1)
 
             # Get the result.
-            pq = pipeq.pipeq(self, b3270.stdout)
             formatted = False
             while True:
                 line = pq.get(2, 'b3270 did not produce expected output')

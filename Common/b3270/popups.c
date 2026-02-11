@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2025 Paul Mattes.
+ * Copyright (c) 2016-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -69,13 +69,14 @@ static const char *error_types[] = {
 static void
 popup_store(bool is_error, pae_t type, bool retrying, const char *text)
 {
-    stored_popup_t *sp =
-	(stored_popup_t *)Malloc(sizeof(stored_popup_t) + strlen(text) + 1);
+    size_t sl1 = strlen(text) + 1;
+
+    stored_popup_t *sp = (stored_popup_t *)Malloc(sizeof(stored_popup_t) + sl1);
     sp->is_error = is_error;
     sp->error_type = type;
     sp->retrying = retrying;
     sp->text = (char *)(sp + 1);
-    strcpy(sp->text, text);
+    strncpy(sp->text, text, sl1);
 
     sp->next = NULL;
     if (sp_last != NULL) {

@@ -40,10 +40,12 @@
 #include "copyright.h"
 #include "ctlrc.h"
 #include "host.h"
+#include "linemode.h"
 #include "model.h"
 #include "names.h"
 #include "nvt_gui.h"
 #include "popups.h"
+#include "product.h"
 #include "query.h"
 #include "see.h"
 #include "split_host.h"
@@ -415,6 +417,24 @@ Show_action(ia_t ia, unsigned argc, const char **argv)
     return query_common(AnShow, ia, argc, argv);
 }
 
+/* Get the special line-mode characters. */
+static const char *
+get_special_characters(void)
+{
+    varbuf_t r;
+    struct ctl_char *c = linemode_chars();
+    int i;
+
+    vb_init(&r);
+    for (i = 0; c[i].name; i++) {
+	if (i && !(i % 4)) {
+	    vb_appends(&r, "\n");
+	}
+	vb_appendf(&r, "%s%s %s", (i % 4)? " ": "", c[i].name, c[i].value);
+    }
+    return txdFree(vb_consume(&r));
+}
+
 /**
  * Register a set of queries.
  */
@@ -466,6 +486,7 @@ query_register(void)
 	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, false, false },
 	{ KwScreenSizeMax, ctlr_query_max_size, NULL, false, false },
 	{ KwScreenTraceFile, get_screentracefile, NULL, false, false },
+	{ KwSpecialCharacters, get_special_characters, NULL, false, true },
 	{ KwSsl, net_query_tls, NULL, true, false },
 	{ KwStatsRx, get_rx, NULL, false, false },
 	{ KwStatsTx, get_tx, NULL, false, false },
@@ -481,9 +502,6 @@ query_register(void)
 	{ KwTlsSessionInfo, net_session_info, NULL, false, true },
 	{ KwTn3270eOptions, tn3270e_current_opts, NULL, false, false },
 	{ KwVersion, query_build, NULL, false, false },
-#if defined(_WIN32) /*[*/
-	{ KwWindowId, get_windowid, NULL, false, false },
-#endif /*]*/
     };
     static query_t hidden_window_queries[] = {
 	{ KwCharacterPixels, query_character_pixels, NULL, true, false },
@@ -499,6 +517,14 @@ query_register(void)
 	{ KwWindowLocation, query_window_location, NULL, false, false },
 	{ KwWindowState, query_window_state, NULL, false, false },
     };
+#if defined(_WIN32) /*[*/
+    static query_t visible_window_id_queries[] = {
+	{ KwWindowId, get_windowid, NULL, false, false },
+    };
+    static query_t hidden_window_id_queries[] = {
+	{ KwWindowId, get_windowid, NULL, true, false },
+    };
+#endif /*]*/
 
     /* Register actions.*/
     register_actions(actions, array_count(actions));
@@ -507,9 +533,16 @@ query_register(void)
     register_queries(base_queries, array_count(base_queries));
 
     /* Register possibly-hidden queries. */
-    if (get_window_state() == WS_NONE) {
-	register_queries(hidden_window_queries, array_count(hidden_window_queries));
-    } else {
+    if (get_window_state() != WS_NONE) {
 	register_queries(visible_window_queries, array_count(visible_window_queries));
+    } else {
+	register_queries(hidden_window_queries, array_count(hidden_window_queries));
     }
+#if defined(_WIN32) /*[*/
+    if (product_has_window_id()) {
+	register_queries(visible_window_id_queries, array_count(visible_window_id_queries));
+    } else {
+	register_queries(hidden_window_id_queries, array_count(hidden_window_id_queries));
+    }
+#endif /*]*/
 }

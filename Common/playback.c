@@ -396,10 +396,10 @@ process_command(FILE *f, socket_t s, const char *t)
     if (!*t) {
 	return 0;
     }
-    if (isdigit(*t)) {
+    if (isdigit((int)*t)) {
 	const char *r_start = t;
 
-	while (isdigit(*++t)) {
+	while (isdigit((int)*++t)) {
 	    ;
 	}
 	repeat = atoi(r_start);

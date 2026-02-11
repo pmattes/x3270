@@ -37,7 +37,7 @@
 #define GD_INSTALLED	0x1
 #define GD_CATF		0x2
 
-bool get_dirs(char *appname, char **instdir, char **desktop,
+bool get_dirs(const char *appname, char **instdir, char **desktop,
 	char **appdata, char **common_desktop, char **common_appdata,
 	char **documents, char **common_documnts,
 	char **docs3270, char **common_docs3270,

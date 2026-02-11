@@ -130,6 +130,7 @@
 
 #if defined(_WIN32) /*[*/
 # include "relinkc.h"
+# include "show_dirs.h"
 # include "w3misc.h"
 # include "wc3270.h"
 # include "windirs.h"
@@ -682,6 +683,9 @@ main(int argc, char *argv[])
     prefer_register();
     telnet_new_environ_register();
     rpq_register();
+#if defined(_WIN32) /*[*/
+    show_dirs_register();
+#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);
@@ -2174,6 +2178,14 @@ product_has_display(void)
 {   
     return true;
 }
+
+#if defined(_WIN32) /*[*/
+bool
+product_has_window_id(void)
+{
+    return true;
+}
+#endif /*]*/
 
 /**
  * Build options.

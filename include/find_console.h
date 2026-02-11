@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 Paul Mattes.
+ * Copyright (c) 2019-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,6 @@ typedef struct {
     const char *command_string;	/* command string */
 } console_desc_t;
 
-bool find_in_path(const char *program);
+const char *find_in_path(const char *program);
 console_desc_t *find_console(const char **errmsg);
 int console_args(console_desc_t *t, const char *title, const char ***s, int ix);

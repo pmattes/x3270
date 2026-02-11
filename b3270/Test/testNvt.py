@@ -34,6 +34,7 @@ from typing import Sequence
 import unittest
 
 from Common.Test.cti import *
+import Common.Test.pipeq as pipeq
 
 @requests_timeout
 class TestB3270Nvt(cti):
@@ -111,6 +112,7 @@ class TestB3270Nvt(cti):
         self.children.append(b3270)
         self.check_listen(hport)
         ts.close()
+        pq = pipeq.pipeq(self, b3270.stdout)
 
         # Connect to the server.
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(a:c:t:127.0.0.1:{s.port})')
@@ -127,19 +129,23 @@ class TestB3270Nvt(cti):
         # End the session.
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         _ = s.data()
+        self.vgwait(b3270)
+        b3270.stdout.close()
+        pq.close()
 
         # See what we get back.
-        output = b3270.stdout.readlines()
+        output = []
+        while True:
+            line = pq.get(timeout=0, block=False)
+            if line == None:
+                break
+            output.append(line)
         wc = [line for line in output if b'window-change' in line]
-        b3270.stdout.close()
         if receive != None:
-            self.assertEqual(receive, wc[0])
+            self.assertEqual(receive.strip(), wc[0].strip())
         else:
             got = wc[0] if len(wc) > 0 else None
             self.assertEqual(0, len(wc), f'expected nothing, got {got}')
-
-        # Clean up.
-        self.vgwait(b3270)
 
     def test_deiconify(self):
         self.single_parameter('\033[1t', b'{"window-change":{"operation":"state","state":"normal"}}\n')
@@ -189,6 +195,7 @@ class TestB3270Nvt(cti):
         self.children.append(b3270)
         self.check_listen(hport)
         ts.close()
+        pq = pipeq.pipeq(self, b3270.stdout)
 
         # Connect to the server.
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(a:c:t:127.0.0.1:{s.port})')
@@ -202,10 +209,16 @@ class TestB3270Nvt(cti):
 
         # End the session.
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(b3270)
 
         # See what we get back.
         got = s.data()
-        output = b3270.stdout.readlines()
+        pq.close()
+        output = []
+        while True:
+            line = pq.get(timeout=0, block=False)
+            if line == None:
+                break
         b3270.stdout.close()
         b3270.stdin.close()
         if bmsg_reply != None:
@@ -218,9 +231,6 @@ class TestB3270Nvt(cti):
             self.assertEqual(0, len(wc))
         if esc_reply != None:
             self.assertEqual(esc_reply.encode(), got)
-
-        # Clean up.
-        self.vgwait(b3270)
 
     @dataclass
     class ChangeParam:
@@ -238,6 +248,7 @@ class TestB3270Nvt(cti):
             cmd.append('-json')
         b3270 = Popen(vgwrap(cmd), stdin=PIPE, stdout=PIPE)
         self.children.append(b3270)
+        pq = pipeq.pipeq(self, b3270.stdout)
         self.check_listen(hport)
         ts.close()
 
@@ -263,7 +274,7 @@ class TestB3270Nvt(cti):
             got = s.data()
             output = []
             while True:
-                line = b3270.stdout.readline()
+                line = pq.get(timeout=0, block=False)
                 if b'xxx' in line:
                     break
                 output.append(line)
@@ -285,9 +296,10 @@ class TestB3270Nvt(cti):
                 self.assertEqual(param.esc_reply.encode(), got)
 
         # Clean up.
-        b3270.stdout.close()
         b3270.stdin.close()
         self.vgwait(b3270)
+        pq.close()
+        b3270.stdout.close()
 
     def test_change_esc(self):
         self.oper_window_change_bulk([

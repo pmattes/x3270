@@ -101,6 +101,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     /* Tease apart the syntax. */
     if (spec[0] == '[') {
 	char *rbrack = strchr(spec, ']');
+	size_t sl1;
 
 	/* We appear to have a hostname in square brackets. */
 	if (rbrack == NULL ||
@@ -116,8 +117,9 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	strncpy(host_str, spec + 1, hlen);
 	host_str[hlen] = '\0';
 
-	port_str = Malloc(strlen(rbrack + 2) + 1);
-	strcpy(port_str, rbrack + 2);
+	sl1 = strlen(rbrack + 2) + 1;
+	port_str = Malloc(sl1);
+	strncpy(port_str, rbrack + 2, sl1);
     } else {
 	char *colon;
 
@@ -135,6 +137,8 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	    host_str = NewString("127.0.0.1");
 	    port_str = NewString(spec + 1);
 	} else {
+	    size_t sl1;
+
 	    /* <address>:<port>. */
 	    if (colon == NULL || colon == spec || !*(colon + 1)) {
 		return false;
@@ -145,8 +149,9 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	    strncpy(host_str, spec, hlen);
 	    host_str[hlen] = '\0';
 
-	    port_str = Malloc(strlen(colon + 1) + 1);
-	    strcpy(port_str, colon + 1);
+	    sl1 = strlen(colon + 1) + 1;
+	    port_str = Malloc(sl1);
+	    strncpy(port_str, colon + 1, sl1);
 	}
     }
 

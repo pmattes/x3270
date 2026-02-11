@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2026 Paul Mattes.
+ * Copyright (c) 2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,60 +27,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Memory allocation functions. */
+/*
+ *	product_stubs5.c
+ *		Stub functions for product information.
+ */
 
 #include "globals.h"
 
-void *
-Malloc(size_t len)
+#include "product.h"
+
+#if defined(_WIN32) /*[*/
+/* By default, there is no window ID. */
+bool
+product_has_window_id(void)
 {
-    char *r;
-
-    r = malloc(len);
-    if (r == NULL) {
-	Error("Out of memory");
-    }
-    return r;
+    return false;
 }
-
-void *
-Calloc(size_t nelem, size_t elsize)
-{
-    char *r;
-
-    r = malloc(nelem * elsize);
-    if (r == NULL) {
-	Error("Out of memory");
-    }
-    return memset(r, '\0', nelem * elsize);
-}
-
-void *
-Realloc(void *p, size_t len)
-{
-    p = realloc(p, len);
-    if (p == NULL) {
-	Error("Out of memory");
-    }
-    return p;
-}
-
-void
-Free(void *p)
-{
-    if (p != NULL) {
-	free(p);
-    }
-}
-
-char *
-NewString(const char *s)
-{
-    if (s != NULL) {
-	size_t sl1 = strlen(s) + 1;
-
-	return strncpy(Malloc(sl1), s, sl1);
-    } else {
-	return NULL;
-    }
-}
+#endif /*]*/

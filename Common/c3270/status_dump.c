@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -264,21 +264,19 @@ status_dump(void)
 	if (IN_NVT) {
 	    struct ctl_char *c = linemode_chars();
 	    int i;
-	    char buf[128];
-	    char *s = buf;
+	    bool nl = false;
 
 	    vb_appendf(&r, "%s\n", get_message("specialCharacters"));
 	    for (i = 0; c[i].name; i++) {
 		if (i && !(i % 4)) {
-		    *s = '\0';
-		    vb_appendf(&r, "%s\n", buf);
-		    s = buf;
+		    vb_appends(&r, "\n");
+		    nl = true;
 		}
-		s += sprintf(s, "  %s %s", c[i].name, c[i].value);
+		vb_appendf(&r, "  %s %s", c[i].name, c[i].value);
+		nl = false;
 	    }
-	    if (s != buf) {
-		*s = '\0';
-		vb_appendf(&r, "%s\n", buf);
+	    if (!nl) {
+		vb_appends(&r, "\n");
 	    }
 	}
     } else if (HALF_CONNECTED) {

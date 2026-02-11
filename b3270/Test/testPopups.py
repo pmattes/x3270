@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 #
+#!/usr/bin/env python3
 # Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
@@ -25,51 +25,42 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# x3270if stderr tests
+# b3270 pop-up tests
 
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
 
 from Common.Test.cti import *
+import Common.Test.pipeq as pipeq
 
-class TestX3270ifStderr(cti):
+class TestB3270Popups(cti):
 
-    # x3270if stderr test
-    def test_x3270if_stderr(self):
+    # b3270 stored pop-up test
+    def test_b3270_stored_popup(self):
 
-        # Start a copy of s3270 to talk to.
-        port, ts = unused_port()
-        s3270 = Popen(["s3270", "-scriptport", f"127.0.0.1:{port}"],
-                stdin=DEVNULL, stdout=DEVNULL)
-        self.children.append(s3270)
-        self.check_listen(port)
-        ts.close()
+        b3270 = Popen(vgwrap(['b3270', '-json', '-httpd', '1.2.3.4:1234']), stdin=PIPE, stdout=PIPE)
+        self.children.append(b3270)
+        pq = pipeq.pipeq(self, b3270.stdout)
 
-        # Run x3270if with a trivial query that succeeds and one that fails.
-        x3270if = Popen(vgwrap(["x3270if", "-t", str(port), "Set(startTls) Set(blorf)"]),
-                stdout=PIPE, stderr=PIPE)
-        self.children.append(x3270if)
-
-        # Decode the result.
-        stdout = x3270if.communicate()[0].decode()
-        stderr = x3270if.communicate()[1].decode()
+        # Get the result. It is generated before b3270's stdout is initialized (and the 'initialize' indication comes out),
+        # but it comes out after.
+        init = False
+        while True:
+            line = pq.get(2, 'b3270 did not produce expected output')
+            if line.startswith(b'{"initialize":'):
+                init = True
+            self.assertNotEqual(None, line)
+            if line.startswith(b'{"popup":{"type":"error","text":"httpd bind: '):
+                break
 
         # Wait for the processes to exit.
-        s3270.kill()
-        self.children.remove(s3270)
-        s3270.wait()
-        exception = None
-        try:
-            self.vgwait(x3270if)
-        except AssertionError as ex:
-            exception = ex
-        self.assertTrue(exception != None, 'x3270if should fail')
-        self.assertEqual(exception.args, ('0 != 1 : Program failed',), 'x3270if exit status should be 1')
+        b3270.stdin.close()
+        b3270.stdout.close()
+        self.vgwait(b3270)
+        pq.close()
 
-        # Test the output.
-        # The successful Set() should go to stdout, the unsuccessful one to stderr.
-        self.assertEqual('true', stdout.strip())
-        self.assertEqual("Set(): Unknown toggle name 'blorf'", stderr.strip())
+        # Check.
+        self.assertTrue(init, 'Expected initialize before popup')
 
 if __name__ == '__main__':
     unittest.main()

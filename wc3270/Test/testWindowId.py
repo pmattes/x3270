@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,8 @@ class TestWc3270WindowId(cti):
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
         for dir in os.environ['PATH'].split(';'):
+            if dir.startswith('obj'):
+                dir = os.getcwd() + '\\' + dir
             cand = dir + '\\' + exe
             if os.path.exists(cand):
                 return (dir, cand)
@@ -89,6 +91,13 @@ class TestWc3270WindowId(cti):
             # Verify that we can't set the window ID.
             r = self.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/Set(windowId,0x1234)')
             self.assertFalse(r.ok)
+
+            # Verify that the Window ID is part of the default output.
+            r = self.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/Show()')
+            self.assertTrue(r.ok)
+            result = r.json()['result']
+            matches = [qline for qline in result if 'WindowId:' in qline]
+            self.assertEqual(1, len(matches), f'expected WindowId')
 
 if __name__ == '__main__':
     unittest.main()

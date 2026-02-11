@@ -1492,6 +1492,8 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 #if !defined(_WIN32) /*[*/
     console_desc_t *t;
     const char *errmsg;
+#else /*]*/
+    const char *x3270if_path;
 #endif /*]*/
 
     action_debug(AnPrompt, ia, argc, argv);
@@ -1506,13 +1508,19 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error(AnPrompt "(): console program:\n%s", errmsg);
 	return false;
     }
+#endif /*]*/
 
     /* Make sure x3270if is available. */
-    if (!find_in_path("x3270if")) {
+    if
+#if !defined(_WIN32) /*[*/
+        (find_in_path("x3270if") == NULL)
+#else /*][*/
+	((x3270if_path = find_in_path("x3270if.exe")) == NULL)
+#endif /*]*/
+    {
 	popup_an_error(AnPrompt "(): can't find x3270if");
 	return false;
     }
-#endif /*]*/
 
     if (appres.alias != NULL) {
 	params[0] = appres.alias;
@@ -1563,7 +1571,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
     array_add(&nargv, nargc++, "start");
     array_add(&nargv, nargc++, txAsprintf("\"%s\"", params[0]));
     array_add(&nargv, nargc++, "/wait");
-    array_add(&nargv, nargc++, txAsprintf("%sx3270if.exe", instdir));
+    array_add(&nargv, nargc++, txAsprintf("\"%s\"", x3270if_path));
     array_add(&nargv, nargc++, "-I");
     array_add(&nargv, nargc++, params[0]);
     if (params[1] != NULL) {

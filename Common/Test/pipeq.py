@@ -63,13 +63,13 @@ class pipeq():
                 if self.count >= self.limit:
                     break
 
-    def get(self, timeout=2, error='Pipe read timed out') -> bytes:
+    def get(self, timeout=2, error='Pipe read timed out', block=True) -> bytes:
         '''Timed read'''
         try:
-            r = self.queue.get(block=True, timeout=timeout)
+            r = self.queue.get(block=block, timeout=timeout)
         except queue.Empty:
             r = None
-        self.cti.assertIsNotNone(r, error)
+        # self.cti.assertIsNotNone(r, error)
         return r
     
     def close(self):

@@ -418,8 +418,8 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
     case XTW_3MOVE: /* Move to x,y */
 	ui_leaf(IndWindowChange,
 		AttrOperation, AT_STRING, WinMove,
-		AttrX, AT_INT, *p2,
-		AttrY, AT_INT, *p3,
+		AttrX, AT_INT, (uint64_t)*p2,
+		AttrY, AT_INT, (uint64_t)*p3,
 		NULL);
 	break;
     case XTW_4RESIZE_PIXELS: /* resize to window to h,w pixels */
@@ -427,20 +427,20 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	    ui_leaf(IndWindowChange,
 		    AttrOperation, AT_STRING, WinSize,
 		    AttrType, AT_STRING, SizeWindow,
-		    AttrHeight, AT_INT, *p2,
-		    AttrWidth, AT_INT, *p3,
+		    AttrHeight, AT_INT, (uint64_t)*p2,
+		    AttrWidth, AT_INT, (uint64_t)*p3,
 		    NULL);
 	} else if (p2) {
 	    ui_leaf(IndWindowChange,
 		    AttrOperation, AT_STRING, WinSize,
 		    AttrType, AT_STRING, SizeWindow,
-		    AttrHeight, AT_INT, *p2,
+		    AttrHeight, AT_INT, (uint64_t)*p2,
 		    NULL);
 	} else {
 	    ui_leaf(IndWindowChange,
 		    AttrOperation, AT_STRING, WinSize,
 		    AttrType, AT_STRING, SizeWindow,
-		    AttrWidth, AT_INT, *p3,
+		    AttrWidth, AT_INT, (uint64_t)*p3,
 		    NULL);
 	}
 	break;

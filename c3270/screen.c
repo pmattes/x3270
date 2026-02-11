@@ -503,10 +503,12 @@ void
 screen_init(void)
 {
     setupterm(NULL, fileno(stdout), NULL);
+#if !defined(NCURSES_VERSION) /*[*/
     if (cursesLINES == 0 || cursesCOLS == 0) {
 	cursesLINES = lines;
 	cursesCOLS = columns;
     }
+#endif /*]*/
 
     menu_init();
 
@@ -1643,7 +1645,6 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     for (;;) {
 	volatile int alt = 0;
-	char dbuf[128];
 #if defined(CURSES_WIDE) /*[*/
 	wint_t wch;
 	size_t sz;
@@ -1787,14 +1788,14 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    alt = KM_ALT;
 	} else if (me_mode == TS_ON && ucs4 == 0x1b) {
 	    vctrace(TC_UI, "Key '%s' (curses key 0x%x, char code 0x%x)\n",
-		    decode_key(k, ucs4, alt, dbuf), k, ucs4);
+		    decode_key(k, ucs4, alt), k, ucs4);
 	    eto = AddTimeOut(ME_DELAY, escape_timeout);
 	    vctrace(TC_UI, " waiting to see if Escape is followed by another key\n");
 	    meta_escape = true;
 	    continue;
 	}
 	vctrace(TC_UI, "Key '%s' (curses key 0x%x, char code 0x%x)\n",
-		decode_key(k, ucs4, alt, dbuf), k, ucs4);
+		decode_key(k, ucs4, alt), k, ucs4);
 	kybd_input2(k, ucs4, alt);
 	first = false;
     }

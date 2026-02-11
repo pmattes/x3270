@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2025 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1066,57 +1066,60 @@ keymap_3270_mode(bool ignored _is_unused)
  * keymap definition.
  */
 const char *
-decode_key(int k, ucs4_t ucs4, int hint, char *buf)
+decode_key(int k, ucs4_t ucs4, int hint)
 {
     const char *n;
     int len;
     char mb[16];
-    char *s = buf;
+    varbuf_t r;
 
     if (k) {
 	/* Curses key. */
 	if ((n = lookup_cname(k)) != NULL) {
-	    sprintf(buf, "<Key>%s", n);
+	    return txAsprintf("<Key>%s", n);
 	} else {
-	    sprintf(buf, "[unknown curses key 0x%x]", k);
+	    return txAsprintf("[unknown curses key 0x%x]", k);
 	}
-	return buf;
     }
 
+    vb_init(&r);
     if (hint & KM_ALT) {
-	s += sprintf(s, "Alt");
+	vb_appends(&r, "Alt");
     }
 
-    if (ucs4 < ' ') {
-	/* Control key. */
-	char *latin1_name = key_to_string(ucs4);
+    do {
+	if (ucs4 < ' ') {
+	    /* Control key. */
+	    char *latin1_name = key_to_string(ucs4);
 
-	if (latin1_name != NULL) {
-	    strcpy(buf, latin1_name);
-	} else {
-	    sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	    if (latin1_name != NULL) {
+		vb_appends(&r, latin1_name);
+	    } else {
+		vb_appendf(&r, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	    }
+	    break;
 	}
-	return buf;
-    }
 
-    /* Special-case ':' and ' ' because of the keymap syntax. */
-    if (ucs4 == ':') {
-	strcpy(s, "colon");
-	return buf;
-    }
-    if (ucs4 == ' ') {
-	strcpy(s, "space");
-	return buf;
-    }
+	/* Special-case ':' and ' ' because of the keymap syntax. */
+	if (ucs4 == ':') {
+	    vb_appends(&r, "colon");
+	    break;
+	}
+	if (ucs4 == ' ') {
+	    vb_appends(&r, "space");
+	    break;
+	}
 
-    /* Convert from Unicode to local multi-byte. */
-    len = unicode_to_multibyte(ucs4, mb, sizeof(mb));
-    if (len > 0) {
-	sprintf(s, "<Key>%s", mb);
-    } else {
-	sprintf(s, "<Key>U+%04x", k);
-    }
-    return buf;
+	/* Convert from Unicode to local multi-byte. */
+	len = unicode_to_multibyte(ucs4, mb, sizeof(mb));
+	if (len > 0) {
+	    vb_appendf(&r, "<Key>%s", mb);
+	} else {
+	    vb_appendf(&r, "<Key>U+%04x", k);
+	}
+    } while (false);
+
+    return txdFree(vb_consume(&r));
 }
 
 /* Dump the current keymap. */
@@ -1138,20 +1141,14 @@ keymap_dump(void)
 		    k->successor->file, k->successor->line);
 	} else if (!IS_INACTIVE(k)) {
 	    int i;
-	    char buf[1024];
-	    char *s = buf;
-	    char dbuf[128];
-	    char *t = safe_string(k->action);
+	    char *t;
 
+	    vb_appendf(&r, "[%s:%d%s]", k->file, k->line, k->temp? " temp": "");
 	    for (i = 0; i < k->ncodes; i++) {
-		s += sprintf(s, " %s", decode_key(k->codes[i].key,
-			    k->codes[i].ucs4,
-			    (k->hints[i] & KM_HINTS) |
-				KM_KEYMAP | k->codes[i].modifiers,
-			    dbuf));
+		vb_appendf(&r, " %s", decode_key(k->codes[i].key, k->codes[i].ucs4,
+			    (k->hints[i] & KM_HINTS) | KM_KEYMAP | k->codes[i].modifiers));
 	    }
-	    vb_appendf(&r, "[%s:%d%s]%s: %s\n", k->file, k->line,
-		    k->temp? " temp": "", buf, t);
+	    vb_appendf(&r, ": %s\n", (t = safe_string(k->action)));
 	    Free(t);
 	}
     }

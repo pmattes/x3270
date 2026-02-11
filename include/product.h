@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Paul Mattes.
+ * Copyright (c) 2015-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,10 @@
  *		default value.
  */
 
-bool product_has_display(void); 			/* default False */
+bool product_has_display(void); 			/* default false */
 const char *product_specific_build_options(void);	/* default NULL */
-bool product_auto_oversize(void);			/* default False */
+bool product_auto_oversize(void);			/* default false */
 void product_set_appres_defaults(void);
+#if defined(_WIN32) /*[*/
+bool product_has_window_id(void);			/* default false */
+#endif /*]*/

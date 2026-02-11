@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2025 Paul Mattes.
+ * Copyright (c) 2019-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,6 @@
  *              Console window support.
  */
 
-#if defined(_WIN32) /*[*/
-# error Not for Windows
-#endif /*]*/
-
 #include "globals.h"
 
 #include "appres.h"
@@ -41,6 +37,7 @@
 #include "txa.h"
 #include "utils.h"
 
+#if !defined(_WIN32) /*[*/
 /* Well-known consoles, in order of preference. */
 static console_desc_t consoles[] = {
     { "gnome-terminal",
@@ -54,38 +51,66 @@ static console_desc_t consoles[] = {
 	    COMMAND_SUBST },
     { NULL, NULL }
 };
+#endif /*]*/
 
 /* Find an executable in $PATH. */
-bool
+const char *
 find_in_path(const char *program)
 {
+#   if !defined(_WIN32) /*[*/
+#    define DIR_CHAR	'/'
+#    define ACCESS_OK	X_OK
+#    define SEP_CHAR	':'
+#   else /*][*/
+#    define DIR_CHAR '\\'
+#    define ACCESS_OK	R_OK
+#    define SEP_CHAR	';'
+#   endif /*]*/
     char *path;
-    char *colon;
+    char *sep;
+    const char *xpath;
 
-    if (program[0] == '/') {
-	return access(program, X_OK) == 0;
+    /* Check for absolute path. */
+#if !defined(_WIN32) /*[*/
+    if (program[0] == DIR_CHAR) {
+	return (access(program, ACCESS_OK) == 0)? program: NULL;
     }
-    path = getenv("PATH");
-    while ((colon = strchr(path, ':')) != NULL) {
-	if (colon != path) {
-	    const char *xpath = txAsprintf("%.*s/%s", (int)(colon - path), path, program);
+#else /*][*/
+    if (program[0] == DIR_CHAR || (strchr("ABCDEFGHIJKLMNOPQRSTUVWXYZ", toupper((int)program[0])) != NULL && program[1] == ':')) {
+	return access(program, ACCESS_OK)? NULL: program;
+    }
+#endif /*]*/
 
-	    if (access(xpath, X_OK) == 0) {
-		return true;
+#if defined(_WIN32) /*[*/
+    /* Try the install directory. */
+    xpath = txAsprintf("%s%s", instdir, program);
+    if (access(xpath, ACCESS_OK) == 0) {
+	return xpath;
+    }
+#endif /*]*/
+
+    /* Walk $PATH. */
+    path = getenv("PATH");
+    while ((sep = strchr(path, SEP_CHAR)) != NULL) {
+	if (sep != path) {
+	    xpath = txAsprintf("%.*s%c%s", (int)(sep - path), path, DIR_CHAR, program);
+	    if (access(xpath, ACCESS_OK) == 0) {
+		return xpath;
 	    }
 	}
-	path = colon + 1;
+	path = sep + 1;
     }
     if (*path) {
-	const char *xpath = txAsprintf("%s/%s", path, program);
-
-	if (access(xpath, X_OK) == 0) {
-	    return true;
+	xpath = txAsprintf("%s%c%s", path, DIR_CHAR, program);
+	if (access(xpath, ACCESS_OK) == 0) {
+	    return xpath;
 	}
     }
-    return false;
+
+    return NULL;
 }
 
+#if !defined(_WIN32) /*[*/
 /* Find the preferred console emulator for the prompt. */
 console_desc_t *
 find_console(const char **errmsg)
@@ -97,7 +122,7 @@ find_console(const char **errmsg)
     if (override == NULL) {
 	/* No override. Find the best one. */
 	for (i = 0; consoles[i].program != NULL; i++) {
-	    if (find_in_path(consoles[i].program)) {
+	    if (find_in_path(consoles[i].program) != NULL) {
 		return &consoles[i];
 	    }
 	}
@@ -109,7 +134,7 @@ find_console(const char **errmsg)
 	/* They just specified the name. */
 	for (i = 0; consoles[i].program != NULL; i++) {
 	    if (!strcmp(override, consoles[i].program) &&
-		    find_in_path(override)) {
+		    find_in_path(override) != NULL) {
 		return &consoles[i];
 	    }
 	}
@@ -128,7 +153,7 @@ find_console(const char **errmsg)
     dup = NewString(override);
     dup[space - override] = '\0';
     txdFree(dup);
-    if (find_in_path(dup)) {
+    if (find_in_path(dup) != NULL) {
 	static console_desc_t t_ret;
 
 	t_ret.program = dup;
@@ -160,3 +185,4 @@ console_args(console_desc_t *t, const char *title, const char ***s, int ix)
     txdFree(str);
     return ix;
 }
+#endif /*]*/

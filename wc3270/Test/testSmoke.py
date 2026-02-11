@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,8 @@ class TestWc3270Smoke(cti):
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
         for dir in os.environ['PATH'].split(';'):
+            if dir.startswith('obj'):
+                dir = os.getcwd() + '\\' + dir
             cand = dir + '\\' + exe
             if os.path.exists(cand):
                 return (dir, cand)

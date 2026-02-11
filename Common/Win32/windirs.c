@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2024 Paul Mattes.
+ * Copyright (c) 2006-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,8 +116,9 @@ getcwd_bsl(void)
 	    return NULL;
 	}
 
-	strcpy(xwd, wd);
-	strcat(xwd, "\\");
+	strncpy(xwd, wd, sl);
+	xwd[sl] = '\\';
+	xwd[sl + 1] = '\0';
 	free(wd);
 	wd = xwd;
     }
@@ -151,7 +152,7 @@ getcwd_bsl(void)
  * not.  If not, appdata is returned as the cwd.
  */
 bool
-get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
+get_dirs(const char *appname, char **instdir, char **desktop, char **appdata,
 	char **common_desktop, char **common_appdata, char **documents,
 	char **common_documents, char **docs3270, char **common_docs3270,
 	unsigned *flags)
@@ -220,12 +221,14 @@ get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
 		return false;
 	    }
 	} else {
+	    size_t sl1 = strlen(path) + 1;
+
 	    *(bsl + 1) = '\0';
-	    *instdir = malloc(strlen(path) + 1);
+	    *instdir = malloc(sl1);
 	    if (*instdir == NULL) {
 		return false;
 	    }
-	    strcpy(*instdir, path);
+	    strncpy(*instdir, path, sl1);
 	}
     }
 

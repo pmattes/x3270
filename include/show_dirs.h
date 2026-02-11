@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2026 Paul Mattes.
+ * Copyright (c) 2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,13 +25,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* c3270 version of keymap.h */
+/*
+ *	show_dirs.h
+ *		Windows directory display.
+ */
 
-#define KM_CTRL		0x0001
-#define KM_ALT		0x0002
-
-void keymap_register(void);
-void keymap_init(void);
-char *lookup_key(int k, ucs4_t ucs4, int modifiers);
-const char *keymap_dump(void);
-const char *decode_key(int k, ucs4_t ucs4, int hint);
+void show_dirs_register(void);

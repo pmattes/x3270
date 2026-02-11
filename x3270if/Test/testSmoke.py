@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ class TestX3270ifSmoke(cti):
         self.vgwait(x3270if)
 
         # Test the output.
-        self.assertEqual('true\n', stdout)
+        self.assertEqual('true', stdout.strip())
 
 if __name__ == '__main__':
     unittest.main()

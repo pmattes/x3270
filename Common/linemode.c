@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -572,14 +572,21 @@ linemode_chars(void)
 {
     static struct ctl_char c[9];
 
-    c[0].name = "intr";		strcpy(c[0].value, ctl_see(vintr));
-    c[1].name = "quit";		strcpy(c[1].value, ctl_see(vquit));
-    c[2].name = "erase";	strcpy(c[2].value, ctl_see(verase));
-    c[3].name = "kill";		strcpy(c[3].value, ctl_see(vkill));
-    c[4].name = "eof";		strcpy(c[4].value, ctl_see(veof));
-    c[5].name = "werase";	strcpy(c[5].value, ctl_see(vwerase));
-    c[6].name = "rprnt";	strcpy(c[6].value, ctl_see(vrprnt));
-    c[7].name = "lnext";	strcpy(c[7].value, ctl_see(vlnext));
+    linemode_init();
+
+#   define COPY_LMCHAR(ix, n_name, n_value) { \
+    c[ix].name = n_name; \
+    strncpy(c[ix].value, ctl_see(n_value), sizeof(c[ix].value)); \
+    c[ix].value[sizeof(c[ix].value) - 1] = '\0'; \
+}
+    COPY_LMCHAR(0, "intr", vintr);
+    COPY_LMCHAR(1, "quit", vquit);
+    COPY_LMCHAR(2, "erase", verase);
+    COPY_LMCHAR(3, "kill", vkill);
+    COPY_LMCHAR(4, "eof", veof);
+    COPY_LMCHAR(5, "werase", vwerase);
+    COPY_LMCHAR(6, "rprnt", vrprnt);
+    COPY_LMCHAR(7, "lnext", vlnext);
     c[8].name = NULL;
 
     return c;

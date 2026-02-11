@@ -268,7 +268,8 @@ static xsb_t xs_public;	/* public sessions */
 
 static session_t empty_session;
 static HANDLE conin_handle = INVALID_HANDLE_VALUE;
-static HANDLE stdout_handle = INVALID_HANDLE_VALUE;
+static HANDLE conout_handle = INVALID_HANDLE_VALUE;
+static bool is_vt = false;
 
 static void write_user_settings(char *us, FILE *f);
 static void display_sessions(bool with_numbers, bool include_public);
@@ -280,43 +281,33 @@ static sw_t do_upgrade(bool);
 static BOOL admin(void);
 static bool ad_exist(void);
 
-/* Set up the stdout handle. */
-static bool
-setup_stdout(void)
-{
-    if (stdout_handle != INVALID_HANDLE_VALUE) {
-	return true;
-    }
-    stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    return (stdout_handle != INVALID_HANDLE_VALUE);
-}
-
 /* Clear the screen. */
 static void
 cls(void)
 {
-    system("cls");
-    if (setup_stdout()) {
-	SetConsoleTextAttribute(stdout_handle,
-		FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
-		FOREGROUND_INTENSITY);
+    if (is_vt) {
+	WriteConsoleA(conout_handle, "\033[H\033[J", 6, NULL, NULL);
+    } else {
+	system("cls");
     }
+    SetConsoleTextAttribute(conout_handle,
+	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
 }
 
 /* Generate output in specific colors. */
 static void
 color_out(const char *fmt, int colors, va_list ap)
 {
-    if (!setup_stdout()) {
+    if (conout_handle == NULL) {
 	vprintf(fmt, ap);
 	fflush(stdout);
 	return;
     }
     fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle, colors);
+    SetConsoleTextAttribute(conout_handle, colors);
     vprintf(fmt, ap);
     fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
+    SetConsoleTextAttribute(conout_handle,
 	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
 	    FOREGROUND_INTENSITY);
 }
@@ -376,6 +367,37 @@ grayout(const char *fmt, ...)
     va_start(ap, fmt);
     color_out(fmt, FOREGROUND_INTENSITY, ap);
     va_end(ap);
+}
+
+/* Set up the console handles. */
+static int
+setup_console(void)
+{
+    DWORD mode;
+
+    /* Get the console input handle. */
+    conin_handle = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+	    FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (conin_handle == NULL) {
+	errout("CreateFile(CONIN$) failed, error %ld\n", (long)GetLastError());
+	return -1;
+    }
+
+    /* Get the console output handle. */
+    conout_handle = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+	    FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (conout_handle == NULL) {
+	errout("CreateFile(CONOUT$) failed, error %ld\n", (long)GetLastError());
+	return -1;
+    }
+
+    /* Figure out if we're on a VT-capable console or not. */
+    if (GetConsoleMode(conout_handle, &mode) == 0) {
+	errout("Console mode read failed, error %ld\n", (long)GetLastError());
+	return 0;
+    }
+    is_vt = (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0;
+    return 0;
 }
 
 /**
@@ -5203,24 +5225,13 @@ static int
 resize_window(int rows)
 {
     int rv = 0;
-    HANDLE h;
     CONSOLE_SCREEN_BUFFER_INFO info;
     bool resized = false;
     int cols;
 
     do {
-	/* Get a handle to the console. */
-	h = CreateFile("CONOUT$",
-		GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
-		OPEN_EXISTING, 0, NULL);
-	if (h == NULL) {
-	    errout("Console handle open failed, error %ld\n", (long)GetLastError());
-	    rv = -1;
-	    break;
-	}
-
-	/* Get its current geometry. */
-	if (GetConsoleScreenBufferInfo(h, &info) == 0) {
+	/* Get the window's current geometry. */
+	if (GetConsoleScreenBufferInfo(conout_handle, &info) == 0) {
 	    errout("GetConsoleScreenBufferInfo failed, error %ld\n", (long)GetLastError());
 	    rv = -1;
 	    break;
@@ -5233,7 +5244,7 @@ resize_window(int rows)
 
 	    new_size.X = cols;
 	    new_size.Y = rows;
-	    if (SetConsoleScreenBufferSize(h, new_size) == 0) {
+	    if (SetConsoleScreenBufferSize(conout_handle, new_size) == 0) {
 		errout("SetConsoleScreenBufferSize failed, error %ld\n", (long)GetLastError());
 		rv = -1;
 		break;
@@ -5254,7 +5265,7 @@ resize_window(int rows)
 	    sr.Bottom = rows - 1;
 	    sr.Left = 0;
 	    sr.Right = cols - 1;
-	    if (SetConsoleWindowInfo(h, TRUE, &sr) == 0) {
+	    if (SetConsoleWindowInfo(conout_handle, TRUE, &sr) == 0) {
 		errout("SetConsoleWindowInfo failed, error %ld\n", (long)GetLastError());
 		rv = -1;
 		break;
@@ -5262,30 +5273,18 @@ resize_window(int rows)
 	    resized = true;
 	}
 
-	if (resized) {
-	    DWORD mode;
+	if (resized && is_vt) {
+	    char *msg = malloc(64);
 
-	    /* Do the Windows Terminal version of resize. */
-	    if (GetConsoleMode(h, &mode) == 0) {
-		rv = -1;
-		break;
-	    }
-	    if (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) {
-		char *msg = malloc(64);
-
-		snprintf(msg, 63, "\033[8;%d;%dt", rows, cols);
-		msg[63] = '\0';
-		WriteConsoleA(h, msg, (int)strlen(msg), NULL, NULL);
-		free(msg);
-		Sleep(500);
-	    }
+	    snprintf(msg, 63, "\033[8;%d;%dt", rows, cols);
+	    msg[63] = '\0';
+	    WriteConsoleA(conout_handle, msg, (int)strlen(msg), NULL, NULL);
+	    free(msg);
+	    Sleep(500);
 	}
 
     } while(0);
 
-    if (h != NULL) {
-	CloseHandle(h);
-    }
     return rv;
 }
 
@@ -5390,19 +5389,6 @@ main(int argc, char *argv[])
 	return 1;
     }
 
-    /* Get the console input handle. */
-    conin_handle = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
-	    FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (conin_handle == NULL) {
-	errout("CreateFile(CONIN$) failed, error %ld\n", (long)GetLastError());
-	return 1;
-    }
-
-    /* Resize the console window. */
-    if (resize_window(44) < 0) {
-	return 1;
-    }
-
     signal(SIGINT, SIG_IGN);
 
     if (upgrade) {
@@ -5412,6 +5398,16 @@ main(int argc, char *argv[])
 	xs_init(admin());
 	rc = do_upgrade(automatic_upgrade);
     } else {
+	/* Set up the console. */
+	if (setup_console() < 0) {
+	    return 1;
+	}
+
+	/* Resize the console window. */
+	if (resize_window(44) < 0) {
+	    return 1;
+	}
+
 	get_base_dirs(true);
 	save_keymaps(true);
 	/* Display the main menu until they quit or something goes wrong. */

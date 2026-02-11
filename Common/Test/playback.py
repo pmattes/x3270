@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ class playback():
         self.listensocket.bind((loopback, port))
         self.listensocket.listen()
         if trace_file != None:
-            self.file = open(trace_file, 'r')
+            self.file = open(trace_file, 'r', encoding='utf-8')
         self.thread = threading.Thread(target=self.process)
         self.thread.start()
 

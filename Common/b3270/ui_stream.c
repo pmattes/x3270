@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2025 Paul Mattes.
+ * Copyright (c) 2016-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -416,10 +416,11 @@ static void
 push_name(const char *name, bool is_array)
 {
     uix_container_t *g;
+    size_t sl1 = strlen(name) + 1;
 
-    g = Malloc(sizeof(uix_container_t) + strlen(name) + 1);
+    g = Malloc(sizeof(uix_container_t) + sl1);
     g->name = (char *)(g + 1);
-    strcpy(g->name, name);
+    strncpy(g->name, name, sl1);
     g->next = uix.container;
     uix.container = g;
     uix.depth++;
@@ -839,14 +840,16 @@ static void
 run_command(const char *tag, const char *type, const char *actions,
 	cmd_t **cmds)
 {
+    size_t sl1 = (tag != NULL)? strlen(tag) + 1: 0;
     ui_action_t *uia;
     tcb_t *tcb;
 
-    uia = (ui_action_t *)Calloc(1, sizeof(ui_action_t) +
-	    (tag? (strlen(tag) + 1): 0));
-    uia->tag = tag? (char *)(uia + 1): NULL;
-    if (tag) {
-	strcpy(uia->tag, tag);
+    uia = (ui_action_t *)Calloc(1, sizeof(ui_action_t) + sl1);
+    if (tag != NULL) {
+	uia->tag = (char *)(uia + 1);
+	strncpy(uia->tag, tag, sl1);
+    } else {
+	uia->tag = NULL;
     }
     uia->xresult = NULL;
     uia->xresult_err = NULL;

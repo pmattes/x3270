@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from Common.Test.cti import *
+import Common.Test.pipeq as pipeq
 from Common.Test.playback import playback
 
 @requests_timeout
@@ -48,6 +49,7 @@ class TestB3270Inhibit(cti):
             # Start b3270.
             b3270 = Popen(vgwrap(['b3270']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
+            pq = pipeq.pipeq(self, b3270.stdout)
 
             # Connect to playback.
             top = ET.Element('b3270-in')
@@ -64,9 +66,17 @@ class TestB3270Inhibit(cti):
             b3270.stdin.flush()
             b3270.stdin.close()
             self.vgwait(b3270)
+            pq.close()
 
             # Get the output.
-            out = ET.fromstring((b'\n'.join(b3270.stdout.readlines())).decode('utf8'))
+            sout = []
+            while True:
+                line = pq.get(timeout=0)
+                sout.append(line)
+                if line == b'</b3270-out>':
+                    break
+
+            out = ET.fromstring((b'\n'.join(sout)).decode('utf8'))
             b3270.stdout.close()
 
             # We should see the OIA go through three states:
