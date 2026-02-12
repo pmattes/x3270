@@ -191,9 +191,9 @@
 #define KwCaption	"caption"
 #define KwOia		"oia"
 /*  Parameters to Query(). */
+#define KwDashAll	"-all"
 #define KwAbout		"About"
 #define KwActions	"Actions"
-#define KwAll		"All"
 #define KwBindPluName	"BindPluName"
 #define KwBuildOptions	"BuildOptions"
 #define KwCharacterPixels	"CharacterPixels"

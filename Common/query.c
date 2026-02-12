@@ -322,7 +322,7 @@ query_all(void)
     for (i = 0; i < num_queries; i++) {
 	const char *s;
 
-	if (queries[i].fn == query_all || (queries[i].flags & (QF_ALIAS | QF_DEPRECATED))) {
+	if (queries[i].flags & (QF_ALIAS | QF_DEPRECATED)) {
 	    continue;
 	}
 
@@ -392,6 +392,11 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 	}
 	break;
     case 1:
+	if (!strcasecmp(argv[0], KwDashAll)) {
+	    action_output("%s", query_all());
+	    return true;
+	}
+
 	/* Look for an exact match. */
 	for (i = 0; i < num_queries; i++) {
 	    if (!strcasecmp(argv[0], queries[i].name)) {
@@ -514,7 +519,6 @@ query_register(void)
     static query_t base_queries[] = {
 	{ KwAbout, get_about, NULL, QF_SPECIFIC },
 	{ KwActions, all_actions, NULL, QF_SPECIFIC },
-	{ KwAll, query_all, NULL, QF_SPECIFIC },
 	{ KwBindPluName, net_query_bind_plu_name, NULL, 0 },
 	{ KwBuildOptions, build_options, NULL, 0 },
 	{ KwConnectionState, net_query_connection_state, NULL, 0 },

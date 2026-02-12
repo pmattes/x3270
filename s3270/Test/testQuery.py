@@ -172,8 +172,8 @@ class TestS3270Query(cti):
         # Wait for the process to exit.
         self.vgwait(s3270)
 
-    # s3270 Query(All) test.
-    def test_s3270_query_special_characters(self):
+    # s3270 Query(-all) test.
+    def test_s3270_query_all(self):
         # Start s3270.
         http_port, ts = unused_port()
         s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
@@ -182,7 +182,7 @@ class TestS3270Query(cti):
         self.check_listen(http_port)
 
         # Query all.
-        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(All)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(-all)')
         self.assertTrue(r.ok)
         result = r.json()['result']
         # Spot checks -- we did get Tls, we didn't get Ssl, we did get Cursor1, we didn't get Cursor.
