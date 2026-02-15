@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2025 Paul Mattes.
+ * Copyright (c) 1994-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@
 
 /* Support for WM_SAVE_YOURSELF. */
 
-char *command_string = NULL;
+char *updated_command_string = NULL;
 
 static char *cmd;
 static int cmd_len;
@@ -511,7 +511,7 @@ save_yourself(void)
     char *c, *c2;
     int len;
 
-    Replace(command_string, NULL);
+    Replace(updated_command_string, NULL);
 
     /* Copy the original command line into tmp_cmd. */
     tmp_cmd = (char **) XtMalloc(sizeof(char *) * NWORDS);
@@ -564,9 +564,9 @@ save_yourself(void)
 	    XA_STRING, 8, PropModeReplace, (unsigned char *)c, len);
 
     /* Save a readable copy of the command string for posterity. */
-    command_string = c;
+    updated_command_string = c;
     while (((c2 = strchr(c, '\0')) != NULL) &&
-	   (c2 - command_string < len-1)) {
+	   (c2 - updated_command_string < len-1)) {
 	*c2 = ' ';
 	c = c2 + 1;
     }

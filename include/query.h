@@ -36,13 +36,15 @@ typedef struct {
     const char *string;
     unsigned flags;
 } query_t;
-#define QF_HIDDEN	0x1
-#define QF_SPECIFIC	0x2
-#define QF_ALIAS	0x4
-#define QF_DEPRECATED	0x8
+#define QF_HIDDEN	0x1	/* show only if requested specifically or with -all */
+#define QF_MULTILINE	0x2	/* has multi-line output */
+#define QF_ALIAS	0x4	/* alias for another keyword, show only if requested specifically */
+#define QF_DEPRECATED	0x8	/* deprecated, show only if requested specifically */
+#define QF_TRACEHDR	0x10	/* include in the trace file header */
 void register_queries(query_t queries[], size_t count);
 void query_register(void);
 bool Query_action(ia_t ia, unsigned argc, const char **argv);
 bool query_common(const char *name, ia_t ia, unsigned argc, const char **argv);
 const char *get_about(void);
-
+char **query_all_strings(bool tracehdr);
+void free_query_all(char **all_strings);

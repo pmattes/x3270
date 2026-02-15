@@ -54,6 +54,7 @@
 #include "kybd.h"
 #include "names.h"
 #include "popups.h"
+#include "product.h"
 #include "query.h"
 #include "screen.h"
 #include "see.h"
@@ -3344,6 +3345,13 @@ query_curses(void)
 	    );
 }
 
+/* Report if screen color support is unknown. */
+bool
+product_has_known_color(void)
+{
+    return screen_initted;
+}
+
 /* Connection state change handler. */
 static void
 screen_connect(bool ignored)
@@ -3364,7 +3372,7 @@ void
 screen_register(void)
 {
     static query_t queries[] = {
-	{ KwCurses, query_curses, NULL, QF_SPECIFIC }
+	{ KwCurses, query_curses, NULL, QF_MULTILINE | QF_TRACEHDR }
     };
     static toggle_register_t toggles[] = {
 	{ MONOCASE,	toggle_monocase,	0 },

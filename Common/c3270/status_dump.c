@@ -151,7 +151,7 @@ status_dump(void)
     }
 #if !defined(_WIN32) /*[*/
     vb_appendf(&r, "%s %s\n", get_message("localeCodeset"), locale_codeset);
-    vb_appendf(&r, "%s, wide curses %s\n",
+    vb_appendf(&r, "%s wide curses %s\n",
 	    get_message("buildOpts"),
 # if defined(CURSES_WIDE) /*[*/
 	    get_message("buildEnabled")

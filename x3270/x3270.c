@@ -1,6 +1,6 @@
 /**
  * @copyright
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -92,6 +92,7 @@
 #include "txa.h"
 #include "screentrace.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "vstatus.h"
 #include "xactions.h"
 #include "xappres.h"
@@ -125,6 +126,7 @@ AppRes		appres;
 xappres_t	xappres;
 bool		exiting = false;
 char           *user_title = NULL;
+char	       *command_string;
 
 /* Statics */
 static void	peek_at_xevent(XEvent *);
@@ -450,6 +452,20 @@ dup_resource_strings(void *ap, XtResourceList res, Cardinal num)
     }
 }
 
+/* Save the original command line. */
+static void
+save_command_string(int argc, char *argv[])
+{
+    varbuf_t r;
+    int i;
+
+    vb_init(&r);
+    for (i = 0; i < argc; i++) {
+	vb_appendf(&r, "%s%s", i?" ": "", argv[i]);
+    }
+    command_string = vb_consume(&r);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -551,6 +567,9 @@ main(int argc, char *argv[])
     prefer_register();
     telnet_new_environ_register();
     rpq_register();
+
+    /* Save the original command line. */
+    save_command_string(argc, argv);
 
     /* Translate and validate -set and -clear toggle options. */
 #if defined(DEBUG_SET_CLEAR) /*[*/

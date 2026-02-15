@@ -47,6 +47,7 @@
 #include "popups.h"
 #include "product.h"
 #include "query.h"
+#include "save.h"
 #include "see.h"
 #include "split_host.h"
 #include "telnet.h"
@@ -310,19 +311,19 @@ query_window_state(void)
     }
 }
 
-/* Query everything, hidden or not, specific or not. */
-static const char *
-query_all(void)
+/* Get all of the query, as a vector of strings. */
+char **
+query_all_strings(bool tracehdr)
 {
+    char **ret = NULL;
+    int n_ret = 0;
     size_t i;
-    varbuf_t r;
-    const char *bk = "";
+#   define ADD_RET	ret = (char **)Realloc(ret, (n_ret + 1) * sizeof(char *))
 
-    vb_init(&r);
     for (i = 0; i < num_queries; i++) {
 	const char *s;
 
-	if (queries[i].flags & (QF_ALIAS | QF_DEPRECATED)) {
+	if ((queries[i].flags & (QF_ALIAS | QF_DEPRECATED)) || (tracehdr && !(queries[i].flags & QF_TRACEHDR))) {
 	    continue;
 	}
 
@@ -330,34 +331,64 @@ query_all(void)
 	if (s == NULL) {
 	    s = "";
 	}
-	if (queries[i].flags & QF_SPECIFIC) {
+	if (queries[i].flags & QF_MULTILINE) {
 	    const char *rest = s;
 	    const char *nl;
 
 	    if (!*s) {
-		vb_appendf(&r, "%s%s:", bk, queries[i].name);
-		bk = "\n";
+		ADD_RET;
+		ret[n_ret++] = Asprintf("%s:", queries[i].name);
 		continue;
 	    }
+
 	    while ((nl = strchr(rest, '\n')) != NULL) {
-		vb_appendf(&r, "%s%s: %.*s", bk, queries[i].name, (int)(nl - rest), rest);
+		ADD_RET;
+		ret[n_ret++] = Asprintf("%s: %.*s", queries[i].name, (int)(nl - rest), rest);
 		rest = nl + 1;
-		bk = "\n";
 	    }
 	    if (*rest) {
-		vb_appendf(&r, "%s%s: %s", bk, queries[i].name, rest);
-		bk = "\n";
+		ADD_RET;
+		ret[n_ret++] = Asprintf("%s: %s", queries[i].name, rest);
 	    }
 	} else {
-	    vb_appendf(&r, "%s%s:%s%s",
-		    bk,
-		    queries[i].name,
-		    *s? " ": "",
-		    s);
-	    bk = "\n";
+	    ADD_RET;
+	    ret[n_ret++] = Asprintf("%s:%s%s", queries[i].name, *s? " ": "", s);
 	}
     }
-    return txdFree(vb_consume(&r));
+    ADD_RET;
+    ret[n_ret] = NULL;
+    return ret;
+}
+
+/* Free the data allocated by query_all_strings(). */
+void
+free_query_all(char **strings)
+{
+    char **s = strings;
+
+    while (*s != NULL) {
+	Free(*s);
+	s++;
+    }
+    Free(strings);
+}
+
+/* Query everything, hidden or not, multi-line or not. */
+static const char *
+query_all(void)
+{
+    char **strings = query_all_strings(false);
+    int i;
+    varbuf_t r;
+    const char *ret;
+
+    vb_init(&r);
+    for (i = 0; strings[i] != NULL; i++) {
+	vb_appendf(&r, "%s%s", i? "\n": "", strings[i]);
+    }
+    ret = txdFree(vb_consume(&r));
+    free_query_all(strings);
+    return ret;
 }
 
 /* Common code for Query() and Show() actions. */
@@ -384,7 +415,7 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 		if (s == NULL) {
 		    s = "";
 		}
-		if ((queries[i].flags & QF_SPECIFIC) && strcmp(s, "")) {
+		if ((queries[i].flags & QF_MULTILINE) && strcmp(s, "")) {
 		    s = "...";
 		}
 		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
@@ -482,12 +513,25 @@ get_special_characters(void)
 
     vb_init(&r);
     for (i = 0; c[i].name; i++) {
-	if (i && !(i % 4)) {
-	    vb_appends(&r, "\n");
-	}
-	vb_appendf(&r, "%s%s %s", (i % 4)? " ": "", c[i].name, c[i].value);
+	vb_appendf(&r, "%s%s %s", i? " ": "", c[i].name, c[i].value);
     }
     return txdFree(vb_consume(&r));
+}
+
+/* Get the command line. */
+static const char *
+get_command_line(void)
+{
+    return command_string;
+}
+
+/* Get the color configuration. */
+static const char *
+get_color(void)
+{
+    return txAsprintf("display %s emulation %s",
+	    product_has_known_color()? (appres.interactive.mono? "monochrome": "color"): "unknown",
+	    mode3279? "color": "monochrome");
 }
 
 /**
@@ -517,46 +561,48 @@ query_register(void)
 	{ AnShow,		Show_action, 0 }
     };
     static query_t base_queries[] = {
-	{ KwAbout, get_about, NULL, QF_SPECIFIC },
-	{ KwActions, all_actions, NULL, QF_SPECIFIC },
-	{ KwBindPluName, net_query_bind_plu_name, NULL, 0 },
-	{ KwBuildOptions, build_options, NULL, 0 },
-	{ KwConnectionState, net_query_connection_state, NULL, 0 },
-	{ KwConnectTime, get_connect_time, NULL, 0 },
-	{ KwCodePage, get_codepage, NULL, 0 },
-	{ KwCodePages, get_codepages, NULL, QF_SPECIFIC },
-	{ KwCopyright, show_copyright, NULL, QF_SPECIFIC },
+	{ KwAbout, get_about, NULL, QF_MULTILINE },
+	{ KwActions, all_actions, NULL, QF_MULTILINE },
+	{ KwBindPluName, net_query_bind_plu_name, NULL, QF_TRACEHDR },
+	{ KwBuildOptions, build_options, NULL, QF_TRACEHDR },
+	{ KwCommandLine, get_command_line, NULL, QF_TRACEHDR },
+	{ KwConnectionState, net_query_connection_state, NULL, QF_TRACEHDR },
+	{ KwConnectTime, get_connect_time, NULL, QF_TRACEHDR },
+	{ KwCodePage, get_codepage, NULL, QF_TRACEHDR },
+	{ KwCodePages, get_codepages, NULL, QF_MULTILINE },
+	{ KwCopyright, show_copyright, NULL, QF_MULTILINE },
+	{ KwColor, get_color, NULL, QF_TRACEHDR },
 	{ KwCursor, ctlr_query_cursor, NULL, QF_DEPRECATED },
-	{ KwCursor1, ctlr_query_cursor1, NULL, 0 },
-	{ KwFormatted, ctlr_query_formatted, NULL, 0 },
-	{ KwHost, net_query_host, NULL, 0 },
-	{ KwLocalEncoding, get_codeset, NULL, 0 },
-	{ KwLuName, net_query_lu_name, NULL, 0 },
+	{ KwCursor1, ctlr_query_cursor1, NULL, QF_TRACEHDR },
+	{ KwFormatted, ctlr_query_formatted, NULL, QF_TRACEHDR },
+	{ KwHost, net_query_host, NULL, QF_TRACEHDR },
+	{ KwLocalEncoding, get_codeset, NULL, QF_TRACEHDR },
+	{ KwLuName, net_query_lu_name, NULL, QF_TRACEHDR },
 	{ KwModel, get_full_model, NULL, QF_DEPRECATED },
 	{ KwPrefixes, host_prefixes, NULL, 0 },
-	{ KwProxy, get_proxy, NULL, 0 },
-	{ KwReplyMode, get_reply_mode, NULL, 0 },
+	{ KwProxy, get_proxy, NULL, QF_TRACEHDR },
+	{ KwReplyMode, get_reply_mode, NULL, QF_TRACEHDR },
 	{ KwScreenCurSize, ctlr_query_cur_size_old, NULL, QF_DEPRECATED },
 	{ KwScreenMaxSize, ctlr_query_max_size_old, NULL, QF_DEPRECATED },
-	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, 0 },
-	{ KwScreenSizeMax, ctlr_query_max_size, NULL, 0 },
-	{ KwScreenTraceFile, get_screentracefile, NULL, 0 },
-	{ KwSpecialCharacters, get_special_characters, NULL, QF_SPECIFIC },
+	{ KwScreenSizeCurrent, ctlr_query_cur_size, NULL, QF_TRACEHDR },
+	{ KwScreenSizeMax, ctlr_query_max_size, NULL, QF_TRACEHDR },
+	{ KwScreenTraceFile, get_screentracefile, NULL, QF_TRACEHDR },
+	{ KwSpecialCharacters, get_special_characters, NULL, QF_TRACEHDR },
 	{ KwSsl, net_query_tls, NULL, QF_ALIAS },
-	{ KwStatsRx, get_rx, NULL, 0 },
-	{ KwStatsTx, get_tx, NULL, 0 },
-	{ KwTasks, get_tasks, NULL, QF_SPECIFIC },
-	{ KwTelnetMyOptions, net_myopts, NULL, 0 },
-	{ KwTelnetHostOptions, net_hisopts, NULL, 0 },
-	{ KwTerminalName, query_terminal_name, NULL, 0 },
+	{ KwStatsRx, get_rx, NULL, QF_TRACEHDR },
+	{ KwStatsTx, get_tx, NULL, QF_TRACEHDR },
+	{ KwTasks, get_tasks, NULL, QF_MULTILINE },
+	{ KwTelnetMyOptions, net_myopts, NULL, QF_TRACEHDR },
+	{ KwTelnetHostOptions, net_hisopts, NULL, QF_TRACEHDR },
+	{ KwTerminalName, query_terminal_name, NULL, QF_TRACEHDR },
 	{ KwTraceFile, get_tracefile, NULL, 0 },
-	{ KwTls, net_query_tls, NULL, 0 },
-	{ KwTlsCertInfo, net_server_cert_info, NULL, QF_SPECIFIC },
-	{ KwTlsSubjectNames, net_server_subject_names, NULL, QF_SPECIFIC },
-	{ KwTlsProvider, net_sio_provider, NULL, 0 },
-	{ KwTlsSessionInfo, net_session_info, NULL, QF_SPECIFIC },
-	{ KwTn3270eOptions, tn3270e_current_opts, NULL, 0 },
-	{ KwVersion, query_build, NULL, 0 },
+	{ KwTls, net_query_tls, NULL, QF_TRACEHDR },
+	{ KwTlsCertInfo, net_server_cert_info, NULL, QF_MULTILINE },
+	{ KwTlsSubjectNames, net_server_subject_names, NULL, QF_MULTILINE },
+	{ KwTlsProvider, net_sio_provider, NULL, QF_TRACEHDR },
+	{ KwTlsSessionInfo, net_session_info, NULL, QF_MULTILINE | QF_TRACEHDR },
+	{ KwTn3270eOptions, tn3270e_current_opts, NULL, QF_TRACEHDR },
+	{ KwVersion, query_build, NULL, 0 }, /* version is displayed explicitly by the trace logic */
     };
     static query_t hidden_window_queries[] = {
 	{ KwCharacterPixels, query_character_pixels, NULL, QF_HIDDEN },
@@ -566,15 +612,15 @@ query_register(void)
 	{ KwWindowState, query_window_state, NULL, QF_HIDDEN },
     };
     static query_t visible_window_queries[] = {
-	{ KwCharacterPixels, query_character_pixels, NULL, 0 },
-	{ KwDisplayPixels, query_display_pixels, NULL, 0 },
-	{ KwWindowPixels, query_window_pixels, NULL, 0 },
-	{ KwWindowLocation, query_window_location, NULL, 0 },
-	{ KwWindowState, query_window_state, NULL, 0 },
+	{ KwCharacterPixels, query_character_pixels, NULL, QF_TRACEHDR },
+	{ KwDisplayPixels, query_display_pixels, NULL, QF_TRACEHDR },
+	{ KwWindowPixels, query_window_pixels, NULL, QF_TRACEHDR },
+	{ KwWindowLocation, query_window_location, NULL, QF_TRACEHDR },
+	{ KwWindowState, query_window_state, NULL, QF_TRACEHDR },
     };
 #if defined(_WIN32) /*[*/
     static query_t visible_window_id_queries[] = {
-	{ KwWindowId, get_windowid, NULL, 0 },
+	{ KwWindowId, get_windowid, NULL, QF_TRACEHDR },
     };
     static query_t hidden_window_id_queries[] = {
 	{ KwWindowId, get_windowid, NULL, QF_HIDDEN },

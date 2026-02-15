@@ -40,3 +40,4 @@ void product_set_appres_defaults(void);
 #if defined(_WIN32) /*[*/
 bool product_has_window_id(void);			/* default false */
 #endif /*]*/
+bool product_has_known_color(void);			/* default true */

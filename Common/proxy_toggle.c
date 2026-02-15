@@ -91,7 +91,7 @@ void
 proxy_register(void)
 {
     static query_t queries[] = {
-	{ "Proxies", proxy_dump, NULL, QF_SPECIFIC }
+	{ "Proxies", proxy_dump, NULL, QF_MULTILINE }
     };
 
     /* Register the toggles. */

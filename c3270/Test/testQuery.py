@@ -48,8 +48,8 @@ class TestC3270Query(cti):
             except:
                 return
 
-    # c3270 Query test.
-    def test_c3270_Query(self):
+    # c3270 Query(SpecialCharacters) test.
+    def test_c3270_query_special_characters(self):
 
         # Fork a child process with a PTY between this process and it.
         c3270_port, ts = unused_port()
@@ -99,6 +99,66 @@ class TestC3270Query(cti):
                     else:
                         in_specials = False
             self.assertEqual(['  intr ^C  quit ^\\  erase ^H  kill ^U', '  eof ^D  werase ^W  rprnt ^R  lnext ^V'], specials)
+
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit(-force)')
+        self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
+
+    # Accept a connection and play one line of text.
+    def accept(self, p: playback):
+        p.send_lines(1)
+
+    # c3270 Query(Color) test.
+    def test_c3270_query_color(self):
+
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-mono', '-httpd', f'127.0.0.1:{c3270_port}']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Query color info. Since we haven't connected, display color is unknown.
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(Color)')
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual('display unknown emulation monochrome', result[0])
+
+        # Connect to a host and try again.
+        playback_port, pts = unused_port()
+        with playback(self, 'c3270/Test/hello.trc', port=playback_port) as p:
+            pts.close()
+
+            play_thread = threading.Thread(target=self.accept, args=[p])
+            play_thread.start()
+
+            # Connect to playback.
+            os.write(fd, f'Open(127.0.0.1:{playback_port})\n'.encode('utf8'))
+
+            # Wait for the connection to be accepted.
+            play_thread.join()
+
+            # Try the query again. Now we should know display color.
+            r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(Color)')
+            self.assertTrue(r.ok)
+            result = r.json()['result']
+            self.assertEqual('display monochrome emulation monochrome', result[0])
 
         r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit(-force)')
         self.vgwait_pid(pid)

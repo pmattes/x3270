@@ -813,8 +813,8 @@ kybd_register(void)
 	{ UNDERSCORE_BLANK_FILL, NULL,	0 },
     };
     static query_t queries[] = {
-	{ KwKeyboardLock, kybdlock_dump, NULL, 0 },
-	{ KwKeyboardLockDetail, kybdlock_dump_detail, NULL, 0 },
+	{ KwKeyboardLock, kybdlock_dump, NULL, QF_TRACEHDR },
+	{ KwKeyboardLockDetail, kybdlock_dump_detail, NULL, QF_TRACEHDR },
     };
 
     /* Register interest in connect and disconnect events. */

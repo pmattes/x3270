@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
+#include "query.h"
 #include "resources.h"
 #include "save.h"
 #include "status.h"
@@ -113,6 +114,7 @@ static char    *tracef_bufptr = NULL;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = NULL;
+static int	trace_reason;
 
 static void	vwtrace(bool do_ts, tc_t category, const char *fmt, va_list args);
 static void	wtrace(bool do_ts, tc_t category, const char *fmt, ...);
@@ -480,58 +482,44 @@ trace_rollover_check(void)
     }
 }
 
-static int trace_reason;
-
-/* Create a trace file header. */
-static char *
-create_tracefile_header(const char *trace_mode)
+/* Put the output of most queries into the trace file. */
+static void
+dump_queries(void)
 {
-    char *buf;
+    char **query_strings;
+    int i;
+    size_t len = 0;
+
+    query_strings = query_all_strings(true);
+
+    for (i = 0; query_strings[i] != NULL; i++) {
+	size_t slen = strlen(query_strings[i]);
+	int skiplen = len? 2: 1;
+
+	if (len + skiplen + slen >= 132) {
+	    wtrace(false, TC_INFRA, "%s %s", len? "\n": "", query_strings[i]);
+	    len = 1 + slen;
+	    continue;
+	}
+	wtrace(false, TC_INFRA, "%*s%s", skiplen, "", query_strings[i]);
+	len += skiplen + slen;
+    }
+    if (len) {
+	wtrace(false, TC_INFRA, "\n");
+    }
+
+    free_query_all(query_strings);
+}
+
+/* Put the values of modifiable settings into the trace file. */
+static void
+dump_settings(void)
+{
     int i;
     tnv_t *tnv;
     char *setting;
     size_t len;
 
-    /* Create a buffer and redirect output. */
-    buf = Malloc(MAX_HEADER_SIZE);
-    tracef_bufptr = buf;
-
-    /* Display current status */
-    wtrace(true, TC_INFRA, "Trace %s\n", trace_mode);
-    wtrace(false, TC_INFRA, " Version: %s\n", build);
-    wtrace(false, TC_INFRA, " Build options: %s\n", build_options());
-    save_yourself();
-    wtrace(false, TC_INFRA, " Command: %s\n", command_string);
-    wtrace(false, TC_INFRA, " Model %s, %d rows x %d cols", get_model(), maxROWS, maxCOLS);
-    wtrace(false, TC_INFRA, ", %s display",
-	    appres.interactive.mono? "monochrome": "color");
-    if (appres.extended_data_stream) {
-	wtrace(false, TC_INFRA, ", extended data stream");
-    }
-    wtrace(false, TC_INFRA, ", %s emulation", mode3279 ? "color" : "monochrome");
-    wtrace(false, TC_INFRA, ", code page %s", get_codepage_name());
-    if (toggled(APL_MODE)) {
-	wtrace(false, TC_INFRA, ", APL mode");
-    }
-    wtrace(false, TC_INFRA, "\n");
-#if !defined(_WIN32) /*[*/
-    wtrace(false, TC_INFRA, " Locale codeset: %s\n", locale_codeset);
-#else /*][*/
-    wtrace(false, TC_INFRA, " ANSI codepage: %d\n", GetACP());
-# if defined(_WIN32) /*[*/
-    wtrace(false, TC_INFRA, " Local codepage: %d\n", appres.local_cp);
-# endif /*]*/
-#endif /*]*/
-    wtrace(false, TC_INFRA, " Host codepage: %d", (int)(cgcsgid & 0xffff));
-    if (dbcs) {
-	wtrace(false, TC_INFRA, "+%d", (int)(cgcsgid_dbcs & 0xffff));
-    }
-    wtrace(false, TC_INFRA, "\n");
-#if defined(_WIN32) /*[*/
-    wtrace(false, TC_INFRA, " Docs: %s\n", mydocs3270? mydocs3270: "(null)");
-    wtrace(false, TC_INFRA, " Install dir: %s\n", instdir? instdir: "(null)");
-    wtrace(false, TC_INFRA, " Desktop: %s\n", mydesktop? mydesktop: "(null)");
-#endif /*]*/
     wtrace(false, TC_INFRA, " Settings:");
     len = 10;
     tnv = toggle_values();
@@ -541,21 +529,32 @@ create_tracefile_header(const char *trace_mode)
 	} else {
 	    setting = Asprintf("%s=", tnv[i].name);
 	}
-	if (len + 1 + strlen(setting) >= 80) {
-	    wtrace(false, TC_INFRA, "\n ");
-	    len = 1;
+	if (len + (i? 2: 1) + strlen(setting) >= 132) {
+	    wtrace(false, TC_INFRA, "\n");
+	    len = 0;
 	}
-	wtrace(false, TC_INFRA, " %s", setting);
-	len += 1 + strlen(setting);
+	wtrace(false, TC_INFRA, "%s%s", i? "  ": " ", setting);
+	len += (i? 2: 1) + strlen(setting);
 	Free(setting);
     }
     wtrace(false, TC_INFRA, "\n");
+}
 
-    if (HALF_CONNECTED) {
-	wtrace(false, TC_INFRA, " Connected to %s, port %u\n", current_host,
-		current_port);
-    }
-    wtrace(false, TC_INFRA, " Connection state: %s\n", state_name[cstate]);
+/* Create a trace file header. */
+static char *
+create_tracefile_header(const char *trace_mode)
+{
+    char *buf;
+
+    /* Create a buffer and redirect output. */
+    buf = Malloc(MAX_HEADER_SIZE);
+    tracef_bufptr = buf;
+
+    /* Display current status */
+    wtrace(true, TC_INFRA, "Trace %s\n", trace_mode);
+    wtrace(false, TC_INFRA, " Version: %s\n", build);
+    dump_queries();
+    dump_settings();
 
     /* Snap the current TELNET options. */
     if (net_snap_options()) {

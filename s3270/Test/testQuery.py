@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -194,6 +194,57 @@ class TestS3270Query(cti):
         if sys.platform.startswith('win'):
             self.assertTrue(any([line for line in result if line.startswith('WindowId:')]))
             self.assertTrue(any([line for line in result if line.startswith('Dirs:')]))
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
+    # s3270 Query(Color) test.
+    def test_s3270_query_color(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Query color.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Color)')
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual('display color emulation color', result[0])
+
+        # Switch to 3278 and try again.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(model,3278-2)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Color)')
+        self.assertTrue(r.ok)
+        result = r.json()['result']
+        self.assertEqual('display color emulation monochrome', result[0])
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Wait for the process to exit.
+        self.vgwait(s3270)
+
+    # s3270 Query(CommandLine) test.
+    def test_s3270_query_command_line(self):
+        # Start s3270.
+        http_port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Query the command line.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(CommandLine)')
+        self.assertTrue(r.ok)
+        result = r.json()['result'][0].split()
+        self.assertEqual(3, len(result))
+        self.assertTrue(result[0].endswith('s3270') or result[0].endswith('s3270.exe'))
+        self.assertEqual(['-httpd', f'127.0.0.1:{http_port}'], result[1:])
 
         # Stop s3270.
         self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
