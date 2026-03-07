@@ -226,7 +226,7 @@ class TestS3270CodePage(cti):
         # Check the SBCS code pages.
         r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,2,12,16)')
         self.assertEqual(apl_chars, r.json()['result'])
-        
+
         # Wait for the process to exit successfully.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
@@ -258,7 +258,7 @@ class TestS3270CodePage(cti):
             # Check the DBCS output.
             r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,3,80)')
             self.assertEqual(expect_chinese, r.json()['result'])
-        
+
         # Wait for the process to exit successfully.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
@@ -295,7 +295,7 @@ class TestS3270CodePage(cti):
             # Check the DBCS output.
             r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(2,1,2,80)')
             self.assertEqual(expect_chinese, r.json()['result'])
-        
+
         # Wait for the process to exit successfully.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
@@ -340,7 +340,7 @@ class TestS3270CodePage(cti):
             # Check the DBCS output.
             r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Ascii1(1,1,3,80)')
             self.assertEqual(expect_japanese[codePage], r.json()['result'])
-        
+
         # Wait for the process to exit successfully.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)

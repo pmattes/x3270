@@ -59,7 +59,7 @@ class TestS3270Uri(cti):
         port, ts = unused_port(ipv6=ipv6)
         with playback(self, 's3270/Test/lu.trc', port=port, ipv6=ipv6) as p:
             ts.close()
-            
+
             # Start s3270.
             loopback = '[::1]' if ipv6 else '127.0.0.1'
             env = os.environ.copy()
@@ -89,7 +89,7 @@ class TestS3270Uri(cti):
         port, ts = unused_port()
         with tls_server.tls_server('Common/Test/tls/TEST.crt', 'Common/Test/tls/TEST.key', self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
-            
+
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270s is 992, and it overrides s3270.port.
             # But we have to map 992 to something else, so we don't need to run the TLS server as root.
@@ -110,7 +110,7 @@ class TestS3270Uri(cti):
         # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
-    
+
 
     # s3270 tn3270 URI default port test.
     def test_s3270_tn3270_uri_port(self):
@@ -119,7 +119,7 @@ class TestS3270Uri(cti):
         port, ts = unused_port()
         with playback(self, 's3270/Test/ibmlink.trc', port) as p:
             ts.close()
-            
+
             # Start s3270.
             # What we're trying to prove here is that the default port for tn3270 is 23, and it overrides s3270.port.
             # But we have to map 23 to something else, so we don't need to run the TLS server as root.
@@ -196,6 +196,6 @@ class TestS3270Uri(cti):
         s.close()
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
 if __name__ == '__main__':
     unittest.main()

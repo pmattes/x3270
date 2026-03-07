@@ -110,6 +110,6 @@ ft_gui_aborting(void)
 /* Display an "Awaiting start of transfer" message. */
 void
 ft_gui_awaiting(void)
-{   
+{
     popup_an_info("Awaiting start of transfer");
 }

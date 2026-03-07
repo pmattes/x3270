@@ -66,7 +66,7 @@ class TestS3270Inhibit(cti):
         # Wait for the processes to exit.
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
     def send_async(self, port: int, text: str):
         '''Send an action to s3270 via HTTP, asynchronously'''
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/{text}')
@@ -108,7 +108,7 @@ class TestS3270Inhibit(cti):
 
             # Check the flags.
             self.try_until(lambda: self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(KeyboardLockDetail)').json()['result'][0] == 'oia-twait oia-locked', 2, 'Did not get desired state')
-            
+
             # Reset the keyboard lock from the host.
             p.send_records(1)
             x.join()

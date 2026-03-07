@@ -63,7 +63,7 @@ class TestB3270ForceStatus(cti):
         self.vgwait(b3270)
         pq.close()
         b3270.stdout.close()
-    
+
     def test_b3270_FS_unknown_reason(self):
         self.b3270_ForceStatus_error('ForceStatus(abc\u0001def)', "ForceStatus(): Unknown reason 'abc^Adef'")
 

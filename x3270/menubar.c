@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1993-2025 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -1538,7 +1538,7 @@ macros_menu_init(bool regen, Position x, Position y)
 	}
 	w = XtVaCreateManagedWidget(
 		m->name, cmeBSBObjectClass,
-		add_menu_hier(root, m->parents, NULL, 0), 
+		add_menu_hier(root, m->parents, NULL, 0),
 		NULL);
 	XtAddCallback(w, XtNcallback, do_macro, (XtPointer)m);
 	any = true;
@@ -1961,28 +1961,28 @@ linemode_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 }
 
 static void
-charmode_callback(Widget w _is_unused, XtPointer client_data _is_unused, 
+charmode_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     net_charmode();
 }
 
 static void
-toggle_retry(Widget w _is_unused, XtPointer client_data _is_unused, 
+toggle_retry(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     push_macro(AnToggle "(" ResRetry ")");
 }
 
 static void
-toggle_reconnect(Widget w _is_unused, XtPointer client_data _is_unused, 
+toggle_reconnect(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     push_macro(AnToggle "(" ResReconnect ")");
 }
 
 static void
-toggle_fullscreen(Widget w _is_unused, XtPointer client_data _is_unused, 
+toggle_fullscreen(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     push_macro(AnWindowState "(" KwToggle "," KwFullScreen ")");

@@ -25,10 +25,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*     
+/*
  *	pr3287_session.h
  *		Printer session support
- */             
+ */
 
 void pr3287_session_register(void);
 void pr3287_session_start(const char *lu);

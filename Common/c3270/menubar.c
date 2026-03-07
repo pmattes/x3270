@@ -81,7 +81,7 @@
 /*
  * The menus look like this:
  *
- *   File       Options   Keymap 
+ *   File       Options   Keymap
  * +----------+
  * | Fubar    |
  * |*Grill    |

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1996-2009, 2019 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -100,14 +100,14 @@ HuskClassRec huskClassRec = {
 
 WidgetClass huskWidgetClass = (WidgetClass)&huskClassRec;
 
-static XtGeometryResult 
+static XtGeometryResult
 QueryGeometry(Widget widget _is_unused, XtWidgetGeometry *constraint _is_unused,
 	XtWidgetGeometry *preferred _is_unused)
 {
     return XtGeometryYes;
 }
 
-static XtGeometryResult 
+static XtGeometryResult
 GeometryManager(Widget w, XtWidgetGeometry *request,
     XtWidgetGeometry *reply _is_unused)
 {
@@ -132,24 +132,24 @@ GeometryManager(Widget w, XtWidgetGeometry *request,
     return XtGeometryYes;
 }
 
-static void 
+static void
 ChangeManaged(Widget w _is_unused)
 {
 }
 
-static void 
+static void
 ClassInitialize(void)
 {
     XawInitializeWidgetSet();
 }
 
-static void 
+static void
 Initialize(Widget request _is_unused, Widget new _is_unused,
 	ArgList args _is_unused, Cardinal *num_args _is_unused)
 {
 }
 
-static void 
+static void
 Realize(register Widget w, Mask *valueMask, XSetWindowAttributes *attributes)
 {
     attributes->bit_gravity = NorthWestGravity;
@@ -159,7 +159,7 @@ Realize(register Widget w, Mask *valueMask, XSetWindowAttributes *attributes)
 	   *valueMask, attributes);
 }
 
-static Boolean 
+static Boolean
 SetValues(Widget current _is_unused, Widget request _is_unused,
 	Widget new _is_unused, ArgList args _is_unused,
 	Cardinal *num_args _is_unused)

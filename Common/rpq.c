@@ -10,9 +10,9 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the names of Paul Mattes, Don Russell, Jeff Sparkes, GTRC nor
- *       the names of their contributors may be used to endorse or promote
- *       products derived from this software without specific prior written
+ *     * Neither the names of Paul Mattes, Don Russell, nor the names of
+ *       their contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written
  *       permission.
  *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES AND DON RUSSELL "AS IS" AND ANY
@@ -105,7 +105,7 @@ static char *rpq_warnbuf = NULL;
 static char *rpq_warnbuf_prev = NULL;
 
 /*
- * Define a table of RPQ self-defing terms. 
+ * Define a table of RPQ self-defing terms.
  * NOTE: Synonyms could be specified by coding different text items but using
  * the same "id" value.
  * Items should be listed in alphabetical order by "text" name so if the user
@@ -288,7 +288,7 @@ select_rpq_terms(void)
 		break;
 	    }
 	}
-	len = s - kw; 
+	len = s - kw;
 	is_no_form = len > 2 && !strncasecmp(RPQ_NO, kw, strlen(RPQ_NO));
 	if (is_no_form) {
 	    kw += strlen(RPQ_NO);	/* skip "NO" prefix for matching keyword */
@@ -447,7 +447,7 @@ get_rpq_timezone(unsigned char *buf, const size_t buflen, size_t *lenp)
 
 /* Fetches the USER term. */
 static term_result_t
-get_rpq_user(unsigned char *buf, const size_t buflen, size_t *lenp) 
+get_rpq_user(unsigned char *buf, const size_t buflen, size_t *lenp)
 {
     /*
      * Text may be specified in one of two ways, but not both.
@@ -550,7 +550,7 @@ get_rpq_user(unsigned char *buf, const size_t buflen, size_t *lenp)
     /* plain text - subject to ascii/ebcdic translation */
 
     /*
-     * Copy the source string to a temporary buffer, terminating on 
+     * Copy the source string to a temporary buffer, terminating on
      * ':', unless preceded by '\'.
      */
     sbuf = sbuf0 = Malloc(strlen(override) + 1);

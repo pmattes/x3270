@@ -96,14 +96,12 @@ class TestC3270IntScript(cti):
 
         self.vgwait_pid(pid)
         os.close(fd)
-    
+
     def test_c3270_interactive_script_noprompt(self):
         self.c3270_interactive_script_test(prompt=False)
     def test_c3270_interactive_script_prompt(self):
         self.c3270_interactive_script_test(prompt=True)
 
-    
-        
     # c3270 bad interactive script test
     def test_c3270_interactive_script_wrong(self):
 

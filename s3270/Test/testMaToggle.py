@@ -79,7 +79,6 @@ class TestS3270MultiAddressToggle(cti):
     def test_s3270_prefer_toggles(self):
         for case in [[False, False], [False, True], [True, False], [False, False]]:
             self.s3270_prefer_toggles(case[0], case[1])
-        
 
 if __name__ == '__main__':
     unittest.main()

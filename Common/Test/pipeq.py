@@ -71,6 +71,6 @@ class pipeq():
             r = None
         # self.cti.assertIsNotNone(r, error)
         return r
-    
+
     def close(self):
         self.thread.join()

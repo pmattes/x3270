@@ -4,7 +4,7 @@
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -16,7 +16,7 @@
  *     * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor their
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -120,11 +120,11 @@ usage(const char *msg)
 
 static void
 s3270_connect(bool ignored)
-{       
+{
     if (CONNECTED || appres.disconnect_clear) {
 	ctlr_erase(true);
     }
-} 
+}
 
 /**
  * Set up a callback session.

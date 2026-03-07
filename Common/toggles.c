@@ -239,7 +239,7 @@ toggle_exiting(bool mode _is_unused)
 
 /**
  * Get the current value of an extended toggle.
- * 
+ *
  * @param[in] u		Extended upcall struct
  *
  * @returns Current value

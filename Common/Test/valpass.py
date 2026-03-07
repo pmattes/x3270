@@ -114,7 +114,7 @@ class valpass():
 def Usage():
     print("Usage: valpass [-check][-gen] <logfile>", file=sys.stderr)
     exit(1)
-    
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         Usage()

@@ -3,7 +3,7 @@
 /*
  * Copyright (c) 1995-2024 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -44,7 +44,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL M.I.T.
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
@@ -55,7 +55,7 @@
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  */
 
@@ -78,7 +78,7 @@
 
 #define offset(field) XtOffsetOf(ComplexMenuRec, complex_menu.field)
 
-static XtResource resources[] = { 
+static XtResource resources[] = {
 
 /*
  * Label Resources.
@@ -114,23 +114,23 @@ static XtResource resources[] = {
   {XtNpopupOnEntry,  XtCPopupOnEntry, XtRWidget, sizeof(Widget),
       offset(popup_entry), XtRWidget, NULL},
   {XtNbackingStore, XtCBackingStore, XtRBackingStore, sizeof (int),
-      offset(backing_store), 
+      offset(backing_store),
       XtRImmediate, (XtPointer) (Always + WhenMapped + NotUseful)},
   {XtNcMparent, XtCCMparent, XtRWidget, sizeof(Widget),
       offset(parent), XtRWidget, NULL},
   {XtNcMdefer, XtCCMdefer, XtRWidget, sizeof(Widget),
       offset(deferred_notify), XtRWidget, NULL},
-};  
+};
 #undef offset
 
 static char defaultTranslations[] =
     "<EnterWindow>:     highlight()             \n\
      <LeaveWindow>:     leftWindow()            \n\
      <BtnMotion>:       highlight()             \n\
-     <BtnUp>:           saveUnhighlight() myMenuPopdown()"; 
+     <BtnUp>:           saveUnhighlight() myMenuPopdown()";
 
 /*
- * Semi Public function definitions. 
+ * Semi Public function definitions.
  */
 
 static void Redisplay(Widget, XEvent *, Region);
@@ -155,7 +155,7 @@ static void LeftWindow(Widget, XEvent *, String *, Cardinal *);
 static void MyMenuPopdown(Widget, XEvent *, String *, Cardinal *);
 static void Highlight(Widget, XEvent *, String *, Cardinal *);
 
-/* 
+/*
  * Private Function Definitions.
  */
 
@@ -182,7 +182,7 @@ static XtActionsRec actionsList[] =
   {"leftWindow",	LeftWindow},
   {"myMenuPopdown",	MyMenuPopdown},
 };
- 
+
 static CompositeClassExtensionRec extension_rec = {
     /* next_extension */  NULL,
     /* record_type */     NULLQUARK,
@@ -192,7 +192,7 @@ static CompositeClassExtensionRec extension_rec = {
 };
 
 #define superclass (&overrideShellClassRec)
-    
+
 ComplexMenuClassRec complexMenuClassRec = {
   {
     /* superclass         */    (WidgetClass) superclass,
@@ -209,7 +209,7 @@ ComplexMenuClassRec complexMenuClassRec = {
     /* resources          */    resources,
     /* resource_count     */	XtNumber(resources),
     /* xrm_class          */    NULLQUARK,
-    /* compress_motion    */    TRUE, 
+    /* compress_motion    */    TRUE,
     /* compress_exposure  */    TRUE,
     /* compress_enterleave*/ 	TRUE,
     /* visible_interest   */    FALSE,
@@ -218,7 +218,7 @@ ComplexMenuClassRec complexMenuClassRec = {
     /* expose             */    Redisplay,
     /* set_values         */    SetValues,
     /* set_values_hook    */	SetValuesHook,
-    /* set_values_almost  */	XtInheritSetValuesAlmost,  
+    /* set_values_almost  */	XtInheritSetValuesAlmost,
     /* get_values_hook    */	NULL,			
     /* accept_focus       */    NULL,
     /* intrinsics version */	XtVersion,
@@ -267,7 +267,7 @@ ClassInitialize(void)
 
 /*      Function Name: ClassInitialize
  *      Description: Class Part Initialize routine, called for every
- *                   subclass.  Makes sure that the subclasses pick up 
+ *                   subclass.  Makes sure that the subclasses pick up
  *                   the extension record.
  *      Arguments: wc - the widget class of the subclass.
  *      Returns: none.
@@ -302,7 +302,7 @@ Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
 
   XmuCallInitializers(XtWidgetToApplicationContext(new));
 
-  if (cmw->complex_menu.label_class == NULL) 
+  if (cmw->complex_menu.label_class == NULL)
       cmw->complex_menu.label_class = cmeBSBObjectClass;
 
   cmw->complex_menu.label = NULL;
@@ -330,13 +330,13 @@ Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
 /*
  * Add a popup_callback routine for changing the cursor.
  */
-  
+
   XtAddCallback(new, XtNpopupCallback, ChangeCursorOnGrab, NULL);
 
 /*
  * Add a popdown_callback routine for clearing the parent field.
  */
-  
+
   XtAddCallback(new, XtNpopdownCallback, ClearParent, NULL);
 }
 
@@ -344,7 +344,7 @@ Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
  *      Description: Redisplays the contents of the widget.
  *      Arguments: w - the complex menu widget.
  *                 event - the X event that caused this redisplay.
- *                 region - the region the needs to be repainted. 
+ *                 region - the region the needs to be repainted.
  *      Returns: none.
  */
 
@@ -365,7 +365,7 @@ Redisplay(Widget w, XEvent *event _is_unused, Region region)
     ForAllChildren(cmw, entry) {
 	if (!XtIsManaged ( (Widget) *entry)) continue;
 
-	if (region != NULL) 
+	if (region != NULL)
 	    switch(XRectInRegion(region, (int) (*entry)->rectangle.x,
 				 (int) (*entry)->rectangle.y,
 				 (unsigned int) (*entry)->rectangle.width,
@@ -427,7 +427,7 @@ Resize(Widget w)
     ForAllChildren(cmw, entry) 	/* reset width of all entries. */
 	if (XtIsManaged( (Widget) *entry))
 	    (*entry)->rectangle.width = cmw->core.width;
-    
+
     Redisplay(w, (XEvent *) NULL, (Region) NULL);
 }
 
@@ -446,9 +446,9 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
     ComplexMenuWidget cmw_old = (ComplexMenuWidget) current;
     ComplexMenuWidget cmw_new = (ComplexMenuWidget) new;
     Boolean ret_val = FALSE, layout = FALSE;
-    
+
     if (!XtIsRealized(current)) return(FALSE);
-    
+
     if (!cmw_new->complex_menu.recursive_set_values) {
 	if (cmw_new->core.width != cmw_old->core.width) {
 	    cmw_new->complex_menu.menu_width = (cmw_new->core.width != 0);
@@ -463,26 +463,26 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
     if (cmw_old->complex_menu.cursor != cmw_new->complex_menu.cursor)
 	XDefineCursor(XtDisplay(new),
 		      XtWindow(new), cmw_new->complex_menu.cursor);
-    
-    if (cmw_old->complex_menu.label_string !=cmw_new->complex_menu.label_string) { 
+
+    if (cmw_old->complex_menu.label_string !=cmw_new->complex_menu.label_string) {
 	if (cmw_new->complex_menu.label_string == NULL)         /* Destroy. */
 	    XtDestroyWidget((Widget) cmw_old->complex_menu.label);
 	else if (cmw_old->complex_menu.label_string == NULL)    /* Create. */
 	    CreateLabel(new);
 	else {                                                 /* Change. */
 	    Arg arglist[1];
-	    
+
 	    XtSetArg(arglist[0], XtNlabel, cmw_new->complex_menu.label_string);
 	    XtSetValues((Widget) cmw_new->complex_menu.label, arglist, ONE);
 	}
     }
-    
+
     if (cmw_old->complex_menu.label_class != cmw_new->complex_menu.label_class)
 	XtAppWarning(XtWidgetToApplicationContext(new),
 		     "No Dynamic class change of the ComplexMenu Label.");
-    
+
     if ((cmw_old->complex_menu.top_margin != cmw_new->complex_menu.top_margin) ||
-	(cmw_old->complex_menu.bottom_margin != 
+	(cmw_old->complex_menu.bottom_margin !=
 	 cmw_new->complex_menu.bottom_margin) /* filler.................  */ ) {
 	layout = TRUE;
 	ret_val = TRUE;
@@ -503,7 +503,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
  *      Returns: none
  */
 
-/* 
+/*
  * If the user actually passed a width and height to the widget
  * then this MUST be used, rather than our newly calculated width and
  * height.
@@ -514,10 +514,10 @@ SetValuesHook(Widget w, ArgList arglist, Cardinal *num_args)
 {
     register Cardinal i;
     Dimension width, height;
-    
+
     width = w->core.width;
     height = w->core.height;
-    
+
     for ( i = 0 ; i < *num_args ; i++) {
 	if ( streq(arglist[i].name, XtNwidth) )
 	    width = (Dimension) arglist[i].value;
@@ -591,7 +591,7 @@ GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
 
 	if ( ((reply->width == request->width) && !(mode & CWHeight)) ||
 	      ((reply->height == request->height) && !(mode & CWWidth)) ||
-	      ((reply->width == request->width) && 
+	      ((reply->width == request->width) &&
 	       (reply->height == request->height)) )
 	    answer = XtGeometryNo;
 	else {
@@ -621,10 +621,10 @@ ChangeManaged(Widget w)
 /************************************************************
  *
  * Global Action Routines.
- * 
+ *
  * These actions routines will be added to the application's
- * global action list. 
- * 
+ * global action list.
+ *
  ************************************************************/
 
 /*      Function Name: PositionMenuAction
@@ -639,7 +639,7 @@ ChangeManaged(Widget w)
 static void
 PositionMenuAction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
-{ 
+{
   Widget menu;
   XPoint loc;
 
@@ -659,7 +659,7 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
     XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
     return;
   }
-  
+
   switch (event->type) {
   case ButtonPress:
   case ButtonRelease:
@@ -682,12 +682,12 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
     PositionMenu(menu, NULL);
     break;
   }
-}  
+}
 
 /************************************************************
  *
  * Widget Action Routines.
- * 
+ *
  ************************************************************/
 
 /*      Function Name: Unhighlight
@@ -701,11 +701,11 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
 static void
 Unhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
 	Cardinal *num_params _is_unused)
-{ 
+{
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
     CmeObjectClass class;
- 
+
     if ( entry == NULL) return;
 
 #if defined(CmeDebug)
@@ -720,11 +720,11 @@ Unhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
 static void
 SaveUnhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
 	Cardinal *num_params _is_unused)
-{ 
+{
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
     CmeObjectClass class;
- 
+
 #if defined(CmeDebug)
     printf("SaveUnhighlight(%lx) '%s', BtnUp\n",
 		    (unsigned long)w, cmw->core.name);
@@ -746,7 +746,7 @@ SaveUnhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
 static void
 LeftWindow(Widget w, XEvent *event, String *params _is_unused,
 	Cardinal *num_params _is_unused)
-{ 
+{
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
     CmeObjectClass class;
@@ -776,7 +776,7 @@ LeftWindow(Widget w, XEvent *event, String *params _is_unused,
 static void
 MyMenuPopdown(Widget w, XEvent *event, String *params _is_unused,
 	Cardinal *num_params _is_unused)
-{ 
+{
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
 
 #if defined(CmeDebug1)
@@ -819,7 +819,7 @@ Highlight(Widget w, XEvent *event, String *params, Cardinal *num_params)
     CmeObjectClass class;
     ShellWidget shell_widget = (ShellWidget)w;
 
-    
+
 #if defined(CmeDebug)
     printf("Highlight(%lx) '%s' ", (unsigned long)w, cmw->core.name);
 #endif
@@ -837,7 +837,7 @@ Highlight(Widget w, XEvent *event, String *params, Cardinal *num_params)
 #endif
         return;
     }
-    
+
     entry = GetEventEntry(w, event);
 
     if (entry == cmw->complex_menu.entry_set) {
@@ -850,7 +850,7 @@ Highlight(Widget w, XEvent *event, String *params, Cardinal *num_params)
 #if defined(CmeDebug)
     printf("unhighlighting, ");
 #endif
-    Unhighlight(w, event, params, num_params);  
+    Unhighlight(w, event, params, num_params);
 
     if (entry == NULL) {
 #if defined(CmeDebug)
@@ -929,7 +929,7 @@ Notify(Widget w, XEvent *event _is_unused, String *params _is_unused,
  * Public Functions.
  *
  ************************************************************/
- 
+
 /*	Function Name: XawComplexMenuAddGlobalActions
  *	Description: adds the global actions to the complex menu widget.
  *	Arguments: app_con - the appcontext.
@@ -941,9 +941,9 @@ XawComplexMenuAddGlobalActions(XtAppContext app_con)
 {
     XtInitializeWidgetClass(complexMenuWidgetClass);
     XmuCallInitializers( app_con );
-} 
+}
 
- 
+
 /*	Function Name: XawComplexMenuGetActiveEntry
  *	Description: Gets the currently active (set) entry.
  *	Arguments: w - the cmw widget.
@@ -956,7 +956,7 @@ XawComplexMenuGetActiveEntry(Widget w)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
 
     return( (Widget) cmw->complex_menu.entry_set);
-} 
+}
 
 /*	Function Name: XawComplexMenuClearActiveEntry
  *	Description: Unsets the currently active (set) entry.
@@ -971,7 +971,7 @@ XawComplexMenuClearActiveEntry(Widget w)
 
     cmw->complex_menu.entry_set = NULL;
     cmw->complex_menu.prev_entry = NULL;
-} 
+}
 
 /************************************************************
  *
@@ -983,7 +983,7 @@ XawComplexMenuClearActiveEntry(Widget w)
  *	Description: Creates a the menu label.
  *	Arguments: w - the cmw widget.
  *	Returns: none.
- * 
+ *
  * Creates the label object and makes sure it is the first child in
  * in the list.
  */
@@ -1002,7 +1002,7 @@ CreateLabel(Widget w)
 
 	snprintf(error_buf, sizeof(error_buf),
 		"Xaw Complex Menu Widget: %s or %s, %s",
-		"label string is NULL", "label already exists", 
+		"label string is NULL", "label already exists",
 		"no label is being created.");
 	XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
 	return;
@@ -1010,8 +1010,8 @@ CreateLabel(Widget w)
 
     XtSetArg(args[0], XtNlabel, cmw->complex_menu.label_string);
     XtSetArg(args[1], XtNjustify, XtJustifyCenter);
-    cmw->complex_menu.label = (CmeObject) 
-	                      XtCreateManagedWidget("menuLabel", 
+    cmw->complex_menu.label = (CmeObject)
+	                      XtCreateManagedWidget("menuLabel",
 					    cmw->complex_menu.label_class, w,
 					    args, TWO);
 
@@ -1028,7 +1028,7 @@ CreateLabel(Widget w)
 /*	Function Name: Layout
  *	Description: lays the menu entries out all nice and neat.
  *	Arguments: w - See below (+++)
- *                 width_ret, height_ret - The returned width and 
+ *                 width_ret, height_ret - The returned width and
  *                                         height values.
  *	Returns: none.
  *
@@ -1072,8 +1072,8 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
 	    ForAllChildren(cmw, entry) {
 		if (!XtIsManaged( (Widget) *entry)) continue;
 
-		if ( (cmw->complex_menu.row_height != 0) && 
-		    (*entry != cmw->complex_menu.label) ) 
+		if ( (cmw->complex_menu.row_height != 0) &&
+		    (*entry != cmw->complex_menu.label) )
 		    (*entry)->rectangle.height = cmw->complex_menu.row_height;
 		
 		(*entry)->rectangle.y = height;
@@ -1083,11 +1083,11 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
 	    height += cmw->complex_menu.bottom_margin;
 	}
 	else {
-	    if ((cmw->complex_menu.row_height != 0) && 
+	    if ((cmw->complex_menu.row_height != 0) &&
 		(current_entry != cmw->complex_menu.label) )
 		height = cmw->complex_menu.row_height;
 	}
-    
+
     if (cmw->complex_menu.menu_width)
 	width = cmw->core.width;
     else if ( allow_change_size )
@@ -1097,7 +1097,7 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
 
     if (do_layout) {
 	ForAllChildren(cmw, entry)
-	    if (XtIsManaged( (Widget) *entry)) 
+	    if (XtIsManaged( (Widget) *entry))
 		(*entry)->rectangle.width = width;
 
 	if (allow_change_size)
@@ -1109,7 +1109,7 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
 	    *height_ret = height;
     }
 }
-    
+
 /*	Function Name: AddPositionAction
  *	Description: Adds the XawPositionComplexMenu action to the global
  *                   action list for this appcon.
@@ -1135,11 +1135,11 @@ AddPositionAction(XtAppContext app_con, caddr_t data _is_unused)
  *	Returns: the menu widget or NULL.
  */
 
-static Widget 
+static Widget
 FindMenu(Widget widget, String name)
 {
     register Widget w, menu;
-    
+
     for ( w = widget ; w != NULL ; w = XtParent(w) )
 	if ( (menu = XtNameToWidget(w, name)) != NULL )
 	    return(menu);
@@ -1159,14 +1159,14 @@ PositionMenu(Widget w, XPoint *location)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry;
     XPoint t_point;
-    
+
     if (location == NULL) {
 	Window junk1, junk2;
 	int root_x, root_y, junkX, junkY;
 	unsigned int junkM;
 	
 	location = &t_point;
-	if (XQueryPointer(XtDisplay(w), XtWindow(w), &junk1, &junk2, 
+	if (XQueryPointer(XtDisplay(w), XtWindow(w), &junk1, &junk2,
 			  &root_x, &root_y, &junkX, &junkY, &junkM) == FALSE) {
 	    char error_buf[BUFSIZ];
 	    snprintf(error_buf, sizeof(error_buf),
@@ -1178,15 +1178,15 @@ PositionMenu(Widget w, XPoint *location)
 	location->x = (short) root_x;
 	location->y = (short) root_y;
     }
-    
+
     /*
      * The width will not be correct unless it is realized.
      */
-    
+
     XtRealizeWidget(w);
-    
+
     location->x -= (Position) w->core.width/2;
-    
+
     if (cmw->complex_menu.popup_entry == NULL)
 	entry = cmw->complex_menu.label;
     else
@@ -1203,7 +1203,7 @@ PositionMenu(Widget w, XPoint *location)
  *                   to be fully visable if menu_on_screen is TRUE.
  *	Arguments: w - the complex menu widget.
  *                 x, y - the current location of the widget.
- *	Returns: none 
+ *	Returns: none
  */
 
 static void
@@ -1212,7 +1212,7 @@ MoveMenu(Widget w, Position x, Position y)
     Arg arglist[2];
     Cardinal num_args = 0;
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
-    
+
     if (cmw->complex_menu.menu_on_screen) {
 	int width = w->core.width + 2 * w->core.border_width;
 	int height = w->core.height + 2 * w->core.border_width;
@@ -1222,7 +1222,7 @@ MoveMenu(Widget w, Position x, Position y)
 	    if (x + width > scr_width)
 		x = scr_width - width;
 	}
-	if (x < 0) 
+	if (x < 0)
 	    x = 0;
 	
 	if (y >= 0) {
@@ -1233,7 +1233,7 @@ MoveMenu(Widget w, Position x, Position y)
 	if (y < 0)
 	    y = 0;
     }
-    
+
     XtSetArg(arglist[num_args], XtNx, x); num_args++;
     XtSetArg(arglist[num_args], XtNy, y); num_args++;
     XtSetValues(w, arglist, num_args);
@@ -1251,7 +1251,7 @@ static void
 ChangeCursorOnGrab(Widget w, XtPointer junk _is_unused, XtPointer garbage _is_unused)
 {
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
-    
+
 #if defined(CmeDebug)
     printf("ChangeCursorOnGrab(%lx) '%s': parent=%lx '%s'\n", (unsigned long)w,
 		    cmw->core.name,
@@ -1267,9 +1267,9 @@ ChangeCursorOnGrab(Widget w, XtPointer junk _is_unused, XtPointer garbage _is_un
      * There really needs to be a way to get the value of the mask out
      * of the toolkit (CDP 5/26/89).
      */
-    
+
     XChangeActivePointerGrab(XtDisplay(w), ButtonPressMask|ButtonReleaseMask,
-			     cmw->complex_menu.cursor, 
+			     cmw->complex_menu.cursor,
 			     XtLastTimestampProcessed(XtDisplay(w)));
 }
 
@@ -1305,7 +1305,7 @@ MakeSetValuesRequest(Widget w, Dimension width, Dimension height)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     Arg arglist[2];
     Cardinal num_args = (Cardinal) 0;
-    
+
     if ( !cmw->complex_menu.recursive_set_values ) {
 	if ( (cmw->core.width != width) || (cmw->core.height != height) ) {
 	    cmw->complex_menu.recursive_set_values = TRUE;
@@ -1332,8 +1332,8 @@ GetMenuWidth(Widget w, Widget w_ent)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     Dimension width, widest = (Dimension) 0;
     CmeObject * entry;
-    
-    if ( cmw->complex_menu.menu_width ) 
+
+    if ( cmw->complex_menu.menu_width )
 	return(cmw->core.width);
 
     ForAllChildren(cmw, entry) {
@@ -1343,7 +1343,7 @@ GetMenuWidth(Widget w, Widget w_ent)
 	
 	if (*entry != cur_entry) {
 	    XtQueryGeometry((Widget) *entry, NULL, &preferred);
-	    
+
 	    if (preferred.request_mode & CWWidth)
 		width = preferred.width;
 	    else
@@ -1355,7 +1355,7 @@ GetMenuWidth(Widget w, Widget w_ent)
 	if ( width > widest )
 	    widest = width;
     }
-    
+
     return(widest);
 }
 
@@ -1371,17 +1371,17 @@ GetMenuHeight(Widget w)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject * entry;
     Dimension height;
-    
+
     if (cmw->complex_menu.menu_height)
 	return(cmw->core.height);
 
     height = cmw->complex_menu.top_margin + cmw->complex_menu.bottom_margin;
-    
+
     if (cmw->complex_menu.row_height == 0) {
-	ForAllChildren(cmw, entry) 
-	    if (XtIsManaged ((Widget) *entry)) 
+	ForAllChildren(cmw, entry)
+	    if (XtIsManaged ((Widget) *entry))
 		height += (*entry)->rectangle.height;
-    } else 
+    } else
 	height += cmw->complex_menu.row_height * cmw->composite.num_children;
 	
     return(height);
@@ -1400,7 +1400,7 @@ GetEventEntry(Widget w, XEvent *event)
     Position x_loc = 0, y_loc = 0;
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject * entry;
-    
+
     switch (event->type) {
     case MotionNotify:
 	x_loc = event->xmotion.x;
@@ -1421,11 +1421,11 @@ GetEventEntry(Widget w, XEvent *event)
 		   "Unknown event type in GetEventEntry().");
 	break;
     }
-    
+
     if ( (x_loc < 0) || (x_loc >= (int)cmw->core.width) || (y_loc < 0) ||
 	(y_loc >= (int)cmw->core.height) )
 	return(NULL);
-    
+
     ForAllChildren(cmw, entry) {
 	if (!XtIsManaged ((Widget) *entry)) continue;
 
@@ -1437,7 +1437,7 @@ GetEventEntry(Widget w, XEvent *event)
 		return(*entry);
         }
     }
-    
+
     return(NULL);
 }
 

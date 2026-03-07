@@ -69,7 +69,7 @@ class TestS3270Keepalive(cti):
 
         # Wait for the processes to exit.
         self.vgwait(s3270)
-    
+
     def test_s3270_keepalive(self):
         self.s3270_keepalive(telnet=True)
     def test_s3270_keepalive_no_telnet(self):

@@ -194,7 +194,7 @@ def mkfb(infiles, ofile: str):
             in_file.close()
         else:
             break
-    
+
     if ssp != 0:
         print(f'{ssp} missing #endifs', file=sys.stderr)
         print(f'last #ifdef was at line {ss[ssp-1].lno}', file=sys.stderr)
@@ -205,7 +205,7 @@ def mkfb(infiles, ofile: str):
     if not cmode:
         tc = OutBuffer()
         tm = OutBuffer()
-    
+
     # Emit the initial boilerplate.
     t.append('/* This file was created automatically by mkfb. */')
     t.append('')
@@ -328,7 +328,7 @@ def mkfb(infiles, ofile: str):
             out_file.write(line + '\n')
         for line in tm.text:
             out_file.write(line + '\n')
-    
+
     if cmode:
         # Emit the fallback array.
         print(f'char *fallbacks[{len(aix)+1}] = ' + '{', file=out_file)

@@ -37,7 +37,7 @@ def add_len(body: str) -> str:
 def iac_quote(body: str) -> str:
     '''Double TELNET IAC bytes'''
     return ''.join([b + b if b == 'ff' else b for b in [body[i:i+2] for i in range(0, len(body), 2)]])
-    
+
 def make_rpq(body: str) -> str:
     '''Construct the RPQ Names reply, getting the fixed fields and length right'''
     return iac_quote('0000000000000000' + add_len(ebcdic('x3270') + body))

@@ -549,7 +549,7 @@ ft_complete(const char *errmsg)
 
 	gettimeofday(&t1, NULL);
 	bytes_sec = (double)fts.length /
-		((double)(t1.tv_sec - t0.tv_sec) + 
+		((double)(t1.tv_sec - t0.tv_sec) +
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 	buf = Asprintf(get_message("ftComplete"), fts.length,
 		display_scale(bytes_sec),
@@ -1130,7 +1130,7 @@ ft_start_backend(ft_conf_t *p, enum iaction cause)
  *   WindowsCodePage=n		no default
  */
 
-static bool  
+static bool
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
     ft_conf_t *p = NULL;

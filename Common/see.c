@@ -10,9 +10,9 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the names of Paul Mattes, Don Russell, Jeff Sparkes, GTRC nor
- *       the names of their contributors may be used to endorse or promote
- *       products derived from this software without specific prior written
+ *     * Neither the names of Paul Mattes, Don Russell, nor the names of
+ *       their contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written
  *       permission.
  *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES AND DON RUSSELL "AS IS" AND ANY
@@ -119,77 +119,77 @@ const char *
 see_aid(unsigned char code)
 {
     switch (code) {
-    case AID_NO: 
+    case AID_NO:
 	return "NoAID";
-    case AID_ENTER: 
+    case AID_ENTER:
 	return "Enter";
-    case AID_PF1: 
+    case AID_PF1:
 	return "PF1";
-    case AID_PF2: 
+    case AID_PF2:
 	return "PF2";
-    case AID_PF3: 
+    case AID_PF3:
 	return "PF3";
-    case AID_PF4: 
+    case AID_PF4:
 	return "PF4";
-    case AID_PF5: 
+    case AID_PF5:
 	return "PF5";
-    case AID_PF6: 
+    case AID_PF6:
 	return "PF6";
-    case AID_PF7: 
+    case AID_PF7:
 	return "PF7";
-    case AID_PF8: 
+    case AID_PF8:
 	return "PF8";
-    case AID_PF9: 
+    case AID_PF9:
 	return "PF9";
-    case AID_PF10: 
+    case AID_PF10:
 	return "PF10";
-    case AID_PF11: 
+    case AID_PF11:
 	return "PF11";
-    case AID_PF12: 
+    case AID_PF12:
 	return "PF12";
-    case AID_PF13: 
+    case AID_PF13:
 	return "PF13";
-    case AID_PF14: 
+    case AID_PF14:
 	return "PF14";
-    case AID_PF15: 
+    case AID_PF15:
 	return "PF15";
-    case AID_PF16: 
+    case AID_PF16:
 	return "PF16";
-    case AID_PF17: 
+    case AID_PF17:
 	return "PF17";
-    case AID_PF18: 
+    case AID_PF18:
 	return "PF18";
-    case AID_PF19: 
+    case AID_PF19:
 	return "PF19";
-    case AID_PF20: 
+    case AID_PF20:
 	return "PF20";
-    case AID_PF21: 
+    case AID_PF21:
 	return "PF21";
-    case AID_PF22: 
+    case AID_PF22:
 	return "PF22";
-    case AID_PF23: 
+    case AID_PF23:
 	return "PF23";
-    case AID_PF24: 
+    case AID_PF24:
 	return "PF24";
-    case AID_OICR: 
+    case AID_OICR:
 	return "OICR";
-    case AID_MSR_MHS: 
+    case AID_MSR_MHS:
 	return "MSR_MHS";
-    case AID_SELECT: 
+    case AID_SELECT:
 	return "Select";
-    case AID_PA1: 
+    case AID_PA1:
 	return "PA1";
-    case AID_PA2: 
+    case AID_PA2:
 	return "PA2";
-    case AID_PA3: 
+    case AID_PA3:
 	return "PA3";
-    case AID_CLEAR: 
+    case AID_CLEAR:
 	return "Clear";
-    case AID_SYSREQ: 
+    case AID_SYSREQ:
 	return "SysReq";
     case AID_QREPLY:
 	return "QueryReplyAID";
-    default: 
+    default:
 	return unknown(code);
     }
 }

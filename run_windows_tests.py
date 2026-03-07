@@ -66,7 +66,7 @@ def run_gcc_tests():
 
 # Run Visual Studio tests.
 def run_vs_tests():
-    
+
     # Build the code.
     os.chdir('VisualStudio')
     if build and os.system('msbuild /p:Configuration=Debug /p:Platform=x64') != 0:

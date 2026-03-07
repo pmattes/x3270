@@ -61,7 +61,7 @@ class TestPrtodir(cti):
             for file in files:
                 contents = pathlib.Path(os.path.join(tempdir, file)).read_text()
                 self.assertEqual('hello\n', contents)
-    
+
     # test for files being (relatively) complete
     def file_check(self, tempdir: str):
         files = os.listdir(tempdir)
@@ -109,6 +109,6 @@ class TestPrtodir(cti):
         # The reference file is actually the second of the two print-outs, but we don't know the order
         # that the file names will be enumerated, so we have to compare against each of them.
         self.assertTrue(n[0] == ref_printout or n[1] == ref_printout)
-                
+
 if __name__ == '__main__':
     unittest.main()

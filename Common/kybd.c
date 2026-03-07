@@ -83,13 +83,13 @@
 
 /* Statics */
 static enum	{ NONE, COMPOSE, FIRST } composing = NONE;
-static unsigned char pf_xlate[] = { 
+static unsigned char pf_xlate[] = {
     AID_PF1,  AID_PF2,  AID_PF3,  AID_PF4,  AID_PF5,  AID_PF6,
     AID_PF7,  AID_PF8,  AID_PF9,  AID_PF10, AID_PF11, AID_PF12,
     AID_PF13, AID_PF14, AID_PF15, AID_PF16, AID_PF17, AID_PF18,
     AID_PF19, AID_PF20, AID_PF21, AID_PF22, AID_PF23, AID_PF24
 };
-static unsigned char pa_xlate[] = { 
+static unsigned char pa_xlate[] = {
     AID_PA1, AID_PA2, AID_PA3
 };
 #define PF_SZ	(sizeof(pf_xlate)/sizeof(pf_xlate[0]))
@@ -1064,7 +1064,7 @@ ins_prep(int faddr, int baddr, int count, bool *no_room, bool oerr_fail)
     ntb = 0;
     while (need && (xaddr != next_faddr)) {
 	if (ea_buf[xaddr].ec == EBC_null) {
-	    need--; 
+	    need--;
 	} else if (toggled(BLANK_FILL) &&
 		((ea_buf[xaddr].ec == EBC_space) ||
 		 (toggled(UNDERSCORE_BLANK_FILL) &&
@@ -2954,7 +2954,7 @@ lightpen_select(int baddr)
 	    }
 	    return;
 	}
-    } 
+    }
 
     switch (ea_buf[designator].ec) {
     case EBC_greater:		/* > */
@@ -4064,13 +4064,13 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting, bool margin)
 		key_UCharacter((unsigned char) c, KT_STD, ia, true);
 		state = BASE;
 		break;
-	    case '0': 
-	    case '1': 
-	    case '2': 
+	    case '0':
+	    case '1':
+	    case '2':
 	    case '3':
-	    case '4': 
-	    case '5': 
-	    case '6': 
+	    case '4':
+	    case '5':
+	    case '6':
 	    case '7':
 		state = OCTAL;
 		literal = 0;

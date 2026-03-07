@@ -59,7 +59,7 @@ class playback():
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.close()
-    
+
     def close(self):
         '''Close the object'''
         if (self.listensocket != None):
@@ -93,7 +93,7 @@ class playback():
         if self.listensocket != None:
             self.listensocket.close()
             self.listensocket = None
-    
+
     def wait_accept(self, timeout=5):
         '''Wait for a connection'''
         if self.thread != None:

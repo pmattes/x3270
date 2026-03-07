@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2013-2026 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -947,9 +947,9 @@ copy_cut_action(bool cutting)
 	}
 
 	/* Copy the screen data to it. */
-	lptstr = GlobalLock(hglb); 
+	lptstr = GlobalLock(hglb);
 	sl = (types[i].copy_fn)(lptstr);
-	GlobalUnlock(hglb); 
+	GlobalUnlock(hglb);
 
 	/* Place the handle on the clipboard. */
 	SetClipboardData(types[i].type, hglb);

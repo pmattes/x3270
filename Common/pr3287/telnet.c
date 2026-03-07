@@ -200,13 +200,13 @@ static const char *nnn(int c);
 #define TNS_SB_IAC	7	/* got an IAC after an IAC SB */
 
 /* telnet predefined messages */
-static unsigned char	do_opt[]	= { 
+static unsigned char	do_opt[]	= {
     IAC, DO, '_' };
-static unsigned char	dont_opt[]	= { 
+static unsigned char	dont_opt[]	= {
     IAC, DONT, '_' };
-static unsigned char	will_opt[]	= { 
+static unsigned char	will_opt[]	= {
     IAC, WILL, '_' };
-static unsigned char	wont_opt[]	= { 
+static unsigned char	wont_opt[]	= {
     IAC, WONT, '_' };
 static unsigned char	functions_req[] = {
     IAC, SB, TELOPT_TN3270E, TN3270E_OP_FUNCTIONS };
@@ -456,7 +456,7 @@ net_disconnect(bool including_tls)
 	if (sio != NULL) {
 	    sio_close(sio);
 	    sio = NULL;
-	}               
+	}
 	secure_connection = false;
 	secure_unverified = false;
 
@@ -499,7 +499,7 @@ setup_lus(char *luname, const char *assoc)
 
     /*
      * Count the commas in the LU name.  That plus one is the
-     * number of LUs to try. 
+     * number of LUs to try.
      */
     lu = luname;
     while ((comma = strchr(lu, ',')) != NULL) {

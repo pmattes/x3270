@@ -609,7 +609,7 @@ unicode_to_printer(ucs4_t u, char mb[], int mb_len)
  * Our philosophy for automatic newlines and formfeeds is that we generate them
  * only if the user attempts to put data outside the MPP/MPL-defined area.
  * Therefore, the user can put a byte on the last column of each line, and on
- * the last column of the last line of the page, and not need to worry about 
+ * the last column of the last line of the page, and not need to worry about
  * suppressing their own NL or FF.
  */
 
@@ -876,7 +876,7 @@ add_scs_trn(unsigned char *cp, int cnt)
  *
  * Note that unlike a 3270 Write command, even though the record is bounded
  * by an EOR, the SCS data are not guaranteed to be complete.
- * 
+ *
  * Rather than have a full FSM for every byte of every SCS order, we resort
  * to the rather inefficient method of concatenating the previous, incomplete
  * record with a copy of the new record, processing it as a contiguous
@@ -1870,7 +1870,7 @@ dump_unformatted(void)
  * Dump a formatted output buffer.
  *
  * The buffer is treated as a sequence of lines, with the length specified by
- * the write control character.  
+ * the write control character.
  *
  * Each line is terminated by a newline, with trailing spaces and nulls
  * suppressed.

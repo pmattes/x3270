@@ -289,19 +289,19 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
     switch (mn) {
     case 2:
 	mxc = MODEL_2_COLS;
-	mxr = MODEL_2_ROWS; 
+	mxr = MODEL_2_ROWS;
 	break;
     case 3:
 	mxc = MODEL_3_COLS;
-	mxr = MODEL_3_ROWS; 
+	mxr = MODEL_3_ROWS;
 	break;
     case 4:
 	mxc = MODEL_4_COLS;
-	mxr = MODEL_4_ROWS; 
+	mxr = MODEL_4_ROWS;
 	break;
     case 5:
 	mxc = MODEL_5_COLS;
-	mxr = MODEL_5_ROWS; 
+	mxr = MODEL_5_ROWS;
 	break;
     default:
 	err = txAsprintf("Unknown model: %d", mn);
@@ -391,22 +391,22 @@ set_cols_rows(int mn, int ovc, int ovr)
     switch (mn) {
     case 2:
 	maxCOLS = MODEL_2_COLS;
-	maxROWS = MODEL_2_ROWS; 
+	maxROWS = MODEL_2_ROWS;
 	model_num = 2;
 	break;
     case 3:
 	maxCOLS = MODEL_3_COLS;
-	maxROWS = MODEL_3_ROWS; 
+	maxROWS = MODEL_3_ROWS;
 	model_num = 3;
 	break;
     case 4:
 	maxCOLS = MODEL_4_COLS;
-	maxROWS = MODEL_4_ROWS; 
+	maxROWS = MODEL_4_ROWS;
 	model_num = 4;
 	break;
     case 5:
 	maxCOLS = MODEL_5_COLS;
-	maxROWS = MODEL_5_ROWS; 
+	maxROWS = MODEL_5_ROWS;
 	model_num = 5;
 	break;
     default:
@@ -535,8 +535,8 @@ find_field_attribute_ea(int baddr, struct ea *ea)
 {
     int sbaddr;
 
-    sbaddr = baddr;    
-    do {   
+    sbaddr = baddr;
+    do {
 	if (ea[baddr].fa) {
 	    return baddr;
 	}
@@ -2895,7 +2895,7 @@ ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs)
     }
 }
 
-/* 
+/*
  * Set a field attribute in the 3270 buffer.
  */
 void
@@ -2911,7 +2911,7 @@ ctlr_add_fa(int baddr, unsigned char fa, unsigned char cs)
     ea_buf[baddr].fa = FA_PRINTABLE | (fa & FA_MASK);
 }
 
-/* 
+/*
  * Change the character set for a field in the 3270 buffer.
  */
 void

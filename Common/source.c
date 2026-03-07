@@ -83,7 +83,7 @@ source_data(task_cbh handle _is_unused, const char *buf _is_unused,
 {
     source_t *s = (source_t *)handle;
     char *b = Malloc(len + 1);
-    
+
     strncpy(b, buf, len);
     b[len] = '\0';
     Replace(s->result, b);

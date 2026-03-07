@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2025 Paul Mattes.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -9,10 +9,10 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the names of Paul Mattes, Don Russell, Jeff Sparkes, GTRC
- *       nor their contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- * 
+ *     * Neither the names of Paul Mattes nor his contributors may be used
+ *       to endorse or promote products derived from this software without
+ *       specific prior written permission.
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES, "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -1252,7 +1252,7 @@ sio_secure_unverified(sio_t sio)
  */
 unsigned
 sio_options_supported(void)
-{   
+{
     return TLS_OPT_CERT_FILE | TLS_OPT_CLIENT_CERT | TLS_OPT_KEY_PASSWD | TLS_OPT_MIN_PROTOCOL | TLS_OPT_MAX_PROTOCOL;
 }
 

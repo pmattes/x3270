@@ -1092,7 +1092,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 
 	pen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
 	SelectObject(dc, pen);
-	status = MoveToEx(dc, 
+	status = MoveToEx(dc,
 		pstate.hmargin_pixels - pchar.poffX,
 		pstate.vmargin_pixels +
 		    (pstate.out_row * pstate.space_size.cy) +

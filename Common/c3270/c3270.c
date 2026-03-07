@@ -360,7 +360,7 @@ c3270_3270_mode(bool ignored)
 	    ctlr_erase(true);
 	}
     }
-} 
+}
 
 /**
  * GUI redirect function for popup_an_error.
@@ -482,12 +482,12 @@ c3270_connect(bool ignored)
 	    x3270_exit(0);
 	}
     }
-} 
+}
 
 /* Callback for application exit. */
 static void
 main_exiting(bool ignored)
-{       
+{
     if (escaped) {
 	stop_pager();
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -499,7 +499,7 @@ main_exiting(bool ignored)
 	    screen_final();
 	}
     }
-} 
+}
 
 #if !defined(_WIN32) /*[*/
 /* Empty SIGCHLD handler, ensuring that we can collect child exit status. */
@@ -2179,7 +2179,7 @@ start_html_help(void)
  */
 bool
 product_has_display(void)
-{   
+{
     return true;
 }
 

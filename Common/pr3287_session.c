@@ -200,7 +200,7 @@ static char *
 read_pr3287_errors(void)
 {
     DWORD nread;
-    CHAR buf[PRINTER_BUF]; 
+    CHAR buf[PRINTER_BUF];
     BOOL success = FALSE;
     char *result = NULL;
     size_t result_len = 0;
@@ -210,7 +210,7 @@ read_pr3287_errors(void)
 
 	success = ReadFile(pr3287_stderr_rd, buf, PRINTER_BUF, &nread, NULL);
 	if (!success || nread == 0) {
-	    break; 
+	    break;
 	}
 
 	result = Realloc(result, result_len + nread + 1);
@@ -219,7 +219,7 @@ read_pr3287_errors(void)
 		result[result_len++] = buf[ix];
 	    }
 	}
-    } 
+    }
     if (result_len > 0) {
 	result[result_len] = '\0';
     }
@@ -783,9 +783,9 @@ pr3287_start_now(const char *lu, bool associated)
 
     /* Create a named pipe for pr3287's stderr. */
     memset(&sa, 0, sizeof(sa));
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES); 
-    sa.bInheritHandle = TRUE; 
-    sa.lpSecurityDescriptor = NULL; 
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
     if (!CreatePipe(&pr3287_stderr_rd, &pr3287_stderr_wr, &sa, 0)) {
 	popup_an_error("CreatePipe() failed: %s",
 		win32_strerror(GetLastError()));

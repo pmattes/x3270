@@ -85,7 +85,7 @@ class TestB3270Nvt(cti):
     # Window change request that fails.
     def window_change_fail(self, rows: int, cols: int):
         self.window_report(f'\033[8;{rows};{cols}t', '\033[8;43;80t')
-    
+
     def test_window_change_fail_small(self):
         self.window_change_fail(20, 20)
     def test_window_change_fail_large(self):
@@ -238,7 +238,7 @@ class TestB3270Nvt(cti):
         bmsg_reply: str
         esc: str
         esc_reply: str
-    
+
     # Test the window-change operation, in bulk.
     def oper_window_change_bulk(self, params: Sequence[ChangeParam], json=True, debug=False):
         # Start b3270.

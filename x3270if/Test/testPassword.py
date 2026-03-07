@@ -52,7 +52,7 @@ class TestX3270ifPassword(cti):
 
     def expect(self, timeout, fd: int, text: str):
         '''Expect simple output from x3270if'''
-        self.try_until(lambda: self.drain_input.endswith(text), timeout, f'expected "{text}", got "{self.drain_input}"')    
+        self.try_until(lambda: self.drain_input.endswith(text), timeout, f'expected "{text}", got "{self.drain_input}"')
 
     # x3270if password test
     def test_x3270if_password(self):

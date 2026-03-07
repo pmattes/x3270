@@ -64,7 +64,7 @@ class TestS3270AplUnderscore(cti):
         # Wait for s3270 to exit.
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
     # s3270 APL underscored alphabetics test, PrintText(html) action
     def test_s3270_apl_underscore_printtext_html(self):
 

@@ -1329,7 +1329,7 @@ uricmpp(const char *candidate, const char *target, char **canonp)
 
 /**
  * Look up a URI in the registry and act on it.
- * 
+ *
  * @param[in,out] h	State
  * @param[in] uri	URI to look up, NULL terminated
  *

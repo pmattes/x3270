@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -629,7 +629,7 @@ longer_match(struct keymap *k, int nc)
 
 /*
  * Helper function that returns a keymap action, sets the status line, and
- * traces the result.  
+ * traces the result.
  *
  * If s is NULL, then this is a failed initial lookup.
  * If s is 'ignore', then this is a lookup in progress (k non-NULL) or a

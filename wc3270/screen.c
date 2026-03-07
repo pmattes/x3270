@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -3523,7 +3523,7 @@ status_typeahead(bool on)
     status_ta = on;
 }
 
-void    
+void
 status_compose(bool on, ucs4_t ucs4, enum keytype keytype)
 {
     oia_compose = on;
@@ -3593,7 +3593,7 @@ status_connect(bool connected)
 	oia_boxsolid = false;
 	other_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
-    }       
+    }
     other_attr = oia_white_attr;
     status_untiming();
 }
@@ -3985,7 +3985,7 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
     hglb = GetClipboardData(format);
     if (hglb != NULL) {
 	lptstr = GlobalLock(hglb);
-	if (lptstr != NULL) { 
+	if (lptstr != NULL) {
 	    int sl = 0;
 	    wchar_t *w = (wchar_t *)lptstr;
 	    ucs4_t *u;
@@ -4008,9 +4008,9 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 	    emulate_uinput(u, sl, true, margin);
 	    Free(u);
 	}
-	GlobalUnlock(hglb); 
+	GlobalUnlock(hglb);
     }
-    CloseClipboard(); 
+    CloseClipboard();
 
     return true;
 }

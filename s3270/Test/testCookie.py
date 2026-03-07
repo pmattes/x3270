@@ -161,7 +161,7 @@ class TestS3270Cookie(cti):
         # Wait for the processes to exit.
         self.vgwait(s3270)
 
-    
+
     # s3270 s3270-mode cookie test with a file that does not exist yet.
     def test_s3270_s3270_cookie_create_file(self):
 
@@ -204,7 +204,7 @@ class TestS3270Cookie(cti):
 
         tf.close()
         os.unlink(tf.name)
-    
+
     # s3270 s3270-mode cookie test with a file that we create and fill in
     def test_s3270_s3270_cookie_filled(self):
 
@@ -277,7 +277,7 @@ class TestS3270Cookie(cti):
         s3270.stderr.close()
         self.assertTrue(b'Cookie file contains invalid character' in errmsg[0])
         os.unlink(tf_name)
-    
+
     def test_s3270_s3270_cookie_filled_wrong_char(self):
         self.s3270_s3270_cookie_filled_wrong(',')
     def test_s3270_s3270_cookie_filled_wrong_whitespace(self):

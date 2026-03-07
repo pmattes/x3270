@@ -166,13 +166,13 @@ class TestC3270Resize(cti):
         self.assertTrue(r.ok)
         reply = r.json()['result'][1].split(' ')
         return (int(reply[2]), int(reply[4]))
-    
+
     def get_connection_state(self, c3270_port: int):
         '''Gets the connection state from c3270'''
         r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(ConnectionState)')
         self.assertTrue(r.ok)
         return r.json()['result'][0]
-    
+
     def drain(self, fd: int, timeout=0.5):
         '''Drain the PTY'''
         while True:

@@ -168,7 +168,7 @@ class TestS3270RpqNames(cti):
         '''Get the version'''
         version = self.s3270quick('Show(version)')[0].split(' ')[1][1:]
         return rpq.add_len(rpq.RpqName.Version.encode() + rpq.ebcdic(version))
-    
+
     def get_timezone(self) -> str:
         '''Get the timezone'''
         offset = time.timezone
@@ -270,7 +270,7 @@ class TestS3270RpqNames(cti):
     # NOALL meaning nothing
     def test_s3270_rpqnames_noall(self):
         self.s3270_rpqnames(rpq.make_rpq(''), rpq='NOALL')
-    
+
     # ALL in lowercase
     def test_s3270_rpqnames_all2(self):
         str = self.get_address() + \
@@ -285,7 +285,7 @@ class TestS3270RpqNames(cti):
               self.get_timestamp() + \
               self.get_version()
         self.s3270_rpqnames(rpq.make_rpq(str), rpq='ALL:NOTIMEZONE')
-    
+
     # NO form of keywords, mixed case
     def test_s3270_rpqnames_no2(self):
         str = self.get_address() + \

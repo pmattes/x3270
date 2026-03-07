@@ -176,7 +176,7 @@ string_run(task_cbh handle, bool *success)
 	done = false;
 	goto clean_up;
     }
-    
+
 clean_up:
     if (done) {
 	Replace(s->result, NULL);

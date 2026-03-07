@@ -3,7 +3,7 @@
 /*
  * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -44,7 +44,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL M.I.T.
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Chris D. Peterson, MIT X Consortium
@@ -57,7 +57,7 @@
  * Date:    September 26, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  */
 
@@ -79,11 +79,11 @@ static XtResource resources[] = {
      offset(stipple), XtRImmediate, (XtPointer) XtUnspecifiedPixmap},
   {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
      offset(foreground), XtRString, XtDefaultForeground},
-};   
+};
 #undef offset
 
 /*
- * Function definitions. 
+ * Function definitions.
  */
 
 static void Redisplay(Widget, XEvent *, Region);
@@ -113,7 +113,7 @@ CmeLineClassRec cmeLineClassRec = {
     /* resources          */    resources,
     /* resource_count     */	XtNumber(resources),
     /* xrm_class          */    NULLQUARK,
-    /* compress_motion    */    FALSE, 
+    /* compress_motion    */    FALSE,
     /* compress_exposure  */    FALSE,
     /* compress_enterleave*/ 	FALSE,
     /* visible_interest   */    FALSE,
@@ -122,7 +122,7 @@ CmeLineClassRec cmeLineClassRec = {
     /* expose             */    Redisplay,
     /* set_values         */    SetValues,
     /* set_values_hook    */	NULL,
-    /* set_values_almost  */	XtInheritSetValuesAlmost,  
+    /* set_values_almost  */	XtInheritSetValuesAlmost,
     /* get_values_hook    */	NULL,			
     /* accept_focus       */    NULL,
     /* intrinsics version */	XtVersion,
@@ -133,7 +133,7 @@ CmeLineClassRec cmeLineClassRec = {
     /* extension	  */    NULL
   },{
     /* Menu Entry Fields */
-      
+
     /* highlight */             XtInheritHighlight,
     /* unhighlight */           XtInheritUnhighlight,
     /* notify */		XtInheritNotify,		
@@ -187,17 +187,17 @@ CreateGC(Widget w)
     CmeLineObject entry = (CmeLineObject) w;
     XGCValues values;
     XtGCMask mask = GCForeground | GCGraphicsExposures | GCLineWidth ;
-    
+
     values.foreground = entry->cme_line.foreground;
     values.graphics_exposures = FALSE;
     values.line_width = entry->cme_line.line_width;
-    
+
     if (entry->cme_line.stipple != XtUnspecifiedPixmap) {
 	values.stipple = entry->cme_line.stipple;
-	values.fill_style = FillStippled; 
+	values.fill_style = FillStippled;
 	mask |= GCStipple | GCFillStyle;
 	
-	entry->cme_line.gc = XCreateGC(XtDisplayOfObject(w), 
+	entry->cme_line.gc = XCreateGC(XtDisplayOfObject(w),
 				      RootWindowOfScreen(XtScreenOfObject(w)),
 				      mask, &values);
     }
@@ -216,7 +216,7 @@ DestroyGC(Widget w)
 {
     CmeLineObject entry = (CmeLineObject) w;
 
-    if (entry->cme_line.stipple != XtUnspecifiedPixmap) 
+    if (entry->cme_line.stipple != XtUnspecifiedPixmap)
 	XFreeGC(XtDisplayOfObject(w), entry->cme_line.gc);
     else
 	XtReleaseGC(w, entry->cme_line.gc);
@@ -233,15 +233,15 @@ static void
 Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
 {
     CmeLineObject entry = (CmeLineObject) w;
-    int y = entry->rectangle.y + 
+    int y = entry->rectangle.y +
 	    (int)(entry->rectangle.height - entry->cme_line.line_width) / 2;
 
-    if (entry->cme_line.stipple != XtUnspecifiedPixmap) 
+    if (entry->cme_line.stipple != XtUnspecifiedPixmap)
 	XSetTSOrigin(XtDisplayOfObject(w), entry->cme_line.gc, 0, y);
 
     XFillRectangle(XtDisplayOfObject(w), XtWindowOfObject(w),
-		   entry->cme_line.gc, 
-		   0, y, (unsigned int) entry->rectangle.width, 
+		   entry->cme_line.gc,
+		   0, y, (unsigned int) entry->rectangle.width,
 		   (unsigned int) entry->cme_line.line_width );
 }
 
@@ -259,7 +259,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
 {
     CmeLineObject entry = (CmeLineObject) new;
     CmeLineObject old_entry = (CmeLineObject) current;
-  
+
     if ( (entry->cme_line.line_width != old_entry->cme_line.line_width) &&
 	 (entry->cme_line.stipple != old_entry->cme_line.stipple) ) {
 	DestroyGC(current);
@@ -276,7 +276,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
  *	Returns: A Geometry Result.
  *
  * See the Intrinsics manual for details on what this function is for.
- * 
+ *
  * I just return the height and a width of 1.
  */
 

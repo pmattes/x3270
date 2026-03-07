@@ -586,7 +586,7 @@ longer_match(struct keymap *k, int nc)
 
 /*
  * Helper function that returns a keymap action, sets the status line, and
- * traces the result.  
+ * traces the result.
  *
  * If s is NULL, then this is a failed initial lookup.
  * If s is 'ignore', then this is a lookup in progress (k non-NULL) or a

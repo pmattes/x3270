@@ -11,7 +11,7 @@ main(int argc, char *argv[])
     FILE *f;
     int c;
     int i = 0;
-    
+
     if (argc != 2) {
 	fprintf(stderr, "Usage: %s icon-file >c-file\n", argv[0]);
 	return 1;

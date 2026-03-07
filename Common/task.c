@@ -812,7 +812,7 @@ free_task(task_t *t)
 	t->macro.cmd_next = NULL;
     }
     Replace(t->match.string, NULL);
-    
+
     /* Free the structure. */
     Free(t);
 }
@@ -1494,7 +1494,7 @@ execute_command(enum iaction cause, const char *s, const char **np, char *last,
  * @param[in] command	Command to check
  * @param[in] offset	Offset for error message
  * @param[out] error	Returned error message
- * 
+ *
  * @return true for success, false for failure
  */
 bool
@@ -2530,7 +2530,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
      * - Ebcdic
      * - Ebcdic1
      * - ReadBuffer
-     */     
+     */
     if (current_task != NULL && buf == ea_buf) {
 	set_output_needed(true);
     }
@@ -2792,7 +2792,7 @@ EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 static unsigned char
 calc_cs(unsigned char cs)
 {
-    switch (cs & CS_MASK) { 
+    switch (cs & CS_MASK) {
     case CS_APL:
 	return 0xf1;
     case CS_LINEDRAW:
@@ -2857,7 +2857,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
      * - Ascii
      * - Ebcdic
      * - ReadBuffer
-     */     
+     */
     if (current_task != NULL && buf == ea_buf) {
 	set_output_needed(true);
     }
@@ -3244,7 +3244,7 @@ task_cb_prompt(task_cbh handle)
     const char *t;
 
     s = task_find_cb(handle);
-    
+
     if (!s) {
 	return "???";
     }
@@ -3276,7 +3276,7 @@ unsigned long
 task_cb_msec(task_cbh handle)
 {
     task_t *s = task_find_cb(handle);
-    
+
     if (!s) {
 	return 0;
     }

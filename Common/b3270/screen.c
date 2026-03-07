@@ -230,7 +230,7 @@ toggle_visibleControl(toggle_index_t ix _is_unused,
 	enum toggle_type tt _is_unused)
 {
     screen_disp_cond(true);
-}       
+}
 
 
 /* Internal screen initialization. */

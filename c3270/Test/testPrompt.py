@@ -51,7 +51,7 @@ class TestC3270Prompt(cti):
                 self.drain_input += b.decode()
             except:
                 return
-    
+
     def expect(self, timeout, fd: int, text: str, flush=True):
         '''Expect simple output from c3270'''
         if flush:
@@ -190,7 +190,7 @@ class TestC3270Prompt(cti):
         # Specify BAZ as an extra IND$FILE option, and make sure it is echoed back in the summary.
         os.write(fd, b'BAZ\r')
         self.expect(2, fd, 'Continue? (y/n) [y] ')
-        
+
         # Go ahead, and make sure BAZ is specified (it's X'C2C1E9' in the text).
         os.write(fd, b'\r')
         want = bytes.fromhex('00000000007d5d5e11d94c6d6d6d6d6d6d6d6d11d95f6d6d6d6d6d6d6d6d115cf6c9d5c45bc6c9d3c540d7e4e340c5e3c340c7d9d6e4d740c1404dc1e2c3c9c940c3d9d3c640c2c1e9115df6ffef')

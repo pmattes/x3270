@@ -100,7 +100,7 @@ class TestC3270Smoke(cti):
             except OSError:
                 break
             result += rbuf.decode('utf8')
-        
+
         # Make the output a bit more readable and split it into lines.
         result = re.sub('(?s).*File', 'File', result, count=1)
         result = result.replace('\x1b', '<ESC>').split('\n')

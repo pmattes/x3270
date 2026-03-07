@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1996-2024 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -13,7 +13,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -48,7 +48,7 @@
 #define GUID_DATA1	0x0c570607
 #define GUID_DATA2	0x0396
 #define GUID_DATA3	0x43de
-#define GUID_DATA4	0x9d, 0x61, 0xe3, 0x21, 0xd7, 0xdf, 0x50, 0x26 
+#define GUID_DATA4	0x9d, 0x61, 0xe3, 0x21, 0xd7, 0xdf, 0x50, 0x26
 
 #define PID_FORCE_V2	1	/* Force V2 console mode. */
 #define PID_DISABLE_CTRL_KEYS 4	/* Disable control key shortcuts */
@@ -69,8 +69,8 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
 {
     HRESULT		hres;
     int	 		initialized;
-    IShellLink*		psl = NULL; 
-    IShellLinkDataList*	psldl = NULL; 
+    IShellLink*		psl = NULL;
+    IShellLinkDataList*	psldl = NULL;
     IPersistFile*	ppf = NULL;
     IPropertyStore*	pps = NULL;
     NT_CONSOLE_PROPS	p;
@@ -280,4 +280,4 @@ out:
     }
 
     return hres;
-} 
+}

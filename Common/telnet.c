@@ -5,7 +5,7 @@
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -17,7 +17,7 @@
  *     * Neither the names of Paul Mattes, Don Russell, Jeff Sparkes, GTRC
  *       nor their contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, JEFF SPARKES AND
  * GTRC "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -263,13 +263,13 @@ static void trace_envt_in(unsigned const char *buf, size_t len);
 #define TNS_SB_IAC	7	/* got an IAC after an IAC SB */
 
 /* telnet predefined messages */
-static unsigned char	do_opt[]	= { 
+static unsigned char	do_opt[]	= {
 	IAC, DO, '_' };
-static unsigned char	dont_opt[]	= { 
+static unsigned char	dont_opt[]	= {
 	IAC, DONT, '_' };
-static unsigned char	will_opt[]	= { 
+static unsigned char	will_opt[]	= {
 	IAC, WILL, '_' };
-static unsigned char	wont_opt[]	= { 
+static unsigned char	wont_opt[]	= {
 	IAC, WONT, '_' };
 static unsigned char	functions_req[] = {
 	IAC, SB, TELOPT_TN3270E, TN3270E_OP_FUNCTIONS };
@@ -907,7 +907,7 @@ setup_lus(void)
 
     /*
      * Count the commas in the LU name.  That plus one is the
-     * number of LUs to try. 
+     * number of LUs to try.
      */
     lu = luname;
     while ((comma = strchr(lu, ',')) != NULL) {

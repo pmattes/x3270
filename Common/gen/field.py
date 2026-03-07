@@ -91,7 +91,7 @@ color_map = {
     'paleGreen': 'fc',
     'paleTurquoise': 'fd',
     'grey': 'fe',
-    'white': 'ff' 
+    'white': 'ff'
 }
 
 # Map from character sets to their encoded values

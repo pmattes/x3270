@@ -57,7 +57,7 @@
  * it to U+0021 ('!'), but Tachyonsoft translates it to U+01c3, Latin Letter
  * Retroflex Click. I am going with Wikipedia for now.
  *
- * Note: This table is partially redundant with apl2uc[] in unicode.c, and 
+ * Note: This table is partially redundant with apl2uc[] in unicode.c, and
  * needs to be kept consistent with it. apl2uc[] has Unicode translations for
  * additional line-drawing code points that are not intended for keyboard
  * input.

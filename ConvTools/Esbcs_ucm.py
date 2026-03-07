@@ -10,7 +10,7 @@ class sbcs_ucm:
         self.cs = os.path.splitext(os.path.basename(self.filename))[0]
         self.cp = m.group(1) if (m := re.match(r'^ibm-([0-9]+)_.*', self.cs)) else "???"
         self.d2u = {}
-    
+
     def read(self):
         '''Read the .ucm file'''
         dmatch = re.compile(r'^<U([0-9a-zA-Z]+)> +\\x([0-9a-zA-Z]+) .*')

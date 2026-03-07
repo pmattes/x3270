@@ -46,7 +46,7 @@ class TestX3270MoveCursor(cti):
         out = xdotool.communicate()[0].decode('utf8').strip()
         xdotool.wait(2)
         return out != ''
-    
+
     # x3270 MoveCursor NVT-mode test.
     def x3270_MoveCursor_nvt(self, suffix: str):
 

@@ -505,7 +505,7 @@ main(int argc, char *argv[])
 	char *path = getenv("PATH");
 
 	/* Add our path to $PATH so we can find x3270if. */
-	putenv(Asprintf("PATH=%.*s%s%s", 
+	putenv(Asprintf("PATH=%.*s%s%s",
 		    (int)(programname - argv[0]), argv[0],
 		    path? ":": "",
 		    path? path: ""));

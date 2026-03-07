@@ -56,7 +56,7 @@ static int slot_ix = 0;
  * Do a deferred free on a malloc'd block of memory.
  *
  * @param[in] buf	Buffer to store
- * 
+ *
  * @return buf, for convenience
  */
 const char *

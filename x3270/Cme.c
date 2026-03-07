@@ -3,7 +3,7 @@
 /*
  * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -44,7 +44,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL M.I.T.
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
@@ -55,7 +55,7 @@
  * Date:    September 26, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  */
 
@@ -73,11 +73,11 @@
 static XtResource resources[] = {
   {XtNcallback, XtCCallback, XtRCallback, sizeof(XtPointer),
      offset(callbacks), XtRCallback, NULL},
-};   
+};
 #undef offset
 
 /*
- * Semi Public function definitions. 
+ * Semi Public function definitions.
  */
 
 static void Highlight(Widget);
@@ -106,7 +106,7 @@ CmeClassRec cmeClassRec = {
     /* resources          */    resources,
     /* resource_count     */	XtNumber(resources),
     /* xrm_class          */    NULLQUARK,
-    /* compress_motion    */    FALSE, 
+    /* compress_motion    */    FALSE,
     /* compress_exposure  */    FALSE,
     /* compress_enterleave*/ 	FALSE,
     /* visible_interest   */    FALSE,
@@ -115,7 +115,7 @@ CmeClassRec cmeClassRec = {
     /* expose             */    NULL,
     /* set_values         */    NULL,
     /* set_values_hook    */	NULL,
-    /* set_values_almost  */	XtInheritSetValuesAlmost,  
+    /* set_values_almost  */	XtInheritSetValuesAlmost,
     /* get_values_hook    */	NULL,			
     /* accept_focus       */    NULL,
     /* intrinsics version */	XtVersion,
@@ -126,7 +126,7 @@ CmeClassRec cmeClassRec = {
     /* extension	  */    NULL
   },{
     /* Complex Menu Entry Fields */
-      
+
     /* highlight */             Highlight,
     /* unhighlight */           Unhighlight,
     /* notify */		Notify,		
@@ -156,18 +156,18 @@ ClassPartInitialize(WidgetClass class)
     m_ent = (CmeObjectClass) class;
     superC = (CmeObjectClass) m_ent->rect_class.superclass;
 
-/* 
+/*
  * We don't need to check for null super since we'll get to TextSink
  * eventually.
  */
 
-    if (m_ent->cme_class.highlight == XtInheritHighlight) 
+    if (m_ent->cme_class.highlight == XtInheritHighlight)
 	m_ent->cme_class.highlight = superC->cme_class.highlight;
 
     if (m_ent->cme_class.unhighlight == XtInheritUnhighlight)
 	m_ent->cme_class.unhighlight = superC->cme_class.unhighlight;
 
-    if (m_ent->cme_class.notify == XtInheritNotify) 
+    if (m_ent->cme_class.notify == XtInheritNotify)
 	m_ent->cme_class.notify = superC->cme_class.notify;
 }
 
@@ -177,7 +177,7 @@ ClassPartInitialize(WidgetClass class)
  *                 new     - the new widget with both resource and non
  *                           resource values.
  *      Returns: none.
- * 
+ *
  * MENU ENTRIES CANNOT HAVE BORDERS.
  */
 
@@ -233,7 +233,7 @@ Notify(Widget w)
  *	Returns: A Geometry Result.
  *
  * See the Intrinsics manual for details on what this function is for.
- * 
+ *
  * I just return the height and a width of 1.
  */
 

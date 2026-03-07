@@ -146,7 +146,7 @@ getcwd_bsl(void)
  *
  * @returns true for success, false for an unrecoverable error.
  *
- * All returned directories end in '\'. 
+ * All returned directories end in '\'.
  *
  * Uses the presence of CATF.EXE to decide if the program is installed or
  * not.  If not, appdata is returned as the cwd.

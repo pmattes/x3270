@@ -39,7 +39,7 @@ class TestS3270Attn(cti):
     def send_enter(self, port: int):
         '''Send an Enter() to the emulator'''
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/Enter()')
-    
+
     def kbwait(self, port: int) -> bool:
         '''Test for KBWAIT'''
         r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Show(Tasks)')

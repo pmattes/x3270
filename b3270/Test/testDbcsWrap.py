@@ -45,7 +45,7 @@ class TestB3270DbcsWrap(cti):
         pport, ts = unused_port()
         with playback(self, 's3270/Test/dbcs-wrap.trc', port=pport) as p:
             ts.close()
-            
+
             # Start b3270.
             b3270 = Popen(vgwrap(['b3270', '-json', '-codepage', 'japanese-latin']), stdin=PIPE, stdout=PIPE)
             self.children.append(b3270)
@@ -73,14 +73,14 @@ class TestB3270DbcsWrap(cti):
                 s = pq.get(5, 'did not get screen update')
                 if s.decode().startswith('{"screen":{'):
                     break
-            
+
             # Verify that the split character is rendered properly.
             ret = json.loads(s.decode())
             rows = ret['screen']['rows']
             self.assertEqual([{'row': 22, 'changes': [{'column': 6, 'gr': 'wide', 'text': japanese_text[:37]}, {'column': 80, 'gr': 'left-half', 'text': '取'}]},
                 {'row': 23, 'changes': [{'column': 1, 'gr': 'no-copy,right-half', 'text': '取'}, {'column': 2, 'gr': 'wide', 'text': japanese_text[38:]}]}],
                 rows)
-            
+
         # Wait for the processes to exit.
         b3270.stdin.close()
         pq.close()

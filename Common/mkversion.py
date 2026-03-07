@@ -34,29 +34,29 @@
 # LANG=C
 # LC_ALL=C
 # export LANG LC_ALL
-# 
+#
 # set -e
-# 
+#
 # if date --help >/dev/null 2>&1
 # then    # GNU date
 #         ddopt="-d@"
 # else    # BSD date
 #         ddopt="-r"
 # fi
-# 
+#
 # . ${2-./version.txt}
 # date="date -u"
 # [ -n "$SOURCE_DATE_EPOCH" ] && date="$date $ddopt$SOURCE_DATE_EPOCH"
 # builddate=`$date`
 # sccsdate=`$date +%Y/%m/%d`
 # user=${LOGNAME-$USER}
-# 
+#
 # # Create an all numeric timestamp for rpqnames.
 # # rpq.c will return this string of numbers in bcd format
 # # It is OK to change the length (+ or -), but use
 # # decimal (0-9) digits only. Length must be even number of digits.
 # rpq_timestamp=`$date +%Y%m%d%H%M%S`
-# 
+#
 # app=${1-x3270}
 # cat <<EOF
 # const char *app = "$app";
@@ -64,7 +64,7 @@
 # const char *app_defaults_version = "$adversion";
 # const char *cyear = "$cyear";
 # const char sccsid[] = "@(#)$app v$version $sccsdate $user";
-# 
+#
 # const char *build_rpq_timestamp = "$rpq_timestamp";
 # const char *build_rpq_version = "$version";
 # EOF

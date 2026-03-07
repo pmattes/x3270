@@ -73,7 +73,7 @@ class TestS3270Nvt(cti):
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Ascii1(1,1,1,10)')
         self.assertTrue(r.ok)
         self.assertEqual('hellofella', r.json()['result'][0])
-        
+
         # Alternate again. Make sure it's blank.
         s.send(b'\x1b[?1049' + mode_alt + b'hubba')
         r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Expect(hubba,1)')
@@ -86,7 +86,7 @@ class TestS3270Nvt(cti):
         s.close()
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
     # Test with set/reset.
     def test_nvt_1049_set(self):
         self.nvt_1049(b'h', b'l')
@@ -218,7 +218,7 @@ class TestS3270Nvt(cti):
     # Window change request that fails.
     def window_change_fail(self, rows: int, cols: int):
         self.window_report(f'\033[8;{rows};{cols}t', '\033[8;43;80t')
-    
+
     def test_window_change_fail_small(self):
         self.window_change_fail(20, 20)
     def test_window_change_fail_large(self):

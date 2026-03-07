@@ -145,7 +145,7 @@ class listenserver():
     # Send data.
     def send(self, bytes):
         self.iosock.send(bytes)
-    
+
     # Get data.
     def data(self, timeout=0):
         # Handle an apparent bug in Windows when a loopback connection is shut for writing

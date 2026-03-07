@@ -12,7 +12,7 @@ class dbcs_ucm:
         self.cp = m.group(1) if (m := re.match(r'^ibm-([0-9]+)_.*', self.cs)) else "???"
         self.d2u = {}
         self.u2d = {}
-    
+
     def read(self):
         '''Read the .ucm file'''
         dmatch = re.compile(r'^<U([0-9a-zA-Z]+)> +\\x([0-9a-zA-Z]+)\\x([0-9a-zA-Z]+).*')

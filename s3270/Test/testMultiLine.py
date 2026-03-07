@@ -92,7 +92,7 @@ class TestS3270MultiLine(cti):
         # Wait for the process to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
-    
+
     # s3270 multi-line output scriptport test
     def test_s3270_multiline_scriptport(self):
 
@@ -136,7 +136,7 @@ class TestS3270MultiLine(cti):
 
         # Wait for the process to exit.
         self.vgwait(s3270)
-    
+
     # s3270 multi-line output scriptport test, JSON mode
     def test_s3270_multiline_scriptport_json(self):
 
@@ -208,7 +208,7 @@ class TestS3270MultiLine(cti):
         # Wait for the process to exit.
         self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(s3270)
-    
+
     # s3270 multi-line output httpd test, HTML mode
     def test_s3270_multiline_httpd_html(self):
 
@@ -237,7 +237,7 @@ class TestS3270MultiLine(cti):
         # Wait for the process to exit.
         self.get(f'http://127.0.0.1:{port}/3270/rest/text/Quit')
         self.vgwait(s3270)
-    
+
     # s3270 multi-line output httpd test, JSON mode
     def test_s3270_multiline_httpd_json(self):
 

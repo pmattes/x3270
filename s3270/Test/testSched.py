@@ -68,7 +68,7 @@ class TestS3270Sched(cti):
 
         if not http and not scriptport:
             return
-        
+
         # Start s3270.
         if http:
             hport, htp = unused_port()

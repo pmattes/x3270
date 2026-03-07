@@ -91,7 +91,7 @@ class TestB3270ProtoErrors(cti):
     # b3270 invalid EUA test
     def test_b3270_invalid_eua(self):
         self.invalid_address('eua')
-    
+
     # b3270 ignore EOR test
     def test_b3270_ignore_eor(self):
 
@@ -134,7 +134,7 @@ class TestB3270ProtoErrors(cti):
         self.vgwait(b3270)
         pq.close()
         b3270.stdout.close()
-    
+
     # b3270 invalid command test
     def test_b3270_invalid_command(self):
 
@@ -177,7 +177,7 @@ class TestB3270ProtoErrors(cti):
         self.vgwait(b3270)
         pq.close()
         b3270.stdout.close()
-    
+
     # b3270 short write test
     def too_short(self, trc: str):
 
@@ -220,55 +220,55 @@ class TestB3270ProtoErrors(cti):
         self.vgwait(b3270)
         pq.close()
         b3270.stdout.close()
-    
+
     # Test a write with no flags field.
     def test_b3270_short_write(self):
         self.too_short('no_flags')
-    
+
     # Test a write with a truncated SF.
     def test_b3270_short_sf(self):
         self.too_short('short_sf')
-    
+
     # Test a write with a truncated SBA.
     def test_b3270_short_sba(self):
         self.too_short('short_sba')
-    
+
     # Test a write with a truncated RA (no address).
     def test_b3270_short_ra_addr(self):
         self.too_short('short_ra_addr')
-    
+
     # Test a write with a truncated RA (no character).
     def test_b3270_short_ra_char(self):
         self.too_short('short_ra_char')
-    
+
     # Test a write with a truncated RA (no GE character).
     def test_b3270_short_ra_ge(self):
         self.too_short('short_ra_ge')
-    
+
     # Test a write with a truncated EUA.
     def test_b3270_short_eua(self):
         self.too_short('short_eua')
-    
+
     # Test a write with a truncated GE.
     def test_b3270_short_ge(self):
         self.too_short('short_ge')
-    
+
     # Test a write with a truncated MF (count).
     def test_b3270_short_mf_count(self):
         self.too_short('short_mf_count')
-    
+
     # Test a write with a truncated MF (attribute).
     def test_b3270_short_mf_attr(self):
         self.too_short('short_mf_attr')
-    
+
     # Test a write with a truncated SA.
     def test_b3270_short_sa(self):
         self.too_short('short_sa')
-    
+
     # Test a write with a truncated SFE (count).
     def test_b3270_short_sfe_count(self):
         self.too_short('short_sfe_count')
-    
+
     # Test a write with a truncated SFE (attribute).
     def test_b3270_short_sfe_attr(self):
         self.too_short('short_sfe_attr')

@@ -64,7 +64,7 @@ typedef enum {
 
 /**
  * Process the response to a yes or no question.
- * 
+ *
  * @param defval	Default value
  * @param response	Response text to process
  *

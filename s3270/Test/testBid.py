@@ -153,7 +153,7 @@ class TestS3270Bid(cti):
 
             # Get the queued response.
             data = p.nread(8 + 14, 0.5)
-        
+
         self.assertEqual(data, b'\x02\x00\x00\x00/\x00\xff\xef\x00\x00\x00\x00\x00}\x01\xa1\x11\x01\xa0\x81\xff\xef', 'Expected Enter')
 
         # Wait for the processes to exit.

@@ -207,10 +207,10 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     *(xcmd + xcmd_len) = '\0';
     xargc = argc;
 
-#if defined(LOCAL_PROCESS) /*[*/ 
+#if defined(LOCAL_PROCESS) /*[*/
     /* Pick out the -e option. */
     parse_local_process(&argc, argv, cl_hostname);
-#endif /*]*/    
+#endif /*]*/
 
     /* Set the defaults. */
     set_appres_defaults();

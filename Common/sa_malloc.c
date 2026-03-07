@@ -159,7 +159,7 @@ Free(void *buf)
 /**
  * Duplicate a string in tracked memory.
  * Crash if there is no memory available.
- * 
+ *
  * @param[in] s		String to duplicate
  * @returns duplicated string
  */

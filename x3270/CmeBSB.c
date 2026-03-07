@@ -3,7 +3,7 @@
 /*
  * Copyright (c) 1995-2009, 2013-2014, 2019 Paul Mattes.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  *     * Neither the name of Paul Mattes nor his contributors may be used
  *       to endorse or promote products derived from this software without
  *       specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
  * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -44,7 +44,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL M.I.T.
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
@@ -55,7 +55,7 @@
  * Date:    September 26, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  */
 
@@ -100,11 +100,11 @@ static XtResource resources[] = {
      offset(foreground), XtRString, XtDefaultForeground},
   {XtNfont,  XtCFont, XtRFontStruct, sizeof(XFontStruct *),
      offset(font), XtRString, XtDefaultFont},
-};   
+};
 #undef offset
 
 /*
- * Semi Public function definitions. 
+ * Semi Public function definitions.
  */
 
 static void FlipColors(Widget);
@@ -119,7 +119,7 @@ static Boolean SetValues(Widget, Widget, Widget);
 static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
 	XtWidgetGeometry *);
 
-/* 
+/*
  * Private Function Definitions.
  */
 
@@ -128,7 +128,7 @@ static void DrawBitmaps(Widget, GC);
 static void GetBitmapInfo(Widget, Boolean);
 static void CreateGCs(Widget);
 static void DestroyGCs(Widget);
-    
+
 #define superclass (&cmeClassRec)
 CmeBSBClassRec cmeBSBClassRec = {
   {
@@ -146,7 +146,7 @@ CmeBSBClassRec cmeBSBClassRec = {
     /* resources          */    resources,
     /* resource_count     */	XtNumber(resources),
     /* xrm_class          */    NULLQUARK,
-    /* compress_motion    */    FALSE, 
+    /* compress_motion    */    FALSE,
     /* compress_exposure  */    FALSE,
     /* compress_enterleave*/ 	FALSE,
     /* visible_interest   */    FALSE,
@@ -155,7 +155,7 @@ CmeBSBClassRec cmeBSBClassRec = {
     /* expose             */    Redisplay,
     /* set_values         */    (XtSetValuesFunc)SetValues,
     /* set_values_hook    */	NULL,
-    /* set_values_almost  */	XtInheritSetValuesAlmost,  
+    /* set_values_almost  */	XtInheritSetValuesAlmost,
     /* get_values_hook    */	NULL,			
     /* accept_focus       */    NULL,
     /* intrinsics version */	XtVersion,
@@ -166,13 +166,13 @@ CmeBSBClassRec cmeBSBClassRec = {
     /* extension	  */    NULL
   },{
     /* Menu Entry Fields */
-      
+
     /* highlight */             FlipOn,
     /* unhighlight */           FlipOff,
     /* notify */		XtInheritNotify,
     /* extension	  */    NULL
   }, {
-    /* BSB Menu entry Fields */  
+    /* BSB Menu entry Fields */
 
     /* extension	  */    NULL
   }
@@ -187,12 +187,12 @@ WidgetClass cmeBSBObjectClass = (WidgetClass) &cmeBSBClassRec;
  ************************************************************/
 
 /*	Function Name: ClassInitialize
- *	Description: Initializes the CmeBSBObject. 
+ *	Description: Initializes the CmeBSBObject.
  *	Arguments: none.
  *	Returns: none.
  */
 
-static void 
+static void
 ClassInitialize(void)
 {
     XawInitializeWidgetSet();
@@ -212,7 +212,7 @@ Initialize(Widget request _is_unused, Widget new)
 {
     CmeBSBObject entry = (CmeBSBObject) new;
 
-    if (entry->cme_bsb.label == NULL) 
+    if (entry->cme_bsb.label == NULL)
 	entry->cme_bsb.label = XtName(new);
     else
 	entry->cme_bsb.label = XtNewString( entry->cme_bsb.label );
@@ -251,7 +251,7 @@ Destroy(Widget w)
  *      Description: Redisplays the contents of the widget.
  *      Arguments: w - the complex menu widget.
  *                 event - the X event that caused this redisplay.
- *                 region - the region the needs to be repainted. 
+ *                 region - the region the needs to be repainted.
  *      Returns: none.
  */
 
@@ -262,15 +262,15 @@ Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
     CmeBSBObject entry = (CmeBSBObject) w;
     int	font_ascent, font_descent, y_loc;
 
-    entry->cme_bsb.set_values_area_cleared = FALSE;    
+    entry->cme_bsb.set_values_area_cleared = FALSE;
     font_ascent = entry->cme_bsb.font->max_bounds.ascent;
     font_descent = entry->cme_bsb.font->max_bounds.descent;
 
     y_loc = entry->rectangle.y;
-    
+
     if (XtIsSensitive(w) && XtIsSensitive( XtParent(w) ) ) {
 	if ( w == XawComplexMenuGetActiveEntry(XtParent(w)) ) {
-	    XFillRectangle(XtDisplayOfObject(w), XtWindowOfObject(w), 
+	    XFillRectangle(XtDisplayOfObject(w), XtWindowOfObject(w),
 			   entry->cme_bsb.norm_gc, 0, y_loc,
 			   (unsigned int) entry->rectangle.width,
 			   (unsigned int) entry->rectangle.height);
@@ -281,7 +281,7 @@ Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
     }
     else
 	gc = entry->cme_bsb.norm_gray_gc;
-    
+
     if (entry->cme_bsb.label != NULL) {
 	int x_loc = entry->cme_bsb.left_margin;
 	int len = strlen(entry->cme_bsb.label);
@@ -306,7 +306,7 @@ Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
 	    break;
 	}
 
-	y_loc += ((int)entry->rectangle.height - 
+	y_loc += ((int)entry->rectangle.height -
 		  (font_ascent + font_descent)) / 2 + font_ascent;
 	
 	XDrawString(XtDisplayOfObject(w), XtWindowOfObject(w), gc,
@@ -336,7 +336,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new)
         if (old_entry->cme_bsb.label != XtName( new ) )
 	    XtFree( (char *) old_entry->cme_bsb.label );
 
-	if (entry->cme_bsb.label != XtName(new) ) 
+	if (entry->cme_bsb.label != XtName(new) )
 	    entry->cme_bsb.label = XtNewString( entry->cme_bsb.label );
 
 	ret_val = True;
@@ -363,7 +363,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new)
     }
 
     if (ret_val) {
-	GetDefaultSize(new, 
+	GetDefaultSize(new,
 		       &(entry->rectangle.width), &(entry->rectangle.height));
 	entry->cme_bsb.set_values_area_cleared = TRUE;
     }
@@ -377,7 +377,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new)
  *	Returns: A Geometry Result.
  *
  * See the Intrinsics manual for details on what this function is for.
- * 
+ *
  * I just return the height and width of the label plus the margins.
  */
 
@@ -390,7 +390,7 @@ QueryGeometry(Widget w, XtWidgetGeometry *intended,
     XtGeometryResult ret_val = XtGeometryYes;
     XtGeometryMask mode = intended->request_mode;
 
-    GetDefaultSize(w, &width, &height );    
+    GetDefaultSize(w, &width, &height );
 
     if ( ((mode & CWWidth) && (intended->width != width)) ||
 	 !(mode & CWWidth) ) {
@@ -441,7 +441,7 @@ OnCallback(XtPointer closure, XtIntervalId *id _is_unused)
  *      Returns: none.
  */
 
-static void 
+static void
 FlipOn(Widget w)
 {
     CmeBSBObject entry = (CmeBSBObject) w;
@@ -462,7 +462,7 @@ FlipOn(Widget w)
  *      Returns: none.
  */
 
-static void 
+static void
 FlipOff(Widget w)
 {
     CmeBSBObject entry = (CmeBSBObject) w;
@@ -483,7 +483,7 @@ FlipOff(Widget w)
     temp = w;
     while(temp != NULL) {
 	menu = XtNameToWidget(temp, entry->cme_bsb.menu_name);
-	if (menu == NULL) 
+	if (menu == NULL)
 	    temp = XtParent(temp);
 	else {
 #if defined(CmeDebug)
@@ -515,7 +515,7 @@ FlipOff(Widget w)
 	temp = w;
 	while (temp != NULL) {
 	    menu = XtNameToWidget(temp, entry->cme_bsb.menu_name);
-	    if (menu == NULL) 
+	    if (menu == NULL)
 		temp = XtParent(temp);
 	    else
 		break;
@@ -527,14 +527,14 @@ FlipOff(Widget w)
     while (num_menus)
 	XtPopdown(menus[--num_menus]);
 }
-    
+
 /*      Function Name: FlipColors
  *      Description: Invert the colors of the current entry.
  *      Arguments: w - the bsb menu entry widget.
  *      Returns: none.
  */
 
-static void 
+static void
 FlipColors(Widget w)
 {
     CmeBSBObject entry = (CmeBSBObject) w;
@@ -543,7 +543,7 @@ FlipColors(Widget w)
 
     XFillRectangle(XtDisplayOfObject(w), XtWindowOfObject(w),
 		   entry->cme_bsb.invert_gc, 0, (int) entry->rectangle.y,
-		   (unsigned int) entry->rectangle.width, 
+		   (unsigned int) entry->rectangle.width,
 		   (unsigned int) entry->rectangle.height);
 }
 
@@ -566,18 +566,18 @@ GetDefaultSize(Widget w, Dimension *width, Dimension *height)
 {
     CmeBSBObject entry = (CmeBSBObject) w;
 
-    if (entry->cme_bsb.label == NULL) 
+    if (entry->cme_bsb.label == NULL)
 	*width = 0;
     else
 	*width = XTextWidth(entry->cme_bsb.font, entry->cme_bsb.label,
 			    strlen(entry->cme_bsb.label));
 
     *width += entry->cme_bsb.left_margin + entry->cme_bsb.right_margin;
-    
+
     *height = (entry->cme_bsb.font->max_bounds.ascent +
 	       entry->cme_bsb.font->max_bounds.descent);
 
-    *height = ((int)*height * ( ONE_HUNDRED + 
+    *height = ((int)*height * ( ONE_HUNDRED +
 			        entry->cme_bsb.vert_space )) / ONE_HUNDRED;
 }
 
@@ -593,8 +593,8 @@ DrawBitmaps(Widget w, GC gc)
 {
     int x_loc, y_loc;
     CmeBSBObject entry = (CmeBSBObject) w;
-    
-    if ( (entry->cme_bsb.left_bitmap == None) && 
+
+    if ( (entry->cme_bsb.left_bitmap == None) &&
 	 (entry->cme_bsb.right_bitmap == None) ) return;
 
 /*
@@ -609,7 +609,7 @@ DrawBitmaps(Widget w, GC gc)
 				       entry->cme_bsb.left_bitmap_height) / 2;
 
     XCopyPlane(XtDisplayOfObject(w), entry->cme_bsb.left_bitmap,
-	       XtWindowOfObject(w), gc, 0, 0, 
+	       XtWindowOfObject(w), gc, 0, 0,
 	       entry->cme_bsb.left_bitmap_width,
 	       entry->cme_bsb.left_bitmap_height, x_loc, y_loc, 1);
   }
@@ -628,7 +628,7 @@ DrawBitmaps(Widget w, GC gc)
 				       entry->cme_bsb.right_bitmap_height) / 2;
 
     XCopyPlane(XtDisplayOfObject(w), entry->cme_bsb.right_bitmap,
-	       XtWindowOfObject(w), gc, 0, 0, 
+	       XtWindowOfObject(w), gc, 0, 0,
 	       entry->cme_bsb.right_bitmap_width,
 	       entry->cme_bsb.right_bitmap_height, x_loc, y_loc, 1);
   }
@@ -645,17 +645,17 @@ DrawBitmaps(Widget w, GC gc)
 static void
 GetBitmapInfo(Widget w, Boolean is_left)
 {
-    CmeBSBObject entry = (CmeBSBObject) w;    
+    CmeBSBObject entry = (CmeBSBObject) w;
     unsigned int depth, bw;
     Window root;
     int x, y;
     unsigned int width, height;
     char buf[BUFSIZ];
-    
+
     if (is_left) {
 	if (entry->cme_bsb.left_bitmap != None) {
-	    if (!XGetGeometry(XtDisplayOfObject(w), 
-			      entry->cme_bsb.left_bitmap, &root, 
+	    if (!XGetGeometry(XtDisplayOfObject(w),
+			      entry->cme_bsb.left_bitmap, &root,
 			      &x, &y, &width, &height, &bw, &depth)) {
 		snprintf(buf, sizeof(buf),
 			"CmeBSB Object: %s %s \"%s\".",
@@ -666,12 +666,12 @@ GetBitmapInfo(Widget w, Boolean is_left)
 	    }
 	    if (depth != 1) {
 		snprintf(buf, sizeof(buf),
-			"CmeBSB Object: %s \"%s\"%s.", 
-			"Left Bitmap of entry ", 
+			"CmeBSB Object: %s \"%s\"%s.",
+			"Left Bitmap of entry ",
 			XtName(w), " is not one bit deep.");
 		XtAppError(XtWidgetToApplicationContext(w), buf);
 	    }
-	    entry->cme_bsb.left_bitmap_width = (Dimension) width; 
+	    entry->cme_bsb.left_bitmap_width = (Dimension) width;
 	    entry->cme_bsb.left_bitmap_height = (Dimension) height;
 	}
     }
@@ -686,15 +686,15 @@ GetBitmapInfo(Widget w, Boolean is_left)
 	    XtAppError(XtWidgetToApplicationContext(w), buf);
 	}
 	if (depth != 1) {
-	    snprintf(buf, sizeof(buf), "CmeBSB Object: %s \"%s\"%s.", 
+	    snprintf(buf, sizeof(buf), "CmeBSB Object: %s \"%s\"%s.",
 		    "Right Bitmap of entry ", XtName(w),
 		    " is not one bit deep.");
 	    XtAppError(XtWidgetToApplicationContext(w), buf);
 	}
-	entry->cme_bsb.right_bitmap_width = (Dimension) width; 
+	entry->cme_bsb.right_bitmap_width = (Dimension) width;
 	entry->cme_bsb.right_bitmap_height = (Dimension) height;
     }
-}      
+}
 
 /*      Function Name: CreateGCs
  *      Description: Creates all gc's for the complex menu widget.
@@ -705,30 +705,30 @@ GetBitmapInfo(Widget w, Boolean is_left)
 static void
 CreateGCs(Widget w)
 {
-    CmeBSBObject entry = (CmeBSBObject) w;    
+    CmeBSBObject entry = (CmeBSBObject) w;
     XGCValues values;
     XtGCMask mask;
-    
+
     values.foreground = XtParent(w)->core.background_pixel;
     values.background = entry->cme_bsb.foreground;
     values.font = entry->cme_bsb.font->fid;
     values.graphics_exposures = FALSE;
     mask        = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
     entry->cme_bsb.rev_gc = XtGetGC(w, mask, &values);
-    
+
     values.foreground = entry->cme_bsb.foreground;
     values.background = XtParent(w)->core.background_pixel;
     entry->cme_bsb.norm_gc = XtGetGC(w, mask, &values);
-    
+
     values.fill_style = FillTiled;
-    values.tile   = XmuCreateStippledPixmap(XtScreenOfObject(w), 
+    values.tile   = XmuCreateStippledPixmap(XtScreenOfObject(w),
 					    entry->cme_bsb.foreground,
 					    XtParent(w)->core.background_pixel,
 					    XtParent(w)->core.depth);
     values.graphics_exposures = FALSE;
     mask |= GCTile | GCFillStyle;
     entry->cme_bsb.norm_gray_gc = XtGetGC(w, mask, &values);
-    
+
     values.foreground ^= values.background;
     values.background = 0;
     values.function = GXxor;
@@ -745,7 +745,7 @@ CreateGCs(Widget w)
 static void
 DestroyGCs(Widget w)
 {
-    CmeBSBObject entry = (CmeBSBObject) w;    
+    CmeBSBObject entry = (CmeBSBObject) w;
 
     XtReleaseGC(w, entry->cme_bsb.norm_gc);
     XtReleaseGC(w, entry->cme_bsb.norm_gray_gc);
@@ -772,7 +772,7 @@ PopupMenu(Widget w)
     temp = w;
     while(temp != NULL) {
 	menu = XtNameToWidget(temp, entry->cme_bsb.menu_name);
-	if (menu == NULL) 
+	if (menu == NULL)
 	    temp = XtParent(temp);
 	else
 	    break;
@@ -805,7 +805,7 @@ PopupMenu(Widget w)
 	if (menu_x + menu_width > scr_width)
 	    menu_x = scr_width - menu_width;
     }
-    if (menu_x < 0) 
+    if (menu_x < 0)
 	menu_x = 0;
 
     if (menu_y >= 0) {

@@ -213,7 +213,7 @@ class Gen(GenCommon):
             print(out[0:64])
             out = out[64:]
             offset += 32
-    
+
     # Processes a file.
     def process_file(self, filename):
         f = open(filename, 'r')

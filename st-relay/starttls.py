@@ -76,7 +76,7 @@ class starttls_layer(ttelnet, consumer.consumer):
         else:
             self.tls_ready = True
         return True
-    
+
     def negotiation_complete(self) -> bool:
         '''Check for TLS negotiation complete'''
         return self.tls_ready

@@ -960,7 +960,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		    u++;
 		}
 	    } while (fd < 0);
-    
+
 #if !defined(_WIN32) /*[*/
 	    fcntl(fd, F_SETFD, 1);
 #endif /*]*/

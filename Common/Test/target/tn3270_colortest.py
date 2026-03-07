@@ -78,7 +78,7 @@ class colortest(tn3270.tn3270_server):
         if ttype.startswith('IBM-327') and ttype.endswith('-E'):
             return None
         return 'Need an extended (-E) model of 3270 or IBM-DYNAMIC terminal type.'
-    
+
     def start3270(self):
         '''Start 3270 mode'''
         self.debug('color', f'ttype is {self.dinfo.ttype}')

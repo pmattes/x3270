@@ -115,7 +115,7 @@ class TestS3270ExtendedDataStream(cti):
         # Wait for the process to exit.
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
     # s3270 mixed-case oversize test
     def test_s3270_mixed_case_oversize(self):
 

@@ -536,7 +536,7 @@ class TestS3270Json(cti):
         # Clean up.
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
         self.vgwait(s3270)
-    
+
     # Verify socket JSON result-err
     def test_s3270_socket_json_result_err(self):
 
@@ -571,7 +571,7 @@ class TestS3270Json(cti):
     @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
     def test_s3270_pipechild_json_result_err(self):
         self.s3270_pipechild(self, suffix='-triple')
-    
+
     # Test JSON with child pipe I/O (POSIX only).
     @unittest.skipIf(sys.platform.startswith('win'), "Windows does not support FD pipes")
     def test_s3270_pipechild_json_result_spaces(self):

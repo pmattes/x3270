@@ -46,7 +46,7 @@ class TestX3270FieldEnd(cti):
         out = xdotool.communicate()[0].decode('utf8').strip()
         xdotool.wait(2)
         return out != ''
-    
+
     # x3270 FieldEnd test.
     def test_x3270_FieldEnd(self):
 

@@ -2,7 +2,7 @@
  * Copyright (c) 1996-2022 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -14,7 +14,7 @@
  *     * Neither the names of Paul Mattes, Dick Altenbern nor their
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY PAUL MATTES AND DICK ALTENBERN "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -48,7 +48,7 @@ typedef struct sr {
 
 struct toggle_list {                    /* List of toggle widgets */
     Widget *widgets;
-};  
+};
 
 typedef enum { T_NUMERIC, T_HOSTFILE, T_UNIXFILE, T_COMMAND } text_t;
 extern text_t t_numeric;
