@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2025 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -416,7 +416,7 @@ read_keymap(const char *name, bool temp)
     rc_3270 = locate_keymap(name_3270, &fn_3270, &r0_3270);
     rc_nvt = locate_keymap(name_nvt, &fn_nvt, &r0_nvt);
     if (rc < 0 && rc_3270 < 0 && rc_nvt < 0) {
-	popup_an_error("No such keymap resource or file: %s", name);
+	popup_an_error("No such keymap resource or file: %s", scatv(name));
 	Free(name_3270);
 	Free(name_nvt);
 	return false;
@@ -1267,15 +1267,13 @@ keymap_dump(void)
 	    char buf[1024];
 	    char *s = buf;
 	    char dbuf[128];
-	    char *t = safe_string(k->action);
 
 	    for (i = 0; i < k->ncodes; i++) {
 		s += sprintf(s, " %s", decode_key(k->codes[i],
 			    (k->hints[i] & KM_HINTS) | KM_KEYMAP, dbuf));
 	    }
 	    vb_appendf(&r, "[%s:%d%s]%s: %s\n", k->file, k->line,
-		k->temp? " temp": "", buf, t);
-	    Free(t);
+		k->temp? " temp": "", buf, scatv(k->action));
 	}
     }
 

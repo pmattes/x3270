@@ -5527,16 +5527,15 @@ screen_newcodepage(char *cpname)
 	break;
     case CS_NOTFOUND:
 	Free(old_codepage);
-	popup_an_error("Cannot find definition of host code page \"%s\"",
-		cpname);
+	popup_an_error("Cannot find definition of host code page '%s'", scatv(cpname));
 	break;
     case CS_BAD:
 	Free(old_codepage);
-	popup_an_error("Invalid code page definition for \"%s\"", cpname);
+	popup_an_error("Invalid code page definition for '%s'", scatv(cpname));
 	break;
     case CS_PREREQ:
 	Free(old_codepage);
-	popup_an_error("No fonts for host code page \"%s\"", cpname);
+	popup_an_error("No fonts for host code page '%s'", scatv(cpname));
 	break;
     case CS_ILLEGAL:
 	/* Error already popped up. */

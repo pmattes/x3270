@@ -47,7 +47,6 @@
 #include "popups.h"
 #include "product.h"
 #include "query.h"
-#include "save.h"
 #include "see.h"
 #include "split_host.h"
 #include "telnet.h"
@@ -327,10 +326,11 @@ query_all_strings(bool tracehdr)
 	    continue;
 	}
 
-	s = (queries[i].fn? (*queries[i].fn)(): queries[i].string);
+	s = queries[i].fn? (*queries[i].fn)(): queries[i].string;
 	if (s == NULL) {
 	    s = "";
 	}
+	s = (queries[i].flags & QF_MULTILINE)? mscatv(s): scatv(s);
 	if (queries[i].flags & QF_MULTILINE) {
 	    const char *rest = s;
 	    const char *nl;
@@ -409,13 +409,12 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
     case 0:
 	for (i = 0; i < num_queries; i++) {
 	    if (!(queries[i].flags & (QF_HIDDEN | QF_ALIAS | QF_DEPRECATED))) {
-		const char *s = (queries[i].fn? (*queries[i].fn)():
-			queries[i].string);
+		const char *s = scatv(queries[i].fn? (*queries[i].fn)(): queries[i].string);
 
 		if (s == NULL) {
 		    s = "";
 		}
-		if ((queries[i].flags & QF_MULTILINE) && strcmp(s, "")) {
+		if ((queries[i].flags & QF_MULTILINE) && *s) {
 		    s = "...";
 		}
 		action_output("%s:%s%s", queries[i].name, *s? " ": "", s);
@@ -471,10 +470,10 @@ query_common(const char *name, ia_t ia, unsigned argc, const char **argv)
 	    if (s == NULL) {
 		s = "";
 	    }
-	    action_output("%s\n", s);
+	    action_output("%s\n", (queries[i].flags & QF_MULTILINE)? mscatv(s): scatv(s));
 	    return true;
 	}
-	popup_an_error("%s(): Unknown parameter '%s'", name, argv[0]);
+	popup_an_error("%s(): Unknown parameter '%s'", name, scatv(argv[0]));
 	return false;
     }
 

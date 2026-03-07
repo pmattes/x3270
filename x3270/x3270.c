@@ -76,6 +76,7 @@
 #include "proxy_toggle.h"
 #include "query.h"
 #include "resolver.h"
+#include "resolver_pipe.h"
 #include "resourcesc.h"
 #include "rpq.h"
 #include "save_restore.h"
@@ -108,7 +109,6 @@
 #include "xstatus.h"
 
 /* Globals */
-const char     *programname;
 Display        *display;
 int             default_screen;
 Window          root_window;
@@ -124,9 +124,7 @@ Pixmap          gray;
 XrmDatabase     rdb;
 AppRes		appres;
 xappres_t	xappres;
-bool		exiting = false;
 char           *user_title = NULL;
-char	       *command_string;
 
 /* Statics */
 static void	peek_at_xevent(XEvent *);
@@ -461,7 +459,7 @@ save_command_string(int argc, char *argv[])
 
     vb_init(&r);
     for (i = 0; i < argc; i++) {
-	vb_appendf(&r, "%s%s", i?" ": "", argv[i]);
+	vb_appendf(&r, "%s%s", i? " ": "", sscatv(argv[i]));
     }
     command_string = vb_consume(&r);
 }
@@ -480,6 +478,7 @@ main(int argc, char *argv[])
     char *session = NULL;
     XtResource *res;
     XtResource *xres;
+    const char *errmsg;
 
     /*
      * Make sure the Xt and x3270 Boolean types line up.
@@ -567,6 +566,7 @@ main(int argc, char *argv[])
     prefer_register();
     telnet_new_environ_register();
     rpq_register();
+    resolver_pipe_register();
 
     /* Save the original command line. */
     save_command_string(argc, argv);
@@ -818,18 +818,15 @@ main(int argc, char *argv[])
     case CS_OKAY:
 	break;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition for host code page \"%s\"",
-		appres.codepage);
+	popup_an_error("Cannot find definition of host code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
 	break;
     case CS_BAD:
-	popup_an_error("Invalid definition for host code page \"%s\"",
-		appres.codepage);
+	popup_an_error("Invalid definition for host code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
 	break;
     case CS_PREREQ:
-	popup_an_error("No fonts for host code page \"%s\"",
-		appres.codepage);
+	popup_an_error("No fonts for host code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
 	break;
     case CS_ILLEGAL:
@@ -850,8 +847,8 @@ main(int argc, char *argv[])
     icon_init();
 
     hostfile_init();
-    if (!cookiefile_init()) {
-        exit(1);
+    if (!cookiefile_init(appres.cookie_file, &errmsg)) {
+        Error(errmsg);
     }
 
     if (xappres.char_class != NULL) {

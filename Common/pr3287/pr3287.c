@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2025 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -143,6 +143,7 @@
 #include "codepage.h"
 #include "trace.h"
 #include "ctlrc.h"
+#include "nhp.h"
 #include "popups.h"
 #include "pr3287.h"
 #include "proxy.h"
@@ -150,6 +151,7 @@
 #include "resolver.h"
 #include "resources.h"
 #include "sio.h"
+#include "sockaddr_46.h"
 #include "split_host.h"
 #include "telnet_core.h"
 #include "unicodec.h"
@@ -188,7 +190,6 @@ static int proxy_type = 0;
 static char *proxy_user = NULL;
 static char *proxy_host = NULL;
 static char *proxy_portname = NULL;
-static unsigned short proxy_port = 0;
 
 void pr3287_exit(int);
 
@@ -563,13 +564,14 @@ main(int argc, char *argv[])
 {
     int i;
     char *lu = NULL;
-    char *host = NULL;
-    char *port = "23";
+    char *hostname = NULL;
+    char *portname = "23";
     char *accept = NULL;
     unsigned prefixes;
     char *error;
     char *xtable = NULL;
-    unsigned short p;
+    unsigned short proxy_port;
+    unsigned short host_port;
     socket_t s = INVALID_SOCKET;
     int rc = 0;
     int report_success = 0;
@@ -849,7 +851,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    usage(NULL);
 	}
     }
-    if (argc != i + 1) {
+    if (argc < i + 1) {
+	usage("Missing command-line options");
+    }
+    if (argc > i + 1) {
 	usage("Too many command-line options");
     }
 
@@ -857,13 +862,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
      * Pick apart the hostname, LUs and port.
      * We allow "L:" and "<luname>@" in either order.
      */
-    if (!new_split_host(argv[i],  &lu, &host, &port, &accept, &prefixes,
+    if (!new_split_host(argv[i],  &lu, &hostname, &portname, &accept, &prefixes,
 		&error)) {
 	fprintf(stderr, "%s\n", error);
 	pr3287_exit(1);
     }
-    if (port == NULL) {
-	port = "23";
+    if (portname == NULL) {
+	portname = "23";
     }
 
     if (HOST_nFLAG(prefixes, TLS_HOST)) {
@@ -1048,7 +1053,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
     /* Set up the proxy. */
     if (options.proxy_spec != NULL) {
 	proxy_type = proxy_setup(options.proxy_spec,  &proxy_user,
-		    &proxy_host, &proxy_portname);
+		    &proxy_host, &proxy_portname, false);
 	if (proxy_type < 0) {
 	    pr3287_exit(1);
 	}
@@ -1084,11 +1089,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
      * option is in effect.
      */
     for (;;) {
-	typedef union {
-	    struct sockaddr sa;
-	    struct sockaddr_in sin;
-	    struct sockaddr_in6 sin6;
-	} sockaddr_46_t;
 #       define NUM_HA 4
 	sockaddr_46_t ha[NUM_HA];
 	socklen_t ha_len[NUM_HA];
@@ -1102,7 +1102,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    char *ptr;
 	    struct servent *sp;
 
-	    if (resolve_host_and_port(proxy_host, proxy_portname, &proxy_port,
+	    if (resolve_host_and_port_blocking(proxy_host, proxy_portname, PF_UNSPEC, &proxy_port,
 			&ha[0].sa, sizeof(sockaddr_46_t), ha_len, &errtxt,
 			NUM_HA, &n_ha) < 0) {
 		popup_an_error("%s", errtxt);
@@ -1110,19 +1110,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		goto retry;
 	    }
 
-	    lport = strtoul(port, &ptr, 0);
-	    if (ptr == port || *ptr != '\0' || lport == 0L || lport & ~0xffff) {
-		if (!(sp = getservbyname(port, "tcp"))) {
-		    popup_an_error("Unknown port number or service: %s", port);
+	    lport = strtoul(portname, &ptr, 0);
+	    if (ptr == portname || *ptr != '\0' || lport == 0L || lport & ~0xffff) {
+		if (!(sp = getservbyname(portname, "tcp"))) {
+		    popup_an_error("Unknown port number or service: %s", portname);
 		    rc = 1;
 		    goto retry;
 		}
-		p = ntohs(sp->s_port);
+		host_port = ntohs(sp->s_port);
 	    } else {
-		p = (unsigned short)lport;
+		host_port = (unsigned short)lport;
 	    }
 	} else {
-	    if (resolve_host_and_port(host, port, &p, &ha[0].sa,
+	    if (resolve_host_and_port_blocking(hostname, portname, PF_UNSPEC, &host_port, &ha[0].sa,
 			sizeof(sockaddr_46_t), ha_len, &errtxt, NUM_HA,
 			&n_ha) < 0) {
 		popup_an_error("%s", errtxt);
@@ -1146,15 +1146,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	    }
 	    if (connect(s, &ha[ha_ix].sa, ha_len[ha_ix]) == 0) {
 		/* Success! */
-		if (ha[ha_ix].sa.sa_family == AF_INET) {
-		    p = htons(ha[ha_ix].sin.sin_port);
-		} else {
-		    p = htons(ha[ha_ix].sin6.sin6_port);
-		}
 		break;
 	    }
 
-	    popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: host);
+	    popup_a_sockerr("%s", (proxy_type > 0)? proxy_host: hostname);
 	    SOCK_CLOSE(s);
 	    s = INVALID_SOCKET;
 	}
@@ -1169,7 +1164,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		fprintf(stderr, "Connected to proxy server %s, port %u\n",
 			proxy_host, proxy_port);
 	    }
-	    if (proxy_negotiate(s, proxy_user, host, p, true) != PX_SUCCESS) {
+	    if (proxy_negotiate(s, proxy_user, hostname, host_port, NULL) != PX_SUCCESS) {
 		rc = 1;
 		goto retry;
 	    }
@@ -1177,7 +1172,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 	/* Say hello. */
 	if (options.verbose) {
-	    fprintf(stderr, "Connected to %s, port %u%s\n", host, p,
+	    fprintf(stderr, "Connected to %s, port %u%s\n", hostname, host_port,
 		    options.tls_host? " via TLS": "");
 	    if (options.assoc != NULL) {
 		fprintf(stderr, "Associating with LU %s\n", options.assoc);
@@ -1191,7 +1186,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		    options.printer? options.printer: "(none)");
 #endif /*]*/
 	}
-	vctrace(TC_SOCKET, "Connected to %s, port %u%s\n", host, p,
+	vctrace(TC_SOCKET, "Connected to %s, port %u%s\n", hostname, host_port,
 		options.tls_host? " via TLS": "");
 	if (options.assoc != NULL) {
 	    vctrace(TC_TN3270, "Associating with LU %s\n", options.assoc);
@@ -1205,7 +1200,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 
 	/* Negotiate. */
-	if (!pr_net_negotiate(host, &ha[ha_ix].sa, ha_len[ha_ix], s, lu,
+	if (!pr_net_negotiate(hostname, &ha[ha_ix].sa, ha_len[ha_ix], s, lu,
 		    options.assoc)) {
 	    rc = 1;
 	    goto retry;
@@ -1213,7 +1208,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 	/* Report sudden success. */
 	if (report_success) {
-	    errmsg("Connected to %s, port %u", host, p);
+	    errmsg("Connected to %s, port %u", hostname, host_port);
 	    report_success = 0;
 	}
 
@@ -1236,6 +1231,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	/* Close the socket. */
 	if (s != INVALID_SOCKET) {
 	    net_disconnect(true);
+	    proxy_close();
 	    s = INVALID_SOCKET;
 	}
 

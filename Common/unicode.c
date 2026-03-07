@@ -1239,6 +1239,9 @@ multibyte_to_unicode_f(const char *mb, size_t mb_len, int *consumedp,
     int nw;
     ucs4_t ucs4;
 
+    *errorp = ME_NONE;
+    *consumedp = 0;
+
     if (is_utf8 || force_utf8) {
 	/* Translate from UTF-8 to UCS-4. */
 	nw = utf8_to_unicode(mb, (int)mb_len, &ucs4);

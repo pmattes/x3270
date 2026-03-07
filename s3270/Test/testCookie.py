@@ -275,14 +275,19 @@ class TestS3270Cookie(cti):
 
         errmsg = s3270.stderr.readlines()
         s3270.stderr.close()
-        self.assertTrue(b'invalid cookie' in errmsg[0])
+        self.assertTrue(b'Cookie file contains invalid character' in errmsg[0])
         os.unlink(tf_name)
     
     def test_s3270_s3270_cookie_filled_wrong_char(self):
         self.s3270_s3270_cookie_filled_wrong(',')
     def test_s3270_s3270_cookie_filled_wrong_whitespace(self):
         self.s3270_s3270_cookie_filled_wrong('ab cd')
-
+    def test_s3270_s3270_cookie_filled_wrong_ctlchar(self):
+        self.s3270_s3270_cookie_filled_wrong('ab\tcd')
+    def test_s3270_s3270_cookie_filled_wrong_del(self):
+        self.s3270_s3270_cookie_filled_wrong('ab\x7fcd')
+    def test_s3270_s3270_cookie_filled_wrong_meta(self):
+        self.s3270_s3270_cookie_filled_wrong('ab\xfecd')
 
 if __name__ == '__main__':
     unittest.main()

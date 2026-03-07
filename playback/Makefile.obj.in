@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2025 Paul Mattes.
+# Copyright (c) 1999-2026 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,12 @@ include playback_files.mk libs.mk
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @CPPFLAGS@
-override CFLAGS += $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
-LDFLAGS = @LDFLAGS@
+override CFLAGS += $(EXTRA_FLAGS) $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) @CFLAGS@
+LDFLAGS = $(EXTRA_FLAGS) @LDFLAGS@
 LIBS = @LIBS@
 
-playback: $(PLAYBACK_OBJECTS) $(DEP3270) $(DEP32XX)
-	$(CC) -o $@ $(LDFLAGS) $(PLAYBACK_OBJECTS) $(LD3270) $(LD32XX) $(LIBS)
+playback: $(PLAYBACK_OBJECTS) $(DEP32XX)
+	$(CC) -o $@ $(LDFLAGS) $(PLAYBACK_OBJECTS) $(LD32XX) $(LIBS)
 
 clean:
 	$(RM) *.o

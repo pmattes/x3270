@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2015 Paul Mattes.
+ * Copyright (c) 1999-2006 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,5 @@
  *	save.h
  *		Declarations for save.c.
  */
-
-extern char *command_string;
 
 void save_yourself(void);

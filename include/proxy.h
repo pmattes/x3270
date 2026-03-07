@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2024 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,11 +56,12 @@ typedef enum {
     PX_WANTMORE		/* more input needed */
 } proxy_negotiate_ret_t;
 
+typedef void proxy_disconnect_fn(void);
 typedef void *proxy_t;
-int proxy_setup(const char *spec, char **puser, char **phost, char **pport);
+int proxy_setup(const char *spec, char **puser, char **phost, char **pport, bool connecting);
 proxy_negotiate_ret_t proxy_negotiate(socket_t fd, const char *user,
-	const char *host, unsigned short port, bool blocking);
-proxy_negotiate_ret_t proxy_continue(void);
+	const char *host, unsigned short port, proxy_disconnect_fn async_disconnect);
+proxy_negotiate_ret_t proxy_continue(socket_t fd);
 void proxy_close(void);
 const char *proxy_type_name(proxytype_t type);
 bool proxy_takes_username(proxytype_t type);

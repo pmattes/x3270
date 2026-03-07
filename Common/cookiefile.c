@@ -34,44 +34,72 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 
-#include "appres.h"
-#include "utils.h"
-#include "wincmn.h"
+#include "txa.h"
+#include "xscatv.h"
 
 #if defined(_WIN32) /*[*/
 # include "aclapi.h"
 # include "accctrl.h"
+# include "wincmn.h"
 #endif /*]*/
 
 #include "cookiefile.h"
 
 #define GEN_LENGTH	64
 
-static char *cookie_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.";
+#define MIN_COOKIE_CHAR	0x21	/* '!' */
+#define MAX_COOKIE_CHAR	0x7e	/* '~' */
 
+/* Within the printable ASCII-7 range, characters that can't be in cookies. */
+static char *bad_printable_cookie_chars = " =;\"\\(),#@:?";
+
+/* Generate a cookie. */
 static char *
 gen_cookie(void)
 {
+    static char cookie_chars[(MAX_COOKIE_CHAR - MIN_COOKIE_CHAR) + 1];
+    static int ncc = 0;
     static char buf[GEN_LENGTH + 1];
     int i;
 
+    if (ncc == 0) {
+	/* Fill 'cookie_chars' with all o the valid characters for cookies. */
+	for (i = MIN_COOKIE_CHAR; i <= MAX_COOKIE_CHAR; i++) {
+	    if (strchr(bad_printable_cookie_chars, i) == NULL) {
+		cookie_chars[ncc++] = (char)i;
+	    }
+	}
+    }
+
     for (i = 0; i < GEN_LENGTH; i++) {
-	buf[i] = cookie_chars[random() % strlen(cookie_chars)];
+	buf[i] = cookie_chars[random() % ncc];
     }
     buf[GEN_LENGTH] = '\0';
     return buf;
 }
 
+/*
+ * Expand an invalid cookie character for display.
+ */
+static const char *
+expand_invalid_cookie_char(const char *s)
+{
+    return txdFree(xscatv(s, strlen(s), 1, XSCQ_NONE, XSCF_DEFAULT));
+}
+
 /**
  * Cookie file initialization.
+ * @param[in] filename	Name of cookie file
+ * @param[out] errmsg	Returned error message, if initialization fails.
+ *
  * @return true if initialization was successful
  */
 bool
-cookiefile_init(void)
+cookiefile_init(const char *filename, const char **errmsg)
 {
-    static char bad_chars[] = { '=', ';', ' ', '"', '\\', '(', ')', ',', '#', '@', ':', '?', 0 };
     int i;
     int fd = -1;
     char *cookie;
@@ -81,23 +109,24 @@ cookiefile_init(void)
     DWORD rc;
 #endif /*]*/
 
-    if (appres.cookie_file == NULL) {
+    *errmsg = NULL;
+    if (filename == NULL) {
 	return true;
     }
 
-    if (access(appres.cookie_file, R_OK) == 0) {
+    if (access(filename, R_OK) == 0) {
 	char read_buf[1024];
 	ssize_t nr;
 
 	/* The file exists. Read the cookie from it. */
-	fd = open(appres.cookie_file, O_RDONLY);
+	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
-	    perror(appres.cookie_file);
+	    *errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 	    goto fail;
 	}
 	nr = read(fd, read_buf, sizeof(read_buf) - 1);
 	if (nr < 0) {
-	    perror(appres.cookie_file);
+	    *errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 	    goto fail;
 	}
 	while (nr > 0 && isspace((int)read_buf[nr - 1])) {
@@ -110,9 +139,9 @@ cookiefile_init(void)
 
 	    /* Re-open the file in write mode. */
 	    close(fd);
-	    fd = open(appres.cookie_file, O_WRONLY | O_TRUNC);
+	    fd = open(filename, O_WRONLY | O_TRUNC);
 	    if (fd < 0) {
-		perror(appres.cookie_file);
+		*errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 		goto fail;
 	    }
 
@@ -120,21 +149,22 @@ cookiefile_init(void)
 	    lseek(fd, 0, SEEK_SET);
 	    nw = write(fd, gen, (unsigned int)strlen(gen));
 	    if (nw < 0) {
-		perror(appres.cookie_file);
+		*errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 		goto fail;
 	    }
 	    cookie = gen;
 	} else {
 	    /* Check for invalid characters. */
 	    for (i = 0; read_buf[i]; i++) {
-		if (isspace((int)read_buf[i])) {
-		    fprintf(stderr, "%s contains an invalid cookie, contains whitespace\n", appres.cookie_file);
+		unsigned char c = read_buf[i];
+
+		if (strchr(bad_printable_cookie_chars, c) != NULL) {
+		    *errmsg = txAsprintf("Cookie file contains invalid character '%c'", c);
 		    goto fail;
 		}
-	    }
-	    for (i = 0; bad_chars[i]; i++) {
-		if (strchr(read_buf, bad_chars[i]) != NULL) {
-		    fprintf(stderr, "%s contains an invalid cookie, contains '%c'\n", appres.cookie_file, bad_chars[i]);
+
+		if (c < MIN_COOKIE_CHAR || c > MAX_COOKIE_CHAR) {
+		    *errmsg = txAsprintf("Cookie file contains invalid character '%s'", expand_invalid_cookie_char(&read_buf[i]));
 		    goto fail;
 		}
 	    }
@@ -145,16 +175,16 @@ cookiefile_init(void)
 
 	/* Create the file. */
 #if !defined(_WIN32) /*[*/
-	fd = open(appres.cookie_file, O_WRONLY | O_CREAT | O_EXCL, 0400);
+	fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0400);
 #else /*][*/
-	fd = open(appres.cookie_file, O_WRONLY | O_CREAT | O_EXCL, S_IREAD);
+	fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, S_IREAD);
 #endif /*]*/
 	if (fd < 0) {
-	    perror(appres.cookie_file);
+	    *errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 	    goto fail;
 	}
 	if (write(fd, gen, (unsigned int)strlen(gen)) < 0) {
-	    perror("cookiefile write");
+	    *errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 	    goto fail;
 	}
 	cookie = gen;
@@ -162,8 +192,9 @@ cookiefile_init(void)
 
     /* Make the file reasonably secure. */
 #if !defined(_WIN32) /*[*/
-    chmod(appres.cookie_file, 0400);
+    chmod(filename, 0400);
 #else /*][*/
+    memset(eas, 0, sizeof(eas));
     eas[0].grfAccessPermissions = GENERIC_ALL;
     eas[0].grfAccessMode = GRANT_ACCESS;
     eas[0].grfInheritance = NO_INHERITANCE;
@@ -173,18 +204,23 @@ cookiefile_init(void)
 
     rc = SetEntriesInAcl(1, &eas[0], NULL, &pacl);
     if (rc != ERROR_SUCCESS) {
-        fprintf(stderr, "SetEntriesInAcl(%s) failed: 0x%x\n", appres.cookie_file, (unsigned)rc);
+        *errmsg = txAsprintf("Cookie file: SetEntriesInAcl failed: 0x%x", (unsigned)rc);
 	goto fail;
     }
 
-    rc = SetNamedSecurityInfoA(appres.cookie_file, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
+    rc = SetNamedSecurityInfoA((char *)filename, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
 	    NULL, NULL, pacl, NULL);
     if (rc != ERROR_SUCCESS) {
-        fprintf(stderr, "SetNamedSecurityInfo(%s) failed: 0x%x\n", appres.cookie_file, (unsigned)rc);
+        *errmsg = txAsprintf("Cookie file: SetNamedSecurityInfo failed: 0x%x", (unsigned)rc);
 	goto fail;
     }
 #endif
 
+#if defined(_WIN32) /*[*/
+    if (pacl != 0) {
+	LocalFree(pacl);
+    }
+#endif /*]*/
     if (fd >= 0) {
 	close(fd);
     }
@@ -192,7 +228,11 @@ cookiefile_init(void)
     return true;
 
 fail:
-    fflush(stderr);
+#if defined(_WIN32) /*[*/
+    if (pacl != 0) {
+	LocalFree(pacl);
+    }
+#endif /*]*/
     if (fd >= 0) {
 	close(fd);
     }

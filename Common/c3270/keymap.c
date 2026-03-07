@@ -379,7 +379,7 @@ read_keymap(const char *name, bool temp)
     char *r0, *r0_3270, *r0_nvt;
 
     if (master_keymap != NULL && !strcmp(name, master_keymap->name)) {
-	popup_an_error("Duplicate keymap: %s", name);
+	popup_an_error("Duplicate keymap: %s", scatv(name));
 	return false;
     }
 
@@ -387,7 +387,7 @@ read_keymap(const char *name, bool temp)
     rc_3270 = locate_keymap(name_3270, &fn_3270, &r0_3270);
     rc_nvt = locate_keymap(name_nvt, &fn_nvt, &r0_nvt);
     if (rc < 0 && rc_3270 < 0 && rc_nvt < 0) {
-	popup_an_error("No such keymap resource or file: %s", name);
+	popup_an_error("No such keymap resource or file: %s", scatv(name));
 	Free(name_3270);
 	Free(name_nvt);
 	return false;
@@ -472,11 +472,11 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
 	/* Split. */
 	if (rc < 0 ||
 	    (r == NULL && split_dresource(&s, &left, &right) < 0)) {
-	    popup_an_error("Keymap %s, line %d: syntax error", fn, line);
+	    popup_an_error("Keymap %s, line %d: syntax error", scatv(fn), line);
 	    goto done;
 	}
 	if (!validate_command(right, (int)(right - left), &action_error)) {
-	    popup_an_error("Keymap %s, line %d: error:\n%s", fn, line,
+	    popup_an_error("Keymap %s, line %d: error:\n%s", scatv(fn), line,
 		    action_error);
 	    Free(action_error);
 	    goto done;
@@ -484,11 +484,11 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
 
 	pkr = parse_keydef(&left, &ccode, &hint);
 	if (pkr == 0) {
-	    popup_an_error("Keymap %s, line %d: Missing <Key>", fn, line);
+	    popup_an_error("Keymap %s, line %d: Missing <Key>", scatv(fn), line);
 	    goto done;
 	}
 	if (pkr < 0) {
-	    popup_an_error("Keymap %s, line %d: %s", fn, line,
+	    popup_an_error("Keymap %s, line %d: %s", scatv(fn), line,
 		    pk_errmsg[-1 - pkr]);
 	    goto done;
 	}
@@ -505,7 +505,7 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
 	    hints[ncodes - 1] = hint;
 	    pkr = parse_keydef(&left, &ccode, &hint);
 	    if (pkr < 0) {
-		popup_an_error("Keymap %s, line %d: %s", fn, line,
+		popup_an_error("Keymap %s, line %d: %s", scatv(fn), line,
 			pk_errmsg[-1 - pkr]);
 		goto done;
 	    }
@@ -1141,15 +1141,13 @@ keymap_dump(void)
 		    k->successor->file, k->successor->line);
 	} else if (!IS_INACTIVE(k)) {
 	    int i;
-	    char *t;
 
 	    vb_appendf(&r, "[%s:%d%s]", k->file, k->line, k->temp? " temp": "");
 	    for (i = 0; i < k->ncodes; i++) {
 		vb_appendf(&r, " %s", decode_key(k->codes[i].key, k->codes[i].ucs4,
 			    (k->hints[i] & KM_HINTS) | KM_KEYMAP | k->codes[i].modifiers));
 	    }
-	    vb_appendf(&r, ": %s\n", (t = safe_string(k->action)));
-	    Free(t);
+	    vb_appendf(&r, ": %s\n", scatv(k->action));
 	}
     }
 

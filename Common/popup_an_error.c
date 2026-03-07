@@ -141,13 +141,13 @@ trace_error(pae_t type, const char *message)
     vb_init(&r);
     while ((c = *message++) != '\0') {
 	if (c == '\n') {
-	    vb_appends(&r, "\\n");
+	    vb_appends(&r, "^J");
 	} else {
 	    vb_appendf(&r, "%c", c);
 	}
     }
 
     res = vb_consume(&r);
-    vtrace("Error: %s%s\n", (type == ET_CONNECT)? "Connection failed:\\n": "", res);
+    vtrace("Error: %s%s\n", (type == ET_CONNECT)? "Connection failed:^J": "", res);
     Free(res);
 }

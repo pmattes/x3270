@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -301,7 +301,7 @@ toggle_values(void)
     for (u = extended_upcalls; u != NULL; u = u->next) {
 	tnv = (tnv_t *)Realloc(tnv, (n_tnv + 1) * sizeof(tnv_t));
 	tnv[n_tnv].name = u->name;
-	tnv[n_tnv].value = u_value(u);
+	tnv[n_tnv].value = scatv(u_value(u));
 	n_tnv++;
     }
 
@@ -441,7 +441,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	     * Set() accepts 0 arguments (show all), 1 argument (show one), or
 	     * an even number of arguments (set one or more).
 	     */
-	    popup_an_error("%s(): '%s' requires a value", name, argv[argc - 1]);
+	    popup_an_error("%s(): '%s' requires a value", name, scatv(argv[argc - 1]));
 	    return false;
 	}
     }
@@ -470,7 +470,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 	    }
 	}
 	if (toggle_names[j].name == NULL && u == NULL) {
-	    popup_an_error("%s(): Unknown toggle name '%s'", name, argv[arg]);
+	    popup_an_error("%s(): Unknown toggle name '%s'", name, scatv(argv[arg]));
 	    goto failed;
 	}
 
@@ -496,7 +496,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		/* Set(x): Display one value. */
 		const char *live;
 		if (u != NULL) {
-		    const char *v = u_value(u);
+		    const char *v = scatv(u_value(u));
 
 		    live = v? v: "\n";
 		} else {
@@ -509,7 +509,7 @@ toggle_common(const char *name, bool is_toggle_action, ia_t ia, unsigned argc,
 		    for (s = disconnect_sets; s != NULL; s = s->next) {
 			if (!strcasecmp(s->resource, argv[arg])) {
 			    if (s->value[0]) {
-				deferred = s->value;
+				deferred = scatv(s->value);
 			    } else {
 				deferred = "\n";
 			    }

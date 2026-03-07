@@ -32,6 +32,7 @@ import unittest
 from subprocess import Popen
 
 from Common.Test.cti import *
+from Common.Test.playback import playback
 
 @requests_timeout
 class TestS3270Nvt(cti):
@@ -232,6 +233,29 @@ class TestS3270Nvt(cti):
         self.window_report('\033[8;;81t', '\033[8;43;81t')
     def test_window_change_omit_cols(self):
         self.window_report('\033[8;45t', '\033[8;45;80t')
+
+    # Test the terminal name.
+    def test_tn(self):
+        # Start 'playback' to read s3270's output.
+        port, ts = unused_port()
+        with playback(self, 's3270/Test/testTn.trc', port=port) as p:
+            ts.close()
+
+            # Start s3270.
+            env = os.environ.copy()
+            env['USER'] = 'pdm'
+            env['USERNAME'] = 'pdm'
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-tn', 'abc\x01def', '-httpd', str(hport), f'n:127.0.0.1:{port}']), env=env)
+            self.children.append(s3270)
+            self.check_listen(hport)
+            ts.close()
+
+            # Negotiate.
+            p.match()
+
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
 
 if __name__ == '__main__':
     unittest.main()

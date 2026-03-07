@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@
 
 #include "split_host.h"
 #include "utils.h"
+#include "xscatv.h"
 
 static const char *pfxstr = "AaCcLlNnPpSsBbYyTt";
 
@@ -124,6 +125,12 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
 	goto done;
     }
 
+    /* Check for invalid characters. */
+    if (!xscatv_safe(start, sl, XSCC_ALL)) {
+	errmsg = "contains invalid characters";
+	goto done;
+    }
+
     /*
      * 'start' now points to the start of the string, and sl is its length.
      */
@@ -146,10 +153,6 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
     memset(skip_map, ' ', sl);
     skip_map[sl] = '\0';
     for (s = start; (size_t)(s - start) < sl; s++) {
-	if (isspace((unsigned char)*s)) {
-	    errmsg = "contains whitespace";
-	    goto done;
-	}
 	if (quoted) {
 	    qmap[uq_len] = '+';
 	    quoted = false;
@@ -363,7 +366,7 @@ done:
 	Free(skip_map);
     }
     if (!rc) {
-	*error = Asprintf("Hostname syntax error in '%s': %s", raw, errmsg);
+	*error = Asprintf("Hostname syntax error: %s", errmsg);
     }
     return rc;
 }

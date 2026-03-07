@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2025 Paul Mattes.
+# Copyright (c) 1999-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,15 +29,16 @@
 all: test
 
 JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o snprintf.o asprintf.o
-BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o sa_malloc.o snprintf.o asprintf.o w3misc.o
+BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o resolver_abs.o sa_malloc.o snprintf.o asprintf.o w3misc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o snprintf.o asprintf.o
 URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o snprintf.o asprintf.o
 DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o snprintf.o asprintf.o
+CATV_OBJS = catv_test.o xscatv.o utf8.o varbuf.o sa_malloc.o asprintf.o snprintf.o
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
-override CFLAGS += $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
+override CFLAGS += $(EXTRA_FLAGS) -DTEST -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
-test: json_test bind_opts_test utf8_test uri_test devname_test
+test: json_test bind_opts_test utf8_test uri_test devname_test catv_test
 	@case `uname -s` in \
 	*_NT*) \
 	  ./json_test.exe $(TESTOPTIONS) && \
@@ -45,6 +46,7 @@ test: json_test bind_opts_test utf8_test uri_test devname_test
 	  ./utf8_test.exe $(TESTOPTIONS) && \
 	  ./uri_test.exe $(TESTOPTIONS) && \
 	  ./devname_test.exe $(TESTOPTIONS) \
+	  ./catv_test.exe $(TESTOPTIONS) \
 	  ;; \
 	*) \
 	  echo "Error: Must run tests on Windows"; exit 1 \
@@ -66,11 +68,14 @@ uri_test: $(URI_OBJS)
 devname_test: $(DEVNAME_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(DEVNAME_OBJS)
 
+catv_test: $(CATV_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(CATV_OBJS)
+
 clean:
 	$(RM) *.o
 
 clobber: clean
-	$(RM) json_test.exe bind_opts_test.exe utf8_test.exe uri_test.exe devname_test.exe
+	$(RM) json_test.exe bind_opts_test.exe utf8_test.exe uri_test.exe devname_test.exe catv_test.exe
 	$(RM) $(LIB3270) *.d
 
 -include $(JSON_OBJS:.o=.d)
@@ -78,3 +83,4 @@ clobber: clean
 -include $(UTF8_OBJS:.o=.d)
 -include $(URI_OBJS:.o=.d)
 -include $(DEVNAME_OBJS:.o=.d)
+-include $(CATV_OBJS:.o=.d)

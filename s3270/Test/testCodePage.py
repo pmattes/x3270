@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #
 # s3270 code page tests
 
+import os
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
@@ -448,6 +449,55 @@ class TestS3270CodePage(cti):
         self.s3270_dbcs_wrap('PrintText')
     def test_s3270_dbcs_wrap_ascii1(self):
         self.s3270_dbcs_wrap('Ascii1')
+
+    # s3270 missing codepage test
+    def test_s3270_missing_codepage(self):
+
+        # Start s3270.
+        http_port, http_ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(http_port)]), stdin=DEVNULL, stdout=DEVNULL)
+        self.children.append(s3270)
+        self.check_listen(http_port)
+        http_ts.close()
+
+        # Switch to a nonexistent codepage.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(codepage,abc\x01)')
+        self.assertFalse(r.ok)
+        result = r.json()['result']
+        self.assertEqual("Cannot find definition of host code page 'abc^A'", result[0])
+
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.vgwait(s3270)
+
+    # s3270 invalid codepage tests
+    def s3270_invalid_codepage(self, cause: str, errmsg: str):
+
+        # Start s3270.
+        env = os.environ.copy()
+        env['CODEPAGE_FAIL'] = cause
+        http_port, http_ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(http_port), '-utenv']), stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE, env=env)
+        self.children.append(s3270)
+        self.check_listen(http_port)
+        http_ts.close()
+
+        # Switch to a bad codepage.
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(codepage,abc\x01)')
+        self.assertFalse(r.ok)
+        result = r.json()['result']
+        self.assertEqual(f"{errmsg} 'abc^A'", result[0])
+
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.vgwait(s3270)
+
+        stderr = s3270.stderr.readlines()[0].decode('utf8').strip()
+        self.assertEqual("Warning: Cannot find code page 'bracket'", stderr)
+        s3270.stderr.close()
+
+    def test_s3270_bad_codepage(self):
+        self.s3270_invalid_codepage('BAD', 'Invalid code page definition for')
+    def test_s3270_no_font_codepage(self):
+        self.s3270_invalid_codepage('PREREQ', 'No fonts for host code page')
 
 if __name__ == '__main__':
     unittest.main()

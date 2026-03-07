@@ -199,6 +199,7 @@ extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
 extern const char	*app;
 extern const char	*build;
+extern char		*command_string;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;
@@ -307,7 +308,8 @@ extern enum cstate cstate; /**< connection state */
 
 /*   network connection status */
 typedef enum {
-    NC_FAILED,		/* failed */
+    NC_INVALID,		/* failed permanently */
+    NC_FAILED,		/* failed transiently */
     NC_RESOLVING,	/* name resolution in progress */
     NC_TLS_PASS,	/* TLS password pending */
     NC_CONNECT_PENDING,	/* connection pending */

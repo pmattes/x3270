@@ -14,6 +14,7 @@
     <ClCompile Include="..\..\Common\ft_cut.c" />
     <ClCompile Include="..\..\Common\ft_dft.c" />
     <ClCompile Include="..\..\Common\Win32\gdi_print.c" />
+    <ClCompile Include="..\..\Common\globals.c" />
     <ClCompile Include="..\..\Common\glue.c" />
     <ClCompile Include="..\..\Common\host.c" />
     <ClCompile Include="..\..\Common\httpd-core.c" />
@@ -34,6 +35,7 @@
     <ClCompile Include="..\..\Common\print_screen.c" />
     <ClCompile Include="..\..\Common\query.c" />
     <ClCompile Include="..\..\Common\readres.c" />
+    <ClCompile Include="..\..\Common\resolver_pipe.c" />
     <ClCompile Include="..\..\Common\Nodisplay\resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
     <ClCompile Include="..\..\Common\sched.c" />
@@ -64,5 +66,6 @@
     <ClCompile Include="..\..\Common\percent_decode.c" />
     <ClCompile Include="..\..\Common\cookiefile.c" />
     <ClCompile Include="favicon.c" />
+    <ClCompile Include="..\..\Common\find_console.c" />
   </ItemGroup>
 </Project>

@@ -27,7 +27,7 @@
 #
 # s3270 Query() tests
 
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import unittest
 
 from Common.Test.cti import *
@@ -164,7 +164,7 @@ class TestS3270Query(cti):
         # Query special characters.
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(SpecialCharacters)')
         result = r.json()['result']
-        self.assertEqual(['intr ^C quit ^\\ erase ^H kill ^U', 'eof ^D werase ^W rprnt ^R lnext ^V'], result)
+        self.assertEqual(['intr ^C quit ^\\ erase ^H kill ^U eof ^D werase ^W rprnt ^R lnext ^V'], result)
 
         # Stop s3270.
         self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
@@ -233,7 +233,7 @@ class TestS3270Query(cti):
     def test_s3270_query_command_line(self):
         # Start s3270.
         http_port, ts = unused_port()
-        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
+        s3270 = Popen(vgwrap(['s3270', '-httpd', f'127.0.0.1:{http_port}', '-user', 'x \x01y\nz']), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
         self.check_listen(http_port)
@@ -241,10 +241,11 @@ class TestS3270Query(cti):
         # Query the command line.
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(CommandLine)')
         self.assertTrue(r.ok)
-        result = r.json()['result'][0].split()
-        self.assertEqual(3, len(result))
-        self.assertTrue(result[0].endswith('s3270') or result[0].endswith('s3270.exe'))
-        self.assertEqual(['-httpd', f'127.0.0.1:{http_port}'], result[1:])
+        result = r.json()['result'][0]
+        rest = f' -httpd 127.0.0.1:{http_port} -user "x ^Ay^Jz"'
+        if 'TRACEALL' in os.environ:
+            rest = ' -trace' + rest
+        self.assertTrue(result.endswith('s3270' + rest) or result.endswith('s3270.exe' + rest))
 
         # Stop s3270.
         self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')

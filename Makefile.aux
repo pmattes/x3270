@@ -74,6 +74,7 @@ windows-release: man
 	$(MAKE) -j12
 	rm -f config.cache
 	./configure -C --host=$(win64)
+	rm -f config.cache
 	$(MAKE) -j12
 	$(MAKE) -C wc3270 -f Makefile.aux $@ VPATH=../Common -I../Common
 
@@ -94,3 +95,13 @@ doxygen-wizard:
 	$(DOXY) -p wc3270/Doxygen-wizard.opts -o obj/doxygen/windows/wizard
 doxygen-clean:
 	rm -rf obj/doxygen/*
+
+# Targets for dual POSIX/Windows builds.
+dual:
+	$(MAKE) -f Makefile.unix
+	$(MAKE) -f Makefile.windows
+dual-configure:
+	rm -f config.cache
+	./configure -C --host=$(win64)
+	rm -f config.cache
+	./configure -C

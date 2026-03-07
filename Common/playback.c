@@ -56,7 +56,7 @@
 #include <assert.h>
 
 #include "bind-opt.h"
-#include "resolver.h"
+#include "nhp.h"
 #include "sa_malloc.h"
 
 #define BSIZE		16384
@@ -1003,4 +1003,12 @@ const char *
 ut_getenv(const char *name)
 {
     return NULL;
+}
+
+/* Local copy of Error. */
+void Error(const char *s)
+{
+    fprintf(stderr, "Fatal: %s\n", s);
+    fflush(stderr);
+    exit(1);
 }

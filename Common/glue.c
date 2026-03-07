@@ -70,6 +70,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utils.h"
+#include "varbuf.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
@@ -100,12 +101,8 @@ static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
 
 /* Globals */
-const char     *programname;
 bool		supports_cmdline_host = true;
 AppRes          appres;
-bool		exiting = false;
-char	       *command_string = NULL;
-char	       *profile_name = NULL;
 char	       *profile_path = NULL;
 
 /* Register a profile merge function. */
@@ -144,7 +141,6 @@ check_session_suffix(const char *name)
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
-    size_t cl;
     int i;
     int hn_argc;
     size_t xcmd_len = 0;
@@ -154,6 +150,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     bool read_session_or_profile = false;
     int suffix_match = -1;
     char *s;
+    varbuf_t r;
 #if !defined(_WIN32) /*[*/
 #   define SEP_CHAR	":"
 #else /*][*/
@@ -184,20 +181,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 
     /* Save the command string for tracing purposes. */
-    cl = 0;
+    vb_init(&r);
     for (i = 0; i < argc; i++) {
-	cl += 1 + strlen(argv[i]);
+	vb_appendf(&r, "%s%s", i? " ": "", sscatv(argv[i]));
     }
-    cl++;
-    command_string = Malloc(cl);
-    command_string[0] = '\0';
-    for (i = 0; i < argc; i++) {
-	if (i == 0) {
-	    strcpy(command_string, argv[i]);
-	} else {
-	    strcat(strcat(command_string, " "), argv[i]);
-	}
-    }
+    command_string = vb_consume(&r);
 
     /*
      * Save the command-line options so they can be reapplied after
@@ -944,6 +932,7 @@ static res_t base_resources[] = {
     { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN },
     { ResTls992,	aoffset(tls992),	XRM_BOOLEAN },
     { ResCookieFile,	aoffset(cookie_file), 	XRM_STRING },
+    { ResUser,		aoffset(user),		XRM_STRING },
     { ResUtEnv,		aoffset(ut_env),	XRM_BOOLEAN },
     { ResRpq,		aoffset(rpq),		XRM_STRING },
 #if defined(_WIN32) /*[*/
@@ -1274,81 +1263,6 @@ parse_clear(const char *arg, const char *where, bool warn)
 
     xparse_xrm(xrm_arg, where, warn);
     Free(xrm_arg);
-}
-
-/*
- * Clean up a string for display (undo what parse_xrm does).
- */
-char *
-safe_string(const char *s)
-{
-    char *t = Malloc(1);
-    int tlen = 1;
-
-    *t = '\0';
-
-    /*
-     * Translate the string to UCS4 a character at a time.
-     * If the result is a control code or backslash, expand it.
-     * Otherwise, translate it back to the local encoding and
-     * append it to the output.
-     */
-    while (*s) {
-	ucs4_t u;
-	int consumed;
-	enum me_fail error;
-
-	u = multibyte_to_unicode(s, strlen(s), &consumed, &error);
-	if (u == 0) {
-	    break;
-	}
-	if (u < ' ') {
-	    char c = 0;
-	    int inc = 0;
-
-	    switch (u) {
-	    case '\b':
-		c = 'b';
-		inc = 2;
-		break;
-	    case '\f':
-		c = 'f';
-		inc = 2;
-		break;
-	    case '\n':
-		c = 'n';
-		inc = 2;
-		break;
-	    case '\r':
-		c = 'r';
-		inc = 2;
-		break;
-	    case '\t':
-		c = 't';
-		inc = 2;
-		break;
-	    default:
-		inc = 6;
-		break;
-	    }
-
-	    t = Realloc(t, tlen + inc);
-	    if (inc == 2) {
-		*(t + tlen - 1) = '\\';
-		*(t + tlen) = c;
-	    } else {
-		sprintf(t, "\\u%04x", u);
-	    }
-	    tlen += inc;
-	} else {
-	    t = Realloc(t, tlen + consumed);
-	    memcpy(t + tlen - 1, s, consumed);
-	    tlen += consumed;
-	}
-	s += consumed;
-    }
-    *(t + tlen - 1) = '\0';
-    return t;
 }
 
 /* Read resources from a file. */

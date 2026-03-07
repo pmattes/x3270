@@ -218,6 +218,8 @@ def vgwrap(command):
         cmd = command
     if 'VALGRIND' in os.environ:
         return ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + cmd
+    elif 'STRACE' in os.environ:
+        return ['strace'] + cmd
     else:
         return cmd
 
@@ -316,9 +318,9 @@ class cti(unittest.TestCase):
                 return
             time.sleep(0.1)
 
-    def check_listen(self, port, ipv6=False):
+    def check_listen(self, port, ipv6=False, timeout=2):
         '''Check for a particular port being listened on'''
-        self.try_until2(lambda p, i: connect_test(p, i), port, ipv6, 2, f'Port {port} is not bound')
+        self.try_until2(lambda p, i: connect_test(p, i), port, ipv6, timeout, f'Port {port} is not bound')
 
     def wait_for_pty_output(self, timeout: int, fd: int, text: str):
         '''Wait for the emulator to produce specific output on the pty'''
@@ -391,6 +393,17 @@ class cti(unittest.TestCase):
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'Program should fail')
         self.assertTrue(stderr[0].startswith("Too many command-line options"), 'Missing "Too many" error')
+        self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
+        self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
+
+    def check_toofew(self, prog):
+        '''Make sure too few command-line options fail'''
+        args = [prog]
+        p = Popen(args, stderr=PIPE)
+        stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
+        rc = p.wait(timeout=2)
+        self.assertNotEqual(0, rc, 'Program should fail')
+        self.assertTrue(stderr[0].startswith("Missing command-line options"), 'Missing "Missing" error')
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 

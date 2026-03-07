@@ -27,6 +27,7 @@
 #
 # pr3287 basic command-line tests
 
+from subprocess import Popen, PIPE
 import unittest
 
 from Common.Test.cti import *
@@ -40,6 +41,7 @@ class TestPr3287BasicCmdline(cti):
         self.check_bad('pr3287')
         self.check_bad2('pr3287')
         self.check_toomany('pr3287')
+        self.check_toofew('pr3287')
         self.check_incomplete('pr3287')
 
 if __name__ == '__main__':

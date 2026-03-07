@@ -89,6 +89,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "resolver_pipe.h"
 #include "rpq.h"
 #include "s3270_proto.h"
 #include "save_restore.h"
@@ -603,6 +604,7 @@ int
 main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
+    const char	*errmsg;
 #if defined(_WIN32) /*[*/
     char	*delenv;
     int		save_argc;
@@ -686,6 +688,7 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
     show_dirs_register();
 #endif /*]*/
+    resolver_pipe_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);
@@ -723,7 +726,7 @@ Type 'help' for help information.\n\n",
 #endif /*]*/
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
-	xs_warning("Cannot find code page \"%s\"", appres.codepage);
+	xs_warning("Cannot find code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
     }
     model_init();
@@ -779,8 +782,9 @@ Type 'help' for help information.\n\n",
     idle_init();
     keymap_init();
     hostfile_init();
-    if (!cookiefile_init()) {
-        exit(1);
+    if (!cookiefile_init(appres.cookie_file, &errmsg)) {
+	popup_an_error("%s", errmsg);
+        x3270_exit(1);
     }
     httpd_objects_init();
 

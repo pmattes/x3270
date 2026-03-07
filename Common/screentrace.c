@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,6 @@
 #include "print_screen.h"
 #include "product.h"
 #include "resources.h"
-#include "save.h"
 #include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"

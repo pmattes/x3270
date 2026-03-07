@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2025 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,9 @@
 #include "proxy_private.h"
 #include "proxy_socks4.h"
 #include "resolver.h"
+#include "sockaddr_46.h"	/* needed by resolver_pipe.h */
+#include "resolver_pipe.h"
+#include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
 #include "txa.h"
@@ -59,41 +62,25 @@ static struct {
     bool use_4a;
     size_t nread;
     unsigned char rbuf[REPLY_LEN];
+    char *host;
+    char *user;
+    unsigned short port;
+    rp_t rp;
+    proxy_disconnect_fn *async_disconnect;
+    sockaddr_46_t ha;
+    socklen_t ha_len;
 } ps = { INVALID_SOCKET, false, 0 };
 
-/* SOCKS version 4 proxy. */
-proxy_negotiate_ret_t
-proxy_socks4(socket_t fd, const char *user, const char *host,
-	unsigned short port, bool force_a)
+static proxy_negotiate_ret_t
+send_request(socket_t fd)
 {
-    struct hostent *hp;
-    struct in_addr ipaddr;
     const char *ruser;
     char *sbuf;
     char *s;
 
-    ps.fd = fd;
-    ps.use_4a = false;
-    ps.nread = 0;
-
-    /* Resolve the hostname to an IPv4 address. */
-    if (force_a) {
-	ps.use_4a = true;
-    } else {
-	hp = gethostbyname(host);
-	if (hp != NULL) {
-	    memcpy(&ipaddr, hp->h_addr, hp->h_length);
-	} else {
-	    ipaddr.s_addr = inet_addr(host);
-	    if (ipaddr.s_addr == (in_addr_t)-1) {
-		ps.use_4a = true;
-	    }
-	}
-    }
-
     /* Resolve the username. */
-    if (user != NULL) {
-	ruser = user;
+    if (ps.user != NULL) {
+	ruser = ps.user;
     } else {
 #if !defined(_WIN32) /*[*/
 	ruser = getenv("USER");
@@ -107,19 +94,19 @@ proxy_socks4(socket_t fd, const char *user, const char *host,
 
     /* Send the request to the server. */
     if (ps.use_4a) {
-	sbuf = Malloc(32 + strlen(ruser) + strlen(host));
+	sbuf = Malloc(32 + strlen(ruser) + strlen(ps.host));
 	s = sbuf;
 	*s++ = 0x04;
 	*s++ = 0x01;
-	SET16(s, port);
+	SET16(s, ps.port);
 	SET32(s, 0x00000001);
 	strcpy(s, ruser);
 	s += strlen(ruser) + 1;
-	strcpy(s, host);
-	s += strlen(host) + 1;
+	strcpy(s, ps.host);
+	s += strlen(ps.host) + 1;
 
-	vctrace(TC_PROXY, "SOCKS4: version 4 connect port %u address 0.0.0.1 user "
-		"'%s' host '%s'\n", port, ruser, host);
+	vctrace(TC_PROXY, "SOCKS4: version 4 connect port %u address 0.0.0.1 user '%s' host '%s'\n",
+		ps.port, ruser, ps.host);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {
@@ -135,14 +122,14 @@ proxy_socks4(socket_t fd, const char *user, const char *host,
 	s = sbuf;
 	*s++ = 0x04;
 	*s++ = 0x01;
-	SET16(s, port);
-	u = ntohl(ipaddr.s_addr);
+	SET16(s, ps.port);
+	u = ntohl(ps.ha.sin.sin_addr.s_addr);
 	SET32(s, u);
 	strcpy(s, ruser);
 	s += strlen(ruser) + 1;
 
-	vctrace(TC_PROXY, "SOCKS4: xmit version 4 connect port %u address %s user "
-		"'%s'\n", port, inet_ntoa(ipaddr), ruser);
+	vctrace(TC_PROXY, "SOCKS4: xmit version 4 connect port %u address %s user '%s'\n",
+		ps.port, inet_ntoa(ps.ha.sin.sin_addr), ruser);
 	trace_netdata('>', (unsigned char *)sbuf, s - sbuf);
 
 	if (send(fd, sbuf, (int)(s - sbuf), 0) < 0) {
@@ -156,16 +143,102 @@ proxy_socks4(socket_t fd, const char *user, const char *host,
     return PX_WANTMORE;
 }
 
+/* Handle a resolution completion. */
+static void
+rp_done(rp_t rp, void *context, bool success, const char *errmsg)
+{
+    if (success) {
+	ps.ha_len = rp_ha_len(rp, 0);
+	memcpy(&ps.ha, rp_haddr(rp, 0), ps.ha_len);
+	if (ps.ha.sa.sa_family != AF_INET) {
+	    vctrace(TC_PROXY, "SOCKS4: %s resolves to IPv6, switching to SOCKS4A\n", ps.host);
+	    ps.use_4a = true;
+	}
+    } else {
+	/* Failed, switch to 4A. */
+        vctrace(TC_PROXY, "SOCKS4: %s %s, switching to SOCKS4A\n", ps.host, errmsg);
+	ps.use_4a = true;
+    }
+
+    /* Send the request. */
+    if (send_request(ps.fd) == PX_FAILURE) {
+        /* Error has already popped up. */
+	ps.async_disconnect();
+    }
+}
+
+/* SOCKS version 4 proxy. */
+proxy_negotiate_ret_t
+proxy_socks4(socket_t fd, const char *user, const char *host,
+	unsigned short port, bool force_a, proxy_disconnect_fn async_disconnect)
+{
+    ps.fd = fd;
+    ps.use_4a = false;
+    ps.nread = 0;
+    Replace(ps.user, NewString(user));
+    Replace(ps.host, NewString(host));
+    ps.port = port;
+
+    /* Resolve the hostname to an IPv4 address. */
+    if (force_a) {
+	ps.use_4a = true;
+    } else {
+	const char *errmsg;
+
+	ps.async_disconnect = async_disconnect;
+        if (async_disconnect == NULL) {
+            rhp_t rv;
+            int nr;
+	    unsigned short rport;
+
+            rv = resolve_host_and_port_blocking(host, NULL, PF_UNSPEC, &rport, &ps.ha.sa, sizeof(ps.ha),
+                    &ps.ha_len, &errmsg, 1, &nr);
+            if (rv == RHP_CANNOT_RESOLVE) {
+                ps.use_4a = true;
+            } else if (RHP_IS_ERROR(rv)) {
+                connect_error("SOCKS4 proxy: %s/%u: %s", host, port, errmsg);
+                return PX_FAILURE;
+            }
+        } else {
+	    rp_result_t result;
+
+	    if (ps.rp == NULL && (ps.rp = rp_alloc(NULL, rp_done)) == NULL) {
+		connect_error("SOCKS4 proxy: unable to allocate resolver context");
+		return PX_FAILURE;
+	    }
+
+	    result = rp_resolve(ps.rp, host, NULL, PF_UNSPEC, &errmsg);
+	    if (result == RP_FAIL) {
+		vctrace(TC_PROXY, "SOCKS4 proxy: %s: %s, switching to SOCKS4A\n", host, errmsg);
+		ps.use_4a = true;
+		/* and continue */
+	    } else if (result == RP_PENDING) {
+		return PX_WANTMORE;
+	    } else {
+		/* Worked synchronously. */
+		ps.ha_len = rp_ha_len(ps.rp, 0);
+		memcpy(&ps.ha, rp_haddr(ps.rp, 0), ps.ha_len);
+		if (ps.ha.sa.sa_family != AF_INET) {
+		    vctrace(TC_PROXY, "SOCKS4 proxy: %s resolves to IPv6, switching to SOCKS4A\n", host);
+		    ps.use_4a = true;
+		}
+	    }
+	}
+    }
+
+    return send_request(fd);
+}
+
 /* SOCKS version 4 continuation. */
 proxy_negotiate_ret_t
-proxy_socks4_continue(void)
+proxy_socks4_continue(socket_t fd)
 {
     /*
      * Process the reply.
      * Read the response.
      */
     for (;;) {
-	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
@@ -181,7 +254,7 @@ proxy_socks4_continue(void)
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
-	    popup_an_error("SOCKS4 proxy: unexpected EOF");
+	    connect_error("SOCKS4 proxy: unexpected EOF");
 	    return PX_FAILURE;
 	    /* XXX: was break */
 	}
@@ -206,16 +279,16 @@ proxy_socks4_continue(void)
     case 0x5a:
 	break;
     case 0x5b:
-	popup_an_error("SOCKS4 proxy: request rejected or failed");
+	connect_error("SOCKS4 proxy: request rejected or failed");
 	return PX_FAILURE;
     case 0x5c:
-	popup_an_error("SOCKS4 proxy: client is not reachable");
+	connect_error("SOCKS4 proxy: client is not reachable");
 	return PX_FAILURE;
     case 0x5d:
-	popup_an_error("SOCKS4 proxy: userid error");
+	connect_error("SOCKS4 proxy: userid error");
 	return PX_FAILURE;
     default:
-	popup_an_error("SOCKS4 proxy: unknown status 0x%02x", ps.rbuf[1]);
+	connect_error("SOCKS4 proxy: unknown status 0x%02x", ps.rbuf[1]);
 	return PX_FAILURE;
     }
 
@@ -228,4 +301,11 @@ proxy_socks4_close(void)
     ps.fd = INVALID_SOCKET;
     ps.use_4a = false;
     ps.nread = 0;
+    Replace(ps.host, NULL);
+    Replace(ps.user, NULL);
+    ps.port = 0;
+    rp_free(&ps.rp);
+    ps.async_disconnect = NULL;
+    memset(&ps.ha, 0, sizeof(sockaddr_46_t));
+    ps.ha_len = 0;
 }

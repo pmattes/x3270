@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2025 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ typedef enum {
     TC_PROXY,		/* Proxy protocols */
     TC_SCHED,		/* Scheduler */
     TC_SCRIPT,		/* Script operations */
+    TC_DNS,		/* Name resolution operations */
     TC_SOCKET,		/* Socket operations */
     TC_TASK,		/* Task operations */
     TC_TELNET,		/* TELNET protocol */

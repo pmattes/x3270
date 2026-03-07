@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -73,6 +73,7 @@
 #include "product.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "resolver_pipe.h"
 #include "rpq.h"
 #include "save_restore.h"
 #include "screen.h"
@@ -181,6 +182,7 @@ int
 main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
+    const char	*errmsg;
 
 #if defined(_WIN32) /*[*/
     get_version_info();
@@ -227,6 +229,7 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
     show_dirs_register();
 #endif /*]*/
+    resolver_pipe_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -235,7 +238,7 @@ main(int argc, char *argv[])
     }
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
-	xs_warning("Cannot find code page \"%s\"", appres.codepage);
+	xs_warning("Cannot find code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
     }
     model_init();
@@ -255,7 +258,8 @@ main(int argc, char *argv[])
     }
     ft_init();
     hostfile_init();
-    if (!cookiefile_init()) {
+    if (!cookiefile_init(appres.cookie_file, &errmsg)) {
+	fprintf(stderr, "%s\n", errmsg);
 	exit(1);
     }
 

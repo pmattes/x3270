@@ -579,7 +579,6 @@ save_yourself(void)
 #define RDB_ENV		"X3270RDB"
 #define DEFAULT_PROFILE	"~/.x3270pro"
 
-char *profile_name = NULL;
 static char *xcmd;
 static int xargc;
 static char **xargv;

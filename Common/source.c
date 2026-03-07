@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -195,7 +195,7 @@ source_run(task_cbh handle, bool *success)
 
     /* Run the command as a macro. */
     buf = vb_consume(&r);
-    vctrace(TC_SCRIPT, "%s %s got '%s%s'\n", s->name, s->path, scatv(buf), newline? "\\n": "");
+    vctrace(TC_SCRIPT, "%s %s got '%s%s'\n", s->name, s->path, scatv(buf), newline? "^J": "");
     push_stack_macro(buf);
     Free(buf);
 

@@ -1,133 +1,47 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\Common\apl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\asprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\base64.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\boolstr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\cats.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\copyright.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\min_version.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\popup_an_error.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\popup_separator.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\popups_glue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\pr3287_session.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\prefer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_http.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_passthru.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_socks4.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_socks5.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_telnet.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\proxy_toggle.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\resolver.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\see.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\snprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\tables.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\toupper.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\txa.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\unicode.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\unicode_dbcs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\utf8.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\varbuf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\w3misc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\windirs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\winvers.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\xscatv.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\xs_buffer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\Win32\sio_schannel.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\sioc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\indent_s.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Common\split_host.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\Common\apl.c" />
+    <ClCompile Include="..\..\Common\asprintf.c" />
+    <ClCompile Include="..\..\Common\base64.c" />
+    <ClCompile Include="..\..\Common\boolstr.c" />
+    <ClCompile Include="..\..\Common\cats.c" />
+    <ClCompile Include="..\..\Common\copyright.c" />
+    <ClCompile Include="..\..\Common\indent_s.c" />
+    <ClCompile Include="..\..\Common\min_version.c" />
+    <ClCompile Include="..\..\Common\mock_resolver.c" />
+    <ClCompile Include="..\..\Common\nhp.c" />
+    <ClCompile Include="..\..\Common\popup_an_error.c" />
+    <ClCompile Include="..\..\Common\popup_separator.c" />
+    <ClCompile Include="..\..\Common\popups_glue.c" />
+    <ClCompile Include="..\..\Common\pr3287_session.c" />
+    <ClCompile Include="..\..\Common\prefer.c" />
+    <ClCompile Include="..\..\Common\proxy.c" />
+    <ClCompile Include="..\..\Common\proxy_http.c" />
+    <ClCompile Include="..\..\Common\proxy_passthru.c" />
+    <ClCompile Include="..\..\Common\proxy_socks4.c" />
+    <ClCompile Include="..\..\Common\proxy_socks5.c" />
+    <ClCompile Include="..\..\Common\proxy_telnet.c" />
+    <ClCompile Include="..\..\Common\proxy_toggle.c" />
+    <ClCompile Include="..\..\Common\resolver.c" />
+    <ClCompile Include="..\..\Common\resolver_abs.c" />
+    <ClCompile Include="..\..\Common\see.c" />
+    <ClCompile Include="..\..\Common\sioc.c" />
+    <ClCompile Include="..\..\Common\split_host.c" />
+    <ClCompile Include="..\..\Common\Win32\sio_schannel.c" />
+    <ClCompile Include="..\..\Common\Win32\snprintf.c" />
+    <ClCompile Include="..\..\Common\tables.c" />
+    <ClCompile Include="..\..\Common\toupper.c" />
+    <ClCompile Include="..\..\Common\txa.c" />
+    <ClCompile Include="..\..\Common\unicode.c" />
+    <ClCompile Include="..\..\Common\unicode_dbcs.c" />
+    <ClCompile Include="..\..\Common\utf8.c" />
+    <ClCompile Include="..\..\Common\varbuf.c" />
+    <ClCompile Include="..\..\Common\Win32\w3misc.c" />
+    <ClCompile Include="..\..\Common\Win32\windirs.c" />
+    <ClCompile Include="..\..\Common\Win32\winvers.c" />
+    <ClCompile Include="..\..\Common\xscatv.c" />
+    <ClCompile Include="..\..\Common\xs_buffer.c" />
+    <ClCompile Include="..\..\Common\Win32\show_dirs.c" />
   </ItemGroup>
 </Project>

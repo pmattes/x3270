@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2019 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,4 +42,4 @@
 # define SE_EWOULDBLOCK EWOULDBLOCK
 #endif /*]*/
 
-typedef proxy_negotiate_ret_t continue_t(void);
+typedef proxy_negotiate_ret_t continue_t(socket_t fd);

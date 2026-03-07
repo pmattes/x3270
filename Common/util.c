@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -111,7 +111,7 @@ xs_error(const char *fmt, ...)
 const char *
 sncatv(const char *s, size_t len)
 {
-    return txdFree(xscatv(s, len, false));
+    return s? txdFree(xscatv(s, len, (ssize_t)-1, XSCQ_NONE, XSCF_DEFAULT)): NULL;
 }
 
 /**
@@ -124,11 +124,11 @@ sncatv(const char *s, size_t len)
 const char *
 scatv(const char *s)
 {
-    return txdFree(xscatv(s, strlen(s), false));
+    return s? txdFree(xscatv(s, strlen(s), (ssize_t)-1, XSCQ_NONE, XSCF_DEFAULT)): NULL;
 }
 
 /**
- * Expand control characters in a string, quoting the result.
+ * Expand control characters in a string, quoting the result if needed.
  *
  * @param[in] s		String to format
  *
@@ -137,7 +137,33 @@ scatv(const char *s)
 const char *
 qscatv(const char *s)
 {
-    return txdFree(xscatv(s, strlen(s), true));
+    return s? txdFree(xscatv(s, strlen(s), (ssize_t)-1, XSCQ_ARGQUOTE, XSCF_DEFAULT)): NULL;
+}
+
+/**
+ * Expand control characters in a string, leaving newlines intact.
+ *
+ * @param[in] s		String to format
+ *
+ * @returns Expanded string
+ */
+const char *
+mscatv(const char *s)
+{
+    return s? txdFree(xscatv(s, strlen(s), (ssize_t)-1, XSCQ_NONE, XSCF_NLTHRU)): NULL;
+}
+
+/**
+ * Expand control characters in a string, quoting as needed for a shell argument.
+ *
+ * @param[in] s		String to format
+ *
+ * @returns Expanded string
+ */
+const char *
+sscatv(const char *s)
+{
+    return s? txdFree(xscatv(s, strlen(s), (ssize_t)-1, XSCQ_SHELLQUOTE, XSCF_DEFAULT)): NULL;
 }
 
 /**

@@ -119,7 +119,7 @@ class TestB3270Retry(cti):
             # Wait for the Wait() to block.
             def wait_block():
                 r = ''.join(self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Tasks)').json()['result'])
-                return 'Wait("InputField")' in r
+                return 'Wait(InputField)' in r
             self.try_until(wait_block, 2, 'Wait() did not block')
 
             # Close the connection.

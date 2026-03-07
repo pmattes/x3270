@@ -610,6 +610,11 @@ remap_blue(HANDLE buf, unsigned *map)
 	return;
     }
 
+    if (getenv("WINEUSERNAME") != NULL) {
+	/* Color remapping does not work on Wine. */
+	return;
+    }
+
     memset(&infoex, '\0', sizeof(CONSOLE_SCREEN_BUFFER_INFOEX));
     infoex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
     if (GetConsoleScreenBufferInfoEx(buf, &infoex) == 0) {

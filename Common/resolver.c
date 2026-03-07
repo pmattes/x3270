@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2025 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,9 @@
 #endif /*]*/
 
 #include <stdio.h>
+#include "gai_strerror.h"
 #include "resolver.h"
+#include "mock_resolver.h"
 #include "txa.h"
 #include "utils.h"
 #if defined(_WIN32) /*[*/
@@ -79,6 +81,12 @@ static struct gai {
 bool prefer_ipv4;
 bool prefer_ipv6;
 
+#if defined(ASYNC_RESOLVER) /*[*/
+int gai_slots = GAI_SLOTS;
+#else /*][*/
+int gai_slots = 0;
+#endif /*]*/
+
 /* Set the IPv4/IPv6 lookup preferences. */
 void
 set_46(bool prefer4, bool prefer6)
@@ -100,32 +108,26 @@ want_pf(void)
     }
 }
 
-# if defined(_WIN32) /*[*/
-/* Wrap gai_strerror() in a function that translates the code page. */
-static const char *
-my_gai_strerror(int rc)
-{
-    return to_localcp(gai_strerror(rc));
-}
-# else /*][*/
-# define my_gai_strerror(x)	gai_strerror(x)
-# endif /*]*/
-
 /* Local version of xscatv. */
 static char *lscatv(const char *s)
 {
-    return s? xscatv(s, strlen(s), false): NewString("(none)");
+    return s? xscatv(s, strlen(s), (ssize_t)-1, XSCQ_NONE, XSCF_DEFAULT): NewString("(none)");
 }
 
 /*
- * Resolve a hostname and port using getaddrinfo, allowing IPv4 or IPv6.
+ * Resolve a hostname and port using getaddrinfo.
  * Synchronous version.
  */
+#define RHPF_DEFAULT		0x0	/* Use preferences to prefer v4 or v6, if PF is PF_UNSPEC, disallow unit test delays */
+#define RHPF_46			0x1	/* Allow v4 and v6, regardless of other settings */
+#define RHPF_ALLOW_DELAY	0x2	/* Allow unit test delay */
 static rhp_t
-resolve_host_and_port_v46(const char *host, char *portname,
-	bool abs, unsigned short *pport, struct sockaddr *sa, size_t sa_len,
+resolve_host_and_port_internal_blocking(const char *host, const char *portname, int pf, unsigned flags,
+	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
+    const char *dnsdelay_str = (flags & RHPF_ALLOW_DELAY)? ut_getenv("DNSDELAY"): NULL;
+    int delay = dnsdelay_str? atoi(dnsdelay_str): 0;
     struct addrinfo hints, *res0, *res;
     int rc;
     int i;
@@ -150,9 +152,17 @@ resolve_host_and_port_v46(const char *host, char *portname,
 	}
     }
 
+    if (delay > 0) {
+#if !defined(_WIN32) /*[*/
+	sleep(delay);
+#else /*][*/
+	Sleep(delay * 1000);
+#endif /*]*/
+    }
+
     memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_flags = 0;
-    hints.ai_family = abs? PF_UNSPEC: want_pf();
+    hints.ai_family = (flags & RHPF_46)? PF_UNSPEC: ((pf != PF_UNSPEC)? pf: want_pf());
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     rc = getaddrinfo(host, portname, &hints, &res0);
@@ -211,11 +221,18 @@ gai_notify(union sigval sigval)
 {
     char slot = (char)sigval.sival_int;
     struct gai *gaip = &gai[(int)slot];
+    const char *dnsdelay_str = ut_getenv("DNSDELAY");
+    int dnsdelay = dnsdelay_str? atoi(dnsdelay_str): 0;
     ssize_t nw;
 
     assert(gaip->busy == true);
     assert(gaip->done == false);
     gaip->done = true;
+
+    /* Wait. */
+    if (dnsdelay > 0) {
+	sleep(dnsdelay);
+    }
 
     /*
      * Write our slot number into the pipe, so the main thread can poll us for
@@ -234,7 +251,14 @@ async_resolve(LPVOID parameter)
     struct gai *gaip = (struct gai *)parameter;
     char slot = (char)(gaip - gai);
     struct addrinfo hints;
+    const char *dnsdelay_str = ut_getenv("DNSDELAY");
+    int dnsdelay = dnsdelay_str? atoi(dnsdelay_str): 0;
     ssize_t nw;
+
+    /* Wait. */
+    if (dnsdelay > 0) {
+	Sleep(dnsdelay * 1000);
+    }
 
     assert(gaip->busy == true);
     assert(gaip->done == false);
@@ -283,11 +307,11 @@ cleanup_partial_slot(int slot)
 }
 
 /*
- * Resolve a hostname and port using getaddrinfo_a, allowing IPv4 or IPv6.
+ * Resolve a hostname and port using getaddrinfo_a.
  * Asynchronous version.
  */
 static rhp_t
-resolve_host_and_port_v46_a(const char *host, char *portname,
+resolve_host_and_port_internal_async(const char *host, const char *portname, int pf,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, const char **errmsg, int max, int *nr, int *slot,
 	int pipe, iosrc_t event)
@@ -298,6 +322,11 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 # else /*][*/
     HANDLE thread;
 # endif /*]*/
+
+    if (mock_resolver_ready()) {
+	return mock_resolve_host_and_port_async(host, portname, pf, pport, sa, sa_len, sa_rlen, errmsg,
+		max, nr, slot, pipe, event);
+    }
 
     if (!initted) {
 	int i;
@@ -355,7 +384,7 @@ resolve_host_and_port_v46_a(const char *host, char *portname,
 
 # if !defined(_WIN32) /*[*/
     gai[*slot].hints.ai_flags = AI_ADDRCONFIG;
-    gai[*slot].hints.ai_family = want_pf();
+    gai[*slot].hints.ai_family = (pf != PF_UNSPEC)? pf: want_pf();
     gai[*slot].hints.ai_socktype = SOCK_STREAM;
     gai[*slot].hints.ai_protocol = IPPROTO_TCP;
 
@@ -417,8 +446,13 @@ collect_host_and_port(int slot, struct sockaddr *sa, size_t sa_len,
     struct addrinfo *res;
     int i;
     void *rsa = sa;
-    struct gai *gaip = &gai[slot];
+    struct gai *gaip;
 
+    if (slot >= GAI_SLOTS) {
+	return mock_collect_host_and_port(slot, sa, sa_len, sa_rlen, pport, errmsg, max, nr);
+    }
+
+    gaip = &gai[slot];
     assert(gaip->busy == true);
     assert(gaip->done == true);
     gaip->busy = false;
@@ -572,6 +606,12 @@ cleanup_host_and_port(int slot)
     int rc;
 # endif /*]*/
 
+    if (slot >= GAI_SLOTS) {
+	mock_cleanup_host_and_port(slot);
+	return;
+    }
+
+    gaip = &gai[slot];
     assert(gaip->busy == true);
     assert(gaip->done == true);
     gaip->busy = false;
@@ -619,7 +659,7 @@ cleanup_host_and_port(int slot)
  * @returns @ref rhp_t status
  */
 static rhp_t
-mock_sync_resolver(const char *m, const char *host, char *portname,
+mock_sync_resolver(const char *m, const char *host, const char *portname,
 	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
 	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
 {
@@ -672,10 +712,11 @@ mock_sync_resolver(const char *m, const char *host, char *portname,
 
 /**
  * Resolve a hostname and port.
- * Synchronous version.
+ * Synchronous (blocking) version.
  *
  * @param[in] host	Host name
  * @param[in] portname	Port name
+ * @param[in] pf	Protocol preference (AF_INET, AF_INET6, AF_UNSPEC)
  * @param[out] pport	Returned numeric port
  * @param[out] sa	Returned array of addresses
  * @param[in] sa_len	Number of elements in sa
@@ -687,7 +728,7 @@ mock_sync_resolver(const char *m, const char *host, char *portname,
  * @returns RHP_XXX status
  */
 rhp_t
-resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
+resolve_host_and_port_blocking(const char *host, const char *portname, int pf, unsigned short *pport,
 	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, const char **errmsg,
 	int max, int *nr)
 {
@@ -697,32 +738,7 @@ resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	return mock_sync_resolver(m, host, portname, pport, sa, sa_len,
 		sa_rlen, errmsg, max, nr);
     }
-    return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
-	    sa_rlen, errmsg, max, nr);
-}
-
-/**
- * Resolve a hostname and port.
- * Synchronous version, without -4/-6 preferences.
- *
- * @param[in] host	Host name
- * @param[in] portname	Port name
- * @param[out] pport	Returned numeric port
- * @param[out] sa	Returned array of addresses
- * @param[in] sa_len	Number of elements in sa
- * @param[out] sa_rlen	Returned size of elements in sa
- * @param[out] errmsg	Returned error message
- * @param[in] max	Maximum number of elements to return
- * @param[out] nr	Number of elements returned
- *
- * @returns RHP_XXX status
- */
-rhp_t
-resolve_host_and_port_abs(const char *host, char *portname,
-	unsigned short *pport, struct sockaddr *sa, size_t sa_len,
-	socklen_t *sa_rlen, const char **errmsg, int max, int *nr)
-{
-    return resolve_host_and_port_v46(host, portname, true, pport, sa, sa_len,
+    return resolve_host_and_port_internal_blocking(host, portname, pf, RHPF_ALLOW_DELAY, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
 }
 
@@ -739,49 +755,25 @@ resolve_host_and_port_abs(const char *host, char *portname,
  * @param[out] errmsg	Returned error message
  * @param[in] max	Maximum number of elements to return
  * @param[out] nr	Number of elements returned
+ * @param[out] slot	Returned slot number
+ * @param[in] pipe	Reply pipe file descriptor
+ * @param[in] event	Completion event to signal (Windows)
+ * @param[in] pf	Protocol family desired (INET/INET6/UNSPEC)
  *
  * @returns RHP_XXX status
  */
 rhp_t
-resolve_host_and_port_a(const char *host, char *portname, unsigned short *pport,
+resolve_host_and_port_async(const char *host, const char *portname, int pf, unsigned short *pport,
 	struct sockaddr *sa, size_t sa_len, socklen_t *sa_rlen, const char **errmsg,
 	int max, int *nr, int *slot, int pipe, iosrc_t event)
 {
 #if defined(ASYNC_RESOLVER) /*[*/
     if (ut_getenv("SYNC_RESOLVER") == NULL) {
-	return resolve_host_and_port_v46_a(host, portname, pport, sa, sa_len,
+	return resolve_host_and_port_internal_async(host, portname, pf, pport, sa, sa_len,
 		sa_rlen, errmsg, max, nr, slot, pipe, event);
     }
 #endif /*]*/
     *slot = -1;
-    return resolve_host_and_port_v46(host, portname, false, pport, sa, sa_len,
+    return resolve_host_and_port_internal_blocking(host, portname, pf, RHPF_ALLOW_DELAY, pport, sa, sa_len,
 	    sa_rlen, errmsg, max, nr);
-}
-
-#if defined(_WIN32) /*[*/
-# define LEN DWORD
-#else /*][*/
-# define LEN size_t
-#endif /*]*/
-
-/*
- * Resolve a sockaddr into a numeric hostname and port.
- * Returns True for success, false for failure.
- */
-bool
-numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
-	size_t hostlen, char *serv, size_t servlen, const char **errmsg)
-{
-    int rc;
-
-    /* Use getnameinfo(). */
-    rc = getnameinfo(sa, salen, host, (LEN)hostlen, serv, (LEN)servlen,
-	    NI_NUMERICHOST | NI_NUMERICSERV);
-    if (rc != 0) {
-	if (errmsg) {
-	    *errmsg = txAsprintf("%s", my_gai_strerror(rc));
-	}
-	return false;
-    }
-    return true;
 }

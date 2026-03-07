@@ -27,6 +27,8 @@
     <ClCompile Include="..\..\Common\copyright.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\min_version.c" />
+    <ClCompile Include="..\..\Common\mock_resolver.c" />
+    <ClCompile Include="..\..\Common\nhp.c" />
     <ClCompile Include="..\..\Common\popup_an_error.c" />
     <ClCompile Include="..\..\Common\popup_separator.c" />
     <ClCompile Include="..\..\Common\popups_glue.c" />
@@ -40,9 +42,11 @@
     <ClCompile Include="..\..\Common\proxy_telnet.c" />
     <ClCompile Include="..\..\Common\proxy_toggle.c" />
     <ClCompile Include="..\..\Common\resolver.c" />
+    <ClCompile Include="..\..\Common\resolver_abs.c" />
     <ClCompile Include="..\..\Common\see.c" />
     <ClCompile Include="..\..\Common\sioc.c" />
     <ClCompile Include="..\..\Common\split_host.c" />
+    <ClCompile Include="..\..\Common\Win32\show_dirs.c" />
     <ClCompile Include="..\..\Common\Win32\sio_schannel.c" />
     <ClCompile Include="..\..\Common\Win32\snprintf.c" />
     <ClCompile Include="..\..\Common\tables.c" />
@@ -68,27 +72,27 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

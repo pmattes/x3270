@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Paul Mattes.
+ * Copyright (c) 2019-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,6 @@
  */
 
 proxy_negotiate_ret_t proxy_socks5(socket_t fd, const char *user,
-	const char *host, unsigned short port, bool force_d);
+	const char *host, unsigned short port, bool force_d, proxy_disconnect_fn async_disconnect);
 continue_t proxy_socks5_continue;
 void proxy_socks5_close(void);

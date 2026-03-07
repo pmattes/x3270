@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2025 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -87,6 +87,7 @@ const char *net_sio_provider(void);
 const char *net_myopts(void);
 const char *net_hisopts(void);
 void net_register(void);
+const char *net_inferred_passthru_proxy_spec(void);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);

@@ -41,9 +41,11 @@ class TestC3270Keymap(cti):
 
     # Drain the PTY.
     def drain(self, fd):
+        self.result = b''
         while True:
             try:
-                os.read(fd, 1024)
+                r = os.read(fd, 1024)
+                self.result += r
             except:
                 return
 
@@ -58,7 +60,7 @@ class TestC3270Keymap(cti):
             ts.close()
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
-            keymap = '<Key>space: Key(a)\n<Key>colon: Key(b)\nAlt<Key>x: Key(z)'
+            keymap = '<Key>space: Key(a)\n<Key>colon: Key(b)\nAlt<Key>x: Key(\x7f)'
             os.execvpe(vgwrap_ecmd('c3270'),
                 vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}',
                               '-xrm', 'c3270.keymap.test: ' + keymap, '-e', '/bin/sh']), env)
@@ -79,7 +81,7 @@ class TestC3270Keymap(cti):
         r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(Keymap)')
         self.assertTrue(r.ok)
         result = r.json()['result']
-        self.assertEqual(['[test:1 temp] space: Key(a)', '[test:2 temp] colon: Key(b)', '[test:3 temp] Alt<Key>x: Key(z)'], result[0:3])
+        self.assertEqual(['[test:1 temp] space: Key(a)', '[test:2 temp] colon: Key(b)', '[test:3 temp] Alt<Key>x: Key(^?)'], result[0:3])
 
         # Send alt-q cause c3270 to exit.
         os.write(fd, b'\x01q')
@@ -87,6 +89,137 @@ class TestC3270Keymap(cti):
         self.vgwait_pid(pid)
         os.close(fd)
         drain_thread.join()
+
+    # c3270 missing keymap test.
+    def test_c3270_missing_keymap(self):
+
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}',
+                              '-keymap', 'foo\x01\x02\x7f', '-e', '/bin/sh']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Cause c3270 to exit.
+        os.write(fd, b'\r\x01q')
+
+        self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
+
+        # Make sure we got the complaint about the keymap, with the control characters expanded.
+        self.assertIn(b'No such keymap resource or file: foo^A^B^?', self.result)
+
+    # c3270 duplicate keymap test.
+    def test_c3270_duplicate_keymap(self):
+
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}',
+                              '-keymap', 'foo\x02',
+                              '-xrm', 'c3270.keymap.foo\x02: <Key>a: Key(b)',
+                              '-e', '/bin/sh']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Try using that same keymap as a temporary.
+        # Make sure that the error message cleans the keymap name.
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Keymap(foo\x02))')
+        self.assertFalse(r.ok)
+        result = r.json()['result']
+        self.assertEqual('Duplicate keymap: foo^B', result[0])
+
+        # Cause c3270 to exit.
+        os.write(fd, b'\r\x01q')
+
+        self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
+
+    # c3270 bad keymap test.
+    def c3270_bad_keymap(self, keymap: str, errmsg: str):
+
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}',
+                              '-xrm', f'c3270.keymap.foo\x02: {keymap}',
+                              '-e', '/bin/sh']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Try using that same keymap as a temporary.
+        # Make sure that the error message cleans the keymap name.
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Keymap(foo\x02))')
+        self.assertFalse(r.ok)
+        result = r.json()['result']
+        self.assertEqual(errmsg, result)
+
+        # Cause c3270 to exit.
+        os.write(fd, b'\r\x01q')
+
+        self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
+
+    # Various keymap errors.
+    def test_c3270_keymap_syntax(self):
+        self.c3270_bad_keymap('foo!', ['Keymap foo^B, line 1: syntax error'])
+    def test_c3270_keymap_action(self):
+        self.c3270_bad_keymap('<Key>a: Zzz()', ['Keymap foo^B, line 1: error:', 'Unknown action: Zzz'])
+    def test_c3270_keymap_no_key(self):
+        self.c3270_bad_keymap('Zip: Key(a)', ['Keymap foo^B, line 1: Missing <Key>'])
+    def test_c3270_keymap_bad_key(self):
+        self.c3270_bad_keymap('<Key>WOOT: Key(a)', ['Keymap foo^B, line 1: Unknown keysym'])
+    def test_c3270_keymap_bad_key2(self):
+        self.c3270_bad_keymap('<Key>a <Key>WOOT: Key(a)', ['Keymap foo^B, line 1: Unknown keysym'])
 
 if __name__ == '__main__':
     unittest.main()

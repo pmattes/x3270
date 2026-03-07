@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -58,7 +58,7 @@
 
 #if defined(__CYGWIN__) /*[*/
 # include <w32api/windows.h>
-#undef _WIN32
+# undef _WIN32
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -115,6 +115,7 @@ guess_codeset(void)
 enum cs_result
 codepage_init(const char *cpname)
 {
+    const char *codepage_fail_env;
     enum cs_result rc;
     const char *codeset_name;
     const char *codepage;
@@ -123,6 +124,15 @@ codepage_init(const char *cpname)
     const char *realname;
     bool is_dbcs;
     const char *kt;
+
+    if ((codepage_fail_env = ut_getenv("CODEPAGE_FAIL")) != NULL) {
+	if (!strcmp(codepage_fail_env, "BAD")) {
+	    return CS_BAD;
+	}
+	if (!strcmp(codepage_fail_env, "PREREQ")) {
+	    return CS_PREREQ;
+	}
+    }
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
@@ -384,13 +394,13 @@ toggle_codepage(const char *name _is_unused, const char *value, unsigned flags _
 	Replace(appres.codepage, NewString(canonical_cs(value)));
 	return TU_SUCCESS;
     case CS_NOTFOUND:
-	popup_an_error("Cannot find definition of host code page \"%s\"", value);
+	popup_an_error("Cannot find definition of host code page '%s'", scatv(value));
 	return TU_FAILURE;
     case CS_BAD:
-	popup_an_error("Invalid code page definition for \"%s\"", value);
+	popup_an_error("Invalid code page definition for '%s'", scatv(value));
 	return TU_FAILURE;
     case CS_PREREQ:
-	popup_an_error("No fonts for host code page \"%s\"", value);
+	popup_an_error("No fonts for host code page '%s'", scatv(value));
 	return TU_FAILURE;
     default:
     case CS_ILLEGAL:

@@ -40,7 +40,6 @@ extern char *profile_path;
 
 int parse_command_line(int argc, const char **argv, const char **cl_hostname);
 void parse_xrm(const char *arg, const char *where);
-char *safe_string(const char *s);
 bool process_events(bool block);
 void cmdline_help(bool as_action);
 void model_init(void);

@@ -1,4 +1,4 @@
-Copyright (c) 1993-2024 Paul Mattes.  
+Copyright (c) 1993-2026 Paul Mattes.  
 Copyright (c) 2004-2005 Don Russell.  
 Copyright (c) 2004 Dick Altenbern.  
 Copyright (c) 1990 Jeff Sparkes.  

@@ -84,6 +84,7 @@
 #include "proxy.h"
 #include "proxy_toggle.h"
 #include "query.h"
+#include "resolver_pipe.h"
 #include "rpq.h"
 #include "save_restore.h"
 #include "screen.h"
@@ -281,7 +282,7 @@ b3270_connect_common(bool direct_indication)
 	}
 	ui_leaf(IndConnection,
 		AttrState, AT_STRING, state_name[(int)cstate],
-		AttrHost, AT_STRING, current_host,
+		AttrHost, AT_STRING, scatv(current_host),
 		AttrCause, AT_STRING, cause,
 		NULL);
 	Free(cause);
@@ -542,6 +543,7 @@ main(int argc, char *argv[])
 {
     const char *cl_hostname = NULL;
     toggle_index_t ix;
+    const char *errmsg;
 
 #if defined(_WIN32) /*[*/
     get_version_info();
@@ -590,6 +592,7 @@ main(int argc, char *argv[])
     main_window_register();
     show_dirs_register();
 #endif /*]*/
+    resolver_pipe_register();
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
@@ -598,6 +601,15 @@ main(int argc, char *argv[])
     }
 
     check_min_version(appres.min_version);
+
+    if (codepage_init(appres.codepage) != CS_OKAY) {
+	xs_warning("Cannot find code page '%s'", scatv(appres.codepage));
+	codepage_init(NULL);
+    }
+    if (!cookiefile_init(appres.cookie_file, &errmsg)) {
+	fprintf(stderr, "%s\n", errmsg);
+        exit(1);
+    }
 
     ui_io_init();
     if (XML_MODE) {
@@ -641,10 +653,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n\
 POSSIBILITY OF SUCH DAMAGE.", cyear),
 	    NULL);
 
-    if (codepage_init(appres.codepage) != CS_OKAY) {
-	xs_warning("Cannot find code page \"%s\"", appres.codepage);
-	codepage_init(NULL);
-    }
     dump_codepages();
     dump_models();
     dump_proxies();
@@ -682,9 +690,6 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     }
     ft_init();
     hostfile_init();
-    if (!cookiefile_init()) {
-        exit(1);
-    }
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
@@ -885,8 +890,8 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
     };
     int reason;
 
-    action_debug("ForceStatus", ia, argc, argv);
-    if (check_argc("ForceStatus", argc, 1, 2) < 0) {
+    action_debug(AnForceStatus, ia, argc, argv);
+    if (check_argc(AnForceStatus, argc, 1, 2) < 0) {
 	return false;
     }
 
@@ -896,15 +901,14 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
     if (reasons[reason] == NULL) {
-	popup_an_error("ForceStatus: Unknown reason '%s'", argv[0]);
+	popup_an_error(AnForceStatus "(): Unknown reason '%s'", scatv(argv[0]));
 	return false;
     }
     if (!strcmp(argv[0], OiaLockOerr)) {
 	int oerr;
 
 	if (argc < 2) {
-	    popup_an_error("ForceStatus: Reason '%s' requires an argument",
-		    reasons[reason]);
+	    popup_an_error(AnForceStatus "(): Reason '%s' requires an argument", reasons[reason]);
 	    return false;
 	}
 	for (oerr = 0; oerrs[oerr] != NULL; oerr++) {
@@ -913,8 +917,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	if (oerrs[oerr] == NULL) {
-	    popup_an_error("ForceStatus: Unknown %s type '%s'",
-		    reasons[reason], argv[1]);
+	    popup_an_error(AnForceStatus "(): Unknown %s type '%s'", reasons[reason], scatv(argv[1]));
 	    return false;
 	}
 	ui_leaf(IndOia,
@@ -926,13 +929,12 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 	int n;
 
 	if (argc < 2) {
-	    popup_an_error("ForceStatus: Reason '%s' requires an argument",
-		    reasons[reason]);
+	    popup_an_error(AnForceStatus "(): Reason '%s' requires an argument", reasons[reason]);
 	    return false;
 	}
 	n = atoi(argv[1]);
 	if (n < 1) {
-	    popup_an_error("Invalid %s amount '%s'", reasons[reason], argv[1]);
+	    popup_an_error(AnForceStatus "(): Invalid %s amount '%s'", reasons[reason], scatv(argv[1]));
 	    return false;
 	}
 	
@@ -941,8 +943,7 @@ ForceStatus_action(ia_t ia, unsigned argc, const char **argv)
 		AttrValue, AT_STRING, txAsprintf("%s %d", reasons[reason], n),
 		NULL);
     } else if (argc > 1) {
-	popup_an_error("ForceStatus: Reason '%s' does not take an argument",
-		reasons[reason]);
+	popup_an_error(AnForceStatus "(): Reason '%s' does not take an argument", reasons[reason]);
 	return false;
     } else {
 	if (!strcmp(reasons[reason], STATUS_RECONNECTING)) {
@@ -1169,7 +1170,7 @@ b3270_register(void)
     static action_table_t actions[] = {
 	{ AnClearRegion,	ClearRegion_action,	0 },
 	{ AnCrash,		Crash_action,		ACTION_HIDDEN },
-	{ "ForceStatus",	ForceStatus_action,	ACTION_HIDDEN },
+	{ AnForceStatus,	ForceStatus_action,	ACTION_HIDDEN },
     };
     static opt_t b3270_opts[] = {
 	{ OptCallback, OPT_STRING,  false, ResCallback,

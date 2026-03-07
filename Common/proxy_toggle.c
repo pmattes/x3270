@@ -77,7 +77,7 @@ toggle_proxy(const char *name _is_unused, const char *value, unsigned flags, ia_
 	Replace(appres.proxy, NULL);
 	return TU_SUCCESS;
     }
-    if (proxy_setup(value, &user, &host, &port) < 0) {
+    if (proxy_setup(value, &user, &host, &port, false) < 0) {
 	return TU_FAILURE;
     }
     Replace(appres.proxy, NewString(value));

@@ -32,6 +32,9 @@
     <ClCompile Include="..\..\Common\pr3287\pr3287.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Common\pr3287\rp_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Common\pr3287\sf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

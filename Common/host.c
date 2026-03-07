@@ -643,6 +643,9 @@ host_connect(const char *n, enum iaction ia)
     host_retry_mode = appres.reconnect || appres.retry;
     ever_3270 = false;
     nc = net_connect(chost, port, accept, localprocess_cmd != NULL, &net_sock);
+    if (nc == NC_INVALID) {
+	goto failure;
+    }
     if (port != appres.port) {
 	Replace(port, NULL);
     }
@@ -1160,8 +1163,16 @@ static bool
 Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug(AnDisconnect, ia, argc, argv);
-    if (check_argc(AnDisconnect, argc, 0, 0) < 0) {
+    if (check_argc(AnDisconnect, argc, 0, 1) < 0) {
 	return false;
+    }
+    if (argc > 0) {
+	if (!strcasecmp(argv[0], KwDashReset)) {
+	    net_free_rp();
+	} else {
+	    popup_an_error(AnDisconnect "(): Unknown keyword '%s'", scatv(argv[0]));
+	    return false;
+	}
     }
     host_disconnect(false);
     return true;

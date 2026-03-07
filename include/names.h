@@ -76,6 +76,7 @@
 #define AnFail		"Fail"
 #define AnFieldEnd	"FieldEnd"
 #define AnFieldMark	"FieldMark"
+#define AnForceStatus	"ForceStatus"
 #define AnFlip		"Flip"
 #define AnHexString	"HexString"
 #define AnHome		"Home"
@@ -164,6 +165,8 @@
 #define KwAssert	"assert"
 #define KwExit		"exit"
 #define KwNull		"null"
+/*  Parameters to Disconnect(). */
+#define KwDashReset	"-reset"
 /*  Parameters to HexString(). */
 #define KwDashAscii	"-ascii"
 /*  Parameters to KeyboardDisable(). */
@@ -210,6 +213,7 @@
 #define KwCursor1	"Cursor1"
 #define KwDirs		"Dirs"
 #define KwDisplayPixels	"DisplayPixels"
+#define KwResolver	"Resolver"
 #define KwFormatted	"Formatted"
 #define KwHost		"Host"
 #define KwKeyboardLock	"KeyboardLock"

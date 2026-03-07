@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015, 2018-2020 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,10 @@
 #include "proxy_socks5.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "w3misc.h"
+#include "xscatv.h"
 
 #define PROXY_MSEC	(15 * 1000)
 
@@ -79,7 +81,7 @@ int proxy_ports[PT_MAX] = {
     NPORT_SOCKS5D
 };
 
-static bool parse_host_port(char *s, char **puser, char **phost, char **pport);
+static bool parse_host_port(char *s, char **puser, char **phost, char **pport, bool connecting);
 
 /* Continue functions. */
 static continue_t *continues[PT_MAX] = {
@@ -148,12 +150,22 @@ proxy_default_port(proxytype_t type)
     }
 }
 
+static void
+proxy_error(bool connecting, const char *errmsg)
+{
+    if (connecting) {
+	connect_error("%s", errmsg);
+    } else {
+	popup_an_error("%s", errmsg);
+    }
+}
+
 /*
- * Resolve the type, hostname and port for a proxy.
+ * Parse the type, hostname and port from a proxy spec.
  * Returns -1 for failure, 0 for no proxy, >0 (the proxy type) for success.
  */
 int
-proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
+proxy_setup(const char *proxy, char **puser, char **phost, char **pport, bool connecting)
 {
     char *colon;
     size_t sl;
@@ -162,8 +174,13 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
 	return PT_NONE;
     }
 
+    if (!xscatv_safe(proxy, strlen(proxy), XSCC_ALL)) {
+	proxy_error(connecting, "Proxy specification contains invalid characters");
+	return -1;
+    }
+
     if ((colon = strchr(proxy, ':')) == NULL || (colon == proxy)) {
-	popup_an_error("Invalid proxy syntax");
+	proxy_error(connecting, "Invalid proxy syntax");
 	return -1;
     }
 
@@ -171,7 +188,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     if (sl == strlen(PROXY_PASSTHRU) &&
 	    !strncasecmp(proxy, PROXY_PASSTHRU, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -181,7 +198,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_HTTP) && !strncasecmp(proxy, PROXY_HTTP, sl)) {
 
-	if (!parse_host_port(colon + 1, puser, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -191,18 +208,18 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_TELNET) && !strncasecmp(proxy, PROXY_TELNET, sl)) {
 
-	if (!parse_host_port(colon + 1, NULL, phost, pport)) {
+	if (!parse_host_port(colon + 1, NULL, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
-	    popup_an_error("Must specify port for telnet proxy");
+	    proxy_error(connecting, "Must specify port for telnet proxy");
 	    return -1;
 	}
 	return proxy_type = PT_TELNET;
     }
     if (sl == strlen(PROXY_SOCKS4) && !strncasecmp(proxy, PROXY_SOCKS4, sl)) {
 
-	if (!parse_host_port(colon + 1, puser, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -213,7 +230,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS4A) &&
 	    !strncasecmp(proxy, PROXY_SOCKS4A, sl)) {
 
-	if (!parse_host_port(colon + 1, puser, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -223,7 +240,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     }
     if (sl == strlen(PROXY_SOCKS5) && !strncasecmp(proxy, PROXY_SOCKS5, sl)) {
 
-	if (!parse_host_port(colon + 1, puser, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -234,7 +251,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
     if (sl == strlen(PROXY_SOCKS5D) &&
 	    !strncasecmp(proxy, PROXY_SOCKS5D, sl)) {
 
-	if (!parse_host_port(colon + 1, puser, phost, pport)) {
+	if (!parse_host_port(colon + 1, puser, phost, pport, connecting)) {
 	    return -1;
 	}
 	if (*pport == NULL) {
@@ -242,7 +259,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
 	}
 	return proxy_type = PT_SOCKS5D;
     }
-    popup_an_error("Invalid proxy type '%.*s'", (int)sl, proxy);
+    proxy_error(connecting, txAsprintf("Invalid proxy type '%.*s'", (int)sl, proxy));
     return -1;
 }
 
@@ -253,7 +270,7 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport)
  * Returns false for failure, true for success.
  */
 static bool
-parse_host_port(char *s, char **puser, char **phost, char **pport)
+parse_host_port(char *s, char **puser, char **phost, char **pport, bool connecting)
 {
     char *at;
     char *h;
@@ -264,11 +281,11 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
     /* Check for 'username:password@' first. */
     if ((at = strchr(s, '@')) != NULL) {
 	if (puser == NULL) {
-	    popup_an_error("Proxy type does not support username");
+	    proxy_error(connecting, "Proxy type does not support username");
 	    return false;
 	}
 	if (at == s) {
-	    popup_an_error("Invalid proxy username syntax");
+	    proxy_error(connecting, "Invalid proxy username syntax");
 	    return false;
 	}
 	h = at + 1;
@@ -284,7 +301,7 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
 	rbrack = strchr(h, ']');
 	if (rbrack == NULL || rbrack == h + 1 ||
 		(*(rbrack + 1) != '\0' && *(rbrack + 1) != ':')) {
-	    popup_an_error("Invalid proxy hostname syntax");
+	    proxy_error(connecting, "Invalid proxy hostname syntax");
 	    return false;
 	}
 	if (*(rbrack + 1) == ':') {
@@ -297,7 +314,7 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
 	hstart = h;
 	colon = strchr(h, ':');
 	if (colon == h) {
-	    popup_an_error("Invalid proxy hostname syntax");
+	    proxy_error(connecting, "Invalid proxy hostname syntax");
 	    return false;
 	}
 	if (colon == NULL) {
@@ -329,7 +346,7 @@ parse_host_port(char *s, char **puser, char **phost, char **pport)
 	    *puser = NULL;
 	}
     } else if (at != NULL) {
-	popup_an_error("Invalid proxy hostname syntax (user@ not supported for this type");
+	proxy_error(connecting, "Invalid proxy hostname syntax (user@ not supported for this type)");
 	return false;
     }
 
@@ -351,7 +368,7 @@ proxy_timeout(ioid_t id _is_unused)
  */
 proxy_negotiate_ret_t
 proxy_negotiate(socket_t fd, const char *user, const char *host,
-	unsigned short port, bool blocking)
+	unsigned short port, proxy_disconnect_fn async_disconnect)
 {
     proxy_negotiate_ret_t ret;
 
@@ -374,16 +391,16 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
 	ret = proxy_telnet(fd, host, port);
 	break;
     case PT_SOCKS4:
-	ret = proxy_socks4(fd, user, host, port, false);
+	ret = proxy_socks4(fd, user, host, port, false, async_disconnect);
 	break;
     case PT_SOCKS4A:
-	ret = proxy_socks4(fd, user, host, port, true);
+	ret = proxy_socks4(fd, user, host, port, true, async_disconnect);
 	break;
     case PT_SOCKS5:
-	ret = proxy_socks5(fd, user, host, port, false);
+	ret = proxy_socks5(fd, user, host, port, false, async_disconnect);
 	break;
     case PT_SOCKS5D:
-	ret = proxy_socks5(fd, user, host, port, true);
+	ret = proxy_socks5(fd, user, host, port, true, async_disconnect);
 	break;
     default:
 	ret = PX_FAILURE;
@@ -392,7 +409,7 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
 
     proxy_pending = (ret == PX_WANTMORE);
     if (proxy_pending) {
-	if (blocking) {
+	if (async_disconnect == NULL) {
 	    do {
 		fd_set rfds;
 		struct timeval tv;
@@ -403,11 +420,11 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
 		tv.tv_sec = PROXY_MSEC / 1000;
 		tv.tv_usec = (PROXY_MSEC % 1000) * 10;
 		if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) <= 0) {
-		    popup_an_error("%s proxy timeout", type_name[proxy_type]);
+		    connect_error("%s proxy timeout", type_name[proxy_type]);
 		    return PX_FAILURE;
 		}
 
-		ret = proxy_continue();
+		ret = proxy_continue(fd);
 	    } while (ret == PX_WANTMORE);
 	} else {
 	    /* Set a timeout in case the input never arrives. */
@@ -425,7 +442,7 @@ proxy_negotiate(socket_t fd, const char *user, const char *host,
  * Continue proxy negotiation.
  */
 proxy_negotiate_ret_t
-proxy_continue(void)
+proxy_continue(socket_t fd)
 {
     proxy_negotiate_ret_t ret;
 
@@ -437,7 +454,7 @@ proxy_continue(void)
 	return PX_FAILURE;
     }
 
-    ret = (*continues[proxy_type])();
+    ret = (*continues[proxy_type])(fd);
     if (ret == PX_SUCCESS) {
 	proxy_close();
     }

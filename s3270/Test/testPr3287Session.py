@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 #
 # s3270 printer session tests
 
-import json
 import os
 from subprocess import Popen
 import sys
@@ -36,17 +35,18 @@ import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
+from Common.Test.proxy import ProxyType, proxy_server
 import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
 @unittest.skipIf(sys.platform.startswith('win'), 'Unix-specific test')
-@unittest.skipUnless(hostsSetup, setupHosts.warning)
 @requests_timeout
 class TestPr3287Session(cti):
 
     # pr3287 IPv6 session address test.
-    def test_ipv6_pr3287_session(self):
+    @unittest.skipUnless(hostsSetup, setupHosts.warning)
+    def test_s3270_ipv6_pr3287_session(self):
 
         # Start playback to talk to s3270.
         pport, ts = unused_port(ipv6=True)
@@ -88,6 +88,88 @@ class TestPr3287Session(cti):
 
         os.unlink(sname)
         os.unlink(tname)
+
+    # Asynchronous send.
+    def async_send(self, p: playback):
+        p.send_records(4)
+
+    # pr3287 proxy session test.
+    def s3270_proxy_pr3287_session(self, use_passthru=False):
+
+        proxy_type = ProxyType.passthru if use_passthru else ProxyType.http
+
+        # Start playback to talk to s3270.
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
+            ts.close()
+
+            # Start a proxy server.
+            if use_passthru:
+                proxy_port = 3514
+            else:
+                proxy_port, ts = unused_port()
+            ps = proxy_server(self, pport, proxy_port, type=proxy_type)
+            ps.run()
+            self.check_listen(proxy_port)
+            if not use_passthru:
+                ts.close()
+
+            # Create a proxy s3270 session file that starts a fake printer session.
+            handle, sname = tempfile.mkstemp(suffix='.s3270')
+            os.close(handle)
+            handle, tname = tempfile.mkstemp()
+            os.close(handle)
+            with open(sname, 'w') as file:
+                prefix = 'P:' if use_passthru else ''
+                file.write(f's3270.hostname: {prefix}127.0.0.1:{pport}\n')
+                file.write('s3270.printerLu: .\n')
+                file.write(f's3270.printer.assocCommandLine: echo "%P% %H%" >{tname} && sleep 5\n')
+                if not use_passthru:
+                    file.write(f's3270.proxy: {proxy_type.name}:127.0.0.1:{proxy_port}')
+
+            # Start s3270 with that profile.
+            env = os.environ.copy()
+            env['PRINTER_DELAY_MS'] = '1'
+            if use_passthru:
+                env['INTERNET_HOST'] = '127.0.0.1'
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), sname]), env=env)
+            self.children.append(s3270)
+            self.check_listen(hport)
+            ts.close()
+
+            # Accept the connection and fill the screen.
+            # This will cause s3270 to start up the printer session.
+            sr = threading.Thread(target=self.async_send, args=[p])
+            sr.start()
+
+            # Make sure the printer session got started.
+            self.try_until(lambda: os.path.getsize(tname) > 0, 4, 'Printer session not started')
+            with open(tname, 'r') as file:
+                contents = file.readlines()
+            self.assertEqual(f'-proxy {proxy_type.name}:127.0.0.1:{proxy_port} 127.0.0.1:{pport}\n', contents[0])
+
+            # Make sure the proxy is reported correctly by Query().
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Proxy)')
+            self.assertTrue(r.ok)
+            result = r.json()['result'][0]
+            self.assertEqual(f'{proxy_type.name} 127.0.0.1 {proxy_port}', result)
+
+            # Wait for the process to exit.
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit())')
+            self.vgwait(s3270)
+            sr.join()
+            ps.close()
+
+        os.unlink(sname)
+        os.unlink(tname)
+
+    # pr3287 HTTP proxy session test.
+    def test_s3270_proxy_pr3287_session_http(self):
+        self.s3270_proxy_pr3287_session()
+    # pr3287 passthru (P:) proxy session test.
+    def test_s3270_proxy_pr3287_session_passthru(self):
+        self.s3270_proxy_pr3287_session(use_passthru=True)
 
 if __name__ == '__main__':
     unittest.main()

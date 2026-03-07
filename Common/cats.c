@@ -44,6 +44,7 @@ const char *cats[NUM_TC] = {
     "proxy",
     "sched",
     "script",
+    "dns",
     "socket",
     "task",
     "telnet",

@@ -57,7 +57,6 @@
 #include "product.h"
 #include "query.h"
 #include "resources.h"
-#include "save.h"
 #include "status.h"
 #include "task.h"
 #include "telnet.h"
@@ -469,7 +468,7 @@ trace_rollover_check(void)
 	alt_filename = NULL;
 	tracef = fopen(tracefile_name, "w");
 	if (tracef == NULL) {
-	    popup_an_errno(errno, "%s", tracefile_name);
+	    popup_an_errno(errno, "%s", scatv(tracefile_name));
 	    return;
 	}
 
@@ -488,24 +487,11 @@ dump_queries(void)
 {
     char **query_strings;
     int i;
-    size_t len = 0;
 
     query_strings = query_all_strings(true);
 
     for (i = 0; query_strings[i] != NULL; i++) {
-	size_t slen = strlen(query_strings[i]);
-	int skiplen = len? 2: 1;
-
-	if (len + skiplen + slen >= 132) {
-	    wtrace(false, TC_INFRA, "%s %s", len? "\n": "", query_strings[i]);
-	    len = 1 + slen;
-	    continue;
-	}
-	wtrace(false, TC_INFRA, "%*s%s", skiplen, "", query_strings[i]);
-	len += skiplen + slen;
-    }
-    if (len) {
-	wtrace(false, TC_INFRA, "\n");
+	wtrace(false, TC_INFRA, " %s\n", query_strings[i]);
     }
 
     free_query_all(query_strings);
@@ -525,7 +511,7 @@ dump_settings(void)
     tnv = toggle_values();
     for (i = 0; tnv[i].name != NULL; i++) {
 	if (tnv[i].value != NULL) {
-	    setting = Asprintf("%s=%s", tnv[i].name, tnv[i].value);
+	    setting = Asprintf("%s=%s", tnv[i].name, scatv(tnv[i].value));
 	} else {
 	    setting = Asprintf("%s=", tnv[i].name);
 	}
@@ -790,7 +776,7 @@ tracefile_ok(const char *tfn)
     stfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
     if (strchr(stfn, '\'') ||
 	((int)strlen(stfn) > 0 && stfn[strlen(stfn)-1] == '\\')) {
-	popup_an_error("Illegal file name: %s", tfn);
+	popup_an_error("Illegal file name: %s", scatv(tfn));
 	Free(stfn);
 	goto done;
     }
@@ -819,7 +805,7 @@ tracefile_ok(const char *tfn)
 	    tracef = fopen(stfn, "w");
 	}
 	if (tracef == NULL) {
-	    popup_an_errno(errno, "%s", stfn);
+	    popup_an_errno(errno, "%s", scatv(stfn));
 	    Free(stfn);
 	    goto done;
 	}
@@ -973,7 +959,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 
     if (argc == 0) {
 	if (toggled(TRACING) && tracefile_name != NULL) {
-	    action_output("Trace file is %s.", tracefile_name);
+	    action_output("Trace file is %s.", scatv(tracefile_name));
 	} else {
 	    action_output("Tracing is %sabled.",
 		    toggled(TRACING)? "en": "dis");
@@ -1025,9 +1011,9 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 
     if (tracefile_name != NULL) {
 	if (task_is_interactive()) {
-	    action_output("Trace file is %s.", tracefile_name);
+	    action_output("Trace file is %s.", scatv(tracefile_name));
 	} else {
-	    popup_an_info("Trace file is %s.", tracefile_name);
+	    popup_an_info("Trace file is %s.", scatv(tracefile_name));
 	}
     }
     return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,7 +124,7 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	    return;
 	}
 	if (!xappres.fixed_size && !(maximized | fullscreen) && !iconic) {
-	    XtVaGetValues(toplevel, XtNx, &x, XtNy, &y, NULL);
+	    XtVaGetValues(toplevel, XtNheight, &height, XtNwidth, &width, NULL);
 	    XResizeWindow(display, XtWindow(toplevel), p2? *p2: height, p3? *p3: width);
 	}
 	break;

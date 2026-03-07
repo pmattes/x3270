@@ -28,27 +28,27 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -148,6 +148,7 @@
     <ClCompile Include="..\..\Common\ctlr.c" />
     <ClCompile Include="..\..\Common\devname.c" />
     <ClCompile Include="..\..\Common\event.c" />
+    <ClCompile Include="..\..\Common\find_console.c" />
     <ClCompile Include="..\..\Common\telnet_sio.c" />
     <ClCompile Include="..\..\Common\fprint_screen.c" />
     <ClCompile Include="..\..\Common\ft.c" />
@@ -155,6 +156,7 @@
     <ClCompile Include="..\..\Common\ft_dft.c" />
     <ClCompile Include="..\..\Common\Win32\gdi_print.c" />
     <ClCompile Include="..\..\Common\glue.c" />
+    <ClCompile Include="..\..\Common\globals.c" />
     <ClCompile Include="..\..\Common\host.c" />
     <ClCompile Include="..\..\Common\httpd-core.c" />
     <ClCompile Include="..\..\Common\httpd-io.c" />
@@ -174,6 +176,7 @@
     <ClCompile Include="..\..\Common\print_screen.c" />
     <ClCompile Include="..\..\Common\query.c" />
     <ClCompile Include="..\..\Common\readres.c" />
+    <ClCompile Include="..\..\Common\resolver_pipe.c" />
     <ClCompile Include="..\..\Common\Nodisplay\resources.c" />
     <ClCompile Include="..\..\Common\rpq.c" />
     <ClCompile Include="..\..\Common\sched.c" />

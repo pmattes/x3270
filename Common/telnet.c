@@ -72,14 +72,18 @@
 #include "linemode.h"
 #include "model.h"
 #include "names.h"
+#include "nhp.h"
 #include "nvt.h"
 #include "popups.h"
 #include "proxy.h"
+#include "proxy_names.h"
 #include "query.h"
 #include "resolver.h"
+#include "sockaddr_46.h"	/* must precede resolver_pipe.h */
+#include "resolver_pipe.h"
 #include "resources.h"
 #include "sio.h"
-#include "varbuf.h"	/* must precede sioc.h */
+#include "varbuf.h"		/* must precede sioc.h */
 #include "sioc.h"
 #include "split_host.h"
 #include "stats.h"
@@ -98,6 +102,7 @@
 #include "vstatus.h"
 #include "w3misc.h"
 #include "xio.h"
+#include "xscatv.h"
 
 #if !defined(TELOPT_NAWS) /*[*/
 # define TELOPT_NAWS	31
@@ -203,6 +208,7 @@ static char	*proxy_user = NULL;
 static char	*proxy_host = NULL;
 static char	*proxy_portname = NULL;
 static unsigned short proxy_port = 0;
+static char	*inferred_passthru_proxy_spec = NULL;
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
 
@@ -364,12 +370,6 @@ static void output_possible(iosrc_t fd, ioid_t id);
 # define IS_EINPROGRESS(e)	false
 #endif /*]*/
 
-typedef union {
-    struct sockaddr sa;
-    struct sockaddr_in sin;
-    struct sockaddr_in6 sin6;
-} sockaddr_46_t;
-
 #define NUM_HA	4
 static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
@@ -377,9 +377,8 @@ static socklen_t ha_len[NUM_HA] = {
 };
 static int num_ha = 0;
 static int ha_ix = 0;
-static int resolver_pipe[2] = { -1, -1 };
-static int resolver_slot = -1;
-static iosrc_t resolver_event = INVALID_IOSRC;
+static rp_t host_rp = NULL;
+static rp_t proxy_rp = NULL;
 
 #if defined(_WIN32) /*[*/
 void
@@ -604,47 +603,63 @@ finish_connect(iosrc_t *iosrc)
     return NC_FAILED;
 }
 
-/* There is data on the resolver pipe. */
+/* Asynchronous DNS lookup is complete. */
 static void
-resolve_done(iosrc_t fd, ioid_t id)
+resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
 {
-    int nr;
-    char slot_byte;
-    int slot;
-    int rv;
-    const char *errmsg;
-    iosrc_t iosrc = INVALID_IOSRC;
+    int i;
     net_connect_t nc;
+    iosrc_t iosrc = INVALID_IOSRC;
 
-    /* Read the data, which is the slot number. */
-    nr = read(resolver_pipe[0], &slot_byte, 1);
-    if (nr < 0) {
-	popup_an_errno(errno, "Resolver pipe");
-	return;
-    }
-    if (nr == 0) {
-	popup_an_error("Resolver pipe EOF");
-    }
-
-    /* Might be a canceled request. */
-    slot = (int)slot_byte;
-    if (slot != resolver_slot) {
-	vctrace(TC_SOCKET, "Cleaning up canceled resolver slot %d\n", slot);
-	cleanup_host_and_port(slot);
-	return;
-    }
-
-    rv = collect_host_and_port(slot, &haddr[0].sa, sizeof(haddr[0]), ha_len,
-	    &current_port, &errmsg, NUM_HA, &num_ha);
-    if (RHP_IS_ERROR(rv)) {
+    if (!success) {
 	connect_error("%s", errmsg);
+	host_disconnect(true);
 	return;
     }
-    vctrace(TC_SOCKET, "Resolution complete, %d address%s\n", num_ha, 
-	    (num_ha == 1)? "": "es");
 
-    /* Proceed with the connection. */
-    resolver_slot = -1;
+    current_port = rp_port(rp);
+    num_ha = rp_num_ha(rp);
+    if (num_ha > NUM_HA) {
+	num_ha = NUM_HA;
+    }
+    memcpy(haddr, rp_haddr(rp, 0), num_ha * sizeof(sockaddr_46_t));
+    for (i = 0; i < num_ha; i++) {
+	ha_len[i] = rp_ha_len(rp, i);
+    }
+
+    nc = finish_connect(&iosrc);
+    if (nc == NC_FAILED) {
+	host_disconnect(true);
+    } else {
+	host_continue_connect(iosrc, nc);
+    }
+}
+
+/* Asynchronous DNS lookup for proxy is complete. */
+static void
+proxy_resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
+{
+    int i;
+    net_connect_t nc;
+    iosrc_t iosrc = INVALID_IOSRC;
+
+    if (!success) {
+	connect_error("%s", errmsg);
+	host_disconnect(true);
+	return;
+    }
+
+    proxy_port = rp_port(rp);
+    num_ha = rp_num_ha(rp);
+    if (num_ha > NUM_HA) {
+	num_ha = NUM_HA;
+    }
+    memcpy(haddr, rp_haddr(rp, 0), num_ha * sizeof(sockaddr_46_t));
+    for (i = 0; i < num_ha; i++) {
+	ha_len[i] = rp_ha_len(rp, i);
+    }
+    num_ha = 1; /* XXX: We only try one. */
+
     nc = finish_connect(&iosrc);
     if (nc == NC_FAILED) {
 	host_disconnect(true);
@@ -663,12 +678,8 @@ net_connect_t
 net_connect(const char *host, char *portname, char *accept, bool ls,
 	iosrc_t *iosrc)
 {
-    struct servent       *sp;
-    struct hostent       *hp;
-    char	       	passthru_haddr[8];
-    int			passthru_len = 0;
-    unsigned short	passthru_port = 0;
     const char		*errmsg;
+    char		*proxy_spec;
 
     if (sizeof(state_name)/sizeof(state_name[0]) != NUM_CSTATE) {
 	Error("telnet cstate_name has the wrong number of elements");
@@ -690,6 +701,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
     Replace(hostname, NewString(host));
     Replace(net_accept, NewString(accept));
+    Replace(inferred_passthru_proxy_spec, NULL);
 
     starttls_pending = NOT_CONNECTED;
     st_changed(ST_SECURE, false);
@@ -697,47 +709,49 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     /* set up temporary termtype */
     net_set_default_termtype();
 
-    /* get the passthru host and port number */
     if (HOST_FLAG(PASSTHRU_HOST)) {
-	const char *hn;
+	/* get the passthru host and port number */
+	const char *passthru_host = getenv("INTERNET_HOST");
+	struct servent *sp = getservbyname("telnet-passthru", "tcp");
+	unsigned short port;
 
-	hn = getenv("INTERNET_HOST");
-	if (hn == NULL) {
-	    hn = "internet-gateway";
+	if (passthru_host == NULL) {
+	    passthru_host = "internet-gateway";
+	}
+	if (!xscatv_safe(passthru_host, strlen(passthru_host), XSCC_ALL)) {
+	    connect_error("Invalid passthru host");
+	    return NC_INVALID;
 	}
 
-	hp = gethostbyname(hn);
-	if (hp == (struct hostent *) 0) {
-	    connect_error("Unknown passthru host: %s", hn);
-	    return NC_FAILED;
-	}
-	memmove(passthru_haddr, hp->h_addr, hp->h_length);
-	passthru_len = hp->h_length;
-
-	sp = getservbyname("telnet-passthru","tcp");
 	if (sp != NULL) {
-	    passthru_port = sp->s_port;
+	    port = ntohs(sp->s_port);
 	} else {
-	    passthru_port = htons(3514);
+	    port = NPORT_PASSTHRU;
 	}
+	Replace(inferred_passthru_proxy_spec, Asprintf("%s:%s:%u", PROXY_PASSTHRU, passthru_host, port));
+	proxy_spec = inferred_passthru_proxy_spec;
     } else if (appres.proxy != NULL) {
+	proxy_spec = appres.proxy;
+    } else {
+	proxy_spec = NULL;
+    }
+
+    if (proxy_spec != NULL) {
 	proxytype_t pt;
 	unsigned long lport;
 	char *ptr;
 	struct servent *sp;
 
-	pt = proxy_setup(appres.proxy, &proxy_user, &proxy_host,
-		&proxy_portname);
+	pt = proxy_setup(proxy_spec, &proxy_user, &proxy_host, &proxy_portname, true);
 	if (pt == PT_ERROR) {
-	    return NC_FAILED;
+	    return NC_INVALID;
 	}
 
 	lport = strtoul(portname, &ptr, 0);
 	if (ptr == portname || *ptr != '\0' || lport == 0L ||
 		lport & ~0xffff) {
 	    if (!(sp = getservbyname(portname, "tcp"))) {
-		connect_error("Unknown port number or service: %s",
-			portname);
+		connect_error("Unknown proxy port number or service: %s", scatv(portname));
 		return NC_FAILED;
 	    }
 	    current_port = ntohs(sp->s_port);
@@ -750,32 +764,33 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
     /* fill in the socket address of the given host */
     memset((char *) &haddr, 0, sizeof(haddr));
-    if (HOST_FLAG(PASSTHRU_HOST)) {
-	/*
-	 * XXX: We don't try multiple addresses for the passthru
-	 * host.
-	 */
-	haddr[0].sin.sin_family = AF_INET;
-	memmove(&haddr[0].sin.sin_addr, passthru_haddr, passthru_len);
-	haddr[0].sin.sin_port = passthru_port;
-	ha_len[0] = sizeof(struct sockaddr_in);
-	num_ha = 1;
-	ha_ix = 0;
-    } else if (proxy_pending) {
+    if (proxy_pending) {
 	/*
 	 * XXX: We don't try multiple addresses for a proxy
 	 * host.
 	 */
-	rhp_t rv;
-	int nr;
+	rp_result_t rv;
 
-	rv = resolve_host_and_port(proxy_host, proxy_portname, &proxy_port,
-		&haddr[0].sa, sizeof(haddr[0]), &ha_len[0], &errmsg, 1, &nr);
-	if (RHP_IS_ERROR(rv)) {
+	if (proxy_rp == NULL) {
+	    proxy_rp = rp_alloc(NULL, proxy_resolve_complete);
+	    if (proxy_rp == NULL) {
+		return NC_FAILED;
+	    }
+	}
+
+	rv = rp_resolve(proxy_rp, proxy_host, proxy_portname, PF_UNSPEC, &errmsg);
+	if (rv == RP_FAIL) {
 	    connect_error("%s", errmsg);
 	    return NC_FAILED;
 	}
+	if (rv == RP_PENDING) {
+	    return NC_RESOLVING;
+	}
+
+	/* Resolved synchronously. */
 	num_ha = 1;
+	memcpy(haddr, rp_haddr(proxy_rp, 0), sizeof(sockaddr_46_t));
+	ha_len[0] = rp_ha_len(proxy_rp, 0);
 	ha_ix = 0;
     } else {
 #if defined(LOCAL_PROCESS) /*[*/
@@ -783,44 +798,39 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    local_process = true;
 	} else {
 #endif /*]*/
-	    rhp_t rv;
+	    rp_result_t rv;
+	    int i;
 
-	    if (resolver_pipe[0] == -1) {
-		int rv;
-
-#if !defined(_WIN32) /*[*/
-		rv = pipe(resolver_pipe);
-#else /*][*/
-		rv = _pipe(resolver_pipe, 512, _O_BINARY);
-#endif /*]*/
-		if (rv < 0) {
-		    connect_error("resolver pipe: %s", strerror(errno));
+	    if (host_rp == NULL) {
+		host_rp = rp_alloc(NULL, resolve_complete);
+		if (host_rp == NULL) {
 		    return NC_FAILED;
 		}
-#if !defined(_WIN32) /*[*/
-		AddInput(resolver_pipe[0], resolve_done);
-#else /*][*/
-		resolver_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-		AddInput(resolver_event, resolve_done);
-#endif /*]*/
 	    }
 
 #if defined(LOCAL_PROCESS) /*[*/
 	    local_process = false;
 #endif /*]*/
-	    rv = resolve_host_and_port_a(host, portname, &current_port,
-		    &haddr[0].sa, sizeof(haddr[0]), ha_len, &errmsg, NUM_HA,
-		    &num_ha, &resolver_slot, resolver_pipe[1], resolver_event);
-	    if (RHP_IS_ERROR(rv)) {
+	    rv = rp_resolve(host_rp, host, portname, PF_UNSPEC, &errmsg);
+	    if (rv == RP_FAIL) {
 		connect_error("%s", errmsg);
 		return NC_FAILED;
 	    }
-	    ha_ix = 0;
-
-	    if (rv == RHP_PENDING) {
-		vctrace(TC_SOCKET, "Resolver slot is %d\n", resolver_slot);
+	    if (rv == RP_PENDING) {
 		return NC_RESOLVING;
 	    }
+
+	    /* Synchronous success. */
+	    current_port = rp_port(host_rp);
+	    num_ha = rp_num_ha(host_rp);
+	    if (num_ha > NUM_HA) {
+		num_ha = NUM_HA;
+	    }
+	    memcpy(haddr, rp_haddr(host_rp, 0), num_ha * sizeof(sockaddr_46_t));
+	    for (i = 0; i < num_ha; i++) {
+		ha_len[i] = rp_ha_len(host_rp, i);
+	    }
+	    ha_ix = 0;
 #if defined(LOCAL_PROCESS) /*[*/
 	}
 #endif /*]*/
@@ -1009,19 +1019,17 @@ net_connected_complete(void)
 
     check_linemode(true);
 
-    /* write out the passthru hostname and port nubmer */
-    if (HOST_FLAG(PASSTHRU_HOST)) {
-	char *buf;
-
-	buf = Asprintf("%s %d\r\n", hostname, current_port);
-	send(sock, buf, (int)strlen(buf), 0);
-	Free(buf);
-    }
-
     /* set up NOP transmission */
     if (appres.nop_seconds > 0 && !HOST_FLAG(NO_TELNET_HOST)) {
 	nop_timeout_id = AddTimeOut(appres.nop_seconds * 1000, send_nop);
     }
+}
+
+/* Callback for asynchronous proxy failures. */
+static void
+net_proxy_disconnect(void)
+{
+    host_disconnect(true);
 }
 
 static void
@@ -1035,7 +1043,7 @@ net_connected(void)
 	connect_timeout_id = NULL_IOID;
     }
 
-    if (cstate != TLS_PENDING) {
+    if (cstate != TLS_PENDING && !proxy_pending) {
 	vctrace(TC_SOCKET, "Connected to %s, port %u.\n", hostname, current_port);
     }
 
@@ -1057,7 +1065,7 @@ net_connected(void)
 
 	change_cstate(PROXY_PENDING, "net_connected");
 
-	ret = proxy_negotiate(sock, proxy_user, hostname, current_port, false);
+	ret = proxy_negotiate(sock, proxy_user, hostname, current_port, net_proxy_disconnect);
 	if (ret == PX_FAILURE) {
 	    host_disconnect(true);
 	    return;
@@ -1184,9 +1192,11 @@ static void
 net_pre_close(void)
 {
     /* Stop resolution. */
-    if (cstate == RESOLVING) {
-	vctrace(TC_SOCKET, "Canceling name resolution, slot %d\n", resolver_slot);
-	resolver_slot = -1;
+    if (host_rp != NULL) {
+	rp_cancel(host_rp);
+    }
+    if (proxy_rp != NULL) {
+	rp_cancel(proxy_rp);
     }
 
     /* Close the socket. */
@@ -1321,6 +1331,16 @@ net_disconnect(bool including_tls)
 }
 
 /*
+ * net_free_rp
+ * 	Free the resolver pipe.
+ */
+void
+net_free_rp(void)
+{
+    rp_free(&host_rp);
+}
+
+/*
  * net_input
  *	Called by the toolkit whenever there is input available on the
  *	socket.  Reads the data, processes the special telnet commands
@@ -1402,7 +1422,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     if (cstate == PROXY_PENDING) {
 	/* More proxy data available. */
-	proxy_negotiate_ret_t ret = proxy_continue();
+	proxy_negotiate_ret_t ret = proxy_continue(sock);
 
 	if (ret == PX_WANTMORE) {
 	    vctrace(TC_PROXY, "Proxy needs more data\n");
@@ -1624,34 +1644,58 @@ next_lu(void)
     }
 }
 
-#if defined(EBCDIC_HOST) /*[*/
 /*
  * force_ascii
- * 	Force the argument string to ASCII.  On ASCII (or ASCII-derived) hosts,
- * 	this is a no-op.  On EBCDIC-based hosts, translation is necessary.
+ * 	Force the argument string to 7-bit ASCII.
+ * 	Non-ASCII characters become '?'.
  */
 static const char *
 force_ascii(const char *s)
 {
-    static char buf[256];
-    unsigned char c, e;
-    int i;
+    varbuf_t r;
+    unsigned char c;
 
-    i = 0;
-    while ((c = *s++) && i < sizeof(buf) - 1) {
-	e = ebc2asc0[c];
-	if (e) {
-	    buf[i++] = e;
-	} else {
-	    buf[i++] = 0x3f; /* '?' */
-	}
-    }
-    buf[i] = '\0';
-    return buf;
-}
-#else /*][*/
-#define force_ascii(s) (s)
+    vb_init(&r);
+    while ((c = *s++) != '\0') {
+#if defined(EBCDIC_HOST) /*[*/
+	c = ebc2asc0[c];
 #endif /*]*/
+
+	if (c < ' ' || c >= 0x7f) {
+	    c = 0x3f; /* ASCII '?' */
+	}
+	vb_append(&r, (char *)&c, 1);
+    }
+    return txdFree(vb_consume(&r));
+}
+
+/*
+ * clean_ascii
+ * 	Translate non-ASCII-7 characters to '?'.
+ */
+static const char *
+clean_ascii(const char *s)
+{
+    varbuf_t r;
+    unsigned char c;
+
+    vb_init(&r);
+    while ((c = *s++) != '\0') {
+#if defined(EBCDIC_HOST) /*[*/
+	unsigned char a = ebc2asc0[c];
+
+	if (a < ' ' || a >= 0x7f) {
+	    c = '?';
+	}
+#else /*][*/
+	if (c < ' ' || c >= 0x7f) {
+	    c = '?';
+	}
+#endif /*]*/
+	vb_append(&r, (char *)&c, 1);
+    }
+    return txdFree(vb_consume(&r));
+}
 
 #if defined(EBCDIC_HOST) /*[*/
 /*
@@ -2038,9 +2082,9 @@ telnet_fsm(unsigned char c)
 		vstatus_lu(connected_lu);
 
 		vctrace(TC_TELNET, "SENT %s %s %s %s%s%s %s\n", cmd(SB), opt(TELOPT_TTYPE),
-			telquals[TELQUAL_IS], termtype,
+			telquals[TELQUAL_IS], clean_ascii(termtype),
 			(try_lu != NULL && *try_lu)? "@": "",
-			(try_lu != NULL && *try_lu)? try_lu: "",
+			(try_lu != NULL && *try_lu)? clean_ascii(try_lu): "",
 			cmd(SE));
 
 		/* Advance to the next LU name. */
@@ -2154,7 +2198,7 @@ tn3270e_request(void)
     vctrace(TC_TELNET, "SENT %s %s DEVICE-TYPE REQUEST %s%s%s %s\n",
 	cmd(SB), opt(TELOPT_TN3270E), xtn,
 	(try_lu != NULL && *try_lu)? " CONNECT ": "",
-	(try_lu != NULL && *try_lu)? try_lu: "",
+	(try_lu != NULL && *try_lu)? clean_ascii(try_lu): "",
 	cmd(SE));
 
     Free(xtn);
@@ -4258,6 +4302,12 @@ toggle_linemode(const char *name, const char *value, unsigned flags, ia_t ia)
 	net_charmode();
     }
     return TU_SUCCESS;
+}
+
+/* Return the inferred passthru proxy spec, if any. */
+const char *net_inferred_passthru_proxy_spec(void)
+{
+    return inferred_passthru_proxy_spec;
 }
 
 /* Canonicalization for no-TELNET input mode. */

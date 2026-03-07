@@ -1,0 +1,167 @@
+20260217.210254.119 infra  Trace started
+ Version: s3270 v4.6pre1 Mon Feb 16 18:26:09 UTC 2026 pdm
+ BindPluName:
+ BuildOptions: --enable-local-process via gcc 13.3.0 64-bit
+ CodePage: bracket sbcs gcsgid 697 cpgid 37
+ Color: display color emulation color
+ CommandLine: s3270 -trace -tn abc^Adef n:localhost:8021
+ ConnectTime:
+ ConnectionState: not-connected
+ Cursor1: row 1 column 1 offset 0
+ Formatted: unformatted
+ Host:
+ KeyboardLock: true
+ KeyboardLockDetail: not-connected
+ LocalEncoding: UTF-8
+ LuName:
+ Proxy:
+ ReplyMode: field
+ ScreenSizeCurrent: rows 24 columns 80
+ ScreenSizeMax: rows 43 columns 80
+ ScreenTraceFile:
+ SpecialCharacters: intr ^C quit ^\ erase ^H kill ^U eof ^D werase ^W rprnt ^R lnext ^V
+ StatsRx:
+ StatsTx:
+ TelnetHostOptions:
+ TelnetMyOptions:
+ TerminalName: abc^Adef
+ Tls:
+ TlsProvider: OpenSSL 3.0.13 30 Jan 2024
+ TlsSessionInfo:
+ Tn3270eOptions:
+ Settings: acceptHostname=  aidWait=true  alwaysInsert=false  bindLimit=true  blankFill=true  caDir=  caFile=  certFile=
+  certFileType=  chainFile=  codePage=bracket  confDir=/usr/local/etc/x3270  contentionResolution=true  devName=
+  extendedDataStream=true  ftBufferSize=16384  httpd=  insertMode=false  keyFile=  keyFileType=  keyPasswd=  lineMode=true
+  lineWrap=false  loginMacro=  model=3279-4  monoCase=false  noTelnetInputMode=line  nopSeconds=0  oerrLock=true  oversize=
+  preferIpv4=false  preferIpv6=false  printer.options=  printerLu=  proxy=  reconnect=false  retry=false  reverseInputMode=false
+  rightToLeftMode=false  rpq=  screenTrace=false  scriptPort=  showTiming=false  startTls=true  termName=abc^Adef  tls992=true
+  tlsMaxProtocol=  tlsMinProtocol=  tlsSecurityLevel=  trace=true  underscoreBlankFill=true  unlockDelay=false  unlockDelayMs=350
+  user=  verifyHostCert=true  wrongTerminalName=false  xtwinops=true
+ Data stream:
+20260217.210254.119 infra  st_changed(secure,false)
+20260217.210254.120 socket Resolver slot is 0
+20260217.210254.120 infra  cstate [not-connected] -> [resolving] (host_connect)
+20260217.210254.120 infra  st_changed(connect,true)
+20260217.210254.120 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20260217.210254.120 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20260217.210254.120 infra  ctlr_enable_cursor(false, connect)
+20260217.210254.120 infra  st_changed(negotiating,true)
+20260217.210254.120 sched  Waiting for 1 event or 0.999 sec
+20260217.210254.120 sched  Got 1 fd, 1 event
+20260217.210254.120 socket Resolution complete, 1 address
+20260217.210254.122 tls    Will verify host certificate
+20260217.210254.147 socket Making host socket non-blocking
+20260217.210254.147 socket Trying 127.0.0.1, port 8021...
+20260217.210254.147 socket TCP connection pending.
+20260217.210254.147 infra  cstate [resolving] -> [tcp-pending] (host_continue_connect)
+20260217.210254.147 infra  st_changed(negotiating,true)
+20260217.210254.147 infra  txflush: 133 slots, 4952 bytes
+20260217.210254.147 sched  Waiting for 4 events or 0.000 sec
+20260217.210254.147 sched  Got 1 fd, 1 event
+20260217.210254.147 socket Output possible
+20260217.210254.147 infra  cstate [tcp-pending] -> [telnet-pending] (host_connected)
+20260217.210254.147 infra  st_changed(connect,true)
+20260217.210254.147 kybd   Keyboard unlock(kybd_connect) NOT_CONNECTED -NOT_CONNECTED -> none
+20260217.210254.147 kybd   Keyboard lock(kybd_connect) none +AWAITING_FIRST -> AWAITING_FIRST
+20260217.210254.147 infra  Host negotiation step took 0.000084s to complete
+20260217.210254.147 infra  ctlr_enable_cursor(true, connect)
+20260217.210254.147 infra  ctlr_enable_cursor(true, nvt)
+20260217.210254.147 infra  st_changed(negotiating,true)
+20260217.210254.147 socket Connected to localhost, port 8021.
+20260217.210254.147 infra  st_changed(secure,false)
+20260217.210254.147 infra  st_changed(line-mode,true)
+20260217.210254.147 infra  txflush: 21 slots, 760 bytes
+20260217.210254.147 sched  Waiting for 3 events or 0.999 sec
+20260217.210254.147 sched  Got 1 fd, 1 event
+20260217.210254.147 socket Reading host socket
+20260217.210254.147 socket Host socket read complete nr=3
+< 0x0   fffd28
+20260217.210254.147 telnet RCVD DO TN3270E
+> 0x0   fffc28
+20260217.210254.148 telnet SENT WONT TN3270E
+20260217.210254.148 sched  Waiting for 3 events or 0.999 sec
+20260217.210254.148 sched  Got 1 fd, 1 event
+20260217.210254.148 socket Reading host socket
+20260217.210254.148 socket Host socket read complete nr=3
+< 0x0   fffd27
+20260217.210254.148 telnet RCVD DO NEW-ENVIRON
+> 0x0   fffb27
+20260217.210254.148 telnet SENT WILL NEW-ENVIRON
+20260217.210254.148 sched  Waiting for 3 events or 0.999 sec
+20260217.210254.148 sched  Got 1 fd, 1 event
+20260217.210254.148 socket Reading host socket
+20260217.210254.148 socket Host socket read complete nr=3
+< 0x0   fffd18
+20260217.210254.148 telnet RCVD DO TERMINAL TYPE
+20260217.210254.148 sched  Waiting for 3 events or 0.999 sec
+20260217.210254.148 sched  Got 1 fd, 1 event
+20260217.210254.148 socket Reading host socket
+20260217.210254.148 socket Host socket read complete nr=6
+< 0x0   fffa2701fff0
+20260217.210254.148 telnet RCVD SB NEW-ENVIRON SEND SE
+> 0x0   fffa270000555345520170646d0349424d454c46015945530349424d4150504c
+> 0x20  4944014e6f6e6503434f44455041474501303337034348415253455401363937
+> 0x40  034b42445459504501555342fff0
+20260217.210254.148 telnet SENT SB NEW-ENVIRON IS VAR "USER" VALUE "pdm" USERVAR "IBMELF" VALUE "YES" USERVAR "IBMAPPLID" VALUE "None" USERVAR "CODEPAGE" VALUE "037" USERVAR "CHARSET" VALUE "697" USERVAR "KBDTYPE" VALUE "USB" SE
+> 0x0   fffb18
+20260217.210254.148 telnet SENT WILL TERMINAL TYPE
+20260217.210254.148 infra  txflush: 19 slots, 568 bytes
+20260217.210254.148 sched  Waiting for 3 events or 0.999 sec
+20260217.210254.189 sched  Got 1 fd, 1 event
+20260217.210254.189 socket Reading host socket
+20260217.210254.189 socket Host socket read complete nr=6
+< 0x0   fffa1801fff0
+20260217.210254.189 telnet RCVD SB TERMINAL TYPE SEND
+> 0x0   fffa18006162633f646566fff0
+20260217.210254.189 telnet SENT SB TERMINAL TYPE IS abc?def SE
+20260217.210254.189 sched  Waiting for 3 events or 0.958 sec
+20260217.210254.189 sched  Got 1 fd, 1 event
+20260217.210254.189 socket Reading host socket
+20260217.210254.189 socket Host socket read complete nr=47
+< 0x0   3332373020656d756c6174696f6e207265717569726564202877726f6e672074
+< 0x20  65726d696e616c2074797065290d0a
+20260217.210254.189 infra  cstate [telnet-pending] -> [connected-nvt] (host_in3270)
+20260217.210254.189 infra  st_changed(line-mode,true)
+20260217.210254.189 infra  st_changed(3270-mode,false)
+20260217.210254.189 kybd   Keyboard unlock(kybd_in3270) AWAITING_FIRST -AWAITING_FIRST -> none
+20260217.210254.189 infra  Host negotiation step took 0.041979s to complete
+20260217.210254.189 infra  ctlr_enable_cursor(true, connect)
+<.. 3270 emulation required (wrong terminal type) ^M ^J
+20260217.210254.189 infra  txflush: 13 slots, 488 bytes
+20260217.210254.189 sched  Waiting for 4 events
+20260217.210254.189 sched  Got 1 fd, 1 event
+20260217.210254.189 socket Reading host socket
+20260217.210254.189 socket Host socket read complete nr=0
+20260217.210254.189 socket RCVD disconnect
+20260217.210254.190 infra  st_changed(secure,false)
+20260217.210254.190 socket SENT disconnect
+20260217.210254.190 infra  cstate [connected-nvt] -> [not-connected] (net_disconnect)
+20260217.210254.190 infra  st_changed(connect,false)
+20260217.210254.190 kybd   Keyboard lock(kybd_connect) none +NOT_CONNECTED -> NOT_CONNECTED
+20260217.210254.190 infra  ctlr_enable_cursor(false, connect)
+20260217.210254.190 infra  ctlr_enable_cursor(false, nvt)
+20260217.210254.190 infra  txflush: 16 slots, 592 bytes
+20260217.210254.191 sched  Waiting for 2 events
+20260217.210258.475 sched  Got 1 fd, 1 event
+20260217.210258.475 script s3stdin got 'quit^J'
+20260217.210258.475 task   CB(s3stdin)[#1] started
+20260217.210258.475 task   CB(s3stdin)[#1.1] IDLE -> RUNNING (child task to be pushed next)
+20260217.210258.475 task   Macro[#1.2] IDLE -> RUNNING (fresh push)
+20260217.210258.475 task   Macro[#1.2] RUNNING -> IDLE (about to resume)
+20260217.210258.475 task   Macro[#1.2] running
+20260217.210258.475 task   Macro[#1.2] IDLE -> RUNNING (executing)
+20260217.210258.475 task   Macro[#1.2] 'quit'
+20260217.210258.475 infra  script -> Quit()
+20260217.210258.475 task   Macro[#1.2] complete, success
+20260217.210258.475 task   CB(s3stdin)[#1.1] RUNNING -> IDLE (about to resume)
+20260217.210258.475 task   CB(s3stdin)[#1.1] child task done, success
+20260217.210258.475 infra  Output for CB(s3stdin)[#1.1]: L U U N N 4 43 80 1 0 0x0 0.000/ok
+20260217.210258.475 task   CB(s3stdin)[#1.1] complete, success
+20260217.210258.475 task   CB(s3stdin)[#1] complete
+20260217.210258.475 sched  Timeout(s) already expired
+20260217.210258.475 sched  Waiting for 2 events or 0.000 sec
+20260217.210258.475 sched  Got 0 fds, 0 events
+20260217.210258.475 sched  Processing timeout
+20260217.210258.475 infra  Exiting with status 0
+20260217.210258.475 infra  st_changed(exiting,true)
+20260217.210258.475 infra  Trace stopped

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2025 Paul Mattes.
+ * Copyright (c) 2007-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include "proxy_http.h"
 #include "resolver.h"
 #include "telnet_core.h"
+#include "task.h"
 #include "txa.h"
 #include "trace.h"
 #include "utils.h"
@@ -135,7 +136,7 @@ proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 
 /* HTTP proxy continuation. */
 proxy_negotiate_ret_t
-proxy_http_continue(void)
+proxy_http_continue(socket_t fd)
 {
     char *space;
     bool nl = false;
@@ -145,7 +146,7 @@ proxy_http_continue(void)
      * Read a byte at a time until two \n or EOF.
      */
     for (;;) {
-	ssize_t nr = recv(ps.fd, (char *)&ps.rbuf[ps.nread], 1, 0);
+	ssize_t nr = recv(fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
 		if (ps.nread) {
@@ -163,7 +164,7 @@ proxy_http_continue(void)
 	    if (ps.nread) {
 		trace_netdata('<', ps.rbuf, ps.nread);
 	    }
-	    popup_an_error("HTTP proxy: unexpected EOF");
+	    connect_error("HTTP proxy: unexpected EOF");
 	    return PX_FAILURE;
 	}
 	if (++ps.nread >= RBUF) {
@@ -196,11 +197,11 @@ proxy_http_continue(void)
 
     if (strncmp((char *)ps.rbuf, "HTTP/", 5) ||
 	    (space = strchr((char *)ps.rbuf, ' ')) == NULL) {
-	popup_an_error("HTTP proxy: unrecognized reply");
+	connect_error("HTTP proxy: unrecognized reply");
 	return PX_FAILURE;
     }
     if (*(space + 1) != '2') {
-	popup_an_error("HTTP proxy: CONNECT failed:\n%s",
+	connect_error("HTTP proxy: CONNECT failed:\n%s",
 		(char *)ps.rbuf);
 	return PX_FAILURE;
     }

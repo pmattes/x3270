@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015, 2020 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ void popup_a_sockerr(const char *fmt, ...) printflike(1, 2);
 bool net_add_dummy_tn3270e(void);
 void net_add_eor(unsigned char *buf, size_t len);
 void net_disconnect(bool including_tls);
+void net_free_rp(void);
 void net_output(void);
 void space3270out(size_t n);
 void trace_netdata(char direction, unsigned const char *buf, size_t len);

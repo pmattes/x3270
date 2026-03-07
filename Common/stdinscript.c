@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -182,7 +182,7 @@ json_input(char *buf, bool *need_more)
 static void
 trace_stdin(const char *buf, size_t len, bool fake_newline)
 {
-    vctrace(TC_SCRIPT, "s3stdin got '%s%s'\n", sncatv(buf, len), fake_newline? "\\n": "");
+    vctrace(TC_SCRIPT, "s3stdin got '%s%s'\n", sncatv(buf, len), fake_newline? "^J": "");
 }
 
 #if !defined(_WIN32) /*[*/

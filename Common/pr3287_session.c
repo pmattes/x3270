@@ -49,6 +49,7 @@
 #include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
+#include "telnet.h"
 #include "telnet_core.h"
 #include "sio.h"
 #include "telnet.h"
@@ -455,6 +456,7 @@ pr3287_start_now(const char *lu, bool associated)
     char *cmd_text;
     char c;
     const char *charset_cmd;		/* -charset <csname> */
+    const char *proxy_spec;
     const char *proxy_cmd = NULL;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
     char *pcp_res = NULL;
@@ -566,11 +568,15 @@ pr3287_start_now(const char *lu, bool associated)
     charset_cmd = txAsprintf(OptCodePage " %s", get_codepage_name());
 
     /* Construct proxy option. */
-    if (appres.proxy != NULL) {
+    proxy_spec = net_inferred_passthru_proxy_spec();
+    if (proxy_spec == NULL) {
+	proxy_spec = appres.proxy;
+    }
+    if (proxy_spec != NULL) {
 #if !defined(_WIN32) /*[*/
-	proxy_cmd = txAsprintf(OptProxy  " \"%s\"", appres.proxy);
+	proxy_cmd = txAsprintf(OptProxy  " \"%s\"", proxy_spec);
 #else /*][ */
-	proxy_cmd = txAsprintf(OptProxy " %s", appres.proxy);
+	proxy_cmd = txAsprintf(OptProxy " %s", proxy_spec);
 #endif /*]*/
     }
 
