@@ -3343,7 +3343,7 @@ draw_oia(void)
     attrset(msg_attr);
     mvprintw(status_row, 7, "%-35.35s", status_msg_now);
     attrset(oia_attr);
-    mvprintw(status_row, rmargin-35,
+    mvprintw(status_row, rmargin-36,
 	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
 	    oia_compose? oia_compose_char: ' ', /* XXX */

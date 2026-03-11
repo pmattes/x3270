@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * Copyright (c) 1989 Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -154,6 +154,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     bool read_session_or_profile = false;
     int suffix_match = -1;
     char *s;
+#if !defined(_WIN32) /*[*/
+#   define SEP_CHAR	":"
+#else /*][*/
+#   define SEP_CHAR	";"
+#endif /*]*/
 
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -171,7 +176,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	/* Add our path to $PATH so we can find x3270if. */
 	(void) putenv(Asprintf("PATH=%.*s%s%s",
 		    (int)(programname - argv[0]), argv[0],
-		    path? ":": "",
+		    path? SEP_CHAR: "",
 		    path? path: ""));
 	++programname;
     } else {

@@ -164,6 +164,7 @@ cookiefile_init(void)
 #if !defined(_WIN32) /*[*/
     chmod(appres.cookie_file, 0400);
 #else /*][*/
+    memset(eas, 0, sizeof(eas));
     eas[0].grfAccessPermissions = GENERIC_ALL;
     eas[0].grfAccessMode = GRANT_ACCESS;
     eas[0].grfInheritance = NO_INHERITANCE;
@@ -185,6 +186,12 @@ cookiefile_init(void)
     }
 #endif
 
+#if defined(_WIN32) /*[*/
+    if (pacl != 0) {
+	LocalFree(pacl);
+    }
+#endif /*]*/
+
     if (fd >= 0) {
 	close(fd);
     }
@@ -192,6 +199,11 @@ cookiefile_init(void)
     return true;
 
 fail:
+#if defined(_WIN32) /*[*/
+    if (pacl != 0) {
+	LocalFree(pacl);
+    }
+#endif /*]*/
     fflush(stderr);
     if (fd >= 0) {
 	close(fd);

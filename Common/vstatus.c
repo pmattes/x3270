@@ -385,11 +385,9 @@ vstatus_line(struct ea *ea)
     }
 
     /* Display the miscellaneous state. */
-    i = rmargin - 35;
-    if (voia_compose) {
-	ea2[i++].ucs4 = voia_compose? 'C': 0;
-	ea2[i++].ucs4 = voia_compose? voia_compose_char: 0;
-    }
+    i = rmargin - 36;
+    ea2[i++].ucs4 = voia_compose? 'C': 0;
+    ea2[i++].ucs4 = voia_compose? voia_compose_char: 0;
     i++;
     ea2[i++].ucs4 = voia_ta? 'T': 0;
     ea2[i++].ucs4 = voia_rm? 'R': 0;
