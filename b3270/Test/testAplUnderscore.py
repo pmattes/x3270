@@ -30,7 +30,6 @@
 import json
 from subprocess import Popen, PIPE
 import unittest
-import xml.etree.ElementTree as ET
 
 from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
@@ -51,7 +50,6 @@ class TestB3270AplUnderscore(cti):
             pq = pipeq.pipeq(self, b3270.stdout)
 
             # Connect to playback.
-            j = { "run": { "actions": { "action": "open", "args": [ f"localhost:{pport}" ] } } }
             b3270.stdin.write(f'"Open(localhost:{pport})"\n'.encode())
             b3270.stdin.flush()
 

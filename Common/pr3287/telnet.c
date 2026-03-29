@@ -549,7 +549,7 @@ net_input(socket_t s)
     }
     if (nr < 0) {
 	if ((sio != NULL && nr == SIO_EWOULDBLOCK) ||
-	    (sio == NULL && socket_errno() == SE_EWOULDBLOCK)) {
+	    (sio == NULL && IS_EWOULDBLOCK(socket_errno()))) {
 	    vctrace(TC_SOCKET, "EWOULDBLOCK\n");
 	    return true;
 	}

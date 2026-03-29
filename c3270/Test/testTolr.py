@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,55 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# s3270 connection fail tests
+# c3270 trace-of-last-resort tests
 
+import sys
+if not sys.platform.startswith('win'):
+    import pty
 import os
-from subprocess import Popen, PIPE, DEVNULL
+import tempfile
+import termios
 import unittest
 
 from Common.Test.cti import *
 
-class TestS3270ConnectFail(cti):
+@unittest.skipIf(sys.platform.startswith('win'), "Windows uses different c3270 graphic tests")
+class TestC3270Tolr(cti):
 
-    # s3270 connect fail test
-    def test_s3270_connect_fail(self):
+    # c3270 trace-of-last-resort test
+    def test_c3270_tolr(self):
 
-        # Start s3270.
-        s3270 = Popen(vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
-        self.children.append(s3270)
+        handle, tracefile = tempfile.mkstemp()
+        os.close(handle)
 
-        # Push a trivial command at it.
-        s3270.stdin.write(b'Connect(127.0.0.1:1)\n')
+        # Start c3270.
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            termios.tcsetwinsize(0, (28, 80))
+            env = os.environ.copy()
+            env['X3270_TOLR'] = tracefile
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'), vgwrap_eargs(['c3270', '-model', '2', '-utf8']), env)
+            self.assertTrue(False, 'c3270 did not start')
 
-        # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
+        # Tell c3270 to exit.
+        os.write(fd, b'Quit()\n')
 
-        # Wait for the process to exit successfully.
-        self.vgwait(s3270)
+        # Wait for the processes to exit.
+        self.vgwait_pid(pid)
+        os.close(fd)
 
-        # Test the output.
-        self.assertEqual(5, len(stdout))
-        self.assertTrue(stdout[0].startswith('data: Connection failed:'))
-        self.assertTrue(stdout[1].startswith('data: 127.0.0.1, port 1: '))
-        self.assertTrue('refused' in stdout[1])
-        self.assertTrue(stdout[2].startswith('L U U N N 4 24 80 0 0 0x0 '))
-        self.assertEqual('error', stdout[3])
-        self.assertEqual('', stdout[4])
+        # Verify what was traced.
+        with open(tracefile, 'rb') as file:
+            t = file.readlines()
+        os.unlink(tracefile)
+        started = [line for line in t if b'trace of last resort started' in line]
+        self.assertEqual(1, len(started))
+        version = [line for line in t if b'Version:' in line]
+        self.assertEqual(1, len(version))
+        quit = [line for line in t if b'Quit' in line]
+        self.assertGreater(len(quit), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2022 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,11 +49,11 @@ extern bool host_retry_mode;
 void hostfile_init(void);
 bool host_connect(const char *n, enum iaction ia);
 void host_connected(void);
-void host_continue_connect(iosrc_t iosrc, net_connect_t nc);
+void host_continue_connect(socket_t socket, net_connect_t nc);
 void host_new_connection(bool pending);
 void host_disconnect(bool disable);
 void host_in3270(enum cstate);
-void host_newfd(iosrc_t s);
+void host_newfd(socket_t socket);
 bool host_reconnecting(void);
 void host_register(void);
 void host_set_flag(int flag);

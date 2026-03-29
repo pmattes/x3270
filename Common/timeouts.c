@@ -87,6 +87,10 @@ static timeout_t *timeouts = NULL;
 ioid_t
 AddTimeOut(unsigned long interval_ms, tofn_t proc)
 {
+    if (interval_ms == 0) {
+	return AddDefer(proc);
+    }
+
     timeout_t *t_new;
     timeout_t *t;
     timeout_t *prev = NULL;
@@ -140,6 +144,10 @@ AddTimeOut(unsigned long interval_ms, tofn_t proc)
 void
 RemoveTimeOut(ioid_t timer)
 {
+    if (RemoveDefer(timer)) {
+	return;
+    }
+
     timeout_t *st = (timeout_t *)timer;
     timeout_t *t;
     timeout_t *prev = NULL;

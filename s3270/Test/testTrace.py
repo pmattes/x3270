@@ -39,7 +39,7 @@ from Common.Test.playback import playback
 class TestS3270Trace(cti):
 
     # s3270 trace header test
-    def test_s3270_trace_header(self, ipv6=False):
+    def test_s3270_trace_header(self):
 
         # Start s3270.
         http_port, ts = unused_port()
@@ -69,6 +69,55 @@ class TestS3270Trace(cti):
 
         # Wait for the processes to exit.
         self.vgwait(s3270)
+
+    # s3270 trace detail test
+    def s3270_detail_trace(self, env=False, spec='sched', success=True):
+
+        # Start s3270.
+        handle, tracefile = tempfile.mkstemp()
+        os.close(handle)
+
+        http_port, ts = unused_port()
+        args = ['s3270', '-httpd', f'127.0.0.1:{http_port}']
+        env = os.environ.copy()
+        env['X3270_TOLR'] = tracefile
+        if env:
+            env['X3270_DETAIL_TRACE'] = spec
+        else:
+            args += ['-set', f's3270.detailTrace={spec}']
+        s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, env=env)
+        self.children.append(s3270)
+        ts.close()
+        self.check_listen(http_port)
+
+        # Stop s3270.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+        # Check the tracefile.
+        with open(tracefile, 'r') as file:
+            lines = file.readlines()
+        os.unlink(tracefile)
+        addInput = [line for line in lines if 'AddInput' in line]
+        if success:
+            self.assertGreater(len(addInput), 0)
+        else:
+            self.assertEqual(len(addInput), 0)
+
+        # Wait for the processes to exit.
+        self.vgwait(s3270)
+
+    def test_s3270_detail_trace_env(self):
+        self.s3270_detail_trace(env=True)
+        self.s3270_detail_trace(env=True, spec='1')
+        self.s3270_detail_trace(env=True, spec='all')
+        self.s3270_detail_trace(env=True, spec='a:sched:b')
+        self.s3270_detail_trace(env=True, spec='foo', success=False)
+    def test_s3270_detail_trace_resource(self):
+        self.s3270_detail_trace(env=False)
+        self.s3270_detail_trace(env=False, spec='1')
+        self.s3270_detail_trace(env=False, spec='all')
+        self.s3270_detail_trace(env=False, spec='a:sched:b')
+        self.s3270_detail_trace(env=False, spec='foo', success=False)
 
 if __name__ == '__main__':
     unittest.main()

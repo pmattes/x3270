@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Common\asprintf.c" />
     <ClCompile Include="..\..\..\Common\bind-opt.c" />
+    <ClCompile Include="..\..\..\Common\resolver_abs.c" />
     <ClCompile Include="..\..\..\Common\sa_malloc.c" />
     <ClCompile Include="..\..\..\Common\Test\bind_opts_test.c" />
     <ClCompile Include="..\..\..\Common\Win32\snprintf.c" />

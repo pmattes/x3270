@@ -27,24 +27,21 @@
 #
 # b3270 stdout EPIPE tests
 
-import json
-from subprocess import Popen, PIPE
-import sys
+from subprocess import Popen, PIPE, DEVNULL
+import time
 import unittest
 
 from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
-import Common.Test.setupCert as setupCert
-import Common.Test.tls_server as tls_server
 
 class TestB3270Epipe(cti):
 
-    # b3270 TLSEPIPE test
-    def test_b3270_tls(self):
+    # b3270 EPIPE test
+    def test_b3270_epipe(self):
 
         # Start b3270.
         args = ['b3270', '-json']
-        b3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE)
+        b3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
         self.children.append(b3270)
 
         # Throw away b3270's initialization output.
@@ -56,12 +53,13 @@ class TestB3270Epipe(cti):
         b3270.stdout.close()
 
         # Generate a lot of output.
-        b3270.stdin.write(b'"readbuffer"\n')
+        b3270.stdin.write(b'"readbuffer"\n"Wait(1,seconds) ReadBuffer()"\n')
         b3270.stdin.flush()
 
         # Wait for the process to exit.
+        time.sleep(2)
         b3270.stdin.close()
-        self.vgwait(b3270)
+        self.vgwait(b3270, expected_status=1)
 
 if __name__ == '__main__':
     unittest.main()

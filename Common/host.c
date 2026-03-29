@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,7 @@ char 	       *host_user = NULL;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
-static iosrc_t net_sock = INVALID_IOSRC;
+static socket_t net_sock = INVALID_SOCKET;
 static ioid_t reconnect_id = NULL_IOID;
 
 static char *host_ps = NULL;
@@ -695,7 +695,7 @@ host_connect(const char *n, enum iaction ia)
     }
 
     /* Prepare Xt for I/O. */
-    if (net_sock != INVALID_IOSRC) {
+    if (net_sock != INVALID_SOCKET) {
 	x_add_input(net_sock);
     }
 
@@ -744,7 +744,7 @@ host_new_connection(bool pending)
 
 /* Continue a connection after hostname resolution completes. */
 void
-host_continue_connect(iosrc_t iosrc, net_connect_t nc)
+host_continue_connect(socket_t socket, net_connect_t nc)
 {
     char *ps = host_ps;
 
@@ -757,8 +757,8 @@ host_continue_connect(iosrc_t iosrc, net_connect_t nc)
     }
 
     /* Prepare Xt for I/O. */
-    net_sock = iosrc;
-    if (net_sock != INVALID_IOSRC) {
+    net_sock = socket;
+    if (net_sock != INVALID_SOCKET) {
 	x_add_input(net_sock);
     }
 
@@ -811,7 +811,7 @@ host_disconnect(bool failed)
 
     x_remove_input();
     net_disconnect(true);
-    net_sock = INVALID_IOSRC;
+    net_sock = INVALID_SOCKET;
     if (!host_gui_disconnect()) {
 	if (host_retry_mode && reconnect_id == NULL_IOID) {
 	    /* Schedule an automatic reconnection. */
@@ -861,13 +861,13 @@ host_connected(void)
 
 /* Swap out net_sock. */
 void
-host_newfd(iosrc_t s)
+host_newfd(socket_t socket)
 {
     /* Shut off the old. */
     x_remove_input();
 
     /* Turn on the new. */
-    net_sock = s;
+    net_sock = socket;
     x_add_input(net_sock);
 }
 

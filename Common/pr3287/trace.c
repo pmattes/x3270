@@ -73,7 +73,7 @@ clear_tmode(tmode_t desired)
 
 /* Data Stream trace print, handles line wraps. */
 void
-trace_ds(const char *fmt, ...)
+_trace_ds(const char *fmt, ...)
 {
     va_list args;
     size_t len;
@@ -207,7 +207,7 @@ vatrace(bool do_ts, tc_t category, const char *fmt, va_list args)
 
 /* Trace something that isn't host or printer data, with a timestamp. */
 void
-vtrace(const char *fmt, ...)
+_vtrace(const char *fmt, ...)
 {
     va_list args;
 
@@ -222,7 +222,7 @@ vtrace(const char *fmt, ...)
 
 /* Trace something that isn't host or printer data, with a timestamp. */
 void
-vctrace(tc_t category, const char *fmt, ...)
+_vctrace(tc_t category, const char *fmt, ...)
 {
     va_list args;
 

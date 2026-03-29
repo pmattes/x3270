@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2025 Paul Mattes.
+ * Copyright (c) 2000-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,13 +88,9 @@ static enum {
 } pr3287_state = PRS_NONE;
 static socket_t	pr3287_ls = INVALID_SOCKET;	/* printer sync listening socket */
 static ioid_t	pr3287_ls_id = NULL_IOID; /* input ID */
-#if defined(_WIN32) /*[*/
-static HANDLE	pr3287_ls_handle = NULL;
-#endif /*]*/
 static socket_t	pr3287_sync = INVALID_SOCKET;	/* printer sync socket */
 static ioid_t	pr3287_sync_id = NULL_IOID; /* input ID */
 #if defined(_WIN32) /*[*/
-static HANDLE	pr3287_sync_handle = NULL;
 static HANDLE	pr3287_stderr_wr = NULL;
 static HANDLE	pr3287_stderr_rd = NULL;
 #endif /*]*/
@@ -524,20 +520,7 @@ pr3287_start_now(const char *lu, bool associated)
     fcntl(pr3287_ls, F_SETFD, 1);
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-    pr3287_ls_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (pr3287_ls_handle == NULL) {
-	popup_an_error("CreateEvent: %s", win32_strerror(GetLastError()));
-	SOCK_CLOSE(pr3287_ls);
-	pr3287_ls = INVALID_SOCKET;
-	return;
-    }
-    if (WSAEventSelect(pr3287_ls, pr3287_ls_handle, FD_ACCEPT) != 0) {
-	popup_an_error("WSAEventSelect: %s", win32_strerror(GetLastError()));
-	SOCK_CLOSE(pr3287_ls);
-	pr3287_ls = INVALID_SOCKET;
-	return;
-    }
-    pr3287_ls_id = AddInput(pr3287_ls_handle, pr3287_accept);
+    pr3287_ls_id = AddInputSocket(pr3287_ls, FD_ACCEPT, pr3287_accept);
 #else /*][*/
     pr3287_ls_id = AddInput(pr3287_ls, pr3287_accept);
 #endif /*]*/
@@ -981,11 +964,6 @@ pr3287_stop_sync(void)
     assert(pr3287_sync_id != NULL_IOID);
     RemoveInput(pr3287_sync_id);
     pr3287_sync_id = NULL_IOID;
-#if defined(_WIN32) /*[*/
-    assert(pr3287_sync_handle != NULL);
-    CloseHandle(pr3287_sync_handle);
-    pr3287_sync_handle = NULL;
-#endif /*]*/
     SOCK_CLOSE(pr3287_sync);
     pr3287_sync = INVALID_SOCKET;
 }
@@ -1018,16 +996,9 @@ pr3287_stop_listening(void)
 {
     assert(pr3287_ls_id != NULL_IOID);
     assert(pr3287_ls != INVALID_SOCKET);
-#if defined(_WIN32) /*[*/
-    assert(pr3287_ls_handle != NULL);
-#endif /*]*/
 
     RemoveInput(pr3287_ls_id);
     pr3287_ls_id = NULL_IOID;
-#if defined(_WIN32) /*[*/
-    CloseHandle(pr3287_ls_handle);
-    pr3287_ls_handle = NULL;
-#endif /*]*/
     SOCK_CLOSE(pr3287_ls);
     pr3287_ls = INVALID_SOCKET;
 }
@@ -1051,17 +1022,7 @@ pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
 	fcntl(pr3287_sync, F_SETFD, 1);
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-	pr3287_sync_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (pr3287_sync_handle == NULL) {
-	    popup_an_error("CreateEvent failed");
-	    x3270_exit(1);
-	}
-	if (WSAEventSelect(pr3287_sync, pr3287_sync_handle,
-		    FD_READ | FD_CLOSE) != 0) {
-	    popup_an_error("Can't set socket handle events\n");
-	    x3270_exit(1);
-	}
-	pr3287_sync_id = AddInput(pr3287_sync_handle, pr3287_sync_input);
+	pr3287_sync_id = AddInputSocket(pr3287_sync, FD_READ | FD_CLOSE, pr3287_sync_input);
 #else /*][*/
 	pr3287_sync_id = AddInput(pr3287_sync, pr3287_sync_input);
 #endif /*]*/

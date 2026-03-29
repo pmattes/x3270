@@ -241,7 +241,7 @@ proxy_socks4_continue(socket_t fd)
 	ssize_t nr = recv(fd, (char *)&ps.rbuf[ps.nread], 1, 0);
 
 	if (nr < 0) {
-	    if (socket_errno() == SE_EWOULDBLOCK) {
+	    if (IS_EWOULDBLOCK(socket_errno())) {
 		if (ps.nread) {
 		    trace_netdata('<', ps.rbuf, ps.nread);
 		}

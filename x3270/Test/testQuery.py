@@ -90,7 +90,8 @@ class TestX3270Query(cti):
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(CommandLine)')
         self.assertTrue(r.ok)
         result = r.json()['result'][0]
-        self.assertTrue(result.endswith(f'x3270 -httpd 127.0.0.1:{http_port} -user "x ^Ay^Jz"'))
+        ew = f' -httpd 127.0.0.1:{http_port} -user "x ^Ay^Jz"'
+        self.assertTrue(result.endswith(ew))
 
         # Stop s3270.
         self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')

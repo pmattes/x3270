@@ -33,5 +33,8 @@
     <ClCompile Include="..\..\..\Common\Win32\w3misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Common\resolver_abs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -158,5 +158,94 @@ class TestS3270Httpd(cti):
     def test_s3270_httpd_html_syntax(self):
         self.s3270_httpd_html_error_test('/Foo(', 'Syntax')
 
+    # s3270 HTTPD blocking output test.
+    def test_s3270_httpd_blocking_output(self):
+
+        # Start s3270.
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port)]))
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Feed s3270 HTTP requests until the output backs up in the socket.
+        s = socket.socket()
+        s.connect(('127.0.0.1', port))
+        t0 = time.monotonic()
+        while True:
+            for i in range(50):
+                s.send(f'''GET /3270/rest/json/Show(-all) HTTP/1.1
+Host: 127.0.0.1:{port}
+User-Agent: Dummy/1.2.3.4
+Accept: */*
+Accept-Encoding: identity
+Connection: Keep-Alive
+
+'''.encode('utf-8'))
+            time.sleep(0.5)
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(OutputQueues)')
+            self.assertTrue(r.ok)
+            fields = [i for i in r.json()['result'] if i.startswith('total')][0].split()
+            queued = int(fields[2])
+            total = int(fields[6])
+            if queued != 0:
+                break
+            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+
+        # Read the socket in chunks.
+        # Wait for the output queue to clear.
+        total_chunk = total // 3
+        queued_chunk = queued // 2
+        this_chunk = queued_chunk
+        t0 = time.monotonic()
+        while True:
+            got = s.recv(this_chunk)
+            this_chunk = total_chunk
+            r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Query(OutputQueues)')
+            self.assertTrue(r.ok)
+            fields = [i for i in r.json()['result'] if i.startswith('total')][0].split()
+            queued = int(fields[2])
+            if queued == 0:
+                break
+            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not clear')
+            time.sleep(0.5)
+        s.close()
+
+        # Wait for the process to exit successfully.
+        requests.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
+        self.vgwait(s3270)
+
+    # s3270 HTTPD blocking output failure test.
+    def test_s3270_httpd_blocking_output_fail(self):
+
+        # Start s3270.
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-set', 'scriptedAlways']), stdin=PIPE)
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        # Feed s3270 HTTP requests until it closes the connection.
+        s = socket.socket()
+        s.connect(('127.0.0.1', port))
+        t0 = time.monotonic()
+        while True:
+            try:
+                s.send(f'''GET /3270/rest/json/Show(-all) HTTP/1.1
+Host: 127.0.0.1:{port}
+User-Agent: Dummy/1.2.3.4
+Accept: */*
+Accept-Encoding: identity
+Connection: Keep-Alive
+
+'''.encode('utf-8'))
+            except ConnectionResetError:
+                break
+            self.assertLess(time.monotonic() - t0, 5, 'Connection not broken')
+
+        s.close()
+        s3270.stdin.close()
+        self.vgwait(s3270)
+
 if __name__ == '__main__':
     unittest.main()

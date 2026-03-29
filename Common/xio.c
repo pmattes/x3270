@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, 2015, 2018, 2020 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -59,11 +59,15 @@ static bool excepting = false;
  * Called to set up input on a new network connection.
  */
 void
-x_add_input(iosrc_t iosrc)
+x_add_input(socket_t socket)
 {
-    ns_exception_id = AddExcept(iosrc, net_exception);
+    ns_exception_id = AddExcept(socket, net_exception);
     excepting = true;
-    ns_read_id = AddInput(iosrc, net_input);
+#if !defined(_WIN32) /*[*/
+    ns_read_id = AddInput(socket, net_input);
+#else /*][*/
+    ns_read_id = AddInputSocket(socket, FD_CONNECT | FD_READ | FD_CLOSE, net_input);
+#endif /*]*/
     reading = true;
 }
 
@@ -74,7 +78,7 @@ void
 x_except_off(void)
 {
     if (excepting) {
-	RemoveInput(ns_exception_id);
+	RemoveExcept(ns_exception_id);
 	excepting = false;
     }
 }
@@ -85,7 +89,7 @@ x_except_off(void)
  * processed first.
  */
 void
-x_except_on(iosrc_t iosrc)
+x_except_on(socket_t socket)
 {
     if (excepting) {
 	return;
@@ -93,10 +97,14 @@ x_except_on(iosrc_t iosrc)
     if (reading) {
 	RemoveInput(ns_read_id);
     }
-    ns_exception_id = AddExcept(iosrc, net_exception);
+    ns_exception_id = AddExcept(socket, net_exception);
     excepting = true;
     if (reading) {
-	ns_read_id = AddInput(iosrc, net_input);
+#if !defined(_WIN32) /*[*/
+	ns_read_id = AddInput(socket, net_input);
+#else /*][*/
+	ns_read_id = AddInputSocket(socket, FD_CONNECT | FD_READ | FD_CLOSE, net_input);
+#endif /*]*/
     }
 }
 
@@ -111,7 +119,7 @@ x_remove_input(void)
 	reading = false;
     }
     if (excepting) {
-	RemoveInput(ns_exception_id);
+	RemoveExcept(ns_exception_id);
 	excepting = false;
     }
 }

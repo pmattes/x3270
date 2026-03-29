@@ -33,6 +33,7 @@ import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
+import Common.Test.pipeq as pipeq
 
 class TestS3270Stdin(cti):
 
@@ -61,6 +62,80 @@ class TestS3270Stdin(cti):
         # Wait for the processes to exit.
         s3270.stdin.close()
         self.vgwait(s3270)
+
+    # s3270 stdin output backup test
+    def test_s3270_stdin_backup(self):
+
+        # Start s3270.
+        hport, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-set', 'scriptedAlways']), stdin=PIPE, stdout=PIPE)
+        self.children.append(s3270)
+        ts.close()
+
+        # Feed s3270 actions until the output backs up on stdout.
+        t0 = time.monotonic()
+        while True:
+            for i in range(100):
+                s3270.stdin.write(b'Query(-all)\n')
+            s3270.stdin.flush()
+            time.sleep(0.5)
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(OutputQueues)')
+            self.assertTrue(r.ok)
+            fields = [i for i in r.json()['result'] if i.startswith('total')][0].split()
+            queued = int(fields[2])
+            if queued != 0:
+                break
+            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+
+        # Read stdout.
+        # Wait for the output queue to clear.
+        pq = pipeq.pipeq(self, s3270.stdout)
+        t0 = time.monotonic()
+        while True:
+            try:
+                if pq.get() == None:
+                    r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(OutputQueues)')
+                    self.assertTrue(r.ok)
+                    fields = [i for i in r.json()['result'] if i.startswith('total')][0].split()
+                    queued = int(fields[2])
+                    self.assertEqual(0, queued, 'Output queue did not drain')
+                    break
+            except:
+                break
+            self.assertLess(time.monotonic() - t0, 5, 'Output queue took too long to drain')
+
+        # Wait for the processes to exit.
+        s3270.stdin.close()
+        self.vgwait(s3270)
+        pq.close()
+        s3270.stdout.close()
+
+    # s3270 stdin output backup crash test
+    def test_s3270_stdin_backup_crash(self):
+
+        # Start s3270.
+        s3270 = Popen(vgwrap(['s3270']), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.children.append(s3270)
+
+        # Feed s3270 actions until the output backs up completely on stdout.
+        t0 = time.monotonic()
+        while True:
+            try:
+                s3270.stdin.write(b'Query(-all)\n')
+            except (BrokenPipeError, OSError):
+                break
+            self.assertLess(time.monotonic() - t0, 10, 's3270 did not crash')
+
+        # Wait for the processes to exit.
+        try:
+            s3270.stdin.close()
+        except (BrokenPipeError, OSError):
+            pass
+        s3270.stdout.close()
+        self.vgwait(s3270, assertOnFailure=False)
+        lines = s3270.stderr.readlines()
+        s3270.stderr.close()
+        self.assertIn(b'Unread output exceeded', lines[0])
 
 if __name__ == '__main__':
     unittest.main()

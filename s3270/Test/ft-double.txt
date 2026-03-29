@@ -1,2 +1,3 @@
 transfer direction=send host=vm localfile=s3270/Test/fttext "hostfile=ft1 text"
+wait cursorat 23 1
 transfer direction=send host=vm localfile=s3270/Test/fttext "hostfile=ft2 text"

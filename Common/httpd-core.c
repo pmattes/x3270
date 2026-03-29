@@ -154,7 +154,7 @@ typedef struct _httpd_reg {
 static void httpd_print(httpd_t *h, httpd_print_t type, const char *format,
 	...) printflike(3, 4);
 static httpd_reg_t *httpd_reg;
-static unsigned long httpd_seq = 0;
+static unsigned long httpd_next_seq = 0;
 
 static const char *type_map[] = {
     "text/html",
@@ -207,7 +207,7 @@ status_text(int status_code)
  * @param[in] len		Length of data
  * @param[in,out] doffset	Display offset
  */
-static void
+    static void
 httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
 	size_t len, size_t *doffset)
 {
@@ -215,16 +215,11 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
 #define BPL 16
     unsigned char linebuf[BPL];
     size_t j;
+    size_t limit = trace_detail_enabled(TC_HTTPD)? len: BPL;
 
     memset(linebuf, 0, BPL);
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < limit; i++) {
 	if (!(i % BPL)) {
-	    if (i) {
-		vtrace(" ");
-		for (j = 0; j < BPL; j++) {
-		    vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
-		}
-	    }
 	    vctrace(TC_HTTPD, "%s%s[%lu] 0x%04x",
 		    i? "\n": "",
 		    direction,
@@ -233,18 +228,22 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
 	}
 	vtrace(" %02x", (unsigned char)buf[i]);
 	linebuf[i % BPL] = buf[i];
+
+	/* Write out the ASCII for a full line. */
+	if ((i % BPL) == BPL - 1) {
+	    vtrace(" ");
+	    for (j = 0; j < BPL; j++) {
+		vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
+	    }
+	}
     }
 
-    /* Space over the missing data bytes on the line. */
-    if (i % BPL) {
-	vtrace("%*s", (int)((BPL - (i % BPL)) * 3 + 1), "");
-    } else {
-	vtrace(" ");
-    }
-
-    /* Trace the last chunk of data as text. */
-    for (j = 0; j < ((i % BPL)? (i % BPL): BPL); j++) {
-	vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
+    /* Write out the ASCII for a partial line. */
+    if (limit % BPL) {
+	vtrace("%*s", (int)(((BPL - (limit % BPL)) * 3) + 1), "");
+	for (j = 0; j < limit % BPL; j++) {
+	    vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
+	}
     }
     vtrace("\n");
 
@@ -494,7 +493,7 @@ httpd_init_state(httpd_t *h, void *mhandle)
     httpd_init_request(&h->request);
 
     h->mhandle = mhandle;
-    h->seq = httpd_seq++;
+    h->seq = httpd_next_seq++;
 }
 
 /**
@@ -2093,6 +2092,21 @@ httpd_new(void *mhandle, const char *client_name)
 }
 
 /**
+ * Get the sequence number for a session.
+ *
+ * @param[in] dhandle	handle returned by http_new
+ *
+ * @return session sequence number.
+ */
+int
+httpd_seq(void *dhandle)
+{
+    httpd_t *h = (httpd_t *)dhandle;
+
+    return h->seq;
+}
+
+/**
  * Process incoming HTTP data.
  *
  * Called with data read from the HTTP socket.
@@ -2100,11 +2114,12 @@ httpd_new(void *mhandle, const char *client_name)
  * @param[in] dhandle	handle returned by httpd_new
  * @param[in] data	data buffer
  * @param[in] len	length of data in buffer
+ * @param[out] len_left	returned remaining data length
  *
  * @return httpd_status_t
  */
 httpd_status_t
-httpd_input(void *dhandle, const char *data, size_t len)
+httpd_input(void *dhandle, const char *data, size_t len, size_t *len_left)
 {
     httpd_t *h = (httpd_t *)dhandle;
     request_t *r = &h->request;
@@ -2112,6 +2127,7 @@ httpd_input(void *dhandle, const char *data, size_t len)
     httpd_status_t rv = HS_CONTINUE;
 
     httpd_data_trace(h, "<", data, len, &r->it_offset);
+    *len_left = 0;
 
     /* Process a byte at a time, skipping CRs. */
     for (i = 0; i < len; i++) {
@@ -2121,6 +2137,7 @@ httpd_input(void *dhandle, const char *data, size_t len)
 	    continue;
 	case HS_SUCCESS_OPEN:
 	    httpd_reinit_request(r);
+	    *len_left = len - (i + 1);
 	    return rv;
 	case HS_ERROR_OPEN:
 	    /* Request failed, but keep the socket open. */
@@ -2128,9 +2145,14 @@ httpd_input(void *dhandle, const char *data, size_t len)
 	    /* fall through */
 	case HS_ERROR_CLOSE:
 	    /* Request failed, close the socket. */
+	    /* fall through */
 	case HS_SUCCESS_CLOSE:
 	    /* Request succeeded, close the socket. */
+	    /* fall through */
 	case HS_PENDING:
+	    if (rv == HS_ERROR_OPEN || rv == HS_PENDING) {
+		*len_left = len - (i + 1);
+	    }
 	    /* Request pending, hold off further input. */
 	    return rv;
 	}

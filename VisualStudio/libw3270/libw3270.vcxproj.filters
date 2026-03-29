@@ -65,7 +65,9 @@
     <ClCompile Include="..\..\Common\uri.c" />
     <ClCompile Include="..\..\Common\percent_decode.c" />
     <ClCompile Include="..\..\Common\cookiefile.c" />
+    <ClCompile Include="..\..\Common\oq.c" />
     <ClCompile Include="favicon.c" />
     <ClCompile Include="..\..\Common\find_console.c" />
+    <ClCompile Include="..\..\Common\defer.c" />
   </ItemGroup>
 </Project>

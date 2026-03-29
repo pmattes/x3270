@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2025 Paul Mattes.
+ * Copyright (c) 2014-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,7 @@
 #include "bind-opt.h"
 #include "json.h"
 #include "json_run.h"
+#include "oq.h"
 #include "popups.h"
 #include "resources.h"
 #include "s3270_proto.h"
@@ -72,9 +73,6 @@ struct hio_listener {
     llist_t link;	/* list linkage */
     int n_sessions;
     socket_t listen_s;
-#if defined(_WIN32) /*[*/
-    HANDLE listen_event;
-#endif /*]*/
     ioid_t listen_id;
     char *desc;
 };
@@ -85,13 +83,12 @@ static llist_t listeners = LLIST_INIT(listeners);
 typedef struct {
     llist_t link;	/* list linkage */
     socket_t s;		/* socket */
-#if defined(_WIN32) /*[*/
-    HANDLE event;
-#endif /*]*/
+    oq_t oq;		/* output queue */
     void *dhandle;	/* httpd protocol handle */
     int idle;
-    ioid_t ioid;	/* AddInput ID */
-    ioid_t toid;	/* AddTimeOut ID */
+    ioid_t ioid;	/* Input ID */
+    ioid_t toid;	/* Idle timeout ID */
+    ioid_t noid;	/* Next timeout ID */
 
     struct {		/* pending command state: */
 	sendto_callback_t *callback; /* callback function */
@@ -101,6 +98,8 @@ typedef struct {
 	bool done;	/* is the command done? */
     } pending;
     hio_listener_t *listener;
+    char *pending_input; /* leftover input */
+    size_t pending_input_len; /* length of leftover input */
 } session_t;
 llist_t sessions = LLIST_INIT(sessions);
 
@@ -129,21 +128,28 @@ static void
 hio_socket_close(session_t *session)
 {
     SOCK_CLOSE(session->s);
+    if (session->oq != NULL) {
+	oq_free(&session->oq);
+    }
     if (session->ioid != NULL_IOID) {
 	RemoveInput(session->ioid);
     }
     if (session->toid != NULL_IOID) {
 	RemoveTimeOut(session->toid);
     }
-#if defined(_WIN32) /*[*/
-    CloseHandle(session->event);
-#endif /*]*/
+    if (session->noid != NULL_IOID) {
+	RemoveTimeOut(session->noid);
+    }
     vb_free(&session->pending.result);
     json_free(session->pending.jresult);
+    if (session->pending_input != NULL) {
+	Free(session->pending_input);
+    }
     llist_unlink(&session->link);
     if (session->listener != NULL) {
 	session->listener->n_sessions--;
     }
+    memset(session, 0, sizeof(session_t));
     Free(session);
 }
 
@@ -202,6 +208,62 @@ hio_timeout(ioid_t id)
 }
 
 /**
+ * Process an input buffer.
+ * @param[in] session	Context
+ * @param[in] buf	Data buffer
+ * @param[in] nr	Data buffer length
+ * @returns true if input should be re-enabled
+ */
+static bool
+hio_process_buffer(session_t *session, char *buf, size_t nr)
+{
+    httpd_status_t rv;
+    size_t len_left;
+    bool reenable = false;
+
+    do {
+	rv = httpd_input(session->dhandle, buf, nr, &len_left);
+	if (rv < 0) {
+	    httpd_close(session->dhandle, "protocol error");
+	    hio_socket_close(session);
+	    return false;
+	}
+	if (rv == HS_PENDING || len_left > 0) {
+	    /* Stop input on this socket. */
+	    if (session->ioid != NULL_IOID) {
+		RemoveInput(session->ioid);
+		session->ioid = NULL_IOID;
+	    }
+	} else if (session->ioid != NULL_IOID && session->toid == NULL_IOID) {
+	    /* Leave input enabled and start the idle timeout. */
+	    session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
+	}
+
+	/* Remember any leftover input. */
+	if (len_left > 0) {
+	    if (rv == HS_PENDING) {
+		/* Hold onto the remaining data until the pending actions complete. */
+		session->pending_input = Malloc(len_left);
+		memcpy(session->pending_input, buf + nr - len_left, len_left);
+		session->pending_input_len = len_left;
+		break;
+	    }  else {
+		/* No action pending and no error -- keep processing. */
+		buf += nr - len_left;
+		nr = len_left;
+	    }
+	} else {
+	    /*
+	     * No leftover input. If an action is not pending (and there is no error,
+	     * which would have been caught above), re-enable input.
+	     */
+	    reenable = rv != HS_PENDING;
+	}
+    } while (len_left);
+    return reenable;
+}
+
+/**
  * New inbound data for an httpd connection.
  *
  * @param[in] fd	socket file descriptor
@@ -211,6 +273,7 @@ void
 hio_socket_input(iosrc_t fd, ioid_t id)
 {
     session_t *session;
+    const char *errmsg;
     char buf[1024];
     ssize_t nr;
 
@@ -223,6 +286,14 @@ hio_socket_input(iosrc_t fd, ioid_t id)
     if (session == NULL) {
 	vctrace(TC_HTTPD, "mystery input\n");
 	return;
+    }
+
+    /* It can't already have input pending. */
+    assert(session->pending_input == NULL);
+
+    if (oq_errored(session->oq, &errmsg)) {
+	httpd_close(session->dhandle, txAsprintf("hio_socket_input: %s", errmsg));
+	hio_socket_close(session);
     }
 
     /* Move this session to the front of the list. */
@@ -242,7 +313,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 	bool harmless = false;
 
 	if (nr < 0) {
-	    if (socket_errno() == SE_EWOULDBLOCK) {
+	    if (IS_EWOULDBLOCK(socket_errno())) {
 		harmless = true;
 	    }
 	    ebuf = txAsprintf("recv error: %s", socket_errtext());
@@ -255,20 +326,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 	    hio_socket_close(session);
 	}
     } else {
-	httpd_status_t rv;
-
-	rv = httpd_input(session->dhandle, buf, nr);
-	if (rv < 0) {
-	    httpd_close(session->dhandle, "protocol error");
-	    hio_socket_close(session);
-	} else if (rv == HS_PENDING) {
-	    /* Stop input on this socket. */
-	    RemoveInput(session->ioid);
-	    session->ioid = NULL_IOID;
-	} else if (session->toid == NULL_IOID) {
-	    /* Leave input enabled and start the timeout. */
-	    session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
-	}
+	(void) hio_process_buffer(session, buf, nr);
     }
 }
 
@@ -292,6 +350,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     socklen_t len;
     char hostbuf[128];
     session_t *session;
+    const char *desc;
 
     /* Find the listener. */
     FOREACH_LLIST(&listeners, l, hio_listener_t *) {
@@ -310,7 +369,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     t = accept(l->listen_s, &sa.sa, &len);
     if (t == INVALID_SOCKET) {
 	vctrace(TC_HTTPD, "accept error: %s%s\n", socket_errtext(),
-		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
+		IS_EWOULDBLOCK(socket_errno())? " (harmless)": "");
 	return;
     }
 
@@ -324,42 +383,19 @@ hio_connection(iosrc_t fd, ioid_t id)
     vb_init(&session->pending.result);
     session->pending.jresult = NULL;
     session->s = t;
-#if defined(_WIN32) /*[*/
-    session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (session->event == NULL) {
-	vctrace(TC_HTTPD, "can't create socket handle\n");
-	SOCK_CLOSE(t);
-	Free(session);
-	return;
-    }
-    if (WSAEventSelect(session->s, session->event, FD_READ | FD_CLOSE) != 0) {
-	vctrace(TC_HTTPD, "Can't set socket handle events\n");
-	CloseHandle(session->event);
-	SOCK_CLOSE(t);
-	Free(session);
-	return;
-    }
-#endif /*]*/
     if (sa.sa.sa_family == AF_INET) {
-	session->dhandle = httpd_new(session,
-		txAsprintf("%s:%u",
-		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
-			sizeof(hostbuf)),
-		    ntohs(sa.sin.sin_port)));
+	desc = txAsprintf("%s:%u", inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf, sizeof(hostbuf)),ntohs(sa.sin.sin_port));
     } else if (sa.sa.sa_family == AF_INET6) {
-	session->dhandle = httpd_new(session,
-		txAsprintf("%s:%u",
-		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
-			sizeof(hostbuf)),
-		    ntohs(sa.sin6.sin6_port)));
+	desc = txAsprintf("%s:%u", inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf, sizeof(hostbuf)), ntohs(sa.sin6.sin6_port));
+    } else {
+	desc = "???";
     }
-    else {
-	session->dhandle = httpd_new(session, "???");
-    }
+    session->dhandle = httpd_new(session, desc);
+    session->oq = oq_create_socket(txAsprintf("httpd[%d]", httpd_seq(session->dhandle)), TC_HTTPD, t);
 #if !defined(_WIN32) /*[*/
     session->ioid = AddInput(t, hio_socket_input);
 #else /*][*/
-    session->ioid = AddInput(session->event, hio_socket_input);
+    session->ioid = AddInputSocket(session->s, FD_READ | FD_CLOSE, hio_socket_input);
 #endif /*]*/
 
     /* Set the timeout for the first line of input. */
@@ -429,23 +465,7 @@ hio_init_x(struct sockaddr *sa, socklen_t sa_len)
     fcntl(l->listen_s, F_SETFD, 1);
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-    l->listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (l->listen_event == NULL) {
-	popup_an_error("httpd: cannot create listen handle");
-	SOCK_CLOSE(l->listen_s);
-	l->listen_s = INVALID_SOCKET;
-	goto fail;
-    }
-    if (WSAEventSelect(l->listen_s, l->listen_event, FD_ACCEPT) != 0) {
-	popup_an_error("httpd: WSAEventSelect failed: %s",
-		socket_errtext());
-	CloseHandle(l->listen_event);
-	l->listen_event = INVALID_HANDLE_VALUE;
-	SOCK_CLOSE(l->listen_s);
-	l->listen_s = INVALID_SOCKET;
-	goto fail;
-    }
-    l->listen_id = AddInput(l->listen_event, hio_connection);
+    l->listen_id = AddInputSocket(l->listen_s, FD_ACCEPT, hio_connection);
 #else /*][*/
     l->listen_id = AddInput(l->listen_s, hio_connection);
 #endif /*]*/
@@ -510,11 +530,6 @@ hio_stop_x(hio_listener_t *l)
     SOCK_CLOSE(l->listen_s);
     l->listen_s = INVALID_SOCKET;
 
-#if defined(_WIN32) /*[*/
-    CloseHandle(l->listen_event);
-    l->listen_event = INVALID_HANDLE_VALUE;
-#endif /*]*/
-
     /* Detach any sessions. */
     FOREACH_LLIST(&sessions, session, session_t *) {
 	if (session->listener == l) {
@@ -552,11 +567,10 @@ void
 hio_send(void *mhandle, const char *buf, size_t len)
 {
     session_t *s = mhandle;
-    ssize_t nw;
+    const char *errmsg;
 
-    nw = send(s->s, buf, (int)len, 0);
-    if (nw < 0) {
-	vctrace(TC_HTTPD, "send error: %s\n", socket_errtext());
+    if (!oq_write(s->oq, buf, len, &errmsg)) {
+	vctrace(TC_HTTPD, "[%d] send error: %s\n", httpd_seq(s->dhandle), errmsg);
     }
 }
 
@@ -790,7 +804,55 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 }
 
 /**
- * Asynchronous completion.
+ * Process the next action for a session.
+ *
+ * @param[in] ioid	I/O ID
+ */
+void
+hio_next(ioid_t id)
+{
+    session_t *session = NULL;
+
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (session->noid == id) {
+	    break;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (session == NULL) {
+	vctrace(TC_HTTPD, "hio_next: ID not found\n");
+	return;
+    }
+
+    session->noid = NULL_IOID;
+    if (session->pending_input != NULL) {
+	char *buf = session->pending_input;
+	size_t nr = session->pending_input_len;
+	bool reenable;
+
+	session->pending_input = NULL;
+	session->pending_input_len = 0;
+	reenable = hio_process_buffer(session, buf, nr);
+	Free(buf);
+	if (!reenable) {
+	    return;
+	}
+    }
+
+    /* Allow more input, with a timeout. */
+    if (session->ioid == NULL_IOID) {
+#if !defined(_WIN32) /*[*/
+	session->ioid = AddInput(session->s, hio_socket_input);
+#else /*][*/
+	session->ioid = AddInputSocket(session->s, FD_READ | FD_CLOSE, hio_socket_input);
+#endif /*]*/
+    }
+    if (session->toid == NULL_IOID) {
+	session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
+    }
+}
+
+/**
+ * Asynchronous action completion.
  *
  * @param[in] dhandle   State
  * @param[in] rv        Completion status
@@ -799,29 +861,25 @@ void
 hio_async_done(void *dhandle, httpd_status_t rv)
 {
     session_t *session = httpd_mhandle(dhandle);
+    const char *errmsg;
 
     if (rv < 0) {
 	hio_socket_close(session);
 	return;
     }
 
-    /* Allow more input. */
-    if (session->ioid == NULL_IOID) {
-#if !defined(_WIN32) /*[*/
-	session->ioid = AddInput(session->s, hio_socket_input);
-#else /*][*/
-	session->ioid = AddInput(session->event, hio_socket_input);
-#endif /*]*/
+    if (oq_errored(session->oq, &errmsg)) {
+	httpd_close(dhandle, txAsprintf("hio_async_done: %s", errmsg));
+	hio_socket_close(session);
+	return;
     }
 
     /*
-     * Set a timeout for that input to arrive. We didn't set this timeout
-     * as soon as the last input arrived, because it might have taken us a
-     * long time to proces the last request.
+     * Do the next thing (process pending input or listen for more), after a trip through the scheduler.
+     * This ensures that other activity gets a chance to be processed if our peer is slamming us with
+     * input.
      */
-    if (session->toid == NULL_IOID) {
-	session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
-    }
+    session->noid = AddTimeOut(0, hio_next);
 }
 
 /**

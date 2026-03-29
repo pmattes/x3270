@@ -268,7 +268,7 @@ class TestS3270Tls(cti):
 
             # Start s3270.
             args = ['s3270', '-set', 'wrongTerminalName', f'l:y:127.0.0.1:{port}=TEST' if not uri else f'tn3270s://127.0.0.1:{port}?accepthostname=TEST?verifyhostcert=false']
-            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL)
+            s3270 = Popen(vgwrap(args), stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL)
             self.children.append(s3270)
 
             # Do the TLS thing.

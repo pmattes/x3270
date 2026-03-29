@@ -67,11 +67,9 @@ init_schange(void)
 /*
  * Register a function with a particular order.
  * 'order' can be:
- *   ORDER_DONTCARE (65534)	insert anywhere (will actually queue up before
- *   				 any 'last')
- *   ORDER_LAST (65535)		insert last (the order of multiple 'lasts' is
- *   				 undefined)
- *   0 through 65533		specific ordering
+ *   0 through 0x7fff		specific ordering
+ *   ORDER_DONTCARE (0x8000)	insert anywhere (will actually queue up before any 'last')
+ *   ORDER_LAST (0xffff)	insert last (the order of multiple 'lasts' is undefined)
  */
 void
 register_schange_ordered(enum st tx, schange_callback_t *func,

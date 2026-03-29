@@ -108,24 +108,45 @@ static int      tracewindow_pid = -1;
 #else /*][*/
 static HANDLE	tracewindow_handle = NULL;
 #endif /*]*/
-static FILE    *tracef = NULL;
 static char    *tracef_bufptr = NULL;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = NULL;
 static int	trace_reason;
 
+static bool 	wrote_ts = false;
+static bool	tolr_active = false;
+
 static void	vwtrace(bool do_ts, tc_t category, const char *fmt, va_list args);
 static void	wtrace(bool do_ts, tc_t category, const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
 static void	stop_tracing(void);
 
+static bool detail_initted[NUM_TC];
+static bool detail_enabled[NUM_TC];
+
 /* Globals */
+FILE           *tracef = NULL;
 bool		trace_skipping = false;
 char	       *tracefile_name = NULL;
 
 /* Statics */
-static bool 	 wrote_ts = false;
+
+/* Start the trace-of-last-resort. */
+void
+tolr_start(void)
+{
+    char *path;
+
+    if ((path = getenv("X3270_TOLR")) != NULL) {
+	tracef = fopen(path, "w");
+	if (tracef != NULL) {
+	    set_toggle(TRACING, true);
+	    tolr_active = true;
+	}
+	vctrace(TC_INFRA, "trace of last resort started\n");
+    }
+}
 
 /* display a (row,col) */
 const char *
@@ -232,7 +253,7 @@ trace_ds_s(char *s, bool can_break)
  * wraps.
  */
 void
-trace_ds(const char *fmt, ...)
+_trace_ds(const char *fmt, ...)
 {
     va_list args;
     char *s;
@@ -249,9 +270,56 @@ trace_ds(const char *fmt, ...)
     Free(s);
 }
 
+/* Set the value of a detail trace category. */
+static bool
+check_detail_trace(const char *spec, const char *catname)
+{
+    char *copy = NewString(spec);
+    char *str = copy;
+    char *saveptr = NULL;
+    char *token;
+    bool found = false;
+
+    if (spec == NULL) {
+	return false;
+    }
+    if (!strcmp(spec, "1") || !strcasecmp(spec, "all")) {
+	return true;
+    }
+
+    while ((token = strtok_r(str, ":", &saveptr)) != NULL) {
+	if (!strcasecmp(token, catname)) {
+	    found = true;
+	    break;
+	}
+	str = NULL;
+    }
+    Free(copy);
+    return found;
+}
+
+/* Returns true if the specified category is enabled for detail tracing. */
+bool
+trace_detail_enabled(tc_t tc)
+{
+    if (!detail_initted[tc]) {
+	detail_enabled[tc] = check_detail_trace(getenv("X3270_DETAIL_TRACE"), cats[tc])
+	    || check_detail_trace(appres.detail_trace, cats[tc]);
+	detail_initted[tc] = true;
+    }
+    return detail_enabled[tc];
+}
+
+/* Reset the cached trace detail configuration. */
+void
+trace_detail_reset(void)
+{
+    memset(detail_initted, 0, sizeof(detail_enabled));
+}
+
 /* Conditional event trace. */
 void
-vtrace(const char *fmt, ...)
+_vtrace(const char *fmt, ...)
 {
     va_list args;
 
@@ -265,9 +333,9 @@ vtrace(const char *fmt, ...)
     va_end(args);
 }
 
-/* Conditional event trace. */
+/* Event trace for a specific category. */
 void
-vctrace(tc_t category, const char *fmt, ...)
+_vctrace(tc_t category, const char *fmt, ...)
 {
     va_list args;
 
@@ -281,9 +349,25 @@ vctrace(tc_t category, const char *fmt, ...)
     va_end(args);
 }
 
+/* Detailed event trace for a specific category. */
+void
+_vcdtrace(tc_t category, const char *fmt, ...)
+{
+    va_list args;
+
+    if (!toggled(TRACING) || tracef == NULL || !trace_detail_enabled(category)) {
+	return;
+    }
+
+    /* print out message */
+    va_start(args, fmt);
+    vwtrace(true, category, fmt, args);
+    va_end(args);
+}
+
 /* Conditional event trace. */
 void
-ntvtrace(const char *fmt, ...)
+_ntvtrace(const char *fmt, ...)
 {
     va_list args;
 
@@ -934,6 +1018,15 @@ trace_set_trace_file(const char *path)
 static void
 toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
 {
+    if (tt == TT_INITIAL && tolr_active) {
+	/* Display current status */
+	wtrace(true, TC_INFRA, "Trace info\n");
+	wtrace(false, TC_INFRA, " Version: %s\n", build);
+	dump_queries();
+	dump_settings();
+	return;
+    }
+
     /* If turning on trace and no trace file, open one. */
     if (toggled(TRACING) && tracef == NULL) {
 	tracefile_on(TRACING, tt);

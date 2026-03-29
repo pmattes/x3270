@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@
 #include "json_run.h"
 #include "kybd.h"
 #include "names.h"
+#include "oq.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "s3270_proto.h"
@@ -129,12 +130,11 @@ static tcb_t interactive_cb = {
 typedef struct {
     llist_t llist;	/* list linkage */
     socket_t socket;	/* socket */
+    oq_t oq;		/* output queue */
     char *desc;		/* description */
-#if defined(_WIN32) /*[*/
-    HANDLE event;	/* event */
-#endif /*]*/
     peer_listen_t listener;
-    ioid_t id;		/* I/O identifier */
+    ioid_t ioid;	/* I/O identifier */
+    ioid_t toid;	/* timeout identifier */
     char *buf;		/* pending command */
     size_t buf_len;	/* length of pending command */
     size_t pj_offset;	/* partial JSON offset */
@@ -152,9 +152,6 @@ static llist_t peer_scripts = LLIST_INIT(peer_scripts);
 struct _peer_listen {
     llist_t llist;	/* list linkage */
     socket_t socket;	/* socket */
-#if defined(_WIN32) /*[*/
-    HANDLE event;	/* event */
-#endif /*]*/
     ioid_t id;		/* I/O identifier */
     peer_listen_mode mode; /* listen mode */
     char *desc;		/* listener description */
@@ -167,22 +164,23 @@ static llist_t peer_listeners = LLIST_INIT(peer_listeners);
  * @param[in,out] p	Peer
  */
 static void
-close_peer(peer_t *p)
+close_peer(peer_t *p, const char *errmsg)
 {
     llist_unlink(&p->llist);
     if (p->socket != INVALID_SOCKET) {
 	SOCK_CLOSE(p->socket);
 	p->socket = INVALID_SOCKET;
     }
-#if defined(_WIN32) /*[*/
-    if (p->event != INVALID_HANDLE_VALUE) {
-	CloseHandle(p->event);
-	p->event = INVALID_HANDLE_VALUE;
+    if (p->oq != NULL) {
+	oq_free(&p->oq);
     }
-#endif /*]*/
-    if (p->id != NULL_IOID) {
-	RemoveInput(p->id);
-	p->id = NULL_IOID;
+    if (p->ioid != NULL_IOID) {
+	RemoveInput(p->ioid);
+	p->ioid = NULL_IOID;
+    }
+    if (p->toid != NULL_IOID) {
+	RemoveInput(p->toid);
+	p->toid = NULL_IOID;
     }
     Replace(p->desc, NULL);
     Replace(p->buf, NULL);
@@ -190,6 +188,9 @@ close_peer(peer_t *p)
 
     if (p->listener == NULL || p->listener->mode == PLM_ONCE) {
 	vctrace(TC_SCRIPT, "once-only socket closed, exiting\n");
+	if (errmsg != NULL) {
+	    xs_error("%s", errmsg);
+	}
 	x3270_exit(0);
     }
     task_cb_abort_ir_state(&p->ir_state);
@@ -328,7 +329,7 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 
     /* Find the peer. */
     FOREACH_LLIST(&peer_scripts, p, peer_t *) {
-	if (p->id == id) {
+	if (p->ioid == id) {
 	    found_peer = true;
 	    break;
 	}
@@ -347,13 +348,13 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 #else /*][*/
 	vctrace(TC_SCRIPT, "s3sock %s recv: %s\n", p->desc, strerror(errno));
 #endif /*]*/
-	close_peer(p);
+	close_peer(p, NULL);
 	return;
     }
     vctrace(TC_SCRIPT, "Input for s3sock %s complete, nr=%d\n", p->desc, (int)nr);
     if (nr == 0) {
 	vctrace(TC_SCRIPT, "s3sock %s EOF\n", p->desc);
-	close_peer(p);
+	close_peer(p, NULL);
 	return;
     }
 
@@ -370,18 +371,18 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
     }
 
     /* Disable further input. */
-    if (p->id != NULL_IOID) {
-	RemoveInput(p->id);
-	p->id = NULL_IOID;
+    if (p->ioid != NULL_IOID) {
+	RemoveInput(p->ioid);
+	p->ioid = NULL_IOID;
     }
 
     /* Run the next command, if we have it all. */
-    if (!run_next(p) && p->id == NULL_IOID) {
+    if (!run_next(p) && p->ioid == NULL_IOID) {
 	/* Get more input. */
 #if defined(_WIN32) /*[*/
-	p->id = AddInput(p->event, peer_input);
+	p->ioid = AddInputSocket(p->socket, FD_READ | FD_CLOSE, peer_input);
 #else /*][*/
-	p->id = AddInput(p->socket, peer_input);
+	p->ioid = AddInput(p->socket, peer_input);
 #endif /*]*/
     }
 }
@@ -389,25 +390,18 @@ peer_input(iosrc_t fd _is_unused, ioid_t id)
 /**
  * Send data on a socket and check the result.
  *
- * @param[in] s		Socket
+ * @param[in] p		Peer
  * @param[in] data	Data to send
  * @param[in] len	Length
  * @param[in] sender	Sending function
  */
 static void
-check_send(socket_t s, const char *data, size_t len, const char *sender)
+check_send(peer_t *p, const char *data, size_t len, const char *sender)
 {
-    ssize_t ns = send(s, data, (int)len, 0);
-    if (ns != (ssize_t)len) {
-	if (ns < 0) {
-#if !defined(_WIN32) /*[*/
-	    vctrace(TC_SCRIPT, "%s send: %s\n", sender, strerror(errno));
-#else /*][*/
-	    vctrace(TC_SCRIPT, "%s send: %s\n", sender, win32_strerror(GetLastError()));
-#endif/*]*/
-	} else {
-	    vctrace(TC_SCRIPT, "%s: short send\n", sender);
-	}
+    const char *errmsg;
+
+    if (!oq_write(p->oq, data, len, &errmsg)) {
+	vctrace(TC_SCRIPT, "s3sock write %s failed: %s\n", p->desc, errmsg);
     }
 }
 
@@ -433,7 +427,7 @@ peer_data(task_cbh handle, const char *buf, size_t len, bool success)
 
     s3data(buf, len, success, p->capabilities, p->json_result, NULL, &cooked);
     if (cooked != NULL) {
-	check_send(p->socket, cooked, strlen(cooked), "peer_data");
+	check_send(p, cooked, strlen(cooked), "peer_data");
 	Free(cooked);
     }
 
@@ -461,9 +455,43 @@ peer_reqinput(task_cbh handle, const char *buf, size_t len, bool echo)
     recursing = true;
 
     s = Asprintf("%s%.*s\n", echo? INPUT_PREFIX: PWINPUT_PREFIX, (int)len, buf);
-    check_send(p->socket, s, strlen(s), "peer_reqinput");
+    check_send(p, s, strlen(s), "peer_reqinput");
     Free(s);
     recursing = false;
+}
+
+/**
+ * Run the next pending command.
+ *
+ * @param[in] id	Timeout ID
+ */
+static void
+run_next_deferred(ioid_t id)
+{
+    peer_t *p;
+    bool found_peer = false;
+
+    /* Find the peer. */
+    FOREACH_LLIST(&peer_scripts, p, peer_t *) {
+	if (p->toid == id) {
+	    found_peer = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&peer_scripts, p, peer_t *);
+    assert(found_peer);
+
+    vctrace(TC_SCRIPT, "Processing %s next command\n", p->desc);
+
+    /* Run whatever is pending. If there was nothing to run, allow more input. */
+    bool new_child = run_next(p);
+    if (!new_child && p->ioid == NULL_IOID) {
+	/* Allow more input. */
+#if defined(_WIN32) /*[*/
+	p->ioid = AddInputSocket(p->socket, FD_READ | FD_CLOSE, peer_input);
+#else /*][*/
+	p->ioid = AddInput(p->socket, peer_input);
+#endif /*]*/
+    }
 }
 
 /**
@@ -480,33 +508,32 @@ peer_done(task_cbh handle, bool success, bool abort)
 {
     peer_t *p = (peer_t *)handle;
     char *out;
-    bool new_child = false;
 
     s3done(handle, success, &p->json_result, &out);
-    check_send(p->socket, out, strlen(out), "peer_done");
+    check_send(p, out, strlen(out), "peer_done");
     Free(out);
 
-    if (abort || !p->enabled) {
-	close_peer(p);
+    const char *errmsg = NULL;
+    if (abort || !p->enabled || oq_errored(p->oq, &errmsg)) {
+	close_peer(p, NewString(errmsg));
 	return true;
     }
 
-    /* Run any pending command that we already read in. */
-    new_child = run_next(p);
-    if (!new_child && p->id == NULL_IOID) {
+    if (p->pj_offset < p->buf_len) {
+	vctrace(TC_SCRIPT, "Deferring %s next command\n", p->desc);
+	p->toid = AddTimeOut(0, run_next_deferred);
+	return false;
+    } else {
 	/* Allow more input. */
+	if (p->ioid == NULL_IOID) {
 #if defined(_WIN32) /*[*/
-	p->id = AddInput(p->event, peer_input);
+	    p->ioid = AddInputSocket(p->socket, FD_READ | FD_CLOSE, peer_input);
 #else /*][*/
-	p->id = AddInput(p->socket, peer_input);
+	    p->ioid = AddInput(p->socket, peer_input);
 #endif /*]*/
+	}
+	return true;
     }
-
-    /*
-     * If there was a new child, we're still active. Otherwise, let our sms
-     * be popped.
-     */
-    return !new_child;
 }
 
 /**
@@ -686,11 +713,7 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
     }
 
     if (accept_fd == INVALID_SOCKET) {
-#if !defined(_WIN32) /*[*/
-	vctrace(TC_SCRIPT, "s3sock accept: %s\n", strerror(errno));
-#else /*][*/
-	vctrace(TC_SCRIPT, "s3sock accept: %s\n", win32_strerror(GetLastError()));
-#endif /*]*/
+	vctrace(TC_SCRIPT, "s3sock accept: %s\n", socket_strerror(socket_errno()));
 	return;
     }
 
@@ -701,12 +724,6 @@ peer_connection(iosrc_t fd _is_unused, ioid_t id)
 	    SOCK_CLOSE(listener->socket);
 	    listener->socket = INVALID_SOCKET;
 	}
-#if defined(_WIN32) /*[*/
-	if (listener->event != INVALID_HANDLE_VALUE) {
-	    CloseHandle(listener->event);
-	    listener->event = INVALID_HANDLE_VALUE;
-	}
-#endif /*]*/
 	if (listener->id != NULL_IOID) {
 	    RemoveInput(listener->id);
 	    listener->id = NULL_IOID;
@@ -728,33 +745,20 @@ void
 peer_accepted(socket_t s, void *listener, const char *desc)
 {
     peer_t *p = (peer_t *)Calloc(1, sizeof(peer_t));
-#if defined(_WIN32) /*[*/
-    HANDLE event;
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
     fcntl(s, F_SETFD, 1);
-#else /*][*/
-    event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (event == NULL) {
-	fprintf(stderr, "Can't create socket handle\n");
-	exit(1);
-    }
-    if (WSAEventSelect(s, event, FD_READ | FD_CLOSE) != 0) {
-	fprintf(stderr, "Can't set socket handle events\n");
-	exit(1);
-    }
 #endif /*]*/
 
     llist_init(&p->llist);
     p->listener = listener;
     p->socket = s;
+    p->oq = oq_create_socket(txAsprintf("s3sock %s", desc), TC_SCRIPT, s);
     p->desc = NewString(desc);
 #if defined(_WIN32) /*[*/
-    p->event = event;
-    p->id = AddInput(p->event, peer_input);
+    p->ioid = AddInputSocket(p->socket, FD_READ | FD_CLOSE, peer_input);
 #else /*][*/
-    p->id = AddInput(p->socket, peer_input);
+    p->ioid = AddInput(p->socket, peer_input);
 #endif /*]*/
     p->buf = NULL;
     p->buf_len = 0;
@@ -784,9 +788,6 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
     /* Create the listening socket. */
     listener = (peer_listen_t)Calloc(sizeof(struct _peer_listen), 1);
     listener->socket = INVALID_SOCKET;
-#if defined(_WIN32) /*[*/
-    listener->event = INVALID_HANDLE_VALUE;
-#endif /*]*/
     listener->id = NULL_IOID;
 
     listener->mode = mode;
@@ -797,50 +798,30 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 	    WSA_FLAG_NO_HANDLE_INHERIT);
 #endif /*]*/
     if (listener->socket == INVALID_SOCKET) {
-#if !defined(_WIN32) /*[*/
-	popup_an_errno(errno, "script socket()");
-#else /*][*/
-	popup_an_error("script socket(): %s",
-		win32_strerror(GetLastError()));
-#endif /*]*/
+	popup_nh_sockerr("s3sock socket");
 	goto fail;
     }
 
 #if !defined(_WIN32) /*[*/
     if (setsockopt(listener->socket, SOL_SOCKET, SO_REUSEADDR,
 		(char *)&on, sizeof(on)) < 0) {
-	popup_an_errno(errno, "script setsockopt(SO_REUSEADDR)");
+	popup_nh_sockerr("s3sock setsockopt(SO_REUSEADDR)");
 	goto fail;
     }
 #endif /*]*/
 
     if (bind(listener->socket, sa, sa_len) < 0) {
-#if !defined(_WIN32) /*[*/
-	popup_an_errno(errno, "script socket bind");
-#else /*][*/
-	popup_an_error("script socket bind: %s",
-		win32_strerror(GetLastError()));
-#endif /*]*/
+	popup_nh_sockerr("s3sock bind");
 	goto fail;
     }
 
     if (getsockname(listener->socket, sa, &sa_len) < 0) {
-#if !defined(_WIN32) /*[*/
-	popup_an_errno(errno, "script socket getsockname");
-#else /*][*/
-	popup_an_error("script socket getsockname: %s",
-		win32_strerror(GetLastError()));
-#endif /*]*/
+	popup_nh_sockerr("s3sock getsockname");
 	goto fail;
     }
 
     if (listen(listener->socket, 1) < 0) {
-#if !defined(_WIN32) /*[*/
-	popup_an_errno(errno, "script socket listen");
-#else /*][*/
-	popup_an_error("script socket listen: %s",
-		win32_strerror(GetLastError()));
-#endif /*]*/
+	popup_nh_sockerr("s3sock listen");
 	goto fail;
     }
 
@@ -849,18 +830,7 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-    listener->event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (listener->event == NULL) {
-	popup_an_error("script CreateEvent: %s",
-		win32_strerror(GetLastError()));
-	goto fail;
-    }
-    if (WSAEventSelect(listener->socket, listener->event, FD_ACCEPT) != 0) {
-	popup_an_error("script WSAEventSelect: %s",
-		win32_strerror(GetLastError()));
-	goto fail;
-    }
-    listener->id = AddInput(listener->event, peer_connection);
+    listener->id = AddInputSocket(listener->socket, FD_ACCEPT, peer_connection);
 #else /*][*/
     listener->id = AddInput(listener->socket, peer_connection);
 #endif/*]*/
@@ -897,12 +867,6 @@ peer_init(struct sockaddr *sa, socklen_t sa_len, peer_listen_mode mode)
     goto done;
 
 fail:
-#if defined(_WIN32) /*[*/
-    if (listener->event != INVALID_HANDLE_VALUE) {
-	CloseHandle(listener->event);
-	listener->event = INVALID_HANDLE_VALUE;
-    }
-#endif /*]*/
     if (listener->socket != INVALID_SOCKET) {
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;
@@ -929,12 +893,6 @@ peer_shutdown(peer_listen_t listener)
 	SOCK_CLOSE(listener->socket);
 	listener->socket = INVALID_SOCKET;
     }
-#if defined(_WIN32) /*[*/
-    if (listener->event != INVALID_HANDLE_VALUE) {
-	CloseHandle(listener->event);
-	listener->event = INVALID_HANDLE_VALUE;
-    }
-#endif /*]*/
     if (listener->id != NULL_IOID) {
 	RemoveInput(listener->id);
 	listener->id = NULL_IOID;

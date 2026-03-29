@@ -63,8 +63,10 @@
 #include "login_macro.h"
 #include "min_version.h"
 #include "model.h"
+#include "names.h"
 #include "nvt.h"
 #include "opts.h"
+#include "oq.h"
 #include "peerscript.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -103,6 +105,24 @@ char *mydocs3270 = NULL;
 char *commondocs3270 = NULL;
 unsigned windirs_flags;
 #endif /*]*/
+
+/* Callback block for the command-line Connect action. */
+static void s3270_data(task_cbh handle, const char *buf, size_t len, bool success);
+static bool s3270_done(task_cbh handle, bool success, bool abort);
+static tcb_t s3270_cb = {
+    "s3270",
+    IA_UI,
+    CB_NEW_TASKQ,
+    s3270_data,
+    s3270_done,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
 
 static void s3270_register(void);
 
@@ -178,15 +198,28 @@ callback_init(void)
     }
 }
 
+/* Ready to accept input. */
+static void
+ready_for_input(void)
+{
+    /* Prepare to run a peer script. */
+    peer_script_init();
+
+    /* Prepare a callback session. */
+    callback_init();
+}
+
 int
 main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
     const char	*errmsg;
 
+    tolr_start();
+
 #if defined(_WIN32) /*[*/
     get_version_info();
-    if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    if (!get_dirs("s3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 		NULL, &windirs_flags)) {
 	exit(1);
     }
@@ -230,6 +263,7 @@ main(int argc, char *argv[])
     show_dirs_register();
 #endif /*]*/
     resolver_pipe_register();
+    oq_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -268,33 +302,65 @@ main(int argc, char *argv[])
     signal(SIGPIPE, SIG_IGN);
 #endif /*]*/
 
+    /* Initialize output queues. */
+    oq_init(appres.output_queues);
+
     /* Handle initial toggle settings. */
     initialize_toggles();
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	if (!host_connect(cl_hostname, IA_UI)) {
-	    exit(1);
-	}
-	/* Wait for negotiations to complete or fail. */
-	while (!IN_NVT && !IN_3270) {
-	    process_events(true);
-	    if (!PCONNECTED) {
-		exit(1);
-	    }
-	}
+	char *action = Asprintf(AnConnect "(\"%s\")", cl_hostname);
+
+	push_cb(action, strlen(action), &s3270_cb, (task_cbh)&s3270_cb);
+	Free(action);
+    } else {
+	ready_for_input();
     }
-
-    /* Prepare to run a peer script. */
-    peer_script_init();
-
-    /* Prepare a callback session. */
-    callback_init();
 
     /* Process events forever. */
-    while (1) {
+    while (true) {
 	process_events(true);
     }
+}
+
+/**
+ * Callback for data written by an action.
+ *
+ * @param[in] handle    Callback handle
+ * @param[in] buf       Buffer
+ * @param[in] len       Buffer length
+ * @param[in] success   True if data, false if error message
+ */
+static void
+s3270_data(task_cbh handle, const char *buf, size_t len, bool success)
+{
+    /* This is used only for the command-line Connect() action, so everything goes to stderr. */
+    fprintf(stderr, "%.*s\n", (int)len, buf);
+    fflush(stderr);
+}
+
+/**
+ * Callback for completion of an action.
+ *
+ * @param[in] handle            Callback handle
+ * @param[in] success           True if child succeeded
+ * @param[in] abort             True if aborting
+ *
+ * @return True if context is complete
+ */
+static bool
+s3270_done(task_cbh handle, bool success, bool abort)
+{
+    /* This is used only for the command-line Connect() action, so simply exit if it fails. */
+    if (!success || abort) {
+	vctrace(TC_UI, "Command-line " AnConnect "() action %s, exiting\n", abort? "aborted": "failed")
+	x3270_exit(1);
+    } else {
+	vctrace(TC_UI, "Command-line " AnConnect "() action succeeded\n");
+	ready_for_input();
+    }
+    return true;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2026 Paul Mattes.
+ * Copyright (c) 2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +26,19 @@
  */
 
 /*
- *	xio.h
- *		Global declarations for xio.c.
+ *      oq.h
+ *              Output queueing.
  */
 
-void x3270_exit(int n);
-void x_add_input(socket_t socket);
-void x_except_off(void);
-void x_except_on(socket_t socket);
-void xio_register(void);
-void x_remove_input(void);
+#include "trace.h"
+
+typedef struct oq *oq_t;
+
+void oq_init(const char *spec);
+oq_t oq_create_socket(const char *name, tc_t tc, socket_t socket);
+oq_t oq_create_stdout(const char *name, tc_t tc);
+bool oq_write(oq_t oq, const char *data, size_t len, const char **errmsg);
+bool oq_errored(oq_t oq, const char **errmsg);
+void oq_free(oq_t *oq);
+
+void oq_register(void);

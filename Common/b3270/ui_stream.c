@@ -35,6 +35,7 @@
 #include "globals.h"
 
 #if !defined(_WIN32) /*[*/
+# include <fcntl.h>
 # include <unistd.h>
 # include <netinet/in.h>
 # include <sys/select.h>
@@ -53,6 +54,7 @@
 #include "b_password.h"
 #include "json.h"
 #include "json_run.h"
+#include "oq.h"
 #include "popups.h"
 #include "resources.h"
 #include "screen.h"
@@ -173,6 +175,7 @@ static tcb_t cb_ui = {
     NULL
 };
 
+static oq_t ui_oq;
 static socket_t ui_socket = INVALID_SOCKET;
 
 static void xml_start(void *userData, const XML_Char *name,
@@ -188,16 +191,13 @@ uprintf(const char *fmt, ...)
     va_list ap;
     char *s;
     static char *pending_trace = NULL;
-    ssize_t nw;
+    bool write_success;
+    const char *errmsg;
 
     va_start(ap, fmt);
     s = Vasprintf(fmt, ap);
     va_end(ap);
-    if (ui_socket != INVALID_SOCKET) {
-	nw = send(ui_socket, s, (int)strlen(s), 0);
-    } else {
-	nw = write(fileno(stdout), s, (int)strlen(s));
-    }
+    write_success = oq_write(ui_oq, s, strlen(s), &errmsg);
 
     if (pending_trace != NULL) {
 	char *pt = Asprintf("%s%s", pending_trace, s);
@@ -220,13 +220,8 @@ uprintf(const char *fmt, ...)
 	Replace(pending_trace, NULL);
     }
 
-    if (nw < 0) {
-	    vctrace(TC_UI, "Write failure: %s\n",
-#if defined(_WIN32) /*[*/
-		    (ui_socket != INVALID_SOCKET)?
-			win32_strerror(GetLastError()):
-#endif /*]*/
-		    strerror(errno));
+    if (!write_success) {
+	vctrace(TC_UI, "Write failure: %s\n", errmsg);
     }
 }
 
@@ -749,6 +744,10 @@ ui_action_done(task_cbh handle, bool success, bool abort)
     }
 
     Free(uia);
+    const char *errmsg;
+    if (oq_errored(ui_oq, &errmsg)) {
+	xs_error("stdout: %s", errmsg);
+    }
     return true;
 }
 
@@ -1524,16 +1523,10 @@ ui_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     }
 
     if (nr < 0) {
-#if !defined(_WIN32) /*[*/
-	popup_an_errno(errno, "UI input");
-#else /*][*/
-	popup_an_error("UI input: %s\n", win32_strerror(GetLastError()));
-#endif /*]*/
-	fprintf(stderr, "UI read error\n");
-	x3270_exit(1);
+	xs_error("UI read error: %s\n", strerror(errno));
     }
     if (nr == 0) {
-	vctrace(TC_UI, "EOF, exiting\n");
+	vctrace(TC_UI, "UI input EOF, exiting\n");
 	if (uix.input_nest) {
 	    ui_leaf(IndUiError,
 		    AttrFatal, AT_BOOLEAN, false,
@@ -1759,6 +1752,10 @@ xml_data(void *userData _is_unused, const XML_Char *s, int len)
 void
 ui_io_init(void)
 {
+#if !defined(_WIN32) /*[*/
+    int flags, fd;
+#endif /*]*/
+
     /* See if we need to call out or use stdin/stdout. */
     if (appres.scripting.callback != NULL) {
 	struct sockaddr *sa;
@@ -1773,7 +1770,7 @@ ui_io_init(void)
 	    perror("socket");
 #else /*][*/
 	    fprintf(stderr, "socket: %s\n", win32_strerror(WSAGetLastError()));
-	    fflush(stdout);
+	    fflush(stderr);
 #endif /*]*/
 	    exit(1);
 	}
@@ -1782,7 +1779,7 @@ ui_io_init(void)
 	    perror("connect");
 #else /*][*/
 	    fprintf(stderr, "connect: %s\n", win32_strerror(WSAGetLastError()));
-	    fflush(stdout);
+	    fflush(stderr);
 #endif /*]*/
 	    exit(1);
 	}
@@ -1802,14 +1799,27 @@ ui_io_init(void)
     }
 
 #if !defined(_WIN32) /*[*/
+    /* Make stdout or the callback socket non-blocking. */
+    fd = (ui_socket != INVALID_SOCKET)? ui_socket: fileno(stdout);
+    if ((flags = fcntl(fd, F_GETFL)) < 0) {
+        perror("fcntl(F_GETFL)");
+        exit(1);
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        perror("fcntl(F_SETFL)");
+        exit(1);
+    }
     AddInput((ui_socket != INVALID_SOCKET)? ui_socket: fileno(stdin), ui_input);
+    if (ui_socket != INVALID_SOCKET) {
+	ui_oq = oq_create_socket("b3270-callback", TC_UI, ui_socket);
+    } else {
+	ui_oq = oq_create_stdout("b3270-stdout", TC_UI);
+    }
 #else /*][*/
     /* Set up the peer thread. */
     if (ui_socket != INVALID_SOCKET) {
-	HANDLE ui_socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	WSAEventSelect(ui_socket, ui_socket_event, FD_READ | FD_CLOSE);
-	AddInput(ui_socket_event, ui_input);
+	AddInputSocket(ui_socket, FD_READ | FD_CLOSE, ui_input);
+	ui_oq = oq_create_socket("b3270-callback", TC_UI, ui_socket);
     } else {
 	peer_enable_event = CreateEvent(NULL, FALSE, TRUE, NULL);
 	assert(peer_enable_event != INVALID_HANDLE_VALUE);
@@ -1826,6 +1836,7 @@ ui_io_init(void)
 		    win32_strerror(GetLastError()));
 	}
 	AddInput(peer_done_event, ui_input);
+	ui_oq = oq_create_stdout("b3270-stdout", TC_UI);
     }
 #endif /*]*/
 
@@ -1839,6 +1850,9 @@ ui_io_init(void)
 	}
     }
 
-    /* Set up a handler for exit. */
-    register_schange_ordered(ST_EXITING, ui_exiting, ORDER_LAST);
+    /*
+     * Set up a handler for exit.
+     * This is ORDER_LAST - 2, so it comes before stdout flush, which is ORDER_LAST - 1.
+     */
+    register_schange_ordered(ST_EXITING, ui_exiting, ORDER_LAST - 2);
 }

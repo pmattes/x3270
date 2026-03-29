@@ -42,12 +42,14 @@
 #include "json_run.h"
 #include "kybd.h"
 #include "names.h"
+#include "oq.h"
 #include "popups.h"
 #include "s3270_proto.h"
 #include "s3common.h"
 #include "source.h"
 #include "task.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
@@ -92,6 +94,8 @@ static char *pj_in;	/* pending JSON input */
 static json_t *pj_out;		/* pending JSON output state */
 
 static unsigned stdin_capabilities;
+
+static oq_t stdout_oq;
 
 /**
  * Check a string for (possibly incremental) JSON.
@@ -318,8 +322,9 @@ stdin_data(task_cbh handle _is_unused, const char *buf, size_t len, bool success
 	fprintf(stderr, AnWait "(): %s\n", raw);
 	fflush(stderr);
     } else if (cooked != NULL) {
-	fputs(cooked, stdout);
-	fflush(stdout);
+	const char *errmsg;
+
+	(void) oq_write(stdout_oq, cooked, strlen(cooked), &errmsg);
     }
     Free(raw);
     Free(cooked);
@@ -342,8 +347,9 @@ stdin_done(task_cbh handle, bool success, bool abort)
     /* Print the output or the prompt. */
     s3done(handle, success, &pj_out, &out);
     if (!pushed_wait) {
-	printf("%s", out);
-	fflush(stdout);
+	const char *errmsg;
+
+	(void) oq_write(stdout_oq, out, strlen(out), &errmsg);
     }
     Free(out);
     pushed_wait = false;
@@ -362,6 +368,11 @@ stdin_done(task_cbh handle, bool success, bool abort)
 	    stdin_id = AddInput(stdin_done_event, stdin_input);
 	}
 #endif /*]*/
+    }
+
+    const char *errmsg;
+    if (oq_errored(stdout_oq, &errmsg)) {
+	xs_error("stdout: %s", errmsg);
     }
 
     /* Future commands will be async. */
@@ -446,6 +457,9 @@ stdin_init(void)
 		win32_strerror(GetLastError()));
     }
 #endif /*]*/
+
+    /* Set up the stdout output queue. */
+    stdout_oq = oq_create_stdout(txAsprintf("%s-stdout", programname), TC_SCRIPT);
 
     /* If not connected yet, wait for one before enabling input. */
     /* XXX: We might need to add a Wait(Connect) action. */

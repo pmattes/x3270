@@ -76,6 +76,7 @@
 #include "nvt.h"
 #include "nvt_gui.h"
 #include "opts.h"
+#include "oq.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "prefer.h"
@@ -545,9 +546,11 @@ main(int argc, char *argv[])
     toggle_index_t ix;
     const char *errmsg;
 
+    tolr_start();
+
 #if defined(_WIN32) /*[*/
     get_version_info();
-    if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
+    if (!get_dirs("b3270", &instdir, NULL, NULL, NULL, NULL, NULL,
 		NULL, NULL, NULL, &windirs_flags)) {
 	exit(1);
     }
@@ -593,6 +596,7 @@ main(int argc, char *argv[])
     show_dirs_register();
 #endif /*]*/
     resolver_pipe_register();
+    oq_register();
 
     supports_cmdline_host = false;
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
@@ -698,6 +702,9 @@ POSSIBILITY OF SUCH DAMAGE.", cyear),
     /* Collect child exit status. */
     signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
+
+    /* Initialize output queueing. */
+    oq_init(appres.output_queues);
 
     /* Initialize the toggles. */
     initialize_toggles();

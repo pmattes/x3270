@@ -64,14 +64,24 @@ typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
 typedef void (*childfn_t)(ioid_t id, int status);
 ioid_t AddInput(iosrc_t fd, iofn_t fn);
-ioid_t AddExcept(iosrc_t fd, iofn_t fn);
-ioid_t AddOutput(iosrc_t fd, iofn_t fn);
+ioid_t AddExcept(socket_t socket, iofn_t fn);
+ioid_t AddOutput(socket_t socket, iofn_t fn);
 #if !defined(_WIN32) /*[*/
 ioid_t AddChild(pid_t pid, childfn_t fn);
+#else /*][*/
+ioid_t AddInputSocket(socket_t fd, long events, iofn_t fn);
+void sched_get_network_events(socket_t socket, WSANETWORKEVENTS *events);
+const char *sched_expand_network_events(long events);
 #endif /*]*/
 void RemoveInput(ioid_t);
+void RemoveOutput(ioid_t);
+void RemoveExcept(ioid_t);
 ioid_t AddTimeOut(unsigned long msec, tofn_t);
 void RemoveTimeOut(ioid_t id);
+ioid_t AddDefer(tofn_t fn);
+bool RemoveDefer(ioid_t id);
+bool run_deferred(void);
+bool any_deferred(void);
 
 ks_t string_to_key(char *s);
 char *key_to_string(ks_t k);
@@ -125,7 +135,7 @@ enum st {
     N_ST
 };
 
-#define ORDER_DONTCARE	0xfffe
+#define ORDER_DONTCARE	0x8000
 #define ORDER_LAST	0xffff
 
 typedef void schange_callback_t(bool);

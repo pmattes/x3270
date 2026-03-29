@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,47 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# s3270 connection fail tests
+# b3270 trace-of-last-resort tests
 
 import os
 from subprocess import Popen, PIPE, DEVNULL
+import tempfile
 import unittest
 
 from Common.Test.cti import *
 
-class TestS3270ConnectFail(cti):
+class TestB3270Tolr(cti):
 
-    # s3270 connect fail test
-    def test_s3270_connect_fail(self):
+    # b3270 trace-of-last-resort test
+    def test_b3270_tolr(self):
 
-        # Start s3270.
-        s3270 = Popen(vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
-        self.children.append(s3270)
+        handle, tracefile = tempfile.mkstemp()
+        os.close(handle)
 
-        # Push a trivial command at it.
-        s3270.stdin.write(b'Connect(127.0.0.1:1)\n')
+        # Start b3270.
+        env = os.environ
+        env['X3270_TOLR'] = tracefile
+        b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL, env=env)
+        self.children.append(b3270)
 
-        # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
+        # Tell b3270 to exit.
+        b3270.stdin.write(b'"Quit()"\n')
+        b3270.stdin.flush()
 
-        # Wait for the process to exit successfully.
-        self.vgwait(s3270)
+        # Wait for the processes to exit.
+        b3270.stdin.close()
+        self.vgwait(b3270)
 
-        # Test the output.
-        self.assertEqual(5, len(stdout))
-        self.assertTrue(stdout[0].startswith('data: Connection failed:'))
-        self.assertTrue(stdout[1].startswith('data: 127.0.0.1, port 1: '))
-        self.assertTrue('refused' in stdout[1])
-        self.assertTrue(stdout[2].startswith('L U U N N 4 24 80 0 0 0x0 '))
-        self.assertEqual('error', stdout[3])
-        self.assertEqual('', stdout[4])
+        # Verify what was traced.
+        with open(tracefile, 'rb') as file:
+            t = file.readlines()
+        os.unlink(tracefile)
+        started = [line for line in t if b'trace of last resort started' in line]
+        self.assertEqual(1, len(started))
+        version = [line for line in t if b'Version:' in line]
+        self.assertEqual(1, len(version))
+        quit = [line for line in t if b'Quit' in line]
+        self.assertGreater(len(quit), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -55,6 +55,7 @@ typedef struct {
     bool	 contention_resolution;
     char	*dbcs_cgcsgid;
     bool	 debug_tracing;
+    char	*detail_trace;
     char	*devname;	/* for 5250 */
     bool	 disconnect_clear;
     bool	 extended_data_stream;
@@ -83,6 +84,7 @@ typedef struct {
     int		 nop_seconds;
     bool	 numeric_lock;
     bool	 nvt_mode;
+    char	*output_queues;
     bool	 once;
     char	*oversize;
     char	*port;

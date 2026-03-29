@@ -53,6 +53,15 @@ typedef enum {
 extern const char *cats[];
 
 const char *rcba(int baddr);
-void trace_ds(const char *fmt, ...) printflike(1, 2);
-void vtrace(const char *fmt, ...) printflike(1, 2);
-void vctrace(tc_t, const char *fmt, ...) printflike(2, 3);
+
+void _trace_ds(const char *fmt, ...) printflike(1, 2);
+void _vtrace(const char *fmt, ...) printflike(1, 2);
+void _vctrace(tc_t, const char *fmt, ...) printflike(2, 3);
+void _vcdtrace(tc_t, const char *fmt, ...) printflike(2, 3);
+bool trace_detail_enabled(tc_t);
+
+extern FILE *tracef;
+#define trace_ds(...)	if (tracef != NULL) { _trace_ds(__VA_ARGS__); }
+#define vtrace(...)	if (tracef != NULL) { _vtrace(__VA_ARGS__); }
+#define vctrace(...)	if (tracef != NULL) { _vctrace(__VA_ARGS__); }
+#define vcdtrace(tc, ...) if (tracef != NULL && trace_detail_enabled(tc)) { _vcdtrace(tc, __VA_ARGS__); }

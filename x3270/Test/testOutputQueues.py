@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,43 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# s3270 connection fail tests
+# x3270 output queue config tests
 
-import os
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE
 import unittest
 
 from Common.Test.cti import *
 
-class TestS3270ConnectFail(cti):
+class TestX3270OutputQueue(cti):
 
-    # s3270 connect fail test
-    def test_s3270_connect_fail(self):
+    # x3270 output queue config test
+    def x3270_oq(self, spec: str, expect: str, stderr=False):
 
-        # Start s3270.
-        s3270 = Popen(vgwrap(["s3270"]), stdin=PIPE, stdout=PIPE)
-        self.children.append(s3270)
+        # Start x3270.
+        args=['x3270', '-script']
+        if spec != None:
+            args += ['-set', f'outputQueues={spec}']
+        x3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.children.append(x3270)
 
-        # Push a trivial command at it.
-        s3270.stdin.write(b'Connect(127.0.0.1:1)\n')
+        # Feed x3270 one action.
+        got = x3270.communicate(input=b'Show(OutputQueues)\n', timeout=2)
 
-        # Decode the result.
-        stdout = s3270.communicate()[0].decode('utf8').split(os.linesep)
+        # Wait for the processes to exit.
+        self.vgwait(x3270)
 
-        # Wait for the process to exit successfully.
-        self.vgwait(s3270)
-
-        # Test the output.
-        self.assertEqual(5, len(stdout))
-        self.assertTrue(stdout[0].startswith('data: Connection failed:'))
-        self.assertTrue(stdout[1].startswith('data: 127.0.0.1, port 1: '))
-        self.assertTrue('refused' in stdout[1])
-        self.assertTrue(stdout[2].startswith('L U U N N 4 24 80 0 0 0x0 '))
-        self.assertEqual('error', stdout[3])
-        self.assertEqual('', stdout[4])
+        line1 = got[0].splitlines()[0].decode('utf8')
+        self.assertEqual('data: ' + expect, line1)
+        err = got[1]
+        if stderr:
+            self.assertNotEqual(b'', err)
+        else:
+            self.assertEqual(b'', err)
+    
+    def test_x3270_oq_1m(self):
+        self.x3270_oq('1m', 'queueing enabled limit 976KiB')
+    def test_x3270_oq_bad(self):
+        self.x3270_oq('1mx', 'queueing enabled limit 10MiB', stderr=True)
 
 if __name__ == '__main__':
     unittest.main()

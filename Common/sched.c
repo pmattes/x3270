@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2025 Paul Mattes.
+ * Copyright (c) 1999-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@
 #endif /*]*/
 
 enum condition {
-    WantInput,
+    WantRead,
     WantExcept,
     WantWrite,
 };
@@ -78,9 +78,120 @@ typedef struct input {
     iofn_t proc;		/* callback */
     bool valid;			/* true if not deleted */
     unsigned sflags;		/* sched flags */
+#if defined(_WIN32) /*[*/
+    bool is_socket;		/* true if this is a Windows socket */
+#endif /*]*/
+    int wait_index;		/* linear index when searching for matches */
 } input_t;
 static input_t *inputs = NULL;
 static bool inputs_changed = false;
+
+#if defined(_WIN32) /*[*/
+/* The Windows socket table. */
+typedef struct wst {
+    struct wst *next;		/* linkage */
+    socket_t socket;		/* socket */
+    HANDLE event;		/* WSAEventSelect event */
+    long network_events;	/* mask of FD_XXX */
+    WSANETWORKEVENTS events;	/* network events read */
+    bool events_valid;		/* true if events is valid */
+    int refcnt;			/* reference count */
+} wst_t;
+static wst_t *wst = NULL;
+#define IP_EVENTS(ip)	(((ip)->condition == WantRead)? (FD_ACCEPT | FD_CONNECT | FD_READ | FD_CLOSE): FD_WRITE)
+
+/* Expand a set of network events for display. */
+const char *
+sched_expand_network_events(long fds)
+{
+    return txAsprintf("[0x%lx%s%s%s%s%s]", fds,
+	    (fds & FD_ACCEPT)? " ACCEPT": "",
+	    (fds & FD_CONNECT)? " CONNECT": "",
+	    (fds & FD_READ)? " READ": "",
+	    (fds & FD_CLOSE)? " CLOSE": "",
+	    (fds & FD_WRITE)? " WRITE": "");
+}
+
+/* Add an entry to the socket table. */
+static iosrc_t
+add_socket_table(socket_t socket, long network_events)
+{
+    wst_t *w;
+
+    /* Search for an existing entry. */
+    for (w = wst; w != NULL; w = w->next) {
+	if (w->socket == socket) {
+	    break;
+	}
+    }
+
+    if (w != NULL) {
+	/* Existing socket. */
+	w->refcnt++;
+	vcdtrace(TC_SCHED, "wst inc refcnt socket S0x%lx event 0x%lx events %s\n",
+		(unsigned long)(size_t)socket,
+		(unsigned long)(size_t)w->event,
+		sched_expand_network_events(network_events));
+    } else {
+	/* New socket. */
+	w = Malloc(sizeof(wst_t));
+	w->socket = socket;
+	w->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (w->event == NULL) {
+	    xs_error("add_socket_table: Cannot create socket handle: %s\n", win32_strerror(GetLastError()));
+	}
+	w->network_events = network_events;
+	if (WSAEventSelect(socket, w->event, w->network_events) != 0) {
+	    xs_error("add_socket_table: WSAEventSelect failed: %s\n", win32_strerror(GetLastError()));
+	}
+	w->refcnt = 1;
+	memset(&w->events, 0, sizeof(WSANETWORKEVENTS));
+	w->events_valid = false;
+	w->next = wst;
+	wst = w;
+	vcdtrace(TC_SCHED, "wst created socket S0x%lx event 0x%lx events %s\n",
+		(unsigned long)(size_t)socket,
+		(unsigned long)(size_t)w->event,
+		sched_expand_network_events(network_events));
+    }
+    return (iosrc_t)w->event;
+}
+
+/* Remove an entry from the socket table. */
+static void
+remove_socket_table(HANDLE event)
+{
+    wst_t *w, *prev = NULL;
+
+    vcdtrace(TC_SCHED, "wst remove event 0x%lx\n", (unsigned long)(size_t)event);
+
+    for (w = wst; w != NULL; w = w->next) {
+	if (w->event == event) {
+	    break;
+	}
+	prev = w;
+    }
+    if (w == NULL) {
+	vctrace(TC_SCHED, " remove_socket_table: cannot find event\n");
+	return;
+    }
+    if (!--w->refcnt) {
+	vcdtrace(TC_SCHED, " refcnt == 0, wst deleting event 0x%lx\n", (unsigned long)(size_t)w->event);
+
+	/* Free the entry. */
+	CloseHandle(w->event);
+	if (prev != NULL) {
+	    prev->next = w->next;
+	} else {
+	    wst = w->next;
+	}
+	memset(w, 0, sizeof(wst_t));
+	Free(w);
+    } else {
+	vcdtrace(TC_SCHED, " refcnt != 0, wst not deleting event 0x%lx\n", (unsigned long)(size_t)w->event);
+    }
+}
+#endif /*]*/
 
 /* Appends a new input event to the list of pending events. */
 static void
@@ -99,8 +210,13 @@ append_input(input_t *ip)
     ip->next = NULL;
 }
 
+#if !defined(_WIN32) /*[*/
 ioid_t
 AddInput(iosrc_t source, iofn_t fn)
+#else /*][*/
+static ioid_t
+AddInputCommon(iosrc_t source, iofn_t fn, bool is_socket)
+#endif /*]*/
 {
     input_t *ip;
 
@@ -108,28 +224,53 @@ AddInput(iosrc_t source, iofn_t fn)
 
     ip = (input_t *)Malloc(sizeof(input_t));
     ip->source = source;
-    ip->condition = WantInput;
+    ip->condition = WantRead;
     ip->proc = fn;
     ip->valid = true;
     ip->sflags = 0;
+#if defined(_WIN32) /*[*/
+    ip->is_socket = is_socket;
+#endif /*]*/
+    ip->wait_index = -1;
     append_input(ip);
     inputs_changed = true;
-#if defined(VERBOSE_HANDLES) /*[*/
-    vctrace(TC_SCHED, "AddInput 0x%lx\n", (unsigned long)(size_t)source);
-#endif /*]*/
+    vcdtrace(TC_SCHED, "AddInput 0x%lx\n", (unsigned long)(size_t)source);
     return (ioid_t)ip;
 }
 
+#if defined(_WIN32) /*[*/
 ioid_t
-AddExcept(iosrc_t source, iofn_t fn)
+AddInput(iosrc_t source, iofn_t fn)
+{
+    return AddInputCommon(source, fn, false);
+}
+
+ioid_t
+AddInputSocket(socket_t socket, long events, iofn_t fn)
+{
+    iosrc_t event;
+
+    if (events & FD_READ) {
+	/* If we're reading, we're probably going to want to write, too. */
+	events |= FD_WRITE;
+    }
+    event = add_socket_table(socket, events);
+    vcdtrace(TC_SCHED, "AddInputSocket S0x%lx 0x%lx %s\n", (unsigned long)(size_t)socket, (unsigned long)(size_t)event,
+	    sched_expand_network_events(events));
+    return AddInputCommon(event, fn, true);
+}
+#endif /*]*/
+
+ioid_t
+AddExcept(socket_t socket, iofn_t fn)
 {
 #if defined(_WIN32) /*[*/
-    return 0;
+    return NULL_IOID;
 #else /*][*/
     input_t *ip;
 
     ip = (input_t *)Malloc(sizeof(input_t));
-    ip->source = source;
+    ip->source = socket;
     ip->condition = WantExcept;
     ip->proc = fn;
     ip->valid = true;
@@ -140,38 +281,69 @@ AddExcept(iosrc_t source, iofn_t fn)
 #endif /*]*/
 }
 
-#if !defined(_WIN32) /*[*/
 ioid_t
-AddOutput(iosrc_t source, iofn_t fn)
+AddOutput(socket_t socket, iofn_t fn)
 {
     input_t *ip;
 
     ip = (input_t *)Malloc(sizeof(input_t));
-    ip->source = source;
+#if !defined(_WIN32) /*[*/
+    ip->source = socket;
+#else /*][*/
+    ip->source = add_socket_table(socket, FD_READ | FD_CLOSE | FD_WRITE);
+#endif /*]*/
     ip->condition = WantWrite;
     ip->proc = fn;
     ip->valid = true;
     ip->sflags = 0;
+#if defined(_WIN32) /*[*/
+    ip->is_socket = true;
+#endif /*]*/
+    ip->wait_index = -1;
     append_input(ip);
     inputs_changed = true;
+    vcdtrace(TC_SCHED, "AddOutput 0x%lx\n", (unsigned long)(size_t)ip->source);
     return (ioid_t)ip;
 }
-#endif /*]*/
 
-void
-RemoveInput(ioid_t id)
+/* Common code for RemoveInput/RemoveOutput/RemoveExcept. */
+static void
+remove_common(ioid_t id, const char *name)
 {
     input_t *ip;
 
     for (ip = inputs; ip != NULL; ip = ip->next) {
 	if (ip->valid && ip == (input_t *)id) {
 	    ip->valid = false;
-#if defined(VERBOSE_HANDLES) /*[*/
-	    vctrace(TC_SCHED, "RemoveInput 0x%lx\n", (unsigned long)(size_t)ip->source);
+	    vcdtrace(TC_SCHED, "%s 0x%lx\n", name, (unsigned long)(size_t)ip->source);
+#if defined(_WIN32) /*[*/
+	    if (ip->is_socket) {
+		remove_socket_table(ip->source);
+		ip->source = INVALID_IOSRC;
+	    }
 #endif /*]*/
+	    inputs_changed = true;
 	    return;
 	}
     }
+}
+
+void
+RemoveInput(ioid_t id)
+{
+    remove_common(id, "RemoveInput");
+}
+
+void
+RemoveOutput(ioid_t id)
+{
+    remove_common(id, "RemoveOutput");
+}
+
+void
+RemoveExcept(ioid_t id)
+{
+    remove_common(id, "RemoveExcept");
 }
 
 #if !defined(_WIN32) /*[*/
@@ -458,17 +630,32 @@ count_revents(struct pollfd *fds, nfds_t nfds)
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-/* Sets up the wait group state for an event. */
-static void
-set_wait_group(input_t *ip, DWORD ha_total)
+/*
+ * Sets up the wait group state for an event.
+ * Returns true if one was added (not a duplicate).
+ */
+static bool
+set_wait_group(input_t *ip, DWORD ha_total, int *wait_index)
 {
     int wait_thread_index = ha_total / maximum_wait_objects();
+    int i;
+
+    /* Check for a duplicate. */
+    for (i = 0; i < (int)ha_total; i++) {
+	if (waitgroups[i / maximum_wait_objects()].ha[1 + (i % maximum_wait_objects())] == ip->source) {
+	    vcdtrace(TC_SCHED, "set_wait_group: dup\n");
+	    *wait_index = i;
+	    return false; /* dup */
+	}
+    }
 
     if (wait_thread_index > num_wait_groups - 1) {
 	allocate_wait_group();
     }
     waitgroups[wait_thread_index].ha[waitgroups[wait_thread_index].nha] = ip->source;
     waitgroups[wait_thread_index].nha++;
+    *wait_index = ha_total;
+    return true;
 }
 
 /* Signals the wait threads to proceed. */
@@ -575,6 +762,56 @@ purge_inputs(void)
     }
 }
 
+#if defined(_WIN32) /*[*/
+/* Check an event for completion. */
+static bool
+is_ready(input_t *ip, enum condition condition)
+{
+    wst_t *w;
+    bool ret;
+
+    if (!ip->is_socket) {
+	/* Not a socket, only valid for Read events. */
+	return condition == WantRead;
+    }
+
+    /* Find the socket table entry. */
+    vctrace(TC_SCHED, "is_ready: looking for 0x%lx %s ", (unsigned long)(size_t)ip->source, (condition == WantRead)? "Read": "Write");
+    for (w = wst; w != NULL; w = w->next) {
+	if (w->event == ip->source) {
+	    break;
+	}
+    }
+    assert(w != NULL);
+
+    if (!w->events_valid) {
+	/* Fetch the completed network events. */
+        if (WSAEnumNetworkEvents(w->socket, w->event, &w->events) != 0) {
+	    xs_error("sched: WSAEnumNetworkEvents failed: %s\n", win32_strerror(WSAGetLastError()));
+	}
+	w->events_valid = true;
+	vctrace(TC_SCHED, "new ");
+    }
+    vctrace(TC_SCHED, "events %s ", sched_expand_network_events(w->events.lNetworkEvents));
+
+    ret = (w->events.lNetworkEvents & IP_EVENTS(ip)) != 0;
+    vctrace(TC_SCHED, "%s\n", ret? "success": "failure");
+    return ret;
+}
+
+/* Clear the network events for all sockets. */
+static void
+clear_wst_events(void)
+{
+    wst_t *w;
+
+    for (w = wst; w != NULL; w = w->next) {
+	memset(&w->events, 0, sizeof(WSANETWORKEVENTS));
+	w->events_valid = false;
+    }
+}
+#endif /*]*/
+
 /*
  * Inner event dispatcher.
  * Processes one or more pending I/O and timeout events.
@@ -621,17 +858,19 @@ process_some_events(bool block, bool *processed_any)
     char tmo_buf[256];
 
 #if defined(_WIN32) /*[*/
-# define SOURCE_READY(i, ip)    (waitgroups[i / maximum_wait_objects()].ret == WAIT_OBJECT_0 + 1 + (i % maximum_wait_objects()))
-# define WRITE_READY(i, ip)     false
+# define READ_READY(i, ip)      ((waitgroups[i / maximum_wait_objects()].ret == WAIT_OBJECT_0 + 1 + (i % maximum_wait_objects())) \
+				 && is_ready(ip, WantRead))
+# define WRITE_READY(i, ip)     ((waitgroups[i / maximum_wait_objects()].ret == WAIT_OBJECT_0 + 1 + (i % maximum_wait_objects())) \
+				 && is_ready(ip, WantWrite))
 # define EXCEPT_READY(i, ip)    false
 # define WAIT_BAD        	(ret == WAIT_FAILED)
 #else /*][*/
 # if defined(HAVE_POLL) /*[*/
-#  define SOURCE_READY(i, ip)   (find_pollfd(fds, nfds, ip->source, false)->revents & (POLLIN | POLLHUP))
+#  define READ_READY(i, ip)     (find_pollfd(fds, nfds, ip->source, false)->revents & (POLLIN | POLLHUP))
 #  define WRITE_READY(i, ip)    (find_pollfd(fds, nfds, ip->source, false)->revents & (POLLOUT | POLLERR))
 #  define EXCEPT_READY(i, ip)   (find_pollfd(fds, nfds, ip->source, false)->revents & POLLPRI)
 # else /*][*/
-#  define SOURCE_READY(i, ip)   FD_ISSET(ip->source, &rfds)
+#  define READ_READY(i, ip)     FD_ISSET(ip->source, &rfds)
 #  define WRITE_READY(i,  ip)	FD_ISSET(ip->source, &wfds)
 #  define EXCEPT_READY(i, ip)   FD_ISSET(ip->source, &xfds)
 # endif /*]*/
@@ -651,6 +890,8 @@ process_some_events(bool block, bool *processed_any)
 	}
 	allocate_wait_group();
     }
+
+    clear_wst_events();
 #endif /*]*/
 
     *processed_any = false;
@@ -668,6 +909,7 @@ process_some_events(bool block, bool *processed_any)
     FD_ZERO(&xfds);
 #endif /*]*/
 
+    i = 0;
     for (ip = inputs; ip != NULL; ip = ip->next) {
 
 	if (!ip->valid) {
@@ -676,12 +918,16 @@ process_some_events(bool block, bool *processed_any)
 	}
 
 	ip->sflags = 0;
+	ip->wait_index = -1;
 
 	/* Set pending input event. */
-	if (ip->condition == WantInput) {
+	if (ip->condition == WantRead) {
 #if defined(_WIN32) /*[*/
-	    set_wait_group(ip, ha_total++);
+	    if (set_wait_group(ip, ha_total, &ip->wait_index)) {
+		++ha_total;
+	    }
 #else /*][*/
+	    ip->wait_index = i;
 # if defined(HAVE_POLL) /*[*/
 	    nfds += add_poll(ip, POLLIN, nfds);
 # else /*][*/
@@ -694,22 +940,30 @@ process_some_events(bool block, bool *processed_any)
 	    any_events_pending = true;
 	}
 
-#if !defined(_WIN32) /*[*/
 	/* Set pending output event. */
 	if (ip->condition == WantWrite) {
-#if defined(HAVE_POLL) /*[*/
-	    nfds += add_poll(ip, POLLOUT, nfds);
+#if defined(_WIN32) /*[*/
+	    if (set_wait_group(ip, ha_total, &ip->wait_index)) {
+		++ha_total;
+	    }
 #else /*][*/
+	    ip->wait_index = i;
+# if defined(HAVE_POLL) /*[*/
+	    nfds += add_poll(ip, POLLOUT, nfds);
+# else /*][*/
 	    assert(ip->source <= FD_SETSIZE);
 	    FD_SET(ip->source, &wfds);
-#endif /*]*/
+# endif /*]*/
 	    ne++;
+#endif /*]*/
 	    ip->sflags |= SF_CURRENT;
 	    any_events_pending = true;
 	}
 
+#if !defined(_WIN32) /*[*/
 	/* Set pending exception event. */
 	if (ip->condition == WantExcept) {
+	    ip->wait_index = i;
 #if defined(HAVE_POLL) /*[*/
 	    nfds += add_poll(ip, POLLPRI, nfds);
 #else /*][*/
@@ -721,6 +975,7 @@ process_some_events(bool block, bool *processed_any)
 	    any_events_pending = true;
 	}
 #endif /*]*/
+	i++;
     }
 
     /* Compute the next timeout. */
@@ -742,16 +997,14 @@ process_some_events(bool block, bool *processed_any)
     vctrace(TC_SCHED, "Waiting for ");
 #if defined(_WIN32) /*[*/
     vtrace("%d handle%s", (int)ha_total, (ha_total == 1)? "": "s");
-# if defined(VERBOSE_HANDLES) /*[*/
     {
 	int i;
 
 	for (i = 1; i < waitgroups[0].nha; i++) {
-	    vtrace(" 0x%lx", (unsigned long)(size_t)waitgroups[0].ha[i]);
+	    vcdtrace(TC_SCHED, " 0x%lx", (unsigned long)(size_t)waitgroups[0].ha[i]);
 	}
 
     }
-# endif /*]*/
 #else /*][*/
     vtrace("%d event%s", ne, (ne == 1)? "": "s");
 #endif /*]*/
@@ -815,24 +1068,22 @@ process_some_events(bool block, bool *processed_any)
 
     /* Process the events that completed. */
     inputs_changed = false;
-    i = 0;
     for (ip = inputs; ip != NULL; ip = ip->next) {
 	if (ip->valid) {
 	    if (!(ip->sflags & SF_CURRENT)) {
 		/* From here on are entries that were added by callbacks. */
-#if defined(VERBOSE_HANDLES) /*[*/
-		vctrace(TC_SCHED, "0x%08lx is not current\n", (unsigned long)(size_t)ip->source);
-#endif /*]*/
+		vcdtrace(TC_SCHED, "0x%lx is not current\n", (unsigned long)(size_t)ip->source);
 		break;
 	    }
 
 	    /* Check for completion. */
-	    if ((ip->condition == WantInput  && SOURCE_READY(i, ip)) ||
+	    i = ip->wait_index;
+	    vcdtrace(TC_SCHED, "Checking i=%d 0x%lx %s\n",
+		    i, (unsigned long)(size_t)ip->source, (ip->condition == WantRead)? "Read": "Write");
+	    if ((ip->condition == WantRead   && READ_READY(i, ip)) ||
 		(ip->condition == WantWrite  && WRITE_READY(i, ip)) ||
 		(ip->condition == WantExcept && EXCEPT_READY(i, ip))) {
-#if defined(VERBOSE_HANDLES) /*[*/
-		vctrace(TC_SCHED, "Running 0x%lx\n", (unsigned long)(size_t)ip->source);
-#endif /*]*/
+		vcdtrace(TC_SCHED, "Running 0x%lx\n", (unsigned long)(size_t)ip->source);
 		(*ip->proc)(ip->source, (ioid_t)ip);
 #if defined(WIN32_HEAP_CHECK) /*[*/
 		assert(_heapchk() == _HEAPOK);
@@ -840,8 +1091,6 @@ process_some_events(bool block, bool *processed_any)
 		ip->sflags |= SF_RAN;
 		*processed_any = true;
 	    }
-
-	    i++;
 	}
     }
 
@@ -856,6 +1105,25 @@ process_some_events(bool block, bool *processed_any)
 }
 #if defined(__clang__) /*[*/
 # pragma clang diagnostic pop
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+/* Get the most recent network events for a socket. */
+void
+sched_get_network_events(socket_t socket, WSANETWORKEVENTS *events)
+{
+    wst_t *w;
+
+    for (w = wst; w != NULL; w = w->next) {
+	if (w->socket == socket) {
+	    memcpy(events, &w->events, sizeof(WSANETWORKEVENTS));
+	    return;
+	}
+    }
+
+    vctrace(TC_SCHED, "sched_get_network_events can't find socket S0x%lx\n", (unsigned long)(size_t)socket);
+    memset(events, 0, sizeof(WSANETWORKEVENTS));
+}
 #endif /*]*/
 
 /*
@@ -877,17 +1145,27 @@ process_events(bool block)
 	    return true;
 	}
 
+	/*
+	 * Run deferred events.
+	 * We always do this *after* running tasks, so the tasks will see
+	 * the state changed by the deferred events.
+	 * If any deferred events were run, run tasks again before blocking.
+	 */
+	bool any_deferred_ran = run_deferred();
+	processed_any |= any_deferred_ran;
+	if (any_deferred_ran && run_tasks()) {
+	    return true;
+	}
+
 	/* Process some events. */
-	done = process_some_events(block, &any_this_time);
+	done = process_some_events(block && !any_deferred(), &any_this_time);
+	processed_any |= any_this_time;
 
 	/* Free transaction memory. */
 	txflush();
 
 	/* Don't block a second time. */
 	block = false;
-
-	/* Record what happened this time. */
-	processed_any |= any_this_time;
     }
 
     return processed_any;

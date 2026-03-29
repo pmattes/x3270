@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -78,6 +78,8 @@ XtResource resources[] = {
       offset(sbcs_cgcsgid), XtRString, 0 },
     { ResTermName, ClsTermName, XtRString, sizeof(char *),
       offset(termname), XtRString, 0 },
+    { ResDetailTrace, ClsDetailTrace, XtRString, sizeof(char *),
+      offset(detail_trace), XtRString, 0 },
     { ResDevName, ClsDevName, XtRString, sizeof(char *),
       offset(devname), XtRString, 0 },
     { ResUser, ClsUser, XtRString, sizeof(char *),
@@ -126,6 +128,8 @@ XtResource resources[] = {
       offset(cookie_file), XtRString, 0 },
     { ResRpq, ClsRpq, XtRString, sizeof(char *),
       offset(rpq), XtRString, 0 },
+    { ResOutputQueues, ClsOutputQueues, XtRString, sizeof(char *),
+      offset(output_queues), XtRString, 0 },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Paul Mattes.
+ * Copyright (c) 2021-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,10 @@
 #include "txa.h"
 #include "utils.h"
 #include "varbuf.h"
+
+#if defined(_WIN32) /*[*/
+# include "w3misc.h"
+#endif /*]*/
 
 /**
  * Pop up an error message with a strerror appended.
@@ -124,6 +128,25 @@ popup_a_vxerror(pae_t type, const char *fmt, va_list ap)
     }
     Free(s);
 }
+
+/**
+ * Pop up a non-host socket error message.
+ *
+ * @param[in] fmt	Format
+ */
+void
+popup_nh_sockerr(const char *fmt, ...)
+{
+    va_list ap;
+    char *s;
+
+    va_start(ap, fmt);
+    s = Vasprintf(fmt, ap);
+    va_end(ap);
+    popup_an_error("%s: %s", s, socket_strerror(socket_errno()));
+    Free(s);
+}
+
 
 /**
  * Trace an error.

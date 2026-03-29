@@ -128,26 +128,7 @@ typedef unsigned long ks_t;
 #define KS_NONE 0L
 
 /* Common socket definitions. */
-#if !defined(_WIN32) /*[*/
-typedef int socket_t;
-# define INVALID_SOCKET  (-1)
-# define INET_ADDR_T    in_addr_t
-# define SOCK_CLOSE(s)  close(s)
-# define socket_errno() errno
-# define SE_EWOULDBLOCK EWOULDBLOCK
-# define SE_ECONNRESET	ECONNRESET
-# define SE_EINTR	EINTR
-# define SE_EPIPE	EPIPE
-#else /*][*/
-typedef SOCKET socket_t;
-# define INET_ADDR_T    unsigned long
-# define SOCK_CLOSE(s)  closesocket(s)
-# define socket_errno() WSAGetLastError()
-# define SE_EWOULDBLOCK WSAEWOULDBLOCK
-# define SE_ECONNRESET	WSAECONNRESET
-# define SE_EINTR	WSAEINTR
-# define SE_EPIPE	WSAECONNABORTED
-#endif /*]*/
+#include "socket_common.h"
 
 /* Error type for popup_an_xerror(). */
 typedef enum {

@@ -149,9 +149,6 @@ const char *telquals[3] = { "IS", "SEND", "INFO" };
 
 /* Statics */
 static socket_t sock = INVALID_SOCKET;	/* active socket */
-#if defined(_WIN32) /*[*/
-static HANDLE	sock_handle = INVALID_HANDLE_VALUE;
-#endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
 static bool did_ne_send;
@@ -229,12 +226,12 @@ static const char *ntim_name[] = {
 static ntim_t ntim = NTIM_UNKNOWN;
 static ntim_t parse_ntim(const char *value);
 
-static bool telnet_fsm(unsigned char c);
+static bool telnet_fsm(unsigned char c, bool *eor);
 static void net_rawout(unsigned const char *buf, size_t len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
 static void check_linemode(bool init);
-static int non_blocking(bool on);
+static int non_blocking(void);
 static void net_connected(void);
 static void connection_complete(void);
 static int tn3270e_negotiate(void);
@@ -338,38 +335,6 @@ static bool net_connect_pending;
 static void output_possible(iosrc_t fd, ioid_t id);
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-# define socket_errno()	WSAGetLastError()
-# define socket_strerror(n) win32_strerror(n)
-# define SE_EWOULDBLOCK	WSAEWOULDBLOCK
-# define SE_ECONNRESET	WSAECONNRESET
-# define SE_EINTR	WSAEINTR
-# define SE_EAGAIN	WSAEINPROGRESS
-# define SE_EPIPE	WSAECONNABORTED
-# define SE_EINPROGRESS	WSAEINPROGRESS
-# define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
-# define IOCTL_T	u_long
-#else /*][*/
-# define socket_errno()	errno
-# define socket_strerror(n) strerror(n)
-# define SE_EWOULDBLOCK	EWOULDBLOCK
-# define SE_ECONNRESET	ECONNRESET
-# define SE_EINTR	EINTR
-# define SE_EAGAIN	EAGAIN
-# define SE_EPIPE	EPIPE
-# if defined(EINPROGRESS) /*[*/
-#  define SE_EINPROGRESS	EINPROGRESS
-# endif /*]*/
-# define SOCK_IOCTL	ioctl
-# define IOCTL_T	int
-#endif /*]*/
-
-#if defined(SE_EINPROGRESS) /*[*/
-# define IS_EINPROGRESS(e)	((e) == SE_EINPROGRESS)
-#else /*][*/
-# define IS_EINPROGRESS(e)	false
-#endif /*]*/
-
 #define NUM_HA	4
 static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
@@ -380,31 +345,28 @@ static int ha_ix = 0;
 static rp_t host_rp = NULL;
 static rp_t proxy_rp = NULL;
 
+/* EOR processing resumption state. */
+typedef struct {
+    size_t offset;
+    size_t buflen;
 #if defined(_WIN32) /*[*/
-void
-popup_a_sockerr(const char *fmt, ...)
-{
-    va_list args;
-    const char *buffer;
-
-    va_start(args, fmt);
-    buffer = txVasprintf(fmt, args);
-    va_end(args);
-    connect_error("%s: %s", buffer, win32_strerror(socket_errno()));
-}
-#else /*][*/
-void
-popup_a_sockerr(const char *fmt, ...)
-{
-    va_list args;
-    const char *buffer;
-
-    va_start(args, fmt);
-    buffer = txVasprintf(fmt, args);
-    va_end(args);
-    connect_errno(errno, "%s", buffer);
-}
+    bool close;
 #endif /*]*/
+} eor_resume_t;
+static eor_resume_t eor_resume;
+static ioid_t eor_id = NULL_IOID;
+
+void
+popup_a_sockerr(const char *fmt, ...)
+{
+    va_list args;
+    const char *buffer;
+
+    va_start(args, fmt);
+    buffer = txVasprintf(fmt, args);
+    va_end(args);
+    connect_error("%s: %s", buffer, socket_strerror(socket_errno()));
+}
 
 /* The host connection timed out. */
 static void
@@ -416,7 +378,7 @@ connect_timed_out(ioid_t id _is_unused)
 }
 
 /* Connect to one of the addresses in haddr[]. */
-static iosrc_t
+static socket_t
 connect_to(int ix, bool noisy, bool *pending)
 {
     int			on = 1;
@@ -430,14 +392,13 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 #   define close_fail	{ SOCK_CLOSE(sock); \
     			  sock = INVALID_SOCKET; \
-    			  return INVALID_IOSRC; \
+			  return INVALID_SOCKET; \
 			}
 
     /* create the socket */
-    if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, IPPROTO_TCP)) ==
-	    INVALID_SOCKET) {
+    if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET) {
 	popup_a_sockerr("socket");
-	return INVALID_IOSRC;
+	return INVALID_SOCKET;
     }
 
     /* set options for inline out-of-band data and keepalives */
@@ -460,7 +421,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* set the socket to be non-delaying */
-    if (ut_getenv("BLOCKING_CONNECT") == NULL && non_blocking(true) < 0) {
+    if (ut_getenv("BLOCKING_CONNECT") == NULL && non_blocking() < 0) {
 	popup_an_error("non-blocking failure");
 	close_fail;
     }
@@ -518,8 +479,7 @@ connect_to(int ix, bool noisy, bool *pending)
 
     /* connect */
     if (connect(sock, &haddr[ix].sa, ha_len[ix]) == -1) {
-	if (socket_errno() == SE_EWOULDBLOCK ||
-		IS_EINPROGRESS(socket_errno())) {
+	if (IS_EWOULDBLOCK(socket_errno()) || IS_EINPROGRESS(socket_errno())) {
 	    vctrace(TC_SOCKET, "TCP connection pending.\n");
 	    *pending = true;
 #if !defined(_WIN32) /*[*/
@@ -544,31 +504,14 @@ connect_to(int ix, bool noisy, bool *pending)
     }
 
     /* all done */
-#if defined(_WIN32) /*[*/
-    sock_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (sock_handle == NULL) {
-	fprintf(stderr, "Cannot create socket handle: %s\n",
-		win32_strerror(GetLastError()));
-	x3270_exit(1);
-    }
-    if (WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE)
-	    != 0) {
-	fprintf(stderr, "WSAEventSelect failed: %s\n",
-		win32_strerror(GetLastError()));
-	x3270_exit(1);
-    }
-
-    return sock_handle;
-#else /*][*/
     return sock;
-#endif /*]*/
 }
 
 /* Complete a connection, now that the hostname has been resolved. */
 static net_connect_t
-finish_connect(iosrc_t *iosrc)
+finish_connect(socket_t *socket)
 {
-    iosrc_t s;
+    socket_t s;
 
     /* Set up the TLS context, whether this is an TLS host or not. */
     if (sio_supported()) {
@@ -591,9 +534,8 @@ finish_connect(iosrc_t *iosrc)
     while (ha_ix < num_ha) {
 	bool pending = false;
 
-	if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
-			&pending)) != INVALID_IOSRC) {
-	    *iosrc = s;
+	if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending)) != INVALID_SOCKET) {
+	    *socket = s;
 	    return pending? NC_CONNECT_PENDING: NC_CONNECTED;
 	}
 	ha_ix++;
@@ -609,7 +551,7 @@ resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
 {
     int i;
     net_connect_t nc;
-    iosrc_t iosrc = INVALID_IOSRC;
+    socket_t socket = INVALID_SOCKET;
 
     if (!success) {
 	connect_error("%s", errmsg);
@@ -627,11 +569,11 @@ resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
 	ha_len[i] = rp_ha_len(rp, i);
     }
 
-    nc = finish_connect(&iosrc);
+    nc = finish_connect(&socket);
     if (nc == NC_FAILED) {
 	host_disconnect(true);
     } else {
-	host_continue_connect(iosrc, nc);
+	host_continue_connect(socket, nc);
     }
 }
 
@@ -641,7 +583,7 @@ proxy_resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
 {
     int i;
     net_connect_t nc;
-    iosrc_t iosrc = INVALID_IOSRC;
+    socket_t socket = INVALID_SOCKET;
 
     if (!success) {
 	connect_error("%s", errmsg);
@@ -660,11 +602,11 @@ proxy_resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
     }
     num_ha = 1; /* XXX: We only try one. */
 
-    nc = finish_connect(&iosrc);
+    nc = finish_connect(&socket);
     if (nc == NC_FAILED) {
 	host_disconnect(true);
     } else {
-	host_continue_connect(iosrc, nc);
+	host_continue_connect(socket, nc);
     }
 }
 
@@ -675,8 +617,7 @@ proxy_resolve_complete(rp_t rp, void *context, bool success, const char *errmsg)
  *	variables.  Returns the file descriptor of the connected socket.
  */
 net_connect_t
-net_connect(const char *host, char *portname, char *accept, bool ls,
-	iosrc_t *iosrc)
+net_connect(const char *host, char *portname, char *accept, bool ls, socket_t *socket)
 {
     const char		*errmsg;
     char		*proxy_spec;
@@ -685,7 +626,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	Error("telnet cstate_name has the wrong number of elements");
     }
 
-    *iosrc = INVALID_IOSRC;
+    *socket = INVALID_SOCKET;
 
     if (netrbuf == NULL) {
 	netrbuf = (unsigned char *)Malloc(BUFSZ);
@@ -877,12 +818,12 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    ntim = NTIM_CHARACTER;
 	    break;
 	}
-	*iosrc = sock;
+	*socket = sock;
 	return NC_CONNECTED;
     }
 #endif /*]*/
 
-    return finish_connect(iosrc);
+    return finish_connect(socket);
 }
 #undef close_fail
 
@@ -1047,7 +988,7 @@ net_connected(void)
 	vctrace(TC_SOCKET, "Connected to %s, port %u.\n", hostname, current_port);
     }
 
-    if (ut_getenv("BLOCKING_CONNECT") != NULL && non_blocking(true) < 0) {
+    if (ut_getenv("BLOCKING_CONNECT") != NULL && non_blocking() < 0) {
 	connect_error("non-blocking failure");
 	host_disconnect(true);
 	return;
@@ -1126,7 +1067,7 @@ void
 net_password_continue(const char *password)
 {
     bool pending;
-    iosrc_t s;
+    socket_t s;
 
     if (!net_connect_pending) {
 	/* Connection is gone. */
@@ -1147,7 +1088,7 @@ net_password_continue(const char *password)
     /* Try connecting. */
     while (ha_ix < num_ha) {
 	s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
-	if (s != INVALID_IOSRC) {
+	if (s != INVALID_SOCKET) {
 	    host_newfd(s);
 	    host_new_connection(pending);
 	    break;
@@ -1189,8 +1130,10 @@ connection_complete(void)
  * Clean up the pre-TCP-connected network state.
  */
 static void
-net_pre_close(void)
+net_pre_close(const char *why)
 {
+    vctrace(TC_SOCKET, "net_pre_close: %s\n", why);
+
     /* Stop resolution. */
     if (host_rp != NULL) {
 	rp_cancel(host_rp);
@@ -1203,10 +1146,6 @@ net_pre_close(void)
     if (sock != INVALID_SOCKET) {
 	SOCK_CLOSE(sock);
 	sock = INVALID_SOCKET;
-#if defined(_WIN32) /*[*/
-	CloseHandle(sock_handle);
-	sock_handle = INVALID_HANDLE_VALUE;
-#endif /*]*/
 	vctrace(TC_SOCKET, "SENT disconnect\n");
     }
 
@@ -1245,12 +1184,12 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 	if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &e, &len) >= 0) {
 	    vctrace(TC_SOCKET, "RCVD socket error %d (%s)\n", e, strerror(e));
-	    net_pre_close();
+	    net_pre_close("output_possible: async error");
 	    while (++ha_ix < num_ha) {
 		bool pending;
-		iosrc_t s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
+		socket_t s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
 
-		if (s != INVALID_IOSRC) {
+		if (s != INVALID_SOCKET) {
 		    host_newfd(s);
 		    host_new_connection(pending);
 		    return;
@@ -1292,7 +1231,7 @@ net_disconnect(bool including_tls)
 	shutdown(sock, 2);
     }
 
-    net_pre_close();
+    net_pre_close("net_disconnect");
 
     net_connect_pending = false;
 
@@ -1307,6 +1246,12 @@ net_disconnect(bool including_tls)
     if (nop_timeout_id != NULL_IOID) {
 	RemoveTimeOut(nop_timeout_id);
 	nop_timeout_id = NULL_IOID;
+    }
+
+    /* Cancel EOR continuation. */
+    if (eor_id != NULL_IOID) {
+	RemoveTimeOut(eor_id);
+	eor_id = NULL_IOID;
     }
 
     /* We're not connected to an LU any more. */
@@ -1341,6 +1286,52 @@ net_free_rp(void)
 }
 
 /*
+ * net_eor_resume
+ * 	Continue processing a partial network input buffer after giving other processing a
+ * 	chance to run.
+ */
+static void
+net_eor_resume(ioid_t id _is_unused)
+{
+    eor_resume_t res = eor_resume; /* struct copy */
+    unsigned char *cp;
+
+    eor_id = NULL_IOID;
+
+    for (cp = netrbuf + res.offset; cp < netrbuf + res.buflen; cp++) {
+	bool eor = false;
+
+	if (!telnet_fsm(*cp, &eor)) {
+	    ctlr_dbcs_postprocess();
+	    host_disconnect(true);
+	    return;
+	}
+	if (eor && cp < netrbuf + res.buflen - 1) {
+	    trace_rollover_check();
+	    eor_resume.offset = (cp + 1) - netrbuf;
+	    eor_id = AddTimeOut(0, net_eor_resume);
+	    return;
+	}
+    }
+
+#if defined(_WIN32) /*[*/
+    if (res.close) {
+	vctrace(TC_SOCKET, "RCVD disconnect\n");
+	host_disconnect(false);
+    }
+#endif /*]*/
+
+    /* We've exhausted the input, start listening again. */
+    if (PCONNECTED) {
+	vctrace(TC_SOCKET, "eor_resume: buffer exhausted, resuming input\n");
+	x_add_input(sock);
+    }
+
+    /* See if it's time to roll over the trace file. */
+    trace_rollover_check();
+}
+
+/*
  * net_input
  *	Called by the toolkit whenever there is input available on the
  *	socket.  Reads the data, processes the special telnet commands
@@ -1361,7 +1352,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
      * Note that WSAEventSelect does this automatically (and won't allow
      * us to change it back to blocking), except on Wine.
      */
-    if (sock != INVALID_SOCKET && non_blocking(true) < 0) {
+    if (sock != INVALID_SOCKET && non_blocking() < 0) {
 	host_disconnect(true);
 	return;
     }
@@ -1371,20 +1362,13 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     }
 
 #if defined(_WIN32) /*[*/
-    if (WSAEnumNetworkEvents(sock, sock_handle, &events) != 0) {
-	popup_an_error("WSAEnumNetworkEvents failed: %s",
-		win32_strerror(WSAGetLastError()));
-	host_disconnect(true);
-	return;
-    }
-    vctrace(TC_SOCKET, "net_input: NetworkEvents 0x%lx%s%s%s\n",
-	    events.lNetworkEvents,
-	    (events.lNetworkEvents & FD_CONNECT) ? " CONNECT": "",
-	    (events.lNetworkEvents & FD_CLOSE) ? " CLOSE": "",
-	    (events.lNetworkEvents & FD_READ) ? " READ": "");
+    sched_get_network_events(sock, &events);
+    vctrace(TC_SOCKET, "net_input: NetworkEvents %s\n", sched_expand_network_events(events.lNetworkEvents))
     if (cstate == TCP_PENDING) {
 	if (events.lNetworkEvents & FD_CONNECT) {
 	    if (events.iErrorCode[FD_CONNECT_BIT] != 0) {
+		vctrace(TC_SOCKET, "RCVD socket error %d (%s)\n", events.iErrorCode[FD_CONNECT_BIT],
+			win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
 		if (ha_ix == num_ha - 1) {
 		    connect_error("%s%s, port %d: %s",
 			    (proxy_type != PT_NONE)? "Proxy ": "",
@@ -1393,12 +1377,12 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			    win32_strerror(events.iErrorCode[FD_CONNECT_BIT]));
 		} else {
 		    bool pending;
-		    iosrc_t s;
+		    socket_t s;
 
-		    net_pre_close();
+		    net_pre_close("net_input: next connect attempt");
 		    while (++ha_ix < num_ha) {
 			s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
-			if (s != INVALID_IOSRC) {
+			if (s != INVALID_SOCKET) {
 			    host_newfd(s);
 			    host_new_connection(pending);
 			    return;
@@ -1484,7 +1468,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     vctrace(TC_SOCKET, "Host socket read complete nr=%d\n", nr);
     if (nr < 0) {
 	if ((secure_connection && nr == SIO_EWOULDBLOCK) ||
-	    (!secure_connection && socket_errno() == SE_EWOULDBLOCK)) {
+	    (!secure_connection && IS_EWOULDBLOCK(socket_errno()))) {
 	    vctrace(TC_SOCKET, "EWOULDBLOCK\n");
 	    return;
 	}
@@ -1514,12 +1498,12 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			(proxy_type != PT_NONE)? proxy_port : current_port);
 	    } else {
 		bool pending;
-		iosrc_t s;
+		socket_t s;
 
-		net_pre_close();
+		net_pre_close("net_input: next connect attempt");
 		while (++ha_ix < num_ha) {
 		    s = connect_to(ha_ix, (ha_ix == num_ha - 1), &pending);
-		    if (s != INVALID_IOSRC) {
+		    if (s != INVALID_SOCKET) {
 			host_newfd(s);
 			host_new_connection(pending);
 			return;
@@ -1565,9 +1549,24 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    nvt_process((unsigned int) *cp);
 	} else {
 #endif /*]*/
-	    if (!telnet_fsm(*cp)) {
+	    bool eor = false;
+
+	    if (!telnet_fsm(*cp, &eor)) {
 		ctlr_dbcs_postprocess();
 		host_disconnect(true);
+		return;
+	    }
+	    if (eor && cp < netrbuf + nr - 1) {
+		trace_rollover_check();
+		x_remove_input();
+		eor_resume.offset = (cp + 1) - netrbuf;
+		eor_resume.buflen = nr;
+		vctrace(TC_SOCKET, "net_input: EOR with %zd bytes left, suspending input\n",
+			eor_resume.buflen - eor_resume.offset);
+#if defined(_WIN32) /*[*/
+		eor_resume.close = (events.lNetworkEvents & FD_CLOSE) != 0;
+#endif /*]*/
+		eor_id = AddTimeOut(0, net_eor_resume);
 		return;
 	    }
 #if defined(LOCAL_PROCESS) /*[*/
@@ -1582,6 +1581,17 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 #if defined(_WIN32) /*[*/
     if (events.lNetworkEvents & FD_CLOSE) {
+	if (nr > 0) {
+	    /* We processed some input, give it a chance to be digested before processing EOF. */
+	    trace_rollover_check();
+	    x_remove_input();
+	    eor_resume.offset = (cp + 1) - netrbuf;
+	    eor_resume.buflen = nr;
+	    vctrace(TC_SOCKET, "net_input: deferring FD_CLOSE processing\n");
+	    eor_resume.close = true;
+	    eor_id = AddTimeOut(0, net_eor_resume);
+	    return;
+	}
 	vctrace(TC_SOCKET, "RCVD disconnect\n");
 	host_disconnect(false);
     }
@@ -1729,12 +1739,18 @@ force_local(char *s)
  * telnet_fsm
  *	Telnet finite-state machine.
  *	Returns true for okay, false for errors.
+ *	If it processes an EOR, sets *eor to true on return.
  */
 static bool
-telnet_fsm(unsigned char c)
+telnet_fsm(unsigned char c, bool *eor)
 {
     char *see_chr;
     size_t sl;
+
+    *eor = false;
+    if (!PCONNECTED) {
+	return false;
+    }
 
     switch (telnet_state) {
     case TNS_DATA:	/* normal data processing */
@@ -1841,6 +1857,7 @@ telnet_fsm(unsigned char c)
 	    vctrace(TC_TELNET, "RCVD EOR\n");
 	    ibptr = ibuf;
 	    telnet_state = TNS_DATA;
+	    *eor = true;
 	    break;
 	case WILL:
 	    telnet_state = TNS_WILL;
@@ -1865,11 +1882,7 @@ telnet_fsm(unsigned char c)
 	    vtrace("\n");
 	    if (syncing) {
 		syncing = 0;
-#if !defined(_WIN32) /*[*/
 		x_except_on(sock);
-#else /*][*/
-		x_except_on(sock_handle);
-#endif /*]*/
 	    }
 	    telnet_state = TNS_DATA;
 	    break;
@@ -3820,47 +3833,57 @@ net_snap_options(void)
 }
 
 /*
- * Set blocking/non-blocking mode on the socket.  On error, pops up an error
- * message, but does not close the socket.
+ * Mark a socket as non-blocking.
+ * Returns true for success.
  */
-static int
-non_blocking(bool on)
+bool
+net_nonblocking(socket_t sock, const char **errmsg)
 {
 #if !defined(BLOCKING_CONNECT_ONLY) /*[*/
 # if defined(FIONBIO) /*[*/
-    IOCTL_T i = on? 1: 0;
+    IOCTL_T i = 1;
 
-    vctrace(TC_SOCKET, "Making host socket %sblocking\n", on? "non-": "");
-    if (sock == INVALID_SOCKET) {
-	return 0;
-    }
-
+    *errmsg = NULL;
     if (SOCK_IOCTL(sock, FIONBIO, &i) < 0) {
-	popup_a_sockerr("ioctl(FIONBIO, %d)", on);
-	return -1;
+	*errmsg = txAsprintf("ioctl(FIONBIO): %s", socket_strerror(socket_errno()));
+	return false;
     }
 # else /*][*/
     int f;
 
-    vctrace(TC_SOCKET, "Making host socket %sblocking\n", on? "non-": "");
+    if ((f = fcntl(sock, F_GETFL, 0)) < 0) {
+	*errmsg = txAsprintf("fcntl(F_GETFL): %s", strerror(errno));
+	return false;
+    }
+    f |= O_NDELAY;
+    if (fcntl(sock, F_SETFL, f) < 0) {
+	*errmsg = txAsprintf("fcntl(F_SETFL): %s", strerror(errno));
+	return false;
+    }
+# endif /*]*/
+#endif /*]*/
+    *errmsg = NULL;
+    return true;
+}
+
+/*
+ * Set blocking/non-blocking mode on the host socket. On error, pops up an error
+ * message, but does not close the socket.
+ */
+static int
+non_blocking(void)
+{
+#if !defined(BLOCKING_CONNECT_ONLY) /*[*/
+    const char *errmsg;
+
+    vctrace(TC_SOCKET, "Making host socket non-blocking\n");
     if (sock == INVALID_SOCKET) {
 	return 0;
     }
-
-    if ((f = fcntl(sock, F_GETFL, 0)) == -1) {
-	connect_errno(errno, "fcntl(F_GETFL)");
+    if (!net_nonblocking(sock, &errmsg)) {
+	connect_error("%s", errmsg);
 	return -1;
     }
-    if (on) {
-	f |= O_NDELAY;
-    } else {
-	f &= ~O_NDELAY;
-    }
-    if (fcntl(sock, F_SETFL, f) < 0) {
-	connect_errno(errno, "fcntl(F_SETFL)");
-	return -1;
-    }
-# endif /*]*/
 #endif /*]*/
     return 0;
 }

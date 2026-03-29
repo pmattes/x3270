@@ -82,6 +82,7 @@
 #include "names.h"
 #include "nvt.h"
 #include "opts.h"
+#include "oq.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "prefer.h"
@@ -612,6 +613,8 @@ main(int argc, char *argv[])
     int		i;
 #endif /*]*/
 
+    tolr_start();
+
     Warning_redirect = c3270_Warning;
 #if defined(_WIN32) /*[*/
     /* Redirect Error() so we pause. */
@@ -689,6 +692,7 @@ main(int argc, char *argv[])
     show_dirs_register();
 #endif /*]*/
     resolver_pipe_register();
+    oq_register();
 
 #if !defined(_WIN32) /*[*/
     register_merge_profile(merge_profile);
@@ -813,6 +817,9 @@ Type 'help' for help information.\n\n",
     signal(SIGTSTP, common_handler);
 #endif /*]*/
     task_cb_init_ir_state(&command_ir_state);
+
+    /* Initialize output queues. */
+    oq_init(appres.output_queues);
 
     /* Handle initial toggle settings. */
     initialize_toggles();

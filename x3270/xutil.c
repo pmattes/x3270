@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -125,7 +125,7 @@ AddInput(iosrc_t sock, iofn_t fn)
 }
 
 ioid_t
-AddExcept(iosrc_t sock, iofn_t fn)
+AddExcept(socket_t sock, iofn_t fn)
 {
     iorec_t *iorec;
 
@@ -140,7 +140,7 @@ AddExcept(iosrc_t sock, iofn_t fn)
 }
 
 ioid_t
-AddOutput(iosrc_t sock, iofn_t fn)
+AddOutput(socket_t sock, iofn_t fn)
 {
     iorec_t *iorec;
 
@@ -176,6 +176,18 @@ RemoveInput(ioid_t cookie)
 	}
 	XtFree((XtPointer)iorec);
     }
+}
+
+void
+RemoveOutput(ioid_t cookie)
+{
+    RemoveInput(cookie);
+}
+
+void
+RemoveExcept(ioid_t cookie)
+{
+    RemoveInput(cookie);
 }
 
 /*
@@ -225,19 +237,27 @@ to_fn(XtPointer closure, XtIntervalId *id)
 ioid_t
 AddTimeOut(unsigned long msec, tofn_t fn)
 {
-    torec_t *torec;
+    if (msec > 0) {
+	torec_t *torec;
 
-    torec = (torec_t *)XtMalloc(sizeof(torec_t));
-    torec->fn = fn;
-    torec->id = XtAppAddTimeOut(appcontext, msec, to_fn, NULL);
-    torec->next = torecs;
-    torecs = torec;
-    return torec->id;
+	torec = (torec_t *)XtMalloc(sizeof(torec_t));
+	torec->fn = fn;
+	torec->id = XtAppAddTimeOut(appcontext, msec, to_fn, NULL);
+	torec->next = torecs;
+	torecs = torec;
+	return torec->id;
+    } else {
+	return AddDefer(fn);
+    }
 }
 
 void
 RemoveTimeOut(ioid_t cookie)
 {
+    if (RemoveDefer(cookie)) {
+	return;
+    }
+
     torec_t *torec;
     torec_t *prev = NULL;
 

@@ -49,7 +49,7 @@ extern char *numeric_port;
 void net_abort(void);
 void net_break(char c);
 void net_charmode(void);
-net_connect_t net_connect(const char *, char *, char *, bool, iosrc_t *);
+net_connect_t net_connect(const char *, char *, char *, bool, socket_t *);
 void net_exception(iosrc_t fd, ioid_t id);
 int net_getsockname(void *buf, int *len);
 void net_hexnvt_out(unsigned char *buf, size_t len);
@@ -87,6 +87,7 @@ const char *net_myopts(void);
 const char *net_hisopts(void);
 void net_register(void);
 const char *net_inferred_passthru_proxy_spec(void);
+bool net_nonblocking(socket_t s, const char **errmsg);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);

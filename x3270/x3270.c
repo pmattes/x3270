@@ -67,6 +67,7 @@
 #include "model.h"
 #include "nvt.h"
 #include "opts.h"
+#include "oq.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "prefer.h"
@@ -480,6 +481,8 @@ main(int argc, char *argv[])
     XtResource *xres;
     const char *errmsg;
 
+    tolr_start();
+
     /*
      * Make sure the Xt and x3270 Boolean types line up.
      * This is needed because we use the Xt resource parser to fill in all of
@@ -567,6 +570,7 @@ main(int argc, char *argv[])
     telnet_new_environ_register();
     rpq_register();
     resolver_pipe_register();
+    oq_register();
 
     /* Save the original command line. */
     save_command_string(argc, argv);
@@ -700,6 +704,17 @@ main(int argc, char *argv[])
 
     /* Copy bool values from xres to appres. */
     copy_xres_to_res_bool();
+
+    /*
+     * Fix up tracing.
+     * First, toggle it back on if it was set by the TOLR environment variable.
+     * Second, augment the detail settings from the resource.
+     */
+    if (tracef != NULL) {
+	set_toggle_initial(TRACING, true);
+    }
+    trace_detail_reset();
+    vcdtrace(TC_INFRA, "trace detail reset\n");
 
     /*
      * Handle the deprecated 'charset' resource. It is an alias for
@@ -876,6 +891,9 @@ main(int argc, char *argv[])
      */
     signal(SIGCHLD, sigchld_handler);
 
+    /* Initialize output queues. */
+    oq_init(appres.output_queues);
+
     /* Handle initial toggle settings. */
     if (!appres.debug_tracing) {
 	set_toggle_initial(TRACING, false);
@@ -910,6 +928,15 @@ main(int argc, char *argv[])
 
 	/* Run tasks triggered by the events we polled for. */
 	run_tasks();
+	if (run_deferred()) {
+	    run_tasks();
+	}
+
+	/* If there are deferred events at this point, we don't want to block. */
+	if (any_deferred()) {
+	    txflush();
+	    continue;
+	}
 
 	/* Block and process the next event. */
 	XtAppProcessEvent(appcontext, XtIMAll);
@@ -920,6 +947,9 @@ main(int argc, char *argv[])
 
 	/* Run tasks triggered by the event we blocked for. */
 	run_tasks();
+	if (run_deferred()) {
+	    run_tasks();
+	}
 
 	/* Free transaction memory. */
 	txflush();

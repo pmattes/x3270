@@ -79,16 +79,15 @@ class TestS3270CmdLineHostError(cti):
             p.disconnect()
 
             # Get the result.
-            s3270.stdin.write(b'Quit()\n')
             out = s3270.communicate(timeout=2)
 
         # Wait for the processes to exit.
-        self.vgwait(s3270)
+        self.vgwait(s3270, expected_status=1)
 
         # Check.
         # There should be nothing on stdout, but something on stderr.
-        self.assertTrue(out[0].startswith(b'L U U N N 4 43 80 0 0 0x0 '))
-        self.assertTrue(out[1].startswith(b'Wait(): Host disconnected'))
+        self.assertEqual(b'', out[0])
+        self.assertIn(b'Connection failed', out[1])
 
 if __name__ == '__main__':
     unittest.main()

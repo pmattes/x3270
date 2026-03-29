@@ -212,7 +212,7 @@ class sendserver():
 
 def vgwrap(command):
     '''Wrap a command in valgrind'''
-    if 'TRACEALL' in os.environ and not '-trace' in command:
+    if 'TRACEALL' in os.environ and not '-trace' in command and command[0] != 'x3270if':
         cmd = [command[0], '-trace'] + command[1:]
     else:
         cmd = command
@@ -229,7 +229,7 @@ def vgwrap_ecmd(command):
 
 def vgwrap_eargs(args):
     '''Wrap execvp arguments in valgrind'''
-    if 'TRACEALL' in os.environ and not '-trace' in args:
+    if 'TRACEALL' in os.environ and not '-trace' in args and args[0] != 'x3270if':
         targs = [args[0]] + ['-trace'] + args[1:]
     else:
         targs = args
@@ -421,7 +421,7 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def vgcheck(self, pid, rc, assertOnFailure):
+    def vgcheck(self, pid, rc, assertOnFailure, expected_status):
         '''Check a valgrind log file'''
         isVal = 'VALGRIND' in os.environ
         valLog = f'/tmp/valgrind.{pid}'
@@ -429,17 +429,17 @@ class cti(unittest.TestCase):
             success, nomatch = valpass.valpass().check(valLog)
             self.assertTrue(success, f'Valgrind error(s) found ({" ".join(nomatch)}), see {valLog}')
         if (assertOnFailure):
-            self.assertEqual(0, rc, 'Program failed')
+            self.assertEqual(expected_status, rc, 'Program failed')
         if isVal:
             os.unlink(valLog)
 
-    def vgwait(self, p, timeout=2, assertOnFailure=True):
+    def vgwait(self, p, timeout=2, assertOnFailure=True, expected_status=0):
         '''Wait for a subprocess with a timeout, optionally assert on failure, and clean up the valgrind log file'''
         pid = p.pid
         rc = p.wait(timeout=timeout)
-        self.vgcheck(pid, rc, assertOnFailure)
+        self.vgcheck(pid, rc, assertOnFailure, expected_status)
 
-    def vgwait_pid(self, pid, timeout=2, assertOnFailure=True):
+    def vgwait_pid(self, pid, timeout=2, assertOnFailure=True, expected_status=0):
         '''Wait for a process with a timeout, optionally assert on failure, and clean up the valgrind log file'''
         self.status = -1
         def waitforit():
@@ -449,7 +449,7 @@ class cti(unittest.TestCase):
         if os.WIFSIGNALED(self.status):
             self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(self.status)}')
         rc = os.WEXITSTATUS(self.status)
-        self.vgcheck(pid, rc, assertOnFailure)
+        self.vgcheck(pid, rc, assertOnFailure, expected_status)
 
 # Define a class decorator to create a requests session and set the requests timeout.
 # I could probably figure out how to pass a timeout override as a parameter, but for now, you can just set

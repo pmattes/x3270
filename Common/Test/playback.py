@@ -241,6 +241,11 @@ class playback():
         if accum != '':
             print(f'playback.match: warning: accum {accum} still pending, direction={direction}', file=sys.stderr)
 
+    def send_literal(self, hex: str):
+        '''Send literal bytes'''
+        self.wait_accept()
+        self.conn.send(bytes.fromhex(hex))
+
     def disconnect(self):
         '''Disconnect'''
         self.conn.close()

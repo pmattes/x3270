@@ -1662,16 +1662,11 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	vctrace(TC_UI, "kybd_input: calling wgetch()\n");
 	k = wgetch(stdscr);
 #endif /*]*/
-	vctrace(TC_UI, "kybd_input: k=%d "
 # if defined(CURSES_WIDE) /*[*/
-		       "wch=%lu "
+	vctrace(TC_UI, "kybd_input: k=%d wch=%lu\n", k, (unsigned long)wch);
+# else /*][*/
+	vctrace(TC_UI, "kybd_input: k=%d\n", k)wch);
 # endif /*]*/
-				  "\n",
-					k
-# if defined(CURSES_WIDE) /*[*/
-					 , (unsigned long)wch
-# endif /*]*/
-						             );
 	if (k == ERR) {
 	    if (first) {
 		if (failed_first) {

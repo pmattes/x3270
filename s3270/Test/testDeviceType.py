@@ -28,7 +28,7 @@
 # s3270 TN3270E DEVICE-TYPE tests
 
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 import tempfile
 from typing import List
 import unittest
@@ -63,7 +63,7 @@ class TestS3270DeviceType(cti):
             if prefix != None:
                 host = prefix + host
             command.append(host)
-            s3270 = Popen(vgwrap(command), stdin=PIPE)
+            s3270 = Popen(vgwrap(command), stdin=PIPE, stderr=DEVNULL)
             self.children.append(s3270)
 
             # Make sure the emulator does what we expect.

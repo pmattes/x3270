@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2024 Paul Mattes.
+ * Copyright (c) 2014-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ void httpd_set_alias(void *nhandle, const char *text);
 /* Called from the main logic. */
 void *httpd_mhandle(void *dhandle);
 void *httpd_new(void *mhandle, const char *client_name);
-httpd_status_t httpd_input(void *dhandle, const char *data, size_t len);
+httpd_status_t httpd_input(void *dhandle, const char *data, size_t len, size_t *len_left);
 void httpd_close(void *dhandle, const char *why);
 
 /* Callable from methods. */
@@ -96,6 +96,7 @@ httpd_status_t httpd_dyn_error(void *dhandle, content_t content_type,
 char *html_quote(const char *text);
 char *uri_quote(const char *text);
 const char *httpd_fetch_query(void *dhandle, const char *name);
+int httpd_seq(void *dhandle);
 
 content_t httpd_content_type(void *dhandle);
 char *httpd_content(void *dhandle);

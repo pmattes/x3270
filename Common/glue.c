@@ -363,6 +363,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     /* Set up the resolver. */
     set_46(appres.prefer_ipv4, appres.prefer_ipv6);
 
+    /*
+     * Reset the cached trace detail config, so any environment variable can be OR'd in
+     * with the newly-read resource value.
+     */
+    trace_detail_reset();
+
     return argc;
 }
 
@@ -847,19 +853,20 @@ static res_t base_resources[] = {
     { ResAlias,		aoffset(alias),		XRM_STRING },
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
-    { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
+    { ResBsdTm,		aoffset(bsd_tm),	XRM_BOOLEAN },
     { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResCodePage,	aoffset(codepage),	XRM_STRING },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResContentionResolution, aoffset(contention_resolution), XRM_BOOLEAN },
-    { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
+    { ResCrosshairColor,aoffset(interactive.crosshair_color), XRM_STRING },
     { ResConsole,aoffset(interactive.console),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
+    { ResDetailTrace,	aoffset(detail_trace),	XRM_STRING },
     { ResDevName,	aoffset(devname),	XRM_STRING },
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
-    { ResErase,		aoffset(linemode.erase),	XRM_STRING },
-    { ResExtendedDataStream, aoffset(extended_data_stream),	XRM_BOOLEAN },
+    { ResErase,		aoffset(linemode.erase), XRM_STRING },
+    { ResExtendedDataStream, aoffset(extended_data_stream), XRM_BOOLEAN },
     { ResFtAllocation,	aoffset(ft.allocation),	XRM_STRING },
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
@@ -882,13 +889,13 @@ static res_t base_resources[] = {
     { ResFtSecondarySpace,aoffset(ft.secondary_space),XRM_INT },
     { ResHostname,	aoffset(hostname),	XRM_STRING },
     { ResHostsFile,	aoffset(hostsfile),	XRM_STRING },
-    { ResHttpd,		aoffset(httpd_port),		XRM_STRING },
-    { ResIcrnl,		aoffset(linemode.icrnl),	XRM_BOOLEAN },
-    { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
-    { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
+    { ResHttpd,		aoffset(httpd_port),	XRM_STRING },
+    { ResIcrnl,		aoffset(linemode.icrnl), XRM_BOOLEAN },
+    { ResInlcr,		aoffset(linemode.inlcr), XRM_BOOLEAN },
+    { ResOnlcr,		aoffset(linemode.onlcr), XRM_BOOLEAN },
     { ResIntr,		aoffset(linemode.intr),	XRM_STRING },
     { ResKill,		aoffset(linemode.kill),	XRM_STRING },
-    { ResLnext,		aoffset(linemode.lnext),	XRM_STRING },
+    { ResLnext,		aoffset(linemode.lnext), XRM_STRING },
 #if defined(_WIN32) /*[*/
     { ResLocalCp,	aoffset(local_cp),	XRM_INT },
 #endif /*]*/
@@ -902,6 +909,7 @@ static res_t base_resources[] = {
 	XRM_STRING },
     { ResNumericLock, aoffset(numeric_lock),	XRM_BOOLEAN },
     { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
+    { ResOutputQueues,	aoffset(output_queues),	XRM_STRING },
     { ResOversize,	aoffset(oversize),	XRM_STRING },
     { ResPort,	aoffset(port),			XRM_STRING },
 #if defined(_WIN32) /*[*/
@@ -912,22 +920,22 @@ static res_t base_resources[] = {
     { ResQuit,		aoffset(linemode.quit),	XRM_STRING },
     { ResReconnect,	aoffset(reconnect),	XRM_BOOLEAN },
     { ResRetry,		aoffset(retry),		XRM_BOOLEAN },
-    { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
+    { ResRprnt,		aoffset(linemode.rprnt), XRM_STRING },
     { ResScreenTraceFile,aoffset(screentrace.file),XRM_STRING },
     { ResScreenTraceTarget,aoffset(screentrace.target),XRM_STRING },
     { ResScreenTraceType,aoffset(screentrace.type),XRM_STRING },
-    { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
+    { ResSecure,	aoffset(secure),	XRM_BOOLEAN },
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
-    { ResScriptPortOnce,aoffset(script_port_once),	XRM_BOOLEAN },
+    { ResScriptPortOnce,aoffset(script_port_once), XRM_BOOLEAN },
     { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
     { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
     { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
-    { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
+    { ResTraceFileSize,aoffset(trace_file_size), XRM_STRING },
     { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
     { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
-    { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
+    { ResUnlockDelayMs,aoffset(unlock_delay_ms), XRM_INT },
     { ResWerase,	aoffset(linemode.werase),XRM_STRING },
     { ResWrongTerminalName,aoffset(wrong_terminal_name),XRM_BOOLEAN },
     { ResTls992,	aoffset(tls992),	XRM_BOOLEAN },
