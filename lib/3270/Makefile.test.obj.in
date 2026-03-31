@@ -31,12 +31,12 @@ CC = @CC@
 
 all: test
 
-JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o
+JSON_OBJS = json_test.o json.o utf8.o varbuf.o ctype32.o sa_malloc.o
 BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o resolver_abs.o sa_malloc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o
 URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o
 DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o
-CATV_OBJS = catv_test.o xscatv.o utf8.o varbuf.o sa_malloc.o
+CATV_OBJS = catv_test.o xscatv.o utf8.o varbuf.o ctype32.o sa_malloc.o
 
 CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include @CPPFLAGS@

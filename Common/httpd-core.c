@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2025 Paul Mattes.
+ * Copyright (c) 2014-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1525,7 +1525,7 @@ check_cookie(field_t *fields)
 	char *value_start;
 
 	ptr = NULL;
-	while (*s && isspace((int)*s)) {
+	while (*s && isspace((unsigned char)*s)) {
 	    s++;
 	}
 	if (!*s) {
@@ -1544,7 +1544,7 @@ check_cookie(field_t *fields)
 
 	/* Found the right cookie. */
 	value_start = ++s;
-	while (*s && !isspace((int)*s)) {
+	while (*s && !isspace((unsigned char)*s)) {
 	    s++;
 	}
 	if (((size_t)(s - value_start) == strlen(security_cookie)) &&
@@ -1617,9 +1617,7 @@ httpd_digest_fields(httpd_t *h)
 	    field_t *f;
 
 	    /* The field name needs to start with a non-space, non-colon. */
-	    if (iscntrl((unsigned char)*s) ||
-		    isspace((unsigned char)*s) ||
-		    *s == ':') {
+	    if (iscntrl((unsigned char)*s) || isspace((unsigned char)*s) || *s == ':') {
 		return httpd_error(h, ERRMODE_FATAL, CT_HTML, 400, "Malformed "
 			"field name in request.");
 	    }

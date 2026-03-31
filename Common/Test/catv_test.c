@@ -27,21 +27,23 @@
 
 /*
  *      catv_test.c
- *              xscatv unit tests
+ *              xscatv and ctype32 unit tests
  */
 
 #include "globals.h"
 
 #include <assert.h>
 
-#include "xscatv.h"
+#include "ctype32.h"
 #include "utils.h"
+#include "xscatv.h"
 
 static void basic_test(void);
 static void quoting_test(void);
 static void newline_test(void);
 static void broken_test(void);
 static void safety_test(void);
+static void ctype32_test(void);
 
 static struct {
     const char *name;
@@ -52,6 +54,7 @@ static struct {
     { "Newline", newline_test },
     { "Broken", broken_test },
     { "Safety", safety_test },
+    { "ctype32", ctype32_test },
     { NULL, NULL }
 };
 
@@ -211,8 +214,8 @@ safety_test(void)
 	{ "abc def", ~XSCC_WHITESPACE, true },	/* White space. */
 	{ "abc\001def", ~XSCC_CONTROLS, true },	/* C0 control. */
 	{ "abc\302\200def", ~XSCC_CONTROLS, true }, /* C1 control. */
-	{ "abc\302\240", ~XSCC_NBSP, true },	/* No-break space. */
-	{ "abc\343\200\200", ~XSCC_DBSPACE, true }, /* Ideographic space. */
+	{ "abc\302\240", ~XSCC_WHITESPACE, true }, /* No-break space. */
+	{ "abc\343\200\200", ~XSCC_WHITESPACE, true }, /* Ideographic space. */
 
 	{ NULL, 0, false }
     };
@@ -222,5 +225,52 @@ safety_test(void)
 	bool result = xscatv_safe(cases[i].string, strlen(cases[i].string), cases[i].opts);
 
 	assert(result == cases[i].success);
+    }
+}
+
+/* ctype32 test. */
+static void
+ctype32_test(void)
+{
+    struct c {
+	ucs4_t u;
+	bool alpha;
+	bool cntrl;
+	bool digit;
+	bool print;
+	bool space;
+	bool xdigit;
+    } cases[] = {
+	{ 'a', true, false, false, true, false, true },		/* 'a' is alpha, printable, and a hex digit */
+	{ '0', false, false, true, true, false, true },		/* '0' is a digit, printble and a hex digit */
+	{ 'g', true, false, false, true, false, false },	/* 'g' is alpha and printable */
+	{ 0, false, true, false, false, false, false },		/* NUL is a control character */
+	{ '\f', false, true, false, false, true, false },	/* \f is a control character and whitespace */
+	{ ' ', false, false, false, false, true, false },	/* A space is whitespace */
+	{ 0x7f, false, true, false, false, false, false },	/* DEL is a control character */
+	{ 0x80, false, true, false, false, false, false },	/* PAD is a (c1) control character */
+	{ 0xa0, false, false, false, false, true, false },	/* Non-break space is whitespace */
+	{ 0x3000, false, false, false, false, true, false },	/* Ideographic space is whitespace */
+	{ 0x100, false, false, false, true, false, false },	/* A+macron is printable */
+	{ 0xf0, false, false, false, true, false, false },	/* Eth is printable */
+    };
+    size_t i;
+
+    for (i = 0; i < array_count(cases); i++) {
+	struct c *c = &cases[i];
+	bool result;
+
+	result = isalpha32(c->u);
+	assert(result == c->alpha);
+	result = iscntrl32(c->u);
+	assert(result == c->cntrl);
+	result = isdigit32(c->u);
+	assert(result == c->digit);
+	result = isprint32(c->u);
+	assert(result == c->print);
+	result = isspace32(c->u);
+	assert(result == c->space);
+	result = isxdigit32(c->u);
+	assert(result == c->xdigit);
     }
 }

@@ -55,8 +55,6 @@
 
 #include "utils.h"
 
-#define my_isspace(c)	isspace((unsigned char)c)
-
 static struct dresource {
     struct dresource *next;
     const char *name;
@@ -212,7 +210,7 @@ split_dresource(char **st, char **left, char **right)
     bool quote;
 
     /* Skip leading white space. */
-    while (my_isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
 
@@ -238,7 +236,7 @@ split_dresource(char **st, char **left, char **right)
     }
 
     /* Stip white space before the colon. */
-    for (t = s-1; my_isspace(*t); t--) {
+    for (t = s-1; isspace((unsigned char)*t); t--) {
 	*t = '\0';
     }
 
@@ -246,7 +244,7 @@ split_dresource(char **st, char **left, char **right)
     *(s++) = '\0';
 
     /* Skip white space after the colon. */
-    while (*s != '\n' && my_isspace(*s)) {
+    while (*s != '\n' && isspace((unsigned char)*s)) {
 	s++;
     }
 
@@ -276,7 +274,7 @@ split_dresource(char **st, char **left, char **right)
 	t = s-1;
 	*st = s;
     }
-    while (my_isspace(*t)) {
+    while (isspace((unsigned char)*t)) {
 	*t-- = '\0';
     }
 
@@ -377,7 +375,7 @@ split_lresource(char **st, char **value)
     bool quote;
 
     /* Skip leading white space. */
-    while (my_isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
 
@@ -409,7 +407,7 @@ split_lresource(char **st, char **value)
 	t = s-1;
 	*st = s;
     }
-    while (my_isspace(*t)) {
+    while (isspace((unsigned char)*t)) {
 	*t-- = '\0';
     }
 
@@ -870,13 +868,13 @@ strip_whitespace(const char *s)
 {
     char *t = NewString(s);
 
-    while (*t && my_isspace(*t)) {
+    while (*t && isspace((unsigned char)*t)) {
 	t++;
     }
     if (*t) {
 	char *u = t + strlen(t) - 1;
 
-	while (my_isspace(*u)) {
+	while (isspace((unsigned char)*u)) {
 	    *u-- = '\0';
 	}
     }

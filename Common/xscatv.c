@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include "ctype32.h"
 #include "unicodec.h"
 #if defined(TEST) /*[*/
 # include "utf8.h"
@@ -167,10 +168,8 @@ xscatv_safe(const char *s, size_t len, unsigned opts)
 	}
 
 	/* Check this character. */
-	if (((opts & XSCC_WHITESPACE) && isspace(uc)) ||
-	    ((opts & XSCC_CONTROLS) && (uc < ' ' || uc == 0x7f || ((uc & 0x80) && (uc & 0x7f) < ' '))) ||
-	    ((opts & XSCC_NBSP) && uc == 0xa0) ||
-	    ((opts & XSCC_DBSPACE) && uc == 0x3000)) {
+	if (((opts & XSCC_WHITESPACE) && isspace32(uc)) ||
+	    ((opts & XSCC_CONTROLS) && iscntrl32(uc))) {
 	    return false;
 	}
 

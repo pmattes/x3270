@@ -217,7 +217,7 @@ do_push(peer_t *p, const char *buf, size_t len)
     tcb_t *tcb = (p->capabilities & CBF_INTERACTIVE)?
 	&interactive_cb : &peer_cb;
 
-    while (len && isspace((int)*s)) {
+    while (len && isspace((unsigned char)*s)) {
 	s++;
 	len--;
     }

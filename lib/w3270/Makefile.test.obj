@@ -28,12 +28,12 @@
 
 all: test
 
-JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o snprintf.o asprintf.o
+JSON_OBJS = json_test.o json.o utf8.o varbuf.o sa_malloc.o snprintf.o asprintf.o ctype32.o
 BIND_OPTS_OBJS = bind_opts_test.o bind-opt.o resolver_abs.o sa_malloc.o snprintf.o asprintf.o w3misc.o
 UTF8_OBJS = utf8_test.o utf8.o sa_malloc.o snprintf.o asprintf.o
 URI_OBJS = uri_test.o uri.o percent_decode.o varbuf.o sa_malloc.o snprintf.o asprintf.o
 DEVNAME_OBJS = devname_test.o devname.o varbuf.o sa_malloc.o snprintf.o asprintf.o
-CATV_OBJS = catv_test.o xscatv.o utf8.o varbuf.o sa_malloc.o asprintf.o snprintf.o
+CATV_OBJS = catv_test.o xscatv.o utf8.o varbuf.o sa_malloc.o asprintf.o snprintf.o ctype32.o
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
 override CFLAGS += $(EXTRA_FLAGS) -DTEST -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)

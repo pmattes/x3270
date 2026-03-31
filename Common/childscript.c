@@ -282,7 +282,7 @@ run_next(child_t *c)
     /* Skip whitespace. */
     start = c->buf;
     xlen = cmdlen;
-    while (xlen > 0 && isspace((int)*start)) {
+    while (xlen > 0 && isspace((unsigned char)*start)) {
 	start++;
 	xlen--;
     }
@@ -1542,7 +1542,7 @@ Prompt_action(ia_t ia, unsigned argc, const char **argv)
 	char c;
 
 	while ((c = *in++)) {
-	    if (c != '\'' && c != '"' && (i == 2 || !isspace((int)c))) {
+	    if (c != '\'' && c != '"' && (i == 2 || !isspace((unsigned char)c))) {
 		*out++ = c;
 	    }
 	}

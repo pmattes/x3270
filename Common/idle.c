@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,7 +94,7 @@ idle_init(void)
     /* Get values from resources. */
     cmd = appres.idle_command;
     if (cmd != NULL) {
-	while (isspace((int)*cmd)) {
+	while (isspace((unsigned char)*cmd)) {
 	    cmd++;
 	}
 	if (!*cmd) {

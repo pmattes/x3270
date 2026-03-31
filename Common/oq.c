@@ -185,13 +185,13 @@ oq_init(const char *spec)
 	si = true;
 	sc[--sl] = '\0';
     }
-    if (sl > 0 && toupper((int)sc[sl - 1]) == 'K') {
+    if (sl > 0 && toupper((unsigned char)sc[sl - 1]) == 'K') {
 	mult = si? KiB: KB;
 	sc[--sl] = '\0';
-    } else if (sl > 0 && toupper((int)sc[sl - 1]) == 'M') {
+    } else if (sl > 0 && toupper((unsigned char)sc[sl - 1]) == 'M') {
 	mult = si? MiB: MB;
 	sc[--sl] = '\0';
-    } else if (sl > 0 && toupper((int)sc[sl - 1]) == 'G') {
+    } else if (sl > 0 && toupper((unsigned char)sc[sl - 1]) == 'G') {
 	mult = si? GiB: GB;
 	sc[--sl] = '\0';
     }

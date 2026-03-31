@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Paul Mattes.
+ * Copyright (c) 2024-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -129,7 +129,7 @@ cookiefile_init(const char *filename, const char **errmsg)
 	    *errmsg = txAsprintf("Cookie file: %s", strerror(errno));
 	    goto fail;
 	}
-	while (nr > 0 && isspace((int)read_buf[nr - 1])) {
+	while (nr > 0 && isspace((unsigned char)read_buf[nr - 1])) {
 	    nr--;
 	}
 	read_buf[nr] = '\0';

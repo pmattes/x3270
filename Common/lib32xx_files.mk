@@ -1,6 +1,6 @@
 # Object files for lib32xx.
 LIB32XX_OBJECTS = apl.o asprintf.o base64.o bind-opt.o boolstr.o cats.o \
-	copyright.o indent_s.o min_version.o mock_resolver.o nhp.o \
+	copyright.o ctype32.o indent_s.o min_version.o mock_resolver.o nhp.o \
 	popup_an_error.o popup_separator.o popups_glue.o pr3287_session.o \
 	prefer.o proxy.o proxy_http.o proxy_passthru.o proxy_socks4.o \
 	proxy_socks5.o proxy_telnet.o proxy_toggle.o resolver.o \

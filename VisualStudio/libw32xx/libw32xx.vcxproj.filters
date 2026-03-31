@@ -7,6 +7,7 @@
     <ClCompile Include="..\..\Common\boolstr.c" />
     <ClCompile Include="..\..\Common\cats.c" />
     <ClCompile Include="..\..\Common\copyright.c" />
+    <ClCompile Include="..\..\Common\ctype32.c" />
     <ClCompile Include="..\..\Common\indent_s.c" />
     <ClCompile Include="..\..\Common\min_version.c" />
     <ClCompile Include="..\..\Common\mock_resolver.c" />

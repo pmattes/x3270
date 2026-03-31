@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Paul Mattes.
+ * Copyright (c) 2021-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,12 @@
 #include "globals.h"
 
 #include <assert.h>
-#include <ctype.h>
 #include <limits.h>
 #include <math.h>
 #include <inttypes.h>
 #include <errno.h>
 
+#include "ctype32.h"
 #include "utf8.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -251,7 +251,7 @@ valid_string(ucs4_t *s, size_t len, char **s_ret, size_t *len_ret)
 	    case 'u':
 		/* We need 4 hex digits. */
 		for (j = 0; j < 4; j++) {
-		    if (++i >= len || !isxdigit((int)s[i])) {
+		    if (++i >= len || !isxdigit32(s[i])) {
 			Free(ret);
 			return SP_FAILURE;
 		    }
@@ -356,7 +356,7 @@ ucs4streq(ucs4_t *a, ucs4_t *b)
 static char *
 format_uerror(const char *text, ucs4_t u)
 {
-    return (u < 0xff && isprint((int)u))?
+    return (u < 0xff && isprint32(u))?
 	Asprintf("%s '%c'", text, u):
 	Asprintf("%s U+%04x", text, u);
 }
@@ -628,11 +628,11 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 			token_state = JK_STRING;
 			break;
 		    default:
-			if (ucs4 == '-' || isdigit((int)ucs4)) {
+			if (ucs4 == '-' || isdigit32(ucs4)) {
 			    /* The start of a number. */
 			    ADD_TOKEN(ucs4);
 			    token_state = JK_NUMBER;
-			} else if (isalpha((int)ucs4)) {
+			} else if (isalpha32(ucs4)) {
 			    /* The start of a bareword. */
 			    ADD_TOKEN(ucs4);
 			    token_state = JK_BAREWORD;
@@ -644,7 +644,7 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 		break;
 	    case JK_BAREWORD:
 		/* Have seen at least one bareword character. */
-		if (isalpha((int)ucs4)) {
+		if (isalpha32(ucs4)) {
 		    ADD_TOKEN(ucs4);
 		} else {
 		    BAREWORD_DONE;
@@ -658,7 +658,7 @@ json_parse_internal(int *line, int *column, const char *text, size_t *offset,
 		break;
 	    case JK_NUMBER:
 		/* Have seen at least one part of a number. */
-		if (isdigit((int)ucs4) ||
+		if (isdigit32(ucs4) ||
 			ucs4 == '.' ||
 			ucs4 == 'e' ||
 			ucs4 == '-' ||

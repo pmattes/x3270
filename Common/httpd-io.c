@@ -762,7 +762,7 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 
     /* Remove any trailing white space. */
     sl = strlen(cmd);
-    while (sl && isspace((int)cmd[sl - 1])) {
+    while (sl && isspace((unsigned char)cmd[sl - 1])) {
 	sl--;
     }
 

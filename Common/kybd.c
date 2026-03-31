@@ -789,7 +789,7 @@ kybdlock_dump_detail(void)
 
 	while ((c = *trcd++) != '\0') {
 	    if (c != ')') {
-		*to++ = (c == '(' || c == '_')? '-': tolower((int)c);
+		*to++ = (c == '(' || c == '_')? '-': tolower((unsigned char)c);
 	    }
 	}
 	*to = '\0';
@@ -3558,7 +3558,7 @@ static int
 nybble(unsigned char c)
 {
     static char hex_digits[] = "0123456789abcdef";
-    char *index = strchr(hex_digits, tolower((int)c));
+    char *index = strchr(hex_digits, tolower((unsigned char)c));
 
     return (index == NULL)? -1: (int)(index - hex_digits);
 }
