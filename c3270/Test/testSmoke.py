@@ -85,10 +85,11 @@ class TestC3270Smoke(cti):
         # Write the stream to c3270.
         p.send_records(5)
         thread.join()
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
         self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
-        p.send_records(2)
-        p.send_tm()
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(0.1,seconds)')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
         p.close()
         self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
 
@@ -101,12 +102,13 @@ class TestC3270Smoke(cti):
                 break
             result += rbuf.decode('utf8')
 
-        # Make the output a bit more readable and split it into lines.
-        result = re.sub('(?s).*File', 'File', result, count=1)
-        result = result.replace('\x1b', '<ESC>').split('\n')
-        for i in range(len(result)):
-            result[i] = re.sub(r' port [0-9]*\.\.\.', ' <port>...', result[i], count=1)
-        rtext = '\n'.join(result)
+        # Make the output a bit more readable.
+        result = result.replace('\x1b', '<ESC>').replace('\r', '<CR>').replace('\n', '<LF>').replace('\a', '<BEL>').replace('\b', '<BS>')
+
+        # There will be 3 <BEL> instances: One from the initial screen from the host, one after
+        # the first Redraw(), and one after the second. We want the text between the second and third.
+        rtext = result.split('<BEL>')[2]
+
         if 'GENERATE' in os.environ:
             # Use this to regenerate the template file.
             file = open(os.environ['GENERATE'], "w")
