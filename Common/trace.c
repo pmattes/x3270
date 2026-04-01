@@ -138,7 +138,7 @@ tolr_start(void)
 {
     char *path;
 
-    if ((path = getenv("X3270_TOLR")) != NULL) {
+    if ((path = getenv("X3270TOLR")) != NULL) {
 	tracef = fopen(path, "w");
 	if (tracef != NULL) {
 	    set_toggle(TRACING, true);

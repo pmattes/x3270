@@ -44,7 +44,7 @@ class TestB3270Tolr(cti):
 
         # Start b3270.
         env = os.environ
-        env['X3270_TOLR'] = tracefile
+        env['X3270TOLR'] = tracefile
         b3270 = Popen(vgwrap(['b3270', '-json']), stdin=PIPE, stdout=DEVNULL, env=env)
         self.children.append(b3270)
 

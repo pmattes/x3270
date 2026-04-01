@@ -44,7 +44,7 @@ class TestX3270Tolr(cti):
 
         # Start x3270.
         env = os.environ
-        env['X3270_TOLR'] = tracefile
+        env['X3270TOLR'] = tracefile
         x3270 = Popen(vgwrap(['x3270', '-script', '-set', 'detailTrace=infra']), stdin=PIPE, stdout=DEVNULL, env=env)
         self.children.append(x3270)
 

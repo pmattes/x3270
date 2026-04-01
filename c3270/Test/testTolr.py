@@ -52,7 +52,7 @@ class TestC3270Tolr(cti):
             # Child process
             termios.tcsetwinsize(0, (28, 80))
             env = os.environ.copy()
-            env['X3270_TOLR'] = tracefile
+            env['X3270TOLR'] = tracefile
             env['TERM'] = 'xterm-256color'
             os.execvpe(vgwrap_ecmd('c3270'), vgwrap_eargs(['c3270', '-model', '2', '-utf8']), env)
             self.assertTrue(False, 'c3270 did not start')

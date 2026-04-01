@@ -80,7 +80,7 @@ class TestS3270Trace(cti):
         http_port, ts = unused_port()
         args = ['s3270', '-httpd', f'127.0.0.1:{http_port}']
         env = os.environ.copy()
-        env['X3270_TOLR'] = tracefile
+        env['X3270TOLR'] = tracefile
         if env:
             env['X3270_DETAIL_TRACE'] = spec
         else:
