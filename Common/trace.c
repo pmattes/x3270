@@ -303,7 +303,7 @@ bool
 trace_detail_enabled(tc_t tc)
 {
     if (!detail_initted[tc]) {
-	detail_enabled[tc] = check_detail_trace(getenv("X3270_DETAIL_TRACE"), cats[tc])
+	detail_enabled[tc] = check_detail_trace(getenv("X3270DETAILTRACE"), cats[tc])
 	    || check_detail_trace(appres.detail_trace, cats[tc]);
 	detail_initted[tc] = true;
     }

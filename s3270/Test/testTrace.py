@@ -82,7 +82,7 @@ class TestS3270Trace(cti):
         env = os.environ.copy()
         env['X3270TOLR'] = tracefile
         if env:
-            env['X3270_DETAIL_TRACE'] = spec
+            env['X3270DETAILTRACE'] = spec
         else:
             args += ['-set', f's3270.detailTrace={spec}']
         s3270 = Popen(vgwrap(args), stdin=DEVNULL, stdout=DEVNULL, env=env)
