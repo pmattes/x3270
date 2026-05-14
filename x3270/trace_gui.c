@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, 2019-2020 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
 #include "xpopups.h"
 
 /* Statics */
-static Widget trace_shell = NULL;
+static Widget trace_shell;
 
 /* Pop up an info about a bogus trace file maximum size. */
 void
