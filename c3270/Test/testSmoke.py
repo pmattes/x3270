@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
 # c3270 smoke tests
 
 import os
-import re
 import sys
 if not sys.platform.startswith('win'):
     import pty
