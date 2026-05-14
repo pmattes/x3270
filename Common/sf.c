@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2024 Paul Mattes.
+ * Copyright (c) 1994-2026 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *

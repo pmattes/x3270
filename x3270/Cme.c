@@ -1,7 +1,7 @@
 /* (from) $XConsortium: Sme.c,v 1.9 91/02/17 16:44:14 rws Exp $ */
 
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

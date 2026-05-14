@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2025 Paul Mattes.
+ * Copyright (c) 1996-2026 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *

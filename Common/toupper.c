@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Paul Mattes.
+ * Copyright (c) 2018-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

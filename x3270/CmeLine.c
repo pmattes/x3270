@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SmeLine.c,v 1.13 91/07/23 12:23:21 rws Exp $ */
 
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

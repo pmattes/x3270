@@ -1,7 +1,7 @@
 /*
  * (from) $XConsortium: SmeP.h,v 1.4 89/12/11 15:20:22 kit Exp $
  *
- 4 Copyright (c) 1995-2025, Paul Mattes.
+ 4 Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
