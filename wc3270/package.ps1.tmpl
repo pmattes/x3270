@@ -1,9 +1,17 @@
-﻿# Set up constants.
+﻿# wc3270 packaging script.
+
+# Set up constants.
 $inno = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
 $version = '%VERSION%'
 
 # Any error kills the script.
 $ErrorActionPreference = 'Stop'
+
+# We are now PS7-specific.
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "This script requires PowerShell 7"
+    exit 1
+}
 
 # Set up Azure login to do signing.
 Connect-AzAccount -TenantId 16375de7-ceed-4050-a848-5002e9b8f912 -SubscriptionName Pay-As-You-Go
@@ -45,13 +53,14 @@ Compress-Archive -Path $zip64 -DestinationPath wx3270-$version-extern-64.zip
 
 # Run Inno Setup to create the installer.
 Write-Host -ForegroundColor Green 'Running Inno Setup'
-# The signtool command passed to Inno Setup is a bit strange, but passing the current directory through an
-# environment variable overcomes the problem of Inno Setup running from its own install directory, and the
-# peculiarities of trying to pass the pathname of the run-signtool script (which may contain spaces) through
-# various layers of Inno Setup and PowerShell.
+# Passing the current directory in an environment variable takes care of the problem of
+# Inno Setup running in its own install directory.
 $Env:mydir = (Get-Location)
-$signparm = '/smystandard="powershell.exe -command $q& { & $$Env:mydir\run-signtool.ps1 ''$f'' }$q"'
-& $inno $signparm /Qp wc3270.iss
+# The 'mystandard' signtool is simply pwsh (PowerShell 7). The rest of the parameters (running run-signtool.ps1) are
+# specified in the SignTool parameter in wc3270.iss. This is because it is practically impossible
+# to get all of the nested quoting right to pass the necessary command to Inno Setup from the command
+# line in PS7. It's also a bit more readable.
+& $inno '/smystandard=pwsh.exe $p' /Qp wc3270.iss
 
 # Archive to bgp.nu and moby.
 Write-Host -ForegroundColor Green 'Archiving to bgp.nu'

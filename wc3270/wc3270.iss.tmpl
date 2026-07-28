@@ -21,7 +21,7 @@ OutputBaseFilename=wc3270-%VERSION%-setup
 OutputDir=.
 SolidCompression=yes
 WizardSmallImageFile=wc3270\x3270-icon2.bmp
-SignTool=mystandard $f
+SignTool=mystandard -command $q& { & $$Env:mydir\run-signtool.ps1 '$f' }$q
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
