@@ -69,3 +69,7 @@ $vdir="{0:D2}.{1:D2}" -f @($v)
 & scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip bgp.nu:www/download/$vdir/
 Write-Host -ForegroundColor Green 'Archiving to moby'
 & scp wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip 10.0.0.12:gr/
+
+# Display the SHA values and sizes.
+Write-Host -ForegroundColor Green 'Sizes and SHA values'
+& python3 sha.py suite3270-$version-src.tgz wc3270-$version-setup.exe wc3270-$version-noinstall-32.zip wc3270-$version-noinstall-64.zip
