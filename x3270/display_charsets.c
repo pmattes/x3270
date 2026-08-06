@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2025 Paul Mattes.
+ * Copyright (c) 2008-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,7 @@ static dcs_t dcs[] = {
     { "cp937", "3270cg-1a,3270cg-1,iso10646-1,iso8859-1" },
     { "cp939", "iso10646-1,jisx0201.1976-0" },
     { "cp933", "iso10646-1" },
+    { "cp1025", "iso10646-1,koi8-r" },
     { "cp1026", "iso10646-1,iso8859-9" },
     { "cp1047", "3270cg-1a,3270cg-1,iso10646-1,iso8859-1" },
     { "cp1123", "iso10646-1,koi8-u" },
@@ -73,6 +74,7 @@ static dcs_t dcs[] = {
     { "cp1147", "3270cg-1a,3270cg-1,iso10646-1,iso8859-15" },
     { "cp1148", "3270cg-1a,3270cg-1,iso10646-1,iso8859-15" },
     { "cp1149", "3270cg-1a,3270cg-1,iso10646-1,iso8859-15" },
+    { "cp1154", "iso10646-1,koi8-r" },
     { "cp1158", "iso10646-1,koi8-u" },
     { "cp1160", "iso10646-1,iso8859-11" },
     { "cp1364", "iso10646-1" },
