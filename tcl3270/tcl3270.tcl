@@ -30,7 +30,6 @@
 #
 #   source tcl3270.tcl
 #   tcl3270::init 127.0.0.1:23
-#   Connect
 #   Wait InputField
 #   String "hello"
 #
