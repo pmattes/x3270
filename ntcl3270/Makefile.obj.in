@@ -1,0 +1,30 @@
+# Copyright (c) 2026 Paul Mattes.
+# All rights reserved.
+
+# Makefile for ntcl3270 (Tcl package).
+
+RM = rm -f
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+
+LIBDIR = @libdir@
+TCL_VERSION = @TCL_VERSION@
+PACKAGE_DIR = $(DESTDIR)$(LIBDIR)/tcl$(TCL_VERSION)/ntcl3270-1.0
+
+all: ntcl3270.tcl pkgIndex.tcl
+
+ntcl3270.tcl: $(THIS)/ntcl3270.tcl
+	cp $< $@
+
+pkgIndex.tcl: $(THIS)/pkgIndex.tcl
+	cp $< $@
+
+install: all
+	mkdir -p $(PACKAGE_DIR)
+	$(INSTALL_DATA) ntcl3270.tcl $(PACKAGE_DIR)/ntcl3270.tcl
+	$(INSTALL_DATA) pkgIndex.tcl $(PACKAGE_DIR)/pkgIndex.tcl
+
+clean:
+	$(RM) ntcl3270.tcl pkgIndex.tcl
+
+clobber: clean

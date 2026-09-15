@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Paul Mattes.
+# All rights reserved.
+
+# Makefile for ntcl3270.
+
+top = ../../..
+objdir = ../obj/@host@/ntcl3270
+this = $(top)/ntcl3270
+
+export TOP = $(top)
+export THIS = $(this)
+
+default: all
+all install clean clobber: $(objdir)
+	$(MAKE) -C $(objdir) -f $(this)/Makefile.obj $@
+
+$(objdir):
+	mkdir -p $(objdir)

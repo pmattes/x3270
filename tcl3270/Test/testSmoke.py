@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2026 Paul Mattes.
+# Copyright (c) 2021-2025 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -77,40 +77,6 @@ class TestTcl3270Smoke(cti):
         self.vgwait(tcl3270, assertOnFailure=False)
 
         # Compare the files
-        self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))
-        os.unlink(name)
-
-    # tcl3270.tcl wrapper smoke test
-    def test_tcl3270_tcl_smoke(self):
-
-        # Start 'playback' to feed data to the Tcl wrapper.
-        playback_port, ts = unused_port()
-        with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
-            ts.close()
-
-            # Create a temporary file.
-            (handle, name) = tempfile.mkstemp()
-            os.close(handle)
-
-            # Start the Tcl wrapper.
-            tcl = Popen(vgwrap(["tclsh", "tcl3270/Test/smoke-tcl.tcl", name,
-                f"127.0.0.1:{playback_port}"]),
-                stdin=DEVNULL, stdout=DEVNULL)
-            self.children.append(tcl)
-
-            # Send a screenful to s3270.
-            p.send_records(4)
-
-            # Wait for the file to show up.
-            def Test():
-                return os.path.getsize(name) > 0
-            self.try_until(Test, 2, "Tcl wrapper did not produce a file")
-
-        # Wait for the Tcl wrapper to exit.
-        self.children.remove(tcl)
-        self.vgwait(tcl)
-
-        # Compare the files.
         self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))
         os.unlink(name)
 
