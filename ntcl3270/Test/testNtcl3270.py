@@ -101,6 +101,8 @@ if {![catch {Ascii} error] || $error ne "ntcl3270 is not initialized"} {
 ntcl3270::init
 if {[lsearch -exact [info commands] Ascii] < 0} {error "Ascii was not created"}
 if {[lsearch -exact [info commands] Query] < 0} {error "Query was not created"}
+if {[interp alias {} Quit] ne "exit"} {error "Quit was not mapped to exit"}
+if {[interp alias {} Exit] ne "exit"} {error "Exit was not mapped to exit"}
 if {[Query LocalEncoding] ne "UTF-8"} {error "unexpected LocalEncoding"}
 if {[Rows] ne "24" || [Cols] ne "80"} {error "unexpected screen size"}
 if {![catch {Query Garbage} error]

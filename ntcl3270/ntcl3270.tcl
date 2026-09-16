@@ -340,7 +340,10 @@ proc ::ntcl3270::init {args} {
         }
     }
     foreach action $discovered {
-        if {[lsearch -exact $actions $action] < 0
+        if {[string equal -nocase $action Quit]
+                || [string equal -nocase $action Exit]} {
+            interp alias {} ::$action {} exit
+        } elseif {[lsearch -exact $actions $action] < 0
                 && [catch {interp alias {} ::$action {} ::ntcl3270::_invoke $action}]} {
             ::ntcl3270::close
             return -code error "cannot create Tcl command for s3270 action $action"
