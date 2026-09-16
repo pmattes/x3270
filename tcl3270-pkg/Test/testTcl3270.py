@@ -105,6 +105,10 @@ if {[interp alias {} Quit] ne "exit"} {error "Quit was not mapped to exit"}
 if {[interp alias {} Exit] ne "exit"} {error "Exit was not mapped to exit"}
 if {[Query LocalEncoding] ne "UTF-8"} {error "unexpected LocalEncoding"}
 if {[Rows] ne "24" || [Cols] ne "80"} {error "unexpected screen size"}
+set ascii [Ascii]
+if {[llength $ascii] != 24} {
+    error "Ascii did not return one list element per screen row"
+}
 if {![catch {Query Garbage} error]
         || $error ne "Query(): Unknown parameter 'Garbage'"} {
     error "s3270 error was not propagated"
