@@ -23,16 +23,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Tcl interface to s3270 using its JSON scripting protocol.
+# Tcl interface to s3270.
 #
-# A script should source this file, call ntcl3270::init, and then use the
-# dynamically-created action commands, for example:
+# If this is installed as a package, a script should use 'package require ntcl3270'.
+# Otherwise it can just source this file.
+# Then the script should call ntcl3270::init.
+# After that, it can use the dynamically-created action commands, for example:
 #
 #   source ntcl3270.tcl
 #   ntcl3270::init 127.0.0.1:23
 #   Wait InputField
 #   String "hello"
 #
+# To terminate the session, the script should call ntcl3270::close.
 
 namespace eval ::ntcl3270 {
     variable channel {}
