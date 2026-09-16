@@ -1,8 +1,8 @@
 #
-# Exercise ntcl3270.tcl against a playback s3270 session.
+# Exercise tcl3270.tcl against a playback s3270 session.
 #
 
-source ntcl3270/ntcl3270.tcl
+source tcl3270-pkg/tcl3270.tcl
 
 if {$argc != 2} {
     error "Usage: $argv0 output-file host"
@@ -11,7 +11,7 @@ if {$argc != 2} {
 set output [lindex $argv 0]
 set host [lindex $argv 1]
 
-ntcl3270::init $host
+tcl3270::init $host
 Wait InputField
 
 set fp [open $output w+]
@@ -20,4 +20,4 @@ foreach line [Ascii] {
 }
 close $fp
 
-ntcl3270::close
+tcl3270::close

@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# ntcl3270 smoke tests
+# tcl3270-pkg smoke tests
 
 import filecmp
 import os
@@ -39,10 +39,10 @@ from Common.Test.playback import playback
 
 
 @unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
-class TestNtcl3270Smoke(cti):
+class TestTcl3270PackageSmoke(cti):
 
-    # ntcl3270 Tcl wrapper smoke test
-    def test_ntcl3270_smoke(self):
+    # tcl3270-pkg Tcl wrapper smoke test
+    def test_tcl3270_pkg_smoke(self):
 
         # Start 'playback' to feed data to the Tcl wrapper.
         playback_port, ts = unused_port()
@@ -54,11 +54,11 @@ class TestNtcl3270Smoke(cti):
             os.close(handle)
 
             # Start the Tcl wrapper.
-            ntcl3270 = Popen(vgwrap(["tclsh",
-                "ntcl3270/Test/smoke-ntcl3270.tcl", name,
+            tcl3270_pkg = Popen(vgwrap(["tclsh",
+                "tcl3270-pkg/Test/smoke-tcl3270-pkg.tcl", name,
                 f"127.0.0.1:{playback_port}"]),
                 stdin=DEVNULL, stdout=DEVNULL)
-            self.children.append(ntcl3270)
+            self.children.append(tcl3270_pkg)
 
             # Send a screenful to s3270.
             p.send_records(4)
@@ -69,8 +69,8 @@ class TestNtcl3270Smoke(cti):
             self.try_until(Test, 2, "Tcl wrapper did not produce a file")
 
         # Wait for the Tcl wrapper to exit.
-        self.children.remove(ntcl3270)
-        self.vgwait(ntcl3270)
+        self.children.remove(tcl3270_pkg)
+        self.vgwait(tcl3270_pkg)
 
         # Compare the files.
         self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))

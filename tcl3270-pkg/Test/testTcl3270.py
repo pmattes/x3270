@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# ntcl3270.tcl unit tests
+# tcl3270.tcl unit tests
 
 import os
 from subprocess import run, PIPE
@@ -36,7 +36,7 @@ from Common.Test.cti import cti
 
 
 @unittest.skipIf(sys.platform == "darwin", "macOS does not like tcl")
-class TestNtcl3270Tcl(cti):
+class TestTcl3270Package(cti):
 
     def run_tcl(self, script):
         return run(["tclsh"], input=script, text=True, stdout=PIPE,
@@ -44,11 +44,11 @@ class TestNtcl3270Tcl(cti):
 
     def test_json_string_round_trip(self):
         script = r'''
-source ntcl3270/ntcl3270.tcl
+source tcl3270-pkg/tcl3270.tcl
 foreach value [list {} {a"b} {back\slash} {line
 break} "\u03a9"] {
-    set encoded [::ntcl3270::_json_quote $value]
-    set decoded [::ntcl3270::_json_decode $encoded]
+    set encoded [::tcl3270::_json_quote $value]
+    set decoded [::tcl3270::_json_decode $encoded]
     if {$decoded ne $value} {
         error "round trip failed: '$value' -> '$encoded' -> '$decoded'"
     }
@@ -61,14 +61,14 @@ puts ok
 
     def test_json_values_and_command_encoding(self):
         script = r'''
-source ntcl3270/ntcl3270.tcl
-set value [::ntcl3270::_json_decode {{"text":"hello","items":[true,false,null,42]}}]
+source tcl3270-pkg/tcl3270.tcl
+set value [::tcl3270::_json_decode {{"text":"hello","items":[true,false,null,42]}}]
 if {[dict get $value text] ne "hello"} {error "bad object string"}
 if {[lindex [dict get $value items] 0] ne "true"} {error "bad true"}
 if {[lindex [dict get $value items] 1] ne "false"} {error "bad false"}
 if {[lindex [dict get $value items] 2] ne ""} {error "bad null"}
 if {[lindex [dict get $value items] 3] ne "42"} {error "bad number"}
-if {[::ntcl3270::_json_command String [list {a"b} {line
+if {[::tcl3270::_json_command String [list {a"b} {line
 break}]] ne {"action":"String","args":["a\"b","line\nbreak"]}} {
     error "bad command encoding"
 }
@@ -80,9 +80,9 @@ puts ok
 
     def test_json_decode_errors(self):
         script = r'''
-source ntcl3270/ntcl3270.tcl
+source tcl3270-pkg/tcl3270.tcl
 foreach value [list {} {"unterminated} {true trailing} {[1,]}] {
-    if {![catch {::ntcl3270::_json_decode $value} error]} {
+    if {![catch {::tcl3270::_json_decode $value} error]} {
         error "accepted invalid JSON '$value'"
     }
 }
@@ -94,11 +94,11 @@ puts ok
 
     def test_actions_and_results(self):
         script = r'''
-source ntcl3270/ntcl3270.tcl
-if {![catch {Ascii} error] || $error ne "ntcl3270 is not initialized"} {
+source tcl3270-pkg/tcl3270.tcl
+if {![catch {Ascii} error] || $error ne "tcl3270 is not initialized"} {
     error "action before init did not fail correctly"
 }
-ntcl3270::init
+tcl3270::init
 if {[lsearch -exact [info commands] Ascii] < 0} {error "Ascii was not created"}
 if {[lsearch -exact [info commands] Query] < 0} {error "Query was not created"}
 if {[interp alias {} Quit] ne "exit"} {error "Quit was not mapped to exit"}
@@ -109,12 +109,12 @@ if {![catch {Query Garbage} error]
         || $error ne "Query(): Unknown parameter 'Garbage'"} {
     error "s3270 error was not propagated"
 }
-if {![catch {ntcl3270::init} error]
-        || $error ne "ntcl3270 is already initialized"} {
+if {![catch {tcl3270::init} error]
+        || $error ne "tcl3270 is already initialized"} {
     error "duplicate init was not rejected"
 }
-ntcl3270::close
-if {![catch {Ascii} error] || $error ne "ntcl3270 is not initialized"} {
+tcl3270::close
+if {![catch {Ascii} error] || $error ne "tcl3270 is not initialized"} {
     error "action after close did not fail correctly"
 }
 puts ok

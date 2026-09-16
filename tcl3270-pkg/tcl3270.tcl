@@ -25,31 +25,31 @@
 
 # Tcl interface to s3270.
 #
-# If this is installed as a package, a script should use 'package require ntcl3270'.
+# If this is installed as a package, a script should use 'package require tcl3270'.
 # Otherwise it can just source this file.
-# Then the script should call ntcl3270::init.
+# Then the script should call tcl3270::init.
 # After that, it can use the dynamically-created action commands, for example:
 #
-#   source ntcl3270.tcl
-#   ntcl3270::init 127.0.0.1:23
+#   source tcl3270.tcl
+#   tcl3270::init 127.0.0.1:23
 #   Wait InputField
 #   String "hello"
 #
-# To terminate the session, the script should call ntcl3270::close.
+# To terminate the session, the script should call tcl3270::close.
 
-namespace eval ::ntcl3270 {
+namespace eval ::tcl3270 {
     variable channel {}
     variable actions {}
     variable initialized 0
 }
 
 # Report a JSON parsing error.
-proc ::ntcl3270::_json_error {text position message} {
+proc ::tcl3270::_json_error {text position message} {
     return -code error "invalid JSON at character $position: $message"
 }
 
 # Advance a JSON parser position past whitespace.
-proc ::ntcl3270::_json_skip {text positionVar length} {
+proc ::tcl3270::_json_skip {text positionVar length} {
     upvar 1 $positionVar position
     while {$position < $length
             && [string first [string index $text $position] " \t\r\n"] >= 0} {
@@ -58,7 +58,7 @@ proc ::ntcl3270::_json_skip {text positionVar length} {
 }
 
 # Decode a JSON string at the current parser position.
-proc ::ntcl3270::_json_string {text positionVar length} {
+proc ::tcl3270::_json_string {text positionVar length} {
     upvar 1 $positionVar position
     if {[string index $text $position] ne "\""} {
         return -code error "invalid JSON at character $position: expected string"
@@ -110,34 +110,34 @@ proc ::ntcl3270::_json_string {text positionVar length} {
 }
 
 # Decode one JSON value at the current parser position.
-proc ::ntcl3270::_json_value {text positionVar length} {
+proc ::tcl3270::_json_value {text positionVar length} {
     upvar 1 $positionVar position
-    ::ntcl3270::_json_skip $text position $length
+    ::tcl3270::_json_skip $text position $length
     if {$position >= $length} {
         return -code error "invalid JSON at character $position: expected value"
     }
     set character [string index $text $position]
     if {$character eq "\""} {
-        return [::ntcl3270::_json_string $text position $length]
+        return [::tcl3270::_json_string $text position $length]
     }
     if {$character eq "\{"} {
         incr position
         set result [dict create]
-        ::ntcl3270::_json_skip $text position $length
+        ::tcl3270::_json_skip $text position $length
         if {$position < $length && [string index $text $position] eq "\}"} {
             incr position
             return $result
         }
         while {1} {
-            ::ntcl3270::_json_skip $text position $length
-            set key [::ntcl3270::_json_string $text position $length]
-            ::ntcl3270::_json_skip $text position $length
+            ::tcl3270::_json_skip $text position $length
+            set key [::tcl3270::_json_string $text position $length]
+            ::tcl3270::_json_skip $text position $length
             if {$position >= $length || [string index $text $position] ne ":"} {
                 return -code error "invalid JSON at character $position: expected colon"
             }
             incr position
-            dict set result $key [::ntcl3270::_json_value $text position $length]
-            ::ntcl3270::_json_skip $text position $length
+            dict set result $key [::tcl3270::_json_value $text position $length]
+            ::tcl3270::_json_skip $text position $length
             if {$position >= $length} {
                 return -code error "invalid JSON at character $position: unterminated object"
             }
@@ -154,14 +154,14 @@ proc ::ntcl3270::_json_value {text positionVar length} {
     if {$character eq "\["} {
         incr position
         set result {}
-        ::ntcl3270::_json_skip $text position $length
+        ::tcl3270::_json_skip $text position $length
         if {$position < $length && [string index $text $position] eq "\]"} {
             incr position
             return $result
         }
         while {1} {
-            lappend result [::ntcl3270::_json_value $text position $length]
-            ::ntcl3270::_json_skip $text position $length
+            lappend result [::tcl3270::_json_value $text position $length]
+            ::tcl3270::_json_skip $text position $length
             if {$position >= $length} {
                 return -code error "invalid JSON at character $position: unterminated array"
             }
@@ -191,11 +191,11 @@ proc ::ntcl3270::_json_value {text positionVar length} {
 }
 
 # Decode a complete JSON document into Tcl values.
-proc ::ntcl3270::_json_decode {text} {
+proc ::tcl3270::_json_decode {text} {
     set position 0
     set length [string length $text]
-    set result [::ntcl3270::_json_value $text position $length]
-    ::ntcl3270::_json_skip $text position $length
+    set result [::tcl3270::_json_value $text position $length]
+    ::tcl3270::_json_skip $text position $length
     if {$position != $length} {
         return -code error "invalid JSON at character $position: trailing data"
     }
@@ -203,7 +203,7 @@ proc ::ntcl3270::_json_decode {text} {
 }
 
 # Encode a Tcl string as a JSON string.
-proc ::ntcl3270::_json_quote {input} {
+proc ::tcl3270::_json_quote {input} {
     set result "\""
     foreach character [split $input ""] {
         switch -- $character {
@@ -229,26 +229,26 @@ proc ::ntcl3270::_json_quote {input} {
 }
 
 # Encode an s3270 action and its arguments as a JSON request.
-proc ::ntcl3270::_json_command {action arguments} {
-    set json "{\"action\":[::ntcl3270::_json_quote $action],\"args\":\["
+proc ::tcl3270::_json_command {action arguments} {
+    set json "{\"action\":[::tcl3270::_json_quote $action],\"args\":\["
     set encoded {}
     foreach item $arguments {
-        lappend encoded [::ntcl3270::_json_quote $item]
+        lappend encoded [::tcl3270::_json_quote $item]
     }
     append json [join $encoded ,] "]}"
     return $json
 }
 
 # Read and validate one JSON response from s3270.
-proc ::ntcl3270::_response {} {
+proc ::tcl3270::_response {} {
     variable channel
     if {$channel eq {}} {
-        return -code error "ntcl3270 is not initialized"
+        return -code error "tcl3270 is not initialized"
     }
     if {[gets $channel line] < 0} {
         return -code error "s3270 closed its output"
     }
-    if {[catch {::ntcl3270::_json_decode $line} response]} {
+    if {[catch {::tcl3270::_json_decode $line} response]} {
         return -code error "could not decode s3270 response: $response"
     }
     if {![dict exists $response success] || ![dict exists $response status]} {
@@ -258,14 +258,14 @@ proc ::ntcl3270::_response {} {
 }
 
 # Invoke one s3270 action and return its result.
-proc ::ntcl3270::_invoke {action args} {
+proc ::tcl3270::_invoke {action args} {
     variable channel
     if {$channel eq {}} {
-        return -code error "ntcl3270 is not initialized"
+        return -code error "tcl3270 is not initialized"
     }
-    puts $channel [::ntcl3270::_json_command $action $args]
+    puts $channel [::tcl3270::_json_command $action $args]
     flush $channel
-    set response [::ntcl3270::_response]
+    set response [::tcl3270::_response]
     if {![dict get $response success]} {
         set result {}
         if {[dict exists $response result]} {
@@ -284,24 +284,24 @@ proc ::ntcl3270::_invoke {action args} {
 }
 
 # Return the current s3270 status line.
-proc ::ntcl3270::_status {} {
-    puts [set ::ntcl3270::channel] "\"\""
-    flush [set ::ntcl3270::channel]
-    return [dict get [::ntcl3270::_response] status]
+proc ::tcl3270::_status {} {
+    puts [set ::tcl3270::channel] "\"\""
+    flush [set ::tcl3270::channel]
+    return [dict get [::tcl3270::_response] status]
 }
 
 # Return the current screen row count.
-proc ::ntcl3270::_rows {} {
-    return [lindex [split [::ntcl3270::_status] " "] 6]
+proc ::tcl3270::_rows {} {
+    return [lindex [split [::tcl3270::_status] " "] 6]
 }
 
 # Return the current screen column count.
-proc ::ntcl3270::_cols {} {
-    return [lindex [split [::ntcl3270::_status] " "] 7]
+proc ::tcl3270::_cols {} {
+    return [lindex [split [::tcl3270::_status] " "] 7]
 }
 
 # Stop s3270 and remove the dynamically-created action commands.
-proc ::ntcl3270::close {} {
+proc ::tcl3270::close {} {
     variable channel
     variable actions
     if {$channel ne {}} {
@@ -312,16 +312,16 @@ proc ::ntcl3270::close {} {
         catch {rename ::$action {}}
     }
     set actions {}
-    set ::ntcl3270::initialized 0
+    set ::tcl3270::initialized 0
 }
 
 # Start s3270 and create Tcl commands for its supported actions.
-proc ::ntcl3270::init {args} {
+proc ::tcl3270::init {args} {
     variable channel
     variable actions
     variable initialized
     if {$initialized} {
-        return -code error "ntcl3270 is already initialized"
+        return -code error "tcl3270 is already initialized"
     }
     set command [linsert $args 0 s3270 -utf8]
     if {[catch {open |$command r+} newChannel]} {
@@ -329,8 +329,8 @@ proc ::ntcl3270::init {args} {
     }
     set channel $newChannel
     fconfigure $channel -buffering line -translation lf -encoding utf-8
-    if {[catch {::ntcl3270::_invoke Query [list Actions]} response]} {
-        ::ntcl3270::close
+    if {[catch {::tcl3270::_invoke Query [list Actions]} response]} {
+        ::tcl3270::close
         return -code error "could not discover s3270 actions: $response"
     }
     set discovered {}
@@ -344,20 +344,20 @@ proc ::ntcl3270::init {args} {
                 || [string equal -nocase $action Exit]} {
             interp alias {} ::$action {} exit
         } elseif {[lsearch -exact $actions $action] < 0
-                && [catch {interp alias {} ::$action {} ::ntcl3270::_invoke $action}]} {
-            ::ntcl3270::close
+                && [catch {interp alias {} ::$action {} ::tcl3270::_invoke $action}]} {
+            ::tcl3270::close
             return -code error "cannot create Tcl command for s3270 action $action"
         }
         lappend actions $action
     }
     foreach {name implementation} {Rows _rows Cols _cols Status _status} {
-        interp alias {} ::$name {} ::ntcl3270::$implementation
+        interp alias {} ::$name {} ::tcl3270::$implementation
         lappend actions $name
     }
     set initialized 1
     return
 }
 
-interp alias {} ::ntcl3270::initialize {} ::ntcl3270::init
+interp alias {} ::tcl3270::initialize {} ::tcl3270::init
 
-package provide ntcl3270 1.0
+package provide tcl3270 1.0

@@ -1,11 +1,11 @@
 # Copyright (c) 2026 Paul Mattes.
 # All rights reserved.
 
-# Makefile for ntcl3270.
+# Makefile for tcl3270-pkg.
 
 top = ../../..
-objdir = ../obj/@host@/ntcl3270
-this = $(top)/ntcl3270
+objdir = ../obj/@host@/tcl3270-pkg
+this = $(top)/tcl3270-pkg
 
 export TOP = $(top)
 export THIS = $(this)

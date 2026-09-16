@@ -689,7 +689,7 @@ enable_c3270
 enable_s3270
 enable_b3270
 enable_tcl3270
-enable_ntcl3270
+enable_tcl3270_pkg
 enable_pr3287
 enable_x3270if
 enable_playback
@@ -711,7 +711,7 @@ ws3270
 b3270
 wb3270
 tcl3270
-ntcl3270
+tcl3270-pkg
 pr3287
 wpr3287
 x3270if
@@ -1346,7 +1346,7 @@ Optional Features:
   --enable-s3270          build s3270
   --enable-b3270          build b3270
   --enable-tcl3270        build tcl3270
-  --enable-ntcl3270       build ntcl3270
+  --enable-tcl3270-pkg    build tcl3270-pkg
   --enable-pr3287         build pr3287
   --enable-x3270if        build x3270if
   --enable-playback       build playback
@@ -2006,10 +2006,10 @@ then :
   enableval=$enable_tcl3270;
 fi
 
-# Check whether --enable-ntcl3270 was given.
-if test ${enable_ntcl3270+y}
+# Check whether --enable-tcl3270-pkg was given.
+if test ${enable_tcl3270_pkg+y}
 then :
-  enableval=$enable_ntcl3270;
+  enableval=$enable_tcl3270_pkg;
 fi
 
 # Check whether --enable-pr3287 was given.
@@ -2317,7 +2317,7 @@ if test $MODE = unix; then
     if test "x$enable_s3270" != xno; then enable_s3270=yes; fi
     if test "x$enable_b3270" != xno; then enable_b3270=yes; fi
     if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
-    if test "x$enable_ntcl3270" != xno; then enable_ntcl3270=yes; fi
+    if test "x$enable_tcl3270_pkg" != xno; then enable_tcl3270_pkg=yes; fi
     if test "x$enable_pr3287" != xno; then enable_pr3287=yes; fi
     if test "x$enable_x3270if" != xno; then enable_x3270if=yes; fi
     if test "x$enable_playback" != xno; then enable_playback=yes; fi
@@ -2325,7 +2325,7 @@ if test $MODE = unix; then
 else
     enable_x3270=no
     enable_tcl3270=no
-    enable_ntcl3270=no
+    enable_tcl3270_pkg=no
 fi
 
 if test "x$enable_windows" != xno; then
@@ -2352,7 +2352,7 @@ if test "x$enable_x3270" = x -a \
         "x$enable_s3270" = x -a \
         "x$enable_b3270" = x -a \
         "x$enable_tcl3270" = x -a \
-        "x$enable_ntcl3270" = x -a \
+        "x$enable_tcl3270_pkg" = x -a \
         "x$enable_pr3287" = x -a \
         "x$enable_x3270if" = x -a \
         "x$enable_playback" = x -a \
@@ -2363,7 +2363,7 @@ printf "%s\n" "$as_me: configuring all emulators... use --enable or --disable op
     if test $MODE = unix; then
 	enable_x3270=yes
 	enable_tcl3270=yes
-	enable_ntcl3270=yes
+	enable_tcl3270_pkg=yes
     fi
     if test $MODE = windows; then
 	enable_wc3270=yes
@@ -2384,7 +2384,7 @@ if test "x$enable_x3270" != xyes -a \
 	"x$enable_s3270" != xyes -a \
 	"x$enable_b3270" != xyes -a \
 	"x$enable_tcl3270" != xyes -a \
-	"x$enable_ntcl3270" != xyes -a \
+	"x$enable_tcl3270_pkg" != xyes -a \
 	"x$enable_pr3287" != xyes -a \
 	"x$enable_x3270if" != xyes -a \
 	"x$enable_playback" != xyes -a \
@@ -2395,7 +2395,7 @@ if test "x$enable_x3270" != xyes -a \
 	 "x$enable_s3270" = xno -o \
 	 "x$enable_b3270" = xno -o \
 	 "x$enable_tcl3270" = xno -o \
-	 "x$enable_ntcl3270" = xno -o \
+	 "x$enable_tcl3270_pkg" = xno -o \
 	 "x$enable_pr3287" = xno -o \
 	 "x$enable_x3270if" = xno -o \
 	 "x$enable_playback" = xno -o \
@@ -2403,7 +2403,7 @@ if test "x$enable_x3270" != xyes -a \
         if test $MODE = unix; then
 	if test "x$enable_x3270" != xno; then enable_x3270=yes; fi
 	if test "x$enable_tcl3270" != xno; then enable_tcl3270=yes; fi
-	if test "x$enable_ntcl3270" != xno; then enable_ntcl3270=yes; fi
+	if test "x$enable_tcl3270_pkg" != xno; then enable_tcl3270_pkg=yes; fi
     fi
     if test $MODE = windows; then
 	if test "x$enable_wc3270" != xno; then enable_wc3270=yes; fi
@@ -2417,12 +2417,12 @@ if test "x$enable_x3270" != xyes -a \
     if test "x$enable_mitm" != xno; then enable_mitm=yes; fi
 fi
 
-if test $MODE = windows -a $lparen x$enable_x3270 = xyes -o x$enable_tcl3270 = xyes -o x$enable_ntcl3270 = xyes -o x$enable_c3270 = xyes $rparen; then
+if test $MODE = windows -a $lparen x$enable_x3270 = xyes -o x$enable_tcl3270 = xyes -o x$enable_tcl3270_pkg = xyes -o x$enable_c3270 = xyes $rparen; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: ignoring Unix-specific targets" >&5
 printf "%s\n" "$as_me: ignoring Unix-specific targets" >&6;}
     enable_x3270=no
     enable_tcl3270=no
-    enable_ntcl3270=no
+    enable_tcl3270_pkg=no
     enable_c3270=no
 fi
 if test $MODE = unix -a x$enable_wc3270 = xyes; then
@@ -2434,7 +2434,7 @@ fi
 if test "x$enable_tcl3270" = xyes; then
     enable_s3270=yes
 fi
-if test "x$enable_ntcl3270" = xyes; then
+if test "x$enable_tcl3270_pkg" = xyes; then
     enable_s3270=yes
 fi
 if test "x$enable_x3270" = xyes -o \
@@ -2442,7 +2442,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_b3270" = xyes -o \
 	"x$enable_tcl3270" = xyes -o \
-	"x$enable_ntcl3270" = xyes; then
+	"x$enable_tcl3270_pkg" = xyes; then
     enable_x3270if=yes
 fi
 if test "x$enable_x3270" = xyes -o \
@@ -2450,7 +2450,7 @@ if test "x$enable_x3270" = xyes -o \
 	"x$enable_s3270" = xyes -o \
 	"x$enable_b3270" = xyes -o \
 	"x$enable_tcl3270" = xyes -o \
-	"x$enable_ntcl3270" = xyes; then
+	"x$enable_tcl3270_pkg" = xyes; then
     enable_pr3287=yes
 fi
 if test "x$enable_x3270" = xyes -o \
@@ -2495,15 +2495,19 @@ T_TEST_TARGETS=""
 T_TEST_CLEAN=""
 T_TEST_CLOBBER=""
 
-for i in x3270 c3270 s3270 b3270 tcl3270 ntcl3270 pr3287 x3270if playback mitm wc3270; do
-    eval x=\$enable_$i
+for i in x3270 c3270 s3270 b3270 tcl3270 tcl3270-pkg pr3287 x3270if playback mitm wc3270; do
+    case $i in
+    tcl3270-pkg) feature=tcl3270_pkg;;
+    *) feature=$i;;
+    esac
+    eval x=\$enable_$feature
     if test "x$x" = xyes; then
 	T_ALL="$T_ALL $i"
 	T_CLEAN="$T_CLEAN $i-clean"
 	T_CLOBBER="$T_CLOBBER $i-clobber"
 	if test $MODE = unix; then
 	    case $i in
-	    playback|mitm|ntcl3270)	;;
+	    playback|mitm|tcl3270-pkg)	;;
 	    *)
 		T_INSTALL="$T_INSTALL $i-install"
 		T_INSTALL_MAN="$T_INSTALL_MAN $i-install.man"
@@ -2543,7 +2547,7 @@ fi
 if test "x$enable_tcl3270" = xyes; then subdirs="$subdirs tcl3270"
 
 fi
-if test "x$enable_ntcl3270" = xyes; then subdirs="$subdirs ntcl3270"
+if test "x$enable_tcl3270_pkg" = xyes; then subdirs="$subdirs tcl3270-pkg"
 
 fi
 if test "x$enable_pr3287" = xyes -a $MODE = unix; then subdirs="$subdirs pr3287"
@@ -2574,7 +2578,7 @@ fi
 case $MODE in
     unix)	T_WRONG_MODE="wb3270 wc3270 ws3270 wpr3287 wx3270if wplayback wmitm"
     ;;
-    windows)	T_WRONG_MODE="x3270 tcl3270 ntcl3270 ibm_hosts"
+    windows)	T_WRONG_MODE="x3270 tcl3270 tcl3270-pkg ibm_hosts"
     ;;
 esac
 
