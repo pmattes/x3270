@@ -53,6 +53,7 @@
 #include "boolstr.h"
 #include "codepage.h"
 #include "cookiefile.h"
+#include "crash.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "host.h"
@@ -704,6 +705,9 @@ main(int argc, char *argv[])
 
     /* Copy bool values from xres to appres. */
     copy_xres_to_res_bool();
+
+    /* Register the Crash() action, now that appres.ut_env is set. */
+    crash_register();
 
     /*
      * Fix up tracing.

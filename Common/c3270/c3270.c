@@ -59,6 +59,7 @@
 #include "boolstr.h"
 #include "codepage.h"
 #include "cookiefile.h"
+#include "crash.h"
 #include "ckeypad.h"
 #include "cscreen.h"
 #include "cstatus.h"
@@ -709,6 +710,9 @@ main(int argc, char *argv[])
 #endif /*]*/
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+
+    /* Register the Crash() action, now that appres.ut_env is set. */
+    crash_register();
 
     printf("%s\n\nType 'show copyright' for full copyright information.\n\
 Type 'help' for help information.\n\n",

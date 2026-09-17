@@ -37,7 +37,6 @@
  */
 
 #include "globals.h"
-#include <assert.h>
 #if !defined(_WIN32) /*[*/
 # include <sys/wait.h>
 # include <signal.h>
@@ -56,6 +55,7 @@
 #include "b_password.h"
 #include "codepage.h"
 #include "cookiefile.h"
+#include "crash.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "unicodec.h"
@@ -136,8 +136,6 @@ static int rsent = 0;
 static ioid_t stats_ioid = NULL_IOID;
 
 static bool b3270_toggle_yet = false;
-static char* crashptr;
-
 static ioid_t csdelay_ioid = NULL_IOID;
 
 static void b3270_toggle(toggle_index_t ix, enum toggle_type tt);
@@ -604,6 +602,9 @@ main(int argc, char *argv[])
 	usage("Unrecognized option(s)");
     }
 
+    /* Register the Crash() action, now that appres.ut_env is set. */
+    crash_register();
+
     check_min_version(appres.min_version);
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
@@ -848,34 +849,6 @@ ClearRegion_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     return true;
-}
-
-/*
- * Crash action. Used for debug purposes.
- */
-static bool
-Crash_action(ia_t ia, unsigned argc, const char **argv)
-{
-    action_debug(AnCrash, ia, argc, argv);
-    if (check_argc(AnCrash, argc, 1, 1) < 0) {
-	return false;
-    }
-    if (!strcasecmp(argv[0], KwAssert)) {
-	assert(false);
-	popup_an_error(AnCrash "(): Assert did not work");
-    } else if (!strcasecmp(argv[0], KwExit)) {
-	exit(999);
-	popup_an_error(AnCrash "(): Exit did not work");
-    } else if (!strcasecmp(argv[0], KwNull)) {
-	char c;
-	printf("%c\n", c = *crashptr);
-	popup_an_error(AnCrash "(): Null did not work");
-    } else {
-	popup_an_error(AnCrash "(): Must specify " KwAssert ", " KwExit " or "
-		KwNull);
-    }
-
-    return false;
 }
 
 #define STATUS_RECONNECTING	"reconnecting"
@@ -1176,7 +1149,6 @@ b3270_register(void)
 {
     static action_table_t actions[] = {
 	{ AnClearRegion,	ClearRegion_action,	0 },
-	{ AnCrash,		Crash_action,		ACTION_HIDDEN },
 	{ AnForceStatus,	ForceStatus_action,	ACTION_HIDDEN },
     };
     static opt_t b3270_opts[] = {

@@ -50,6 +50,7 @@
 #include "bind-opt.h"
 #include "codepage.h"
 #include "cookiefile.h"
+#include "crash.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -266,6 +267,9 @@ main(int argc, char *argv[])
     oq_register();
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+
+    /* Register the Crash() action, now that appres.ut_env is set. */
+    crash_register();
 
     if (appres.min_version != NULL) {
 	check_min_version(appres.min_version);

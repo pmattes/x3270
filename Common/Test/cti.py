@@ -430,6 +430,8 @@ class cti(unittest.TestCase):
             self.assertTrue(success, f'Valgrind error(s) found ({" ".join(nomatch)}), see {valLog}')
         if (assertOnFailure):
             self.assertEqual(expected_status, rc, 'Program failed')
+        elif expected_status != 0:
+            self.assertEqual(expected_status, rc, 'Program did not fail as expected')
         if isVal:
             os.unlink(valLog)
 
