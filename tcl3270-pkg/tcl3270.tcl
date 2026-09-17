@@ -323,7 +323,7 @@ proc ::tcl3270::init {args} {
     if {$initialized} {
         return -code error "tcl3270 is already initialized"
     }
-    set command [linsert $args 0 s3270 -utf8]
+    set command [linsert $args 0 s3270 -utf8 -alias tcl3270]
     if {[catch {open |$command r+} newChannel]} {
         return -code error "could not start s3270: $newChannel"
     }

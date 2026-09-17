@@ -98,15 +98,15 @@ source tcl3270-pkg/tcl3270.tcl
 if {![catch {Ascii} error] || $error ne "tcl3270 is not initialized"} {
     error "action before init did not fail correctly"
 }
-tcl3270::init
+tcl3270::init -xrm {tcl3270.model: 5}
 if {[lsearch -exact [info commands] Ascii] < 0} {error "Ascii was not created"}
 if {[lsearch -exact [info commands] Query] < 0} {error "Query was not created"}
 if {[interp alias {} Quit] ne "exit"} {error "Quit was not mapped to exit"}
 if {[interp alias {} Exit] ne "exit"} {error "Exit was not mapped to exit"}
 if {[Query LocalEncoding] ne "UTF-8"} {error "unexpected LocalEncoding"}
-if {[Rows] ne "24" || [Cols] ne "80"} {error "unexpected screen size"}
+if {[Rows] ne "27" || [Cols] ne "132"} {error "unexpected screen size"}
 set ascii [Ascii]
-if {[llength $ascii] != 24} {
+if {[llength $ascii] != 27} {
     error "Ascii did not return one list element per screen row"
 }
 if {![catch {Query Garbage} error]
