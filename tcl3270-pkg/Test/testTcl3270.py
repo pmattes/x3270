@@ -28,10 +28,8 @@
 # tcl3270.tcl unit tests
 
 import os
-import stat
 from subprocess import run, PIPE
 import sys
-import tempfile
 import unittest
 
 from Common.Test.cti import cti
@@ -132,28 +130,18 @@ puts ok
     def test_backend_exit_status(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
-tcl3270::init
-if {![catch {Ascii} error]} {
-    error "action succeeded after s3270 exited"
+tcl3270::init -utenv
+if {![catch {Crash Exit 7} error]} {
+    error "Crash action succeeded after s3270 exited"
 }
 if {![string match "*status 7*" $error]} {
     error "s3270 exit status was not reported: $error"
 }
 puts ok
 '''
-        with tempfile.TemporaryDirectory() as directory:
-            executable = os.path.join(directory, "s3270")
-            with open(executable, "w") as stream:
-                stream.write("#!/bin/sh\n")
-                stream.write("IFS= read -r request\n")
-                stream.write("printf '%s\\n' ")
-                stream.write("'{\"result\":[\"Query() Ascii()\"],")
-                stream.write("\"success\":true,\"status\":\"L U U N N 4 24 80 0 0 0x0 0.000\"}'\n")
-                stream.write("exit 7\n")
-            os.chmod(executable, os.stat(executable).st_mode | stat.S_IXUSR)
-            env = os.environ.copy()
-            env["PATH"] = directory + os.pathsep + env["PATH"]
-            result = self.run_tcl(script, env=env)
+        env = os.environ.copy()
+        env["CRASH"] = "1"
+        result = self.run_tcl(script, env=env)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("ok\n", result.stdout)
 
