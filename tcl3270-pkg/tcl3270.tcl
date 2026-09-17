@@ -246,6 +246,10 @@ proc ::tcl3270::_response {} {
         return -code error "tcl3270 is not initialized"
     }
     if {[gets $channel line] < 0} {
+        set closeError [catch {::tcl3270::close} message]
+        if {$closeError} {
+            return -code error $message
+        }
         return -code error "s3270 closed its output"
     }
     if {[catch {::tcl3270::_json_decode $line} response]} {
@@ -263,8 +267,16 @@ proc ::tcl3270::_invoke {action args} {
     if {$channel eq {}} {
         return -code error "tcl3270 is not initialized"
     }
-    puts $channel [::tcl3270::_json_command $action $args]
-    flush $channel
+    if {[catch {
+        puts $channel [::tcl3270::_json_command $action $args]
+        flush $channel
+    } message]} {
+        set closeError [catch {::tcl3270::close} closeMessage]
+        if {$closeError} {
+            return -code error $closeMessage
+        }
+        return -code error "could not write to s3270: $message"
+    }
     set response [::tcl3270::_response]
     if {![dict get $response success]} {
         set result {}
@@ -285,8 +297,17 @@ proc ::tcl3270::_invoke {action args} {
 
 # Return the current s3270 status line.
 proc ::tcl3270::_status {} {
-    puts [set ::tcl3270::channel] "\"\""
-    flush [set ::tcl3270::channel]
+    set channel [set ::tcl3270::channel]
+    if {[catch {
+        puts $channel "\"\""
+        flush $channel
+    } message]} {
+        set closeError [catch {::tcl3270::close} closeMessage]
+        if {$closeError} {
+            return -code error $closeMessage
+        }
+        return -code error "could not write to s3270: $message"
+    }
     return [dict get [::tcl3270::_response] status]
 }
 
@@ -304,15 +325,23 @@ proc ::tcl3270::_cols {} {
 proc ::tcl3270::close {} {
     variable channel
     variable actions
+    set closeError 0
+    set closeMessage {}
     if {$channel ne {}} {
-        catch {close $channel}
+        set oldChannel $channel
         set channel {}
+        if {[catch {::close $oldChannel} closeMessage]} {
+            set closeError 1
+        }
     }
     foreach action $actions {
         catch {rename ::$action {}}
     }
     set actions {}
     set ::tcl3270::initialized 0
+    if {$closeError} {
+        return -code error $closeMessage
+    }
 }
 
 # Start s3270 and create Tcl commands for its supported actions.
