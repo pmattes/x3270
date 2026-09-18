@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+ncpu=$(grep '^processor' /proc/cpuinfo | wc -l)
+make -f Makefile.unix -j$ncpu
+make -f Makefile.windows -j$ncpu

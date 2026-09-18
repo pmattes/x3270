@@ -1,0 +1,30 @@
+# Copyright (c) 2026 Paul Mattes.
+# All rights reserved.
+
+# Makefile for tcl3270-pkg (Tcl package).
+
+RM = rm -f
+INSTALL = /usr/bin/install -c
+INSTALL_DATA = ${INSTALL} -m 644
+
+LIBDIR = ${exec_prefix}/lib
+TCL_VERSION = 8.6
+PACKAGE_DIR = $(DESTDIR)$(LIBDIR)/tcl$(TCL_VERSION)/tcl3270-1.0
+
+all: tcl3270.tcl pkgIndex.tcl
+
+tcl3270.tcl: $(THIS)/tcl3270.tcl
+	cp $< $@
+
+pkgIndex.tcl: $(THIS)/pkgIndex.tcl
+	cp $< $@
+
+install: all
+	mkdir -p $(PACKAGE_DIR)
+	$(INSTALL_DATA) tcl3270.tcl $(PACKAGE_DIR)/tcl3270.tcl
+	$(INSTALL_DATA) pkgIndex.tcl $(PACKAGE_DIR)/pkgIndex.tcl
+
+clean:
+	$(RM) tcl3270.tcl pkgIndex.tcl
+
+clobber: clean

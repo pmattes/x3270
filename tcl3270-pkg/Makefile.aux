@@ -1,0 +1,13 @@
+# Copyright (c) 2026 Paul Mattes.
+# All rights reserved.
+
+# Auxiliary makefile for tcl3270-pkg.
+
+PRODUCT = tcl3270-pkg
+
+all:
+	@echo "Must pick a specific make target."
+
+prepare: configure
+configure: configure.in
+	autoconf

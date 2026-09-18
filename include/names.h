@@ -163,8 +163,10 @@
 #define KwErrd		"errd"
 /*  Parameters to Crash(). */
 #define KwAssert	"assert"
+#define KwAsync		"async"
 #define KwExit		"exit"
 #define KwNull		"null"
+#define KwSync		"sync"
 /*  Parameters to Disconnect(). */
 #define KwDashReset	"-reset"
 /*  Parameters to HexString(). */
