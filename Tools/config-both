@@ -1,0 +1,7 @@
+#!/bin/sh
+# Configure 64-bit Windows.
+rm -f config.cache
+./configure --host=x86_64-w64-mingw32
+# Configure Linux.
+rm -f config.cache
+./configure -C CFLAGS="-ggdb3 -Werror -Wno-format-zero-length -fno-common"
