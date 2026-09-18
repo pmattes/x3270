@@ -41,8 +41,6 @@
 #include "popups.h"
 #include "utils.h"
 
-#define KwAsync		"async"
-
 typedef enum {
     CRASH_ASSERT,
     CRASH_EXIT,
@@ -123,7 +121,7 @@ Crash_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned offset = 0;
     crash_operation_t operation;
-    int exit_code = 999;
+    int exit_code = 27;
     char *end;
     long l;
 
@@ -132,7 +130,7 @@ Crash_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (!strcasecmp(argv[0], KwAsync)) {
+    if (!strcasecmp(argv[0], KwAsync) || !strcasecmp(argv[0], KwSync)) {
 	offset++;
 	if (argc == offset) {
 	    popup_an_error(AnCrash "(): Missing operation");

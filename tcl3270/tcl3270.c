@@ -250,7 +250,7 @@ usage(const char *msg)
     fprintf(stderr, "tcl3270-options:\n");
     fprintf(stderr, "  -d          debug s3270 I/O\n");
     fprintf(stderr, "s3270-options:\n");
-    (void) system("s3270 --help 2>&1 | tail -n +4 - >&2");
+    (void) !system("s3270 --help 2>&1 | tail -n +4 - >&2");
     exit(99);
 }
 
@@ -505,7 +505,7 @@ watch_s3270(void *arg)
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     /* Wait until s3270 closes the second callback socket. */
-    (void) read(s, &buf, 1);
+    (void) !read(s, &buf, 1);
 
     if (verbose) {
 	/*
