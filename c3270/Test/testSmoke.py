@@ -31,6 +31,10 @@ import os
 import sys
 if not sys.platform.startswith('win'):
     import pty
+import json
+if not sys.platform.startswith('win') and not sys.platform == "darwin":
+    import pyte
+import select
 import termios
 import threading
 import unittest
@@ -63,7 +67,7 @@ class TestC3270Smoke(cti):
             env = os.environ.copy()
             env['TERM'] = 'xterm-256color'
             os.execvpe(vgwrap_ecmd('c3270'),
-                vgwrap_eargs(['c3270', '-model', '2', '-utf8',
+                vgwrap_eargs(['c3270', '-model', '2', '-utf8', '-clear', 'useRgb',
                     '-httpd', f'127.0.0.1:{c3270_port}', '-secure']), env)
             self.assertTrue(False, 'c3270 did not start')
 
@@ -84,48 +88,53 @@ class TestC3270Smoke(cti):
         # Write the stream to c3270.
         p.send_records(5)
         thread.join()
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
         self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Wait(0.1,seconds)')
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Redraw()')
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Bell()')
-        p.close()
-        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
 
-        # Collect the output.
-        result = ''
+        # Parse the output into a terminal screen.
+        screen = pyte.Screen(80, 28)
+        stream = pyte.Stream(screen)
+        timeout = 2
+        received = False
         while True:
+            ready, _, _ = select.select([fd], [], [], timeout)
+            if not ready:
+                self.assertTrue(received, 'Timed out reading c3270 output')
+                break
             try:
                 rbuf = os.read(fd, 1024)
             except OSError:
                 break
-            result += rbuf.decode('utf8')
+            if not rbuf:
+                break
+            stream.feed(rbuf.decode('utf8'))
+            received = True
+            timeout = 0.1
 
-        # Make the output a bit more readable.
-        result = result.replace('\x1b', '<ESC>').replace('\r', '<CR>').replace('\n', '<LF>').replace('\a', '<BEL>').replace('\b', '<BS>')
+        # Serialize the screen contents.
+        snapshot = []
+        for y in range(screen.lines):
+            snapshot.append([screen.buffer[y][x]._asdict() for x in range(screen.columns)])
 
-        # There will be 3 <BEL> instances: One from the initial screen from the host, one after
-        # the first Redraw(), and one after the second. We want the text between the second and third.
-        rtext = result.split('<BEL>')[2]
+        p.close()
+        self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit()')
+        self.vgwait_pid(pid)
+
+        # Compare or generate the reference screen.
+        rtext = json.dumps(snapshot, indent=2)
 
         if 'GENERATE' in os.environ:
-            # Use this to regenerate the template file.
-            file = open(os.environ['GENERATE'], "w")
-            file.write(rtext)
-            file.close()
+            with open(os.environ['GENERATE'], "w") as file:
+                file.write(rtext)
+                file.write('\n')
         else:
-            # Compare what we just got to the reference file.
             localtext = f'c3270/Test/smoke_{sys.platform}.txt'
             if os.path.exists(localtext):
                 text = localtext
             else:
                 text = 'c3270/Test/smoke.txt'
-            file = open(text, "r", newline='')
-            ctext = file.read()
-            file.close()
-            self.assertEqual(rtext, ctext)
-
-        self.vgwait_pid(pid)
+            with open(text, "r") as file:
+                ctext = file.read()
+            self.assertEqual(rtext + '\n', ctext)
 
 if __name__ == '__main__':
     unittest.main()

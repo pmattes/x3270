@@ -165,5 +165,73 @@ class TestC3270Query(cti):
         os.close(fd)
         drain_thread.join()
 
+    # c3270 Query(Curses) test.
+    def c3270_query_curses(self, rgb=True):
+
+        # Fork a child process with a PTY between this process and it.
+        c3270_port, ts = unused_port()
+        (pid, fd) = pty.fork()
+        if pid == 0:
+            # Child process
+            ts.close()
+            env = os.environ.copy()
+            env['TERM'] = 'xterm-256color'
+            os.execvpe(vgwrap_ecmd('c3270'),
+                vgwrap_eargs(['c3270', '-httpd', f'127.0.0.1:{c3270_port}', '-xrm', f'c3270.useRgb:{rgb}']), env)
+            self.assertTrue(False, 'c3270 did not start')
+
+        # Parent process.
+
+        # Start a thread to drain c3270's output.
+        drain_thread = threading.Thread(target=self.drain, args=[fd])
+        drain_thread.start()
+
+        # Make sure c3270 started.
+        self.check_listen(c3270_port)
+        ts.close()
+
+        # Connect to a host so curses is initialized.
+        playback_port, pts = unused_port()
+        with playback(self, 'c3270/Test/hello.trc', port=playback_port) as p:
+            pts.close()
+
+            play_thread = threading.Thread(target=self.accept, args=[p])
+            play_thread.start()
+
+            # Connect to playback.
+            os.write(fd, f'Open(127.0.0.1:{playback_port})\n'.encode('utf8'))
+
+            # Wait for the connection to be accepted.
+            play_thread.join()
+
+            # Try the query. If we are running plain curses, we should be in 8-color mode. If ncurses, we should be in rgb mode.
+            r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Query(Curses)')
+            self.assertTrue(r.ok)
+            result = r.json()['result']
+            result0 = result[0].split()
+            result1 = result[1].split()
+            if result0[1] == 'curses':
+                self.assertEqual('color-mode 8-color', ' '.join(result1[11:13]))
+            elif result0[1] == 'ncurses':
+                if rgb:
+                    self.assertEqual('color-mode rgb', ' '.join(result1[11:13]))
+                else:
+                    self.assertEqual('color-mode color-cube', ' '.join(result1[11:13]))
+            else:
+                self.assertTrue(False, f'Unexpected curses type: {result0[1]}')
+
+        r = self.get(f'http://127.0.0.1:{c3270_port}/3270/rest/json/Quit(-force)')
+        self.vgwait_pid(pid)
+        os.close(fd)
+        drain_thread.join()
+
+    # Test c3270 Query(Curses) with RGB mode.
+    def test_c3270_query_curses(self):
+        self.c3270_query_curses(rgb=True)
+
+    # Test c3270 Query(Curses) with color-cube mode.
+    def test_c3270_query_curses_cube(self):
+        self.c3270_query_curses(rgb=False)
+
 if __name__ == '__main__':
     unittest.main()

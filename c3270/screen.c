@@ -133,7 +133,7 @@ typedef int curses_attr;
 typedef int host_color_ix;
 typedef int color_pair;
 
-static color_pair cp[40][40];
+static color_pair cp[256][256];
 
 typedef struct {
     curses_attr attrs;
@@ -333,6 +333,8 @@ static struct {
 
 static enum { MS_UNINITIALIZED, MS_PRESENT, MS_ABSENT } mouse_state = MS_UNINITIALIZED;
 static const char *mouse_state_name[] = { "uninitialized", "true", "false" };
+static enum { CM_NONE, CM_8COLOR, CM_RGB, CM_CUBE } color_mode = CM_NONE;
+static const char *color_mode_name[] = { "none", "8-color", "rgb", "color-cube" };
 
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -936,8 +938,8 @@ get_color_pair(curses_color fg, curses_color bg)
     curses_color fg_arg = fg;
 
     assert(screen_initted);
-    assert(fg < 40);
-    assert(bg < 40);
+    assert(fg < 256);
+    assert(bg < 256);
     if ((pair = cp[fg][bg])) {
 	return pair;
     }
@@ -1018,6 +1020,46 @@ add_rgb(host_color_ix ix, unsigned rgb)
     cmap[ix] = rgb_color_index++;
 }
 
+/* Computes a cube index 0-5 for a single color index 0-255. */
+static int
+nearest_cube_level(int value)
+{
+    static const int cube_levels[6] = { 0, 95, 135, 175, 215, 255 };
+    int best = 0;
+    int best_dist = abs(value - cube_levels[0]);
+
+    for (int i = 1; i < 6; i++) {
+        int dist = abs(value - cube_levels[i]);
+
+        if (dist < best_dist) {
+            best = i;
+            best_dist = dist;
+        }
+    }
+    return best;
+}
+
+/* Computes an xterm 6x6x6 color-cube color index. */
+static int
+rgb_to_xterm256(int r, int g, int b)
+{
+    int ri = nearest_cube_level(r);
+    int gi = nearest_cube_level(g);
+    int bi = nearest_cube_level(b);
+
+    return 16 + 36 * ri + 6 * gi + bi;
+}
+
+/* Add an xterm 6x6x6 color-cube color. */
+static void
+add_cube(host_color_ix ix, unsigned rgb)
+{
+    cmap[ix] = rgb_to_xterm256(
+	    (((rgb & 0xff0000) >> 16) & 0xff),
+	    (((rgb & 0x00ff00) >>  8) & 0xff),
+	    (((rgb & 0x0000ff)      ) & 0xff));
+}
+
 /*
  * Set up the user-specified color mappings.
  */
@@ -1035,9 +1077,12 @@ init_user_color(const char *name, host_color_ix ix)
 	r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
     }
     if (r == NULL) {
-	if (appres.c3270.use_rgb && COLORS >= 32 && can_change_color() == TRUE) {
-	    /* Use the default RGB color. */
+	if (color_mode == CM_RGB) {
+	    /* Use the default RGB color, redefining a color index. */
 	    add_rgb(ix, appres.c3270.reverse_video ? rgbmap_rv[ix] : rgbmap[ix]);
+	} else if (color_mode == CM_CUBE) {
+	    /* Approximate the default using the 6x6x6 color cube. */
+	    add_cube(ix, appres.c3270.reverse_video ? rgbmap_rv[ix] : rgbmap[ix]);
 	}
 	return;
     }
@@ -1046,24 +1091,23 @@ init_user_color(const char *name, host_color_ix ix)
 	unsigned long rgb;
 	char *end;
 
-	if (!appres.c3270.use_rgb) {
-	    xs_warning(ResUseRgb " is not set, ignoring RGB color specification %s", r);
-	    return;
-	}
-	if (COLORS < 32) {
-	    xs_warning("RGB colors require at least 32-color support");
-	    return;
-	}
-	if (can_change_color() != TRUE) {
-	    xs_warning("RGB colors require a terminal that can change colors");
-	    return;
-	}
 	rgb = strtoul(r + 1, &end, 16);
 	if (end == r + 1 || *end != '\0' || (rgb & ~0xffffffUL) != 0) {
 	    xs_warning("Invalid RGB color '%s'", r);
 	    return;
 	}
-	add_rgb(ix, (unsigned)rgb);
+	if (color_mode == CM_RGB) {
+	    /* Real RGB, by redefining a color index. */
+	    add_rgb(ix, (unsigned)rgb);
+	    return;
+	}
+	if (color_mode == CM_CUBE) {
+	    /* Approximate RGB, with the 6x6x6 color cube. */
+	    add_cube(ix, (unsigned)rgb);
+	    return;
+	}
+
+	xs_warning("RGB colors require " ResUseRgb " to be set and a terminal with at least 32 redefinable colors, or a terminal with at least 256 colors -- ignorning RGB color specification");
 	return;
     }
 
@@ -1105,9 +1149,18 @@ init_user_color(const char *name, host_color_ix ix)
 static void
 init_user_colors(void)
 {
-    int i;
+    if (appres.c3270.use_rgb && COLORS >= 32 && can_change_color() == TRUE) {
+	color_mode = CM_RGB;
+    } else if (COLORS >= 256) {
+	color_mode = CM_CUBE;
+    } else if (has_colors() && COLORS >= 8) {
+	color_mode = CM_8COLOR;
+    } else {
+	color_mode = CM_NONE;
+    }
+    vctrace(TC_UI, "color mode set to %s\n", color_mode_name[color_mode]);
 
-    for (i = 0; host_color[i].name != NULL; i++) {
+    for (int i = 0; host_color[i].name != NULL; i++) {
 	init_user_color(host_color[i].name, host_color[i].index);
     }
 }
@@ -3322,7 +3375,7 @@ enable_cursor(bool on)
 const char *
 query_curses(void)
 {
-    return txAsprintf("Provider: %s\nTerminal: rows %d columns %d colors %s mouse %s wchar %s",
+    return txAsprintf("Provider: %s\nTerminal: rows %d columns %d colors %s mouse %s wchar %s color-mode %s",
 #if defined(NCURSES_VERSION) /*[*/
 	    txAsprintf("ncurses %s %d", NCURSES_VERSION, NCURSES_VERSION_PATCH),
 #else /*][*/
@@ -3333,11 +3386,11 @@ query_curses(void)
 	    screen_initted? txAsprintf("%d", COLORS): "uninitialized",
 	    mouse_state_name[mouse_state],
 #if defined(CURSES_WIDE) /*[*/
-	    "true"
+	    "true",
 #else /*][*/
-	    "false"
+	    "false",
 #endif /*]*/
-	    );
+	    color_mode_name[color_mode]);
 }
 
 /* Report if screen color support is unknown. */
