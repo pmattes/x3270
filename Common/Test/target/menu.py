@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2023 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -389,4 +389,3 @@ class menu_f(tn3270.tn3270_server):
             return
         no = no_such('', b'').replace(b'\r\n', b'')
         self.display_menu(to_ebc(no) + self.dbtrunc(self.raw_cmd, 63))
-

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2025 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ from typing import Dict, Any
 
 import aswitch
 import menu
+import tn3270_chars
 import oopts
 import server
 import socketwrapper
@@ -310,7 +311,8 @@ servers = {
     'snake': tn3270_snake.snake,
     'sruvm': tn3270_sruvm.sruvm,
     'uvvm': tn3270_uvvm.uvvm,
-    'apl': tn3270_apl.apl
+    'apl': tn3270_apl.apl,
+    'chars': tn3270_chars.chars
 }
 
 if __name__ == '__main__':
