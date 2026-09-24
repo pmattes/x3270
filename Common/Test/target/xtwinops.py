@@ -41,39 +41,76 @@ from typing import Optional
 clear_screen = b'\033[2J\033[H'
 prompt = b'==> '
 quit = 'quit'
+enter_to_continue = '\r\nPress Enter to continue '
 
 operations = {
-    'deiconify': ('1t', 'De-iconify window', False),
-    'iconify': ('2t', 'Iconify window', False),
-    'move': ('3;{0};{1}t', 'Move window (x y)', False),
-    'resize-pixels': ('4;{0};{1}t', 'Resize window in pixels (height width)', False),
-    'raise': ('5t', 'Raise window', False),
-    'lower': ('6t', 'Lower window', False),
-    'refresh': ('7t', 'Refresh window', False),
-    'resize-chars': ('8;{0};{1}t', 'Resize window in characters (height width)', False),
-    'maximize': ('9;{0}t', 'Restore (0) / maximize (2) window', False),
-    'fullscreen': ('10;{0}t', 'Undo (0) / fullscreen (1) / toggle(2)', False),
-    'window-state': ('11t', 'Report window state', True),
-    'window-position': ('13t', 'Report window position', True),
-    'window-size-pixels': ('14;{0}t', 'Report text area size (0) / window size (2) in pixels', True),
-    'screen-size-pixels': ('15t', 'Report screen size in pixels', True),
-    'character-size-pixels': ('16t', 'Report character cell size in pixels', True),
-    'textarea-chars': ('18t', 'Report text area size in characters', True),
-    'screen-size-chars': ('19t', 'Report screen area size in characters', True),
-    'icon-label': ('20t', 'Report icon label', True),
-    'window-label': ('21t', 'Report window label', True),
+    'deiconify': ('1t', 'De-iconify window', '', False),
+    'iconify': ('2t', 'Iconify window', '', False),
+    'move': ('3;{0};{1}t', 'Move window (x y)', 'x y', False),
+    'resize-pixels': ('4;{0};{1}t', 'Resize window in pixels (height width)', 'height width', False),
+    'raise': ('5t', 'Raise window', '', False),
+    'lower': ('6t', 'Lower window', '', False),
+    'refresh': ('7t', 'Refresh window', '', False),
+    'resize-chars': ('8;{0};{1}t', 'Resize window in characters (height width)', 'height width', False),
+    'maximize': ('9;{0}t', 'Window restore (0) / maximize (2)', '0/2', False),
+    'fullscreen': ('10;{0}t', 'Window restore (0) / fullscreen (1) / toggle (2)', '0/1/2', False),
+    'window-state': ('11t', 'Report window state', '', True),
+    'window-position': ('13t', 'Report window position', '', True),
+    'window-size-pixels': ('14;{0}t', 'Report text area size (0) / window size (2) in pixels', '0/2', True),
+    'screen-size-pixels': ('15t', 'Report screen size in pixels', '', True),
+    'character-size-pixels': ('16t', 'Report character cell size in pixels', '', True),
+    'textarea-chars': ('18t', 'Report text area size in characters', '', True),
+    'screen-size-chars': ('19t', 'Report screen area size in characters', '', True),
+    'icon-label': ('20t', 'Report icon label', '', True),
+    'window-label': ('21t', 'Report window label', '', True),
 }
-
 response_csi = re.compile(rb'\033\[([0-9;]*)t')
 response_osc = re.compile(rb'\033\]([Ll])(.*?)\033\\', re.DOTALL)
 operations_by_opcode = {
     template.split(';', 1)[0].rstrip('t'): name
-    for name, (template, _, _) in operations.items()
+    for name, (template, _, _, _) in operations.items()
 }
-
 # Clean a command line without treating terminal responses as text.
 def clean_command(data: bytes) -> str:
     return data.strip(b' \r\n').decode('ascii', errors='replace')
+
+def safe_repr(s: str) -> str:
+    '''Display a string with non-printable characters escaped'''
+    named = {
+        '\n': r'\n',
+        '\t': r'\t',
+        '\r': r'\r',
+        '\b': r'\b',
+        '\f': r'\f',
+        '\v': r'\v',
+        '\\': r'\\',
+        '"': r'\"',
+        "'": r"\'",
+    }
+
+    out = []
+    for ch in s:
+        code = ord(ch)
+
+        # Python named escapes
+        if ch in named:
+            out.append(named[ch])
+            continue
+
+        # Printable ASCII → literal
+        if 0x20 <= code <= 0x7e:
+            out.append(ch)
+            continue
+
+        # Non-ASCII → literal UTF-8
+        if code > 0x7f:
+            out.append(ch)
+            continue
+
+        # Remaining control chars → C-style octal
+        out.append(f'\\{code:03o}')
+
+    return ''.join(out)
 
 # Decode an XTWINOPS response, if one is present.
 def response_text(data: bytes, operation: str) -> Optional[str]:
@@ -81,28 +118,28 @@ def response_text(data: bytes, operation: str) -> Optional[str]:
     if match:
         raw = match.group(1).decode()
         values = raw.split(';')
-        raw_text = f'raw: \\033[{raw}t'
+        rt = f'\r\nResponse: \\033[{raw}t'
+        rtn = rt + '\r\n '
         if operation == 'window-state' and len(values) == 1:
             state = {'1': 'normal', '2': 'iconified'}.get(values[0], values[0])
-            return f'Response: state {state} ({raw_text})'
+            return f'{rtn}state {state}'
         if operation == 'window-position' and len(values) == 3 and values[0] == '3':
-            return f'Response: x {values[1]}, y {values[2]} ({raw_text})'
+            return f'{rtn}x {values[1]}, y {values[2]}'
         if operation == 'screen-size-pixels' and len(values) == 3 and values[0] == '5':
-            return f'Response: width {values[2]}, height {values[1]} ({raw_text})'
+            return f'{rtn}width {values[2]}, height {values[1]}'
         if operation in ('textarea-chars', 'screen-size-chars'):
             if len(values) == 3 and values[0] in ('8', '9'):
-                return f'Response: rows {values[1]}, columns {values[2]} ({raw_text})'
+                return f'{rtn}rows {values[1]}, columns {values[2]}'
         if operation in ('window-size-pixels', 'character-size-pixels'):
             if len(values) == 3:
-                return f'Response: height {values[1]}, width {values[2]} ({raw_text})'
-        return f'Response: {raw_text}'
+                return f'{rtn}height {values[1]}, width {values[2]}'
+        return rt
     match = response_osc.search(data)
     if match:
         kind = 'icon label' if match.group(1) == b'L' else 'window label'
         label = match.group(2).decode('ascii', errors='replace')
-        raw = data[match.start():match.end()].decode(
-            'ascii', errors='backslashreplace').replace('\\', '\\\\').replace('\033', '\\033')
-        return f'Response: {kind} "{label}" (raw: {raw})'
+        raw = safe_repr(data[match.start():match.end()].decode('ascii', errors='backslashreplace'))
+        return f'\r\nResponse: {raw}\r\n {kind} "{label}"'
     return None
 
 class xtwinops(server.server):
@@ -149,7 +186,7 @@ class xtwinops(server.server):
         if last:
             text += last + '\r\n\r\n'
         width = max(len(name) for name in operations)
-        for name, (template, description, _) in operations.items():
+        for name, (template, description, _, _) in operations.items():
             opcode = template.split(';', 1)[0].rstrip('t')
             text += f'{opcode.rjust(3)} {name.ljust(width + 1)}{description}\r\n'
         text += f'{"":3} {quit.ljust(width + 1)}{self.quit_help}\r\n\r\n'
@@ -222,19 +259,21 @@ class xtwinops(server.server):
         name = fields[0]
         name = operations_by_opcode.get(name, name)
         if name not in operations:
-            self.conn.send(f'No such operation: {name}\r\n\r\n'.encode() + prompt)
+            self.conn.send(f'No such operation: {name}\r\n'.encode() + prompt)
             return
 
-        template, description, is_report = operations[name]
+        template, description, usage, is_report = operations[name]
         argument_count = template.count('{')
         optional_window_size = name == 'window-size-pixels' and len(fields[1:]) == 0
         if len(fields[1:]) != argument_count and not optional_window_size:
-            self.conn.send(f'Usage: {name} {description}\r\n\r\n'.encode() + prompt)
+            usage_text = f' {usage}' if usage else ''
+            self.conn.send(f'Usage: {name}{usage_text}\r\n'.encode() + prompt)
             return
         try:
             parameters = [int(value) for value in fields[1:]]
         except ValueError:
-            self.conn.send(f'Usage: {name} {description}\r\n\r\n'.encode() + prompt)
+            usage_text = f' {usage}' if usage else ''
+            self.conn.send(f'Usage: {name}{usage_text}\r\n'.encode() + prompt)
             return
         sequence = '14t' if optional_window_size else template.format(*parameters)
         raw_sequence = f'\\033[{sequence}'
@@ -248,8 +287,8 @@ class xtwinops(server.server):
             self.conn.send(clear_screen)
             self.conn.send(f'XTWINOPS: {description}\r\n'.encode())
             self.conn.send(f'Parameters: {" ".join(fields[1:]) or "(none)"}\r\n\r\n'.encode())
-            self.conn.send(f'Sent: {raw_sequence}\r\n\r\n'.encode())
-            self.conn.send(b'Press Enter to continue\r\n')
+            self.conn.send(f'Sent: {raw_sequence}\r\n'.encode())
+            self.conn.send(enter_to_continue.encode())
             self.awaiting_enter = True
             return
 
@@ -262,10 +301,10 @@ class xtwinops(server.server):
                               int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA)]))
         self.conn.send(clear_screen)
         self.conn.send(f'XTWINOPS: {description}\r\n'.encode())
-        self.conn.send(f'Parameters: {" ".join(fields[1:]) or "(none)"}\r\n\r\n'.encode())
-        self.conn.send(f'Sent: {raw_sequence}\r\n\r\n'.encode())
+        self.conn.send(f'Parameters: {" ".join(fields[1:]) or "(none)"}\r\n'.encode())
+        self.conn.send(f'Sent: {raw_sequence}\r\n'.encode())
         self.conn.send((result or 'Response timeout').encode()
-                       + b'\r\n\r\nPress Enter to continue\r\n')
+                       + b'\r\n' + enter_to_continue.encode())
         self.awaiting_enter = True
 
     # Wait for and decode a terminal response.
