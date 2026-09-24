@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2834,7 +2834,7 @@ nvt_register(void)
     register_extended_toggle(ResXtwinops, toggle_xtwinops, NULL, NULL, (void **)&appres.xtwinops, XRM_BOOLEAN);
 
     /* Register for state changes. */
-    register_schange(ST_3270_MODE, nvt_in3270);
+    register_schange_ordered(ST_3270_MODE, nvt_in3270, ORDER_LAST); /* after screen_connect */
     register_schange(ST_CONNECT, nvt_connect);
     register_schange(ST_TERMINAL_SIZE, nvt_size_change);
 }
