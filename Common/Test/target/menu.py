@@ -94,7 +94,7 @@ def expand_newlines(text: bytes) -> bytes:
                 col = 1
     return bytes(ret)
 
-class menu(server.server):
+class menu_t(server.server):
     '''Menu using plain TELNET'''
 
     def __init__(self, conn: socketwrapper.socketwrapper, logger: logging.Logger, peername: str, tls: bool, switch: aswitch.aswitch, opts: oopts.oopts):

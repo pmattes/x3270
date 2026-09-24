@@ -184,7 +184,7 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	if (!p2 || *p2 == XTWR_14WINDOWSIZE_PIXELS_0TEXTAREA) {
 	    /* report text area size in pixels */
 	    *rp1 = maxROWS * *char_height;
-	    *rp1 = maxCOLS * *char_width;
+	    *rp2 = maxCOLS * *char_width;
 	} else if (p2 && *p2 == XTWR_14WINDOWSIZE_PIXELS_2WINDOW) {
 	    /* report window size in pixels */
 	    XtVaGetValues(toplevel, XtNheight, &height, XtNwidth, &width, NULL);

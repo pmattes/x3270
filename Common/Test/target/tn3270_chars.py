@@ -44,7 +44,7 @@ def build_screen(graphic_escape: bool, numeric_order: bool = False) -> bytes:
     '''Build the EBCDIC character screen.'''
     mode = 'Graphic Escape' if graphic_escape else 'Normal'
     ret = bytes([command.erase_write, wcc.keyboard_restore | wcc.reset])
-    ret += sba_bytes(1, 1, 80) + _ebcdic(f'EBCDIC characters - {mode}')
+    ret += sba_bytes(1, 1, 80) + _ebcdic(f'Printable EBCDIC characters ({mode})')
     ret += sba_bytes(3, 1, 80)
     ret += bytes([order.sf, fa.protect | fa.high_sel])
     if numeric_order:
@@ -71,8 +71,9 @@ def build_screen(graphic_escape: bool, numeric_order: bool = False) -> bytes:
             ret += character
             ret += bytes([0x40, 0x40])
 
-    ret += sba_bytes(24, 1, 80) + bytes([order.sf, fa.protect])
-    ret += _ebcdic('F3=END     F8=GE/NORMAL F9=IBM/SEQUENTIAL')
+    ret += sba_bytes(23, 80, 80) + bytes([order.sf, fa.protect])
+    f8 = 'NORMAL' if graphic_escape else 'GE    '
+    ret += _ebcdic(f'F3=END     F8={f8} F9=ORIENTATION')
     ret += sba_bytes(24, 80, 80) + bytes([order.ic])
     return ret
 

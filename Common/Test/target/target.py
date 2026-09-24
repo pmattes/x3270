@@ -52,6 +52,7 @@ import tn3270_snake
 import tn3270_sruvm
 import tn3270_uvvm
 import tn3270_apl
+import xtwinops
 
 def peername_string(conn: socket.socket):
     '''Get a peername'''
@@ -303,7 +304,7 @@ servers = {
     'color': tn3270_colortest.colortest,
     'echo': echo_server,
     'ibmlink': tn3270_ibmlink.ibmlink,
-    'menu': menu.menu,
+    'menu-t': menu.menu_t,
     'menu-f': menu.menu_f,
     'menu-n': menu.menu_n,
     'menu-s': menu.menu_s,
@@ -312,7 +313,8 @@ servers = {
     'sruvm': tn3270_sruvm.sruvm,
     'uvvm': tn3270_uvvm.uvvm,
     'apl': tn3270_apl.apl,
-    'chars': tn3270_chars.chars
+    'chars': tn3270_chars.chars,
+    'xtwinops': xtwinops.xtwinops
 }
 
 if __name__ == '__main__':
