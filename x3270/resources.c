@@ -373,8 +373,8 @@ XtResource xresources[] = {
       boffset(ut_env), XtRString, ResTrue },
     { ResExtendedDataStream, ClsExtendedDataStream, XtRBoolean, sizeof(Boolean),
       boffset(extended_data_stream), XtRString, ResTrue },
-    { ResXtwinops, ClsXtwinops, XtRBoolean, sizeof(Boolean),
-      boffset(xtwinops), XtRString, ResTrue },
+    { ResAllowWindowOps, ClsAllowWindowOps, XtRBoolean, sizeof(Boolean),
+      boffset(allow_window_ops), XtRString, ResFalse },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

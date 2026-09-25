@@ -119,7 +119,7 @@ typedef struct {
 #if defined(_WIN32) /*[*/
     char	*window_id;
 #endif /*]*/
-    bool	 xtwinops;
+    bool	 allow_window_ops;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];

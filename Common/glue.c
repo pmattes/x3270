@@ -453,7 +453,6 @@ set_appres_defaults(void)
     appres.contention_resolution = true;
     appres.new_environ = true;
     appres.max_recent = 5;
-    appres.xtwinops = true;
 
     appres.ft.dft_buffer_size = DFT_BUF;
 
@@ -851,6 +850,7 @@ cmdline_help(bool as_action)
 
 static res_t base_resources[] = {
     { ResAlias,		aoffset(alias),		XRM_STRING },
+    { ResAllowWindowOps,aoffset(allow_window_ops),XRM_BOOLEAN },
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),	XRM_BOOLEAN },
@@ -946,7 +946,6 @@ static res_t base_resources[] = {
 #if defined(_WIN32) /*[*/
     { ResWindowId,	aoffset(window_id),	XRM_STRING },
 #endif /*]*/
-    { ResXtwinops,	aoffset(xtwinops),	XRM_BOOLEAN },
 };
 
 typedef struct reslist {

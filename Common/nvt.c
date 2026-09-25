@@ -1833,7 +1833,7 @@ xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
     unsigned short rp1 = 0, rp2 = 0;
     const char *rtext = NULL;
 
-    if (!appres.xtwinops && (n[0] < XTWR_11WINDOWSTATE || n[0] >= 24)) {
+    if (!appres.allow_window_ops && (n[0] < XTWR_11WINDOWSTATE || n[0] >= 24)) {
 	/* Prohibited. */
 	return DATA;
     }
@@ -2806,13 +2806,13 @@ nvt_snap_modes(void)
     }
 }
 
-/* Toggle contention resolution. */
+/* Toggle window operation permissions. */
 static toggle_upcall_ret_t
-toggle_xtwinops(const char *name, const char *value, unsigned flags, ia_t ia)
+toggle_allow_window_ops(const char *name, const char *value, unsigned flags, ia_t ia)
 {
     const char *errmsg;
 
-    if ((errmsg = boolstr(value, &appres.xtwinops)) != NULL) {
+    if ((errmsg = boolstr(value, &appres.allow_window_ops)) != NULL) {
         popup_an_error("%s", errmsg);
         return TU_FAILURE;
     }
@@ -2831,7 +2831,8 @@ nvt_register(void)
 
     /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
-    register_extended_toggle(ResXtwinops, toggle_xtwinops, NULL, NULL, (void **)&appres.xtwinops, XRM_BOOLEAN);
+    register_extended_toggle(ResAllowWindowOps, toggle_allow_window_ops, NULL, NULL, (void **)&appres.allow_window_ops,
+	    XRM_BOOLEAN);
 
     /* Register for state changes. */
     register_schange_ordered(ST_3270_MODE, nvt_in3270, ORDER_LAST); /* after screen_connect */

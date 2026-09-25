@@ -39,6 +39,7 @@
 #define ResAlias		"alias"
 #define ResAllBold		"allBold"
 #define ResAllowResize		"allowResize"
+#define ResAllowWindowOps	"allowWindowOps"
 #define ResAltCursor		"altCursor"
 #define ResAltScreen		"altScreen"
 #define ResAlwaysInsert		"alwaysInsert"
@@ -266,7 +267,6 @@
 #define ResWrapperDoc		"wrapperDoc"
 #define ResWrongTerminalName	"wrongTerminalName"
 #define ResXQuartzHack		"xQuartzHack"
-#define ResXtwinops		"xtwinops"
 
 /* Dotted resource names. */
 #define DotAcceptHostname	"." ResAcceptHostname
@@ -339,6 +339,7 @@
 #define ClsAidWait		"AidWait"
 #define ClsAllBold		"AllBold"
 #define ClsAllowResize		"AllowResize"
+#define ClsAllowWindowOps	"AllowWindowOps"
 #define ClsAltCursor		"AltCursor"
 #define ClsAlwaysInsert		"AlwaysInsert"
 #define ClsAplCircledAlpha	"AplCircledAlpha"
@@ -520,7 +521,6 @@
 #define ClsWerase		"Werase"
 #define ClsWrongTerminalName	"WrongTerminalName"
 #define ClsXQuartzHack		"XQuartzHack"
-#define ClsXtwinops		"Xtwinops"
 
 /* Options. */
 #define OptAcceptHostname	"-accepthostname"

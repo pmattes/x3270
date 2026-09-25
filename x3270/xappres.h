@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990 Jeff Sparkes.
  * All rights reserved.
  *
@@ -118,7 +118,7 @@ typedef struct {
 	Boolean tls992;
 	Boolean ut_env;
 	Boolean extended_data_stream;
-	Boolean xtwinops;
+	Boolean allow_window_ops;
 	struct {
 	    Boolean do_confirms;
 	    Boolean menubar;

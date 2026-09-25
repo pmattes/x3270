@@ -1309,7 +1309,7 @@ copy_xres_to_res_bool(void)
     copy_bool(wrong_terminal_name);
     copy_bool(tls992);
     copy_bool(ut_env);
-    copy_bool(xtwinops);
+    copy_bool(allow_window_ops);
 
     copy_bool(interactive.do_confirms);
     copy_bool(interactive.mono);
