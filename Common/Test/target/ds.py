@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2024 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -127,6 +127,7 @@ class dinfo():
         self.rpqnames = None
         self.ge = False
         self.dbcs = False
+        self.cgcsgid_dbcs = None
         if not self.dynamic:
             self.model = self.ttype[9]
             self.alt_rows = rows[self.model]
@@ -139,6 +140,7 @@ class dinfo():
 
     def parse_query_reply(self, b: bytes) -> Tuple[bool, str]:
         '''Parse a Query Reply'''
+        self.cgcsgid_dbcs = None
         if len(b) < 1 or b[0] != aid.SF.value:
             return (False, 'overall len or AID is wrong')
         b = b[1:]
@@ -149,6 +151,8 @@ class dinfo():
             field_len = b[0] << 8 | b[1]
             if field_len < 2 or len(b) < field_len:
                 return (False, 'subfield len too small')
+            if field_len < 4:
+                return (False, 'subfield too short')
             if b[2] != aid.SF_QREPLY.value:
                 return (False, 'subfield isn\'t QREPLY')
             if b[3] == qr.usable_area.value:
@@ -157,13 +161,32 @@ class dinfo():
                 #  +2 special character features
                 #  +3/+4 width
                 #  +5/+6 height
+                if field_len < 10:
+                    return (False, 'usable area subfield too short')
                 self.alt_columns = b[6] << 8 | b[7]
                 self.alt_rows = b[8] << 8 | b[9]
             elif b[3] == qr.rpq_names.value:
                 self.rpqnames = b[4:field_len]
             elif b[3] == qr.charsets.value:
+                if field_len < 5:
+                    return (False, 'character sets subfield too short')
                 self.ge = (b[4] & 0x80) != 0
                 self.dbcs = (b[4] & 0x04) != 0
+                self.cgcsgid_dbcs = None
+                if self.dbcs:
+                    charsets = b[4:field_len]
+                    if len(charsets) < 9:
+                        return (False, 'character sets data too short')
+                    set_len = charsets[8]
+                    if set_len < 11:
+                        return (False, 'DBCS character set entry too short')
+                    entries = charsets[9:]
+                    if len(entries) % set_len != 0:
+                        return (False, 'invalid character set entry length')
+                    for offset in range(0, len(entries), set_len):
+                        entry = entries[offset : offset + set_len]
+                        if entry[0] == 0x80:
+                            self.cgcsgid_dbcs = int.from_bytes(entry[-4:], 'big')
 
             # Get the next field.
             b = b[field_len:]

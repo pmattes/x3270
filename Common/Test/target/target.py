@@ -41,6 +41,7 @@ from typing import Dict, Any
 import aswitch
 import menu
 import tn3270_chars
+import tn3270_chinese
 import oopts
 import server
 import socketwrapper
@@ -314,6 +315,7 @@ servers = {
     'uvvm': tn3270_uvvm.uvvm,
     'apl': tn3270_apl.apl,
     'chars': tn3270_chars.chars,
+    'chinese': tn3270_chinese.chinese,
     'xtwinops': xtwinops.xtwinops
 }
 
