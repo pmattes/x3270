@@ -115,7 +115,10 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	break;
     case XTW_3MOVE: /* move to x,y */
 	if (!(maximized | fullscreen) && !iconic) {
-	    XMoveWindow(display, XtWindow(toplevel), *p2, *p3);
+	    int x = (*p2 <= 32767)? *p2: (short)*p2;
+	    int y = (*p3 <= 32767)? *p3: (short)*p3;
+
+	    XMoveWindow(display, XtWindow(toplevel), x, y);
 	}
 	break;
     case XTW_4RESIZE_PIXELS: /* resize to h,w pixels */

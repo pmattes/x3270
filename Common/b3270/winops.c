@@ -416,10 +416,13 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 		NULL);
 	break;
     case XTW_3MOVE: /* Move to x,y */
+	int64_t x = (*p2 <= 32767)? *p2: (short)*p2;
+	int64_t y = (*p3 <= 32767)? *p3: (short)*p3;
+
 	ui_leaf(IndWindowChange,
 		AttrOperation, AT_STRING, WinMove,
-		AttrX, AT_INT, (uint64_t)*p2,
-		AttrY, AT_INT, (uint64_t)*p3,
+		AttrX, AT_INT, x,
+		AttrY, AT_INT, y,
 		NULL);
 	break;
     case XTW_4RESIZE_PIXELS: /* resize to window to h,w pixels */
