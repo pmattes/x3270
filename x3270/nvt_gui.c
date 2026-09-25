@@ -125,7 +125,7 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	}
 	if (!xappres.fixed_size && !(maximized | fullscreen) && !iconic) {
 	    XtVaGetValues(toplevel, XtNheight, &height, XtNwidth, &width, NULL);
-	    XResizeWindow(display, XtWindow(toplevel), p2? *p2: height, p3? *p3: width);
+	    XResizeWindow(display, XtWindow(toplevel), p3? *p3: width, p2? *p2: height);
 	}
 	break;
     case XTW_5RAISE: /* raise */
