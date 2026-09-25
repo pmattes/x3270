@@ -1897,8 +1897,10 @@ xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 	break;
     case XTWR_20ICONLABEL: /* send icon label */
     case XTWR_21WINDOWLABEL: /* send window label */
-	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
-	net_sends(txAsprintf("\033]%s%s\033\\", n[0] == 20? "L": "l", rtext? clean_text(rtext): ""));
+	if (appres.allow_window_ops) {
+	    xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
+	}
+	net_sends(txAsprintf("\033]%s%s\033\\", n[0] == XTWR_20ICONLABEL? "L": "l", rtext? clean_text(rtext): ""));
 	break;
     default:
 	if (n[0] >= defROWS) {
