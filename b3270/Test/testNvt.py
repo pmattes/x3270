@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ class TestB3270Nvt(cti):
 
         # Start b3270.
         hport, ts = unused_port()
-        b3270 = Popen(vgwrap(['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-json']), stdout=DEVNULL)
+        b3270 = Popen(vgwrap(['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-json', '-set', 'allowWindowOps']), stdout=DEVNULL)
         self.children.append(b3270)
         self.check_listen(hport)
         ts.close()
@@ -108,7 +108,7 @@ class TestB3270Nvt(cti):
 
         # Start b3270.
         hport, ts = unused_port()
-        b3270 = Popen(vgwrap(['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-json']), stdout=PIPE)
+        b3270 = Popen(vgwrap(['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-json', '-set', 'allowWindowOps']), stdout=PIPE)
         self.children.append(b3270)
         self.check_listen(hport)
         ts.close()
@@ -178,8 +178,8 @@ class TestB3270Nvt(cti):
     def test_toggle_fullscreen(self):
         self.single_parameter('\033[10;2t', b'{"window-change":{"operation":"state","state":"toggle-full-screen"}}\n')
 
-    def test_xtwinops_resource(self):
-        self.single_parameter('\033[2t', None, extra_send='Set(xtwinops,false)')
+    def test_allowWindowOps_resource(self):
+        self.single_parameter('\033[2t', None, extra_send='Set(allowWindowOps,false)')
 
     # Test the window-change operation.
     def oper_window_change(self, bmsg: str, bmsg_reply: str, esc: str, esc_reply: str, json=True, debug=False):
@@ -188,7 +188,7 @@ class TestB3270Nvt(cti):
 
         # Start b3270.
         hport, ts = unused_port()
-        cmd = ['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport)]
+        cmd = ['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-set', 'allowWindowOps']
         if json:
             cmd.append('-json')
         b3270 = Popen(vgwrap(cmd), stdin=PIPE, stdout=PIPE)
@@ -243,7 +243,7 @@ class TestB3270Nvt(cti):
     def oper_window_change_bulk(self, params: Sequence[ChangeParam], json=True, debug=False):
         # Start b3270.
         hport, ts = unused_port()
-        cmd = ['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport)]
+        cmd = ['b3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), '-set', 'allowWindowOps']
         if json:
             cmd.append('-json')
         b3270 = Popen(vgwrap(cmd), stdin=PIPE, stdout=PIPE)
