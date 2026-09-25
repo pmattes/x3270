@@ -1949,7 +1949,7 @@ xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
     case XTWR_18TEXTAREA_CHARACTERS: /* report text area in characters */
 	net_sends(txAsprintf("\033[8;%u;%ut", ROWS, COLS));
 	break;
-    case XTWR_19SCREENSIZE_PIXELS: /* report screen area in characters */
+    case XTWR_19SCREENSIZE_CHARACTERS: /* report screen area in characters */
 	xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
 	net_sends(txAsprintf("\033[9;%u;%ut", rp1, rp2));
 	break;

@@ -535,7 +535,7 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	*rp1 = character_height;
 	*rp2 = character_width;
 	break;
-    case XTWR_19SCREENSIZE_PIXELS: /* report screen size in characters */
+    case XTWR_19SCREENSIZE_CHARACTERS: /* report screen size in characters */
 	*rp1 = screen_height? (character_height / screen_height): 0;
 	*rp2 = screen_width? (character_width / screen_width): 0;
 	break;
