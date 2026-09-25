@@ -211,11 +211,11 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	*rp1 = height;
 	*rp2 = width;
 	break;
-    case XTWR_20ICONLABEL: /* report window label */
-	XtVaGetValues(toplevel, XtNtitle, rtext, NULL);
-	break;
-    case XTWR_21WINDOWLABEL: /* report icon label */
+    case XTWR_20ICONLABEL: /* report icon label */
 	XtVaGetValues(toplevel, XtNiconName, rtext, NULL);
+	break;
+    case XTWR_21WINDOWLABEL: /* report window label */
+	XtVaGetValues(toplevel, XtNtitle, rtext, NULL);
 	break;
     default:
 	if (!xappres.fixed_size && !(maximized | fullscreen) && !iconic) {

@@ -584,6 +584,14 @@ static bool	cursor_enabled = false;
 
 static bool  held_wrap = false;
 
+#define MAX_TITLES	10
+typedef struct {
+    char *title[MAX_TITLES];	/* saved titles */
+    int index;			/* next stack index */
+    int count;			/* stored count */
+} title_stack_t;
+static title_stack_t icon_stack, window_stack;
+
 static void nvt_scroll(void);
 
 static enum state
@@ -1827,6 +1835,56 @@ clean_text(const char *text)
     return txdFree(copy);
 }
 
+/**
+ * Push a title.
+ * @params[in] opcode		Opcode to pass to the platform to get the current title
+ * @params[in,out] stack	Stack to manipulate
+ */
+static void
+push_title(int opcode, title_stack_t *stack)
+{
+    unsigned short rp1 = 0, rp2 = 0;
+    const char *rtext = NULL;
+
+    /* Get the current title from the platform. */
+    xtwinops(opcode, NULL, NULL, &rp1, &rp2, &rtext);
+
+    /*
+     * Push it on the stack, possibly overwriting the oldest entry.
+     * IMO, this is better than the (probably unintended) xterm behavior that leaves the stack, after
+     * the 11th push, with only one item on the stack instead of ten.
+     */
+    Replace(stack->title[stack->index], NewString(rtext));
+    stack->index = (stack->index + 1) % MAX_TITLES;
+    stack->count = stack->count + 1;
+    if (stack->count > MAX_TITLES) {
+	stack->count = MAX_TITLES;
+    }
+}
+
+/**
+ * Pop a title.
+ * @params[in] opcode		Opcode to pass to the platform to get the current title
+ * @params[in,out] stack	Stack to manipulate
+ */
+static void
+pop_title(int opcode, title_stack_t *stack)
+{
+    if (!stack->count) {
+	return;
+    }
+
+    /* Adjust the count and index. (The index points to the next entry, not the current one.) */
+    stack->count--;
+    stack->index = (stack->index + MAX_TITLES - 1) % MAX_TITLES;
+
+    /* Update the current title on the platform. */
+    xterm_text_gui(opcode, stack->title[stack->index]);
+
+    /* Clear the item on the stack. */
+    Replace(stack->title[stack->index], NULL);
+}
+
 static enum state
 xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 {
@@ -1901,6 +1959,36 @@ xterm_xtwinops(unsigned short ig1 _is_unused, unsigned short ig2 _is_unused)
 	    xtwinops(n[0], NULL, NULL, &rp1, &rp2, &rtext);
 	}
 	net_sends(txAsprintf("\033]%s%s\033\\", n[0] == XTWR_20ICONLABEL? "L": "l", rtext? clean_text(rtext): ""));
+	break;
+    case XTW_22PUSH: /* push title: (0) icon+window (1) icon (2) window */
+    case XTW_23POP:  /* pop title: (0) icon+window (1) icon (2) window */
+	if ((n_present[1] && n[1] > XTW_2XPUSHPOP_2WINDOW) ||  n_present[2]) {
+	    /*
+	     * First parameter is optional. Second parameter (index) is prohibited because I refuse to implement it
+	     * the odd way xterm does.
+	     */
+	      break;
+	}
+	int p1 = n_present[1]? n[1]: XTW_2XPUSHPOP_0ICONWINDOW;
+	if (n[0] == XTW_22PUSH) {
+	    if (p1 == XTW_2XPUSHPOP_0ICONWINDOW || p1 == XTW_2XPUSHPOP_1ICON) {
+		/* Push icon title. */
+		push_title(XTWR_20ICONLABEL, &icon_stack);
+	    }
+	    if (p1 == XTW_2XPUSHPOP_0ICONWINDOW || p1 == XTW_2XPUSHPOP_2WINDOW) {
+		/* Push window title. */
+		push_title(XTWR_21WINDOWLABEL, &window_stack);
+	    }
+	} else {
+	    if (p1 == XTW_2XPUSHPOP_0ICONWINDOW || p1 == XTW_2XPUSHPOP_1ICON) {
+		/* Pop icon title. */
+		pop_title(XTW_2XPUSHPOP_1ICON, &icon_stack);
+	    }
+	    if (p1 == XTW_2XPUSHPOP_0ICONWINDOW || p1 == XTW_2XPUSHPOP_2WINDOW) {
+		/* pop window title. */
+		pop_title(XTW_2XPUSHPOP_2WINDOW, &window_stack);
+	    }
+	}
 	break;
     default:
 	if (n[0] >= defROWS) {

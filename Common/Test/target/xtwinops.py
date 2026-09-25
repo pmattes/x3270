@@ -63,6 +63,8 @@ operations = {
     'screen-size-chars': ('19t', 'Report screen area size in characters', '', True),
     'icon-label': ('20t', 'Report icon label', '', True),
     'window-label': ('21t', 'Report window label', '', True),
+    'push-title': ('22;{0}t', 'Push title both (0) / icon (1) / window (2)', '0/1/2', False),
+    'pop-title': ('23;{0}t', 'Pop title both (0) / icon (1) / window (2)', '0/1/2', False),
 }
 response_csi = re.compile(rb'\033\[([0-9;]*)t')
 response_osc = re.compile(rb'\033\]([Ll])(.*?)\033\\', re.DOTALL)
@@ -189,7 +191,7 @@ class xtwinops(server.server):
         for name, (template, description, _, _) in operations.items():
             opcode = template.split(';', 1)[0].rstrip('t')
             text += f'{opcode.rjust(3)} {name.ljust(width + 1)}{description}\r\n'
-        text += f'{"":3} {quit.ljust(width + 1)}{self.quit_help}\r\n\r\n'
+        text += f'{"":3} {quit.ljust(width + 1)}{self.quit_help}\r\n'
         return text.encode() + prompt
 
     # Remove Telnet commands and return application data.
@@ -264,8 +266,8 @@ class xtwinops(server.server):
 
         template, description, usage, is_report = operations[name]
         argument_count = template.count('{')
-        optional_window_size = name == 'window-size-pixels' and len(fields[1:]) == 0
-        if len(fields[1:]) != argument_count and not optional_window_size:
+        optional_param = name in ('window-size-pixels', 'push-title', 'pop-title') and len(fields[1:]) == 0
+        if len(fields[1:]) != argument_count and not optional_param:
             usage_text = f' {usage}' if usage else ''
             self.conn.send(f'Usage: {name}{usage_text}\r\n'.encode() + prompt)
             return
@@ -275,7 +277,7 @@ class xtwinops(server.server):
             usage_text = f' {usage}' if usage else ''
             self.conn.send(f'Usage: {name}{usage_text}\r\n'.encode() + prompt)
             return
-        sequence = '14t' if optional_window_size else template.format(*parameters)
+        sequence = template.replace(';{0}', '') if optional_param else template.format(*parameters)
         raw_sequence = f'\\033[{sequence}'
 
         self.conn.send(clear_screen + f'XTWINOPS: {description}\r\n'.encode())
