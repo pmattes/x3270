@@ -31,7 +31,13 @@ from unittest.mock import Mock
 
 from ds import decode_address, dinfo, sba_bytes
 from ibm3270ds import aid, command, fa, order
-from tn3270_chinese import build_screen, chinese, poem, required_cgcsgid
+from tn3270_chinese import (
+    build_screen,
+    chinese,
+    encode_cp935,
+    poem,
+    required_cgcsgid,
+)
 
 # Create a minimally initialized page for input-dispatch tests.
 def input_page() -> chinese:
@@ -67,21 +73,22 @@ class ChinesePageTest(unittest.TestCase):
         self.assertEqual(info.parse_query_reply(charset_reply(other)), (True, ''))
         self.assertEqual(info.cgcsgid_dbcs, other)
 
-    # Check highlighting, unmodified poem bytes and lower-right cursor position.
+    # Check CP935 conversion, highlighting and lower-right cursor position.
     def test_build_screen(self):
-        text = b'\x0e\x42\x43\x0f\x25second'
-        screen = build_screen(text, 24, 80)
+        text = '中文\nsecond'
+        encoded = encode_cp935(text)
+        screen = build_screen(encoded, 24, 80)
         self.assertEqual(screen[0], command.erase_write_alternate)
         self.assertIn(sba_bytes(1, 1, 80) + bytes([order.sf, fa.protect | fa.high_sel]), screen)
-        self.assertIn(b'\x0e\x42\x43\x0f', screen)
+        self.assertIn(encode_cp935('中文'), screen)
         self.assertIn(sba_bytes(2, 1, 80) + bytes([order.sf, fa.protect]), screen)
         self.assertIn(sba_bytes(24, 1, 80) + 'F3=END'.encode('cp037'), screen)
         self.assertTrue(screen.endswith(sba_bytes(24, 80, 80) + bytes([order.ic])))
         cursor_address = decode_address(screen[-3:-1])
         self.assertEqual(cursor_address, 24 * 80 - 1)
         self.assertLess(cursor_address, 24 * 80)
-        self.assertTrue(build_screen(poem, 24, 80))
-        larger_screen = build_screen(text, 43, 80)
+        self.assertTrue(build_screen(encode_cp935(poem), 24, 80))
+        larger_screen = build_screen(encode_cp935(text), 43, 80)
         self.assertIn(sba_bytes(43, 1, 80) + 'F3=END'.encode('cp037'), larger_screen)
         self.assertEqual(decode_address(larger_screen[-3:-1]), 43 * 80 - 1)
 

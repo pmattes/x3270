@@ -28,6 +28,7 @@
 # x3270 test target host, Chinese code-page test page.
 
 import re
+import subprocess
 
 from ds import *
 from ibm3270ds import *
@@ -35,25 +36,28 @@ import tn3270
 import tn3270e_proto
 
 required_cgcsgid = 0x04380345
-poem = bytes.fromhex('''
-    0e 4f 4d 4a 67 5c 73 0f 6b 40 0e 56 75 65 99 0f
-    40 4d 0e 44 62 0f e2 96 95 87 40 96 86 40 d9 89
-    a5 85 99 40 c3 89 a3 a8 0e 44 72 0f 6b 40 82 a8
-    40 e2 a4 40 e2 88 89 5d 25 25 0e 55 ad 52 e9 55
-    9b 56 60 51 5d 52 43 52 43 42 6b 49 ba 56 5c 51
-    5f 42 6b 5c 74 52 d0 57 9d 43 41 0f 25 0e 54 47
-    50 ee 4d 62 4c 78 42 6b 57 dd 4a a5 4e 50 53 df
-    51 59 43 41 0f 25 0e 5c 7d 55 b8 58 81 4c 8b 5a
-    46 49 ba 55 b5 42 6b 4a 5e 51 f9 52 87 42 6b 6c
-    7e 54 e6 56 4a 43 41 0f 25 0e 59 b8 50 b3 5a 64
-    52 6e 4d f5 4e 59 58 88 42 6b 58 a0 58 f8 4a af
-    42 6b 5b 9e 55 e0 5c 51 43 41 0f 25 0e 58 81 4d
-    6b 57 dd 59 74 42 6b 57 a8 5a 70 50 e0 54 47 58
-    cf 43 41 0f 25 0e 51 6f 4b 63 52 e9 52 e9 4a 46
-    4b ce 4a a5 42 6b 52 98 5a c1 59 b8 42 6b 4b cb
-    56 69 4c d3 43 41 0f 25
-''')
+poem = '''\
+江城子, 苏轼 (“Song of River City”, by Su Shi)
+
+十年生死两茫茫，不思量，自难忘。
+千里孤坟，无处话凄凉。
+纵使相逢应不识，尘满面，鬓如霜。
+夜来幽梦忽还乡，小轩窗，正梳妆。
+相顾无言，惟有泪千行。
+料得年年肠断处，明月夜，短松冈。
+'''
 linebreak = re.compile(rb'\x0d\x25|\r\n|[\x0a\x0d\x15\x25]')
+
+# Convert editable UTF-8 text to the terminal's CP935 byte stream.
+def encode_cp935(text: str) -> bytes:
+    result = subprocess.run(
+        ['iconv', '-f', 'UTF-8', '-t', 'IBM-935'],
+        input=text.encode('utf-8'),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=True,
+    )
+    return result.stdout
 
 # Split the EBCDIC text into physical screen lines.
 def poem_lines(text: bytes) -> list[bytes]:
@@ -124,10 +128,18 @@ class chinese(tn3270.tn3270_server):
             return
         self.query()
 
-    # Display the embedded poem bytes without transcoding the CP935 content.
+    # Convert and display the UTF-8 poem using CP935.
     def display_poem(self):
         try:
-            screen = build_screen(poem, self.dinfo.alt_rows, self.dinfo.alt_columns)
+            screen = build_screen(encode_cp935(poem), self.dinfo.alt_rows,
+                                  self.dinfo.alt_columns)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            detail = getattr(exc, 'stderr', b'')
+            if detail:
+                detail = detail.decode('utf-8', errors='replace').strip()
+            self.error('chinese', f'Cannot convert poem to CP935: {detail or exc}')
+            self.fail('Unable to convert the UTF-8 poem to EBCDIC 935.')
+            return
         except ValueError as exc:
             self.error('chinese', str(exc))
             self.fail(str(exc))
