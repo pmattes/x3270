@@ -251,10 +251,7 @@ class xtwinops(server.server):
             self.conn.send(prompt)
             return
         if command == quit:
-            if self.switch.is_switched(self.peername):
-                self.switch.revert(self.peername)
-            else:
-                self.conn.close()
+            self.switch.revert(self.peername, self.conn)
             return
 
         fields = command.split()

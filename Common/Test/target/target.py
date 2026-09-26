@@ -201,12 +201,16 @@ class target(aswitch.aswitch):
             return None
         return f'No such service: {other}'
 
-    def revert(self, peername: str):
+    def revert(self, peername: str, conn: socketwrapper.socketwrapper = None) -> str:
         '''Revert to previous type'''
         if self.is_switched(peername):
             self.switch_to[peername] = self.previous_type[peername]
             self.previous_type.pop(peername)
             self.drain[peername] = True
+        elif conn != None:
+            # Not switched, but we have a connection. Close it.
+            self.logger.info(f'target:{peername}: closing connection')
+            conn.close()
 
     def is_switched(self, peername: str) -> bool:
         '''Test for being a switched session'''
