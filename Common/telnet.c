@@ -3105,6 +3105,10 @@ check_in3270(void)
 {
     enum cstate new_cstate = NOT_CONNECTED;
 
+    if (cstate == NOT_CONNECTED) {
+	return;
+    }
+
     if (myopts[TELOPT_TN3270E]) {
 	if (!tn3270e_negotiated) {
 	    new_cstate = CONNECTED_UNBOUND;
@@ -3229,6 +3233,10 @@ static void
 check_linemode(bool init)
 {
     bool wasline = linemode;
+
+    if (cstate == NOT_CONNECTED) {
+	return;
+    }
 
     if (local_process) {
 	linemode = false;
