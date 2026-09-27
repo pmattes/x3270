@@ -269,12 +269,12 @@ class menu_u(tn3270.tn3270_server):
             self.undo()
             self.switch.switch(self.peername, cmd, drain=True)
         else:
-            self.display_menu(to_ebc(no_such(cmd[0:10], b'')))
+            self.display_menu(no_such(cmd[0:10], b''))
 
-    def display_menu(self, errmsg=b''):
+    def display_menu(self, errmsg: Optional[str]=None):
         '''Display the menu with an optional EBCDIC error message'''
-        if errmsg != b'':
-            prompt = to_ascii(errmsg) + self.unformatted_prompt
+        if errmsg:
+            prompt = errmsg + self.unformatted_prompt
             alarm = wcc.sound_alarm
         else:
             prompt = self.unformatted_prompt
@@ -286,11 +286,10 @@ class menu_u(tn3270.tn3270_server):
     def start3270(self) -> bool:
         '''Ready'''
         error = self.switch.take_error(self.peername)
-        errmsg = b''
+        errmsg = None
         if error:
             error_line = error.replace('\r', ' ').replace('\n', ' ') + '\r\n'
-            errmsg = to_ebc(error_line.encode('ascii', errors='replace'),
-                            errors='replace')
+            errmsg = error_line.encode('ascii', errors='replace')
         self.display_menu(errmsg)
         return True
 
