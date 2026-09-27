@@ -219,6 +219,7 @@ class target(aswitch.aswitch):
                 message = error.replace('\r', ' ').replace('\n', ' ')
                 conn.send(message.encode() + b'\r\n')
             self.logger.info(f'target:{peername}: closing connection')
+            time.sleep(0.4)
             conn.close()
 
     # Consume an error message returned to a previous menu.
