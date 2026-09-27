@@ -28,6 +28,7 @@
 import unittest
 from unittest.mock import Mock, call
 
+from ibm3270ds import wcc
 import menu
 from ds import sba_bytes
 from target import target
@@ -136,6 +137,7 @@ class MenuErrorTest(unittest.TestCase):
         error_offset = output.index(error.encode('cp037'))
         prompt_offset = output.index('Press CLEAR, type selection'.encode('cp037'))
         self.assertLess(error_offset, prompt_offset)
+        self.assertEqual(output[1] & wcc.sound_alarm, wcc.sound_alarm)
 
     # Verify existing unformatted-menu validation errors still display.
     def test_unformatted_menu_command_error(self):
@@ -164,6 +166,7 @@ class MenuErrorTest(unittest.TestCase):
         output = page.send_host.call_args.args[0]
         self.assertIn(sba_bytes(21, 1, 80) + error.encode('cp037'), output)
         self.assertIn(sba_bytes(22, 1, 80) + menu.to_ebc(b'==>'), output)
+        self.assertEqual(output[1] & wcc.sound_alarm, wcc.sound_alarm)
 
 if __name__ == '__main__':
     unittest.main()
