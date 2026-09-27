@@ -322,20 +322,20 @@ class echo_server(server.server):
     desc = 'Simple echo server'
 
 servers = {
+    'apl': tn3270_apl.apl,
+    'chars': tn3270_chars.chars,
+    'chinese': tn3270_chinese.chinese,
     'color': tn3270_colortest.colortest,
     'echo': echo_server,
     'ibmlink': tn3270_ibmlink.ibmlink,
-    'menu-t': menu.menu_t,
     'menu-f': menu.menu_f,
     'menu-n': menu.menu_n,
     'menu-s': menu.menu_s,
+    'menu-t': menu.menu_t,
     'menu-u': menu.menu_u,
     'snake': tn3270_snake.snake,
     'sruvm': tn3270_sruvm.sruvm,
     'uvvm': tn3270_uvvm.uvvm,
-    'apl': tn3270_apl.apl,
-    'chars': tn3270_chars.chars,
-    'chinese': tn3270_chinese.chinese,
     'xtwinops': xtwinops.xtwinops
 }
 

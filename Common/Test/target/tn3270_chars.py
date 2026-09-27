@@ -72,8 +72,8 @@ def build_screen(graphic_escape: bool, numeric_order: bool = False) -> bytes:
             ret += bytes([0x40, 0x40])
 
     ret += sba_bytes(23, 80, 80) + bytes([order.sf, fa.protect])
-    f8 = 'NORMAL' if graphic_escape else 'GE    '
-    ret += _ebcdic(f'F3=END     F8={f8} F9=ORIENTATION')
+    f4 = 'NORMAL' if graphic_escape else 'GE    '
+    ret += _ebcdic(f'F3=END     F4={f4} F5=ORIENTATION')
     ret += sba_bytes(24, 80, 80) + bytes([order.ic])
     return ret
 
@@ -98,10 +98,10 @@ class chars(tn3270.tn3270_server):
             self.homescreen()
             return
         match data[0]:
-            case aid.PF8.value:
+            case aid.PF4.value:
                 self.graphic_escape = not self.graphic_escape
                 self.homescreen()
-            case aid.PF9.value:
+            case aid.PF5.value:
                 self.numeric_order = not self.numeric_order
                 self.homescreen()
             case aid.PF3.value:
