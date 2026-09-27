@@ -28,6 +28,7 @@
 # x3270 test target host, menu.
 
 import logging
+from typing import Optional
 
 import aswitch
 from ds import *
@@ -43,7 +44,8 @@ default_prompt = '==> '.encode()
 no_such_msg = 'No such service'
 quit = 'quit'
 
-def get_menu(kind: str, switch: aswitch.aswitch, prompt=default_prompt) -> bytes:
+def get_menu(kind: str, switch: aswitch.aswitch, prompt=default_prompt,
+             error: Optional[str] = None) -> bytes:
     '''Create the menu'''
     ret = f'{title} ({kind})\r\n\r\n'
     servers = switch.list()
@@ -54,6 +56,8 @@ def get_menu(kind: str, switch: aswitch.aswitch, prompt=default_prompt) -> bytes
             ret += servers[server]
         ret += '\r\n'
     ret += ' ' + quit.ljust(mx + 2) + 'Disconnect from test target\r\n\r\n'
+    if error:
+        ret += error.replace('\r', ' ').replace('\n', ' ') + '\r\n'
     return ret.encode() + prompt
 
 def clean(b: bytes):
@@ -66,10 +70,10 @@ def no_such(cmd: str, prompt=default_prompt) -> bytes:
     '''Build 'no such command' error message'''
     return f'{no_such_msg}: {cmd}\r\n'.encode() + prompt
 
-def to_ebc(b: bytes) -> bytes:
+def to_ebc(b: bytes, errors: str = 'strict') -> bytes:
     '''Convert ASCII to EBCDIC'''
     # Slight funkiness: U+0085 (NEL) becomes EBCDIC X'15' (NL).
-    return b.decode().replace('\r\n', '\x85').encode('cp037')
+    return b.decode().replace('\r\n', '\x85').encode('cp037', errors=errors)
 
 def to_ascii(b: bytes):
     '''Convert EBCDIC to ASCII'''
@@ -126,7 +130,8 @@ class menu_t(server.server):
 
     def ready(self) -> bool:
         '''Ready'''
-        self.conn.send(get_menu('plain TELNET', self.switch))
+        self.conn.send(get_menu('plain TELNET', self.switch,
+                                error=self.switch.take_error(self.peername)))
         return True
 
 class menu_n(tn3270.tn3270_server):
@@ -169,7 +174,9 @@ class menu_n(tn3270.tn3270_server):
 
     def start3270(self) -> bool:
         '''Ready'''
-        self.send_host(get_menu('TN3270E NVT mode', self.switch), tn3270e_proto.data_type.nvt_data)
+        self.send_host(get_menu('TN3270E NVT mode', self.switch,
+                                error=self.switch.take_error(self.peername)),
+                       tn3270e_proto.data_type.nvt_data)
         return True
 
 class menu_s(tn3270.tn3270_server):
@@ -211,7 +218,10 @@ class menu_s(tn3270.tn3270_server):
 
     def start3270(self) -> bool:
         '''Ready'''
-        self.send_host(to_ebc(get_menu('TN3270E SSCP-LU mode', self.switch)), tn3270e_proto.data_type.sscp_lu_data)
+        self.send_host(to_ebc(get_menu('TN3270E SSCP-LU mode', self.switch,
+                                       error=self.switch.take_error(self.peername)),
+                              errors='replace'),
+                       tn3270e_proto.data_type.sscp_lu_data)
         return True
 
 class menu_u(tn3270.tn3270_server):
@@ -259,12 +269,12 @@ class menu_u(tn3270.tn3270_server):
             self.undo()
             self.switch.switch(self.peername, cmd, drain=True)
         else:
-            self.display_menu(no_such(cmd[0:10], b''))
+            self.display_menu(to_ebc(no_such(cmd[0:10], b'')))
 
     def display_menu(self, errmsg=b''):
-        '''Display the menu with an optional error message'''
+        '''Display the menu with an optional EBCDIC error message'''
         if errmsg != b'':
-            prompt = errmsg + self.unformatted_prompt
+            prompt = to_ascii(errmsg) + self.unformatted_prompt
             alarm = wcc.sound_alarm
         else:
             prompt = self.unformatted_prompt
@@ -275,7 +285,13 @@ class menu_u(tn3270.tn3270_server):
 
     def start3270(self) -> bool:
         '''Ready'''
-        self.display_menu()
+        error = self.switch.take_error(self.peername)
+        errmsg = b''
+        if error:
+            error_line = error.replace('\r', ' ').replace('\n', ' ') + '\r\n'
+            errmsg = to_ebc(error_line.encode('ascii', errors='replace'),
+                            errors='replace')
+        self.display_menu(errmsg)
         return True
 
 class menu_f(tn3270.tn3270_server):
@@ -314,7 +330,7 @@ class menu_f(tn3270.tn3270_server):
         self.enter(b)
 
     def display_menu(self, errmsg=b''):
-        '''Display the menu with an optional error message'''
+        '''Display the menu with an optional EBCDIC error message'''
         if errmsg != b'':
             alarm = wcc.sound_alarm
         else:
@@ -330,7 +346,12 @@ class menu_f(tn3270.tn3270_server):
 
     def start3270(self) -> bool:
         '''Ready'''
-        self.display_menu()
+        error = self.switch.take_error(self.peername)
+        errmsg = b''
+        if error:
+            error_line = error.replace('\r', ' ').replace('\n', ' ')
+            errmsg = self.dbtrunc(to_ebc(error_line.encode(), errors='replace'), 80)
+        self.display_menu(errmsg)
         return True
 
     def dbtrunc(self, text: bytes, length: int):

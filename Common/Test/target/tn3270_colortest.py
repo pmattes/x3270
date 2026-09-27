@@ -27,6 +27,8 @@
 #
 # x3270 test target host, color test.
 
+from typing import Optional
+
 from ds import *
 from ibm3270ds import *
 import tn3270
@@ -62,8 +64,7 @@ class colortest(tn3270.tn3270_server):
                     self.rows = self.dinfo.alt_rows
                     self.columns = self.dinfo.alt_columns
                     if self.rows < 43 or self.columns < 80:
-                        self.send_host(bytes([command.erase_write, 0xc7]) + 'Need 43 rows x 80 columns at minimum.'.encode('cp037') + bytes([order.sf, fa.protect, order.ic]))
-                        self.hangup()
+                        self.hangup('Need 43 rows x 80 columns at minimum.')
                         return
                     self.query_done()
                 else:
@@ -71,8 +72,8 @@ class colortest(tn3270.tn3270_server):
             case _:
                 self.homescreen(self.inv, self.ea)
 
-    def tnError(self, ttype: str) -> str:
-        '''Check for valid terminal type, retuyrn error message'''
+    def tnError(self, ttype: str) -> Optional[str]:
+        '''Check for valid terminal type, return error message'''
         if ttype == 'IBM-DYNAMIC':
             return None
         if ttype.startswith('IBM-327') and ttype.endswith('-E'):
@@ -84,8 +85,7 @@ class colortest(tn3270.tn3270_server):
         self.debug('color', f'ttype is {self.dinfo.ttype}')
         err = self.tnError(self.dinfo.ttype)
         if err != None:
-            self.send_host(bytes([command.erase_write, 0xc7]) + err.encode('cp037') + bytes([order.sf, fa.protect, order.ic]))
-            self.hangup()
+            self.hangup(err)
             return
         if self.dinfo.extended:
             self.query()
@@ -160,5 +160,3 @@ class colortest(tn3270.tn3270_server):
         ret += sba_bytes(self.rows - 2, self.columns - 21, self.columns) + f'EA:  {ea}'.encode('cp037')
         ret += sba_bytes(self.rows, self.columns - 21, self.columns) + 'F1=INV  F2=EA  F3=END'.encode('cp037')
         return ret
-
-

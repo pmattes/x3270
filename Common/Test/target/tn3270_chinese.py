@@ -88,16 +88,6 @@ def build_screen(text: bytes, rows: int, columns: int) -> bytes:
     ret += sba_bytes(rows, columns, columns) + bytes([order.ic])
     return ret
 
-# Build an explanatory screen before returning to the caller.
-def build_error_screen(message: str, rows: int, columns: int,
-                       alternate: bool = False) -> bytes:
-    write_command = command.erase_write_alternate if alternate else command.erase_write
-    ret = bytes([write_command, wcc.keyboard_restore | wcc.reset])
-    ret += sba_bytes(1, 1, columns) + bytes([order.sf, fa.protect | fa.high_sel])
-    ret += message[:columns - 1].encode('cp037')
-    ret += sba_bytes(rows, columns, columns) + bytes([order.ic])
-    return ret
-
 class chinese(tn3270.tn3270_server):
     '''TN3270 protocol server for displaying a CP935 Chinese poem.'''
 
@@ -149,7 +139,4 @@ class chinese(tn3270.tn3270_server):
     # Display a failure message and return to the calling menu.
     def fail(self, message: str):
         self.warning('chinese', message)
-        rows = max(self.dinfo.alt_rows, 2)
-        columns = max(self.dinfo.alt_columns, 8)
-        self.send_host(build_error_screen(message, rows, columns, self.dinfo.extended))
-        self.hangup()
+        self.hangup(message)

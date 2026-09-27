@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2023 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 
 import logging
 import socketwrapper
+from typing import Optional
 
 import aswitch
 import consumer
@@ -223,13 +224,16 @@ class ttelnet():
             if opt != telopt.STARTTLS:
                 self.send_wont(opt.real)
 
-    def hangup(self):
+    def hangup(self, error: Optional[str] = None):
         '''Hang up the connection'''
         if self.switch.is_switched(self.peername):
             self.debug('TELNET', 'hangup when switched')
             # Send DONT/WONT for everything but STARTTLS.
             self.undo()
-            self.switch.revert(self.peername)
+            self.switch.revert(self.peername, error=error)
+        elif error is not None:
+            self.undo()
+            self.switch.revert(self.peername, self.conn, error=error)
         else:
             self.conn.close()
 

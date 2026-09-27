@@ -36,7 +36,7 @@ import socket
 import threading
 import time
 import traceback
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import aswitch
 import menu
@@ -99,6 +99,7 @@ class target(aswitch.aswitch):
     active_type = {}    # Current type
     previous_type = {}  # Previous type
     drain = {}          # True if switching requires an input drain step
+    return_error = {}   # Error to display after returning to a menu
 
     # Initialization.
     def __init__(self, port: int, opts: Dict[str, Any]):
@@ -191,7 +192,7 @@ class target(aswitch.aswitch):
             ret[server] = servers[server].__doc__
         return ret
 
-    def switch(self, peername: str, other: str, drain=False) -> str:
+    def switch(self, peername: str, other: str, drain=False) -> Optional[str]:
         '''Switch to a new server'''
         if other in servers:
             self.switch_to[peername] = other
@@ -201,16 +202,29 @@ class target(aswitch.aswitch):
             return None
         return f'No such service: {other}'
 
-    def revert(self, peername: str, conn: socketwrapper.socketwrapper = None) -> str:
-        '''Revert to previous type'''
+    def revert(self, peername: str, conn: socketwrapper.socketwrapper = None,
+               error: Optional[str] = None) -> Optional[str]:
+        '''Revert, returning an error to a menu or sending it before closing'''
         if self.is_switched(peername):
             self.switch_to[peername] = self.previous_type[peername]
             self.previous_type.pop(peername)
             self.drain[peername] = True
+            if error:
+                self.return_error[peername] = error
+            else:
+                self.return_error.pop(peername, None)
         elif conn != None:
             # Not switched, but we have a connection. Close it.
+            if error:
+                message = error.replace('\r', ' ').replace('\n', ' ')
+                conn.send(message.encode() + b'\r\n')
             self.logger.info(f'target:{peername}: closing connection')
             conn.close()
+
+    # Consume an error message returned to a previous menu.
+    def take_error(self, peername: str) -> Optional[str]:
+        '''Take a pending error message for a peer'''
+        return self.return_error.pop(peername, None)
 
     def is_switched(self, peername: str) -> bool:
         '''Test for being a switched session'''
@@ -283,6 +297,7 @@ class target(aswitch.aswitch):
         self.active_type.pop(peername)
         if peername in self.previous_type:
             self.previous_type.pop(peername)
+        self.return_error.pop(peername, None)
         self.logger.info(f'target:{peername} done')
 
 # Trivial echo server.

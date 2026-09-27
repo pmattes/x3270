@@ -104,6 +104,29 @@ class ChinesePageTest(unittest.TestCase):
         page.rcv_data_cooked(bytes([aid.PF3]))
         page.hangup.assert_called_once_with()
 
+    # Return startup failures through the menu error handoff, not a 3270 screen.
+    def test_startup_failure_returns_to_menu(self):
+        page = input_page()
+        page.dinfo = SimpleNamespace(extended=False)
+        page.fail = Mock()
+
+        page.start3270()
+
+        page.fail.assert_called_once_with(
+            'This page requires an extended terminal with DBCS CGCSGID '
+            '0x04380345.')
+
+    # Report runtime charset failures through the error handoff.
+    def test_fail_uses_error_handoff(self):
+        page = input_page()
+        page.warning = Mock()
+        page.hangup = Mock()
+
+        page.fail('Unsupported terminal')
+
+        page.warning.assert_called_once_with('chinese', 'Unsupported terminal')
+        page.hangup.assert_called_once_with('Unsupported terminal')
+
     # Reject a terminal that reports a different DBCS CGCSGID.
     def test_reject_wrong_cgcsgid(self):
         page = input_page()

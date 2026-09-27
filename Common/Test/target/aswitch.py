@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2023 Paul Mattes.
+# Copyright (c) 2023-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 # x3270 test target host, abstracted switch interface.
 
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Optional
 
 class aswitch(ABC):
     '''Abstract switch class'''
@@ -45,6 +45,11 @@ class aswitch(ABC):
         '''Check for switch operation'''
         pass
     @abstractmethod
-    def revert(peername: str):
+    def revert(peername: str, conn=None, error: Optional[str] = None):
         '''Revert to base type'''
+        pass
+    # Consume an error message returned to a previous menu.
+    @abstractmethod
+    def take_error(peername: str) -> Optional[str]:
+        '''Take a pending error message for a peer'''
         pass
