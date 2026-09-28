@@ -52,7 +52,7 @@ operations = {
     'lower': ('6t', 'Lower window', '', False),
     'refresh': ('7t', 'Refresh window', '', False),
     'resize-chars': ('8;{0};{1}t', 'Resize window in characters (height width)', 'height width', False),
-    'maximize': ('9;{0}t', 'Window restore (0) / maximize (2)', '0/2', False),
+    'maximize': ('9;{0}t', 'Window restore (0) / maximize (1)', '0/1', False),
     'fullscreen': ('10;{0}t', 'Window restore (0) / fullscreen (1) / toggle (2)', '0/1/2', False),
     'window-state': ('11t', 'Report window state', '', True),
     'window-position': ('13t', 'Report window position', '', True),
