@@ -98,7 +98,7 @@ def expand_newlines(text: bytes) -> bytes:
                 col = 1
     return bytes(ret)
 
-class menu_t(server.server):
+class menu_t(server.server, server.nvt_cooked):
     '''Menu using plain TELNET'''
 
     def __init__(self, conn: socketwrapper.socketwrapper, logger: logging.Logger, peername: str, tls: bool, switch: aswitch.aswitch, opts: oopts.oopts):
@@ -106,7 +106,7 @@ class menu_t(server.server):
         self.conn = conn
         self.peername = peername
         self.switch = switch
-        pass
+        self.init_nvt_cooked()
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -116,6 +116,10 @@ class menu_t(server.server):
 
     def process(self, b: bytes):
         '''Process data'''
+        self.process_nvt_cooked(b, self.process_command)
+
+    # Process a complete NVT command.
+    def process_command(self, b: bytes):
         cmd = clean(b)
         if cmd == '':
             self.conn.send(default_prompt)

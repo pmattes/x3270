@@ -30,8 +30,10 @@ from unittest.mock import Mock, call
 
 from ibm3270ds import wcc
 import menu
+import xtwinops
 from ds import sba_bytes
 from target import target
+from telnet_proto import telcmd, telopt
 from tn3270e_proto import data_type
 
 error = 'Unable to start test item'
@@ -167,6 +169,115 @@ class MenuErrorTest(unittest.TestCase):
         self.assertIn(sba_bytes(21, 1, 80) + error.encode('cp037'), output)
         self.assertIn(sba_bytes(22, 1, 80) + menu.to_ebc(b'==>'), output)
         self.assertEqual(output[1] & wcc.sound_alarm, wcc.sound_alarm)
+
+class NvtCookedInputTest(unittest.TestCase):
+    # Create a plain-TELNET menu page.
+    def menu_page(self):
+        conn = Mock()
+        switch = Mock()
+        switch.list.return_value = {'xtwinops': 'XTWINOPS'}
+        return menu.menu_t(conn, None, 'peer', False, switch, None), conn, switch
+
+    # Create an XTWINOPS page.
+    def xtwinops_page(self):
+        conn = Mock()
+        switch = Mock()
+        switch.is_switched.return_value = False
+        return xtwinops.xtwinops(conn, None, 'peer', False, switch, None), conn
+
+    # Verify menu commands wait for fragmented input and a terminator.
+    def test_menu_fragmented_command(self):
+        page, conn, switch = self.menu_page()
+
+        page.process(b'xt')
+        page.process(b'winops')
+        conn.send.assert_not_called()
+        switch.switch.assert_not_called()
+        page.process(b'\r\n')
+
+        switch.switch.assert_called_once_with('peer', 'xtwinops')
+        conn.send.assert_not_called()
+
+    # Verify CR, LF and CRLF delimit commands with no duplicate CRLF command.
+    def test_xtwinops_terminators(self):
+        page, _, = self.xtwinops_page()
+        page.process_command = Mock()
+
+        page.process(b'one\r')
+        page.process(b'\ntwo\nthree\r\n')
+        page.process(b'\r\n')
+
+        self.assertEqual(page.process_command.call_args_list,
+                         [call(b'one'), call(b'two'), call(b'three'), call(b'')])
+
+    # Verify backspace deletes a character, including from an empty line.
+    def test_xtwinops_backspace(self):
+        page, conn = self.xtwinops_page()
+        page.process_command = Mock()
+
+        page.process(b'ab\x08c\r')
+        page.process(b'\x08\r')
+
+        self.assertEqual(page.process_command.call_args_list, [call(b'ac'), call(b'')])
+        conn.send.assert_not_called()
+
+    # Verify kill-line clears a line, including an already empty line.
+    def test_xtwinops_kill_line(self):
+        page, conn = self.xtwinops_page()
+        page.process_command = Mock()
+
+        page.process(b'ab\x15\r')
+        page.process(b'\x15\r')
+
+        self.assertEqual(page.process_command.call_args_list, [call(b''), call(b'')])
+        conn.send.assert_not_called()
+
+    # Verify rprnt retransmits the editable pending line.
+    def test_xtwinops_rprnt(self):
+        page, conn = self.xtwinops_page()
+        page.process_command = Mock()
+
+        page.process(b'ab\x12c\r')
+
+        conn.send.assert_called_once_with(b'\r\nab')
+        page.process_command.assert_called_once_with(b'abc')
+
+    # Verify XTWINOPS commands are dispatched only after their terminator.
+    def test_xtwinops_command_dispatch(self):
+        page, _ = self.xtwinops_page()
+        page.process_command = Mock()
+
+        page.process(b'iconify')
+        page.process(b'\n')
+
+        page.process_command.assert_called_once_with(b'iconify')
+
+    # Verify normal mode undoes the character-mode negotiation.
+    def test_xtwinops_normal_mode(self):
+        page, conn = self.xtwinops_page()
+
+        page.enter_normal_mode()
+
+        conn.send.assert_called_once_with(bytes([
+            int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO),
+            int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA),
+        ]))
+
+    # Verify a report timeout restores normal TELNET mode.
+    def test_xtwinops_timeout_restores_normal_mode(self):
+        page, conn = self.xtwinops_page()
+        page.enter_character_mode = Mock()
+        page.wait_for_response = Mock(return_value=None)
+
+        page.process_command(b'window-state')
+
+        report = call.send(b'\033[11t')
+        normal = call.send(bytes([
+            int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO),
+            int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA),
+        ]))
+        self.assertLess(conn.mock_calls.index(report), conn.mock_calls.index(normal))
+        page.wait_for_response.assert_called_once_with('window-state')
 
 if __name__ == '__main__':
     unittest.main()

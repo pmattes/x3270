@@ -144,7 +144,7 @@ def response_text(data: bytes, operation: str) -> Optional[str]:
         return f'\r\nResponse: {raw}\r\n {kind} "{label}"'
     return None
 
-class xtwinops(server.server):
+class xtwinops(server.server, server.nvt_cooked):
     '''XTWINOPS test page using plain NVT mode'''
 
     # Initialize the page.
@@ -160,7 +160,7 @@ class xtwinops(server.server):
         self.telnet_command = None
         self.telnet_options = []
         self.pending_data = bytearray()
-        self.ignore_lf = False
+        self.init_nvt_cooked()
         self.quit_help = ('Return to previous menu'
                           if self.switch.is_switched(self.peername)
                           else 'Disconnect from test target')
@@ -228,8 +228,7 @@ class xtwinops(server.server):
     # Wait for the client's response to character-mode negotiation.
     def enter_character_mode(self):
         self.telnet_options = []
-        self.conn.send(bytes([int(telcmd.IAC), int(telcmd.WILL), int(telopt.ECHO),
-                              int(telcmd.IAC), int(telcmd.WILL), int(telopt.SGA)]))
+        self.conn.send(self.character_mode_options(telcmd.WILL))
         deadline = time.monotonic() + 2.0
         while time.monotonic() < deadline:
             readable, _, _ = select.select([self.conn], [], [],
@@ -243,6 +242,15 @@ class xtwinops(server.server):
                     and (int(telcmd.DO), int(telopt.SGA)) in self.telnet_options):
                 return True
         return False
+
+    # Generate the TELNET options for entering or leaving character mode.
+    def character_mode_options(self, command: telcmd) -> bytes:
+        return bytes([int(telcmd.IAC), int(command), int(telopt.ECHO),
+                      int(telcmd.IAC), int(command), int(telopt.SGA)])
+
+    # Return the client to the normal line-mode option state.
+    def enter_normal_mode(self):
+        self.conn.send(self.character_mode_options(telcmd.WONT))
 
     # Process a complete user command.
     def process_command(self, data: bytes):
@@ -293,11 +301,12 @@ class xtwinops(server.server):
 
         # Temporarily switch the terminal to character-at-a-time mode so the
         # report can arrive without waiting for an input line.
-        self.enter_character_mode()
-        self.conn.send(f'\033[{sequence}'.encode())
-        result = self.wait_for_response(name)
-        self.conn.send(bytes([int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO),
-                              int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA)]))
+        try:
+            self.enter_character_mode()
+            self.conn.send(f'\033[{sequence}'.encode())
+            result = self.wait_for_response(name)
+        finally:
+            self.enter_normal_mode()
         self.conn.send(clear_screen)
         self.conn.send(f'XTWINOPS: {description}\r\n'.encode())
         self.conn.send(f'Parameters: {" ".join(fields[1:]) or "(none)"}\r\n'.encode())
@@ -335,17 +344,14 @@ class xtwinops(server.server):
         application_data = self.telnet_data(data)
         if self.awaiting_enter:
             for byte in application_data:
-                if self.ignore_lf and byte == ord('\n'):
-                    self.ignore_lf = False
+                if self.nvt_ignore_lf and byte == ord('\n'):
+                    self.nvt_ignore_lf = False
                     continue
                 if byte in (ord('\r'), ord('\n')):
                     self.awaiting_enter = False
-                    self.ignore_lf = byte == ord('\r')
+                    self.nvt_ignore_lf = byte == ord('\r')
                     self.conn.send(self.menu_text())
             return
 
-        if self.ignore_lf:
-            application_data = application_data.lstrip(b'\n')
-            self.ignore_lf = False
         if application_data != b'':
-            self.process_command(application_data)
+            self.process_nvt_cooked(application_data, self.process_command)
