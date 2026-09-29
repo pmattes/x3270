@@ -1108,7 +1108,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	bool found = false;
 
 	for (i = 0; i < r->count && !found; i++) {
-	    if (!strncasecmp(r->resources[i].name, name, rnlen)) {
+	    if (!strncasecmp(r->resources[i].name, name, rnlen) && r->resources[i].name[rnlen] == '\0') {
 		address = r->resources[i].address;
 		type = r->resources[i].type;
 		found = true;
@@ -1122,7 +1122,7 @@ xparse_xrm(const char *arg, const char *where, bool warn)
 	    if (!toggle_supported(toggle_names[i].index)) {
 		continue;
 	    }
-	    if (!strncasecmp(toggle_names[i].name, name, rnlen)) {
+	    if (!strncasecmp(toggle_names[i].name, name, rnlen) && toggle_names[i].name[rnlen] == '\0') {
 		address = &appres.toggle[toggle_names[i].index];
 		type = XRM_BOOLEAN;
 		break;
