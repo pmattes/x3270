@@ -7,7 +7,7 @@ Comment headers
  - All new C functions need to have Doxygen-style comment headers.
  - All new Python functions need to have a simple comment header, which can just be a single line '#' comment.
 Running ./configure and building
- - Before committing a change, Tools/config-both and Tools/make-both should be run to ensure that both Linux and Windows builds still work.
+ - Before committing a change, Tools/config-both and Tools/make-both should be run to ensure that both Linux and Windows builds still work. This is not needed for changes that only affect unit tests or test fixtures (changes that are all under a Test/ directory).
 Code formatting and C standards
  - The code was originally written with a strict 80-column line size. This has since been relaxed to 132 columns.
  - Use of C99 features is permitted, including inline declarations.
