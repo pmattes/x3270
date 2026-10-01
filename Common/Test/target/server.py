@@ -36,33 +36,3 @@ class server(ABC):
         pass
     def process(self, b: bytes):
         pass
-
-class nvt_cooked:
-    '''Cook NVT input a line at a time.'''
-
-    # Initialize NVT line editing state.
-    def init_nvt_cooked(self):
-        self.nvt_line = bytearray()
-        self.nvt_ignore_lf = False
-
-    # Process NVT input and call command for each completed line.
-    def process_nvt_cooked(self, data: bytes, command):
-        for byte in data:
-            if self.nvt_ignore_lf:
-                self.nvt_ignore_lf = False
-                if byte == ord('\n'):
-                    continue
-
-            if byte in (ord('\r'), ord('\n')):
-                command(bytes(self.nvt_line))
-                self.nvt_line.clear()
-                self.nvt_ignore_lf = byte == ord('\r')
-            elif byte == 0x08:
-                if self.nvt_line:
-                    self.nvt_line.pop()
-            elif byte == 0x15:
-                self.nvt_line.clear()
-            elif byte == 0x12:
-                self.conn.send(b'\r\n' + bytes(self.nvt_line))
-            else:
-                self.nvt_line.append(byte)

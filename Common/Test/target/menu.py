@@ -31,13 +31,16 @@ import logging
 from typing import Optional
 
 import aswitch
+import consumer
 from ds import *
 from ibm3270ds import *
 import oopts
 import server
 import socketwrapper
+from telnet_proto import telcmd, telopt
 import tn3270
 import tn3270e_proto
+from ttelnet import ttelnet
 
 title = 'x3270 test target'
 default_prompt = '==> '.encode()
@@ -98,15 +101,13 @@ def expand_newlines(text: bytes) -> bytes:
                 col = 1
     return bytes(ret)
 
-class menu_t(server.server, server.nvt_cooked):
+class menu_t(ttelnet, server.server, consumer.consumer):
     '''Menu using plain TELNET'''
 
     def __init__(self, conn: socketwrapper.socketwrapper, logger: logging.Logger, peername: str, tls: bool, switch: aswitch.aswitch, opts: oopts.oopts):
         '''Initialize'''
-        self.conn = conn
-        self.peername = peername
-        self.switch = switch
-        self.init_nvt_cooked()
+        super().__init__(conn, logger, peername, self, switch)
+        self.set_cooked_input(True)
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -114,12 +115,8 @@ class menu_t(server.server, server.nvt_cooked):
     def __del__(self):
         pass
 
-    def process(self, b: bytes):
-        '''Process data'''
-        self.process_nvt_cooked(b, self.process_command)
-
     # Process a complete NVT command.
-    def process_command(self, b: bytes):
+    def rcv_data(self, b: bytes):
         cmd = clean(b)
         if cmd == '':
             self.conn.send(default_prompt)
@@ -131,6 +128,30 @@ class menu_t(server.server, server.nvt_cooked):
             self.switch.switch(self.peername, cmd)
         else:
             self.conn.send(no_such(cmd))
+
+    # Reject unsolicited TELNET options.
+    def rcv_will(self, option: telopt) -> bool:
+        return False
+
+    # Accept notification that a TELNET option was disabled.
+    def rcv_wont(self, option: telopt) -> bool:
+        return True
+
+    # Reject unsolicited TELNET options.
+    def rcv_do(self, option: telopt) -> bool:
+        return False
+
+    # Accept notification that a TELNET option was disabled.
+    def rcv_dont(self, option: telopt) -> bool:
+        return True
+
+    # Ignore TELNET subnegotiation.
+    def rcv_sb(self, option: telopt, data: bytes):
+        pass
+
+    # Ignore TELNET commands.
+    def rcv_cmd(self, cmd: telcmd):
+        pass
 
     def ready(self) -> bool:
         '''Ready'''

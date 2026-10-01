@@ -49,7 +49,11 @@ class ttelnet():
         self.state = tn_state.DATA
         self.linebuf = []       # accumulated bytes of input data
         self.myopts = []        # my options (telopt)
+        self.myopts_acked = []  # my options acknowledged by the client
         self.theiropts = []     # their options (telopt)
+        self.cooked_input = False
+        self.cooked_line = bytearray()
+        self.cooked_ignore_lf = False
 
     def __enter__(self):
         return self
@@ -84,14 +88,14 @@ class ttelnet():
                         continue
                     self.linebuf.append(byte)
                     if not telopt.EOR in self.myopts and not telopt.TN3270E in self.theiropts:
-                        self.consumer.rcv_data(bytes(self.linebuf))
+                        self.deliver_data(bytes(self.linebuf))
                         self.linebuf.clear()
                 case tn_state.IAC:
                     match ftie(byte, telcmd):
                         case telcmd.IAC:
                             self.linebuf.append(byte)
                             if not telopt.EOR in self.myopts and not telopt.TN3270E in self.theiropts:
-                                self.consumer.rcv_data(bytes(self.linebuf))
+                                self.deliver_data(bytes(self.linebuf))
                                 self.linebuf.clear()
                             self.state = tn_state.DATA
                         case telcmd.DONT:
@@ -106,11 +110,12 @@ class ttelnet():
                             self.state = tn_state.SB
                         case telcmd.EOR:
                             if telopt.EOR in self.myopts or telopt.TN3270E in self.theiropts:
-                                self.consumer.rcv_data(bytes(self.linebuf))
+                                self.deliver_data(bytes(self.linebuf))
                                 self.linebuf.clear()
                             self.state = tn_state.DATA
                         case _:
-                            pass
+                            self.consumer.rcv_cmd(ftie(byte, telcmd))
+                            self.state = tn_state.DATA
                 case tn_state.WILL:
                     opt = ftie(byte, telopt)
                     self.debug('TELNET', f'got WILL {opt.name}')
@@ -132,9 +137,13 @@ class ttelnet():
                 case tn_state.DO:
                     opt = ftie(byte, telopt)
                     self.debug('TELNET', f'got DO {opt.name}')
-                    if not opt in self.myopts:
+                    if opt in self.myopts:
+                        if not opt in self.myopts_acked:
+                            self.myopts_acked.append(opt)
+                    else:
                         if opt != telopt.TM and self.consumer.rcv_do(opt):
                             self.myopts.append(opt)
+                            self.myopts_acked.append(opt)
                             self.send_raw(bytes([int(telcmd.IAC), int(telcmd.WILL), byte]))
                             self.debug('TELNET', f'sent WILL {opt.name}')
                         else:
@@ -146,6 +155,8 @@ class ttelnet():
                     self.debug('TELNET', f'got DONT {opt.name}')
                     if opt in self.myopts:
                         self.myopts.remove(opt)
+                        if opt in self.myopts_acked:
+                            self.myopts_acked.remove(opt)
                         if self.consumer.rcv_dont(opt):
                             self.send_raw(bytes([int(telcmd.IAC), int(telcmd.WONT), byte]))
                             self.debug('TELNET', f'sent WONT {opt.name}')
@@ -166,6 +177,50 @@ class ttelnet():
                         self.linebuf.append(byte)
                         self.state = tn_state.SB
 
+    # Deliver application data, optionally cooking NVT input into lines.
+    def deliver_data(self, data: bytes):
+        if not self.cooked_input:
+            self.consumer.rcv_data(data)
+            return
+        for byte in data:
+            if self.cooked_ignore_lf:
+                self.cooked_ignore_lf = False
+                if byte == ord('\n'):
+                    continue
+            if byte in (ord('\r'), ord('\n')):
+                self.consumer.rcv_data(bytes(self.cooked_line))
+                self.cooked_line.clear()
+                self.cooked_ignore_lf = byte == ord('\r')
+            elif byte == 0x08:
+                if self.cooked_line:
+                    self.cooked_line.pop()
+            elif byte == 0x15:
+                self.cooked_line.clear()
+            elif byte == 0x12:
+                self.send_data(b'\r\n' + bytes(self.cooked_line))
+            else:
+                self.cooked_line.append(byte)
+
+    # Enable or disable cooked NVT input.
+    def set_cooked_input(self, enabled: bool):
+        self.cooked_input = enabled
+        self.cooked_line.clear()
+        self.cooked_ignore_lf = False
+
+    # Temporarily enable character-at-a-time terminal input.
+    def enter_character_mode(self):
+        self.send_will(telopt.ECHO)
+        self.send_will(telopt.SGA)
+
+    # Restore normal terminal input mode.
+    def enter_normal_mode(self):
+        self.send_wont(telopt.ECHO)
+        self.send_wont(telopt.SGA)
+
+    # Return whether the client acknowledged character-at-a-time input.
+    def character_mode_acked(self) -> bool:
+        return telopt.ECHO in self.myopts_acked and telopt.SGA in self.myopts_acked
+
     def send_will(self, opt: telopt):
         '''Tell client we will do an option'''
         if not ftie(opt) in self.myopts:
@@ -177,6 +232,8 @@ class ttelnet():
         '''Tell client we won't do an option'''
         if ftie(opt) in self.myopts:
             self.myopts.remove(ftie(opt))
+            if ftie(opt) in self.myopts_acked:
+                self.myopts_acked.remove(ftie(opt))
             self.send_raw(bytes([int(telcmd.IAC), int(telcmd.WONT), int(opt)]))
             self.debug('TELNET', f'sent WONT {opt.name}')
 

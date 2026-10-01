@@ -176,14 +176,14 @@ class NvtCookedInputTest(unittest.TestCase):
         conn = Mock()
         switch = Mock()
         switch.list.return_value = {'xtwinops': 'XTWINOPS'}
-        return menu.menu_t(conn, None, 'peer', False, switch, None), conn, switch
+        return menu.menu_t(conn, Mock(), 'peer', False, switch, None), conn, switch
 
     # Create an XTWINOPS page.
     def xtwinops_page(self):
         conn = Mock()
         switch = Mock()
         switch.is_switched.return_value = False
-        return xtwinops.xtwinops(conn, None, 'peer', False, switch, None), conn
+        return xtwinops.xtwinops(conn, Mock(), 'peer', False, switch, None), conn
 
     # Verify menu commands wait for fragmented input and a terminator.
     def test_menu_fragmented_command(self):
@@ -252,30 +252,46 @@ class NvtCookedInputTest(unittest.TestCase):
 
         page.process_command.assert_called_once_with(b'iconify')
 
+    # Verify report bytes and option acknowledgements use the TELNET parser.
+    def test_xtwinops_report_response_uses_ttelnet(self):
+        page, _ = self.xtwinops_page()
+        page.collecting_response = True
+        page.set_cooked_input(False)
+        page.enter_character_mode()
+
+        page.process(bytes([
+            int(telcmd.IAC), int(telcmd.DO), int(telopt.ECHO),
+            int(telcmd.IAC), int(telcmd.DO), int(telopt.SGA),
+        ]) + b'\033[1t')
+
+        self.assertTrue(page.character_mode_acked())
+        self.assertEqual(page.response_data, b'\033[1t')
+
     # Verify normal mode undoes the character-mode negotiation.
     def test_xtwinops_normal_mode(self):
         page, conn = self.xtwinops_page()
 
+        page.enter_character_mode()
         page.enter_normal_mode()
 
-        conn.send.assert_called_once_with(bytes([
-            int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO),
-            int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA),
-        ]))
+        self.assertEqual(conn.send.call_args_list, [
+            call(bytes([int(telcmd.IAC), int(telcmd.WILL), int(telopt.ECHO)])),
+            call(bytes([int(telcmd.IAC), int(telcmd.WILL), int(telopt.SGA)])),
+            call(bytes([int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO)])),
+            call(bytes([int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA)])),
+        ])
 
     # Verify a report timeout restores normal TELNET mode.
     def test_xtwinops_timeout_restores_normal_mode(self):
         page, conn = self.xtwinops_page()
-        page.enter_character_mode = Mock()
+        page.wait_for_character_mode = Mock()
         page.wait_for_response = Mock(return_value=None)
 
         page.process_command(b'window-state')
 
         report = call.send(b'\033[11t')
-        normal = call.send(bytes([
-            int(telcmd.IAC), int(telcmd.WONT), int(telopt.ECHO),
-            int(telcmd.IAC), int(telcmd.WONT), int(telopt.SGA),
-        ]))
+        normal = call.send(bytes([int(telcmd.IAC), int(telcmd.WONT),
+                                 int(telopt.SGA)]))
         self.assertLess(conn.mock_calls.index(report), conn.mock_calls.index(normal))
         page.wait_for_response.assert_called_once_with('window-state')
 
