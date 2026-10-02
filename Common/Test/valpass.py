@@ -53,7 +53,7 @@ class valpass():
         'calloc:???:_nc_tiparm:newterm_sp:newterm',
         'calloc:???:_nc_tiparm:???:newterm_sp:newterm',
         # This one seems to be some confusion on valgrind's part. I could be wrong about it.
-        'malloc:__vasprintf_internal:xs_vbuffer:xs_buffer:prompt_init:',
+        'malloc:__vasprintf_internal:Vasprintf:Asprintf:prompt_init:main',
         # These are possibly lost by the Tcl library.
         'malloc:???:TclpAlloc:',
         'malloc:???:???:???:???:???:Tcl_CreateInterp:main',
@@ -75,6 +75,18 @@ class valpass():
         # More ncurses.
         'malloc:tsearch:???:get_color_pair',
         'malloc:tsearch:???:assume_default_colors_sp',
+        'malloc:tsearch:???:_nc_tiparm:???:add_rgb',
+        'malloc:strdup:???:_nc_tiparm:???:add_rgb',
+        'calloc:???:_nc_tiparm:???:add_rgb',
+        'malloc:tsearch:???:_nc_tiparm:???:mousemask_sp:finish_screen_init',
+        'malloc:strdup:???:_nc_tiparm:???:mousemask_sp:finish_screen_init',
+        'calloc:???:_nc_tiparm:???:mousemask_sp:finish_screen_init',
+        'calloc:???:_nc_tiparm:???:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp:screen_resume',
+        'calloc:???:_nc_tiparm:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp:screen_resume:main',
+        'malloc:strdup:???:_nc_tiparm:???:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp',
+        'malloc:strdup:???:_nc_tiparm:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp:screen_resume',
+        'malloc:tsearch:???:_nc_tiparm:???:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp',
+        'malloc:tsearch:???:_nc_tiparm:???:vid_puts_sp:???:???:doupdate_sp:wrefresh:screen_disp:screen_resume',
     ]
 
     def walkbacks(self, fileName):
