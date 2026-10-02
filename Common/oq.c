@@ -531,6 +531,7 @@ oq_free(oq_t *oq)
     llist_unlink(&(*oq)->oq_list);
     Replace((*oq)->errmsg, NULL);
     memset(*oq, 0, sizeof(struct oq));
+    Free(*oq);
     *oq = NULL;
 }
 
