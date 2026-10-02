@@ -200,8 +200,8 @@ class TestS3270NewEnviron(cti):
     def test_s3270_specific_unknown(self):
         self.s3270_specific_user(user_method.UNKNOWN)
 
+    # s3270 NEW-ENVIRON DEVNAME success test
     def test_s3270_devname_success(self):
-        '''s3270 NEW-ENVIRON DEVNAME success test'''
 
         # Start 'playback' to read s3270's output.
         port, ts = unused_port()
@@ -223,8 +223,8 @@ class TestS3270NewEnviron(cti):
         s3270.stdin.close()
         self.vgwait(s3270)
 
+    # s3270 NEW-ENVIRON DEVNAME failure test
     def test_s3270_devname_failure(self):
-        '''s3270 NEW-ENVIRON DEVNAME failure test'''
 
         # Start 'playback' to read s3270's output.
         port, ts = unused_port()
@@ -246,8 +246,8 @@ class TestS3270NewEnviron(cti):
         s3270.stdin.close()
         self.vgwait(s3270)
 
+    # s3270 NEW-ENVIRON DEVNAME change test
     def test_s3270_devname_change(self):
-        '''s3270 NEW-ENVIRON DEVNAME change test'''
 
         # Start 'playback' to read s3270's output.
         port, ts = unused_port()

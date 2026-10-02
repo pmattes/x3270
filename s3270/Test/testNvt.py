@@ -183,7 +183,7 @@ class TestS3270Nvt(cti):
 
         # Start s3270.
         hport, ts = unused_port()
-        s3270 = Popen(vgwrap(['s3270', '-set', 'noTelnetInputMode=character', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
+        s3270 = Popen(vgwrap(['s3270', '-set', 'noTelnetInputMode=character', '-set', 'allowWindowOps', '-httpd', str(hport), f'a:c:t:127.0.0.1:{s.port}']))
         self.children.append(s3270)
         self.check_listen(hport)
         ts.close()
