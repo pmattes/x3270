@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2024 Paul Mattes.
+ * Copyright (c) 2014-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -188,8 +188,10 @@ Action and parameters:<br>\n\
  * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
+ *
+ * @returns session status (open or closed)
  */
-static void
+static session_status_t
 dyn_form_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
@@ -243,7 +245,7 @@ CMD_FORM
 		buf);
 	break;
     }
-    hio_async_done(dhandle, rv);
+    return hio_async_done(dhandle, rv);
 }
 
 /**
@@ -312,8 +314,10 @@ CMD_FORM
  * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	Status line buffer (ignored)
  * @param[in] sl_len	Status line length (ignored)
+ *
+ * @returns session status (open or closed)
  */
-static void
+static session_status_t
 rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
@@ -332,7 +336,7 @@ rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		buf);
 	break;
     }
-    hio_async_done(dhandle, rv);
+    return hio_async_done(dhandle, rv);
 }
 
 /**
@@ -373,7 +377,7 @@ rest_text_dyn(const char *url, void *dhandle)
 
 /**
  * Completion callback for the 3270 text command node (/3270/rest/stext).
- *
+ *sendto_cbr_t
  * @param[in] dhandle	daemon handle
  * @param[in] cbs	completion status
  * @param[in] buf	data buffer
@@ -381,8 +385,10 @@ rest_text_dyn(const char *url, void *dhandle)
  * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
+ *
+ * #returns session status (open or closed)
  */
-static void
+static session_status_t
 rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
@@ -403,7 +409,7 @@ rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		(int)sl_len, sl_buf, (int)len, buf);
 	break;
     }
-    hio_async_done(dhandle, rv);
+    return hio_async_done(dhandle, rv);
 }
 
 /**
@@ -452,8 +458,10 @@ rest_status_text_dyn(const char *url, void *dhandle)
  * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
+ *
+ * @returns session state (open or closed)
  */
-static void
+static session_status_t
 rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
@@ -501,7 +509,7 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		(int)len, buf);
 	break;
     }
-    hio_async_done(dhandle, rv);
+    return hio_async_done(dhandle, rv);
 }
 
 /**
@@ -514,8 +522,10 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
  * @param[in] jresult	JSON result buffer
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
+ *
+ * @returns session state (open or closed)
  */
-static void
+static session_status_t
 rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, json_t *jresult, const char *sl_buf, size_t sl_len)
 {
@@ -552,7 +562,7 @@ rest_dyn_json_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 		buf);
 	break;
     }
-    hio_async_done(dhandle, rv);
+    return hio_async_done(dhandle, rv);
 }
 
 /**

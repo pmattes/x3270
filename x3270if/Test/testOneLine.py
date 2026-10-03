@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ class TestX3270ifOneLine(cti):
         s3270.kill()
         self.children.remove(s3270)
         s3270.wait()
-        self.vgwait(x3270if, assertOnFailure=False)
+        self.vgwait(x3270if, expected_status=1)
 
         # Test the output, making sure it is on one line and contains the entire text.
         self.assertEqual('', stdout)

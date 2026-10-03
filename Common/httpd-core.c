@@ -207,9 +207,8 @@ status_text(int status_code)
  * @param[in] len		Length of data
  * @param[in,out] doffset	Display offset
  */
-    static void
-httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
-	size_t len, size_t *doffset)
+static void
+httpd_data_trace(httpd_t *h, const char *direction, const char *buf, size_t len, size_t *doffset)
 {
     size_t i;
 #define BPL 16
@@ -217,35 +216,41 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
     size_t j;
     size_t limit = trace_detail_enabled(TC_HTTPD)? len: BPL;
 
-    memset(linebuf, 0, BPL);
-    for (i = 0; i < limit; i++) {
-	if (!(i % BPL)) {
-	    vctrace(TC_HTTPD, "%s%s[%lu] 0x%04x",
-		    i? "\n": "",
-		    direction,
-		    h->seq,
-		    (unsigned)(*doffset + i));
-	}
-	vtrace(" %02x", (unsigned char)buf[i]);
-	linebuf[i % BPL] = buf[i];
+    if (toggled(TRACING)) {
 
-	/* Write out the ASCII for a full line. */
-	if ((i % BPL) == BPL - 1) {
-	    vtrace(" ");
-	    for (j = 0; j < BPL; j++) {
+	if (limit > len) {
+	    limit = len;
+	}
+	memset(linebuf, 0, BPL);
+	for (i = 0; i < limit; i++) {
+	    if (!(i % BPL)) {
+		vctrace(TC_HTTPD, "%s%s[%lu] 0x%04x",
+			i? "\n": "",
+			direction,
+			h->seq,
+			(unsigned)(*doffset + i));
+	    }
+	    vtrace(" %02x", (unsigned char)buf[i]);
+	    linebuf[i % BPL] = buf[i];
+
+	    /* Write out the ASCII for a full line. */
+	    if ((i % BPL) == BPL - 1) {
+		vtrace(" ");
+		for (j = 0; j < BPL; j++) {
+		    vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
+		}
+	    }
+	}
+
+	/* Write out the ASCII for a partial line. */
+	if (limit % BPL) {
+	    vtrace("%*s", (int)(((BPL - (limit % BPL)) * 3) + 1), "");
+	    for (j = 0; j < limit % BPL; j++) {
 		vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
 	    }
 	}
+	vtrace("\n");
     }
-
-    /* Write out the ASCII for a partial line. */
-    if (limit % BPL) {
-	vtrace("%*s", (int)(((BPL - (limit % BPL)) * 3) + 1), "");
-	for (j = 0; j < limit % BPL; j++) {
-	    vtrace("%c", iscntrl(linebuf[j])? '.': linebuf[j]);
-	}
-    }
-    vtrace("\n");
 
     *doffset += len;
 }

@@ -58,13 +58,7 @@ class TestX3270ifStderr(cti):
         s3270.kill()
         self.children.remove(s3270)
         s3270.wait()
-        exception = None
-        try:
-            self.vgwait(x3270if)
-        except AssertionError as ex:
-            exception = ex
-        self.assertTrue(exception != None, 'x3270if should fail')
-        self.assertEqual(exception.args, ('0 != 1 : Program failed',), 'x3270if exit status should be 1')
+        self.vgwait(x3270if, expected_status=1)
 
         # Test the output.
         # The successful Set() should go to stdout, the unsuccessful one to stderr.

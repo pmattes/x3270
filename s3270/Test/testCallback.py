@@ -27,6 +27,7 @@
 #
 # s3270 output queue tests
 
+import os
 from subprocess import Popen, PIPE
 import unittest
 
@@ -93,6 +94,7 @@ class TestS3270OutputQueue(cti):
 
         # Feed s3270 actions until the output backs up in the callback socket.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(10):
                 cbsocket.send(f'Query(-all) ignore({i})\n'.encode('utf8'))
@@ -103,7 +105,7 @@ class TestS3270OutputQueue(cti):
             total = int(fields[6])
             if queued != 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not back up')
 
         # Read the socket in chunks.
         # Wait for the output queue to clear.
@@ -146,16 +148,17 @@ class TestS3270OutputQueue(cti):
 
         # Feed s3270 actions until the output backs up in the callback socket.
         t0 = time.monotonic()
+        tmax = 60 if 'VALGRIND' in os.environ else 10
         while True:
             try:
                 cbsocket.send(b'Query(-all)\n')
             except ConnectionResetError:
                 break
-            self.assertLess(time.monotonic() - t0, 10, 's3270 did not crash')
+            self.assertLess(time.monotonic() - t0, tmax, 's3270 did not crash')
 
         # Wait for the processes to exit.
         cbsocket.close()
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
         lines = s3270.stderr.readlines()
         s3270.stderr.close()
         self.assertIn(b'Unread output exceeded', lines[0])
@@ -190,8 +193,7 @@ class TestS3270OutputQueue(cti):
         # Wait for the processes to exit.
         cbsocket.close()
         s3270.kill()
-        self.vgwait(s3270, assertOnFailure=False)
-        self.children.remove(s3270)
+        self.vgwait(s3270, expected_status=kill_status)
 
 if __name__ == '__main__':
     unittest.main()

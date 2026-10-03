@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,9 +46,12 @@ class TestS3270HomeEnd(cti):
         hts.close()
 
         # Start s3270.
-        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), f"a:c:t:{nc.qloopback}:{nc.port}"]))
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport)]))
         self.children.append(s3270)
         self.check_listen(hport)
+
+        # Connect.
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Connect(a:c:t:{nc.qloopback}:{nc.port})')
 
         # Send the extra escape sequence.
         if extra_send != '':

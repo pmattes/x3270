@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -172,6 +172,7 @@ class TestS3270Httpd(cti):
         s = socket.socket()
         s.connect(('127.0.0.1', port))
         t0 = time.monotonic()
+        tmax = 60 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(50):
                 s.send(f'''GET /3270/rest/json/Show(-all) HTTP/1.1
@@ -190,7 +191,7 @@ Connection: Keep-Alive
             total = int(fields[6])
             if queued != 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not back up')
 
         # Read the socket in chunks.
         # Wait for the output queue to clear.
@@ -207,7 +208,7 @@ Connection: Keep-Alive
             queued = int(fields[2])
             if queued == 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not clear')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not clear')
             time.sleep(0.5)
         s.close()
 
@@ -241,7 +242,8 @@ Connection: Keep-Alive
 '''.encode('utf-8'))
             except ConnectionResetError:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Connection not broken')
+            tmax = 60 if 'VALGRIND' in os.environ else 5
+            self.assertLess(time.monotonic() - t0, tmax, 'Connection not broken')
 
         s.close()
         s3270.stdin.close()

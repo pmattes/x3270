@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -57,13 +57,14 @@ class TestS3270Keepalive(cti):
             self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(nopSeconds,1)')
 
         # Give s3270 2.5 seconds to send two NOPs (or not), then close it.
-        time.sleep(2.5)
+        twait = 10 if 'VALGRIND' in os.environ else 2.5
+        time.sleep(twait)
         self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit()')
 
         # Make sure they showed up, or didn't.
         out = nc.data()
         if telnet and (set or dynamic):
-            self.assertEqual(b'\xff\xf1\xff\xf1', out)
+            self.assertTrue(out.startswith(b'\xff\xf1\xff\xf1'))
         else:
             self.assertEqual(b'', out)
 

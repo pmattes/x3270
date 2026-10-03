@@ -80,8 +80,11 @@ struct hio_listener {
 static hio_listener_t *global_listener = NULL;
 static llist_t listeners = LLIST_INIT(listeners);
 
+#define SESSION_MAGIC	0x53455353 /* "SESS" */
+
 typedef struct {
     llist_t link;	/* list linkage */
+    unsigned magic;	/* magic number */
     socket_t s;		/* socket */
     oq_t oq;		/* output queue */
     void *dhandle;	/* httpd protocol handle */
@@ -127,6 +130,8 @@ socket_errtext(void)
 static void
 hio_socket_close(session_t *session)
 {
+    assert(session->magic == SESSION_MAGIC);
+
     SOCK_CLOSE(session->s);
     if (session->oq != NULL) {
 	oq_free(&session->oq);
@@ -379,6 +384,7 @@ hio_connection(iosrc_t fd, ioid_t id)
 
     session = Malloc(sizeof(session_t));
     memset(session, 0, sizeof(session_t));
+    session->magic = SESSION_MAGIC;
     session->listener = l;
     vb_init(&session->pending.result);
     session->pending.jresult = NULL;
@@ -587,6 +593,8 @@ hio_data(task_cbh handle, const char *buf, size_t len, bool success)
 {
     session_t *s = handle;
 
+    assert(s->magic == SESSION_MAGIC);
+
     /* Remove trailing newlines. */
     while (len > 0 && buf[len - 1] == '\n') {
         len--;
@@ -667,17 +675,22 @@ hio_complete(task_cbh handle, bool success, bool abort)
     session_t *s = handle;
     const char *prompt = task_cb_prompt(handle);
 
+    assert(s->magic == SESSION_MAGIC);
+
     /* We're done. */
     s->pending.done = true;
 
     /* Pass the result up to the node. */
-    s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
+    session_status_t status = s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
 	    vb_buf(&s->pending.result), vb_len(&s->pending.result),
 	    s->pending.jresult, prompt, strlen(prompt));
 
     /* Get ready for the next command. */
-    vb_reset(&s->pending.result);
-    json_free(s->pending.jresult);
+    if (status == SS_OPEN) {
+	assert(s->magic == SESSION_MAGIC);
+	vb_reset(&s->pending.result);
+	json_free(s->pending.jresult);
+    }
 
     /* This is always the end of the command. */
     return true;
@@ -856,8 +869,10 @@ hio_next(ioid_t id)
  *
  * @param[in] dhandle   State
  * @param[in] rv        Completion status
+ *
+ * @returns connection status (open or closed)
  */
-void
+session_status_t
 hio_async_done(void *dhandle, httpd_status_t rv)
 {
     session_t *session = httpd_mhandle(dhandle);
@@ -865,13 +880,13 @@ hio_async_done(void *dhandle, httpd_status_t rv)
 
     if (rv < 0) {
 	hio_socket_close(session);
-	return;
+	return SS_CLOSED;
     }
 
     if (oq_errored(session->oq, &errmsg)) {
 	httpd_close(dhandle, txAsprintf("hio_async_done: %s", errmsg));
 	hio_socket_close(session);
-	return;
+	return SS_CLOSED;
     }
 
     /*
@@ -880,6 +895,7 @@ hio_async_done(void *dhandle, httpd_status_t rv)
      * input.
      */
     session->noid = AddTimeOut(0, hio_next);
+    return SS_OPEN;
 }
 
 /**

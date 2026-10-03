@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ class TestS3270DeviceType(cti):
         #s3270.stdin.write(b'Quit()\n')
         #s3270.stdin.flush()
         s3270.stdin.close()
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
         os.unlink(file_name)
 
     # Default behavior.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -71,6 +71,7 @@ class TestS3270Stdin(cti):
         s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-set', 'scriptedAlways']), stdin=PIPE, stdout=PIPE)
         self.children.append(s3270)
         ts.close()
+        self.check_listen(hport)
 
         # Feed s3270 actions until the output backs up on stdout.
         t0 = time.monotonic()
@@ -124,7 +125,8 @@ class TestS3270Stdin(cti):
                 s3270.stdin.write(b'Query(-all)\n')
             except (BrokenPipeError, OSError):
                 break
-            self.assertLess(time.monotonic() - t0, 10, 's3270 did not crash')
+            tmax = 60 if 'VALGRIND' in os.environ else 10
+            self.assertLess(time.monotonic() - t0, 60, 's3270 did not crash')
 
         # Wait for the processes to exit.
         try:
@@ -132,7 +134,7 @@ class TestS3270Stdin(cti):
         except (BrokenPipeError, OSError):
             pass
         s3270.stdout.close()
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
         lines = s3270.stderr.readlines()
         s3270.stderr.close()
         self.assertIn(b'Unread output exceeded', lines[0])

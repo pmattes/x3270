@@ -65,9 +65,10 @@ class TestS3270HostQueueing(cti):
             #  telnet eor
             # 000001000302ffef
             t0 = time.monotonic()
+            tmax = 60 if 'VALGRIND' in os.environ else 20
             done = False
             while True:
-                self.assertLess(time.monotonic() - t0, 20, 'Host output did not block')
+                self.assertLess(time.monotonic() - t0, tmax, 'Host output did not block')
                 for i in range(300):
                     try:
                         p.send_literal('000001000302ffef')

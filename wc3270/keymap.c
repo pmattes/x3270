@@ -401,8 +401,6 @@ add_keymap_entry(int ncodes, int *codes, int *hints, const char *name,
 static bool
 read_keymap(const char *name, bool temp)
 {
-    char *name_3270 = Asprintf("%s.3270", name);
-    char *name_nvt = Asprintf("%s.nvt", name);
     int rc, rc_3270, rc_nvt;
     char *fn, *fn_3270, *fn_nvt;
     char *r0, *r0_3270, *r0_nvt;
@@ -413,6 +411,8 @@ read_keymap(const char *name, bool temp)
     }
 
     rc = locate_keymap(name, &fn, &r0);
+    char *name_3270 = Asprintf("%s.3270", name);
+    char *name_nvt = Asprintf("%s.nvt", name);
     rc_3270 = locate_keymap(name_3270, &fn_3270, &r0_3270);
     rc_nvt = locate_keymap(name_nvt, &fn_nvt, &r0_nvt);
     if (rc < 0 && rc_3270 < 0 && rc_nvt < 0) {

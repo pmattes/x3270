@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -73,8 +73,7 @@ class TestTcl3270Smoke(cti):
 
         # Wait for the processes to exit.
         tcl3270.kill()
-        self.children.remove(tcl3270)
-        self.vgwait(tcl3270, assertOnFailure=False)
+        self.vgwait(tcl3270, expected_status=kill_status)
 
         # Compare the files
         self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))

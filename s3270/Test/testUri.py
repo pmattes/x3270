@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ class TestS3270Uri(cti):
 
         # Wait for the processes to exit.
         s3270.stdin.close()
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
         err = s3270.stderr.readline().decode()
         s3270.stderr.close()
         self.assertIn('URI error', err)

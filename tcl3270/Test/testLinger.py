@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -67,8 +67,7 @@ class TestTcl3270Linger(cti):
 
         # Kill tcl3270.
         tcl3270.kill()
-        self.children.remove(tcl3270)
-        self.vgwait(tcl3270, assertOnFailure=False)
+        self.vgwait(tcl3270, expected_status=kill_status)
 
         # Make sure s3270 is gone, too.
         def test2():
@@ -97,9 +96,7 @@ class TestTcl3270Linger(cti):
         os.kill(s3270.pid, signal.SIGTERM)
 
         # Make sure tcl3270 is gone, too.
-        self.vgwait(tcl3270, assertOnFailure=False)
-        exit_code = tcl3270.wait()
-        self.assertEqual(98, exit_code)
+        self.vgwait(tcl3270, expected_status=98)
 
 if __name__ == '__main__':
     unittest.main()

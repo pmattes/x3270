@@ -43,7 +43,7 @@ class TestS3270Lu(cti):
         self.children.append(s3270)
 
         # Make sure it complained appropriately.
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
         out = s3270.stderr.readlines()
         self.assertEqual('Hostname syntax error: contains invalid characters', out[0].decode('utf8').strip())
         s3270.stderr.close()

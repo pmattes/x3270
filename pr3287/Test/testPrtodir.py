@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -99,8 +99,7 @@ class TestPrtodir(cti):
 
             # Wait for the processes to exit.
             pr3287.kill()
-            self.children.remove(pr3287)
-            self.vgwait(pr3287, assertOnFailure=False)
+            self.vgwait(pr3287, expected_status=-9)
 
             # Read back the files.
             n = [pathlib.Path(os.path.join(tempdir, file)).read_text() for file in os.listdir(tempdir)]

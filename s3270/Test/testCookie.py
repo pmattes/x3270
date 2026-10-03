@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,7 @@ class TestS3270Cookie(cti):
             s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
+            self.check_listen(port)
 
             # Make sure s3270 puts something in the file. Then read the cookie from it.
             self.try_until(lambda: os.path.getsize(tf.name) > 0, 2, 's3270 did not write to the cookie file')
@@ -127,6 +128,7 @@ class TestS3270Cookie(cti):
             s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(s3270)
             ts.close()
+            self.check_listen(port)
 
             # Make sure s3270 puts something in the file. Then read the cookie from it.
             self.try_until(lambda: os.path.getsize(tf.name) > 0, 2, 's3270 did not write to the cookie file')
@@ -172,6 +174,7 @@ class TestS3270Cookie(cti):
         s3270 = Popen(vgwrap(['s3270', '-scriptport', str(port), '-cookiefile', tf.name]), stdin=DEVNULL, stdout=DEVNULL)
         self.children.append(s3270)
         ts.close()
+        self.check_listen(port)
 
         # Make sure s3270 creates and puts something in the file. Then read the cookie from it.
         self.try_until(lambda: os.path.exists(tf.name) and os.path.getsize(tf.name) > 0, 2, 's3270 did not write to the cookie file')
@@ -271,7 +274,7 @@ class TestS3270Cookie(cti):
             ts.close()
 
             # Wait for the process to exit.
-            self.vgwait(s3270, assertOnFailure=False)
+            self.vgwait(s3270, expected_status=1)
 
         errmsg = s3270.stderr.readlines()
         s3270.stderr.close()

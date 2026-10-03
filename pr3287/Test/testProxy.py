@@ -49,7 +49,7 @@ class TestPr3287Proxy(cti):
         self.children.append(pr3287)
 
         # Wait for the process to exit.
-        self.vgwait(pr3287, assertOnFailure=False)
+        self.vgwait(pr3287, expected_status=1)
 
         # Check output
         output = pr3287.stderr.readlines()
@@ -97,9 +97,11 @@ class TestPr3287Proxy(cti):
             os.unlink(sy_name)
 
         # Wait for the processes to exit.
-        pr3287.kill()
-        self.children.remove(pr3287)
-        self.vgwait(pr3287, assertOnFailure=False)
+        if (fail):
+            self.vgwait(pr3287, expected_status=1)
+        else:
+            pr3287.kill()
+            self.vgwait(pr3287, expected_status=kill_status)
         ps.close()
 
         # Read back the file.
@@ -130,6 +132,7 @@ class TestPr3287Proxy(cti):
     def test_pr3287_socks4_proxy(self):
         self.pr3287_proxy(ProxyType.socks4)
 
+    @unittest.skipIf('VALGRIND' in os.environ, 'This test crashes Valgrind')
     def test_pr3287_socks4_proxy_fail(self):
         self.pr3287_proxy(ProxyType.socks4, fail=True)
 
@@ -167,8 +170,7 @@ class TestPr3287Proxy(cti):
 
             # Wait for the processes to exit.
             pr3287.kill()
-            self.children.remove(pr3287)
-            self.vgwait(pr3287, assertOnFailure=False)
+            self.vgwait(pr3287, expected_status=-9)
 
             # Read back the file.
             if not force_fail:
@@ -182,9 +184,6 @@ class TestPr3287Proxy(cti):
                     ref_printout = file.read()
 
                 self.assertEqual(new_printout, ref_printout)
-
-        # Wait for the process to exit.
-        self.vgwait(pr3287, assertOnFailure=False)
 
     socks5_instructions = 'Need to set up a local SOCKS5 proxy (e.g., ssh -N -D 127.0.0.1:1080 localhost) and put its listening port in SOCKS5 in the environment'
 

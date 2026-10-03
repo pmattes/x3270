@@ -61,7 +61,7 @@ class TestPr3287MultiHost(cti):
         self.children.append(pr3287)
 
         # Wait for the process to exit.
-        self.vgwait(pr3287, assertOnFailure=False, timeout=8)
+        self.vgwait(pr3287, timeout=8, expected_status=1)
 
         # Make sure both are processed.
         with open(tracefile, 'r') as file:
@@ -110,7 +110,7 @@ class TestPr3287MultiHost(cti):
 
         # Wait for the process to exit.
         c.close(timeout=10)
-        self.vgwait(pr3287, timeout=10, assertOnFailure=False)
+        self.vgwait(pr3287, timeout=10)
 
         # Make sure only two addresses are processed.
         with open(tracefile, 'r') as file:

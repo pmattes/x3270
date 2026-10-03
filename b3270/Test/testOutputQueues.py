@@ -49,6 +49,7 @@ class TestB3270OutputQueue(cti):
         # Feed b3270 actions until the output backs up in the stdout pipe.
         # Note that on Windows, we back up with the initialization indications.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(100):
                 b3270.stdin.write(b'"Query(-all)"\n')
@@ -61,7 +62,7 @@ class TestB3270OutputQueue(cti):
             if queued > 1000000:
                 break
             print('queued:', queued)
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not back up')
 
         # Read part of stdout in chunks.
         chunk = queued // 3
@@ -75,6 +76,7 @@ class TestB3270OutputQueue(cti):
 
         # Wait for the output queue to clear.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(OutputQueues)')
             self.assertTrue(r.ok)
@@ -82,7 +84,7 @@ class TestB3270OutputQueue(cti):
             queued = int(fields[2])
             if queued == 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not clear')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not clear')
             time.sleep(0.5)
         
         b3270.stdin.close()
@@ -112,6 +114,7 @@ class TestB3270OutputQueue(cti):
 
         # Feed b3270 actions until the output backs up in the callback socket.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(100):
                 cbsocket.send(b'"Query(-all)"\n')
@@ -123,7 +126,7 @@ class TestB3270OutputQueue(cti):
             total = int(fields[6])
             if queued != 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not back up')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not back up')
 
         # Read the socket in chunks.
         # Wait for the output queue to clear.
@@ -140,7 +143,7 @@ class TestB3270OutputQueue(cti):
             queued = int(fields[2])
             if queued == 0:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'Output queue did not clear')
+            self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not clear')
             time.sleep(0.5)
 
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
@@ -156,12 +159,13 @@ class TestB3270OutputQueue(cti):
 
         # Feed b3270 actions until the output backs up completely on stdout.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             try:
                 b3270.stdin.write(b'"Query(-all)"\n')
             except BrokenPipeError:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'b3270 did not crash')
+            self.assertLess(time.monotonic() - t0, tmax, 'b3270 did not crash')
 
         # Wait for the processes to exit.
         try:
@@ -169,7 +173,7 @@ class TestB3270OutputQueue(cti):
         except (BrokenPipeError, OSError):
             pass
         b3270.stdout.close()
-        self.vgwait(b3270, assertOnFailure=False)
+        self.vgwait(b3270, expected_status=1)
         lines = b3270.stderr.readlines()
         b3270.stderr.close()
         self.assertIn(b'Unread output exceeded', lines[0])
@@ -193,16 +197,17 @@ class TestB3270OutputQueue(cti):
 
         # Feed b3270 actions until the output backs up completely on the callback socket.
         t0 = time.monotonic()
+        tmax = 10 if 'VALGRIND' in os.environ else 5
         while True:
             try:
                 s.send(b'"Query(-all)"\n')
             except ConnectionResetError:
                 break
-            self.assertLess(time.monotonic() - t0, 5, 'b3270 did not crash')
+            self.assertLess(time.monotonic() - t0, tmax, 'b3270 did not crash')
 
         # Wait for the processes to exit.
         s.close()
-        self.vgwait(b3270, assertOnFailure=False)
+        self.vgwait(b3270, expected_status=1)
         lines = b3270.stderr.readlines()
         b3270.stderr.close()
         self.assertIn(b'Unread output exceeded', lines[0])

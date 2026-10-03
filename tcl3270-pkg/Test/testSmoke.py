@@ -56,7 +56,7 @@ class TestTcl3270PackageSmoke(cti):
             # Start the Tcl wrapper.
             tcl3270_pkg = Popen(vgwrap(["tclsh",
                 "tcl3270-pkg/Test/smoke-tcl3270-pkg.tcl", name,
-                f"127.0.0.1:{playback_port}"]),
+                f"127.0.0.1:{playback_port}"], valgrind=False),
                 stdin=DEVNULL, stdout=DEVNULL)
             self.children.append(tcl3270_pkg)
 
@@ -69,8 +69,7 @@ class TestTcl3270PackageSmoke(cti):
             self.try_until(Test, 2, "Tcl wrapper did not produce a file")
 
         # Wait for the Tcl wrapper to exit.
-        self.children.remove(tcl3270_pkg)
-        self.vgwait(tcl3270_pkg)
+        self.vgwait(tcl3270_pkg, valgrind=False)
 
         # Compare the files.
         self.assertTrue(filecmp.cmp(name, 'tcl3270/Test/smoke.txt'))

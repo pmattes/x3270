@@ -45,6 +45,7 @@ class TestS3270Crash(cti):
         s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-utenv']),
                 stdin=DEVNULL, stdout=DEVNULL, env=env)
         self.children.append(s3270)
+        self.expected_status[s3270] = expected_status
         self.check_listen(hport)
         socket.close()
 
@@ -57,8 +58,7 @@ class TestS3270Crash(cti):
             self.assertTrue(success)
         else:
             self.assertFalse(success)
-        self.vgwait(s3270, assertOnFailure=False, expected_status=expected_status)
-        self.children.remove(s3270)
+        self.vgwait(s3270, expected_status=expected_status)
 
     # s3270 crash test
     def test_s3270_crash(self):
@@ -70,6 +70,7 @@ class TestS3270Crash(cti):
         s3270 = Popen(vgwrap(['s3270', '-httpd', str(hport), '-utenv']),
                 stdin=DEVNULL, stdout=DEVNULL, env=env)
         self.children.append(s3270)
+        self.expected_status[s3270] = -11
         self.check_listen(hport)
         socket.close()
 
@@ -82,12 +83,7 @@ class TestS3270Crash(cti):
         self.assertFalse(success)
 
         # Wait for the process to exit, killed by a signal.
-        self.vgwait(s3270, assertOnFailure=False, expected_status=self.segv)
-
-        # Remove s3270 from the child list, because the cti tear_down function crashes when a
-        # child is killed by a signal. This is safe to do because we have already waited for
-        # the child to exit above.
-        self.children.remove(s3270)
+        self.vgwait(s3270, expected_status=self.segv)
 
     # Crash() should not be known without -utenv and CRASH.
     def test_s3270_crash_unknown(self):

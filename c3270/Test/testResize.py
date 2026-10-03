@@ -67,7 +67,7 @@ class TestC3270Resize(cti):
             cts.close()
 
             # The child process is supposed to exit, because the window is too small.
-            self.vgwait_pid(pid, assertOnFailure=False)
+            self.vgwait_pid(pid, expected_status=1)
 
             # Collect the output.
             result = ''

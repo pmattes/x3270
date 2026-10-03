@@ -42,6 +42,7 @@
 #include "resolver.h"
 #include "sockaddr_46.h"
 #include "trace.h"
+#include "txa.h"
 #include "utils.h"
 #include "xscatv.h"
 
@@ -182,8 +183,8 @@ mock_resolve_host_and_port_async(const char *host, const char *portname, int pf,
     *errmsg = NULL;
 
     assert(token != NULL);
-    vctrace(TC_DNS, "Processing mock async resolver token '%s'\n", xscatv(token, strlen(token), (ssize_t)-1, XSCQ_NONE,
-		XSCF_DEFAULT));
+    vctrace(TC_DNS, "Processing mock async resolver token '%s'\n", txdFree(xscatv(token, strlen(token), (ssize_t)-1, XSCQ_NONE,
+		XSCF_DEFAULT)));
     if (!strcmp("fail-sync", token)) {
 	*errmsg = "Mock async resolver fail-sync";
 	ret = RHP_CANNOT_RESOLVE;

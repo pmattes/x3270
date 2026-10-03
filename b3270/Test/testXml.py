@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -170,7 +170,7 @@ class TestB3270Xml(cti):
         *first, _, _ = xml_prettify(top).split(b'\n')
         b3270.stdin.write(b'\n'.join(first) + b'<<>' b'\n')
         out = b3270.communicate(timeout=2)[0].decode('utf8').split(os.linesep)
-        self.vgwait(b3270, assertOnFailure=False)
+        self.vgwait(b3270, expected_status=1)
         self.assertTrue(b3270.wait() != 0)
 
         # Get the result.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -141,7 +141,7 @@ class TestS3270Tls(cti):
             self.assertTrue(got_exception, 'Expected exception when accepting connection')
 
         # Wait for the process to exit.
-        self.vgwait(s3270, assertOnFailure=False)
+        self.vgwait(s3270, expected_status=1)
 
     # s3270 TLS maximum version test
     @unittest.skipUnless(sys.platform == 'linux', 'Linux-only test') # Linux-only for now.

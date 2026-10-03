@@ -274,12 +274,6 @@ _trace_ds(const char *fmt, ...)
 static bool
 check_detail_trace(const char *spec, const char *catname)
 {
-    char *copy = NewString(spec);
-    char *str = copy;
-    char *saveptr = NULL;
-    char *token;
-    bool found = false;
-
     if (spec == NULL) {
 	return false;
     }
@@ -287,6 +281,11 @@ check_detail_trace(const char *spec, const char *catname)
 	return true;
     }
 
+    char *copy = NewString(spec);
+    char *str = copy;
+    char *saveptr = NULL;
+    char *token;
+    bool found = false;
     while ((token = strtok_r(str, ":", &saveptr)) != NULL) {
 	if (!strcasecmp(token, catname)) {
 	    found = true;

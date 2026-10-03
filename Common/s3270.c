@@ -193,6 +193,7 @@ callback_init(void)
 #endif /*]*/
 	    exit(1);
 	}
+	Free(sa);
 
 	/* Get ready for I/O. */
 	peer_accepted(s, NULL, net_peername(s));

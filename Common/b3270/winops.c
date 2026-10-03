@@ -540,7 +540,7 @@ xtwinops(unsigned short p1, unsigned short *p2, unsigned short *p3, unsigned sho
 	*rp2 = screen_width? (character_width / screen_width): 0;
 	break;
     case XTWR_21WINDOWLABEL: /* report window title */
-	*rtext = window_title? NewString(window_title): NULL;
+	*rtext = window_title? txdFree(NewString(window_title)): NULL;
 	break;
     default:
 	if (p1 >= 24) {

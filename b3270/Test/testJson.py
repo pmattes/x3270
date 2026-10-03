@@ -185,7 +185,7 @@ class TestB3270Json(cti):
 
         # Wait for the process to exit.
         b3270.stdin.close()
-        self.vgwait(b3270, assertOnFailure=False)
+        self.vgwait(b3270, expected_status=1)
 
         # Check.
         self.assertTrue('ui-error' in out)

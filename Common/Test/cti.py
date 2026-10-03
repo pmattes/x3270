@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,9 @@ import unittest
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import Common.Test.valpass as valpass
+
+# The status returned by a Popen process that has been killed.
+kill_status = 1 if sys.platform.startswith('win') else -9
 
 # Pretty-print an XML document.
 def xml_prettify(elem):
@@ -210,13 +213,13 @@ class sendserver():
         self.conn = None
         self.thread.join(timeout=2)
 
-def vgwrap(command):
+def vgwrap(command, valgrind=True):
     '''Wrap a command in valgrind'''
     if 'TRACEALL' in os.environ and not '-trace' in command and command[0] != 'x3270if':
         cmd = [command[0], '-trace'] + command[1:]
     else:
         cmd = command
-    if 'VALGRIND' in os.environ:
+    if valgrind and 'VALGRIND' in os.environ:
         return ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + cmd
     elif 'STRACE' in os.environ:
         return ['strace'] + cmd
@@ -267,6 +270,7 @@ class cti(unittest.TestCase):
     def setUp(self):
         '''Common set-up procedure'''
         self.children = []
+        self.expected_status = {}
         if hasattr(self, 'requests_timeout'):
             self.session = requests.Session()
             self.session.request = functools.partial(self.session.request, timeout=self.requests_timeout)
@@ -276,10 +280,15 @@ class cti(unittest.TestCase):
         for child in self.children:
             try:
                 status = child.wait(timeout=0.1)
-                if sys.platform.startswith('win'):
-                    self.assertLess(status, 0x1000, f'Process {child.args[0]} exited with status 0x{status:x}')
+                if child in self.expected_status:
+                    xs = self.expected_status[child]
+                    self.assertEqual(xs, status, f'Process {child.args[0]} exited with unexpected status');
+                    self.expected_status.pop(child)
                 else:
-                    self.assertGreater(status, -1, f'Process {child.args[0]} killed by signal {-status}')
+                    if sys.platform.startswith('win'):
+                        self.assertLess(status, 0x1000, f'Process {child.args[0]} exited with status 0x{status:x}')
+                    else:
+                        self.assertGreater(status, -1, f'Process {child.args[0]} killed by signal {-status}')
             except TimeoutExpired:
                 child.kill()
                 child.wait()
@@ -421,37 +430,39 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def vgcheck(self, pid, rc, assertOnFailure, expected_status):
+    def _vgcheck(self, pid, rc, expected_status, valgrind=True):
         '''Check a valgrind log file'''
-        isVal = 'VALGRIND' in os.environ
+        isVal = valgrind and 'VALGRIND' in os.environ
         valLog = f'/tmp/valgrind.{pid}'
         if isVal:
             success, nomatch = valpass.valpass().check(valLog)
             self.assertTrue(success, f'Valgrind error(s) found ({" ".join(nomatch)}), see {valLog}')
-        if (assertOnFailure):
-            self.assertEqual(expected_status, rc, 'Program failed')
-        elif expected_status != 0:
-            self.assertEqual(expected_status, rc, 'Program did not fail as expected')
+        self.assertEqual(expected_status, rc, f'Program returned unexpected status {rc}')
         if isVal:
             os.unlink(valLog)
 
-    def vgwait(self, p, timeout=2, assertOnFailure=True, expected_status=0):
-        '''Wait for a subprocess with a timeout, optionally assert on failure, and clean up the valgrind log file'''
+    def vgwait(self, p, timeout=2, expected_status=0, valgrind=True):
+        '''Wait for a subprocess with a timeout, and clean up the valgrind log file'''
         pid = p.pid
         rc = p.wait(timeout=timeout)
-        self.vgcheck(pid, rc, assertOnFailure, expected_status)
+        self._vgcheck(pid, rc, expected_status, valgrind=valgrind)
+        # No need to clean up this child now.
+        self.children.remove(p)
 
-    def vgwait_pid(self, pid, timeout=2, assertOnFailure=True, expected_status=0):
-        '''Wait for a process with a timeout, optionally assert on failure, and clean up the valgrind log file'''
+    def vgwait_pid(self, pid, timeout=2, expected_status=0):
+        '''Wait for a process with a timeout, and clean up the valgrind log file'''
         self.status = -1
         def waitforit():
             (gotpid, self.status) = os.waitpid(pid, os.WNOHANG)
             return gotpid == pid
         self.try_until(waitforit, timeout, 'Process did not exit')
-        if os.WIFSIGNALED(self.status):
-            self.assertTrue(False, f'Process killed by signal {os.WTERMSIG(self.status)}')
-        rc = os.WEXITSTATUS(self.status)
-        self.vgcheck(pid, rc, assertOnFailure, expected_status)
+        if os.WIFEXITED(self.status):
+            status = os.WEXITSTATUS(self.status)
+        elif os.WIFSIGNALED(self.status):
+            status = -os.WTERMSIG(self.status)
+        else:
+            status = 99999
+        self._vgcheck(pid, status, expected_status)
 
 # Define a class decorator to create a requests session and set the requests timeout.
 # I could probably figure out how to pass a timeout override as a parameter, but for now, you can just set

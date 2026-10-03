@@ -58,7 +58,7 @@ class TestC327080_132(cti):
             self.assertTrue(False, 'c3270 did not start')
 
         # The child process is supposed to exit, because of the syntax error.
-        self.vgwait_pid(pid, assertOnFailure=False)
+        self.vgwait_pid(pid, expected_status=1)
 
         # Collect the output.
         result = ''
