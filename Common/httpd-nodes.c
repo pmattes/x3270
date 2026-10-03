@@ -386,7 +386,7 @@ rest_text_dyn(const char *url, void *dhandle)
  * @param[in] sl_buf	status-line buffer
  * @param[in] sl_len	length of status-line buffer
  *
- * #returns session status (open or closed)
+ * @returns session status (open or closed)
  */
 static session_status_t
 rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
