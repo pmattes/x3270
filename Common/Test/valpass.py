@@ -73,6 +73,7 @@ class valpass():
         'malloc:__libc_alloc_buffer_allocate:alloc_buffer_allocate:__resolv_conf_allocate:__resolv_conf_load:__resolv_conf_get_current',
         # TCL.
         'calloc:calloc:allocate_dtv:_dl_allocate_tls:allocate_stack:pthread_create:tcl3270_main:Tcl_AppInit:Tcl_MainEx:main',
+        'malloc:???:Tcl_CreateInterp:main',
         # More ncurses.
         'calloc:???:_nc_tiparm:???:add_rgb',
         'calloc:???:_nc_tiparm:???:mousemask_sp:finish_screen_init',

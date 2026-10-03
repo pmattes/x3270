@@ -45,7 +45,7 @@ class TestX3270OutputQueue(cti):
         self.children.append(x3270)
 
         # Feed x3270 one action.
-        got = x3270.communicate(input=b'Show(OutputQueues)\n', timeout=2)
+        got = x3270.communicate(input=b'Show(OutputQueues)\n', timeout=10)
 
         # Wait for the processes to exit.
         self.vgwait(x3270)

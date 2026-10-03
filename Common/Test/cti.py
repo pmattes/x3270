@@ -215,16 +215,25 @@ class sendserver():
 
 def vgwrap(command, valgrind=True):
     '''Wrap a command in valgrind'''
-    if 'TRACEALL' in os.environ and not '-trace' in command and command[0] != 'x3270if':
-        cmd = [command[0], '-trace'] + command[1:]
-    else:
-        cmd = command
+    cmd = command
+    if 'TRACEALL' in os.environ and not '-trace' in command and command[0] != 'x3270if' and command[0] != 'tclsh':
+        if command[0] == 'tcl3270':
+            if '--' in command:
+                # Put -trace right after '--'.
+                cmd = command.copy()
+                cmd.insert(cmd.index('--') + 1, '-trace')
+            else:
+                # Append '--' and '-trace'.
+                cmd = command + [ '--', '-trace' ]
+            pass
+        else:
+            # Insert '-trace' between the first and second elements.
+            cmd = [command[0], '-trace'] + command[1:]
     if valgrind and 'VALGRIND' in os.environ:
-        return ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + cmd
+        cmd = ['valgrind', '--leak-check=full', '--log-file=/tmp/valgrind.%p', '--child-silent-after-fork=yes'] + cmd
     elif 'STRACE' in os.environ:
-        return ['strace'] + cmd
-    else:
-        return cmd
+        cmd = ['strace'] + cmd
+    return cmd
 
 def vgwrap_ecmd(command):
     '''Wrap an execvp command in valgrind'''
@@ -327,8 +336,10 @@ class cti(unittest.TestCase):
                 return
             time.sleep(0.1)
 
-    def check_listen(self, port, ipv6=False, timeout=2):
+    def check_listen(self, port, ipv6=False, timeout=None):
         '''Check for a particular port being listened on'''
+        if timeout == None:
+            timeout = 10 if 'VALGRIND' in os.environ else 2
         self.try_until2(lambda p, i: connect_test(p, i), port, ipv6, timeout, f'Port {port} is not bound')
 
     def wait_for_pty_output(self, timeout: int, fd: int, text: str):
@@ -465,9 +476,17 @@ class cti(unittest.TestCase):
         self._vgcheck(pid, status, expected_status)
 
 # Define a class decorator to create a requests session and set the requests timeout.
-# I could probably figure out how to pass a timeout override as a parameter, but for now, you can just set
-# requests_timeout to a number from with your class definition.
-def requests_timeout(original_class):
-    '''Sets a default requests timeout'''
-    original_class.requests_timeout = 5
-    return original_class
+def requests_timeout(original_class=None, timeout=5):
+    '''Sets a default requests timeout.'''
+    if original_class is not None and not isinstance(original_class, type):
+        timeout = original_class
+        original_class = None
+
+    # Set the timeout on the decorated test class.
+    def decorate(cls):
+        cls.requests_timeout = timeout
+        return cls
+
+    if original_class is None:
+        return decorate
+    return decorate(original_class)

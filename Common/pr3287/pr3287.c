@@ -1299,7 +1299,11 @@ ut_getenv(const char *name)
 void
 connect_error(const char *fmt, ...)
 {
-    assert(false);
+    va_list args;
+
+    va_start(args, fmt);
+    verrmsg(fmt, args);
+    va_end(args);
 }
 
 ioid_t

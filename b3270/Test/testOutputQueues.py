@@ -27,13 +27,14 @@
 #
 # b3270 output queue tests
 
+import os
 from subprocess import Popen, PIPE
 import unittest
 
 from Common.Test.cti import *
 import Common.Test.pipeq as pipeq
 
-@requests_timeout
+@requests_timeout(timeout=10 if 'VALGRIND' in os.environ else 5)
 class TestB3270OutputQueue(cti):
 
     # b3270 stdout output queue test
@@ -49,7 +50,7 @@ class TestB3270OutputQueue(cti):
         # Feed b3270 actions until the output backs up in the stdout pipe.
         # Note that on Windows, we back up with the initialization indications.
         t0 = time.monotonic()
-        tmax = 10 if 'VALGRIND' in os.environ else 5
+        tmax = 20 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(100):
                 b3270.stdin.write(b'"Query(-all)"\n')
@@ -61,7 +62,6 @@ class TestB3270OutputQueue(cti):
             queued = int(fields[2])
             if queued > 1000000:
                 break
-            print('queued:', queued)
             self.assertLess(time.monotonic() - t0, tmax, 'Output queue did not back up')
 
         # Read part of stdout in chunks.
@@ -114,7 +114,7 @@ class TestB3270OutputQueue(cti):
 
         # Feed b3270 actions until the output backs up in the callback socket.
         t0 = time.monotonic()
-        tmax = 10 if 'VALGRIND' in os.environ else 5
+        tmax = 20 if 'VALGRIND' in os.environ else 5
         while True:
             for i in range(100):
                 cbsocket.send(b'"Query(-all)"\n')
@@ -236,6 +236,10 @@ class TestB3270OutputQueue(cti):
         self.b3270_oq('1m', 'queueing enabled limit 976KiB')
     def test_b3270_oq_bad(self):
         self.b3270_oq('1mx', 'queueing enabled limit 10MiB', stderr=True)
+
+if 'VALGRIND' in os.environ:
+    # Override the default requests timeout of 5.
+    TestB3270OutputQueue.requests_timeout = 10
 
 if __name__ == '__main__':
     unittest.main()

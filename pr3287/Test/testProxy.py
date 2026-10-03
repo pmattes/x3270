@@ -85,13 +85,17 @@ class TestPr3287Proxy(cti):
                                    f'127.0.0.1:{port}']), stderr=DEVNULL)
             self.children.append(pr3287)
 
+            with open('pr3287/Test/smoke.out', 'rb') as file:
+                ref_printout = file.read()
+
             # Send output, asynchronously.
             if not fail:
                 sr = threading.Thread(target=self.async_send, args=[p])
                 sr.start()
 
                 # Wait for the sync file to appear.
-                self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, 'pr3287 did not produce output')
+                tmax = 10 if 'VALGRIND' in os.environ else 2
+                self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0) and os.path.getsize(po_name) >= len(ref_printout)), tmax, 'pr3287 did not produce output')
 
             os.close(sy_handle)
             os.unlink(sy_name)
@@ -112,9 +116,6 @@ class TestPr3287Proxy(cti):
             os.unlink(po_name)
 
             # Compare.
-            with open('pr3287/Test/smoke.out', 'rb') as file:
-                ref_printout = file.read()
-
             self.assertEqual(new_printout, ref_printout)
 
     def test_pr3287_passthru_proxy(self):
@@ -156,14 +157,19 @@ class TestPr3287Proxy(cti):
                                    f'127.0.0.1:{port}']), stderr=DEVNULL)
             self.children.append(pr3287)
 
+            # Read the reference file.
+            with open('pr3287/Test/smoke.out', 'rb') as file:
+                ref_printout = file.read()
+
             # Connect via proxy.
             # Send output, asynchronously.
             if not force_fail:
                 sr = threading.Thread(target=self.async_send, args=[p])
                 sr.start()
 
-                # Wait for the sync file to appear.
-                self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0)), 2, 'pr3287 did not produce output')
+                # Wait for the sync file to appear and the output to complete.
+                tmax = 10 if 'VALGRIND' in os.environ else 2
+                self.try_until((lambda: (os.lseek(sy_handle, 0, os.SEEK_END) > 0) and os.path.getsize(po_name) >= len(ref_printout)), tmax, 'pr3287 did not produce output')
 
             os.close(sy_handle)
             os.unlink(sy_name)
@@ -180,9 +186,6 @@ class TestPr3287Proxy(cti):
                 os.unlink(po_name)
 
                 # Compare.
-                with open('pr3287/Test/smoke.out', 'rb') as file:
-                    ref_printout = file.read()
-
                 self.assertEqual(new_printout, ref_printout)
 
     socks5_instructions = 'Need to set up a local SOCKS5 proxy (e.g., ssh -N -D 127.0.0.1:1080 localhost) and put its listening port in SOCKS5 in the environment'

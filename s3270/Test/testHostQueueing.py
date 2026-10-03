@@ -65,7 +65,7 @@ class TestS3270HostQueueing(cti):
             #  telnet eor
             # 000001000302ffef
             t0 = time.monotonic()
-            tmax = 60 if 'VALGRIND' in os.environ else 20
+            tmax = 120 if 'VALGRIND' in os.environ else 20
             done = False
             while True:
                 self.assertLess(time.monotonic() - t0, tmax, 'Host output did not block')
