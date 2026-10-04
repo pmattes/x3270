@@ -33,6 +33,7 @@ import unittest
 from Common.Test.cti import *
 from Common.Test.playback import playback
 
+@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @requests_timeout
 class TestX3270Query(cti):
 

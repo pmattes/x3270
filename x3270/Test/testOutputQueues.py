@@ -32,6 +32,7 @@ import unittest
 
 from Common.Test.cti import *
 
+@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 class TestX3270OutputQueue(cti):
 
     # x3270 output queue config test

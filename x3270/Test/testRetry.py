@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ import unittest
 from Common.Test.cti import *
 from Common.Test.playback import playback
 
+@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
 @unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
 @requests_timeout
 class TestX3270Retry(cti):
