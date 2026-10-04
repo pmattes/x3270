@@ -218,6 +218,8 @@ class TestC3270Resize(cti):
             xtra = self.read_until(fd, "won't fit")
             xtra = self.read_until(fd, 'c3270>', xtra=xtra)
 
+        # Start a new 'playback' and try with the new window size.
+        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
             # Resize the window so it will fit, then try connecting again.
             new_size = (24, 80)
             termios.tcsetwinsize(fd, new_size)
