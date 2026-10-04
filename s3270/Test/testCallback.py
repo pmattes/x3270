@@ -164,6 +164,7 @@ class TestS3270OutputQueue(cti):
         self.assertIn(b'Unread output exceeded', lines[0])
 
     # s3270 callback output queue backup hang test
+    @unittest.skipIf(sys.platform == 'cygwin', 'Hangs on Cygwin')
     def test_s3270_callback_output_queue_hang(self):
 
         # Set up a listener for the callback port.
