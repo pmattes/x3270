@@ -77,8 +77,9 @@ class playback():
 
     # Stop listening.
     def abandon(self):
-        self.listensocket.close()
-        self.listensocket = None
+        if (self.listensocket != None):
+            self.listensocket.close()
+            self.listensocket = None
 
     # Accept a connection asynchronously.
     def process(self):
