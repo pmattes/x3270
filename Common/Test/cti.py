@@ -90,7 +90,10 @@ class copyserver():
         (self.conn, _) = self.listensocket.accept()
         self.listensocket.close()
         while True:
-            rdata = self.conn.recv(1024)
+            try:
+                rdata = self.conn.recv(1024)
+            except ConnectionResetError:
+                break
             if len(rdata) == 0:
                 break
             self.result += rdata

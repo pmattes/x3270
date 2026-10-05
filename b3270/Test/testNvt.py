@@ -63,6 +63,7 @@ class TestB3270Nvt(cti):
         s.send('\033[18t')
 
         # End the session.
+        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Wait(0.1,seconds)')
         self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
 
         # See what we get back.
