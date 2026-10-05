@@ -132,7 +132,7 @@ rtf_caption(const char *caption)
     ucs4_t u;
     int consumed;
     enum me_fail error;
-    char mb[16];
+    char mb[MB_MIN];
     varbuf_t r;
 
     vb_init(&r);
@@ -560,7 +560,7 @@ fprint_screen_body(fps_t ofps)
     fps->need_separator = false;
 
     for (i = 0; i < xrows * COLS; i++) {
-	char mb[16];
+	char mb[MB_MIN];
 	int nmb;
 	bool extra_underline = false;
 

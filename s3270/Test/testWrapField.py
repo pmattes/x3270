@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 #
 # s3270 field wrap tests
 
+import codecs
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
@@ -42,8 +43,7 @@ def kw_split(result):
 
 def ebcdic(s: str) -> bytes:
     '''Convert ASCII to EBCDIC'''
-    dd = Popen(['dd', 'conv=ebcdic'], stdin=PIPE, stdout=PIPE, stderr=DEVNULL)
-    return dd.communicate(s.encode())[0]
+    return codecs.encode(s, 'cp037')
 
 @requests_timeout
 class TestS3270WrapField(cti):

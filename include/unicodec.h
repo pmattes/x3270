@@ -53,6 +53,7 @@ bool set_uni(const char *cpname, int local_cp, const char **host_codepage,
 	const char **kybdtype);
 ucs4_t linedraw_to_unicode(ucs4_t e, bool ascii_art);
 int apl_to_unicode(ebc_t e, unsigned flags);
+#define MB_MIN 16	/* Conservative guess for multibyte expansion size */
 size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
 size_t ebcdic_to_multibyte_f(ebc_t ebc, char mb[], size_t mb_len, bool
 	force_utf8);

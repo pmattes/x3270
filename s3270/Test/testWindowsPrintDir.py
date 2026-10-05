@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -54,8 +54,10 @@ class TestS3270WindowsPrintDir(cti):
 
                 # Start s3270.
                 loopback = '127.0.0.1'
-                s3270 = Popen(vgwrap(["s3270", "-xrm", "s3270.contentionResolution: false",
-                    '-xrm', f's3270.printer.name: {tempdir}',
+                # Note: -xrm arguments need to quote backslashes.
+                qdir = tempdir.replace('\\', '\\\\')
+                s3270 = Popen(vgwrap(['s3270', '-xrm', 's3270.contentionResolution: false',
+                    '-xrm', f's3270.printer.name: {qdir}',
                     f'{loopback}:{port}']), stdin=PIPE, stdout=DEVNULL)
                 self.children.append(s3270)
 
@@ -63,7 +65,7 @@ class TestS3270WindowsPrintDir(cti):
                 p.send_records(4)
 
                 # Tell s3270 to do a screen trace, twice, on the printer.
-                if kind == "screentrace":
+                if kind == 'screentrace':
                     s3270.stdin.write(b'ScreenTrace(on,printer)\n')
                     s3270.stdin.write(b'ScreenTrace(off)\n')
                     s3270.stdin.write(b'ScreenTrace(on,printer)\n')

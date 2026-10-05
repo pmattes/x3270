@@ -44,7 +44,7 @@ class TestWc3270Smoke(cti):
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
         for dir in os.environ['PATH'].split(';'):
-            if dir.startswith('obj'):
+            if dir.startswith('obj') or dir.startswith('VisualStudio'):
                 dir = os.getcwd() + '\\' + dir
             cand = dir + '\\' + exe
             if os.path.exists(cand):
@@ -71,7 +71,7 @@ class TestWc3270Smoke(cti):
             (handle, lname) = tempfile.mkstemp(suffix='.lnk')
             os.close(handle)
             wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
-            cmd = f'mkshort {wc3270_dir} wc3270.exe {lname} {sname}'
+            cmd = f'mkshort "{wc3270_dir}" wc3270.exe "{lname}" "{sname}"'
             self.assertEqual(0, os.system(cmd))
 
             # Start wc3270 in its own window by starting the link.

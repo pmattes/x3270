@@ -2159,7 +2159,7 @@ grab_string(int baddr, size_t len, struct ea *buf, bool force_utf8)
     is_zero = FA_IS_ZERO(get_field_attribute(baddr));
 
     for (i = 0; vb_len(&r) < len; i++) {
-	char mb[16];
+	char mb[MB_MIN];
 	ucs4_t uc;
 	size_t j;
 	size_t xlen;
@@ -2546,7 +2546,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	    any = false;
 	}
 	if (in_ascii) {
-	    char mb[16];
+	    char mb[MB_MIN];
 	    ucs4_t uc;
 	    size_t j;
 	    size_t xlen;
@@ -2977,7 +2977,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		}
 	    } else if (mode == RB_ASCII) {
 		bool done = false;
-		char mb[16];
+		char mb[MB_MIN];
 		size_t j;
 		ucs4_t uc;
 		size_t len;

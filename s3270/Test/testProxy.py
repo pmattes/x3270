@@ -29,7 +29,8 @@
 
 from enum import IntEnum, auto
 import os
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL, run
+import sys
 import threading
 import time
 import unittest
@@ -40,7 +41,8 @@ from Common.Test.proxy import ProxyType, proxy_server
 
 def has_async_resolver() -> str:
     '''Check if an async resolver is supported by this platform'''
-    return '--enable-async-resolver' in run(['s3270', '-v'], capture_output=True, text=True).stderr
+    s3270 = 's3270.exe' if sys.platform.startswith('win') else 's3270'
+    return '--enable-async-resolver' in run([s3270, '-v'], capture_output=True, text=True).stderr
 
 @requests_timeout
 class TestS3270Proxy(cti):

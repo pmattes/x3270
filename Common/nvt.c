@@ -2406,7 +2406,7 @@ nvt_snap_one(struct ea *buf)
 	/* 0xfe */ 0,	/* (shouldn't happen) */
 	/* 0xff */ 0	/* (shouldn't happen) */
     };
-    char mb[16];
+    char mb[MB_MIN];
     size_t len;
     int xlen;
     size_t i;

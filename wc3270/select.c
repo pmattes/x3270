@@ -814,7 +814,7 @@ copy_clipboard_text(LPTSTR lptstr)
     for (r = 0; r < ROWS; r++) {
 	for (c = 0; c < COLS; c++) {
 	    int baddr = (r * COLS) + c;
-	    char buf[16];
+	    char buf[MB_MIN];
 	    size_t nc;
 	    ucs4_t u;
 

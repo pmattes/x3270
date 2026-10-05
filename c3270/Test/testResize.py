@@ -32,7 +32,7 @@ import re
 import sys
 if not sys.platform.startswith('win'):
     import pty
-import termios
+    import termios
 import unittest
 
 from Common.Test.cti import *

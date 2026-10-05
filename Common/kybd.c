@@ -1149,7 +1149,7 @@ key_Character_wrapper(ia_t ia _is_unused, unsigned argc, const char **argv)
     unsigned ebc;
     bool with_ge = false;
     bool pasting = false;
-    char mb[16];
+    char mb[MB_MIN];
     ucs4_t uc;
     bool oerr_fail = false;
 
@@ -1501,7 +1501,7 @@ key_WCharacter(unsigned char ebc_pair[], bool oerr_fail)
 
     /* In NVT mode? */
     if (IN_NVT) {
-	char mb[16];
+	char mb[MB_MIN];
 
 	ebcdic_to_multibyte((ebc_pair[0] << 8) | ebc_pair[1], mb, sizeof(mb));
 	net_sends(mb);
@@ -1874,7 +1874,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		    oerr_fail, NULL);
 	}
     } else if (IN_NVT) {
-	char mb[16];
+	char mb[MB_MIN];
 
 	unicode_to_multibyte(ucs4, mb, sizeof(mb));
 	net_sends(mb);

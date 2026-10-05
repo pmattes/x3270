@@ -29,6 +29,7 @@
 
 import os
 from subprocess import Popen, run
+import sys
 import threading
 import unittest
 
@@ -37,7 +38,8 @@ from Common.Test.playback import playback
 
 def has_async_resolver() -> str:
     '''Check if an async resolver is supported by this platform'''
-    return '--enable-async-resolver' in run(['s3270', '-v'], capture_output=True, text=True).stderr
+    s3270 = 's3270.exe' if sys.platform.startswith('win') else 's3270'
+    return '--enable-async-resolver' in run([s3270, '-v'], capture_output=True, text=True).stderr
 
 @unittest.skipUnless(has_async_resolver(), 'No async resolver support')
 @requests_timeout

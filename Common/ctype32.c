@@ -26,7 +26,7 @@
  */
 
 /*
- *      ctype32.h
+ *      ctype32.c
  *              Partially Unicode-aware versions of the ctype functions.
  */
 

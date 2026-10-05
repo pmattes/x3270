@@ -21,17 +21,23 @@ verbose_flag = ''
 build = True
 dirs = ['lib', 's3270', 'b3270', 'c3270', 'wc3270', 'pr3287']
 args = sys.argv[1:]
+single = None
 while len(args) > 0 and args[0][0] == '-':
     if args[0] == '-v':
         verbose = True
         verbose_flag = '-v'
     elif args[0] == '-nobuild':
         build = False
+    elif args[0] == '-single':
+        single = args[1]
+        args = args[1:]
     else:
         print(f"Unknown option '{args[0]}'")
         exit(1)
     args = args[1:]
-if len(args) > 0:
+if single:
+    dirs = []
+elif len(args) > 0:
     dirs = args
 
 # Run Makefile/gcc-based tests.
@@ -42,7 +48,7 @@ def run_gcc_tests():
 
     # Set the path.
     obj = None
-    for dir in ['obj\\x86_64-w64-mingw32', 'obj\\i686-w64-mingw32', 'obj\\x86_64-pc-msys', 'obj\i686-pc-msys']:
+    for dir in ['obj\\x86_64-w64-mingw32', 'obj\\i686-w64-mingw32', 'obj\\x86_64-pc-msys', 'obj\\i686-pc-msys']:
         if os.path.exists(dir):
             obj = dir
     if obj == None:
@@ -83,7 +89,11 @@ def run_vs_tests():
                 exit(1)
 
     # Run the emulator tests.
-    cmd = 'python3 -m unittest ' + verbose_flag + ' ' + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs])
+    os.environ['PATH'] = 'VisualStudio\\x64\\Debug;' + os.environ['PATH']
+    if single:
+        cmd = 'python3 -m unittest ' + verbose_flag + ' ' + single
+    else:
+        cmd = 'python3 -m unittest ' + verbose_flag + ' ' + ' '.join([' '.join(glob.glob(dir + '\\Test\\test*.py')) for dir in dirs])
     os.system(cmd)
 
 # Guess whether we are supposed to build/run with VS or gcc.

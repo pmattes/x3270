@@ -966,7 +966,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 			    }
 			    d = ctlr_dbcs_state(baddr);
 			    if (d == DBCS_LEFT) {
-				char mb[3];
+				char mb[MB_MIN];
 				ucs4_t uc;
 				ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
 
@@ -1192,7 +1192,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 		}
 		d = ctlr_dbcs_state(baddr);
 		if (d == DBCS_LEFT) {
-		    char mb[3];
+		    char mb[MB_MIN];
 		    ucs4_t uc;
 		    ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
 
@@ -1479,7 +1479,7 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
     enum dbcs_state d;
     enum dbcs_why why = DBCS_FIELD;
     bool aborted = false;
-    char mb[16];
+    char mb[MB_MIN];
     bool insert_cursor = false;
     int ic_baddr = 0;
 

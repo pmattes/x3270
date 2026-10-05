@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@ class TestS3270WindowId(cti):
         r = self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Show(WindowId)')
         self.assertTrue(r.ok)
         window_id = r.json()['result'][0]
-        self.assertIn(window_id, ['0xffffffff', '0xffffffffffffffff'])
+        self.assertIn(window_id.lower(), ['0xffffffff', '0xffffffffffffffff'])
 
         # Wait for the process to exit.
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')

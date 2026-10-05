@@ -1323,7 +1323,7 @@ process_scs_contig(unsigned char *buf, size_t buflen)
 	    }
 	    uc = ebcdic_to_unicode(*cp, CS_BASE, EUO_NONE);
 	    {
-		char mb[16];
+		char mb[MB_MIN];
 
 		unicode_to_multibyte(uc, mb, sizeof(mb));
 		trace_ds("%s", mb);

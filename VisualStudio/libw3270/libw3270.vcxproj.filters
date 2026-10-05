@@ -69,5 +69,6 @@
     <ClCompile Include="favicon.c" />
     <ClCompile Include="..\..\Common\find_console.c" />
     <ClCompile Include="..\..\Common\defer.c" />
+    <ClCompile Include="..\..\Common\crash.c" />
   </ItemGroup>
 </Project>

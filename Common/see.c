@@ -70,7 +70,7 @@ unknown(unsigned char value)
 const char *
 see_ebc(unsigned char ch)
 {
-    char mb[16];
+    char mb[MB_MIN];
     ucs4_t uc;
 
     switch (ch) {

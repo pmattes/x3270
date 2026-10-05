@@ -35,7 +35,8 @@ import json
 if not sys.platform.startswith('win') and not sys.platform == "darwin":
     import pyte
 import select
-import termios
+if not sys.platform.startswith('win'):
+    import termios
 import threading
 import unittest
 

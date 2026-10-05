@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Common\asprintf.c" />
+    <ClCompile Include="..\..\..\Common\ctype32.c" />
     <ClCompile Include="..\..\..\Common\json.c" />
     <ClCompile Include="..\..\..\Common\sa_malloc.c" />
     <ClCompile Include="..\..\..\Common\Test\json_test.c" />

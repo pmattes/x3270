@@ -42,7 +42,7 @@ class TestWc3270WindowId(cti):
     def find_in_path(self, exe):
         '''Find an executable in $PATH'''
         for dir in os.environ['PATH'].split(';'):
-            if dir.startswith('obj'):
+            if dir.startswith('obj') or dir.startswith('VisualStudio'):
                 dir = os.getcwd() + '\\' + dir
             cand = dir + '\\' + exe
             if os.path.exists(cand):
@@ -69,7 +69,7 @@ class TestWc3270WindowId(cti):
             (handle, lname) = tempfile.mkstemp(suffix='.lnk')
             os.close(handle)
             wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
-            cmd = f'mkshort {wc3270_dir} wc3270.exe {lname} {sname}'
+            cmd = f'mkshort "{wc3270_dir}" wc3270.exe "{lname}" "{sname}"'
             self.assertEqual(0, os.system(cmd))
 
             # Start wc3270 in its own window by starting the link.
@@ -85,7 +85,7 @@ class TestWc3270WindowId(cti):
             # Verify a non-zero Window ID.
             r = self.get(f'http://127.0.0.1:{wc3270_port}/3270/rest/json/Show(windowId)')
             self.assertTrue(r.ok)
-            response = r.json()['result'][0]
+            response = r.json()['result'][0].lower()
             self.assertNotIn(response, ['0x00000000', '0x0000000000000000', '0xffffffff', '0xffffffffffffffff'])
 
             # Verify that we can't set the window ID.

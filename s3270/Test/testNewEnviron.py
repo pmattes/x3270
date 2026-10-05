@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -99,7 +99,8 @@ class TestS3270NewEnviron(cti):
                     env['USER'] = ''
                 case user.username_env:
                     opt = []
-                    del env['USER']
+                    if 'USER' in env:
+                        del env['USER']
                     env['USERNAME'] = ''
             command = ['s3270']
             command += opt
