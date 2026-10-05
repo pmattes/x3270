@@ -943,13 +943,18 @@ build_options(void)
 	p = "";
     }
 
-    return txAsprintf("%s%s%s%s",
+    return txAsprintf("%s%s%s%s%s",
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 	    "--enable-local-process"
 #else /*][*/
 	    "--disable-local-process"
 #endif /*]*/
 	    , p, using_iconv()? " --with-iconv": "",
+#if !defined(HAVE_GETADDRINFO_A) && !defined(_WIN32) /*[*/
+	    " --disable-async-resolver",
+#else /*][*/
+	    " --enable-async-resolver",
+#endif /*]*/
 #if defined(_MSC_VER) /*[*/
 	    " via MSVC " xstr(_MSC_VER)
 #endif /*]*/

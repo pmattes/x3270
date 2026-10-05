@@ -97,8 +97,10 @@ class TestPrtodir(cti):
                 self.try_until((lambda: (self.file_check(tempdir))), 2,
                     'pr3287+prtodir did not produce output files')
 
+                # Kill pr3287 before it sees the playback socket close.
+                pr3287.kill()
+
             # Wait for the processes to exit.
-            pr3287.kill()
             self.vgwait(pr3287, expected_status=-9)
 
             # Read back the files.

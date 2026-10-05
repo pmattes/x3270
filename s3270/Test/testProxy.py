@@ -38,6 +38,10 @@ from Common.Test.cti import *
 from Common.Test.playback import playback
 from Common.Test.proxy import ProxyType, proxy_server
 
+def has_async_resolver() -> str:
+    '''Check if an async resolver is supported by this platform'''
+    return '--enable-async-resolver' in run(['s3270', '-v'], capture_output=True, text=True).stderr
+
 @requests_timeout
 class TestS3270Proxy(cti):
 
@@ -241,6 +245,7 @@ class TestS3270Proxy(cti):
     def test_s3270_socks4a_proxy_blocking(self):
         self.s3270_proxy(ProxyType.socks4a, blocking=True)
 
+    @unittest.skipUnless(has_async_resolver(), 'No async resolver support')
     def test_s3270_socks4_fallback(self):
         self.s3270_proxy(ProxyType.socks4, server_type=ProxyType.socks4a, mock_resolver='succeed-sync=127.0.0.1;fail-sync')
         self.s3270_proxy(ProxyType.socks4, server_type=ProxyType.socks4a, mock_resolver='succeed-sync=127.0.0.1;fail-async')

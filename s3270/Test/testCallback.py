@@ -152,7 +152,7 @@ class TestS3270OutputQueue(cti):
         while True:
             try:
                 cbsocket.send(b'Query(-all)\n')
-            except ConnectionResetError:
+            except (ConnectionResetError, BrokenPipeError):
                 break
             self.assertLess(time.monotonic() - t0, tmax, 's3270 did not crash')
 

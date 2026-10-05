@@ -109,6 +109,11 @@ class TestC3270Prompt(cti):
     # c3270 interactive file transfer test ('other' option)
     def test_c3270_prompt_ft_other(self):
 
+        if sys.platform == 'cygwin' and not os.path.exists('/etc/group'):
+            # Cygwin doesn't have /etc/group, but you're free to create it.
+            with open('/etc/group', 'w') as f:
+                f.write('dummy\n')
+
         playback_port, pts = unused_port()
 
         # Fork a child process with a PTY between this process and it.

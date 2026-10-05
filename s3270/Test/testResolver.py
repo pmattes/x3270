@@ -28,13 +28,18 @@
 # s3270 hostname resolver tests.
 
 import os
-from subprocess import Popen
+from subprocess import Popen, run
 import threading
 import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
 
+def has_async_resolver() -> str:
+    '''Check if an async resolver is supported by this platform'''
+    return '--enable-async-resolver' in run(['s3270', '-v'], capture_output=True, text=True).stderr
+
+@unittest.skipUnless(has_async_resolver(), 'No async resolver support')
 @requests_timeout
 class TestS3270Resolver(cti):
 

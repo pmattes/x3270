@@ -240,7 +240,7 @@ Accept-Encoding: identity
 Connection: Keep-Alive
 
 '''.encode('utf-8'))
-            except ConnectionResetError:
+            except (ConnectionResetError, BrokenPipeError):
                 break
             tmax = 60 if 'VALGRIND' in os.environ else 5
             self.assertLess(time.monotonic() - t0, tmax, 'Connection not broken')

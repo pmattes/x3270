@@ -201,7 +201,7 @@ class TestB3270OutputQueue(cti):
         while True:
             try:
                 s.send(b'"Query(-all)"\n')
-            except ConnectionResetError:
+            except (ConnectionResetError, BrokenPipeError):
                 break
             self.assertLess(time.monotonic() - t0, tmax, 'b3270 did not crash')
 
