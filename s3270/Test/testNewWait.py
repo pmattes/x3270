@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ from Common.Test.cti import *
 from Common.Test.playback import playback
 
 @requests_timeout
-class TestNewWait(cti):
+class TestS3270NewWait(cti):
 
     def to_playback(self, port: int, second_actions, p: playback = None, n=0):
         '''Write a string to playback after verifying the emulator is blocked'''
@@ -82,21 +82,21 @@ class TestNewWait(cti):
         self.vgwait(s3270)
 
     # Generic flavor of CursorAt test.
-    def test_cursor_at(self):
+    def test_s3270_cursor_at(self):
         self.new_wait(4, ['Up()'], 'CursorAt,20,13')
-    def test_cursor_at_offset(self):
+    def test_s3270_cursor_at_offset(self):
         self.new_wait(4, ['Up()'], 'CursorAt,1532')
 
     # Generic flavor of StringAt test.
-    def test_string_at(self):
+    def test_s3270_string_at(self):
         self.new_wait(4, ['String("xxx")'], 'StringAt,21,13,"xx"')
-    def test_string_at_offset(self):
+    def test_s3270_string_at_offset(self):
         self.new_wait(4, ['String("xxx")'], 'StringAt,1612,"xx"')
 
     # Generic flavor of InputFieldAt test.
-    def test_input_field_at(self):
+    def test_s3270_input_field_at(self):
         self.new_wait(3, [], 'InputFieldAt,21,13', playback, 1)
-    def test_input_field_at_offset(self):
+    def test_s3270_input_field_at_offset(self):
         self.new_wait(3, [], 'InputFieldAt,1612', playback, 1)
 
     # Simple negative test framework.
@@ -107,7 +107,7 @@ class TestNewWait(cti):
         self.assertTrue(message in r.json()['result'][0])
 
     # Some basic negative tests.
-    def test_simple_negatives(self):
+    def test_s3270_simple_negatives(self):
 
         # Start s3270.
         port, ts = unused_port()
@@ -142,7 +142,7 @@ class TestNewWait(cti):
         self.assertTrue(r.ok)
 
     # No-op tests (things that don't block).
-    def test_nops(self):
+    def test_s3270_nops(self):
 
         # Start 'playback' to drive s3270.
         pport, pts = unused_port()

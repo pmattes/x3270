@@ -412,9 +412,9 @@ class TestS3270CodePage(cti):
         self.get(f'http://127.0.0.1:{sport}/3270/rest/json/Quit()')
         self.vgwait(s3270)
 
-    def test_korean_933(self):
+    def test_s3270_korean_933(self):
         self.s3270_korean('korean', 'cp933 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
-    def test_korean_1364(self):
+    def test_s3270_korean_1364(self):
         self.s3270_korean('korean-euro', 'cp1364 sbcs gcsgid 1173 cpgid 833 dbcs gcsgid 934 cpgid 834')
 
     # s3270 PrintText() wrap test.

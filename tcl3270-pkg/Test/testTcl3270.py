@@ -42,7 +42,7 @@ class TestTcl3270Package(cti):
         return run(["tclsh"], input=script, text=True, stdout=PIPE,
             stderr=PIPE, cwd=os.getcwd(), check=False, timeout=10, env=env)
 
-    def test_json_string_round_trip(self):
+    def test_tcl3270pkg_json_string_round_trip(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
 foreach value [list {} {a"b} {back\slash} {line
@@ -59,7 +59,7 @@ puts ok
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("ok\n", result.stdout)
 
-    def test_json_values_and_command_encoding(self):
+    def test_tcl3270pkg_json_values_and_command_encoding(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
 set value [::tcl3270::_json_decode {{"text":"hello","items":[true,false,null,42]}}]
@@ -78,7 +78,7 @@ puts ok
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("ok\n", result.stdout)
 
-    def test_json_decode_errors(self):
+    def test_tcl3270pkg_json_decode_errors(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
 foreach value [list {} {"unterminated} {true trailing} {[1,]}] {
@@ -92,7 +92,7 @@ puts ok
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("ok\n", result.stdout)
 
-    def test_actions_and_results(self):
+    def test_tcl3270pkg_actions_and_results(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
 if {![catch {Ascii} error] || $error ne "tcl3270 is not initialized"} {
@@ -127,7 +127,7 @@ puts ok
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual("ok\n", result.stdout)
 
-    def test_backend_exit_status(self):
+    def test_tcl3270pkg_backend_exit_status(self):
         script = r'''
 source tcl3270-pkg/tcl3270.tcl
 tcl3270::init -utenv

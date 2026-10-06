@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -102,10 +102,10 @@ class TestS3270ft(cti):
         self.vgwait(s3270)
 
     def test_s3270_ft_cut(self):
-        '''Test CUT mode with ordinary EW commands from the host.'''
+        # Test CUT mode with ordinary EW commands from the host.
         self.ft_cut('s3270/Test/ft_cut.trc')
     def test_s3270_ft_cut_ewa(self):
-        '''Test CUT mode with EWA commands from the host.'''
+        # Test CUT mode with EWA commands from the host.
         self.ft_cut('s3270/Test/ft_cut_ewa.trc')
 
     # Send the rest of the file to the emulator, after a brief delay, and absorb broken pipe errors,

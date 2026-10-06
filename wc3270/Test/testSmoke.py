@@ -45,8 +45,8 @@ class TestWc3270Smoke(cti):
         '''Find an executable in $PATH'''
         for dir in os.environ['PATH'].split(';'):
             if dir.startswith('obj') or dir.startswith('VisualStudio'):
-                dir = os.getcwd() + '\\' + dir
-            cand = dir + '\\' + exe
+                dir = os.getcwd() + os.path.sep + dir
+            cand = dir + os.path.sep + exe
             if os.path.exists(cand):
                 return (dir, cand)
         self.assertTrue(False, f'Could not find {exe} in PATH')
@@ -67,19 +67,12 @@ class TestWc3270Smoke(cti):
             os.write(handle, f'wc3270.hostname: 127.0.0.1:{playback_port}\n'.encode('utf8'))
             os.close(handle)
 
-            # Create a shortcut.
-            (handle, lname) = tempfile.mkstemp(suffix='.lnk')
-            os.close(handle)
+            # Start wc3270.
             wc3270_dir, wc3270_path = self.find_in_path('wc3270.exe')
-            cmd = f'mkshort "{wc3270_dir}" wc3270.exe "{lname}" "{sname}"'
-            self.assertEqual(0, os.system(cmd))
-
-            # Start wc3270 in its own window by starting the link.
-            self.assertEqual(0, os.system(f'start {lname}'))
+            self.assertEqual(0, os.system(f'start conhost {wc3270_path} {sname}'))
             self.check_listen(wc3270_port)
             ts.close()
             os.unlink(sname)
-            os.unlink(lname)
 
             # Feed wc3270 some data.
             p.send_records(4)

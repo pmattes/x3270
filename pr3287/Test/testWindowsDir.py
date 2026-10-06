@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 #
 # Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
@@ -50,7 +51,7 @@ class TestPr3287WindowsDir(cti):
                 return False
         return True
 
-    def test_windows_pr3287_dir(self):
+    def test_pr3287_windows_dir(self):
 
         # Grab the expected output.
         ref_printout = pathlib.Path('pr3287/Test/smoke.out').read_text()

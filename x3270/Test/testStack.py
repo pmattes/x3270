@@ -48,7 +48,7 @@ class TestX3270Stack(cti):
         self.try_until(lambda: self.window_title(window_id) == title, 2, f'Window title did not become "{title}"')
 
     # XTWINOPS push/pop stack tests.
-    def test_xtwinops_stack(self):
+    def test_x3270_xtwinops_stack(self):
 
         # Start a tightvnc server.
         with tvs.tightvncserver(self):

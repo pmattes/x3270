@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,12 @@ from Common.Test.cti import *
 from Common.Test.playback import playback
 
 @requests_timeout
-class TestRenegotiate(cti):
+class TestS3270Renegotiate(cti):
 
     def send_pf3(self, s3270_port: int):
         self.get(f'http://127.0.0.1:{s3270_port}/3270/rest/json/PF(3)')
 
-    def test_renegotiate(self):
+    def test_s3270_renegotiate(self):
 
         # Start 'playback' to drive s3270.
         playback_port, ts = unused_port()

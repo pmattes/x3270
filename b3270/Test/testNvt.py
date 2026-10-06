@@ -74,32 +74,32 @@ class TestB3270Nvt(cti):
         self.vgwait(b3270)
 
     # Basic window report test.
-    def test_window_report(self):
+    def test_b3270_window_report(self):
         self.window_report(None, '\033[8;43;80t')
     # Window size change success test.
-    def test_window_change_success(self):
+    def test_b3270_window_change_success(self):
         self.window_report('\033[8;45;81t', '\033[8;45;81t')
     # Window size change by lines test.
-    def test_window_change_success_lines(self):
+    def test_b3270_window_change_success_lines(self):
         self.window_report('\033[45t', '\033[8;45;80t')
 
     # Window change request that fails.
     def window_change_fail(self, rows: int, cols: int):
         self.window_report(f'\033[8;{rows};{cols}t', '\033[8;43;80t')
 
-    def test_window_change_fail_small(self):
+    def test_b3270_window_change_fail_small(self):
         self.window_change_fail(20, 20)
-    def test_window_change_fail_large(self):
+    def test_b3270_window_change_fail_large(self):
         self.window_change_fail(1000, 1000)
-    def test_window_change_fail_zero_rows(self):
+    def test_b3270_window_change_fail_zero_rows(self):
         self.window_change_fail(0, 80)
-    def test_window_change_fail_zero_cols(self):
+    def test_b3270_window_change_fail_zero_cols(self):
         self.window_change_fail(43, 0)
 
     # Window changes with missing (use existing value) parameters.
-    def test_window_change_omit_rows(self):
+    def test_b3270_window_change_omit_rows(self):
         self.window_report('\033[8;;81t', '\033[8;43;81t')
-    def test_window_change_omit_cols(self):
+    def test_b3270_window_change_omit_cols(self):
         self.window_report('\033[8;45t', '\033[8;45;80t')
 
     # Send an escape sequence and expect a b3270 response.
@@ -148,38 +148,38 @@ class TestB3270Nvt(cti):
             got = wc[0] if len(wc) > 0 else None
             self.assertEqual(0, len(wc), f'expected nothing, got {got}')
 
-    def test_deiconify(self):
+    def test_b3270_deiconify(self):
         self.single_parameter('\033[1t', b'{"window-change":{"operation":"state","state":"normal"}}\n')
-    def test_iconify(self):
+    def test_b3270_iconify(self):
         self.single_parameter('\033[2t', b'{"window-change":{"operation":"state","state":"iconified"}}\n')
-    def test_move(self):
+    def test_b3270_move(self):
         self.single_parameter('\033[3;100;200t', b'{"window-change":{"operation":"move","x":100,"y":200}}\n')
-    def test_resize(self):
+    def test_b3270_resize(self):
         self.single_parameter('\033[4;100;200t', b'{"window-change":{"operation":"size","type":"window","height":100,"width":200}}\n')
-    def test_resize2(self):
+    def test_b3270_resize2(self):
         self.single_parameter('\033[4;;200t', b'{"window-change":{"operation":"size","type":"window","width":200}}\n')
-    def test_resize3(self):
+    def test_b3270_resize3(self):
         self.single_parameter('\033[4;100t', b'{"window-change":{"operation":"size","type":"window","height":100}}\n')
-    def test_raise(self):
+    def test_b3270_raise(self):
         self.single_parameter('\033[5t', b'{"window-change":{"operation":"stack","order":"raise"}}\n')
-    def test_lower(self):
+    def test_b3270_lower(self):
         self.single_parameter('\033[6t', b'{"window-change":{"operation":"stack","order":"lower"}}\n')
-    def test_refresh(self):
+    def test_b3270_refresh(self):
         self.single_parameter('\033[7t', b'{"window-change":{"operation":"refresh"}}\n')
-    def test_unmaximize(self):
+    def test_b3270_unmaximize(self):
         self.single_parameter('\033[9;0t', b'{"window-change":{"operation":"state","state":"normal"}}\n')
-    def test_unmaximize2(self):
+    def test_b3270_unmaximize2(self):
         self.single_parameter('\033[9t', b'{"window-change":{"operation":"state","state":"normal"}}\n')
-    def test_maximize(self):
+    def test_b3270_maximize(self):
         self.single_parameter('\033[9;1t', b'{"window-change":{"operation":"state","state":"maximized"}}\n')
-    def test_unfullscreen(self):
+    def test_b3270_unfullscreen(self):
         self.single_parameter('\033[10;0t', b'{"window-change":{"operation":"state","state":"normal"}}\n')
-    def test_fullscreen(self):
+    def test_b3270_fullscreen(self):
         self.single_parameter('\033[10;1t', b'{"window-change":{"operation":"state","state":"full-screen"}}\n')
-    def test_toggle_fullscreen(self):
+    def test_b3270_toggle_fullscreen(self):
         self.single_parameter('\033[10;2t', b'{"window-change":{"operation":"state","state":"toggle-full-screen"}}\n')
 
-    def test_allowWindowOps_resource(self):
+    def test_b3270_allowWindowOps_resource(self):
         self.single_parameter('\033[2t', None, extra_send='Set(allowWindowOps,false)')
 
     # Test the window-change operation.
@@ -302,7 +302,7 @@ class TestB3270Nvt(cti):
         pq.close()
         b3270.stdout.close()
 
-    def test_change_esc(self):
+    def test_b3270_change_esc(self):
         self.oper_window_change_bulk([
             self.ChangeParam(None, None, '\033[21t]', '\033]l\033\\'),
             self.ChangeParam('{"window-change":{"operation":"title","text":"foo"}}', None, '\033[21t]', '\033]lfoo\033\\'),
@@ -322,7 +322,7 @@ class TestB3270Nvt(cti):
             self.ChangeParam('<window-change operation="move" x="1" y="2"/>', None, '\033[13t]', '\033[3;1;2t'),
             self.ChangeParam('<window-change operation="move" x="-1" y="-2"/>', None, '\033[13t]', '\033[3;65535;65534t'),
             ], json=False)
-    def test_change_size(self):
+    def test_b3270_change_size(self):
         self.oper_window_change_bulk([
             self.ChangeParam('{"window-change":{"operation":"size","height":10,"width": 20,"type":"window"}}', None, '\033[14;2t]', '\033[4;10;20t'),
             self.ChangeParam('{"window-change":{"operation":"size","height":30,"width": 40,"type":"character"}}', None, '\033[16t]', '\033[6;30;40t'),
@@ -334,7 +334,7 @@ class TestB3270Nvt(cti):
             self.ChangeParam('<window-change operation="size" type="character" width="30" height="40"/>', None, None, None),
             self.ChangeParam('<window-change operation="size" type="screen" width="50" height="60"/>', None, None, None),
         ], json=False)
-    def test_change_junk(self):
+    def test_b3270_change_junk(self):
         self.oper_window_change_bulk([
             self.ChangeParam('{"window-change":null}', 'must be an object', None, None),
             self.ChangeParam('{"window-change":{}}', 'missing member', None, None),

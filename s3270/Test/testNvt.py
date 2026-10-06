@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -88,14 +88,14 @@ class TestS3270Nvt(cti):
         self.vgwait(s3270)
 
     # Test with set/reset.
-    def test_nvt_1049_set(self):
+    def test_s3270_nvt_1049_set(self):
         self.nvt_1049(b'h', b'l')
     # Test with save/restore
-    def test_nvt_1049_save(self):
+    def test_s3270_nvt_1049_save(self):
         self.nvt_1049(b'h', b'r')
 
     # ECH test.
-    def test_ech(self):
+    def test_s3270_ech(self):
 
         # Start a server to throw NVT escape sequences at s3270.
         s = sendserver(self)
@@ -142,7 +142,7 @@ class TestS3270Nvt(cti):
         self.vgwait(s3270)
 
     # Secondary DA test.
-    def test_secondary_da(self):
+    def test_s3270_secondary_da(self):
 
         # Start a server to throw NVT escape sequences at s3270.
         s = copyserver()
@@ -206,36 +206,36 @@ class TestS3270Nvt(cti):
         self.vgwait(s3270)
 
     # Basic window report test.
-    def test_window_report(self):
+    def test_s3270_window_report(self):
         self.window_report(None, '\033[8;43;80t')
     # Window size change success test.
-    def test_window_change_success(self):
+    def test_s3270_window_change_success(self):
         self.window_report('\033[8;45;81t', '\033[8;45;81t')
     # Window size change by lines test.
-    def test_window_change_success_lines(self):
+    def test_s3270_window_change_success_lines(self):
         self.window_report('\033[45t', '\033[8;45;80t')
 
     # Window change request that fails.
     def window_change_fail(self, rows: int, cols: int):
         self.window_report(f'\033[8;{rows};{cols}t', '\033[8;43;80t')
 
-    def test_window_change_fail_small(self):
+    def test_s3270_window_change_fail_small(self):
         self.window_change_fail(20, 20)
-    def test_window_change_fail_large(self):
+    def test_s3270_window_change_fail_large(self):
         self.window_change_fail(1000, 1000)
-    def test_window_change_fail_zero_rows(self):
+    def test_s3270_window_change_fail_zero_rows(self):
         self.window_change_fail(0, 80)
-    def test_window_change_fail_zero_cols(self):
+    def test_s3270_window_change_fail_zero_cols(self):
         self.window_change_fail(43, 0)
 
     # Window changes with missing (use existing value) parameters.
-    def test_window_change_omit_rows(self):
+    def test_s3270_window_change_omit_rows(self):
         self.window_report('\033[8;;81t', '\033[8;43;81t')
-    def test_window_change_omit_cols(self):
+    def test_s3270_window_change_omit_cols(self):
         self.window_report('\033[8;45t', '\033[8;45;80t')
 
     # Test the terminal name.
-    def test_tn(self):
+    def test_s3270_tn(self):
         # Start 'playback' to read s3270's output.
         port, ts = unused_port()
         with playback(self, 's3270/Test/testTn.trc', port=port) as p:

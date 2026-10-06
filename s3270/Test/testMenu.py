@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -76,11 +76,11 @@ class TestMenu(cti):
         self.vgwait(s3270)
 
     # Test basic NVT-DATA I/O
-    def test_nvt_data(self):
+    def test_s3270_nvt_data(self):
         self.menu_test('nvt-data')
 
     # Test basic SSCP-LU-DATA I/O
-    def test_sscp_lu_data(self):
+    def s3270_test_sscp_lu_data(self):
         self.menu_test('sscp-lu-data')
 
 if __name__ == '__main__':

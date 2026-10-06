@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2022-2025 Paul Mattes.
+# Copyright (c) 2022-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ from Common.Test.playback import playback
 class TestB3270Render(cti):
 
     # b3270 invisible underscore test
-    def test_invisible_underscore(self):
+    def test_b3270_invisible_underscore(self):
 
         # Start 'playback' to talk to b3270.
         playback_port, ts = unused_port()
@@ -79,7 +79,7 @@ class TestB3270Render(cti):
         b3270.stdout.close()
 
     # b3270 reverse video test
-    def test_reverse(self):
+    def test_b3270_reverse(self):
 
         # Start 'playback' to talk to b3270.
         playback_port, ts = unused_port()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -83,11 +83,11 @@ class TestX3270WmName(cti):
             self.vgwait(x3270)
 
     # x3270 default title test.
-    def test_default_title(self):
+    test_x3270_default_title(self):
         self.title_test()
 
     # x3270 command-line title test.
-    def test_explicit_title(self):
+    test_x3270_explicit_title(self):
         self.title_test(cmdlineTitle=True)
 
 if __name__ == '__main__':
