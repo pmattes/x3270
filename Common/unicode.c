@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2025 Paul Mattes.
+ * Copyright (c) 2008-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1324,13 +1324,8 @@ int
 mb_max_len(int len)
 {
 #if defined(_WIN32) /*[*/
-    /*
-     * On Windows, it's 1:1 (we don't do DBCS, and we don't support locales
-     * like UTF-8).
-     *
-     * XXX: On Windows, we *do* do DBCS. Should this change?
-     */
-    return len + 1;
+    /* Be very conservative. */
+    return (len * 16) + 1;
 #elif defined(UNICODE_WCHAR) /*][*/
     /* Allocate enough space for shift-state transitions. */
     return (MB_CUR_MAX * (len * 2)) + 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2025 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -867,7 +867,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 			    }
 			    d = ctlr_dbcs_state(baddr);
 			    if (d == DBCS_LEFT) {
-				char mb[3];
+				char mb[16];
 				ucs4_t uc;
 				ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
 
@@ -1093,7 +1093,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 		}
 		d = ctlr_dbcs_state(baddr);
 		if (d == DBCS_LEFT) {
-		    char mb[3];
+		    char mb[16];
 		    ucs4_t uc;
 		    ebc_t ch = (ea_buf[baddr].ec << 8) | ea_buf[baddr + 1].ec;
 
