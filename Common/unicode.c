@@ -1104,7 +1104,7 @@ ucs4_t unicode_uncircle(ucs4_t u)
  * the EBCDIC character.
  */
 size_t
-ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb_p[],
+ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	size_t mb_len, unsigned flags, ucs4_t *ucp)
 {
     ucs4_t uc;
@@ -1130,8 +1130,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb_p[],
     }
     if (uc == 0) {
 	if (flags & EUO_BLANK_UNDEF) {
-	    mb_p[0] = ' ';
-	    mb_p[1] = '\0';
+	    mb[0] = ' ';
+	    mb[1] = '\0';
 	    return 2;
 	} else {
 	    return 0;
@@ -1153,16 +1153,16 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb_p[],
      * wchar_t's are Unicode.
      */
     wuc = uc;
-    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb_p, (int)mb_len,
+    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
 	    (u_local_cp == CP_UTF8)? NULL: "?",
 	    (u_local_cp == CP_UTF8)? NULL: &udc);
     if (nc != 0) {
 		assert(nc < mb_len);
-	mb_p[nc++] = '\0';
+	mb[nc++] = '\0';
 	return nc;
     } else {
-	mb_p[0] = '?';
-	mb_p[1] = '\0';
+	mb[0] = '?';
+	mb[1] = '\0';
 	return 2;
     }
 
