@@ -2269,10 +2269,14 @@ product_set_appres_defaults(void)
 }
 
 #if defined(_WIN32) /*[*/
-char *
+const char **
 product_settings(void)
 {
-    return Asprintf("portable=%s", TrueFalse(portable_mode));
+    const char **ret = Malloc(2 * sizeof(char *));
+    txdFree(ret);
+    ret[0] = txAsprintf("portable=%s", TrueFalse(portable_mode));
+    ret[1] = NULL;
+    return ret;
 }
 
 bool

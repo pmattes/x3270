@@ -36,7 +36,7 @@
 
 #include "product.h"
 
-char *
+const char **
 product_settings(void)
 {
     return NULL;

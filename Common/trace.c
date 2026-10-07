@@ -582,7 +582,7 @@ dump_queries(void)
 
 /* Dump one setting. */
 static void
-dump_setting(int i, char *setting, size_t *len)
+dump_setting(int i, const char *setting, size_t *len)
 {
     if (*len + (i? 2: 1) + strlen(setting) >= 132) {
 	wtrace(false, TC_INFRA, "\n");
@@ -590,7 +590,6 @@ dump_setting(int i, char *setting, size_t *len)
     }
     wtrace(false, TC_INFRA, "%s%s", i? "  ": " ", setting);
     *len += (i? 2: 1) + strlen(setting);
-    Free(setting);
 }
 
 /* Put the values of modifiable settings into the trace file. */
@@ -612,11 +611,15 @@ dump_settings(void)
 	    setting = Asprintf("%s=", tnv[i].name);
 	}
 	dump_setting(i, setting, &len);
+	Free(setting);
     }
 
-    char *s = product_settings();
+    const char **s = product_settings();
     if (s != NULL) {
-	dump_setting(i, s, &len);
+	while (*s != NULL) {
+	    dump_setting(i, *s, &len);
+	    s++;
+	}
     }
     wtrace(false, TC_INFRA, "\n");
 }
