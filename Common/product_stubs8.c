@@ -36,8 +36,8 @@
 
 #include "product.h"
 
-char *
-product_settings(void)
+bool
+product_portable(void)
 {
-    return NULL;
+    return false;
 }
