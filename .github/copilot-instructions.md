@@ -13,3 +13,4 @@ Code formatting and C standards
  - Use of C99 features is permitted, including inline declarations.
 Unit testing
  - Added or changed code should have as close to 100% unit test code coverage as possible. This is enforced informally at the moment, by periodically running gcov on the suite of unit tests. Gcov does not need to be run with every commit.
+ - Most unit tests are in Python in the Test/ directory under each component. The naming convention is that the class should be Test<component><functionality>, e.g., TestS3270Nvt, and each test should be named test_<component>_<feature>, e.g., test_s3270_nvt_clear.
