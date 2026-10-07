@@ -1,0 +1,9 @@
+The presence of this file in the same directory as wc3270.exe,
+wc3270wiz.exe (the Session Wizard), s3270.exe or b3270.exe causes the
+emulator to run in portable mode. In portable mode, the emulator will
+generally not read or write files outside of that directory. The only
+exception is that the Session Wizard can still create shortcuts on the
+user's Desktop.
+
+To turn off portable mode, remove this file, or run the emulator with the
+-noportable command-line option.

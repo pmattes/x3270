@@ -42,6 +42,7 @@
 
 #include "ctlrc.h"
 #include "host.h"
+#include "portable_mode.h"
 #include "proxy_names.h"
 #include "resources.h"
 #include "screen.h"
@@ -5353,7 +5354,7 @@ Usage: wc3270wiz [opts] [session-name]\n\
        wc3270wiz [opts] -e session-file\n\
        wc3270wiz -U[a]\n\
 Opts: -portable    Run in portable mode\n\
-      -noportable  Do not run in portable mode, even if portable.txt exists\n");
+      -noportable  Do not run in portable mode, even if " PORTABLE_FLAG_FILE " exists\n");
     fflush(stderr);
     exit(1);
 }
@@ -5449,7 +5450,7 @@ main(int argc, char *argv[])
 
     /* Figure out portable mode. */
     char fpath[MAX_PATH];
-    sprintf(fpath, "%s\\%s", installdir, "portable.txt");
+    sprintf(fpath, "%s\\%s", installdir, PORTABLE_FLAG_FILE);
     portable_mode = portable || (access(fpath, F_OK) == 0 && !no_portable);
     if (portable_mode) {
 	searchdir = installdir;

@@ -75,6 +75,7 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
+# include "portable_mode.h"
 # include "winvers.h"
 #endif /*]*/
 
@@ -532,7 +533,7 @@ static opt_t base_opts[] = {
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 #if defined(_WIN32) /*[*/
 { OptNoPortable, OPT_BOOLEAN, true, NULL,        aoffset(no_portable),
-    NULL, "Do not run in portable mode" },
+    NULL, "Do not run in portable mode, even if " PORTABLE_FLAG_FILE " exists" },
 #endif /*]*/
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
@@ -1298,7 +1299,7 @@ static bool portable_mode = false;
 void
 portable_init(void)
 {
-    char *flagfile = Asprintf("%s\\%s", instdir, "portable.txt");
+    char *flagfile = Asprintf("%s\\%s", instdir, PORTABLE_FLAG_FILE);
 
     portable_mode = appres.portable || (access(flagfile, F_OK) == 0 && !appres.no_portable);
     Free(flagfile);
