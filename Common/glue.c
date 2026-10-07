@@ -1304,17 +1304,6 @@ portable_init(void)
     Free(flagfile);
 }
 
-/* Return product-specific settings. */
-const char **
-product_settings(void)
-{
-    const char **ret = Malloc(2 * sizeof(char *));
-    txdFree(ret);
-    ret[0] = txAsprintf("portable=%s", TrueFalse(portable_mode));
-    ret[1] = NULL;
-    return ret;
-}
-
 /* Indicate if we are in portable mode. */
 bool
 product_portable(void)

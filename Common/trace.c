@@ -614,13 +614,6 @@ dump_settings(void)
 	Free(setting);
     }
 
-    const char **s = product_settings();
-    if (s != NULL) {
-	while (*s != NULL) {
-	    dump_setting(i, *s, &len);
-	    s++;
-	}
-    }
     wtrace(false, TC_INFRA, "\n");
 }
 
