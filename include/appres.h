@@ -217,6 +217,8 @@ typedef struct {
 	bool	 use_rgb;
 #if defined(_WIN32) /*[*/
 	bool	 vt;
+	bool	 portable;
+	bool	 no_portable;
 #endif /*]*/
     } c3270;
 

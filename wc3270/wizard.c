@@ -135,6 +135,7 @@ typedef enum {
     SRC_PUBLIC_DESKTOP,	/* success, on public Desktop */
     SRC_DESKTOP,	/* success, on Desktop */
     SRC_OTHER,		/* not sure where the file is */
+    SRC_INSTDIR,	/* install directory (portable mode) */
     SRC_NONE,		/* don't rewrite the file */
     SRC_ERR = -1	/* error */
 } src_t;
@@ -270,6 +271,7 @@ static session_t empty_session;
 static HANDLE conin_handle = INVALID_HANDLE_VALUE;
 static HANDLE conout_handle = INVALID_HANDLE_VALUE;
 static bool is_vt = false;
+static bool portable_mode = false;
 
 static void write_user_settings(char *us, FILE *f);
 static void display_sessions(bool with_numbers, bool include_public);
@@ -838,7 +840,7 @@ save_keymaps(bool include_public)
     }
 
     save_keymaps_type(SRC_DOCUMENTS, searchdir);
-    if (include_public) {
+    if (include_public && public_searchdir != NULL) {
 	save_keymaps_type(SRC_PUBLIC_DOCUMENTS, public_searchdir);
     }
 }
@@ -956,11 +958,18 @@ abort:
 static void
 new_screen(session_t *s, const char *path, const char *title)
 {
-    static char wizard[] = "wc3270 Session Wizard";
+    static char *base_title = "wc3270 Session Wizard";
+    static char *pm_banner = " [Portable Mode]";
+    char *name = base_title;
+
+    if (portable_mode) {
+	name = malloc(strlen(base_title) + strlen(pm_banner) + 1);
+	sprintf(name, "%s%s", base_title, pm_banner);
+    }
     cls();
     reverseout("%s%*sv%s\n",
-	    wizard,
-	    (int)(79 - strlen(wizard) - (strlen(build_rpq_version) + 1)), " ",
+	    name,
+	    (int)(79 - strlen(name) - (strlen(build_rpq_version) + 1)), " ",
 	    build_rpq_version);
     if (s->session[0]) {
 	printf("\nSession: %s\n", s->session);
@@ -969,6 +978,9 @@ new_screen(session_t *s, const char *path, const char *title)
 	printf("Path: %s\n", path);
     }
     printf("\n%s\n", title);
+    if (portable_mode) {
+	free(name);
+    }
 }
 
 /*
@@ -1161,6 +1173,15 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
 static src_t
 find_session_file(const char *session_name, char *path)
 {
+    if (portable_mode) {
+	/* It's the install dir or nothing. */
+	snprintf(path, MAX_PATH, "%s%s%s", installdir, session_name, SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+	    return SRC_INSTDIR;
+	}
+	return SRC_NONE;
+    }
+
     /* Try the user's My Documents\wc3270. */
     snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session_name,
 	    SESS_SUFFIX);
@@ -1290,7 +1311,7 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 	    char *bsl;
 	    char *colon;
 
-	    /* Ends in .wc3270km. Pathname. */
+	    /* Ends in .wc3270. Pathname. */
 	    path[MAX_PATH - 1] = '\0';
 	    bsl = strrchr(session_name, '\\');
 	    colon = strrchr(session_name, ':');
@@ -1325,6 +1346,15 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		if (strlen(start) - SESS_LEN + 1 < slen) {
 		    slen = strlen(start) - SESS_LEN + 1;
 		}
+
+		/* In portable mode, the only legal pathname is installdir. */
+		if (portable_mode &&
+			(((strlen(session_name) - strlen(start)) != strlen(installdir)) ||
+			 (strncasecmp(session_name, installdir, strlen(installdir))))) {
+		    fprintf(stderr, "Error: '%s' does not start with '%s'\nInvalid in portable mode\n", session_name, installdir);
+		    return GS_ERR;
+		}
+
 		strncpy(s->session, start, slen);
 		s->session[slen - 1] = '\0';
 
@@ -1332,7 +1362,9 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		 * Try to figure out where it is.  This is inherently
 		 * imperfect.
 		 */
-		if (!strncmp(path, documents_wc3270,
+		if (portable_mode) {
+		    *src = SRC_INSTDIR;
+		} else if (!strncmp(path, documents_wc3270,
 			    strlen(documents_wc3270))) {
 		    *src = SRC_DOCUMENTS;
 		} else if (!strncmp(path, public_documents_wc3270,
@@ -3131,6 +3163,10 @@ get_src(const char *name, src_t def)
     char ac[STR_SIZE];
     src_t src_out = def;
 
+    if (portable_mode) {
+	return SRC_INSTDIR;
+    }
+
     /* Ask where they want the file. */
     if (admin()) {
 	for (;;) {
@@ -3766,6 +3802,12 @@ display_sessions(bool with_numbers, bool include_public)
     int i;
     int col = 0;
     const char *n;
+    char *mydir = documents_wc3270;
+
+    if (portable_mode) {
+	mydir = installdir;
+	include_public = false;
+    }
 
     /*
      * Display the session names in four colums. Each 20-character column
@@ -3785,8 +3827,8 @@ display_sessions(bool with_numbers, bool include_public)
 	if (i == 0 && xs_my.count != 0) {
 	    printf("Sessions for user '%s' in %.*s:\n",
 		    username,
-		    (int)(strlen(documents_wc3270) - 1),
-		    documents_wc3270);
+		    (int)(strlen(mydir) - 1),
+		    mydir);
 	} else if (i == xs_my.count) {
 	    if (col) {
 		printf("\n");
@@ -4588,7 +4630,7 @@ xs_init(bool include_public)
     num_xs = 0;
 
     xs_init_type(searchdir, &xs_my, SRC_DOCUMENTS);
-    if (include_public) {
+    if (include_public && public_searchdir != NULL) {
 	xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
     }
     num_xs = xs_my.count + xs_public.count;
@@ -5307,9 +5349,11 @@ static void
 w_usage(void)
 {
     fprintf(stderr, "\
-Usage: wc3270wiz [session-name]\n\
-       wc3270wiz [-e] [session-file]\n\
-       wc3270wiz -U[a]\n");
+Usage: wc3270wiz [opts] [session-name]\n\
+       wc3270wiz [opts] -e session-file\n\
+       wc3270wiz -U[a]\n\
+Opts: -portable    Run in portable mode\n\
+      -noportable  Do not run in portable mode, even if portable.txt exists\n");
     fflush(stderr);
     exit(1);
 }
@@ -5330,12 +5374,13 @@ main(int argc, char *argv[])
     bool explicit_edit = false;
     bool upgrade = false;
     bool automatic_upgrade = false;
+    bool portable = false;
+    bool no_portable = false;
     DWORD name_size;
     char result[STR_SIZE];
 
     /*
      * Parse command-line arguments.
-     * For now, there is only one -- the optional name of the session.
      */
     program = argv[0];
     if (argc > 1 && !strcmp(argv[1], "-U")) {
@@ -5353,6 +5398,19 @@ main(int argc, char *argv[])
 	explicit_edit = true;
 	argc--;
 	argv++;
+    }
+    if (argc > 1 && !strcmp(argv[1], "-portable")) {
+	portable = true;
+	argc--;
+	argv++;
+    }
+    if (argc > 1 && !strcmp(argv[1], "-noportable")) {
+	no_portable = true;
+	argc--;
+	argv++;
+    }
+    if (argc > 1 && argv[1][0] == '-') {
+	w_usage();
     }
     switch (argc) {
     case 1:
@@ -5387,6 +5445,15 @@ main(int argc, char *argv[])
     if (GetUserName(username, &name_size) == 0) {
 	errout("GetUserName failed, error %ld\n", (long)GetLastError());
 	return 1;
+    }
+
+    /* Figure out portable mode. */
+    char fpath[MAX_PATH];
+    sprintf(fpath, "%s\\%s", installdir, "portable.txt");
+    portable_mode = portable || (access(fpath, F_OK) == 0 && !no_portable);
+    if (portable_mode) {
+	searchdir = installdir;
+	public_searchdir = NULL;
     }
 
     signal(SIGINT, SIG_IGN);
@@ -6003,7 +6070,7 @@ The files can be copied automatically, which means that:\n\
     if ((f = fopen(done_path, "w")) != NULL) {
 	fclose(f);
     }
-    if (admin()) {
+    if (admin() && public_searchdir != NULL) {
 	snprintf(done_path, sizeof(done_path), "%s%s", public_searchdir,
 		DONE_FILE);
 	if ((f = fopen(done_path, "w")) != NULL) {

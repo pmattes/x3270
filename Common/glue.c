@@ -513,8 +513,7 @@ static opt_t base_opts[] = {
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,false, NULL,         NULL,
-    "<command> [<arg>...]", "Run <command> instead of making TELNET connection"
-},
+    "<command> [<arg>...]", "Run <command> instead of making TELNET connection" },
 #endif /*]*/
 { OptHostsFile,OPT_STRING,  false, ResHostsFile, aoffset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
@@ -522,12 +521,10 @@ static opt_t base_opts[] = {
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(_WIN32) /*[*/
 { OptLocalCp,  OPT_INT,	false, ResLocalCp,   aoffset(local_cp),
-    "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
-},
+    "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O" },
 #endif /*]*/
 { OptLoginMacro, OPT_STRING, false, ResLoginMacro, aoffset(login_macro),
-    "Action([arg[,arg...]]) [...]"
-},
+    "Action([arg[,arg...]]) [...]" },
 { OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
     "<version>", "Fail unless at this version or greater" },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
