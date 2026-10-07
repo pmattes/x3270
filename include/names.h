@@ -225,6 +225,7 @@
 #define KwLuName	"LuName"
 #define KwModel		"Model"
 #define KwOutputQueues	"OutputQueues"
+#define KwPortable	"Portable"
 #define KwPrefixes	"Prefixes"
 #define KwProxy		"Proxy"
 #define KwReplyMode	"ReplyMode"
