@@ -101,11 +101,17 @@ static size_t session_suffix_len[4];
 static int n_session_suffixes;
 static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
+#if defined(_WIN32) /*[*/
+static bool portable_mode = false;
+#endif /*]*/
 
 /* Globals */
 bool		supports_cmdline_host = true;
 AppRes          appres;
 char	       *profile_path = NULL;
+
+bool		visible_control = false;
+bool		flipped = false;
 
 /* Register a profile merge function. */
 void
@@ -1286,15 +1292,7 @@ read_resource_file(const char *filename, bool fatal)
     return read_resource_filex(filename, fatal);
 }
 
-/* Screen globals. */
-
-bool visible_control = false;
-
-bool flipped = false;
-
 #if defined(_WIN32) /*[*/
-static bool portable_mode = false;
-
 /* Set up portable mode. */
 void
 portable_init(void)
@@ -1303,6 +1301,10 @@ portable_init(void)
 
     portable_mode = appres.portable || (access(flagfile, F_OK) == 0 && !appres.no_portable);
     Free(flagfile);
+
+    if (portable_mode) {
+	Replace(appres.conf_dir, NewString(instdir));
+    }
 }
 
 /* Indicate if we are in portable mode. */
@@ -1311,6 +1313,4 @@ product_portable(void)
 {
     return portable_mode;
 }
-
 #endif /*]*/
-/* Portable mode. */

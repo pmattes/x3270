@@ -276,6 +276,10 @@ main(int argc, char *argv[])
 	check_min_version(appres.min_version);
     }
 
+#if defined(_WIN32) /*[*/
+    portable_init();
+#endif /*]*/
+
     if (codepage_init(appres.codepage) != CS_OKAY) {
 	xs_warning("Cannot find code page '%s'", scatv(appres.codepage));
 	codepage_init(NULL);
