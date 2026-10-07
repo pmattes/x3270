@@ -45,6 +45,9 @@ void cmdline_help(bool as_action);
 void model_init(void);
 typedef bool merge_profile_t(void);
 void register_merge_profile(merge_profile_t *);
+#if defined(_WIN32) /*[*/
+void portable_init(void);
+#endif /*]*/
 
 /* XtGlue.c */
 extern void (*Error_redirect)(const char *);

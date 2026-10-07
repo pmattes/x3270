@@ -68,6 +68,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -529,12 +530,20 @@ static opt_t base_opts[] = {
     "<version>", "Fail unless at this version or greater" },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+#if defined(_WIN32) /*[*/
+{ OptNoPortable, OPT_BOOLEAN, true, NULL,        aoffset(no_portable),
+    NULL, "Do not run in portable mode" },
+#endif /*]*/
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
 { OptOversize, OPT_STRING,  false, ResOversize,  aoffset(oversize),
     "<cols>x<rows>", "Larger screen dimensions" },
 { OptPort,     OPT_STRING,  false, ResPort,      aoffset(port),
     "<port>", "Default TELNET port" },
+#if defined(_WIN32) /*[*/
+{ OptPortable, OPT_BOOLEAN, true,  NULL,         aoffset(portable),
+    NULL, "Run in portable mode" },
+#endif /*]*/
 { OptPreferIpv4, OPT_BOOLEAN, true, ResPreferIpv4, aoffset(prefer_ipv4),
     NULL,	"Prefer IPv4 host addresses" },
 { OptPreferIpv6, OPT_BOOLEAN, true, ResPreferIpv6, aoffset(prefer_ipv6),
@@ -1281,3 +1290,37 @@ read_resource_file(const char *filename, bool fatal)
 bool visible_control = false;
 
 bool flipped = false;
+
+#if defined(_WIN32) /*[*/
+static bool portable_mode = false;
+
+/* Set up portable mode. */
+void
+portable_init(void)
+{
+    char *flagfile = Asprintf("%s\\%s", instdir, "portable.txt");
+
+    portable_mode = appres.portable || (access(flagfile, F_OK) == 0 && !appres.no_portable);
+    Free(flagfile);
+}
+
+/* Return product-specific settings. */
+const char **
+product_settings(void)
+{
+    const char **ret = Malloc(2 * sizeof(char *));
+    txdFree(ret);
+    ret[0] = txAsprintf("portable=%s", TrueFalse(portable_mode));
+    ret[1] = NULL;
+    return ret;
+}
+
+/* Indicate if we are in portable mode. */
+bool
+product_portable(void)
+{
+    return portable_mode;
+}
+
+#endif /*]*/
+/* Portable mode. */

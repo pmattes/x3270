@@ -241,7 +241,6 @@ char *mydesktop = NULL;
 char *mydocs3270 = NULL;
 char *commondocs3270 = NULL;
 unsigned windirs_flags;
-bool portable_mode;
 static void start_auto_shortcut(int argc, char *argv[]);
 
 static struct {
@@ -734,9 +733,7 @@ Type 'help' for help information.\n\n",
     }
 
     /* Set up portable mode. */
-    char *flagfile = Asprintf("%s\\%s", instdir, "portable.txt");
-    portable_mode = appres.c3270.portable || (access(flagfile, F_OK) == 0 && !appres.c3270.no_portable);
-    Free(flagfile);
+    portable_init();
 #endif /*]*/
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
@@ -2160,7 +2157,7 @@ void
 start_wizard(const char *session)
 {
     char *cmd;
-    char *portable_opt = portable_mode? OptPortable: OptNoPortable;
+    char *portable_opt = product_portable()? OptPortable: OptNoPortable;
 
     if (session != NULL) {
 	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" %s -e \"%s\"", instdir, portable_opt, session);
@@ -2267,24 +2264,6 @@ product_set_appres_defaults(void)
 
     set_toggle(SELECT_URL, true);
 }
-
-#if defined(_WIN32) /*[*/
-const char **
-product_settings(void)
-{
-    const char **ret = Malloc(2 * sizeof(char *));
-    txdFree(ret);
-    ret[0] = txAsprintf("portable=%s", TrueFalse(portable_mode));
-    ret[1] = NULL;
-    return ret;
-}
-
-bool
-product_portable(void)
-{
-    return portable_mode;
-}
-#endif /*]*/
 
 /*
  * Telnet GUI.
@@ -2443,10 +2422,6 @@ c3270_register(void)
 	{ OptTitle,    OPT_STRING,  false, ResTitle,
 	    aoffset(c3270.title),
 	    "<string>", "Set window title to <string>" },
-	{ OptNoPortable, OPT_BOOLEAN, true, NULL,
-	    aoffset(c3270.no_portable), NULL, "Do not run in portable mode" },
-	{ OptPortable, OPT_BOOLEAN, true, NULL,
-	    aoffset(c3270.portable), NULL, "Run in portable mode" },
 #endif /*]*/
     };
     static res_t c3270_resources[] = {

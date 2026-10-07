@@ -44,6 +44,7 @@
 typedef struct {
     /* Common options. */
     char	*alias;
+    bool	 allow_window_ops;
     bool	 bind_limit;
     bool	 bind_unlock;
     bool	 bsd_tm;
@@ -81,6 +82,9 @@ typedef struct {
     char	*model;
     bool	 modified_sel;
     bool	 new_environ;
+#if defined(_WIN32) /*[*/
+    bool	 no_portable;
+#endif /*[*/
     int		 nop_seconds;
     bool	 numeric_lock;
     bool	 nvt_mode;
@@ -88,6 +92,9 @@ typedef struct {
     bool	 once;
     char	*oversize;
     char	*port;
+#if defined(_WIN32) /*[*/
+    bool	 portable;
+#endif /*]*/
     bool	 prefer_ipv4;
     bool	 prefer_ipv6;
     char	*proxy;
@@ -119,7 +126,6 @@ typedef struct {
 #if defined(_WIN32) /*[*/
     char	*window_id;
 #endif /*]*/
-    bool	 allow_window_ops;
 
     /* Toggles. */
     bool toggle[N_TOGGLES];
@@ -217,8 +223,6 @@ typedef struct {
 	bool	 use_rgb;
 #if defined(_WIN32) /*[*/
 	bool	 vt;
-	bool	 portable;
-	bool	 no_portable;
 #endif /*]*/
     } c3270;
 
