@@ -50,10 +50,15 @@ class TestS3270Portable(cti):
         self.check_listen(http_port)
         return http_port, s3270
 
-    # Check the portable state and its default trace directory.
-    def check_portable(self, http_port, expected, installdir=None):
+    # Check the portable state, configuration directory and trace directory.
+    def check_portable(self, http_port, expected, confdir, installdir=None):
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Portable)')
         self.assertEqual([str(expected).lower()], r.json()['result'])
+
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Show(confDir)')
+        actual_confdir = r.json()['result'][0]
+        self.assertEqual(os.path.normcase(os.path.normpath(confdir)),
+            os.path.normcase(os.path.normpath(actual_confdir)))
 
         if installdir is not None:
             self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Trace(on)')
@@ -80,16 +85,16 @@ class TestS3270Portable(cti):
             with open(flagfile, 'w'):
                 pass
             http_port, s3270 = self.start_s3270(executable, [])
-            self.check_portable(http_port, True, installdir)
+            self.check_portable(http_port, True, installdir, installdir)
             self.stop_s3270(http_port, s3270)
 
             http_port, s3270 = self.start_s3270(executable, ['-noportable'])
-            self.check_portable(http_port, False)
+            self.check_portable(http_port, False, os.getcwd())
             self.stop_s3270(http_port, s3270)
 
             os.unlink(flagfile)
             http_port, s3270 = self.start_s3270(executable, ['-portable'])
-            self.check_portable(http_port, True, installdir)
+            self.check_portable(http_port, True, installdir, installdir)
             self.stop_s3270(http_port, s3270)
 
 if __name__ == '__main__':
