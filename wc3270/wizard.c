@@ -3202,6 +3202,28 @@ get_src(const char *name, src_t def)
     return src_out;
 }
 
+/**
+ * Return the directory containing sessions for a location.
+ *
+ * @param[in] src	Session location
+ *
+ * @return directory pathname, or NULL for a location without sessions
+ */
+static const char *
+session_dir(src_t src)
+{
+    switch (src) {
+    case SRC_INSTDIR:
+	return installdir;
+    case SRC_DOCUMENTS:
+	return documents_wc3270;
+    case SRC_PUBLIC_DOCUMENTS:
+	return public_documents_wc3270;
+    default:
+	return NULL;
+    }
+}
+
 static const char *
 weight_name(int weight)
 {
@@ -3734,7 +3756,11 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     }
 
     /* Return where the file ended up. */
-    if (!strncasecmp(documents_wc3270, path, strlen(documents_wc3270))) {
+    if (portable_mode) {
+	ret = SRC_INSTDIR;
+	goto done;
+    } else if (!strncasecmp(documents_wc3270, path,
+	    strlen(documents_wc3270))) {
 	ret = SRC_DOCUMENTS;
 	goto done;
     } else if (!strncasecmp(public_documents_wc3270, path,
@@ -4022,6 +4048,7 @@ static int
 delete_session(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
+    const char *dirname;
     src_t l = SRC_ERR;
     char path[MAX_PATH];
 
@@ -4060,9 +4087,14 @@ Delete Session\n");
 	}
     }
 
+    dirname = session_dir(l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
+    }
+
     snprintf(path, MAX_PATH, "%s%s%s",
-	    (l == SRC_DOCUMENTS)? documents_wc3270: public_documents_wc3270,
-	    name, SESS_SUFFIX);
+	    dirname, name, SESS_SUFFIX);
     if (unlink(path) < 0) {
 	errout("\nDelete of '%s' failed: %s\n", path, strerror(errno));
 	goto failed;
@@ -4101,6 +4133,7 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 {
     char to_name[64];
     const char *from_name = NULL;
+    const char *dirname;
     src_t from_l, to_l;
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
@@ -4184,32 +4217,23 @@ Copy Session\n");
 	break;
     }
 
-    switch (from_l) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270,
-		from_name, SESS_SUFFIX);
-	break;
-    default:
-    case SRC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, from_name,
-		SESS_SUFFIX);
-	break;
-    }
-
-    switch ((to_l = get_src(to_name, from_l))) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(to_path, MAX_PATH, "%s%s%s", public_documents_wc3270, to_name,
-		SESS_SUFFIX);
-	break;
-    case SRC_DOCUMENTS:
-	snprintf(to_path, MAX_PATH, "%s%s%s", documents_wc3270, to_name,
-		SESS_SUFFIX);
-	break;
-    case SRC_NONE:
-	return 0;
-    default:
+    dirname = session_dir(from_l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
 	return -1;
     }
+    snprintf(from_path, MAX_PATH, "%s%s%s", dirname, from_name, SESS_SUFFIX);
+
+    to_l = get_src(to_name, from_l);
+    if (to_l == SRC_NONE) {
+	return 0;
+    }
+    dirname = session_dir(to_l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
+    }
+    snprintf(to_path, MAX_PATH, "%s%s%s", dirname, to_name, SESS_SUFFIX);
 
     /* Read in the existing session. */
     f = fopen(from_path, "r");
@@ -4309,6 +4333,7 @@ static int
 new_shortcut(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
+    const char *dirname;
     src_t l = SRC_ERR;
     char from_path[MAX_PATH];
     FILE *f;
@@ -4333,17 +4358,12 @@ Create Shortcut\n");
 	}
     }
 
-    switch (l) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270, name,
-		SESS_SUFFIX);
-	break;
-    default:
-    case SRC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, name,
-		SESS_SUFFIX);
-	break;
+    dirname = session_dir(l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
     }
+    snprintf(from_path, MAX_PATH, "%s%s%s", dirname, name, SESS_SUFFIX);
 
     /*
      * If public document but not admin, create shortcut on per-user desktop.
@@ -4398,6 +4418,8 @@ reshort(void)
     int rc;
     int i;
     const char *n;
+    const char *dirname;
+    src_t location;
     bool any = false;
 
     new_screen(&empty_session, NULL, "\
@@ -4420,7 +4442,7 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
     }
     printf("\n");
 
-    for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
+    for (i = 0; (n = xs_name(i + 1, &location)) != NULL; i++) {
 	char *session;
 	char *shortcut;
 	FILE *f;
@@ -4435,12 +4457,17 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 
 	fflush(stdout);
 	any = true;
-	if (i < xs_my.count) {
+	dirname = session_dir(location);
+	if (dirname == NULL) {
+	    errout("Invalid session location for '%s'.\n", n);
+	    continue;
+	}
+	if (location != SRC_PUBLIC_DOCUMENTS) {
 	    /* User session. */
 	    public = false;
-	    session = malloc(strlen(documents_wc3270) + strlen(n) +
+	    session = malloc(strlen(dirname) + strlen(n) +
 		    strlen(SESS_SUFFIX) + 1);
-	    sprintf(session, "%s%s" SESS_SUFFIX, documents_wc3270, n);
+	    sprintf(session, "%s%s" SESS_SUFFIX, dirname, n);
 	    shortcut = malloc(strlen(desktop) + strlen(n) + strlen(".lnk") + 1);
 	    sprintf(shortcut, "%s%s.lnk", desktop, n);
 	} else {
@@ -4449,9 +4476,9 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 		continue;
 	    }
 	    public = true;
-	    session = malloc(strlen(public_documents_wc3270) + strlen(n) +
+	    session = malloc(strlen(dirname) + strlen(n) +
 		    strlen(SESS_SUFFIX) + 1);
-	    sprintf(session, "%s%s" SESS_SUFFIX, public_documents_wc3270, n);
+	    sprintf(session, "%s%s" SESS_SUFFIX, dirname, n);
 	    shortcut = malloc(strlen(public_desktop) + strlen(n) +
 		    strlen(".lnk") + 1);
 	    sprintf(shortcut, "%s%s.lnk", public_desktop, n);
@@ -4631,7 +4658,8 @@ xs_init(bool include_public)
     free_xs(&xs_public);
     num_xs = 0;
 
-    xs_init_type(searchdir, &xs_my, SRC_DOCUMENTS);
+    xs_init_type(searchdir, &xs_my,
+	    portable_mode? SRC_INSTDIR: SRC_DOCUMENTS);
     if (include_public && public_searchdir != NULL) {
 	xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
     }
