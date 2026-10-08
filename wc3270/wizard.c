@@ -1352,7 +1352,8 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		if (portable_mode &&
 			(((strlen(session_name) - strlen(start)) != strlen(installdir)) ||
 			 (strncasecmp(session_name, installdir, strlen(installdir))))) {
-		    fprintf(stderr, "Error: '%s' does not start with '%s'\nInvalid in portable mode\n", session_name, installdir);
+		    errout("Error: '%s' does not start with '%s'.\n", session_name, installdir);
+		    errout("Invalid in portable mode.\n");
 		    return GS_ERR;
 		}
 
@@ -5384,37 +5385,38 @@ main(int argc, char *argv[])
      * Parse command-line arguments.
      */
     program = argv[0];
-    if (argc > 1 && !strcmp(argv[1], "-U")) {
-	upgrade = true;
-	argc--;
-	argv--;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-Ua")) {
-	upgrade = true;
-	automatic_upgrade = true;
-	argc--;
-	argv--;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-e")) {
-	explicit_edit = true;
-	argc--;
-	argv++;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-portable")) {
-	portable = true;
-	argc--;
-	argv++;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-noportable")) {
-	no_portable = true;
-	argc--;
-	argv++;
-    }
-    if (argc > 1 && argv[1][0] == '-') {
-	w_usage();
+    while (argc > 1 && argv[1][0] == '-') {
+	if (argc > 1 && !strcmp(argv[1], "-U")) {
+	    upgrade = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-Ua")) {
+	    upgrade = true;
+	    automatic_upgrade = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-e")) {
+	    explicit_edit = true;
+	    argc--;
+	    argv++;
+	    break;
+	} else if (!strcmp(argv[1], "-portable")) {
+	    portable = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-noportable")) {
+	    no_portable = true;
+	    argc--;
+	    argv++;
+	} else {
+	    w_usage();
+	}
     }
     switch (argc) {
     case 1:
+	if (explicit_edit) {
+	    w_usage();
+	}
 	break;
     case 2:
 	session_name = argv[1];
@@ -5424,7 +5426,7 @@ main(int argc, char *argv[])
 	break;
     }
 
-    if (upgrade && explicit_edit) {
+    if (upgrade && (explicit_edit || portable || no_portable)) {
 	w_usage();
     }
 
