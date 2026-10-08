@@ -47,6 +47,7 @@ typedef bool merge_profile_t(void);
 void register_merge_profile(merge_profile_t *);
 #if defined(_WIN32) /*[*/
 void portable_init(void);
+const char *get_portable(void);
 #endif /*]*/
 
 /* XtGlue.c */

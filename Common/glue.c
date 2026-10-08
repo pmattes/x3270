@@ -103,6 +103,7 @@ static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
 #if defined(_WIN32) /*[*/
 static bool portable_mode = false;
+static bool flagfile_present = false;
 #endif /*]*/
 
 /* Globals */
@@ -1299,8 +1300,9 @@ portable_init(void)
 {
     char *flagfile = Asprintf("%s\\%s", instdir, PORTABLE_FLAG_FILE);
 
-    portable_mode = appres.portable || (access(flagfile, F_OK) == 0 && !appres.no_portable);
+    flagfile_present = access(flagfile, F_OK) == 0;
     Free(flagfile);
+    portable_mode = appres.portable || (flagfile_present && !appres.no_portable);
 
     if (portable_mode) {
 	Replace(appres.conf_dir, NewString(instdir));
@@ -1312,5 +1314,14 @@ bool
 product_portable(void)
 {
     return portable_mode;
+}
+
+/* Get the state of portable mode. */
+const char *
+get_portable(void)
+{
+    return txAsprintf("%s %s",
+	portable_mode? "enabled": "disabled",
+	(appres.portable || appres.no_portable)? "command-line": (flagfile_present? "flag-file": "default"));
 }
 #endif /*]*/

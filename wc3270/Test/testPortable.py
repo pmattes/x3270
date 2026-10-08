@@ -40,41 +40,57 @@ from Common.Test.cti import *
 class TestWc3270Portable(cti):
 
     # Start wc3270 with the supplied portable-mode options.
-    def start_wc3270(self, executable, installdir, options, instance):
+    def start_wc3270(self, executable: str, options: list[str]) -> tuple[int, Popen]:
         http_port, ts = unused_port()
-        session = os.path.join(installdir, f'portable-{instance}.wc3270')
-        with open(session, 'w') as f:
-            f.write(f'wc3270.httpd: 127.0.0.1:{http_port}\n')
-
         self.assertEqual(0, os.system(
-            f'start "" conhost "{executable}" {" ".join(options)} "{session}"'))
+            f'start "" conhost "{executable}" -httpd :{http_port} {" ".join(options)}'))
         self.check_listen(http_port)
         ts.close()
         return http_port
 
+    # Stop wc3270.
+    def is_dead(self, http_port: int) -> bool:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect(('127.0.0.1', http_port))
+            s.close()
+            return False
+        except ConnectionRefusedError:
+            s.close()
+            return True
+    def stop_wc3270(self, http_port: int):
+        # We need to use indirect means to make sure wc3270 is dead, because it is
+        # a child of conhost, not a child of this script.
+        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        self.try_until(lambda: self.is_dead(http_port), 2, 'expected wc3270 to exit')
+
     # Check the portable state, configuration directory and trace directory.
-    def check_portable(self, http_port, expected, confdir, installdir=None):
+    def check_portable(self, http_port: int, expected: str, confdir: str, installdir=None):
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Portable)')
-        self.assertEqual([str(expected).lower()], r.json()['result'])
+        q_portable = r.json()['result']
 
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(confDir)')
         actual_confdir = r.json()['result'][0]
-        self.assertEqual(os.path.normcase(os.path.normpath(confdir)),
-            os.path.normcase(os.path.normpath(actual_confdir)))
 
         if installdir is not None:
             self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Trace(on)')
             r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(TraceFile)')
             tracefile = r.json()['result'][0]
-            self.assertEqual(os.path.normcase(os.path.normpath(installdir)),
-                os.path.normcase(os.path.normpath(os.path.dirname(tracefile))))
 
-    # Stop wc3270.
-    def stop_wc3270(self, http_port):
-        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force)')
+        # Stop wc3270 before checking anything.
+        self.stop_wc3270(http_port)
+
+        # Check.
+        self.assertEqual([expected], q_portable)
+        self.assertEqual(os.path.normcase(os.path.normpath(confdir)),
+            os.path.normcase(os.path.normpath(actual_confdir)))
+        if installdir is not None:
+            os.unlink(tracefile)
+            self.assertEqual(os.path.normcase(os.path.normpath(confdir)),
+                os.path.normcase(os.path.normpath(actual_confdir)))
 
     # Test the flag file and command-line portable mode controls.
-    def test_wc3270_portable(self):
+    def wc3270_portable(self, cmdline: list[str], expected: str, portable=False, create_flagfile=False):
         source = shutil.which('wc3270.exe')
         self.assertIsNotNone(source, 'Could not find wc3270.exe in PATH')
 
@@ -83,20 +99,20 @@ class TestWc3270Portable(cti):
             executable = os.path.join(installdir, os.path.basename(source))
             flagfile = os.path.join(installdir, 'PORTABLE.txt')
 
-            with open(flagfile, 'w'):
-                pass
-            http_port = self.start_wc3270(executable, installdir, [], 1)
-            self.check_portable(http_port, True, installdir, installdir)
-            self.stop_wc3270(http_port)
+            if create_flagfile:
+                with open(flagfile, 'w'):
+                    pass
+            http_port = self.start_wc3270(executable, cmdline)
+            self.check_portable(http_port, expected, confdir=installdir if portable else os.getcwd(), installdir=installdir if portable else None)
 
-            http_port = self.start_wc3270(executable, installdir, ['-noportable'], 2)
-            self.check_portable(http_port, False, os.getcwd())
-            self.stop_wc3270(http_port)
-
-            os.unlink(flagfile)
-            http_port = self.start_wc3270(executable, installdir, ['-portable'], 3)
-            self.check_portable(http_port, True, installdir, installdir)
-            self.stop_wc3270(http_port)
+    def test_wc3270_portable_default(self):
+        self.wc3270_portable([], 'disabled default')
+    def test_wc3270_portable_flagfile(self):
+        self.wc3270_portable([], 'enabled flag-file', portable=True, create_flagfile=True)
+    def test_wc3270_portable_cmdline_disabled(self):
+        self.wc3270_portable(['-noportable'], 'disabled command-line', create_flagfile=True)
+    def test_wc3270_portable_cmdline_enabled(self):
+        self.wc3270_portable(['-portable'], 'enabled command-line', portable=True)
 
 if __name__ == '__main__':
     unittest.main()

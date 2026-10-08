@@ -39,6 +39,7 @@
 #include "codepage.h"
 #include "copyright.h"
 #include "ctlrc.h"
+#include "glue.h"
 #include "host.h"
 #include "linemode.h"
 #include "model.h"
@@ -142,14 +143,6 @@ get_codepages(void)
     free_cpnames(c);
     return txdFree(vb_consume(&r));
 }
-
-#if defined(_WIN32) /*[*/
-static const char *
-get_portable(void)
-{
-    return TrueFalse(product_portable());
-}
-#endif /*]*/
 
 static const char *
 get_proxy(void)
