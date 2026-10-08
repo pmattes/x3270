@@ -5463,6 +5463,10 @@ main(int argc, char *argv[])
 
     if (upgrade) {
 	/* Do an upgrade. */
+	if (portable_mode) {
+	    errout("Can't do an upgrade in portable mode.\n");
+	    return 1;
+	}
 	get_base_dirs(false);
 	save_keymaps(admin());
 	xs_init(admin());
