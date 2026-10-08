@@ -55,7 +55,7 @@ class TestB3270Portable(cti):
         r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(Portable)')
         self.assertEqual([str(expected).lower()], r.json()['result'])
 
-        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Show(confDir)')
+        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Set(confDir)')
         actual_confdir = r.json()['result'][0]
         self.assertEqual(os.path.normcase(os.path.normpath(confdir)),
             os.path.normcase(os.path.normpath(actual_confdir)))
