@@ -41,3 +41,4 @@ void product_set_appres_defaults(void);
 bool product_has_window_id(void);			/* default false */
 #endif /*]*/
 bool product_has_known_color(void);			/* default true */
+bool product_portable(void);				/* default false */

@@ -580,6 +580,18 @@ dump_queries(void)
     free_query_all(query_strings);
 }
 
+/* Dump one setting. */
+static void
+dump_setting(int i, const char *setting, size_t *len)
+{
+    if (*len + (i? 2: 1) + strlen(setting) >= 132) {
+	wtrace(false, TC_INFRA, "\n");
+	*len = 0;
+    }
+    wtrace(false, TC_INFRA, "%s%s", i? "  ": " ", setting);
+    *len += (i? 2: 1) + strlen(setting);
+}
+
 /* Put the values of modifiable settings into the trace file. */
 static void
 dump_settings(void)
@@ -598,14 +610,10 @@ dump_settings(void)
 	} else {
 	    setting = Asprintf("%s=", tnv[i].name);
 	}
-	if (len + (i? 2: 1) + strlen(setting) >= 132) {
-	    wtrace(false, TC_INFRA, "\n");
-	    len = 0;
-	}
-	wtrace(false, TC_INFRA, "%s%s", i? "  ": " ", setting);
-	len += (i? 2: 1) + strlen(setting);
+	dump_setting(i, setting, &len);
 	Free(setting);
     }
+
     wtrace(false, TC_INFRA, "\n");
 }
 
@@ -929,6 +937,11 @@ done:
 const char *
 default_trace_dir(void)
 {
+    if (product_portable()) {
+	/* In portable mode, traces go in the install directory. */
+	return instdir;
+    }
+
     if (product_has_display()) {
 	/*
 	 * wc3270 puts traces on the desktop, and if that's not defined, in

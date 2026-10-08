@@ -68,12 +68,14 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
+#include "txa.h"
 #include "unicodec.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
+# include "portable_mode.h"
 # include "winvers.h"
 #endif /*]*/
 
@@ -99,11 +101,17 @@ static size_t session_suffix_len[4];
 static int n_session_suffixes;
 static opt_t *sorted_help = NULL;
 unsigned sorted_help_count = 0;
+#if defined(_WIN32) /*[*/
+static bool portable_mode = false;
+#endif /*]*/
 
 /* Globals */
 bool		supports_cmdline_host = true;
 AppRes          appres;
 char	       *profile_path = NULL;
+
+bool		visible_control = false;
+bool		flipped = false;
 
 /* Register a profile merge function. */
 void
@@ -513,8 +521,7 @@ static opt_t base_opts[] = {
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,false, NULL,         NULL,
-    "<command> [<arg>...]", "Run <command> instead of making TELNET connection"
-},
+    "<command> [<arg>...]", "Run <command> instead of making TELNET connection" },
 #endif /*]*/
 { OptHostsFile,OPT_STRING,  false, ResHostsFile, aoffset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
@@ -522,22 +529,28 @@ static opt_t base_opts[] = {
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(_WIN32) /*[*/
 { OptLocalCp,  OPT_INT,	false, ResLocalCp,   aoffset(local_cp),
-    "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
-},
+    "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O" },
 #endif /*]*/
 { OptLoginMacro, OPT_STRING, false, ResLoginMacro, aoffset(login_macro),
-    "Action([arg[,arg...]]) [...]"
-},
+    "Action([arg[,arg...]]) [...]" },
 { OptMinVersion,OPT_STRING, false, ResMinVersion,aoffset(min_version),
     "<version>", "Fail unless at this version or greater" },
 { OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+#if defined(_WIN32) /*[*/
+{ OptNoPortable, OPT_BOOLEAN, true, NULL,        aoffset(no_portable),
+    NULL, "Do not run in portable mode, even if " PORTABLE_FLAG_FILE " exists" },
+#endif /*]*/
 { OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
 { OptOversize, OPT_STRING,  false, ResOversize,  aoffset(oversize),
     "<cols>x<rows>", "Larger screen dimensions" },
 { OptPort,     OPT_STRING,  false, ResPort,      aoffset(port),
     "<port>", "Default TELNET port" },
+#if defined(_WIN32) /*[*/
+{ OptPortable, OPT_BOOLEAN, true,  NULL,         aoffset(portable),
+    NULL, "Run in portable mode" },
+#endif /*]*/
 { OptPreferIpv4, OPT_BOOLEAN, true, ResPreferIpv4, aoffset(prefer_ipv4),
     NULL,	"Prefer IPv4 host addresses" },
 { OptPreferIpv6, OPT_BOOLEAN, true, ResPreferIpv6, aoffset(prefer_ipv6),
@@ -1279,8 +1292,25 @@ read_resource_file(const char *filename, bool fatal)
     return read_resource_filex(filename, fatal);
 }
 
-/* Screen globals. */
+#if defined(_WIN32) /*[*/
+/* Set up portable mode. */
+void
+portable_init(void)
+{
+    char *flagfile = Asprintf("%s\\%s", instdir, PORTABLE_FLAG_FILE);
 
-bool visible_control = false;
+    portable_mode = appres.portable || (access(flagfile, F_OK) == 0 && !appres.no_portable);
+    Free(flagfile);
 
-bool flipped = false;
+    if (portable_mode) {
+	Replace(appres.conf_dir, NewString(instdir));
+    }
+}
+
+/* Indicate if we are in portable mode. */
+bool
+product_portable(void)
+{
+    return portable_mode;
+}
+#endif /*]*/

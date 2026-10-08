@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2026 Paul Mattes.
+ * Copyright (c) 2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,8 @@
  */
 
 /*
- *	glue.h
- *		Declarations for glue.c and XtGlue.c
+ *	portable_mode.h
+ *		Declarations for portable mode support.
  */
 
-/* glue.c */
-struct host_color {
-    char *name;
-    int index;
-};
-extern struct host_color host_color[];
-extern char *profile_path;
-
-int parse_command_line(int argc, const char **argv, const char **cl_hostname);
-void parse_xrm(const char *arg, const char *where);
-bool process_events(bool block);
-void cmdline_help(bool as_action);
-void model_init(void);
-typedef bool merge_profile_t(void);
-void register_merge_profile(merge_profile_t *);
-#if defined(_WIN32) /*[*/
-void portable_init(void);
-#endif /*]*/
-
-/* XtGlue.c */
-extern void (*Error_redirect)(const char *);
-extern void (*Warning_redirect)(const char *);
+#define PORTABLE_FLAG_FILE	"PORTABLE.txt"

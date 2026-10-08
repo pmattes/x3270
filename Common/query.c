@@ -47,6 +47,7 @@
 #include "popups.h"
 #include "product.h"
 #include "query.h"
+#include "resources.h"
 #include "see.h"
 #include "split_host.h"
 #include "telnet.h"
@@ -141,6 +142,14 @@ get_codepages(void)
     free_cpnames(c);
     return txdFree(vb_consume(&r));
 }
+
+#if defined(_WIN32) /*[*/
+static const char *
+get_portable(void)
+{
+    return TrueFalse(product_portable());
+}
+#endif /*]*/
 
 static const char *
 get_proxy(void)
@@ -578,6 +587,9 @@ query_register(void)
 	{ KwLocalEncoding, get_codeset, NULL, QF_TRACEHDR },
 	{ KwLuName, net_query_lu_name, NULL, QF_TRACEHDR },
 	{ KwModel, get_full_model, NULL, QF_DEPRECATED },
+#if defined(_WIN32) /*[*/
+	{ KwPortable, get_portable, NULL, QF_TRACEHDR },
+#endif /*]*/
 	{ KwPrefixes, host_prefixes, NULL, 0 },
 	{ KwProxy, get_proxy, NULL, QF_TRACEHDR },
 	{ KwReplyMode, get_reply_mode, NULL, QF_TRACEHDR },

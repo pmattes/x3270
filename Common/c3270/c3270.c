@@ -731,6 +731,9 @@ Type 'help' for help information.\n\n",
 	start_auto_shortcut(save_argc, save_argv);
 	exit(0);
     }
+
+    /* Set up portable mode. */
+    portable_init();
 #endif /*]*/
 
     if (codepage_init(appres.codepage) != CS_OKAY) {
@@ -2154,13 +2157,12 @@ void
 start_wizard(const char *session)
 {
     char *cmd;
+    char *portable_opt = product_portable()? OptPortable: OptNoPortable;
 
     if (session != NULL) {
-	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" "
-		"-e \"%s\"", instdir, session);
+	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" %s -e \"%s\"", instdir, portable_opt, session);
     } else {
-	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\"",
-		instdir);
+	cmd = Asprintf("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" %s", instdir, portable_opt);
     }
     system(cmd);
     Free(cmd);

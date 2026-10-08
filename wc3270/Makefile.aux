@@ -75,7 +75,7 @@ CopyToWx3270.ps1: CopyToWx3270.ps1.tmpl mkiss find-dirnames
 include dirnames
 WROBJ = obj/release
 .PHONY: package.zip
-package.zip: wc3270.iss package.ps1 run-signtool.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.zipit wx3270-32.zipit wx3270-64.zipit LICENSE.txt README.txt README ../ReleaseTools/sha.py
+package.zip: wc3270.iss package.ps1 run-signtool.ps1 CopyToWx3270.ps1 wc3270-32.zipit wc3270-64.zipit wx3270-32.zipit wx3270-64.zipit LICENSE.txt README.txt README NO-INSTALL.txt PORTABLE.txt ../ReleaseTools/sha.py
 	@(cd .. && \
 	 mkdir -p $(WROBJ) && \
 	 rm -f $(WROBJ)/package.zip && \

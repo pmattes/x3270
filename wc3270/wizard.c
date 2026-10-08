@@ -42,6 +42,7 @@
 
 #include "ctlrc.h"
 #include "host.h"
+#include "portable_mode.h"
 #include "proxy_names.h"
 #include "resources.h"
 #include "screen.h"
@@ -135,6 +136,7 @@ typedef enum {
     SRC_PUBLIC_DESKTOP,	/* success, on public Desktop */
     SRC_DESKTOP,	/* success, on Desktop */
     SRC_OTHER,		/* not sure where the file is */
+    SRC_INSTDIR,	/* install directory (portable mode) */
     SRC_NONE,		/* don't rewrite the file */
     SRC_ERR = -1	/* error */
 } src_t;
@@ -270,6 +272,7 @@ static session_t empty_session;
 static HANDLE conin_handle = INVALID_HANDLE_VALUE;
 static HANDLE conout_handle = INVALID_HANDLE_VALUE;
 static bool is_vt = false;
+static bool portable_mode = false;
 
 static void write_user_settings(char *us, FILE *f);
 static void display_sessions(bool with_numbers, bool include_public);
@@ -838,7 +841,7 @@ save_keymaps(bool include_public)
     }
 
     save_keymaps_type(SRC_DOCUMENTS, searchdir);
-    if (include_public) {
+    if (include_public && public_searchdir != NULL) {
 	save_keymaps_type(SRC_PUBLIC_DOCUMENTS, public_searchdir);
     }
 }
@@ -956,11 +959,18 @@ abort:
 static void
 new_screen(session_t *s, const char *path, const char *title)
 {
-    static char wizard[] = "wc3270 Session Wizard";
+    static char *base_title = "wc3270 Session Wizard";
+    static char *pm_banner = " [Portable Mode]";
+    char *name = base_title;
+
+    if (portable_mode) {
+	name = malloc(strlen(base_title) + strlen(pm_banner) + 1);
+	sprintf(name, "%s%s", base_title, pm_banner);
+    }
     cls();
     reverseout("%s%*sv%s\n",
-	    wizard,
-	    (int)(79 - strlen(wizard) - (strlen(build_rpq_version) + 1)), " ",
+	    name,
+	    (int)(79 - strlen(name) - (strlen(build_rpq_version) + 1)), " ",
 	    build_rpq_version);
     if (s->session[0]) {
 	printf("\nSession: %s\n", s->session);
@@ -969,6 +979,9 @@ new_screen(session_t *s, const char *path, const char *title)
 	printf("Path: %s\n", path);
     }
     printf("\n%s\n", title);
+    if (portable_mode) {
+	free(name);
+    }
 }
 
 /*
@@ -1161,6 +1174,15 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
 static src_t
 find_session_file(const char *session_name, char *path)
 {
+    if (portable_mode) {
+	/* It's the install dir or nothing. */
+	snprintf(path, MAX_PATH, "%s%s%s", installdir, session_name, SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+	    return SRC_INSTDIR;
+	}
+	return SRC_NONE;
+    }
+
     /* Try the user's My Documents\wc3270. */
     snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session_name,
 	    SESS_SUFFIX);
@@ -1290,7 +1312,7 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 	    char *bsl;
 	    char *colon;
 
-	    /* Ends in .wc3270km. Pathname. */
+	    /* Ends in .wc3270. Pathname. */
 	    path[MAX_PATH - 1] = '\0';
 	    bsl = strrchr(session_name, '\\');
 	    colon = strrchr(session_name, ':');
@@ -1325,6 +1347,16 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		if (strlen(start) - SESS_LEN + 1 < slen) {
 		    slen = strlen(start) - SESS_LEN + 1;
 		}
+
+		/* In portable mode, the only legal pathname is installdir. */
+		if (portable_mode &&
+			(((strlen(session_name) - strlen(start)) != strlen(installdir)) ||
+			 (strncasecmp(session_name, installdir, strlen(installdir))))) {
+		    errout("Error: '%s' does not start with '%s'.\n", session_name, installdir);
+		    errout("Invalid in portable mode.\n");
+		    return GS_ERR;
+		}
+
 		strncpy(s->session, start, slen);
 		s->session[slen - 1] = '\0';
 
@@ -1332,7 +1364,9 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		 * Try to figure out where it is.  This is inherently
 		 * imperfect.
 		 */
-		if (!strncmp(path, documents_wc3270,
+		if (portable_mode) {
+		    *src = SRC_INSTDIR;
+		} else if (!strncmp(path, documents_wc3270,
 			    strlen(documents_wc3270))) {
 		    *src = SRC_DOCUMENTS;
 		} else if (!strncmp(path, public_documents_wc3270,
@@ -3131,6 +3165,10 @@ get_src(const char *name, src_t def)
     char ac[STR_SIZE];
     src_t src_out = def;
 
+    if (portable_mode) {
+	return SRC_INSTDIR;
+    }
+
     /* Ask where they want the file. */
     if (admin()) {
 	for (;;) {
@@ -3162,6 +3200,28 @@ get_src(const char *name, src_t def)
     /* Make sure the subfolder exists. */
     create_wc3270_folder(src_out);
     return src_out;
+}
+
+/**
+ * Return the directory containing sessions for a location.
+ *
+ * @param[in] src	Session location
+ *
+ * @return directory pathname, or NULL for a location without sessions
+ */
+static const char *
+session_dir(src_t src)
+{
+    switch (src) {
+    case SRC_INSTDIR:
+	return installdir;
+    case SRC_DOCUMENTS:
+	return documents_wc3270;
+    case SRC_PUBLIC_DOCUMENTS:
+	return public_documents_wc3270;
+    default:
+	return NULL;
+    }
 }
 
 static const char *
@@ -3696,7 +3756,11 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     }
 
     /* Return where the file ended up. */
-    if (!strncasecmp(documents_wc3270, path, strlen(documents_wc3270))) {
+    if (portable_mode) {
+	ret = SRC_INSTDIR;
+	goto done;
+    } else if (!strncasecmp(documents_wc3270, path,
+	    strlen(documents_wc3270))) {
 	ret = SRC_DOCUMENTS;
 	goto done;
     } else if (!strncasecmp(public_documents_wc3270, path,
@@ -3766,6 +3830,12 @@ display_sessions(bool with_numbers, bool include_public)
     int i;
     int col = 0;
     const char *n;
+    char *mydir = documents_wc3270;
+
+    if (portable_mode) {
+	mydir = installdir;
+	include_public = false;
+    }
 
     /*
      * Display the session names in four colums. Each 20-character column
@@ -3785,8 +3855,8 @@ display_sessions(bool with_numbers, bool include_public)
 	if (i == 0 && xs_my.count != 0) {
 	    printf("Sessions for user '%s' in %.*s:\n",
 		    username,
-		    (int)(strlen(documents_wc3270) - 1),
-		    documents_wc3270);
+		    (int)(strlen(mydir) - 1),
+		    mydir);
 	} else if (i == xs_my.count) {
 	    if (col) {
 		printf("\n");
@@ -3978,6 +4048,7 @@ static int
 delete_session(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
+    const char *dirname;
     src_t l = SRC_ERR;
     char path[MAX_PATH];
 
@@ -4016,9 +4087,14 @@ Delete Session\n");
 	}
     }
 
+    dirname = session_dir(l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
+    }
+
     snprintf(path, MAX_PATH, "%s%s%s",
-	    (l == SRC_DOCUMENTS)? documents_wc3270: public_documents_wc3270,
-	    name, SESS_SUFFIX);
+	    dirname, name, SESS_SUFFIX);
     if (unlink(path) < 0) {
 	errout("\nDelete of '%s' failed: %s\n", path, strerror(errno));
 	goto failed;
@@ -4057,6 +4133,7 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 {
     char to_name[64];
     const char *from_name = NULL;
+    const char *dirname;
     src_t from_l, to_l;
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
@@ -4140,32 +4217,23 @@ Copy Session\n");
 	break;
     }
 
-    switch (from_l) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270,
-		from_name, SESS_SUFFIX);
-	break;
-    default:
-    case SRC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, from_name,
-		SESS_SUFFIX);
-	break;
-    }
-
-    switch ((to_l = get_src(to_name, from_l))) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(to_path, MAX_PATH, "%s%s%s", public_documents_wc3270, to_name,
-		SESS_SUFFIX);
-	break;
-    case SRC_DOCUMENTS:
-	snprintf(to_path, MAX_PATH, "%s%s%s", documents_wc3270, to_name,
-		SESS_SUFFIX);
-	break;
-    case SRC_NONE:
-	return 0;
-    default:
+    dirname = session_dir(from_l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
 	return -1;
     }
+    snprintf(from_path, MAX_PATH, "%s%s%s", dirname, from_name, SESS_SUFFIX);
+
+    to_l = get_src(to_name, from_l);
+    if (to_l == SRC_NONE) {
+	return 0;
+    }
+    dirname = session_dir(to_l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
+    }
+    snprintf(to_path, MAX_PATH, "%s%s%s", dirname, to_name, SESS_SUFFIX);
 
     /* Read in the existing session. */
     f = fopen(from_path, "r");
@@ -4265,6 +4333,7 @@ static int
 new_shortcut(int argc, char **argv, char *result, size_t result_size)
 {
     const char *name = NULL;
+    const char *dirname;
     src_t l = SRC_ERR;
     char from_path[MAX_PATH];
     FILE *f;
@@ -4289,17 +4358,12 @@ Create Shortcut\n");
 	}
     }
 
-    switch (l) {
-    case SRC_PUBLIC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270, name,
-		SESS_SUFFIX);
-	break;
-    default:
-    case SRC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, name,
-		SESS_SUFFIX);
-	break;
+    dirname = session_dir(l);
+    if (dirname == NULL) {
+	errout("Invalid session location.\n");
+	return -1;
     }
+    snprintf(from_path, MAX_PATH, "%s%s%s", dirname, name, SESS_SUFFIX);
 
     /*
      * If public document but not admin, create shortcut on per-user desktop.
@@ -4354,6 +4418,8 @@ reshort(void)
     int rc;
     int i;
     const char *n;
+    const char *dirname;
+    src_t location;
     bool any = false;
 
     new_screen(&empty_session, NULL, "\
@@ -4376,7 +4442,7 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
     }
     printf("\n");
 
-    for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
+    for (i = 0; (n = xs_name(i + 1, &location)) != NULL; i++) {
 	char *session;
 	char *shortcut;
 	FILE *f;
@@ -4391,12 +4457,17 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 
 	fflush(stdout);
 	any = true;
-	if (i < xs_my.count) {
+	dirname = session_dir(location);
+	if (dirname == NULL) {
+	    errout("Invalid session location for '%s'.\n", n);
+	    continue;
+	}
+	if (location != SRC_PUBLIC_DOCUMENTS) {
 	    /* User session. */
 	    public = false;
-	    session = malloc(strlen(documents_wc3270) + strlen(n) +
+	    session = malloc(strlen(dirname) + strlen(n) +
 		    strlen(SESS_SUFFIX) + 1);
-	    sprintf(session, "%s%s" SESS_SUFFIX, documents_wc3270, n);
+	    sprintf(session, "%s%s" SESS_SUFFIX, dirname, n);
 	    shortcut = malloc(strlen(desktop) + strlen(n) + strlen(".lnk") + 1);
 	    sprintf(shortcut, "%s%s.lnk", desktop, n);
 	} else {
@@ -4405,9 +4476,9 @@ Windows 10 or the use of Windows Terminal in Windows 11.");
 		continue;
 	    }
 	    public = true;
-	    session = malloc(strlen(public_documents_wc3270) + strlen(n) +
+	    session = malloc(strlen(dirname) + strlen(n) +
 		    strlen(SESS_SUFFIX) + 1);
-	    sprintf(session, "%s%s" SESS_SUFFIX, public_documents_wc3270, n);
+	    sprintf(session, "%s%s" SESS_SUFFIX, dirname, n);
 	    shortcut = malloc(strlen(public_desktop) + strlen(n) +
 		    strlen(".lnk") + 1);
 	    sprintf(shortcut, "%s%s.lnk", public_desktop, n);
@@ -4587,8 +4658,9 @@ xs_init(bool include_public)
     free_xs(&xs_public);
     num_xs = 0;
 
-    xs_init_type(searchdir, &xs_my, SRC_DOCUMENTS);
-    if (include_public) {
+    xs_init_type(searchdir, &xs_my,
+	    portable_mode? SRC_INSTDIR: SRC_DOCUMENTS);
+    if (include_public && public_searchdir != NULL) {
 	xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
     }
     num_xs = xs_my.count + xs_public.count;
@@ -5307,9 +5379,11 @@ static void
 w_usage(void)
 {
     fprintf(stderr, "\
-Usage: wc3270wiz [session-name]\n\
-       wc3270wiz [-e] [session-file]\n\
-       wc3270wiz -U[a]\n");
+Usage: wc3270wiz [opts] [session-name]\n\
+       wc3270wiz [opts] -e session-file\n\
+       wc3270wiz -U[a]\n\
+Opts: -portable    Run in portable mode\n\
+      -noportable  Do not run in portable mode, even if " PORTABLE_FLAG_FILE " exists\n");
     fflush(stderr);
     exit(1);
 }
@@ -5330,32 +5404,47 @@ main(int argc, char *argv[])
     bool explicit_edit = false;
     bool upgrade = false;
     bool automatic_upgrade = false;
+    bool portable = false;
+    bool no_portable = false;
     DWORD name_size;
     char result[STR_SIZE];
 
     /*
      * Parse command-line arguments.
-     * For now, there is only one -- the optional name of the session.
      */
     program = argv[0];
-    if (argc > 1 && !strcmp(argv[1], "-U")) {
-	upgrade = true;
-	argc--;
-	argv--;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-Ua")) {
-	upgrade = true;
-	automatic_upgrade = true;
-	argc--;
-	argv--;
-    }
-    if (argc > 1 && !strcmp(argv[1], "-e")) {
-	explicit_edit = true;
-	argc--;
-	argv++;
+    while (argc > 1 && argv[1][0] == '-') {
+	if (argc > 1 && !strcmp(argv[1], "-U")) {
+	    upgrade = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-Ua")) {
+	    upgrade = true;
+	    automatic_upgrade = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-e")) {
+	    explicit_edit = true;
+	    argc--;
+	    argv++;
+	    break;
+	} else if (!strcmp(argv[1], "-portable")) {
+	    portable = true;
+	    argc--;
+	    argv++;
+	} else if (!strcmp(argv[1], "-noportable")) {
+	    no_portable = true;
+	    argc--;
+	    argv++;
+	} else {
+	    w_usage();
+	}
     }
     switch (argc) {
     case 1:
+	if (explicit_edit) {
+	    w_usage();
+	}
 	break;
     case 2:
 	session_name = argv[1];
@@ -5365,7 +5454,7 @@ main(int argc, char *argv[])
 	break;
     }
 
-    if (upgrade && explicit_edit) {
+    if (upgrade && (explicit_edit || portable || no_portable)) {
 	w_usage();
     }
 
@@ -5389,10 +5478,23 @@ main(int argc, char *argv[])
 	return 1;
     }
 
+    /* Figure out portable mode. */
+    char fpath[MAX_PATH];
+    sprintf(fpath, "%s\\%s", installdir, PORTABLE_FLAG_FILE);
+    portable_mode = portable || (access(fpath, F_OK) == 0 && !no_portable);
+    if (portable_mode) {
+	searchdir = installdir;
+	public_searchdir = NULL;
+    }
+
     signal(SIGINT, SIG_IGN);
 
     if (upgrade) {
 	/* Do an upgrade. */
+	if (portable_mode) {
+	    errout("Can't do an upgrade in portable mode.\n");
+	    return 1;
+	}
 	get_base_dirs(false);
 	save_keymaps(admin());
 	xs_init(admin());
@@ -6003,7 +6105,7 @@ The files can be copied automatically, which means that:\n\
     if ((f = fopen(done_path, "w")) != NULL) {
 	fclose(f);
     }
-    if (admin()) {
+    if (admin() && public_searchdir != NULL) {
 	snprintf(done_path, sizeof(done_path), "%s%s", public_searchdir,
 		DONE_FILE);
 	if ((f = fopen(done_path, "w")) != NULL) {
