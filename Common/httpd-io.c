@@ -842,6 +842,7 @@ hio_next(ioid_t id)
 	size_t nr = session->pending_input_len;
 	bool reenable;
 
+	vctrace(TC_HTTPD, "Continuing [%d] pending input\n", httpd_seq(session->dhandle));
 	session->pending_input = NULL;
 	session->pending_input_len = 0;
 	reenable = hio_process_buffer(session, buf, nr);
@@ -894,6 +895,9 @@ hio_async_done(void *dhandle, httpd_status_t rv)
      * This ensures that other activity gets a chance to be processed if our peer is slamming us with
      * input.
      */
+    if (session->pending_input_len) {
+	vctrace(TC_HTTPD, "Deferring [%d] pending input\n", httpd_seq(session->dhandle));
+    }
     session->noid = AddTimeOut(0, hio_next);
     return SS_OPEN;
 }

@@ -166,6 +166,8 @@ static llist_t peer_listeners = LLIST_INIT(peer_listeners);
 static void
 close_peer(peer_t *p, const char *errmsg)
 {
+    char *errmsg_copy = errmsg? NewString(errmsg): NULL;
+
     llist_unlink(&p->llist);
     if (p->socket != INVALID_SOCKET) {
 	SOCK_CLOSE(p->socket);
@@ -188,8 +190,8 @@ close_peer(peer_t *p, const char *errmsg)
 
     if (p->listener == NULL || p->listener->mode == PLM_ONCE) {
 	vctrace(TC_SCRIPT, "once-only socket closed, exiting\n");
-	if (errmsg != NULL) {
-	    xs_error("%s", errmsg);
+	if (errmsg_copy != NULL) {
+	    xs_error("%s", errmsg_copy);
 	}
 	x3270_exit(0);
     }
@@ -197,6 +199,9 @@ close_peer(peer_t *p, const char *errmsg)
 
     json_free(p->json_result);
 
+    if (errmsg_copy != NULL) {
+	Free(errmsg_copy);
+    }
     Free(p);
 }
 
@@ -480,7 +485,7 @@ run_next_deferred(ioid_t id)
     } FOREACH_LLIST_END(&peer_scripts, p, peer_t *);
     assert(found_peer);
 
-    vctrace(TC_SCRIPT, "Processing %s next command\n", p->desc);
+    vctrace(TC_SCRIPT, "Continuing %s pending input\n", p->desc);
 
     /* Run whatever is pending. If there was nothing to run, allow more input. */
     bool new_child = run_next(p);
@@ -520,9 +525,9 @@ peer_done(task_cbh handle, bool success, bool abort)
     }
 
     if (p->pj_offset < p->buf_len) {
-	vctrace(TC_SCRIPT, "Deferring %s next command\n", p->desc);
+	vctrace(TC_SCRIPT, "Deferring %s pending input\n", p->desc);
 	p->toid = AddTimeOut(0, run_next_deferred);
-	return false;
+	return true;
     } else {
 	/* Allow more input. */
 	if (p->ioid == NULL_IOID) {
