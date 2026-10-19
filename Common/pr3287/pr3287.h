@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2024 Paul Mattes.
+ * Copyright (c) 2013-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,8 @@ typedef struct {
 	int ffskip;		/* -ffskip */
 	int ignoreeoj;		/* -ignoreeoj */
 #if defined(_WIN32) /*[*/
+	bool no_portable;	/* -noportable */
+	bool portable;		/* -portable */
 	const char *printer;	/* printer to use (-printer) */
 	int printercp;		/* -printercp */
 #endif /*]*/

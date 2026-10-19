@@ -28,6 +28,7 @@
 # s3270 printer session tests
 
 import os
+import shutil
 from subprocess import Popen
 import sys
 import tempfile
@@ -40,7 +41,6 @@ import Common.Test.setupHosts as setupHosts
 
 hostsSetup = setupHosts.present()
 
-@unittest.skipIf(sys.platform.startswith('win'), 'Unix-specific test')
 @requests_timeout
 class TestPr3287Session(cti):
 
@@ -61,7 +61,10 @@ class TestPr3287Session(cti):
             with open(sname, 'w') as file:
                 file.write(f's3270.hostname: {setupHosts.test_hostname}:{pport}\n')
                 file.write('s3270.printerLu: .\n')
-                file.write(f's3270.printer.assocCommandLine: echo "%H%" >{tname} && sleep 5\n')
+                if sys.platform.startswith('win'):
+                    file.write(f's3270.printer.assocCommandLine: cmd.exe /c "echo %H% >{tname} & timeout /t 5 >NUL:"\n')
+                else:
+                    file.write(f's3270.printer.assocCommandLine: echo "%H%" >{tname} && sleep 5\n')
 
             # Start s3270 with that profile.
             env = os.environ.copy()
@@ -123,7 +126,10 @@ class TestPr3287Session(cti):
                 prefix = 'P:' if use_passthru else ''
                 file.write(f's3270.hostname: {prefix}127.0.0.1:{pport}\n')
                 file.write('s3270.printerLu: .\n')
-                file.write(f's3270.printer.assocCommandLine: echo "%P% %H%" >{tname} && sleep 5\n')
+                if sys.platform.startswith('win'):
+                    file.write(f's3270.printer.assocCommandLine: cmd.exe /c "echo %P% %H% >{tname} & timeout /t 5 >NUL:"\n')
+                else:
+                    file.write(f's3270.printer.assocCommandLine: echo "%P% %H%" >{tname} && sleep 5\n')
                 if not use_passthru:
                     file.write(f's3270.proxy: {proxy_type.name}:127.0.0.1:{proxy_port}')
 
@@ -147,7 +153,7 @@ class TestPr3287Session(cti):
             self.try_until(lambda: os.path.getsize(tname) > 0, 4, 'Printer session not started')
             with open(tname, 'r') as file:
                 contents = file.readlines()
-            self.assertEqual(f'-proxy {proxy_type.name}:127.0.0.1:{proxy_port} 127.0.0.1:{pport}\n', contents[0])
+            self.assertEqual(f'-proxy {proxy_type.name}:127.0.0.1:{proxy_port} 127.0.0.1:{pport}', contents[0].strip())
 
             # Make sure the proxy is reported correctly by Query().
             r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(Proxy)')
@@ -170,6 +176,79 @@ class TestPr3287Session(cti):
     # pr3287 passthru (P:) proxy session test.
     def test_s3270_proxy_pr3287_session_passthru(self):
         self.s3270_proxy_pr3287_session(use_passthru=True)
+
+    # Check the portable state, configuration directory and trace directory.
+    def check_s3270_pr3287_portable(self, executable: str, cmdline: list[str], expected: str, installdir=None):
+
+        # Start playback to talk to s3270.
+        pport, ts = unused_port()
+        with playback(self, 's3270/Test/ibmlink.trc', port=pport) as p:
+            ts.close()
+
+            # Create a s3270 session file that starts a fake printer session.
+            handle, sname = tempfile.mkstemp(suffix='.s3270')
+            os.close(handle)
+            handle, tname = tempfile.mkstemp()
+            os.close(handle)
+            with open(sname, 'w') as file:
+                file.write(f's3270.hostname: 127.0.0.1:{pport}\n')
+                file.write('s3270.printerLu: .\n')
+                file.write(f's3270.printer.assocCommandLine: cmd.exe /c "echo xxx%PORTABLE%xxx >{tname} & timeout /t 5 >NUL:"\n')
+
+            # Start s3270 with that profile.
+            env = os.environ.copy()
+            env['PRINTER_DELAY_MS'] = '1'
+            hport, ts = unused_port()
+            s3270 = Popen(vgwrap([executable, '-httpd', str(hport)] + cmdline + [sname]), env=env)
+            self.children.append(s3270)
+            self.check_listen(hport)
+            ts.close()
+
+            # Accept the connection and fill up the screen, which will cause s3270 to
+            # start the printer session.
+            p.send_records(4)
+
+            # Make sure the printer session got started.
+            self.try_until(lambda: os.path.getsize(tname) > 0, 4, 'Printer session not started')
+            with open(tname, 'r') as file:
+                contents = file.readlines()
+
+            # Verify what %PORTABLE% expanded to.
+            self.assertEqual('xxx' + expected + 'xxx', contents[0].strip())
+
+            # Wait for the process to exit.
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit())')
+            self.vgwait(s3270)
+
+    # Test the flag file and command-line portable mode controls.
+    def s3270_pr3287_portable(self, cmdline: list[str], expected: str, portable=False, create_flagfile=False):
+        source = shutil.which('s3270.exe')
+        self.assertIsNotNone(source, 'Could not find s3270.exe in PATH')
+
+        with tempfile.TemporaryDirectory() as installdir:
+            shutil.copytree(os.path.dirname(source), installdir, dirs_exist_ok=True)
+            executable = os.path.join(installdir, os.path.basename(source))
+            flagfile = os.path.join(installdir, 'PORTABLE.txt')
+
+            if create_flagfile:
+                with open(flagfile, 'w'):
+                    pass
+            self.check_s3270_pr3287_portable(executable, cmdline, expected,
+                installdir=installdir if portable else None)
+
+    # s3270+pr3287 session portable-mode tests.
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-only test')
+    def test_s3270_pr3287_portable_default(self):
+        self.s3270_pr3287_portable([], '')
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-only test')
+    def test_s3270_pr3287_portable_flagfile(self):
+        self.s3270_pr3287_portable([], '', portable=True, create_flagfile=True)
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-only test')
+    def test_s3270_pr3287_portable_cmdline_disabled(self):
+        self.s3270_pr3287_portable(['-noportable'], '-noportable', create_flagfile=True)
+    @unittest.skipUnless(sys.platform.startswith('win'), 'Windows-only test')
+    def test_s3270_pr3287_portable_cmdline_enabled(self):
+        self.s3270_pr3287_portable(['-portable'], '-portable', portable=True)
 
 if __name__ == '__main__':
     unittest.main()

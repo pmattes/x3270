@@ -1,0 +1,26 @@
+Trace started Fri Oct 09 19:33:09 2026
+ Version: pr3287 v4.6pre1 Fri Oct 09 23:40:10 UTC 2026 pdm
+ Build options: via gcc 13-win32 32-bit
+ ANSI codepage: 1252, printer codepage: 1252
+ Host codepage: 37+37
+ Command: Z:\tmp\ppp\pr3287.exe -trace localhost:8021
+ Instdir: Z:\tmp\ppp\
+20261009.193309.766 socket Trying 127.0.0.1, port 8021...
+20261009.193309.767 socket Connected to localhost, port 8021
+20261009.193309.767 infra Printer: PDF
+< 0x0   fffd28fffd27
+20261009.193309.767 telnet RCVD DO TN3270E
+> 0x0   fffb28
+20261009.193309.767 telnet SENT WILL TN3270E
+20261009.193309.767 tn3270 Now operating in TN3270E mode.
+20261009.193309.767 telnet RCVD DO NEW-ENVIRON
+> 0x0   fffc27
+20261009.193309.768 telnet SENT WONT NEW-ENVIRON
+< 0x0   fffa280802fff0
+20261009.193309.768 telnet RCVD SB TN3270E SEND DEVICE-TYPE SE
+> 0x0   fffa28020749424d2d333238372d31fff0
+20261009.193309.768 telnet SENT SB TN3270E DEVICE-TYPE REQUEST IBM-3287-1 SE
+< 0x0   fffa2802060504fff0
+20261009.193309.809 telnet RCVD SB TN3270E DEVICE-TYPE REJECT REASON INV-DEVICE-TYPE SE
+20261009.193309.809 infra Error: Device type rejected, cannot connect: INV-DEVICE-TYPE
+20261009.193309.848 socket SENT disconnect

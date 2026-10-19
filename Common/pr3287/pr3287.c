@@ -77,11 +77,14 @@
  *              set the maximum presentation position (unformatted line length)
  *          -nocrlf
  *		expand newlines to CR/LF (Windows only)
+ *	    -noportable
+ *	    	do not run in portable mode, even if PORTABLE.TXT exists (Windows only)
  *          -noverifycert
  *          	do not verify host certificates for TLS connections
+ *	    -portable
+ *	    	run in portable mode (Windows only)
  *	    -printer "printer name"
- *	        printer to use (default is $PRINTER or system default,
- *	        Windows only)
+ *	        printer to use (default is $PRINTER or system default, Windows only)
  *	    -printercp n
  *	        Code page to use for output (Windows only)
  *	    -proxy "spec"
@@ -145,6 +148,7 @@
 #include "ctlrc.h"
 #include "nhp.h"
 #include "popups.h"
+#include "portable_mode.h"
 #include "pr3287.h"
 #include "proxy.h"
 #include "pr_telnet.h"
@@ -190,6 +194,9 @@ static int proxy_type = 0;
 static char *proxy_user = NULL;
 static char *proxy_host = NULL;
 static char *proxy_portname = NULL;
+#if defined(_WIN32) /*[*/
+static bool portable_mode = false;
+#endif /*]*/
 
 void pr3287_exit(int);
 
@@ -302,12 +309,17 @@ cmdline_help(void)
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
 "  -mpp <n>         define the Maximum Presentation Position (unformatted\n"
 "                   line length)\n");
+#if defined(_WIN32) /*[*/
+    fprintf(stderr,
+"  " OptNoPortable "      do not run in Portable Mode, even if " PORTABLE_FLAG_FILE " exists\n");
+#endif /*]*/
     if (tls_options & TLS_OPT_VERIFY_HOST_CERT) {
 	fprintf(stderr,
 "  " OptNoVerifyHostCert "    do not verify host certificate for TLS connections\n");
     }
     fprintf(stderr,
 #if defined(_WIN32) /*[*/
+"  " OptPortable "        run in Portable Mode\n"
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
 "                   default printer)\n"
@@ -321,7 +333,7 @@ cmdline_help(void)
 "                   output\n"
 "  -syncport port   TCP port for login session synchronization\n"
 #if defined(_WIN32) /*[*/
-"  " OptTrace "           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n"
+"  " OptTrace "           trace data stream to .\\x3trc.<pid>.txt\n"
 #else /*][*/
 "  " OptTrace "           trace data stream to file (default /tmp/x3trc.<pid>)\n"
 #endif /*]*/
@@ -534,6 +546,10 @@ init_options(void)
     options.reconnect		= 0;
     options.skipcc		= 0;
     options.mpp			= DEFAULT_UNF_MPP;
+#if defined(_WIN32) /*[*/
+    options.no_portable		= false;
+    options.portable		= false;
+#endif /*]*/
     options.tls.accept_hostname	= NULL;
     options.tls.ca_dir		= NULL;
     options.tls.ca_file		= NULL;
@@ -769,6 +785,12 @@ main(int argc, char *argv[])
 		usage("Invalid value for '-mpp'");
 	    }
 	    i++;
+#if defined(_WIN32) /*[*/
+	} else if (!strcmp(argv[i], OptNoPortable)) {
+	    options.no_portable = true;
+	} else if (!strcmp(argv[i], OptPortable)) {
+	    options.portable = true;
+#endif /*]*/
 	} else if ((tls_options & TLS_OPT_VERIFY_HOST_CERT) &&
 		!strcmp(argv[i], OptNoVerifyHostCert)) {
 	    options.tls.verify_host_cert = false;
@@ -911,6 +933,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	pr3287_exit(1);
     }
 
+#if defined(_WIN32) /*[*/
+    /* Set up portable mode. */
+    if (instdir != NULL) {
+	char *flagfile = Asprintf("%s\\%s", instdir, PORTABLE_FLAG_FILE);
+	bool flagfile_present = access(flagfile, F_OK) == 0;
+
+	Free(flagfile);
+	portable_mode = options.portable || (flagfile_present && !options.no_portable);
+    }
+#endif /*]*/
+
     /* Try opening the trace file, if there is one. */
     if (options.tracing) {
 	char tracefile[4096];
@@ -937,7 +970,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 #if defined(_WIN32) /*[*/
 		if (options.tracedir == NULL) {
-		    options.tracedir = "";
+		    options.tracedir = portable_mode? instdir: "";
 		}
 		sl = strlen(options.tracedir);
 		snprintf(tracefile, sizeof(tracefile),

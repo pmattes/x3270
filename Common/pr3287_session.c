@@ -49,6 +49,7 @@
 #include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
+#include "product.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "sio.h"
@@ -682,6 +683,16 @@ pr3287_start_now(const char *lu, bool associated)
 		vb_appends(&r, syncopt);
 		s += 2;
 		continue;
+#if defined(_WIN32) /*[*/
+	    } else if (!strncmp(s+1, "PORTABLE%", 9)) {
+		if (appres.portable) {
+		    vb_appends(&r, OptPortable);
+		} else if (appres.no_portable) {
+		    vb_appends(&r, OptNoPortable);
+		}
+		s += 9;
+		continue;
+#endif /*]*/
 	    }
 	}
 	vb_append(&r, &c, 1);
